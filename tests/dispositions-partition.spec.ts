@@ -33,9 +33,9 @@ const CHANT_FR = "a-jamais-tu-es-saint";
 const CHANT_ZH = "一生爱你";
 const LOUANGE_FR = ["abba-pere", "avec-nous"];
 const LOUANGE_ZH = ["谢谢你", "活着为要敬拜你"];
-const NOMS: Record<string, string> = { classique: "Classique", sections: "Couleurs par section", reperes: "Repères" };
+const NOMS: Record<string, string> = { classique: "Classique", sections: "Couleurs par section", reperes: "Repères", scene: "Scène" };
 // Ordre du menu (les libellés changent avec la langue : la capture vise par rang).
-const ORDRE = ["classique", "sections", "reperes"];
+const ORDRE = ["classique", "sections", "reperes", "scene"];
 
 const lire = (page: Page, cle: string) => page.evaluate((k) => localStorage.getItem(k), cle);
 
@@ -122,7 +122,7 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
 
     await page.getByRole("button", { name: "Plus d'actions" }).click();
     await expect(page.getByText("Disposition", { exact: true })).toBeVisible();
-    await expect(page.getByRole("menuitemradio")).toHaveText([/Classique/, /Couleurs par section/, /Repères/]);
+    await expect(page.getByRole("menuitemradio")).toHaveText([/Classique/, /Couleurs par section/, /Repères/, /Scène/]);
     await expect(page.getByRole("menuitemradio", { name: "Classique" })).toHaveAttribute("aria-checked", "true");
     await expect(page.getByText("Retenue sur cet appareil")).toBeVisible();
     // Le menu tient dans l'écran.
@@ -197,7 +197,7 @@ test("mode louange : le texte garde ses deux colonnes sur grand écran, dans cha
   };
   const avant = await colonnes();
   expect(avant, "deux colonnes au départ").toBe(2);
-  for (const d of ["reperes", "sections", "classique"]) {
+  for (const d of ["scene", "reperes", "sections", "classique"]) {
     const options = await ouvrirOptions(page);
     await options.getByRole("radio", { name: NOMS[d] }).click();
     await page.keyboard.press("Escape");
@@ -233,6 +233,9 @@ for (const langue of ["fr", "zh"] as const) {
         // Menu ouvert, puis page seule.
         await page.screenshot({ path: `${dossier}/${info.project.name}-chant-menu-${d}-${langue}-${theme}.png` });
         await page.keyboard.press("Escape");
+        // Attendre la FIN de la fermeture du menu avant la capture de la page.
+        await expect(page.getByRole("menu")).toBeHidden();
+        await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
         await page.screenshot({ path: `${dossier}/${info.project.name}-chant-${d}-${langue}-${theme}.png` });
       }
       await page.goto(`/setlists/${SETLIST_ID}`);
@@ -374,9 +377,8 @@ test("Repères : le mode louange garde ses deux colonnes sur grand écran (data-
   expect(new Set(gauches.map((x) => Math.round(x / 8))).size, "deux colonnes").toBe(2);
 });
 
-test("Repères : Structure seule (batteur, mode louange) garde les pastilles avec le nom à côté", async ({ page }) => {
-  // Dans la vue partitions, « Structure seule » ne montre que le bandeau de pastilles de tête (décision 4) ; les
-  // sections sans corps (paroles et accords masqués) n'existent qu'au mode louange du batteur.
+test("Repères : Structure seule (batteur, mode louange) reste la feuille de route, repère et nom côte à côte", async ({ page }) => {
+  // Pour le batteur, la structure est la feuille de route (FS-D) quelle que soit la disposition : pas de pastille Repères.
   await page.addInitScript(() => {
     localStorage.setItem("perf-role-preset", "batteur");
     localStorage.setItem("disposition", "reperes");
@@ -384,13 +386,159 @@ test("Repères : Structure seule (batteur, mode louange) garde les pastilles ave
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(LOUANGE_FR) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  const pastille = onStage(page, "[data-repere-pastille]").first();
-  await expect(pastille).toBeVisible();
-  const nom = (await pastille.getAttribute("title"))!;
-  const texte = onStage(page, "[data-repere]").first().locator(":scope > div:nth-child(2) > span").first();
-  await expect(texte).toHaveText(nom);
+  await expect(onStage(page, "[data-repere]")).toHaveCount(0);
+  const repere = onStage(page, "[data-feuille-route-repere]").first();
+  await expect(repere).toBeVisible();
+  const texte = onStage(page, "[data-feuille-route-nom]").first();
   await expect(texte).toBeVisible();
-  const [p, t] = await Promise.all([pastille.boundingBox(), texte.boundingBox()]);
-  expect(t!.x, "le nom à droite de la pastille").toBeGreaterThanOrEqual(p!.x + p!.width);
+  await expect(texte).not.toHaveText("");
+  const [p, t] = await Promise.all([repere.boundingBox(), texte.boundingBox()]);
+  expect(t!.x, "le nom à droite du repère").toBeGreaterThanOrEqual(p!.x + p!.width);
   expect(Math.abs(t!.y + t!.height / 2 - (p!.y + p!.height / 2)), "sur la même ligne").toBeLessThanOrEqual(p!.height);
+});
+
+// ─── (g) Scène (DP-C) : bande teintée, grande lettre, nom dessous, contraste, pleine largeur ─────────────────────
+
+const scene = (page: Page) => page.addInitScript(() => {
+  if (!localStorage.getItem("disposition")) localStorage.setItem("disposition", "scene");
+  localStorage.setItem("jianpu-sheet-pref", "never");
+});
+
+for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
+  test(`${langue} : Scène sur la page du chant, une bande par section, fond = teinte du type, lettre = abréviation, pas d'intitulé`, async ({ page }) => {
+    await scene(page);
+    await page.goto(`/songs/${encodeURIComponent(slug)}`);
+    const bandes = page.locator("main [data-section]");
+    await expect(bandes.first()).toBeVisible();
+    const n = await bandes.count();
+    expect(n).toBeGreaterThan(1);
+    await expect(page.locator("main [data-disposition]").first()).toHaveAttribute("data-disposition", "scene");
+    await expect(page.locator("main [data-section]:not([data-scene])")).toHaveCount(0);
+    await expect(page.locator("main [data-section] .uppercase")).toHaveCount(0);
+    await expect(page.locator("main [data-scene-lettre]")).toHaveCount(n);
+
+    const lignes = await bandes.evaluateAll((els) => {
+      // Couleur calculée d'une variable de la palette (le canevas ne résout pas var()).
+      const rgb = (el: Element, css: string) => {
+        const sonde = document.createElement("span");
+        sonde.style.color = css;
+        el.appendChild(sonde);
+        const c = getComputedStyle(sonde).color;
+        sonde.remove();
+        return c;
+      };
+      return els.map((el) => {
+        const cs = getComputedStyle(el);
+        const col = el.querySelector("[data-scene-colonne]") as HTMLElement;
+        const lettre = el.querySelector("[data-scene-lettre]") as HTMLElement;
+        const filet = cs.borderLeftColor;
+        const palette = ["intro", "verse", "prechorus", "chorus", "bridge", "outro", "coda", "other"].map((t) => ({
+          t,
+          couleur: rgb(el, `var(--sec-${t})`),
+          teinte: rgb(el, `var(--sec-${t}-tint)`),
+        }));
+        const type = palette.find((p) => p.couleur === filet);
+        return {
+          fond: cs.backgroundColor,
+          teinte: type?.teinte ?? null,
+          filetLarg: parseFloat(cs.borderLeftWidth),
+          lettre: lettre.textContent!,
+          titre: col.getAttribute("title")!,
+          lecteur: col.querySelector(".sr-only")!.textContent!,
+          copie: col.hasAttribute("data-copy-ignore"),
+          largeur: Math.round(col.getBoundingClientRect().width),
+          tailleLettre: parseFloat(getComputedStyle(lettre).fontSize),
+        };
+      });
+    });
+    for (const l of lignes) {
+      expect(l.teinte, "type reconnu").not.toBeNull();
+      expect(l.fond, "fond = teinte de son type").toBe(l.teinte);
+      expect(l.filetLarg, "filet").toBe(4);
+      expect(l.lettre.length).toBeGreaterThan(0);
+      expect(l.lettre, "capitales").toBe(l.lettre.toUpperCase());
+      expect(l.titre).toBe(l.lecteur);
+      expect(l.copie, "colonne hors copie").toBe(true);
+      expect(l.largeur, "colonne").toBe(telephone(page) ? 44 : 56);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), "débordement horizontal").toBeLessThanOrEqual(0);
+  });
+
+  test(`${langue} : Scène, contraste de la lettre et du nom sur la teinte, clair et sombre (AA)`, async ({ page }) => {
+    await scene(page);
+    await page.goto(`/songs/${encodeURIComponent(slug)}`);
+    await expect(page.locator("main [data-scene-lettre]").first()).toBeVisible();
+    for (const sombre of [false, true]) {
+      await page.evaluate((s) => document.documentElement.classList.toggle("dark", s), sombre);
+      const ratios = await page.locator("main [data-scene]").evaluateAll((els) => {
+        const lum = (css: string) => {
+          const c = document.createElement("canvas").getContext("2d")!;
+          c.fillStyle = "#000"; c.fillStyle = css; c.fillRect(0, 0, 1, 1);
+          const [r, g, b] = Array.from(c.getImageData(0, 0, 1, 1).data).slice(0, 3).map((v) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        const rapport = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+        return els.flatMap((el) => {
+          const fond = lum(getComputedStyle(el).backgroundColor);
+          const out: { quoi: string; r: number }[] = [];
+          for (const [sel, quoi] of [["[data-scene-lettre]", "lettre"], ["[data-scene-nom]", "nom"]] as const) {
+            const e = el.querySelector(sel);
+            if (e) out.push({ quoi, r: rapport(lum(getComputedStyle(e).color), fond) });
+          }
+          return out;
+        });
+      });
+      expect(ratios.some((x) => x.quoi === "nom"), "des noms mesurés").toBe(true);
+      for (const x of ratios) expect(x.r, `contraste ${x.quoi} ${sombre ? "sombre" : "clair"}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+}
+
+test("Scène : une bande remplit son conteneur (de bord à bord, sans arrondi), lettre ≈ 1,6 fois le texte", async ({ page }) => {
+  await scene(page);
+  await page.goto(`/songs/${CHANT_FR}`);
+  const bande = page.locator("main [data-scene]").first();
+  await expect(bande).toBeVisible();
+  const m = await bande.evaluate((el) => {
+    const r = el.getBoundingClientRect(), p = el.parentElement!.getBoundingClientRect();
+    return { g: r.left - p.left, d: p.right - r.right, rayon: getComputedStyle(el).borderTopLeftRadius, boite: getComputedStyle(el).boxShadow };
+  });
+  expect(Math.abs(m.g), "bord gauche").toBeLessThanOrEqual(1);
+  expect(Math.abs(m.d), "bord droit").toBeLessThanOrEqual(1);
+  expect(m.rayon).toBe("0px");
+  const tailles = await page.evaluate(() => ({
+    lettre: parseFloat(getComputedStyle(document.querySelector("main [data-scene-lettre]")!).fontSize),
+    texte: (() => {
+      const sonde = document.createElement("span");
+      sonde.style.fontSize = "var(--lyric-size)";
+      document.body.appendChild(sonde);
+      const t = parseFloat(getComputedStyle(sonde).fontSize);
+      sonde.remove();
+      return t;
+    })(),
+  }));
+  expect(tailles.lettre / tailles.texte).toBeGreaterThan(1.5);
+  expect(tailles.lettre / tailles.texte).toBeLessThan(1.7);
+});
+
+test("Scène : le mode louange garde ses deux colonnes sur grand écran (data-disposition = scene), bandes pleine colonne", async ({ page }) => {
+  const grand = await page.evaluate(
+    (q) => matchMedia(q).matches,
+    "(pointer: fine) and (min-width: 1024px), (pointer: coarse) and (orientation: landscape) and (min-width: 1024px)",
+  );
+  await page.addInitScript(() => {
+    localStorage.setItem("perf-role-preset", "pianiste");
+    localStorage.setItem("perf-font-scale", "1");
+    localStorage.setItem("disposition", "scene");
+  });
+  await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(["abba-pere"]) }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-disposition", "scene");
+  await expect(onStage(page, "[data-scene]").first()).toBeVisible();
+  await expect(onStage(page, "[data-section]:not([data-scene])")).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), "débordement horizontal").toBeLessThanOrEqual(0);
+  if (!grand) return;
+  const gauches = await onStage(page, "[data-section]").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().left)));
+  expect(new Set(gauches.map((x) => Math.round(x / 8))).size, "deux colonnes").toBe(2);
 });

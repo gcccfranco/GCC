@@ -158,10 +158,10 @@ async function verifieEgalite(page: Page, max = 6) {
 }
 
 test.describe("louange : la copie de mesure et l'écran coupent les vers pareil", () => {
-  // Repères (DP-B) : la gouttière réduit le corps de section, la copie et l'écran doivent poser les mêmes rangées.
+  // Repères (DP-B), Scène (DP-C) : la gouttière réduit le corps de section, la copie et l'écran doivent poser les mêmes rangées.
   for (const [affichage, nomAffichage] of AFFICHAGES)
     for (const [nom, it] of CHANTS)
-      for (const disposition of affichage === "played" ? [undefined, "reperes"] : [undefined]) {
+      for (const disposition of affichage === "played" ? [undefined, "reperes", "scene"] : [undefined]) {
       test(`${nom}, ${nomAffichage}${disposition ? `, ${disposition}` : ""} : mêmes hauteurs et mêmes coupures, puis après A+ et après une rotation`, async ({ page }, info) => {
         await ouvrirMode(page, [it], { affichage, echelle: "1", disposition });
         expect(await verifieEgalite(page), "des sections ont été comparées").toBeGreaterThan(0);

@@ -798,7 +798,7 @@ interface SectionViewProps {
   typography?: "web" | "pdf";
   /** Disposition de la partition (dispositionPref.ts) : « sections » = couleur par type de section, cadre gris fin,
    *  accords neutres ; « reperes » = pastille et filet dans une gouttière, sans cadre ; « classique » = cadre de la
-   *  couleur de langue. Scène et partition : rendu classique en attendant leurs tranches. */
+   *  couleur de langue. Partition : rendu classique en attendant sa tranche. */
   disposition?: Disposition;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
   onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
@@ -831,8 +831,10 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
     keyChange ? t("setlists.detail.sectionKeyChange", { defaultValue: "升调 ({{key}})", key: keyChange }) : "",
   ].filter(Boolean).join(" · ");
   // Ce que portait la rangée d'intitulé en plus du nom (Repères : une ligne fine en tête du corps).
-  const suite = disposition === "reperes" && (songSourceLabel || note || (nuance && (nuance.tags.length > 0 || nuance.note))) ? (
+  const aSuite = songSourceLabel || note || (nuance && (nuance.tags.length > 0 || nuance.note));
+  const suite = (disposition === "reperes" ? aSuite : disposition === "scene" ? aSuite || keyChange : false) ? (
     <>
+      {disposition === "scene" && keyChange && <span className="font-semibold">{t("setlists.detail.sectionKeyChange", { defaultValue: "升调 ({{key}})", key: keyChange })}</span>}
       {songSourceLabel && <span className="font-normal text-muted-foreground">{songSourceLabel}</span>}
       {note && <span className="font-normal text-muted-foreground">{note}</span>}
       {nuance && (nuance.tags.length > 0 || nuance.note) && <NuanceBadge nuance={nuance} size={nuanceSize} />}
@@ -919,6 +921,54 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         {bodyHidden ? (
           <div data-copy-ignore className="flex min-h-[var(--rep-p)] min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
             <span>{nomComplet}</span>
+            {suite}
+          </div>
+        ) : (
+          <div className="min-w-0">
+            {suite && <div data-copy-ignore className="mb-1 flex flex-wrap items-center gap-x-2 text-xs">{suite}</div>}
+            {corps}
+          </div>
+        )}
+      </div>
+    );
+  }
+  if (disposition === "scene") {
+    // Scène (lot DP-C) : une bande pleine largeur teintée, filet de 4 px de la couleur de section, grande lettre et nom
+    // dans la colonne de gauche (44 px au téléphone, 56 px dès la tablette). Lettre : 70 % de la couleur mêlée de noir en
+    // clair (AA sur la teinte), la couleur telle quelle en sombre ; la teinte `--sec-*-tint` suit le thème de l'appareil.
+    const couleurScene = CHART_TYPE_COLOR[couleurDe ?? section.type] ?? "var(--sec-other)";
+    const police = uiIsZh ? zh_lyric_font.className : chord_font.className;
+    const lettre = (
+      <span className="flex items-baseline gap-[3px] whitespace-nowrap leading-none">
+        <span aria-hidden="true" data-scene-lettre className={`font-bold ${police}`} style={{ fontSize: "calc(var(--lyric-size) * 1.6)", color: "var(--scene-lettre)" }}>{abbreviateSection(section).toUpperCase()}</span>
+        {repeat > 1 && <span aria-hidden="true" data-scene-repeat className="text-[13px] font-semibold md:text-sm" style={{ color: "var(--scene-nom)" }}>×{repeat}</span>}
+      </span>
+    );
+    return (
+      <div
+        data-section
+        data-section-uids={occurrenceUids?.join(" ")}
+        data-scene
+        className="mb-0.5 grid grid-cols-[44px_minmax(0,1fr)] gap-x-3 py-2.5 pl-3 pr-3 md:grid-cols-[56px_minmax(0,1fr)] md:pl-4 md:pr-5 print:mb-0 [--scene-lettre:color-mix(in_srgb,var(--rep-c)_70%,black)] dark:[--scene-lettre:var(--rep-c)]"
+        style={{
+          breakInside: "avoid",
+          "--sec-c": LANG_THEME[isZh ? "zh" : "fr"].accent,
+          "--rep-c": couleurScene,
+          "--scene-nom": `color-mix(in srgb, hsl(var(--foreground)) 72%, ${couleurScene.replace(")", "-tint)")})`,
+          background: couleurScene.replace(")", "-tint)"),
+          borderLeft: "4px solid var(--rep-c)",
+        } as React.CSSProperties}
+      >
+        <div data-copy-ignore data-scene-colonne title={nomComplet} className="min-w-0">
+          {lettre}
+          {!bodyHidden && (
+            <span aria-hidden="true" data-scene-nom className={`mt-1 block break-words text-[11px] leading-tight md:text-xs ${police}`} style={{ color: "var(--scene-nom)", overflowWrap: "anywhere" }}>{label}</span>
+          )}
+          <span className="sr-only">{nomComplet}</span>
+        </div>
+        {bodyHidden ? (
+          <div data-copy-ignore className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
+            <span data-scene-nom-ligne>{label}</span>
             {suite}
           </div>
         ) : (
