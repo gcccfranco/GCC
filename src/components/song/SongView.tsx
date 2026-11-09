@@ -41,7 +41,6 @@ import {
 import type { SectionNuance } from "@/types/setList";
 import { nuanceDef, nuanceLabel, nuanceFull } from "@/lib/setlist/nuances";
 import { TempoPartition } from "@/components/song/NoteNoire";
-import { cp } from "fs";
 
 // ---------------------------------------------------------------------------
 // Thèmes et styles de sections
