@@ -99,6 +99,12 @@ Du 08/11/2026 :
     petit ; la marque **`v2` seulement sur les pages où un vers est vraiment coupé** ; les cinq chants dont le `.cho`
     n'a pas les accords du scan se tranchent **plus tard, chant par chant**. FS-E (demi-page) attend toujours un go
     explicite.
+27. **Demande : couleur des accords au choix de chacun** (Timothée, 09/11/2026 : « peut être qu'il serait bien de
+    pouvoir personnaliser les couleurs des accords pour que chacun ait une couleur qui lui plaise. Faire comme pour les
+    autres personnalisation de couleur, mettre un cercle chromatique pour qu'ils mettent la couleur d'accords qu'ils
+    souhaitent »). Même geste que la couleur des icônes (FS-A) et des stylos (AN-4) : teintes prêtes et cercle
+    chromatique, garde de lisibilité au rendu. **Planche à faire** (`docs/planches/planche-couleur-accords.html`), puis
+    spec du lot CA, puis code sur go.
 
 ## Ce qui change, ce qui reste gelé
 
