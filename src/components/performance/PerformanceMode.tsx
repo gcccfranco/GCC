@@ -244,22 +244,23 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
       </div>
     );
   }
-  // Partition (lot DP-D) : titre centré en serif, tempo et tonalité à gauche, compositeur en italique à droite.
+  // Partition (lot DP-D, compacté en DP-F) : titre centré en serif, puis une seule rangée : tempo et tonalité à gauche, compositeur à droite.
   if (disposition === "partition") {
     const zh = block.language === "zh";
     return (
-      <div data-entete-chant data-entete-partition className="mb-3 pb-3 border-b border-border">
+      <div data-entete-chant data-entete-partition className="mb-3 pb-2 border-b border-border">
         <div className="[[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
-          <h2 data-titre-partition className={`text-center text-[26px] font-bold leading-[1.15] text-foreground ${zh ? KaiTiFont.className : gelasio_font.className}`}>
+          <h2 data-titre-partition className={`text-center text-[22px] font-bold leading-[1.15] text-foreground md:text-[26px] ${zh ? KaiTiFont.className : gelasio_font.className}`}>
             {block.title}
           </h2>
           {block.titlePinyin && <p className={`text-center text-xs text-muted-foreground mt-0.5 ${pinyin_font.className}`}>{block.titlePinyin}</p>}
-          <div className="mt-2 flex items-start justify-between gap-4">
-            <div data-partition-tempo data-testid={block.tempo ? "ligne-tempo" : undefined} className="min-w-0 text-[15px] font-bold leading-[1.3]">
-              {block.tempo ? <span><span aria-hidden="true">♩</span>{`\u202f=\u202f${block.tempo}`}</span> : null}
-              <small className="block text-sm font-normal text-muted-foreground">{t("performance.key")} {block.songKey}</small>
+          <div className="mt-1 flex items-baseline justify-between gap-4">
+            <div data-partition-tempo data-testid={block.tempo ? "ligne-tempo" : undefined} className="min-w-0 whitespace-nowrap text-sm leading-[1.3]">
+              {block.tempo ? <span className="font-bold">♩ = {block.tempo}</span> : null}
+              {block.tempo ? <span aria-hidden="true" className="text-muted-foreground"> · </span> : null}
+              <span className="text-muted-foreground">{t("performance.key")} {block.songKey}</span>
             </div>
-            <p data-partition-compositeur data-testid="auteur" className={`max-w-[55%] text-right text-[15px] leading-[1.3] text-foreground/80 ${zh ? zh_lyric_font.className : `italic ${gelasio_font.className}`}`}>{block.artist}</p>
+            <p data-partition-compositeur data-testid="auteur" title={block.artist} className={`min-w-0 max-w-[55%] truncate pr-[0.2em] text-right text-sm leading-[1.3] text-foreground/80 ${zh ? zh_lyric_font.className : `italic ${gelasio_font.className}`}`}>{block.artist}</p>
           </div>
         </div>
         {strip}

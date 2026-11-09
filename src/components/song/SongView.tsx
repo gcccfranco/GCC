@@ -659,6 +659,8 @@ export function StructureStrip({
   // dans la liste sous le bandeau (quand le corps ne les porte pas).
   const notes = details ? groups.filter((g) => g.step.note || g.step.transition) : [];
   const noteNumber = new Map(notes.map((g, i) => [g, i + 1]));
+  // Partition : la feuille de route de tête a la taille des repères de section (26 / 30 px), comme le rappel compact.
+  const petit = compacte || disposition === "partition";
   const numberBadge = "inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 text-xs font-bold leading-none text-background";
   return (
     <div className={className}>
@@ -683,7 +685,7 @@ export function StructureStrip({
                   data-pleine={pleine.has(i) || undefined}
                   data-repere-encadre={disposition === "partition" || undefined}
                   className={`relative inline-flex items-center justify-center ${disposition === "partition" ? "rounded-[5px] border-[1.5px]" : "rounded-full"} ${
-                    compacte ? "h-[26px] min-w-[26px] px-1.5 sm:h-[30px] sm:min-w-[30px]" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
+                    petit ? "h-[26px] min-w-[26px] px-1.5 sm:h-[30px] sm:min-w-[30px]" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
                   }`}
                   style={
                     disposition === "partition"
@@ -693,9 +695,9 @@ export function StructureStrip({
                         : { background: tintOf(g.step.section), color: colorOf(g.step.section) }
                   }
                 >
-                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-[13px] sm:text-[14px]" : "text-sm sm:text-lg"}`}>
+                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${petit ? "text-[13px] sm:text-[14px]" : "text-sm sm:text-lg"}`}>
                     <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
-                    {g.repeat > 1 && <span className={`ml-px font-semibold leading-none ${compacte ? "text-[10px]" : "text-xs sm:text-sm"}`}>×{g.repeat}</span>}
+                    {g.repeat > 1 && <span className={`ml-px font-semibold leading-none ${petit ? "text-[10px]" : "text-xs sm:text-sm"}`}>×{g.repeat}</span>}
                   </span>
                   {n !== undefined && (
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
@@ -811,16 +813,16 @@ function GouttiereReperes({ sigle, nom, epais, repeat, sansFilet, fontClass }: {
   );
 }
 
-/** Colonne de gauche d'une bande de la disposition Scène : grande lettre (26 px, 32 px dès la tablette ; 13 / 20 px au-delà de
- *  deux signes, pour tenir dans la colonne), « ×2 » dessous, puis le nom de la section (dès la tablette seulement ; en dessous,
+/** Colonne de gauche d'une bande de la disposition Scène : grande lettre (26 px, 32 px dès la tablette ; 20 / 26 px pour trois
+ *  signes ; 16 / 20 px au-delà, coupée par une ellipse si elle ne tient pas dans la colonne), « ×2 » dessous, puis le nom de la section (dès la tablette seulement ; en dessous,
  *  un toucher sur la lettre l'ouvre dans la même bulle que les Repères). */
 function ColonneScene({ sigle, label, nomComplet, repeat, nomVisible, police }: { sigle: string; label: string; nomComplet: string; repeat: number; nomVisible: boolean; police: string }) {
   const { ouvert, setOuvert, ref } = useBulleNom();
-  const long = sigle.length > 2;
+  const taille = sigle.length > 3 ? "overflow-hidden text-ellipsis text-[16px] md:text-[20px]" : sigle.length > 2 ? "text-[20px] md:text-[26px]" : "text-[26px] md:text-[32px]";
   return (
     <div ref={ref} data-copy-ignore data-scene-colonne title={nomComplet} className="relative min-w-0">
-      <button type="button" data-scene-bouton onClick={() => setOuvert((o) => !o)} className="block max-w-full text-left leading-none md:pointer-events-none md:cursor-default">
-        <span aria-hidden="true" data-scene-lettre className={`block whitespace-nowrap font-bold leading-none ${long ? "text-[13px] md:text-[20px]" : "text-[26px] md:text-[32px]"} ${police}`} style={{ color: "var(--scene-lettre)" }}>{sigle}</span>
+      <button type="button" data-scene-bouton onClick={() => setOuvert((o) => !o)} className="relative block max-w-full text-left leading-none before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 md:pointer-events-none md:cursor-default md:before:hidden">
+        <span aria-hidden="true" data-scene-lettre className={`block whitespace-nowrap font-bold leading-none ${taille} ${police}`} style={{ color: "var(--scene-lettre)" }}>{sigle}</span>
         {repeat > 1 && <span aria-hidden="true" data-scene-repeat className="mt-1 block text-[13px] font-semibold leading-none md:text-sm" style={{ color: "var(--scene-nom)" }}>×{repeat}</span>}
         <span className="sr-only">{nomComplet}</span>
       </button>
@@ -1053,7 +1055,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           marginInline: "calc(-1 * var(--marge-bande, 0px))",
         } as React.CSSProperties}
       >
-        <ColonneScene sigle={abbreviateSection(section).toUpperCase()} label={label} nomComplet={nomComplet} repeat={repeat} nomVisible={!bodyHidden} police={police} />
+        <ColonneScene sigle={abbreviateSection(section)} label={label} nomComplet={nomComplet} repeat={repeat} nomVisible={!bodyHidden} police={police} />
         {bodyHidden ? (
           <div data-copy-ignore className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
             <span data-scene-nom-ligne>{label}</span>
@@ -1232,7 +1234,7 @@ export function SongView({
         )}
         <div className="mt-2 flex items-start justify-between gap-4">
           <div data-partition-tempo data-testid={ast.metadata.tempo || ast.metadata.time ? "ligne-tempo" : undefined} className={`min-w-0 text-[15px] font-bold leading-[1.3] ${chord_font.className}`}>
-            {ast.metadata.tempo ? <span><span aria-hidden="true">♩</span>{`\u202f=\u202f${ast.metadata.tempo}`}</span> : null}
+            {ast.metadata.tempo ? <span>♩ = {ast.metadata.tempo}</span> : null}
             {ast.metadata.key && (
               <small className="block text-sm font-normal text-muted-foreground">{t("performance.key")} {ast.metadata.key}</small>
             )}

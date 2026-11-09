@@ -224,10 +224,15 @@ for (const langue of ["fr", "zh"] as const) {
         if (zh) localStorage.setItem("i18nextLng", "zh-CN");
         // Sans le scan 简谱 : la disposition se voit en chinois (par défaut la page montre le scan de la partition).
         localStorage.setItem("jianpu-sheet-pref", "never");
+        // DP-F : la bulle d'aide « Touche un accord… » est déjà vue (clé de AccordsProvider) : elle couvrait l'onglet actif.
+        localStorage.setItem("accords-aide-vue", "1");
       }, [langue === "zh", theme === "sombre"] as const);
+      // DP-F : l'indicateur de Next en développement recouvre des paroles sur les captures.
+      const masquerNext = () => page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
       const slugsLouange = langue === "zh" ? LOUANGE_ZH : LOUANGE_FR;
       await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(slugsLouange) }, `/songs/${encodeURIComponent(slug)}`);
       await expect(page.locator("main [data-disposition]").first()).toBeAttached();
+      await masquerNext();
       const nomMenu = langue === "zh" ? "更多操作" : "Plus d'actions";
       for (const d of ORDRE) {
         await page.getByRole("button", { name: nomMenu }).click();
@@ -242,6 +247,7 @@ for (const langue of ["fr", "zh"] as const) {
         await page.screenshot({ path: `${dossier}/${info.project.name}-chant-${d}-${langue}-${theme}.png` });
       }
       await page.goto(`/setlists/${SETLIST_ID}`);
+      await masquerNext();
       await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
       await attendreMiseEnPage(page);
       const l: Langue = langue;
@@ -255,6 +261,15 @@ for (const langue of ["fr", "zh"] as const) {
         await attendreMiseEnPage(page);
         await page.screenshot({ path: `${dossier}/${info.project.name}-louange-${d}-${langue}-${theme}.png` });
       }
+      // DP-F : barre fermée, en Partition (dernière disposition de la boucle) : l'en-tête gravé se voit.
+      if (await page.locator("[data-barre-ouverte]").count()) {
+        const ecran = page.viewportSize()!;
+        await page.mouse.click(ecran.width / 2, ecran.height / 2);
+        await expect(page.locator("[data-barre-ouverte]")).toHaveCount(0);
+        await expect(page.locator("[data-barre-haut]").locator("xpath=..")).toHaveCSS("opacity", "0");
+      }
+      await masquerNext();
+      await page.screenshot({ path: `${dossier}/${info.project.name}-louange-ferme-partition-${langue}-${theme}.png` });
     });
   }
 }
@@ -483,7 +498,6 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
       expect(l.fond, "fond = teinte de son type").toBe(l.teinte);
       expect(l.filetLarg, "filet").toBe(6);
       expect(l.lettre.length).toBeGreaterThan(0);
-      expect(l.lettre, "capitales").toBe(l.lettre.toUpperCase());
       expect(l.titre).toBe(l.lecteur);
       expect(l.copie, "colonne hors copie").toBe(true);
       expect(l.largeur, "colonne").toBe(telephone(page) ? 40 : 64);
@@ -887,7 +901,33 @@ test("C4 : Scène, sigles longs (Pr1, Pr2, Tag) dans la colonne de lettre, « ×
     expect(l.dedans, `lettre ${l.lettre} dans la colonne`).toBe(true);
     expect(l.sous, "×2 sous la lettre").toBe(true);
   }
-  for (const l of longs) expect(l.taille, "corps réduit").toBeLessThan(telephone(page) ? 26 : 32);
+  // DP-F : trois signes (Int, Tag, Pr1) gardent au moins 20 px au téléphone, 26 px dès la tablette ; toujours sous la taille d'un « C1 ».
+  for (const l of longs) {
+    expect(l.taille, `corps de ${l.lettre} réduit`).toBeLessThan(telephone(page) ? 26 : 32);
+    if (l.lettre.length <= 3) expect(l.taille, `corps de ${l.lettre} d'au moins 20 / 26 px`).toBeGreaterThanOrEqual(telephone(page) ? 20 : 26);
+    else expect(l.taille, `corps de ${l.lettre} jamais sous 16 px`).toBeGreaterThanOrEqual(16);
+  }
+  // Casse : le sigle de la bande n'est pas forcé en capitales (« Pr1 », pas « PR1 »).
+  expect(lignes.some((l) => l.lettre !== l.lettre.toUpperCase()), "sigles en casse d'origine").toBe(true);
+});
+
+test("DP-F : Scène au téléphone, le bouton de la lettre offre une zone de toucher de 44 × 44 sans bouger la lettre", async ({ page }) => {
+  test.skip(!telephone(page), "téléphone seulement");
+  await scene(page);
+  await page.goto(`/songs/${CHANT_FR}`);
+  const bouton = page.locator("main [data-scene-bouton]").first();
+  await expect(bouton).toBeVisible();
+  const zone = await bouton.evaluate((el) => {
+    const c = getComputedStyle(el, "::before");
+    return { l: parseFloat(c.width), h: parseFloat(c.height), pos: c.position };
+  });
+  expect(zone.pos).toBe("absolute");
+  expect(zone.l, "largeur de la zone").toBeGreaterThanOrEqual(44);
+  expect(zone.h, "hauteur de la zone").toBeGreaterThanOrEqual(44);
+  // La zone déborde de la lettre sans la déplacer : un toucher à 8 px sous la lettre ouvre bien la bulle.
+  const boite = (await bouton.boundingBox())!;
+  await page.mouse.click(boite.x + boite.width / 2, boite.y + boite.height + 8);
+  await expect(page.locator("[data-repere-bulle]")).toHaveCount(1);
 });
 
 test("C3 : Scène, le nom de section est caché sous la tablette et s'ouvre au toucher de la lettre", async ({ page }) => {
@@ -983,3 +1023,53 @@ test("D2 D3 : Partition, compositeur chinois en police des paroles et sans itali
   await expect(zh).toHaveAttribute("data-testid", "auteur");
   await expect(page.locator('[data-outline-item="2"] [data-partition-tempo]')).toHaveAttribute("data-testid", "ligne-tempo");
 });
+
+// ─── (i) DP-F : finitions après la critique de design ────────────────────────────────────────────────────────────
+
+test("DP-F : Partition, la feuille de route de tête a la taille des repères de section (≤ 30 px), page du chant", async ({ page }) => {
+  await partition(page);
+  await page.goto(`/songs/${encodeURIComponent(CHANT_FR)}`);
+  const repere = page.locator("main [data-repere-encadre]:not([data-section] *)").first();
+  await expect(repere).toBeVisible();
+  const h = (await repere.boundingBox())!.height;
+  expect(h, "hauteur d'un repère de tête").toBeLessThanOrEqual(30);
+  expect(h, "pas plus petit que 26 px").toBeGreaterThanOrEqual(26);
+});
+
+for (const [langue, slug] of [["FR", "abba-pere"], ["ZH", "谢谢你"]] as const) {
+  test(`DP-F : Partition, l'en-tête du mode louange est compact (≤ Classique + 24 px), repères de tête ≤ 30 px — ${langue}`, async ({ page }) => {
+    await page.addInitScript((zh) => {
+      localStorage.setItem("perf-role-preset", "pianiste");
+      localStorage.setItem("perf-font-scale", "1");
+      localStorage.setItem("disposition", "classique");
+      localStorage.setItem("jianpu-sheet-pref", "never");
+      if (zh) localStorage.setItem("i18nextLng", "zh-CN");
+    }, langue === "ZH");
+    await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist([slug]) }, `/setlists/${SETLIST_ID}`);
+    await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
+    await attendreMiseEnPage(page);
+    const l: Langue = langue === "ZH" ? "zh" : "fr";
+    const hauteur = async () => (await onStage(page, "[data-entete-chant]").first().boundingBox())!.height;
+    const classique = await hauteur();
+    const options = await ouvrirOptions(page, l);
+    await options.getByRole("radio").nth(ORDRE.indexOf("partition")).click();
+    await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-disposition", "partition");
+    await page.keyboard.press("Escape");
+    await expect(options).toBeHidden();
+    await attendreMiseEnPage(page);
+    await expect(onStage(page, "[data-entete-partition]").first()).toBeAttached();
+    const gravee = await hauteur();
+    expect(gravee, `en-tête Partition (${gravee}) contre Classique (${classique})`).toBeLessThanOrEqual(classique + 24);
+    const repere = onStage(page, "[data-entete-partition] [data-repere-encadre]").first();
+    await expect(repere).toBeAttached();
+    expect((await repere.boundingBox())!.height, "repère de tête").toBeLessThanOrEqual(30);
+    // Une seule rangée sous le titre : tempo / tonalité à gauche, compositeur à droite.
+    const rangee = await page.evaluate(() => {
+      const t = document.querySelector("[data-performance-mode] [data-partition-tempo]:not([aria-hidden=true] *)")!.getBoundingClientRect();
+      const c = document.querySelector("[data-performance-mode] [data-partition-compositeur]:not([aria-hidden=true] *)")!.getBoundingClientRect();
+      return { dessous: Math.abs(t.top - c.top) < 12, gauche: t.left < c.left };
+    });
+    expect(rangee.dessous, "tempo et compositeur sur la même rangée").toBe(true);
+    expect(rangee.gauche, "tempo à gauche du compositeur").toBe(true);
+  });
+}
