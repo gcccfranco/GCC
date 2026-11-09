@@ -92,6 +92,13 @@ Du 08/11/2026 :
     responsive ? »).
 25. **Section reprise dans une autre tonalité sans être regravée** (« Refrain 2 (G) ») : **gardée dans les repères**,
     elle renvoie à la ligne où sa musique est gravée, et son nom porte la tonalité (même réponse).
+26. **Questions de la vague 1, tranchées comme proposé** (Timothée, 09/11/2026 : « pour les questions en attente je
+    suis ok avec toi ») : garde-fou de contraste de la couleur personnelle à **4,5:1** (elle sert aussi pour du texte) ;
+    au téléphone, **Outils en tête de la feuille Options d'affichage** ; tolérance de **8 px** avant de couper un vers
+    (décision 11 gardée) ; un vers français trop long passe sur **trois ou quatre rangées** plutôt que d'écrire plus
+    petit ; la marque **`v2` seulement sur les pages où un vers est vraiment coupé** ; les cinq chants dont le `.cho`
+    n'a pas les accords du scan se tranchent **plus tard, chant par chant**. FS-E (demi-page) attend toujours un go
+    explicite.
 
 ## Ce qui change, ce qui reste gelé
 
