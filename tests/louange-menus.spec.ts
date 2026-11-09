@@ -154,8 +154,9 @@ for (const menu of MENUS) {
       const dedans = (px: number, py: number) => px >= boite.x && px <= boite.x + boite.width && py >= boite.y && py <= boite.y + boite.height;
       let px = ecran.width * part, py = y;
       if (!telephone(page) && dedans(px, py)) {
+        // Le popover peut occuper toute la hauteur (bloc Disposition, DP-A) : sous lui, rien à toucher ; on vise alors à côté.
         py = Math.min(ecran.height - 4, boite.y + boite.height + 8);
-        if (dedans(px, py) || py > ecran.height - 6) { py = ecran.height * 0.88; px = boite.x > 40 ? boite.x - 12 : boite.x + boite.width + 12; }
+        if (dedans(px, py) || py > ecran.height - 6 || py > ecran.height - 100) { py = ecran.height * 0.88; px = boite.x > 40 ? boite.x - 12 : boite.x + boite.width + 12; }
       }
       await toucher(page, testInfo, px, py);
       await expect(dialogue, `dehors à ${part * 100} % : le menu se ferme`).toBeHidden();
@@ -447,11 +448,15 @@ test("Options : aucune 2e ligne d'un seul élément (ronds « Sur la page » et 
     return [...parLigne.values()];
   };
   const ronds = await lignes('[role=group][aria-labelledby="perf-sur-page"] > button');
-  expect(ronds.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(4);
+  expect(ronds.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(3); // l'interrupteur « Couleurs par section » est devenu le bloc Disposition (DP-A)
   if (ronds.length > 1) for (const n of ronds) expect(n, `ronds par ligne : ${ronds}`).toBeGreaterThanOrEqual(2);
   if (!telephone(page)) expect(ronds, "tous les ronds sur une ligne dans le popover").toHaveLength(1);
   const pastilles = await lignes('[role=radiogroup][aria-labelledby="perf-couleur-icones"] > button');
   expect(pastilles, `pastilles : ${pastilles}`).toEqual([7]);
+  // Bloc Disposition (DP-A) : jamais une miniature seule sur sa ligne.
+  const dispositions = await lignes('[role=radiogroup][aria-labelledby="perf-disposition"] > button');
+  expect(dispositions.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(2);
+  if (dispositions.length > 1) for (const n of dispositions) expect(n, `miniatures par ligne : ${dispositions}`).toBeGreaterThanOrEqual(2);
   // Le popover garde sa largeur d'environ 26 rem et n'est pas plafonné en hauteur à 34 rem.
   if (!telephone(page)) {
     const boite = (await options.boundingBox())!;

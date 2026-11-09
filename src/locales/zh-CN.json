@@ -641,6 +641,15 @@
     "Noël": "圣诞节",
     "Pâques": "复活节"
   },
+  "dispositions": {
+    "titre": "排版",
+    "classique": "经典",
+    "sections": "段落配色",
+    "reperes": "段落标记",
+    "scene": "舞台",
+    "partition": "乐谱",
+    "retenue": "仅在本设备上保存"
+  },
   "performance": {
     "indiceRappelJoue": "圆点：已唱过 · 实心：在本页，下方为力度",
     "indiceRappelUnique": "实心：在本页，下方为力度",
@@ -694,7 +703,6 @@
     "transitions": "过渡提示",
     "hideLyrics": "隐藏歌词",
     "pinyin": "拼音",
-    "chartStyle": "段落配色",
     "affichageHint": "与歌单“显示”菜单的设置相同。",
     "jianpuSheet": "简谱",
     "jianpuSheetHint": "默认开启，保存在本设备上。负责人标为「歌词」的歌曲会显示歌词，除非你已自己选择简谱或歌词（在这里或在歌曲页面）。",

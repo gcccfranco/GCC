@@ -9,6 +9,7 @@ import type { JianpuEntry, JianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { uniqueSections } from "@/lib/setlist/uniqueSections";
+import type { Disposition } from "@/lib/dispositionPref";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { isDp } from "@/lib/setlist/dp";
 
@@ -415,7 +416,8 @@ export function buildPerformanceBlocks(
 }
 
 /** Signature de mise en page d'une page du mode louange, partie de la clé de
- *  ses annotations : accords, transitions, paroles, style « chart » (s1),
+ *  ses annotations : accords, transitions, paroles, disposition (rien en
+ *  Classique, s1 en Couleurs par section, dR Repères, dS Scène, dP Partition),
  *  capo (kN), tonalité choisie sur l'appareil (p…) et taille du texte.
  *  L'affichage y entre aussi (O12) : rien en Ordre joué, pour que les clés
  *  d'aujourd'hui ne changent pas ; « au » en Sections uniques ; Structure
@@ -426,7 +428,7 @@ export function signatureAffichage({
   showChords,
   showTransitions,
   hideLyrics,
-  chartStyle,
+  disposition,
   capo,
   personalKey,
   fontScale,
@@ -435,7 +437,7 @@ export function signatureAffichage({
   showChords: boolean;
   showTransitions: boolean;
   hideLyrics: boolean;
-  chartStyle: boolean;
+  disposition: Disposition;
   capo?: number;
   personalKey?: string;
   fontScale: number;
@@ -444,7 +446,8 @@ export function signatureAffichage({
   const ossature = affichage === "structure";
   const accords = showChords && !ossature;
   const paroles = !hideLyrics && !ossature;
-  return `c${accords ? 1 : 0}t${showTransitions ? 1 : 0}l${paroles ? 0 : 1}${chartStyle ? "s1" : ""}${capo ? `k${capo}` : ""}${personalKey ? `p${personalKey}` : ""}z${Math.round(fontScale * 100)}${affichage === "unique" ? "au" : ""}`;
+  const suffixeDisposition = disposition === "sections" ? "s1" : disposition === "reperes" ? "dR" : disposition === "scene" ? "dS" : disposition === "partition" ? "dP" : "";
+  return `c${accords ? 1 : 0}t${showTransitions ? 1 : 0}l${paroles ? 0 : 1}${suffixeDisposition}${capo ? `k${capo}` : ""}${personalKey ? `p${personalKey}` : ""}z${Math.round(fontScale * 100)}${affichage === "unique" ? "au" : ""}`;
 }
 
 /** Identité stable d'un bloc d'une mise en page à l'autre : les indices ne le

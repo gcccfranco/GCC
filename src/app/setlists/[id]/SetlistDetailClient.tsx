@@ -342,8 +342,8 @@ export function SetlistDetailClient() {
   }, []);
   const {
     showChords, setShowChords, chordsTouched, setChordsTouched,
-    showPinyin, chartStyle, layout, jianpuPref,
-    toggleChartStyle, changeLayout, changeJianpuPref, togglePinyin,
+    showPinyin, disposition, layout, jianpuPref,
+    changeDisposition, changeLayout, changeJianpuPref, togglePinyin,
   } = usePreferencesAffichage();
   // Adapter (la setlist) et Ma version (pour soi) s'excluent ; la barre d'outils
   // et, sur téléphone étroit, le menu « ⋯ » passent par ici.
@@ -1481,8 +1481,8 @@ export function SetlistDetailClient() {
       hasZhSong={hasZhSong}
       showPinyin={showPinyin}
       togglePinyin={togglePinyin}
-      chartStyle={chartStyle}
-      toggleChartStyle={toggleChartStyle}
+      disposition={disposition}
+      changeDisposition={changeDisposition}
       hasJianpuSheets={hasJianpuSheets}
       jianpuPref={jianpuPref}
       changeJianpuPref={changeJianpuPref}
@@ -1533,7 +1533,7 @@ export function SetlistDetailClient() {
         loading={loadingContent}
         showChordsGlobal={showChords}
         showPinyinGlobal={showPinyin}
-        chartStyle={chartStyle}
+        disposition={disposition}
         jianpuPref={jianpuPref}
         layout={layout}
         editMode={editPartitions || editMine}

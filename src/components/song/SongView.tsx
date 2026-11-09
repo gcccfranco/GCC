@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
 import { ConteneurCoupure, LargeurCoupureContext, CoupureMesureContext, bordCoupure } from "@/components/song/LargeurCoupure";
+import type { Disposition } from "@/lib/dispositionPref";
 import { signalerCoupure } from "@/lib/song/coupureSignal";
 import { choisirCoupureZh, DEBORD, type UniteZh } from "@/lib/song/coupure";
 import { motsDuTexte, type MotZh } from "@/lib/song/motsChinois";
@@ -733,8 +734,10 @@ interface SectionViewProps {
   songSourceLabel?: string;
   /** « pdf » = typographie des PDF exportés (Mode Louange) ; « web » = défaut. */
   typography?: "web" | "pdf";
-  /** Style « chart » : couleur par type de section, cadre gris fin, accords neutres. */
-  chartStyle?: boolean;
+  /** Disposition de la partition (dispositionPref.ts) : « sections » = couleur par type de section, cadre gris fin,
+   *  accords neutres ; « classique » = cadre de la couleur de langue. Repères, scène et partition : rendu classique
+   *  en attendant leurs tranches. */
+  disposition?: Disposition;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
   onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
   /** Taille des badges de nuances (« lg » en mode louange). */
@@ -751,7 +754,7 @@ interface SectionViewProps {
   slug?: string;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", chartStyle = false, onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -762,7 +765,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
   // centré dans son cadre, même agrandi en vue structure.
   const bodyHidden = hideLyrics && !showChords;
   return (
-    <div data-section data-section-uids={occurrenceUids?.join(" ")} className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(chartStyle ? getChartSectionStyle(couleurDe ?? section.type) : getSectionStyle(couleurDe ?? section.type, isZh)), ...(bodyHidden ? { paddingBottom: 10 } : null) }}>
+    <div data-section data-section-uids={occurrenceUids?.join(" ")} className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(disposition === "sections" ? getChartSectionStyle(couleurDe ?? section.type) : getSectionStyle(couleurDe ?? section.type, isZh)), ...(bodyHidden ? { paddingBottom: 10 } : null) }}>
       {/* Label de section — hors copie : la régie colle les paroles seules. */}
       <div data-copy-ignore className={bodyHidden ? undefined : "mb-1.5"} style={{ display: "flex", alignItems: "center", gap: 9 }}>
         <span
@@ -882,8 +885,8 @@ interface SongViewProps {
   sectionNuances?: Record<string, SectionNuance>;
   /** Modulation (升调) par section : uid → tonalité cible d'affichage. */
   sectionKeys?: Record<string, string>;
-  /** Style « chart » : couleurs par type de section + accords neutres. */
-  chartStyle?: boolean;
+  /** Disposition de la partition (dispositionPref.ts). */
+  disposition?: Disposition;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
   onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
   /** Coup d'œil : ordre joué (défaut), chaque section une fois, ou bandeau seul. */
@@ -920,7 +923,7 @@ export function SongView({
   sectionTransitions = {},
   sectionNuances = {},
   sectionKeys = {},
-  chartStyle = false,
+  disposition = "classique",
   onLineSelect,
   layout = "played",
   bodyStructure = null,
@@ -1053,7 +1056,7 @@ export function SongView({
       </>
   );
   return (
-    <ConteneurCoupure className="max-w-[var(--colonne-partition,42rem)] print:max-w-none">
+    <ConteneurCoupure className="max-w-[var(--colonne-partition,42rem)] print:max-w-none" disposition={disposition}>
       {enTete}
       {bandeau}
 
@@ -1078,7 +1081,7 @@ export function SongView({
                 note={withDetails ? step.note : undefined}
                 nuance={withDetails ? step.nuance : undefined}
                 keyChange={keyChange}
-                chartStyle={chartStyle}
+                disposition={disposition}
                 onLineSelect={onLineSelect}
                 occurrenceUids={uids}
                 slug={slug}

@@ -82,7 +82,7 @@ for (const slug of ["abba-pere", "grace-infinie", "一切歌颂赞美", "一切�
 // n'ont alors pas de cadre pour rogner ce qui dépasse, et le contenu glisse.
 for (const slug of ["tu-m-aimes", "abrite-moi", "abba-pere"]) {
   test(`${slug} — texte agrandi au maximum, rien ne dépasse sur les côtés`, async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem("chart-style", "0"));
+    await page.addInitScript(() => localStorage.setItem("disposition", "classique"));
     await ouvrir(page, slug);
     const plus = page.getByRole("button", { name: "Agrandir le texte" }).first();
     while (await plus.isEnabled()) await plus.click();

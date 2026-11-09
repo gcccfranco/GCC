@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { TOUCHER_44 } from "@/lib/toucher44";
 import { PiluleTonalite } from "./_components/PiluleTonalite";
 import { ActionsChant } from "./_components/ActionsChant";
@@ -273,13 +273,13 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
 
     const { fontScale, changeFontScale } = useTailleTexte();
 
-    // Couleurs par section — préférence par appareil partagée avec le mode
+    // Disposition de la partition — préférence par appareil partagée avec le mode
     // louange ; chargée après montage (même raison d'hydratation que fontScale).
-    const [chartStyle, setChartStyle] = useState(true);
-    useEffect(() => setChartStyle(getChartStylePref()), []);
-    const toggleChartStyle = (v: boolean) => {
-      setChartStyle(v);
-      setChartStylePref(v);
+    const [disposition, setDisposition] = useState<Disposition>("classique");
+    useEffect(() => setDisposition(getDispositionPref()), []);
+    const changeDisposition = (d: Disposition) => {
+      setDisposition(d);
+      setDispositionPref(d);
     };
 
     async function handleDownload(style: PdfStyle) {
@@ -344,7 +344,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
 
   // Menu ⋯ (spec-barre-chant.md, Q3, Q5) : Vidéo, PDF et Idées sont dans la barre partout ; plus
   // de Spotify ni d'Apple Music (Timothée, 18/10/2026 : les chants n'ont que YouTube).
-  const menuChant = <MenuChant chartStyle={chartStyle} toggleChartStyle={toggleChartStyle} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
+  const menuChant = <MenuChant disposition={disposition} changeDisposition={changeDisposition} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
 
   return (
     <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }}>
@@ -529,7 +529,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               sectionNotes={sectionsNote}
               sectionNuances={sectionsNuance}
               sectionKeys={sectionsKeys}
-              chartStyle={chartStyle}
+              disposition={disposition}
             />
         </main>
 

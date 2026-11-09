@@ -15,7 +15,7 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, Palette, Plus, Waves } from "lucide-react";
+import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, Plus, Waves } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { ecouterCoupure, versionCoupure } from "@/lib/song/coupureSignal";
 import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
@@ -31,7 +31,8 @@ import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { dpOrigin } from "@/lib/setlist/dp";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { ANCIEN_RAPPEL } from "@/lib/annotations/strokes";
-import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
+import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { getTransposedKey, noteToIndex } from "@/lib/transpose";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
@@ -82,7 +83,7 @@ function BlockRenderer({
   showChordsGlobal,
   showTransitions,
   hideLyrics,
-  chartStyle,
+  disposition,
   showPinyinGlobal,
   fit = false,
   repeat,
@@ -93,7 +94,7 @@ function BlockRenderer({
   showChordsGlobal: boolean;
   showTransitions: boolean;
   hideLyrics: boolean;
-  chartStyle: boolean;
+  disposition: Disposition;
   showPinyinGlobal: boolean;
   /** Page 简谱 : le scan se met à l'échelle de la hauteur disponible. */
   fit?: boolean;
@@ -141,7 +142,7 @@ function BlockRenderer({
       nuance={block.nuance}
       keyChange={block.keyChange}
       songSourceLabel={block.songSourceLabel}
-      chartStyle={chartStyle}
+      disposition={disposition}
       nuanceSize="lg"
       repeat={repeat ?? block.repeat}
       occurrenceUids={block.occurrenceUids}
@@ -347,10 +348,9 @@ export function PerformanceMode({
       return false;
     }
   });
-  // Style « chart » : couleurs par type de section + accords neutres (cf.
-  // SectionView). Préférence par appareil partagée avec la fiche chant et la
-  // vue setlist (chartStylePref).
-  const [chartStyle, setChartStyle] = useState(() => getChartStylePref());
+  // Disposition de la partition (cf. SectionView). Préférence par appareil
+  // partagée avec la fiche chant et la vue setlist (dispositionPref).
+  const [disposition, setDisposition] = useState<Disposition>(() => getDispositionPref());
   // Pinyin (chants zh) : masquable pour qui lit les caractères. Même
   // préférence que la vue setlist (pinyinPref). Défaut : affiché.
   const [showPinyin, setShowPinyin] = useState(() => getPinyinPref());
@@ -459,9 +459,9 @@ export function PerformanceMode({
     try { localStorage.setItem("perf-hide-lyrics", v ? "1" : "0"); } catch { /* ignore */ }
   }, []);
 
-  const toggleChartStyle = useCallback((v: boolean) => {
-    setChartStyle(v);
-    setChartStylePref(v);
+  const changeDisposition = useCallback((d: Disposition) => {
+    setDisposition(d);
+    setDispositionPref(d);
   }, []);
 
   // Choisir ou retirer un rôle vaut réponse à la question de la première
@@ -658,7 +658,7 @@ export function PerformanceMode({
   // Re-measure when a setting affecting heights changes
   useEffect(() => {
     setRemeasureKey((k) => k + 1);
-  }, [showChords, showTransitions, hideLyrics, fontScale, chartStyle, showPinyin]);
+  }, [showChords, showTransitions, hideLyrics, fontScale, disposition, showPinyin]);
 
   // Re-measure on viewport resize / orientation change
   useEffect(() => {
@@ -906,7 +906,7 @@ export function PerformanceMode({
     showChords,
     showTransitions,
     hideLyrics,
-    chartStyle,
+    disposition,
     capo: currentCapo,
     personalKey: currentPersonalKey,
     fontScale,
@@ -1248,7 +1248,7 @@ export function PerformanceMode({
   const rogneBas = apercuPossible ? `calc(${(APERCU_H + 16) * fontScale}px + var(--sab, 0px))` : undefined;
 
   // Ronds « Sur la page » : tous sur une ligne dans le popover (jusqu'à 6) ; au téléphone, par 3 plutôt qu'un rond seul en dessous.
-  const nRonds = 2 + [blocks.some((b) => b.kind === "section" && b.showPinyin), hasJianpuSheets && !structureMode, !!user, twoColumnsAvailable].filter(Boolean).length;
+  const nRonds = 1 + [blocks.some((b) => b.kind === "section" && b.showPinyin), hasJianpuSheets && !structureMode, !!user, twoColumnsAvailable].filter(Boolean).length;
   const colonnesRonds = telephone && nRonds > 4 ? 3 : nRonds;
   // Le contenu d'Outils : le même élément dans le menu Outils (md et plus) et en tête d'Options au téléphone.
   const contenuOutils = (
@@ -1273,6 +1273,7 @@ export function PerformanceMode({
   return (
     <div
       data-performance-mode
+      data-disposition={disposition}
       data-barre-ouverte={showChrome ? "" : undefined}
       data-cle-ancienne={cleAncienne ?? undefined}
       data-cle-page={currentPageKey}
@@ -1322,7 +1323,7 @@ export function PerformanceMode({
                   showChordsGlobal={chordsShown}
                   showTransitions={showTransitions}
                   hideLyrics={lyricsHidden}
-                  chartStyle={chartStyle}
+                  disposition={disposition}
                   showPinyinGlobal={showPinyin}
                   repeat={repeatCount.get(i)}
                   bandeau={bandeau}
@@ -1364,7 +1365,7 @@ export function PerformanceMode({
                       showChordsGlobal={chordsShown}
                       showTransitions={showTransitions}
                       hideLyrics={lyricsHidden}
-                      chartStyle={chartStyle}
+                      disposition={disposition}
                       showPinyinGlobal={showPinyin}
                     />
                   )}
@@ -1420,7 +1421,7 @@ export function PerformanceMode({
                 showChordsGlobal={chordsShown}
                 showTransitions={showTransitions}
                 hideLyrics={lyricsHidden}
-                chartStyle={chartStyle}
+                disposition={disposition}
                 showPinyinGlobal={showPinyin}
                 fit={fit}
                 repeat={repeatCount.get(i)}
@@ -1663,12 +1664,12 @@ export function PerformanceMode({
                   <Columns2 className="h-5 w-5" />
                 </BoutonSurPage>
               )}
-              {/* En attendant DP-A (Disposition à miniatures) : l'interrupteur « Couleurs par section » actuel. */}
-              <BoutonSurPage label={t("performance.chartStyle")} allume={chartStyle} onClick={() => toggleChartStyle(!chartStyle)}>
-                <Palette className="h-5 w-5" />
-              </BoutonSurPage>
             </div>
             {hasJianpuSheets && !structureMode && <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>}
+          </div>
+          <div className="space-y-2">
+            <TitreRubrique id="perf-disposition">{t("dispositions.titre")}</TitreRubrique>
+            <ChoixDisposition variante="panneau" labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
           </div>
             <SettingRow label={t("performance.text")}>
               <div className="flex items-center gap-1.5">

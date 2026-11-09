@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import { expect, test, type Page } from "@playwright/test";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { buildPerformanceBlocks, computePageKey, signatureAffichage, type PerformanceBlock, type SectionBlock } from "../src/lib/performance/blocks";
+import type { Disposition } from "../src/lib/dispositionPref";
 import type { JianpuManifest } from "../src/lib/jianpu/images";
 import { paginateColumns, pagesUneColonne } from "../src/lib/performance/columns";
 import type { SetlistItem } from "../src/types/setList";
@@ -817,13 +818,14 @@ test.describe("rappel de structure (Sections uniques)", () => {
 // ─── Annotations (L2-T5) ─────────────────────────────────────────────────────
 
 test.describe("signatureAffichage (pur)", () => {
-  const reglages = { showChords: true, showTransitions: true, hideLyrics: false, chartStyle: false, fontScale: 1 };
+  const reglages = { showChords: true, showTransitions: true, hideLyrics: false, disposition: "classique" as Disposition, fontScale: 1 };
 
   test("Ordre joué : la chaîne d'avant le lot ; Sections uniques et Structure seule : une autre", () => {
     // La signature construite dans PerformanceMode avant le lot 2.
-    const avant = (o: { showChords: boolean; showTransitions: boolean; hideLyrics: boolean; chartStyle: boolean; capo?: number; personalKey?: string; fontScale: number }) =>
-      `c${o.showChords ? 1 : 0}t${o.showTransitions ? 1 : 0}l${o.hideLyrics ? 1 : 0}${o.chartStyle ? "s1" : ""}${o.capo ? `k${o.capo}` : ""}${o.personalKey ? `p${o.personalKey}` : ""}z${Math.round(o.fontScale * 100)}`;
-    for (const o of [reglages, { ...reglages, chartStyle: true, capo: 3, personalKey: "B", fontScale: 1.2 }, { ...reglages, showChords: false, hideLyrics: true }]) {
+    // Les anciennes clés : Classique = sans suffixe, Couleurs par section = « s1 » (l'ancien booléen chartStyle).
+    const avant = (o: { showChords: boolean; showTransitions: boolean; hideLyrics: boolean; disposition: Disposition; capo?: number; personalKey?: string; fontScale: number }) =>
+      `c${o.showChords ? 1 : 0}t${o.showTransitions ? 1 : 0}l${o.hideLyrics ? 1 : 0}${o.disposition === "sections" ? "s1" : ""}${o.capo ? `k${o.capo}` : ""}${o.personalKey ? `p${o.personalKey}` : ""}z${Math.round(o.fontScale * 100)}`;
+    for (const o of [reglages, { ...reglages, disposition: "sections" as Disposition, capo: 3, personalKey: "B", fontScale: 1.2 }, { ...reglages, showChords: false, hideLyrics: true }]) {
       expect(signatureAffichage({ ...o, affichage: "played" })).toBe(avant(o));
       expect(signatureAffichage(o)).toBe(avant(o));
     }
@@ -832,6 +834,18 @@ test.describe("signatureAffichage (pur)", () => {
     // Structure seule rend la vue ossature du batteur : même clé que ses traits d'avant.
     const batteur = { ...reglages, showChords: false, hideLyrics: true };
     expect(signatureAffichage({ ...reglages, affichage: "structure" })).toBe(avant(batteur));
+  });
+
+  test("Repères, Scène et Partition : dR, dS, dP, et une clé différente de Classique", () => {
+    const base = signatureAffichage(reglages);
+    const suffixes: [Disposition, string][] = [["reperes", "dR"], ["scene", "dS"], ["partition", "dP"]];
+    for (const [d, suffixe] of suffixes) {
+      const sig = signatureAffichage({ ...reglages, disposition: d });
+      expect(sig).toBe(`c1t1l0${suffixe}z100`);
+      expect(sig).not.toBe(base);
+    }
+    expect(signatureAffichage({ ...reglages, disposition: "sections" })).toBe("c1t1l0s1z100");
+    expect(base).toBe("c1t1l0z100");
   });
 
   test("la même page a deux clés en Ordre joué et en Sections uniques", () => {
