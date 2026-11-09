@@ -105,6 +105,12 @@ Du 08/11/2026 :
     souhaitent »). Même geste que la couleur des icônes (FS-A) et des stylos (AN-4) : teintes prêtes et cercle
     chromatique, garde de lisibilité au rendu. **Planche à faire** (`docs/planches/planche-couleur-accords.html`), puis
     spec du lot CA, puis code sur go.
+28. **Planche de la couleur des accords acceptée** (Timothée, 09/11/2026 : « je suis ok avec la planche ») : piste A et
+    ses quatre recommandations. **Une couleur par langue** (français, chinois) ; elle s'applique dans **les cinq
+    dispositions** dès qu'on l'a choisie, et tant qu'on n'a rien choisi chaque disposition garde sa couleur d'origine ;
+    une couleur proche de celle d'une section est **acceptée telle quelle** ; **retenue par compte sur l'appareil**,
+    comme le rôle et les stylos, et **la couleur des icônes passe aussi par compte** ; en Classique, **l'étiquette, le
+    filet et le fond des sections suivent la couleur** choisie. Spec : section « CA » ci-dessous.
 
 ## Ce qui change, ce qui reste gelé
 
@@ -560,6 +566,85 @@ Classique et un scan 简谱. Libellés chinois nouveaux relus par un responsable
 sur un iPad avec Apple Pencil (pression, paume posée sur l'écran) par Timothée avant la mise en ligne : Playwright ne
 le voit pas.
 
+### CA — Couleur des accords au choix de chacun
+
+Planche : `docs/planches/planche-couleur-accords.html` (artefact, carte 4), **piste A** et ses quatre recommandations
+(décisions 27 et 28). Aujourd'hui : les accords français prennent `--chord-color` (#3f63cf clair, #8fb0ff sombre ;
+`font-chord`, `ChordLine.tsx:338`), les accords chinois `--jianpu-color` (#b3261d, #ff7d72 ; `ZhLine`,
+`SongView.tsx:450`), deux variables globales de `globals.css` (l. 260-261 et 331-332) qui servent aussi ailleurs (chiffres
+`{jianpu:}` par `.font-jianpu`, contour « Montrer » de l'Harmonie, pastilles de langue de la liste des chants,
+`langAccent`). Couleurs par section les remplace par la couleur du texte (`getChartSectionStyle`, l. 88-89), Scène et
+Partition posent `--jianpu-color: var(--chord-color)` sur la bande ou la partition. En Classique, l'étiquette, le filet et
+le fond des sections suivent la langue par `--fr-accent` / `--zh-accent`, `--*-box-fill`, `--*-box-border`
+(`LANG_THEME`, `SongView.tsx:48-58`, `globals.css:282-287` et `350-355`). La couleur des icônes (FS-A) est retenue par
+appareil (`perf-couleur-icones`, `src/lib/performance/couleurIcones.ts`), avec le cercle `CercleChromatique.tsx` et la
+garde `garderContraste` (4,5:1, décision 26).
+
+**Ce qui ne change pas** : les variables globales et tout ce qui les lit hors de la partition (pastilles de langue de la
+liste, badge de tonalité de l'en-tête du chant, accents d'interface, bouton « Accords », miniatures du menu) ; les chiffres
+`{jianpu:}` ; les étiquettes du calque sur un scan 简谱 (encre du scan) ; l'export PDF ; les couleurs de section
+(`--sec-*`, pastilles de Repères, bandes de Scène, cadres de Partition) ; la clé des annotations (la couleur ne change pas
+la mise en page : rien dans `signatureAffichage`) ; aucune écriture Firestore.
+
+**CA-A Socle** (M) :
+- `src/lib/couleurAccords.ts` (nouveau) : `{ fr: string | null, zh: string | null }` (hex normalisé par `normaliserHex`,
+  `null` = couleur d'origine), **par compte sur l'appareil** : `accords-couleurs-<uid>` en localStorage, et
+  `accords-couleurs` sans compte ; lecture tolérante (valeur illisible = origine). Rien à reprendre (réglage nouveau).
+- **Couleur des icônes par compte** (décision 28) : `perf-couleur-icones-<uid>` ; la clé d'appareil existante sert de
+  valeur de départ au seul premier compte qui la lit, avec une marque de reprise, sur le modèle de
+  `src/lib/performance/roleCompte.ts` (`migrer`, `estPremierCompte`) ; sans compte, la clé d'appareil.
+- **Couleur d'origine** (rien de choisi), par disposition : français bleu (`--chord-color`) partout, couleur du texte en
+  Couleurs par section ; chinois rouge (`--jianpu-color`) en Classique et Repères, bleu en Scène et Partition, couleur du
+  texte en Couleurs par section. C'est le rendu d'aujourd'hui (après la seconde relecture de DP).
+- **Couleur choisie** : elle remplace la couleur d'origine de sa langue dans **les cinq dispositions**, sur la page du
+  chant, la vue partitions et le mode louange. Elle se pose en variables propres au conteneur de la partition
+  (`--accord-fr`, `--accord-zh`), jamais sur `:root` ; `ChordLine` et `ZhLine` lisent `var(--accord-fr, …)` /
+  `var(--accord-zh, …)` avec la couleur d'origine en repli, si bien que les chiffres `{jianpu:}` et le reste du site ne
+  bougent pas.
+- **Garde de lisibilité au rendu, jamais à l'enregistrement** : la couleur affichée est `garderContraste(choix, fond)` à
+  4,5:1 contre le **fond réel** de l'accord : la page (`--background`), la teinte de la bande en Scène
+  (`--sec-*-tint`), le fond d'une section pleine en Classique ; valeurs lues dans le thème courant, recalculées quand le
+  thème change. L'encre (#1c1c1e) devient la couleur du texte en sombre, comme pour les icônes. Une couleur proche de
+  celle d'une section reste telle quelle (décision 28).
+- **Classique** : l'étiquette, le filet et le fond des sections suivent la couleur choisie de la langue du chant
+  (accent = couleur affichée ; fond et bordure des sections pleines dérivés par `color-mix` avec le fond de la page, aux
+  proportions d'aujourd'hui) ; sans choix, `LANG_THEME` inchangé.
+- Lecture synchrone dans le mode louange ; dans un `useLayoutEffect` sur la page du chant et la vue partitions (pas de
+  saut à l'ouverture, pas d'écart d'hydratation).
+
+**CA-B Réglage** (M) :
+- Composant `src/components/song/ChoixCouleurAccords.tsx` : rubrique « Couleur des accords » / « 和弦颜色 » **sous la
+  rubrique Disposition** dans les trois endroits où se règle l'affichage : options d'affichage du mode louange
+  (`PerformanceMode.tsx`, après `ChoixDisposition variante="panneau"`), menu ⋯ de la page du chant (`MenuChant.tsx`),
+  réglages d'affichage de la vue partitions (`ReglagesAffichage`, `MenusSetlist.tsx`).
+- Deux rangées, « Chants en français » / « 法语歌曲 » et « Chants en chinois » / « 中文歌曲 », de **sept pastilles de
+  44 px, 6 px d'écart** : la pastille d'origine (dessinée avec les couleurs qu'elle prend : français bleu / texte, chinois
+  rouge / bleu / texte), cinq teintes prêtes (encre #1c1c1e, vert #1f7a5c, violet #6d4bc3, framboise #c2185b, gris
+  #636872 : celles des icônes sans le bleu), puis le bouton arc-en-ciel qui ouvre `CercleChromatique` (aperçus clair et
+  sombre). La pastille retenue est marquée, et annoncée (`role="radio"`, `aria-checked`, flèches) ; le bouton du cercle
+  est coché quand la couleur ne fait pas partie des pastilles.
+- Lien « Couleurs d'origine » / « 恢复原色 », 44 px de haut, grisé tant que rien n'est choisi ; ligne de rétention
+  « Retenue pour ce compte sur cet appareil » / « 仅用于此账号，保存在本设备上 ».
+- Au téléphone, le menu ⋯ de la page du chant et le menu Affichage de la vue partitions passent de 355 à 374 px de large
+  pour tenir les sept pastilles (table des finitions de la planche) ; ailleurs, aucune taille ne change.
+- Un choix fait dans un endroit se retrouve dans les deux autres (même stockage), et s'applique à l'écran sans
+  rechargement.
+
+Critères (CA) : nouvelle spec `tests/couleur-accords.spec.ts`, ajoutée à `SPECS_GRAND_ECRAN` (cinq projets) : choisir
+une teinte dans chacun des trois endroits colore les accords de sa langue (couleur calculée) sur la page du chant, la vue
+partitions et le mode louange, dans les cinq dispositions ; l'autre langue ne bouge pas ; « Couleurs d'origine » rend le
+rendu d'aujourd'hui (couleurs calculées identiques à celles d'avant le lot, par disposition) ; deux comptes simulés aux
+noms inventés gardent chacun leur couleur sur le même appareil, et sans compte on lit la clé d'appareil ; la couleur des
+icônes passe par compte, la clé d'appareil reprise une seule fois par le premier compte ; un jaune #ffd60a s'affiche
+assombri sur page claire et sur une bande de Scène claire, tel quel en sombre ; en Classique, l'étiquette et le filet
+d'une section suivent la couleur ; hors partition, la pastille de langue de la liste des chants, le badge de tonalité et
+les chiffres `{jianpu:}` gardent leur couleur ; le calque d'un scan 简谱 ne change pas ; aucune écriture Firestore ;
+`signatureAffichage` inchangée. Captures **regardées** : quatre dispositions + 1 440 px, FR et 中文, clair et sombre,
+avec une couleur choisie et sans. Libellés chinois nouveaux relus par un responsable sinophone avant la mise en ligne.
+
+Dépendances : FS-A (cercle, garde), DP (cinq dispositions et sa seconde relecture, qui touche `SongView.tsx`,
+`ChoixDisposition.tsx`, `MenuChant.tsx`). Une session, deux tranches (CA-A puis CA-B).
+
 ## Annotations et coupure
 
 Aujourd'hui, un trait est enregistré en pixels de l'écran sous une clé de page faite des sections de la page et de la
@@ -636,3 +721,4 @@ parallèle, **puis RP et JP-B** ; JP-C, JP-D et AN restent en vague 3, sur un no
 | RP | **go le 09/11/2026** (vague 2, seconde paire de sessions, après FS-C) |
 | JP | **go le 08/11/2026 pour JP-A** (vague 1, données seulement) : JP-A1 fait (`scripts/jianpu/systemes.py`, planche `npm run jianpu:audit -- --systemes`, `public/jianpu/systemes.json` : 11 scans du pilote certifiés à l'œil) ; JP-A2 fait (`scripts/jianpu/sections.py`, `public/jianpu/sections.json` : sections des 11 chants du pilote certifiées, 4 corrigées à la main) ; JP-A3 fait (**187 scans sur 190 certifiés à l'œil**, lignes et sections ; 十字架, 大手牵着小手, 荣耀至高神 laissés non certifiés, raisons dans `scripts/jianpu/LOOP.md`) ; **relu le 08/11 : lignes et barres bonnes dans l'ensemble, sections à reprendre** (une trentaine de sections sur la mauvaise ligne ou avec une anacrouse dans le mauvais sens, tempo d'en-tête dans L1 sur 4 scans, étiquettes du calque hors ligne sur 3 scans, certificateur trop permissif) ; **corrections faites** (74014c1 : 20 lignes sur 17 chants, sections de 29 chants ; `systemes.py verifier` 0 refus, `sections.py controle` 0 écart non justifié, 18 exceptions écrites dans LOOP.md ; planches regardées) ; les trois derniers scans découpés à la main (décision 24 révisée ; masques pour 大手牵着小手 et 荣耀至高神) : **190 scans sur 190 certifiés, JP-A terminé** ; JP-B à JP-D en attente de go ; **go le 09/11/2026 pour JP-B** (vague 2, seconde paire de sessions, après DP et FS-E) |
 | AN | planche tranchée le 08/11 (piste A, couleurs au choix : décisions 21 à 23), spec écrite ; en attente de go (vague 3, après FS-A, FS-B et DP) |
+| CA | demande du 09/11 (décision 27), planche acceptée le 09/11 (décision 28), spec écrite ; en attente de go (après la seconde relecture de DP, qui touche les mêmes fichiers) |
