@@ -1426,7 +1426,17 @@ go, la vague 3 (JP-C, JP-D, AN) ; avant toute mise en ligne : **une relecture co
 (Timothée, 09/11/2026 : « ok pour la relecture complète avant la mise en ligne » ; relecteurs par angle, suite des specs
 touchées sur les cinq projets, captures triées, critique de design contre les planches, constats contre-vérifiés), passe sur le guide, relecture des libellés chinois
 nouveaux par un responsable sinophone, prévenir l'équipe (coupure des vers et annotations rangées par disposition),
-essai sur iPad.
+essai sur iPad. **Lot FS fini le 09/11/2026** (FS-C, FS-D, FS-E et
+corrections ; relecture légère : bon, aucun défaut important). **À traiter à la relecture complète** (questions de la
+session FS, avec la recommandation de la session d'origine) : (1) feuille de route du batteur en Classique, repères à
+la couleur de la langue alors que la planche les colore par sorte de section → suivre la planche ; (2) segment choisi
+d'« Ordre des sections » à la couleur personnelle (décision 23) plutôt que neutre comme la planche → garder ; (3)
+« Masquer les paroles » placé dans Je joue (hors planche ; il était dans les Options avant FS-C) → à trancher par
+Timothée ; (4) demi-page en deux colonnes, colonne par colonne → garder ; (5) traits d'annotation masqués pendant la
+demi-page → garder pour l'instant, rognés à leur place peut-être avec AN ; et deux tests à durcir
+(`louange-demi-page.spec.ts:389-412`, coupe forcée en vue Structure ; clé `ap` demi-page coupée). Annotations : quand la
+vue Structure ou la demi-page change la composition d'une page, les traits ne sont jamais supprimés, mais le bandeau ne
+prévient que si la page garde les mêmes blocs ; à dire à l'équipe avec le reste.
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
