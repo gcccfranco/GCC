@@ -1405,7 +1405,9 @@ menus Setlist, Repères, Outils, Tempo, Options d'affichage) ; relecture indépe
 design), défauts confirmés corrigés par les deux sessions ; 592 tests verts sur les cinq projets. Captures et questions
 en attente dans l'artefact (carte « À voir d'abord »). **Ouvert** : FS-E Demi-page (spec écrite, attend un go) ; une
 passe sur tout le guide (plusieurs images ne correspondent plus au site) ; prévenir l'équipe avant la mise en ligne de
-CV (annotations des pages dont la coupure change).
+CV (annotations des pages dont la coupure change). **Questions de la vague 1 tranchées comme proposé** (Timothée,
+09/11/2026 : « je suis ok avec toi » ; décision 26 de la spec). **Go du 09/11/2026 pour FS-E (demi-page) et pour la
+vague 2, deux sessions à la fois** : DP et FS-C + FS-D + FS-E d'abord, puis RP et JP-B.
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
