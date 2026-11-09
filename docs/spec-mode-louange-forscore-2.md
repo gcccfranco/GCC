@@ -233,7 +233,8 @@ par la page du chant (`SongDetailClient.tsx:278-282`, après montage), la vue pa
   certaines pages** (voir « Annotations et coupure » plus bas).
 
 **DP-B Repères** (M) : planche des dispositions n° 3. Sigle de la section (I, C1, Pr, R1…) dans une pastille de sa
-couleur (`--sec-*`), lettre à l'encre (#0e0e10 en clair) pour le contraste, dans une gouttière à gauche ; un filet de
+couleur (`--sec-*`), lettre à l'encre (#0e0e10 en clair) pour le contraste, en blanc sur les pastilles trop foncées pour
+l'encre (pont, fin, coda, autre en clair : l'encre y tombe sous 4,5:1, relecture du 09/11/2026), dans une gouttière à gauche ; un filet de
 la même couleur descend le long de la section (3 px, 5 px pour refrain, post-refrain et fin) ; plus de rangée
 d'intitulé ; « ×2 » sous la pastille, à l'encre ; accords dans la couleur de la langue comme en Classique. Gouttière de
 36 px au téléphone (pastille 24 px, filet à 3 px, texte à 6 px du filet), 44 px de case sur tablette. Le nom complet de
