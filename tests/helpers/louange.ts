@@ -47,6 +47,18 @@ export async function ouvrirMenu(page: Page, menu: Menu, langue: Langue = "fr") 
   return dialogue;
 }
 
+/** Ferme la barre de titre si elle est ouverte (première ouverture du mode sur l'appareil : elle l'est, et l'en-tête du
+ *  chant est alors invisible puisque la barre porte déjà le titre, FS-A). Un toucher au centre la cache. */
+export async function fermerBarre(page: Page) {
+  const chrome = page.locator("[data-performance-mode] [data-barre-haut]").locator("xpath=..");
+  if ((await page.locator("[data-barre-ouverte]").count()) > 0) {
+    const ecran = page.viewportSize()!;
+    await page.mouse.click(ecran.width / 2, ecran.height / 2);
+    await expect(page.locator("[data-barre-ouverte]")).toHaveCount(0);
+  }
+  await expect(chrome).toHaveCSS("opacity", "0");
+}
+
 /** Ouvre le menu « Options d'affichage » du mode louange (c'était le tiroir « Réglages » avant FS-B). */
 export const ouvrirOptions = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "options", langue);
 /** Ancien nom d'`ouvrirOptions`, gardé pour les specs qui le citent. */

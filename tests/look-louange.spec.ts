@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import * as fs from "fs";
 import * as path from "path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, onStage } from "./helpers/louange";
+import { attendreMiseEnPage, fermerBarre, onStage } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 4 « Nouveau look », tranche T3 : louange (docs/spec-look.md).
@@ -120,6 +120,7 @@ test.describe("louange : casse des titres de chants (partout-q1)", () => {
     await signInAs(page, MUSICIEN, { "setlists/setlist-louange": setlist }, "/setlists/setlist-louange");
     await page.getByRole("button", { name: /Mode Louange/ }).click();
     await attendreMiseEnPage(page);
+    await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
     const titreScene = onStage(page, "[data-entete-chant] h2").first();
     await expect(titreScene).toBeVisible();
     expect(await titreScene.evaluate((el) => getComputedStyle(el).textTransform)).toBe("uppercase");

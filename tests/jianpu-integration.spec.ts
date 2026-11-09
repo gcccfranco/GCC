@@ -5,7 +5,7 @@ import { inflateSync } from "zlib";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { loadChords, openSheet } from "./helpers/jianpu";
-import { attendreCompteur } from "./helpers/louange";
+import { attendreCompteur, fermerBarre } from "./helpers/louange";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
@@ -777,6 +777,7 @@ test("8 K1 (mode louange) : le scan et son en-tête tiennent entre les deux barr
 test("L3-T5a en-tête d'une ligne (mode louange) : n°, titre, ♩, pastille de tonalité, puis le bandeau, puis le scan", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouangeT5(page);
+  await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
   // En paysage sur grand écran, l'en-tête et le bandeau sont dans la colonne de gauche (L3-T5b).
   test.skip(await grandEcran(page), "téléphone et tablette en portrait");
   const entete = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)");
@@ -810,6 +811,7 @@ test("L3-T5a en-tête d'une ligne (mode louange), A+ 150 %, capo et tonalité de
   }, SLUG);
   // Le capo ne s'affiche qu'au guitariste.
   await ouvrirLouangeT5(page, "guitariste");
+  await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
   const entete = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)");
   await expect(entete.getByText(/Capo/)).toBeVisible();
   const titre = (await entete.getByRole("heading", { name: SLUG }).boundingBox())!;

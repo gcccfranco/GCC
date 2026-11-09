@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
-import { attendreCompteur, lireCompteur, ouvrirReglages } from "./helpers/louange";
+import { attendreCompteur, fermerBarre, lireCompteur, ouvrirReglages } from "./helpers/louange";
 import { paginateColumns, pagesUneColonne, twoColumnsPossible, type PerfPage } from "../src/lib/performance/columns";
 
 // Lot U5, tranche T1 (docs/spec-deux-volets.md, Q2 à Q5) : le mode louange en deux
@@ -255,6 +255,7 @@ function grandEcranTests(nom: string) {
       item({ songSlug: "一生爱你", position: 2, jianpuSheet: true }),
     ]);
     await verifierInterrupteur(page, "true");
+    await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
     const scan = onStage(page, "[data-jianpu-page] img");
     // Le scan arrive avec le manifeste 简谱 : le chant 2 passe alors sur sa partition.
     await expect(onStage(page, "h2").first()).toBeVisible();

@@ -280,7 +280,15 @@ test.describe("Structure seule : règles des Dp", () => {
     await ouvrirMode(page, [joue("prince-de-paix", source, ["chorus-3", ids[0]])], "structure");
     const blocs = onStage(page, "[data-section]");
     await expect(blocs).toHaveCount(2);
-    const style = (i: number) => blocs.nth(i).evaluate((el) => el.getAttribute("style"));
-    expect(await style(1)).toBe(await style(0));
+    // Le `style` entier diffère (FS-D : `flex` proportionnel à la longueur de la section, un Dp est plus court que son refrain) :
+    // on compare la couleur héritée, la variable `--sec-c` et la bordure du repère.
+    const couleurs = (i: number) =>
+      blocs.nth(i).evaluate((el) => ({
+        secC: (el as HTMLElement).style.getPropertyValue("--sec-c"),
+        bordure: getComputedStyle(el.querySelector("[data-feuille-route-repere]")!).borderTopColor,
+      }));
+    const origine = await couleurs(0);
+    expect(origine.secC).not.toBe("");
+    expect(await couleurs(1)).toEqual(origine);
   });
 });
