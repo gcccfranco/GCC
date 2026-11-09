@@ -569,81 +569,140 @@ le voit pas.
 ### CA — Couleur des accords au choix de chacun
 
 Planche : `docs/planches/planche-couleur-accords.html` (artefact, carte 4), **piste A** et ses quatre recommandations
-(décisions 27 et 28). Aujourd'hui : les accords français prennent `--chord-color` (#3f63cf clair, #8fb0ff sombre ;
-`font-chord`, `ChordLine.tsx:338`), les accords chinois `--jianpu-color` (#b3261d, #ff7d72 ; `ZhLine`,
-`SongView.tsx:450`), deux variables globales de `globals.css` (l. 260-261 et 331-332) qui servent aussi ailleurs (chiffres
-`{jianpu:}` par `.font-jianpu`, contour « Montrer » de l'Harmonie, pastilles de langue de la liste des chants,
-`langAccent`). Couleurs par section les remplace par la couleur du texte (`getChartSectionStyle`, l. 88-89), Scène et
-Partition posent `--jianpu-color: var(--chord-color)` sur la bande ou la partition. En Classique, l'étiquette, le filet et
-le fond des sections suivent la langue par `--fr-accent` / `--zh-accent`, `--*-box-fill`, `--*-box-border`
-(`LANG_THEME`, `SongView.tsx:48-58`, `globals.css:282-287` et `350-355`). La couleur des icônes (FS-A) est retenue par
-appareil (`perf-couleur-icones`, `src/lib/performance/couleurIcones.ts`), avec le cercle `CercleChromatique.tsx` et la
-garde `garderContraste` (4,5:1, décision 26).
+(décisions 27 et 28) ; spec contre-vérifiée le 09/11/2026 (trois relecteurs : références, planche, trous).
 
-**Ce qui ne change pas** : les variables globales et tout ce qui les lit hors de la partition (pastilles de langue de la
-liste, badge de tonalité de l'en-tête du chant, accents d'interface, bouton « Accords », miniatures du menu) ; les chiffres
-`{jianpu:}` ; les étiquettes du calque sur un scan 简谱 (encre du scan) ; l'export PDF ; les couleurs de section
-(`--sec-*`, pastilles de Repères, bandes de Scène, cadres de Partition) ; la clé des annotations (la couleur ne change pas
-la mise en page : rien dans `signatureAffichage`) ; aucune écriture Firestore.
+**Aujourd'hui** : les accords français prennent `--chord-color` (#3f63cf clair, #8fb0ff sombre) par la classe
+`.font-chord` (`ChordLine.tsx:338`, `globals.css:459-461`), classe que partagent l'Harmonie (`FicheHarmonie.tsx:236`,
+`TexteFiche.tsx:44`, `LecteurCours.tsx:118`, `IdeesSheet.tsx:261`) ; les accords chinois prennent `--jianpu-color`
+(#b3261d, #ff7d72) en style en ligne (`ZhLine`, `SongView.tsx:450`). Ces deux variables sont globales (`globals.css:260-261`
+et `331-332`) et servent aussi hors de la partition (chiffres `{jianpu:}` par `.font-jianpu`, contour « Montrer » de
+l'Harmonie, pastilles de langue de la liste des chants, `langAccent`, badge de tonalité `SongView.tsx:1188` et `:1291`).
+Couleurs par section les remplace par la couleur du texte sur chaque section (`getChartSectionStyle`, `SongView.tsx:88-89`) ;
+Scène pose `--jianpu-color: var(--chord-color)` sur chaque bande (`SongView.tsx:1051`) ; Partition le posera aussi après
+la seconde relecture de DP (point 15 : accords chinois bleus, comme la planche A). En Classique, l'étiquette, le filet et
+le fond des sections suivent la langue par `LANG_THEME` (`SongView.tsx:48-58` : `--fr-accent` / `--zh-accent`,
+`--*-box-fill`, `--*-box-border`, constantes de `globals.css:282-287` et `350-355`), que lisent aussi Repères (`:969`),
+Partition (`:1006`) et Scène (`:1048`). La couleur des icônes (FS-A) est retenue par appareil (`perf-couleur-icones`,
+`src/lib/performance/couleurIcones.ts`), corrigée par `garderContraste` contre des constantes de fond (`FOND_CLAIR`,
+`FOND_SOMBRE`) et le thème de la scène (`stageTheme`, `PerformanceMode.tsx:516-518`) ; son réglage est un `radiogroup`
+qui garde ses flèches (`PerformanceMode.tsx:1992-2011`).
+
+**Ce qui ne change pas** : les variables globales, `.font-chord` et tout ce qui les lit hors de la partition (Harmonie,
+liste des chants, badges de tonalité, bouton « Accords », miniatures du menu, contour « Montrer ») ; les chiffres
+`{jianpu:}` ; les étiquettes du calque d'un scan 简谱 (encre du scan, ou bleu fixe quand le calque est partiel,
+`JianpuSheet.tsx:537`) ; l'éditeur de setlist et ses aperçus (`Bibliotheque.tsx`, `EditLineSheet.tsx`, `ChordPad.tsx`,
+`LastPhraseSheet.tsx`), le panneau et la bulle du dictionnaire d'accords (`PanneauAccord.tsx`) ; la feuille de route du
+batteur (FS-D, sans accords) ; `JianpuLine.tsx` (inatteignable : `useJianpu` est toujours faux) ; l'export PDF ; les
+couleurs de section (`--sec-*`, pastilles de Repères, bandes de Scène, cadres de Partition, et `LANG_THEME` dans ces trois
+dispositions) ; la clé des annotations (la couleur ne change pas la mise en page : rien dans `signatureAffichage`) ;
+aucune écriture Firestore.
 
 **CA-A Socle** (M) :
-- `src/lib/couleurAccords.ts` (nouveau) : `{ fr: string | null, zh: string | null }` (hex normalisé par `normaliserHex`,
-  `null` = couleur d'origine), **par compte sur l'appareil** : `accords-couleurs-<uid>` en localStorage, et
-  `accords-couleurs` sans compte ; lecture tolérante (valeur illisible = origine). Rien à reprendre (réglage nouveau).
-- **Couleur des icônes par compte** (décision 28) : `perf-couleur-icones-<uid>` ; la clé d'appareil existante sert de
-  valeur de départ au seul premier compte qui la lit, avec une marque de reprise, sur le modèle de
-  `src/lib/performance/roleCompte.ts` (`migrer`, `estPremierCompte`) ; sans compte, la clé d'appareil.
-- **Couleur d'origine** (rien de choisi), par disposition : français bleu (`--chord-color`) partout, couleur du texte en
-  Couleurs par section ; chinois rouge (`--jianpu-color`) en Classique et Repères, bleu en Scène et Partition, couleur du
-  texte en Couleurs par section. C'est le rendu d'aujourd'hui (après la seconde relecture de DP).
+- **Stockage** : `src/lib/couleurAccords.ts` (nouveau), `{ fr: string | null, zh: string | null }` (hex normalisé par
+  `normaliserHex`, `null` = couleur d'origine), **par compte sur l'appareil** : `accords-couleurs-<uid>` ; sans compte
+  (visiteur non connecté), `accords-couleurs`. Lecture et écriture dans un `try/catch` comme `roleCompte.ts` : stockage
+  indisponible ou valeur illisible = couleur d'origine, sans exception ; un choix qui ne peut pas s'enregistrer s'applique
+  quand même pour la séance.
+- **Compte pas encore connu** : `useAuth` démarre sans utilisateur (`loading`, `src/lib/firebase/auth.ts:35-45`). Tant que
+  `loading` est vrai, on n'applique que la couleur d'origine et le réglage est grisé : rien ne s'écrit sous une mauvaise
+  clé ; à l'arrivée de l'uid, la couleur du compte s'applique avant la peinture suivante. Dans le mode louange, l'uid
+  arrive en prop (`PerformanceMode.tsx:353`) : lecture synchrone à l'ouverture. À la déconnexion, les clés restent sur
+  l'appareil : le même compte retrouve sa couleur, un autre compte n'en hérite pas.
+- **Couleur des icônes par compte** (décision 28) : `perf-couleur-icones-<uid>` ; la clé d'appareil `perf-couleur-icones`
+  devient la valeur de départ du **premier compte**, avec la **même marque** que le rôle (`perf-role-migre`) : `migrer` de
+  `roleCompte.ts` recopie aussi cette clé, et `estPremierCompte` vaut pour les deux réglages (un seul compte reprend
+  l'ancien état de l'appareil ; rien n'étant en ligne, aucun appareil réel ne porte encore la marque). Sans compte, la clé
+  d'appareil. Les specs qui lisent ou écrivent `perf-couleur-icones` (`tests/louange-menus.spec.ts:454`, `:507`,
+  `tests/louange-barre-titre.spec.ts:48`, `:307`, `:336`, `:363-376`) passent à la clé du compte simulé.
+- **Couleur d'origine** (rien de choisi), par disposition : français bleu (`--chord-color`), couleur du texte en Couleurs
+  par section ; chinois rouge (`--jianpu-color`) en Classique et Repères, bleu en Scène et Partition, couleur du texte en
+  Couleurs par section. C'est le rendu du code une fois la seconde relecture de DP faite.
 - **Couleur choisie** : elle remplace la couleur d'origine de sa langue dans **les cinq dispositions**, sur la page du
-  chant, la vue partitions et le mode louange. Elle se pose en variables propres au conteneur de la partition
-  (`--accord-fr`, `--accord-zh`), jamais sur `:root` ; `ChordLine` et `ZhLine` lisent `var(--accord-fr, …)` /
-  `var(--accord-zh, …)` avec la couleur d'origine en repli, si bien que les chiffres `{jianpu:}` et le reste du site ne
-  bougent pas.
-- **Garde de lisibilité au rendu, jamais à l'enregistrement** : la couleur affichée est `garderContraste(choix, fond)` à
-  4,5:1 contre le **fond réel** de l'accord : la page (`--background`), la teinte de la bande en Scène
-  (`--sec-*-tint`), le fond d'une section pleine en Classique ; valeurs lues dans le thème courant, recalculées quand le
-  thème change. L'encre (#1c1c1e) devient la couleur du texte en sombre, comme pour les icônes. Une couleur proche de
-  celle d'une section reste telle quelle (décision 28).
-- **Classique** : l'étiquette, le filet et le fond des sections suivent la couleur choisie de la langue du chant
-  (accent = couleur affichée ; fond et bordure des sections pleines dérivés par `color-mix` avec le fond de la page, aux
-  proportions d'aujourd'hui) ; sans choix, `LANG_THEME` inchangé.
-- Lecture synchrone dans le mode louange ; dans un `useLayoutEffect` sur la page du chant et la vue partitions (pas de
-  saut à l'ouverture, pas d'écart d'hydratation).
+  chant, la vue partitions et le mode louange, et **l'emporte** sur les surcharges de section (`--chord-color` /
+  `--jianpu-color` posées par Couleurs par section et Scène, qui ne servent plus que de repli). Elle se pose en deux
+  variables, `--accord-fr` et `--accord-zh`, sur la **racine de `SongView`** (page du chant et vue partitions,
+  `SongDetailClient.tsx:478`, `PartitionView.tsx:316` et `:571`) et sur la **racine `data-performance-mode`** du mode
+  louange (`PerformanceMode.tsx:1415`, qui porte déjà `--couleur-icones`) ; jamais sur `:root`. Un hook partagé
+  `useCouleursAccords(uid, theme, disposition)` rend le style des deux variables. Le span d'accord de `ChordLine` lit
+  `color: var(--accord-fr, var(--chord-color))` en style (ou une classe dédiée `.accord-partition`) ; `ZhLine` lit
+  `var(--accord-zh, var(--jianpu-color, #b3261d))`. `.font-chord` n'est pas modifiée.
+- **Garde de lisibilité au rendu, jamais à l'enregistrement** : **une seule couleur affichée par langue**, calculée une
+  fois par thème et par disposition : `garderContraste(choix, fond)` à 4,5:1 (décision 26) contre le **fond le plus
+  défavorable** de la disposition, en constantes hex comme `FOND_CLAIR` / `FOND_SOMBRE` : la page (#ffffff, #000000)
+  en Classique, Repères, Partition et Couleurs par section ; en Scène, la teinte `--sec-*-tint` la plus sombre du thème
+  clair et la plus claire du thème sombre (valeurs de `globals.css:270-280` et `338-348`). Aucun calcul par section.
+  Thème : `stageTheme` dans le mode louange, `resolvedTheme` ailleurs ; recalcul quand le thème ou la disposition change.
+  L'encre (#1c1c1e) devient la couleur du texte en sombre, comme pour les icônes. Une couleur proche de celle d'une
+  section reste telle quelle (décision 28).
+- **Classique** (décision 28) : avec une couleur choisie, `getSectionStyle` (`SongView.tsx:138-175`, Classique seulement)
+  prend pour accent la couleur affichée de la langue (étiquette, filet) et dérive le fond et la bordure des sections
+  pleines et du pont par `color-mix(in srgb, <couleur affichée> X%, <fond de page>)`, X et Y choisis pour que le bleu
+  d'origine redonne `--fr-box-fill` / `--fr-box-border` à ± 2 par canal, en clair et en sombre (≈ 15 % et ≈ 30 % en
+  clair). La garde se fait contre le fond de la page, jamais contre ce fond dérivé. Sans choix : `LANG_THEME` et ses
+  constantes, inchangés. Repères, Scène et Partition gardent `LANG_THEME`.
 
 **CA-B Réglage** (M) :
 - Composant `src/components/song/ChoixCouleurAccords.tsx` : rubrique « Couleur des accords » / « 和弦颜色 » **sous la
   rubrique Disposition** dans les trois endroits où se règle l'affichage : options d'affichage du mode louange
   (`PerformanceMode.tsx`, après `ChoixDisposition variante="panneau"`), menu ⋯ de la page du chant (`MenuChant.tsx`),
   réglages d'affichage de la vue partitions (`ReglagesAffichage`, `MenusSetlist.tsx`).
-- Deux rangées, « Chants en français » / « 法语歌曲 » et « Chants en chinois » / « 中文歌曲 », de **sept pastilles de
-  44 px, 6 px d'écart** : la pastille d'origine (dessinée avec les couleurs qu'elle prend : français bleu / texte, chinois
-  rouge / bleu / texte), cinq teintes prêtes (encre #1c1c1e, vert #1f7a5c, violet #6d4bc3, framboise #c2185b, gris
-  #636872 : celles des icônes sans le bleu), puis le bouton arc-en-ciel qui ouvre `CercleChromatique` (aperçus clair et
-  sombre). La pastille retenue est marquée, et annoncée (`role="radio"`, `aria-checked`, flèches) ; le bouton du cercle
-  est coché quand la couleur ne fait pas partie des pastilles.
+- Deux rangées, « Chants en français » / « 法语歌曲 » et « Chants en chinois » / « 中文歌曲 », chacune un
+  `role="radiogroup"` nommé par son libellé (`aria-labelledby`), de **sept pastilles de 44 px**, réparties sur la largeur
+  avec **6 px d'écart au moins** (`justify-between`, comme la rangée des icônes) : la pastille d'origine (dessinée avec les
+  couleurs qu'elle prend : français bleu / texte, chinois rouge / bleu / texte ; nom « Couleur d'origine (selon la
+  disposition) » / « 原色（随排版而定） »), cinq teintes prêtes (encre #1c1c1e, vert #1f7a5c, violet #6d4bc3, framboise
+  #c2185b, gris #636872 : celles des icônes sans le bleu, noms repris de `performance.iconColors.*`), puis le bouton
+  arc-en-ciel « Autre couleur » / « 其他颜色 » (`performance.iconColors.autre`) qui ouvre `CercleChromatique` (aperçus clair et sombre) **sous la rangée de
+  sa langue, un seul cercle ouvert à la fois**. Les pastilles se dessinent corrigées contre la surface du menu, comme
+  celles des icônes.
+- État : la pastille retenue est marquée (`role="radio"`, `aria-checked`, tabindex itinérant) ; pendant que le cercle est
+  ouvert, son bouton est marqué ; une couleur venue du cercle, même égale au bleu d'origine, reste un choix (bouton du
+  cercle marqué, valeur hex dans son nom accessible).
+- Clavier : flèches ← ↑ → ↓ en boucle dans la rangée, avec `preventDefault` et `stopPropagation` sur le radiogroup comme
+  `PerformanceMode.tsx:1996-2008` (les flèches ne tournent pas la page du mode louange) ; dans les menus Radix
+  (`MenuChant`, `ReglagesAffichage`), la rubrique n'entre pas dans la navigation du menu (le groupe garde ses flèches, le
+  choix ne ferme pas le menu) ; le cercle se règle au pointeur et au clavier (`CercleChromatique.tsx`) ; rien n'est offert
+  au survol seul.
 - Lien « Couleurs d'origine » / « 恢复原色 », 44 px de haut, grisé tant que rien n'est choisi ; ligne de rétention
-  « Retenue pour ce compte sur cet appareil » / « 仅用于此账号，保存在本设备上 ».
-- Au téléphone, le menu ⋯ de la page du chant et le menu Affichage de la vue partitions passent de 355 à 374 px de large
-  pour tenir les sept pastilles (table des finitions de la planche) ; ailleurs, aucune taille ne change.
-- Un choix fait dans un endroit se retrouve dans les deux autres (même stockage), et s'applique à l'écran sans
-  rechargement.
+  « Retenue pour ce compte sur cet appareil » / « 仅用于此账号，保存在本设备上 » quand un compte est connecté, et
+  « Retenue sur cet appareil » / « 仅在本设备上保存 » (clé existante `dispositions.retenue`) sinon. Clés nouvelles dans
+  `fr.json` et `zh-CN.json` (titre, deux rangées, pastille d'origine, lien, ligne de rétention du compte),
+  libellés chinois relus par un responsable sinophone avant la mise en ligne.
+- Largeur : le contenu des trois emplacements fait au moins 344 px (sept pastilles et six écarts) ; au téléphone, le menu ⋯
+  et le menu Affichage prennent `min(374 px, 100vw − 16 px)` (planche, mesurée à 390 px) ; quand la place manque (fenêtre
+  de 360 px), la rangée passe sur deux lignes, sans réduire les pastilles ; aucun débordement horizontal.
+- Un choix fait dans un endroit se retrouve dans les deux autres (même stockage) et s'applique sans rechargement.
 
-Critères (CA) : nouvelle spec `tests/couleur-accords.spec.ts`, ajoutée à `SPECS_GRAND_ECRAN` (cinq projets) : choisir
-une teinte dans chacun des trois endroits colore les accords de sa langue (couleur calculée) sur la page du chant, la vue
-partitions et le mode louange, dans les cinq dispositions ; l'autre langue ne bouge pas ; « Couleurs d'origine » rend le
-rendu d'aujourd'hui (couleurs calculées identiques à celles d'avant le lot, par disposition) ; deux comptes simulés aux
-noms inventés gardent chacun leur couleur sur le même appareil, et sans compte on lit la clé d'appareil ; la couleur des
-icônes passe par compte, la clé d'appareil reprise une seule fois par le premier compte ; un jaune #ffd60a s'affiche
-assombri sur page claire et sur une bande de Scène claire, tel quel en sombre ; en Classique, l'étiquette et le filet
-d'une section suivent la couleur ; hors partition, la pastille de langue de la liste des chants, le badge de tonalité et
-les chiffres `{jianpu:}` gardent leur couleur ; le calque d'un scan 简谱 ne change pas ; aucune écriture Firestore ;
-`signatureAffichage` inchangée. Captures **regardées** : quatre dispositions + 1 440 px, FR et 中文, clair et sombre,
-avec une couleur choisie et sans. Libellés chinois nouveaux relus par un responsable sinophone avant la mise en ligne.
+Critères (CA) : nouvelle spec `tests/couleur-accords.spec.ts`, ajoutée à `SPECS_GRAND_ECRAN` (`playwright.config.ts:16`,
+avec un commentaire de lot comme ses voisines), sur la mécanique de `tests/louange-je-joue.spec.ts` (deux comptes
+`signInAs` successifs, `addInitScript` pour poser une clé d'appareil) :
+- choisir une teinte dans chacun des trois endroits colore les accords de sa langue (couleur calculée) sur la page du
+  chant, la vue partitions et le mode louange, dans les cinq dispositions ; l'autre langue ne bouge pas ;
+- sans choix, et après « Couleurs d'origine » : couleurs calculées des accords identiques à celles d'avant le lot, par
+  disposition ; en Classique, fonds et bordures de section identiques à ± 2 par canal ;
+- comptes : A choisit violet, déconnexion, B (noms inventés) voit les accords d'origine, reconnexion d'A : violet ; sans
+  compte, la clé d'appareil ; pendant le chargement de l'authentification, réglage grisé et rien d'écrit ; la couleur des
+  icônes passe par compte et la clé d'appareil n'est reprise que par le premier compte (même marque que le rôle) ;
+- stockage qui lève (script de test) : aucune exception, couleur d'origine, le choix s'applique pour la séance ; valeur
+  illisible dans `accords-couleurs-<uid>` : couleur d'origine ;
+- garde : un jaune #ffd60a s'affiche assombri sur page claire et en Scène claire (≥ 4,5:1 contre la teinte la plus
+  sombre), tel quel en sombre ; en Classique, l'étiquette et le filet d'une section suivent la couleur ;
+- mode louange : mêmes couleurs dans la copie de mesure et à l'écran en deux colonnes, dans les deux moitiés de la
+  demi-page (FS-E), et hors ligne (setlist en copie locale, `serviceWorkers: "block"` pour les substituts) ; la feuille de
+  route du batteur ne change pas ; les flèches dans une rangée ne tournent pas la page ;
+- menus : au clavier, flèches dans la rangée, le menu reste ouvert au choix, Échap ferme d'abord le cercle ; aucun
+  débordement horizontal à 360 et 390 px dans les trois emplacements ;
+- hors partition, la pastille de langue de la liste des chants, le badge de tonalité, les chiffres `{jianpu:}`, l'Harmonie
+  (`.font-chord`) et le calque d'un scan 简谱 (à l'encre et partiel, en bleu) gardent leur couleur ; aucune écriture
+  Firestore ; `signatureAffichage` inchangée ;
+- specs voisines relancées sur les cinq projets : `louange-menus`, `louange-barre-titre`, `dispositions-partition`,
+  `louange-je-joue`, `performance-mode`, `mode-louange-forscore`.
+Captures **regardées** : quatre dispositions + 1 440 px (et 360 px pour les menus), FR et 中文, clair et sombre, avec une
+couleur choisie et sans.
 
-Dépendances : FS-A (cercle, garde), DP (cinq dispositions et sa seconde relecture, qui touche `SongView.tsx`,
-`ChoixDisposition.tsx`, `MenuChant.tsx`). Une session, deux tranches (CA-A puis CA-B).
+Dépendances : FS-A (cercle, garde, rangée des icônes), FS-C (`roleCompte.ts` et sa marque), DP et sa seconde relecture
+(qui touche `SongView.tsx`, `ChoixDisposition.tsx`, `MenuChant.tsx`, et rend les accords chinois bleus en Partition). Une
+session, deux tranches (CA-A puis CA-B).
 
 ## Annotations et coupure
 
