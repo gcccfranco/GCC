@@ -1407,7 +1407,17 @@ en attente dans l'artefact (carte « À voir d'abord »). **Ouvert** : FS-E Demi
 passe sur tout le guide (plusieurs images ne correspondent plus au site) ; prévenir l'équipe avant la mise en ligne de
 CV (annotations des pages dont la coupure change). **Questions de la vague 1 tranchées comme proposé** (Timothée,
 09/11/2026 : « je suis ok avec toi » ; décision 26 de la spec). **Go du 09/11/2026 pour FS-E (demi-page) et pour la
-vague 2, deux sessions à la fois** : DP et FS-C + FS-D + FS-E d'abord, puis RP et JP-B.
+vague 2, deux sessions à la fois** : DP et FS-C + FS-D + FS-E d'abord, puis RP et JP-B. **Vague 2, première paire codée le 09/11/2026**
+(rien en ligne) : DP (cinq dispositions : Classique, Couleurs par section, Repères, Scène, Partition ; menu à miniatures
+aux trois endroits) et FS-C + FS-D + FS-E (« Je joue » et rôle par compte, feuille de route du batteur, demi-page) ;
+deux relectures indépendantes (code, 820 captures, critique de design contre les planches, constats contre-vérifiés),
+corrections en cours dans les deux sessions. **Décisions du 09/11/2026** : la disposition « Repères » s'appelle
+« Marge » (libellé seulement, décision 29) ; **couleur des accords au choix de chacun** (demande de Timothée,
+décision 27 ; planche acceptée, décision 28 : une couleur par langue, dans les cinq dispositions, par compte sur
+l'appareil, la couleur des icônes aussi par compte) ; spec du lot **CA**, **go le 09/11/2026**, après la seconde
+relecture de DP. Import inutilisé de `fs` dans `SongView.tsx` (déjà sur `main`) retiré dans une session à part
+(commit 8e6572a, branche `claude/laughing-cerf-hznlxc`) : à reprendre sur la branche de la session après DP, il partira
+avec la prochaine mise en ligne (Timothée, 09/11/2026).
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
