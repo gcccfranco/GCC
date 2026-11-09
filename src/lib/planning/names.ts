@@ -159,6 +159,18 @@ export function splitNames(cell: string): string[] {
     )
 }
 
+/** Musicien seulement : le préfixe d'instrument (« Piano: Lina R. » → « Piano ») de la part de la case qui porte `name`,
+ *  tel qu'écrit, sans le deux-points ; undefined sans préfixe ou si le nom n'y est pas. Même découpe que `splitNames`. */
+export function instrumentDuNom(cell: string | undefined, name: string): string | undefined {
+  if (!cell) return undefined
+  const target = normalize(name)
+  for (const part of cell.replace(/"+/g, "").split(/[,，;；/]/)) {
+    const m = /^([^:：]{1,12})[:：]\s*/.exec(part)
+    if (m && normalize(part.slice(m[0].length)) === target) return m[1].trim()
+  }
+  return undefined
+}
+
 function cellHasName(cell: string | undefined, name: string): boolean {
   if (!cell) return false
   const target = normalize(name)
@@ -303,6 +315,9 @@ export interface ServiceEntry {
   leader?: string
   /** Moment de la séance Campus (matin/soir) — clé de matching exact avec la setlist. */
   moment?: "matin" | "soir"
+  /** Musicien seulement : le préfixe de la case avant « : » (« Piano: Lina R. ») qui précède le nom de la personne,
+   *  tel qu'écrit ; absent sans préfixe. */
+  instrument?: string
 }
 
 /** Toutes les dates où `name` apparaît dans les plannings, triées chronologiquement. */
@@ -316,7 +331,10 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
     for (const r of rows) {
       const leader = presCol != null ? (splitNames(r[presCol] ?? "")[0] ?? "") : ""
       for (const [i, role] of roles) {
-        if (cellHasName(r[i], name)) out.push({ date: r[0], service, role, leader })
+        if (cellHasName(r[i], name)) {
+          const instrument = role === "Musicien" ? instrumentDuNom(r[i], name) : undefined
+          out.push(instrument ? { date: r[0], service, role, leader, instrument } : { date: r[0], service, role, leader })
+        }
       }
     }
   }
@@ -348,11 +366,13 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
     if (cellHasName(s.ch, name)) roles.push("Chant")
     if (cellHasName(s.mu, name)) roles.push("Musicien")
     if (cellHasName(s.rg, name)) roles.push("Régie")
+    const instrument = instrumentDuNom(s.mu, name)
     for (const role of roles) {
-      out.push({ date: dt, service: moment, role, leader, moment: seanceMoment })
+      const inst = role === "Musicien" && instrument ? { instrument } : {}
+      out.push({ date: dt, service: moment, role, leader, moment: seanceMoment, ...inst })
       // Répétition associée : date / heure / lieu propres, distincts de la séance.
       // setlistDate = date de la séance pour lier la setlist (chants à réviser).
-      if (s.ent) out.push({ date: s.ent, service: "Campus (répét.)", role, time: s.entTime, location: s.entLieu, setlistDate: dt, leader, moment: seanceMoment })
+      if (s.ent) out.push({ date: s.ent, service: "Campus (répét.)", role, time: s.entTime, location: s.entLieu, setlistDate: dt, leader, moment: seanceMoment, ...inst })
     }
   }
 
