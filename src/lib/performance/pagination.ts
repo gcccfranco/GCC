@@ -49,13 +49,24 @@ export function splitSheetPages(
 export const NEXT_PILL_RESERVE = 40;
 
 /** Les lignes d'une page s'étirent jusqu'à remplir l'écran, sans dépasser ce multiple de leur hauteur naturelle. */
-const ETIREMENT_MAX = 3;
+export const ETIREMENT_MAX = 3;
+
+/** Le contenu des lignes (repère, nom, note, pastille) grossit avec la place libre, jusqu'à ce facteur ; le reste de
+ *  la place s'ajoute aux espaces. */
+export const ECHELLE_MAX = 1.6;
+
+/** Poids d'une ligne de la feuille de route : son nombre de lignes de paroles (1 au moins, 6 au plus), pour garder
+ *  l'indication de durée d'une section (une section sans paroles pèse 1). */
+export function poidsSection(block: SectionBlock): number {
+  const n = block.section.lines.filter((l) => l.tokens.some((tk) => tk.type === "lyric" && tk.value.trim() !== "")).length;
+  return Math.min(6, Math.max(1, n));
+}
 
 /** Vue structure, feuille de route du batteur (FS-D) : une colonne, échelle 1, une ligne par section à sa hauteur
  *  naturelle mesurée. Si l'en-tête, toutes les lignes et la place de la pastille « Suivant » tiennent, une page ;
  *  sinon on coupe entre deux lignes (jamais au milieu d'une), les pages suivantes sans en-tête. Une page dont les
- *  lignes, étirées jusqu'à la hauteur libre, ne dépassent pas 3 fois leur hauteur naturelle porte `etire` : l'écran
- *  les étire pour la remplir ; sinon elles restent en haut. */
+ *  lignes tiennent à leur hauteur naturelle (`naturel`, somme à l'échelle 1) porte `etire` : l'écran grossit d'abord
+ *  leur contenu (jusqu'à ECHELLE_MAX), puis étire les espaces, au plus jusqu'à ETIREMENT_MAX fois `naturel`. */
 export function layoutFeuilleDeRoute(headerIdx: number | null, body: number[], heights: number[], viewportH: number): PerfPage[] {
   const headerH = headerIdx != null ? heights[headerIdx] : 0;
   const pages: PerfPage[] = [];
@@ -64,8 +75,8 @@ export function layoutFeuilleDeRoute(headerIdx: number | null, body: number[], h
   let enTete = headerIdx;
   let room = Math.max(1, viewportH - headerH - NEXT_PILL_RESERVE);
   const fermer = () => {
-    const etire = cumul > 0 && room / cumul >= 1 && room / cumul <= ETIREMENT_MAX;
-    pages.push({ header: enTete, cols: [ligne], scale: 1, ...(etire ? { etire } : null) });
+    const etire = cumul > 0 && room / cumul >= 1;
+    pages.push({ header: enTete, cols: [ligne], scale: 1, ...(etire ? { etire, naturel: cumul } : null) });
     ligne = [];
     cumul = 0;
     enTete = null;

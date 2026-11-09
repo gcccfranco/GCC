@@ -6,7 +6,7 @@ import { langAccent } from "./langAccent";
 import { BarreHaut, ICONES_ROLE } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
 import { MenuLouange, type MenuId } from "./MenuLouange";
-import { LigneFeuilleDeRoute, LigneTransitionFeuille } from "./FeuilleDeRoute";
+import { LigneFeuilleDeRoute } from "./FeuilleDeRoute";
 import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo, LignesTempo, TitreRubrique, VALEUR } from "./ContenusMenus";
 import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
@@ -91,6 +91,8 @@ function BlockRenderer({
   bandeau = "simple",
   couleurDe,
   feuilleRoute = false,
+  transitionApres,
+  tempoChant,
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
@@ -108,13 +110,16 @@ function BlockRenderer({
   couleurDe?: string;
   /** Vue structure : les sections se rendent en lignes de la feuille de route (FS-D). */
   feuilleRoute?: boolean;
+  /** Vue structure : transition qui suit cette section, rendue dans sa ligne (le bloc transition ne rend rien). */
+  transitionApres?: string;
+  /** Vue structure : tempo du chant, en tête de page avec la tonalité. */
+  tempoChant?: number;
 }) {
   if (block.kind === "song-header") {
-    return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} />;
+    return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} feuilleRoute={feuilleRoute} tempo={tempoChant} />;
   }
   if (block.kind === "transition-intra") {
-    if (!showTransitions) return null;
-    if (feuilleRoute) return <LigneTransitionFeuille text={block.text} />;
+    if (!showTransitions || feuilleRoute) return null;
     return <TransitionNote text={block.text} />;
   }
   if (block.kind === "transition-inter") {
@@ -135,7 +140,7 @@ function BlockRenderer({
       />
     );
   }
-  if (feuilleRoute) return <LigneFeuilleDeRoute block={block} repeat={repeat} couleurDe={couleurDe} disposition={disposition} />;
+  if (feuilleRoute) return <LigneFeuilleDeRoute block={block} repeat={repeat} couleurDe={couleurDe} disposition={disposition} transition={transitionApres} />;
   return (
     <SectionView
       section={block.section}
@@ -166,8 +171,21 @@ function BlockRenderer({
 type Bandeau = "aucun" | "simple" | "details";
 
 
-function SongHeader({ block, bandeau, showTransitions }: { block: SongHeaderBlock; bandeau: Bandeau; showTransitions: boolean }) {
+function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo }: { block: SongHeaderBlock; bandeau: Bandeau; showTransitions: boolean; feuilleRoute?: boolean; tempo?: number }) {
   const { t } = useTranslation();
+  // Vue structure (FS-D) : la barre du haut porte le titre ; l'en-tête montre en grand le tempo et la tonalité, toujours
+  // visibles (pas de bande vide ni de filet orphelin sous la barre ouverte).
+  if (feuilleRoute) {
+    return (
+      <div data-entete-chant className="mx-auto mb-3 w-full max-w-[880px] pb-3 border-b border-border">
+        <p data-entete-tempo-tonalite className="text-[22px] font-bold leading-tight text-foreground">
+          {tempo ? <span data-entete-tempo>♩ = {tempo}</span> : null}
+          {tempo ? " · " : null}
+          <span data-entete-tonalite>{t("performance.key")} {block.songKey}</span>
+        </p>
+      </div>
+    );
+  }
   // Mesuré avec l'en-tête : en deux colonnes, il reste en pleine largeur au-dessus.
   const strip = bandeau !== "aucun" && block.steps?.length ? (
     <StructureStrip steps={sansTransitions(block.steps, showTransitions)} details={bandeau === "details"} className="mt-3" />
@@ -645,6 +663,23 @@ export function PerformanceMode({
     () => replisStructure(blocks, structureMode, showTransitions, t),
     [blocks, structureMode, showTransitions, t],
   );
+
+  // Vue structure (FS-D) : la transition qui suit une section (ou le groupe de passages repliés dont elle est la tête)
+  // se rend dans sa ligne ; le tempo d'un chant vient de sa première section (l'en-tête ne le porte pas).
+  const transitionApres = (i: number): string | undefined => {
+    if (!showTransitions) return undefined;
+    let j = i + 1;
+    while (repeatHidden.has(j)) j++;
+    const b = blocks[j];
+    return b?.kind === "transition-intra" ? b.text : undefined;
+  };
+  const tempoDuChant = (i: number): number | undefined => {
+    for (let j = i + 1; j < blocks.length && blocks[j].kind !== "song-header"; j++) {
+      const b = blocks[j];
+      if (b.kind === "section" && b.tempo) return b.tempo;
+    }
+    return undefined;
+  };
 
   // Re-measure when a setting affecting heights changes
   useEffect(() => {
@@ -1284,6 +1319,8 @@ export function PerformanceMode({
                   bandeau={bandeau}
                   couleurDe={structureMode && block.kind === "section" ? dpOrigin(block.section) ?? undefined : undefined}
                   feuilleRoute={structureMode}
+                  transitionApres={structureMode ? transitionApres(i) : undefined}
+                  tempoChant={structureMode ? tempoDuChant(i) : undefined}
                 />
               )}
             </div>
@@ -1384,6 +1421,8 @@ export function PerformanceMode({
                 bandeau={bandeau}
                 couleurDe={structureMode && block.kind === "section" ? dpOrigin(block.section) ?? undefined : undefined}
                 feuilleRoute={structureMode}
+                transitionApres={structureMode ? transitionApres(i) : undefined}
+                tempoChant={structureMode ? tempoDuChant(i) : undefined}
               />
             );
           };

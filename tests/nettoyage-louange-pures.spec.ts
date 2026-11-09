@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { PerformanceBlock } from "../src/lib/performance/blocks";
+import type { PerformanceBlock, SectionBlock } from "../src/lib/performance/blocks";
 import { GRAND_ECRAN, type PerfPage } from "../src/lib/performance/columns";
 import {
   NEXT_PILL_RESERVE,
@@ -7,6 +7,7 @@ import {
   lireEcran,
   pageAncree,
   paginer,
+  poidsSection,
   replisStructure,
   sansTransitions,
   splitSheetPages,
@@ -85,8 +86,8 @@ test.describe("splitSheetPages", () => {
 
 test.describe("layoutFeuilleDeRoute", () => {
   test("tout tient : une page, échelle 1, lignes étirées", () => {
-    // room = 400 - 10 - 40 = 350 ; lignes = 300 → 350/300 ≤ 3
-    expect(layoutFeuilleDeRoute(0, [1, 2, 3], [10, 100, 100, 100], 400)).toEqual([{ header: 0, cols: [[1, 2, 3]], scale: 1, etire: true }]);
+    // room = 400 - 10 - 40 = 350 ; lignes = 300 → rapport 350/300 ≥ 1
+    expect(layoutFeuilleDeRoute(0, [1, 2, 3], [10, 100, 100, 100], 400)).toEqual([{ header: 0, cols: [[1, 2, 3]], scale: 1, etire: true, naturel: 300 }]);
   });
   test("trop haut : coupe entre deux lignes, pages suivantes sans en-tête", () => {
     const pages = layoutFeuilleDeRoute(0, [1, 2, 3, 4], [10, 100, 100, 100, 100], 300);
@@ -96,8 +97,8 @@ test.describe("layoutFeuilleDeRoute", () => {
   test("une ligne plus haute que la page reste seule sur sa page", () => {
     expect(layoutFeuilleDeRoute(null, [0, 1], [500, 50], 300).map((p) => p.cols)).toEqual([[[0]], [[1]]]);
   });
-  test("peu de lignes sur une grande page : pas d'étirement au-delà de ×3", () => {
-    expect(layoutFeuilleDeRoute(null, [0], [50], 1000)).toEqual([{ header: null, cols: [[0]], scale: 1 }]);
+  test("peu de lignes sur une grande page : étirée quand même (l'écran plafonne à ×3 la hauteur naturelle)", () => {
+    expect(layoutFeuilleDeRoute(null, [0], [50], 1000)).toEqual([{ header: null, cols: [[0]], scale: 1, etire: true, naturel: 50 }]);
   });
   test("aucune ligne : une page vide avec l'en-tête", () => {
     expect(layoutFeuilleDeRoute(0, [], [10], 300)).toEqual([{ header: 0, cols: [[]], scale: 1 }]);
@@ -251,5 +252,16 @@ test.describe("lireEcran", () => {
   test("ordinateur : grand écran, souris", () => {
     g.window = { innerWidth: 1440, innerHeight: 900, matchMedia: (q: string) => ({ matches: q === GRAND_ECRAN }) };
     expect(lireEcran()).toEqual({ grand: true, largeur: 1440, hauteur: 900, tabletteVerticale: false });
+  });
+});
+
+test.describe("poidsSection", () => {
+  const bloc = (lignes: string[][]) =>
+    ({ section: { lines: lignes.map((l) => ({ type: "line", tokens: l.map((v) => ({ type: v.startsWith("[") ? "chord" : "lyric", value: v })) })) } }) as unknown as SectionBlock;
+  test("nombre de lignes de paroles, entre 1 et 6", () => {
+    expect(poidsSection(bloc([]))).toBe(1);
+    expect(poidsSection(bloc([["[A]"], ["[B]", " "]]))).toBe(1);
+    expect(poidsSection(bloc([["a"], ["b"], ["c"]]))).toBe(3);
+    expect(poidsSection(bloc(Array.from({ length: 9 }, () => ["x"])))).toBe(6);
   });
 });

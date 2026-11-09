@@ -16,8 +16,10 @@ export type PerfPage = { header: number | null; cols: number[][]; scale: number;
   /** Dernière page d'un chant suivi d'un autre : indice de la colonne qui porte la pastille « Ensuite »
    *  (posée à la fin de cette colonne, dans le flux). Absent : pas de pastille dans le flux. */
   suivant?: number;
-  /** Vue structure (FS-D) : les lignes de la feuille de route s'étirent pour remplir la hauteur de la page. */
-  etire?: boolean };
+  /** Vue structure (FS-D) : les lignes de la feuille de route grossissent puis s'étirent pour remplir la page. */
+  etire?: boolean;
+  /** Avec `etire` : somme des hauteurs naturelles (échelle 1) des lignes de la page. */
+  naturel?: number };
 
 /** Place gardée à la pastille « Ensuite » dans le flux (44 px de bouton + marge). */
 export const PASTILLE_SUIVANT_H = 64;
