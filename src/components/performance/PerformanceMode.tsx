@@ -187,7 +187,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
           {!block.fusionSongs?.length && block.artist ? <p className="text-xs text-muted-foreground">{block.artist}</p> : null}
         </div>
         <p data-entete-tempo-tonalite className="text-[22px] font-bold leading-tight text-foreground">
-          {tempo ? <span data-entete-tempo>♩ = {tempo}</span> : null}
+          {tempo ? <span data-entete-tempo>♩ = {tempo}</span> : null}
           {tempo ? " · " : null}
           <span data-entete-tonalite>{t("performance.key")} {block.songKey}</span>
         </p>

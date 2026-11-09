@@ -36,10 +36,12 @@ const ZH = ["谢谢你", "活着为要敬拜你", "耶和华所定的日子"];
 // Un chant à scan 简谱 (deux pages de scan) : la demi-page ne s'y applique pas.
 const SCAN = ["为我而来"];
 
-async function ouvrir(page: Page, opts: { slugs?: string[]; langue?: Langue; theme?: "light" | "dark"; demi?: boolean; structure?: string[] } = {}) {
-  const { slugs, langue = "fr", theme = "light", demi = true, structure } = opts;
-  await page.addInitScript(([zh, th, d]) => {
+async function ouvrir(page: Page, opts: { slugs?: string[]; langue?: Langue; theme?: "light" | "dark"; demi?: boolean; structure?: string[]; uneColonne?: boolean } = {}) {
+  const { slugs, langue = "fr", theme = "light", demi = true, structure, uneColonne = false } = opts;
+  await page.addInitScript(([zh, th, d, une]) => {
     try {
+      // Coupe horizontale testée aussi en grand écran : « 2 colonnes » coupé (réglage par appareil), sinon automatique.
+      if (une) localStorage.setItem("perf-two-columns", "0");
       if (!localStorage.getItem("perf-role-preset")) localStorage.setItem("perf-role-preset", "pianiste");
       if (zh) localStorage.setItem("i18nextLng", "zh-CN");
       localStorage.setItem("perf-theme", th as string);
@@ -49,7 +51,7 @@ async function ouvrir(page: Page, opts: { slugs?: string[]; langue?: Langue; the
         localStorage.setItem("perf-demi-page", "1");
       }
     } catch { /* ignore */ }
-  }, [langue === "zh", theme, demi]);
+  }, [langue === "zh", theme, demi, uneColonne]);
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(slugs ?? (langue === "zh" ? ZH : FR), structure) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
   await attendreMiseEnPage(page);
@@ -76,7 +78,11 @@ async function tourner(page: Page, testInfo: TestInfo, sens: 1 | -1, par: "touch
     return;
   }
   const e = page.viewportSize()!;
-  await toucher(page, testInfo, e.width * (sens === 1 ? 0.85 : 0.15), e.height * 0.5);
+  // La poignée arrête les touchers (sa cible de 44 px ne tourne pas la page) : on touche à une hauteur qu'elle ne couvre pas.
+  const loc = page.locator("[data-performance-mode] [data-demi-poignee]");
+  const p = (await loc.count()) > 0 ? await loc.boundingBox({ timeout: 1000 }) : null;
+  const y = p && Math.abs(p.y + p.height / 2 - e.height * 0.5) < 60 ? e.height * 0.8 : e.height * 0.5;
+  await toucher(page, testInfo, e.width * (sens === 1 ? 0.85 : 0.15), y);
 }
 const textePremierBloc = async (page: Page) => normaliser(await onStage(page, PREMIER_BLOC).first().textContent());
 
@@ -110,6 +116,7 @@ async function mesurer(page: Page) {
     };
     const visiblesHaut = lire(haut);
     const visiblesBas = lire(bas);
+    const colonnes = document.querySelector("[data-performance-mode] [data-demi-colonnes]") !== null;
     // Rangées de la page en cours (calque bas) : celles qui sont sous le filet doivent toutes se voir, et le blanc entre le filet
     // et la reprise ne dépasse pas la plus haute rangée (le rappel du nom de section s'y loge).
     const rangees = Array.from(bas.querySelectorAll("[data-copy-line]"), (l) => {
@@ -121,14 +128,23 @@ async function mesurer(page: Page) {
     const dansZone = (r: DOMRect) => zonesBas.some(([x0, y0, x1, y1]) => r.left < x1 - 1 && r.right > x0 + 1 && r.top >= y0 - 1 && r.bottom <= y1 + 1);
     const blanc = zonesBas.length ? Math.max(...zonesBas.map(([, y0]) => y0 - yCoupe)) : 0;
     return {
+      colonnes,
+      // Blanc entre le bas de la dernière rangée du haut et le filet, entre le filet et la première rangée du bas (px).
+      margeHaut: visiblesHaut.length ? yCoupe - Math.max(...visiblesHaut.map((r) => r.bottom)) : Infinity,
+      margeBas: visiblesBas.length ? Math.min(...visiblesBas.map((r) => r.top)) - yCoupe : Infinity,
+      hauteurFilet: f.height,
       yCoupe, hauteurFenetre: window.innerHeight,
-      haut: { visibles: visiblesHaut.length, tranches: visiblesHaut.filter((r) => !r.entiere || r.bottom > yCoupe + 1).length },
-      bas: { visibles: visiblesBas.length, tranches: visiblesBas.filter((r) => !r.entiere || r.top < yCoupe - 1).length },
+      // Coupe verticale (deux colonnes) : pas de filet horizontal, une rangée est tranchée si elle sort de sa zone.
+      haut: { visibles: visiblesHaut.length, tranches: visiblesHaut.filter((r) => !r.entiere || (!colonnes && r.bottom > yCoupe + 1)).length },
+      bas: { visibles: visiblesBas.length, tranches: visiblesBas.filter((r) => !r.entiere || (!colonnes && r.top < yCoupe - 1)).length },
       sousCoupe: sous.length,
       sousCoupeInvisibles: sous.filter((r) => !dansZone(r)).length,
       blanc,
       rangeeMax: rangees.length ? Math.max(...rangees.map((r) => r.height)) : 0,
       rappel: bas.parentElement!.querySelectorAll("[data-demi-rappel]").length,
+      // Jusqu'où le contenu de chaque page va (le filet ne peut pas se tenir à mi-hauteur au-delà de ce qui existe).
+      finHaut: visiblesHaut.length ? Math.max(...visiblesHaut.map((r) => r.bottom)) : 0,
+      finBas: rangees.length ? Math.max(...rangees.map((r) => r.bottom)) : 0,
     };
   });
 }
@@ -138,7 +154,7 @@ const TRAIT = (w: number, h: number) =>
 
 for (const par of ["toucher", "fleche"] as const) {
   test(`demi-page : tour avant (${par}) = haut de la page 2 au-dessus du filet, fin de la page 1 dessous ; second tour = page 2 entière ; retour symétrique`, async ({ page }, testInfo) => {
-    await ouvrir(page);
+    await ouvrir(page, { uneColonne: true });
     await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
     const total = (await lireCompteur(page)).split("/")[1].trim();
     expect(Number(total)).toBeGreaterThan(1);
@@ -157,12 +173,18 @@ for (const par of ["toucher", "fleche"] as const) {
     expect(m.haut.tranches, "aucune ligne ni section du haut ne passe sous le filet").toBe(0);
     expect(m.bas.tranches, "aucune ligne ni section du bas ne passe au-dessus du filet").toBe(0);
     expect(m.sousCoupeInvisibles, "chaque rangée de la page 1 sous le filet se voit dans la moitié basse").toBe(0);
-    expect(m.blanc, "le blanc sous le filet ne dépasse pas une rangée (le rappel de section s'y loge)").toBeLessThanOrEqual(m.rangeeMax + (m.rappel > 0 ? 18 : 0) + 1);
-    expect(m.yCoupe).toBeGreaterThan(m.hauteurFenetre * 0.2);
-    expect(m.yCoupe).toBeLessThan(m.hauteurFenetre * 0.8);
-    if (m.bas.visibles > 0) {
+    if (!m.colonnes) {
+      expect(m.blanc, "le blanc sous le filet ne dépasse pas une rangée (le rappel de section s'y loge)").toBeLessThanOrEqual(m.rangeeMax + (m.rappel > 0 ? 14 : 0) + 1);
+      expect(m.yCoupe).toBeGreaterThan(m.hauteurFenetre * 0.2);
+      expect(m.yCoupe).toBeLessThan(m.hauteurFenetre * 0.8);
+      expect(m.hauteurFilet, "filet de 1,5 px").toBeCloseTo(1.5, 1);
+      expect(m.margeHaut, "12 px au moins entre la dernière rangée du haut et le filet").toBeGreaterThanOrEqual(11.5);
+      expect(m.margeBas, "12 px au moins entre le filet et la première rangée du bas").toBeGreaterThanOrEqual(11.5);
+    }
+    if (!m.colonnes && m.bas.visibles > 0) {
       const premierBas = normaliser(await page.locator("[data-performance-mode] [data-demi-bas]").locator(PREMIER_BLOC).evaluateAll((els, y) => {
-        const e = els.find((el) => el.getBoundingClientRect().top >= (y as number) - 1);
+        // Premier bloc qui se prolonge sous le filet (une section plus haute que la part est coupée entre deux lignes : elle commence au-dessus).
+        const e = els.find((el) => el.getBoundingClientRect().bottom > (y as number) + 1);
         return e ? e.textContent : "";
       }, m.yCoupe));
       expect(blocsPage1, "la moitié basse montre la page 1").toContain(premierBas);
@@ -213,7 +235,7 @@ test("demi-page : coupée, un tour de page est un tour entier", async ({ page },
 });
 
 test("demi-page : la poignée (glisser, flèches) règle la coupe, retenue ; elle porte le nom « Demi-page »", async ({ page }, testInfo) => {
-  await ouvrir(page);
+  await ouvrir(page, { uneColonne: true });
   await tourner(page, testInfo, 1, "fleche");
   await expect(enDemi(page)).toHaveCount(1);
   const p = poignee(page);
@@ -223,6 +245,14 @@ test("demi-page : la poignée (glisser, flèches) règle la coupe, retenue ; ell
   const cible = await p.boundingBox();
   expect(cible!.width).toBeGreaterThanOrEqual(43);
   expect(cible!.height).toBeGreaterThanOrEqual(43);
+  // À droite, la pastille (contour, fond de page) à 48 px du bord de la zone de lecture ; la cible de 44 px y reste centrée.
+  const largeur = page.viewportSize()!.width;
+  const pastille = (await p.locator("span").first().boundingBox())!;
+  expect(largeur - (pastille.x + pastille.width), "pastille à 48 px du bord droit").toBeGreaterThan(46.5);
+  expect(largeur - (pastille.x + pastille.width)).toBeLessThan(49.5);
+  // Bord de 1,5 px (le navigateur l'arrondit au pixel d'écran).
+  expect(parseFloat(await p.locator("span").first().evaluate((el) => getComputedStyle(el).borderTopWidth))).toBeGreaterThanOrEqual(1);
+  expect(await p.locator("span").first().evaluate((el) => getComputedStyle(el).backgroundColor), "fond de page, pas de pastille pleine").not.toBe("rgba(0, 0, 0, 0)");
 
   const avant = (await mesurer(page)).yCoupe;
   const h = page.viewportSize()!.height;
@@ -235,7 +265,8 @@ test("demi-page : la poignée (glisser, flèches) règle la coupe, retenue ; ell
   await page.mouse.up();
   await expect(enDemi(page), "glisser la poignée ne tourne pas la page").toHaveCount(1);
   expect(await lireCompteur(page)).toMatch(/^1 \//);
-  await expect(p).toHaveAttribute("aria-valuenow", /^(29|30|31)$/);
+  // La valeur est la part de la moitié basse : le filet monte, elle augmente (70 % pour une part du haut de 30 %).
+  await expect(p).toHaveAttribute("aria-valuenow", /^(69|70|71)$/);
   const part = Number(await page.evaluate(() => localStorage.getItem("perf-demi-page-part")));
   expect(part).toBeGreaterThan(0.28);
   expect(part).toBeLessThan(0.32);
@@ -244,16 +275,22 @@ test("demi-page : la poignée (glisser, flèches) règle la coupe, retenue ; ell
   expect(apres.haut.tranches).toBe(0);
   expect(apres.bas.tranches).toBe(0);
 
-  // Au clavier : ↓ de 5 %, bornée à 75 %.
+  // Au clavier : ↑ monte le filet et augmente la valeur de 5 (part de la moitié basse), ↓ la baisse ; bornée de 25 à 75.
   await p.focus();
   await page.keyboard.press("ArrowDown");
-  await expect(p).toHaveAttribute("aria-valuenow", /^(34|35|36)$/);
-  for (let i = 0; i < 12; i++) await page.keyboard.press("ArrowDown");
-  await expect(p).toHaveAttribute("aria-valuenow", "75");
+  await expect(p).toHaveAttribute("aria-valuenow", /^(64|65|66)$/);
+  await page.keyboard.press("ArrowUp");
+  await expect(p).toHaveAttribute("aria-valuenow", /^(69|70|71)$/);
+  const yAvant = (await mesurer(page)).yCoupe;
+  await page.keyboard.press("ArrowUp");
+  await expect(p).toHaveAttribute("aria-valuenow", /^(74|75)$/);
+  expect((await mesurer(page)).yCoupe, "↑ monte le filet").toBeLessThanOrEqual(yAvant + 1);
   for (let i = 0; i < 12; i++) await page.keyboard.press("ArrowUp");
+  await expect(p).toHaveAttribute("aria-valuenow", "75");
+  for (let i = 0; i < 12; i++) await page.keyboard.press("ArrowDown");
   await expect(p).toHaveAttribute("aria-valuenow", "25");
   expect(await lireCompteur(page), "les flèches de la poignée ne tournent pas la page").toMatch(/^1 \//);
-  expect(Number(await page.evaluate(() => localStorage.getItem("perf-demi-page-part")))).toBeCloseTo(0.25, 2);
+  expect(Number(await page.evaluate(() => localStorage.getItem("perf-demi-page-part")))).toBeCloseTo(0.75, 2);
 });
 
 test("demi-page : sur un chant à scan 简谱, le tour est normal", async ({ page }, testInfo) => {
@@ -338,7 +375,7 @@ test("demi-page : la pastille « Ensuite » reste visible et touchable sur la de
 });
 
 test("demi-page : aucune coupe ne convient, le tour est un tour normal", async ({ page }) => {
-  await ouvrir(page);
+  await ouvrir(page, { uneColonne: true });
   await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
   const total = (await lireCompteur(page)).split("/")[1].trim();
   // Les rangées du haut de la demi-page deviennent plus hautes que la page : aucun bord ne tient au-dessus de la limite.
@@ -414,29 +451,198 @@ test("demi-page : tablette portrait, des traits posés avec l'aperçu (clé « a
   expect(db.writes.filter((x) => x.path.startsWith("annotations/")), "aucune écriture").toEqual([]);
 });
 
+test("demi-page : à la part 0,5 le filet tient entre 40 % et 60 % de la hauteur, la coupe ne recule pas pour le rappel de section", async ({ page }) => {
+  await ouvrir(page);
+  await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
+  const mesures: string[] = [];
+  for (let tour = 0; tour < 6; tour++) {
+    await page.keyboard.press("ArrowRight");
+    if ((await enDemi(page).count()) === 1) {
+      await expect(filet(page)).toBeVisible();
+      const m = await mesurer(page);
+      // « Quand le contenu le permet » : la page en cours descend au-delà de 70 % de la hauteur de lecture.
+      if (!m.colonnes && m.finBas > m.hauteurFenetre * 0.7) {
+        const part = m.yCoupe / m.hauteurFenetre;
+        mesures.push(`page ${(await lireCompteur(page)).split("/")[0].trim()} : ${(part * 100).toFixed(0)} %`);
+        expect(part, `filet entre 40 % et 60 % (${mesures.join(" ; ")})`).toBeGreaterThanOrEqual(0.4);
+        expect(part, `filet entre 40 % et 60 % (${mesures.join(" ; ")})`).toBeLessThanOrEqual(0.6);
+      }
+    }
+  }
+});
+
+test("demi-page : le rappel de section a l'allure du libellé (tiret, couleur de la section), et un cadre rogné se prolonge jusqu'au filet", async ({ page }) => {
+  await ouvrir(page);
+  await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
+  let rappels = 0;
+  let prolonges = 0;
+  for (let tour = 0; tour < 8; tour++) {
+    await page.keyboard.press("ArrowRight");
+    if ((await enDemi(page).count()) !== 1) continue;
+    await expect(filet(page)).toBeVisible();
+    const r = await page.evaluate(() => {
+      const racine = document.querySelector("[data-performance-mode]")!;
+      const bas = racine.querySelector<HTMLElement>("[data-demi-bas]")!;
+      const haut = racine.querySelector<HTMLElement>("[data-demi-haut]")!;
+      const f = racine.querySelector("[data-demi-filet]")!.getBoundingClientRect();
+      const yF = f.top + f.height / 2;
+      if (racine.querySelector("[data-demi-colonnes]")) return null;
+      const couleursLibelles = Array.from(bas.querySelectorAll("[data-section] > [data-copy-ignore] span")).map((e) => getComputedStyle(e).color);
+      const rappels = Array.from(racine.querySelectorAll<HTMLElement>("[data-demi-rappel]")).map((e) => ({
+        couleur: getComputedStyle(e).color,
+        tiret: e.firstElementChild ? e.firstElementChild.getBoundingClientRect().width : 0,
+        dansLibelles: couleursLibelles.includes(getComputedStyle(e).color),
+        gris: getComputedStyle(e).color === getComputedStyle(document.body).color,
+      }));
+      // Sections du haut rognées par la coupe (leurs bords latéraux visibles s'arrêtent à la coupe) : un prolongement les rejoint.
+      const zones = JSON.parse(haut.dataset.demiZones ?? "[]") as Array<[number, number, number, number]>;
+      const prol = Array.from(racine.querySelectorAll<HTMLElement>("[data-demi-prolongement]")).map((e) => e.getBoundingClientRect());
+      const ouverts: string[] = [];
+      for (const sec of Array.from(haut.querySelectorAll<HTMLElement>("[data-section]"))) {
+        const q = sec.getBoundingClientRect();
+        const cs = getComputedStyle(sec);
+        const z = zones.find(([x0, , x1]) => q.left >= x0 - 1 && q.right <= x1 + 1);
+        if (!z || !(q.top < z[3] - 1 && q.bottom > z[3] + 1) || !(parseFloat(cs.borderLeftWidth) > 0)) continue;
+        const ok = prol.some((p) => Math.abs(p.left - q.left) < 1.5 && Math.abs(p.top - z[3]) < 1.5 && Math.abs(p.bottom - yF) < 1.5);
+        if (!ok) ouverts.push(sec.textContent?.slice(0, 20) ?? "");
+      }
+      return { rappels, ouverts, prolonges: prol.length };
+    });
+    if (!r) continue;
+    rappels += r.rappels.length;
+    prolonges += r.prolonges;
+    for (const rp of r.rappels) {
+      expect(rp.tiret, "tiret du rappel").toBeGreaterThan(8);
+      expect(rp.dansLibelles, "couleur de la section, lue sur son libellé").toBe(true);
+      expect(rp.gris, "pas de gris générique").toBe(false);
+    }
+    expect(r.ouverts, "aucun cadre rogné ne reste ouvert").toEqual([]);
+  }
+  test.info().annotations.push({ type: "mesure", description: `${rappels} rappels, ${prolonges} prolongements vus` });
+});
+
+test("demi-page : deux colonnes, la première colonne de la page suivante à gauche, la dernière de la page en cours à droite, un filet vertical entre elles", async ({ page }, testInfo) => {
+  test.skip(!["tablette-paysage", "ordinateur-1440"].includes(testInfo.project.name), "la coupe verticale n'existe qu'en deux colonnes (tablette paysage, ordinateur)");
+  // Structure rallongée par des répétitions : le chant tient sur trois pages à deux colonnes, la 2e et la 3e sans en-tête.
+  await ouvrir(page, { slugs: ["abba-pere"], structure: ["intro-1-0", "verse-2-1", "chorus-3-2", "intro-4-3", "verse-5-4", "chorus-3-5", "bridge-6-5", "chorus-3-7", "chorus-3-8", "verse-2-9", "chorus-3-10", "verse-2-11", "chorus-3-12"] });
+  await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
+  const total = Number((await lireCompteur(page)).split("/")[1]);
+  const colonnesEntieres = () => onStage(page, "[data-col-page]").evaluateAll((cols) => cols.map((c) => Array.from(c.children, (b) => (b.textContent ?? "").replace(/\s+/g, " ").trim())));
+  // Avance de page en page jusqu'à un tour qui passe entre deux pages à deux colonnes sans en-tête pleine largeur.
+  let trouve = false;
+  for (let n = 1; n < total && !trouve; n++) {
+    await page.keyboard.press("ArrowRight");
+    if ((await enDemi(page).count()) === 1) {
+      await expect(filet(page)).toBeVisible();
+      if ((await page.locator("[data-performance-mode] [data-demi-colonnes]").count()) === 1) { trouve = true; break; }
+      await page.keyboard.press("ArrowRight");
+      await expect.poll(() => lireCompteur(page)).toBe(`${n + 1} / ${total}`);
+    }
+  }
+  expect(trouve, "une page à deux colonnes suivie d'une page à deux colonnes existe dans les chants d'essai").toBe(true);
+  const e = page.viewportSize()!;
+  const info = await page.evaluate(() => {
+    const racine = document.querySelector("[data-performance-mode]")!;
+    const lire = (c: Element) => Array.from(c.querySelectorAll("[data-col-page]"), (col) => {
+      const q = col.getBoundingClientRect();
+      return { x0: q.left, x1: q.right, blocs: Array.from(col.children, (b) => (b.textContent ?? "").replace(/\s+/g, " ").trim()) };
+    });
+    const haut = racine.querySelector<HTMLElement>("[data-demi-haut]")!;
+    const bas = racine.querySelector<HTMLElement>("[data-demi-bas]")!;
+    const f = racine.querySelector("[data-demi-filet]")!.getBoundingClientRect();
+    return {
+      haut: lire(haut), bas: lire(bas),
+      zH: JSON.parse(haut.dataset.demiZones ?? "[]") as number[][], zB: JSON.parse(bas.dataset.demiZones ?? "[]") as number[][],
+      filet: { x: f.left + f.width / 2, w: f.width, h: f.height, top: f.top },
+      poignee: racine.querySelectorAll("[data-demi-poignee]").length,
+      rappels: racine.querySelectorAll("[data-demi-rappel]").length,
+    };
+  });
+  // La page suivante peut n'avoir qu'une colonne de contenu (page courte) ; la page en cours en a deux.
+  expect(info.haut.length).toBeGreaterThanOrEqual(1);
+  expect(info.bas.length).toBe(2);
+  // Gauche : la première colonne de la page suivante ; droite : la dernière de la page en cours ; le filet (1,5 px) dans la gouttière.
+  // Deux zones disjointes sur toute la hauteur : rien ne se superpose.
+  expect(info.zH).toHaveLength(1);
+  expect(info.zB).toHaveLength(1);
+  const droite = info.zB[info.zB.length - 1];
+  if (info.haut[1]) expect(info.zH[0][2], "la zone du haut s'arrête à la gouttière").toBeLessThanOrEqual(info.haut[1].x0 + 1);
+  expect(info.zH[0][2], "les deux zones se touchent à la gouttière, sans se recouvrir").toBeCloseTo(droite[0], 0);
+  expect(info.zH[0][2]).toBeGreaterThanOrEqual(info.haut[0].x1 - 1);
+  expect(droite[0], "la zone du bas commence à la gouttière").toBeGreaterThanOrEqual(info.bas[0].x1 - 1);
+  expect(droite[0]).toBeLessThanOrEqual(info.bas[1].x0 + 1);
+  expect(info.filet.w).toBeCloseTo(1.5, 1);
+  expect(info.filet.x).toBeGreaterThan(info.haut[0].x1 - 1);
+  expect(info.filet.x).toBeLessThan(info.bas[1].x0 + 1);
+  expect(info.filet.h, "filet sur toute la hauteur des colonnes").toBeGreaterThan(e.height * 0.6);
+  expect(info.poignee, "pas de poignée : la proportion ne se règle pas ici").toBe(0);
+  expect(info.rappels).toBe(0);
+  const m = await mesurer(page);
+  expect(m.haut.tranches).toBe(0);
+  expect(m.bas.tranches).toBe(0);
+  expect(m.haut.visibles, "la colonne de gauche se voit").toBeGreaterThan(0);
+  expect(m.bas.visibles, "la colonne de droite se voit").toBeGreaterThan(0);
+  const courante = info.bas[1].blocs;
+  const suivante = info.haut[0].blocs;
+  const pageEnCours = Number((await lireCompteur(page)).split("/")[0]);
+  expect(courante.length).toBeGreaterThan(0);
+
+  // Le tour suivant donne la page suivante entière : ses colonnes sont celles que montrait la demi-page (la première à gauche).
+  await page.keyboard.press("ArrowRight");
+  await expect(enDemi(page)).toHaveCount(0);
+  await expect.poll(() => lireCompteur(page)).toBe(`${pageEnCours + 1} / ${total}`);
+  const entieres = await colonnesEntieres();
+  expect(entieres[0], "à gauche, la première colonne de la page suivante").toEqual(suivante);
+  // Tour arrière symétrique : la demi-page de retour montre la page précédente à droite.
+  await page.keyboard.press("ArrowLeft");
+  await expect(enDemi(page)).toHaveCount(1);
+  expect(await lireCompteur(page)).toBe(`${pageEnCours} / ${total}`);
+  await page.keyboard.press("ArrowLeft");
+  await expect(enDemi(page)).toHaveCount(0);
+  await expect.poll(() => lireCompteur(page)).toBe(`${pageEnCours} / ${total}`);
+  const retour = await colonnesEntieres();
+  expect(retour[retour.length - 1], "à droite, la dernière colonne de la page en cours").toEqual(courante);
+});
+
 for (const langue of ["fr", "zh"] as const) {
   for (const theme of ["light", "dark"] as const) {
     test(`demi-page : captures de l'état demi (${langue}, ${theme})`, async ({ page }, testInfo) => {
       await ouvrir(page, { langue, theme });
       await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
+      // État prêt avant le tour : polices chargées (les sous-ensembles chinois changent la mise en page) et mise en page terminée,
+      // sinon la demi-page peut être calculée sur des mesures provisoires et le tour devient un tour entier.
+      await page.evaluate(() => document.fonts.ready);
+      await attendreMiseEnPage(page);
       await tourner(page, testInfo, 1, "fleche");
       await expect(enDemi(page)).toHaveCount(1);
       await expect(filet(page)).toBeVisible();
       const m = await mesurer(page);
       expect(m.haut.tranches).toBe(0);
       expect(m.bas.tranches).toBe(0);
-      expect(m.sousCoupeInvisibles).toBe(0);
+      // Rangées sous le filet : notion de la coupe horizontale ; en colonnes le filet est vertical et la colonne cachée n'en est pas une.
+      if (!m.colonnes) expect(m.sousCoupeInvisibles).toBe(0);
+      // Deux colonnes : coupe verticale (filet sur la hauteur, pas de poignée) ; une colonne : coupe horizontale et poignée.
+      if (m.colonnes) {
+        await expect(page.locator("[data-performance-mode] [data-demi-colonnes]")).toHaveCount(1);
+        await expect(poignee(page)).toHaveCount(0);
+        const f = (await filet(page).boundingBox())!;
+        expect(f.width).toBeCloseTo(1.5, 1);
+        expect(f.height, "filet vertical sur la hauteur des colonnes").toBeGreaterThan(page.viewportSize()!.height * 0.6);
+      } else {
+        await expect(poignee(page)).toHaveCount(1);
+        expect(m.hauteurFilet).toBeCloseTo(1.5, 1);
+      }
       if (langue === "zh") {
         const options = await ouvrirOptions(page, "zh");
         await expect(options.getByRole("button", { name: "半页翻页", exact: true })).toBeVisible();
         await page.keyboard.press("Escape");
         await expect(options).toBeHidden();
-        await expect(poignee(page)).toHaveAttribute("aria-label", "半页");
+        if (!m.colonnes) await expect(poignee(page)).toHaveAttribute("aria-label", "半页");
       }
       // Menus fermés, barres fermées (toucher au centre, hors poignée), transition finie.
-      const p = (await poignee(page).boundingBox())!;
+      const p = m.colonnes ? null : (await poignee(page).boundingBox())!;
       const e = page.viewportSize()!;
-      await toucher(page, testInfo, e.width * 0.5, p.y + p.height / 2 < e.height / 2 ? e.height * 0.75 : e.height * 0.25);
+      await toucher(page, testInfo, e.width * 0.5, p && p.y + p.height / 2 < e.height / 2 ? e.height * 0.75 : e.height * 0.25);
       // L'opacité (fondu de 300 ms) est sur le conteneur des deux barres.
       await expect(page.locator("[data-barre-haut]").locator("xpath=..")).toHaveCSS("opacity", "0");
       await expect(enDemi(page)).toHaveCount(1);
