@@ -49,6 +49,8 @@ const SPECS_GRAND_ECRAN = [
   /louange-barre-titre\.spec\.ts/,
   // Lot FS-B (docs/spec-mode-louange-forscore-2.md) : les menus du mode louange (Setlist, Repères, Outils, Tempo, Options).
   /louange-menus\.spec\.ts/,
+  // Lot FS-C (docs/spec-mode-louange-forscore-2.md) : « Je joue », le menu du rôle (ancrage sous l'icône, première ouverture).
+  /louange-je-joue\.spec\.ts/,
   /setlist-regie\.spec\.ts/,
   /setlist-partage\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,

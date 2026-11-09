@@ -437,11 +437,11 @@ test("tempo réglé par chant : gardé après rechargement, « Tempo du fichier 
   expect(erreurs).toEqual([]);
 });
 
-// Lot L5 : annotations stables. Taille du texte mémorisée par setlist et par chant (`perf-annot-scale-<setlist>-<slug>`),
+// Lot L5 : annotations stables. Taille du texte mémorisée par compte, par setlist et par chant (`perf-annot-scale-<uid>-<setlist>-<slug>`),
 // figée en annotation ; bannière « Revenir à cette taille » quand on lit à une autre taille.
 // Les traits sont dessinés à la souris sur le canevas ; le Firestore est simulé (`db.writes`).
 
-const CLE_TAILLE = `perf-annot-scale-${SETLIST_ID}-abba-pere`;
+const CLE_TAILLE = `perf-annot-scale-${MUSICIEN.uid}-${SETLIST_ID}-abba-pere`;
 const calqueLecture = (page: Page) => page.locator("[data-performance-mode] > canvas");
 const ecritesAnnot = (db: { writes: { path: string }[] }) => db.writes.filter((w) => w.path.startsWith("annotations/"));
 
@@ -972,8 +972,17 @@ test("forScore, L5 : la taille annotée est propre à la setlist (pas de banniè
   expect(await pourcentage(page)).toBe("110%");
   await page.waitForTimeout(500);
   await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
-  expect(await page.evaluate((c) => localStorage.getItem(c), `perf-annot-scale-${AUTRE}-abba-pere`)).toBeNull();
+  expect(await page.evaluate((c) => localStorage.getItem(c), `perf-annot-scale-${MUSICIEN.uid}-${AUTRE}-abba-pere`)).toBeNull();
   expect(erreurs).toEqual([]);
+});
+
+test("forScore, L5 : l'ancienne clé sans compte sert de taille de départ au premier compte, pas à un autre", async ({ page }) => {
+  // Taille annotée avant les comptes : 130 %, lue à 100 % -> la bannière prévient ; l'ancienne clé n'est pas réécrite.
+  await page.addInitScript((c) => { if (!localStorage.getItem("perf-role-migre")) localStorage.setItem(c, "1.3"); }, `perf-annot-scale-${SETLIST_ID}-abba-pere`);
+  await ouvrirL5(page);
+  await expect(page.locator("[data-alerte-annotations]")).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("perf-role-migre"))).toBe(MUSICIEN.uid);
+  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBeNull();
 });
 
 test("forScore, L5 : en annulant le dernier trait, la taille reste mémorisée (jamais supprimée automatiquement)", async ({ page }) => {

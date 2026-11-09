@@ -6,7 +6,7 @@ import { Bookmark, Drum, Guitar, ListMusic, Mic, MicVocal, Music, PenLine, Piano
 import type { JianpuSheetBlock, SectionBlock } from "@/lib/performance/blocks";
 import type { MenuId } from "./MenuLouange";
 
-const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> = {
+export const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> = {
   pianiste: Piano,
   guitariste: Guitar,
   presidence: Mic,
@@ -77,7 +77,7 @@ export function BarreHaut({
             <Bookmark className="h-5 w-5" />
           </BtnBarre>
         )}
-        <BtnBarre label={t("performance.iPlay")} onClick={onJeJoue} texte>
+        <BtnBarre label={t("performance.iPlay")} menu="jejoue" menuOuvert={menuOuvert} onClick={onJeJoue} texte>
           <IconeRole className="h-5 w-5" />
         </BtnBarre>
       </div>

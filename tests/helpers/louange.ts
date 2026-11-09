@@ -17,11 +17,11 @@ export async function attendreMiseEnPage(page: Page) {
 }
 
 export type Langue = "fr" | "zh";
-export type Menu = "setlist" | "reperes" | "outils" | "tempo" | "options";
+export type Menu = "setlist" | "reperes" | "jejoue" | "outils" | "tempo" | "options";
 /** Nom du bouton de la barre de titre, qui est aussi le nom du dialogue qu'il ouvre (FS-B). */
 export const NOM_MENU: Record<Langue, Record<Menu, string>> = {
-  fr: { setlist: "Setlist", reperes: "Repères", outils: "Outils", tempo: "Tempo", options: "Options d'affichage" },
-  zh: { setlist: "歌单", reperes: "段落", outils: "工具", tempo: "节拍", options: "显示选项" },
+  fr: { setlist: "Setlist", reperes: "Repères", jejoue: "Je joue", outils: "Outils", tempo: "Tempo", options: "Options d'affichage" },
+  zh: { setlist: "歌单", reperes: "段落", jejoue: "我演奏", outils: "工具", tempo: "节拍", options: "显示选项" },
 };
 
 /** Ouvre un menu du mode louange (FS-B : Setlist, Repères, Outils, Tempo, Options d'affichage). La barre reste ouverte
@@ -51,6 +51,8 @@ export async function ouvrirMenu(page: Page, menu: Menu, langue: Langue = "fr") 
 export const ouvrirOptions = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "options", langue);
 /** Ancien nom d'`ouvrirOptions`, gardé pour les specs qui le citent. */
 export const ouvrirReglages = ouvrirOptions;
+/** Ouvre le menu « Je joue » (rôle, ordre des sections, paroles masquées ; FS-C). */
+export const ouvrirJeJoue = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "jejoue", langue);
 /** Ouvre Outils : son menu à partir de 768 px, la feuille Options d'affichage (dont il est la tête) au téléphone. */
 export const ouvrirOutils = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "outils", langue);
 

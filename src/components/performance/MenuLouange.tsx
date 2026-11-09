@@ -5,7 +5,7 @@ import { Popover, PopoverAnchor, PopoverArrow, PopoverContent } from "@/componen
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 
 /** Les menus du mode louange (FS-B) : un seul est ouvert à la fois (`popoverOuvert` de PerformanceMode). */
-export type MenuId = "setlist" | "reperes" | "outils" | "options" | "tempo";
+export type MenuId = "setlist" | "reperes" | "jejoue" | "outils" | "options" | "tempo";
 
 /** Largeur de la dernière disposition où les menus sont des feuilles du bas (md de Tailwind). */
 const MD = "(min-width: 768px)";

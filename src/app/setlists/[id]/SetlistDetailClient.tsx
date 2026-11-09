@@ -344,7 +344,7 @@ export function SetlistDetailClient() {
     showChords, setShowChords, chordsTouched, setChordsTouched,
     showPinyin, disposition, layout, jianpuPref,
     changeDisposition, changeLayout, changeJianpuPref, togglePinyin,
-  } = usePreferencesAffichage();
+  } = usePreferencesAffichage(user?.uid ?? null, authLoading);
   // Adapter (la setlist) et Ma version (pour soi) s'excluent ; la barre d'outils
   // et, sur téléphone étroit, le menu « ⋯ » passent par ici.
   // Depuis la Liste, les deux modes ouvrent les partitions au chant lu (Q11) ; en
@@ -2090,6 +2090,7 @@ export function SetlistDetailClient() {
       )}
       {performanceMode && (
         <PerformanceMode
+          uid={user?.uid ?? null}
           items={stageItems}
           contents={contents}
           initialShowChords={chordsTouched ? showChords : undefined}

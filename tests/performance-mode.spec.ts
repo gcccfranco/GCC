@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, onStage, ouvrirOutils, ouvrirReglages } from "./helpers/louange";
+import { attendreMiseEnPage, onStage, ouvrirJeJoue, ouvrirOutils, ouvrirReglages } from "./helpers/louange";
 import { basculerAccords, fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
@@ -177,7 +177,7 @@ test.describe("vue structure (batteur)", () => {
 
 test.describe("choix du rôle à la première ouverture", () => {
   const ITEMS = [item({ songSlug: "abba-pere", position: 1, structureOverride: ["verse-2-0", "chorus-3-1"] })];
-  const roleSheet = (page: Page) => page.getByRole("dialog", { name: "Quel est ton rôle ?" });
+  const roleSheet = (page: Page) => page.getByRole("dialog", { name: "Je joue", exact: true });
   /** Lignes de paroles de la page affichée (hors copie de mesure). */
   const lyricLines = (page: Page) => onStage(page, "[data-copy-line]");
   const reopen = async (page: Page) => {
@@ -189,7 +189,9 @@ test.describe("choix du rôle à la première ouverture", () => {
   test("appareil vierge : la question apparaît, le rôle choisi s'applique et n'est plus redemandé", async ({ page }) => {
     await openPerformance(page, ITEMS, null);
     await expect(roleSheet(page)).toBeVisible();
+    await expect(roleSheet(page).getByText("Choisis ce que tu joues, ton compte s'en souviendra.")).toBeVisible();
     await roleSheet(page).getByRole("button", { name: /Batteur/ }).click();
+    await page.keyboard.press("Escape");
     await expect(roleSheet(page)).toBeHidden();
     // Vue structure : plus de paroles à l'écran.
     await expect(lyricLines(page)).toHaveCount(0);
@@ -200,7 +202,8 @@ test.describe("choix du rôle à la première ouverture", () => {
 
   test("« Aucun » : rien n'est imposé et la question n'est plus redemandée", async ({ page }) => {
     await openPerformance(page, ITEMS, null);
-    await roleSheet(page).getByRole("button", { name: /Aucun/ }).click();
+    await roleSheet(page).getByRole("button", { name: /Aucun · je règle moi-même/ }).click();
+    await page.keyboard.press("Escape");
     await expect(roleSheet(page)).toBeHidden();
     await reopen(page);
     await expect(roleSheet(page)).toBeHidden();
@@ -283,8 +286,8 @@ test.describe("reprise des réglages", () => {
     await basculerAccords(page); // de nouveau affichés
     await launch(page);
     await expect(lyricLines(page).first()).toBeVisible();
-    const settings = await settingsText(page);
-    await expect(settings.getByRole("button", { name: "Batteur" })).not.toHaveClass(/bg-primary/);
+    const jejoue = await ouvrirJeJoue(page);
+    await expect(jejoue.getByRole("button", { name: /^Batteur/ })).toHaveAttribute("aria-pressed", "false");
   });
 
   test("sans changement sur la page setlist, le rôle décide", async ({ page }) => {
@@ -295,13 +298,13 @@ test.describe("reprise des réglages", () => {
 
   test("désélectionner son rôle dans Réglages ne fait pas revenir la question", async ({ page }) => {
     await openPerformance(page, FR, "pianiste");
-    const settings = await settingsText(page);
-    await settings.getByRole("button", { name: "Pianiste" }).click();
-    await page.keyboard.press("Escape"); // ferme les réglages
-    await expect(settings).toBeHidden();
+    const jejoue = await ouvrirJeJoue(page);
+    await jejoue.getByRole("button", { name: /^Pianiste/ }).click();
+    await page.keyboard.press("Escape"); // ferme Je joue
+    await expect(jejoue).toBeHidden();
     await page.keyboard.press("Escape"); // quitte le mode louange
     await launch(page);
-    await expect(page.getByRole("dialog", { name: "Quel est ton rôle ?" })).toBeHidden();
+    await expect(page.getByRole("dialog", { name: "Je joue", exact: true })).toHaveCount(0);
   });
 });
 

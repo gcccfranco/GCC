@@ -3,11 +3,10 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { langAccent } from "./langAccent";
-import { BarreHaut } from "./BarreHaut";
+import { BarreHaut, ICONES_ROLE } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
 import { MenuLouange, type MenuId } from "./MenuLouange";
 import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo, LignesTempo, TitreRubrique, VALEUR } from "./ContenusMenus";
-import { FeuilleRole } from "./FeuilleRole";
 import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
 import { PageTexte } from "./PageTexte";
@@ -15,7 +14,7 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, Plus, Waves } from "lucide-react";
+import { Check, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, Plus, Waves } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { ecouterCoupure, versionCoupure } from "@/lib/song/coupureSignal";
 import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
@@ -40,6 +39,7 @@ import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
+import { ROLE_IDS, getRole, roleDemande, setRole, type RolePreset } from "@/lib/performance/roleCompte";
 import { barreDejaVue, marquerBarreVue } from "@/lib/performance/barreVue";
 import { FOND_CLAIR, FOND_SOMBRE, SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE, TEINTES, garderContraste, getCouleurIcones, setCouleurIcones } from "@/lib/performance/couleurIcones";
 import { getMetronomePref, setMetronomePref } from "@/lib/performance/tempo";
@@ -269,7 +269,6 @@ const APERCU_PART_MAX = 0.25;
 
 // Presets de rôle : raccourcis vers une combinaison accords/paroles. Mémorisé
 // par appareil ; un réglage manuel des toggles désélectionne le preset.
-type RolePreset = "pianiste" | "guitariste" | "presidence" | "choriste" | "batteur";
 const ROLE_PRESETS: Record<RolePreset, { chords: boolean; hideLyrics: boolean }> = {
   pianiste: { chords: true, hideLyrics: false },
   guitariste: { chords: true, hideLyrics: false },
@@ -277,9 +276,10 @@ const ROLE_PRESETS: Record<RolePreset, { chords: boolean; hideLyrics: boolean }>
   choriste: { chords: false, hideLyrics: false },
   batteur: { chords: false, hideLyrics: true },
 };
-const ROLE_PRESET_IDS = Object.keys(ROLE_PRESETS) as RolePreset[];
 
 interface PerformanceModeProps {
+  /** Compte connecté (null hors connexion) : le rôle et la taille annotée sont retenus par compte. */
+  uid: string | null;
   items: SetlistItem[];
   contents: Record<string, SongContent>;
   /** Accords changés sur la page setlist juste avant (absent sinon) : ils
@@ -303,6 +303,7 @@ interface PerformanceModeProps {
 }
 
 export function PerformanceMode({
+  uid,
   items,
   contents,
   initialShowChords,
@@ -318,14 +319,7 @@ export function PerformanceMode({
 }: PerformanceModeProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [storedRole] = useState<RolePreset | null>(() => {
-    try {
-      const v = localStorage.getItem("perf-role-preset");
-      return v && v in ROLE_PRESETS ? (v as RolePreset) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [storedRole] = useState<RolePreset | null>(() => getRole(uid));
   // Rôle contredit par les accords choisis juste avant sur la page setlist :
   // désélectionné, et l'affichage reprend celui de la page (paroles comprises).
   // Même chose quand l'Affichage de l'appareil contredit le rôle (D15, dans les
@@ -468,11 +462,8 @@ export function PerformanceMode({
   // ouverture : un appareil qui retire son rôle n'est pas réinterrogé.
   const clearRolePreset = useCallback(() => {
     setRolePreset(null);
-    try {
-      localStorage.removeItem("perf-role-preset");
-      localStorage.setItem("perf-role-asked", "1");
-    } catch { /* ignore */ }
-  }, []);
+    setRole(uid, null);
+  }, [uid]);
 
   const applyRolePreset = useCallback((id: RolePreset) => {
     const p = ROLE_PRESETS[id];
@@ -483,27 +474,21 @@ export function PerformanceMode({
     // depuis Structure seule seulement (O5) : Sections uniques reste.
     if (id === "batteur") onAffichageChange("structure");
     else if (affichage === "structure") onAffichageChange("played");
-    try {
-      localStorage.setItem("perf-role-preset", id);
-      localStorage.setItem("perf-role-asked", "1");
-    } catch { /* ignore */ }
-  }, [toggleHideLyrics, affichage, onAffichageChange]);
+    setRole(uid, id);
+  }, [toggleHideLyrics, affichage, onAffichageChange, uid]);
 
-  // Première ouverture sur cet appareil : on demande le rôle, retenu ensuite
-  // (« Aucun » aussi). Refermer la feuille sans répondre la reporte à la
-  // prochaine ouverture.
-  const [askRole, setAskRole] = useState(() => {
-    try {
-      return !localStorage.getItem("perf-role-preset") && !localStorage.getItem("perf-role-asked");
-    } catch {
-      return false;
-    }
-  });
-  const answerRole = useCallback((id: RolePreset | null) => {
-    if (id) applyRolePreset(id);
-    else clearRolePreset();
-    setAskRole(false);
-  }, [applyRolePreset, clearRolePreset]);
+  // Première ouverture de ce compte : « Je joue » s'ouvre seul avec la phrase d'accueil ; le rôle choisi (ou « Aucun »)
+  // est retenu ensuite. Fermer sans répondre reporte la question à la prochaine ouverture.
+  const [accueilRole, setAccueilRole] = useState(() => !roleDemande(uid));
+
+  // L'ouverture automatique ancre le popover sous son icône : la barre de titre doit être visible.
+  useEffect(() => {
+    if (!accueilRole) return;
+    setShowChrome(true);
+    setPopoverOuvert("jejoue");
+    // Une seule fois, à l'ouverture du mode.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const capoActive = rolePreset === "guitariste";
 
@@ -950,7 +935,7 @@ export function PerformanceMode({
 
   // L5 : chant de la page courante, et taille à laquelle il a été annoté sur cet appareil.
   const slugAnnote = currentEntry?.block.songSlug;
-  const tailleAnnotee = slugAnnote ? getTailleAnnotee(setlistId, slugAnnote) : null;
+  const tailleAnnotee = slugAnnote ? getTailleAnnotee(uid, setlistId, slugAnnote) : null;
   const alerteAnnotations =
     !!user && !annotateMode && showAnnotations && tailleAnnotee !== null &&
     Math.round(tailleAnnotee * 100) !== Math.round(fontScale * 100);
@@ -989,7 +974,7 @@ export function PerformanceMode({
   const basculerAnnotation = () => {
     setPopoverOuvert(null);
     if (!annotateMode && slugAnnote) {
-      const memo = getTailleAnnotee(setlistId, slugAnnote);
+      const memo = getTailleAnnotee(uid, setlistId, slugAnnote);
       if (memo !== null && Math.round(memo * 100) !== Math.round(fontScale * 100)) appliquerTaille(memo);
     }
     setAnnotateMode((v) => !v);
@@ -1025,7 +1010,7 @@ export function PerformanceMode({
       if (e.key !== "Escape") {
         // Curseur de page, feuilles et sommaire ouverts : flèches, PageUp/Down et Espace leur appartiennent.
         if (cible instanceof HTMLInputElement) return;
-        if (popoverOuvert || askRole) return;
+        if (popoverOuvert) return;
         if (cible?.closest("[role=dialog]")) return;
         // Espace active le bouton, le lien, le curseur ou l'élément de menu qui a le focus (comportement natif)
         // seulement si le focus y est venu au clavier (pas de pointerdown depuis le dernier Tab / Échap) ; un focus resté après un clic, un toucher ou
@@ -1043,9 +1028,8 @@ export function PerformanceMode({
         // Échap déjà consommé par une feuille (Radix le marque en la fermant) :
         // il ne doit pas aussi quitter le mode louange.
         if (e.defaultPrevented) return;
-        if (popoverOuvert || askRole) {
+        if (popoverOuvert) {
           setPopoverOuvert(null);
-          setAskRole(false);
           return;
         }
         onClose();
@@ -1053,7 +1037,7 @@ export function PerformanceMode({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [currentPage, pages.length, goToPage, onClose, popoverOuvert, askRole]);
+  }, [currentPage, pages.length, goToPage, onClose, popoverOuvert]);
 
   // Touch/pointer tap handling
   // Pointeurs actifs. Un second doigt qui descend annule le geste en cours (zoom à deux doigts).
@@ -1567,7 +1551,7 @@ export function PerformanceMode({
           avecReperes={reperes.length > 0}
           onAnnoter={user && !horsLigne ? basculerAnnotation : undefined}
           onMenu={basculerMenu}
-          onJeJoue={() => { setPopoverOuvert(null); setAskRole(true); }}
+          onJeJoue={() => basculerMenu("jejoue")}
           onQuitter={onClose}
         />
 
@@ -1580,9 +1564,6 @@ export function PerformanceMode({
           goToPage={goToPage}
         />
       </div>
-
-      {/* ── Choix du rôle à la première ouverture ── */}
-      <FeuilleRole open={askRole} roleIds={ROLE_PRESET_IDS} onFermer={() => setAskRole(false)} onChoisir={answerRole} />
 
       {/* ── Menus du mode (FS-B) : popover sous l'icône à partir de md, feuille du bas au téléphone ── */}
       <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurMenus} titreCache>
@@ -1599,6 +1580,88 @@ export function PerformanceMode({
 
       <MenuLouange id="reperes" titre={t("performance.reperes")} ouvert={popoverOuvert === "reperes"} onOuvertChange={(o) => !o && fermerMenu("reperes")} align="start" couleur={couleurMenus}>
         <ContenuReperes reperes={reperes} currentPage={currentPage} goToPage={goToPage} pageCount={pages.length} onFermer={() => fermerMenu("reperes")} />
+      </MenuLouange>
+
+      <MenuLouange id="jejoue" titre={t("performance.iPlay")} ouvert={popoverOuvert === "jejoue"} onOuvertChange={(o) => !o && fermerMenu("jejoue")} align="start" couleur={couleurMenus}>
+        <div className="space-y-4">
+          <div>
+            {accueilRole && (
+              <p className="px-1 pb-2 text-sm font-medium text-foreground">
+                {t(uid ? "performance.rolePrompt.welcome" : "performance.rolePrompt.welcomeDevice")}
+              </p>
+            )}
+            <TitreRubrique>{t("performance.rolePrompt.subtitle")}</TitreRubrique>
+            <div className="flex flex-col">
+              {ROLE_IDS.map((id) => {
+                const Icone = ICONES_ROLE[id];
+                const actif = rolePreset === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={actif}
+                    onClick={() => {
+                      if (actif) clearRolePreset();
+                      else applyRolePreset(id);
+                      setAccueilRole(false);
+                    }}
+                    className="flex min-h-11 w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Icone className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-foreground">{t(`performance.roles.${id}`)}</span>
+                      <span className="block text-xs text-muted-foreground">{t(`performance.rolePrompt.hints.${id}`)}</span>
+                    </span>
+                    {actif && <Check className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" aria-hidden="true" />}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => { clearRolePreset(); setAccueilRole(false); }}
+                className="flex min-h-11 w-full items-center rounded-lg px-2 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {t("performance.rolePrompt.none")} · {t("performance.rolePrompt.hints.none")}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-4 border-t border-border pt-4">
+            {/* Affichage (D15) : le même réglage que le menu Affichage de la setlist. */}
+            <div className="space-y-2">
+              <TitreRubrique id="perf-ordre-sections">{t("performance.sectionOrder")}</TitreRubrique>
+              <div role="radiogroup" aria-labelledby="perf-ordre-sections" className="flex rounded-lg bg-secondary p-1">
+                {(["played", "unique", "structure"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={affichageVu === v}
+                    onClick={() => changeAffichage(v)}
+                    className={`h-11 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      affichageVu === v ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t(`setlists.detail.layout.${v}`)}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
+            </div>
+            <SettingRow label={t("performance.hideLyrics")}>
+              <BoutonRond
+                label={t("performance.hideLyrics")}
+                allume={lyricsHidden}
+                onClick={() => {
+                  clearRolePreset();
+                  quitterStructureSeule();
+                  toggleHideLyrics(!lyricsHidden);
+                }}
+              >
+                <EyeOff className="h-5 w-5" />
+              </BoutonRond>
+            </SettingRow>
+          </div>
+        </div>
       </MenuLouange>
 
       <MenuLouange id="tempo" titre={t("performance.tempo")} ouvert={popoverOuvert === "tempo"} onOuvertChange={(o) => !o && fermerMenu("tempo")} couleur={couleurMenus}>
@@ -1764,64 +1827,6 @@ export function PerformanceMode({
               </div>
               {cercleOuvert && <CercleChromatique valeur={couleurChoix} fond={stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR} onChange={choisirCouleur} />}
             </div>
-          {/* En attendant FS-C (Je joue) : la vue et l'affichage restent ici, comme dans l'ancien tiroir. */}
-          <div className="space-y-4 border-t border-border pt-4">
-            <TitreRubrique>{t("performance.viewSection")}</TitreRubrique>
-            <div className="space-y-2">
-              <TitreRubrique>{t("performance.view")}</TitreRubrique>
-              <div className="flex flex-wrap gap-1.5">
-                {ROLE_PRESET_IDS.map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    aria-pressed={rolePreset === id}
-                    onClick={() => (rolePreset === id ? clearRolePreset() : applyRolePreset(id))}
-                    className={`h-11 px-3 rounded-lg border text-xs font-semibold transition-colors ${
-                      rolePreset === id
-                        ? `${SEGMENT_CHOISI} border-transparent`
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {t(`performance.roles.${id}`)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {/* Affichage (D15) : le même réglage que le menu Affichage de la setlist. */}
-            <div className="space-y-2">
-              <TitreRubrique id="perf-affichage">{t("setlists.detail.layout.label")}</TitreRubrique>
-              <div role="radiogroup" aria-labelledby="perf-affichage" className="flex rounded-lg bg-secondary p-1">
-                {(["played", "unique", "structure"] as const).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    role="radio"
-                    aria-checked={affichageVu === v}
-                    onClick={() => changeAffichage(v)}
-                    className={`h-11 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                      affichageVu === v ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {t(`setlists.detail.layout.${v}`)}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
-            </div>
-            <SettingRow label={t("performance.hideLyrics")}>
-              <BoutonRond
-                label={t("performance.hideLyrics")}
-                allume={lyricsHidden}
-                onClick={() => {
-                  clearRolePreset();
-                  quitterStructureSeule();
-                  toggleHideLyrics(!lyricsHidden);
-                }}
-              >
-                <EyeOff className="h-5 w-5" />
-              </BoutonRond>
-            </SettingRow>
-          </div>
         </div>
       </MenuLouange>
     </div>

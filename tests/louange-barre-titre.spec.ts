@@ -145,7 +145,7 @@ test("barre de titre en 中文 : mêmes boutons, noms chinois", async ({ page })
   else expect(noms.filter((n) => n !== "节拍" && n !== "批注")).toEqual(["歌单", "我演奏", "工具", "显示选项", "退出"]);
 });
 
-test("Setlist ouvre son menu, Je joue la feuille du rôle, Options le menu « Options d'affichage »", async ({ page }) => {
+test("Setlist ouvre son menu, Je joue son menu (rôle), Options le menu « Options d'affichage »", async ({ page }) => {
   await ouvrir(page);
   const setlist = await ouvrirMenu(page, "setlist");
   await expect(setlist.getByText("Culte d'essai de la barre")).toBeVisible();
@@ -164,7 +164,7 @@ test("Setlist ouvre son menu, Je joue la feuille du rôle, Options le menu « Op
     await expect(outils).toBeHidden();
   }
   await page.getByRole("button", { name: "Je joue" }).click();
-  await expect(page.getByRole("dialog", { name: /rôle/i })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Je joue", exact: true })).toBeVisible();
 });
 
 // ─── La rangée de points ──────────────────────────────────────────────────────

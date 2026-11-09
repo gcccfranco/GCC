@@ -5,7 +5,7 @@ import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { getJianpuPref, setJianpuPref, type JianpuPref } from "@/lib/jianpu/preference";
 
 /** Réglages d'affichage de la setlist, relus du stockage de l'appareil au montage. */
-export function usePreferencesAffichage() {
+export function usePreferencesAffichage(uid: string | null, authLoading: boolean) {
   const [showChords, setShowChords] = useState(true);
   // Accords changés sur cette page juste avant le mode louange : ils
   // l'emportent alors sur le rôle mémorisé (reprise des réglages).
@@ -26,8 +26,11 @@ export function usePreferencesAffichage() {
     setShowPinyin(getPinyinPref());
     setDisposition(getDispositionPref());
     setJianpuPrefState(getJianpuPref());
-    setLayout(getPartitionLayoutPref());
   }, []);
+  // La disposition par défaut dépend du rôle du compte : relue une fois le compte connu, et à chaque changement d'uid.
+  useEffect(() => {
+    if (!authLoading) setLayout(getPartitionLayoutPref(uid));
+  }, [uid, authLoading]);
   const changeDisposition = (d: Disposition) => {
     setDisposition(d);
     setDispositionPref(d);

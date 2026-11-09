@@ -642,20 +642,29 @@ test("Annoter (téléphone) est une action : ligne entière, pas un rond d'inter
 for (const theme of ["light", "dark"] as const) {
   test(`« Masquer les paroles » (${theme}) : bouton rond allumé / éteint comme les autres, plus de Switch`, async ({ page }) => {
     await ouvrir(page, { theme });
-    const options = await ouvrirMenu(page, "options");
+    // « Masquer les paroles » est dans Je joue (FS-C), le métronome dans Options : deux menus, un rond de chacun.
+    const jejoue = await ouvrirMenu(page, "jejoue");
     await attendreOuverture(page);
-    await expect(options.getByRole("switch")).toHaveCount(0);
-    const masquer = options.getByRole("button", { name: "Masquer les paroles" });
+    await expect(jejoue.getByRole("switch")).toHaveCount(0);
+    const masquer = jejoue.getByRole("button", { name: "Masquer les paroles" });
     await expect(masquer).toHaveAttribute("aria-pressed", "false");
     await masquer.click();
     await expect(masquer).toHaveAttribute("aria-pressed", "true");
+    await page.waitForTimeout(500); // fin des transitions de couleur
+    const fond = (el: Element) => getComputedStyle(el).backgroundColor;
+    const couleur = (el: Element) => getComputedStyle(el).color;
+    const fondMasquer = await masquer.evaluate(fond);
+    const couleurMasquer = await masquer.evaluate(couleur);
+    await page.keyboard.press("Escape");
+    await expect(jejoue).toBeHidden();
+    const options = await ouvrirMenu(page, "options");
+    await attendreOuverture(page);
     const metronome = options.getByRole("button", { name: "Métronome visuel" });
     await metronome.click();
     await expect(metronome).toHaveAttribute("aria-pressed", "true");
-    await page.waitForTimeout(500); // fin des transitions de couleur
-    const fond = (el: Element) => getComputedStyle(el).backgroundColor;
-    expect(await masquer.evaluate(fond)).toBe(await metronome.evaluate(fond));
-    expect(await masquer.evaluate((el) => getComputedStyle(el).color)).toBe(await metronome.evaluate((el) => getComputedStyle(el).color));
+    await page.waitForTimeout(500);
+    expect(fondMasquer).toBe(await metronome.evaluate(fond));
+    expect(couleurMasquer).toBe(await metronome.evaluate(couleur));
   });
 }
 

@@ -88,8 +88,8 @@ export function useAnnotationsPage({
     (data: AnnotationData) => {
       setPageAnnotations(data);
       // L5 : au premier trait d'un chant, on retient la taille du texte à laquelle on annote.
-      if (slugAnnote && data.strokes.length > 0 && getTailleAnnotee(setlistId, slugAnnote) === null) {
-        setTailleAnnotee(setlistId, slugAnnote, fontScale);
+      if (slugAnnote && data.strokes.length > 0 && getTailleAnnotee(user?.uid ?? null, setlistId, slugAnnote) === null) {
+        setTailleAnnotee(user?.uid ?? null, setlistId, slugAnnote, fontScale);
       }
       if (user && currentPageKey && !horsLigne) {
         saveAnnotation(user.uid, setlistId, currentPageKey, serializeAnnotations(data));

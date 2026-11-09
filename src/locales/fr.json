@@ -672,21 +672,21 @@
     "keyEsc": "Échap",
     "keySpace": "Espace",
     "onPage": "Sur la page",
-    "viewSection": "Rôle et Affichage",
     "twoColumns": "2 colonnes",
     "settings": "Réglages",
-    "view": "Rôle",
+    "sectionOrder": "Ordre des sections",
     "rolePrompt": {
-      "title": "Quel est ton rôle ?",
-      "description": "L'affichage s'adapte à ce que tu joues. Tu pourras changer dans Réglages.",
+      "subtitle": "Ce que la vue montre",
+      "welcome": "Choisis ce que tu joues, ton compte s'en souviendra.",
+      "welcomeDevice": "Choisis ce que tu joues, cet appareil s'en souviendra.",
       "none": "Aucun",
       "hints": {
-        "pianiste": "Paroles et accords",
-        "guitariste": "Paroles, accords et capo",
-        "presidence": "Paroles, sans accords",
-        "choriste": "Paroles, sans accords",
-        "batteur": "Structure du chant en grand",
-        "none": "Je règle moi-même"
+        "pianiste": "Accords et paroles",
+        "guitariste": "Accords, paroles et capo",
+        "presidence": "Paroles seules",
+        "choriste": "Paroles seules",
+        "batteur": "Feuille de route",
+        "none": "je règle moi-même"
       }
     },
     "roles": {
