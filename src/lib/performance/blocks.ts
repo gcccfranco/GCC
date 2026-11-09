@@ -428,6 +428,9 @@ export function buildPerformanceBlocks(
  *  seule s'écrit comme la vue ossature qu'elle rend (accords coupés, paroles
  *  masquées) — la vue structure du batteur garde ainsi ses traits, par quelque
  *  chemin qu'on y arrive. */
+/** Marque de la vue Structure (FS-D) : la feuille de route a remplacé la mise en page d'avant, les traits posés sur les anciennes cartes ne se chargent plus ici (ils restent dans Firestore). */
+export const SUFFIXE_FEUILLE = "f2";
+
 export function signatureAffichage({
   showChords,
   showTransitions,
@@ -451,7 +454,7 @@ export function signatureAffichage({
   const accords = showChords && !ossature;
   const paroles = !hideLyrics && !ossature;
   const suffixeDisposition = disposition === "sections" ? "s1" : disposition === "reperes" ? "dR" : disposition === "scene" ? "dS" : disposition === "partition" ? "dP" : "";
-  return `c${accords ? 1 : 0}t${showTransitions ? 1 : 0}l${paroles ? 0 : 1}${suffixeDisposition}${capo ? `k${capo}` : ""}${personalKey ? `p${personalKey}` : ""}z${Math.round(fontScale * 100)}${affichage === "unique" ? "au" : ""}`;
+  return `c${accords ? 1 : 0}t${showTransitions ? 1 : 0}l${paroles ? 0 : 1}${suffixeDisposition}${capo ? `k${capo}` : ""}${personalKey ? `p${personalKey}` : ""}z${Math.round(fontScale * 100)}${affichage === "unique" ? "au" : ""}${ossature ? SUFFIXE_FEUILLE : ""}`;
 }
 
 /** Identité stable d'un bloc d'une mise en page à l'autre : les indices ne le

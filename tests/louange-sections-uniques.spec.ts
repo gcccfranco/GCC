@@ -859,9 +859,11 @@ test.describe("signatureAffichage (pur)", () => {
     }
     expect(signatureAffichage({ ...reglages, affichage: "unique" })).not.toBe(avant(reglages));
     expect(signatureAffichage({ ...reglages, affichage: "structure" })).not.toBe(avant(reglages));
-    // Structure seule rend la vue ossature du batteur : même clé que ses traits d'avant.
+    // Structure seule (feuille de route, FS-D) : la composition a changé, la clé porte « f2 » et se distingue de celle d'avant.
     const batteur = { ...reglages, showChords: false, hideLyrics: true };
-    expect(signatureAffichage({ ...reglages, affichage: "structure" })).toBe(avant(batteur));
+    const structure = signatureAffichage({ ...reglages, affichage: "structure" });
+    expect(structure).toBe(`${avant(batteur)}f2`);
+    expect(structure).not.toBe(avant(batteur));
   });
 
   test("Repères, Scène et Partition : dR, dS, dP, et une clé différente de Classique", () => {

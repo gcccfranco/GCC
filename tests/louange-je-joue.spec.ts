@@ -213,6 +213,43 @@ test("deux comptes sur le même appareil : le premier hérite du rôle d'apparei
   await expect(retour.getByRole("button", { name: /^Guitariste/ })).toHaveAttribute("aria-pressed", "false");
 });
 
+test("le rôle d'appareil n'est repris qu'à l'ouverture du mode louange : consulter la setlist (vue partitions) ne migre rien", async ({ page }) => {
+  await preparer(page, { init: { "perf-role-preset": "batteur" } });
+  // Anouk ne fait que consulter la setlist : la marque n'est pas posée, rien n'est copié vers son compte.
+  await signInAs(page, ANOUK, { [`setlists/${SETLIST_ID}`]: setlist(FR) }, `/setlists/${SETLIST_ID}`);
+  await ouvrirPartitions(page);
+  await expect(page.getByRole("list", { name: "Structure" }).first()).toBeVisible();
+  expect(await lire(page, "perf-role-migre"), "pas de marque après une simple consultation").toBeNull();
+  expect(await lire(page, "perf-role-preset-uid-anouk")).toBeNull();
+
+  // Basile ouvre le mode louange : c'est lui qui hérite du rôle d'appareil.
+  await changerDeCompte(page);
+  await ouvrirMode(page, BASILE);
+  await expect(dialogueJeJoue(page), "Basile a hérité de Batteur : pas de question").toHaveCount(0);
+  expect(await lire(page, "perf-role-migre")).toBe("uid-basile");
+  expect(await lire(page, "perf-role-preset-uid-basile")).toBe("batteur");
+  expect(await lire(page, "perf-role-preset-uid-anouk"), "Anouk n'a rien").toBeNull();
+});
+
+test("le popover Je joue porte son titre en gras dès md ; au téléphone, seul le titre de la feuille", async ({ page }) => {
+  await preparer(page, { init: { "perf-role-preset": "guitariste" } });
+  await ouvrirMode(page, ANOUK);
+  const dialogue = await ouvrirJeJoue(page);
+  await expect(dialogue).toBeVisible();
+  const titre = dialogue.locator("[data-titre-je-joue]");
+  if (telephone(page)) {
+    await expect(titre).toBeHidden();
+    return;
+  }
+  await expect(titre).toBeVisible();
+  await expect(titre).toHaveText("Je joue");
+  expect(await titre.evaluate((e) => [parseFloat(getComputedStyle(e).fontSize), Number(getComputedStyle(e).fontWeight)])).toEqual([16, 700]);
+  const boiteTitre = (await titre.boundingBox())!;
+  const boiteSous = (await dialogue.getByText("Ce que la vue montre").boundingBox())!;
+  expect(boiteTitre.y + boiteTitre.height, "« Ce que la vue montre » sous le titre").toBeLessThanOrEqual(boiteSous.y + 0.5);
+  await expect(page.getByRole("dialog", { name: "Je joue", exact: true })).toBeVisible();
+});
+
 test("vue partitions de la setlist : le rôle Batteur du compte donne « Structure seule » (clé par compte)", async ({ page }) => {
   await preparer(page, { init: { "perf-role-preset-uid-anouk": "batteur", "perf-role-asked-uid-anouk": "1", "perf-role-migre": "uid-autre" } });
   await signInAs(page, ANOUK, { [`setlists/${SETLIST_ID}`]: setlist(FR) }, `/setlists/${SETLIST_ID}`);
@@ -233,6 +270,18 @@ test("taille annotée : la clé d'un autre compte ne compte pas", async ({ page 
   await page.waitForTimeout(500);
   await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
 });
+
+for (const largeur of [1024, 1440]) {
+  test(`capture FS-corr : le popover Je joue à ${largeur} px, titre en tête`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: largeur, height: 900 });
+    await preparer(page, { init: { "perf-role-preset": "guitariste" } });
+    await ouvrirMode(page, ANOUK);
+    const dialogue = await ouvrirJeJoue(page);
+    await expect(dialogue.locator("[data-titre-je-joue]")).toBeVisible();
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: `test-results/fs-corr/je-joue-${largeur}-${testInfo.project.name}.png` });
+  });
+}
 
 // ─── Captures à regarder (test-results/fs-c/) ─────────────────────────────────
 

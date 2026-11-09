@@ -96,6 +96,14 @@ const boites = (page: Page) =>
     els.map((e) => { const r = e.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, texte: (e as HTMLElement).innerText.replace(/\s+/g, " ").trim() }; }),
   );
 
+/** Referme la barre (toucher au centre) et attend la fin du fondu : sans quoi la capture saisit la barre à demi effacée. */
+async function fermerLaBarre(page: Page) {
+  const ecran = page.viewportSize()!;
+  await page.mouse.click(ecran.width / 2, ecran.height / 2);
+  await expect(page.locator("[data-barre-ouverte]")).toHaveCount(0);
+  await expect(page.locator("[data-barre-haut]").locator("xpath=..")).toHaveCSS("opacity", "0");
+}
+
 /** Zone libre de la page : du bas de l'en-tête du chant (à défaut, de la barre du haut) au haut de la rangée de points
  *  (à défaut, de la barre du bas). */
 async function zoneLibre(page: Page) {
@@ -302,9 +310,7 @@ test.describe("feuille de route du batteur (FS-D)", () => {
       expect(await tete.evaluate((e) => getComputedStyle(e.closest("[data-entete-chant]")!).visibility)).toBe("visible");
       expect(await tete.evaluate((e) => Number(getComputedStyle(e.closest("[data-entete-chant]")!).opacity))).toBe(1);
       // Barre refermée : même en-tête.
-      const ecran = page.viewportSize()!;
-      await page.mouse.click(ecran.width / 2, ecran.height / 2);
-      await expect(page.locator("[data-barre-ouverte]")).toHaveCount(0);
+      await fermerLaBarre(page);
       await expect(tete).toBeVisible();
       // Rien ne passe sous la rangée de points (ou la barre du bas).
       const { bas } = await zoneLibre(page);
@@ -332,12 +338,93 @@ test.describe("feuille de route du batteur (FS-D)", () => {
       });
     }
 
+    test(`barre fermée : le titre du chant est visible en tête de feuille, au-dessus du tempo et de la tonalité (${langue.toUpperCase()})`, async ({ page }) => {
+      await ouvrirRiche(page, langue);
+      await fermerLaBarre(page);
+      const titre = onStage(page, "[data-entete-titre]");
+      await expect(titre).toBeVisible();
+      await expect(titre).toContainText(langue === "zh" ? "我在这里敬拜" : /abba/i);
+      const t = (await titre.boundingBox())!;
+      const tt = (await onStage(page, "[data-entete-tempo-tonalite]").boundingBox())!;
+      expect(t.y + t.height, "titre au-dessus du tempo et de la tonalité").toBeLessThanOrEqual(tt.y + 0.5);
+    });
+
+    for (const theme of ["light", "dark"] as const) {
+      test(`captures FS-corr : feuille de route barre fermée, titre visible (${langue.toUpperCase()}, ${theme})`, async ({ page }, info) => {
+        await ouvrirRiche(page, langue, theme);
+        await fermerLaBarre(page);
+        await expect(onStage(page, "[data-entete-titre]")).toBeVisible();
+        await page.screenshot({ path: `test-results/fs-corr/${langue}-${theme}-barre-fermee-${info.project.name}.png` });
+      });
+    }
+
     test(`capture barre refermée (${langue.toUpperCase()})`, async ({ page }, info) => {
       await ouvrirRiche(page, langue);
-      const ecran = page.viewportSize()!;
-      await page.mouse.click(ecran.width / 2, ecran.height / 2);
-      await expect(page.locator("[data-barre-ouverte]")).toHaveCount(0);
+      await fermerLaBarre(page);
       await page.screenshot({ path: `test-results/fs-d/${langue}-barre-fermee-${info.project.name}.png` });
     });
+
+    for (const largeur of [375, 390]) {
+      test(`à ${largeur} px, rien dans une ligne (pastille de nuance comprise) ne dépasse le bord droit du filet (${langue.toUpperCase()})`, async ({ page }) => {
+        await page.setViewportSize({ width: largeur, height: 800 });
+        await ouvrirRiche(page, langue);
+        const exces = await onStage(page, "[data-feuille-route-ligne]").evaluateAll((lignes) =>
+          lignes.flatMap((l) => {
+            const bord = l.getBoundingClientRect().right;
+            return [...l.querySelectorAll("*")].map((e) => e.getBoundingClientRect()).filter((r) => r.width > 0 && r.right > bord + 0.5).map((r) => r.right - bord);
+          }),
+        );
+        expect(exces, "aucun élément au-delà du bord droit").toEqual([]);
+        // La nuance passe sous le nom, dans la largeur du contenu (à droite du repère).
+        const place = await onStage(page, "[data-feuille-route-nuance]").evaluate((e) => {
+          const ligne = e.closest("[data-feuille-route-ligne]")!;
+          const nom = ligne.querySelector("[data-feuille-route-nom]")!.getBoundingClientRect();
+          const repere = ligne.querySelector("[data-feuille-route-repere]")!.getBoundingClientRect();
+          const r = e.getBoundingClientRect();
+          return { sous: r.top >= nom.bottom - 0.5, gauche: r.left - repere.right };
+        });
+        expect(place.sous, "nuance sous le nom").toBe(true);
+        expect(place.gauche, "dans la largeur du contenu, à droite du repère").toBeGreaterThanOrEqual(0);
+      });
+    }
+
+    test(`« Modulation (B) » ne se coupe jamais à l'intérieur (${langue.toUpperCase()})`, async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 800 });
+      await ouvrirRiche(page, langue);
+      const mod = onStage(page, "[data-feuille-route-nom] > span").last();
+      expect(await mod.evaluate((e) => getComputedStyle(e).whiteSpace)).toBe("nowrap");
+      expect(await mod.evaluate((e) => e.getClientRects().length), "un seul fragment : jamais coupé").toBe(1);
+    });
   }
+});
+
+// FS-D, annotations : la vue Structure a sa propre marque de clé (« f2 ») ; des traits posés sous l'ancienne clé
+// (avant la feuille de route) ne s'y chargent plus, le bandeau le dit, rien n'est supprimé.
+test("traits posés sous l'ancienne clé de la vue Structure : bandeau « ancienne mise en page », aucune écriture", async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      if (!localStorage.getItem("perf-test-init")) {
+        localStorage.setItem("perf-test-init", "1");
+        localStorage.setItem("perf-role-preset", "batteur");
+      }
+    } catch { /* ignore */ }
+  });
+  const db = await signInAs(page, MARGAUX, { [`setlists/${SETLIST_ID}`]: setlist("abba-pere", CINQ) }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
+  await attendreMiseEnPage(page);
+  await expect(onStage(page, "[data-feuille-route-ligne]").first()).toBeVisible();
+  const cle = (await page.locator("[data-performance-mode]").getAttribute("data-cle-page"))!;
+  expect(cle, "la clé de la vue Structure porte « f2 »").toMatch(/f2$/);
+  await expect(page.locator("[data-alerte-composition]"), "rien sous l'ancienne clé : pas de bandeau").toHaveCount(0);
+  const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
+  const trait = JSON.stringify({ w, h, strokes: [{ tool: "pen", size: 3.5, color: "#dc2626", points: [[w * 0.2, h * 0.5], [w * 0.5, h * 0.5]] }] });
+  db.set(`annotations/${MARGAUX.uid}__${SETLIST_ID}__${cle.replace(/f2$/, "")}`, { strokes: trait, updatedAt: new Date() });
+  await page.reload();
+  await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
+  await attendreMiseEnPage(page);
+  const bandeau = page.locator("[data-alerte-composition]");
+  await expect(bandeau).toBeVisible();
+  await expect(bandeau).toHaveText("Des annotations existent avec l'ancienne mise en page");
+  await expect(page.locator("[data-performance-mode] > canvas"), "les anciens traits ne s'affichent pas").toHaveCount(0);
+  expect(db.writes.filter((x) => x.path.startsWith("annotations/")), "aucune écriture").toEqual([]);
 });

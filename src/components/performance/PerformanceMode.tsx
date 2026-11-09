@@ -21,7 +21,7 @@ import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Col
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { ecouterCoupure, versionCoupure } from "@/lib/song/coupureSignal";
 import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
-import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, type AncreLecture } from "@/lib/performance/blocks";
+import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, SUFFIXE_FEUILLE, type AncreLecture } from "@/lib/performance/blocks";
 import { PASTILLE_SUIVANT_H, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
 import { layoutFeuilleDeRoute, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
 import { useJianpuManifest } from "@/lib/jianpu/images";
@@ -178,8 +178,14 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
   // Vue structure (FS-D) : la barre du haut porte le titre ; l'en-tête montre en grand le tempo et la tonalité, toujours
   // visibles (pas de bande vide ni de filet orphelin sous la barre ouverte).
   if (feuilleRoute) {
+    const titres = block.fusionSongs?.length ? block.fusionSongs.map((s) => s.title).join(" / ") : block.title;
     return (
       <div data-entete-chant className="mx-auto mb-3 w-full max-w-[880px] pb-3 border-b border-border">
+        {/* Titre du chant : la barre est fermée à l'ouverture, le batteur doit voir quel chant il joue. Masqué barre ouverte (qu'elle le répète), sans changer de place. */}
+        <div data-entete-titre className="mb-0.5 flex flex-wrap items-baseline gap-x-3 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
+          <h2 className="text-lg font-bold text-foreground leading-tight uppercase tracking-tight">{titres}</h2>
+          {!block.fusionSongs?.length && block.artist ? <p className="text-xs text-muted-foreground">{block.artist}</p> : null}
+        </div>
         <p data-entete-tempo-tonalite className="text-[22px] font-bold leading-tight text-foreground">
           {tempo ? <span data-entete-tempo>♩ = {tempo}</span> : null}
           {tempo ? " · " : null}
@@ -315,8 +321,8 @@ const APERCU_PART_MAX = 0.25;
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-// Presets de rôle : raccourcis vers une combinaison accords/paroles. Mémorisé
-// par appareil ; un réglage manuel des toggles désélectionne le preset.
+// Presets de rôle : raccourcis vers une combinaison accords/paroles. Rôle retenu
+// par compte (roleCompte.ts) ; un réglage manuel des toggles désélectionne le preset.
 const ROLE_PRESETS: Record<RolePreset, { chords: boolean; hideLyrics: boolean }> = {
   pianiste: { chords: true, hideLyrics: false },
   guitariste: { chords: true, hideLyrics: false },
@@ -967,6 +973,10 @@ export function PerformanceMode({
     [demiOn, annotateMode, annotZoom, layout],
   );
   const demiActif = demi && demiPossible(currentPage);
+  // FS-D : en vue Structure, la clé sans « f2 » est celle d'avant la feuille de route (même page, mêmes réglages) : lue pour le seul bandeau.
+  const cleAvantFeuille = affichageVu === "structure"
+    ? computePageKey(blocks, currentPageIndices, `${layoutSig.slice(0, -SUFFIXE_FEUILLE.length)}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`)
+    : null;
   const cleSansV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`);
   // FS-E : la clé qu'aurait eue la page avec l'aperçu de la page suivante (éteint par la demi-page), sans « v2 » puis avec.
   const cleAvecApercuSansV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}ap`);
@@ -1031,10 +1041,11 @@ export function PerformanceMode({
   // FS-E : demi-page allumée sur une tablette portrait, les traits posés avec l'aperçu (clé « ap ») ne se montrent plus ici.
   const anciennesCompositions = useMemo(() => {
     const l: string[] = [];
+    if (cleAvantFeuille) l.push(cleAvantFeuille);
     if (pageV2) l.push(cleSansV2);
     if (apercuEteint && !layout[currentPage]?.fit) l.push(pageV2 ? cleAvecApercuV2 : cleAvecApercuSansV2);
     return l;
-  }, [pageV2, cleSansV2, apercuEteint, layout, currentPage, cleAvecApercuV2, cleAvecApercuSansV2]);
+  }, [cleAvantFeuille, pageV2, cleSansV2, apercuEteint, layout, currentPage, cleAvecApercuV2, cleAvecApercuSansV2]);
   const { annotationsIndispo, annotations, handleAnnotationsChange, ancienneCompositionTraits } = useAnnotationsPage({
     user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
   });
@@ -1749,6 +1760,8 @@ export function PerformanceMode({
 
       <MenuLouange id="jejoue" titre={t("performance.iPlay")} ouvert={popoverOuvert === "jejoue"} onOuvertChange={(o) => !o && fermerMenu("jejoue")} align="start" couleur={couleurMenus}>
         <div className="space-y-4">
+          {/* Popover (dès md) : le titre est dans le contenu ; au téléphone, le titre de la feuille le donne déjà. */}
+          <p data-titre-je-joue className="hidden px-1 text-[16px] font-bold leading-snug text-foreground md:block">{t("performance.iPlay")}</p>
           <div>
             {accueilRole && (
               <p className="mb-3 border-b border-border px-2 pb-3 text-base font-semibold text-foreground">

@@ -48,6 +48,19 @@ export function getRole(uid: string | null): RolePreset | null {
   }
 }
 
+/** Lecture seule du rôle d'un compte : comme `getRole`, mais sans poser la marque ni recopier (la migration ne se fait qu'à
+ *  l'ouverture du mode louange). Un compte sans marque lit la clé d'appareil seulement si personne ne l'a encore reprise. */
+export function getRoleSansMigrer(uid: string | null): RolePreset | null {
+  try {
+    const valide = (v: string | null) => (v && (ROLE_IDS as readonly string[]).includes(v) ? (v as RolePreset) : null);
+    const duCompte = valide(localStorage.getItem(clePreset(uid)));
+    if (duCompte || !uid) return duCompte;
+    return porteurMarque() === null ? valide(localStorage.getItem(PRESET)) : null;
+  } catch {
+    return null;
+  }
+}
+
 /** La question du rôle a déjà reçu une réponse (un rôle, ou « Aucun »). */
 export function roleDemande(uid: string | null): boolean {
   migrer(uid);
