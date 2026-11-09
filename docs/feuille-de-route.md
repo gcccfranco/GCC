@@ -1428,7 +1428,10 @@ touchées sur les cinq projets, captures triées, critique de design contre les 
 nouveaux par un responsable sinophone, prévenir l'équipe (coupure des vers et annotations rangées par disposition),
 essai sur iPad. **Lot FS fini le 09/11/2026** (FS-C, FS-D, FS-E et
 corrections ; relecture légère : bon, aucun défaut important). **À traiter à la relecture complète** (questions de la
-session FS, avec la recommandation de la session d'origine) : (1) feuille de route du batteur en Classique, repères à
+session FS, avec la recommandation de la session d'origine ; **tranchées le 09/11/2026** par Timothée, « 1,2,3,4,5 »
+aux recommandations de la session FS, décision 30 de la spec : repères par sorte de section, couleur personnelle gardée,
+rond « Paroles » dans « Sur la page », colonne par colonne gardé, traits affichés rognés pendant la demi-page ; code des
+points 1, 3 et 5 en tranche FS-F, en attente de go) : (1) feuille de route du batteur en Classique, repères à
 la couleur de la langue alors que la planche les colore par sorte de section → suivre la planche ; (2) segment choisi
 d'« Ordre des sections » à la couleur personnelle (décision 23) plutôt que neutre comme la planche → garder ; (3)
 « Masquer les paroles » placé dans Je joue (hors planche ; il était dans les Options avant FS-C) → à trancher par
