@@ -258,7 +258,8 @@ test("barre de titre : le titre est centré sur l'écran, groupes alignés à le
   await ouvrir(page);
   const titre = (await page.locator("[data-barre-haut] p").first().boundingBox())!;
   const ecran = page.viewportSize()!;
-  expect(Math.abs(titre.x + titre.width / 2 - ecran.width / 2)).toBeLessThanOrEqual(4);
+  // Au téléphone, le groupe de gauche (3 boutons) est plus large que celui de droite (2) : un léger décentrage vaut mieux qu'un titre tronqué.
+  expect(Math.abs(titre.x + titre.width / 2 - ecran.width / 2)).toBeLessThanOrEqual(telephone(page) ? 28 : 4);
   const boutons = await boutonsHaut(page);
   expect(boutons[0].x).toBeLessThan(24);
   const dernier = boutons[boutons.length - 1];
@@ -520,4 +521,40 @@ test("captures FS-A : pendant le glissé, la vignette du chant visé", async ({ 
   await expect(page.locator("[data-bulle-curseur]")).toBeVisible();
   await page.screenshot({ path: `${SORTIE}/glisse-${testInfo.project.name}.png` });
   await page.mouse.up();
+});
+
+// ─── Corrections de relecture FS-A / FS-B, groupe 2 ───────────────────────────
+
+test("barre de titre (téléphone) : « Avec nous (Emmanuel) » n'est pas tronqué, centré dans les deux langues", async ({ page }) => {
+  test.skip(!telephone(page), "la place compte au téléphone");
+  const lire = () => page.locator("[data-barre-haut] p").first().evaluate((el) => ({
+    sw: el.scrollWidth, cw: el.clientWidth, align: getComputedStyle(el).textAlign,
+  }));
+  await ouvrir(page);
+  const fr = await lire();
+  expect(fr.sw, "titre FR non tronqué").toBeLessThanOrEqual(fr.cw);
+  expect(fr.align).toBe("center");
+});
+
+test("barre de titre en 中文 (téléphone) : même alignement centré", async ({ page }) => {
+  test.skip(!telephone(page), "la place compte au téléphone");
+  await ouvrir(page, { slugs: ["avec-nous", "abba-pere"], zh: true });
+  const zh = await page.locator("[data-barre-haut] p").first().evaluate((el) => ({
+    sw: el.scrollWidth, cw: el.clientWidth, align: getComputedStyle(el).textAlign,
+  }));
+  expect(zh.sw).toBeLessThanOrEqual(zh.cw);
+  expect(zh.align).toBe("center");
+});
+
+test("scan 简谱, dernière page : la pastille « Ensuite » ne recouvre pas le scan", async ({ page }) => {
+  await ouvrir(page, { slugs: ["一生爱你", "abba-pere"], zh: true });
+  const scan = page.locator('[data-performance-mode] img[src*="jianpu"]:not([aria-hidden=true] *)').first();
+  await expect(scan).toBeVisible({ timeout: 15_000 });
+  const pastille = page.locator("[data-performance-mode] [data-suivant]");
+  await expect(pastille).toBeVisible();
+  await page.waitForTimeout(600);
+  const [s, p] = await Promise.all([scan.boundingBox(), pastille.boundingBox()]);
+  // Paysage sur grand écran : « Ensuite » est dans la colonne de gauche, à côté du scan et non dessous.
+  if (p!.x + p!.width <= s!.x || s!.x + s!.width <= p!.x) return;
+  expect(s!.y + s!.height, `scan ${JSON.stringify(s)} / pastille ${JSON.stringify(p)}`).toBeLessThanOrEqual(p!.y + 0.5);
 });

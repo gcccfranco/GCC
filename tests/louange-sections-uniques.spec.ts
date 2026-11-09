@@ -342,7 +342,7 @@ test.describe("Réglages : Rôle et Affichage", () => {
     // Sections uniques depuis la vue structure : paroles et accords reviennent.
     await affichage.getByRole("radio", { name: "Sections uniques" }).click();
     await expect(feuille.getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "true");
-    await expect(feuille.getByRole("switch", { name: "Masquer les paroles" })).not.toBeChecked();
+    await expect(feuille.getByRole("button", { name: "Masquer les paroles" })).toHaveAttribute("aria-pressed", "false");
     expect(await page.evaluate(() => localStorage.getItem("perf-hide-lyrics"))).toBe("0");
   });
 });
@@ -406,10 +406,10 @@ test.describe("Réglages : corrections de la relecture", () => {
     await ouvrirMode(page, [ABBA], { role: null });
     const feuille = await reglages(page);
     await expect(feuille.getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "true");
-    await expect(feuille.getByRole("switch", { name: "Masquer les paroles" })).not.toBeChecked();
+    await expect(feuille.getByRole("button", { name: "Masquer les paroles" })).toHaveAttribute("aria-pressed", "false");
     await feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: "Structure seule" }).click();
     await expect(feuille.getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "false");
-    await expect(feuille.getByRole("switch", { name: "Masquer les paroles" })).toBeChecked();
+    await expect(feuille.getByRole("button", { name: "Masquer les paroles" })).toHaveAttribute("aria-pressed", "true");
   });
 
   test("« Transitions » coupé retire aussi les transitions du bandeau, la note reste (C6) (FR)", async ({ page }) => {

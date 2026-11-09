@@ -68,7 +68,7 @@ export function BarreHaut({
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
     >
-      <div className="flex min-w-[8.25rem] flex-1 basis-0 items-center justify-start gap-0.5 md:min-w-0">
+      <div className="flex flex-1 basis-0 items-center justify-start gap-0.5">
         <BtnBarre label={t("performance.songList")} menu="setlist" menuOuvert={menuOuvert} onClick={() => onMenu("setlist")} texte>
           <ListMusic className="h-5 w-5" />
         </BtnBarre>
@@ -82,8 +82,9 @@ export function BarreHaut({
         </BtnBarre>
       </div>
 
-      {/* Les deux groupes latéraux prennent la même largeur (flex-1, base 0) tant que la place suffit : le titre est
-          alors centré sur l'écran. Quand elle manque, seul le titre rétrécit (il se tronque), jamais un débordement. */}
+      {/* Les deux groupes latéraux (flex-1, base 0, largeur minimale = leurs boutons) prennent la même largeur tant que
+          la place suffit : le titre est alors centré sur l'écran. Si l'un des deux est plus large que sa moitié, le titre se
+          décentre un peu plutôt que de se tronquer ; il ne se tronque que si la largeur totale manque vraiment. */}
       <div className="min-w-0 shrink px-1 text-center">
         <p className="truncate text-sm font-semibold leading-tight text-foreground md:text-base">
           {currentSong?.songTitle ?? setlistTitle}
@@ -103,10 +104,10 @@ export function BarreHaut({
         )}
       </div>
 
-      <div className="flex min-w-[8.25rem] flex-1 basis-0 items-center justify-end gap-0.5 md:min-w-0">
+      <div className="flex flex-1 basis-0 items-center justify-end gap-0.5">
         {tempo ? (
           <BtnBarre label={t("performance.tempo")} menu="tempo" menuOuvert={menuOuvert} onClick={() => onMenu("tempo")} cacheTel>
-            <span data-tempo-barre className="flex items-center gap-1 text-sm font-semibold tabular-nums">
+            <span data-tempo-barre className="flex items-center gap-0.5 text-sm font-semibold tabular-nums">
               <span aria-hidden="true" className="text-xl leading-none">♩</span>
               {tempo}
             </span>

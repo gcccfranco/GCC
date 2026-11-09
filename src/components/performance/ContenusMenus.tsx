@@ -92,7 +92,7 @@ export function BoutonSurPage({
       >
         {children}
       </span>
-      <span className="text-center text-[11px] font-medium leading-tight text-foreground">{label}</span>
+      <span className="text-center text-[11px] font-medium leading-tight text-foreground md:text-[13px]">{label}</span>
     </button>
   );
 }
@@ -217,8 +217,10 @@ export function ContenuReperes({
               >
                 {isDp(r.section) ? "Dp" : abbreviateSection(r.section)}
               </span>
-              <span className="min-w-0 flex-1 truncate text-base font-medium text-foreground">{formatSectionName(r.section, t)}</span>
-              <span className={`shrink-0 text-[13px] tabular-nums ${COULEUR}`}>{t("performance.pageShort", { n: r.page + 1 })}</span>
+              <span className="flex min-w-0 flex-1 items-baseline gap-3">
+                <span className="min-w-0 flex-1 truncate text-base font-medium text-foreground">{formatSectionName(r.section, t)}</span>
+                <span className={`shrink-0 text-[13px] tabular-nums ${COULEUR}`}>{t("performance.pageShort", { n: r.page + 1 })}</span>
+              </span>
             </button>
           </li>
         );
@@ -395,11 +397,16 @@ export function ContenuOutils({
         </LigneMenu>
       )}
       {onAnnoter && (
-        <LigneMenu label={t("performance.annotate")}>
-          <BoutonRond label={t("performance.annotate")} onClick={onAnnoter}>
-            <PenLine className="h-5 w-5" />
-          </BoutonRond>
-        </LigneMenu>
+        // Annoter est une action, pas un interrupteur : une ligne entière cliquable, icône et libellé dans la couleur des actions.
+        <button
+          type="button"
+          data-annoter
+          onClick={onAnnoter}
+          className={`flex min-h-11 w-full items-center gap-2 rounded-lg px-1 text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+        >
+          <PenLine aria-hidden="true" className="h-5 w-5 shrink-0" />
+          {t("performance.annotate")}
+        </button>
       )}
       {tempoLignes}
       {raccourcis && (

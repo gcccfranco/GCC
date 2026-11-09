@@ -335,9 +335,10 @@ test.describe("tonalité choisie sur la page du chant", () => {
       await page.getByRole("button", { name: /Mode Louange/ }).click();
       await attendreMiseEnPage(page);
 
-      // Repère dans l'en-tête du chant (et dans la barre du haut).
+      // Repère dans l'en-tête du chant et dans la barre du haut : barre ouverte, l'en-tête est masqué sous elle
+      // (groupe 1) et c'est la barre qui le montre ; on attend donc un des repères visible, pas le premier du DOM.
       const mark = onStage(page, "*").getByText(`setlist : ${c.setlistKey}`, { exact: true });
-      await expect(mark.first()).toBeVisible();
+      await expect(mark.and(page.locator(":visible")).first()).toBeVisible();
       await expect(onStage(page, "*").getByText(c.after, { exact: true }).first()).toBeVisible();
 
       // Retour à la tonalité de la setlist : dans le menu Outils, pour le chant en cours.

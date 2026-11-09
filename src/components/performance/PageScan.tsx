@@ -23,6 +23,7 @@ export function PageScan({
   isLastPageOfSong,
   nextEntry,
   onSuivant,
+  reserveBas = 0,
   children,
 }: {
   sheet: PerformanceBlock | undefined;
@@ -31,6 +32,8 @@ export function PageScan({
   isLastPageOfSong: boolean;
   nextEntry: { block: SongHeaderBlock; index: number } | undefined;
   onSuivant: () => void;
+  /** Hauteur (px de la page) gardée sous le scan pour la pastille « Ensuite » flottante : elle ne recouvre pas le scan. */
+  reserveBas?: number;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -136,7 +139,7 @@ export function PageScan({
           {bandeauScan}
         </div>
       )}
-      <div className="min-h-0 flex-1">{children}</div>
+      <div className="min-h-0 flex-1" style={reserveBas ? { paddingBottom: reserveBas } : undefined}>{children}</div>
     </div>
   );
 }

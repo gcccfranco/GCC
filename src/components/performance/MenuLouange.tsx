@@ -130,8 +130,8 @@ export function MenuLouange({
         aria-label={titre}
         side="bottom"
         align={align}
-        sideOffset={10}
-        collisionPadding={8}
+        sideOffset={-2}
+        collisionPadding={{ top: 8, left: 8, right: 8, bottom: 16 }}
         data-menu-louange={id}
         style={style}
         className="z-[10000] w-[min(26rem,calc(100vw-1rem))] border-border bg-background p-0 dark:bg-[hsl(var(--raised))]"
@@ -143,7 +143,7 @@ export function MenuLouange({
         onCloseAutoFocus={rendreLeFocus}
         {...arreter}
       >
-        <ZoneDefilante className="max-h-[var(--radix-popover-content-available-height)] overflow-y-auto rounded-xl p-3">{children}</ZoneDefilante>
+        <ZoneDefilante className="max-h-[calc(var(--radix-popover-content-available-height)-2px)] overflow-y-auto rounded-xl p-3">{children}</ZoneDefilante>
         <PopoverArrow width={18} height={9} className="fill-background stroke-border dark:fill-[hsl(var(--raised))]" />
       </PopoverContent>
     </Popover>

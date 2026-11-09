@@ -15,8 +15,7 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2, FileMusic, Languages, Minus, Music, Palette, Plus, Waves } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, Palette, Plus, Waves } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { ecouterCoupure, versionCoupure } from "@/lib/song/coupureSignal";
 import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
@@ -399,6 +398,11 @@ export function PerformanceMode({
       if (e.pointerType === "pen") return;
       if (!cible || cible.closest("[data-menu-louange], [data-menu-declencheur], [data-vaul-overlay]")) return;
       if (!cible.closest("[data-barre-haut], [data-barre-bas]")) menuAuToucher.current = { t: e.timeStamp };
+      // La rangée de points (CurseurPage) change de page au pointerdown : menu ouvert, ce toucher ferme seulement le menu.
+      if (cible.closest("[data-curseur-page]")) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
       setPopoverOuvert(null);
     };
     document.addEventListener("pointerdown", hors, true);
@@ -998,6 +1002,20 @@ export function PerformanceMode({
     setCurrentPage(p);
   }, []);
 
+  // Dernier moyen de déplacer le focus : le pointeur (clic, toucher) ou le clavier (Tab, Échap). Chromium marque
+  // :focus-visible dès qu'une touche est pressée, Espace compris : la pédale ne peut pas s'y fier.
+  const focusAuPointeur = useRef(false);
+  useEffect(() => {
+    const auPointeur = () => { focusAuPointeur.current = true; };
+    const auClavier = (e: KeyboardEvent) => { if (e.key === "Tab" || e.key === "Escape") focusAuPointeur.current = false; };
+    window.addEventListener("pointerdown", auPointeur, true);
+    window.addEventListener("keydown", auClavier, true);
+    return () => {
+      window.removeEventListener("pointerdown", auPointeur, true);
+      window.removeEventListener("keydown", auClavier, true);
+    };
+  }, []);
+
   // Keyboard navigation (flèches, PageUp/Down — pédales Bluetooth, Échap pour quitter)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -1009,6 +1027,11 @@ export function PerformanceMode({
         if (cible instanceof HTMLInputElement) return;
         if (popoverOuvert || askRole) return;
         if (cible?.closest("[role=dialog]")) return;
+        // Espace active le bouton, le lien, le curseur ou l'élément de menu qui a le focus (comportement natif)
+        // seulement si le focus y est venu au clavier (pas de pointerdown depuis le dernier Tab / Échap) ; un focus resté après un clic, un toucher ou
+        // rendu par la fermeture d'un menu ouvert à la souris laisse Espace (pédale) tourner la page.
+        // Flèches et PageUp/PageDown (pédales) gardent leur effet.
+        if (e.key === " " && !focusAuPointeur.current && cible?.closest("button, a[href], select, summary, [contenteditable], [role=button], [role=link], [role=slider], [role=radio], [role=switch], [role=checkbox], [role=tab], [role^=menuitem], [role=option]")) return;
       }
       if (e.key === "ArrowLeft" || e.key === "PageUp") {
         e.preventDefault();
@@ -1415,6 +1438,8 @@ export function PerformanceMode({
                 isLastPageOfSong={isLastPageOfSong}
                 nextEntry={nextEntry}
                 onSuivant={() => goToPage(nextSongPage, pages.length)}
+                // La pastille flottante (44 px, à 8 px au-dessus de la barre du bas) ne recouvre plus le scan : sa place est gardée dessous.
+                reserveBas={isLastPageOfSong && nextEntry && !colonneScan ? 56 / fontScale : 0}
               >
                 {renderBlock(page.cols[0][0], true)}
               </PageScan>
@@ -1783,15 +1808,17 @@ export function PerformanceMode({
               <p className="text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
             </div>
             <SettingRow label={t("performance.hideLyrics")}>
-              <Switch
-                aria-label={t("performance.hideLyrics")}
-                checked={lyricsHidden}
-                onCheckedChange={(v) => {
+              <BoutonRond
+                label={t("performance.hideLyrics")}
+                allume={lyricsHidden}
+                onClick={() => {
                   clearRolePreset();
                   quitterStructureSeule();
-                  toggleHideLyrics(v);
+                  toggleHideLyrics(!lyricsHidden);
                 }}
-              />
+              >
+                <EyeOff className="h-5 w-5" />
+              </BoutonRond>
             </SettingRow>
           </div>
         </div>

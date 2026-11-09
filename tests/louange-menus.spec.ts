@@ -532,3 +532,166 @@ for (const langue of ["fr", "zh"] as const) {
     });
   }
 }
+
+// ─── Corrections de relecture FS-A / FS-B, groupe 2 ───────────────────────────
+
+test("rangée de points : un toucher dessus, menu ouvert, ferme le menu sans changer de page", async ({ page }, testInfo) => {
+  test.skip(telephone(page), "au téléphone la feuille du bas recouvre la rangée de points");
+  await ouvrir(page);
+  const dialogue = await ouvrirMenu(page, "setlist");
+  await attendreOuverture(page);
+  const avant = await lireCompteur(page);
+  const point = (await page.locator("[data-barre-bas] [data-point=inactif]").last().boundingBox())!;
+  await toucher(page, testInfo, point.x + point.width / 2, point.y + point.height / 2);
+  await expect(dialogue).toBeHidden();
+  await page.waitForTimeout(400);
+  expect(await lireCompteur(page)).toBe(avant);
+  // Menu fermé, le même toucher mène bien à la page visée.
+  await toucher(page, testInfo, point.x + point.width / 2, point.y + point.height / 2);
+  await expect.poll(() => lireCompteur(page)).not.toBe(avant);
+});
+
+test("Espace et Entrée activent le bouton focalisé de la barre ; Espace tourne la page seulement hors d'un bouton", async ({ page }) => {
+  await ouvrir(page);
+  const avant = await lireCompteur(page);
+  const declencheur = page.locator('[data-menu-declencheur="setlist"]');
+  const dialogue = page.getByRole("dialog", { name: NOM_MENU.fr.setlist, exact: true });
+  for (const touche of ["Space", "Enter"]) {
+    await declencheur.focus();
+    await page.keyboard.press(touche);
+    await expect(dialogue, `${touche} sur le bouton Setlist ouvre le menu`).toBeVisible();
+    expect(await lireCompteur(page), `${touche} ne tourne pas la page`).toBe(avant);
+    await page.keyboard.press("Escape");
+    await expect(dialogue).toBeHidden();
+  }
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press("Space");
+  await expect.poll(() => lireCompteur(page)).not.toBe(avant);
+});
+
+test("Espace tourne la page quand le focus reste sur un bouton après un clic ou un toucher (pédale) : aucun menu ne s'ouvre", async ({ page }, testInfo) => {
+  await ouvrir(page);
+  await allerPage2(page);
+  const avant = await lireCompteur(page);
+  const ecran = page.viewportSize()!;
+  const declencheur = page.locator('[data-menu-declencheur="setlist"]');
+  const dialogue = page.getByRole("dialog", { name: NOM_MENU.fr.setlist, exact: true });
+  // Ouvert à la souris ou au doigt, fermé par un toucher hors du menu : le focus est rendu au déclencheur.
+  const bouton = (await declencheur.boundingBox())!;
+  await toucher(page, testInfo, bouton.x + bouton.width / 2, bouton.y + bouton.height / 2);
+  await expect(dialogue).toBeVisible();
+  await attendreOuverture(page);
+  const boite = (await dialogue.boundingBox())!;
+  const dedans = (px: number, py: number) => px >= boite.x && px <= boite.x + boite.width && py >= boite.y && py <= boite.y + boite.height;
+  let px = ecran.width * 0.5;
+  const py = telephone(page) ? ecran.height * 0.02 : ecran.height * 0.88;
+  if (dedans(px, py)) { px = boite.x > 40 ? boite.x - 12 : boite.x + boite.width + 12; }
+  await toucher(page, testInfo, px, py);
+  await expect(dialogue).toBeHidden();
+  await page.waitForTimeout(400);
+  expect(await lireCompteur(page), "la fermeture n'a pas tourné la page").toBe(avant);
+  await expect.poll(() => declencheur.evaluate((el) => el === document.activeElement), { message: "le focus est revenu au déclencheur" }).toBe(true);
+  await page.keyboard.press(" ");
+  await expect.poll(() => lireCompteur(page)).not.toBe(avant);
+  await page.waitForTimeout(300);
+  await expect(page.getByRole("dialog"), "aucun menu ne s'ouvre").toHaveCount(0);
+});
+
+for (const [largeur, hauteur] of [[1280, 720], [1280, 800]] as const) {
+  test(`Options à ${largeur}×${hauteur} : le bas du popover reste à 16 px au moins du bord de l'écran ; il défile`, async ({ page }) => {
+    test.skip(telephone(page), "au téléphone, feuille du bas");
+    await page.setViewportSize({ width: largeur, height: hauteur });
+    await ouvrir(page);
+    const options = await ouvrirMenu(page, "options");
+    await attendreOuverture(page);
+    const b = (await options.boundingBox())!;
+    expect(b.y + b.height).toBeLessThanOrEqual(hauteur - 16 + 0.5);
+    expect(b.y).toBeGreaterThanOrEqual(8);
+  });
+}
+
+test("Options : le bas du popover est à 16 px au moins du bord de l'écran, à la taille de l'appareil", async ({ page }) => {
+  test.skip(telephone(page), "au téléphone, feuille du bas");
+  await ouvrir(page);
+  const options = await ouvrirMenu(page, "options");
+  await attendreOuverture(page);
+  const b = (await options.boundingBox())!;
+  expect(b.y + b.height).toBeLessThanOrEqual(page.viewportSize()!.height - 16 + 0.5);
+});
+
+test("Annoter (téléphone) est une action : ligne entière, pas un rond d'interrupteur ; aucune autre action n'est un rond allumé / éteint", async ({ page }) => {
+  test.skip(!telephone(page), "Annoter n'est une ligne d'Outils qu'au téléphone");
+  await ouvrir(page);
+  const outils = await ouvrirMenu(page, "outils");
+  const annoter = outils.getByRole("button", { name: "Annoter" });
+  await expect(annoter).toBeVisible();
+  await expect(annoter).not.toHaveAttribute("aria-pressed");
+  const [a, m] = await Promise.all([annoter.boundingBox(), outils.boundingBox()]);
+  expect(a!.width).toBeGreaterThan(m!.width * 0.7);
+  expect(await annoter.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe("0px");
+  for (const rond of await outils.locator("[aria-pressed]").all()) {
+    expect((await rond.getAttribute("aria-label")) ?? "", "un rond d'interrupteur ne porte pas le nom d'une action").not.toMatch(/Annoter|Revenir|Monter|Baisser|Tempo du fichier|Augmenter|Diminuer/);
+  }
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`« Masquer les paroles » (${theme}) : bouton rond allumé / éteint comme les autres, plus de Switch`, async ({ page }) => {
+    await ouvrir(page, { theme });
+    const options = await ouvrirMenu(page, "options");
+    await attendreOuverture(page);
+    await expect(options.getByRole("switch")).toHaveCount(0);
+    const masquer = options.getByRole("button", { name: "Masquer les paroles" });
+    await expect(masquer).toHaveAttribute("aria-pressed", "false");
+    await masquer.click();
+    await expect(masquer).toHaveAttribute("aria-pressed", "true");
+    const metronome = options.getByRole("button", { name: "Métronome visuel" });
+    await metronome.click();
+    await expect(metronome).toHaveAttribute("aria-pressed", "true");
+    await page.waitForTimeout(500); // fin des transitions de couleur
+    const fond = (el: Element) => getComputedStyle(el).backgroundColor;
+    expect(await masquer.evaluate(fond)).toBe(await metronome.evaluate(fond));
+    expect(await masquer.evaluate((el) => getComputedStyle(el).color)).toBe(await metronome.evaluate((el) => getComputedStyle(el).color));
+  });
+}
+
+test("Repères : la pointe du popover reste dans la zone de la barre ou juste dessous, le popover ne sort pas par le haut", async ({ page }) => {
+  test.skip(telephone(page), "au téléphone, feuille du bas");
+  await ouvrir(page);
+  const dialogue = await ouvrirMenu(page, "reperes");
+  await attendreOuverture(page);
+  const barre = (await page.locator("[data-barre-haut]").boundingBox())!;
+  const boite = (await dialogue.boundingBox())!;
+  const pointe = (await dialogue.locator("svg").last().boundingBox())!;
+  expect(boite.y).toBeGreaterThanOrEqual(8);
+  expect(pointe.y, "la pointe ne sort pas par le haut de la barre").toBeGreaterThanOrEqual(barre.y);
+  expect(pointe.y + pointe.height, "la pointe ne descend pas sur la page").toBeLessThanOrEqual(barre.y + barre.height + 8);
+});
+
+test("finitions : « p. n » des Repères sur la ligne de base du libellé, libellés « Sur la page » à 13 px dès md, écart ♩ / tempo de 2 px", async ({ page }) => {
+  await ouvrir(page);
+  if (!telephone(page)) {
+    const tempo = page.locator("[data-tempo-barre]");
+    expect(await tempo.evaluate((el) => getComputedStyle(el).columnGap)).toBe("2px");
+  }
+  const reperes = await ouvrirMenu(page, "reperes");
+  await attendreOuverture(page);
+  const ys = await reperes.locator("li button").first().evaluate((bouton) => {
+    const [libelle, pageN] = Array.from(bouton.querySelectorAll("span.truncate, span.tabular-nums")) as HTMLElement[];
+    const repere = (el: HTMLElement) => {
+      const s = document.createElement("span");
+      s.style.cssText = "display:inline-block;width:0;height:0";
+      el.prepend(s);
+      const y = s.getBoundingClientRect().bottom;
+      s.remove();
+      return y;
+    };
+    return [repere(libelle), repere(pageN)];
+  });
+  expect(Math.abs(ys[0] - ys[1]), `lignes de base ${ys}`).toBeLessThanOrEqual(1);
+  await page.keyboard.press("Escape");
+  await expect(reperes).toBeHidden();
+  const options = await ouvrirMenu(page, "options");
+  await attendreOuverture(page);
+  const taille = await options.locator('[role=group][aria-labelledby="perf-sur-page"] > button span:last-child').first().evaluate((el) => getComputedStyle(el).fontSize);
+  expect(taille).toBe(telephone(page) ? "11px" : "13px");
+});
