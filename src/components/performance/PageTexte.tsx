@@ -4,6 +4,7 @@ import type { ReactNode, RefObject } from "react";
 import type { CSSProperties } from "react";
 import { IndiceRappel } from "./IndiceRappel";
 import type { PerfPage } from "@/lib/performance/columns";
+import { NEXT_PILL_RESERVE } from "@/lib/performance/pagination";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 
@@ -46,7 +47,7 @@ export function PageTexte({
   const multiCol = page.cols.length > 1;
   return (
     <>
-    <div>
+    <div className={page.etire ? "flex h-full flex-col" : undefined}>
       {rappel && (
         <div ref={rappelRef} data-rappel className="relative mb-2">
           {rappelTrame}
@@ -62,8 +63,11 @@ export function PageTexte({
           déterministes, cf. commentaire du conteneur). */}
       <div
         ref={scaledBodyRef}
+        className={page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}
         style={
-          page.scale !== 1
+          page.etire
+            ? { paddingBottom: NEXT_PILL_RESERVE }
+            : page.scale !== 1
             ? {
                 transform: `scale(${page.scale})`,
                 transformOrigin: "top left",
@@ -73,9 +77,9 @@ export function PageTexte({
         }
       >
         {/* Deux colonnes : gouttière de 2rem, celle de la mesure en colonne. */}
-        <div className={multiCol ? `flex items-start ${page.twoColumns ? "gap-x-8" : "gap-x-4"}` : undefined}>
+        <div className={multiCol ? `flex items-start ${page.twoColumns ? "gap-x-8" : "gap-x-4"}` : page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}>
           {page.cols.map((colIdxs, ci) => (
-            <div key={ci} className={multiCol ? "flex-1 min-w-0" : undefined}>
+            <div key={ci} className={multiCol ? "flex-1 min-w-0" : page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}>
               {colIdxs.map((i) => renderBlock(i))}
               {pastille && page.suivant === ci && <div className="mt-4 flex">{pastille}</div>}
             </div>

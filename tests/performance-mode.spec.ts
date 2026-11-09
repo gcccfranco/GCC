@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, onStage, ouvrirJeJoue, ouvrirOutils, ouvrirReglages } from "./helpers/louange";
+import { attendreMiseEnPage, lireCompteur, onStage, ouvrirJeJoue, ouvrirOutils, ouvrirReglages } from "./helpers/louange";
 import { basculerAccords, fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
@@ -138,7 +138,7 @@ test.describe("vue structure (batteur)", () => {
     await visibleSections(page);
     const rows = await onStage(page, "[data-section]").evaluateAll((cards) =>
       cards.map((card) => {
-        const label = card.firstElementChild!.lastElementChild!;
+        const label = card.querySelector("[data-feuille-route-nom]")!;
         const range = document.createRange();
         range.selectNodeContents(label);
         const lines = new Set([...range.getClientRects()].map((r) => Math.round(r.top / 4)));
@@ -166,12 +166,22 @@ test.describe("vue structure (batteur)", () => {
         sectionNuances: Object.fromEntries(structure.map((uid) => [uid, long])),
       }),
     ], "batteur");
-    const sections = await visibleSections(page);
-    expect(sections).toHaveLength(6);
-    for (const s of sections) {
-      expect(s.box.x + s.box.width, "rien ne déborde à droite").toBeLessThanOrEqual(375);
-      expect(s.box.y + s.box.height, "rien ne déborde en bas").toBeLessThanOrEqual(667);
+    // Feuille de route (FS-D) : des lignes hautes passent sur plusieurs pages, jamais coupées ni débordantes ;
+    // en parcourant les pages on retrouve exactement les six sections, dans l'ordre.
+    const total = Number((await lireCompteur(page)).split(" / ")[1]);
+    const uids: string[] = [];
+    for (let p = 0; p < total; p++) {
+      await expect.poll(() => lireCompteur(page)).toBe(`${p + 1} / ${total}`);
+      const sections = await visibleSections(page);
+      expect(sections.length, `page ${p + 1} : au moins une ligne`).toBeGreaterThan(0);
+      for (const s of sections) {
+        expect(s.box.x + s.box.width, "rien ne déborde à droite").toBeLessThanOrEqual(375);
+        expect(s.box.y + s.box.height, "rien ne déborde en bas").toBeLessThanOrEqual(667);
+      }
+      uids.push(...(await onStage(page, "[data-section]").evaluateAll((els) => els.map((e) => e.getAttribute("data-section-uids") ?? ""))));
+      if (p < total - 1) await page.keyboard.press("ArrowRight");
     }
+    expect(uids, "les six sections, une fois chacune, dans l'ordre").toEqual(structure);
   });
 });
 

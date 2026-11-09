@@ -79,7 +79,7 @@ const CHART_TYPE_COLOR: Record<string, string> = {
 // Clé --sec-* d'un type de section : voir src/lib/sectionPalette.ts.
 export { SECTION_PALETTE_KEY };
 
-function getChartSectionStyle(type: string): React.CSSProperties {
+export function getChartSectionStyle(type: string): React.CSSProperties {
   return {
     "--sec-c": CHART_TYPE_COLOR[type] ?? "var(--sec-other)",
     // Accords neutres : surcharge des variables héritées par ChordLine (FR) et ZhLine (ZH).
@@ -106,7 +106,7 @@ const KaiTiFont = localFont({
 const fr_lyric_font = localFont({ src: "../../../public/fonts/AtkinsonHyperlegibleNext-Regular.woff2" });
 // Caractères chinois : Source Han Sans CN Medium (auparavant Light, trop fine
 // de loin) — choisie par Timothée le 13/09/2026 sur captures.
-const zh_lyric_font = localFont({ src: "../../../public/fonts/SourceHanSansCN-Medium-sub.woff2", preload: false });
+export const zh_lyric_font = localFont({ src: "../../../public/fonts/SourceHanSansCN-Medium-sub.woff2", preload: false });
 const chord_font = localFont({
   src: [
     { path: "../../../public/fonts/AtkinsonHyperlegibleNext-Regular.woff2", weight: "400" },
@@ -123,7 +123,7 @@ const liberation_font = localFont({
 });
 
 
-function getSectionStyle(type: string, isZh: boolean): React.CSSProperties {
+export function getSectionStyle(type: string, isZh: boolean): React.CSSProperties {
   const { accent, boxFill, boxBorder } = LANG_THEME[isZh ? "zh" : "fr"];
 
   const base: React.CSSProperties = {
@@ -539,7 +539,7 @@ const NUANCE_TEXT_NEUTRAL_CLASS = "text-stone-600 dark:text-stone-300";
  *  structure, texte discret sous l'abréviation. Notation de la partition : ses
  *  tailles en px restent hors de l'échelle de texte B et de son plancher (lot CD,
  *  T4a), pour garder le badge du mode louange nettement plus grand. */
-function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance?: SectionNuance; size?: "sm" | "lg"; variant?: "badge" | "text" }) {
+export function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance?: SectionNuance; size?: "sm" | "lg"; variant?: "badge" | "text" }) {
   if (!nuance || (nuance.tags.length === 0 && !nuance.note)) return null;
   const lg = size === "lg";
   const text = variant === "text";

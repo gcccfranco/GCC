@@ -45,56 +45,39 @@ export function splitSheetPages(
   return out;
 }
 
-// Vue structure : agrandissement maximal du corps, et place gardée en bas pour
-// la pastille « Suivant : … », qui recouvrirait la dernière section.
-const STRUCTURE_MAX_SCALE = 3;
+// Vue structure : place gardée en bas pour la pastille « Suivant : … », qui recouvrirait la dernière ligne.
 export const NEXT_PILL_RESERVE = 40;
 
-// Mode ossature : UN CHANT PAR PAGE. L'en-tête occupe la pleine largeur ; les
-// sections (libellés + notes/transitions) sont disposées en 1 colonne si elles
-// tiennent, sinon en 2 colonnes équilibrées lues colonne par colonne (↓ gauche
-// puis ↓ droite). Le corps est mis à l'échelle de la place restante : réduit
-// s'il déborde, agrandi (jusqu'à ×3) pour remplir la page — les batteurs lisent
-// la structure de loin. L'en-tête reste à l'échelle 1 : un titre long agrandi
-// serait tronqué.
-// L'agrandissement réduit d'autant la largeur de mise en page : il s'arrête
-// avant qu'un libellé (largeur naturelle `widths`) ne passe à la ligne ou ne
-// déborde de son cadre. Un libellé déjà plus large que sa colonne à l'échelle 1
-// n'est pas agrandi ; le rendu réel est de toute façon vérifié après coup.
-export function layoutSong(
-  headerIdx: number | null,
-  body: number[],
-  heights: number[],
-  widths: number[],
-  viewportH: number,
-  contentW: number,
-): PerfPage {
-  const sum = (arr: number[]) => arr.reduce((s, i) => s + heights[i], 0);
+/** Les lignes d'une page s'étirent jusqu'à remplir l'écran, sans dépasser ce multiple de leur hauteur naturelle. */
+const ETIREMENT_MAX = 3;
+
+/** Vue structure, feuille de route du batteur (FS-D) : une colonne, échelle 1, une ligne par section à sa hauteur
+ *  naturelle mesurée. Si l'en-tête, toutes les lignes et la place de la pastille « Suivant » tiennent, une page ;
+ *  sinon on coupe entre deux lignes (jamais au milieu d'une), les pages suivantes sans en-tête. Une page dont les
+ *  lignes, étirées jusqu'à la hauteur libre, ne dépassent pas 3 fois leur hauteur naturelle porte `etire` : l'écran
+ *  les étire pour la remplir ; sinon elles restent en haut. */
+export function layoutFeuilleDeRoute(headerIdx: number | null, body: number[], heights: number[], viewportH: number): PerfPage[] {
   const headerH = headerIdx != null ? heights[headerIdx] : 0;
-  const room = Math.max(1, viewportH - headerH - NEXT_PILL_RESERVE);
-  const bodyTotal = sum(body);
-  const widest = Math.max(1, ...body.map((i) => widths[i]));
-  const fit = (contentH: number, colW: number) =>
-    Math.min(STRUCTURE_MAX_SCALE, room / Math.max(1, contentH), Math.max(1, colW / widest));
-
-  // 1 colonne si peu de sections ou si tout tient en hauteur.
-  if (body.length <= 1 || bodyTotal <= room) {
-    return { header: headerIdx, cols: [body], scale: fit(bodyTotal, contentW) };
-  }
-
-  // 2 colonnes : coupure équilibrée minimisant la hauteur de la plus haute colonne.
-  let best = { k: 1, maxH: Infinity };
-  for (let k = 1; k < body.length; k++) {
-    const left = sum(body.slice(0, k));
-    const maxH = Math.max(left, bodyTotal - left);
-    if (maxH < best.maxH) best = { k, maxH };
-  }
-  return {
-    header: headerIdx,
-    cols: [body.slice(0, best.k), body.slice(best.k)],
-    // gap-x-4 entre les deux colonnes
-    scale: fit(best.maxH, (contentW - 16) / 2),
+  const pages: PerfPage[] = [];
+  let ligne: number[] = [];
+  let cumul = 0;
+  let enTete = headerIdx;
+  let room = Math.max(1, viewportH - headerH - NEXT_PILL_RESERVE);
+  const fermer = () => {
+    const etire = cumul > 0 && room / cumul >= 1 && room / cumul <= ETIREMENT_MAX;
+    pages.push({ header: enTete, cols: [ligne], scale: 1, ...(etire ? { etire } : null) });
+    ligne = [];
+    cumul = 0;
+    enTete = null;
+    room = Math.max(1, viewportH - NEXT_PILL_RESERVE);
   };
+  for (const i of body) {
+    if (ligne.length > 0 && cumul + heights[i] > room) fermer();
+    ligne.push(i);
+    cumul += heights[i];
+  }
+  fermer();
+  return pages;
 }
 
 /** Mesures et réglages dont dépend la pagination du flux normal (une ou deux colonnes). */

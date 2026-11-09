@@ -6,6 +6,7 @@ import { langAccent } from "./langAccent";
 import { BarreHaut, ICONES_ROLE } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
 import { MenuLouange, type MenuId } from "./MenuLouange";
+import { LigneFeuilleDeRoute, LigneTransitionFeuille } from "./FeuilleDeRoute";
 import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo, LignesTempo, TitreRubrique, VALEUR } from "./ContenusMenus";
 import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
@@ -20,7 +21,7 @@ import { ecouterCoupure, versionCoupure } from "@/lib/song/coupureSignal";
 import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
 import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, type AncreLecture } from "@/lib/performance/blocks";
 import { PASTILLE_SUIVANT_H, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
-import { NEXT_PILL_RESERVE, layoutSong, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
+import { layoutFeuilleDeRoute, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
@@ -89,6 +90,7 @@ function BlockRenderer({
   repeat,
   bandeau = "simple",
   couleurDe,
+  feuilleRoute = false,
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
@@ -104,12 +106,15 @@ function BlockRenderer({
   bandeau?: Bandeau;
   /** Structure seule : sorte de section dont un Dp emprunte la couleur (son origine). */
   couleurDe?: string;
+  /** Vue structure : les sections se rendent en lignes de la feuille de route (FS-D). */
+  feuilleRoute?: boolean;
 }) {
   if (block.kind === "song-header") {
     return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} />;
   }
   if (block.kind === "transition-intra") {
     if (!showTransitions) return null;
+    if (feuilleRoute) return <LigneTransitionFeuille text={block.text} />;
     return <TransitionNote text={block.text} />;
   }
   if (block.kind === "transition-inter") {
@@ -130,6 +135,7 @@ function BlockRenderer({
       />
     );
   }
+  if (feuilleRoute) return <LigneFeuilleDeRoute block={block} repeat={repeat} couleurDe={couleurDe} disposition={disposition} />;
   return (
     <SectionView
       section={block.section}
@@ -699,9 +705,6 @@ export function PerformanceMode({
       const padTop = mcs ? parseFloat(mcs.paddingTop) || 0 : 16;
       const padBottom = mcs ? parseFloat(mcs.paddingBottom) || 0 : 16;
       const viewportH = window.innerHeight / fontScale - padTop - padBottom - safety - (apercuActif ? APERCU_H : 0);
-      const contentW = mcs && measureInnerRef.current
-        ? measureInnerRef.current.clientWidth - parseFloat(mcs.paddingLeft) - parseFloat(mcs.paddingRight)
-        : window.innerWidth / fontScale;
       // Hauteur réellement occupée par chaque bloc, marges verticales comprises :
       // delta entre le haut du bloc et le haut du bloc suivant dans le flux.
       const flowHeights = (rects: (DOMRect | null)[]) =>
@@ -716,8 +719,6 @@ export function PerformanceMode({
       // mesure). Absente : une colonne.
       const colRects = twoColumns ? blocks.map((_, i) => blockColRefs.current[i]?.getBoundingClientRect() ?? null) : [];
       const heightsColumn = colRects.some(Boolean) ? flowHeights(colRects) : [];
-      // Vue structure : largeur naturelle des sections (mesurées sans retour à la ligne).
-      const widths = rects.map((r, i) => (structureMode && blocks[i]?.kind === "section" ? r?.width ?? 0 : 0));
       const kindOf = (i: number) => blocks[i]?.kind;
       // Sections uniques : la réserve de chaque chant est la hauteur de son
       // rappel (marge comprise), au moins la rangée de nuances (RAPPEL_RESERVE). Il passe à la
@@ -740,7 +741,7 @@ export function PerformanceMode({
       let ancienne: PerfPage[] = [];
       let computed: PerfPage[];
       if (structureMode) {
-        // Un chant par page : on regroupe l'en-tête et ses sections, puis layoutSong.
+        // Un chant par page : on regroupe l'en-tête et ses lignes, puis layoutFeuilleDeRoute.
         // Un chant joué sur son 简谱 n'a pas de section à mettre en ossature :
         // sa partition occupe la page, comme en mode normal.
         const groups: number[][] = [];
@@ -752,7 +753,7 @@ export function PerformanceMode({
           splitSheetPages(group, kindOf, (flow) => {
             const headerIdx = blocks[flow[0]].kind === "song-header" ? flow[0] : null;
             const body = headerIdx != null ? flow.slice(1) : flow;
-            return [layoutSong(headerIdx, body, heights, widths, viewportH, contentW)];
+            return layoutFeuilleDeRoute(headerIdx, body, heights, viewportH);
           }),
         );
       } else {
@@ -795,27 +796,8 @@ export function PerformanceMode({
     };
   }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuActif]);
 
-  // Vue structure agrandie : la mesure se fait à l'échelle 1, mais à l'écran
-  // le corps agrandi dispose d'une largeur réduite d'autant, et un libellé
-  // chargé de nuances peut y passer à la ligne — la page déborderait en bas.
-  // On lit donc le rendu réel et on réduit l'échelle jusqu'à ce que tout
-  // tienne. Réduction seulement : la boucle converge.
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const page = layout[currentPage];
-    const area = contentAreaRef.current;
-    const body = scaledBodyRef.current;
-    if (!structureMode || !page || page.fit || !area || !body || annotZoom !== 1) return;
-    // Hauteurs en px de mise en page (hors échelle du texte) : clientHeight et
-    // offsetHeight ignorent les transform, getBoundingClientRect non.
-    const bodyTop = (body.getBoundingClientRect().top - area.getBoundingClientRect().top) / fontScale;
-    const room = area.clientHeight - parseFloat(getComputedStyle(area).paddingBottom) - bodyTop - NEXT_PILL_RESERVE;
-    const used = body.offsetHeight * page.scale;
-    if (used <= room + 0.5 || page.scale <= 0.3) return;
-    const scale = Math.max(0.3, page.scale * (room / used) * 0.98);
-    setLayout((prev) => prev.map((p, i) => (i === currentPage ? { ...p, scale } : p)));
-  }, [layout, currentPage, structureMode, fontScale, annotZoom]);
 
   const changeFontScale = useCallback((delta: number) => {
     setFontScale((s) => {
@@ -1289,17 +1271,6 @@ export function PerformanceMode({
             <div
               key={block.uid}
               ref={(el) => { blockRefs.current[i] = el; }}
-              // En ossature, les sections sont mesurées à leur largeur naturelle
-              // (sans retour à la ligne : c'est la limite de l'agrandissement),
-              // les transitions à la largeur d'une colonne ; l'en-tête, lui,
-              // occupe toujours la pleine largeur.
-              style={
-                !structureMode || block.kind === "song-header"
-                  ? undefined
-                  : block.kind === "section"
-                    ? { width: "max-content" }
-                    : { width: "calc(50% - 0.5rem)" }
-              }
             >
               {!repeatHidden.has(i) && (
                 <BlockRenderer
@@ -1312,6 +1283,7 @@ export function PerformanceMode({
                   repeat={repeatCount.get(i)}
                   bandeau={bandeau}
                   couleurDe={structureMode && block.kind === "section" ? dpOrigin(block.section) ?? undefined : undefined}
+                  feuilleRoute={structureMode}
                 />
               )}
             </div>
@@ -1411,6 +1383,7 @@ export function PerformanceMode({
                 repeat={repeatCount.get(i)}
                 bandeau={bandeau}
                 couleurDe={structureMode && block.kind === "section" ? dpOrigin(block.section) ?? undefined : undefined}
+                feuilleRoute={structureMode}
               />
             );
           };
@@ -1431,7 +1404,7 @@ export function PerformanceMode({
             );
           }
           return (
-            <ConteneurCoupure>
+            <ConteneurCoupure className={page.etire ? "h-full" : undefined}>
             <PageTexte
               page={page}
               rappel={rappel}
