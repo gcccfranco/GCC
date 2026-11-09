@@ -1394,11 +1394,11 @@ sessions de code en parallèle sur la branche de la session ; rien en ligne sans
 seulement, rien de visible sur le site) : **190 scans sur 190** ont leurs lignes, barres de mesure et débuts de section
 certifiés à l'œil (`public/jianpu/systemes.json`, `sections.json`) ; après relecture, sections de 29 chants et première
 ligne de 14 scans corrigées ; 十字架, 大手牵着小手 et 荣耀至高神 découpés à la main (barres à l'œil, caches sur les lignes
-imbriquées, décision 24 de la spec). **À trancher plus tard par Timothée** : cinq chants dont le `.cho` n'a pas les
-mêmes accords que le scan (不停赞美你 : C dans le `.cho`, Cmaj7 gravé ; 是耶稣的名 : Emaj7 contre une triade gravée ;
-我需要有你在我生命中 couplet 2, 只需要你 intro, 打开天窗 intro et interlude : réharmonisés dans le `.cho`) ; la vue
-paroles et la vue 简谱 montrent donc des accords différents ; liste complète : `python3 scripts/jianpu/sections.py
-controle`. **Vague 1 codée et relue le 09/11/2026** (rien en ligne) :
+imbriquées, décision 24 de la spec). Cinq chants n'ont pas les mêmes accords dans le `.cho` et sur le scan
+(不停赞美你 : C contre Cmaj7 gravé ; 是耶稣的名 : Emaj7 contre une triade ; 我需要有你在我生命中 couplet 2, 只需要你
+intro, 打开天窗 intro et interlude) : **rien à trancher** (Timothée, 09/11/2026 : « normalement pour les partitions on
+s'est fixé dessus déjà », décision 27) ; chaque `.cho` suit sa partition retenue, qui n'est pas le document du scan,
+et le scan garde ses accords gravés ; liste complète : `python3 scripts/jianpu/sections.py controle`. **Vague 1 codée et relue le 09/11/2026** (rien en ligne) :
 CV (coupure des vers, page du chant, vue partitions et mode louange, marque `v2` et bandeau des annotations) et FS-A +
 FS-B (barre de titre forScore, rangée de points, couleur des icônes avec cercle chromatique étendue aux actions,
 menus Setlist, Repères, Outils, Tempo, Options d'affichage) ; relecture indépendante (diffs, 195 captures, critique de

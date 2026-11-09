@@ -97,8 +97,16 @@ Du 08/11/2026 :
     au téléphone, **Outils en tête de la feuille Options d'affichage** ; tolérance de **8 px** avant de couper un vers
     (décision 11 gardée) ; un vers français trop long passe sur **trois ou quatre rangées** plutôt que d'écrire plus
     petit ; la marque **`v2` seulement sur les pages où un vers est vraiment coupé** ; les cinq chants dont le `.cho`
-    n'a pas les accords du scan se tranchent **plus tard, chant par chant**. FS-E (demi-page) attend toujours un go
-    explicite.
+    n'a pas les accords du scan se tranchent **plus tard, chant par chant** (finalement rien à trancher : décision 27).
+    FS-E (demi-page) attend toujours un go explicite.
+27. **Les cinq chants dont le `.cho` n'a pas les accords du scan : rien à trancher** (Timothée, 09/11/2026 :
+    « normalement pour les partitions on s'est fixé dessus déjà »). Chaque `.cho` suit **sa partition retenue** (relevé
+    du 27/09/2026, règle « la partition fournie fait foi » de `spec-guidelines-cho.md`), et ce n'est pas le document du
+    scan : `不停赞美你 accompagnement.pdf` contre `不停赞美你 简谱.png`, `是耶稣的名.pdf` (en E) contre `是耶稣的名 G.pdf`,
+    `我需要有你在我生命中.pdf` contre `… 简谱.png`, `只需要你.pdf` contre `只需要你 简谱.jpg`, `打开天窗.pdf` (chant validé par
+    Timothée) contre `打开天窗 简谱.png` (`source` de `public/jianpu/index.json`). Le scan garde ses accords gravés ; la vue
+    paroles et la vue 简谱 montrent donc, sur ces cinq chants, deux arrangements voisins, et c'est voulu. Aucun fichier ne
+    change. Reste seulement, comme avant, le `{needs_review}` du refrain de 我需要有你在我生命中 (version jouée).
 
 ## Ce qui change, ce qui reste gelé
 
