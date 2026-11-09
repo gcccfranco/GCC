@@ -1422,7 +1422,9 @@ avec la prochaine mise en ligne (Timothée, 09/11/2026). **Fin de chantier pour 
 vague 2 (corrections de DP, RP lancé le 09/11 au soir, puis JP-B), avec des relectures légères (un relecteur et les
 captures regardées) ; **CA reporté**, go et spec gardés. **Pour reprendre** : lire « Avancement » de
 `spec-mode-louange-forscore-2.md` (état de chaque lot), puis lancer CA (spec complète, section « CA ») et, sur nouveau
-go, la vague 3 (JP-C, JP-D, AN) ; avant toute mise en ligne : passe sur le guide, relecture des libellés chinois
+go, la vague 3 (JP-C, JP-D, AN) ; avant toute mise en ligne : **une relecture complète de toute la vague 2**
+(Timothée, 09/11/2026 : « ok pour la relecture complète avant la mise en ligne » ; relecteurs par angle, suite des specs
+touchées sur les cinq projets, captures triées, critique de design contre les planches, constats contre-vérifiés), passe sur le guide, relecture des libellés chinois
 nouveaux par un responsable sinophone, prévenir l'équipe (coupure des vers et annotations rangées par disposition),
 essai sur iPad.
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
