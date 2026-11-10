@@ -1447,7 +1447,15 @@ du bandeau ; (2) rôles sans vue (Orateur, Sono…) ignorés, Présidence + Orat
 « Aucun », retirer aussi l'étiquette « d'après le planning » de Je joue → oui ; (4) la pastille dit « Batterie » à qui
 joue du cajon → reprendre le mot du planning (« Cajon aujourd'hui · Passer en vue Batteur ») ; (5) zone `sr-only`
 permanente pour que la pastille soit annoncée → oui. Hors lot : la page d'une setlist sans date plante (`formatDate`,
-`SetlistDetailClient.tsx:1943`, antérieur à AO) → garde à ajouter.
+`SetlistDetailClient.tsx:1943`, antérieur à AO) → garde à ajouter. **Lot DP fini le 10/11/2026** (seconde relecture : 22 points,
+« Marge », et la régression d'`accords-toucher:139` trouvée et corrigée : depuis DP-A la page du chant se recomposait
+après l'hydratation et un premier toucher sur un accord chinois tombait dans le vide). **À traiter à la relecture
+complète** (questions de la session DP) : (1) Scène coupe encore des vers que Classique garde entiers (téléphone, 1 024
+px), à cause de la colonne de lettre → accepter, ou une colonne plus étroite en compact ; (2) un appareil qui n'est pas
+en Couleurs par section voit la page changer après le chargement → accepter, ou lire le réglage avant la peinture ;
+(3) la note ♩ en SVG aussi dans l'en-tête Classique de la page du chant et dans la barre du mode louange → oui, avec
+FS-F ; (4) le Tag dans le cadre de section du PDF → garder celui d'« other » (aucun). Import inutilisé de `fs` retiré
+(a200a80).
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
