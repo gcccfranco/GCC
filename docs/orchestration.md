@@ -196,6 +196,6 @@ chaque agent par une liste `tools:`, à la place de `disallowedTools`.
 | `executant`, `maquettiste` | `Bash, Read, Edit, Write, Grep, Glob` |
 
 Ils y perdent `Skill`, la recherche web, les connecteurs (GitHub, Notion, Drive, Todoist, Figma) et les outils de
-session cloud ; aucune consigne d'agent ne les demande. Le champ `skills:` de l'équipe design reste. Après le go :
+session cloud ; aucune consigne d'agent ne les demande. Le champ `skills:` de l'équipe design et de l'`executant` (`ponytail`, § 4) reste ; les skills dormants de l'aiguillage se lisent par chemin, avec `Read`. Après le go :
 mesure « après » dans une session neuve (les agents se chargent au démarrage), puis `/tranche` et `/planche` à vide et
 par une petite passe réelle, pour vérifier la sortie par `schema` et le préchargement des skills.
