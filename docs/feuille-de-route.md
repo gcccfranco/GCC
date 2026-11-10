@@ -1455,7 +1455,15 @@ px), à cause de la colonne de lettre → accepter, ou une colonne plus étroite
 en Couleurs par section voit la page changer après le chargement → accepter, ou lire le réglage avant la peinture ;
 (3) la note ♩ en SVG aussi dans l'en-tête Classique de la page du chant et dans la barre du mode louange → oui, avec
 FS-F ; (4) le Tag dans le cadre de section du PDF → garder celui d'« other » (aucun). Import inutilisé de `fs` retiré
-(a200a80).
+(a200a80). **Lot JP-B codé le 10/11/2026** (简谱 en tranches dans le mode louange, tête de
+feuille, demi-page sur les scans, données hors ligne ; relecture légère : un défaut important, les traits d'avant des
+scans certifiés sans bandeau, renvoyé à la session avec trois mineurs). **À traiter à la relecture complète** (questions
+de la session JP-B, recommandation de la session d'origine) : (1) en tablette paysage et sur ordinateur, un écran de scan
+peut garder ~30 % de blanc → permettre une légère réduction (chiffres jamais sous 22 px) quand elle fait tenir une ligne
+de plus, à essayer au pupitre ; (2) entourage de feuille sur ordinateur, comme la planche → oui ; (3) `AGENTS.md` écrit par
+`next dev` au démarrage des serveurs de test → l'ignorer (`.gitignore`) ; et, non faits : `×2` lu par un lecteur d'écran,
+ligne de crédit du scan dans la dernière tranche, repli « un toucher mène au premier écran », vérification de
+`sections.json` / `marges.json` contre `index.json`, chiffres ≥ 17 px au téléphone en portrait (c'est JP-C).
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
