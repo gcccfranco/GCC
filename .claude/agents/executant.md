@@ -1,6 +1,7 @@
 ---
 name: executant
 description: Applique une modification déjà décidée et décrite précisément — même changement sur plusieurs fichiers, renommage, libellés FR et 中文 à propager, corrections listées sur plusieurs .cho. À utiliser quand le quoi et le où sont fixés et qu'il ne reste qu'à faire ; ne décide rien.
+tools: Bash, Read, Edit, Write, Grep, Glob
 model: sonnet
 effort: medium
 color: green

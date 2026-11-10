@@ -1,6 +1,7 @@
 ---
 name: maquettiste
 description: Construit une planche HTML autonome à partir de pistes déjà proposées (pistes côte à côte aux trois tailles, la recommandée marquée, questions à trancher), puis la capture avec Playwright. À utiliser quand les pistes sont écrites et qu'il faut les rendre visibles ; n'invente pas de nouvelle direction et ne touche pas au code du site.
+tools: Bash, Read, Edit, Write, Grep, Glob
 model: sonnet
 effort: high
 color: cyan

@@ -1,7 +1,7 @@
 ---
 name: relecteur
 description: Relecture adversariale, en lecture seule — un diff au regard de sa spec et des règles du CLAUDE.md, ou un constat d'audit à réfuter. À utiliser d'office après chaque tranche codée par un executant, et sur chaque constat avant qu'il entre dans un rapport ; rend un verdict prouvé par chemin et ligne.
-disallowedTools: Edit, Write, NotebookEdit
+tools: Bash, Read, Grep, Glob
 model: sonnet
 effort: medium
 color: red
