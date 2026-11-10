@@ -971,6 +971,7 @@ test("C5 / DP-G1 : Scène (mode louange, dès la tablette, deux colonnes à 1 02
   await page.goto("about:blank");
   const sceneR = await rangees("scene");
   expect(sceneR.size, "mêmes vers lus").toBe(classique.size);
+  expect([...sceneR.keys()].some((k) => /mes\s+doutes/.test(k)), "le vers « Bien avant mes doutes » est lu en Scène").toBe(true);
   for (const [vers, n] of sceneR) if (/mes\s+doutes/.test(vers)) expect(n, "rangées de « Bien avant mes doutes » en Scène").toBeLessThanOrEqual(classique.get(vers) ?? 99);
 });
 
@@ -1040,7 +1041,7 @@ test("DP-F G2-17 : Partition, la feuille de route de tête a la cote des repère
 });
 
 for (const [langue, slug] of [["FR", "abba-pere"], ["ZH", "谢谢你"]] as const) {
-  test(`DP-F : Partition, l'en-tête du mode louange est compact (≤ Classique + 24 px), repères de tête ≤ 30 px — ${langue}`, async ({ page }) => {
+  test(`DP-F : Partition, l'en-tête du mode louange est compact (≤ Classique + 24 px), repères de tête ≤ 32 px — ${langue}`, async ({ page }) => {
     await page.addInitScript((zh) => {
       localStorage.setItem("perf-role-preset", "pianiste");
       localStorage.setItem("perf-font-scale", "1");
@@ -1399,6 +1400,21 @@ test("G2-16 : Partition, repères à la cote de la planche (32 px, 30 au télép
   expect(Math.abs(tete.x - repères[0].nomG), "feuille de route au bord du texte").toBeLessThanOrEqual(1);
   const defile = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(defile, "débordement horizontal").toBeLessThanOrEqual(0);
+});
+
+test("G2-16 : mode louange en une colonne, Partition : repères suspendus avec de l'air avant le bord, et hors de l'encoche en paysage (--sal de 44 px)", async ({ page }) => {
+  await louangeEn(page, "partition");
+  test.skip(await page.locator("[data-performance-mode][data-deux-colonnes]").count() > 0, "une colonne seulement (en deux colonnes, rien ne se suspend)");
+  const gauches = () => onStage(page, "[data-section][data-partition] [data-repere-encadre]").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().left));
+  const defile = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  const sans = await gauches();
+  expect(sans.length).toBeGreaterThan(0);
+  for (const g of sans) expect(g, "air avant le bord de l'écran").toBeGreaterThanOrEqual(7.5);
+  expect(await defile(), "débordement horizontal").toBeLessThanOrEqual(0);
+  // Encoche à gauche (paysage) : les repères restent dans la zone sûre, à 8 px de son bord.
+  await page.locator("[data-performance-mode]").evaluate((el) => (el as HTMLElement).style.setProperty("--sal", "44px"));
+  await expect.poll(async () => Math.min(...(await gauches())), { message: "repères hors de l'encoche" }).toBeGreaterThanOrEqual(44 + 7.5);
+  expect(await defile(), "débordement horizontal").toBeLessThanOrEqual(0);
 });
 
 test("G2-17 G2-19 : mode louange en Partition, repère de tête et de section de même cote et même police, en-tête borné à une colonne", async ({ page }) => {

@@ -765,7 +765,8 @@ export function StructureStrip({
 // pastille. Dès la tablette le filet ne se montre que s'il couvre au moins 24 px (jamais un bout isolé sous une section d'une
 // rangée). Au-delà de trois signes (« Bénédiction », « 尾声 » écrits tels quels) le sigle est coupé par une ellipse dans la pastille. Au toucher la pastille ouvre le nom complet dans une petite bulle (cible de 44 × 44).
 // Partition : retrait du texte = colonne de repères (`--rep-col`) moins ce qui se suspend dans la marge de la page (marge moins
-// 8 px d'air avant le bord). `--marge-rep` force la marge (0 dans l'aperçu de la page suivante, qui coupe ce qui dépasse).
+// 8 px d'air avant le bord). `--marge-rep` force la marge : dans le mode louange, sa part hors encoche (1,5 rem, jamais sous
+// l'encoche en paysage) ; 0 dans l'aperçu de la page suivante, qui coupe ce qui dépasse.
 const RETRAIT_PARTITION = "max(0px, calc(var(--rep-col) - max(0px, var(--marge-rep, var(--marge-bande-g, var(--marge-bande, 0px))) - 8px)))";
 // Cotes de la colonne de repères (planche `.mk28`) : 44 px (38 au téléphone) ; aperçu de la page suivante : rien de suspendu.
 const COLONNE_REPERES = "[--rep-col:38px] md:[--rep-col:44px] [[data-apercu-suivant]_&]:[--marge-rep:0px]";
