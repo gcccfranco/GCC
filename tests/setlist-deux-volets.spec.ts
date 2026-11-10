@@ -171,7 +171,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await page.getByRole("menuitem", { name: "Affichage" }).click();
     await expect(page.getByRole("menuitemradio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
     await expect(page.getByRole("menuitemcheckbox", { name: "Pinyin" })).toBeVisible();
-    await expect(page.getByRole("menuitemcheckbox", { name: "Couleurs par section" })).toBeVisible();
+    await expect(page.getByRole("menuitemradio", { name: "Couleurs par section" })).toBeVisible();
     await page.getByRole("menuitemradio", { name: "Structure seule" }).click();
     await expect(chant(page, 1).locator("[data-section]")).toHaveCount(0);
   });

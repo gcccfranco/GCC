@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { readFileSync } from "node:fs";
-import { attendreMiseEnPage } from "./helpers/louange";
+import { attendreMiseEnPage, basculerAnnoter, ouvrirOutils } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { suivreLeCompte } from "../src/lib/setlist/copieHorsLigne";
 import { verifierMode } from "./helpers/menuSetlist";
@@ -355,7 +355,7 @@ test("annotations : lecture impossible (5xx) → message, pas de page vide à é
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
   await expect(page.locator("[data-annotations-indisponibles]")).toHaveText("Annotations indisponibles pour l'instant");
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await basculerAnnoter(page);
   await page.waitForTimeout(300);
   await expect(canevas(page), "pas de page vide initialisée : pas de canevas pour tracer").toHaveCount(0);
   expect(ecritesAnnotations(db)).toEqual([]);
@@ -365,7 +365,7 @@ test("annotations : document absent (404) → page vide, canevas offert, pas de 
   await signInAsPuisCopie(page);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await basculerAnnoter(page);
   await expect(canevas(page)).toHaveCount(1);
   await expect(page.locator("[data-annotations-indisponibles]")).toHaveCount(0);
 });
@@ -377,8 +377,13 @@ test("annotations : copie hors ligne → « Annoter » est masqué, rien n'est e
   await expect(page.getByText(COPIE)).toBeVisible();
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  await expect(page.getByRole("button", { name: "Réglages" }).or(page.getByRole("button", { name: "Quitter" })).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Options d'affichage" }).or(page.getByRole("button", { name: "Quitter" })).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Annoter" })).toHaveCount(0);
+  // Au téléphone « Annoter » est une ligne du menu Outils : absente aussi hors ligne.
+  if (page.viewportSize()!.width < 768) {
+    const outils = await ouvrirOutils(page);
+    await expect(outils.getByRole("button", { name: "Annoter" })).toHaveCount(0);
+  }
   expect(ecritesAnnotations(db)).toEqual([]);
 });
 

@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
+import { attendreMiseEnPage, lireCompteur, onStage, ouvrirJeJoue, ouvrirOutils, ouvrirReglages } from "./helpers/louange";
 import { basculerAccords, fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
@@ -138,7 +138,7 @@ test.describe("vue structure (batteur)", () => {
     await visibleSections(page);
     const rows = await onStage(page, "[data-section]").evaluateAll((cards) =>
       cards.map((card) => {
-        const label = card.firstElementChild!.lastElementChild!;
+        const label = card.querySelector("[data-feuille-route-nom]")!;
         const range = document.createRange();
         range.selectNodeContents(label);
         const lines = new Set([...range.getClientRects()].map((r) => Math.round(r.top / 4)));
@@ -166,18 +166,28 @@ test.describe("vue structure (batteur)", () => {
         sectionNuances: Object.fromEntries(structure.map((uid) => [uid, long])),
       }),
     ], "batteur");
-    const sections = await visibleSections(page);
-    expect(sections).toHaveLength(6);
-    for (const s of sections) {
-      expect(s.box.x + s.box.width, "rien ne déborde à droite").toBeLessThanOrEqual(375);
-      expect(s.box.y + s.box.height, "rien ne déborde en bas").toBeLessThanOrEqual(667);
+    // Feuille de route (FS-D) : des lignes hautes passent sur plusieurs pages, jamais coupées ni débordantes ;
+    // en parcourant les pages on retrouve exactement les six sections, dans l'ordre.
+    const total = Number((await lireCompteur(page)).split(" / ")[1]);
+    const uids: string[] = [];
+    for (let p = 0; p < total; p++) {
+      await expect.poll(() => lireCompteur(page)).toBe(`${p + 1} / ${total}`);
+      const sections = await visibleSections(page);
+      expect(sections.length, `page ${p + 1} : au moins une ligne`).toBeGreaterThan(0);
+      for (const s of sections) {
+        expect(s.box.x + s.box.width, "rien ne déborde à droite").toBeLessThanOrEqual(375);
+        expect(s.box.y + s.box.height, "rien ne déborde en bas").toBeLessThanOrEqual(667);
+      }
+      uids.push(...(await onStage(page, "[data-section]").evaluateAll((els) => els.map((e) => e.getAttribute("data-section-uids") ?? ""))));
+      if (p < total - 1) await page.keyboard.press("ArrowRight");
     }
+    expect(uids, "les six sections, une fois chacune, dans l'ordre").toEqual(structure);
   });
 });
 
 test.describe("choix du rôle à la première ouverture", () => {
   const ITEMS = [item({ songSlug: "abba-pere", position: 1, structureOverride: ["verse-2-0", "chorus-3-1"] })];
-  const roleSheet = (page: Page) => page.getByRole("dialog", { name: "Quel est ton rôle ?" });
+  const roleSheet = (page: Page) => page.getByRole("dialog", { name: "Je joue", exact: true });
   /** Lignes de paroles de la page affichée (hors copie de mesure). */
   const lyricLines = (page: Page) => onStage(page, "[data-copy-line]");
   const reopen = async (page: Page) => {
@@ -189,7 +199,9 @@ test.describe("choix du rôle à la première ouverture", () => {
   test("appareil vierge : la question apparaît, le rôle choisi s'applique et n'est plus redemandé", async ({ page }) => {
     await openPerformance(page, ITEMS, null);
     await expect(roleSheet(page)).toBeVisible();
+    await expect(roleSheet(page).getByText("Choisis ce que tu joues, ton compte s'en souviendra.")).toBeVisible();
     await roleSheet(page).getByRole("button", { name: /Batteur/ }).click();
+    await page.keyboard.press("Escape");
     await expect(roleSheet(page)).toBeHidden();
     // Vue structure : plus de paroles à l'écran.
     await expect(lyricLines(page)).toHaveCount(0);
@@ -200,7 +212,8 @@ test.describe("choix du rôle à la première ouverture", () => {
 
   test("« Aucun » : rien n'est imposé et la question n'est plus redemandée", async ({ page }) => {
     await openPerformance(page, ITEMS, null);
-    await roleSheet(page).getByRole("button", { name: /Aucun/ }).click();
+    await roleSheet(page).getByRole("button", { name: /^Aucun/ }).click();
+    await page.keyboard.press("Escape");
     await expect(roleSheet(page)).toBeHidden();
     await reopen(page);
     await expect(roleSheet(page)).toBeHidden();
@@ -283,8 +296,8 @@ test.describe("reprise des réglages", () => {
     await basculerAccords(page); // de nouveau affichés
     await launch(page);
     await expect(lyricLines(page).first()).toBeVisible();
-    const settings = await settingsText(page);
-    await expect(settings.getByRole("button", { name: "Batteur" })).not.toHaveClass(/bg-primary/);
+    const jejoue = await ouvrirJeJoue(page);
+    await expect(jejoue.getByRole("button", { name: /^Batteur/ })).toHaveAttribute("aria-pressed", "false");
   });
 
   test("sans changement sur la page setlist, le rôle décide", async ({ page }) => {
@@ -295,13 +308,13 @@ test.describe("reprise des réglages", () => {
 
   test("désélectionner son rôle dans Réglages ne fait pas revenir la question", async ({ page }) => {
     await openPerformance(page, FR, "pianiste");
-    const settings = await settingsText(page);
-    await settings.getByRole("button", { name: "Pianiste" }).click();
-    await page.keyboard.press("Escape"); // ferme les réglages
-    await expect(settings).toBeHidden();
+    const jejoue = await ouvrirJeJoue(page);
+    await jejoue.getByRole("button", { name: /^Pianiste/ }).click();
+    await page.keyboard.press("Escape"); // ferme Je joue
+    await expect(jejoue).toBeHidden();
     await page.keyboard.press("Escape"); // quitte le mode louange
     await launch(page);
-    await expect(page.getByRole("dialog", { name: "Quel est ton rôle ?" })).toBeHidden();
+    await expect(page.getByRole("dialog", { name: "Je joue", exact: true })).toHaveCount(0);
   });
 });
 
@@ -335,13 +348,14 @@ test.describe("tonalité choisie sur la page du chant", () => {
       await page.getByRole("button", { name: /Mode Louange/ }).click();
       await attendreMiseEnPage(page);
 
-      // Repère dans l'en-tête du chant (et dans la barre du haut).
+      // Repère dans l'en-tête du chant et dans la barre du haut : barre ouverte, l'en-tête est masqué sous elle
+      // (groupe 1) et c'est la barre qui le montre ; on attend donc un des repères visible, pas le premier du DOM.
       const mark = onStage(page, "*").getByText(`setlist : ${c.setlistKey}`, { exact: true });
-      await expect(mark.first()).toBeVisible();
+      await expect(mark.and(page.locator(":visible")).first()).toBeVisible();
       await expect(onStage(page, "*").getByText(c.after, { exact: true }).first()).toBeVisible();
 
-      // Retour à la tonalité de la setlist : dans les réglages du chant en cours.
-      const settings = await ouvrirReglages(page);
+      // Retour à la tonalité de la setlist : dans le menu Outils, pour le chant en cours.
+      const settings = await ouvrirOutils(page);
       await settings.getByRole("button", { name: `Revenir à ${c.setlistKey}` }).click();
       await page.keyboard.press("Escape");
       await expect(settings).toBeHidden();

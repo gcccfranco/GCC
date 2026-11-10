@@ -1,3 +1,5 @@
+import type { Tranche } from "@/lib/performance/tranchesScan";
+
 // Pagination du mode louange (PerformanceMode.tsx) — pur, sans DOM.
 // Une colonne : les pages d'aujourd'hui. Deux colonnes (lot U5, T1,
 // docs/spec-deux-volets.md Q2 à Q5) : sur tablette couchée et sur ordinateur,
@@ -10,9 +12,19 @@
  *  coupe pas). `twoColumns` : page posée en deux colonnes hors vue structure ;
  *  ses annotations ont leur propre clé (« x2 »). */
 export type PerfPage = { header: number | null; cols: number[][]; scale: number; fit?: boolean; twoColumns?: boolean;
+  /** Lot CV : au moins une ligne de la page n'est pas posée en une seule rangée (coupure des vers). Sa clé de
+   *  page porte « v2 » ; une page dont tous les vers tiennent sur une rangée garde sa clé d'avant CV. */
+  coupe?: boolean;
+  /** Page de scan 简谱 certifié (lot JP-B) : la tranche de la page de partition qu'elle montre (lignes entières,
+   *  y en px image). Absent : le scan entier, comme avant. Sa clé de page est « j4-<y0> ». */
+  tranche?: Tranche;
   /** Dernière page d'un chant suivi d'un autre : indice de la colonne qui porte la pastille « Ensuite »
    *  (posée à la fin de cette colonne, dans le flux). Absent : pas de pastille dans le flux. */
-  suivant?: number };
+  suivant?: number;
+  /** Vue structure (FS-D) : les lignes de la feuille de route grossissent puis s'étirent pour remplir la page. */
+  etire?: boolean;
+  /** Avec `etire` : somme des hauteurs naturelles (échelle 1) des lignes de la page. */
+  naturel?: number };
 
 /** Place gardée à la pastille « Ensuite » dans le flux (44 px de bouton + marge). */
 export const PASTILLE_SUIVANT_H = 64;

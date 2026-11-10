@@ -251,7 +251,7 @@ test.describe("setlist, vue Partitions", () => {
   }
 });
 
-test("mode louange : le scan par défaut ; l'interrupteur des Réglages est celui de la setlist", async ({ page }) => {
+test("mode louange : le scan par défaut ; le bouton des Options d'affichage est celui de la setlist", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await ouvrirPartitions(page, [item({ songSlug: "一生爱你", position: 1 })]);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
@@ -259,10 +259,10 @@ test("mode louange : le scan par défaut ; l'interrupteur des Réglages est celu
   await expect(onStage(page, "[data-jianpu-page]").first()).toBeVisible();
 
   const reglages = await ouvrirReglages(page);
-  const interrupteur = reglages.getByRole("switch", { name: "Partition 简谱" });
-  await expect(interrupteur).toBeChecked();
+  const interrupteur = reglages.getByRole("button", { name: "Partition 简谱" });
+  await expect(interrupteur).toHaveAttribute("aria-pressed", "true");
   await interrupteur.click();
-  await expect(interrupteur).not.toBeChecked();
+  await expect(interrupteur).toHaveAttribute("aria-pressed", "false");
   expect(await lirePref(page)).toBe("never");
   await page.keyboard.press("Escape");
   await expect(onStage(page, "[data-section]").first()).toBeVisible();

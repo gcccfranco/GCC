@@ -10,6 +10,7 @@ import { getSetlistHistory, type HistoryEntry } from "@/lib/firebase/setlistHist
 import { compareSequences, type HistoryChange, type SectionNote, type SequenceMark } from "@/lib/setlist/history";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { SECTION_PALETTE_KEY } from "@/components/song/SongView";
+import { sectionColorKind } from "@/lib/sectionPalette";
 import type { SongIndexEntry } from "@/types/song";
 
 // Historique des modifications (docs/spec-setlist.md, lot 2) : une ligne sous
@@ -111,7 +112,7 @@ function SectionPill({ label, songs, mark, side, songsMap }: {
   const [, number, abbr] = label.match(/^(?:(\d+) )?(.*)$/) ?? [];
   const slug = songs[number ? Number(number) - 1 : 0];
   const section = songsMap[slug]?.sections?.find((s) => writtenAs(s, abbr));
-  const type = section?.type ?? TYPE_OF_ABBREVIATION[abbr.replace(/\d+$/, "")] ?? "other";
+  const type = (section && sectionColorKind(section)) ?? TYPE_OF_ABBREVIATION[abbr.replace(/\d+$/, "")] ?? "other";
   const key = SECTION_PALETTE_KEY[type] ?? "other";
   const shown = shownMark(mark, side);
   return (

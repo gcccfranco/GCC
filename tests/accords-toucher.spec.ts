@@ -124,6 +124,20 @@ test.describe("page chant", () => {
     await expect(nom(page)).toHaveText("F");
   });
 
+  test("ZH téléphone, processeur ralenti ×4 : un toucher avant la fin de l'hydratation ouvre quand même le panneau (DP-G2, point 24)", async ({ page }, info) => {
+    test.skip(info.project.name !== "telephone", "téléphone seulement");
+    await sansAide(page);
+    await paroles(page);
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    // Le rendu serveur doit déjà être dans la disposition de l'appareil (Couleurs par section) : sinon l'hydratation
+    // recompose la page, recrée les boutons d'accord, et le toucher commencé sur l'ancien bouton n'ouvre rien.
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+    await page.goto("/songs/" + encodeURIComponent("一切歌颂赞美"));
+    await touchables(page).first().click();
+    await expect(panneau(page)).toBeVisible({ timeout: 15_000 });
+  });
+
   test("FR : Piano, la flèche suivante passe au 1er renversement et la main droite change", async ({ page }) => {
     await sansAide(page);
     await page.goto("/songs/abba-pere");

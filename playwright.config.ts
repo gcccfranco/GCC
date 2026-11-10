@@ -14,6 +14,16 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Lot JP-B (docs/spec-mode-louange-forscore-2.md) : un scan 简谱 certifié coupé en tranches, une seule feuille large, sur les quatre dispositions.
+  /louange-jianpu-tranches\.spec\.ts/,
+  // Lot RP (tranche 2) : la pastille « d'après le planning » du mode louange (centrée sous la barre) sur les quatre dispositions.
+  /louange-role-planning\.spec\.ts/,
+  // Lot FS-E : la demi-page du mode louange (filet et poignée, coupe entre deux blocs) sur les quatre dispositions.
+  /louange-demi-page\.spec\.ts/,
+  // Lot FS-D : la feuille de route du batteur (lignes à la hauteur de l'écran) sur les quatre dispositions.
+  /louange-feuille-route\.spec\.ts/,
+  // Lot DP (docs/spec-mode-louange-forscore-2.md) : la disposition de la partition, ses menus à miniatures et le mode louange.
+  /dispositions-partition\.spec\.ts/,
   // Lot CH (docs/spec-chargement.md) : la forme du membre pendant l'attente de Firebase, sur les quatre dispositions.
   /chargement\.spec\.ts/,
   // Lot CD, T1h (bo-reunions-taches-1) : aucun débordement horizontal des pages du Back-Office, aux largeurs du téléphone.
@@ -37,8 +47,18 @@ const SPECS_GRAND_ECRAN = [
   /rappel-dp\.spec\.ts/,
   /rappel-ordre-joue\.spec\.ts/,
   /rappel-indice\.spec\.ts/,
+  // Lot CV (docs/spec-mode-louange-forscore-2.md) : la coupure des vers français sur les quatre dispositions.
+  /coupure-vers\.spec\.ts/,
+  // Lot CV, CV-3 : copie de mesure et rendu au même calcul de coupure, clé de page « v2 », bandeau de composition.
+  /louange-coupure\.spec\.ts/,
   /performance-mode\.spec\.ts/,
   /mode-louange-forscore\.spec\.ts/,
+  // Lot FS-A (docs/spec-mode-louange-forscore-2.md) : barre de titre, rangée de points, couleur des icônes.
+  /louange-barre-titre\.spec\.ts/,
+  // Lot FS-B (docs/spec-mode-louange-forscore-2.md) : les menus du mode louange (Setlist, Repères, Outils, Tempo, Options).
+  /louange-menus\.spec\.ts/,
+  // Lot FS-C (docs/spec-mode-louange-forscore-2.md) : « Je joue », le menu du rôle (ancrage sous l'icône, première ouverture).
+  /louange-je-joue\.spec\.ts/,
   /setlist-regie\.spec\.ts/,
   /setlist-partage\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,

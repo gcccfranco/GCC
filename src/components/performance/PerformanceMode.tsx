@@ -3,51 +3,60 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { langAccent } from "./langAccent";
-import { BarreHaut } from "./BarreHaut";
+import { BarreHaut, ICONES_ROLE } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
-import { SommaireChants } from "./SommaireChants";
-import { FeuilleRole } from "./FeuilleRole";
+import { MenuLouange, type MenuId } from "./MenuLouange";
+import { LigneFeuilleDeRoute } from "./FeuilleDeRoute";
+import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo, LignesTempo, TitreRubrique, VALEUR } from "./ContenusMenus";
+import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
 import { PageTexte } from "./PageTexte";
+import { DemiPage } from "./DemiPage";
+import { getDemiPagePref, getDemiPart, setDemiPagePref, setDemiPart as setDemiPartPref } from "@/lib/performance/demiPage";
 import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Link2, MessageSquare, Sun, Moon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves, X } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
-import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, type AncreLecture } from "@/lib/performance/blocks";
+import type { Tranche } from "@/lib/performance/tranchesScan";
+import type { TrancheFenetre } from "@/components/jianpu/JianpuSheet";
+import { ecouterCoupure, versionCoupure } from "@/lib/song/coupureSignal";
+import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
+import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, SUFFIXE_FEUILLE, type AncreLecture } from "@/lib/performance/blocks";
 import { PASTILLE_SUIVANT_H, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
-import { NEXT_PILL_RESERVE, layoutSong, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
-import { useJianpuManifest } from "@/lib/jianpu/images";
+import { layoutFeuilleDeRoute, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
+import { useJianpuManifest, useJianpuMargesToutes, useJianpuSections, useJianpuSystemes } from "@/lib/jianpu/images";
+import { bornesX, LARGEUR_FEUILLE_MAX, sectionsDeTranche, trancheDeSection, tranchesScan } from "@/lib/performance/tranchesScan";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
-import { SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
+import { SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, zh_lyric_font } from "@/components/song/SongView";
+import { TempoPartition } from "@/components/song/NoteNoire";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { dpOrigin } from "@/lib/setlist/dp";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { ANCIEN_RAPPEL } from "@/lib/annotations/strokes";
-import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
+import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
+import { getTransposedKey, noteToIndex } from "@/lib/transpose";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
+import { ROLE_IDS, getRole, roleDemande, setRole, type RolePreset } from "@/lib/performance/roleCompte";
 import { barreDejaVue, marquerBarreVue } from "@/lib/performance/barreVue";
-import { getMetronomePref, setMetronomePref, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
+import { FOND_CLAIR, FOND_SOMBRE, SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE, TEINTES, garderContraste, getCouleurIcones, setCouleurIcones } from "@/lib/performance/couleurIcones";
+import { getMetronomePref, setMetronomePref } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
+
+/** Marque de la pastille cochée dans la palette de couleur : double anneau, le même pour les sept. */
+const PASTILLE_CHOISIE = "ring-2 ring-foreground ring-offset-2 ring-offset-background";
 
 // ─── TransitionBanner (local copy — same style as PartitionView) ──────────────
 
@@ -81,18 +90,22 @@ function BlockRenderer({
   showChordsGlobal,
   showTransitions,
   hideLyrics,
-  chartStyle,
+  disposition,
   showPinyinGlobal,
   fit = false,
   repeat,
   bandeau = "simple",
   couleurDe,
+  feuilleRoute = false,
+  transitionApres,
+  tempoChant,
+  tranche,
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
   showTransitions: boolean;
   hideLyrics: boolean;
-  chartStyle: boolean;
+  disposition: Disposition;
   showPinyinGlobal: boolean;
   /** Page 简谱 : le scan se met à l'échelle de la hauteur disponible. */
   fit?: boolean;
@@ -102,12 +115,20 @@ function BlockRenderer({
   bandeau?: Bandeau;
   /** Structure seule : sorte de section dont un Dp emprunte la couleur (son origine). */
   couleurDe?: string;
+  /** Vue structure : les sections se rendent en lignes de la feuille de route (FS-D). */
+  feuilleRoute?: boolean;
+  /** Vue structure : transition qui suit cette section, rendue dans sa ligne (le bloc transition ne rend rien). */
+  transitionApres?: string;
+  /** Vue structure : tempo du chant, en tête de page avec la tonalité. */
+  tempoChant?: number;
+  /** Page de scan 简谱 certifié : la tranche de la page de partition à montrer (lot JP-B). */
+  tranche?: TrancheFenetre;
 }) {
   if (block.kind === "song-header") {
-    return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} />;
+    return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} feuilleRoute={feuilleRoute} tempo={tempoChant} disposition={disposition} />;
   }
   if (block.kind === "transition-intra") {
-    if (!showTransitions) return null;
+    if (!showTransitions || feuilleRoute) return null;
     return <TransitionNote text={block.text} />;
   }
   if (block.kind === "transition-inter") {
@@ -125,9 +146,11 @@ function BlockRenderer({
         capo={block.capo}
         pageIndex={block.pageIndex}
         layout={fit ? "fit" : "flow"}
+        tranche={fit ? tranche : undefined}
       />
     );
   }
+  if (feuilleRoute) return <LigneFeuilleDeRoute block={block} repeat={repeat} couleurDe={couleurDe} disposition={disposition} transition={transitionApres} />;
   return (
     <SectionView
       section={block.section}
@@ -140,11 +163,13 @@ function BlockRenderer({
       nuance={block.nuance}
       keyChange={block.keyChange}
       songSourceLabel={block.songSourceLabel}
-      chartStyle={chartStyle}
+      disposition={disposition}
       nuanceSize="lg"
       repeat={repeat ?? block.repeat}
       occurrenceUids={block.occurrenceUids}
       couleurDe={couleurDe}
+      // Lot CV : les exceptions de mots chinois du chant (motsChinois.ts) s'appliquent au pupitre comme sur la page du chant.
+      slug={block.songSlug}
     />
   );
 }
@@ -156,16 +181,52 @@ function BlockRenderer({
 type Bandeau = "aucun" | "simple" | "details";
 
 
-function SongHeader({ block, bandeau, showTransitions }: { block: SongHeaderBlock; bandeau: Bandeau; showTransitions: boolean }) {
+function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disposition }: { block: SongHeaderBlock; bandeau: Bandeau; showTransitions: boolean; feuilleRoute?: boolean; tempo?: number; disposition?: Disposition }) {
   const { t } = useTranslation();
+  // Vue structure (FS-D) : la barre du haut porte le titre ; l'en-tête montre en grand le tempo et la tonalité, toujours
+  // visibles (pas de bande vide ni de filet orphelin sous la barre ouverte).
+  if (feuilleRoute) {
+    const titres = block.fusionSongs?.length ? block.fusionSongs.map((s) => s.title).join(" / ") : block.title;
+    return (
+      <div data-entete-chant className="mx-auto mb-3 w-full max-w-[880px] pb-3 border-b border-border">
+        {/* Titre du chant : la barre est fermée à l'ouverture, le batteur doit voir quel chant il joue. Masqué barre ouverte (qu'elle le répète), sans changer de place. */}
+        <div data-entete-titre className="mb-0.5 flex flex-wrap items-baseline gap-x-3 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
+          <h2 className="text-lg font-bold text-foreground leading-tight uppercase tracking-tight">{titres}</h2>
+          {!block.fusionSongs?.length && block.artist ? <p className="text-xs text-muted-foreground">{block.artist}</p> : null}
+        </div>
+        <p data-entete-tempo-tonalite className="text-[22px] font-bold leading-tight text-foreground">
+          {tempo ? <span data-entete-tempo>♩ = {tempo}</span> : null}
+          {tempo ? " · " : null}
+          <span data-entete-tonalite>{t("performance.key")} {block.songKey}</span>
+        </p>
+      </div>
+    );
+  }
   // Mesuré avec l'en-tête : en deux colonnes, il reste en pleine largeur au-dessus.
   const strip = bandeau !== "aucun" && block.steps?.length ? (
-    <StructureStrip steps={sansTransitions(block.steps, showTransitions)} details={bandeau === "details"} className="mt-3" />
+    <StructureStrip steps={sansTransitions(block.steps, showTransitions)} details={bandeau === "details"} disposition={disposition} className="mt-3" />
   ) : null;
   if (block.fusionSongs?.length) {
+    // Partition : l'en-tête d'un chant fusionné prend l'apparence de l'autre (titres en serif centrés, structure dessous).
+    if (disposition === "partition") {
+      return (
+        <div data-entete-chant data-entete-partition className="mb-3 border-b border-border pb-3 [[data-page-deux-colonnes]_&]:max-w-[calc(50%-1rem)]">
+          <div className="space-y-0.5 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
+            {block.fusionSongs.map((s, i) => (
+              <h2 key={i} data-titre-partition className={`text-center text-[26px] font-bold leading-[1.15] text-foreground ${s.language === "zh" ? KaiTiFont.className : gelasio_font.className}`}>
+                {s.title}
+                <small className="ml-1.5 text-sm font-normal text-muted-foreground">{s.key}</small>
+              </h2>
+            ))}
+          </div>
+          {strip}
+        </div>
+      );
+    }
     return (
       <div data-entete-chant className="mb-3 pb-3 border-b border-border">
-        <div className="flex items-start gap-2">
+        {/* Barre de titre ouverte : ces lignes (qu'elle répète) sont masquées sans changer de place, jamais coupées à mi-hauteur. */}
+        <div className="flex items-start gap-2 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
           <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
             {block.position}
           </span>
@@ -191,9 +252,33 @@ function SongHeader({ block, bandeau, showTransitions }: { block: SongHeaderBloc
       </div>
     );
   }
+  // Partition (lot DP-D, compacté en DP-F) : titre centré en serif, puis une seule rangée : tempo et tonalité à gauche, compositeur à droite.
+  if (disposition === "partition") {
+    const zh = block.language === "zh";
+    return (
+      <div data-entete-chant data-entete-partition className="mb-3 border-b border-border pb-2 [[data-page-deux-colonnes]_&]:max-w-[calc(50%-1rem)]">
+        <div className="[[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
+          <h2 data-titre-partition className={`text-center text-[22px] font-bold leading-[1.15] text-foreground md:text-[26px] ${zh ? KaiTiFont.className : gelasio_font.className}`}>
+            {block.title}
+          </h2>
+          {block.titlePinyin && <p className={`text-center text-xs text-muted-foreground mt-0.5 ${pinyin_font.className}`}>{block.titlePinyin}</p>}
+          <div className="mt-1 flex items-baseline justify-between gap-4">
+            <div data-partition-tempo data-testid={block.tempo ? "ligne-tempo" : undefined} className="min-w-0 whitespace-nowrap text-sm leading-[1.3]">
+              {block.tempo ? <span className="font-bold"><TempoPartition tempo={block.tempo} /></span> : null}
+              {block.tempo ? <span aria-hidden="true" className="text-muted-foreground"> · </span> : null}
+              <span className="text-muted-foreground">{t("performance.key")} {block.songKey}</span>
+            </div>
+            <p data-partition-compositeur data-testid="auteur" title={block.artist} className={`min-w-0 max-w-[55%] truncate pr-[0.2em] text-right text-sm leading-[1.3] text-foreground/80 ${zh ? zh_lyric_font.className : `italic ${gelasio_font.className}`}`}>{block.artist}</p>
+          </div>
+        </div>
+        {strip}
+      </div>
+    );
+  }
   return (
     <div data-entete-chant className="mb-3 pb-3 border-b border-border">
-      <div className="flex items-start justify-between gap-4">
+      {/* Barre de titre ouverte : titre, pinyin, crédits et tonalité (qu'elle répète) sont masqués sans changer de place, jamais coupés à mi-hauteur ; la structure reste. */}
+      <div className="flex items-start justify-between gap-4 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
@@ -261,9 +346,8 @@ const APERCU_PART_MAX = 0.25;
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-// Presets de rôle : raccourcis vers une combinaison accords/paroles. Mémorisé
-// par appareil ; un réglage manuel des toggles désélectionne le preset.
-type RolePreset = "pianiste" | "guitariste" | "presidence" | "choriste" | "batteur";
+// Presets de rôle : raccourcis vers une combinaison accords/paroles. Rôle retenu
+// par compte (roleCompte.ts) ; un réglage manuel des toggles désélectionne le preset.
 const ROLE_PRESETS: Record<RolePreset, { chords: boolean; hideLyrics: boolean }> = {
   pianiste: { chords: true, hideLyrics: false },
   guitariste: { chords: true, hideLyrics: false },
@@ -271,9 +355,10 @@ const ROLE_PRESETS: Record<RolePreset, { chords: boolean; hideLyrics: boolean }>
   choriste: { chords: false, hideLyrics: false },
   batteur: { chords: false, hideLyrics: true },
 };
-const ROLE_PRESET_IDS = Object.keys(ROLE_PRESETS) as RolePreset[];
 
 interface PerformanceModeProps {
+  /** Compte connecté (null hors connexion) : le rôle et la taille annotée sont retenus par compte. */
+  uid: string | null;
   items: SetlistItem[];
   contents: Record<string, SongContent>;
   /** Accords changés sur la page setlist juste avant (absent sinon) : ils
@@ -281,6 +366,8 @@ interface PerformanceModeProps {
   initialShowChords?: boolean;
   setlistId: string;
   setlistTitle: string;
+  /** Date de la setlist (AAAA-MM-JJ), affichée en tête du menu Setlist ; absente = pas de date. */
+  setlistDate?: string;
   /** Affichage (D15) : la préférence `partition-layout`, tenue par la page
    *  setlist pour que son menu Affichage soit à jour en sortant du mode. */
   affichage: PartitionLayout;
@@ -291,32 +378,30 @@ interface PerformanceModeProps {
   onJianpuPrefChange: (v: JianpuPref) => void;
   /** La setlist vient de la copie hors ligne : « Annoter » est masqué et rien ne s'enregistre. */
   horsLigne?: boolean;
+  /** Lot RP : rôle d'après le planning pour le service de cette setlist ; proposé, jamais appliqué seul. */
+  rolePlanning?: RolePreset | null;
   onClose: () => void;
 }
 
 export function PerformanceMode({
+  uid,
   items,
   contents,
   initialShowChords,
   setlistId,
   setlistTitle,
+  setlistDate,
   affichage,
   onAffichageChange,
   jianpuPref,
   onJianpuPrefChange,
   horsLigne = false,
+  rolePlanning = null,
   onClose,
 }: PerformanceModeProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [storedRole] = useState<RolePreset | null>(() => {
-    try {
-      const v = localStorage.getItem("perf-role-preset");
-      return v && v in ROLE_PRESETS ? (v as RolePreset) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [storedRole] = useState<RolePreset | null>(() => getRole(uid));
   // Rôle contredit par les accords choisis juste avant sur la page setlist :
   // désélectionné, et l'affichage reprend celui de la page (paroles comprises).
   // Même chose quand l'Affichage de l'appareil contredit le rôle (D15, dans les
@@ -339,10 +424,9 @@ export function PerformanceMode({
       return false;
     }
   });
-  // Style « chart » : couleurs par type de section + accords neutres (cf.
-  // SectionView). Préférence par appareil partagée avec la fiche chant et la
-  // vue setlist (chartStylePref).
-  const [chartStyle, setChartStyle] = useState(() => getChartStylePref());
+  // Disposition de la partition (cf. SectionView). Préférence par appareil
+  // partagée avec la fiche chant et la vue setlist (dispositionPref).
+  const [disposition, setDisposition] = useState<Disposition>(() => getDispositionPref());
   // Pinyin (chants zh) : masquable pour qui lit les caractères. Même
   // préférence que la vue setlist (pinyinPref). Défaut : affiché.
   const [showPinyin, setShowPinyin] = useState(() => getPinyinPref());
@@ -370,9 +454,64 @@ export function PerformanceMode({
   const [annotPan, setAnnotPan] = useState({ x: 0, y: 0 });
   // Barre visible à la toute première ouverture du mode sur l'appareil, masquée ensuite (drapeau posé par l'effet ci-dessous).
   const [showChrome, setShowChrome] = useState(() => !barreDejaVue());
-  const [songListOpen, setSongListOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  // FS-B : un seul menu ouvert à la fois ; lu par les trois gardes (toucher, clavier, Échap). `popoverRef` : la valeur
+  // à jour pour les gestionnaires de pointeur, qui ne se recréent pas à chaque rendu.
+  const [popoverOuvert, setPopoverOuvert] = useState<MenuId | null>(null);
+  const popoverRef = useRef<MenuId | null>(null);
+  popoverRef.current = popoverOuvert;
+  // Le menu était ouvert au pointerdown en cours : le pointerup qui suit ne tourne pas la page et ne bascule pas la barre.
+  // On garde l'évènement (`t` = horodatage du pointerdown) : le pointerdown suivant, menu fermé, remet le drapeau à zéro,
+  // il n'avale donc qu'UN toucher (un pointerdown sans pointerup, ou un pointerup du stylet, ne le laisse pas collé).
+  const menuAuToucher = useRef<{ t: number } | null>(null);
+  const basculerMenu = useCallback((id: MenuId) => setPopoverOuvert((cur) => (cur === id ? null : id)), []);
+  const fermerMenu = useCallback((id: MenuId) => setPopoverOuvert((cur) => (cur === id ? null : cur)), []);
+  // Un toucher hors du menu le ferme, y compris sur les barres (qui arrêtent la propagation et cachent le toucher à Radix,
+  // écouté plus haut dans le document) : écoute en capture. Sur la page, il est marqué pour que son pointerup ne tourne rien.
+  useEffect(() => {
+    if (popoverOuvert === null) return;
+    const hors = (e: PointerEvent) => {
+      const cible = e.target instanceof Element ? e.target : null;
+      if (e.pointerType === "pen") return;
+      if (!cible || cible.closest("[data-menu-louange], [data-menu-declencheur], [data-vaul-overlay]")) return;
+      if (!cible.closest("[data-barre-haut], [data-barre-bas]")) menuAuToucher.current = { t: e.timeStamp };
+      // La rangée de points (CurseurPage) change de page au pointerdown : menu ouvert, ce toucher ferme seulement le menu.
+      if (cible.closest("[data-curseur-page]")) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      setPopoverOuvert(null);
+    };
+    document.addEventListener("pointerdown", hors, true);
+    return () => document.removeEventListener("pointerdown", hors, true);
+  }, [popoverOuvert]);
+  // Raccourcis clavier du menu Outils : sur ordinateur (pointeur précis) ou dès qu'une touche a été frappée dans le mode.
+  const [clavierVu, setClavierVu] = useState(false);
+  useEffect(() => {
+    // Une touche de navigation ou un caractère : ni Échap, ni une touche de modification seule.
+    const vu = (e: KeyboardEvent) => {
+      const navigation = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(e.key);
+      if (!navigation && e.key.length !== 1) return;
+      setClavierVu(true);
+      window.removeEventListener("keydown", vu);
+    };
+    window.addEventListener("keydown", vu);
+    return () => window.removeEventListener("keydown", vu);
+  }, []);
+  const [pointeurFin] = useState(() => {
+    try { return window.matchMedia("(pointer: fine)").matches; } catch { return false; }
+  });
+  // Couleur des icônes (FS-A) : le choix de l'appareil, corrigé pour garder 4,5:1 contre le fond de la barre.
+  const [couleurChoix, setCouleurChoix] = useState(getCouleurIcones);
+  const [cercleOuvert, setCercleOuvert] = useState(false);
+  // Pastille cochée de la palette : « autre » quand le cercle est ouvert ou que la couleur n'est pas une teinte prête.
+  const teinteChoisie = cercleOuvert ? "autre" : TEINTES.find((c) => c.hex === couleurChoix)?.id ?? "autre";
+  const choisirCouleur = useCallback((hex: string) => {
+    setCouleurChoix(hex);
+    setCouleurIcones(hex);
+  }, []);
   const [layout, setLayout] = useState<PerfPage[]>([]);
+  // Nombre de paginations publiées (attribut de test : tourner la page ne doit pas la relancer).
+  const [passesPagination, setPassesPagination] = useState(0);
   // Pagination d'avant le rappel refait (lot RS-C) : retrouve les annotations sous leurs anciennes clés.
   const [layoutAncien, setLayoutAncien] = useState<PerfPage[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -386,26 +525,27 @@ export function PerformanceMode({
 
   // ── Thème scène (indépendant du thème du site, mémorisé) ──
   const { stageTheme, setTheme } = useThemeScene();
+  // La couleur affichée : le choix, corrigé pour garder 4,5:1 contre le fond. Posée sur la racine du mode et sur chaque menu (Portal).
+  const couleurIcones = garderContraste(couleurChoix, stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR);
+  // Dans les menus (popover, feuille du bas) la surface n'est pas le fond de la barre : la couleur y est corrigée contre elle.
+  const couleurMenus = garderContraste(couleurChoix, stageTheme === "dark" ? SURFACE_MENU_SOMBRE : SURFACE_MENU_CLAIRE);
 
   const toggleHideLyrics = useCallback((v: boolean) => {
     setHideLyrics(v);
     try { localStorage.setItem("perf-hide-lyrics", v ? "1" : "0"); } catch { /* ignore */ }
   }, []);
 
-  const toggleChartStyle = useCallback((v: boolean) => {
-    setChartStyle(v);
-    setChartStylePref(v);
+  const changeDisposition = useCallback((d: Disposition) => {
+    setDisposition(d);
+    setDispositionPref(d);
   }, []);
 
   // Choisir ou retirer un rôle vaut réponse à la question de la première
   // ouverture : un appareil qui retire son rôle n'est pas réinterrogé.
   const clearRolePreset = useCallback(() => {
     setRolePreset(null);
-    try {
-      localStorage.removeItem("perf-role-preset");
-      localStorage.setItem("perf-role-asked", "1");
-    } catch { /* ignore */ }
-  }, []);
+    setRole(uid, null);
+  }, [uid]);
 
   const applyRolePreset = useCallback((id: RolePreset) => {
     const p = ROLE_PRESETS[id];
@@ -416,27 +556,58 @@ export function PerformanceMode({
     // depuis Structure seule seulement (O5) : Sections uniques reste.
     if (id === "batteur") onAffichageChange("structure");
     else if (affichage === "structure") onAffichageChange("played");
-    try {
-      localStorage.setItem("perf-role-preset", id);
-      localStorage.setItem("perf-role-asked", "1");
-    } catch { /* ignore */ }
-  }, [toggleHideLyrics, affichage, onAffichageChange]);
+    setRole(uid, id);
+  }, [toggleHideLyrics, affichage, onAffichageChange, uid]);
 
-  // Première ouverture sur cet appareil : on demande le rôle, retenu ensuite
-  // (« Aucun » aussi). Refermer la feuille sans répondre la reporte à la
-  // prochaine ouverture.
-  const [askRole, setAskRole] = useState(() => {
-    try {
-      return !localStorage.getItem("perf-role-preset") && !localStorage.getItem("perf-role-asked");
-    } catch {
-      return false;
+  // Lot RP : le rôle du planning à l'ouverture du mode, figé : un planning arrivé après n'ajoute pas l'étiquette de Je joue.
+  const [rolePlanningOuverture] = useState<RolePreset | null>(rolePlanning);
+  // Pastille « Planning : … » : proposée, puis acceptée (« Annuler » pendant 6 s), puis finie (croix, tour de page, délai).
+  const [etatPastille, setEtatPastille] = useState<"propose" | "accepte" | "fini">("propose");
+  const [avantPlanning, setAvantPlanning] = useState<{ role: RolePreset | null; affichage: PartitionLayout } | null>(null);
+  const [pageDePastille, setPageDePastille] = useState<number | null>(null);
+  const pastilleProposee =
+    // Comparée au rôle retenu à l'ouverture (figé) : un choix fait ensuite dans Je joue ne la fait jamais surgir.
+    etatPastille === "propose" && rolePlanning !== null && storedRole !== null && rolePreset === storedRole && !roleOverridden &&
+    initialShowChords === undefined && rolePlanning !== storedRole && !horsLigne;
+  // Sous un menu ouvert, la pastille s'efface : un toucher ne doit pas à la fois fermer le menu et choisir un rôle.
+  const pastilleVisible = (pastilleProposee || etatPastille === "accepte") && !annotateMode && popoverOuvert === null;
+  useEffect(() => {
+    // Le premier tour de page depuis son apparition la clôt, même fait pendant qu'un menu ou l'annotation la cache.
+    if (pageDePastille === null) { if (pastilleVisible) setPageDePastille(currentPage); return; }
+    if (currentPage !== pageDePastille && etatPastille !== "fini") setEtatPastille("fini");
+  }, [pastilleVisible, currentPage, pageDePastille, etatPastille]);
+  useEffect(() => {
+    if (etatPastille !== "accepte") return;
+    const minuteur = setTimeout(() => setEtatPastille("fini"), 6000);
+    return () => clearTimeout(minuteur);
+  }, [etatPastille]);
+  const accepterRolePlanning = () => {
+    if (!rolePlanning) return;
+    setAvantPlanning({ role: rolePreset, affichage });
+    applyRolePreset(rolePlanning);
+    setEtatPastille("accepte");
+  };
+  const annulerRolePlanning = () => {
+    if (avantPlanning) {
+      if (avantPlanning.role) applyRolePreset(avantPlanning.role);
+      else clearRolePreset();
+      if (avantPlanning.affichage !== affichage) onAffichageChange(avantPlanning.affichage);
     }
-  });
-  const answerRole = useCallback((id: RolePreset | null) => {
-    if (id) applyRolePreset(id);
-    else clearRolePreset();
-    setAskRole(false);
-  }, [applyRolePreset, clearRolePreset]);
+    setEtatPastille("fini");
+  };
+
+  // Première ouverture de ce compte : « Je joue » s'ouvre seul avec la phrase d'accueil ; le rôle choisi (ou « Aucun »)
+  // est retenu ensuite. Fermer sans répondre reporte la question à la prochaine ouverture.
+  const [accueilRole, setAccueilRole] = useState(() => !roleDemande(uid));
+
+  // L'ouverture automatique ancre le popover sous son icône : la barre de titre doit être visible.
+  useEffect(() => {
+    if (!accueilRole) return;
+    setShowChrome(true);
+    setPopoverOuvert("jejoue");
+    // Une seule fois, à l'ouverture du mode.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const capoActive = rolePreset === "guitariste";
 
@@ -494,9 +665,24 @@ export function PerformanceMode({
   const twoColumns = twoColumnsAvailable && twoColumnsPref !== "0";
   // Aperçu de la page suivante (L6) : tablette portrait, hors vue structure, et
   // seulement si la bande tient (≤ 25 % de la hauteur) ; sinon la pagination garde son budget.
-  const apercuActif =
-    ecran.tabletteVerticale && !structureMode &&
-    APERCU_H * fontScale <= ecran.hauteur * APERCU_PART_MAX;
+  // Demi-page allumée (FS-E) : la demi-page montre déjà le haut de la page suivante, l'aperçu se retire et la pagination
+  // reprend la hauteur de la bande (la clé de page perd alors son suffixe « ap »).
+  const [demiOn, setDemiOn] = useState(getDemiPagePref);
+  const [demiPart, setDemiPartEtat] = useState(getDemiPart);
+  // Demi-page en cours : la page lue est `currentPage`, le haut de l'écran montre déjà le début de la suivante.
+  const [demi, setDemi] = useState(false);
+  const demiSens = useRef<1 | -1>(1);
+  const refDemiRappel = useRef<HTMLDivElement>(null);
+  const refDemiCorps = useRef<HTMLDivElement>(null);
+  const apercuPlace = ecran.tabletteVerticale && !structureMode && APERCU_H * fontScale <= ecran.hauteur * APERCU_PART_MAX;
+  const apercuActif = apercuPlace && !demiOn;
+  const apercuEteint = apercuPlace && demiOn;
+  const basculerDemi = () => {
+    const next = !demiOn;
+    setDemiOn(next);
+    setDemiPagePref(next);
+    setDemi(false);
+  };
   const toggleTwoColumns = useCallback(() => {
     const next = twoColumns ? "0" : "1";
     setTwoColumnsPref(next);
@@ -530,6 +716,8 @@ export function PerformanceMode({
   // s'efface et la pastille flottante se pose au-dessus de la barre, comme avant ; barre escamotée, elle reste dans le flux.
   const refPastilleFlux = useRef<HTMLButtonElement>(null);
   const [pastilleCouverte, setPastilleCouverte] = useState(false);
+  // Lot CV : les lignes affichées posent leur coupure après le contrôle de la pastille (effets des enfants) : on le refait.
+  const [coupureEcran, setCoupureEcran] = useState(0);
   useLayoutEffect(() => {
     const haut = barreHautRef.current;
     const bas = barreBasRef.current;
@@ -541,7 +729,7 @@ export function PerformanceMode({
     ro.observe(bas, { box: "border-box" });
     return () => ro.disconnect();
   }, []);
-  const tapStart = useRef<{ x: number; y: number; time: number } | null>(null);
+  const tapStart = useRef<{ x: number; y: number; time: number; pastille?: boolean } | null>(null);
 
   // Annotations vectorielles de la page courante (toujours chargées, pas
   // seulement en mode annotation) + visibilité (œil dans les réglages)
@@ -553,6 +741,12 @@ export function PerformanceMode({
 
   // Build flat block list (memoised — only changes when content changes)
   const jianpuManifest = useJianpuManifest();
+  // Lot JP-B : lignes des scans certifiés et marges blanches, pour couper un scan en tranches (tant qu'ils ne
+  // sont pas chargés, ou si un chant n'y figure pas : un scan par page d'écran, comme avant).
+  const jianpuSystemes = useJianpuSystemes();
+  const jianpuMarges = useJianpuMargesToutes();
+  // Feuille de route allumée et menu Repères sur un scan certifié : début de chaque section (page, ligne).
+  const jianpuSections = useJianpuSections();
   // Le réglage 简谱 n'apparaît que si un chant de la setlist a un scan.
   const hasJianpuSheets = useMemo(
     () => items.some((it) => it.songSlug && jianpuManifest?.[it.songSlug]),
@@ -569,6 +763,11 @@ export function PerformanceMode({
     });
   }, [setlistId]);
 
+  const choisirCle = useCallback((slug: string, cle: string) => {
+    setPersonalKey(setlistId, slug, cle);
+    setPersonalKeysState((prev) => ({ ...prev, [slug]: cle }));
+  }, [setlistId]);
+
   const blocks = useMemo(
     // always build with chords=true for stable UIDs (le capo et la tonalité ne
     // changent ni le nombre ni l'ordre des blocs : les UIDs restent stables)
@@ -581,10 +780,27 @@ export function PerformanceMode({
     [blocks, structureMode, showTransitions, t],
   );
 
+  // Vue structure (FS-D) : la transition qui suit une section (ou le groupe de passages repliés dont elle est la tête)
+  // se rend dans sa ligne ; le tempo d'un chant vient de sa première section (l'en-tête ne le porte pas).
+  const transitionApres = (i: number): string | undefined => {
+    if (!showTransitions) return undefined;
+    let j = i + 1;
+    while (repeatHidden.has(j)) j++;
+    const b = blocks[j];
+    return b?.kind === "transition-intra" ? b.text : undefined;
+  };
+  const tempoDuChant = (i: number): number | undefined => {
+    for (let j = i + 1; j < blocks.length && blocks[j].kind !== "song-header"; j++) {
+      const b = blocks[j];
+      if (b.kind === "section" && b.tempo) return b.tempo;
+    }
+    return undefined;
+  };
+
   // Re-measure when a setting affecting heights changes
   useEffect(() => {
     setRemeasureKey((k) => k + 1);
-  }, [showChords, showTransitions, hideLyrics, fontScale, chartStyle, showPinyin]);
+  }, [showChords, showTransitions, hideLyrics, fontScale, disposition, showPinyin]);
 
   // Re-measure on viewport resize / orientation change
   useEffect(() => {
@@ -596,10 +812,39 @@ export function PerformanceMode({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Lot CV : les lignes recalculent leur coupure après les polices, un changement de largeur ou de corps ;
+  // la pagination lit des hauteurs qui en dépendent. Quand une coupure change, on remesure (regroupé à
+  // l'image suivante ; sans boucle : une coupure ne change que si sa largeur, son corps ou son contenu ont changé).
+  useEffect(() => {
+    let raf = 0;
+    const off = ecouterCoupure((mesure) => {
+      // Une ligne affichée qui se coupe ne change pas la pagination, seulement la place de la pastille (plus bas).
+      if (!mesure) {
+        setCoupureEcran((n) => n + 1);
+        return;
+      }
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setRemeasureKey((k) => k + 1));
+    });
+    return () => {
+      off();
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   // Measure block heights → compute pages
   useEffect(() => {
+    let annule = false;
     const run = async () => {
       await document.fonts.ready;
+      // Lot CV-3 : les lignes posent leur coupure après les polices ; on attend qu'elle ne bouge plus (au plus 6
+      // tours de deux images) avant de lire les hauteurs, pour ne publier qu'une pagination et une clé de page.
+      for (let n = 0; n < 6; n++) {
+        const v = versionCoupure();
+        await new Promise<void>((ok) => requestAnimationFrame(() => requestAnimationFrame(() => ok())));
+        if (v === versionCoupure()) break;
+      }
+      if (annule) return;
       // Budget de hauteur en px CSS à l'échelle 1 (la mesure se fait hors
       // échelle) : hauteur visible ÷ fontScale, moins les paddings RÉELS du
       // conteneur de mesure (py-4 + safe areas), et une marge de sécurité pour
@@ -611,9 +856,6 @@ export function PerformanceMode({
       const padTop = mcs ? parseFloat(mcs.paddingTop) || 0 : 16;
       const padBottom = mcs ? parseFloat(mcs.paddingBottom) || 0 : 16;
       const viewportH = window.innerHeight / fontScale - padTop - padBottom - safety - (apercuActif ? APERCU_H : 0);
-      const contentW = mcs && measureInnerRef.current
-        ? measureInnerRef.current.clientWidth - parseFloat(mcs.paddingLeft) - parseFloat(mcs.paddingRight)
-        : window.innerWidth / fontScale;
       // Hauteur réellement occupée par chaque bloc, marges verticales comprises :
       // delta entre le haut du bloc et le haut du bloc suivant dans le flux.
       const flowHeights = (rects: (DOMRect | null)[]) =>
@@ -628,8 +870,6 @@ export function PerformanceMode({
       // mesure). Absente : une colonne.
       const colRects = twoColumns ? blocks.map((_, i) => blockColRefs.current[i]?.getBoundingClientRect() ?? null) : [];
       const heightsColumn = colRects.some(Boolean) ? flowHeights(colRects) : [];
-      // Vue structure : largeur naturelle des sections (mesurées sans retour à la ligne).
-      const widths = rects.map((r, i) => (structureMode && blocks[i]?.kind === "section" ? r?.width ?? 0 : 0));
       const kindOf = (i: number) => blocks[i]?.kind;
       // Sections uniques : la réserve de chaque chant est la hauteur de son
       // rappel (marge comprise), au moins la rangée de nuances (RAPPEL_RESERVE). Il passe à la
@@ -648,11 +888,32 @@ export function PerformanceMode({
         if (b.kind === "song-header") courant = i;
         enteteDe.set(i, courant);
       });
-      const ctxPagination = { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe, pastille: PASTILLE_SUIVANT_H };
+      // Lot JP-B : un scan certifié se coupe entre deux lignes. Largeur : la zone de page (moins les 0,25 rem de
+      // chaque côté), bornée à 1 040 px ; hauteur : celle que PageScan laisse au scan entre les barres mesurées
+      // (la tête de feuille occupe la place de la barre du haut : rien de plus à retrancher). La dernière tranche d'un chant suivi d'un autre garde la
+      // place de la pastille « Ensuite » (56 px, comme `reserveBas` de PageScan).
+      const dernierEntete = blocks.reduce((m, b, i) => (b.kind === "song-header" ? i : m), -1);
+      // Encoches latérales : lues dans les paddings calculés du conteneur de mesure (1,5 rem + inset / fontScale), en px résolus.
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const insetG = mcs ? Math.max(0, (parseFloat(mcs.paddingLeft) || 0) - 1.5 * rem) : 0;
+      const insetD = mcs ? Math.max(0, (parseFloat(mcs.paddingRight) || 0) - 1.5 * rem) : 0;
+      const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, window.innerWidth / fontScale - 8 - insetG - insetD);
+      const hauteurScan = window.innerHeight / fontScale - 4 - (barres.haut + barres.bas) / fontScale;
+      const tranchesDe = (i: number) => {
+        const b = blocks[i];
+        if (b?.kind !== "jianpu-sheet" || !jianpuSystemes || !jianpuMarges) return null;
+        const sp = jianpuSystemes[b.songSlug]?.pages[b.pageIndex];
+        if (!sp || sp.lignes.length === 0) return null;
+        const { x0, x1 } = bornesX(sp.w, jianpuMarges[b.songSlug]?.[b.pageIndex]);
+        const dernierDuChant = enteteDe.get(i + 1) !== enteteDe.get(i);
+        const suivi = (enteteDe.get(i) ?? -1) < dernierEntete;
+        return tranchesScan(sp.lignes, sp.h, x1 - x0, largeurScan, Math.max(1, hauteurScan), dernierDuChant && suivi ? 56 / fontScale : 0);
+      };
+      const ctxPagination = { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe, pastille: PASTILLE_SUIVANT_H, tranchesDe };
       let ancienne: PerfPage[] = [];
       let computed: PerfPage[];
       if (structureMode) {
-        // Un chant par page : on regroupe l'en-tête et ses sections, puis layoutSong.
+        // Un chant par page : on regroupe l'en-tête et ses lignes, puis layoutFeuilleDeRoute.
         // Un chant joué sur son 简谱 n'a pas de section à mettre en ossature :
         // sa partition occupe la page, comme en mode normal.
         const groups: number[][] = [];
@@ -664,7 +925,7 @@ export function PerformanceMode({
           splitSheetPages(group, kindOf, (flow) => {
             const headerIdx = blocks[flow[0]].kind === "song-header" ? flow[0] : null;
             const body = headerIdx != null ? flow.slice(1) : flow;
-            return [layoutSong(headerIdx, body, heights, widths, viewportH, contentW)];
+            return layoutFeuilleDeRoute(headerIdx, body, heights, viewportH);
           }),
         );
       } else {
@@ -675,9 +936,22 @@ export function PerformanceMode({
         if (affichageVu === "unique") reserves.forEach((_, i) => anciennes.set(i, ANCIEN_RAPPEL));
         ancienne = paginer(anciennes, ctxPagination);
       }
+      // Lot CV : une page dont une ligne n'est pas posée en une rangée (lue dans la copie de mesure, à la largeur
+      // où la page est posée) a une autre composition qu'avant : sa clé de page porte « v2 ».
+      const ligneCoupee = (i: number, colonne: boolean) => {
+        const el = (colonne ? blockColRefs.current[i] : blockRefs.current[i]) ?? blockRefs.current[i];
+        return !!el && Array.from(el.querySelectorAll("[data-coupe]")).some((n) => !(n.getAttribute("data-coupe") ?? "une").startsWith("une"));
+      };
+      computed = computed.map((p) => {
+        const colonne = !!p.twoColumns && heightsColumn.length > 0;
+        const idx = [...(p.header != null ? [p.header] : []), ...p.cols.flat()];
+        const coupe = !p.fit && idx.some((i) => ligneCoupee(i, colonne && i !== p.header));
+        return coupe ? { ...p, coupe } : p;
+      });
       layoutBlocksRef.current = blocks;
       setLayout(computed);
       setLayoutAncien(ancienne);
+      setPassesPagination((n) => n + 1);
       // La lecture reste à l'écran quand la mise en page change (« 2 colonnes »,
       // rotation, taille du texte) : la page qui contient le premier bloc de la
       // page lue. Une page tournée entre-temps n'est pas déplacée. Si les blocs
@@ -689,29 +963,13 @@ export function PerformanceMode({
       });
     };
     run();
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuActif]);
+    return () => {
+      annule = true;
+    };
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuActif, jianpuSystemes, jianpuMarges, barres.haut, barres.bas]);
 
-  // Vue structure agrandie : la mesure se fait à l'échelle 1, mais à l'écran
-  // le corps agrandi dispose d'une largeur réduite d'autant, et un libellé
-  // chargé de nuances peut y passer à la ligne — la page déborderait en bas.
-  // On lit donc le rendu réel et on réduit l'échelle jusqu'à ce que tout
-  // tienne. Réduction seulement : la boucle converge.
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const page = layout[currentPage];
-    const area = contentAreaRef.current;
-    const body = scaledBodyRef.current;
-    if (!structureMode || !page || page.fit || !area || !body || annotZoom !== 1) return;
-    // Hauteurs en px de mise en page (hors échelle du texte) : clientHeight et
-    // offsetHeight ignorent les transform, getBoundingClientRect non.
-    const bodyTop = (body.getBoundingClientRect().top - area.getBoundingClientRect().top) / fontScale;
-    const room = area.clientHeight - parseFloat(getComputedStyle(area).paddingBottom) - bodyTop - NEXT_PILL_RESERVE;
-    const used = body.offsetHeight * page.scale;
-    if (used <= room + 0.5 || page.scale <= 0.3) return;
-    const scale = Math.max(0.3, page.scale * (room / used) * 0.98);
-    setLayout((prev) => prev.map((p, i) => (i === currentPage ? { ...p, scale } : p)));
-  }, [layout, currentPage, structureMode, fontScale, annotZoom]);
 
   const changeFontScale = useCallback((delta: number) => {
     setFontScale((s) => {
@@ -787,7 +1045,7 @@ export function PerformanceMode({
     showChords,
     showTransitions,
     hideLyrics,
-    chartStyle,
+    disposition,
     capo: currentCapo,
     personalKey: currentPersonalKey,
     fontScale,
@@ -800,8 +1058,41 @@ export function PerformanceMode({
   // notes (gardés dans Firestore). « j3 » en paysage sur grand écran : la structure y passe
   // en colonne et le scan glisse à droite en grandissant (L3-T5b). À incrémenter si le scan
   // bouge encore.
-  const cleScan = layout[currentPage]?.fit ? (ecran.grand ? "j3" : "j2") : "";
-  const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`);
+  // « j4-<y0> » sur une tranche d'un scan certifié (lot JP-B) : deux tranches d'un même scan ont deux clés ;
+  // un scan non certifié garde « j2 » / « j3 ».
+  const trancheCourante = layout[currentPage]?.fit ? layout[currentPage].tranche : undefined;
+  const cleScan = layout[currentPage]?.fit ? (trancheCourante ? `j4-${trancheCourante.y0}` : ecran.grand ? "j3" : "j2") : "";
+  // FS-E : la demi-page entre les pages `n` et `n + 1` (ni annotation, ni loupe) : deux pages de texte, ou (lot JP-B) deux
+  // écrans successifs du MÊME scan 简谱 certifié (deux tranches, ou la dernière d'une page de scan et la première de la
+  // suivante) ; un scan non certifié (page sans tranche) n'en a jamais, ni un texte suivi d'un scan.
+  const demiPossible = useCallback(
+    (n: number) => {
+      const a = layout[n];
+      const b = layout[n + 1];
+      if (!demiOn || annotateMode || annotZoom !== 1 || !a || !b) return false;
+      if (!a.fit && !b.fit) return true;
+      if (!a.fit || !b.fit || !a.tranche || !b.tranche) return false;
+      const ba = blocks[a.cols[0][0]];
+      const bb = blocks[b.cols[0][0]];
+      return ba?.kind === "jianpu-sheet" && bb?.kind === "jianpu-sheet" && ba.songSlug === bb.songSlug && ba.position === bb.position;
+    },
+    [demiOn, annotateMode, annotZoom, layout, blocks],
+  );
+  const demiActif = demi && demiPossible(currentPage);
+  // FS-D : en vue Structure, la clé sans « f2 » est celle d'avant la feuille de route (même page, mêmes réglages) : lue pour le seul bandeau.
+  const cleAvantFeuille = affichageVu === "structure"
+    ? computePageKey(blocks, currentPageIndices, `${layoutSig.slice(0, -SUFFIXE_FEUILLE.length)}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`)
+    : null;
+  const cleSansV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`);
+  // FS-E : la clé qu'aurait eue la page avec l'aperçu de la page suivante (éteint par la demi-page), sans « v2 » puis avec.
+  const cleAvecApercuSansV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}ap`);
+  const cleAvecApercuV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}apv2`);
+  // Lot CV : « v2 » seulement sur une page dont une ligne est coupée (la composition a changé). La clé sans « v2 »
+  // est alors l'ancienne clé de composition : ses traits ne s'affichent pas ici, ils ne sont jamais supprimés.
+  const pageV2 = !!layout[currentPage]?.coupe;
+  const currentPageKey = pageV2
+    ? computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}v2`)
+    : cleSansV2;
 
   // Lot RS-C : le rappel plus haut déplace les fins de page (pages 2 et suivantes d'un chant). Une page dont la
   // composition a changé a une nouvelle clé : on garde la clé qu'aurait eue, dans l'ancienne pagination, la page
@@ -816,15 +1107,16 @@ export function PerformanceMode({
       const idx = p.header != null ? [p.header, ...p.cols.flat()] : p.cols.flat();
       if (p.fit || idx.find((i) => blocks[i]?.kind === "section") !== premiereSection) continue;
       const cle = computePageKey(blocks, idx, `${layoutSig}${p.twoColumns ? "x2" : ""}${apercuActif ? "ap" : ""}`);
-      return cle === currentPageKey ? null : cle;
+      // Sur une page « v2 », la clé sans « v2 » est l'ancienne clé de composition (bandeau), pas une clé RS-C.
+      return cle === currentPageKey || cle === cleSansV2 ? null : cle;
     }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layoutAncien, layout, currentPage, blocks, layoutSig, apercuActif, affichageVu, currentPageKey]);
+  }, [layoutAncien, layout, currentPage, blocks, layoutSig, apercuActif, affichageVu, currentPageKey, cleSansV2]);
 
   // L5 : chant de la page courante, et taille à laquelle il a été annoté sur cet appareil.
   const slugAnnote = currentEntry?.block.songSlug;
-  const tailleAnnotee = slugAnnote ? getTailleAnnotee(setlistId, slugAnnote) : null;
+  const tailleAnnotee = slugAnnote ? getTailleAnnotee(uid, setlistId, slugAnnote) : null;
   const alerteAnnotations =
     !!user && !annotateMode && showAnnotations && tailleAnnotee !== null &&
     Math.round(tailleAnnotee * 100) !== Math.round(fontScale * 100);
@@ -846,18 +1138,36 @@ export function PerformanceMode({
     const obs = new ResizeObserver(mesurer);
     obs.observe(el);
     return () => obs.disconnect();
-  }, [rappelPresent, currentPage, fontScale, currentPageKey]);
-  const { annotationsIndispo, annotations, handleAnnotationsChange } = useAnnotationsPage({
-    user, setlistId, currentPageKey, cleAncienne, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
+  }, [rappelPresent, currentPage, fontScale, currentPageKey, demiActif]);
+  // Ordre de lecture des traits (lot CV) : 1. la clé courante ; 2. si elle est vide, la clé de la pagination d'avant
+  // le rappel (RS-C, ci-dessus) ; 3. sur une page « v2 » seulement, si rien n'a été trouvé, l'ancienne clé de
+  // composition (la même sans « v2 »), lue pour le seul bandeau : ses traits ne s'affichent pas (ils ne sont plus à
+  // leur place) et ne sont jamais supprimés. La clé RS-C n'est jamais l'ancienne clé de composition (écartée dans
+  // `cleAncienne`).
+  // FS-E : demi-page allumée sur une tablette portrait, les traits posés avec l'aperçu (clé « ap ») ne se montrent plus ici.
+  const anciennesCompositions = useMemo(() => {
+    const l: string[] = [];
+    if (cleAvantFeuille) l.push(cleAvantFeuille);
+    if (pageV2) l.push(cleSansV2);
+    // JP-B : une page de scan découpée en tranches (« j4-<y0> ») a eu, avant, la clé de la page entière (« j2 » / « j3 », sans « ap » : une page fit n'a pas d'aperçu).
+    if (trancheCourante) l.push(computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${ecran.grand ? "j3" : "j2"}`));
+    if (apercuEteint && !layout[currentPage]?.fit) l.push(pageV2 ? cleAvecApercuV2 : cleAvecApercuSansV2);
+    return l;
+  }, [cleAvantFeuille, pageV2, cleSansV2, trancheCourante, blocks, currentPageIndices, layoutSig, ecran.grand, apercuEteint, layout, currentPage, cleAvecApercuV2, cleAvecApercuSansV2]);
+  const { annotationsIndispo, annotations, handleAnnotationsChange, ancienneCompositionTraits } = useAnnotationsPage({
+    user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
   });
+  // Un seul bandeau : celui de la taille (il a un bouton qui règle le problème) passe avant.
+  const alerteComposition = !!user && !annotateMode && showAnnotations && ancienneCompositionTraits && !alerteAnnotations;
 
   // L5 : à l'entrée en annotation, la taille mémorisée du chant revient avant qu'on dessine.
   const basculerAnnotation = () => {
-    setSettingsOpen(false);
+    setPopoverOuvert(null);
     if (!annotateMode && slugAnnote) {
-      const memo = getTailleAnnotee(setlistId, slugAnnote);
+      const memo = getTailleAnnotee(uid, setlistId, slugAnnote);
       if (memo !== null && Math.round(memo * 100) !== Math.round(fontScale * 100)) appliquerTaille(memo);
     }
+    setDemi(false);
     setAnnotateMode((v) => !v);
   };
 
@@ -865,7 +1175,72 @@ export function PerformanceMode({
 
   const goToPage = useCallback((p: number, pgCount: number) => {
     if (p < 0 || p >= pgCount) return;
+    setDemi(false);
     setCurrentPage(p);
+  }, []);
+
+  // Lot FS-E : tous les tours de page relatifs (zones, balayage, flèches, PageUp/PageDown, Espace, pédale) passent ici.
+  // Demi-page allumée : page n entière → (n, demi) → page n + 1 entière ; et dans l'autre sens, sans toucher à la pagination.
+  // L'état (demi, page) se lit dans des refs, écrites aussi au tour même : une pédale qui répète envoie deux tours avant que
+  // React ait rendu le premier.
+  const demiRef = useRef(false);
+  demiRef.current = demi;
+  const pageRef = useRef(currentPage);
+  pageRef.current = currentPage;
+  const tourner = useCallback((sens: 1 | -1) => {
+    const n = pageRef.current;
+    if (demiOn) {
+      if (demiRef.current && demiPossible(n)) {
+        if (sens === 1) {
+          demiRef.current = false;
+          pageRef.current = n + 1;
+          goToPage(n + 1, pages.length);
+        } else {
+          demiRef.current = false;
+          setDemi(false);
+        }
+        return;
+      }
+      if (sens === 1 && demiPossible(n)) {
+        demiSens.current = 1;
+        demiRef.current = true;
+        setDemi(true);
+        return;
+      }
+      if (sens === -1 && n > 0 && demiPossible(n - 1)) {
+        demiSens.current = -1;
+        demiRef.current = true;
+        pageRef.current = n - 1;
+        setCurrentPage(n - 1);
+        setDemi(true);
+        return;
+      }
+    }
+    if (n + sens >= 0 && n + sens < pages.length) pageRef.current = n + sens;
+    demiRef.current = false;
+    goToPage(n + sens, pages.length);
+  }, [demiOn, demiPossible, pages.length, goToPage]);
+  // Aucune coupe ne convient entre les deux pages : tour normal.
+  const echecDemi = useCallback(() => {
+    setDemi(false);
+    if (demiSens.current === 1) goToPage(currentPage + 1, pages.length);
+  }, [currentPage, pages.length, goToPage]);
+  // Une demi-page ne survit ni à un changement de mise en page ni à une pagination qui la rend impossible.
+  useEffect(() => { setDemi(false); }, [showChords, showTransitions, hideLyrics, disposition, fontScale, twoColumns, structureMode, affichageVu]);
+  useEffect(() => { if (demi && !demiPossible(currentPage)) setDemi(false); }, [demi, demiPossible, currentPage]);
+
+  // Dernier moyen de déplacer le focus : le pointeur (clic, toucher) ou le clavier (Tab, Échap). Chromium marque
+  // :focus-visible dès qu'une touche est pressée, Espace compris : la pédale ne peut pas s'y fier.
+  const focusAuPointeur = useRef(false);
+  useEffect(() => {
+    const auPointeur = () => { focusAuPointeur.current = true; };
+    const auClavier = (e: KeyboardEvent) => { if (e.key === "Tab" || e.key === "Escape") focusAuPointeur.current = false; };
+    window.addEventListener("pointerdown", auPointeur, true);
+    window.addEventListener("keydown", auClavier, true);
+    return () => {
+      window.removeEventListener("pointerdown", auPointeur, true);
+      window.removeEventListener("keydown", auClavier, true);
+    };
   }, []);
 
   // Keyboard navigation (flèches, PageUp/Down — pédales Bluetooth, Échap pour quitter)
@@ -877,23 +1252,26 @@ export function PerformanceMode({
       if (e.key !== "Escape") {
         // Curseur de page, feuilles et sommaire ouverts : flèches, PageUp/Down et Espace leur appartiennent.
         if (cible instanceof HTMLInputElement) return;
-        if (settingsOpen || songListOpen || askRole) return;
+        if (popoverOuvert) return;
         if (cible?.closest("[role=dialog]")) return;
+        // Espace active le bouton, le lien, le curseur ou l'élément de menu qui a le focus (comportement natif)
+        // seulement si le focus y est venu au clavier (pas de pointerdown depuis le dernier Tab / Échap) ; un focus resté après un clic, un toucher ou
+        // rendu par la fermeture d'un menu ouvert à la souris laisse Espace (pédale) tourner la page.
+        // Flèches et PageUp/PageDown (pédales) gardent leur effet.
+        if (e.key === " " && !focusAuPointeur.current && cible?.closest("button, a[href], select, summary, [contenteditable], [role=button], [role=link], [role=slider], [role=radio], [role=switch], [role=checkbox], [role=tab], [role^=menuitem], [role=option]")) return;
       }
       if (e.key === "ArrowLeft" || e.key === "PageUp") {
         e.preventDefault();
-        goToPage(currentPage - 1, pages.length);
+        tourner(-1);
       } else if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
         e.preventDefault();
-        goToPage(currentPage + 1, pages.length);
+        tourner(1);
       } else if (e.key === "Escape") {
         // Échap déjà consommé par une feuille (Radix le marque en la fermant) :
         // il ne doit pas aussi quitter le mode louange.
         if (e.defaultPrevented) return;
-        if (settingsOpen || songListOpen || askRole) {
-          setSettingsOpen(false);
-          setSongListOpen(false);
-          setAskRole(false);
+        if (popoverOuvert) {
+          setPopoverOuvert(null);
           return;
         }
         onClose();
@@ -901,7 +1279,7 @@ export function PerformanceMode({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [currentPage, pages.length, goToPage, onClose, settingsOpen, songListOpen, askRole]);
+  }, [tourner, onClose, popoverOuvert]);
 
   // Touch/pointer tap handling
   // Pointeurs actifs. Un second doigt qui descend annule le geste en cours (zoom à deux doigts).
@@ -912,6 +1290,9 @@ export function PerformanceMode({
     // Fond d'une feuille : React fait remonter ses évènements jusqu'ici, ce n'est pas un toucher sur la page.
     // (Pas de stopPropagation sur le fond : Radix y détecte le toucher extérieur qui ferme la feuille.)
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) return;
+    // Un menu est ouvert : ce toucher le ferme (Radix), il ne tourne pas la page et ne bascule pas la barre.
+    if (popoverRef.current !== null) menuAuToucher.current = { t: e.nativeEvent.timeStamp };
+    else if (menuAuToucher.current && menuAuToucher.current.t !== e.nativeEvent.timeStamp) menuAuToucher.current = null;
     if (e.pointerType === "mouse") pointeursActifs.current.clear();
     pointeursActifs.current.add(e.pointerId);
     if (pointeursActifs.current.size > 1) {
@@ -921,11 +1302,13 @@ export function PerformanceMode({
     // Clic sur une barre de défilement (colonne du scan, barres toujours affichées) : pas un toucher.
     const el = e.target as HTMLElement;
     if (el.clientWidth > 0 && el.scrollHeight > el.clientHeight && e.nativeEvent.offsetX >= el.clientWidth) return;
-    tapStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+    // Pastille des Repères, lettre de Scène : leur TOUCHER ouvre le nom de la section (ni page tournée, ni barre) ; un balayage parti d'elles tourne la page.
+    tapStart.current = { x: e.clientX, y: e.clientY, time: Date.now(), pastille: !!el.closest("[data-repere-pastille], [data-scene-bouton]") };
   }, []);
 
   const handlePointerCancel = useCallback((e: React.PointerEvent) => {
     pointeursActifs.current.delete(e.pointerId);
+    menuAuToucher.current = null;
     tapStart.current = null;
   }, []);
 
@@ -933,18 +1316,24 @@ export function PerformanceMode({
     if (e.pointerType === "pen") return;
     pointeursActifs.current.delete(e.pointerId);
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) { tapStart.current = null; return; }
+    if (menuAuToucher.current || popoverRef.current !== null) {
+      menuAuToucher.current = null;
+      tapStart.current = null;
+      return;
+    }
     if (!tapStart.current) return;
     const dx = e.clientX - tapStart.current.x;
     const dy = e.clientY - tapStart.current.y;
     const dt = Date.now() - tapStart.current.time;
+    const departPastille = tapStart.current.pastille;
     tapStart.current = null;
 
     const geste = classerGeste(dx, dy, dt);
-    if (geste === null) return;
+    if (geste === null || (geste === "toucher" && departPastille)) return;
     if (geste !== "toucher") {
       // Un balayage tourne la page, ne bascule jamais la barre, et se tait pendant l'annotation.
       if (annotateModeRef.current) return;
-      goToPage(currentPage + (geste === "balayage-gauche" ? 1 : -1), pages.length);
+      tourner(geste === "balayage-gauche" ? 1 : -1);
       return;
     }
     let grossier = false;
@@ -952,13 +1341,13 @@ export function PerformanceMode({
     const zone = largeurZoneLaterale(window.innerWidth, window.innerHeight, grossier);
 
     if (e.clientX < window.innerWidth * zone) {
-      goToPage(currentPage - 1, pages.length);
+      tourner(-1);
     } else if (e.clientX > window.innerWidth * (1 - zone)) {
-      goToPage(currentPage + 1, pages.length);
+      tourner(1);
     } else {
       setShowChrome(!showChrome);
     }
-  }, [currentPage, pages.length, showChrome, goToPage]);
+  }, [showChrome, tourner]);
 
   // Current page song info for chrome
   // Un chant joué sur sa partition 简谱 n'a pas de bloc « section » : la barre
@@ -986,16 +1375,62 @@ export function PerformanceMode({
     .map(({ block, index }) => ({ page: pages.findIndex((p) => p.includes(index)), titre: block.title }))
     .filter((r) => r.page >= 0);
 
+  // Repères (FS-B) : les sections du chant en cours, dans l'ordre de la page (un scan seul n'en a pas).
+  const reperesTexte = currentEntry
+    ? blocks.flatMap((b, i) => {
+        if (b.kind !== "section" || i <= currentEntry.index || (nextEntry && i >= nextEntry.index) || repeatHidden.has(i)) return [];
+        const page = pages.findIndex((p) => p.includes(i));
+        return page >= 0 ? [{ uid: b.uid, section: b.section, page }] : [];
+      })
+    : [];
+  // Un scan certifié (tranches) : chaque section saute à l'écran qui contient sa ligne de début (`sections.json`) ;
+  // sans donnée, ou sans tranche, le menu reste comme avant (rien).
+  const reperesScan = (() => {
+    const sections = currentEntry ? jianpuSections?.[currentEntry.block.songSlug ?? ""]?.sections : undefined;
+    if (!currentEntry || !sections || songStartPage < 0) return [];
+    const ecrans = layout.flatMap((pg, p) => {
+      const b = p >= songStartPage && p <= songEndPage && pg.fit && pg.tranche ? blocks[pg.cols[0][0]] : undefined;
+      return b?.kind === "jianpu-sheet" ? [{ p, page: b.pageIndex + 1, tranche: pg.tranche!, steps: b.steps }] : [];
+    });
+    return sections.flatMap((sec) => {
+      const section = ecrans.flatMap((e) => e.steps).find((st) => st.section.id === sec.id)?.section;
+      const dePage = ecrans.filter((e) => e.page === sec.page);
+      const k = trancheDeSection(sec, dePage.map((e) => e.tranche));
+      return section && k >= 0 ? [{ uid: section.uid, section, page: dePage[k].p }] : [];
+    });
+  })();
+  const reperes = reperesTexte.length > 0 ? reperesTexte : reperesScan;
+  // Tonalité (menu Outils) : d'un demi-ton, par la tonalité personnelle de l'appareil ; revenir à celle de la setlist l'oublie.
+  const entreeSlug = currentEntry?.block.songSlug;
+  const cleJouee = currentEntry?.block.songKey;
+  const cleBase = currentEntry?.block.setlistKey ?? cleJouee;
+  const cleModifiable = !!entreeSlug && !!cleJouee && !!cleBase && noteToIndex(cleJouee) !== -1 && noteToIndex(cleBase) !== -1;
+  const decalerCle = (demiTons: number) => {
+    if (!cleModifiable || !entreeSlug) return;
+    const nouvelle = getTransposedKey(cleJouee!, demiTons);
+    if (noteToIndex(nouvelle) === noteToIndex(cleBase!)) resetPersonalKey(entreeSlug);
+    else choisirCle(entreeSlug, nouvelle);
+  };
+  // Sous md la barre n'a que Setlist, Repères, Je joue, Options : Annoter et le tempo passent dans Outils.
+  const telephone = ecran.largeur < 768;
+
   // Padding interne des conteneurs mis à l'échelle : px-6 py-4 + safe areas.
   // Les insets sont divisés par le facteur d'échelle pour rester exacts en
   // pixels physiques (16px + inset une fois multipliés par fontScale) — 0 hors
   // encoche.
-  const contentPadding: React.CSSProperties = {
+  // « --marge-bande » : la bande de la disposition Scène sort de cette marge pour couvrir toute la largeur de la page (rien en deux colonnes : elle resterait dans sa colonne).
+  const contentPadding = {
+    "--marge-bande": twoColumns ? "0px" : "1.5rem",
+    // Mêmes termes que le padding : la bande va jusqu'au bord de l'écran, encoche comprise.
+    "--marge-bande-g": twoColumns ? "0px" : `calc(1.5rem + var(--sal, 0px) / ${fontScale})`,
+    "--marge-bande-d": twoColumns ? "0px" : `calc(1.5rem + var(--sar, 0px) / ${fontScale})`,
+    // Partition : les repères se suspendent dans la marge HORS encoche (l'air se compte depuis le bord de la zone sûre).
+    "--marge-rep": twoColumns ? "0px" : "1.5rem",
     paddingTop: `calc(1rem + var(--sat, 0px) / ${fontScale})`,
     paddingBottom: `calc(1rem + var(--sab, 0px) / ${fontScale})`,
     paddingLeft: `calc(1.5rem + var(--sal, 0px) / ${fontScale})`,
     paddingRight: `calc(1.5rem + var(--sar, 0px) / ${fontScale})`,
-  };
+  } as React.CSSProperties;
   // Page 简谱 : marges resserrées. Le scan est déjà recadré au plus juste et se
   // met à l'échelle de la place disponible — chaque pixel de marge est un pixel
   // de partition en moins. Seul le conteneur de rendu change : la mesure garde
@@ -1017,12 +1452,14 @@ export function PerformanceMode({
     }),
   );
   // L3-T5b : page de scan en paysage sur grand écran, structure en colonne à gauche.
-  const colonneScan = fitPage && ecran.grand;
+  // Un scan certifié (tranches) est une seule feuille large : plus de colonne de structure (lot JP-B).
+  const colonneScan = fitPage && ecran.grand && !trancheCourante;
   // K1 : le scan tient entre les deux barres, mesurées (encoche comprise). Elles
   // s'escamotent sans changer de taille : la page ne bouge pas avec elles.
   const renderPadding: React.CSSProperties = fitPage
     ? {
-        paddingTop: barres.haut ? `calc(0.25rem + ${barres.haut / fontScale}px)` : `calc(0.25rem + var(--sat, 0px) / ${fontScale})`,
+        // Page de scan certifié : la tête de feuille occupe la place de la barre du haut, le scan commence dessous.
+        paddingTop: trancheCourante ? 0 : barres.haut ? `calc(0.25rem + ${barres.haut / fontScale}px)` : `calc(0.25rem + var(--sat, 0px) / ${fontScale})`,
         paddingBottom: barres.bas ? `calc(0.25rem + ${barres.bas / fontScale}px)` : `calc(0.25rem + var(--sab, 0px) / ${fontScale})`,
         paddingLeft: `calc(0.25rem + var(--sal, 0px) / ${fontScale})`,
         paddingRight: `calc(0.25rem + var(--sar, 0px) / ${fontScale})`,
@@ -1056,24 +1493,55 @@ export function PerformanceMode({
 
   useLayoutEffect(() => {
     const el = refPastilleFlux.current;
-    const couverte = !!el && showChrome && el.getBoundingClientRect().bottom > window.innerHeight - barres.bas;
+    // Demi-page (FS-E) : la pastille du flux n'est pas rendue, la flottante la remplace (rien à recouvrir).
+    const couverte = !demiActif && !!el && showChrome && el.getBoundingClientRect().bottom > window.innerHeight - barres.bas;
     setPastilleCouverte(couverte);
-  }, [showChrome, currentPage, layout, barres.bas]);
+  }, [showChrome, currentPage, layout, barres.bas, coupureEcran, demiActif]);
   // Sur la dernière page d'un chant, la pastille « Ensuite » occupe déjà la bande : pas d'aperçu par-dessous.
   const apercu = isLastPageOfSong && nextEntry ? null : apercuPossible;
   // Les calques d'annotation ne couvrent pas la bande (bas de page + 16 px de marge + sab).
   const rogneBas = apercuPossible ? `calc(${(APERCU_H + 16) * fontScale}px + var(--sab, 0px))` : undefined;
 
+  // Ronds « Sur la page » : tous sur une ligne dans le popover (jusqu'à 6) ; au téléphone, par 3 plutôt qu'un rond seul en dessous.
+  const nRonds = 1 + [blocks.some((b) => b.kind === "section" && b.showPinyin), hasJianpuSheets && !structureMode, !!user, twoColumnsAvailable, true].filter(Boolean).length;
+  const colonnesRonds = telephone && nRonds > 4 ? 3 : nRonds;
+  // Le contenu d'Outils : le même élément dans le menu Outils (md et plus) et en tête d'Options au téléphone.
+  const contenuOutils = (
+    <ContenuOutils
+      cle={cleModifiable ? cleJouee : undefined}
+      cleSetlist={cleBase}
+      decalerCle={decalerCle}
+      revenirCle={() => entreeSlug && resetPersonalKey(entreeSlug)}
+      capo={capoActive && entreeSlug && currentEntry ? { frets: currentCapo, set: (f) => setCapo(entreeSlug, f), titre: currentEntry.block.title } : undefined}
+      showTransitions={showTransitions}
+      setShowTransitions={setShowTransitions}
+      onAnnoter={telephone && user && !horsLigne ? basculerAnnotation : undefined}
+      tempoLignes={
+        telephone && tempoChantId ? (
+          <LignesTempo tempo={tempoLiseret} tempoAppareil={tempoAppareil} changerTempo={changerTempo} effacerTempo={effacerTempo} />
+        ) : undefined
+      }
+      raccourcis={pointeurFin || clavierVu}
+    />
+  );
+
   return (
     <div
       data-performance-mode
+      data-disposition={disposition}
+      data-deux-colonnes={twoColumns || undefined}
+      data-barre-ouverte={showChrome ? "" : undefined}
+      data-demi-page={demiActif ? "" : undefined}
       data-cle-ancienne={cleAncienne ?? undefined}
+      data-cle-page={currentPageKey}
+      data-passes-pagination={passesPagination}
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none"
       style={{
         "--sat": "env(safe-area-inset-top, 0px)",
         "--sab": "env(safe-area-inset-bottom, 0px)",
         "--sal": "env(safe-area-inset-left, 0px)",
         "--sar": "env(safe-area-inset-right, 0px)",
+        "--couleur-icones": couleurIcones,
       } as React.CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
@@ -1088,22 +1556,12 @@ export function PerformanceMode({
         {/* Mesure à l'échelle 1, à la largeur de mise en page du contenu
             (100%/fontScale) : mêmes conditions de layout que le rendu (qui est
             agrandi par transform, sans reflow) → hauteurs exactes au pixel. */}
-        <div ref={measureInnerRef} style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
+        <div ref={measureInnerRef} data-bord-coupure style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
+          <ConteneurCoupure mesure>
           {blocks.map((block, i) => (
             <div
               key={block.uid}
               ref={(el) => { blockRefs.current[i] = el; }}
-              // En ossature, les sections sont mesurées à leur largeur naturelle
-              // (sans retour à la ligne : c'est la limite de l'agrandissement),
-              // les transitions à la largeur d'une colonne ; l'en-tête, lui,
-              // occupe toujours la pleine largeur.
-              style={
-                !structureMode || block.kind === "song-header"
-                  ? undefined
-                  : block.kind === "section"
-                    ? { width: "max-content" }
-                    : { width: "calc(50% - 0.5rem)" }
-              }
             >
               {!repeatHidden.has(i) && (
                 <BlockRenderer
@@ -1111,15 +1569,19 @@ export function PerformanceMode({
                   showChordsGlobal={chordsShown}
                   showTransitions={showTransitions}
                   hideLyrics={lyricsHidden}
-                  chartStyle={chartStyle}
+                  disposition={disposition}
                   showPinyinGlobal={showPinyin}
                   repeat={repeatCount.get(i)}
                   bandeau={bandeau}
                   couleurDe={structureMode && block.kind === "section" ? dpOrigin(block.section) ?? undefined : undefined}
+                  feuilleRoute={structureMode}
+                  transitionApres={structureMode ? transitionApres(i) : undefined}
+                  tempoChant={structureMode ? tempoDuChant(i) : undefined}
                 />
               )}
             </div>
           ))}
+          </ConteneurCoupure>
         </div>
         {/* Sections uniques : le rappel de chaque chant, à la largeur de la page, pour
             réserver sa vraie hauteur (il passe à la ligne quand le texte grossit). */}
@@ -1141,8 +1603,9 @@ export function PerformanceMode({
             de 2rem, comme le rendu). Seuls les blocs qui vont en colonne y sont
             rendus : l'en-tête reste en pleine largeur, un scan 简谱 sur sa page. */}
         {twoColumns && (
-          <div className="absolute top-0 left-0" style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
+          <div className="absolute top-0 left-0" data-bord-coupure style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
             <div style={{ width: "calc(50% - 1rem)" }}>
+              <ConteneurCoupure mesure>
               {blocks.map((block, i) => (
                 <div key={block.uid} ref={(el) => { blockColRefs.current[i] = el; }}>
                   {block.kind !== "song-header" && block.kind !== "jianpu-sheet" && (
@@ -1151,12 +1614,13 @@ export function PerformanceMode({
                       showChordsGlobal={chordsShown}
                       showTransitions={showTransitions}
                       hideLyrics={lyricsHidden}
-                      chartStyle={chartStyle}
+                      disposition={disposition}
                       showPinyinGlobal={showPinyin}
                     />
                   )}
                 </div>
               ))}
+              </ConteneurCoupure>
             </div>
           </div>
         )}
@@ -1172,6 +1636,7 @@ export function PerformanceMode({
           même facteur, en miroir exact du canvas d'annotation (origine (0,0)). */}
       <div
         ref={contentAreaRef}
+        data-bord-coupure
         className="absolute top-0 left-0 overflow-hidden"
         style={{
           zIndex: 1,
@@ -1195,7 +1660,7 @@ export function PerformanceMode({
           // 简谱 arrive en asynchrone et un chant joué sur sa partition passe
           // de N sections à un seul bloc. Le temps que la pagination se
           // recalcule, `pages` porte encore des indices trop grands.
-          const renderBlock = (i: number, fit = false) => {
+          const renderBlock = (i: number, fit = false, tranche?: Tranche) => {
             const block = blocks[i];
             if (!block || repeatHidden.has(i)) return null;
             return (
@@ -1205,30 +1670,97 @@ export function PerformanceMode({
                 showChordsGlobal={chordsShown}
                 showTransitions={showTransitions}
                 hideLyrics={lyricsHidden}
-                chartStyle={chartStyle}
+                disposition={disposition}
                 showPinyinGlobal={showPinyin}
                 fit={fit}
                 repeat={repeatCount.get(i)}
                 bandeau={bandeau}
                 couleurDe={structureMode && block.kind === "section" ? dpOrigin(block.section) ?? undefined : undefined}
+                feuilleRoute={structureMode}
+                transitionApres={structureMode ? transitionApres(i) : undefined}
+                tempoChant={structureMode ? tempoDuChant(i) : undefined}
+                tranche={tranche && block.kind === "jianpu-sheet" ? { ...tranche, ...bornesX(block.entry.pages[block.pageIndex]?.w ?? 0, jianpuMarges?.[block.songSlug]?.[block.pageIndex]) } : undefined}
               />
             );
           };
-          if (page.fit) {
+          // Tête de feuille d'un scan certifié : hauteur exacte de la barre de titre, repères des sections de la tranche allumés.
+          const teteFeuille = (b: PerformanceBlock | undefined, tr: Tranche) => ({
+            hauteur: barres.haut ? `${barres.haut / fontScale}px` : `calc(var(--sat, 0px) / ${fontScale})`,
+            encoche: `calc(var(--sat, 0px) / ${fontScale})`,
+            allumes: b?.kind === "jianpu-sheet" ? sectionsDeTranche(jianpuSections?.[b.songSlug]?.sections ?? [], b.pageIndex + 1, tr) : new Set<string>(),
+          });
+          // L'écran de scan de la page `p` (la page courante, ou l'une des deux de la demi-page).
+          const scanDePage = (p: number) => {
+            const pg = layout[p];
+            const sheetIdx = pg.cols[0][0];
+            const dernierDuChant = pages.length > 0 && p === songEndPage;
             return (
               <PageScan
-                sheet={blocks[page.cols[0][0]]}
+                sheet={blocks[sheetIdx]}
                 showTransitions={showTransitions}
                 colonneScan={colonneScan}
-                isLastPageOfSong={isLastPageOfSong}
+                isLastPageOfSong={dernierDuChant}
                 nextEntry={nextEntry}
                 onSuivant={() => goToPage(nextSongPage, pages.length)}
+                // La pastille flottante (44 px, à 8 px au-dessus de la barre du bas) ne recouvre plus le scan : sa place est gardée dessous.
+                reserveBas={dernierDuChant && nextEntry && !colonneScan ? 56 / fontScale : 0}
+                tete={pg.tranche ? teteFeuille(blocks[sheetIdx], pg.tranche) : undefined}
               >
-                {renderBlock(page.cols[0][0], true)}
+                {renderBlock(sheetIdx, true, pg.tranche)}
               </PageScan>
             );
+          };
+          if (demiActif) {
+            // Lot FS-E : le haut de la page suivante au-dessus du filet, la fin de la page en cours dessous.
+            // Deux écrans d'un même scan (lot JP-B) : chaque calque est un écran de scan (tête de feuille comprise, celle de
+            // l'écran suivant en haut) ; la coupe tombe entre deux lignes du scan, mesurées sur `data-jianpu-lignes`.
+            const surScan = page.fit;
+            const texteDePage = (p: number) => {
+              const idx = pages[p] ?? [];
+              const entree = songEntries.reduce((acc, e) => (e.index <= (idx[0] ?? 0) ? e : acc), songEntries[0]);
+              const r = (affichageVu === "unique" || affichageVu === "played") && entree && (idx[0] ?? -1) > entree.index ? entree.block.steps : undefined;
+              const pleines = new Set(idx.flatMap((i) => {
+                const b = blocks[i];
+                return b?.kind === "section" ? (b.occurrenceUids ?? []) : [];
+              }));
+              return (
+                <ConteneurCoupure className={layout[p].etire ? "h-full" : undefined}>
+                  <PageTexte
+                    page={layout[p]}
+                    rappel={r}
+                    rappelRef={refDemiRappel}
+                    rappelTrame={r ? <RappelRangee titre={entree?.block.title} steps={r} pleines={pleines} rappel={affichageVu === "played" ? "joue" : "unique"} /> : null}
+                    affichageVu={affichageVu}
+                    currentPage={p}
+                    scaledBodyRef={refDemiCorps}
+                    renderBlock={renderBlock}
+                    apercu={null}
+                    apercuHauteur={0}
+                    contentPadding={contentPadding}
+                    showChrome={false}
+                    sansIndice
+                  />
+                </ConteneurCoupure>
+              );
+            };
+            return (
+              <DemiPage
+                clePage={`${currentPage}|${fontScale}|${showChords}${showTransitions}${hideLyrics}${disposition}|${affichageVu}|${twoColumns}|${passesPagination}|${coupureEcran}`}
+                rendreHaut={() => (surScan ? scanDePage(currentPage + 1) : texteDePage(currentPage + 1))}
+                rendreBas={() => (surScan ? scanDePage(currentPage) : texteDePage(currentPage))}
+                part={demiPart}
+                onPart={setDemiPartEtat}
+                onPartFin={(v) => { setDemiPartEtat(v); setDemiPartPref(v); }}
+                fontScale={fontScale}
+                contentPadding={surScan ? renderPadding : contentPadding}
+                nom={t("performance.halfPageHandle")}
+                onEchec={echecDemi}
+              />
+            );
           }
+          if (page.fit) return scanDePage(currentPage);
           return (
+            <ConteneurCoupure className={page.etire ? "h-full" : undefined}>
             <PageTexte
               page={page}
               rappel={rappel}
@@ -1244,9 +1776,62 @@ export function PerformanceMode({
               showChrome={showChrome}
               pastille={isLastPageOfSong && nextEntry && !colonneScan ? pastilleSuivant(`pointer-events-auto max-w-full border-border/60 ${pastilleCouverte ? "invisible" : ""}`, refPastilleFlux, pastilleCouverte) : null}
             />
+            </ConteneurCoupure>
           );
         })()}
       </div>
+
+      {pastilleVisible && rolePlanning && (
+        <div
+          data-pastille-planning
+          role="status"
+          className="fixed left-1/2 flex w-[304px] max-w-[calc(100vw-16px)] -translate-x-1/2 items-center gap-1 rounded-2xl border border-border bg-popover/90 py-1 pl-4 pr-1 text-foreground shadow-[0_8px_28px_rgba(28,28,30,.22)] backdrop-blur-xl dark:shadow-[0_8px_28px_rgba(0,0,0,.5)] max-[430px]:w-[calc(100vw-48px)] max-[430px]:bg-popover"
+          style={{ "--couleur-icones": couleurMenus, zIndex: 25, top: showChrome ? `${barres.haut + 4}px` : "calc(var(--sat, 0px) + 4px)" } as React.CSSProperties}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onPointerCancel={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {etatPastille === "accepte" ? (
+            <>
+              <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-foreground">
+                {t("performance.planning.done", { role: t(`performance.roles.${rolePlanning}`) })}
+              </span>
+              <button
+                type="button"
+                data-pastille-annuler
+                onClick={annulerRolePlanning}
+                className="min-h-11 shrink-0 rounded-lg px-3 text-[15px] font-semibold text-[color:var(--couleur-icones)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {t("performance.planning.undo")}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              data-pastille-accepter
+              onClick={accepterRolePlanning}
+              className="min-h-11 min-w-0 flex-1 rounded-lg py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="block text-[13.5px] leading-snug text-muted-foreground">
+                {t("performance.planning.today", { instrument: t(`performance.planning.instrument.${rolePlanning}`) })}
+              </span>
+              <span className="block text-[15px] font-bold leading-snug text-[color:var(--couleur-icones)]">
+                {t("performance.planning.switch", { role: t(`performance.roles.${rolePlanning}`) })}
+              </span>
+            </button>
+          )}
+          <button
+            type="button"
+            data-pastille-fermer
+            aria-label={t("performance.planning.dismiss")}
+            onClick={() => setEtatPastille("fini")}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="h-5 w-5" strokeWidth={2.2} aria-hidden="true" />
+          </button>
+        </div>
+      )}
 
       {annotationsIndispo && (
         <div
@@ -1283,10 +1868,23 @@ export function PerformanceMode({
         </div>
       )}
 
+      {/* ── Lot CV : des traits existent sous l'ancienne composition de la page (vers coupés depuis) ── */}
+      {alerteComposition && (
+        <div
+          data-alerte-composition
+          className="absolute left-0 right-0 flex justify-center pointer-events-none"
+          style={{ zIndex: 6, top: showChrome ? `${barres.haut + 8}px` : "calc(var(--sat, 0px) + 0.5rem)" }}
+        >
+          <div className="flex max-w-[92%] flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-2xl border border-border/60 bg-background/90 px-4 py-1 text-sm text-muted-foreground backdrop-blur">
+            <span>{t("performance.annotAncienneMiseEnPage")}</span>
+          </div>
+        </div>
+      )}
+
       {/* ── « Ensuite : … » sur la dernière page d'un chant : touchable, sans confirmation.
           Dans le flux (PageTexte) quand la pagination lui a gardé la place ; posée en absolu sinon (vue structure),
           ou quand la barre du bas, affichée, couvre la pastille du flux. ── */}
-      {isLastPageOfSong && nextEntry && !colonneScan && (layout[currentPage]?.suivant === undefined || pastilleCouverte) && (
+      {isLastPageOfSong && nextEntry && !colonneScan && (layout[currentPage]?.suivant === undefined || pastilleCouverte || demiActif) && (
         <div
           className="absolute left-0 right-0 flex justify-center pointer-events-none"
           style={{ zIndex: 5, bottom: showChrome ? `${barres.bas + 8}px` : "calc(0.625rem + var(--sab, 0px))" }}
@@ -1296,7 +1894,7 @@ export function PerformanceMode({
       )}
 
       {/* ── Annotations : calque de lecture permanent + canvas d'édition ── */}
-      {showAnnotations && !annotateMode && annotations && annotations.strokes.length > 0 && (
+      {showAnnotations && !annotateMode && !demiActif && annotations && annotations.strokes.length > 0 && (
         <StrokesLayer data={annotations} rogneBas={rogneBas} />
       )}
       {annotateMode && annotations && (
@@ -1308,18 +1906,6 @@ export function PerformanceMode({
           zoom={annotZoom}
           pan={annotPan}
           onZoomPanChange={(z, p) => { setAnnotZoom(z); setAnnotPan(p); }}
-        />
-      )}
-
-      {/* ── Sommaire des chants ── */}
-      {songListOpen && (
-        <SommaireChants
-          setlistTitle={setlistTitle}
-          songEntries={songEntries}
-          pages={pages}
-          currentSongEntryIdx={currentSongEntryIdx}
-          goToPage={goToPage}
-          onClose={() => setSongListOpen(false)}
         />
       )}
 
@@ -1337,15 +1923,17 @@ export function PerformanceMode({
           barreRef={barreHautRef}
           showChrome={showChrome}
           currentSong={currentSong}
-          setlistTitle={setlistTitle}
+          setlistTitle={currentSong ? setlistTitle : currentEntry?.block.title ?? setlistTitle}
+          compositeur={currentEntry?.block.artist || undefined}
           personalKey={currentEntry?.block.setlistKey}
-          songPageCount={songPageCount}
-          songPageIdx={songPageIdx}
-          pageCount={pages.length}
-          currentPage={currentPage}
-          twoColumnsAvailable={twoColumnsAvailable}
-          twoColumns={twoColumns}
-          onToggleTwoColumns={toggleTwoColumns}
+          rolePreset={rolePreset}
+          annotateMode={annotateMode}
+          menuOuvert={popoverOuvert}
+          avecReperes={reperes.length > 0}
+          onAnnoter={user && !horsLigne ? basculerAnnotation : undefined}
+          onMenu={basculerMenu}
+          onJeJoue={() => basculerMenu("jejoue")}
+          onQuitter={onClose}
         />
 
         <BarreBas
@@ -1355,57 +1943,90 @@ export function PerformanceMode({
           currentPage={currentPage}
           reperesChants={reperesChants}
           goToPage={goToPage}
-          settingsOpen={settingsOpen}
-          annotateMode={annotateMode}
-          onAnnoter={user && !horsLigne ? basculerAnnotation : undefined}
-          onSommaire={() => { setSettingsOpen(false); setSongListOpen(true); }}
-          onReglages={() => setSettingsOpen(true)}
-          onQuitter={onClose}
         />
       </div>
 
-      {/* ── Choix du rôle à la première ouverture ── */}
-      <FeuilleRole open={askRole} roleIds={ROLE_PRESET_IDS} onFermer={() => setAskRole(false)} onChoisir={answerRole} />
+      {/* ── Menus du mode (FS-B) : popover sous l'icône à partir de md, feuille du bas au téléphone ── */}
+      <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurMenus} titreCache>
+        <ContenuSetlist
+          setlistTitle={setlistTitle}
+          setlistDate={setlistDate}
+          songEntries={songEntries}
+          pages={pages}
+          currentSongEntryIdx={currentSongEntryIdx}
+          goToPage={goToPage}
+          onFermer={() => fermerMenu("setlist")}
+        />
+      </MenuLouange>
 
-      {/* ── Réglages : bottom-sheet (au-dessus du z-9999 du mode) ── */}
-      <Drawer open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DrawerContent
-          className="z-[10000]"
-          overlayClassName="z-[10000] bg-black/40"
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        >
-          <DrawerHeader className="pb-1">
-            <DrawerTitle>{t("performance.settings")}</DrawerTitle>
-          </DrawerHeader>
-          <div
-            className="w-full max-w-md mx-auto px-4 pt-1 space-y-4"
-            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
-          >
-            <div className="space-y-2">
-              <span className="text-sm font-medium text-foreground">{t("performance.view")}</span>
-              <div className="flex flex-wrap gap-1.5">
-                {ROLE_PRESET_IDS.map((id) => (
+      <MenuLouange id="reperes" titre={t("performance.reperes")} ouvert={popoverOuvert === "reperes"} onOuvertChange={(o) => !o && fermerMenu("reperes")} align="start" couleur={couleurMenus}>
+        <ContenuReperes reperes={reperes} currentPage={currentPage} goToPage={goToPage} pageCount={pages.length} onFermer={() => fermerMenu("reperes")} />
+      </MenuLouange>
+
+      <MenuLouange id="jejoue" titre={t("performance.iPlay")} ouvert={popoverOuvert === "jejoue"} onOuvertChange={(o) => !o && fermerMenu("jejoue")} align="start" couleur={couleurMenus}>
+        <div className="space-y-4">
+          {/* Popover (dès md) : le titre est dans le contenu ; au téléphone, le titre de la feuille le donne déjà. */}
+          <p data-titre-je-joue className="hidden px-1 text-[16px] font-bold leading-snug text-foreground md:block">{t("performance.iPlay")}</p>
+          <div>
+            {accueilRole && (
+              <p className="mb-3 border-b border-border px-2 pb-3 text-base font-semibold text-foreground">
+                {t(uid ? "performance.rolePrompt.welcome" : "performance.rolePrompt.welcomeDevice")}
+              </p>
+            )}
+            <div className="px-1"><TitreRubrique>{t("performance.rolePrompt.subtitle")}</TitreRubrique></div>
+            <div className="flex flex-col">
+              {ROLE_IDS.map((id) => {
+                const Icone = ICONES_ROLE[id];
+                const actif = rolePreset === id;
+                return (
                   <button
                     key={id}
                     type="button"
-                    aria-pressed={rolePreset === id}
-                    onClick={() => (rolePreset === id ? clearRolePreset() : applyRolePreset(id))}
-                    className={`h-11 px-3 rounded-lg border text-xs font-semibold transition-colors ${
-                      rolePreset === id
-                        ? "bg-primary text-primary-foreground border-transparent"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    }`}
+                    aria-pressed={actif}
+                    onClick={() => {
+                      if (actif) clearRolePreset();
+                      else applyRolePreset(id);
+                      setAccueilRole(false);
+                      if (etatPastille === "propose") setEtatPastille("fini"); // choisi à la main : plus de proposition
+                    }}
+                    className={`flex min-h-14 w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${actif ? "" : "hover:bg-muted/60 active:bg-muted"}`}
+                    // Rôle retenu : fond léger de la couleur personnelle (décision 23), comme la planche.
+                    style={actif ? { background: "color-mix(in srgb, var(--couleur-icones) 12%, transparent)" } : undefined}
                   >
-                    {t(`performance.roles.${id}`)}
+                    <Icone className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-base font-semibold text-foreground">{t(`performance.roles.${id}`)}</span>
+                      <span className="block text-[13px] text-muted-foreground">{t(`performance.rolePrompt.hints.${id}`)}</span>
+                    </span>
+                    {id === rolePlanningOuverture && (
+                      <span data-role-planning className="shrink-0 rounded-full px-2 py-1 text-[12.5px] font-semibold leading-none text-[color:var(--couleur-icones)]" style={{ background: "color-mix(in srgb, var(--couleur-icones) 14%, transparent)" }}>{t("performance.planning.label")}</span>
+                    )}
+                    {actif && <Check className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" aria-hidden="true" />}
                   </button>
-                ))}
-              </div>
+                );
+              })}
+              {/* « Aucun » : un sixième choix comme les rôles, coché quand aucun rôle n'est retenu (après réponse). */}
+              <button
+                type="button"
+                aria-pressed={rolePreset === null && !accueilRole}
+                onClick={() => { clearRolePreset(); setAccueilRole(false); if (etatPastille === "propose") setEtatPastille("fini"); }}
+                className={`flex min-h-14 w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${rolePreset === null && !accueilRole ? "" : "hover:bg-muted/60 active:bg-muted"}`}
+                style={rolePreset === null && !accueilRole ? { background: "color-mix(in srgb, var(--couleur-icones) 12%, transparent)" } : undefined}
+              >
+                <SlidersHorizontal className="h-5 w-5 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold text-foreground">{t("performance.rolePrompt.none")}</span>
+                  <span className="block text-[13px] text-muted-foreground">{t("performance.rolePrompt.hints.none")}</span>
+                </span>
+                {rolePreset === null && !accueilRole && <Check className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" aria-hidden="true" />}
+              </button>
             </div>
+          </div>
+          <div className="space-y-4 border-t border-border pt-4">
             {/* Affichage (D15) : le même réglage que le menu Affichage de la setlist. */}
             <div className="space-y-2">
-              <span id="perf-affichage" className="text-sm font-medium text-foreground">{t("setlists.detail.layout.label")}</span>
-              <div role="radiogroup" aria-labelledby="perf-affichage" className="flex rounded-lg bg-secondary p-1">
+              <div className="px-1"><TitreRubrique id="perf-ordre-sections">{t("performance.sectionOrder")}</TitreRubrique></div>
+              <div role="radiogroup" aria-labelledby="perf-ordre-sections" className="flex rounded-lg bg-secondary p-1">
                 {(["played", "unique", "structure"] as const).map((v) => (
                   <button
                     key={v}
@@ -1414,160 +2035,134 @@ export function PerformanceMode({
                     aria-checked={affichageVu === v}
                     onClick={() => changeAffichage(v)}
                     className={`h-11 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                      affichageVu === v ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
+                      affichageVu === v ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {t(`setlists.detail.layout.${v}`)}
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
+              <p className="px-2 text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
             </div>
-            {currentEntry?.block.setlistKey && currentEntry.block.songSlug && (
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <span className="text-sm font-medium text-foreground">{t("performance.key")}</span>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {t("performance.personalKeyHint", { key: currentEntry.block.songKey, setlistKey: currentEntry.block.setlistKey })}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => resetPersonalKey(currentEntry.block.songSlug!)}
-                  className="text-xs font-semibold shrink-0"
-                >
-                  {t("performance.personalKeyReset", { key: currentEntry.block.setlistKey })}
-                </Button>
-              </div>
-            )}
-            {capoActive && currentEntry?.block.songSlug && (
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <span className="text-sm font-medium text-foreground">{t("performance.capo")}</span>
-                  <p className="text-xs text-muted-foreground truncate">{currentEntry.block.title}</p>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
-                    onClick={() => setCapo(currentEntry.block.songSlug!, currentCapo - 1)}
-                    disabled={currentCapo <= 0}
-                    aria-label={t("performance.capoLower")}
-                    className="text-sm font-bold"
-                  >
-                    −
-                  </Button>
-                  <span className="text-xs text-muted-foreground tabular-nums w-10 text-center">
-                    {currentCapo}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
-                    onClick={() => setCapo(currentEntry.block.songSlug!, currentCapo + 1)}
-                    disabled={currentCapo >= 11}
-                    aria-label={t("performance.capoRaise")}
-                    className="text-sm font-bold"
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
-            )}
-            <SettingRow label={t("performance.chords")}>
-              <Switch
-                aria-label={t("performance.chords")}
-                checked={chordsShown}
-                onCheckedChange={(v) => {
-                  clearRolePreset();
-                  quitterStructureSeule();
-                  setShowChords(v);
-                }}
-              />
-            </SettingRow>
-            <SettingRow label={t("performance.transitions")}>
-              <Switch checked={showTransitions} onCheckedChange={setShowTransitions} />
-            </SettingRow>
+            <div className="px-2">
             <SettingRow label={t("performance.hideLyrics")}>
-              <Switch
-                aria-label={t("performance.hideLyrics")}
-                checked={lyricsHidden}
-                onCheckedChange={(v) => {
+              <BoutonRond
+                label={t("performance.hideLyrics")}
+                allume={lyricsHidden}
+                onClick={() => {
                   clearRolePreset();
                   quitterStructureSeule();
-                  toggleHideLyrics(v);
+                  toggleHideLyrics(!lyricsHidden);
                 }}
-              />
+              >
+                <EyeOff className="h-5 w-5" />
+              </BoutonRond>
             </SettingRow>
-            {blocks.some((b) => b.kind === "section" && b.showPinyin) && (
-              <SettingRow label={t("performance.pinyin")}>
-                <Switch checked={showPinyin} onCheckedChange={toggleShowPinyin} />
-              </SettingRow>
-            )}
-            <SettingRow label={t("performance.chartStyle")}>
-              <Switch checked={chartStyle} onCheckedChange={toggleChartStyle} />
-            </SettingRow>
-            {hasJianpuSheets && !structureMode && (
-              // Partition 简谱 : par appareil — le pianiste lit le scan pendant
-              // que le guitariste lit la grille, sur la même setlist.
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <span className="text-sm font-medium text-foreground">{t("performance.jianpuSheet")}</span>
-                  <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>
-                </div>
-                <Switch
-                  aria-label={t("performance.jianpuSheet")}
-                  checked={interrupteurAllume(jianpuPref)}
-                  onCheckedChange={(on) => onJianpuPrefChange(prefDepuisInterrupteur(on))}
-                />
-              </div>
-            )}
-            {user && (
-              <SettingRow label={t("performance.annotations")}>
-                <Switch checked={showAnnotations} onCheckedChange={setShowAnnotations} />
-              </SettingRow>
-            )}
+            </div>
+          </div>
+        </div>
+      </MenuLouange>
+
+      <MenuLouange id="tempo" titre={t("performance.tempo")} ouvert={popoverOuvert === "tempo"} onOuvertChange={(o) => !o && fermerMenu("tempo")} couleur={couleurMenus}>
+        <ContenuTempo
+          tempo={tempoLiseret}
+          tempoAppareil={tempoAppareil}
+          changerTempo={changerTempo}
+          effacerTempo={effacerTempo}
+          metronome={metronome}
+          setMetronome={setMetronome}
+        />
+      </MenuLouange>
+
+      <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurMenus}>
+        {contenuOutils}
+      </MenuLouange>
+
+      <MenuLouange id="options" titre={t("performance.displayOptions")} ouvert={popoverOuvert === "options"} onOuvertChange={(o) => !o && fermerMenu("options")} couleur={couleurMenus}>
+        <div className="space-y-4">
+          {telephone && (
+            <div className="space-y-1 border-b border-border pb-4">
+              <TitreRubrique>{t("performance.toolsMenu")}</TitreRubrique>
+              {contenuOutils}
+            </div>
+          )}
+          <div className="space-y-2">
+            <TitreRubrique id="perf-sur-page">{t("performance.onPage")}</TitreRubrique>
+            <div role="group" aria-labelledby="perf-sur-page" className="grid gap-y-2" style={{ gridTemplateColumns: `repeat(${colonnesRonds}, minmax(0, 1fr))` }}>
+              <BoutonSurPage
+                label={t("performance.chords")}
+                allume={chordsShown}
+                onClick={() => {
+                  clearRolePreset();
+                  quitterStructureSeule();
+                  setShowChords(!chordsShown);
+                }}
+              >
+                <Music className="h-5 w-5" />
+              </BoutonSurPage>
+              {blocks.some((b) => b.kind === "section" && b.showPinyin) && (
+                <BoutonSurPage label={t("performance.pinyin")} allume={showPinyin} onClick={() => toggleShowPinyin(!showPinyin)}>
+                  <Languages className="h-5 w-5" />
+                </BoutonSurPage>
+              )}
+              {hasJianpuSheets && !structureMode && (
+                // Partition 简谱 : par appareil — le pianiste lit le scan pendant
+                // que le guitariste lit la grille, sur la même setlist.
+                <BoutonSurPage
+                  label={t("performance.jianpuSheet")}
+                  allume={interrupteurAllume(jianpuPref)}
+                  onClick={() => onJianpuPrefChange(prefDepuisInterrupteur(!interrupteurAllume(jianpuPref)))}
+                >
+                  <FileMusic className="h-5 w-5" />
+                </BoutonSurPage>
+              )}
+              {user && (
+                <BoutonSurPage label={t("performance.annotations")} allume={showAnnotations} onClick={() => setShowAnnotations(!showAnnotations)}>
+                  <PenLine className="h-5 w-5" />
+                </BoutonSurPage>
+              )}
+              {twoColumnsAvailable && (
+                <BoutonSurPage label={t("performance.twoColumns")} allume={twoColumns} onClick={toggleTwoColumns}>
+                  <Columns2 className="h-5 w-5" />
+                </BoutonSurPage>
+              )}
+              <BoutonSurPage label={t("performance.halfPage")} allume={demiOn} onClick={basculerDemi}>
+                <PanelTopBottomDashed className="h-5 w-5" />
+              </BoutonSurPage>
+            </div>
+            {hasJianpuSheets && !structureMode && <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>}
+          </div>
+          <div className="space-y-2">
+            <TitreRubrique id="perf-disposition">{t("dispositions.titre")}</TitreRubrique>
+            <ChoixDisposition variante="panneau" langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
+          </div>
             <SettingRow label={t("performance.text")}>
               <div className="flex items-center gap-1.5">
-                <Button
-                  variant="outline"
-                  size="icon-lg"
-                  onClick={() => changeFontScale(-0.1)}
-                  disabled={fontScale <= MIN_FONT_SCALE || annotateMode}
-                  aria-label={t("performance.textSmaller")}
-                  className="text-xs font-bold"
-                >
-                  A−
-                </Button>
-                <span className="text-xs text-muted-foreground tabular-nums w-10 text-center">
-                  {Math.round(fontScale * 100)}%
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon-lg"
-                  onClick={() => changeFontScale(0.1)}
-                  disabled={fontScale >= MAX_FONT_SCALE || annotateMode}
-                  aria-label={t("performance.textLarger")}
-                  className="text-sm font-bold"
-                >
-                  A+
-                </Button>
+                <BoutonRond label={t("performance.textSmaller")} onClick={() => changeFontScale(-0.1)} disabled={fontScale <= MIN_FONT_SCALE || annotateMode}>
+                  <span aria-hidden="true" className="text-xs font-bold">A−</span>
+                </BoutonRond>
+                <span className={VALEUR}>{Math.round(fontScale * 100)}%</span>
+                <BoutonRond label={t("performance.textLarger")} onClick={() => changeFontScale(0.1)} disabled={fontScale >= MAX_FONT_SCALE || annotateMode}>
+                  <span aria-hidden="true" className="text-sm font-bold">A+</span>
+                </BoutonRond>
               </div>
             </SettingRow>
             <SettingRow label={t("performance.theme")}>
               <div className="flex rounded-lg border border-border overflow-hidden">
                 <button
                   onClick={() => setTheme("light")}
+                  aria-pressed={stageTheme === "light"}
                   className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                    stageTheme === "light" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    stageTheme === "light" ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Sun className="h-3.5 w-3.5" /> {t("performance.light")}
                 </button>
                 <button
                   onClick={() => setTheme("dark")}
+                  aria-pressed={stageTheme === "dark"}
                   className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold border-l border-border transition-colors ${
-                    stageTheme === "dark" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    stageTheme === "dark" ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Moon className="h-3.5 w-3.5" /> {t("performance.dark")}
@@ -1575,73 +2170,73 @@ export function PerformanceMode({
               </div>
             </SettingRow>
             <SettingRow label={t("performance.metronome")}>
-              <div className="flex rounded-lg border border-border overflow-hidden">
-                <button
-                  data-metronome-on
-                  onClick={() => setMetronome(true)}
-                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                    metronome ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t("performance.metronomeOn")}
-                </button>
-                <button
-                  data-metronome-off
-                  onClick={() => setMetronome(false)}
-                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold border-l border-border transition-colors ${
-                    !metronome ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t("performance.metronomeOff")}
-                </button>
-              </div>
+              <BoutonRond label={t("performance.metronome")} allume={metronome} onClick={() => setMetronome(!metronome)} data-metronome="">
+                <Waves className="h-5 w-5" />
+              </BoutonRond>
             </SettingRow>
-            {metronome && tempoChantId && (
-              <SettingRow label={t("performance.tempoSong")}>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
-                    onClick={() => changerTempo(-1)}
-                    disabled={(tempoLiseret ?? TEMPO_DEPART) <= TEMPO_MIN}
-                    aria-label={t("performance.tempoDown")}
-                    data-tempo-moins
-                    className="text-sm font-bold"
-                  >
-                    −
-                  </Button>
-                  <span data-tempo-valeur className="text-xs text-muted-foreground tabular-nums w-14 text-center">
-                    ♩ {tempoLiseret ?? TEMPO_DEPART}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
-                    onClick={() => changerTempo(1)}
-                    disabled={(tempoLiseret ?? TEMPO_DEPART) >= TEMPO_MAX}
-                    aria-label={t("performance.tempoUp")}
-                    data-tempo-plus
-                    className="text-sm font-bold"
-                  >
-                    +
-                  </Button>
-                  {tempoAppareil !== null && (
-                    <button
-                      data-tempo-fichier
-                      onClick={effacerTempo}
-                      className="h-11 px-3 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:text-foreground"
-                    >
-                      {t("performance.tempoFile")}
-                    </button>
-                  )}
-                </div>
-              </SettingRow>
-            )}
-          </div>
-        </DrawerContent>
-      </Drawer>
+            <div className="space-y-2">
+              <TitreRubrique id="perf-couleur-icones">{t("performance.iconColor")}</TitreRubrique>
+              <div
+                role="radiogroup"
+                aria-labelledby="perf-couleur-icones"
+                className="flex justify-between gap-1"
+                onKeyDown={(e) => {
+                  // Radiogroup standard : ← ↑ et → ↓ passent à la teinte voisine en la choisissant (« Autre couleur » en dernier).
+                  const d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+                  if (d === 0) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const ids = [...TEINTES.map((c) => c.id), "autre"];
+                  const suivant = ids[(ids.indexOf(teinteChoisie) + d + ids.length) % ids.length];
+                  if (suivant === "autre") setCercleOuvert(true);
+                  else {
+                    setCercleOuvert(false);
+                    choisirCouleur(TEINTES.find((c) => c.id === suivant)!.hex);
+                  }
+                  e.currentTarget.querySelector<HTMLElement>(`[data-teinte="${suivant}"]`)?.focus();
+                }}
+              >
+                {TEINTES.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={teinteChoisie === c.id}
+                    aria-label={t(`performance.iconColors.${c.id}`)}
+                    data-teinte={c.id}
+                    tabIndex={teinteChoisie === c.id ? 0 : -1}
+                    onClick={() => { setCercleOuvert(false); choisirCouleur(c.hex); }}
+                    className={`h-11 w-11 rounded-full border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      teinteChoisie === c.id ? PASTILLE_CHOISIE : ""
+                    }`}
+                    // La pastille montre la couleur telle qu'elle sera dans la barre, sur le thème courant.
+                    style={{ background: garderContraste(c.hex, stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR) }}
+                  />
+                ))}
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={teinteChoisie === "autre"}
+                  aria-label={t("performance.iconColors.autre")}
+                  data-teinte="autre"
+                  tabIndex={teinteChoisie === "autre" ? 0 : -1}
+                  onClick={() => setCercleOuvert((o) => !o)}
+                  className={`h-11 w-11 rounded-full border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    teinteChoisie === "autre" ? PASTILLE_CHOISIE : ""
+                  }`}
+                  style={{ background: "conic-gradient(hsl(0 70% 50%), hsl(60 70% 50%), hsl(120 70% 50%), hsl(180 70% 50%), hsl(240 70% 50%), hsl(300 70% 50%), hsl(360 70% 50%))" }}
+                />
+              </div>
+              {cercleOuvert && <CercleChromatique valeur={couleurChoix} fond={stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR} onChange={choisirCouleur} />}
+            </div>
+        </div>
+      </MenuLouange>
     </div>
   );
 }
+
+/** Choix sélectionné d'un segmenté : le même langage que les ronds allumés (couleur des icônes, texte contrasté). */
+const SEGMENT_CHOISI = "bg-[color:var(--couleur-icones)] text-background";
 
 // ─── Petits composants de la barre ────────────────────────────────────────────
 

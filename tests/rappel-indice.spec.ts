@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import type { SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { onStage } from "./helpers/louange";
+import { attendreCompteur, lireCompteur, onStage } from "./helpers/louange";
 
 // Lot RS, tranche RS-D (docs/spec-rappel-structure-louange.md, D6) : l'indice du rappel,
 // une seule fois par appareil et par mode (`perf-astuce-rappel-unique` / `-joue`).
@@ -39,7 +39,6 @@ const setlist = {
   items: [ABBA],
 };
 
-const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums").last();
 const indice = (page: Page) => onStage(page, "[data-indice-rappel]");
 const cle = (page: Page, nom: string) => page.evaluate((n) => localStorage.getItem(n), nom);
 
@@ -50,7 +49,7 @@ const TEXTES = {
 
 async function lancer(page: Page, langue: "fr" | "zh") {
   await page.getByRole("button", { name: TEXTES[langue].bouton }).click();
-  await expect(compteur(page)).toHaveText(/^\d+ \/ \d+$/);
+  await attendreCompteur(page, /^\d+ \/ \d+$/);
   await expect(onStage(page, "[data-section]").first()).toBeVisible();
 }
 
@@ -69,12 +68,12 @@ async function ouvrir(page: Page, langue: "fr" | "zh" = "fr", mode: "unique" | "
   await lancer(page, langue);
 }
 
-const total = async (page: Page) => Number((await compteur(page).innerText()).split("/")[1]);
+const total = async (page: Page) => Number((await lireCompteur(page)).split("/")[1]);
 
 async function pageDeux(page: Page) {
   expect(await total(page), "Abba Père tient sur plusieurs pages").toBeGreaterThan(2);
   await page.keyboard.press("ArrowRight");
-  await expect(compteur(page)).toHaveText(/^2 \//);
+  await attendreCompteur(page, /^2 \//);
   await expect(onStage(page, "[data-rappel]")).toBeVisible();
 }
 
@@ -103,11 +102,11 @@ for (const langue of ["fr", "zh"] as const) {
 
       // Page suivante : la bulle part.
       await page.keyboard.press("ArrowRight");
-      await expect(compteur(page)).toHaveText(/^3 \//);
+      await attendreCompteur(page, /^3 \//);
       await expect(indice(page)).toHaveCount(0);
       // Retour à la page 2 : elle ne revient pas.
       await page.keyboard.press("ArrowLeft");
-      await expect(compteur(page)).toHaveText(/^2 \//);
+      await attendreCompteur(page, /^2 \//);
       await expect(onStage(page, "[data-rappel]")).toBeVisible();
       await expect(indice(page)).toHaveCount(0);
 
@@ -135,7 +134,7 @@ for (const langue of ["fr", "zh"] as const) {
       expect(await cle(page, "perf-astuce-rappel-joue"), "écrite dès que la bulle paraît").toBe("1");
       expect(await cle(page, "perf-astuce-rappel-unique"), "l'autre mode n'est pas touché").toBeNull();
       await page.keyboard.press("ArrowRight");
-      await expect(compteur(page)).toHaveText(/^3 \//);
+      await attendreCompteur(page, /^3 \//);
       await expect(indice(page)).toHaveCount(0);
     });
 
@@ -145,7 +144,7 @@ for (const langue of ["fr", "zh"] as const) {
       await expect(indice(page)).toBeVisible();
       const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
       await page.mouse.click(w - 6, h / 2);
-      await expect(compteur(page)).toHaveText(/^3 \//);
+      await attendreCompteur(page, /^3 \//);
       await expect(indice(page)).toHaveCount(0);
     });
 
@@ -157,7 +156,7 @@ for (const langue of ["fr", "zh"] as const) {
       const barre = await page.getByRole("button", { name: /Quitter|退出/ }).isVisible();
       await bulle.click();
       await expect(bulle).toHaveCount(0);
-      await expect(compteur(page)).toHaveText(/^2 \//);
+      await attendreCompteur(page, /^2 \//);
       expect(await page.getByRole("button", { name: /Quitter|退出/ }).isVisible(), "la barre n'a pas bougé").toBe(barre);
     });
   });

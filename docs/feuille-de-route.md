@@ -1337,6 +1337,157 @@ passages instrumentaux. **Tranché par Timothée le 07/11/2026 : interlude « In
 sur le constat 16 du § 7). Les « Dernière phrase – Pm » et l'historique déjà enregistrés restent lisibles, sans
 migration. **Lot AB-I codé le 07/11/2026** (go du jour) sur `claude/cool-allen-pkzti6` (`b538acc`) ; **en ligne le 07/11/2026** (ordre de Timothée).
 
+### AO. Mode louange façon forScore, apparence comprise (Timothée, 07/11/2026) → `spec-mode-louange-forscore-2.md`
+
+« J'aime pas le mode louange, je trouve qu'il ressemble pas assez à forScore alors que je t'avais [dit] de faire tout
+comme forScore, de la navigation à l'apparence etc. ; l'UI du mode louange est bof, que ce soit la vue des musiciens
+ou autre. En gros tout le mode louange. » La « vue des musiciens » = les vues par rôle du mode louange (pianiste,
+guitariste, choriste, batteur), précisé le jour même. Le chantier d'octobre (`spec-mode-louange-forscore.md`, L0–L7)
+n'avait repris que les gestes et gardé l'apparence du site : captures de l'existant (barre haute sans commande, tout
+dans la barre basse, tiroir de liste, longue feuille de réglages, cartes de section façon appli web, vue batteur en
+cadres vides). Cette demande **rouvre toute l'apparence du mode louange** ; restent gelées les couleurs d'accords, de
+sections et du 简谱, les calques 简谱 et le PDF. Planche du 07/11/2026 (`docs/planches/planche-mode-louange-forscore-2.html`,
+https://claude.ai/artifact/AuYFVmjUN6UAZhUVxBHBr8) : A « Pupitre » recommandée, neuf questions à trancher.
+**Vue par rôle proposée d'après le planning** (question du jour, étude `chantier-forscore/04-role-suggere.md`) :
+**proposer, pas imposer** ; **cajon → vue Batteur** ; **rôle retenu par compte sur un iPad partagé** (tranché par
+Timothée le 07/11/2026) ; **plusieurs services le même jour sont toujours dans des lieux différents** (jamais présidence
+et piano au même service) : un service, un rôle. Restent ouverts : « Musicien » sans instrument, Percussion.
+**Paroles du site dans le mode louange** (demande du 07/11/2026 : « les dispositions des paroles qui existent déjà
+sur le site, le mode par défaut en bleu et le mode section en couleur ») : planche à part
+(`docs/planches/planche-mode-louange-paroles-site.html`, https://claude.ai/artifact/EPfZA3RAvEXrE2cqzPXcCf),
+vraies captures sous le chrome de la piste A. **Tranché par Timothée le 07/11/2026 (« comme tes propositions ») :**
+(1) la page du mode louange garde **les paroles du site** sous la barre forScore, pas la « partition imprimée » de la
+piste A (barre, menus, points, « Je joue », feuille de route du batteur gardés) ; (2) un appareil neuf démarre en
+**Bleu** ; (3) les **pastilles de structure** restent en tête de chant, le menu Repères les reprend ; (4) le **chinois
+reste rouge** en mode Bleu. **Nouvelle demande du même soir** : « propose-moi plus de dispositions pour les
+partitions, pour que je choisisse ; on va mettre 3-4 types que les gens peuvent choisir sur le site » : le réglage
+« Couleurs par section » deviendrait un choix entre 3 ou 4 dispositions, partagé par la page du chant, la vue
+partitions et le mode louange (planche `docs/planches/planche-dispositions-partition.html`, en cours). **Premier
+critère** (Timothée, même soir) : « les partitions doivent être lisibles, on doit pouvoir bien voir la structure
+des chants et tout » : lisible de loin au pupitre, et le début, le type de chaque section, les reprises et l'ordre
+joué visibles d'un coup d'œil. Planche publiée le 08/11/2026 (https://claude.ai/artifact/AuYFVmjUN6UAZhUVxBHBr8, carte 2) :
+huit dispositions, quatre proposées. **Avant de choisir** (Timothée, 08/11/2026 : « corrige ça d'abord ») :
+(1) la **coupure des vers au téléphone**, défaut du site actuel (`ChordLine.tsx:61-90` ne coupe qu'avant un accord :
+escalier « Ton / E Nom… », mot seul « suivront ») : règle corrigée proposée (deux rangées équilibrées, de préférence
+après une ponctuation, jamais un mot seul ; accord toujours sur sa syllabe, rangée d'accords vide repliée ; fin
+d'accords sans paroles qui déborde un peu ; espaces resserrés si la ligne dépasse de 5 % au plus ; suite en retrait
+de 1 em), montrée dans la planche pour les huit dispositions ; (2) la **marge de « Repères en marge »** resserrée au
+téléphone. Corriger le site lui-même = un lot à part, sur go. **Choix de Timothée (08/11/2026, captures à l'appui) : quatre
+dispositions au menu** — **Bleu** (l'actuelle, appareil neuf), **Repères en marge** (planche des dispositions,
+n° 3), la **page de la piste B « Grille de scène »** de la planche forScore (bandes de section pleine largeur, grande
+lettre de section dans la colonne de gauche, thème clair) et la **page de la piste A « Pupitre »** (partition
+imprimée : titre gravé centré, ♩ et tonalité, repères encadrés). Écartées : Couleurs par section (sort du menu),
+Bandeaux, Grille, Une section par écran, Pour chanter, Recueil. La règle de coupure corrigée vaut pour les quatre
+(la capture de la piste A au téléphone montrait encore l'ancienne). **Puis (même jour) : « Couleurs par section »
+reste aussi au menu** — cinq dispositions : Classique (ex-Bleu), Couleurs par section, Repères, Scène, Partition, avec
+une miniature de la page à côté de chaque nom. **Réponses du 08/11/2026 aux questions de la spec** : choix dans les
+options d'affichage du mode louange et le menu ⋯ de la page du chant, la vue partitions suit, retenu par appareil ;
+débordement de 8 px avant de couper ; mots chinois de deux caractères par découpage automatique + liste d'exceptions
+vérifiée ; **couleur des icônes de la barre au choix de chacun dans une palette** ; « Je joue » et pastille du
+planning ; menu Repères ; deux colonnes actuelles en paysage et sur ordinateur ; « Musicien » : instrument de la case
+du Campus ou du profil, sinon rien, Percussion → Batteur ; 简谱 : ligne coupée en deux au téléphone en portrait, une
+feuille large en tablette paysage, une feuille plus grande sur ordinateur, début de chaque section noté par scan ;
+**choriste et présidence : paroles avec pinyin par défaut sur un chant à scan, le 简谱 à leur choix** ; **pas de
+sépia pour l'instant**. Spec : `spec-mode-louange-forscore-2.md` (écrite et contre-vérifiée le 08/11/2026 : lots CV, DP, FS, RP, JP, AN ;
+en attente de go, lot par lot). **Go de Timothée le 08/11/2026 pour la vague 1** : CV, JP-A et FS-A + FS-B, trois
+sessions de code en parallèle sur la branche de la session ; rien en ligne sans son ordre. **JP-A terminé le 08/11/2026** (données
+seulement, rien de visible sur le site) : **190 scans sur 190** ont leurs lignes, barres de mesure et débuts de section
+certifiés à l'œil (`public/jianpu/systemes.json`, `sections.json`) ; après relecture, sections de 29 chants et première
+ligne de 14 scans corrigées ; 十字架, 大手牵着小手 et 荣耀至高神 découpés à la main (barres à l'œil, caches sur les lignes
+imbriquées, décision 24 de la spec). **À trancher plus tard par Timothée** : cinq chants dont le `.cho` n'a pas les
+mêmes accords que le scan (不停赞美你 : C dans le `.cho`, Cmaj7 gravé ; 是耶稣的名 : Emaj7 contre une triade gravée ;
+我需要有你在我生命中 couplet 2, 只需要你 intro, 打开天窗 intro et interlude : réharmonisés dans le `.cho`) ; la vue
+paroles et la vue 简谱 montrent donc des accords différents ; liste complète : `python3 scripts/jianpu/sections.py
+controle`. **Vague 1 codée et relue le 09/11/2026** (rien en ligne) :
+CV (coupure des vers, page du chant, vue partitions et mode louange, marque `v2` et bandeau des annotations) et FS-A +
+FS-B (barre de titre forScore, rangée de points, couleur des icônes avec cercle chromatique étendue aux actions,
+menus Setlist, Repères, Outils, Tempo, Options d'affichage) ; relecture indépendante (diffs, 195 captures, critique de
+design), défauts confirmés corrigés par les deux sessions ; 592 tests verts sur les cinq projets. Captures et questions
+en attente dans l'artefact (carte « À voir d'abord »). **Ouvert** : FS-E Demi-page (spec écrite, attend un go) ; une
+passe sur tout le guide (plusieurs images ne correspondent plus au site) ; prévenir l'équipe avant la mise en ligne de
+CV (annotations des pages dont la coupure change). **Questions de la vague 1 tranchées comme proposé** (Timothée,
+09/11/2026 : « je suis ok avec toi » ; décision 26 de la spec). **Go du 09/11/2026 pour FS-E (demi-page) et pour la
+vague 2, deux sessions à la fois** : DP et FS-C + FS-D + FS-E d'abord, puis RP et JP-B. **Vague 2, première paire codée le 09/11/2026**
+(rien en ligne) : DP (cinq dispositions : Classique, Couleurs par section, Repères, Scène, Partition ; menu à miniatures
+aux trois endroits) et FS-C + FS-D + FS-E (« Je joue » et rôle par compte, feuille de route du batteur, demi-page) ;
+deux relectures indépendantes (code, 820 captures, critique de design contre les planches, constats contre-vérifiés),
+corrections en cours dans les deux sessions. **Décisions du 09/11/2026** : la disposition « Repères » s'appelle
+« Marge » (libellé seulement, décision 29) ; **couleur des accords au choix de chacun** (demande de Timothée,
+décision 27 ; planche acceptée, décision 28 : une couleur par langue, dans les cinq dispositions, par compte sur
+l'appareil, la couleur des icônes aussi par compte) ; spec du lot **CA**, **go le 09/11/2026**, après la seconde
+relecture de DP. Import inutilisé de `fs` dans `SongView.tsx` (déjà sur `main`) retiré dans une session à part
+(commit 8e6572a, branche `claude/laughing-cerf-hznlxc`) : à reprendre sur la branche de la session après DP, il partira
+avec la prochaine mise en ligne (Timothée, 09/11/2026). **Fin de chantier pour l'instant** (Timothée, 09/11/2026 au soir :
+« après la vague 2 je pense qu'on va s'arrêter », « on reprendra plus tard dans une nouvelle session ») : on finit la
+vague 2 (corrections de DP, RP lancé le 09/11 au soir, puis JP-B), avec des relectures légères (un relecteur et les
+captures regardées) ; **CA reporté**, go et spec gardés. **Pour reprendre** : lire « Avancement » de
+`spec-mode-louange-forscore-2.md` (état de chaque lot), puis lancer CA (spec complète, section « CA ») et FS-F (décision 30, reportée le 09/11 : « plus tard »), sur un go chacun, et, sur nouveau
+go, la vague 3 (JP-C, JP-D, AN) ; avant toute mise en ligne : **une relecture complète de toute la vague 2**
+(Timothée, 09/11/2026 : « ok pour la relecture complète avant la mise en ligne » ; relecteurs par angle, suite des specs
+touchées sur les cinq projets, captures triées, critique de design contre les planches, constats contre-vérifiés), passe sur le guide, relecture des libellés chinois
+nouveaux par un responsable sinophone, prévenir l'équipe (coupure des vers et annotations rangées par disposition),
+essai sur iPad. **Lot FS fini le 09/11/2026** (FS-C, FS-D, FS-E et
+corrections ; relecture légère : bon, aucun défaut important). **À traiter à la relecture complète** (questions de la
+session FS, avec la recommandation de la session d'origine ; **tranchées le 09/11/2026** par Timothée, « 1,2,3,4,5 »
+aux recommandations de la session FS, décision 30 de la spec : repères par sorte de section, couleur personnelle gardée,
+rond « Paroles » dans « Sur la page », colonne par colonne gardé, traits affichés rognés pendant la demi-page ; code des
+points 1, 3 et 5 en tranche FS-F, en attente de go) : (1) feuille de route du batteur en Classique, repères à
+la couleur de la langue alors que la planche les colore par sorte de section → suivre la planche ; (2) segment choisi
+d'« Ordre des sections » à la couleur personnelle (décision 23) plutôt que neutre comme la planche → garder ; (3)
+« Masquer les paroles » placé dans Je joue (hors planche ; il était dans les Options avant FS-C) → à trancher par
+Timothée ; (4) demi-page en deux colonnes, colonne par colonne → garder ; (5) traits d'annotation masqués pendant la
+demi-page → garder pour l'instant, rognés à leur place peut-être avec AN ; et deux tests à durcir
+(`louange-demi-page.spec.ts:389-412`, coupe forcée en vue Structure ; clé `ap` demi-page coupée). Annotations : quand la
+vue Structure ou la demi-page change la composition d'une page, les traits ne sont jamais supprimés, mais le bandeau ne
+prévient que si la page garde les mêmes blocs ; à dire à l'équipe avec le reste. **Lot RP fini le 10/11/2026** (rôle proposé d'après le planning ; relecture
+légère : un défaut important, la pastille qui pouvait surgir après un choix manuel, renvoyé à la session avec deux
+mineurs et des tests). **À traiter à la relecture complète** (questions de la session RP, recommandation de la session
+d'origine) : (1) en tablette portrait, la pastille centrée cache des pastilles de structure → dès md, la caler à droite
+du bandeau ; (2) rôles sans vue (Orateur, Sono…) ignorés, Présidence + Orateur propose Présidence → garder ; (3) après
+« Aucun », retirer aussi l'étiquette « d'après le planning » de Je joue → oui ; (4) la pastille dit « Batterie » à qui
+joue du cajon → reprendre le mot du planning (« Cajon aujourd'hui · Passer en vue Batteur ») ; (5) zone `sr-only`
+permanente pour que la pastille soit annoncée → oui. Hors lot : la page d'une setlist sans date plante (`formatDate`,
+`SetlistDetailClient.tsx:1943`, antérieur à AO) → garde à ajouter. **Lot DP fini le 10/11/2026** (seconde relecture : 22 points,
+« Marge », et la régression d'`accords-toucher:139` trouvée et corrigée : depuis DP-A la page du chant se recomposait
+après l'hydratation et un premier toucher sur un accord chinois tombait dans le vide). **À traiter à la relecture
+complète** (questions de la session DP) : (1) Scène coupe encore des vers que Classique garde entiers (téléphone, 1 024
+px), à cause de la colonne de lettre → accepter, ou une colonne plus étroite en compact ; (2) un appareil qui n'est pas
+en Couleurs par section voit la page changer après le chargement → accepter, ou lire le réglage avant la peinture ;
+(3) la note ♩ en SVG aussi dans l'en-tête Classique de la page du chant et dans la barre du mode louange → oui, avec
+FS-F ; (4) le Tag dans le cadre de section du PDF → garder celui d'« other » (aucun). Import inutilisé de `fs` retiré
+(a200a80). **Lot JP-B codé le 10/11/2026** (简谱 en tranches dans le mode louange, tête de
+feuille, demi-page sur les scans, données hors ligne ; relecture légère : un défaut important, les traits d'avant des
+scans certifiés sans bandeau, renvoyé à la session avec trois mineurs). **À traiter à la relecture complète** (questions
+de la session JP-B, recommandation de la session d'origine) : (1) en tablette paysage et sur ordinateur, un écran de scan
+peut garder ~30 % de blanc → permettre une légère réduction (chiffres jamais sous 22 px) quand elle fait tenir une ligne
+de plus, à essayer au pupitre ; (2) entourage de feuille sur ordinateur, comme la planche → oui ; (3) `AGENTS.md` écrit par
+`next dev` au démarrage des serveurs de test → l'ignorer (`.gitignore`) ; et, non faits : `×2` lu par un lecteur d'écran,
+ligne de crédit du scan dans la dernière tranche, repli « un toucher mène au premier écran », vérification de
+`sections.json` / `marges.json` contre `index.json`, chiffres ≥ 17 px au téléphone en portrait (c'est JP-C). **Vague 2 terminée le 10/11/2026** (JP-B4, 319db5f : bandeau
+L5 pour les traits d'avant les tranches, rechargement des données après échec, largeur sans les encoches ; spec
+`louange-jianpu-tranches` relancée à la tête : 152 réussis sur les cinq projets, tsc vert). Rien en ligne : la branche
+`claude/tender-johnson-99hadm` attend CA, FS-F, la relecture complète, puis l'ordre de Timothée.
+**Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
+ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
+maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
+préréglés, texte, tampons utiles au culte, annuler/rétablir), **sans changer le stockage** ; l'accrochage des traits à
+la ligne ou à la section (pour qu'un trait ne bouge plus, comme sur un PDF) se fera **avec la migration de la base** ;
+calques plus tard. Planche lancée le 08/11/2026 ; ce « go » vaut pour la planche, pas pour le code. Planche publiée le
+08/11/2026 (https://claude.ai/artifact/AuYFVmjUN6UAZhUVxBHBr8, carte 3). **Tranché par Timothée le 08/11/2026** :
+**piste A « Barre forScore »** (en annotation, la barre de titre devient la barre d'outils) et les autres propositions de
+la planche ; **chacun choisit la couleur de ses stylos** et les règle à sa guise (couleur, épaisseur, transparence) ; **la
+couleur personnelle vaut aussi pour toute la barre du mode louange et ses actions** (« pour les actions et tout »), pas
+pour la page. Spec AN écrite (cinq tranches : enregistrement fiable, entrer et sortir, barre d'annotation, préréglages
+et couleurs, texte et tampons) ; en attente de go, vague 3. **Le mode
+louange suit le réglage du site** (Timothée, 07/11/2026 : « si sur le site ils sont en couleur par section, dans le
+mode louange on le met en couleur par section ») : c'est déjà le cas, un seul réglage « Couleurs par section » par
+appareil partagé par la page du chant, la vue partitions de la setlist et le mode louange (`src/lib/chartStylePref.ts`) ;
+la refonte doit le garder (le bouton « Couleurs » de Display Options = ce même réglage). **Réglages par compte
+(synchronisés entre appareils) : reportés** — Timothée, 07/11/2026 : la base de données est en cours de migration
+hors de Firebase vers une base physique ; rien de nouveau n'est stocké dans Firestore d'ici là (le rôle « retenu par
+compte sur un iPad partagé » se fait sur l'appareil, clé par compte, sans base). Rien n'est codé : planche,
+puis spec, puis go.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne

@@ -57,13 +57,15 @@ test("hors ligne : chants déjà ouverts, liste, chant jamais ouvert", async ({ 
 
 // A3 bis : le parcours réel d'un dimanche. On ouvre la liste, on touche la setlist (navigation par lien, pas un
 // chargement complet), puis le réseau tombe : la page rechargée montre la copie, et le chant chinois son scan.
+// Date toujours à venir : /setlists ouvre l'onglet « À venir », qui écarte toute date passée.
+const DANS_UNE_SEMAINE = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
 const item = (slug: string, position: number) => ({ type: "song", songSlug: slug, position, keyOverride: null, showChords: true,
   showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" });
 test("hors ligne : setlist ouverte par un lien, rechargée sans réseau", async ({ page, context }, info) => {
   if (!["telephone", "ordinateur", "tablette"].includes(info.project.name)) test.skip();
   test.setTimeout(4 * 60_000);
   await signInAs(page, { uid: "uid-maelys", email: "maelys@example.com", serviceRoles: { "Culte Francophone": ["musicien"] } },
-    { "setlists/sl-banc": { title: "Culte du banc", leader: "Présidence", category: "Culte Francophone", date: "2026-11-01",
+    { "setlists/sl-banc": { title: "Culte du banc", leader: "Présidence", category: "Culte Francophone", date: DANS_UNE_SEMAINE,
       language: "mixed", notes: "", ownerId: "uid-autre", isPrivate: false, items: [item("abba-pere", 1), item("一生爱你", 2)] } },
     "/setlists");
   await page.evaluate(() => navigator.serviceWorker?.ready);

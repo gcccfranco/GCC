@@ -37,7 +37,20 @@
  * La planche, elle, montre toujours la **page entière** (fenêtre ouverte) avec la ligne
  * de coupe en pointillé rouge : ce qui est au-dessus n'est pas affiché sur le site.
  *
- * Sortie : scripts/jianpu/debug/_pw-<slug>-<n>.png ; _pw-<slug>-cadrage-p<n>.png
+ * `--systemes` (lot AO, JP-A1, docs/spec-mode-louange-forscore-2.md) : les **lignes** et **barres de mesure** de
+ * chaque page, par-dessus le scan entier tel que le navigateur le rend. Accepte PLUSIEURS slugs (un seul serveur, un
+ * seul navigateur) :
+ *   npm run jianpu:audit -- --systemes 一生爱你 为我而来 [--propose]
+ *   npm run jianpu:audit <slug> -- --systemes
+ * Chaque ligne = bande translucide alternée bleu / vert (bords haut et bas pleins), son numéro L1, L2… dans la marge
+ * gauche ; chaque barre = trait rouge sur la hauteur de la ligne ; la barre la plus proche du milieu de la ligne
+ * (celle où JP-C coupera au téléphone) en magenta épais ; le `top` de cadrage.json en pointillé gris. Données :
+ * public/jianpu/systemes.json si le chant y est, sinon scripts/jianpu/debug/systemes-propose.json ; `--propose`
+ * préfère la proposition. Couche facultative de SECTIONS (JP-A2) : si debug/sections-propose.json ou
+ * public/jianpu/sections.json donne des entrées {id, label, page, ligne, anacrouse} (page et ligne comptées depuis 1),
+ * le libellé s'écrit (fond jaune, texte noir) à gauche de la ligne où la section commence.
+ *
+ * Sortie : scripts/jianpu/debug/_pw-<slug>-<n>.png ; _pw-<slug>-cadrage-p<n>.png ; _pw-<slug>-systemes-p<n>.png
  */
 
 import fs from "node:fs";
@@ -56,6 +69,7 @@ function flag(name: string, fallback: number): number {
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const slug = args[0];
+const systemes = process.argv.includes("--systemes");
 if (!slug) {
   console.error("usage : npx tsx scripts/jianpu/audit-browser.ts <slug> [tonalité] [--page=0] [--slice=380] [--width=1400] [--dark] [--no-frames] [--alt]");
   process.exit(1);
@@ -247,10 +261,166 @@ async function planchecadrage(browser: Browser) {
   console.log(`\n${slug} p.${pageIndex + 1} : coupe à ${coupe.top} px (${coupe.certifie ? "certifiée" : "proposée"})`);
 }
 
+type Ligne = { y0: number; y1: number; barres: number[]; masques?: number[][] };
+type PageSystemes = { file: string; w: number; h: number; lignes: Ligne[] };
+type EntreeSystemes = { source: string; pages: PageSystemes[] };
+type Section = { id: string; label: string; page: number | null; ligne: number | null; anacrouse?: boolean };
+
+const PUBLIC_JIANPU = path.resolve(__dirname, "..", "..", "public", "jianpu");
+
+function lireJson<T>(fichier: string): T | undefined {
+  return fs.existsSync(fichier) ? (JSON.parse(fs.readFileSync(fichier, "utf8")) as T) : undefined;
+}
+
+/** Les lignes d'un chant : certifiées (systemes.json) sauf `--propose`, sinon proposées. */
+function donneesSystemes(s: string): { entree: EntreeSystemes; certifie: boolean } {
+  const certifie: EntreeSystemes | undefined = lireJson<{ chants?: Record<string, EntreeSystemes> }>(path.join(PUBLIC_JIANPU, "systemes.json"))?.chants?.[s];
+  const propose: EntreeSystemes | undefined = lireJson<Record<string, EntreeSystemes>>(path.join(OUT_DIR, "systemes-propose.json"))?.[s];
+  if (certifie && !(preferePropose && propose)) return { entree: certifie, certifie: true };
+  if (propose) return { entree: propose, certifie: false };
+  throw new Error(`${s} : aucune ligne — python3 scripts/jianpu/systemes.py propose ${s}`);
+}
+
+/** Couche facultative des sections (JP-A2) : vide tant que les fichiers n'existent pas. */
+function sectionsDuChant(s: string): Section[] {
+  type Fichier = Record<string, Section[] | { sections?: Section[] }>;
+  const lire = (f: string): Section[] | undefined => {
+    const d = lireJson<Fichier & { chants?: Fichier }>(f);
+    const v = (d?.chants ?? d)?.[s];
+    const liste = Array.isArray(v) ? v : v?.sections;
+    return Array.isArray(liste) ? liste : undefined;
+  };
+  const certifie = lire(path.join(PUBLIC_JIANPU, "sections.json"));
+  const propose = lire(path.join(OUT_DIR, "sections-propose.json"));
+  // Même règle que les lignes : le certifié d'abord, la proposition seulement si absent ou avec `--propose`.
+  if (certifie && !(preferePropose && propose)) return certifie;
+  return propose ?? [];
+}
+
+/** Planche des lignes et barres : une capture par page de chaque slug, un seul navigateur. */
+async function planchesystemes(browser: Browser, slugs: string[]) {
+  const cadrageJson = lireJson<Record<string, number[]>>(path.join(PUBLIC_JIANPU, "cadrage.json"));
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+  for (const s of slugs) {
+    const { entree, certifie } = donneesSystemes(s);
+    const sections = sectionsDuChant(s);
+    // Sections sans page ni ligne (non gravées ou à placer à la main) : listées dans le bandeau de la page 1.
+    const nulles = sections.filter((x) => x.ligne === null || x.page === null);
+    const context = await browser.newContext({
+      baseURL: BASE_URL,
+      viewport: { width: 1600, height: 1000 },
+      deviceScaleFactor: 1,
+      colorScheme: "light",
+    });
+    const page = await context.newPage();
+    const sheets = await openSheet(page, s, { gravure: true });
+    await page.addStyleTag({ content: PAGE_ENTIERE });
+    // tsx (esbuild) enveloppe les fonctions nommées dans `__name`, absent du navigateur.
+    await page.evaluate("window.__name = (f) => f");
+    // Les barres collantes du site (retour, tonalité, PDF) se superposeraient au scan dans la capture.
+    await page.addStyleTag({ content: "header,nav,[class*=sticky],[class*=fixed]{visibility:hidden!important}" });
+    const n = await sheets.count();
+    for (let i = 0; i < n; i++) {
+      const donnees = entree.pages[i];
+      if (!donnees) {
+        console.log(`${s} p.${i + 1} : pas de données`);
+        continue;
+      }
+      const sheet = sheets.nth(i);
+      // Le conteneur de la page plafonne la lecture (~820 px) : trop petit pour juger les barres. La planche rend le scan à
+      // 1000 px de large (deviceScaleFactor 1) : on lève le plafond des ancêtres et on fixe la largeur de la feuille.
+      await sheet.evaluate((host) => {
+        for (let e: HTMLElement | null = host as HTMLElement; e; e = e.parentElement) {
+          e.style.maxWidth = "none";
+          const w = e.getBoundingClientRect().width;
+          if (w >= 700 && w < 1000) e.style.width = "1000px";
+        }
+      });
+      await sheet.scrollIntoViewIfNeeded();
+      await sheet.evaluate(
+        (host, arg) => {
+          const img = host.querySelector("img")!;
+          const k = img.getBoundingClientRect().height / img.naturalHeight;
+          (host as HTMLElement).style.position = "relative";
+          const poser = (css: string, texte = "") => {
+            const d = document.createElement("div");
+            d.style.cssText = `position:absolute;pointer-events:none;z-index:60;${css}`;
+            d.textContent = texte;
+            host.appendChild(d);
+            return d;
+          };
+          arg.lignes.forEach((l, j) => {
+            const teinte = j % 2 === 0 ? "37,99,235" : "22,163,74";
+            const h = Math.max(1, (l.y1 - l.y0) * k);
+            poser(`left:0;right:0;top:${l.y0 * k}px;height:${h}px;background:rgba(${teinte},.14);border-top:2px solid rgb(${teinte});border-bottom:2px solid rgb(${teinte})`);
+            poser(`left:4px;top:${l.y0 * k + h / 2 - 22}px;font:700 40px/44px ui-sans-serif,system-ui;color:rgb(${teinte});text-shadow:0 0 4px #fff,0 0 4px #fff,0 0 4px #fff`, `L${j + 1}`);
+            // Masques (bornes inclusives) : hachures grises semi-transparentes, bord gris pointillé ; le scan reste lisible dessous.
+            for (const m of l.masques ?? []) {
+              poser(`left:${m[0] * k}px;top:${m[1] * k}px;width:${(m[2] - m[0] + 1) * k}px;height:${(m[3] - m[1] + 1) * k}px;background:repeating-linear-gradient(45deg,rgba(90,90,90,.28) 0 4px,transparent 4px 10px);border:2px dashed rgb(110,110,110);box-sizing:border-box`);
+            }
+            // « le milieu de la ligne » : la barre la plus proche du milieu de la feuille (w / 2, en pixels du WebP).
+            // L'étendue d'encre de la ligne n'est pas connue du navigateur (la proposition ne la porte pas) ; w / 2 est simple.
+            const milieu = arg.w / 2;
+            const centre = l.barres.reduce((a, b) => (Math.abs(b - milieu) < Math.abs(a - milieu) ? b : a), l.barres[0]);
+            for (const x of l.barres) {
+              const choisie = x === centre;
+              poser(`left:${x * k - (choisie ? 3 : 1)}px;top:${l.y0 * k}px;width:${choisie ? 6 : 2}px;height:${h}px;background:${choisie ? "rgb(217,0,217)" : "rgb(220,38,38)"}`);
+            }
+          });
+          // Plusieurs sections sur la même ligne s'empilent (26 px chacune) à partir du bord haut de la ligne.
+          const empilees = new Map<number, number>();
+          arg.sections.forEach((sec) => {
+            const l = arg.lignes[(sec.ligne ?? 0) - 1];
+            if (!l || sec.page !== arg.n) return;
+            const rang = empilees.get(sec.ligne!) ?? 0;
+            empilees.set(sec.ligne!, rang + 1);
+            poser(
+              `left:70px;top:${l.y0 * k + 2 + rang * 28}px;background:#fde047;color:#000;font:700 18px/24px ui-sans-serif,system-ui;padding:0 8px;border:1px solid #000;white-space:nowrap`,
+              (sec.anacrouse ? "↑ anacrouse " : "") + (sec.label || sec.id) + " [" + sec.id + "]",
+            );
+          });
+          if (arg.top) poser(`left:0;right:0;top:${arg.top * k}px;border-top:2px dashed rgb(120,120,120)`);
+          // Le bandeau est posé au-dessus de l'image, hors du scan : il ne recouvre aucune ligne.
+          const b = document.createElement("div");
+          b.dataset.bandeauAudit = "1";
+          b.style.cssText = "background:#fff;color:#000;font:700 22px/30px ui-sans-serif,system-ui;padding:0 10px;border-bottom:2px solid #000";
+          b.textContent = arg.bandeau;
+          host.before(b);
+        },
+        {
+          lignes: donnees.lignes,
+          w: donnees.w,
+          sections,
+          n: i + 1,
+          top: cadrageJson?.[s]?.[i] ?? 0,
+          bandeau: `${s} — p.${i + 1} — ${certifie ? "certifié" : "proposé"} — ${donnees.lignes.length} lignes${nulles.length ? ` — ⚠ sections à placer : ${nulles.map((x) => x.id).join(", ")}` : ""}`,
+        },
+      );
+      const file = path.join(OUT_DIR, `_pw-${s}-systemes-p${i + 1}.png`);
+      // Capture du bandeau puis de la page entière, en coordonnées du document.
+      const bandeau = await page.locator("[data-bandeau-audit]").last().boundingBox();
+      const boite = await sheet.boundingBox();
+      if (!bandeau || !boite) throw new Error(`${s} p.${i + 1} : boîte introuvable`);
+      const sx = await page.evaluate("window.scrollX"), sy = await page.evaluate("window.scrollY");
+      await page.screenshot({
+        path: file,
+        fullPage: true,
+        clip: { x: boite.x + (sx as number), y: bandeau.y + (sy as number), width: boite.width, height: boite.y + boite.height - bandeau.y },
+      });
+      console.log(file);
+    }
+    await context.close();
+  }
+}
+
 async function main() {
   const server = await ensureServer();
   const browser = await chromium.launch();
   try {
+    if (systemes) {
+      await planchesystemes(browser, args);
+      return;
+    }
     if (cadrage) {
       await planchecadrage(browser);
       return;

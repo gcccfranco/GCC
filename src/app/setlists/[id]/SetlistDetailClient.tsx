@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
@@ -25,7 +25,8 @@ import type { FSSetlist } from "@/types/setList";
 import { RELIRE_PROFIL, useProfile } from "@/lib/firebase/users";
 import { ecrireCopie } from "@/lib/setlist/copieHorsLigne";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { datesServies, loadPlanningData } from "@/lib/planning/names";
+import { datesServies, findMyServices, loadPlanningData, type ServiceEntry } from "@/lib/planning/names";
+import { roleDuPlanning } from "@/lib/planning/rolePlanning";
 import type { DateServie } from "@/types/planning";
 import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion, estRegieDeLaSetlist, peutExporterFreeShow } from "@/lib/access";
 import { useTranslation } from "react-i18next";
@@ -159,13 +160,16 @@ export function SetlistDetailClient() {
   // Lot AO (F1) : les dates où l'on sert, tirées du planning — la setlist de cette date se lit même sans équipe.
   // Chargées sans bloquer la page (qui voit déjà la setlist ne les attend pas) ; `undefined` = pas encore lues.
   const [datesDuCompte, setDatesDuCompte] = useState<DateServie[] | undefined>(undefined);
+  // Lot RP : les services du compte (rôle compris), gardés du même chargement pour proposer une vue dans le mode louange ;
+  // avec le nom lu, pour qu'un autre compte connecté par-dessus n'hérite jamais du rôle du précédent.
+  const [servicesDuCompte, setServicesDuCompte] = useState<{ nom: string; services: ServiceEntry[] } | undefined>(undefined);
   const planningName = profile?.planningName ?? "";
   useEffect(() => {
     if (!BACK_OFFICE || !planningName) return;
     let annule = false;
     loadPlanningData().then(
-      (d) => { if (!annule) setDatesDuCompte(datesServies(d, planningName)); },
-      () => { if (!annule) setDatesDuCompte([]); },
+      (d) => { if (!annule) { setDatesDuCompte(datesServies(d, planningName)); setServicesDuCompte({ nom: planningName, services: findMyServices(d, planningName) }); } },
+      () => { if (!annule) { setDatesDuCompte([]); setServicesDuCompte({ nom: planningName, services: [] }); } },
     );
     return () => { annule = true; };
   }, [planningName]);
@@ -268,6 +272,13 @@ export function SetlistDetailClient() {
   const [loadError, setLoadError] = useState(false);
   // Hors ligne (D1, décision C2) : date de lecture de la copie locale servie à la place de la setlist, sinon null.
   const [copieLueLe, setCopieLueLe] = useState<number | null>(null);
+  // Lot RP : la vue du planning pour le service de cette setlist (proposée par le mode louange, jamais appliquée seule).
+  const rolePlanning = useMemo(
+    () => (user && planningName && servicesDuCompte?.nom === planningName && setlist && copieLueLe === null
+      ? roleDuPlanning(servicesDuCompte.services, { date: setlist.date, category: setlist.category, moment: setlist.moment }, profile?.joue)
+      : null),
+    [user, planningName, servicesDuCompte, setlist, copieLueLe, profile?.joue],
+  );
   // Mode louange (D4) : chants qui n'ont pas pu être chargés ; null = pas de bandeau.
   const [chantsManquants, setChantsManquants] = useState<string[] | null>(null);
   const [retryKey, setRetryKey] = useState(0);
@@ -342,9 +353,9 @@ export function SetlistDetailClient() {
   }, []);
   const {
     showChords, setShowChords, chordsTouched, setChordsTouched,
-    showPinyin, chartStyle, layout, jianpuPref,
-    toggleChartStyle, changeLayout, changeJianpuPref, togglePinyin,
-  } = usePreferencesAffichage();
+    showPinyin, disposition, layout, jianpuPref,
+    changeDisposition, changeLayout, changeJianpuPref, togglePinyin,
+  } = usePreferencesAffichage(user?.uid ?? null, authLoading);
   // Adapter (la setlist) et Ma version (pour soi) s'excluent ; la barre d'outils
   // et, sur téléphone étroit, le menu « ⋯ » passent par ici.
   // Depuis la Liste, les deux modes ouvrent les partitions au chant lu (Q11) ; en
@@ -1481,8 +1492,8 @@ export function SetlistDetailClient() {
       hasZhSong={hasZhSong}
       showPinyin={showPinyin}
       togglePinyin={togglePinyin}
-      chartStyle={chartStyle}
-      toggleChartStyle={toggleChartStyle}
+      disposition={disposition}
+      changeDisposition={changeDisposition}
       hasJianpuSheets={hasJianpuSheets}
       jianpuPref={jianpuPref}
       changeJianpuPref={changeJianpuPref}
@@ -1533,7 +1544,7 @@ export function SetlistDetailClient() {
         loading={loadingContent}
         showChordsGlobal={showChords}
         showPinyinGlobal={showPinyin}
-        chartStyle={chartStyle}
+        disposition={disposition}
         jianpuPref={jianpuPref}
         layout={layout}
         editMode={editPartitions || editMine}
@@ -1666,7 +1677,7 @@ export function SetlistDetailClient() {
                         <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
                         {t("setlists.detail.layout.label")}
                       </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent className="w-56">{reglagesAffichage}</DropdownMenuSubContent>
+                      <DropdownMenuSubContent collisionPadding={12} className="w-56">{reglagesAffichage}</DropdownMenuSubContent>
                     </DropdownMenuSub>
                     <DropdownMenuSeparator />
                     {actionsPartagees}
@@ -1788,7 +1799,7 @@ export function SetlistDetailClient() {
                       <span aria-hidden className={LIBELLE_COURT}>{t("setlists.detail.layout.label")}</span>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuContent align="start" collisionPadding={12} className="w-56">
                     {reglagesAffichage}
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1913,7 +1924,7 @@ export function SetlistDetailClient() {
             </div>
           </div>
 
-          <div ref={zoneRef} className={`relative pb-8 pt-6 print:px-0 print:py-4 ${enTablette ? "px-[var(--marge-page)]" : "max-w-2xl mx-auto px-4"}`} style={{ marginTop: toolbarH }}>
+          <div ref={zoneRef} className={`relative pb-8 pt-6 print:px-0 print:py-4 ${enTablette ? "px-[var(--marge-page)] [--marge-bande:var(--marge-page)]" : "max-w-2xl mx-auto px-4 [--marge-bande:1rem]"} print:[--marge-bande:0px]`} style={{ marginTop: toolbarH }}>
             {copieLueLe !== null && (
               <div role="status" data-copie-hors-ligne className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-muted py-1 pl-3 pr-1 text-xs text-muted-foreground print:hidden">
                 <span>{texteCopie}</span>
@@ -2090,16 +2101,19 @@ export function SetlistDetailClient() {
       )}
       {performanceMode && (
         <PerformanceMode
+          uid={user?.uid ?? null}
           items={stageItems}
           contents={contents}
           initialShowChords={chordsTouched ? showChords : undefined}
           setlistId={id}
           setlistTitle={setlist.title}
+          setlistDate={setlist.date || undefined}
           affichage={layout}
           onAffichageChange={changeLayout}
           jianpuPref={jianpuPref}
           onJianpuPrefChange={changeJianpuPref}
           horsLigne={horsLigne}
+          rolePlanning={rolePlanning}
           onClose={() => {
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             setPerformanceMode(false);

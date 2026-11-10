@@ -5,6 +5,7 @@ import { transposeSection } from "@/lib/transposeAST";
 import type { SectionNuance } from "@/types/setList";
 import { nuanceLabel } from "@/lib/setlist/nuances";
 import { nuancePdfColors, sectionPdfPalette } from "@/lib/pdf/colors";
+import { sectionColorKind } from "@/lib/sectionPalette";
 import { compactPlan, stripGroups } from "@/lib/pdf/compact";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { StructureStripPDF, estimateStripHeight } from "@/components/pdf/StructureStripPDF";
@@ -55,7 +56,7 @@ export function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin,
   const label = sectionName(section, uiLang).toUpperCase();
   const boxType: BoxStyle = SECTION_BOX[section.type] ?? "none";
   const colors = sectionStyle === "colors";
-  const labelColor = colors ? sectionPdfPalette(section.type).color : theme.accent;
+  const labelColor = colors ? sectionPdfPalette(sectionColorKind(section)).color : theme.accent;
   const lineTheme: Theme = colors ? { ...theme, accent: INK, jianpu: INK } : theme;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

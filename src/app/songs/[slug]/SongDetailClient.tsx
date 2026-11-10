@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { DISPOSITION_AVANT_LECTURE, getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { TOUCHER_44 } from "@/lib/toucher44";
 import { PiluleTonalite } from "./_components/PiluleTonalite";
 import { ActionsChant } from "./_components/ActionsChant";
@@ -96,6 +96,9 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
   }, [slug, setlistId, position, user]);
   return version;
 }
+
+// Layout effect sans avertissement au rendu serveur.
+const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
   export function SongDetailClient({ song }: SongDetailClientProps) {
     const { t, i18n } = useTranslation();
@@ -273,13 +276,13 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
 
     const { fontScale, changeFontScale } = useTailleTexte();
 
-    // Couleurs par section — préférence par appareil partagée avec le mode
-    // louange ; chargée après montage (même raison d'hydratation que fontScale).
-    const [chartStyle, setChartStyle] = useState(true);
-    useEffect(() => setChartStyle(getChartStylePref()), []);
-    const toggleChartStyle = (v: boolean) => {
-      setChartStyle(v);
-      setChartStylePref(v);
+    // Disposition de la partition — préférence par appareil partagée avec le mode
+    // louange ; lue avant la peinture (layout effect isomorphe), à partir de la valeur avant lecture.
+    const [disposition, setDisposition] = useState<Disposition>(DISPOSITION_AVANT_LECTURE);
+    useEffetAvantPeinture(() => setDisposition(getDispositionPref()), []);
+    const changeDisposition = (d: Disposition) => {
+      setDisposition(d);
+      setDispositionPref(d);
     };
 
     async function handleDownload(style: PdfStyle) {
@@ -344,7 +347,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
 
   // Menu ⋯ (spec-barre-chant.md, Q3, Q5) : Vidéo, PDF et Idées sont dans la barre partout ; plus
   // de Spotify ni d'Apple Music (Timothée, 18/10/2026 : les chants n'ont que YouTube).
-  const menuChant = <MenuChant chartStyle={chartStyle} toggleChartStyle={toggleChartStyle} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
+  const menuChant = <MenuChant langue={song.language === "zh" ? "zh" : "fr"} disposition={disposition} changeDisposition={changeDisposition} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
 
   return (
     <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }}>
@@ -463,7 +466,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
         )}
         {/* Contenu — un tap rappelle la barre d'outils (sans gêner la sélection de texte) */}
         <main
-          className="song-zoom px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px]"
+          className="song-zoom px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px] [--marge-bande:1rem] print:[--marge-bande:0px]"
           style={{
             transform: `scale(${fontScale})`,
             transformOrigin: 'top left  ',
@@ -477,6 +480,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               à droite des pastilles règle la préférence de l'appareil (D5). */}
             <SongView
               pageChant
+              slug={song.slug}
               statistiques={<StatistiquesDuChant slug={song.slug} />}
               bascule={
                 jianpuScore ? (
@@ -528,7 +532,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               sectionNotes={sectionsNote}
               sectionNuances={sectionsNuance}
               sectionKeys={sectionsKeys}
-              chartStyle={chartStyle}
+              disposition={disposition}
             />
         </main>
 

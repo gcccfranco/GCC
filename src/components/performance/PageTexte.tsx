@@ -1,9 +1,11 @@
 "use client";
 
-import type { ReactNode, RefObject } from "react";
+import { useRef, type ReactNode, type RefObject } from "react";
 import type { CSSProperties } from "react";
+import { useEchelleFeuille } from "./FeuilleDeRoute";
 import { IndiceRappel } from "./IndiceRappel";
 import type { PerfPage } from "@/lib/performance/columns";
+import { NEXT_PILL_RESERVE } from "@/lib/performance/pagination";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 
@@ -26,6 +28,7 @@ export function PageTexte({
   contentPadding,
   showChrome,
   pastille,
+  sansIndice = false,
 }: {
   page: PerfPage;
   rappel: SectionOccurrence[] | undefined;
@@ -42,15 +45,20 @@ export function PageTexte({
   showChrome: boolean;
   /** Pastille « Ensuite » : rendue à la fin de la colonne `page.suivant`, dans le flux. */
   pastille?: ReactNode;
+  /** Calques de la demi-page (FS-E) : pas d'indice du rappel (il appartient à la page lue). */
+  sansIndice?: boolean;
 }) {
   const multiCol = page.cols.length > 1;
+  // Vue structure : le contenu des lignes grossit avec la place libre (`--fdr-echelle` sur la colonne).
+  const lignesRef = useRef<HTMLDivElement>(null);
+  useEchelleFeuille(lignesRef, !!page.etire, page.naturel, page);
   return (
     <>
-    <div>
+    <div className={page.etire ? "flex h-full flex-col" : undefined} data-page-deux-colonnes={page.twoColumns || undefined}>
       {rappel && (
         <div ref={rappelRef} data-rappel className="relative mb-2">
           {rappelTrame}
-          {(affichageVu === "played" || affichageVu === "unique") && <IndiceRappel mode={affichageVu} page={currentPage} />}
+          {!sansIndice && (affichageVu === "played" || affichageVu === "unique") && <IndiceRappel mode={affichageVu} page={currentPage} />}
         </div>
       )}
       {/* En-tête hors échelle, en pleine largeur : vue structure et
@@ -62,8 +70,11 @@ export function PageTexte({
           déterministes, cf. commentaire du conteneur). */}
       <div
         ref={scaledBodyRef}
+        className={page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}
         style={
-          page.scale !== 1
+          page.etire
+            ? { paddingBottom: NEXT_PILL_RESERVE }
+            : page.scale !== 1
             ? {
                 transform: `scale(${page.scale})`,
                 transformOrigin: "top left",
@@ -73,9 +84,9 @@ export function PageTexte({
         }
       >
         {/* Deux colonnes : gouttière de 2rem, celle de la mesure en colonne. */}
-        <div className={multiCol ? `flex items-start ${page.twoColumns ? "gap-x-8" : "gap-x-4"}` : undefined}>
+        <div className={multiCol ? `flex items-start ${page.twoColumns ? "gap-x-8" : "gap-x-4"}` : page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}>
           {page.cols.map((colIdxs, ci) => (
-            <div key={ci} className={multiCol ? "flex-1 min-w-0" : undefined}>
+            <div key={ci} data-col-page ref={page.etire ? lignesRef : undefined} className={multiCol ? "flex-1 min-w-0" : page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}>
               {colIdxs.map((i) => renderBlock(i))}
               {pastille && page.suivant === ci && <div className="mt-4 flex">{pastille}</div>}
             </div>

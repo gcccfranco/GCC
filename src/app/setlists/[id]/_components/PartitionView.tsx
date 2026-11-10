@@ -3,7 +3,7 @@ import Link from "next/link";
 import { songHref } from "@/lib/setlist/songHref";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
-import { SongView, SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
+import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { AccordsProvider, ChantDesAccords } from "@/components/accords/AccordsProvider";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
@@ -25,6 +25,7 @@ import { Check, Copy, Link2, ListOrdered, MessageSquare, RotateCcw, Sparkles } f
 import { TOUCHER_44 } from "@/lib/toucher44";
 import type { ChordProAST, ChordProLine, ChordProSection } from "@/types/chordPro";
 import type { SongVersionView } from "@/lib/setlist/versionChoice";
+import type { Disposition } from "@/lib/dispositionPref";
 
 /** Badge ambre de la version affichée : « Version modifiée », « Ma version », « Version de … ». */
 const AMBER_BADGE =
@@ -76,7 +77,7 @@ export function PartitionsView({
   loading,
   showChordsGlobal,
   showPinyinGlobal,
-  chartStyle,
+  disposition,
   jianpuPref,
   layout,
   editMode = false,
@@ -100,7 +101,7 @@ export function PartitionsView({
   showChordsGlobal: boolean;
   showPinyinGlobal: boolean;
   /** Couleurs par section — préférence par appareil, pilotée par la page. */
-  chartStyle: boolean;
+  disposition: Disposition;
   /** Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer. */
   jianpuPref: JianpuPref;
   /** Coup d'œil : ordre joué, sections uniques ou structure seule (par appareil). */
@@ -142,7 +143,7 @@ export function PartitionsView({
   return (
     // Les accords s'ouvrent au toucher hors édition (DA-3) ; « Ma version » et « Adapter » gardent leurs lignes tappables.
     <AccordsProvider actif={!editMode} aide>
-    <div className="space-y-10 print:space-y-6">
+    <div className="space-y-10 print:space-y-6" data-disposition={disposition}>
       {items
         .map((item, origIndex) => ({ item, origIndex }))
         .sort((a, b) => a.item.position - b.item.position)
@@ -215,12 +216,14 @@ export function PartitionsView({
                   </span>
                   <Link2 className="h-3.5 w-3.5 text-foreground shrink-0" />
                   <CopyLyricsButton sections={playedSections(item, contents)} />
-                  <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                  <div className={disposition === "partition" ? "flex min-w-0 flex-1 flex-col items-center gap-y-0.5" : "flex flex-wrap gap-x-3 gap-y-0.5"}>
                     {item.fusionSongs.map((fs) => {
                       const ast = transposedAsts[fs.songSlug];
                       if (!ast) return null;
+                      // Partition : titres en serif centrés, comme l'en-tête d'un chant seul.
+                      const titrePartition = disposition === "partition" ? `text-center text-2xl font-bold leading-[1.15] ${ast.metadata.language === "zh" ? KaiTiFont.className : gelasio_font.className}` : "text-sm font-bold";
                       return (
-                        <span key={fs.songSlug} className="text-sm font-bold text-foreground">
+                        <span key={fs.songSlug} {...(disposition === "partition" ? { "data-titre-partition": true } : null)} className={`${titrePartition} text-foreground`}>
                           <Link href={songHref(fs.songSlug, fs, setlistId, item.position)} className="hover:underline underline-offset-2">
                             {ast.metadata.title}
                           </Link>
@@ -237,6 +240,7 @@ export function PartitionsView({
                 {/* Le bandeau porte notes et transitions dès que le corps ne les porte plus. */}
                 <StructureStrip
                   className="pt-2 pb-1"
+                  disposition={disposition}
                   details={layout !== "played"}
                   steps={passages.map(({ ms, section, fusionSong, targetKey }): SectionOccurrence => ({
                     section,
@@ -267,8 +271,9 @@ export function PartitionsView({
                           nuance={withDetails ? sectionNuance : undefined}
                           keyChange={keyChange}
                           songSourceLabel={showSongLabel ? ast.metadata.title : undefined}
-                          chartStyle={chartStyle}
+                          disposition={disposition}
                           occurrenceUids={[section.uid]}
+                          slug={ms.songSlug}
                         />
                         </ChantDesAccords>
                         {withDetails && ms.transition && <TransitionNote text={ms.transition} />}
@@ -317,8 +322,9 @@ export function PartitionsView({
                         sectionNotes={fs.sectionNotes ?? {}}
                         sectionNuances={fs.sectionNuances ?? {}}
                         sectionKeys={fs.sectionKeys ?? {}}
-                        chartStyle={chartStyle}
+                        disposition={disposition}
                         layout={layout}
+                        slug={fs.songSlug}
                         titleHref={songHref(fs.songSlug, fs, setlistId, item.position)}
                       />
                       </ChantDesAccords>
@@ -343,7 +349,7 @@ export function PartitionsView({
             editMode={editMode}
             version={versions?.[item.songSlug]}
             editMine={editMine}
-            chartStyle={chartStyle}
+            disposition={disposition}
             jianpuPref={jianpuPref}
             layout={layout}
             onSelectLine={onSelectLine}
@@ -373,7 +379,7 @@ function NormalSongItem({
   editMode,
   version,
   editMine,
-  chartStyle,
+  disposition,
   jianpuPref,
   layout: layoutPref,
   onSelectLine,
@@ -395,7 +401,7 @@ function NormalSongItem({
   editMode: boolean;
   version?: SongVersionView;
   editMine: boolean;
-  chartStyle: boolean;
+  disposition: Disposition;
   jianpuPref: JianpuPref;
   layout: PartitionLayout;
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
@@ -572,8 +578,9 @@ function NormalSongItem({
         sectionTransitions={item.sectionTransitions ?? {}}
         sectionNuances={item.sectionNuances ?? {}}
         sectionKeys={item.sectionKeys ?? {}}
-        chartStyle={chartStyle}
+        disposition={disposition}
         layout={layout}
+        slug={item.songSlug}
         bodyStructure={version?.bodyStructure}
         titleHref={titleHref}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}

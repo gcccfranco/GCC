@@ -337,10 +337,10 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     // « Choix du responsable · Toujours · Jamais ».
     await expect(menu.getByRole("menuitemcheckbox", { name: "Partition 简谱" })).toHaveAttribute("aria-checked", "true");
     await expect(menu.getByRole("menuitemradio")).toHaveText([
-      "Ordre joué", "Sections uniques", "Structure seule",
+      "Ordre joué", "Sections uniques", "Structure seule", "Classique", "Couleurs par section", "Marge", "Scène", "Partition",
     ].map((t) => new RegExp(t)));
     await expect(menu.getByRole("menuitemcheckbox", { name: "Pinyin" })).toBeVisible();
-    await expect(menu.getByRole("menuitemcheckbox", { name: "Couleurs par section" })).toBeVisible();
+    await expect(menu.getByRole("menuitemradio", { name: "Couleurs par section" })).toBeVisible();
     // Le réglage choisi sur la Liste vaut pour les partitions.
     await menu.getByRole("menuitemradio", { name: "Structure seule" }).click();
     await page.keyboard.press("Escape");

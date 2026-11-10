@@ -11,6 +11,8 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
+import { ChoixDisposition } from "@/components/song/ChoixDisposition";
+import type { Disposition } from "@/lib/dispositionPref";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import type { FSSetlist } from "@/types/setList";
 
@@ -63,8 +65,8 @@ export function ReglagesAffichage({
   hasZhSong,
   showPinyin,
   togglePinyin,
-  chartStyle,
-  toggleChartStyle,
+  disposition,
+  changeDisposition,
   hasJianpuSheets,
   jianpuPref,
   changeJianpuPref,
@@ -74,8 +76,8 @@ export function ReglagesAffichage({
   hasZhSong: boolean;
   showPinyin: boolean;
   togglePinyin: () => void;
-  chartStyle: boolean;
-  toggleChartStyle: (v: boolean) => void;
+  disposition: Disposition;
+  changeDisposition: (d: Disposition) => void;
   hasJianpuSheets: boolean;
   jianpuPref: JianpuPref;
   changeJianpuPref: (v: JianpuPref) => void;
@@ -104,13 +106,8 @@ export function ReglagesAffichage({
           {t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}
         </DropdownMenuCheckboxItem>
       )}
-      <DropdownMenuCheckboxItem
-        checked={chartStyle}
-        onCheckedChange={toggleChartStyle}
-        onSelect={(e) => e.preventDefault()}
-      >
-        {t("performance.chartStyle")}
-      </DropdownMenuCheckboxItem>
+      <DropdownMenuSeparator />
+      <ChoixDisposition variante="menu" disposition={disposition} changeDisposition={changeDisposition} />
       {hasJianpuSheets && (
         <>
           <DropdownMenuSeparator />

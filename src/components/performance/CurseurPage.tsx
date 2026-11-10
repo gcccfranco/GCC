@@ -14,31 +14,54 @@ interface Props {
   reperes: RepereChant[];
   libelle: string;
   texteValeur: string;
-  /** Étiquette visible sous la glissière, à droite (« page 3 / 6 »). */
-  etiquette: string;
+  /** Texte de la vignette sous le titre du chant visé (« page 3 »). */
+  pageVignette: (n: number) => string;
   onAller: (page: number) => void;
 }
 
-// Demi-largeur du pouce natif (16 px en Chromium) : la piste utile commence et finit à ce décalage.
-const MARGE_POUCE = 8;
-const arreter = (e: React.PointerEvent) => e.stopPropagation();
+// Marge de chaque côté : le rayon de la poignée (11 px) et un peu d'air.
+const MARGE = 14;
+// Pas d'un point à l'autre : la rangée garde cette largeur quand il y a peu de pages, centrée dans la barre.
+const PAS = 24;
+// Écart supplémentaire entre deux chants, en pas de point (1 = un point de vide).
+const ECART_CHANTS = 1;
+// Au-delà, les points deviennent une piste continue (un trait par chant).
+const MAX_POINTS = 40;
+const COULEUR = "var(--couleur-icones, hsl(var(--primary)))";
+// Points et traits pas encore atteints : une teinte neutre du thème (≥ 3:1 contre le fond de la barre, clair et sombre).
+const COULEUR_INACTIVE = "hsl(var(--muted-foreground))";
 
-/** Curseur de page (forScore, lot L7) : toute la setlist, un repère au début de chaque chant.
- *  Chaque élément arrête les pointeurs : un geste ici ne tourne jamais la page par la racine. */
-export function CurseurPage({ total, courante, reperes, libelle, texteValeur, etiquette, onAller }: Props) {
-  const max = Math.max(total - 1, 1);
+/** Curseur de page (forScore, lots L7 et FS-A) : une rangée de points, un par page de toute la setlist,
+ *  un écart plus large entre deux chants, une poignée ronde. Un pas fixe par point : la rangée est centrée
+ *  et ne s'étale pas d'un bord à l'autre (au-delà de 40 pages, piste continue sur toute la largeur).
+ *  L'input range natif reste dessous, invisible mais focalisable : clavier et lecteur d'écran n'ont rien perdu.
+ *  Le toucher et la souris passent par la rangée elle-même, qui connaît la place des points et mène à la page
+ *  la plus proche. Les repères de chant restent dans le DOM (focalisables, Entrée) mais ne captent aucun
+ *  pointeur : leur zone de 44 px recouvrirait le point voisin. Chaque élément arrête les pointeurs : un geste
+ *  ici ne tourne jamais la page par la racine. */
+export function CurseurPage({ total, courante, reperes, libelle, texteValeur, pageVignette, onAller }: Props) {
   const [visee, setVisee] = useState<number | null>(null);
   const minuterie = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(minuterie.current), []);
   const racine = useRef<HTMLDivElement>(null);
-  // Glissé commencé sur un repère : il déplace quand même le curseur (la zone du repère recouvre la piste).
-  const glisse = useRef<{ x: number; actif: boolean } | null>(null);
+  const glisseRangee = useRef(false);
+
+  // Place de chaque page sur la rangée : un pas par page, plus un écart à chaque début de chant.
+  const debuts = [...reperes].map((r) => r.page).sort((a, b) => a - b);
+  const indiceChant = (p: number) => Math.max(0, debuts.filter((d) => d <= p).length - 1);
+  const place = (p: number) => p + ECART_CHANTS * indiceChant(p);
+  const longueur = Math.max(place(total - 1), 1);
+  const fraction = (p: number) => place(p) / longueur;
+
   const pageA = (clientX: number) => {
     const r = racine.current?.getBoundingClientRect();
     if (!r) return courante;
-    const f = (clientX - r.left - MARGE_POUCE) / (r.width - 2 * MARGE_POUCE);
-    return Math.round(Math.min(1, Math.max(0, f)) * max);
+    const f = Math.min(1, Math.max(0, (clientX - r.left - MARGE) / (r.width - 2 * MARGE)));
+    const u = f * longueur;
+    let meilleure = 0;
+    for (let p = 0; p < total; p++) if (Math.abs(place(p) - u) < Math.abs(place(meilleure) - u)) meilleure = p;
+    return meilleure;
   };
 
   const viser = (p: number) => {
@@ -49,34 +72,80 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, et
     clearTimeout(minuterie.current);
     minuterie.current = setTimeout(() => setVisee(null), delai);
   };
-  const position = (p: number) => `calc(${MARGE_POUCE}px + (100% - ${2 * MARGE_POUCE}px) * ${p / max})`;
+  const aller = (p: number) => {
+    viser(p);
+    onAller(p);
+  };
+  const position = (p: number) => `calc(${MARGE}px + (100% - ${2 * MARGE}px) * ${fraction(p)})`;
 
+  const cible = visee ?? courante;
   const chantVise =
     visee === null ? null : [...reperes].reverse().find((r) => r.page <= visee) ?? reperes[0] ?? null;
-  // Titre du chant de la page courante : le dernier repère dont la page est <= courante.
-  const titreCourant = [...reperes].reverse().find((r) => r.page <= courante)?.titre ?? reperes[0]?.titre ?? "";
-  const frac = visee === null ? 0 : visee / max;
+  const frac = fraction(cible);
+
+  // Rangée de points, ou piste continue d'un trait par chant au-delà de MAX_POINTS pages.
+  const marques = (pleine: boolean) =>
+    total <= MAX_POINTS
+      ? Array.from({ length: total }, (_, p) => (
+          <span
+            key={p}
+            data-point={pleine ? "passe" : "inactif"}
+            className="absolute top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{ left: position(p), background: pleine ? COULEUR : COULEUR_INACTIVE }}
+          />
+        ))
+      : (debuts.length ? debuts : [0]).map((d, i, tous) => {
+          const fin = (tous[i + 1] ?? total) - 1;
+          return (
+            <span
+              key={d}
+              data-point={pleine ? "passe" : "inactif"}
+              className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full"
+              style={{ left: position(d), width: `calc((100% - ${2 * MARGE}px) * ${(place(fin) - place(d)) / longueur})`, background: pleine ? COULEUR : COULEUR_INACTIVE }}
+            />
+          );
+        });
 
   return (
-    <div className="basis-full w-full">
     <div
       ref={racine}
       data-curseur-page
-      className="relative h-10 -mb-1.5 w-full overflow-x-clip"
-      onPointerDown={arreter}
-      onPointerUp={arreter}
+      className="relative mx-auto h-11 touch-none"
+      style={{ width: total <= MAX_POINTS ? `min(100%, ${longueur * PAS + 2 * MARGE}px)` : "100%" }}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        if (e.button > 0) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        glisseRangee.current = true;
+        aller(pageA(e.clientX));
+      }}
+      onPointerMove={(e) => {
+        if (glisseRangee.current) aller(pageA(e.clientX));
+      }}
+      onPointerUp={(e) => {
+        e.stopPropagation();
+        if (glisseRangee.current) {
+          glisseRangee.current = false;
+          oublier(400);
+        }
+      }}
+      onPointerCancel={() => {
+        glisseRangee.current = false;
+        oublier(0);
+      }}
     >
       {chantVise && (
         <div
           aria-hidden="true"
           data-bulle-curseur
-          className="pointer-events-none absolute bottom-full mb-1 max-w-[70%] truncate rounded-md border border-border bg-background px-2 py-1 text-xs font-semibold text-foreground shadow-md"
+          className="pointer-events-none absolute bottom-[calc(100%-4px)] w-max max-w-[min(80vw,20rem)] rounded-xl border border-border bg-background px-3 py-1.5 text-center shadow-lg"
           style={{
-            left: position(visee ?? 0),
-            transform: `translateX(${frac < 0.25 ? "-8px" : frac > 0.75 ? "calc(-100% + 8px)" : "-50%"})`,
+            left: position(cible),
+            transform: `translateX(${frac < 0.2 ? "-14px" : frac > 0.8 ? "calc(-100% + 14px)" : "-50%"})`,
           }}
         >
-          {chantVise.titre}
+          <div data-bulle-titre className="truncate text-sm font-semibold leading-tight text-foreground">{chantVise.titre}</div>
+          <div data-bulle-page className="text-xs leading-tight text-muted-foreground tabular-nums">{pageVignette(cible + 1)}</div>
         </div>
       )}
       <input
@@ -87,20 +156,11 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, et
         value={courante}
         aria-label={libelle}
         aria-valuetext={texteValeur}
-        className="absolute left-0 right-0 top-0.5 m-0 h-11 w-full cursor-pointer accent-[hsl(var(--primary))]"
+        className="peer pointer-events-none absolute inset-x-0 top-0 m-0 h-11 w-full opacity-0"
         onChange={(e) => {
-          const p = Number(e.target.value);
-          viser(p);
-          onAller(p);
+          aller(Number(e.target.value));
           oublier(1500);
         }}
-        onPointerDown={() => viser(courante)}
-        onPointerUp={(e) => {
-          oublier(400);
-          // Le focus resterait sur le curseur : PageUp / PageDown des pédales sauteraient alors de dix pages.
-          e.currentTarget.blur();
-        }}
-        onPointerCancel={() => oublier(0)}
         onBlur={() => oublier(0)}
         onKeyDown={(e) => {
           // Pédales Bluetooth : PageUp / PageDown / espace tournent d'une page, comme hors du curseur.
@@ -110,6 +170,21 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, et
           onAller(courante + delta);
         }}
       />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 peer-focus-visible:[&_[data-poignee-curseur]]:ring-2 peer-focus-visible:[&_[data-poignee-curseur]]:ring-ring">
+        {marques(false)}
+        <div
+          className="absolute inset-0"
+          style={{ clipPath: `inset(0 calc(100% - ${MARGE}px - (100% - ${2 * MARGE}px) * ${frac}) 0 0)` }}
+        >
+          {marques(true)}
+        </div>
+        {/* Poignée ronde, dans la couleur des icônes. */}
+        <span
+          data-poignee-curseur
+          className="absolute top-1/2 h-[22px] w-[22px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background shadow-md"
+          style={{ left: position(cible), background: COULEUR }}
+        />
+      </div>
       {reperes.map((r) => (
         <button
           key={`${r.page}-${r.titre}`}
@@ -118,42 +193,12 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, et
           data-page={r.page}
           data-titre={r.titre}
           aria-label={r.titre}
-          onClick={() => {
-            if (glisse.current?.actif) return;
-            onAller(r.page);
-          }}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            glisse.current = { x: e.clientX, actif: false };
-            e.currentTarget.setPointerCapture(e.pointerId);
-          }}
-          onPointerMove={(e) => {
-            const g = glisse.current;
-            if (!g || (!g.actif && Math.abs(e.clientX - g.x) < 6)) return;
-            g.actif = true;
-            const p = pageA(e.clientX);
-            viser(p);
-            onAller(p);
-          }}
-          onPointerUp={(e) => {
-            e.stopPropagation();
-            if (glisse.current?.actif) oublier(400);
-            // Le clic qui suit le relâchement lit encore `actif` : on libère après lui.
-            setTimeout(() => { glisse.current = null; }, 0);
-          }}
-          onPointerCancel={() => { glisse.current = null; }}
-          // Zone de 44 × 44 px centrée sur le trait, qui reste fin.
-          className="absolute -top-1.5 flex h-11 w-11 -translate-x-1/2 touch-none items-start justify-center pt-1.5"
+          onClick={() => onAller(r.page)}
+          // Zone de 44 × 44 px centrée sur le premier point du chant, sans pointeur : la rangée traite tout toucher.
+          className="pointer-events-none absolute top-0 h-11 w-11 -translate-x-1/2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           style={{ left: position(r.page) }}
-        >
-          <span className="block h-3 w-0.5 rounded-full bg-muted-foreground/70" />
-        </button>
+        />
       ))}
-    </div>
-    <div data-curseur-etiquette className="mt-1 flex items-baseline justify-between gap-3 text-[12px] text-muted-foreground">
-      <span data-etiquette-titre className="min-w-0 truncate">{titreCourant}</span>
-      <span data-etiquette-page className="shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{etiquette}</span>
-    </div>
     </div>
   );
 }

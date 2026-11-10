@@ -265,6 +265,8 @@
     --sheet-accent: #1c6e7c;
 
     /* Section identity — accent (label / rail) + tint (block bg) */
+    /* Repères (DP-B) : encre du sigle sur les pastilles foncées (pont, fin, autre) — blanc en clair, encre en sombre. */
+    --rep-encre-claire: #ffffff;
     --sec-intro: #5b7fa6;        --sec-intro-tint: #eef3f9;
     --sec-verse: #2c8a7d;        --sec-verse-tint: #e8f3f0;
     --sec-prechorus: #c1871f;    --sec-prechorus-tint: #faf2e1;
@@ -332,6 +334,7 @@
     --pinyin-color: #888e98;
     --sheet-accent: #63c3cf;
 
+    --rep-encre-claire: #0e0e10;
     --sec-intro: #8fb2dc;        --sec-intro-tint: #161f2a;
     --sec-verse: #59bdac;        --sec-verse-tint: #112320;
     --sec-prechorus: #e0b35b;    --sec-prechorus-tint: #251e0f;
@@ -819,6 +822,7 @@
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
   .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  .chants-chant main.song-zoom { --marge-bande: 0px; } /* plus de remplissage : la bande Scène ne sort pas de la colonne */
   .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
@@ -840,6 +844,7 @@
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
   :root[data-barre="reduite"] .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  :root[data-barre="reduite"] .chants-chant main.song-zoom { --marge-bande: 0px; }
   :root[data-barre="reduite"] .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   :root[data-barre="reduite"] .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
@@ -861,6 +866,7 @@
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
   .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  .chants-chant main.song-zoom { --marge-bande: 0px; } /* plus de remplissage : la bande Scène ne sort pas de la colonne */
   .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }

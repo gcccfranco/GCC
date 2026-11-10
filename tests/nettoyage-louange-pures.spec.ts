@@ -1,12 +1,13 @@
 import { expect, test } from "@playwright/test";
-import type { PerformanceBlock } from "../src/lib/performance/blocks";
+import type { PerformanceBlock, SectionBlock } from "../src/lib/performance/blocks";
 import { GRAND_ECRAN, type PerfPage } from "../src/lib/performance/columns";
 import {
   NEXT_PILL_RESERVE,
-  layoutSong,
+  layoutFeuilleDeRoute,
   lireEcran,
   pageAncree,
   paginer,
+  poidsSection,
   replisStructure,
   sansTransitions,
   splitSheetPages,
@@ -83,33 +84,28 @@ test.describe("splitSheetPages", () => {
   });
 });
 
-test.describe("layoutSong", () => {
-  test("tout tient : une colonne, agrandie à la place restante", () => {
-    const page = layoutSong(0, [1, 2, 3], [10, 100, 100, 100], [0, 50, 50, 50], 400, 200);
-    expect(page).toEqual({ header: 0, cols: [[1, 2, 3]], scale: 350 / 300 });
+test.describe("layoutFeuilleDeRoute", () => {
+  test("tout tient : une page, échelle 1, lignes étirées", () => {
+    // room = 400 - 10 - 40 = 350 ; lignes = 300 → rapport 350/300 ≥ 1
+    expect(layoutFeuilleDeRoute(0, [1, 2, 3], [10, 100, 100, 100], 400)).toEqual([{ header: 0, cols: [[1, 2, 3]], scale: 1, etire: true, naturel: 300 }]);
   });
-  test("trop haut : deux colonnes équilibrées, échelle de la plus haute", () => {
-    const page = layoutSong(null, [0, 1, 2, 3], [100, 100, 100, 100], [20, 20, 20, 20], 300, 216);
-    expect(page.header).toBeNull();
-    expect(page.cols).toEqual([[0, 1], [2, 3]]);
-    expect(page.scale).toBeCloseTo(1.3, 10);
+  test("trop haut : coupe entre deux lignes, pages suivantes sans en-tête", () => {
+    const pages = layoutFeuilleDeRoute(0, [1, 2, 3, 4], [10, 100, 100, 100, 100], 300);
+    expect(pages.map((p) => [p.header, p.cols])).toEqual([[0, [[1, 2]]], [null, [[3, 4]]]]);
+    expect(pages.every((p) => p.scale === 1)).toBe(true);
   });
-  test("un bloc plus grand que la page est réduit", () => {
-    expect(layoutSong(null, [0], [500], [10], 300, 100)).toEqual({ header: null, cols: [[0]], scale: 260 / 500 });
+  test("une ligne plus haute que la page reste seule sur sa page", () => {
+    expect(layoutFeuilleDeRoute(null, [0, 1], [500, 50], 300).map((p) => p.cols)).toEqual([[[0]], [[1]]]);
   });
-  test("agrandissement plafonné à ×3, puis limité par la largeur du libellé", () => {
-    expect(layoutSong(null, [0], [10], [10], 300, 1000).scale).toBe(3);
-    expect(layoutSong(null, [0], [10], [200], 300, 300).scale).toBe(1.5);
+  test("peu de lignes sur une grande page : étirée quand même (l'écran plafonne à ×3 la hauteur naturelle)", () => {
+    expect(layoutFeuilleDeRoute(null, [0], [50], 1000)).toEqual([{ header: null, cols: [[0]], scale: 1, etire: true, naturel: 50 }]);
   });
-  test("un libellé plus large que la colonne n'est pas agrandi", () => {
-    expect(layoutSong(null, [0], [10], [400], 300, 300).scale).toBe(1);
-  });
-  test("aucune section : une colonne vide", () => {
-    expect(layoutSong(0, [], [10], [0], 300, 500)).toEqual({ header: 0, cols: [[]], scale: 3 });
+  test("aucune ligne : une page vide avec l'en-tête", () => {
+    expect(layoutFeuilleDeRoute(0, [], [10], 300)).toEqual([{ header: 0, cols: [[]], scale: 1 }]);
   });
   test("place gardée pour la pastille Suivant", () => {
     expect(NEXT_PILL_RESERVE).toBe(40);
-    expect(layoutSong(null, [0], [260], [1], 300, 1).scale).toBe(1);
+    expect(layoutFeuilleDeRoute(null, [0, 1], [140, 140], 300).length).toBe(2);
   });
 });
 
@@ -256,5 +252,16 @@ test.describe("lireEcran", () => {
   test("ordinateur : grand écran, souris", () => {
     g.window = { innerWidth: 1440, innerHeight: 900, matchMedia: (q: string) => ({ matches: q === GRAND_ECRAN }) };
     expect(lireEcran()).toEqual({ grand: true, largeur: 1440, hauteur: 900, tabletteVerticale: false });
+  });
+});
+
+test.describe("poidsSection", () => {
+  const bloc = (lignes: string[][]) =>
+    ({ section: { lines: lignes.map((l) => ({ type: "line", tokens: l.map((v) => ({ type: v.startsWith("[") ? "chord" : "lyric", value: v })) })) } }) as unknown as SectionBlock;
+  test("nombre de lignes de paroles, entre 1 et 6", () => {
+    expect(poidsSection(bloc([]))).toBe(1);
+    expect(poidsSection(bloc([["[A]"], ["[B]", " "]]))).toBe(1);
+    expect(poidsSection(bloc([["a"], ["b"], ["c"]]))).toBe(3);
+    expect(poidsSection(bloc(Array.from({ length: 9 }, () => ["x"])))).toBe(6);
   });
 });
