@@ -65,6 +65,37 @@ passe ; une retouche ne se relance que pour un défaut visible.
   `args : { commit, build? }`.
 - Proposé, sur go : un workflow `/rude-epreuve` (détail dans l'archive, § 4).
 
+**Skills** (`.claude/skills/`, 58 ; aiguillage du 10/11/2026, règle courte dans `.claude/CLAUDE.md`). Un skill coûte
+trois fois : la **liste** (nom et description de chaque skill visible, relue par chaque session et chaque agent ; la
+doc de Claude Code lui donne environ 1 % du contexte, et au-delà les descriptions les moins utilisées tombent), le
+**chargement** (le corps, à chaque emploi) et le **déclenchement à tort**. D'où : 23 visibles (6 900 caractères ; 26
+et 8 800 le matin du 10/11/2026), 35 dormants (`disable-model-invocation: true`) ouverts par chemin ou lancés par
+`/nom`, et un seul porteur par skill. Un dormant ne se précharge pas dans un agent. Poids en milliers de caractères.
+
+| Moment | Skill (poids) | Porteur |
+| --- | --- | --- |
+| Cadrer | `spec-driven-development` (13), `grilling` (2) ; à la main : `/grill-me`, `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/to-questionnaire`, `/wayfinder` | session principale ; Timothée |
+| Implémenter | `ponytail` (3,5) préchargé ; `incremental-implementation` (10), `frontend-ui-engineering` (11) | `executant` ; session qui code elle-même |
+| Bug | `debugging-and-error-recovery` (11), puis un seul dormant selon la cause : `click-path-audit` (8), `e2e-testing` (8), `react-patterns` (11), `nextjs-turbopack` (3), `typescript-patterns` (24) | étape « Conseil » de `/tranche` ; session qui débogue |
+| Libellés fr et 中文 | `i18n-sync` (7) | session qui rédige la consigne |
+| Tests | `test-driven-development` (17), `tdd` (4) | sur besoin |
+| Relire | axe « allégé » de `ponytail-review`, porté par la consigne ; `ponytail-review` (5), en mots simples pour Timothée ; `code-review-and-quality` (21) avant `main` | `relecteur` ; session principale |
+| Livrer | `git-workflow-and-versioning` (14), `resolving-merge-conflicts` (1) | session principale |
+| Auditer | `ponytail-audit` (5), un agent, avant tout `/audit-code` ; `ponytail-debt` (2) pour les `shortcut:` ; `security-and-hardening` (28), `performance-optimization` (22), `react-performance` (18) | session principale, par section |
+| Coût, passage de main | `context-budget` (6) ; `/handoff` au plafond de 200 000 jetons | session principale ; Timothée |
+| Direction de design | `frontend-design` (9) + `apple-design` (23) préchargés ; `taste-skill` (87) par passages | `directeur-artistique` |
+| Planche | `web-design-engineer` (35) + `frontend-design` préchargés ; `dimensional-drawing` (9) pour une planche cotée, après validation ; `dimensional-drawing-motion` (6) sur demande | `maquettiste` |
+| Critique | `.claude/references/critique-gcc.md` ; sources, pour un point précis : `impeccable` (10), `avoid-ai-design` (14), `web-design-guidelines` (1), `unslop` (31) | `critique-design` |
+| Démonstration du site | `stageshow` (19, allégé : le kit se prend dans un clone temporaire) | session principale, sur demande |
+| Hors site | `astryx` (2) : idées pour une planche, jamais dans le code du site | sur demande de Timothée |
+| Code, architecture | `graphify` (33 ; les commandes sont dans le `CLAUDE.md`), `codebase-design` (6), `domain-modeling` (3), `/improve-codebase-architecture` | `chercheur` ; sur besoin |
+| Divers | `research` (1), `prototype` (3), `writing-for-agents` (11, avant de toucher un `CLAUDE.md`, un agent ou un skill) ; à la main : `/ask-matt`, `/teach`, `/triage`, `/wait-what`, `/setup-matt-pocock-skills`, `/ponytail-help`, `/ponytail-gain` | sur besoin ; Timothée |
+
+`karpathy-guidelines` (dormant) est déjà le § « Comportement » du `CLAUDE.md` racine. Origine des 19 skills du
+10/11/2026 au soir : `multica-ai/andrej-karpathy-skills`, `dietrichgebert/ponytail` (6), `affaan-m/ECC` (8 sur 314),
+`benjitaylor/skills` (`stageshow`), `enesozturk/dimensional-drawing` (2), `meta/astryx`. `impeccable` reste la 4.8.0
+allégée (seule la description, plus courte, vient de la 4.8.2 : dix références adaptées à la main seraient écrasées).
+
 ## 5. Un lot, de bout en bout
 
 1. **Timothée demande.** La session principale (Opus) fait la planche si l'écran change, puis la spec avec ses
@@ -165,6 +196,6 @@ chaque agent par une liste `tools:`, à la place de `disallowedTools`.
 | `executant`, `maquettiste` | `Bash, Read, Edit, Write, Grep, Glob` |
 
 Ils y perdent `Skill`, la recherche web, les connecteurs (GitHub, Notion, Drive, Todoist, Figma) et les outils de
-session cloud ; aucune consigne d'agent ne les demande. Le champ `skills:` de l'équipe design reste. Après le go :
+session cloud ; aucune consigne d'agent ne les demande. Le champ `skills:` de l'équipe design et de l'`executant` (`ponytail`, § 4) reste ; les skills dormants de l'aiguillage se lisent par chemin, avec `Read`. Après le go :
 mesure « après » dans une session neuve (les agents se chargent au démarrage), puis `/tranche` et `/planche` à vide et
 par une petite passe réelle, pour vérifier la sortie par `schema` et le préchargement des skills.

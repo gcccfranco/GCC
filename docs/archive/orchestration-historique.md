@@ -275,6 +275,33 @@ que le harnais ajoute hors liste. C'est ce qui fonde la proposition : une liste 
 retire les trois plus grosses pièces. Reste à vérifier sur nos agents, après le go : la sortie par `schema` dans les
 workflows et le préchargement par `skills:` sans l'outil `Skill`.
 
-**À côté.** `ponytail`, que l'`executant` préchargeait, n'est plus dans le dépôt et son en-tête n'a plus de champ
-`skills:`. `/audit-code` lance ses agents sans `agentType` : s'ils partent du même contexte, 60 agents × 68 000 jetons
+**À côté.** Au moment de la mesure, l'`executant` ne préchargeait rien ; `ponytail` lui a été rendu le même soir
+(§ 10), après la mesure « avant » : son contexte « après » compte donc ce skill en plus. `/audit-code` lance ses agents
+sans `agentType` : s'ils partent du même contexte, 60 agents × 68 000 jetons
 font l'essentiel des 5 millions annoncés ; non mesuré, à relever lors de l'essai des workflows.
+
+## 10. Skills du 10/11/2026 au soir et essai de repowise
+
+**Skills.** Demande de Timothée : installer sept sources, sans scan, et faire servir tous les skills du dépôt au
+moindre coût. Fait : 19 skills ajoutés (58 au total), 22 rendus dormants, liste visible passée de 26 skills et 8 833
+caractères à 23 et 6 904 ; aiguillage dans `orchestration.md` § 4. D'ECC (314 skills, environ 25 600 jetons de liste
+à eux seuls), 8 retenus. Constaté dans la session : la liste des skills se recharge à chaud, les définitions d'agents
+non ; le préchargement de `ponytail` par l'`executant` reste donc à constater dans une session neuve.
+
+**repowise 0.60.1** (demandé le même soir ; essayé sur une copie du dépôt, non installé).
+
+| | repowise | graphify 0.8.36 |
+| --- | --- | --- |
+| Installation | 3 min 09, 941 Mo | non mesurée |
+| Index | 2 min 47, 140 Mo (`.repowise/`) | 48 s, 29 Mo |
+| Mise à jour après un commit | 1 min 47 (graphe reconstruit en entier) | 48 s (même commande) |
+| Qui appelle `canSeeSetlist` | juste, 22 120 caractères | juste par `explain` (962), bruyant par `query` (6 231) |
+| Qui dépend de `src/lib/access.ts` (151 fichiers) | juste (151), 2 856 caractères | aucun nœud trouvé |
+| Version du cache de `public/sw.js` | trouvée ; pas la spec qui s'y réfère | `sw.js` absent du graphe |
+
+Ce que fait son installation complète : 43 lignes ajoutées à `.claude/CLAUDE.md` ; des hooks au niveau utilisateur
+(`~/.claude/settings.json`), dont un qui réécrit certaines commandes Bash et les approuve sans demande de permission,
+et un qui remplace la lecture d'un gros fichier par son squelette (103 065 → 9 476 caractères) ; un hook git
+`post-commit` qui relance l'index ; 10 outils MCP (16 971 caractères de définitions) ; une télémétrie active par
+défaut vers `api.repowise.dev` (coupée par `DO_NOT_TRACK=1`). Sans rien de cela : `repowise init --yes --no-prose
+--no-editor-setup`. Non établi : le comportement des hooks dans une vraie session, la qualité de `get_answer`.
