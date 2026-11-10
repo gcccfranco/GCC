@@ -68,7 +68,7 @@ passe ; une retouche ne se relance que pour un défaut visible.
 **Skills** (`.claude/skills/`, 58 ; aiguillage du 10/11/2026, règle courte dans `.claude/CLAUDE.md`). Un skill coûte
 trois fois : la **liste** (nom et description de chaque skill visible, relue par chaque session et chaque agent ; la
 doc de Claude Code lui donne environ 1 % du contexte, et au-delà les descriptions les moins utilisées tombent), le
-**chargement** (le corps, à chaque emploi) et le **déclenchement à tort**. D'où : 23 visibles (6 900 caractères ; 26
+**chargement** (le corps, à chaque emploi) et le **déclenchement à tort**. D'où : 23 visibles (6 800 caractères ; 26
 et 8 800 le matin du 10/11/2026), 35 dormants (`disable-model-invocation: true`) ouverts par chemin ou lancés par
 `/nom`, et un seul porteur par skill. Un dormant ne se précharge pas dans un agent. Poids en milliers de caractères.
 
@@ -77,11 +77,11 @@ et 8 800 le matin du 10/11/2026), 35 dormants (`disable-model-invocation: true`)
 | Cadrer | `spec-driven-development` (13), `grilling` (2) ; à la main : `/grill-me`, `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/to-questionnaire`, `/wayfinder` | session principale ; Timothée |
 | Implémenter | `ponytail` (3,5) préchargé ; `incremental-implementation` (10), `frontend-ui-engineering` (11) | `executant` ; session qui code elle-même |
 | Bug | `debugging-and-error-recovery` (11), puis un seul dormant selon la cause : `click-path-audit` (8), `e2e-testing` (8), `react-patterns` (11), `nextjs-turbopack` (3), `typescript-patterns` (24) | étape « Conseil » de `/tranche` ; session qui débogue |
-| Libellés fr et 中文 | `i18n-sync` (7) | session qui rédige la consigne |
+| Libellés fr et 中文 | `i18n-sync` (7) | session principale, quand elle écrit les libellés dans la spec |
 | Tests | `test-driven-development` (17), `tdd` (4) | sur besoin |
-| Relire | axe « allégé » de `ponytail-review`, porté par la consigne ; `ponytail-review` (5), en mots simples pour Timothée ; `code-review-and-quality` (21) avant `main` | `relecteur` ; session principale |
+| Relire | axe « allégé » de `ponytail-review`, porté par la consigne ; `ponytail-review` (5), en mots simples et en français pour Timothée ; `code-review-and-quality` (21) avant `main` | `relecteur` ; session principale |
 | Livrer | `git-workflow-and-versioning` (14), `resolving-merge-conflicts` (1) | session principale |
-| Auditer | `ponytail-audit` (5), un agent, avant tout `/audit-code` ; `ponytail-debt` (2) pour les `shortcut:` ; `security-and-hardening` (28), `performance-optimization` (22), `react-performance` (18) | session principale, par section |
+| Auditer | `ponytail-audit` (5), un agent, avant tout `/audit-code` ; `ponytail-debt` (2) pour les `shortcut:` ; `security-and-hardening` (18), `performance-optimization` (17), `react-performance` (18) | session principale, par section |
 | Coût, passage de main | `context-budget` (6) ; `/handoff` au plafond de 200 000 jetons | session principale ; Timothée |
 | Direction de design | `frontend-design` (9) + `apple-design` (23) préchargés ; `taste-skill` (87) par passages | `directeur-artistique` |
 | Planche | `web-design-engineer` (35) + `frontend-design` préchargés ; `dimensional-drawing` (9) pour une planche cotée, après validation ; `dimensional-drawing-motion` (6) sur demande | `maquettiste` |
@@ -94,7 +94,9 @@ et 8 800 le matin du 10/11/2026), 35 dormants (`disable-model-invocation: true`)
 `karpathy-guidelines` (dormant) est déjà le § « Comportement » du `CLAUDE.md` racine. Origine des 19 skills du
 10/11/2026 au soir : `multica-ai/andrej-karpathy-skills`, `dietrichgebert/ponytail` (6), `affaan-m/ECC` (8 sur 314),
 `benjitaylor/skills` (`stageshow`), `enesozturk/dimensional-drawing` (2), `meta/astryx`. `impeccable` reste la 4.8.0
-allégée (seule la description, plus courte, vient de la 4.8.2 : dix références adaptées à la main seraient écrasées).
+allégée (seule la description, plus courte, vient de la 4.8.2 : dix références adaptées à la main seraient écrasées). `security-and-hardening`
+et `performance-optimization` sont repris d'`addyosmani/agent-skills` dans leur version allégée (les exemples de code y
+sont passés dans `references/`, lus à la demande) ; les copies précédentes étaient d'anciennes versions exactes du repo.
 
 ## 5. Un lot, de bout en bout
 

@@ -18,7 +18,7 @@ React repo, bug fixes, security and privacy cases, small apps), 5 runs each,
 against the same agent without the skill. 18 of the tasks have hidden checks
 for correctness and safety. Each figure is the geometric mean of the per-task
 medians. They are measured, not computed from the current repo.
-Source: `benchmarks/results/2026-10-07-agentic.md` and the README.
+Source: `benchmarks/results/2026-10-07-agentic.md` and the README (fichiers de la source `dietrichgebert/ponytail`, non copiés ici).
 
 ## Scoreboard
 

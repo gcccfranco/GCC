@@ -6,6 +6,8 @@ description: >
   Use for /ponytail-help, "ponytail help", "how do I use ponytail".
 ---
 
+> **Dans GCC Louange** : seul le skill est copié, pas le plugin. Le bandeau, l'activation à chaque session, `PONYTAIL_DEFAULT_MODE`, la configuration et la mise à jour par `/plugin` sont sans objet ici ; `ponytail` est préchargé dans l'agent `executant`.
+
 # Ponytail Help
 
 Display this reference card when invoked. One-shot, do NOT change mode,

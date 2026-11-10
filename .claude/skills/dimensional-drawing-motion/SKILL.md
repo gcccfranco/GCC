@@ -4,6 +4,8 @@ disable-model-invocation: true
 description: Turn a finished dimensional drawing sheet into a ~10 s Apple-style motion film — lines draw themselves in, the camera pulls back, layers lift into an exploded view, the full sheet resolves. Use after the dimensional-drawing skill, or when asked to animate a spec sheet or anatomy drawing.
 ---
 
+> **Dans GCC Louange (10/11/2026)** : sur demande de Timothée seulement. Voie `adapters/headless/` seulement, sans `npm install` (Playwright est déjà dans le dépôt) ni installation de ffmpeg : s'il manque, rendre des images fixes (`--still`). Sorties dans `test-results/` ; pas d'artefact Motion, la conversation principale publie. Le `CLAUDE.md` racine gagne sur ce skill.
+
 # Dimensional drawing → motion
 
 Animate a sheet made with the `dimensional-drawing` skill. The film reads like a pen drawing the sheet while a camera moves over it. Same rules as the drawing: monochrome, slots not content, variable codes, unbranded.

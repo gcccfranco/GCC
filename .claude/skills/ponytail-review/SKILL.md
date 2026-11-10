@@ -9,6 +9,8 @@ description: >
   the last commit", "review my PR", "is this over-engineered", /ponytail-review.
 ---
 
+> **Dans GCC Louange** : rapport en français, phrases courtes, mêmes rubriques traduites. Le `CLAUDE.md` racine gagne sur ce skill.
+
 Review a change like the senior developer who will be paged when it breaks.
 Order of importance: correct, safe, holds under load, tested, fast, lean.
 Lean still matters: every extra line must be read, tested and fixed later.

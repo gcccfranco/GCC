@@ -9,6 +9,8 @@ description: >
   "find bloat", "what can I delete", /ponytail-audit.
 ---
 
+> **Dans GCC Louange** : rapport en français, phrases courtes, mêmes rubriques traduites. Le `CLAUDE.md` racine gagne sur ce skill.
+
 Audit the whole repo like the senior developer who just inherited it and
 will be paged when it breaks. Order of importance: correct, safe, holds under
 load, tested, fast, lean. Lean still matters: every extra line must be read,
