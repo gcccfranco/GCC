@@ -1463,7 +1463,10 @@ peut garder ~30 % de blanc → permettre une légère réduction (chiffres jamai
 de plus, à essayer au pupitre ; (2) entourage de feuille sur ordinateur, comme la planche → oui ; (3) `AGENTS.md` écrit par
 `next dev` au démarrage des serveurs de test → l'ignorer (`.gitignore`) ; et, non faits : `×2` lu par un lecteur d'écran,
 ligne de crédit du scan dans la dernière tranche, repli « un toucher mène au premier écran », vérification de
-`sections.json` / `marges.json` contre `index.json`, chiffres ≥ 17 px au téléphone en portrait (c'est JP-C).
+`sections.json` / `marges.json` contre `index.json`, chiffres ≥ 17 px au téléphone en portrait (c'est JP-C). **Vague 2 terminée le 10/11/2026** (JP-B4, 319db5f : bandeau
+L5 pour les traits d'avant les tranches, rechargement des données après échec, largeur sans les encoches ; spec
+`louange-jianpu-tranches` relancée à la tête : 152 réussis sur les cinq projets, tsc vert). Rien en ligne : la branche
+`claude/tender-johnson-99hadm` attend CA, FS-F, la relecture complète, puis l'ordre de Timothée.
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
