@@ -1439,7 +1439,15 @@ Timothée ; (4) demi-page en deux colonnes, colonne par colonne → garder ; (5)
 demi-page → garder pour l'instant, rognés à leur place peut-être avec AN ; et deux tests à durcir
 (`louange-demi-page.spec.ts:389-412`, coupe forcée en vue Structure ; clé `ap` demi-page coupée). Annotations : quand la
 vue Structure ou la demi-page change la composition d'une page, les traits ne sont jamais supprimés, mais le bandeau ne
-prévient que si la page garde les mêmes blocs ; à dire à l'équipe avec le reste.
+prévient que si la page garde les mêmes blocs ; à dire à l'équipe avec le reste. **Lot RP fini le 10/11/2026** (rôle proposé d'après le planning ; relecture
+légère : un défaut important, la pastille qui pouvait surgir après un choix manuel, renvoyé à la session avec deux
+mineurs et des tests). **À traiter à la relecture complète** (questions de la session RP, recommandation de la session
+d'origine) : (1) en tablette portrait, la pastille centrée cache des pastilles de structure → dès md, la caler à droite
+du bandeau ; (2) rôles sans vue (Orateur, Sono…) ignorés, Présidence + Orateur propose Présidence → garder ; (3) après
+« Aucun », retirer aussi l'étiquette « d'après le planning » de Je joue → oui ; (4) la pastille dit « Batterie » à qui
+joue du cajon → reprendre le mot du planning (« Cajon aujourd'hui · Passer en vue Batteur ») ; (5) zone `sr-only`
+permanente pour que la pastille soit annoncée → oui. Hors lot : la page d'une setlist sans date plante (`formatDate`,
+`SetlistDetailClient.tsx:1943`, antérieur à AO) → garde à ajouter.
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
