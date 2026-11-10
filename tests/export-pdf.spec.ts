@@ -3,6 +3,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { parsePdfStyle, pdfFileName } from "../src/lib/pdfStylePref";
 import { nuancePdfColors, sectionPdfPalette } from "../src/lib/pdf/colors";
+import { sectionColorKind } from "../src/lib/sectionPalette";
 import { compactPlan, compactTransitions, stripGroups } from "../src/lib/pdf/compact";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { resolveStructureOverride } from "../src/lib/chordpro/structure";
@@ -117,8 +118,11 @@ test("couleurs par section : même palette que l'écran, le reste en gris « aut
   expect(sectionPdfPalette("bridge").color).toBe("#7a5bcb");
   expect(sectionPdfPalette("outro").color).toBe("#4f6477");
   expect(sectionPdfPalette("coda").color).toBe("#4f6477");
+  // DP-G1 : « tag » a sa couleur (--sec-tag) comme à l'écran, y compris pour une section « other » nommée « Tag ».
+  expect(sectionPdfPalette("tag")).toEqual({ color: "#bd476a", tint: "#faedf0" });
+  expect(sectionPdfPalette(sectionColorKind({ type: "other", name: "Tag (x2)" }))).toEqual({ color: "#bd476a", tint: "#faedf0" });
+  expect(sectionPdfPalette(sectionColorKind({ type: "other", name: "Interlude" })).color).toBe("#6b7280");
   // Types sans couleur propre à l'écran (CHART_TYPE_COLOR) : gris « autre ».
-  expect(sectionPdfPalette("tag")).toEqual({ color: "#6b7280", tint: "#f1f3f6" });
   expect(sectionPdfPalette("instrumental").color).toBe("#6b7280");
   expect(sectionPdfPalette("other").color).toBe("#6b7280");
 });

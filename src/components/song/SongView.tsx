@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
-import { SECTION_PALETTE_KEY } from "@/lib/sectionPalette";
+import { SECTION_PALETTE_KEY, sectionColorKind } from "@/lib/sectionPalette";
 import { dpFullName, groupSteps, paletteKeyOf } from "@/lib/setlist/dp";
 import { uniqueSections } from "@/lib/setlist/uniqueSections";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
@@ -744,11 +744,11 @@ export function StructureStrip({
 // 3 px, texte à 6 px du filet), 56 px à partir de la tablette (pastille gélule de 44 × 38, sigle de 21 px, filet centré
 // dessous). Au-delà de deux signes (« Int », « Inst »), le sigle passe à 11 px (15 px dès la tablette) au lieu d'élargir la
 // pastille. Dès la tablette le filet ne se montre que s'il couvre au moins 24 px (jamais un bout isolé sous une section d'une
-// rangée). Au toucher la pastille ouvre le nom complet dans une petite bulle (cible de 44 × 44).
+// rangée). Au-delà de trois signes (« Bénédiction », « 尾声 » écrits tels quels) le sigle est coupé par une ellipse dans la pastille. Au toucher la pastille ouvre le nom complet dans une petite bulle (cible de 44 × 44).
 const FILET_EPAIS = new Set(["chorus", "postchorus", "outro", "final", "coda"]);
 // Encre du sigle : celle qui contraste le plus avec la pastille (≥ 4,5:1). En clair, le pont (#7a5bcb), la fin et la
-// coda (#4f6477) et le gris « autre » (#6b7280) prennent le blanc ; les autres et tout le thème sombre, l'encre #0e0e10.
-const PASTILLE_FONCEE = new Set(["var(--sec-bridge)", "var(--sec-outro)", "var(--sec-coda)", "var(--sec-other)"]);
+// coda (#4f6477), le tag (#bd476a) et le gris « autre » (#6b7280) prennent le blanc ; les autres et tout le thème sombre, l'encre #0e0e10.
+const PASTILLE_FONCEE = new Set(["var(--sec-bridge)", "var(--sec-outro)", "var(--sec-coda)", "var(--sec-tag)", "var(--sec-other)"]);
 
 /** Bulle du nom d'une section (Repères, Scène sous la tablette) : ouverte au toucher, fermée par un toucher dehors ou Échap. */
 function useBulleNom() {
@@ -757,7 +757,8 @@ function useBulleNom() {
   useEffect(() => {
     if (!ouvert) return;
     const dehors = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) setOuvert(false); };
-    const echap = (e: KeyboardEvent) => { if (e.key === "Escape") setOuvert(false); };
+    // preventDefault : le mode louange (qui écoute window) ne doit pas se fermer sur cet Échap-là ; le second le ferme.
+    const echap = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); setOuvert(false); } };
     document.addEventListener("pointerdown", dehors);
     document.addEventListener("keydown", echap);
     return () => { document.removeEventListener("pointerdown", dehors); document.removeEventListener("keydown", echap); };
@@ -787,7 +788,7 @@ function GouttiereReperes({ sigle, nom, epais, repeat, sansFilet, fontClass }: {
           className={`relative inline-flex h-6 w-6 cursor-pointer select-none items-center justify-center whitespace-nowrap rounded-full font-bold leading-none before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] md:h-[38px] md:w-11 ${long ? "text-[11px] md:text-[15px]" : "text-[14px] md:text-[21px]"} ${fontClass}`}
           style={{ background: "var(--rep-c)", color: "var(--rep-encre)" }}
         >
-          <span aria-hidden="true" data-repere-sigle>{sigle}</span>
+          <span aria-hidden="true" data-repere-sigle className={sigle.length > 3 ? "min-w-0 max-w-full overflow-hidden text-ellipsis" : undefined}>{sigle}</span>
           <span className="sr-only">{nom}</span>
         </button>
         {repeat > 1 && (
@@ -818,19 +819,32 @@ function GouttiereReperes({ sigle, nom, epais, repeat, sansFilet, fontClass }: {
  *  un toucher sur la lettre l'ouvre dans la même bulle que les Repères). */
 function ColonneScene({ sigle, label, nomComplet, repeat, nomVisible, police }: { sigle: string; label: string; nomComplet: string; repeat: number; nomVisible: boolean; police: string }) {
   const { ouvert, setOuvert, ref } = useBulleNom();
-  const taille = sigle.length > 3 ? "overflow-hidden text-ellipsis text-[16px] md:text-[20px]" : sigle.length > 2 ? "text-[20px] md:text-[26px]" : "text-[26px] md:text-[32px]";
+  const bouton = useRef<HTMLButtonElement>(null);
+  // Cotes larges : la lettre n'est plus qu'une étiquette (CSS : pointer-events none) ; elle sort alors de la tabulation. L'état est
+  // lu sur le rendu (la bande est un conteneur : sa largeur décide), jamais recalculé à part.
+  const [inerte, setInerte] = useState(false);
+  useLayoutEffect(() => {
+    const cadre = ref.current?.closest("[data-scene-cadre]");
+    if (!cadre) return;
+    const lire = () => setInerte(!!bouton.current && getComputedStyle(bouton.current).pointerEvents === "none");
+    lire();
+    const obs = new ResizeObserver(lire);
+    obs.observe(cadre);
+    return () => obs.disconnect();
+  }, [ref]);
+  const taille = sigle.length > 3 ? "overflow-hidden text-ellipsis text-[16px] scene-large:text-[20px]" : sigle.length > 2 ? "text-[20px] scene-large:text-[26px]" : "text-[26px] scene-large:text-[32px]";
   return (
     <div ref={ref} data-copy-ignore data-scene-colonne title={nomComplet} className="relative min-w-0">
-      <button type="button" data-scene-bouton onClick={() => setOuvert((o) => !o)} className="relative block max-w-full text-left leading-none before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 md:pointer-events-none md:cursor-default md:before:hidden">
+      <button ref={bouton} type="button" data-scene-bouton disabled={inerte} onClick={() => setOuvert((o) => !o)} className="relative block max-w-full text-left leading-none before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 scene-large:pointer-events-none scene-large:cursor-default scene-large:before:hidden">
         <span aria-hidden="true" data-scene-lettre className={`block whitespace-nowrap font-bold leading-none ${taille} ${police}`} style={{ color: "var(--scene-lettre)" }}>{sigle}</span>
-        {repeat > 1 && <span aria-hidden="true" data-scene-repeat className="mt-1 block text-[13px] font-semibold leading-none md:text-sm" style={{ color: "var(--scene-nom)" }}>×{repeat}</span>}
+        {repeat > 1 && <span aria-hidden="true" data-scene-repeat className="mt-1 block text-[13px] font-semibold leading-none scene-large:text-sm" style={{ color: "var(--scene-nom)" }}>×{repeat}</span>}
         <span className="sr-only">{nomComplet}</span>
       </button>
       {nomVisible && (
-        <span aria-hidden="true" data-scene-nom className={`mt-[5px] hidden text-xs leading-tight md:block ${police}`} style={{ color: "var(--scene-nom)" }}>{label}</span>
+        <span aria-hidden="true" data-scene-nom className={`mt-[5px] hidden text-xs leading-tight scene-large:block ${police}`} style={{ color: "var(--scene-nom)" }}>{label}</span>
       )}
       {ouvert && (
-        <span aria-hidden="true" data-repere-bulle className="absolute left-full top-0 z-30 ml-1 whitespace-nowrap rounded-md border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md md:hidden">
+        <span aria-hidden="true" data-repere-bulle className="absolute left-full top-0 z-30 ml-1 whitespace-nowrap rounded-md border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md scene-large:hidden">
           {nomComplet}
         </span>
       )}
@@ -959,7 +973,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
     </div>
   ) : null;
   if (disposition === "reperes") {
-    const couleurRepere = CHART_TYPE_COLOR[couleurDe ?? section.type] ?? "var(--sec-other)";
+    const couleurRepere = CHART_TYPE_COLOR[couleurDe ?? sectionColorKind(section)] ?? "var(--sec-other)";
     return (
       <div
         data-section
@@ -971,7 +985,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         <GouttiereReperes
           sigle={abbreviateSection(section)}
           nom={nomComplet}
-          epais={FILET_EPAIS.has(couleurDe ?? section.type)}
+          epais={FILET_EPAIS.has(couleurDe ?? sectionColorKind(section))}
           repeat={repeat}
           sansFilet={bodyHidden}
           fontClass={uiIsZh ? zh_lyric_font.className : chord_font.className}
@@ -995,7 +1009,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
     // Partition (lot DP-D) : page gravée, sans fond ni cadre de section. Chaque section s'ouvre sur une rangée : repère
     // encadré (lettre à l'encre, cadre de la couleur de section), nom en casse normale, « ×2 », modulation, source,
     // note et nuance ; le corps suit en pleine largeur de colonne, les sections se séparent par du blanc.
-    const couleurPartition = CHART_TYPE_COLOR[couleurDe ?? section.type] ?? "var(--sec-other)";
+    const couleurPartition = CHART_TYPE_COLOR[couleurDe ?? sectionColorKind(section)] ?? "var(--sec-other)";
     const police = uiIsZh ? zh_lyric_font.className : chord_font.className;
     return (
       <div
@@ -1035,43 +1049,54 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
     // colonne de lettre de 40 px au téléphone, 64 px dès la tablette. La bande sort des marges de la page (`--marge-bande`)
     // et les bandes se joignent par un filet de 1 px. Lettre : 70 % de la couleur mêlée de noir en clair (AA sur la teinte),
     // la couleur telle quelle en sombre ; la teinte `--sec-*-tint` suit le thème de l'appareil.
-    const couleurScene = CHART_TYPE_COLOR[couleurDe ?? section.type] ?? "var(--sec-other)";
+    const couleurScene = CHART_TYPE_COLOR[couleurDe ?? sectionColorKind(section)] ?? "var(--sec-other)";
     const police = uiIsZh ? zh_lyric_font.className : chord_font.className;
     return (
       <div
-        data-section
-        data-section-uids={occurrenceUids?.join(" ")}
-        data-scene
-        className="grid grid-cols-[40px_minmax(0,1fr)] gap-x-3 border-b border-b-[#d1d1d6] pb-[6px] pl-[10px] pr-[14px] pt-3 dark:border-b-[#3a3a3c] md:grid-cols-[64px_minmax(0,1fr)] md:gap-x-[18px] md:pb-[10px] md:pl-[18px] md:pr-7 md:pt-4 [--scene-lettre:color-mix(in_srgb,var(--rep-c)_70%,black)] dark:[--scene-lettre:var(--rep-c)]"
+        data-scene-cadre
+        className="[container-type:inline-size]"
         style={{
           breakInside: "avoid",
-          "--sec-c": LANG_THEME[isZh ? "zh" : "fr"].accent,
-          "--rep-c": couleurScene,
-          // Les accords restent bleus, en chinois aussi (Repères et Partition gardent la couleur de la langue).
-          "--jianpu-color": "var(--chord-color)",
-          "--scene-nom": `color-mix(in srgb, hsl(var(--foreground)) 72%, ${couleurScene.replace(")", "-tint)")})`,
-          background: couleurScene.replace(")", "-tint)"),
-          borderLeft: "6px solid var(--rep-c)",
-          marginInline: "calc(-1 * var(--marge-bande, 0px))",
-        } as React.CSSProperties}
+          marginLeft: "calc(-1 * var(--marge-bande-g, var(--marge-bande, 0px)))",
+          marginRight: "calc(-1 * var(--marge-bande-d, var(--marge-bande, 0px)))",
+        }}
       >
-        <ColonneScene sigle={abbreviateSection(section)} label={label} nomComplet={nomComplet} repeat={repeat} nomVisible={!bodyHidden} police={police} />
-        {bodyHidden ? (
-          <div data-copy-ignore className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
-            <span data-scene-nom-ligne>{label}</span>
-            {suite}
-          </div>
-        ) : (
-          <div className="min-w-0">
-            {suite && <div data-copy-ignore className="mb-1 flex flex-wrap items-center gap-x-2 text-xs">{suite}</div>}
-            {corps}
-          </div>
-        )}
+        <div
+          data-section
+          data-section-uids={occurrenceUids?.join(" ")}
+          data-scene
+          className="grid grid-cols-[40px_minmax(0,1fr)] gap-x-3 border-b border-b-[#d1d1d6] pb-[6px] pl-[10px] pr-[22px] pt-3 dark:border-b-[#3a3a3c] scene-large:grid-cols-[64px_minmax(0,1fr)] scene-large:gap-x-[18px] scene-large:pb-[10px] scene-large:pl-[18px] scene-large:pr-7 scene-large:pt-4 [--scene-lettre:color-mix(in_srgb,var(--rep-c)_70%,black)] dark:[--scene-lettre:var(--rep-c)]"
+          style={{
+            breakInside: "avoid",
+            "--sec-c": LANG_THEME[isZh ? "zh" : "fr"].accent,
+            "--rep-c": couleurScene,
+            // Les accords restent bleus, en chinois aussi (Repères et Partition gardent la couleur de la langue).
+            "--jianpu-color": "var(--chord-color)",
+            "--scene-nom": `color-mix(in srgb, hsl(var(--foreground)) 72%, ${couleurScene.replace(")", "-tint)")})`,
+            background: couleurScene.replace(")", "-tint)"),
+            borderLeft: "6px solid var(--rep-c)",
+          } as React.CSSProperties}
+        >
+          <ColonneScene sigle={abbreviateSection(section)} label={label} nomComplet={nomComplet} repeat={repeat} nomVisible={!bodyHidden} police={police} />
+          {bodyHidden ? (
+            <div data-copy-ignore className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
+              <span data-scene-nom-ligne>{label}</span>
+              {suite}
+            </div>
+          ) : (
+            // Retrait droit de la bande : 22 px au téléphone. La coupure laisse un vers déborder de 8 px au plus (DEBORD) ;
+            // il garde donc 14 px d'air avant le bord de l'écran, sans toucher à la coupure.
+            <div className="min-w-0">
+              {suite && <div data-copy-ignore className="mb-1 flex flex-wrap items-center gap-x-2 text-xs">{suite}</div>}
+              {corps}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
   return (
-    <div data-section data-section-uids={occurrenceUids?.join(" ")} className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(disposition === "sections" ? getChartSectionStyle(couleurDe ?? section.type) : getSectionStyle(couleurDe ?? section.type, isZh)), ...(bodyHidden ? { paddingBottom: 10 } : null) }}>
+    <div data-section data-section-uids={occurrenceUids?.join(" ")} className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(disposition === "sections" ? getChartSectionStyle(couleurDe ?? sectionColorKind(section)) : getSectionStyle(couleurDe ?? section.type, isZh)), ...(bodyHidden ? { paddingBottom: 10 } : null) }}>
       {/* Label de section — hors copie : la régie colle les paroles seules. */}
       <div data-copy-ignore className={bodyHidden ? undefined : "mb-1.5"} style={{ display: "flex", alignItems: "center", gap: 9 }}>
         <span

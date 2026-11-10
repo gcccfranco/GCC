@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
-import { attendreMiseEnPage, onStage, ouvrirOptions, type Langue } from "./helpers/louange";
+import { attendreCompteur, attendreMiseEnPage, fermerBarre, lireCompteur, onStage, ouvrirOptions, type Langue } from "./helpers/louange";
 
 // Lot DP, tranche DP-A (docs/spec-mode-louange-forscore-2.md) : la disposition de la partition, retenue par appareil,
 // partagée entre la page du chant, la vue partitions de la setlist et le mode louange ; sa reprise de l'ancien réglage
@@ -944,30 +944,32 @@ test("C3 : Scène, le nom de section est caché sous la tablette et s'ouvre au t
   await expect(page.locator("[data-repere-bulle]")).toHaveCount(0);
 });
 
-test("C5 : Scène au téléphone, les vers d'Abba Père tiennent sur autant de rangées qu'en Classique", async ({ page }) => {
-  test.skip(page.viewportSize()!.width !== 390, "téléphone 390 px");
+test("C5 / DP-G1 : Scène (mode louange, dès la tablette, deux colonnes à 1 024 px et 1 440 px compris), « Bien avant mes doutes » tient sur autant de rangées qu'en Classique", async ({ page }) => {
+  // Au téléphone la gouttière de Scène (6 + 10 + 40 + 12 px, retrait droit de 22 px) laisse 330 px au texte à 412 px contre 384
+  // en Classique, qui déborde dans ses marges : un vers de 340 à 380 px y est coupé en Scène par construction de la planche.
+  test.skip(page.viewportSize()!.width < 768, "dès la tablette");
   const rangees = async (disposition: string) => {
-    await page.addInitScript((d) => { localStorage.setItem("disposition", d); localStorage.setItem("perf-role-preset", "pianiste"); localStorage.setItem("perf-font-scale", "1"); }, disposition);
+    await page.addInitScript((d) => { localStorage.setItem("disposition", d); localStorage.setItem("perf-role-preset", "pianiste"); localStorage.setItem("perf-font-scale", "1"); localStorage.setItem("accords-aide-vue", "1"); }, disposition);
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(["abba-pere"]) }, `/setlists/${SETLIST_ID}`);
     await page.getByRole("button", { name: /Mode Louange/ }).click();
     await attendreMiseEnPage(page);
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
-    return page.evaluate(() => {
-      const vers = ["que Tu me formes", "les premiers", "mes doutes"];
-      const lignes = [...document.querySelectorAll("[data-performance-mode] [data-copy-line]")].filter((l) => !l.closest("[aria-hidden=true]"));
-      return vers.map((v) => {
-        const l = lignes.find((x) => (x.textContent ?? "").includes(v));
-        if (!l) return -1;
-        return new Set([...l.querySelectorAll("span, div")].filter((e) => e.children.length === 0 && (e.textContent ?? "").trim()).map((e) => Math.round(e.getBoundingClientRect().top / 10))).size > 0 ? Math.round(l.getBoundingClientRect().height) : 0;
-      });
-    });
+    const vers = new Map<string, number>();
+    const total = Number((await lireCompteur(page)).split("/")[1]);
+    for (let p = 1; p <= total; p++) {
+      await attendreCompteur(page, new RegExp(`^${p} /`));
+      const lus = await onStage(page, "[data-copy-line]").evaluateAll((ls) => ls.map((l) => [l.textContent ?? "", l.querySelectorAll("[data-rangee]").length] as const));
+      for (const [texte, n] of lus) if (texte.trim()) vers.set(texte, n);
+      if (p < total) await page.keyboard.press("ArrowRight");
+    }
+    return vers;
   };
   const classique = await rangees("classique");
-  expect(classique.every((h) => h > 0), "les trois vers trouvés").toBe(true);
+  expect([...classique.keys()].some((k) => /mes\s+doutes/.test(k)), "le vers « Bien avant mes doutes » est lu").toBe(true);
   await page.goto("about:blank");
-  const sceneH = await rangees("scene");
-  expect(sceneH.every((h) => h > 0)).toBe(true);
-  sceneH.forEach((h, i) => expect(h, `vers ${i + 1} : même hauteur (même nombre de rangées) qu'en Classique`).toBeLessThanOrEqual(classique[i] + 1));
+  const sceneR = await rangees("scene");
+  expect(sceneR.size, "mêmes vers lus").toBe(classique.size);
+  for (const [vers, n] of sceneR) if (/mes\s+doutes/.test(vers)) expect(n, "rangées de « Bien avant mes doutes » en Scène").toBeLessThanOrEqual(classique.get(vers) ?? 99);
 });
 
 test("D1 : Partition, l'en-tête d'un chant fusionné est en serif centré (vue partitions)", async ({ page }) => {
@@ -1073,3 +1075,215 @@ for (const [langue, slug] of [["FR", "abba-pere"], ["ZH", "谢谢你"]] as const
     expect(rangee.gauche, "tempo à gauche du compositeur").toBe(true);
   });
 }
+
+// ─── (g) DP-G1 : seconde relecture (Échap, balayages, Scène étroite, tag, ellipse) ──────────────────────────────
+
+/** Ouvre le mode louange sur la disposition donnée (compte et setlist simulés), barre fermée. */
+async function louangeEn(page: Page, disposition: string, slugs: string[] = LOUANGE_FR) {
+  await page.addInitScript((d) => {
+    localStorage.setItem("disposition", d);
+    localStorage.setItem("perf-role-preset", "pianiste");
+    localStorage.setItem("perf-font-scale", "1");
+    localStorage.setItem("accords-aide-vue", "1");
+    localStorage.setItem("jianpu-sheet-pref", "never");
+  }, disposition);
+  await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(slugs) }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  await expect(onStage(page, "[data-section]").first()).toBeVisible();
+  await fermerBarre(page);
+}
+
+for (const [d, bouton, seulementTelephone] of [["reperes", "[data-repere-pastille]", false], ["scene", "[data-scene-bouton]", true]] as const) {
+  test(`G1-1 : ${d}, Échap ferme la bulle du nom sans quitter le mode louange, le second Échap le quitte`, async ({ page }) => {
+    test.skip(seulementTelephone && !telephone(page), "la lettre n'est un bouton qu'au téléphone et en colonne étroite");
+    await louangeEn(page, d);
+    await onStage(page, bouton).nth(1).click();
+    await expect(page.locator("[data-repere-bulle]")).toHaveCount(1);
+    await page.keyboard.press("Escape");
+    await expect(page.locator("[data-repere-bulle]")).toHaveCount(0);
+    await expect(page.locator("[data-performance-mode]")).toHaveCount(1);
+    await page.keyboard.press("Escape");
+    await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
+  });
+}
+
+test("G1-4 : un balayage parti d'une pastille de Repères tourne la page, un toucher sur elle ne la tourne pas", async ({ page }) => {
+  // L'astuce du rappel (bulle de la première fois, posée par-dessus le haut de la page) déjà vue : elle couvrirait la pastille.
+  await page.addInitScript(() => {
+    localStorage.setItem("perf-astuce-rappel-joue", "1");
+    localStorage.setItem("perf-astuce-rappel-unique", "1");
+  });
+  await louangeEn(page, "reperes");
+  await page.keyboard.press("ArrowRight");
+  await attendreCompteur(page, /^2 \//);
+  const pastille = onStage(page, "[data-repere-pastille]").first();
+  await expect(pastille).toBeVisible();
+  const b = (await pastille.boundingBox())!;
+  const x = b.x + b.width / 2, y = b.y + b.height / 2;
+  expect(await page.evaluate(([px, py]) => !!document.elementFromPoint(px, py)?.closest("[data-repere-pastille]"), [x, y]), "rien ne recouvre la pastille").toBe(true);
+  // Toucher : la bulle s'ouvre (le toucher est traité), et la page n'a pas bougé.
+  await page.mouse.click(x, y);
+  await expect(page.locator("[data-repere-bulle]")).toHaveCount(1);
+  expect(await lireCompteur(page), "page inchangée après le toucher").toMatch(/^2 \//);
+  // Balayage vers la droite (page précédente) parti de la pastille.
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 150, y, { steps: 6 });
+  await page.mouse.up();
+  await attendreCompteur(page, /^1 \//);
+});
+
+test("G1-10b : un toucher sur la lettre de Scène (mode louange, téléphone) ouvre la bulle, laisse la page et la barre fermée", async ({ page }) => {
+  test.skip(!telephone(page), "téléphone seulement");
+  await louangeEn(page, "scene");
+  const avant = await lireCompteur(page);
+  await onStage(page, "[data-scene-bouton]").nth(1).click();
+  await expect(page.locator("[data-repere-bulle]")).toHaveCount(1);
+  expect(await lireCompteur(page), "page inchangée").toBe(avant);
+  await expect(page.locator("[data-barre-ouverte]")).toHaveCount(0);
+});
+
+test("G1-2 G1-8 : Scène, cotes larges ou compactes selon la place de la bande ; la lettre ne se focalise que si elle est un bouton", async ({ page }) => {
+  await louangeEn(page, "scene");
+  const deux = await page.locator("[data-performance-mode]").evaluate((el) => el.hasAttribute("data-deux-colonnes"));
+  const bandes = await onStage(page, "[data-scene]").evaluateAll((els) => els.map((el) => {
+    const col = el.querySelector("[data-scene-colonne]") as HTMLElement;
+    const bouton = el.querySelector("[data-scene-bouton]") as HTMLButtonElement;
+    const nom = el.querySelector("[data-scene-nom]");
+    return { largeur: Math.round(el.getBoundingClientRect().width), col: col.offsetWidth, nom: nom ? getComputedStyle(nom).display !== "none" : null, inerte: bouton.disabled };
+  }));
+  expect(bandes.length).toBeGreaterThan(0);
+  for (const b of bandes) {
+    // Cotes larges dès la tablette (768 px), sauf dans les deux colonnes du mode louange quand la bande fait moins de 600 px.
+    const large = page.viewportSize()!.width >= 768 && (!deux || b.largeur >= 600);
+    expect(b.col, `colonne de lettre (bande de ${b.largeur} px)`).toBeCloseTo(large ? 64 : 40, 0);
+    if (b.nom !== null) expect(b.nom, "nom visible = cotes larges").toBe(large);
+    expect(b.inerte, "lettre inerte (hors tabulation) seulement en cotes larges").toBe(large);
+  }
+});
+
+test("G1-8 : Scène sur la page du chant, dès la tablette la lettre est hors tabulation (nom affiché)", async ({ page }) => {
+  test.skip(telephone(page), "dès la tablette");
+  await scene(page);
+  await page.goto(`/songs/${CHANT_FR}`);
+  await expect(page.locator("main [data-scene-nom]").first()).toBeVisible();
+  for (const b of await page.locator("main [data-scene-bouton]").all()) await expect(b).toBeDisabled();
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => document.activeElement?.hasAttribute("data-scene-bouton")), "Tab ne s'arrête pas sur la lettre").toBe(false);
+  }
+});
+
+test("G1-6 : Scène au téléphone, le texte garde au moins 14 px d'air avant le bord de l'écran", async ({ page }) => {
+  test.skip(!telephone(page), "téléphone seulement");
+  await louangeEn(page, "scene");
+  const airs = await onStage(page, "[data-section]").evaluateAll((els) => els.map((el) => {
+    let droite = 0;
+    for (const n of el.querySelectorAll("[data-copy-line] *")) if (n.children.length === 0 && (n.textContent ?? "").trim()) droite = Math.max(droite, n.getBoundingClientRect().right);
+    return innerWidth - droite;
+  }));
+  expect(airs.length).toBeGreaterThan(0);
+  for (const a of airs) expect(a, "air à droite du texte le plus long").toBeGreaterThanOrEqual(13.5);
+});
+
+test("G1-7 : Scène, le bas de la dernière bande de chaque page reste à 8 px au moins au-dessus de la barre du bas", async ({ page }) => {
+  await louangeEn(page, "scene");
+  const total = Number((await lireCompteur(page)).split("/")[1]);
+  for (let p = 1; p <= total; p++) {
+    await attendreCompteur(page, new RegExp(`^${p} /`));
+    const m = await page.evaluate(() => {
+      const bandes = [...document.querySelectorAll("[data-performance-mode] [data-scene]")].filter((b) => !b.closest("[aria-hidden=true]"));
+      const c = document.querySelector("[data-performance-mode] [data-curseur-page]");
+      return { bas: Math.max(...bandes.map((b) => b.getBoundingClientRect().bottom)), limite: c ? c.getBoundingClientRect().top : innerHeight };
+    });
+    expect(m.limite - m.bas, `page ${p} : air sous la dernière bande`).toBeGreaterThanOrEqual(8);
+    if (p < total) await page.keyboard.press("ArrowRight");
+  }
+});
+
+test("G1-5 : la bande Scène va de bord à bord dans le mode louange (une colonne) et dans la vue partitions de la setlist, au téléphone", async ({ page }) => {
+  test.skip(!telephone(page), "téléphone seulement");
+  await louangeEn(page, "scene");
+  const bords = (sel: string) => page.locator(sel).evaluateAll((els) => els.filter((e) => !e.closest("[aria-hidden=true]")).map((e) => { const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(innerWidth - r.right)]; }));
+  for (const [g, d] of await bords("[data-performance-mode] [data-scene]")) { expect(g, "bord gauche").toBe(0); expect(d, "bord droit").toBe(0); }
+  await page.keyboard.press("Escape");
+  await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
+  await ouvrirPartitions(page);
+  await expect(page.locator("[data-scene]").first()).toBeVisible();
+  const lus = await bords("[data-scene]");
+  expect(lus.length).toBeGreaterThan(0);
+  for (const [g, d] of lus) { expect(g, "bord gauche (vue partitions)").toBe(0); expect(d, "bord droit (vue partitions)").toBe(0); }
+});
+
+test("G1-3 : la section « Tag » prend --sec-tag en Repères, Scène et Couleurs par section", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+  const rgbTag = async () => page.evaluate(() => { const s = document.createElement("span"); s.style.color = "var(--sec-tag)"; document.body.appendChild(s); const c = getComputedStyle(s).color; s.remove(); return c; });
+  const ouvrir = async (disposition: string) => {
+    await page.evaluate((d) => localStorage.setItem("disposition", d), disposition).catch(() => {});
+    await page.goto("/songs/grace-en-grace");
+  };
+  await page.goto("/songs/grace-en-grace");
+  const tag = await rgbTag();
+  await ouvrir("reperes");
+  await expect(page.locator("main [data-repere]").first()).toBeVisible();
+  const pastille = await page.locator("main [data-repere]", { has: page.locator("[data-repere-sigle]", { hasText: /^Tag$/ }) }).first().evaluate((el) => {
+    const p = el.querySelector("[data-repere-pastille]")!, f = el.querySelector("[data-repere-filet]");
+    return { pastille: getComputedStyle(p).backgroundColor, filet: f ? getComputedStyle(f).backgroundColor : null, encre: getComputedStyle(p).color };
+  });
+  expect(pastille.pastille, "pastille").toBe(tag);
+  if (pastille.filet) expect(pastille.filet, "filet").toBe(tag);
+  expect(pastille.encre, "encre blanche sur le rose du tag").toBe("rgb(255, 255, 255)");
+  await ouvrir("scene");
+  await expect(page.locator("main [data-scene]").first()).toBeVisible();
+  const bande = await page.locator("main [data-scene]", { has: page.locator("[data-scene-lettre]", { hasText: /^Tag$/ }) }).first().evaluate((el) => getComputedStyle(el).borderLeftColor);
+  expect(bande, "filet de la bande").toBe(tag);
+  await ouvrir("sections");
+  await expect(page.locator("main [data-section]").first()).toBeVisible();
+  const cadre = await page.locator("main [data-section]", { has: page.locator(".uppercase", { hasText: /^Tag$/ }) }).first().evaluate((el) => getComputedStyle(el).borderTopColor);
+  expect(cadre, "cadre de Couleurs par section").toBe(tag);
+});
+
+test.describe("G1-9 G1-10a : sigle « autre » long, coupé par une ellipse dans la colonne ou la pastille", () => {
+  test.use({ serviceWorkers: "block" });
+  // Fixture : la dernière section (« Fin ») du chant devient une section « autre » nommée « Bénédiction » ; vue partitions
+  // de la setlist simulée (la page du chant est rendue côté serveur : rien à substituer).
+  const nomLong = async (page: Page, disposition: string) => {
+    await page.addInitScript((d) => { localStorage.setItem("disposition", d); localStorage.setItem("jianpu-sheet-pref", "never"); }, disposition);
+    await page.route("**/api/song/au-nom-de-jesus", async (route) => {
+      const rep = await route.fetch();
+      await route.fulfill({ response: rep, body: (await rep.text()).replace("{start_of_verse: Fin}", "{start_of_part: Bénédiction}") });
+    });
+    await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(["au-nom-de-jesus"]) }, `/setlists/${SETLIST_ID}`);
+    await ouvrirPartitions(page);
+  };
+  test("Scène : « Inst » et « Bénédiction » restent dans la colonne de lettre (rectangles), « Bénédiction » est coupé", async ({ page }) => {
+    await nomLong(page, "scene");
+    await expect(page.locator("[data-scene]").first()).toBeVisible();
+    const l = await page.locator("[data-scene]").evaluateAll((els) => els.map((el) => {
+      const c = (el.querySelector("[data-scene-colonne]") as HTMLElement).getBoundingClientRect();
+      const t = el.querySelector("[data-scene-lettre]") as HTMLElement;
+      const r = t.getBoundingClientRect();
+      return { texte: t.textContent!, dedans: r.right <= c.right + 0.5 && r.left >= c.left - 0.5, coupe: t.scrollWidth > t.clientWidth };
+    }));
+    expect(l.some((x) => x.texte === "Inst"), "« Inst » présent").toBe(true);
+    const benediction = l.find((x) => x.texte === "Bénédiction");
+    expect(benediction, "« Bénédiction » présent").toBeTruthy();
+    expect(benediction!.coupe, "« Bénédiction » est coupé par l'ellipse").toBe(true);
+    for (const x of l) expect(x.dedans, `lettre ${x.texte} dans sa colonne`).toBe(true);
+  });
+  test("Repères : « Bénédiction » reste dans sa pastille (rectangles) et y est coupé", async ({ page }) => {
+    await nomLong(page, "reperes");
+    await expect(page.locator("[data-repere]").first()).toBeVisible();
+    const l = await page.locator("[data-repere]").evaluateAll((els) => els.map((el) => {
+      const p = (el.querySelector("[data-repere-pastille]") as HTMLElement).getBoundingClientRect();
+      const t = el.querySelector("[data-repere-sigle]") as HTMLElement;
+      const r = t.getBoundingClientRect();
+      return { texte: t.textContent!, dedans: r.right <= p.right + 0.5 && r.left >= p.left - 0.5, coupe: t.scrollWidth > t.clientWidth };
+    }));
+    const benediction = l.find((x) => x.texte === "Bénédiction");
+    expect(benediction, "« Bénédiction » présent").toBeTruthy();
+    expect(benediction!.coupe, "« Bénédiction » est coupé par l'ellipse").toBe(true);
+    for (const x of l) expect(x.dedans, `sigle ${x.texte} dans sa pastille`).toBe(true);
+  });
+});

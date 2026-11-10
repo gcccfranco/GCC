@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   darkMode: ["class"],
@@ -111,7 +112,21 @@ const config: Config = {
       },
     },
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [
+    tailwindcssAnimate,
+    // Scène (DP-G1) : cotes larges (colonne de lettre de 64 px, nom visible) dès la tablette (768 px) ; les cotes compactes du
+    // téléphone (40 px, lettre de 26 px, nom dans la bulle) en dessous, et dans les deux colonnes du mode louange
+    // (`data-deux-colonnes`) quand la bande (`data-scene-cadre`, container-type inline-size) fait moins de 600 px (~500 px à
+    // 1 024 px). Seuil : en cotes larges la gouttière prend 134 px, un vers long (~450 px) ne tient plus sous ~590 px ;
+    // 1 440 px en deux colonnes (~680) reste large. La page du chant (513 px à 1 280 px avec sa barre latérale) n'a pas de
+    // colonnes : elle garde les cotes larges.
+    plugin(({ addVariant }) => {
+      addVariant("scene-large", [
+        "@media (min-width: 768px) { [data-scene-cadre]:not([data-deux-colonnes] *) & }",
+        "@media (min-width: 768px) { @container (min-width: 600px) { & } }",
+      ]);
+    }),
+  ],
 };
 
 export default config;

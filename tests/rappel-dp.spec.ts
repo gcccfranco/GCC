@@ -73,6 +73,11 @@ test.describe("Dp : origine, palette, nom (pur)", () => {
     expect(paletteKeyOf({ type: "other", name: "Dernière phrase – ???" })).toBe("other");
     expect(paletteKeyOf({ type: "other", name: "Bénédiction" })).toBe("other");
     expect(paletteKeyOf({ type: "verse", name: "Couplet 1" })).toBe("verse");
+    // DP-G1 : « Tag » (type « other » du parseur) prend sa couleur ; « Interlude », « Instrumental », « Fin » restent « autre ».
+    expect(paletteKeyOf({ type: "other", name: "Tag (x2)" })).toBe("tag");
+    expect(paletteKeyOf({ type: "other", name: "Interlude" })).toBe("other");
+    expect(paletteKeyOf({ type: "other", name: "Instrumental" })).toBe("other");
+    expect(paletteKeyOf({ type: "other", name: "Fin" })).toBe("other");
     expect(paletteKeyOf({ type: "postchorus", name: "Post-refrain" })).toBe("chorus");
   });
 

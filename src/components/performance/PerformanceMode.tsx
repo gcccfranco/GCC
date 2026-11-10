@@ -721,7 +721,7 @@ export function PerformanceMode({
     ro.observe(bas, { box: "border-box" });
     return () => ro.disconnect();
   }, []);
-  const tapStart = useRef<{ x: number; y: number; time: number } | null>(null);
+  const tapStart = useRef<{ x: number; y: number; time: number; pastille?: boolean } | null>(null);
 
   // Annotations vectorielles de la page courante (toujours chargées, pas
   // seulement en mode annotation) + visibilité (œil dans les réglages)
@@ -1239,8 +1239,6 @@ export function PerformanceMode({
     // Fond d'une feuille : React fait remonter ses évènements jusqu'ici, ce n'est pas un toucher sur la page.
     // (Pas de stopPropagation sur le fond : Radix y détecte le toucher extérieur qui ferme la feuille.)
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) return;
-    // Pastille des Repères : son toucher ouvre le nom de la section, il ne tourne pas la page et n'ouvre pas la barre.
-    if ((e.target as Element).closest("[data-repere-pastille], [data-scene-bouton]")) { tapStart.current = null; return; }
     // Un menu est ouvert : ce toucher le ferme (Radix), il ne tourne pas la page et ne bascule pas la barre.
     if (popoverRef.current !== null) menuAuToucher.current = { t: e.nativeEvent.timeStamp };
     else if (menuAuToucher.current && menuAuToucher.current.t !== e.nativeEvent.timeStamp) menuAuToucher.current = null;
@@ -1253,7 +1251,8 @@ export function PerformanceMode({
     // Clic sur une barre de défilement (colonne du scan, barres toujours affichées) : pas un toucher.
     const el = e.target as HTMLElement;
     if (el.clientWidth > 0 && el.scrollHeight > el.clientHeight && e.nativeEvent.offsetX >= el.clientWidth) return;
-    tapStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+    // Pastille des Repères, lettre de Scène : leur TOUCHER ouvre le nom de la section (ni page tournée, ni barre) ; un balayage parti d'elles tourne la page.
+    tapStart.current = { x: e.clientX, y: e.clientY, time: Date.now(), pastille: !!el.closest("[data-repere-pastille], [data-scene-bouton]") };
   }, []);
 
   const handlePointerCancel = useCallback((e: React.PointerEvent) => {
@@ -1266,7 +1265,6 @@ export function PerformanceMode({
     if (e.pointerType === "pen") return;
     pointeursActifs.current.delete(e.pointerId);
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) { tapStart.current = null; return; }
-    if ((e.target as Element).closest("[data-repere-pastille], [data-scene-bouton]")) { tapStart.current = null; return; }
     if (menuAuToucher.current || popoverRef.current !== null) {
       menuAuToucher.current = null;
       tapStart.current = null;
@@ -1276,10 +1274,11 @@ export function PerformanceMode({
     const dx = e.clientX - tapStart.current.x;
     const dy = e.clientY - tapStart.current.y;
     const dt = Date.now() - tapStart.current.time;
+    const departPastille = tapStart.current.pastille;
     tapStart.current = null;
 
     const geste = classerGeste(dx, dy, dt);
-    if (geste === null) return;
+    if (geste === null || (geste === "toucher" && departPastille)) return;
     if (geste !== "toucher") {
       // Un balayage tourne la page, ne bascule jamais la barre, et se tait pendant l'annotation.
       if (annotateModeRef.current) return;
@@ -1354,6 +1353,9 @@ export function PerformanceMode({
   // « --marge-bande » : la bande de la disposition Scène sort de cette marge pour couvrir toute la largeur de la page (rien en deux colonnes : elle resterait dans sa colonne).
   const contentPadding = {
     "--marge-bande": twoColumns ? "0px" : "1.5rem",
+    // Mêmes termes que le padding : la bande va jusqu'au bord de l'écran, encoche comprise.
+    "--marge-bande-g": twoColumns ? "0px" : `calc(1.5rem + var(--sal, 0px) / ${fontScale})`,
+    "--marge-bande-d": twoColumns ? "0px" : `calc(1.5rem + var(--sar, 0px) / ${fontScale})`,
     paddingTop: `calc(1rem + var(--sat, 0px) / ${fontScale})`,
     paddingBottom: `calc(1rem + var(--sab, 0px) / ${fontScale})`,
     paddingLeft: `calc(1.5rem + var(--sal, 0px) / ${fontScale})`,
@@ -1455,6 +1457,7 @@ export function PerformanceMode({
     <div
       data-performance-mode
       data-disposition={disposition}
+      data-deux-colonnes={twoColumns || undefined}
       data-barre-ouverte={showChrome ? "" : undefined}
       data-demi-page={demiActif ? "" : undefined}
       data-cle-ancienne={cleAncienne ?? undefined}

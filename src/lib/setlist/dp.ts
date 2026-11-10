@@ -2,7 +2,7 @@ import type { SectionNuance } from "@/types/setList";
 import { sectionKindOfName } from "@/lib/chordpro/parser";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { LAST_PHRASE } from "@/lib/setlist/lastPhrase";
-import { SECTION_PALETTE_KEY } from "@/lib/sectionPalette";
+import { SECTION_PALETTE_KEY, sectionColorKind } from "@/lib/sectionPalette";
 import { isRepeatOf, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 
 // Règles des « Dernière phrase » (Dp) dans les bandeaux de structure et en
@@ -54,7 +54,7 @@ export function dpOrigin(section: NamedSection): string | null {
 /** Clé --sec-* d'une section : celle de son origine pour un Dp, sinon celle de
  *  son type ; « other » à défaut. */
 export function paletteKeyOf(section: NamedSection): string {
-  const kind = dpOrigin(section) ?? section.type;
+  const kind = dpOrigin(section) ?? sectionColorKind(section);
   return SECTION_PALETTE_KEY[kind] ?? "other";
 }
 
