@@ -6,13 +6,15 @@ import { StructureStrip } from "@/components/song/SongView";
 import type { JianpuSheetBlock, PerformanceBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { sansTransitions } from "@/lib/performance/pagination";
 import { langAccent } from "./langAccent";
+import { TeteFeuille } from "./TeteFeuille";
 
 /** Page 简谱 : en-tête d'une ligne et bandeau de structure en haut, scan
  *  (`children`, déjà rendu par PerformanceMode) à l'échelle de la hauteur qui
  *  reste. Un scan non certifié ne se coupe pas : une page de scan par page d'écran.
  *  Un scan certifié (`systemes.json`, lot JP-B) se coupe entre deux lignes : une page d'écran par tranche,
  *  en une seule feuille large (jamais de colonne de structure à gauche) ; « Ensuite » reste sur la dernière tranche
- *  du chant. L'en-tête
+ *  du chant ; il n'a ni en-tête d'une ligne ni bandeau : la tête de feuille (`tete`, `TeteFeuille`) occupe la hauteur
+ *  de la barre de titre, scan juste dessous. L'en-tête
  *  complet du chant n'est pas rendu : ses 200 px devenaient des marges
  *  blanches sur les côtés (la page est contrainte par sa hauteur) ; une ligne
  *  remplace le titre gravé, coupé depuis L3-T2b (K3). Le bandeau reprend ce que
@@ -27,6 +29,7 @@ export function PageScan({
   nextEntry,
   onSuivant,
   reserveBas = 0,
+  tete,
   children,
 }: {
   sheet: PerformanceBlock | undefined;
@@ -37,6 +40,8 @@ export function PageScan({
   onSuivant: () => void;
   /** Hauteur (px de la page) gardée sous le scan pour la pastille « Ensuite » flottante : elle ne recouvre pas le scan. */
   reserveBas?: number;
+  /** Scan certifié (tranche) : la tête de feuille, de la hauteur de la barre de titre. Absent : le scan entier, comme avant. */
+  tete?: { hauteur: string; encoche: string; allumes: ReadonlySet<string> };
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -78,6 +83,23 @@ export function PageScan({
       className={colonneScan ? "" : "mb-1.5"}
     />
   );
+  if (tete && enTete) {
+    return (
+      <div className="flex h-full flex-col">
+        <TeteFeuille
+          hauteur={tete.hauteur}
+          encoche={tete.encoche}
+          steps={sansTransitions(enTete.steps, showTransitions)}
+          allumes={tete.allumes}
+          songKey={enTete.songKey}
+          gravure={enTete.songKey !== enTete.originalKey ? enTete.originalKey : null}
+          tempo={enTete.tempo}
+          capo={enTete.capo}
+        />
+        <div className="min-h-0 flex-1" style={reserveBas ? { paddingBottom: reserveBas } : undefined}>{children}</div>
+      </div>
+    );
+  }
   // Paysage sur grand écran : l'en-tête et le bandeau passent dans une
   // colonne de la marge gauche, « Ensuite » en bas ; le scan, seul à
   // droite, prend toute la hauteur entre les barres.

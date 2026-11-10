@@ -137,6 +137,9 @@ test("barre de titre : Setlist, Repères et Je joue à gauche, titre au centre, 
 });
 
 test("barre de titre en 中文 : mêmes boutons, noms chinois", async ({ page }) => {
+  // Scan non certifié : depuis JP-B2, un scan certifié (一生爱你) a des Repères (sections.json). On répond à systemes.json par « aucun chant certifié ».
+  await page.route("**/jianpu/systemes.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
   await ouvrir(page, { slugs: ZH, zh: true });
   const noms = (await boutonsHaut(page)).map((b) => b.nom);
   // Ces deux chants sont des scans 简谱 : pas de section, donc pas de bouton Repères (段落).
@@ -276,6 +279,9 @@ test("barre de titre : le titre est centré sur l'écran, groupes alignés à le
 });
 
 test("barre de titre : le titre reste centré sur un chant sans Repères (scan 简谱, zh)", async ({ page }) => {
+  // Scan non certifié : depuis JP-B2, un scan certifié (一生爱你) a des Repères (sections.json). On répond à systemes.json par « aucun chant certifié ».
+  await page.route("**/jianpu/systemes.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
   await ouvrir(page, { slugs: ZH, zh: true });
   await expect(page.getByRole("button", { name: "段落" })).toHaveCount(0);
   const titre = (await page.locator("[data-barre-haut] p").first().boundingBox())!;

@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreCompteur, fermerBarre, lireCompteur, onStage } from "./helpers/louange";
+import { attendreCompteur, fermerBarre, lireCompteur, onStage, ouvrirMenu } from "./helpers/louange";
 import { bornesX, tranchesScan } from "../src/lib/performance/tranchesScan";
 
 // Lot JP-B, tranche 1 (docs/spec-mode-louange-forscore-2.md) : un scan 简谱 certifié (`systemes.json`) se coupe
@@ -29,14 +29,18 @@ const MUSICIEN: FakeProfile = {
 // Captures à l'échelle 1 : on les regarde, elles n'ont pas à peser des mégaoctets.
 test.use({ deviceScaleFactor: 1 });
 
-async function ouvrirLouange(page: Page, opts: { cles?: Record<string, string>; sombre?: boolean; chants?: string[] } = {}) {
+async function ouvrirLouange(
+  page: Page,
+  opts: { cles?: Record<string, string>; sombre?: boolean; chants?: string[]; zh?: boolean; surcharge?: Record<string, Record<string, unknown>> } = {},
+) {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript(
-    ([role, sombre]) => {
+    ([role, sombre, zh]) => {
       localStorage.setItem("perf-role-preset", role as string);
       if (sombre) localStorage.setItem("theme", "dark");
+      if (zh) localStorage.setItem("i18nextLng", "zh-CN");
     },
-    ["pianiste", !!opts.sombre],
+    ["pianiste", !!opts.sombre, !!opts.zh],
   );
   const item = { showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" };
   const chants = opts.chants ?? [UN, DEUX, MASQUES, FR];
@@ -46,10 +50,11 @@ async function ouvrirLouange(page: Page, opts: { cles?: Record<string, string>; 
       language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
       items: chants.map((slug, i) => ({
         ...item, songSlug: slug, position: i + 1, keyOverride: opts.cles?.[slug] ?? null, jianpuSheet: slug !== FR,
+        ...opts.surcharge?.[slug],
       })),
     },
   }, "/setlists/setlist-tranches");
-  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
   await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
   await page.locator("[data-performance-mode]").waitFor();
   await expect(page.getByText("Mise en page…")).toHaveCount(0, { timeout: 20_000 });
@@ -96,7 +101,11 @@ async function lireEcranUneFois(page: Page): Promise<Ecran> {
     const f = Array.from(document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-jianpu-fenetre]")).find(
       (e) => !e.closest("[aria-hidden=true]"),
     );
-    const titre = document.querySelector("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *) h2")?.textContent ?? "";
+    // Une tranche certifiée n'a plus d'en-tête d'une ligne (la tête de feuille ne répète pas le titre) : il est dans la barre de titre.
+    const titre =
+      document.querySelector("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *) h2")?.textContent ??
+      document.querySelector("[data-performance-mode] [data-barre-haut] p")?.textContent ??
+      "";
     if (!f) return { titre, tranche: null, masques: 0, masquesFiltre: [], fenetre: null, pageW: 0, labels: [] };
     const r = f.getBoundingClientRect();
     const labels = Array.from(f.querySelectorAll<HTMLElement>("[data-jianpu-label]"))
@@ -412,3 +421,214 @@ test("capture des tranches à masques (大手牵着小手)", async ({ page }, in
     if (e.titre === MASQUES && e.masques > 0) await page.screenshot({ path: `test-results/jp-b1-${info.project.name}-masques-${n}.png` });
   });
 });
+
+
+// ─── Tranche 2 : tête de feuille, feuille de route allumée, menu Repères ────
+
+const SECTIONS = JSON.parse(readFileSync("public/jianpu/sections.json", "utf8")) as {
+  chants: Record<string, { sections: { id: string; page: number; ligne: number; anacrouse: boolean }[] }>;
+};
+/** Une Dernière phrase et deux refrains de suite (« R ×2 ») ajoutés à 一生爱你 : de quoi voir « ×2 » et un Dp. */
+const UN_CHO = readFileSync(`content/songs/${UN}.cho`, "utf8");
+const UN_DP = {
+  contentOverride: `${UN_CHO.trimEnd()}\n\n{start_of_Dp: Dernière phrase – R}\n[E]你的爱 [A]永远\n{end_of_Dp}\n`,
+  structureOverride: ["intro-1-0", "verse-2-1", "chorus-3-2", "chorus-3-3", "Dp-4-4"],
+};
+
+type Tete = { present: boolean; hauteur: number; barre: number; barreBas: number; fenetreHaut: number; repereTexte: string[]; allumes: string[]; cle: string; grave: string };
+
+/** Ce que montrent la tête de feuille, la barre de titre et la fenêtre du scan affichés. */
+async function lireTete(page: Page): Promise<Tete> {
+  return page.evaluate(() => {
+    const sel = "[data-performance-mode] [data-tete-feuille]";
+    const t = Array.from(document.querySelectorAll<HTMLElement>(sel)).find((e) => !e.closest("[aria-hidden=true]"));
+    const b = document.querySelector<HTMLElement>("[data-performance-mode] [data-barre-haut]")!.getBoundingClientRect();
+    const f = Array.from(document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-jianpu-fenetre]")).find((e) => !e.closest("[aria-hidden=true]"));
+    const reperes = t ? Array.from(t.querySelectorAll<HTMLElement>("[data-repere-tete]")) : [];
+    return {
+      present: !!t,
+      hauteur: t ? t.getBoundingClientRect().height : 0,
+      barre: b.height,
+      barreBas: b.bottom,
+      fenetreHaut: f ? f.getBoundingClientRect().top : 0,
+      repereTexte: reperes.map((r) => (r.textContent ?? "").trim()),
+      allumes: reperes.filter((r) => r.hasAttribute("data-allume")).map((r) => r.getAttribute("title") ?? ""),
+      cle: t?.querySelector("[data-cle-tete]")?.textContent ?? "",
+      grave: t?.querySelector("[data-grave-en]")?.textContent ?? "",
+    };
+  });
+}
+
+/** Revient au premier écran (flèche gauche : « Home » ne tourne pas les pages). */
+async function premierEcran(page: Page) {
+  const [, total] = (await lireCompteur(page)).split(" / ").map(Number);
+  for (let k = Number((await lireCompteur(page)).split(" / ")[0]); k > 1; k--) await page.keyboard.press("ArrowLeft");
+  await attendreCompteur(page, `1 / ${total}`);
+}
+
+/** Rouvre la barre de titre (un toucher au centre la montre ou la cache). */
+async function ouvrirBarre(page: Page) {
+  if ((await page.locator("[data-barre-ouverte]").count()) === 0) {
+    const ecran = page.viewportSize()!;
+    await page.mouse.click(ecran.width / 2, ecran.height / 2);
+    await expect(page.locator("[data-barre-ouverte]")).toHaveCount(1);
+  }
+}
+
+test("tête de feuille : sur chaque écran certifié, de la hauteur de la barre ; ouverte, la barre ne recouvre pas la première ligne", async ({ page }) => {
+  test.setTimeout(120_000);
+  await ouvrirLouange(page, { chants: [UN, DEUX, FR] });
+  await attendreTranches(page);
+  await fermerBarre(page);
+  const total = Number((await lireCompteur(page)).split("/")[1]);
+  for (let n = 1; n <= total; n++) {
+    await attendreCompteur(page, `${n} / ${total}`);
+    await page.waitForTimeout(150);
+    const e = await lireEcran(page);
+    const t = await lireTete(page);
+    if (e.tranche) {
+      expect(t.present, `écran ${n} : tête de feuille`).toBe(true);
+      expect(Math.abs(t.hauteur - t.barre), `écran ${n} : tête ${t.hauteur} px, barre ${t.barre} px`).toBeLessThanOrEqual(1);
+      expect(t.fenetreHaut, `écran ${n} : le scan commence sous la tête`).toBeGreaterThanOrEqual(t.barre - 1);
+    } else {
+      expect(t.present, `écran ${n} : pas de tête sur un chant sans scan`).toBe(false);
+    }
+    if (n < total) await page.keyboard.press("ArrowRight");
+  }
+  // Barre ouverte : son bas ne passe pas sur la fenêtre du scan, sur le premier écran comme sur un autre.
+  for (const n of [1, total >= 3 ? 2 : 1]) {
+    await premierEcran(page);
+    if (n > 1) await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(200);
+    await ouvrirBarre(page);
+    const t = await lireTete(page);
+    expect(t.barreBas, "bas de la barre ouverte ≤ haut de la fenêtre + 1 px").toBeLessThanOrEqual(t.fenetreHaut + 1);
+    await fermerBarre(page);
+  }
+});
+
+test("tête de feuille : « 1 = F » et « gravé en E » quand le scan est transposé, en français et en 中文", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" } });
+  await attendreTranches(page);
+  const t = await lireTete(page);
+  expect(t.cle).toBe("1 = F");
+  expect(t.grave).toBe("gravé en E");
+});
+
+test("tête de feuille, interface en 中文 : « 原谱 E 调 »", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" }, zh: true });
+  await attendreTranches(page);
+  const t = await lireTete(page);
+  expect(t.cle).toBe("1 = F");
+  expect(t.grave).toBe("原谱 E 调");
+});
+
+test("tête de feuille : pas de « gravé en » quand la tonalité est celle du scan ; « ×2 » dans le repère, Dp en tirets", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouange(page, { chants: [UN, FR], surcharge: { [UN]: UN_DP } });
+  await attendreTranches(page);
+  const t = await lireTete(page);
+  expect(t.cle).toBe("1 = E");
+  expect(t.grave).toBe("");
+  const tete = onStage(page, "[data-tete-feuille]");
+  await expect(tete.locator("[data-repeat]")).toHaveText("×2");
+  // « ×2 » est écrit dans le cadre du repère, à l'encre (couleur du texte, pas celle de la section).
+  const repeat = tete.locator("[data-repere-tete]", { has: page.locator("[data-repeat]") });
+  await expect(repeat).toHaveCount(1);
+  expect(await repeat.evaluate((r) => getComputedStyle(r.querySelector("[data-repeat]")!).color === getComputedStyle(r).color)).toBe(true);
+  const dp = tete.locator("[data-repere-tete][data-dp]");
+  await expect(dp).toHaveCount(1);
+  await expect(dp).toHaveCSS("border-top-style", "dashed");
+  await expect(dp).toHaveText("Dp");
+  // La rangée ne passe jamais à la ligne : la tête garde la hauteur de la barre.
+  const h = await lireTete(page);
+  expect(Math.abs(h.hauteur - h.barre)).toBeLessThanOrEqual(1);
+});
+
+/** Début (ligne 1-based) de chaque section de 一生爱你, anacrouse comprise : la règle de `sections.json`. */
+const debuts = () => SECTIONS.chants[UN].sections.map((s) => ({ ...s, debut: s.anacrouse && s.ligne > 1 ? s.ligne - 1 : s.ligne }));
+
+test("feuille de route allumée : les repères des sections présentes sur l'écran, d'après sections.json", async ({ page }) => {
+  test.setTimeout(120_000);
+  await ouvrirLouange(page, { chants: [UN, FR] });
+  await attendreTranches(page);
+  await fermerBarre(page);
+  const lignes = SYSTEMES.chants[UN].pages[0].lignes;
+  const sections = debuts();
+  const ecrans: { tranche: [number, number]; allumes: string[] }[] = [];
+  const total = Number((await lireCompteur(page)).split("/")[1]);
+  for (let n = 1; n <= total; n++) {
+    await attendreCompteur(page, `${n} / ${total}`);
+    await page.waitForTimeout(150);
+    const e = await lireEcran(page);
+    if (e.tranche) ecrans.push({ tranche: bornes(e.tranche), allumes: (await lireTete(page)).allumes });
+    if (n < total) await page.keyboard.press("ArrowRight");
+  }
+  expect(ecrans.length).toBeGreaterThanOrEqual(1);
+  const motif = { intro: /Intro|前奏/, verse: /Couplet|主歌/, chorus: /Refrain|副歌/ };
+  const allumeSur = (e: (typeof ecrans)[number], re: RegExp) => e.allumes.some((a) => re.test(a));
+  for (const e of ecrans) {
+    // Lignes (1-based) de la tranche, puis les sections dont l'intervalle [début, début suivant) les touche.
+    const dans = lignes.flatMap((l, k) => (l.y0 >= e.tranche[0] && l.y1 <= e.tranche[1] ? [k + 1] : []));
+    const [a, b] = [dans[0], dans.at(-1)!];
+    for (const [id, re] of [["intro-1", motif.intro], ["verse-2", motif.verse], ["chorus-3", motif.chorus]] as const) {
+      const k = sections.findIndex((s) => s.id === id);
+      const fin = sections[k + 1]?.debut ?? Infinity;
+      expect(allumeSur(e, re), `${id} sur la tranche des lignes ${a}-${b}`).toBe(sections[k].debut <= b && fin > a);
+    }
+  }
+  // L'écran de la dernière ligne allume le refrain ; celui des premières lignes, l'intro.
+  expect(allumeSur(ecrans.at(-1)!, motif.chorus)).toBe(true);
+  expect(allumeSur(ecrans[0], motif.intro)).toBe(true);
+});
+
+test("menu Repères d'un scan certifié : toucher une section saute à l'écran qui contient sa ligne de début", async ({ page }) => {
+  test.setTimeout(120_000);
+  await ouvrirLouange(page, { chants: [UN, FR] });
+  await attendreTranches(page);
+  await fermerBarre(page);
+  const lignes = SYSTEMES.chants[UN].pages[0].lignes;
+  const total = Number((await lireCompteur(page)).split("/")[1]);
+  const tranches: [number, number][] = [];
+  for (let n = 1; n <= total; n++) {
+    await attendreCompteur(page, `${n} / ${total}`);
+    await page.waitForTimeout(100);
+    const e = await lireEcran(page);
+    if (e.tranche) tranches.push(bornes(e.tranche));
+    if (n < total) await page.keyboard.press("ArrowRight");
+  }
+  const refrain = debuts().find((s) => s.id === "chorus-3")!;
+  const attendu = tranches.findIndex(([y0, y1]) => {
+    const dans = lignes.flatMap((l, k) => (l.y0 >= y0 && l.y1 <= y1 ? [k + 1] : []));
+    return dans[0] <= refrain.debut && refrain.debut <= dans.at(-1)!;
+  });
+  expect(attendu).toBeGreaterThanOrEqual(0);
+  await premierEcran(page);
+  const menu = await ouvrirMenu(page, "reperes");
+  await menu.getByRole("button", { name: /Refrain|副歌/ }).click();
+  await attendreCompteur(page, `${attendu + 1} / ${total}`);
+  await expect.poll(async () => (await lireEcran(page)).tranche, { timeout: 10_000 }).toBe(tranches[attendu].join("-"));
+});
+
+// Captures de la tranche 2 (à regarder) : tête de feuille, barre fermée puis ouverte.
+const VUES = [
+  { nom: "clair", opts: {} },
+  { nom: "sombre", opts: { sombre: true } },
+  { nom: "zh", opts: { zh: true, cles: { [UN]: "F" } } },
+  { nom: "transpose", opts: { cles: { [UN]: "F" }, surcharge: { [UN]: UN_DP } } },
+];
+for (const v of VUES) {
+  test(`capture JP-B2 de la tête de feuille, ${v.nom}`, async ({ page }, info) => {
+    test.setTimeout(90_000);
+    await ouvrirLouange(page, { chants: [UN, FR], ...v.opts });
+    await attendreTranches(page);
+    await fermerBarre(page);
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `test-results/jp-b2-${info.project.name}-${v.nom}.png` });
+    await ouvrirBarre(page);
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `test-results/jp-b2-${info.project.name}-${v.nom}-barre.png` });
+  });
+}

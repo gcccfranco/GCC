@@ -86,8 +86,10 @@ async function pointsInertes(page: Page, boite: { x: number; y: number; width: n
 
 /** Passe à la page 2 (le clavier ne touche pas à la barre) : de là, un toucher à gauche ou à droite changerait la page. */
 async function allerPage2(page: Page) {
-  await page.keyboard.press("ArrowRight");
-  await expect.poll(() => lireCompteur(page)).toMatch(/^2 \//);
+  await expect(async () => {
+    if (/^1 \//.test(await lireCompteur(page))) await page.keyboard.press("ArrowRight");
+    expect(await lireCompteur(page)).toMatch(/^2 \//);
+  }).toPass();
 }
 
 const attendreOuverture = (page: Page) => page.waitForTimeout(500);
@@ -230,6 +232,9 @@ for (const langue of ["fr", "zh"] as const) {
 }
 
 test("Repères est absent quand le chant courant n'a pas de section (scan 简谱 seul)", async ({ page }) => {
+  // Scan non certifié : depuis JP-B2, un scan certifié (一生爱你) a des Repères (sections.json). On répond à systemes.json par « aucun chant certifié ».
+  await page.route("**/jianpu/systemes.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(["一生爱你", "abba-pere"]) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();

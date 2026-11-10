@@ -26,8 +26,8 @@ import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
 import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, SUFFIXE_FEUILLE, type AncreLecture } from "@/lib/performance/blocks";
 import { PASTILLE_SUIVANT_H, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
 import { layoutFeuilleDeRoute, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
-import { useJianpuManifest, useJianpuMargesToutes, useJianpuSystemes } from "@/lib/jianpu/images";
-import { bornesX, LARGEUR_FEUILLE_MAX, RESERVE_ENTETE_SCAN, tranchesScan } from "@/lib/performance/tranchesScan";
+import { useJianpuManifest, useJianpuMargesToutes, useJianpuSections, useJianpuSystemes } from "@/lib/jianpu/images";
+import { bornesX, LARGEUR_FEUILLE_MAX, sectionsDeTranche, trancheDeSection, tranchesScan } from "@/lib/performance/tranchesScan";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, zh_lyric_font } from "@/components/song/SongView";
@@ -745,6 +745,8 @@ export function PerformanceMode({
   // sont pas chargés, ou si un chant n'y figure pas : un scan par page d'écran, comme avant).
   const jianpuSystemes = useJianpuSystemes();
   const jianpuMarges = useJianpuMargesToutes();
+  // Feuille de route allumée et menu Repères sur un scan certifié : début de chaque section (page, ligne).
+  const jianpuSections = useJianpuSections();
   // Le réglage 简谱 n'apparaît que si un chant de la setlist a un scan.
   const hasJianpuSheets = useMemo(
     () => items.some((it) => it.songSlug && jianpuManifest?.[it.songSlug]),
@@ -887,12 +889,12 @@ export function PerformanceMode({
         enteteDe.set(i, courant);
       });
       // Lot JP-B : un scan certifié se coupe entre deux lignes. Largeur : la zone de page (moins les 0,25 rem de
-      // chaque côté), bornée à 1 040 px ; hauteur : celle que PageScan laisse au scan entre les barres mesurées,
-      // moins la réserve de l'en-tête et du bandeau. La dernière tranche d'un chant suivi d'un autre garde la
+      // chaque côté), bornée à 1 040 px ; hauteur : celle que PageScan laisse au scan entre les barres mesurées
+      // (la tête de feuille occupe la place de la barre du haut : rien de plus à retrancher). La dernière tranche d'un chant suivi d'un autre garde la
       // place de la pastille « Ensuite » (56 px, comme `reserveBas` de PageScan).
       const dernierEntete = blocks.reduce((m, b, i) => (b.kind === "song-header" ? i : m), -1);
       const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, window.innerWidth / fontScale - 8);
-      const hauteurScan = window.innerHeight / fontScale - 8 - (barres.haut + barres.bas) / fontScale - RESERVE_ENTETE_SCAN;
+      const hauteurScan = window.innerHeight / fontScale - 4 - (barres.haut + barres.bas) / fontScale;
       const tranchesDe = (i: number) => {
         const b = blocks[i];
         if (b?.kind !== "jianpu-sheet" || !jianpuSystemes || !jianpuMarges) return null;
@@ -1357,13 +1359,30 @@ export function PerformanceMode({
     .filter((r) => r.page >= 0);
 
   // Repères (FS-B) : les sections du chant en cours, dans l'ordre de la page (un scan seul n'en a pas).
-  const reperes = currentEntry
+  const reperesTexte = currentEntry
     ? blocks.flatMap((b, i) => {
         if (b.kind !== "section" || i <= currentEntry.index || (nextEntry && i >= nextEntry.index) || repeatHidden.has(i)) return [];
         const page = pages.findIndex((p) => p.includes(i));
         return page >= 0 ? [{ uid: b.uid, section: b.section, page }] : [];
       })
     : [];
+  // Un scan certifié (tranches) : chaque section saute à l'écran qui contient sa ligne de début (`sections.json`) ;
+  // sans donnée, ou sans tranche, le menu reste comme avant (rien).
+  const reperesScan = (() => {
+    const sections = currentEntry ? jianpuSections?.[currentEntry.block.songSlug ?? ""]?.sections : undefined;
+    if (!currentEntry || !sections || songStartPage < 0) return [];
+    const ecrans = layout.flatMap((pg, p) => {
+      const b = p >= songStartPage && p <= songEndPage && pg.fit && pg.tranche ? blocks[pg.cols[0][0]] : undefined;
+      return b?.kind === "jianpu-sheet" ? [{ p, page: b.pageIndex + 1, tranche: pg.tranche!, steps: b.steps }] : [];
+    });
+    return sections.flatMap((sec) => {
+      const section = ecrans.flatMap((e) => e.steps).find((st) => st.section.id === sec.id)?.section;
+      const dePage = ecrans.filter((e) => e.page === sec.page);
+      const k = trancheDeSection(sec, dePage.map((e) => e.tranche));
+      return section && k >= 0 ? [{ uid: section.uid, section, page: dePage[k].p }] : [];
+    });
+  })();
+  const reperes = reperesTexte.length > 0 ? reperesTexte : reperesScan;
   // Tonalité (menu Outils) : d'un demi-ton, par la tonalité personnelle de l'appareil ; revenir à celle de la setlist l'oublie.
   const entreeSlug = currentEntry?.block.songSlug;
   const cleJouee = currentEntry?.block.songKey;
@@ -1422,7 +1441,8 @@ export function PerformanceMode({
   // s'escamotent sans changer de taille : la page ne bouge pas avec elles.
   const renderPadding: React.CSSProperties = fitPage
     ? {
-        paddingTop: barres.haut ? `calc(0.25rem + ${barres.haut / fontScale}px)` : `calc(0.25rem + var(--sat, 0px) / ${fontScale})`,
+        // Page de scan certifié : la tête de feuille occupe la place de la barre du haut, le scan commence dessous.
+        paddingTop: trancheCourante ? 0 : barres.haut ? `calc(0.25rem + ${barres.haut / fontScale}px)` : `calc(0.25rem + var(--sat, 0px) / ${fontScale})`,
         paddingBottom: barres.bas ? `calc(0.25rem + ${barres.bas / fontScale}px)` : `calc(0.25rem + var(--sab, 0px) / ${fontScale})`,
         paddingLeft: `calc(0.25rem + var(--sal, 0px) / ${fontScale})`,
         paddingRight: `calc(0.25rem + var(--sar, 0px) / ${fontScale})`,
@@ -1691,6 +1711,12 @@ export function PerformanceMode({
               />
             );
           }
+          // Tête de feuille d'un scan certifié : hauteur exacte de la barre de titre, repères des sections de la tranche allumés.
+          const teteFeuille = (b: PerformanceBlock | undefined, tr: Tranche) => ({
+            hauteur: barres.haut ? `${barres.haut / fontScale}px` : `calc(var(--sat, 0px) / ${fontScale})`,
+            encoche: `calc(var(--sat, 0px) / ${fontScale})`,
+            allumes: b?.kind === "jianpu-sheet" ? sectionsDeTranche(jianpuSections?.[b.songSlug]?.sections ?? [], b.pageIndex + 1, tr) : new Set<string>(),
+          });
           if (page.fit) {
             return (
               <PageScan
@@ -1702,6 +1728,7 @@ export function PerformanceMode({
                 onSuivant={() => goToPage(nextSongPage, pages.length)}
                 // La pastille flottante (44 px, à 8 px au-dessus de la barre du bas) ne recouvre plus le scan : sa place est gardée dessous.
                 reserveBas={isLastPageOfSong && nextEntry && !colonneScan ? 56 / fontScale : 0}
+                tete={page.tranche ? teteFeuille(blocks[page.cols[0][0]], page.tranche) : undefined}
               >
                 {renderBlock(page.cols[0][0], true, page.tranche)}
               </PageScan>

@@ -716,6 +716,7 @@
     "chords": "Accords",
     "capo": "Capo",
     "capoBadge": "Capo {{n}}",
+    "gravedIn": "gravé en {{key}}",
     "key": "Tonalité",
     "personalKey": "setlist : {{key}}",
     "personalKeyHint": "{{key}} sur cet appareil, {{setlistKey}} dans la setlist",

@@ -711,6 +711,7 @@
     "chords": "和弦",
     "capo": "变调夹",
     "capoBadge": "变调夹 {{n}} 品",
+    "gravedIn": "原谱 {{key}} 调",
     "key": "调",
     "personalKey": "歌单：{{key}}",
     "personalKeyHint": "本设备：{{key}}，歌单：{{setlistKey}}",

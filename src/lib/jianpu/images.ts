@@ -220,6 +220,40 @@ export function useJianpuSystemes(): JianpuSystemes | undefined {
   return systemes ?? undefined;
 }
 
+/** Sections du scan (JP-B, `public/jianpu/sections.json`) : pour chaque chant, la page (1-based) et la ligne (1-based)
+ *  où commence chaque section du `.cho` ; `anacrouse` : la section commence en fin de la ligne d'avant. Le `id` est
+ *  celui de la section du parseur (`Section.id`). Absent (ou fichier en échec) : rien d'allumé, pas de saut. */
+export type JianpuSectionScan = { id: string; label?: string; page: number; ligne: number; anacrouse?: boolean };
+export type JianpuSections = Record<string, { sections: JianpuSectionScan[] }>;
+
+let sectionsPromise: Promise<JianpuSections> | null = null;
+let sectionsCharges: JianpuSections | null = null;
+
+export function loadJianpuSections(): Promise<JianpuSections> {
+  sectionsPromise ??= fetch("/jianpu/sections.json")
+    .then((r) => (r.ok ? (r.json() as Promise<{ version: number; chants?: JianpuSections }>) : { version: 0, chants: {} }))
+    .catch(() => ({ version: 0, chants: {} }))
+    .then((d) => (sectionsCharges = d.chants ?? {}));
+  return sectionsPromise;
+}
+
+/** Les sections de tous les chants, ou `undefined` tant que le fichier n'est pas chargé (échec : `{}`). */
+export function useJianpuSections(): JianpuSections | undefined {
+  const [sections, setSections] = useState<JianpuSections | null>(sectionsCharges);
+
+  useEffect(() => {
+    let alive = true;
+    loadJianpuSections().then((s) => {
+      if (alive) setSections(s);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return sections ?? undefined;
+}
+
 /** Les marges de tous les chants (`{}` en cas d'échec), ou `undefined` tant que le fichier n'est pas chargé :
  *  la pagination en tranches en a besoin pour tous les scans d'une setlist. */
 export function useJianpuMargesToutes(): JianpuMarges | undefined {

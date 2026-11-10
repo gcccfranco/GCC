@@ -11,10 +11,6 @@ export type LigneTranche = { y0: number; y1: number };
 export const AIR_X = 16;
 /** Plus grande marge verticale prise de part et d'autre d'une tranche (px image). */
 export const MARGE_Y_MAX = 12;
-/** Place gardée (px de page, échelle 1) au-dessus du scan pour l'en-tête d'une ligne et le bandeau de structure de
- *  `PageScan` : la pagination ne peut pas les mesurer (ils ne sont rendus que sur la page de scan affichée), elle
- *  prend cette réserve fixe. Large : mieux vaut une tranche un peu courte qu'un scan réduit pour tenir. */
-export const RESERVE_ENTETE_SCAN = 104;
 /** Largeur maximale de la feuille de scan (px CSS, ordinateur : centrée). */
 export const LARGEUR_FEUILLE_MAX = 1040;
 
@@ -68,4 +64,38 @@ export function tranchesScan(
     p = k;
   }
   return out;
+}
+
+/** Une section du scan (`sections.json`) : page et ligne de début, 1-based. */
+export type SectionScan = { id: string; page: number; ligne: number; anacrouse?: boolean };
+
+/** Rang de début d'une section dans le chant : (page, ligne). Une anacrouse commence en fin de la ligne d'avant
+ *  (la 1re ligne de la page reste la 1re : rien avant elle sur cette page). */
+function debutSection(s: SectionScan): [number, number] {
+  return [s.page, s.anacrouse && s.ligne > 1 ? s.ligne - 1 : s.ligne];
+}
+
+const avant = (a: [number, number], b: [number, number]) => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
+
+/** Sections présentes sur une tranche : celles dont l'intervalle [début, début de la suivante) chevauche les lignes
+ *  de la tranche. `page` : 1-based ; `premiere` et `derniere` : indices 0 de la tranche (`Tranche`). Des sections qui
+ *  commencent à la même ligne (couplets sur la même musique) partagent l'intervalle qui court jusqu'au début suivant. */
+export function sectionsDeTranche(sections: SectionScan[], page: number, tranche: Pick<Tranche, "premiere" | "derniere">): Set<string> {
+  const debuts = sections.map(debutSection);
+  const a: [number, number] = [page, tranche.premiere + 1];
+  const b: [number, number] = [page, tranche.derniere + 1];
+  const out = new Set<string>();
+  sections.forEach((s, k) => {
+    const d = debuts[k];
+    const fin = debuts.filter((x) => avant(d, x)).reduce<[number, number] | null>((m, x) => (m === null || avant(x, m) ? x : m), null);
+    if (!avant(b, d) && (fin === null || avant(a, fin))) out.add(s.id);
+  });
+  return out;
+}
+
+/** Indice de la première tranche (d'un scan, page 1-based) qui contient la ligne de début de la section ;
+ *  -1 si la page n'a pas de tranche qui la contienne. */
+export function trancheDeSection(section: SectionScan, tranchesDeLaPage: Pick<Tranche, "premiere" | "derniere">[]): number {
+  const [, ligne] = debutSection(section);
+  return tranchesDeLaPage.findIndex((t) => t.premiere + 1 <= ligne && ligne <= t.derniere + 1);
 }
