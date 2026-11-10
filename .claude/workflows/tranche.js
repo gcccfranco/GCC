@@ -99,7 +99,7 @@ if (t && t.echecs.filter((e) => !e.course).length) {
   // Conseiller : modèle de la session (Opus), lecture et diagnostic seulement.
   conseil = await agent(
     `Deux tours de correction n'ont pas suffi pour la tranche ${A.tranche} (${A.spec}). Échecs restants :\n${JSON.stringify(t.echecs, null, 1)}\n\n` +
-    `Trouve la cause racine (git diff ${A.base}, le test, le composant), sans rien modifier. Rends : la cause en deux phrases, la correction précise (fichier, ligne, quoi), et si l'échec ne vient pas de la tranche.`,
+    `Trouve la cause racine (git diff ${A.base}, le test, le composant), sans rien modifier. Méthode : le skill \`debugging-and-error-recovery\`. Puis, selon la cause probable, ouvre **un seul** de ces skills dormants, par section (\`grep -n '^#'\` puis la plage) : \`.claude/skills/click-path-audit/SKILL.md\` (un bouton ou un geste ne produit pas l'état attendu alors que chaque fonction marche seule), \`e2e-testing\` (test instable, attente, sélecteur), \`react-patterns\` (hook, composant serveur ou client, formulaire), \`nextjs-turbopack\` (build, serveur de dev, proxy.ts), \`typescript-patterns\` (erreur de type). Rends : la cause en deux phrases, la correction précise (fichier, ligne, quoi), et si l'échec ne vient pas de la tranche.`,
     { label: `conseil:${A.tranche}`, phase: 'Conseil', effort: 'high' })
   await agent(
     `Applique exactement ce diagnostic pour la tranche ${A.tranche} (${A.spec}) :\n${conseil}`,
