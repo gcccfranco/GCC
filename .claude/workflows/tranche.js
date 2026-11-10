@@ -23,7 +23,7 @@ if (!A.spec || !A.tranche || !A.consigne || !A.base) {
   throw new Error('args attendus : { spec, tranche, consigne, tests: [...], base }')
 }
 const tests = (A.tests || []).join(' ')
-// (go efficience de Timothée, 10/11/2026, règle proposée) De la spec, un ouvrier ne lit que la section de sa tranche : les specs font jusqu'à 180 000 caractères.
+// (validée par Timothée le 10/11/2026) De la spec, un ouvrier ne lit que la section de sa tranche : les specs font jusqu'à 180 000 caractères.
 const SECTION = `de la spec, ne lis que la section de la tranche (\`grep -n '^#' ${A.spec}\` puis la plage par \`sed -n 'a,bp'\`), jamais le fichier entier ; la consigne ci-dessous fait foi`
 
 const ECHECS = {
@@ -78,7 +78,7 @@ const specsRouges = (r) => [...new Set(r.echecs.map((e) => (e.lieu.match(/tests\
 
 phase('Coder')
 const code = await agent(
-  // (go efficience de Timothée, 10/11/2026, règle proposée) L'executant ne lance plus Playwright ni next dev : l'attente dépasse la durée de son cache et tout son
+  // (validée par Timothée le 10/11/2026) L'executant ne lance plus Playwright ni next dev : l'attente dépasse la durée de son cache et tout son
   // contexte se réécrit ; le testeur (Haiku) lance les specs tout de suite après.
   `Tranche ${A.tranche} de ${A.spec} : ${SECTION}.\n\nCONSIGNE DÉCIDÉE :\n${A.consigne}\n\nTests de la tranche : ${tests || 'aucun nommé'} (pour mémoire : ne les lance pas). Pour te vérifier, lance seulement \`npx tsc --noEmit\` (ou \`npm run validate\` si tu n'as touché que des .cho) ; jamais Playwright ni \`next dev\` : le testeur lance les specs juste après toi.`,
   { agentType: 'executant', label: `coder:${A.tranche}`, phase: 'Coder' })

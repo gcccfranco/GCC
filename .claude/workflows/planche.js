@@ -90,7 +90,7 @@ phase('Maquette')
 let maquette = await agent(consigneMaquette, { agentType: 'maquettiste', schema: MAQUETTE, label: 'maquette', phase: 'Maquette' })
 if (!maquette) throw new Error('Le maquettiste n’a rien rendu.')
 
-// 10/11/2026 (go efficience de Timothée, règle proposée) : `regard` ne passe plus ici. Le maquettiste ne rend que trois captures, qu'il a déjà
+// 10/11/2026 (validée par Timothée le 10/11/2026) : `regard` ne passe plus ici. Le maquettiste ne rend que trois captures, qu'il a déjà
 // ouvertes et que la critique ouvre toutes : un troisième agent sur les mêmes PNG ne triait rien.
 const critiquer = (m, n) => agent(
     `Critique la planche ${m.planche} (sujet « ${A.sujet} », demande : ${A.demande}). Captures : ${m.captures.join(', ')}. ` +

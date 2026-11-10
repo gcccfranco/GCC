@@ -35,7 +35,7 @@ const VERDICTS_LOT = {
 }
 const DEJA = `Vérifie aussi s'il est déjà corrigé : \`git fetch -q origin ${BRANCHE}\` puis \`git diff ${A.base} origin/${BRANCHE} -- <fichiers cités>\` (verdict deja_corrige).`
 
-// 10/11/2026 (go efficience de Timothée, règle proposée) : les constats qui citent le même fichier (première preuve) partent ensemble, cinq au
+// 10/11/2026 (validée par Timothée le 10/11/2026) : les constats qui citent le même fichier (première preuve) partent ensemble, cinq au
 // plus par relecteur — il relit le fichier une fois ; un constat seul sur son fichier garde son relecteur.
 const fichierDe = (c) => (String((c.preuves || [])[0] || '').match(/[\w@()[\]./-]+\.[A-Za-z]+/) || [])[0] || ''
 const groupes = new Map()

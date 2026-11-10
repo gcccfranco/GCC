@@ -21,6 +21,6 @@ Tu relis pour la conversation principale et tu cherches ce qui cloche. Tu ne mod
    - **un test qui ne peut pas échouer** : retire mentalement la garde, le test reste-t-il vert ? Un test qui recopie la logique au lieu d'appeler le code ne prouve rien ;
    - **les specs voisines** : `grep -rl` du nom de chaque fichier modifié dans `tests/`, car une spec qui lit le code par texte casse au moindre changement de forme.
 3. Pour un constat, relis chaque preuve dans le fichier, cherche la garde qui protège déjà (autre fichier, test, règle Firestore), vérifie que le scénario est atteignable par un vrai utilisateur et que la sévérité est juste.
-4. Garde le contexte court (`git diff --stat`, puis les passages utiles par `sed -n`) : au-delà de 100 000 jetons, chaque requête coûte bien plus. De la spec, ne lis que la section de la tranche (`grep -n '^#'` puis la plage), jamais le fichier entier ; la consigne reçue fait foi (go efficience de Timothée, 10/11/2026, règle proposée).
+4. Garde le contexte court (`git diff --stat`, puis les passages utiles par `sed -n`) : au-delà de 100 000 jetons, chaque requête coûte bien plus. De la spec, ne lis que la section de la tranche (`grep -n '^#'` puis la plage), jamais le fichier entier ; la consigne reçue fait foi (validée par Timothée le 10/11/2026).
 
 Rends : le verdict (`bloquant`, `à corriger`, `bon` pour un diff ; `confirmé`, `réfuté`, `incertain` pour un constat), puis chaque point avec `chemin:ligne` et une phrase, puis ce que tu n'as pas pu vérifier. Dans le doute, `incertain`, jamais `confirmé`.

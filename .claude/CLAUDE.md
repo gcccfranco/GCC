@@ -2,7 +2,7 @@
 Skills vendorisés dans `.claude/skills/`. En cas de conflit, le `CLAUDE.md` racine gagne.
 
 - **Code** : un seul skill, celui de la phase, dans la session qui fait le travail, jamais dans une orchestratrice
-  qui ne fait que lancer `/tranche` (go efficience de Timothée, 10/11/2026) : cadrer `spec-driven-development` (`grilling` si flou) ·
+  qui ne fait que lancer `/tranche` (go efficience de Timothée, 10/11/2026) : cadrer `spec-driven-development` (`grilling` si flou, à la place d'`interview-me` : validé le 10/11/2026) ·
   implémenter `incremental-implementation` (pour une UI : `frontend-ui-engineering`) · bug
   `debugging-and-error-recovery` · relire `code-review-and-quality` · livrer `git-workflow-and-versioning`.
   Les autres : sur besoin précis.
@@ -18,7 +18,7 @@ Skills vendorisés dans `.claude/skills/`. En cas de conflit, le `CLAUDE.md` rac
   `web-design-guidelines` lit une copie figée (`guidelines.md`), sans téléchargement ; `impeccable` allégé : sans
   `scripts/` ni les commandes `live`, `generate`, `hooks`, `doctor`, `pin` (le lanceur téléchargeait et exécutait un
   binaire fermé). Ne pas réinstaller la version complète sans décision de Timothée.
-- **Retraits du 10/11/2026** (go efficience de Timothée, liste issue de l'audit) : 33 skills jamais cités ou en doublon (dont `using-agent-skills`,
+- **Retraits du 10/11/2026** (liste issue de l'audit, validée par Timothée) : 33 skills jamais cités ou en doublon (dont `using-agent-skills`,
   `interview-me`) ; ne pas les réinstaller sans demande.
 - **Scan de sécurité** (01/11/2026) : tout skill ajouté se scanne avec SkillSpector (NVIDIA) avant d'être commité :
   `python3 scripts/scan-skills.py` n'affiche que les alertes absentes de `.claude/skillspector-reference.json` (faux

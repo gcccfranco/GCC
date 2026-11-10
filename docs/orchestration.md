@@ -72,10 +72,9 @@ passe ; une retouche ne se relance que pour un défaut visible.
 2. **Go.** La session principale lance une session orchestratrice (`create_session`) ; sa consigne tient en une page :
    la spec, son § « Avancement », ce qui reste. **Retouche** (trois fichiers au plus, pas de spec, aucune décision
    nouvelle, toujours sur go) : pas de session orchestratrice ni de `/tranche`, la session courante lance un
-   `executant` puis un `testeur` (go efficience de Timothée, 10/11/2026, règle proposée ; précise la règle du
+   `executant` puis un `testeur` (validée par Timothée le 10/11/2026 ; précise la règle du
    18/10/2026).
-3. **Chaque tranche** : `/tranche` avec la consigne exacte et les specs de test. **Au retour** (go efficience de
-   Timothée, 10/11/2026, règle proposée) :
+3. **Chaque tranche** : `/tranche` avec la consigne exacte et les specs de test. **Au retour** (validée par Timothée le 10/11/2026) :
    la session lit le verdict du `relecteur` et `git diff --stat`, et n'ouvre du diff que les passages signalés. Pour
    une tranche qui change l'apparence, `regard` ouvre toutes les captures ; la session ouvre celles qu'il signale et
    au moins une par disposition (téléphone, tablette portrait, tablette paysage, ordinateur, plus 1 440 px pour une
@@ -94,8 +93,7 @@ passe ; une retouche ne se relance que pour un défaut visible.
 
 ## 6. Règles de conduite
 
-Coût (go efficience de Timothée, 10/11/2026 : sa demande était générale, ces quatre règles sont proposées par la
-session et restent à confirmer par lui) :
+Coût (règles issues de l'audit des sessions, validées par Timothée le 10/11/2026, à ajuster après deux ou trois lots) :
 
 - **Plafond de 200 000 jetons pour toute session**, principale comme orchestratrice. Avant de l'atteindre, elle écrit
   l'état dans le § « Avancement » de la spec (fait, reste, décisions prises) et passe la main à une session neuve qui

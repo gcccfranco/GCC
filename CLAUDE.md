@@ -95,8 +95,8 @@ pas seulement en mémoire.
   dans la consigne) et garde la spec, les planches et le suivi. Une retouche (trois fichiers au plus, pas de spec,
   pas de décision nouvelle) → la session courante lance directement un `executant` puis un `testeur`, sans nouvelle
   session. Le go reste requis dans les deux cas.
-- **Économie de contexte** (go efficience de Timothée, 10/11/2026 ; règles proposées par l'audit des sessions, à
-  ajuster à l'usage) :
+- **Économie de contexte** (règles issues de l'audit des sessions, validées par Timothée le
+  10/11/2026, à ajuster après deux ou trois lots) :
   - *Plafond* : toute session, principale comme orchestratrice, passe la main avant 200 000 tokens (≈ deux ou trois
     tranches) : elle écrit l'état dans le § Avancement de la spec ou dans la feuille de route, puis une session
     neuve reprend de là.

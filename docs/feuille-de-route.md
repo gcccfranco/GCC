@@ -40,6 +40,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   « Avancement » de la spec, puis CA et FS-F sur un go chacun, la vague 3 (JP-C, JP-D, AN) sur nouveau go ; avant toute
   mise en ligne, relecture complète de la vague 2, passe sur le guide, 中文 nouveaux à relire, prévenir l'équipe, essai
   sur iPad. Détail : archive, `grep -n '^### AO\.'`.
+  **À la fusion de cette branche** (Timothée, 10/11/2026) : conflit attendu sur `docs/feuille-de-route.md` et une ligne de
+  `CLAUDE.md` ; ce fichier court gagne (sa section AO est déjà dans l'archive, à compléter de ce qui a été écrit
+  depuis), et la ligne « PWA » modifiée là-bas se reporte dans `docs/reference-technique.md`.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 
