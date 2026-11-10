@@ -54,7 +54,7 @@ export function PageTexte({
   useEchelleFeuille(lignesRef, !!page.etire, page.naturel, page);
   return (
     <>
-    <div className={page.etire ? "flex h-full flex-col" : undefined}>
+    <div className={page.etire ? "flex h-full flex-col" : undefined} data-page-deux-colonnes={page.twoColumns || undefined}>
       {rappel && (
         <div ref={rappelRef} data-rappel className="relative mb-2">
           {rappelTrame}

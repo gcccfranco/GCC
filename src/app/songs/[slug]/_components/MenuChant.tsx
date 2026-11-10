@@ -18,7 +18,7 @@ export function MenuChant({ langue, disposition, changeDisposition, setShowPanel
 }) {
   const { t } = useTranslation();
   return (
-    <DropdownMenuContent align="end" className="w-auto min-w-52 max-w-[calc(100vw-1rem)]">
+    <DropdownMenuContent align="end" collisionPadding={12} className="w-auto min-w-52 max-w-[calc(100vw-1rem)]">
       <ChoixDisposition variante="menu" langue={langue} disposition={disposition} changeDisposition={changeDisposition} />
       <DropdownMenuSeparator />
       <DropdownMenuItem onClick={() => setShowPanel(true)}>

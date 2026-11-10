@@ -93,7 +93,7 @@ export function MiniatureDisposition({ disposition, langue = "fr", taille = "men
             <g key={y as number}>
               <circle cx={10} cy={(y as number) + 4} r={3.6} fill={c as string} />
               <rect x={10 - (w as number) / 2} y={(y as number) + 9.5} width={w as number} height={17} rx={0.6} fill={c as string} />
-              <Rangees x={19} y={(y as number) + 1} w={31} />
+              <Rangees x={19} y={(y as number) + 1} w={31} accord={LANGUE[langue].accent} />
             </g>
           ))}
         </Page>
@@ -112,13 +112,16 @@ export function MiniatureDisposition({ disposition, langue = "fr", taille = "men
         </Page>
       );
     case "partition":
-      // Page gravée : titre centré, petits repères encadrés, lignes noires.
+      // Page gravée : titre centré, repères encadrés de la couleur de section (sigle dedans), nom en trait gris,
+      // lignes noires, accords bleus (la couleur de la disposition Partition).
       return (
         <Page titre="centre" taille={taille}>
-          {[17, 43].map((y) => (
-            <g key={y}>
-              <rect x={6} y={y} width={5} height={5} fill="none" stroke="currentColor" strokeWidth={0.7} />
-              <Rangees x={15} y={y - 1} w={34} accord="currentColor" chiffres />
+          {[[16, V, "C"], [43, R, "R"]].map(([y, c, lettre]) => (
+            <g key={y as number}>
+              <rect x={5} y={y as number} width={7} height={7} fill="none" stroke={c as string} strokeWidth={0.9} />
+              <text x={8.5} y={(y as number) + 5.4} fontSize={5} fontWeight={700} textAnchor="middle" fill={c as string} fontFamily="sans-serif">{lettre as string}</text>
+              <rect x={15} y={(y as number) + 0.5} width={13} height={1.6} rx={0.8} fill="currentColor" opacity={0.3} />
+              <Rangees x={15} y={(y as number) + 4.5} w={34} chiffres />
             </g>
           ))}
         </Page>

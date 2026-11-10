@@ -86,7 +86,7 @@ for (const chant of CHANTS) {
         await expect(page.getByRole("menuitem", { name: "Personnaliser" })).toBeVisible();
         await expect(page.getByRole("menuitem", { name: "Signalement" })).toBeVisible();
         await expect(page.getByRole("menuitemcheckbox")).toHaveCount(0);
-        await expect(page.getByRole("menuitemradio")).toHaveText([/Classique/, /Couleurs par section/, /Repères/, /Scène/, /Partition/]);
+        await expect(page.getByRole("menuitemradio")).toHaveText([/Classique/, /Couleurs par section/, /Marge/, /Scène/, /Partition/]);
         for (const n of ["Vidéo", "PDF", "Idées d'harmonie"]) await expect(page.getByRole("menuitem", { name: n })).toHaveCount(0);
         // Ni Spotify ni Apple Music (Timothée, 18/10/2026) : Personnaliser et Signalement, plus Couleurs.
         await expect(page.getByRole("menuitem")).toHaveCount(2);

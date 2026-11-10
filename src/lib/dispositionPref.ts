@@ -16,6 +16,10 @@ export type Disposition = "classique" | "sections" | "reperes" | "scene" | "part
 
 export const DISPOSITIONS: Disposition[] = ["classique", "sections", "reperes", "scene", "partition"];
 
+// Valeur avant lecture du stockage (rendu serveur, premier rendu) : « sections », la disposition de tous les appareils
+// déjà utilisés (ancien défaut) ; partir de « classique » recompose la page et recrée les boutons d'accord après l'hydratation.
+export const DISPOSITION_AVANT_LECTURE: Disposition = "sections";
+
 export const DISPOSITIONS_AU_MENU: Disposition[] = ["classique", "sections", "reperes", "scene", "partition"];
 
 const KEY = "disposition";

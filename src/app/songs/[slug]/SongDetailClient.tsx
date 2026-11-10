@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
+import { DISPOSITION_AVANT_LECTURE, getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { TOUCHER_44 } from "@/lib/toucher44";
 import { PiluleTonalite } from "./_components/PiluleTonalite";
 import { ActionsChant } from "./_components/ActionsChant";
@@ -96,6 +96,9 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
   }, [slug, setlistId, position, user]);
   return version;
 }
+
+// Layout effect sans avertissement au rendu serveur.
+const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
   export function SongDetailClient({ song }: SongDetailClientProps) {
     const { t, i18n } = useTranslation();
@@ -274,9 +277,9 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     const { fontScale, changeFontScale } = useTailleTexte();
 
     // Disposition de la partition — préférence par appareil partagée avec le mode
-    // louange ; chargée après montage (même raison d'hydratation que fontScale).
-    const [disposition, setDisposition] = useState<Disposition>("classique");
-    useEffect(() => setDisposition(getDispositionPref()), []);
+    // louange ; lue avant la peinture (layout effect isomorphe), à partir de la valeur avant lecture.
+    const [disposition, setDisposition] = useState<Disposition>(DISPOSITION_AVANT_LECTURE);
+    useEffetAvantPeinture(() => setDisposition(getDispositionPref()), []);
     const changeDisposition = (d: Disposition) => {
       setDisposition(d);
       setDispositionPref(d);

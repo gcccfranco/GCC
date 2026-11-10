@@ -28,6 +28,7 @@ import { useJianpuManifest } from "@/lib/jianpu/images";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, zh_lyric_font } from "@/components/song/SongView";
+import { TempoPartition } from "@/components/song/NoteNoire";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { dpOrigin } from "@/lib/setlist/dp";
@@ -202,7 +203,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
     // Partition : l'en-tête d'un chant fusionné prend l'apparence de l'autre (titres en serif centrés, structure dessous).
     if (disposition === "partition") {
       return (
-        <div data-entete-chant data-entete-partition className="mb-3 pb-3 border-b border-border">
+        <div data-entete-chant data-entete-partition className="mb-3 border-b border-border pb-3 [[data-page-deux-colonnes]_&]:max-w-[calc(50%-1rem)]">
           <div className="space-y-0.5 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
             {block.fusionSongs.map((s, i) => (
               <h2 key={i} data-titre-partition className={`text-center text-[26px] font-bold leading-[1.15] text-foreground ${s.language === "zh" ? KaiTiFont.className : gelasio_font.className}`}>
@@ -248,7 +249,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
   if (disposition === "partition") {
     const zh = block.language === "zh";
     return (
-      <div data-entete-chant data-entete-partition className="mb-3 pb-2 border-b border-border">
+      <div data-entete-chant data-entete-partition className="mb-3 border-b border-border pb-2 [[data-page-deux-colonnes]_&]:max-w-[calc(50%-1rem)]">
         <div className="[[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
           <h2 data-titre-partition className={`text-center text-[22px] font-bold leading-[1.15] text-foreground md:text-[26px] ${zh ? KaiTiFont.className : gelasio_font.className}`}>
             {block.title}
@@ -256,7 +257,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
           {block.titlePinyin && <p className={`text-center text-xs text-muted-foreground mt-0.5 ${pinyin_font.className}`}>{block.titlePinyin}</p>}
           <div className="mt-1 flex items-baseline justify-between gap-4">
             <div data-partition-tempo data-testid={block.tempo ? "ligne-tempo" : undefined} className="min-w-0 whitespace-nowrap text-sm leading-[1.3]">
-              {block.tempo ? <span className="font-bold">♩ = {block.tempo}</span> : null}
+              {block.tempo ? <span className="font-bold"><TempoPartition tempo={block.tempo} /></span> : null}
               {block.tempo ? <span aria-hidden="true" className="text-muted-foreground"> · </span> : null}
               <span className="text-muted-foreground">{t("performance.key")} {block.songKey}</span>
             </div>

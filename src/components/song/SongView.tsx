@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import type { SectionNuance } from "@/types/setList";
 import { nuanceDef, nuanceLabel, nuanceFull } from "@/lib/setlist/nuances";
+import { TempoPartition } from "@/components/song/NoteNoire";
 import { cp } from "fs";
 
 // ---------------------------------------------------------------------------
@@ -107,6 +108,7 @@ export const gelasio_font = localFont({
   src: [
     { path: "../../../public/fonts/Gelasio-Regular.woff2", weight: "400", style: "normal" },
     { path: "../../../public/fonts/Gelasio-Bold.woff2", weight: "700", style: "normal" },
+    { path: "../../../public/fonts/Gelasio-Italic.woff2", weight: "400", style: "italic" },
   ],
   display: "swap",
   preload: false,
@@ -631,7 +633,7 @@ export function StructureStrip({
   /** Badges d'état propres au contexte (copie des paroles, version modifiée…). */
   children?: React.ReactNode;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const groups = groupSteps(steps, (section) => formatSectionName(section, t));
   const pleine = new Set(groups.flatMap((g, i) => (g.uids.some((uid) => pleines?.has(uid)) ? [i] : [])));
   // Ordre joué : les groupes tout entiers avant la 1re étape de la page sont des points.
@@ -659,16 +661,24 @@ export function StructureStrip({
   // dans la liste sous le bandeau (quand le corps ne les porte pas).
   const notes = details ? groups.filter((g) => g.step.note || g.step.transition) : [];
   const noteNumber = new Map(notes.map((g, i) => [g, i + 1]));
-  // Partition : la feuille de route de tête a la taille des repères de section (26 / 30 px), comme le rappel compact.
-  const petit = compacte || disposition === "partition";
+  // Partition : la feuille de route de tête a la cote unique des repères de section (carré de 32 px, 30 au téléphone, trait de 2 px)
+  // et leur police ; la taille du rappel compact (26 / 30 px) ne vaut que pour lui.
+  const enPartition = disposition === "partition";
+  // Feuille de route de tête (pas le rappel compact, pas la vue structure) : au bord du texte, comme les noms de section.
+  const routePartition = enPartition && !compacte && !colonne;
+  const petit = compacte;
+  const policePartition = i18n.language === "zh-CN" ? zh_lyric_font.className : chord_font.className;
   const numberBadge = "inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 text-xs font-bold leading-none text-background";
   return (
-    <div className={className}>
+    <div
+      className={`${className ?? ""} ${routePartition ? COLONNE_REPERES : ""}`}
+      style={routePartition ? { paddingLeft: RETRAIT_PARTITION } : undefined}
+    >
       <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
         {/* Pastilles rondes ; la taille suit l'écran : 32 px sous 640 px (neuf étapes
             sur une rangée à 390 px), 44 px au-delà ; 24 px dans le rappel du mode
             louange. Non cliquables : pas de plancher tactile. */}
-        <ol aria-label={t("songs.view.structure")} className={colonne ? "flex flex-col gap-2" : compacte ? "flex flex-wrap items-start gap-1.5" : "flex flex-wrap items-start gap-x-1.5 gap-y-2 sm:gap-x-3 sm:gap-y-3"}>
+        <ol aria-label={t("songs.view.structure")} className={colonne ? "flex flex-col gap-2" : compacte || enPartition ? "flex flex-wrap items-start gap-1.5" : "flex flex-wrap items-start gap-x-1.5 gap-y-2 sm:gap-x-3 sm:gap-y-3"}>
           {groups.map((g, i) => {
             const targetKey = g.step.targetKey && g.step.targetKey !== songKey ? g.step.targetKey : undefined;
             const n = noteNumber.get(g);
@@ -684,8 +694,10 @@ export function StructureStrip({
                 <span
                   data-pleine={pleine.has(i) || undefined}
                   data-repere-encadre={disposition === "partition" || undefined}
-                  className={`relative inline-flex items-center justify-center ${disposition === "partition" ? "rounded-[5px] border-[1.5px]" : "rounded-full"} ${
-                    petit ? "h-[26px] min-w-[26px] px-1.5 sm:h-[30px] sm:min-w-[30px]" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
+                  className={`relative inline-flex items-center justify-center ${enPartition ? `rounded-[5px] border-2 ${policePartition}` : "rounded-full"} ${
+                    enPartition
+                      ? "h-[30px] w-[30px] md:h-8 md:w-8"
+                      : petit ? "h-[26px] min-w-[26px] px-1.5 sm:h-[30px] sm:min-w-[30px]" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
                   }`}
                   style={
                     disposition === "partition"
@@ -695,14 +707,22 @@ export function StructureStrip({
                         : { background: tintOf(g.step.section), color: colorOf(g.step.section) }
                   }
                 >
-                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${petit ? "text-[13px] sm:text-[14px]" : "text-sm sm:text-lg"}`}>
-                    <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
-                    {g.repeat > 1 && <span className={`ml-px font-semibold leading-none ${petit ? "text-[10px]" : "text-xs sm:text-sm"}`}>×{g.repeat}</span>}
-                  </span>
+                  {enPartition ? (
+                    // Même cadre que les repères de section : au-delà de deux signes le corps baisse (11 / 12 px), plus long une ellipse.
+                    <span className={`block max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-px font-bold leading-none ${g.abbr.length > 2 ? "text-[11px] md:text-xs" : "text-sm md:text-[15px]"}`}>
+                      <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
+                    </span>
+                  ) : (
+                    <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${petit ? "text-[13px] sm:text-[14px]" : "text-sm sm:text-lg"}`}>
+                      <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
+                      {g.repeat > 1 && <span className={`ml-px font-semibold leading-none ${petit ? "text-[10px]" : "text-xs sm:text-sm"}`}>×{g.repeat}</span>}
+                    </span>
+                  )}
                   {n !== undefined && (
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
                   )}
                 </span>
+                {enPartition && g.repeat > 1 && <span className="text-[11px] font-semibold leading-none text-muted-foreground md:text-xs">×{g.repeat}</span>}
                 {colonne ? (
                   // Nom, modulation et nuance passent à la ligne dans la largeur de la colonne.
                   <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
@@ -745,6 +765,11 @@ export function StructureStrip({
 // dessous). Au-delà de deux signes (« Int », « Inst »), le sigle passe à 11 px (15 px dès la tablette) au lieu d'élargir la
 // pastille. Dès la tablette le filet ne se montre que s'il couvre au moins 24 px (jamais un bout isolé sous une section d'une
 // rangée). Au-delà de trois signes (« Bénédiction », « 尾声 » écrits tels quels) le sigle est coupé par une ellipse dans la pastille. Au toucher la pastille ouvre le nom complet dans une petite bulle (cible de 44 × 44).
+// Partition : retrait du texte = colonne de repères (`--rep-col`) moins ce qui se suspend dans la marge de la page (marge moins
+// 8 px d'air avant le bord). `--marge-rep` force la marge (0 dans l'aperçu de la page suivante, qui coupe ce qui dépasse).
+const RETRAIT_PARTITION = "max(0px, calc(var(--rep-col) - max(0px, var(--marge-rep, var(--marge-bande-g, var(--marge-bande, 0px))) - 8px)))";
+// Cotes de la colonne de repères (planche `.mk28`) : 44 px (38 au téléphone) ; aperçu de la page suivante : rien de suspendu.
+const COLONNE_REPERES = "[--rep-col:38px] md:[--rep-col:44px] [[data-apercu-suivant]_&]:[--marge-rep:0px]";
 const FILET_EPAIS = new Set(["chorus", "postchorus", "outro", "final", "coda"]);
 // Encre du sigle : celle qui contraste le plus avec la pastille (≥ 4,5:1). En clair, le pont (#7a5bcb), la fin et la
 // coda (#4f6477), le tag (#bd476a) et le gris « autre » (#6b7280) prennent le blanc ; les autres et tout le thème sombre, l'encre #0e0e10.
@@ -1011,25 +1036,39 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
     // note et nuance ; le corps suit en pleine largeur de colonne, les sections se séparent par du blanc.
     const couleurPartition = CHART_TYPE_COLOR[couleurDe ?? sectionColorKind(section)] ?? "var(--sec-other)";
     const police = uiIsZh ? zh_lyric_font.className : chord_font.className;
+    const sigle = abbreviateSection(section);
+    // Colonne de repères (planche, `.mk28`) : carré de 32 px (30 au téléphone), trait de 2 px, SUSPENDU dans la marge gauche de la page
+    // (colonne de 44 px, 38 au téléphone) ; le texte et le nom partent d'un même retrait. La marge disponible est `--marge-bande`
+    // (celle de la page : 16 px sur la page du chant, 24 px en mode louange, rien en deux colonnes ni à l'impression), en gardant 8 px
+    // d'air avant le bord de la page : ce qui manque des 44 px reste dans le flux (retrait `--rep-p`), jamais de débordement horizontal.
     return (
       <div
         data-section
         data-section-uids={occurrenceUids?.join(" ")}
         data-partition
-        className="mb-5 print:mb-4"
-        style={{ breakInside: "avoid", "--sec-c": LANG_THEME[isZh ? "zh" : "fr"].accent, "--rep-c": couleurPartition } as React.CSSProperties}
+        className={`relative mb-5 [--rep-h:30px] md:[--rep-h:32px] print:mb-4 ${COLONNE_REPERES}`}
+        style={{
+          breakInside: "avoid",
+          "--sec-c": LANG_THEME[isZh ? "zh" : "fr"].accent,
+          "--rep-c": couleurPartition,
+          // Les accords restent bleus, en chinois aussi (Scène et Partition ; Repères garde la couleur de la langue).
+          "--jianpu-color": "var(--chord-color)",
+          "--rep-p": RETRAIT_PARTITION,
+          paddingLeft: "var(--rep-p)",
+        } as React.CSSProperties}
       >
-        <div data-copy-ignore data-partition-rangee className={`flex flex-wrap items-center gap-x-2.5 gap-y-1 ${bodyHidden ? "" : "mb-1.5"}`}>
+        <div data-copy-ignore data-partition-rangee className={`flex min-h-[var(--rep-h)] flex-wrap items-center gap-x-2.5 gap-y-1 ${bodyHidden ? "" : "mb-1"}`}>
           <span
             data-repere-encadre
             title={nomComplet}
             aria-hidden="true"
-            className={`inline-flex h-6 min-w-6 shrink-0 select-none items-center justify-center whitespace-nowrap rounded-[5px] border-[1.5px] text-[13px] font-bold leading-none text-foreground md:h-[26px] md:min-w-[26px] md:text-sm ${abbreviateSection(section).length > 2 ? "px-1.5" : ""} ${police}`}
-            style={{ borderColor: "var(--rep-c)" }}
+            className={`absolute top-0 grid h-[var(--rep-h)] w-[var(--rep-h)] select-none place-items-center overflow-hidden rounded-[5px] border-2 text-sm font-bold leading-none text-foreground md:text-[15px] ${police}`}
+            style={{ borderColor: "var(--rep-c)", left: "calc(var(--rep-p) - var(--rep-col))" }}
           >
-            {abbreviateSection(section)}
+            {/* Au-delà de deux signes, le corps du sigle baisse (jamais d'élargissement du cadre) ; plus long, une ellipse. */}
+            <span className={`block max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-px ${sigle.length > 2 ? "text-[11px] md:text-xs" : ""}`}>{sigle}</span>
           </span>
-          <span data-partition-nom className={`text-[13px] font-medium text-muted-foreground md:text-sm ${police}`}>
+          <span data-partition-nom className={`text-[13px] font-medium text-muted-foreground md:text-[15px] ${police}`}>
             {label}
             {repeat > 1 && <span className="ml-1">×{repeat}</span>}
           </span>
@@ -1258,8 +1297,8 @@ export function SongView({
           <p className={`text-center text-muted-foreground text-sm mt-0.5 ${pinyin_font.className}`}>{ast.metadata.titlePinyin}</p>
         )}
         <div className="mt-2 flex items-start justify-between gap-4">
-          <div data-partition-tempo data-testid={ast.metadata.tempo || ast.metadata.time ? "ligne-tempo" : undefined} className={`min-w-0 text-[15px] font-bold leading-[1.3] ${chord_font.className}`}>
-            {ast.metadata.tempo ? <span>♩ = {ast.metadata.tempo}</span> : null}
+          <div data-partition-tempo data-testid={ast.metadata.tempo ? "ligne-tempo" : undefined} className={`min-w-0 text-[15px] font-bold leading-[1.3] ${chord_font.className}`}>
+            {ast.metadata.tempo ? <span><TempoPartition tempo={ast.metadata.tempo} /></span> : null}
             {ast.metadata.key && (
               <small className="block text-sm font-normal text-muted-foreground">{t("performance.key")} {ast.metadata.key}</small>
             )}

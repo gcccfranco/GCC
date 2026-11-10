@@ -28,12 +28,26 @@ export function ChoixDisposition(props: Props & { variante: "menu" | "panneau"; 
   return props.variante === "menu" ? <ChoixMenu {...props} /> : <ChoixPanneau {...props} />;
 }
 
+// Les cinq entrées sont en grille : Radix ne connaît que ↑/↓. ← et → déplacent le focus sur la voisine sans changer le choix
+// (Entrée ou Espace choisit) ; stopPropagation pour que ← ne referme pas le sous-menu Affichage. Aux bords (← sur la première,
+// → sur la dernière) la touche reste à Radix : ← referme alors le sous-menu, comme ailleurs.
+function flechesGaucheDroite(e: React.KeyboardEvent<HTMLDivElement>) {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitemradio"]'));
+  const i = items.indexOf(document.activeElement as HTMLElement);
+  const voisine = i < 0 ? undefined : items[i + (e.key === "ArrowRight" ? 1 : -1)];
+  if (!voisine) return;
+  e.preventDefault();
+  e.stopPropagation();
+  voisine.focus();
+}
+
 function ChoixMenu({ disposition, changeDisposition, langue }: Props) {
   const { t } = useTranslation();
   return (
     <>
       <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{t("dispositions.titre")}</DropdownMenuLabel>
-      <DropdownMenuRadioGroup value={disposition} onValueChange={(v) => changeDisposition(v as Disposition)} className="grid w-[min(25rem,calc(100vw-2.5rem))] grid-cols-5 gap-0.5 px-1">
+      <DropdownMenuRadioGroup value={disposition} onValueChange={(v) => changeDisposition(v as Disposition)} className="grid w-[min(25rem,calc(100vw-34px))] grid-cols-5 gap-0.5 px-1" onKeyDown={flechesGaucheDroite}>
         {DISPOSITIONS_AU_MENU.map((d) => (
           <DropdownMenuRadioItem
             key={d}
@@ -51,7 +65,7 @@ function ChoixMenu({ disposition, changeDisposition, langue }: Props) {
           </DropdownMenuRadioItem>
         ))}
       </DropdownMenuRadioGroup>
-      <p className="px-2 pb-1 pt-0.5 text-[11px] text-muted-foreground">{t("dispositions.retenue")}</p>
+      <p className="px-2 pb-1 pt-0.5 text-xs text-muted-foreground">{t("dispositions.retenue")}</p>
     </>
   );
 }
