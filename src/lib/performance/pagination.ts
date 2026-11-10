@@ -5,6 +5,7 @@ import { estTabletteVerticale } from "@/lib/performance/gestes";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { isRepeatOf, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { isDp } from "@/lib/setlist/dp";
+import type { Tranche } from "@/lib/performance/tranchesScan";
 
 // Fonctions pures de la pagination du mode louange, sorties de PerformanceMode.tsx (lot N, N5a).
 // Pages en une et en deux colonnes (`PerfPage`) : columns.ts.
@@ -15,11 +16,13 @@ export function sansTransitions(steps: SectionOccurrence[], showTransitions: boo
 }
 
 // Une page de scan 简谱 = une page d'écran, avec l'en-tête du chant s'il la
-// précède immédiatement. Le reste des blocs est paginé normalement autour.
+// précède immédiatement ; un scan certifié (`tranchesDe` rend ses tranches, lot JP-B) en fait une page d'écran par
+// tranche, l'en-tête restant sur la première. Le reste des blocs est paginé normalement autour.
 export function splitSheetPages(
   idxs: number[],
   kindOf: (i: number) => PerformanceBlock["kind"] | undefined,
   paginate: (flow: number[]) => PerfPage[],
+  tranchesDe?: (i: number) => Tranche[] | null,
 ): PerfPage[] {
   const out: PerfPage[] = [];
   let flow: number[] = [];
@@ -39,7 +42,12 @@ export function splitSheetPages(
     const last = flow[flow.length - 1];
     const header = last !== undefined && kindOf(last) === "song-header" ? flow.pop()! : null;
     flush();
-    out.push({ header, cols: [[i]], scale: 1, fit: true });
+    const tranches = tranchesDe?.(i);
+    if (tranches && tranches.length > 0) {
+      tranches.forEach((tranche, n) => out.push({ header: n === 0 ? header : null, cols: [[i]], scale: 1, fit: true, tranche }));
+    } else {
+      out.push({ header, cols: [[i]], scale: 1, fit: true });
+    }
   }
   flush();
   return out;
@@ -102,11 +110,13 @@ type ContextePagination = {
   enteteDe: Map<number, number>;
   /** Hauteur de la pastille « Ensuite » comptée dans la dernière page d'un chant suivi d'un autre (absent : 0). */
   pastille?: number;
+  /** Tranches d'un bloc de scan 简谱 certifié (null : scan non certifié ou données pas encore chargées). */
+  tranchesDe?: (i: number) => Tranche[] | null;
 };
 
 /** Pagine tous les blocs hors vue structure ; `reservesDe` : place gardée en haut des pages 2 et suivantes, par en-tête. */
 export function paginer(reservesDe: Map<number, number>, ctx: ContextePagination): PerfPage[] {
-  const { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe, pastille = 0 } = ctx;
+  const { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe, pastille = 0, tranchesDe } = ctx;
   const dernierEntete = blocks.reduce((m, b, i) => (b.kind === "song-header" ? i : m), -1);
   const kindOf = (i: number) => blocks[i]?.kind;
   const all = blocks.map((_, i) => i);
@@ -134,7 +144,7 @@ export function paginer(reservesDe: Map<number, number>, ctx: ContextePagination
         pastille: placePastille,
       });
     });
-  });
+  }, tranchesDe);
 }
 
 /** Page à garder à l'écran après une nouvelle mise en page : celle qui contient le premier bloc de la page lue

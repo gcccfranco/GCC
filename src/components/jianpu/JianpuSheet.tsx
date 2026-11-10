@@ -4,7 +4,8 @@ import { Fragment, useMemo, useState, type CSSProperties } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
-import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords, useJianpuMarges } from "@/lib/jianpu/images";
+import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords, useJianpuMarges, useJianpuSystemes } from "@/lib/jianpu/images";
+import { LARGEUR_FEUILLE_MAX } from "@/lib/performance/tranchesScan";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
@@ -156,6 +157,10 @@ function JianpuFiltres() {
   );
 }
 
+/** Tranche d'une page de scan certifié (lot JP-B) : le rectangle `x0..x1` × `y0..y1` (px image) que la fenêtre
+ *  montre, et les lignes (`premiere`..`derniere`, indices dans `systemes.json`) qu'il contient. */
+export type TrancheFenetre = { y0: number; y1: number; x0: number; x1: number; premiere: number; derniere: number };
+
 type JianpuSheetProps = {
   entry: JianpuEntry;
   title: string;
@@ -185,6 +190,9 @@ type JianpuSheetProps = {
   /** Donné : toucher un accord le change ou l'efface, toucher une ligne
    *  d'accords en ajoute un (modes « Adapter » et « Ma version »). */
   onEditChords?: (next: JianpuChords) => void;
+  /** Mode `fit` d'un scan certifié : montrer cette tranche de la page, pleine largeur (bornée à 1 040 px), au lieu de
+   *  la page entière. Image et calque se décalent ensemble ; aucune coordonnée du calque ne change. */
+  tranche?: TrancheFenetre;
 };
 
 /** Partition 简谱 en image. Les chiffres, durées, points d'octave et
@@ -195,12 +203,13 @@ type JianpuSheetProps = {
  *  Le calque est en HTML positionné en pourcentage de l'image, pas en
  *  PNG pré-rendu : 124 chants × 12 tonalités serait intenable, et la
  *  transposition doit rester instantanée. */
-export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: demandee, originalKey, capo = 0, pageIndex, chordEdits, onEditChords }: JianpuSheetProps) {
+export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: demandee, originalKey, capo = 0, pageIndex, chordEdits, onEditChords, tranche }: JianpuSheetProps) {
   const { t } = useTranslation();
   const fit = layout === "fit";
   const chords = useJianpuChords(slug);
   const cadrage = useJianpuCadrage(slug);
   const marges = useJianpuMarges(slug);
+  const systemes = useJianpuSystemes();
   const playedKey = cleJouee(demandee, originalKey, chords?.printedKey);
   // Retouches (lot 9) : l'accord retouché remplace le gravé partout où le
   // calque parle de lui, y compris dans l'ordre de peinture.
@@ -614,7 +623,28 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
       {shownPages.map((page, n) => {
         const i = firstShown + n;
         const calque = (overlayOn || retouchesOn || retouchable) && i === 0 && chords;
-        const cal = calque ? boitesCalque(i) : [];
+        // Tranche (lot JP-B) : seulement en `fit`, sur la page montrée.
+        const tr = fit && tranche ? tranche : null;
+        // Masques (décision 24) : le masque d'une ligne cache l'encre d'une ligne VOISINE qui déborde dans la tranche.
+        // Si cette voisine est elle-même dans la tranche, son encre doit rester : le masque ne s'applique pas
+        // quand il est contenu (en y) dans l'intervalle [y0, y1] d'une autre ligne de la tranche.
+        const lignesTranche = tr ? (systemes?.[slug ?? ""]?.pages[i]?.lignes.slice(tr.premiere, tr.derniere + 1) ?? []) : [];
+        const masques = lignesTranche.flatMap((l) =>
+          (l.masques ?? []).filter(([, b, , d]) => !lignesTranche.some((autre) => autre !== l && b >= autre.y0 && d <= autre.y1)),
+        );
+        const dansMasque = (l: { x: number; y: number; w?: number; h?: number }) => {
+          const cx = l.x + (l.w ?? 0) / 2;
+          const cy = l.y + (l.h ?? 0) / 2;
+          return masques.some(([a, b, c, d]) => cx >= a && cx <= c + 1 && cy >= b && cy <= d + 1);
+        };
+        // Une étiquette ou un accord ajouté dont le centre tombe dans un masque n'est pas rendu dans cette tranche
+        // (le fond blanc d'une étiquette comprise).
+        const cal = (calque ? boitesCalque(i) : []).filter((b) => {
+          if (!masques.length) return true;
+          if (b.key.startsWith("etiquette-")) return !dansMasque(chords!.labels[Number(b.key.slice("etiquette-".length))]);
+          if (b.key.startsWith("ajout-")) return !dansMasque(ajouts[Number(b.key.slice("ajout-".length))]);
+          return true;
+        });
         // La fenêtre (piste A, P3) : la page et son calque remontent ensemble de
         // `top` pixels image, l'en-tête gravé passe au-dessus du bord et
         // disparaît. Aucune coordonnée du calque ne change. Tant que le
@@ -627,11 +657,14 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         <Fragment key={page.file}>
         {!fit && pageNonTransposee(i) && avertissementPage(i)}
         <div
-          data-jianpu-fenetre={top}
+          data-jianpu-fenetre={tr ? tr.y0 : top}
+          data-jianpu-tranche={tr ? `${tr.y0}-${tr.y1}` : undefined}
           className={fit ? "relative mx-auto overflow-hidden" : "relative overflow-hidden"}
           style={{
-            aspectRatio: `${page.w} / ${visible}`,
-            ...(fit
+            aspectRatio: tr ? `${tr.x1 - tr.x0} / ${tr.y1 - tr.y0}` : `${page.w} / ${visible}`,
+            ...(tr
+              ? { width: `min(100%, ${LARGEUR_FEUILLE_MAX}px, calc(100cqh * ${tr.x1 - tr.x0} / ${tr.y1 - tr.y0}))` }
+              : fit
               ? { width: `min(100%, calc(100cqh * ${page.w} / ${visible}))` }
               : {
                   // Page chant, vue Partitions : la marge blanche déborde de la colonne.
@@ -652,7 +685,11 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           // calque en cqw : il suit l'échelle de l'image sans mesure JS.
           style={{
             containerType: "inline-size",
-            transform: top ? `translateY(${(-top / page.h) * 100}%)` : undefined,
+            // Tranche : la page, élargie de w / (x1 − x0), glisse de −x0 et −y0 ; la fenêtre coupe le reste.
+            ...(tr ? { width: `${(page.w / (tr.x1 - tr.x0)) * 100}%` } : null),
+            transform: tr
+              ? `translate(${(-tr.x0 / page.w) * 100}%, ${(-tr.y0 / page.h) * 100}%)`
+              : top ? `translateY(${(-top / page.h) * 100}%)` : undefined,
           }}
         >
           {/* Le groupe filtré (piste A) : l'image et les gommes. Le filtre « luminance
@@ -672,6 +709,20 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
               className="h-auto w-full"
               sizes={fit ? "100vw" : "(min-width: 1024px) 900px, 100vw"}
             />
+            {masques.map(([a, b, c, d], n) => (
+              <div
+                key={`masque-${n}`}
+                data-jianpu-masque
+                aria-hidden
+                className="pointer-events-none absolute bg-white"
+                style={{
+                  left: `${(a / page.w) * 100}%`,
+                  top: `${(b / page.h) * 100}%`,
+                  width: `${((c - a + 1) / page.w) * 100}%`,
+                  height: `${((d - b + 1) / page.h) * 100}%`,
+                }}
+              />
+            ))}
             {calque && (
               <div data-jianpu-calque className="pointer-events-none absolute inset-0" aria-hidden>
                 {cal.filter((b) => !b.ajout).map((b) => rendreBoite(b, false))}

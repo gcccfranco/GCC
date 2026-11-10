@@ -306,6 +306,9 @@ test("dernier chant de la setlist, aucun bandeau « Ensuite »", async ({ page }
 test("L3 colonne scan 简谱 (paysage grand écran seulement) : « Ensuite » de la colonne change de chant", async ({ page }) => {
   test.setTimeout(90_000);
   const erreurs = surveillerErreurs(page);
+  // Scan non certifié : "一生爱你" est certifié, donc en tranches sans colonne ; on le rend non certifié.
+  await page.route("**/jianpu/systemes.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await signInAs(page, MUSICIEN, {

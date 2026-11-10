@@ -9,7 +9,10 @@ import { langAccent } from "./langAccent";
 
 /** Page 简谱 : en-tête d'une ligne et bandeau de structure en haut, scan
  *  (`children`, déjà rendu par PerformanceMode) à l'échelle de la hauteur qui
- *  reste. Pas de pagination — un scan ne se coupe pas en deux. L'en-tête
+ *  reste. Un scan non certifié ne se coupe pas : une page de scan par page d'écran.
+ *  Un scan certifié (`systemes.json`, lot JP-B) se coupe entre deux lignes : une page d'écran par tranche,
+ *  en une seule feuille large (jamais de colonne de structure à gauche) ; « Ensuite » reste sur la dernière tranche
+ *  du chant. L'en-tête
  *  complet du chant n'est pas rendu : ses 200 px devenaient des marges
  *  blanches sur les côtés (la page est contrainte par sa hauteur) ; une ligne
  *  remplace le titre gravé, coupé depuis L3-T2b (K3). Le bandeau reprend ce que

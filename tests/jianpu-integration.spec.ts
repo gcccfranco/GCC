@@ -411,7 +411,15 @@ test("5 fenêtre (page chant, deux pages) : 为我而来 p. 1 recadrée, p. 2 en
   expect(Math.abs(p2.img.top - p2.fenetre.top), "page 2 : rien de coupé").toBeLessThan(1);
 });
 
+/** Lot JP-B : 一生爱你 est certifié (`systemes.json`) et se coupe en tranches. Ces tests décrivent l'affichage d'un scan
+ *  non certifié (une page de scan par page d'écran, ratio w / (h − top), colonne en paysage) : on répond à
+ *  `systemes.json` par « aucun chant certifié » ; les tranches sont dans tests/louange-jianpu-tranches.spec.ts. */
+const scanNonCertifie = (page: Page) =>
+  page.route("**/jianpu/systemes.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
+
 test("5 fenêtre (mode louange, fit) : ratio w / (h − top), la page tient à l'écran, centrée sans compensation", async ({ page }) => {
+  await scanNonCertifie(page);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await signInAs(page, MUSICIEN, {
@@ -725,7 +733,8 @@ for (const th of THEMES) {
 
 // ─── L3-T5a : mode louange — K1 (le scan entre les barres) et l'en-tête d'une ligne ─
 
-async function ouvrirLouangeT5(page: Page, role = "pianiste") {
+async function ouvrirLouangeT5(page: Page, role = "pianiste", certifie = false) {
+  if (!certifie) await scanNonCertifie(page);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
   await signInAs(page, MUSICIEN, {
@@ -739,7 +748,11 @@ async function ouvrirLouangeT5(page: Page, role = "pianiste") {
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
   await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);
-  // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus.
+  // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus. Certifié : la page est une tranche.
+  if (certifie) {
+    await expect(page.locator("[data-performance-mode] [data-jianpu-tranche]:not([aria-hidden=true] *)")).toBeAttached({ timeout: 30_000 });
+    return;
+  }
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
   await expect.poll(async () => ratio((await fenetres(page, "[data-performance-mode]"))[0].fenetre) / (w / (h - top))).toBeCloseTo(1, 2);
@@ -820,16 +833,17 @@ test("L3-T5a en-tête d'une ligne (mode louange), A+ 150 %, capo et tonalité de
   expect(e.x + e.width).toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
 });
 
-test("L3-T5a annotations : une page de scan a sa propre clé (« j2 ») — les traits posés avant que le scan ne bouge ne s'y chargent plus", async ({ page }) => {
+test("L3-T5a annotations : une page de scan a sa propre clé (« j2 », « j4-<y0> » sur un scan certifié) — les traits posés avant que le scan ne bouge ne s'y chargent plus", async ({ page }) => {
   test.setTimeout(90_000);
   const lues: string[] = [];
   page.on("request", (r) => {
     const m = r.url().match(/\/documents\/(annotations\/[^?]+)/);
     if (m && r.method() === "GET") lues.push(decodeURIComponent(m[1]));
   });
-  await ouvrirLouangeT5(page);
-  // En paysage sur grand écran, la colonne (L3-T5b) a encore déplacé le scan : « j3 ».
-  await expect.poll(() => lues.at(-1) ?? "").toMatch((await grandEcran(page)) ? /j3$/ : /j2$/);
+  await ouvrirLouangeT5(page, "pianiste", true);
+  // 一生爱你 est certifié (`systemes.json`, lot JP-B) : sa page est une tranche, clé « j4-<y0> ». Un scan non
+  // certifié garde « j2 » (« j3 » en paysage sur grand écran, colonne L3-T5b) : tests/louange-jianpu-tranches.spec.ts.
+  await expect.poll(() => lues.at(-1) ?? "").toMatch(/j4-\d+$/);
 });
 
 // ─── L3-T5b : mode louange — en paysage sur grand écran, la structure en colonne ─
@@ -839,6 +853,7 @@ const grandEcran = (page: Page) =>
 
 /** 一生爱你 en D puis Abba Père : la page du scan est la dernière du chant, « Suivant » y est. */
 async function ouvrirLouangeT5b(page: Page, over: Record<string, unknown> = {}, role = "pianiste") {
+  await scanNonCertifie(page);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
   const item = { showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, notes: "" };

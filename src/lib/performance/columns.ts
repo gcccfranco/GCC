@@ -1,3 +1,5 @@
+import type { Tranche } from "@/lib/performance/tranchesScan";
+
 // Pagination du mode louange (PerformanceMode.tsx) — pur, sans DOM.
 // Une colonne : les pages d'aujourd'hui. Deux colonnes (lot U5, T1,
 // docs/spec-deux-volets.md Q2 à Q5) : sur tablette couchée et sur ordinateur,
@@ -13,6 +15,9 @@ export type PerfPage = { header: number | null; cols: number[][]; scale: number;
   /** Lot CV : au moins une ligne de la page n'est pas posée en une seule rangée (coupure des vers). Sa clé de
    *  page porte « v2 » ; une page dont tous les vers tiennent sur une rangée garde sa clé d'avant CV. */
   coupe?: boolean;
+  /** Page de scan 简谱 certifié (lot JP-B) : la tranche de la page de partition qu'elle montre (lignes entières,
+   *  y en px image). Absent : le scan entier, comme avant. Sa clé de page est « j4-<y0> ». */
+  tranche?: Tranche;
   /** Dernière page d'un chant suivi d'un autre : indice de la colonne qui porte la pastille « Ensuite »
    *  (posée à la fin de cette colonne, dans le flux). Absent : pas de pastille dans le flux. */
   suivant?: number;

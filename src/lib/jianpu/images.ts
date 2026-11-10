@@ -182,6 +182,62 @@ export function useJianpuMarges(slug: string | null | undefined): [number, numbe
   return (slug && marges[slug]) || [];
 }
 
+/** Systèmes des scans (JP-A, `scripts/jianpu/systemes.py`) : pour chaque chant certifié à l'œil et chaque page, les
+ *  lignes du scan (`y0`..`y1` inclus, px image), les x des barres de mesure et, pour une ligne imbriquée dans sa
+ *  voisine, des `masques` `[x0, y0, x1, y1]` à couvrir dans sa tranche (décision 24). Le slug est la clé de
+ *  `index.json`. Un chant absent (ou le fichier non chargé, en échec) n'est pas certifié : le scan garde l'affichage
+ *  d'une page de scan par page d'écran. */
+export type JianpuLigne = { y0: number; y1: number; barres: number[]; masques?: number[][] };
+export type JianpuSystemesPage = { file: string; w: number; h: number; lignes: JianpuLigne[] };
+export type JianpuSystemes = Record<string, { pages: JianpuSystemesPage[] }>;
+
+let systemesPromise: Promise<JianpuSystemes> | null = null;
+/** Le fichier une fois arrivé : un scan monté ensuite (page suivante du mode louange) part directement en tranches. */
+let systemesCharges: JianpuSystemes | null = null;
+
+export function loadJianpuSystemes(): Promise<JianpuSystemes> {
+  systemesPromise ??= fetch("/jianpu/systemes.json")
+    .then((r) => (r.ok ? (r.json() as Promise<{ version: number; chants?: JianpuSystemes }>) : { version: 0, chants: {} }))
+    .catch(() => ({ version: 0, chants: {} }))
+    .then((d) => (systemesCharges = d.chants ?? {}));
+  return systemesPromise;
+}
+
+/** Les systèmes de tous les chants, ou `undefined` tant que le fichier n'est pas chargé (échec : `{}`). */
+export function useJianpuSystemes(): JianpuSystemes | undefined {
+  const [systemes, setSystemes] = useState<JianpuSystemes | null>(systemesCharges);
+
+  useEffect(() => {
+    let alive = true;
+    loadJianpuSystemes().then((s) => {
+      if (alive) setSystemes(s);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return systemes ?? undefined;
+}
+
+/** Les marges de tous les chants (`{}` en cas d'échec), ou `undefined` tant que le fichier n'est pas chargé :
+ *  la pagination en tranches en a besoin pour tous les scans d'une setlist. */
+export function useJianpuMargesToutes(): JianpuMarges | undefined {
+  const [marges, setMarges] = useState<JianpuMarges | null>(margesChargees);
+
+  useEffect(() => {
+    let alive = true;
+    loadJianpuMarges().then((m) => {
+      if (alive) setMarges(m);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return marges ?? undefined;
+}
+
 /** Manifeste des partitions 简谱 disponibles en image (généré par
  *  scripts/jianpu/build-images.py). Chargé une seule fois par session. */
 let manifestPromise: Promise<JianpuManifest> | null = null;

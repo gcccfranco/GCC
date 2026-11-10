@@ -494,6 +494,9 @@ for (const [langue, zh] of [["fr", false], ["zh", true]] as const) {
 
 // Page de scan 简谱 (一生爱你) : la ligne d'en-tête du scan répète le titre de la barre, comme l'en-tête texte.
 test("en-tête d'une page de scan 简谱 : barre ouverte, invisible ou sous la barre ; barre fermée, visible", async ({ page }) => {
+  // Scan non certifié (一生爱你 est certifié, donc en tranches) : on répond à systemes.json par « aucun chant certifié ».
+  await page.route("**/jianpu/systemes.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
   await ouvrir(page, { slugs: ZH, zh: true });
   await page.waitForTimeout(400);
   const ligne = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)").first();
@@ -575,6 +578,9 @@ test("barre de titre en 中文 (téléphone) : même alignement centré", async 
 });
 
 test("scan 简谱, dernière page : la pastille « Ensuite » ne recouvre pas le scan", async ({ page }) => {
+  // Scan non certifié (一生爱你 est certifié, donc en tranches) : on répond à systemes.json par « aucun chant certifié ».
+  await page.route("**/jianpu/systemes.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
   await ouvrir(page, { slugs: ["一生爱你", "abba-pere"], zh: true });
   const scan = page.locator('[data-performance-mode] img[src*="jianpu"]:not([aria-hidden=true] *)').first();
   await expect(scan).toBeVisible({ timeout: 15_000 });
