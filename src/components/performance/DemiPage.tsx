@@ -57,6 +57,18 @@ export function DemiPage({
         const q = e.getBoundingClientRect();
         groupes.push({ x0: cadre.left, x1: cadre.right, top: q.top, blocs: bordsLibres(rects([e]), cote), lignes: [], sections: [] });
       }
+      // Écran d'un scan 简谱 certifié (lot JP-B) : un groupe par fenêtre de scan, ses lignes mesurées d'après leurs bornes
+      // en pixels image (`data-jianpu-lignes`) et l'échelle de la fenêtre ; on ne coupe qu'entre deux lignes, jamais dans une.
+      for (const f of couche.querySelectorAll("[data-jianpu-tranche]")) {
+        const q = f.getBoundingClientRect();
+        const [t0, t1] = (f.getAttribute("data-jianpu-tranche") ?? "").split("-").map(Number);
+        const echelle = q.height / Math.max(1, t1 - t0);
+        const rects = (f.getAttribute("data-jianpu-lignes") ?? "").split(",").filter(Boolean).map((l): [number, number] => {
+          const [a, b] = l.split("-").map(Number);
+          return [q.top + (a - t0) * echelle, q.top + (b - t0) * echelle];
+        });
+        groupes.push({ x0: q.left, x1: q.right, top: q.top, blocs: bordsLibres(rects, cote), lignes: [], sections: [], plages: cote === "haut" ? rects : undefined });
+      }
       for (const col of couche.querySelectorAll("[data-col-page]")) {
         const q = col.getBoundingClientRect();
         // Bords de ligne : les rangées de vers (les enfants `[data-rangee]` d'une ligne, ou la ligne elle-même) et, pour la
@@ -227,7 +239,7 @@ export function DemiPage({
         data-demi-zones={zones ? JSON.stringify(zones.bas) : undefined}
         style={{ visibility: pret ? undefined : "hidden", clipPath: zones ? chemin(zones.bas) : undefined }}
       >
-        <div ref={basInterieurRef} style={{ transform: coupe && coupe.decalage > 0 ? `translateY(${coupe.decalage / fontScale}px)` : undefined }}>
+        <div ref={basInterieurRef} className="h-full" style={{ transform: coupe && coupe.decalage > 0 ? `translateY(${coupe.decalage / fontScale}px)` : undefined }}>
           {rendreBas()}
         </div>
       </div>

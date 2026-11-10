@@ -84,7 +84,11 @@ self.addEventListener("activate", (event) => {
 /** Garde au plus `max` entrées dont le chemin commence par `prefixe` : les plus anciennes sont retirées. */
 function plafonner(cache, prefixe, max) {
   return cache.keys().then((keys) => {
-    const siens = keys.filter((k) => new URL(k.url).pathname.startsWith(prefixe));
+    // Les manifestes JSON de /jianpu/ (index, systemes, sections, marges…) ne comptent pas dans le plafond et ne sont jamais évincés.
+    const siens = keys.filter((k) => {
+      const chemin = new URL(k.url).pathname;
+      return chemin.startsWith(prefixe) && !(prefixe === "/jianpu/" && chemin.endsWith(".json"));
+    });
     return Promise.all(siens.slice(0, Math.max(0, siens.length - max)).map((k) => cache.delete(k)));
   });
 }

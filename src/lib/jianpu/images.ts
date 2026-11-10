@@ -196,11 +196,34 @@ let systemesPromise: Promise<JianpuSystemes> | null = null;
 let systemesCharges: JianpuSystemes | null = null;
 
 export function loadJianpuSystemes(): Promise<JianpuSystemes> {
-  systemesPromise ??= fetch("/jianpu/systemes.json")
-    .then((r) => (r.ok ? (r.json() as Promise<{ version: number; chants?: JianpuSystemes }>) : { version: 0, chants: {} }))
-    .catch(() => ({ version: 0, chants: {} }))
-    .then((d) => (systemesCharges = d.chants ?? {}));
+  systemesPromise ??= Promise.all([
+    fetch("/jianpu/systemes.json")
+      .then((r) => (r.ok ? (r.json() as Promise<{ version: number; chants?: JianpuSystemes }>) : { version: 0, chants: {} }))
+      .catch(() => ({ version: 0, chants: {} })),
+    loadJianpuManifest(),
+  ]).then(([d, manifeste]) => {
+    // index.json en échec (manifeste vide) : rien n'est certifié cette fois, mais rien n'est gardé non plus, pour
+    // qu'un prochain montage réessaie au lieu de laisser tous les scans entiers pour la session.
+    if (Object.keys(manifeste).length === 0) {
+      systemesPromise = null;
+      return {};
+    }
+    return (systemesCharges = systemesCoherents(d.chants ?? {}, manifeste));
+  });
   return systemesPromise;
+}
+
+/** Garde les chants dont les pages ont les mêmes fichiers, `w` et `h` que `index.json` : des données d'une ancienne
+ *  version (copie hors ligne) ne s'appliquent pas à des scans refaits, le chant retombe sur l'affichage d'une page de
+ *  scan par page d'écran (non certifié). */
+export function systemesCoherents(systemes: JianpuSystemes, manifeste: JianpuManifest): JianpuSystemes {
+  const out: JianpuSystemes = {};
+  for (const [slug, chant] of Object.entries(systemes)) {
+    const pages = manifeste[slug]?.pages;
+    if (!pages || pages.length !== chant.pages.length) continue;
+    if (chant.pages.every((p, i) => p.file === pages[i].file && p.w === pages[i].w && p.h === pages[i].h)) out[slug] = chant;
+  }
+  return out;
 }
 
 /** Les systèmes de tous les chants, ou `undefined` tant que le fichier n'est pas chargé (échec : `{}`). */
@@ -294,10 +317,13 @@ export function jianpuImageUrl(file: string): string {
   return `/jianpu/${encodeURIComponent(file)}`;
 }
 
-/** Adresses à garder hors ligne pour les chants donnés : les manifestes (`index`, `chords`, `cadrage`) et chaque page
+/** Adresses à garder hors ligne pour les chants donnés : les manifestes (`index`, `chords`, `cadrage`, `systemes`, `sections`, `marges`) et chaque page
  *  de scan de ceux qui en ont un. Le service worker les garde (message « precache », chemins `/jianpu/`). */
 export function urlsJianpuAGarder(manifest: JianpuManifest, slugs: Iterable<string>): string[] {
-  const urls = ["/jianpu/index.json", "/jianpu/chords.json", "/jianpu/cadrage.json"];
+  const urls = [
+    "/jianpu/index.json", "/jianpu/chords.json", "/jianpu/cadrage.json",
+    "/jianpu/systemes.json", "/jianpu/sections.json", "/jianpu/marges.json",
+  ];
   for (const slug of slugs) for (const page of manifest[slug]?.pages ?? []) urls.push(jianpuImageUrl(page.file));
   return urls;
 }

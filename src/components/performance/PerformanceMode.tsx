@@ -1058,10 +1058,21 @@ export function PerformanceMode({
   // un scan non certifié garde « j2 » / « j3 ».
   const trancheCourante = layout[currentPage]?.fit ? layout[currentPage].tranche : undefined;
   const cleScan = layout[currentPage]?.fit ? (trancheCourante ? `j4-${trancheCourante.y0}` : ecran.grand ? "j3" : "j2") : "";
-  // FS-E : la demi-page entre les pages `n` et `n + 1` (texte ; ni scan 简谱, ni annotation, ni loupe).
+  // FS-E : la demi-page entre les pages `n` et `n + 1` (ni annotation, ni loupe) : deux pages de texte, ou (lot JP-B) deux
+  // écrans successifs du MÊME scan 简谱 certifié (deux tranches, ou la dernière d'une page de scan et la première de la
+  // suivante) ; un scan non certifié (page sans tranche) n'en a jamais, ni un texte suivi d'un scan.
   const demiPossible = useCallback(
-    (n: number) => demiOn && !annotateMode && annotZoom === 1 && !!layout[n] && !layout[n].fit && !!layout[n + 1] && !layout[n + 1].fit,
-    [demiOn, annotateMode, annotZoom, layout],
+    (n: number) => {
+      const a = layout[n];
+      const b = layout[n + 1];
+      if (!demiOn || annotateMode || annotZoom !== 1 || !a || !b) return false;
+      if (!a.fit && !b.fit) return true;
+      if (!a.fit || !b.fit || !a.tranche || !b.tranche) return false;
+      const ba = blocks[a.cols[0][0]];
+      const bb = blocks[b.cols[0][0]];
+      return ba?.kind === "jianpu-sheet" && bb?.kind === "jianpu-sheet" && ba.songSlug === bb.songSlug && ba.position === bb.position;
+    },
+    [demiOn, annotateMode, annotZoom, layout, blocks],
   );
   const demiActif = demi && demiPossible(currentPage);
   // FS-D : en vue Structure, la clé sans « f2 » est celle d'avant la feuille de route (même page, mêmes réglages) : lue pour le seul bandeau.
@@ -1666,8 +1677,38 @@ export function PerformanceMode({
               />
             );
           };
+          // Tête de feuille d'un scan certifié : hauteur exacte de la barre de titre, repères des sections de la tranche allumés.
+          const teteFeuille = (b: PerformanceBlock | undefined, tr: Tranche) => ({
+            hauteur: barres.haut ? `${barres.haut / fontScale}px` : `calc(var(--sat, 0px) / ${fontScale})`,
+            encoche: `calc(var(--sat, 0px) / ${fontScale})`,
+            allumes: b?.kind === "jianpu-sheet" ? sectionsDeTranche(jianpuSections?.[b.songSlug]?.sections ?? [], b.pageIndex + 1, tr) : new Set<string>(),
+          });
+          // L'écran de scan de la page `p` (la page courante, ou l'une des deux de la demi-page).
+          const scanDePage = (p: number) => {
+            const pg = layout[p];
+            const sheetIdx = pg.cols[0][0];
+            const dernierDuChant = pages.length > 0 && p === songEndPage;
+            return (
+              <PageScan
+                sheet={blocks[sheetIdx]}
+                showTransitions={showTransitions}
+                colonneScan={colonneScan}
+                isLastPageOfSong={dernierDuChant}
+                nextEntry={nextEntry}
+                onSuivant={() => goToPage(nextSongPage, pages.length)}
+                // La pastille flottante (44 px, à 8 px au-dessus de la barre du bas) ne recouvre plus le scan : sa place est gardée dessous.
+                reserveBas={dernierDuChant && nextEntry && !colonneScan ? 56 / fontScale : 0}
+                tete={pg.tranche ? teteFeuille(blocks[sheetIdx], pg.tranche) : undefined}
+              >
+                {renderBlock(sheetIdx, true, pg.tranche)}
+              </PageScan>
+            );
+          };
           if (demiActif) {
             // Lot FS-E : le haut de la page suivante au-dessus du filet, la fin de la page en cours dessous.
+            // Deux écrans d'un même scan (lot JP-B) : chaque calque est un écran de scan (tête de feuille comprise, celle de
+            // l'écran suivant en haut) ; la coupe tombe entre deux lignes du scan, mesurées sur `data-jianpu-lignes`.
+            const surScan = page.fit;
             const texteDePage = (p: number) => {
               const idx = pages[p] ?? [];
               const entree = songEntries.reduce((acc, e) => (e.index <= (idx[0] ?? 0) ? e : acc), songEntries[0]);
@@ -1699,41 +1740,19 @@ export function PerformanceMode({
             return (
               <DemiPage
                 clePage={`${currentPage}|${fontScale}|${showChords}${showTransitions}${hideLyrics}${disposition}|${affichageVu}|${twoColumns}|${passesPagination}|${coupureEcran}`}
-                rendreHaut={() => texteDePage(currentPage + 1)}
-                rendreBas={() => texteDePage(currentPage)}
+                rendreHaut={() => (surScan ? scanDePage(currentPage + 1) : texteDePage(currentPage + 1))}
+                rendreBas={() => (surScan ? scanDePage(currentPage) : texteDePage(currentPage))}
                 part={demiPart}
                 onPart={setDemiPartEtat}
                 onPartFin={(v) => { setDemiPartEtat(v); setDemiPartPref(v); }}
                 fontScale={fontScale}
-                contentPadding={contentPadding}
+                contentPadding={surScan ? renderPadding : contentPadding}
                 nom={t("performance.halfPageHandle")}
                 onEchec={echecDemi}
               />
             );
           }
-          // Tête de feuille d'un scan certifié : hauteur exacte de la barre de titre, repères des sections de la tranche allumés.
-          const teteFeuille = (b: PerformanceBlock | undefined, tr: Tranche) => ({
-            hauteur: barres.haut ? `${barres.haut / fontScale}px` : `calc(var(--sat, 0px) / ${fontScale})`,
-            encoche: `calc(var(--sat, 0px) / ${fontScale})`,
-            allumes: b?.kind === "jianpu-sheet" ? sectionsDeTranche(jianpuSections?.[b.songSlug]?.sections ?? [], b.pageIndex + 1, tr) : new Set<string>(),
-          });
-          if (page.fit) {
-            return (
-              <PageScan
-                sheet={blocks[page.cols[0][0]]}
-                showTransitions={showTransitions}
-                colonneScan={colonneScan}
-                isLastPageOfSong={isLastPageOfSong}
-                nextEntry={nextEntry}
-                onSuivant={() => goToPage(nextSongPage, pages.length)}
-                // La pastille flottante (44 px, à 8 px au-dessus de la barre du bas) ne recouvre plus le scan : sa place est gardée dessous.
-                reserveBas={isLastPageOfSong && nextEntry && !colonneScan ? 56 / fontScale : 0}
-                tete={page.tranche ? teteFeuille(blocks[page.cols[0][0]], page.tranche) : undefined}
-              >
-                {renderBlock(page.cols[0][0], true, page.tranche)}
-              </PageScan>
-            );
-          }
+          if (page.fit) return scanDePage(currentPage);
           return (
             <ConteneurCoupure className={page.etire ? "h-full" : undefined}>
             <PageTexte

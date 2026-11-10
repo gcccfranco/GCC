@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { expect, test, type Page } from "@playwright/test";
+import { systemesCoherents, urlsJianpuAGarder } from "../src/lib/jianpu/images";
 
 // 16/09/2026 : en local, le service worker servait les fichiers de Next
 // (`/_next/static/…`) depuis son cache. En production ces fichiers portent un
@@ -215,6 +216,42 @@ test("sw.js, precache : les scans respectent le plafond de /jianpu/", async () =
   expect(jianpu).toHaveLength(250);
   expect(jianpu.slice(-2)).toEqual(["/jianpu/neuf-a.webp", "/jianpu/neuf-b.webp"]);
   expect(jianpu).not.toContain("/jianpu/vieux-0.webp");
+});
+
+test("sw.js, precache : les JSON de /jianpu/ (index, systemes, sections, marges) sont hors du plafond des 250 entrées", async () => {
+  const sw = monterSw((chemin) => rep(chemin));
+  const jsons = ["index", "chords", "cadrage", "systemes", "sections", "marges"].map((n) => `/jianpu/${n}.json`);
+  await sw.precache(jsons);
+  // Beaucoup plus de scans que le plafond : les JSON ne partent jamais, les scans les plus anciens oui.
+  for (let i = 0; i < 300; i++) await sw.precache([`/jianpu/s-${i}.webp`]);
+  const jianpu = sw.chemins().filter((c) => c.startsWith("/jianpu/"));
+  for (const j of jsons) expect(jianpu, j).toContain(j);
+  const scans = jianpu.filter((c) => c.endsWith(".webp"));
+  expect(scans).toHaveLength(250);
+  expect(scans).not.toContain("/jianpu/s-0.webp");
+  expect(scans).toContain("/jianpu/s-299.webp");
+});
+
+test("urlsJianpuAGarder : les manifestes systemes, sections et marges sont gardés avec les scans", () => {
+  const urls = urlsJianpuAGarder({ chant: { source: "x", pages: [{ file: "a.webp", w: 1, h: 1 }] } }, ["chant"]);
+  for (const n of ["index", "chords", "cadrage", "systemes", "sections", "marges"]) expect(urls).toContain(`/jianpu/${n}.json`);
+  expect(urls).toContain("/jianpu/a.webp");
+});
+
+test("systemesCoherents : un chant dont une page n'a pas les mêmes w/h que index.json retombe sur le repli (non certifié)", () => {
+  const manifeste = {
+    a: { source: "x", pages: [{ file: "a-p1.webp", w: 1600, h: 2000 }] },
+    b: { source: "x", pages: [{ file: "b-p1.webp", w: 1600, h: 2000 }, { file: "b-p2.webp", w: 1600, h: 2000 }] },
+    c: { source: "x", pages: [{ file: "c-p1.webp", w: 1600, h: 2000 }] },
+  };
+  const page = (file: string, w: number, h: number) => ({ file, w, h, lignes: [] });
+  const out = systemesCoherents({
+    a: { pages: [page("a-p1.webp", 1600, 2000)] },
+    b: { pages: [page("b-p1.webp", 1600, 2000), page("b-p2.webp", 1600, 2100)] },
+    c: { pages: [page("c-p1.webp", 1601, 2000)] },
+    absent: { pages: [page("z.webp", 1, 1)] },
+  }, manifeste);
+  expect(Object.keys(out)).toEqual(["a"]);
 });
 
 test("sw.js, adresses sans barre finale : la copie avec barre est servie hors ligne, paramètres gardés", async () => {

@@ -659,6 +659,8 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         <div
           data-jianpu-fenetre={tr ? tr.y0 : top}
           data-jianpu-tranche={tr ? `${tr.y0}-${tr.y1}` : undefined}
+          // Bornes (px image) des lignes de la tranche : la demi-page ne coupe qu'entre deux d'entre elles.
+          data-jianpu-lignes={tr ? lignesTranche.map((l) => `${l.y0}-${l.y1}`).join(",") : undefined}
           className={fit ? "relative mx-auto overflow-hidden" : "relative overflow-hidden"}
           style={{
             aspectRatio: tr ? `${tr.x1 - tr.x0} / ${tr.y1 - tr.y0}` : `${page.w} / ${visible}`,

@@ -289,6 +289,18 @@ test("deux tranches d'un même scan ont deux clés j4-<y0> distinctes", async ({
 for (const cas of [
   { nom: "systemes.json sans le chant", repondre: (route: import("@playwright/test").Route) => route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }) },
   { nom: "systemes.json en 404", repondre: (route: import("@playwright/test").Route) => route.fulfill({ status: 404, body: "" }) },
+  // Hors ligne sans copie : la requête échoue (réseau coupé).
+  { nom: "systemes.json en échec réseau", repondre: (route: import("@playwright/test").Route) => route.abort("failed") },
+  // Données d'une ancienne version : la largeur d'une page ne correspond plus à index.json, le chant est traité comme non certifié.
+  {
+    nom: "w/h différents de index.json",
+    repondre: async (route: import("@playwright/test").Route) => {
+      const rep = await route.fetch();
+      const d = (await rep.json()) as Systemes;
+      d.chants[UN].pages[0].w += 1;
+      await route.fulfill({ response: rep, json: d });
+    },
+  },
 ]) {
   test.describe(`non certifié (${cas.nom})`, () => {
     test.use({ serviceWorkers: "block" });
@@ -452,7 +464,7 @@ async function lireTete(page: Page): Promise<Tete> {
       barreBas: b.bottom,
       fenetreHaut: f ? f.getBoundingClientRect().top : 0,
       repereTexte: reperes.map((r) => (r.textContent ?? "").trim()),
-      allumes: reperes.filter((r) => r.hasAttribute("data-allume")).map((r) => r.getAttribute("title") ?? ""),
+      allumes: reperes.filter((r) => r.hasAttribute("data-allume")).map((r) => r.getAttribute("aria-label") ?? ""),
       cle: t?.querySelector("[data-cle-tete]")?.textContent ?? "",
       grave: t?.querySelector("[data-grave-en]")?.textContent ?? "",
     };
@@ -620,15 +632,88 @@ const VUES = [
   { nom: "transpose", opts: { cles: { [UN]: "F" }, surcharge: { [UN]: UN_DP } } },
 ];
 for (const v of VUES) {
-  test(`capture JP-B2 de la tête de feuille, ${v.nom}`, async ({ page }, info) => {
+  test(`capture JP-B3 de la tête de feuille, ${v.nom}`, async ({ page }, info) => {
     test.setTimeout(90_000);
     await ouvrirLouange(page, { chants: [UN, FR], ...v.opts });
     await attendreTranches(page);
     await fermerBarre(page);
     await page.waitForTimeout(400);
-    await page.screenshot({ path: `test-results/jp-b2-${info.project.name}-${v.nom}.png` });
+    await page.screenshot({ path: `test-results/jp-b3-${info.project.name}-${v.nom}.png` });
     await ouvrirBarre(page);
     await page.waitForTimeout(400);
-    await page.screenshot({ path: `test-results/jp-b2-${info.project.name}-${v.nom}-barre.png` });
+    await page.screenshot({ path: `test-results/jp-b3-${info.project.name}-${v.nom}-barre.png` });
   });
 }
+
+// ─── Tranche 3 : finitions de la tête ───────────────────────────────────────
+
+test("tête de feuille : posée sur la feuille (ordinateur, tablette paysage), repères et tonalité au bord de l'encre ; repères inertes au défilement", async ({ page }, info) => {
+  test.setTimeout(90_000);
+  await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" } });
+  await attendreTranches(page);
+  await fermerBarre(page);
+  await page.waitForTimeout(300);
+  const m = await page.evaluate(() => {
+    const vu = (e: Element) => !e.closest("[aria-hidden=true]");
+    const rect = (e: Element | null | undefined) => (e ? e.getBoundingClientRect() : null);
+    const t = Array.from(document.querySelectorAll("[data-performance-mode] [data-tete-feuille]")).find(vu)!;
+    const f = Array.from(document.querySelectorAll("[data-performance-mode] [data-jianpu-fenetre]")).find(vu)!;
+    const fr = f.getBoundingClientRect();
+    const premier = rect(t.querySelector("[data-repere-tete]"))!;
+    const cle = rect(t.querySelector("[data-cle-tete]"))!;
+    const ol = t.querySelector("ol")!;
+    const repere = t.querySelector<HTMLElement>("[data-repere-tete]")!;
+    const cs = getComputedStyle(t.querySelector("[data-cle-tete]")!);
+    const tempo = t.querySelector("[data-tempo-tete]");
+    const note = tempo?.querySelector("svg")?.getBoundingClientRect();
+    return {
+      fenetre: { x: fr.x, droite: fr.right, largeur: fr.width },
+      premierX: premier.x, cleDroite: cle.right,
+      zone: window.innerWidth,
+      overflow: getComputedStyle(ol).overflowX,
+      aria: repere.getAttribute("aria-label"), title: repere.getAttribute("title"),
+      largeurMin: repere.getBoundingClientRect().width,
+      cleTaille: cs.fontSize, cleNums: cs.fontVariantNumeric,
+      noteH: note ? Math.round(note.height * 10) / 10 : null,
+      hauteurTete: t.getBoundingClientRect().height,
+      hauteurContenu: Math.max(...Array.from(t.querySelectorAll("[data-repere-tete], [data-cle-tete], [data-grave-en]"), (e) => e.getBoundingClientRect().bottom)) - t.getBoundingClientRect().top,
+    };
+  });
+  const surFeuille = m.fenetre.largeur < m.zone - 16;
+  if (surFeuille) {
+    // Ordinateur et tablette paysage : la tête est sur la feuille, du bord gauche au bord droit de la fenêtre de scan.
+    expect(Math.abs(m.premierX - m.fenetre.x), "premier repère au bord gauche de la feuille").toBeLessThanOrEqual(2);
+    expect(Math.abs(m.cleDroite - m.fenetre.droite), "tonalité au bord droit de la feuille").toBeLessThanOrEqual(2);
+  } else {
+    // Tablette portrait, téléphone : le retrait habituel (la fenêtre occupe toute la largeur), rien ne change.
+    expect(m.premierX).toBeGreaterThanOrEqual(m.fenetre.x);
+  }
+  expect(m.overflow).toBe("hidden");
+  expect(m.aria, "nom complet de la section").toBeTruthy();
+  expect(m.title, "plus de title").toBeNull();
+  expect(m.largeurMin).toBeGreaterThanOrEqual(26);
+  expect(m.cleTaille).toBe("20px");
+  expect(m.cleNums).toContain("lining-nums");
+  expect(m.cleNums).toContain("tabular-nums");
+  expect(m.noteH, "note noire à 15 px").toBe(15);
+  expect(m.hauteurContenu, "le tout tient dans la hauteur de la tête").toBeLessThanOrEqual(m.hauteurTete + 0.5);
+  info.annotations.push({ type: "surFeuille", description: String(surFeuille) });
+});
+
+test("tête de feuille : « gravé en E » en #6c6c72 en clair, 13 px ; repère allumé souligné de 3 px", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" } });
+  await attendreTranches(page);
+  const r = await page.evaluate(() => {
+    const t = Array.from(document.querySelectorAll("[data-performance-mode] [data-tete-feuille]")).find((e) => !e.closest("[aria-hidden=true]"))!;
+    const g = getComputedStyle(t.querySelector("[data-grave-en]")!);
+    const on = t.querySelector<HTMLElement>("[data-repere-tete][data-allume]");
+    const off = t.querySelector<HTMLElement>("[data-repere-tete]:not([data-allume])");
+    return { couleur: g.color, taille: g.fontSize, ombreOn: on ? getComputedStyle(on).boxShadow : null, ombreOff: off ? getComputedStyle(off).boxShadow : "none" };
+  });
+  expect(r.couleur).toBe("rgb(108, 108, 114)");
+  expect(r.taille).toBe("13px");
+  expect(r.ombreOn, "un repère allumé").not.toBeNull();
+  expect(r.ombreOn).toMatch(/0px 3px 0px -1px/);
+  expect(r.ombreOff).toBe("none");
+});

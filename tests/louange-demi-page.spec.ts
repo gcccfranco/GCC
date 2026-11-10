@@ -293,16 +293,91 @@ test("demi-page : la poignée (glisser, flèches) règle la coupe, retenue ; ell
   expect(Number(await page.evaluate(() => localStorage.getItem("perf-demi-page-part")))).toBeCloseTo(0.75, 2);
 });
 
-test("demi-page : sur un chant à scan 简谱, le tour est normal", async ({ page }, testInfo) => {
-  await ouvrir(page, { slugs: SCAN });
-  await expect(page.locator("[data-performance-mode] [data-jianpu-page] img").first()).toBeVisible();
-  const total = Number((await lireCompteur(page)).split("/")[1]);
-  expect(total).toBeGreaterThan(1);
-  await tourner(page, testInfo, 1, "fleche");
-  await expect.poll(() => lireCompteur(page)).toMatch(/^2 \//);
-  await expect(enDemi(page)).toHaveCount(0);
-  await expect(filet(page)).toHaveCount(0);
+test.describe("demi-page : scan non certifié", () => {
+  // Les scans sont tous certifiés : on retire le chant de systemes.json (hors de portée du service worker, d'où le blocage).
+  test.use({ serviceWorkers: "block" });
+  test("demi-page : sur un scan 简谱 non certifié, la demi-page reste éteinte et le tour est normal", async ({ page }, testInfo) => {
+    await page.route("**/jianpu/systemes.json", (route) => route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
+    await ouvrir(page, { slugs: SCAN });
+    await expect(page.locator("[data-performance-mode] [data-jianpu-page] img").first()).toBeVisible();
+    const total = Number((await lireCompteur(page)).split("/")[1]);
+    expect(total).toBeGreaterThan(1);
+    await tourner(page, testInfo, 1, "fleche");
+    await expect.poll(() => lireCompteur(page)).toMatch(/^2 \//);
+    await expect(enDemi(page)).toHaveCount(0);
+    await expect(filet(page)).toHaveCount(0);
+  });
 });
+
+/** Ce que montrent les deux calques d'un scan en demi-page : pour chaque ligne du scan (bornes `data-jianpu-lignes`, échelle de
+ *  la fenêtre), visible si elle rencontre la zone du calque, « tranchée » si elle n'y tient pas entière. */
+async function mesurerScan(page: Page) {
+  return page.evaluate(() => {
+    const f = document.querySelector<HTMLElement>("[data-performance-mode] [data-demi-filet]")!.getBoundingClientRect();
+    const yCoupe = f.top + f.height / 2;
+    const lire = (sel: string) => {
+      const calque = document.querySelector<HTMLElement>(`[data-performance-mode] ${sel}`)!;
+      const zs = JSON.parse(calque.dataset.demiZones ?? "[]") as Array<[number, number, number, number]>;
+      const fen = calque.querySelector<HTMLElement>("[data-jianpu-tranche]")!;
+      const q = fen.getBoundingClientRect();
+      const [t0, t1] = fen.dataset.jianpuTranche!.split("-").map(Number);
+      const echelle = q.height / (t1 - t0);
+      const lignes = fen.dataset.jianpuLignes!.split(",").map((l) => l.split("-").map(Number)).map(([a, b]) => ({ top: q.top + (a - t0) * echelle, bottom: q.top + (b - t0) * echelle }));
+      const vues = lignes.flatMap((l) => {
+        const z = zs.find(([, y0, , y1]) => l.top < y1 - 1 && l.bottom > y0 + 1);
+        return z ? [{ ...l, entiere: l.top >= z[1] - 1 && l.bottom <= z[3] + 1 }] : [];
+      });
+      return { total: lignes.length, vues, bas: q.bottom, fenetreHaut: q.top };
+    };
+    const haut = lire("[data-demi-haut]");
+    const bas = lire("[data-demi-bas]");
+    return {
+      yCoupe,
+      haut: { visibles: haut.vues.length, tranchees: haut.vues.filter((l) => !l.entiere || l.bottom > yCoupe + 1).length, total: haut.total },
+      bas: { visibles: bas.vues.length, tranchees: bas.vues.filter((l) => !l.entiere || l.top < yCoupe - 1).length, total: bas.total },
+      // Le filet n'est dans aucune ligne visible.
+      dansUneLigne: [...haut.vues, ...bas.vues].filter((l) => l.top < yCoupe - 1 && l.bottom > yCoupe + 1).length,
+    };
+  });
+}
+
+for (const slug of ["一生爱你", "为我而来"]) {
+  test(`demi-page : un scan certifié (${slug}) se coupe entre deux lignes, jamais dans une portée`, async ({ page }, testInfo) => {
+    test.setTimeout(90_000);
+    await ouvrir(page, { slugs: [slug] });
+    await expect(page.locator("[data-performance-mode] [data-jianpu-page] img").first()).toBeVisible();
+    await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
+    const total = Number((await lireCompteur(page)).split("/")[1]);
+    test.skip(total < 2, "ce scan tient en un seul écran dans cette disposition");
+    await tourner(page, testInfo, 1, "fleche");
+    await expect(enDemi(page)).toHaveCount(1);
+    await expect(filet(page)).toHaveCount(1);
+    // La tête de feuille reste en haut.
+    await expect(page.locator("[data-performance-mode] [data-demi-haut] [data-tete-feuille]")).toHaveCount(1);
+    // Le demi-écran est (encore) la page 1 : le compteur n'a pas bougé.
+    expect(await lireCompteur(page)).toMatch(/^1 \//);
+    const m = await mesurerScan(page);
+    expect(m.haut.visibles, "des lignes de l'écran suivant au-dessus du filet").toBeGreaterThan(0);
+    expect(m.bas.visibles, "des lignes de l'écran courant sous le filet").toBeGreaterThan(0);
+    expect(m.haut.tranchees, "aucune portée coupée en haut").toBe(0);
+    expect(m.bas.tranchees, "aucune portée coupée en bas").toBe(0);
+    expect(m.dansUneLigne, "le filet tombe entre deux lignes").toBe(0);
+    // La poignée ne propose que des coupes entre lignes : à chaque cran, rien n'est tranché.
+    await poignee(page).focus();
+    for (const touche of ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowDown"]) {
+      await page.keyboard.press(touche);
+      await page.waitForTimeout(150);
+      const k = await mesurerScan(page);
+      expect(k.haut.tranchees + k.bas.tranchees + k.dansUneLigne, touche).toBe(0);
+    }
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `test-results/jp-b3-${testInfo.project.name}-demi${slug === "一生爱你" ? "-1" : ""}.png` });
+    // Un second tour passe à l'écran suivant, entier.
+    await tourner(page, testInfo, 1, "fleche");
+    await expect.poll(() => lireCompteur(page)).toMatch(/^2 \//);
+    await expect(enDemi(page)).toHaveCount(0);
+  });
+}
 
 test("demi-page : « Annoter » remet la page entière", async ({ page }, testInfo) => {
   await ouvrir(page);

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { StructureStrip } from "@/components/song/SongView";
 import type { JianpuSheetBlock, PerformanceBlock, SongHeaderBlock } from "@/lib/performance/blocks";
@@ -45,6 +45,25 @@ export function PageScan({
   children: ReactNode;
 }) {
   const { t } = useTranslation();
+  // Largeur réelle de la fenêtre de scan quand elle est plus étroite que la zone (ordinateur, tablette en paysage) :
+  // la tête de feuille se pose sur la même largeur, centrée. Mesurée sur le rendu (elle dépend de la hauteur et de la tranche).
+  const scanRef = useRef<HTMLDivElement>(null);
+  const [largeurFeuille, setLargeurFeuille] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const zone = scanRef.current;
+    if (!zone || !tete) return;
+    const mesurer = () => {
+      const fenetre = zone.querySelector<HTMLElement>("[data-jianpu-fenetre]");
+      const w = fenetre?.offsetWidth ?? 0;
+      setLargeurFeuille(w > 0 && w < zone.clientWidth - 1 ? w : null);
+    };
+    mesurer();
+    const ro = new ResizeObserver(mesurer);
+    ro.observe(zone);
+    const fenetre = zone.querySelector("[data-jianpu-fenetre]");
+    if (fenetre) ro.observe(fenetre);
+    return () => ro.disconnect();
+  });
   const enTete: JianpuSheetBlock | null = sheet?.kind === "jianpu-sheet" ? sheet : null;
   const rond = enTete && (
     <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
@@ -95,8 +114,9 @@ export function PageScan({
           gravure={enTete.songKey !== enTete.originalKey ? enTete.originalKey : null}
           tempo={enTete.tempo}
           capo={enTete.capo}
+          largeur={largeurFeuille}
         />
-        <div className="min-h-0 flex-1" style={reserveBas ? { paddingBottom: reserveBas } : undefined}>{children}</div>
+        <div ref={scanRef} className="min-h-0 flex-1" style={reserveBas ? { paddingBottom: reserveBas } : undefined}>{children}</div>
       </div>
     );
   }
