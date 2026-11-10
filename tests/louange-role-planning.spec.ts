@@ -171,7 +171,7 @@ test("Piano retenu, planning Batterie : pastille centrée, dans l'écran, ≤ 60
   expect(boite.x, "ne déborde pas à gauche").toBeGreaterThanOrEqual(0);
   expect(boite.x + boite.width, "ne déborde pas à droite").toBeLessThanOrEqual(ecran.width);
   expect(boite.height, "hauteur").toBeLessThanOrEqual(60);
-  expect(Math.round(boite.width), telephone(page) ? "358 px au téléphone (ou la fenêtre moins 16)" : "304 px").toBe(telephone(page) ? Math.min(358, ecran.width - 16) : 304);
+  expect(Math.round(boite.width), telephone(page) ? "au téléphone, la fenêtre moins 48 px (marges des cartes)" : "304 px").toBe(telephone(page) ? ecran.width - 48 : 304);
   if ((await page.locator("[data-barre-ouverte]").count()) > 0) {
     const barre = (await page.locator("[data-barre-haut]").boundingBox())!;
     expect(boite.y, "juste sous la barre de titre").toBeGreaterThanOrEqual(barre.y + barre.height - 1);
@@ -427,7 +427,7 @@ test("en 中文 : la pastille, son bouton et sa croix portent les mots chinois ;
   await ouvrirMode(page, { feuilles: culte({ batterie: NOM }), slugs: ZH });
   const p = pastille(page);
   await expect(p).toBeVisible();
-  await expect(p).toContainText("排班表：今天鼓");
+  await expect(p).toContainText("今日排班：鼓");
   await expect(p).toContainText("切换到鼓手视图");
   await expect(p.getByRole("button", { name: "关闭建议" })).toBeVisible();
   await p.getByRole("button", { name: /切换到鼓手视图/ }).click();

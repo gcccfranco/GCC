@@ -1694,8 +1694,8 @@ export function PerformanceMode({
         <div
           data-pastille-planning
           role="status"
-          className="fixed left-1/2 flex w-[304px] max-w-[calc(100vw-16px)] -translate-x-1/2 items-center gap-1 rounded-2xl border border-border bg-popover/90 py-1 pl-4 pr-1 text-foreground shadow-[0_8px_28px_rgba(28,28,30,.22)] backdrop-blur-xl dark:shadow-[0_8px_28px_rgba(0,0,0,.5)] max-[430px]:w-[358px]"
-          style={{ zIndex: 25, top: showChrome ? `${barres.haut + 4}px` : "calc(var(--sat, 0px) + 4px)" }}
+          className="fixed left-1/2 flex w-[304px] max-w-[calc(100vw-16px)] -translate-x-1/2 items-center gap-1 rounded-2xl border border-border bg-popover/90 py-1 pl-4 pr-1 text-foreground shadow-[0_8px_28px_rgba(28,28,30,.22)] backdrop-blur-xl dark:shadow-[0_8px_28px_rgba(0,0,0,.5)] max-[430px]:w-[calc(100vw-48px)] max-[430px]:bg-popover"
+          style={{ "--couleur-icones": couleurMenus, zIndex: 25, top: showChrome ? `${barres.haut + 4}px` : "calc(var(--sat, 0px) + 4px)" } as React.CSSProperties}
           onPointerDown={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
           onPointerCancel={(e) => e.stopPropagation()}
@@ -1703,7 +1703,7 @@ export function PerformanceMode({
         >
           {etatPastille === "accepte" ? (
             <>
-              <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[color:var(--couleur-icones)]">
+              <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-foreground">
                 {t("performance.planning.done", { role: t(`performance.roles.${rolePlanning}`) })}
               </span>
               <button
@@ -1907,7 +1907,7 @@ export function PerformanceMode({
                       <span className="block text-[13px] text-muted-foreground">{t(`performance.rolePrompt.hints.${id}`)}</span>
                     </span>
                     {id === rolePlanningOuverture && (
-                      <span data-role-planning className="shrink-0 text-[13px] text-[color:var(--couleur-icones)]">{t("performance.planning.label")}</span>
+                      <span data-role-planning className="shrink-0 rounded-full px-2 py-1 text-[12.5px] font-semibold leading-none text-[color:var(--couleur-icones)]" style={{ background: "color-mix(in srgb, var(--couleur-icones) 14%, transparent)" }}>{t("performance.planning.label")}</span>
                     )}
                     {actif && <Check className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" aria-hidden="true" />}
                   </button>

@@ -695,7 +695,7 @@
     },
     "planning": {
       "label": "按排班表",
-      "today": "排班表：今天{{instrument}}",
+      "today": "今日排班：{{instrument}}",
       "switch": "切换到{{role}}视图",
       "done": "{{role}}视图",
       "undo": "撤销",
