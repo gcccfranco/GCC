@@ -133,3 +133,38 @@ Parallélisme :
   que sa propre ligne (en cas de conflit au `git pull --rebase`, garder les deux).
 - **Un workflow se teste à vide d'abord** (sans `args`, il s'arrête avant le premier agent) ; une liste se passe en
   `args` réel, jamais un texte à remplacer.
+
+## 7. Contexte de départ des agents
+
+Ce qu'un agent pèse avant d'avoir rien fait : jetons d'entrée de sa première requête, lus dans sa transcription (même
+question pour les huit, aucun outil lancé, session cloud). Mesuré le 10/11/2026 ; méthode et décomposition : archive,
+§ 9.
+
+| Agent | Modèle | Avant | Après (attendu) | Après (mesuré) |
+| --- | --- | --- | --- | --- |
+| `chercheur` | Haiku | 67 160 | ≈ 12 500 | à mesurer |
+| `testeur` | Haiku | 67 407 | ≈ 12 500 | à mesurer |
+| `relecteur` | Sonnet | 68 112 | ≈ 13 000 | à mesurer |
+| `regard` | Sonnet | 67 393 | ≈ 10 500 | à mesurer |
+| `critique-design` | Opus | 67 801 | ≈ 13 000 | à mesurer |
+| `executant` | Sonnet | 67 966 | ≈ 13 000 | à mesurer |
+| `maquettiste` | Sonnet | 84 266 | ≈ 29 500 | à mesurer |
+| `directeur-artistique` | Opus | 78 751 | ≈ 24 000 | à mesurer |
+
+Les définitions d'outils font les deux tiers de ce contexte (les 48 outils MCP de la session à eux seuls ≈ 59 %), la
+liste des 60 skills ≈ 15 %, les deux `CLAUDE.md` ≈ 10 %. `disallowedTools` ne retire que les outils qu'il nomme : tout
+le reste est hérité, y compris par les agents « en lecture seule ».
+
+**Proposé le 10/11/2026, en attente du go de Timothée** (aucun fichier de `.claude/agents/` n'est modifié) : déclarer
+chaque agent par une liste `tools:`, à la place de `disallowedTools`.
+
+| Agents | `tools:` |
+| --- | --- |
+| `chercheur`, `testeur`, `relecteur`, `critique-design`, `directeur-artistique` | `Bash, Read, Grep, Glob` |
+| `regard` | `Read, Glob` |
+| `executant`, `maquettiste` | `Bash, Read, Edit, Write, Grep, Glob` |
+
+Ils y perdent `Skill`, la recherche web, les connecteurs (GitHub, Notion, Drive, Todoist, Figma) et les outils de
+session cloud ; aucune consigne d'agent ne les demande. Le champ `skills:` de l'équipe design reste. Après le go :
+mesure « après » dans une session neuve (les agents se chargent au démarrage), puis `/tranche` et `/planche` à vide et
+par une petite passe réelle, pour vérifier la sortie par `schema` et le préchargement des skills.

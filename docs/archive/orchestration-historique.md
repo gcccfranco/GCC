@@ -234,3 +234,47 @@ Règles à partir du 24/10/2026, 20 h :
 - *(Avant le 03/11/2026)* **Specs voisines bornées à huit** dans `/tranche` (A6 : 2 h 45, dont une bonne part en specs voisines lourdes). La
   suite complète, en fin de lot, se découpe en trois (`--shard=1/3`…), dans trois sessions de test légères en
   parallèle.
+
+---
+
+## 9. Contexte de départ des agents (mesure du 10/11/2026, ajoutée après la copie)
+
+Constat de départ : un `chercheur` interrogé sur son propre contexte rendait `subagent_tokens: 67950` pour un seul
+appel d'outil. Cet appel est la remise du rapport (`SubagentHandback`) : `subagent_tokens` additionne l'entrée et la
+sortie d'une seule requête, donc le contexte de départ.
+
+**Méthode.** Les huit agents de `.claude/agents/`, trois à la fois, avec la même question (as-tu `Skill`, combien de
+skills, combien d'outils, vois-tu les `CLAUDE.md`), sans lancer d'outil. Les chiffres viennent de la transcription de
+chaque agent (`~/.claude/projects/<projet>/<session>/subagents/agent-*.jsonl`) : compteurs de la première requête, et
+taille en caractères de chaque pièce du contexte. Les jetons par pièce sont **estimés** par règle de trois sur deux
+agents mesurés (56 outils et 6 outils) : ≈ 0,22 jeton par caractère de définition d'outil, ≈ 0,37 par caractère de
+texte ; les colonnes « attendu » du tableau en vigueur (`../orchestration.md` § 7) en découlent.
+
+**D'où viennent les 67 160 jetons du `chercheur`** (les sept autres ont les mêmes pièces, à la consigne près) :
+
+| Pièce | Caractères | Jetons (≈) | Part |
+| --- | --- | --- | --- |
+| Définitions de 56 outils | 198 941 | 45 000 | 67 % |
+| dont 48 outils MCP : `claude-code-remote` 36, `claude-artifacts` 7, `Claude_Docs` 3, `ccd_session` 2 | 176 061 | 40 000 | 59 % |
+| dont 8 outils natifs : `Bash`, `Grep`, `Skill`, `Read`, `ToolSearch`, `SearchPlugins`, `SubagentHandback`, `Glob` | 22 880 | 5 000 | 8 % |
+| Liste des 60 skills (descriptions) | 27 896 | 10 000 | 15 % |
+| Les deux `CLAUDE.md` | 17 127 | 6 400 | 10 % |
+| Noms des 244 outils différés (GitHub, Notion, Todoist, Figma, Drive…) | 8 369 | 3 100 | 5 % |
+| Consigne de l'agent, environnement, question | ≈ 6 700 | 2 500 | 4 % |
+
+Les quatre plus gros outils (`create_environment`, `update_environment`, `request_credential`, `get_environment`)
+pèsent 46 600 caractères, plus que les deux `CLAUDE.md` et la liste des skills réunis. L'`executant` et le
+`maquettiste` ont deux outils de plus (`Edit`, `Write` : 2 400 caractères). Les skills du champ `skills:` arrivent en
+entier : + 16 300 jetons pour le `maquettiste` (`web-design-engineer`, `frontend-design`), + 11 000 pour le
+`directeur-artistique` (`frontend-design`, `apple-design`). Aucun agent ne reçoit les instructions des serveurs MCP.
+
+**Point de comparaison.** L'agent intégré `claude-code-guide`, déclaré par liste (`Glob, Grep, Read, WebFetch,
+WebSearch`), est parti de 32 693 jetons, dont 56 000 caractères de consigne intégrée qui lui sont propres. Il n'a reçu
+ni outil MCP, ni liste de skills, ni liste d'outils différés ; il garde les deux `CLAUDE.md` et `SubagentHandback`,
+que le harnais ajoute hors liste. C'est ce qui fonde la proposition : une liste `tools:` sans `Skill` ni `ToolSearch`
+retire les trois plus grosses pièces. Reste à vérifier sur nos agents, après le go : la sortie par `schema` dans les
+workflows et le préchargement par `skills:` sans l'outil `Skill`.
+
+**À côté.** `ponytail`, que l'`executant` préchargeait, n'est plus dans le dépôt et son en-tête n'a plus de champ
+`skills:`. `/audit-code` lance ses agents sans `agentType` : s'ils partent du même contexte, 60 agents × 68 000 jetons
+font l'essentiel des 5 millions annoncés ; non mesuré, à relever lors de l'essai des workflows.
