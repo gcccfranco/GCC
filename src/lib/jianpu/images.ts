@@ -157,9 +157,15 @@ let margesChargees: JianpuMarges | null = null;
 
 export function loadJianpuMarges(): Promise<JianpuMarges> {
   margesPromise ??= fetch("/jianpu/marges.json")
-    .then((r) => (r.ok ? (r.json() as Promise<JianpuMarges>) : {}))
-    .catch(() => ({}))
-    .then((m) => (margesChargees = m));
+    .then((r) => {
+      if (r.ok) return (r.json() as Promise<JianpuMarges>).then((m) => (margesChargees = m));
+      margesPromise = null; // échec : rien n'est gardé, un prochain montage réessaie
+      return {};
+    })
+    .catch(() => {
+      margesPromise = null;
+      return {};
+    });
   return margesPromise;
 }
 
@@ -198,13 +204,13 @@ let systemesCharges: JianpuSystemes | null = null;
 export function loadJianpuSystemes(): Promise<JianpuSystemes> {
   systemesPromise ??= Promise.all([
     fetch("/jianpu/systemes.json")
-      .then((r) => (r.ok ? (r.json() as Promise<{ version: number; chants?: JianpuSystemes }>) : { version: 0, chants: {} }))
-      .catch(() => ({ version: 0, chants: {} })),
+      .then((r) => (r.ok ? (r.json() as Promise<{ version: number; chants?: JianpuSystemes }>) : null))
+      .catch(() => null),
     loadJianpuManifest(),
   ]).then(([d, manifeste]) => {
-    // index.json en échec (manifeste vide) : rien n'est certifié cette fois, mais rien n'est gardé non plus, pour
+    // systemes.json ou index.json en échec : rien n'est certifié cette fois, mais rien n'est gardé non plus, pour
     // qu'un prochain montage réessaie au lieu de laisser tous les scans entiers pour la session.
-    if (Object.keys(manifeste).length === 0) {
+    if (!d || Object.keys(manifeste).length === 0) {
       systemesPromise = null;
       return {};
     }
@@ -254,9 +260,15 @@ let sectionsCharges: JianpuSections | null = null;
 
 export function loadJianpuSections(): Promise<JianpuSections> {
   sectionsPromise ??= fetch("/jianpu/sections.json")
-    .then((r) => (r.ok ? (r.json() as Promise<{ version: number; chants?: JianpuSections }>) : { version: 0, chants: {} }))
-    .catch(() => ({ version: 0, chants: {} }))
-    .then((d) => (sectionsCharges = d.chants ?? {}));
+    .then((r) => {
+      if (r.ok) return (r.json() as Promise<{ version: number; chants?: JianpuSections }>).then((d) => (sectionsCharges = d.chants ?? {}));
+      sectionsPromise = null; // échec : rien n'est gardé, un prochain montage réessaie
+      return {};
+    })
+    .catch(() => {
+      sectionsPromise = null;
+      return {};
+    });
   return sectionsPromise;
 }
 

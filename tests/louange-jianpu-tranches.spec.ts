@@ -44,7 +44,7 @@ async function ouvrirLouange(
   );
   const item = { showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" };
   const chants = opts.chants ?? [UN, DEUX, MASQUES, FR];
-  await signInAs(page, MUSICIEN, {
+  const db = await signInAs(page, MUSICIEN, {
     "setlists/setlist-tranches": {
       title: "Culte du 21 septembre", leader: "Léa Exemple", category: "Culte Francophone", date: "2026-09-21",
       language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
@@ -54,6 +54,11 @@ async function ouvrirLouange(
       })),
     },
   }, "/setlists/setlist-tranches");
+  await lancerLouange(page);
+  return db;
+}
+
+async function lancerLouange(page: Page) {
   await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
   await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
   await page.locator("[data-performance-mode]").waitFor();
@@ -268,7 +273,8 @@ test("deux tranches d'un même scan ont deux clés j4-<y0> distinctes", async ({
   const lues: string[] = [];
   page.on("request", (r) => {
     const m = r.url().match(/\/documents\/(annotations\/[^?]+)/);
-    if (m && r.method() === "GET") lues.push(decodeURIComponent(m[1]));
+    // La clé de la page entière d'avant JP-B (j2 / j3) est lue aussi, pour le bandeau : on ne garde que les clés de tranche.
+    if (m && r.method() === "GET" && /j4-\d+$/.test(m[1])) lues.push(decodeURIComponent(m[1]));
   });
   await ouvrirLouange(page, { chants: [UN, FR] });
   await attendreTranches(page);
@@ -282,6 +288,26 @@ test("deux tranches d'un même scan ont deux clés j4-<y0> distinctes", async ({
   const t1 = bornes((await lireEcran(page)).tranche!)[0];
   expect(t1).not.toBe(t0);
   expect(seconde).toMatch(new RegExp(`j4-${t1}$`));
+});
+
+test("traits posés avant JP-B sous la clé de la page entière (j2 / j3) : bandeau sur l'écran de tranche, rien n'est écrit", async ({ page }) => {
+  test.setTimeout(90_000);
+  const db = await ouvrirLouange(page, { chants: [UN, FR] });
+  await attendreTranches(page);
+  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-cle-page", /j4-\d+$/);
+  const cle = (await page.locator("[data-performance-mode]").getAttribute("data-cle-page"))!;
+  const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
+  const trait = JSON.stringify({ w, h, strokes: [{ tool: "pen", size: 3.5, color: "#dc2626", points: [[w * 0.2, h * 0.5], [w * 0.5, h * 0.5]] }] });
+  // L'écran est tantôt « j2 » tantôt « j3 » selon l'appareil : on pose le trait sous les deux anciennes clés.
+  for (const ancien of ["j2", "j3"]) {
+    db.set(`annotations/${MUSICIEN.uid}__setlist-tranches__${cle.replace(/j4-\d+$/, ancien)}`, { strokes: trait, updatedAt: new Date() });
+  }
+  await page.reload();
+  await lancerLouange(page);
+  await attendreTranches(page);
+  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-cle-page", cle);
+  await expect(page.locator("[data-alerte-composition]")).toBeVisible();
+  expect(db.writes.filter((w) => w.path.startsWith("annotations/")), "aucune écriture").toEqual([]);
 });
 
 // ─── (e) scan non certifié : l'affichage d'aujourd'hui ──────────────────────

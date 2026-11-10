@@ -893,7 +893,11 @@ export function PerformanceMode({
       // (la tête de feuille occupe la place de la barre du haut : rien de plus à retrancher). La dernière tranche d'un chant suivi d'un autre garde la
       // place de la pastille « Ensuite » (56 px, comme `reserveBas` de PageScan).
       const dernierEntete = blocks.reduce((m, b, i) => (b.kind === "song-header" ? i : m), -1);
-      const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, window.innerWidth / fontScale - 8);
+      // Encoches latérales : lues dans les paddings calculés du conteneur de mesure (1,5 rem + inset / fontScale), en px résolus.
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const insetG = mcs ? Math.max(0, (parseFloat(mcs.paddingLeft) || 0) - 1.5 * rem) : 0;
+      const insetD = mcs ? Math.max(0, (parseFloat(mcs.paddingRight) || 0) - 1.5 * rem) : 0;
+      const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, window.innerWidth / fontScale - 8 - insetG - insetD);
       const hauteurScan = window.innerHeight / fontScale - 4 - (barres.haut + barres.bas) / fontScale;
       const tranchesDe = (i: number) => {
         const b = blocks[i];
@@ -1145,9 +1149,11 @@ export function PerformanceMode({
     const l: string[] = [];
     if (cleAvantFeuille) l.push(cleAvantFeuille);
     if (pageV2) l.push(cleSansV2);
+    // JP-B : une page de scan découpée en tranches (« j4-<y0> ») a eu, avant, la clé de la page entière (« j2 » / « j3 », sans « ap » : une page fit n'a pas d'aperçu).
+    if (trancheCourante) l.push(computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${ecran.grand ? "j3" : "j2"}`));
     if (apercuEteint && !layout[currentPage]?.fit) l.push(pageV2 ? cleAvecApercuV2 : cleAvecApercuSansV2);
     return l;
-  }, [cleAvantFeuille, pageV2, cleSansV2, apercuEteint, layout, currentPage, cleAvecApercuV2, cleAvecApercuSansV2]);
+  }, [cleAvantFeuille, pageV2, cleSansV2, trancheCourante, blocks, currentPageIndices, layoutSig, ecran.grand, apercuEteint, layout, currentPage, cleAvecApercuV2, cleAvecApercuSansV2]);
   const { annotationsIndispo, annotations, handleAnnotationsChange, ancienneCompositionTraits } = useAnnotationsPage({
     user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
   });
