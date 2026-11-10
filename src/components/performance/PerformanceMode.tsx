@@ -558,15 +558,15 @@ export function PerformanceMode({
   const [avantPlanning, setAvantPlanning] = useState<{ role: RolePreset | null; affichage: PartitionLayout } | null>(null);
   const [pageDePastille, setPageDePastille] = useState<number | null>(null);
   const pastilleProposee =
-    etatPastille === "propose" && rolePlanning !== null && storedRole !== null && rolePreset !== null && !roleOverridden &&
-    initialShowChords === undefined && rolePlanning !== rolePreset && !horsLigne;
+    // Comparée au rôle retenu à l'ouverture (figé) : un choix fait ensuite dans Je joue ne la fait jamais surgir.
+    etatPastille === "propose" && rolePlanning !== null && storedRole !== null && rolePreset === storedRole && !roleOverridden &&
+    initialShowChords === undefined && rolePlanning !== storedRole && !horsLigne;
   // Sous un menu ouvert, la pastille s'efface : un toucher ne doit pas à la fois fermer le menu et choisir un rôle.
   const pastilleVisible = (pastilleProposee || etatPastille === "accepte") && !annotateMode && popoverOuvert === null;
   useEffect(() => {
-    // Masquée avant tout tour de page : le compte des tours repart à sa prochaine apparition.
-    if (!pastilleVisible) { if (etatPastille === "propose") setPageDePastille(null); return; }
-    if (pageDePastille === null) setPageDePastille(currentPage);
-    else if (currentPage !== pageDePastille) setEtatPastille("fini");
+    // Le premier tour de page depuis son apparition la clôt, même fait pendant qu'un menu ou l'annotation la cache.
+    if (pageDePastille === null) { if (pastilleVisible) setPageDePastille(currentPage); return; }
+    if (currentPage !== pageDePastille && etatPastille !== "fini") setEtatPastille("fini");
   }, [pastilleVisible, currentPage, pageDePastille, etatPastille]);
   useEffect(() => {
     if (etatPastille !== "accepte") return;
@@ -1899,6 +1899,7 @@ export function PerformanceMode({
                       if (actif) clearRolePreset();
                       else applyRolePreset(id);
                       setAccueilRole(false);
+                      if (etatPastille === "propose") setEtatPastille("fini"); // choisi à la main : plus de proposition
                     }}
                     className={`flex min-h-14 w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${actif ? "" : "hover:bg-muted/60 active:bg-muted"}`}
                     // Rôle retenu : fond léger de la couleur personnelle (décision 23), comme la planche.
@@ -1920,7 +1921,7 @@ export function PerformanceMode({
               <button
                 type="button"
                 aria-pressed={rolePreset === null && !accueilRole}
-                onClick={() => { clearRolePreset(); setAccueilRole(false); }}
+                onClick={() => { clearRolePreset(); setAccueilRole(false); if (etatPastille === "propose") setEtatPastille("fini"); }}
                 className={`flex min-h-14 w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${rolePreset === null && !accueilRole ? "" : "hover:bg-muted/60 active:bg-muted"}`}
                 style={rolePreset === null && !accueilRole ? { background: "color-mix(in srgb, var(--couleur-icones) 12%, transparent)" } : undefined}
               >

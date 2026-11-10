@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, lireCompteur, NOM_MENU, ouvrirJeJoue, type Langue } from "./helpers/louange";
+import { attendreMiseEnPage, basculerAnnoter, lireCompteur, NOM_MENU, ouvrirJeJoue, ouvrirMenu, type Langue } from "./helpers/louange";
 import { basculerAccords, ouvrirPartitions } from "./helpers/setlist";
 
 // Lot RP, tranche 2 (docs/spec-mode-louange-forscore-2.md « RP — Rôle proposé d'après le planning ») : le mode louange
@@ -204,6 +204,8 @@ test("accepter : vue Batteur appliquée et retenue ; « Annuler » rétablit Pia
   await expect.poll(() => lire(page, `perf-role-preset-${UID}`)).toBe("batteur");
   await expect.poll(() => lire(page, "partition-layout"), "le Batteur pose Structure seule").toBe("structure");
   await expect(p).toContainText("Vue Batteur");
+  const scene = page.locator("[data-performance-mode]");
+  await expect(scene.getByText("Dans la ville de David").first(), "la feuille de route du batteur n'a pas de paroles").toBeHidden();
   const annuler = p.getByRole("button", { name: "Annuler" });
   await expect(annuler).toBeVisible();
   expect((await annuler.boundingBox())!.height).toBeGreaterThanOrEqual(43.5);
@@ -211,6 +213,9 @@ test("accepter : vue Batteur appliquée et retenue ; « Annuler » rétablit Pia
   await annuler.click();
   await expect.poll(() => lire(page, `perf-role-preset-${UID}`)).toBe("pianiste");
   await expect.poll(() => lire(page, "partition-layout"), "l'affichage d'avant").toBe("played");
+  await expect(scene.getByText("Dans la ville de David").first(), "les paroles reviennent").toBeVisible();
+  await expect(scene.getByText("C#m7", { exact: true }).first(), "les accords reviennent").toBeVisible();
+  expect(await lire(page, "perf-hide-lyrics"), "paroles non masquées").not.toBe("1");
   await expect(p).toHaveCount(0);
   await page.waitForTimeout(500);
   await expect(p, "ne repropose pas").toHaveCount(0);
@@ -243,6 +248,52 @@ test("la pastille disparaît au premier tour de page et ne revient pas", async (
   await page.waitForTimeout(400);
   await expect(pastille(page), "ne revient pas").toHaveCount(0);
   expect(await lire(page, `perf-role-preset-${UID}`), "rien n'a basculé").toBe("pianiste");
+});
+
+test("un choix fait à la main dans Je joue ne fait jamais surgir la pastille", async ({ page }) => {
+  await preparer(page, { role: "pianiste" });
+  await ouvrirMode(page, { feuilles: culte({ piano: NOM }) });
+  await page.waitForTimeout(400);
+  await expect(pastille(page), "rôle retenu = planning").toHaveCount(0);
+  const dialogue = await ouvrirJeJoue(page);
+  await dialogue.getByRole("button", { name: /^Guitariste/ }).click();
+  await page.keyboard.press("Escape");
+  await expect(dialogue).toBeHidden();
+  await page.waitForTimeout(500);
+  await expect(pastille(page), "pas de « Passer en vue Pianiste » après un choix manuel").toHaveCount(0);
+});
+
+test("menu ouvert : la pastille s'efface, et revient à sa fermeture", async ({ page }) => {
+  await preparer(page, { role: "pianiste" });
+  await ouvrirMode(page, { feuilles: culte({ batterie: NOM }) });
+  await expect(pastille(page)).toBeVisible();
+  const reperes = await ouvrirMenu(page, "reperes");
+  await expect(pastille(page), "sous un menu ouvert").toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(reperes).toBeHidden();
+  await expect(pastille(page), "menu fermé, sans tour de page").toBeVisible();
+});
+
+test("tour de page pendant qu'un menu cache la pastille : elle ne revient pas", async ({ page }) => {
+  await preparer(page, { role: "pianiste", init: { "perf-font-scale": "1.5" } });
+  await ouvrirMode(page, { feuilles: culte({ batterie: NOM }) });
+  await expect(pastille(page)).toBeVisible();
+  const setlistMenu = await ouvrirMenu(page, "setlist");
+  await expect(pastille(page)).toHaveCount(0);
+  await setlistMenu.getByText("Abba Père", { exact: false }).first().click();
+  await expect.poll(() => lireCompteur(page)).not.toMatch(/^1 \//);
+  await expect(setlistMenu).toBeHidden();
+  await page.waitForTimeout(500);
+  await expect(pastille(page), "le tour de page a clos la proposition").toHaveCount(0);
+  expect(await lire(page, `perf-role-preset-${UID}`)).toBe("pianiste");
+});
+
+test("mode annotation : la pastille s'efface", async ({ page }) => {
+  await preparer(page, { role: "pianiste" });
+  await ouvrirMode(page, { feuilles: culte({ batterie: NOM }) });
+  await expect(pastille(page)).toBeVisible();
+  await basculerAnnoter(page);
+  await expect(pastille(page)).toHaveCount(0);
 });
 
 // ─── La correspondance planning → vue, dans le navigateur ─────────────────────

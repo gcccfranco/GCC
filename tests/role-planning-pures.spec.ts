@@ -95,6 +95,9 @@ test("h. Campus, préfixe d'instrument", () => {
 test("i. Campus séance et répétition dédoublonnées", () => {
   const d = vide();
   d.campus = [seance({ ch: "Ondine Pradel", ent: "2026-11-12" })];
+  // Deux entrées pour le même service (séance, répétition liée par setlistDate), une seule proposition.
+  const memeService = findMyServices(d, "Ondine Pradel").filter((e) => (e.setlistDate ?? e.date) === D);
+  expect(memeService.map((e) => e.service).sort()).toEqual(["Campus (matin)", "Campus (répét.)"]);
   expect(role(d, "Ondine Pradel", { date: D, category: "Campus", moment: "matin" })).toBe("choriste");
   expect(role(d, "Ondine Pradel", { date: "2026-11-12", category: "Campus", moment: "matin" })).toBeNull();
 });
