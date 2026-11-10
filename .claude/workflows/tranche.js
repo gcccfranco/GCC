@@ -1,9 +1,9 @@
 export const meta = {
   name: 'tranche',
   description: "Code une tranche déjà décidée : executant (Sonnet) → testeur (Haiku) → corrections (≤ 2) → conseil Opus si ça résiste → relecteur (Sonnet). Ne commite pas.",
-  whenToUse: "Après un go de Timothée sur un lot dont la spec découpe les tranches. Une tranche par appel : la conversation principale relit le diff, regarde les captures et commite entre deux.",
+  whenToUse: "Après un go de Timothée sur un lot dont la spec découpe les tranches. Une tranche par appel : la conversation principale lit le verdict, ouvre les passages et captures signalés et commite entre deux.",
   phases: [
-    { title: 'Coder', detail: 'executant applique la consigne', model: 'sonnet' },
+    { title: 'Coder', detail: 'executant applique la consigne, se vérifie par tsc', model: 'sonnet' },
     { title: 'Tester', detail: 'tsc, lint, specs nommées sur les appareils du projet', model: 'haiku' },
     { title: 'Corriger', detail: 'executant reprend les échecs, deux tours au plus', model: 'sonnet' },
     { title: 'Conseil', detail: 'Opus diagnostique la cause si deux tours ne suffisent pas' },
@@ -23,6 +23,8 @@ if (!A.spec || !A.tranche || !A.consigne || !A.base) {
   throw new Error('args attendus : { spec, tranche, consigne, tests: [...], base }')
 }
 const tests = (A.tests || []).join(' ')
+// (validée par Timothée le 10/11/2026) De la spec, un ouvrier ne lit que la section de sa tranche : les specs font jusqu'à 180 000 caractères.
+const SECTION = `de la spec, ne lis que la section de la tranche (\`grep -n '^#' ${A.spec}\` puis la plage par \`sed -n 'a,bp'\`), jamais le fichier entier ; la consigne ci-dessous fait foi`
 
 const ECHECS = {
   type: 'object',
@@ -76,7 +78,9 @@ const specsRouges = (r) => [...new Set(r.echecs.map((e) => (e.lieu.match(/tests\
 
 phase('Coder')
 const code = await agent(
-  `Tranche ${A.tranche} de ${A.spec} (lis la spec pour le contexte, la consigne ci-dessous fait foi).\n\nCONSIGNE DÉCIDÉE :\n${A.consigne}\n\nTests de la tranche : ${tests || 'aucun nommé'}. Pour te vérifier, lance seulement ces specs, sur un seul projet (\`--project=telephone\` ou celui que l'entrée vise), et \`npx tsc --noEmit\` : la passe sur tous les appareils et les specs voisines, c'est le testeur qui la fait juste après (03/11/2026 : l'executant relançait 612 tests, puis le testeur les mêmes).`,
+  // (validée par Timothée le 10/11/2026) L'executant ne lance plus Playwright ni next dev : l'attente dépasse la durée de son cache et tout son
+  // contexte se réécrit ; le testeur (Haiku) lance les specs tout de suite après.
+  `Tranche ${A.tranche} de ${A.spec} : ${SECTION}.\n\nCONSIGNE DÉCIDÉE :\n${A.consigne}\n\nTests de la tranche : ${tests || 'aucun nommé'} (pour mémoire : ne les lance pas). Pour te vérifier, lance seulement \`npx tsc --noEmit\` (ou \`npm run validate\` si tu n'as touché que des .cho) ; jamais Playwright ni \`next dev\` : le testeur lance les specs juste après toi.`,
   { agentType: 'executant', label: `coder:${A.tranche}`, phase: 'Coder' })
 
 let t = await tester(1)
@@ -104,7 +108,7 @@ if (t && t.echecs.filter((e) => !e.course).length) {
 }
 
 const relu = await agent(
-  `Relis \`git diff ${A.base}\` (tranche ${A.tranche} de ${A.spec}). Consigne qui a été donnée :\n${A.consigne}`,
+  `Relis \`git diff ${A.base}\` (tranche ${A.tranche} de ${A.spec}) : ${SECTION}. Consigne qui a été donnée :\n${A.consigne}`,
   { agentType: 'relecteur', schema: VERDICT, label: `relire:${A.tranche}`, phase: 'Relire' })
 
 return { tranche: A.tranche, code, tests: t, tours, conseil, relu }

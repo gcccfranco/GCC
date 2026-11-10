@@ -1,11 +1,11 @@
 export const meta = {
   name: 'planche',
-  description: "Fait une planche de design : directeur-artistique (Opus, trois pistes) → maquettiste (Sonnet, HTML + captures) → critique-design et regard en parallèle → une reprise si besoin. Ne commite pas, ne publie pas.",
-  whenToUse: "Au début d'une demande qui change l'apparence ou l'organisation des écrans (CLAUDE.md « Design »), avant la spec. La conversation principale relit, regarde les captures, publie la planche en artefact et pose les questions à Timothée.",
+  description: "Fait une planche de design : directeur-artistique (Opus, trois pistes) → maquettiste (Sonnet, HTML + captures) → critique-design → une reprise si besoin. Ne commite pas, ne publie pas.",
+  whenToUse: "Au début d'une demande qui change l'apparence ou l'organisation des écrans (CLAUDE.md « Design »), avant la spec. La conversation principale relit, regarde les trois captures, publie la planche en artefact et pose les questions à Timothée.",
   phases: [
     { title: 'Pistes', detail: 'directeur-artistique : trois pistes, la recommandée, les questions' },
     { title: 'Maquette', detail: 'maquettiste : planche HTML et captures', model: 'sonnet' },
-    { title: 'Critique', detail: 'critique-design et regard, en parallèle', model: 'sonnet' },
+    { title: 'Critique', detail: 'critique-design (ouvre les captures, relève aussi ce qui déborde)' },
     { title: 'Reprise', detail: 'maquettiste reprend une fois ce que la critique juge à reprendre', model: 'sonnet' },
   ],
 }
@@ -90,18 +90,15 @@ phase('Maquette')
 let maquette = await agent(consigneMaquette, { agentType: 'maquettiste', schema: MAQUETTE, label: 'maquette', phase: 'Maquette' })
 if (!maquette) throw new Error('Le maquettiste n’a rien rendu.')
 
-const critiquer = (m, n) => parallel([
-  () => agent(
+// 10/11/2026 (validée par Timothée le 10/11/2026) : `regard` ne passe plus ici. Le maquettiste ne rend que trois captures, qu'il a déjà
+// ouvertes et que la critique ouvre toutes : un troisième agent sur les mêmes PNG ne triait rien.
+const critiquer = (m, n) => agent(
     `Critique la planche ${m.planche} (sujet « ${A.sujet} », demande : ${A.demande}). Captures : ${m.captures.join(', ')}. ` +
     `Pistes et recommandation du directeur artistique :\n${JSON.stringify(pistes, null, 1)}\n\n` +
-    `Juge aussi la planche en tant que planche : les trois pistes sont-elles vraiment différentes, aussi soignées l'une que l'autre, et la recommandée tient-elle face aux deux autres ?`,
-    { agentType: 'critique-design', schema: CRITIQUE, label: `critique:${n}`, phase: 'Critique' }),
-  () => agent(
-    `Regarde ces captures d'une planche de design (pas du site : des maquettes de pistes côte à côte, en clair et en sombre) : ${m.captures.join(', ')}.`,
-    { agentType: 'regard', label: `regard:${n}`, phase: 'Critique' }),
-])
+    `Juge aussi la planche en tant que planche : les trois pistes sont-elles vraiment différentes, aussi soignées l'une que l'autre, et la recommandée tient-elle face aux deux autres ? Relève aussi ce qui se voit sur les captures : débordements, textes coupés, chevauchements.`,
+    { agentType: 'critique-design', schema: CRITIQUE, label: `critique:${n}`, phase: 'Critique' })
 
-let [critique, regard] = await critiquer(maquette, 1)
+let critique = await critiquer(maquette, 1)
 let reprise = false
 if (critique && critique.verdict === 'a_reprendre') {
   phase('Reprise')
@@ -109,15 +106,14 @@ if (critique && critique.verdict === 'a_reprendre') {
   log(`Reprise : ${aCorriger.length} point(s) ; les points « finition » et « gelé » vont à la conversation principale.`)
   const m2 = await agent(
     `${consigneMaquette}\n\nLa planche existe déjà (${maquette.planche}). Corrige-la selon la critique, sans changer les pistes ni la recommandation, puis refais toutes les captures :\n` +
-    `${JSON.stringify(aCorriger, null, 1)}\n\nCe que le regard a vu :\n${regard || '(rien)'}`,
+    `${JSON.stringify(aCorriger, null, 1)}`,
     { agentType: 'maquettiste', schema: MAQUETTE, label: 'reprise', phase: 'Reprise' })
   if (m2) {
     maquette = m2
     reprise = true
-    const [c2, r2] = await critiquer(maquette, 2)
+    const c2 = await critiquer(maquette, 2)
     if (c2) critique = c2
-    if (r2) regard = r2
   }
 }
 
-return { sujet: A.sujet, pistes, maquette, critique, regard, reprise }
+return { sujet: A.sujet, pistes, maquette, critique, reprise }
