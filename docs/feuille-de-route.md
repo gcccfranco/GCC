@@ -17,7 +17,7 @@ toute l'assemblée a un compte ; sans compte on voit les chants et le calendrier
 
 ## Comment ce document évolue (Timothée, 10/11/2026)
 
-- Une demande nouvelle reçoit la lettre suivante (**AP**) : **une ligne** dans l'index ci-dessous, le détail (mots de la
+- Une demande nouvelle reçoit la lettre suivante (**AQ**) : **une ligne** dans l'index ci-dessous, le détail (mots de la
   personne, décisions, tranches, avancement) dans sa
   spec `docs/spec-<sujet>.md`, les décisions aussi dans `intent/vision-site.md`.
 - Le journal vit dans le § Avancement de chaque spec ; ici, seul « État » est réécrit (daté), jamais allongé.
@@ -122,6 +122,7 @@ Specs dans `docs/` ; « archive § 3.X » = `grep -n '^### X\.' docs/archive/feu
 | AM | Espace Musiciens, scène des fêtes | `spec-espace-musiciens.md` (EM, SF) | en ligne 02/11 |
 | AN | Pastilles « Int » et « Inst » | `spec-abreviation-interlude.md` (AB-I) | en ligne 07/11 |
 | AO | Mode louange façon forScore, apparence comprise | `spec-mode-louange-forscore-2.md` | vagues 1 et 2 codées sur `claude/tender-johnson-99hadm`, pas en ligne ; reste CA, FS-F, vague 3, relecture complète |
+| AP | Le site devient le pupitre : « Ma partition » qui suit le chant, entrée des musiciens, écrans pratiques, Harmonie qui s'entend, accords en chiffres | `spec-pupitre-musicien.md` | cadrage du 11/11/2026 ; cinq questions ouvertes, planches à faire, rien de codé |
 
 **Chantiers sans lettre** (journal, archive § 6) : 简谱 par défaut puis piste A partout (`spec-jianpu-integration.md`,
 lot 1 en ligne, lot 3 codé 12–18/10) ; relevé des écarts et corrections (`spec-corrections-apres-releve.md`, 08–11/10) ;

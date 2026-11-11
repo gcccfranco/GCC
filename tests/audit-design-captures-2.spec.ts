@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { appendFileSync } from "node:fs";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { mesurerUsage } from "./helpers/mesuresUsage";
 
 // Audit du design, second lot (03/11/2026) : les pages que audit-design-captures.spec.ts ne couvre pas.
 // Rien n'est vérifié ici, on photographie. Comptes et données fictifs. PW_CAPTURES=<dossier> obligatoire.
@@ -198,6 +199,8 @@ async function photographier(page: Page, nom: string) {
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" }).catch(() => {});
   await page.waitForTimeout(800);
   await page.screenshot({ path: `${DIR}/${test.info().project.name}/${nom}.png`, fullPage: true });
+  // Audit d'usage (11/11/2026) : PW_MESURES=<fichier> ajoute le relevé mesuré de l'écran (tests/helpers/mesuresUsage.ts).
+  if (process.env.PW_MESURES) await mesurerUsage(page, nom);
 }
 
 for (const v of VARIANTES) {
