@@ -83,6 +83,8 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
 - 11/11/2026 : captures de l'existant (téléphone, tablette, ordinateur), un `/planche` (3 agents), retouches à la
   relecture, artefact publié, questions posées.
 - 11/11/2026 : « Go » de Timothée sur les six recommandations ; décisions et lots écrits. Prochain : go pour H1 ?
+- 11/11/2026 : go de Timothée pour H1 ; H1 codé (non testé, non commité), puis **en attente, règle des trois chantiers ;
+  reprise au début de H1**.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
