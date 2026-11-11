@@ -118,6 +118,11 @@ pas seulement en mémoire.
     relectures en cache comprises (taille du contexte × nombre de tours). On lance sur son accord du moment.
   - *Sessions en parallèle* (même date) : en Opus, avec la consigne d'économie écrite dans la consigne de lancement
     (un livrable, lecture par section, aucun agent hors ceux nommés, arrêt dès le livrable rendu).
+  - *Trois chantiers de code au plus* (Timothée, 11/11/2026, nuit : six orchestratrices codaient ensemble sur la
+    branche, la limite des 5 h est tombée) : au plus trois chantiers de code en même temps sur la branche ; un
+    nouveau go attend qu'une place se libère. Avant de lancer une orchestratrice, la session compte celles qui
+    tournent (`list_sessions`) ; à trois, elle le dit à Timothée et attend. Un chantier garde sa place d'une tranche
+    à la suivante.
 - **Agents en parallèle** : quelques-uns à la fois (neuf d'un coup ont épuisé la limite de dépense du mois, le
   04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
 - **Déléguer** aux agents de `.claude/agents/` : `chercheur`, `testeur` (Haiku) ; `executant`, `relecteur`, `regard`,

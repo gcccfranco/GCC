@@ -248,3 +248,8 @@ dans la spec : 简谱 (image du scan), mode sombre à 1 440 px, mouvement (déci
   à une session neuve (« AP · Spec des deux exemples », Opus, un livrable : `docs/spec-exemples-usage.md`), la
   session principale ayant dépassé le plafond. « Ma partition » et Harmonie et Accords attendent toujours leurs
   réponses ; lot 1 des retouches : T3 codée.
+- 11/11/2026 (nuit, 22 h 15 UTC) : six chantiers codaient ensemble après les go de Timothée (retouches T6, couleur
+  des accords en fin de lot, deux exemples T1, comptage T3, Harmonie H1, « Ma partition » MP-1). Timothée choisit
+  **trois à la fois** et en fait une règle (CLAUDE.md § Économie de contexte). Mis en attente par message : « Ma
+  partition », Harmonie H1, comptage T3. Ordre de reprise : « Ma partition », puis Harmonie, puis comptage, une
+  place à la fois, sur « reprends » de Timothée ou de la session principale.
