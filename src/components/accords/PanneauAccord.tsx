@@ -6,6 +6,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { DiagrammeGuitare, ClavierMains } from "@/components/harmonie/Diagrammes";
@@ -114,6 +115,8 @@ export function PanneauAccord({
   onSignaler?: () => void;
 }) {
   const { t } = useTranslation();
+  // Ouvert depuis la page d'un chant : le lien du dictionnaire le dit (`?depuis=<slug>`) pour le retour.
+  const depuisChant = /^\/songs\/([^/]+)\/?$/.exec(usePathname() ?? "")?.[1];
   const bulle = variante === "bulle";
   const carte = variante === "carte";
   const { doigtes, basseAJouer } = useMemo(() => positionsGuitare(accord), [accord]);
@@ -298,7 +301,7 @@ export function PanneauAccord({
       {!carte && (
         <div className="mt-4 text-center">
           <Link
-            href={`/accords?accord=${encodeURIComponent(accord.texte)}`}
+            href={`/accords?accord=${encodeURIComponent(accord.texte)}${depuisChant ? `&depuis=${depuisChant}` : ""}`}
             onClick={onFermer}
             className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-[color:var(--chord-color)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >

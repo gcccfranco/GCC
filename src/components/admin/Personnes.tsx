@@ -7,6 +7,8 @@
 // volets) ; `Personnes` les assemble comme avant pour l'ancienne administration.
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { ChevronDown, ChevronRight, ChevronUp, UserRound } from "lucide-react";
 import { listProfiles, saveProfile } from "@/lib/firebase/users";
 import { listGroupes } from "@/lib/firebase/groupes";
@@ -147,6 +149,23 @@ const FILTRES_GROUPE = FILTERS.filter(estGroupe);
 const AVEC_SANS_GROUPE = FILTERS.includes(FILTRE_SANS_GROUPE);
 
 /** Recherche, filtres (menus Service et Groupe, pastille Sans équipe), tri Récents · A–Z (rail). */
+/** Liste vide : « Sans équipe » seul (ni recherche) vide, c'est que tout le monde a une équipe ; la sortie est de retirer le filtre. */
+export function texteListeVide(t: TFunction, nbProfils: number, f: ReturnType<typeof useFiltresPersonnes>): string {
+  if (nbProfils === 0) return t("admin.membre.aucunProfil");
+  if (f.filter === FILTRES_SANS_EQUIPE && f.query.trim() === "") return t("admin.membre.toutLeMondeALEquipe");
+  return t("admin.membre.aucunCorrespond");
+}
+
+export function RetirerFiltreSansEquipe({ f }: { f: ReturnType<typeof useFiltresPersonnes> }) {
+  const { t } = useTranslation();
+  if (f.filter !== FILTRES_SANS_EQUIPE) return null;
+  return (
+    <Button type="button" variant="outline" size="sm" onClick={() => f.setFilter("Tous")} className={TOUCHER_44}>
+      {t("admin.membre.retirerFiltre")}
+    </Button>
+  );
+}
+
 export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonnes> }) {
   const { t, i18n } = useTranslation();
   const zh = i18n.language === "zh-CN";
@@ -478,7 +497,7 @@ export function ListePersonnes({
   if (loadingProfiles) return <p className="text-sm text-muted-foreground py-6 text-center">{t("common.loading")}</p>;
   if (f.displayed.length === 0)
     return (
-      <EtatVide compact>{profiles.length === 0 ? t("admin.membre.aucunProfil") : t("admin.membre.aucunCorrespond")}</EtatVide>
+      <EtatVide compact action={<RetirerFiltreSansEquipe f={f} />}>{texteListeVide(t, profiles.length, f)}</EtatVide>
     );
   return (
     <div className="space-y-2">

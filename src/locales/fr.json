@@ -4130,6 +4130,8 @@
       "erreurEnregistrer": "Erreur lors de l'enregistrement du profil.",
       "aucunProfil": "Aucun profil pour l'instant.",
       "aucunCorrespond": "Aucun membre ne correspond.",
+      "toutLeMondeALEquipe": "Tout le monde a une équipe.",
+      "retirerFiltre": "Retirer le filtre",
       "compte": "{{inscrits}} inscrit(s) · {{musiciens}} musicien(s) · {{chanteurs}} chanteur(s) · {{presidences}} présidence(s)",
       "servicesRoles": "Services et rôles",
       "droits": "Droits",

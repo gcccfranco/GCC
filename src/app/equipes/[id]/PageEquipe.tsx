@@ -9,7 +9,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Plus } from "lucide-react";
 import { LargeurBO } from "@/components/backOffice/LargeurBO";
@@ -45,9 +45,13 @@ const LIEN_LIGNE = "flex min-h-[52px] items-center gap-3 px-1 py-2";
 export function PageEquipe({ id, backOffice }: { id: string; backOffice: boolean }) {
   const { t } = useTranslation();
   const { user, profile, loading } = useProfile();
+  // Le retour suit la provenance, posée par le lien (`?depuis=`, liste fermée) ; sans paramètre, « ‹ Moi ».
+  const depuis = useSearchParams().get("depuis");
   const retour = backOffice
     ? { href: "/back-office/equipes", label: t("backOffice.entrees.equipes") }
-    : { href: "/moi", label: t("moi.title") };
+    : depuis === "equipes"
+      ? { href: "/equipes", label: t("equipes.title") }
+      : { href: "/moi", label: t("moi.title") };
   const connue = idValide(id);
   const droit = connue && !loading && peutVoirEquipe(user, profile, id);
   const nom = connue ? t(cleNomEquipe(id, true)) : t("equipes.page.introuvable");
@@ -172,7 +176,7 @@ function SectionTachesEquipe({ id, backOffice }: { id: string; backOffice: boole
       ligne={l}
       // Case inerte sans le droit de cocher (EQ8, décision 41).
       onToggle={peutCocher(user, profile, l.tache) ? () => cocher(l) : undefined}
-      onOpen={() => router.push(adresseDeLaLigne(l, racine))}
+      onOpen={() => router.push(adresseDeLaLigne(l, racine, backOffice ? undefined : "equipe"))}
     />
   );
   const groupes: [string, Ligne[], boolean][] = [

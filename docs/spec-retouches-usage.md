@@ -202,3 +202,13 @@ Vrais mais hors lot 1, parce qu'ils déplacent, réorganisent ou demandent un de
   de « Présidenc / e »). « Non publié » en tête (`data-non-publie-trimestre`, libellé existant en fr et zh) :
   `planning-grille.spec.ts` et `planning-2027.spec.ts` suivent la nouvelle mention. Reste à arbitrer : le bouton
   retour de la barre de la setlist reste une flèche seule (il n'a pas de libellé court).
+- 11/11/2026 : **T6 codée, pas finie : tests rouges** (commit « T6 en cours »). Fait : tous les constats du tableau, plus
+  musiciens-5 (« Où l'entendre » : titre normalisé cherché dans `songs-index.json`, le premier gagne ; 187 titres sur
+  194 trouvés, les 7 autres sont des phrases et restent du texte) ; `?from=` du profil refuse aussi `//…` et `/\…`
+  (redirection ouverte). Passe du 11/11 (`retouches-usage-t6`, `equipes-page`, `retouches-usage-t2`) : 141 passés,
+  28 échoués. À reprendre : `equipes-page.spec.ts:73` attend `/taches/da/affiche` sans le `?depuis=equipe` désormais
+  posé ; t6 : en-tête « DA » et « Mira » introuvables (données simulées de la page d'équipe), bouton « Enregistrer »
+  du profil (nom accessible `profile.save`), « Voir tout le dictionnaire » introuvable (le lien porte
+  `?accord=F%23m&depuis=abba-pere`), `[data-ou-l-entendre]` absent sur `/harmonie/substitutions/2m7-pour-4` (vérifier
+  la route de la fiche), services-5 et bo-equipes-15 à relire. Ni testeur ni relecteur n'ont pu passer (limite de
+  dépense atteinte pendant la tranche). **Reste ensuite : T7 puis T4.**

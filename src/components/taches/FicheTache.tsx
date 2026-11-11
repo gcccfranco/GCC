@@ -55,7 +55,7 @@ function laLigne(tache: Tache, lignes: Ligne[], date: string | null): Ligne {
     ?? { tache, date: date ?? tache.echeance, fois: null };
 }
 
-export function FicheTache({ equipe, id, date }: { equipe: string; id: string; date: string | null }) {
+export function FicheTache({ equipe, id, date, depuis }: { equipe: string; id: string; date: string | null; depuis?: string | null }) {
   const { t } = useTranslation();
   const deuxVolets = useDeuxVolets();
   const { equipes, items, chargement, aujourdhui } = useMesTaches();
@@ -65,7 +65,7 @@ export function FicheTache({ equipe, id, date }: { equipe: string; id: string; d
   let contenu: React.ReactNode;
   if (!equipes.includes(equipe)) contenu = <p className="text-sm text-muted-foreground">{t("taches.pasMembre")}</p>;
   else if (!item) contenu = chargement ? null : <Impasse icone={ListChecks} titre={t("taches.introuvable")} sortie={{ href: `${enBackOffice ? "/back-office" : ""}/taches/${equipe}`, label: t("taches.title") }} />;
-  else contenu = <Fiche key={`${equipe}/${id}/${date ?? ""}`} ligne={laLigne(item.tache, lignesDeTache(item.tache, item.fois, aujourdhui), date)} toutesLesFois={item.fois} />;
+  else contenu = <Fiche key={`${equipe}/${id}/${date ?? ""}`} ligne={laLigne(item.tache, lignesDeTache(item.tache, item.fois, aujourdhui), date)} toutesLesFois={item.fois} depuis={depuis} />;
 
   return (
     // R10 : la fiche ne pose plus de marge en grand ; en un volet, son en-tête la porte (App et
@@ -76,7 +76,7 @@ export function FicheTache({ equipe, id, date }: { equipe: string; id: string; d
   );
 }
 
-function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }) {
+function Fiche({ ligne, toutesLesFois, depuis }: { ligne: Ligne; toutesLesFois: Fois[]; depuis?: string | null }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const titreId = useId();
@@ -213,10 +213,15 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
       {!deuxVolets ? (
         // Un volet : la fiche est une page, avec le seul retour (R8) et son titre en h1.
         <EnTetePage
-          retour={{
-            href: backOffice ? `${racine}/${tache.equipe}` : racine,
-            label: backOffice ? t("taches.retourEquipe", { equipe: nomEquipe }) : t("taches.title"),
-          }}
+          retour={
+            // Ouverte depuis la page de son équipe (`?depuis=equipe`, valeur fermée) : retour à l'équipe.
+            !backOffice && depuis === "equipe"
+              ? { href: `/equipes/${tache.equipe}`, label: nomEquipe }
+              : {
+                  href: backOffice ? `${racine}/${tache.equipe}` : racine,
+                  label: backOffice ? t("taches.retourEquipe", { equipe: nomEquipe }) : t("taches.title"),
+                }
+          }
           titre={<span id={titreId}>{tache.titre}</span>}
           sousTitre={backOffice ? undefined : nomEquipe}
           outils={<>{boutonModifier}{menu}</>}

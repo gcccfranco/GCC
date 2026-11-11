@@ -28,6 +28,10 @@ import { ALL_KEYS, getTransposedKey, semitonesTo } from "@/lib/transpose";
 import { cn } from "@/lib/utils";
 import type { Instrument } from "@/types/harmonie";
 
+/** Titre comparable : sans accents, sans casse, ponctuation réduite à des espaces. */
+const titreNormalise = (t: string) =>
+  t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[’`]/g, "'").replace(/[^\p{L}\p{N}']+/gu, " ").trim();
+
 type Entree = { slug: string; title: string; titlePinyin: string | null; language: string };
 
 /** Une carte de la fiche : le titre dedans, petit et gris, comme la planche. */
@@ -51,14 +55,17 @@ export function FicheHarmonie({ id }: { id: string }) {
   // setlists (lisibles par tout connecté) plutôt qu'au build : le classement reste
   // à jour sans relancer de script. Le layout de la section les lit une fois.
   useEffect(() => {
-    if (!fiche?.exemples.length) return;
+    if (!fiche?.exemples.length && !fiche?.repertoire) return;
     let vivant = true;
     chargerIndexChants()
       .then((songs) => { if (vivant) setChants(songs); })
       .catch(() => { /* la liste s'affichera par slug */ });
     comptesDesChants().then((n) => { if (vivant) setComptes(n); });
     return () => { vivant = false; };
-  }, [fiche?.exemples.length, comptesDesChants]);
+  }, [fiche?.exemples.length, fiche?.repertoire, comptesDesChants]);
+
+  // « Où l'entendre » : chaque titre retrouve son chant dans le même index (titre normalisé, le premier gagne) ; introuvable, il reste du texte.
+  const slugDuTitre = useMemo(() => new Map([...chants].reverse().map((c) => [titreNormalise(c.title), c.slug])), [chants]);
 
   const exemples = useMemo(() => {
     if (!fiche) return [];
@@ -230,7 +237,11 @@ export function FicheHarmonie({ id }: { id: string }) {
               <ul className={cn("grid", colonnesRepertoire)}>
                 {phrase.map((e, i) => (
                   <li key={i} className="border-t border-border py-2">
-                    <span className="block text-base font-semibold leading-[21px]">{e.titre}</span>
+                    {slugDuTitre.has(titreNormalise(e.titre)) ? (
+                      <Link href={`/songs/${slugDuTitre.get(titreNormalise(e.titre))}`} className="block text-base font-semibold leading-[21px] underline-offset-4 hover:underline">{e.titre}</Link>
+                    ) : (
+                      <span className="block text-base font-semibold leading-[21px]">{e.titre}</span>
+                    )}
                     {e.detail.length > 0 && (
                       <span className="block text-sm leading-[18px] text-muted-foreground">
                         {e.detail.map((m, j) => (m.accord ? <span key={j} className="font-chord font-semibold text-[var(--chord-color)]">{m.texte}</span> : <span key={j}>{m.texte}</span>))}

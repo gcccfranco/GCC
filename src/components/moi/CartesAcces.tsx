@@ -53,7 +53,7 @@ export function CarteMesEquipes({ profile }: { profile: UserProfile | null }) {
     <Apercu titre={t("moi.apercus.mesEquipes")} lien={{ href: "/equipes", label: t("moi.apercus.organigramme") }}>
       {lignes.length === 0 && <Vide>{t("moi.apercus.aucuneEquipe")}</Vide>}
       {lignes.map((l) => (
-        <Link key={l.cle} href={`/equipes/${l.id}`} data-testid="equipe-ligne" className="flex min-h-[44px] items-center gap-3 py-2.5 text-base text-foreground">
+        <Link key={l.cle} href={`/equipes/${l.id}?depuis=moi`} data-testid="equipe-ligne" className="flex min-h-[44px] items-center gap-3 py-2.5 text-base text-foreground">
           <span className="min-w-0 flex-1">
             {l.sous ? <>{l.nom} · <b>{l.sous}</b></> : <b>{l.nom}</b>}
             {l.referent && <span className="text-muted-foreground"> — {t("equipes.referent")}</span>}

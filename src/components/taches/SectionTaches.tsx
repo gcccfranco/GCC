@@ -33,9 +33,10 @@ import { cn } from "@/lib/utils";
 import { Squelette } from "@/components/layout/Squelette";
 
 /** Adresse de la fiche d'une ligne ; une tâche répétée dit laquelle de ses fois. */
-export function adresseDeLaLigne(l: Ligne, racine = "/taches"): string {
+export function adresseDeLaLigne(l: Ligne, racine = "/taches", depuis?: "equipe"): string {
   const base = `${racine}/${l.tache.equipe}/${l.tache.id}`;
-  return l.tache.repetition ? `${base}?date=${l.date}` : base;
+  const params = [l.tache.repetition ? `date=${l.date}` : "", depuis ? `depuis=${depuis}` : ""].filter(Boolean).join("&");
+  return params ? `${base}?${params}` : base;
 }
 
 export function SectionTaches({ children }: { children: React.ReactNode }) {

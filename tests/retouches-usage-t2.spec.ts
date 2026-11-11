@@ -67,7 +67,7 @@ test.describe("zones de 44 px (T2)", () => {
     await zone44(lien, "nom de l'équipe", -20);
     const b = (await lien.boundingBox())!;
     await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2 - 20);
-    await expect(page).toHaveURL(/\/equipes\/da\/?$/);
+    await expect(page).toHaveURL(/\/equipes\/da\/?\?depuis=equipes$/);
   });
 
   test("ligne de tâche : le bouton d'ouverture prend toute la hauteur de la ligne, toucher le bas de la ligne ouvre la tâche", async ({ page }) => {

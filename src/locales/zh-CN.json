@@ -4079,6 +4079,8 @@
       "erreurEnregistrer": "保存资料时出错。",
       "aucunProfil": "目前还没有资料。",
       "aucunCorrespond": "没有符合的成员。",
+      "toutLeMondeALEquipe": "每个人都有团队。",
+      "retirerFiltre": "取消筛选",
       "compte": "{{inscrits}} 人注册 · {{musiciens}} 位乐手 · {{chanteurs}} 位唱诗 · {{presidences}} 位主领",
       "servicesRoles": "服事与角色",
       "droits": "权限",

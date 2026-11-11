@@ -96,9 +96,9 @@ export default function ProfilPage() {
         // Les droits (annonces, notify, coordination, equipes, plannings) ne sont pas
         // envoyés : saveProfile n'écrit que les champs donnés, ils restent intacts.
       });
-      // Retour à la page d'origine (?from=…) plutôt que /setlists systématique
+      // Retour à la page d'origine (?from=…, chemin du site seulement) ; sans paramètre, à Moi.
       const from = new URLSearchParams(window.location.search).get("from");
-      router.push(from && from.startsWith("/") ? from : "/setlists");
+      router.push(from && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/\\") ? from : "/moi");
     } catch {
       setError(t("profile.saveError"));
       setSaving(false);

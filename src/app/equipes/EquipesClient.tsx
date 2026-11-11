@@ -102,7 +102,7 @@ export function EquipesClient({
       equipe={equipeDe(def.id)}
       peutEditer={modifiable(def.id)}
       // Piste A (BO7, BO4) : le nom de l'équipe ouvre sa page à qui peut la voir (coupée en ligne).
-      href={BACK_OFFICE && peutVoirEquipe(user, profile, def.id) ? `${gestion ? "/back-office" : ""}/equipes/${def.id}` : undefined}
+      href={BACK_OFFICE && peutVoirEquipe(user, profile, def.id) ? gestion ? `/back-office/equipes/${def.id}` : `/equipes/${def.id}?depuis=equipes` : undefined}
       enBandeau={bandeau}
       onFiche={setFiche}
       onModifier={() => setEditee(def.id)}

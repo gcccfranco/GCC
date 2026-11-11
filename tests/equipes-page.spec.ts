@@ -142,10 +142,10 @@ test.describe("la page d'une équipe dans l'app (BO4)", () => {
     await ouvrir(page, MIRA, "/moi");
     const ligne = page.getByTestId("equipe-ligne").first();
     await expect(ligne).toBeVisible();
-    await expect(ligne).toHaveAttribute("href", /\/equipes\/da\/?$/);
+    await expect(ligne).toHaveAttribute("href", /\/equipes\/da\/?\?depuis=moi$/);
     expect((await ligne.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await ligne.click();
-    await expect(page).toHaveURL(/\/equipes\/da\/?$/);
+    await expect(page).toHaveURL(/\/equipes\/da\/?\?depuis=moi$/);
   });
 });
 
