@@ -292,3 +292,6 @@ qu'après quelques semaines de données.
   dépense mensuelle atteinte (aucun agent n'a tourné). Rien de T3 n'est codé ; à relancer telle quelle quand la
   limite le permet (consigne : lignes T3 de l'inventaire, règles de pose tirées de la relecture de T2, tests
   `tests/usage-reste.spec.ts` sur trois appareils).
+- 11/11/2026 — T3 relancée après la remise à zéro de la limite, puis **mise en attente** (règle des trois chantiers
+  décidée par Timothée ; ordre de reprise : « Ma partition », Harmonie, puis le comptage). Rien de T3 n'est commité ;
+  reprise au début de T3 (même consigne), après `git pull --rebase`.
