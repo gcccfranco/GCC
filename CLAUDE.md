@@ -109,6 +109,15 @@ pas seulement en mémoire.
     seulement les passages signalés.
   - *Attentes* : un agent ne reste pas en attente de plus de 5 minutes en avant-plan (son cache expire) : Playwright
     est lancé par le `testeur`, les suites longues en tâche de fond ou en fragments.
+  - *Agents sur captures* (Timothée, 11/11/2026 : une relance d'audit a coûté 85 M de jetons, dont 72,5 M pour
+    douze `critique-design` en Opus qui relisaient leurs captures à chaque tour) : le tri des captures revient à
+    `regard` ; un agent Opus n'ouvre que les captures qu'on lui signale, douze au plus, plusieurs par tour, et ne
+    reçoit ni lot de captures ni liste à balayer. Au-delà, on découpe ou on passe l'agent en Sonnet dans le script.
+  - *Annoncer avant de lancer* (même date) : hors `/tranche` et `/planche` déjà demandés, tout workflow ou tout
+    lancement de plus de trois agents s'annonce d'abord à Timothée : nombre d'agents, modèles, estimation en jetons
+    relectures en cache comprises (taille du contexte × nombre de tours). On lance sur son accord du moment.
+  - *Sessions en parallèle* (même date) : en Opus, avec la consigne d'économie écrite dans la consigne de lancement
+    (un livrable, lecture par section, aucun agent hors ceux nommés, arrêt dès le livrable rendu).
 - **Agents en parallèle** : quelques-uns à la fois (neuf d'un coup ont épuisé la limite de dépense du mois, le
   04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
 - **Déléguer** aux agents de `.claude/agents/` : `chercheur`, `testeur` (Haiku) ; `executant`, `relecteur`, `regard`,

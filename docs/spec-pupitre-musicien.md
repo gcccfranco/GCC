@@ -188,3 +188,12 @@ il ne vaut pas go de code (règle : le go de code vient après la spec, lot par 
   `src/components/equipes/OrganigrammeLouange.tsx:186-240` ; (b) la spec du lot 1 : partir des constats d'effort
   « retouche » du rapport, relire chacun dans le code avant de le garder (57 ne sont pas relus), écarter ceux qui
   déplacent quelque chose, découper en tranches ; puis demander « go pour le lot 1 ? ». Rien n'est codé.
+- 11/11/2026 (soir, fin) : Timothée demande de lancer les autres chantiers en même temps, en Opus, « en consommant
+  le moins de tokens possible ». Lancés : la planche des deux exemples (équipe design, consigne serrée, dans la
+  session principale : `docs/planches/planche-exemples-usage.html`) et quatre sessions sur cette branche, un
+  livrable chacune, dans leur propre fichier : « AP · Spec lot 1 (retouches d'usage) » → `docs/spec-retouches-usage.md` ;
+  « AP · Planche Ma partition » → `docs/spec-ma-partition.md` ; « AP · Planche Harmonie et Accords » →
+  `docs/spec-harmonie-accords.md` ; « AP · Spec comptage d'usage » → `docs/spec-comptage-usage.md`. Chacune pose ses
+  questions à Timothée dans sa conversation. **Pas encore lancée : la planche du pupitre**, qui dépend des réponses
+  sur « Ma partition » (où vivent la partition personnelle et les annotations dans le mode louange). Garde-fous de
+  dépense ajoutés au CLAUDE.md (§ Économie de contexte) et aux fiches `critique-design` et `directeur-artistique`.
