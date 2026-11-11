@@ -148,7 +148,6 @@ const FILTRES_SERVICE = FILTERS.filter((x) => x !== "Tous" && x !== FILTRES_SANS
 const FILTRES_GROUPE = FILTERS.filter(estGroupe);
 const AVEC_SANS_GROUPE = FILTERS.includes(FILTRE_SANS_GROUPE);
 
-/** Recherche, filtres (menus Service et Groupe, pastille Sans équipe), tri Récents · A–Z (rail). */
 /** Liste vide : « Sans équipe » seul (ni recherche) vide, c'est que tout le monde a une équipe ; la sortie est de retirer le filtre. */
 export function texteListeVide(t: TFunction, nbProfils: number, f: ReturnType<typeof useFiltresPersonnes>): string {
   if (nbProfils === 0) return t("admin.membre.aucunProfil");
@@ -166,6 +165,7 @@ export function RetirerFiltreSansEquipe({ f }: { f: ReturnType<typeof useFiltres
   );
 }
 
+/** Recherche, filtres (menus Service et Groupe, pastille Sans équipe), tri Récents · A–Z (rail). */
 export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonnes> }) {
   const { t, i18n } = useTranslation();
   const zh = i18n.language === "zh-CN";

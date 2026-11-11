@@ -212,3 +212,15 @@ Vrais mais hors lot 1, parce qu'ils déplacent, réorganisent ou demandent un de
   `?accord=F%23m&depuis=abba-pere`), `[data-ou-l-entendre]` absent sur `/harmonie/substitutions/2m7-pour-4` (vérifier
   la route de la fiche), services-5 et bo-equipes-15 à relire. Ni testeur ni relecteur n'ont pu passer (limite de
   dépense atteinte pendant la tranche). **Reste ensuite : T7 puis T4.**
+- 11/11/2026 : **T6 faite** (reprise du commit « T6 en cours »). Les échecs venaient des tests : liens à `/` final
+  (`trailingSlash`), document `users/u-mira` absent, accès à Harmonie par le planning non simulé, lien « Chants » de la
+  barre latérale confondu avec le retour (recherche limitée à `main`), profil rempli verrouillé hors admin (test passé
+  en admin, comme `coherence.spec.ts`, qui suit aussi le retour à `/moi`). Ajouts : `?from=/songs` y ramène, `//…` et
+  `/\…` ramènent à `/moi` ; liens des chants du service et de « Où l'entendre » en `TOUCHER_44` (le titre coupé passe
+  dans un `<span>` intérieur pour que la zone ne soit pas rognée), zone mesurée au toucher. Passe :
+  `retouches-usage-t6`, `equipes-page`, `retouches-usage-t2`, `coherence` : 209 passés, 13 sautés, puis le seul rouge
+  (retour des accords, ordinateur) corrigé et repassé vert ; tsc et lint propres. Captures regardées sur les quatre
+  dispositions (service, Personnes « Sans équipe », fiche Harmonie, page d'équipe) : rien ne bouge. **Point à
+  trancher** : en deux volets (souris, ≥ 1 148 px), une tâche ouverte depuis une équipe s'affiche à côté de la liste
+  des tâches, sans en-tête ni retour vers l'équipe ; le test vérifie le retour à 1 100 px. Ajouter un retour en deux
+  volets serait un dessin (lot 2). **Reste : T7 puis T4.**

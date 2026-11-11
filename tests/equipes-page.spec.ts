@@ -73,7 +73,7 @@ test.describe("la page d'une équipe dans l'app (BO4)", () => {
   test("toucher une tâche ouvre sa fiche dans l'app ; toucher une réunion ouvre sa fiche", async ({ page }) => {
     await ouvrir(page, MIRA, "/equipes/da");
     await section(page, "Tâches").getByText("Affiche de Noël").click();
-    await expect(page).toHaveURL(/\/taches\/da\/affiche\/?$/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/taches\/da\/affiche\/?\?depuis=equipe$/, { timeout: 15_000 });
     await page.goto("/equipes/da");
     await section(page, "Réunions").getByRole("link", { name: /Point DA d'octobre/ }).click();
     await expect(page).toHaveURL(/\/evenements\/prochaine\/?$/, { timeout: 15_000 });

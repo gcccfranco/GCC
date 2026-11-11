@@ -10,7 +10,6 @@
 // garde son h1 et le seul retour du site, `Retour`.
 
 import { useId, useMemo } from "react";
-import { lienPartition } from "@/components/setlists/editeur/Volets";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Clock, ListMusic, MapPin, Play } from "lucide-react";
@@ -28,6 +27,8 @@ import { serviceButtonFill } from "@/lib/serviceButton";
 import type { FSSetlist } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
 import { cn } from "@/lib/utils";
+import { TOUCHER_44 } from "@/lib/toucher44";
+import { lienPartition } from "@/components/setlists/editeur/Volets";
 import { useMesServices } from "./contexteMesServices";
 import { PastilleRole } from "./PastilleRole";
 
@@ -175,7 +176,7 @@ function CarteSetlist({ setlist, songs, couleur, boutonsEnTete }: {
               <span className="min-w-0 flex-1">
                 {fusion
                   ? <span className="block truncate text-base font-semibold">{titre}</span>
-                  : <Link href={lienPartition(it.songSlug, tonalite ?? null)} className="block truncate rounded-sm text-base font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{titre}</Link>}
+                  : <Link href={lienPartition(it.songSlug, tonalite ?? null)} className={cn("block rounded-sm text-base font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", TOUCHER_44)}><span className="block truncate">{titre}</span></Link>}
                 {!fusion && song?.artist && <span className="block truncate text-sm text-muted-foreground">{song.artist}</span>}
               </span>
               {!fusion && tonalite && <KeyPill tonalite={tonalite} langue={song?.language === "zh" ? "zh" : "fr"} />}

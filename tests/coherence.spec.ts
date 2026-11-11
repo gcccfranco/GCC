@@ -47,7 +47,8 @@ test("profil : un admin qui enregistre son profil garde ses équipes et ses plan
   const db = await open(page, ADMIN, "/profil");
   await page.getByLabel("Prénom").fill("Aurel");
   await page.getByRole("button", { name: "Enregistrer mon profil" }).click();
-  await page.waitForURL(/\/setlists\/?$/);
+  // T6 (accueil-compte-3) : sans ?from=, l'enregistrement ramène à Moi.
+  await page.waitForURL(/\/moi\/?$/);
   const doc = db.doc("users/admin1");
   expect(doc?.firstName).toBe("Aurel");
   expect(doc?.dansEquipes).toEqual(["da"]);

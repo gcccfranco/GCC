@@ -4,8 +4,7 @@ import { ADMIN_EMAIL, musicien, signInAs, type FakeProfile } from "./helpers/fak
 // Lot 1 du rapport d'usage, tranche T6 (docs/spec-retouches-usage.md) : retours et liens morts. Chaque
 // retour mène à la page d'origine (`?depuis=` posé par le lien) ; les chants du service sont des liens
 // qui gardent la tonalité de la setlist ; le filtre « Sans équipe » vide propose sa sortie.
-// « Où l'entendre » (musiciens-5) est laissé à une décision (aucune fonction de recherche par titre
-// n'existe dans la liste « chants qui le jouent », qui travaille par slug). Base et Sheets simulés,
+// « Où l'entendre » (musiciens-5) retrouve le chant par son titre normalisé dans l'index des chants. Base et Sheets simulés,
 // noms fictifs. Horloge au 1er octobre 2026.
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Alix", lastName: "D.", dansEquipes: ["da"] };
@@ -21,6 +20,11 @@ const FEUILLES: Record<string, string> = {
   ]),
 };
 
+const PLANNING_PIANO = csv([
+  ENTETE_CULTE,
+  ["20/09", "Hugo L.", "Noé T.", "Inès V.", "Anouk F.", "Samuel K.", "Paul D.", "Marc A.", "Rémi K.", "Hélène W.", "Jun L.", "", ""],
+]);
+
 const ZH = "一切歌颂赞美";
 const item = (songSlug: string, position: number, keyOverride: string | null) => ({
   songSlug, position, keyOverride, showChords: true, showPinyin: true, useJianpu: false,
@@ -31,6 +35,10 @@ const DOCS: Record<string, Record<string, unknown>> = {
   "setlists/sl-1": {
     title: "Culte du 18 octobre", leader: "Hugo L.", category: "Culte Francophone", date: "2026-10-18", language: "mixed", notes: "",
     ownerId: "uid-owner", isPrivate: false, items: [item("abba-pere", 1, "G"), item(ZH, 2, "F")],
+  },
+  "users/u-mira": {
+    email: "mira@example.com", firstName: "Mira", lastName: "Quenot", planningName: "", serviceRoles: {}, annonces: [], notify: [],
+    equipes: false, plannings: [], dansEquipes: ["da"],
   },
   "equipes/da": { pole: "da", membres: [M("Mira Quenot")], updatedAt: "2026-09-18T10:00:00Z", parUid: "", parNom: "" },
   "equipes/da/taches/affiche": {
@@ -49,6 +57,10 @@ async function ouvrir(page: Page, p: FakeProfile, vers: string, docs = DOCS) {
   await page.addInitScript(() => localStorage.setItem("accords-aide-vue", "1"));
   return signInAs(page, p, docs, vers);
 }
+const unVolet = async (page: Page) => {
+  const v = page.viewportSize();
+  if (v && v.width >= 1148) await page.setViewportSize({ width: 1100, height: v.height });
+};
 const entete = (page: Page) => page.locator("header[data-entete-page]");
 
 test.describe("equipes-taches-app-1 : le retour d'une équipe suit la provenance", () => {
@@ -59,7 +71,9 @@ test.describe("equipes-taches-app-1 : le retour d'une équipe suit la provenance
   });
 
   test("?depuis=moi, sans paramètre ou valeur inconnue : « ‹ Moi » mène à /moi", async ({ page }) => {
-    for (const adresse of ["/equipes/da?depuis=moi", "/equipes/da", "/equipes/da?depuis=https://example.org"]) {
+    const adresses = ["/equipes/da?depuis=moi", "/equipes/da", "/equipes/da?depuis=https://example.org"];
+    await ouvrir(page, MIRA, adresses[0]); // la session simulée n'existe qu'après ce premier appel
+    for (const adresse of adresses) {
       await page.goto(adresse);
       await expect(page.getByRole("heading", { name: "DA", level: 1 })).toBeVisible();
       const retour = entete(page).getByRole("link", { name: "Moi", exact: true });
@@ -76,6 +90,9 @@ test.describe("equipes-taches-app-1 : le retour d'une équipe suit la provenance
   });
 
   test("une tâche ouverte depuis la page de son équipe revient à l'équipe", async ({ page }) => {
+    // En deux volets (souris, ≥ 1 148 px), la fiche s'ouvre à côté de la liste, sans en-tête ni retour : la
+    // fenêtre passe à 1 100 px pour vérifier le retour partout (l'écart des deux volets est noté dans la spec).
+    await unVolet(page);
     await ouvrir(page, MIRA, "/equipes/da");
     await page.getByRole("region", { name: "Tâches" }).getByText("Affiche de Noël").click();
     await expect(page).toHaveURL(/\/taches\/da\/affiche\/?\?depuis=equipe$/);
@@ -84,6 +101,9 @@ test.describe("equipes-taches-app-1 : le retour d'une équipe suit la provenance
   });
 
   test("une tâche ouverte sans provenance garde « ‹ Tâches »", async ({ page }) => {
+    // En deux volets (souris, ≥ 1 148 px), la fiche s'ouvre à côté de la liste, sans en-tête ni retour : la
+    // fenêtre passe à 1 100 px pour vérifier le retour partout (l'écart des deux volets est noté dans la spec).
+    await unVolet(page);
     await ouvrir(page, MIRA, "/taches/da/affiche");
     await expect(entete(page).getByRole("link", { name: "Tâches", exact: true })).toHaveAttribute("href", /\/taches\/?$/);
   });
@@ -92,8 +112,8 @@ test.describe("equipes-taches-app-1 : le retour d'une équipe suit la provenance
 test.describe("musiciens-8 : « ‹ Chants » seulement depuis un chant", () => {
   test("?depuis=<slug d'un chant> : le retour mène au chant", async ({ page }) => {
     await page.goto("/accords?accord=G&depuis=abba-pere");
-    const retour = page.getByRole("link", { name: "Chants", exact: true });
-    await expect(retour).toHaveAttribute("href", /\/songs\/abba-pere$/);
+    const retour = page.locator("main").getByRole("link", { name: "Chants", exact: true });
+    await expect(retour).toHaveAttribute("href", /\/songs\/abba-pere\/?$/);
     await retour.click();
     await expect(page).toHaveURL(/\/songs\/abba-pere\/?$/);
   });
@@ -102,7 +122,7 @@ test.describe("musiciens-8 : « ‹ Chants » seulement depuis un chant", () => 
     for (const adresse of ["/accords?accord=G", "/accords?accord=G&depuis=chant-qui-n-existe-pas", "/accords?accord=G&depuis=https://example.org"]) {
       await page.goto(adresse);
       await expect(page.locator("[data-accord-nom]").first()).toBeVisible();
-      await expect(page.getByRole("link", { name: "Chants", exact: true }), adresse).toHaveCount(0);
+      await expect(page.locator("main").getByRole("link", { name: "Chants", exact: true }), adresse).toHaveCount(0);
       await expect(page.locator('a[href*="example.org"]'), adresse).toHaveCount(0);
     }
   });
@@ -112,15 +132,26 @@ test.describe("musiciens-8 : « ‹ Chants » seulement depuis un chant", () => 
     await page.goto("/songs/abba-pere");
     await page.locator("[data-accord-touchable]").first().click();
     const lien = page.getByRole("link", { name: /Voir tout le dictionnaire/ });
-    await expect(lien).toHaveAttribute("href", /^\/accords\?accord=[^&]+&depuis=abba-pere$/);
+    await expect(lien).toHaveAttribute("href", /^\/accords\/?\?accord=[^&]+&depuis=abba-pere$/);
   });
 });
 
 test.describe("accueil-compte-3 : après « Enregistrer », retour à Moi", () => {
   test("sans ?from=, le profil enregistré ramène à /moi", async ({ page }) => {
-    await ouvrir(page, MIRA, "/profil");
+    await ouvrir(page, ADMIN, "/profil"); // un profil déjà rempli est verrouillé hors admin
     await page.getByRole("button", { name: /^Enregistrer/ }).first().click();
     await expect(page).toHaveURL(/\/moi\/?$/);
+  });
+
+  test("?from= d'un chemin du site y ramène ; //… et /\\… (autre site) ramènent à /moi", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/profil?from=%2Fsongs");
+    await page.getByRole("button", { name: /^Enregistrer/ }).first().click();
+    await expect(page).toHaveURL(/\/songs\/?$/);
+    for (const from of ["//example.org", "/\\example.org"]) {
+      await page.goto(`/profil?from=${encodeURIComponent(from)}`);
+      await page.getByRole("button", { name: /^Enregistrer/ }).first().click();
+      await expect(page).toHaveURL(/^http:\/\/localhost:\d+\/moi\/?$/);
+    }
   });
 });
 
@@ -128,11 +159,21 @@ test.describe("services-5 : les chants du service sont des liens, à la tonalit�
   test("un chant FR (G) et un chant ZH (F) ouvrent la page chant à cette tonalité", async ({ page }) => {
     await ouvrir(page, RUTH, "/mes-services/2026-10-18");
     const fr = page.getByRole("link", { name: "Abba Père" });
-    await expect(fr).toHaveAttribute("href", `/songs/abba-pere?key=${encodeURIComponent(JSON.stringify("G"))}`);
-    await expect(page.getByRole("link", { name: ZH })).toHaveAttribute("href", `/songs/${encodeURIComponent(ZH)}?key=${encodeURIComponent(JSON.stringify("F"))}`);
+    const cle = (k: string) => encodeURIComponent(JSON.stringify(k));
+    await expect(fr).toHaveAttribute("href", new RegExp(`^/songs/abba-pere/?\\?key=${cle("G")}$`));
+    await expect(page.getByRole("link", { name: ZH })).toHaveAttribute("href", new RegExp(`^/songs/${encodeURIComponent(ZH)}/?\\?key=${cle("F")}$`));
     await fr.click();
     await expect(page).toHaveURL(/\/songs\/abba-pere\/?\?key=%22G%22$/);
     await expect(page.locator("[data-accord-touchable]").first()).toBeVisible();
+  });
+
+  test("appareils tactiles : le lien d'un chant du service a une zone de 44 px", async ({ page }) => {
+    test.skip(!(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)), "zone de toucher : appareils tactiles seulement");
+    await ouvrir(page, RUTH, "/mes-services/2026-10-18");
+    const fr = page.getByRole("link", { name: "Abba Père" });
+    await expect(fr).toBeVisible();
+    const h = await fr.evaluate((el) => parseFloat(getComputedStyle(el, "::after").height));
+    expect(h).toBeGreaterThanOrEqual(44);
   });
 });
 
@@ -161,11 +202,16 @@ test.describe("musiciens-5 : « Où l'entendre » ouvre le chant", () => {
   const PIANISTE: FakeProfile = { uid: "uid-anouk", email: "anouk@example.com", firstName: "Anouk", lastName: "Ferrand", planningName: "Anouk F.", ...musicien("piano") };
 
   test("un titre retrouvé dans l'index est un lien vers le chant ; une phrase reste du texte", async ({ page }) => {
+    // L'accès à Harmonie passe par le planning : Anouk F. y est pianiste.
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const feuille = new URL(route.request().url()).searchParams.get("sheet");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: feuille === "Franco_Louange" ? PLANNING_PIANO : "" });
+    });
     await signInAs(page, PIANISTE, {}, "/harmonie/substitutions/2m7-pour-4");
     const bloc = page.locator("[data-ou-l-entendre]").filter({ visible: true });
     await expect(bloc).toBeVisible();
     const lien = bloc.getByRole("link", { name: "Hosanna", exact: true });
-    await expect(lien).toHaveAttribute("href", /\/songs\/hosanna$/);
+    await expect(lien).toHaveAttribute("href", /\/songs\/hosanna\/?$/);
     await lien.click();
     await expect(page).toHaveURL(/\/songs\/hosanna\/?(\?.*)?$/);
   });

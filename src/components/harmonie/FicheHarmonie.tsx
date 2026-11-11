@@ -26,6 +26,7 @@ import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { ALL_KEYS, getTransposedKey, semitonesTo } from "@/lib/transpose";
 import { cn } from "@/lib/utils";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import type { Instrument } from "@/types/harmonie";
 
 /** Titre comparable : sans accents, sans casse, ponctuation réduite à des espaces. */
@@ -238,7 +239,7 @@ export function FicheHarmonie({ id }: { id: string }) {
                 {phrase.map((e, i) => (
                   <li key={i} className="border-t border-border py-2">
                     {slugDuTitre.has(titreNormalise(e.titre)) ? (
-                      <Link href={`/songs/${slugDuTitre.get(titreNormalise(e.titre))}`} className="block text-base font-semibold leading-[21px] underline-offset-4 hover:underline">{e.titre}</Link>
+                      <Link href={`/songs/${slugDuTitre.get(titreNormalise(e.titre))}`} className={cn("block text-base font-semibold leading-[21px] underline-offset-4 hover:underline", TOUCHER_44)}>{e.titre}</Link>
                     ) : (
                       <span className="block text-base font-semibold leading-[21px]">{e.titre}</span>
                     )}
