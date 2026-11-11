@@ -1,12 +1,12 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, onStage } from "./helpers/louange";
-import { ouvrirPartitions } from "./helpers/setlist";
+import { attendreMiseEnPage, lireCompteur, onStage, ouvrirOptions } from "./helpers/louange";
+import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 import { contraste, garderContraste, FOND_CLAIR } from "../src/lib/performance/couleurIcones";
 
 // Lot CA, tranche CA-A (docs/spec-mode-louange-forscore-2.md) : la couleur des accords au choix de chacun, retenue par
 // compte sur l'appareil (`accords-couleurs-<uid>`), appliquée sur la page du chant, la vue partitions et le mode louange.
-// Dans cette tranche les choix se posent par la clé de stockage (le réglage arrive en CA-B). Comptes simulés, noms fictifs.
+// CA-A : les choix se posent par la clé de stockage ; CA-B : par le réglage des trois menus (fin du fichier). Comptes simulés, noms fictifs.
 
 const SETLIST_ID = "setlist-couleur-accords";
 const profil = (uid: string, prenom: string, nom: string): FakeProfile => ({
@@ -58,9 +58,9 @@ const canaux = (css: string) => (css.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).ma
 const versHex = (css: string) => `#${canaux(css).map((x) => Math.round(x).toString(16).padStart(2, "0")).join("")}`;
 
 /** Réglages de départ posés une seule fois (le script d'initialisation rejoue à chaque chargement de page). */
-async function preparer(page: Page, opts: { theme?: "light" | "dark"; disposition?: Disposition; init?: Record<string, string>; deuxColonnes?: boolean } = {}) {
-  const { theme = "light", disposition = "classique", init = {}, deuxColonnes = false } = opts;
-  await page.addInitScript(([th, d, extra, cols]) => {
+async function preparer(page: Page, opts: { theme?: "light" | "dark"; disposition?: Disposition; init?: Record<string, string>; deuxColonnes?: boolean; zh?: boolean; avecScan?: boolean } = {}) {
+  const { theme = "light", disposition = "classique", init = {}, deuxColonnes = false, zh = false, avecScan = false } = opts;
+  await page.addInitScript(([th, d, extra, cols, langue, scan]) => {
     try {
       if (!localStorage.getItem("couleur-accords-init")) {
         localStorage.setItem("couleur-accords-init", "1");
@@ -69,17 +69,18 @@ async function preparer(page: Page, opts: { theme?: "light" | "dark"; dispositio
         localStorage.setItem("disposition", d as string);
         localStorage.setItem("perf-role-preset", "pianiste");
         // Le chant chinois a un scan 简谱 : sans « never », il s'affiche sur le scan et n'a pas de ligne d'accords.
-        localStorage.setItem("jianpu-sheet-pref", "never");
+        localStorage.setItem("jianpu-sheet-pref", scan ? "always" : "never");
+        if (langue) localStorage.setItem("i18nextLng", "zh-CN");
         if (cols) localStorage.setItem("perf-two-columns", "1");
         for (const [k, v] of Object.entries(extra as Record<string, string>)) localStorage.setItem(k, v);
       }
     } catch { /* ignore */ }
-  }, [theme, disposition, init, deuxColonnes] as const);
+  }, [theme, disposition, init, deuxColonnes, zh, avecScan] as const);
 }
 
-async function ouvrir(page: Page, surface: Surface, slug: string, compte: FakeProfile | null) {
+async function ouvrir(page: Page, surface: Surface, slug: string, compte: FakeProfile | null, requete = "") {
   // Slug chinois encodé : `signInAs` compare le chemin tel que le navigateur l'écrit (%E4…).
-  const chemin = surface === "chant" ? `/songs/${encodeURIComponent(slug)}` : `/setlists/${SETLIST_ID}`;
+  const chemin = surface === "chant" ? `/songs/${encodeURIComponent(slug)}${requete}` : `/setlists/${SETLIST_ID}`;
   const db = compte
     ? await signInAs(page, compte, { [`setlists/${SETLIST_ID}`]: setlist(slug) }, chemin)
     : (await page.goto(chemin), null);
@@ -93,10 +94,11 @@ async function ouvrir(page: Page, surface: Surface, slug: string, compte: FakePr
 }
 
 /** Premier accord affiché de la langue, là où la surface le montre. */
-function accord(page: Page, surface: Surface, langue: Langue): Locator {
+function accord(page: Page, surface: Surface, langue: Langue, modale = false): Locator {
   const sel = langue === "fr" ? ".font-chord[data-copy-ignore]" : "[data-accord]";
   const racine = surface === "chant" ? page.locator(`main ${sel}`)
     : surface === "partitions" ? page.locator(`[data-outline-item] ${sel}`)
+    : modale ? page.locator(`[data-performance-mode] ${sel}`) // feuille modale (téléphone) : Radix pose aria-hidden sur la scène
     : onStage(page, sel);
   return racine.filter({ hasText: /\S/ }).first();
 }
@@ -271,3 +273,266 @@ test("hors partition : variables globales intactes, badge de tonalité et Harmon
   }
   expect(db!.writes.filter((w) => /accords/.test(w.path))).toEqual([]);
 });
+
+// ─── CA-B : le réglage (rubrique « Couleur des accords » des trois menus d'affichage) ───────────────────
+
+const NOM_MENU_CHANT = /Plus d'actions|更多操作/;
+const NOMS = {
+  fr: { origine: /Couleur d'origine/, violet: "Violet", encre: "Encre", autre: /^Autre couleur/, lien: "Couleurs d'origine" },
+  zh: { origine: /原色/, violet: "紫色", encre: "墨黑", autre: /^其他颜色/, lien: "恢复原色" },
+} as const;
+
+/** Ouvre le menu d'affichage de la surface et rend sa portée (menu Radix ou panneau d'options du mode louange). */
+async function ouvrirReglage(page: Page, surface: Surface, ui: Langue = "fr"): Promise<Locator> {
+  if (surface === "chant") {
+    await page.getByRole("button", { name: NOM_MENU_CHANT }).filter({ visible: true }).first().click();
+    return page.getByRole("menu");
+  }
+  if (surface === "partitions") {
+    await ouvrirAffichage(page);
+    return page.getByRole("menu").last();
+  }
+  return ouvrirOptions(page, ui);
+}
+const rangee = (portee: Locator, langue: Langue) => portee.locator(`[data-langue="${langue}"]`);
+
+for (const surface of SURFACES) {
+  for (const langue of ["fr", "zh"] as const) {
+    test(`réglage, ${surface} : une teinte colore les accords ${langue} ; « Couleurs d'origine » remet l'origine`, async ({ page }) => {
+      await preparer(page, { zh: langue === "zh" });
+      await ouvrir(page, surface, CHANT[langue], ELODIE);
+      const portee = await ouvrirReglage(page, surface, langue);
+      const n = NOMS[langue];
+      await rangee(portee, langue).getByRole("radio", { name: n.violet }).click();
+      await expect(rangee(portee, langue).getByRole("radio", { name: n.violet })).toHaveAttribute("aria-checked", "true");
+      await expect.poll(() => couleurDe(accord(page, surface, langue, true))).toBe(rgb(garderContraste(VIOLET, FOND_CLAIR)));
+      // L'autre langue ne bouge pas.
+      const autre: Langue = langue === "fr" ? "zh" : "fr";
+      await expect(rangee(portee, autre).getByRole("radio", { name: n.origine })).toHaveAttribute("aria-checked", "true");
+      await portee.getByRole("button", { name: n.lien }).click();
+      await expect.poll(() => couleurDe(accord(page, surface, langue, true))).toBe(origine(langue, "classique"));
+      await expect(portee.getByRole("button", { name: n.lien })).toBeDisabled();
+      expect(await page.evaluate((k) => JSON.parse(localStorage.getItem(k)!), cle(ELODIE))).toEqual({ fr: null, zh: null });
+    });
+  }
+}
+
+test("réglage : un choix fait sur la page du chant se retrouve dans la vue partitions, sans rechargement du stockage", async ({ page }) => {
+  await preparer(page);
+  await ouvrir(page, "chant", CHANT.fr, ELODIE);
+  const menu = await ouvrirReglage(page, "chant");
+  await rangee(menu, "fr").getByRole("radio", { name: "Violet" }).click();
+  await page.goto(`/setlists/${SETLIST_ID}`);
+  await ouvrirPartitions(page);
+  await expect.poll(() => couleurDe(accord(page, "partitions", "fr"))).toBe(rgb(garderContraste(VIOLET, FOND_CLAIR)));
+  const affichage = await ouvrirReglage(page, "partitions");
+  await expect(rangee(affichage, "fr").getByRole("radio", { name: "Violet" })).toHaveAttribute("aria-checked", "true");
+});
+
+test("réglage : le stockage qui lève, le choix s'applique pour la séance", async ({ page }) => {
+  const erreurs: string[] = [];
+  page.on("pageerror", (e) => erreurs.push(e.message));
+  await page.addInitScript(() => {
+    const set = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k: string, v: string) { if (k.startsWith("accords-couleurs")) throw new Error("stockage indisponible"); return set.call(this, k, v); };
+  });
+  await preparer(page);
+  await ouvrir(page, "chant", CHANT.fr, ELODIE);
+  const menu = await ouvrirReglage(page, "chant");
+  await rangee(menu, "fr").getByRole("radio", { name: "Violet" }).click();
+  await expect.poll(() => couleurDe(accord(page, "chant", "fr"))).toBe(rgb(garderContraste(VIOLET, FOND_CLAIR)));
+  expect(erreurs).toEqual([]);
+});
+
+test("réglage : couleur venue du cercle, égale au bleu d'origine, reste un choix ; hex dans le nom du bouton", async ({ page }) => {
+  await preparer(page, { init: { [cle(ELODIE)]: JSON.stringify({ fr: "#3f63cf", zh: null }) } });
+  await ouvrir(page, "chant", CHANT.fr, ELODIE);
+  const menu = await ouvrirReglage(page, "chant");
+  const fr = rangee(menu, "fr");
+  await expect(fr.getByRole("radio", { name: "Autre couleur #3f63cf" })).toHaveAttribute("aria-checked", "true");
+  await expect(fr.getByRole("radio", { name: /Couleur d'origine/ })).toHaveAttribute("aria-checked", "false");
+  await expect(menu.getByRole("button", { name: "Couleurs d'origine" })).toBeEnabled();
+});
+
+test("réglage, clavier : flèches en boucle dans la rangée, le menu reste ouvert, Échap ferme d'abord le cercle", async ({ page }) => {
+  await preparer(page);
+  await ouvrir(page, "chant", CHANT.fr, ELODIE);
+  const menu = await ouvrirReglage(page, "chant");
+  const fr = rangee(menu, "fr");
+  await fr.getByRole("radio", { name: /Couleur d'origine/ }).focus();
+  await page.keyboard.press("ArrowLeft"); // en boucle : de l'origine à « Autre couleur » (cercle ouvert)
+  await expect(fr.locator("[data-cercle-chromatique]")).toBeVisible();
+  await page.keyboard.press("ArrowRight"); // retour à l'origine
+  await expect(fr.locator("[data-cercle-chromatique]")).toHaveCount(0);
+  await page.keyboard.press("ArrowRight");
+  await expect(fr.getByRole("radio", { name: "Encre" })).toHaveAttribute("aria-checked", "true");
+  await expect(fr.getByRole("radio", { name: "Encre" })).toBeFocused();
+  await expect(menu).toBeVisible();
+  await expect.poll(() => couleurDe(accord(page, "chant", "fr"))).toBe(rgb("#1c1c1e"));
+  await fr.getByRole("radio", { name: /^Autre couleur/ }).click();
+  await expect(fr.locator("[data-cercle-chromatique]")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(fr.locator("[data-cercle-chromatique]")).toHaveCount(0);
+  await expect(menu).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(menu).toHaveCount(0);
+});
+
+test("réglage, mode louange : les flèches dans une rangée ne tournent pas la page", async ({ page }) => {
+  await preparer(page);
+  await ouvrir(page, "louange", CHANT.fr, ELODIE);
+  const dialogue = await ouvrirReglage(page, "louange");
+  const avant = await lireCompteur(page);
+  await rangee(dialogue, "fr").getByRole("radio", { name: /Couleur d'origine/ }).focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowDown");
+  await expect(rangee(dialogue, "fr").getByRole("radio", { name: "Vert" })).toHaveAttribute("aria-checked", "true");
+  expect(await lireCompteur(page)).toBe(avant);
+});
+
+for (const largeur of [360, 390]) {
+  for (const surface of SURFACES) {
+    test(`réglage, ${surface} à ${largeur} px : aucun débordement horizontal, pastilles de 44 px`, async ({ page }) => {
+      await page.setViewportSize({ width: largeur, height: 800 });
+      await preparer(page);
+      await ouvrir(page, surface, CHANT.fr, ELODIE);
+      const portee = await ouvrirReglage(page, surface);
+      const rg = rangee(portee, "zh").getByRole("radiogroup");
+      await rg.scrollIntoViewIfNeeded();
+      const m = await rg.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const racine = el.closest('[role="menu"], [role="dialog"]') as HTMLElement | null;
+        return {
+          page: document.documentElement.scrollWidth - window.innerWidth,
+          boite: racine ? racine.scrollWidth - racine.clientWidth : 0,
+          dedans: r.left >= 0 && r.right <= window.innerWidth,
+          pastilles: Array.from(el.querySelectorAll("button")).map((b) => Math.round(b.getBoundingClientRect().width)),
+        };
+      });
+      expect(m.page).toBeLessThanOrEqual(0);
+      expect(m.boite).toBeLessThanOrEqual(0);
+      expect(m.dedans).toBe(true);
+      expect(m.pastilles).toEqual([44, 44, 44, 44, 44, 44, 44]);
+    });
+  }
+}
+
+test("calque d'un scan 简谱 : garde sa couleur avec un choix posé", async ({ page }) => {
+  await preparer(page, { avecScan: true });
+  // Le calque ne s'écrit que sous une tonalité jouée différente de la gravée : `?key` en JSON.
+  await ouvrir(page, "chant", CHANT.zh, ELODIE, `?key=${encodeURIComponent(JSON.stringify("F"))}`);
+  const accords = page.locator("[data-jianpu-page] [data-jianpu-label]");
+  await expect(accords.first()).toBeVisible({ timeout: 20_000 });
+  const avant = await couleurDe(accords.first());
+  const menu = await ouvrirReglage(page, "chant");
+  await rangee(menu, "zh").getByRole("radio", { name: "Violet" }).click();
+  await expect(rangee(menu, "zh").getByRole("radio", { name: "Violet" })).toHaveAttribute("aria-checked", "true");
+  expect(await couleurDe(accords.first())).toBe(avant);
+});
+
+// ─── Captures de CA-B, à regarder (test-results/captures-ca-b/) ───────────────────────────────────────
+
+for (const surface of SURFACES) {
+  for (const ui of ["fr", "zh"] as const) {
+    for (const theme of ["light", "dark"] as const) {
+      test(`captures CA-B : ${surface}, ${ui}, ${theme}, sans puis avec une couleur`, async ({ page }, info) => {
+        await preparer(page, { theme, zh: ui === "zh" });
+        await ouvrir(page, surface, CHANT[ui], ELODIE);
+        const portee = await ouvrirReglage(page, surface, ui);
+        const nom = (etat: string) => `test-results/captures-ca-b/${info.project.name}-${surface}-${ui}-${theme}-${etat}.png`;
+        await page.waitForTimeout(400); // fin de l'animation d'ouverture du menu
+        await page.screenshot({ path: nom("sans") });
+        await rangee(portee, ui).getByRole("radio", { name: NOMS[ui].violet }).click();
+        await rangee(portee, ui).getByRole("radio", { name: NOMS[ui].autre }).click();
+        await page.screenshot({ path: nom("avec") });
+      });
+    }
+  }
+}
+
+test("captures CA-B : menus à 360 px, deux langues", async ({ page }, info) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await preparer(page);
+  await ouvrir(page, "chant", CHANT.fr, ELODIE);
+  await ouvrirReglage(page, "chant");
+  await page.waitForTimeout(400); /* fin de l'animation d'ouverture du menu */ await page.screenshot({ path: `test-results/captures-ca-b/${info.project.name}-360-chant.png` });
+});
+
+// ─── CA-B, compléments : sous-menu Affichage, retenue, Échap du mode louange, fonds Classique ─────────────
+
+test("réglage, vue partitions : sous-menu Affichage (là où Affichage est un sous-menu ; sinon sauté) reste ouvert au choix, Échap et clic dehors le ferment", async ({ page }) => {
+  await preparer(page);
+  await ouvrir(page, "partitions", CHANT.fr, ELODIE);
+  const barre = page.getByTestId("barre-outils").getByRole("button", { name: /^(Affichage|显示)$/ });
+  await barre.or(page.locator("[data-en-tete]")).first().waitFor();
+  test.skip(await barre.isVisible(), "Affichage est un bouton de la barre, pas un sous-menu");
+  const sousMenu = page.getByRole("menu", { name: /^(Affichage|显示)$/ });
+  const rouvrir = async () => { await fermerMenus(page); await ouvrirAffichage(page); await expect(sousMenu).toBeVisible(); };
+
+  await ouvrirAffichage(page);
+  await rangee(sousMenu, "fr").getByRole("radio", { name: "Violet" }).click();
+  await expect(sousMenu).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(sousMenu).toHaveCount(0);
+
+  await rouvrir();
+  await page.mouse.click(2, 2);
+  await expect(page.getByRole("menu")).toHaveCount(0);
+});
+
+// shortcut: ← depuis le lien « Couleurs d'origine » ferme le sous-menu à 1 280 px mais pas à 1 024 ni à 1 440 px (lien
+// bien focalisé, cause non trouvée le 11/11/2026) ; la spec ne demande pas ←, Échap et le clic dehors le ferment partout.
+test.fixme("réglage, vue partitions : ← ferme le sous-menu Affichage depuis le lien « Couleurs d'origine »", async () => {});
+
+// shortcut: pas d'authentification lente simulable simplement (signInAs répond tout de suite), à reprendre avec une option de délai dans fakeSession.
+test.fixme("réglage : grisé pendant le chargement de l'authentification, rien d'écrit", async () => {
+  // Idée : après signInAs, une route securetoken/identitytoolkit qui attend avant route.fallback(), puis recharger la page,
+  // vérifier les pastilles `disabled` et `localStorage` sans clé `accords-couleurs*`, libérer, vérifier qu'elles s'activent.
+});
+
+test("réglage : ligne de rétention, « pour ce compte » connecté, « sur cet appareil » sans compte (page du chant)", async ({ page }) => {
+  await preparer(page);
+  await ouvrir(page, "chant", CHANT.fr, ELODIE);
+  await expect(await ouvrirReglage(page, "chant")).toContainText("Retenue pour ce compte sur cet appareil");
+  await changerDeCompte(page);
+  await ouvrir(page, "chant", CHANT.fr, null);
+  const menu = await ouvrirReglage(page, "chant");
+  await expect(menu).toContainText("Retenue sur cet appareil");
+  await expect(menu).not.toContainText("pour ce compte");
+});
+
+test("réglage, mode louange : Échap ferme d'abord le cercle du panneau Options, puis le panneau", async ({ page }) => {
+  await preparer(page);
+  await ouvrir(page, "louange", CHANT.fr, ELODIE);
+  const dialogue = await ouvrirReglage(page, "louange");
+  const fr = rangee(dialogue, "fr");
+  await fr.getByRole("radio", { name: /^Autre couleur/ }).click();
+  await expect(fr.locator("[data-cercle-chromatique]")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(fr.locator("[data-cercle-chromatique]")).toHaveCount(0);
+  await expect(dialogue).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialogue).toBeHidden();
+});
+
+/** Canaux 0-255 d'une couleur calculée : `rgb()` ou `color(srgb …)` (Chrome rend ainsi un color-mix). */
+const canauxRgb = (css: string) => css.startsWith("color(") ? canaux(css).map((x) => x * 255) : canaux(css);
+
+for (const [theme, dose, fondPage] of [["light", 0.15, 255], ["dark", 0.16, 0]] as const) {
+  test(`Classique, violet choisi, page du chant, thème ${theme} : étiquette et filet suivent la couleur, fond du refrain à ${dose * 100} %`, async ({ page }) => {
+    await preparer(page, { theme, init: { [cle(ELODIE)]: JSON.stringify({ fr: VIOLET, zh: null }) } });
+    await ouvrir(page, "chant", CHANT.fr, ELODIE);
+    const affichee = canauxRgb(rgb(garderContraste(VIOLET, theme === "light" ? FOND_CLAIR : "#000000")));
+    const lire = () => page.locator("main [data-section]").evaluateAll((els) => {
+      const e = els.find((x) => getComputedStyle(x).backgroundColor !== "rgba(0, 0, 0, 0)");
+      if (!e) return null;
+      const marque = e.querySelector(":scope > [data-copy-ignore] > span");
+      return { fond: getComputedStyle(e).backgroundColor, filet: getComputedStyle(e).borderLeftColor, etiquette: marque ? getComputedStyle(marque).backgroundColor : "" };
+    });
+    await expect.poll(async () => (await lire()) !== null, { timeout: 20_000 }).toBe(true);
+    const r = (await lire())!;
+    canauxRgb(r.filet).forEach((c, i) => expect(Math.abs(c - affichee[i])).toBeLessThanOrEqual(2));
+    canauxRgb(r.etiquette).forEach((c, i) => expect(Math.abs(c - affichee[i])).toBeLessThanOrEqual(2));
+    canauxRgb(r.fond).forEach((c, i) => expect(Math.abs(c - (affichee[i] * dose + fondPage * (1 - dose)))).toBeLessThanOrEqual(2));
+  });
+}

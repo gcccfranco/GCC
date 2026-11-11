@@ -56,8 +56,21 @@ export function useCouleursAccords(uid: string | null | undefined, theme: "light
     const sombre = theme === "dark";
     const fond = disposition === "scene" ? (sombre ? FOND_SCENE_SOMBRE : FOND_SCENE_CLAIR) : sombre ? FOND_SOMBRE : FOND_CLAIR;
     const s: Record<string, string> = {};
-    if (c.fr) s["--accord-fr"] = garderContraste(c.fr, fond);
-    if (c.zh) s["--accord-zh"] = garderContraste(c.zh, fond);
+    // Classique (décision 28) : fond (15 % clair, 16 % sombre) et bordure (33 %) mêlés au fond de la page, lus par getSectionStyle.
+    const pose = (l: "fr" | "zh", hex: string | null) => {
+      if (!hex) return;
+      const v = garderContraste(hex, fond);
+      s[`--accord-${l}`] = v;
+      s[`--classique-fond-${l}`] = `color-mix(in srgb, ${v} ${sombre ? 16 : 15}%, ${fond})`;
+      s[`--classique-bord-${l}`] = `color-mix(in srgb, ${v} 33%, ${fond})`;
+    };
+    pose("fr", c.fr);
+    pose("zh", c.zh);
     return Object.keys(s).length ? (s as CSSProperties) : undefined;
   }, [c, theme, disposition]);
+}
+
+/** Choix en cours (réglage) ; `uid` undefined = authentification en cours : couleur d'origine. */
+export function useChoixCouleursAccords(uid: string | null | undefined): CouleursAccords {
+  return useSyncExternalStore(abonner, () => (uid === undefined ? ORIGINE : getCouleursAccords(uid)), () => ORIGINE);
 }

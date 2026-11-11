@@ -73,7 +73,7 @@ export function LigneFeuilleDeRoute({ block, repeat, couleurDe, disposition = "c
       data-section-uids={block.occurrenceUids?.join(" ")}
       data-feuille-route-ligne
       className="mx-auto flex w-full max-w-[880px] items-center border-border [container-type:inline-size] [&:not(:first-child)]:border-t"
-      style={{ "--sec-c": couleurRepere, flex: `${poidsSection(block)} 1 auto`, paddingBlock: px(12) } as React.CSSProperties}
+      style={{ /* lot CA : la couleur des accords choisie ne change pas la feuille de route du batteur (« initial » rend l'accent de langue) */ "--accord-fr": "initial", "--accord-zh": "initial", "--sec-c": couleurRepere, flex: `${poidsSection(block)} 1 auto`, paddingBlock: px(12) } as React.CSSProperties}
     >
       {/* Le conteneur de requête est la ligne ; la mise en page (flex, ou grille sous 560 px) est sur ce cadre intérieur. */}
       <div className="flex w-full items-center [@container(max-width:560px)]:grid [@container(max-width:560px)]:grid-cols-[auto_minmax(0,1fr)]" style={{ gap: px(16) }}>

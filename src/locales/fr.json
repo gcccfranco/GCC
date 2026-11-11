@@ -654,6 +654,14 @@
     "partition": "Partition",
     "retenue": "Retenue sur cet appareil"
   },
+  "couleurAccords": {
+    "titre": "Couleur des accords",
+    "francais": "Chants en français",
+    "chinois": "Chants en chinois",
+    "origine": "Couleur d'origine (selon la disposition)",
+    "lien": "Couleurs d'origine",
+    "retenueCompte": "Retenue pour ce compte sur cet appareil"
+  },
   "performance": {
     "indiceRappelJoue": "Points : déjà joué · Pleines : sur cette page, avec leur nuance",
     "indiceRappelUnique": "Pleines : sur cette page, avec leur nuance",

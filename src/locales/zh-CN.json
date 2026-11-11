@@ -650,6 +650,14 @@
     "partition": "乐谱",
     "retenue": "仅在本设备上保存"
   },
+  "couleurAccords": {
+    "titre": "和弦颜色",
+    "francais": "法语歌曲",
+    "chinois": "中文歌曲",
+    "origine": "原色（随排版而定）",
+    "lien": "恢复原色",
+    "retenueCompte": "仅用于此账号，保存在本设备上"
+  },
   "performance": {
     "indiceRappelJoue": "圆点：已唱过 · 实心：在本页，下方为力度",
     "indiceRappelUnique": "实心：在本页，下方为力度",

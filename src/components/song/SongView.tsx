@@ -140,7 +140,11 @@ const liberation_font = localFont({
 
 
 export function getSectionStyle(type: string, isZh: boolean): React.CSSProperties {
-  const { accent, boxFill, boxBorder } = LANG_THEME[isZh ? "zh" : "fr"];
+  const l = isZh ? "zh" : "fr";
+  // Sans couleur d'accords choisie, les variables n'existent pas : les replis redonnent LANG_THEME.
+  const accent = `var(--accord-${l}, ${LANG_THEME[l].accent})`;
+  const boxFill = `var(--classique-fond-${l}, ${LANG_THEME[l].boxFill})`;
+  const boxBorder = `var(--classique-bord-${l}, ${LANG_THEME[l].boxBorder})`;
 
   const base: React.CSSProperties = {
     "--sec-c": accent,

@@ -39,6 +39,7 @@ import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { ANCIEN_RAPPEL } from "@/lib/annotations/strokes";
 import { getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
+import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { getTransposedKey, noteToIndex } from "@/lib/transpose";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
@@ -2138,6 +2139,10 @@ export function PerformanceMode({
           <div className="space-y-2">
             <TitreRubrique id="perf-disposition">{t("dispositions.titre")}</TitreRubrique>
             <ChoixDisposition variante="panneau" langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
+          </div>
+          <div className="space-y-2">
+            <TitreRubrique id="perf-couleur-accords">{t("couleurAccords.titre")}</TitreRubrique>
+            <ChoixCouleurAccords variante="panneau" theme={stageTheme} />
           </div>
             <SettingRow label={t("performance.text")}>
               <div className="flex items-center gap-1.5">
