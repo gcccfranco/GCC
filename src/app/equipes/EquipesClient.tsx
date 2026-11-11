@@ -346,7 +346,7 @@ function CarteEquipe({
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-2">
           <h2 className="min-w-0 break-words hyphens-auto text-lg font-bold leading-[23px] text-foreground">
-            {href ? <Link href={href} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{nom}</Link> : nom}
+            {href ? <Link href={href} className={`rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${TOUCHER_44}`}>{nom}</Link> : nom}
           </h2>
           {peutEditer && (
             <button

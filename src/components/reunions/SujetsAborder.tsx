@@ -20,7 +20,7 @@ import { CSS } from "@dnd-kit/utilities"
 import { Check, GripVertical, Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { BOUTON_CHAMP_ACTION, CHAMP_ACTION } from "@/components/reunions/champAction"
-import { TOUCHER_44 } from "@/lib/toucher44"
+import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44"
 import { peutAjouterSujet, peutOrdonnerSujets, peutRetirerSujet } from "@/lib/access"
 import { useSensorsAvecClavier } from "@/lib/dnd/sensors"
 import { aCommence, nowIsoParis } from "@/lib/evenements/agenda"
@@ -55,7 +55,7 @@ function LigneSujet({ sujet, rouge, provenance, ordonner, retirer, onTraite, onR
       {ordonner && (
         <button type="button" ref={setActivatorNodeRef} {...attributes} {...listeners}
           aria-label={t("evenements.sujets.deplacer", { texte: sujet.texte })}
-          className="flex h-10 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          className={`flex h-10 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${TOUCHER_PILULE}`}>
           <GripVertical className="h-4 w-4" aria-hidden />
         </button>
       )}

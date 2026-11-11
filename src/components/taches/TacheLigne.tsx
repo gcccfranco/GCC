@@ -76,7 +76,7 @@ export function TacheLigne({ ligne, onToggle, onOpen, equipeLabel, sansEvenement
           {enCours && <Minus className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}
         </span>
       </button>
-      <button type="button" onClick={onOpen} disabled={!onOpen} aria-current={actif ? "page" : undefined} className="min-w-0 flex-1 text-left cursor-pointer disabled:cursor-default">
+      <button type="button" onClick={onOpen} disabled={!onOpen} aria-current={actif ? "page" : undefined} className="min-w-0 flex-1 self-stretch -my-1.5 py-1.5 flex flex-col justify-center text-left cursor-pointer disabled:cursor-default">
         <span className={`block text-base ${terminee ? "text-muted-foreground line-through" : "text-foreground"}`}>{tache.titre}</span>
         <span className="block text-sm text-muted-foreground">{details}</span>
       </button>

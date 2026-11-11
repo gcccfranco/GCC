@@ -37,6 +37,7 @@ import { prevenirFait, prevenirResponsable } from "@/lib/taches/prevenir";
 import { cn } from "@/lib/utils";
 import type { EtatFois, Fois, Tache } from "@/types/tache";
 import { Impasse } from "@/components/layout/Impasse";
+import { TOUCHER_RANGEE } from "@/lib/toucher44";
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -255,6 +256,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
               disabled={!cochable}
               className={cn(
                 "min-h-9 flex-1 whitespace-nowrap rounded-full px-4 font-semibold transition-colors duration-150 disabled:cursor-default",
+                TOUCHER_RANGEE,
                 backOffice && "inline-flex items-center justify-center gap-1.5",
                 !cochable && etat !== e && "opacity-50",
                 etat === e ? "bg-pose text-foreground shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,.08)]" : "text-muted-foreground hover:text-foreground",

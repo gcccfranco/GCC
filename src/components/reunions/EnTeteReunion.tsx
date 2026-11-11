@@ -19,6 +19,7 @@ import type { Evenement } from "@/types/evenement"
 import { EnTetePage } from "@/components/layout/EnTetePage"
 import { MenuActions } from "@/components/layout/MenuActions"
 import { Button } from "@/components/ui/button"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 
 export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gestion: boolean; onSupprimer: () => void }) {
@@ -40,12 +41,12 @@ export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gesti
     </p>
   )
   const dupliquer = gestion && (
-    <Button asChild size="sm" variant="outline" className="rounded-full">
+    <Button asChild size="sm" variant="outline" className={`rounded-full ${TOUCHER_44}`}>
       <Link href={`/back-office/reunions/nouvelle?from=${e.id}`}><Copy aria-hidden /> {t("backOffice.dupliquerProchaine")}</Link>
     </Button>
   )
   const modifier = gestion && (
-    <Button asChild size="sm" variant="outline" className="rounded-full">
+    <Button asChild size="sm" variant="outline" className={`rounded-full ${TOUCHER_44}`}>
       <Link href={`/back-office/reunions/${e.id}/modifier`}><Pencil aria-hidden /> {t("evenements.modifier")}</Link>
     </Button>
   )

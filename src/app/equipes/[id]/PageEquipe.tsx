@@ -16,6 +16,7 @@ import { LargeurBO } from "@/components/backOffice/LargeurBO";
 import { useBarreMontree } from "@/components/layout/BarreLaterale";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { buttonVariants } from "@/components/ui/button";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { TacheLigne, dateCourte } from "@/components/taches/TacheLigne";
 import { adresseDeLaLigne } from "@/components/taches/SectionTaches";
 import { texteRetour } from "@/components/taches/retour";
@@ -131,7 +132,7 @@ function TitreSection({ id, titre, action }: { id: string; titre: string; action
 
 function BoutonSection({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}>
+    <Link href={href} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0", TOUCHER_44)}>
       <Plus aria-hidden />
       {label}
     </Link>

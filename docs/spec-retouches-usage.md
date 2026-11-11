@@ -182,3 +182,9 @@ Vrais mais hors lot 1, parce qu'ils déplacent, réorganisent ou demandent un de
   zones ne sont vérifiées que par les classes du source ; pastilles du Sommaire : quand elles passent à la ligne, les
   zones de deux rangées se recouvrent en hauteur (le toucher va à la rangée du dessous) ; bouton « Voir » des
   inscriptions (36 px) laissé, hors consigne.
+- 11/11/2026 : **T2 faite** (8 fichiers + `tests/retouches-usage-t2.spec.ts`, 17 passés et 7 sautés hors toucher, toutes
+  les commandes mesurées dans la page, aucune lecture de classes ; relecteur : bon). Écarts : segments d'état en
+  `TOUCHER_RANGEE` (44 px aussi au téléphone) ; poignée des sujets en `TOUCHER_PILULE` (4 px d'écart avec la case
+  voisine : zone de 44 px de haut, 34 de large). Ligne de tâche : le bouton d'ouverture couvre toute la ligne par
+  `self-stretch -my-1.5 py-1.5`, hauteur et position du texte inchangées. Limite : un nom d'équipe de moins de 44 px a
+  une zone qui déborde sur le crayon voisin (le crayon garde le toucher).

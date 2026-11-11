@@ -14,6 +14,7 @@ import { equipeDuPour, publicDeReunion } from "@/lib/access"
 import { cleNomEquipe } from "@/lib/equipes/table"
 import type { EvenementValues } from "@/components/evenements/EvenementForm"
 import { Button } from "@/components/ui/button"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { Champ } from "@/components/ui/champ"
 import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
@@ -134,10 +135,10 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, onSu
                     onChange={(e) => { const liens = [...v.liens]; liens[i] = { ...liens[i], label: e.target.value }; set({ liens }) }} />
                   <Input aria-label={t("evenements.form.lienUrl")} value={l.url} placeholder="https://…"
                     onChange={(e) => { const liens = [...v.liens]; liens[i] = { ...liens[i], url: e.target.value }; set({ liens }) }} />
-                  <Button type="button" variant="ghost" size="sm" aria-label={t("evenements.form.removeLink")} onClick={() => set({ liens: v.liens.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></Button>
+                  <Button type="button" variant="ghost" size="sm" className={TOUCHER_44} aria-label={t("evenements.form.removeLink")} onClick={() => set({ liens: v.liens.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => set({ liens: [...v.liens, { label: "", url: "" }] })}>{t("evenements.form.addLink")}</Button>
+              <Button type="button" variant="outline" size="sm" className={TOUCHER_44} onClick={() => set({ liens: [...v.liens, { label: "", url: "" }] })}>{t("evenements.form.addLink")}</Button>
             </div>
           </Champ>
         </div>
