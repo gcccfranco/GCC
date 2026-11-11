@@ -171,18 +171,23 @@ Ce qu'un agent pèse avant d'avoir rien fait : jetons d'entrée de sa première 
 question pour les huit, aucun outil lancé, session cloud). Mesuré le 10/11/2026 par
 `python3 scripts/mesure-contexte-agents.py` ; méthode et décomposition : archive, § 9.
 
-| Agent | Modèle | Avant | Après (attendu) | Après (mesuré) |
-| --- | --- | --- | --- | --- |
-| `chercheur` | Haiku | 67 160 | ≈ 12 500 | à mesurer |
-| `testeur` | Haiku | 67 407 | ≈ 12 500 | à mesurer |
-| `relecteur` | Sonnet | 68 112 | ≈ 13 000 | à mesurer |
-| `regard` | Sonnet | 67 393 | ≈ 10 500 | à mesurer |
-| `critique-design` | Opus | 67 801 | ≈ 13 000 | à mesurer |
-| `executant` | Sonnet | 67 966 | ≈ 14 500, `ponytail` préchargé en plus | à mesurer |
-| `maquettiste` | Sonnet | 84 266 | ≈ 29 500 | à mesurer |
-| `directeur-artistique` | Opus | 78 751 | ≈ 24 000 | à mesurer |
+| Agent | Modèle | Avant | Après (mesuré le 11/11/2026) |
+| --- | --- | --- | --- |
+| `chercheur` | Haiku | 67 160 | 14 914 |
+| `testeur` | Haiku | 67 407 | 15 161 |
+| `relecteur` | Sonnet | 68 112 | 16 151 |
+| `regard` | Sonnet | 67 393 | 12 528 |
+| `critique-design` | Opus | 67 801 | 15 555 |
+| `executant` | Sonnet | 67 966 | 16 930, `ponytail` préchargé compris |
+| `maquettiste` | Sonnet | 84 266 | 32 163 |
+| `directeur-artistique` | Opus | 78 751 | 26 505 |
 
-Les définitions d'outils font les deux tiers de ce contexte (les 48 outils MCP de la session à eux seuls ≈ 59 %), la
+Soit 62 à 81 % de moins (≈ 52 000 jetons par agent), 2 000 à 2 700 jetons au-dessus de l'estimation : aucun outil MCP,
+aucune liste de skills ni d'outils différés ; restent les outils de la liste plus `SubagentHandback` (ajouté par le
+harnais), les deux `CLAUDE.md` et la consigne. La mesure « après » compte les changements du même soir (liste des
+skills plus courte, `ponytail` rendu à l'`executant`, `CLAUDE.md` allongés).
+
+Avant, les définitions d'outils faisaient les deux tiers de ce contexte (les 48 outils MCP de la session à eux seuls ≈ 59 %), la
 liste des 60 skills ≈ 15 %, les deux `CLAUDE.md` ≈ 10 %. `disallowedTools` ne retire que les outils qu'il nomme : tout
 le reste est hérité, y compris par les agents « en lecture seule ».
 
@@ -198,6 +203,9 @@ le reste est hérité, y compris par les agents « en lecture seule ».
 Ils y perdent `Skill`, la recherche web, les connecteurs (GitHub, Notion, Drive, Todoist, Figma) et les outils de
 session cloud ; aucune consigne d'agent ne les demande. Le champ `skills:` de l'équipe design et de l'`executant` (`ponytail`, § 4) reste ; les skills dormants de l'aiguillage se lisent par chemin, avec `Read`.
 
-**Reste à faire, dans une session neuve** (une définition d'agent ne se recharge pas à chaud, la liste des skills
-si) : la mesure « après », puis `/tranche` et `/planche` à vide et par une petite passe réelle, pour vérifier la sortie
-par `schema` et le préchargement des skills sans l'outil `Skill`.
+**Vérifié le 11/11/2026, dans une session neuve** : `/tranche`, `/planche` et `/verifier-constats` s'arrêtent à vide
+sur « args attendus » ; `/tranche` et `/planche` passent par une petite passe réelle (sortie par `schema` rendue par
+tous, `StructuredOutput` y remplace `SubagentHandback`). Le préchargement par `skills:` tient sans l'outil `Skill`
+(`executant`, `maquettiste`, `directeur-artistique`). Reste : les agents de `/audit-code` (sans `agentType`), non mesurés.
+
+**Règle** : tout nouvel agent se déclare par une liste `tools:`, jamais par `disallowedTools`.

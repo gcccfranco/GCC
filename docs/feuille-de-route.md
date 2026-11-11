@@ -72,9 +72,6 @@ et **n'ont pas été reconfirmées** : vérifier dans le § Avancement de la spe
   `spec-jianpu-integration.md`.
 - **AH** : quatre références bibliques gravées douteuses à vérifier (spec, « Avancement »).
 - **AE** : questions de `audit-2026-10-24.md` (lots L0 à L9), suivies dans `spec-corrections-audit.md`.
-- **Contexte de départ des agents** : mesuré le 10/11/2026 (≈ 68 000 jetons chacun) ; listes `tools:` appliquées le même
-  jour sur go de Timothée (`orchestration.md` § 7) ; mesure « après » et essai des workflows à faire dans une session
-  neuve.
 - **repowise** (index de code, demandé le 10/11/2026) : essayé sur une copie, non installé ; mesures et raisons dans
   `archive/orchestration-historique.md` § 10. À décider : le laisser de côté, ou l'installer en ligne de commande seule.
 
