@@ -72,6 +72,9 @@ et **n'ont pas été reconfirmées** : vérifier dans le § Avancement de la spe
   `spec-jianpu-integration.md`.
 - **AH** : quatre références bibliques gravées douteuses à vérifier (spec, « Avancement »).
 - **AE** : questions de `audit-2026-10-24.md` (lots L0 à L9), suivies dans `spec-corrections-audit.md`.
+- **Agents de `/audit-code`** : ils n'ont pas d'`agentType`, donc partent de 73 796 jetons au lieu de 16 000 à 17 000
+  (mesuré le 11/11/2026) ; les déclarer par `tools:` épargnerait environ 3,4 M de jetons par audit (estimation,
+  `orchestration.md` § 7). À faire avant le prochain audit, sur go.
 
 **À construire**
 - **U** : évènements sur le site en janvier 2027 (dernier lot de l'ordre du chantier U ; le Sheet « Calendrier des
