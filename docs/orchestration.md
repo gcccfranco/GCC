@@ -65,6 +65,41 @@ passe ; une retouche ne se relance que pour un défaut visible.
   `args : { commit, build? }`.
 - Proposé, sur go : un workflow `/rude-epreuve` (détail dans l'archive, § 4).
 
+**Skills** (`.claude/skills/`, 58 ; aiguillage du 10/11/2026, règle courte dans `.claude/CLAUDE.md`). Un skill coûte
+trois fois : la **liste** (nom et description de chaque skill visible, relue par chaque session et chaque agent ; la
+doc de Claude Code lui donne environ 1 % du contexte, et au-delà les descriptions les moins utilisées tombent), le
+**chargement** (le corps, à chaque emploi) et le **déclenchement à tort**. D'où : 22 visibles (6 500 caractères ; 26
+et 8 800 le matin du 10/11/2026), 36 dormants (`disable-model-invocation: true`) ouverts par chemin ou lancés par
+`/nom`, et un seul porteur par skill. Un dormant ne se précharge pas dans un agent. Poids en milliers de caractères.
+
+| Moment | Skill (poids) | Porteur |
+| --- | --- | --- |
+| Cadrer | `spec-driven-development` (13), `grilling` (2) ; à la main : `/grill-me`, `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/to-questionnaire`, `/wayfinder` | session principale ; Timothée |
+| Implémenter | `ponytail` (3,5) préchargé ; `incremental-implementation` (10), `frontend-ui-engineering` (11) | `executant` ; session qui code elle-même |
+| Bug | `debugging-and-error-recovery` (11), puis un seul dormant selon la cause : `click-path-audit` (8), `e2e-testing` (8), `react-patterns` (11), `nextjs-turbopack` (3), `typescript-patterns` (24) | étape « Conseil » de `/tranche` ; session qui débogue |
+| Libellés fr et 中文 | `i18n-sync` (7) | session principale, quand elle écrit les libellés dans la spec |
+| Tests | `test-driven-development` (17), `tdd` (4) | sur besoin |
+| Relire | axe « allégé » de `ponytail-review`, porté par la consigne ; `ponytail-review` (5), en mots simples et en français pour Timothée ; `code-review-and-quality` (21) avant `main` | `relecteur` ; session principale |
+| Livrer | `git-workflow-and-versioning` (14), `resolving-merge-conflicts` (1) | session principale |
+| Auditer | `ponytail-audit` (5), un agent, avant tout `/audit-code` ; `ponytail-debt` (2) pour les `shortcut:` ; `security-and-hardening` (18), `performance-optimization` (17), `react-performance` (18) | session principale, par section |
+| Coût, passage de main | `context-budget` (6) ; `/handoff` au plafond de 200 000 jetons | session principale ; Timothée |
+| Direction de design | `frontend-design` (9) + `apple-design` (23) préchargés ; `taste-skill` (87) par passages | `directeur-artistique` |
+| Planche | `web-design-engineer` (35) + `frontend-design` préchargés ; `dimensional-drawing` (9) pour une planche cotée, après validation ; `dimensional-drawing-motion` (6) sur demande | `maquettiste` |
+| Critique | `.claude/references/critique-gcc.md` ; sources, pour un point précis : `impeccable` (10), `avoid-ai-design` (14), `web-design-guidelines` (1), `unslop` (31) | `critique-design` |
+| Démonstration du site | `stageshow` (19, allégé : le kit se prend dans un clone temporaire) | session principale, sur demande |
+| Hors site | `astryx` (2) : idées pour une planche, jamais dans le code du site | sur demande de Timothée |
+| Code, architecture | `graphify` (33 ; les commandes sont dans le `CLAUDE.md`), `codebase-design` (6), `domain-modeling` (3), `/improve-codebase-architecture` | `chercheur` ; sur besoin |
+| Divers | `research` (1), `prototype` (3), `writing-for-agents` (11, avant de toucher un `CLAUDE.md`, un agent ou un skill) ; à la main : `/ask-matt`, `/teach`, `/triage`, `/wait-what`, `/setup-matt-pocock-skills`, `/ponytail-help`, `/ponytail-gain` | sur besoin ; Timothée |
+
+`karpathy-guidelines` (dormant) est déjà le § « Comportement » du `CLAUDE.md` racine. Origine des 19 skills du
+10/11/2026 au soir : `multica-ai/andrej-karpathy-skills`, `dietrichgebert/ponytail` (6), `affaan-m/ECC` (8 sur 314),
+`benjitaylor/skills` (`stageshow`), `enesozturk/dimensional-drawing` (2), `meta/astryx`. `impeccable` reste la 4.8.0
+allégée (seule la description, plus courte, vient de la 4.8.2 : dix références adaptées à la main seraient écrasées). `security-and-hardening`
+et `performance-optimization` sont repris d'`addyosmani/agent-skills` dans leur version allégée (les exemples de code y
+sont passés dans `references/`, lus à la demande) ; les copies précédentes étaient d'anciennes versions exactes du repo. Décidé le 11/11/2026 (Timothée a laissé
+la session trancher) : `performance-optimization` devient dormant ; `security-and-hardening` reste visible (filet quand une
+session touche aux comptes, aux droits ou à une route d'API) ainsi qu'`impeccable` (outil de design lancé par son nom).
+
 ## 5. Un lot, de bout en bout
 
 1. **Timothée demande.** La session principale (Opus) fait la planche si l'écran change, puis la spec avec ses
@@ -133,3 +168,69 @@ Parallélisme :
   que sa propre ligne (en cas de conflit au `git pull --rebase`, garder les deux).
 - **Un workflow se teste à vide d'abord** (sans `args`, il s'arrête avant le premier agent) ; une liste se passe en
   `args` réel, jamais un texte à remplacer.
+
+## 7. Contexte de départ des agents
+
+Ce qu'un agent pèse avant d'avoir rien fait : jetons d'entrée de sa première requête, lus dans sa transcription (même
+question pour les huit, aucun outil lancé, session cloud). Mesuré le 10/11/2026 par
+`python3 scripts/mesure-contexte-agents.py` ; méthode et décomposition : archive, § 9.
+
+| Agent | Modèle | Avant | Après (mesuré le 11/11/2026) |
+| --- | --- | --- | --- |
+| `chercheur` | Haiku | 67 160 | 14 914 |
+| `testeur` | Haiku | 67 407 | 15 161 |
+| `relecteur` | Sonnet | 68 112 | 16 151 |
+| `regard` | Sonnet | 67 393 | 12 528 |
+| `critique-design` | Opus | 67 801 | 15 555 |
+| `executant` | Sonnet | 67 966 | 16 930, `ponytail` préchargé compris |
+| `maquettiste` | Sonnet | 84 266 | 32 163 |
+| `directeur-artistique` | Opus | 78 751 | 26 505 |
+
+Soit 62 à 81 % de moins (≈ 52 000 jetons par agent), 2 000 à 2 700 jetons au-dessus de l'estimation : aucun outil MCP,
+aucune liste de skills ni d'outils différés ; restent les outils de la liste plus `SubagentHandback` (ajouté par le
+harnais), les deux `CLAUDE.md` et la consigne. La mesure « après » compte les changements du même soir (liste des
+skills plus courte, `ponytail` rendu à l'`executant`, `CLAUDE.md` allongés).
+
+Avant, les définitions d'outils faisaient les deux tiers de ce contexte (les 48 outils MCP de la session à eux seuls ≈ 59 %), la
+liste des 60 skills ≈ 15 %, les deux `CLAUDE.md` ≈ 10 %. `disallowedTools` ne retire que les outils qu'il nomme : tout
+le reste est hérité, y compris par les agents « en lecture seule ».
+
+**Appliqué le 10/11/2026** (go de Timothée) : chaque agent est déclaré par une liste `tools:`, à la place de
+`disallowedTools`.
+
+| Agents | `tools:` |
+| --- | --- |
+| `chercheur`, `testeur`, `relecteur`, `critique-design`, `directeur-artistique` | `Bash, Read, Grep, Glob` |
+| `regard` | `Read, Glob` |
+| `executant`, `maquettiste` | `Bash, Read, Edit, Write, Grep, Glob` |
+
+Ils y perdent `Skill`, la recherche web, les connecteurs (GitHub, Notion, Drive, Todoist, Figma) et les outils de
+session cloud ; aucune consigne d'agent ne les demande. Le champ `skills:` de l'équipe design et de l'`executant` (`ponytail`, § 4) reste ; les skills dormants de l'aiguillage se lisent par chemin, avec `Read`.
+
+**Vérifié le 11/11/2026, dans une session neuve** : `/tranche`, `/planche` et `/verifier-constats` s'arrêtent à vide
+sur « args attendus » ; `/tranche` et `/planche` passent par une petite passe réelle (sortie par `schema` rendue par
+tous, `StructuredOutput` y remplace `SubagentHandback`). Le préchargement par `skills:` tient sans l'outil `Skill`
+(`executant`, `maquettiste`, `directeur-artistique`). Reste : les agents de `/audit-code` (sans `agentType`), non mesurés.
+
+**Vérifié le 11/11/2026 (consignes finales)**, dans une session neuve qui a chargé `tranche.js` et les trois agents
+dans leur version finale. Rien n'a été corrigé.
+- Garde-fou : `fd0d1c7` est ancêtre de `HEAD`. Passe.
+- Les quatre workflows (`tranche`, `planche`, `verifier-constats`, `audit-code`) lancés sans `args` s'arrêtent sur
+  « args attendus », avec 0 agent lancé chacun. Passe.
+- `executant` : la consigne contient « un appelant, un test ou une fixture hors de ta liste que ton changement
+  casse… » et le skill `ponytail` est dans son contexte (titre « # Ponytail »). Passe.
+- `relecteur` : la consigne contient « liste quand même chaque `shortcut:` ajouté par le diff… ». Passe.
+- `maquettiste` : point 7 sur la planche cotée, « le skill gagne sur les étapes 2 à 4 ». Passe.
+- Étape « Conseil » de `/tranche` : `grep` trouve `.claude/skills/<nom>/SKILL.md` et « Aucune correction ne désactive »
+  (`tranche.js:102`) ; le passage à vide prouve que le fichier se charge. Passe.
+- Liste des skills de la session : `performance-optimization` absent ; `ponytail`, `security-and-hardening` et
+  `impeccable` présents ; 22 skills du projet comptés. Passe.
+- Agent de `/audit-code` (workflow d'un seul agent, sans `agentType`, question « 2+2 », aucun outil lancé), mesuré par
+  `scripts/mesure-contexte-agents.py` : **73 796 jetons d'entrée**, 62 outils dont 46 MCP (215 000 caractères de
+  définitions), 24 800 caractères de liste de skills, 13 000 d'outils différés, 19 300 de `CLAUDE.md`, consigne
+  2 900. Un agent déclaré par `tools:` pèse 16 000 à 17 000 jetons (`executant` 16 826, `relecteur` 16 044 dans la
+  même session) : environ 57 000 de moins par agent, soit ≈ 3,4 M de jetons d'entrée sur les ~60 agents d'un audit
+  (davantage avec les tours suivants ; en partie lus depuis le cache, donc moins cher que le tarif plein). Estimation, non
+  mesurée sur un audit réel ; `audit-code.js` non modifié.
+
+**Règle** : tout nouvel agent se déclare par une liste `tools:`, jamais par `disallowedTools`.

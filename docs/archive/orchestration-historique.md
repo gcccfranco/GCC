@@ -234,3 +234,85 @@ Règles à partir du 24/10/2026, 20 h :
 - *(Avant le 03/11/2026)* **Specs voisines bornées à huit** dans `/tranche` (A6 : 2 h 45, dont une bonne part en specs voisines lourdes). La
   suite complète, en fin de lot, se découpe en trois (`--shard=1/3`…), dans trois sessions de test légères en
   parallèle.
+
+---
+
+## 9. Contexte de départ des agents (mesure du 10/11/2026, ajoutée après la copie)
+
+Constat de départ : un `chercheur` interrogé sur son propre contexte rendait `subagent_tokens: 67950` pour un seul
+appel d'outil. Cet appel est la remise du rapport (`SubagentHandback`) : `subagent_tokens` additionne l'entrée et la
+sortie d'une seule requête, donc le contexte de départ.
+
+**Méthode.** Les huit agents de `.claude/agents/`, trois à la fois, avec la même question (as-tu `Skill`, combien de
+skills, combien d'outils, vois-tu les `CLAUDE.md`), sans lancer d'outil. Les chiffres viennent de la transcription de
+chaque agent (`~/.claude/projects/<projet>/<session>/subagents/agent-*.jsonl`) : compteurs de la première requête, et
+taille en caractères de chaque pièce du contexte. Les jetons par pièce sont **estimés** par règle de trois sur deux
+agents mesurés (56 outils et 6 outils) : ≈ 0,22 jeton par caractère de définition d'outil, ≈ 0,37 par caractère de
+texte ; les colonnes « attendu » du tableau en vigueur (`../orchestration.md` § 7) en découlent.
+
+**D'où viennent les 67 160 jetons du `chercheur`** (les sept autres ont les mêmes pièces, à la consigne près) :
+
+| Pièce | Caractères | Jetons (≈) | Part |
+| --- | --- | --- | --- |
+| Définitions de 56 outils | 198 941 | 45 000 | 67 % |
+| dont 48 outils MCP : `claude-code-remote` 36, `claude-artifacts` 7, `Claude_Docs` 3, `ccd_session` 2 | 176 061 | 40 000 | 59 % |
+| dont 8 outils natifs : `Bash`, `Grep`, `Skill`, `Read`, `ToolSearch`, `SearchPlugins`, `SubagentHandback`, `Glob` | 22 880 | 5 000 | 8 % |
+| Liste des 60 skills (descriptions) | 27 896 | 10 000 | 15 % |
+| Les deux `CLAUDE.md` | 17 127 | 6 400 | 10 % |
+| Noms des 244 outils différés (GitHub, Notion, Todoist, Figma, Drive…) | 8 369 | 3 100 | 5 % |
+| Consigne de l'agent, environnement, question | ≈ 6 700 | 2 500 | 4 % |
+
+Les quatre plus gros outils (`create_environment`, `update_environment`, `request_credential`, `get_environment`)
+pèsent 46 600 caractères, plus que les deux `CLAUDE.md` et la liste des skills réunis. L'`executant` et le
+`maquettiste` ont deux outils de plus (`Edit`, `Write` : 2 400 caractères). Les skills du champ `skills:` arrivent en
+entier : + 16 300 jetons pour le `maquettiste` (`web-design-engineer`, `frontend-design`), + 11 000 pour le
+`directeur-artistique` (`frontend-design`, `apple-design`). Aucun agent ne reçoit les instructions des serveurs MCP.
+
+**Point de comparaison.** L'agent intégré `claude-code-guide`, déclaré par liste (`Glob, Grep, Read, WebFetch,
+WebSearch`), est parti de 32 693 jetons, dont 56 000 caractères de consigne intégrée qui lui sont propres. Il n'a reçu
+ni outil MCP, ni liste de skills, ni liste d'outils différés ; il garde les deux `CLAUDE.md` et `SubagentHandback`,
+que le harnais ajoute hors liste. C'est ce qui fonde la proposition : une liste `tools:` sans `Skill` ni `ToolSearch`
+retire les trois plus grosses pièces. Reste à vérifier sur nos agents, après le go : la sortie par `schema` dans les
+workflows et le préchargement par `skills:` sans l'outil `Skill`.
+
+**À côté.** Au moment de la mesure, l'`executant` ne préchargeait rien ; `ponytail` lui a été rendu le même soir
+(§ 10), après la mesure « avant » : son contexte « après » compte donc ce skill en plus. `/audit-code` lance ses agents
+sans `agentType` : s'ils partent du même contexte, 60 agents × 68 000 jetons
+font l'essentiel des 5 millions annoncés ; non mesuré, à relever lors de l'essai des workflows.
+
+**Mesure « après » (11/11/2026, session neuve).** Par agent : outils 15 096 caractères pour cinq (`Bash`, `Read`,
+`Grep`, `Glob`, `SubagentHandback`), 17 527 avec `Edit` et `Write`, 5 381 pour le `regard` ; `CLAUDE.md` 18 931 ;
+skills et différés 0 ; préchargé 3 326 (`executant`), 44 859 (`maquettiste`), 32 092 (`directeur-artistique`).
+Surprises : 2 000 à 2 700 jetons de plus que l'estimation (les outils natifs et les `CLAUDE.md` pèsent plus que la
+règle de trois) ; dans `/planche`, la `critique-design` part avec 5 264 caractères préchargés, origine non cherchée.
+
+## 10. Skills du 10/11/2026 au soir et essai de repowise
+
+**Skills.** Demande de Timothée : installer sept sources, sans scan, et faire servir tous les skills du dépôt au
+moindre coût. Fait : 19 skills ajoutés (58 au total), 22 rendus dormants, liste visible passée de 26 skills et 8 833
+caractères à 23 et 6 904 ; aiguillage dans `orchestration.md` § 4. D'ECC (314 skills, environ 25 600 jetons de liste
+à eux seuls), 8 retenus. Constaté dans la session : la liste des skills se recharge à chaud, les définitions d'agents
+non ; le préchargement de `ponytail` par l'`executant` reste donc à constater dans une session neuve.
+
+**repowise 0.60.1** (demandé le même soir ; essayé sur une copie du dépôt, non installé).
+
+| | repowise | graphify 0.8.36 |
+| --- | --- | --- |
+| Installation | 3 min 09, 941 Mo | non mesurée |
+| Index | 2 min 47, 140 Mo (`.repowise/`) | 48 s, 29 Mo |
+| Mise à jour après un commit | 1 min 47 (graphe reconstruit en entier) | 48 s (même commande) |
+| Qui appelle `canSeeSetlist` | juste, 22 120 caractères | juste par `explain` (962), bruyant par `query` (6 231) |
+| Qui dépend de `src/lib/access.ts` (151 fichiers) | juste (151), 2 856 caractères | aucun nœud trouvé |
+| Version du cache de `public/sw.js` | trouvée ; pas la spec qui s'y réfère | `sw.js` absent du graphe |
+
+Ce que fait son installation complète : 43 lignes ajoutées à `.claude/CLAUDE.md` ; des hooks au niveau utilisateur
+(`~/.claude/settings.json`), dont un qui réécrit certaines commandes Bash et les approuve sans demande de permission,
+et un qui remplace la lecture d'un gros fichier par son squelette (103 065 → 9 476 caractères) ; un hook git
+`post-commit` qui relance l'index ; 10 outils MCP (16 971 caractères de définitions) ; une télémétrie active par
+défaut vers `api.repowise.dev` (coupée par `DO_NOT_TRACK=1`). Sans rien de cela : `repowise init --yes --no-prose
+--no-editor-setup`. Non établi : le comportement des hooks dans une vraie session, la qualité de `get_answer`.
+
+**Décision du 11/11/2026** (Timothée a laissé la session trancher) : repowise n'est pas installé. Six minutes et 1 Go de
+plus par machine neuve, des hooks qui changent ce qu'un agent lit et approuvent des commandes à sa place, 43 lignes de
+plus dans un fichier relu par tous : trop pour le gain. À reprendre si `graphify` gêne vraiment : il a manqué deux des
+trois questions de l'essai (il répond sur un symbole, pas sur un chemin de fichier, et `public/sw.js` n'est pas dans son graphe).

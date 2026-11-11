@@ -1,7 +1,7 @@
 ---
 name: testeur
 description: Lance une vérification (suite Playwright sur les appareils du projet, `npx tsc --noEmit`, `npm run lint`, `npm run validate`, `scripts/cho/check.py`) et rend un bilan court — total, et pour chaque échec le test, l'appareil, l'erreur, `fichier:ligne`. À utiliser d'office pour toute suite de tests ; ne corrige rien.
-disallowedTools: Edit, Write, NotebookEdit
+tools: Bash, Read, Grep, Glob
 model: haiku
 effort: medium
 color: yellow
