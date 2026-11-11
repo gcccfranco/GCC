@@ -90,7 +90,8 @@ async function photographier(page: Page, nom: string) {
     if (vues.length) appendFileSync(process.env.PW_EMAIL_CHECK, `${test.info().project.name} ${nom}: ${vues.join(", ")}\n`);
     return;
   }
-  await page.waitForLoadState("networkidle").catch(() => {});
+  // Sans délai, une page qui n'atteint jamais le calme réseau bloquait le test jusqu'à son plafond (5 sur 385 le 11/11/2026).
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
   await page.waitForTimeout(800);
   await page.screenshot({ path: `${DIR}/${test.info().project.name}/${nom}.png`, fullPage: true });
   // Audit d'usage (11/11/2026) : PW_MESURES=<fichier> ajoute le relevé mesuré de l'écran (tests/helpers/mesuresUsage.ts).

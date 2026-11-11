@@ -174,8 +174,10 @@ async function toucherLesBoutons(page: Page, nom: string, projet: string, tactil
   // Le premier écran tel qu'on le voit : une capture pleine page pose les barres fixes au bout de l'image.
   await page.screenshot({ path: `${dossier}/${nom}__ecran.png` });
   const url = page.url();
-  const marquer = () => page.evaluate(({ eviter, max }) => {
+  // PW_BOUTON=<regex> : ne toucher que les boutons dont le nom répond (une feuille précise, ex. « Louange »).
+  const marquer = () => page.evaluate(({ eviter, max, seul }) => {
     const re = new RegExp(eviter, "i");
+    const reSeul = seul ? new RegExp(seul, "i") : null;
     const zone = document.querySelector("main") ?? document.body;
     const out: { i: number; nom: string }[] = []; let i = 0;
     for (const el of zone.querySelectorAll<HTMLElement>("button, [role=button], summary")) {
@@ -185,15 +187,16 @@ async function toucherLesBoutons(page: Page, nom: string, projet: string, tactil
       if ((el as HTMLButtonElement).type === "submit") continue;
       const n = (el.getAttribute("aria-label") || el.innerText || el.getAttribute("title") || "").trim().replace(/\s+/g, " ").slice(0, 40);
       if (!n || re.test(n)) continue;
+      if (reSeul && !reSeul.test(n)) continue;
       // « Modifier Orga », « Modifier DA »… ouvrent la même feuille : deux boutons au plus par premier mot.
       const mot = n.split(" ")[0];
       const memes = out.filter((o) => o.nom.split(" ")[0] === mot).length;
-      if (memes >= 2) continue;
+      if (!reSeul && memes >= 2) continue;
       el.setAttribute("data-audit-i", String(i)); out.push({ i, nom: n }); i++;
       if (i >= max) break;
     }
     return out;
-  }, { eviter: A_EVITER.source, max: MAX_BOUTONS });
+  }, { eviter: A_EVITER.source, max: MAX_BOUTONS, seul: process.env.PW_BOUTON ?? "" });
 
   const boutons = await marquer();
   const dejaVues = new Set<string>();

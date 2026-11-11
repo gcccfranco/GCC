@@ -221,7 +221,8 @@ async function photographier(page: Page, nom: string) {
     if (vues.length) appendFileSync(process.env.PW_EMAIL_CHECK, `${test.info().project.name} ${nom}: ${vues.join(", ")}\n`);
     return;
   }
-  await page.waitForLoadState("networkidle").catch(() => {});
+  // Sans délai, une page qui n'atteint jamais le calme réseau bloquait le test jusqu'à son plafond (5 sur 385 le 11/11/2026).
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
   // Le badge « Compiling… » de `next dev` recouvrait la barre de navigation sur certaines captures.
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" }).catch(() => {});
   await page.waitForTimeout(800);
