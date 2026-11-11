@@ -4,7 +4,7 @@ Cadrage : `docs/spec-pupitre-musicien.md` (§ Chantiers proposés, ligne 5 ; § 
 Mots de Timothée (11/11/2026) : « tu peux même compter pour toutes les fonctionnalités pour faire le tri à la fin
 des fonctionnalités qui servent à rien et les retirer ».
 
-Statut : **spec à valider**. Aucun code. Le go de code viendra lot par lot, après les réponses du § Questions.
+Statut : **validée** (Timothée, 11/11/2026 : « suis tes recommandations, go pour T1 »). Go pour **T1 seulement**.
 
 ## Objectif
 
@@ -235,7 +235,7 @@ moins utilisée, la marque « candidate » suit le seuil ; un membre non admin n
 Ordre : T1 → T2 → T3 → T4. T1 et T2 suffisent pour que le comptage commence sur l'essentiel ; T4 n'est utile
 qu'après quelques semaines de données.
 
-## Questions à trancher (Timothée)
+## Questions à trancher (Timothée) — tranchées le 11/11/2026 : les six recommandations
 
 1. **Visiteurs sans compte** : (a) **ne compter que les appareils où un compte est connecté** (les comptes faits
    avant connexion partent quand on se connecte) — *recommandé* : simple, aucune règle ouverte à tous ; (b) passer
@@ -258,3 +258,8 @@ qu'après quelques semaines de données.
 
 - 11/11/2026 — spec écrite (session dédiée, demande AP chantier 5), inventaire relevé par grep. Attend les
   réponses aux questions 1 à 6 et un go. Aucun code.
+- 11/11/2026 — Timothée : « suis tes recommandations, go pour T1 ». Décisions : (1) appareils connectés seulement ;
+  (2) ventilation par disposition seulement (téléphone, tablette, ordinateur : à ajouter en T1, champ
+  `<clé>.d.<disposition>` en jours-appareils) ; (3) trois mois, douze dimanches, une fête, seuil « sous 1 % et
+  sous 4 par mois » ; (4) tableau trié, sans planche ; (5) phrase d'information dans `/guide` ; (6) administrateurs
+  seulement. T1 confiée à une session orchestratrice neuve (règle « Coder » du CLAUDE.md).
