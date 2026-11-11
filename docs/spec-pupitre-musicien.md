@@ -157,3 +157,14 @@ titre, « Ajouter un membre » est après toute la liste, chaque ligne porte deu
 - 11/11/2026 (suite) : réponses de Timothée consignées ; il confirme l'ordre « un livrable à la fois », en
   commençant par le rapport sur toutes les pages. Relevé relancé sur `54da181` (76 écrans, cinq dispositions, puis
   la passe des boutons). Rapport : `docs/audit-usage-2026-11-11.md` (à venir).
+- 11/11/2026 (soir) : **rapport d'usage rendu**, `docs/audit-usage-2026-11-11.md` (page illustrée en artefact privé).
+  77 écrans × 5 dispositions, 386 feuilles et menus ; 149 constats (75 confirmés, 17 incertains, 57 non relus), six
+  lots proposés, cinq questions à trancher. Deux réserves : (1) un piège de l'outil (une capture plus grande que la
+  fenêtre coupe la simulation du toucher) avait faussé le premier passage, tout a été remesuré, le chiffre de « 43 % de
+  cibles trop petites » donné en cours de route était faux (environ 25 % au toucher) ; (2) la révision par les agents
+  a été arrêtée en route, à cause de la dépense signalée par Timothée (≈ 85 M de jetons, surtout les douze
+  `critique-design` en Opus) : sept familles sur douze révisées, les autres gardent leurs constats du premier passage.
+  **Consigne retenue : ne plus lancer d'équipe d'agents sans demande explicite de Timothée à ce moment-là.**
+  Suite : Timothée choisit par quoi commencer (recommandé : lot 1 de retouches et une planche pour ses deux
+  exemples) ; les autres livrables (planches « Ma partition », pupitre, Harmonie · Accords, spec du comptage d'usage)
+  restent à faire, un à la fois.
