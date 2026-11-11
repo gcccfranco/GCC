@@ -258,3 +258,9 @@ dans la spec : 简谱 (image du scan), mode sombre à 1 440 px, mouvement (déci
   livrables `docs/planches/planche-pupitre-musicien.html` et `docs/spec-entree-musiciens.md`. Ce n'est pas un
   chantier de code (hors règle des trois). À 23 h 01 : trois chantiers codent (retouches T7 et T4, deux exemples
   T1, AO FS-F) ; « Ma partition », Harmonie H1 et comptage T3 attendent, dans cet ordre.
+- 11/11/2026 (23 h 34 UTC), dernier point de suivi de la règle des trois chantiers, plus de surveillance ensuite.
+  **Codent** : retouches (T7 poussée à 23 h 25, reste T4), deux exemples T1 (tests Playwright en cours, commit dès
+  qu'ils sont verts), AO FS-F. **Fait** : Harmonie H1, relancée par Timothée à 23 h 11 et poussée à 23 h 23
+  (`991cf38`) ; la suite (H2 à H8) demande un nouveau go. **Attendent** : « Ma partition » (MP-1, repart quand la
+  tranche 1 des deux exemples est poussée et qu'une place est libre), puis comptage T3. Reprise : Timothée écrit
+  « reprends » dans leur conversation. **Planche du pupitre** : en cours (`docs/spec-entree-musiciens.md`).
