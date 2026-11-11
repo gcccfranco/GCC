@@ -29,6 +29,7 @@ def dossier_par_defaut():
 def mesurer(meta):
     r = {'agent': json.load(open(meta)).get('agentType'), 'modele': '', 'entree': 0, 'outils': [], 'car_outils': 0,
          'skills': 0, 'claude_md': 0, 'differes': 0, 'precharge': 0, 'consigne': 0}
+    demande_vue = False  # le premier message est la demande faite à l'agent, pas un skill préchargé
     for ligne in open(meta.replace('.meta.json', '.jsonl')):
         d = json.loads(ligne)
         piece = d.get('attachment') if d.get('type') == 'attachment' else None
@@ -46,8 +47,10 @@ def mesurer(meta):
                 r['claude_md'] += rendu
             elif piece.get('type') == 'deferred_tools_delta':
                 r['differes'] += rendu
-        elif d.get('type') == 'user' and not r['entree'] and taille(message.get('content')) > 2000:
-            r['precharge'] += taille(message.get('content'))  # un skill du champ `skills:` arrive en message entier
+        elif d.get('type') == 'user' and not r['entree']:
+            if demande_vue and taille(message.get('content')) > 2000:
+                r['precharge'] += taille(message.get('content'))  # un skill du champ `skills:` arrive en message entier
+            demande_vue = True
         elif d.get('type') == 'assistant' and message.get('usage') and not r['entree']:
             u = message['usage']
             r['entree'] = sum(u.get(k) or 0 for k in ('input_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens'))

@@ -284,7 +284,9 @@ font l'essentiel des 5 millions annoncés ; non mesuré, à relever lors de l'es
 `Grep`, `Glob`, `SubagentHandback`), 17 527 avec `Edit` et `Write`, 5 381 pour le `regard` ; `CLAUDE.md` 18 931 ;
 skills et différés 0 ; préchargé 3 326 (`executant`), 44 859 (`maquettiste`), 32 092 (`directeur-artistique`).
 Surprises : 2 000 à 2 700 jetons de plus que l'estimation (les outils natifs et les `CLAUDE.md` pèsent plus que la
-règle de trois) ; dans `/planche`, la `critique-design` part avec 5 264 caractères préchargés, origine non cherchée.
+règle de trois). Dans `/planche`, les 5 264 caractères « préchargés » de la `critique-design` n'étaient pas un skill :
+le script comptait aussi une demande de plus de 2 000 caractères (ici, les pistes en JSON) ; corrigé le 11/11/2026, il
+saute désormais le premier message.
 
 ## 10. Skills du 10/11/2026 au soir et essai de repowise
 
