@@ -463,7 +463,8 @@ test.describe("Questionnaire (A15)", () => {
     }
     // Même parcours : « Suivant » sans réponse demande les questions obligatoires.
     await page.getByRole("button", { name: "Suivant" }).click();
-    await expect(page.getByText("Merci de répondre aux questions marquées d'une étoile.")).toBeVisible();
+    // Le message est dit en haut et se répète au-dessus du bouton (T7).
+    await expect(page.getByText("Merci de répondre aux questions marquées d'une étoile.").first()).toBeVisible();
     // Une réponse est une pilule, en encre une fois choisie.
     const choix = page.getByRole("button", { name: "Chaque semaine" });
     await choix.click();

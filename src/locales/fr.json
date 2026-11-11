@@ -1910,6 +1910,7 @@
     "thanksBody": "Tes réponses sont bien enregistrées. Tu peux les modifier quand tu veux.",
     "error": "Enregistrement impossible. Vérifie ta connexion (et que les règles Firestore sont publiées).",
     "errorRequired": "Merci de répondre aux questions marquées d'une étoile.",
+    "attendue": "Réponse attendue",
     "identityNotice": "Envoyé par {{name}}",
     "steps": {
       "you": "Toi et le site",
@@ -4068,6 +4069,7 @@
     "effacer": "Effacer",
     "manque": {
       "destinataires": "Choisis à qui écrire.",
+      "culte": "Choisis un culte.",
       "titre": "Ajoute un titre.",
       "message": "Ajoute un message."
     },

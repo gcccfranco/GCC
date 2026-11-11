@@ -410,7 +410,7 @@ function LigneMembre({
     <>
       <span className={gras ? "font-semibold" : ""}>{membre.nom}</span>
       {membre.mention && <span className="text-muted-foreground"> — {membre.mention}</span>}
-      {nouveau && referentTexte && <span className="text-muted-foreground"> — {referentTexte}</span>}
+      {nouveau && referentTexte && !/^R[ée]f/i.test(membre.mention) && <span className="text-muted-foreground"> — {referentTexte}</span>}
       {!nouveau && membre.referent && !/^R[ée]f/i.test(membre.mention) && (
         <span className="ml-1.5 text-xs font-semibold text-muted-foreground">{t("equipes.referent")}</span>
       )}

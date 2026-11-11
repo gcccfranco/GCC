@@ -4,13 +4,14 @@
 // pu lire ou pas le droit de lire restent absentes. Les lignes portent des données, jamais du texte traduit.
 import { estReunion } from "@/lib/access";
 import { isExpired, isInfo, isPast } from "@/lib/evenements/agenda";
+import { nomsSansCompte } from "@/lib/groupes/personnes";
 import { baseBackOffice, ficheEvenement } from "@/lib/navigation";
 import { addDays, type Ligne } from "@/lib/taches/echeances";
 import type { Absence } from "@/types/absence";
 import type { Evenement } from "@/types/evenement";
 import type { Creneau } from "@/types/programme";
 import {
-  creneauxVides, equipeDeLaColonne, estSienEvenement, etatInscriptions, fermeBientot, nomsSansCompte, planningsDuTableau,
+  creneauxVides, equipeDeLaColonne, estSienEvenement, etatInscriptions, fermeBientot, planningsDuTableau,
   prochainDimanche, prochainsDimanches, tachesDuTableau,
   type EtatInscriptions, type ProfilReferent, type ReunionDuTableau,
 } from "./donnees";
@@ -65,7 +66,7 @@ export type SourcesAFaire = {
   /** `reunionsDuTableau(...)` sans plafond. */
   reunions?: ReunionDuTableau[];
   messages?: { signalements: number; propositions: number };
-  comptes?: { noms: string[]; profils: { planningName: string }[] };
+  comptes?: { noms: string[]; profils: { planningName: string }[]; titulaires: { nom: string }[] };
 };
 
 export type EntreesAFaire = {
@@ -197,7 +198,7 @@ export function aFaire({ sources, today, nowIso, uid, mesEquipes }: EntreesAFair
     }
   }
   if (sources.comptes) {
-    const n = nomsSansCompte(sources.comptes.noms, sources.comptes.profils).length;
+    const n = nomsSansCompte(sources.comptes.noms, sources.comptes.profils, sources.comptes.titulaires).length;
     if (n > 0) {
       g.aLire.push({
         id: "comptes", sorte: "comptes", verbe: "relier", href: "/back-office/equipes/personnes/sans-compte", equipes: [], aMoi: false, nombre: n,

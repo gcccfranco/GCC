@@ -224,3 +224,15 @@ Vrais mais hors lot 1, parce qu'ils déplacent, réorganisent ou demandent un de
   trancher** : en deux volets (souris, ≥ 1 148 px), une tâche ouverte depuis une équipe s'affiche à côté de la liste
   des tâches, sans en-tête ni retour vers l'équipe ; le test vérifie le retour à 1 100 px. Ajouter un retour en deux
   volets serait un dessin (lot 2). **Reste : T7 puis T4.**
+- 11/11/2026 : **T7 faite** (7 fichiers de code, locales, `tests/retouches-usage-t7.spec.ts`). Référent nommé une fois ;
+  « Commencée par » absent de la ligne quand c'est le responsable (comparaison par uid) et de l'historique de la fiche
+  (reste dans le sous-titre) ; À faire compte les noms à relier par `nomsSansCompte` de `personnes.ts`, titulaires
+  compris (groupes illisibles : pas de rangée, plutôt qu'un nombre faux) ; questionnaire : « Suivant » refusé marque
+  « Réponse attendue » (fr, 需要回答), fait défiler jusqu'à la première question manquante et répète le message
+  au-dessus du bouton ; Notifier : « Choisis un culte. » (fr, zh). Specs suivies : `agencement-v18-taches` (historique
+  sans « commencée par », mention comptée une fois), `agencement-v18-moi`, `a-faire`. Passe : t7, t2, `equipes-page`,
+  `a-faire`, `agencement-v18-moi`, `-t5`, `-taches`, `taches`, `tableau-de-bord` sur les cinq projets : 1 197 passés,
+  76 sautés, 6 rouges corrigés (tests) et repassés verts ; tsc propre. Captures du questionnaire regardées sur les
+  quatre dispositions ; « Réponse attendue » déplacée après « · Plusieurs réponses possibles » (la ligne commençait
+  par un point). Reste à nettoyer (hors lot, signalé) : l'ancienne `nomsSansCompte` de `tableauDeBord/donnees.ts` n'est
+  plus utilisée que par `tableau-de-bord.spec.ts`. **Reste : T4.**

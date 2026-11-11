@@ -1876,6 +1876,7 @@
     "thanksBody": "你的回答已保存，随时可以修改。",
     "error": "保存失败。请检查网络连接（以及 Firestore 规则是否已发布）。",
     "errorRequired": "请回答标有星号的问题。",
+    "attendue": "需要回答",
     "identityNotice": "提交人：{{name}}",
     "steps": {
       "you": "你与网站",
@@ -4017,6 +4018,7 @@
     "effacer": "清空",
     "manque": {
       "destinataires": "请选择发给谁。",
+      "culte": "请选择一场崇拜。",
       "titre": "请填写标题。",
       "message": "请填写内容。"
     },

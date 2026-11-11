@@ -131,7 +131,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
   const canSend = !!title.trim() && !!body.trim() && !busy && selected.size > 0;
   // compte-12 : la première condition qui manque, dite sous « Envoyer » tant qu'il est grisé.
   const manque = busy || canSend ? null
-    : selected.size === 0 ? "destinataires"
+    : selected.size === 0 ? (!audience && groupe === "Cultes" ? "culte" : "destinataires")
     : !title.trim() ? "titre"
     : "message";
   const needsConfirm = broadcast || selected.size > CONFIRM_THRESHOLD;

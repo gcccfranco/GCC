@@ -200,7 +200,9 @@ test.describe("en grand (deux volets)", () => {
     await expect(detail(page).getByText("Format A3 et version Instagram")).toBeVisible();
     // Corrections du design (-11) : l'historique est une liste étiquetée hors carte, en lignes grises de 13 px.
     const historique = detail(page).getByRole("list", { name: "Historique" });
-    await expect(historique.getByRole("listitem")).toHaveText(["Commencée par Ruth K. · 29 sept.", "Créée par Léa M. le 21 sept."]);
+    // Retouches d'usage T7 : « commencée par » n'est écrit qu'une fois, dans le sous-titre, plus dans l'historique.
+    await expect(historique.getByRole("listitem")).toHaveText(["Créée par Léa M. le 21 sept."]);
+    await expect(detail(page).getByText(/Commencée par Ruth K\./i)).toHaveCount(1);
     await expect(historique.getByRole("listitem").first()).toHaveCSS("font-size", "13px");
     await expect(detail(page).locator("section", { has: page.getByRole("heading", { name: "Historique" }) })).toHaveCount(0);
     await expect(detail(page).getByRole("button", { name: "Modifier" })).toBeVisible();

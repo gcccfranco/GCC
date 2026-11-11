@@ -177,7 +177,6 @@ function Fiche({ ligne, toutesLesFois, depuis }: { ligne: Ligne; toutesLesFois: 
 
   // Historique (B1), le plus récent d'abord : où en est la fois, puis la création.
   const historique: string[] = [];
-  if (fois?.etat === "encours") historique.push(`${t("taches.commenceePar", { nom: fois.parNom })} · ${jourCourt(fois.debutLe || fois.le, i18n.language)}`);
   if (fois?.etat === "terminee") historique.push(`${t("taches.faitePar", { nom: fois.parNom })} · ${jourCourt(fois.le, i18n.language)}`);
   if (auteur !== undefined) historique.push(t("taches.fiche.creeeLe", { nom: auteur ?? t("taches.fiche.unMembre"), date: jourCourt(tache.createdAt, i18n.language) }));
   const SousTitre = deuxVolets ? "h3" : "h2";

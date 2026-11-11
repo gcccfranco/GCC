@@ -161,13 +161,13 @@ test.describe("À faire (BO-B) : la fonction pure", () => {
   test("à lire ou à relier : messages (si > 0), noms sans compte (si > 0)", () => {
     const r = aFaire(entrees({
       messages: { signalements: 2, propositions: 1 },
-      comptes: { noms: ["Pers. A", "pers b", "Pers. C"], profils: [{ planningName: "Pers. A" }] },
+      comptes: { noms: ["Pers. A", "pers b", "Pers. C"], profils: [{ planningName: "Pers. A" }], titulaires: [] },
     }));
     expect(lignesDe(r, "aLire")).toMatchObject([
       { id: "comptes", sorte: "comptes", verbe: "relier", href: "/back-office/equipes/personnes/sans-compte", nombre: 2 },
       { id: "messages", sorte: "messages", verbe: "lire", href: "/back-office/messages", nombre: 3, signalements: 2, propositions: 1 },
     ]);
-    const rien = aFaire(entrees({ messages: { signalements: 0, propositions: 0 }, comptes: { noms: ["Pers. A"], profils: [{ planningName: "Pers. A" }] } }));
+    const rien = aFaire(entrees({ messages: { signalements: 0, propositions: 0 }, comptes: { noms: ["Pers. A"], profils: [{ planningName: "Pers. A" }], titulaires: [] } }));
     expect(rien.total).toBe(0);
   });
 
@@ -185,7 +185,7 @@ test.describe("À faire (BO-B) : la fonction pure", () => {
     // Dans un groupe, une ligne sans date passe après les datées.
     const mix = aFaire(entrees({
       planning: { rows: { culte: [ligneCulte("2026-11-08", { 7: "" })] }, plannings: ["culte"], profils: [] },
-      messages: { signalements: 1, propositions: 0 }, comptes: { noms: ["Pers. X"], profils: [] },
+      messages: { signalements: 1, propositions: 0 }, comptes: { noms: ["Pers. X"], profils: [], titulaires: [] },
     }));
     expect(ids(lignesDe(mix, "aLire"))).toEqual(["comptes", "messages"]);
   });

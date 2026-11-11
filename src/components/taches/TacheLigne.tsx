@@ -52,7 +52,7 @@ export function TacheLigne({ ligne, onToggle, onOpen, equipeLabel, sansEvenement
     tache.evenement && !sansEvenement ? t("taches.pourEvenement", { titre: tache.evenement.titre }) : null,
     terminee ? t("taches.faitePar", { nom: fois!.parNom }) : null,
     enCours ? depuisQuand(t, fois!) : null,
-    enCours ? t("taches.commenceePar", { nom: fois!.parNom }) : null,
+    enCours && !(tache.responsableUid && tache.responsableUid === fois!.parUid) ? t("taches.commenceePar", { nom: fois!.parNom }) : null,
   ].filter(Boolean).join(" · ");
 
   return (
