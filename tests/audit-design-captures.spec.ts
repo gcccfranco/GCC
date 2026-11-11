@@ -58,7 +58,8 @@ const PAGES: [string, string][] = [
   ["accords", "/accords"],
   ["guide", "/guide"],
   ["back-office", "/back-office"],
-  ["taches", "/back-office/taches/da"],
+  // Pas « taches » : la seconde spec photographie /taches sous ce nom (les deux captures s'écrasaient).
+  ["back-office_taches_equipe", "/back-office/taches/da"],
   ["equipes", "/equipes"],
 ];
 const VARIANTES = [
