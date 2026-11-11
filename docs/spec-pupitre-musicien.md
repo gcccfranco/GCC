@@ -139,6 +139,19 @@ titre, « Ajouter un membre » est après toute la liste, chaque ligne porte deu
    zooms sur le clavier »), en reprenant ce qui est bien sur wangshubianqu.com/chord-map (progressions, carte des
    accords).
 
+## Décisions de Timothée après le rapport d'usage (11/11/2026, soir : « go » sur les cinq recommandations)
+
+Rapport : `docs/audit-usage-2026-11-11.md`. Ce « go » valide les décisions et lance la spec du lot 1 et la planche ;
+il ne vaut pas go de code (règle : le go de code vient après la spec, lot par lot).
+
+1. **Par quoi commencer** : le lot 1 (retouches sans dessin) et, en même temps, une planche pour ses deux exemples
+   (vue Partitions d'une setlist sur iPad debout ; feuille d'une équipe).
+2. **Largeur** : la règle du 07/11/2026 (lot CD T4b, « colonne alignée à gauche ») est rouverte pour les partitions,
+   qui prennent la largeur. Les listes se décident sur la planche.
+3. **Liste | Partitions au toucher** : le même glisser que le geste du doigt, pas un changement immédiat.
+4. **Mode louange** : aucune animation, même pour passer au chant suivant.
+5. **Constats non relus** (57) : pas de nouvelle équipe d'agents ; chaque lot vérifie les siens au moment de sa spec.
+
 ## Ordre recommandé (décision déléguée, réponse 5)
 
 1. **Rapport d'usage sur toutes les pages** (chantier 3), puis planches de corrections : indépendant du reste.
@@ -168,3 +181,10 @@ titre, « Ajouter un membre » est après toute la liste, chaque ligne porte deu
   Suite : Timothée choisit par quoi commencer (recommandé : lot 1 de retouches et une planche pour ses deux
   exemples) ; les autres livrables (planches « Ma partition », pupitre, Harmonie · Accords, spec du comptage d'usage)
   restent à faire, un à la fois.
+- 11/11/2026 (soir, suite) : « go » de Timothée sur les cinq recommandations (section « Décisions de Timothée après
+  le rapport d'usage »). **Reste à faire, par une session neuve** (celle-ci est au plafond de contexte) :
+  (a) la planche des deux exemples : captures et mesures dans le rapport, § « Les deux exemples de Timothée » ;
+  feuille d'équipe = `src/app/equipes/EquipesClient.tsx:244-262` et `:563-660`, ligne d'un membre =
+  `src/components/equipes/OrganigrammeLouange.tsx:186-240` ; (b) la spec du lot 1 : partir des constats d'effort
+  « retouche » du rapport, relire chacun dans le code avant de le garder (57 ne sont pas relus), écarter ceux qui
+  déplacent quelque chose, découper en tranches ; puis demander « go pour le lot 1 ? ». Rien n'est codé.

@@ -653,6 +653,11 @@ Détail : `docs/spec-pupitre-musicien.md`. Décisions de Timothée ce jour-là :
 - **Toutes les pages** revues pour l'usage, sur toutes les dispositions ; de petites animations.
 - Contenu des fiches d'harmonie et des cours, ordre des chantiers avec AO : délégués à Claude.
 
+**Après le rapport d'usage (11/11/2026, soir).** Timothée valide : commencer par les retouches sans dessin et par
+une planche pour ses deux exemples ; les partitions prennent la largeur de l'écran (la règle « colonne alignée à
+gauche » du 07/11/2026 ne vaut plus pour elles) ; toucher Liste | Partitions fait glisser la vue comme le doigt ; le
+mode louange reste sans animation. Détail : `docs/spec-pupitre-musicien.md`, `docs/audit-usage-2026-11-11.md`.
+
 ## Historique des changements d'avis
 
 | Date | Avant | Après |

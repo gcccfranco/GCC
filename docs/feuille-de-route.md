@@ -122,7 +122,7 @@ Specs dans `docs/` ; « archive § 3.X » = `grep -n '^### X\.' docs/archive/feu
 | AM | Espace Musiciens, scène des fêtes | `spec-espace-musiciens.md` (EM, SF) | en ligne 02/11 |
 | AN | Pastilles « Int » et « Inst » | `spec-abreviation-interlude.md` (AB-I) | en ligne 07/11 |
 | AO | Mode louange façon forScore, apparence comprise | `spec-mode-louange-forscore-2.md` | vagues 1 et 2 codées sur `claude/tender-johnson-99hadm`, pas en ligne ; reste CA, FS-F, vague 3, relecture complète |
-| AP | Le site devient le pupitre : « Ma partition » qui suit le chant, entrée des musiciens, écrans pratiques, Harmonie qui s'entend, accords en chiffres | `spec-pupitre-musicien.md` | cadrage du 11/11/2026 ; rapport d'usage rendu (`audit-usage-2026-11-11.md` : 149 constats, six lots proposés, révision incomplète) ; à trancher par Timothée, planches à faire, rien de codé |
+| AP | Le site devient le pupitre : « Ma partition » qui suit le chant, entrée des musiciens, écrans pratiques, Harmonie qui s'entend, accords en chiffres | `spec-pupitre-musicien.md` | cadrage du 11/11/2026 ; rapport d'usage rendu (`audit-usage-2026-11-11.md` : 149 constats, six lots proposés, révision incomplète) ; « go » de Timothée sur les cinq recommandations : planche des deux exemples et spec du lot 1 (retouches) à faire, rien de codé |
 
 **Chantiers sans lettre** (journal, archive § 6) : 简谱 par défaut puis piste A partout (`spec-jianpu-integration.md`,
 lot 1 en ligne, lot 3 codé 12–18/10) ; relevé des écarts et corrections (`spec-corrections-apres-releve.md`, 08–11/10) ;
