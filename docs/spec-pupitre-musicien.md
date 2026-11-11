@@ -152,6 +152,35 @@ il ne vaut pas go de code (règle : le go de code vient après la spec, lot par 
 4. **Mode louange** : aucune animation, même pour passer au chant suivant.
 5. **Constats non relus** (57) : pas de nouvelle équipe d'agents ; chaque lot vérifie les siens au moment de sa spec.
 
+## Décisions de Timothée sur la planche des deux exemples (11/11/2026, nuit : « Ok »)
+
+Planche : `docs/planches/planche-exemples-usage.html`. Les onze questions étaient posées avec une proposition
+chacune et la consigne « répondez "ok pour tout" ou seulement les numéros où vous voulez autre chose ». Timothée
+répond « Ok » : lu comme un accord sur la **piste A « Pupitre »** et sur les onze propositions. Ce n'est pas un go
+de code : la spec vient d'abord, puis « go pour la tranche N ? ».
+
+1. **Deux colonnes** : lecture en rangées (Intro | Couplet 1, puis Refrain | Couplet 2).
+2. **Sommaire en vue Partitions** (tablette couchée, ordinateur) : rail de numéros qui s'ouvre au toucher ; il
+   reste ouvert en vue Liste.
+3. **Note de la setlist** : une ligne en italique dans la barre du haut, dépliable.
+4. **Vue Liste** : colonne d'environ 720 px, alignée sur le même bord gauche que les partitions (qui, elles,
+   prennent la largeur : décision 2 du rapport d'usage).
+5. **Retirer un membre** : depuis ses réglages dépliés (« Retirer de l'équipe »), puis « Remettre » sur la ligne
+   jusqu'à l'enregistrement ; plus de croix sur chaque ligne.
+6. **Feuille d'équipe en tablette debout** : feuille de formulaire centrée de 560 px.
+7. **Colonne unique en tablette debout** : taille de paroles actuelle (pas d'agrandissement).
+8. **Étiquettes de sections** : « Couplet 1 » en semi-gras au lieu de « COUPLET 1 » en capitales espacées, même
+   couleur gelée.
+9. **Seuil des deux colonnes** : vers 1 360 px (une seule colonne de 920 px à 1 280 px).
+10. **Réglages d'un membre** : rôle, « Référent », « En essai », « Retirer de l'équipe ». **À vérifier dans le code
+    avant d'écrire la spec** (la maquette les dessine d'après les libellés, pas d'après les champs).
+11. **Téléphone** : « Mode Louange » devient un bouton rond à icône seule, pour que la bascule Liste | Partitions
+    tienne dans la barre d'outils.
+
+Aussi acquis sur la planche A : champ « Ajouter un membre » en tête de la feuille d'équipe, une ligne repliée par
+membre, « Annuler » et « Enregistrer » collés en bas, « en essai » visible sur la ligne. Non dessinés, à traiter
+dans la spec : 简谱 (image du scan), mode sombre à 1 440 px, mouvement (décisions 3 et 4 du rapport d'usage).
+
 ## Ordre recommandé (décision déléguée, réponse 5)
 
 1. **Rapport d'usage sur toutes les pages** (chantier 3), puis planches de corrections : indépendant du reste.
@@ -214,3 +243,8 @@ il ne vaut pas go de code (règle : le go de code vient après la spec, lot par 
   pupitre toujours pas lancée** (attend les réponses sur « Ma partition »). La session principale a dépassé le
   plafond de 200 000 tokens : la suite (spec des deux exemples après réponses, planche du pupitre) se reprend
   dans une session neuve à partir de ces lignes.
+- 11/11/2026 (nuit, fin) : Timothée répond « Ok » aux onze questions de la planche des deux exemples : piste A et
+  les onze propositions retenues (section « Décisions de Timothée sur la planche des deux exemples »). Spec confiée
+  à une session neuve (« AP · Spec des deux exemples », Opus, un livrable : `docs/spec-exemples-usage.md`), la
+  session principale ayant dépassé le plafond. « Ma partition » et Harmonie et Accords attendent toujours leurs
+  réponses ; lot 1 des retouches : T3 codée.

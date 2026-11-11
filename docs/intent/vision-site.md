@@ -658,6 +658,14 @@ une planche pour ses deux exemples ; les partitions prennent la largeur de l'éc
 gauche » du 07/11/2026 ne vaut plus pour elles) ; toucher Liste | Partitions fait glisser la vue comme le doigt ; le
 mode louange reste sans animation. Détail : `docs/spec-pupitre-musicien.md`, `docs/audit-usage-2026-11-11.md`.
 
+**Après la planche des deux exemples (11/11/2026, nuit).** Timothée retient la piste « Pupitre » : en vue
+Partitions, le haut de page se resserre pour que le premier couplet arrive tôt, le sommaire devient un rail de
+numéros sur grand écran, la note de la setlist tient en une ligne dans la barre, deux colonnes lues en rangées à
+partir d'environ 1 360 px ; la vue Liste reste une colonne d'environ 720 px au même bord gauche ; « Mode Louange »
+est un bouton rond au téléphone ; les étiquettes de sections passent en minuscules semi-grasses. Feuille d'une
+équipe : ajouter en tête, une ligne par membre qui se déplie, retirer depuis les réglages avec « Remettre », boutons
+collés en bas, feuille centrée de 560 px en tablette debout. Détail : `docs/spec-pupitre-musicien.md`.
+
 ## Historique des changements d'avis
 
 | Date | Avant | Après |
