@@ -280,6 +280,12 @@ workflows et le préchargement par `skills:` sans l'outil `Skill`.
 sans `agentType` : s'ils partent du même contexte, 60 agents × 68 000 jetons
 font l'essentiel des 5 millions annoncés ; non mesuré, à relever lors de l'essai des workflows.
 
+**Mesure « après » (11/11/2026, session neuve).** Par agent : outils 15 096 caractères pour cinq (`Bash`, `Read`,
+`Grep`, `Glob`, `SubagentHandback`), 17 527 avec `Edit` et `Write`, 5 381 pour le `regard` ; `CLAUDE.md` 18 931 ;
+skills et différés 0 ; préchargé 3 326 (`executant`), 44 859 (`maquettiste`), 32 092 (`directeur-artistique`).
+Surprises : 2 000 à 2 700 jetons de plus que l'estimation (les outils natifs et les `CLAUDE.md` pèsent plus que la
+règle de trois) ; dans `/planche`, la `critique-design` part avec 5 264 caractères préchargés, origine non cherchée.
+
 ## 10. Skills du 10/11/2026 au soir et essai de repowise
 
 **Skills.** Demande de Timothée : installer sept sources, sans scan, et faire servir tous les skills du dépôt au
