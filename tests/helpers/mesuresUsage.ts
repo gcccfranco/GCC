@@ -10,9 +10,16 @@ import { test, type Page } from "@playwright/test";
 //                               (Timothée, 11/11/2026 : « pour tous les responsives »). Le premier écran est aussi
 //                               photographié tel qu'on le voit (`<nom>__ecran.png`, barres fixes à leur place).
 // La taille d'une cible est celle de sa boîte, élargie par un ::before / ::after absolu quand il y en a un.
+//
+// ⚠ Au toucher, jamais de capture plus grande que la fenêtre (`fullPage`, ou un élément plus haut qu'elle) : Chromium
+// y perd la simulation du toucher (`pointer: coarse`, `maxTouchPoints`) pour tout le reste de la page — vérifié le
+// 11/11/2026. Les zones de 44 px, les rangées qui défilent et la barre réduite de la tablette couchée disparaissaient
+// alors des captures ET des mesures prises ensuite. D'où : on mesure avant de photographier, et on photographie
+// écran par écran (`photographierPage`).
 
 const PROJETS_FEUILLES = ["telephone", "tablette", "tablette-paysage", "ordinateur", "ordinateur-1440"];
 const MAX_BOUTONS = 22;
+const MAX_ECRANS = 12;
 // Boutons qu'on ne touche pas : ils suppriment, envoient, exportent ou quittent.
 const A_EVITER = /supprim|d[ée]connex|retirer|effacer|quitter|envoyer|notifier|publier|export|pdf|imprimer|t[ée]l[ée]charg|partager|copier|fusionner|enregistrer|valider|cr[ée]er|dupliquer|archiver|vider/i;
 const SURCOUCHE = "[role=dialog], [role=alertdialog], [role=menu], [role=listbox], [data-vaul-drawer]";
@@ -157,17 +164,50 @@ function geometrie(): Releve {
   };
 }
 
-export async function mesurerUsage(page: Page, nom: string) {
+const auToucher = (page: Page) => page.evaluate(() => matchMedia("(pointer: coarse)").matches);
+
+/** Photographie la page : au toucher, écran par écran (`<nom>__01.png`, `__02.png`… : on défile, puis on capture la
+ *  fenêtre, barres fixes à leur place) ; à la souris, la capture pleine page d'origine (`<nom>.png`).
+ *  Rend le nombre d'écrans de la page. */
+export async function photographierPage(page: Page, dossier: string, nom: string, max = MAX_ECRANS): Promise<number> {
+  mkdirSync(dossier, { recursive: true });
+  if (!(await auToucher(page))) {
+    await page.screenshot({ path: `${dossier}/${nom}.png`, fullPage: true });
+    return 1;
+  }
+  const { haut, vh } = await page.evaluate(() => ({ haut: document.documentElement.scrollHeight, vh: innerHeight }));
+  let n = Math.max(1, Math.ceil(haut / vh));
+  // Une dernière tranche de moins d'un cinquième d'écran ne vaut pas une capture.
+  if (n > 1 && haut - (n - 1) * vh < vh / 5) n -= 1;
+  const garde = n <= max ? [...Array(n).keys()] : [...Array(max - 1).keys(), n - 1];
+  for (const i of garde) {
+    await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), i * vh);
+    await page.waitForTimeout(250);
+    await page.screenshot({ path: `${dossier}/${nom}__${String(i + 1).padStart(2, "0")}.png` });
+  }
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  await page.waitForTimeout(200);
+  return n;
+}
+
+/** Le relevé mesuré de la page (une ligne `type: "page"`). À appeler AVANT toute capture.
+ *  `racine` : sélecteur d'une page posée par-dessus une autre (le mode louange), pour ne mesurer qu'elle. */
+export async function mesurerPage(page: Page, nom: string, racine: string | null = null) {
   const projet = test.info().project.name;
-  const tactile = projet.startsWith("telephone") || projet.startsWith("tablette");
-  const sortie = process.env.PW_MESURES!;
-  const m = await page.evaluate(relever, { tactile, racine: null });
-  appendFileSync(sortie, JSON.stringify({ type: "page", projet, nom, ...m }) + "\n");
-  if (process.env.PW_FEUILLES && PROJETS_FEUILLES.includes(projet)) await toucherLesBoutons(page, nom, projet, tactile, sortie);
+  const tactile = await auToucher(page);
+  const m = await page.evaluate(relever, { tactile, racine });
+  appendFileSync(process.env.PW_MESURES!, JSON.stringify({ type: "page", projet, nom, toucher: tactile, ...m }) + "\n");
+}
+
+/** La passe des boutons (seulement avec PW_FEUILLES) : à appeler APRÈS la capture de la page. */
+export async function ouvrirFeuilles(page: Page, nom: string, racine: string | null = null) {
+  const projet = test.info().project.name;
+  if (!process.env.PW_FEUILLES || !PROJETS_FEUILLES.includes(projet)) return;
+  await toucherLesBoutons(page, nom, projet, await auToucher(page), process.env.PW_MESURES!, racine);
 }
 
 /** Touche chaque bouton de la page ; mesure et photographie ce qui s'ouvre par-dessus. */
-async function toucherLesBoutons(page: Page, nom: string, projet: string, tactile: boolean, sortie: string) {
+async function toucherLesBoutons(page: Page, nom: string, projet: string, tactile: boolean, sortie: string, racine: string | null = null) {
   test.setTimeout(420_000);
   const dossier = `${process.env.PW_FEUILLES}/${projet}`;
   mkdirSync(dossier, { recursive: true });
@@ -175,10 +215,12 @@ async function toucherLesBoutons(page: Page, nom: string, projet: string, tactil
   await page.screenshot({ path: `${dossier}/${nom}__ecran.png` });
   const url = page.url();
   // PW_BOUTON=<regex> : ne toucher que les boutons dont le nom répond (une feuille précise, ex. « Louange »).
-  const marquer = () => page.evaluate(({ eviter, max, seul }) => {
+  const marquer = () => page.evaluate(({ eviter, max, seul, racine }) => {
     const re = new RegExp(eviter, "i");
     const reSeul = seul ? new RegExp(seul, "i") : null;
-    const zone = document.querySelector("main") ?? document.body;
+    // Avec `racine` (mode louange) : rien d'autre qu'elle ; si elle a disparu (page rechargée), on ne touche à rien.
+    const zone = racine ? document.querySelector(racine) : (document.querySelector("main") ?? document.body);
+    if (!zone) return [];
     const out: { i: number; nom: string }[] = []; let i = 0;
     for (const el of zone.querySelectorAll<HTMLElement>("button, [role=button], summary")) {
       el.removeAttribute("data-audit-i");
@@ -196,7 +238,7 @@ async function toucherLesBoutons(page: Page, nom: string, projet: string, tactil
       if (i >= max) break;
     }
     return out;
-  }, { eviter: A_EVITER.source, max: MAX_BOUTONS, seul: process.env.PW_BOUTON ?? "" });
+  }, { eviter: A_EVITER.source, max: MAX_BOUTONS, seul: process.env.PW_BOUTON ?? "", racine });
 
   const boutons = await marquer();
   const dejaVues = new Set<string>();
@@ -228,8 +270,9 @@ async function toucherLesBoutons(page: Page, nom: string, projet: string, tactil
         if ((await signature()) !== avant) {
           const fichier = `${nom}__${String(b.i).padStart(2, "0")}-${b.nom.replace(/[^\p{L}\p{N}]+/gu, "-").slice(0, 24)}__vue.png`;
           const m = await page.evaluate(relever, { tactile, racine: null });
-          await page.screenshot({ path: `${dossier}/${fichier}`, fullPage: true });
-          appendFileSync(sortie, JSON.stringify({ type: "vue", projet, nom, bouton: b.nom, capture: fichier, ...m }) + "\n");
+          // Deux écrans au plus : une vue est une variante de la page, déjà photographiée en entier.
+          await photographierPage(page, dossier, fichier.replace(/\.png$/, ""), 2);
+          appendFileSync(sortie, JSON.stringify({ type: "vue", projet, nom, bouton: b.nom, capture: fichier, toucher: await auToucher(page), ...m }) + "\n");
         }
         continue;
       } // bascule dans la page : rien par-dessus
@@ -239,7 +282,7 @@ async function toucherLesBoutons(page: Page, nom: string, projet: string, tactil
       const m = await page.evaluate(relever, { tactile, racine: "[data-audit-feuille]" });
       const fichier = `${nom}__${String(b.i).padStart(2, "0")}-${b.nom.replace(/[^\p{L}\p{N}]+/gu, "-").slice(0, 24)}.png`;
       await page.screenshot({ path: `${dossier}/${fichier}` });
-      appendFileSync(sortie, JSON.stringify({ type: "feuille", projet, nom, bouton: b.nom, capture: fichier, ...g, ...m }) + "\n");
+      appendFileSync(sortie, JSON.stringify({ type: "feuille", projet, nom, bouton: b.nom, capture: fichier, toucher: await auToucher(page), ...g, ...m }) + "\n");
       await page.keyboard.press("Escape"); await page.waitForTimeout(300);
     } catch (e) {
       // Bouton recouvert ou disparu : on passe au suivant.

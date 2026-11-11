@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { appendFileSync } from "node:fs";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage } from "./helpers/louange";
-import { mesurerUsage } from "./helpers/mesuresUsage";
+import { mesurerPage, ouvrirFeuilles, photographierPage } from "./helpers/mesuresUsage";
 
 // Audit du design (02/11/2026) : captures du site entier pour l'équipe design. Rien n'est vérifié ici,
 // on photographie. Comptes et données fictifs. PW_CAPTURES=<dossier> obligatoire.
@@ -92,10 +92,13 @@ async function photographier(page: Page, nom: string) {
   }
   // Sans délai, une page qui n'atteint jamais le calme réseau bloquait le test jusqu'à son plafond (5 sur 385 le 11/11/2026).
   await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" }).catch(() => {});
   await page.waitForTimeout(800);
-  await page.screenshot({ path: `${DIR}/${test.info().project.name}/${nom}.png`, fullPage: true });
-  // Audit d'usage (11/11/2026) : PW_MESURES=<fichier> ajoute le relevé mesuré de l'écran (tests/helpers/mesuresUsage.ts).
-  if (process.env.PW_MESURES) await mesurerUsage(page, nom);
+  // Audit d'usage (11/11/2026) : PW_MESURES=<fichier> ajoute le relevé mesuré de l'écran, pris avant toute capture ;
+  // au toucher, la page est photographiée écran par écran (tests/helpers/mesuresUsage.ts dit pourquoi).
+  if (process.env.PW_MESURES) await mesurerPage(page, nom);
+  await photographierPage(page, `${DIR}/${test.info().project.name}`, nom);
+  if (process.env.PW_MESURES) await ouvrirFeuilles(page, nom);
 }
 
 for (const v of VARIANTES) {
@@ -116,7 +119,11 @@ for (const v of VARIANTES) {
     await page.getByRole("button", { name: /Mode Louange|敬拜模式|Louange/ }).first().click();
     await attendreMiseEnPage(page).catch(() => {});
     await page.waitForTimeout(800);
+    // Audit d'usage : le mode louange est une page fixe ; on le mesure, puis on ouvre ses menus.
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" }).catch(() => {});
+    if (process.env.PW_MESURES) await mesurerPage(page, `mode-louange-${v.nom}`, "[data-performance-mode]");
     await page.screenshot({ path: `${DIR}/${test.info().project.name}/mode-louange-${v.nom}.png` });
+    if (process.env.PW_MESURES) await ouvrirFeuilles(page, `mode-louange-${v.nom}`, "[data-performance-mode]");
   });
   test(`connexion ${v.nom}`, async ({ page }) => {
     await preparer(page, v.langue, v.sombre);
