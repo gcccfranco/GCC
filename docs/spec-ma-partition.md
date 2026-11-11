@@ -180,3 +180,4 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
   publier à la main).
 - 11/11/2026 (suite) : « go » de Timothée sur la planche (piste A, neuf recommandations). Spec écrite (§ Décisions,
   § Ce qui se construit, § Tranches). Restent trois questions ouvertes pour MP-6 ; le go de code n'est pas donné.
+- 11/11/2026 (soir) : « go pour le lot MP » de Timothée. Session orchestratrice lancée (« AP · Lot MP « Ma partition » (orchestratrice) ») pour MP-1 à MP-5 ; MP-6 attend les réponses aux trois questions ouvertes.
