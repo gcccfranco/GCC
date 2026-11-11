@@ -202,7 +202,7 @@ met à jour.
 
 ### T3 — Grand écran : rail du sommaire et colonne de 920 px (tablette couchée, ordinateur)
 
-- **Bloquée par Q2** (bascule Liste | Partitions en deux volets).
+- Q2 tranchée : pas de bascule Liste | Partitions en deux volets ; le rail ouvert sert de liste.
 - Fichiers : `SetlistDetailClient.tsx` (branche `deuxVolets`, en-tête collé, `--colonne-partition`),
   `_components/Sommaire.tsx` (rail de numéros de 56 px, panneau par-dessus au toucher), barre compacte de T2
   étendue aux deux volets.
@@ -259,16 +259,22 @@ met à jour.
 
 ## 6. Questions
 
-- **Q1 (bloque T7)** — Réglages d'un membre : le code n'a pas de « rôle » mais un champ libre « Mention », et
+**Réponse de Timothée (11/11/2026) : « Ok pour les trois propositions ».** Q1 : réglages actuels gardés tels quels,
+« Retirer de l'équipe » ajouté en bas. Q2 : pas de bascule Liste | Partitions en deux volets ; le rail ouvert sert de
+liste. Q3 : 简谱 plafonné à 920 px. Plus aucune tranche bloquée par une question.
+
+- **Q1 (tranchée)** — Réglages d'un membre : le code n'a pas de « rôle » mais un champ libre « Mention », et
   « Référent » ne se coche plus dans cette feuille (il se change dans Responsabilités). Proposition : garder tous
   les réglages actuels tels quels et seulement ajouter « Retirer de l'équipe » en bas. D'accord ?
-- **Q2 (bloque T3)** — Sur tablette couchée et ordinateur, le site n'a aujourd'hui **pas** de bascule Liste |
+- **Q2 (tranchée)** — Sur tablette couchée et ordinateur, le site n'a aujourd'hui **pas** de bascule Liste |
   Partitions (sommaire à gauche, partitions à droite, toujours) ; la maquette en dessine une. Proposition : ne pas
   l'ajouter ; le rail de numéros, une fois ouvert, joue le rôle de la liste. Ou faut-il ajouter la bascule ?
-- **Q3 (ne bloque que T4)** — 简谱 sur grand écran : plafonner l'image à 920 px (proposition) ou la laisser
+- **Q3 (tranchée)** — 简谱 sur grand écran : plafonner l'image à 920 px (proposition) ou la laisser
   prendre toute la largeur jusqu'à ~1 080 px ?
 
 ## 7. Avancement
 
 - 11/11/2026 : spec écrite d'après la planche validée et le code (décision 10 vérifiée : écart noté, Q1). Sept
   tranches ; T1, T2, T6 et T5 (sauf le ressort du rail, qui suit T3) peuvent partir sans réponse aux questions. En attente : « go pour la tranche 1 ? ».
+- 11/11/2026 : go de Timothée pour T1, lancée dans une session orchestratrice. Réponse « Ok pour les trois
+  propositions » : Q1, Q2 et Q3 tranchées (§ 6).
