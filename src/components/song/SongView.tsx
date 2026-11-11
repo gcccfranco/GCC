@@ -1,6 +1,9 @@
 "use client";
 import { Fragment, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import localFont from "next/font/local";
+import { useTheme } from "next-themes";
+import { useAuth } from "@/lib/firebase/auth";
+import { useCouleursAccords } from "@/lib/couleurAccords";
 import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
 import { ConteneurCoupure, LargeurCoupureContext, CoupureMesureContext, bordCoupure } from "@/components/song/LargeurCoupure";
@@ -448,7 +451,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
                             fontSize: chordEm,
                             lineHeight: "0.7",
                             minHeight: "1.1em",
-                            color: "var(--jianpu-color, #b3261d)",
+                            color: "var(--accord-zh, var(--jianpu-color, #b3261d))",
                             visibility: col.chord ? "visible" : "hidden",
                             whiteSpace: "nowrap",
                             // Deux accords longs sur deux caractères voisins se touchaient
@@ -1247,6 +1250,9 @@ export function SongView({
   slug,
 }: SongViewProps) {
   const { t } = useTranslation();
+  const { user, loading } = useAuth();
+  const { resolvedTheme } = useTheme();
+  const couleursAccords = useCouleursAccords(loading ? undefined : user?.uid ?? null, resolvedTheme === "dark" ? "dark" : "light", disposition);
   const isZh = ast.metadata.language === "zh";
   const canUseJianpu = isZh && useJianpu;
   const langAccent = isZh ? "var(--jianpu-color)" : "var(--chord-color)";
@@ -1400,7 +1406,7 @@ export function SongView({
       </>
   );
   return (
-    <ConteneurCoupure className="max-w-[var(--colonne-partition,42rem)] print:max-w-none" disposition={disposition}>
+    <ConteneurCoupure className="max-w-[var(--colonne-partition,42rem)] print:max-w-none" disposition={disposition} style={couleursAccords}>
       {enTete}
       {bandeau}
 

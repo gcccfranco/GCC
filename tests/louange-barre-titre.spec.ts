@@ -40,14 +40,15 @@ async function ouvrir(
   opts: { slugs?: string[]; zh?: boolean; theme?: "light" | "dark"; couleur?: string } = {},
 ) {
   const { slugs = FR, zh = false, theme = "light", couleur } = opts;
-  await page.addInitScript(([z, th, c]) => {
+  const cleIcones = `perf-couleur-icones-${MUSICIEN.uid}`;
+  await page.addInitScript(([z, th, c, cle]) => {
     try {
       if (!localStorage.getItem("perf-role-preset")) localStorage.setItem("perf-role-preset", "pianiste");
       if (z) localStorage.setItem("i18nextLng", "zh-CN");
       localStorage.setItem("perf-theme", th as string);
-      if (c && !localStorage.getItem("perf-couleur-icones")) localStorage.setItem("perf-couleur-icones", c as string);
+      if (c && !localStorage.getItem(cle as string)) localStorage.setItem(cle as string, c as string);
     } catch { /* ignore */ }
-  }, [zh, theme, couleur ?? ""]);
+  }, [zh, theme, couleur ?? "", cleIcones]);
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(slugs) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
   await attendreMiseEnPage(page);
@@ -310,7 +311,7 @@ test("couleur des icônes : bleu par défaut ; framboise choisie, retenue après
   await expect(reglages).toBeHidden();
   const attendue = rgb(garderContraste("#c2185b", FOND_CLAIR));
   await expect.poll(() => couleurIcone(page)).toBe(attendue);
-  expect(await page.evaluate(() => localStorage.getItem("perf-couleur-icones"))).toBe("#c2185b");
+  expect(await page.evaluate((k) => localStorage.getItem(k), `perf-couleur-icones-${MUSICIEN.uid}`)).toBe("#c2185b");
 
   // La page n'est pas teintée : les accords gardent leur couleur.
   const accord = page.locator("[data-performance-mode] [data-chord], [data-performance-mode] .chord").first();
@@ -339,7 +340,7 @@ test("palette : un seul arrêt de tabulation, les flèches passent d'une teinte 
   await expect(encre).toHaveAttribute("tabindex", "0");
   await expect(bleu).toHaveAttribute("aria-checked", "false");
   await expect(bleu).toHaveAttribute("tabindex", "-1");
-  expect(await page.evaluate(() => localStorage.getItem("perf-couleur-icones"))).toBe("#1c1c1e");
+  expect(await page.evaluate((k) => localStorage.getItem(k), `perf-couleur-icones-${MUSICIEN.uid}`)).toBe("#1c1c1e");
   await page.keyboard.press("ArrowDown");
   await expect(palette.getByRole("radio", { name: "Vert" })).toBeFocused();
   await page.keyboard.press("ArrowUp");
@@ -366,12 +367,12 @@ test("cercle chromatique : flèche droite sur la teinte change la couleur, reten
   await expect(reglages.getByRole("slider", { name: "Luminosité" })).toBeVisible();
   await expect(reglages.locator("[data-apercu-fond]")).toHaveCount(2);
   const avant = Number(await teinte.getAttribute("aria-valuenow"));
-  const couleurAvant = await page.evaluate(() => localStorage.getItem("perf-couleur-icones"));
+  const couleurAvant = await page.evaluate((k) => localStorage.getItem(k), `perf-couleur-icones-${MUSICIEN.uid}`);
   await teinte.focus();
   await page.keyboard.press("ArrowRight");
   await expect.poll(async () => Number(await teinte.getAttribute("aria-valuenow"))).not.toBe(avant);
   await page.keyboard.press("Shift+ArrowRight");
-  const apres = await page.evaluate(() => localStorage.getItem("perf-couleur-icones"));
+  const apres = await page.evaluate((k) => localStorage.getItem(k), `perf-couleur-icones-${MUSICIEN.uid}`);
   expect(apres).toMatch(/^#[0-9a-f]{6}$/);
   expect(apres).not.toBe(couleurAvant);
   await page.keyboard.press("Escape");
@@ -379,7 +380,7 @@ test("cercle chromatique : flèche droite sur la teinte change la couleur, reten
   await expect.poll(() => couleurIcone(page)).toBe(rgb(garderContraste(apres!, FOND_CLAIR)));
 
   await page.reload();
-  expect(await page.evaluate(() => localStorage.getItem("perf-couleur-icones"))).toBe(apres);
+  expect(await page.evaluate((k) => localStorage.getItem(k), `perf-couleur-icones-${MUSICIEN.uid}`)).toBe(apres);
 });
 
 test("cercle chromatique : un toucher sur l'anneau choisit la teinte (pointer events)", async ({ page }) => {
