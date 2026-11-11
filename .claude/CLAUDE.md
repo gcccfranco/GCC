@@ -5,15 +5,15 @@ porteur et poids de chaque skill) : `docs/orchestration.md` § 4 « Skills », �
 - **Règle** : un seul skill, celui de la phase, dans la session ou l'agent qui fait le travail, jamais dans une
   orchestratrice qui ne fait que lancer `/tranche` (go efficience de Timothée, 10/11/2026). Au-delà de 10 000
   caractères, un skill s'ouvre par section (`grep -n '^#'` puis la plage).
-- **Visibles et dormants** : 23 skills sont dans la liste que chaque session et chaque agent relit (ceux d'une phase, ceux préchargés
-  par un agent et ceux laissés visibles pour un besoin ponctuel ; la garder sous 8 000 caractères). Les 35 autres sont dormants
+- **Visibles et dormants** : 22 skills sont dans la liste que chaque session et chaque agent relit (ceux d'une phase, ceux préchargés
+  par un agent et ceux laissés visibles pour un besoin ponctuel ; la garder sous 8 000 caractères). Les 36 autres sont dormants
   (`disable-model-invocation: true`) : gratuits tant qu'on ne s'en sert pas, lancés par Timothée (`/nom`) ou ouverts
   par chemin (`.claude/skills/<nom>/SKILL.md`) au moment que dit l'aiguillage. Un skill ajouté est dormant par défaut
   et prend une ligne dans l'aiguillage : sans elle, il ne sert pas.
 - **Code** : cadrer `spec-driven-development` (`grilling` si flou) · implémenter `incremental-implementation` (UI :
   `frontend-ui-engineering`) · bug `debugging-and-error-recovery`, puis un seul dormant selon la cause :
   `click-path-audit` (bouton sans effet), `e2e-testing` (test instable), `react-patterns`, `nextjs-turbopack`,
-  `typescript-patterns` · libellés des deux langues `i18n-sync` · performance `react-performance` · relire
+  `typescript-patterns` · libellés des deux langues `i18n-sync` · performance `react-performance` puis `performance-optimization` · relire
   `code-review-and-quality` avant `main` (relecture courte, en mots simples et en français : `ponytail-review`) · livrer
   `git-workflow-and-versioning`. Audit : `ponytail-audit` (un agent) avant tout `/audit-code` ; dette (`shortcut:`) :
   `ponytail-debt` ; coût des skills et des agents : `context-budget`. Les autres : sur besoin précis.

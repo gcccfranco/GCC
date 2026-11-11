@@ -68,8 +68,8 @@ passe ; une retouche ne se relance que pour un défaut visible.
 **Skills** (`.claude/skills/`, 58 ; aiguillage du 10/11/2026, règle courte dans `.claude/CLAUDE.md`). Un skill coûte
 trois fois : la **liste** (nom et description de chaque skill visible, relue par chaque session et chaque agent ; la
 doc de Claude Code lui donne environ 1 % du contexte, et au-delà les descriptions les moins utilisées tombent), le
-**chargement** (le corps, à chaque emploi) et le **déclenchement à tort**. D'où : 23 visibles (6 800 caractères ; 26
-et 8 800 le matin du 10/11/2026), 35 dormants (`disable-model-invocation: true`) ouverts par chemin ou lancés par
+**chargement** (le corps, à chaque emploi) et le **déclenchement à tort**. D'où : 22 visibles (6 500 caractères ; 26
+et 8 800 le matin du 10/11/2026), 36 dormants (`disable-model-invocation: true`) ouverts par chemin ou lancés par
 `/nom`, et un seul porteur par skill. Un dormant ne se précharge pas dans un agent. Poids en milliers de caractères.
 
 | Moment | Skill (poids) | Porteur |
@@ -96,7 +96,9 @@ et 8 800 le matin du 10/11/2026), 35 dormants (`disable-model-invocation: true`)
 `benjitaylor/skills` (`stageshow`), `enesozturk/dimensional-drawing` (2), `meta/astryx`. `impeccable` reste la 4.8.0
 allégée (seule la description, plus courte, vient de la 4.8.2 : dix références adaptées à la main seraient écrasées). `security-and-hardening`
 et `performance-optimization` sont repris d'`addyosmani/agent-skills` dans leur version allégée (les exemples de code y
-sont passés dans `references/`, lus à la demande) ; les copies précédentes étaient d'anciennes versions exactes du repo.
+sont passés dans `references/`, lus à la demande) ; les copies précédentes étaient d'anciennes versions exactes du repo. Décidé le 11/11/2026 (Timothée a laissé
+la session trancher) : `performance-optimization` devient dormant ; `security-and-hardening` reste visible (filet quand une
+session touche aux comptes, aux droits ou à une route d'API) ainsi qu'`impeccable` (outil de design lancé par son nom).
 
 ## 5. Un lot, de bout en bout
 

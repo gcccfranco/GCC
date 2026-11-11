@@ -74,8 +74,6 @@ et **n'ont pas été reconfirmées** : vérifier dans le § Avancement de la spe
 - **AE** : questions de `audit-2026-10-24.md` (lots L0 à L9), suivies dans `spec-corrections-audit.md`.
 - **Contexte de départ des agents** : mesuré le 10/11/2026 (≈ 68 000 jetons chacun) ; listes `tools:` proposées dans
   `orchestration.md` § 7, en attente du go de Timothée.
-- **repowise** (index de code, demandé le 10/11/2026) : essayé sur une copie, non installé ; mesures et raisons dans
-  `archive/orchestration-historique.md` § 10. À décider : le laisser de côté, ou l'installer en ligne de commande seule.
 
 **À construire**
 - **U** : évènements sur le site en janvier 2027 (dernier lot de l'ordre du chantier U ; le Sheet « Calendrier des

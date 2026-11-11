@@ -304,3 +304,8 @@ et un qui remplace la lecture d'un gros fichier par son squelette (103 065 → 9
 `post-commit` qui relance l'index ; 10 outils MCP (16 971 caractères de définitions) ; une télémétrie active par
 défaut vers `api.repowise.dev` (coupée par `DO_NOT_TRACK=1`). Sans rien de cela : `repowise init --yes --no-prose
 --no-editor-setup`. Non établi : le comportement des hooks dans une vraie session, la qualité de `get_answer`.
+
+**Décision du 11/11/2026** (Timothée a laissé la session trancher) : repowise n'est pas installé. Six minutes et 1 Go de
+plus par machine neuve, des hooks qui changent ce qu'un agent lit et approuvent des commandes à sa place, 43 lignes de
+plus dans un fichier relu par tous : trop pour le gain. À reprendre si `graphify` gêne vraiment : il a manqué deux des
+trois questions de l'essai (il répond sur un symbole, pas sur un chemin de fichier, et `public/sw.js` n'est pas dans son graphe).
