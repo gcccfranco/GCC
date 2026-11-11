@@ -253,3 +253,8 @@ dans la spec : 简谱 (image du scan), mode sombre à 1 440 px, mouvement (déci
   **trois à la fois** et en fait une règle (CLAUDE.md § Économie de contexte). Mis en attente par message : « Ma
   partition », Harmonie H1, comptage T3. Ordre de reprise : « Ma partition », puis Harmonie, puis comptage, une
   place à la fois, sur « reprends » de Timothée ou de la session principale.
+- 11/11/2026 (23 h 15 UTC) : **planche du pupitre lancée** (chantier 2), les réponses de Timothée sur « Ma
+  partition » étant consignées : session « AP · Planche du pupitre (entrée des musiciens) », Opus, un `/planche`,
+  livrables `docs/planches/planche-pupitre-musicien.html` et `docs/spec-entree-musiciens.md`. Ce n'est pas un
+  chantier de code (hors règle des trois). À 23 h 01 : trois chantiers codent (retouches T7 et T4, deux exemples
+  T1, AO FS-F) ; « Ma partition », Harmonie H1 et comptage T3 attendent, dans cet ordre.
