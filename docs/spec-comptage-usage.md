@@ -288,3 +288,7 @@ qu'après quelques semaines de données.
   de setlist ; `cmd.setlist.presentation` compte l'export FreeShow et l'enregistrement d'un lien ; une retouche
   简谱 en « ma version » compte `maVersion`, côté présidence `adapter` ; `modifierLigne` se compte une fois par
   rafale de saisie (3 s). Le test « vue Partitions » se saute en deux volets (pas de bascule). Attend le go de T3.
+- 11/11/2026 — Timothée : « Go » pour T3. `/tranche` T3 lancée, arrêtée avant toute modification : limite de
+  dépense mensuelle atteinte (aucun agent n'a tourné). Rien de T3 n'est codé ; à relancer telle quelle quand la
+  limite le permet (consigne : lignes T3 de l'inventaire, règles de pose tirées de la relecture de T2, tests
+  `tests/usage-reste.spec.ts` sur trois appareils).
