@@ -62,8 +62,27 @@ mêmes, plus Options d'affichage. Tablette couchée : onglet Setlists, setlist. 
 
 ## Pistes, recommandation, questions
 
-À remplir après la planche.
+Trois pistes (planche `docs/planches/planche-pupitre-musicien.html`) :
+
+- **A. Le pupitre (recommandée)** : pour un musicien, l'onglet Setlists s'ouvre sur son prochain service, déjà « posé
+  sur le pupitre » (les chants en rangées, un toucher ouvre le mode louange sur ce chant) ; « Plus tard », « Archives »
+  et « Mes setlists » repliés dessous. Dans le mode louange, « Je joue » devient une pastille qui résume rôle, ordre et
+  disposition (« Piano · Tout le chant · Classique ») et ouvre une seule feuille.
+- **B. Le programme du culte** : mes services dans l'ordre du calendrier, comme un programme imprimé ; la commande unique
+  est une phrase à trous (« Je joue piano, tout le chant, en classique »), chaque mot se touche.
+- **C. La setlist au sol** : grosses rangées lisibles à un mètre ; deux affichages au lieu de trois ; barre basse à trois
+  segments sous le pouce.
+
+Questions posées à Timothée (propositions de la planche, corrigées par la critique) : qui garde l'export PDF ; le PDF
+sur la page d'un chant ; ce qui le remplace pour un musicien (hors-ligne d'office) ; l'onglet du musicien ; les trois
+affichages renommés ; où vit la commande unique ; le rôle règle les trois ; la feuille « Je joue » à la première
+entrée ; place de 字母/数字 et des idées d'harmonie ; couleur par défaut des icônes du mode louange.
+
+Fait vérifié pour la spec : l'export PDF est produit dans le navigateur (`SetlistDetailClient.tsx:780`-`830`, import
+dynamique de `@/components/pdf/*`), sans route API : le retirer aux musiciens masque le bouton, sans protection serveur.
 
 ## Avancement
 
 - 11/11/2026 (nuit) : code relu, huit captures prises, `/planche` lancé (sujet `pupitre-musicien`).
+- 11/11/2026 (nuit) : `/planche` rendu (trois pistes, A recommandée) ; critique « à retoucher » (accent pétrole = couleur
+  du culte, chrome bleu = choix par appareil, vignettes illisibles au téléphone, tablette couchée absente) ; une reprise lancée.
