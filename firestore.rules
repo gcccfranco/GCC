@@ -693,6 +693,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Comptage d'usage (docs/spec-comptage-usage.md) : un document par mois, des compteurs incrémentés par tout
+    // connecté ; lu par les admins seuls. Miroir client : peutLireUsage (src/lib/access.ts).
+    match /usage/{mois} {
+      allow read: if isAdmin();
+      allow create, update: if signedIn() && mois.matches('^[0-9]{4}-[0-9]{2}$');
+      allow delete: if false;
+    }
+
     // Préférences de notification par type (un doc par membre, id = uid) : chacun
     // gère les siennes ; le serveur (Admin) les lit pour filtrer les envois auto.
     match /notifPrefs/{uid} {

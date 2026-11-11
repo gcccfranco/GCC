@@ -263,3 +263,13 @@ qu'après quelques semaines de données.
   `<clé>.d.<disposition>` en jours-appareils) ; (3) trois mois, douze dimanches, une fête, seuil « sous 1 % et
   sous 4 par mois » ; (4) tableau trié, sans planche ; (5) phrase d'information dans `/guide` ; (6) administrateurs
   seulement. T1 confiée à une session orchestratrice neuve (règle « Coder » du CLAUDE.md).
+- 11/11/2026 — **T1 codée** (session orchestratrice, `/tranche`) : `src/lib/usageCles.ts` (registre `CLES_USAGE`,
+  une clé `ecran.…` par page, `normaliserRoute`), `src/lib/usage.ts` (`compter`, `envoyerUsage` : un commit REST par
+  jour et par appareil, `increment` sur `<clé>.n/.j/.d.<disposition>` et `_actif`, verrou entre onglets, délai de
+  15 s), `src/components/UsageCompteur.tsx` monté dans `src/app/layout.tsx` (route, `cmd.general.pwa`, envoi au
+  montage, à la connexion et au passage en arrière-plan), règle `usage/{mois}` dans `firestore.rules` + miroir
+  `peutLireUsage` (`src/lib/access.ts`), phrase fr/中文 en fin de `/guide`, `tests/usage.spec.ts` (trois appareils).
+  Disposition : seuils de `useDisposition` (ordinateur = deux volets, tablette ≥ 768 px). Reste faible : le test
+  « clé hors registre » vérifie le registre en Node mais n'appelle pas `compter` dans la page. ⚠ La règle est à
+  publier à la main par Timothée ; le comptage ne commence en ligne qu'après une mise en ligne sur `main`. Attend
+  le go de T2.

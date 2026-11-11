@@ -1189,7 +1189,8 @@
         }
       }
     },
-    "commentCaMarche": "Comment ça marche ?"
+    "commentCaMarche": "Comment ça marche ?",
+    "compteUsage": "Le site compte, sans savoir qui, quelles fonctions servent, pour retirer celles qui ne servent pas."
   },
   "annonces": {
     "title": "Annonces",

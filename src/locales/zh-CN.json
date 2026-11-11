@@ -1184,7 +1184,8 @@
         }
       }
     },
-    "commentCaMarche": "如何使用？"
+    "commentCaMarche": "如何使用？",
+    "compteUsage": "本网站会统计各项功能的使用情况，但不知道是谁在使用，以便移除不常用的功能。"
   },
   "annonces": {
     "title": "公告",

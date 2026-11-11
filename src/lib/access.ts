@@ -41,6 +41,11 @@ export function isAdminUser(user: { email?: string | null } | null): boolean {
   return isAdminEmail(user?.email);
 }
 
+/** Lire le comptage d'usage (`usage/{mois}`) : administrateurs seuls. Miroir : la règle `usage/{mois}` de firestore.rules. */
+export function peutLireUsage(user: { email?: string | null } | null): boolean {
+  return isAdminUser(user);
+}
+
 /** Modification du profil : autorisée tant qu'il n'existe pas encore (première
  *  complétion par l'intéressé) ; une fois complété, réservé aux admins.
  *  Miroir serveur dans firestore.rules (users/{uid} : create libre, update admin). */

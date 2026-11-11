@@ -310,6 +310,7 @@ export default function GuidePage() {
                 );
               })}
             </div>
+            <p className="col-span-full mt-2 text-sm text-muted-foreground">{t("guide.compteUsage")}</p>
           </div>
         </div>
       </div>
