@@ -41,6 +41,9 @@ const profil = (uid: string, prenom: string, nom: string, over: Record<string, u
   uid, email: `${prenom.toLowerCase()}@example.com`, firstName: prenom, lastName: nom, planningName: `${prenom} ${nom}`,
   serviceRoles: {}, annonces: [], notify: [], ...over,
 });
+const membreLouange = (uid: string, nom: string, groupe: string, over: Record<string, unknown> = {}) => ({
+  nom, uid, mention: "", referent: false, essai: false, groupe, ...over,
+});
 const resa = (dimanche: string, debut: string, fin: string, quoi: string, qui: string[]) => ({
   dimanche, debut, fin, quoi, qui, note: "", auteurUid: "uid-autre", auteurNom: "Zoé F.",
   createdAt: "2026-10-20T10:00:00Z", updatedAt: "2026-10-20T10:00:00Z",
@@ -73,6 +76,30 @@ const DOCS: Record<string, Record<string, unknown>> = {
   "users/uid-zoe": profil("uid-zoe", "Zoé", "F.", { dansEquipes: ["da"] }),
   "users/uid-mathis": profil("uid-mathis", "Mathis", "R.", { dansEquipes: ["louange"], serviceRoles: { "Culte Francophone": ["chanteur"] } }),
   "users/uid-lina": profil("uid-lina", "Lina", "O.", { dansEquipes: ["medias"] }),
+  // Audit d'usage (11/11/2026) : une équipe Louange de neuf membres, pour que la feuille d'une équipe montre une vraie
+  // liste (défilement, « Ajouter un membre » après la liste). Noms inventés.
+  "equipes/louange": {
+    membres: [
+      membreLouange("u-capucine", "Capucine Morel", "Présidences", { referent: true, mention: "Référente Louange" }),
+      membreLouange("u-ugo", "Ugo Ferrand", "Pianistes"),
+      membreLouange("u-salome", "Salomé Diaz", "Guitaristes"),
+      membreLouange("u-bastien", "Bastien Leroux", "Batteurs"),
+      membreLouange("u-ornella", "Ornella Costa", "Batteurs"),
+      membreLouange("u-titouan", "Titouan Gallet", "Choristes"),
+      membreLouange("u-maiwenn", "Maïwenn Jaouen", "Choristes"),
+      membreLouange("", "Anselme Vidalenc", "Guitaristes", { essai: true }),
+      membreLouange("u-yaelle", "Yaëlle Brun", "Présidences"),
+    ],
+    updatedAt: "2026-10-01T10:00:00Z", parUid: "uid-admin", parNom: "Alix D.",
+  },
+  "users/u-capucine": profil("u-capucine", "Capucine", "Morel", { dansEquipes: ["louange"], referentDe: ["louange"], sousEquipes: ["musiciens"], referentSous: ["musiciens"], joue: ["guitare"], lieuxLouange: ["Culte Francophone", "Intergroupe", "Interfranco", "Campus"] }),
+  "users/u-ugo": profil("u-ugo", "Ugo", "Ferrand", { dansEquipes: ["louange"], sousEquipes: ["musiciens"], joue: ["piano"], lieuxLouange: ["Culte Francophone", "Interfranco"] }),
+  "users/u-salome": profil("u-salome", "Salomé", "Diaz", { dansEquipes: ["louange"], sousEquipes: ["musiciens", "choristes"], joue: ["guitare", "basse"], lieuxLouange: ["Culte Francophone", "Campus"] }),
+  "users/u-bastien": profil("u-bastien", "Bastien", "Leroux", { dansEquipes: ["louange"], sousEquipes: ["musiciens"], joue: ["batterie", "cajon"], lieuxLouange: ["Culte Francophone", "Interfranco", "Campus"] }),
+  "users/u-ornella": profil("u-ornella", "Ornella", "Costa", { dansEquipes: ["louange"], sousEquipes: ["musiciens"], joue: ["batterie", "cajon"], lieuxLouange: ["Culte Francophone"] }),
+  "users/u-titouan": profil("u-titouan", "Titouan", "Gallet", { dansEquipes: ["louange"], sousEquipes: ["choristes"], lieuxLouange: ["Culte Francophone", "Interfranco", "Campus"] }),
+  "users/u-maiwenn": profil("u-maiwenn", "Maïwenn", "Jaouen", { dansEquipes: ["louange"], sousEquipes: ["choristes"], lieuxLouange: ["Culte Francophone"] }),
+  "users/u-yaelle": profil("u-yaelle", "Yaëlle", "Brun", { dansEquipes: ["louange"], sousEquipes: ["presidence"], lieuxLouange: ["Culte Francophone", "Interfranco", "Campus"] }),
   // Setlist du 8 novembre (mes-services/[date] la relie au service).
   "setlists/s1": {
     title: "Culte du 8 novembre", leader: "Alix D.", category: "Culte Francophone", date: "2026-11-08", language: "mixed",

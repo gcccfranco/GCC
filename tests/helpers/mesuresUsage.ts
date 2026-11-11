@@ -5,10 +5,11 @@ import { test, type Page } from "@playwright/test";
 // Rien n'est vérifié, on mesure. Deux passes :
 //   PW_MESURES=<fichier.jsonl>  une ligne par page et par disposition (cibles, textes, défilement, action principale) ;
 //   PW_FEUILLES=<dossier>       en plus, chaque bouton de la page est touché : si une feuille, un menu ou une fenêtre
-//                               s'ouvre, on la mesure et on la photographie (téléphone et ordinateur seulement).
+//                               s'ouvre, on la mesure et on la photographie ; si la page change (onglet, bascule),
+//                               c'est une « vue », mesurée et photographiée aussi (téléphone, tablette, ordinateur).
 // La taille d'une cible est celle de sa boîte, élargie par un ::before / ::after absolu quand il y en a un.
 
-const PROJETS_FEUILLES = ["telephone", "ordinateur"];
+const PROJETS_FEUILLES = ["telephone", "tablette", "ordinateur"];
 const MAX_BOUTONS = 22;
 // Boutons qu'on ne touche pas : ils suppriment, envoient, exportent ou quittent.
 const A_EVITER = /supprim|d[ée]connex|retirer|effacer|quitter|envoyer|notifier|publier|export|pdf|imprimer|t[ée]l[ée]charg|partager|copier|fusionner|enregistrer|valider|cr[ée]er|dupliquer|archiver|vider/i;
@@ -96,6 +97,35 @@ function relever({ tactile, racine }: { tactile: boolean; racine: string | null 
     const r = el.getBoundingClientRect();
     if (r.width >= vw * 0.6 && r.height < vh * 0.4 && (r.top <= 4 || r.bottom >= vh - 4) && !el.parentElement?.closest("[data-audit-barre]")) { el.setAttribute("data-audit-barre", ""); barres += r.height; }
   }
+  // Place prise par le contenu : marges vides à gauche et à droite, et part de la largeur que le texte occupe
+  // (des paroles tassées dans le tiers gauche d'une tablette donnent une médiane basse).
+  const zoneLue = (racine ? root : document.querySelector<HTMLElement>("main") ?? root).getBoundingClientRect();
+  let gauche = vw, droite = 0; const bordsDroits: number[] = [];
+  for (const el of vus) {
+    if (!(racine ? root : document.querySelector("main") ?? root).contains(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.bottom < 0 || r.top > vh * 3) continue;
+    gauche = Math.min(gauche, r.left); droite = Math.max(droite, r.right);
+    const plage = document.createRange(); plage.selectNodeContents(el);
+    const rt = plage.getBoundingClientRect();
+    if (rt.width > 0) bordsDroits.push(rt.right);
+  }
+  // Bande vide à droite : où s'arrêtent les grands blocs (au moins la moitié de l'écran) de la zone lue.
+  const fins: number[] = [];
+  for (const el of (racine ? root : document.querySelector<HTMLElement>("main") ?? root).querySelectorAll<HTMLElement>("*")) {
+    const r = el.getBoundingClientRect();
+    if (r.width >= vw * 0.5 && r.height >= 40 && r.height < vh * 2 && visible(el)) fins.push(Math.round(r.right));
+  }
+  fins.sort((x, y) => x - y);
+  const finBlocs = fins.length ? fins[Math.floor(fins.length / 2)] : 0;
+  bordsDroits.sort((x, y) => x - y);
+  const mediane = bordsDroits.length ? bordsDroits[Math.floor(bordsDroits.length / 2)] : 0;
+  const place = droite > gauche ? {
+    videGauche: Math.round(Math.max(0, gauche)), videDroite: Math.round(Math.max(0, vw - droite)),
+    zone: [Math.round(zoneLue.left), Math.round(zoneLue.right)],
+    texteMedian: +((mediane - gauche) / Math.max(1, droite - gauche)).toFixed(2),
+    videDroiteBlocs: finBlocs ? Math.max(0, vw - finBlocs) : null,
+  } : null;
   const champs = cibles.filter((el) => /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) && !/checkbox|radio|file/.test((el as HTMLInputElement).type ?? "")).length;
   return {
     vw, vh,
@@ -103,7 +133,7 @@ function relever({ tactile, racine }: { tactile: boolean; racine: string | null 
     debordeX: Math.max(0, document.documentElement.scrollWidth - vw),
     cibles: cibles.length, ciblesPremierEcran: cibles.filter((el) => el.getBoundingClientRect().top < vh).length,
     sousSeuil, tresPetites, sous, champs, textesPetits, petits, textesCoupes, coupes, principale,
-    barres: +(barres / vh).toFixed(2),
+    barres: +(barres / vh).toFixed(2), place,
   };
 }
 
@@ -173,6 +203,8 @@ async function toucherLesBoutons(page: Page, nom: string, projet: string, tactil
       }
       const encore = await marquer();
       if (!encore.some((e) => e.i === b.i && e.nom === b.nom)) { if (process.env.PW_AUDIT_DEBUG) console.log("forme", b.i, b.nom); continue; } // la page a changé de forme : on passe
+      const signature = () => page.evaluate(() => `${(document.querySelector("main") ?? document.body).innerText.length}:${document.documentElement.scrollHeight}`);
+      const avant = await signature();
       await page.locator(`[data-audit-i="${b.i}"]`).click({ timeout: 2500 });
       await page.waitForTimeout(550);
       if (new URL(page.url()).pathname !== new URL(url).pathname) { appendFileSync(sortie, JSON.stringify({ type: "bouton", projet, nom, bouton: b.nom, effet: "navigue", vers: new URL(page.url()).pathname }) + "\n"); continue; }
@@ -183,7 +215,17 @@ async function toucherLesBoutons(page: Page, nom: string, projet: string, tactil
         f.setAttribute("data-audit-feuille", "");
         return (f.innerText ?? "").trim().replace(/\s+/g, " ").slice(0, 80);
       }, SURCOUCHE);
-      if (marquee === null) { propre = false; if (process.env.PW_AUDIT_DEBUG) console.log("rien", b.i, b.nom); continue; } // bascule dans la page : rien par-dessus
+      if (marquee === null) {
+        // Rien par-dessus : un onglet ou une bascule. Si la page a changé, c'est une autre vue du même écran.
+        propre = false;
+        if ((await signature()) !== avant) {
+          const fichier = `${nom}__${String(b.i).padStart(2, "0")}-${b.nom.replace(/[^\p{L}\p{N}]+/gu, "-").slice(0, 24)}__vue.png`;
+          const m = await page.evaluate(relever, { tactile, racine: null });
+          await page.screenshot({ path: `${dossier}/${fichier}`, fullPage: true });
+          appendFileSync(sortie, JSON.stringify({ type: "vue", projet, nom, bouton: b.nom, capture: fichier, ...m }) + "\n");
+        }
+        continue;
+      } // bascule dans la page : rien par-dessus
       if (dejaVues.has(marquee)) { await page.keyboard.press("Escape"); await page.waitForTimeout(250); continue; }
       dejaVues.add(marquee);
       const g = await page.evaluate(geometrie);
