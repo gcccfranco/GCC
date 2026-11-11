@@ -1,7 +1,7 @@
 ---
 name: chercheur
 description: Recherche en lecture seule dans le code, les docs, les .cho et l'historique git — où est défini X, qui appelle Y, quels fichiers touchent Z, que dit la spec d'un lot. À utiliser d'office dès qu'une réponse demande de parcourir plusieurs fichiers ; rend une conclusion prouvée par chemin et ligne.
-disallowedTools: Edit, Write, NotebookEdit
+tools: Bash, Read, Grep, Glob
 model: haiku
 effort: low
 color: cyan

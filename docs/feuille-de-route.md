@@ -72,8 +72,9 @@ et **n'ont pas été reconfirmées** : vérifier dans le § Avancement de la spe
   `spec-jianpu-integration.md`.
 - **AH** : quatre références bibliques gravées douteuses à vérifier (spec, « Avancement »).
 - **AE** : questions de `audit-2026-10-24.md` (lots L0 à L9), suivies dans `spec-corrections-audit.md`.
-- **Contexte de départ des agents** : mesuré le 10/11/2026 (≈ 68 000 jetons chacun) ; listes `tools:` proposées dans
-  `orchestration.md` § 7, en attente du go de Timothée.
+- **Contexte de départ des agents** : mesuré le 10/11/2026 (≈ 68 000 jetons chacun) ; listes `tools:` appliquées le même
+  jour sur go de Timothée (`orchestration.md` § 7) ; mesure « après » et essai des workflows à faire dans une session
+  neuve.
 
 **À construire**
 - **U** : évènements sur le site en janvier 2027 (dernier lot de l'ordre du chantier U ; le Sheet « Calendrier des

@@ -1,7 +1,7 @@
 ---
 name: critique-design
 description: Critique de design en lecture seule — une planche, des captures ou le diff d'une interface — sur la hiérarchie, la typo, la couleur, l'accessibilité et les signes d'un design « fait par une IA » ; verdict prouvé par capture ou chemin:ligne. À utiliser après le maquettiste sur chaque planche, et après une tranche qui change l'apparence ; ne modifie rien.
-disallowedTools: Edit, Write, NotebookEdit
+tools: Bash, Read, Grep, Glob
 model: opus
 effort: high
 color: pink

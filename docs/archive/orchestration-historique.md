@@ -275,8 +275,9 @@ que le harnais ajoute hors liste. C'est ce qui fonde la proposition : une liste 
 retire les trois plus grosses pièces. Reste à vérifier sur nos agents, après le go : la sortie par `schema` dans les
 workflows et le préchargement par `skills:` sans l'outil `Skill`.
 
-**À côté.** `ponytail`, que l'`executant` préchargeait, n'est plus dans le dépôt et son en-tête n'a plus de champ
-`skills:`. `/audit-code` lance ses agents sans `agentType` : s'ils partent du même contexte, 60 agents × 68 000 jetons
+**À côté.** Au moment de la mesure, l'`executant` ne préchargeait rien ; `ponytail` lui a été rendu le même soir
+(§ 10), après la mesure « avant » : son contexte « après » compte donc ce skill en plus. `/audit-code` lance ses agents
+sans `agentType` : s'ils partent du même contexte, 60 agents × 68 000 jetons
 font l'essentiel des 5 millions annoncés ; non mesuré, à relever lors de l'essai des workflows.
 
 ## 10. Skills du 10/11/2026 au soir et essai de repowise

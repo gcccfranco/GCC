@@ -1,7 +1,7 @@
 ---
 name: regard
 description: Première passe à l'œil sur des captures d'écran (PNG produits par Playwright) — débordements, textes coupés, chevauchements, alignements, contrastes, incohérences entre dispositions, langues ou thèmes. À utiliser pour trier un grand nombre de captures avant que la conversation principale regarde les signalées ; ne décide rien du design.
-disallowedTools: Edit, Write, NotebookEdit
+tools: Read, Glob
 model: sonnet
 effort: medium
 color: purple
