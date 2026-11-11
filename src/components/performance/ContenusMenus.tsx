@@ -10,6 +10,7 @@ import { isDp, paletteKeyOf } from "@/lib/setlist/dp";
 import { formatDate } from "@/lib/utils/formatDate";
 import { TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import type { SectionBlock, SongHeaderBlock } from "@/lib/performance/blocks";
+import { compter } from "@/lib/usage";
 
 // ─── Briques communes ─────────────────────────────────────────────────────────
 
@@ -204,6 +205,7 @@ export function ContenuReperes({
               type="button"
               aria-current={enCours ? "true" : undefined}
               onClick={() => {
+                compter("cmd.louange.reperes");
                 goToPage(r.page, pageCount);
                 onFermer();
               }}
@@ -315,6 +317,7 @@ function usePleinEcran() {
   }, []);
   const disponible = typeof document !== "undefined" && typeof document.documentElement.requestFullscreen === "function";
   const basculer = () => {
+    compter("cmd.louange.pleinEcran");
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     else document.documentElement.requestFullscreen().catch(() => {});
   };
@@ -385,7 +388,7 @@ export function ContenuOutils({
         </LigneMenu>
       )}
       <LigneMenu label={t("performance.transitions")}>
-        <BoutonRond label={t("performance.transitions")} allume={showTransitions} onClick={() => setShowTransitions(!showTransitions)}>
+        <BoutonRond label={t("performance.transitions")} allume={showTransitions} onClick={() => { compter("cmd.chant.transitions"); setShowTransitions(!showTransitions); }}>
           <Timer className="h-5 w-5" />
         </BoutonRond>
       </LigneMenu>

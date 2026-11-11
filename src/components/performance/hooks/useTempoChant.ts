@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { clampTempo, getTempoChant, setTempoChant, TEMPO_DEPART } from "@/lib/performance/tempo";
+import { compter } from "@/lib/usage";
 
 /**
  * Métronome visuel : tempo réglé sur l'appareil pour ce chant, sinon celui du fichier.
@@ -12,11 +13,13 @@ export function useTempoChant(tempoChantId: string | undefined, tempoDuFichier: 
   const tempoLiseret = tempoAppareil ?? tempoFichier;
   const changerTempo = (delta: number) => {
     if (!tempoChantId) return;
+    compter("cmd.louange.tempo");
     setTempoChant(tempoChantId, clampTempo((tempoLiseret ?? TEMPO_DEPART) + delta));
     setTempoTick((n) => n + 1);
   };
   const effacerTempo = () => {
     if (!tempoChantId) return;
+    compter("cmd.louange.tempo");
     setTempoChant(tempoChantId, null);
     setTempoTick((n) => n + 1);
   };

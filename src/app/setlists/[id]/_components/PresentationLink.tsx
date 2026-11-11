@@ -6,6 +6,7 @@ import { ExternalLink, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authHeader } from "@/lib/firebase/setlists";
+import { compter } from "@/lib/usage";
 import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
 
 /** Lien de la présentation (PPT) de la setlist : ouvert par tous, ajouté ou
@@ -75,6 +76,7 @@ export function PresentationLink({
         setError(data.error || t("setlists.detail.presentationError"));
         return;
       }
+      if (next.trim()) compter("cmd.setlist.presentation");
       onSaved(data.presentationUrl ?? undefined);
       setNotice(data.notified > 0 ? "notified" : data.linked === false ? "unlinked" : null);
       onEdition(false);

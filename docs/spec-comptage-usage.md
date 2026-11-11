@@ -273,3 +273,18 @@ qu'après quelques semaines de données.
   « clé hors registre » vérifie le registre en Node mais n'appelle pas `compter` dans la page. ⚠ La règle est à
   publier à la main par Timothée ; le comptage ne commence en ligne qu'après une mise en ligne sur `main`. Attend
   le go de T2.
+- 11/11/2026 — Timothée : « Go » pour T2. **T2 codée** (même session orchestratrice, `/tranche`) : 47 clés `cmd.*`
+  au registre (valeurs réelles : `cmd.louange.affichage.unique|played|structure`, `cmd.setlist.vue.liste|partitions`,
+  `cmd.setlist.corbeille.mettre|restaurer|supprimer`), `compter()` posé dans les gestionnaires qui agissent (page
+  chant, liste des chants, mode louange, setlists), aucun changement visible. Tests `tests/usage-dimanche.spec.ts` :
+  15 commandes par l'interface (page chant sur un chant FR et un chant ZH), plus un test qui vérifie que chaque clé
+  `cmd.…` du code est au registre et que chaque clé du registre est comptée quelque part. Relecture : comptes en
+  trop corrigés (rôle rétabli par « Annuler », touche maintenue sur le cercle et le curseur de page, disposition
+  déjà choisie). **Absentes du code, non comptées** : `cmd.chant.largeur` (pas de commande, seulement une mesure),
+  `cmd.chant.partager` (pas de partage sur la page chant), « ajouter à une setlist » depuis la page chant (seul
+  « Je joue » existe), « chant précédent » (seule la pastille « Suivant » existe). **Choix faits, à confirmer** :
+  capo et transitions comptés dans le mode louange (seul endroit où ils existent) ; `cmd.chant.accord` compte aussi
+  les accords touchés dans la vue Partitions et le dictionnaire ; `cmd.chant.copierParoles` compte aussi les copies
+  de setlist ; `cmd.setlist.presentation` compte l'export FreeShow et l'enregistrement d'un lien ; une retouche
+  简谱 en « ma version » compte `maVersion`, côté présidence `adapter` ; `modifierLigne` se compte une fois par
+  rafale de saisie (3 s). Le test « vue Partitions » se saute en deux volets (pas de bascule). Attend le go de T3.

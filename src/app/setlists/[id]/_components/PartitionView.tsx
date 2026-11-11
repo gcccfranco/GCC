@@ -17,6 +17,7 @@ import { transposeSection, transposerVers } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { lyricsText } from "@/components/song/copyLyrics";
+import { compter } from "@/lib/usage";
 import { playedSections } from "@/lib/setlist/playedSections";
 import { isLastPhraseOnly } from "@/lib/setlist/lastPhrase";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ function CopyLyricsButton({ sections }: { sections: ChordProSection[] }) {
   async function copy() {
     try {
       await navigator.clipboard.writeText(lyricsText(sections));
+      compter("cmd.chant.copierParoles");
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch { /* presse-papiers indisponible */ }

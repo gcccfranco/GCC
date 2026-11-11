@@ -41,6 +41,7 @@ import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { getSetlist } from "@/lib/firebase/setlists";
 import { useAuth } from "@/lib/firebase/auth";
+import { compter } from "@/lib/usage";
 import { telechargerBlob } from "@/lib/telecharger";
 import type { JianpuChords } from "@/types/setList";
 
@@ -126,6 +127,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
       const next = prefDepuisInterrupteur(on);
       setJianpuPrefState(next);
       setJianpuPref(next);
+      if (on) compter("cmd.chant.jianpu");
     };
     const originalKey = ast.metadata.key;
     // Tonalité la plus chantée à GCC : la page y démarre, l'originale reste proposée.
@@ -308,6 +310,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
           />
         ).toBlob();
         telechargerBlob(blob, pdfFileName(`${song.slug}-${customize.currentKey}`, style));
+        compter("cmd.chant.pdf");
       } finally {
         setDownloading(false);
       }

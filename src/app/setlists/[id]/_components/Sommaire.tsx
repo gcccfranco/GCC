@@ -12,6 +12,7 @@ import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { playedSections } from "@/lib/setlist/playedSections";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
+import { compter } from "@/lib/usage";
 
 /** Sommaire de la setlist en deux volets (lot U5, docs/spec-deux-volets.md, Q6) :
  *  par chant, numéro, titre, tonalité et « orig. », une pastille par étape jouée,
@@ -167,6 +168,7 @@ function CopierTout({ copier, pret }: { copier: () => string; pret: boolean }) {
           } catch {
             return; // presse-papiers refusé : rien n'est annoncé
           }
+          compter("cmd.chant.copierParoles");
           setCopie(true);
           window.clearTimeout(minuteur.current);
           minuteur.current = window.setTimeout(() => setCopie(false), 2000);

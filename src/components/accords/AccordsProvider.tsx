@@ -23,6 +23,7 @@ import { analyserAccord, type Accord } from "@/lib/accords/analyse";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { PanneauAccord } from "./PanneauAccord";
 import { decrire } from "./outils";
+import { compter } from "@/lib/usage";
 
 type DemandeAccord = {
   /** L'accord tel qu'affiché : « D/F# », « (A) », « Bb2 ». */
@@ -129,6 +130,7 @@ export function AccordsProvider({
   const ouvrir = useCallback((d: DemandeAccord) => {
     const accord = analyserAccord(d.accord);
     if (!accord) return;
+    compter("cmd.chant.accord");
     derniereAncre.current = d.ancre ?? null;
     // Toucher un accord vaut lecture de l'aide.
     if (aideAncre) fermerAide();

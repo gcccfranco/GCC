@@ -1,6 +1,7 @@
 import type { Ref } from "react";
 import { List, Music } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { compter } from "@/lib/usage";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 
 /** Bascule « Liste | Partitions » (setlist G, Q11) : sous l'en-tête, elle colle
@@ -37,7 +38,7 @@ export function BasculeVues({
         <button
           type="button"
           aria-pressed={view === "liste"}
-          onClick={versListe}
+          onClick={() => { if (view !== "liste") compter("cmd.setlist.vue.liste"); versListe(); }}
           className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-semibold transition-colors ${
             view === "liste" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           }`}
@@ -48,7 +49,7 @@ export function BasculeVues({
         <button
           type="button"
           aria-pressed={view === "partitions"}
-          onClick={() => versPartitions()}
+          onClick={() => { if (view !== "partitions") compter("cmd.setlist.vue.partitions"); versPartitions(); }}
           className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-semibold transition-colors ${
             view === "partitions" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           }`}

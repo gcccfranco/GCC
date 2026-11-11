@@ -7,6 +7,7 @@ import type { JianpuSheetBlock, PerformanceBlock, SongHeaderBlock } from "@/lib/
 import { sansTransitions } from "@/lib/performance/pagination";
 import { langAccent } from "./langAccent";
 import { TeteFeuille } from "./TeteFeuille";
+import { compter } from "@/lib/usage";
 
 /** Page 简谱 : en-tête d'une ligne et bandeau de structure en haut, scan
  *  (`children`, déjà rendu par PerformanceMode) à l'échelle de la hauteur qui
@@ -150,7 +151,7 @@ export function PageScan({
               <button
                 type="button"
                 data-suivant
-                onClick={onSuivant}
+                onClick={() => { compter("cmd.louange.chantSuivant"); onSuivant(); }}
                 onPointerDown={(e) => e.stopPropagation()}
                 onPointerUp={(e) => e.stopPropagation()}
                 className="pointer-events-auto min-h-11 w-full rounded-xl border border-border/60 bg-background/85 px-3 py-2 text-left text-sm text-muted-foreground backdrop-blur"

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { FOND_CLAIR, FOND_SOMBRE, garderContraste, hexVersHsl, hslVersHex } from "@/lib/performance/couleurIcones";
+import { compter } from "@/lib/usage";
 
 const arreter = (e: React.PointerEvent) => e.stopPropagation();
 const TAILLE = 176;
@@ -63,7 +64,10 @@ export function CercleChromatique({ valeur, fond, onChange }: { valeur: string; 
         }}
         onPointerUp={(e) => {
           e.stopPropagation();
-          if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+          if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+            compter("cmd.louange.cercle");
+          }
         }}
         onKeyDown={(e) => {
           const pas = e.shiftKey ? 30 : 5;
@@ -71,6 +75,7 @@ export function CercleChromatique({ valeur, fond, onChange }: { valeur: string; 
           if (d === 0) return;
           e.preventDefault();
           e.stopPropagation();
+          if (!e.repeat) compter("cmd.louange.cercle");
           onChange(hslVersHex((h + d + 360) % 360, s, l));
         }}
       >
@@ -112,6 +117,8 @@ export function CercleChromatique({ valeur, fond, onChange }: { valeur: string; 
           className="h-11 min-w-0 flex-1 cursor-pointer accent-[hsl(var(--primary))]"
           onChange={(e) => onChange(hslVersHex(h, s, Number(e.target.value)))}
           onKeyDown={(e) => e.stopPropagation()}
+          onPointerUp={() => compter("cmd.louange.cercle")}
+          onKeyUp={(e) => { if (e.key.startsWith("Arrow") || ["Home", "End", "PageUp", "PageDown"].includes(e.key)) compter("cmd.louange.cercle"); }}
         />
       </label>
       <div className="flex items-center gap-3 text-xs text-muted-foreground" data-apercu-couleur>

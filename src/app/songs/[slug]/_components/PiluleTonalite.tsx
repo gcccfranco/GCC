@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { CustomizeState } from "@/components/customPanel/CustomizePanel";
 import { keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { TOUCHER_44 } from "@/lib/toucher44";
+import { compter } from "@/lib/usage";
 
 /** Transposition rapide de la barre du chant : − / liste des tonalités / +. */
 export function PiluleTonalite({ currentKey, originalKey, keySuffix, setCustomize }: {
@@ -20,12 +21,13 @@ export function PiluleTonalite({ currentKey, originalKey, keySuffix, setCustomiz
         variant="ghost"
         size="icon-lg"
         className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold`}
-        onClick={() =>
+        onClick={() => {
+          compter("cmd.chant.transposer");
           setCustomize((c) => {
             const s = c.semitones - 1;
             return { ...c, semitones: s, currentKey: getTransposedKey(originalKey, s) };
-          })
-        }
+          });
+        }}
       >
         −
       </Button>
@@ -43,12 +45,14 @@ export function PiluleTonalite({ currentKey, originalKey, keySuffix, setCustomiz
           <select
             aria-label={t("customize.panel.key")}
             value={currentKey}
-            onChange={(e) => setCustomize((c) => {
+            onChange={(e) => {
+              compter(e.target.value === originalKey ? "cmd.chant.toniqueOrigine" : "cmd.chant.transposer");
+              setCustomize((c) => {
               const key = e.target.value;
               const diff = semitonesTo(originalKey, key);
               return { ...c, semitones: diff, currentKey: key };
-              })
-            }
+              });
+            }}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           >
             {keyOptions(currentKey, originalKey).map((k) => (
@@ -63,12 +67,13 @@ export function PiluleTonalite({ currentKey, originalKey, keySuffix, setCustomiz
         variant="ghost"
         size="icon-lg"
         className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold`}
-        onClick={() =>
+        onClick={() => {
+          compter("cmd.chant.transposer");
           setCustomize((c) => {
             const s = c.semitones + 1;
             return { ...c, semitones: s, currentKey: getTransposedKey(originalKey, s) };
-          })
-        }
+          });
+        }}
       >
         +
       </Button>

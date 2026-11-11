@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { type AnnotationData, ANCIEN_RAPPEL, recaler, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
 import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
 import { setTailleAnnotee, getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
+import { compter } from "@/lib/usage";
 
 type Params = {
   user: { uid: string } | null;
@@ -86,6 +87,8 @@ export function useAnnotationsPage({
   // Chaque modification (trait fini, gomme, annuler) est sauvegardée aussitôt
   const handleAnnotationsChange = useCallback(
     (data: AnnotationData) => {
+      // Un trait de plus, enregistré (ni gomme, ni annulation) : une annotation.
+      if (user && currentPageKey && !horsLigne && data.strokes.length > (pageAnnotations?.strokes.length ?? 0)) compter("cmd.chant.annoter");
       setPageAnnotations(data);
       // L5 : au premier trait d'un chant, on retient la taille du texte à laquelle on annote.
       if (slugAnnote && data.strokes.length > 0 && getTailleAnnotee(user?.uid ?? null, setlistId, slugAnnote) === null) {
@@ -95,7 +98,7 @@ export function useAnnotationsPage({
         saveAnnotation(user.uid, setlistId, currentPageKey, serializeAnnotations(data));
       }
     },
-    [user, setlistId, currentPageKey, horsLigne, slugAnnote, fontScale],
+    [user, setlistId, currentPageKey, horsLigne, slugAnnote, fontScale, pageAnnotations],
   );
 
   return { annotationsIndispo, annotations, handleAnnotationsChange, ancienneCompositionTraits };

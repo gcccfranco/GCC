@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 import { DISPOSITIONS_AU_MENU, type Disposition } from "@/lib/dispositionPref";
 import { MiniatureDisposition } from "@/components/song/MiniatureDisposition";
+import { compter } from "@/lib/usage";
 
 // Choix de la disposition de la partition (docs/spec-mode-louange-forscore-2.md, lot DP) :
 // une miniature de la page et le nom dessous, l'entrée choisie marquée (cadre de 2 px
@@ -47,7 +48,7 @@ function ChoixMenu({ disposition, changeDisposition, langue }: Props) {
   return (
     <>
       <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{t("dispositions.titre")}</DropdownMenuLabel>
-      <DropdownMenuRadioGroup value={disposition} onValueChange={(v) => changeDisposition(v as Disposition)} className="grid w-[min(25rem,calc(100vw-34px))] grid-cols-5 gap-0.5 px-1" onKeyDown={flechesGaucheDroite}>
+      <DropdownMenuRadioGroup value={disposition} onValueChange={(v) => { compter("cmd.chant.disposition"); changeDisposition(v as Disposition); }} className="grid w-[min(25rem,calc(100vw-34px))] grid-cols-5 gap-0.5 px-1" onKeyDown={flechesGaucheDroite}>
         {DISPOSITIONS_AU_MENU.map((d) => (
           <DropdownMenuRadioItem
             key={d}
@@ -85,6 +86,7 @@ function ChoixPanneau({ disposition, changeDisposition, langue, couleur = ACCENT
         e.preventDefault();
         const n = DISPOSITIONS_AU_MENU.length;
         const i = (DISPOSITIONS_AU_MENU.indexOf(disposition) + d + n) % n;
+        compter("cmd.chant.disposition");
         changeDisposition(DISPOSITIONS_AU_MENU[i]);
         refs.current[i]?.focus();
       }}
@@ -99,7 +101,7 @@ function ChoixPanneau({ disposition, changeDisposition, langue, couleur = ACCENT
             role="radio"
             aria-checked={choisie}
             tabIndex={choisie ? 0 : -1}
-            onClick={() => changeDisposition(d)}
+            onClick={() => { if (!choisie) compter("cmd.chant.disposition"); changeDisposition(d); }}
             className="flex min-h-11 min-w-0 flex-col items-center gap-1 rounded-md px-0 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="block max-w-full rounded-md p-0.5" style={{ boxShadow: choisie ? `0 0 0 2px ${couleur}` : "0 0 0 1px transparent" }}>

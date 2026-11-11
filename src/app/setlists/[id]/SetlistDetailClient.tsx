@@ -44,6 +44,7 @@ import { usePreferencesAffichage } from "./_hooks/usePreferencesAffichage";
 import { useEntreeLouange } from "./_hooks/useEntreeLouange";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
+import { compter } from "@/lib/usage";
 import { Sommaire } from "./_components/Sommaire";
 import { PresentationLink } from "./_components/PresentationLink";
 import { exporterFreeShow } from "./_components/ExportFreeShow";
@@ -760,6 +761,7 @@ export function SetlistDetailClient() {
   /** Sommaire des deux volets : un chant (ou une de ses sections) touché vient
    *  sous l'en-tête et devient le chant lu ; l'adresse le suit, sans nouvelle entrée. */
   function allerA(n: number, uid?: string) {
+    compter("cmd.setlist.sommaire");
     enRoute.current = true;
     setCurrent(n);
     setUidsLus(uid ? [uid] : []);
@@ -853,6 +855,7 @@ export function SetlistDetailClient() {
         router.push("/setlists");
       } else {
         await mettreALaCorbeille(id, user.uid);
+        compter("cmd.setlist.corbeille.mettre");
         router.push(`/setlists?corbeille=${encodeURIComponent(id)}`);
       }
     } catch {
@@ -895,6 +898,7 @@ export function SetlistDetailClient() {
     if (privee) {
       try {
         await navigator.clipboard.writeText(url);
+        compter("cmd.setlist.partager");
         flashFeedback(t("setlists.detail.sharePrivateEquipe"));
       } catch { /* clipboard indisponible */ }
       return;
@@ -902,11 +906,13 @@ export function SetlistDetailClient() {
     if (navigator.share) {
       try {
         await navigator.share({ title: setlist.title, url });
+        compter("cmd.setlist.partager");
         return;
       } catch { return; /* partage annulé */ }
     }
     try {
       await navigator.clipboard.writeText(url);
+      compter("cmd.setlist.partager");
       flashFeedback(t("setlists.detail.linkCopied"));
     } catch { /* clipboard indisponible */ }
   }
@@ -925,6 +931,7 @@ export function SetlistDetailClient() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
+        compter("cmd.setlist.notifier");
         flashFeedback(
           t("setlists.detail.notifySent", {
             defaultValue: "Équipe prévenue ({{count}} notifications envoyées).",
@@ -1033,8 +1040,8 @@ export function SetlistDetailClient() {
     itemIndex: number,
     override: string | undefined,
     extra?: Partial<SetlistItem>
-  ) {
-    if (!setlist) return;
+  ): Promise<boolean> {
+    if (!setlist) return false;
     setSavingLine(true);
     try {
       let base = setlist;
@@ -1056,7 +1063,7 @@ export function SetlistDetailClient() {
                 defaultValue: "La setlist a été modifiée entre-temps — vérifie puis réessaie.",
               })
             );
-            return;
+            return false;
           }
           base = fresh;
         }
@@ -1079,8 +1086,10 @@ export function SetlistDetailClient() {
         await recordHistory(historyPassRef.current, { ...base, items }, (slug) => songsMap[slug]?.sections);
         setHistoryVersion((v) => v + 1);
       }
+      return true;
     } catch {
       flashFeedback(t("setlists.contentEdit.saveError", { defaultValue: "Échec de l'enregistrement — réessaie." }));
+      return false;
     } finally {
       setSavingLine(false);
     }
@@ -1088,8 +1097,8 @@ export function SetlistDetailClient() {
 
   /** Réécrit mon document de versions — jamais la setlist : ni relecture,
    *  ni historique. */
-  async function saveMine(items: Record<string, VersionItem>, choices: Record<string, string>) {
-    if (!user) return;
+  async function saveMine(items: Record<string, VersionItem>, choices: Record<string, string>): Promise<boolean> {
+    if (!user) return false;
     setSavingLine(true);
     try {
       const doc: SetlistVersions = {
@@ -1102,8 +1111,10 @@ export function SetlistDetailClient() {
       setVersions((v) => ({ ...v, [user.uid]: doc }));
       setEditTarget(null);
       setStructureTarget(null);
+      return true;
     } catch {
       flashFeedback(t("setlists.contentEdit.saveError", { defaultValue: "Échec de l'enregistrement — réessaie." }));
+      return false;
     } finally {
       setSavingLine(false);
     }
@@ -1111,7 +1122,7 @@ export function SetlistDetailClient() {
 
   /** Modifie ma version d'un chant (accords et paroles, structure, partage).
    *  Une version revenue à la présidence sur tout est retirée. */
-  async function persistMine(songSlug: string, patch: Partial<VersionItem>) {
+  async function persistMine(songSlug: string, patch: Partial<VersionItem>, cle: string | null = "shared" in patch ? "cmd.chant.partagerVersion" : "cmd.chant.maVersion") {
     if (!user) return;
     const prev = versions[user.uid];
     const items = { ...(prev?.items ?? {}) };
@@ -1120,7 +1131,7 @@ export function SetlistDetailClient() {
       delete items[songSlug];
     }
     else items[songSlug] = next;
-    await saveMine(items, prev?.choices ?? {});
+    if (await saveMine(items, prev?.choices ?? {})) compter(cle);
   }
 
   /** Retient la version choisie pour un chant (« presidence » ou l'uid de son auteur). */
@@ -1141,7 +1152,7 @@ export function SetlistDetailClient() {
       await persistMine(item.songSlug, { jianpuChords: next });
       return;
     }
-    await persistOverride(itemIndex, item.contentOverride ?? undefined, { jianpuChords: next });
+    if (await persistOverride(itemIndex, item.contentOverride ?? undefined, { jianpuChords: next })) compter("cmd.chant.adapter");
   }
 
   /** Applique un nouveau source complet : no-op si rien n'a changé, retrait
@@ -1166,7 +1177,7 @@ export function SetlistDetailClient() {
       return;
     }
     const original = contents[setlist.items[itemIndex].songSlug]?.source;
-    await persistOverride(itemIndex, next === original ? undefined : next, extra);
+    if (await persistOverride(itemIndex, next === original ? undefined : next, extra)) compter("cmd.chant.adapter");
   }
 
   /** Ligne d'une section répétée par la structure : duplique la section dans
@@ -1317,17 +1328,17 @@ export function SetlistDetailClient() {
         // Mes passages retouchés seuls disparaissent avec mon contenu.
         sectionOrigins: undefined,
         jianpuChords: undefined,
-      });
+      }, "cmd.chant.retablir");
       return;
     }
     // Les sections matérialisées disparaissent avec le contenu adapté : la
     // structure doit repointer vers les sections d'origine, sinon les
     // occurrences modifiées sortent de la setlist. Les retouches du scan
     // partent avec le reste : ce sont des accords adaptés comme les autres.
-    await persistOverride(itemIndex, undefined, {
+    if (await persistOverride(itemIndex, undefined, {
       ...revertSectionOrigins(setlist.items[itemIndex]),
       jianpuChords: {},
-    });
+    })) compter("cmd.chant.retablir");
   }
 
   if (loadingSetlist) {
@@ -1449,6 +1460,7 @@ export function SetlistDetailClient() {
       return false;
     }
     setChantsManquants(null);
+    compter("cmd.louange.ouvrir");
     setPerformanceMode(true);
     return true;
   }
@@ -1477,6 +1489,7 @@ export function SetlistDetailClient() {
       demanderPleinEcran();
     } catch { /* non supporté */ }
     setChantsManquants(null);
+    compter("cmd.louange.ouvrir");
     setPerformanceMode(true);
   }
   // Qui peut modifier — rend visible la logique de access.ts.
@@ -1517,7 +1530,7 @@ export function SetlistDetailClient() {
       onLien={() => setEditionLien(true)}
       canExporter={peutExporterFreeShow(user, profile, setlist)}
       exportPret={tousLesChantsCharges}
-      onExporter={() => exporterFreeShow(setlist, contents)}
+      onExporter={() => { compter("cmd.setlist.presentation"); exporterFreeShow(setlist, contents); }}
     />
   );
   const supprimer = <MenuSupprimer canDelete={canDelete} onSupprimer={() => setConfirmDelete(true)} />;
@@ -1568,7 +1581,7 @@ export function SetlistDetailClient() {
         onEditJianpu={handleEditJianpu}
         onRetryChant={rechargerUnChant}
         titres={Object.fromEntries(Object.entries(songsMap).map(([slug, e]) => [slug, e.title]))}
-        onIdees={accesHarmonie.peut ? (itemIndex, slug) => { setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
+        onIdees={accesHarmonie.peut ? (itemIndex, slug) => { compter("cmd.setlist.idees"); setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
       />
     </>
   );

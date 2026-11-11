@@ -17,6 +17,7 @@ import type { SongIndexEntry, Theme } from "@/types/song";
 import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
 import { BoutonStatistiques } from "@/components/songs/BoutonStatistiques";
 import { deuxVoletsMaintenant } from "@/hooks/useDeuxVolets";
+import { compter } from "@/lib/usage";
 
 interface SongListClientProps {
   /** Lus dans l'index (useSongsIndex) : vide tant qu'il n'est pas arrivé. */
@@ -333,7 +334,10 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
         <OngletsRail
           etiquette={t("songs.list.filterLanguage")}
           actif={langFilter}
-          choisir={(lang) => setLangFilter(lang as "all" | "fr" | "zh")}
+          choisir={(lang) => {
+            if (lang === "zh" && langFilter !== "zh") compter("cmd.chants.basculeZh");
+            setLangFilter(lang as "all" | "fr" | "zh");
+          }}
           onglets={[
             { id: "all", label: t("songs.list.allLanguages") },
             { id: "fr", label: "FR" },
@@ -430,6 +434,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
             <li key={song.slug} id={`song-li-${song.slug}`} className="group-row relative scroll-mt-[calc(var(--nav-h)+8px)]">
               <Link
                 href={`/songs/${song.slug}`}
+                onClick={() => { if (query.trim()) compter("cmd.chants.recherche"); }}
                 aria-current={ouvert ? "page" : undefined}
                 className={`-mx-2 flex min-h-[60px] items-center gap-3 rounded-xl px-2 py-2.5 transition-colors duration-150 ${
                   // Le chant ouvert à droite (deux volets, planche `Main`) : la ligne en encre.

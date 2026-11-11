@@ -45,6 +45,7 @@ import { clesDeMesServices, estDeMesServices, trierSetlists } from "@/lib/setlis
 import { EcranConnexionRequise, EcranProfilRequis } from "./_components/EcransAccesListe";
 import { SectionCorbeille } from "./_components/SectionCorbeille";
 import { ConfirmationSuppressionGroupee, ConfirmationSuppressionDefinitive } from "./_components/ConfirmationsSuppression";
+import { compter } from "@/lib/usage";
 
 // Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q4) : en grand, la liste à gauche et l'aperçu
 // de la setlist choisie à droite (`?apercu=<id>`, sans aperçu choisi la première de la liste,
@@ -290,6 +291,7 @@ export default function SetlistsPage() {
     setCoches(new Set(ko));
     const rates = cibles.filter((s) => ko.includes(s.id)).map((s) => `« ${s.title} »`);
     if (vers.ok.length) {
+      compter("cmd.setlist.corbeille.mettre");
       setEnCorbeille(vers.ok);
       setVersionCorbeille((v) => v + 1);
     }
@@ -312,6 +314,7 @@ export default function SetlistsPage() {
     const ids = enCorbeille;
     try {
       for (const id of ids) await restaurerSetlist(id);
+      compter("cmd.setlist.corbeille.restaurer");
     } catch {
       montrerMessage(t("setlists.corbeille.erreur"));
     }
@@ -322,6 +325,7 @@ export default function SetlistsPage() {
   async function restaurer(s: FSSetlist) {
     try {
       await restaurerSetlist(s.id);
+      compter("cmd.setlist.corbeille.restaurer");
       await rafraichir();
     } catch {
       montrerMessage(t("setlists.corbeille.erreur"));
@@ -332,6 +336,7 @@ export default function SetlistsPage() {
     setEnCours(true);
     try {
       await deleteSetlist(s.id);
+      compter("cmd.setlist.corbeille.supprimer");
       setVersionCorbeille((v) => v + 1);
     } catch {
       montrerMessage(t("setlists.corbeille.erreur"));

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { compter } from "@/lib/usage";
 
 interface RepereChant {
   /** Index de page (0-based) de la première page du chant. */
@@ -126,6 +127,7 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, pa
         e.stopPropagation();
         if (glisseRangee.current) {
           glisseRangee.current = false;
+          compter("cmd.louange.reperes");
           oublier(400);
         }
       }}
@@ -161,6 +163,7 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, pa
           aller(Number(e.target.value));
           oublier(1500);
         }}
+        onKeyUp={(e) => { if (e.key.startsWith("Arrow") || e.key === "Home" || e.key === "End") compter("cmd.louange.reperes"); }}
         onBlur={() => oublier(0)}
         onKeyDown={(e) => {
           // Pédales Bluetooth : PageUp / PageDown / espace tournent d'une page, comme hors du curseur.

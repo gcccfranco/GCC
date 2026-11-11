@@ -19,6 +19,7 @@ import { Pilules } from "@/components/layout/Onglets";
 import { FeuilleOuPanneau } from "@/components/stats/FeuilleOuPanneau";
 import type { FSSetlist } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
+import { compter } from "@/lib/usage";
 
 type ChoixPeriode = "3" | "12" | "debut";
 const PERIODES: ChoixPeriode[] = ["3", "12", "debut"];
@@ -78,7 +79,7 @@ export function StatistiquesDuChant({ slug }: { slug: string }) {
         type="button"
         data-testid="statistiques-chant"
         aria-haspopup="dialog"
-        onClick={(e) => { e.stopPropagation(); setOuvert(true); }}
+        onClick={(e) => { e.stopPropagation(); compter("cmd.chants.statsDuChant"); setOuvert(true); }}
         className="page-fade mt-2 -ml-1 flex min-h-8 max-w-full items-center gap-0.5 rounded-md px-1 text-left text-sm leading-snug text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring print:hidden [@media(pointer:coarse)]:min-h-11"
       >
         <span className="min-w-0">

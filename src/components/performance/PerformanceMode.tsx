@@ -54,6 +54,7 @@ import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } fr
 import { useAuth } from "@/lib/firebase/auth";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
+import { compter } from "@/lib/usage";
 
 /** Marque de la pastille cochée dans la palette de couleur : double anneau, le même pour les sept. */
 const PASTILLE_CHOISIE = "ring-2 ring-foreground ring-offset-2 ring-offset-background";
@@ -521,7 +522,7 @@ export function PerformanceMode({
   // Métronome visuel (L4) : réglage par appareil, inactif par défaut ; tempo réglé par chant
   // relu du stockage à chaque rendu (`tempoTick` relance le rendu après une écriture).
   const [metronome, setMetronomeState] = useState(() => getMetronomePref());
-  const setMetronome = (v: boolean) => { setMetronomeState(v); setMetronomePref(v); };
+  const setMetronome = (v: boolean) => { compter("cmd.louange.metronome"); setMetronomeState(v); setMetronomePref(v); };
 
   // ── Thème scène (indépendant du thème du site, mémorisé) ──
   const { stageTheme, setTheme } = useThemeScene();
@@ -547,6 +548,11 @@ export function PerformanceMode({
     setRole(uid, null);
   }, [uid]);
 
+  // Compté dans les gestes qui choisissent un rôle, pas dans applyRolePreset (que « Annuler » rappelle aussi).
+  const compterRole = (id: RolePreset) => {
+    compter("cmd.chant.jeJoue");
+    if (id === "batteur") compter("cmd.louange.feuilleDeRoute");
+  };
   const applyRolePreset = useCallback((id: RolePreset) => {
     const p = ROLE_PRESETS[id];
     setShowChords(p.chords);
@@ -585,6 +591,7 @@ export function PerformanceMode({
     if (!rolePlanning) return;
     setAvantPlanning({ role: rolePreset, affichage });
     applyRolePreset(rolePlanning);
+    compterRole(rolePlanning);
     setEtatPastille("accepte");
   };
   const annulerRolePlanning = () => {
@@ -612,6 +619,7 @@ export function PerformanceMode({
   const capoActive = rolePreset === "guitariste";
 
   const setCapo = useCallback((slug: string, frets: number) => {
+    compter("cmd.chant.capo");
     setCapos((prev) => {
       const next = { ...prev };
       if (frets <= 0) delete next[slug];
@@ -635,13 +643,14 @@ export function PerformanceMode({
   // vue ossature rend paroles et accords : sinon le chemin d'O7 la
   // ramènerait aussitôt.
   const changeAffichage = useCallback((v: PartitionLayout) => {
+    if (v !== affichageVu) compter(`cmd.louange.affichage.${v}`);
     if (v !== "structure" && structureMode) {
       toggleHideLyrics(false);
       setShowChords(true);
     }
     clearRolePreset();
     onAffichageChange(v);
-  }, [structureMode, toggleHideLyrics, clearRolePreset, onAffichageChange]);
+  }, [structureMode, toggleHideLyrics, clearRolePreset, onAffichageChange, affichageVu]);
   // « Accords » et « Masquer les paroles » portent sur le corps : les toucher
   // depuis Structure seule ramène l'ordre joué, comme le faisait « Accords »
   // pour le batteur avant l'Affichage.
@@ -678,6 +687,7 @@ export function PerformanceMode({
   const apercuActif = apercuPlace && !demiOn;
   const apercuEteint = apercuPlace && demiOn;
   const basculerDemi = () => {
+    compter("cmd.louange.demiPage");
     const next = !demiOn;
     setDemiOn(next);
     setDemiPagePref(next);
@@ -1407,6 +1417,7 @@ export function PerformanceMode({
   const cleModifiable = !!entreeSlug && !!cleJouee && !!cleBase && noteToIndex(cleJouee) !== -1 && noteToIndex(cleBase) !== -1;
   const decalerCle = (demiTons: number) => {
     if (!cleModifiable || !entreeSlug) return;
+    compter("cmd.chant.transposer");
     const nouvelle = getTransposedKey(cleJouee!, demiTons);
     if (noteToIndex(nouvelle) === noteToIndex(cleBase!)) resetPersonalKey(entreeSlug);
     else choisirCle(entreeSlug, nouvelle);
@@ -1479,7 +1490,7 @@ export function PerformanceMode({
         data-suivant={cachee ? undefined : ""}
         aria-hidden={cachee || undefined}
         tabIndex={cachee ? -1 : undefined}
-        onClick={() => goToPage(nextSongPage, pages.length)}
+        onClick={() => { compter("cmd.louange.chantSuivant"); goToPage(nextSongPage, pages.length); }}
         onPointerDown={(e) => e.stopPropagation()}
         onPointerUp={(e) => e.stopPropagation()}
         className={`flex min-h-11 items-center gap-1.5 rounded-full border px-4 py-2 text-sm text-muted-foreground ${classes}`}
@@ -1985,7 +1996,7 @@ export function PerformanceMode({
                     aria-pressed={actif}
                     onClick={() => {
                       if (actif) clearRolePreset();
-                      else applyRolePreset(id);
+                      else { applyRolePreset(id); compterRole(id); }
                       setAccueilRole(false);
                       if (etatPastille === "propose") setEtatPastille("fini"); // choisi à la main : plus de proposition
                     }}
@@ -2150,7 +2161,7 @@ export function PerformanceMode({
             <SettingRow label={t("performance.theme")}>
               <div className="flex rounded-lg border border-border overflow-hidden">
                 <button
-                  onClick={() => setTheme("light")}
+                  onClick={() => { compter("cmd.louange.themeScene"); setTheme("light"); }}
                   aria-pressed={stageTheme === "light"}
                   className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
                     stageTheme === "light" ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
@@ -2159,7 +2170,7 @@ export function PerformanceMode({
                   <Sun className="h-3.5 w-3.5" /> {t("performance.light")}
                 </button>
                 <button
-                  onClick={() => setTheme("dark")}
+                  onClick={() => { compter("cmd.louange.themeScene"); setTheme("dark"); }}
                   aria-pressed={stageTheme === "dark"}
                   className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold border-l border-border transition-colors ${
                     stageTheme === "dark" ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"

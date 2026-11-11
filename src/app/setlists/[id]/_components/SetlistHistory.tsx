@@ -12,6 +12,7 @@ import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { SECTION_PALETTE_KEY } from "@/components/song/SongView";
 import { sectionColorKind } from "@/lib/sectionPalette";
 import type { SongIndexEntry } from "@/types/song";
+import { compter } from "@/lib/usage";
 
 // Historique des modifications (docs/spec-setlist.md, lot 2) : une ligne sous
 // le titre de la setlist, qui ouvre une feuille — la dernière entrée, puis les
@@ -367,7 +368,7 @@ export function SetlistHistory({ setlistId, songsMap }: { setlistId: string; son
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => { compter("cmd.setlist.historique"); setOpen(true); }}
         className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground print:hidden"
       >
         <History className="h-3.5 w-3.5" aria-hidden />
