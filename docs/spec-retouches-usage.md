@@ -78,11 +78,11 @@ toucher le bas d'une ligne de tâche ouvre la tâche.
 
 Test : `tests/retouches-usage-t3.spec.ts` ; zones mesurées ; au téléphone, toucher entre deux cases ouvre la bonne.
 
-### T4 — Menus déroulants (2 fichiers) — attend Q1
+### T4 — Menus déroulants (2 fichiers) — Q1 : option (a)
 
 | Constat | Fichier:ligne | Changement |
 | --- | --- | --- |
-| dimanche-8, chants-3, equipes-taches-app-8, bo-equipes-14 | `src/components/ui/menu.tsx:91` | Le plafond de 294 px au toucher (320 px à la souris), posé au lot CD T3b, coupe les listes longues (catégories, Thème, Service, « Aller à une équipe ») alors que l'écran est libre dessous. Selon Q1. |
+| dimanche-8, chants-3, equipes-taches-app-8, bo-equipes-14 | `src/components/ui/menu.tsx:91` | Le plafond de 294 px au toucher (320 px à la souris), posé au lot CD T3b, coupe les listes longues (catégories, Thème, Service, « Aller à une équipe ») alors que l'écran est libre dessous. Décision Q1 (a) : retirer les deux plafonds fixes ; le menu grandit jusqu'à `--radix-dropdown-menu-content-available-height` moins 8 px, au toucher comme à la souris. |
 | bo-messages-planning-5 | `src/components/layout/MenuActions.tsx:78-79` | Le menu « ⋯ » du dimanche ne sort plus de l'écran : `max-w-[min(20rem,calc(100vw-1rem))]` et `collisionPadding` de 8 px. |
 
 Test : `tests/retouches-usage-t4.spec.ts` ; menu « Tous les services » ouvert au téléphone et en tablette : la rubrique
@@ -133,7 +133,9 @@ tonalité conservée (un FR, un ZH) ; « Où l'entendre » ouvre le chant ; filt
 Test : `tests/retouches-usage-t7.spec.ts` ; chaque mention apparaît une fois ; les deux nombres de noms à relier sont
 égaux (données simulées) ; au questionnaire, depuis le bas de l'étape, « Suivant » fait voir la question manquante.
 
-## Questions à trancher par Timothée
+## Questions tranchées par Timothée (11/11/2026 : « go pour le lot 1, Q1 option a »)
+
+**Décision Q1 : option (a)**, le plafond fixe disparaît pour tous les menus. Q2 : ordre recommandé.
 
 - **Q1 — Hauteur des menus (T4).** Le plafond de 294 px au toucher a été posé au lot CD (T3b, 05/11/2026). (a)
   *Recommandé* : le menu grandit jusqu'à la place disponible, moins 8 px, sur tous les menus (`menu.tsx:91`) ; (b)
@@ -170,3 +172,5 @@ Vrais mais hors lot 1, parce qu'ils déplacent, réorganisent ou demandent un de
 
 - 11/11/2026 : spec écrite (46 constats relus dans le code, sept tranches). En attente du go de Timothée pour le lot 1
   et de sa réponse à Q1. Rien n'est codé.
+- 11/11/2026 : **go de Timothée pour le lot 1**, Q1 option (a). Codage confié à une session orchestratrice neuve
+  (« AP · Lot 1 retouches d'usage »), même branche, une tranche à la fois, une ligne datée ici par tranche.
