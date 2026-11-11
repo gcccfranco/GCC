@@ -7,6 +7,7 @@
 // « Voir les n » ; l'ancienne administration garde la carte d'avant.
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { getRegistrationOpen, setRegistrationOpen } from "@/lib/firebase/users";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -56,6 +57,7 @@ export function InscriptionsComptes({
             onCheckedChange={() => void toggleRegistration()}
             // Un nom fixe : l'interrupteur annonce lui-même son état (activé, désactivé).
             aria-label={t("admin.inscr.ouvertes")}
+            className={TOUCHER_44}
           />
           <div className="min-w-0 flex-1">
             <p className="text-base font-semibold text-foreground">

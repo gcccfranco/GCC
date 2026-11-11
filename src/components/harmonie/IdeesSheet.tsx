@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { ChevronDown } from "lucide-react";
 import type { TFunction } from "i18next";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -321,7 +322,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                   <button
                     type="button"
                     onClick={() => ecarter(s)}
-                    className="ml-auto text-sm text-muted-foreground underline underline-offset-4"
+                    className={`${TOUCHER_44} ml-auto text-sm text-muted-foreground underline underline-offset-4`}
                   >
                     {t("harmonie.neMarchePas")}
                   </button>

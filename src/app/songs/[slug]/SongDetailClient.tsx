@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DISPOSITION_AVANT_LECTURE, getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
-import { TOUCHER_44 } from "@/lib/toucher44";
+import { TOUCHER_44, TOUCHER_RANGEE } from "@/lib/toucher44";
 import { PiluleTonalite } from "./_components/PiluleTonalite";
 import { ActionsChant } from "./_components/ActionsChant";
 import { MenuChant } from "./_components/MenuChant";
@@ -498,7 +498,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
                           e.stopPropagation();
                           choisirScore(on);
                         }}
-                        className={`h-7 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                        className={`${TOUCHER_RANGEE} h-7 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                           showScore === on ? "text-background" : "text-muted-foreground hover:text-foreground"
                         }`}
                         style={showScore === on ? { backgroundColor: "hsl(var(--jianpu-encre))" } : undefined}

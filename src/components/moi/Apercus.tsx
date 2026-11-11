@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { ChevronRight, Minus } from "lucide-react";
 import { Tile } from "@/components/ui/tile";
 import { adresseDeLaLigne } from "@/components/taches/SectionTaches";
@@ -43,7 +44,7 @@ export function Apercu({ titre, lien, chargement = false, children }: { titre: s
           <Link
             href={lien.href}
             aria-label={`${titre} · ${lien.label}`}
-            className="-mr-1 inline-flex shrink-0 items-center gap-0.5 rounded-md px-1 text-sm font-semibold text-foreground transition-colors hover:text-muted-foreground"
+            className={`${TOUCHER_44} -mr-1 inline-flex shrink-0 items-center gap-0.5 rounded-md px-1 text-sm font-semibold text-foreground transition-colors hover:text-muted-foreground`}
           >
             {lien.label}
             <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.4} aria-hidden />

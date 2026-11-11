@@ -18,6 +18,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { Coffee, Pencil, Trash2 } from "lucide-react"
 import { MenuActions } from "@/components/layout/MenuActions"
@@ -208,7 +209,7 @@ export function PetitDejCarte({ etat, annee, tri }: {
 
   const champ = (label: string) => <ChampDeSaisie etat={etat} label={label} />
 
-  const bouton = "h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] disabled:opacity-60"
+  const bouton = `${TOUCHER_44} h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] disabled:opacity-60`
 
   function laLigne(l: LignePetitDej): ReactNode {
     if (saisie?.id === l.id) return <div key={l.id} className="flex min-h-9 items-center">{champ(t("planning.petitDej.modifier"))}</div>

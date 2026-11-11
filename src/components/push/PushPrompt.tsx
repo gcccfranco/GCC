@@ -78,7 +78,7 @@ export function PushPrompt({ surGris }: { surGris?: boolean } = {}) {
       <button
         onClick={dismiss}
         aria-label={t("signalement.fermer")}
-        className="absolute right-2 top-2 text-muted-foreground hover:text-foreground [@media(pointer:coarse)]:after:absolute [@media(pointer:coarse)]:after:-inset-3.5 [@media(pointer:coarse)]:after:content-['']"
+        className="absolute right-2 top-2 text-muted-foreground hover:text-foreground after:absolute after:-inset-1 after:content-[''] [@media(pointer:coarse)]:after:absolute [@media(pointer:coarse)]:after:-inset-3.5 [@media(pointer:coarse)]:after:content-['']"
       >
         <X className="h-4 w-4" />
       </button>

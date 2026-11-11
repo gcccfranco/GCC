@@ -174,3 +174,11 @@ Vrais mais hors lot 1, parce qu'ils déplacent, réorganisent ou demandent un de
   et de sa réponse à Q1. Rien n'est codé.
 - 11/11/2026 : **go de Timothée pour le lot 1**, Q1 option (a). Codage confié à une session orchestratrice neuve
   (« AP · Lot 1 retouches d'usage »), même branche, une tranche à la fois, une ligne datée ici par tranche.
+- 11/11/2026 : **T1 faite** (14 fichiers + `tests/retouches-usage-t1.spec.ts`, 62 passés sur trois appareils, tsc et
+  lint propres). Non relus ajoutés (tous sous 44 px) : « Mes dates », « Je m'inscris » du petit déj, « Comment ça
+  marche ? », étoiles du questionnaire, interrupteur des inscriptions. Écarts : bascule 简谱 / Paroles en
+  `TOUCHER_RANGEE` (`TOUCHER_SEGMENT` ne donne que 36 px au téléphone) ; croix du prénom à `-inset-[6px]` (32 px de
+  dessin, pas 34). Limites : aucun chant FR n'a de scan, la bascule n'est mesurée que sur un chant ZH ; plusieurs
+  zones ne sont vérifiées que par les classes du source ; pastilles du Sommaire : quand elles passent à la ligne, les
+  zones de deux rangées se recouvrent en hauteur (le toucher va à la rangée du dessous) ; bouton « Voir » des
+  inscriptions (36 px) laissé, hors consigne.

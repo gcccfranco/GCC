@@ -7,6 +7,7 @@
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/firebase/auth";
+import { TOUCHER_44 } from "@/lib/toucher44";
 
 export function GuideLien({ section }: { section: string }) {
   const { t } = useTranslation();
@@ -14,7 +15,7 @@ export function GuideLien({ section }: { section: string }) {
   if (!user) return null;
   return (
     <p className="pt-2">
-      <Link href={`/guide#${section}`} className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
+      <Link href={`/guide#${section}`} className={`${TOUCHER_44} text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground`}>
         {t("guide.commentCaMarche")}
       </Link>
     </p>

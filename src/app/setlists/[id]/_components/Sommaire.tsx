@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
+import { TOUCHER_PILULE } from "@/lib/toucher44";
 import { Check, Copy } from "lucide-react";
 import type { SetlistItem } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
@@ -96,7 +97,7 @@ export function Sommaire({
                       {titre}
                     </button>
                     {etapes.length > 0 && (
-                      <div className="relative mt-1.5 flex flex-wrap gap-1">
+                      <div className="relative mt-1.5 flex flex-wrap gap-1.5">
                         {etapes.map((s, i) => {
                           const ici = lu && uidsLus.includes(s.uid);
                           return (
@@ -106,7 +107,7 @@ export function Sommaire({
                               data-pastille
                               aria-current={ici ? "true" : undefined}
                               onClick={() => onGo(item.position, s.uid)}
-                              className={`h-[18px] min-w-[18px] rounded-full px-1.5 text-xs font-semibold leading-[18px] transition-colors ${
+                              className={`${TOUCHER_PILULE} h-[18px] min-w-[18px] rounded-full px-1.5 text-xs font-semibold leading-[18px] transition-colors ${
                                 ici
                                   ? "bg-background text-foreground"
                                   : lu

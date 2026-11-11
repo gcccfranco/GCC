@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, MessageSquareHeart, Star } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import { getMySurveyResponse, saveSurveyResponse } from "@/lib/firebase/survey";
@@ -68,7 +69,7 @@ function QuestionField({
                   type="button"
                   onClick={() => onChange(n)}
                   aria-label={`${n}/${RATING_MAX}`}
-                  className="h-10 w-10 rounded-lg border border-transparent bg-secondary flex items-center justify-center transition-colors hover:border-muted-foreground/50"
+                  className={`${TOUCHER_44} h-10 w-10 rounded-lg border border-transparent bg-secondary flex items-center justify-center transition-colors hover:border-muted-foreground/50`}
                 >
                   <Star
                     className={`h-[18px] w-[18px] ${
@@ -110,7 +111,7 @@ function QuestionField({
                   );
                 }}
                 aria-pressed={checked}
-                className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors duration-150 ${
+                className={`${TOUCHER_PILULE} inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors duration-150 ${
                   checked
                     ? "bg-foreground text-background"
                     : "bg-card text-foreground/80 ring-1 ring-inset ring-border hover:text-foreground"

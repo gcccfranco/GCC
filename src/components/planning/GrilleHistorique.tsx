@@ -2,6 +2,7 @@
 
 import { History } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { TOUCHER_44 } from "@/lib/toucher44";
 import type { EntreeGrille } from "@/lib/firebase/planningHistorique"
 import { phraseHistorique } from "@/lib/planning/grilleAffichage"
 import type { DefinitionGrille } from "@/lib/planning/grilles"
@@ -25,7 +26,7 @@ export function GrilleHistorique({
       <button
         onClick={onBascule}
         aria-expanded={ouvert}
-        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+        className={`${TOUCHER_44} inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground`}
       >
         <History className="h-3.5 w-3.5" aria-hidden />
         {t("planning.grille.historique")}

@@ -22,6 +22,7 @@ import {
   type LastPhraseTarget,
 } from "@/components/setlists/SetlistFormRows";
 import type { SectionSummary, SongIndexEntry } from "@/types/song";
+import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44";
 
 // Réglages d'un chant dans le volet de l'éditeur (lot U5 bis, T3, planche
 // `creer-piste2-ordinateur`) : tonalités en boutons, structure en pastilles,
@@ -105,7 +106,7 @@ export function Tonalites({
             data-origine={k === song.originalKey ? "" : undefined}
             onClick={() => choisir(k)}
             onKeyDown={(e) => onKeyDown(e, i)}
-            className="group flex w-10 flex-col items-center gap-1 rounded-lg focus-visible:outline-none"
+            className={`${TOUCHER_44} group flex w-10 flex-col items-center gap-1 rounded-lg focus-visible:outline-none`}
           >
             <span
               className={`flex h-9 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors group-focus-visible:ring-2 group-focus-visible:ring-ring ${
@@ -286,7 +287,7 @@ export function StructurePastilles({
             key={s.id}
             type="button"
             onClick={() => onChange([...sectionItems, nouvelleEtape(s.id, s.name)])}
-            className="flex h-8 items-center gap-1 rounded-full border border-border px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            className={`${TOUCHER_44} flex h-8 items-center gap-1 rounded-full border border-border px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted`}
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {formatSectionName(s, t)}
@@ -296,7 +297,7 @@ export function StructurePastilles({
           <button
             type="button"
             onClick={() => setDpOuverte(true)}
-            className="flex h-8 items-center gap-1 rounded-full border border-dashed border-border px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            className={`${TOUCHER_44} flex h-8 items-center gap-1 rounded-full border border-dashed border-border px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted`}
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {t("setlists.form.lastPhrase.add")}
@@ -346,7 +347,7 @@ function BoutonChamp({
       title={title}
       aria-expanded={ouvert}
       onClick={onClick}
-      className={`flex h-[26px] max-w-[14rem] items-center gap-1 rounded-md px-2 text-xs font-medium transition-colors ${
+      className={`${TOUCHER_PILULE} flex h-[26px] max-w-[14rem] items-center gap-1 rounded-md px-2 text-xs font-medium transition-colors ${
         rempli ? filled : "text-muted-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:text-foreground hover:bg-muted"
       } ${ouvert ? ring : ""}`}
     >
