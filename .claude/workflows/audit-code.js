@@ -13,7 +13,7 @@ if (!COMMIT) throw new Error('args attendus : { commit, build? }')
 const CONTEXTE = `Dépôt /home/user/GCC (Next.js 16, App Router, TypeScript, Firebase Auth + Firestore en REST, Vercel), branche ui/apple-design, commit audité ${COMMIT}. Environ 83 000 lignes dans src/.
 RÈGLES STRICTES :
 - Lecture seule : ne modifie AUCUN fichier, aucun état git (pas de checkout, stash, commit, pull). Pas de serveur, pas de Playwright, pas de npm install (d'autres tests peuvent tourner sur les ports 3100, 3101, 3300).
-- Cherche par commande : \`graphify query "<question>"\`, \`git grep -n\`, \`sed -n 'a,bp'\`. Garde le contexte court : n'ouvre que les passages utiles.
+- Cherche par commande : \`graphify explain "<Symbole>"\` pour un nom de fonction ou de composant, \`git grep -ln\` puis \`git grep -n\` pour le reste, \`sed -n 'a,bp'\`. Garde le contexte court : n'ouvre que les passages utiles.
 - Chaque constat est PROUVÉ : chemin:ligne lu dans le fichier lui-même, citation courte. Rien de déduit d'un nom de fichier. Pas de spéculation : si tu n'as pas pu établir un point, ne le rends pas.
 - Choix assumés, à NE PAS signaler : les règles Firestore autorisent read: if signedIn() sur toutes les setlists et tous les profils (filtrage isPrivate côté client seulement) ; Firestore en REST (pas de SDK WebChannel) ; WebKit écarté des tests ; firestore.rules publié à la main.
 - Zones gelées (docs/audit-ui-apple-design.md § 2 « Restent gelés ») : couleurs de serviceColors.ts, logo, couleurs des accords/简谱/sections (--chord-color, --jianpu-color, --sec-*), l'intérieur du calque 简谱 (JianpuSheet, calques certifiés), l'export PDF. Un défaut DANS ces zones se rend avec gele: true.

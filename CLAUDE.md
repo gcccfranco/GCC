@@ -135,11 +135,13 @@ cinq étiquettes de triage par défaut (`docs/agents/triage-labels.md`) ; un seu
 à la racine, créés au besoin (`docs/agents/domain.md`).
 
 ## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+Graphe du code dans `graphify-out/` (non versionné ; reconstruit au démarrage de chaque session cloud par
+`scripts/graphify-cloud.sh`). La commande la moins chère par question (mesuré le 11/11/2026, validé par Timothée) :
+- **Un symbole** (fonction, composant, type), qui l'importe et ce qu'il appelle : `graphify explain "<Symbole>"`
+  (≈ 1 000 caractères, trois fois moins que `git grep -n` ; fichiers nommés sans dossier). Lien entre deux
+  symboles : `graphify path "<A>" "<B>"`.
+- **Un chemin, un texte, un libellé, un mot sans symbole connu** : `git grep -ln`, puis `git grep -n` ou
+  `sed -n 'a,bp'` sur les fichiers retenus.
+- **Vue d'ensemble** : `grep -n '^## ' graphify-out/GRAPH_REPORT.md` puis la plage (le rapport entier : 237 000
+  caractères). `graphify query` (≈ 6 000 caractères de voisinage par question) : en dernier recours.
+- Après une modification de code : `graphify update .` (35 s, sans clé d'API).
