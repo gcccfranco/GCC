@@ -212,4 +212,25 @@ sur « args attendus » ; `/tranche` et `/planche` passent par une petite passe 
 tous, `StructuredOutput` y remplace `SubagentHandback`). Le préchargement par `skills:` tient sans l'outil `Skill`
 (`executant`, `maquettiste`, `directeur-artistique`). Reste : les agents de `/audit-code` (sans `agentType`), non mesurés.
 
+**Vérifié le 11/11/2026 (consignes finales)**, dans une session neuve qui a chargé `tranche.js` et les trois agents
+dans leur version finale. Rien n'a été corrigé.
+- Garde-fou : `fd0d1c7` est ancêtre de `HEAD`. Passe.
+- Les quatre workflows (`tranche`, `planche`, `verifier-constats`, `audit-code`) lancés sans `args` s'arrêtent sur
+  « args attendus », avec 0 agent lancé chacun. Passe.
+- `executant` : la consigne contient « un appelant, un test ou une fixture hors de ta liste que ton changement
+  casse… » et le skill `ponytail` est dans son contexte (titre « # Ponytail »). Passe.
+- `relecteur` : la consigne contient « liste quand même chaque `shortcut:` ajouté par le diff… ». Passe.
+- `maquettiste` : point 7 sur la planche cotée, « le skill gagne sur les étapes 2 à 4 ». Passe.
+- Étape « Conseil » de `/tranche` : `grep` trouve `.claude/skills/<nom>/SKILL.md` et « Aucune correction ne désactive »
+  (`tranche.js:102`) ; le passage à vide prouve que le fichier se charge. Passe.
+- Liste des skills de la session : `performance-optimization` absent ; `ponytail`, `security-and-hardening` et
+  `impeccable` présents ; 22 skills du projet comptés. Passe.
+- Agent de `/audit-code` (workflow d'un seul agent, sans `agentType`, question « 2+2 », aucun outil lancé), mesuré par
+  `scripts/mesure-contexte-agents.py` : **73 796 jetons d'entrée**, 62 outils dont 46 MCP (215 000 caractères de
+  définitions), 24 800 caractères de liste de skills, 13 000 d'outils différés, 19 300 de `CLAUDE.md`, consigne
+  2 900. Un agent déclaré par `tools:` pèse 16 000 à 17 000 jetons (`executant` 16 826, `relecteur` 16 044 dans la
+  même session) : environ 57 000 de moins par agent, soit ≈ 3,4 M de jetons d'entrée sur les ~60 agents d'un audit
+  (davantage avec les tours suivants ; en partie lus depuis le cache, donc moins cher que le tarif plein). Estimation, non
+  mesurée sur un audit réel ; `audit-code.js` non modifié.
+
 **Règle** : tout nouvel agent se déclare par une liste `tools:`, jamais par `disallowedTools`.
