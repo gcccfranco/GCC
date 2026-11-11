@@ -1,7 +1,6 @@
 # Spec : Harmonie et Accords (chantier 4 de la demande AP)
 
-Statut : **planche publiée, en attente des réponses de Timothée.** Pas de spec de code avant ses réponses, pas de code
-sans go. Cadrage : `docs/spec-pupitre-musicien.md` (§ Le site de référence, § Chantiers proposés, réponse 7).
+Statut : **recommandations acceptées par Timothée (« Go », 11/11/2026) ; spec écrite, chaque lot attend son go de code.** Cadrage : `docs/spec-pupitre-musicien.md` (§ Le site de référence, § Chantiers proposés, réponse 7).
 Planche : `docs/planches/planche-harmonie-accords.html`, artefact privé « Planche — Harmonie et Accords ».
 
 ## Demande (Timothée, 11/11/2026)
@@ -45,10 +44,45 @@ la planche : /accords dessinée trois fois presque pareil, tablette paysage non 
 5. Écoute : synthèse Web Audio sur demande (fiche, /accords), jamais en mode louange. → oui, tranche optionnelle.
 6. Exercices d'oreille : → pas dans ce lot.
 
+## Décisions de Timothée (11/11/2026, « Go » sur les six recommandations)
+
+Ce « Go » valide les décisions et la spec ; il ne vaut pas go de code (un go par lot, après la spec).
+
+1. Piste **A, le cahier des boucles**, avec « Et ensuite ? » de B en texte (sans roue) et le pied précédente / suivante
+   de C.
+2. Clavier d'accord **fixe à trois octaves** : 21 touches blanches, octave grave grisée pour la main gauche, 16 px par
+   touche au téléphone, 24 ailleurs ; la largeur ne dépend plus de l'accord.
+3. **Chiffres sur les partitions** : bascule « Lettres / Chiffres » (字母 / 数字) à côté de la tonalité, mémorisée par
+   musicien ; mêmes positions, `--chord-color` ; basse en degré (A/C# en D = 5/7) ; rien sur le calque 简谱 ; PDF en
+   lettres.
+4. **Idées d'harmonie en mode louange** : oui, désactivées par défaut, activables par musicien ; un point
+   `--chord-color` en marge, au plus un par section ; la touche ouvre sans animation une bande d'une ligne
+   « 4 5 → 2m7 5 · G A → Em7 A », la touche suivante la referme ; aucun « Pourquoi » sur scène.
+5. **Écoute** : synthèse Web Audio sur demande (fiche, /accords), jamais en lecture automatique ni en mode louange ;
+   lot optionnel.
+6. **Exercices d'oreille** : pas dans ce chantier.
+
+## Lots (chacun attend son go)
+
+| Lot | Contenu | Ampleur | Dépend de |
+| --- | --- | --- | --- |
+| **H1** | /accords : clavier fixe (`Diagrammes.tsx` `ClavierMains`, `PanneauAccord.tsx:241`), variantes « Les plus joués » au-dessus du diagramme au téléphone, « ‹ Chants » montré seulement si l'on vient d'un chant (`PageAccords.tsx:48`, `:67`) | retouche, 3 fichiers | rien |
+| **H2** | Données : `scripts/build-harmonie.ts` sort les boucles de quatre degrés les plus fréquentes (rotations fondues), leur compteur et leurs chants (section, tonalité), et le rattachement fiche → degré de la boucle ; afficher seulement les boucles mesurées | tranche | rien |
+| **H3** | Catalogue en boucles : six chiffres, liste des boucles, page d'une boucle (idées par chiffre, chants en liens), « Toutes les idées » en familles ; ambiances dans une feuille ; deux volets jusqu'à 1 440 px, fiche ≥ 640 px | 2 tranches | H2 |
+| **H4** | Fiche : « Avant → après » en chiffres et en lettres, « Où l'entendre » en liens, « Et ensuite ? » (notes communes, texte), pied précédente / suivante, retour par l'historique | tranche | H2 |
+| **H5** | Chiffres sur la page chant et en mode louange (bascule, mémoire par musicien) | tranche | planche pupitre (AO en ligne) pour la place de la bascule en mode louange |
+| **H6** | Idées en mode louange (point en marge, bande) | tranche | H2, état AO |
+| **H7** | Écoute (Web Audio) | tranche, optionnelle | H4 |
+| **H8** | Fiches manquantes (liste ci-dessous), statut « à valider » | contenu | H2 pour les fiches de boucles |
+
+Avant chaque lot : vérifier ses constats d'usage (musiciens-2, 5, 7, 8, 10, 11, 12) sur la tête de branche. Libellés
+nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
+
 ## Avancement
 
 - 11/11/2026 : captures de l'existant (téléphone, tablette, ordinateur), un `/planche` (3 agents), retouches à la
-  relecture, artefact publié, questions posées. Réponses : —
+  relecture, artefact publié, questions posées.
+- 11/11/2026 : « Go » de Timothée sur les six recommandations ; décisions et lots écrits. Prochain : go pour H1 ?
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
