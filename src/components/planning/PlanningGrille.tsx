@@ -36,7 +36,7 @@ import { TOUCHER_44 } from "@/lib/toucher44"
 import { GrilleEnTete } from "./GrilleEnTete"
 import { GrilleCelluleDate } from "./GrilleCelluleDate"
 import { GrilleHistorique } from "./GrilleHistorique"
-import { CarteDimanche, LigneDeCarte } from "./GrilleCarte"
+import { CarteDimanche, LigneDeCarte, ZONE_CASE, ouvrirLaCase } from "./GrilleCarte"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -942,7 +942,8 @@ export function PlanningGrille({
                         data-changement={aChange(date, c.cle)}
                         onMouseDownCapture={(e) => { if (actifClavier && e.shiftKey) e.preventDefault() }}
                         onClickCapture={(e) => surCase(e, date, c.cle)}
-                        className={`relative px-2.5 py-2 text-foreground ${j === colonnes.length - 1 ? "pr-3" : ""} ${aChange(date, c.cle) ? "bg-amber-100/70 dark:bg-amber-500/15" : ""} ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
+                        onClick={ouvrirLaCase}
+                        className={`relative ${ZONE_CASE} px-2.5 py-2 text-foreground ${j === colonnes.length - 1 ? "pr-3" : ""} ${aChange(date, c.cle) ? "bg-amber-100/70 dark:bg-amber-500/15" : ""} ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
                         style={styleCase(plage, couleur, dansGeste(date, c.cle), rangDate(date), j)}
                       >
                         {caseOuApercu(l, c)}

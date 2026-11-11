@@ -188,3 +188,11 @@ Vrais mais hors lot 1, parce qu'ils déplacent, réorganisent ou demandent un de
   voisine : zone de 44 px de haut, 34 de large). Ligne de tâche : le bouton d'ouverture couvre toute la ligne par
   `self-stretch -my-1.5 py-1.5`, hauteur et position du texte inchangées. Limite : un nom d'équipe de moins de 44 px a
   une zone qui déborde sur le crayon voisin (le crayon garde le toucher).
+- 11/11/2026 : **T3 faite en partie** (4 fichiers + `tests/retouches-usage-t3.spec.ts`, 9 passés et 9 sautés hors
+  toucher, mesures dans la page ; relecteur : bon). Calendrier (`BOUTON_ROND`, donc aussi « mois suivant » de l'agenda)
+  et « ⋯ » non compact : `TOUCHER_44`. Cases de nom : la zone est sur la cellule (tablette) ou la ligne de carte
+  (téléphone, `GrilleCarte.tsx`, fichier en plus), passée sous le contenu, et un toucher hors du bouton est renvoyé au
+  bouton. **Seul changement visible** : au toucher, 12 px au lieu de 4 entre les lignes d'une carte du téléphone
+  (sinon les zones de deux cases se recouvrent) ; regardé à l'œil, à confirmer par Timothée. **Non fait** :
+  `ChoisirNom.tsx` (lignes de 40 px jointives dans une liste qui défile : une zone de 44 px n'y gagne rien ; il
+  faudrait des lignes de 44 px, donc un dessin, lot 2).
