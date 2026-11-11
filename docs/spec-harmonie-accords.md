@@ -95,6 +95,10 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   détaché ; rouge aussi sans H1, 4 fois sur 12). Captures 390/820/1180/1440 : largeur du clavier identique pour C et
   F#m7b5 (308/299/326/389 px), aucun débordement. Le gris de l'octave gauche se voit à peine en thème clair.
 
+- 11/11/2026 : H1 fini par sa session (commit 991cf38). Timothée n'aime pas l'entrée par boucles : H2 à H4 suspendus.
+  Inventaire du site de référence de A à Z : `docs/inventaire-wangshubianqu.md`. Prochain : nouvelle planche d'Harmonie à
+  partir de l'inventaire, sur accord de Timothée.
+
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
 69 fiches en 12 familles aujourd'hui. À ajouter, dans l'ordre d'utilité pour le répertoire :
