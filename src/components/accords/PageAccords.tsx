@@ -75,6 +75,32 @@ export function PageAccords() {
     { titre: t("accords.plusRares"), accords: PLUS_RARES.map((q) => note + q) },
   ];
 
+  const rendreGroupe = (g: { titre: string; accords: string[] }) => (
+    <section key={g.titre}>
+      <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{g.titre}</h2>
+      <div className="flex flex-wrap gap-2">
+        {g.accords.map((a) => {
+          const pleine = cleDeAccord(a) === cleAffichee;
+          return (
+            <button
+              key={a}
+              type="button"
+              aria-pressed={pleine}
+              onClick={() => choisir(a)}
+              className={`inline-flex h-11 min-w-11 items-center justify-center rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                pleine
+                  ? "border-transparent bg-[color:var(--chord-color)] text-background"
+                  : "border-border bg-card text-[color:var(--chord-color)] hover:bg-secondary"
+              }`}
+            >
+              {a}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+
   return (
     <div className="w-full max-w-[1120px] px-[var(--marge-page)] pb-28 pt-6">
       {chantDOrigine && <Retour href={`/songs/${encodeURIComponent(chantDOrigine)}`}>{t("accords.retour")}</Retour>}
@@ -118,6 +144,8 @@ export function PageAccords() {
         </div>
       </div>
 
+      <div className="mt-5 md:hidden">{rendreGroupe(groupes[0])}</div>
+
       <div className="mt-6 flex flex-wrap items-start gap-6">
         <section
           aria-label={accord.texte}
@@ -128,31 +156,8 @@ export function PageAccords() {
         </section>
 
         <div className="min-w-0 flex-[2_1_380px] space-y-5">
-          {groupes.map((g) => (
-            <section key={g.titre}>
-              <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{g.titre}</h2>
-              <div className="flex flex-wrap gap-2">
-                {g.accords.map((a) => {
-                  const pleine = cleDeAccord(a) === cleAffichee;
-                  return (
-                    <button
-                      key={a}
-                      type="button"
-                      aria-pressed={pleine}
-                      onClick={() => choisir(a)}
-                      className={`inline-flex h-11 min-w-11 items-center justify-center rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                        pleine
-                          ? "border-transparent bg-[color:var(--chord-color)] text-background"
-                          : "border-border bg-card text-[color:var(--chord-color)] hover:bg-secondary"
-                      }`}
-                    >
-                      {a}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+          <div className="hidden md:block">{rendreGroupe(groupes[0])}</div>
+          {groupes.slice(1).map(rendreGroupe)}
           <p className="text-sm leading-5 text-muted-foreground">{t("accords.dansLesChants", { n: note, a: note, b: quinte })}</p>
         </div>
       </div>

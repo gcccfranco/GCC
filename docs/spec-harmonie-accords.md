@@ -88,6 +88,12 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
 - 11/11/2026 : « reprends » de Timothée ; H1 relancé dans une session orchestratrice, réduit au clavier fixe et à
   « Les plus joués » au téléphone (le retour « ‹ Chants » est fait par T6 des retouches d'usage). Ensuite : une
   session par tranche, enchaînées (Timothée).
+- 11/11/2026 : **H1 fait** (session neuve) : clavier piano toujours 3 octaves (viewBox 504×96, octave main gauche en
+  `fill-muted`), « Les plus joués » sous les 12 notes au téléphone (`md:hidden` / `hidden md:block`) ; nouveau test de
+  largeur C = F#m7b5 (`accords-page.spec.ts`). tsc et lint propres ; `tests/accords-*` : 219 passés, 1 rouge, la course
+  préexistante « chant ZH : le panneau d'un accord » [telephone] (`accords-toucher-agencement.spec.ts:82`, élément
+  détaché ; rouge aussi sans H1, 4 fois sur 12). Captures 390/820/1180/1440 : largeur du clavier identique pour C et
+  F#m7b5 (308/299/326/389 px), aucun débordement. Le gris de l'octave gauche se voit à peine en thème clair.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
