@@ -85,6 +85,8 @@ pas seulement en mémoire.
 - **Go** : un lot se code sur un mot explicite de Timothée, donné **après** la spec (« go », « feu vert », « vas-y pour
   le lot N ») ; une phrase au futur ou au conditionnel (« tu peux le coder », « je le montrerai ») décrit un plan. Un go
   vaut pour un lot, pas pour le suivant, ni pour une mise en ligne. Dans le doute, demander « go pour le lot N ? ».
+  Exception (Timothée, 11/11/2026, « oui ») : les tranches 2 à 7 de `docs/spec-exemples-usage.md` s'enchaînent sans
+  nouveau go, selon le § 8 de cette spec ; une tranche bloquée arrête la chaîne. La mise en ligne reste à part.
 - **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (pistes aux
   trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go. Planche = workflow
   `/planche` (équipe design, 02/11/2026, `docs/orchestration.md` § 4) ; la conversation principale relit, publie

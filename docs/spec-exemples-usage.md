@@ -278,3 +278,25 @@ liste. Q3 : 简谱 plafonné à 920 px. Plus aucune tranche bloquée par une que
   tranches ; T1, T2, T6 et T5 (sauf le ressort du rail, qui suit T3) peuvent partir sans réponse aux questions. En attente : « go pour la tranche 1 ? ».
 - 11/11/2026 : go de Timothée pour T1, lancée dans une session orchestratrice. Réponse « Ok pour les trois
   propositions » : Q1, Q2 et Q3 tranchées (§ 6).
+- 11/11/2026 : go de Timothée (« oui ») pour enchaîner automatiquement T2 à T7, selon le § 8.
+
+## 8. Enchaînement automatique des tranches (go de Timothée du 11/11/2026)
+
+Chaque session orchestratrice code **une** tranche, puis lance elle-même la suivante. Ordre : T1 → T2 → T3 → T4 →
+T5 → T6 → T7. Pas de mise en ligne, jamais `main`.
+
+1. Lire de cette spec seulement : § 1, § 2, § 3 (pour T6 et T7), § 4, § 5 (en-tête commun et sa tranche), § 6.
+2. `npx playwright install --with-deps chromium`, puis un seul appel de `/tranche` pour la tranche ; `regard` trie
+   les captures ; la session n'ouvre que celles signalées, plus une par disposition (quatre, plus 1 440 px pour la
+   vue Partitions), et une en sombre.
+3. Un commit en français, `git add` par nom, ligne datée dans le § 7, `git -c rebase.autoStash=true pull -q --rebase
+   origin claude/corrections-design`, push sur cette branche, jamais `--force`.
+4. Puis `create_session` (même dépôt, `source_revision` et `outcome_branch` : `claude/corrections-design`, modèle
+   Opus) avec la consigne : « Session orchestratrice, un seul livrable : la tranche TN de `docs/spec-exemples-usage.md`.
+   Suis le § 8 de cette spec. » Après T7, pas de nouvelle session.
+5. **Arrêt** : si une tranche bloque (critère impossible, zone gelée touchée, tests rouges après les reprises de
+   `/tranche`), écrire la question au § 6, pousser, et ne pas lancer la suivante.
+6. Messages : aucun suivi. Un seul message (`send_message`) à la session d'origine
+   `session_01UMdfucwvmJpTDorFFu21AG`, pour une question bloquante ou à la fin de T7.
+7. Économie : un livrable par session ; lecture par section ; aucun agent hors `/tranche` et `regard` ; pas d'attente
+   de plus de 5 minutes en avant-plan ; passer la main avant 200 000 jetons.
