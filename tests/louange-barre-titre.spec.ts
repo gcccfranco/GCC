@@ -361,7 +361,7 @@ test("palette : un seul arrêt de tabulation, les flèches passent d'une teinte 
 test("cercle chromatique : flèche droite sur la teinte change la couleur, retenue après rechargement", async ({ page }) => {
   await ouvrir(page);
   const reglages = await ouvrirReglages(page);
-  await reglages.getByRole("radio", { name: "Autre couleur" }).click();
+  await reglages.locator("[aria-labelledby=perf-couleur-icones]").getByRole("radio", { name: "Autre couleur" }).click();
   const teinte = reglages.getByRole("slider", { name: "Teinte" });
   await expect(teinte).toBeVisible();
   await expect(reglages.getByRole("slider", { name: "Luminosité" })).toBeVisible();
@@ -386,7 +386,7 @@ test("cercle chromatique : flèche droite sur la teinte change la couleur, reten
 test("cercle chromatique : un toucher sur l'anneau choisit la teinte (pointer events)", async ({ page }) => {
   await ouvrir(page);
   const reglages = await ouvrirReglages(page);
-  await reglages.getByRole("radio", { name: "Autre couleur" }).click();
+  await reglages.locator("[aria-labelledby=perf-couleur-icones]").getByRole("radio", { name: "Autre couleur" }).click();
   const anneau = reglages.getByRole("slider", { name: "Teinte" });
   await anneau.scrollIntoViewIfNeeded();
   const b = (await anneau.boundingBox())!;

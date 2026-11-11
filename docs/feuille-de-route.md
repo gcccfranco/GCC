@@ -36,8 +36,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
 - **08/11/2026** : formulaire de réunion à part (`ReunionForm`) et retouches iPhone des champs date et heure (go « tout
   puis main ») ; **rendu iOS à vérifier sur l'iPhone** (Chromium seul en session cloud).
 - **AO, mode louange façon forScore** (`spec-mode-louange-forscore-2.md`, branche `claude/tender-johnson-99hadm`, pas
-  fusionnée ici) : vagues 1 et 2 codées, chantier en pause (Timothée, 09/11/2026). **Pour reprendre** : lire
-  « Avancement » de la spec, puis CA et FS-F sur un go chacun, la vague 3 (JP-C, JP-D, AN) sur nouveau go ; avant toute
+  fusionnée ici) : vagues 1 et 2 codées ; **CA codé le 11/11/2026** sur `claude/friendly-cerf-cy7hio` (couleur des
+  accords par compte, réglage dans les trois menus). **Pour reprendre** : lire « Avancement » de la spec, puis FS-F (go
+  du 11/11/2026, à lancer dans une session neuve), la vague 3 (JP-C, JP-D, AN) sur nouveau go ; avant toute
   mise en ligne, relecture complète de la vague 2, passe sur le guide, 中文 nouveaux à relire, prévenir l'équipe, essai
   sur iPad. Détail : archive, `grep -n '^### AO\.'`.
   **À la fusion de cette branche** (Timothée, 10/11/2026) : conflit attendu sur `docs/feuille-de-route.md` et une ligne de
@@ -124,7 +125,7 @@ Specs dans `docs/` ; « archive § 3.X » = `grep -n '^### X\.' docs/archive/feu
 | AL | Vidéo de bienvenue | `spec-video-bienvenue.md` (VB, VB-E) | en ligne 02/11 |
 | AM | Espace Musiciens, scène des fêtes | `spec-espace-musiciens.md` (EM, SF) | en ligne 02/11 |
 | AN | Pastilles « Int » et « Inst » | `spec-abreviation-interlude.md` (AB-I) | en ligne 07/11 |
-| AO | Mode louange façon forScore, apparence comprise | `spec-mode-louange-forscore-2.md` | vagues 1 et 2 codées sur `claude/tender-johnson-99hadm`, pas en ligne ; reste CA, FS-F, vague 3, relecture complète |
+| AO | Mode louange façon forScore, apparence comprise | `spec-mode-louange-forscore-2.md` | vagues 1 et 2 codées sur `claude/tender-johnson-99hadm`, CA codé le 11/11 sur `claude/friendly-cerf-cy7hio`, pas en ligne ; restent FS-F (go du 11/11), vague 3, relecture complète |
 
 **Chantiers sans lettre** (journal, archive § 6) : 简谱 par défaut puis piste A partout (`spec-jianpu-integration.md`,
 lot 1 en ligne, lot 3 codé 12–18/10) ; relevé des écarts et corrections (`spec-corrections-apres-releve.md`, 08–11/10) ;
