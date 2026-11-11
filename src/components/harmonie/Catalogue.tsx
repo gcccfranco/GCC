@@ -265,7 +265,7 @@ function ListeCatalogue({
                         </span>
                       )}
                     </span>
-                    <span className="block truncate text-sm text-muted-foreground">
+                    <span className="line-clamp-2 text-sm text-muted-foreground">
                       {f.sensations.map((s) => t(`harmonie.sensation.${s}`)).join(" · ")}
                     </span>
                   </GroupRow>

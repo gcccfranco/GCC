@@ -95,9 +95,10 @@ import {
 import { structUidAt, revertSectionOrigins, idDeSection } from "@/lib/setlist/sectionOrigins";
 import { TOUCHER_44 } from "@/lib/toucher44";
 
-// Sous 1024 px, où `.libelle-outil` est masqué : l'icône et un libellé court dessous (G15, audit 24/10/2026).
-const PILULE_EMPILEE = "max-lg:h-auto max-lg:min-h-8 max-lg:flex-col max-lg:justify-center max-lg:gap-0.5 max-lg:px-2 max-lg:py-1 max-lg:rounded-2xl";
-const LIBELLE_COURT = "hidden max-lg:block max-w-[64px] truncate text-xs font-medium leading-tight";
+// Quand `.libelle-outil` est masqué (sous 1 024 px de fenêtre, ou rangée sous 880 px de conteneur : dimanche-9) :
+// l'icône et un libellé court dessous (G15, audit 24/10/2026), jamais l'icône seule.
+const PILULE_EMPILEE = "max-lg:h-auto max-lg:min-h-8 max-lg:flex-col max-lg:justify-center max-lg:gap-0.5 max-lg:px-2 max-lg:py-1 max-lg:rounded-2xl [@container(max-width:879px)]:h-auto [@container(max-width:879px)]:min-h-8 [@container(max-width:879px)]:flex-col [@container(max-width:879px)]:justify-center [@container(max-width:879px)]:gap-0.5 [@container(max-width:879px)]:px-2 [@container(max-width:879px)]:py-1 [@container(max-width:879px)]:rounded-2xl";
+const LIBELLE_COURT = "hidden max-lg:block [@container(max-width:879px)]:block max-w-[64px] truncate text-xs font-medium leading-tight";
 
 /** Cible d'édition de ligne + indices source nécessaires à la sauvegarde. */
 type LineEditState = EditLineTarget & {

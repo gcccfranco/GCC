@@ -672,7 +672,9 @@
 }
 
 /* Libellés de la barre d'outils de la setlist : à partir de 1 024 px de fenêtre comme avant
-   (en dessous, téléphones même couchés et iPad en portrait : icônes), et seulement s'ils tiennent dans la
+   (en dessous, téléphones même couchés et iPad en portrait : icône et libellé court dessous ; de même
+   au-dessus de 1 024 px quand la rangée a moins de 880 px : dimanche-9, `PILULE_EMPILEE` et
+   `LIBELLE_COURT` de SetlistDetailClient), et seulement s'ils tiennent dans la
    rangée, donc à côté de la barre latérale. Requête de conteneur sur la rangée, qui ne
    contient aucun élément fixe (Q9 : jamais sur `main` ni ses ancêtres). Seuil mesuré le
    05/10/2026 : la rangée avec ses libellés fait 852 px en français dans le pire cas (Adapter,

@@ -196,3 +196,9 @@ Vrais mais hors lot 1, parce qu'ils déplacent, réorganisent ou demandent un de
   (sinon les zones de deux cases se recouvrent) ; regardé à l'œil, à confirmer par Timothée. **Non fait** :
   `ChoisirNom.tsx` (lignes de 40 px jointives dans une liste qui défile : une zone de 44 px n'y gagne rien ; il
   faudrait des lignes de 44 px, donc un dessin, lot 2).
+- 11/11/2026 : **T5 faite** (10 fichiers + `tests/retouches-usage-t5.spec.ts`, ajoutée à `SPECS_GRAND_ECRAN` ; avec les
+  specs voisines 239 passés, 10 sautés sur les cinq projets). Les intitulés de poste trop longs étaient dans
+  `GrilleEnTete.tsx` : `line-clamp-2` avec coupure en syllabes (`hyphens-auto` : « Prési-dence », vu à l'œil, au lieu
+  de « Présidenc / e »). « Non publié » en tête (`data-non-publie-trimestre`, libellé existant en fr et zh) :
+  `planning-grille.spec.ts` et `planning-2027.spec.ts` suivent la nouvelle mention. Reste à arbitrer : le bouton
+  retour de la barre de la setlist reste une flèche seule (il n'a pas de libellé court).

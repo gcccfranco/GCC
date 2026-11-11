@@ -29,7 +29,7 @@ function Contenu({ e, lang }: { e: EntreeCalendrier; lang: NotifLang }) {
   return (
     <>
       <Icone aria-hidden className="hidden h-3 w-3 shrink-0 sm:block" />
-      <span className="truncate">{libelleCourt(e, lang)}</span>
+      <span className="line-clamp-2 min-w-0">{libelleCourt(e, lang)}</span>
     </>
   );
 }

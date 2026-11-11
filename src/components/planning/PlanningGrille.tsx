@@ -254,6 +254,7 @@ export function PlanningGrille({
   )
 
   const sansLigne = affichees.length === 0
+  const toutBrouillon = !sansLigne && affichees.every((l) => l.nonPublie)
 
   // `?case=grille|date|cle` (le lien d'une case vide de « À faire ») : la case défile au centre, porte un anneau
   // ~2,5 s et reçoit le focus. Lu dans l'adresse (pas `useSearchParams`, qui veut un Suspense autour de chaque page).
@@ -888,6 +889,14 @@ export function PlanningGrille({
       {/* ── Vide : un seul bloc, au téléphone comme en grand (plannings-1) ── */}
       {sansLigne && <EtatVide compact surGris>{vide ?? t("planning.grille.aVenir")}</EtatVide>}
 
+      {/* bo-messages-planning-1 : « Non publié » une fois en tête quand tout le trimestre est en brouillon. */}
+      {toutBrouillon && (
+        <p data-non-publie-trimestre className="flex items-center gap-1 text-xs font-semibold text-muted-foreground" title={t("planning.unpublishedTooltip")}>
+          <Lock className="h-3 w-3" aria-hidden />
+          {t("planning.grille.nonPublie")}
+        </p>
+      )}
+
       {/* ── Grille (ordinateur, tablette) ── */}
       {!sansLigne && <div ref={enveloppe} data-en-cours={enCours || undefined} inert={enCours ? true : undefined} className="relative">
       {/* La carte porte l'ombre (`raised`, sans `overflow-hidden`) ; l'enveloppe intérieure défile, avec un fondu à droite.
@@ -925,7 +934,7 @@ export function PlanningGrille({
                       couleur={couleur}
                       fond={fond}
                       cetteSemaine={cetteSemaine}
-                      nonPublie={l.nonPublie}
+                      nonPublie={l.nonPublie && !toutBrouillon}
                       badge={dateBadge?.(l.row, toutes)}
                       retirer={peutRetirer(date) && <div className="-ml-1.5 mt-0.5">{boutonRetirer(date, false)}</div>}
                       copie={survol ? pastilleCopie(date) : null}
@@ -991,7 +1000,7 @@ export function PlanningGrille({
               date={date}
               couleur={couleur}
               cetteSemaine={cetteSemaine}
-              nonPublie={l.nonPublie}
+              nonPublie={l.nonPublie && !toutBrouillon}
               badge={dateBadge?.(l.row, toutes)}
               actions={(peutRetirer(date) || mode === "edition") && (
                 <span className="ml-auto flex items-center gap-1">

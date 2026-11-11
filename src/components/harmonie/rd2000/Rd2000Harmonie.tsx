@@ -88,14 +88,14 @@ function LigneSon({ son, layer, actif }: { son: Son; layer?: boolean; actif?: bo
   const { t } = useTranslation();
   return (
     <GroupRow href={`/harmonie/rd2000/${son.n}`} chevron actif={actif}>
-      <span className="flex items-start gap-2.5">
+      <span className="flex flex-wrap items-start gap-x-2.5 gap-y-1">
         {layer && (
           <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs leading-4 font-medium", actif ? "bg-background text-foreground" : "bg-secondary text-foreground")} data-layer>
             {t("harmonie.rd2000.layer")}
           </span>
         )}
         <span className="shrink-0 text-lg font-semibold tabular-nums" data-son={son.n}>{son.n}</span>
-        <span className="min-w-0 font-medium [overflow-wrap:anywhere]" lang="fr">{son.nom}</span>
+        <span className="min-w-0 font-medium" lang="fr">{son.nom}</span>
         {son.premier && (
           <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-xs font-medium", actif ? "bg-background text-foreground" : "bg-secondary text-foreground")}>
             {t("harmonie.rd2000.premierChoix")}

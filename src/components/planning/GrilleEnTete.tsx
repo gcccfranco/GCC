@@ -33,8 +33,9 @@ export function GrilleEnTete({
           {t("planning.roles.date")}
         </th>
         {colonnes.map((c, j) => (
-          <th key={c.cle} title={t(c.i18n)} className={`overflow-hidden text-ellipsis px-2.5 py-2.5 ${j === colonnes.length - 1 ? "pr-3" : ""} text-left text-xs font-semibold whitespace-nowrap`} style={app ? undefined : { background: couleur }}>
-            {t(c.i18n)}
+          <th key={c.cle} title={t(c.i18n)} className={`overflow-hidden px-2.5 py-2.5 ${j === colonnes.length - 1 ? "pr-3" : ""} text-left text-xs font-semibold`} style={app ? undefined : { background: couleur }}>
+            <span data-poste className="line-clamp-2 break-words hyphens-auto">
+              {t(c.i18n)}
             {!app && groupe && groupeDef(groupe.id)?.planning === definition.key && roleDeColonne(groupe, c.cle) && (
               <Link2
                 role="img"
@@ -42,6 +43,7 @@ export function GrilleEnTete({
                 className="ml-1 inline h-3 w-3 align-[-1px] opacity-80"
               />
             )}
+            </span>
           </th>
         ))}
       </tr>
