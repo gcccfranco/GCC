@@ -638,6 +638,21 @@ responsables sachent ce qui est prêt, ce qui manque et qui relancer, et fassent
 et le Back-Office garde son rôle : le travail d'organisation que les autres ne voient pas (plannings, évènements,
 réunions, tâches).
 
+### Le site devient le pupitre (11/11/2026, demande AP)
+
+Détail : `docs/spec-pupitre-musicien.md`. Décisions de Timothée ce jour-là :
+- **But** : que chaque musicien de service joue sur le site et plus sur forScore. Les musiciens n'ont rien contre
+  forScore (« ils adorent même ») : on ne force pas, la partition du site doit être meilleure, la sienne, annotée,
+  et le suivre d'une setlist à l'autre.
+- **« Ma version » et « Adapter » fusionnent** ; la personne choisit si elle partage, et à qui (liste de personnes).
+- **Une annotation reste sur le chant** : dans une nouvelle setlist, on retrouve la partition annotée.
+- **Export PDF retiré aux musiciens** : « je pense que oui » (à confirmer sur planche : qui le garde).
+- **Idées d'harmonie dans le mode louange** : la décision du 17/09/2026 (« jamais en mode louange ») est rouverte.
+- **Accords en chiffres** (number system) sur les partitions.
+- **Compter l'usage de toutes les fonctionnalités**, pour retirer ensuite celles qui ne servent pas.
+- **Toutes les pages** revues pour l'usage, sur toutes les dispositions ; de petites animations.
+- Contenu des fiches d'harmonie et des cours, ordre des chantiers avec AO : délégués à Claude.
+
 ## Historique des changements d'avis
 
 | Date | Avant | Après |

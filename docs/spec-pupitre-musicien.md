@@ -1,8 +1,8 @@
 # Cadrage : le site devient le pupitre (demande AP)
 
-**Statut : cadrage du 11/11/2026 (session cloud). Rien de tranché, rien de codé, aucune planche publiée.** Ce
-document porte l'état pour la session qui reprendra (CLAUDE.md, « Économie de contexte »). Faits vérifiés sur
-`187c286` (branche `claude/corrections-design`, AO vagues 1 et 2 fusionnées).
+**Statut : cadrage du 11/11/2026 (session cloud), complété le même jour par les réponses de Timothée (§ Réponses).
+Rien de codé, aucune planche publiée.** Ce document porte l'état pour la session qui reprendra (CLAUDE.md, « Économie
+de contexte »). Faits vérifiés sur `187c286` (branche `claude/corrections-design`, AO vagues 1 et 2 fusionnées).
 
 ## Demande (Timothée, 11/11/2026)
 
@@ -17,6 +17,11 @@ document porte l'état pour la session qui reprendra (CLAUDE.md, « Économie de
 5. Idées d'harmonie : les déplacer dans le mode louange ; revoir l'onglet Harmonie (« pas très pratique ») ; accords,
    théorie et idées « encore plus exhaustifs » ; intégrer le number system aux partitions ; s'inspirer de
    `https://wangshubianqu.com/chord-map/`.
+
+Compléments du même jour (voir § Réponses) : **toutes les pages, sans exception**, sur toutes les dispositions ;
+de petites animations ; compter l'usage de toutes les fonctionnalités pour retirer celles qui ne servent pas ;
+contenu des fiches d'harmonie et des cours laissé à Claude ; bibliothèque d'accords à revoir (le clavier « zoome »
+quand on change d'accord).
 
 Timothée demande aussi de reformuler la demande selon l'article de Felix Rieseberg « How to be more ambitious »
 (altitude : le résultat et non la tâche ; profondeur : matière brute, outils des meilleurs, objectif dur, juge
@@ -59,8 +64,8 @@ meilleure : la sienne, annotée, qui le suit de dimanche en dimanche.
 - **Harmonie** : 69 fiches en 12 familles, **toutes au statut « à valider »** ; 24 chapitres et un glossaire, statut
   « validée » ; aucun son. Sujets absents : seulement CAGED. La page `/harmonie` au téléphone fait 14 015 px, soit
   17 écrans de défilement (capture du 11/11).
-- **« Pièce jointe »** : aucun écran de ce nom. Le plus proche : images et liens du formulaire d'un évènement ou d'une
-  réunion (`EvenementForm.tsx`). À faire préciser (question 1).
+- **« La pièce jointe »** est la capture jointe au message : la feuille d'une équipe (Back-Office › Équipes,
+  `src/app/equipes/EquipesClient.tsx`), au téléphone. Ce n'est pas un écran du site.
 
 ## Mesure du répertoire (11/11/2026, premier comptage, à contre-vérifier)
 
@@ -94,7 +99,8 @@ de GCC ; l'oreille (reconnaître 1, 4, 5, 6m) sur des passages du répertoire. P
 | 1 | **Ma partition** : une partition par personne et par chant (version, structure, annotations accrochées au texte), qui suit le chant ; partage à des personnes choisies ; « Adapter » = la même édition, pour toute la setlist | points 2 et 3, et le vrai levier du point 1 | planche `ma-partition`, puis spec ; recoupe AN (vague 3 d'AO) et la « migration » annoncée par sa décision 18 |
 | 2 | **Le pupitre** : l'entrée des musiciens, une seule commande pour rôle + affichage + disposition, idées d'harmonie en répétition, accords en chiffres | points 1 et 5 | planche `pupitre-musicien`, **sur l'état AO** |
 | 3 | **Écrans pratiques** : relevé mesuré de tous les écrans, feuilles et menus compris | point 4 | lancer l'outil ci-dessous, `regard` trie, `/verifier-constats`, rapport, planches de corrections |
-| 4 | **Harmonie qui s'entend** : écoute, validation des 69 fiches par un musicien, boucles en chiffres, oreille ; page moins longue | point 5 | planche après le chantier 2 |
+| 4 | **Harmonie qui s'entend** : écoute, validation des 69 fiches par un musicien, boucles en chiffres, oreille ; page moins longue ; fiches manquantes ; bibliothèque d'accords (clavier qui ne bouge pas) | point 5 | planche après le chantier 2 |
+| 5 | **Compter l'usage** de chaque fonctionnalité, pour retirer ensuite celles qui ne servent pas | réponse du 11/11 | spec (ce qu'on compte, où, combien de temps, ce qui reste privé) |
 
 ## Outil du relevé d'usage
 
@@ -115,17 +121,39 @@ Premier relevé (11/11, interrompu, sur `61d6f5b`) : Back-Office › Équipes au
 (onglets de 30 px de haut). Capture de Timothée (feuille d'une équipe de sept membres) : la liste défile sous le
 titre, « Ajouter un membre » est après toute la liste, chaque ligne porte deux ou trois lignes de rôles.
 
-## Questions ouvertes
+## Réponses de Timothée (11/11/2026)
 
-1. Où est la « pièce jointe » (quelle page) ?
-2. Compter qui ouvre le mode louange le dimanche (une écriture par personne et par setlist), pour savoir si les
-   musiciens quittent forScore ?
-3. Deux ou trois objections de musiciens restés sur forScore.
-4. Retirer l'export PDF aux musiciens (il alimente forScore) ?
-5. AO est en pause : ce chantier le reprend-il (AN, vague 3) ou passe-t-il devant ?
+1. La « pièce jointe » = la capture de la feuille d'une équipe (Back-Office › Équipes, téléphone).
+2. Compter : oui, et plus large : « tu peux même compter pour toutes les fonctionnalités pour faire le tri à la fin
+   des fonctionnalités qui servent à rien et les retirer » (chantier 5).
+3. Objections sur forScore : aucune, « ils adorent même ». Conséquence : on ne gagne pas contre forScore en
+   forçant ; on gagne si la partition du site suit le musicien (chantier 1) et s'ouvre aussi vite (chantier 2).
+4. Retirer l'export PDF aux musiciens : « je pense que oui ». À confirmer sur la planche du pupitre (qui le garde :
+   responsables de louange, administrateurs ?). L'export PDF lui-même reste gelé.
+5. AO et sa vague 3 : « fais ce que tu penses être le mieux » (ordre recommandé ci-dessous).
+6. Exemple de défaut d'usage : la vue Partitions d'une setlist sur iPad portrait laisse une bande vide à droite, les
+   paroles tiennent dans le tiers gauche. « Voir toutes les pages du site sans exception » ; « peut-être ajouter des
+   petites animations ».
+7. Fiches d'harmonie et cours théoriques : « prends les décisions toi-même », « il manque beaucoup de choses dans les
+   idées d'harmonies ». Bibliothèque d'accords : revoir l'interface (« quand on change d'accord au piano, ça fait des
+   zooms sur le clavier »), en reprenant ce qui est bien sur wangshubianqu.com/chord-map (progressions, carte des
+   accords).
+
+## Ordre recommandé (décision déléguée, réponse 5)
+
+1. **Rapport d'usage sur toutes les pages** (chantier 3), puis planches de corrections : indépendant du reste.
+2. **Valider puis mettre en ligne les vagues 1 et 2 d'AO** (codées, pas en ligne) : tout le reste s'appuie dessus.
+3. **Ma partition** (chantier 1) avant les annotations d'AO : c'est la « migration » annoncée par la décision 18
+   d'AO ; elle absorbe AN-1 (où se range un trait). AN-2 à AN-5 se codent ensuite sur ce rangement, pas avant, sinon
+   les traits seraient à déplacer une seconde fois.
+4. **Le pupitre** (chantier 2), sur l'état AO en ligne. CA (couleur des accords), JP-C et JP-D restent indépendants.
+5. **Harmonie · Accords** (chantier 4) et **compter l'usage** (chantier 5) : sans dépendance, à glisser entre deux.
 
 ## Avancement
 
 - 11/11/2026 : cadrage, état des lieux, mesure du répertoire, lecture du site de référence, outil du relevé écrit et
   essayé. Relevé complet et planche `pupitre-musicien` lancés puis **arrêtés** : la branche locale était en retard de
-  la fusion d'AO, ils travaillaient sur un état périmé. À relancer sur la tête de branche, après les réponses.
+  la fusion d'AO, ils travaillaient sur un état périmé.
+- 11/11/2026 (suite) : réponses de Timothée consignées ; il confirme l'ordre « un livrable à la fois », en
+  commençant par le rapport sur toutes les pages. Relevé relancé sur `54da181` (76 écrans, cinq dispositions, puis
+  la passe des boutons). Rapport : `docs/audit-usage-2026-11-11.md` (à venir).

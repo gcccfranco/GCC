@@ -6,10 +6,12 @@ import { test, type Page } from "@playwright/test";
 //   PW_MESURES=<fichier.jsonl>  une ligne par page et par disposition (cibles, textes, défilement, action principale) ;
 //   PW_FEUILLES=<dossier>       en plus, chaque bouton de la page est touché : si une feuille, un menu ou une fenêtre
 //                               s'ouvre, on la mesure et on la photographie ; si la page change (onglet, bascule),
-//                               c'est une « vue », mesurée et photographiée aussi (téléphone, tablette, ordinateur).
+//                               c'est une « vue », mesurée et photographiée aussi. Sur les cinq dispositions
+//                               (Timothée, 11/11/2026 : « pour tous les responsives »). Le premier écran est aussi
+//                               photographié tel qu'on le voit (`<nom>__ecran.png`, barres fixes à leur place).
 // La taille d'une cible est celle de sa boîte, élargie par un ::before / ::after absolu quand il y en a un.
 
-const PROJETS_FEUILLES = ["telephone", "tablette", "ordinateur"];
+const PROJETS_FEUILLES = ["telephone", "tablette", "tablette-paysage", "ordinateur", "ordinateur-1440"];
 const MAX_BOUTONS = 22;
 // Boutons qu'on ne touche pas : ils suppriment, envoient, exportent ou quittent.
 const A_EVITER = /supprim|d[ée]connex|retirer|effacer|quitter|envoyer|notifier|publier|export|pdf|imprimer|t[ée]l[ée]charg|partager|copier|fusionner|enregistrer|valider|cr[ée]er|dupliquer|archiver|vider/i;
@@ -169,6 +171,8 @@ async function toucherLesBoutons(page: Page, nom: string, projet: string, tactil
   test.setTimeout(420_000);
   const dossier = `${process.env.PW_FEUILLES}/${projet}`;
   mkdirSync(dossier, { recursive: true });
+  // Le premier écran tel qu'on le voit : une capture pleine page pose les barres fixes au bout de l'image.
+  await page.screenshot({ path: `${dossier}/${nom}__ecran.png` });
   const url = page.url();
   const marquer = () => page.evaluate(({ eviter, max }) => {
     const re = new RegExp(eviter, "i");
