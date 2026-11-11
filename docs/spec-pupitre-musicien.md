@@ -197,3 +197,20 @@ il ne vaut pas go de code (règle : le go de code vient après la spec, lot par 
   questions à Timothée dans sa conversation. **Pas encore lancée : la planche du pupitre**, qui dépend des réponses
   sur « Ma partition » (où vivent la partition personnelle et les annotations dans le mode louange). Garde-fous de
   dépense ajoutés au CLAUDE.md (§ Économie de contexte) et aux fiches `critique-design` et `directeur-artistique`.
+- 11/11/2026 (nuit) : **planche des deux exemples reprise et publiée** (`docs/planches/planche-exemples-usage.html`,
+  artefact privé « Planche : deux écrans pratiques partout »). Un `/planche` (trois agents), verdict « à retoucher »
+  (13 points), une reprise par un `maquettiste` (14 corrections ; un prénom de maquette changé à la relecture, il
+  coïncidait avec un membre réel). Trois pistes : A « Pupitre » (recommandée), B « Conducteur », C « Livret ouvert ».
+  Couplet 1 mesuré sur la maquette, piste A : 45 % du premier écran au téléphone avec l'aide de première visite
+  (36 % sans ; cible 40 % non tenue), 33 % en tablette debout, 35 % couchée, 39 % à 1 280 px, 24 % à 1 440 px (deux
+  colonnes de 528 px lues en rangées, seuil vers 1 360 px). Feuille d'équipe : champ d'ajout en tête, lignes d'un
+  membre repliées, boutons collés en bas, feuille centrée de 560 px en tablette debout. **Onze questions posées à
+  Timothée** ; pas de spec avant ses réponses, rien de codé. Non dessinés : 简谱, sombre à 1 440 px, mouvement.
+- 11/11/2026 (nuit), état des quatre sessions, lu dans leurs specs : **lot 1 des retouches** : go donné, T1 et T2
+  codées sur la branche (zones de 44 px), suite dans `docs/spec-retouches-usage.md` § Avancement ; **« Ma
+  partition »** : planche publiée (`planche-ma-partition.html`), questions posées, réponses attendues ; **Harmonie
+  et Accords** : planche publiée (`planche-harmonie-accords.html`), questions posées, réponses attendues ;
+  **comptage d'usage** : spec écrite, six décisions prises, go pour T1 (session orchestratrice). **Planche du
+  pupitre toujours pas lancée** (attend les réponses sur « Ma partition »). La session principale a dépassé le
+  plafond de 200 000 tokens : la suite (spec des deux exemples après réponses, planche du pupitre) se reprend
+  dans une session neuve à partir de ces lignes.
