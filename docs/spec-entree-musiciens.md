@@ -412,3 +412,20 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   MP-3, exemples T2, comptage T3) ; PU-1 part à la première place libre (attendue : la fin du comptage T3, T4 n'ayant
   pas de go), puis PU-2, PU-3 ; PU-4 à PU-6 seulement après FS-F et jamais en même temps qu'une session dans
   `PerformanceMode.tsx` (JP-C, MP-5).
+- 12/11/2026 : **PU-1 faite** (PDF réservé ; session lancée depuis la file, partie à 11 h 58 quand le comptage T4 a
+  libéré sa place, MP-3 vérifiée). `canExporterPdfSetlist` et `canExporterPdfChant` (`src/lib/access.ts`, masquage
+  sans miroir dans `firestore.rules`, commentaire au-dessus) ; `presideLeService` (`rolePlanning.ts`, filtre de
+  `roleDuPlanning`) ; page de setlist : bouton de la barre et entrée du ⋯ seulement pour `peutPdf` ; page d'un chant :
+  équipe d'une setlist à venir lue une fois (`getSetlistsPartagees`, `getMySetlists`, `getSetlistsFrom`), pas de bouton
+  tant que l'auth se résout (relecture : sinon flash), un « non » n'est pas gardé (relu à la visite suivante). Sans
+  compte, le PDF d'un chant reste (question 1). **Écart à la spec, noté `shortcut:`** : `getMySetlists` ne rend que
+  les privées, d'où `getSetlistsFrom(today, 30)` pour le créateur d'une setlist publique (vue seulement parmi les 30
+  prochaines). Fixtures de `export-pdf` et `pdf-ma-version` : le compte connecté ajouté à `editeurs` (assertions
+  inchangées). Nouvelle `tests/pdf-droits.spec.ts` (Sheet simulé, chants abba-pere et 谢谢你, noms inventés) : un compte
+  hors équipe doit servir ce jour-là pour ouvrir la setlist (F1), d'où les lignes du Sheet ; Sheet en panne = page
+  refusée, aucun PDF. **Tests** : 6 specs × 3 appareils, 285 passés et 3 échecs de `pdf-droits` (attente
+  `networkidle`) en 8,4 min ; second tour sur `pdf-droits` seule, 54/54 en 1,5 min. Un premier tour du testeur (1,1 h,
+  290 échecs `page.goto /login` interrompu) est à mettre sur deux `next dev` orphelins d'un lancement coupé, pas sur la
+  tranche. `tsc` et lint propres. `npm run validate` échoue hors tranche : 姐 妹 跃 (`zh-CN.json`) absents de la police,
+  `python3 scripts/build-fonts.py` à relancer par la session qui les a ajoutés. Pas de `regard` : rien de nouveau à
+  l'écran, des boutons existants masqués. Suite : PU-2 lancée.

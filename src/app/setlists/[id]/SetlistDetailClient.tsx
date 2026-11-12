@@ -26,9 +26,9 @@ import { RELIRE_PROFIL, useProfile } from "@/lib/firebase/users";
 import { ecrireCopie } from "@/lib/setlist/copieHorsLigne";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { datesServies, findMyServices, loadPlanningData, type ServiceEntry } from "@/lib/planning/names";
-import { roleDuPlanning } from "@/lib/planning/rolePlanning";
+import { roleDuPlanning, presideLeService } from "@/lib/planning/rolePlanning";
 import type { DateServie } from "@/types/planning";
-import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, estRegieDeLaSetlist, peutExporterFreeShow } from "@/lib/access";
+import { canSeeSetlist, canEditSetlist, canExporterPdfSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, estRegieDeLaSetlist, peutExporterFreeShow } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
@@ -290,6 +290,12 @@ export function SetlistDetailClient() {
       ? roleDuPlanning(servicesDuCompte.services, { date: setlist.date, category: setlist.category, moment: setlist.moment }, profile?.joue)
       : null),
     [user, planningName, servicesDuCompte, setlist, copieLueLe, profile?.joue],
+  );
+  // PDF réservé : présider le service donne le droit (Sheet absent ou en panne : services vides, faux).
+  const presidence = useMemo(
+    () => !!(user && planningName && servicesDuCompte?.nom === planningName && setlist
+      && presideLeService(servicesDuCompte.services, { date: setlist.date, category: setlist.category, moment: setlist.moment })),
+    [user, planningName, servicesDuCompte, setlist],
   );
   // Mode louange (D4) : chants qui n'ont pas pu être chargés ; null = pas de bandeau.
   const [chantsManquants, setChantsManquants] = useState<string[] | null>(null);
@@ -1555,6 +1561,7 @@ export function SetlistDetailClient() {
   // Copie hors ligne : rien ne s'écrit en base pendant ce temps (modifier, supprimer, dupliquer, versions…).
   const horsLigne = copieLueLe !== null;
   const canEdit = !horsLigne && canEditSetlist(user, profile, setlist);
+  const peutPdf = canExporterPdfSetlist(user, profile, setlist, presidence);
   // Suppression : le même droit, sous son nom — la liste (lot 10) s'en sert aussi
   const canDelete = !horsLigne && canDeleteSetlist(user, profile, setlist);
   // Items affichés : la partition lue remplace celle de la présidence — accords et paroles pour la vue partitions (qui
@@ -1837,16 +1844,18 @@ export function SetlistDetailClient() {
                     {duplicating ? "…" : t("setlists.detail.duplicateForNotes")}
                   </button>
                 )}
-                <button
-                  type="button"
-                  aria-label={t("setlists.detail.pdf")}
-                  title={t("setlists.detail.pdf")}
-                  disabled={downloading}
-                  onClick={() => setShowPdfChoice(true)}
-                  className={PILULE_ICONE}
-                >
-                  <FileText className="h-4 w-4" aria-hidden />
-                </button>
+                {peutPdf && (
+                  <button
+                    type="button"
+                    aria-label={t("setlists.detail.pdf")}
+                    title={t("setlists.detail.pdf")}
+                    disabled={downloading}
+                    onClick={() => setShowPdfChoice(true)}
+                    className={PILULE_ICONE}
+                  >
+                    <FileText className="h-4 w-4" aria-hidden />
+                  </button>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button type="button" aria-label={t("common.moreActions")} className={PILULE_ICONE}>
@@ -2141,14 +2150,16 @@ export function SetlistDetailClient() {
                         </DropdownMenuItem>
                       )}
                       {actionsPartagees}
-                      <DropdownMenuItem
-                        disabled={downloading}
-                        // Vue liste : le PDF liste, sans choix ; vue partitions : « Quel PDF ? ».
-                        onClick={() => (view === "liste" ? handleDownload("liste") : setShowPdfChoice(true))}
-                      >
-                        <Download className="h-3.5 w-3.5 text-muted-foreground" />
-                        {downloading ? "…" : t("songs.detail.downloadPdf")}
-                      </DropdownMenuItem>
+                      {peutPdf && (
+                        <DropdownMenuItem
+                          disabled={downloading}
+                          // Vue liste : le PDF liste, sans choix ; vue partitions : « Quel PDF ? ».
+                          onClick={() => (view === "liste" ? handleDownload("liste") : setShowPdfChoice(true))}
+                        >
+                          <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                          {downloading ? "…" : t("songs.detail.downloadPdf")}
+                        </DropdownMenuItem>
+                      )}
                       {supprimer}
                     </DropdownMenuContent>
                   </DropdownMenu>

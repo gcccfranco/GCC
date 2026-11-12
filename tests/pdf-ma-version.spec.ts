@@ -50,6 +50,7 @@ const SETLIST = {
   language: "mixed",
   notes: "",
   ownerId: BERNARD.uid,
+  editeurs: [OLIVIA.uid], // le PDF est réservé à l'équipe (PU-1)
   isPrivate: false,
   items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2 })],
 };

@@ -44,6 +44,7 @@ function setlist(over: Record<string, unknown> = {}) {
     language: "mixed",
     notes: "",
     ownerId: "uid-owner",
+    editeurs: [MUSICIEN.uid], // le PDF est réservé à l'équipe (PU-1)
     isPrivate: false,
     items: [
       item({

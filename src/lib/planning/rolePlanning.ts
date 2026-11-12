@@ -57,3 +57,16 @@ export function roleDuPlanning(
   }
   return vues.size === 1 ? [...vues][0] : null
 }
+
+/** La personne préside-t-elle le service de la setlist ? Même filtre que `roleDuPlanning`. */
+export function presideLeService(
+  entries: ServiceEntry[],
+  setlist: { date?: string; category?: string; moment?: "matin" | "soir" },
+): boolean {
+  if (!setlist.date || !setlist.category) return false
+  return entries.some(e =>
+    e.role === "Présidence"
+    && serviceCategory(e.service) === setlist.category
+    && (e.setlistDate ?? e.date) === setlist.date
+    && !(e.moment && setlist.moment && e.moment !== setlist.moment))
+}

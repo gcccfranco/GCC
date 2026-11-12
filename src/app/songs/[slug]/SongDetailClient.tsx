@@ -40,7 +40,10 @@ import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
 import { AccordsProvider } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
-import { getSetlist } from "@/lib/firebase/setlists";
+import { getSetlist, getSetlistsPartagees, getMySetlists, getSetlistsFrom } from "@/lib/firebase/setlists";
+import { canExporterPdfChant, isAdminUser } from "@/lib/access";
+import { todayIso } from "@/lib/scene/dimanches";
+import type { FSSetlist } from "@/types/setList";
 import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { compter } from "@/lib/usage";
@@ -108,6 +111,27 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
   return version;
 }
 
+/** Le compte est-il de l'équipe (créateur ou `editeurs`) d'une setlist à venir ? Gardé en mémoire de module par uid et
+ *  jour (comme `prochainesLues`) quand c'est oui ; un non (ou une lecture en échec, que les lectures rendent vide) se
+ *  relit à la visite suivante.
+ *  shortcut: le créateur d'une setlist non privée n'est trouvé que parmi les 30 prochaines (`getSetlistsFrom`),
+ *  `getMySetlists` ne rendant que les privées. */
+const equipeLue = new Map<string, Promise<boolean>>();
+function equipeAVenirLue(uid: string): Promise<boolean> {
+  const today = todayIso();
+  const cle = `${uid}|${today}`;
+  let p = equipeLue.get(cle);
+  if (!p) {
+    p = Promise.all([getSetlistsPartagees(uid), getMySetlists(uid), getSetlistsFrom(today, 30)]).then((l) =>
+      l.flat().some((s: FSSetlist) => !!s.date && s.date >= today && (s.ownerId === uid || !!s.editeurs?.includes(uid))));
+    equipeLue.set(cle, p);
+    const lue = p;
+    lue.then((oui) => { if (!oui && equipeLue.get(cle) === lue) equipeLue.delete(cle); },
+      () => { if (equipeLue.get(cle) === lue) equipeLue.delete(cle); });
+  }
+  return p.catch(() => false);
+}
+
 // Layout effect sans avertissement au rendu serveur.
 const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
@@ -124,8 +148,20 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     const sourceAdaptee = versionSetlist?.source;
     // Ma partition (docs/spec-ma-partition.md) : « Je lis » = la mienne, une partagée, l'origine — et celle du culte
     // quand la page s'ouvre depuis une setlist qui a adapté ce chant. Pas de compte : le chant d'origine, sans menu.
-    const { user: compte } = useAuth();
+    const { user: compte, loading: authEnCours } = useAuth();
     const { profile } = useProfile();
+    // PDF réservé : sans compte, visible ; connecté non admin, seulement pour l'équipe d'une setlist à venir (lue ici).
+    const [equipeAVenir, setEquipeAVenir] = useState<{ uid: string; oui: boolean } | null>(null);
+    const uidCompte = compte?.uid;
+    const admin = isAdminUser(compte ?? null);
+    useEffect(() => {
+      if (!uidCompte || admin) return;
+      let vivant = true;
+      equipeAVenirLue(uidCompte).then((oui) => { if (vivant) setEquipeAVenir({ uid: uidCompte, oui }); });
+      return () => { vivant = false; };
+    }, [uidCompte, admin]);
+    // Auth en cours : pas de bouton (sinon un compte sans droit le verrait passer, `user` valant null au départ).
+    const pdf = !authEnCours && canExporterPdfChant(compte ?? null, !!equipeAVenir && equipeAVenir.uid === uidCompte && equipeAVenir.oui);
     const mp = useMesPartitions(compte?.uid, [song.slug]);
     const mienne = mp.mes[song.slug] ?? null;
     const lecture = useMemo(
@@ -562,13 +598,13 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
                 Personnaliser et Signaler (globals.css, `.actions-chant`). */}
             <div className="actions-chant ml-auto shrink-0 items-center gap-1">
               <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-              <ActionsChant variante="rangee" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
+              <ActionsChant variante="rangee" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} pdf={pdf} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
             </div>
           </div>
           {/* Téléphone, couché compris (Q5) : les actions sur une seconde rangée, qui défile en
               largeur, colle sous la première et s'escamote avec elle (globals.css, `.actions-tel`). */}
           <div className="actions-tel max-w-2xl mx-auto w-full gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <ActionsChant variante="tel" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
+            <ActionsChant variante="tel" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} pdf={pdf} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
           </div>
 
           {/* Embed YouTube */}

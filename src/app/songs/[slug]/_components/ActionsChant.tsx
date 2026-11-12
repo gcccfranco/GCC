@@ -7,11 +7,13 @@ import { TOUCHER_44 } from "@/lib/toucher44";
 
 /** Les actions de la barre du chant (Q2, Q5) : Vidéo, PDF, Crayon, Idées d'harmonie, ⋯. Rendues deux fois
  *  (au bout de la rangée, et sur la seconde rangée du téléphone) : une seule est visible. */
-export function ActionsChant({ variante, youtubeId, showVideo, setShowVideo, downloading, setShowPdfChoice, crayon, setCrayon, accesHarmoniePeut, setShowIdees, menuChant }: {
+export function ActionsChant({ variante, youtubeId, showVideo, setShowVideo, pdf, downloading, setShowPdfChoice, crayon, setCrayon, accesHarmoniePeut, setShowIdees, menuChant }: {
   variante: "rangee" | "tel";
   youtubeId: string | null;
   showVideo: boolean;
   setShowVideo: Dispatch<SetStateAction<boolean>>;
+  /** Droit au PDF (canExporterPdfChant) : sinon pas de bouton. */
+  pdf: boolean;
   downloading: boolean;
   setShowPdfChoice: (v: boolean) => void;
   /** Crayon : l'état du bouton ; absent = personne de connecté, pas de bouton. */
@@ -43,7 +45,7 @@ export function ActionsChant({ variante, youtubeId, showVideo, setShowVideo, dow
           <span className={libelle}>{t("songs.detail.video")}</span>
         </Button>
       )}
-      <Button
+      {pdf && <Button
         variant="secondary"
         aria-label={t("songs.detail.downloadPdf") || "PDF"}
         title={t("songs.detail.downloadPdf") || "PDF"}
@@ -53,7 +55,7 @@ export function ActionsChant({ variante, youtubeId, showVideo, setShowVideo, dow
       >
         <FileText className="h-4 w-4" />
         <span className={libelle}>{t("songs.detail.downloadPdf") || "PDF"}</span>
-      </Button>
+      </Button>}
       {crayon !== undefined && (
         <Button
           variant="secondary"

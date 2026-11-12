@@ -743,6 +743,18 @@ export function canEcrirePartition(user: AuthUser | null, p: Pick<Partition, "ow
   return !!user && p.ownerUid === user.uid;
 }
 
+/** Export PDF réservé (docs/spec-entree-musiciens.md) : un masquage, pas une permission. Pas de miroir dans
+ *  firestore.rules : le PDF se fait dans le navigateur à partir de données déjà lisibles (exception assumée à la
+ *  règle des permissions en double). Setlist : l'équipe (modification) ou la présidence du service. Chant : sans
+ *  compte, tout le monde ; connecté, les admins et l'équipe d'une setlist à venir. */
+export function canExporterPdfSetlist(user: AuthUser | null, profile: UserProfile | null, setlist: FSSetlist, presidence: boolean): boolean {
+  return !!user && (canEditSetlist(user, profile, setlist) || presidence);
+}
+
+export function canExporterPdfChant(user: AuthUser | null, equipeAVenir: boolean): boolean {
+  return !user || isAdminUser(user) || equipeAVenir;
+}
+
 export function canEditSetlist(
   user: AuthUser,
   profile: UserProfile | null,
