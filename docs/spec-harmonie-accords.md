@@ -187,3 +187,6 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
 - **voicings** : **guitare : accords de 4 à la place des barrés**, **piano : 1 et 5 à gauche, triade à droite en
   renversement le plus proche** (fiche « mains » pour débuter).
 - **transitions** : **d'un chant en 6/8 vers un 4/4** (même tempo de noire pointée).
+- 12/11/2026 : **go de Timothée pour H3** (« tu peux lancer h3 », au pilote). Les quatre places de code sont prises :
+  H3 part à la première place libre (fin du comptage T3), avant le pupitre (une tranche courte passe devant une chaîne
+  de six ; décision déléguée, pilote, 12/11). H4 et suivants : un go par lot.

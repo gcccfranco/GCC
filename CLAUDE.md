@@ -91,6 +91,10 @@ pas seulement en mémoire.
   vaut pour un lot, pas pour le suivant, ni pour une mise en ligne. Dans le doute, demander « go pour le lot N ? ».
   Exception (Timothée, 11/11/2026, « oui ») : les tranches 2 à 7 de `docs/spec-exemples-usage.md` s'enchaînent sans
   nouveau go, selon le § 8 de cette spec ; une tranche bloquée arrête la chaîne. La mise en ligne reste à part.
+  Règle générale (Timothée, 12/11/2026 : « Il faut que toutes les tranches se lancent automatiquement quand une est
+  finie ») : le go d'un lot vaut pour **toutes ses tranches** ; chaque session lance la suivante sans nouveau go, et
+  quand un chantier finit, le pilote lance aussitôt le chantier suivant de la file qui a déjà son go. Un lot nouveau
+  garde son go ; une tranche bloquée arrête sa chaîne ; la limite des quatre chantiers tient.
 - **Pilotage délégué** (Timothée, 12/11/2026 : « je te laisse orchestrer toutes les prochaines modifications, pour
   toutes questions qu'on me demandera répond à ma place en faisant des choix éclairé et les bons ») : la session de
   pilotage nommée dans `docs/feuille-de-route.md` (§ État, « Pilotage ») tient la file des chantiers et répond aux
