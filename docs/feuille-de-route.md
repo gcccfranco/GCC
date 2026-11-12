@@ -50,8 +50,8 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   traits, avec deux rangements ; ordre retenu, celui du cadrage AP (`spec-pupitre-musicien.md` § Ordre recommandé,
   point 3) : MP d'abord, AN ensuite, réécrit sur le nouveau rangement (suspension d'AN à confirmer par Timothée).
 - **Pilotage délégué depuis le 12/11/2026** (`CLAUDE.md`, § Sessions cloud) : session « Pilotage · AO et AP »,
-  lancée par « Incohérence entre sessions » (`session_01UMdfubTRUV3nKS69sehVcU`) ; son identifiant : à la ligne
-  suivante. File des chantiers de code, trois au plus : AO (FS-F, puis JP-C et JP-D) ; les deux exemples (T1 à T7) ;
+  lancée par « Incohérence entre sessions » (`session_01UMdfubTRUV3nKS69sehVcU`) ; son identifiant :
+  `session_01UMdfuaG5Kou4ye2eij6aMr`. File des chantiers de code, trois au plus : AO (FS-F, puis JP-C et JP-D) ; les deux exemples (T1 à T7) ;
   « Ma partition » (MP-1 à MP-5) ; ensuite le comptage d'usage (T3), Harmonie (H2 et suivants), AN réécrit après MP-5.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
