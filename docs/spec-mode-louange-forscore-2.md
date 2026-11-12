@@ -498,7 +498,8 @@ tranche ; **planches `npm run jianpu:audit` regardées** pour chaque scan certif
 
 ### AN — Annotations façon forScore
 
-**Réécrit le 12/11/2026 après MP-5 ; attend le go de Timothée**, et ne se code qu'après la fin du pupitre PU-6 (même
+**Réécrit le 12/11/2026 après MP-5 ; go de Timothée le 12/11/2026 (« Go », après lecture des tranches ; AN-Q1 : la
+proposition s'applique, il ne l'a pas contestée)**, et ne se code qu'après la fin du pupitre PU-6 (même
 fichier `PerformanceMode.tsx`). La version du 08/11, écrite sur l'ancien rangement (documents
 `annotations/{uid}__{setlistId}__{pageKey}`, décision 18), est remplacée par celle-ci, qui se code sur le rangement et
 le Crayon de « Ma partition » (`docs/spec-ma-partition.md`, § Traits accrochés au texte, lignes d'Avancement MP-1 à
