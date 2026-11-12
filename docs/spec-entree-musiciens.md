@@ -386,3 +386,15 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   rôle ; les ronds « Accords » et « Paroles » le retirent encore (FS-F). Motif : l'ordre et la disposition ne changent
   pas ce que le rôle montre (accords, paroles), et cela s'accorde avec la question 3 (Présidence et Choriste : le rôle
   n'impose ni ordre ni disposition). Questions 1, 4, 5, 6, 7 : toujours ouvertes ; aucun go de code.
+- 12/11/2026 : **réponses de Timothée au pilote** (« 1. Non », « 3. Les chanteurs et présidences choisissent ce qu'ils
+  veulent, pas besoin de leur imposer », « pour le reste fais ce qui est bon »).
+  **Question 1 : non, contre la proposition** : le PDF d'un chant **reste** aux visiteurs sans compte ; PU-1 ne le
+  retire qu'aux comptes connectés qui ne sont ni admins ni de l'équipe d'une setlist à venir (décision 2).
+  `canExporterPdfChant` rend donc vrai sans compte. **Question 3 : confirmée** (ligne précédente) : PU-5 n'impose ni
+  ordre ni disposition à Présidence et Choriste. **Questions 4, 5, 6, 7 : décisions déléguées (pilote, 12/11)**, les
+  propositions sont retenues telles quelles : (4) équipe = créateur ou membre de `editeurs` ; (5) services des 14
+  prochains jours, à l'ouverture de l'onglet Setlists, une fois par jour et par setlist ; (6) PU-2 code la vignette
+  简谱, ses captures sombres vont au pilote pour Timothée, essai sur iPad avant la mise en ligne, elle tombe seule si
+  elle ne convient pas ; (7) PU-1 à PU-3 d'abord, PU-4 à PU-6 après FS-F, jamais en même temps qu'une session dans
+  `PerformanceMode.tsx`. Motif : aucune ne sort de ce que Timothée a déjà décidé, toutes se défont sans perte.
+  **Plus aucune question ouverte. Aucun go de code donné** : attend « go pour le pupitre » (ou par tranche).
