@@ -381,3 +381,8 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   font ce qu'ils veulent » : le rôle Présidence ou Choriste n'impose ni ordre ni disposition, la personne garde ce
   qu'elle a choisi (PU-5 à écrire ainsi). **Question 2 : pas comprise** telle qu'elle est écrite ; le pilote la lui
   réexplique, elle reste ouverte. Questions 1, 4, 5, 6, 7 : sans réponse. Aucun go de code donné.
+- 12/11/2026 : **question 2, décision déléguée (pilote, 12/11)** : Timothée laisse le choix au pilote (« Tu peux donner
+  ta réponse au nouveau pilote »). Retenue : **la proposition**. Changer l'ordre ou la disposition ne retire plus le
+  rôle ; les ronds « Accords » et « Paroles » le retirent encore (FS-F). Motif : l'ordre et la disposition ne changent
+  pas ce que le rôle montre (accords, paroles), et cela s'accorde avec la question 3 (Présidence et Choriste : le rôle
+  n'impose ni ordre ni disposition). Questions 1, 4, 5, 6, 7 : toujours ouvertes ; aucun go de code.
