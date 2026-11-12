@@ -184,3 +184,5 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
 - 11/11/2026 (nuit) : lot MP en attente, règle des trois chantiers (demande de la session principale AP). MP-1 avait démarré : rien de commité, le travail partiel reste dans la copie de travail de la session orchestratrice (non poussé). Reprise au début de MP-1, après `git pull --rebase` (la vue Partitions aura changé).
 - 12/11/2026 : la spec d'AO avait reçu, sur une autre branche, un go pour AN sur l'ancien rangement (vague 3
   enchaînée). Branches réunies ; AN est suspendu dans la spec d'AO jusqu'à MP-5, comme le veut cette spec.
+- 12/11/2026 : à suivre en MP-5 : FS-F (AO, en cours) affiche les traits pendant la demi-page (`DemiPage.tsx`, calque
+  `StrokesLayer`) depuis l'ancien rangement ; ce calque est à porter sur le nouveau avec le reste.

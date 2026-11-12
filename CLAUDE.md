@@ -70,7 +70,11 @@ Valables pour toutes les sessions (complétées le 13/10/2026). Une nouvelle con
 pas seulement en mémoire.
 - **Branches** (Timothée, 29/10/2026) : on ne passe plus par `ui/apple-design` (fusionnée). `main` = le site en ligne
   (Vercel déploie chaque push) : n'y pousser **que sur un ordre explicite de Timothée, donné au moment même** (un
-  « oui » à une autre question n'en est pas un). En attendant, le travail reste sur la branche de la session.
+  « oui » à une autre question n'en est pas un). En attendant, le travail se fait sur **`claude/corrections-design`**,
+  la branche de travail commune (Timothée, 12/11/2026 : « Toi aussi mets toi sur la branche claude/corrections-design ») :
+  une session qui a reçu une autre branche (conversation ouverte depuis le téléphone) bascule dessus avant de
+  travailler, et toute session lancée l'est avec `source_revision` et `outcome_branch` = cette branche. Sans cela, AO
+  et AP ont travaillé un jour sur deux branches sans se voir (`docs/feuille-de-route.md`, « Branches réunies »).
 - **Pousser** : `git pull --rebase` juste avant chaque push (d'autres sessions poussent aussi) ; jamais de
   `push --force`, jamais de suppression de branche. Indexer **par nom** (jamais `git add -A`) ; ne jamais commiter
   `next-env.d.ts` ni `tsconfig.json` réécrits par un serveur de test, `test-results/`, `.next*/`. Un fichier sous
@@ -87,6 +91,13 @@ pas seulement en mémoire.
   vaut pour un lot, pas pour le suivant, ni pour une mise en ligne. Dans le doute, demander « go pour le lot N ? ».
   Exception (Timothée, 11/11/2026, « oui ») : les tranches 2 à 7 de `docs/spec-exemples-usage.md` s'enchaînent sans
   nouveau go, selon le § 8 de cette spec ; une tranche bloquée arrête la chaîne. La mise en ligne reste à part.
+- **Pilotage délégué** (Timothée, 12/11/2026 : « je te laisse orchestrer toutes les prochaines modifications, pour
+  toutes questions qu'on me demandera répond à ma place en faisant des choix éclairé et les bons ») : la session de
+  pilotage nommée dans `docs/feuille-de-route.md` (§ État, « Pilotage ») tient la file des chantiers et répond aux
+  questions des sessions à sa place ; son go, son « reprends » ou son choix vaut celui de Timothée, et elle l'écrit,
+  daté et motivé, dans la spec (« décision déléguée »). Restent à Timothée seul : pousser sur `main`, publier
+  `firestore.rules`, lever un garde-fou de dépense. Ce qu'il écrit lui-même l'emporte ; il reprend la main d'un mot.
+  Pilote économe : réveil sur évènement, aucune transcription lue en entier, passage de main avant le plafond.
 - **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (pistes aux
   trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go. Planche = workflow
   `/planche` (équipe design, 02/11/2026, `docs/orchestration.md` § 4) ; la conversation principale relit, publie
