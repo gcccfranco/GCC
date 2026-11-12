@@ -75,6 +75,7 @@ import { useMesPartitions } from "@/lib/partition/useMesPartitions";
 import { lire, resoudreConflit, type Lecture } from "@/lib/partition/lecture";
 import { passerAuCulte, rangDansLaCourante } from "@/lib/partition/fusion";
 import type { PartitionDeChant } from "@/lib/firebase/partitions";
+import type { Trait } from "@/types/partition";
 import { BarreCrayon, type CibleCrayon } from "@/components/partition/BarreCrayon";
 import { ChoixDestination, type Destination } from "@/components/partition/ChoixDestination";
 import { adresseVue, lireAdresse, poser, surLaSetlist } from "@/lib/setlist/adresseVue";
@@ -379,6 +380,29 @@ export function SetlistDetailClient() {
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, setlist, contents, versions, mesPartitions.mes, mesPartitions.partagees, mesPartitions.choix, t]);
+  /** Traits du Crayon par chant (MP-5) : les miens, toujours ; ceux de la partition partagée que je lis, si son auteur les partage. */
+  const traitsParChant = useMemo(() => {
+    const out: Record<string, { miens: Trait[]; autres: Trait[] }> = {};
+    for (const slug of slugsPartitions) {
+      const partagee = mesPartitions.partagees.find((p) => p.slug === slug && p.ownerUid === lectures[slug]?.valeur);
+      out[slug] = { miens: mesPartitions.mes[slug]?.traits ?? [], autres: partagee?.sharedTraits ? partagee.traits : [] };
+    }
+    return out;
+  }, [slugsPartitions, lectures, mesPartitions.mes, mesPartitions.partagees]);
+  // Écritures des traits regroupées (≈ 800 ms) : un trait par tracé ferait une écriture par tracé.
+  const traitsEnAttente = useRef<Record<string, { traits: Trait[]; minuterie: ReturnType<typeof setTimeout> }>>({});
+  const enregistrerTraitsRef = useRef<(slug: string, traits: Trait[]) => Promise<void>>(async () => {});
+  // Un échec d'écriture des traits : le mode louange revient à l'état enregistré.
+  const [echecTraits, setEchecTraits] = useState(0);
+  const envoyerTraitsRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    // Sortie de la page ou de l'onglet : pas d'attente des 800 ms.
+    const envoyer = () => envoyerTraitsRef.current();
+    const cache = () => { if (document.visibilityState === "hidden") envoyer(); };
+    window.addEventListener("pagehide", envoyer);
+    document.addEventListener("visibilitychange", cache);
+    return () => { window.removeEventListener("pagehide", envoyer); document.removeEventListener("visibilitychange", cache); };
+  }, []);
   /** Ma partition lue à la place de la présidence (sinon : les anciennes versions décident). */
   const lectureNeuve = (item: SetlistItem) => {
     const l = lectures[item.songSlug];
@@ -1212,6 +1236,55 @@ export function SetlistDetailClient() {
       setSavingLine(false);
     }
   }
+
+  /** Mode louange : mes traits d'un chant ont changé. Réécrit ma partition (créée au besoin, texte et `base` inchangés). */
+  function traitsChanges(slug: string, traits: Trait[]) {
+    const en = traitsEnAttente.current[slug];
+    if (en) clearTimeout(en.minuterie);
+    traitsEnAttente.current[slug] = {
+      traits,
+      minuterie: setTimeout(() => {
+        delete traitsEnAttente.current[slug];
+        void enregistrerTraitsRef.current(slug, traits);
+      }, 800),
+    };
+  }
+  /** Écrit tout de suite les traits en attente (sortie du mode louange, de la page, de l'onglet). */
+  function envoyerTraits() {
+    for (const [slug, en] of Object.entries(traitsEnAttente.current)) {
+      clearTimeout(en.minuterie);
+      delete traitsEnAttente.current[slug];
+      void enregistrerTraitsRef.current(slug, en.traits);
+    }
+  }
+  envoyerTraitsRef.current = envoyerTraits;
+  async function enregistrerTraits(slug: string, traits: Trait[]) {
+    const item = setlist?.items.find((i) => i.songSlug === slug);
+    if (!user || !item) return;
+    // Lecture de ma partition pas aboutie : on ne réécrit rien (le document existant perdrait son texte et son partage).
+    if (!mesPartitions.charges[slug]) { flashFeedback(t("maPartition.erreurEnregistrement")); setEchecTraits((n) => n + 1); return; }
+    const prev = mesPartitions.lireLocale(slug);
+    try {
+      await mesPartitions.enregistrer({
+        slug,
+        ownerUid: user.uid,
+        ownerName: prev?.ownerName ?? historyAuthor(profile)?.name ?? "",
+        base: prev?.base ?? sourceDuCulte(item),
+        content: prev?.content ?? null,
+        structure: prev?.structure ?? null,
+        sectionOrigins: prev?.sectionOrigins,
+        jianpuChords: prev?.jianpuChords,
+        key: prev?.key ?? null,
+        traits,
+        sharedWith: prev?.sharedWith ?? [],
+        sharedTraits: prev?.sharedTraits ?? false,
+      });
+    } catch {
+      flashFeedback(t("maPartition.erreurEnregistrement"));
+      setEchecTraits((n) => n + 1);
+    }
+  }
+  enregistrerTraitsRef.current = enregistrerTraits;
 
   /** Réécrit ma partition de ce chant (`partitions/{uid}__{slug}`, créée au besoin) : `base` = la couche du dessous
    *  (celle du culte, sinon le .cho) quand le texte change, sinon celle d'avant — la fusion ne prend pas pour miennes des
@@ -2370,7 +2443,17 @@ export function SetlistDetailClient() {
           horsLigne={horsLigne}
           rolePlanning={rolePlanning}
           chantInitial={chantInitial}
+          lectures={lectures}
+          onChoisirLecture={(slug, valeur) => {
+            const i = setlist.items.findIndex((it) => it.songSlug === slug);
+            if (i >= 0) void choisirLecture(i, valeur);
+          }}
+          traits={traitsParChant}
+          onTraitsChange={traitsChanges}
+          chantsCharges={Object.fromEntries(slugsPartitions.map((s) => [s, !!mesPartitions.charges[s]]))}
+          echecTraits={echecTraits}
           onClose={() => {
+            envoyerTraits();
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             setPerformanceMode(false);
             setChantInitial(undefined);

@@ -388,7 +388,7 @@ for (const slug of ["一生爱你", "为我而来"]) {
   });
 }
 
-test("demi-page : « Annoter » remet la page entière", async ({ page }, testInfo) => {
+test("demi-page : « Crayon » remet la page entière", async ({ page }, testInfo) => {
   await ouvrir(page);
   await tourner(page, testInfo, 1, "fleche");
   await expect(enDemi(page)).toHaveCount(1);
@@ -554,7 +554,7 @@ test("demi-page : les traits de la page 2 se voient au-dessus du filet, ceux de 
   expect(Math.abs(bas.y - h * 0.85), "trait de la page 1 à sa place").toBeLessThan(5);
   expect(bas.y + bas.decalage, "sous le filet").toBeGreaterThan(bas.filet);
   expect(db.writes.filter((x) => x.path.startsWith("annotations/")), "aucune écriture").toEqual([]);
-  // « Annoter » remet la page entière : les calques de demi-page disparaissent.
+  // « Crayon » remet la page entière : les calques de demi-page disparaissent.
   await basculerAnnoter(page);
   await expect(page.locator("[data-performance-mode] [data-strokes-demi]")).toHaveCount(0);
   await expect(enDemi(page)).toHaveCount(0);

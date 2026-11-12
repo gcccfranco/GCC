@@ -55,13 +55,13 @@ function clampPan(zoom: number, p: Pan): Pan {
 // Demi-page : `clip` (clip-path en px écran, sur un cadre fixe) et `decalage` (px écran) rognent et descendent les traits comme le texte.
 export function StrokesLayer({ data, rogneBas, clip, decalage }: { data: AnnotationData; rogneBas?: string; clip?: string; decalage?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const dpr = window.devicePixelRatio || 1;
-    const w = window.innerWidth;
-    const h = window.innerHeight;
     canvas.width = w * dpr;
     canvas.height = h * dpr;
     canvas.style.width = `${w}px`;
@@ -73,12 +73,18 @@ export function StrokesLayer({ data, rogneBas, clip, decalage }: { data: Annotat
       scaleX: w / (data.w || w),
       scaleY: h / (data.h || h),
     });
-  }, [data]);
+  }, [data, w, h]);
 
   const canvas = (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 pointer-events-none"
+      // Boîtes englobantes des tracés (px écran) : lues par les tests, qui comparent un trait à son mot.
+      data-strokes-boites={JSON.stringify(data.strokes.map((s) => {
+        const xs = s.points.map((p) => p[0] * w / (data.w || w));
+        const ys = s.points.map((p) => p[1] * h / (data.h || h));
+        return [Math.round(Math.min(...xs)), Math.round(Math.min(...ys)), Math.round(Math.max(...xs)), Math.round(Math.max(...ys))];
+      }))}
       style={{ zIndex: clip ? undefined : 5, clipPath: rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined, transform: decalage ? `translateY(${decalage}px)` : undefined }}
       aria-hidden="true"
     />
@@ -393,6 +399,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
 
       {/* Panneau d'outils — bord droit, centré entre les deux barres (l'étiquette de la glissière, dimanche-24, a grandi celle du bas) */}
       <div
+        data-crayon-barre
         className="absolute my-auto h-fit flex flex-col gap-1.5 material-panel [box-shadow:var(--shadow-flottant)] rounded-xl p-2 max-h-[85vh] overflow-y-auto"
         style={{ zIndex: 11, right: "calc(0.75rem + var(--sar, 0px))", top: (barres?.haut ?? 0) + 8, bottom: (barres?.bas ?? 0) + 8 }}
         onPointerDown={(e) => e.stopPropagation()}

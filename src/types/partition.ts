@@ -3,12 +3,13 @@ import type { JianpuChords } from "@/types/setList";
 // Ma partition (docs/spec-ma-partition.md, « Rangement ») : un document par personne et par chant,
 // `partitions/{uid}__{songSlug}` ; le choix de lecture suit le compte, `partitions/{uid}__choix`.
 
-/** Trait du Crayon accroché au texte. Type provisoire, à compléter en MP-5 (docs/spec-ma-partition.md, § Traits) :
- *  `ancre` = un point du texte (section, ligne, caractère) ou, pour un scan 简谱, `{ scan: true }` (coordonnées
- *  du scan) ; `points` = le tracé. */
+/** Trait du Crayon accroché au texte (docs/spec-ma-partition.md, § Traits). `ancre` : un caractère du texte (section,
+ *  ligne dans la section, rang du caractère des paroles) ou une image de scan 简谱. Texte : `points` et `epaisseur`
+ *  en em de la ligne, relatifs au coin haut-gauche du caractère. Scan : en fraction de la largeur de l'image,
+ *  relatifs à son coin haut-gauche. Calculs dans `src/lib/annotations/ancres.ts`. */
 export type Trait = {
-  ancre: { section: string; ligne: number; car: number } | { scan: true };
-  outil: string;
+  ancre: { section: string; ligne: number; car: number } | { scan: true; image: number };
+  outil: "pen" | "highlighter";
   couleur: string;
   epaisseur: number;
   points: [number, number][];

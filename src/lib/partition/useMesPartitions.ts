@@ -11,10 +11,13 @@ export function useMesPartitions(uid: string | undefined, slugs: string[]) {
   const [partagees, setPartagees] = useState<PartitionDeChant[]>([]);
   const [choix, setChoix] = useState<ChoixPartitions>({ choices: {}, partageTout: [] });
   const [enAttente, setEnAttente] = useState(false);
+  // Chants dont la lecture de ma partition a abouti (absente = lue, 404). Une lecture en échec n'y est pas : « pas lue » ≠ « pas de partition ».
+  const [charges, setCharges] = useState<Record<string, boolean>>({});
   // Miroir de `mes` tenu à jour à chaque écriture, sans attendre le rendu (cases cochées vite, « toutes mes partitions »).
   const mesRef = useRef<Record<string, PartitionDeChant>>({});
 
   useEffect(() => {
+    setCharges({});
     if (!uid) {
       mesRef.current = {};
       setMes({});
@@ -29,12 +32,13 @@ export function useMesPartitions(uid: string | undefined, slugs: string[]) {
     setPartagees([]);
     setChoix({ choices: {}, partageTout: [] });
     Promise.all([
-      Promise.all(slugs.map((s) => lirePartition(uid, s).catch(() => null))),
+      Promise.all(slugs.map((s) => lirePartition(uid, s).then((p) => ({ ok: true, p }), () => ({ ok: false, p: null as PartitionDeChant | null })))),
       lirePartitionsPartageesAvecMoi(uid).catch(() => [] as PartitionDeChant[]),
       lireChoix(uid).catch(() => null),
     ]).then(([lues, autres, c]) => {
       if (!vivant) return;
-      mesRef.current = Object.fromEntries(lues.filter((p): p is PartitionDeChant => !!p).map((p) => [p.slug, p]));
+      mesRef.current = Object.fromEntries(lues.map((l) => l.p).filter((p): p is PartitionDeChant => !!p).map((p) => [p.slug, p]));
+      setCharges(Object.fromEntries(slugs.map((s, i) => [s, lues[i].ok])));
       setMes(mesRef.current);
       setPartagees(autres.filter((p) => slugs.includes(p.slug)));
       if (c) setChoix(c);
@@ -122,5 +126,8 @@ export function useMesPartitions(uid: string | undefined, slugs: string[]) {
     choisir(partagee.slug, "mienne");
   }, [uid, enregistrer, choix.partageTout, choisir]);
 
-  return { mes, partagees, choix: choix.choices, partageTout: choix.partageTout, choisir, enregistrer, enAttente, partagerAvec, partagerTraits, partagerTout, garderUneCopie };
+  /** Ma partition de ce chant telle qu'elle est maintenant (écritures en cours comprises), sans attendre le rendu. */
+  const lireLocale = useCallback((slug: string) => mesRef.current[slug], []);
+
+  return { mes, charges, lireLocale, partagees, choix: choix.choices, partageTout: choix.partageTout, choisir, enregistrer, enAttente, partagerAvec, partagerTraits, partagerTout, garderUneCopie };
 }

@@ -1,5 +1,6 @@
 import { delaiMax } from "@/lib/delaiMax";
 import { FS_BASE, authHeader, checkRest, fromFsValue, toFsFields, type RawDoc } from "@/lib/firebase/setlists";
+import { traitsAplatis, traitsValides } from "@/lib/annotations/ancres";
 import { repairCopyIds } from "@/lib/setlist/sectionOrigins";
 import type { ChoixPartitions, Partition } from "@/types/partition";
 
@@ -39,7 +40,7 @@ function versPartition(doc: RawDoc): PartitionDeChant {
     ...(sectionOrigins ? { sectionOrigins } : {}),
     ...(jianpuChords ? { jianpuChords } : {}),
     key: (d.key as string | null) ?? null,
-    traits: (d.traits as Partition["traits"] | null) ?? [],
+    traits: traitsValides(d.traits),
     sharedWith: (d.sharedWith as string[] | null) ?? [],
     sharedTraits: d.sharedTraits === true,
     ...(d.updatedAt ? { updatedAt: d.updatedAt as Date } : {}),
@@ -108,7 +109,8 @@ async function verifier(res: Response): Promise<void> {
 
 /** Réécrit le document en entier ; `updatedAt` est horodaté ici. Lève si l'écriture échoue. */
 export async function enregistrerPartition(p: PartitionDeChant): Promise<void> {
-  const { slug, updatedAt: _ignore, ...doc } = p;
+  const { slug, updatedAt: _ignore, ...brut } = p;
+  const doc = { ...brut, traits: traitsAplatis(brut.traits) };
   void _ignore;
   const propres = Object.fromEntries(Object.entries(doc).filter(([, v]) => v !== undefined));
   const res = await fetch(`${FS_BASE}/partitions/${encodeURIComponent(idPartition(p.ownerUid, slug))}`, {

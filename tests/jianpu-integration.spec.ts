@@ -5,7 +5,7 @@ import { inflateSync } from "zlib";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { loadChords, openSheet } from "./helpers/jianpu";
-import { attendreCompteur, fermerBarre } from "./helpers/louange";
+import { attendreCompteur, basculerAnnoter, fermerBarre } from "./helpers/louange";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
@@ -740,7 +740,7 @@ async function ouvrirLouangeT5(page: Page, role = "pianiste", certifie = false) 
   if (!certifie) await scanNonCertifie(page);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
-  await signInAs(page, MUSICIEN, {
+  const db = await signInAs(page, MUSICIEN, {
     "setlists/setlist-t5": {
       title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
       language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
@@ -755,11 +755,12 @@ async function ouvrirLouangeT5(page: Page, role = "pianiste", certifie = false) 
   // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus. Certifié : la page est une tranche.
   if (certifie) {
     await expect(page.locator("[data-performance-mode] [data-jianpu-tranche]:not([aria-hidden=true] *)").first()).toBeAttached({ timeout: 30_000 });
-    return;
+    return db;
   }
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
   await expect.poll(async () => ratio((await fenetres(page, "[data-performance-mode]"))[0].fenetre) / (w / (h - top))).toBeCloseTo(1, 2);
+  return db;
 }
 
 /** Bas de la barre du haut, haut de la barre du bas (elles restent en place, escamotées). */
@@ -837,20 +838,24 @@ test("L3-T5a en-tête d'une ligne (mode louange), A+ 150 %, capo et tonalité de
   expect(e.x + e.width).toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
 });
 
-test("L3-T5a annotations : une page de scan a sa propre clé (« j2 », « j4-<y0> » sur un scan certifié) — les traits posés avant que le scan ne bouge ne s'y chargent plus", async ({ page }) => {
+test("L3-T5a annotations (MP-5) : un trait tracé sur un scan s'accroche à l'image (ancre « scan », coordonnées de l'image) dans ma partition, plus sous la clé de la page", async ({ page }) => {
   test.setTimeout(90_000);
-  const lues: string[] = [];
-  page.on("request", (r) => {
-    const m = r.url().match(/\/documents\/(annotations\/[^?]+)/);
-    if (m && r.method() === "GET") lues.push(decodeURIComponent(m[1]));
-  });
-  await ouvrirLouangeT5(page, "pianiste", true);
-  // 一生爱你 est certifié (`systemes.json`, lot JP-B) : sa page est une tranche, clé « j4-<y0> ». Un scan non
-  // certifié garde « j2 » (« j3 » en paysage sur grand écran, colonne L3-T5b) : tests/louange-jianpu-tranches.spec.ts.
-  // Téléphone en portrait : demi-lignes, clé « j5-<y0> » (lot JP-C). L'ancienne clé « j2 » / « j3 » est aussi lue (migration) : on cherche la bonne parmi les lectures.
-  const { width, height } = page.viewportSize()!;
-  const cle = width < 768 && height > width ? /j5-\d+$/ : /j4-\d+$/;
-  await expect.poll(() => lues.some((l) => cle.test(l))).toBe(true);
+  // 一生爱你 est certifié (`systemes.json`, lot JP-B) : sa page est une tranche. Les anciennes annotations par page
+  // (clés « j2 », « j4-<y0> ») restent lues, plus rien ne s'y écrit : tests/louange-jianpu-tranches.spec.ts.
+  const db = await ouvrirLouangeT5(page, "pianiste", true);
+  await basculerAnnoter(page);
+  const fenetre = (await page.locator("[data-performance-mode] [data-jianpu-tranche]:not([aria-hidden=true] *)").first().boundingBox())!;
+  const x = fenetre.x + fenetre.width * 0.4;
+  const y = Math.min(fenetre.y + fenetre.height * 0.5, page.viewportSize()!.height * 0.5);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 40, y + 15, { steps: 4 });
+  await page.mouse.move(x + 90, y + 30, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(() => db.writes.filter((w) => w.path.startsWith("partitions/")).length).toBeGreaterThan(0);
+  const traits = db.writes.filter((w) => w.path.startsWith("partitions/")).at(-1)!.data.traits as { ancre: { scan?: boolean; image?: number } }[];
+  expect(traits[0].ancre).toMatchObject({ scan: true, image: 0 });
+  expect(db.writes.filter((w) => w.path.startsWith("annotations/")), "rien dans les annotations par page").toEqual([]);
 });
 
 // ─── L3-T5b : mode louange — en paysage sur grand écran, la structure en colonne ─

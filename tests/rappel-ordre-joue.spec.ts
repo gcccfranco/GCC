@@ -362,6 +362,10 @@ test.describe("rappel en Ordre joué", () => {
 
 const calque = (page: Page) => page.locator("[data-performance-mode] > canvas");
 const ecritesAnnot = (db: FakeDb) => db.writes.filter((w) => w.path.startsWith("annotations/"));
+// MP-5 : le Crayon écrit des traits accrochés au texte dans ma partition ; les annotations par page sont en lecture seule.
+const ecritesTraits = (db: FakeDb) => db.writes.filter((w) => w.path.startsWith("partitions/"));
+/** Clé de la page affichée : où se range une ancienne annotation par page. */
+const clePage = (page: Page) => page.locator("[data-performance-mode]").getAttribute("data-cle-page");
 
 /** Boîte (px d'écran) des pixels dessinés du calque de lecture. */
 const boite = (page: Page) =>
@@ -381,20 +385,27 @@ async function montrerChrome(page: Page) {
   await expect(page.getByRole("button", { name: "Quitter" })).toBeVisible();
 }
 
-async function tracer(page: Page, db: FakeDb) {
+/** `calques` : le canvas du Crayon, plus le calque des anciennes annotations de la page quand il y en a une. */
+async function tracer(page: Page, db: FakeDb, calques = 1) {
   await montrerChrome(page);
   await basculerAnnoter(page);
-  await expect(calque(page)).toHaveCount(1);
+  await expect(calque(page)).toHaveCount(calques);
   const ecran = page.viewportSize()!;
+  // Sur une ligne de texte (le trait s'accroche au texte : un tracé à plus de 2 em de toute ligne est ignoré), la plus proche de 55 % de la hauteur.
+  const y = await page.evaluate((cible) => {
+    const lignes = [...document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-trait-section]")].filter((e) => !e.closest("[aria-hidden=true]")).map((e) => e.getBoundingClientRect());
+    lignes.sort((p, q) => Math.abs((p.top + p.bottom) / 2 - cible) - Math.abs((q.top + q.bottom) / 2 - cible));
+    return (lignes[0].top + lignes[0].bottom) / 2;
+  }, ecran.height * 0.55);
   const x = ecran.width * 0.4;
-  const y = ecran.height * 0.55;
   await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.mouse.move(x + 40, y + 15, { steps: 4 });
-  await page.mouse.move(x + 90, y + 30, { steps: 4 });
+  await page.mouse.move(x + 40, y + 5, { steps: 4 });
+  await page.mouse.move(x + 90, y, { steps: 4 });
   await page.mouse.up();
-  await expect.poll(() => ecritesAnnot(db).length).toBeGreaterThan(0);
+  await expect.poll(() => ecritesTraits(db).length).toBeGreaterThan(0);
   await basculerAnnoter(page);
+  return y;
 }
 
 /** Hauteur actuelle du rappel (marge comprise), en px d'écran, et haut de la 1re section. */
@@ -416,7 +427,7 @@ test.describe("annotations avec le rappel", () => {
     await tracer(page, db);
     await expect.poll(() => boite(page)).not.toBeNull();
     const avant = (await boite(page))!;
-    expect(JSON.parse(ecritesAnnot(db).at(-1)!.data.strokes as string).rappel, "la hauteur du rappel est enregistrée").toBeGreaterThan(30);
+    expect((ecritesTraits(db).at(-1)!.data.traits as unknown[]).length, "le trait est enregistré dans ma partition, accroché au texte").toBeGreaterThan(0);
     await page.waitForTimeout(1500);
     await page.reload();
     await lancer(page);
@@ -437,9 +448,8 @@ test.describe("annotations avec le rappel", () => {
       const db = await ouvrirMode(page, [ABBA], affichage === "unique" ? "unique" : null, String(echelle));
       await allerPage(page, 2);
       await expect(onStage(page, "[data-rappel]")).toBeVisible();
-      // Un premier trait crée le document de la page (sa clé) ; on le remplace par une annotation d'avant.
-      await tracer(page, db);
-      const ecriture = ecritesAnnot(db).at(-1)!;
+      // Une annotation d'avant (par page, lecture seule) posée sous la clé de la page.
+      const cle = await clePage(page);
       const { rappel, haut } = await mesures(page, echelle);
       const ancien = affichage === "unique" ? 32 * echelle : 0;
       const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
@@ -448,7 +458,7 @@ test.describe("annotations avec le rappel", () => {
         w, h,
         strokes: [{ tool: "pen", size: 3.5, color: "#dc2626", points: [[w * 0.2, y], [w * 0.5, y]] }],
       });
-      db.set(decodeURIComponent(ecriture.path), { strokes: sansChamp, updatedAt: new Date() });
+      db.set(`annotations/${MUSICIEN.uid}__${SETLIST_ID}__${cle}`, { strokes: sansChamp, updatedAt: new Date() });
       await page.reload();
       await lancer(page);
       await page.keyboard.press("ArrowRight");
@@ -498,14 +508,15 @@ test.describe("annotations avec le rappel", () => {
       const [, y0, , y1] = (await boite(page))!;
       expect(Math.abs((y0 + y1) / 2 - haut), `trait à ${((y0 + y1) / 2).toFixed(1)} px, haut de la section à ${haut.toFixed(1)} px`).toBeLessThanOrEqual(3);
 
-      // Un trait de plus : tout s'enregistre sous la NOUVELLE clé, avec la hauteur du rappel ; l'ancienne reste.
-      await tracer(page, db);
-      const ecrite = ecritesAnnot(db).at(-1)!;
-      expect(decodeURIComponent(ecrite.path)).not.toBe(chemin);
-      const donnees = JSON.parse(ecrite.data.strokes as string);
-      expect(donnees.rappel).toBeGreaterThan(30);
-      expect(donnees.strokes).toHaveLength(2);
-      expect(decodeURIComponent(ecrite.path)).toContain(`${SETLIST_ID}__`);
+      // Un trait de plus : il s'enregistre dans ma partition ; l'ancienne annotation reste en lecture seule, intacte.
+      const yTrace = await tracer(page, db, 2);
+      expect(ecritesAnnot(db), "plus rien ne s'écrit dans les annotations par page").toEqual([]);
+      // Le trait s'ancre au bon endroit sur la page à rappel : il est relu là où il a été tracé (x 40 %, sur la ligne tracée).
+      const { w: largeur } = await page.evaluate(() => ({ w: innerWidth }));
+      await expect.poll(async () => {
+        const boites = await page.evaluate(() => [...document.querySelectorAll("[data-performance-mode] > canvas[data-strokes-boites]")].flatMap((c) => JSON.parse(c.getAttribute("data-strokes-boites")!) as number[][]));
+        return boites.some((b) => Math.abs(b[0] - largeur * 0.4) <= 8 && b[1] >= yTrace - 12 && b[3] <= yTrace + 12);
+      }, { message: "le trait neuf est sur la page, là où il a été tracé" }).toBe(true);
       expect(db.doc(chemin)!.strokes).toBe(sansChamp);
     });
   }

@@ -17,6 +17,7 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
+import { ancrerTrace, useTraitsAncres, type TraitsParChant } from "./hooks/useTraitsAncres";
 import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, AlignLeft, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves, X } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import type { Tranche } from "@/lib/performance/tranchesScan";
@@ -36,7 +37,10 @@ import { pinyin_font } from "@/components/song/pinyinFont";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { dpOrigin } from "@/lib/setlist/dp";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
-import { ANCIEN_RAPPEL } from "@/lib/annotations/strokes";
+import { ANCIEN_RAPPEL, type AnnotationData, type Stroke } from "@/lib/annotations/strokes";
+import { libelleLecture } from "@/components/partition/MenuJeLis";
+import type { Lecture, Marques } from "@/lib/partition/lecture";
+import type { Trait } from "@/types/partition";
 import { getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
@@ -103,6 +107,7 @@ function BlockRenderer({
   transitionApres,
   tempoChant,
   tranche,
+  marques,
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
@@ -126,6 +131,8 @@ function BlockRenderer({
   tempoChant?: number;
   /** Page de scan 简谱 certifié : la tranche de la page de partition à montrer (lot JP-B). */
   tranche?: TrancheFenetre;
+  /** Ma partition : signes des lignes du chant (MP-2), comme sur la page de setlist. */
+  marques?: Marques;
 }) {
   if (block.kind === "song-header") {
     return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} feuilleRoute={feuilleRoute} tempo={tempoChant} disposition={disposition} />;
@@ -173,6 +180,7 @@ function BlockRenderer({
       couleurDe={couleurDe}
       // Lot CV : les exceptions de mots chinois du chant (motsChinois.ts) s'appliquent au pupitre comme sur la page du chant.
       slug={block.songSlug}
+      marques={marques}
     />
   );
 }
@@ -385,6 +393,17 @@ interface PerformanceModeProps {
   rolePlanning?: RolePreset | null;
   /** Ouverture sur le chant de cet item (sa `position`, celle de son en-tête), une seule fois ; absent ou sans en-tête : page 0. */
   chantInitial?: number;
+  /** Ma partition (docs/spec-ma-partition.md) : quelle partition se lit, par chant ; sert aux signes et à la rubrique « Partition » de « Je joue ». */
+  lectures?: Record<string, Lecture>;
+  onChoisirLecture?: (slug: string, valeur: string) => void;
+  /** Traits accrochés au texte, par chant : les miens, et ceux de la partition partagée que je lis (si son auteur les partage). */
+  traits?: TraitsParChant;
+  /** Mes traits d'un chant ont changé : à écrire dans ma partition (regroupé par le parent). */
+  onTraitsChange?: (slug: string, traits: Trait[]) => void;
+  /** Chants dont ma partition est lue : le Crayon n'est offert qu'alors (sinon l'écriture écraserait le document existant). */
+  chantsCharges?: Record<string, boolean>;
+  /** Change quand une écriture de traits échoue : l'écran revient à l'état enregistré. */
+  echecTraits?: number;
   onClose: () => void;
 }
 
@@ -403,6 +422,12 @@ export function PerformanceMode({
   horsLigne = false,
   rolePlanning = null,
   chantInitial,
+  lectures,
+  onChoisirLecture,
+  traits,
+  onTraitsChange,
+  chantsCharges,
+  echecTraits = 0,
   onClose,
 }: PerformanceModeProps) {
   const { t } = useTranslation();
@@ -453,7 +478,9 @@ export function PerformanceMode({
       return {};
     }
   });
+  // « Crayon » (ex-« Annoter ») : l'état garde son nom, il porte les traits accrochés au texte (MP-5).
   const [annotateMode, setAnnotateMode] = useState(false);
+  const marquesDe = (b: PerformanceBlock) => (b.kind === "section" ? lectures?.[b.songSlug ?? ""]?.marques : undefined);
   // Loupe du mode annotation : grossissement (≠ taille du texte, ne re-pagine pas)
   // + déplacement. Possédée ici car elle agrandit aussi le texte (transform CSS).
   const [annotZoom, setAnnotZoom] = useState(1);
@@ -1207,13 +1234,99 @@ export function PerformanceMode({
     if (apercuEteint && !layout[currentPage]?.fit) l.push(pageV2 ? cleAvecApercuV2 : cleAvecApercuSansV2);
     return l;
   }, [cleAvantFeuille, pageV2, cleSansV2, trancheCourante, blocks, currentPageIndices, layoutSig, ecran.grand, apercuEteint, layout, currentPage, cleAvecApercuV2, cleAvecApercuSansV2]);
-  const { annotationsIndispo, annotations, annotationsSuivante, handleAnnotationsChange, ancienneCompositionTraits } = useAnnotationsPage({
-    user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote, clePageSuivante, rappelSuivantEcran,
+  const { annotationsIndispo, annotations, annotationsSuivante, ancienneCompositionTraits } = useAnnotationsPage({
+    user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, clePageSuivante, rappelSuivantEcran,
   });
+  // ── Traits accrochés au texte (MP-5, docs/spec-ma-partition.md, § Traits) ──
+  // Mes traits écrits ici l'emportent sur ceux des props tant que le parent n'a pas fini d'enregistrer.
+  const [miensLocaux, setMiensLocaux] = useState<Record<string, Trait[]>>({});
+  // Une entrée locale s'efface dès que les props apportent la même liste (écriture faite), au changement de compte, ou après un échec d'écriture.
+  useEffect(() => { setMiensLocaux({}); }, [uid, echecTraits]);
+  useEffect(() => {
+    setMiensLocaux((m) => {
+      const reste = Object.entries(m).filter(([slug, l]) => { const p = traits?.[slug]?.miens; return !(p && p.length === l.length && p.every((x, i) => x === l[i])); });
+      return reste.length === Object.keys(m).length ? m : Object.fromEntries(reste);
+    });
+  }, [traits]);
+  const traitsChants = useMemo<TraitsParChant>(() => {
+    const out: TraitsParChant = {};
+    for (const slug of new Set([...Object.keys(traits ?? {}), ...Object.keys(miensLocaux)])) {
+      out[slug] = { miens: miensLocaux[slug] ?? traits?.[slug]?.miens ?? [], autres: traits?.[slug]?.autres ?? [] };
+    }
+    return out;
+  }, [traits, miensLocaux]);
+  // La loupe d'AO translate et agrandit le texte : les mesures sont ramenées à l'espace sans loupe.
+  const loupe = useMemo(() => ({ zoom: annotateMode ? annotZoom : 1, pan: annotateMode ? annotPan : { x: 0, y: 0 } }), [annotateMode, annotZoom, annotPan]);
+  const racineTexte = useCallback(() => contentAreaRef.current, []);
+  const racineDemiHaut = useCallback(() => contentAreaRef.current?.querySelector<HTMLElement>("[data-demi-haut]") ?? null, []);
+  const racineDemiBas = useCallback(() => contentAreaRef.current?.querySelector<HTMLElement>("[data-demi-bas]") ?? null, []);
+  const projection = useTraitsAncres({ racine: racineTexte, traits: traitsChants, actif: !!user && !demiActif, loupe });
+  const projectionHaut = useTraitsAncres({ racine: racineDemiHaut, traits: traitsChants, actif: !!user && demiActif, loupe });
+  const projectionBas = useTraitsAncres({ racine: racineDemiBas, traits: traitsChants, actif: !!user && demiActif, loupe });
+  const donnees = (strokes: Stroke[]): AnnotationData => ({ w: window.innerWidth, h: window.innerHeight, strokes });
+  const tracesMiens = useMemo(() => projection.strokes.filter((st) => projection.origines.get(st)?.mien), [projection]);
+  const tracesAutres = useMemo(() => projection.strokes.filter((st) => !projection.origines.get(st)?.mien), [projection]);
+  /* eslint-disable react-hooks/exhaustive-deps -- la taille de la fenêtre se relit à chaque rendu */
+  const donneesMiens = useMemo(() => donnees(tracesMiens), [tracesMiens, window.innerWidth, window.innerHeight]);
+  const donneesAutres = useMemo(() => donnees(tracesAutres), [tracesAutres, window.innerWidth, window.innerHeight]);
+  const donneesTout = useMemo(() => donnees(projection.strokes), [projection, window.innerWidth, window.innerHeight]);
+  const donneesHaut = useMemo(() => donnees(projectionHaut.strokes), [projectionHaut, window.innerWidth, window.innerHeight]);
+  const donneesBas = useMemo(() => donnees(projectionBas.strokes), [projectionBas, window.innerWidth, window.innerHeight]);
+  /* eslint-enable react-hooks/exhaustive-deps */
+  // Table tracé → traits qu'il représente : un tracé projeté, ou un tracé écran déjà ancré. L'annulation d'AO remet des
+  // tracés d'avant (même identité d'objet) : leurs traits reviennent sans être ancrés une seconde fois.
+  const tableTraits = useRef(new WeakMap<Stroke, { slug: string; trait: Trait }[]>());
+  useEffect(() => {
+    for (const [st, o] of projection.origines) tableTraits.current.set(st, [{ slug: o.slug, trait: o.trait }]);
+  }, [projection]);
+  const traitsChantsRef = useRef(traitsChants);
+  traitsChantsRef.current = traitsChants;
+  /** Le canvas du Crayon a changé : un tracé neuf s'ancre (découpé par ligne), un tracé projeté disparu (gomme, effacer
+   *  tout, annuler) retire son trait, un tracé d'avant revenu (annuler) le remet. Les autres traits restent intacts. */
+  const surTracesCrayon = (nouveau: AnnotationData) => {
+    const racine = contentAreaRef.current;
+    if (!racine) return;
+    // Une section jouée plusieurs fois montre le même trait à chaque passage : il est retiré dès qu'un de ses passages
+    // manque (gomme), pas quand l'annulation d'AO rend des tracés d'avant (autres objets, mêmes traits).
+    const voulus: { slug: string; trait: Trait }[] = [];
+    let neufs = 0;
+    for (const st of nouveau.strokes) {
+      let traits = tableTraits.current.get(st);
+      if (!traits) {
+        // shortcut: un tracé hors de toute ligne et de tout scan (en-tête, vide) ne s'ancre nulle part et se perd, à reprendre si on veut des traits libres sur la page.
+        traits = ancrerTrace(st, racine, loupe);
+        tableTraits.current.set(st, traits);
+        neufs++;
+      }
+      voulus.push(...traits);
+    }
+    const denombrer = (traits: Trait[]) => traits.reduce((m, tr) => m.set(tr, (m.get(tr) ?? 0) + 1), new Map<Trait, number>());
+    const presents = denombrer(tracesMiens.map((st) => projection.origines.get(st)!.trait));
+    const restants = denombrer(voulus.map((v) => v.trait));
+    const retires = new Set([...presents].filter(([tr, n]) => (restants.get(tr) ?? 0) < n).map(([tr]) => tr));
+    const suivants: Record<string, Trait[]> = {};
+    const touches = new Set<string>();
+    const actuels = traitsChantsRef.current;
+    for (const slug of Object.keys(actuels)) {
+      const gardes = actuels[slug].miens.filter((tr) => !retires.has(tr));
+      if (gardes.length !== actuels[slug].miens.length) touches.add(slug);
+      suivants[slug] = gardes;
+    }
+    for (const { slug, trait } of voulus) {
+      if (!slug || retires.has(trait)) continue;
+      suivants[slug] ??= [];
+      if (!suivants[slug].includes(trait)) { suivants[slug].push(trait); touches.add(slug); }
+    }
+    if (!touches.size) return;
+    if (neufs && user && !horsLigne) for (let k = 0; k < neufs; k++) compter("cmd.chant.annoter");
+    setMiensLocaux((m) => ({ ...m, ...Object.fromEntries([...touches].map((slug) => [slug, suivants[slug]])) }));
+    for (const slug of touches) onTraitsChange?.(slug, suivants[slug]);
+  };
   // Un seul bandeau : celui de la taille (il a un bouton qui règle le problème) passe avant.
   const alerteComposition = !!user && !annotateMode && showAnnotations && ancienneCompositionTraits && !alerteAnnotations;
 
   // L5 : à l'entrée en annotation, la taille mémorisée du chant revient avant qu'on dessine.
+  const crayonPret = !slugAnnote || chantsCharges?.[slugAnnote] !== false;
   const basculerAnnotation = () => {
     setPopoverOuvert(null);
     if (!annotateMode && slugAnnote) {
@@ -1572,7 +1685,7 @@ export function PerformanceMode({
       capo={capoActive && entreeSlug && currentEntry ? { frets: currentCapo, set: (f) => setCapo(entreeSlug, f), titre: currentEntry.block.title } : undefined}
       showTransitions={showTransitions}
       setShowTransitions={setShowTransitions}
-      onAnnoter={telephone && user && !horsLigne ? basculerAnnotation : undefined}
+      onAnnoter={telephone && user && !horsLigne && crayonPret ? basculerAnnotation : undefined}
       tempoLignes={
         telephone && tempoChantId ? (
           <LignesTempo tempo={tempoLiseret} tempoAppareil={tempoAppareil} changerTempo={changerTempo} effacerTempo={effacerTempo} />
@@ -1635,6 +1748,7 @@ export function PerformanceMode({
                   feuilleRoute={structureMode}
                   transitionApres={structureMode ? transitionApres(i) : undefined}
                   tempoChant={structureMode ? tempoDuChant(i) : undefined}
+                  marques={marquesDe(block)}
                 />
               )}
             </div>
@@ -1674,6 +1788,7 @@ export function PerformanceMode({
                       hideLyrics={lyricsHidden}
                       disposition={disposition}
                       showPinyinGlobal={showPinyin}
+                      marques={marquesDe(block)}
                     />
                   )}
                 </div>
@@ -1737,6 +1852,7 @@ export function PerformanceMode({
                 feuilleRoute={structureMode}
                 transitionApres={structureMode ? transitionApres(i) : undefined}
                 tempoChant={structureMode ? tempoDuChant(i) : undefined}
+                marques={marquesDe(block)}
                 tranche={tranche && block.kind === "jianpu-sheet" ? { ...tranche, ...bornesX(block.entry.pages[block.pageIndex]?.w ?? 0, jianpuMarges?.[block.songSlug]?.[block.pageIndex]) } : undefined}
               />
             );
@@ -1953,26 +2069,36 @@ export function PerformanceMode({
         </div>
       )}
 
-      {/* ── Annotations : calque de lecture permanent + canvas d'édition ── */}
-      {showAnnotations && !annotateMode && !demiActif && annotations && annotations.strokes.length > 0 && (
+      {/* ── Anciennes annotations par page (lecture seule, jusqu'à MP-6) ── */}
+      {showAnnotations && !demiActif && (!annotateMode || annotZoom === 1) && annotations && annotations.strokes.length > 0 && (
         <StrokesLayer data={annotations} rogneBas={rogneBas} />
       )}
-      {/* Demi-page : traits en lecture seule, la page suivante dans la zone haute, la page en cours dans la zone basse (rognés et décalés comme leur texte). */}
+      {/* ── Traits accrochés au texte : lecture (les miens, et ceux de la partition partagée que je lis) ── */}
+      {showAnnotations && !annotateMode && !demiActif && projection.strokes.length > 0 && (
+        <StrokesLayer data={donneesTout} rogneBas={rogneBas} />
+      )}
+      {/* Demi-page : les anciennes annotations en lecture seule, la page suivante dans la zone haute, la page en cours dans la zone basse (rognés et décalés comme leur texte) ; les traits accrochés suivent le texte de chaque zone (rognés à la zone). */}
       {showAnnotations && !annotateMode && demiActif && zonesDemi && (() => {
         const clip = (zs: Array<[number, number, number, number]>) => `path("${zs.map(([x0, y0, x1, y1]) => `M${x0} ${y0}H${x1}V${y1}H${x0}Z`).join("")}")`;
         return (
           <>
             {annotationsSuivante && annotationsSuivante.strokes.length > 0 && <StrokesLayer data={annotationsSuivante} clip={clip(zonesDemi.haut)} />}
             {annotations && annotations.strokes.length > 0 && <StrokesLayer data={annotations} clip={clip(zonesDemi.bas)} decalage={zonesDemi.decalage} />}
+            {projectionHaut.strokes.length > 0 && <StrokesLayer data={donneesHaut} clip={clip(zonesDemi.haut)} />}
+            {projectionBas.strokes.length > 0 && <StrokesLayer data={donneesBas} clip={clip(zonesDemi.bas)} />}
           </>
         );
       })()}
-      {annotateMode && annotations && (
+      {/* Crayon : le canvas édite mes traits seulement ; ceux d'un autre restent dessous, en lecture (hors loupe). */}
+      {annotateMode && showAnnotations && annotZoom === 1 && tracesAutres.length > 0 && (
+        <StrokesLayer data={donneesAutres} rogneBas={rogneBas} />
+      )}
+      {annotateMode && (
         <AnnotationCanvas
-          data={annotations}
+          data={donneesMiens}
           rogneBas={rogneBas}
           barres={barres}
-          onChange={handleAnnotationsChange}
+          onChange={surTracesCrayon}
           zoom={annotZoom}
           pan={annotPan}
           onZoomPanChange={(z, p) => { setAnnotZoom(z); setAnnotPan(p); }}
@@ -2000,7 +2126,7 @@ export function PerformanceMode({
           annotateMode={annotateMode}
           menuOuvert={popoverOuvert}
           avecReperes={reperes.length > 0}
-          onAnnoter={user && !horsLigne ? basculerAnnotation : undefined}
+          onAnnoter={user && !horsLigne && crayonPret ? basculerAnnotation : undefined}
           onMenu={basculerMenu}
           onJeJoue={() => basculerMenu("jejoue")}
           onQuitter={onClose}
@@ -2114,6 +2240,31 @@ export function PerformanceMode({
               </div>
               <p className="px-2 text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
             </div>
+            {/* Partition (MP-5) : les choix « Je lis » du chant affiché ; ni « Partager… » ni « Garder une copie » (page de setlist). */}
+            {user && !horsLigne && onChoisirLecture && slugAnnote && (lectures?.[slugAnnote]?.options.length ?? 0) > 1 && (
+              <div className="space-y-2 border-t border-border pt-4">
+                <div className="px-1"><TitreRubrique id="perf-partition">{t("performance.partition")}</TitreRubrique></div>
+                <div role="radiogroup" aria-labelledby="perf-partition" data-je-joue-partition className="flex flex-col">
+                  {lectures![slugAnnote].options.map((o) => {
+                    const actif = lectures![slugAnnote].valeur === o.valeur;
+                    return (
+                      <button
+                        key={o.valeur}
+                        type="button"
+                        role="radio"
+                        aria-checked={actif}
+                        onClick={() => onChoisirLecture(slugAnnote, o.valeur)}
+                        className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-base font-semibold text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${actif ? "" : "hover:bg-muted/60 active:bg-muted"}`}
+                        style={actif ? { background: "color-mix(in srgb, var(--couleur-icones) 12%, transparent)" } : undefined}
+                      >
+                        <span className="min-w-0 flex-1">{libelleLecture(t, o)}</span>
+                        {actif && <Check className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" aria-hidden="true" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </MenuLouange>

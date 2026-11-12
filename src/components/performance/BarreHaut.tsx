@@ -2,7 +2,7 @@
 
 import type { ComponentType, ReactNode, RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Bookmark, Drum, Guitar, ListMusic, Mic, MicVocal, Music, PenLine, Piano, Type, Wrench, X } from "lucide-react";
+import { Bookmark, Drum, Guitar, ListMusic, Mic, MicVocal, Music, Pencil, Piano, Type, Wrench, X } from "lucide-react";
 import type { JianpuSheetBlock, SectionBlock } from "@/lib/performance/blocks";
 import type { MenuId } from "./MenuLouange";
 
@@ -15,12 +15,12 @@ export const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> 
 };
 
 /** Barre de titre du mode louange (forScore, piste A « Pupitre », FS-A) : à gauche Setlist et Je joue,
- *  au centre le titre et « compositeur · tonalité », à droite ♩ tempo, Annoter, Outils, Options
- *  d'affichage, ✕. Au téléphone : Setlist, Repères, Je joue | titre | Options, ✕ (Annoter, ♩ et Outils passent en tête de la feuille Options). Setlist, Repères, ♩, Outils et
+ *  au centre le titre et « compositeur · tonalité », à droite ♩ tempo, Crayon, Outils, Options
+ *  d'affichage, ✕. Au téléphone : Setlist, Repères, Je joue | titre | Options, ✕ (Crayon, ♩ et Outils passent en tête de la feuille Options). Setlist, Repères, ♩, Outils et
  *  Options ouvrent chacun leur menu (FS-B, `MenuLouange`) : `menuOuvert` dit lequel, `onMenu` le bascule.
  *  `avecReperes` : le chant courant a des sections (un scan seul n'en a pas).
  *  `barreRef` est la ref de mesure lue par PerformanceMode (hauteur des barres).
- *  `onAnnoter` absent = bouton « Annoter » masqué. Les icônes prennent `--couleur-icones`. */
+ *  `onCrayon` absent = bouton « Crayon » masqué. Les icônes prennent `--couleur-icones`. */
 export function BarreHaut({
   barreRef,
   showChrome,
@@ -114,8 +114,8 @@ export function BarreHaut({
           </BtnBarre>
         ) : null}
         {onAnnoter && (
-          <BtnBarre label={t("performance.annotate")} active={annotateMode} onClick={onAnnoter} cacheTel>
-            <PenLine className="h-5 w-5" />
+          <BtnBarre label={t("performance.crayon")} active={annotateMode} onClick={onAnnoter} cacheTel>
+            <Pencil className="h-5 w-5" />
           </BtnBarre>
         )}
         <BtnBarre label={t("performance.toolsMenu")} menu="outils" menuOuvert={menuOuvert} onClick={() => onMenu("outils")} cacheTel>

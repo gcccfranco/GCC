@@ -349,7 +349,7 @@ const URL_ANNOTATIONS = /firestore\.googleapis\.com\/.*\/annotations\//;
 const canevas = (page: Page) => page.locator("[data-performance-mode] > canvas");
 const ecritesAnnotations = (db: { writes: { path: string }[] }) => db.writes.filter((w) => w.path.startsWith("annotations/"));
 
-test("annotations : lecture impossible (5xx) → message, pas de page vide à écrire, rien d'enregistré", async ({ page }) => {
+test("annotations : lecture impossible (5xx) des anciennes annotations → message ; le Crayon reste offert (traits dans ma partition), rien n'est écrit dans les annotations par page", async ({ page }) => {
   const db = await signInAsPuisCopie(page);
   await page.route(URL_ANNOTATIONS, (route) => route.fulfill({ status: 503, contentType: "application/json", body: "{}" }));
   await page.getByRole("button", { name: /Mode Louange/ }).click();
@@ -357,7 +357,7 @@ test("annotations : lecture impossible (5xx) → message, pas de page vide à é
   await expect(page.locator("[data-annotations-indisponibles]")).toHaveText("Annotations indisponibles pour l'instant");
   await basculerAnnoter(page);
   await page.waitForTimeout(300);
-  await expect(canevas(page), "pas de page vide initialisée : pas de canevas pour tracer").toHaveCount(0);
+  await expect(canevas(page), "les traits du Crayon ne dépendent pas des anciennes annotations : le canevas est offert").toHaveCount(1);
   expect(ecritesAnnotations(db)).toEqual([]);
 });
 
@@ -370,7 +370,7 @@ test("annotations : document absent (404) → page vide, canevas offert, pas de 
   await expect(page.locator("[data-annotations-indisponibles]")).toHaveCount(0);
 });
 
-test("annotations : copie hors ligne → « Annoter » est masqué, rien n'est enregistré", async ({ page }) => {
+test("annotations : copie hors ligne → « Crayon » est masqué, rien n'est enregistré", async ({ page }) => {
   const db = await signInAsPuisCopie(page);
   await page.route(/firestore\.googleapis\.com/, (route) => route.abort("internetdisconnected"));
   await page.reload();
@@ -378,11 +378,11 @@ test("annotations : copie hors ligne → « Annoter » est masqué, rien n'est e
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
   await expect(page.getByRole("button", { name: "Options d'affichage" }).or(page.getByRole("button", { name: "Quitter" })).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "Annoter" })).toHaveCount(0);
-  // Au téléphone « Annoter » est une ligne du menu Outils : absente aussi hors ligne.
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Crayon" })).toHaveCount(0);
+  // Au téléphone « Crayon » est une ligne du menu Outils : absente aussi hors ligne.
   if (page.viewportSize()!.width < 768) {
     const outils = await ouvrirOutils(page);
-    await expect(outils.getByRole("button", { name: "Annoter" })).toHaveCount(0);
+    await expect(outils.getByRole("button", { name: "Crayon" })).toHaveCount(0);
   }
   expect(ecritesAnnotations(db)).toEqual([]);
 });

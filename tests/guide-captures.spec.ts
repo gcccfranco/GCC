@@ -220,7 +220,7 @@ test("captures du guide", async ({ page }, testInfo) => {
     await expect(reglages).toBeVisible({ timeout: 1_500 });
   }).toPass({ timeout: 20_000 });
   await figure(page, "performance", {
-    annoter: page.getByRole("button", { name: tr("Annoter", "批注") }),
+    annoter: page.locator("[data-performance-mode]").getByRole("button", { name: tr("Crayon", "画笔") }),
     reglages,
     page: page.getByRole("slider", { name: tr("Aller à la page", "跳转到页面") }),
     quitter: page.getByRole("button", { name: tr("Quitter", "退出") }),

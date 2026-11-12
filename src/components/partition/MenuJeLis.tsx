@@ -7,10 +7,20 @@ import { Menu, type EntreeMenu, type OptionMenu } from "@/components/ui/menu";
 import { PartagerMaPartition, type PartageProps } from "@/components/partition/PartagerMaPartition";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import type { PartitionDeChant } from "@/lib/firebase/partitions";
-import type { Lecture } from "@/lib/partition/lecture";
+import type { Lecture, OptionLecture } from "@/lib/partition/lecture";
+import type { TFunction } from "i18next";
 import { compter } from "@/lib/usage";
 
 const PARTAGER = "__partager";
+
+/** Le libellé d'un choix « Je lis » (aussi la rubrique « Partition » de « Je joue »). */
+export function libelleLecture(t: TFunction, o: OptionLecture): string {
+  return o.type === "mienne" ? t("maPartition.mienne")
+    : o.type === "culte" ? t("maPartition.culte")
+    : o.type === "origine" ? t("maPartition.origine")
+    : o.type === "partagee" ? t("maPartition.partageePar", { nom: o.nom || t("maPartition.quelquUn") })
+    : o.nom ? t("maPartition.versionDe", { nom: o.nom }) : t("maPartition.maVersion");
+}
 
 /** « Je lis : … ▾ » (docs/spec-ma-partition.md, « Lecture ») : quelle partition se lit pour ce chant. Sans choix
  *  (une seule entrée), rien. Les anciennes « Ma version » de la setlist ont leur petit groupe, jusqu'à MP-6. */
@@ -18,12 +28,7 @@ export function MenuJeLis({ lecture, onChoisir, partage }: { lecture: Lecture; o
   const { t } = useTranslation();
   const [ouvert, setOuvert] = useState(false);
   if (lecture.options.length < 2) return null;
-  const libelle = (o: Lecture["options"][number]) =>
-    o.type === "mienne" ? t("maPartition.mienne")
-    : o.type === "culte" ? t("maPartition.culte")
-    : o.type === "origine" ? t("maPartition.origine")
-    : o.type === "partagee" ? t("maPartition.partageePar", { nom: o.nom || t("maPartition.quelquUn") })
-    : o.nom ? t("maPartition.versionDe", { nom: o.nom }) : t("maPartition.maVersion");
+  const libelle = (o: OptionLecture) => libelleLecture(t, o);
   const en = (anciennes: boolean): OptionMenu[] =>
     lecture.options.filter((o) => (o.type === "ancienne") === anciennes).map((o) => ({ valeur: o.valeur, libelle: libelle(o) }));
   const entrees: EntreeMenu[] = lecture.options.some((o) => o.type === "ancienne")

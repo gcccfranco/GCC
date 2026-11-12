@@ -1,8 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { type AnnotationData, ANCIEN_RAPPEL, recaler, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
-import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
-import { setTailleAnnotee, getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
-import { compter } from "@/lib/usage";
+import { useState, useEffect, useMemo } from "react";
+import { type AnnotationData, ANCIEN_RAPPEL, recaler, deserializeAnnotations } from "@/lib/annotations/strokes";
+import { loadAnnotation } from "@/lib/firebase/annotations";
 
 type Params = {
   user: { uid: string } | null;
@@ -14,16 +12,14 @@ type Params = {
   rappelEcran: number;
   affichageVu: string;
   fontScale: number;
-  horsLigne: boolean;
-  slugAnnote: string | undefined;
   /** Demi-page : clé de la page suivante (traits lus en lecture seule, sans repli sur les anciennes clés) et son rappel (px écran). */
   clePageSuivante?: string;
   rappelSuivantEcran?: number;
 };
 
-/** Traits de la page courante : chargement, recalage, enregistrement à chaque modification. */
+/** Anciennes annotations par page (avant MP-5) : chargement et recalage, en lecture seule — plus rien ne s'y écrit. */
 export function useAnnotationsPage({
-  user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote, clePageSuivante, rappelSuivantEcran = 0,
+  user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, clePageSuivante, rappelSuivantEcran = 0,
 }: Params) {
   // Les traits de la page n'ont pas pu être lus (réseau, 5xx) : page non initialisée, rien n'est enregistré.
   const [annotationsIndispo, setAnnotationsIndispo] = useState(false);
@@ -105,22 +101,5 @@ export function useAnnotationsPage({
     return () => { stale = true; clearTimeout(minuterie); };
   }, [user, setlistId, currentPageKey, cleAncienne, anciennesStr]);
 
-  // Chaque modification (trait fini, gomme, annuler) est sauvegardée aussitôt
-  const handleAnnotationsChange = useCallback(
-    (data: AnnotationData) => {
-      // Un trait de plus, enregistré (ni gomme, ni annulation) : une annotation.
-      if (user && currentPageKey && !horsLigne && data.strokes.length > (pageAnnotations?.strokes.length ?? 0)) compter("cmd.chant.annoter");
-      setPageAnnotations(data);
-      // L5 : au premier trait d'un chant, on retient la taille du texte à laquelle on annote.
-      if (slugAnnote && data.strokes.length > 0 && getTailleAnnotee(user?.uid ?? null, setlistId, slugAnnote) === null) {
-        setTailleAnnotee(user?.uid ?? null, setlistId, slugAnnote, fontScale);
-      }
-      if (user && currentPageKey && !horsLigne) {
-        saveAnnotation(user.uid, setlistId, currentPageKey, serializeAnnotations(data));
-      }
-    },
-    [user, setlistId, currentPageKey, horsLigne, slugAnnote, fontScale, pageAnnotations],
-  );
-
-  return { annotationsIndispo, annotations, annotationsSuivante, handleAnnotationsChange, ancienneCompositionTraits };
+  return { annotationsIndispo, annotations, annotationsSuivante, ancienneCompositionTraits };
 }

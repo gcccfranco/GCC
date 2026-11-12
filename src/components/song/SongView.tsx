@@ -1024,7 +1024,9 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
             </Fragment>
           );
         }
-        if (!m) return <div key={i}>{rendered}</div>;
+        // Crayon (MP-5) : repères où s'accrochent les traits (section, rang de la ligne, chant).
+        const repere = { "data-trait-slug": slug, "data-trait-section": section.id, "data-trait-ligne": i };
+        if (!m) return <div key={i} {...repere}>{rendered}</div>;
         const bouton = `${TOUCHER_44} h-8 rounded-full border border-border bg-background px-3 text-xs font-semibold hover:bg-secondary`;
         return (
           <Fragment key={i}>
@@ -1039,7 +1041,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
                 )}
               </div>
             )}
-            <div data-marque={m.marque} data-conflit={m.conflit?.cote} data-retouche={m.retouche}>{rendered}</div>
+            <div data-marque={m.marque} data-conflit={m.conflit?.cote} data-retouche={m.retouche} {...repere}>{rendered}</div>
           </Fragment>
         );
       })}

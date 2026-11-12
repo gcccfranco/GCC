@@ -100,14 +100,14 @@ const fondBarre = (page: Page) => page.locator("[data-barre-haut]").evaluate((el
 
 // ─── La barre de titre ────────────────────────────────────────────────────────
 
-test("barre de titre : Setlist, Repères et Je joue à gauche, titre au centre, ♩ Annoter Outils Options ✕ à droite (téléphone : Setlist, Repères, Je joue | titre | Options, ✕)", async ({ page }) => {
+test("barre de titre : Setlist, Repères et Je joue à gauche, titre au centre, ♩ Crayon Outils Options ✕ à droite (téléphone : Setlist, Repères, Je joue | titre | Options, ✕)", async ({ page }) => {
   await ouvrir(page);
   const boutons = await boutonsHaut(page);
   const noms = boutons.map((b) => b.nom);
   if (telephone(page)) {
     expect(noms).toEqual(["Setlist", "Repères", "Je joue", "Options d'affichage", "Quitter"]);
   } else {
-    expect(noms).toEqual(["Setlist", "Repères", "Je joue", "Tempo", "Annoter", "Outils", "Options d'affichage", "Quitter"]);
+    expect(noms).toEqual(["Setlist", "Repères", "Je joue", "Tempo", "Crayon", "Outils", "Options d'affichage", "Quitter"]);
   }
   for (const b of boutons) {
     expect(b.h, `${b.nom} : cible haute d'au moins 44 px`).toBeGreaterThanOrEqual(43.5);
@@ -146,7 +146,7 @@ test("barre de titre en 中文 : mêmes boutons, noms chinois", async ({ page })
   // Ces deux chants sont des scans 简谱 : pas de section, donc pas de bouton Repères (段落).
   await expect(page.getByRole("button", { name: "段落" })).toHaveCount(0);
   if (telephone(page)) expect(noms).toEqual(["歌单", "我演奏", "显示选项", "退出"]);
-  else expect(noms.filter((n) => n !== "节拍" && n !== "批注")).toEqual(["歌单", "我演奏", "工具", "显示选项", "退出"]);
+  else expect(noms.filter((n) => n !== "节拍" && n !== "画笔")).toEqual(["歌单", "我演奏", "工具", "显示选项", "退出"]);
 });
 
 test("Setlist ouvre son menu, Je joue son menu (rôle), Options le menu « Options d'affichage »", async ({ page }) => {
@@ -160,10 +160,10 @@ test("Setlist ouvre son menu, Je joue son menu (rôle), Options le menu « Optio
   await expect(options).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
-  // Au téléphone, Annoter est une ligne d'Outils, en tête de la feuille Options d'affichage, plus de la barre.
+  // Au téléphone, Crayon est une ligne d'Outils, en tête de la feuille Options d'affichage, plus de la barre.
   if (telephone(page)) {
     const outils = await ouvrirMenu(page, "outils");
-    await expect(outils.getByRole("button", { name: "Annoter", exact: true })).toBeVisible();
+    await expect(outils.getByRole("button", { name: "Crayon", exact: true })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(outils).toBeHidden();
   }

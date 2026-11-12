@@ -26,6 +26,8 @@ const SPECS_GRAND_ECRAN = [
   /ma-partition-crayon\.spec\.ts/,
   // Ma partition, MP-4 (docs/spec-ma-partition.md) : la feuille « Partager ma partition » (feuille du bas au téléphone, popover de 380 px ailleurs) sur les quatre dispositions.
   /ma-partition-partage\.spec\.ts/,
+  // Ma partition, MP-5 (docs/spec-ma-partition.md) : traits accrochés au texte du mode louange, qui suivent le mot quand la page se recompose (quatre dispositions), rubrique « Partition » de « Je joue ».
+  /ma-partition-traits\.spec\.ts/,
   // Lot pupitre, T1 (docs/spec-exemples-usage.md) : partitions pleine largeur en volet unique, vue Liste à 720 px, étiquettes de section, 简谱 ; deux volets inchangés.
   /pupitre-partitions\.spec\.ts/,
   // Lot 1 du rapport d'usage, T5 (docs/spec-retouches-usage.md) : textes coupés, cellule Date, barre de la setlist, sur les quatre dispositions.

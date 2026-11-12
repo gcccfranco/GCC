@@ -93,17 +93,18 @@ export async function attendreCompteur(page: Page, motif: string | RegExp, timeo
   else await poll.toMatch(motif);
 }
 
-/** Entre dans l'annotation ou en sort. Au téléphone (< 768 px) la barre de titre n'a plus « Annoter » (FS-A) :
+/** Entre dans l'annotation ou en sort. Au téléphone (< 768 px) la barre de titre n'a plus « Crayon » (FS-A) :
  *  la fonction est une ligne d'Outils, en tête de la feuille Options d'affichage (FS-B), qu'on ouvre d'abord
  *  (elle la referme en s'exécutant). */
 export async function basculerAnnoter(page: Page) {
   if (page.viewportSize()!.width < 768) {
     const outils = await ouvrirOutils(page);
-    await outils.getByRole("button", { name: "Annoter", exact: true }).click();
+    await outils.getByRole("button", { name: "Crayon", exact: true }).click();
     await expect(outils).toBeHidden();
     return;
   }
-  const bouton = page.getByRole("button", { name: "Annoter" });
+  // Dans la barre de titre : l'outil « Crayon » (stylo) du panneau d'outils porte le même nom.
+  const bouton = page.locator("[data-performance-mode] [data-barre-haut]").getByRole("button", { name: "Crayon", exact: true });
   // Barre masquée (inert) après un rechargement : un toucher au centre la rappelle.
   if ((await bouton.count()) === 0) await page.mouse.click(page.viewportSize()!.width / 2, page.viewportSize()!.height / 2);
   await bouton.click();

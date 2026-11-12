@@ -180,6 +180,7 @@ test("première ouverture d'un compte neuf : Je joue s'ouvre seul avec la phrase
 });
 
 test("deux comptes sur le même appareil : le premier hérite du rôle d'appareil, le second de rien", async ({ page }) => {
+  test.setTimeout(60_000); // trois connexions et trois ouvertures du mode louange : ≈ 29 s seul, plus sous charge
   await preparer(page, { init: { "perf-role-preset": "pianiste" } });
 
   await ouvrirMode(page, ANOUK);

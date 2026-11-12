@@ -272,12 +272,12 @@ test("Outils : + monte d'un demi-ton (barre), « Revenir à X » apparaît puis 
   // Raccourcis : sur ordinateur (pointeur précis) ; absents au téléphone tant qu'aucune touche n'a été frappée.
   if (ordinateur(testInfo)) await expect(outils.locator("[data-raccourcis]")).toBeVisible();
   if (telephone(page)) await expect(outils.locator("[data-raccourcis]")).toHaveCount(0);
-  // Au téléphone, Annoter et le tempo sont des lignes d'Outils ; ailleurs ils sont dans la barre.
+  // Au téléphone, Crayon et le tempo sont des lignes d'Outils ; ailleurs ils sont dans la barre.
   if (telephone(page)) {
-    await expect(outils.getByRole("button", { name: "Annoter" })).toBeVisible();
+    await expect(outils.getByRole("button", { name: "Crayon" })).toBeVisible();
     await expect(outils.locator("[data-tempo-plus]")).toBeVisible();
   } else {
-    await expect(outils.getByRole("button", { name: "Annoter" })).toHaveCount(0);
+    await expect(outils.getByRole("button", { name: "Crayon" })).toHaveCount(0);
     await expect(outils.locator("[data-tempo-plus]")).toHaveCount(0);
   }
   // Au téléphone Outils est la tête de la feuille Options d'affichage : un titre de rubrique « Outils », pas de bouton dans la barre.
@@ -629,18 +629,18 @@ test("Options : le bas du popover est à 16 px au moins du bord de l'écran, à 
   expect(b.y + b.height).toBeLessThanOrEqual(page.viewportSize()!.height - 16 + 0.5);
 });
 
-test("Annoter (téléphone) est une action : ligne entière, pas un rond d'interrupteur ; aucune autre action n'est un rond allumé / éteint", async ({ page }) => {
-  test.skip(!telephone(page), "Annoter n'est une ligne d'Outils qu'au téléphone");
+test("Crayon (téléphone) est une action : ligne entière, pas un rond d'interrupteur ; aucune autre action n'est un rond allumé / éteint", async ({ page }) => {
+  test.skip(!telephone(page), "Crayon n'est une ligne d'Outils qu'au téléphone");
   await ouvrir(page);
   const outils = await ouvrirMenu(page, "outils");
-  const annoter = outils.getByRole("button", { name: "Annoter" });
+  const annoter = outils.getByRole("button", { name: "Crayon" });
   await expect(annoter).toBeVisible();
   await expect(annoter).not.toHaveAttribute("aria-pressed");
   const [a, m] = await Promise.all([annoter.boundingBox(), outils.boundingBox()]);
   expect(a!.width).toBeGreaterThan(m!.width * 0.7);
   expect(await annoter.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe("0px");
   for (const rond of await outils.locator("[aria-pressed]").all()) {
-    expect((await rond.getAttribute("aria-label")) ?? "", "un rond d'interrupteur ne porte pas le nom d'une action").not.toMatch(/Annoter|Revenir|Monter|Baisser|Tempo du fichier|Augmenter|Diminuer/);
+    expect((await rond.getAttribute("aria-label")) ?? "", "un rond d'interrupteur ne porte pas le nom d'une action").not.toMatch(/Crayon|Revenir|Monter|Baisser|Tempo du fichier|Augmenter|Diminuer/);
   }
 });
 

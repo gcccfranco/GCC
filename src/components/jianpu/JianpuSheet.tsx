@@ -703,6 +703,8 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         >
         <div
           data-jianpu-page={i}
+          data-trait-scan={i}
+          data-trait-slug={slug}
           className="relative w-full"
           // `containerType: inline-size` permet d'exprimer la taille du texte du
           // calque en cqw : il suit l'échelle de l'image sans mesure JS.

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Highlighter, Maximize, Minus, Plus, Timer, Waves } from "lucide-react";
+import { Check, Maximize, Minus, Pencil, Plus, Timer, Waves } from "lucide-react";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
@@ -344,7 +344,7 @@ export function ContenuOutils({
   capo: { frets: number; set: (frets: number) => void; titre: string } | undefined;
   showTransitions: boolean;
   setShowTransitions: (v: boolean) => void;
-  /** Téléphone seulement : la barre n'a plus « Annoter ». Absent = pas de ligne. */
+  /** Téléphone seulement : la barre n'a plus « Crayon ». Absent = pas de ligne. */
   onAnnoter: (() => void) | undefined;
   /** Téléphone seulement : les lignes du tempo, sous le métronome. Absent = pas de ligne. */
   tempoLignes: ReactNode;
@@ -400,15 +400,15 @@ export function ContenuOutils({
         </LigneMenu>
       )}
       {onAnnoter && (
-        // Annoter est une action, pas un interrupteur : une ligne entière cliquable, icône et libellé dans la couleur des actions.
+        // Le Crayon est une action, pas un interrupteur : une ligne entière cliquable, icône et libellé dans la couleur des actions.
         <button
           type="button"
           data-annoter
           onClick={onAnnoter}
           className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
         >
-          <Highlighter aria-hidden="true" className="h-5 w-5 shrink-0" />
-          {t("performance.annotate")}
+          <Pencil aria-hidden="true" className="h-5 w-5 shrink-0" />
+          {t("performance.crayon")}
         </button>
       )}
       {tempoLignes}

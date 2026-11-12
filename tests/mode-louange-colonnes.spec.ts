@@ -321,7 +321,7 @@ function grandEcranTests(nom: string) {
     const enUne = lues.at(-1)!;
     expect(enUne, "une page en une colonne garde sa clé").not.toContain("x2");
 
-    // Un trait sur la page en une colonne (enregistré comme le ferait « Annoter »).
+    // Une ancienne annotation par page (d'avant MP-5, lecture seule) sur la page en une colonne.
     db.set(enUne, {
       strokes: JSON.stringify({ w: 1000, h: 700, strokes: [{ tool: "pen", size: 3, color: "#dc2626", points: [[100, 100], [300, 300]] }] }),
     });
