@@ -2,6 +2,7 @@ import { EDD_CLASSES } from "@/lib/planning/utils";
 import { aCommence } from "@/lib/evenements/agenda";
 import type { Evenement } from "@/types/evenement";
 import type { FSSetlist } from "@/types/setList";
+import type { Partition } from "@/types/partition";
 import type { Tache } from "@/types/tache";
 import type { DateServie } from "@/types/planning";
 import { EQUIPES } from "@/lib/equipes/table";
@@ -727,6 +728,20 @@ export function canSetPresentationLink(
  *  qui voit la setlist peut avoir la sienne. Miroir serveur dans
  *  firestore.rules (setlists/{id}/versions/{uid} : écrit par son propriétaire). */
 export const canHaveSetlistVersion = canSeeSetlist;
+
+/** Ma partition (docs/spec-ma-partition.md) : lue par son propriétaire ou une personne de `sharedWith`. Miroir de
+ *  firestore.rules (`match /partitions/{id}`, lecture). */
+export function canLirePartition(
+  user: AuthUser | null,
+  p: Pick<Partition, "ownerUid" | "sharedWith">,
+): boolean {
+  return !!user && (p.ownerUid === user.uid || (p.sharedWith ?? []).includes(user.uid));
+}
+
+/** Écriture : le propriétaire seul. Miroir de firestore.rules (`match /partitions/{id}`, create / update / delete). */
+export function canEcrirePartition(user: AuthUser | null, p: Pick<Partition, "ownerUid" | "sharedWith">): boolean {
+  return !!user && p.ownerUid === user.uid;
+}
 
 export function canEditSetlist(
   user: AuthUser,

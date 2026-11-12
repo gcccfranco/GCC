@@ -25,6 +25,9 @@ const GARDE_COPIE_MS = 14 * 24 * 60 * 60 * 1000;
 const BASE = "gcc-copies-hors-ligne";
 const STORE = "setlists";
 const PREFIXE_LS = "gcc-copie-setlist:";
+/** File d'attente des partitions (src/lib/partition/fileEnAttente.ts) : définie ici, feuille sans dépendance, pour
+ *  que l'effacement au changement de compte ne crée pas de cycle d'import. */
+export const PREFIXE_FILE = "gcc-partitions-en-attente:";
 
 // Les dates (`createdAt`…) passent en JSON sous la forme { "__date": iso } et reviennent en Date.
 function texte(copie: CopieSetlist): string {
@@ -165,11 +168,16 @@ export async function effacerCopie(id: string): Promise<void> {
   try { await retirer(id); } catch { /* rien */ }
 }
 
-/** Efface toutes les copies : à la déconnexion et au changement de compte. N'efface que ce que ce module a écrit. */
+/** Efface toutes les copies (et la file des partitions en attente) : à la déconnexion et au changement de compte.
+ *  N'efface que ce que ces modules ont écrit. */
 export async function effacerToutesLesCopies(): Promise<void> {
   try { await idb("readwrite", (s) => s.clear()); } catch { /* rien */ }
   try {
     for (const cle of Object.keys(localStorage)) if (cle.startsWith(PREFIXE_LS)) localStorage.removeItem(cle);
+  } catch { /* rien */ }
+  // File d'attente des partitions (Ma partition, MP-1) : liée au compte, effacée au même moment.
+  try {
+    for (const cle of Object.keys(localStorage)) if (cle.startsWith(PREFIXE_FILE)) localStorage.removeItem(cle);
   } catch { /* rien */ }
 }
 

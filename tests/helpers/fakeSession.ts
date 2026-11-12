@@ -307,6 +307,7 @@ export async function fakeFirestore(
           from: { collectionId: string; allDescendants?: boolean }[];
           orderBy?: { field: { fieldPath: string }; direction?: string }[];
           limit?: number;
+          where?: { fieldFilter?: { field: { fieldPath: string }; op: string; value: unknown } };
         };
       }).structuredQuery;
       const order = q.orderBy?.[0];
@@ -318,6 +319,18 @@ export async function fakeFirestore(
       let paths = q.from[0].allDescendants
         ? [...store.keys()].filter((p) => p.split("/").slice(-2, -1)[0] === q.from[0].collectionId)
         : children(parent ? `${parent}/${q.from[0].collectionId}` : q.from[0].collectionId);
+      // Ma partition (MP-1) : `where` EQUAL / ARRAY_CONTAINS appliqué sur `partitions` seulement. // shortcut: les autres collections
+      // ignorent toujours `where` (des specs en dépendent), à étendre quand elles auront leurs fixtures filtrées.
+      const filtre = q.where?.fieldFilter;
+      if (filtre && q.from[0].collectionId === "partitions") {
+        const attendu = jsValue(filtre.value);
+        paths = paths.filter((p) => {
+          const v = jsValue(store.get(p)?.[filtre.field.fieldPath]);
+          if (filtre.op === "ARRAY_CONTAINS") return Array.isArray(v) && v.includes(attendu);
+          if (filtre.op === "EQUAL") return v === attendu;
+          return true;
+        });
+      }
       if (order) {
         paths.sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
         if (order.direction === "DESCENDING") paths.reverse();

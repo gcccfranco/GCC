@@ -668,6 +668,25 @@ service cloud.firestore {
       allow read, write: if signedIn() && id.split('__')[0] == request.auth.uid;
     }
 
+    // Ma partition (docs/spec-ma-partition.md, « Rangement ») : un document par personne et par chant,
+    // partitions/{uid}__{songSlug}, et partitions/{uid}__choix pour le choix de lecture. L'id est préfixé par l'uid
+    // du propriétaire. Lecture : le propriétaire (un document absent se lit : 404 côté client) ou une personne de
+    // sharedWith (la requête `sharedWith array-contains` passe par cette seconde condition). Écriture : le
+    // propriétaire seul, avec ownerUid == uid pour une partition ; le document de choix n'est lisible que par son
+    // propriétaire parce qu'il ne peut pas porter de sharedWith. Miroir client : canLirePartition /
+    // canEcrirePartition (src/lib/access.ts). À publier à la main dans la console Firebase.
+    match /partitions/{id} {
+      allow read: if signedIn()
+        && (id.split('__')[0] == request.auth.uid
+          || (resource != null && request.auth.uid in resource.data.sharedWith));
+      allow create, update: if signedIn()
+        && id.split('__')[0] == request.auth.uid
+        && (id == request.auth.uid + '__choix'
+          ? !('sharedWith' in request.resource.data)
+          : request.resource.data.ownerUid == request.auth.uid);
+      allow delete: if signedIn() && id.split('__')[0] == request.auth.uid;
+    }
+
     // Abonnements push (un document par appareil).
     // L'id est préfixé par l'uid du propriétaire : {uid}__{hashEndpoint}
     // — voir src/lib/push/client.ts. Chacun ne gère que ses propres appareils ;
