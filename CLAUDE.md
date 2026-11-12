@@ -109,7 +109,7 @@ pas seulement en mémoire.
   jour : « tranche-les pour moi ») : une session tranche elle-même en suivant la proposition motivée de la spec et
   l'écrit « décision déléguée (session, JJ/MM) » ; elle n'écrit au pilote que si le choix est difficile à défaire,
   sort des décisions de Timothée ou n'a pas de proposition ; le pilote tranche alors à sa place. (3) Le pilote n'a pas
-  de rappel périodique et passe la main vers 100 000 jetons. (4) Filet : `autoCompactWindow` à 200 000 dans
+  de rappel périodique et passe la main vers 100 000 jetons. (4) Filet : `autoCompactWindow` à 500 000 (Timothée, 12/11 : « Monte à 500k ») dans
   `.claude/settings.json` ; l'état s'écrit quand même dans le dépôt (un résumé perd des détails).
 - **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (pistes aux
   trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go. Planche = workflow
