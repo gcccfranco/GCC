@@ -406,4 +406,5 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   merveilleux*, *Amour sans fin*, 你是我的平安, 得胜的宣告), et deux exercices (81 au lieu de 79 :
   `harmonie-cours.spec.ts` suit). Statut du chapitre : « à valider » (Timothée). Reste à faire, code : les exemples
   sont du texte ; un lien vers le passage (chant + section) demanderait une syntaxe de lien dans `cours.ts` et
-  `LecteurCours`.
+  `LecteurCours`. Tests : build:index, validate, tsc ; `harmonie-cours` et `harmonie-cours-lecture` sur les trois
+  appareils, 51 passés (1,4 min). Relecteur : exact ; une basse précisée. Prochaine : T2.
