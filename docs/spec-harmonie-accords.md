@@ -172,6 +172,40 @@ Deux tranches. La première remplace le contenu et garde la feuille à toutes le
   setlist (chant courant). Le téléphone et la tablette portrait gardent la feuille. Après « Exemples d'usage T4 »
   (deux colonnes de `SongView`) : la tranche se pose sur leur travail.
 
+### H5 — porte 1, panneau d'accord enrichi (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Deux tranches. Le panneau (`PanneauAccord`, feuille au téléphone, bulle ailleurs) garde tout ce qu'il montre ; les
+ajouts n'apparaissent que pour un accord touché **dans la partition d'un chant** (page chant, setlist), jamais sur
+/accords ni dans la porte 2, ni en mode louange (`PerformanceMode` n'a pas le panneau).
+- **Données** : un contexte `HarmonieDesAccords` (dans `AccordsProvider` ou à côté), donné par la page chant et par
+  chaque chant de la setlist (`ChantDesAccords`) : tonalité **affichée** (celle des étiquettes, capo compris : les
+  degrés ne bougent pas), passages du chant (`harmonieDuChant`, refus appliqués) et, pour H5-2, l'ouverture de la
+  porte 2. Le passage de l'accord touché se lit au DOM : `closest("[data-section-uids]")` de l'ancre, et la place de
+  l'accord parmi les `[data-accord-touchable]` de cette section (ce qui suit dans la partition). Accord hors section
+  (calque 简谱, en-tête) : chiffre et Écouter seulement.
+- **H5-1, chiffre, Écouter, Ensuite.**
+  - **Chiffre** sous le nom, devant la description : « 4 dans D » / « D 调的 4 » (`chiffreDuDegre`, en
+    `--chord-color`, `font-chord`) ; un accord hors tonalité garde son chiffre d'emprunt (« b7 dans D ») ; rien si la
+    tonalité est inconnue.
+  - **Écouter** (`BoutonEcouter`, l'accord seul, en sons réels : étiquette + capo) à droite du nom, à côté de la croix.
+  - **Ensuite** : une ligne repliée « Ensuite : 5 · 6m · 1 » / « 接下来：5 · 6m · 1 » (chiffres), au plus trois
+    accords : d'abord celui qui suit **vraiment** dans la partition (s'il diffère), marqué « dans ce chant » / « 本歌中 »,
+    puis les suites usuelles par degré (`src/lib/harmonie/suites.ts`, pur : 1 → 4, 5, 6m ; 2m → 5, 4 ; 3m → 6m, 4 ;
+    4 → 5, 1, 2m ; 5 → 1, 6m, 4 ; 6m → 4, 2m, 5 ; 7dim → 1 ; le reste → 1, 5), sans doublon. Un appui déplie (bouton,
+    `aria-expanded`) une ligne par suite : chiffre, lettre (`AccordTouchable` « nu », qui ouvre son propre panneau),
+    étiquette « dans ce chant » s'il y a lieu, et les notes : « garde B D · G → F# » / « 保留 B D · G → F# » (notes
+    communes, puis chaque note qui bouge vers la plus proche du nouvel accord ; « tout bouge » / « 全部移动 » si rien
+    n'est commun), avec un `BoutonEcouter` des deux accords (ceci → suite). Pas de clavier dans la ligne (le panneau en
+    a déjà un). Repliée à chaque ouverture du panneau.
+- **H5-2, Ici.** Si une idée du passage de l'accord (calculée ou de l'équipe, refus appliqués) a cet accord dans son
+  « avant », une ligne « Ici : 4 → 2m7 » / « 这里：4 → 2m7 » (chiffres, nom de la fiche en dessous, `lang="fr"`) sous
+  Ensuite ; un appui ferme le panneau et ouvre la porte 2 (feuille ou colonne, selon la place) **au bloc de ce
+  passage**, défilé et mis en valeur comme « Montrer ». Mêmes conditions d'accès que la porte 2
+  (`accesHarmonie.peut`) ; au plus une ligne Ici (la première idée du passage qui s'applique).
+- Tests : nouvelle spec `harmonie-porte1.spec.ts` (chant FR `a-jamais-tu-es-saint`, chant ZH `一切歌颂赞美`, fonctions
+  pures de `suites.ts`, chiffre, Ensuite déplié, Ici ouvre la porte 2) ; voisines `accords-toucher*`, `harmonie-*`.
+  Captures : feuille au téléphone, bulle en tablette portrait, paysage, ordinateur et 1 440 px, FR et 中文.
+
 Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
 nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
 
