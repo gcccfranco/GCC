@@ -4,11 +4,12 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage } from "./helpers/louange";
 import { enDeuxVolets, ouvrirAffichage, ouvrirListe, ouvrirPartitions } from "./helpers/setlist";
 import { verifierPuce } from "./helpers/puce";
-import { basculerMode } from "./helpers/menuSetlist";
+import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 
 // Version perso d'un chant dans une setlist (docs/spec-version-perso.md).
-// V1 : « Ma version » — accords et paroles retouchés pour soi, enregistrés
-// par compte, sans toucher la setlist de la présidence ; jouée en mode louange.
+// V1 : « Ma version » — accords et paroles retouchés pour soi, sans toucher la setlist de la présidence ; jouée en
+// mode louange. MP-3 : la retouche passe par le Crayon (« Pour moi ») et s'écrit dans `partitions/{uid}__{slug}` ;
+// les anciens documents `versions/{uid}` restent lisibles (menu « Je lis », groupe « Dans cette setlist »).
 
 const MUSICIEN: FakeProfile = {
   uid: "uid-musicien",
@@ -22,6 +23,13 @@ const MUSICIEN: FakeProfile = {
 const SETLIST_ID = "setlist-perso";
 const SETLIST_DOC = `setlists/${SETLIST_ID}`;
 const VERSION_DOC = `setlists/${SETLIST_ID}/versions/${MUSICIEN.uid}`;
+const PARTITION_ABBA = `partitions/${MUSICIEN.uid}__abba-pere`;
+const PARTITION_ZH = `partitions/${MUSICIEN.uid}__一生爱你`;
+const SOURCE_ABBA = readFileSync("content/songs/abba-pere.cho", "utf8");
+/** Ma partition au nouveau rangement : le texte retouché, sur le chant d'origine. */
+const maPartition = (content: string | null, structure: string[] | null = null) => ({
+  ownerUid: MUSICIEN.uid, ownerName: "Ruth K.", base: SOURCE_ABBA, content, structure, key: null, traits: [], sharedWith: [], sharedTraits: false,
+});
 
 const item = (over: Record<string, unknown>) => ({
   keyOverride: null,
@@ -86,31 +94,31 @@ async function openPartitions(page: Page, extraDocs: Record<string, Record<strin
   return db;
 }
 
+/** Supprime une ligne au Crayon, pour moi (la musicienne règle la setlist : « Enregistrer » lui demande où). */
 async function deleteLine(page: Page, text: string | RegExp) {
   await page.getByRole("button").filter({ hasText: text }).first().click();
   await page.getByRole("button", { name: "Supprimer la ligne" }).click();
   await page.getByRole("button", { name: "Supprimer", exact: true }).click();
+  await choisirDestination(page, "moi");
 }
 
-test("« Ma version » : retoucher une ligne écrit dans mon document, jamais dans la setlist", async ({ page }) => {
+test("Crayon, pour moi : retoucher une ligne écrit dans ma partition, jamais dans la setlist", async ({ page }) => {
   const db = await openPartitions(page);
   await expect(lyricLine(page, "planait")).toHaveCount(1);
-  await basculerMode(page, "Ma version");
-  await expect(page.getByText(/Toi seul vois ces changements/)).toBeVisible();
+  await basculerMode(page);
+  await expect(page.getByText("Crayon : touche un accord ou un mot pour le retoucher.")).toBeVisible();
   await capture(page, "v1-mode-ma-version");
   await deleteLine(page, "planait");
 
-  await expect(song(page, 1).getByText("Ma version", { exact: true })).toBeVisible();
   await capture(page, "v1-apres-retouche");
   await expect(lyricLine(page, "planait")).toHaveCount(0);
   await expect(lyricLine(page, "le chant qui")).toHaveCount(1);
 
-  const mine = db.writes.filter((w) => w.path === VERSION_DOC);
-  expect(mine.length).toBeGreaterThan(0);
-  const items = mine[mine.length - 1].data.items as Record<string, { content: string; shared: boolean }>;
-  expect(items["abba-pere"].content).toContain("Bien a[F#m]vant le chant");
-  expect(items["abba-pere"].content).not.toContain("planait");
-  expect(items["abba-pere"].shared).toBe(false);
+  const mine = db.doc(PARTITION_ABBA)!;
+  expect(String(mine.content)).toContain("Bien a[F#m]vant le chant");
+  expect(String(mine.content)).not.toContain("planait");
+  expect(mine.base).toBe(SOURCE_ABBA);
+  expect(db.writes.filter((w) => w.path === VERSION_DOC), "versions/{uid} n'est plus écrit").toHaveLength(0);
   expect(db.writes.filter((w) => w.path === SETLIST_DOC || w.path.startsWith(`${SETLIST_DOC}/history`)), "la setlist et son historique ne bougent pas").toHaveLength(0);
 });
 
@@ -130,51 +138,44 @@ test("ma version s'affiche dans la vue partitions et se joue en mode louange", a
   await capture(page, "v1-mode-louange");
 });
 
-test("revenir à la présidence retire ma version", async ({ page }) => {
-  const db = await openPartitions(page, {
-    [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
-  });
-  await basculerMode(page, "Ma version");
+test("revenir à la présidence vide ma partition de ce chant", async ({ page }) => {
+  const db = await openPartitions(page, { [PARTITION_ABBA]: maPartition(MY_ABBA) });
+  await expect(lyricLine(page, "flottait")).toHaveCount(1);
+  await basculerMode(page);
   await page.getByRole("button", { name: "Revenir à la présidence" }).click();
   await capture(page, "v1-revenir-presidence");
   await page.getByRole("button", { name: "Rétablir", exact: true }).click();
 
   await expect(lyricLine(page, "planait")).toHaveCount(1);
-  await expect(song(page, 1).getByText("Ma version", { exact: true })).toHaveCount(0);
-  const last = db.writes.filter((w) => w.path === VERSION_DOC).pop();
-  expect(last).toBeDefined();
-  expect(Object.keys(last!.data.items as object)).toHaveLength(0);
+  await expect.poll(() => db.doc(PARTITION_ABBA)?.content).toBeNull();
+  expect(db.doc(PARTITION_ABBA)).toMatchObject({ content: null, structure: null });
   expect(db.writes.filter((w) => w.path === SETLIST_DOC)).toHaveLength(0);
 });
 
-test("un responsable en mode « Adapter » voit la version de la présidence, pas la sienne", async ({ page }) => {
+test("au Crayon, je retouche ce que je lis : ma version d'abord", async ({ page }) => {
   await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
   });
   await expect(lyricLine(page, "flottait")).toHaveCount(1);
-  await basculerMode(page, "Adapter");
-  await expect(lyricLine(page, "planait")).toHaveCount(1);
-  await expect(lyricLine(page, "flottait")).toHaveCount(0);
-  await expect(song(page, 1).getByText("Ma version", { exact: true })).toHaveCount(0);
-  await basculerMode(page, "Adapter");
+  await basculerMode(page);
   await expect(lyricLine(page, "flottait")).toHaveCount(1);
+  await expect(lyricLine(page, "planait")).toHaveCount(0);
 });
 
-test("chant chinois : ma version garde les caractères et le pinyin des autres lignes", async ({ page }) => {
+test("chant chinois : ma partition garde les caractères et le pinyin des autres lignes", async ({ page }) => {
   await enParoles(page);
   const db = await openPartitions(page);
-  await basculerMode(page, "Ma version");
+  await basculerMode(page);
   await deleteLine(page, "宝");
 
-  await expect(song(page, 2).getByText("Ma version", { exact: true })).toBeVisible();
   await song(page, 2).scrollIntoViewIfNeeded();
   await capture(page, "v1-zh");
   await expect(lyricLine(page, "宝")).toHaveCount(0);
   await expect(page.locator("span").filter({ hasText: /^wǒ$/ }).first()).toBeVisible();
-  const items = db.writes.filter((w) => w.path === VERSION_DOC).pop()!.data.items as Record<string, { content: string }>;
-  expect(items["一生爱你"].content).not.toContain("宝贵");
-  expect(items["一生爱你"].content).toContain("wǒ de xīn shēn shēn");
-  expect(items["abba-pere"]).toBeUndefined();
+  const mine = db.doc(PARTITION_ZH)!;
+  expect(String(mine.content)).not.toContain("宝贵");
+  expect(String(mine.content)).toContain("wǒ de xīn shēn shēn");
+  expect(db.doc(PARTITION_ABBA)).toBeUndefined();
 });
 
 // ── V2 : ma structure (quelles sections voir, dans quel ordre) ────────────────
@@ -207,11 +208,11 @@ test("ma structure : le corps la suit, le bandeau, le sommaire et la liste reste
   await expect(page.getByRole("listitem").filter({ hasText: "Abba Père" }).first(), "la vue liste garde la présidence").toContainText("Int");
 });
 
-test("la feuille « Sections » enregistre ma structure sans toucher la setlist", async ({ page }) => {
+test("« Ordre » enregistre ma structure dans ma partition sans toucher la setlist", async ({ page }) => {
   const db = await openPartitions(page);
   await expect(bodySections(page, 1)).toHaveCount(6);
-  await basculerMode(page, "Ma version");
-  await song(page, 1).getByRole("button", { name: "Sections" }).click();
+  await basculerMode(page);
+  await page.locator("[data-barre-crayon]").getByRole("button", { name: "Ordre", exact: true }).click();
   const sheet = page.getByRole("dialog", { name: "Sections" });
   await expect(sheet).toBeVisible();
   await capture(page, "v2-feuille-sections");
@@ -222,24 +223,20 @@ test("la feuille « Sections » enregistre ma structure sans toucher la setlist"
   await expect(sheet).toBeHidden();
   await expect(bodySections(page, 1)).toHaveCount(5);
   await expect(song(page, 1).getByText("Interlude")).toHaveCount(0);
-  const items = db.writes.filter((w) => w.path === VERSION_DOC).pop()!.data.items as Record<string, { content: string | null; structure: string[] }>;
-  expect(items["abba-pere"].structure).toEqual(["intro-1", "verse-2", "chorus-3", "verse-5", "bridge-6"]);
-  expect(items["abba-pere"].content).toBeNull();
+  const mine = db.doc(PARTITION_ABBA)!;
+  expect(mine.structure).toEqual(["intro-1", "verse-2", "chorus-3", "verse-5", "bridge-6"]);
+  expect(mine.content).toBeNull();
   expect(db.writes.filter((w) => w.path === SETLIST_DOC)).toHaveLength(0);
 });
 
 test("« Réinitialiser » dans la feuille revient à la structure de la présidence", async ({ page }) => {
-  const db = await openPartitions(page, {
-    [VERSION_DOC]: myDoc({ "abba-pere": { content: null, structure: MY_STRUCTURE, shared: false } }),
-  });
-  await basculerMode(page, "Ma version");
-  await song(page, 1).getByRole("button", { name: "Sections" }).click();
+  const db = await openPartitions(page, { [PARTITION_ABBA]: maPartition(null, MY_STRUCTURE) });
+  await basculerMode(page);
+  await page.locator("[data-barre-crayon]").getByRole("button", { name: "Ordre", exact: true }).click();
   await page.getByRole("dialog", { name: "Sections" }).getByRole("button", { name: "Réinitialiser" }).click();
 
   await expect(bodySections(page, 1)).toHaveCount(6);
-  await expect(song(page, 1).getByText("Ma version", { exact: true })).toHaveCount(0);
-  const last = db.writes.filter((w) => w.path === VERSION_DOC).pop()!;
-  expect(Object.keys(last.data.items as object)).toHaveLength(0);
+  await expect.poll(() => db.doc(PARTITION_ABBA)?.structure).toBeNull();
 });
 
 test("« Structure seule » masque le corps même avec ma structure", async ({ page }) => {
@@ -343,35 +340,14 @@ test("une version partagée se choisit, et le choix suit mon compte jusqu'en mod
   await expect(onStage(page, "flottait").first()).toBeVisible();
 });
 
-test("les actions de « Ma version » sont des puces de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
-  await openPartitions(page, {
-    [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
-  });
-  await basculerMode(page, "Ma version");
-  for (const nom of ["Partager ma version", "Sections"]) {
-    await verifierPuce(song(page, 1).getByRole("button", { name: nom }), info);
-  }
+test("au Crayon, « Revenir à la présidence » est une puce de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
+  await openPartitions(page, { [PARTITION_ABBA]: maPartition(MY_ABBA) });
+  await basculerMode(page);
+  await verifierPuce(song(page, 1).getByRole("button", { name: "Revenir à la présidence" }), info);
 });
 
-test("partager ma version, puis retirer le partage", async ({ page }) => {
-  const db = await openPartitions(page, {
-    [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
-  });
-  await basculerMode(page, "Ma version");
-  const share = song(page, 1).getByRole("button", { name: "Partager ma version" });
-  await expect(share).toHaveAttribute("aria-pressed", "false");
-  await share.click();
-  await expect(share).toHaveAttribute("aria-pressed", "true");
-  await capture(page, "v3-partager");
-  let items = db.writes.filter((w) => w.path === VERSION_DOC).pop()!.data.items as Record<string, { shared: boolean; content: string }>;
-  expect(items["abba-pere"].shared).toBe(true);
-  expect(items["abba-pere"].content).toContain("flottait");
-
-  await share.click();
-  await expect(share).toHaveAttribute("aria-pressed", "false");
-  items = db.writes.filter((w) => w.path === VERSION_DOC).pop()!.data.items as Record<string, { shared: boolean; content: string }>;
-  expect(items["abba-pere"].shared).toBe(false);
-});
+// « Partager ma version » (la puce) est retirée en MP-3 : le partage revient avec la feuille de MP-4.
+test.skip("partager ma version, puis retirer le partage (MP-4)", async () => {});
 
 test("une version non partagée n'est proposée à personne", async ({ page }) => {
   await openPartitions(page, {

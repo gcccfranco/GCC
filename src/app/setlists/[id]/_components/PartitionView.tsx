@@ -10,7 +10,6 @@ import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { ordreJoue } from "@/lib/chordpro/structure";
 import { useJianpuScore } from "@/lib/jianpu/images";
-import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { useTranslation } from "react-i18next";
 import { transposeSection, transposerVers } from "@/lib/transposeAST";
@@ -19,19 +18,14 @@ import { itemAst } from "@/lib/chordpro/itemContent";
 import { lyricsText } from "@/components/song/copyLyrics";
 import { compter } from "@/lib/usage";
 import { playedSections } from "@/lib/setlist/playedSections";
-import { isLastPhraseOnly } from "@/lib/setlist/lastPhrase";
 import { Button } from "@/components/ui/button";
 import { MenuJeLis, LigneMaPartition } from "@/components/partition/MenuJeLis";
 import type { Lecture } from "@/lib/partition/lecture";
-import { Check, Copy, Link2, ListOrdered, MessageSquare, RotateCcw, Sparkles } from "lucide-react";
+import { Check, Copy, Link2, MessageSquare, RotateCcw, Sparkles } from "lucide-react";
 import { TOUCHER_44 } from "@/lib/toucher44";
 import type { ChordProAST, ChordProLine, ChordProSection } from "@/types/chordPro";
 import type { SongVersionView } from "@/lib/setlist/versionChoice";
 import type { Disposition } from "@/lib/dispositionPref";
-
-/** Badge ambre de la version affichée : « Version modifiée », « Ma version », « Version de … ». */
-const AMBER_BADGE =
-  "text-xs px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300/60 dark:border-amber-700/50 font-semibold print:hidden";
 
 /** Les actions de la rangée d'un chant (dimanche-17) : une puce à contour de 32 px, 12,5 px, zone de toucher de 44 px. */
 const PUCE = `${TOUCHER_44} inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-xs font-semibold text-foreground transition-colors hover:bg-secondary print:hidden`;
@@ -85,11 +79,10 @@ export function PartitionsView({
   layout,
   editMode = false,
   versions,
-  editMine = false,
+  retouches,
   onSelectLine,
   onRevert,
-  onEditStructure,
-  onShare,
+  onPasserAuCulte,
   onEditJianpu,
   onIdees,
   onRetryChant,
@@ -125,13 +118,13 @@ export function PartitionsView({
    *  du chant (le bandeau garde celle de la présidence) ; badge, sélecteur de
    *  version, partage. */
   versions?: Record<string, SongVersionView>;
-  /** Le mode d'édition vise ma version : « Revenir à la présidence » au lieu
-   *  de « Rétablir l'original », bouton « Sections », case « Partager ». */
-  editMine?: boolean;
+  /** Crayon : ce que chaque chant a de retouché pour moi et pour le culte (puces « Revenir à la présidence » et
+   *  « Rétablir l'original »). */
+  retouches?: (itemIndex: number) => { moi: boolean; culte: boolean };
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
-  onRevert?: (itemIndex: number) => void;
-  onEditStructure?: (itemIndex: number) => void;
-  onShare?: (itemIndex: number, shared: boolean) => void;
+  onRevert?: (itemIndex: number, destination: "moi" | "culte") => void;
+  /** Crayon, pour qui règle le culte : « Passer au culte » sous une ligne marquée « moi ». */
+  onPasserAuCulte?: (itemIndex: number, srcLine: number) => void;
   /** Retouche d'accords sur un scan 简谱 (lot 9) : l'item pour la présidence,
    *  ma version pour moi — la page tranche. */
   onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
@@ -359,14 +352,13 @@ export function PartitionsView({
             showPinyinGlobal={showPinyinGlobal}
             editMode={editMode}
             version={versions?.[item.songSlug]}
-            editMine={editMine}
+            retouches={retouches?.(origIndex)}
             disposition={disposition}
             jianpuPref={jianpuPref}
             layout={layout}
             onSelectLine={onSelectLine}
             onRevert={onRevert}
-            onEditStructure={onEditStructure}
-            onShare={onShare}
+            onPasserAuCulte={onPasserAuCulte}
             onEditJianpu={onEditJianpu}
             onIdees={onIdees}
             onRetryChant={onRetryChant}
@@ -392,14 +384,13 @@ function NormalSongItem({
   showPinyinGlobal,
   editMode,
   version,
-  editMine,
+  retouches,
   disposition,
   jianpuPref,
   layout: layoutPref,
   onSelectLine,
   onRevert,
-  onEditStructure,
-  onShare,
+  onPasserAuCulte,
   onEditJianpu,
   onIdees,
   onRetryChant,
@@ -421,14 +412,13 @@ function NormalSongItem({
   showPinyinGlobal: boolean;
   editMode: boolean;
   version?: SongVersionView;
-  editMine: boolean;
+  retouches?: { moi: boolean; culte: boolean };
   disposition: Disposition;
   jianpuPref: JianpuPref;
   layout: PartitionLayout;
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
-  onRevert?: (itemIndex: number) => void;
-  onEditStructure?: (itemIndex: number) => void;
-  onShare?: (itemIndex: number, shared: boolean) => void;
+  onRevert?: (itemIndex: number, destination: "moi" | "culte") => void;
+  onPasserAuCulte?: (itemIndex: number, srcLine: number) => void;
   onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
   onIdees?: (itemIndex: number) => void;
   onRetryChant?: (slug: string) => void | Promise<void>;
@@ -437,9 +427,7 @@ function NormalSongItem({
   const { t } = useTranslation();
   const [reprise, setReprise] = useState(false);
   const mine = version?.mine;
-  // En mode « Ma version », c'est la mienne qui s'affiche, quel que soit le choix.
-  const shown = editMine ? (mine?.content ? "mine" : "presidence") : (version?.shown ?? "presidence");
-  const isMine = shown === "mine" || (shown === "presidence" && !!mine?.structure?.length);
+  const shown = version?.shown ?? "presidence";
   // Copier les paroles (régie) : seulement en suivant la setlist de la
   // présidence — ni ma version, ni ma structure, ni celle d'un autre.
   const followsPresidency = lecture && lecture.source !== undefined
@@ -458,9 +446,6 @@ function NormalSongItem({
   }, [item, content]);
   // Partition 简谱 choisie pour cet item : le scan remplace les paroles.
   const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref, item.jianpuSheet) ? item.songSlug : null);
-  // Retouches d'accords sur le scan qui sont les miennes : elles ouvrent
-  // « Revenir à la présidence » même sans accords ni paroles retouchés.
-  const mesRetouches = aDesRetouches(mine?.jianpuChords);
   if (!ast) {
     // Chant sans contenu (lecture ratée) : son titre et de quoi le relire, plutôt qu'un trou dans la setlist.
     return (
@@ -500,35 +485,16 @@ function NormalSongItem({
       {item.notes && (
         <span className="text-xs text-muted-foreground italic">{item.notes}</span>
       )}
-      {/* L'adaptation porte sur les paroles ChordPro : elle n'est pas visible
-          tant que la partition 简谱 remplace le chant. Le dire, plutôt que
-          d'afficher « Version modifiée » sur un scan intact. Une « Dernière
-          phrase » seule n'est pas une modification : pas de badge. */}
-      {editMode && (shown === "other" ? (
-        <span className={AMBER_BADGE}>
-          {t("setlists.myVersion.badgeOther", { name: version?.shownName || t("setlists.history.someone") })}
-        </span>
-      ) : isMine ? (
-        <span className={AMBER_BADGE}>
-          {jianpuScore ? t("setlists.myVersion.badgeHidden") : t("setlists.myVersion.badge")}
-        </span>
-      ) : item.contentOverride && !(content && isLastPhraseOnly(content.source, item.contentOverride)) && (
-        <span className={AMBER_BADGE}>
-          {jianpuScore
-            ? t("setlists.contentEdit.modifiedHidden")
-            : t("setlists.contentEdit.modifiedBadge", { defaultValue: "Version modifiée" })}
-        </span>
-      ))}
-      {editMode && (editMine ? isMine || mesRetouches : !!item.contentOverride || aDesRetouches(item.jianpuChords)) && (
-        <button
-          type="button"
-          onClick={() => onRevert?.(origIndex)}
-          className={PUCE}
-        >
+      {editMode && retouches?.moi && (
+        <button type="button" onClick={() => onRevert?.(origIndex, "moi")} className={PUCE}>
           <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-          {editMine
-            ? t("setlists.myVersion.revert")
-            : t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
+          {t("setlists.myVersion.revert")}
+        </button>
+      )}
+      {editMode && retouches?.culte && (
+        <button type="button" onClick={() => onRevert?.(origIndex, "culte")} className={PUCE}>
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+          {t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
         </button>
       )}
       {onIdees && (
@@ -539,27 +505,6 @@ function NormalSongItem({
         >
           <Sparkles className="h-3.5 w-3.5" aria-hidden />
           {t("harmonie.idees")}
-        </button>
-      )}
-      {editMode && editMine && !jianpuScore && (
-        <button
-          type="button"
-          onClick={() => onEditStructure?.(origIndex)}
-          className={PUCE}
-        >
-          <ListOrdered className="h-3.5 w-3.5" aria-hidden />
-          {t("setlists.myVersion.sections")}
-        </button>
-      )}
-      {editMode && editMine && mine?.content && (
-        <button
-          type="button"
-          aria-pressed={mine.shared}
-          onClick={() => onShare?.(origIndex, !mine.shared)}
-          className={`${PUCE} aria-pressed:bg-secondary`}
-        >
-          {mine.shared ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Link2 className="h-3.5 w-3.5" aria-hidden />}
-          {t("setlists.myVersion.share")}
         </button>
       )}
       {!editMode && lecture && <MenuJeLis lecture={lecture} onChoisir={(v) => onChoisirLecture?.(origIndex, v)} />}
@@ -591,7 +536,8 @@ function NormalSongItem({
         bodyStructure={version?.bodyStructure}
         titleHref={titleHref}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
-        marques={editMode ? undefined : lecture?.marques}
+        marques={lecture?.marques}
+        onPasserAuCulte={editMode && onPasserAuCulte ? (srcLine) => onPasserAuCulte(origIndex, srcLine) : undefined}
         onConflit={!editMode && lecture?.modifiable && onConflit ? (index, choix) => onConflit(origIndex, index, choix) : undefined}
         corps={
           // Partition 简谱 : le scan prend la place des paroles, sous le même

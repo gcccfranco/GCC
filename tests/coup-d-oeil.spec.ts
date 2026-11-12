@@ -243,12 +243,12 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await expect(song1Sections(page)).toHaveCount(2);
   });
 
-  test("mode Adapter : ordre joué forcé, le bandeau reste", async ({ page }) => {
+  test("Crayon : ordre joué forcé, le bandeau reste", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
     // Depuis SC1 (18/10/2026), seul le créateur adapte et modifie une setlist : la musicienne est la créatrice de la sienne.
     await openPartitions(page, setlist({ ownerId: MUSICIEN.uid }));
     await expect(song1Sections(page)).toHaveCount(2);
-    await basculerMode(page, "Adapter");
+    await basculerMode(page);
     await expect(song1Sections(page)).toHaveCount(3);
     await expect(page.getByRole("list", { name: "Structure" }).first()).toBeVisible();
   });

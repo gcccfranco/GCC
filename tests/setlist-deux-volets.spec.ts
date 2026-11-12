@@ -130,7 +130,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await capture(page, "deux-volets");
   });
 
-  test("l'en-tête : catégorie et date, titre, présidence ; Présentation · Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange", async ({ page }) => {
+  test("l'en-tête : catégorie et date, titre, présidence ; Présentation · Crayon · Modifier · PDF · ⋯ · Mode louange", async ({ page }) => {
     await ouvrir(page);
     const e = enTete(page);
     await expect(e).toContainText("Culte Francophone");
@@ -141,9 +141,9 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
         .filter((el) => (el as HTMLElement).offsetParent !== null)
         .map((el) => el.getAttribute("aria-label") ?? el.textContent?.trim() ?? ""),
     );
-    expect(noms).toEqual(["Présentation", "Adapter", "Ma version", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
+    expect(noms).toEqual(["Présentation", "Crayon", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
     // Libellés compris : ils se lisent, pas seulement à l'oreille.
-    for (const nom of ["Adapter", "Ma version", "Modifier", "Mode Louange"]) {
+    for (const nom of ["Crayon", "Modifier", "Mode Louange"]) {
       await expect(e.getByRole(nom === "Modifier" ? "link" : "button", { name: nom, exact: true })).toContainText(nom);
     }
     await expect(e.getByRole("link", { name: "Présentation" })).toHaveAttribute("href", CANVA);
@@ -299,20 +299,18 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     expect(download.suggestedFilename()).toBe("Culte du 4 octobre-liste.pdf");
   });
 
-  test("Adapter et Ma version s'ouvrent dans le volet de droite, sans rien perdre du sommaire", async ({ page }) => {
+  test("le Crayon s'ouvre dans le volet de droite, sans rien perdre du sommaire", async ({ page }) => {
     await ouvrir(page);
-    const adapter = enTete(page).getByRole("button", { name: "Adapter", exact: true });
-    const maVersion = enTete(page).getByRole("button", { name: "Ma version", exact: true });
-    await adapter.click();
-    await expect(adapter).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByText(/Mode adaptation/)).toBeVisible();
+    const crayon = enTete(page).getByRole("button", { name: "Crayon", exact: true });
+    await crayon.click();
+    await expect(crayon).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText("Crayon : touche un accord ou un mot pour le retoucher.")).toBeVisible();
+    await expect(page.locator("[data-barre-crayon]")).toBeVisible();
     await expect(sommaire(page)).toBeVisible();
-    await maVersion.click();
-    await expect(maVersion).toHaveAttribute("aria-pressed", "true");
-    await expect(adapter).toHaveAttribute("aria-pressed", "false");
-    await expect(page.getByText(/Mode adaptation/)).toHaveCount(0);
-    await expect(sommaire(page)).toBeVisible();
-    await capture(page, "deux-volets-ma-version");
+    await capture(page, "deux-volets-crayon");
+    await page.locator("[data-barre-crayon]").getByRole("button", { name: "Terminé", exact: true }).click();
+    await expect(crayon).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByText("Crayon : touche un accord ou un mot pour le retoucher.")).toHaveCount(0);
   });
 
   test("« Mode louange » s'ouvre au premier chant", async ({ page }) => {

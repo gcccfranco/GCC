@@ -92,8 +92,8 @@ test.describe("copie hors ligne d'une setlist", () => {
   test("réseau en échec : la copie est servie avec son bandeau, sans écriture possible", async ({ page }) => {
     // Le PROPRIÉTAIRE de la setlist : en ligne il peut tout, hors ligne (copie) plus rien n'est offert.
     const db = await signInAsPuisCopie(page, { setlist: { ...SETLIST, ownerId: MUSICIEN.uid } });
-    // « Adapter » est dans la barre ; « Modifier » dans la barre (grand écran) ou dans le menu ⋯ (téléphone, tablette).
-    await verifierMode(page, "Adapter");
+    // « Crayon » est dans la barre ; « Modifier » dans la barre (grand écran) ou dans le menu ⋯ (téléphone, tablette).
+    await verifierMode(page, "Crayon");
     const modifier = page.getByRole("link", { name: "Modifier" }).or(page.getByRole("menuitem", { name: "Modifier" }));
     if (!(await modifier.first().isVisible())) await page.getByRole("button", { name: "Plus d'actions" }).first().click();
     await expect(modifier.first()).toBeVisible();
@@ -107,11 +107,11 @@ test.describe("copie hors ligne d'une setlist", () => {
     // L'ordre des chants de la copie s'affiche.
     await expect(page.getByText(/Abba/i).first()).toBeVisible();
     // Pas de bouton d'édition ni de suppression pendant que la copie est affichée.
-    await expect(page.getByRole("button", { name: "Adapter" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Crayon" })).toHaveCount(0);
     await page.getByRole("button", { name: "Plus d'actions" }).first().click();
     await expect(page.getByRole("menu")).toBeVisible();
     await expect(page.getByRole("link", { name: "Modifier" }).or(page.getByRole("menuitem", { name: "Modifier" }))).toHaveCount(0);
-    await expect(page.getByRole("menuitemcheckbox", { name: "Adapter" })).toHaveCount(0);
+    await expect(page.getByRole("menuitemcheckbox", { name: "Crayon" })).toHaveCount(0);
     await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveCount(0);
     await expect(page.getByRole("menuitem", { name: /Dupliquer/ })).toHaveCount(0);
     expect(db.writes.filter((w) => w.path.startsWith("setlists/"))).toEqual([]);

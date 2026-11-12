@@ -131,7 +131,7 @@ test.describe("louange : casse des titres de chants (partout-q1)", () => {
 // setlist passait sur deux lignes sur son iPhone (402 pt) — 374 pt de commandes
 // pour 370 pt de large. Une seule ligne à toute largeur de téléphone ; sous
 // 431 pt (lot CD, T4a : libellés de 12 px et pastilles à 8 px de marge, la barre ne tient plus
-// sur un 430 pt), « Adapter » et « Ma version » vivent dans le menu « ⋯ ». Même défaut sur
+// sur un 430 pt), « Crayon » (qui remplace Adapter et Ma version, MP-3) vit dans le menu « ⋯ ». Même défaut sur
 // tablette, l'appareil du pupitre : les libellés texte arrivaient dès 640 px et ne
 // ne tiennent pas (iPad en portrait : 768 à 834 px). En paysage aussi (demande du
 // soir même) : un téléphone reste en icônes dans les deux sens, jusqu'à 956 px de
@@ -144,18 +144,17 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
     keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
     structureOverride: null, sectionNotes: {}, notes: "", ...over,
   });
-  // Le pire cas : on peut modifier (Adapter) et avoir sa version (Pinyin est passé dans « Affichage »). Depuis SC1
+  // Le pire cas : on peut modifier et retoucher au Crayon (Pinyin est passé dans « Affichage »). Depuis SC1
   // (18/10/2026), seul le créateur modifie une setlist : la musicienne est la créatrice de la sienne.
   const setlist = {
     title: "高班", leader: "David C.", category: "Culte Francophone", date: "2026-09-20",
     language: "mixed", notes: "", ownerId: "uid-musicien", isPrivate: false,
     items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "爱的约定", position: 2 })],
   };
-  const AIDE_ADAPTER = /Mode adaptation/;
-  const AIDE_MA_VERSION = /^Ma version :/;
+  const AIDE_CRAYON = "Crayon : touche un accord ou un mot pour le retoucher.";
 
   /** Deux volets (docs/spec-deux-volets.md, T4, Q7) : plus de barre d'outils, l'en-tête
-   *  pleine largeur porte Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange (pas de
+   *  pleine largeur porte Crayon · Modifier · PDF · ⋯ · Mode louange (pas de
    *  Présentation sans lien), libellés compris ; la rangée tient sur une ligne, à droite du
    *  titre ou dessous, jamais par-dessus, ni sous la barre latérale (`bord`), ni hors de l'écran. */
   async function enTeteSurUneLigne(page: Page, largeur: number, bord: number) {
@@ -170,7 +169,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           return { nom: el.getAttribute("aria-label") ?? el.textContent?.trim() ?? "", milieu: r.top + r.height / 2, haut: r.top, gauche: r.left, droite: r.right };
         }),
     );
-    expect(boites.map((b) => b.nom)).toEqual(["Adapter", "Ma version", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
+    expect(boites.map((b) => b.nom)).toEqual(["Crayon", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
     const milieux = boites.map((b) => b.milieu);
     expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
     const titre = (await enTete.getByRole("heading", { level: 1 }).boundingBox())!;
@@ -181,10 +180,8 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
     }
     expect(await enTete.evaluate((el) => el.scrollWidth <= el.clientWidth), "l'en-tête ne déborde pas").toBe(true);
     await expect(enTete.getByText("Mode Louange", { exact: true }), "libellés compris").toBeVisible();
-    await enTete.getByRole("button", { name: "Adapter" }).click();
-    await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();
-    await enTete.getByRole("button", { name: "Ma version" }).click();
-    await expect(page.getByText(AIDE_MA_VERSION)).toBeVisible();
+    await enTete.getByRole("button", { name: "Crayon" }).click();
+    await expect(page.getByText(AIDE_CRAYON)).toBeVisible();
   }
 
   const ECRANS: [number, number, string][] = [
@@ -216,7 +213,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
             return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width };
           }),
       );
-      expect(boites.length, "retour, affichage, (adapter), accords, (ma version), mode louange, ⋯").toBe(largeur >= 431 ? 7 : 5);
+      expect(boites.length, "retour, affichage, (crayon), accords, mode louange, ⋯").toBe(largeur >= 431 ? 6 : 5);
       const milieux = boites.map((b) => b.milieu);
       expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
       for (const b of boites) {
@@ -231,23 +228,17 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
 
       if (largeur >= 431) {
-        // Assez de place : les deux modes restent dans la barre, comme avant.
-        await barre.getByRole("button", { name: "Adapter" }).click();
-        await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();
-        await barre.getByRole("button", { name: "Ma version" }).click();
-        await expect(page.getByText(AIDE_MA_VERSION)).toBeVisible();
+        // Assez de place : le Crayon reste dans la barre, comme Adapter avant lui.
+        await barre.getByRole("button", { name: "Crayon" }).click();
+        await expect(page.getByText(AIDE_CRAYON)).toBeVisible();
       } else {
-        // Téléphone étroit : ils passent dans le menu « ⋯ », et y marchent pareil.
-        await expect(barre.getByRole("button", { name: "Adapter" })).toBeHidden();
-        await expect(barre.getByRole("button", { name: "Ma version" })).toBeHidden();
+        // Téléphone étroit : il passe dans le menu « ⋯ », et y marche pareil.
+        await expect(barre.getByRole("button", { name: "Crayon" })).toBeHidden();
         await barre.getByRole("button", { name: "Plus d'actions" }).click();
-        await page.getByRole("menuitemcheckbox", { name: "Adapter" }).click();
-        await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();
+        await page.getByRole("menuitemcheckbox", { name: "Crayon" }).click();
+        await expect(page.getByText(AIDE_CRAYON)).toBeVisible();
         await barre.getByRole("button", { name: "Plus d'actions" }).click();
-        await expect(page.getByRole("menuitemcheckbox", { name: "Adapter" })).toHaveAttribute("aria-checked", "true");
-        await page.getByRole("menuitemcheckbox", { name: "Ma version" }).click();
-        await expect(page.getByText(AIDE_MA_VERSION)).toBeVisible();
-        await expect(page.getByText(AIDE_ADAPTER), "les deux modes s'excluent, comme dans la barre").toHaveCount(0);
+        await expect(page.getByRole("menuitemcheckbox", { name: "Crayon" })).toHaveAttribute("aria-checked", "true");
       }
     });
   }

@@ -5,7 +5,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 
-// Lot 9, tranche MV (docs/spec-harmonie.md) : dans « Ma version », une retouche
+// Lot 9, tranche MV (docs/spec-harmonie.md) : au Crayon, pour moi (MP-3 : ma partition), une retouche
 // d'une section répétée vaut pour « Toutes les répétitions » (comme avant) ou
 // pour « Seulement ce passage » — copie de section du mode Adapter. Une version
 // partagée s'affiche « au même endroit » chez quelqu'un dont la structure
@@ -142,11 +142,14 @@ async function editLyrics(page: Page, uid: string, text: string, next: string, s
   await page.getByRole("button", { name: "Valider" }).click();
 }
 
+/** Mes partitions écrites (MP-3 : `partitions/{uid}__{slug}` ; `versions/{uid}` n'est plus écrit), par chant. */
 const myItems = (db: Awaited<ReturnType<typeof openPartitions>>) =>
-  db.writes.filter((w) => w.path === RUTH_DOC).pop()!.data.items as Record<
-    string,
-    { content: string | null; structure: string[] | null; sectionOrigins?: Record<string, string> }
-  >;
+  Object.fromEntries(
+    ["abba-pere", "一生爱你"].flatMap((slug) => {
+      const d = db.doc(`partitions/${RUTH.uid}__${slug}`);
+      return d ? [[slug, d]] : [];
+    }),
+  ) as Record<string, { content: string | null; structure: string[] | null; sectionOrigins?: Record<string, string> }>;
 
 test("le choix de portée n'apparaît que dans une section répétée", async ({ page }) => {
   await openPartitions(page);
@@ -181,7 +184,7 @@ test("« Seulement ce passage » ne retouche que le refrain touché", async ({ p
   await expect(lyricLine(page, "Papa")).toHaveCount(1);
   await expect(bodySections(page, 1).nth(1), "le premier refrain est intact").not.toContainText("Papa");
   await expect(bodySections(page, 1).nth(3)).toContainText("Papa");
-  await expect(song(page, 1).getByText("Ma version", { exact: true })).toBeVisible();
+  await expect(song(page, 1).locator('[data-marque="moi"]').first()).toBeVisible();
   await capture(page, "mv-seulement-ce-passage");
 
   const items = myItems(db);

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { basculerMode } from "./helpers/menuSetlist";
+import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { loadChords } from "./helpers/jianpu";
@@ -29,7 +29,7 @@ const CHORDS = loadChords()[SLUG];
 
 const SETLIST_ID = "setlist-jianpu";
 const SETLIST_DOC = `setlists/${SETLIST_ID}`;
-const VERSION_DOC = `setlists/${SETLIST_ID}/versions/${MUSICIEN.uid}`;
+const PARTITION_DOC = `partitions/${MUSICIEN.uid}__${SLUG}`;
 
 const item = (over: Record<string, unknown>) => ({
   keyOverride: null,
@@ -90,11 +90,13 @@ async function toucher(page: Page, x: number, y: number) {
   });
 }
 
-/** Pavé d'accord de la feuille : fondamentale, altération, qualité, valider. */
-async function pave(page: Page, ...touches: string[]) {
+/** Pavé d'accord de la feuille : fondamentale, altération, qualité, valider ; puis le choix du lieu (MP-3 : la
+ *  musicienne règle le culte, « Enregistrer » lui demande Pour moi ou Pour tout le culte). */
+async function pave(page: Page, destination: "moi" | "culte", ...touches: string[]) {
   const feuille = page.getByRole("dialog");
   for (const nom of touches) await feuille.getByRole("button", { name: nom, exact: true }).click();
   await feuille.getByRole("button", { name: "Valider l'accord" }).click();
+  await choisirDestination(page, destination);
 }
 
 /** Dernier état des items écrit dans la setlist. */
@@ -105,13 +107,13 @@ function itemsEcrits(db: { writes: { path: string; data: Record<string, unknown>
 
 const scanItem = (db: Parameters<typeof itemsEcrits>[0]) => itemsEcrits(db)[1];
 
-test("Adapter : toucher un accord imprimé le change, et l'historique le dit", async ({ page }) => {
+test("Crayon, pour tout le culte : toucher un accord imprimé le change, et l'historique le dit", async ({ page }) => {
   const db = await openPartitions(page);
-  await basculerMode(page, "Adapter");
+  await basculerMode(page);
   // Étiquette 0 : « G » gravé en haut à gauche (x 80, y 344).
   await toucher(page, 90, 356);
   await capture(page, "jianpu-pave");
-  await pave(page, "E", "m7");
+  await pave(page, "culte", "E", "m7");
 
   const retouche = page.locator('[data-jianpu-retouche="0"]');
   await expect(retouche).toHaveText("Em7");
@@ -125,26 +127,27 @@ test("Adapter : toucher un accord imprimé le change, et l'historique le dit", a
   await expect(histoire.getByText(`Adaptation de ${SLUG} modifiée (accords ou paroles)`)).toBeVisible();
 });
 
-test("Adapter : un accord touché puis effacé disparaît du scan", async ({ page }) => {
+test("Crayon, pour tout le culte : un accord touché puis effacé disparaît du scan", async ({ page }) => {
   const db = await openPartitions(page);
-  await basculerMode(page, "Adapter");
+  await basculerMode(page);
   // Étiquette 1 : « G7 » (x 638, y 344).
   await toucher(page, 655, 356);
   await page.getByRole("dialog").getByRole("button", { name: "Supprimer l'accord" }).click();
+  await choisirDestination(page, "culte");
 
   await expect(page.locator('[data-jianpu-retouche="1"]')).toHaveText("");
   await capture(page, "jianpu-accord-efface");
   expect(scanItem(db).jianpuChords).toEqual({ changed: { "1": "" } });
 });
 
-test("Adapter : toucher la ligne d'accords en ajoute un à la hauteur des autres", async ({ page }) => {
+test("Crayon, pour tout le culte : toucher la ligne d'accords en ajoute un à la hauteur des autres", async ({ page }) => {
   // Setlist jouée en A : le calque est entièrement écrit, l'accord ajouté doit
   // s'aligner sur ses voisins gravés.
   const db = await openPartitions(page, { [SETLIST_DOC]: setlist({ keyOverride: "A" }) });
-  await basculerMode(page, "Adapter");
+  await basculerMode(page);
   // Rangée du bas (y 1163), entre le « C » (x 662) et le « D » (x 920).
   await toucher(page, 800, 1176);
-  await pave(page, "A");
+  await pave(page, "culte", "A");
 
   const ajout = page.locator('[data-jianpu-ajout="0"]');
   await expect(ajout).toHaveText("A");
@@ -159,37 +162,36 @@ test("Adapter : toucher la ligne d'accords en ajoute un à la hauteur des autres
 
 test("retouche transposée : saisie dans la tonalité jouée, stockée dans celle de la gravure", async ({ page }) => {
   const db = await openPartitions(page, { [SETLIST_DOC]: setlist({ keyOverride: "A" }) });
-  await basculerMode(page, "Adapter");
+  await basculerMode(page);
   // Le « G » gravé s'affiche « A » : on le remplace par F#m, qui vaut Em en G.
   await expect(page.locator('[data-jianpu-label="G"]').first()).toHaveText("A");
   await toucher(page, 90, 356);
-  await pave(page, "F", "♯", "m");
+  await pave(page, "culte", "F", "♯", "m");
 
   await expect(page.locator('[data-jianpu-retouche="0"]')).toHaveText("F#m");
   expect(scanItem(db).jianpuChords).toEqual({ changed: { "0": "Em" } });
   await capture(page, "jianpu-retouche-transposee");
 });
 
-test("Ma version : même geste, écrit dans mon document et jamais dans la setlist", async ({ page }) => {
+test("Crayon, pour moi : même geste, écrit dans ma partition et jamais dans la setlist", async ({ page }) => {
   const db = await openPartitions(page);
-  await basculerMode(page, "Ma version");
+  await basculerMode(page);
   await toucher(page, 90, 356);
-  await pave(page, "C");
+  await pave(page, "moi", "C");
 
   await expect(page.locator('[data-jianpu-retouche="0"]')).toHaveText("C");
   await capture(page, "jianpu-ma-version");
 
-  const miennes = db.writes.filter((w) => w.path === VERSION_DOC);
+  const miennes = db.writes.filter((w) => w.path === PARTITION_DOC);
   expect(miennes.length).toBeGreaterThan(0);
-  const items = miennes.at(-1)!.data.items as Record<string, { jianpuChords: unknown }>;
-  expect(items[SLUG].jianpuChords).toEqual({ changed: { "0": "C" } });
+  expect(miennes.at(-1)!.data.jianpuChords).toEqual({ changed: { "0": "C" } });
   expect(
     db.writes.filter((w) => w.path === SETLIST_DOC || w.path.startsWith(`${SETLIST_DOC}/history`)),
     "la setlist et son historique ne bougent pas",
   ).toHaveLength(0);
 });
 
-test("hors Adapter et Ma version : les retouches s'affichent, rien ne se touche", async ({ page }) => {
+test("hors Crayon : les retouches s'affichent, rien ne se touche", async ({ page }) => {
   await openPartitions(page, {
     [SETLIST_DOC]: setlist({ jianpuChords: { changed: { "0": "Em7" } } }),
   });

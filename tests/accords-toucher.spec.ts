@@ -8,7 +8,7 @@ import { basculerMode } from "./helpers/menuSetlist";
 
 // Lot DA / DA-3 (docs/spec-dictionnaire-accords.md, Q13, Q15, Q16) : toucher un accord ouvre son panneau, en
 // lecture seulement — page chant, partition d'une setlist hors édition, calque des accords sur la 简谱 —,
-// jamais en édition (« Ma version », « Adapter »), ni en mode louange. Setlists et comptes simulés, noms
+// jamais en édition (« Crayon »), ni en mode louange. Setlists et comptes simulés, noms
 // fictifs. Les captures à regarder sont dans accords-toucher-agencement.spec.ts.
 
 const SETLIST_ID = "setlist-accords";
@@ -216,7 +216,7 @@ test.describe("setlist", () => {
     await expect(nom(page)).toHaveText("E");
   });
 
-  for (const mode of ["Ma version", "Adapter"] as const) {
+  for (const mode of ["Crayon"] as const) {
     test(`en « ${mode} » : aucun accord touchable, la ligne s'édite comme avant`, async ({ page }) => {
       await ouvrirLaSetlist(page);
       await basculerMode(page, mode);
@@ -300,7 +300,7 @@ test.describe("bulle d'aide", () => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIENNE, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
     await ouvrirPartitions(page);
-    await basculerMode(page, "Adapter");
+    await basculerMode(page);
     await expect(page.locator('[data-outline-item="1"] [data-section] .font-chord').first()).toBeVisible();
     await page.waitForTimeout(1500);
     await expect(aide(page)).toHaveCount(0);

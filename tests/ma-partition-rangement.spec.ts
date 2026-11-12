@@ -6,8 +6,8 @@ import { signInAs } from "./helpers/fakeSession";
 
 // Ma partition, tranche MP-1 (docs/spec-ma-partition.md, « Rangement ») : droits, module REST, enregistrement fiable.
 // Pas d'agencement : trois appareils, pas dans SPECS_GRAND_ECRAN. Noms fictifs. Les règles Firestore ne tournent pas
-// ici (pas d'émulateur) : on lit leur texte. Dans la page, les fonctions sont atteintes par `window.__gccPartitions`
-// (src/lib/firebase/auth.ts, hors production).
+// ici (pas d'émulateur) : on lit leur texte. MP-3 : l'accès de test `window.__gccPartitions` est retiré ; le module
+// (écrire, relire, refus, file hors ligne) se teste par une retouche au Crayon sur la page d'un chant.
 
 const regles = readFileSync(path.resolve(__dirname, "..", "firestore.rules"), "utf8");
 
@@ -64,141 +64,135 @@ test.describe("Ma partition : droits et règles (sans page)", () => {
   });
 });
 
-type Api = {
-  idPartition(uid: string, slug: string): string;
-  lirePartition(uid: string, slug: string): Promise<Record<string, unknown> | null>;
-  lirePartitionsPartageesAvecMoi(uid: string): Promise<Record<string, unknown>[]>;
-  enregistrerOuMettreEnFile(p: unknown): Promise<string>;
-  etatEnregistrement(uid: string): { etat: string; enAttente: number };
-  suivreLaFile(uid: string): () => void;
-  rejouerFile(uid: string): Promise<void>;
-  logOut(): Promise<void>;
-};
-declare global { interface Window { __gccPartitions: Api } }
-
-const partition = (ownerUid: string, ownerName: string, slug: string, sharedWith: string[] = []) => ({
-  slug, ownerUid, ownerName,
-  base: "{title: Hosanna}\n[C]Hosanna", content: "{title: Hosanna}\n[D]Hosanna", structure: ["c1", "r1"],
-  key: "D", traits: [], sharedWith, sharedTraits: false,
-});
-
+const ABBA = readFileSync(path.resolve(__dirname, "..", "content", "songs", "abba-pere.cho"), "utf8");
+const PARTITION = `partitions/${SOLENE.uid}__abba-pere`;
 const cleFile = (uid: string) => `gcc-partitions-en-attente:${uid}`;
+const REFUS = (route: { fulfill(o: object): Promise<void> }) =>
+  route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refus" } }) });
+const PANNE = (route: { fulfill(o: object): Promise<void> }) =>
+  route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: { code: 503, message: "indisponible" } }) });
+const COUPURE = (route: { abort(): Promise<void> }) => route.abort();
+const PARTITIONS = /firestore\.googleapis\.com.*partitions/;
 
-async function ouvrir(page: Page, profil: typeof SOLENE, docs: Record<string, Record<string, unknown>> = {}) {
-  const db = await signInAs(page, profil, docs, "/setlists");
-  await page.waitForFunction(() => !!window.__gccPartitions);
-  return db;
+// La bulle « Touche un accord… » (une fois par appareil) recouvre la barre basse du Crayon : déjà vue, comme dans les autres specs.
+const ouvrirChant = async (page: Page, profil: typeof SOLENE, docs: Record<string, Record<string, unknown>> = {}) => {
+  await page.addInitScript(() => localStorage.setItem("accords-aide-vue", "1"));
+  return signInAs(page, profil, docs, "/songs/abba-pere");
+};
+
+/** Une retouche au Crayon sur la page d'un chant : « Paroles », la ligne touchée, ses paroles changées, « Valider ». */
+async function retoucher(page: Page, de: string, vers: string) {
+  const crayon = page.getByRole("button", { name: "Crayon", exact: true }).filter({ visible: true }).first();
+  if ((await crayon.getAttribute("aria-pressed")) !== "true") await crayon.click();
+  await page.getByRole("button", { name: "Paroles", exact: true }).click();
+  await page.getByRole("button").filter({ hasText: de }).first().click();
+  const feuille = page.getByRole("dialog").first();
+  const champ = feuille.locator("textarea");
+  await champ.fill((await champ.inputValue()).replace(de, vers));
+  await feuille.getByRole("button", { name: "Valider", exact: true }).click();
+  await feuille.getByRole("button", { name: "Valider", exact: true }).click();
 }
+const enAttente = (page: Page) => page.locator("[data-ma-partition-ligne]", { hasText: "En attente" });
 
-test.describe("Ma partition : le module dans la page", () => {
+// Couverture de MP-1, par l'interface : écrire et relire (« écrire une partition… »), refus de lecture hors `sharedWith`
+// (« lire celles qu'on m'a partagées »), refus de lecture remonté, file hors ligne rejouée, refus d'écriture remonté,
+// rejeu lent. L'effacement de la file à la déconnexion passe par le bouton « Déconnexion ».
+test.describe("Ma partition : le module, par une retouche au Crayon", () => {
   test("écrire une partition puis la relire", async ({ page }) => {
-    const db = await ouvrir(page, SOLENE);
-    const p = partition(SOLENE.uid, "Solène Varin", "hosanna");
-    expect(await page.evaluate((x) => window.__gccPartitions.enregistrerOuMettreEnFile(x), p)).toBe("enregistre");
-    expect(db.doc(`partitions/${SOLENE.uid}__hosanna`)).toBeTruthy();
-    const lue = await page.evaluate((uid) => window.__gccPartitions.lirePartition(uid, "hosanna"), SOLENE.uid);
-    const { slug: _s, ...attendu } = p;
-    void _s;
-    expect(lue).toMatchObject(attendu);
-    expect(lue?.updatedAt).toBeTruthy();
-    expect(await page.evaluate((uid) => window.__gccPartitions.lirePartition(uid, "absente"), SOLENE.uid)).toBeNull();
+    const db = await ouvrirChant(page, SOLENE);
+    await retoucher(page, "planait", "flottait");
+    await expect(page.locator('[data-marque="moi"]', { hasText: "flottait" })).toHaveCount(1);
+    expect(db.doc(PARTITION)).toMatchObject({ ownerUid: SOLENE.uid, base: ABBA });
+    expect(String(db.doc(PARTITION)!.content)).toContain("flottait");
+    expect(db.doc(PARTITION)!.updatedAt).toBeTruthy();
+    // Relue à l'ouverture suivante.
+    await page.reload();
+    await expect(page.locator('[data-marque="moi"]', { hasText: "flottait" })).toHaveCount(1);
+    expect(db.doc(`partitions/${SOLENE.uid}__absente`)).toBeUndefined();
   });
 
-  test("lirePartitionsPartageesAvecMoi ne rend que celles où mon uid est dans sharedWith", async ({ page }) => {
-    const doc = (p: ReturnType<typeof partition>) => { const { slug: _s, ...d } = p; void _s; return d; };
-    await ouvrir(page, ILYES, {
-      [`partitions/${SOLENE.uid}__hosanna`]: doc(partition(SOLENE.uid, "Solène Varin", "hosanna", [ILYES.uid])),
-      [`partitions/${SOLENE.uid}__grace`]: doc(partition(SOLENE.uid, "Solène Varin", "grace", ["uid-tiers"])),
+  test("les partitions partagées avec moi : seules celles où mon uid est dans sharedWith", async ({ page }) => {
+    const doc = (ownerUid: string, ownerName: string, sharedWith: string[]) => ({
+      ownerUid, ownerName, base: ABBA, content: ABBA.replace("planait", "flottait"), structure: null, key: null, traits: [], sharedWith, sharedTraits: false,
+    });
+    await ouvrirChant(page, ILYES, {
+      [`partitions/${SOLENE.uid}__abba-pere`]: doc(SOLENE.uid, "Solène Varin", [ILYES.uid]),
+      "partitions/uid-tiers__abba-pere": doc("uid-tiers", "Tiers Fictif", ["uid-autre"]),
       [`partitions/${SOLENE.uid}__choix`]: { choices: {}, partageTout: [] },
     });
-    const rendues = await page.evaluate((uid) => window.__gccPartitions.lirePartitionsPartageesAvecMoi(uid), ILYES.uid);
-    expect(rendues.map((r) => r.slug)).toEqual(["hosanna"]);
+    await page.getByRole("button", { name: /Je lis/ }).filter({ visible: true }).first().click();
+    await expect(page.getByText("Partition de Solène Varin")).toBeVisible();
+    await expect(page.getByText("Partition de Tiers Fictif")).toHaveCount(0);
   });
 
-  test("un refus de lecture (403) fait lever lirePartition et n'écrit rien", async ({ page }) => {
-    const db = await ouvrir(page, ILYES);
-    await page.route(/firestore\.googleapis\.com.*partitions/, (route) =>
-      route.request().method() === "GET"
-        ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "Missing or insufficient permissions." } }) })
-        : route.fallback());
-    const erreur = await page.evaluate(async (uid) => {
-      try { await window.__gccPartitions.lirePartition(uid, "hosanna"); return null; } catch (e) { return (e as Error).message; }
-    }, SOLENE.uid);
-    expect(erreur).toContain("permissions");
+  test("un refus de lecture (403) : le chant d'origine reste affiché et rien ne s'écrit", async ({ page }) => {
+    const db = await ouvrirChant(page, ILYES, {
+      [`partitions/${ILYES.uid}__abba-pere`]: { ownerUid: ILYES.uid, ownerName: "Ilyès M.", base: ABBA, content: ABBA.replace("planait", "flottait"), structure: null, key: null, traits: [], sharedWith: [], sharedTraits: false },
+    });
+    await page.route(PARTITIONS, (route) => (route.request().method() === "GET" ? REFUS(route) : route.fallback()));
+    await page.goto("/songs/abba-pere");
+    await expect(page.locator("[data-copy-line]", { hasText: "planait" })).toHaveCount(1);
+    await expect(page.locator("[data-copy-line]", { hasText: "flottait" })).toHaveCount(0);
     expect(db.writes.filter((w) => w.path.startsWith("partitions/"))).toEqual([]);
   });
 
   test("un refus d'écriture (403) remonte et ne met rien en file", async ({ page }) => {
-    await ouvrir(page, SOLENE);
-    await page.route(/firestore\.googleapis\.com.*partitions/, (route) =>
-      route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refus" } }) }));
-    const p = partition(SOLENE.uid, "Solène Varin", "hosanna");
-    const erreur = await page.evaluate(async (x) => {
-      try { await window.__gccPartitions.enregistrerOuMettreEnFile(x); return null; } catch (e) { return (e as Error).message; }
-    }, p);
-    expect(erreur).toBe("refus");
+    await ouvrirChant(page, SOLENE);
+    await page.route(PARTITIONS, REFUS);
+    await retoucher(page, "planait", "flottait");
+    await expect(page.getByRole("alert")).toContainText("Échec de l'enregistrement");
     expect(await page.evaluate((k) => localStorage.getItem(k), cleFile(SOLENE.uid))).toBeNull();
   });
 
-  test("réseau coupé : mise en file, rejeu au retour du réseau, puis effacement à la déconnexion", async ({ page }) => {
-    const db = await ouvrir(page, SOLENE);
-    const p = partition(SOLENE.uid, "Solène Varin", "hosanna");
-    // Coupure : les appels à Firestore échouent comme un réseau absent.
-    const coupure = (route: { abort(): Promise<void> }) => route.abort();
-    await page.route(/firestore\.googleapis\.com.*partitions/, coupure);
-    expect(await page.evaluate((x) => window.__gccPartitions.enregistrerOuMettreEnFile(x), p)).toBe("en-attente");
-    expect(await page.evaluate((k) => localStorage.getItem(k), cleFile(SOLENE.uid))).toContain("hosanna");
-    expect(await page.evaluate((uid) => window.__gccPartitions.etatEnregistrement(uid), SOLENE.uid)).toEqual({ etat: "en-attente", enAttente: 1 });
-    expect(db.doc(`partitions/${SOLENE.uid}__hosanna`)).toBeUndefined();
+  test("réseau coupé : « En attente », rejeu au retour du réseau, puis effacement à la déconnexion", async ({ page }) => {
+    const db = await ouvrirChant(page, SOLENE);
+    await page.route(PARTITIONS, COUPURE);
+    await retoucher(page, "planait", "flottait");
+    await expect(enAttente(page)).toBeVisible();
+    expect(await page.evaluate((k) => localStorage.getItem(k), cleFile(SOLENE.uid))).toContain("abba-pere");
+    expect(db.doc(PARTITION)).toBeUndefined();
 
     // Retour du réseau : la file se rejoue à l'évènement `online`.
-    await page.unroute(/firestore\.googleapis\.com.*partitions/, coupure);
-    await page.evaluate((uid) => { window.__gccPartitions.suivreLaFile(uid); window.dispatchEvent(new Event("online")); }, SOLENE.uid);
-    await expect.poll(() => db.doc(`partitions/${SOLENE.uid}__hosanna`)).toBeTruthy();
+    await page.unroute(PARTITIONS, COUPURE);
+    await page.evaluate(() => window.dispatchEvent(new Event("online")));
+    await expect.poll(() => db.doc(PARTITION)).toBeTruthy();
     await expect.poll(() => page.evaluate((k) => localStorage.getItem(k), cleFile(SOLENE.uid))).toBeNull();
-    expect(await page.evaluate((uid) => window.__gccPartitions.etatEnregistrement(uid), SOLENE.uid)).toEqual({ etat: "enregistre", enAttente: 0 });
 
     // Déconnexion : la file d'un compte ne lui survit pas.
     await page.evaluate((k) => localStorage.setItem(k, "{}"), cleFile(SOLENE.uid));
-    await page.evaluate(() => window.__gccPartitions.logOut());
+    await page.goto("/moi");
+    await page.getByText("Déconnexion", { exact: true }).click();
     await expect.poll(() => page.evaluate((k) => localStorage.getItem(k), cleFile(SOLENE.uid))).toBeNull();
   });
 
   test("un 5xx met en file ; au rejeu, une entrée refusée (403) quitte la file", async ({ page }) => {
-    const db = await ouvrir(page, SOLENE);
-    const p = partition(SOLENE.uid, "Solène Varin", "hosanna");
-    const panne = (route: { fulfill(o: object): Promise<void> }) =>
-      route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: { code: 503, message: "indisponible" } }) });
-    await page.route(/firestore\.googleapis\.com.*partitions/, panne);
-    expect(await page.evaluate((x) => window.__gccPartitions.enregistrerOuMettreEnFile(x), p)).toBe("en-attente");
-    await page.unroute(/firestore\.googleapis\.com.*partitions/, panne);
-    // Les droits ont changé entre-temps : le rejeu est refusé, l'entrée ne passera jamais et ne reste pas « En attente ».
-    await page.route(/firestore\.googleapis\.com.*partitions/, (route) =>
-      route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refus" } }) }));
-    await page.evaluate((uid) => window.__gccPartitions.rejouerFile(uid), SOLENE.uid);
-    expect(await page.evaluate((uid) => window.__gccPartitions.etatEnregistrement(uid), SOLENE.uid)).toEqual({ etat: "enregistre", enAttente: 0 });
-    expect(db.doc(`partitions/${SOLENE.uid}__hosanna`)).toBeUndefined();
+    const db = await ouvrirChant(page, SOLENE);
+    await page.route(PARTITIONS, PANNE);
+    await retoucher(page, "planait", "flottait");
+    await expect(enAttente(page)).toBeVisible();
+    await page.unroute(PARTITIONS, PANNE);
+    // Les droits ont changé entre-temps : le rejeu est refusé, l'entrée ne passera jamais et ne reste pas en file.
+    await page.route(PARTITIONS, REFUS);
+    await page.evaluate(() => window.dispatchEvent(new Event("online")));
+    await expect.poll(() => page.evaluate((k) => localStorage.getItem(k), cleFile(SOLENE.uid))).toBeNull();
+    expect(db.doc(PARTITION)).toBeUndefined();
   });
 
   test("un rejeu lent n'écrase pas une version plus récente enregistrée pendant ce temps", async ({ page }) => {
-    const db = await ouvrir(page, SOLENE);
-    const v1 = { ...partition(SOLENE.uid, "Solène Varin", "hosanna"), content: "{title: Hosanna}\n[E]version un" };
-    const v2 = { ...partition(SOLENE.uid, "Solène Varin", "hosanna"), content: "{title: Hosanna}\n[F]version deux" };
-    const coupure = (route: { abort(): Promise<void> }) => route.abort();
-    await page.route(/firestore\.googleapis\.com.*partitions/, coupure);
-    expect(await page.evaluate((x) => window.__gccPartitions.enregistrerOuMettreEnFile(x), v1)).toBe("en-attente");
-    await page.unroute(/firestore\.googleapis\.com.*partitions/, coupure);
-    // Réseau qui traîne : chaque écriture met une seconde à revenir.
-    await page.route(/firestore\.googleapis\.com.*partitions/, async (route) => {
-      await new Promise((r) => setTimeout(r, 1000));
+    const db = await ouvrirChant(page, SOLENE);
+    await page.route(PARTITIONS, COUPURE);
+    await retoucher(page, "planait", "flottait");
+    await expect(enAttente(page)).toBeVisible();
+    await page.unroute(PARTITIONS, COUPURE);
+    // Réseau qui traîne : chaque écriture met trois secondes à revenir ; une seconde retouche part pendant le rejeu.
+    await page.route(PARTITIONS, async (route) => {
+      await new Promise((r) => setTimeout(r, 3000));
       await route.fallback();
     });
-    await page.evaluate(async ([uid, x]) => {
-      const rejeu = window.__gccPartitions.rejouerFile(uid as string);
-      const ecriture = window.__gccPartitions.enregistrerOuMettreEnFile(x);
-      await Promise.all([rejeu, ecriture]);
-    }, [SOLENE.uid, v2] as const);
-    expect(db.doc(`partitions/${SOLENE.uid}__hosanna`)?.content).toBe(v2.content);
-    expect(await page.evaluate((uid) => window.__gccPartitions.etatEnregistrement(uid), SOLENE.uid)).toEqual({ etat: "enregistre", enAttente: 0 });
+    await page.evaluate(() => window.dispatchEvent(new Event("online")));
+    await retoucher(page, "flottait", "glissait");
+    await expect.poll(() => String(db.doc(PARTITION)?.content ?? ""), { timeout: 20_000 }).toContain("glissait");
+    expect(String(db.doc(PARTITION)!.content)).not.toContain("flottait");
+    await expect.poll(() => page.evaluate((k) => localStorage.getItem(k), cleFile(SOLENE.uid))).toBeNull();
   });
 });

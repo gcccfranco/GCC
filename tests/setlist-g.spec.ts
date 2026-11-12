@@ -287,31 +287,24 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await ouvrir(page);
     await expect(barre(page).getByRole("button", { name: "Mode Louange" })).toBeVisible();
     const cote = await commandes(page);
-    // Sous 431 px (lot CD, T4a, dimanche-15), « Adapter » et « Ma version » vivent dans le menu « ⋯ ».
+    // Sous 431 px (lot CD, T4a, dimanche-15), « Crayon » vit dans le menu « ⋯ » (MP-3 : il remplace Adapter et Ma version).
     expect(cote).toEqual(page.viewportSize()!.width >= 431
-      ? ["Retour", "Affichage", "Adapter", "Accords", "Ma version", "Mode Louange", "Plus d'actions"]
+      ? ["Retour", "Affichage", "Crayon", "Accords", "Mode Louange", "Plus d'actions"]
       : ["Retour", "Affichage", "Accords", "Mode Louange", "Plus d'actions"]);
     await boutonVue(page, "Partitions").click();
     await expect(chant(page, 1)).toBeVisible();
     expect(await commandes(page)).toEqual(cote);
   });
 
-  test("Adapter depuis la Liste ouvre les partitions au chant lu, en adaptation", async ({ page }) => {
+  test("Crayon depuis la Liste ouvre les partitions au chant lu, en Crayon", async ({ page }) => {
     await ouvrir(page);
     await lienLigne(page, 2).click();
     await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
     await boutonVue(page, "Liste").click();
-    await basculerMode(page, "Adapter");
-    await expect(page.getByText(/Mode adaptation/)).toBeVisible();
+    await basculerMode(page);
+    await expect(page.getByText("Crayon : touche un accord ou un mot pour le retoucher.")).toBeVisible();
     expect(params(page)).toEqual({ vue: "partitions", chant: "2" });
-    await verifierMode(page, "Adapter", true);
-  });
-
-  test("Ma version depuis la Liste ouvre les partitions dans ce mode", async ({ page }) => {
-    await ouvrir(page);
-    await basculerMode(page, "Ma version");
-    await expect(page.getByText(/^Ma version :/)).toBeVisible();
-    expect(params(page)).toEqual({ vue: "partitions", chant: "1" });
+    await verifierMode(page, "Crayon", true);
   });
 
   test("Accords depuis la Liste change le réglage des partitions", async ({ page }) => {

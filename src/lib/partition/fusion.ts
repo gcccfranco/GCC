@@ -128,3 +128,37 @@ export function resoudre(f: Fusion, index: number, choix: "mienne" | "chant"): {
   }
   return { base: base.join("\n"), content: content.join("\n") };
 }
+
+/** Le morceau qui porte la ligne `srcLine` de la source fusionnée, son rang dans ce morceau, et si les lignes y sont les miennes. */
+function morceauDeLaLigne(f: Fusion, srcLine: number) {
+  let n = 0;
+  for (const mo of f.morceaux) {
+    const moi = !mo.conflit && !meme(mo.m, mo.b);
+    const taille = mo.conflit ? mo.m.length + mo.c.length : moi ? mo.m.length : mo.c.length;
+    if (srcLine < n + taille) return { mo, k: srcLine - n, moi };
+    n += taille;
+  }
+  return null;
+}
+
+/** Rang, dans la courante, de la ligne `srcLine` de la source fusionnée : la ligne que la courante a en cet endroit, ou
+ *  celle que ma retouche y remplace. `null` : ligne ajoutée ou retirée par moi, ou en conflit (rien en face). */
+export function rangDansLaCourante(f: Fusion, srcLine: number): number | null {
+  const x = morceauDeLaLigne(f, srcLine);
+  if (!x || x.mo.conflit) return null;
+  return x.moi && x.mo.m.length !== x.mo.c.length ? null : x.mo.c0 + x.k;
+}
+
+/**
+ * « Passer au culte » : la courante où ma ligne `srcLine` prend la place de la sienne. Même nombre de lignes des deux
+ * côtés : cette ligne seule ; sinon tout le morceau (ses lignes voisines changées avec elle). `null` : la ligne n'est
+ * pas de moi.
+ */
+export function passerAuCulte(f: Fusion, courante: string, srcLine: number): string | null {
+  const x = morceauDeLaLigne(f, srcLine);
+  if (!x?.moi) return null;
+  const c = courante.split("\n");
+  if (x.mo.m.length === x.mo.c.length) c.splice(x.mo.c0 + x.k, 1, x.mo.m[x.k]);
+  else c.splice(x.mo.c0, x.mo.c.length, ...x.mo.m);
+  return c.join("\n");
+}

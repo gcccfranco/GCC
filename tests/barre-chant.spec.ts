@@ -62,8 +62,8 @@ for (const chant of CHANTS) {
       await expect(b.getByRole("button", { name: "Pinyin" })).toHaveCount(chant.zh ? 1 : 0);
 
       if (actionsDansLaBarre(page)) {
-        // Q2 : lire à gauche, faire à droite — Vidéo, PDF, Idées, puis ⋯ au bout.
-        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Idées d'harmonie", "Plus d'actions"];
+        // Q2 : lire à gauche, faire à droite — Vidéo, PDF, Crayon (MP-3), Idées, puis ⋯ au bout.
+        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Crayon", "Idées d'harmonie", "Plus d'actions"];
         const boites = await Promise.all(noms.map((n) => b.getByRole("button", { name: n, exact: true }).boundingBox()));
         const accords = (await b.getByRole("button", { name: "Accords", exact: true }).boundingBox())!;
         let x = accords.x;
@@ -100,7 +100,7 @@ for (const chant of CHANTS) {
         // Vidéo · PDF · Idées · ⋯, qui défile en largeur (pas d'« Écouter » : YouTube seul, 18/10/2026).
         const seconde = b.locator(".actions-tel");
         await expect(seconde).toBeVisible();
-        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Idées d'harmonie", "Plus d'actions"];
+        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Crayon", "Idées d'harmonie", "Plus d'actions"];
         for (const n of noms) await expect(seconde.getByRole("button", { name: n, exact: true })).toBeAttached();
         await expect(rangee(page).getByRole("button", { name: "Plus d'actions" })).toHaveCount(0);
         await expect(seconde.getByRole("button", { name: "Écouter" })).toHaveCount(0);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DISPOSITION_AVANT_LECTURE, getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
@@ -41,11 +42,17 @@ import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { getSetlist } from "@/lib/firebase/setlists";
 import { useAuth } from "@/lib/firebase/auth";
+import { useProfile } from "@/lib/firebase/users";
 import { compter } from "@/lib/usage";
 import { telechargerBlob } from "@/lib/telecharger";
 import { useMesPartitions } from "@/lib/partition/useMesPartitions";
 import { lire, resoudreConflit } from "@/lib/partition/lecture";
 import { MenuJeLis, LigneMaPartition } from "@/components/partition/MenuJeLis";
+import { BarreCrayon, type CibleCrayon } from "@/components/partition/BarreCrayon";
+import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
+import { replaceSourceLine, insertSourceLineAfter, deleteSourceLines } from "@/lib/chordpro/editSource";
+import { historyAuthor } from "@/lib/firebase/setlistHistory";
+import type { ChordProLine } from "@/types/chordPro";
 import type { JianpuChords } from "@/types/setList";
 
 interface SongDetailClientProps {
@@ -118,6 +125,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     // Ma partition (docs/spec-ma-partition.md) : « Je lis » = la mienne, une partagée, l'origine — et celle du culte
     // quand la page s'ouvre depuis une setlist qui a adapté ce chant. Pas de compte : le chant d'origine, sans menu.
     const { user: compte } = useAuth();
+    const { profile } = useProfile();
     const mp = useMesPartitions(compte?.uid, [song.slug]);
     const mienne = mp.mes[song.slug] ?? null;
     const lecture = useMemo(
@@ -326,6 +334,68 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
       [ast, customize.semitones, customize.currentKey]
     );
 
+    // Crayon (docs/spec-ma-partition.md) : retoucher ce que je lis, toujours pour moi (`partitions/{uid}__{slug}`).
+    // shortcut: « Pour tout le culte » (page ouverte depuis une setlist, `canEditSetlist`) pas offert ici, le chemin
+    // d'écriture de la setlist (`persistOverride`) vit dans SetlistDetailClient ; à extraire avant de l'offrir.
+    const [crayon, setCrayon] = useState(false);
+    const [viseeCrayon, setViseeCrayon] = useState<CibleCrayon>("accord");
+    const [editTarget, setEditTarget] = useState<(EditLineTarget & { srcLine: number; pinyinSrcLine?: number; jianpuSrcLine?: number }) | null>(null);
+    const [enregistrement, setEnregistrement] = useState(false);
+    const [erreurCrayon, setErreurCrayon] = useState(false);
+    const sourceCrayon = sourceLue ?? song.chordProSource;
+    function toucherLigne(line: ChordProLine) {
+      if (line.srcLine === undefined) return;
+      const displayKey = customize.currentKey;
+      setEditTarget({
+        itemIndex: 0,
+        raw: sourceCrayon.split("\n")[line.srcLine] ?? "",
+        pinyin: line.pinyin ?? null,
+        language: ast.metadata.language === "zh" ? "zh" : "fr",
+        semitones: semitonesTo(originalKey, displayKey),
+        targetKey: displayKey,
+        originalKey,
+        srcLine: line.srcLine,
+        pinyinSrcLine: line.pinyinSrcLine,
+        jianpuSrcLine: line.jianpuSrcLine,
+        cible: viseeCrayon,
+      });
+    }
+    /** Ma partition réécrite : `base` = la couche du dessous (celle du culte si la page s'ouvre d'une setlist, sinon le .cho). */
+    async function retoucher(fabriquer: (source: string, t: NonNullable<typeof editTarget>) => string) {
+      if (!compte || !editTarget) return;
+      const prochain = fabriquer(sourceCrayon, editTarget);
+      if (prochain === sourceCrayon) {
+        setEditTarget(null);
+        return;
+      }
+      const courante = sourceAdaptee ?? song.chordProSource;
+      setEnregistrement(true);
+      try {
+        await mp.enregistrer({
+          slug: song.slug,
+          ownerUid: compte.uid,
+          ownerName: historyAuthor(profile)?.name ?? "",
+          base: courante,
+          content: prochain === courante ? null : prochain,
+          structure: mienne?.structure ?? null,
+          sectionOrigins: mienne?.sectionOrigins,
+          jianpuChords: mienne?.jianpuChords,
+          key: mienne?.key ?? null,
+          traits: mienne?.traits ?? [],
+          sharedWith: mienne?.sharedWith ?? [],
+          sharedTraits: mienne?.sharedTraits ?? false,
+        });
+        const choisi = mp.choix[song.slug];
+        if (choisi && choisi !== "mienne") mp.choisir(song.slug, "mienne");
+        compter("cmd.chant.maVersion");
+        setEditTarget(null);
+      } catch {
+        setErreurCrayon(true);
+      } finally {
+        setEnregistrement(false);
+      }
+    }
+
     const { fontScale, changeFontScale } = useTailleTexte();
 
     // Disposition de la partition — préférence par appareil partagée avec le mode
@@ -492,13 +562,13 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
                 Personnaliser et Signaler (globals.css, `.actions-chant`). */}
             <div className="actions-chant ml-auto shrink-0 items-center gap-1">
               <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-              <ActionsChant variante="rangee" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} downloading={downloading} setShowPdfChoice={setShowPdfChoice} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
+              <ActionsChant variante="rangee" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
             </div>
           </div>
           {/* Téléphone, couché compris (Q5) : les actions sur une seconde rangée, qui défile en
               largeur, colle sous la première et s'escamote avec elle (globals.css, `.actions-tel`). */}
           <div className="actions-tel max-w-2xl mx-auto w-full gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <ActionsChant variante="tel" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} downloading={downloading} setShowPdfChoice={setShowPdfChoice} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
+            <ActionsChant variante="tel" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
           </div>
 
           {/* Embed YouTube */}
@@ -593,9 +663,36 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
               sectionKeys={sectionsKeys}
               disposition={disposition}
               marques={lecture?.marques}
+              onLineSelect={crayon ? (line) => toucherLigne(line) : undefined}
               onConflit={lecture?.modifiable ? (index, choix) => { mp.enregistrer(resoudreConflit(lecture, index, choix)).catch(() => {}); } : undefined}
             />
         </main>
+
+        {crayon && (
+          <>
+            <BarreCrayon cible={viseeCrayon} onCible={setViseeCrayon} onTermine={() => { setCrayon(false); setEditTarget(null); }} deuxVolets={deuxVolets} />
+            {/* Dans `body` : la feuille ouverte masque le reste de la page aux lecteurs d'écran, l'alerte doit rester annoncée. */}
+            {erreurCrayon && createPortal(
+              <p role="alert" className="fixed inset-x-4 bottom-[calc(var(--tabbar-bottom)+78px+56px)] z-[60] mx-auto w-fit rounded-full bg-foreground px-4 py-2 text-sm text-background">
+                {t("maPartition.erreurEnregistrement")}
+              </p>,
+              document.body,
+            )}
+            <EditLineSheet
+              target={editTarget}
+              saving={enregistrement}
+              onClose={() => { setEditTarget(null); setErreurCrayon(false); }}
+              onSaveLine={(newRaw) => retoucher((source, c) => {
+                if (newRaw === source.split("\n")[c.srcLine]) return source;
+                const next = replaceSourceLine(source, c.srcLine, newRaw);
+                // Le pinyin est désormais inline dans la ligne → la ligne séparée disparaît.
+                return c.pinyinSrcLine !== undefined ? deleteSourceLines(next, [c.pinyinSrcLine]) : next;
+              })}
+              onInsertAfter={(newRaw) => retoucher((source, c) => insertSourceLineAfter(source, Math.max(c.srcLine, c.pinyinSrcLine ?? -1), newRaw))}
+              onDeleteLine={() => retoucher((source, c) => deleteSourceLines(source, [c.srcLine, ...(c.pinyinSrcLine !== undefined ? [c.pinyinSrcLine] : []), ...(c.jianpuSrcLine !== undefined ? [c.jianpuSrcLine] : [])]))}
+            />
+          </>
+        )}
 
         {/* Panneau de personnalisation */}
         {showPanel && (

@@ -138,7 +138,8 @@ test("un ancien refus d'une seule section retire cette section de la carte, pas 
 
 const SETLIST_ID = "setlist-regroupees";
 const SETLIST_DOC = `setlists/${SETLIST_ID}`;
-const VERSION_DOC = `setlists/${SETLIST_ID}/versions/${AMBROISE.uid}`;
+// MP-3 : l'essai écrit ma partition (`versions/{uid}` n'est plus écrit).
+const VERSION_DOC = `partitions/${AMBROISE.uid}__${SLUG}`;
 const SETLIST = {
   title: "Culte du 21 septembre",
   leader: "Clémence R.",
@@ -173,7 +174,7 @@ test("Essayer dans Ma version : on choisit la section, et seule celle-ci change"
   await puces.filter({ hasText: "Couplet 2" }).click();
   await expect.poll(() => db.writes.filter((w) => w.path === VERSION_DOC).length).toBeGreaterThan(0);
   const dernier = db.writes.filter((w) => w.path === VERSION_DOC).pop()!;
-  const contenu = (dernier.data.items as Record<string, { content: string }>)[SLUG].content;
+  const contenu = String(dernier.data.content);
   const entre = (a: string, b: string) => contenu.slice(contenu.indexOf(a), contenu.indexOf(b));
   expect(entre("{start_of_verse: Couplet 2}", "{start_of_chorus"), "Couplet 2 prend Gmaj7").toContain("[Gmaj7]");
   expect(entre("{start_of_verse: Couplet 1}", "{start_of_verse: Interlude}"), "Couplet 1 reste tel quel").not.toContain("[Gmaj7]");

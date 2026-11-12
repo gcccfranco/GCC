@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
+import { Pencil, SlidersHorizontal, PenLine, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
@@ -28,7 +28,7 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { datesServies, findMyServices, loadPlanningData, type ServiceEntry } from "@/lib/planning/names";
 import { roleDuPlanning } from "@/lib/planning/rolePlanning";
 import type { DateServie } from "@/types/planning";
-import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion, estRegieDeLaSetlist, peutExporterFreeShow } from "@/lib/access";
+import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, estRegieDeLaSetlist, peutExporterFreeShow } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
@@ -67,14 +67,16 @@ import { MyStructureSheet, type MyStructureTarget } from "@/components/setlists/
 import {
   songVersionView,
   withChosenItem,
-  withMineItem,
   withMyJianpuItem,
   withMineStructureItem,
-  myStructureOf,
   type SongVersionView,
 } from "@/lib/setlist/versionChoice";
 import { useMesPartitions } from "@/lib/partition/useMesPartitions";
 import { lire, resoudreConflit, type Lecture } from "@/lib/partition/lecture";
+import { passerAuCulte, rangDansLaCourante } from "@/lib/partition/fusion";
+import type { PartitionDeChant } from "@/lib/firebase/partitions";
+import { BarreCrayon, type CibleCrayon } from "@/components/partition/BarreCrayon";
+import { ChoixDestination, type Destination } from "@/components/partition/ChoixDestination";
 import { adresseVue, lireAdresse, poser, surLaSetlist } from "@/lib/setlist/adresseVue";
 import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, scansAbsentsDuCache, urlsJianpuAGarder, useJianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled } from "@/lib/jianpu/preference";
@@ -146,7 +148,7 @@ type EditBase = {
   pinyinSrcLine?: number;
   jianpuSrcLine?: number;
   extra?: Partial<SetlistItem>;
-  mine?: Partial<VersionItem>;
+  mine?: Partial<Pick<PartitionDeChant, "structure" | "sectionOrigins">>;
 };
 
 
@@ -291,11 +293,14 @@ export function SetlistDetailClient() {
   const [essaiEnCours, setEssaiEnCours] = useState(false);
   const [essaiEchoue, setEssaiEchoue] = useState(false);
   const boutonReessayerRef = useRef<HTMLButtonElement>(null);
-  // Mode « adapter le chant » (accords/paroles par setlist)
-  const [editPartitions, setEditPartitions] = useState(false);
+  // Crayon (docs/spec-ma-partition.md) : un seul mode de retouche, pour moi ou, pour qui règle le culte, pour tout le culte.
+  const [crayon, setCrayon] = useState(false);
+  const [viseeCrayon, setViseeCrayon] = useState<CibleCrayon>("accord");
+  /** « Enregistrer » d'un responsable : la retouche en attente, jusqu'au choix Pour moi / Pour tout le culte. */
+  const [aChoisir, setAChoisir] = useState<((d: Destination) => void) | null>(null);
   const [editTarget, setEditTarget] = useState<LineEditState | null>(null);
   const [savingLine, setSavingLine] = useState(false);
-  const [confirmRevert, setConfirmRevert] = useState<number | null>(null);
+  const [confirmRevert, setConfirmRevert] = useState<{ itemIndex: number; destination: Destination } | null>(null);
   // Versions perso des chants (docs/spec-version-perso.md) : un document par
   // personne, chargé avec la setlist. La mienne remplace les accords et
   // paroles de la présidence dans la vue partitions, le sommaire et le mode
@@ -304,26 +309,27 @@ export function SetlistDetailClient() {
   const [versions, setVersions] = useState<Record<string, SetlistVersions>>({});
   // Vrai quand `versions` vient d'être lu en ligne (faux : lecture échouée, ou versions de la copie hors ligne).
   const [versionsLues, setVersionsLues] = useState(false);
-  // Mode « Ma version » : mêmes gestes qu'Adapter, écrits dans mon document.
-  const [editMine, setEditMine] = useState(false);
   // La phrase des droits est repliée derrière un « i » (G15, audit 24/10/2026 ; toutes tailles depuis dimanche-16).
   const [droitsDeplies, setDroitsDeplies] = useState(false);
   // Formulaire du lien de la présentation, ouvert par l'entrée du menu ⋯ (dimanche-16).
   const [editionLien, setEditionLien] = useState(false);
-  // Retouche d'une section répétée en « Ma version » : toutes les répétitions
+  // Retouche d'une section répétée pour moi : toutes les répétitions
   // (défaut, comme avant le lot 9) ou ce seul passage (docs/spec-harmonie.md).
   const [repeatScope, setRepeatScope] = useState<"all" | "one">("all");
-  const myItems = user ? versions[user.uid]?.items : undefined;
-  /** Item en mode « Ma version » : mes accords et paroles à la place de ceux de la présidence. */
-  function withMine(item: SetlistItem): SetlistItem {
-    return withMineItem(item, myItems);
-  }
   // Ma partition (docs/spec-ma-partition.md) : mes partitions, celles qu'on m'a partagées, mon choix « Je lis ».
   const slugsPartitions = useMemo(
     () => (setlist?.items ?? []).filter((i) => i.songSlug && i.type !== "fusion").map((i) => i.songSlug),
     [setlist],
   );
   const mesPartitions = useMesPartitions(user?.uid, slugsPartitions);
+  /** Mes retouches de structure et de calque 简谱 : mes partitions d'abord, puis les anciennes « Ma version » (`versions/{uid}`). */
+  const myItems = useMemo(() => {
+    const anciennes = user ? versions[user.uid]?.items : undefined;
+    const neuves = Object.fromEntries(
+      Object.values(mesPartitions.mes).map((p) => [p.slug, { content: p.content, structure: p.structure, shared: false, sectionOrigins: p.sectionOrigins, jianpuChords: p.jianpuChords } as VersionItem]),
+    );
+    return anciennes || Object.keys(neuves).length ? { ...anciennes, ...neuves } : undefined;
+  }, [user, versions, mesPartitions.mes]);
   /** Ancienne version perso de la setlist affichée pour un chant (`versions/{uid}`). */
   function ancienneVue(item: SetlistItem): SongVersionView | undefined {
     return user
@@ -365,7 +371,9 @@ export function SetlistDetailClient() {
    *  autre partagée et choisie. */
   function viewOf(item: SetlistItem): SongVersionView | undefined {
     const v = ancienneVue(item);
-    return v && lectureNeuve(item) ? { ...v, shown: "presidence", content: null, value: "presidence", bodyStructure: null } : v;
+    const l = lectureNeuve(item);
+    // Ma partition lue : sa structure est celle du corps du chant.
+    return v && l ? { ...v, shown: "presidence", content: null, value: "presidence", bodyStructure: l.mienne?.structure ?? null } : v;
   }
   /** Item tel qu'affiché : les accords et paroles de la partition lue. */
   function withChosen(item: SetlistItem): SetlistItem {
@@ -391,18 +399,13 @@ export function SetlistDetailClient() {
       flashFeedback(t("maPartition.erreurEnregistrement"));
     }
   }
-  /** Structure que suit le corps du chant en « Ma version » : la mienne si
-   *  j'en ai une, sinon celle de la présidence. */
-  function myStructure(item: SetlistItem): string[] | null {
-    return myStructureOf(item, myItems);
-  }
   /** Pour le sommaire et le mode louange : ma structure remplace aussi celle
    *  de la présidence, sans ses notes, nuances et transitions d'occurrence
    *  (elles restent dans le bandeau de la vue partitions). */
   function withMineStructure(item: SetlistItem): SetlistItem {
     return withMineStructureItem(item, viewOf(item), myItems);
   }
-  // Feuille « Sections » de ma version : chant en cours de réglage.
+  // Feuille « Ordre » du Crayon : chant en cours de réglage.
   const [structureTarget, setStructureTarget] = useState<(MyStructureTarget & { itemIndex: number }) | null>(null);
 
   useEffect(() => {
@@ -417,21 +420,13 @@ export function SetlistDetailClient() {
     showPinyin, disposition, layout, jianpuPref,
     changeDisposition, changeLayout, changeJianpuPref, togglePinyin,
   } = usePreferencesAffichage(user?.uid ?? null, authLoading);
-  // Adapter (la setlist) et Ma version (pour soi) s'excluent ; la barre d'outils
-  // et, sur téléphone étroit, le menu « ⋯ » passent par ici.
-  // Depuis la Liste, les deux modes ouvrent les partitions au chant lu (Q11) ; en
-  // deux volets, elles sont déjà là.
-  const toggleAdapter = () => {
-    setEditPartitions(!editPartitions);
-    setEditMine(false);
+  // Crayon : le bouton de la barre d'outils et, sur téléphone étroit, l'entrée du menu « ⋯ ».
+  // Depuis la Liste, il ouvre les partitions au chant lu (Q11) ; en deux volets, elles sont déjà là.
+  const toggleCrayon = () => {
+    setCrayon(!crayon);
     setEditTarget(null);
-    if (!editPartitions && !affichePartitions) versPartitions(current ?? undefined);
-  };
-  const toggleMaVersion = () => {
-    setEditMine(!editMine);
-    setEditPartitions(false);
-    setEditTarget(null);
-    if (!editMine && !affichePartitions) versPartitions(current ?? undefined);
+    setAChoisir(null);
+    if (!crayon && !affichePartitions) versPartitions(current ?? undefined);
   };
   // Le réglage 简谱 n'apparaît que si un chant de la setlist a un scan.
   const jianpuManifest = useJianpuManifest();
@@ -869,8 +864,8 @@ export function SetlistDetailClient() {
         const [sheets, sheetChords, cadrage] = await Promise.all([loadJianpuManifest(), loadJianpuChords(), loadJianpuCadrage()]);
         // Ré-encodage PNG des seules pages réellement imprimées, coupées sous
         // l'en-tête gravé.
-        // « Ma version » : exactement les items de la vue affichée (stageItems, hors mode Adapter).
-        const mesItems = version === "mine" ? setlist.items.map(editMine ? withMine : withChosen).map(withMineStructure) : setlist.items;
+        // « Ma version » : exactement les items de la vue affichée (stageItems).
+        const mesItems = version === "mine" ? setlist.items.map(withChosen).map(withMineStructure) : setlist.items;
         const sheetFiles = mesItems.flatMap((it) =>
           sheetEnabled(jianpuPref, it.jianpuSheet)
             ? (sheets[it.songSlug]?.pages ?? []).map((p, i) => ({ file: p.file, top: cadrage[it.songSlug]?.[i] ?? 0 }))
@@ -1022,12 +1017,25 @@ export function SetlistDetailClient() {
   // Dans une fusion : celui de ses chants dont on lit les idées.
   const [ideesChant, setIdeesChant] = useState<string | null>(null);
 
-  // ── Adapter le chant (accords/paroles par setlist) ──────────────────────────
+  // ── Crayon : retoucher le chant (accords/paroles) ───────────────────────────
 
-  /** Source ChordPro de travail d'un item : version modifiée sinon original
-   *  (en mode « Ma version » : la mienne d'abord). */
+  /** Source ChordPro de ce que je lis : c'est elle que le Crayon retouche (ma partition fusionnée, celle du culte ou l'origine). */
   function sourceForItem(item: SetlistItem): string | null {
-    return (editMine ? withMine(item) : item).contentOverride ?? contents[item.songSlug]?.source ?? null;
+    return withChosen(item).contentOverride ?? contents[item.songSlug]?.source ?? null;
+  }
+  /** La couche du culte : les retouches de la setlist, sinon le .cho. */
+  function sourceDuCulte(item: SetlistItem): string | null {
+    return item.contentOverride ?? contents[item.songSlug]?.source ?? null;
+  }
+  /** Structure du corps du chant telle que je la lis (la mienne si je lis ma partition). */
+  function structureLue(item: SetlistItem): string[] | null {
+    return viewOf(item)?.bodyStructure ?? item.structureOverride ?? null;
+  }
+
+  /** « Enregistrer » : un responsable choisit Pour moi / Pour tout le culte ; sans le droit, Pour moi directement. */
+  function demanderDestination(action: (d: Destination) => void) {
+    if (canEdit) setAChoisir(() => action);
+    else action("moi");
   }
 
   function handleSelectLine(itemIndex: number, line: ChordProLine, sectionUid?: string) {
@@ -1043,15 +1051,15 @@ export function SetlistDetailClient() {
       );
       return;
     }
-    const baseAst = itemAst(editMine ? withMine(item) : item, contents[item.songSlug]);
+    const baseAst = itemAst(withChosen(item), contents[item.songSlug]);
     if (!baseAst) return;
     const origKey = baseAst.metadata.key;
 
-    // Section répétée par la structure ? On note l'occurrence tapée : Adapter
-    // matérialise une copie, « Ma version » propose le choix à l'enregistrement.
+    // Section répétée par la structure ? On note l'occurrence tapée : pour le culte, une copie est
+    // matérialisée ; pour moi, le choix se propose dans la feuille.
     let repeatedSectionId: string | undefined;
     let structIndex: number | undefined;
-    const struct = editMine ? myStructure(item) : item.structureOverride;
+    const struct = structureLue(item);
     if (struct && sectionUid) {
       const sec = baseAst.sections.find((s) => s.lines.some((l) => l.srcLine === line.srcLine));
       if (sec) {
@@ -1089,6 +1097,7 @@ export function SetlistDetailClient() {
       jianpuSrcLine: line.jianpuSrcLine,
       repeatedSectionId,
       structIndex,
+      cible: viseeCrayon,
     });
   }
 
@@ -1180,18 +1189,49 @@ export function SetlistDetailClient() {
     }
   }
 
-  /** Modifie ma version d'un chant (accords et paroles, structure, partage).
-   *  Une version revenue à la présidence sur tout est retirée. */
-  async function persistMine(songSlug: string, patch: Partial<VersionItem>, cle: string | null = "shared" in patch ? "cmd.chant.partagerVersion" : "cmd.chant.maVersion") {
-    if (!user) return;
-    const prev = versions[user.uid];
-    const items = { ...(prev?.items ?? {}) };
-    const next = { ...(items[songSlug] ?? { content: null, structure: null, shared: false }), ...patch };
-    if (next.content === null && next.structure === null && !aDesRetouches(next.jianpuChords)) {
-      delete items[songSlug];
+  /** Réécrit ma partition de ce chant (`partitions/{uid}__{slug}`, créée au besoin) : `base` = la couche du dessous
+   *  (celle du culte, sinon le .cho) quand le texte change, sinon celle d'avant — la fusion ne prend pas pour miennes des
+   *  lignes que le culte a changées depuis. Je la lis ensuite. */
+  async function ecrireMaPartition(
+    item: SetlistItem,
+    patch: Partial<Pick<PartitionDeChant, "content" | "structure" | "sectionOrigins" | "jianpuChords">>,
+    cle: string = "cmd.chant.maVersion",
+  ): Promise<boolean> {
+    if (!user) return false;
+    const slug = item.songSlug;
+    const courante = sourceDuCulte(item);
+    const prev = mesPartitions.mes[slug];
+    const p: PartitionDeChant = {
+      slug,
+      ownerUid: user.uid,
+      ownerName: historyAuthor(profile)?.name ?? "",
+      base: "content" in patch ? courante : prev?.base ?? courante,
+      content: prev?.content ?? null,
+      structure: prev?.structure ?? null,
+      sectionOrigins: prev?.sectionOrigins,
+      jianpuChords: prev?.jianpuChords,
+      key: prev?.key ?? null,
+      traits: prev?.traits ?? [],
+      sharedWith: prev?.sharedWith ?? [],
+      sharedTraits: prev?.sharedTraits ?? false,
+      ...patch,
+    };
+    setSavingLine(true);
+    try {
+      await mesPartitions.enregistrer(p);
+      // Un choix posé sur autre chose que ma partition cacherait ma retouche : je la lis.
+      const choisi = mesPartitions.choix[slug];
+      if (choisi && choisi !== "mienne") mesPartitions.choisir(slug, "mienne");
+      setEditTarget(null);
+      setStructureTarget(null);
+      compter(cle);
+      return true;
+    } catch {
+      flashFeedback(t("setlists.contentEdit.saveError", { defaultValue: "Échec de l'enregistrement — réessaie." }));
+      return false;
+    } finally {
+      setSavingLine(false);
     }
-    else items[songSlug] = next;
-    if (await saveMine(items, prev?.choices ?? {})) compter(cle);
   }
 
   /** Retient la version choisie pour un chant (« presidence » ou l'uid de son auteur). */
@@ -1201,43 +1241,46 @@ export function SetlistDetailClient() {
     await saveMine(prev?.items ?? {}, { ...(prev?.choices ?? {}), [songSlug]: value });
   }
 
-  /** Retouche d'accords sur un scan 简谱 (lot 9, docs/spec-harmonie.md) : dans
-   *  l'item de la setlist pour la présidence — donc dans l'historique, avec la
-   *  phrase des autres retouches d'Adapter —, dans ma version pour moi. Le
-   *  calque publié (`public/jianpu/chords.json`) n'est jamais écrit. */
-  async function handleEditJianpu(itemIndex: number, next: JianpuChords) {
+  /** Retouche d'accords sur un scan 简谱 (lot 9, docs/spec-harmonie.md) : dans l'item de la setlist pour tout le culte —
+   *  donc dans l'historique, avec la phrase des autres retouches —, dans ma partition pour moi. Le calque publié
+   *  (`public/jianpu/chords.json`) n'est jamais écrit. */
+  function handleEditJianpu(itemIndex: number, next: JianpuChords) {
     if (!setlist) return;
     const item = setlist.items[itemIndex];
-    if (editMine) {
-      await persistMine(item.songSlug, { jianpuChords: next });
-      return;
-    }
-    if (await persistOverride(itemIndex, item.contentOverride ?? undefined, { jianpuChords: next })) compter("cmd.chant.adapter");
+    demanderDestination(async (dest) => {
+      if (dest === "moi") {
+        await ecrireMaPartition(item, { jianpuChords: next });
+        return;
+      }
+      if (await persistOverride(itemIndex, item.contentOverride ?? undefined, { jianpuChords: next })) compter("cmd.chant.adapter");
+    });
   }
 
-  /** Applique un nouveau source complet : no-op si rien n'a changé, retrait
-   *  automatique de l'override s'il redevient identique au chant original. */
+  /** Applique un nouveau source complet : no-op si rien n'a changé, retrait automatique de la retouche si elle redevient
+   *  identique à la couche du dessous (le culte : le chant original ; moi : la couche du culte). */
   async function applyNewSource(
     itemIndex: number,
     next: string,
     extra?: Partial<SetlistItem>,
-    mine?: Partial<VersionItem>
+    mine?: EditBase["mine"],
+    dest: Destination = "moi",
   ) {
     if (!setlist) return;
-    const current = sourceForItem(setlist.items[itemIndex]);
-    if (next === current && !extra && !mine) {
+    const item = setlist.items[itemIndex];
+    if (dest === "culte") {
+      if (next === sourceDuCulte(item) && !extra) {
+        setEditTarget(null);
+        return;
+      }
+      const original = contents[item.songSlug]?.source;
+      if (await persistOverride(itemIndex, next === original ? undefined : next, extra)) compter("cmd.chant.adapter");
+      return;
+    }
+    if (next === sourceForItem(item) && !mine) {
       setEditTarget(null);
       return;
     }
-    if (editMine) {
-      // Ma version : retirée d'elle-même si elle redevient celle de la présidence.
-      const item = setlist.items[itemIndex];
-      const presidency = item.contentOverride ?? contents[item.songSlug]?.source;
-      await persistMine(item.songSlug, { content: next === presidency ? null : next, ...mine });
-      return;
-    }
-    const original = contents[setlist.items[itemIndex].songSlug]?.source;
-    if (await persistOverride(itemIndex, next === original ? undefined : next, extra)) compter("cmd.chant.adapter");
+    await ecrireMaPartition(item, { content: next === sourceDuCulte(item) ? null : next, ...mine });
   }
 
   /** Ligne d'une section répétée par la structure : duplique la section dans
@@ -1300,11 +1343,10 @@ export function SetlistDetailClient() {
     };
   }
 
-  /** « Seulement ce passage » (Ma version) : la section répétée est copiée dans
-   *  mon source et ma structure fait pointer cette occurrence vers la copie —
-   *  le mécanisme d'Adapter, écrit dans mon document. */
+  /** « Seulement ce passage » (pour moi) : la section répétée est copiée dans ma source et ma structure fait pointer cette
+   *  occurrence vers la copie — le mécanisme du culte, écrit dans ma partition. */
   function materializeMine(item: SetlistItem, source: string, t: LineEditState): EditBase | null {
-    const struct = myStructure(item);
+    const struct = structureLue(item);
     if (t.repeatedSectionId === undefined || t.structIndex === undefined || !struct) return null;
     const mat = materializeSectionCopy(source, t.repeatedSectionId);
     if (!mat) return null;
@@ -1316,7 +1358,7 @@ export function SetlistDetailClient() {
       mine: {
         structure: struct.map((ov, k) => (k === t.structIndex ? `${mat.newSectionId}-${t.structIndex}` : ov)),
         // Provenance de la copie : elle situe le passage chez qui lit ma
-        // version partagée avec une autre structure.
+        // partition partagée avec une autre structure.
         sectionOrigins: {
           ...myItems?.[item.songSlug]?.sectionOrigins,
           [mat.newSectionId]: t.repeatedSectionId,
@@ -1325,22 +1367,56 @@ export function SetlistDetailClient() {
     };
   }
 
-  /** Base d'une édition de ligne : Adapter copie toujours l'occurrence tapée,
-   *  « Ma version » seulement si la retouche ne vise que ce passage. */
-  function editBase(item: SetlistItem, source: string, t: LineEditState): EditBase {
-    if (!editMine) return materializeIfRepeated(item, source, t);
-    const one = repeatScope === "one" ? materializeMine(item, source, t) : null;
+  /** La ligne touchée, vue de la couche du culte : sa source et ses rangs ; `null` si elle n'y a pas d'équivalent. */
+  function ligneDuCulte(item: SetlistItem, ligne: LineEditState): LineEditState | null {
+    const source = sourceDuCulte(item);
+    if (!source) return null;
+    if (source === sourceForItem(item)) return ligne;
+    const f = lectures[item.songSlug]?.fusion;
+    if (!f) return null;
+    const rang = (n?: number) => (n === undefined ? undefined : rangDansLaCourante(f, n));
+    const [srcLine, pinyinSrcLine, jianpuSrcLine] = [rang(ligne.srcLine), rang(ligne.pinyinSrcLine), rang(ligne.jianpuSrcLine)];
+    if (srcLine == null || pinyinSrcLine === null || jianpuSrcLine === null) return null;
+    return { ...ligne, srcLine, pinyinSrcLine, jianpuSrcLine };
+  }
+
+  /** Base d'une édition de ligne : pour le culte, la couche du culte, qui copie toujours l'occurrence tapée ; pour moi,
+   *  ma source, « Seulement ce passage » seulement si la retouche ne vise que lui. */
+  function editBase(item: SetlistItem, ligne: LineEditState, dest: Destination): EditBase | null {
+    if (dest === "culte") {
+      const l = ligneDuCulte(item, ligne);
+      if (!l) {
+        flashFeedback(t("maPartition.crayon.pasDansLeCulte"));
+        return null;
+      }
+      // shortcut: avec ma propre structure, l'occurrence tapée n'est pas repérable dans celle du culte (copie sautée), à reprendre si on s'en plaint.
+      return materializeIfRepeated(item, sourceDuCulte(item)!, myItems?.[item.songSlug]?.structure?.length ? { ...l, repeatedSectionId: undefined } : l);
+    }
+    const source = sourceForItem(item)!;
+    const one = repeatScope === "one" ? materializeMine(item, source, ligne) : null;
     return (
       one ?? {
         source,
-        srcLine: t.srcLine,
-        pinyinSrcLine: t.pinyinSrcLine,
-        jianpuSrcLine: t.jianpuSrcLine,
+        srcLine: ligne.srcLine,
+        pinyinSrcLine: ligne.pinyinSrcLine,
+        jianpuSrcLine: ligne.jianpuSrcLine,
       }
     );
   }
 
-  async function handleSaveLine(newRaw: string) {
+  /** Une retouche de la ligne touchée : `fabriquer` rend le nouveau source depuis la base ; le choix du lieu se fait ici. */
+  function retoucherLigne(fabriquer: (m: EditBase) => string) {
+    if (!setlist || !editTarget) return;
+    const cibleLigne = editTarget;
+    const item = setlist.items[cibleLigne.itemIndex];
+    demanderDestination(async (dest) => {
+      const m = editBase(item, cibleLigne, dest);
+      if (!m) return;
+      await applyNewSource(cibleLigne.itemIndex, fabriquer(m), m.extra, m.mine, dest);
+    });
+  }
+
+  function handleSaveLine(newRaw: string) {
     if (!setlist || !editTarget) return;
     const source = sourceForItem(setlist.items[editTarget.itemIndex]);
     if (!source) return;
@@ -1349,46 +1425,40 @@ export function SetlistDetailClient() {
       setEditTarget(null);
       return;
     }
-    const m = editBase(setlist.items[editTarget.itemIndex], source, editTarget);
-    let next = replaceSourceLine(m.source, m.srcLine, newRaw);
-    // Le pinyin est désormais inline dans la ligne → la ligne séparée disparaît.
-    if (m.pinyinSrcLine !== undefined) {
-      next = deleteSourceLines(next, [m.pinyinSrcLine]);
-    }
-    await applyNewSource(editTarget.itemIndex, next, m.extra, m.mine);
+    retoucherLigne((m) => {
+      let next = replaceSourceLine(m.source, m.srcLine, newRaw);
+      // Le pinyin est désormais inline dans la ligne → la ligne séparée disparaît.
+      if (m.pinyinSrcLine !== undefined) next = deleteSourceLines(next, [m.pinyinSrcLine]);
+      return next;
+    });
   }
 
-  async function handleInsertAfter(newRaw: string) {
-    if (!setlist || !editTarget) return;
-    const source = sourceForItem(setlist.items[editTarget.itemIndex]);
-    if (!source) return;
-    const m = editBase(setlist.items[editTarget.itemIndex], source, editTarget);
-    const at = Math.max(m.srcLine, m.pinyinSrcLine ?? -1);
-    await applyNewSource(editTarget.itemIndex, insertSourceLineAfter(m.source, at, newRaw), m.extra, m.mine);
+  function handleInsertAfter(newRaw: string) {
+    retoucherLigne((m) => insertSourceLineAfter(m.source, Math.max(m.srcLine, m.pinyinSrcLine ?? -1), newRaw));
   }
 
-  async function handleDeleteLine() {
-    if (!setlist || !editTarget) return;
-    const source = sourceForItem(setlist.items[editTarget.itemIndex]);
-    if (!source) return;
-    const m = editBase(setlist.items[editTarget.itemIndex], source, editTarget);
-    const idxs = [m.srcLine];
-    if (m.pinyinSrcLine !== undefined) idxs.push(m.pinyinSrcLine);
-    if (m.jianpuSrcLine !== undefined) idxs.push(m.jianpuSrcLine);
-    await applyNewSource(editTarget.itemIndex, deleteSourceLines(m.source, idxs), m.extra, m.mine);
+  function handleDeleteLine() {
+    retoucherLigne((m) => {
+      const idxs = [m.srcLine];
+      if (m.pinyinSrcLine !== undefined) idxs.push(m.pinyinSrcLine);
+      if (m.jianpuSrcLine !== undefined) idxs.push(m.jianpuSrcLine);
+      return deleteSourceLines(m.source, idxs);
+    });
   }
 
-  async function handleRevert(itemIndex: number) {
+  /** « Ordre » : ma structure (jamais celle du culte, qui se règle dans « Modifier »). */
+  async function handleSaveOrdre(structure: string[] | null) {
+    if (!setlist || !structureTarget) return;
+    const item = setlist.items[structureTarget.itemIndex];
+    await ecrireMaPartition(item, { structure });
+  }
+
+  async function handleRevert(itemIndex: number, destination: Destination) {
     setConfirmRevert(null);
     if (!setlist) return;
-    if (editMine) {
-      await persistMine(setlist.items[itemIndex].songSlug, {
-        content: null,
-        structure: null,
-        // Mes passages retouchés seuls disparaissent avec mon contenu.
-        sectionOrigins: undefined,
-        jianpuChords: undefined,
-      }, "cmd.chant.retablir");
+    if (destination === "moi") {
+      // Mes passages retouchés seuls disparaissent avec mon contenu.
+      await ecrireMaPartition(setlist.items[itemIndex], { content: null, structure: null, sectionOrigins: undefined, jianpuChords: undefined }, "cmd.chant.retablir");
       return;
     }
     // Les sections matérialisées disparaissent avec le contenu adapté : la
@@ -1399,6 +1469,29 @@ export function SetlistDetailClient() {
       ...revertSectionOrigins(setlist.items[itemIndex]),
       jianpuChords: {},
     })) compter("cmd.chant.retablir");
+  }
+
+  /** « Passer au culte » : ma ligne prend la place de celle du culte (par `persistOverride`, historique compris), puis ma
+   *  partition est réécrite sur la nouvelle couche du culte : la ligne n'est plus « moi », mes autres retouches restent. */
+  async function handlePasserAuCulte(itemIndex: number, srcLine: number) {
+    if (!setlist || !canEdit) return;
+    const item = setlist.items[itemIndex];
+    const l = lectures[item.songSlug];
+    const courante = sourceDuCulte(item);
+    const nouvelle = l?.fusion && courante ? passerAuCulte(l.fusion, courante, srcLine) : null;
+    if (nouvelle === null || !courante) return;
+    const original = contents[item.songSlug]?.source;
+    if (!(await persistOverride(itemIndex, nouvelle === original ? undefined : nouvelle))) return;
+    compter("cmd.chant.adapter");
+    const prev = mesPartitions.mes[item.songSlug];
+    if (!user || !prev) return;
+    // La fusion rendue (mes lignes et celles du culte), relue contre la nouvelle couche du culte.
+    const lue = l.fusion!.source;
+    try {
+      await mesPartitions.enregistrer({ ...prev, base: nouvelle, content: lue === nouvelle ? null : lue });
+    } catch {
+      flashFeedback(t("maPartition.erreurEnregistrement"));
+    }
   }
 
   if (loadingSetlist) {
@@ -1434,18 +1527,13 @@ export function SetlistDetailClient() {
   const canEdit = !horsLigne && canEditSetlist(user, profile, setlist);
   // Suppression : le même droit, sous son nom — la liste (lot 10) s'en sert aussi
   const canDelete = !horsLigne && canDeleteSetlist(user, profile, setlist);
-  // Items affichés : la version choisie (en mode « Ma version » : la mienne)
-  // remplace celle de la présidence — accords et paroles pour la vue
-  // partitions (qui applique ma structure au corps seul), ma structure
-  // comprise pour le sommaire et le mode louange. Mode Adapter : la
-  // présidence seule.
-  const displayItems = editPartitions ? setlist.items : setlist.items.map(editMine ? withMine : withChosen);
-  const stageItems = editPartitions ? setlist.items : displayItems.map(withMineStructure);
+  // Items affichés : la partition lue remplace celle de la présidence — accords et paroles pour la vue partitions (qui
+  // applique ma structure au corps seul), ma structure comprise pour le sommaire et le mode louange.
+  const displayItems = setlist.items.map(withChosen);
+  const stageItems = displayItems.map(withMineStructure);
   // « Quel PDF ? » propose ma version quand elle diffère de la présidence (identité d'objet : les trois transformations rendent l'item lui-même quand rien ne change).
-  const aMaVersion = !editPartitions && !!user && stageItems.some((it, i) => it !== setlist.items[i]);
-  const versionViews = editPartitions
-    ? undefined
-    : Object.fromEntries(setlist.items.filter((it) => it.songSlug).map((it) => [it.songSlug, viewOf(it)!]));
+  const aMaVersion = !!user && stageItems.some((it, i) => it !== setlist.items[i]);
+  const versionViews = Object.fromEntries(setlist.items.filter((it) => it.songSlug).map((it) => [it.songSlug, viewOf(it)!]));
   const canDuplicate = !horsLigne && canDuplicateSetlist(user, profile, setlist);
   // Notif « setlist prête » : pour toute setlist modifiable par l'utilisateur,
   // contenant au moins 4 vrais chants (hors transitions). Toutes catégories.
@@ -1469,10 +1557,10 @@ export function SetlistDetailClient() {
   // « Copier les paroles » de chaque chant, PartitionView).
   const toutSuitLaPresidence = setlist.items.every((item) => {
     if (!item.songSlug || item.type === "fusion") return true;
-    const l = editMine ? undefined : lectureNeuve(item);
+    const l = lectureNeuve(item);
     if (l) return l.suitLaPresidence;
     const v = viewOf(item);
-    const shown = editMine ? (v?.mine?.content ? "mine" : "presidence") : (v?.shown ?? "presidence");
+    const shown = v?.shown ?? "presidence";
     return shown === "presidence" && !v?.mine?.structure?.length;
   });
   // … et seulement quand chaque chant est là : pendant le préchargement (Q14), ou sans un
@@ -1597,19 +1685,21 @@ export function SetlistDetailClient() {
   );
   const supprimer = <MenuSupprimer canDelete={canDelete} onSupprimer={() => setConfirmDelete(true)} />;
   // Les partitions : à droite en deux volets, côté Partitions sur G.
+  /** « Ordre » : la structure du chant lu (celui de la page où l'on est, sinon le premier). */
+  function ouvrirOrdre() {
+    const chant = (it: SetlistItem) => !!it.songSlug && it.type !== "fusion";
+    const lu = setlist!.items.findIndex((it) => chant(it) && it.position === current);
+    const itemIndex = lu !== -1 ? lu : setlist!.items.findIndex(chant);
+    const item = setlist!.items[itemIndex];
+    const ast = item && itemAst(withChosen(item), contents[item.songSlug]);
+    if (!ast) return;
+    setStructureTarget({ itemIndex, ast, structure: myItems?.[item.songSlug]?.structure ?? null, presidency: item.structureOverride });
+  }
   const partitions = (
     <>
-      {editPartitions && (
+      {crayon && (
         <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
-          {t("setlists.contentEdit.hint", {
-            defaultValue:
-              "Mode adaptation : touche une ligne pour modifier ses accords ou ses paroles. Les changements ne concernent que cette setlist.",
-          })}
-        </p>
-      )}
-      {editMine && (
-        <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
-          {t("setlists.myVersion.hint")}
+          {t("maPartition.crayon.aide")}
         </p>
       )}
       <PartitionsView
@@ -1622,32 +1712,30 @@ export function SetlistDetailClient() {
         disposition={disposition}
         jianpuPref={jianpuPref}
         layout={layout}
-        editMode={editPartitions || editMine}
+        editMode={crayon}
         versions={versionViews}
-        editMine={editMine}
-        onSelectLine={handleSelectLine}
-        onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
-        onEditStructure={(itemIndex) => {
-          const item = setlist.items[itemIndex];
-          const ast = itemAst(withMine(item), contents[item.songSlug]);
-          if (!ast) return;
-          setStructureTarget({
-            itemIndex,
-            ast,
-            structure: myItems?.[item.songSlug]?.structure ?? null,
-            presidency: item.structureOverride,
-          });
+        retouches={(itemIndex) => {
+          const brut = setlist.items[itemIndex];
+          const p = mesPartitions.mes[brut.songSlug];
+          return {
+            moi: !!p && (p.content !== null || p.structure !== null || aDesRetouches(p.jianpuChords)),
+            culte: canEdit && (!!brut.contentOverride || aDesRetouches(brut.jianpuChords)),
+          };
         }}
-        lectures={editPartitions || editMine ? undefined : lectures}
+        onSelectLine={handleSelectLine}
+        onRevert={(itemIndex, destination) => setConfirmRevert({ itemIndex, destination })}
+        onPasserAuCulte={canEdit ? handlePasserAuCulte : undefined}
+        lectures={lectures}
         onChoisirLecture={choisirLecture}
         onConflit={reglerConflit}
         enAttente={mesPartitions.enAttente}
-        onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
         onEditJianpu={handleEditJianpu}
         onRetryChant={rechargerUnChant}
         titres={Object.fromEntries(Object.entries(songsMap).map(([slug, e]) => [slug, e.title]))}
         onIdees={accesHarmonie.peut ? (itemIndex, slug) => { compter("cmd.setlist.idees"); setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
       />
+      {/* La barre basse du Crayon ne cache pas la fin du dernier chant. */}
+      {crayon && <div aria-hidden className="h-16 print:hidden" />}
     </>
   );
   // Bandeau de la copie hors ligne (A3, décision C2) : dans l'en-tête collant sur grand écran (il compte dans
@@ -1689,7 +1777,7 @@ export function SetlistDetailClient() {
             <div className="flex max-w-[calc(50%+648px)] flex-wrap items-end gap-x-6 gap-y-3 px-7 pb-4 pt-5">
               {/* Le titre garde 18rem au moins : sinon les boutons passent dessous. */}
               <TitreEnTete setlist={setlist} passage={passageFete} />
-              {/* Présentation · Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange,
+              {/* Présentation · Crayon · Modifier · PDF · ⋯ · Mode louange,
                   libellés compris ; la rangée passe sous le titre quand elle n'y tient pas. */}
               <div className="flex flex-wrap items-center gap-2">
                 {presentationHref && (
@@ -1698,16 +1786,10 @@ export function SetlistDetailClient() {
                     {t("setlists.detail.presentation")}
                   </a>
                 )}
-                {canEdit && (
-                  <button type="button" aria-pressed={editPartitions} onClick={toggleAdapter} className={editPartitions ? PILULE_ACTIVE : PILULE}>
+                {!horsLigne && (
+                  <button type="button" aria-pressed={crayon} onClick={toggleCrayon} className={crayon ? PILULE_ACTIVE : PILULE}>
                     <PenLine className="h-4 w-4" aria-hidden />
-                    {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
-                  </button>
-                )}
-                {(!horsLigne && canHaveSetlistVersion(user, profile, setlist)) && (
-                  <button type="button" aria-pressed={editMine} onClick={toggleMaVersion} className={editMine ? PILULE_ACTIVE : PILULE}>
-                    <UserRound className="h-4 w-4" aria-hidden />
-                    {t("setlists.myVersion.toggle")}
+                    {t("maPartition.crayon.bouton")}
                   </button>
                 )}
                 {canEdit && (
@@ -1884,22 +1966,20 @@ export function SetlistDetailClient() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Adapter le chant (accords/paroles par setlist) */}
-                {canEdit && (
-                  <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
-                    aria-pressed={editPartitions}
-                    onClick={toggleAdapter}
+                {/* Crayon : retoucher le chant, pour moi ou pour tout le culte */}
+                {!horsLigne && (
+                  <button aria-label={t("maPartition.crayon.bouton")}
+                    aria-pressed={crayon}
+                    onClick={toggleCrayon}
                     className={`${TOUCHER_44} ${PILULE_EMPILEE} max-[430px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                      editPartitions
+                      crayon
                         ? "bg-foreground text-background"
                         : "bg-secondary text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <PenLine className="h-3.5 w-3.5" />
-                    <span className="libelle-outil">
-                      {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
-                    </span>
-                    <span aria-hidden className={LIBELLE_COURT}>{t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}</span>
+                    <span className="libelle-outil">{t("maPartition.crayon.bouton")}</span>
+                    <span aria-hidden className={LIBELLE_COURT}>{t("maPartition.crayon.bouton")}</span>
                   </button>
                 )}
 
@@ -1920,23 +2000,6 @@ export function SetlistDetailClient() {
                   <span className="libelle-outil">{t("songs.detail.chords")}</span>
                   <span aria-hidden className={LIBELLE_COURT}>{t("songs.detail.chords")}</span>
                 </button>
-
-                {/* Ma version (accords/paroles pour soi) — tout connecté */}
-                {(!horsLigne && canHaveSetlistVersion(user, profile, setlist)) && (
-                  <button aria-label={t("setlists.myVersion.toggle")}
-                    aria-pressed={editMine}
-                    onClick={toggleMaVersion}
-                    className={`${TOUCHER_44} ${PILULE_EMPILEE} max-[430px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                      editMine
-                        ? "bg-foreground text-background"
-                        : "bg-secondary text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <UserRound className="h-3.5 w-3.5" />
-                    <span className="libelle-outil">{t("setlists.myVersion.toggle")}</span>
-                    <span aria-hidden className={LIBELLE_COURT}>{t("setlists.myVersion.toggle")}</span>
-                  </button>
-                )}
 
                 {/* Mode louange et ⋯ — poussés à droite, sur la même ligne */}
                 <div className="ml-auto flex items-center gap-1.5">
@@ -1967,18 +2030,13 @@ export function SetlistDetailClient() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
-                      {/* Téléphone étroit : les deux modes d'édition, sortis de la barre. */}
-                      {canEdit && (
-                        <DropdownMenuCheckboxItem className="min-[431px]:hidden" checked={editPartitions} onCheckedChange={toggleAdapter}>
-                          {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
+                      {/* Téléphone étroit : le Crayon, sorti de la barre. */}
+                      {!horsLigne && (
+                        <DropdownMenuCheckboxItem className="min-[431px]:hidden" checked={crayon} onCheckedChange={toggleCrayon}>
+                          {t("maPartition.crayon.bouton")}
                         </DropdownMenuCheckboxItem>
                       )}
-                      {(!horsLigne && canHaveSetlistVersion(user, profile, setlist)) && (
-                        <DropdownMenuCheckboxItem className="min-[431px]:hidden" checked={editMine} onCheckedChange={toggleMaVersion}>
-                          {t("setlists.myVersion.toggle")}
-                        </DropdownMenuCheckboxItem>
-                      )}
-                      {(canEdit || (!horsLigne && canHaveSetlistVersion(user, profile, setlist))) && <DropdownMenuSeparator className="min-[431px]:hidden" />}
+                      {!horsLigne && <DropdownMenuSeparator className="min-[431px]:hidden" />}
                       {canEdit && (
                         <DropdownMenuItem asChild>
                           <Link href={`/setlists/${id}/edit`}>
@@ -2095,14 +2153,14 @@ export function SetlistDetailClient() {
           items={setlist.items}
           contents={contents}
           songsMap={songsMap}
-          editMine={editMine}
+          editMine={crayon}
           canEdit={canEdit}
           instrument={instrumentHarmonie}
           jianpuManifest={jianpuManifest}
           jianpuPref={jianpuPref}
-          withMine={withMine}
-          sourceForItem={sourceForItem}
-          applyNewSource={applyNewSource}
+          withMine={withChosen}
+          sourceForItem={crayon ? sourceForItem : sourceDuCulte}
+          applyNewSource={(i, next, extra) => applyNewSource(i, next, extra, undefined, crayon ? "moi" : "culte")}
           flashFeedback={flashFeedback}
           setIdeesTarget={setIdeesTarget}
           setIdeesChant={setIdeesChant}
@@ -2134,11 +2192,11 @@ export function SetlistDetailClient() {
         </div>
       )}
 
-      {/* Sheet d'édition de ligne (mode adaptation) */}
+      {/* Sheet d'édition de ligne (Crayon) */}
       <EditLineSheet
         target={editTarget}
         saving={savingLine}
-        repeatScope={editMine && editTarget?.repeatedSectionId !== undefined ? repeatScope : undefined}
+        repeatScope={editTarget?.repeatedSectionId !== undefined ? repeatScope : undefined}
         onRepeatScope={setRepeatScope}
         onClose={() => setEditTarget(null)}
         onSaveLine={handleSaveLine}
@@ -2146,23 +2204,42 @@ export function SetlistDetailClient() {
         onDeleteLine={handleDeleteLine}
       />
 
-      {/* Feuille « Sections » de ma version */}
+      {/* Feuille « Ordre » du Crayon : ma structure */}
       <MyStructureSheet
         target={structureTarget}
         saving={savingLine}
         onClose={() => setStructureTarget(null)}
-        onSave={(structure) =>
-          structureTarget && persistMine(setlist.items[structureTarget.itemIndex].songSlug, { structure })
-        }
+        onSave={handleSaveOrdre}
       />
+
+      {/* « Enregistrer » d'un responsable : Pour moi / Pour tout le culte */}
+      {aChoisir && (
+        <ChoixDestination
+          open
+          dateCourte={setlist.date ? new Intl.DateTimeFormat(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { day: "numeric", month: "short" }).format(new Date(`${setlist.date}T12:00:00`)) : ""}
+          onChoisir={(d) => { const action = aChoisir; setAChoisir(null); action(d); }}
+          onClose={() => setAChoisir(null)}
+        />
+      )}
+
+      {/* Barre basse du Crayon */}
+      {crayon && (
+        <BarreCrayon
+          cible={viseeCrayon}
+          onCible={setViseeCrayon}
+          onOrdre={ouvrirOrdre}
+          onTermine={toggleCrayon}
+          deuxVolets={deuxVolets}
+        />
+      )}
 
       {/* Confirmation de rétablissement de l'original */}
       <ConfirmerRetablir
         open={confirmRevert !== null}
         onOpenChange={(o) => !o && setConfirmRevert(null)}
-        editMine={editMine}
+        editMine={confirmRevert?.destination === "moi"}
         savingLine={savingLine}
-        onConfirmer={() => confirmRevert !== null && handleRevert(confirmRevert)}
+        onConfirmer={() => confirmRevert !== null && handleRevert(confirmRevert.itemIndex, confirmRevert.destination)}
       />
 
       {/* Mode Louange */}

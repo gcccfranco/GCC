@@ -923,9 +923,11 @@ interface SectionViewProps {
   marques?: Marques;
   /** Conflit « Le chant a changé ici » : sans elle, les deux versions se montrent sans boutons. */
   onConflit?: (index: number, choix: "mienne" | "chant") => void;
+  /** Crayon, pour qui règle le culte : « Passer au culte » sous chaque ligne que j'ai retouchée (`srcLine`). */
+  onPasserAuCulte?: (srcLine: number) => void;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, marques, onConflit }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, marques, onConflit, onPasserAuCulte }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -990,23 +992,37 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           );
         }
 
+        const m = marques && (marques[line.srcLine ?? -1] ?? marques[line.pinyinSrcLine ?? -1]);
         // Mode édition : la ligne devient une cible tactile qui ouvre la sheet.
         if (onLineSelect && line.srcLine !== undefined) {
           return (
-            <div
-              key={i}
-              role="button"
-              tabIndex={0}
-              onClick={() => onLineSelect(line, section.uid)}
-              onKeyDown={(e) => e.key === "Enter" && onLineSelect(line, section.uid)}
-              className="cursor-pointer rounded-md -mx-1.5 px-1.5 border border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 transition-colors my-0.5 print:border-transparent print:bg-transparent print:mx-0 print:px-0 print:my-0"
-            >
-              {/* Édition : toucher la ligne ouvre la feuille d'édition, jamais le panneau d'un accord. */}
-              <AccordsInactifs>{rendered}</AccordsInactifs>
-            </div>
+            <Fragment key={i}>
+              <div
+                role="button"
+                tabIndex={0}
+                data-marque={m?.marque}
+                data-retouche={m?.retouche}
+                onClick={() => onLineSelect(line, section.uid)}
+                onKeyDown={(e) => e.key === "Enter" && onLineSelect(line, section.uid)}
+                className="cursor-pointer rounded-md -mx-1.5 px-1.5 border border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 transition-colors my-0.5 print:border-transparent print:bg-transparent print:mx-0 print:px-0 print:my-0"
+              >
+                {/* Édition : toucher la ligne ouvre la feuille d'édition, jamais le panneau d'un accord. */}
+                <AccordsInactifs>{rendered}</AccordsInactifs>
+              </div>
+              {m?.marque === "moi" && onPasserAuCulte && (
+                <button
+                  type="button"
+                  data-copy-ignore
+                  className={`${TOUCHER_44} mb-1 text-xs font-semibold underline underline-offset-2 print:hidden`}
+                  style={{ color: "var(--graphite)" }}
+                  onClick={() => onPasserAuCulte(line.srcLine!)}
+                >
+                  {t("maPartition.crayon.passerAuCulte")}
+                </button>
+              )}
+            </Fragment>
           );
         }
-        const m = marques && (marques[line.srcLine ?? -1] ?? marques[line.pinyinSrcLine ?? -1]);
         if (!m) return <div key={i}>{rendered}</div>;
         const bouton = `${TOUCHER_44} h-8 rounded-full border border-border bg-background px-3 text-xs font-semibold hover:bg-secondary`;
         return (
@@ -1257,6 +1273,7 @@ interface SongViewProps {
   /** Ma partition : signes des lignes par `srcLine` (docs/spec-ma-partition.md, « Signes »), et règlement des conflits. */
   marques?: Marques;
   onConflit?: (index: number, choix: "mienne" | "chant") => void;
+  onPasserAuCulte?: (srcLine: number) => void;
 }
 
 export function SongView({
@@ -1281,6 +1298,7 @@ export function SongView({
   slug,
   marques,
   onConflit,
+  onPasserAuCulte,
 }: SongViewProps) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
@@ -1470,6 +1488,7 @@ export function SongView({
                 slug={slug}
                 marques={marques}
                 onConflit={onConflit}
+                onPasserAuCulte={onPasserAuCulte}
               />
               {withDetails && step.transition && <TransitionNote text={step.transition} />}
             </div>

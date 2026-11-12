@@ -52,6 +52,8 @@ export type EditLineTarget = {
   originalKey: string;
   /** Index de la ligne dans le source — sert aussi de clé d'identité de la sheet. */
   srcLine?: number;
+  /** Crayon : « Paroles » ouvre la feuille sur les paroles, « Accord » (défaut) sur la ligne et ses accords. */
+  cible?: "accord" | "paroles";
 };
 
 type PadTarget = { kind: "add"; offset: number } | { kind: "edit"; index: number } | null;
@@ -310,10 +312,11 @@ function SheetBody({
   );
 
   const [draft, setDraft] = useState<EditableLine>(initial);
-  const [mode, setMode] = useState<Mode>(initialInstr ? "instr" : "line");
+  const surLesParoles = target.cible === "paroles" && !initialInstr;
+  const [mode, setMode] = useState<Mode>(initialInstr ? "instr" : surLesParoles ? "lyrics" : "line");
   const [padTarget, setPadTarget] = useState<PadTarget>(null);
-  const [lyricsDraft, setLyricsDraft] = useState("");
-  const [pinyinDraft, setPinyinDraft] = useState("");
+  const [lyricsDraft, setLyricsDraft] = useState(surLesParoles ? initial.text : "");
+  const [pinyinDraft, setPinyinDraft] = useState(surLesParoles ? initial.pinyin ?? "" : "");
   const [instrNew, setInstrNew] = useState(false);
   const [instrAnnotation, setInstrAnnotation] = useState(initialParts.annotation);
   const [instrChords, setInstrChords] = useState<string[]>(initialParts.chords);

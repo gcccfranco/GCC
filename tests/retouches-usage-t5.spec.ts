@@ -227,8 +227,8 @@ test("dimanche-9 : ordinateur à 1 100 px, barre latérale dépliée, chaque pil
         return { nom: el.getAttribute("aria-label") ?? "", libelle: vu.map((s) => (s.textContent ?? "").trim()).join(""), droite: r.right, police: vu.length ? parseFloat(getComputedStyle(vu[0]).fontSize) : 0 };
       }),
   );
-  const nommees = pilules.filter((p) => /Affichage|Adapter|Accords|Ma version|Mode Louange|Mode louange/i.test(p.nom));
-  expect(nommees.length, "Affichage, Adapter, Accords, Ma version, Mode louange").toBeGreaterThanOrEqual(4);
+  const nommees = pilules.filter((p) => /Affichage|Crayon|Accords|Mode Louange|Mode louange/i.test(p.nom));
+  expect(nommees.length, "Affichage, Crayon, Accords, Mode louange").toBeGreaterThanOrEqual(4);
   for (const p of nommees) {
     expect(p.libelle, `« ${p.nom} » a un libellé visible`).not.toBe("");
     expect(p.police, `« ${p.nom} » : 12 px au moins`).toBeGreaterThanOrEqual(12);

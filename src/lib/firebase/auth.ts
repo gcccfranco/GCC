@@ -30,15 +30,6 @@ if (typeof window !== "undefined") {
     poserMarqueConnecte(!!u);
   });
   void balayerLesCopies();
-  // Pour tests/ma-partition-rangement.spec.ts seulement (MP-1 ; `logOut` pour tester l'effacement) : reste jusqu'à MP-3
-  // (aucune écriture d'interface n'existe encore pour tester la file). Import dynamique : rien n'est embarqué en production.
-  if (process.env.NODE_ENV !== "production") {
-    void Promise.all([import("@/lib/firebase/partitions"), import("@/lib/partition/fileEnAttente")]).then(
-      ([partitions, filePartitions]) => {
-        (window as unknown as { __gccPartitions?: unknown }).__gccPartitions = { ...partitions, ...filePartitions, logOut };
-      },
-    );
-  }
 }
 
 export function useAuth() {

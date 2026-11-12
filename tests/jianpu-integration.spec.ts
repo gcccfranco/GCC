@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { basculerMode } from "./helpers/menuSetlist";
+import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 import { readFileSync, existsSync } from "fs";
 import { inflateSync } from "zlib";
 import { expect, test, type Page } from "@playwright/test";
@@ -279,7 +279,7 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
   await page.locator('[data-jianpu-page="0"] img').waitFor();
   await page.waitForFunction(() =>
     Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every((i) => i.complete && i.naturalWidth > 0));
-  await basculerMode(page, "Adapter");
+  await basculerMode(page);
 
   // L'étiquette 1 (« G7 », x 638, y 344) : on touche au centre de l'écriture qui l'a retouchée.
   const c = loadChords()[ADAPTER_SLUG];
@@ -290,6 +290,8 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
   const feuille = page.getByRole("dialog");
   await feuille.getByRole("button", { name: "A", exact: true }).click();
   await feuille.getByRole("button", { name: "Valider l'accord" }).click();
+  // MP-3 : la créatrice de la setlist règle le culte, « Enregistrer » lui demande où.
+  await choisirDestination(page, "culte");
 
   const retouche = page.locator('[data-jianpu-retouche="1"]');
   await expect(retouche).toHaveText("A7");

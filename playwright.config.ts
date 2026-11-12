@@ -16,6 +16,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 const SPECS_GRAND_ECRAN = [
   // Ma partition, MP-2 (docs/spec-ma-partition.md) : menu « Je lis », filets et mention de conflit sur les quatre dispositions.
   /ma-partition-lecture\.spec\.ts/,
+  // Ma partition, MP-3 (docs/spec-ma-partition.md) : la barre basse du Crayon et la feuille « Pour moi / Pour tout le culte » sur les quatre dispositions.
+  /ma-partition-crayon\.spec\.ts/,
   // Lot pupitre, T1 (docs/spec-exemples-usage.md) : partitions pleine largeur en volet unique, vue Liste à 720 px, étiquettes de section, 简谱 ; deux volets inchangés.
   /pupitre-partitions\.spec\.ts/,
   // Lot 1 du rapport d'usage, T5 (docs/spec-retouches-usage.md) : textes coupés, cellule Date, barre de la setlist, sur les quatre dispositions.

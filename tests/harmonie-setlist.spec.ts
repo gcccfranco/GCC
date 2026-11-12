@@ -27,7 +27,8 @@ const MUSICIEN: FakeProfile = {
 
 const SETLIST_ID = "setlist-harmonie";
 const SETLIST_DOC = `setlists/${SETLIST_ID}`;
-const VERSION_DOC = `setlists/${SETLIST_ID}/versions/${MUSICIEN.uid}`;
+// MP-3 : « Essayer dans Ma version » écrit ma partition de ce chant (`versions/{uid}` n'est plus écrit).
+const VERSION_DOC = `partitions/${MUSICIEN.uid}__abba-pere`;
 
 const item = (over: Record<string, unknown>) => ({
   keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
@@ -97,7 +98,7 @@ test("hors « Ma version », l'idée se lit mais ne s'applique pas", async ({ pa
   await expect(page.getByRole("button", { name: "Essayer dans Ma version" })).toHaveCount(0);
 });
 
-test("« Essayer dans Ma version » écrit dans mon document, jamais dans la setlist", async ({ page }) => {
+test("« Essayer dans Ma version » écrit dans ma partition, jamais dans la setlist", async ({ page }) => {
   const db = await openPartitions(page);
   await basculerMode(page, "Ma version");
   await ouvrirLesIdees(page);
@@ -108,9 +109,8 @@ test("« Essayer dans Ma version » écrit dans mon document, jamais dans la set
 
   await expect.poll(() => db.writes.filter((w) => w.path === VERSION_DOC).length).toBeGreaterThan(0);
   const dernier = db.writes.filter((w) => w.path === VERSION_DOC).pop()!;
-  const items = dernier.data.items as Record<string, { content: string }>;
   const premierAccord = apres.split(" – ")[0];
-  expect(items["abba-pere"].content, `le nouvel accord ${premierAccord} est écrit`).toContain(`[${premierAccord}]`);
+  expect(String(dernier.data.content), `le nouvel accord ${premierAccord} est écrit`).toContain(`[${premierAccord}]`);
   expect(
     db.writes.filter((w) => w.path === SETLIST_DOC || w.path.startsWith(`${SETLIST_DOC}/history`)),
     "la setlist de la présidence ne bouge pas",

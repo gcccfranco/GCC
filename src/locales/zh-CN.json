@@ -2525,7 +2525,24 @@
     "conflit": "Le chant a changé ici",
     "garderLaMienne": "Garder la mienne",
     "prendreCelleDuChant": "Prendre celle du chant",
-    "erreurEnregistrement": "Échec de l'enregistrement — réessaie."
+    "erreurEnregistrement": "Échec de l'enregistrement — réessaie.",
+    "crayon": {
+      "bouton": "Crayon",
+      "aide": "Crayon : touche un accord ou un mot pour le retoucher.",
+      "barre": "Outils du Crayon",
+      "accord": "Accord",
+      "paroles": "Paroles",
+      "ordre": "Ordre",
+      "termine": "Terminé",
+      "choixTitre": "Enregistrer la retouche",
+      "pourMoi": "Pour moi",
+      "pourMoiAide": "Seul toi la vois, dans tous tes cultes.",
+      "pourLeCulte": "Pour tout le culte du {{date}}",
+      "pourLeCulteAide": "Tout le monde la lit.",
+      "enregistrer": "Enregistrer",
+      "passerAuCulte": "Passer au culte",
+      "pasDansLeCulte": "Cette ligne n'existe pas dans la version du culte : enregistre-la pour toi."
+    }
   },
   "moi": {
     "title": "我",

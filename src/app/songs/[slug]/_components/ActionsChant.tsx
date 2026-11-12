@@ -1,19 +1,22 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { MoreHorizontal, Play, X, Sparkles, FileText } from "lucide-react";
+import { MoreHorizontal, Play, X, Sparkles, PenLine, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { TOUCHER_44 } from "@/lib/toucher44";
 
-/** Les actions de la barre du chant (Q2, Q5) : Vidéo, PDF, Idées d'harmonie, ⋯. Rendues deux fois
+/** Les actions de la barre du chant (Q2, Q5) : Vidéo, PDF, Crayon, Idées d'harmonie, ⋯. Rendues deux fois
  *  (au bout de la rangée, et sur la seconde rangée du téléphone) : une seule est visible. */
-export function ActionsChant({ variante, youtubeId, showVideo, setShowVideo, downloading, setShowPdfChoice, accesHarmoniePeut, setShowIdees, menuChant }: {
+export function ActionsChant({ variante, youtubeId, showVideo, setShowVideo, downloading, setShowPdfChoice, crayon, setCrayon, accesHarmoniePeut, setShowIdees, menuChant }: {
   variante: "rangee" | "tel";
   youtubeId: string | null;
   showVideo: boolean;
   setShowVideo: Dispatch<SetStateAction<boolean>>;
   downloading: boolean;
   setShowPdfChoice: (v: boolean) => void;
+  /** Crayon : l'état du bouton ; absent = personne de connecté, pas de bouton. */
+  crayon?: boolean;
+  setCrayon: Dispatch<SetStateAction<boolean>>;
   accesHarmoniePeut: boolean;
   setShowIdees: (v: boolean) => void;
   menuChant: ReactNode;
@@ -51,6 +54,19 @@ export function ActionsChant({ variante, youtubeId, showVideo, setShowVideo, dow
         <FileText className="h-4 w-4" />
         <span className={libelle}>{t("songs.detail.downloadPdf") || "PDF"}</span>
       </Button>
+      {crayon !== undefined && (
+        <Button
+          variant="secondary"
+          aria-label={t("maPartition.crayon.bouton")}
+          title={t("maPartition.crayon.bouton")}
+          aria-pressed={crayon}
+          onClick={() => setCrayon((v) => !v)}
+          className={`${classe} ${crayon ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
+        >
+          <PenLine className="h-4 w-4" />
+          <span className={libelle}>{t("maPartition.crayon.bouton")}</span>
+        </Button>
+      )}
       {accesHarmoniePeut && (
         <Button
           variant="secondary"
