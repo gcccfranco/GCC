@@ -1,6 +1,6 @@
 # Entrée des musiciens : le pupitre (demande AP, chantier 2)
 
-**Statut : planche publiée (12/11/2026), questions posées à Timothée. Pas de spec de code, aucun code.** La spec s'écrit après les réponses de
+**Statut : planche acceptée par Timothée (12/11/2026, « ok pour tout ») ; spec à écrire. Pas de spec de code, aucun code.** La spec s'écrit après les réponses de
 Timothée aux questions de la planche, le code après un go (CLAUDE.md, « Design », « Go », « Coder »).
 Planche : `docs/planches/planche-pupitre-musicien.html` (artefact privé : https://claude.ai/artifact/N8qza1nQJVjzPtdFf9ek7H). Cadrage d'ensemble : `docs/spec-pupitre-musicien.md`
 (§ Chantiers proposés, ligne 2).
@@ -81,6 +81,42 @@ entrée ; place de 字母/数字 et des idées d'harmonie ; couleur par défaut 
 Fait vérifié pour la spec : l'export PDF est produit dans le navigateur (`SetlistDetailClient.tsx:780`-`830`, import
 dynamique de `@/components/pdf/*`), sans route API : le retirer aux musiciens masque le bouton, sans protection serveur.
 
+## Décisions de Timothée (12/11/2026, « ok pour tout »)
+
+Piste **A « Le pupitre »** et les quatorze propositions de la planche (version republiée le 12/11). Ce n'est pas un go
+de code : la spec vient d'abord, puis « go pour la tranche N ? ».
+
+1. **PDF d'une setlist** : réservé à qui peut la modifier (`canEditSetlist` : créateur, équipe, admins) et à la
+   présidence du service ; un musicien qui crée la setlist de son groupe le garde. Masquage seulement (PDF produit dans
+   le navigateur, aucune route API).
+2. **PDF d'un chant** : admins et membres de l'équipe d'au moins une setlist à venir ; le bouton disparaît sinon.
+3. **À la place du PDF** : rien à toucher ; les setlists de ses services gardées hors-ligne d'office, « Prêt hors-ligne »
+   (已可离线使用) dans le bloc du pupitre.
+4. **Onglet Setlists** : bloc « Mon prochain service » en tête pour toute personne inscrite au planning (« Jouer »
+   dedans, chants en rangées au téléphone, en vignettes dès la tablette) ; l'onglet actuel dessous, entier ; « + »
+   toujours visible pour qui peut créer ; aucun bloc sans service planifié.
+5. **Trois affichages renommés** : « Tout le chant » (完整顺序), « Chaque section une fois » (每段一次), « Plan du
+   chant » (只看结构).
+6. **Disposition déplacée** d'« Options d'affichage » vers « Je joue » (révise la décision 10 d'AO) ; Options garde
+   « Sur la page », « Couleur des accords », texte, thème, métronome, couleur des icônes.
+7. **Le rôle règle aussi l'ordre et la disposition** (Batteur : Plan du chant ; Pianiste, Guitariste : Tout le chant et
+   Classique ; Présidence, Choriste : paroles seules) ; un choix manuel gagne jusqu'au prochain changement de rôle.
+   Mémoire : rôle et ordre par compte, disposition par type d'appareil.
+8. **Première entrée** : si le planning donne le rôle, une ligne « Réglé pour piano d'après le planning. Changer »
+   (sans animation) au lieu du popover ouvert (révise FS-C et RP) ; le popover ne s'ouvre seul que si le planning ne
+   dit rien.
+9. **Lettres | Chiffres** (字母 | 数字) dans « Outils », sur la ligne de la tonalité (place de la bascule du lot H5).
+10. **Rond « Idées »** dans « Sur la page », après « Paroles », éteint par défaut (point d'entrée du lot H6).
+11. **« ‹ Toutes mes setlists »** en tête du menu Setlist : services à venir, les miens d'abord ; ouvre la setlist sur
+    son premier chant, sans animation ; hors-ligne, seulement les setlists gardées sur l'appareil.
+12. **« Jouer »** en encre sur l'onglet ; couleur du service seulement sur l'écran d'un culte (règle 5C1).
+13. **Vignette 简谱 en sombre** : scan inversé et atténué, à regarder sur appareil avant la tranche.
+14. **Libellés chinois** nouveaux à faire relire par un locuteur.
+
+Également acquis (non questionnés, dits sur la planche) : « Couleur des accords » reste dans Options ; sur ordinateur,
+le bloc du pupitre occupe le volet de droite (l'aperçu actuel). Non dessinés, à traiter dans la spec : Outils au
+téléphone, tablette couchée hors piste A, compte sans service, « Toutes mes setlists » hors-ligne.
+
 ## Avancement
 
 - 11/11/2026 (nuit) : code relu, huit captures prises, `/planche` lancé (sujet `pupitre-musicien`).
@@ -104,3 +140,5 @@ dynamique de `@/components/pdf/*`), sans route API : le retirer aux musiciens ma
   « Crayon » ; « ‹ Toutes mes setlists » dans le menu Setlist ; pistes B et C réduites à l'onglet. Mesures : seul l'onglet
   diffère (A 6/6 chants et un service de la liste visibles à 390 px, B 6/6, C 5/6). Quatorze questions posées.
   **En attente des réponses de Timothée.**
+- 12/11/2026 : Timothée répond « ok pour tout » : piste A et les quatorze propositions (§ Décisions). Prochaine
+  étape : la spec (tranches), puis un go par tranche.
