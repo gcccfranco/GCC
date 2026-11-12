@@ -98,3 +98,9 @@ dynamique de `@/components/pdf/*`), sans route API : le retirer aux musiciens ma
   pastille qui remplaçait « Je joue » et la question sur la couleur des icônes sont retirées ; la commande unique devient
   le popover « Je joue » de FS-C enrichi de la disposition ; Lettres | Chiffres dans Outils ; rond « Idées » dans
   « Sur la page » ; « Toutes mes setlists » en tête du menu Setlist. Reprise de la planche lancée (un maquettiste).
+- 12/11/2026 : planche reprise et republiée (même artefact). Pupitre en tête de l'onglet pour qui sert, + toujours
+  visible, cadres de création d'une setlist ; barre FS commune, « Je joue » = rôles + ordre + disposition ; Lettres |
+  Chiffres dans Outils ; rond « Idées » après « Paroles » (FS-F) ; « Couleur des accords » (CA) dans Options ;
+  « Crayon » ; « ‹ Toutes mes setlists » dans le menu Setlist ; pistes B et C réduites à l'onglet. Mesures : seul l'onglet
+  diffère (A 6/6 chants et un service de la liste visibles à 390 px, B 6/6, C 5/6). Quatorze questions posées.
+  **En attente des réponses de Timothée.**
