@@ -94,7 +94,10 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      dans la file donne-leur le go mais ils se lancent chacun leur tour »)**. Un lot Harmonie à la fois ; la session qui
      finit un lot lance le suivant et le raye ici. H5 lancé (`session_01UMdfucJo6tgJLNfc6qtSps`, 12/11). H8 (mode louange) en
      dernier, et seulement quand AN et le pupitre ont fini dans `PerformanceMode.tsx`. `docs/spec-harmonie-accords.md`,
-     tableau « Lots ». MP-6 n'est pas dans la file : ses trois questions restent ouvertes.
+     tableau « Lots ». MP-6 : voir la ligne 5.
+  5. **Ma partition MP-6** (reprise de l'existant) : **go de Timothée (12/11, 17 h 10 UTC)**, questions closes
+     (`docs/spec-ma-partition.md`, § Questions ouvertes, « Réponses de Timothée », et § Tranches, MP-6). À lancer par la
+     session qui finit **AN-5**, jamais pendant qu'une autre session modifie `PerformanceMode.tsx` ou les annotations.
   Consigne de lancement (`create_session`) : `source_url` https://github.com/gcccfranco/GCC, `source_revision` et
   `outcome_branch` `claude/corrections-design`, modèle `claude-opus-5-5` ; une tranche, la section de spec à lire,
   agents nommés (`executant`, `testeur`, `relecteur` ; `regard` puis `critique-design` sur captures signalées si

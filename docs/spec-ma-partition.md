@@ -216,7 +216,7 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
    setlist jusqu'à leur retrait, sans migration.
 2. « Ok » : proposition retenue (lecture seule dans la setlist, « Les recopier dans ma partition », retrait après un mois).
 3. « Oui » : l'interrupteur « Partager ma version » disparaît sans remplaçant.
-MP-6 n'a pas encore son go.
+**Go de Timothée pour MP-6 (12/11/2026, « Oui go pour MP6 »)** : inscrit dans la file, après AN.
 
 ## Avancement
 
