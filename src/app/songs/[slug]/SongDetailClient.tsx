@@ -512,6 +512,9 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     ajuster();
     const ro = new ResizeObserver(ajuster);
     ro.observe(el);
+    // Les enfants aussi : un libellé traduit après coup (中文) ou une police arrivée tard élargit la rangée sans
+    // changer sa taille ; la mesure restait celle d'avant et la barre débordait de la carte (H7-1, 1 280 px).
+    for (const c of el.children) ro.observe(c);
     document.fonts?.ready.then(ajuster);
     return () => ro.disconnect();
   }, [isZh, youtubeId, accesHarmonie.peut, customize.currentKey, setlistDOrigine, deuxVolets]);
