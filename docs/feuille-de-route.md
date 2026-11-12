@@ -58,8 +58,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   `session_01UMdfubYiUCKu2qWDJ3Sp6S`, sur `claude/friendly-cerf-cy7hio`, tests avant push ; JP-C puis JP-D ensuite
   par « Repo update et relance ») ; Ma partition MP-3 à vérifier (`session_01UMdfuaeUi8Rj8DRw1ZtGP3`, lance MP-4 puis
   MP-5) ; exemples T2 (`session_01UMdfudEbsAbMKJ3gzmCuJo`, lance T3 à T7) ; Harmonie H2 (`session_01UMdfuc5BHmNuwdhdc1YadF`,
-  go de Timothée, ne lance pas H3). En attente : comptage T3 (session neuve, à la prochaine place ; « Couleur des
-  accords » n'a pas de clé de comptage) ; pupitre PU-1 à PU-6 (spec écrite, pas de go, questions 1, 2, 4 à 7
+  go de Timothée, ne lance pas H3). **10 h 15** : H2 fini (`622f778`, étiquettes « (proposé) » à valider par Timothée) ;
+  comptage T3 lancé à sa place (`session_01UMdfubRJjSZsD9FwQ3owSa`, clé `cmd.louange.couleurAccords` ajoutée). Pupitre :
+  question 2 tranchée par le pilote (proposition). En attente : pupitre PU-1 à PU-6 (spec écrite, pas de go, questions 1, 2, 4 à 7
   ouvertes) ; H3 et suivants (un go par lot) ; AN après MP-5 (suspension non confirmée par Timothée) ; trois
   questions avant MP-6. À Timothée : publier `firestore.rules` (Ma partition MP-1 ; `usage/{mois}` du comptage).
   **Planche « direction du site » du 11/11 : écartée** par Timothée le 12/11 (« j'aime pas ») ; artefact supprimé,
