@@ -724,6 +724,14 @@
       "done": "Vue {{role}}",
       "undo": "Annuler",
       "dismiss": "Fermer la proposition",
+      "regle": {
+        "pianiste": "Réglé pour piano d'après le planning.",
+        "guitariste": "Réglé pour guitare d'après le planning.",
+        "batteur": "Réglé pour batterie d'après le planning.",
+        "choriste": "Réglé pour le chant d'après le planning.",
+        "presidence": "Réglé pour la présidence d'après le planning."
+      },
+      "changer": "Changer",
       "instrument": {
         "pianiste": "Piano",
         "guitariste": "Guitare",

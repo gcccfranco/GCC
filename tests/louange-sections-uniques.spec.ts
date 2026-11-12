@@ -288,9 +288,9 @@ test.describe("Je joue : rôle et Ordre des sections", () => {
 
     await affichage.getByRole("radio", { name: "Chaque section une fois" }).click();
     await expect(affichage.getByRole("radio", { name: "Chaque section une fois" })).toHaveAttribute("aria-checked", "true");
-    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("unique");
-    // Toucher Affichage désélectionne le rôle, comme « Accords ».
-    await expect(feuille.getByRole("button", { name: "Pianiste" })).toHaveAttribute("aria-pressed", "false");
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien"))).toBe("unique");
+    // Toucher Affichage garde le rôle.
+    await expect(feuille.getByRole("button", { name: "Pianiste" })).toHaveAttribute("aria-pressed", "true");
 
     await quitter(page);
     await ouvrirPartitions(page);
@@ -304,23 +304,23 @@ test.describe("Je joue : rôle et Ordre des sections", () => {
     await expect(retour.getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
   });
 
-  test("Batteur → Structure seule écrite ; « Ordre joué » ensuite : plus de rôle, les paroles reviennent (FR)", async ({ page }) => {
+  test("Batteur → Structure seule écrite ; « Ordre joué » ensuite : le rôle reste, les paroles reviennent (FR)", async ({ page }) => {
     await ouvrirMode(page, [ABBA]);
     const feuille = await jejoue(page);
     await feuille.getByRole("button", { name: "Batteur" }).click();
     await expect(feuille.getByRole("button", { name: "Batteur" })).toHaveAttribute("aria-pressed", "true");
     const affichage = feuille.getByRole("radiogroup", { name: "Ordre des sections" });
     await expect(affichage.getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
-    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("structure");
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien"))).toBe("structure");
     await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
 
     await affichage.getByRole("radio", { name: "Tout le chant" }).click();
     await expect(affichage.getByRole("radio", { name: "Tout le chant" })).toHaveAttribute("aria-checked", "true");
-    // Plus aucun rôle pressé (les boutons ronds « Sur la page » de FS-B ont aussi un aria-pressed : on ne compte que les rôles).
+    // Le rôle reste coché (les boutons ronds « Sur la page » de FS-B ont aussi un aria-pressed : on ne compte que les rôles).
     for (const role of ["Pianiste", "Guitariste", "Présidence", "Choriste", "Batteur"]) {
-      await expect(feuille.getByRole("button", { name: new RegExp(`^${role}`) })).toHaveAttribute("aria-pressed", "false");
+      await expect(feuille.getByRole("button", { name: new RegExp(`^${role}`) })).toHaveAttribute("aria-pressed", role === "Batteur" ? "true" : "false");
     }
-    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("played");
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien"))).toBe("played");
     await page.keyboard.press("Escape");
     await expect(onStage(page, "[data-section] [data-copy-line]").first()).toBeVisible();
   });
@@ -386,23 +386,23 @@ test.describe("Réglages : corrections de la relecture", () => {
     }
   });
 
-  test("rôle Batteur mémorisé, Sections uniques choisies dans la setlist : le mode s'ouvre en Sections uniques, sans rôle (C2) (FR)", async ({ page }) => {
+  test("rôle Batteur mémorisé, Sections uniques choisies dans la setlist : le mode s'ouvre en Sections uniques, le rôle reste (C2) (FR)", async ({ page }) => {
     await ouvrirMode(page, [ABBA], { role: "batteur", affichage: "unique" });
     await expect(onStage(page, "[data-copy-line]").first()).toBeVisible();
     const feuille = await jejoue(page);
     await expect(feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Chaque section une fois" })).toHaveAttribute("aria-checked", "true");
-    await expect(feuille.getByRole("button", { name: "Batteur" })).toHaveAttribute("aria-pressed", "false");
+    await expect(feuille.getByRole("button", { name: "Batteur" })).toHaveAttribute("aria-pressed", "true");
     // Rien n'est écrit à l'ouverture : le rôle mémorisé reste celui du compte.
     expect(await page.evaluate((u) => localStorage.getItem(`perf-role-preset-${u}`), MUSICIEN.uid)).toBe("batteur");
   });
 
-  test("rôle Pianiste mémorisé, Structure seule choisie dans la setlist : le mode s'ouvre en Structure seule, sans rôle (FR)", async ({ page }) => {
+  test("rôle Pianiste mémorisé, Structure seule choisie dans la setlist : le mode s'ouvre en Structure seule, le rôle reste (FR)", async ({ page }) => {
     await ouvrirMode(page, [ABBA], { role: "pianiste", affichage: "structure" });
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
     const feuille = await jejoue(page);
     await expect(feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
-    await expect(feuille.getByRole("button", { name: "Pianiste" }), "le rôle cède à l'Affichage, comme le Batteur (C2)").toHaveAttribute("aria-pressed", "false");
+    await expect(feuille.getByRole("button", { name: "Pianiste" }), "l'Affichage ne retire plus le rôle").toHaveAttribute("aria-pressed", "true");
     expect(await page.evaluate((u) => localStorage.getItem(`perf-role-preset-${u}`), MUSICIEN.uid)).toBe("pianiste");
   });
 

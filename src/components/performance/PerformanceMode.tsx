@@ -357,14 +357,15 @@ const APERCU_PART_MAX = 0.25;
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-// Presets de rôle : raccourcis vers une combinaison accords/paroles. Rôle retenu
-// par compte (roleCompte.ts) ; un réglage manuel des toggles désélectionne le preset.
-const ROLE_PRESETS: Record<RolePreset, { chords: boolean; hideLyrics: boolean }> = {
-  pianiste: { chords: true, hideLyrics: false },
-  guitariste: { chords: true, hideLyrics: false },
-  presidence: { chords: false, hideLyrics: false },
-  choriste: { chords: false, hideLyrics: false },
-  batteur: { chords: false, hideLyrics: true },
+// Presets de rôle : raccourcis vers une combinaison accords/paroles, plus l'ordre et la disposition posés au
+// choix du rôle (null = rien d'imposé). Rôle retenu par compte (roleCompte.ts) ; seuls les ronds Accords et
+// Paroles le désélectionnent : changer l'ordre ou la disposition le garde.
+const ROLE_PRESETS: Record<RolePreset, { chords: boolean; hideLyrics: boolean; ordre: PartitionLayout | null; disposition: Disposition | null }> = {
+  pianiste: { chords: true, hideLyrics: false, ordre: "played", disposition: "classique" },
+  guitariste: { chords: true, hideLyrics: false, ordre: "played", disposition: "classique" },
+  presidence: { chords: false, hideLyrics: false, ordre: null, disposition: null },
+  choriste: { chords: false, hideLyrics: false, ordre: null, disposition: null },
+  batteur: { chords: false, hideLyrics: true, ordre: "structure", disposition: null },
 };
 
 interface PerformanceModeProps {
@@ -435,19 +436,17 @@ export function PerformanceMode({
   const [storedRole] = useState<RolePreset | null>(() => getRole(uid));
   // Rôle contredit par les accords choisis juste avant sur la page setlist :
   // désélectionné, et l'affichage reprend celui de la page (paroles comprises).
-  // Même chose quand l'Affichage de l'appareil contredit le rôle (D15, dans les
-  // deux sens) : le Batteur hors Structure seule, un autre rôle en Structure seule.
+  // L'ordre n'y entre plus : un Batteur qui a choisi un autre ordre garde son rôle (accords et paroles affichés).
   const roleOverridden =
-    storedRole !== null &&
-    ((initialShowChords !== undefined && ROLE_PRESETS[storedRole].chords !== initialShowChords) ||
-      (storedRole === "batteur") !== (affichage === "structure"));
+    storedRole !== null && initialShowChords !== undefined && ROLE_PRESETS[storedRole].chords !== initialShowChords;
+  const batteurHorsPlan = storedRole === "batteur" && !roleOverridden && affichage !== "structure";
   const [rolePreset, setRolePreset] = useState<RolePreset | null>(roleOverridden ? null : storedRole);
   const [showChords, setShowChords] = useState(
-    initialShowChords ?? (storedRole && !roleOverridden ? ROLE_PRESETS[storedRole].chords : true),
+    initialShowChords ?? (batteurHorsPlan ? true : storedRole && !roleOverridden ? ROLE_PRESETS[storedRole].chords : true),
   );
   const [showTransitions, setShowTransitions] = useState(true);
   const [hideLyrics, setHideLyrics] = useState(() => {
-    if (roleOverridden) return false;
+    if (roleOverridden || batteurHorsPlan) return false;
     if (rolePreset) return ROLE_PRESETS[rolePreset].hideLyrics;
     try {
       return localStorage.getItem("perf-hide-lyrics") === "1";
@@ -591,30 +590,41 @@ export function PerformanceMode({
     setShowChords(p.chords);
     toggleHideLyrics(p.hideLyrics);
     setRolePreset(id);
-    // Le Batteur pose Structure seule ; un autre rôle ramène l'ordre joué
-    // depuis Structure seule seulement (O5) : Sections uniques reste.
-    if (id === "batteur") onAffichageChange("structure");
+    // Ordre et disposition du rôle s'il en impose ; sinon (Présidence, Choriste) ils gardent les leurs,
+    // sauf Structure seule, qui cache les paroles que ces rôles montrent (O5).
+    if (p.ordre) onAffichageChange(p.ordre);
     else if (affichage === "structure") onAffichageChange("played");
+    if (p.disposition) changeDisposition(p.disposition);
     setRole(uid, id);
-  }, [toggleHideLyrics, affichage, onAffichageChange, uid]);
+  }, [toggleHideLyrics, affichage, onAffichageChange, changeDisposition, uid]);
 
   // Lot RP : le rôle du planning à l'ouverture du mode, figé : un planning arrivé après n'ajoute pas l'étiquette de Je joue.
   const [rolePlanningOuverture] = useState<RolePreset | null>(rolePlanning);
   // Pastille « Planning : … » : proposée, puis acceptée (« Annuler » pendant 6 s), puis finie (croix, tour de page, délai).
   const [etatPastille, setEtatPastille] = useState<"propose" | "accepte" | "fini">("propose");
-  const [avantPlanning, setAvantPlanning] = useState<{ role: RolePreset | null; affichage: PartitionLayout } | null>(null);
+  const [avantPlanning, setAvantPlanning] = useState<{ role: RolePreset | null; affichage: PartitionLayout; disposition: Disposition } | null>(null);
   const [pageDePastille, setPageDePastille] = useState<number | null>(null);
   const pastilleProposee =
     // Comparée au rôle retenu à l'ouverture (figé) : un choix fait ensuite dans Je joue ne la fait jamais surgir.
     etatPastille === "propose" && rolePlanning !== null && storedRole !== null && rolePreset === storedRole && !roleOverridden &&
     initialShowChords === undefined && rolePlanning !== storedRole && !horsLigne;
+  // Première entrée : la question du rôle n'a jamais reçu de réponse (un « Aucun » en est une) et le planning
+  // désigne un rôle : il s'applique à l'ouverture, avec une ligne « Réglé pour… / Changer » au lieu du popover.
+  // Figé à l'ouverture, comme le rôle du planning ci-dessus.
+  const [premiereEntree] = useState<RolePreset | null>(() =>
+    !roleDemande(uid) && initialShowChords === undefined && !horsLigne ? rolePlanning : null);
+  const [ligneEntree, setLigneEntree] = useState(premiereEntree !== null);
+  const ligneVisible = ligneEntree && !annotateMode && popoverOuvert === null;
   // Sous un menu ouvert, la pastille s'efface : un toucher ne doit pas à la fois fermer le menu et choisir un rôle.
   const pastilleVisible = (pastilleProposee || etatPastille === "accepte") && !annotateMode && popoverOuvert === null;
   useEffect(() => {
-    // Le premier tour de page depuis son apparition la clôt, même fait pendant qu'un menu ou l'annotation la cache.
-    if (pageDePastille === null) { if (pastilleVisible) setPageDePastille(currentPage); return; }
-    if (currentPage !== pageDePastille && etatPastille !== "fini") setEtatPastille("fini");
-  }, [pastilleVisible, currentPage, pageDePastille, etatPastille]);
+    // Le premier tour de page depuis son apparition la clôt (la ligne de première entrée aussi), même fait pendant qu'un menu ou l'annotation la cache.
+    if (pageDePastille === null) { if (pastilleVisible || ligneVisible) setPageDePastille(currentPage); return; }
+    if (currentPage !== pageDePastille) {
+      if (etatPastille !== "fini") setEtatPastille("fini");
+      if (ligneEntree) setLigneEntree(false);
+    }
+  }, [pastilleVisible, ligneVisible, ligneEntree, currentPage, pageDePastille, etatPastille]);
   useEffect(() => {
     if (etatPastille !== "accepte") return;
     const minuteur = setTimeout(() => setEtatPastille("fini"), 6000);
@@ -622,7 +632,7 @@ export function PerformanceMode({
   }, [etatPastille]);
   const accepterRolePlanning = () => {
     if (!rolePlanning) return;
-    setAvantPlanning({ role: rolePreset, affichage });
+    setAvantPlanning({ role: rolePreset, affichage, disposition });
     applyRolePreset(rolePlanning);
     compterRole(rolePlanning);
     setEtatPastille("accepte");
@@ -632,6 +642,8 @@ export function PerformanceMode({
       if (avantPlanning.role) applyRolePreset(avantPlanning.role);
       else clearRolePreset();
       if (avantPlanning.affichage !== affichage) onAffichageChange(avantPlanning.affichage);
+      // Sans comparer : rappeler le rôle d'avant vient de reposer sa disposition.
+      changeDisposition(avantPlanning.disposition);
     }
     setEtatPastille("fini");
   };
@@ -642,6 +654,12 @@ export function PerformanceMode({
 
   // L'ouverture automatique ancre le popover sous son icône : la barre de titre doit être visible.
   useEffect(() => {
+    if (premiereEntree) {
+      applyRolePreset(premiereEntree);
+      compterRole(premiereEntree);
+      setAccueilRole(false);
+      return;
+    }
     if (!accueilRole) return;
     setShowChrome(true);
     setPopoverOuvert("jejoue");
@@ -673,18 +691,16 @@ export function PerformanceMode({
   const lyricsHidden = hideLyrics || structureMode;
   const chordsShown = showChords && !structureMode;
 
-  // Toucher Affichage désélectionne le rôle, comme « Accords ». Quitter la
-  // vue ossature rend paroles et accords : sinon le chemin d'O7 la
-  // ramènerait aussitôt.
+  // Toucher Affichage garde le rôle. Quitter la vue ossature rend paroles et
+  // accords : sinon le chemin d'O7 la ramènerait aussitôt.
   const changeAffichage = useCallback((v: PartitionLayout) => {
     if (v !== affichageVu) compter(`cmd.louange.affichage.${v}`);
     if (v !== "structure" && structureMode) {
       toggleHideLyrics(false);
       setShowChords(true);
     }
-    clearRolePreset();
     onAffichageChange(v);
-  }, [structureMode, toggleHideLyrics, clearRolePreset, onAffichageChange, affichageVu]);
+  }, [structureMode, toggleHideLyrics, onAffichageChange, affichageVu]);
   // « Accords » et « Masquer les paroles » portent sur le corps : les toucher
   // depuis Structure seule ramène l'ordre joué, comme le faisait « Accords »
   // pour le batteur avant l'Affichage.
@@ -1956,6 +1972,31 @@ export function PerformanceMode({
           );
         })()}
       </div>
+
+      {ligneVisible && premiereEntree && (
+        <div
+          data-premiere-entree
+          role="status"
+          className="fixed left-1/2 flex w-max max-w-[min(420px,calc(100vw-16px))] -translate-x-1/2 items-center gap-1 rounded-2xl border border-border bg-popover/90 py-1 pl-4 pr-1 text-foreground shadow-[0_8px_28px_rgba(28,28,30,.22)] backdrop-blur-xl dark:shadow-[0_8px_28px_rgba(0,0,0,.5)] max-[430px]:w-[calc(100vw-48px)] max-[430px]:bg-popover"
+          style={{ "--couleur-icones": couleurMenus, zIndex: 25, top: showChrome ? `${barres.haut + 4}px` : "calc(var(--sat, 0px) + 4px)" } as React.CSSProperties}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onPointerCancel={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span className="min-w-0 flex-1 text-[15px] leading-snug text-foreground">
+            {t(`performance.planning.regle.${premiereEntree}`)}
+          </span>
+          <button
+            type="button"
+            data-premiere-entree-changer
+            onClick={() => { setLigneEntree(false); setShowChrome(true); setPopoverOuvert("jejoue"); }}
+            className="min-h-11 shrink-0 rounded-lg px-3 text-[15px] font-semibold text-[color:var(--couleur-icones)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t("performance.planning.changer")}
+          </button>
+        </div>
+      )}
 
       {pastilleVisible && rolePlanning && (
         <div

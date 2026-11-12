@@ -40,7 +40,7 @@ export function usePreferencesAffichage(uid: string | null, authLoading: boolean
   };
   const changeLayout = (v: PartitionLayout) => {
     setLayout(v);
-    setPartitionLayoutPref(v);
+    setPartitionLayoutPref(uid, v);
   };
   const changeJianpuPref = (v: JianpuPref) => {
     setJianpuPrefState(v);

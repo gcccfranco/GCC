@@ -719,6 +719,14 @@
       "done": "{{role}}视图",
       "undo": "撤销",
       "dismiss": "关闭建议",
+      "regle": {
+        "pianiste": "按排班已设为钢琴。",
+        "guitariste": "按排班已设为吉他。",
+        "batteur": "按排班已设为鼓。",
+        "choriste": "按排班已设为和声。",
+        "presidence": "按排班已设为领会。"
+      },
+      "changer": "更改",
       "instrument": {
         "pianiste": "钢琴",
         "guitariste": "吉他",

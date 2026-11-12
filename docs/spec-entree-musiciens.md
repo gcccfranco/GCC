@@ -490,3 +490,22 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   ciblée, 20/20 en 1,3 min. `tsc` propre, lint sans erreur. **Leçon de durée** : 10 des 12 specs n'avaient qu'un
   sélecteur changé ; PU-5 et PU-6 ne lancent que les tests touchés (`--grep`), plus les specs entières qui changent
   vraiment. Suite : PU-5 lancée.
+- 12/11/2026 : **PU-5 faite** (le rôle règle les trois ; première entrée). `ROLE_PRESETS` gagne `ordre` et
+  `disposition` : Pianiste, Guitariste → Tout le chant, Classique ; Batteur → Plan du chant (disposition intacte) ;
+  Présidence, Choriste → rien d'imposé (Q3), sauf retour à Tout le chant depuis Plan du chant (il cache les paroles
+  que ces rôles montrent). Changer l'ordre ou la disposition ne retire plus le rôle ; les ronds Accords et Paroles le
+  retirent encore (Q2) ; `roleOverridden` ne regarde plus l'ordre ; un Batteur retenu dans un autre ordre rouvre
+  accords et paroles affichés. « Annuler » de la pastille RP rétablit aussi la disposition. Ordre par compte :
+  `partition-layout-<uid>`, la clé d'appareil relue tant que la marque `perf-role-migre` est nulle ou celle du compte
+  (`roleCompte.ts` et `dispositionPref.ts` inchangés). Première entrée : ligne « Réglé pour piano d'après le planning.
+  Changer » (按排班已设为钢琴。更改) à la place de la pastille, sans animation, partie au premier tour de page,
+  « Changer » ouvre « Je joue » ; largeur ajustée au texte (420 px au plus, une ligne dès la tablette).
+  **Décision déléguée (session PU-5, 12/11)** : un « Aucun » déjà choisi est une réponse : le planning ne l'écrase pas
+  (la ligne ne vient que si la question du rôle n'a jamais reçu de réponse). Pas de `regard` ni de `critique-design` :
+  la ligne reprend la surface de la pastille RP ; captures regardées à la main sur les cinq projets, FR et 中文
+  (`test-results/rp2/premiere-entree-*`). Nouvelle `tests/louange-role-regle.spec.ts` (noms inventés) ; quatre tests
+  de première entrée et deux de captures dans `louange-role-planning` ; assertions de clé et de rôle suivies dans
+  `coup-d-oeil` et `louange-sections-uniques`. **Tests** : `louange-role-regle`, `louange-role-planning`,
+  `louange-je-joue` entières, voisines par `--grep` : 297 passés, 3 échecs (e-mail fictif à « ë » refusé par le
+  formulaire, corrigé) en 19 min ; tours après correction : 3/3 puis 25/25 en 2 min. `tsc` propre, lint sans erreur,
+  `npm run validate` propre. Suite : PU-6 lancée.

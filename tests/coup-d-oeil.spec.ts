@@ -178,7 +178,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await expect(song1Sections(page).nth(1)).toHaveAttribute("data-section-uids", "chorus-3-1");
     await expect(song1Sections(page).nth(2)).toHaveAttribute("data-section-uids", "chorus-3-2");
     await expect(page.locator('[data-outline-item="1"] [data-section] [data-nuance]')).toHaveText(["f", "f"]);
-    expect(await page.evaluate(() => localStorage.getItem("partition-layout")), "le défaut n'est pas un choix : rien n'est retenu").toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien")), "le défaut n'est pas un choix : rien n'est retenu").toBeNull();
   });
 
   test("« Sections uniques » : le refrain repris n'est imprimé qu'une fois, sa nuance dans le bandeau ; le choix est retenu sur l'appareil", async ({ page }) => {
@@ -188,7 +188,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await expect(song1Sections(page).nth(1)).toHaveAttribute("data-section-uids", "chorus-3-1 chorus-3-2");
     await expect(page.locator('[data-outline-item="1"] [data-section] [data-nuance]')).toHaveCount(0);
     await expect(page.getByRole("list", { name: "Structure" }).first().locator("[data-nuance]")).toHaveText("f");
-    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("unique");
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien"))).toBe("unique");
   });
 
   test("le choix retenu s'applique à l'ouverture", async ({ page }) => {
@@ -221,7 +221,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
     const affichage = jejoue.getByRole("radiogroup", { name: "Ordre des sections" });
     await expect(affichage.getByRole("radio", { name: "Tout le chant" })).toHaveAttribute("aria-checked", "true");
     await affichage.getByRole("radio", { name: "Chaque section une fois" }).click();
-    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("unique");
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien"))).toBe("unique");
 
     // Quitter le mode louange (Échap referme d'abord la feuille).
     await page.keyboard.press("Escape");

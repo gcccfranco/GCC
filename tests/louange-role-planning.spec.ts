@@ -120,36 +120,82 @@ async function ouvrirMode(page: Page, o: Ouverture = {}) {
   return suivi;
 }
 
-// ─── Étiquette de Je joue (sans rôle retenu) ───────────────────────────────────
+// ─── Première entrée : le rôle du planning s'applique, une ligne le dit ───────────
 
-test("sans rôle retenu : Je joue s'ouvre seul, Batteur porte « d'après le planning », rien n'est coché ni changé ; un toucher sur Batteur le choisit", async ({ page }) => {
+const ligneEntree = (page: Page) => page.locator("[data-premiere-entree]");
+
+test("première entrée, planning Piano, aucun rôle retenu : pas de popover, la ligne « Réglé pour piano… », Pianiste appliqué ; « Changer » ouvre Je joue, Pianiste « d'après le planning »", async ({ page }) => {
   await preparer(page);
-  await ouvrirMode(page, { feuilles: culte({ batterie: NOM }) });
+  await ouvrirMode(page, { feuilles: culte({ piano: NOM }) });
+  const ligne = ligneEntree(page);
+  await expect(ligne).toBeVisible();
+  await expect(ligne).toHaveAttribute("role", "status");
+  await expect(ligne).toContainText("Réglé pour piano d'après le planning.");
+  await expect(dialogueJeJoue(page), "le popover ne s'ouvre pas seul").toHaveCount(0);
+  await expect(pastille(page)).toHaveCount(0);
+  await expect.poll(() => lire(page, `perf-role-preset-${UID}`), "le rôle du planning est retenu").toBe("pianiste");
+  await expect.poll(() => lire(page, `partition-layout-${UID}`)).toBe("played");
+  expect(await lire(page, "disposition")).toBe("classique");
+
+  const ecran = page.viewportSize()!;
+  const boite = (await ligne.boundingBox())!;
+  expect(Math.abs(boite.x + boite.width / 2 - ecran.width / 2), "centrée").toBeLessThanOrEqual(2);
+  expect(boite.height, "hauteur").toBeLessThanOrEqual(60);
+  const changer = ligne.locator("[data-premiere-entree-changer]");
+  await expect(changer).toHaveText("Changer");
+  expect((await changer.boundingBox())!.height, "cible d'au moins 44 px").toBeGreaterThanOrEqual(43.5);
+
+  await changer.click();
   const dialogue = dialogueJeJoue(page);
   await expect(dialogue).toBeVisible();
+  await expect(ligne, "la ligne part").toHaveCount(0);
+  await expect(dialogue.getByRole("button", { name: /^Pianiste/ })).toHaveAttribute("aria-pressed", "true");
   const etiquette = dialogue.locator("[data-role-planning]");
   await expect(etiquette).toHaveCount(1);
   await expect(etiquette).toHaveText("d'après le planning");
-  const ligne = dialogue.getByRole("button", { name: /^Batteur/ });
-  await expect(ligne.locator("[data-role-planning]")).toHaveCount(1);
   const fs = await etiquette.evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
   expect(fs, "12 à 13 px").toBeGreaterThanOrEqual(12);
   expect(fs).toBeLessThanOrEqual(13);
-  // Étiquette à droite du nom, ligne dans le dialogue.
-  const bl = (await ligne.boundingBox())!;
-  const be = (await etiquette.boundingBox())!;
-  expect(be.x + be.width, "l'étiquette reste dans sa ligne").toBeLessThanOrEqual(bl.x + bl.width + 1);
-  expect(be.x, "à droite du nom").toBeGreaterThan(bl.x + bl.width / 3);
+});
 
+test("première entrée : la ligne part au premier tour de page et ne revient pas", async ({ page }) => {
+  await preparer(page, { init: { "perf-font-scale": "1.5" } });
+  await ouvrirMode(page, { feuilles: culte({ piano: NOM }) });
+  await expect(ligneEntree(page)).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => lireCompteur(page)).toMatch(/^2 \//);
+  await expect(ligneEntree(page)).toHaveCount(0);
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(() => lireCompteur(page)).toMatch(/^1 \//);
+  await page.waitForTimeout(400);
+  await expect(ligneEntree(page), "ne revient pas").toHaveCount(0);
+  expect(await lire(page, `perf-role-preset-${UID}`)).toBe("pianiste");
+});
+
+test("première entrée en 中文 : la ligne et son bouton portent les mots chinois ; « 更改 » ouvre Je joue", async ({ page }) => {
+  await preparer(page, { langue: "zh" });
+  await ouvrirMode(page, { feuilles: culte({ piano: NOM }), slugs: ZH });
+  const ligne = ligneEntree(page);
+  await expect(ligne).toContainText("按排班已设为钢琴。");
+  await ligne.locator("[data-premiere-entree-changer]").click();
+  await expect(dialogueJeJoue(page, "zh")).toBeVisible();
+  await expect(ligne).toHaveCount(0);
+});
+
+test("planning muet, aucun rôle retenu : Je joue s'ouvre seul avec la phrase d'accueil, pas de ligne, rien n'est coché ni changé ; un toucher sur Batteur le choisit", async ({ page }) => {
+  await preparer(page);
+  await ouvrirMode(page, { feuilles: culte({}) });
+  const dialogue = dialogueJeJoue(page);
+  await expect(dialogue).toBeVisible();
+  await expect(dialogue.getByText("Choisis ce que tu joues, ton compte s'en souviendra.")).toBeVisible();
+  await expect(ligneEntree(page)).toHaveCount(0);
+  await expect(dialogue.locator("[data-role-planning]")).toHaveCount(0);
   for (const role of ["Pianiste", "Guitariste", "Présidence", "Choriste", "Batteur"]) {
     await expect(dialogue.getByRole("button", { name: new RegExp(`^${role}`) }), `${role} non coché`).toHaveAttribute("aria-pressed", "false");
   }
-  await expect(dialogue.getByRole("radio", { name: "Plan du chant" }), "l'affichage n'a pas changé").toHaveAttribute("aria-checked", "false");
-  expect(await lire(page, "partition-layout")).toBeNull();
+  expect(await lire(page, `partition-layout-${UID}`)).toBeNull();
   expect(await lire(page, `perf-role-preset-${UID}`)).toBeNull();
-  await expect(pastille(page), "sans rôle retenu, pas de pastille").toHaveCount(0);
-
-  await ligne.click();
+  await dialogue.getByRole("button", { name: /^Batteur/ }).click();
   await expect.poll(() => lire(page, `perf-role-preset-${UID}`)).toBe("batteur");
   await expect(dialogue.getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
 });
@@ -183,7 +229,7 @@ test("Piano retenu, planning Batterie : pastille centrée, dans l'écran, ≤ 60
 
   // La vue n'a pas bougé : rien n'est basculé sans toucher.
   expect(await lire(page, `perf-role-preset-${UID}`)).toBe("pianiste");
-  expect(await lire(page, "partition-layout")).toBeNull();
+  expect(await lire(page, `partition-layout-${UID}`)).toBeNull();
 
   const avant = await lireCompteur(page);
   await p.getByRole("button", { name: "Fermer la proposition" }).click();
@@ -202,7 +248,7 @@ test("accepter : vue Batteur appliquée et retenue ; « Annuler » rétablit Pia
   await expect(p).toBeVisible();
   await p.getByRole("button", { name: /Passer en vue Batteur/ }).click();
   await expect.poll(() => lire(page, `perf-role-preset-${UID}`)).toBe("batteur");
-  await expect.poll(() => lire(page, "partition-layout"), "le Batteur pose Structure seule").toBe("structure");
+  await expect.poll(() => lire(page, `partition-layout-${UID}`), "le Batteur pose Structure seule").toBe("structure");
   await expect(p).toContainText("Vue Batteur");
   const scene = page.locator("[data-performance-mode]");
   await expect(scene.getByText("Dans la ville de David").first(), "la feuille de route du batteur n'a pas de paroles").toBeHidden();
@@ -212,7 +258,7 @@ test("accepter : vue Batteur appliquée et retenue ; « Annuler » rétablit Pia
 
   await annuler.click();
   await expect.poll(() => lire(page, `perf-role-preset-${UID}`)).toBe("pianiste");
-  await expect.poll(() => lire(page, "partition-layout"), "l'affichage d'avant").toBe("played");
+  await expect.poll(() => lire(page, `partition-layout-${UID}`), "l'affichage d'avant").toBe("played");
   await expect(scene.getByText("Dans la ville de David").first(), "les paroles reviennent").toBeVisible();
   await expect(scene.getByText("C#m7", { exact: true }).first(), "les accords reviennent").toBeVisible();
   expect(await lire(page, "perf-hide-lyrics"), "paroles non masquées").not.toBe("1");
@@ -394,11 +440,13 @@ test("aucune pastille : le rôle retenu est déjà celui du planning", async ({ 
   await expect(pastille(page)).toHaveCount(0);
 });
 
-test("aucune pastille : l'affichage de l'appareil contredit déjà le rôle (Batteur retenu, hors Structure seule)", async ({ page }) => {
-  await preparer(page, { role: "batteur", init: { "partition-layout": "played" } });
+test("Batteur retenu avec un autre ordre choisi à la main : le rôle reste coché, accords et paroles affichés ; la pastille propose Piano", async ({ page }) => {
+  await preparer(page, { role: "batteur", init: { [`partition-layout-${UID}`]: "played" } });
   await ouvrirMode(page, { feuilles: culte({ piano: NOM }) });
-  await page.waitForTimeout(600);
-  await expect(pastille(page)).toHaveCount(0);
+  await expect(pastille(page)).toBeVisible();
+  await expect(pastille(page)).toContainText("Passer en vue Pianiste");
+  await expect(page.locator("[data-performance-mode]").getByText("Dans la ville de David").first(), "les paroles sont affichées").toBeVisible();
+  expect(await lire(page, `perf-role-preset-${UID}`)).toBe("batteur");
 });
 
 test("aucune pastille : accords changés sur la page de la setlist juste avant d'ouvrir le mode", async ({ page }) => {
@@ -448,7 +496,7 @@ test("Sheet qui répond après l'ouverture, rôle retenu différent : la pastill
   await expect(pastille(page)).toBeVisible();
   await expect(pastille(page)).toContainText("Passer en vue Batteur");
   expect(await lire(page, `perf-role-preset-${UID}`), "la vue n'a pas changé").toBe("pianiste");
-  expect(await lire(page, "partition-layout")).toBeNull();
+  expect(await lire(page, `partition-layout-${UID}`)).toBeNull();
   const dialogue = await ouvrirJeJoue(page);
   await expect(dialogue.getByRole("button", { name: /^Pianiste/ })).toHaveAttribute("aria-pressed", "true");
   await expect(dialogue.locator("[data-role-planning]"), "un planning tardif n'ajoute pas l'étiquette").toHaveCount(0);
@@ -523,4 +571,13 @@ for (const langue of ["fr", "zh"] as const) {
       await capture(page, testInfo, `je-joue-etiquette-${langue}-${theme}`);
     });
   }
+}
+
+for (const langue of ["fr", "zh"] as const) {
+  test(`captures PU-5 : ligne de première entrée, ${langue}`, async ({ page }, testInfo) => {
+    await preparer(page, { langue });
+    await ouvrirMode(page, { feuilles: culte({ piano: NOM }), slugs: langue === "zh" ? ZH : FR });
+    await expect(ligneEntree(page)).toBeVisible();
+    await capture(page, testInfo, `premiere-entree-${langue}`);
+  });
 }
