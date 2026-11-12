@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Maximize, Minus, Pencil, Plus, Timer, Waves } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronUp, Maximize, Minus, Pencil, Plus, Timer, Waves } from "lucide-react";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
@@ -10,6 +10,7 @@ import { isDp, paletteKeyOf } from "@/lib/setlist/dp";
 import { formatDate } from "@/lib/utils/formatDate";
 import { TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import type { SectionBlock, SongHeaderBlock } from "@/lib/performance/blocks";
+import type { FSSetlist } from "@/types/setList";
 import { compter } from "@/lib/usage";
 
 // ─── Briques communes ─────────────────────────────────────────────────────────
@@ -113,6 +114,96 @@ export function LigneMenu({ label, hint, children }: { label: string; hint?: str
 
 // ─── Setlist ──────────────────────────────────────────────────────────────────
 
+/** Les setlists à venir du menu : celles de mes services, les autres ; `horsLigne` = seulement les copies gardées. */
+export type ListeSetlistsMenu = { miens: FSSetlist[]; autres: FSSetlist[]; horsLigne: boolean };
+
+/** « ‹ Toutes mes setlists » : se déplie en ligne ; la liste est lue une fois, au montage du menu (le menu fermé démonte son contenu). */
+function ToutesMesSetlists({
+  charger,
+  onOuvrir,
+  onFermer,
+}: {
+  charger: () => Promise<ListeSetlistsMenu>;
+  onOuvrir: (id: string) => void;
+  onFermer: () => void;
+}) {
+  const { t, i18n } = useTranslation();
+  const [ouvert, setOuvert] = useState(false);
+  const [liste, setListe] = useState<ListeSetlistsMenu | null>(null);
+  useEffect(() => {
+    let annule = false;
+    charger().then((l) => { if (!annule) setListe(l); }, () => { if (!annule) setListe({ miens: [], autres: [], horsLigne: true }); });
+    return () => { annule = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- une lecture, à l'ouverture du menu
+  }, []);
+  const ligne = (s: FSSetlist) => {
+    const n = s.items?.filter((i) => i.songSlug).length;
+    return (
+      <li key={s.id}>
+        <button
+          type="button"
+          data-autre-setlist={s.id}
+          onClick={() => {
+            onFermer();
+            onOuvrir(s.id);
+          }}
+          className="flex min-h-12 w-full items-center rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-base font-normal text-foreground">{s.title}</span>
+            <span className="block truncate text-[13px] text-muted-foreground">
+              {formatDate(s.date, i18n.language)}
+              {n ? ` · ${t("performance.songCount", { count: n })}` : null}
+            </span>
+          </span>
+        </button>
+      </li>
+    );
+  };
+  const Chevron = ouvert ? ChevronUp : ChevronDown;
+  return (
+    <div className="pb-3">
+      <button
+        type="button"
+        data-toutes-setlists
+        aria-expanded={ouvert}
+        onClick={() => setOuvert((o) => !o)}
+        className="-mx-1 flex min-h-11 w-[calc(100%+0.5rem)] items-center gap-2 rounded-lg px-2 text-left text-base font-medium text-foreground transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <ChevronLeft aria-hidden="true" className={`h-4 w-4 shrink-0 ${COULEUR}`} />
+        <span className="min-w-0 flex-1 truncate">{t("performance.allSetlists")}</span>
+        <Chevron aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </button>
+      {ouvert && (
+        // Filet sous la liste dépliée : la setlist courante (en-tête et chants) ne se lit pas comme une setlist de plus.
+        <div className="mb-1 border-b border-border pb-3 pt-2">
+          {!liste ? (
+            <p className="px-1 text-[13px] text-muted-foreground">{t("performance.loadingSetlists")}</p>
+          ) : (
+            <>
+              {liste.miens.length > 0 && (
+                <>
+                  <TitreRubrique>{t("performance.myServices")}</TitreRubrique>
+                  <ul className="-mx-1 pb-2">{liste.miens.map(ligne)}</ul>
+                </>
+              )}
+              {liste.autres.length > 0 && (
+                <>
+                  <div className={liste.miens.length > 0 ? "mt-2" : undefined}><TitreRubrique>{t("performance.otherSetlists")}</TitreRubrique></div>
+                  <ul className="-mx-1">{liste.autres.map(ligne)}</ul>
+                </>
+              )}
+              {liste.autres.length === 0 && liste.miens.length === 0 && (
+                <p className="px-1 text-[13px] text-muted-foreground">{t(liste.horsLigne ? "performance.noOtherSetlistOffline" : "performance.noOtherSetlist")}</p>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ContenuSetlist({
   setlistTitle,
   setlistDate,
@@ -121,6 +212,8 @@ export function ContenuSetlist({
   currentSongEntryIdx,
   goToPage,
   onFermer,
+  chargerToutesSetlists,
+  onOuvrirSetlist,
 }: {
   setlistTitle: string;
   setlistDate?: string;
@@ -129,10 +222,15 @@ export function ContenuSetlist({
   currentSongEntryIdx: number;
   goToPage: (p: number, pgCount: number) => void;
   onFermer: () => void;
+  chargerToutesSetlists?: () => Promise<ListeSetlistsMenu>;
+  onOuvrirSetlist?: (id: string) => void;
 }) {
   const { t, i18n } = useTranslation();
   return (
     <div>
+      {chargerToutesSetlists && onOuvrirSetlist && (
+        <ToutesMesSetlists charger={chargerToutesSetlists} onOuvrir={onOuvrirSetlist} onFermer={onFermer} />
+      )}
       <div className="px-1 pb-2">
         <p className="truncate text-base font-semibold text-foreground">{setlistTitle}</p>
         <p className="truncate text-[13px] text-muted-foreground">

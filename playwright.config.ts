@@ -24,6 +24,8 @@ const SPECS_GRAND_ECRAN = [
   /pupitre-onglet\.spec\.ts/,
   // Lot Pupitre, PU-3 : « Prêt hors-ligne » dans le bloc (téléphone et tablette debout surtout).
   /pupitre-hors-ligne\.spec\.ts/,
+  // Lot Pupitre, PU-6 : « ‹ Toutes mes setlists » dans le menu Setlist du mode louange.
+  /louange-toutes-setlists\.spec\.ts/,
   // Comptage d'usage, T4 (docs/spec-comptage-usage.md) : l'écran de lecture /back-office/usage (tableau trié) sur les quatre dispositions.
   /usage-lecture\.spec\.ts/,
   // Ma partition, MP-2 (docs/spec-ma-partition.md) : menu « Je lis », filets et mention de conflit sur les quatre dispositions.

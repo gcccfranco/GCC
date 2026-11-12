@@ -7,7 +7,7 @@ import { BarreHaut, ICONES_ROLE } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
 import { MenuLouange, type MenuId } from "./MenuLouange";
 import { LigneFeuilleDeRoute } from "./FeuilleDeRoute";
-import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo, LignesTempo, TitreRubrique, VALEUR } from "./ContenusMenus";
+import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo, LignesTempo, TitreRubrique, VALEUR, type ListeSetlistsMenu } from "./ContenusMenus";
 import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
 import { PageTexte } from "./PageTexte";
@@ -405,6 +405,10 @@ interface PerformanceModeProps {
   chantsCharges?: Record<string, boolean>;
   /** Change quand une écriture de traits échoue : l'écran revient à l'état enregistré. */
   echecTraits?: number;
+  /** Menu Setlist, « ‹ Toutes mes setlists » : lit les setlists à venir (appelée à l'ouverture du menu) ; absente = pas de ligne. */
+  chargerToutesSetlists?: () => Promise<ListeSetlistsMenu>;
+  /** Ouvre cette setlist en mode louange (la page change de setlist). */
+  onOuvrirSetlist?: (id: string) => void;
   onClose: () => void;
 }
 
@@ -429,6 +433,8 @@ export function PerformanceMode({
   onTraitsChange,
   chantsCharges,
   echecTraits = 0,
+  chargerToutesSetlists,
+  onOuvrirSetlist,
   onClose,
 }: PerformanceModeProps) {
   const { t } = useTranslation();
@@ -2193,6 +2199,8 @@ export function PerformanceMode({
           currentSongEntryIdx={currentSongEntryIdx}
           goToPage={goToPage}
           onFermer={() => fermerMenu("setlist")}
+          chargerToutesSetlists={chargerToutesSetlists}
+          onOuvrirSetlist={onOuvrirSetlist}
         />
       </MenuLouange>
 

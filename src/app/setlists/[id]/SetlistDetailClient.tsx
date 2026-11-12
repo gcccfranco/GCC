@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronDown, Pencil, SlidersHorizontal, PenLine, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
@@ -20,10 +20,11 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getSetlist, getSetlistOuCopie, lireCopieDuCompte, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader } from "@/lib/firebase/setlists";
+import { getSetlist, getSetlistOuCopie, lireCopieDuCompte, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader, getSetlistsFrom } from "@/lib/firebase/setlists";
 import type { FSSetlist } from "@/types/setList";
 import { RELIRE_PROFIL, useProfile } from "@/lib/firebase/users";
-import { ecrireCopie } from "@/lib/setlist/copieHorsLigne";
+import { ecrireCopie, listerCopies } from "@/lib/setlist/copieHorsLigne";
+import { aujourdhuiLocal, clesDesEntrees, setlistsAVenir } from "@/lib/setlist/liste";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { datesServies, findMyServices, loadPlanningData, type ServiceEntry } from "@/lib/planning/names";
 import { roleDuPlanning, presideLeService } from "@/lib/planning/rolePlanning";
@@ -296,6 +297,24 @@ export function SetlistDetailClient() {
       : null),
     [user, planningName, servicesDuCompte, setlist, copieLueLe, profile?.joue],
   );
+  // Menu Setlist du mode louange, « ‹ Toutes mes setlists » : les setlists à venir que je peux lire ; hors ligne ou lecture
+  // en échec, seulement les copies gardées sur l'appareil. Sans compte : pas de ligne (visibilité et copies tiennent au compte).
+  const chargerToutesSetlists = useCallback(async () => {
+    if (!user) return { miens: [], autres: [], horsLigne: false };
+    const cles = clesDesEntrees(servicesDuCompte?.nom === planningName ? servicesDuCompte.services : []);
+    const aujourdhui = aujourdhuiLocal();
+    if (copieLueLe === null && navigator.onLine) {
+      try {
+        // Lecture stricte (une réponse en erreur lève) et bornée à 3 s : sinon, les copies gardées.
+        const lecture = getSetlistsFrom(aujourdhui, 30, { strict: true });
+        const delai = new Promise<never>((_, rejeter) => setTimeout(() => rejeter(new Error("délai")), COPIE_APRES_MS));
+        const lues = (await Promise.race([lecture, delai])).filter((s) => canSeeSetlist(user, profile, s, datesDuCompte));
+        return { ...setlistsAVenir(lues, cles, aujourdhui, id), horsLigne: false };
+      } catch { /* lecture en échec : les copies gardées */ }
+    }
+    const copies = (await listerCopies(user.uid)).map((c) => c.setlist);
+    return { ...setlistsAVenir(copies, cles, aujourdhui, id), horsLigne: true };
+  }, [user, profile, planningName, servicesDuCompte, datesDuCompte, copieLueLe, id]);
   // PDF réservé : présider le service donne le droit (Sheet absent ou en panne : services vides, faux).
   const presidence = useMemo(
     () => !!(user && planningName && servicesDuCompte?.nom === planningName && setlist
@@ -402,7 +421,8 @@ export function SetlistDetailClient() {
     const cache = () => { if (document.visibilityState === "hidden") envoyer(); };
     window.addEventListener("pagehide", envoyer);
     document.addEventListener("visibilitychange", cache);
-    return () => { window.removeEventListener("pagehide", envoyer); document.removeEventListener("visibilitychange", cache); };
+    // Démontage (« ‹ Toutes mes setlists » ouvre une autre setlist sans passer par la sortie du mode) : écrire aussi.
+    return () => { window.removeEventListener("pagehide", envoyer); document.removeEventListener("visibilitychange", cache); envoyer(); };
   }, []);
   /** Ma partition lue à la place de la présidence (sinon : les anciennes versions décident). */
   const lectureNeuve = (item: SetlistItem) => {
@@ -2575,6 +2595,8 @@ export function SetlistDetailClient() {
           onTraitsChange={traitsChanges}
           chantsCharges={Object.fromEntries(slugsPartitions.map((s) => [s, !!mesPartitions.charges[s]]))}
           echecTraits={echecTraits}
+          chargerToutesSetlists={user ? chargerToutesSetlists : undefined}
+          onOuvrirSetlist={(autre) => router.push(`/setlists/${autre}?louange=1`)}
           onClose={() => {
             envoyerTraits();
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});

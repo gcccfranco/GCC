@@ -509,3 +509,27 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   `louange-je-joue` entières, voisines par `--grep` : 297 passés, 3 échecs (e-mail fictif à « ë » refusé par le
   formulaire, corrigé) en 19 min ; tours après correction : 3/3 puis 25/25 en 2 min. `tsc` propre, lint sans erreur,
   `npm run validate` propre. Suite : PU-6 lancée.
+- 12/11/2026 : **PU-6 faite** (« ‹ Toutes mes setlists »). **Le lot pupitre est fini** (PU-1 à PU-6). En tête du menu
+  Setlist (`ToutesMesSetlists`, `ContenusMenus.tsx`) : une ligne « ‹ Toutes mes setlists » (我的全部歌单, `aria-expanded`)
+  qui se déplie en ligne : « Mes services » (我的服事) puis « Autres setlists » (其他歌单), à venir, par date, sans la
+  courante ni les brouillons, `canSeeSetlist` ; un filet la sépare ensuite de la setlist courante (`regard` : sans lui,
+  l'en-tête courant se lisait comme une setlist de plus). Lue une fois à l'ouverture du menu (le menu fermé démonte son
+  contenu). Un toucher : `router.push('/setlists/<id>?louange=1')`, la page `[id]` se remonte et ouvre l'autre setlist
+  sur son premier chant (vérifié). Hors ligne, copie lue, lecture en échec ou plus lente que 3 s
+  (`getSetlistsFrom(…, { strict: true })`) : seulement `listerCopies(uid)`. `liste.ts` : `clesDesEntrees` extraite de
+  `clesDeMesServices` (inchangée), `aujourdhuiLocal`, `setlistsAVenir`. Relecture : traits en attente écrits aussi au
+  démontage de la page (on quitte le mode sans `onClose`), services du compte seulement s'ils sont ceux du
+  `planningName` courant. **Décisions déléguées (session PU-6, 12/11)** : (a) sans compte, pas de ligne (visibilité
+  et copies tiennent au compte ; le mode louange ne s'ouvre d'ailleurs pas sans compte) ; (b) le « ‹ » de la décision 11
+  est gardé, avec un chevron haut/bas à droite pour l'état plié (`regard` les trouvait redondants) ; (c) **limite
+  assumée** : la liste vient des 30 prochaines setlists de l'église (`getSetlistsFrom(…, 30)`), un service plus lointain
+  peut manquer. Hors tranche, notés par `regard` : la ligne courante teintée et les rubriques `TitreRubrique` sont
+  pâles en sombre (styles communs à tous les menus). `critique-design` sur deux captures après correction : « bon » ;
+  deux finitions faites (titres de la liste en graisse normale, 8 px avant « Autres setlists »). Captures regardées aux
+  cinq projets, FR et 中文, clair et sombre (`test-results/pu6/`). Nouvelle `tests/louange-toutes-setlists.spec.ts`
+  (`SPECS_GRAND_ECRAN`, noms inventés, e-mail ASCII) : 7 tests + captures. **Tests** : spec entière 39 passés,
+  1 ignoré (Échap au téléphone) en 2,8 min (premier tour du testeur 5,5 min avec des erreurs de fixtures, puis 38/40 :
+  l'adresse testée gardait `?louange=1`, que la page retire, assertion corrigée) ; voisines par `--grep` :
+  `louange-menus` « Setlist » 25 passés (1,7 min), `setlist-hors-ligne` « louange » 6 passés (19 s) ; captures après
+  le filet, 15 passés en 1,7 min. `tsc` propre, lint sans erreur nouvelle, `npm run validate` propre. Suite : la file
+  de la feuille de route (AN-3a).
