@@ -169,6 +169,12 @@
     "errorNetwork": "网络出错——请检查网络后重试。"
   },
   "setlists": {
+    "pupitre": {
+      "titre": "我的下一次服事",
+      "jouer": "开始演奏",
+      "tuJoues": "根据排班，你担任{{role}}",
+      "retour": "我的下一次服事"
+    },
     "fete": {
       "propositionAide": "还不在诗歌库中。本节目会保留这份推荐；诗歌一进入诗歌库，它就变成该诗歌。",
       "proposerDescription": "你的推荐会发给管理员。诗歌进入诗歌库之前，本节目会保留这份推荐。",

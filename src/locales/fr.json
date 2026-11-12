@@ -169,6 +169,12 @@
     "errorNetwork": "Problème de réseau — vérifie ta connexion et réessaie."
   },
   "setlists": {
+    "pupitre": {
+      "titre": "Mon prochain service",
+      "jouer": "Jouer",
+      "tuJoues": "Tu joues {{role}} d'après le planning",
+      "retour": "Mon prochain service"
+    },
     "fete": {
       "propositionAide": "Pas encore au répertoire. Le passage garde la proposition en attente ; elle devient le chant dès qu'il est au répertoire.",
       "proposerDescription": "Ta proposition est envoyée aux administrateurs. Le passage la garde en attente jusqu'à ce que le chant soit au répertoire.",

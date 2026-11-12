@@ -383,6 +383,8 @@ interface PerformanceModeProps {
   horsLigne?: boolean;
   /** Lot RP : rôle d'après le planning pour le service de cette setlist ; proposé, jamais appliqué seul. */
   rolePlanning?: RolePreset | null;
+  /** Ouverture sur le chant de cet item (sa `position`, celle de son en-tête), une seule fois ; absent ou sans en-tête : page 0. */
+  chantInitial?: number;
   onClose: () => void;
 }
 
@@ -400,6 +402,7 @@ export function PerformanceMode({
   onJianpuPrefChange,
   horsLigne = false,
   rolePlanning = null,
+  chantInitial,
   onClose,
 }: PerformanceModeProps) {
   const { t } = useTranslation();
@@ -1049,6 +1052,15 @@ export function PerformanceMode({
     () => blocks.flatMap((b, i) => (b.kind === "song-header" ? [{ block: b, index: i }] : [])),
     [blocks],
   );
+  // Ouverture sur un chant (« Mon prochain service ») : une fois, dès que la mise en page répond aux blocs en cours.
+  const chantInitialFait = useRef(false);
+  useEffect(() => {
+    if (chantInitialFait.current || chantInitial == null || !pages.length || layoutBlocksRef.current !== blocks) return;
+    chantInitialFait.current = true;
+    const entree = songEntries.find((e) => e.block.position === chantInitial);
+    const page = entree ? pages.findIndex((p) => p.includes(entree.index)) : -1;
+    if (page > 0) setCurrentPage(page);
+  }, [pages, blocks, songEntries, chantInitial]);
   const firstBlockIdx = currentPageIndices[0] ?? 0;
   const currentSongEntryIdx = songEntries.reduce(
     (acc, e, i) => (e.index <= firstBlockIdx ? i : acc),

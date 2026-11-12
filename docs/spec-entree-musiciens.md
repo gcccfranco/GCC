@@ -429,3 +429,25 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   tranche. `tsc` et lint propres. `npm run validate` échoue hors tranche : 姐 妹 跃 (`zh-CN.json`) absents de la police,
   `python3 scripts/build-fonts.py` à relancer par la session qui les a ajoutés. Pas de `regard` : rien de nouveau à
   l'écran, des boutons existants masqués. Suite : PU-2 lancée.
+- 12/11/2026 : **PU-2 faite** (bloc « Mon prochain service »). `Pupitre.tsx` en tête de l'onglet Setlists pour qui sert
+  à un service relié à une setlist (`pourMoi` + `setlistDuService` + `roleDuPlanning`, rien de nouveau dans
+  `accueil.ts`) : rangées au téléphone, vignettes dès la tablette (trois colonnes), volet de droite en deux volets tant
+  qu'aucune setlist n'est choisie, rangée « Mon prochain service » en tête de la liste pour y revenir ; « Jouer » à
+  l'encre. `?louange=1&chant=n` (lu avant le `replaceState`, borné, propositions exclues, fusions comptées comme une
+  ligne) ouvre le mode louange sur la première page du chant : prop `chantInitial` (position de l'item) dans
+  `PerformanceMode.tsx`, un seul effet, rien d'autre de touché. Prop `milieu` ajoutée à `EnTetePage` (entre le titre
+  et les onglets). **Décisions déléguées (session, 12/11)** : (a) vignette d'un chant sans scan = la suite de ses
+  sections en texte, pas un rendu de sa première page (aucun `.cho` chargé sur l'onglet ; se remplace sans toucher au
+  reste) ; (b) la ligne « Tu joues … d'après le planning » pour les instruments seulement (pas « tu joues
+  présidence ») ; (c) le « + » reste plein à côté de « Jouer » (critique-design proposait un contour : la spec veut le
+  « + » inchangé) ; (d) le nom du service = la catégorie traduite, comme la liste. Q6 : vignette 简谱 sombre codée
+  (inversée, atténuée), captures sombres tablette, ordinateur et tablette couchée envoyées à Timothée ; essai sur iPad
+  avant la mise en ligne. `pages-en-grand-setlists.spec.ts` : trois tests reçoivent un compte qui ne sert pas (le
+  pupitre y apparaissait, comportement voulu). Tests : `pupitre-onglet` (nouvelle, cinq projets) et voisines
+  (`agencement-v18-setlists`, `pages-en-grand-setlists`, `setlist-deux-volets`, `louange-role-planning`,
+  `pupitre-partitions`) : premier tour 399 passés, 8 échecs (comportement voulu, corrigé) en 12 min ; tours après
+  corrections sur les specs en échec : 3 min, puis `pupitre-onglet` 77/77 (8 ignorés) en 2,6 min. `tsc`, lint,
+  `npm run validate` propres (polices reconstruites, 姐 妹 跃 compris). `regard` sur 20 captures, `critique-design` sur
+  quatre : retouches faites (grille, structure en texte, titres sur deux lignes, filet sous les vignettes). Les agents
+  nommés n'étant pas chargés dans la session, ils ont tourné comme agents génériques avec leur fiche
+  (`.claude/agents/*.md`) et leur modèle. Suite : PU-3 lancée.

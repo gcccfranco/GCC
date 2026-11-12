@@ -278,6 +278,8 @@ export function SetlistDetailClient() {
   const [downloading, setDownloading] = useState(false);
   const [showPdfChoice, setShowPdfChoice] = useState(false);
   const [performanceMode, setPerformanceMode] = useState(false);
+  // Ouverture du mode louange sur un chant (`?chant=<n>`, « Mon prochain service »), index 0-based.
+  const [chantInitial, setChantInitial] = useState<number | undefined>(undefined);
   const [duplicating, setDuplicating] = useState(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [notifying, setNotifying] = useState(false);
@@ -601,7 +603,7 @@ export function SetlistDetailClient() {
     requestAnimationFrame(() => loadContents(items));
   }, [setlist, loadContents]);
 
-  useEntreeLouange({ setlist, loadContents, entrerEnLouange });
+  useEntreeLouange({ setlist, loadContents, entrerEnLouange, ouvrirSurChant: setChantInitial });
 
   // Vue lue dans l'adresse à l'ouverture (lien, rechargement) et au retour du
   // navigateur (Q9).
@@ -1612,6 +1614,7 @@ export function SetlistDetailClient() {
   /** Plein écran natif : à demander en synchrone dans le geste (avant tout
    *  await), sinon la demande est rejetée ; iPhone Safari ne le connaît pas. */
   async function ouvrirModeLouange() {
+    setChantInitial(undefined); // le bouton ouvre toujours sur le chant 1
     try {
       demanderPleinEcran();
     } catch { /* non supporté */ }
@@ -1667,6 +1670,7 @@ export function SetlistDetailClient() {
     }
   }
   function fermerLeBandeauDesChants() {
+    setChantInitial(undefined);
     setChantsManquants(null);
     setEssaiEchoue(false);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -2378,9 +2382,11 @@ export function SetlistDetailClient() {
           onJianpuPrefChange={changeJianpuPref}
           horsLigne={horsLigne}
           rolePlanning={rolePlanning}
+          chantInitial={chantInitial}
           onClose={() => {
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             setPerformanceMode(false);
+            setChantInitial(undefined);
           }}
         />
       )}

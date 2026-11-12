@@ -29,6 +29,10 @@ import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44";
 import { SetlistCard, SetlistCarteChants } from "@/components/setlists/SetlistCard";
 import { BandeauCorbeille } from "@/components/setlists/BandeauCorbeille";
 import { ApercuSetlist } from "@/components/setlists/ApercuSetlist";
+import { Pupitre } from "@/components/setlists/Pupitre";
+import { servicesDuCompte } from "@/lib/petitdej/services";
+import { pourMoi, setlistDuService } from "@/lib/planning/accueil";
+import { roleDuPlanning } from "@/lib/planning/rolePlanning";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
@@ -46,6 +50,13 @@ import { EcranConnexionRequise, EcranProfilRequis } from "./_components/EcransAc
 import { SectionCorbeille } from "./_components/SectionCorbeille";
 import { ConfirmationSuppressionGroupee, ConfirmationSuppressionDefinitive } from "./_components/ConfirmationsSuppression";
 import { compter } from "@/lib/usage";
+
+/** Date du jour en heure locale (pas UTC : décalée autour de minuit), comme l'accueil. */
+function aujourdhuiLocal(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
 
 // Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q4) : en grand, la liste à gauche et l'aperçu
 // de la setlist choisie à droite (`?apercu=<id>`, sans aperçu choisi la première de la liste,
@@ -221,10 +232,40 @@ export default function SetlistsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, toutes, mySetlists, matches, todayStr, user, profile, onlyMine, myServiceKeys, programmes, feteFiltree, datesDuCompte]);
 
+  // « Mon prochain service » (PU-2) : le prochain jour où le compte sert, et la setlist reliée à l'un de ses
+  // services (même règle que l'accueil : jamais une privée, un brouillon ni une qu'il ne pourrait pas ouvrir).
+  // Aucun service ou aucune setlist reliée : null, l'onglet est celui d'avant.
+  // (Pas de useMemo : le compilateur de React ne sait pas le préserver ici ; le calcul est court.)
+  const pupitre = (() => {
+    if (!user || !planning) return null;
+    const entries = servicesDuCompte(planning, [], user.uid, profile?.planningName ?? "");
+    const p = pourMoi(entries, aujourdhuiLocal(), 0);
+    if (!p) return null;
+    const lisibles = toutes.filter((s) => !s.isPrivate && !s.isDraft && canSeeSetlist(user, profile, s, datesDuCompte));
+    for (const service of p.prochain) {
+      const setlist = setlistDuService(lisibles, service);
+      if (setlist) {
+        const role = roleDuPlanning(entries, { date: setlist.date, category: setlist.category, moment: setlist.moment }, profile?.joue);
+        return { setlist, services: p.prochain, role };
+      }
+    }
+    return null;
+  })();
+  const aUnPupitre = !!pupitre;
+  // Sans index chargé par la disposition (téléphone), le bloc a besoin des titres.
+  useEffect(() => {
+    if (!aUnPupitre || avecChants) return;
+    chargerIndexChants()
+      .then((index) => setSongsMap(Object.fromEntries(index.map((x) => [x.slug, x]))))
+      .catch(() => {});
+  }, [aUnPupitre, avecChants]);
+  // En grand, le bloc prend le volet de droite tant qu'aucune setlist n'est choisie.
+  const pupitreAffiche = grand && !!pupitre && !apercu;
+
   // L'aperçu (en grand) : celui de l'adresse, sinon la première setlist de la liste filtrée (Q3).
   // Une adresse peut viser une setlist d'un autre onglet (lien partagé) : seulement si la page
   // de la setlist l'ouvrirait (`canSeeSetlist`, même règle que sa page).
-  const choisie =
+  const choisie = pupitreAffiche ? null :
     (apercu &&
       (displayed.find((s) => s.id === apercu) ??
         [...toutes, ...mySetlists].find((s) => s.id === apercu && !!user && canSeeSetlist(user, profile, s, datesDuCompte)))) ||
@@ -492,6 +533,7 @@ export default function SetlistsPage() {
       titre={t("common.header.setlists")}
       sousTitre={t("setlists.list.sousTitre")}
       action={canCreate ? <BoutonNouveau label={t("setlists.list.newButton")} href="/setlists/new" /> : undefined}
+      milieu={!grand && pupitre ? <Pupitre setlist={pupitre.setlist} services={pupitre.services} songsMap={songsMap} role={pupitre.role} disposition={disposition} /> : undefined}
       onglets={rail}
       apres={filtres}
     />
@@ -616,9 +658,26 @@ export default function SetlistsPage() {
           largeurListe={400}
           // V3 (validation du 07/11/2026) : plus de colonne seule tant qu'on n'a rien touché ; la première
           // setlist de la liste est montrée d'emblée (`choisie`). Seule une liste vide reste en colonne seule.
-          colonneSeule={!choisie}
-          liste={<div className="relative px-4 pb-4 pt-4">{contenuListe}</div>}
-          premier={choisie && (
+          colonneSeule={!choisie && !pupitre}
+          liste={
+            <div className="relative px-4 pb-4 pt-4">
+              {pupitre && (
+                <button
+                  type="button"
+                  data-pupitre-retour
+                  aria-pressed={pupitreAffiche}
+                  onClick={() => setApercu(null)}
+                  className={`mb-3 flex h-10 w-full items-center rounded-xl px-3 text-left text-sm font-semibold transition-colors duration-150 ${pupitreAffiche ? "bg-secondary" : "active:bg-secondary/70"}`}
+                >
+                  {t("setlists.pupitre.retour")}
+                </button>
+              )}
+              {contenuListe}
+            </div>
+          }
+          premier={pupitreAffiche && pupitre ? (
+            <Pupitre setlist={pupitre.setlist} services={pupitre.services} songsMap={songsMap} role={pupitre.role} disposition={disposition} />
+          ) : choisie && (
             <ApercuSetlist setlist={choisie} songsMap={songsMap} planning={planning} monNom={profile ? nomCourt(profile) : ""} />
           )}
         >

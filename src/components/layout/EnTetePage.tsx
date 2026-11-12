@@ -39,6 +39,7 @@ export function EnTetePage({
   retour,
   outils,
   action,
+  milieu,
   onglets,
   apres,
   fond = "groupe",
@@ -54,6 +55,8 @@ export function EnTetePage({
   outils?: ReactNode;
   /** L'action principale, une par page : `BoutonNouveau` (rond fixe sur téléphone). */
   action?: ReactNode;
+  /** Un bloc entre le titre et les onglets (« Mon prochain service » de l'onglet Setlists, téléphone et tablette). */
+  milieu?: ReactNode;
   /** Les onglets de section ou de vue : `OngletsRail`. */
   onglets?: ReactNode;
   /** Une rangée libre sous les onglets : `Pilules`, période, interrupteur. */
@@ -85,6 +88,7 @@ export function EnTetePage({
         )}
       </div>
       </>)}
+      {milieu && <div className="mt-4">{milieu}</div>}
       {onglets && <div className="mt-4">{onglets}</div>}
       {apres && <div className="mt-3">{apres}</div>}
     </header>

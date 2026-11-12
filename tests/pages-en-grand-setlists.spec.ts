@@ -44,13 +44,15 @@ const SL2 = {
 const DOCS = { "setlists/sl-1": SL1, "setlists/sl-2": SL2 };
 
 /** Jeudi 1er octobre 2026. */
-async function ouvrir(page: Page, adresse = "/setlists", docs: Record<string, Record<string, unknown>> = {}) {
+async function ouvrir(page: Page, adresse = "/setlists", docs: Record<string, Record<string, unknown>> = {}, sansService = false) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
-    return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES[feuille] ?? "" });
+    return route.fulfill({ status: 200, contentType: "text/csv", body: sansService ? "" : FEUILLES[feuille] ?? "" });
   });
-  await signInAs(page, RUTH, { ...DOCS, ...docs }, adresse);
+  // Sans service au planning, Ruth ne voit ces setlists que dans l'équipe (`editeurs`).
+  const base = sansService ? { "setlists/sl-1": { ...SL1, editeurs: [RUTH.uid] }, "setlists/sl-2": { ...SL2, editeurs: [RUTH.uid] } } : DOCS;
+  await signInAs(page, RUTH, { ...base, ...docs }, adresse);
 }
 
 type Disposition = "grand" | "tablette" | "telephone";
@@ -140,7 +142,7 @@ test.describe("Setlists : les dispositions", () => {
 
   test("en grand : toucher une setlist ouvre son aperçu, l'adresse est remplacée, « Ouvrir » mène à la setlist", async ({ page }, info) => {
     test.skip(disposition(info) !== "grand", "deux volets : ordinateur et iPad paysage");
-    await ouvrir(page);
+    await ouvrir(page, "/setlists", {}, true); // aucun service au planning : pas de « Mon prochain service » (PU-2)
     // V3 : la première setlist est déjà montrée et sa ligne marquée, sans rien toucher.
     await expect(apercu(page).getByRole("heading", { name: "Culte du 4 octobre" })).toBeVisible();
     await expect(ligne(page, "Culte du 4 octobre")).toHaveAttribute("aria-current", "true");
@@ -219,7 +221,7 @@ test.describe("Setlists : les dispositions", () => {
   // V3 (validation du 07/11/2026) : seulement quand il n'y a aucune setlist à montrer (ici les Archives, vides à cette date).
   test("en grand : liste vide seule, colonne de 720 px calée sur le titre, action de l'en-tête au bord droit de la colonne", async ({ page }, info) => {
     test.skip(disposition(info) !== "grand", "colonne seule : grand écran");
-    await ouvrir(page, "/setlists?tab=archived");
+    await ouvrir(page, "/setlists?tab=archived", {}, true); // sans service : pas de bloc (PU-2)
     const volet = page.locator('[data-volet="liste"]');
     await expect(volet).toBeVisible();
     const entete = page.locator("header[data-entete-page]");
@@ -277,7 +279,7 @@ test.describe("Setlists : les dispositions", () => {
 
   test("téléphone : inchangé, une ligne par setlist, toucher ouvre la setlist", async ({ page }, info) => {
     test.skip(disposition(info) !== "telephone", "téléphone");
-    await ouvrir(page);
+    await ouvrir(page, "/setlists", {}, true); // sans service : pas de « Mon prochain service » (PU-2)
     await expect(page.getByRole("link", { name: /Culte du 4 octobre/ })).toBeVisible();
     await expect(page.getByTestId("carte-setlist")).toHaveCount(0);
     await expect(page.getByText("一生爱你", { exact: true }), "les chants ne sont pas listés").toHaveCount(0);
