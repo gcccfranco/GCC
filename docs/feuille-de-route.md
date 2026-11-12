@@ -94,7 +94,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      dans la file donne-leur le go mais ils se lancent chacun leur tour »)**. Un lot Harmonie à la fois ; la session qui
      finit un lot lance le suivant et le raye ici. H5 lancé (`session_01UMdfucJo6tgJLNfc6qtSps`, 12/11). **17 h 07 UTC, Timothée (« Oui pour les 2 »)** : H9
      (`session_01UMdfubgkvSMaCBBvrLbfxY`, contenu seulement) et H6 (`session_01UMdfuZq2SzB3kmofctkeHc`) lancés en
-     parallèle de H5 ; cinq chantiers en cours. Ni H5, ni H6, ni H9 ne lance de lot à sa fin. **H9 fini** (12/11, T3 : 91 fiches, famille Mineur ; `docs/spec-harmonie-accords.md` § Avancement). Restent : **H7** (touche
+     parallèle de H5 ; cinq chantiers en cours. Ni H5, ni H6, ni H9 ne lance de lot à sa fin. **H6 fini** (12/11, H6-2 : fiche ; § Avancement). **H9 fini** (12/11, T3 : 91 fiches, famille Mineur ; `docs/spec-harmonie-accords.md` § Avancement). Restent : **H7** (touche
      l'affichage des partitions : à lancer par la session qui finit les exemples d'usage T7, s'il y a une place), puis
      H8. H8 (mode louange) en
      dernier, et seulement quand AN et le pupitre ont fini dans `PerformanceMode.tsx`. `docs/spec-harmonie-accords.md`,

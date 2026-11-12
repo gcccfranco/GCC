@@ -40,6 +40,7 @@ import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
 import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
 import { AccordsProvider } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
+import { useAllerAuPassage } from "@/lib/harmonie/useAllerAuPassage";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { getSetlist, getSetlistsPartagees, getMySetlists, getSetlistsFrom } from "@/lib/firebase/setlists";
 import { canExporterPdfChant, isAdminUser } from "@/lib/access";
@@ -139,6 +140,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
   export function SongDetailClient({ song }: SongDetailClientProps) {
     const { t, i18n } = useTranslation();
     const searchParams = useSearchParams();
+    useAllerAuPassage();
     // Ouvert depuis une setlist (`?setlist=`) : sa version, et le Retour y ramène.
     const setlistDOrigine = safeParseParam<string | null>(searchParams.get("setlist"), null, estTexteOuNul);
     const versionSetlist = useVersionDeLaSetlist(

@@ -487,3 +487,23 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   part. Tests (5,0 min) : build:index (91 fiches), validate, tsc ; `harmonie-catalogue`, `harmonie-regles`,
   `harmonie-passages`, `agencement-v18-harmonie`, `pages-en-grand-harmonie-corrections` sur les trois appareils
   (cinq projets) : 244 passés, 6 ignorés, aucun échec. Les tests comptent 91 fiches.
+- 12/11/2026 : **H6-2 faite, lot H6 fini** (session orchestratrice de H6-2, executant + testeur + relecteur + regard +
+  critique-design) : en-tête de fiche en pastilles grises (ressentis, usages, niveau ; « proposées » / « 待确认 »,
+  famille en petit au-dessus) ; deux `BoutonEcouter` Avant / Après dans la carte « Avant → après », lus par
+  `src/lib/harmonie/avantApres.ts` (« → », « … » et « – » séparent, parenthèses ôtées ; 10 cartes sur 64 restent sans
+  bouton : « … A → D | refrain en D », transitions de tonalité, texte libre) ; « Où l'entendre » : une ligne par chant
+  d'`ecoutes` en lien `?passage=`, noms des passages en gris (trois puis « +n »), les titres de la phrase écrite
+  mènent au passage ; hook `useAllerAuPassage` (une ligne dans `SongDetailClient`) ; liens précédente / suivante qui
+  suivent `ordre`. **Décisions déléguées (session H6-2, 12/11)**, après `critique-design` : (1) « Quand l'éviter »
+  pleine largeur sous la rangée Pourquoi / instrument (supprime le vide sous « Pourquoi » à 1 280 et 1 440 ; en une
+  colonne : Pourquoi, instrument, Quand l'éviter) ; (2) un chant déjà cité dans la phrase écrite ne se répète pas
+  dans la liste d'`ecoutes` ; (3) chant de la phrase sans détail : son pinyin en gris dessous (plus de rangées
+  creuses pour les chants chinois) ; (4) le sous-titre « Où l'entendre » n'apparaît que si la liste « n chants qui le
+  jouent déjà » le suit ; (5) un mot gris visible « Précédente » / « Suivante » (上一张 / 下一张) au-dessus des liens.
+  Clés retirées : `harmonie.sensation.*`, `harmonie.moment.*`, `harmonie.niveau.titre|tous`. Tests : tsc, validate ;
+  `harmonie-bibliotheque` (cinq projets), `harmonie-catalogue`, `harmonie-ecoute`, `pages-en-grand-harmonie*`,
+  `retouches-v18-pilules-stats` : premier tour 333 passés / 14 échecs (6,2 min : sélecteurs et tests périmés par
+  H6-1 et la nouvelle disposition), deuxième 244 / 5 (4,5 min, `trailingSlash` dans un sélecteur), puis après les
+  retouches 145 + 125 passés (4,5 min) et, après rebase sur H5-1, 77 passés (1,1 min). Reste, hors lot : la ligne
+  « Portée … sûreté » en bas de fiche reste en français en 中文 ; le surlignage `harmonie-surligne` touche le bord
+  droit de la colonne à 1 440 sur la page chant (classe partagée avec « Montrer »).

@@ -102,13 +102,13 @@ test("une fiche montre avant → après, le pourquoi, les pièges et les exemple
   await expect(page.getByRole("heading", { name: "Quand l'éviter" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Au piano" }), "Jo est pianiste").toBeVisible();
   await expect(page.getByRole("heading", { name: "Dans le répertoire" })).toBeVisible();
-  await expect(page.getByText(/chants? qui le joue/), "les exemples sont comptés").toBeVisible();
-  // harmonie-10 : toutes les lignes de chants ont la même hauteur (44 px) ; « Voir les N autres » déplie le reste.
+  // H6-2 : les chants à passages (`ecoutes`) quittent la liste « n chants qui le jouent déjà » ; cette fiche les a tous, donc pas de compteur.
+  // harmonie-10 : toutes les lignes de chants ont la même hauteur ; « Voir les N autres » déplie le reste.
   // Les titres de « Où l'entendre » (liens depuis les retouches d'usage T6) ne sont pas des lignes de cette liste.
-  const lignes = page.locator('[data-fiche] a[href^="/songs/"]:not([data-ou-l-entendre] a)');
+  const lignes = page.locator('[data-fiche] [data-ecoutes] a[href^="/songs/"]');
   await expect(lignes.first()).toBeVisible();
   const hauteurs = await lignes.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().height)));
-  expect(new Set(hauteurs), "des lignes d'une seule hauteur").toEqual(new Set([44]));
+  expect(new Set(hauteurs).size, "des lignes d'une seule hauteur").toBe(1);
   const autres = page.locator("[data-fiche]").getByRole("button", { name: /^Voir les \d+ autres$/ });
   if (await autres.count()) {
     const avant = await lignes.count();

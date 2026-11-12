@@ -197,15 +197,16 @@ test.describe("harmonie-10 : la phrase « Dans le répertoire »", () => {
     expect(decouperRepertoire("*Jireh* (intro, en E : B6)")![0].detail.filter((m) => m.accord).map((m) => m.texte)).toEqual(["B6"]);
   });
 
-  test("tablette portrait : « Quand l'éviter » suit « Au piano » sans vide de plus de 24 px", async ({ page }, info) => {
+  test("tablette portrait : « Quand l'éviter » passe sous Pourquoi et Au piano, aligné à gauche, sans vide de plus de 24 px", async ({ page }, info) => {
     test.skip(info.project.name !== "tablette", "tablette portrait seulement");
     await entrer(page, "/harmonie/substitutions/2m7-pour-4");
-    const piano = page.locator("section", { has: page.getByRole("heading", { name: "Au piano" }) });
-    const eviter = page.locator("section", { has: page.getByRole("heading", { name: "Quand l'éviter" }) });
+    const carte = (titre: string) => page.locator("section", { has: page.getByRole("heading", { name: titre }) });
+    const [pourquoi, piano, eviter] = [carte("Pourquoi ça marche"), carte("Au piano"), carte("Quand l'éviter")];
     await expect(piano).toBeVisible();
-    const [p, e] = [(await piano.boundingBox())!, (await eviter.boundingBox())!];
-    expect(Math.abs(p.x - e.x), "dans la même colonne").toBeLessThan(2);
-    expect(e.y - (p.y + p.height), "écart entre les deux cartes").toBeLessThanOrEqual(24);
+    const [p, a, e] = [(await pourquoi.boundingBox())!, (await piano.boundingBox())!, (await eviter.boundingBox())!];
+    expect(Math.abs(p.x - e.x), "aligné à gauche sur Pourquoi").toBeLessThan(2);
+    expect(e.y, "sous les deux cartes").toBeGreaterThan(Math.max(p.y + p.height, a.y + a.height) - 1);
+    expect(e.y - Math.max(p.y + p.height, a.y + a.height), "écart sous la plus haute des deux").toBeLessThanOrEqual(24);
     expect(await sansDefilementHorizontal(page)).toBe(true);
     await capture(page, "harmonie-10-fiche");
   });

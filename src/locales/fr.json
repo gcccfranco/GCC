@@ -3249,9 +3249,7 @@
     "niveau": {
       "facile": "Facile",
       "intermediaire": "Intermédiaire",
-      "avance": "Avancé",
-      "titre": "Niveau",
-      "tous": "Tous les niveaux"
+      "avance": "Avancé"
     },
     "ressenti": {
       "titre": "Ressenti",
@@ -3270,38 +3268,19 @@
       "transition": "Transition"
     },
     "duPlusSimple": "Du plus simple au plus avancé",
-    "sensation": {
-      "titre": "Sensation",
-      "epique": "Épique",
-      "majeste": "Majesté",
-      "tension": "Tension",
-      "repos": "Repos",
-      "surprise": "Surprise",
-      "suspendu": "Suspendu et planant",
-      "emerveillement": "Émerveillement",
-      "douceur": "Douceur et intimité",
-      "tendresse": "Tendresse et nostalgie",
-      "gravite": "Gravité et recueillement",
-      "lumiere": "Lumière et espérance",
-      "joie": "Joie et élan"
-    },
-    "moment": {
-      "titre": "Moment",
-      "tous": "Tous les moments",
-      "intro": "Intro",
-      "couplet": "Couplet",
-      "montee": "Montée",
-      "refrain": "Refrain",
-      "pont": "Pont",
-      "fin": "Fin",
-      "transition": "Transition"
-    },
     "surete": {
       "tres-sure": "Très sûre",
       "sure": "Sûre",
       "a-ecouter": "À écouter"
     },
     "avantApres": "Avant → après",
+    "avant": "Avant",
+    "apres": "Après",
+    "proposees": "proposées",
+    "fichePrecedente": "Fiche précédente",
+    "ficheSuivante": "Fiche suivante",
+    "precedente": "Précédente",
+    "suivante": "Suivante",
     "pourquoi": "Pourquoi ça marche",
     "eviter": "Quand l'éviter",
     "auPiano": "Au piano",

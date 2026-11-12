@@ -3206,9 +3206,7 @@
     "niveau": {
       "facile": "简单",
       "intermediaire": "中等",
-      "avance": "进阶",
-      "titre": "难度",
-      "tous": "全部难度"
+      "avance": "进阶"
     },
     "ressenti": {
       "titre": "感觉",
@@ -3227,38 +3225,19 @@
       "transition": "过渡"
     },
     "duPlusSimple": "由浅入深",
-    "sensation": {
-      "titre": "感觉",
-      "epique": "史诗",
-      "majeste": "庄严",
-      "tension": "张力",
-      "repos": "安息",
-      "surprise": "意外",
-      "suspendu": "悬浮飘渺",
-      "emerveillement": "惊叹",
-      "douceur": "柔和亲密",
-      "tendresse": "温柔怀旧",
-      "gravite": "肃穆默想",
-      "lumiere": "光明盼望",
-      "joie": "喜乐激昂"
-    },
-    "moment": {
-      "titre": "段落",
-      "tous": "全部段落",
-      "intro": "前奏",
-      "couplet": "主歌",
-      "montee": "过门",
-      "refrain": "副歌",
-      "pont": "桥段",
-      "fin": "结尾",
-      "transition": "过渡"
-    },
     "surete": {
       "tres-sure": "很稳妥",
       "sure": "稳妥",
       "a-ecouter": "需试听"
     },
     "avantApres": "改前 → 改后",
+    "avant": "改前",
+    "apres": "改后",
+    "proposees": "待确认",
+    "fichePrecedente": "上一张",
+    "ficheSuivante": "下一张",
+    "precedente": "上一张",
+    "suivante": "下一张",
     "pourquoi": "为什么好听",
     "eviter": "什么时候别用",
     "auPiano": "钢琴弹法",
