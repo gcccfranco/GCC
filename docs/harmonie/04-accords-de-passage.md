@@ -232,3 +232,87 @@ F : Em7b5).
 
 **Règle.** Portée : Pont, Couplet · motif `5 → 6m` · remplacement
 `7m7b5 – 3 7 → 6m` · sûreté : **à écouter**.
+
+---
+
+## P7 · Le 3m qui devient majeur
+
+| | |
+| --- | --- |
+| Id | `passage/3-majeur` |
+| Statut | à valider |
+| Sensations | Tension · Tendresse et nostalgie |
+| Moments | Couplet · Refrain |
+| Ressenti | élan · mélancolique (proposé) |
+| Usage | couplet · refrain (proposé) |
+| Niveau | piano : facile · guitare : intermédiaire |
+
+**Avant → après** : `G → A → F#m → Bm` devient `G → A → F# → Bm` · degrés
+`4 → 5 → 3m → 6m` devient `4 → 5 → 3 → 6m`.
+
+**Pourquoi ça marche.** Une seule note change : le A de F#m monte d'un
+demi-ton sur A#. Cette note veut monter sur B, la base de Bm : F# devient le
+5 du 6m, et la chute vers Bm devient une petite cadence en mineur. Là où P1
+part du 1 (`D/F# → Bm`), cette fiche part d'un 3m déjà écrit dans la grille.
+
+**Quand l'éviter.**
+- Quand la mélodie chante A (sans dièse) sur ce temps : il frotte contre A#.
+- Quand le chant reste lumineux de bout en bout : le 3m est plus calme.
+
+**Variante.** `F#7` (avec E) pour tirer encore plus vers Bm (P1) ; `F# → G`
+(`3 → 4`) : A# monte sur B, F# monte sur G.
+
+**Au piano.** Main gauche : G, A, F#, B. Main droite : B-D-G, puis A-C#-E,
+puis A#-C#-F#, puis B-D-F#.
+
+**À la guitare.** F# en barré 2e case (`244322`) ; F#7 en `242322`.
+
+**Dans le répertoire** (`3 → 6m` dans une ligne : 32 chants) : *Je louerai
+l'Éternel* (couplets, en D : G – A – F# – Bm) · *Je loue Ton Nom, Éternel*
+(refrain, en G : C – D – B7 – Em, avec la 7 : voir P1) · 一同齐声宣扬 (副歌, en A : D – C# – F#m) ·
+十字架是我的荣耀 (副歌, en F : F – A7 – Bb, le `3 → 4`).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).
+
+---
+
+## P8 · Le 2m7b5 de passage, avant le 1
+
+| | |
+| --- | --- |
+| Id | `passage/2m7b5` |
+| Statut | à valider |
+| Sensations | Tendresse et nostalgie · Douceur et intimité |
+| Moments | Fin · Couplet |
+| Ressenti | mélancolique · chaleureux (proposé) |
+| Usage | fin · couplet (proposé) |
+| Niveau | piano : intermédiaire · guitare : intermédiaire |
+
+**Avant → après** : `Em7 → A → D` devient `Em7 – Em7b5/A → D` · degrés
+`2m7 → 5 → 1` devient `2m7 – 2m7b5/5 → 1`.
+
+**Pourquoi ça marche.** Em7b5, c'est E-G-Bb-D : le B de Em7 descend sur Bb,
+puis sur le A de D. Une ligne chromatique (B, Bb, A) au milieu des accords.
+Avec la basse A, l'accord fait office de 5, assombri : Bb vient de D mineur,
+un instant d'ombre juste avant la lumière du 1.
+
+**Quand l'éviter.**
+- Quand la mélodie chante B sur cet accord : il frotte contre le Bb.
+- Dans un refrain énergique : l'ombre ralentit l'élan.
+
+**Variante.** Le préparer par le 5 du 2m (P3) : `B7 → Em7 – Em7b5/A → D`,
+toute la grille descend. Sans la basse A : `Em7 – Em7b5 → D/F#`.
+
+**Au piano.** Main gauche : E, puis A, puis D. Main droite : D-G-B, puis
+D-G-Bb (un seul doigt descend), puis D-F#-A.
+
+**À la guitare.** Em7 en `022030`, puis Em7b5 en `012030` (un doigt descend d'une
+case sur la 5e corde, B → Bb ; la basse A se laisse au bassiste ou au piano), puis D.
+
+**Dans le répertoire** (en chinois) : 爱的约定 (副歌 2, en C : Dm7 – Dm7b5/G –
+Cmaj9) ; plus loin du motif, la basse sur le b5 : 唯有耶稣 (副歌, en G :
+Am – Am7b5/Eb – G/D, basse Eb → D).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).

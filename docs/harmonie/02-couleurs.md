@@ -279,3 +279,176 @@ avec une mélodie qui tient G.
 chants, par exemple *Quand je contemple* (refrain, en C : FM7 – G/F).
 
 **Règle.** Aucune : c'est M3 qui propose ce son sur un chant, en mouvement.
+
+---
+
+## C8 · Les deux notes du haut tenues (4 2 – 6m7 – 5sus4)
+
+| | |
+| --- | --- |
+| Id | `couleurs/notes-du-haut-tenues` |
+| Statut | à valider |
+| Sensations | Suspendu et planant · Douceur et intimité |
+| Moments | Intro · Couplet · Pont |
+| Ressenti | couleur · chaleureux (proposé) |
+| Usage | transition · couplet · pré-refrain (proposé) |
+| Niveau | piano : intermédiaire · guitare : facile |
+
+**Avant → après** : `D → G → Bm → A` devient `D → G2 → Bm7 → Asus4` · degrés
+`1 → 4 → 6m → 5` devient `1 → 4 2 → 6m7 → 5sus4`.
+
+**Pourquoi ça marche.** Les quatre accords gardent les deux mêmes notes en
+haut, A et D. Seules la basse et une note du milieu bougent : la suite sonne
+comme une seule nappe qui change de couleur par-dessous. C'est le son
+« guitare de louange » : deux doigts qui ne bougent pas. Où C1 colore un
+accord, cette fiche colore toute une grille.
+
+**Quand l'éviter.**
+- Quand la mélodie chante C# sur le 5 : Asus4 n'a pas de C#, il frotte.
+  Résous en A (C2).
+- Quand le refrain doit frapper : les accords pleins (G, Bm, A) sonnent plus
+  franc.
+
+**Variante.** Finir la ligne par `Asus4 – A` (C2) ; pour un seul accord
+coloré, voir C1.
+
+**Au piano.** Main gauche : la basse (D, G, B, A). Main droite : garde A-D en
+haut sur les quatre accords et ajoute en dessous la note qui change : F# (D),
+B (G2), F# (Bm7), E (Asus4).
+
+**À la guitare.** En D, capodastre 7e case et formes de G : `320033` (D),
+`x32033` (G2), `022033` (Bm7), `xx0233` (Asus4). L'annulaire et l'auriculaire
+restent sur les cordes de si et de mi aigu. Sans capodastre, la même grille
+sonne en G : G, Cadd9, Em7, Dsus4.
+
+**Dans le répertoire** : *Infiniment grand* (refrain, en C : C – F2 – Am7 –
+Gsus4 – G) · *Abrite-moi* (intro, en C : F2 – Am7 – C/G – G).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).
+
+---
+
+## C9 · Le m9 sur le 6m
+
+| | |
+| --- | --- |
+| Id | `couleurs/m9` |
+| Statut | à valider |
+| Sensations | Douceur et intimité · Tendresse et nostalgie |
+| Moments | Couplet · Pont |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
+| Niveau | piano : intermédiaire · guitare : intermédiaire |
+
+**Avant → après** : `Bm` devient `Bm9` · degrés `6m` devient `6m9`.
+
+**Pourquoi ça marche.** Bm9, c'est B-D-F#-A-C# : au Bm7 de C6 on ajoute C#, la
+9. Toutes ces notes sont dans la gamme de D, rien d'étranger ; la 9 ouvre
+l'accord et, avec la 7 (A), le rend feutré, presque jazz. Joli sur un 6m qui
+dure, en début de couplet.
+
+**Quand l'éviter.**
+- Quand la mélodie tient D en haut : C# est juste en dessous, un demi-ton qui
+  frotte. Garde Bm7.
+- Sur un 6m bref entre deux accords rapides : la couleur ne s'entend pas.
+
+**Variante.** `Bm7` (C6) si la 9 gêne ; `Bm(add9)` sans la 7 : B-D-F#-C#. Sur
+le 2m aussi : `Em9`.
+
+**Au piano.** Main gauche : B (ou B-F#). Main droite : D-F#-A-C#, c'est-à-dire
+un Dmaj7 posé sur la basse B : c'est exactement Bm9.
+
+**À la guitare.** Bm9 en `x20222` (B, D, A, C#, F#) : facile, la corde de ré
+à vide.
+
+**Dans le répertoire** : 一颗谦卑的心 (主歌, en D : D – Bm9 – G) · *Infiniment
+grand* (pont, en C : Am – Am9). Sur le 2m : *Oasis* (refrain, en E : F#m9).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).
+
+---
+
+## C10 · Le sus4 qui se résout sur le 7
+
+| | |
+| --- | --- |
+| Id | `couleurs/sus4-vers-7` |
+| Statut | à valider |
+| Sensations | Tension · Repos |
+| Moments | Fin · Montée |
+| Ressenti | élan · chaleureux (proposé) |
+| Usage | fin · pré-refrain (proposé) |
+| Niveau | piano : facile · guitare : facile |
+
+**Avant → après** : `A → D` devient `Asus4 – A7 → D` · degrés `5 → 1` devient
+`5sus4 – 5 7 → 1`.
+
+**Pourquoi ça marche.** Dans Asus4, le D attend. Il descend sur C#, et en même
+temps le G (la 7) entre : A7 tire deux fois vers D (C# monte sur D, G descend
+sur F#). Deux tensions l'une après l'autre : la fin se pose plus fermement
+qu'avec C2 (`Asus4 – A`).
+
+**Quand l'éviter.**
+- Dans un passage doux où A seul suffit : le 7 sonne plus appuyé.
+- Quand la mélodie tient D sur le A7 : D frotte contre le C#.
+
+**Variante.** `A7sus4 – A7 → D` : le G est là dès le début, seul le D
+descend.
+
+**Au piano.** Main gauche : A. Main droite : A-D-E, puis G-C#-E (deux doigts
+descendent), puis F#-A-D.
+
+**À la guitare.** Asus4 en `x02230`, puis A7 en `x02020`, puis D en `xx0232`.
+
+**Dans le répertoire** (`5sus4 – 5 7` dans une ligne, tous en chinois) :
+我愿为你去 (副歌 1, en D : Asus4 – A7) · 我在这里敬拜 (主歌 2, en D : Em7 –
+Asus4 – A7) · 大手牵着小手 (主歌, en D : Asus4 – A7) · 唯独依靠你 (主歌 1, en
+E : Bsus4 – B7).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).
+
+---
+
+## C11 · Le 1 tenu en nappe
+
+| | |
+| --- | --- |
+| Id | `couleurs/1-en-nappe` |
+| Statut | à valider |
+| Sensations | Suspendu et planant · Douceur et intimité |
+| Moments | Intro · Transition · Fin |
+| Ressenti | couleur · chaleureux (proposé) |
+| Usage | transition · fin (proposé) |
+| Niveau | piano : intermédiaire · guitare : facile |
+
+**Avant → après** : `D` (plaqué à chaque temps) devient `D2` tenu, la 9 en bas
+de la main droite · degrés `1` devient `1 2` (tenu).
+
+**Pourquoi ça marche.** Main gauche D-A (la quinte, grave), main droite
+E-F#-A : la 9 (E) serrée sous la tierce. La seconde E-F# fait vibrer
+l'accord ; tenu sans attaque, il remplit l'espace comme un son de nappe
+(« pad »). C1 donne l'accord ; cette fiche, la façon de le tenir. C'est le fond des temps de prière et des passages d'un chant à
+l'autre.
+
+**Quand l'éviter.**
+- Quand un clavier joue déjà un son de nappe : deux nappes épaississent tout.
+- Sous une voix qui chante E ou F# longuement dans le même registre : elle se
+  perd dans le frottement.
+
+**Variante.** `Dsus2` (C3), sans F# : plus ouvert encore.
+
+**Au piano.** Main gauche D-A dans le grave, à la pédale ; main droite E-F#-A
+au milieu du clavier, attaquée doucement, une fois par mesure ou moins.
+
+**À la guitare.** Dadd9 en `x54230`, en arpège lent, laissé sonner ; ou
+gratté une fois par mesure et laissé mourir.
+
+**Dans le répertoire** (intros en accords 2 ou 5) : *J'annoncerai* (intro, en
+A : A2 – E) · *Cet amour* (intro, en A : A5 – D2) · 十架的大能 (前奏, en A :
+… – D2).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).

@@ -172,9 +172,9 @@ test.describe("le RD-2000", () => {
 });
 
 test.describe("harmonie-10 : la phrase « Dans le répertoire »", () => {
-  test("le découpeur ne perd aucun texte sur les 69 fiches", () => {
+  test("le découpeur ne perd aucun texte sur les 80 fiches", () => {
     const nettoyer = (s: string) => s.replace(/[*()·.]/g, " ").replace(/\s+/g, " ").trim();
-    expect(CATALOGUE.fiches).toHaveLength(69);
+    expect(CATALOGUE.fiches).toHaveLength(80);
     let avecPhrase = 0;
     let decoupees = 0;
     for (const f of CATALOGUE.fiches) {

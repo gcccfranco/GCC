@@ -408,3 +408,20 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   sont du texte ; un lien vers le passage (chant + section) demanderait une syntaxe de lien dans `cours.ts` et
   `LecteurCours`. Tests : build:index, validate, tsc ; `harmonie-cours` et `harmonie-cours-lecture` sur les trois
   appareils, 51 passés (1,4 min). Relecteur : exact ; une basse précisée. Prochaine : T2.
+- 12/11/2026 — **H9 T2 faite** : 11 fiches en français, statut « à valider », ressenti et usage « (proposé) » :
+  S7 le 3m après le 4 (`4 – 5/4 – 3m – 6m`), S8 la quarte-sixte de cadence, S9 le 6m à la place du 4 ; C8 les deux
+  notes du haut tenues, C9 le m9 sur le 6m, C10 le sus4 qui se résout sur le 7, C11 le 1 tenu en nappe ; P7 le 3m
+  qui devient majeur, P8 le 2m7b5 de passage ; E6 le 4m6 avant le dernier 1, E7 le b7 qui conclut. Passages du
+  répertoire relevés par script sur les `.cho`, puis vérifiés un à un par le relecteur (quatre citations corrigées).
+  Décisions déléguées (orchestratrice H9 T2, 12/11) : cinq idées de la liste recouvraient une fiche existante. Elles
+  ont donc pris un angle distinct : « add9 sur le 4 et le 1 » devient C8 (toute une grille sur deux notes tenues, C1
+  colorait un seul accord) ; « 3 majeur » part d'un 3m déjà écrit (P1 part du 1/3) ; « dominante secondaire du 2m
+  avant le 2m7-5 » devient P8, le 2m7b5 de passage, avec P3 en variante (aucun `3m7b5 – 6 7 → 2m` dans le
+  répertoire, le 2m7b5 y est deux fois) ; le 4m6 et le b7 → 1 se distinguent de E1 et de E3 par leur couleur et
+  leur arrivée directe. C11 reste proche de C1 (même accord, tenu en nappe) : Timothée peut la fondre dans C1.
+  Chaque fiche porte « **Règle.** Aucune : catalogue seul » (convention des familles sans règle ; le test exige la
+  ligne). Reste à faire, en code et hors périmètre : une règle de suggestion par fiche, à proposer à part. Tests
+  (5,2 min) : build:index (80 fiches), validate, tsc ; `harmonie-catalogue`, `harmonie-regles`, `harmonie-passages`,
+  `agencement-v18-harmonie`, `pages-en-grand-harmonie-corrections` sur les trois appareils : 244 passés, 6 ignorés.
+  Les 6 échecs de la ligne « Règle » sont corrigés et `harmonie-regles` repasse (27). Les tests comptent 80 fiches.
+  Prochaine tranche : T3.

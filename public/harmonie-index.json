@@ -1,5 +1,5 @@
 {
-  "genereLe": "2026-11-12T10:09:02.753Z",
+  "genereLe": "2026-11-12T17:27:08.950Z",
   "fiches": [
     {
       "id": "substitutions/2m7-pour-4",
@@ -7626,6 +7626,129 @@
       ]
     },
     {
+      "id": "substitutions/3m-apres-le-4",
+      "code": "S7",
+      "famille": "substitutions",
+      "familleNom": "Substitutions",
+      "nom": "Le 3m après le 4 (4 – 5/4 – 3m – 6m)",
+      "statut": "a-valider",
+      "sensations": [
+        "tendresse",
+        "lumiere"
+      ],
+      "moments": [
+        "couplet",
+        "refrain"
+      ],
+      "ressentis": [
+        "melancolique",
+        "chaleureux"
+      ],
+      "usages": [
+        "couplet",
+        "refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "intermediaire"
+      },
+      "avantApres": "`G → A → Bm` devient `G – A/G → F#m → Bm` · degrés\n`4 → 5 → 6m` devient `4 – 5/4 → 3m → 6m`.",
+      "pourquoi": "La basse descend pas à pas : G, G, F#, puis B. A/G\ngarde le G en bas pendant que le haut monte (M3). Puis F#m garde deux notes de\nA (A et C#) et tombe d'une quinte sur Bm : le chemin le plus naturel qui soit.\nOn arrive sur le 6m sans à-coup, par une marche descendante.",
+      "eviter": [
+        "Quand la mélodie chante D sur le temps où arrive F#m : D frotte contre le C# de l'accord.",
+        "Quand le passage doit monter avec force vers le refrain : `4 → 5 → 1` pousse plus. **Variante.** `G → A → F#m7 → Bm7` sans la basse G : la suite « 4 5 3m 6m » toute simple. F# majeur au lieu de F#m : voir P7."
+      ],
+      "piano": "Main gauche : G, G, F#, B. Main droite : B-D-G, puis A-C#-E (sur\nla même basse G), puis A-C#-F#, puis B-D-F#.",
+      "guitare": "A/G en `3x2220` (le G au pouce ou à l'annulaire) ; F#m en\nbarré 2e case (`244222`) ; Bm en `x24432`.",
+      "repertoire": "*Quand je contemple* (refrain, en C : Fmaj7 – G/F – Em7 – Am) · *Que tous\nsoient un* (couplets, en E : A – B/A – G#m – C#m) · *Seigneur, par la clarté*\n(couplet 1, en A : D – E/D – C#m – F#m) · 为我而来 (主歌, en C : Fmaj7 – G –\nEm7 – Am, sans la basse G).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "substitutions/quarte-sixte-de-cadence",
+      "code": "S8",
+      "famille": "substitutions",
+      "familleNom": "Substitutions",
+      "nom": "La quarte-sixte de cadence (1/5 avant le 5)",
+      "statut": "a-valider",
+      "sensations": [
+        "majeste",
+        "repos"
+      ],
+      "moments": [
+        "fin",
+        "refrain"
+      ],
+      "ressentis": [
+        "elan",
+        "chaleureux"
+      ],
+      "usages": [
+        "fin",
+        "refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "facile"
+      },
+      "avantApres": "`A → D` devient `D/A – A → D` · degrés `5 → 1` devient\n`1/5 – 5 → 1`.",
+      "pourquoi": "D/A a déjà la basse du 5 (A), mais en haut ce sont les\nnotes de D. Elles glissent ensuite vers celles de A (D descend sur C#, F# sur\nE), puis reviennent sur D. On entend l'arrivée deux fois : la fin paraît plus\nlarge, plus solennelle. C'est la cadence des hymnes.",
+      "eviter": [
+        "Sur une fin rapide où le 5 ne dure qu'un temps : pas la place pour deux accords.",
+        "Quand la basse joue D sous D/A : tout l'effet vient de la basse A tenue. **Variante.** `D/A – Asus4 – A → D` (la 4 entre les deux, voir C2) ; ou `D/A – A7 → D`."
+      ],
+      "piano": "Main gauche : A, tenu sur les deux accords. Main droite : D-F#-A,\npuis C#-E-A, puis D-F#-A.",
+      "guitare": "D/A en `x00232`, puis A en `x02220`, puis D en `xx0232` : la\n5e corde (A) reste en basse sur les deux premiers.",
+      "repertoire": "*Attaché\nà la croix* (refrain, en D : D/A – A – D) · *Noël est arrivé* (refrain 1, en\nF : Bb – F/C – C – F) · 你是我的一切 (主歌 1, en D : D/A – A – D) · 何等恩典\n(副歌, en G : G/D – Dsus4 – G).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "substitutions/6m-pour-4",
+      "code": "S9",
+      "famille": "substitutions",
+      "familleNom": "Substitutions",
+      "nom": "Le 6m à la place du 4 (1 6m 5)",
+      "statut": "a-valider",
+      "sensations": [
+        "tendresse",
+        "douceur"
+      ],
+      "moments": [
+        "couplet",
+        "pont"
+      ],
+      "ressentis": [
+        "melancolique",
+        "chaleureux"
+      ],
+      "usages": [
+        "couplet",
+        "pre-refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "facile"
+      },
+      "avantApres": "`D → G → A` devient `D → Bm → A` · degrés `1 → 4 → 5`\ndevient `1 → 6m → 5`.",
+      "pourquoi": "Bm et G ont deux notes en commun (B et D) : l'accord\ntient la même place, mais la couleur passe en mineur. Bm prépare A moins\nfranchement que G : la marche vers le 5 est plus retenue, plus intime. La\nbasse descend D, B, A.",
+      "eviter": [
+        "Quand la mélodie tient G sur cet accord : G frotte contre le F# de Bm.",
+        "Dans un refrain qui doit s'ouvrir : le 4 est plus lumineux. **Variante.** `D → Bm7 → A` (C6, plus doux) ; ou `D → Bm → G → A` pour garder les deux."
+      ],
+      "piano": "Main droite : de D-F#-A à D-F#-B (un seul doigt bouge, A monte\nsur B), puis C#-E-A. Main gauche : D, B, A.",
+      "guitare": "Bm en `x24432` ; plus léger, Bm7 en `x20202`.",
+      "repertoire": "*En Toi je sais\nqui je suis* (couplets, en F : F – Dm – C – F) · *Il est temps* (refrain, en\nB : B – G#m – F#) · *Infiniment grand* (couplet 1, en C : C – Am7 – G) ·\n*Avec nous (Emmanuel)* (pont, en E : E – C#m – B).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
       "id": "couleurs/accord-2",
       "code": "C1",
       "famille": "couleurs",
@@ -10421,6 +10544,173 @@
       "guitare": "A/G `3x2220`.",
       "repertoire": "même son que M3 (« Le 4 – 5/4 qui soulève »), dans 45\nchants, par exemple *Quand je contemple* (refrain, en C : FM7 – G/F).",
       "regle": "Aucune : c'est M3 qui propose ce son sur un chant, en mouvement.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "couleurs/notes-du-haut-tenues",
+      "code": "C8",
+      "famille": "couleurs",
+      "familleNom": "Couleurs",
+      "nom": "Les deux notes du haut tenues (4 2 – 6m7 – 5sus4)",
+      "statut": "a-valider",
+      "sensations": [
+        "suspendu",
+        "douceur"
+      ],
+      "moments": [
+        "intro",
+        "couplet",
+        "pont"
+      ],
+      "ressentis": [
+        "couleur",
+        "chaleureux"
+      ],
+      "usages": [
+        "transition",
+        "couplet",
+        "pre-refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "intermediaire",
+        "guitare": "facile"
+      },
+      "avantApres": "`D → G → Bm → A` devient `D → G2 → Bm7 → Asus4` · degrés\n`1 → 4 → 6m → 5` devient `1 → 4 2 → 6m7 → 5sus4`.",
+      "pourquoi": "Les quatre accords gardent les deux mêmes notes en\nhaut, A et D. Seules la basse et une note du milieu bougent : la suite sonne\ncomme une seule nappe qui change de couleur par-dessous. C'est le son\n« guitare de louange » : deux doigts qui ne bougent pas. Où C1 colore un\naccord, cette fiche colore toute une grille.",
+      "eviter": [
+        "Quand la mélodie chante C# sur le 5 : Asus4 n'a pas de C#, il frotte. Résous en A (C2).",
+        "Quand le refrain doit frapper : les accords pleins (G, Bm, A) sonnent plus franc. **Variante.** Finir la ligne par `Asus4 – A` (C2) ; pour un seul accord coloré, voir C1."
+      ],
+      "piano": "Main gauche : la basse (D, G, B, A). Main droite : garde A-D en\nhaut sur les quatre accords et ajoute en dessous la note qui change : F# (D),\nB (G2), F# (Bm7), E (Asus4).",
+      "guitare": "En D, capodastre 7e case et formes de G : `320033` (D),\n`x32033` (G2), `022033` (Bm7), `xx0233` (Asus4). L'annulaire et l'auriculaire\nrestent sur les cordes de si et de mi aigu. Sans capodastre, la même grille\nsonne en G : G, Cadd9, Em7, Dsus4.",
+      "repertoire": "*Infiniment grand* (refrain, en C : C – F2 – Am7 –\nGsus4 – G) · *Abrite-moi* (intro, en C : F2 – Am7 – C/G – G).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "couleurs/m9",
+      "code": "C9",
+      "famille": "couleurs",
+      "familleNom": "Couleurs",
+      "nom": "Le m9 sur le 6m",
+      "statut": "a-valider",
+      "sensations": [
+        "douceur",
+        "tendresse"
+      ],
+      "moments": [
+        "couplet",
+        "pont"
+      ],
+      "ressentis": [
+        "chaleureux",
+        "melancolique"
+      ],
+      "usages": [
+        "couplet",
+        "pre-refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "intermediaire",
+        "guitare": "intermediaire"
+      },
+      "avantApres": "`Bm` devient `Bm9` · degrés `6m` devient `6m9`.",
+      "pourquoi": "Bm9, c'est B-D-F#-A-C# : au Bm7 de C6 on ajoute C#, la\n9. Toutes ces notes sont dans la gamme de D, rien d'étranger ; la 9 ouvre\nl'accord et, avec la 7 (A), le rend feutré, presque jazz. Joli sur un 6m qui\ndure, en début de couplet.",
+      "eviter": [
+        "Quand la mélodie tient D en haut : C# est juste en dessous, un demi-ton qui frotte. Garde Bm7.",
+        "Sur un 6m bref entre deux accords rapides : la couleur ne s'entend pas. **Variante.** `Bm7` (C6) si la 9 gêne ; `Bm(add9)` sans la 7 : B-D-F#-C#. Sur le 2m aussi : `Em9`."
+      ],
+      "piano": "Main gauche : B (ou B-F#). Main droite : D-F#-A-C#, c'est-à-dire\nun Dmaj7 posé sur la basse B : c'est exactement Bm9.",
+      "guitare": "Bm9 en `x20222` (B, D, A, C#, F#) : facile, la corde de ré\nà vide.",
+      "repertoire": "一颗谦卑的心 (主歌, en D : D – Bm9 – G) · *Infiniment\ngrand* (pont, en C : Am – Am9). Sur le 2m : *Oasis* (refrain, en E : F#m9).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "couleurs/sus4-vers-7",
+      "code": "C10",
+      "famille": "couleurs",
+      "familleNom": "Couleurs",
+      "nom": "Le sus4 qui se résout sur le 7",
+      "statut": "a-valider",
+      "sensations": [
+        "tension",
+        "repos"
+      ],
+      "moments": [
+        "fin",
+        "montee"
+      ],
+      "ressentis": [
+        "elan",
+        "chaleureux"
+      ],
+      "usages": [
+        "fin",
+        "pre-refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "facile"
+      },
+      "avantApres": "`A → D` devient `Asus4 – A7 → D` · degrés `5 → 1` devient\n`5sus4 – 5 7 → 1`.",
+      "pourquoi": "Dans Asus4, le D attend. Il descend sur C#, et en même\ntemps le G (la 7) entre : A7 tire deux fois vers D (C# monte sur D, G descend\nsur F#). Deux tensions l'une après l'autre : la fin se pose plus fermement\nqu'avec C2 (`Asus4 – A`).",
+      "eviter": [
+        "Dans un passage doux où A seul suffit : le 7 sonne plus appuyé.",
+        "Quand la mélodie tient D sur le A7 : D frotte contre le C#. **Variante.** `A7sus4 – A7 → D` : le G est là dès le début, seul le D descend."
+      ],
+      "piano": "Main gauche : A. Main droite : A-D-E, puis G-C#-E (deux doigts\ndescendent), puis F#-A-D.",
+      "guitare": "Asus4 en `x02230`, puis A7 en `x02020`, puis D en `xx0232`.",
+      "repertoire": "我愿为你去 (副歌 1, en D : Asus4 – A7) · 我在这里敬拜 (主歌 2, en D : Em7 –\nAsus4 – A7) · 大手牵着小手 (主歌, en D : Asus4 – A7) · 唯独依靠你 (主歌 1, en\nE : Bsus4 – B7).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "couleurs/1-en-nappe",
+      "code": "C11",
+      "famille": "couleurs",
+      "familleNom": "Couleurs",
+      "nom": "Le 1 tenu en nappe",
+      "statut": "a-valider",
+      "sensations": [
+        "suspendu",
+        "douceur"
+      ],
+      "moments": [
+        "intro",
+        "transition",
+        "fin"
+      ],
+      "ressentis": [
+        "couleur",
+        "chaleureux"
+      ],
+      "usages": [
+        "transition",
+        "fin"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "intermediaire",
+        "guitare": "facile"
+      },
+      "avantApres": "`D` (plaqué à chaque temps) devient `D2` tenu, la 9 en bas\nde la main droite · degrés `1` devient `1 2` (tenu).",
+      "pourquoi": "Main gauche D-A (la quinte, grave), main droite\nE-F#-A : la 9 (E) serrée sous la tierce. La seconde E-F# fait vibrer\nl'accord ; tenu sans attaque, il remplit l'espace comme un son de nappe\n(« pad »). C1 donne l'accord ; cette fiche, la façon de le tenir. C'est le fond des temps de prière et des passages d'un chant à\nl'autre.",
+      "eviter": [
+        "Quand un clavier joue déjà un son de nappe : deux nappes épaississent tout.",
+        "Sous une voix qui chante E ou F# longuement dans le même registre : elle se perd dans le frottement. **Variante.** `Dsus2` (C3), sans F# : plus ouvert encore."
+      ],
+      "piano": "Main gauche D-A dans le grave, à la pédale ; main droite E-F#-A\nau milieu du clavier, attaquée doucement, une fois par mesure ou moins.",
+      "guitare": "Dadd9 en `x54230`, en arpège lent, laissé sonner ; ou\ngratté une fois par mesure et laissé mourir.",
+      "repertoire": "*J'annoncerai* (intro, en\nA : A2 – E) · *Cet amour* (intro, en A : A5 – D2) · 十架的大能 (前奏, en A :\n… – D2).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
       "ecoutes": []
     },
@@ -13963,6 +14253,88 @@
       ]
     },
     {
+      "id": "passage/3-majeur",
+      "code": "P7",
+      "famille": "passage",
+      "familleNom": "Accords de passage",
+      "nom": "Le 3m qui devient majeur",
+      "statut": "a-valider",
+      "sensations": [
+        "tension",
+        "tendresse"
+      ],
+      "moments": [
+        "couplet",
+        "refrain"
+      ],
+      "ressentis": [
+        "elan",
+        "melancolique"
+      ],
+      "usages": [
+        "couplet",
+        "refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "intermediaire"
+      },
+      "avantApres": "`G → A → F#m → Bm` devient `G → A → F# → Bm` · degrés\n`4 → 5 → 3m → 6m` devient `4 → 5 → 3 → 6m`.",
+      "pourquoi": "Une seule note change : le A de F#m monte d'un\ndemi-ton sur A#. Cette note veut monter sur B, la base de Bm : F# devient le\n5 du 6m, et la chute vers Bm devient une petite cadence en mineur. Là où P1\npart du 1 (`D/F# → Bm`), cette fiche part d'un 3m déjà écrit dans la grille.",
+      "eviter": [
+        "Quand la mélodie chante A (sans dièse) sur ce temps : il frotte contre A#.",
+        "Quand le chant reste lumineux de bout en bout : le 3m est plus calme. **Variante.** `F#7` (avec E) pour tirer encore plus vers Bm (P1) ; `F# → G` (`3 → 4`) : A# monte sur B, F# monte sur G."
+      ],
+      "piano": "Main gauche : G, A, F#, B. Main droite : B-D-G, puis A-C#-E,\npuis A#-C#-F#, puis B-D-F#.",
+      "guitare": "F# en barré 2e case (`244322`) ; F#7 en `242322`.",
+      "repertoire": "*Je louerai\nl'Éternel* (couplets, en D : G – A – F# – Bm) · *Je loue Ton Nom, Éternel*\n(refrain, en G : C – D – B7 – Em, avec la 7 : voir P1) · 一同齐声宣扬 (副歌, en A : D – C# – F#m) ·\n十字架是我的荣耀 (副歌, en F : F – A7 – Bb, le `3 → 4`).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "passage/2m7b5",
+      "code": "P8",
+      "famille": "passage",
+      "familleNom": "Accords de passage",
+      "nom": "Le 2m7b5 de passage, avant le 1",
+      "statut": "a-valider",
+      "sensations": [
+        "tendresse",
+        "douceur"
+      ],
+      "moments": [
+        "fin",
+        "couplet"
+      ],
+      "ressentis": [
+        "melancolique",
+        "chaleureux"
+      ],
+      "usages": [
+        "fin",
+        "couplet"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "intermediaire",
+        "guitare": "intermediaire"
+      },
+      "avantApres": "`Em7 → A → D` devient `Em7 – Em7b5/A → D` · degrés\n`2m7 → 5 → 1` devient `2m7 – 2m7b5/5 → 1`.",
+      "pourquoi": "Em7b5, c'est E-G-Bb-D : le B de Em7 descend sur Bb,\npuis sur le A de D. Une ligne chromatique (B, Bb, A) au milieu des accords.\nAvec la basse A, l'accord fait office de 5, assombri : Bb vient de D mineur,\nun instant d'ombre juste avant la lumière du 1.",
+      "eviter": [
+        "Quand la mélodie chante B sur cet accord : il frotte contre le Bb.",
+        "Dans un refrain énergique : l'ombre ralentit l'élan. **Variante.** Le préparer par le 5 du 2m (P3) : `B7 → Em7 – Em7b5/A → D`, toute la grille descend. Sans la basse A : `Em7 – Em7b5 → D/F#`."
+      ],
+      "piano": "Main gauche : E, puis A, puis D. Main droite : D-G-B, puis\nD-G-Bb (un seul doigt descend), puis D-F#-A.",
+      "guitare": "Em7 en `022030`, puis Em7b5 en `012030` (un doigt descend d'une\ncase sur la 5e corde, B → Bb ; la basse A se laisse au bassiste ou au piano), puis D.",
+      "repertoire": "爱的约定 (副歌 2, en C : Dm7 – Dm7b5/G –\nCmaj9) ; plus loin du motif, la basse sur le b5 : 唯有耶稣 (副歌, en G :\nAm – Am7b5/Eb – G/D, basse Eb → D).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
       "id": "emprunts/4m-avant-1",
       "code": "E1",
       "famille": "emprunts",
@@ -14191,6 +14563,87 @@
       "guitare": "Bb `x1333x` puis D `xx0232`.",
       "repertoire": "aucun chant ne l'utilise encore.",
       "regle": "Portée : dernière occurrence, toute fin du chant · motif `4 → 1`\nfinal · remplacement `b6 → 1` · sûreté : **à écouter**.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "emprunts/4m6",
+      "code": "E6",
+      "famille": "emprunts",
+      "familleNom": "Emprunts au mineur",
+      "nom": "Le 4m6 avant le dernier 1",
+      "statut": "a-valider",
+      "sensations": [
+        "tendresse",
+        "emerveillement"
+      ],
+      "moments": [
+        "fin"
+      ],
+      "ressentis": [
+        "melancolique",
+        "couleur"
+      ],
+      "usages": [
+        "fin"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "intermediaire",
+        "guitare": "intermediaire"
+      },
+      "avantApres": "`G → D` devient `G – Gm6 → D` · degrés `4 → 1` devient\n`4 – 4m6 → 1`.",
+      "pourquoi": "Gm6, c'est G-Bb-D-E. Comme dans E1, le B descend sur\nBb (emprunté à D mineur), puis sur le A de D. Le E en plus (la 6) adoucit\nl'ombre : l'accord sonne moins triste que Gm, plus « gospel ». Une couleur\nd'avant la fin, à tenir.",
+      "eviter": [
+        "Quand la mélodie chante B (sans bémol) sur ce temps.",
+        "Plus d'une fois par chant : la couleur s'use. Garde-la pour la dernière fin. **Variante.** Sur la basse du 5 : `Gm6/A → D`, la basse annonce déjà le retour."
+      ],
+      "piano": "Main gauche : G. Main droite : B-D-G, puis Bb-D-E, puis A-D-F#\n(Bb descend sur A, E monte sur F#, D reste).",
+      "guitare": "Gm6 en `3x2333` (G, E, Bb, D, G).",
+      "repertoire": "握住幸福 (副歌 2, en G : Cm6/D – G, sur\nla basse du 5) · 奔跑不放弃 (副歌, en E : A/B – (Am6) – E, entre parenthèses\ndans la grille).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "emprunts/b7-1",
+      "code": "E7",
+      "famille": "emprunts",
+      "familleNom": "Emprunts au mineur",
+      "nom": "Le b7 qui conclut (cadence mixolydienne)",
+      "statut": "a-valider",
+      "sensations": [
+        "joie",
+        "majeste"
+      ],
+      "moments": [
+        "fin",
+        "intro",
+        "refrain"
+      ],
+      "ressentis": [
+        "elan"
+      ],
+      "usages": [
+        "fin",
+        "transition",
+        "refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "facile"
+      },
+      "avantApres": "`A → D` devient `C → D` · degrés `5 → 1` devient\n`b7 → 1`.",
+      "pourquoi": "C monte sur D d'un ton entier, toutes ses notes\nensemble. Il n'y a pas de C# (la note qui « tire » vers D) : la fin ne se\nreferme pas, elle s'élève. Un son ouvert, de fête, qu'on appelle mixolydien :\nle « Hosanna » de beaucoup de chants rock de louange. Là où E3 passe par le 4\n(`C – G → D`), ici le b7 conclut seul.",
+      "eviter": [
+        "Quand la mélodie chante C# juste avant le 1 : il frotte contre le C.",
+        "Dans un chant doux et intime : la couleur est trop rock. **Variante.** En boucle sur une intro ou une fin : `D – C – D – C`. Précédé du b6 : c'est E2."
+      ],
+      "piano": "Main gauche : C puis D. Main droite : C-E-G puis D-F#-A (tout\nmonte d'un ton).",
+      "guitare": "C en `x32010` puis D en `xx0232` ; en riff, D – C – D sur la\nmême pulsation.",
+      "repertoire": "*Au nom de Jésus* (intro, en D : D – C – D – C – D) ·\n奔跑不放弃 (副歌, en E : … – D – E/G#, après des accords\nentre parenthèses).",
+      "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
       "ecoutes": []
     },
