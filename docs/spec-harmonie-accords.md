@@ -206,6 +206,61 @@ ajouts n'apparaissent que pour un accord touché **dans la partition d'un chant*
   pures de `suites.ts`, chiffre, Ensuite déplié, Ici ouvre la porte 2) ; voisines `accords-toucher*`, `harmonie-*`.
   Captures : feuille au téléphone, bulle en tablette portrait, paysage, ordinateur et 1 440 px, FR et 中文.
 
+### H6 — porte 3, bibliothèque (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Deux tranches. La première refait la liste, la seconde la fiche. Les données de H2 suffisent (`ressentis`, `usages`,
+`etiquettesProposees`, `ecoutes`) : rien dans `docs/harmonie/` (H9 y écrit), ni dans le panneau d'accord, le module
+d'écoute, `BoutonEcouter` (H5), `SongView` ou `PerformanceMode`.
+- **H6-1, liste.** (`Catalogue.tsx`)
+  - **Filtres** : deux rangées de `Pilules`, **Ressenti** (chaleureux 温暖, mélancolique 忧伤, élan 推进, couleur 色彩)
+    puis **Usage** (couplet 主歌, pré-refrain 副歌前奏, refrain 副歌, fin 结尾, transition 过渡 : les mots chinois
+    des sections du site) ; un appui choisit, un second rend « tous ». Les menus Moment et Niveau et les pilules
+    d'ambiances disparaissent ; Piano · Guitare gardé. Le compteur `cmd.harmonie.filtre` reste.
+  - **Le niveau ordonne** : liste à plat, du plus simple au plus avancé pour l'instrument choisi (facile,
+    intermédiaire, avancé, puis sans niveau), ordre du catalogue à niveau égal ; une ligne grise au-dessus
+    « Du plus simple au plus avancé » / « 由浅入深 ». Plus de groupes par famille (la famille reste dans la fiche).
+    Pourquoi à plat : le niveau ne peut ordonner qu'une seule liste ; les familles coupaient l'ordre en douze.
+  - **Ligne** : nom de la fiche (`lang="fr"`, deux lignes au plus), dessous en gris les ressentis puis les usages
+    puis le niveau, **en entier** (« Chaleureux · Élan · Couplet, pré-refrain · Facile »), sur deux lignes au besoin,
+    sans « … » (musiciens-7). Badge « à relire » gardé.
+  - **Par où commencer** replié partout en une ligne qui se déplie sur place, comme déjà en deux volets
+    (musiciens-11) ; il s'efface toujours au premier filtre.
+  - **Largeur** : en deux volets, liste de **320 px** (au lieu de 400) : la fiche passe de ~530 à ≥ 640 px à
+    l'ordinateur 1 280 (musiciens-10, planche : 320 + 712). Tablette portrait (un volet) : les lignes en cartes sur
+    deux colonnes (`md:grid-cols-2`), sans trous sous les cartes courtes.
+  - **Ordre partagé** : le contexte du catalogue expose `ordre` (ids de la liste visible, dans l'ordre affiché) ; la
+    fiche s'en sert en H6-2.
+  - Tests : nouvelle spec `harmonie-bibliotheque.spec.ts` (dans `SPECS_GRAND_ECRAN` : largeur de la fiche ≥ 640 px
+    sur `ordinateur`), filtres Ressenti et Usage, ordre par niveau, lignes sans troncature, parcours replié ; mises à
+    jour des specs qui cherchaient les ambiances ou les menus (`harmonie-catalogue`, `pages-en-grand-harmonie*`,
+    `agencement-v18-harmonie`).
+- **H6-2, fiche.** (`FicheHarmonie.tsx`, plus un petit hook pour la page chant)
+  - **En-tête** : nom, puis une rangée de pastilles grises (ressentis, usages, niveau) à la place des lignes
+    d'ambiances et de moments ; famille gardée en petit au-dessus ou à côté ; si `etiquettesProposees`, un mot gris
+    « proposées » / « 待确认 » après les pastilles.
+  - **Écouter** : dans la carte « Avant → après », un `BoutonEcouter` avant / après lu dans le texte de la fiche (les
+    deux premiers accords entre accents graves avant « · degrés » : `` `G → A` devient `Em7 → A` ``, flèches et « … »
+    séparent, parenthèses ôtées), transposé avec le menu Tonalité ; texte illisible → pas de bouton. Fonction pure
+    dans `src/lib/harmonie/` (testée).
+  - **Où l'entendre en liens vers les passages** (musiciens-5) : avec `fiche.ecoutes`, **une ligne par chant**
+    (classés par setlists comme les exemples, 6 puis « Voir les autres ») : titre (et pinyin) en lien vers
+    `/songs/<slug>?passage=<uid JSON>` (premier passage), dessous les noms des passages en gris (type traduit par
+    les clés de section du site + numéro, repli sur `nom`), trois au plus puis « +n ». Ces chants sortent de la liste
+    « n chants qui le jouent déjà », qui ne garde que les autres. Les titres de la phrase écrite « Où l'entendre »
+    (`repertoire`) restent des liens vers le chant, à la section si un passage d'`ecoutes` du même chant existe.
+  - **Page chant** : un hook `useAllerAuPassage` (fichier à part, une ligne d'appel dans `SongDetailClient`) lit
+    `passage` (JSON, comme les autres paramètres), attend la section (`[data-section-uids]`, uid exact puis même
+    `idDeSection`), la fait défiler au centre et l'entoure comme « Montrer » (`harmonie-surligne`) ; introuvable :
+    rien. Une fois.
+  - **Précédente / suivante** (musiciens-12) : en bas de chaque fiche, une rangée de deux liens « ‹ nom » / « nom › »
+    (« Fiche précédente » / « 上一张 », « Fiche suivante » / « 下一张 » en `aria-label`) qui suit `ordre` (liste
+    filtrée) ; rien aux bouts ; une fiche hors de la liste filtrée suit l'ordre complet.
+  - Tests : `harmonie-bibliotheque.spec.ts` complétée (Écouter présent, liens d'Où l'entendre avec `passage`, la page
+    chant défile au passage — chant FR `a-jamais-tu-es-saint` —, précédente / suivante suit le filtre, fonction
+    avant / après) ; voisines `harmonie-catalogue`, `pages-en-grand-harmonie*`, `harmonie-ecoute`.
+- Captures des deux tranches : téléphone, tablette portrait, tablette paysage, ordinateur 1 280 et 1 440, FR et
+  中文 ; `regard`, puis `critique-design` sur ses signalements.
+
 Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
 nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
 
