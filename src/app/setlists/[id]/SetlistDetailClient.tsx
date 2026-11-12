@@ -389,6 +389,12 @@ export function SetlistDetailClient() {
     if (valeur.startsWith("v:")) await persistChoice(slug, valeur.slice(2));
     else if ((valeur === "culte" || valeur === "origine") && lectures[slug]?.options.some((o) => o.type === "ancienne")) await persistChoice(slug, "presidence");
   }
+  /** « Garder une copie » : la partition partagée que je lis devient la mienne. */
+  function garderCopie(itemIndex: number) {
+    const slug = setlist!.items[itemIndex].songSlug;
+    const p = mesPartitions.partagees.find((x) => x.slug === slug && x.ownerUid === lectures[slug]?.valeur);
+    if (p) mesPartitions.garderUneCopie(p, historyAuthor(profile)?.name ?? "").catch(() => flashFeedback(t("maPartition.erreurEnregistrement")));
+  }
   /** « Garder la mienne » / « Prendre celle du chant » : ma partition réécrite, base = la couche du dessous. */
   async function reglerConflit(itemIndex: number, index: number, choix: "mienne" | "chant") {
     const l = lectures[setlist!.items[itemIndex].songSlug];
@@ -1732,6 +1738,8 @@ export function SetlistDetailClient() {
         onPasserAuCulte={canEdit ? handlePasserAuCulte : undefined}
         lectures={lectures}
         onChoisirLecture={choisirLecture}
+        partage={user ? (_i, slug) => ({ slug, uid: user.uid, setlistId: id, mp: mesPartitions }) : undefined}
+        onGarderCopie={garderCopie}
         onConflit={reglerConflit}
         enAttente={mesPartitions.enAttente}
         onEditJianpu={handleEditJianpu}

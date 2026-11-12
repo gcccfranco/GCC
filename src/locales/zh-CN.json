@@ -2526,6 +2526,20 @@
     "garderLaMienne": "保留我的",
     "prendreCelleDuChant": "采用诗歌的版本",
     "erreurEnregistrement": "保存失败，请重试。",
+    "partage": {
+      "entree": "分享我的乐谱…",
+      "titre": "分享我的乐谱",
+      "ceDimanche": "本周日与你同工的人",
+      "partageeAvec": "已分享给",
+      "chercher": "搜索成员",
+      "chercherPlaceholder": "姓名",
+      "personne": "没有匹配的人。",
+      "traits": "包含我的笔迹",
+      "tout": "与此人分享我的所有乐谱",
+      "garderCopie": "保留一份副本",
+      "remplacerTitre": "替换我的乐谱？",
+      "remplacerTexte": "你已修改过这首诗歌：副本将替换你的乐谱。"
+    },
     "crayon": {
       "bouton": "铅笔",
       "aide": "铅笔：点一下和弦或字词即可修改。",

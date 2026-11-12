@@ -47,7 +47,7 @@ import { compter } from "@/lib/usage";
 import { telechargerBlob } from "@/lib/telecharger";
 import { useMesPartitions } from "@/lib/partition/useMesPartitions";
 import { lire, resoudreConflit } from "@/lib/partition/lecture";
-import { MenuJeLis, LigneMaPartition } from "@/components/partition/MenuJeLis";
+import { MenuJeLis, LigneMaPartition, LignePartagee } from "@/components/partition/MenuJeLis";
 import { BarreCrayon, type CibleCrayon } from "@/components/partition/BarreCrayon";
 import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
 import { replaceSourceLine, insertSourceLineAfter, deleteSourceLines } from "@/lib/chordpro/editSource";
@@ -601,8 +601,14 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
         >
           {lecture && lecture.options.length > 1 && (
             <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 print:hidden" onClick={(e) => e.stopPropagation()}>
-              <MenuJeLis lecture={lecture} onChoisir={(v) => mp.choisir(song.slug, v)} />
+              <MenuJeLis lecture={lecture} onChoisir={(v) => mp.choisir(song.slug, v)} partage={compte ? { slug: song.slug, uid: compte.uid, setlistId: setlistDOrigine, mp } : undefined} />
               {lecture.valeur === "mienne" && <LigneMaPartition date={lecture.mienne?.updatedAt} enAttente={mp.enAttente} />}
+              {lecture.options.find((o) => o.valeur === lecture.valeur)?.type === "partagee" && (
+                <LignePartagee
+                  nom={lecture.options.find((o) => o.valeur === lecture.valeur)?.nom} mienne={mienne}
+                  onGarder={() => { const p = mp.partagees.find((x) => x.slug === song.slug && x.ownerUid === lecture.valeur); if (p) mp.garderUneCopie(p, historyAuthor(profile)?.name ?? "").catch(() => {}); }}
+                />
+              )}
             </div>
           )}
           {/* L'en-tête du site reste au-dessus du scan (K3) ; le segment « 简谱 · Paroles »

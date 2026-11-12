@@ -346,9 +346,6 @@ test("au Crayon, « Revenir à la présidence » est une puce de 32 px, 12 px au
   await verifierPuce(song(page, 1).getByRole("button", { name: "Revenir à la présidence" }), info);
 });
 
-// « Partager ma version » (la puce) est retirée en MP-3 : le partage revient avec la feuille de MP-4.
-test.skip("partager ma version, puis retirer le partage (MP-4)", async () => {});
-
 test("une version non partagée n'est proposée à personne", async ({ page }) => {
   await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),

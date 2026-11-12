@@ -19,7 +19,8 @@ import { lyricsText } from "@/components/song/copyLyrics";
 import { compter } from "@/lib/usage";
 import { playedSections } from "@/lib/setlist/playedSections";
 import { Button } from "@/components/ui/button";
-import { MenuJeLis, LigneMaPartition } from "@/components/partition/MenuJeLis";
+import { MenuJeLis, LigneMaPartition, LignePartagee } from "@/components/partition/MenuJeLis";
+import type { PartageProps } from "@/components/partition/PartagerMaPartition";
 import type { Lecture } from "@/lib/partition/lecture";
 import { Check, Copy, Link2, MessageSquare, RotateCcw, Sparkles } from "lucide-react";
 import { TOUCHER_44 } from "@/lib/toucher44";
@@ -89,12 +90,17 @@ export function PartitionsView({
   titres,
   lectures,
   onChoisirLecture,
+  partage,
+  onGarderCopie,
   onConflit,
   enAttente = false,
 }: {
   /** Ma partition (docs/spec-ma-partition.md) : par chant, quelle partition se lit, le menu « Je lis » et les signes. */
   lectures?: Record<string, Lecture>;
   onChoisirLecture?: (itemIndex: number, valeur: string) => void;
+  /** De quoi partager ma partition de ce chant (feuille « Partager ma partition ») ; `undefined` : pas de partage. */
+  partage?: (itemIndex: number, slug: string) => PartageProps | undefined;
+  onGarderCopie?: (itemIndex: number) => void;
   onConflit?: (itemIndex: number, index: number, choix: "mienne" | "chant") => void;
   /** Des écritures de ma partition attendent le réseau (« En attente »). */
   enAttente?: boolean;
@@ -365,6 +371,8 @@ export function PartitionsView({
             titre={titres?.[item.songSlug]}
             lecture={lectures?.[item.songSlug]}
             onChoisirLecture={onChoisirLecture}
+            partage={partage}
+            onGarderCopie={onGarderCopie}
             onConflit={onConflit}
             enAttente={enAttente}
           />
@@ -397,11 +405,15 @@ function NormalSongItem({
   titre,
   lecture,
   onChoisirLecture,
+  partage,
+  onGarderCopie,
   onConflit,
   enAttente,
 }: {
   lecture?: Lecture;
   onChoisirLecture?: (itemIndex: number, valeur: string) => void;
+  partage?: (itemIndex: number, slug: string) => PartageProps | undefined;
+  onGarderCopie?: (itemIndex: number) => void;
   onConflit?: (itemIndex: number, index: number, choix: "mienne" | "chant") => void;
   enAttente: boolean;
   setlistId: string;
@@ -507,8 +519,11 @@ function NormalSongItem({
           {t("harmonie.idees")}
         </button>
       )}
-      {!editMode && lecture && <MenuJeLis lecture={lecture} onChoisir={(v) => onChoisirLecture?.(origIndex, v)} />}
+      {!editMode && lecture && <MenuJeLis lecture={lecture} onChoisir={(v) => onChoisirLecture?.(origIndex, v)} partage={partage?.(origIndex, item.songSlug)} />}
       {!editMode && lecture?.valeur === "mienne" && <LigneMaPartition date={lecture.mienne?.updatedAt} enAttente={enAttente} />}
+      {!editMode && lecture && lecture.options.find((o) => o.valeur === lecture.valeur)?.type === "partagee" && onGarderCopie && (
+        <LignePartagee nom={lecture.options.find((o) => o.valeur === lecture.valeur)?.nom} mienne={lecture.mienne ?? null} onGarder={() => onGarderCopie(origIndex)} />
+      )}
     </>
   );
   return (

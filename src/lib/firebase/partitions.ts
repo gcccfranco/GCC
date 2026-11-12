@@ -76,6 +76,24 @@ export async function lirePartitionsPartageesAvecMoi(uid: string): Promise<Parti
   return rows.filter((r) => r.document).map((r) => versPartition(r.document!));
 }
 
+/** Toutes mes partitions (`ownerUid == uid`) ; le document de choix n'a pas de `ownerUid`, il n'en est pas. Lève si la requête échoue. */
+export async function lireMesPartitions(uid: string): Promise<PartitionDeChant[]> {
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeader()) },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "partitions" }],
+        where: { fieldFilter: { field: { fieldPath: "ownerUid" }, op: "EQUAL", value: { stringValue: uid } } },
+      },
+    }),
+    signal: delaiMax(10_000),
+  });
+  await checkRest(res);
+  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+  return rows.filter((r) => r.document).map((r) => versPartition(r.document!));
+}
+
 /** Erreur d'écriture portant le statut HTTP (absent = le réseau a échoué avant toute réponse) : la file hors ligne
  *  distingue ainsi un 5xx, qui se rejoue, d'un refus, qui se remonte. */
 export type ErreurEcriture = Error & { status?: number };

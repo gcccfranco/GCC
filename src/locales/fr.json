@@ -2560,6 +2560,20 @@
     "garderLaMienne": "Garder la mienne",
     "prendreCelleDuChant": "Prendre celle du chant",
     "erreurEnregistrement": "Échec de l'enregistrement — réessaie.",
+    "partage": {
+      "entree": "Partager ma partition…",
+      "titre": "Partager ma partition",
+      "ceDimanche": "Ce dimanche avec toi",
+      "partageeAvec": "Déjà partagée avec",
+      "chercher": "Chercher un membre",
+      "chercherPlaceholder": "Nom ou prénom",
+      "personne": "Personne ne correspond.",
+      "traits": "Inclure mes traits",
+      "tout": "Partager toutes mes partitions avec cette personne",
+      "garderCopie": "Garder une copie",
+      "remplacerTitre": "Remplacer ma partition ?",
+      "remplacerTexte": "Tu as déjà retouché ce chant : la copie remplace ta partition."
+    },
     "crayon": {
       "bouton": "Crayon",
       "aide": "Crayon : touche un accord ou un mot pour le retoucher.",
