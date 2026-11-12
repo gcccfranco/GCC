@@ -19,12 +19,14 @@ const item = (songSlug: string, position: number, over: Record<string, unknown> 
 });
 const setlist = (items: unknown[]) => ({
   title: "Culte du 8 novembre", leader: "Zélie A.", category: "Culte Francophone", date: "2026-11-08", language: "mixed",
-  notes: "", ownerId: "uid-membre", isPrivate: false, items,
+  notes: NOTE, ownerId: "uid-membre", isPrivate: false, items,
 });
 const NOTE = "Intro douce, enchaîner sans pause";
 const DOCS = {
   "setlists/sjp": setlist([item("hosanna", 1, {}, NOTE), item("一切歌颂赞美", 2)]),
   "setlists/stxt": setlist([item("hosanna", 1, {}, NOTE), item("一切歌颂赞美", 2, { jianpuSheet: false })]),
+  // T2 : premier chant en texte chinois, même note
+  "setlists/szh": setlist([item("一切歌颂赞美", 1, { jianpuSheet: false }, NOTE), item("hosanna", 2)]),
 };
 
 // Valeurs de la base (avant T1), codées en dur : --lyric-size = 0.88rem × 1,1 (écran) ou × 1,2 (dès 768 px) ; couleur
@@ -38,12 +40,12 @@ const FENETRES: Record<string, { width: number; height: number }> = {
   tablette: { width: 820, height: 1180 },
 };
 
-async function ouvrir(page: Page, id: "sjp" | "stxt", projet?: string, sombre = false) {
+async function ouvrir(page: Page, id: "sjp" | "stxt" | "szh", projet?: string, sombre = false, aideVue = true) {
   if (projet && FENETRES[projet]) await page.setViewportSize(FENETRES[projet]);
-  await page.addInitScript((dark) => {
-    localStorage.setItem("accords-aide-vue", "1");
+  await page.addInitScript(([dark, vue]) => {
+    if (vue) localStorage.setItem("accords-aide-vue", "1");
     if (dark) localStorage.setItem("theme", "dark");
-  }, sombre);
+  }, [sombre, aideVue] as const);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await signInAs(page, MEMBRE, DOCS, `/setlists/${id}`);
   await ouvrirPartitions(page);
@@ -173,4 +175,128 @@ test("captures sombres : téléphone et 1 440", async ({ page }, info) => {
   await page.screenshot({ path: `test-results/t1-pupitre/${nom}-partitions-sombre.png`, fullPage: volet(nom) });
   await ouvrirListe(page);
   await page.screenshot({ path: `test-results/t1-pupitre/${nom}-liste-sombre.png` });
+});
+
+// ─── T2 : barre compacte en vue Partitions (volet unique), bulle d'aide dans le flux ────────────────────────────────
+// La note de la setlist (`NOTE`) se lit sur une ligne dans la barre ; les setlists ci-dessus la portent toutes.
+const barre = (page: Page) => page.getByTestId("barre-outils");
+const aide = (page: Page) => page.locator("[data-accords-aide]");
+const boutonDetails = (page: Page) => barre(page).getByRole("button", { name: /^.+, (Afficher les détails de la setlist|显示歌单详情)$/ });
+
+/** Haut de l'étiquette de la première section de couplet du premier chant, en % de la hauteur de la fenêtre, page en haut. */
+async function hautEtiquette(page: Page, id: "sjp" | "stxt" | "szh") {
+  const filtre = id === "szh" ? /./ : /^Couplet 1/;
+  const etiquette = page.locator("[data-outline-item] [data-section] > [data-copy-ignore] span.font-semibold").filter({ hasText: filtre }).first();
+  await expect(etiquette).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  let pct = 0;
+  await expect.poll(async () => {
+    pct = await etiquette.evaluate((el) => (el.getBoundingClientRect().top / innerHeight) * 100);
+    return page.evaluate(() => window.scrollY);
+  }).toBe(0);
+  return pct;
+}
+
+const MESURES: { projet: string; id: "sjp" | "stxt" | "szh"; nom: string; aide: number; vue: number }[] = [
+  { projet: "telephone", id: "sjp", nom: "Hosanna", aide: 48, vue: 39 },
+  { projet: "tablette", id: "sjp", nom: "Hosanna", aide: 36, vue: 32 },
+  { projet: "tablette", id: "szh", nom: "一切歌颂赞美 en texte", aide: 28, vue: 24 },
+];
+for (const m of MESURES) {
+  test(`${m.projet} : « Couplet 1 » de ${m.nom} à ${m.aide} % au plus, aide affichée, au-dessus de la première section`, async ({ page }, info) => {
+    test.skip(info.project.name !== m.projet, "Mesure propre au volet unique de cette fenêtre (les deux volets ne changent pas, T3)");
+    await ouvrir(page, m.id, m.projet, false, false);
+    await expect(aide(page)).toBeVisible();
+    const pct = await hautEtiquette(page, m.id);
+    expect(pct, `étiquette à ${pct.toFixed(1)} % de la hauteur`).toBeLessThanOrEqual(m.aide);
+    // Dans le flux : au-dessus de la première section, pas par-dessus les paroles.
+    const [a, section] = await Promise.all([aide(page).boundingBox(), page.locator("[data-outline-item] [data-section]").first().boundingBox()]);
+    expect(a!.y + a!.height, "l'aide finit avant la première section").toBeLessThanOrEqual(section!.y + 1);
+    await expect(aide(page)).toHaveAttribute("role", "status");
+  });
+
+  test(`${m.projet} : « Couplet 1 » de ${m.nom} à ${m.vue} % au plus, aide déjà vue`, async ({ page }, info) => {
+    test.skip(info.project.name !== m.projet, "Mesure propre au volet unique de cette fenêtre (les deux volets ne changent pas, T3)");
+    await ouvrir(page, m.id, m.projet);
+    await expect(aide(page)).toHaveCount(0);
+    const pct = await hautEtiquette(page, m.id);
+    expect(pct, `étiquette à ${pct.toFixed(1)} % de la hauteur`).toBeLessThanOrEqual(m.vue);
+  });
+}
+
+test("téléphone et tablette debout : l'en-tête se déplie au clavier (Entrée) et au toucher, la note se lit sur une ligne dans la barre", async ({ page }, info) => {
+  test.skip(!volet(info.project.name), pasVolet);
+  await ouvrir(page, "sjp", info.project.name);
+  const entete = page.locator("#entete-setlist");
+  const bouton = boutonDetails(page);
+  await expect(bouton).toHaveAttribute("aria-expanded", "false");
+  // Replié : l'en-tête n'est pas là, la note tient sur une ligne dans la barre (un seul h1 lisible).
+  await expect(entete).toBeHidden();
+  const note = barre(page).getByText(NOTE);
+  await expect(note).toBeVisible();
+  expect(await note.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe("nowrap");
+  await expect(page.getByRole("heading", { level: 1, name: "Culte du 8 novembre" })).toHaveCount(1);
+
+  await bouton.focus();
+  await page.keyboard.press("Enter");
+  await expect(bouton).toHaveAttribute("aria-expanded", "true");
+  await expect(entete.getByText("Zélie A.")).toBeVisible();
+  await expect(entete.getByText("Culte Francophone")).toBeVisible();
+  await expect(entete.getByText(NOTE)).toBeVisible();
+  await expect(entete.getByRole("heading", { level: 1 })).toBeVisible();
+
+  await bouton.click();
+  await expect(bouton).toHaveAttribute("aria-expanded", "false");
+  await expect(entete).toBeHidden();
+
+  await bouton.click();
+  await expect(bouton).toHaveAttribute("aria-expanded", "true");
+  await expect(entete.getByText("Zélie A.")).toBeVisible();
+  await expect(entete.getByText("Culte Francophone")).toBeVisible();
+  await expect(entete.getByText(NOTE)).toBeVisible();
+});
+
+test("téléphone et tablette debout : Entrée sur la bascule Liste / Partitions garde le focus sur le bouton pressé", async ({ page }, info) => {
+  test.skip(!volet(info.project.name), pasVolet);
+  await ouvrir(page, "sjp", info.project.name);
+  for (const nom of ["Liste", "Partitions"]) {
+    await page.getByTestId("bascule-vues").getByRole("button", { name: nom, exact: true }).focus();
+    await page.keyboard.press("Enter");
+    const presse = page.getByTestId("bascule-vues").getByRole("button", { name: nom, exact: true });
+    await expect(presse).toHaveAttribute("aria-pressed", "true");
+    await expect(presse).toBeFocused();
+  }
+});
+
+test("téléphone : Mode Louange est un bouton rond de 44 × 44 px, sans texte visible, nommé pour les lecteurs d'écran", async ({ page }, info) => {
+  test.skip(info.project.name !== "telephone", "Test propre au téléphone");
+  await ouvrir(page, "sjp", "telephone");
+  const bouton = page.getByRole("button", { name: "Mode Louange" });
+  await expect(bouton).toBeVisible();
+  const b = (await bouton.boundingBox())!;
+  expect(Math.abs(b.width - 44), "largeur").toBeLessThanOrEqual(1);
+  expect(Math.abs(b.height - 44), "hauteur").toBeLessThanOrEqual(1);
+  expect((await bouton.innerText()).trim(), "aucun texte visible").toBe("");
+});
+
+test("captures T2 : barre compacte, aide affichée, aide vue, en-tête déplié, sombre au téléphone", async ({ page }, info) => {
+  const nom = info.project.name;
+  test.skip(!volet(nom), pasVolet);
+  const dossier = "test-results/t2-pupitre";
+  await ouvrir(page, "sjp", nom, false, false);
+  await expect(aide(page)).toBeVisible();
+  await page.screenshot({ path: `${dossier}/${nom}-partitions-aide-affichee.png` });
+  await aide(page).getByRole("button").click();
+  await expect(aide(page)).toHaveCount(0);
+  await page.screenshot({ path: `${dossier}/${nom}-partitions-aide-vue.png` });
+  await boutonDetails(page).click();
+  await expect(page.locator("#entete-setlist")).toBeVisible();
+  await page.screenshot({ path: `${dossier}/${nom}-partitions-entete-deplie.png` });
+});
+
+test("capture T2 sombre : téléphone, vue Partitions", async ({ page }, info) => {
+  test.skip(info.project.name !== "telephone", "Test propre au téléphone");
+  await ouvrir(page, "sjp", "telephone", true, false);
+  await expect(aide(page)).toBeVisible();
+  await page.screenshot({ path: "test-results/t2-pupitre/telephone-partitions-sombre.png" });
 });

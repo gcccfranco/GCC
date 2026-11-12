@@ -200,7 +200,8 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       const barre = page.getByTestId("barre-outils");
       // Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : « Affichage » remplace
       // Pinyin dans la barre ; la bascule Liste | Partitions est sous l'en-tête.
-      await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible();
+      // Vue Partitions sous 640 px (T2 du lot exemples d'usage) : « Affichage » passe dans le menu « ⋯ ».
+      await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible({ visible: largeur >= 640 });
       // La barre glisse (transition-transform) quand la page défile : la mesurer à l'arrêt, sinon un
       // décalage fractionnaire donne 31,999996 px au lieu de 32 sous charge.
       await expect.poll(() => barre.evaluate((el) => getComputedStyle(el).transform)).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
@@ -213,26 +214,30 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
             return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width };
           }),
       );
-      expect(boites.length, "retour, affichage, (crayon), accords, mode louange, ⋯").toBe(largeur >= 431 ? 6 : 5);
+      // Vue Partitions, un volet (T2 du lot exemples d'usage) : retour, bloc titre, bascule (Liste, Partitions), mode louange, ⋯ ;
+      // dès 640 px s'y ajoutent affichage, crayon (MP-3, à la place d'Adapter et de Ma version), accords, qui sous 640 px vivent dans le menu « ⋯ ».
+      const pleine = largeur >= 640;
+      expect(boites.length, "retour, titre, (affichage, crayon, accords), Liste, Partitions, mode louange, ⋯").toBe(pleine ? 9 : 6);
       const milieux = boites.map((b) => b.milieu);
       expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
       for (const b of boites) {
         // iPad couché : la barre latérale réduite (68 px, lot U4, N4) est à gauche.
         expect.soft(b.gauche, `${b.nom} ne sort pas à gauche`).toBeGreaterThanOrEqual(sens === "iPad paysage" ? 68 : 0);
         expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
-        expect.soft(Math.min(b.h, b.l), `${b.nom} : pas plus petit qu'avant (32 px)`).toBeGreaterThanOrEqual(32);
+        // Les segments de la bascule (h-7 dans une bascule de 32 px) ont leur zone de toucher de 44 px au doigt.
+        if (!/^(Liste|Partitions)$/.test(b.nom)) expect.soft(Math.min(b.h, b.l), `${b.nom} : pas plus petit qu'avant (32 px)`).toBeGreaterThanOrEqual(32);
       }
       // Icônes seules sur téléphone (dans les deux sens) et iPad en portrait ; libellés à partir de 1024 px.
       await expect(barre.getByText("Mode Louange", { exact: true })).toBeVisible({ visible: largeur >= 1024 });
       // La barre seule : à 320 px une longue ligne d'accords du corps (« Dm7(b5)/G ») dépasse de 4 px, c'est une autre histoire.
       expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
 
-      if (largeur >= 431) {
+      if (pleine) {
         // Assez de place : le Crayon reste dans la barre, comme Adapter avant lui.
         await barre.getByRole("button", { name: "Crayon" }).click();
         await expect(page.getByText(AIDE_CRAYON)).toBeVisible();
       } else {
-        // Téléphone étroit : il passe dans le menu « ⋯ », et y marche pareil.
+        // Sous 640 px en vue Partitions : il passe dans le menu « ⋯ », et y marche pareil.
         await expect(barre.getByRole("button", { name: "Crayon" })).toBeHidden();
         await barre.getByRole("button", { name: "Plus d'actions" }).click();
         await page.getByRole("menuitemcheckbox", { name: "Crayon" }).click();
@@ -269,7 +274,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
               return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
             }),
         );
-        expect(boites.length, "retour, affichage, crayon, accords, mode louange, ⋯").toBe(6);
+        expect(boites.length, "retour, titre, affichage, crayon, accords, Liste, Partitions, mode louange, ⋯").toBe(9);
         const milieux = boites.map((b) => b.milieu);
         expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
         for (const b of boites) {

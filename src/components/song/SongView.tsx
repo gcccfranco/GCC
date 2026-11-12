@@ -125,7 +125,7 @@ const fr_lyric_font = localFont({ src: "../../../public/fonts/AtkinsonHyperlegib
 // Caractères chinois : Source Han Sans CN Medium (auparavant Light, trop fine
 // de loin) — choisie par Timothée le 13/09/2026 sur captures.
 export const zh_lyric_font = localFont({ src: "../../../public/fonts/SourceHanSansCN-Medium-sub.woff2", preload: false });
-const chord_font = localFont({
+export const chord_font = localFont({
   src: [
     { path: "../../../public/fonts/AtkinsonHyperlegibleNext-Regular.woff2", weight: "400" },
     { path: "../../../public/fonts/AtkinsonHyperlegibleNext-Bold.woff2", weight: "700" },
@@ -1275,6 +1275,10 @@ interface SongViewProps {
   marques?: Marques;
   onConflit?: (index: number, choix: "mienne" | "chant") => void;
   onPasserAuCulte?: (srcLine: number) => void;
+  /** Entre le bandeau de structure et la première section (setlist : l'aide des accords, premier chant). */
+  apresBandeau?: React.ReactNode;
+  /** Remplace l'en-tête du chant à l'écran (setlist : rangée compacte, T2) ; l'impression garde l'en-tête complet. */
+  enTete?: React.ReactNode;
 }
 
 export function SongView({
@@ -1300,6 +1304,8 @@ export function SongView({
   marques,
   onConflit,
   onPasserAuCulte,
+  apresBandeau,
+  enTete: enTeteFourni,
 }: SongViewProps) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
@@ -1459,8 +1465,14 @@ export function SongView({
   );
   return (
     <ConteneurCoupure className="max-w-[var(--colonne-partition,42rem)] print:max-w-none" disposition={disposition} style={couleursAccords}>
-      {enTete}
+      {enTeteFourni ? (
+        <>
+          <div className="print:hidden">{enTeteFourni}</div>
+          <div className="hidden print:block">{enTete}</div>
+        </>
+      ) : enTete}
       {bandeau}
+      {apresBandeau}
 
       {/* Corps : ordre joué, ou chaque section une fois (les réglages
           d'occurrence restent dans le bandeau), ou rien du tout — ou le scan. */}

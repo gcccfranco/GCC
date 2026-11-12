@@ -3,9 +3,9 @@ import Link from "next/link";
 import { songHref } from "@/lib/setlist/songHref";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
-import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font } from "@/components/song/SongView";
+import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, chord_font } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
-import { AccordsProvider, ChantDesAccords } from "@/components/accords/AccordsProvider";
+import { AccordsProvider, AideAccordsEnLigne, ChantDesAccords } from "@/components/accords/AccordsProvider";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { ordreJoue } from "@/lib/chordpro/structure";
@@ -32,7 +32,7 @@ import type { Disposition } from "@/lib/dispositionPref";
 const PUCE = `${TOUCHER_44} inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-xs font-semibold text-foreground transition-colors hover:bg-secondary print:hidden`;
 
 /** Copie les paroles d'un chant, dans l'ordre joué, pour la régie (PPT). */
-function CopyLyricsButton({ sections }: { sections: ChordProSection[] }) {
+function CopyLyricsButton({ sections, icone = false }: { sections: ChordProSection[]; icone?: boolean }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   async function copy() {
@@ -47,10 +47,11 @@ function CopyLyricsButton({ sections }: { sections: ChordProSection[] }) {
     <button
       type="button"
       onClick={copy}
-      className={PUCE}
+      aria-label={icone ? t("setlists.detail.copyLyrics") : undefined}
+      className={icone ? `${TOUCHER_44} inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary print:hidden` : PUCE}
     >
-      {copied ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
-      {copied ? t("setlists.detail.copyLyricsDone") : t("setlists.detail.copyLyrics")}
+      {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
+      {!icone && (copied ? t("setlists.detail.copyLyricsDone") : t("setlists.detail.copyLyrics"))}
     </button>
   );
 }
@@ -150,9 +151,13 @@ export function PartitionsView({
       </div>
     );
   }
+  // L'aide des accords se pose sous les pastilles du premier chant.
+  const positionPremierChant = items
+    .filter((i) => i.type !== "transition" && i.type !== "proposition")
+    .sort((a, b) => a.position - b.position)[0]?.position;
   return (
     // Les accords s'ouvrent au toucher hors édition (DA-3) ; « Ma version » et « Adapter » gardent leurs lignes tappables.
-    <AccordsProvider actif={!editMode} aide>
+    <AccordsProvider actif={!editMode} aide="flux">
     <div className="space-y-10 print:space-y-6" data-disposition={disposition}>
       {items
         .map((item, origIndex) => ({ item, origIndex }))
@@ -225,7 +230,7 @@ export function PartitionsView({
                     {item.position}
                   </span>
                   <Link2 className="h-3.5 w-3.5 text-foreground shrink-0" />
-                  <CopyLyricsButton sections={playedSections(item, contents)} />
+                  <CopyLyricsButton icone={disposition !== "partition"} sections={playedSections(item, contents)} />
                   <div className={disposition === "partition" ? "flex min-w-0 flex-1 flex-col items-center gap-y-0.5" : "flex flex-wrap gap-x-3 gap-y-0.5"}>
                     {item.fusionSongs.map((fs) => {
                       const ast = transposedAsts[fs.songSlug];
@@ -260,6 +265,7 @@ export function PartitionsView({
                     targetKey,
                   }))}
                 />
+                {item.position === positionPremierChant && <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none"><AideAccordsEnLigne /></div>}
                 <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none pt-2">
                   {shownPassages.map(({ ms, ast, section, fusionSong, keyChange }, msIdx) => {
                     const sectionNote = ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId];
@@ -306,7 +312,7 @@ export function PartitionsView({
                 <span className="text-xs text-foreground font-medium uppercase tracking-wider">
                   {t("setlists.form.fusionLabel")}
                 </span>
-                <CopyLyricsButton sections={playedSections(item, contents)} />
+                <CopyLyricsButton icone={disposition !== "partition"} sections={playedSections(item, contents)} />
               </div>
               {ideesFusion}
               <div className="space-y-8">
@@ -336,6 +342,7 @@ export function PartitionsView({
                         layout={layout}
                         slug={fs.songSlug}
                         titleHref={songHref(fs.songSlug, fs, setlistId, item.position)}
+                        apresBandeau={fsIdx === 0 && item.position === positionPremierChant ? <AideAccordsEnLigne /> : undefined}
                       />
                       </ChantDesAccords>
                     </div>
@@ -375,6 +382,7 @@ export function PartitionsView({
             onGarderCopie={onGarderCopie}
             onConflit={onConflit}
             enAttente={enAttente}
+            premier={item.position === positionPremierChant}
           />
         );
       })}
@@ -409,6 +417,7 @@ function NormalSongItem({
   onGarderCopie,
   onConflit,
   enAttente,
+  premier,
 }: {
   lecture?: Lecture;
   onChoisirLecture?: (itemIndex: number, valeur: string) => void;
@@ -435,6 +444,8 @@ function NormalSongItem({
   onIdees?: (itemIndex: number) => void;
   onRetryChant?: (slug: string) => void | Promise<void>;
   titre?: string;
+  /** Premier chant de la setlist : l'aide des accords s'y pose sous les pastilles. */
+  premier?: boolean;
 }) {
   const { t } = useTranslation();
   const [reprise, setReprise] = useState(false);
@@ -493,10 +504,6 @@ function NormalSongItem({
   // le chant s'affiche en paroles ou en partition.
   const badges = (
     <>
-      {followsPresidency && <CopyLyricsButton sections={playedSections} />}
-      {item.notes && (
-        <span className="text-xs text-muted-foreground italic">{item.notes}</span>
-      )}
       {editMode && retouches?.moi && (
         <button type="button" onClick={() => onRevert?.(origIndex, "moi")} className={PUCE}>
           <RotateCcw className="h-3.5 w-3.5" aria-hidden />
@@ -526,15 +533,57 @@ function NormalSongItem({
       )}
     </>
   );
+  // Rangée compacte de la maquette (.shead, 48 px) : n°, titre et pinyin (puis la note, tronquée), tonalité, copie en icône.
+  const sousLigne = [ast.metadata.titlePinyin, item.notes].filter(Boolean);
+  const enTete = (
+    <>
+      <div data-entete-chant className="flex min-h-12 items-center gap-2.5 py-1">
+        <span className="shrink-0 text-[17px] font-bold tabular-nums text-muted-foreground">{item.position}</span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <h1 className={`text-xl font-semibold leading-[1.15] tracking-[-0.01em] text-foreground ${ast.metadata.language === "zh" ? KaiTiFont.className : ""}`}>
+            <Link href={titleHref} className="hover:underline underline-offset-4 decoration-2">{ast.metadata.title}</Link>
+          </h1>
+          {sousLigne.length > 0 && (
+            <p className="truncate text-[12.5px] leading-tight text-muted-foreground">
+              {ast.metadata.titlePinyin}
+              {ast.metadata.titlePinyin && item.notes && " · "}
+              {item.notes && <span className="italic">{item.notes}</span>}
+            </p>
+          )}
+        </div>
+        {ast.metadata.key && (
+          <span
+            className={`shrink-0 text-sm font-bold ${chord_font.className}`}
+            style={{ color: ast.metadata.language === "zh" ? "var(--jianpu-color)" : "var(--chord-color)" }}
+          >
+            {ast.metadata.key}
+          </span>
+        )}
+        {ast.metadata.tempo && (
+          <span className="flex shrink-0 items-baseline gap-0.5 text-xs text-muted-foreground max-[359px]:hidden">
+            <span className="text-base leading-none text-foreground/70">♩</span>
+            {` = ${ast.metadata.tempo}`}
+          </span>
+        )}
+        {followsPresidency && <CopyLyricsButton icone sections={playedSections} />}
+      </div>
+      <div className="flex flex-wrap items-center gap-2 py-2 empty:hidden print:hidden">{badges}</div>
+    </>
+  );
   return (
     <div data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
       <ChantDesAccords chant={{ slug: item.songSlug, titre: ast.metadata.title }}>
-      <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">
-        <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-          {item.position}
-        </span>
-        {badges}
-      </div>
+      {/* Disposition « partition » : en-tête d'avant T2, inchangé. */}
+      {disposition === "partition" && (
+        <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">
+          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+            {item.position}
+          </span>
+          {followsPresidency && <CopyLyricsButton sections={playedSections} />}
+          {item.notes && <span className="text-xs text-muted-foreground italic">{item.notes}</span>}
+          {badges}
+        </div>
+      )}
       <SongView
         ast={ast}
         showChords={showChordsGlobal && item.showChords}
@@ -550,6 +599,8 @@ function NormalSongItem({
         slug={item.songSlug}
         bodyStructure={version?.bodyStructure}
         titleHref={titleHref}
+        enTete={disposition !== "partition" ? enTete : undefined}
+        apresBandeau={premier ? <AideAccordsEnLigne /> : undefined}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
         marques={lecture?.marques}
         onPasserAuCulte={editMode && onPasserAuCulte ? (srcLine) => onPasserAuCulte(origIndex, srcLine) : undefined}

@@ -15,6 +15,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 import { ReportDialog } from "@/components/report/ReportDialog";
@@ -46,6 +47,8 @@ type Contexte = {
   chant?: Chant;
   /** Un accord touchable s'annonce (pour la bulle d'aide) ; renvoie son retrait. */
   enregistrer: (el: HTMLElement) => () => void;
+  /** Aide « dans le flux » (`aide="flux"`) : présent seulement tant qu'elle est à afficher ; ferme l'aide. */
+  fermerAideLigne?: () => void;
 };
 
 const Rien: Contexte = { ouvrir: () => {}, fermer: () => {}, actif: false, enregistrer: () => () => {} };
@@ -103,11 +106,16 @@ export function AccordsProvider({
   /** Faux : le fournisseur reste monté mais les accords ne sont plus touchables (setlist en édition). */
   actif?: boolean;
   chant?: Chant;
-  /** Montre, une seule fois par appareil, la bulle « Touchez un accord… » sous le premier accord visible. */
-  aide?: boolean;
+  /** Montre, une seule fois par appareil, la bulle « Touchez un accord… » sous le premier accord visible.
+   *  `"flux"` : pas de bulle posée par-dessus, l'aide se dessine là où l'on pose `AideAccordsEnLigne`. */
+  aide?: boolean | "flux";
 }) {
   const [ouvert, setOuvert] = useState<Ouvert | null>(null);
   const [aideAncre, setAideAncre] = useState<HTMLElement | null>(null);
+  const enLigne = aide === "flux";
+  const bulle = aide === true;
+  const [aideLigne, setAideLigne] = useState(false);
+  const aideLigneFermee = useRef(false);
   const touchables = useRef(new Set<HTMLElement>());
   const minuteur = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [signalement, setSignalement] = useState<{ accord: string; chant?: { slug: string; titre: string } } | null>(null);
@@ -124,6 +132,8 @@ export function AccordsProvider({
 
   const fermerAide = useCallback(() => {
     setAideAncre(null);
+    setAideLigne(false);
+    aideLigneFermee.current = true;
     noterAideVue();
   }, []);
 
@@ -133,14 +143,14 @@ export function AccordsProvider({
     compter("cmd.chant.accord");
     derniereAncre.current = d.ancre ?? null;
     // Toucher un accord vaut lecture de l'aide.
-    if (aideAncre) fermerAide();
+    if (aideAncre || aideLigne) fermerAide();
     setOuvert({ accord, ancre: d.ancre ?? null, capo: d.capo, chant: d.chant ?? chant });
-  }, [chant, aideAncre, fermerAide]);
+  }, [chant, aideAncre, aideLigne, fermerAide]);
 
   // La bulle d'aide : sous le premier accord visible, une fois les accords posés (les chants arrivent
   // par le réseau) ; si aucun n'est à l'écran, on réessaie au défilement.
   const chercherPremier = useCallback(() => {
-    if (!aide || !actif || aideDejaVue()) return;
+    if (!bulle || !actif || aideDejaVue()) return;
     const visibles = [...touchables.current].filter((el) => {
       if (!el.isConnected) return false;
       const r = el.getBoundingClientRect();
@@ -148,7 +158,7 @@ export function AccordsProvider({
     });
     visibles.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
     if (visibles[0]) setAideAncre((courante) => courante ?? visibles[0]);
-  }, [aide, actif]);
+  }, [bulle, actif]);
 
   const programmer = useCallback(() => {
     if (minuteur.current) clearTimeout(minuteur.current);
@@ -157,21 +167,23 @@ export function AccordsProvider({
 
   const enregistrer = useCallback((el: HTMLElement) => {
     touchables.current.add(el);
+    // Aide dans le flux : dès qu'un accord touchable est posé (accords masqués, rien à toucher : pas d'aide).
+    if (enLigne && !aideLigneFermee.current && !aideDejaVue()) setAideLigne(true);
     programmer();
     return () => {
       touchables.current.delete(el);
     };
-  }, [programmer]);
+  }, [programmer, enLigne]);
 
   useEffect(() => {
-    if (!aide || !actif || aideAncre || aideDejaVue()) return;
+    if (!bulle || !actif || aideAncre || aideDejaVue()) return;
     programmer();
     window.addEventListener("scroll", programmer, { passive: true, capture: true });
     return () => {
       window.removeEventListener("scroll", programmer, true);
       if (minuteur.current) clearTimeout(minuteur.current);
     };
-  }, [aide, actif, aideAncre, programmer]);
+  }, [bulle, actif, aideAncre, programmer]);
 
   // Passage en édition : tout se referme (ajustement pendant le rendu, pas dans un effet).
   const [etaitActif, setEtaitActif] = useState(actif);
@@ -180,12 +192,23 @@ export function AccordsProvider({
     if (!actif) {
       setOuvert(null);
       setAideAncre(null);
+      setAideLigne(false);
     }
   }
 
+  useEffect(() => {
+    if (!actif || !aideLigne) return;
+    const surTouche = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector("[role=menu], [role=dialog]")) return;
+      fermerAide();
+    };
+    document.addEventListener("keydown", surTouche);
+    return () => document.removeEventListener("keydown", surTouche);
+  }, [actif, aideLigne, fermerAide]);
+
   const valeur = useMemo<Contexte>(
-    () => (actif ? { ouvrir, fermer, actif: true, chant, enregistrer } : Rien),
-    [actif, ouvrir, fermer, chant, enregistrer],
+    () => (actif ? { ouvrir, fermer, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined } : Rien),
+    [actif, ouvrir, fermer, chant, enregistrer, aideLigne, fermerAide],
   );
 
   return (
@@ -409,5 +432,28 @@ function AideBulle({ ancre, onOk }: { ancre: HTMLElement; onOk: () => void }) {
       </div>
     </div>,
     document.body,
+  );
+}
+
+
+/** L'aide de la première fois, dans le flux (`<AccordsProvider aide="flux">`) : un bloc pleine largeur de colonne,
+ *  que l'appelant pose entre les pastilles de structure du premier chant et sa première section. */
+export function AideAccordsEnLigne() {
+  const { t } = useTranslation();
+  const ordinateur = useOrdinateur();
+  const { fermerAideLigne } = useContext(AccordsContext);
+  if (!fermerAideLigne) return null;
+  return (
+    <div role="status" data-accords-aide className="mb-2 flex items-center gap-1 rounded-[12px] bg-secondary pl-4 pr-0.5 text-sm leading-snug text-foreground print:hidden">
+      <p className="min-w-0 flex-1 py-1.5">{t(ordinateur ? "accords.aideCliquer" : "accords.aideToucher")}</p>
+      <button
+        type="button"
+        onClick={fermerAideLigne}
+        aria-label={t("accords.aideOk")}
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <X className="h-4 w-4" aria-hidden />
+      </button>
+    </div>
   );
 }

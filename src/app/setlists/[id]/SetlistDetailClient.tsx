@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Pencil, SlidersHorizontal, PenLine, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
+import { ChevronDown, Pencil, SlidersHorizontal, PenLine, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
@@ -33,7 +33,7 @@ import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { ChordProLine } from "@/types/chordPro";
-import { formatDate, langueCourte } from "@/lib/utils/formatDate";
+import { formatDate, formatJourMois, langueCourte } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useSwipeViews } from "@/hooks/useSwipeViews";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
@@ -231,6 +231,14 @@ export function SetlistDetailClient() {
   const [loadingSetlist, setLoadingSetlist] = useState(true);
   const [view, setView] = useState<"liste" | "partitions">("liste");
   const affichePartitions = deuxVolets || view === "partitions";
+  /** Vue Partitions en volet unique : barre compacte, en-tête replié (docs/spec-exemples-usage.md, T2). */
+  const compacte = !deuxVolets && view === "partitions";
+  const [enteteOuvert, setEnteteOuvert] = useState(false);
+  /** Téléphone, vue Partitions : « Affichage » ouvert depuis le ⋯ (un sous-menu sortirait de l'écran). */
+  const [affichageTel, setAffichageTel] = useState(false);
+  const plusRef = useRef<HTMLButtonElement>(null);
+  const masqueBarre = compacte ? "max-sm:hidden" : "max-[430px]:hidden";
+  const masqueMenu = compacte ? "sm:hidden" : "min-[431px]:hidden";
   /** Occurrences de la section lue (`data-section-uids`) : la pastille marquée. */
   const [uidsLus, setUidsLus] = useState<string[]>([]);
   // ── Setlist G : Liste et Partitions reliées (docs/spec-deux-volets.md, T2) ──
@@ -666,6 +674,17 @@ export function SetlistDetailClient() {
     setCible({ type: "ligne" });
   }
 
+  // Bascule au clavier : la vue change et l'autre bascule remplace celle qui avait le focus ; on le rend au bouton pressé.
+  const focusBascule = useRef(false);
+  const marquerBascule = (cible: "liste" | "partitions") => {
+    if (cible !== view && document.activeElement?.closest("[data-testid=bascule-vues]")) focusBascule.current = true;
+  };
+  useEffect(() => {
+    if (!focusBascule.current) return;
+    focusBascule.current = false;
+    document.querySelector<HTMLElement>("[data-testid=bascule-vues] [aria-pressed=true]")?.focus();
+  }, [view]);
+
   // Glissement entre les deux vues (Q13) : la Liste à gauche, les Partitions à
   // droite ; même chemin que la bascule (historique, chant lu, retour à la ligne).
   useSwipeViews({
@@ -735,7 +754,7 @@ export function SetlistDetailClient() {
     root.style.overflowAnchor = "none";
     const ro = new ResizeObserver(() => amener());
     // La colonne entière (en-tête compris) : `body` garde la hauteur de l'écran.
-    ro.observe(basculeRef.current?.parentElement ?? el);
+    ro.observe(basculeRef.current?.parentElement ?? zoneRef.current ?? el);
     const GESTES = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
     const lacher = () => {
       ro.disconnect();
@@ -1948,7 +1967,7 @@ export function SetlistDetailClient() {
                   de tenir à côté de la barre latérale (lot U4 : `.libelle-outil`, requête de
                   conteneur sur `.rangee-outils`, globals.css). `flex-wrap` reste le filet de
                   sécurité. */}
-              <div className="rangee-outils flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 py-[9px] flex-wrap">
+              <div className={`rangee-outils flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 ${compacte ? "py-1 flex-nowrap" : "py-[9px] flex-wrap"}`}>
 
                 {/* ← Retour */}
                 <Link aria-label={t("songs.detail.backToAll")}
@@ -1961,13 +1980,38 @@ export function SetlistDetailClient() {
                   <span className="libelle-outil">{t("songs.detail.backToAll")}</span>
                 </Link>
 
+                {/* Vue Partitions : le bloc titre, un bouton qui déplie l'en-tête complet (T2). Le <h1> reste
+                    pour les lecteurs d'écran : celui de l'en-tête déplié, sinon celui-ci. */}
+                {compacte && (
+                  <>
+                    {!enteteOuvert && <h1 className="sr-only">{titreAffiche(setlist, langueCourte(i18n.language))}</h1>}
+                    <button
+                      type="button"
+                      aria-expanded={enteteOuvert}
+                      aria-controls="entete-setlist"
+                      aria-label={`${titreAffiche(setlist, langueCourte(i18n.language))}, ${t("setlists.detail.afficherDetails")}`}
+                      onClick={() => setEnteteOuvert((o) => !o)}
+                      className={`${TOUCHER_44} flex min-h-8 min-w-0 flex-1 items-center gap-1.5 rounded-lg px-1.5 py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="flex min-w-0 items-baseline gap-2">
+                          <span className="truncate text-[15px] font-semibold leading-tight tracking-[-0.01em] text-foreground sm:text-[17px]">{titreAffiche(setlist, langueCourte(i18n.language))}</span>
+                          {setlist.date && <span className="hidden shrink-0 text-xs text-muted-foreground min-[480px]:inline">{formatJourMois(setlist.date, i18n.language)}</span>}
+                        </span>
+                        {setlist.notes && <span className="block truncate text-xs italic leading-tight text-muted-foreground">{setlist.notes}</span>}
+                      </span>
+                      <ChevronDown aria-hidden className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none ${enteteOuvert ? "rotate-180" : ""}`} />
+                    </button>
+                  </>
+                )}
+
                 {/* Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : la même barre côté Liste
                     et côté Partitions — Affichage, Adapter, Accords, Ma version ; la bascule
                     « Liste | Partitions » est passée sous l'en-tête. */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button aria-label={t("setlists.detail.layout.label")}
-                      className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] bg-secondary text-muted-foreground hover:text-foreground`}
+                      className={`${TOUCHER_44} ${PILULE_EMPILEE} ${compacte ? "max-sm:hidden" : ""} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] bg-secondary text-muted-foreground hover:text-foreground`}
                     >
                       <SlidersHorizontal className="h-3.5 w-3.5" />
                       <span className="libelle-outil">{t("setlists.detail.layout.label")}</span>
@@ -1984,7 +2028,7 @@ export function SetlistDetailClient() {
                   <button aria-label={t("maPartition.crayon.bouton")}
                     aria-pressed={crayon}
                     onClick={toggleCrayon}
-                    className={`${TOUCHER_44} ${PILULE_EMPILEE} max-[430px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                    className={`${TOUCHER_44} ${PILULE_EMPILEE} ${masqueBarre} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                       crayon
                         ? "bg-foreground text-background"
                         : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -2003,7 +2047,7 @@ export function SetlistDetailClient() {
                     setShowChords((s) => !s);
                     setChordsTouched(true);
                   }}
-                  className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                  className={`${TOUCHER_44} ${PILULE_EMPILEE} ${compacte ? "max-sm:hidden" : ""} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     showChords
                       ? "bg-foreground text-background"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -2017,23 +2061,41 @@ export function SetlistDetailClient() {
                 {/* Mode louange et ⋯ — poussés à droite, sur la même ligne */}
                 <div className="ml-auto flex items-center gap-1.5">
 
+                  {/* Bascule « Liste | Partitions » dans la barre (vue Partitions, un volet) */}
+                  {compacte && setlist.items.length > 0 && (
+                    <BasculeVues dansBarre view={view} versListe={() => { marquerBascule("liste"); versListe(); }} versPartitions={() => { marquerBascule("partitions"); versPartitions(); }} />
+                  )}
+
                   {/* Mode Louange — action principale en live */}
                   <button
                     onClick={ouvrirModeLouange}
                     aria-label={t("setlists.detail.performanceMode")}
                     // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
                     style={{ backgroundColor: serviceButtonFill(categoryColor(setlist.category ?? "")) }}
-                    className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 sm:px-3 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150`}
+                    className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 sm:px-3 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150 max-sm:!h-11 max-sm:!min-h-11 max-sm:!w-11 max-sm:!flex-row max-sm:!justify-center max-sm:!rounded-full max-sm:!p-0`}
                   >
-                    <Play className="h-3.5 w-3.5" />
+                    <Play className="h-3.5 w-3.5 max-sm:h-4 max-sm:w-4" />
                     <span className="libelle-outil">{t("setlists.detail.performanceMode")}</span>
-                    <span aria-hidden className={LIBELLE_COURT}>{t("setlists.detail.performanceModeCourt")}</span>
+                    <span aria-hidden className={`${LIBELLE_COURT} max-sm:!hidden`}>{t("setlists.detail.performanceModeCourt")}</span>
                   </button>
+
+                  {/* Téléphone, vue Partitions : « Affichage » choisi dans le ⋯ s'ouvre ici, sous la barre, à droite. */}
+                  {compacte && (
+                    <DropdownMenu open={affichageTel} onOpenChange={setAffichageTel}>
+                      <DropdownMenuTrigger asChild>
+                        <span aria-hidden tabIndex={-1} className="pointer-events-none absolute bottom-0 right-[var(--marge-page)] h-0 w-0 sm:hidden" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" collisionPadding={8} onCloseAutoFocus={(e) => { e.preventDefault(); plusRef.current?.focus(); }} className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(374px,calc(100vw-16px))] overflow-y-auto overflow-x-hidden">
+                        {reglagesAffichage}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
 
                   {/* Menu ⋯ : Modifier / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
+                        ref={plusRef}
                         variant="outline"
                         size="icon-lg"
                         className={`${TOUCHER_44} h-8 w-8 rounded-md text-muted-foreground`}
@@ -2043,13 +2105,33 @@ export function SetlistDetailClient() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
+                      {/* Vue Partitions au téléphone : « Accords » et « Affichage », sortis de la barre. */}
+                      {compacte && (
+                        <>
+                          <DropdownMenuCheckboxItem
+                            className="sm:hidden"
+                            checked={showChords}
+                            onCheckedChange={(v) => {
+                              setShowChords(v);
+                              setChordsTouched(true);
+                            }}
+                          >
+                            {t("songs.detail.chords")}
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuItem className="sm:hidden" onSelect={() => setTimeout(() => setAffichageTel(true), 0)}>
+                            <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                            {t("setlists.detail.layout.label")}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="sm:hidden" />
+                        </>
+                      )}
                       {/* Téléphone étroit : le Crayon, sorti de la barre. */}
                       {!horsLigne && (
-                        <DropdownMenuCheckboxItem className="min-[431px]:hidden" checked={crayon} onCheckedChange={toggleCrayon}>
+                        <DropdownMenuCheckboxItem className={masqueMenu} checked={crayon} onCheckedChange={toggleCrayon}>
                           {t("maPartition.crayon.bouton")}
                         </DropdownMenuCheckboxItem>
                       )}
-                      {!horsLigne && <DropdownMenuSeparator className="min-[431px]:hidden" />}
+                      {!horsLigne && <DropdownMenuSeparator className={masqueMenu} />}
                       {canEdit && (
                         <DropdownMenuItem asChild>
                           <Link href={`/setlists/${id}/edit`}>
@@ -2075,15 +2157,15 @@ export function SetlistDetailClient() {
             </div>
           </div>
 
-          <div ref={zoneRef} className={`relative pb-8 pt-6 print:px-0 print:py-4 px-[var(--marge-page)] [--marge-bande:var(--marge-page)] [--colonne-partition:none] print:max-w-2xl print:mx-auto print:[--marge-bande:0px]`} style={{ marginTop: toolbarH }}>
+          <div ref={zoneRef} className={`relative pb-8 ${compacte ? "pt-2" : "pt-6"} print:px-0 print:py-4 px-[var(--marge-page)] [--marge-bande:var(--marge-page)] [--colonne-partition:none] print:max-w-2xl print:mx-auto print:[--marge-bande:0px]`} style={{ marginTop: toolbarH }}>
             {copieLueLe !== null && (
               <div role="status" data-copie-hors-ligne className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-muted py-1 pl-3 pr-1 text-xs text-muted-foreground print:hidden">
                 <span>{texteCopie}</span>
                 {reessayerCopie}
               </div>
             )}
-            {/* Header setlist */}
-            <div className="pb-2 print:mb-4">
+            {/* Header setlist : en vue Partitions (un volet), replié derrière le bloc titre de la barre ; il s'imprime quand même. */}
+            <div id="entete-setlist" className={`pb-2 print:mb-4 ${compacte && !enteteOuvert ? "hidden print:block" : ""}`}>
               <div className="flex items-start gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 flex-wrap">
@@ -2128,14 +2210,14 @@ export function SetlistDetailClient() {
                 sous la barre et s'escamote avec elle. Pleine largeur sur téléphone. Elle s'escamote par
                 son `top` collant et non par un transform, qui la faisait remonter sur l'en-tête avant
                 qu'elle ne colle ; 3.5rem = sa hauteur (py-2 + p-0.5 + h-9). */}
-            {setlist.items.length > 0 && (
+            {setlist.items.length > 0 && !compacte && (
               <BasculeVues
                 refBascule={basculeRef}
                 scrollVisible={scrollVisible}
                 toolbarH={toolbarH}
                 view={view}
-                versListe={versListe}
-                versPartitions={versPartitions}
+                versListe={() => { marquerBascule("liste"); versListe(); }}
+                versPartitions={() => { marquerBascule("partitions"); versPartitions(); }}
               />
             )}
 

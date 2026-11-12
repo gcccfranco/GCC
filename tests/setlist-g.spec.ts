@@ -4,6 +4,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { compterLesRendus, defilerImageParImage } from "./helpers/rendus";
 import { issueDuGeste, lireIntention, projection } from "../src/hooks/useSwipeViews";
 import { basculerMode, verifierMode } from "./helpers/menuSetlist";
+import { basculerAccords } from "./helpers/setlist";
 
 // Lot U5, tranche T2 (docs/spec-deux-volets.md, questions 3, 9 à 12 et 14) :
 // sur téléphone et tablette portrait, la setlist relie Liste et Partitions (G).
@@ -86,15 +87,17 @@ const lienLigne = (page: Page, n: number) => ligne(page, n).getByRole("link");
 const chant = (page: Page, n: number) => page.locator(`[data-outline-item="${n}"]`);
 const params = (page: Page) => Object.fromEntries(new URL(page.url()).searchParams);
 
-/** Écart entre le haut du chant `n` et le bas de la bascule, posée sous la barre. */
+/** Écart entre le haut du chant `n` et le bas de ce qui le coiffe : la bascule collée en vue Liste, la barre d'outils
+ *  en vue Partitions (la bascule y est dans la barre compacte, T2 du lot exemples d'usage). */
 async function ecartSousLaBarre(page: Page, n: number) {
+  const enListe = (await page.locator("[data-vue=liste]").count()) > 0;
   const [haut, bas] = await Promise.all([
     chant(page, n).evaluate((el) => el.getBoundingClientRect().top),
-    bascule(page).evaluate((el) => el.getBoundingClientRect().bottom),
+    (enListe ? bascule(page) : barre(page)).evaluate((el) => el.getBoundingClientRect().bottom),
   ]);
   return Math.round(haut - bas);
 }
-/** Le chant commence juste sous la bascule : 12 px, le fondu du bas de la bascule. */
+/** Le chant commence juste sous la bascule (12 px, le fondu de son bas) ou sous la barre : 12 px. */
 const SOUS_LA_BARRE = 12;
 
 /** Libellés des commandes visibles de la barre, dans l'ordre. */
@@ -136,10 +139,39 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     expect(params(page)).toEqual({});
   });
 
-  test("au défilement, la bascule suit la page tant qu'elle ne colle pas, s'escamote plus bas et revient sous la barre", async ({ page }) => {
+  test("au défilement, la barre compacte (et la bascule qu'elle porte) s'escamote, puis revient en remontant", async ({ page }) => {
     // Vue Partitions : la page est assez longue pour défiler loin.
     await ouvrir(page, `/setlists/${SETLIST_ID}?vue=partitions`);
     await expect(bascule(page)).toBeVisible();
+    await expect(barre(page).getByTestId("bascule-vues")).toBeVisible();
+    const defiler = async (de: number, a: number) => {
+      const pas = a > de ? 10 : -10;
+      for (let y = de; pas > 0 ? y <= a : y >= a; y += pas) {
+        await page.evaluate((v) => window.scrollTo(0, v), y);
+        await page.waitForTimeout(30);
+      }
+    };
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
+    await defiler(0, 1500);
+    await page.waitForTimeout(400);
+    const b = (await bascule(page).boundingBox())!;
+    expect(b.y + b.height, "escamotée hors écran avec la barre").toBeLessThanOrEqual(1);
+    // Remonter un peu ramène la barre, la bascule dedans.
+    await defiler(1490, 1430);
+    await page.waitForTimeout(400);
+    await expect(bascule(page)).toBeInViewport({ ratio: 1 });
+  });
+
+  test("vue Liste : la bascule suit la page puis colle sous la barre, s'escamote et revient", async ({ page }) => {
+    await ouvrir(page);
+    await expect(bascule(page)).toBeVisible();
+    // La liste de trois chants ne défile pas jusqu'à 1 500 px : une longue setlist est simulée par la hauteur de la page.
+    // Rallonger la colonne de la bascule (son conteneur collant), pas seulement la page.
+    await bascule(page).evaluate((el) => {
+      const cale = document.createElement("div");
+      cale.style.height = "2400px";
+      el.parentElement!.appendChild(cale);
+    });
     const haut = async (el: Locator) => (await el.boundingBox())!;
     const defiler = async (de: number, a: number) => {
       const pas = a > de ? 10 : -10;
@@ -283,7 +315,7 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
   });
 
-  test("la même barre des deux côtés", async ({ page }) => {
+  test("la barre de la Liste, puis la barre compacte des Partitions (titre et bascule dedans)", async ({ page }) => {
     await ouvrir(page);
     await expect(barre(page).getByRole("button", { name: "Mode Louange" })).toBeVisible();
     const cote = await commandes(page);
@@ -293,7 +325,13 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
       : ["Retour", "Affichage", "Accords", "Mode Louange", "Plus d'actions"]);
     await boutonVue(page, "Partitions").click();
     await expect(chant(page, 1)).toBeVisible();
-    expect(await commandes(page)).toEqual(cote);
+    // Vue Partitions (T2 du lot exemples d'usage) : le bloc titre et la bascule dans la barre ; sous 640 px, Affichage,
+    // Accords et le Crayon passent dans le menu « ⋯ ».
+    await expect(barre(page).getByTestId("bascule-vues")).toBeVisible();
+    // Le bouton titre se lit « {titre}, Afficher les détails de la setlist » : le titre est ôté pour comparer.
+    expect((await commandes(page)).map((n) => n.replace(/^.+, (Afficher les détails de la setlist)$/, "$1"))).toEqual(page.viewportSize()!.width >= 640
+      ? ["Retour", "Afficher les détails de la setlist", "Affichage", "Crayon", "Accords", "Liste", "Partitions", "Mode Louange", "Plus d'actions"]
+      : ["Retour", "Afficher les détails de la setlist", "Liste", "Partitions", "Mode Louange", "Plus d'actions"]);
   });
 
   test("Crayon depuis la Liste ouvre les partitions au chant lu, en Crayon", async ({ page }) => {
@@ -318,7 +356,8 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect(chant(page, 1).getByText("Bien avant le chant", { exact: false }).first()).toBeVisible();
     // Abba Père en G : F#m devient Em.
     await expect(chant(page, 1).getByText("Em", { exact: true })).toHaveCount(0);
-    await accords.click();
+    // Vue Partitions au téléphone (T2 du lot exemples d'usage) : « Accords » est dans le menu « ⋯ ».
+    await basculerAccords(page);
     await expect(chant(page, 1).getByText("Em", { exact: true }).first()).toBeVisible();
   });
 

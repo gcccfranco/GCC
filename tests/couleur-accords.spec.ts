@@ -464,8 +464,9 @@ test("réglage, vue partitions : sous-menu Affichage (là où Affichage est un s
   await preparer(page);
   await ouvrir(page, "partitions", CHANT.fr, ELODIE);
   const barre = page.getByTestId("barre-outils").getByRole("button", { name: /^(Affichage|显示)$/ });
-  await barre.or(page.locator("[data-en-tete]")).first().waitFor();
-  test.skip(await barre.isVisible(), "Affichage est un bouton de la barre, pas un sous-menu");
+  await barre.or(page.locator("[data-en-tete]")).or(page.getByTestId("barre-outils").getByRole("button", { name: "Plus d'actions" })).first().waitFor();
+  // Téléphone, vue Partitions (T2 du lot exemples d'usage) : « Affichage » du ⋯ ouvre un menu à part, pas un sous-menu.
+  test.skip(await barre.isVisible() || (await page.locator("[data-en-tete]").count()) === 0, "Affichage n'est pas un sous-menu ici");
   const sousMenu = page.getByRole("menu", { name: /^(Affichage|显示)$/ });
   const rouvrir = async () => { await fermerMenus(page); await ouvrirAffichage(page); await expect(sousMenu).toBeVisible(); };
 

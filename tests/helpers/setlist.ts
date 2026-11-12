@@ -44,15 +44,17 @@ export async function ouvrirListe(page: Page): Promise<void> {
 
 /** Ouvre les réglages d'affichage (ordre joué, sections uniques, structure seule,
  *  Pinyin, couleurs par section, 简谱) : le bouton « Affichage » de la barre sur G,
- *  le sous-menu « Affichage » du ⋯ de l'en-tête en deux volets (T4, Q7). */
+ *  le sous-menu « Affichage » du ⋯ de l'en-tête en deux volets (T4, Q7), le sous-menu
+ *  « Affichage » du ⋯ de la barre au téléphone en vue Partitions (T2 du lot exemples d'usage). */
 export async function ouvrirAffichage(page: Page): Promise<void> {
   const bouton = page.getByTestId("barre-outils").getByRole("button", { name: /^(Affichage|显示)$/ });
-  await bouton.or(page.locator("[data-en-tete]")).first().waitFor();
+  await bouton.or(page.locator("[data-en-tete]")).or(page.getByTestId("barre-outils")).first().waitFor();
   if (await bouton.isVisible()) {
     await bouton.click();
     return;
   }
-  await page.locator("[data-en-tete]").getByRole("button", { name: /Plus d'actions|更多操作/ }).click();
+  const hote = (await page.locator("[data-en-tete]").count()) > 0 ? page.locator("[data-en-tete]") : page.getByTestId("barre-outils");
+  await hote.getByRole("button", { name: /Plus d'actions|更多操作/ }).click();
   await page.getByRole("menuitem", { name: /^(Affichage|显示)$/ }).click();
 }
 
@@ -63,15 +65,16 @@ export async function fermerMenus(page: Page): Promise<void> {
 }
 
 /** Montre ou cache les accords : le bouton « Accords » de la barre sur G, la case
- *  « Accords » du ⋯ de l'en-tête en deux volets (T4, Q7). */
+ *  « Accords » du ⋯ de l'en-tête en deux volets (T4, Q7) ou du ⋯ de la barre au téléphone en vue Partitions. */
 export async function basculerAccords(page: Page): Promise<void> {
   const bouton = page.getByTestId("barre-outils").getByRole("button", { name: "Accords", exact: true });
-  await bouton.or(page.locator("[data-en-tete]")).first().waitFor();
+  await bouton.or(page.locator("[data-en-tete]")).or(page.getByTestId("barre-outils")).first().waitFor();
   if (await bouton.isVisible()) {
     await bouton.click();
     return;
   }
-  await page.locator("[data-en-tete]").getByRole("button", { name: "Plus d'actions" }).click();
+  const hote = (await page.locator("[data-en-tete]").count()) > 0 ? page.locator("[data-en-tete]") : page.getByTestId("barre-outils");
+  await hote.getByRole("button", { name: "Plus d'actions" }).click();
   await page.getByRole("menuitemcheckbox", { name: "Accords" }).click();
   await fermerMenus(page);
 }
