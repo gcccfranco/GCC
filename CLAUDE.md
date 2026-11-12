@@ -113,6 +113,11 @@ pas seulement en mémoire.
   - *Plafond* : toute session, principale comme orchestratrice, passe la main avant 200 000 tokens (≈ deux ou trois
     tranches) : elle écrit l'état dans le § Avancement de la spec ou dans la feuille de route, puis une session
     neuve reprend de là.
+  - *Une session par tranche* (Timothée, 12/11/2026 : « relancer de nouvelles sessions chaque nouvelle tranche pour
+    économiser des tokens ») : une orchestratrice code **une** tranche, la commite, écrit sa ligne d'Avancement,
+    pousse, lance elle-même la session de la tranche suivante (`create_session`, même branche, Opus, consigne
+    reprise de la sienne avec le numéro de tranche changé) puis s'arrête. Elle ne lance pas la suivante si la tranche
+    est bloquée, si le lot est fini ou si le go ne couvre pas la suite : elle écrit alors au pilote.
   - *Pas de réveil* : une orchestratrice n'envoie pas de message de suivi à la session d'origine ; elle écrit une
     ligne datée par tranche dans la spec et pousse. Un message seulement pour une question bloquante ou la fin du lot.
   - *Lire par section* : une spec ou un document de plus de 30 000 caractères se lit par section (grep des titres
