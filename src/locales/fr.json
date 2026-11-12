@@ -3833,6 +3833,23 @@
     "plannings": "Plannings",
     "planningReserve": "Page réservée aux responsables de ce planning.",
     "adminReserve": "Page réservée aux administrateurs.",
+    "usage": {
+      "lien": "Usage du site",
+      "titre": "Usage du site",
+      "sousTitre": "Jours-appareils par fonction, de la moins utilisée à la plus utilisée. Rien n'est retiré automatiquement.",
+      "periodeAria": "Période lue",
+      "periode": "{{n}} mois",
+      "total": "Jours-appareils actifs : {{total}}",
+      "moisLus": "Mois lus : {{lus}} sur {{demandes}}",
+      "colFonction": "Fonction",
+      "colJours": "Jours-appareils",
+      "colUtilisations": "Utilisations",
+      "colPart": "Part",
+      "candidate": "Candidate au retrait",
+      "exceptions": "Exceptions (rares par nature, jamais candidates)",
+      "vide": "Pas encore de données sur cette période.",
+      "erreur": "Lecture impossible : le comptage n'a pas pu être chargé."
+    },
     "parties": {
       "reception": "Réception",
       "notifier": "Notifier",

@@ -3784,6 +3784,23 @@
     "plannings": "排班表",
     "planningReserve": "仅限该排班表的负责人。",
     "adminReserve": "仅限管理员。",
+    "usage": {
+      "lien": "网站使用情况",
+      "titre": "网站使用情况",
+      "sousTitre": "各功能的设备活跃天数，从最少用到最多用。不会自动移除任何功能。",
+      "periodeAria": "查看的时间范围",
+      "periode": "{{n}} 个月",
+      "total": "活跃设备天数：{{total}}",
+      "moisLus": "已读取月份：{{lus}} / {{demandes}}",
+      "colFonction": "功能",
+      "colJours": "设备天数",
+      "colUtilisations": "使用次数",
+      "colPart": "占比",
+      "candidate": "建议移除",
+      "exceptions": "例外（本来就少用，从不列为建议移除）",
+      "vide": "这段时间还没有数据。",
+      "erreur": "无法读取：使用统计加载失败。"
+    },
     "parties": {
       "reception": "收件箱",
       "notifier": "发送通知",

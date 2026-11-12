@@ -117,6 +117,7 @@ export const CLES_USAGE: Record<string, string> = {
   "ecran.back-office/taches/[equipe]": "Back-Office : tâches d'une équipe",
   "ecran.back-office/taches/[equipe]/[id]": "Back-Office : une tâche",
   "ecran.back-office/taches/[equipe]/nouvelle": "Back-Office : nouvelle tâche",
+  "ecran.back-office/usage": "Back-Office : usage du site",
   "ecran.equipes": "Équipes",
   "ecran.equipes/[id]": "Fiche d'une équipe",
   "ecran.evenements": "Évènements",

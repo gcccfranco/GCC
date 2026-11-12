@@ -14,6 +14,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Comptage d'usage, T4 (docs/spec-comptage-usage.md) : l'écran de lecture /back-office/usage (tableau trié) sur les quatre dispositions.
+  /usage-lecture\.spec\.ts/,
   // Ma partition, MP-2 (docs/spec-ma-partition.md) : menu « Je lis », filets et mention de conflit sur les quatre dispositions.
   /ma-partition-lecture\.spec\.ts/,
   // Ma partition, MP-3 (docs/spec-ma-partition.md) : la barre basse du Crayon et la feuille « Pour moi / Pour tout le culte » sur les quatre dispositions.

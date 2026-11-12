@@ -328,3 +328,22 @@ qu'après quelques semaines de données.
 - 12/11/2026 — **T4 lancée** (`session_01UMdfuaPmCAo5WCMLAs8RDy`) à la demande de Timothée (« si PU-1 ne peut pas être
   codé pour le moment, lance autre chose »). Question 4 : **décision déléguée (pilote, 12/11)**, option (a), un simple
   tableau trié, sans planche (proposition de la spec : outil de bilan réservé aux admins).
+- 12/11/2026 — **T4 codée** (session `session_01UMdfuaPmCAo5WCMLAs8RDy`, executant → testeur → relecteur → regard) :
+  `/back-office/usage` (derrière `BACK_OFFICE`, lecture réservée aux admins par `peutLireUsage`, sinon « Réservé aux
+  responsables. ») ; période 3, 6 ou 12 mois (3 par défaut), total `_actif.j` et « Mois lus : x sur N » ; tableau
+  trié de la moins utilisée à la plus utilisée (jours-appareils, puis utilisations), toutes les clés du registre
+  (jamais utilisée = 0), marque « Candidate au retrait », exceptions dans un second tableau ; lien discret « Usage du
+  site » en bas d'À faire (admins). Lecture REST mois par mois, 404 = mois vide (`src/lib/usageLecture.ts`, calcul
+  pur `calculerLignes`). Libellés fr et zh-CN (`backOffice.usage.*`). Spec `tests/usage-lecture.spec.ts` ajoutée à
+  `SPECS_GRAND_ECRAN` : 30/30 sur les cinq projets (52 s) ; voisines (`back-office-coupe`, `bilingue-b5`) 119/119 en
+  2,4 min sur ordinateur. **Suite complète non menée à terme** : 21 400 tests (≈ 8 h au rythme mesuré), arrêtée à
+  1 332 ; les 41 échecs relevés venaient du serveur surchargé (réponses 500 sur le second serveur) et passent rejoués
+  seuls. Captures vues aux cinq tailles (`regard` puis la conversation) : rien de grave ; total écrit « 1 000 ».
+  **Décisions déléguées (session, 12/11)**, selon les propositions de la spec : (1) exceptions = suppression et
+  restauration de corbeille, signaler, publier le planning, admin et comptes (`ecran.admin|login|signup`),
+  questionnaire, notifier, création d'évènement (écrans et commandes) ; (2) totaux sur la période, sans colonne par
+  mois ni détail par disposition ; (3) « par mois » compté sur les mois qui ont des données (le mois en cours compte
+  pour un) ; (4) seuil strict (< 1 % et < 4 par mois : 1 % pile n'est pas candidate) ; (5) aucune candidate quand la
+  période n'a aucune donnée (une phrase à la place) ; (6) lien rangé dans À faire ; (7) pas de test Node du calcul
+  pur (il importe Firebase) : couvert par les fixtures Playwright. Non corrigé, accepté : pas de délai d'expiration
+  des lectures ; un 403 sur un mois fait échouer l'écran entier (phrase d'erreur). **Lot « Comptage d'usage » fini.**
