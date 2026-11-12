@@ -108,6 +108,10 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   l'apparence change), tests de la tranche sur trois appareils, `npm ci` avant les tests, « lance toi-même la tranche
   suivante puis arrête-toi ; en fin de lot, sers la file », questions tranchées selon la spec, pilote
   (identifiant ci-dessus) seulement pour un choix difficile à défaire.
+- **Demande de Timothée (12/11/2026, soir), à cadrer** : dans le mode louange, accès direct à **tous les chants** (comme
+  aux setlists), et les **idées d'harmonie de chaque chant** intégrées dedans. La seconde moitié recoupe Harmonie H8
+  (point en marge et bande, go donné). Change l'organisation d'un écran : planche, puis spec, puis go ; pas avant la
+  fin d'AN, MP-6 et H8 (même fichier `PerformanceMode.tsx`). Rien de lancé.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 
