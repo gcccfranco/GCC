@@ -300,3 +300,6 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   de six ; décision déléguée, pilote, 12/11). H4 et suivants : un go par lot.
 - 12/11/2026 (après-midi) — **Go de Timothée pour H4** (« go pour Harmonie H4 »). Lancé en cinquième chantier ; H5 et
   suivants gardent leur go.
+- 12/11/2026 (16 h 55 UTC) — **Go de Timothée pour H5 à H9** (« tout ce qui est dans la file donne-leur le go mais ils se
+  lancent chacun leur tour »). Ordre : H5, H6, H7, H9, puis H8 en dernier (mode louange, après AN et le pupitre) ; un
+  lot à la fois, chaque session lance le suivant. H5 lancé.
