@@ -212,7 +212,7 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
 
 **Réponses de Timothée (12/11/2026, 17 h UTC)** :
 1. « Pas besoin » : les anciennes « Ma version » ne sont **pas** reprises dans « Ma partition » (aucune conversion à la
-   première ouverture). Lecture du pilote, à confirmer par Timothée avant le code : elles restent lisibles dans leur
+   première ouverture). Confirmé par Timothée (« Elles restent lisibles ») : elles restent lisibles dans leur
    setlist jusqu'à leur retrait, sans migration.
 2. « Ok » : proposition retenue (lecture seule dans la setlist, « Les recopier dans ma partition », retrait après un mois).
 3. « Oui » : l'interrupteur « Partager ma version » disparaît sans remplaçant.
