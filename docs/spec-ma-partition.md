@@ -210,6 +210,14 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
 3. **Partage de la setlist entière** : l'ancien interrupteur « Partager ma version » (visible de tous) disparaît-il
    sans remplaçant ? Je propose oui : le partage se fait à des personnes choisies.
 
+**Réponses de Timothée (12/11/2026, 17 h UTC)** :
+1. « Pas besoin » : les anciennes « Ma version » ne sont **pas** reprises dans « Ma partition » (aucune conversion à la
+   première ouverture). Lecture du pilote, à confirmer par Timothée avant le code : elles restent lisibles dans leur
+   setlist jusqu'à leur retrait, sans migration.
+2. « Ok » : proposition retenue (lecture seule dans la setlist, « Les recopier dans ma partition », retrait après un mois).
+3. « Oui » : l'interrupteur « Partager ma version » disparaît sans remplaçant.
+MP-6 n'a pas encore son go.
+
 ## Avancement
 
 - 11/11/2026 : code relu, six captures de l'existant (setlist sur trois appareils, chant au téléphone, mode louange
