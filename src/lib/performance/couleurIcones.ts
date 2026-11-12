@@ -100,17 +100,17 @@ export function hslVersHex(h: number, s: number, l: number): string {
 }
 
 /** Éclaircit (fond sombre) ou assombrit (fond clair) la couleur, en HSL, jusqu'à un contraste
- *  d'au moins 4,5:1 contre le fond. Une couleur déjà assez contrastée ne bouge pas. En sombre,
+ *  d'au moins `seuil` (4,5:1 par défaut ; 3:1 pour les traits, AN-4) contre le fond. Une couleur déjà assez contrastée ne bouge pas. En sombre,
  *  l'encre devient la couleur du texte du thème, pas un gris. */
-export function garderContraste(hex: string, fond: string): string {
+export function garderContraste(hex: string, fond: string, seuil = CONTRASTE_MIN): string {
   const base = normaliserHex(hex) ?? COULEUR_DEFAUT;
   if (base === TEINTES[1].hex && luminance(fond) < 0.5) return TEXTE_SOMBRE;
-  if (contraste(base, fond) >= CONTRASTE_MIN) return base;
+  if (contraste(base, fond) >= seuil) return base;
   const [h, s, l] = hexVersHsl(base);
   const pas = luminance(fond) < 0.5 ? 1 : -1;
   for (let x = l + pas; x >= 0 && x <= 100; x += pas) {
     const c = hslVersHex(h, s, x);
-    if (contraste(c, fond) >= CONTRASTE_MIN) return c;
+    if (contraste(c, fond) >= seuil) return c;
   }
   return pas > 0 ? "#ffffff" : "#000000";
 }

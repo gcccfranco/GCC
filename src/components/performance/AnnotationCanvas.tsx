@@ -17,16 +17,12 @@ import {
   type StrokeTool,
   drawStrokes,
   simplifyStroke,
+  styleTrait,
   strokeHitTest,
 } from "@/lib/annotations/strokes";
 
-export const COLORS = ["#1a1a1a", "#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#ffffff"];
-
-export const SIZES: Record<"pen" | "highlighter" | "eraser", [number, number, number]> = {
-  pen: [2, 3.5, 6],
-  highlighter: [12, 20, 32],
-  eraser: [12, 24, 40],
-};
+// Stylo et surligneur : épaisseur, couleur et transparence viennent des préréglages (`src/lib/annotations/prereglages.ts`).
+export const SIZES = { eraser: [12, 24, 40] };
 
 export type Tool = StrokeTool | "eraser";
 
@@ -52,7 +48,7 @@ export function clampPan(zoom: number, p: Pan): Pan {
 // clip-path garde les coordonnées intactes et retire aussi les touchers de la bande.
 // `clipPath` (px écran) remplace `rogneBas` : le Crayon y ajoute des trous (repères de section, au-dessus de l'encre).
 // Demi-page : `clip` (clip-path en px écran, sur un cadre fixe) et `decalage` (px écran) rognent et descendent les traits comme le texte.
-export function StrokesLayer({ data, rogneBas, clip, decalage, clipPath }: { data: AnnotationData; rogneBas?: string; clip?: string; decalage?: number; clipPath?: string }) {
+export function StrokesLayer({ data, rogneBas, clip, decalage, clipPath, fond }: { data: AnnotationData; rogneBas?: string; clip?: string; decalage?: number; clipPath?: string; fond?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const w = window.innerWidth;
   const h = window.innerHeight;
@@ -71,8 +67,9 @@ export function StrokesLayer({ data, rogneBas, clip, decalage, clipPath }: { dat
       dpr,
       scaleX: w / (data.w || w),
       scaleY: h / (data.h || h),
+      fond,
     });
-  }, [data, w, h]);
+  }, [data, w, h, fond]);
 
   const canvas = (
     <canvas
@@ -84,6 +81,8 @@ export function StrokesLayer({ data, rogneBas, clip, decalage, clipPath }: { dat
         const ys = s.points.map((p) => p[1] * h / (data.h || h));
         return [Math.round(Math.min(...xs)), Math.round(Math.min(...ys)), Math.round(Math.max(...xs)), Math.round(Math.max(...ys))];
       }))}
+      // Couleurs réellement dessinées (garde de lisibilité comprise) : lues par les tests.
+      data-strokes-couleurs={JSON.stringify(data.strokes.map((s) => styleTrait(s, fond).color))}
       style={{ zIndex: clip ? undefined : 5, clipPath: clipPath ?? (rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined), transform: decalage ? `translateY(${decalage}px)` : undefined }}
       aria-hidden="true"
     />
@@ -104,10 +103,13 @@ interface Props {
   rogneBas?: string;
   /** Remplace `rogneBas` si fourni (clip-path en px écran, avec des trous : repères de section au-dessus de l'encre). */
   clipPath?: string;
-  /** Outil, couleur, épaisseur (S/M/L → 0/1/2) et taille de gomme : possédés par le parent, qui porte la barre d'outils. */
+  /** Outil, couleur, épaisseur (px), transparence et taille de gomme : possédés par le parent, qui porte la barre d'outils. */
   tool: Tool;
   color: string;
-  sizeIdx: number;
+  size: number;
+  alpha: number;
+  /** Fond de la page (garde de lisibilité au rendu, AN-4). */
+  fond: string;
   tailleGomme: number;
   /** Aucun tracé ni gomme (partition pas encore lue) ; la loupe reste. */
   inerte?: boolean;
@@ -121,7 +123,7 @@ interface Props {
   onTraitStylet?: () => void;
 }
 
-export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas, clipPath, tool, color, sizeIdx, tailleGomme, inerte, onDebutGeste, doigtLibre, contactInitial, onTraitStylet }: Props) {
+export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas, clipPath, tool, color, size, alpha, fond, tailleGomme, inerte, onDebutGeste, doigtLibre, contactInitial, onTraitStylet }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Pointeurs actifs sur le canvas (multi-touch). 1 = tracé, 2 = pincer/déplacer.
@@ -165,8 +167,9 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
       zoom,
       panX: pan.x,
       panY: pan.y,
+      fond,
     });
-  }, [data, zoom, pan.x, pan.y]);
+  }, [data, zoom, pan.x, pan.y, fond]);
 
   // Dimensionner au devicePixelRatio (et au resize)
   useEffect(() => {
@@ -227,11 +230,13 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.strokeStyle = color;
+    const st = tool === "eraser" ? null : styleTrait({ tool, size, color, alpha, points: [] }, fond);
+    ctx.strokeStyle = st?.color ?? color;
     // Le segment live est tracé en coordonnées écran (sans la matrice de zoom) :
     // on multiplie donc l'épaisseur par le zoom pour coller au rendu final.
-    ctx.lineWidth = SIZES[tool === "eraser" ? "pen" : tool][sizeIdx] * zoom;
-    ctx.globalAlpha = tool === "highlighter" ? 0.35 : 1;
+    ctx.lineWidth = size * zoom;
+    ctx.globalAlpha = st?.alpha ?? 1;
+    if (st) ctx.globalCompositeOperation = st.composite;
     ctx.beginPath();
     ctx.moveTo(prev[0], prev[1]);
     ctx.lineTo(x, y);
@@ -349,8 +354,9 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
     if (pts.length === 0) return;
     const stroke: Stroke = {
       tool,
-      size: SIZES[tool][sizeIdx],
+      size,
       color,
+      alpha,
       points: simplifyStroke(pts.map(([x, y]) => toOrig(x, y))),
     };
     onChange({ ...data, strokes: [...data.strokes, stroke] });
@@ -359,7 +365,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
 
   // Diamètre du cercle qui suit le pointeur : empreinte de la gomme (= 2× son rayon,
   // taille fixe à l'écran), ou épaisseur du trait stylo/surligneur — qui suit le zoom.
-  const cursorDiameter = tool === "eraser" ? SIZES.eraser[tailleGomme] * 2 : SIZES[tool][sizeIdx] * zoom;
+  const cursorDiameter = tool === "eraser" ? SIZES.eraser[tailleGomme] * 2 : size * zoom;
 
   return (
     <>

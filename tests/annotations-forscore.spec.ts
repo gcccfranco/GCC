@@ -1,8 +1,13 @@
-import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { expect, test, type BrowserContextOptions, type Page } from "@playwright/test";
+import { parseChordPro } from "../src/lib/chordpro/parser";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, basculerAnnoter, onStage } from "./helpers/louange";
 import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui } from "../src/lib/performance/gestes";
-import { FOND_CLAIR, garderContraste } from "../src/lib/performance/couleurIcones";
+import { FOND_CLAIR, FOND_SOMBRE, contraste, garderContraste } from "../src/lib/performance/couleurIcones";
+import { styleTrait } from "../src/lib/annotations/strokes";
+import { estTrait, traitsAplatis, traitsValides } from "../src/lib/annotations/ancres";
+import { INDICES_TELEPHONE, PREREGLAGES_DEFAUT, lirePrereglages } from "../src/lib/annotations/prereglages";
 import { annuler, historiqueVide, MAX_ETATS, noter, peutAnnuler, peutRetablir, retablir } from "../src/lib/annotations/historique";
 import type { Trait } from "../src/types/partition";
 import { accrocheSuivante, lirePosition, normaliser, placerBarre, poserBarre, type Zone } from "../src/lib/performance/barreAnnotation";
@@ -637,4 +642,168 @@ test("(t) un toucher simple sur la poignée d'une barre détachée la rattache",
   await page.mouse.down();
   await page.mouse.up();
   await expect(detachable(page)).toHaveAttribute("data-accroche", "attachee");
+});
+
+// ─── AN-4 : préréglages et couleurs ──────────────────────────────────────────
+
+// Id de section réel : un trait ancré à une section absente de la page ne se dessine pas.
+const COUPLET = parseChordPro(readFileSync("content/songs/abba-pere.cho", "utf8")).sections.find((s) => s.type === "verse")!.id;
+const TAMPON = { type: "stamp", nom: "ff", x: 3, y: 4 };
+const TRAIT_AN4 = { ancre: { section: "s", ligne: 0, car: 0 }, outil: "pen", couleur: "#dc2626", epaisseur: 0.1, alpha: 0.6, nouveauChamp: "x", points: [[0, 0], [1, 1]] };
+
+test.describe("AN-4 : fonctions pures (sans page)", () => {
+  test("traitsValides garde un élément inconnu et le champ inconnu d'un trait ; aller-retour traitsAplatis → traitsValides", () => {
+    const lus = traitsValides([TAMPON, TRAIT_AN4, "x", null]);
+    expect(lus).toHaveLength(2);
+    expect(lus[0]).toEqual(TAMPON);
+    expect(lus[1]).toEqual(TRAIT_AN4);
+    expect(estTrait(lus[0])).toBe(false);
+    expect(estTrait(lus[1])).toBe(true);
+    const ecrits = traitsAplatis(lus) as Record<string, unknown>[];
+    expect(ecrits[0]).toEqual(TAMPON);
+    expect(ecrits[1]).toMatchObject({ alpha: 0.6, nouveauChamp: "x", points: [0, 0, 1, 1] });
+    expect(traitsValides(ecrits)).toEqual(lus);
+  });
+
+  test("garderContraste avec seuil 3 : l'ancre à 4,5 par défaut ne bouge pas, un trait sombre sur noir est éclairci à 3:1 sans plus", () => {
+    expect(garderContraste("#1a1a1a", FOND_SOMBRE, 3)).not.toBe("#1a1a1a");
+    expect(contraste(garderContraste("#1a1a1a", FOND_SOMBRE, 3), FOND_SOMBRE)).toBeGreaterThanOrEqual(3);
+    expect(contraste(garderContraste("#1a1a1a", FOND_SOMBRE, 3), FOND_SOMBRE)).toBeLessThan(4.5);
+    expect(contraste(garderContraste("#1a1a1a", FOND_SOMBRE), FOND_SOMBRE)).toBeGreaterThanOrEqual(4.5);
+    expect(garderContraste("#2563eb", FOND_CLAIR, 3)).toBe("#2563eb");
+  });
+
+  test("styleTrait : sans alpha, stylo 1 et surligneur 0,35 en clair ; en sombre le surligneur 0,35 devient 0,45 en screen", () => {
+    const trait = (tool: "pen" | "highlighter", alpha?: number) => ({ tool, size: 3, color: "#2563eb", alpha, points: [] as [number, number][] });
+    expect(styleTrait(trait("pen"), FOND_CLAIR)).toMatchObject({ alpha: 1, composite: "source-over" });
+    expect(styleTrait(trait("highlighter"), FOND_CLAIR)).toMatchObject({ alpha: 0.35, composite: "source-over" });
+    const sombre = styleTrait(trait("highlighter"), FOND_SOMBRE);
+    expect(sombre.alpha).toBeCloseTo(0.45, 10);
+    expect(sombre.composite).toBe("screen");
+    expect(styleTrait(trait("highlighter", 0.35), FOND_SOMBRE).alpha).toBeCloseTo(0.45, 10);
+    expect(styleTrait(trait("highlighter", 0.7), FOND_SOMBRE).alpha).toBeCloseTo(0.9, 10);
+    expect(styleTrait(trait("highlighter", 1), FOND_SOMBRE).alpha).toBe(1);
+  });
+
+  test("lirePrereglages : sans compte les défauts ; lecture tolérante élément par élément", () => {
+    expect(PREREGLAGES_DEFAUT).toHaveLength(5);
+    expect(INDICES_TELEPHONE.map((i) => PREREGLAGES_DEFAUT[i].couleur)).toEqual(["#2b2b2e", "#b8188c", "#ffd60a"]);
+    const mauvais = [{ outil: "pen", couleur: "#123456", taille: 4, alpha: 0.5 }, { outil: "pinceau", couleur: "#123456", taille: 4, alpha: 0.5 }, { outil: "pen", couleur: "rouge", taille: 4, alpha: 1 }, { outil: "highlighter", couleur: "#ffd60a", taille: 99, alpha: 1 }, null];
+    const stock = new Map<string, string>([["annot-prereglages-odile", JSON.stringify(mauvais)], ["annot-prereglages-brut", "pas du json"], ["annot-prereglages-objet", "{}"]]);
+    Object.defineProperty(globalThis, "localStorage", { value: { getItem: (k: string) => stock.get(k) ?? null, setItem: () => {} }, configurable: true });
+    try {
+      expect(lirePrereglages(null)).toEqual(PREREGLAGES_DEFAUT);
+      expect(lirePrereglages("brut")).toEqual(PREREGLAGES_DEFAUT);
+      expect(lirePrereglages("objet")).toEqual(PREREGLAGES_DEFAUT);
+      expect(lirePrereglages("inconnu")).toEqual(PREREGLAGES_DEFAUT);
+      const l = lirePrereglages("odile");
+      expect(l[0]).toEqual(mauvais[0]);
+      expect(l.slice(1)).toEqual(PREREGLAGES_DEFAUT.slice(1));
+    } finally {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    }
+  });
+});
+
+const PRESETS = (page: Page) => dansBarres(page).locator("[data-prereglage]");
+/** Rang de la place d'un préréglage dans la barre : au téléphone, seuls les indices 0, 1 et 3 sont montrés. */
+const place = (page: Page, i: number) => PRESETS(page).nth(telephone(page) ? INDICES_TELEPHONE.indexOf(i) : i);
+const couleursDessinees = async (page: Page) => JSON.parse((await onStage(page, "canvas[data-strokes-couleurs]").first().getAttribute("data-strokes-couleurs")) ?? "[]") as string[];
+
+test("(u) cinq préréglages (trois au téléphone) en traits témoins de 44 px ; un toucher prend, un second ouvre le réglage ; plus de menu Outils", async ({ page }) => {
+  await ouvrirLouange(page);
+  await basculerAnnoter(page);
+  await expect(PRESETS(page)).toHaveCount(telephone(page) ? 3 : 5);
+  await expect(bouton(page, "Outils")).toHaveCount(0);
+  for (const b of await PRESETS(page).all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await expect(PRESETS(page).first()).toHaveAttribute("aria-pressed", "true");
+  await expect(place(page, 1)).toHaveAttribute("aria-label", "Préréglage 2 : Stylo");
+  await expect(place(page, 3)).toHaveAttribute("aria-label", "Préréglage 4 : Surligneur");
+  await place(page, 1).click();
+  await expect(place(page, 1)).toHaveAttribute("aria-pressed", "true");
+  await expect(PRESETS(page).first()).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("group", { name: "Réglage du préréglage 2" })).toHaveCount(0);
+  await place(page, 1).click();
+  await expect(page.getByRole("group", { name: "Réglage du préréglage 2" })).toBeVisible();
+});
+
+const BASTIEN: FakeProfile = {
+  uid: "uid-bastien", email: "bastien.leroux@example.invalid", firstName: "Bastien", lastName: "Leroux", planningName: "Bastien L.",
+  serviceRoles: { "Culte Francophone": ["musicien"] },
+};
+
+test("(v) un préréglage modifié (couleur, transparence) est retenu après rechargement pour le compte A ; le compte B, sur le même appareil, a les défauts", async ({ page, browser }, testInfo) => {
+  await ouvrirLouange(page);
+  await basculerAnnoter(page);
+  await place(page, 1).click();
+  await place(page, 1).click();
+  const reglage = (p: Page) => p.getByRole("group", { name: "Réglage du préréglage 2" });
+  await reglage(page).getByRole("button", { name: "#2563eb", exact: true }).click();
+  await reglage(page).getByLabel("Transparence").fill("0.5");
+  const cle = `annot-prereglages-${ODILE.uid}`;
+  await expect.poll(() => page.evaluate((k) => JSON.parse(localStorage.getItem(k) ?? "[]")[1], cle)).toMatchObject({ outil: "pen", couleur: "#2563eb", alpha: 0.5 });
+  // Compte B : même appareil (le stockage local de A est repris), autre connexion simulée.
+  const ctxB = await browser.newContext({ ...(testInfo.project.use as BrowserContextOptions), storageState: await page.context().storageState() });
+  try {
+    const pageB = await ctxB.newPage();
+    await pageB.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    // Le drapeau « barre déjà vue » vient de l'appareil de A : B voit la barre comme à une première ouverture.
+    await pageB.addInitScript(() => localStorage.removeItem("perf-barre-vue"));
+    await signInAs(pageB, BASTIEN, DOCS, `/setlists/${SL}`);
+    // Le clic peut partir avant l'hydratation : on le refait tant que le mode n'est pas ouvert.
+    await expect(async () => {
+      if (!(await pageB.locator("[data-performance-mode]").count())) await pageB.getByRole("button", { name: /Mode Louange/ }).click();
+      await expect(pageB.locator("[data-performance-mode]")).toBeVisible({ timeout: 3000 });
+    }).toPass({ timeout: 30_000 });
+    await attendreMiseEnPage(pageB);
+    // Compte sans rôle retenu : la feuille « Je joue » s'ouvre d'elle-même à la première entrée ; on la ferme.
+    const jeJoue = pageB.getByRole("dialog", { name: "Je joue", exact: true });
+    if (await jeJoue.waitFor({ timeout: 3000 }).then(() => true, () => false)) {
+      await pageB.keyboard.press("Escape");
+      await expect(jeJoue).toBeHidden();
+    }
+    await basculerAnnoter(pageB);
+    await place(pageB, 1).click();
+    await place(pageB, 1).click();
+    await expect(reglage(pageB).getByRole("button", { name: "#b8188c", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(reglage(pageB).getByLabel("Transparence")).toHaveValue("1");
+    expect(await pageB.evaluate((k) => localStorage.getItem(k), `annot-prereglages-${BASTIEN.uid}`)).toBeNull();
+  } finally {
+    await ctxB.close();
+  }
+  // A retrouve ses réglages après rechargement.
+  await page.reload();
+  await ouvrirMode(page);
+  await basculerAnnoter(page);
+  await place(page, 1).click();
+  await place(page, 1).click();
+  await expect(reglage(page).getByRole("button", { name: "#2563eb", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(reglage(page).getByLabel("Transparence")).toHaveValue("0.5");
+});
+
+test("(w) un trait tracé avec un préréglage garde couleur et alpha dans l'écriture de ma partition", async ({ page }) => {
+  const db = await ouvrirLouange(page);
+  await basculerAnnoter(page);
+  await place(page, 3).click();
+  await tracer(page);
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(1);
+  expect(traitsEcrits(db)[0]).toMatchObject({ outil: "highlighter", couleur: "#ffd60a", alpha: 0.35 });
+});
+
+test("(x) en sombre, un trait #1a1a1a est dessiné éclairci à 3:1 au moins ; en clair il ne change pas ; sans alpha il se dessine comme avant", async ({ page }) => {
+  const ancien = { ancre: { section: COUPLET, ligne: 0, car: 0 }, outil: "pen", couleur: "#1a1a1a", epaisseur: 0.1, points: [0, 0.5, 2, 0.5] };
+  const docs = { ...DOCS, [PARTITION]: { ownerUid: ODILE.uid, ownerName: "Odile P.", base: null, content: null, structure: null, key: null, traits: [ancien], sharedWith: [], sharedTraits: false, updatedAt: new Date("2026-11-02T10:00:00Z") } };
+  await page.addInitScript(() => { localStorage.setItem("perf-role-preset", "pianiste"); localStorage.setItem("accords-aide-vue", "1"); localStorage.setItem("perf-theme", sessionStorage.getItem("pw-theme") ?? "light"); });
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, ODILE, docs, `/setlists/${SL}`);
+  await ouvrirMode(page);
+  await expect.poll(async () => (await couleursDessinees(page)).length).toBe(1);
+  expect(await couleursDessinees(page)).toEqual(["#1a1a1a"]);
+  await page.evaluate(() => sessionStorage.setItem("pw-theme", "dark"));
+  await page.reload();
+  await ouvrirMode(page);
+  await expect.poll(async () => (await couleursDessinees(page)).length).toBe(1);
+  const [c] = await couleursDessinees(page);
+  expect(c).not.toBe("#1a1a1a");
+  expect(contraste(c, FOND_SOMBRE)).toBeGreaterThanOrEqual(3);
 });

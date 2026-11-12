@@ -39,13 +39,15 @@ import { TempoPartition } from "@/components/song/NoteNoire";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { dpOrigin } from "@/lib/setlist/dp";
-import { AnnotationCanvas, StrokesLayer, COLORS, MAX_ZOOM, ZOOM_STEP, clampPan } from "./AnnotationCanvas";
-import { ANCIEN_RAPPEL, type AnnotationData, type Stroke, type StrokeTool } from "@/lib/annotations/strokes";
+import { AnnotationCanvas, StrokesLayer, MAX_ZOOM, ZOOM_STEP, clampPan } from "./AnnotationCanvas";
+import { ANCIEN_RAPPEL, type AnnotationData, type Stroke } from "@/lib/annotations/strokes";
+import { INDICES_TELEPHONE, ecrirePrereglages, lirePrereglages, type Prereglage } from "@/lib/annotations/prereglages";
+import { estTrait } from "@/lib/annotations/ancres";
 import { annuler as annulerHistorique, historiqueVide, noter, peutAnnuler, peutRetablir, retablir as retablirHistorique, type Historique } from "@/lib/annotations/historique";
 import { useConfirmer } from "@/components/layout/Confirmer";
 import { libelleLecture } from "@/components/partition/MenuJeLis";
 import type { Lecture, Marques } from "@/lib/partition/lecture";
-import type { Trait } from "@/types/partition";
+import type { ElementTrait, Trait } from "@/types/partition";
 import { getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
@@ -405,7 +407,7 @@ interface PerformanceModeProps {
   /** Traits accrochés au texte, par chant : les miens, et ceux de la partition partagée que je lis (si son auteur les partage). */
   traits?: TraitsParChant;
   /** Mes traits d'un chant ont changé : à écrire dans ma partition (regroupé par le parent). */
-  onTraitsChange?: (slug: string, traits: Trait[]) => void;
+  onTraitsChange?: (slug: string, traits: ElementTrait[]) => void;
   /** Chants dont ma partition est lue : le Crayon n'est offert qu'alors (sinon l'écriture écraserait le document existant). */
   chantsCharges?: Record<string, boolean>;
   /** Change quand une écriture de traits échoue : l'écran revient à l'état enregistré. */
@@ -507,11 +509,18 @@ export function PerformanceMode({
   // + déplacement. Possédée ici car elle agrandit aussi le texte (transform CSS).
   const [annotZoom, setAnnotZoom] = useState(1);
   const [annotPan, setAnnotPan] = useState({ x: 0, y: 0 });
-  // Outils du Crayon (barre d'annotation) : la gomme est un interrupteur à part, l'outil de trait se garde dessous.
-  const [outilCrayon, setOutilCrayon] = useState<StrokeTool>("pen");
+  // Outils du Crayon (barre d'annotation) : la gomme est un interrupteur à part, le préréglage pris (AN-4) se garde dessous.
+  // Préréglages lus par compte (à l'entrée en Crayon et au changement de compte), écrits à chaque réglage.
+  const [prereglagesDe, setPrereglagesDe] = useState(() => ({ uid, liste: lirePrereglages(uid) }));
+  if (prereglagesDe.uid !== uid) setPrereglagesDe({ uid, liste: lirePrereglages(uid) });
+  const prereglages = prereglagesDe.liste;
+  const [prereglageBrut, setPrereglageActif] = useState(0);
+  const modifierPrereglage = (i: number, pr: Prereglage) => {
+    const liste = prereglages.map((x, k) => (k === i ? pr : x));
+    setPrereglagesDe({ uid, liste });
+    ecrirePrereglages(uid, liste);
+  };
   const [gommeCrayon, setGommeCrayon] = useState(false);
-  const [couleurCrayon, setCouleurCrayon] = useState(COLORS[0]);
-  const [tailleCrayon, setTailleCrayon] = useState(1);
   const [tailleGomme, setTailleGomme] = useState(1);
   // Barre visible à la toute première ouverture du mode sur l'appareil, masquée ensuite (drapeau posé par l'effet ci-dessous).
   const [showChrome, setShowChrome] = useState(() => !barreDejaVue());
@@ -588,7 +597,9 @@ export function PerformanceMode({
   const { stageTheme, setTheme } = useThemeScene();
   // La couleur affichée : le choix, corrigé pour garder 4,5:1 contre le fond. Posée sur la racine du mode et sur chaque menu (Portal).
   const couleursAccords = useCouleursAccords(uid, stageTheme, disposition);
-  const couleurIcones = garderContraste(couleurChoix, stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR);
+  // Fond de la page : garde de lisibilité des traits (AN-4) et aperçu des préréglages.
+  const fondTrait = stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR;
+  const couleurIcones = garderContraste(couleurChoix, fondTrait);
   // Dans les menus (popover, feuille du bas) la surface n'est pas le fond de la barre : la couleur y est corrigée contre elle.
   const couleurMenus = garderContraste(couleurChoix, stageTheme === "dark" ? SURFACE_MENU_SOMBRE : SURFACE_MENU_CLAIRE);
 
@@ -1285,7 +1296,7 @@ export function PerformanceMode({
   });
   // ── Traits accrochés au texte (MP-5, docs/spec-ma-partition.md, § Traits) ──
   // Mes traits écrits ici l'emportent sur ceux des props tant que le parent n'a pas fini d'enregistrer.
-  const [miensLocaux, setMiensLocaux] = useState<Record<string, Trait[]>>({});
+  const [miensLocaux, setMiensLocaux] = useState<Record<string, ElementTrait[]>>({});
   // Une entrée locale s'efface dès que les props apportent la même liste (écriture faite), au changement de compte, ou après un échec d'écriture.
   useEffect(() => { setMiensLocaux({}); }, [uid, echecTraits]);
   useEffect(() => {
@@ -1346,11 +1357,11 @@ export function PerformanceMode({
       }
       voulus.push(...traits);
     }
-    const denombrer = (traits: Trait[]) => traits.reduce((m, tr) => m.set(tr, (m.get(tr) ?? 0) + 1), new Map<Trait, number>());
+    const denombrer = (traits: Trait[]) => traits.reduce((m, tr) => m.set(tr, (m.get(tr) ?? 0) + 1), new Map<ElementTrait, number>());
     const presents = denombrer(tracesMiens.map((st) => projection.origines.get(st)!.trait));
     const restants = denombrer(voulus.map((v) => v.trait));
-    const retires = new Set([...presents].filter(([tr, n]) => (restants.get(tr) ?? 0) < n).map(([tr]) => tr));
-    const suivants: Record<string, Trait[]> = {};
+    const retires = new Set<ElementTrait>([...presents].filter(([tr, n]) => (restants.get(tr) ?? 0) < n).map(([tr]) => tr));
+    const suivants: Record<string, ElementTrait[]> = {};
     const touches = new Set<string>();
     const actuels = traitsChantsRef.current;
     for (const slug of Object.keys(actuels)) {
@@ -1381,7 +1392,7 @@ export function PerformanceMode({
   useEffect(() => { historiqueRef.current = historiqueVide(); setHistorique(historiqueVide()); }, [uid, echecTraits]);
   const [dernierSlugTrace, setDernierSlugTrace] = useState<string | null>(null);
   const gesteNote = useRef(new Set<string>());
-  const appliquerTraits = (suivants: Record<string, Trait[]>) => {
+  const appliquerTraits = (suivants: Record<string, ElementTrait[]>) => {
     // Mis à jour tout de suite : deux ⌘Z avant le rendu suivant lisent le bon état.
     const avant = traitsChantsRef.current;
     traitsChantsRef.current = { ...avant, ...Object.fromEntries(Object.entries(suivants).map(([slug, l]) => [slug, { miens: l, autres: avant[slug]?.autres ?? [] }])) };
@@ -1400,14 +1411,15 @@ export function PerformanceMode({
     appliquerTraits(r.rendus);
   };
   const toutEffacer = async () => {
-    const avecTraits = (slugs: string[]) => slugs.filter((slug) => (traitsChantsRef.current[slug]?.miens.length ?? 0) > 0);
+    const avecTraits = (slugs: string[]) => slugs.filter((slug) => (traitsChantsRef.current[slug]?.miens.filter(estTrait).length ?? 0) > 0);
     if (!avecTraits(slugsPage).length) return;
     if (!(await confirmer({ titre: t("performance.tools.clearConfirmTitle"), texte: t("performance.tools.clearConfirmBody"), action: t("performance.tools.clearAll"), destructif: true }))) return;
     const concernes = avecTraits(slugsPage);
     if (!concernes.length) return;
     poserHistorique(noter(historiqueRef.current, Object.fromEntries(concernes.map((slug) => [slug, traitsChantsRef.current[slug].miens]))));
     setDernierSlugTrace(concernes[0]);
-    appliquerTraits(Object.fromEntries(concernes.map((slug) => [slug, []])));
+    // Tout effacer retire les traits de stylo et de surligneur ; les éléments inconnus (tampons, textes d'une version plus récente) restent.
+    appliquerTraits(Object.fromEntries(concernes.map((slug) => [slug, traitsChantsRef.current[slug].miens.filter((e) => !estTrait(e))])));
   };
   // Loupe par les boutons de la barre (le pincer reste au canvas) : zoom autour du centre de l'écran.
   const zoomerPar = (delta: number) => {
@@ -1426,6 +1438,7 @@ export function PerformanceMode({
   const crayonPret = !surAjout && (!slugAnnote || chantsCharges?.[slugAnnote] !== false);
   const basculerAnnotation = () => {
     setPopoverOuvert(null);
+    if (!annotateMode) { setPrereglagesDe({ uid, liste: lirePrereglages(uid) }); setPrereglageActif(0); }
     if (!annotateMode && slugAnnote) {
       const memo = getTailleAnnotee(uid, setlistId, slugAnnote);
       if (memo !== null && Math.round(memo * 100) !== Math.round(fontScale * 100)) appliquerTaille(memo);
@@ -1786,6 +1799,8 @@ export function PerformanceMode({
   };
   // Sous md la barre n'a que Setlist, Repères, Je joue, Options : Annoter et le tempo passent dans Outils.
   const telephone = ecran.largeur < 768;
+  // Préréglage pris, replié au 1er si l'écran est celui d'un téléphone et que le pris n'y est pas affiché.
+  const prereglageActif = telephone && !INDICES_TELEPHONE.includes(prereglageBrut) ? 0 : prereglageBrut;
 
   // Padding interne des conteneurs mis à l'échelle : px-6 py-4 + safe areas.
   // Les insets sont divisés par le facteur d'échelle pour rester exacts en
@@ -2333,36 +2348,38 @@ export function PerformanceMode({
 
       {/* ── Anciennes annotations par page (lecture seule, jusqu'à MP-6) ── */}
       {showAnnotations && !demiActif && (!annotateMode || annotZoom === 1) && annotations && annotations.strokes.length > 0 && (
-        <StrokesLayer data={annotations} rogneBas={rogneBas} />
+        <StrokesLayer data={annotations} rogneBas={rogneBas} fond={fondTrait} />
       )}
       {/* ── Traits accrochés au texte : lecture (les miens, et ceux de la partition partagée que je lis) ── */}
       {showAnnotations && !annotateMode && !demiActif && projection.strokes.length > 0 && (
-        <StrokesLayer data={donneesTout} rogneBas={rogneBas} />
+        <StrokesLayer data={donneesTout} rogneBas={rogneBas} fond={fondTrait} />
       )}
       {/* Demi-page : les anciennes annotations en lecture seule, la page suivante dans la zone haute, la page en cours dans la zone basse (rognés et décalés comme leur texte) ; les traits accrochés suivent le texte de chaque zone (rognés à la zone). */}
       {showAnnotations && !annotateMode && demiActif && zonesDemi && (() => {
         const clip = (zs: Array<[number, number, number, number]>) => `path("${zs.map(([x0, y0, x1, y1]) => `M${x0} ${y0}H${x1}V${y1}H${x0}Z`).join("")}")`;
         return (
           <>
-            {annotationsSuivante && annotationsSuivante.strokes.length > 0 && <StrokesLayer data={annotationsSuivante} clip={clip(zonesDemi.haut)} />}
-            {annotations && annotations.strokes.length > 0 && <StrokesLayer data={annotations} clip={clip(zonesDemi.bas)} decalage={zonesDemi.decalage} />}
-            {projectionHaut.strokes.length > 0 && <StrokesLayer data={donneesHaut} clip={clip(zonesDemi.haut)} />}
-            {projectionBas.strokes.length > 0 && <StrokesLayer data={donneesBas} clip={clip(zonesDemi.bas)} />}
+            {annotationsSuivante && annotationsSuivante.strokes.length > 0 && <StrokesLayer data={annotationsSuivante} clip={clip(zonesDemi.haut)} fond={fondTrait} />}
+            {annotations && annotations.strokes.length > 0 && <StrokesLayer data={annotations} clip={clip(zonesDemi.bas)} decalage={zonesDemi.decalage} fond={fondTrait} />}
+            {projectionHaut.strokes.length > 0 && <StrokesLayer data={donneesHaut} clip={clip(zonesDemi.haut)} fond={fondTrait} />}
+            {projectionBas.strokes.length > 0 && <StrokesLayer data={donneesBas} clip={clip(zonesDemi.bas)} fond={fondTrait} />}
           </>
         );
       })()}
       {/* Crayon : le canvas édite mes traits seulement ; ceux d'un autre restent dessous, en lecture (hors loupe). */}
       {annotateMode && showAnnotations && annotZoom === 1 && tracesAutres.length > 0 && (
-        <StrokesLayer data={donneesAutres} rogneBas={rogneBas} clipPath={clipEncre} />
+        <StrokesLayer data={donneesAutres} rogneBas={rogneBas} clipPath={clipEncre} fond={fondTrait} />
       )}
       {annotateMode && (
         <AnnotationCanvas
           data={donneesMiens}
           rogneBas={rogneBas}
           clipPath={clipEncre}
-          tool={gommeCrayon ? "eraser" : outilCrayon}
-          color={couleurCrayon}
-          sizeIdx={tailleCrayon}
+          tool={gommeCrayon ? "eraser" : prereglages[prereglageActif].outil}
+          color={prereglages[prereglageActif].couleur}
+          size={prereglages[prereglageActif].taille}
+          alpha={prereglages[prereglageActif].alpha}
+          fond={fondTrait}
           tailleGomme={tailleGomme}
           inerte={etatTraits === "chargement"}
           doigtLibre={doigtLibre}
@@ -2415,15 +2432,14 @@ export function PerformanceMode({
             barreBasRef={barreBasRef}
             showChrome={showChrome}
             disposition={telephone ? "telephone" : ecran.largeur >= 1024 ? "large" : "tablette"}
-            outil={outilCrayon}
+            prereglages={prereglages}
+            actif={prereglageActif}
+            fond={fondTrait}
             gomme={gommeCrayon}
-            couleur={couleurCrayon}
-            taille={tailleCrayon}
             tailleGomme={tailleGomme}
-            onOutil={(o) => { setOutilCrayon(o); setGommeCrayon(false); }}
+            onPrendre={(i) => { setPrereglageActif(i); setGommeCrayon(false); }}
+            onModifier={modifierPrereglage}
             onGomme={setGommeCrayon}
-            onCouleur={(c) => { setCouleurCrayon(c); setGommeCrayon(false); }}
-            onTaille={(i) => { setTailleCrayon(i); setGommeCrayon(false); }}
             onTailleGomme={setTailleGomme}
             onAnnuler={() => defaireCrayon("annuler")}
             onRetablir={() => defaireCrayon("retablir")}

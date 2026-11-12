@@ -3,13 +3,16 @@
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as PointerReact, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, CloudOff, Eraser, GripVertical, Highlighter, Pencil, ChevronLeft, ChevronRight, Loader2, MoreHorizontal, Redo2, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
-import type { StrokeTool } from "@/lib/annotations/strokes";
-import { COLORS, SIZES } from "./AnnotationCanvas";
+import { styleTrait } from "@/lib/annotations/strokes";
+import { BORNES, INDICES_TELEPHONE, TEINTES_PRETES, type Prereglage } from "@/lib/annotations/prereglages";
+import { CercleChromatique } from "./CercleChromatique";
+import { FOND_SOMBRE, SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE, contraste } from "@/lib/performance/couleurIcones";
+import { SIZES } from "./AnnotationCanvas";
 import { accrocheSuivante, lirePosition, normaliser, placerBarre, poserBarre, type PositionBarre, type Zone } from "@/lib/performance/barreAnnotation";
 
 export type EtatTraits = "chargement" | "enregistre" | "en-attente";
 export type DispositionBarre = "telephone" | "tablette" | "large";
-type MenuId = "outils" | "gomme" | "plus";
+type MenuId = "reglage" | "gomme" | "plus";
 const CLE_POSITION = "annot-barre-position";
 
 /** Zone permise : l'écran moins les marges sûres et 8 px ; au téléphone, sous la barre du haut (sa hauteur mesurée) ;
@@ -29,22 +32,25 @@ function mesurerZone(ancre: HTMLElement | null, tel: boolean, hauteurBas: number
  *  (Outils, Gomme, ⋯). AN-3b, détachable : la poignée la glisse (suivi 1:1) ; au lâcher elle s'accroche à un bord (en colonne
  *  contre un bord latéral) ou reste libre ; attachée = haut (tablette, ordinateur) ou bas (téléphone). Détachée, son ancienne
  *  place reste une bande vide de même hauteur (`barreRef` / `barreBasRef`), pour que la mise en page ne bouge pas.
- *  Aucune animation (AN-Q1). Icônes et Terminé à `--couleur-icones` ; l'outil actif a le fond plein de cette couleur. */
+ *  Aucune animation (AN-Q1). Icônes et Terminé à `--couleur-icones` ; l'outil actif a le fond plein de cette couleur.
+ *  AN-4 : cinq préréglages en traits témoins (trois au téléphone) remplacent le popover d'outils ; un second toucher ou un appui long ouvre le réglage. */
 export function BarreAnnotation(p: {
   barreRef: RefObject<HTMLDivElement | null>;
   /** Téléphone seulement : la barre du bas, mesurée comme `BarreBas`. */
   barreBasRef: RefObject<HTMLDivElement | null>;
   showChrome: boolean;
   disposition: DispositionBarre;
-  outil: StrokeTool;
+  prereglages: Prereglage[];
+  /** Rang du préréglage pris. */
+  actif: number;
+  /** Fond de la page : l'aperçu et la garde de lisibilité du trait témoin. */
+  fond: string;
   gomme: boolean;
-  couleur: string;
-  taille: number;
   tailleGomme: number;
-  onOutil: (o: StrokeTool) => void;
+  /** Prendre le préréglage (sort de la gomme). */
+  onPrendre: (i: number) => void;
+  onModifier: (i: number, pr: Prereglage) => void;
   onGomme: (actif: boolean) => void;
-  onCouleur: (c: string) => void;
-  onTaille: (i: number) => void;
   onTailleGomme: (i: number) => void;
   onAnnuler: () => void;
   onRetablir: () => void;
@@ -171,7 +177,6 @@ export function BarreAnnotation(p: {
     : colonne ? `${aDroite ? "right-full mr-2" : "left-full ml-2"} ${enBas ? "bottom-0" : "top-0"}`
     : `${enBas ? "bottom-full mb-2" : "top-full mt-2"} ${aDroite ? "right-0" : "left-0"}`;
 
-  const IconeOutil = p.outil === "pen" ? Pencil : Highlighter;
   const annuler = (
     <Btn label={t("performance.tools.undo")} onClick={p.onAnnuler} disabled={!p.peutAnnuler} sousBulle={sous ?? true}>
       <Undo2 className="h-5 w-5" />
@@ -213,40 +218,23 @@ export function BarreAnnotation(p: {
     <span data-etat-traits={p.etat} className="whitespace-nowrap px-1 text-xs text-muted-foreground">{texteEtat}</span>
   );
 
-  const menuOutils = (
-    <div className="relative" data-menu-annotation>
-      <Btn label={t("performance.tools.tools")} actif={!p.gomme} onClick={() => basculer("outils")} sousBulle={sous ?? !tel} menuOuvert={ouvert === "outils"}>
-        <IconeOutil className="h-5 w-5" />
-        <span aria-hidden="true" data-pastille-couleur className={`rounded-full border border-current ${colonne ? "absolute bottom-1.5 right-1.5 h-2.5 w-2.5" : "h-3 w-3"}`} style={{ background: p.couleur }} />
-      </Btn>
-      {ouvert === "outils" && (
-        <Popover className={pop("g")}>
-          <div className="flex gap-1">
-            {(["pen", "highlighter"] as const).map((o) => {
-              const I = o === "pen" ? Pencil : Highlighter;
-              const actif = !p.gomme && p.outil === o;
-              return (
-                <button key={o} type="button" aria-pressed={actif} onClick={() => p.onOutil(o)} className={`flex h-11 items-center gap-1.5 rounded-lg px-3 text-sm ${actif ? "bg-[color:var(--couleur-icones)] text-background" : "text-foreground hover:bg-muted"}`}>
-                  <I className="h-5 w-5" />
-                  {t(`performance.tools.${o === "pen" ? "pen" : "highlighter"}`)}
-                </button>
-              );
-            })}
-          </div>
-          <Epaisseurs outil={p.outil} couleur={p.couleur} valeur={p.taille} onChoix={p.onTaille} />
-          <div className="mt-1 flex gap-1">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                aria-label={c}
-                aria-pressed={p.couleur === c}
-                onClick={() => p.onCouleur(c)}
-                className="h-8 w-8 rounded-full border-2"
-                style={{ backgroundColor: c, borderColor: p.couleur === c ? "var(--couleur-icones)" : "hsl(var(--border))", boxShadow: c === "#ffffff" ? "inset 0 0 0 1px hsl(var(--border))" : undefined }}
-              />
-            ))}
-          </div>
+  const rangs = tel ? INDICES_TELEPHONE : p.prereglages.map((_, i) => i);
+  const menuPrereglages = (
+    <div className={`relative flex items-center gap-0.5 ${colonne ? "flex-col" : ""}`} data-menu-annotation data-prereglages>
+      {rangs.map((i) => (
+        <Temoin
+          key={i}
+          pr={p.prereglages[i]}
+          fond={p.fond}
+          label={t("performance.tools.preset", { n: i + 1, outil: t(p.prereglages[i].outil === "pen" ? "performance.tools.penName" : "performance.tools.highlighter") })}
+          pris={!p.gomme && p.actif === i}
+          onToucher={() => (!p.gomme && p.actif === i ? basculer("reglage") : (setOuvert(null), p.onPrendre(i)))}
+          onAppuiLong={() => { p.onPrendre(i); setOuvert("reglage"); }}
+        />
+      ))}
+      {ouvert === "reglage" && (
+        <Popover className={`${pop("g")} w-56`}>
+          <Reglage pr={p.prereglages[p.actif]} n={p.actif + 1} fond={p.fond} onChange={(pr) => p.onModifier(p.actif, pr)} />
         </Popover>
       )}
     </div>
@@ -265,7 +253,7 @@ export function BarreAnnotation(p: {
       </Btn>
       {ouvert === "gomme" && (
         <Popover className={pop("g")}>
-          <Epaisseurs gomme etiquette={t("performance.tools.eraserSize")} valeur={p.tailleGomme} onChoix={p.onTailleGomme} />
+          <Epaisseurs etiquette={t("performance.tools.eraserSize")} valeur={p.tailleGomme} onChoix={p.onTailleGomme} />
         </Popover>
       )}
     </div>
@@ -299,6 +287,10 @@ export function BarreAnnotation(p: {
       </Btn>
       {ouvert === "plus" && (
         <Popover className={`${pop("d")} min-w-56`}>
+          <button type="button" onClick={() => setOuvert("reglage")} className="flex h-11 w-full items-center gap-2 rounded-lg px-2 text-sm text-foreground hover:bg-muted">
+            <Pencil className="h-5 w-5" />
+            {t("performance.tools.editPresets")}
+          </button>
           <button type="button" role="switch" aria-checked={p.doigtLibre} onClick={() => p.onDoigtLibre(!p.doigtLibre)} className="flex h-11 w-full items-center justify-between gap-3 rounded-lg px-2 text-sm text-foreground hover:bg-muted">
             {t("performance.tools.fingerFree")}
             <span aria-hidden="true" className={`flex h-5 w-9 items-center rounded-full p-0.5 ${p.doigtLibre ? "justify-end bg-[color:var(--couleur-icones)]" : "justify-start bg-muted-foreground/40"}`}>
@@ -389,13 +381,13 @@ export function BarreAnnotation(p: {
             {...evtsBarre}
           >
             {poignee}
-            {menuOutils}
+            {menuPrereglages}
             {menuGomme}
             {menuPlus}
             <span className="ml-auto">{etat}</span>
           </div>
         ))}
-        {!attachee && capsule(<>{poignee}{menuOutils}{menuGomme}{menuPlus}<span className={colonne ? "" : "ml-1"}>{etat}</span></>)}
+        {!attachee && capsule(<>{poignee}{menuPrereglages}{menuGomme}{menuPlus}<span className={colonne ? "" : "ml-1"}>{etat}</span></>)}
       </>
     );
   }
@@ -408,7 +400,7 @@ export function BarreAnnotation(p: {
       {annuler}
       {retablir}
       <Separateur colonne={colonne} />
-      {menuOutils}
+      {menuPrereglages}
       {menuGomme}
       {p.disposition === "large" && loupe(colonne)}
       {menuPlus}
@@ -437,14 +429,30 @@ const Separateur = ({ colonne }: { colonne?: boolean }) => <div aria-hidden="tru
 
 function Popover({ className, children }: { className: string; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  // Gardé dans l'écran (barre détachée près d'un bord) : décalé d'un coup, sans animation.
+  // Gardé dans l'écran (barre détachée près d'un bord) : hauteur bornée à l'écran disponible (défilement), puis décalé d'un coup,
+  // sans animation. Refait quand le contenu change de taille (ex. le cercle chromatique qui s'ouvre).
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const r = el.getBoundingClientRect();
-    const dx = r.right > window.innerWidth - 8 ? window.innerWidth - 8 - r.right : Math.max(0, 8 - r.left);
-    const dy = r.bottom > window.innerHeight - 8 ? window.innerHeight - 8 - r.bottom : Math.max(0, 8 - r.top);
-    if (dx || dy) el.style.transform = `translate(${dx}px, ${dy}px)`;
+    const ajuster = () => {
+      el.style.maxHeight = "";
+      el.style.overflowY = "";
+      el.style.transform = "";
+      let r = el.getBoundingClientRect();
+      const max = r.top < 8 ? r.bottom - 8 : r.bottom > window.innerHeight - 8 ? window.innerHeight - r.top - 8 : Infinity;
+      if (max < r.height) {
+        el.style.maxHeight = `${Math.max(max, 120)}px`;
+        el.style.overflowY = "auto";
+        r = el.getBoundingClientRect();
+      }
+      const dx = r.right > window.innerWidth - 8 ? window.innerWidth - 8 - r.right : Math.max(0, 8 - r.left);
+      const dy = r.bottom > window.innerHeight - 8 ? window.innerHeight - 8 - r.bottom : Math.max(0, 8 - r.top);
+      if (dx || dy) el.style.transform = `translate(${dx}px, ${dy}px)`;
+    };
+    ajuster();
+    const ro = new ResizeObserver(ajuster);
+    for (const c of Array.from(el.children)) ro.observe(c);
+    return () => ro.disconnect();
   }, []);
   return (
     <div ref={ref} className={`absolute z-30 flex flex-col gap-1 rounded-xl p-2 material-panel [box-shadow:var(--shadow-flottant)] ${className}`}>
@@ -460,35 +468,113 @@ const Rubrique = ({ titre, children }: { titre: string; children: ReactNode }) =
   </div>
 );
 
-/** Les trois épaisseurs d'un outil (barre à l'épaisseur réelle du trait, plafonnée) ou de la gomme (disque à son diamètre, plafonné). */
-function Epaisseurs({ outil, gomme = false, couleur, etiquette, valeur, onChoix }: { outil?: StrokeTool; gomme?: boolean; couleur?: string; etiquette?: string; valeur: number; onChoix: (i: number) => void }) {
+/** Les trois tailles de la gomme (disque à son diamètre, plafonné). */
+function Epaisseurs({ etiquette, valeur, onChoix }: { etiquette?: string; valeur: number; onChoix: (i: number) => void }) {
   const { t } = useTranslation();
   return (
     <div role="group" aria-label={etiquette} className="flex gap-1">
-      {([0, 1, 2] as const).map((i) => {
-        const taille = gomme ? Math.min(SIZES.eraser[i], 30) : Math.min(SIZES[outil!][i], 14 + i * 4);
-        return (
-          <button
-            key={i}
-            type="button"
-            aria-label={[t("performance.tools.small"), t("performance.tools.medium"), t("performance.tools.large")][i]}
-            aria-pressed={valeur === i}
-            onClick={() => onChoix(i)}
-            className={`flex h-9 w-11 items-center justify-center rounded-lg ${valeur === i ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)]" : "hover:bg-muted"}`}
-          >
-            <span
-              className="rounded-full"
-              style={{
-                width: gomme ? taille : 24,
-                height: gomme ? taille : taille,
-                background: gomme ? "hsl(var(--muted-foreground))" : couleur,
-                opacity: outil === "highlighter" ? 0.35 : 1,
-                boxShadow: !gomme && couleur === "#ffffff" ? "inset 0 0 0 1px hsl(var(--border))" : undefined,
-              }}
-            />
-          </button>
-        );
-      })}
+      {([0, 1, 2] as const).map((i) => (
+        <button
+          key={i}
+          type="button"
+          aria-label={[t("performance.tools.small"), t("performance.tools.medium"), t("performance.tools.large")][i]}
+          aria-pressed={valeur === i}
+          onClick={() => onChoix(i)}
+          className={`flex h-9 w-11 items-center justify-center rounded-lg ${valeur === i ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)]" : "hover:bg-muted"}`}
+        >
+          <span className="rounded-full" style={{ width: Math.min(SIZES.eraser[i], 30), height: Math.min(SIZES.eraser[i], 30), background: "hsl(var(--muted-foreground))" }} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Trait témoin : le trait qu'on va faire, à sa couleur (corrigée comme au rendu), son épaisseur (plafonnée pour tenir) et sa transparence. */
+function TraitTemoin({ pr, fond, l, h }: { pr: Prereglage; fond: string; l: number; h: number }) {
+  const { color, alpha } = styleTrait({ tool: pr.outil, size: pr.taille, color: pr.couleur, alpha: pr.alpha, points: [] }, fond);
+  return (
+    <svg width={l} height={h} viewBox={`0 0 ${l} ${h}`} aria-hidden="true" className="overflow-visible">
+      <path d={`M5 ${h * 0.7} C ${l * 0.35} ${h * 0.1}, ${l * 0.55} ${h * 0.95}, ${l - 5} ${h * 0.3}`} fill="none" stroke={color} strokeOpacity={alpha} strokeWidth={Math.min(pr.taille, h - 8)} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Préréglage : bouton de 44 px au trait témoin. Un toucher le prend ; sur le préréglage pris, il ouvre le réglage ; un appui
+ *  long (500 ms, sans animation) le prend et ouvre le réglage, le clic du lâcher est alors ignoré. */
+function Temoin({ pr, fond, label, pris, onToucher, onAppuiLong }: { pr: Prereglage; fond: string; label: string; pris: boolean; onToucher: () => void; onAppuiLong: () => void }) {
+  const minuterie = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const long = useRef(false);
+  const fin = () => clearTimeout(minuterie.current);
+  useEffect(() => fin, []);
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={pris}
+      data-prereglage
+      onClick={() => { if (long.current) { long.current = false; return; } onToucher(); }}
+      onContextMenu={(e) => e.preventDefault()}
+      onPointerDown={(e) => {
+        long.current = false;
+        fin();
+        if (e.button === 0) minuterie.current = setTimeout(() => { long.current = true; onAppuiLong(); }, 500);
+      }}
+      onPointerUp={fin}
+      onPointerLeave={() => { fin(); long.current = false; }}
+      onPointerCancel={() => { fin(); long.current = false; }}
+      className={`flex h-11 w-11 select-none items-center justify-center rounded-lg [-webkit-touch-callout:none] ${pris ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)]" : "hover:bg-muted/60 active:bg-muted"}`}
+    >
+      <TraitTemoin pr={pr} fond={fond} l={28} h={24} />
+    </button>
+  );
+}
+
+const defautDe = (o: Prereglage["outil"]) => (o === "pen" ? { taille: 3.5, alpha: 1 } : { taille: 20, alpha: 0.35 });
+
+/** Réglage d'un préréglage : outil, teintes prêtes et « Autre couleur » (cercle de FS-A), épaisseur, transparence, aperçu.
+ *  Chaque changement s'applique et s'écrit tout de suite. Changer d'outil reprend l'épaisseur et la transparence usuelles de l'outil. */
+function Reglage({ pr, n, fond, onChange }: { pr: Prereglage; n: number; fond: string; onChange: (pr: Prereglage) => void }) {
+  const { t } = useTranslation();
+  const [cercle, setCercle] = useState(false);
+  const [min, max] = BORNES[pr.outil];
+  const surface = fond === FOND_SOMBRE ? SURFACE_MENU_SOMBRE : SURFACE_MENU_CLAIRE;
+  return (
+    <div role="group" aria-label={t("performance.tools.presetSettings", { n })} className="flex flex-col gap-1">
+      <div className="flex gap-1">
+        {(["pen", "highlighter"] as const).map((o) => {
+          const I = o === "pen" ? Pencil : Highlighter;
+          return (
+            <button key={o} type="button" aria-pressed={pr.outil === o} onClick={() => pr.outil !== o && onChange({ ...pr, outil: o, ...defautDe(o) })} className={`flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 text-sm ${pr.outil === o ? "bg-[color:var(--couleur-icones)] text-background" : "text-foreground hover:bg-muted"}`}>
+              <I className="h-5 w-5" />
+              {t(o === "pen" ? "performance.tools.penName" : "performance.tools.highlighter")}
+            </button>
+          );
+        })}
+      </div>
+      <Rubrique titre={t("performance.tools.tint")}>
+        <div className="grid grid-cols-4">
+          {TEINTES_PRETES.map((c) => (
+            <button key={c} type="button" aria-label={c} aria-pressed={pr.couleur === c} onClick={() => onChange({ ...pr, couleur: c })} className="flex h-11 w-11 items-center justify-center">
+              <span className="h-7 w-7 rounded-full border-2" style={{ backgroundColor: c, borderColor: pr.couleur === c ? "var(--couleur-icones)" : contraste(c, surface) < 3 ? "hsl(var(--muted-foreground))" : "hsl(var(--border))" }} />
+            </button>
+          ))}
+        </div>
+        <button type="button" aria-pressed={cercle} onClick={() => setCercle((v) => !v)} className={`flex h-11 w-full items-center rounded-lg px-2 text-sm ${cercle ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)]" : "text-foreground hover:bg-muted"}`}>
+          {t("performance.iconColors.autre")}
+        </button>
+        {cercle && <CercleChromatique valeur={pr.couleur} fond={fond} onChange={(c) => onChange({ ...pr, couleur: c })} />}
+      </Rubrique>
+      <label className="px-1 text-xs font-semibold text-muted-foreground">
+        {t("performance.tools.thickness")}
+        <input type="range" min={min} max={max} step={0.5} value={pr.taille} onChange={(e) => onChange({ ...pr, taille: Number(e.target.value) })} className="block h-11 w-full accent-[color:var(--couleur-icones)]" />
+      </label>
+      <label className="px-1 text-xs font-semibold text-muted-foreground">
+        {t("performance.tools.opacity")}
+        <input type="range" min={BORNES.alpha[0]} max={BORNES.alpha[1]} step={0.05} value={pr.alpha} onChange={(e) => onChange({ ...pr, alpha: Number(e.target.value) })} className="block h-11 w-full accent-[color:var(--couleur-icones)]" />
+      </label>
+      <div data-apercu-prereglage className="flex justify-center rounded-lg border border-border py-1">
+        <TraitTemoin pr={pr} fond={fond} l={160} h={36} />
+      </div>
     </div>
   );
 }

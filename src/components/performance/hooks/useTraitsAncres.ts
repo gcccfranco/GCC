@@ -1,13 +1,13 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { ancrer, decouper, projeter, type Rect, type Repere } from "@/lib/annotations/ancres";
+import { ancrer, decouper, estTrait, projeter, type Rect, type Repere } from "@/lib/annotations/ancres";
 import type { Stroke } from "@/lib/annotations/strokes";
-import type { Trait } from "@/types/partition";
+import type { ElementTrait, Trait } from "@/types/partition";
 
 // Traits accrochés au texte (docs/spec-ma-partition.md, § Traits) : mesure du DOM. Le calcul pur est dans
 // `src/lib/annotations/ancres.ts`. Repères posés par `SectionView` (`data-trait-slug|section|ligne` sur chaque ligne)
 // et par `JianpuSheet` (`data-trait-scan` = rang de l'image, + `data-trait-slug`).
 
-export type TraitsParChant = Record<string, { miens: Trait[]; autres: Trait[] }>;
+export type TraitsParChant = Record<string, { miens: ElementTrait[]; autres: ElementTrait[] }>;
 export type Origine = { slug: string; trait: Trait; mien: boolean };
 export type Projection = { strokes: Stroke[]; origines: Map<Stroke, Origine> };
 /** Loupe d'AO : le contenu est translaté puis agrandi ; les mesures sont ramenées à l'espace sans loupe. */
@@ -142,7 +142,7 @@ export function useTraitsAncres({ racine, traits, actif, loupe }: { racine: () =
       }
       for (const [slug, { miens, autres }] of Object.entries(traits)) {
         for (const [mien, liste] of [[true, miens], [false, autres]] as const) {
-          for (const trait of liste) {
+          for (const trait of liste.filter(estTrait)) {
             const a = trait.ancre;
             const cibles = "scan" in a ? scans.get(`${slug}\n${a.image}`) : lignes.get(`${slug}\n${a.section}\n${a.ligne}`);
             for (const cible of cibles ?? []) {

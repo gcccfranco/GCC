@@ -132,10 +132,11 @@ test("(a) ancres : un tracé sur deux lignes est découpé ligne par ligne ; éc
   // Scan : fraction de la largeur de l'image, 4 décimales.
   const scan = ancrer(trace, { scan: true, image: 1 }, { x: 50, y: 100, unite: 400 });
   expect(scan.points).toEqual([[0.125, 0.25], [0.205, 0.29]]);
-  // Anciens documents : `traits` absent ou de forme inconnue → ignoré ; points à plat (Firestore) relus en paires.
+  // Anciens documents : `traits` absent ou de forme inconnue → ignoré ; points à plat (Firestore) relus en paires ; un objet
+  // inconnu (AN-4, « Compatibilité du format ») est gardé tel quel, un non-objet ignoré.
   expect(traitsValides(undefined)).toEqual([]);
   expect(traitsValides("x")).toEqual([]);
-  expect(traitsValides([{ foo: 1 }, trait, { ...trait, points: [0, 0, 2, 1] }])).toEqual([trait, trait]);
+  expect(traitsValides([{ foo: 1 }, 3, null, trait, { ...trait, points: [0, 0, 2, 1] }])).toEqual([{ foo: 1 }, trait, trait]);
 });
 
 test("(b) un trait tracé sur un mot s'écrit dans ma partition, ancré au texte, et reste sur le mot quand la fenêtre change de taille", async ({ page }) => {

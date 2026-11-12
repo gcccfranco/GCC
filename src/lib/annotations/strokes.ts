@@ -6,6 +6,8 @@
 // normalisées par la taille du viewport au moment du dessin, pour résister
 // aux petites variations d'écran.
 
+import { FOND_SOMBRE, contraste, garderContraste } from "@/lib/performance/couleurIcones";
+
 export type StrokeTool = "pen" | "highlighter";
 
 export interface Stroke {
@@ -13,6 +15,8 @@ export interface Stroke {
   /** Épaisseur en px CSS (à l'échelle du viewport d'origine) */
   size: number;
   color: string;
+  /** Transparence (AN-4) ; absent = 1 pour le stylo, 0,35 pour le surligneur. */
+  alpha?: number;
   /** Points [x, y] en px CSS dans le viewport d'origine */
   points: [number, number][];
 }
@@ -119,12 +123,25 @@ export function strokeHitTest(stroke: Stroke, x: number, y: number, radius: numb
  * d'annotation) agrandissent et déplacent le rendu par-dessus, sans perte de
  * netteté (le trait est rasterisé à la résolution finale).
  */
+/** Rendu d'un trait (AN-4, garde de lisibilité, jamais à l'enregistrement) : un stylo à moins de 3:1 contre `fond` est
+ *  éclairci ou assombri ; en sombre, le surligneur se fond en « screen » à 0,45 par défaut. */
+export function styleTrait(s: Stroke, fond?: string): { color: string; alpha: number; composite: GlobalCompositeOperation } {
+  const sombre = fond === FOND_SOMBRE;
+  if (s.tool === "highlighter") {
+    const alpha = s.alpha ?? 0.35;
+    // En sombre : « screen », la transparence réglée garde son effet relatif (0,35 → 0,45), même rendu pour un ancien et un neuf.
+    return sombre ? { color: s.color, alpha: Math.min(1, (alpha * 0.45) / 0.35), composite: "screen" } : { color: s.color, alpha, composite: "source-over" };
+  }
+  const lisible = fond && contraste(s.color, fond) < 3 ? garderContraste(s.color, fond, 3) : s.color;
+  return { color: lisible, alpha: s.alpha ?? 1, composite: "source-over" };
+}
+
 export function drawStrokes(
   ctx: CanvasRenderingContext2D,
   strokes: Stroke[],
-  opts: { dpr: number; scaleX: number; scaleY: number; zoom?: number; panX?: number; panY?: number },
+  opts: { dpr: number; scaleX: number; scaleY: number; zoom?: number; panX?: number; panY?: number; fond?: string },
 ): void {
-  const { dpr, scaleX, scaleY, zoom = 1, panX = 0, panY = 0 } = opts;
+  const { dpr, scaleX, scaleY, zoom = 1, panX = 0, panY = 0, fond } = opts;
   ctx.save();
   // Effacer toute la surface (espace pixels physiques), indépendamment du zoom/pan
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -135,14 +152,16 @@ export function drawStrokes(
   ctx.lineJoin = "round";
 
   for (const s of strokes) {
+    const st = styleTrait(s, fond);
     ctx.beginPath();
-    ctx.strokeStyle = s.color;
+    ctx.strokeStyle = st.color;
     ctx.lineWidth = s.size * ((scaleX + scaleY) / 2);
-    ctx.globalAlpha = s.tool === "highlighter" ? 0.35 : 1;
+    ctx.globalAlpha = st.alpha;
+    ctx.globalCompositeOperation = st.composite;
     const pts = s.points;
     if (pts.length === 1) {
       // point isolé → petit disque
-      ctx.fillStyle = s.color;
+      ctx.fillStyle = st.color;
       ctx.arc(pts[0][0] * scaleX, pts[0][1] * scaleY, (s.size / 2) * scaleX, 0, Math.PI * 2);
       ctx.fill();
       continue;

@@ -76,7 +76,7 @@ import { useMesPartitions } from "@/lib/partition/useMesPartitions";
 import { lire, resoudreConflit, type Lecture } from "@/lib/partition/lecture";
 import { passerAuCulte, rangDansLaCourante } from "@/lib/partition/fusion";
 import type { PartitionDeChant } from "@/lib/firebase/partitions";
-import type { Trait } from "@/types/partition";
+import type { ElementTrait } from "@/types/partition";
 import { BarreCrayon, type CibleCrayon } from "@/components/partition/BarreCrayon";
 import { ChoixDestination, type Destination } from "@/components/partition/ChoixDestination";
 import { adresseVue, lireAdresse, poser, surLaSetlist } from "@/lib/setlist/adresseVue";
@@ -405,7 +405,7 @@ export function SetlistDetailClient() {
   }, [user, setlist, contents, versions, mesPartitions.mes, mesPartitions.partagees, mesPartitions.choix, t]);
   /** Traits du Crayon par chant (MP-5) : les miens, toujours ; ceux de la partition partagée que je lis, si son auteur les partage. */
   const traitsParChant = useMemo(() => {
-    const out: Record<string, { miens: Trait[]; autres: Trait[] }> = {};
+    const out: Record<string, { miens: ElementTrait[]; autres: ElementTrait[] }> = {};
     for (const slug of slugsPartitions) {
       const partagee = mesPartitions.partagees.find((p) => p.slug === slug && p.ownerUid === lectures[slug]?.valeur);
       out[slug] = { miens: mesPartitions.mes[slug]?.traits ?? [], autres: partagee?.sharedTraits ? partagee.traits : [] };
@@ -413,8 +413,8 @@ export function SetlistDetailClient() {
     return out;
   }, [slugsPartitions, lectures, mesPartitions.mes, mesPartitions.partagees]);
   // Écritures des traits regroupées (≈ 800 ms) : un trait par tracé ferait une écriture par tracé.
-  const traitsEnAttente = useRef<Record<string, { traits: Trait[]; minuterie: ReturnType<typeof setTimeout> }>>({});
-  const enregistrerTraitsRef = useRef<(slug: string, traits: Trait[]) => Promise<void>>(async () => {});
+  const traitsEnAttente = useRef<Record<string, { traits: ElementTrait[]; minuterie: ReturnType<typeof setTimeout> }>>({});
+  const enregistrerTraitsRef = useRef<(slug: string, traits: ElementTrait[]) => Promise<void>>(async () => {});
   // Un échec d'écriture des traits : le mode louange revient à l'état enregistré.
   const [echecTraits, setEchecTraits] = useState(0);
   const envoyerTraitsRef = useRef<() => void>(() => {});
@@ -1339,7 +1339,7 @@ export function SetlistDetailClient() {
   }
 
   /** Mode louange : mes traits d'un chant ont changé. Réécrit ma partition (créée au besoin, texte et `base` inchangés). */
-  function traitsChanges(slug: string, traits: Trait[]) {
+  function traitsChanges(slug: string, traits: ElementTrait[]) {
     const en = traitsEnAttente.current[slug];
     if (en) clearTimeout(en.minuterie);
     traitsEnAttente.current[slug] = {
@@ -1359,7 +1359,7 @@ export function SetlistDetailClient() {
     }
   }
   envoyerTraitsRef.current = envoyerTraits;
-  async function enregistrerTraits(slug: string, traits: Trait[]) {
+  async function enregistrerTraits(slug: string, traits: ElementTrait[]) {
     const item = setlist?.items.find((i) => i.songSlug === slug);
     if (!user || !item) return;
     // Lecture de ma partition pas aboutie : on ne réécrit rien (le document existant perdrait son texte et son partage).

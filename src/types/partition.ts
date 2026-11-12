@@ -12,8 +12,15 @@ export type Trait = {
   outil: "pen" | "highlighter";
   couleur: string;
   epaisseur: number;
+  /** Transparence (AN-4) ; absent = rendu d'avant : 1 pour le stylo, 0,35 pour le surligneur. */
+  alpha?: number;
   points: [number, number][];
 };
+
+/** Élément de `traits` qu'une version plus ancienne ne comprend pas (tampon, texte…) : gardé tel quel et réécrit à
+ *  l'enregistrement (AN-4, « Compatibilité du format »). Seuls les vrais `Trait` se dessinent, s'ancrent ou se gomment. */
+export type ElementInconnu = Record<string, unknown> & { __inconnu?: never };
+export type ElementTrait = Trait | ElementInconnu;
 
 export type Partition = {
   ownerUid: string;
@@ -29,7 +36,7 @@ export type Partition = {
   jianpuChords?: JianpuChords;
   /** Ma tonalité pour ce chant ; le capo reste par appareil. */
   key: string | null;
-  traits: Trait[];
+  traits: ElementTrait[];
   /** Uids des personnes à qui je la partage. */
   sharedWith: string[];
   /** Les traits partent-ils avec la partition (défaut `false`). */

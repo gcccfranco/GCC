@@ -838,7 +838,6 @@
       "resetZoom": "恢复 100%",
       "redo": "重做",
       "done": "完成",
-      "tools": "工具",
       "more": "更多",
       "shortcuts": "快捷键",
       "loupe": "放大镜",
@@ -855,7 +854,14 @@
       "clearConfirmBody": "可用“撤销”恢复。",
       "eraserSize": "橡皮大小",
       "fingerFree": "手指不画线",
-      "fingerNotice": "手指翻页和缩放，触控笔画线"
+      "fingerNotice": "手指翻页和缩放，触控笔画线",
+      "penName": "钢笔",
+      "preset": "预设 {{n}}：{{outil}}",
+      "presetSettings": "预设 {{n}} 的设置",
+      "editPresets": "编辑预设",
+      "tint": "颜色",
+      "thickness": "粗细",
+      "opacity": "透明度"
     }
   },
   "notifications": {

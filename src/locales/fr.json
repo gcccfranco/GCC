@@ -843,7 +843,6 @@
       "resetZoom": "Revenir à 100 %",
       "redo": "Rétablir",
       "done": "Terminé",
-      "tools": "Outils",
       "more": "Plus",
       "shortcuts": "Raccourcis",
       "loupe": "Loupe",
@@ -860,7 +859,14 @@
       "clearConfirmBody": "Tu pourras les rendre avec Annuler.",
       "eraserSize": "Taille de la gomme",
       "fingerFree": "Le doigt ne dessine pas",
-      "fingerNotice": "Le doigt tourne et zoome, le stylet dessine"
+      "fingerNotice": "Le doigt tourne et zoome, le stylet dessine",
+      "penName": "Stylo",
+      "preset": "Préréglage {{n}} : {{outil}}",
+      "presetSettings": "Réglage du préréglage {{n}}",
+      "editPresets": "Modifier les préréglages",
+      "tint": "Couleur",
+      "thickness": "Épaisseur",
+      "opacity": "Transparence"
     }
   },
   "notifications": {
