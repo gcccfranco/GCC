@@ -1,8 +1,8 @@
 # Entrée des musiciens : le pupitre (demande AP, chantier 2)
 
-**Statut : planche en cours (11/11/2026). Pas de spec de code, aucun code.** La spec s'écrit après les réponses de
+**Statut : planche publiée (12/11/2026), questions posées à Timothée. Pas de spec de code, aucun code.** La spec s'écrit après les réponses de
 Timothée aux questions de la planche, le code après un go (CLAUDE.md, « Design », « Go », « Coder »).
-Planche : `docs/planches/planche-pupitre-musicien.html`. Cadrage d'ensemble : `docs/spec-pupitre-musicien.md`
+Planche : `docs/planches/planche-pupitre-musicien.html` (artefact privé : https://claude.ai/artifact/N8qza1nQJVjzPtdFf9ek7H). Cadrage d'ensemble : `docs/spec-pupitre-musicien.md`
 (§ Chantiers proposés, ligne 2).
 
 ## Demande (Timothée, 11/11/2026, point 4 de sa liste)
@@ -86,3 +86,9 @@ dynamique de `@/components/pdf/*`), sans route API : le retirer aux musiciens ma
 - 11/11/2026 (nuit) : code relu, huit captures prises, `/planche` lancé (sujet `pupitre-musicien`).
 - 11/11/2026 (nuit) : `/planche` rendu (trois pistes, A recommandée) ; critique « à retoucher » (accent pétrole = couleur
   du culte, chrome bleu = choix par appareil, vignettes illisibles au téléphone, tablette couchée absente) ; une reprise lancée.
+- 12/11/2026 : reprise faite (13 corrections : « Jouer » suit la règle 5C1, couleur des icônes du mode louange = choix
+  existant, culte à six chants partout, rangées sans vignette au téléphone, pastille longue et sa troncature, mesures
+  qui départagent, cadre 中文, tablette couchée de A en clair et en sombre). Relue sur les quatre dispositions, publiée
+  en artefact privé, questions posées. Mesures : six chants sur six au premier écran à 390 px pour A et B, C à −4 px ;
+  touchers pour changer l'ordre A 3, B 4, C 2 ; réglages lisibles sans rien ouvrir A 1/3, B 0/3, C 3/3.
+  **En attente des réponses de Timothée** ; ensuite la spec, puis le go.
