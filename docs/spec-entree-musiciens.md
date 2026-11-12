@@ -403,3 +403,7 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   venir » (question 4) **ne se construisent pas**. Reste à confirmer par Timothée : le PDF d'une **setlist**
   (décision 1, réservé à qui peut la modifier et à la présidence) est-il ouvert à tous lui aussi ? Si oui, PU-1 tombe
   en entier. PU-1 ne part pas avant cette réponse.
+- 12/11/2026 : **Timothée confirme** (« C'est juste les PDF des setlists qu'il faut enlever aux musiciens ») : la
+  décision 1 tient (PDF d'une setlist réservé à qui peut la modifier et à la présidence du service) ; le PDF d'un
+  chant reste à tous. **PU-1 = PDF de setlist seulement** : `canExporterPdfSetlist` et `presideLeService`, rien sur la
+  page d'un chant. Plus aucune question ouverte ; attend le go de code.
