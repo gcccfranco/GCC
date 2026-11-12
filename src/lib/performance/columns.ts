@@ -16,7 +16,7 @@ export type PerfPage = { header: number | null; cols: number[][]; scale: number;
    *  page porte « v2 » ; une page dont tous les vers tiennent sur une rangée garde sa clé d'avant CV. */
   coupe?: boolean;
   /** Page de scan 简谱 certifié (lot JP-B) : la tranche de la page de partition qu'elle montre (lignes entières,
-   *  y en px image). Absent : le scan entier, comme avant. Sa clé de page est « j4-<y0> ». */
+   *  y en px image). Absent : le scan entier, comme avant. Sa clé de page est « j4-<y0> » (« j5-<y0> » en demi-lignes, téléphone en portrait, lot JP-C). */
   tranche?: Tranche;
   /** Dernière page d'un chant suivi d'un autre : indice de la colonne qui porte la pastille « Ensuite »
    *  (posée à la fin de cette colonne, dans le flux). Absent : pas de pastille dans le flux. */

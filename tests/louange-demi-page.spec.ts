@@ -318,16 +318,25 @@ async function mesurerScan(page: Page) {
     const lire = (sel: string) => {
       const calque = document.querySelector<HTMLElement>(`[data-performance-mode] ${sel}`)!;
       const zs = JSON.parse(calque.dataset.demiZones ?? "[]") as Array<[number, number, number, number]>;
-      const fen = calque.querySelector<HTMLElement>("[data-jianpu-tranche]")!;
-      const q = fen.getBoundingClientRect();
-      const [t0, t1] = fen.dataset.jianpuTranche!.split("-").map(Number);
-      const echelle = q.height / (t1 - t0);
-      const lignes = fen.dataset.jianpuLignes!.split(",").map((l) => l.split("-").map(Number)).map(([a, b]) => ({ top: q.top + (a - t0) * echelle, bottom: q.top + (b - t0) * echelle }));
+      // Demi-lignes (téléphone en portrait, lot JP-C) : plusieurs fenêtres ; les deux moitiés d'une ligne n'en font qu'une.
+      let bas = -Infinity;
+      let fenetreHaut = Infinity;
+      const lignes: Array<{ top: number; bottom: number }> = [];
+      for (const fen of calque.querySelectorAll<HTMLElement>("[data-jianpu-tranche]")) {
+        const q = fen.getBoundingClientRect();
+        const [t0, t1] = fen.dataset.jianpuTranche!.split("-").map(Number);
+        const echelle = q.height / (t1 - t0);
+        bas = Math.max(bas, q.bottom);
+        fenetreHaut = Math.min(fenetreHaut, q.top);
+        const ls = fen.dataset.jianpuLignes!.split(",").map((l) => l.split("-").map(Number)).map(([a, b]) => ({ top: q.top + (a - t0) * echelle, bottom: q.top + (b - t0) * echelle }));
+        if (fen.dataset.jianpuMoitie === "d" && lignes.length) lignes[lignes.length - 1].bottom = ls[0].bottom;
+        else lignes.push(...ls);
+      }
       const vues = lignes.flatMap((l) => {
         const z = zs.find(([, y0, , y1]) => l.top < y1 - 1 && l.bottom > y0 + 1);
         return z ? [{ ...l, entiere: l.top >= z[1] - 1 && l.bottom <= z[3] + 1 }] : [];
       });
-      return { total: lignes.length, vues, bas: q.bottom, fenetreHaut: q.top };
+      return { total: lignes.length, vues, bas, fenetreHaut };
     };
     const haut = lire("[data-demi-haut]");
     const bas = lire("[data-demi-bas]");

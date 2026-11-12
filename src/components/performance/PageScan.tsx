@@ -31,6 +31,7 @@ export function PageScan({
   onSuivant,
   reserveBas = 0,
   tete,
+  pastilleTourne = false,
   children,
 }: {
   sheet: PerformanceBlock | undefined;
@@ -43,6 +44,8 @@ export function PageScan({
   reserveBas?: number;
   /** Scan certifié (tranche) : la tête de feuille, de la hauteur de la barre de titre. Absent : le scan entier, comme avant. */
   tete?: { hauteur: string; encoche: string; allumes: ReadonlySet<string> };
+  /** Téléphone en portrait, scan sans données de lignes : pastille inerte sous le scan (lot JP-C). */
+  pastilleTourne?: boolean;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -54,8 +57,8 @@ export function PageScan({
     const zone = scanRef.current;
     if (!zone || !tete) return;
     const mesurer = () => {
-      const fenetre = zone.querySelector<HTMLElement>("[data-jianpu-fenetre]");
-      const w = fenetre?.offsetWidth ?? 0;
+      // Demi-lignes (JP-C) : la feuille a la largeur de la plus large des fenêtres.
+      const w = Math.max(0, ...Array.from(zone.querySelectorAll<HTMLElement>("[data-jianpu-fenetre]"), (f) => f.offsetWidth));
       setLargeurFeuille(w > 0 && w < zone.clientWidth - 1 ? w : null);
     };
     mesurer();
@@ -186,6 +189,11 @@ export function PageScan({
         </div>
       )}
       <div className="min-h-0 flex-1" style={reserveBas ? { paddingBottom: reserveBas } : undefined}>{children}</div>
+      {pastilleTourne && (
+        <div data-pastille-tourne className="flex h-11 shrink-0 items-center justify-center px-4 text-center text-xs text-muted-foreground">
+          {t("performance.tourneTelephone")}
+        </div>
+      )}
     </div>
   );
 }

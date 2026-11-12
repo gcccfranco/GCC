@@ -749,10 +749,11 @@ async function ouvrirLouangeT5(page: Page, role = "pianiste", certifie = false) 
   }, "/setlists/setlist-t5");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
-  await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);
+  // Certifié au téléphone en portrait (lot JP-C) : des demi-lignes, donc plusieurs fenêtres.
+  await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 })[certifie ? "toBeGreaterThan" : "toBe"](certifie ? 0 : 1);
   // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus. Certifié : la page est une tranche.
   if (certifie) {
-    await expect(page.locator("[data-performance-mode] [data-jianpu-tranche]:not([aria-hidden=true] *)")).toBeAttached({ timeout: 30_000 });
+    await expect(page.locator("[data-performance-mode] [data-jianpu-tranche]:not([aria-hidden=true] *)").first()).toBeAttached({ timeout: 30_000 });
     return;
   }
   const { w, h } = INDEX[SLUG].pages[0];
@@ -845,7 +846,10 @@ test("L3-T5a annotations : une page de scan a sa propre clé (« j2 », « j4-<y
   await ouvrirLouangeT5(page, "pianiste", true);
   // 一生爱你 est certifié (`systemes.json`, lot JP-B) : sa page est une tranche, clé « j4-<y0> ». Un scan non
   // certifié garde « j2 » (« j3 » en paysage sur grand écran, colonne L3-T5b) : tests/louange-jianpu-tranches.spec.ts.
-  await expect.poll(() => lues.at(-1) ?? "").toMatch(/j4-\d+$/);
+  // Téléphone en portrait : demi-lignes, clé « j5-<y0> » (lot JP-C). L'ancienne clé « j2 » / « j3 » est aussi lue (migration) : on cherche la bonne parmi les lectures.
+  const { width, height } = page.viewportSize()!;
+  const cle = width < 768 && height > width ? /j5-\d+$/ : /j4-\d+$/;
+  await expect.poll(() => lues.some((l) => cle.test(l))).toBe(true);
 });
 
 // ─── L3-T5b : mode louange — en paysage sur grand écran, la structure en colonne ─

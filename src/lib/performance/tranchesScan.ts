@@ -2,10 +2,15 @@
 // Un scan se coupe entre deux lignes (`systemes.json`), jamais au milieu : chaque tranche est un écran.
 
 /** Une tranche : indices des lignes (première et dernière, incluses) et bornes en px image. */
-export type Tranche = { y0: number; y1: number; premiere: number; derniere: number };
+export type Tranche = { y0: number; y1: number; premiere: number; derniere: number; demi?: Demi };
 
-/** Une ligne du scan : `y0`..`y1` inclus, px image. */
-export type LigneTranche = { y0: number; y1: number };
+/** Fenêtre d'une demi-ligne (lot JP-C, téléphone en portrait) : `x0..x1` × `y0..y1` px image ; `moitie` absent : ligne entière. */
+export type FenetreDemi = { x0: number; x1: number; y0: number; y1: number; ligne: number; moitie?: "g" | "d" };
+/** Tranche en demi-lignes : fenêtres dans l'ordre d'affichage, échelle commune (px CSS par px image). */
+export type Demi = { echelle: number; fenetres: FenetreDemi[] };
+
+/** Une ligne du scan : `y0`..`y1` inclus, px image ; `barres` : x des barres de mesure (la dernière est la barre finale). */
+export type LigneTranche = { y0: number; y1: number; barres?: number[] };
 
 /** Air laissé de part et d'autre de l'encre (px image) : le bord de l'encre ne touche pas celui de la feuille. */
 export const AIR_X = 16;
@@ -63,6 +68,67 @@ export function tranchesScan(
     out.push(bornes(p, k - 1));
     p = k;
   }
+  return out;
+}
+
+/** Barre de mesure la plus proche du milieu de `x0..x1`, hors barre finale (la dernière) et hors de ]x0, x1[ ; `null` sinon. */
+export function coupeMilieu(barres: number[], x0: number, x1: number): number | null {
+  const milieu = (x0 + x1) / 2;
+  return barres.slice(0, -1).filter((x) => x > x0 && x < x1).reduce<number | null>((m, x) => (m === null || Math.abs(x - milieu) < Math.abs(m - milieu) ? x : m), null);
+}
+
+/** Écart entre les deux moitiés d'une ligne, et entre deux systèmes (px CSS). */
+export const ECART_MOITIES = 2;
+export const ECART_SYSTEMES = 24;
+
+/** Tranches en demi-lignes (téléphone en portrait) : chaque ligne coupée sur sa barre la plus proche du milieu donne
+ *  deux fenêtres empilées (même `y0..y1`) ; une ligne sans coupe reste entière. Échelle commune à la page :
+ *  `largeurDispoPx` / la plus large des fenêtres. On empile des systèmes entiers tant qu'ils tiennent ; un système
+ *  seul plus haut que l'écran fait sa page, dont l'échelle baisse pour qu'elle tienne en hauteur (écarts fixes
+ *  compris). `reserveDerniere` : comme `tranchesScan`. */
+export function tranchesDemiLignes(
+  lignes: LigneTranche[],
+  pageH: number,
+  x0: number,
+  x1: number,
+  largeurDispoPx: number,
+  hauteurDispoPx: number,
+  reserveDerniere = 0,
+): Tranche[] {
+  if (lignes.length === 0) return [];
+  const { haut, bas } = marges(lignes, pageH);
+  const fenetresDe = (k: number): FenetreDemi[] => {
+    const y0 = lignes[k].y0 - haut[k];
+    const y1 = lignes[k].y1 + bas[k];
+    const c = coupeMilieu(lignes[k].barres ?? [], x0, x1);
+    return c === null ? [{ x0, x1, y0, y1, ligne: k }] : [{ x0, x1: c, y0, y1, ligne: k, moitie: "g" }, { x0: c, x1, y0, y1, ligne: k, moitie: "d" }];
+  };
+  const mesure = (fs: FenetreDemi[]) => {
+    const echelle = largeurDispoPx / Math.max(1, ...fs.map((f) => f.x1 - f.x0));
+    const h = fs.reduce((t, f, n) => t + (f.y1 - f.y0) * echelle + (n === 0 ? 0 : f.moitie === "d" ? ECART_MOITIES : ECART_SYSTEMES), 0);
+    return { echelle, h };
+  };
+  const out: Tranche[] = [];
+  let p = 0;
+  let fs: FenetreDemi[] = [];
+  const clore = (d: number) => {
+    const m = mesure(fs);
+    let echelle = m.echelle;
+    const dispo = hauteurDispoPx - (d === lignes.length - 1 ? reserveDerniere : 0);
+    if (m.h > dispo) {
+      const fixe = fs.reduce((t, f, n) => t + (n === 0 ? 0 : f.moitie === "d" ? ECART_MOITIES : ECART_SYSTEMES), 0);
+      echelle = Math.min(echelle, Math.max(0, dispo - fixe) / Math.max(1, (m.h - fixe) / echelle));
+    }
+    out.push({ y0: fs[0].y0, y1: fs[fs.length - 1].y1, premiere: p, derniere: d, demi: { echelle, fenetres: fs } });
+    p = d + 1;
+    fs = [];
+  };
+  for (let k = 0; k < lignes.length; k++) {
+    const nouvelles = fenetresDe(k);
+    if (fs.length > 0 && mesure([...fs, ...nouvelles]).h > hauteurDispoPx - (k === lignes.length - 1 ? reserveDerniere : 0)) clore(k - 1);
+    fs = [...fs, ...nouvelles];
+  }
+  clore(lignes.length - 1);
   return out;
 }
 

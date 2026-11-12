@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreCompteur, fermerBarre, lireCompteur, onStage, ouvrirMenu } from "./helpers/louange";
-import { bornesX, tranchesScan } from "../src/lib/performance/tranchesScan";
+import { bornesX, coupeMilieu, ECART_MOITIES, ECART_SYSTEMES, tranchesDemiLignes, tranchesScan } from "../src/lib/performance/tranchesScan";
 
 // Lot JP-B, tranche 1 (docs/spec-mode-louange-forscore-2.md) : un scan 简谱 certifié (`systemes.json`) se coupe
 // entre deux lignes, une page d'écran par tranche, en une seule feuille large ; un scan non certifié garde
@@ -203,6 +203,45 @@ test.describe("tranchesScan (pur)", () => {
     expect(tranchesScan(lignes, 700, 1000, 1000, 620, 100)).toHaveLength(2);
   });
 
+  test("coupeMilieu : la barre la plus proche du milieu, ni la barre finale ni une barre hors de ]x0, x1[", () => {
+    expect(coupeMilieu([100, 200, 310, 400], 0, 400)).toBe(200);
+    expect(coupeMilieu([100, 400], 0, 400)).toBe(100); // la dernière (400) est la barre finale
+    expect(coupeMilieu([400], 0, 400)).toBeNull();
+    expect(coupeMilieu([], 0, 400)).toBeNull();
+    expect(coupeMilieu([100, 260, 400], 150, 400)).toBe(260); // 100 est hors de ]150, 400[
+  });
+
+  test("tranchesDemiLignes : deux moitiés empilées par ligne coupée, ligne entière sinon, échelle commune, jamais de coupe dans un système", () => {
+    const cou = lignes.slice(0, 3).map((l) => ({ ...l, barres: [200, 400, 600, 800] }));
+    const [une] = tranchesDemiLignes(cou, 700, 0, 800, 400, 10_000);
+    expect(une.demi!.echelle).toBe(1); // 400 px de large pour des moitiés de 400
+    expect(une.demi!.fenetres.map((f) => f.moitie)).toEqual(["g", "d", "g", "d", "g", "d"]);
+    expect(une.demi!.fenetres.slice(0, 2).map((f) => [f.x0, f.x1, f.y0 === une.demi!.fenetres[0].y0])).toEqual([[0, 400, true], [400, 800, true]]);
+    // Une ligne sans barre intermédiaire reste entière, à la largeur de la feuille : l'échelle commune baisse.
+    const ent = lignes.slice(0, 3).map((l) => ({ ...l, barres: [800] }));
+    const [toutes] = tranchesDemiLignes(ent, 700, 0, 800, 400, 10_000);
+    expect(toutes.demi!.fenetres.every((f) => f.moitie === undefined)).toBe(true);
+    expect(toutes.demi!.echelle).toBe(0.5);
+    // Un système (2 × 130 + 2 px) par page : on ne coupe jamais au milieu.
+    const t = tranchesDemiLignes(cou, 700, 0, 800, 400, 264);
+    expect(t.map((x) => [x.premiere, x.derniere])).toEqual([[0, 0], [1, 1], [2, 2]]);
+    expect(t.every((x) => x.demi!.fenetres.length === 2)).toBe(true);
+    // Deux systèmes tiennent : 2 × (2 × h) + 2 + 2 + 24.
+    const h = (f: { y0: number; y1: number }) => f.y1 - f.y0;
+    const f = tranchesDemiLignes(cou.slice(0, 2), 700, 0, 800, 400, 10_000)[0].demi!.fenetres;
+    expect(tranchesDemiLignes(cou.slice(0, 2), 700, 0, 800, 400, 2 * h(f[0]) + ECART_MOITIES + ECART_SYSTEMES + 2 * h(f[2]) + ECART_MOITIES)).toHaveLength(1);
+    expect(tranchesDemiLignes(cou.slice(0, 2), 700, 0, 800, 400, 2 * h(f[0]) + ECART_MOITIES + ECART_SYSTEMES + 2 * h(f[2]) + ECART_MOITIES - 1)).toHaveLength(2);
+  });
+
+  test("tranchesDemiLignes : un système plus haut que l'écran fait sa page, à l'échelle qui le fait tenir en hauteur", () => {
+    const haut = [{ y0: 0, y1: 999, barres: [200, 400, 600, 800] }];
+    const [t] = tranchesDemiLignes(haut, 1000, 0, 800, 400, 300);
+    const fs = t.demi!.fenetres;
+    const rendue = fs.reduce((a, f, n) => a + (f.y1 - f.y0) * t.demi!.echelle + (n === 0 ? 0 : f.moitie === "d" ? ECART_MOITIES : ECART_SYSTEMES), 0);
+    expect(t.demi!.echelle).toBeLessThan(1);
+    expect(rendue).toBeLessThanOrEqual(300 + 1e-6);
+  });
+
   test("bornesX : l'encre plus 16 px d'air, dans la page", () => {
     expect(bornesX(1377, [30, 20])).toEqual({ x0: 14, x1: 1377 - 20 + 16 });
     expect(bornesX(1377, [5, 5])).toEqual({ x0: 0, x1: 1377 });
@@ -214,6 +253,7 @@ test.describe("tranchesScan (pur)", () => {
 
 test("un scan certifié se coupe entre deux lignes : un écran par tranche, contiguës, la suivante commence à la ligne suivante", async ({ page }, info) => {
   test.setTimeout(120_000);
+  test.skip(page.viewportSize()!.width < 700, "téléphone en portrait : demi-lignes (JP-C), voir les tests « téléphone »");
   await ouvrirLouange(page);
   await attendreTranches(page);
   await fermerBarre(page);
@@ -294,13 +334,13 @@ test("traits posés avant JP-B sous la clé de la page entière (j2 / j3) : band
   test.setTimeout(90_000);
   const db = await ouvrirLouange(page, { chants: [UN, FR] });
   await attendreTranches(page);
-  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-cle-page", /j4-\d+$/);
+  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-cle-page", /j[45]-\d+$/);
   const cle = (await page.locator("[data-performance-mode]").getAttribute("data-cle-page"))!;
   const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
   const trait = JSON.stringify({ w, h, strokes: [{ tool: "pen", size: 3.5, color: "#dc2626", points: [[w * 0.2, h * 0.5], [w * 0.5, h * 0.5]] }] });
   // L'écran est tantôt « j2 » tantôt « j3 » selon l'appareil : on pose le trait sous les deux anciennes clés.
   for (const ancien of ["j2", "j3"]) {
-    db.set(`annotations/${MUSICIEN.uid}__setlist-tranches__${cle.replace(/j4-\d+$/, ancien)}`, { strokes: trait, updatedAt: new Date() });
+    db.set(`annotations/${MUSICIEN.uid}__setlist-tranches__${cle.replace(/j[45]-\d+$/, ancien)}`, { strokes: trait, updatedAt: new Date() });
   }
   await page.reload();
   await lancerLouange(page);
@@ -361,6 +401,7 @@ const masquesY = (e: Ecran, h: number) => e.masquesFiltre.map((m) => [(m.top / 1
 
 test("masques (大手牵着小手, 荣耀至高神) : dans le groupe filtré, seulement pour une voisine hors tranche", async ({ page }) => {
   test.setTimeout(120_000);
+  test.skip(page.viewportSize()!.width < 700, "téléphone en portrait : demi-lignes (JP-C), voir les tests « téléphone »");
   await ouvrirLouange(page, { chants: [MASQUES, ROYAUME, FR] });
   await attendreTranches(page);
   await fermerBarre(page);
@@ -590,6 +631,7 @@ const debuts = () => SECTIONS.chants[UN].sections.map((s) => ({ ...s, debut: s.a
 
 test("feuille de route allumée : les repères des sections présentes sur l'écran, d'après sections.json", async ({ page }) => {
   test.setTimeout(120_000);
+  test.skip(page.viewportSize()!.width < 700, "téléphone en portrait : demi-lignes (JP-C), voir les tests « téléphone »");
   await ouvrirLouange(page, { chants: [UN, FR] });
   await attendreTranches(page);
   await fermerBarre(page);
@@ -624,6 +666,7 @@ test("feuille de route allumée : les repères des sections présentes sur l'éc
 
 test("menu Repères d'un scan certifié : toucher une section saute à l'écran qui contient sa ligne de début", async ({ page }) => {
   test.setTimeout(120_000);
+  test.skip(page.viewportSize()!.width < 700, "téléphone en portrait : demi-lignes (JP-C), voir les tests « téléphone »");
   await ouvrirLouange(page, { chants: [UN, FR] });
   await attendreTranches(page);
   await fermerBarre(page);
@@ -683,8 +726,8 @@ test("tête de feuille : posée sur la feuille (ordinateur, tablette paysage), r
     const vu = (e: Element) => !e.closest("[aria-hidden=true]");
     const rect = (e: Element | null | undefined) => (e ? e.getBoundingClientRect() : null);
     const t = Array.from(document.querySelectorAll("[data-performance-mode] [data-tete-feuille]")).find(vu)!;
-    const f = Array.from(document.querySelectorAll("[data-performance-mode] [data-jianpu-fenetre]")).find(vu)!;
-    const fr = f.getBoundingClientRect();
+    // La feuille a la largeur de la plus large des fenêtres visibles (téléphone en portrait : moitiés de lignes, JP-C).
+    const fr = Array.from(document.querySelectorAll("[data-performance-mode] [data-jianpu-fenetre]")).filter(vu).map((e) => e.getBoundingClientRect()).reduce((m, r) => (r.width > m.width ? r : m));
     const premier = rect(t.querySelector("[data-repere-tete]"))!;
     const cle = rect(t.querySelector("[data-cle-tete]"))!;
     const ol = t.querySelector("ol")!;
@@ -742,4 +785,142 @@ test("tête de feuille : « gravé en E » en #6c6c72 en clair, 13 px ; repère 
   expect(r.ombreOn, "un repère allumé").not.toBeNull();
   expect(r.ombreOn).toMatch(/0px 3px 0px -1px/);
   expect(r.ombreOff).toBe("none");
+});
+
+// ─── JP-C : téléphone en portrait, chaque ligne coupée en deux moitiés empilées ─────────────────
+
+type Fen = { moitie: string | null; tranche: string; x: number; y: number; right: number; bottom: number; chiffre: number; labels: { x: number; id: string }[] };
+
+/** Les fenêtres du scan affichées (pas la copie de mesure), dans l'ordre du document. */
+async function lireFenetres(page: Page, w: number): Promise<Fen[]> {
+  return page.evaluate((pageW) => {
+    return Array.from(document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-jianpu-fenetre]"))
+      .filter((e) => !e.closest("[aria-hidden=true]"))
+      .map((f) => {
+        const r = f.getBoundingClientRect();
+        return {
+          moitie: f.getAttribute("data-jianpu-moitie"),
+          tranche: f.getAttribute("data-jianpu-tranche") ?? "",
+          x: r.x, y: r.y, right: r.right, bottom: r.bottom,
+          chiffre: 36 * (f.querySelector<HTMLElement>("[data-jianpu-page]")!.getBoundingClientRect().width / pageW),
+          labels: Array.from(f.querySelectorAll<HTMLElement>("[data-jianpu-label]"))
+            .filter((l) => (l.textContent ?? "").trim() !== "" && l.getAttribute("data-jianpu-opt") !== "hidden")
+            .map((l) => ({ x: l.getBoundingClientRect().x, id: `${f.getAttribute("data-jianpu-lignes")}|${l.textContent!.trim()}|${l.style.left}|${l.style.top}` })),
+        };
+      });
+  }, w);
+}
+
+test("téléphone : les fenêtres viennent par paires d'une même ligne, chiffre ≥ 17 px, 2 px entre moitiés, 24 px entre systèmes", async ({ page }, info) => {
+  test.setTimeout(120_000);
+  test.skip(info.project.name !== "telephone", "téléphone en portrait seulement");
+  await ouvrirLouange(page, { chants: [UN, FR] });
+  await attendreTranches(page);
+  await fermerBarre(page);
+  const fs = await lireFenetres(page, SYSTEMES.chants[UN].pages[0].w);
+  expect(fs.length).toBeGreaterThan(1);
+  fs.forEach((f, n) => {
+    expect(["g", "d", "entiere"]).toContain(f.moitie);
+    if (f.moitie === "g") {
+      const d = fs[n + 1];
+      expect(d?.moitie, "une moitié gauche est suivie de sa moitié droite").toBe("d");
+      expect(d.tranche, "même ligne, même hauteur").toBe(f.tranche);
+      expect(Math.abs(d.y - f.bottom - ECART_MOITIES), "2 px entre les deux moitiés").toBeLessThanOrEqual(1);
+      expect(Math.abs(d.x - f.x), "alignées à gauche").toBeLessThanOrEqual(1);
+    }
+    if (f.moitie === "d") expect(fs[n - 1].moitie).toBe("g");
+    if (n > 0 && f.moitie !== "d") expect(Math.abs(f.y - fs[n - 1].bottom - ECART_SYSTEMES), "24 px entre deux systèmes").toBeLessThanOrEqual(1);
+    expect(f.right, "dans la largeur de l'écran").toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
+  });
+  // Même méthode que pour 768 / 1 024 / 1 440 : chiffre = 36 px image × échelle de la page.
+  expect(Math.min(...fs.map((f) => f.chiffre)), "hauteur de chiffre").toBeGreaterThanOrEqual(17);
+  // Barre ouverte : elle ne recouvre aucune fenêtre.
+  await ouvrirBarre(page);
+  const t = await lireTete(page);
+  expect(t.barreBas, "bas de la barre ouverte ≤ haut de la première fenêtre + 1 px").toBeLessThanOrEqual(t.fenetreHaut + 1);
+});
+
+test("téléphone : transposé (G), une étiquette du calque reste dans sa moitié, sans doublon", async ({ page }, info) => {
+  test.setTimeout(120_000);
+  test.skip(info.project.name !== "telephone", "téléphone en portrait seulement");
+  await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "G" } });
+  await attendreTranches(page);
+  await fermerBarre(page);
+  const fs = await lireFenetres(page, SYSTEMES.chants[UN].pages[0].w);
+  let vues = 0;
+  for (const f of fs) for (const l of f.labels) {
+    vues++;
+    if (f.moitie === "g") expect(l.x, "étiquette de la moitié gauche").toBeLessThan(f.right);
+    if (f.moitie === "d") expect(l.x, "étiquette de la moitié droite").toBeGreaterThanOrEqual(f.x - 1.5);
+  }
+  expect(vues, "des accords transposés sont rendus").toBeGreaterThan(0);
+  // Sans doublon : une étiquette (ligne, texte, position dans la page) n'est rendue que dans une seule fenêtre.
+  const ids = fs.flatMap((f) => f.labels.map((l) => l.id));
+  expect(new Set(ids).size, "aucune étiquette rendue deux fois").toBe(ids.length);
+});
+
+test("téléphone : une page en demi-lignes a sa clé j5-<y0>, jamais j4-", async ({ page }, info) => {
+  test.setTimeout(90_000);
+  test.skip(info.project.name !== "telephone", "téléphone en portrait seulement");
+  await ouvrirLouange(page, { chants: [UN, FR] });
+  await attendreTranches(page);
+  const cle = page.locator("[data-performance-mode]");
+  await expect(cle).toHaveAttribute("data-cle-page", /j5-\d+$/);
+  const t0 = bornes((await lireEcran(page)).tranche!)[0];
+  await expect(cle).toHaveAttribute("data-cle-page", new RegExp(`j5-${t0}$`));
+  const premiere = (await cle.getAttribute("data-cle-page"))!;
+  await page.keyboard.press("ArrowRight");
+  await expect(cle).not.toHaveAttribute("data-cle-page", premiere);
+  await expect(cle).toHaveAttribute("data-cle-page", /j5-\d+$/);
+});
+
+test("téléphone en paysage : lignes entières comme en JP-B (clé j4-), sans moitié ni pastille", async ({ page }, info) => {
+  test.setTimeout(90_000);
+  test.skip(info.project.name !== "telephone", "téléphone seulement");
+  await page.setViewportSize({ width: 844, height: 390 });
+  await ouvrirLouange(page, { chants: [UN, FR] });
+  await attendreTranches(page);
+  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-cle-page", /j4-\d+$/);
+  await expect(onStage(page, "[data-jianpu-moitie]")).toHaveCount(0);
+  await expect(onStage(page, "[data-pastille-tourne]")).toHaveCount(0);
+});
+
+test.describe("pastille « Tourne le téléphone » (scan sans systemes.json)", () => {
+  test.use({ serviceWorkers: "block" });
+  const sansSystemes = (page: Page) =>
+    page.route("**/jianpu/systemes.json", (route) => route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
+
+  test("téléphone en portrait : une pastille de 44 px sous le scan entier, qui ne le recouvre pas", async ({ page }, info) => {
+    test.setTimeout(90_000);
+    test.skip(info.project.name !== "telephone", "téléphone en portrait seulement");
+    await sansSystemes(page);
+    await ouvrirLouange(page, { chants: [UN] });
+    await expect(onStage(page, "[data-jianpu-fenetre]")).toHaveCount(1, { timeout: 30_000 });
+    const pastille = onStage(page, "[data-pastille-tourne]");
+    await expect(pastille).toHaveCount(1);
+    await expect(pastille).toHaveText(/Tourne le téléphone pour lire le 简谱 en grand/);
+    const p = (await pastille.boundingBox())!;
+    const f = (await onStage(page, "[data-jianpu-fenetre]").boundingBox())!;
+    expect(Math.abs(p.height - 44)).toBeLessThanOrEqual(1);
+    expect(p.y, "sous le scan").toBeGreaterThanOrEqual(f.y + f.height - 1);
+    // Inerte : un texte, ni bouton ni lien.
+    await expect(pastille.locator("button, a")).toHaveCount(0);
+  });
+
+  test("téléphone en paysage, tablette, ordinateur : pas de pastille", async ({ page }, info) => {
+    test.setTimeout(90_000);
+    if (info.project.name === "telephone") await page.setViewportSize({ width: 844, height: 390 });
+    await sansSystemes(page);
+    await ouvrirLouange(page, { chants: [UN] });
+    await expect(onStage(page, "[data-jianpu-fenetre]")).toHaveCount(1, { timeout: 30_000 });
+    await expect(onStage(page, "[data-pastille-tourne]")).toHaveCount(0);
+  });
+});
+
+test("un chant français sans scan est inchangé : ni fenêtre, ni moitié, ni pastille", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouange(page, { chants: [FR] });
+  await expect(onStage(page, "[data-jianpu-fenetre]")).toHaveCount(0);
+  await expect(onStage(page, "[data-jianpu-moitie]")).toHaveCount(0);
+  await expect(onStage(page, "[data-pastille-tourne]")).toHaveCount(0);
 });

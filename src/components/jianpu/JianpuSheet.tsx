@@ -5,7 +5,7 @@ import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords, useJianpuMarges, useJianpuSystemes } from "@/lib/jianpu/images";
-import { LARGEUR_FEUILLE_MAX } from "@/lib/performance/tranchesScan";
+import { ECART_MOITIES, ECART_SYSTEMES, LARGEUR_FEUILLE_MAX, type Demi } from "@/lib/performance/tranchesScan";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
@@ -159,7 +159,7 @@ function JianpuFiltres() {
 
 /** Tranche d'une page de scan certifié (lot JP-B) : le rectangle `x0..x1` × `y0..y1` (px image) que la fenêtre
  *  montre, et les lignes (`premiere`..`derniere`, indices dans `systemes.json`) qu'il contient. */
-export type TrancheFenetre = { y0: number; y1: number; x0: number; x1: number; premiere: number; derniere: number };
+export type TrancheFenetre = { y0: number; y1: number; x0: number; x1: number; premiere: number; derniere: number; demi?: Demi };
 
 type JianpuSheetProps = {
   entry: JianpuEntry;
@@ -617,14 +617,15 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           large débordait alors des deux côtés. Calée en haut : bornée par la
           largeur (téléphone), la page commence sous le bandeau (L3-T5a). */}
       <div
-        className={fit ? "flex min-h-0 w-full flex-1 items-start justify-center" : "contents"}
-        style={fit ? { containerType: "size" } : undefined}
+        className={fit ? (tranche?.demi ? "flex min-h-0 w-full flex-1 flex-col items-start" : "flex min-h-0 w-full flex-1 items-start justify-center") : "contents"}
+        style={fit && !tranche?.demi ? { containerType: "size" } : undefined}
       >
-      {shownPages.map((page, n) => {
+      {shownPages.flatMap((page, n) => (fit && tranche?.demi ? tranche.demi.fenetres : [null]).map((demi, nf) => {
         const i = firstShown + n;
         const calque = (overlayOn || retouchesOn || retouchable) && i === 0 && chords;
         // Tranche (lot JP-B) : seulement en `fit`, sur la page montrée.
-        const tr = fit && tranche ? tranche : null;
+        // Demi-ligne (lot JP-C, téléphone en portrait) : la fenêtre d'une moitié, sur la seule ligne `demi.ligne`.
+        const tr = fit && tranche ? (demi ? { ...tranche, ...demi, premiere: demi.ligne, derniere: demi.ligne } : tranche) : null;
         // Masques (décision 24) : le masque d'une ligne cache l'encre d'une ligne VOISINE qui déborde dans la tranche.
         // Si cette voisine est elle-même dans la tranche, son encre doit rester : le masque ne s'applique pas
         // quand il est contenu (en y) dans l'intervalle [y0, y1] d'une autre ligne de la tranche.
@@ -639,11 +640,28 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         };
         // Une étiquette ou un accord ajouté dont le centre tombe dans un masque n'est pas rendu dans cette tranche
         // (le fond blanc d'une étiquette comprise).
+        // Une étiquette n'est rendue que dans la moitié qui contient son centre (largeur inconnue : ≈ 2/3 de la hauteur de ligne).
+        const horsMoitie = (l: { x: number; w?: number }) => {
+          const cx = l.x + (l.w ?? ((chords?.labelH ?? 0) * 2) / 3) / 2;
+          return (demi?.moitie === "g" && cx >= demi.x1) || (demi?.moitie === "d" && cx < demi.x0);
+        };
         const cal = (calque ? boitesCalque(i) : []).filter((b) => {
+          if (b.key.startsWith("etiquette-") && horsMoitie(chords!.labels[Number(b.key.slice("etiquette-".length))])) return false;
+          if (b.key.startsWith("ajout-") && horsMoitie(ajouts[Number(b.key.slice("ajout-".length))])) return false;
           if (!masques.length) return true;
           if (b.key.startsWith("etiquette-")) return !dansMasque(chords!.labels[Number(b.key.slice("etiquette-".length))]);
           if (b.key.startsWith("ajout-")) return !dansMasque(ajouts[Number(b.key.slice("ajout-".length))]);
           return true;
+        }).map((b) => {
+          // Demi-ligne : une étiquette qui chevauche la coupe se décale dans la fenêtre au lieu d'être rognée
+          // (un accord sur la barre appartient à la mesure qui suit).
+          if (!demi?.moitie || !chords) return b;
+          const l = b.key.startsWith("etiquette-") ? chords.labels[Number(b.key.slice("etiquette-".length))]
+            : b.key.startsWith("ajout-") ? ajouts[Number(b.key.slice("ajout-".length))] : null;
+          if (!l) return b;
+          const w = ((l as { w?: number }).w ?? (chords.labelH * 2) / 3) + 7;
+          const gauche = demi.moitie === "d" ? Math.max(l.x - 3, demi.x0) : Math.min(l.x - 3, demi.x1 - w);
+          return gauche === l.x - 3 ? b : { ...b, style: { ...b.style, left: `${(gauche / chords.w) * 100}%` } };
         });
         // La fenêtre (piste A, P3) : la page et son calque remontent ensemble de
         // `top` pixels image, l'en-tête gravé passe au-dessus du bord et
@@ -654,17 +672,20 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         const visible = page.h - top;
         const decalage = marges?.[i] ? (marges[i][1] - marges[i][0]) / 2 : 0;
         return (
-        <Fragment key={page.file}>
+        <Fragment key={`${page.file}-${nf}`}>
         {!fit && pageNonTransposee(i) && avertissementPage(i)}
         <div
           data-jianpu-fenetre={tr ? tr.y0 : top}
           data-jianpu-tranche={tr ? `${tr.y0}-${tr.y1}` : undefined}
+          data-jianpu-moitie={demi ? (demi.moitie ?? "entiere") : undefined}
           // Bornes (px image) des lignes de la tranche : la demi-page ne coupe qu'entre deux d'entre elles.
           data-jianpu-lignes={tr ? lignesTranche.map((l) => `${l.y0}-${l.y1}`).join(",") : undefined}
-          className={fit ? "relative mx-auto overflow-hidden" : "relative overflow-hidden"}
+          className={fit ? (demi ? "relative shrink-0 overflow-hidden" : "relative mx-auto overflow-hidden") : "relative overflow-hidden"}
           style={{
             aspectRatio: tr ? `${tr.x1 - tr.x0} / ${tr.y1 - tr.y0}` : `${page.w} / ${visible}`,
-            ...(tr
+            ...(tr && demi && tranche?.demi
+              ? { width: `${(tr.x1 - tr.x0) * tranche.demi.echelle}px`, marginTop: nf === 0 ? 0 : demi.moitie === "d" ? ECART_MOITIES : ECART_SYSTEMES }
+              : tr
               ? { width: `min(100%, ${LARGEUR_FEUILLE_MAX}px, calc(100cqh * ${tr.x1 - tr.x0} / ${tr.y1 - tr.y0}))` }
               : fit
               ? { width: `min(100%, calc(100cqh * ${page.w} / ${visible}))` }
@@ -770,7 +791,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         </div>
         </Fragment>
         );
-      })}
+      }))}
       </div>
 
       {cible && (

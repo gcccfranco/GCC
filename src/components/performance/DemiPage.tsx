@@ -63,7 +63,19 @@ export function DemiPage({
       }
       // Écran d'un scan 简谱 certifié (lot JP-B) : un groupe par fenêtre de scan, ses lignes mesurées d'après leurs bornes
       // en pixels image (`data-jianpu-lignes`) et l'échelle de la fenêtre ; on ne coupe qu'entre deux lignes, jamais dans une.
-      for (const f of couche.querySelectorAll("[data-jianpu-tranche]")) {
+      // Demi-lignes (lot JP-C, téléphone en portrait) : les fenêtres empilées forment UN groupe, et les deux moitiés d'une ligne
+      // ne comptent que pour une rangée (jamais de coupe entre elles).
+      const fenetres = Array.from(couche.querySelectorAll("[data-jianpu-tranche]"));
+      if (fenetres.some((f) => f.hasAttribute("data-jianpu-moitie"))) {
+        const rects: Array<[number, number]> = [];
+        for (const f of fenetres) {
+          const q = f.getBoundingClientRect();
+          if (f.getAttribute("data-jianpu-moitie") === "d" && rects.length) rects[rects.length - 1][1] = q.bottom;
+          else rects.push([q.top, q.bottom]);
+        }
+        const qs = fenetres.map((f) => f.getBoundingClientRect());
+        groupes.push({ x0: Math.min(...qs.map((q) => q.left)), x1: Math.max(...qs.map((q) => q.right)), top: Math.min(...qs.map((q) => q.top)), blocs: bordsLibres(rects, cote), lignes: [], sections: [], plages: cote === "haut" ? rects : undefined });
+      } else for (const f of fenetres) {
         const q = f.getBoundingClientRect();
         const [t0, t1] = (f.getAttribute("data-jianpu-tranche") ?? "").split("-").map(Number);
         const echelle = q.height / Math.max(1, t1 - t0);

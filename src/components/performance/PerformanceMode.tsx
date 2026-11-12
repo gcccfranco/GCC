@@ -27,7 +27,7 @@ import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffich
 import { PASTILLE_SUIVANT_H, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
 import { layoutFeuilleDeRoute, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
 import { useJianpuManifest, useJianpuMargesToutes, useJianpuSections, useJianpuSystemes } from "@/lib/jianpu/images";
-import { bornesX, LARGEUR_FEUILLE_MAX, sectionsDeTranche, trancheDeSection, tranchesScan } from "@/lib/performance/tranchesScan";
+import { bornesX, LARGEUR_FEUILLE_MAX, sectionsDeTranche, trancheDeSection, tranchesDemiLignes, tranchesScan } from "@/lib/performance/tranchesScan";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, zh_lyric_font } from "@/components/song/SongView";
@@ -915,6 +915,7 @@ export function PerformanceMode({
       const insetD = mcs ? Math.max(0, (parseFloat(mcs.paddingRight) || 0) - 1.5 * rem) : 0;
       const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, window.innerWidth / fontScale - 8 - insetG - insetD);
       const hauteurScan = window.innerHeight / fontScale - 4 - (barres.haut + barres.bas) / fontScale;
+      const telephonePortrait = ecran.largeur < 768 && ecran.hauteur > ecran.largeur;
       const tranchesDe = (i: number) => {
         const b = blocks[i];
         if (b?.kind !== "jianpu-sheet" || !jianpuSystemes || !jianpuMarges) return null;
@@ -923,7 +924,10 @@ export function PerformanceMode({
         const { x0, x1 } = bornesX(sp.w, jianpuMarges[b.songSlug]?.[b.pageIndex]);
         const dernierDuChant = enteteDe.get(i + 1) !== enteteDe.get(i);
         const suivi = (enteteDe.get(i) ?? -1) < dernierEntete;
-        return tranchesScan(sp.lignes, sp.h, x1 - x0, largeurScan, Math.max(1, hauteurScan), dernierDuChant && suivi ? 56 / fontScale : 0);
+        const reserve = dernierDuChant && suivi ? 56 / fontScale : 0;
+        // Lot JP-C : téléphone en portrait, chaque ligne se coupe en deux moitiés empilées ; sinon, lignes entières.
+        if (telephonePortrait) return tranchesDemiLignes(sp.lignes, sp.h, x0, x1, largeurScan, Math.max(1, hauteurScan), reserve);
+        return tranchesScan(sp.lignes, sp.h, x1 - x0, largeurScan, Math.max(1, hauteurScan), reserve);
       };
       const ctxPagination = { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe, pastille: PASTILLE_SUIVANT_H, tranchesDe };
       let ancienne: PerfPage[] = [];
@@ -982,7 +986,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuActif, jianpuSystemes, jianpuMarges, barres.haut, barres.bas]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuActif, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -1075,9 +1079,10 @@ export function PerformanceMode({
   // en colonne et le scan glisse à droite en grandissant (L3-T5b). À incrémenter si le scan
   // bouge encore.
   // « j4-<y0> » sur une tranche d'un scan certifié (lot JP-B) : deux tranches d'un même scan ont deux clés ;
-  // un scan non certifié garde « j2 » / « j3 ».
+  // un scan non certifié garde « j2 » / « j3 ». « j5-<y0> » sur une page en demi-lignes (lot JP-C, téléphone en portrait) :
+  // la mise en page diffère, les traits d'une feuille en lignes entières ne se reposent pas dessus.
   const trancheCourante = layout[currentPage]?.fit ? layout[currentPage].tranche : undefined;
-  const cleScan = layout[currentPage]?.fit ? (trancheCourante ? `j4-${trancheCourante.y0}` : ecran.grand ? "j3" : "j2") : "";
+  const cleScan = layout[currentPage]?.fit ? (trancheCourante ? `${trancheCourante.demi ? "j5" : "j4"}-${trancheCourante.y0}` : ecran.grand ? "j3" : "j2") : "";
   // FS-E : la demi-page entre les pages `n` et `n + 1` (ni annotation, ni loupe) : deux pages de texte, ou (lot JP-B) deux
   // écrans successifs du MÊME scan 简谱 certifié (deux tranches, ou la dernière d'une page de scan et la première de la
   // suivante) ; un scan non certifié (page sans tranche) n'en a jamais, ni un texte suivi d'un scan.
@@ -1113,7 +1118,7 @@ export function PerformanceMode({
   // Demi-page : clé qu'aurait la page suivante en page entière (même formule que `currentPageKey`).
   const demiSuivante = layout[currentPage + 1];
   const clePageSuivante = demiActif && demiSuivante
-    ? computePageKey(blocks, pages[currentPage + 1] ?? [], `${layoutSig}${demiSuivante.twoColumns ? "x2" : ""}${demiSuivante.fit ? (demiSuivante.tranche ? `j4-${demiSuivante.tranche.y0}` : ecran.grand ? "j3" : "j2") : ""}${apercuActif && !demiSuivante.fit ? "ap" : ""}${demiSuivante.coupe ? "v2" : ""}`)
+    ? computePageKey(blocks, pages[currentPage + 1] ?? [], `${layoutSig}${demiSuivante.twoColumns ? "x2" : ""}${demiSuivante.fit ? (demiSuivante.tranche ? `${demiSuivante.tranche.demi ? "j5" : "j4"}-${demiSuivante.tranche.y0}` : ecran.grand ? "j3" : "j2") : ""}${apercuActif && !demiSuivante.fit ? "ap" : ""}${demiSuivante.coupe ? "v2" : ""}`)
     : undefined;
   useLayoutEffect(() => {
     const el = demiActif ? refDemiRappelHaut.current : null;
@@ -1745,6 +1750,7 @@ export function PerformanceMode({
                 // La pastille flottante (44 px, à 8 px au-dessus de la barre du bas) ne recouvre plus le scan : sa place est gardée dessous.
                 reserveBas={dernierDuChant && nextEntry && !colonneScan ? 56 / fontScale : 0}
                 tete={pg.tranche ? teteFeuille(blocks[sheetIdx], pg.tranche) : undefined}
+                pastilleTourne={!!jianpuSystemes && !jianpuSystemes[(blocks[sheetIdx] as Extract<typeof blocks[number], { kind: "jianpu-sheet" }>).songSlug] && ecran.largeur < 768 && ecran.hauteur > ecran.largeur}
               >
                 {renderBlock(sheetIdx, true, pg.tranche)}
               </PageScan>
