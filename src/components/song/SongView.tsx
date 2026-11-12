@@ -1156,7 +1156,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
             display: "inline-block",
           }}
         />
-        <span className={`text-xs font-bold uppercase tracking-[0.1em] ${uiIsZh ? zh_lyric_font.className : chord_font.className}`}
+        <span className={`text-xs font-semibold tracking-normal ${uiIsZh ? zh_lyric_font.className : chord_font.className}`}
               style={{ color: "var(--sec-c, #6b7080)" }}>
           {label}
           {repeat > 1 && <span className="ml-1 normal-case">×{repeat}</span>}

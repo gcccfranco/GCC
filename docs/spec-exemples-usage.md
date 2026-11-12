@@ -279,6 +279,7 @@ liste. Q3 : 简谱 plafonné à 920 px. Plus aucune tranche bloquée par une que
 - 11/11/2026 : go de Timothée pour T1, lancée dans une session orchestratrice. Réponse « Ok pour les trois
   propositions » : Q1, Q2 et Q3 tranchées (§ 6).
 - 11/11/2026 : go de Timothée (« oui ») pour enchaîner automatiquement T2 à T7, selon le § 8.
+- 12/11/2026 : **T1 faite**. En volet unique (téléphone, tablette debout), la zone de la setlist pose `--colonne-partition: none` : les partitions et la 简谱 vont jusqu'à `--marge-page` (plus de bande de ~115 px en tablette), paroles à la même taille ; deux volets inchangés (plafond 860 px) ; vue Liste en 720 px au plus, même bord gauche ; étiquette de `SectionView` en semi-gras, sans capitales ni interlettrage, couleur `--sec-*` inchangée (mode louange compris, puisqu'il dessine les sections par `SectionView`, sans qu'un de ses fichiers soit touché) ; impression : `print:max-w-2xl` gardé. Tests : nouvelle `tests/pupitre-partitions.spec.ts` (cinq projets, dans `SPECS_GRAND_ECRAN`), garde « pas d'intitulé » de `dispositions-partition.spec.ts` resserrée sur l'étiquette ; 408 verts. Déjà rouges sur la base, hors tranche : `jianpu-integration.spec.ts:836` (clé « j4-… ») et `louange-sections-uniques.spec.ts:533`. Reste : T2 à T7 (§ 8).
 
 ## 8. Enchaînement automatique des tranches (go de Timothée du 11/11/2026)
 

@@ -14,6 +14,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Lot pupitre, T1 (docs/spec-exemples-usage.md) : partitions pleine largeur en volet unique, vue Liste à 720 px, étiquettes de section, 简谱 ; deux volets inchangés.
+  /pupitre-partitions\.spec\.ts/,
   // Lot 1 du rapport d'usage, T5 (docs/spec-retouches-usage.md) : textes coupés, cellule Date, barre de la setlist, sur les quatre dispositions.
   /retouches-usage-t5\.spec\.ts/,
   // Lot JP-B (docs/spec-mode-louange-forscore-2.md) : un scan 简谱 certifié coupé en tranches, une seule feuille large, sur les quatre dispositions.

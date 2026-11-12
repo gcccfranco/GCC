@@ -293,7 +293,7 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
     await expect(page.locator("main [data-disposition]").first()).toHaveAttribute("data-disposition", "reperes");
     // Aucune section hors Repères, aucune rangée d'intitulé « — COUPLET 1 ».
     await expect(page.locator("main [data-section]:not([data-repere])")).toHaveCount(0);
-    await expect(page.locator("main [data-section] .uppercase")).toHaveCount(0);
+    await expect(page.locator("main [data-section] > [data-copy-ignore] > span[aria-hidden] + span.text-xs"), "aucune rangée d'intitulé de SectionView").toHaveCount(0);
     await expect(page.locator("main [data-repere-pastille]")).toHaveCount(n);
 
     const lignes = await sections.evaluateAll((els) => els.map((el) => {
@@ -452,7 +452,7 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
     expect(n).toBeGreaterThan(1);
     await expect(page.locator("main [data-disposition]").first()).toHaveAttribute("data-disposition", "scene");
     await expect(page.locator("main [data-section]:not([data-scene])")).toHaveCount(0);
-    await expect(page.locator("main [data-section] .uppercase")).toHaveCount(0);
+    await expect(page.locator("main [data-section] > [data-copy-ignore] > span[aria-hidden] + span.text-xs"), "aucune rangée d'intitulé de SectionView").toHaveCount(0);
     await expect(page.locator("main [data-scene-lettre]")).toHaveCount(n);
 
     const lignes = await bandes.evaluateAll((els) => {
@@ -596,7 +596,7 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
     expect(n).toBeGreaterThan(1);
     await expect(page.locator("main [data-disposition]").first()).toHaveAttribute("data-disposition", "partition");
     await expect(page.locator("main [data-section]:not([data-partition])")).toHaveCount(0);
-    await expect(page.locator("main [data-section] .uppercase")).toHaveCount(0);
+    await expect(page.locator("main [data-section] > [data-copy-ignore] > span[aria-hidden] + span.text-xs"), "aucune rangée d'intitulé de SectionView").toHaveCount(0);
 
     // Les couleurs attendues viennent de la palette du document, pas de l'élément mesuré.
     const lignes = await sections.evaluateAll((els) => {
@@ -1242,7 +1242,7 @@ test("G1-3 : la section « Tag » prend --sec-tag en Repères, Scène et Couleur
   expect(bande, "filet de la bande").toBe(tag);
   await ouvrir("sections");
   await expect(page.locator("main [data-section]").first()).toBeVisible();
-  const cadre = await page.locator("main [data-section]", { has: page.locator(".uppercase", { hasText: /^Tag$/ }) }).first().evaluate((el) => getComputedStyle(el).borderTopColor);
+  const cadre = await page.locator("main [data-section]", { has: page.locator("span.font-semibold", { hasText: /^Tag$/ }) }).first().evaluate((el) => getComputedStyle(el).borderTopColor);
   expect(cadre, "cadre de Couleurs par section").toBe(tag);
 });
 

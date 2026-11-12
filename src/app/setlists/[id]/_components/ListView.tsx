@@ -103,7 +103,7 @@ export function ListView({
   // Partitions, pour que la liste dise ce qui sera réellement affiché.
   const jianpuManifest = useJianpuManifest();
   return (
-    <ol className="divide-y divide-border">
+    <ol className="max-w-[720px] divide-y divide-border">
       {(() => {
         const sorted = [...items].sort((a, b) => a.position - b.position);
         return sorted.map((item, idx) => {

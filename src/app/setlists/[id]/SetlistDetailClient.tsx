@@ -37,7 +37,6 @@ import { formatDate, langueCourte } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useSwipeViews } from "@/hooks/useSwipeViews";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
-import { useDisposition } from "@/hooks/useDisposition";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { useContenusChants } from "./_hooks/useContenusChants";
 import { usePreferencesAffichage } from "./_hooks/usePreferencesAffichage";
@@ -181,8 +180,6 @@ export function SetlistDetailClient() {
   // 900 px utiles au moins (Q1). Le sommaire à gauche, les partitions toujours à
   // droite : ni bascule, ni Liste, ni geste ; `view` n'y sert plus qu'à G.
   const deuxVolets = useDeuxVolets();
-  // dimanche-9 (lot CD, T4b) : en tablette portrait, le contenu va jusqu'à la barre d'outils, à `--marge-page` des bords.
-  const enTablette = useDisposition() === "tablette";
   /** En-tête collant des deux volets, et sa hauteur (le sommaire colle dessous). */
   const enTeteRef = useRef<HTMLElement>(null);
   const [enTeteH, setEnTeteH] = useState(0);
@@ -1940,7 +1937,7 @@ export function SetlistDetailClient() {
             </div>
           </div>
 
-          <div ref={zoneRef} className={`relative pb-8 pt-6 print:px-0 print:py-4 ${enTablette ? "px-[var(--marge-page)] [--marge-bande:var(--marge-page)]" : "max-w-2xl mx-auto px-4 [--marge-bande:1rem]"} print:[--marge-bande:0px]`} style={{ marginTop: toolbarH }}>
+          <div ref={zoneRef} className={`relative pb-8 pt-6 print:px-0 print:py-4 px-[var(--marge-page)] [--marge-bande:var(--marge-page)] [--colonne-partition:none] print:max-w-2xl print:mx-auto print:[--marge-bande:0px]`} style={{ marginTop: toolbarH }}>
             {copieLueLe !== null && (
               <div role="status" data-copie-hors-ligne className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-muted py-1 pl-3 pr-1 text-xs text-muted-foreground print:hidden">
                 <span>{texteCopie}</span>
