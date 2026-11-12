@@ -841,7 +841,9 @@
       "loading": "Chargement…",
       "clearConfirmTitle": "Effacer mes traits de cette page ?",
       "clearConfirmBody": "Tu pourras les rendre avec Annuler.",
-      "eraserSize": "Taille de la gomme"
+      "eraserSize": "Taille de la gomme",
+      "fingerFree": "Le doigt ne dessine pas",
+      "fingerNotice": "Le doigt tourne et zoome, le stylet dessine"
     }
   },
   "notifications": {

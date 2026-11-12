@@ -44,6 +44,9 @@ export function BarreAnnotation(p: {
   onZoom100: () => void;
   onToutEffacer: () => void;
   onTermine: () => void;
+  /** AN-2 : « le doigt ne dessine pas » (réglage par appareil). */
+  doigtLibre: boolean;
+  onDoigtLibre: (v: boolean) => void;
   etat: EtatTraits;
 }) {
   const { t } = useTranslation();
@@ -54,8 +57,11 @@ export function BarreAnnotation(p: {
   useEffect(() => {
     if (!ouvert) return;
     const ferme = (e: PointerEvent) => { if (!(e.target as HTMLElement).closest("[data-menu-annotation]")) setOuvert(null); };
+    // Échap ferme d'abord le menu : marqué, il ne sort pas du Crayon (PerformanceMode ignore un Échap déjà consommé).
+    const echap = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); setOuvert(null); } };
     document.addEventListener("pointerdown", ferme, true);
-    return () => document.removeEventListener("pointerdown", ferme, true);
+    document.addEventListener("keydown", echap);
+    return () => { document.removeEventListener("pointerdown", ferme, true); document.removeEventListener("keydown", echap); };
   }, [ouvert]);
   const basculer = (m: MenuId) => setOuvert((o) => (o === m ? null : m));
   const dessous = tel ? "bottom-full mb-2" : "top-full mt-2";
@@ -182,6 +188,12 @@ export function BarreAnnotation(p: {
       </Btn>
       {ouvert === "plus" && (
         <Popover className={`${tel ? "left-0" : "right-0"} ${dessous} min-w-56`}>
+          <button type="button" role="switch" aria-checked={p.doigtLibre} onClick={() => p.onDoigtLibre(!p.doigtLibre)} className="flex h-11 w-full items-center justify-between gap-3 rounded-lg px-2 text-sm text-foreground hover:bg-muted">
+            {t("performance.tools.fingerFree")}
+            <span aria-hidden="true" className={`flex h-5 w-9 items-center rounded-full p-0.5 ${p.doigtLibre ? "justify-end bg-[color:var(--couleur-icones)]" : "justify-start bg-muted-foreground/40"}`}>
+              <span className="h-4 w-4 rounded-full bg-background" />
+            </span>
+          </button>
           {p.disposition !== "large" && (
             <Rubrique titre={t("performance.tools.loupe")}>{loupe}</Rubrique>
           )}

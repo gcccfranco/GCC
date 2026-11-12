@@ -23,3 +23,15 @@ export function classerGeste(dx: number, dy: number, dt: number): Geste {
   if (Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy)) return dx < 0 ? "balayage-gauche" : "balayage-droite";
   return null;
 }
+
+// Appui long (AN-2) : un anneau se remplit de 200 à 500 ms, à 500 ms on entre en Crayon, plus de 10 px de mouvement annule.
+export const APPUI_MOUVEMENT_MAX_PX = 10;
+export const APPUI_ANNEAU_MS = 200;
+export const APPUI_CRAYON_MS = 500;
+
+/** Ce que vaut un appui après `dureeMs` et `deplacementPx` de mouvement depuis le contact. */
+export function classerAppui(deplacementPx: number, dureeMs: number): "rien" | "anneau" | "crayon" | "annule" {
+  if (deplacementPx > APPUI_MOUVEMENT_MAX_PX) return "annule";
+  if (dureeMs < APPUI_ANNEAU_MS) return "rien";
+  return dureeMs < APPUI_CRAYON_MS ? "anneau" : "crayon";
+}

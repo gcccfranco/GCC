@@ -51,7 +51,7 @@ import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { getTransposedKey, noteToIndex } from "@/lib/transpose";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
-import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
+import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui, classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { ROLE_IDS, getRole, roleDemande, setRole, type RolePreset } from "@/lib/performance/roleCompte";
@@ -1419,8 +1419,66 @@ export function PerformanceMode({
       if (memo !== null && Math.round(memo * 100) !== Math.round(fontScale * 100)) appliquerTaille(memo);
     }
     setDemi(false);
+    setEntreeStylet(false);
+    setContactInitial(null);
     setAnnotateMode((v) => !v);
   };
+  // AN-2 : entrée par le stylet (premier trait repris par le canvas, sortie automatique), réglage « le doigt ne dessine pas »
+  // (par appareil : absent = le doigt dessine, "1" allumé, "0" éteint à la main), appui long, avis.
+  const [entreeStylet, setEntreeStylet] = useState(false);
+  const [contactInitial, setContactInitial] = useState<{ x: number; y: number; id: number } | null>(null);
+  const [doigtLibre, setDoigtLibre] = useState(() => { try { return localStorage.getItem("annot-doigt-libre") === "1"; } catch { return false; } });
+  const doigtLibreRef = useRef(doigtLibre);
+  doigtLibreRef.current = doigtLibre;
+  const [avisDoigt, setAvisDoigt] = useState(false);
+  const reglerDoigtLibre = (v: boolean) => {
+    try { localStorage.setItem("annot-doigt-libre", v ? "1" : "0"); } catch { /* stockage refusé : réglage pour la séance seulement */ }
+    setDoigtLibre(v);
+  };
+  const surTraitStylet = () => {
+    let absent = false;
+    try { absent = localStorage.getItem("annot-doigt-libre") === null; } catch { /* stockage refusé : ni réglage ni avis */ }
+    if (absent) { reglerDoigtLibre(true); setAvisDoigt(true); }
+  };
+  useEffect(() => {
+    if (!avisDoigt) return;
+    const t = setTimeout(() => setAvisDoigt(false), 4000);
+    return () => clearTimeout(t);
+  }, [avisDoigt]);
+  // Condition d'entrée du bouton Crayon, relue par les gestionnaires de pointeur (qui ne se recréent pas).
+  const entrerCrayonRef = useRef<(() => void) | null>(null);
+  entrerCrayonRef.current = user && !horsLigne && crayonPret ? basculerAnnotation : null;
+  const sortieAuto = useEffectEvent(() => basculerAnnotation());
+  // Entré au stylet : 8 s sans aucun toucher, on sort comme par Terminé.
+  useEffect(() => {
+    if (!annotateMode || !entreeStylet) return;
+    // Pas de sortie tant qu'un pointeur est posé (trait en cours) ni qu'une boîte de confirmation est ouverte.
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const poses = new Set<number>();
+    const bloque = () => poses.size > 0 || !!document.querySelector("[role=alertdialog]");
+    const armer = () => { clearTimeout(t); t = undefined; if (!bloque()) t = setTimeout(() => { t = undefined; sortieAuto(); }, 8000); };
+    const evt = (e: Event) => {
+      if (e instanceof PointerEvent) { if (e.type === "pointerdown") poses.add(e.pointerId); else if (e.type !== "pointermove") poses.delete(e.pointerId); }
+      armer();
+    };
+    const evts = ["pointerdown", "pointermove", "pointerup", "pointercancel", "wheel", "keydown"] as const;
+    // La boîte s'ouvre ou se ferme sans toucher de notre part : on suit le DOM.
+    const obs = new MutationObserver(() => { if (bloque()) { clearTimeout(t); t = undefined; } else if (t === undefined) armer(); });
+    armer();
+    for (const n of evts) document.addEventListener(n, evt, true);
+    obs.observe(document.body, { childList: true, subtree: true });
+    return () => { clearTimeout(t); obs.disconnect(); for (const n of evts) document.removeEventListener(n, evt, true); };
+  }, [annotateMode, entreeStylet]);
+  // Appui long (hors Crayon) : anneau à 200 ms, Crayon à 500 ms.
+  const appui = useRef<{ id: number; x: number; y: number; t0: number; minuteries: ReturnType<typeof setTimeout>[] } | null>(null);
+  const [anneau, setAnneau] = useState<{ x: number; y: number } | null>(null);
+  const annulerAppui = useCallback(() => {
+    if (!appui.current) return;
+    appui.current.minuteries.forEach(clearTimeout);
+    appui.current = null;
+    setAnneau(null);
+  }, []);
+  useEffect(() => annulerAppui, [annulerAppui]);
 
   // ── Navigation ──────────────────────────────────────────────────────────────
 
@@ -1440,7 +1498,7 @@ export function PerformanceMode({
   pageRef.current = currentPage;
   const tourner = useCallback((sens: 1 | -1) => {
     const n = pageRef.current;
-    if (demiOn) {
+    if (demiOn && !annotateModeRef.current) {
       if (demiRef.current && demiPossible(n)) {
         if (sens === 1) {
           demiRef.current = false;
@@ -1532,6 +1590,7 @@ export function PerformanceMode({
           setPopoverOuvert(null);
           return;
         }
+        if (annotateMode) { basculerAnnotation(); return; }
         onClose();
       }
   });
@@ -1545,11 +1604,23 @@ export function PerformanceMode({
   // Pointeurs actifs. Un second doigt qui descend annule le geste en cours (zoom à deux doigts).
   const pointeursActifs = useRef<Set<number>>(new Set());
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (e.pointerType === "pen") return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
     // Fond d'une feuille : React fait remonter ses évènements jusqu'ici, ce n'est pas un toucher sur la page.
     // (Pas de stopPropagation sur le fond : Radix y détecte le toucher extérieur qui ferme la feuille.)
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) return;
+    // Hors barres, menus et feuilles (leurs évènements remontent jusqu'ici) : le stylet et l'appui long peuvent ouvrir le Crayon.
+    const surPage = popoverRef.current === null && !annotateModeRef.current && !!entrerCrayonRef.current
+      && !(e.target as HTMLElement).closest("[data-barre-haut], [data-barre-bas], [data-menu-louange], [data-menu-declencheur], [role=dialog], button, a[href], input, select, textarea, [role=button], [role=switch], [role^=menuitem], [data-repere-pastille], [data-scene-bouton]");
+    if (e.pointerType === "pen") {
+      // Le stylet ne tourne jamais la page ; sur la page, il ouvre le Crayon et son premier trait est repris par le canvas.
+      if (!surPage) return;
+      entrerCrayonRef.current!();
+      setEntreeStylet(true);
+      setContactInitial({ x: e.clientX, y: e.clientY, id: e.pointerId });
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* pointeur simulé : le canvas reprendra la capture */ }
+      return;
+    }
+    annulerAppui();
     // Un menu est ouvert : ce toucher le ferme (Radix), il ne tourne pas la page et ne bascule pas la barre.
     if (popoverRef.current !== null) menuAuToucher.current = { t: e.nativeEvent.timeStamp };
     else if (menuAuToucher.current && menuAuToucher.current.t !== e.nativeEvent.timeStamp) menuAuToucher.current = null;
@@ -1562,18 +1633,40 @@ export function PerformanceMode({
     // Clic sur une barre de défilement (colonne du scan, barres toujours affichées) : pas un toucher.
     const el = e.target as HTMLElement;
     if (el.clientWidth > 0 && el.scrollHeight > el.clientHeight && e.nativeEvent.offsetX >= el.clientWidth) return;
+    if (surPage) {
+      const { clientX: x, clientY: y, pointerId: id } = e;
+      appui.current = {
+        id, x, y, t0: Date.now(),
+        minuteries: [
+          setTimeout(() => setAnneau({ x, y }), APPUI_ANNEAU_MS),
+          setTimeout(() => {
+            annulerAppui();
+            tapStart.current = null; // le lever qui suit ne tourne pas la page ni ne bascule la barre
+            entrerCrayonRef.current?.();
+          }, APPUI_CRAYON_MS),
+        ],
+      };
+    }
     // Pastille des Repères, lettre de Scène : leur TOUCHER ouvre le nom de la section (ni page tournée, ni barre) ; un balayage parti d'elles tourne la page.
     tapStart.current = { x: e.clientX, y: e.clientY, time: Date.now(), pastille: !!el.closest("[data-repere-pastille], [data-scene-bouton]") };
-  }, []);
+  }, [annulerAppui]);
 
   const handlePointerCancel = useCallback((e: React.PointerEvent) => {
     pointeursActifs.current.delete(e.pointerId);
     menuAuToucher.current = null;
     tapStart.current = null;
-  }, []);
+    annulerAppui();
+    if (e.pointerType === "pen") setContactInitial(null); // annulé avant le montage du canvas : pas de trait figé
+  }, [annulerAppui]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    const a = appui.current;
+    if (a && a.id === e.pointerId && classerAppui(Math.hypot(e.clientX - a.x, e.clientY - a.y), Date.now() - a.t0) === "annule") annulerAppui();
+  }, [annulerAppui]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (e.pointerType === "pen") return;
+    if (e.pointerType === "pen") { setContactInitial(null); return; } // levé avant le montage du canvas : pas de trait figé
+    annulerAppui();
     pointeursActifs.current.delete(e.pointerId);
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) { tapStart.current = null; return; }
     if (menuAuToucher.current || popoverRef.current !== null) {
@@ -1590,9 +1683,11 @@ export function PerformanceMode({
 
     const geste = classerGeste(dx, dy, dt);
     if (geste === null || (geste === "toucher" && departPastille)) return;
+    // En Crayon, seul un doigt qui ne dessine pas arrive ici (le canvas arrête les autres) : il tourne la page par les côtés
+    // et le balayage, mais le centre ne cache pas la barre.
+    if (annotateModeRef.current && !doigtLibreRef.current) return;
     if (geste !== "toucher") {
-      // Un balayage tourne la page, ne bascule jamais la barre, et se tait pendant l'annotation.
-      if (annotateModeRef.current) return;
+      // Un balayage tourne la page et ne bascule jamais la barre.
       tourner(geste === "balayage-gauche" ? 1 : -1);
       return;
     }
@@ -1604,10 +1699,10 @@ export function PerformanceMode({
       tourner(-1);
     } else if (e.clientX > window.innerWidth * (1 - zone)) {
       tourner(1);
-    } else {
+    } else if (!annotateModeRef.current) {
       setShowChrome(!showChrome);
     }
-  }, [showChrome, tourner]);
+  }, [showChrome, tourner, annulerAppui]);
 
   // Current page song info for chrome
   // Un chant joué sur sa partition 简谱 n'a pas de bloc « section » : la barre
@@ -1829,7 +1924,7 @@ export function PerformanceMode({
       data-cle-page={currentPageKey}
       data-passes-pagination={passesPagination}
       // En annotation, les repères de section et les lettres de Scène passent au-dessus de l'encre et ne répondent plus au toucher.
-      className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none [&[data-annotation]_[data-repere-pastille]]:pointer-events-none [&[data-annotation]_[data-scene-bouton]]:pointer-events-none"
+      className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none [-webkit-touch-callout:none] [&[data-annotation]_[data-repere-pastille]]:pointer-events-none [&[data-annotation]_[data-scene-bouton]]:pointer-events-none"
       style={{
         "--sat": "env(safe-area-inset-top, 0px)",
         "--sab": "env(safe-area-inset-bottom, 0px)",
@@ -1839,6 +1934,7 @@ export function PerformanceMode({
         ...couleursAccords,
       } as React.CSSProperties}
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
     >
@@ -2252,6 +2348,9 @@ export function PerformanceMode({
           sizeIdx={tailleCrayon}
           tailleGomme={tailleGomme}
           inerte={etatTraits === "chargement"}
+          doigtLibre={doigtLibre}
+          contactInitial={contactInitial}
+          onTraitStylet={surTraitStylet}
           onDebutGeste={() => { gesteNote.current = new Set(); }}
           onChange={surTracesCrayon}
           zoom={annotZoom}
@@ -2259,6 +2358,29 @@ export function PerformanceMode({
           onZoomPanChange={(z, p) => { setAnnotZoom(z); setAnnotPan(p); }}
         />
       )}
+
+      {/* Doigt qui dessine : deux onglets de 44 px aux bords tournent la page (le stylet n'y tourne rien) ; sinon les zones latérales. */}
+      {annotateMode && !doigtLibre && (["prec", "suiv"] as const).map((sens) => (
+        <OngletPage
+          key={sens}
+          sens={sens}
+          label={t(sens === "prec" ? "performance.tools.prevPage" : "performance.tools.nextPage")}
+          onTourner={() => tourner(sens === "prec" ? -1 : 1)}
+        />
+      ))}
+      {anneau && (
+        <svg data-anneau-appui aria-hidden="true" viewBox="0 0 44 44" className="pointer-events-none absolute h-11 w-11" style={{ left: anneau.x - 22, top: anneau.y - 22, zIndex: 30, color: "var(--couleur-icones)" }}>
+          <circle ref={remplirAnneau} cx="22" cy="22" r="19" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeDasharray={CIRCONFERENCE_ANNEAU} strokeDashoffset={CIRCONFERENCE_ANNEAU} transform="rotate(-90 22 22)" />
+        </svg>
+      )}
+      {/* Conteneur live toujours présent : son texte change à l'affichage, les lecteurs d'écran l'annoncent. */}
+      <div role="status" data-avis-doigt className="pointer-events-none absolute left-1/2 -translate-x-1/2" style={{ zIndex: 30, bottom: "calc(5rem + var(--sab, 0px))" }}>
+        {avisDoigt && (
+          <div onPointerDown={(e) => { e.stopPropagation(); setAvisDoigt(false); }} className="pointer-events-auto material-panel rounded-xl px-4 py-2 text-sm text-foreground [box-shadow:var(--shadow-flottant)]">
+            {t("performance.tools.fingerNotice")}
+          </div>
+        )}
+      </div>
 
       {/* ── Métronome visuel : liseré silencieux, sous le chrome ── */}
       {metronome && tempoLiseret ? <LiseretTempo tempo={tempoLiseret} top={showChrome ? `${barres.haut}px` : "var(--sat, 0px)"} /> : null}
@@ -2301,6 +2423,8 @@ export function PerformanceMode({
             onZoom100={() => { setAnnotZoom(1); setAnnotPan({ x: 0, y: 0 }); }}
             onToutEffacer={toutEffacer}
             onTermine={basculerAnnotation}
+            doigtLibre={doigtLibre}
+            onDoigtLibre={reglerDoigtLibre}
             etat={etatTraits}
           />
         ) : (
@@ -2652,6 +2776,30 @@ export function PerformanceMode({
 const SEGMENT_CHOISI = "bg-[color:var(--couleur-icones)] text-background";
 
 // ─── Petits composants de la barre ────────────────────────────────────────────
+
+const CIRCONFERENCE_ANNEAU = 2 * Math.PI * 19;
+/** L'anneau de l'appui long se remplit de 200 à 500 ms (animation du navigateur, fonction stable : un rendu ne la relance pas). */
+const remplirAnneau = (c: SVGCircleElement | null) => {
+  c?.animate?.([{ strokeDashoffset: CIRCONFERENCE_ANNEAU }, { strokeDashoffset: 0 }], { duration: APPUI_CRAYON_MS - APPUI_ANNEAU_MS, fill: "forwards", easing: "linear" });
+};
+
+/** Onglet de 44 px au bord de la page, en Crayon quand le doigt dessine : un toucher ou un clic tourne la page, le stylet non.
+ *  shortcut: un stylet posé sur les 44 px du bord ne dessine pas (l'onglet est au-dessus du canvas), à reprendre si l'essai sur iPad le gêne. */
+function OngletPage({ sens, label, onTourner }: { sens: "prec" | "suiv"; label: string; onTourner: () => void }) {
+  const type = useRef("");
+  return (
+    <button
+      type="button"
+      data-onglet-page={sens}
+      aria-label={label}
+      className={`absolute top-0 bottom-0 w-11 bg-transparent ${sens === "prec" ? "left-0" : "right-0"}`}
+      style={{ zIndex: 15 }}
+      onPointerDown={(e) => { e.stopPropagation(); type.current = e.pointerType; }}
+      onPointerUp={(e) => e.stopPropagation()}
+      onClick={() => { const stylet = type.current === "pen"; type.current = ""; if (!stylet) onTourner(); }}
+    />
+  );
+}
 
 function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, basculerAnnoter, onStage } from "./helpers/louange";
+import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui } from "../src/lib/performance/gestes";
 import { FOND_CLAIR, garderContraste } from "../src/lib/performance/couleurIcones";
 import { annuler, historiqueVide, MAX_ETATS, noter, peutAnnuler, peutRetablir, retablir } from "../src/lib/annotations/historique";
 import type { Trait } from "../src/types/partition";
@@ -27,18 +28,22 @@ const DOCS = {
   },
 };
 
-async function ouvrirLouange(page: Page, couleur?: string) {
-  await page.addInitScript(([c, cle]) => {
+async function ouvrirLouange(page: Page, couleur?: string, echelle?: string) {
+  await page.addInitScript(([c, cle, ech]) => {
+    if (ech && !sessionStorage.getItem("pw-echelle")) { localStorage.setItem("perf-font-scale", ech); sessionStorage.setItem("pw-echelle", "1"); }
     if (!localStorage.getItem("perf-role-preset")) localStorage.setItem("perf-role-preset", "pianiste");
     localStorage.setItem("accords-aide-vue", "1");
     localStorage.setItem("perf-theme", "light");
     if (c && !localStorage.getItem(cle)) localStorage.setItem(cle, c);
-  }, [couleur ?? "", `perf-couleur-icones-${ODILE.uid}`]);
+  }, [couleur ?? "", `perf-couleur-icones-${ODILE.uid}`, echelle ?? ""]);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   const db = await signInAs(page, ODILE, DOCS, `/setlists/${SL}`);
+  await ouvrirMode(page);
+  return db;
+}
+async function ouvrirMode(page: Page) {
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  return db;
 }
 
 const telephone = (page: Page) => page.viewportSize()!.width < 768;
@@ -210,4 +215,229 @@ test("(g) la couleur des icônes choisie colore Terminé (corrigée pour le cont
   await basculerAnnoter(page);
   const n = parseInt(garderContraste("#c2185b", FOND_CLAIR).slice(1), 16);
   await expect(page.getByRole("button", { name: "Terminé", exact: true })).toHaveCSS("color", `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`);
+});
+
+// ─── AN-2 : entrer, sortir, tourner la page ──────────────────────────────────
+
+test.describe("classerAppui : fonction pure (sans page)", () => {
+  test("rien avant 200 ms, anneau jusqu'à 500 ms, Crayon ensuite ; plus de 10 px annule", () => {
+    expect(classerAppui(0, 0)).toBe("rien");
+    expect(classerAppui(0, APPUI_ANNEAU_MS - 1)).toBe("rien");
+    expect(classerAppui(0, APPUI_ANNEAU_MS)).toBe("anneau");
+    expect(classerAppui(10, APPUI_CRAYON_MS - 1)).toBe("anneau");
+    expect(classerAppui(10, APPUI_CRAYON_MS)).toBe("crayon");
+    expect(classerAppui(11, 0)).toBe("annule");
+    expect(classerAppui(30, 700)).toBe("annule");
+  });
+});
+
+// Le mode écrit seul sa préférence de langue (notifPrefs) à l'ouverture ; `:commit` est le lot d'écriture de la partition.
+const ailleursQuePartitions = (db: FakeDb) => db.writes.filter((w) => !/^(partitions\/|:commit|notifPrefs\/)/.test(w.path));
+const racine = (page: Page) => page.locator("[data-performance-mode]");
+const clePage = (page: Page) => racine(page).getAttribute("data-cle-page");
+
+/** Un évènement de stylet, envoyé à l'élément sous le point (la page, puis le canvas une fois le Crayon ouvert). */
+const stylet = (page: Page, type: "pointerdown" | "pointermove" | "pointerup", x: number, y: number) =>
+  page.evaluate(([t, px, py]) => {
+    document.elementFromPoint(px as number, py as number)?.dispatchEvent(new PointerEvent(t as string, {
+      pointerType: "pen", pointerId: 7, isPrimary: true, button: 0, buttons: t === "pointerup" ? 0 : 1, clientX: px as number, clientY: py as number, bubbles: true, cancelable: true,
+    }));
+  }, [type, x, y]);
+
+/** Un trait au stylet sur la première ligne de paroles, du contact au lever. */
+async function traitStylet(page: Page) {
+  const ligne = (await onStage(page, "[data-trait-section]").first().boundingBox())!;
+  const y = ligne.y + ligne.height / 2;
+  const x0 = ligne.x + ligne.width * 0.3;
+  await stylet(page, "pointerdown", x0, y);
+  for (let i = 1; i <= 8; i++) await stylet(page, "pointermove", x0 + i * 12, y + (i % 2));
+  await stylet(page, "pointerup", x0 + 96, y);
+}
+
+/** Note, dans `window.__anneau`, que l'anneau de l'appui long est apparu (il ne vit que 300 ms). */
+const guetterAnneau = (page: Page) => page.evaluate(() => {
+  const w = window as unknown as { __anneau: boolean };
+  w.__anneau = false;
+  new MutationObserver(() => { if (document.querySelector("[data-anneau-appui]")) w.__anneau = true; }).observe(document.body, { childList: true, subtree: true });
+});
+const anneauVu = (page: Page) => page.evaluate(() => (window as unknown as { __anneau: boolean }).__anneau);
+
+test("(h) l'appui long de 600 ms entre en Crayon, l'anneau se voit entre-temps ; un toucher rapide ou un appui qui glisse non", async ({ page }) => {
+  await ouvrirLouange(page);
+  await guetterAnneau(page);
+  const ligne = (await onStage(page, "[data-trait-section]").first().boundingBox())!;
+  const x = ligne.x + ligne.width / 2;
+  const y = ligne.y + ligne.height / 2;
+  // Toucher rapide : ni anneau ni Crayon.
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.up();
+  await page.waitForTimeout(APPUI_CRAYON_MS + 200);
+  expect(await anneauVu(page)).toBe(false);
+  await expect(barre(page)).toHaveCount(0);
+  // Appui qui glisse de 30 px avant 200 ms : annulé, rien ne se montre.
+  await page.mouse.down();
+  await page.mouse.move(x + 30, y, { steps: 3 });
+  await page.waitForTimeout(APPUI_CRAYON_MS + 200);
+  await page.mouse.up();
+  expect(await anneauVu(page)).toBe(false);
+  await expect(barre(page)).toHaveCount(0);
+  // Appui long : l'anneau apparaît, puis le Crayon s'ouvre ; le lever qui suit ne bascule pas la barre. (Réessayé : le Crayon n'est offert qu'une fois ma partition lue.)
+  await expect(async () => {
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.waitForTimeout(APPUI_CRAYON_MS + 100);
+    await page.mouse.up();
+    await expect(barre(page)).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  expect(await anneauVu(page)).toBe(true);
+  await page.waitForTimeout(300);
+  await expect(barre(page)).toBeVisible();
+  await expect(page.locator("[data-anneau-appui]")).toHaveCount(0);
+});
+
+test("(h bis) au doigt, l'appui long de 600 ms entre en Crayon et le lever qui suit ne tourne pas la page", async ({ page }) => {
+  await ouvrirLouange(page, undefined, "1.5");
+  const bord = { x: page.viewportSize()!.width - 6, y: page.viewportSize()!.height / 2 };
+  const doigt = (type: "pointerdown" | "pointerup") => page.evaluate(([t, px, py]) => {
+    const w = window as unknown as { __cible?: Element | null };
+    if (t === "pointerdown") w.__cible = document.elementFromPoint(px as number, py as number);
+    w.__cible?.dispatchEvent(new PointerEvent(t as string, {
+      pointerType: "touch", pointerId: 9, isPrimary: true, button: 0, buttons: t === "pointerup" ? 0 : 1, clientX: px as number, clientY: py as number, bubbles: true, cancelable: true,
+    }));
+  }, [type, bord.x, bord.y]);
+  const cle = await clePage(page);
+  await expect(async () => {
+    await doigt("pointerdown");
+    await page.waitForTimeout(APPUI_CRAYON_MS + 100);
+    await doigt("pointerup");
+    await expect(barre(page)).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  await page.waitForTimeout(300);
+  expect(await clePage(page)).toBe(cle);
+  await expect(barre(page)).toBeVisible();
+});
+
+test("(i) un stylet entre en Crayon et dessine dès le contact ; il ne tourne jamais la page", async ({ page }) => {
+  const db = await ouvrirLouange(page, undefined, "1.5");
+  await expect(async () => { expect((await clePage(page))).toBeTruthy(); }).toPass();
+  const bord = { x: page.viewportSize()!.width - 6, y: page.viewportSize()!.height / 2 };
+  // En Crayon : un stylet sur le bord droit ne tourne pas la page (plus loin, le trait du stylet).
+  await expect(async () => {
+    await traitStylet(page);
+    await expect(barre(page)).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  const cle = await clePage(page);
+  await bouton(page, "Terminé").click();
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(1);
+  expect(ailleursQuePartitions(db)).toEqual([]);
+  // Hors Crayon : un stylet sur le bord droit ouvre le Crayon, il ne tourne pas la page.
+  await stylet(page, "pointerdown", bord.x, bord.y);
+  await stylet(page, "pointerup", bord.x, bord.y);
+  await expect(barre(page)).toBeVisible();
+  expect(await clePage(page)).toBe(cle);
+  // En Crayon : sur le bord droit le stylet dessine (un point), il ne tourne pas la page non plus.
+  await stylet(page, "pointerdown", bord.x, bord.y);
+  await stylet(page, "pointerup", bord.x, bord.y);
+  await page.waitForTimeout(300);
+  expect(await clePage(page)).toBe(cle);
+});
+
+test("(j) « le doigt ne dessine pas » s'allume au premier trait au stylet, avis une seule fois, retenu ; l'interrupteur de ⋯ l'éteint", async ({ page }) => {
+  const db = await ouvrirLouange(page);
+  await expect(async () => {
+    await traitStylet(page);
+    await expect(barre(page)).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("annot-doigt-libre"))).toBe("1");
+  const avis = page.locator("[data-avis-doigt]");
+  await expect(avis).toHaveAttribute("role", "status");
+  await expect(avis).toHaveText("Le doigt tourne et zoome, le stylet dessine");
+  await expect(avis).toHaveText("", { timeout: 8_000 });
+  await bouton(page, "Terminé").click();
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(1);
+  // Retenu après rechargement : pas d'onglets de page, pas de second avis.
+  await page.reload();
+  await ouvrirMode(page);
+  await basculerAnnoter(page);
+  await expect(page.locator("[data-onglet-page]")).toHaveCount(0);
+  await traitStylet(page);
+  await page.waitForTimeout(500);
+  await expect(avis).toHaveText("");
+  // L'interrupteur de ⋯ l'éteint : le doigt dessine, les onglets reviennent.
+  await bouton(page, "Plus").click();
+  const interrupteur = page.getByRole("switch", { name: "Le doigt ne dessine pas" });
+  await expect(interrupteur).toHaveAttribute("aria-checked", "true");
+  await interrupteur.click();
+  await expect(interrupteur).toHaveAttribute("aria-checked", "false");
+  expect(await page.evaluate(() => localStorage.getItem("annot-doigt-libre"))).toBe("0");
+  await expect(page.locator("[data-onglet-page]")).toHaveCount(2);
+  // Valeur « 0 » posée à la main : un trait au stylet ne rallume rien et ne montre pas d'avis.
+  await page.keyboard.press("Escape");
+  await traitStylet(page);
+  await page.waitForTimeout(500);
+  await expect(avis).toHaveText("");
+  expect(await page.evaluate(() => localStorage.getItem("annot-doigt-libre"))).toBe("0");
+  expect(ailleursQuePartitions(db)).toEqual([]);
+});
+
+test("(k) en Crayon, tourner la page (onglet, flèche) puis revenir garde les traits des deux pages", async ({ page }) => {
+  const db = await ouvrirLouange(page, undefined, "1.5");
+  await basculerAnnoter(page);
+  const onglet = page.locator('[data-onglet-page="suiv"]');
+  await expect(onglet).toHaveAttribute("aria-label", "Page suivante");
+  await expect(page.locator('[data-onglet-page="prec"]')).toHaveAttribute("aria-label", "Page précédente");
+  const box = (await onglet.boundingBox())!;
+  expect(box.width).toBeCloseTo(44, 0);
+  const cle1 = await clePage(page);
+  await tracer(page);
+  await onglet.click();
+  await expect.poll(() => clePage(page)).not.toBe(cle1);
+  const cle2 = await clePage(page);
+  await tracer(page);
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(() => clePage(page)).toBe(cle1);
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => clePage(page)).toBe(cle2);
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(2);
+  expect(ailleursQuePartitions(db)).toEqual([]);
+});
+
+test("(l) Échap en Crayon ferme d'abord le menu ⋯, puis sort du Crayon sans quitter le mode louange", async ({ page }) => {
+  const db = await ouvrirLouange(page);
+  await basculerAnnoter(page);
+  await tracer(page);
+  await bouton(page, "Plus").click();
+  await expect(page.getByRole("switch", { name: "Le doigt ne dessine pas" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("switch", { name: "Le doigt ne dessine pas" })).toHaveCount(0);
+  await expect(barre(page)).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(barre(page)).toHaveCount(0);
+  await expect(racine(page)).toBeVisible();
+  await expect(page.locator("[data-barre-haut]")).toBeVisible();
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(1);
+  expect(ailleursQuePartitions(db)).toEqual([]);
+});
+
+test("(m) sortie à 8 s sans toucher après une entrée au stylet seulement", async ({ page }) => {
+  test.setTimeout(60_000);
+  const db = await ouvrirLouange(page);
+  // Entrée par le bouton (ou la feuille Options) : aucune sortie automatique.
+  await basculerAnnoter(page);
+  await tracer(page);
+  await page.waitForTimeout(9_000);
+  await expect(barre(page)).toBeVisible();
+  await bouton(page, "Terminé").click();
+  // Entrée au stylet : elle part après 8 s, trait écrit comme par Terminé.
+  await expect(async () => {
+    await traitStylet(page);
+    await expect(barre(page)).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  await page.waitForTimeout(5_000);
+  await expect(barre(page)).toBeVisible();
+  await expect(barre(page)).toHaveCount(0, { timeout: 8_000 });
+  await expect(racine(page)).toBeVisible();
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(2);
+  expect(ailleursQuePartitions(db)).toEqual([]);
 });

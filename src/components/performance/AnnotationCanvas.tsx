@@ -113,9 +113,15 @@ interface Props {
   inerte?: boolean;
   /** Un tracé ou un passage de gomme commence (le parent regroupe ce qui suit en une action à annuler). */
   onDebutGeste?: () => void;
+  /** AN-2 : « le doigt ne dessine pas » : un doigt seul ne trace pas, ses évènements remontent à la page (deux doigts gardent la loupe). */
+  doigtLibre?: boolean;
+  /** AN-2 : contact du stylet qui a ouvert le Crayon ; le premier trait commence là, repris au montage. */
+  contactInitial?: { x: number; y: number; id: number } | null;
+  /** AN-2 : un trait vient d'être fini au stylet. */
+  onTraitStylet?: () => void;
 }
 
-export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas, clipPath, tool, color, sizeIdx, tailleGomme, inerte, onDebutGeste }: Props) {
+export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas, clipPath, tool, color, sizeIdx, tailleGomme, inerte, onDebutGeste, doigtLibre, contactInitial, onTraitStylet }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Pointeurs actifs sur le canvas (multi-touch). 1 = tracé, 2 = pincer/déplacer.
@@ -241,10 +247,38 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
     redraw(); // efface le segment live partiel
   };
 
+  // Un doigt seul qui ne dessine pas : ses évènements remontent à la page (tourner la page).
+  const doigtSeul = (e: React.PointerEvent) => !!doigtLibre && e.pointerType === "touch";
+
+  // Premier trait du stylet qui a ouvert le Crayon : il commence au point de contact.
+  useEffect(() => {
+    if (!contactInitial) return;
+    pointers.current.set(contactInitial.id, { x: contactInitial.x, y: contactInitial.y });
+    try { canvasRef.current?.setPointerCapture(contactInitial.id); } catch { /* pointeur simulé : refusé */ }
+    debuterTrace(contactInitial.id, contactInitial.x, contactInitial.y);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function debuterTrace(id: number, x: number, y: number) {
+    drawingPointer.current = id;
+    onDebutGeste?.();
+    showCursorAt(x, y);
+    if (tool === "eraser") {
+      eraseAt(x, y);
+      return;
+    }
+    livePoints.current = [[x, y]];
+  }
+
   function onPointerDown(e: React.PointerEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    // Un doigt posé pendant un trait au stylet est une paume : ignorée, sans tourner la page.
+    const paume = doigtSeul(e) && drawingPointer.current !== null;
+    if (!doigtSeul(e) || paume) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (paume) return;
+    try { (e.target as HTMLElement).setPointerCapture(e.pointerId); } catch { /* pointeur simulé : refusé */ }
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
     // 2e pointeur → bascule en geste pincer + déplacement
@@ -257,15 +291,8 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
     if (pointers.current.size > 2) return; // geste à 2 prioritaire
 
     // 1 pointeur = tracé (sauf juste après un geste : attendre le relâchement total)
-    if (suppressDraw.current || inerte) return;
-    drawingPointer.current = e.pointerId;
-    onDebutGeste?.();
-    showCursorAt(e.clientX, e.clientY);
-    if (tool === "eraser") {
-      eraseAt(e.clientX, e.clientY);
-      return;
-    }
-    livePoints.current = [[e.clientX, e.clientY]];
+    if (suppressDraw.current || inerte || doigtSeul(e)) return;
+    debuterTrace(e.pointerId, e.clientX, e.clientY);
   }
 
   function onPointerMove(e: React.PointerEvent) {
@@ -287,7 +314,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
       return;
     }
 
-    showCursorAt(e.clientX, e.clientY); // survol + dessin : le cercle suit toujours
+    if (!doigtSeul(e)) showCursorAt(e.clientX, e.clientY); // survol + dessin : le cercle suit toujours
     if (e.pointerId !== drawingPointer.current) return;
     e.preventDefault();
     if (tool === "eraser") {
@@ -299,7 +326,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
   }
 
   function onPointerUp(e: React.PointerEvent) {
-    e.stopPropagation();
+    if (!doigtSeul(e)) e.stopPropagation();
     pointers.current.delete(e.pointerId);
 
     // Fin (ou allègement) d'un geste à 2 pointeurs
@@ -327,6 +354,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
       points: simplifyStroke(pts.map(([x, y]) => toOrig(x, y))),
     };
     onChange({ ...data, strokes: [...data.strokes, stroke] });
+    if (e.pointerType === "pen") onTraitStylet?.();
   }
 
   // Diamètre du cercle qui suit le pointeur : empreinte de la gomme (= 2× son rayon,

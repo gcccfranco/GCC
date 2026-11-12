@@ -836,7 +836,9 @@
       "loading": "加载中…",
       "clearConfirmTitle": "清除本页我的笔迹？",
       "clearConfirmBody": "可用“撤销”恢复。",
-      "eraserSize": "橡皮大小"
+      "eraserSize": "橡皮大小",
+      "fingerFree": "手指不画线",
+      "fingerNotice": "手指翻页和缩放，触控笔画线"
     }
   },
   "notifications": {
