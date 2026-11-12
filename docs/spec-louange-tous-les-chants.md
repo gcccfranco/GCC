@@ -1,6 +1,6 @@
 # Spec : tous les chants dans le mode louange (lot TC)
 
-**Statut : questions tranchées (12/11/2026, un seul bouton Setlist) ; attend le go de Timothée ; se code après AN, MP-6 et Harmonie H8 (`PerformanceMode.tsx`).**
+**Statut : go de Timothée (12/11/2026, soir, « Go ») ; questions tranchées (un seul bouton Setlist) ; se code après AN, MP-6 et Harmonie H8 (`PerformanceMode.tsx`).**
 Planche : `docs/planches/planche-louange-tous-les-chants.html` (artefact privé
 https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue » en tête.
 

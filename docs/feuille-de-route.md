@@ -102,6 +102,11 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   5. **Ma partition MP-6** (reprise de l'existant) : **go de Timothée (12/11, 17 h 10 UTC)**, questions closes
      (`docs/spec-ma-partition.md`, § Questions ouvertes, « Réponses de Timothée », et § Tranches, MP-6). À lancer par la
      session qui finit **AN-5**, jamais pendant qu'une autre session modifie `PerformanceMode.tsx` ou les annotations.
+  6. **Tous les chants en mode louange, lot TC (TC-1 → TC-2 → TC-3)** : **go de Timothée (12/11, soir : « Go »)**,
+     questions toutes tranchées (`docs/spec-louange-tous-les-chants.md`, § Questions tranchées et § Tranches ; un seul
+     bouton Setlist à deux onglets). À lancer par la session qui finit **la dernière de MP-6 et H8**, jamais pendant
+     qu'une autre session modifie `PerformanceMode.tsx` ; une session par tranche, consigne type ci-dessous ; TC-3
+     (raccord H8) après H8.
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.
@@ -114,7 +119,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
 - **Demande de Timothée (12/11/2026, soir), à cadrer** : dans le mode louange, accès direct à **tous les chants** (comme
   aux setlists), et les **idées d'harmonie de chaque chant** intégrées dedans. La seconde moitié recoupe Harmonie H8
   (point en marge et bande, go donné). Change l'organisation d'un écran : planche, puis spec, puis go ; pas avant la
-  fin d'AN, MP-6 et H8 (même fichier `PerformanceMode.tsx`). Rien de lancé.
+  fin d'AN, MP-6 et H8 (même fichier `PerformanceMode.tsx`). Go de Timothée le 12/11 au soir : file, ligne 6.
   Planche faite le 12/11/2026 (`docs/planches/planche-louange-tous-les-chants.html`, artefact privé
   https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU) : A onglet « Tous les chants » dans le menu Setlist, le chant
   joué s'insère dans la suite ; B le titre de la barre devient un champ de recherche ; **C recommandée**, le chant
