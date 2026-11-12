@@ -38,7 +38,7 @@ import { ReportDialog } from "@/components/report/ReportDialog";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
 import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
 import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
-import { AccordsProvider } from "@/components/accords/AccordsProvider";
+import { AccordsProvider, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { useAllerAuPassage } from "@/lib/harmonie/useAllerAuPassage";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
@@ -246,6 +246,8 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     const [showPdfChoice, setShowPdfChoice] = useState(false);
     // Idées d'harmonie (lot 9) : pianistes, guitaristes et admins seulement.
     const [showIdees, setShowIdees] = useState(false);
+    // H5-2 : le passage visé par « Ici » (la clé change à chaque appui, pour redéfiler).
+    const [passageIci, setPassageIci] = useState<{ uid: string; cle: number; idee?: string } | undefined>();
     // Grand écran (≥ 1 024 px) : une colonne à droite de la partition, mémorisée par appareil ; sinon la feuille.
     // La colonne tient si la zone de lecture (partition + colonne) fait 824 px ; sinon, la feuille.
     const [zoneLecture, zoneAssezLarge] = useZoneAssezLarge();
@@ -517,8 +519,19 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
   // de Spotify ni d'Apple Music (Timothée, 18/10/2026 : les chants n'ont que YouTube).
   const menuChant = <MenuChant langue={song.language === "zh" ? "zh" : "fr"} disposition={disposition} changeDisposition={changeDisposition} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
 
+  const ici = useMemo<IciDuChant | undefined>(
+    () => accesHarmonie.peut ? {
+      sections: displayedAST.sections, tonalite: customize.currentKey, tonaliteOrigine: originalKey,
+      ouvrir: (uid, idee) => {
+        setPassageIci({ uid, cle: Date.now(), idee });
+        if (grandEcran) setColonneOuverte(true); else setShowIdees(true);
+      },
+    } : undefined,
+    [accesHarmonie.peut, displayedAST.sections, customize.currentKey, originalKey, grandEcran, setColonneOuverte],
+  );
+
   return (
-    <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }} tonalite={customize.currentKey}>
+    <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }} tonalite={customize.currentKey} ici={ici}>
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
         {/* Barre de contrôles */}
         <div ref={barreRef} data-testid="barre-outils" className={`barre-chant print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : barPinned ? "-translate-y-[calc(var(--nav-h)-var(--sat))]" : "-translate-y-[calc(100%+var(--nav-h)+var(--barre-decalage,0px)+var(--barre-ombre,0px))]"}`}>
@@ -739,6 +752,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
           disposition={grandEcran ? "colonne" : "feuille"}
           open={grandEcran ? accesHarmonie.peut && colonneOuverte : showIdees}
           onClose={() => {
+            setPassageIci(undefined);
             if (grandEcran) { setColonneOuverte(false); boutonHarmonieRef.current?.focus(); } else setShowIdees(false);
           }}
           slug={song.slug}
@@ -747,6 +761,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
           tonalite={customize.currentKey}
           tonaliteOrigine={originalKey}
           instrument={instrumentHarmonie}
+          passage={passageIci}
         />
         </div>
 

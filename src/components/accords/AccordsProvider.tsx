@@ -26,6 +26,7 @@ import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { PanneauAccord } from "./PanneauAccord";
 import { decrire } from "./outils";
 import { compter } from "@/lib/usage";
+import type { ChordProSection } from "@/types/chordPro";
 
 type DemandeAccord = {
   /** L'accord tel qu'affiché : « D/F# », « (A) », « Bb2 ». */
@@ -38,6 +39,17 @@ type DemandeAccord = {
   chant?: { slug: string; titre: string };
   /** Tonalité affichée du chant (posée par le fournisseur, jamais par l'appelant). */
   tonalite?: string;
+  /** De quoi ouvrir la porte 2 au passage de l'accord (posé par le fournisseur, jamais par l'appelant). */
+  ici?: IciDuChant;
+};
+
+/** H5-2 : ce qu'il faut pour calculer la ligne « Ici » et ouvrir la porte 2 au bloc d'un passage. */
+export type IciDuChant = {
+  sections: ChordProSection[];
+  /** Tonalité jouée (celle de la porte 2). */
+  tonalite: string;
+  tonaliteOrigine?: string;
+  ouvrir: (sectionUid: string, idee?: string) => void;
 };
 
 /** Ce que le panneau sait du chant lu : la tonalité affichée et l'accord qui suit vraiment dans la partition. */
@@ -47,6 +59,9 @@ export type HarmonieDuPanneau = {
   suivant?: string;
   /** Accord d'une section de la partition : « Ensuite » ; sinon (calque 简谱, en-tête) chiffre et Écouter seulement. */
   enSection: boolean;
+  /** Les uid de la section de l'accord touché et de quoi ouvrir la porte 2 (H5-2). */
+  sectionUids?: string[];
+  ici?: IciDuChant;
 };
 
 type Chant = { slug: string; titre: string };
@@ -69,8 +84,8 @@ const Rien: Contexte = { ouvrir: () => {}, fermer: () => {}, fermerSansFocus: ()
 const AccordsContext = createContext<Contexte>(Rien);
 
 /** Joint la tonalité affichée à chaque demande qui descend du fournisseur (H5-1 ; H5-2 y ajoutera les passages). */
-function avecTonalite(parent: Contexte, tonalite?: string): Contexte {
-  return tonalite ? { ...parent, ouvrir: (d) => parent.ouvrir({ tonalite, ...d }) } : parent;
+function avecTonalite(parent: Contexte, tonalite?: string, ici?: IciDuChant): Contexte {
+  return tonalite ? { ...parent, ouvrir: (d) => parent.ouvrir({ tonalite, ici, ...d }) } : parent;
 }
 
 export function useOuvrirAccord(): Contexte {
@@ -83,9 +98,9 @@ export function AccordsInactifs({ children }: { children: React.ReactNode }) {
 }
 
 /** Dit de quel chant sont les accords dessous (une setlist en porte plusieurs). */
-export function ChantDesAccords({ chant, tonalite, children }: { chant: Chant; tonalite?: string; children: React.ReactNode }) {
+export function ChantDesAccords({ chant, tonalite, ici, children }: { chant: Chant; tonalite?: string; ici?: IciDuChant; children: React.ReactNode }) {
   const parent = useContext(AccordsContext);
-  const valeur = useMemo(() => avecTonalite({ ...parent, chant }, tonalite), [parent, chant, tonalite]);
+  const valeur = useMemo(() => avecTonalite({ ...parent, chant }, tonalite, ici), [parent, chant, tonalite, ici]);
   return <AccordsContext.Provider value={valeur}>{children}</AccordsContext.Provider>;
 }
 
@@ -120,6 +135,7 @@ export function AccordsProvider({
   actif = true,
   chant,
   tonalite,
+  ici,
   aide = false,
 }: {
   children: React.ReactNode;
@@ -128,6 +144,8 @@ export function AccordsProvider({
   chant?: Chant;
   /** Tonalité affichée du chant lu : le panneau situe l'accord touché dans la partition (page chant). */
   tonalite?: string;
+  /** H5-2 : de quoi ouvrir la porte 2 au passage de l'accord touché (page chant). */
+  ici?: IciDuChant;
   /** Montre, une seule fois par appareil, la bulle « Touchez un accord… » sous le premier accord visible.
    *  `"flux"` : pas de bulle posée par-dessus, l'aide se dessine là où l'on pose `AideAccordsEnLigne`. */
   aide?: boolean | "flux";
@@ -182,11 +200,18 @@ export function AccordsProvider({
     const hors = d.ancre?.closest("[data-idees-harmonie]");
     // Avec un capo, les étiquettes sont des positions : le chiffre se lit dans leur tonalité (D capo 2, étiquette C : « 1 dans C »).
     const tonaliteDuChant = dansPanneau ? courant.current?.harmonie?.tonalite : hors ? undefined : tonaliteDesEtiquettes(d.tonalite, d.capo);
-    const section = !dansPanneau && d.ancre?.closest("[data-section-uids]");
+    const section = !dansPanneau && d.ancre?.closest<HTMLElement>("[data-section-uids]");
     const suivant = tonaliteDuChant && section && d.ancre ? accordSuivant(section, d.ancre, accord.texte) : undefined;
+    const sectionUids = section ? section.dataset.sectionUids?.split(" ").filter(Boolean) : undefined;
+    const enSection = dansPanneau ? !!courant.current?.harmonie?.enSection : !!section;
     courant.current = {
       accord, ancre, capo, chant: d.chant ?? chant,
-      harmonie: tonaliteDuChant ? { tonalite: tonaliteDuChant, suivant, enSection: dansPanneau ? !!courant.current?.harmonie?.enSection : !!section } : undefined,
+      harmonie: tonaliteDuChant
+        ? {
+            tonalite: tonaliteDuChant, suivant, enSection,
+            ...(dansPanneau ? { sectionUids: courant.current?.harmonie?.sectionUids, ici: courant.current?.harmonie?.ici } : { sectionUids, ici: section ? d.ici : undefined }),
+          }
+        : undefined,
     };
     setOuvert(courant.current);
   }, [chant, aideAncre, aideLigne, fermerAide]);
@@ -251,8 +276,8 @@ export function AccordsProvider({
   }, [actif, aideLigne, fermerAide]);
 
   const valeur = useMemo<Contexte>(
-    () => (actif ? { ouvrir: tonalite ? (d: DemandeAccord) => ouvrir({ tonalite, ...d }) : ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined } : Rien),
-    [actif, ouvrir, fermer, fermerSansFocus, chant, tonalite, enregistrer, aideLigne, fermerAide],
+    () => (actif ? { ouvrir: tonalite ? (d: DemandeAccord) => ouvrir({ tonalite, ici, ...d }) : ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined } : Rien),
+    [actif, ouvrir, fermer, fermerSansFocus, chant, tonalite, ici, enregistrer, aideLigne, fermerAide],
   );
 
   return (
@@ -301,7 +326,7 @@ function PanneauOuvert({ ouvert, fermer, signaler }: { ouvert: Ouvert; fermer: (
   const ordinateur = useOrdinateur();
   const acces = useAccesHarmonie();
   const [instrument, setInstrument] = useInstrument(acces, "guitare");
-  const commun = { accord: ouvert.accord, instrument, onInstrument: setInstrument, capo: ouvert.capo, harmonie: ouvert.harmonie, onFermer: fermer, onSignaler: signaler };
+  const commun = { accord: ouvert.accord, instrument, onInstrument: setInstrument, capo: ouvert.capo, harmonie: ouvert.harmonie, chant: ouvert.chant, onFermer: fermer, onSignaler: signaler };
   if (ordinateur && ouvert.ancre) return <Bulle ancre={ouvert.ancre} {...commun} />;
   return <Feuille {...commun} />;
 }

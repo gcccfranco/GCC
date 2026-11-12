@@ -33,6 +33,7 @@ export function IdeesDuChant({
   disposition,
   onFermerColonne,
   styleColonne,
+  passage,
 }: {
   ideesTarget: number;
   ideesChant: string | null;
@@ -54,6 +55,8 @@ export function IdeesDuChant({
   /** La croix ou Échap de la colonne (mémoriser, rendre le focus à la puce). */
   onFermerColonne?: () => void;
   styleColonne?: CSSProperties;
+  /** H5-2 « Ici » : le passage à montrer dans la porte 2. */
+  passage?: { uid: string; cle: number; idee?: string };
 }) {
   const { t } = useTranslation();
   const item = items[ideesTarget];
@@ -95,6 +98,7 @@ export function IdeesDuChant({
       tonalite={tonalite}
       tonaliteOrigine={ast.metadata.key}
       instrument={instrument}
+      passage={passage}
       // « Montrer » cherche dans ce chant : les identifiants de section
       // se répètent d'un chant à l'autre, et d'un chant à l'autre d'une fusion.
       portee={`[data-outline-item="${item.position}"]${chantFusion ? ` [data-chant-slug="${CSS.escape(slug)}"]` : ""}`}

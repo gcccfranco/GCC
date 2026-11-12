@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, X } from "lucide-react";
 import { AccordTouchable } from "./AccordTouchable";
+import { LigneIci } from "./LigneIci";
 import type { HarmonieDuPanneau } from "./AccordsProvider";
 import { BoutonEcouter } from "@/components/harmonie/BoutonEcouter";
 import { chiffreDuDegre, degreDeLAccord } from "@/lib/harmonie/degres";
@@ -169,6 +170,7 @@ export function PanneauAccord({
   variante,
   capo,
   harmonie,
+  chant,
   onFermer,
   onSignaler,
 }: {
@@ -180,6 +182,8 @@ export function PanneauAccord({
   capo?: number;
   /** Donné (accord touché dans la partition d'un chant) : chiffre, Écouter et Ensuite. */
   harmonie?: HarmonieDuPanneau;
+  /** Le chant lu : la ligne « Ici » y charge ses idées. */
+  chant?: { slug: string };
   /** Donné : le bouton ✕ et la fermeture au clic sur « Voir tout le dictionnaire ». */
   onFermer?: () => void;
   /** Ouvre le signalement d'un doigté manquant. */
@@ -378,6 +382,9 @@ export function PanneauAccord({
       )}
 
       {harmonie?.enSection && <Ensuite key={accord.texte} accord={accord.texte} harmonie={harmonie} capo={capo} bulle={bulle} />}
+      {harmonie?.enSection && harmonie.ici && harmonie.sectionUids && (
+        <LigneIci key={`ici-${accord.texte}`} accord={accord.texte} harmonie={harmonie} slug={chant?.slug} bulle={bulle} />
+      )}
 
       {!carte && (
         <div className="mt-4 text-center">

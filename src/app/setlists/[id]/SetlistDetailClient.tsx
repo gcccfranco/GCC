@@ -1112,6 +1112,8 @@ export function SetlistDetailClient() {
   const colonneOuverte = grandEcran && ideesTarget !== null;
   // Dans une fusion : celui de ses chants dont on lit les idées.
   const [ideesChant, setIdeesChant] = useState<string | null>(null);
+  // H5-2 : le passage visé par « Ici » (la clé change à chaque appui, pour redéfiler).
+  const [passageIci, setPassageIci] = useState<{ uid: string; cle: number; idee?: string } | undefined>();
   // Préférence « 1 » en grand écran : la colonne s'ouvre sur le chant lu et le suit quand il change.
   const dernierLu = useRef<number | undefined>(undefined);
   useEffect(() => {
@@ -1123,13 +1125,13 @@ export function SetlistDetailClient() {
     if (!grandEcran || !colonnePref || !accesHarmonie.peut || !affichePartitions) return;
     if (ideesTarget !== null && !change) return;
     const i = setlist.items.findIndex((it) => !!it.songSlug && it.type !== "fusion" && it.position === lu);
-    if (i !== -1) { setIdeesTarget(i); setIdeesChant(null); }
+    if (i !== -1) { setIdeesTarget(i); setIdeesChant(null); setPassageIci(undefined); }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- seul un changement de chant lu ou de préférence rouvre la colonne
   }, [grandEcran, colonnePref, accesHarmonie.peut, affichePartitions, current, setlist?.items.length]);
   // La fenêtre passe sous le seuil colonne ouverte (rotation) : on la ferme, la préférence reste.
   const etaitColonne = useRef(false);
   useEffect(() => {
-    if (etaitColonne.current && !grandEcran) { setIdeesTarget(null); setIdeesChant(null); }
+    if (etaitColonne.current && !grandEcran) { setIdeesTarget(null); setIdeesChant(null); setPassageIci(undefined); }
     etaitColonne.current = grandEcran;
   }, [grandEcran]);
   // La bulle d'un accord de la partition se ferme à l'ouverture de la colonne.
@@ -1915,10 +1917,18 @@ export function SetlistDetailClient() {
         onFermerAccord={(f) => { fermerAccord.current = f; }}
         onIdees={accesHarmonie.peut ? (itemIndex, slug) => {
           compter("cmd.setlist.idees");
+          setPassageIci(undefined);
           const ferme = grandEcran && ideesTarget === itemIndex && ideesChant === (slug ?? null);
           if (grandEcran) setColonneHarmonie(!ferme);
           setIdeesTarget(ferme ? null : itemIndex);
           setIdeesChant(ferme ? null : slug ?? null);
+        } : undefined}
+        // « Ici » ouvre sans basculer : un second appui ne doit pas refermer la porte 2.
+        onIci={accesHarmonie.peut ? (itemIndex, slug, uid, idee) => {
+          if (grandEcran) setColonneHarmonie(true);
+          setIdeesTarget(itemIndex);
+          setIdeesChant(slug ?? null);
+          setPassageIci({ uid, cle: Date.now(), idee });
         } : undefined}
       />
       {/* La barre basse du Crayon ne cache pas la fin du dernier chant. */}
@@ -1976,11 +1986,13 @@ export function SetlistDetailClient() {
       }}
       onFermerColonne={() => {
         setColonneHarmonie(false);
+        setPassageIci(undefined);
         const pos = setlist.items[ideesTarget]?.position;
         setTimeout(() => document.querySelector<HTMLElement>(`[data-outline-item="${pos}"] [data-puce-harmonie]`)?.focus({ preventScroll: true }), 50);
       }}
       ideesTarget={ideesTarget}
       ideesChant={ideesChant}
+      passage={passageIci}
       items={setlist.items}
       contents={contents}
       songsMap={songsMap}
@@ -1993,7 +2005,7 @@ export function SetlistDetailClient() {
       sourceForItem={crayon ? sourceForItem : sourceDuCulte}
       applyNewSource={(i, next, extra) => applyNewSource(i, next, extra, undefined, crayon ? "moi" : "culte")}
       flashFeedback={flashFeedback}
-      setIdeesTarget={setIdeesTarget}
+      setIdeesTarget={(i) => { setIdeesTarget(i); setPassageIci(undefined); }}
       setIdeesChant={setIdeesChant}
     />
   );

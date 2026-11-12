@@ -5,7 +5,7 @@ import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, chord_font } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
-import { AccordsProvider, AideAccordsEnLigne, ChantDesAccords, useOuvrirAccord } from "@/components/accords/AccordsProvider";
+import { AccordsProvider, AideAccordsEnLigne, ChantDesAccords, useOuvrirAccord, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { ordreJoue } from "@/lib/chordpro/structure";
@@ -32,6 +32,14 @@ import type { Disposition } from "@/lib/dispositionPref";
 const PUCE = `${TOUCHER_44} inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-xs font-semibold text-foreground transition-colors hover:bg-secondary print:hidden`;
 
 /** Copie les paroles d'un chant, dans l'ordre joué, pour la régie (PPT). */
+/** H5-2 : de quoi ouvrir la porte 2 au passage d'un accord touché (`tonalite` : celle que la porte 2 joue). */
+function iciDe(
+  onIci: ((itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string) => void) | undefined,
+  itemIndex: number, slug: string | undefined, sections: ChordProSection[], tonalite: string, tonaliteOrigine?: string,
+): IciDuChant | undefined {
+  return onIci && { sections, tonalite, tonaliteOrigine, ouvrir: (uid, idee) => onIci(itemIndex, slug, uid, idee) };
+}
+
 function CopyLyricsButton({ sections, icone = false }: { sections: ChordProSection[]; icone?: boolean }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -94,6 +102,7 @@ export function PartitionsView({
   onPasserAuCulte,
   onEditJianpu,
   onIdees,
+  onIci,
   onFermerAccord,
   onRetryChant,
   titres,
@@ -146,6 +155,8 @@ export function PartitionsView({
   /** Idées d'harmonie du chant (lot 9) — absent si la personne n'y a pas droit.
    *  Fusion : `slug` dit lequel de ses chants. */
   onIdees?: (itemIndex: number, slug?: string) => void;
+  /** H5-2 « Ici » : ouvre la porte 2 au passage de l'accord touché (sans basculer) — absent sans accès Harmonie. */
+  onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string) => void;
   /** Reçoit la fermeture de la bulle d'accord de la partition. */
   onFermerAccord?: (fermer: () => void) => void;
   /** « Chant non chargé — Réessayer » : relit le contenu de ce seul chant. */
@@ -190,9 +201,12 @@ export function PartitionsView({
           // Préparer les ASTs transposés par slug — la version adaptée de
           // chaque chant s'il en a une (sa Dernière phrase).
           const transposedAsts: Record<string, ChordProAST> = {};
+          // Tonalité d'origine de chaque chant (les idées de l'équipe s'y enregistrent).
+          const origines: Record<string, string> = {};
           for (const fs of item.fusionSongs) {
             const ast = itemAst(fs, contents[fs.songSlug]);
             if (!ast) continue;
+            origines[fs.songSlug] = ast.metadata.key;
             transposedAsts[fs.songSlug] = transposerVers(ast, fs.keyOverride);
           }
           // Idées d'harmonie : celles de chaque chant de la fusion.
@@ -287,7 +301,10 @@ export function PartitionsView({
                       : section;
                     return (
                       <div key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`} data-chant-slug={ms.songSlug}>
-                        <ChantDesAccords chant={{ slug: ms.songSlug, titre: ast.metadata.title }} tonalite={keyChange ?? ast.metadata.key}>
+                        <ChantDesAccords chant={{ slug: ms.songSlug, titre: ast.metadata.title }} tonalite={keyChange ?? ast.metadata.key} ici={iciDe(onIci, origIndex, ms.songSlug,
+                          // Section modulée : les chiffres se lisent dans la tonalité cible, comme celui de l'accord touché.
+                          keyChange && ast.metadata.key ? ast.sections.map((x) => transposeSection(x, semitonesTo(ast.metadata.key, keyChange), keyChange)) : ast.sections,
+                          keyChange ?? ast.metadata.key, origines[ms.songSlug])}>
                         <SectionView
                           section={shownSection}
                           language={ast.metadata.language}
@@ -332,7 +349,7 @@ export function PartitionsView({
                   if (!ast) return null;
                   return (
                     <div key={fs.songSlug} data-chant-slug={fs.songSlug}>
-                      <ChantDesAccords chant={{ slug: fs.songSlug, titre: ast.metadata.title }} tonalite={ast.metadata.key}>
+                      <ChantDesAccords chant={{ slug: fs.songSlug, titre: ast.metadata.title }} tonalite={ast.metadata.key} ici={iciDe(onIci, origIndex, fs.songSlug, ast.sections, ast.metadata.key, origines[fs.songSlug])}>
                       {fsIdx > 0 && (
                         <div className="flex items-center gap-2 my-6 print:my-3">
                           <div className="flex-1 border-t border-dashed border-primary/30" />
@@ -385,6 +402,7 @@ export function PartitionsView({
             onPasserAuCulte={onPasserAuCulte}
             onEditJianpu={onEditJianpu}
             onIdees={onIdees}
+            onIci={onIci}
             onRetryChant={onRetryChant}
             titre={titres?.[item.songSlug]}
             lecture={lectures?.[item.songSlug]}
@@ -420,6 +438,7 @@ function NormalSongItem({
   onPasserAuCulte,
   onEditJianpu,
   onIdees,
+  onIci,
   onRetryChant,
   titre,
   lecture,
@@ -453,6 +472,7 @@ function NormalSongItem({
   onPasserAuCulte?: (itemIndex: number, srcLine: number) => void;
   onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
   onIdees?: (itemIndex: number) => void;
+  onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string) => void;
   onRetryChant?: (slug: string) => void | Promise<void>;
   titre?: string;
   /** Premier chant de la setlist : l'aide des accords s'y pose sous les pastilles. */
@@ -583,7 +603,7 @@ function NormalSongItem({
   );
   return (
     <div data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
-      <ChantDesAccords chant={{ slug: item.songSlug, titre: ast.metadata.title }} tonalite={ast.metadata.key}>
+      <ChantDesAccords chant={{ slug: item.songSlug, titre: ast.metadata.title }} tonalite={ast.metadata.key} ici={iciDe(onIci, origIndex, undefined, ast.sections, ast.metadata.key, songKey)}>
       {/* Disposition « partition » : en-tête d'avant T2, inchangé. */}
       {disposition === "partition" && (
         <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">

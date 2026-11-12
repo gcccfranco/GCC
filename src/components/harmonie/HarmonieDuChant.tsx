@@ -6,7 +6,7 @@
 // les idées sans passage, les idées écartées, le formulaire d'ajout et — dans
 // une setlist — la transition vers le chant suivant. Jamais en mode louange.
 
-import { Fragment, useEffect, useId, useMemo, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { TOUCHER_44 } from "@/lib/toucher44";
@@ -73,6 +73,8 @@ type Props = {
   styleColonne?: CSSProperties;
   /** Page chant en colonne : le titre du chant est déjà à l'écran. */
   sansTitre?: boolean;
+  /** H5-2 « Ici » : le passage à montrer (la clé change à chaque appui, pour redéfiler). */
+  passage?: { uid: string; cle: number; /** L'idée nommée par « Ici » : sa carte est dépliée et visible. */ idee?: string };
 };
 
 /** La section visée, dans le chant lu : d'abord son occurrence, sinon (structure
@@ -205,10 +207,12 @@ function grilleDuPassage(p: Passage) {
   return { chiffres: uniques.map(cle).join(" · "), lignes: uniques.map((l) => l.map((a) => a.texte)) };
 }
 
-function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre }: Props) {
+function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage }: Props) {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
-  const { fiches } = useCatalogue();
+  const { fiches, chargement } = useCatalogue();
+  // Nombre de réponses (réussies ou non) de getRejets et getIdees : 2 = tout est là.
+  const [recus, setRecus] = useState(0);
   const [rejets, setRejets] = useState<Rejet[]>([]);
   const [idees, setIdees] = useState<Idee[]>([]);
   // Les passages dont « Voir plus » est ouvert.
@@ -216,8 +220,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
 
   useEffect(() => {
     let vivant = true;
-    getRejets(slug).then((r) => vivant && setRejets(r)).catch(() => { /* rien d'écarté */ });
-    getIdees(slug).then((i) => vivant && setIdees(i)).catch(() => { /* aucune idée */ });
+    getRejets(slug).then((r) => vivant && setRejets(r)).catch(() => { /* rien d'écarté */ }).finally(() => vivant && setRecus((n) => n + 1));
+    getIdees(slug).then((i) => vivant && setIdees(i)).catch(() => { /* aucune idée */ }).finally(() => vivant && setRecus((n) => n + 1));
     return () => { vivant = false; };
   }, [slug]);
 
@@ -245,6 +249,72 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
     }
     return sortie;
   }, [passages, sections, t]);
+
+  // « Ici » : le bloc du passage défile, s'entoure 2,5 s et prend le focus. Il peut ne pas être encore là (feuille qui s'ouvre) : on réessaie ~1 s.
+  // Il ne défile qu'une fois fiches, refus et idées arrivés : les blocs au-dessus grandissent sinon et repoussent la cible.
+  const cle = passage?.cle;
+  const uidPassage = passage?.uid;
+  const ideePassage = passage?.idee;
+  const charge = recus >= 2 && !chargement;
+  const cleTraitee = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (cle === undefined || !uidPassage || !charge || cleTraitee.current === cle) return;
+    cleTraitee.current = cle;
+    const debut = performance.now();
+    let image = 0;
+    let fin: ReturnType<typeof setTimeout> | undefined;
+    let arret: (() => void) | undefined;
+    const chercher = () => {
+      const el = [...document.querySelectorAll<HTMLElement>("[data-passage-uids]")].find((b) => {
+        const uids = (b.dataset.passageUids ?? "").split(" ");
+        return uids.includes(uidPassage) || uids.some((u) => idDeSection(u) === idDeSection(uidPassage));
+      });
+      if (!el) {
+        if (performance.now() - debut < 1000) image = requestAnimationFrame(chercher);
+        return;
+      }
+      // La carte de l'idée : si elle est sous « Voir plus », on déplie le bloc et on la guette (rendu suivant, ~1 s au plus).
+      const carte = ideePassage ? el.querySelector<HTMLElement>(`[data-suggestion="${CSS.escape(ideePassage)}"], [data-idee="${CSS.escape(ideePassage)}"]`) : null;
+      if (ideePassage && !carte && performance.now() - debut < 1000) {
+        const u = el.dataset.passage;
+        if (u) setDeplies((d) => (d.includes(u) ? d : [...d, u]));
+        image = requestAnimationFrame(chercher);
+        return;
+      }
+      el.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      el.classList.add("harmonie-surligne");
+      el.focus({ preventScroll: true });
+      fin = setTimeout(() => el.classList.remove("harmonie-surligne"), 2500);
+      // Tant que le contenu change de taille (1,5 s : feuille qui finit de s'ouvrir, blocs qui grandissent), le bloc est recalé ;
+      // un geste de l'utilisateur dans la zone arrête tout.
+      const liste = el.parentElement;
+      const zone = liste?.parentElement;
+      if (liste && zone) {
+        // Le bloc d'abord ; la carte de l'idée ensuite, si elle n'est pas entièrement dans la zone.
+        const recaler = () => {
+          el.scrollIntoView({ block: "start", behavior: "auto" });
+          if (!carte) return;
+          const c = carte.getBoundingClientRect();
+          const z = zone.getBoundingClientRect();
+          if (c.top < z.top || c.bottom > z.bottom) carte.scrollIntoView({ block: "center", behavior: "auto" });
+        };
+        const obs = new ResizeObserver(recaler);
+        const gestes = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+        const minuteur = setTimeout(() => arret?.(), 1500);
+        arret = () => {
+          obs.disconnect();
+          clearTimeout(minuteur);
+          gestes.forEach((g) => zone.removeEventListener(g, arret!));
+          arret = undefined;
+        };
+        obs.observe(liste);
+        recaler();
+        gestes.forEach((g) => zone.addEventListener(g, arret!, { passive: true }));
+      }
+    };
+    chercher();
+    return () => { cancelAnimationFrame(image); clearTimeout(fin); arret?.(); };
+  }, [cle, uidPassage, ideePassage, charge]);
 
   // Les refus, rangés par fiche (un refus par section couverte, dans Firestore).
   const lignesEcartees = useMemo(() => {
@@ -333,7 +403,9 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
             <section
               key={p.uid}
               data-passage={p.uid}
-              className="sec-rail"
+              data-passage-uids={b.uids.join(" ")}
+              tabIndex={-1}
+              className="sec-rail scroll-mt-2"
               style={{ "--sec-c": `var(--sec-${p.type}, var(--sec-other))` } as CSSProperties}
             >
               <h3 className="text-base font-semibold">

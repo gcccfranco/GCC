@@ -389,6 +389,26 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   l.116 laissés). Captures 390 / 820 / 1 180 / 1 280 / 1 440, FR et 中文, regardées. Connu : le choix Guitare | Piano
   de la bulle reste à 32 px en tablette paysage ; pas de test « pas de chiffre dans la porte 2 ». Prochain : H5-2
   (« Ici »), session neuve.
+- 12/11/2026 : **H5-2 faite, lot H5 fini** (session orchestratrice H5-2 ; executant, testeur, relecteur, regard). Ligne
+  « Ici : 2m 5 → 2 5 » / « 这里：4 → 4 » sous Ensuite, nom de la fiche dessous (`lang="fr"`), chevron ; un appui ferme le
+  panneau et ouvre la porte 2 (feuille ou colonne) au bloc du passage, surligné 2,5 s, focus, l'idée nommée dépliée
+  (« Voir plus ») et centrée. `src/components/accords/LigneIci.tsx` (nouveau) ; prop `ici` (`IciDuChant`) sur
+  `AccordsProvider` / `ChantDesAccords` ; `PanneauAccord` gagne une prop facultative `chant` (rien ne change sans elle,
+  `BoutonEcouter` intact : rien pour H6) ; `HarmonieDuChant` une prop `passage` ; page chant et setlist (`onIci` de
+  `PartitionView`, qui ouvre sans basculer). Décisions déléguées (session H5-2, 12/11) : correspondance de l'accord et de
+  l'« avant » par chiffre (le capo ne change rien) ; idées calculées avant celles de l'équipe ; la ligne montre tous les
+  chiffres de l'avant → l'après de l'idée (« 4 → 4 » pour un maj7, comme le chiffre de la porte 2) ; idées chargées une
+  fois par chant (cache du module) ; section modulée d'une fusion : tonalité et sections du `keyChange` ; le bloc défile
+  après le chargement des idées et se recale (`ResizeObserver`, 1,5 s, arrêté au premier geste). Corrigé en route : clé
+  React commune à `Ensuite` et `LigneIci` (dupliquait « Ensuite »). Tests : tsc, lint (0 erreur), validate ;
+  `harmonie-porte1` (+5 tests : Ici FR et ZH, sans accès, /accords) et voisines `accords-toucher*`, `harmonie-colonne`,
+  `harmonie-montrer`, `harmonie-setlist`, tous projets : 217 / 7 (7,5 min), 154 / 3 (4 min), 122 / 0 (3,7 min), 219 / 5
+  (6,9 min, test FR Ici à adapter : un bloc plus haut que la zone ne montre pas à la fois son haut et la fiche), puis
+  `harmonie-porte1` 75 / 0 (1,1 min), puis `harmonie-porte1` + `harmonie-montrer` 90 / 0 (2,6 min). Comptage
+  `cmd.chant.ici` (déclaré dans `usageCles.ts`). Instable corrigé : `harmonie-porte1` ZH téléphone (clic
+  avant hydratation, refait par `toPass`). Captures FR et 中文, cinq projets, regardées. Connu : la bulle d'un accord
+  haut placé peut recouvrir la barre d'outils à 1 280 px (placement H5-1) ; espace après « ： » en 中文 (comme 接下来) ;
+  `harmonie-colonne.spec.ts:138` (setlist, ordinateur) a échoué une fois sur la transition de l'en-tête, passé ensuite.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
