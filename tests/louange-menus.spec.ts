@@ -509,7 +509,7 @@ const CHOIX: Array<[string, string]> = [...TEINTES.map((t): [string, string] => 
 for (const theme of ["light", "dark"] as const) {
   for (const [nom, hex] of CHOIX) {
     test(`menus (${theme}) : l'action « ${nom} » contraste au moins 4,5:1 avec la surface du menu, mesuré à l'écran`, async ({ page }) => {
-      await page.addInitScript((h) => { try { localStorage.setItem("perf-couleur-icones", h); } catch { /* ignore */ } }, hex);
+      await page.addInitScript(([k, h]) => { try { localStorage.setItem(k, h); } catch { /* ignore */ } }, [`perf-couleur-icones-${MUSICIEN.uid}`, hex]);
       await ouvrir(page, { theme });
       const outils = await ouvrirMenu(page, "outils");
       const plus = outils.locator("[data-cle-plus]");

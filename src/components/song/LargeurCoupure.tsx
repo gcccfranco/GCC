@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 /** Compteur publié par le conteneur d'un chant à chaque changement de largeur : les lignes (ChordLine) recalculent
  *  leur coupure sans avoir chacune leur ResizeObserver (lot CV). `null` hors d'un conteneur : la ligne observe seule. */
@@ -9,7 +9,7 @@ export const LargeurCoupureContext = createContext<number | null>(null);
 /** Vrai dans les copies de mesure du mode louange : seules leurs lignes publient le signal de coupure (lot CV-3). */
 export const CoupureMesureContext = createContext(false);
 
-export function ConteneurCoupure({ className, children, mesure = false, disposition }: { className?: string; children: ReactNode; mesure?: boolean; disposition?: string }) {
+export function ConteneurCoupure({ className, children, mesure = false, disposition, style }: { className?: string; children: ReactNode; mesure?: boolean; disposition?: string; style?: CSSProperties }) {
   const ref = useRef<HTMLDivElement>(null);
   const [version, setVersion] = useState(0);
   useLayoutEffect(() => {
@@ -27,7 +27,7 @@ export function ConteneurCoupure({ className, children, mesure = false, disposit
   return (
     <LargeurCoupureContext.Provider value={version}>
       <CoupureMesureContext.Provider value={mesure}>
-        <div ref={ref} className={className} data-disposition={disposition}>
+        <div ref={ref} className={className} data-disposition={disposition} style={style}>
           {children}
         </div>
       </CoupureMesureContext.Provider>

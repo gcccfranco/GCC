@@ -39,6 +39,7 @@ import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { ANCIEN_RAPPEL } from "@/lib/annotations/strokes";
 import { getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
+import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { getTransposedKey, noteToIndex } from "@/lib/transpose";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
@@ -48,6 +49,7 @@ import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { ROLE_IDS, getRole, roleDemande, setRole, type RolePreset } from "@/lib/performance/roleCompte";
 import { barreDejaVue, marquerBarreVue } from "@/lib/performance/barreVue";
+import { useCouleursAccords } from "@/lib/couleurAccords";
 import { FOND_CLAIR, FOND_SOMBRE, SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE, TEINTES, garderContraste, getCouleurIcones, setCouleurIcones } from "@/lib/performance/couleurIcones";
 import { getMetronomePref, setMetronomePref } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
@@ -502,14 +504,14 @@ export function PerformanceMode({
     try { return window.matchMedia("(pointer: fine)").matches; } catch { return false; }
   });
   // Couleur des icônes (FS-A) : le choix de l'appareil, corrigé pour garder 4,5:1 contre le fond de la barre.
-  const [couleurChoix, setCouleurChoix] = useState(getCouleurIcones);
+  const [couleurChoix, setCouleurChoix] = useState(() => getCouleurIcones(uid));
   const [cercleOuvert, setCercleOuvert] = useState(false);
   // Pastille cochée de la palette : « autre » quand le cercle est ouvert ou que la couleur n'est pas une teinte prête.
   const teinteChoisie = cercleOuvert ? "autre" : TEINTES.find((c) => c.hex === couleurChoix)?.id ?? "autre";
   const choisirCouleur = useCallback((hex: string) => {
     setCouleurChoix(hex);
-    setCouleurIcones(hex);
-  }, []);
+    setCouleurIcones(uid, hex);
+  }, [uid]);
   const [layout, setLayout] = useState<PerfPage[]>([]);
   // Nombre de paginations publiées (attribut de test : tourner la page ne doit pas la relancer).
   const [passesPagination, setPassesPagination] = useState(0);
@@ -527,6 +529,7 @@ export function PerformanceMode({
   // ── Thème scène (indépendant du thème du site, mémorisé) ──
   const { stageTheme, setTheme } = useThemeScene();
   // La couleur affichée : le choix, corrigé pour garder 4,5:1 contre le fond. Posée sur la racine du mode et sur chaque menu (Portal).
+  const couleursAccords = useCouleursAccords(uid, stageTheme, disposition);
   const couleurIcones = garderContraste(couleurChoix, stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR);
   // Dans les menus (popover, feuille du bas) la surface n'est pas le fond de la barre : la couleur y est corrigée contre elle.
   const couleurMenus = garderContraste(couleurChoix, stageTheme === "dark" ? SURFACE_MENU_SOMBRE : SURFACE_MENU_CLAIRE);
@@ -1553,6 +1556,7 @@ export function PerformanceMode({
         "--sal": "env(safe-area-inset-left, 0px)",
         "--sar": "env(safe-area-inset-right, 0px)",
         "--couleur-icones": couleurIcones,
+        ...couleursAccords,
       } as React.CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
@@ -2146,6 +2150,10 @@ export function PerformanceMode({
           <div className="space-y-2">
             <TitreRubrique id="perf-disposition">{t("dispositions.titre")}</TitreRubrique>
             <ChoixDisposition variante="panneau" langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
+          </div>
+          <div className="space-y-2">
+            <TitreRubrique id="perf-couleur-accords">{t("couleurAccords.titre")}</TitreRubrique>
+            <ChoixCouleurAccords variante="panneau" theme={stageTheme} />
           </div>
             <SettingRow label={t("performance.text")}>
               <div className="flex items-center gap-1.5">

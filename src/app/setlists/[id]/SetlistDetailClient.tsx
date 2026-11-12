@@ -1691,7 +1691,9 @@ export function SetlistDetailClient() {
                         <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
                         {t("setlists.detail.layout.label")}
                       </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent collisionPadding={12} className="w-56">{reglagesAffichage}</DropdownMenuSubContent>
+                      {/* Choisir une couleur des accords : Radix remet le focus sur le menu parent (FocusScope, après un rendu), ce qui
+                          refermait le sous-menu ; un focus parti vers un menu ne le ferme plus, un focus parti ailleurs si. */}
+                      <DropdownMenuSubContent collisionPadding={12} onFocusOutside={(e) => { if ((e.target as HTMLElement | null)?.closest?.("[data-radix-menu-content]")) e.preventDefault(); }} className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(374px,calc(100vw-16px))] overflow-y-auto overflow-x-hidden sm:w-[25.5rem]">{reglagesAffichage}</DropdownMenuSubContent>
                     </DropdownMenuSub>
                     <DropdownMenuSeparator />
                     {actionsPartagees}
@@ -1813,7 +1815,7 @@ export function SetlistDetailClient() {
                       <span aria-hidden className={LIBELLE_COURT}>{t("setlists.detail.layout.label")}</span>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" collisionPadding={12} className="w-56">
+                  <DropdownMenuContent align="start" collisionPadding={12} className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(374px,calc(100vw-16px))] overflow-y-auto overflow-x-hidden sm:w-[25.5rem]">
                     {reglagesAffichage}
                   </DropdownMenuContent>
                 </DropdownMenu>

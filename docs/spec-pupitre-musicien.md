@@ -264,3 +264,12 @@ dans la spec : 简谱 (image du scan), mode sombre à 1 440 px, mouvement (déci
   (`991cf38`) ; la suite (H2 à H8) demande un nouveau go. **Attendent** : « Ma partition » (MP-1, repart quand la
   tranche 1 des deux exemples est poussée et qu'une place est libre), puis comptage T3. Reprise : Timothée écrit
   « reprends » dans leur conversation. **Planche du pupitre** : en cours (`docs/spec-entree-musiciens.md`).
+- 12/11/2026 (00 h 30 UTC) : **deux branches réunies** (session « Incohérence entre sessions » ; Timothée : « Vérifie ça et agis
+  en fonction »). Les chantiers d'AO relancés
+  le 11/11 depuis une autre conversation (fusion de `main`, couleur des accords CA, FS-F, go de la vague 3 enchaînée
+  jusqu'à AN) vivaient sur `claude/friendly-cerf-cy7hio`, ceux d'AP ici, chacun sans les commits de l'autre. Fusion
+  faite (seul conflit : la feuille de route). Le go d'AN contredisait le point 3 de l'ordre ci-dessus : l'enchaînement
+  d'AO s'arrête après JP-D, AN attend MP-5 (écrit dans la spec d'AO, § AN et § Avancement). Trois chantiers : AO
+  (FS-F, puis JP-C et JP-D) tient une place, les deux exemples une autre ; l'ordre de reprise déjà écrit (« Ma
+  partition » d'abord) tient d'autant plus qu'elle débloque AN. Pour la planche du pupitre : CA (réglage « Couleur
+  des accords » dans les trois menus) et FS-F changent le mode louange et n'étaient pas dans ses captures.

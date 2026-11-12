@@ -10,12 +10,14 @@ export type RolePreset = (typeof ROLE_IDS)[number];
 const PRESET = "perf-role-preset";
 const ASKED = "perf-role-asked";
 const MARQUE = "perf-role-migre";
+// Couleur des icônes (couleurIcones.ts) : même marque, même premier compte.
+const ICONES = "perf-couleur-icones";
 
 const clePreset = (uid: string | null) => (uid ? `${PRESET}-${uid}` : PRESET);
 const cleAsked = (uid: string | null) => (uid ? `${ASKED}-${uid}` : ASKED);
 
 /** Compte qui a pris la marque de migration sur cet appareil, ou null. */
-function porteurMarque(): string | null {
+export function porteurMarque(): string | null {
   try { return localStorage.getItem(MARQUE); } catch { return null; }
 }
 
@@ -29,7 +31,7 @@ function migrer(uid: string | null) {
   if (!uid) return;
   try {
     if (localStorage.getItem(MARQUE) !== null) return;
-    for (const [appareil, compte] of [[PRESET, clePreset(uid)], [ASKED, cleAsked(uid)]] as const) {
+    for (const [appareil, compte] of [[PRESET, clePreset(uid)], [ASKED, cleAsked(uid)], [ICONES, `${ICONES}-${uid}`]] as const) {
       const v = localStorage.getItem(appareil);
       if (v !== null && localStorage.getItem(compte) === null) localStorage.setItem(compte, v);
     }

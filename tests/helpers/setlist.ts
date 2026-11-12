@@ -11,7 +11,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
  *  son nom : elles valent pour les deux mises en page. */
 
 const bascule = (page: Page, vue: "Liste" | "Partitions") =>
-  page.getByRole("button", { name: vue, exact: true });
+  page.getByRole("button", { name: vue === "Liste" ? /^(Liste|曲目列表)$/ : /^(Partitions|歌谱预览)$/ });
 
 /** Un bloc par chant affiché en partition (`data-outline-item`, PartitionView). */
 const partitions = (page: Page) => page.locator("[data-outline-item]");
@@ -46,14 +46,14 @@ export async function ouvrirListe(page: Page): Promise<void> {
  *  Pinyin, couleurs par section, 简谱) : le bouton « Affichage » de la barre sur G,
  *  le sous-menu « Affichage » du ⋯ de l'en-tête en deux volets (T4, Q7). */
 export async function ouvrirAffichage(page: Page): Promise<void> {
-  const bouton = page.getByTestId("barre-outils").getByRole("button", { name: "Affichage" });
+  const bouton = page.getByTestId("barre-outils").getByRole("button", { name: /^(Affichage|显示)$/ });
   await bouton.or(page.locator("[data-en-tete]")).first().waitFor();
   if (await bouton.isVisible()) {
     await bouton.click();
     return;
   }
-  await page.locator("[data-en-tete]").getByRole("button", { name: "Plus d'actions" }).click();
-  await page.getByRole("menuitem", { name: "Affichage" }).click();
+  await page.locator("[data-en-tete]").getByRole("button", { name: /Plus d'actions|更多操作/ }).click();
+  await page.getByRole("menuitem", { name: /^(Affichage|显示)$/ }).click();
 }
 
 /** Referme les menus ouverts (un réglage d'affichage laisse le sien ouvert). */
