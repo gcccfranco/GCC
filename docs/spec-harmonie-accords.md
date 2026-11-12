@@ -368,6 +368,28 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   `SetlistDetailClient`) : colonne fermée, les partitions gardent la requête de conteneur `partition` de T4 (1 080 px, deux
   colonnes) ; colonne ouverte, partition à 920 px en une colonne. `harmonie-colonne`, `pupitre-partitions`,
   `harmonie-setlist`, `harmonie-montrer`, `pages-en-grand-setlists` verts après la reprise (8 min).
+
+- 12/11/2026 : **H5-1 faite** (session orchestratrice H5 ; executant, testeur, relecteur, regard). Panneau d'un accord
+  touché dans la partition (page chant, setlist) : chiffre « 5 dans A » / « A 调的 5 » sous le nom (tonalité des
+  étiquettes, capo compris), Écouter dans l'en-tête (son réel, capo ajouté), ligne « Ensuite : 1/3 · 6m · 4 » /
+  « 接下来 » **sous le doigté**, dépliable en rangées (chiffre, lettre touchable, « dans ce chant » / « 本歌中 »,
+  « garde E A · B → C# » / « 保留 », « tout bouge » / « 全部移动 », Écouter des deux accords). `src/lib/harmonie/suites.ts`
+  (pur : suites usuelles par degré, `1m` compris, notes gardées / qui bougent, `tonaliteDesEtiquettes`) ; tonalité passée
+  par une prop `tonalite` d'`AccordsProvider` et de `ChantDesAccords` (le panneau est rendu hors des enfants du
+  fournisseur, un contexte posé dessous ne l'atteindrait pas) ; accord suivant lu au DOM dans
+  `[data-section-uids]`. **Décisions déléguées (session H5, 12/11)** : « Ensuite » sous le dessin (le doigté reste le
+  cœur du panneau) ; calque 简谱 hors section : chiffre et Écouter seulement ; doublons écartés sur le chiffre sans
+  basse (D → D/F# ou Dsus4 n'est pas une suite) ; la bulle garde son haut quand son contenu grandit et défile
+  dedans ; ronds de la bulle à 44 px sous `pointer: coarse`. Interface : `BoutonEcouter` gagne une prop facultative
+  `compact` (icône seule), `PanneauAccord` une prop facultative `harmonie` ; rien ne change sans elles (dit à H6).
+  Tests : tsc, lint (0 erreur), validate ; `harmonie-porte1.spec.ts` (nouvelle, `SPECS_GRAND_ECRAN`) et voisines
+  `accords-toucher*`, `accords-page`, `harmonie-colonne`, `harmonie-montrer`, `harmonie-setlist` : 253 passés / 1 (7 min),
+  puis 223 / 1 (3,9 min), puis après retouches 122 passés, 0 échec (2,4 min). Instable corrigé :
+  `accords-toucher-agencement.spec.ts:82` (`scrollIntoViewIfNeeded` sur élément détaché, retiré ; mêmes appels l.66 et
+  l.116 laissés). Captures 390 / 820 / 1 180 / 1 280 / 1 440, FR et 中文, regardées. Connu : le choix Guitare | Piano
+  de la bulle reste à 32 px en tablette paysage ; pas de test « pas de chiffre dans la porte 2 ». Prochain : H5-2
+  (« Ici »), session neuve.
+
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
 69 fiches en 12 familles aujourd'hui. À ajouter, dans l'ordre d'utilité pour le répertoire :

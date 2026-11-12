@@ -8,7 +8,13 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, X } from "lucide-react";
+import { AccordTouchable } from "./AccordTouchable";
+import type { HarmonieDuPanneau } from "./AccordsProvider";
+import { BoutonEcouter } from "@/components/harmonie/BoutonEcouter";
+import { chiffreDuDegre, degreDeLAccord } from "@/lib/harmonie/degres";
+import { ensuite, notesGardeesEtMouvantes } from "@/lib/harmonie/suites";
+import { transposeChord } from "@/lib/transpose";
 import { DiagrammeGuitare, ClavierMains } from "@/components/harmonie/Diagrammes";
 import { positionsGuitare } from "@/lib/accords/guitare";
 import type { Accord } from "@/lib/accords/analyse";
@@ -92,6 +98,68 @@ function Fleches({
   );
 }
 
+/** « Ensuite : 5 · 6m · 1 », repliée ; dépliée, une ligne par suite (lettre, notes gardées, écoute). Repliée à chaque nouvel accord (`key`). */
+function Ensuite({ accord, harmonie, capo, bulle }: { accord: string; harmonie: HarmonieDuPanneau; capo?: number; bulle: boolean }) {
+  const { t } = useTranslation();
+  const [ouvert, setOuvert] = useState(false);
+  const { tonalite } = harmonie;
+  const degre = degreDeLAccord(accord, tonalite);
+  if (!degre) return null;
+  const suivant = harmonie.suivant ? degreDeLAccord(harmonie.suivant, tonalite) : null;
+  const lignes = ensuite(
+    chiffreDuDegre({ ...degre, basse: null }),
+    tonalite,
+    harmonie.suivant && suivant ? { accord: harmonie.suivant, chiffre: chiffreDuDegre(suivant) } : undefined,
+  );
+  if (!lignes.length) return null;
+  const sonore = (a: string) => (capo ? transposeChord(a, capo, tonalite) : a);
+  const Fleche = ouvert ? ChevronUp : ChevronDown;
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        aria-expanded={ouvert}
+        onClick={() => setOuvert(!ouvert)}
+        className={`flex w-full items-center gap-1 rounded-lg text-left text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${bulle ? "min-h-8" : "min-h-11"}`}
+      >
+        <span className="min-w-0 flex-1">
+          {t("accords.ensuite")}{" "}
+          <span className="font-chord font-semibold text-[color:var(--chord-color)]">{lignes.map((l) => l.chiffre).join(" · ")}</span>
+        </span>
+        <Fleche className="h-4 w-4 shrink-0" aria-hidden />
+      </button>
+      {ouvert && (
+        <ul data-ensuite="" className="mt-1 divide-y divide-border">
+          {lignes.map((l) => {
+            const notes = notesGardeesEtMouvantes(accord, l.accord);
+            return (
+              <li key={l.chiffre} className={`grid items-center gap-x-2 py-1 text-sm ${bulle ? "grid-cols-[2.25rem_2.75rem_1fr_auto]" : "min-h-11 grid-cols-[2.75rem_3.5rem_1fr_auto]"}`}>
+                <span className="font-chord font-semibold text-[color:var(--chord-color)]">{l.chiffre}</span>
+                <span className="font-chord font-semibold"><AccordTouchable etiquette={l.accord} visible variante="nu" /></span>
+                <span className="min-w-0 text-muted-foreground">
+                  {l.dansCeChant && <span className="block text-xs">{t("accords.dansCeChant")}</span>}
+                  {notes && (
+                    <Insecables
+                      elements={[
+                        notes.gardees.length ? t("accords.garde", { notes: notes.gardees.join(" ") }) : t("accords.toutBouge"),
+                        ...notes.bougent.map((m) => `${m.de} → ${m.vers}`),
+                      ]}
+                    />
+                  )}
+                </span>
+                <BoutonEcouter compact accords={[sonore(accord), sonore(l.accord)]} className={`px-0 ${bulle ? ROND_BULLE : "h-11 w-11"}`} />
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Ronds de la bulle : 32 px à la souris, 44 px sur un écran tactile. */
+const ROND_BULLE = "h-8 w-8 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11";
+
 const TAILLE_NOM: Record<Variante, string> = { feuille: "text-[32px]", bulle: "text-[26px]", carte: "text-[40px]" };
 
 export function PanneauAccord({
@@ -100,6 +168,7 @@ export function PanneauAccord({
   onInstrument,
   variante,
   capo,
+  harmonie,
   onFermer,
   onSignaler,
 }: {
@@ -109,6 +178,8 @@ export function PanneauAccord({
   onInstrument?: (i: Instrument) => void;
   variante: Variante;
   capo?: number;
+  /** Donné (accord touché dans la partition d'un chant) : chiffre, Écouter et Ensuite. */
+  harmonie?: HarmonieDuPanneau;
   /** Donné : le bouton ✕ et la fermeture au clic sur « Voir tout le dictionnaire ». */
   onFermer?: () => void;
   /** Ouvre le signalement d'un doigté manquant. */
@@ -133,9 +204,11 @@ export function PanneauAccord({
     setChoixPiano({ pour: accord.texte, i: (renversement + delta + nbRenversements) % nbRenversements });
   const piano = useMemo(() => pianoDe(accord, renversement), [accord, renversement]);
   const doigte = doigtes[position];
-  const rondBouton = bulle ? "h-8 w-8" : "h-11 w-11";
+  const rondBouton = bulle ? ROND_BULLE : "h-11 w-11";
   const puissance = accord.qualite === "5" && accord.ecrite === "5";
   const quinte = piano.nomsDroite[piano.nomsDroite.length - 1];
+  const degre = harmonie ? degreDeLAccord(accord.texte, harmonie.tonalite) : null;
+  const sonore = (a: string) => (harmonie && capo ? transposeChord(a, capo, harmonie.tonalite) : a);
 
   return (
     <div className={carte ? "" : bulle ? "p-4" : "px-5 pb-6 pt-2"}>
@@ -147,12 +220,18 @@ export function PanneauAccord({
           >
             {accord.texte}
           </div>
+          {degre && harmonie && (
+            <p data-accord-chiffre="" className="mt-1 font-chord text-sm font-semibold text-[color:var(--chord-color)]">
+              {t("accords.chiffreDans", { chiffre: chiffreDuDegre(degre), tonalite: harmonie.tonalite })}
+            </p>
+          )}
           <p className={`mt-1 text-muted-foreground ${bulle ? "text-sm leading-[18px]" : "text-sm leading-5"}`}>
             {decrire(accord, t)}
             {" · "}
-            {t("accords.notesLigne", { notes: notesEnLettres(accord) })}
+            <span className="whitespace-nowrap">{t("accords.notesLigne", { notes: notesEnLettres(accord) })}</span>
           </p>
         </div>
+        {harmonie && <BoutonEcouter accords={[sonore(accord.texte)]} className={`shrink-0 ${bulle ? "h-8 [@media(pointer:coarse)]:h-11" : "h-11"}`} />}
         {onFermer && (
           <button
             type="button"
@@ -297,6 +376,8 @@ export function PanneauAccord({
           )}
         </dl>
       )}
+
+      {harmonie?.enSection && <Ensuite key={accord.texte} accord={accord.texte} harmonie={harmonie} capo={capo} bulle={bulle} />}
 
       {!carte && (
         <div className="mt-4 text-center">

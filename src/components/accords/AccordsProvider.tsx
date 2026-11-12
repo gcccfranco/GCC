@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
+import { tonaliteDesEtiquettes } from "@/lib/harmonie/suites";
 import { analyserAccord, type Accord } from "@/lib/accords/analyse";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { PanneauAccord } from "./PanneauAccord";
@@ -35,6 +36,17 @@ type DemandeAccord = {
   capo?: number;
   /** Le chant lu, pour le signalement d'un doigté manquant. */
   chant?: { slug: string; titre: string };
+  /** Tonalité affichée du chant (posée par le fournisseur, jamais par l'appelant). */
+  tonalite?: string;
+};
+
+/** Ce que le panneau sait du chant lu : la tonalité affichée et l'accord qui suit vraiment dans la partition. */
+export type HarmonieDuPanneau = {
+  /** Tonalité des étiquettes (capo déduit). */
+  tonalite: string;
+  suivant?: string;
+  /** Accord d'une section de la partition : « Ensuite » ; sinon (calque 简谱, en-tête) chiffre et Écouter seulement. */
+  enSection: boolean;
 };
 
 type Chant = { slug: string; titre: string };
@@ -56,6 +68,11 @@ type Contexte = {
 const Rien: Contexte = { ouvrir: () => {}, fermer: () => {}, fermerSansFocus: () => {}, actif: false, enregistrer: () => () => {} };
 const AccordsContext = createContext<Contexte>(Rien);
 
+/** Joint la tonalité affichée à chaque demande qui descend du fournisseur (H5-1 ; H5-2 y ajoutera les passages). */
+function avecTonalite(parent: Contexte, tonalite?: string): Contexte {
+  return tonalite ? { ...parent, ouvrir: (d) => parent.ouvrir({ tonalite, ...d }) } : parent;
+}
+
 export function useOuvrirAccord(): Contexte {
   return useContext(AccordsContext);
 }
@@ -66,9 +83,9 @@ export function AccordsInactifs({ children }: { children: React.ReactNode }) {
 }
 
 /** Dit de quel chant sont les accords dessous (une setlist en porte plusieurs). */
-export function ChantDesAccords({ chant, children }: { chant: Chant; children: React.ReactNode }) {
+export function ChantDesAccords({ chant, tonalite, children }: { chant: Chant; tonalite?: string; children: React.ReactNode }) {
   const parent = useContext(AccordsContext);
-  const valeur = useMemo(() => ({ ...parent, chant }), [parent, chant]);
+  const valeur = useMemo(() => avecTonalite({ ...parent, chant }, tonalite), [parent, chant, tonalite]);
   return <AccordsContext.Provider value={valeur}>{children}</AccordsContext.Provider>;
 }
 
@@ -86,7 +103,7 @@ function noterAideVue() {
   } catch { /* stockage indisponible : l'aide reviendra */ }
 }
 
-type Ouvert = { accord: Accord; ancre: HTMLElement | null; capo?: number; chant?: { slug: string; titre: string } };
+type Ouvert = { accord: Accord; ancre: HTMLElement | null; capo?: number; chant?: { slug: string; titre: string }; harmonie?: HarmonieDuPanneau };
 
 const ORDINATEUR = "(pointer: fine) and (min-width: 1024px)";
 function suivreOrdinateur(changement: () => void) {
@@ -102,12 +119,15 @@ export function AccordsProvider({
   children,
   actif = true,
   chant,
+  tonalite,
   aide = false,
 }: {
   children: React.ReactNode;
   /** Faux : le fournisseur reste monté mais les accords ne sont plus touchables (setlist en édition). */
   actif?: boolean;
   chant?: Chant;
+  /** Tonalité affichée du chant lu : le panneau situe l'accord touché dans la partition (page chant). */
+  tonalite?: string;
   /** Montre, une seule fois par appareil, la bulle « Touchez un accord… » sous le premier accord visible.
    *  `"flux"` : pas de bulle posée par-dessus, l'aide se dessine là où l'on pose `AideAccordsEnLigne`. */
   aide?: boolean | "flux";
@@ -122,10 +142,12 @@ export function AccordsProvider({
   const minuteur = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [signalement, setSignalement] = useState<{ accord: string; chant?: { slug: string; titre: string } } | null>(null);
   const derniereAncre = useRef<HTMLElement | null>(null);
+  const courant = useRef<Ouvert | null>(null);
   const { t } = useTranslation();
 
   const fermer = useCallback(() => {
     setOuvert(null);
+    courant.current = null;
     const ancre = derniereAncre.current;
     derniereAncre.current = null;
     // Le focus revient à l'accord touché (après le rendu, que vaul ne le reprenne pas).
@@ -134,6 +156,7 @@ export function AccordsProvider({
 
   const fermerSansFocus = useCallback(() => {
     setOuvert(null);
+    courant.current = null;
     derniereAncre.current = null;
   }, []);
 
@@ -148,10 +171,24 @@ export function AccordsProvider({
     const accord = analyserAccord(d.accord);
     if (!accord) return;
     compter("cmd.chant.accord");
-    derniereAncre.current = d.ancre ?? null;
+    // Un accord touché dans le panneau (« Ensuite ») garde l'ancre et la tonalité du panneau, sans suite lue au DOM.
+    const dansPanneau = !!d.ancre?.closest("[data-accord-panneau]");
+    const ancre = dansPanneau ? derniereAncre.current : d.ancre ?? null;
+    derniereAncre.current = ancre;
     // Toucher un accord vaut lecture de l'aide.
     if (aideAncre || aideLigne) fermerAide();
-    setOuvert({ accord, ancre: d.ancre ?? null, capo: d.capo, chant: d.chant ?? chant });
+    // Porte 2 (`data-idees-harmonie`) : pas de situation dans le chant.
+    const capo = dansPanneau ? courant.current?.capo : d.capo;
+    const hors = d.ancre?.closest("[data-idees-harmonie]");
+    // Avec un capo, les étiquettes sont des positions : le chiffre se lit dans leur tonalité (D capo 2, étiquette C : « 1 dans C »).
+    const tonaliteDuChant = dansPanneau ? courant.current?.harmonie?.tonalite : hors ? undefined : tonaliteDesEtiquettes(d.tonalite, d.capo);
+    const section = !dansPanneau && d.ancre?.closest("[data-section-uids]");
+    const suivant = tonaliteDuChant && section && d.ancre ? accordSuivant(section, d.ancre, accord.texte) : undefined;
+    courant.current = {
+      accord, ancre, capo, chant: d.chant ?? chant,
+      harmonie: tonaliteDuChant ? { tonalite: tonaliteDuChant, suivant, enSection: dansPanneau ? !!courant.current?.harmonie?.enSection : !!section } : undefined,
+    };
+    setOuvert(courant.current);
   }, [chant, aideAncre, aideLigne, fermerAide]);
 
   // La bulle d'aide : sous le premier accord visible, une fois les accords posés (les chants arrivent
@@ -214,8 +251,8 @@ export function AccordsProvider({
   }, [actif, aideLigne, fermerAide]);
 
   const valeur = useMemo<Contexte>(
-    () => (actif ? { ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined } : Rien),
-    [actif, ouvrir, fermer, fermerSansFocus, chant, enregistrer, aideLigne, fermerAide],
+    () => (actif ? { ouvrir: tonalite ? (d: DemandeAccord) => ouvrir({ tonalite, ...d }) : ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined } : Rien),
+    [actif, ouvrir, fermer, fermerSansFocus, chant, tonalite, enregistrer, aideLigne, fermerAide],
   );
 
   return (
@@ -252,11 +289,19 @@ export function AccordsProvider({
   );
 }
 
+/** L'accord qui suit vraiment dans la section de l'ancre : le prochain accord touchable différent de celui touché. */
+function accordSuivant(section: Element, ancre: HTMLElement, accord: string): string | undefined {
+  const tous = [...section.querySelectorAll<HTMLElement>("[data-accord-touchable]")];
+  const i = tous.indexOf(ancre);
+  if (i < 0) return undefined;
+  return tous.slice(i + 1).map((el) => el.dataset.accordTouchable).find((a) => a && a !== accord);
+}
+
 function PanneauOuvert({ ouvert, fermer, signaler }: { ouvert: Ouvert; fermer: () => void; signaler: () => void }) {
   const ordinateur = useOrdinateur();
   const acces = useAccesHarmonie();
   const [instrument, setInstrument] = useInstrument(acces, "guitare");
-  const commun = { accord: ouvert.accord, instrument, onInstrument: setInstrument, capo: ouvert.capo, onFermer: fermer, onSignaler: signaler };
+  const commun = { accord: ouvert.accord, instrument, onInstrument: setInstrument, capo: ouvert.capo, harmonie: ouvert.harmonie, onFermer: fermer, onSignaler: signaler };
   if (ordinateur && ouvert.ancre) return <Bulle ancre={ouvert.ancre} {...commun} />;
   return <Feuille {...commun} />;
 }
@@ -281,15 +326,17 @@ const LARGEUR_BULLE = 300;
 const MARGE = 8;
 const ECART = 12;
 
-type Place = { left: number; top: number; fleche: number; dessus: boolean; sansFleche?: boolean };
+type Place = { left: number; top: number; fleche: number; dessus: boolean; sansFleche?: boolean; hauteurMax: number };
 
 function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante"> & { onFermer: () => void; ancre: HTMLElement }) {
   const { ancre, onFermer } = props;
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const [place, setPlace] = useState<Place | null>(null);
+  const placeCourante = useRef<Place | null>(null);
 
-  const placer = useCallback(() => {
+  // `garder` : le contenu a grandi (« Ensuite » déplié) — le haut de la bulle reste où il était, le bas défile.
+  const placer = useCallback((garder?: boolean) => {
     const el = ref.current;
     if (!el) return;
     if (!ancre.isConnected) return onFermer();
@@ -304,20 +351,31 @@ function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante
     // Ni dessous ni dessus (écran bas, accord en haut de page) : la bulle se cale dans l'écran, sur l'accord, sans flèche.
     const cale = !tientDessous && !dessus;
     const top = dessus ? r.top - ECART - h : cale ? clamp(r.bottom + ECART, MARGE, Math.max(MARGE, window.innerHeight - h - MARGE)) : r.bottom + ECART;
-    setPlace({ left, top, fleche: clamp(centre - left, 24, w - 24), dessus, sansFleche: cale });
+    const avant = placeCourante.current;
+    const fige = garder === true && avant && !avant.dessus;
+    const haut = fige ? avant.top : top;
+    const suivante = {
+      left, top: haut, fleche: clamp(centre - left, 24, w - 24), dessus: fige ? false : dessus, sansFleche: fige ? avant.sansFleche : cale,
+      hauteurMax: fige ? window.innerHeight - haut - MARGE : window.innerHeight - 2 * MARGE,
+    };
+    placeCourante.current = suivante;
+    setPlace(suivante);
   }, [ancre, onFermer]);
 
   useLayoutEffect(() => {
     placer();
     const el = ref.current;
-    const obs = el ? new ResizeObserver(placer) : null;
+    const obs = el ? new ResizeObserver(() => placer(true)) : null;
+    const plein = () => placer();
+    // Le défilement interne de la bulle ne la déplace pas.
+    const defilement = (e: Event) => { if (!el?.contains(e.target as Node)) placer(); };
     if (el) obs?.observe(el);
-    window.addEventListener("resize", placer);
-    window.addEventListener("scroll", placer, true);
+    window.addEventListener("resize", plein);
+    window.addEventListener("scroll", defilement, true);
     return () => {
       obs?.disconnect();
-      window.removeEventListener("resize", placer);
-      window.removeEventListener("scroll", placer, true);
+      window.removeEventListener("resize", plein);
+      window.removeEventListener("scroll", defilement, true);
     };
   }, [placer]);
 
@@ -366,7 +424,7 @@ function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante
         />
       )}
       {/* Plus haute que l'écran : le contenu défile sur lui-même plutôt que de sortir du cadre (la flèche reste dehors). */}
-      <div className="overflow-y-auto rounded-2xl" style={{ maxHeight: window.innerHeight - 2 * MARGE }}>
+      <div className="overflow-y-auto rounded-2xl" style={{ maxHeight: place?.hauteurMax ?? window.innerHeight - 2 * MARGE }}>
         <PanneauAccord {...props} variante="bulle" />
       </div>
     </div>,

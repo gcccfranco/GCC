@@ -79,7 +79,6 @@ test("chant ZH : le panneau d'un accord (capture)", async ({ page }) => {
   await page.goto("/songs/" + encodeURIComponent("一切歌颂赞美"));
   await expect(touchables(page).first()).toBeVisible();
   const accord = touchables(page).nth(3);
-  await accord.scrollIntoViewIfNeeded();
   await verifier(page, accord);
   await photo(page, "panneau-zh");
   await panneau(page).getByRole("radio", { name: "钢琴" }).click();

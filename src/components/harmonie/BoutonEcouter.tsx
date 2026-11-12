@@ -6,7 +6,7 @@ import { Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ecouteDisponible, jouer, planAvantApres, planDeLecture } from "@/lib/audio/synthese";
 
-type Props = ({ accords: string[] } | { avant: string[]; apres: string[] }) & { className?: string };
+type Props = ({ accords: string[] } | { avant: string[]; apres: string[] }) & { className?: string; /** Icône seule, `aria-label` « Écouter A → C# ». */ compact?: boolean };
 
 const sansAbonnement = () => () => {};
 
@@ -34,11 +34,13 @@ export function BoutonEcouter(props: Props) {
     setEnLecture(true);
   };
   const Icone = enLecture ? Square : Volume2;
+  const libelle = t(enLecture ? "harmonie.ecoute.arreter" : "harmonie.ecoute.ecouter");
   return (
     <Button type="button" variant="secondary" size="sm" className={props.className} aria-pressed={enLecture}
+      aria-label={props.compact ? `${libelle} ${cle.split("\n")[0].split("|").join(" → ")}` : undefined}
       disabled={!plan.some((p) => p.frequences.length)} onClick={basculer}>
       <Icone aria-hidden />
-      {t(enLecture ? "harmonie.ecoute.arreter" : "harmonie.ecoute.ecouter")}
+      {!props.compact && libelle}
     </Button>
   );
 }

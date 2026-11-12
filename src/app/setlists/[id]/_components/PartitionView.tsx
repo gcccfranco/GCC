@@ -287,7 +287,7 @@ export function PartitionsView({
                       : section;
                     return (
                       <div key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`} data-chant-slug={ms.songSlug}>
-                        <ChantDesAccords chant={{ slug: ms.songSlug, titre: ast.metadata.title }}>
+                        <ChantDesAccords chant={{ slug: ms.songSlug, titre: ast.metadata.title }} tonalite={keyChange ?? ast.metadata.key}>
                         <SectionView
                           section={shownSection}
                           language={ast.metadata.language}
@@ -332,7 +332,7 @@ export function PartitionsView({
                   if (!ast) return null;
                   return (
                     <div key={fs.songSlug} data-chant-slug={fs.songSlug}>
-                      <ChantDesAccords chant={{ slug: fs.songSlug, titre: ast.metadata.title }}>
+                      <ChantDesAccords chant={{ slug: fs.songSlug, titre: ast.metadata.title }} tonalite={ast.metadata.key}>
                       {fsIdx > 0 && (
                         <div className="flex items-center gap-2 my-6 print:my-3">
                           <div className="flex-1 border-t border-dashed border-primary/30" />
@@ -583,7 +583,7 @@ function NormalSongItem({
   );
   return (
     <div data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
-      <ChantDesAccords chant={{ slug: item.songSlug, titre: ast.metadata.title }}>
+      <ChantDesAccords chant={{ slug: item.songSlug, titre: ast.metadata.title }} tonalite={ast.metadata.key}>
       {/* Disposition « partition » : en-tête d'avant T2, inchangé. */}
       {disposition === "partition" && (
         <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">

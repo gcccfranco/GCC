@@ -516,7 +516,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
   const menuChant = <MenuChant langue={song.language === "zh" ? "zh" : "fr"} disposition={disposition} changeDisposition={changeDisposition} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
 
   return (
-    <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }}>
+    <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }} tonalite={customize.currentKey}>
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
         {/* Barre de contrôles */}
         <div ref={barreRef} data-testid="barre-outils" className={`barre-chant print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : barPinned ? "-translate-y-[calc(var(--nav-h)-var(--sat))]" : "-translate-y-[calc(100%+var(--nav-h)+var(--barre-decalage,0px)+var(--barre-ombre,0px))]"}`}>
