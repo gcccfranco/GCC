@@ -407,3 +407,8 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   décision 1 tient (PDF d'une setlist réservé à qui peut la modifier et à la présidence du service) ; le PDF d'un
   chant reste à tous. **PU-1 = PDF de setlist seulement** : `canExporterPdfSetlist` et `presideLeService`, rien sur la
   page d'un chant. Plus aucune question ouverte ; attend le go de code.
+- 12/11/2026 : **go de Timothée** (« Go mais regarde quand même l'ordre et où ça en est pour les autres sessions ») :
+  le lot pupitre peut se coder, une session par tranche. Ordre (pilote) : les quatre places sont prises (FS-F,
+  MP-3, exemples T2, comptage T3) ; PU-1 part à la première place libre (attendue : la fin du comptage T3, T4 n'ayant
+  pas de go), puis PU-2, PU-3 ; PU-4 à PU-6 seulement après FS-F et jamais en même temps qu'une session dans
+  `PerformanceMode.tsx` (JP-C, MP-5).
