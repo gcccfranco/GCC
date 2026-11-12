@@ -71,7 +71,7 @@ export function PageScan({
   const enTete: JianpuSheetBlock | null = sheet?.kind === "jianpu-sheet" ? sheet : null;
   const rond = enTete && (
     <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-      {enTete.position}
+      {Number.isInteger(enTete.position) ? enTete.position : "+"}
     </span>
   );
   const tempo = enTete?.tempo ? (

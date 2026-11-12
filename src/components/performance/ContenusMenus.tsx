@@ -214,6 +214,8 @@ export function ContenuSetlist({
   onFermer,
   chargerToutesSetlists,
   onOuvrirSetlist,
+  onglets,
+  tousLesChants,
 }: {
   setlistTitle: string;
   setlistDate?: string;
@@ -224,6 +226,10 @@ export function ContenuSetlist({
   onFermer: () => void;
   chargerToutesSetlists?: () => Promise<ListeSetlistsMenu>;
   onOuvrirSetlist?: (id: string) => void;
+  /** Onglets « Cette setlist | Tous les chants », sous « ‹ Toutes mes setlists ». */
+  onglets?: ReactNode;
+  /** Si fourni, remplace l'en-tête et la liste de la setlist. */
+  tousLesChants?: ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   return (
@@ -231,6 +237,8 @@ export function ContenuSetlist({
       {chargerToutesSetlists && onOuvrirSetlist && (
         <ToutesMesSetlists charger={chargerToutesSetlists} onOuvrir={onOuvrirSetlist} onFermer={onFermer} />
       )}
+      {onglets}
+      {tousLesChants ?? <>
       <div className="px-1 pb-2">
         <p className="truncate text-base font-semibold text-foreground">{setlistTitle}</p>
         <p className="truncate text-[13px] text-muted-foreground">
@@ -255,7 +263,7 @@ export function ContenuSetlist({
                 className={`flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors ${courant ? LIGNE_COURANTE : "hover:bg-muted/60 active:bg-muted"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
               >
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
-                  {courant ? <Check aria-hidden="true" className={`h-4 w-4 ${COULEUR}`} /> : block.position}
+                  {courant ? <Check aria-hidden="true" className={`h-4 w-4 ${COULEUR}`} /> : Number.isInteger(block.position) ? block.position : "+"}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className={`block truncate text-base ${courant ? "font-semibold" : "font-medium"} text-foreground`}>{block.title}</span>
@@ -269,6 +277,7 @@ export function ContenuSetlist({
           );
         })}
       </ol>
+      </>}
     </div>
   );
 }

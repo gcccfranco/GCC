@@ -160,13 +160,14 @@ export function buildPerformanceBlocks(
   /** Affichage (même préférence que la setlist, `partition-layout`) :
    *  ordre joué ; chaque section une fois, notes et transitions laissées au
    *  bandeau ; ou structure seule, où un chant à scan donne ses sections. */
-  { affichage = "played" }: { affichage?: PartitionLayout } = {},
+  { affichage = "played", choixScan }: { affichage?: PartitionLayout; choixScan?: Record<string, boolean> } = {},
 ): PerformanceBlock[] {
   const blocks: PerformanceBlock[] = [];
   const unique = affichage === "unique";
   // Le responsable coche le 简谱 par chant ; la préférence de l'appareil peut
   // le suivre, l'imposer partout, ou ne jamais l'utiliser.
-  const wantsSheet = (item: SetlistItem) => sheetEnabled(jianpuPref, item.jianpuSheet);
+  // `choixScan` : choix fait à l'ajout d'un chant (mode louange), plus fort que la préférence.
+  const wantsSheet = (item: SetlistItem) => choixScan?.[item.songSlug] ?? sheetEnabled(jianpuPref, item.jianpuSheet);
   let c = 0;
   const uid = () => `pb-${c++}`;
 

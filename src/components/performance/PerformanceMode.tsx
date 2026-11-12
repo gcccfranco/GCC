@@ -8,6 +8,8 @@ import { BarreBas } from "./BarreBas";
 import { BarreAnnotation } from "./BarreAnnotation";
 import { MenuLouange, type MenuId } from "./MenuLouange";
 import { LigneFeuilleDeRoute } from "./FeuilleDeRoute";
+import { OngletsSetlist, ContenuTousLesChants } from "./TousLesChants";
+import { useJouerChant } from "./useJouerChant";
 import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo, LignesTempo, TitreRubrique, VALEUR, type ListeSetlistsMenu } from "./ContenusMenus";
 import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
@@ -242,7 +244,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
         {/* Barre de titre ouverte : ces lignes (qu'elle répète) sont masquées sans changer de place, jamais coupées à mi-hauteur. */}
         <div className="flex items-start gap-2 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
           <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-            {block.position}
+            {Number.isInteger(block.position) ? block.position : "+"}
           </span>
           <Link2 className="h-3.5 w-3.5 text-foreground shrink-0 mt-1" />
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 min-w-0">
@@ -296,7 +298,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-              {block.position}
+              {Number.isInteger(block.position) ? block.position : "+"}
             </span>
             <h2 className="text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight truncate">
               {block.title}
@@ -414,6 +416,10 @@ interface PerformanceModeProps {
   chargerToutesSetlists?: () => Promise<ListeSetlistsMenu>;
   /** Ouvre cette setlist en mode louange (la page change de setlist). */
   onOuvrirSetlist?: (id: string) => void;
+  /** Menu Setlist, « Tous les chants » : ajoute le chant (après le chant en cours) ; faux si son contenu n'a pas pu être lu. */
+  onJouerChant?: (slug: string, avecJianpu: boolean, positionCourante: number) => Promise<boolean>;
+  /** Chants ajoutés : scan ou paroles, choisi à l'ajout (plus fort que la préférence). */
+  choixScan?: Record<string, boolean>;
   onClose: () => void;
 }
 
@@ -429,6 +435,8 @@ export function PerformanceMode({
   onAffichageChange,
   jianpuPref,
   onJianpuPrefChange,
+  onJouerChant,
+  choixScan,
   horsLigne = false,
   rolePlanning = null,
   chantInitial,
@@ -853,8 +861,8 @@ export function PerformanceMode({
   const blocks = useMemo(
     // always build with chords=true for stable UIDs (le capo et la tonalité ne
     // changent ni le nombre ni l'ordre des blocs : les UIDs restent stables)
-    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPrefVu, personalKeys, { affichage: affichageVu }),
-    [items, contents, capoActive, capos, jianpuManifest, jianpuPrefVu, personalKeys, affichageVu],
+    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPrefVu, personalKeys, { affichage: affichageVu, choixScan }),
+    [items, contents, capoActive, capos, jianpuManifest, jianpuPrefVu, personalKeys, affichageVu, choixScan],
   );
 
   const { repeatCount, repeatHidden } = useMemo(
@@ -1487,6 +1495,10 @@ export function PerformanceMode({
     setDemi(false);
     setCurrentPage(p);
   }, []);
+  const { ongletSetlist, setOngletSetlist, focusRecherche, jouer } = useJouerChant({
+    songEntries, pages, goToPage, positionCourante: currentEntry?.block.position ?? 0, onJouerChant, popoverOuvert, setPopoverOuvert, annotateMode,
+    misEnPage: () => layoutBlocksRef.current === blocks,
+  });
 
   // Lot FS-E : tous les tours de page relatifs (zones, balayage, flèches, PageUp/PageDown, Espace, pédale) passent ici.
   // Demi-page allumée : page n entière → (n, demi) → page n + 1 entière ; et dans l'autre sens, sans toucher à la pagination.
@@ -2468,6 +2480,10 @@ export function PerformanceMode({
           onFermer={() => fermerMenu("setlist")}
           chargerToutesSetlists={chargerToutesSetlists}
           onOuvrirSetlist={onOuvrirSetlist}
+          onglets={onJouerChant ? <OngletsSetlist onglet={ongletSetlist} onChange={setOngletSetlist} /> : undefined}
+          tousLesChants={onJouerChant && ongletSetlist === "chants"
+            ? <ContenuTousLesChants slugsDansSetlist={new Set(songEntries.flatMap((e) => e.block.songSlug && Number.isInteger(e.block.position) ? [e.block.songSlug] : []))} onJouer={jouer} onFermer={() => fermerMenu("setlist")} autoFocus={focusRecherche} />
+            : undefined}
         />
       </MenuLouange>
 

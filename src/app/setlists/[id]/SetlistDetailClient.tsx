@@ -86,6 +86,7 @@ import { sheetEnabled } from "@/lib/jianpu/preference";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
+import { choixScanDesAjouts, itemsAvecAjouts, positionApres, type AjoutLocal } from "@/lib/performance/ajoutsLocaux";
 import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
 import { PdfChoiceSheet, type PdfVersion } from "@/components/pdf/PdfChoiceSheet";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
@@ -282,6 +283,8 @@ export function SetlistDetailClient() {
   const [downloading, setDownloading] = useState(false);
   const [showPdfChoice, setShowPdfChoice] = useState(false);
   const [performanceMode, setPerformanceMode] = useState(false);
+  // « Tous les chants » du mode louange : chants ajoutés, locaux, vidés à la fermeture du mode.
+  const [ajoutsLocaux, setAjoutsLocaux] = useState<AjoutLocal[]>([]);
   // Ouverture du mode louange sur un chant (`?chant=<n>`, « Mon prochain service »), index 0-based.
   const [chantInitial, setChantInitial] = useState<number | undefined>(undefined);
   const [duplicating, setDuplicating] = useState(false);
@@ -2573,7 +2576,18 @@ export function SetlistDetailClient() {
       {performanceMode && (
         <PerformanceMode
           uid={user?.uid ?? null}
-          items={stageItems}
+          items={itemsAvecAjouts(stageItems, ajoutsLocaux)}
+          choixScan={choixScanDesAjouts(ajoutsLocaux)}
+          onJouerChant={async (slug, avecJianpu, positionCourante) => {
+            if (stageItems.some((it) => it.songSlug === slug)) return true;
+            if (!contents[slug]) {
+              const res = await fetchSongAST(slug);
+              if (!res) return false;
+              setContents((prev) => ({ ...prev, [slug]: res }));
+            }
+            setAjoutsLocaux((prev) => [...prev, { slug, position: positionApres(itemsAvecAjouts(stageItems, prev), positionCourante), jianpu: avecJianpu }]);
+            return true;
+          }}
           contents={contents}
           initialShowChords={chordsTouched ? showChords : undefined}
           setlistId={id}
@@ -2582,7 +2596,10 @@ export function SetlistDetailClient() {
           affichage={layout}
           onAffichageChange={changeLayout}
           jianpuPref={jianpuPref}
-          onJianpuPrefChange={changeJianpuPref}
+          onJianpuPrefChange={(v) => {
+            changeJianpuPref(v);
+            setAjoutsLocaux((prev) => prev.map((a) => ({ ...a, jianpu: v !== "never" })));
+          }}
           horsLigne={horsLigne}
           rolePlanning={rolePlanning}
           chantInitial={chantInitial}
@@ -2593,7 +2610,7 @@ export function SetlistDetailClient() {
           }}
           traits={traitsParChant}
           onTraitsChange={traitsChanges}
-          chantsCharges={Object.fromEntries(slugsPartitions.map((s) => [s, !!mesPartitions.charges[s]]))}
+          chantsCharges={Object.fromEntries([...slugsPartitions.map((s) => [s, !!mesPartitions.charges[s]]), ...ajoutsLocaux.map((a) => [a.slug, false])])}
           echecTraits={echecTraits}
           traitsEnAttente={mesPartitions.enAttente}
           chargerToutesSetlists={user ? chargerToutesSetlists : undefined}
@@ -2602,6 +2619,7 @@ export function SetlistDetailClient() {
             envoyerTraits();
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             setPerformanceMode(false);
+            setAjoutsLocaux([]);
             setChantInitial(undefined);
           }}
         />

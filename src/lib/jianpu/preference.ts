@@ -52,3 +52,14 @@ export function prefDepuisInterrupteur(on: boolean): JianpuPref {
 export function prefPourRole(pref: JianpuPref, role: string | null): JianpuPref {
   return pref === "auto" && (role === "choriste" || role === "presidence") ? "never" : pref;
 }
+
+/** « Avec / Sans 简谱 » de la liste « Tous les chants » du mode louange : dernier choix, par appareil. Défaut : avec. */
+const KEY_AJOUT = "louange-ajout-jianpu";
+
+export function getJianpuAjout(): boolean {
+  try { return localStorage.getItem(KEY_AJOUT) !== "0"; } catch { return true; }
+}
+
+export function setJianpuAjout(v: boolean) {
+  try { localStorage.setItem(KEY_AJOUT, v ? "1" : "0"); } catch { /* stockage indisponible */ }
+}

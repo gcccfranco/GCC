@@ -116,3 +116,22 @@ https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue �
 - 12/11/2026 : planche (trois pistes), choix de Timothée (piste A, bouton à part, interrupteur 简谱), spec écrite.
 - 12/11/2026, soir : Timothée tranche les questions 1 et 2 (oui) et choisit un seul bouton (Setlist à deux onglets) ;
   plus de question ouverte, le lot attend son go.
+- 12/11/2026, soir : **TC-1 faite** (session `session_01UMdfuZmdnz7GpDir59knoe`). Menu Setlist à deux onglets
+  (`TousLesChants.tsx`, `useJouerChant.ts`, `ajoutsLocaux.ts` neufs ; dans `PerformanceMode.tsx`, des ajouts groupés et
+  le « + » du rond d'en-tête), choix 简谱 à l'ajout plus fort que la préférence (`choixScan`, `blocks.ts`), « / » à
+  l'ordinateur. Un chant ajouté prend une position fractionnaire (milieu entre le chant en cours et le suivant) : il
+  ne s'écrit nulle part (ni Firestore, ni « Ma version »), et les clés d'annotation des autres chants ne bougent pas
+  (`computePageKey` ne lit que les uid de section). Bug trouvé et corrigé : on rejoignait le chant ajouté pendant une
+  pagination provisoire, puis la mise en page refaite laissait la page sur le chant suivant ; on attend désormais que
+  la mise en page réponde aux blocs (même règle que `chantInitial`). Tests : `louange-tous-les-chants` 37 passés,
+  3 ignorés (« / » hors ordinateur), cinq projets, 2,2 min ; voisines (`louange-menus`, `louange-barre-titre`,
+  `louange-toutes-setlists`, `mode-louange-forscore`, `louange-roles-jianpu`) 490 passés, 0 échec, trois appareils,
+  17 min. Aucun conflit avec AN (AN-2 déjà sur la branche au départ ; H7-2 arrivé en cours, sans recouvrement).
+  **Décisions déléguées (session TC-1, 12/11)** : (a) le Crayon est refusé dès TC-1 sur un chant ajouté
+  (`chantsCharges` faux) : sans clé d'annotation, ses traits se perdaient en silence ; TC-2 le masque pour de bon ;
+  (b) le rond d'en-tête d'un chant ajouté dit « + » (il disait « 1.5 ») ; (c) l'interrupteur porte le libellé
+  « Ouvrir » (zh « 打开 ») devant « Avec 简谱 | Sans », pour ne pas se lire comme un filtre de la liste
+  (`critique-design`) ; (d) la tonalité de chaque ligne en gras et en noir, sur une colonne fixe, pour ne pas se
+  confondre avec l'index A–Z ; (e) l'index se rétrécit pour tenir entier dans la part visible du menu.
+  Reste pour plus tard (critique, finition) : fondu au bas de la liste, « Dans la setlist » plus lisible, chant en
+  cours marqué dans la liste.
