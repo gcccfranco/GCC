@@ -12,6 +12,7 @@ export const CLES_USAGE: Record<string, string> = {
   "cmd.chant.transposer": "Chant : transposer (± ou tonalité choisie)",
   "cmd.chant.toniqueOrigine": "Chant : revenir à la tonalité d'origine",
   "cmd.chant.capo": "Chant : capo",
+  "cmd.chant.notation": "Chant : notation des accords (lettres / chiffres)",
   "cmd.chant.disposition": "Chant : choix de disposition",
   "cmd.chant.jianpu": "Chant : partition 简谱 (scan affiché)",
   "cmd.chant.copierParoles": "Chant : copier les paroles",
@@ -52,6 +53,7 @@ export const CLES_USAGE: Record<string, string> = {
   "cmd.setlist.corbeille.mettre": "Setlists : corbeille, mettre",
   "cmd.setlist.corbeille.restaurer": "Setlists : corbeille, restaurer",
   "cmd.setlist.corbeille.supprimer": "Setlists : corbeille, supprimer pour de bon",
+  "cmd.setlist.pupitre.jouer": "Setlists : pupitre, Jouer (prochain service)",
   // T3 : planning, harmonie, compte, évènements, messages, général.
   "cmd.accueil.pourMoi": "Accueil : ouvrir un élément de « Pour moi »",
   "cmd.planning.choisirNom": "Planning : choisir un nom dans une case",

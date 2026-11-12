@@ -672,6 +672,11 @@
     "lien": "Couleurs d'origine",
     "retenueCompte": "Retenue pour ce compte sur cet appareil"
   },
+  "notationAccords": {
+    "titre": "Notation des accords",
+    "lettres": "Lettres",
+    "chiffres": "Chiffres"
+  },
   "performance": {
     "indiceRappelJoue": "Points : déjà joué · Pleines : sur cette page, avec leur nuance",
     "indiceRappelUnique": "Pleines : sur cette page, avec leur nuance",

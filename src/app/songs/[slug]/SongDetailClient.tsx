@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DISPOSITION_AVANT_LECTURE, getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { TOUCHER_44, TOUCHER_RANGEE } from "@/lib/toucher44";
+import { ChoixNotation } from "@/components/song/ChoixNotation";
 import { PiluleTonalite } from "./_components/PiluleTonalite";
 import { ActionsChant } from "./_components/ActionsChant";
 import { MenuChant } from "./_components/MenuChant";
@@ -559,6 +560,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
             </Button>
             {/* Transposition rapide */}
             <PiluleTonalite currentKey={customize.currentKey} originalKey={originalKey} keySuffix={keySuffix} setCustomize={setCustomize} />
+            <ChoixNotation variante="barre" />
             {accesHarmonie.peut && (
               <Button
                 variant="secondary"

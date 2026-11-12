@@ -92,7 +92,7 @@ export function Pupitre({
         <Link
           data-pupitre-jouer
           href={`/setlists/${setlist.id}?louange=1`}
-          onClick={() => compter("cmd.setlists.pupitre.jouer")}
+          onClick={() => compter("cmd.setlist.pupitre.jouer")}
           className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-foreground px-4 text-sm font-semibold text-background transition-transform duration-150 active:scale-[.97]"
         >
           <Play className="h-4 w-4" aria-hidden />

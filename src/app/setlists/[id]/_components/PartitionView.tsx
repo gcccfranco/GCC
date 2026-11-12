@@ -3,6 +3,7 @@ import Link from "next/link";
 import { songHref } from "@/lib/setlist/songHref";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
+import { NotationAccordsProvider } from "@/components/song/NotationAccordsProvider";
 import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, chord_font } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { AccordsProvider, AideAccordsEnLigne, ChantDesAccords, useOuvrirAccord, type IciDuChant } from "@/components/accords/AccordsProvider";
@@ -305,6 +306,7 @@ export function PartitionsView({
                           // Section modulée : les chiffres se lisent dans la tonalité cible, comme celui de l'accord touché.
                           keyChange && ast.metadata.key ? ast.sections.map((x) => transposeSection(x, semitonesTo(ast.metadata.key, keyChange), keyChange)) : ast.sections,
                           keyChange ?? ast.metadata.key, origines[ms.songSlug])}>
+                        <NotationAccordsProvider tonalite={keyChange ?? ast.metadata.key}>
                         <SectionView
                           section={shownSection}
                           language={ast.metadata.language}
@@ -319,6 +321,7 @@ export function PartitionsView({
                           occurrenceUids={[section.uid]}
                           slug={ms.songSlug}
                         />
+                        </NotationAccordsProvider>
                         </ChantDesAccords>
                         {withDetails && ms.transition && <TransitionNote text={ms.transition} />}
                       </div>

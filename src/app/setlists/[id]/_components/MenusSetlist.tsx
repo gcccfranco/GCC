@@ -13,6 +13,7 @@ import {
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
+import { ChoixNotation } from "@/components/song/ChoixNotation";
 import type { Disposition } from "@/lib/dispositionPref";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import type { FSSetlist } from "@/types/setList";
@@ -111,6 +112,8 @@ export function ReglagesAffichage({
       <ChoixDisposition variante="menu" disposition={disposition} changeDisposition={changeDisposition} />
       <DropdownMenuSeparator />
       <ChoixCouleurAccords variante="menu" />
+      <DropdownMenuSeparator />
+      <ChoixNotation variante="menu" />
       {hasJianpuSheets && (
         <>
           <DropdownMenuSeparator />

@@ -12,8 +12,10 @@ import { signalerCoupure } from "@/lib/song/coupureSignal";
 import { choisirCoupureZh, DEBORD, type UniteZh } from "@/lib/song/coupure";
 import { motsDuTexte, type MotZh } from "@/lib/song/motsChinois";
 import { JianpuLine } from "@/components/song/JianpuLine";
+import { NotationAccordsContext } from "@/lib/notationAccords";
+import { NotationAccordsProvider } from "@/components/song/NotationAccordsProvider";
 import { AccordsInactifs } from "@/components/accords/AccordsProvider";
-import { AccordTouchable } from "@/components/accords/AccordTouchable";
+import { AccordTouchable, etiquetteAffichee } from "@/components/accords/AccordTouchable";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { ChordProAST, ChordProLine, ChordProSection, Token } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
@@ -230,6 +232,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
   const pinyinEm = "0.7em";
   const pyWords = pinyin?.split(/\s+/).filter(Boolean) ?? [];
   let pIdx = 0;
+  const { notation, tonalite } = useContext(NotationAccordsContext);
 
   type Col = ZhCol;
   const cols: Col[] = [];
@@ -292,7 +295,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
       else unites.push({ cols: [...group.cols], mot });
     });
   }
-  const cle = unites.map((u) => u.cols.map((c) => `${c.chord ?? ""}|${c.char}|${c.py}`).join("¦")).join("§");
+  const cle = notation + tonalite + unites.map((u) => u.cols.map((c) => `${c.chord ?? ""}|${c.char}|${c.py}`).join("¦")).join("§");
 
   const ligne = useRef<HTMLDivElement>(null);
   const uniteRefs = useRef<(HTMLElement | null)[]>([]);
@@ -405,7 +408,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
     // une largeur minimale, les accords qui suivent la dernière parole
     // (« 弃[(Bm/D)] [(G#/C)] [(Am/C)] … », 奔跑不放弃) formaient un groupe plus
     // large que l'écran du téléphone, et dépassaient le bord.
-    if (col.chord && col.char.trim() !== "") return `${col.chord.length * 0.75 + 1}em`;
+    if (col.chord && col.char.trim() !== "") return `${etiquetteAffichee(col.chord, notation, tonalite).length * 0.75 + 1}em`;
     return undefined;
   };
 
@@ -1488,6 +1491,7 @@ export function SongView({
             : section;
           return (
             <div key={`${section.uid ?? section.id}-${i}`}>
+              <NotationAccordsProvider tonalite={keyChange ?? ast.metadata.key}>
               <SectionView
                 section={shownSection}
                 language={ast.metadata.language}
@@ -1505,6 +1509,7 @@ export function SongView({
                 onConflit={onConflit}
                 onPasserAuCulte={onPasserAuCulte}
               />
+              </NotationAccordsProvider>
               {withDetails && step.transition && <TransitionNote text={step.transition} />}
             </div>
           );

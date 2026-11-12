@@ -668,6 +668,11 @@
     "lien": "恢复原色",
     "retenueCompte": "仅用于此账号，保存在本设备上"
   },
+  "notationAccords": {
+    "titre": "和弦记法",
+    "lettres": "字母",
+    "chiffres": "数字"
+  },
   "performance": {
     "indiceRappelJoue": "圆点：已唱过 · 实心：在本页，下方为力度",
     "indiceRappelUnique": "实心：在本页，下方为力度",

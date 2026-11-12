@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
+import { ChoixNotation } from "@/components/song/ChoixNotation";
 import type { Disposition } from "@/lib/dispositionPref";
 
 /** Menu ⋯ (spec-barre-chant.md, Q3, Q5) : disposition, Personnaliser, Signaler. */
@@ -23,6 +24,8 @@ export function MenuChant({ langue, disposition, changeDisposition, setShowPanel
       <ChoixDisposition variante="menu" langue={langue} disposition={disposition} changeDisposition={changeDisposition} />
       <DropdownMenuSeparator />
       <ChoixCouleurAccords variante="menu" />
+      <DropdownMenuSeparator />
+      <ChoixNotation variante="menu" />
       <DropdownMenuSeparator />
       <DropdownMenuItem onClick={() => setShowPanel(true)}>
         <Settings className="h-3.5 w-3.5 text-muted-foreground" />

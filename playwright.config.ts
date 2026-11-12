@@ -20,6 +20,8 @@ const SPECS_GRAND_ECRAN = [
   /harmonie-bibliotheque\.spec\.ts/,
   // Harmonie H5-1 : le panneau d'un accord enrichi (chiffre, Écouter, Ensuite) en feuille et en bulle.
   /harmonie-porte1\.spec\.ts/,
+  // Harmonie H7-1 : la bascule Lettres / Chiffres dans la barre du chant (dès 640 px) et le menu ⋯.
+  /notation-accords\.spec\.ts/,
   // Lot Pupitre, PU-2 (docs/spec-entree-musiciens.md) : « Mon prochain service » en tête de l'onglet Setlists (rangées, vignettes, volet de droite en deux volets).
   /pupitre-onglet\.spec\.ts/,
   // Lot Pupitre, PU-3 : « Prêt hors-ligne » dans le bloc (téléphone et tablette debout surtout).

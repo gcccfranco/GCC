@@ -1,8 +1,9 @@
 "use client";
 
 import type { Token } from "@/types/chordPro";
-import { AccordTouchable } from "@/components/accords/AccordTouchable";
+import { AccordTouchable, etiquetteAffichee } from "@/components/accords/AccordTouchable";
 import localFont from "next/font/local";
+import { NotationAccordsContext } from "@/lib/notationAccords";
 import { useContext, useLayoutEffect, useRef, useState } from "react";
 import { LargeurCoupureContext, CoupureMesureContext, bordCoupure } from "@/components/song/LargeurCoupure";
 import { signalerCoupure } from "@/lib/song/coupureSignal";
@@ -153,6 +154,7 @@ function espaceFinDe(mot: HTMLElement, echelle: number): number {
 }
 
 export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontSize, chordEm = 0.9, chord_font, fr_lyric_font, ecartApres = false }: ChordLineProps) {
+  const { notation, tonalite } = useContext(NotationAccordsContext);
   const segments = toSegments(tokens, !showChords);
   const hasAnyChord = showChords && segments.some((s) => s.chord !== null);
   // Sans accords, un mot dont rien ne s'affiche n'est pas une unité de coupure.
@@ -163,7 +165,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
     while (nTexte > 0 && words[nTexte - 1].every(({ seg }) => seg.chord !== null && !seg.lyric.trim())) nTexte--;
     if (nTexte === 0) nTexte = words.length;
   }
-  const cle = words.map((w) => w.map(({ seg }) => `${seg.chord ?? ""}|${seg.lyric}`).join("¦")).join("§");
+  const cle = notation + tonalite + words.map((w) => w.map(({ seg }) => `${seg.chord ?? ""}|${seg.lyric}`).join("¦")).join("§");
 
   const ligne = useRef<HTMLDivElement>(null);
   const motRefs = useRef<(HTMLElement | null)[]>([]);
@@ -306,7 +308,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
       {mots.map((word, m) => (
       <span key={word[0].i} ref={(n) => { motRefs.current[depart + m] = n; }} className="inline-flex items-end">
       {word.map(({ seg, i }, k) => {
-        const chordLen = seg.chord?.length ?? 0;
+        const chordLen = seg.chord ? etiquetteAffichee(seg.chord, notation, tonalite).length : 0;
         const lyricLen = [...(seg.lyric)].length;
         const minWidth =
           hasAnyChord && chordLen > lyricLen

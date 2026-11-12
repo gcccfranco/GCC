@@ -443,6 +443,18 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   avant hydratation, refait par `toPass`). Captures FR et 中文, cinq projets, regardées. Connu : la bulle d'un accord
   haut placé peut recouvrir la barre d'outils à 1 280 px (placement H5-1) ; espace après « ： » en 中文 (comme 接下来) ;
   `harmonie-colonne.spec.ts:138` (setlist, ordinateur) a échoué une fois sur la transition de l'en-tête, passé ensuite.
+- 12/11/2026 : **H7-1 faite** (session orchestratrice de H7 ; executant, testeur, relecteur, regard). Préférence
+  `src/lib/notationAccords.ts` (par compte sur l'appareil, lettres par défaut) ; `chiffrerEtiquette` dans `degres.ts` ;
+  `NotationAccordsProvider` autour de chaque `SectionView` (tonalité `keyChange ?? key` ; le calque 简谱 reste hors du
+  fournisseur, donc en lettres) ; `ChordLine` et `ZhLine` réservent la largeur du texte affiché ; `AccordTouchable`
+  affiche le chiffre et ouvre la lettre ; `ChoixNotation` (barre « A | 1 » dès 640 px, rubrique en mots dans les menus
+  du chant et de la setlist) ; comptage `cmd.chant.notation`. Corrigé en route, hors lot mais rouge sur la base :
+  `usage-dimanche.spec.ts` (test PDF sans setlist à venir depuis PU-1) et la clé `cmd.setlists.pupitre.jouer` de
+  `Pupitre.tsx`, renommée `cmd.setlist.pupitre.jouer` et déclarée. Tests : tsc, lint (0 erreur), validate ;
+  `notation-accords` (nouvelle, cinq projets), `accords-toucher*`, `harmonie-porte1`, `libelles-langues`, `coherence`,
+  `statistiques-chant`, `usage-dimanche` : 307 / 20 (8 min), 72 / 22 (3,4 min), 85 / 9 (3,2 min), 47 / 9 (2,3 min),
+  puis 56 / 0 (1,9 min). Captures 390 à 1 440, FR et 中文, clair et sombre. Non couvert par un test : la vue partitions
+  de setlist et une section `keyChange`. Prochain : H7-2, session neuve.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 

@@ -7,9 +7,11 @@
 // ligne, sans rien de visible au repos (Q16) : souligné au survol de la souris, léger fond à l'appui.
 // L'étiquette « G (G/B) » donne deux boutons ; ce qui n'est pas un accord (parenthèses, séparateurs) reste texte.
 
-import { useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { accordsDeLEtiquette } from "@/lib/accords/analyse";
+import { chiffrerEtiquette } from "@/lib/harmonie/degres";
+import { NotationAccordsContext } from "@/lib/notationAccords";
 import { useOuvrirAccord } from "./AccordsProvider";
 
 type Morceau = { texte: string; accord: boolean };
@@ -27,6 +29,11 @@ function decouper(etiquette: string): Morceau[] {
   }
   if (curseur < etiquette.length) sortie.push({ texte: etiquette.slice(curseur), accord: false });
   return sortie;
+}
+
+/** L'étiquette telle que la partition l'affiche : en chiffres, chaque accord devient son degré (largeur réservée comprise). */
+export function etiquetteAffichee(etiquette: string, notation: string, tonalite?: string): string {
+  return notation === "chiffres" ? decouper(etiquette).map((m) => (m.accord ? chiffrerEtiquette(m.texte, tonalite) : m.texte)).join("") : etiquette;
 }
 
 const REPOS =
@@ -60,12 +67,15 @@ export function AccordTouchable({
   variante?: "nu";
 }) {
   const { actif } = useOuvrirAccord();
-  if (!actif) return <>{etiquette}</>;
+  const { notation, tonalite } = useContext(NotationAccordsContext);
+  const affichee = etiquetteAffichee(etiquette, notation, tonalite);
+  if (!actif) return <>{affichee}</>;
   return <Actifs etiquette={etiquette} capo={capo} visible={visible} nu={variante === "nu"} />;
 }
 
 function Actifs({ etiquette, capo, visible, nu }: { etiquette: string; capo?: number; visible: boolean; nu: boolean }) {
   const { t } = useTranslation();
+  const { notation, tonalite } = useContext(NotationAccordsContext);
   const { ouvrir, enregistrer } = useOuvrirAccord();
   const premier = useRef<HTMLSpanElement>(null);
 
@@ -99,7 +109,7 @@ function Actifs({ etiquette, capo, visible, nu }: { etiquette: string; capo?: nu
               ouvrirCelui(e.currentTarget);
             }}
           >
-            {m.texte}
+            {notation === "chiffres" ? chiffrerEtiquette(m.texte, tonalite) : m.texte}
           </span>
         );
       })}

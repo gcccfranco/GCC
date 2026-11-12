@@ -144,7 +144,9 @@ test.describe("page chant", () => {
     });
 
     test(`${langue} : export PDF compte cmd.chant.pdf`, async ({ page }) => {
-      const { recus } = await preparer(page, {}, url);
+      // PDF réservé à l'équipe d'une setlist à venir (PU-1) ; date relative pour ne pas périmer
+      const date = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+      const { recus } = await preparer(page, { "setlists/usage-t2-pdf": { ...setlistLouange, date, editeurs: [MEMBRE.uid] } }, url);
       await hydrate(page);
       await page.getByTestId("barre-outils").getByRole("button", { name: "PDF", exact: true }).click();
       const feuille = page.getByRole("dialog", { name: "Quel PDF ?" });
