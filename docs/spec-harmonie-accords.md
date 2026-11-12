@@ -261,6 +261,40 @@ d'écoute, `BoutonEcouter` (H5), `SongView` ou `PerformanceMode`.
 - Captures des deux tranches : téléphone, tablette portrait, tablette paysage, ordinateur 1 280 et 1 440, FR et
   中文 ; `regard`, puis `critique-design` sur ses signalements.
 
+### H7 — bascule Lettres / Chiffres (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Reprend les décisions de Timothée du 11/11 (point 3) et du 12/11 (point 6). Deux tranches.
+- **Préférence** : `src/lib/notationAccords.ts`, sur le modèle de `couleurAccords.ts` (lot CA) : par compte sur
+  l'appareil (`accords-notation-<uid>`, `accords-notation` sans compte), `"lettres"` par défaut, `useSyncExternalStore`,
+  rien dans Firestore. « Mémorisée par musicien » = comme la couleur des accords, déjà réglée par compte.
+- **Chiffre** : la racine et la basse remplacées par leur degré, écrit comme dans les fiches (`CHIFFRES` de
+  `src/lib/harmonie/degres.ts` : 1 · b3 · #4 · b7) ; le reste de l'étiquette est gardé tel quel (`D` en D → `1`,
+  `Em7` → `2m7`, `Gmaj7` → `4maj7`, `Asus4` → `5sus4`, `A/C#` → `5/7`, `Bm/A` → `6m/5`). Une fonction pure
+  `chiffrerEtiquette(accord, tonalité)` à côté de `chiffreDuDegre` ; un accord illisible (N.C., coquille) reste en
+  lettres. Tonalité = celle des étiquettes affichées (capo déduit, comme `tonaliteDesEtiquettes`) ; une section
+  modulée (`keyChange` d'une fusion de setlist) se chiffre dans sa tonalité. Un chant en mineur se chiffre comme les
+  fiches (tonique sans « m » : Em en Em = 1m).
+- **H7-1, partitions et bascule.** Rendu en chiffres des accords des partitions FR (`ChordLine`) et ZH (`ZhLine`) de la
+  page chant et de la vue partitions de setlist : mêmes positions, `font-chord`, `--accord-fr` / `--chord-color` ; la
+  largeur réservée suit le texte affiché. Le toucher ouvre toujours l'accord **en lettres** (le panneau dit déjà « 4 dans
+  D »). Restent en lettres : le calque 简谱, le PDF, le mode louange (`PerformanceMode.tsx`, H8), les lignes d'édition, le
+  copier des paroles. **Bascule** : contrôle segmenté de deux boutons (`aria-pressed`) « Lettres | Chiffres » /
+  « 字母 | 数字 » ; dans la barre du chant, juste après `PiluleTonalite`, à partir de 640 px, en libellés courts
+  « A » / « 1 » (titre et `aria-label` en mots) ; au téléphone la barre est déjà pleine (elle replie ses libellés) :
+  la bascule y est dans le menu ⋯ du chant, en mots, sous la couleur des accords ; même rubrique dans les réglages de
+  la vue partitions de setlist (`MenusSetlist`, à côté de `ChoixCouleurAccords`). Comptage `cmd.chant.notation`
+  (`usageCles.ts`). Tests : `notation-accords.spec.ts` (nouvelle, `SPECS_GRAND_ECRAN`) — Hosanna et 一切歌颂赞美 en
+  chiffres puis retour, transposition sans changement des chiffres, capo, préférence gardée au rechargement, le
+  toucher ouvre la lettre, PDF et calque 简谱 inchangés.
+- **H7-2, lignes d'harmonie.** Les lignes d'harmonie d'un chant suivent la bascule, **une seule notation** : porte 2
+  (`HarmonieDuChant` : grilles, cartes avant → après, « Faire monter le dernier refrain », « Vers le chant suivant »)
+  et porte 1 (« Ensuite », « Ici ») ; en chiffres, les chiffres seuls (les lettres grises dessous disparaissent) ; en
+  lettres, les lettres seules à la place des chiffres. Le titre du panneau d'un accord garde lettre et chiffre (« G ·
+  4 dans D », c'est son sujet). La bibliothèque (`/harmonie`, fiches sans tonalité) reste en degrés. Tests :
+  `harmonie-porte1`, `harmonie-colonne`, `harmonie-montrer`, `harmonie-setlist` et `notation-accords` complétées.
+- Captures des deux tranches : 390, 820, 1 180, 1 280 et 1 440, FR et 中文, clair et sombre pour H7-1 ; `regard`, puis
+  `critique-design` sur ses signalements.
+
 Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
 nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
 
