@@ -18,6 +18,8 @@ septième (F#7).
 | Statut | à valider |
 | Sensations | Tension · Surprise · Tendresse et nostalgie |
 | Moments | Couplet · Refrain · Montée |
+| Ressenti | élan · couleur (proposé) |
+| Usage | couplet · pré-refrain · refrain (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : `D/F# → Bm` devient `F#7 → Bm` (ou `D → Bm` devient
@@ -55,6 +57,8 @@ remplacement `3 7 → 6m` · sûreté : **à écouter**.
 | Statut | à valider |
 | Sensations | Joie et élan · Tension |
 | Moments | Couplet · Refrain |
+| Ressenti | élan (proposé) |
+| Usage | couplet · refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `D → G` devient `D – D7 → G` · degrés `1 → 4` devient
@@ -92,6 +96,8 @@ Dieu* (refrain : « remplis-nous de Toi », D7 – GM7) · *Mon rédempteur vit*
 | Statut | à valider |
 | Sensations | Tension · Joie et élan |
 | Moments | Couplet · Refrain |
+| Ressenti | élan (proposé) |
+| Usage | couplet · refrain (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : `Bm → Em` devient `B7 → Em` · degrés `6m → 2m` devient
@@ -126,6 +132,8 @@ comme une résolution.
 | Statut | à valider |
 | Sensations | Joie et élan · Lumière et espérance |
 | Moments | Refrain · Montée |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | pré-refrain · refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `Em → A` devient `E7 → A` · degrés `2m → 5` devient
@@ -162,6 +170,8 @@ lieu* (pont, en C : D – G) · *Noël est arrivé* (couplet, en Bb : C – F) �
 | Statut | à valider |
 | Sensations | Tension · Tendresse et nostalgie |
 | Moments | Couplet · Montée |
+| Ressenti | mélancolique · élan (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : `D → Em` devient `D – D#dim → Em` · degrés `1 → 2m`
@@ -196,6 +206,8 @@ G#dim – Em), 何等恩典 (副歌, en G : G#dim), 吹起复兴的风 (桥段, 
 | Statut | à valider |
 | Sensations | Gravité et recueillement · Tension · Tendresse et nostalgie |
 | Moments | Pont · Couplet |
+| Ressenti | mélancolique · élan (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
 | Niveau | piano : avancé · guitare : avancé |
 
 **Avant → après** : `A → Bm` devient `C#m7b5 – F#7 → Bm` · degrés `5 → 6m`

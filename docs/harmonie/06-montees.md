@@ -15,6 +15,8 @@ Tout est écrit en D.
 | Statut | à valider |
 | Sensations | Suspendu et planant · Tension |
 | Moments | Montée |
+| Ressenti | élan · couleur (proposé) |
+| Usage | pré-refrain (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `G → A` (fin de pré-refrain) devient `Em7 → G/A` ·
@@ -52,6 +54,8 @@ ou `2m → 5` · remplacement `2m7 → 4/5` · sûreté : **à écouter**.
 | Statut | à valider |
 | Sensations | Tension · Suspendu et planant |
 | Moments | Montée |
+| Ressenti | élan · couleur (proposé) |
+| Usage | pré-refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `A` (dernier accord avant le refrain) devient
@@ -93,6 +97,8 @@ final · remplacement `5sus4 → 5` · sûreté : **sûre**.
 | Statut | à valider |
 | Sensations | Émerveillement · Lumière et espérance · Joie et élan |
 | Moments | Montée |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | pré-refrain (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `G → A` devient `G → A/G` · degrés `4 → 5` devient
@@ -128,6 +134,8 @@ remplacement `4 → 5/4` · sûreté : **sûre**.
 | Statut | à valider |
 | Sensations | Tension · Majesté · Épique |
 | Moments | Montée · Fin |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · fin (proposé) |
 | Niveau | piano : intermédiaire · guitare : avancé |
 
 **Avant → après** : `G → A → D` devient `G – G#dim → D/A – A → D` · degrés
@@ -164,6 +172,8 @@ en C : F#dim – C/G) · 圣灵的江河 (前奏, en F : Bdim – F/C) · 好喜
 | Statut | à valider |
 | Sensations | Tension · Surprise · Joie et élan |
 | Moments | Montée |
+| Ressenti | élan · couleur (proposé) |
+| Usage | pré-refrain (proposé) |
 | Niveau | piano : facile · guitare : facile · **à préparer avec l'équipe** |
 
 **Avant → après** : `A → (refrain)` devient `A (un coup) – silence → (refrain)`.

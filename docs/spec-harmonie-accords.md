@@ -104,6 +104,30 @@ Elles remplacent le point 1 (piste A, entrée par boucles, écartée) et complè
 | **H8** | Mode louange : point en marge et bande | H5, état AO |
 | **H9** | Contenu : cours « Jouer ensemble » et fiches manquantes (liste ci-dessous) | H2 |
 
+### H2 — contrat de données (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Aucun écran ne change ; H4 à H6 lisent ces données. Une seule tranche.
+- **Passages** (`src/lib/harmonie/passages.ts`, pur, calculé dans le navigateur comme les suggestions) : un passage
+  par section du chant (`uid`, nom, type, rang). Grille = lignes d'accords lus en degrés (`chiffreDuDegre`) avec leur
+  **fonction tonale** (`T` : 1, 3m, 6m ; `SD` : 2m, 4 ; `D` : 5, 7dim ; `autre` : le reste, emprunts et passages) ;
+  `resume` = la suite sans répétitions immédiates, ramenée à sa **boucle** si elle se répète (« 1 5 6m 4 ») ;
+  **fonction du passage** en code (`repos` : finit sur le 1 ; `vers-refrain` : finit ailleurs et précède un refrain ;
+  `suspens` : finit ailleurs ; `sans-accords`). La phrase affichée sera écrite en FR et 中文 par H4, pas ici.
+  Pourquoi au navigateur : les degrés ne dépendent pas de la tonalité et l'AST est déjà chargé ; pas de second index.
+- **Idées ancrées** : `harmonieDuChant` range les suggestions calculées (`suggestionsPour`, refus appliqués) et les
+  idées de l'équipe dans leur passage, calculées d'abord. Une idée d'équipe porte désormais `passage` (uid de section)
+  et `passageNom` (Firestore, champs facultatifs ; `firestore.rules` ne filtre pas les champs : rien à publier). Uid
+  disparu (chant réécrit) → rattachée par le nom ; sinon dans `sansPassage` (les idées d'avant H2 aussi).
+- **Où l'entendre** : `fiche.ecoutes` = `{ slug, section, nom }` par chant **et** section où le « après » est joué
+  (`build-harmonie.ts`), à côté de `exemples` (gardé pour l'onglet actuel).
+- **Ressenti / usage** : deux lignes `Ressenti` et `Usage` dans le tableau de chaque fiche (`docs/harmonie/*.md`),
+  vocabulaire fermé (chaleureux · mélancolique · élan · couleur ; couplet · pré-refrain · refrain · fin ·
+  transition), suivies de « (proposé) » tant que Timothée ne les a pas validées (`fiche.etiquettesProposees`).
+  Proposition tirée des **deux premières** sensations de la fiche (au plus deux ressentis : quatre ne filtraient
+  plus rien) et des moments : Douceur, Repos, Lumière → chaleureux ; Tendresse, Gravité → mélancolique ; Épique, Majesté, Joie, Tension → élan ; Surprise, Émerveillement,
+  Suspendu → couleur ; Couplet → couplet ; Montée et Pont → pré-refrain ; Refrain → refrain ; Fin → fin ; Intro et
+  Transition → transition. Les sensations et moments restent dans les fiches jusqu'à H6.
+
 Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
 nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
 
@@ -136,6 +160,17 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
 - 12/11/2026 : Timothée valide toutes les recommandations ; décisions et lots H2 à H9 réécrits. Prochain : go pour H2 ?
 - 12/11/2026 : **go de Timothée pour H2** (« go pour Harmonie H2 », au pilote), en quatrième chantier de code. Session
   neuve lancée par le pilote ; le go ne couvre pas H3.
+- 12/11/2026 : **H2 fait** (une tranche, session orchestratrice) : `src/lib/harmonie/passages.ts` (passages par
+  section, grille en degrés avec fonction tonale T / SD / D / autre, résumé ramené à la boucle, fonction du passage
+  `repos` / `vers-refrain` / `suspens` / `sans-accords` ; `harmonieDuChant` range les idées calculées puis celles de
+  l'équipe dans leur passage) ; idée d'équipe : champs `passage` et `passageNom` (rien à publier dans les rules) ;
+  `fiche.ecoutes` au build (2 374 écoutes chant + section sur 38 fiches à règle) ; lignes `Ressenti` et `Usage`
+  « (proposé) » dans les 69 fiches. Décision en route : au plus deux ressentis par fiche, tirés des deux premières
+  sensations (la première passe en donnait jusqu'à quatre). À savoir pour H4 : une boucle doit se répéter au moins
+  deux fois en entier ; le repli par nom prend le premier passage du même nom. Tests : tsc, lint (0 erreur), validate,
+  build:index ; 7 specs harmonie × 3 appareils, 189 passés, 3,0 min (nouvelle `harmonie-passages.spec.ts` : chant FR
+  `a-jamais-tu-es-saint`, chant ZH `一切歌颂赞美`). **À valider par Timothée** : les ressentis et usages proposés,
+  fiche par fiche dans `docs/harmonie/*.md` (retirer « (proposé) » une fois validé). H3 attend son go.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 

@@ -28,6 +28,14 @@ Gravité et recueillement · Lumière et espérance · Joie et élan.
 
 **Moments (7)** : Intro · Couplet · Montée · Refrain · Pont · Fin · Transition.
 
+**Ressenti (4)** : chaleureux · mélancolique · élan · couleur. Ils remplaceront
+les Sensations dans les filtres (H6) ; « (proposé) » tant que Timothée ne les a
+pas validés, à retirer fiche par fiche.
+
+**Usage (5)** : couplet · pré-refrain · refrain · fin · transition. Ils
+remplaceront les Moments dans les filtres (H6) ; « (proposé) » tant que Timothée
+ne les a pas validés, à retirer fiche par fiche.
+
 **Niveau**, par instrument :
 - **facile** : un doigt ou une note qui change, rien de nouveau à apprendre ;
 - **intermédiaire** : un accord ou un geste nouveau (barré, septième, basse

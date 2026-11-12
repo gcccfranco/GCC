@@ -18,6 +18,8 @@ les transitions vivent entre les chants.
 | Statut | à valider |
 | Sensations | Repos · Douceur et intimité |
 | Moments | Transition |
+| Ressenti | chaleureux (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : fin sur `D`, silence, intro du chant suivant devient fin
@@ -50,6 +52,8 @@ la même tonalité.
 | Statut | à valider |
 | Sensations | Repos · Joie et élan |
 | Moments | Transition |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : chant en D, puis chant en G : finir sur `D` (ou `D7`),
@@ -78,6 +82,8 @@ quarte plus haut (D → G).
 | Statut | à valider |
 | Sensations | Lumière et espérance · Joie et élan |
 | Moments | Transition |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : chant en D, puis chant en A : `D → E (ou Esus4 – E) →
@@ -107,6 +113,8 @@ quinte plus haut (D → A).
 | Statut | à valider |
 | Sensations | Épique · Joie et élan · Lumière et espérance |
 | Moments | Transition |
+| Ressenti | élan (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : chant en D, puis chant en E : `D → B7 → E` (ou
@@ -136,6 +144,8 @@ ton plus haut (D → E).
 | Statut | à valider |
 | Sensations | Douceur et intimité · Repos |
 | Moments | Transition |
+| Ressenti | chaleureux (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : chant en D, puis chant en C : `D → Dm7 – G7 → C`.
@@ -165,6 +175,8 @@ ton plus bas (D → C).
 | Statut | à valider |
 | Sensations | Suspendu et planant · Surprise |
 | Moments | Transition |
+| Ressenti | couleur (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : avancé · guitare : avancé |
 
 **Avant → après** : chant en D, puis chant en Bb : fin sur `D`, **une seule

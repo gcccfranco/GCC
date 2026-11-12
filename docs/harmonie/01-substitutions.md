@@ -15,6 +15,8 @@ Tout est écrit en D. Degrés en chiffres (voir `README.md`).
 | Statut | à valider |
 | Sensations | Douceur et intimité · Tension |
 | Moments | Couplet · Montée |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `G → A` devient `Em7 → A` · degrés `4 → 5` devient
@@ -55,6 +57,8 @@ différente) · remplacement `2m7 → 5` · sûreté : **très sûre**.
 | Statut | à valider |
 | Sensations | Douceur et intimité · Tendresse et nostalgie |
 | Moments | Couplet · Refrain |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | couplet · refrain (proposé) |
 | Niveau | piano : facile · guitare : facile (avec Bm7) |
 
 **Avant → après** : `D … D` devient `D … Bm` · degrés `1 → 1` devient
@@ -94,6 +98,8 @@ sûreté : **sûre**.
 | Statut | à valider |
 | Sensations | Lumière et espérance · Joie et élan |
 | Moments | Refrain · Montée |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | pré-refrain · refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `Em → A` devient `G → A` · degrés `2m → 5` devient
@@ -132,6 +138,8 @@ S1 vient d'être essayée (les deux fiches se renverraient la balle).
 | Statut | à valider |
 | Sensations | Surprise · Tension · Tendresse et nostalgie |
 | Moments | Refrain · Fin |
+| Ressenti | élan · couleur (proposé) |
+| Usage | refrain · fin (proposé) |
 | Niveau | piano : facile · guitare : facile · **à préparer avec l'équipe** |
 
 **Avant → après** : `A → D` devient `A → Bm` · degrés `5 → 1` devient
@@ -177,6 +185,8 @@ dernière fois · sûreté : **sûre**.
 | Statut | à valider |
 | Sensations | Tendresse et nostalgie · Émerveillement |
 | Moments | Couplet · Pont |
+| Ressenti | mélancolique · couleur (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : `D → Bm` devient `F#m → Bm` (ou `D → G` devient
@@ -219,6 +229,8 @@ ni le premier accord de la section ni le dernier de sa ligne · remplacement du
 | Statut | à valider |
 | Sensations | Suspendu et planant · Douceur et intimité |
 | Moments | Montée · Fin · Intro |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | pré-refrain · fin · transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `A → D` devient `G/A → D` · degrés `5 → 1` devient

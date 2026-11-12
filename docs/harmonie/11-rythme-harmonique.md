@@ -17,6 +17,8 @@ Tout est écrit en D, en mesures à 4 temps.
 | Statut | à valider |
 | Sensations | Douceur et intimité · Repos · Suspendu et planant |
 | Moments | Couplet · Intro |
+| Ressenti | chaleureux (proposé) |
+| Usage | couplet · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `| D | G | D | A |` devient `| D | D | D | A |` (on
@@ -46,6 +48,8 @@ grand.
 | Statut | à valider |
 | Sensations | Joie et élan · Épique |
 | Moments | Refrain · Montée |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `| D | Bm |` devient `| D  A/C# | Bm |` (D sur les
@@ -78,6 +82,8 @@ rythmique.
 | Statut | à valider |
 | Sensations | Joie et élan · Tension |
 | Moments | Refrain · Montée |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · refrain (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire · **avec le batteur** |
 
 **Avant → après** : le changement d'accord sur le temps 1 devient un
@@ -109,6 +115,8 @@ suivant.
 | Statut | à valider |
 | Sensations | Épique · Joie et élan |
 | Moments | Refrain |
+| Ressenti | élan (proposé) |
+| Usage | refrain (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : dernier refrain `| G | A | Bm | D |` devient

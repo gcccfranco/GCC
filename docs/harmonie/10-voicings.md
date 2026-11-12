@@ -18,6 +18,8 @@ Tout est écrit en D.
 | Instrument | piano |
 | Sensations | Majesté · Épique · Lumière et espérance |
 | Moments | Refrain |
+| Ressenti | élan (proposé) |
+| Usage | refrain (proposé) |
 | Niveau | facile |
 
 **Avant → après** : main gauche D-F#-A serrée dans le grave, main droite D-F#-A
@@ -50,6 +52,8 @@ gauche D-A-D, main droite F#-A-D une octave plus haut.
 | Instrument | piano |
 | Sensations | Douceur et intimité · Repos |
 | Moments | Couplet · Refrain |
+| Ressenti | chaleureux (proposé) |
+| Usage | couplet · refrain (proposé) |
 | Niveau | facile |
 
 **Avant → après** : `D – A – Bm – G` joués tous en position fondamentale (la
@@ -81,6 +85,8 @@ mélodie (reste sous la voix), puis ne bouge que les doigts nécessaires.
 | Instrument | piano |
 | Sensations | Douceur et intimité · Suspendu et planant |
 | Moments | Couplet · Pont |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
 | Niveau | intermédiaire |
 
 **Avant → après** : `Em7 – A7` joués avec toutes les notes devient main
@@ -111,6 +117,8 @@ encombre. Avec 3 et 7 seulement, l'accord est riche mais léger. Et d'un accord
 | Instrument | guitare |
 | Sensations | Lumière et espérance · Suspendu et planant |
 | Moments | Intro · Couplet · Refrain |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | couplet · refrain · transition (proposé) |
 | Niveau | facile |
 
 **Avant → après** : les formes barrées ou « de base » deviennent des formes
@@ -142,6 +150,8 @@ Em7 `022033` gardent même deux doigts fixes en 3e case.
 | Instrument | guitare |
 | Sensations | Lumière et espérance · Douceur et intimité |
 | Moments | Couplet · Pont |
+| Ressenti | chaleureux (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
 | Niveau | intermédiaire |
 
 **Avant → après** : les accords sur six cordes deviennent **trois notes sur
@@ -171,6 +181,8 @@ de glisser d'un accord à l'autre le long du manche.
 | Instrument | guitare |
 | Sensations | Lumière et espérance · Émerveillement |
 | Moments | Intro · Couplet · Refrain |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | couplet · refrain · transition (proposé) |
 | Niveau | facile |
 
 **Avant → après** : chant en D joué en formes de D sans capo devient, **dans

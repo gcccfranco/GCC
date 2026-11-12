@@ -16,6 +16,8 @@ Tout est écrit en D. `b6` = Bb, `b7` = C, `b3` = F, `4m` = Gm.
 | Statut | à valider |
 | Sensations | Tendresse et nostalgie · Douceur et intimité |
 | Moments | Fin · Refrain |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | refrain · fin (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `G → D` devient `G – Gm → D` · degrés `4 → 1` devient
@@ -52,6 +54,8 @@ F#-A-D. Main gauche : G, G, D.
 | Statut | à valider |
 | Sensations | Épique · Majesté · Joie et élan |
 | Moments | Fin · Montée · Refrain |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · refrain · fin (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `A → D` (toute fin) devient `Bb – C → D` · degrés
@@ -89,6 +93,8 @@ final · remplacement `b6 – b7 → 1` · sûreté : **à écouter**.
 | Statut | à valider |
 | Sensations | Joie et élan · Épique · Majesté |
 | Moments | Refrain · Intro · Fin |
+| Ressenti | élan (proposé) |
+| Usage | refrain · fin · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `G → D` devient `C – G → D` · degrés `4 → 1` devient
@@ -124,6 +130,8 @@ Ab – Eb).
 | Statut | à valider |
 | Sensations | Épique · Joie et élan |
 | Moments | Intro · Montée |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `D → G` devient `D – F → G` · degrés `1 → 4` devient
@@ -155,6 +163,8 @@ D → F → G, avec un accord « bluesy » au milieu. Énergique, un peu rock.
 | Statut | à valider |
 | Sensations | Majesté · Émerveillement · Épique |
 | Moments | Fin |
+| Ressenti | élan · couleur (proposé) |
+| Usage | fin (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `G → D` (toute fin) devient `Bb → D` · degrés `4 → 1`

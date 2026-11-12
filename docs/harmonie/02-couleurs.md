@@ -15,6 +15,8 @@ Tout est écrit en D. Degrés en chiffres (voir `README.md`).
 | Statut | à valider |
 | Sensations | Lumière et espérance · Suspendu et planant |
 | Moments | Intro · Couplet · Refrain |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | couplet · refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `D` devient `D2` (Dadd9) · degrés `1` devient `1 2`
@@ -55,6 +57,8 @@ E : A2) · 奇异恩典 (主歌, en E : E2) · 你是我的平安 (桥段 : Gadd
 | Statut | à valider |
 | Sensations | Tension · Repos |
 | Moments | Montée · Refrain · Fin |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | pré-refrain · refrain · fin (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `A → D` devient `Asus4 – A → D` · degrés `5 → 1` devient
@@ -94,6 +98,8 @@ parole* (couplet, en Bb : « pour te contempler », Fsus4 – F) · *À la croix
 | Statut | à valider |
 | Sensations | Suspendu et planant · Émerveillement |
 | Moments | Intro · Couplet · Pont |
+| Ressenti | couleur (proposé) |
+| Usage | couplet · pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `D` devient `Dsus2` · degrés `1` devient `1sus2`.
@@ -129,6 +135,8 @@ sûreté : **sûre**.
 | Statut | à valider |
 | Sensations | Douceur et intimité · Tendresse et nostalgie |
 | Moments | Couplet · Pont · Intro |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | couplet · pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `G` devient `Gmaj7`, `D` devient `Dmaj7` · degrés `4`
@@ -168,6 +176,8 @@ Cmaj7) · 你是我的平安 (前奏 : Dmaj7).
 | Statut | à valider |
 | Sensations | Joie et élan · Lumière et espérance · Émerveillement |
 | Moments | Fin · Intro |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | fin · transition (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : `D` devient `D6` ou `D6/9` · degrés `1` devient `1 6`
@@ -202,6 +212,8 @@ remplacement `1 6/9` · sûreté : **sûre**.
 | Statut | à valider |
 | Sensations | Douceur et intimité · Suspendu et planant |
 | Moments | Couplet · Refrain |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | couplet · refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `Bm` devient `Bm7`, `Em` devient `Em7` · degrés `6m`
@@ -240,6 +252,8 @@ ou `2m7` · sûreté : **très sûre**.
 | Statut | à valider |
 | Sensations | Émerveillement · Suspendu et planant |
 | Moments | Pont · Intro |
+| Ressenti | couleur (proposé) |
+| Usage | pré-refrain · transition (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : `G` (tenu) devient `A/G` · degrés `4` devient `5/4`

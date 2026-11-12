@@ -19,6 +19,8 @@ chant.
 | Statut | à valider |
 | Sensations | Douceur et intimité · Tendresse et nostalgie · Repos |
 | Moments | Transition · Pont |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **La boucle** : `D – A/C# – Bm – G`, puis on recommence.
@@ -56,6 +58,8 @@ E – B/D# – C#m – A).
 | Statut | à valider |
 | Sensations | Suspendu et planant · Émerveillement · Douceur et intimité |
 | Moments | Transition · Intro |
+| Ressenti | couleur (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **La boucle** : `Dmaj7 – G/D`, deux accords, deux mesures chacun.
@@ -85,6 +89,8 @@ C'est la boucle la plus contemplative.
 | Statut | à valider |
 | Sensations | Lumière et espérance · Joie et élan |
 | Moments | Transition · Refrain |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **La boucle** : `Bm – G – D – A`, puis on recommence.
@@ -119,6 +125,8 @@ en F : Dm – Bb – F – C) · 哦十字架 (桥段, en F : Dm – Bb – F �
 | Statut | à valider |
 | Sensations | Tension · Épique · Joie et élan |
 | Moments | Transition · Montée |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **La boucle** : `G – A – Bm`, puis retour à `G` (sans passer par D).
@@ -152,6 +160,8 @@ traverserai avec Toi ») · *Abba Père* (refrain, en A : D – E – F#m) · �
 | Statut | à valider |
 | Sensations | Suspendu et planant · Douceur et intimité |
 | Moments | Transition · Pont |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **La boucle** : `D – Em7`, deux mesures chacun (ou `D – Em7/D`, basse tenue).
@@ -182,6 +192,8 @@ texte par-dessus.
 | Statut | à valider |
 | Sensations | Suspendu et planant · Douceur et intimité · Épique |
 | Moments | Transition |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Le principe** : garder **la même boucle** plusieurs minutes, mais changer
