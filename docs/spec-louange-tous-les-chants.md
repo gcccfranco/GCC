@@ -1,6 +1,6 @@
 # Spec : tous les chants dans le mode louange (lot TC)
 
-**Statut : attend le go de Timothée ; se code après AN, MP-6 et Harmonie H8 (`PerformanceMode.tsx`).**
+**Statut : questions tranchées (12/11/2026, un seul bouton Setlist) ; attend le go de Timothée ; se code après AN, MP-6 et Harmonie H8 (`PerformanceMode.tsx`).**
 Planche : `docs/planches/planche-louange-tous-les-chants.html` (artefact privé
 https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue » en tête.
 
@@ -103,16 +103,16 @@ https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue �
 1. **Ajout local** : oui, à cet appareil, le temps du mode louange, effacé à la fermeture (Timothée, 12/11/2026 : « Oui »).
 2. **Retrait** : une action « Retirer » (44 px) sur sa ligne dans « Cette setlist », sans glissé (Timothée, 12/11/2026 : « oui »).
 
-## Question ouverte (Timothée, 12/11/2026)
-
-Timothée : « L'icône bibliothèque doit ouvrir juste la liste de tous les chants. L'icône de la setlist reste comme
-elle est. Est-ce que c'est mieux de fusionner les deux icônes pour éviter que ça fasse trop chargé dans la barre du
-haut ? » Deux formes, la réponse fixe TC-1 :
-- **Deux boutons** : Setlist inchangé (sans onglets) ; « Chants » n'ouvre que la liste de tous les chants. Au
-  téléphone, Repères passe dans Options.
-- **Un seul bouton (proposé)** : Setlist ouvre un menu à deux onglets « Cette setlist | Tous les chants », qui
-  rouvre sur le dernier onglet utilisé ; la barre reste celle d'aujourd'hui, Repères compris au téléphone.
+3. **Un seul bouton** (Timothée, 12/11/2026, après « L'icône bibliothèque doit ouvrir juste la liste de tous les
+   chants […] est-ce que c'est mieux de fusionner les deux icônes ») : pas de bouton « Chants ». Setlist ouvre un menu à
+   deux onglets « Cette setlist | Tous les chants », qui se rouvre sur le **dernier onglet utilisé** (mémorisé pour la
+   session du mode louange). La barre reste celle d'aujourd'hui, Repères compris au téléphone. **Cela remplace** le
+   point 1 de « Ce qui se construit », la décision 2 du § Demande et la décision déléguée « Téléphone » ; en TC-1,
+   `BarreHaut.tsx` et `MenuLouange.tsx` ne changent pas (pas de `MenuId` `chants`) ; « / » sur ordinateur ouvre le menu
+   sur « Tous les chants », champ actif.
 
 ## Avancement
 
 - 12/11/2026 : planche (trois pistes), choix de Timothée (piste A, bouton à part, interrupteur 简谱), spec écrite.
+- 12/11/2026, soir : Timothée tranche les questions 1 et 2 (oui) et choisit un seul bouton (Setlist à deux onglets) ;
+  plus de question ouverte, le lot attend son go.
