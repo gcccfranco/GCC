@@ -498,115 +498,214 @@ tranche ; **planches `npm run jianpu:audit` regardées** pour chaque scan certif
 
 ### AN — Annotations façon forScore
 
-**Suspendu le 12/11/2026 : ne pas coder ce lot tel qu'écrit.** « Ma partition » (`docs/spec-ma-partition.md`) change le
-rangement des traits et le bouton d'entrée ; détail au § Avancement (« L'enchaînement s'arrête après JP-D »).
+**Réécrit le 12/11/2026 après MP-5 ; attend le go de Timothée**, et ne se code qu'après la fin du pupitre PU-6 (même
+fichier `PerformanceMode.tsx`). La version du 08/11, écrite sur l'ancien rangement (documents
+`annotations/{uid}__{setlistId}__{pageKey}`, décision 18), est remplacée par celle-ci, qui se code sur le rangement et
+le Crayon de « Ma partition » (`docs/spec-ma-partition.md`, § Traits accrochés au texte, lignes d'Avancement MP-1 à
+MP-5, `ddbaa13`).
 
 Planche : `docs/planches/planche-annotations-forscore.html` (artefact, carte 3), **piste A « Barre forScore »**
-(décisions 21 à 23). Aujourd'hui : bouton « Annoter » (connecté, setlist qui ne vient pas de la copie hors ligne :
-`PerformanceMode.tsx:1360`), barre d'outils fixe dans `AnnotationCanvas.tsx` (514 lignes : loupe, stylo, surligneur,
-gomme, trois épaisseurs `SIZES` l.27, sept couleurs `COLORS` l.25, annuler sur 30 états l.118 et l.338, tout effacer) ;
-un stylet ne fait rien hors annotation (`PerformanceMode.tsx:910` et `:933`, `if (e.pointerType === "pen") return`) ;
-traits vectoriels `{w, h, strokes, rappel?}` (`src/lib/annotations/strokes.ts`), sérialisés dans le champ `strokes` du
-document `annotations/{uid}__{setlistId}__{pageKey}` (`src/lib/firebase/annotations.ts`) ; un document par écran, deux
-colonnes comprises (suffixe `x2` de la clé, `PerformanceMode.tsx:804`).
+(décisions 21 à 23, gardées). Seul écart à la planche : les animations d'entrée et de sortie (question AN-Q1 ci-dessous).
 
-**Ce qui ne change pas** (décision 18) : le document, son nom, son champ `strokes` et son enveloppe JSON ; aucune autre
-écriture Firestore ; pas de calques ni de partage d'annotations ; les traits restent en pixels d'écran sous la clé de
-page (l'accrochage viendra avec la migration). Les nouveautés tiennent dans la liste `strokes` (types d'AN-5, champ
-optionnel `alpha` d'AN-4) ou restent sur l'appareil (préréglages, position de la barre, « le doigt ne dessine pas »).
+**Ce qui est là aujourd'hui** (tête de branche `4c1c03a`, chemins et lignes vérifiés le 12/11) :
+- **Rangement** (MP-1, MP-5) : mes traits vivent dans `partitions/{uid}__{songSlug}`, champ `traits`
+  (`src/lib/firebase/partitions.ts`, écriture `traitsAplatis` l.113, relecture `traitsValides` l.43). Type `Trait`
+  (`src/types/partition.ts:10`) : `{ancre, outil: "pen" | "highlighter", couleur, epaisseur, points}` ; ancre = section,
+  ligne, caractère des paroles (points et épaisseur en em) ou scan 简谱 (fraction de la largeur de l'image). Calcul pur
+  dans `src/lib/annotations/ancres.ts` (`decouper` l.15, `ancrer` l.43, `projeter` l.55, `traitsValides` l.70) ;
+  projection DOM ↔ écran dans `src/components/performance/hooks/useTraitsAncres.ts` (`ancrerTrace` l.84 : un tracé
+  à plus de 2 em de toute ligne ne s'ancre nulle part, `shortcut:` noté). Un trait suit son mot d'un appareil, d'une
+  disposition ou d'une taille de texte à l'autre, et d'une setlist à l'autre.
+- **Écriture** : `SetlistDetailClient.tsx` regroupe les traits 800 ms par chant (`traitsChanges` l.1241, `traitsEnAttente`
+  l.393), les écrit tout de suite à la sortie du mode, au `pagehide` et en arrière-plan ; en échec, la file locale par
+  compte de MP-1 (`src/lib/partition/fileEnAttente.ts`) les rejoue au retour du réseau ; `mesPartitions.enAttente`
+  existe (l.1835) mais n'est pas montré au mode louange.
+- **Crayon** (MP-5) : « Annoter » est devenu « Crayon » (画笔), `BarreHaut.tsx:116` (`onAnnoter`), et en tête de la
+  feuille Options au téléphone (`PerformanceMode.tsx:1688`) ; offert si connecté, en ligne et ma partition lue
+  (`crayonPret`, `basculerAnnotation`, `PerformanceMode.tsx:1329-1338`). L'état garde son nom `annotateMode` (l.482).
+  Le canvas d'AO est réutilisé tel quel (`AnnotationCanvas.tsx`, 523 lignes : barre d'outils fixe l.409-490, loupe,
+  stylo, surligneur, gomme, trois épaisseurs `SIZES` l.27, sept couleurs `COLORS` l.25, annuler sur 30 états de traits
+  écran l.126 et l.186, tout effacer sans confirmation l.351) ; `surTracesCrayon` (`PerformanceMode.tsx:1286`) ancre les
+  tracés neufs et retire les traits gommés. Aucune animation à l'entrée du Crayon (test (h) de
+  `tests/ma-partition-traits.spec.ts`, règle de MP § Le Crayon).
+- **Stylet** : ignoré hors Crayon (`if (e.pointerType === "pen") return`, `PerformanceMode.tsx:1457` et `:1485` ; celui
+  de la l.507, fermeture d'un menu, reste). En Crayon, le canvas couvre la page : tout pointeur dessine, aucun ne tourne
+  la page.
+- **Deux colonnes et demi-page** : `decouper` envoie chaque point à la ligne (donc à la colonne) qui le contient ; la
+  demi-page montre les traits rognés par zone et se coupe en Crayon (`demiActif`, l.1133).
+- **Anciennes annotations par page** : en lecture seule jusqu'à MP-6 (`useAnnotationsPage` n'écrit plus) ;
+  `saveAnnotation` (`src/lib/firebase/annotations.ts`) est du code mort, retiré en MP-6, pas ici.
 
-Dépendances : FS-A (barre de titre, réglage de couleur et sélecteur à cercle chromatique), FS-B (popover, état
-`popoverOuvert`), DP (traits rangés par disposition), CV (marque `v2`). Vague 3.
+**Ce qui ne change pas** : le rangement de MP (`partitions/{uid}__{songSlug}`, champ `traits`) ; aucune autre écriture
+Firestore, aucune modification de `firestore.rules` ; pas de calques ; le partage des traits reste celui de MP-4
+(« Inclure mes traits », `sharedTraits`) et vaut pour les textes et tampons ; ceux d'une partition partagée restent en
+lecture seule ; la page de setlist et la page d'un chant gardent leur Crayon sans outil Trait (décision déléguée de
+MP-5). Les nouveautés tiennent dans les éléments de `traits` (champ `alpha` d'AN-4, éléments `text` et `stamp`
+d'AN-5) ou restent sur l'appareil (préréglages par compte, position de la barre, « le doigt ne dessine pas »).
 
-**AN-1 Enregistrement fiable** (S) : `saveAnnotation` vérifie `res.ok`, a un délai maximal (`delaiMax`) et ne se tait
-plus ; un enregistrement en échec va dans une file locale par compte (effacée à la déconnexion ou au changement de compte,
-comme `src/lib/setlist/copieHorsLigne.ts`), renvoyée au retour du réseau ; un petit indicateur « Enregistré » /
-« En attente » dans la barre d'annotation. Même document, même format.
+Dépendances : FS-A (barre de titre, couleur des icônes et `CercleChromatique.tsx`), FS-B (popover, `popoverOuvert`),
+MP-1 à MP-5 (faits) ; **PU-4 à PU-6 finis** (`PerformanceMode.tsx`, « Je joue », Options, `ContenusMenus.tsx`).
 
-**AN-2 Entrer et sortir** (M) :
-- **Appui long** n'importe où sur la page (hors barre et popovers) : un anneau se remplit sous le doigt de 200 à
-  500 ms ; à 500 ms on entre en annotation ; un toucher rapide ne montre rien. Les gestes acquis (côtés = tourner,
-  centre = barre, balayage) ne changent pas. Nouveau geste pur dans `src/lib/performance/gestes.ts`, testé.
-- **Stylet** : le trait commence dès que le stylet touche la page (le `return` des lignes 910 et 933 est levé pour ce
-  cas) ; le mode annotation s'ouvre avec ce premier trait.
-- **« Le doigt ne dessine pas »** : coupé sur un appareil neuf ; s'allume seul au premier trait fait au stylet sur
-  l'appareil, avec un avis une seule fois (« Le doigt tourne et zoome, le stylet dessine ») ; interrupteur dans le
-  menu ⋯ de la barre ; retenu par appareil (localStorage).
-- **Sortir** : « Terminé », Échap ; sortie automatique après 8 s sans toucher **seulement** si l'on est entré au stylet.
-- Le bouton Annoter de la barre de titre (FS-A) reste ; l'appui long et le stylet suivent la même condition que lui
-  (connecté, pas sur la copie hors ligne) et ne font rien sinon.
+**Décisions déléguées (session de réécriture d'AN, 12/11)**, à corriger par Timothée d'un mot :
+- **AN-1 n'est plus une tranche** : MP-1 a fait l'enregistrement fiable (`res.ok`, `delaiMax`, file locale par compte
+  effacée au changement de compte, rejeu au retour du réseau). Reste l'indicateur « Enregistré » / « En attente » dans
+  la barre d'annotation : il entre dans AN-3a (motif : c'est un élément de la barre ; `mesPartitions.enAttente` existe).
+- **Annuler / Rétablir par chant**, pas par page : un trait appartient au document du chant, pas à une page d'écran
+  qui change avec la taille et la disposition. L'historique (traits ancrés, plus des tracés écran) quitte le canvas pour
+  un petit module pur, `src/lib/annotations/historique.ts` (pile par chant, 50 états, gardée pendant la séance du mode
+  louange, vidée à sa sortie) ; Annuler touche le chant de la page affichée, et en deux colonnes celui de la colonne où
+  l'on a tracé en dernier.
+- **Plus de « chargement » par page** : les traits de tout le chant arrivent avec ma partition. La règle « rien ne
+  s'enregistre avant la fin du chargement » devient celle de MP-5 : sur un chant dont la partition n'est pas encore lue
+  (`chantsCharges[slug] === false`), le canvas est inerte et la barre dit « Chargement… » ; tourner vers un autre chant
+  en Crayon suit la même règle.
+- **Garde de lisibilité** : celle des traits se calcule à 3:1 (planche) en donnant un seuil à `garderContraste`
+  (`src/lib/performance/couleurIcones.ts:105`, 4,5:1 par défaut, inchangé pour les icônes) ; la barre d'annotation prend
+  la couleur des icônes telle que FS-A la garde déjà (4,5:1, plus strict que les 3:1 de la planche ; même couleur que les
+  autres icônes du mode).
+- **Signes posés loin du texte** : un texte ou un tampon s'accroche à la ligne la plus proche dans la colonne, sans la
+  limite des 2 em des traits (un « ff » se pose souvent dans la marge) ; les traits gardent la limite.
+- **Compatibilité du format** : `traitsValides` garde tel quel (objet opaque) un élément qu'il ne connaît pas et le
+  réécrit à l'enregistrement ; il garde aussi les champs inconnus d'un trait connu. Motif : une version plus ancienne
+  (copie en cache du service worker) qui réécrit la liste ne doit pas effacer les tampons ni la transparence. Fait en
+  premier dans AN-4, avant tout nouvel élément.
+- **Appui long et texte sélectionnable** : la page du mode louange garde `user-select: none` et
+  `-webkit-touch-callout: none` pendant l'appui (sinon iOS ouvre la loupe de sélection à 500 ms).
 
-**AN-3 Barre d'annotation** (L) :
-- Attachée, elle **prend la place de la barre de titre** (même hauteur, même matière opaque, les contenus changent en
-  fondu enchaîné, la barre ne bouge pas) sur la tablette et l'ordinateur (ordinateur : capsule centrée dans la colonne
-  de lecture de 1 440 px) ; **en bas au téléphone**, avec en haut Annuler, Rétablir · ‹ p. 1/2 › · Terminé.
-- Tablette portrait (768 px) : poignée (zone de 44 × 44 px), ‹ ›, Annuler, Rétablir | les cinq préréglages en
-  **traits témoins** (le trait qu'on va faire, à sa couleur, son épaisseur et sa transparence) | Gomme, Texte, Tampons
-  et formes (un seul menu) | ⋯ (Loupe, « Le doigt ne dessine pas », Modifier les préréglages, Raccourcis, Tout
-  effacer…), Terminé. La Loupe sort du menu ⋯ à partir de 1 024 px. Téléphone : trois préréglages, Gomme, Tampons, ⋯.
-- **Détacher** par la poignée : suivi 1:1 (capture du pointeur) ; au lâcher, la barre s'accroche au point le plus
-  proche (haut, bas, bord gauche, bord droit, en colonne contre un bord latéral, contenus en fondu, sans rotation) ou
-  reste libre si on la lâche lentement ; ressort, élastique aux bords ; position retenue par appareil.
-  `prefers-reduced-motion` : fondus de 150 ms, pas de ressort.
-- **Tourner la page en annotant** : ‹ › de la barre, ← → au clavier, et les côtés : onglets de 44 px aux bords quand
-  le doigt dessine, zones latérales habituelles quand il ne dessine pas ; **le stylet ne tourne jamais la page**. La
-  page suivante charge ses traits (état « chargement » visible ; rien ne s'enregistre avant la fin du chargement, comme
-  aujourd'hui avec `loadAnnotation`). En deux colonnes, le trait va à la feuille sous la pointe, dans le document de
-  l'écran.
-- **Annuler / Rétablir** par page, historique gardé en changeant de page pendant la séance ; ⌘Z / ⇧⌘Z sur Apple,
+**Questions à Timothée** (chacune a une proposition, appliquée par défaut pour ne pas bloquer) :
+- **AN-Q1 Animations** : la planche AN (08/11) veut des fondus enchaînés à l'entrée, un ressort pour la barre détachée ;
+  la spec de MP (11/11), testée (test (h)), veut « aucune animation, entrée et sortie du Crayon comprises ». Je propose
+  la règle de MP, plus récente : contenus de la barre changés d'un coup, barre détachée qui se pose sans ressort ni
+  élastique (suivi 1:1 du doigt gardé, c'est du suivi, pas une animation) ; l'anneau d'appui long reste (il dit qu'il
+  se passe quelque chose avant l'entrée).
+- **AN-Q2 Essai réel** : l'essai sur un iPad avec Apple Pencil (pression, paume posée) avant la mise en ligne reste à
+  Timothée ; je propose de le faire avec la relecture complète d'AO, pas tranche par tranche.
+
+**Tranches** (une session par tranche, dans cet ordre ; chacune enchaîne la suivante selon `CLAUDE.md` § Go) :
+
+**AN-3a Barre d'annotation attachée** (M ; reprend AN-1 pour l'indicateur et le cœur d'AN-3) :
+- *Ce qui change* : la barre d'outils fixe d'`AnnotationCanvas.tsx` (l.409-490) sort dans un nouveau
+  `src/components/performance/BarreAnnotation.tsx` ; le canvas ne garde que le dessin, la gomme et la loupe (pincer).
+  Attachée, la barre **prend la place de la barre de titre** (`BarreHaut`, même hauteur et même matière opaque, sans
+  fondu : AN-Q1) sur la tablette et l'ordinateur (ordinateur : capsule centrée dans la colonne de lecture de 1 440 px) ;
+  **en bas au téléphone**, avec en haut Annuler, Rétablir · ‹ p. 1/2 › · Terminé.
+- Tablette portrait (768 px) : poignée (44 × 44 px, inerte jusqu'à AN-3b), ‹ ›, Annuler, Rétablir | outils | Gomme |
+  ⋯ (Loupe, Raccourcis, Tout effacer…), Terminé. Jusqu'à AN-4, « outils » = stylo et surligneur avec les trois
+  épaisseurs et les sept couleurs d'aujourd'hui, dans un popover ; la Loupe sort de ⋯ à partir de 1 024 px.
+  Téléphone : outils, Gomme, ⋯.
+- Annuler / Rétablir par chant (décision déléguée), `src/lib/annotations/historique.ts` pur ; ⌘Z / ⇧⌘Z sur Apple,
   Ctrl+Z / Ctrl+Y ailleurs (les deux combinaisons acceptées partout, libellés selon le système).
-- **Tout effacer** (la page) avec confirmation. Bulles d'aide au survol, montrées aussi à l'appui long sur un outil.
+- **Tout effacer** (mes traits des chants de la page affichée) avec confirmation ; « Annuler » le rend.
+- Indicateur « Enregistré » / « En attente » (`mesPartitions.enAttente` et l'état de `traitsEnAttente`, passés à
+  `PerformanceMode` par `SetlistDetailClient`) ; « Chargement… » tant que la partition du chant n'est pas lue.
+- Bulles d'aide au survol, montrées aussi à l'appui long sur un outil.
 - En annotation, les **repères de section passent au-dessus de l'encre** et sont inertes ; l'onglet de page passe
   devant eux (en Scène, il se pose sur la colonne de gauche).
+- Couleur de la barre (décision 23) : icônes, ‹ ›, Annuler, Rétablir, Terminé et pastille de l'outil actif à
+  `--couleur-icones` (glyphe à la couleur du fond si le contraste l'exige).
+- *Fichiers* : `BarreAnnotation.tsx` (nouveau), `AnnotationCanvas.tsx`, `PerformanceMode.tsx` (rendu de la barre,
+  historique, Tout effacer), `SetlistDetailClient.tsx` (indicateur), `src/lib/annotations/historique.ts`, locales
+  `fr.json` / `zh-CN.json` (`performance.tools.*`).
+- *Tests* : nouvelle `tests/annotations-forscore.spec.ts`, ajoutée à `SPECS_GRAND_ECRAN` (cinq projets) : barre à la
+  place de la barre de titre (tablette, ordinateur) et en bas au téléphone ; tient à 768 px sans débordement ; Annuler /
+  Rétablir (boutons et clavier) ; Tout effacer demande confirmation et s'annule ; « En attente » sur un échec simulé
+  puis « Enregistré » au retour du réseau ; repères au-dessus de l'encre ; barre à la couleur choisie. Pur : historique.
+  Voisines : `ma-partition-traits`, `mode-louange-forscore`, `performance-mode`, `louange-barre-titre`, trois appareils.
 
-**AN-4 Préréglages et couleurs** (M), décisions 22 et 23 :
-- **Cinq préréglages**, chacun réglable à sa guise : outil (stylo ou surligneur), **couleur** (teintes prêtes et le
-  cercle chromatique de FS-A ; aucune couleur interdite), **épaisseur** (curseur), **transparence** (curseur). Un
-  toucher prend le préréglage ; un second toucher, ou un appui long, ouvre son réglage ; « Modifier les préréglages »
-  dans ⋯. Par défaut : Graphite fin (#2b2b2e), Magenta moyen (#b8188c), Vert moyen (#1d7a3e), Surligneur jaune
-  (#ffd60a), Graphite épais. Teintes prêtes du réglage : celles-ci, la Menthe (#6ee7a8) et quelques autres ; le blanc
-  « correcteur » n'est plus proposé (le cercle le permet toujours).
+**AN-2 Entrer, sortir, tourner la page** (M ; reprend AN-2 et le « tourner la page » d'AN-3) :
+- *Déjà fait par MP* : le bouton « Crayon » de la barre de titre (et de la feuille Options au téléphone) et sa
+  condition (`crayonPret`). Il reste.
+- **Appui long** n'importe où sur la page (hors barres et popovers) : un anneau se remplit sous le doigt de 200 à
+  500 ms ; à 500 ms on entre en Crayon ; un toucher rapide ne montre rien ; un mouvement de plus de 10 px annule.
+  Gestes acquis (côtés = tourner, centre = barre, balayage, pincer) inchangés. Geste pur dans
+  `src/lib/performance/gestes.ts` (`classerAppui`), testé. Même condition que le bouton (`crayonPret`) ; rien sinon.
+- **Stylet** : le trait commence dès que le stylet touche la page (le `return` des l.1457 et 1485 est levé pour ce
+  cas, le contact est passé au canvas) ; le Crayon s'ouvre avec ce premier trait, qui n'est pas perdu.
+- **« Le doigt ne dessine pas »** : coupé sur un appareil neuf ; s'allume seul au premier trait fait au stylet sur
+  l'appareil, avec un avis une seule fois (« Le doigt tourne et zoome, le stylet dessine ») ; interrupteur dans ⋯ ;
+  retenu par appareil (`annot-doigt-libre`, localStorage). Allumé, le canvas ne prend que le stylet (et la souris) ; le
+  doigt garde les gestes de la page.
+- **Tourner la page en Crayon** : ‹ › de la barre, ← → au clavier ; les côtés : onglets de 44 px aux bords quand le
+  doigt dessine, zones latérales habituelles quand il ne dessine pas ; **le stylet ne tourne jamais la page**. Les
+  traits de la page suivante sont là par la projection (`useTraitsAncres`) ; un chant pas encore lu : « Chargement… ».
+- **Sortir** : « Terminé », Échap (Échap ferme d'abord un popover ouvert) ; sortie automatique après 8 s sans toucher
+  **seulement** si l'on est entré au stylet. La sortie écrit les traits en attente (`envoyerTraits`, déjà là).
+- *Fichiers* : `PerformanceMode.tsx` (pointeurs, appui long, onglets, clavier), `AnnotationCanvas.tsx` (filtre
+  doigt / stylet, premier trait), `gestes.ts`, `BarreAnnotation.tsx` (interrupteur dans ⋯), locales.
+- *Tests* (dans `annotations-forscore.spec.ts`) : l'appui long entre, un toucher rapide non, un appui qui glisse non ;
+  un stylet simulé (`pointerType: "pen"`) dessine dès le contact, son premier trait est dans ma partition, et il ne
+  tourne jamais la page ; « le doigt ne dessine pas » s'allume au premier trait au stylet, avis montré une fois, retenu
+  après rechargement ; tourner la page en Crayon garde les traits des deux pages ; Échap = Terminé ; sortie à 8 s
+  seulement après une entrée au stylet. Pur : `classerAppui`. Voisines : `ma-partition-traits`, `performance-mode`,
+  `mode-louange-forscore`, `louange-demi-page`, `planning-gestes`, trois appareils.
+
+**AN-3b Détacher la barre** (S à M ; reste d'AN-3) :
+- Par la poignée : suivi 1:1 (capture du pointeur) ; au lâcher, la barre se pose au point le plus proche (haut, bas,
+  bord gauche, bord droit, en colonne contre un bord latéral, sans rotation) ou reste libre si on la lâche lentement ;
+  pas de ressort ni d'élastique (AN-Q1) ; position retenue par appareil (`annot-barre-position`). Contenus en colonne
+  contre un bord latéral. Position recalée dans l'écran à la rotation.
+- *Fichiers* : `BarreAnnotation.tsx`, petit calcul pur (`src/lib/performance/barreAnnotation.ts` : point d'accroche le
+  plus proche), testé.
+- *Tests* (`annotations-forscore.spec.ts`) : glisser la poignée vers la gauche pose la barre en colonne ; position
+  retenue après rechargement ; jamais hors de l'écran après rotation ; la barre détachée ne cache pas les ‹ › au
+  téléphone. Pur : point d'accroche. Voisines : trois appareils.
+
+**AN-4 Préréglages et couleurs** (M ; décisions 22 et 23) :
+- *D'abord* : `traitsValides` compatible (décision déléguée), testé : un élément inconnu et un champ inconnu
+  reviennent tels quels à l'écriture.
+- **Cinq préréglages**, chacun réglable : outil (stylo ou surligneur), **couleur** (teintes prêtes et
+  `CercleChromatique.tsx` de FS-A ; aucune couleur interdite), **épaisseur** (curseur), **transparence** (curseur). Ils
+  remplacent dans la barre le popover d'outils d'AN-3a, en **traits témoins** (le trait qu'on va faire, à sa couleur,
+  son épaisseur et sa transparence). Un toucher prend le préréglage ; un second toucher, ou un appui long, ouvre son
+  réglage ; « Modifier les préréglages » dans ⋯. Par défaut : Graphite fin (#2b2b2e), Magenta moyen (#b8188c), Vert
+  moyen (#1d7a3e), Surligneur jaune (#ffd60a), Graphite épais. Teintes prêtes : celles-ci, la Menthe (#6ee7a8) et
+  quelques autres ; pas de blanc « correcteur » (le cercle le permet toujours). Téléphone : trois préréglages.
 - Retenus **par compte sur l'appareil** (`annot-prereglages-<uid>`, localStorage), comme le rôle (FS-C) ; rien dans
   Firestore.
-- Le trait garde la couleur choisie (champ `color`) ; la transparence va dans un champ optionnel `alpha` du trait
-  (absent = rendu d'aujourd'hui : 1 pour le stylo, 0,35 pour le surligneur). Les anciens traits gardent leur couleur.
+- Le trait garde sa couleur (`couleur`) ; la transparence va dans un champ optionnel `alpha` du `Trait` (absent = rendu
+  d'aujourd'hui : 1 pour le stylo, 0,35 pour le surligneur, `strokes.ts:141`), porté par `ancrer`, `projeter`,
+  `drawStrokes`. Épaisseur en em, comme aujourd'hui.
 - **Garde de lisibilité au rendu**, jamais à l'enregistrement : un trait de stylo à moins de 3:1 contre le fond de la
-  page est dessiné éclairci ou assombri, même teinte (c'est ce qui rend lisible en sombre un ancien #1a1a1a) ; le
-  surligneur a son rendu sombre (fusion « écran », 45 %). Même calcul que le garde-fou de la couleur des icônes.
-- **Couleur de la barre** (décision 23) : la barre d'annotation suit la couleur choisie dans FS-A (icônes, ‹ ›,
-  Annuler, Rétablir, Terminé, pastille de l'outil actif avec un glyphe à la couleur du fond si le contraste l'exige),
-  avec le même garde-fou de 3:1.
+  page est dessiné éclairci ou assombri, même teinte (`garderContraste` avec seuil) ; le surligneur a son rendu sombre
+  (fusion « écran », 45 %).
+- *Fichiers* : `src/types/partition.ts`, `src/lib/annotations/ancres.ts`, `strokes.ts`, `couleurIcones.ts` (seuil),
+  nouveau `src/lib/annotations/prereglages.ts`, `BarreAnnotation.tsx`, `AnnotationCanvas.tsx`, locales.
+- *Tests* (`annotations-forscore.spec.ts`) : un préréglage modifié est retenu après rechargement, par compte (deux
+  comptes simulés, noms inventés) ; un trait garde couleur et `alpha` dans `db.writes` ; un trait #1a1a1a s'affiche
+  lisible en sombre ; un ancien trait (sans `alpha`) se dessine comme avant. Purs : `traitsValides` (inconnus gardés),
+  garde 3:1. Voisines : `ma-partition-traits`, `couleur-accords`, `louange-barre-titre`, trois appareils.
 
 **AN-5 Texte, tampons et formes** (M) :
-- **Texte** : une note courte tapée, posée là où l'on touche ; police système demi-gras, 17 px à la loupe 100 %,
-  liseré de 3 px de la couleur du fond ; déplaçable et modifiable tant qu'on annote ; la gomme l'efface.
-- **Tampons** : p, mf, f, ff, crescendo, decrescendo, respiration, point d'orgue, ×2, seul, tutti ; **formes** :
-  flèche, cercle, trait. Un seul menu « Tampons et formes » ; sous chaque signe, son sens (piano, mezzo-forte, forte,
+- **Texte** : une note courte tapée, posée là où l'on touche ; police système demi-gras, 17 px à la loupe 100 % et à la
+  taille de texte de l'écran (taille enregistrée en em, comme l'épaisseur) ; liseré de 3 px de la couleur du fond ;
+  déplaçable et modifiable tant qu'on est en Crayon ; la gomme l'efface.
+- **Tampons** : p, mf, f, ff, crescendo, decrescendo, respiration, point d'orgue, ×2, seul, tutti ; **formes** : flèche,
+  cercle, trait. Un seul menu « Tampons et formes » ; sous chaque signe, son sens (piano, mezzo-forte, forte,
   fortissimo, crescendo, decrescendo, respiration, point d'orgue, reprise, solo, tous ensemble ; 中文 : 弱, 中强, 强,
   很强, 渐强, 渐弱, 换气, 延长, 反复, 单独, 全体).
-- Enregistrement : formes, soufflets, respiration et point d'orgue sont des traits `pen` ordinaires (aucun type
-  nouveau) ; nuances, ×2, seul et tutti sont un élément `{tool: "stamp", kind, points: [[x, y]], size, color}` ; le
-  texte est `{tool: "text", text, points: [[x, y]], size, color}`. Une ancienne version (copie en cache du service
-  worker) les dessine au pire comme un point, sans planter. Seul et tutti s'affichent dans la langue de l'interface
-  (seul, tutti ; 独, 齐) : on enregistre le genre, pas le texte. `drawStrokes`, `strokeHitTest` (gomme),
-  `serializeAnnotations` et `deserializeAnnotations` les gèrent ; nouveau `src/lib/annotations/tampons.ts`.
-- Glyphes Noto Music U+1D18F à U+1D193, U+1D110 et U+1D112 ajoutés au sous-ensemble (`scripts/build-fonts.py`),
-  couverture vérifiée au build ; la police est chargée avant de dessiner sur le canvas.
+- Enregistrement, dans `traits` : formes, soufflets, respiration et point d'orgue sont des traits `pen` ordinaires ;
+  nuances, ×2, seul et tutti sont `{ancre, outil: "stamp", genre, points: [[x, y]], taille, couleur}` ; le texte est
+  `{ancre, outil: "text", texte, points: [[x, y]], taille, couleur}` (points et taille en em, ou en fraction de largeur
+  sur un scan). Accroche à la ligne la plus proche sans limite de distance (décision déléguée). Seul et tutti
+  s'affichent dans la langue de l'interface (seul, tutti ; 独, 齐) : on enregistre le genre. `ancrer`, `projeter`,
+  `traitsValides`, `drawStrokes`, `strokeHitTest` (gomme) les gèrent ; nouveau `src/lib/annotations/tampons.ts`.
+- Glyphes Noto Music U+1D18F à U+1D193, U+1D110 et U+1D112 ajoutés au sous-ensemble (`scripts/build-fonts.py`, lancé
+  à la main, woff2 commités), couverture vérifiée au build ; la police est chargée avant de dessiner sur le canvas.
+- *Fichiers* : `src/types/partition.ts`, `ancres.ts`, `strokes.ts`, `tampons.ts` (nouveau), `useTraitsAncres.ts`
+  (accroche sans limite), `BarreAnnotation.tsx`, `AnnotationCanvas.tsx`, `scripts/build-fonts.py`, polices, locales.
+- *Tests* (`annotations-forscore.spec.ts`) : tampon et texte écrits dans ma partition (`db.writes` lu après un signe à
+  l'écran) et relus au rechargement, au même mot à une autre taille d'écran ; un « ff » posé dans la marge s'accroche ;
+  la gomme efface un texte ; une partition avec `stamp` et `text` partagée (« Inclure mes traits ») s'affiche chez le
+  destinataire en lecture seule ; seul et tutti en 中文. Voisines : `ma-partition-traits`, `ma-partition-partage`,
+  trois appareils ; `npm run validate`.
 
-Critères (AN) : nouvelle spec `tests/annotations-forscore.spec.ts`, ajoutée à `SPECS_GRAND_ECRAN` (cinq projets) :
-l'appui long entre en annotation, un toucher rapide non ; un stylet simulé (`pointerType: "pen"`) dessine dès le contact
-et ne tourne jamais la page ; « le doigt ne dessine pas » s'allume au premier trait au stylet ; tourner la page en
-annotant garde les traits des deux pages ; Annuler / Rétablir ; Échap = Terminé ; un préréglage modifié est retenu après
-rechargement, par compte (deux comptes simulés, noms inventés) ; tampon et texte enregistrés dans le même document
-(`db.writes` lu après un signe à l'écran) et relus ; un ancien document (sept couleurs, sans `alpha`) s'affiche comme
-avant ; un document avec `stamp` et `text` ne fait pas planter la lecture ; aucune écriture hors
-`annotations/{uid}__…` ; un enregistrement en échec affiche « En attente » puis part au retour du réseau ; repères
-au-dessus de l'encre ; la barre tient à 768 px sans débordement ; la barre et ses actions prennent la couleur choisie.
-Tests existants d'annotation verts (`performance-mode`, `mode-louange-forscore`, `jianpu-integration` pour les clés
-`j2`, `j3`, `j4`). Captures **regardées** : quatre dispositions + 1 440 px, FR et 中文, clair et sombre, une page
-Classique et un scan 简谱. Libellés chinois nouveaux relus par un responsable sinophone avant la mise en ligne. Essai
-sur un iPad avec Apple Pencil (pression, paume posée sur l'écran) par Timothée avant la mise en ligne : Playwright ne
-le voit pas.
+**Pour toutes les tranches** : aucune écriture hors `partitions/{uid}__…` (vérifié dans chaque test qui trace) ; tests
+existants verts (`ma-partition-traits`, `ma-partition-crayon`, `performance-mode`, `mode-louange-forscore`,
+`jianpu-integration` pour un scan, `louange-demi-page`) ; captures **regardées** à chaque tranche qui change l'écran :
+quatre dispositions + 1 440 px, FR et 中文, clair et sombre, une page Classique et un scan 简谱 (`regard`, puis
+`critique-design` sur les signalées) ; pas de suite complète (elle tourne une fois avant la mise en ligne). Libellés
+chinois nouveaux relus par un responsable sinophone avant la mise en ligne ; essai iPad + Apple Pencil par Timothée
+(AN-Q2). Fin du lot : les specs du lot et des pages qu'il touche, cinq projets pour `annotations-forscore`.
 
 ### CA — Couleur des accords au choix de chacun
 
@@ -759,7 +858,8 @@ traits et la nouvelle aucun, le bandeau du lot L5 (« Des annotations existent a
 on prévient l'équipe avant la mise en ligne de CV. La vraie solution (traits accrochés à la ligne ou à la section, comme
 sur un PDF fixe) vient avec la migration de la base (décision 18). Enregistrement : `saveAnnotation` ne regarde pas
 `res.ok` et avale les erreurs (`annotations.ts:31-47`) ; un trait peut donc se perdre sans rien dire sur un réseau qui
-coupe : à corriger dans le lot AN (tranche AN-1), sans changer le format.
+coupe : à corriger dans le lot AN (tranche AN-1), sans changer le format. *(12/11 : fait par MP-1 de « Ma partition », qui range
+les traits dans `partitions/{uid}__{songSlug}` ; voir la section AN réécrite.)*
 
 ## Questions tranchées le 08/11/2026
 
@@ -839,5 +939,5 @@ rangement (décision 18), est à réécrire après MP-5, puis à relancer sur un
 | FS | **go le 08/11/2026 pour FS-A et FS-B** (vague 1) ; **FS-A et FS-B codées** (barre de titre, rangée de points, couleur des icônes + cercle ; menus Setlist, Repères, Outils, Tempo, Options d'affichage ; au téléphone Outils en tête d'Options) ; tests verts sur cinq projets ; FS-C, FS-D et FS-E (demi-page, spec écrite le 08/11/2026) en attente de go ; **go le 09/11/2026 pour FS-C, FS-D et FS-E** (vague 2, première paire de sessions) ; **FS-C, FS-D et FS-E codées le 09/11/2026** : **FS-C** (d348e1c, finitions 731adf0) popover « Je joue » à la place de `FeuilleRole.tsx` (cinq rôles avec ce que la vue montre, « Aucun » comme sixième choix, puis Ordre des sections et Masquer les paroles sortis des Options), ouverture seule à la première entrée avec « Choisis ce que tu joues, ton compte s'en souviendra. », rôle retenu par compte (`src/lib/performance/roleCompte.ts`, `perf-role-preset-<uid>` / `perf-role-asked-<uid>`, marque `perf-role-migre` : seul le premier compte qui ouvre le **mode louange** hérite de la clé d'appareil ; la vue partitions lit sans migrer), taille annotée par compte ; **FS-D** (8482c3c, finitions 744d0c0) feuille de route du batteur (`FeuilleDeRoute.tsx`, `layoutFeuilleDeRoute` à la place de `layoutSong`) : une ligne par section dans l'ordre joué, titre puis « ♩ = tempo · Tonalité » en tête, repère de 64 px à lettre d'encre, nuance en 22 px gras, transition dans la ligne de sa section, le texte grandit avant l'air (×1,6 au plus) puis les lignes s'étirent selon la longueur de leur section (×3 au plus), 880 px au plus sur ordinateur ; clé de page Structure marquée `f2` (bandeau L5 pour les traits posés sur les anciennes cartes) ; **FS-E** (7d183c2, finitions 45ff3ab, corrections c9bfccf) demi-page (`DemiPage.tsx`, `demiPage.ts`, `perf-demi-page`, `perf-demi-page-part`) : interrupteur dans Sur la page, tour avant = haut de la page suivante au-dessus d'un filet de 1,5 px à la couleur personnelle et fin de la page en cours dessous, coupe jamais au milieu d'une rangée, rappel du nom de section à la reprise, poignée en contour à droite (glissé et flèches, une part sans coupe possible est refusée), **en deux colonnes la demi-page avance d'une colonne** (filet vertical dans la gouttière ; un nouveau chant pleine largeur garde la coupe horizontale), désactivée sur les scans 简谱 et en annotation, aperçu L6 retiré quand elle est allumée, traits d'annotation masqués pendant la demi-page ; corrections de relecture f432d02 ; sous-ensemble Source Han Sans régénéré (7c5bad7, `npm run validate` vert) ; tests de l'en-tête lu barre fermée (9eca009). Questions du compte rendu du 09/11 tranchées (décision 30) ; **FS-F** (finitions : repères par sorte de section, rond « Paroles », traits pendant la demi-page) spec écrite ; **reportée** (Timothée, 09/11/2026 : « plus tard ») à la prochaine session de travail, avec CA, avant la relecture complète et la mise en ligne ; **go pour FS-F le 11/11/2026** (Timothée, « Oui » à « Go pour FS-F à la suite de CA ? ») : pas encore codée, la session du lot CA a passé la main (plafond de contexte) ; à lancer dans une session neuve ; **FS-F codée le 12/11/2026** : repère de la feuille de route bordé à la couleur de sa sorte de section (`var(--sec-<paletteKeyOf>)`) dans les cinq dispositions ; rond « Paroles » / « 歌词 » juste après « Accords » dans Sur la page (la ligne « Masquer les paroles » quitte Je joue ; clé `performance.lyrics`), au téléphone les ronds sur deux lignes équilibrées (`Math.ceil(n/2)` colonnes au-delà de 4) ; traits lus en demi-page, rognés et décalés comme leur calque (`onZones` de `DemiPage`, deux `StrokesLayer` lecture seule), ceux de la page suivante lus sous sa seule clé actuelle (**pas de repli sur les anciennes clés** : un trait posé avant un changement de mise en page ne se voit qu'en page entière, choix assumé) ; en passant, défaut d'avant FS-F corrigé : l'écouteur clavier du mode était retiré pendant le dispatch de la première touche (flèche ou pédale perdue, reproduit sur bec2769) et ne s'inscrit plus qu'une fois (`useEffectEvent`) ; test « Ralentir la dernière ligne » remis d'aplomb (tête de feuille du scan depuis JP-B). Tests : 1 166 verts sur les sept specs du mode louange (trois appareils, cinq projets pour l'agencement) ; 60 captures FR/中文, clair/sombre, cinq projets, regardées (`regard`, `critique-design`). **Point ouvert pour Timothée** : sur tablette et ordinateur, à cinq ou six ronds, les libellés français se serrent (« Annotations » presque collé à « Pinyin », « 2 colonnes » sur deux lignes) ; `critique-design` propose deux lignes équilibrées partout, contraire à la règle FS-B « tous les ronds sur une ligne » : non fait, à trancher ; rebasée le 12/11 sur `claude/corrections-design` (AP, Ma partition MP-1 à MP-3, Harmonie H3) et poussée sur cette branche : sept specs vertes sur l'arbre réuni (1 164 passés ; deux courses rejouées vertes : `louange-je-joue:182` ordinateur, `louange-sections-uniques:363` 1 440 px), puis feuille de route et demi-page vertes après MP-3 (297 passés) |
 | RP | **go le 09/11/2026** (vague 2, seconde paire de sessions, après FS-C) ; **RP codé le 09-10/11/2026** : **RP-1** (ae11dd0) `roleDuPlanning` (`src/lib/planning/rolePlanning.ts`, pur) sur les entrées de `findMyServices`, qui note l'instrument écrit devant le nom d'un Musicien (`instrumentDuNom`) ; un service, un rôle ; rôles sans vue (Orateur, Sono…) ignorés, deux vues ou un Musicien ambigu → rien ; **RP-2** (517914d, finitions après critique de design dans le commit suivant) services du compte gardés du chargement existant, liés au nom du compte ; Je joue marque le rôle « d'après le planning » (capsule, valeur figée à l'ouverture) ; pastille en haut au centre si un rôle retenu diffère, jamais après des accords changés, un affichage contraire, « Aucun » (même répondu en séance), hors ligne, en annotation ni sous un menu ouvert ; partie au premier tour de page ; « Annuler » 6 s ; tests `role-planning-pures.spec.ts` (3 appareils) et `louange-role-planning.spec.ts` (`SPECS_GRAND_ECRAN`, cinq projets). Écart : setlist sans date non testée en navigateur (la page plante déjà sans date). Questions ouvertes dans le compte rendu du 10/11 ; tranche 2 de la spec (liens « Pour moi ») non faite |
 | JP | **go le 08/11/2026 pour JP-A** (vague 1, données seulement) : JP-A1 fait (`scripts/jianpu/systemes.py`, planche `npm run jianpu:audit -- --systemes`, `public/jianpu/systemes.json` : 11 scans du pilote certifiés à l'œil) ; JP-A2 fait (`scripts/jianpu/sections.py`, `public/jianpu/sections.json` : sections des 11 chants du pilote certifiées, 4 corrigées à la main) ; JP-A3 fait (**187 scans sur 190 certifiés à l'œil**, lignes et sections ; 十字架, 大手牵着小手, 荣耀至高神 laissés non certifiés, raisons dans `scripts/jianpu/LOOP.md`) ; **relu le 08/11 : lignes et barres bonnes dans l'ensemble, sections à reprendre** (une trentaine de sections sur la mauvaise ligne ou avec une anacrouse dans le mauvais sens, tempo d'en-tête dans L1 sur 4 scans, étiquettes du calque hors ligne sur 3 scans, certificateur trop permissif) ; **corrections faites** (74014c1 : 20 lignes sur 17 chants, sections de 29 chants ; `systemes.py verifier` 0 refus, `sections.py controle` 0 écart non justifié, 18 exceptions écrites dans LOOP.md ; planches regardées) ; les trois derniers scans découpés à la main (décision 24 révisée ; masques pour 大手牵着小手 et 荣耀至高神) : **190 scans sur 190 certifiés, JP-A terminé** ; JP-B à JP-D en attente de go ; **go le 09/11/2026 pour JP-B** (vague 2, seconde paire de sessions, après DP et FS-E) ; **JP-B codé le 10/11/2026** : **JP-B1** (fcc31c0) un scan certifié se coupe entre deux lignes selon la hauteur de l'écran, à la largeur de la feuille (1 040 px au plus, fenêtre serrée sur l'encre par `marges.json`), jamais rapetissé (`src/lib/performance/tranchesScan.ts`, `PerfPage.tranche`) ; une seule feuille en paysage et sur ordinateur ; clé `j4-<y0>` par tranche, `j2`/`j3` gardées hors certification ; masques dans le groupe filtré, appliqués seulement quand la ligne voisine est hors de la tranche ; **JP-B2** (e241b77) tête de feuille de la hauteur de la barre (`TeteFeuille.tsx` : repères dans l'ordre joué, « ×2 » dans le cadre, Dp en tirets, tempo, « 1 = X », « gravé en X » / « 原谱 X 调 »), repères des sections de l'écran allumés (`sections.json`), menu Repères qui saute à la ligne ; **JP-B3** (19e9ec3) finitions après critique de design (tête posée sur la feuille, note SVG, chiffres alignés, contraste AA, repère allumé souligné, rangée sans défilement), demi-page entre deux écrans du même scan certifié (filet entre deux lignes), `systemes.json`, `sections.json`, `marges.json` gardés hors ligne hors du plafond des 250 entrées, chant dont les pages diffèrent d'`index.json` traité non certifié (stratégies du service worker inchangées, cache `v6`). Spec `tests/louange-jianpu-tranches.spec.ts` (cinq projets). Écarts : chiffres ≥ 17 px vérifiés à 768, 1 024 et 1 440 px, pas au téléphone en portrait (JP-C) ; essai hors ligne réel (banc `scripts/rude-epreuve`) non fait, seulement simulé ; un écran de paysage ou d'ordinateur peut garder ~30 % de blanc en bas (règle « jamais rapetissé » tenue, question posée) ; le « ×2 » n'est pas lu par un lecteur d'écran (repère en `role="img"` avec le seul nom de la section). **JP-C codée le 12/11/2026** (`session_01UMdfucQGkCmqMascx4pK1c`) : au téléphone en portrait (largeur < 768 et plus haut que large), chaque ligne d'un scan certifié se coupe sur la barre la plus proche du milieu (`coupeMilieu`, `tranchesDemiLignes` dans `tranchesScan.ts`), moitiés empilées et alignées à gauche (2 px entre moitiés, 24 px entre systèmes, après critique-design), échelle commune à la page, réduite seulement pour un système plus haut que l'écran ; une ligne sans barre intérieure reste entière ; clé d'annotation `j5-<y0>` (`j4` gardée en paysage) ; un accord va à la moitié qui tient son centre et reste dans sa fenêtre (`JianpuSheet.tsx`) ; pastille inerte « Tourne le téléphone… » sous un scan absent de `systemes.json`, jamais pendant le chargement (`PageScan.tsx`, libellés fr et 中文). `DemiPage.tsx` : les deux moitiés d'une ligne comptent pour une rangée. Décisions déléguées écrites sous JP-C. Vu à l'œil : téléphone 412 et 390 px en portrait, téléphone en paysage, tablette portrait, ordinateur (inchangés hors portrait téléphone), un chant ZH certifié (一生爱你), le même sans `systemes.json`, un chant FR. Tests : `louange-jianpu-tranches`, `louange-demi-page`, `jianpu-integration` et voisines, trois appareils, quatre fragments ≈ 21 min, puis une reprise de la spec en échec (téléphone, 28 s), puis `louange-jianpu-tranches` et `louange-demi-page` après la retouche des écarts (trois appareils, 173 réussis, 6,6 min). Échecs **préexistants, hors JP-C** : L3-T4 « vue Partitions » (`jianpu-integration.spec.ts:661` et `:701`, titre décalé de 7,8 px, trois appareils), reproduits sans le diff JP-C : venus d'amont, non corrigés ici. Aucun recouvrement avec les fichiers de « Ma partition ». Suite : JP-D. **JP-D faite le 12/11/2026** (session JP-D) : `prefPourRole` (`src/lib/jianpu/preference.ts`) ; dans `PerformanceMode.tsx`, `jianpuPrefVu` (rôle actif) remplace `jianpuPref` pour les blocs et l'interrupteur « Partition 简谱 » (11 lignes, rien d'autre) : choriste et présidence voient paroles + pinyin sur un chant à scan tant que la préférence n'est pas réglée ; l'interrupteur allume le scan pour tout l'appareil ; « always » / « never » inchangés (D4). Nouveau `tests/louange-roles-jianpu.spec.ts` (test pur + six cas, chant ZH certifié 一生爱你 et un chant FR, noms fictifs). Tests : `/tranche` (nouvelle spec et voisines `louange-jianpu-tranches`, `louange-role-planning`, `jianpu-par-defaut`, `mode-louange-forscore`, trois appareils, quatre tours ≈ 48 min de tranche en tout), puis contrôle final de `louange-roles-jianpu` et des quatre `jianpu-*.spec.ts` (419 tests sur les cinq projets, 395 réussis, 14 sautés, 9,2 min). Pas de `regard` ni de `critique-design` : aucun élément visuel nouveau (le rôle choisit entre deux rendus existants) ; captures (a) et (c) regardées sur les trois appareils. Échecs préexistants hors JP-D : L3-T4 « vue Partitions » (`jianpu-integration.spec.ts:661` et `:701`, rouges sur les cinq projets, venus d'amont, non corrigés). Recouvrement avec « Ma partition » : `PerformanceMode.tsx` touché sur 11 lignes seulement (import, `jianpuPrefVu`, `useMemo` des blocs, interrupteur). Vague 3 finie sauf AN (après MP-5). Rien en ligne |
-| AN | planche tranchée le 08/11 (piste A, couleurs au choix : décisions 21 à 23), spec écrite ; go du 11/11/2026 avec la vague 3, **suspendu le 12/11/2026** : attend « Ma partition » (AP, MP-1 à MP-5) ; AN-1 absorbé par MP-1, AN-2 à AN-5 à réécrire sur le nouveau rangement, puis nouveau go |
+| AN | planche tranchée le 08/11 (piste A, couleurs au choix : décisions 21 à 23), spec écrite ; go du 11/11/2026 avec la vague 3, suspendu le 12/11/2026 pour « Ma partition » ; **réécrit le 12/11 après MP-5** sur le rangement `partitions/{uid}__{songSlug}` et le Crayon : AN-1 fait par MP-1 (indicateur repris en AN-3a), cinq tranches AN-3a, AN-2, AN-3b, AN-4, AN-5 ; décisions déléguées et questions AN-Q1 (animations), AN-Q2 (essai iPad) dans la section ; **attend le go de Timothée**, après la fin du pupitre PU-6 |
 | CA | demande du 09/11 (décision 27), planche acceptée le 09/11 (décision 28), spec écrite et contre-vérifiée ; **go le 09/11/2026** (« go pour CA ») ; **reporté le même soir** (Timothée : « après la vague 2 je pense qu'on va s'arrêter », puis « CA plus tard ») : go et spec gardés, une session (CA-A puis CA-B) à lancer dans une prochaine session de travail, après la seconde relecture de DP ; **relancé le 11/11/2026** (session orchestratrice, branche `claude/friendly-cerf-cy7hio`) ; **CA-A codée le 11/11/2026 sauf le point Classique** : `src/lib/couleurAccords.ts` (stockage `accords-couleurs[-<uid>]`, mémoire de séance, hook `useCouleursAccords`, garde à 4,5:1 contre la page ou, en Scène, `#f0ecf9` / `#112320`), variables `--accord-fr` / `--accord-zh` sur la racine de `SongView` et du mode louange, couleur des icônes par compte (`perf-couleur-icones-<uid>`, reprise par le premier compte avec la marque `perf-role-migre`) ; spec `tests/couleur-accords.spec.ts` (cinq projets). **En attente d'une décision** : le point Classique (accent et fonds dérivés par `color-mix`) est impossible tel qu'écrit, aucun dosage ne redonne `--fr-box-fill` / `--fr-box-border` à ± 2 en sombre (écart 4 à 13) ni la bordure en clair (écart 7) ; question posée à Timothée. Non encore testés : le choix de séance quand le stockage lève, les chiffres `{jianpu:}` et le calque 简谱 (arrivent avec le réglage de CA-B) ; **décision du 11/11/2026** (Timothée, « tout suit ») : en Classique, avec une couleur choisie, étiquette, filet, fond et bordure des sections se dérivent de la couleur par `color-mix` (fond 15 % clair / 16 % sombre, bordure 33 %), sans l'exigence de ± 2 ; spec corrigée ; **CA-B codée le 11/11/2026, avec le point Classique de CA-A** : rubrique `ChoixCouleurAccords.tsx` sous Disposition dans le menu ⋯ du chant, le menu Affichage de la vue partitions et les Options du mode louange (deux rangées de sept pastilles, 4 + 3 quand la place manque, cercle sous sa rangée, lien « Couleurs d'origine », rétention par compte), choix partagé sans rechargement ; en Classique, étiquette, filet, fond (15 % / 16 %) et bordure (33 %) suivent la couleur choisie ; la feuille de route du batteur ne change pas. Choix faits en codant : le sous-menu Affichage de la vue partitions ne se ferme plus quand Radix rend le focus au menu parent (il se refermait au premier choix, disposition comprise) ; menus Affichage à `min(374px, 100vw − 16px)` et défilants ; focus clavier distinct du choix (contour décalé), bouton arc-en-ciel ouvert marqué par `aria-expanded` et un pointillé, l'anneau restant sur la teinte retenue. Tests : `couleur-accords` (cinq projets) et `louange-menus`, `dispositions-partition`, `louange-feuille-route` verts ; deux `test.fixme` documentés (réglage grisé pendant le chargement de l'authentification, faute d'authentification lente simulable ; ← qui ne ferme pas le sous-menu à 1 024 et 1 440 px, non demandé par la spec). Captures regardées (regard, critique-design, 360 px refaite). **À trancher par Timothée** : deux lignes de rétention différentes dans le même menu (disposition par appareil, couleur par compte) ; miniature « Classique » qui ne suit pas la couleur choisie. Libellés chinois à relire par un responsable sinophone ; **passe de fin de lot le 11/11/2026** : `louange-barre-titre`, `louange-je-joue`, `performance-mode`, `mode-louange-forscore` verts sur leurs projets après correction de deux tests du cercle des icônes (`louange-barre-titre:364` et `:389` trouvaient trois boutons « Autre couleur », sélecteur restreint à la rangée des icônes) |

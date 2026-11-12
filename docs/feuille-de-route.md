@@ -87,7 +87,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      PU-1 attend la vérification de MP-3 et ne code pas ; PU-1 garde sa place et ne code que s'il y a moins de quatre
      chantiers qui codent) (`docs/spec-comptage-usage.md`, § Découpage, T4 ; go couvert par la règle des tranches) : écran
      `/back-office/usage`, derrière `BACK_OFFICE`, spec ajoutée à `SPECS_GRAND_ECRAN`, suite complète en fin de lot.
-  3. **AN réécrit** : MP-5 finie (`ddbaa13`, lot MP-1..MP-5 fini) ; pas de go, ne pas lancer. **Harmonie H4** : go de Timothée, lancé (`session_01UMdfuaiAxiKUENyB4RqBb4`, 12/11 14 h 08 UTC,
+  3. **AN réécrit** : spec réécrite, attend le go (12/11, après MP-5 `ddbaa13` : `spec-mode-louange-forscore-2.md` § AN, tranches AN-3a, AN-2, AN-3b, AN-4, AN-5 ; se code après PU-6) ; ne pas lancer sans go. **Harmonie H4** : go de Timothée, lancé (`session_01UMdfuaiAxiKUENyB4RqBb4`, 12/11 14 h 08 UTC,
      cinquième chantier). **Harmonie H5 et suivants** : un go par lot,
      ne pas lancer.
   Consigne de lancement (`create_session`) : `source_url` https://github.com/gcccfranco/GCC, `source_revision` et
