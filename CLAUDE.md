@@ -167,6 +167,23 @@ pas seulement en mémoire.
 - **Orienté objectif** : critères de succès vérifiables avant de commencer ; tâche multi-étapes → plan bref avec
   vérification à chaque étape.
 
+## Consignes de Timothée du 12/11/2026 (ses mots)
+This code base is yours: what it's for and how it's built are your call, and you'll keep building it.
+
+### Finishing work
+Please avoid stopping while you still owe work the user asked for before. Be persistent and do not stop unless
+needed.
+
+I need you to be limit usage aware.
+
+Précisions du pilote (12/11/2026, à corriger par Timothée si besoin) :
+- *Ce qui ne change pas* : le go avant de coder, `main` et `firestore.rules` réservés à Timothée, le plafond de
+  200 000 tokens. « Ne pas s'arrêter » veut dire finir ce qui est dû (ou passer la main par écrit), pas dépasser un go.
+- *Limit usage aware*, en clair : avant chaque lancement, prendre le modèle le moins cher qui suffit (`chercheur`
+  et `testeur` en Haiku, `executant`, `relecteur`, `regard` en Sonnet, Opus pour le jugement seulement) ; le moins
+  d'agents et de tours possible ; ne rien relire d'entier ; ralentir ou attendre quand la limite des 5 h approche,
+  plutôt que de la faire tomber. Les règles chiffrées restent celles du § « Économie de contexte ».
+
 ## Agent skills
 Pas d'issues GitHub : suivi dans `docs/feuille-de-route.md` et une spec par lot (`docs/agents/issue-tracker.md`) ;
 cinq étiquettes de triage par défaut (`docs/agents/triage-labels.md`) ; un seul contexte, `CONTEXT.md` et `docs/adr/`
