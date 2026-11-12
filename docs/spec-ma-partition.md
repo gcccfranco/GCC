@@ -186,3 +186,7 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
   enchaînée). Branches réunies ; AN est suspendu dans la spec d'AO jusqu'à MP-5, comme le veut cette spec.
 - 12/11/2026 : à suivre en MP-5 : FS-F (AO, en cours) affiche les traits pendant la demi-page (`DemiPage.tsx`, calque
   `StrokesLayer`) depuis l'ancien rangement ; ce calque est à porter sur le nouveau avec le reste.
+- 12/11/2026 : décision déléguée (pilote, 12/11) : « reprends » envoyé à la session orchestratrice du lot MP pour
+  MP-1. Motif : go du lot donné par Timothée le 11/11 au soir ; la troisième place de code est libre (FS-F d'AO et
+  les deux exemples tournent) ; ce lot débloque AN. Questions et fin de lot : à la session de pilotage
+  (`docs/feuille-de-route.md`, § État).
