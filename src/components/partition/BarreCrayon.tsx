@@ -34,7 +34,7 @@ export function BarreCrayon({ cible, onCible, onOrdre, onTermine, deuxVolets }: 
       aria-label={t("maPartition.crayon.barre")}
       data-barre-crayon
       className={`print:hidden fixed z-30 flex items-center justify-center gap-2 border-t border-border bg-background px-3 py-2 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-[120ms] ${
-        deuxVolets ? "inset-x-0 bottom-0 left-[var(--barre-laterale)]" : "inset-x-0 bottom-[calc(var(--tabbar-bottom)+78px)]"
+        deuxVolets ? "inset-x-0 bottom-0 left-[var(--barre-laterale)]" : "inset-x-0 bottom-0 pb-[calc(var(--tabbar-bottom)+78px+8px)]"
       }`}
     >
       {choix("accord")}

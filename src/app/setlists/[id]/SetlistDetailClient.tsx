@@ -1032,10 +1032,14 @@ export function SetlistDetailClient() {
     return viewOf(item)?.bodyStructure ?? item.structureOverride ?? null;
   }
 
-  /** « Enregistrer » : un responsable choisit Pour moi / Pour tout le culte ; sans le droit, Pour moi directement. */
+  /** « Enregistrer » : un responsable choisit Pour moi / Pour tout le culte ; sans le droit, Pour moi directement.
+   *  La feuille de la ligne se ferme avant le choix (décision déléguée, session MP-3, 12/11) : empilées, les deux
+   *  feuilles se recouvraient ; la retouche est déjà dans `action`, « Annuler » la laisse de côté. */
   function demanderDestination(action: (d: Destination) => void) {
-    if (canEdit) setAChoisir(() => action);
-    else action("moi");
+    if (canEdit) {
+      setEditTarget(null);
+      setAChoisir(() => action);
+    } else action("moi");
   }
 
   function handleSelectLine(itemIndex: number, line: ChordProLine, sectionUid?: string) {
@@ -1380,8 +1384,9 @@ export function SetlistDetailClient() {
     return { ...ligne, srcLine, pinyinSrcLine, jianpuSrcLine };
   }
 
-  /** Base d'une édition de ligne : pour le culte, la couche du culte, qui copie toujours l'occurrence tapée ; pour moi,
-   *  ma source, « Seulement ce passage » seulement si la retouche ne vise que lui. */
+  /** Base d'une édition de ligne : pour le culte, la couche du culte, qui copie l'occurrence tapée avec « Seulement ce
+   *  passage » ; pour moi, ma source, « Seulement ce passage » seulement si la retouche ne vise que lui.
+   *  Décision déléguée (session MP-3, 12/11) : le choix affiché vaut quelle que soit la destination. */
   function editBase(item: SetlistItem, ligne: LineEditState, dest: Destination): EditBase | null {
     if (dest === "culte") {
       const l = ligneDuCulte(item, ligne);
@@ -1390,7 +1395,7 @@ export function SetlistDetailClient() {
         return null;
       }
       // shortcut: avec ma propre structure, l'occurrence tapée n'est pas repérable dans celle du culte (copie sautée), à reprendre si on s'en plaint.
-      return materializeIfRepeated(item, sourceDuCulte(item)!, myItems?.[item.songSlug]?.structure?.length ? { ...l, repeatedSectionId: undefined } : l);
+      return materializeIfRepeated(item, sourceDuCulte(item)!, repeatScope === "all" || myItems?.[item.songSlug]?.structure?.length ? { ...l, repeatedSectionId: undefined } : l);
     }
     const source = sourceForItem(item)!;
     const one = repeatScope === "one" ? materializeMine(item, source, ligne) : null;
@@ -1698,7 +1703,7 @@ export function SetlistDetailClient() {
   const partitions = (
     <>
       {crayon && (
-        <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
+        <p className="mb-4 text-xs text-foreground bg-secondary rounded-lg px-3 py-2 print:hidden">
           {t("maPartition.crayon.aide")}
         </p>
       )}

@@ -1013,10 +1013,11 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
                 <button
                   type="button"
                   data-copy-ignore
-                  className={`${TOUCHER_44} mb-1 text-xs font-semibold underline underline-offset-2 print:hidden`}
+                  className="mb-1 inline-flex h-11 items-center gap-1 text-xs font-semibold no-underline print:hidden"
                   style={{ color: "var(--graphite)" }}
                   onClick={() => onPasserAuCulte(line.srcLine!)}
                 >
+                  <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
                   {t("maPartition.crayon.passerAuCulte")}
                 </button>
               )}

@@ -18,7 +18,6 @@ export const CLES_USAGE: Record<string, string> = {
   "cmd.chant.pdf": "Chant : export PDF (par mise en page choisie)",
   "cmd.chant.accord": "Chant : toucher un accord (panneau d'accord)",
   "cmd.chant.maVersion": "Chant : ma version, enregistrer",
-  "cmd.chant.partagerVersion": "Chant : ma version, partager",
   "cmd.chant.retablir": "Chant : ma version, rétablir l'original",
   "cmd.chant.adapter": "Chant : adapter",
   "cmd.chant.transitions": "Chant : ligne instrumentale, transitions",

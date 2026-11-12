@@ -506,6 +506,8 @@ test("H1 — mode Adapter, copie d'une section répétée : pas de phrase de str
   await basculerMode(page);
   // Ligne du 2e Couplet 1 : l'édition matérialise une copie de la section.
   await page.getByRole("button").filter({ hasText: "planait" }).last().click();
+  // MP-3 : la copie suit le choix « Seulement ce passage », pour le culte comme pour moi.
+  await page.getByRole("button", { name: "Seulement ce passage" }).click();
   await page.getByRole("button", { name: "Supprimer la ligne" }).click();
   await page.getByRole("button", { name: "Supprimer", exact: true }).click();
   await choisirDestination(page, "culte");

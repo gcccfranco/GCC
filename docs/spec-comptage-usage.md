@@ -71,7 +71,6 @@ le crochet de T1 et ne sont pas relistés ici, sauf quand l'écran est la foncti
 | Chant | Partager | `cmd.chant.partager` | T2 |
 | Chant | Toucher un accord (panneau d'accord) | `cmd.chant.accord` | T2 |
 | Chant | Ma version : enregistrer | `cmd.chant.maVersion` | T2 |
-| Chant | Ma version : partager | `cmd.chant.partagerVersion` | T2 |
 | Chant | Ma version : rétablir l'original | `cmd.chant.retablir` | T2 |
 | Chant | Adapter | `cmd.chant.adapter` | T2 |
 | Chant | Ligne instrumentale, transitions | `cmd.chant.transitions` | T2 |

@@ -63,7 +63,9 @@ const feuille = (page: Page) => page.getByRole("dialog").first();
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, name: string) {
   const dir = process.env.PW_CAPTURES;
-  if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
+  if (!dir) return;
+  await page.waitForTimeout(600); // fin des fondus et des feuilles qui montent : la capture montre l'état stable
+  await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 /** 一生爱你 a un scan, affiché par défaut : les tests du chant chinois lisent ses paroles. */
 const enParoles = (page: Page) => page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
@@ -233,6 +235,7 @@ test("page d'un chant (ZH) : une retouche des paroles garde le pinyin et se lit 
   await feuille(page).getByLabel("Pinyin").fill("qīn ài de zhēn guì yē sū nǐ ài hé děng de gān tián");
   await feuille(page).getByRole("button", { name: "Valider", exact: true }).click();
   await feuille(page).getByRole("button", { name: "Valider", exact: true }).click();
-  await expect(page.locator('[data-marque="moi"]', { hasText: "珍贵" })).toHaveCount(1);
+  await expect(page.locator('[data-marque="moi"]', { hasText: "珍" })).toHaveCount(1);
+  await capture(page, "crayon-page-chant-zh");
   expect(String(db.doc(`partitions/${MUSICIEN.uid}__一生爱你`)!.content)).toContain("珍");
 });

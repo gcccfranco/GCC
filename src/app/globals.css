@@ -1099,5 +1099,7 @@
 [data-marque]::before { content: ""; position: absolute; top: 0; bottom: 0; left: -8px; border-left: 2px solid var(--graphite); }
 [data-marque="culte"]::before,
 [data-marque="conflit"][data-conflit="chant"]::before { border-left: 3px double currentColor; }
-[data-retouche="paroles"] { text-decoration: underline; text-decoration-color: var(--graphite); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+/* Sur le texte des paroles seul (caractère chinois sans son pinyin, mot français sans l'espace qui tient un accord) :
+   posé sur la ligne, le trait descendait dans les blancs sous les accords et sous le pinyin. */
+[data-retouche="paroles"] :is([data-paroles]:not(:has(> [data-copy-ignore])), [data-car]) { text-decoration: underline; text-decoration-color: var(--graphite); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 @media print { [data-marque]::before { display: none; } }

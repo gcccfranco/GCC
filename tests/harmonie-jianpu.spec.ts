@@ -157,7 +157,11 @@ test("Crayon, pour tout le culte : toucher la ligne d'accords en ajoute un à la
   await capture(page, "jianpu-accord-ajoute");
 
   // Stocké en tonalité d'origine (G) : A jouée en A s'écrit G sur la gravure.
-  expect(scanItem(db).jianpuChords).toEqual({ added: [{ page: 0, x: 800, y: 1163, c: "G" }] });
+  // x : le clic en pixels d'écran, ramené aux pixels du scan, s'arrondit (798 pour 800).
+  const ajouts = (scanItem(db).jianpuChords as { added: { x: number }[] }).added;
+  expect(ajouts).toHaveLength(1);
+  expect(ajouts[0]).toMatchObject({ page: 0, y: 1163, c: "G" });
+  expect(Math.abs(ajouts[0].x - 800)).toBeLessThanOrEqual(4);
 });
 
 test("retouche transposée : saisie dans la tonalité jouée, stockée dans celle de la gravure", async ({ page }) => {

@@ -269,7 +269,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
               return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
             }),
         );
-        expect(boites.length, "retour, affichage, adapter, accords, ma version, mode louange, ⋯").toBe(7);
+        expect(boites.length, "retour, affichage, crayon, accords, mode louange, ⋯").toBe(6);
         const milieux = boites.map((b) => b.milieu);
         expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
         for (const b of boites) {

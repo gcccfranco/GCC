@@ -22,7 +22,7 @@ export function ChoixDestination({ open, dateCourte, onChoisir, onClose }: {
     <label
       className={`flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-3 ${d === v ? "border-foreground bg-secondary" : "border-border"}`}
     >
-      <input type="radio" name="destination-crayon" checked={d === v} onChange={() => setD(v)} className="mt-1" />
+      <input type="radio" name="destination-crayon" checked={d === v} onChange={() => setD(v)} className="mt-1 accent-foreground" />
       <span>
         <span className="block text-sm font-semibold">{titre}</span>
         <span className="block text-xs text-muted-foreground">{aide}</span>

@@ -21,7 +21,7 @@ import { CLES_USAGE } from "../src/lib/usageCles";
 // Non couvertes par un test d'interface (comptées dans le code, vérifiées ici par le seul test de registre) :
 //   chants : cmd.chants.recherche, cmd.chants.basculeZh, cmd.chants.statsDuChant, cmd.chants.proposer ;
 //   chant : cmd.chant.toniqueOrigine, cmd.chant.disposition, cmd.chant.jianpu, cmd.chant.maVersion,
-//     cmd.chant.partagerVersion, cmd.chant.retablir, cmd.chant.adapter, cmd.chant.transitions, cmd.chant.annoter,
+//     cmd.chant.retablir, cmd.chant.adapter, cmd.chant.transitions, cmd.chant.annoter,
 //     cmd.chant.jeJoue ;
 //   louange : cmd.louange.pleinEcran, cmd.louange.affichage.<played|unique|structure>, cmd.louange.cercle,
 //     cmd.louange.feuilleDeRoute, cmd.louange.reperes, cmd.louange.demiPage, cmd.louange.themeScene ;

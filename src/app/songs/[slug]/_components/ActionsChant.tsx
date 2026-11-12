@@ -64,7 +64,8 @@ export function ActionsChant({ variante, youtubeId, showVideo, setShowVideo, dow
           className={`${classe} ${crayon ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
         >
           <PenLine className="h-4 w-4" />
-          <span className={libelle}>{t("maPartition.crayon.bouton")}</span>
+          {/* décision déléguée (session MP-3, 12/11) : le Crayon prend la place de l'étincelle dans la spec, en icône comme elle */}
+          {tel(variante) && <span>{t("maPartition.crayon.bouton")}</span>}
         </Button>
       )}
       {accesHarmoniePeut && (

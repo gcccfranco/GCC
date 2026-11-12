@@ -426,10 +426,10 @@ function SheetBody({
               autoFocus
             />
             {target.language === "zh" && (
-              <div>
-                <label className="text-xs text-muted-foreground">Pinyin</label>
+              <label className="block">
+                <span className="text-xs text-muted-foreground">Pinyin</span>
                 <Input value={pinyinDraft} onChange={(e) => setPinyinDraft(e.target.value)} className="mt-1" />
-              </div>
+              </label>
             )}
             {!lyricsDraft.trim() && (
               <p className="text-xs text-destructive">
