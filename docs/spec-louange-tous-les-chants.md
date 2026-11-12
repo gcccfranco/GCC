@@ -65,8 +65,10 @@ https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue �
 - **Annoter** est masqué sur un chant ajouté : il n'a pas d'item dans la setlist, donc pas de clé d'annotation
   stable ; les pages des autres chants gardent leurs clés (l'ajout ne décale pas `pageKey`, à vérifier en TC-1).
 - **Échap** inchangé : menu, puis mode (pas d'état « visite » dans la piste A).
-- **Téléphone** : si la barre « Setlist, Chants, Repères, Je joue | titre | Options, ✕ » ne tient pas à 390 px,
-  Repères passe dans la feuille Options (comme Outils aujourd'hui) ; la planche tranche par la mesure.
+- **Téléphone** : six boutons ne tiennent pas à 390 px (mesuré sur la planche : 78 px de titre) ; Repères passe en
+  tête de la feuille Options, comme Outils aujourd'hui. Barre : Setlist, Chants, Je joue | titre | Options, ✕.
+- **Marque « 简 »** sur les lignes des chants qui ont un calque, à `--jianpu-color` (couleur gelée, réutilisée).
+- **Libellés** : « Chants » (zh « 诗歌 »), icône lucide `library` ; Setlist garde son libellé actuel.
 - **Bouton « Tous les chants » dans un mode louange ouvert hors setlist** : sans objet, le mode louange s'ouvre
   toujours depuis une setlist.
 
