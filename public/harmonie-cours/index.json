@@ -1,5 +1,5 @@
 {
-  "genereLe": "2026-11-03T22:45:59.950Z",
+  "genereLe": "2026-11-12T17:11:00.716Z",
   "chapitres": [
     {
       "id": "mode-d-emploi",
@@ -358,10 +358,10 @@
     {
       "id": "jouer-en-groupe",
       "numero": 17,
-      "titre": "Jouer en groupe",
+      "titre": "Jouer ensemble",
       "partie": 3,
       "niveau": 3,
-      "statut": "validée",
+      "statut": "à valider",
       "sousParties": [
         "17.1 Les rôles de chaque instrument",
         "17.2 Le partage des fréquences",
@@ -370,10 +370,13 @@
         "17.5 Les signaux de main",
         "17.6 Le retour (in-ear, moniteur)",
         "17.7 Une répétition efficace",
-        "17.8 L'attitude du cœur",
-        "17.9 Exercices"
+        "17.8 Piano main gauche et basse",
+        "17.9 Deux guitares",
+        "17.10 Intro, pont, fin : qui joue quoi",
+        "17.11 L'attitude du cœur",
+        "17.12 Exercices"
       ],
-      "exercices": 3
+      "exercices": 5
     },
     {
       "id": "la-structure-des-chants-et-l-arrangement",

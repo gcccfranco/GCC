@@ -368,7 +368,6 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   `SetlistDetailClient`) : colonne fermée, les partitions gardent la requête de conteneur `partition` de T4 (1 080 px, deux
   colonnes) ; colonne ouverte, partition à 920 px en une colonne. `harmonie-colonne`, `pupitre-partitions`,
   `harmonie-setlist`, `harmonie-montrer`, `pages-en-grand-setlists` verts après la reprise (8 min).
-
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
 69 fiches en 12 familles aujourd'hui. À ajouter, dans l'ordre d'utilité pour le répertoire :
@@ -392,3 +391,19 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
 - 12/11/2026 (16 h 55 UTC) — **Go de Timothée pour H5 à H9** (« tout ce qui est dans la file donne-leur le go mais ils se
   lancent chacun leur tour »). Ordre : H5, H6, H7, H9, puis H8 en dernier (mode louange, après AN et le pupitre) ; un
   lot à la fois, chaque session lance le suivant. H5 lancé.
+- 12/11/2026 — **H9, découpage** (orchestratrice H9, décision déléguée) : trois tranches. **T1** le cours « Jouer
+  ensemble » ; **T2** les fiches qui entrent dans les familles existantes, première moitié (substitutions, couleurs,
+  passage, emprunts : 11 fiches) ; **T3** le reste (famille **mineur** nouvelle, boucles, rythme, voicings,
+  transitions : 12 fiches). Fiches en français seulement, comme les 69 (README : le 中文 d'une famille s'écrit après la
+  validation de son français) ; les noms des fiches en interface chinoise (relevé par H4) attendent donc cette
+  validation, pas H9. Ressenti et usage « (proposé) » selon la règle de H2. Pas de règle de suggestion nouvelle
+  (`regles.ts` est du code) : à proposer à part, fiche par fiche. T3 : la famille `mineur` demande sa ligne
+  `harmonie.familles.mineur` dans `src/locales/fr.json` et `zh-CN.json` (libellés, pas un composant).
+- 12/11/2026 — **H9 T1 faite** : le chapitre 17 du cours devient « Jouer ensemble » (même Id `jouer-en-groupe`, la
+  progression des musiciens reste) plutôt qu'un chapitre de plus (décision déléguée : 17 couvrait déjà les rôles ; un
+  nouveau chapitre aurait renuméroté 18 à 26). Trois parties ajoutées : 17.8 piano main gauche et basse, 17.9 deux
+  guitares, 17.10 intro / pont / fin, avec des passages de nos chants (*Digne est Ton Nom*, *Ébloui*, *Ce Nom si
+  merveilleux*, *Amour sans fin*, 你是我的平安, 得胜的宣告), et deux exercices (81 au lieu de 79 :
+  `harmonie-cours.spec.ts` suit). Statut du chapitre : « à valider » (Timothée). Reste à faire, code : les exemples
+  sont du texte ; un lien vers le passage (chant + section) demanderait une syntaxe de lien dans `cours.ts` et
+  `LecteurCours`.

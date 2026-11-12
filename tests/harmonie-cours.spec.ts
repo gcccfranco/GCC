@@ -39,9 +39,9 @@ async function capture(page: Page, name: string) {
 
 // ── L'import (C0) contre le document ─────────────────────────────────────────
 
-test("le cours importé : 23 chapitres à cocher, 79 exercices, niveaux de 5 · 6 · 5 · 7, deux schémas", () => {
+test("le cours importé : 23 chapitres à cocher, 81 exercices, niveaux de 5 · 6 · 5 · 7, deux schémas", () => {
   expect(LECONS).toHaveLength(23);
-  expect(LECONS.reduce((n, c) => n + c.exercices, 0)).toBe(79);
+  expect(LECONS.reduce((n, c) => n + c.exercices, 0)).toBe(81);
   expect([1, 2, 3, 4].map((n) => LECONS.filter((c) => c.niveau === n).length)).toEqual([5, 6, 5, 7]);
   const schemas = INDEX.chapitres.flatMap((c) =>
     JSON.stringify(JSON.parse(readFileSync(`public/harmonie-cours/${c.id}.json`, "utf8"))).match(/"t":"schema"/g) ?? [],
