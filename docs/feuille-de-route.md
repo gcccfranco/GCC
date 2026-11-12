@@ -148,17 +148,18 @@ Mentions encore ouvertes à la dernière écriture de chaque section ; plusieurs
 et **n'ont pas été reconfirmées** : vérifier dans le § Avancement de la spec avant d'agir. Les points « à la main »
 (règles, scripts, 中文) sont **à faire confirmer par Timothée** : certains sont peut-être déjà faits.
 
-- **Bug signalé par Timothée (12/11, nuit) : espace vide en haut de la page chant.** Diagnostic, non corrigé (en attente d'un go).
+- **Bug signalé par Timothée (12/11, nuit) : espace vide en haut de la page chant.** **Corrigé sur la branche** (go de Timothée « Corrige directement », 12/11), pas encore sur `main`.
   Reproduit sous Chromium (iPhone 13 et Pixel 7, défilement de 8 px par pas) : 72 px plus bas, 90 px CSS de blanc au-dessus du
   titre (≈ 270 px de l'iPhone), comme sur la capture. Présent sur `main` (沙漠中的骆驼) **et** sur `claude/corrections-design`,
   en 简谱 comme en Paroles, sur un chant FR aussi (`abba-pere`) : rien de propre à Safari ni au scan.
   Cause : la page réserve 158 px pour les deux barres fixes (`main` `pt-[var(--nav-h)]`, `src/app/layout.tsx:82`, + `mt-[48px]` et
   `py-6` de la partition, `SongDetailClient.tsx:676`), mais navbar et barre du chant se cachent dès 40 px de défilement
   (`HIDE_THRESHOLD`, `src/hooks/useScrollDirection.ts:3` ; seul `currentY < 10` les garde) : entre 40 et 158 px, la bande
-  réservée est vide. Correction proposée (une retouche, un fichier, ~4 lignes) : dans `useScrollDirection`, remplacer le seuil
+  réservée est vide. Correction (un fichier, 4 lignes) : dans `useScrollDirection`, remplacer le seuil
   `10` par le bas de `.barre-chant` (`offsetTop + offsetHeight`, insensible au `transform`) quand elle existe, sinon 10 ; les trois
-  appelants (Navbar, MobileTabBar, page chant) restent d'accord. Test : `tests/chant-defilement-haut.spec.ts`, trois appareils :
-  après 72 px doux, la barre est encore à l'écran ; après 400 px, cachée.
+  appelants (Navbar, MobileTabBar, page chant) restent d'accord. Test : `tests/chant-defilement-haut.spec.ts` (FR + ZH, trois appareils, sauté
+  en deux volets) : après 72 px doux, la barre est encore là ; en bas de page, cachée. Revers : une page qui défile de moins
+  de ~160 px garde ses barres (rien à cacher). Tests : nouvelle spec + `barre-chant` + `barre-rappelee`, verts, ~3 min.
 
 **À Timothée (à la main)**
 - `firestore.rules` à publier, signalé pour : V19PARTAGE, V19EQUIPES + V19GROUPES (même séance, après la migration),

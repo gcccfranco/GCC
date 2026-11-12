@@ -24,7 +24,11 @@ export function useScrollDirection() {
         return;
       }
 
-      if (currentY < 10) {
+      // Page chant : les barres restent tant que la place qu'elles réservent en haut est à l'écran,
+      // sinon cette bande reste vide (bug du 12/11/2026). `offsetTop` ignore le `transform` qui les cache.
+      const barre = document.querySelector<HTMLElement>(".barre-chant");
+      const seuil = barre && getComputedStyle(barre).position === "fixed" ? barre.offsetTop + barre.offsetHeight : 10;
+      if (currentY < seuil) {
         setVisible(true);
         accumulated.current = 0;
       } else if (delta > 0) {
