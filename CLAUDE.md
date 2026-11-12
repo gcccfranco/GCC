@@ -139,6 +139,11 @@ pas seulement en mémoire.
     tests, environ 8 h) : elle ne tourne plus en fin de lot. En fin de lot : les specs du lot et des pages qu'il
     touche. La suite complète tourne une seule fois, quand tous les chantiers en cours sont finis et avant la mise
     en ligne, en tâche de fond et par fragments.
+    **Pour aller plus vite** (Timothée, 12/11/2026 soir, « Oui pour les 3 ») : (1) la suite complète se lance en
+    **quatre parts en même temps** (quatre sessions, `--shard=k/4`), pas en une ; (2) deux lots peuvent coder en même
+    temps dans le mode louange s'ils sont dans des zones différentes du fichier (TC à côté d'AN) : ajouts courts, aucun
+    reformatage, `git pull --rebase` avant de coder, avant les tests finaux et avant de pousser ; (3) deux **petites**
+    tranches voisines peuvent partager une session (un commit et une ligne d'Avancement par tranche).
   - *Quatre chantiers* (même date, « go pour Harmonie H2 » en quatrième) : la limite ci-dessous passe de trois à
     quatre chantiers de code en même temps ; pas au-delà sans nouvel accord de Timothée.
     **Cinq** depuis le 12/11/2026 après-midi (Timothée : « on peut passer à 5 sessions en simultanées ») : partout où
