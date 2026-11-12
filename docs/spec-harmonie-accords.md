@@ -139,6 +139,39 @@ Une seule tranche ; aucun écran ne change (H4 à H6 posent le bouton).
   `aria-pressed` ; accepte une suite ou un avant / après ; même style que les petits boutons secondaires existants ;
   rien si le navigateur n'a pas Web Audio. Pas de survol : un appui joue, un second arrête. Jamais en mode louange.
 
+### H4 — porte 2, « Harmonie de ce chant » (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Deux tranches. La première remplace le contenu et garde la feuille à toutes les tailles ; la seconde pose la colonne.
+- **H4-1, contenu et feuille.** `IdeesSheet.tsx` devient `HarmonieDuChant.tsx` (mêmes props, `git mv`) ; titre
+  « Harmonie de ce chant » / « 本歌和声 » ; feuille aux deux tiers de la hauteur (`67dvh`).
+  - **Un bloc par passage**, dans l'ordre du chant (`harmonieDuChant`, refus appliqués) ; les reprises d'une même
+    section (`idDeSection` identique) se replient dans le premier bloc, nom suivi de « ×n », idées dédoublonnées par
+    fiche. Bloc : filet gauche `--sec-<type>`, nom (`formatSectionName`), grille en chiffres (`font-chord`,
+    `--chord-color`) avec les lettres en dessous en gris (H7 fera la bascule) — `resume` si `boucle` (suivi de
+    « en boucle / 循环 »), sinon les lignes jointes par « · », lignes consécutives identiques fusionnées ; une phrase
+    selon `fonction` (FR et 中文 : `repos` « Finit sur le 1 : le passage se pose. », `vers-refrain` « Finit sur le
+    {x} : il appelle le refrain. », `suspens` « Finit sur le {x} : il reste en suspens. », `sans-accords` « Pas
+    d'accords dans ce passage. ») ; `BoutonEcouter` sur la suite du passage en lettres (une fois la boucle).
+  - **Idées calculées** sous la grille : une carte par idée et par passage (plus de « Essayer où ? » ni de
+    « Montrer i/n » : « Montrer » va à ce passage, « Essayer » s'y applique) ; avant → après en lettres et en
+    chiffres, `BoutonEcouter` avant / après, « Ne marche pas sur ce chant ». Ordre et limite de `cinqPremieres` par
+    passage (3 montrées, « Voir plus » dans le bloc). Puis les **idées de l'équipe** du passage. Un passage sans idée
+    n'a pas de bloc d'idées vide.
+  - **En bas** : idées de l'équipe sans passage, idées écartées (comme aujourd'hui), formulaire d'ajout avec un choix
+    « Passage » (facultatif, « Tout le chant » par défaut) qui écrit `passage` et `passageNom`.
+  - **Setlist** : « Faire monter le dernier refrain » juste après le bloc du dernier refrain (au lieu d'une section à
+    part), « Vers le chant suivant » en dernier, avec un `BoutonEcouter` (dernier accord du chant, accord
+    d'approche s'il y en a, accord du 1 du chant suivant).
+  - **Boutons d'entrée** : page chant, un bouton texte « Harmonie » / « 和声 » juste après `PiluleTonalite` (l'icône
+    étincelle de `ActionsChant` disparaît) ; setlist, la puce du chant courant et les liens de fusion disent
+    « Harmonie ». Mêmes conditions d'accès qu'aujourd'hui (`accesHarmonie.peut`).
+- **H4-2, colonne.** En tablette paysage (≥ 1 024 px) et à l'ordinateur, la porte 2 est une colonne de 400 px à droite
+  de la partition, sans voile, avec sa croix ; **fermée par défaut**, ouverte ou fermée mémorisé par appareil
+  (`localStorage`, comme les autres préférences de lecture). La lecture garde son plafond de 1 440 px : à 1 440 px,
+  partition et colonne côte à côte ; la bulle d'un accord se ferme à l'ouverture de la colonne. Même colonne dans la
+  setlist (chant courant). Le téléphone et la tablette portrait gardent la feuille. Après « Exemples d'usage T4 »
+  (deux colonnes de `SongView`) : la tranche se pose sur leur travail.
+
 Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
 nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
 
