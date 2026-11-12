@@ -62,20 +62,49 @@ Ce « Go » valide les décisions et la spec ; il ne vaut pas go de code (un go 
    lot optionnel.
 6. **Exercices d'oreille** : pas dans ce chantier.
 
-## Lots (chacun attend son go)
+## Décisions de Timothée (12/11/2026, « Ok pour tes recommandations » sur la planche « trois portes »)
 
-| Lot | Contenu | Ampleur | Dépend de |
-| --- | --- | --- | --- |
-| **H1** | /accords : clavier fixe (`Diagrammes.tsx` `ClavierMains`, `PanneauAccord.tsx:241`), variantes « Les plus joués » au-dessus du diagramme au téléphone, « ‹ Chants » montré seulement si l'on vient d'un chant (`PageAccords.tsx:48`, `:67`) | retouche, 3 fichiers | rien |
-| **H2** | Données : `scripts/build-harmonie.ts` sort les boucles de quatre degrés les plus fréquentes (rotations fondues), leur compteur et leurs chants (section, tonalité), et le rattachement fiche → degré de la boucle ; afficher seulement les boucles mesurées | tranche | rien |
-| **H3** | Catalogue en boucles : six chiffres, liste des boucles, page d'une boucle (idées par chiffre, chants en liens), « Toutes les idées » en familles ; ambiances dans une feuille ; deux volets jusqu'à 1 440 px, fiche ≥ 640 px | 2 tranches | H2 |
-| **H4** | Fiche : « Avant → après » en chiffres et en lettres, « Où l'entendre » en liens, « Et ensuite ? » (notes communes, texte), pied précédente / suivante, retour par l'historique | tranche | H2 |
-| **H5** | Chiffres sur la page chant et en mode louange (bascule, mémoire par musicien) | tranche | planche pupitre (AO en ligne) pour la place de la bascule en mode louange |
-| **H6** | Idées en mode louange (point en marge, bande) | tranche | H2, état AO |
-| **H7** | Écoute (Web Audio) | tranche, optionnelle | H4 |
-| **H8** | Fiches manquantes (liste ci-dessous), statut « à valider » | contenu | H2 pour les fiches de boucles |
+Elles remplacent le point 1 (piste A, entrée par boucles, écartée) et complètent les points 2 à 6 ci-dessus.
 
-Avant chaque lot : vérifier ses constats d'usage (musiciens-2, 5, 7, 8, 10, 11, 12) sur la tête de branche. Libellés
+1. Piste **B, la grille du chant** : un seul contenu, l'harmonie d'un chant passage par passage, ouvert par trois
+   portes. **Porte 1**, panneau de l'accord touché dans la partition : doigté, chiffre (« 4 dans D »), Écouter, ligne
+   « Ensuite : 1 · 6m · 4 » dépliable (notes gardées / qui bougent), ligne « Ici : 4 → 2m7 » si une idée s'applique,
+   qui ouvre la porte 2 au passage. **Porte 2**, « Harmonie de ce chant » (remplace la feuille « Idées
+   d'harmonie ») : bouton « Harmonie 和声 » près de la tonalité (page chant) et dans la barre du chant courant
+   (setlist) ; par passage : filet de section, grille, ce qu'il fait en une phrase, Écouter, idées avec avant / après ;
+   un passage sans idée n'a pas de bloc vide ; dans une setlist, « Faire monter le dernier refrain » au dernier
+   refrain et « Vers le chant suivant » en dernier. **Porte 3**, l'onglet Harmonie (gardé dans Musiciens) : bibliothèque.
+2. Porte 2 : **feuille** au téléphone et en tablette portrait (deux tiers de la hauteur) ; **colonne** sans voile en
+   tablette paysage et à l'ordinateur, **fermée par défaut**, mémorisée par musicien.
+3. Filtres : **Ressenti** à quatre valeurs (chaleureux 温暖, mélancolique 忧伤, élan 推进, couleur 色彩) à la place des
+   onze ambiances ; **Usage** à cinq (couplet, pré-refrain, refrain, fin, transition) ; instrument gardé ; le niveau
+   ordonne la liste au lieu de la filtrer. Correspondance ambiances → ressentis à valider fiche par fiche.
+4. Idées de l'équipe **rangées au passage** qu'elles concernent, sous les idées calculées.
+5. « **Jouer ensemble** » = un **cours** (rôles, piano main gauche et basse, deux guitares, intro / pont / fin), dont
+   les exemples renvoient à des passages de chants de GCC.
+6. Les lignes d'harmonie **suivent la bascule Lettres / Chiffres** (une seule notation).
+7. Mode louange : **le point en marge et la bande d'une ligne**, sans animation, désactivés par défaut.
+8. Écoute centrale (un même bouton Écouter dans les trois portes), synthèse dans le navigateur, sur demande, jamais en
+   mode louange. Exercices d'oreille : plus tard.
+
+À dessiner au moment de la spec du lot concerné (manque de la planche) : tablette paysage 1 180 × 820 et page chant à
+1 440 px avec la colonne, la bulle de l'accord fermée quand la colonne est ouverte.
+
+## Lots (chacun attend son go ; H1 fait)
+
+| Lot | Contenu | Dépend de |
+| --- | --- | --- |
+| **H1** | /accords : clavier fixe, « Les plus joués » au-dessus du diagramme au téléphone (fait, 991cf38) | — |
+| **H2** | Données : pour chaque chant, ses passages (section) avec grille en degrés et fonction ; idées calculées et idées de l'équipe ancrées à un passage ; « Où l'entendre » → chant + section ; étiquettes ressenti / usage des 69 fiches (proposées, à valider) | rien |
+| **H3** | Écoute : un module de synthèse (accord, suite d'accords, avant / après) et le bouton Écouter commun | rien |
+| **H4** | Porte 2 : « Harmonie de ce chant » en feuille et en colonne, page chant et setlist (remplace `IdeesSheet`) | H2, H3 |
+| **H5** | Porte 1 : panneau d'accord enrichi (chiffre, Écouter, Ensuite, Ici) | H2, H3 |
+| **H6** | Porte 3 : bibliothèque (filtres, fiche avec liens vers les passages, précédente / suivante, fiche ≥ 640 px à l'ordinateur) | H2, H3 |
+| **H7** | Bascule Lettres / Chiffres sur les partitions, suivie par les lignes d'harmonie | rien |
+| **H8** | Mode louange : point en marge et bande | H5, état AO |
+| **H9** | Contenu : cours « Jouer ensemble » et fiches manquantes (liste ci-dessous) | H2 |
+
+Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
 nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
 
 ## Avancement
@@ -103,7 +132,8 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   contenu, l'harmonie d'un chant passage par passage ; porte 1 = panneau de l'accord touché, porte 2 = feuille ou
   colonne « Harmonie de ce chant », porte 3 = bibliothèque par ressenti et usage. Pistes A (pupitre), **B (grille du
   chant, recommandée)**, C (carnet). Critique « à retoucher » : tablette paysage et 1 440 px non dessinés ; boutons
-  Écouter secondaires passés en contour à la relecture. Questions posées, réponses : —
+  Écouter secondaires passés en contour à la relecture. Questions posées.
+- 12/11/2026 : Timothée valide toutes les recommandations ; décisions et lots H2 à H9 réécrits. Prochain : go pour H2 ?
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
