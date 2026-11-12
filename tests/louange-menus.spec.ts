@@ -645,31 +645,29 @@ test("Annoter (téléphone) est une action : ligne entière, pas un rond d'inter
 });
 
 for (const theme of ["light", "dark"] as const) {
-  test(`« Masquer les paroles » (${theme}) : bouton rond allumé / éteint comme les autres, plus de Switch`, async ({ page }) => {
+  test(`« Paroles » (${theme}) : rond allumé / éteint comme les autres, plus de Switch`, async ({ page }) => {
     await ouvrir(page, { theme });
-    // « Masquer les paroles » est dans Je joue (FS-C), le métronome dans Options : deux menus, un rond de chacun.
-    const jejoue = await ouvrirMenu(page, "jejoue");
+    // « Paroles » (allumé = paroles affichées) et le métronome sont tous deux dans Options.
+    const options = await ouvrirMenu(page, "options");
     await attendreOuverture(page);
-    await expect(jejoue.getByRole("switch")).toHaveCount(0);
-    const masquer = jejoue.getByRole("button", { name: "Masquer les paroles" });
-    await expect(masquer).toHaveAttribute("aria-pressed", "false");
-    await masquer.click();
-    await expect(masquer).toHaveAttribute("aria-pressed", "true");
+    await expect(options.getByRole("switch")).toHaveCount(0);
+    const paroles = options.getByRole("button", { name: "Paroles", exact: true });
+    await expect(paroles).toHaveAttribute("aria-pressed", "true");
+    await paroles.click();
+    await expect(paroles).toHaveAttribute("aria-pressed", "false");
+    await paroles.click();
+    await expect(paroles).toHaveAttribute("aria-pressed", "true");
     await page.waitForTimeout(500); // fin des transitions de couleur
     const fond = (el: Element) => getComputedStyle(el).backgroundColor;
     const couleur = (el: Element) => getComputedStyle(el).color;
-    const fondMasquer = await masquer.evaluate(fond);
-    const couleurMasquer = await masquer.evaluate(couleur);
-    await page.keyboard.press("Escape");
-    await expect(jejoue).toBeHidden();
-    const options = await ouvrirMenu(page, "options");
-    await attendreOuverture(page);
     const metronome = options.getByRole("button", { name: "Métronome visuel" });
     await metronome.click();
     await expect(metronome).toHaveAttribute("aria-pressed", "true");
     await page.waitForTimeout(500);
-    expect(fondMasquer).toBe(await metronome.evaluate(fond));
-    expect(couleurMasquer).toBe(await metronome.evaluate(couleur));
+    // Le rond de « Sur la page » est le span du bouton (le bouton porte le libellé dessous).
+    const rond = paroles.locator("span[aria-hidden]");
+    expect(await rond.evaluate(fond)).toBe(await metronome.evaluate(fond));
+    expect(await rond.evaluate(couleur)).toBe(await metronome.evaluate(couleur));
   });
 }
 

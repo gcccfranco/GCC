@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, useEffectEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { langAccent } from "./langAccent";
 import { BarreHaut, ICONES_ROLE } from "./BarreHaut";
@@ -17,7 +17,7 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves, X } from "lucide-react";
+import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, AlignLeft, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves, X } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import type { Tranche } from "@/lib/performance/tranchesScan";
 import type { TrancheFenetre } from "@/components/jianpu/JianpuSheet";
@@ -685,6 +685,9 @@ export function PerformanceMode({
   const [demi, setDemi] = useState(false);
   const demiSens = useRef<1 | -1>(1);
   const refDemiRappel = useRef<HTMLDivElement>(null);
+  const refDemiRappelHaut = useRef<HTMLDivElement>(null);
+  const [zonesDemi, setZonesDemi] = useState<{ haut: Array<[number, number, number, number]>; bas: Array<[number, number, number, number]>; decalage: number } | null>(null);
+  const [rappelSuivantEcran, setRappelSuivantEcran] = useState(0);
   const refDemiCorps = useRef<HTMLDivElement>(null);
   const apercuPlace = ecran.tabletteVerticale && !structureMode && APERCU_H * fontScale <= ecran.hauteur * APERCU_PART_MAX;
   const apercuActif = apercuPlace && !demiOn;
@@ -1107,6 +1110,24 @@ export function PerformanceMode({
     ? computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}v2`)
     : cleSansV2;
 
+  // Demi-page : clé qu'aurait la page suivante en page entière (même formule que `currentPageKey`).
+  const demiSuivante = layout[currentPage + 1];
+  const clePageSuivante = demiActif && demiSuivante
+    ? computePageKey(blocks, pages[currentPage + 1] ?? [], `${layoutSig}${demiSuivante.twoColumns ? "x2" : ""}${demiSuivante.fit ? (demiSuivante.tranche ? `j4-${demiSuivante.tranche.y0}` : ecran.grand ? "j3" : "j2") : ""}${apercuActif && !demiSuivante.fit ? "ap" : ""}${demiSuivante.coupe ? "v2" : ""}`)
+    : undefined;
+  useLayoutEffect(() => {
+    const el = demiActif ? refDemiRappelHaut.current : null;
+    if (!el) { setRappelSuivantEcran((prev) => (prev === 0 ? prev : 0)); return; }
+    const mesurer = () => {
+      const h = (el.offsetHeight + (parseFloat(getComputedStyle(el).marginBottom) || 0)) * fontScale;
+      setRappelSuivantEcran((prev) => (Math.abs(prev - h) < 0.5 ? prev : h));
+    };
+    mesurer();
+    const obs = new ResizeObserver(mesurer);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [demiActif, currentPage, fontScale, zonesDemi]);
+
   // Lot RS-C : le rappel plus haut déplace les fins de page (pages 2 et suivantes d'un chant). Une page dont la
   // composition a changé a une nouvelle clé : on garde la clé qu'aurait eue, dans l'ancienne pagination, la page
   // qui commence par la même section — l'annotation d'avant s'y retrouve.
@@ -1138,7 +1159,8 @@ export function PerformanceMode({
   // à la ligne) sans forcer une mise en page à chaque rendu.
   const rappelPresent = (affichageVu === "unique" || affichageVu === "played") && !!layout[currentPage] && !layout[currentPage].fit;
   useLayoutEffect(() => {
-    const el = rappelRef.current;
+    // En demi-page, le rappel de la page en cours est celui de sa moitié basse : les traits restent à leur place.
+    const el = rappelRef.current ?? (demiActif && rappelPresent ? refDemiRappel.current : null);
     if (!el) {
       setRappelEcran((prev) => (prev === 0 ? prev : 0));
       return;
@@ -1167,8 +1189,8 @@ export function PerformanceMode({
     if (apercuEteint && !layout[currentPage]?.fit) l.push(pageV2 ? cleAvecApercuV2 : cleAvecApercuSansV2);
     return l;
   }, [cleAvantFeuille, pageV2, cleSansV2, trancheCourante, blocks, currentPageIndices, layoutSig, ecran.grand, apercuEteint, layout, currentPage, cleAvecApercuV2, cleAvecApercuSansV2]);
-  const { annotationsIndispo, annotations, handleAnnotationsChange, ancienneCompositionTraits } = useAnnotationsPage({
-    user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
+  const { annotationsIndispo, annotations, annotationsSuivante, handleAnnotationsChange, ancienneCompositionTraits } = useAnnotationsPage({
+    user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote, clePageSuivante, rappelSuivantEcran,
   });
   // Un seul bandeau : celui de la taille (il a un bouton qui règle le problème) passe avant.
   const alerteComposition = !!user && !annotateMode && showAnnotations && ancienneCompositionTraits && !alerteAnnotations;
@@ -1257,8 +1279,9 @@ export function PerformanceMode({
   }, []);
 
   // Keyboard navigation (flèches, PageUp/Down — pédales Bluetooth, Échap pour quitter)
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
+  // useEffectEvent + inscription unique : un écouteur réinscrit pendant un dispatch (rendu synchrone après setClavierVu)
+  // perd la première flèche.
+  const onKeyDown = useEffectEvent((e: KeyboardEvent) => {
       const cible = e.target instanceof HTMLElement ? e.target : null;
       // Champs de texte : toutes les touches leur reviennent. Le curseur de page (range) garde Échap.
       if (cible instanceof HTMLTextAreaElement || (cible instanceof HTMLInputElement && cible.type !== "range")) return;
@@ -1289,10 +1312,12 @@ export function PerformanceMode({
         }
         onClose();
       }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [tourner, onClose, popoverOuvert]);
+  });
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => onKeyDown(e);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
 
   // Touch/pointer tap handling
   // Pointeurs actifs. Un second doigt qui descend annule le geste en cours (zoom à deux doigts).
@@ -1516,9 +1541,9 @@ export function PerformanceMode({
   // Les calques d'annotation ne couvrent pas la bande (bas de page + 16 px de marge + sab).
   const rogneBas = apercuPossible ? `calc(${(APERCU_H + 16) * fontScale}px + var(--sab, 0px))` : undefined;
 
-  // Ronds « Sur la page » : tous sur une ligne dans le popover (jusqu'à 6) ; au téléphone, par 3 plutôt qu'un rond seul en dessous.
-  const nRonds = 1 + [blocks.some((b) => b.kind === "section" && b.showPinyin), hasJianpuSheets && !structureMode, !!user, twoColumnsAvailable, true].filter(Boolean).length;
-  const colonnesRonds = telephone && nRonds > 4 ? 3 : nRonds;
+  // Ronds « Sur la page » : tous sur une ligne dans le popover (jusqu'à 7) ; au téléphone, sur deux lignes équilibrées plutôt qu'un rond seul en dessous.
+  const nRonds = 1 + [blocks.some((b) => b.kind === "section" && b.showPinyin), hasJianpuSheets && !structureMode, !!user, twoColumnsAvailable, true, true].filter(Boolean).length;
+  const colonnesRonds = telephone && nRonds > 4 ? Math.ceil(nRonds / 2) : nRonds;
   // Le contenu d'Outils : le même élément dans le menu Outils (md et plus) et en tête d'Options au téléphone.
   const contenuOutils = (
     <ContenuOutils
@@ -1743,7 +1768,7 @@ export function PerformanceMode({
                   <PageTexte
                     page={layout[p]}
                     rappel={r}
-                    rappelRef={refDemiRappel}
+                    rappelRef={p === currentPage ? refDemiRappel : refDemiRappelHaut}
                     rappelTrame={r ? <RappelRangee titre={entree?.block.title} steps={r} pleines={pleines} rappel={affichageVu === "played" ? "joue" : "unique"} /> : null}
                     affichageVu={affichageVu}
                     currentPage={p}
@@ -1770,6 +1795,7 @@ export function PerformanceMode({
                 contentPadding={surScan ? renderPadding : contentPadding}
                 nom={t("performance.halfPageHandle")}
                 onEchec={echecDemi}
+                onZones={setZonesDemi}
               />
             );
           }
@@ -1912,6 +1938,16 @@ export function PerformanceMode({
       {showAnnotations && !annotateMode && !demiActif && annotations && annotations.strokes.length > 0 && (
         <StrokesLayer data={annotations} rogneBas={rogneBas} />
       )}
+      {/* Demi-page : traits en lecture seule, la page suivante dans la zone haute, la page en cours dans la zone basse (rognés et décalés comme leur texte). */}
+      {showAnnotations && !annotateMode && demiActif && zonesDemi && (() => {
+        const clip = (zs: Array<[number, number, number, number]>) => `path("${zs.map(([x0, y0, x1, y1]) => `M${x0} ${y0}H${x1}V${y1}H${x0}Z`).join("")}")`;
+        return (
+          <>
+            {annotationsSuivante && annotationsSuivante.strokes.length > 0 && <StrokesLayer data={annotationsSuivante} clip={clip(zonesDemi.haut)} />}
+            {annotations && annotations.strokes.length > 0 && <StrokesLayer data={annotations} clip={clip(zonesDemi.bas)} decalage={zonesDemi.decalage} />}
+          </>
+        );
+      })()}
       {annotateMode && annotations && (
         <AnnotationCanvas
           data={annotations}
@@ -2059,21 +2095,6 @@ export function PerformanceMode({
               </div>
               <p className="px-2 text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
             </div>
-            <div className="px-2">
-            <SettingRow label={t("performance.hideLyrics")}>
-              <BoutonRond
-                label={t("performance.hideLyrics")}
-                allume={lyricsHidden}
-                onClick={() => {
-                  clearRolePreset();
-                  quitterStructureSeule();
-                  toggleHideLyrics(!lyricsHidden);
-                }}
-              >
-                <EyeOff className="h-5 w-5" />
-              </BoutonRond>
-            </SettingRow>
-            </div>
           </div>
         </div>
       </MenuLouange>
@@ -2114,6 +2135,17 @@ export function PerformanceMode({
                 }}
               >
                 <Music className="h-5 w-5" />
+              </BoutonSurPage>
+              <BoutonSurPage
+                label={t("performance.lyrics")}
+                allume={!lyricsHidden}
+                onClick={() => {
+                  clearRolePreset();
+                  quitterStructureSeule();
+                  toggleHideLyrics(!lyricsHidden);
+                }}
+              >
+                <AlignLeft className="h-5 w-5" />
               </BoutonSurPage>
               {blocks.some((b) => b.kind === "section" && b.showPinyin) && (
                 <BoutonSurPage label={t("performance.pinyin")} allume={showPinyin} onClick={() => toggleShowPinyin(!showPinyin)}>

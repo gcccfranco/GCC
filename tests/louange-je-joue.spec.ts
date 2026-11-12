@@ -133,7 +133,7 @@ test("Je joue : s'ouvre sous son icône, cinq rôles et « Aucun », le rôle ac
   await expect(dialogue.getByText("Accords, paroles et capo")).toBeVisible();
   await expect(dialogue.getByRole("button", { name: /^Aucun/ })).toBeVisible();
   await expect(dialogue.getByRole("radiogroup", { name: "Ordre des sections" })).toBeVisible();
-  await expect(dialogue.getByRole("button", { name: "Masquer les paroles" })).toBeVisible();
+  await expect(dialogue.getByRole("button", { name: "Paroles", exact: true }), "le rond Paroles est dans Options, plus dans Je joue").toHaveCount(0);
 
   const doigt = await tactile(page);
   const points = await pointsInertes(page, boite, [0.15, 0.5, 0.85]);

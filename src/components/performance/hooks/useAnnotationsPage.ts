@@ -16,11 +16,14 @@ type Params = {
   fontScale: number;
   horsLigne: boolean;
   slugAnnote: string | undefined;
+  /** Demi-page : clé de la page suivante (traits lus en lecture seule, sans repli sur les anciennes clés) et son rappel (px écran). */
+  clePageSuivante?: string;
+  rappelSuivantEcran?: number;
 };
 
 /** Traits de la page courante : chargement, recalage, enregistrement à chaque modification. */
 export function useAnnotationsPage({
-  user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
+  user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote, clePageSuivante, rappelSuivantEcran = 0,
 }: Params) {
   // Les traits de la page n'ont pas pu être lus (réseau, 5xx) : page non initialisée, rien n'est enregistré.
   const [annotationsIndispo, setAnnotationsIndispo] = useState(false);
@@ -35,6 +38,24 @@ export function useAnnotationsPage({
         ? recaler(pageAnnotations, rappelEcran, affichageVu === "unique" && rappelEcran > 0 ? ANCIEN_RAPPEL * fontScale : 0, window.innerHeight)
         : null,
     [pageAnnotations, rappelEcran, affichageVu, fontScale],
+  );
+
+  // Demi-page : traits de la page suivante, lus seulement (jamais enregistrés ni modifiés).
+  const [suivante, setSuivante] = useState<AnnotationData | null>(null);
+  useEffect(() => {
+    setSuivante(null);
+    if (!user || !clePageSuivante) return;
+    let stale = false;
+    const minuterie = setTimeout(() => {
+      loadAnnotation(user.uid, setlistId, clePageSuivante)
+        .then((raw) => { if (!stale && raw) setSuivante(deserializeAnnotations(raw)); })
+        .catch(() => { /* lecture d'agrément : sans trait, la demi-page reste lisible */ });
+    }, 150);
+    return () => { stale = true; clearTimeout(minuterie); };
+  }, [user, setlistId, clePageSuivante]);
+  const annotationsSuivante = useMemo(
+    () => (suivante ? recaler(suivante, rappelSuivantEcran, affichageVu === "unique" && rappelSuivantEcran > 0 ? ANCIEN_RAPPEL * fontScale : 0, window.innerHeight) : null),
+    [suivante, rappelSuivantEcran, affichageVu, fontScale],
   );
 
   // Charger les traits de la page courante (toujours — affichage permanent)
@@ -101,5 +122,5 @@ export function useAnnotationsPage({
     [user, setlistId, currentPageKey, horsLigne, slugAnnote, fontScale, pageAnnotations],
   );
 
-  return { annotationsIndispo, annotations, handleAnnotationsChange, ancienneCompositionTraits };
+  return { annotationsIndispo, annotations, annotationsSuivante, handleAnnotationsChange, ancienneCompositionTraits };
 }

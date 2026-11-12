@@ -52,7 +52,8 @@ function clampPan(zoom: number, p: Pan): Pan {
 /** Calque de LECTURE : affiche les traits, sans interaction. */
 // `rogneBas` : hauteur (CSS) du bas de l'écran que le calque ne couvre pas (aperçu de page, lot L6).
 // clip-path garde les coordonnées intactes et retire aussi les touchers de la bande.
-export function StrokesLayer({ data, rogneBas }: { data: AnnotationData; rogneBas?: string }) {
+// Demi-page : `clip` (clip-path en px écran, sur un cadre fixe) et `decalage` (px écran) rognent et descendent les traits comme le texte.
+export function StrokesLayer({ data, rogneBas, clip, decalage }: { data: AnnotationData; rogneBas?: string; clip?: string; decalage?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -74,14 +75,15 @@ export function StrokesLayer({ data, rogneBas }: { data: AnnotationData; rogneBa
     });
   }, [data]);
 
-  return (
+  const canvas = (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 5, clipPath: rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined }}
+      style={{ zIndex: clip ? undefined : 5, clipPath: rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined, transform: decalage ? `translateY(${decalage}px)` : undefined }}
       aria-hidden="true"
     />
   );
+  return clip ? <div data-strokes-demi className="absolute inset-0 pointer-events-none" style={{ zIndex: 5, clipPath: clip }}>{canvas}</div> : canvas;
 }
 
 // ─── Canvas d'édition ─────────────────────────────────────────────────────────

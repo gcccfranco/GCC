@@ -218,7 +218,7 @@ test.describe("feuille de route du batteur (FS-D)", () => {
       for (const f of bas) expect(f, "jamais de filet sous une ligne").toBe(0);
     });
 
-    for (const [disposition, quoi] of [["classique", "couleur de la langue (accent de SectionView)"], ["sections", "couleur du type de section"]] as const) {
+    for (const [disposition, quoi] of [["classique", "couleur de la sorte de section"], ["sections", "couleur de la sorte de section"]] as const) {
       test(`couleur du repère : ${quoi} (${langue.toUpperCase()}, ${disposition})`, async ({ page }) => {
         await ouvrir(page, repli[0], repli[1], { langue, disposition });
         // Couleur résolue d'une variable CSS, lue sur un élément témoin.
@@ -233,11 +233,8 @@ test.describe("feuille de route du batteur (FS-D)", () => {
         const reperes = await onStage(page, "[data-feuille-route-repere]").evaluateAll((els) => els.map((e) => getComputedStyle(e).borderTopColor));
         expect(reperes).toHaveLength(2);
         // Couplet puis refrain.
-        const attendues = disposition === "classique"
-          ? [await resolue(`var(--${langue}-accent)`), await resolue(`var(--${langue}-accent)`)]
-          : [await resolue("var(--sec-verse)"), await resolue("var(--sec-chorus)")];
-        expect(reperes).toEqual(attendues);
-        if (disposition === "sections") expect(reperes[0], "couplet et refrain se distinguent").not.toBe(reperes[1]);
+        expect(reperes).toEqual([await resolue("var(--sec-verse)"), await resolue("var(--sec-chorus)")]);
+        expect(reperes[0], "couplet et refrain se distinguent").not.toBe(reperes[1]);
       });
     }
 

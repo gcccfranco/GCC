@@ -351,11 +351,10 @@ test.describe("Je joue : rôle et Ordre des sections", () => {
     await expect(affichage.getByRole("radio", { name: "Structure seule" })).toHaveAttribute("aria-checked", "true");
     // Sections uniques depuis la vue structure : paroles et accords reviennent.
     await affichage.getByRole("radio", { name: "Sections uniques" }).click();
-    await expect(feuille.getByRole("button", { name: "Masquer les paroles" })).toHaveAttribute("aria-pressed", "false");
     expect(await page.evaluate(() => localStorage.getItem("perf-hide-lyrics"))).toBe("0");
     await page.keyboard.press("Escape");
     await expect(feuille).toBeHidden();
-    await expect(await reglages(page)).toBeVisible();
+    await expect((await reglages(page)).getByRole("button", { name: "Paroles" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("dialog", { name: "Options d'affichage" }).getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "true");
   });
 });
@@ -415,19 +414,20 @@ test.describe("Réglages : corrections de la relecture", () => {
     await expect(feuille.getByRole("button", { name: "Batteur" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  test("Structure seule venue d'Affichage : « Accords » décoché et « Masquer les paroles » coché, comme l'écran (C4) (FR)", async ({ page }) => {
+  test("Structure seule venue d'Affichage : « Accords » et « Paroles » décochés, comme l'écran (C4) (FR)", async ({ page }) => {
     await ouvrirMode(page, [ABBA], { role: null });
     const options = await reglages(page);
     await expect(options.getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "true");
+    await expect(options.getByRole("button", { name: "Paroles" })).toHaveAttribute("aria-pressed", "true");
     await page.keyboard.press("Escape");
     await expect(options).toBeHidden();
     const feuille = await jejoue(page);
-    await expect(feuille.getByRole("button", { name: "Masquer les paroles" })).toHaveAttribute("aria-pressed", "false");
     await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Structure seule" }).click();
-    await expect(feuille.getByRole("button", { name: "Masquer les paroles" })).toHaveAttribute("aria-pressed", "true");
     await page.keyboard.press("Escape");
     await expect(feuille).toBeHidden();
-    await expect((await reglages(page)).getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "false");
+    const apres = await reglages(page);
+    await expect(apres.getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "false");
+    await expect(apres.getByRole("button", { name: "Paroles" })).toHaveAttribute("aria-pressed", "false");
   });
 
   test("« Transitions » coupé retire aussi les transitions du bandeau, la note reste (C6) (FR)", async ({ page }) => {
@@ -536,7 +536,7 @@ test.describe("bandeau de pastilles en tête du chant", () => {
     await expect(onStage(page, "[data-jianpu-page]").first()).toBeVisible();
     const bandeauScan = onStage(page, "ol[aria-label=Structure]");
     await expect(bandeauScan).toHaveCount(1);
-    await expect(onStage(page, "li").filter({ hasText: "Ralentir la dernière ligne" })).toBeVisible();
+    await expect(onStage(page, "[data-tete-feuille] [data-note-tete]")).toHaveText("R : Ralentir la dernière ligne");
 
     const feuille = await jejoue(page);
     await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Structure seule" }).click();

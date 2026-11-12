@@ -103,5 +103,8 @@ export async function basculerAnnoter(page: Page) {
     await expect(outils).toBeHidden();
     return;
   }
-  await page.getByRole("button", { name: "Annoter" }).click();
+  const bouton = page.getByRole("button", { name: "Annoter" });
+  // Barre masquée (inert) après un rechargement : un toucher au centre la rappelle.
+  if ((await bouton.count()) === 0) await page.mouse.click(page.viewportSize()!.width / 2, page.viewportSize()!.height / 2);
+  await bouton.click();
 }

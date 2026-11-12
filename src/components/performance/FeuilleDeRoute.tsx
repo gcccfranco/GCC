@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { NuanceBadge, getChartSectionStyle, getSectionStyle, zh_lyric_font } from "@/components/song/SongView";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
-import { isDp } from "@/lib/setlist/dp";
+import { isDp, paletteKeyOf } from "@/lib/setlist/dp";
 import type { SectionBlock } from "@/lib/performance/blocks";
 import { ECHELLE_MAX, ETIREMENT_MAX, poidsSection } from "@/lib/performance/pagination";
 import type { Disposition } from "@/lib/dispositionPref";
@@ -81,7 +81,7 @@ export function LigneFeuilleDeRoute({ block, repeat, couleurDe, disposition = "c
           aria-hidden="true"
           data-feuille-route-repere
           className="inline-flex shrink-0 items-center justify-center rounded-[7px] border-[2.5px] px-1 font-bold leading-none text-foreground"
-          style={{ borderColor: "var(--sec-c)", height: px(64), minWidth: px(64), fontSize: px(28) }}
+          style={{ borderColor: `var(--sec-${paletteKeyOf(section)})`, height: px(64), minWidth: px(64), fontSize: px(28) }}
         >
           {isDp(section) ? "Dp" : abbreviateSection(section)}
         </span>

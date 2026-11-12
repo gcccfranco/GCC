@@ -487,23 +487,68 @@ test("demi-page : en vue structure (feuille de route du batteur), le tour passe 
   await expect.poll(() => lireCompteur(page)).toBe(`2 / ${total}`);
 });
 
-test("demi-page : les traits sont masqués pendant la demi-page et reviennent à la page entière", async ({ page }) => {
-  const db = await ouvrir(page);
+/** Page 1 et page 2 portent chacune un trait (rouge) : page 2 en haut de l'écran, page 1 en bas ; puis retour en demi-page sur la page 1. */
+async function ouvrirAvecTraits(page: Page) {
+  const db = await ouvrir(page, { uneColonne: true });
   await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
-  const cle = (await racine(page).getAttribute("data-cle-page"))!;
+  const cle1 = (await racine(page).getAttribute("data-cle-page"))!;
+  await page.keyboard.press("ArrowRight");
+  if ((await enDemi(page).count()) === 1) await page.keyboard.press("ArrowRight");
+  await expect(enDemi(page)).toHaveCount(0);
+  await expect.poll(() => lireCompteur(page)).toMatch(/^2 \/ \d+$/);
+  const cle2 = (await racine(page).getAttribute("data-cle-page"))!;
   const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
-  db.set(`annotations/${MUSICIEN.uid}__${SETLIST_ID}__${cle}`, { strokes: TRAIT(w, h), updatedAt: new Date() });
+  const trait = (y: number) => JSON.stringify({ w, h, strokes: [{ tool: "pen", size: 6, color: "#dc2626", points: [[w * 0.2, h * y], [w * 0.5, h * y]] }] });
+  db.set(`annotations/${MUSICIEN.uid}__${SETLIST_ID}__${cle1}`, { strokes: trait(0.85), updatedAt: new Date() });
+  db.set(`annotations/${MUSICIEN.uid}__${SETLIST_ID}__${cle2}`, { strokes: trait(0.2), updatedAt: new Date() });
   await page.reload();
   await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
   await attendreMiseEnPage(page);
-  const calque = page.locator("[data-performance-mode] > canvas");
-  await expect(calque).toHaveCount(1);
   await page.keyboard.press("ArrowRight");
   await expect(enDemi(page)).toHaveCount(1);
-  await expect(calque).toHaveCount(0);
-  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator("[data-performance-mode] [data-strokes-demi]")).toHaveCount(2);
+  return { db, w, h };
+}
+
+/** Pour le calque de traits n° `i` (0 = page suivante, 1 = page en cours) : le trait est dessiné à `y` (px) dans le canvas, et le point
+ *  (x, y + décalage) tombe dans une zone visible du calque. Rend aussi la hauteur du filet. */
+async function traitDemi(page: Page, i: number, x: number, y: number) {
+  return page.evaluate(([i, x, y]) => {
+    const cadre = document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-strokes-demi]")[i];
+    const canvas = cadre.querySelector("canvas")!;
+    const dpr = window.devicePixelRatio || 1;
+    // Le trait de la page suivante est recalé du rappel de sa page (comme en page entière) : on cherche son ordonnée dans la colonne x.
+    const data = canvas.getContext("2d")!.getImageData(Math.round(x * dpr), 0, 1, canvas.height).data;
+    const k0 = Array.from({ length: data.length / 4 }, (_, k) => data[k * 4 + 3]).findIndex((a) => a > 0);
+    const dessine = k0 >= 0;
+    const yTrait = dessine ? k0 / dpr : y;
+    y = yTrait;
+    const decalage = canvas.getBoundingClientRect().top;
+    const rects = (getComputedStyle(cadre).clipPath.match(/M[^M]*?Z/g) ?? []).map((m) => (m.match(/-?\d+(\.\d+)?/g) ?? []).map(Number));
+    const visible = rects.some(([x0, y0, x1, y1]) => x >= x0 && x <= x1 && y + decalage >= y0 && y + decalage <= y1);
+    const f = document.querySelector<HTMLElement>("[data-performance-mode] [data-demi-filet]")!.getBoundingClientRect();
+    return { dessine, visible, decalage, filet: f.top + f.height / 2, y: yTrait };
+  }, [i, x, y] as const);
+}
+
+test("demi-page : les traits de la page 2 se voient au-dessus du filet, ceux de la page 1 dessous, à leur place ; rien n'est écrit", async ({ page }) => {
+  const { db, w, h } = await ouvrirAvecTraits(page);
+  const haut = await traitDemi(page, 0, w * 0.35, h * 0.2);
+  expect(haut.dessine, "trait de la page 2 dessiné").toBe(true);
+  expect(haut.visible, "trait de la page 2 dans la zone haute").toBe(true);
+  expect(haut.decalage, "la page suivante n'est pas décalée").toBe(0);
+  expect(Math.abs(haut.y - h * 0.2), "trait de la page 2 près de sa place").toBeLessThan(h * 0.1);
+  expect(haut.y, "au-dessus du filet").toBeLessThan(haut.filet);
+  const bas = await traitDemi(page, 1, w * 0.35, h * 0.85);
+  expect(bas.dessine, "trait de la page 1 dessiné à sa place d'origine").toBe(true);
+  expect(bas.visible, "trait de la page 1 dans la zone basse").toBe(true);
+  expect(Math.abs(bas.y - h * 0.85), "trait de la page 1 à sa place").toBeLessThan(5);
+  expect(bas.y + bas.decalage, "sous le filet").toBeGreaterThan(bas.filet);
+  expect(db.writes.filter((x) => x.path.startsWith("annotations/")), "aucune écriture").toEqual([]);
+  // « Annoter » remet la page entière : les calques de demi-page disparaissent.
+  await basculerAnnoter(page);
+  await expect(page.locator("[data-performance-mode] [data-strokes-demi]")).toHaveCount(0);
   await expect(enDemi(page)).toHaveCount(0);
-  await expect(calque).toHaveCount(1);
 });
 
 test("demi-page : tablette portrait, des traits posés avec l'aperçu (clé « ap ») donnent le bandeau « ancienne mise en page »", async ({ page }, testInfo) => {

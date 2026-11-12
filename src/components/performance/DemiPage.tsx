@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { bordsLibres, bordsParmi, bornerPart, choisirCoupe, type BordsDemi, type GroupeDemi, type SectionDemi, type ZoneDemi } from "@/lib/performance/demiPage";
 
 /** Place (px écran) du rappel du nom de section entre le filet et la reprise de la moitié basse. */
@@ -12,9 +12,11 @@ const RESERVE_RAPPEL = 14;
  *  deux. La coupe tombe toujours entre deux blocs, mesurée à l'écran sur les rendus eux-mêmes, avec 12 px de blanc de part
  *  et d'autre du filet ; un cadre de section rogné est prolongé jusqu'au filet. Sur une page en deux colonnes (de part et
  *  d'autre, sans en-tête pleine largeur), la coupe est verticale : la première colonne de la page suivante à gauche, la
- *  dernière de la page en cours à droite, un filet dans la gouttière et pas de poignée. Les annotations ne s'y montrent pas. */
+ *  dernière de la page en cours à droite, un filet dans la gouttière et pas de poignée. Les traits d'annotation s'y montrent en
+ *  lecture seule : `onZones` rend au parent les zones visibles (px écran) et le décalage de la moitié basse, pour qu'il
+ *  rogne et décale deux calques de traits (page suivante en haut, page en cours en bas) comme ceux du texte. */
 export function DemiPage({
-  clePage, rendreHaut, rendreBas, part, onPart, onPartFin, fontScale, contentPadding, nom, onEchec,
+  clePage, rendreHaut, rendreBas, part, onPart, onPartFin, fontScale, contentPadding, nom, onEchec, onZones,
 }: {
   /** Change quand la page, sa mise en page ou la taille du texte changent : remesure. */
   clePage: string;
@@ -28,6 +30,8 @@ export function DemiPage({
   nom: string;
   /** Aucune coupe ne convient : le parent passe en tour normal. */
   onEchec: () => void;
+  /** Zones visibles de chaque calque (px écran, [x0, y0, x1, y1]) et décalage de la moitié basse ; null quand la demi-page s'éteint. */
+  onZones: (z: { haut: Array<[number, number, number, number]>; bas: Array<[number, number, number, number]>; decalage: number } | null) => void;
 }) {
   const [glisse, setGlisse] = useState(false);
   const hautRef = useRef<HTMLDivElement>(null);
@@ -190,6 +194,13 @@ export function DemiPage({
     const bas = copie(coupe.bas).filter((z) => Number.isFinite(z.y)).map((z): [number, number, number, number] => [z.x0, z.y, z.x1, bottom]);
     return { haut, bas };
   }, [coupe, mesure]);
+  const decalage = coupe?.decalage ?? 0;
+  const onZonesRef = useRef(onZones);
+  onZonesRef.current = onZones;
+  useEffect(() => {
+    onZonesRef.current(zones && pret ? { ...zones, decalage } : null);
+    return () => onZonesRef.current(null);
+  }, [zones, pret, decalage]);
   // Cadre de section rogné par la coupe : ses bords latéraux se prolongent jusqu'au filet (jamais des crochets ouverts).
   const prolongements = useMemo(() => {
     if (!coupe || !mesure) return [];
