@@ -28,7 +28,7 @@ import { PASTILLE_SUIVANT_H, twoColumnsPossible, type PerfPage } from "@/lib/per
 import { layoutFeuilleDeRoute, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
 import { useJianpuManifest, useJianpuMargesToutes, useJianpuSections, useJianpuSystemes } from "@/lib/jianpu/images";
 import { bornesX, LARGEUR_FEUILLE_MAX, sectionsDeTranche, trancheDeSection, tranchesDemiLignes, tranchesScan } from "@/lib/performance/tranchesScan";
-import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
+import { interrupteurAllume, prefDepuisInterrupteur, prefPourRole, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, zh_lyric_font } from "@/components/song/SongView";
 import { TempoPartition } from "@/components/song/NoteNoire";
@@ -623,6 +623,7 @@ export function PerformanceMode({
   }, []);
 
   const capoActive = rolePreset === "guitariste";
+  const jianpuPrefVu = prefPourRole(jianpuPref, rolePreset);
 
   const setCapo = useCallback((slug: string, frets: number) => {
     compter("cmd.chant.capo");
@@ -790,8 +791,8 @@ export function PerformanceMode({
   const blocks = useMemo(
     // always build with chords=true for stable UIDs (le capo et la tonalité ne
     // changent ni le nombre ni l'ordre des blocs : les UIDs restent stables)
-    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPref, personalKeys, { affichage: affichageVu }),
-    [items, contents, capoActive, capos, jianpuManifest, jianpuPref, personalKeys, affichageVu],
+    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPrefVu, personalKeys, { affichage: affichageVu }),
+    [items, contents, capoActive, capos, jianpuManifest, jianpuPrefVu, personalKeys, affichageVu],
   );
 
   const { repeatCount, repeatHidden } = useMemo(
@@ -2175,8 +2176,8 @@ export function PerformanceMode({
                 // que le guitariste lit la grille, sur la même setlist.
                 <BoutonSurPage
                   label={t("performance.jianpuSheet")}
-                  allume={interrupteurAllume(jianpuPref)}
-                  onClick={() => onJianpuPrefChange(prefDepuisInterrupteur(!interrupteurAllume(jianpuPref)))}
+                  allume={interrupteurAllume(jianpuPrefVu)}
+                  onClick={() => onJianpuPrefChange(prefDepuisInterrupteur(!interrupteurAllume(jianpuPrefVu)))}
                 >
                   <FileMusic className="h-5 w-5" />
                 </BoutonSurPage>

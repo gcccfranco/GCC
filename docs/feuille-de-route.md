@@ -72,7 +72,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   plus (Timothée, 12/11 après-midi). La session qui finit un lot : `git pull --rebase`, `list_sessions` (limit 10), et s'il reste une place elle
   lance le premier chantier ci-dessous qui a son go, raye sa ligne (« lancé, identifiant, heure »), pousse, s'arrête.
   En cours le 12/11 à 10 h 40 UTC : AO (FS-F, puis JP-C, JP-D ; **JP-C commencée le 12/11 à 11 h 05 UTC**,
-  `session_01UMdfucQGkCmqMascx4pK1c`, **finie le 12/11** ; JP-D lancée ensuite, modifie `PerformanceMode.tsx`) ; Ma partition (MP-3 → MP-5) ; exemples d'usage
+  `session_01UMdfucQGkCmqMascx4pK1c`, **finie le 12/11** ; JP-D finie le 12/11 : vague 3 faite sauf AN, à lancer après MP-5) ; Ma partition (MP-3 → MP-5) ; exemples d'usage
   (T2 → T7) ; Harmonie H3 fini (`f2a8557`), place passée au pupitre PU-1.
   1. ~~**Pupitre PU-1 → PU-6**~~ lancé (PU-1, `session_01UMdfuaZsemUJk7tUKJRQiY`, 12/11 10 h 50 UTC, à la fin de
      Harmonie H3 `f2a8557` ; attend MP-3 vérifiée, enchaîne PU-2 et PU-3) (`docs/spec-entree-musiciens.md`, go du 12/11). PU-1 = PDF de setlist seulement ; lire
@@ -173,7 +173,7 @@ Specs dans `docs/` ; « archive § 3.X » = `grep -n '^### X\.' docs/archive/feu
 | AL | Vidéo de bienvenue | `spec-video-bienvenue.md` (VB, VB-E) | en ligne 02/11 |
 | AM | Espace Musiciens, scène des fêtes | `spec-espace-musiciens.md` (EM, SF) | en ligne 02/11 |
 | AN | Pastilles « Int » et « Inst » | `spec-abreviation-interlude.md` (AB-I) | en ligne 07/11 |
-| AO | Mode louange façon forScore, apparence comprise | `spec-mode-louange-forscore-2.md` | vagues 1 et 2 et CA (11/11) codés, pas en ligne ; FS-F en cours (go du 11/11) ; vague 3 : JP-C puis JP-D enchaînés, **AN après « Ma partition »** (AP, décision du 12/11) ; relecture complète avant mise en ligne |
+| AO | Mode louange façon forScore, apparence comprise | `spec-mode-louange-forscore-2.md` | vagues 1 et 2 et CA (11/11) codés, pas en ligne ; FS-F en cours (go du 11/11) ; vague 3 : JP-C et JP-D faites (12/11) ; reste **AN, après MP-5 de « Ma partition »** (AP, décision du 12/11), puis une relecture complète avant mise en ligne |
 | AP | Le site devient le pupitre : « Ma partition » qui suit le chant, entrée des musiciens, écrans pratiques, Harmonie qui s'entend, accords en chiffres | `spec-pupitre-musicien.md` | cadrage du 11/11/2026 ; rapport d'usage rendu (`audit-usage-2026-11-11.md` : 149 constats, six lots proposés, révision incomplète) ; « go » de Timothée sur les cinq recommandations : lot 1 (retouches) : go, T1 à T3 codées sur la branche ; deux exemples : piste A et onze décisions (« Ok » de Timothée), spec à écrire (`spec-exemples-usage.md`) ; planches publiées, réponses attendues : « Ma partition », Harmonie et Accords ; comptage d'usage : go pour T1 ; planche du pupitre à lancer après « Ma partition » |
 
 **Chantiers sans lettre** (journal, archive § 6) : 简谱 par défaut puis piste A partout (`spec-jianpu-integration.md`,

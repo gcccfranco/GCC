@@ -46,3 +46,9 @@ export function interrupteurAllume(pref: JianpuPref): boolean {
 export function prefDepuisInterrupteur(on: boolean): JianpuPref {
   return on ? "always" : "never";
 }
+
+/** Mode louange : choriste et présidence voient par défaut paroles + pinyin ;
+ *  le choix réglé de la personne (« always » / « never ») l'emporte (D4). */
+export function prefPourRole(pref: JianpuPref, role: string | null): JianpuPref {
+  return pref === "auto" && (role === "choriste" || role === "presidence") ? "never" : pref;
+}
