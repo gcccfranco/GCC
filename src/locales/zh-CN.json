@@ -173,7 +173,8 @@
       "titre": "我的下一次服事",
       "jouer": "开始演奏",
       "tuJoues": "根据排班，你担任{{role}}",
-      "retour": "我的下一次服事"
+      "retour": "我的下一次服事",
+      "pretHorsLigne": "已可离线使用"
     },
     "fete": {
       "propositionAide": "还不在诗歌库中。本节目会保留这份推荐；诗歌一进入诗歌库，它就变成该诗歌。",

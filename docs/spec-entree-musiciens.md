@@ -451,3 +451,24 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   quatre : retouches faites (grille, structure en texte, titres sur deux lignes, filet sous les vignettes). Les agents
   nommés n'étant pas chargés dans la session, ils ont tourné comme agents génériques avec leur fiche
   (`.claude/agents/*.md`) et leur modèle. Suite : PU-3 lancée.
+- 12/11/2026 : **PU-3 faite** (gardé hors-ligne d'office). `gardeServices.ts` (nouveau) : `urlsAGarder` et
+  `demanderPrecache` (la demande « precache » de `SetlistDetailClient.tsx` sortie telle quelle, mêmes adresses),
+  `precacheFait` (chaque adresse dans Cache Storage, faux sans service worker qui contrôle la page), `garderServices`
+  (setlists visibles des services du compte des 14 prochains jours : copie + precache, une fois par jour et par setlist,
+  marque `gcc-garde-services:<uid>` effacée avec les copies ; rien hors ligne ; la marque n'est posée que si un service
+  worker contrôle la page et que le manifeste 简谱 est lu). `listerCopies(uid)` dans `copieHorsLigne.ts`. Onglet
+  Setlists : garde à l'ouverture, puis « Prêt hors-ligne » (已可离线使用, icône nuage coché) dans le bloc quand la copie
+  **et** le cache du prochain service sont là, revérifié toutes les 3 s pendant 2 min ; rien avant. `public/sw.js`
+  inchangé (`gcc-louange-v6`). **Écart de test** : sans vrai service worker en `next dev`, la spec remplace le contrôleur
+  par un témoin (messages notés, `caches.match` piloté) et coupe Firestore au lieu de `context.setOffline` (les pages
+  du serveur de dev ne sont pas en cache) ; le service worker réel reste à mesurer avec `scripts/rude-epreuve` (non fait
+  ici). **Point préexistant noté** : le service worker plafonne un message à 200 adresses (`MAX_PRECACHE`) ; une setlist
+  à très nombreux scans n'atteindrait jamais « Prêt ». Relecture : quatre corrections (intervalle après démontage,
+  marque sans service worker, manifeste vide, « prêt » lié à l'id de la setlist). `regard` sur 16 captures (quatre
+  dispositions, FR et 中文, clair et sombre), `critique-design` sur deux : icône à 14 px, trait 2, écart 1,5.
+  Nouvelle `tests/pupitre-hors-ligne.spec.ts` (`SPECS_GRAND_ECRAN`, chants abba-pere et 一切都更新, noms inventés).
+  **Tests** : `pupitre-hors-ligne`, `pupitre-onglet`, `setlist-hors-ligne` : 187 passés, 4 échecs (focus rendu à
+  « Je joue » qui gardait la flèche, en grand écran) en 5,6 min ; après corrections, `pupitre-hors-ligne` et
+  `pupitre-onglet` 107 passés (8 ignorés) en 3,3 min. `tsc`, lint (aucun avertissement nouveau), `npm run validate`
+  propres. **PU-4 attend** : FS-F est fusionnée (`fef10377`) mais MP-5 (Crayon du mode louange) travaille encore dans
+  `PerformanceMode.tsx` ; PU-4 part quand MP-5 a fini (pilote prévenu).

@@ -16,6 +16,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 const SPECS_GRAND_ECRAN = [
   // Lot Pupitre, PU-2 (docs/spec-entree-musiciens.md) : « Mon prochain service » en tête de l'onglet Setlists (rangées, vignettes, volet de droite en deux volets).
   /pupitre-onglet\.spec\.ts/,
+  // Lot Pupitre, PU-3 : « Prêt hors-ligne » dans le bloc (téléphone et tablette debout surtout).
+  /pupitre-hors-ligne\.spec\.ts/,
   // Comptage d'usage, T4 (docs/spec-comptage-usage.md) : l'écran de lecture /back-office/usage (tableau trié) sur les quatre dispositions.
   /usage-lecture\.spec\.ts/,
   // Ma partition, MP-2 (docs/spec-ma-partition.md) : menu « Je lis », filets et mention de conflit sur les quatre dispositions.

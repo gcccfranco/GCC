@@ -78,7 +78,8 @@ import type { PartitionDeChant } from "@/lib/firebase/partitions";
 import { BarreCrayon, type CibleCrayon } from "@/components/partition/BarreCrayon";
 import { ChoixDestination, type Destination } from "@/components/partition/ChoixDestination";
 import { adresseVue, lireAdresse, poser, surLaSetlist } from "@/lib/setlist/adresseVue";
-import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, scansAbsentsDuCache, urlsJianpuAGarder, useJianpuManifest } from "@/lib/jianpu/images";
+import { demanderPrecache, urlsAGarder } from "@/lib/setlist/gardeServices";
+import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, scansAbsentsDuCache, useJianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled } from "@/lib/jianpu/preference";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
@@ -569,22 +570,8 @@ export function SetlistDetailClient() {
   // et la page de chacun de ses chants, et les scans 简谱 de ceux qui en ont un (/jianpu/index.json donne leurs pages).
   useEffect(() => {
     if (!setlist || copieLueLe !== null || !jianpuManifest) return;
-    const slugs = new Set<string>();
-    for (const it of setlist.items) {
-      if (it.songSlug) slugs.add(it.songSlug);
-      for (const fs of it.fusionSongs ?? []) slugs.add(fs.songSlug);
-    }
-    const urls = [
-      `/setlists/${encodeURIComponent(id)}/`,
-      "/setlists/",
-      ...[...slugs].flatMap((s) => [`/songs/${encodeURIComponent(s)}/`, `/api/song/${s}`]),
-      ...(slugs.size ? urlsJianpuAGarder(jianpuManifest, slugs) : []),
-    ];
-    const envoyer = () => {
-      try {
-        navigator.serviceWorker?.controller?.postMessage({ type: "precache", urls });
-      } catch { /* pas de service worker : rien à garder */ }
-    };
+    const urls = urlsAGarder(setlist, jianpuManifest);
+    const envoyer = () => demanderPrecache(urls);
     envoyer();
     // Un nouveau service worker qui prend la main (mise à jour, premier contrôle) : il n'a pas reçu le message.
     let sw: ServiceWorkerContainer | undefined;

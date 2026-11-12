@@ -173,7 +173,8 @@
       "titre": "Mon prochain service",
       "jouer": "Jouer",
       "tuJoues": "Tu joues {{role}} d'après le planning",
-      "retour": "Mon prochain service"
+      "retour": "Mon prochain service",
+      "pretHorsLigne": "Prêt hors-ligne"
     },
     "fete": {
       "propositionAide": "Pas encore au répertoire. Le passage garde la proposition en attente ; elle devient le chant dès qu'il est au répertoire.",

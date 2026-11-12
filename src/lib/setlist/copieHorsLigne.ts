@@ -10,7 +10,7 @@
 import type { FSSetlist } from "@/types/setList";
 import type { SetlistVersions } from "@/types/setlistVersions";
 
-type CopieSetlist = {
+export type CopieSetlist = {
   /** Compte qui a lu la setlist. */
   uid: string;
   setlist: FSSetlist;
@@ -28,6 +28,8 @@ const PREFIXE_LS = "gcc-copie-setlist:";
 /** File d'attente des partitions (src/lib/partition/fileEnAttente.ts) : définie ici, feuille sans dépendance, pour
  *  que l'effacement au changement de compte ne crée pas de cycle d'import. */
 export const PREFIXE_FILE = "gcc-partitions-en-attente:";
+/** Marque « services gardés aujourd'hui » (src/lib/setlist/gardeServices.ts) : définie ici pour la même raison. */
+export const PREFIXE_GARDE = "gcc-garde-services:";
 
 // Les dates (`createdAt`…) passent en JSON sous la forme { "__date": iso } et reviennent en Date.
 function texte(copie: CopieSetlist): string {
@@ -163,6 +165,43 @@ export async function lireCopie(
   }
 }
 
+/** Les copies gardées sur l'appareil pour ce compte, de moins de 14 jours (IndexedDB puis localStorage, sans
+ *  doublon d'id). N'efface rien. Ne lève jamais. */
+export async function listerCopies(uid: string, maintenant = Date.now()): Promise<CopieSetlist[]> {
+  const copies = new Map<string, CopieSetlist>();
+  const ajouter = (json: unknown) => {
+    try {
+      const copie = typeof json === "string" ? lire(json) : null;
+      if (copie && copie.uid === uid && maintenant - copie.lueLe <= GARDE_COPIE_MS && !copies.has(copie.setlist.id)) {
+        copies.set(copie.setlist.id, copie);
+      }
+    } catch { /* copie illisible : ignorée */ }
+  };
+  try {
+    const base = await ouvrir();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const tx = base.transaction(STORE, "readonly");
+        tx.objectStore(STORE).openCursor().onsuccess = (e) => {
+          const curseur = (e.target as IDBRequest<IDBCursorWithValue | null>).result;
+          if (!curseur) return;
+          ajouter(curseur.value);
+          curseur.continue();
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+    } finally {
+      base.close();
+    }
+  } catch { /* IndexedDB absente ou refusée */ }
+  try {
+    for (const cle of Object.keys(localStorage)) if (cle.startsWith(PREFIXE_LS)) ajouter(localStorage.getItem(cle));
+  } catch { /* rien */ }
+  return [...copies.values()];
+}
+
 /** Efface la copie d'une setlist (inexistante, refusée ou à la corbeille). */
 export async function effacerCopie(id: string): Promise<void> {
   try { await retirer(id); } catch { /* rien */ }
@@ -175,9 +214,12 @@ export async function effacerToutesLesCopies(): Promise<void> {
   try {
     for (const cle of Object.keys(localStorage)) if (cle.startsWith(PREFIXE_LS)) localStorage.removeItem(cle);
   } catch { /* rien */ }
-  // File d'attente des partitions (Ma partition, MP-1) : liée au compte, effacée au même moment.
+  // File d'attente des partitions (Ma partition, MP-1) et marque des services gardés (PU-3) : liées au compte,
+  // effacées au même moment.
   try {
-    for (const cle of Object.keys(localStorage)) if (cle.startsWith(PREFIXE_FILE)) localStorage.removeItem(cle);
+    for (const cle of Object.keys(localStorage)) {
+      if (cle.startsWith(PREFIXE_FILE) || cle.startsWith(PREFIXE_GARDE)) localStorage.removeItem(cle);
+    }
   } catch { /* rien */ }
 }
 

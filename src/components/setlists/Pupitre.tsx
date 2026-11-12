@@ -4,12 +4,13 @@
 // date et culte, le rôle d'après le planning, « Jouer » (à l'encre : la couleur du service est
 // réservée à l'écran d'un culte, 5C1), puis les chants. Téléphone : rangées sans vignette (le
 // premier service de la liste reste visible dessous) ; tablette et grand : vignettes, le scan
-// 简谱 de la page 1 (inversé et atténué en sombre) ou, sans scan, la structure du chant.
+// 简谱 de la page 1 (inversé et atténué en sombre) ou, sans scan, la structure du chant. Lot PU-3 : une ligne
+// « Prêt hors-ligne » quand la copie et le cache du service sont là (rien sinon).
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
-import { Play } from "lucide-react"
+import { CloudCheck, Play } from "lucide-react"
 import type { FSSetlist } from "@/types/setList"
 import type { SongIndexEntry } from "@/types/song"
 import type { ServiceDuJour } from "@/lib/planning/accueil"
@@ -30,12 +31,14 @@ export function Pupitre({
   songsMap,
   role,
   disposition,
+  pret,
 }: {
   setlist: FSSetlist
   services: ServiceDuJour[]
   songsMap: Record<string, SongIndexEntry>
   role: RolePreset | null
   disposition: Disposition
+  pret: boolean
 }) {
   const { t, i18n } = useTranslation()
   const vignettes = disposition !== "telephone"
@@ -75,6 +78,14 @@ export function Pupitre({
           {role && (role === "pianiste" || role === "guitariste" || role === "batteur") && (
             <p className="text-sm text-muted-foreground">
               {t("setlists.pupitre.tuJoues", { role: t(`performance.planning.instrument.${role}`).toLowerCase() })}
+            </p>
+          )}
+          {pret && (
+            <p data-pret-hors-ligne className="text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <CloudCheck className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                {t("setlists.pupitre.pretHorsLigne")}
+              </span>
             </p>
           )}
         </div>

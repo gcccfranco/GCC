@@ -31,7 +31,10 @@ import { BandeauCorbeille } from "@/components/setlists/BandeauCorbeille";
 import { ApercuSetlist } from "@/components/setlists/ApercuSetlist";
 import { Pupitre } from "@/components/setlists/Pupitre";
 import { servicesDuCompte } from "@/lib/petitdej/services";
-import { pourMoi, setlistDuService } from "@/lib/planning/accueil";
+import { joursAvant, pourMoi, reunirServices, setlistDuService } from "@/lib/planning/accueil";
+import { listerCopies } from "@/lib/setlist/copieHorsLigne";
+import { demanderPrecache, garderServices, precacheFait, urlsAGarder } from "@/lib/setlist/gardeServices";
+import { loadJianpuManifest } from "@/lib/jianpu/images";
 import { roleDuPlanning } from "@/lib/planning/rolePlanning";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useDisposition } from "@/hooks/useDisposition";
@@ -252,6 +255,51 @@ export default function SetlistsPage() {
     return null;
   })();
   const aUnPupitre = !!pupitre;
+  const prochaine = pupitre?.setlist;
+  // Gardé hors ligne d'office (PU-3) : les services du compte des 14 prochains jours sont copiés et mis en cache à
+  // l'ouverture de l'onglet ; `pret` dit si le prochain l'est (copie + cache), revérifié toutes les 3 s pendant
+  // 2 minutes. Hors ligne : rien n'est tenté, le test tourne une fois (une copie d'avant peut suffire). Le « prêt »
+  // est celui d'une setlist (son id) : un autre prochain service ne l'hérite pas. Manifeste 简谱 illisible : pas prêt.
+  const [pretId, setPretId] = useState<string | null>(null);
+  const pret = !!prochaine && pretId === prochaine.id;
+  useEffect(() => {
+    if (!user || !planning || authLoading || loading) return;
+    const uid = user.uid;
+    let vivant = true;
+    let minuterie: ReturnType<typeof setInterval> | undefined;
+    (async () => {
+      const aujourdhui = aujourdhuiLocal();
+      const lisibles = toutes.filter((s) => !s.isPrivate && !s.isDraft && canSeeSetlist(user, profile, s, datesDuCompte));
+      const entries = servicesDuCompte(planning, [], uid, profile?.planningName ?? "");
+      const aGarder: FSSetlist[] = [];
+      for (const service of reunirServices(entries).filter((x) => x.date >= aujourdhui)) {
+        const sl = setlistDuService(lisibles, service);
+        if (sl && !aGarder.some((x) => x.id === sl.id)) aGarder.push(sl);
+      }
+      const manifest = await loadJianpuManifest();
+      if (!vivant) return;
+      await garderServices({ uid, setlists: aGarder, manifest, aujourdhui });
+      if (!vivant || !prochaine) return;
+      const verifier = async () => {
+        const urls = urlsAGarder(prochaine, manifest);
+        const ok = Object.keys(manifest).length > 0 &&
+          (await listerCopies(uid)).some((c) => c.setlist.id === prochaine.id) && (await precacheFait(urls));
+        if (vivant) setPretId(ok ? prochaine.id : null);
+        return ok;
+      };
+      // Le prochain service hors de la garde (plus de 14 jours) : un seul test, sans redemande au service worker.
+      if ((await verifier()) || navigator.onLine === false || joursAvant(prochaine.date, aujourdhui) > 14) return;
+      if (!vivant) return;
+      const debut = Date.now();
+      minuterie = setInterval(async () => {
+        if (!vivant) { clearInterval(minuterie); return; }
+        // Un service worker qui prend la main après coup n'a pas reçu le message : on le redemande.
+        if (Date.now() - debut > 120_000 || (await verifier())) clearInterval(minuterie);
+        else demanderPrecache(urlsAGarder(prochaine, manifest));
+      }, 3000);
+    })();
+    return () => { vivant = false; clearInterval(minuterie); };
+  }, [user, authLoading, loading, planning, toutes, profile, datesDuCompte, prochaine]);
   // Sans index chargé par la disposition (téléphone), le bloc a besoin des titres.
   useEffect(() => {
     if (!aUnPupitre || avecChants) return;
@@ -533,7 +581,7 @@ export default function SetlistsPage() {
       titre={t("common.header.setlists")}
       sousTitre={t("setlists.list.sousTitre")}
       action={canCreate ? <BoutonNouveau label={t("setlists.list.newButton")} href="/setlists/new" /> : undefined}
-      milieu={!grand && pupitre ? <Pupitre setlist={pupitre.setlist} services={pupitre.services} songsMap={songsMap} role={pupitre.role} disposition={disposition} /> : undefined}
+      milieu={!grand && pupitre ? <Pupitre setlist={pupitre.setlist} services={pupitre.services} songsMap={songsMap} role={pupitre.role} disposition={disposition} pret={pret} /> : undefined}
       onglets={rail}
       apres={filtres}
     />
@@ -676,7 +724,7 @@ export default function SetlistsPage() {
             </div>
           }
           premier={pupitreAffiche && pupitre ? (
-            <Pupitre setlist={pupitre.setlist} services={pupitre.services} songsMap={songsMap} role={pupitre.role} disposition={disposition} />
+            <Pupitre setlist={pupitre.setlist} services={pupitre.services} songsMap={songsMap} role={pupitre.role} disposition={disposition} pret={pret} />
           ) : choisie && (
             <ApercuSetlist setlist={choisie} songsMap={songsMap} planning={planning} monNom={profile ? nomCourt(profile) : ""} />
           )}
