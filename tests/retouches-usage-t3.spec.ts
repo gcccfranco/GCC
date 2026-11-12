@@ -91,6 +91,17 @@ test("appareils tactiles : le « ⋯ » non compact d'une carte de dimanche a un
 test.describe("planning : cases de nom", () => {
   const [presidence, suivante] = COLONNES_CULTE.map((c) => c.cle);
 
+  test("la feuille de choix d'un nom : chaque ligne fait au moins 44 px (lignes de 40 px avant le 12/11/2026)", async ({ page }) => {
+    await ouvrirPlanning(page);
+    const zone = laCase(page, "2026-09-27", presidence);
+    await zone.getByRole("button").click();
+    const options = page.getByRole("dialog").getByRole("option");
+    await expect(options.first()).toBeVisible();
+    const hauteurs = await options.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height));
+    expect(hauteurs.length).toBeGreaterThan(1);
+    expect(Math.min(...hauteurs)).toBeGreaterThanOrEqual(44);
+  });
+
   test("appareils tactiles : la case de nom a une zone de 44 px, un toucher à 20 px du centre l'ouvre", async ({ page }) => {
     await ouvrirPlanning(page);
     test.skip(!(await estTactile(page)), "la zone de 44 px est celle du doigt : appareils tactiles");

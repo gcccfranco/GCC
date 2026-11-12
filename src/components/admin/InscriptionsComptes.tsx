@@ -76,7 +76,7 @@ export function InscriptionsComptes({
                 <button
                   type="button"
                   onClick={onVoir}
-                  className="h-9 rounded-full bg-background px-3.5 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
+                  className={`${TOUCHER_44} h-9 rounded-full bg-background px-3.5 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary`}
                 >
                   {t("admin.inscr.voir", { count: nouveaux })}
                 </button>

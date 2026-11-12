@@ -251,3 +251,13 @@ Vrais mais hors lot 1, parce qu'ils déplacent, réorganisent ou demandent un de
   Sommaire qui se recouvrent en hauteur quand elles passent à la ligne (T1) ; bouton retour de la setlist sans libellé
   court (T5) ; bouton « Voir » des inscriptions à 36 px (T1) ; en deux volets, pas de retour vers l'équipe dans la fiche
   d'une tâche (T6). Mise en ligne sur `main` : attend son ordre.
+- 12/11/2026 : **points à trancher réglés** (Timothée : « fais ce qui est le mieux »). Faits : feuille de choix d'un
+  nom (`ChoisirNom.tsx`) en lignes de 44 px au lieu de 40 (mesuré dans `retouches-usage-t3`) ; « Voir » des
+  inscriptions en `TOUCHER_44`, dessin de 36 px inchangé ; en deux volets, une tâche ouverte depuis son équipe porte
+  « ‹ DA » au-dessus du titre (`retouches-usage-t6` le vérifie désormais sur tous les écrans), et le sous-titre de
+  l'équipe disparaît quand le retour la nomme déjà (un volet compris). Gardés tels quels : les 12 px entre les lignes
+  des cartes du planning (sans eux les zones se recouvrent) ; la flèche seule du retour de la setlist (neuf commandes
+  sur une ligne au téléphone, convention connue, nom accessible présent) ; les pastilles du Sommaire (séparer les zones
+  demanderait 26 px entre rangées ; un toucher entre deux rangées ouvre déjà une pastille voisine). Passe : t1, t3, t6,
+  `bilingue-b5`, `agencement-v18-taches`, `planning-grille`, `equipes-page`, `taches` : tout vert (un rouge instable
+  de t1, les tonalités au téléphone, vert trois fois sur trois seul).

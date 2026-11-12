@@ -196,7 +196,7 @@ function Menu({
       onMouseDown={(e) => e.preventDefault()}
       onMouseMove={() => setActif(i)}
       onClick={() => onEcrire(p.nom)}
-      className={`flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-base sm:text-sm ${
+      className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-base sm:text-sm ${
         i === actif ? "bg-secondary" : ""
       } ${absence ? "text-muted-foreground opacity-70" : ""}`}
     >
@@ -263,7 +263,7 @@ function Menu({
               aria-expanded={groupeOuvert}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => { setGroupeOuvert((o) => !o); setActif(0) }}
-              className="flex min-h-10 w-full items-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm font-medium text-foreground hover:bg-secondary"
+              className="flex min-h-11 w-full items-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm font-medium text-foreground hover:bg-secondary"
             >
               {t("groupes.choisir.voirGroupe", { n: rel.groupe.length })}
             </button>
@@ -310,7 +310,7 @@ function Menu({
           type="button"
           disabled={remplir.grise}
           onClick={remplir.onRemplir}
-          className="flex min-h-10 w-full flex-col items-start justify-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm text-foreground hover:bg-secondary disabled:opacity-60 disabled:hover:bg-transparent"
+          className="flex min-h-11 w-full flex-col items-start justify-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm text-foreground hover:bg-secondary disabled:opacity-60 disabled:hover:bg-transparent"
         >
           <span className="font-medium">{t("planning.gestes.remplirBas")}</span>
           <span className="text-xs text-muted-foreground">{remplir.aide}</span>
@@ -319,7 +319,7 @@ function Menu({
       <button
         type="button"
         onClick={ecrireALaMain}
-        className="flex min-h-10 w-full items-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm text-muted-foreground hover:bg-secondary"
+        className="flex min-h-11 w-full items-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm text-muted-foreground hover:bg-secondary"
       >
         {t("planning.choisir.sansCompte")}
       </button>
@@ -327,7 +327,7 @@ function Menu({
         <button
           type="button"
           onClick={() => onEcrire("")}
-          className="flex min-h-10 w-full items-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm text-destructive hover:bg-secondary"
+          className="flex min-h-11 w-full items-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm text-destructive hover:bg-secondary"
         >
           {t("planning.choisir.vider")}
         </button>

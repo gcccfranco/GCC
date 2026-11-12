@@ -125,6 +125,7 @@ test.describe("zones de 44 px posées par le source (T1)", () => {
   contient("src/components/planning/PetitDejCarte.tsx", /const bouton = `\$\{TOUCHER_44\}/, "« Je m'inscris » du petit déj : TOUCHER_44");
   contient("src/components/guide/GuideLien.tsx", /\$\{TOUCHER_44\} text-sm/, "« Comment ça marche ? » : TOUCHER_44");
   contient("src/components/admin/InscriptionsComptes.tsx", /className=\{TOUCHER_44\}/, "réglage des inscriptions : TOUCHER_44 sur l'interrupteur");
+  contient("src/components/admin/InscriptionsComptes.tsx", /className=\{`\$\{TOUCHER_44\} h-9/, "« Voir » des nouvelles inscriptions : TOUCHER_44 (dessin de 36 px inchangé)");
   // services-9 : croix absolue, zone écrite à la main, jamais `relative`.
   contient("src/components/planning/BarreDeGrille.tsx", /\[@media\(pointer:coarse\)\]:after:-inset-\[6px\]/, "croix du prénom : ::after à -inset-[6px] au toucher (32 px + 12 = 44)");
   test("croix du prénom : pas de `relative` (elle est absolute)", () => {

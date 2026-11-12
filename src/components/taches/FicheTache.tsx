@@ -20,7 +20,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Bell, CalendarDays, Check, Link2, ListChecks, Minus, Pencil, Repeat, Ticket, Trash2, UserRound } from "lucide-react";
-import { EnTetePage } from "@/components/layout/EnTetePage";
+import { EnTetePage, Retour } from "@/components/layout/EnTetePage";
 import { MenuActions } from "@/components/layout/MenuActions";
 import { TacheForm } from "@/components/taches/TacheForm";
 import { useMembres } from "@/components/taches/creerTache";
@@ -222,7 +222,7 @@ function Fiche({ ligne, toutesLesFois, depuis }: { ligne: Ligne; toutesLesFois: 
                 }
           }
           titre={<span id={titreId}>{tache.titre}</span>}
-          sousTitre={backOffice ? undefined : nomEquipe}
+          sousTitre={backOffice || depuis === "equipe" ? undefined : nomEquipe}
           outils={<>{boutonModifier}{menu}</>}
         />
       ) : (
@@ -233,8 +233,10 @@ function Fiche({ ligne, toutesLesFois, depuis }: { ligne: Ligne; toutesLesFois: 
             {backOffice
               ? <h1 id={titreId} className="text-2xl font-bold leading-tight tracking-[-0.02em] text-balance">{tache.titre}</h1>
               : <>
+                  {/* Ouverte depuis la page de son équipe : le retour habituel au-dessus du titre, en deux volets aussi. */}
+                  {depuis === "equipe" && <Retour href={`/equipes/${tache.equipe}`}>{nomEquipe}</Retour>}
                   <h2 id={titreId} className="text-2xl font-bold leading-tight tracking-tight text-balance">{tache.titre}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{nomEquipe}</p>
+                  {depuis !== "equipe" && <p className="mt-1 text-sm text-muted-foreground">{nomEquipe}</p>}
                 </>}
           </div>
           <div className="flex shrink-0 items-center gap-2">

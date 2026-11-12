@@ -90,13 +90,11 @@ test.describe("equipes-taches-app-1 : le retour d'une équipe suit la provenance
   });
 
   test("une tâche ouverte depuis la page de son équipe revient à l'équipe", async ({ page }) => {
-    // En deux volets (souris, ≥ 1 148 px), la fiche s'ouvre à côté de la liste, sans en-tête ni retour : la
-    // fenêtre passe à 1 100 px pour vérifier le retour partout (l'écart des deux volets est noté dans la spec).
-    await unVolet(page);
+    // Un volet : « ‹ DA » dans l'en-tête de page ; deux volets (souris, ≥ 1 148 px) : au-dessus du titre de la fiche.
     await ouvrir(page, MIRA, "/equipes/da");
     await page.getByRole("region", { name: "Tâches" }).getByText("Affiche de Noël").click();
     await expect(page).toHaveURL(/\/taches\/da\/affiche\/?\?depuis=equipe$/);
-    await entete(page).getByRole("link", { name: "DA", exact: true }).click();
+    await page.locator("article").getByRole("link", { name: "DA", exact: true }).click();
     await expect(page).toHaveURL(/\/equipes\/da\/?$/);
   });
 
