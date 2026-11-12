@@ -92,3 +92,9 @@ dynamique de `@/components/pdf/*`), sans route API : le retirer aux musiciens ma
   en artefact privé, questions posées. Mesures : six chants sur six au premier écran à 390 px pour A et B, C à −4 px ;
   touchers pour changer l'ordre A 3, B 4, C 2 ; réglages lisibles sans rien ouvrir A 1/3, B 0/3, C 3/3.
   **En attente des réponses de Timothée** ; ensuite la spec, puis le go.
+- 12/11/2026 : deux remarques de Timothée. (1) « Des fois des musiciens doivent créer des setlists » : vérifié, un
+  musicien crée dans ses lieux (`access.ts:641`, `:666`) ; plus d'onglet « musicien » opposé à « responsable », le
+  pupitre se montre en tête pour qui sert, le + reste visible. (2) « Base-toi sur le mode louange forScore » : la
+  pastille qui remplaçait « Je joue » et la question sur la couleur des icônes sont retirées ; la commande unique devient
+  le popover « Je joue » de FS-C enrichi de la disposition ; Lettres | Chiffres dans Outils ; rond « Idées » dans
+  « Sur la page » ; « Toutes mes setlists » en tête du menu Setlist. Reprise de la planche lancée (un maquettiste).
