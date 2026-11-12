@@ -79,7 +79,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      § Tranches (la tranche) et les lignes du 12/11 du § Avancement (questions tranchées). PU-1 à PU-3 s'enchaînent ;
      PU-4 à PU-6 touchent le mode louange : après FS-F, et jamais pendant qu'une autre session modifie
      `PerformanceMode.tsx` (JP-C, MP-5) ; sinon la chaîne attend et rend sa place au suivant de la file.
-  1 bis. **Pupitre PU-4 → PU-6** (go du 12/11 ; PU-1 à PU-3 faites, PU-3 `0963e7a2`) : **à lancer** dès que ni MP-5
+  1 bis. ~~**Pupitre PU-4 → PU-6**~~ lancé (PU-4, `session_01UMdfudH7v6CfVEhY4EiPjX`, 12/11 16 h 04 UTC, à la fin de MP-5 `ddbaa13`, dernière à toucher `PerformanceMode.tsx` ; JP-D finie avant) (go du 12/11 ; PU-1 à PU-3 faites, PU-3 `0963e7a2`) : **à lancer** dès que ni MP-5
      (`session_01UMdfuZ8LxzZ5DHx86qYUw7`) ni JP-D (`session_01UMdfubEaKHYh9fbxpXqErH`) ne modifient plus
      `PerformanceMode.tsx`. Celle des deux qui finit en dernier lance PU-4 (`docs/spec-entree-musiciens.md`, § Tranches,
      PU-4, et § Avancement ; consigne type ci-dessous ; pas de suite complète ; enchaîne PU-5 puis PU-6) et raye cette ligne.
@@ -87,7 +87,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      PU-1 attend la vérification de MP-3 et ne code pas ; PU-1 garde sa place et ne code que s'il y a moins de quatre
      chantiers qui codent) (`docs/spec-comptage-usage.md`, § Découpage, T4 ; go couvert par la règle des tranches) : écran
      `/back-office/usage`, derrière `BACK_OFFICE`, spec ajoutée à `SPECS_GRAND_ECRAN`, suite complète en fin de lot.
-  3. **AN réécrit** : après MP-5 seulement ; pas de go, ne pas lancer. **Harmonie H4** : go de Timothée, lancé (`session_01UMdfuaiAxiKUENyB4RqBb4`, 12/11 14 h 08 UTC,
+  3. **AN réécrit** : MP-5 finie (`ddbaa13`, lot MP-1..MP-5 fini) ; pas de go, ne pas lancer. **Harmonie H4** : go de Timothée, lancé (`session_01UMdfuaiAxiKUENyB4RqBb4`, 12/11 14 h 08 UTC,
      cinquième chantier). **Harmonie H5 et suivants** : un go par lot,
      ne pas lancer.
   Consigne de lancement (`create_session`) : `source_url` https://github.com/gcccfranco/GCC, `source_revision` et
