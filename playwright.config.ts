@@ -26,6 +26,8 @@ const SPECS_GRAND_ECRAN = [
   /louange-feuille-route\.spec\.ts/,
   // Lot DP (docs/spec-mode-louange-forscore-2.md) : la disposition de la partition, ses menus à miniatures et le mode louange.
   /dispositions-partition\.spec\.ts/,
+  // Lot CA, CA-A (docs/spec-mode-louange-forscore-2.md) : la couleur des accords au choix de chacun (page du chant, vue partitions, mode louange) sur les quatre dispositions.
+  /couleur-accords\.spec\.ts/,
   // Lot CH (docs/spec-chargement.md) : la forme du membre pendant l'attente de Firebase, sur les quatre dispositions.
   /chargement\.spec\.ts/,
   // Lot CD, T1h (bo-reunions-taches-1) : aucun débordement horizontal des pages du Back-Office, aux largeurs du téléphone.

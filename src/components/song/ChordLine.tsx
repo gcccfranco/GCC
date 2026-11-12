@@ -339,7 +339,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
                 // padding-right : écart minimal quand l'accord est plus large
                 // que la parole (fréquent en chinois : accord long sur 1 caractère),
                 // sinon deux accords consécutifs se touchent
-                style={{ fontSize: `${chordEm}em`, paddingRight: "0.5em" }}
+                style={{ fontSize: `${chordEm}em`, paddingRight: "0.5em", color: "var(--accord-fr, var(--chord-color))" }}
               >
                 <AccordTouchable etiquette={seg.chord} />
               </span>

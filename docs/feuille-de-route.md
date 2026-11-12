@@ -35,14 +35,20 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
 - **AN** pastilles « Int » / « Inst » et **Tu es notre Dieu en A** : en ligne le 07/11/2026.
 - **08/11/2026** : formulaire de réunion à part (`ReunionForm`) et retouches iPhone des champs date et heure (go « tout
   puis main ») ; **rendu iOS à vérifier sur l'iPhone** (Chromium seul en session cloud).
-- **AO, mode louange façon forScore** (`spec-mode-louange-forscore-2.md`, branche `claude/tender-johnson-99hadm`, pas
-  fusionnée ici) : vagues 1 et 2 codées, chantier en pause (Timothée, 09/11/2026). **Pour reprendre** : lire
-  « Avancement » de la spec, puis CA et FS-F sur un go chacun, la vague 3 (JP-C, JP-D, AN) sur nouveau go ; avant toute
-  mise en ligne, relecture complète de la vague 2, passe sur le guide, 中文 nouveaux à relire, prévenir l'équipe, essai
-  sur iPad. Détail : archive, `grep -n '^### AO\.'`.
-  **À la fusion de cette branche** (Timothée, 10/11/2026) : conflit attendu sur `docs/feuille-de-route.md` et une ligne de
-  `CLAUDE.md` ; ce fichier court gagne (sa section AO est déjà dans l'archive, à compléter de ce qui a été écrit
-  depuis), et la ligne « PWA » modifiée là-bas se reporte dans `docs/reference-technique.md`.
+- **AO, mode louange façon forScore** (`spec-mode-louange-forscore-2.md`), au 12/11/2026 : vagues 1 et 2 codées
+  (`claude/tender-johnson-99hadm`, fusionnée dans la branche de travail le 10/11) ; **CA codé le 11/11/2026** (couleur
+  des accords par compte, réglage dans les trois menus) ; **FS-F en cours** (go du 11/11) ; vague 3 enchaînée après
+  FS-F : **JP-C puis JP-D ; AN suspendu**, il attend « Ma partition » (ci-dessous). Avant toute mise en ligne :
+  relecture complète de la vague 2, passe sur le guide, 中文 nouveaux à relire, prévenir l'équipe, essai sur iPad.
+  Détail : « Avancement » de la spec ; archive, `grep -n '^### AO\.'`.
+- **Branches réunies le 12/11/2026.** Depuis le 11/11, les chantiers d'AP poussaient sur `claude/corrections-design`
+  et ceux d'AO (fusion de `main`, CA, FS-F, go de la vague 3) sur `claude/friendly-cerf-cy7hio`, chacun sans les
+  commits de l'autre. Fusion faite, seul conflit : ce fichier. **Branche de travail : `claude/corrections-design`** ;
+  une session neuve s'y lance (source et branche de sortie) ; FS-F finit sur `claude/friendly-cerf-cy7hio`, que la
+  session suivante d'AO fusionne avant de commencer. La règle des trois chantiers compte AO et AP ensemble.
+  **Annotations** : AN (AO) et « Ma partition » (AP, `spec-ma-partition.md`) avaient chacun un go sur les mêmes
+  traits, avec deux rangements ; ordre retenu, celui du cadrage AP (`spec-pupitre-musicien.md` § Ordre recommandé,
+  point 3) : MP d'abord, AN ensuite, réécrit sur le nouveau rangement (suspension d'AN à confirmer par Timothée).
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 
@@ -72,6 +78,9 @@ et **n'ont pas été reconfirmées** : vérifier dans le § Avancement de la spe
   `spec-jianpu-integration.md`.
 - **AH** : quatre références bibliques gravées douteuses à vérifier (spec, « Avancement »).
 - **AE** : questions de `audit-2026-10-24.md` (lots L0 à L9), suivies dans `spec-corrections-audit.md`.
+- **Agents de `/audit-code`** : ils n'ont pas d'`agentType`, donc partent de 73 796 jetons au lieu de 16 000 à 17 000
+  (mesuré le 11/11/2026) ; les déclarer par `tools:` épargnerait environ 3,4 M de jetons par audit (estimation,
+  `orchestration.md` § 7). À faire avant le prochain audit, sur go.
 
 **À construire**
 - **U** : évènements sur le site en janvier 2027 (dernier lot de l'ordre du chantier U ; le Sheet « Calendrier des
@@ -121,7 +130,7 @@ Specs dans `docs/` ; « archive § 3.X » = `grep -n '^### X\.' docs/archive/feu
 | AL | Vidéo de bienvenue | `spec-video-bienvenue.md` (VB, VB-E) | en ligne 02/11 |
 | AM | Espace Musiciens, scène des fêtes | `spec-espace-musiciens.md` (EM, SF) | en ligne 02/11 |
 | AN | Pastilles « Int » et « Inst » | `spec-abreviation-interlude.md` (AB-I) | en ligne 07/11 |
-| AO | Mode louange façon forScore, apparence comprise | `spec-mode-louange-forscore-2.md` | vagues 1 et 2 codées sur `claude/tender-johnson-99hadm`, pas en ligne ; reste CA, FS-F, vague 3, relecture complète |
+| AO | Mode louange façon forScore, apparence comprise | `spec-mode-louange-forscore-2.md` | vagues 1 et 2 et CA (11/11) codés, pas en ligne ; FS-F en cours (go du 11/11) ; vague 3 : JP-C puis JP-D enchaînés, **AN après « Ma partition »** (AP, décision du 12/11) ; relecture complète avant mise en ligne |
 | AP | Le site devient le pupitre : « Ma partition » qui suit le chant, entrée des musiciens, écrans pratiques, Harmonie qui s'entend, accords en chiffres | `spec-pupitre-musicien.md` | cadrage du 11/11/2026 ; rapport d'usage rendu (`audit-usage-2026-11-11.md` : 149 constats, six lots proposés, révision incomplète) ; « go » de Timothée sur les cinq recommandations : lot 1 (retouches) : go, T1 à T3 codées sur la branche ; deux exemples : piste A et onze décisions (« Ok » de Timothée), spec à écrire (`spec-exemples-usage.md`) ; planches publiées, réponses attendues : « Ma partition », Harmonie et Accords ; comptage d'usage : go pour T1 ; planche du pupitre à lancer après « Ma partition » |
 
 **Chantiers sans lettre** (journal, archive § 6) : 简谱 par défaut puis piste A partout (`spec-jianpu-integration.md`,

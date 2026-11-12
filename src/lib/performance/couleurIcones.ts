@@ -1,6 +1,9 @@
-// Couleur des icônes du mode louange (FS-A, décisions 12 et 19) — par appareil (localStorage).
+// Couleur des icônes du mode louange (FS-A, décisions 12 et 19) — par compte sur l'appareil (localStorage, décision 28) :
+// `perf-couleur-icones-<uid>` ; sans compte, la clé d'appareil, qui sert aussi de départ au premier compte (roleCompte.ts).
 // Le choix s'applique aux icônes de la barre et à la poignée du curseur, jamais à la page : la
 // couleur affichée est le choix corrigé par `garderContraste` contre le fond de la barre.
+import { porteurMarque } from "@/lib/performance/roleCompte";
+
 const KEY = "perf-couleur-icones";
 
 export const TEINTES = [
@@ -32,18 +35,21 @@ export function normaliserHex(v: string): string | null {
   return HEX.test(h) ? h : null;
 }
 
-export function getCouleurIcones(): string {
+export function getCouleurIcones(uid: string | null): string {
   try {
-    return normaliserHex(localStorage.getItem(KEY) ?? "") ?? COULEUR_DEFAUT;
+    const duCompte = uid ? normaliserHex(localStorage.getItem(`${KEY}-${uid}`) ?? "") : null;
+    // Compte sans marque posée : la clé d'appareil vaut tant que personne ne l'a reprise (comme getRoleSansMigrer).
+    const appareil = !uid || (duCompte === null && porteurMarque() === null) ? normaliserHex(localStorage.getItem(KEY) ?? "") : null;
+    return duCompte ?? appareil ?? COULEUR_DEFAUT;
   } catch {
     return COULEUR_DEFAUT;
   }
 }
 
-export function setCouleurIcones(hex: string) {
+export function setCouleurIcones(uid: string | null, hex: string) {
   const h = normaliserHex(hex);
   if (!h) return;
-  try { localStorage.setItem(KEY, h); } catch { /* ignore */ }
+  try { localStorage.setItem(uid ? `${KEY}-${uid}` : KEY, h); } catch { /* ignore */ }
 }
 
 function rgb(hex: string): [number, number, number] {

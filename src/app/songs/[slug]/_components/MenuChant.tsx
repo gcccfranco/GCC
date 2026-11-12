@@ -6,6 +6,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
+import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
 import type { Disposition } from "@/lib/dispositionPref";
 
 /** Menu ⋯ (spec-barre-chant.md, Q3, Q5) : disposition, Personnaliser, Signaler. */
@@ -18,8 +19,10 @@ export function MenuChant({ langue, disposition, changeDisposition, setShowPanel
 }) {
   const { t } = useTranslation();
   return (
-    <DropdownMenuContent align="end" collisionPadding={12} className="w-auto min-w-52 max-w-[calc(100vw-1rem)]">
+    <DropdownMenuContent align="end" collisionPadding={12} className="w-[min(374px,calc(100vw-16px))] sm:w-auto sm:min-w-52 sm:max-w-[calc(100vw-1rem)]">
       <ChoixDisposition variante="menu" langue={langue} disposition={disposition} changeDisposition={changeDisposition} />
+      <DropdownMenuSeparator />
+      <ChoixCouleurAccords variante="menu" />
       <DropdownMenuSeparator />
       <DropdownMenuItem onClick={() => setShowPanel(true)}>
         <Settings className="h-3.5 w-3.5 text-muted-foreground" />

@@ -1,5 +1,6 @@
 ---
 name: avoid-ai-design
+disable-model-invocation: true
 description: Audit and rewrite frontend UI to remove generic AI design patterns ("AI slop"), both the first-order defaults (purple gradients, Inter, a centered hero over three cards, untouched shadcn) and the second-order "tasteful AI" ones (cream with terracotta, near-black with acid green, all-caps mono chrome, one accented headline word, decorative 01/02/03). Use when asked to "de-slop a UI", "make a design look less AI-generated", "audit a page or component for AI design tells", "fix Claude/Codex-generated frontend that looks generic", or keep a multi-page site on one design system. Covers HTML/CSS and React/Tailwind/shadcn. Has a detection-only mode and a zero-dependency scanner (scripts/detect.mjs) for the code-certain tells.
 license: MIT
 compatibility: Works in any agent that reads agentskills.io SKILL.md files (Claude Code, Cursor, Codex CLI, VS Code Copilot and others). Optional, Node 18+ to run scripts/detect.mjs, and a screenshot tool to judge the visual tells.
