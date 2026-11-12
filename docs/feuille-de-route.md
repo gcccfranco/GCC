@@ -68,8 +68,8 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   questions avant MP-6. À Timothée : publier `firestore.rules` (Ma partition MP-1 ; `usage/{mois}` du comptage).
   **Planche « direction du site » du 11/11 : écartée** par Timothée le 12/11 (« j'aime pas ») ; artefact supprimé,
   session archivée, rien n'en est entré dans le dépôt. Ne pas la reprendre ; la direction visuelle reste à rechoisir.
-- **File des chantiers de code** (règle : `CLAUDE.md`, § Pilotage délégué, « Moins de réveils »). Quatre chantiers au
-  plus. La session qui finit un lot : `git pull --rebase`, `list_sessions` (limit 10), et s'il reste une place elle
+- **File des chantiers de code** (règle : `CLAUDE.md`, § Pilotage délégué, « Moins de réveils »). **Cinq** chantiers au
+  plus (Timothée, 12/11 après-midi). La session qui finit un lot : `git pull --rebase`, `list_sessions` (limit 10), et s'il reste une place elle
   lance le premier chantier ci-dessous qui a son go, raye sa ligne (« lancé, identifiant, heure »), pousse, s'arrête.
   En cours le 12/11 à 10 h 40 UTC : AO (FS-F, puis JP-C, JP-D ; **JP-C commencée le 12/11 à 11 h 05 UTC**,
   `session_01UMdfucQGkCmqMascx4pK1c`, **finie le 12/11** ; JP-D lancée ensuite, modifie `PerformanceMode.tsx`) ; Ma partition (MP-3 → MP-5) ; exemples d'usage

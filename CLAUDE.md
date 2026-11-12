@@ -94,7 +94,7 @@ pas seulement en mémoire.
   Règle générale (Timothée, 12/11/2026 : « Il faut que toutes les tranches se lancent automatiquement quand une est
   finie ») : le go d'un lot vaut pour **toutes ses tranches** ; chaque session lance la suivante sans nouveau go, et
   quand un chantier finit, le pilote lance aussitôt le chantier suivant de la file qui a déjà son go. Un lot nouveau
-  garde son go ; une tranche bloquée arrête sa chaîne ; la limite des quatre chantiers tient.
+  garde son go ; une tranche bloquée arrête sa chaîne ; la limite des chantiers (cinq) tient.
 - **Pilotage délégué** (Timothée, 12/11/2026 : « je te laisse orchestrer toutes les prochaines modifications, pour
   toutes questions qu'on me demandera répond à ma place en faisant des choix éclairé et les bons ») : la session de
   pilotage nommée dans `docs/feuille-de-route.md` (§ État, « Pilotage ») tient la file des chantiers et répond aux
@@ -137,6 +137,8 @@ pas seulement en mémoire.
     d'Avancement donne la durée des tests de la tranche (à relire après deux ou trois tranches).
   - *Quatre chantiers* (même date, « go pour Harmonie H2 » en quatrième) : la limite ci-dessous passe de trois à
     quatre chantiers de code en même temps ; pas au-delà sans nouvel accord de Timothée.
+    **Cinq** depuis le 12/11/2026 après-midi (Timothée : « on peut passer à 5 sessions en simultanées ») : partout où
+    ce fichier dit trois ou quatre chantiers, lire cinq ; pas au-delà sans nouvel accord.
   - *Pas de réveil* : une orchestratrice n'envoie pas de message de suivi à la session d'origine ; elle écrit une
     ligne datée par tranche dans la spec et pousse. Un message seulement pour une question bloquante ou la fin du lot.
   - *Lire par section* : une spec ou un document de plus de 30 000 caractères se lit par section (grep des titres
