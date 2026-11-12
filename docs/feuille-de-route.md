@@ -108,7 +108,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      qu'une autre session modifie `PerformanceMode.tsx` ; une session par tranche, consigne type ci-dessous ; TC-3
      (raccord H8) après H8.
   7. **Fin de tout (nuit du 12 au 13/11)** : la session qui finit **H8** (huitième génération, elle ne peut rien lancer)
-     écrit au pilote. Le pilote lance alors TC-3 (si TC-2 est finie), puis, quand plus aucun chantier ne code, la
+     fait elle-même **TC-3** en fin de tranche (le test du raccord H8 sur un chant ajouté, `docs/spec-louange-tous-les-chants.md`
+     § Tranches ; Timothée, 12/11 : les sessions ne passent par le pilote que pour la suite complète), puis écrit au
+     pilote. Le pilote lance, quand plus aucun chantier ne code, la
      **suite complète en quatre parts** (`--shard=k/4`, quatre sessions, résultats dans `docs/feuille-de-route.md`,
      aucune correction sans passer par le pilote). Rien ne part sur `main` : la mise en ligne reste à Timothée.
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
