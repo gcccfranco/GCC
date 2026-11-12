@@ -102,6 +102,15 @@ pas seulement en mémoire.
   daté et motivé, dans la spec (« décision déléguée »). Restent à Timothée seul : pousser sur `main`, publier
   `firestore.rules`, lever un garde-fou de dépense. Ce qu'il écrit lui-même l'emporte ; il reprend la main d'un mot.
   Pilote économe : réveil sur évènement, aucune transcription lue en entier, passage de main avant le plafond.
+  **Moins de réveils** (Timothée, 12/11/2026, « Oui fais les deux » : un pilote réveillé à froid relit tout son
+  contexte) : (1) la **file** des chantiers est écrite dans `docs/feuille-de-route.md` (§ État, « File ») ; la session
+  qui finit un lot ou libère sa place la lit, compte les chantiers (`list_sessions`, limit 10), lance elle-même le
+  premier de la file qui a son go, raye la ligne et pousse, sans écrire au pilote. (2) **Questions** (Timothée, même
+  jour : « tranche-les pour moi ») : une session tranche elle-même en suivant la proposition motivée de la spec et
+  l'écrit « décision déléguée (session, JJ/MM) » ; elle n'écrit au pilote que si le choix est difficile à défaire,
+  sort des décisions de Timothée ou n'a pas de proposition ; le pilote tranche alors à sa place. (3) Le pilote n'a pas
+  de rappel périodique et passe la main vers 100 000 jetons. (4) Filet : `autoCompactWindow` à 200 000 dans
+  `.claude/settings.json` ; l'état s'écrit quand même dans le dépôt (un résumé perd des détails).
 - **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (pistes aux
   trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go. Planche = workflow
   `/planche` (équipe design, 02/11/2026, `docs/orchestration.md` § 4) ; la conversation principale relit, publie

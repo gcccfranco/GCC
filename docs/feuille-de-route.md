@@ -68,6 +68,25 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   questions avant MP-6. À Timothée : publier `firestore.rules` (Ma partition MP-1 ; `usage/{mois}` du comptage).
   **Planche « direction du site » du 11/11 : écartée** par Timothée le 12/11 (« j'aime pas ») ; artefact supprimé,
   session archivée, rien n'en est entré dans le dépôt. Ne pas la reprendre ; la direction visuelle reste à rechoisir.
+- **File des chantiers de code** (règle : `CLAUDE.md`, § Pilotage délégué, « Moins de réveils »). Quatre chantiers au
+  plus. La session qui finit un lot : `git pull --rebase`, `list_sessions` (limit 10), et s'il reste une place elle
+  lance le premier chantier ci-dessous qui a son go, raye sa ligne (« lancé, identifiant, heure »), pousse, s'arrête.
+  En cours le 12/11 à 10 h 40 UTC : AO (FS-F, puis JP-C, JP-D) ; Ma partition (MP-3 → MP-5) ; exemples d'usage
+  (T2 → T7) ; Harmonie H3 (`session_01UMdfubYvNx8M6JbF9S2vnk`, s'arrête après H3).
+  1. **Pupitre PU-1 → PU-6** (`docs/spec-entree-musiciens.md`, go du 12/11). PU-1 = PDF de setlist seulement ; lire
+     § Tranches (la tranche) et les lignes du 12/11 du § Avancement (questions tranchées). PU-1 à PU-3 s'enchaînent ;
+     PU-4 à PU-6 touchent le mode louange : après FS-F, et jamais pendant qu'une autre session modifie
+     `PerformanceMode.tsx` (JP-C, MP-5) ; sinon la chaîne attend et rend sa place au suivant de la file.
+  2. **Comptage T4** (`docs/spec-comptage-usage.md`, § Découpage, T4 ; go couvert par la règle des tranches) : écran
+     `/back-office/usage`, derrière `BACK_OFFICE`, spec ajoutée à `SPECS_GRAND_ECRAN`, suite complète en fin de lot.
+  3. **AN réécrit** : après MP-5 seulement ; pas de go, ne pas lancer. **Harmonie H4 et suivants** : un go par lot,
+     ne pas lancer.
+  Consigne de lancement (`create_session`) : `source_url` https://github.com/gcccfranco/GCC, `source_revision` et
+  `outcome_branch` `claude/corrections-design`, modèle `claude-opus-5-5` ; une tranche, la section de spec à lire,
+  agents nommés (`executant`, `testeur`, `relecteur` ; `regard` puis `critique-design` sur captures signalées si
+  l'apparence change), tests de la tranche sur trois appareils, `npm ci` avant les tests, « lance toi-même la tranche
+  suivante puis arrête-toi ; en fin de lot, sers la file », questions tranchées selon la spec, pilote
+  (identifiant ci-dessus) seulement pour un choix difficile à défaire.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 
