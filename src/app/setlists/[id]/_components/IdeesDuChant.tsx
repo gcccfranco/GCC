@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
 import { AccordsProvider } from "@/components/accords/AccordsProvider";
@@ -29,6 +30,9 @@ export function IdeesDuChant({
   flashFeedback,
   setIdeesTarget,
   setIdeesChant,
+  disposition,
+  onFermerColonne,
+  styleColonne,
 }: {
   ideesTarget: number;
   ideesChant: string | null;
@@ -46,6 +50,10 @@ export function IdeesDuChant({
   flashFeedback: (msg: string) => void;
   setIdeesTarget: (index: number | null) => void;
   setIdeesChant: (slug: string | null) => void;
+  disposition?: "feuille" | "colonne";
+  /** La croix ou Échap de la colonne (mémoriser, rendre le focus à la puce). */
+  onFermerColonne?: () => void;
+  styleColonne?: CSSProperties;
 }) {
   const { t } = useTranslation();
   const item = items[ideesTarget];
@@ -78,7 +86,9 @@ export function IdeesDuChant({
     <AccordsProvider chant={{ slug, titre: songsMap[slug]?.title ?? slug }}>
     <HarmonieDuChant
       open
-      onClose={() => { setIdeesTarget(null); setIdeesChant(null); }}
+      disposition={disposition}
+      styleColonne={styleColonne}
+      onClose={() => { setIdeesTarget(null); setIdeesChant(null); if (disposition === "colonne") onFermerColonne?.(); }}
       slug={slug}
       titre={songsMap[slug]?.title ?? slug}
       sections={ast.sections}
@@ -136,7 +146,8 @@ export function IdeesDuChant({
                   }),
                 );
               }
-              setIdeesTarget(null);
+              // Feuille : elle se ferme ; colonne : elle reste, comme pour « Montrer ».
+              if (disposition !== "colonne") setIdeesTarget(null);
             }
           : undefined
       }

@@ -41,6 +41,8 @@ type Chant = { slug: string; titre: string };
 type Contexte = {
   ouvrir: (d: DemandeAccord) => void;
   fermer: () => void;
+  /** Ferme sans rendre le focus à l'accord touché (la colonne Harmonie s'ouvre ailleurs). */
+  fermerSansFocus: () => void;
   /** Vrai sous un fournisseur actif : les accords y sont touchables. */
   actif: boolean;
   /** Le chant lu, joint à chaque demande qui n'en porte pas. */
@@ -51,7 +53,7 @@ type Contexte = {
   fermerAideLigne?: () => void;
 };
 
-const Rien: Contexte = { ouvrir: () => {}, fermer: () => {}, actif: false, enregistrer: () => () => {} };
+const Rien: Contexte = { ouvrir: () => {}, fermer: () => {}, fermerSansFocus: () => {}, actif: false, enregistrer: () => () => {} };
 const AccordsContext = createContext<Contexte>(Rien);
 
 export function useOuvrirAccord(): Contexte {
@@ -128,6 +130,11 @@ export function AccordsProvider({
     derniereAncre.current = null;
     // Le focus revient à l'accord touché (après le rendu, que vaul ne le reprenne pas).
     if (ancre) setTimeout(() => ancre.isConnected && ancre.focus({ preventScroll: true }), 0);
+  }, []);
+
+  const fermerSansFocus = useCallback(() => {
+    setOuvert(null);
+    derniereAncre.current = null;
   }, []);
 
   const fermerAide = useCallback(() => {
@@ -207,8 +214,8 @@ export function AccordsProvider({
   }, [actif, aideLigne, fermerAide]);
 
   const valeur = useMemo<Contexte>(
-    () => (actif ? { ouvrir, fermer, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined } : Rien),
-    [actif, ouvrir, fermer, chant, enregistrer, aideLigne, fermerAide],
+    () => (actif ? { ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined } : Rien),
+    [actif, ouvrir, fermer, fermerSansFocus, chant, enregistrer, aideLigne, fermerAide],
   );
 
   return (

@@ -39,7 +39,7 @@ export function PiluleTonalite({ currentKey, originalKey, keySuffix, setCustomiz
           <span data-testid="tonalite-courante" className="flex min-w-0 items-baseline" aria-hidden>
             <span className="mr-1 min-w-0 truncate text-[13px] font-semibold text-muted-foreground">{t("customize.panel.keyCourt")}</span>
             <span data-testid="tonalite-lettre" className="shrink-0 text-[15px] font-bold text-foreground">{currentKey}</span>
-            <span className="ml-1 hidden shrink-0 lg:inline">{keySuffix(currentKey).trim()}</span>
+            <span className="suffixe-tonalite ml-1 hidden shrink-0 lg:inline">{keySuffix(currentKey).trim()}</span>
           </span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
           <select

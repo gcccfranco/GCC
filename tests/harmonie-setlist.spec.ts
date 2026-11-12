@@ -163,8 +163,11 @@ test("chant sans scan 简谱 : pas de rappel « À reporter sur la partition 简
   await page.locator('[data-outline-item="1"]').getByRole("button", { name: "Harmonie", exact: true }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
   const premiere = uneSection(page);
+  const enColonne = (await page.locator("[data-harmonie-colonne]").count()) > 0;
   await premiere.getByRole("button", { name: "Essayer dans Ma version" }).click();
-  await expect(page.locator("[data-idees-harmonie]")).toBeHidden();
+  // En colonne (grand écran, H4-2), « Essayer » la laisse ouverte ; la feuille, elle, se ferme.
+  if (enColonne) await expect(page.locator("[data-harmonie-colonne]")).toBeVisible();
+  else await expect(page.locator("[data-idees-harmonie]")).toBeHidden();
   await expect.poll(() => db.writes.some((w) => w.path === VERSION_DOC), "la retouche est bien écrite").toBe(true);
   // Compte immédiat (sans attente) : le message dure 3 s, un `toHaveCount(0)`
   // attendrait sa disparition et passerait à tort.

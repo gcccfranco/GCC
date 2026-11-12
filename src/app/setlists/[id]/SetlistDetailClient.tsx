@@ -90,6 +90,7 @@ import { PdfChoiceSheet, type PdfVersion } from "@/components/pdf/PdfChoiceSheet
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
+import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
 import { semitonesTo } from "@/lib/transpose";
 import { telechargerBlob, demanderPleinEcran } from "@/lib/telecharger";
 import {
@@ -1056,10 +1057,41 @@ export function SetlistDetailClient() {
   // version » n'apparaît que dans le mode « Ma version », seul endroit où une
   // retouche ne touche personne d'autre.
   const accesHarmonie = useAccesHarmonie();
+  // Grand écran : la porte 2 est une colonne à droite des partitions (un second appel du puce la referme).
+  // La colonne tient si la zone de lecture (à droite du rail) fait 824 px ; sinon, la feuille.
+  const [zoneLecture, zoneAssezLarge] = useZoneAssezLarge();
+  const grandEcran = useGrandEcranHarmonie() && zoneAssezLarge;
+  const [colonnePref, setColonneHarmonie] = useColonneHarmonie();
+  const fermerAccord = useRef<(() => void) | null>(null);
   const [instrumentHarmonie] = useInstrument(accesHarmonie);
   const [ideesTarget, setIdeesTarget] = useState<number | null>(null);
+  const colonneOuverte = grandEcran && ideesTarget !== null;
   // Dans une fusion : celui de ses chants dont on lit les idées.
   const [ideesChant, setIdeesChant] = useState<string | null>(null);
+  // Préférence « 1 » en grand écran : la colonne s'ouvre sur le chant lu et le suit quand il change.
+  const dernierLu = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (!setlist) return;
+    const lu = current ?? setlist.items.filter(estUnChant).sort((a, b) => a.position - b.position)[0]?.position;
+    // Un chant choisi à la puce reste : seul un changement du chant lu déplace la colonne.
+    const change = dernierLu.current !== undefined && dernierLu.current !== lu;
+    dernierLu.current = lu;
+    if (!grandEcran || !colonnePref || !accesHarmonie.peut || !affichePartitions) return;
+    if (ideesTarget !== null && !change) return;
+    const i = setlist.items.findIndex((it) => !!it.songSlug && it.type !== "fusion" && it.position === lu);
+    if (i !== -1) { setIdeesTarget(i); setIdeesChant(null); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seul un changement de chant lu ou de préférence rouvre la colonne
+  }, [grandEcran, colonnePref, accesHarmonie.peut, affichePartitions, current, setlist?.items.length]);
+  // La fenêtre passe sous le seuil colonne ouverte (rotation) : on la ferme, la préférence reste.
+  const etaitColonne = useRef(false);
+  useEffect(() => {
+    if (etaitColonne.current && !grandEcran) { setIdeesTarget(null); setIdeesChant(null); }
+    etaitColonne.current = grandEcran;
+  }, [grandEcran]);
+  // La bulle d'un accord de la partition se ferme à l'ouverture de la colonne.
+  useEffect(() => {
+    if (grandEcran && ideesTarget !== null) fermerAccord.current?.();
+  }, [grandEcran, ideesTarget]);
 
   // ── Crayon : retoucher le chant (accords/paroles) ───────────────────────────
 
@@ -1836,7 +1868,14 @@ export function SetlistDetailClient() {
         onEditJianpu={handleEditJianpu}
         onRetryChant={rechargerUnChant}
         titres={Object.fromEntries(Object.entries(songsMap).map(([slug, e]) => [slug, e.title]))}
-        onIdees={accesHarmonie.peut ? (itemIndex, slug) => { compter("cmd.setlist.idees"); setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
+        onFermerAccord={(f) => { fermerAccord.current = f; }}
+        onIdees={accesHarmonie.peut ? (itemIndex, slug) => {
+          compter("cmd.setlist.idees");
+          const ferme = grandEcran && ideesTarget === itemIndex && ideesChant === (slug ?? null);
+          if (grandEcran) setColonneHarmonie(!ferme);
+          setIdeesTarget(ferme ? null : itemIndex);
+          setIdeesChant(ferme ? null : slug ?? null);
+        } : undefined}
       />
       {/* La barre basse du Crayon ne cache pas la fin du dernier chant. */}
       {crayon && <div aria-hidden className="h-16 print:hidden" />}
@@ -1877,6 +1916,50 @@ export function SetlistDetailClient() {
       </button>
     </>
   );
+  // Idées d'harmonie du chant (lot 9) : colonne à droite des partitions en grand écran, feuille sinon.
+  const idees = ideesTarget !== null && (
+    <IdeesDuChant
+      disposition={grandEcran ? "colonne" : "feuille"}
+      // Elle colle sous l'en-tête collant, comme le rail du sommaire, et descend jusqu'au bas de la fenêtre.
+      styleColonne={{
+        top: scrollVisible ? `calc(var(--nav-h) + ${enTeteH}px)` : "var(--nav-h)",
+        height: scrollVisible ? `calc(100dvh - var(--nav-h) - ${enTeteH}px)` : "calc(100dvh - var(--nav-h))",
+        marginTop: 0,
+        // Le bas du parent est coiffé de son padding (pb-16 / pb-8) : sans cette marge négative, en fin de page
+        // la colonne remonte de ce padding au lieu d'aller au bas de la fenêtre.
+        marginBottom: deuxVolets ? "-4rem" : "-2rem",
+        transition: "top 300ms, height 300ms",
+      }}
+      onFermerColonne={() => {
+        setColonneHarmonie(false);
+        const pos = setlist.items[ideesTarget]?.position;
+        setTimeout(() => document.querySelector<HTMLElement>(`[data-outline-item="${pos}"] [data-puce-harmonie]`)?.focus({ preventScroll: true }), 50);
+      }}
+      ideesTarget={ideesTarget}
+      ideesChant={ideesChant}
+      items={setlist.items}
+      contents={contents}
+      songsMap={songsMap}
+      editMine={crayon}
+      canEdit={canEdit}
+      instrument={instrumentHarmonie}
+      jianpuManifest={jianpuManifest}
+      jianpuPref={jianpuPref}
+      withMine={withChosen}
+      sourceForItem={crayon ? sourceForItem : sourceDuCulte}
+      applyNewSource={(i, next, extra) => applyNewSource(i, next, extra, undefined, crayon ? "moi" : "culte")}
+      flashFeedback={flashFeedback}
+      setIdeesTarget={setIdeesTarget}
+      setIdeesChant={setIdeesChant}
+    />
+  );
+  // Colonne fermée : les partitions seules, sans plafond ajouté (T4 les élargit à 1 080 px dès 1 000 px de zone).
+  const partitionsEtColonne = colonneOuverte ? (
+    <div className="flex items-start gap-6">
+      <div className="min-w-0 max-w-[920px] flex-1">{partitions}</div>
+      {idees}
+    </div>
+  ) : partitions;
   return (
     <div className="relative min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist.category ?? "")} />
@@ -2010,9 +2093,12 @@ export function SetlistDetailClient() {
                 }}
               />
             </div>
-            <div className="min-w-0 pb-16 pl-6 pr-4 pt-5 [container-type:inline-size] [container-name:partition]">
-              {/* T3 : colonne de lecture de 920 px, alignée à gauche contre le rail ; seul ce volet pose la variable. */}
-              <div className="w-full max-w-[920px] [--colonne-partition:920px] [@container_partition_(min-width:1000px)]:max-w-[1080px] [@container_partition_(min-width:1000px)]:[--colonne-partition:1080px]">
+            <div ref={zoneLecture} className={`min-w-0 pb-16 pl-6 pr-4 pt-5 ${colonneOuverte ? "" : "[container-type:inline-size] [container-name:partition]"}`}>
+              {/* T3 : colonne de lecture de 920 px, alignée à gauche contre le rail ; seul ce volet pose la variable.
+                  T4 : deux colonnes de sections dès 1 000 px de zone (requête de conteneur `partition`).
+                  Colonne Harmonie ouverte (H4-2) : la zone entière, partition à 920 px au plus et en une colonne
+                  (pas de conteneur `partition` : la zone mesurée inclurait la colonne Harmonie). */}
+              <div className={colonneOuverte ? "w-full [--colonne-partition:920px]" : "w-full max-w-[920px] [--colonne-partition:920px] [@container_partition_(min-width:1000px)]:max-w-[1080px] [@container_partition_(min-width:1000px)]:[--colonne-partition:1080px]"}>
               {/* Ce que garde la question 4, sous le titre : historique, langue, qui peut
                   modifier ; la régie ajoute ou change ici le lien de la présentation. */}
               <div id="entete-setlist-dv" className={`mb-4 ${enteteOuvert ? "" : "hidden print:block"}`}>
@@ -2041,7 +2127,7 @@ export function SetlistDetailClient() {
                   {t("setlists.detail.emptyItems")}
                 </p>
               ) : (
-                partitions
+                partitionsEtColonne
               )}
               {passageFete && <CartesFete passage={passageFete} />}
               </div>
@@ -2307,7 +2393,7 @@ export function SetlistDetailClient() {
                 {view === "liste" ? (
                   <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} current={current} onOpen={versPartitions} />
                 ) : (
-                  partitions
+                  partitionsEtColonne
                 )}
               </div>
             )}
@@ -2316,27 +2402,8 @@ export function SetlistDetailClient() {
         </>
       )}
 
-      {/* Idées d'harmonie du chant (lot 9) */}
-      {ideesTarget !== null && (
-        <IdeesDuChant
-          ideesTarget={ideesTarget}
-          ideesChant={ideesChant}
-          items={setlist.items}
-          contents={contents}
-          songsMap={songsMap}
-          editMine={crayon}
-          canEdit={canEdit}
-          instrument={instrumentHarmonie}
-          jianpuManifest={jianpuManifest}
-          jianpuPref={jianpuPref}
-          withMine={withChosen}
-          sourceForItem={crayon ? sourceForItem : sourceDuCulte}
-          applyNewSource={(i, next, extra) => applyNewSource(i, next, extra, undefined, crayon ? "moi" : "culte")}
-          flashFeedback={flashFeedback}
-          setIdeesTarget={setIdeesTarget}
-          setIdeesChant={setIdeesChant}
-        />
-      )}
+      {/* Idées d'harmonie du chant (lot 9) : la feuille ; en grand écran, la colonne est à côté des partitions. */}
+      {!grandEcran && idees}
 
       {/* Confirmation de suppression */}
       <PdfChoiceSheet

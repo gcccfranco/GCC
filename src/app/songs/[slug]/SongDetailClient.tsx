@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DISPOSITION_AVANT_LECTURE, getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { TOUCHER_44, TOUCHER_RANGEE } from "@/lib/toucher44";
@@ -38,6 +37,7 @@ import type { SectionNuance } from "@/types/setList";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
 import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
+import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
 import { AccordsProvider } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
@@ -244,6 +244,12 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     const [showPdfChoice, setShowPdfChoice] = useState(false);
     // Idées d'harmonie (lot 9) : pianistes, guitaristes et admins seulement.
     const [showIdees, setShowIdees] = useState(false);
+    // Grand écran (≥ 1 024 px) : une colonne à droite de la partition, mémorisée par appareil ; sinon la feuille.
+    // La colonne tient si la zone de lecture (partition + colonne) fait 824 px ; sinon, la feuille.
+    const [zoneLecture, zoneAssezLarge] = useZoneAssezLarge();
+    const grandEcran = useGrandEcranHarmonie() && zoneAssezLarge;
+    const [colonneOuverte, setColonneOuverte] = useColonneHarmonie();
+    const boutonHarmonieRef = useRef<HTMLButtonElement>(null);
     const accesHarmonie = useAccesHarmonie();
     const [instrumentHarmonie] = useInstrument(accesHarmonie);
     useEffect(() => {
@@ -543,11 +549,12 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
                 variant="secondary"
                 aria-label={t("harmonie.idees")}
                 title={t("harmonie.idees")}
-                onClick={() => setShowIdees(true)}
-                className={`raised ${TOUCHER_44} h-10 lg:h-9 bouton-harmonie shrink-0 gap-1.5 rounded-full text-xs font-semibold bg-card text-foreground hover:bg-card`}
+                ref={boutonHarmonieRef}
+                aria-expanded={grandEcran ? colonneOuverte : undefined}
+                aria-controls={grandEcran ? "harmonie-colonne" : undefined}
+                onClick={() => (grandEcran ? setColonneOuverte(!colonneOuverte) : setShowIdees(true))}
+                className={`${TOUCHER_44} h-10 lg:h-9 bouton-harmonie shrink-0 rounded-full px-2.5 text-xs font-semibold ${(grandEcran ? colonneOuverte : showIdees) ? "bg-foreground text-background hover:bg-foreground" : "raised bg-card text-foreground hover:bg-card"}`}
               >
-                <Sparkles className="h-4 w-4" aria-hidden />
-                {/* Le libellé s'ajoute au niveau 3 de la rangée (`data-libelles`, globals.css) ; sinon l'icône seule. */}
                 <span className="libelle-harmonie">{t("harmonie.idees")}</span>
               </Button>
             )}
@@ -638,8 +645,9 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
           </div>
         )}
         {/* Contenu — un tap rappelle la barre d'outils (sans gêner la sélection de texte) */}
+        <div ref={zoneLecture} className="corps-chant flex items-start gap-6">
         <main
-          className="song-zoom px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px] [--marge-bande:1rem] print:[--marge-bande:0px]"
+          className="song-zoom min-w-0 flex-1 px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px] [--marge-bande:1rem] print:[--marge-bande:0px]"
           style={{
             transform: `scale(${fontScale})`,
             transformOrigin: 'top left  ',
@@ -723,6 +731,22 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
               onConflit={lecture?.modifiable ? (index, choix) => { mp.enregistrer(resoudreConflit(lecture, index, choix)).catch(() => {}); } : undefined}
             />
         </main>
+        {/* Idées d'harmonie du chant (lot 9) : colonne à droite de la partition en grand écran, feuille sinon. */}
+        <HarmonieDuChant
+          sansTitre={grandEcran}
+          disposition={grandEcran ? "colonne" : "feuille"}
+          open={grandEcran ? accesHarmonie.peut && colonneOuverte : showIdees}
+          onClose={() => {
+            if (grandEcran) { setColonneOuverte(false); boutonHarmonieRef.current?.focus(); } else setShowIdees(false);
+          }}
+          slug={song.slug}
+          titre={song.title}
+          sections={displayedAST.sections}
+          tonalite={customize.currentKey}
+          tonaliteOrigine={originalKey}
+          instrument={instrumentHarmonie}
+        />
+        </div>
 
         {crayon && (
           <>
@@ -761,18 +785,6 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
             onClose={() => setShowPanel(false)}
           />
         )}
-        
-        {/* Idées d'harmonie du chant (lot 9) */}
-        <HarmonieDuChant
-          open={showIdees}
-          onClose={() => setShowIdees(false)}
-          slug={song.slug}
-          titre={song.title}
-          sections={displayedAST.sections}
-          tonalite={customize.currentKey}
-          tonaliteOrigine={originalKey}
-          instrument={instrumentHarmonie}
-        />
 
         <PdfChoiceSheet
           open={showPdfChoice}

@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { songHref } from "@/lib/setlist/songHref";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, chord_font } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
-import { AccordsProvider, AideAccordsEnLigne, ChantDesAccords } from "@/components/accords/AccordsProvider";
+import { AccordsProvider, AideAccordsEnLigne, ChantDesAccords, useOuvrirAccord } from "@/components/accords/AccordsProvider";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { ordreJoue } from "@/lib/chordpro/structure";
@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { MenuJeLis, LigneMaPartition, LignePartagee } from "@/components/partition/MenuJeLis";
 import type { PartageProps } from "@/components/partition/PartagerMaPartition";
 import type { Lecture } from "@/lib/partition/lecture";
-import { Check, Copy, Link2, MessageSquare, RotateCcw, Sparkles } from "lucide-react";
+import { Check, Copy, Link2, MessageSquare, RotateCcw } from "lucide-react";
 import { TOUCHER_44 } from "@/lib/toucher44";
 import type { ChordProAST, ChordProLine, ChordProSection } from "@/types/chordPro";
 import type { SongVersionView } from "@/lib/setlist/versionChoice";
@@ -69,6 +69,13 @@ function TransitionBanner({ text }: { text: string }) {
   );
 }
 
+/** Donne à la page la fermeture de la bulle d'accord de ce fournisseur (la colonne Harmonie s'ouvre à côté). */
+function DonnerFermeture({ onFermer }: { onFermer?: (fermer: () => void) => void }) {
+  const { fermerSansFocus } = useOuvrirAccord();
+  useEffect(() => onFermer?.(fermerSansFocus), [onFermer, fermerSansFocus]);
+  return null;
+}
+
 export function PartitionsView({
   setlistId,
   items,
@@ -87,6 +94,7 @@ export function PartitionsView({
   onPasserAuCulte,
   onEditJianpu,
   onIdees,
+  onFermerAccord,
   onRetryChant,
   titres,
   lectures,
@@ -138,6 +146,8 @@ export function PartitionsView({
   /** Idées d'harmonie du chant (lot 9) — absent si la personne n'y a pas droit.
    *  Fusion : `slug` dit lequel de ses chants. */
   onIdees?: (itemIndex: number, slug?: string) => void;
+  /** Reçoit la fermeture de la bulle d'accord de la partition. */
+  onFermerAccord?: (fermer: () => void) => void;
   /** « Chant non chargé — Réessayer » : relit le contenu de ce seul chant. */
   onRetryChant?: (slug: string) => void | Promise<void>;
   /** Titre de chaque chant par slug (l'index) : un chant sans contenu garde son titre. */
@@ -158,6 +168,7 @@ export function PartitionsView({
   return (
     // Les accords s'ouvrent au toucher hors édition (DA-3) ; « Ma version » et « Adapter » gardent leurs lignes tappables.
     <AccordsProvider actif={!editMode} aide="flux">
+    <DonnerFermeture onFermer={onFermerAccord} />
     <div className="space-y-10 print:space-y-6" data-disposition={disposition}>
       {items
         .map((item, origIndex) => ({ item, origIndex }))
@@ -520,9 +531,9 @@ function NormalSongItem({
         <button
           type="button"
           onClick={() => onIdees(origIndex)}
+          data-puce-harmonie
           className={PUCE}
         >
-          <Sparkles className="h-3.5 w-3.5" aria-hidden />
           {t("harmonie.idees")}
         </button>
       )}

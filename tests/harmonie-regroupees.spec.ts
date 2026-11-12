@@ -86,8 +86,11 @@ test("« Montrer » d'une carte entoure son passage : Couplet 1, puis Couplet 2"
   await ouvrirChant(page);
   await ouvrirLaFeuille(page);
   let maj7 = await carte(page, COUPLET_1, "couleurs/maj7");
+  const enColonne = (await page.locator("[data-harmonie-colonne]").count()) > 0;
   await maj7.getByRole("button", { name: "Montrer", exact: true }).click();
-  await expect(page.locator("[data-idees-harmonie]")).toBeHidden();
+  // En colonne : elle reste ouverte à côté de la partition ; la feuille, elle, s'efface.
+  if (enColonne) await expect(page.locator("[data-harmonie-colonne]")).toBeVisible();
+  else await expect(page.locator("[data-idees-harmonie]")).toBeHidden();
   const entouree = page.locator(".harmonie-surligne");
   await expect(entouree).toHaveCount(1);
   expect((await entouree.getAttribute("data-section-uids"))?.split(" ")).toContain(COUPLET_1);

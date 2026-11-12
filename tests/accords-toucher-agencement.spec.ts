@@ -111,7 +111,7 @@ test("idées d'harmonie : l'accord proposé, puis son panneau (captures)", async
   await sansAide(page);
   await signInAs(page, AMBROISE, {}, "/songs/au-nom-de-jesus");
   await page.getByTestId("barre-outils").getByRole("button", { name: "Harmonie", exact: true }).click();
-  const accord = page.locator("[data-idees-harmonie] [data-accord-touchable]").first();
+  const accord = page.locator("[data-idees-harmonie] [data-suggestion] [data-accord-touchable]").first();
   await expect(accord).toBeVisible();
   await accord.scrollIntoViewIfNeeded();
   await photo(page, "idees-carte");

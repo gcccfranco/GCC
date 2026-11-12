@@ -14,6 +14,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Harmonie H4-2 (docs/spec-harmonie-accords.md) : la colonne « Harmonie de ce chant » dès 1 024 px, la feuille en dessous.
+  /harmonie-colonne\.spec\.ts/,
   // Lot Pupitre, PU-2 (docs/spec-entree-musiciens.md) : « Mon prochain service » en tête de l'onglet Setlists (rangées, vignettes, volet de droite en deux volets).
   /pupitre-onglet\.spec\.ts/,
   // Lot Pupitre, PU-3 : « Prêt hors-ligne » dans le bloc (téléphone et tablette debout surtout).

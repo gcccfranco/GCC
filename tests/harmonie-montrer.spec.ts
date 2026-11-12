@@ -57,8 +57,9 @@ async function ouvrir(page: Page, setlist: Record<string, unknown> = SETLIST) {
  *  avec la section annoncée par l'idée. */
 async function montrer(page: Page, position: number, n: number) {
   const chant = page.locator(`[data-outline-item="${position}"]`);
-  await chant.getByRole("button", { name: "Harmonie", exact: true }).first().click();
   const feuille = page.locator("[data-idees-harmonie]");
+  // En colonne (grand écran, H4-2), « Montrer » laisse la colonne ouverte : la puce la refermerait.
+  if (!(await feuille.isVisible())) await chant.getByRole("button", { name: "Harmonie", exact: true }).first().click();
   await expect(feuille).toBeVisible();
   const idee = feuille.locator("[data-suggestion]").nth(n);
   await expect(idee).toBeVisible();

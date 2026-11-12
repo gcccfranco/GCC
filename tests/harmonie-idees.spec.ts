@@ -141,8 +141,11 @@ test("« Montrer » ferme la feuille et entoure la section visée", async ({ pag
   const premiere = page.locator("[data-suggestion]").first();
   // Le nom du passage est le titre de son bloc (« Couplet 1 », « Refrain ×2 »).
   const section = (await premiere.locator("xpath=ancestor::*[@data-passage]").locator("h3").first().innerText()).replace(/ ×\d+$/, "");
+  const enColonne = (await page.locator("[data-harmonie-colonne]").count()) > 0;
   await premiere.getByRole("button", { name: "Montrer" }).click();
-  await expect(page.locator("[data-idees-harmonie]"), "la feuille s'efface pour laisser voir").toBeHidden();
+  // En colonne : elle reste ouverte à côté de la partition ; la feuille, elle, s'efface pour laisser voir.
+  if (enColonne) await expect(page.locator("[data-harmonie-colonne]")).toBeVisible();
+  else await expect(page.locator("[data-idees-harmonie]"), "la feuille s'efface pour laisser voir").toBeHidden();
   const entouree = page.locator(".harmonie-surligne");
   await expect(entouree).toHaveCount(1);
   await expect(entouree).toContainText(section, { ignoreCase: true });

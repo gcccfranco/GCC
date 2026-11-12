@@ -41,10 +41,14 @@ const VISIBLE =
   "[-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-ring " +
   "[@media(hover:hover)]:hover:underline active:bg-[color-mix(in_srgb,currentColor_20%,transparent)]";
 
+// « nu » : une lettre grise sans fond ni gras, mais toujours touchable (cible de 44 px).
+const NU = REPOS.replace("before:h-10", "before:h-11").replace("before:min-w-8", "before:min-w-11") + " text-muted-foreground";
+
 export function AccordTouchable({
   etiquette,
   capo,
   visible = false,
+  variante,
 }: {
   /** L'accord ou l'étiquette tels qu'affichés (transposés). */
   etiquette: string;
@@ -52,13 +56,15 @@ export function AccordTouchable({
   capo?: number;
   /** Bouton visible au repos (feuille d'idées) ; la bulle d'aide l'ignore alors. */
   visible?: boolean;
+  /** `nu` (avec `visible`) : sans pastille. */
+  variante?: "nu";
 }) {
   const { actif } = useOuvrirAccord();
   if (!actif) return <>{etiquette}</>;
-  return <Actifs etiquette={etiquette} capo={capo} visible={visible} />;
+  return <Actifs etiquette={etiquette} capo={capo} visible={visible} nu={variante === "nu"} />;
 }
 
-function Actifs({ etiquette, capo, visible }: { etiquette: string; capo?: number; visible: boolean }) {
+function Actifs({ etiquette, capo, visible, nu }: { etiquette: string; capo?: number; visible: boolean; nu: boolean }) {
   const { t } = useTranslation();
   const { ouvrir, enregistrer } = useOuvrirAccord();
   const premier = useRef<HTMLSpanElement>(null);
@@ -85,7 +91,7 @@ function Actifs({ etiquette, capo, visible }: { etiquette: string; capo?: number
             tabIndex={0}
             data-accord-touchable={m.texte}
             aria-label={t("accords.voirComment", { accord: m.texte })}
-            className={visible ? VISIBLE : REPOS}
+            className={nu ? NU : visible ? VISIBLE : REPOS}
             onClick={(e) => ouvrirCelui(e.currentTarget)}
             onKeyDown={(e) => {
               if (e.key !== "Enter" && e.key !== " ") return;

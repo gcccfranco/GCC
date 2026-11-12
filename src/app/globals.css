@@ -762,22 +762,21 @@
 }
 
 /* Barre du chant, piste A (docs/spec-barre-chant.md, Q4) : libellés par priorité, jamais de
-   deuxième ligne — tous (2), ceux des actions Vidéo et PDF seuls (1), aucun (0) ; Idées et ⋯
-   restent des icônes. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`) : des seuils fixes, calés sur la
+   deuxième ligne — tous (2), ceux des actions Vidéo et PDF seuls (1), aucun (0) ; « Harmonie » (texte seul)
+   et ⋯ restent affichés à tous les niveaux. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`) : des seuils fixes, calés sur la
    rangée la plus chargée (Retour, ↺, Pinyin), cachaient tout sur la tablette couchée. */
 .rangee-chant { container-type: inline-size; }
 .libelle-chant, .libelle-action { display: none; }
 /* Un libellé de la barre ne se coupe jamais : la mesure `data-libelles` retombe au niveau inférieur. */
 .libelle-chant, .libelle-action, .libelle-harmonie { white-space: nowrap; }
+/* Rangée serrée (niveaux 0 et 1) : « Harmonie », qui ne tombe jamais, perd 4 px de rembourrage de chaque côté. */
+.rangee-chant:is([data-libelles="0"], [data-libelles="1"]) .bouton-harmonie { padding-inline: 0.375rem; }
+/* Niveau 3, le plus large : le suffixe de tonalité « (orig.) » / « (reco.) » en plus ; il tombe le premier
+   (H4-2, « Harmonie » ne tombant plus, décision déléguée du 12/11). */
+.rangee-chant:not([data-libelles="3"]) .suffixe-tonalite { display: none; }
 /* Téléphone : comme avant, pas de libellé sous 620 px de rangée (la pilule de tonalité, qui
    rétrécit, ne ferait jamais déborder la ligne : la mesure ne suffit pas). */
 @container (min-width: 620px) { .rangee-chant:is([data-libelles="2"], [data-libelles="3"]) .libelle-chant { display: inline; } }
-/* Bouton « Harmonie » de la page chant : l'icône seule, carrée ; son libellé en plus au niveau 3 (tout tient). */
-.libelle-harmonie { display: none; }
-.rangee-chant .bouton-harmonie { width: 2.5rem; padding-inline: 0; }
-.rangee-chant[data-libelles="3"] .bouton-harmonie { width: auto; padding-inline: 0.75rem; }
-.rangee-chant[data-libelles="3"] .libelle-harmonie { display: inline; }
-@media (min-width: 1024px) { .rangee-chant .bouton-harmonie { width: 2.25rem; } .rangee-chant[data-libelles="3"] .bouton-harmonie { width: auto; } }
 /* Téléphone, même couché (moins de 500 px de haut) : la rangée d'avant, sans ⋯ ; dessous, la
    seconde rangée d'actions (Q5, `.actions-tel`) — 44 px de plus sous la barre, d'où les marges
    hautes de la partition et de la vidéo (48 et 82 px sans elle). Dès la tablette debout : la
@@ -788,7 +787,7 @@
 @media screen and (max-width: 767.98px), screen and (max-height: 499.98px) {
   .song-zoom { margin-top: 92px; }
   .video-chant { margin-top: 126px; }
-  .video-chant ~ .song-zoom { margin-top: 48px; }
+  .video-chant ~ .song-zoom, .video-chant ~ .corps-chant > .song-zoom { margin-top: 48px; }
 }
 @media (min-width: 768px) and (min-height: 500px) {
   .rangee-chant { padding-inline: 1rem; }
@@ -833,7 +832,7 @@
   .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
   .dark .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
-  .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
+  .chants-chant .song-zoom, .chants-chant .video-chant, .chants-chant .colonne-harmonie { margin-top: 0; }
   .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
   .chants-chant main.song-zoom { --marge-bande: 0px; } /* plus de remplissage : la bande Scène ne sort pas de la colonne */
   .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
@@ -855,7 +854,7 @@
   :root[data-barre="reduite"] .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
   :root.dark[data-barre="reduite"] .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
-  :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
+  :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant, :root[data-barre="reduite"] .chants-chant .colonne-harmonie { margin-top: 0; }
   :root[data-barre="reduite"] .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
   :root[data-barre="reduite"] .chants-chant main.song-zoom { --marge-bande: 0px; }
   :root[data-barre="reduite"] .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
@@ -877,7 +876,7 @@
   .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
   .dark .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
-  .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
+  .chants-chant .song-zoom, .chants-chant .video-chant, .chants-chant .colonne-harmonie { margin-top: 0; }
   .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
   .chants-chant main.song-zoom { --marge-bande: 0px; } /* plus de remplissage : la bande Scène ne sort pas de la colonne */
   .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */

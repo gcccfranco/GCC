@@ -6,11 +6,11 @@
 // les idées sans passage, les idées écartées, le formulaire d'ajout et — dans
 // une setlist — la transition vers le chant suivant. Jamais en mode louange.
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useId, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { TOUCHER_44 } from "@/lib/toucher44";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { ChampSelect } from "@/components/ui/champ-select";
@@ -37,6 +37,7 @@ import type { ChordProSection } from "@/types/chordPro";
 import type { Fiche, Instrument } from "@/types/harmonie";
 import { ParagrapheFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
+import { useOuvrirAccord } from "@/components/accords/AccordsProvider";
 import { BoutonEcouter } from "@/components/harmonie/BoutonEcouter";
 
 type Props = {
@@ -66,6 +67,12 @@ type Props = {
   /** Dans une setlist : sélecteur du chant lu. Les identifiants de section se
    *  répètent d'un chant à l'autre (« chorus-3-2 ») : « Montrer » cherche là. */
   portee?: string;
+  /** « colonne » : à droite de la partition, sans voile (grand écran) ; sinon la feuille du bas. */
+  disposition?: "feuille" | "colonne";
+  /** Colonne : où elle colle (page de setlist : sous son en-tête collant) ; sinon sous l'en-tête du site. */
+  styleColonne?: CSSProperties;
+  /** Page chant en colonne : le titre du chant est déjà à l'écran. */
+  sansTitre?: boolean;
 };
 
 /** La section visée, dans le chant lu : d'abord son occurrence, sinon (structure
@@ -88,10 +95,10 @@ function trouverLaSection(sectionUid: string, portee?: string): HTMLElement | nu
 /** Montre l'endroit visé dans la partition affichée derrière la feuille : les
  *  sections portent déjà `data-section-uids` (le sommaire s'en sert). La
  *  feuille se ferme, la section défile au centre et s'entoure un instant. */
-function montrerLEndroit(endroit: Endroit, fermer: () => void, portee?: string) {
+function montrerLEndroit(endroit: Endroit, fermer: (() => void) | undefined, portee?: string) {
   const el = trouverLaSection(endroit.sectionUid, portee);
   if (!el) return;
-  fermer();
+  fermer?.();
   requestAnimationFrame(() => {
     el.scrollIntoView({ block: "center", behavior: "smooth" });
     el.classList.add("harmonie-surligne");
@@ -99,18 +106,74 @@ function montrerLEndroit(endroit: Endroit, fermer: () => void, portee?: string) 
   });
 }
 
-export function HarmonieDuChant(props: Props) {
-  useStandaloneScrollLock(props.open);
+function Croix({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      aria-label={t("harmonie.fermer")}
+      onClick={onClose}
+      className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <X className="h-5 w-5" aria-hidden />
+    </button>
+  );
+}
+
+export function HarmonieDuChant(props: Props) {
+  const colonne = props.disposition === "colonne";
+  useStandaloneScrollLock(props.open && !colonne);
+  const { t } = useTranslation();
+  const titreId = useId();
+  if (colonne) {
+    return props.open ? <Colonne {...props} titreId={titreId} /> : null;
+  }
   return (
     <Drawer open={props.open} onOpenChange={(o) => !o && props.onClose()}>
       <DrawerContent className="h-[67dvh] max-h-[67dvh] md:max-w-2xl md:mx-auto" data-idees-harmonie>
-        <DrawerHeader className="relative z-10 shrink-0 bg-inherit pb-3">
+        <DrawerHeader className="flex shrink-0 items-center justify-between pb-3">
           <DrawerTitle>{t("harmonie.titreChant")}</DrawerTitle>
+          <Croix onClose={props.onClose} />
         </DrawerHeader>
         {props.open && <Contenu {...props} />}
       </DrawerContent>
     </Drawer>
+  );
+}
+
+/** La colonne de grand écran : collée sous l'en-tête, sans voile ni verrou de défilement. */
+function Colonne(props: Props & { titreId: string }) {
+  const { t } = useTranslation();
+  const { fermerSansFocus } = useOuvrirAccord();
+  // La bulle d'un accord ouverte se ferme à l'ouverture de la colonne, sans déplacer le focus.
+  useEffect(() => fermerSansFocus(), [fermerSansFocus]);
+  // Échap ferme la colonne où que soit le focus, sauf si un panneau d'accord ou un vrai dialogue est ouvert.
+  const { onClose } = props;
+  useEffect(() => {
+    const surTouche = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (document.querySelector("[data-accord-panneau], [role=dialog][aria-modal=true]")) return;
+      onClose();
+    };
+    document.addEventListener("keydown", surTouche);
+    return () => document.removeEventListener("keydown", surTouche);
+  }, [onClose]);
+  return (
+    <aside
+      id="harmonie-colonne"
+      aria-labelledby={props.titreId}
+      data-idees-harmonie
+      data-harmonie-colonne
+      data-chant={props.slug}
+      style={props.styleColonne}
+      className="colonne-harmonie sticky top-[var(--nav-h)] mt-[48px] flex h-[calc(100dvh-var(--nav-h)-48px)] w-[400px] shrink-0 flex-col border-l border-border bg-card print:hidden"
+    >
+      <div className="flex shrink-0 items-center justify-between px-4 pb-3 pt-4">
+        <h2 id={props.titreId} className="text-lg font-semibold">{t("harmonie.titreChant")}</h2>
+        <Croix onClose={props.onClose} />
+      </div>
+      <Contenu {...props} />
+    </aside>
   );
 }
 
@@ -142,7 +205,7 @@ function grilleDuPassage(p: Passage) {
   return { chiffres: uniques.map(cle).join(" · "), lignes: uniques.map((l) => l.map((a) => a.texte)) };
 }
 
-function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee }: Props) {
+function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre }: Props) {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
   const { fiches } = useCatalogue();
@@ -207,6 +270,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
   const transition = suivant ? transitionEntre(tonalite, suivant.tonalite) : null;
   const ficheTransition = transition ? ficheDeLaTransition(transition, fiches) : undefined;
   const dernierAccord = passages.flatMap((p) => p.lignes.flat()).at(-1)?.texte;
+  const suiteJouee = suivant && transition ? [dernierAccord, transition.approche, suivant.tonalite].filter((a): a is string => !!a) : [];
 
   const equipe = useEquipe({
     slug, idees, instrument, tonalite, tonaliteOrigine: tonaliteOrigine ?? tonalite,
@@ -223,7 +287,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
     : [];
   const carteModulation = ({ m, prop, fiche }: (typeof modulations)[number]) => (
     <li key={m.fiche} className="rounded-xl bg-card p-3" data-modulation={m.fiche}>
-      <Link href={`/harmonie/${fiche.id}`} className="font-semibold underline-offset-4 hover:underline">
+      <Link href={`/harmonie/${fiche.id}`} lang="fr" className="font-semibold underline-offset-4 hover:underline">
         {fiche.nom}
       </Link>
       <p className="mt-0.5 text-sm text-muted-foreground">
@@ -248,8 +312,13 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
   );
 
   return (
-    <div className="min-h-0 overflow-y-auto px-4 pb-8">
-      <p className="mb-3 text-sm text-muted-foreground">{titre}</p>
+    <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-8">
+      {!sansTitre && <p className="mb-3 text-sm text-muted-foreground">{titre}</p>}
+      {blocs.some((b) => b.idees.length > 0) && (
+        <p className="-mt-1 mb-3">
+          <span className="rounded-full bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">{t("harmonie.aVerifier")}</span>
+        </p>
+      )}
 
       <div className="space-y-5">
         {blocs.map((b) => {
@@ -267,7 +336,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
               className="sec-rail"
               style={{ "--sec-c": `var(--sec-${p.type}, var(--sec-other))` } as CSSProperties}
             >
-              <h3 className="text-sm font-semibold">
+              <h3 className="text-base font-semibold">
                 {b.nom}
                 {b.n > 1 && ` ×${b.n}`}
               </h3>
@@ -281,7 +350,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                     {lignes.map((l, i) => (
                       <span key={i}>
                         {i > 0 && " · "}
-                        <AccordTouchable etiquette={l.join(" – ")} visible />
+                        <AccordTouchable etiquette={l.join(" – ")} visible variante="nu" />
                       </span>
                     ))}
                   </p>
@@ -303,24 +372,21 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                     return (
                       <li key={s.id} className="rounded-xl bg-card p-3" data-suggestion={s.id}>
                         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                          <Link href={`/harmonie/${s.fiche.id}`} className="font-semibold underline-offset-4 hover:underline">
+                          <Link href={`/harmonie/${s.fiche.id}`} lang="fr" className="text-sm font-semibold underline-offset-4 hover:underline">
                             {s.fiche.nom}
                           </Link>
-                          <span className="rounded-full bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">
-                            {t("harmonie.aVerifier")}
-                          </span>
                         </div>
                         {apercu ? (
                           <p className="mt-1.5 text-base">
                             <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.avant} visible /></span>
                             <span className="mx-1.5 text-muted-foreground">→</span>
                             <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.apres} visible /></span>
-                            {/* Le degré en petit à côté : la même idée se relit dans
+                            {/* Le degré en petit dessous : la même idée se relit dans
                                 n'importe quelle tonalité. */}
-                            <span className="ml-2 text-sm text-[var(--chord-color)]">
-                              {degres(apercu.avant, tonalite)}
+                            <span className="mt-0.5 block text-sm text-[var(--chord-color)]">
+                              <span className="whitespace-nowrap">{degres(apercu.avant, tonalite)}</span>
                               {" → "}
-                              {degres(apercu.apres, tonalite)}
+                              <span className="whitespace-nowrap">{degres(apercu.apres, tonalite)}</span>
                             </span>
                           </p>
                         ) : (
@@ -336,7 +402,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                           )
                         )}
                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <Button variant="secondary" size="sm" onClick={() => montrerLEndroit(s.endroits[0], onClose, portee)}>
+                          <Button variant="secondary" size="sm" onClick={() => montrerLEndroit(s.endroits[0], disposition === "colonne" ? undefined : onClose, portee)}>
                             {t("harmonie.montrer")}
                           </Button>
                           {onEssayer && apercu && (
@@ -348,7 +414,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                           <button
                             type="button"
                             onClick={() => ecarter(s)}
-                            className={`${TOUCHER_44} ml-auto text-sm text-muted-foreground underline underline-offset-4`}
+                            className={`${TOUCHER_44} ml-auto text-xs text-muted-foreground no-underline hover:underline`}
                           >
                             {t("harmonie.neMarchePas")}
                           </button>
@@ -442,27 +508,24 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
           <div className="rounded-xl bg-card p-3">
             <p className="text-base">
               {ficheTransition ? (
-                <Link href={`/harmonie/${ficheTransition.id}`} className="font-semibold underline-offset-4 hover:underline">
+                <Link href={`/harmonie/${ficheTransition.id}`} lang="fr" className="font-semibold underline-offset-4 hover:underline">
                   {ficheTransition.nom}
                 </Link>
               ) : (
                 t("harmonie.transition.titre")
               )}
             </p>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {suivant.titre} · {suivant.tonalite}
-              {transition.approche && (
-                <>
-                  {" · "}
-                  <span className="font-chord font-semibold"><AccordTouchable etiquette={transition.approche} visible /></span>
-                </>
-              )}
+            {/* Dans l'ordre joué : le dernier accord du chant, l'approche s'il y en a, le 1 du chant suivant. */}
+            <p className="mt-1 font-chord text-base font-semibold">
+              {suiteJouee.map((a, i) => (
+                <Fragment key={i}>
+                  {i > 0 && <span className="mx-1.5 font-sans font-normal text-muted-foreground">→</span>}
+                  <AccordTouchable etiquette={a} visible />
+                </Fragment>
+              ))}
             </p>
-            {/* Le dernier accord du chant, l'approche s'il y en a, le 1 du chant suivant. */}
-            <BoutonEcouter
-              className="mt-2"
-              accords={[dernierAccord, transition.approche, suivant.tonalite].filter((a): a is string => !!a)}
-            />
+            <p className="mt-0.5 text-sm text-muted-foreground">{suivant.titre} · {suivant.tonalite}</p>
+            <BoutonEcouter className="mt-2" accords={suiteJouee} />
           </div>
         </section>
       )}
@@ -552,7 +615,7 @@ function CarteIdee({ i, fiches, eq }: { i: Idee; fiches: Fiche[]; eq: Equipe }) 
         </p>
       )}
       {i.ficheId && fiches.some((f) => f.id === i.ficheId) && (
-        <Link href={`/harmonie/${i.ficheId}`} className="mt-0.5 block text-sm underline underline-offset-4">
+        <Link href={`/harmonie/${i.ficheId}`} lang="fr" className="mt-0.5 block text-sm underline underline-offset-4">
           {fiches.find((f) => f.id === i.ficheId)!.nom}
         </Link>
       )}

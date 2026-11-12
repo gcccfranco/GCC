@@ -250,6 +250,35 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   vérifier en jouant » une seule fois, en tête des idées de la feuille ; (6) chaque côté de la flèche des chiffres en
   `whitespace-nowrap` ; plus un bouton de fermeture visible (croix) et `lang="fr"` sur le nom des fiches en interface
   chinoise.
+- 12/11/2026 : **H4-2 faite, H4 fait** (session orchestratrice de H4-2). Retouches de la critique de H4-1 : lettres de
+  la grille grises sans pastille et touchables (`AccordTouchable` variante `nu`), noms en semibold, bouton texte seul
+  « Harmonie » / « 和声 » (page chant et puce setlist), actif (`bg-foreground`) quand la porte est ouverte, transition
+  « A → B → E » avec le chant suivant sur sa ligne, « À vérifier en jouant » une fois, flèches en `nowrap`, légende des
+  chiffres sous les pastilles, « Ne marche pas sur ce chant » en `text-xs` gris, croix (« Fermer » / 关闭) dans la
+  feuille et la colonne, `lang="fr"` sur les noms de fiches. **Colonne** : `<aside data-harmonie-colonne>` de 400 px à
+  droite de la partition, collante, sans voile, fermée par défaut, préférence `gcc-harmonie-colonne` par appareil
+  (`src/hooks/useColonneHarmonie.ts`), Échap et croix ferment et rendent le focus, bulle d'accord fermée à l'ouverture
+  (sans déplacer le focus, `fermerSansFocus`), « Montrer » et « Essayer » la laissent ouverte. **Décisions déléguées
+  (session H4-2, 12/11)** : (1) la colonne ne s'ouvre que si la **zone de lecture** mesure au moins 824 px
+  (400 + 24 + 400 de partition) ; en deçà, la feuille. Conséquence : la setlist a la colonne dès 1 024 px, mais la
+  page chant, déjà en deux volets (liste des chants à gauche) dès 1 024 px, ne l'a que vers 1 650 px de fenêtre ;
+  avant, la partition tombait à 90-216 px (titre coupé mot à mot, accords chevauchés). Piste pour plus tard : replier
+  la liste des chants quand la colonne s'ouvre (à décider, changement d'agencement des deux volets). (2) Dans la
+  setlist, la colonne relit la préférence et suit le chant lu ; elle garde le nom du chant (plusieurs chants), masqué
+  sur la page chant. (3) « Harmonie » ne tombant plus, le suffixe de tonalité « (orig.) / (reco.) » de la barre tombe
+  le premier (visible au seul niveau 3 de `data-libelles`). Connu, laissé : la puce setlist ne se marque pas active ;
+  marges de la colonne calées sur `pb-16`/`pb-8` de la zone (`SetlistDetailClient`) ; noms des fiches en français en
+  interface chinoise (H9). Tests : tsc, lint (0 erreur), validate ; `harmonie-colonne.spec.ts` (nouvelle, dans
+  `SPECS_GRAND_ECRAN`) ; specs Harmonie, `barre-chant`, `chants-deux-volets`, `accords-toucher*`, `pupitre-partitions`
+  sur tous les projets : premier tour 369 passés / 18 échecs (12 min, code en cours de retouche), puis après
+  corrections 111 + 209 passés (10 min) et un tour ciblé des trois derniers rouges (1 min). Restent rouges, hors
+  tranche : `chants-deux-volets.spec.ts:495` (trois projets) et `:512` (tablette paysage, débordement de 12 px déjà
+  rouge avant). Instable, non lié : `accords-toucher-agencement.spec.ts:75` (téléphone, élément détaché ; 3/3 seul).
+  Durée totale des tests ≈ 45 min. `regard` sur 17 captures, `critique-design` sur 6 (« à retoucher » : 5 retouches
+  faites), relecteur (Échap, deux volets, focus : corrigés). Reposée sur « Exemples d'usage T4 » (conflit dans
+  `SetlistDetailClient`) : colonne fermée, les partitions gardent la requête de conteneur `partition` de T4 (1 080 px, deux
+  colonnes) ; colonne ouverte, partition à 920 px en une colonne. `harmonie-colonne`, `pupitre-partitions`,
+  `harmonie-setlist`, `harmonie-montrer`, `pages-en-grand-setlists` verts après la reprise (8 min).
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
