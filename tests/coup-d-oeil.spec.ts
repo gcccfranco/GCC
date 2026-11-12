@@ -183,7 +183,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
 
   test("« Sections uniques » : le refrain repris n'est imprimé qu'une fois, sa nuance dans le bandeau ; le choix est retenu sur l'appareil", async ({ page }) => {
     await openPartitions(page);
-    await choose(page, "Sections uniques");
+    await choose(page, "Chaque section une fois");
     await expect(song1Sections(page)).toHaveCount(2);
     await expect(song1Sections(page).nth(1)).toHaveAttribute("data-section-uids", "chorus-3-1 chorus-3-2");
     await expect(page.locator('[data-outline-item="1"] [data-section] [data-nuance]')).toHaveCount(0);
@@ -200,7 +200,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
   test("« Structure seule » : bandeau sans paroles ; sur un scan 简谱, pas de scan", async ({ page }) => {
     await openPartitions(page);
     await expect(page.locator('[data-outline-item="2"] img')).toHaveCount(1);
-    await choose(page, "Structure seule");
+    await choose(page, "Plan du chant");
     await expect(page.locator("[data-section]")).toHaveCount(0);
     await expect(page.getByRole("list", { name: "Structure" })).toHaveCount(2);
     await expect(page.locator('[data-outline-item="2"] img')).toHaveCount(0);
@@ -219,8 +219,8 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await page.getByRole("button", { name: /Mode Louange/ }).click();
     const jejoue = await ouvrirJeJoue(page);
     const affichage = jejoue.getByRole("radiogroup", { name: "Ordre des sections" });
-    await expect(affichage.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
-    await affichage.getByRole("radio", { name: "Sections uniques" }).click();
+    await expect(affichage.getByRole("radio", { name: "Tout le chant" })).toHaveAttribute("aria-checked", "true");
+    await affichage.getByRole("radio", { name: "Chaque section une fois" }).click();
     expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("unique");
 
     // Quitter le mode louange (Échap referme d'abord la feuille).
@@ -238,7 +238,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
 
     await ouvrirPartitions(page);
     await ouvrirAffichage(page);
-    await expect(page.getByRole("menuitemradio", { name: "Sections uniques" })).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("menuitemradio", { name: "Chaque section une fois" })).toHaveAttribute("aria-checked", "true");
     await fermerMenus(page);
     await expect(song1Sections(page)).toHaveCount(2);
   });

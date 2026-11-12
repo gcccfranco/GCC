@@ -472,3 +472,21 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   `pupitre-onglet` 107 passés (8 ignorés) en 3,3 min. `tsc`, lint (aucun avertissement nouveau), `npm run validate`
   propres. **PU-4 attend** : FS-F est fusionnée (`fef10377`) mais MP-5 (Crayon du mode louange) travaille encore dans
   `PerformanceMode.tsx` ; PU-4 part quand MP-5 a fini (pilote prévenu).
+- 12/11/2026 : **PU-4 faite** (trois affichages renommés, disposition dans « Je joue »). Libellés fr et zh-CN
+  (`setlists.detail.layout` : Tout le chant 完整顺序, Chaque section une fois 每段一次, Plan du chant 只看结构 ; guides
+  `fr.json:1083`, `zh-CN.json:965`, `:1078`) ; identifiants inchangés. `PerformanceMode.tsx` : `ChoixDisposition` quitte
+  Options et passe dans « Je joue », sous l'ordre, au-dessus de « Partition » (MP-5), qui reste la dernière ; Options garde
+  le reste. Les segments de l'ordre passent à la ligne (« Chaque section une fois » chevauchait « Plan du chant » à la
+  tablette) : `min-h-11`, `leading-tight`, `text-balance`. Douze specs suivent les nouveaux libellés ; celles qui
+  cherchaient la disposition dans Options la cherchent dans « Je joue » (radiogroup `perf-disposition`, pas l'index
+  global, qui tomberait sur l'ordre). Deux tests ajoutés à `louange-je-joue` (ordre des rubriques, aucun libellé qui
+  déborde, 44 px et défilement au téléphone, un choix ne tourne pas la page, Options sans disposition ; 中文).
+  **Décision déléguée (session PU-4, 12/11)** : pas de `regard` ni de `critique-design` : on déplace un composant
+  existant, sans nouveau dessin ; captures regardées à la main sur les quatre dispositions et à 1 440 px, FR et 中文 (popover
+  à la tablette couchée : il défile, `ZoneDefilante`). **Tests** : 12 specs sur 3 ou 5 projets, 1 572 passés, 3 échecs,
+  175 ignorés en 71 min (`--workers=2`). Les 3 échecs, `louange-sections-uniques:769` (trait de la page 2, téléphone)
+  et `setlist-g:260` (défilement rendu à 10 px près, téléphone et tablette), **échouent aussi sans PU-4** (vérifié par
+  `git stash`) : ce ne sont pas des régressions, à reprendre hors lot. Après la retouche des segments : `louange-je-joue`
+  ciblée, 20/20 en 1,3 min. `tsc` propre, lint sans erreur. **Leçon de durée** : 10 des 12 specs n'avaient qu'un
+  sélecteur changé ; PU-5 et PU-6 ne lancent que les tests touchés (`--grep`), plus les specs entières qui changent
+  vraiment. Suite : PU-5 lancée.

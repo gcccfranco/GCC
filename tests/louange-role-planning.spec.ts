@@ -144,14 +144,14 @@ test("sans rôle retenu : Je joue s'ouvre seul, Batteur porte « d'après le pla
   for (const role of ["Pianiste", "Guitariste", "Présidence", "Choriste", "Batteur"]) {
     await expect(dialogue.getByRole("button", { name: new RegExp(`^${role}`) }), `${role} non coché`).toHaveAttribute("aria-pressed", "false");
   }
-  await expect(dialogue.getByRole("radio", { name: "Structure seule" }), "l'affichage n'a pas changé").toHaveAttribute("aria-checked", "false");
+  await expect(dialogue.getByRole("radio", { name: "Plan du chant" }), "l'affichage n'a pas changé").toHaveAttribute("aria-checked", "false");
   expect(await lire(page, "partition-layout")).toBeNull();
   expect(await lire(page, `perf-role-preset-${UID}`)).toBeNull();
   await expect(pastille(page), "sans rôle retenu, pas de pastille").toHaveCount(0);
 
   await ligne.click();
   await expect.poll(() => lire(page, `perf-role-preset-${UID}`)).toBe("batteur");
-  await expect(dialogue.getByRole("radio", { name: "Structure seule" })).toHaveAttribute("aria-checked", "true");
+  await expect(dialogue.getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
 });
 
 // ─── Pastille ──────────────────────────────────────────────────────────────────
@@ -221,7 +221,7 @@ test("accepter : vue Batteur appliquée et retenue ; « Annuler » rétablit Pia
   await expect(p, "ne repropose pas").toHaveCount(0);
   const dialogue = await ouvrirJeJoue(page);
   await expect(dialogue.getByRole("button", { name: /^Pianiste/ })).toHaveAttribute("aria-pressed", "true");
-  await expect(dialogue.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
+  await expect(dialogue.getByRole("radio", { name: "Tout le chant" })).toHaveAttribute("aria-checked", "true");
 });
 
 test("accepter : « Annuler » reste 6 s puis la pastille disparaît, la vue Batteur reste", async ({ page }) => {

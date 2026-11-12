@@ -442,7 +442,7 @@ test.describe("annotations avec le rappel", () => {
 
   // Annotation « d'avant le lot » : pas de champ `rappel`, trait posé là où l'ancien rendu aurait mis le haut
   // de la section (haut actuel − (rappel actuel − ancienne hauteur)).
-  for (const [affichage, nom] of [["unique", "Sections uniques"], ["played", "Ordre joué"]] as const) {
+  for (const [affichage, nom] of [["unique", "Chaque section une fois"], ["played", "Tout le chant"]] as const) {
     test(`annotation d'avant le lot : le trait est sur le haut de sa section, ${nom} (FR)`, async ({ page }) => {
       const echelle = 1.5;
       const db = await ouvrirMode(page, [ABBA], affichage === "unique" ? "unique" : null, String(echelle));
@@ -474,7 +474,7 @@ test.describe("annotations avec le rappel", () => {
   // Les pages qui changent de composition dépendent de l'appareil, du chant et de la taille du texte : trois
   // candidats, chacun recomposé sur au moins un appareil (les autres sautent).
   const CANDIDATS = [["quand-tu-parles", 1.5], ["la-pour-toi", 1.5], ["la-pour-toi", 1]] as const;
-  for (const [affichage, nom] of [["unique", "Sections uniques"], ["played", "Ordre joué"]] as const)
+  for (const [affichage, nom] of [["unique", "Chaque section une fois"], ["played", "Tout le chant"]] as const)
   for (const [slug, echelle] of CANDIDATS) {
     test(`annotation sous l'ancienne clé d'une page recomposée : lue sur la nouvelle page, enregistrée sous la nouvelle clé, ${nom}, ${slug} à ${echelle * 100} % (FR)`, async ({ page }) => {
       const db = await ouvrirMode(page, [item({ songSlug: slug })], affichage === "unique" ? "unique" : null, String(echelle));

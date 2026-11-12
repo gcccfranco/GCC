@@ -2230,7 +2230,7 @@ export function PerformanceMode({
                     role="radio"
                     aria-checked={affichageVu === v}
                     onClick={() => changeAffichage(v)}
-                    className={`h-11 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    className={`min-h-11 min-w-0 flex-1 rounded-md px-2 py-1 text-[13px] font-semibold leading-tight text-balance transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       affichageVu === v ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -2239,6 +2239,10 @@ export function PerformanceMode({
                 ))}
               </div>
               <p className="px-2 text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
+            </div>
+            <div className="space-y-2 border-t border-border pt-4">
+              <div className="px-1"><TitreRubrique id="perf-disposition">{t("dispositions.titre")}</TitreRubrique></div>
+              <ChoixDisposition variante="panneau" langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
             </div>
             {/* Partition (MP-5) : les choix « Je lis » du chant affiché ; ni « Partager… » ni « Garder une copie » (page de setlist). */}
             {user && !horsLigne && onChoisirLecture && slugAnnote && (lectures?.[slugAnnote]?.options.length ?? 0) > 1 && (
@@ -2348,10 +2352,6 @@ export function PerformanceMode({
               </BoutonSurPage>
             </div>
             {hasJianpuSheets && !structureMode && <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>}
-          </div>
-          <div className="space-y-2">
-            <TitreRubrique id="perf-disposition">{t("dispositions.titre")}</TitreRubrique>
-            <ChoixDisposition variante="panneau" langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
           </div>
           <div className="space-y-2">
             <TitreRubrique id="perf-couleur-accords">{t("couleurAccords.titre")}</TitreRubrique>

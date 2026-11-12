@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, lireCompteur, NOM_MENU, ouvrirJeJoue, type Langue } from "./helpers/louange";
+import { attendreMiseEnPage, lireCompteur, NOM_MENU, ouvrirJeJoue, ouvrirOptions, type Langue } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot FS-C (docs/spec-mode-louange-forscore-2.md) : « Je joue », le menu du rôle, retenu par compte sur l'appareil
@@ -257,6 +257,52 @@ test("vue partitions de la setlist : le rôle Batteur du compte donne « Structu
   await ouvrirPartitions(page);
   await expect(page.getByRole("list", { name: "Structure" }).first()).toBeVisible();
   await expect(page.locator("[data-section]")).toHaveCount(0);
+});
+
+test("Je joue : rôles, ordre (Tout le chant, Chaque section une fois, Plan du chant), puis disposition ; Options garde les accords, plus la disposition (FR)", async ({ page }) => {
+  await preparer(page, { init: { "perf-role-preset": "guitariste" } });
+  await ouvrirMode(page, ANOUK);
+  const dialogue = await ouvrirJeJoue(page);
+  const ordre = dialogue.getByRole("radiogroup", { name: "Ordre des sections" });
+  await expect(ordre.getByRole("radio")).toHaveText(["Tout le chant", "Chaque section une fois", "Plan du chant"]);
+  // Libellés longs : ils passent à la ligne dans leur segment, jamais sur le voisin.
+  const debords = await ordre.getByRole("radio").evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length);
+  expect(debords, "aucun libellé d'ordre ne déborde de son segment").toBe(0);
+  const disposition = dialogue.locator('[role=radiogroup][aria-labelledby="perf-disposition"]');
+  await expect(disposition.getByRole("radio")).toHaveCount(5);
+  const y = async (l: ReturnType<typeof dialogue.locator>) => (await l.boundingBox())!.y;
+  const yRole = await y(dialogue.getByRole("button", { name: /^Guitariste/ }));
+  const yOrdre = await y(ordre);
+  const yDispo = await y(disposition);
+  expect(yRole, "rôles au-dessus de l'ordre").toBeLessThan(yOrdre);
+  expect(yOrdre, "ordre au-dessus de la disposition").toBeLessThan(yDispo);
+  if (telephone(page)) {
+    const derniere = disposition.getByRole("radio").last();
+    await derniere.scrollIntoViewIfNeeded();
+    await expect(derniere).toBeInViewport();
+    for (const radio of await disposition.getByRole("radio").all()) {
+      expect((await radio.boundingBox())!.height, "chaque disposition : au moins 44 px").toBeGreaterThanOrEqual(43.5);
+    }
+  }
+  const avant = (await lireCompteur(page)).split(" / ")[0];
+  await disposition.getByRole("radio").last().click();
+  await page.waitForTimeout(250);
+  await expect(dialogue).toBeVisible();
+  expect((await lireCompteur(page)).split(" / ")[0], "un choix de disposition ne tourne pas la page").toBe(avant);
+
+  await page.keyboard.press("Escape");
+  await expect(dialogue).toBeHidden();
+  const options = await ouvrirOptions(page);
+  await expect(options.getByText("Couleur des accords", { exact: true })).toBeVisible();
+  await expect(options.locator('[aria-labelledby="perf-disposition"]')).toHaveCount(0);
+});
+
+test("Je joue : ordre 完整顺序 / 每段一次 / 只看结构 (ZH)", async ({ page }) => {
+  await preparer(page, { langue: "zh" });
+  await ouvrirMode(page, ANOUK, ZH);
+  const dialogue = await ouvrirJeJoue(page, "zh");
+  await expect(dialogue.getByRole("radiogroup", { name: "段落顺序" }).getByRole("radio")).toHaveText(["完整顺序", "每段一次", "只看结构"]);
+  await expect(dialogue.locator('[role=radiogroup][aria-labelledby="perf-disposition"]').getByRole("radio")).toHaveCount(5);
 });
 
 test("taille annotée : lue sous la clé du compte, pas sous celle d'un autre", async ({ page }) => {

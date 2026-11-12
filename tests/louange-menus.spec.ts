@@ -459,12 +459,17 @@ test("Options : aucune 2e ligne d'un seul élément (ronds « Sur la page » et 
   const pastilles = await lignes('[role=radiogroup][aria-labelledby="perf-couleur-icones"] > button');
   expect(pastilles, `pastilles : ${pastilles}`).toEqual([7]);
   // Bloc Disposition (DP-A ; Repères en DP-B, Scène en DP-C, Partition en DP-D : cinq entrées) : jamais une miniature seule sur sa ligne.
-  const dispositions = await lignes('[role=radiogroup][aria-labelledby="perf-disposition"] > button');
-  expect(dispositions.reduce((a, b) => a + b, 0)).toBe(5);
-  if (dispositions.length > 1) for (const n of dispositions) expect(n, `miniatures par ligne : ${dispositions}`).toBeGreaterThanOrEqual(2);
+  await page.keyboard.press("Escape");
+  await expect(options).toBeHidden();
+  const jeJoue = await ouvrirMenu(page, "jejoue");
+  await attendreOuverture(page);
+  const dispositions = (await jeJoue.locator('[role=radiogroup][aria-labelledby="perf-disposition"] > button').evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)))).reduce((m, y) => { const k = [...m.keys()].find((c) => Math.abs(c - y) <= 4) ?? y; m.set(k, (m.get(k) ?? 0) + 1); return m; }, new Map<number, number>());
+  const parLigne = [...dispositions.values()];
+  expect(parLigne.reduce((a, b) => a + b, 0)).toBe(5);
+  if (parLigne.length > 1) for (const n of parLigne) expect(n, `miniatures par ligne : ${parLigne}`).toBeGreaterThanOrEqual(2);
   // Le popover garde sa largeur d'environ 26 rem et n'est pas plafonné en hauteur à 34 rem.
   if (!telephone(page)) {
-    const boite = (await options.boundingBox())!;
+    const boite = (await jeJoue.boundingBox())!;
     expect(boite.width).toBeGreaterThan(400);
   }
 });

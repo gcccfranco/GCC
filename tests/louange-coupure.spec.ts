@@ -28,7 +28,7 @@ const item = (over: Partial<SetlistItem> & { songSlug: string }): SetlistItem =>
 const FR = item({ songSlug: "a-jamais-tu-es-saint", keyOverride: "A" });
 const ZH = item({ songSlug: "一生爱你" });
 const CHANTS = [["À jamais Tu es saint", FR], ["一生爱你", ZH]] as const;
-const AFFICHAGES = [["played", "Ordre joué"], ["unique", "Sections uniques"]] as const;
+const AFFICHAGES = [["played", "Tout le chant"], ["unique", "Chaque section une fois"]] as const;
 
 const totalPages = async (page: Page) => Number((await lireCompteur(page)).split("/")[1]);
 

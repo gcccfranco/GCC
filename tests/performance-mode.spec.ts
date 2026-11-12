@@ -289,8 +289,8 @@ test.describe("reprise des réglages", () => {
     // Le batteur lit la setlist en Structure seule, même réglage que le mode
     // louange (D15, docs/spec-jianpu-integration.md) : il revient à l'ordre joué.
     await ouvrirAffichage(page);
-    await expect(page.getByRole("menuitemradio", { name: "Structure seule" })).toHaveAttribute("aria-checked", "true");
-    await page.getByRole("menuitemradio", { name: "Ordre joué" }).click();
+    await expect(page.getByRole("menuitemradio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
+    await page.getByRole("menuitemradio", { name: "Tout le chant" }).click();
     await fermerMenus(page);
     await basculerAccords(page); // masqués
     await basculerAccords(page); // de nouveau affichés

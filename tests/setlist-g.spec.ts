@@ -372,12 +372,12 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     // « Choix du responsable · Toujours · Jamais ».
     await expect(menu.getByRole("menuitemcheckbox", { name: "Partition 简谱" })).toHaveAttribute("aria-checked", "true");
     await expect(menu.getByRole("menuitemradio")).toHaveText([
-      "Ordre joué", "Sections uniques", "Structure seule", "Classique", "Couleurs par section", "Marge", "Scène", "Partition",
+      "Tout le chant", "Chaque section une fois", "Plan du chant", "Classique", "Couleurs par section", "Marge", "Scène", "Partition",
     ].map((t) => new RegExp(t)));
     await expect(menu.getByRole("menuitemcheckbox", { name: "Pinyin" })).toBeVisible();
     await expect(menu.getByRole("menuitemradio", { name: "Couleurs par section" })).toBeVisible();
     // Le réglage choisi sur la Liste vaut pour les partitions.
-    await menu.getByRole("menuitemradio", { name: "Structure seule" }).click();
+    await menu.getByRole("menuitemradio", { name: "Plan du chant" }).click();
     await page.keyboard.press("Escape");
     await boutonVue(page, "Partitions").click();
     await expect(chant(page, 1)).toBeVisible();

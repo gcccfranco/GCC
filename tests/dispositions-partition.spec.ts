@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
-import { attendreCompteur, attendreMiseEnPage, fermerBarre, lireCompteur, onStage, ouvrirOptions, type Langue } from "./helpers/louange";
+import { attendreCompteur, attendreMiseEnPage, fermerBarre, lireCompteur, onStage, ouvrirMenu, ouvrirOptions, type Langue } from "./helpers/louange";
 
 // Lot DP, tranche DP-A (docs/spec-mode-louange-forscore-2.md) : la disposition de la partition, retenue par appareil,
 // partagée entre la page du chant, la vue partitions de la setlist et le mode louange ; sa reprise de l'ancien réglage
@@ -144,7 +144,7 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
     await attendreMiseEnPage(page);
     const scene = page.locator("[data-performance-mode]");
     await expect(scene).toHaveAttribute("data-disposition", "sections");
-    const options = await ouvrirOptions(page);
+    const options = await ouvrirMenu(page, "jejoue");
     await expect(options.getByRole("radio", { name: "Couleurs par section" })).toHaveAttribute("aria-checked", "true");
     await expect(options.getByRole("radio", { name: "Classique" })).toHaveAttribute("aria-checked", "false");
     await options.getByRole("radio", { name: "Classique" }).click();
@@ -198,7 +198,7 @@ test("mode louange : le texte garde ses deux colonnes sur grand écran, dans cha
   const avant = await colonnes();
   expect(avant, "deux colonnes au départ").toBe(2);
   for (const d of ["partition", "scene", "reperes", "sections", "classique"]) {
-    const options = await ouvrirOptions(page);
+    const options = await ouvrirMenu(page, "jejoue");
     await options.getByRole("radio", { name: NOMS[d] }).click();
     await page.keyboard.press("Escape");
     await expect(options).toBeHidden();
@@ -252,8 +252,8 @@ for (const langue of ["fr", "zh"] as const) {
       await attendreMiseEnPage(page);
       const l: Langue = langue;
       for (const d of ORDRE) {
-        const options = await ouvrirOptions(page, l);
-        await options.getByRole("radio").nth(ORDRE.indexOf(d)).click();
+        const options = await ouvrirMenu(page, "jejoue", l);
+        await options.locator('[role=radiogroup][aria-labelledby="perf-disposition"]').getByRole("radio").nth(ORDRE.indexOf(d)).click();
         await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-disposition", d);
         await page.screenshot({ path: `${dossier}/${info.project.name}-louange-options-${d}-${langue}-${theme}.png` });
         await page.keyboard.press("Escape");
@@ -799,7 +799,7 @@ test("A : Options du mode louange, cinq colonnes égales sur une rangée, miniat
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(LOUANGE_FR) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  const options = await ouvrirOptions(page);
+  const options = await ouvrirMenu(page, "jejoue");
   const radios = options.locator('[role=radiogroup][aria-labelledby="perf-disposition"]').getByRole("radio");
   await expect(radios).toHaveCount(5);
   const m = await radios.evaluateAll((els) => els.map((el) => ({ y: Math.round(el.getBoundingClientRect().top), w: Math.round(el.getBoundingClientRect().width), svg: Math.round(el.querySelector("svg.block")!.getBoundingClientRect().width), nomH: Math.round((el.lastElementChild as HTMLElement).getBoundingClientRect().height) })));
@@ -1055,8 +1055,8 @@ for (const [langue, slug] of [["FR", "abba-pere"], ["ZH", "谢谢你"]] as const
     const l: Langue = langue === "ZH" ? "zh" : "fr";
     const hauteur = async () => (await onStage(page, "[data-entete-chant]").first().boundingBox())!.height;
     const classique = await hauteur();
-    const options = await ouvrirOptions(page, l);
-    await options.getByRole("radio").nth(ORDRE.indexOf("partition")).click();
+    const options = await ouvrirMenu(page, "jejoue", l);
+    await options.locator('[role=radiogroup][aria-labelledby="perf-disposition"]').getByRole("radio").nth(ORDRE.indexOf("partition")).click();
     await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-disposition", "partition");
     await page.keyboard.press("Escape");
     await expect(options).toBeHidden();
@@ -1360,7 +1360,7 @@ test("G2-23 : la disposition s'appelle Marge (fr) et 页边标记 (zh) dans le m
 
 test("G2-23 : en mode louange, le panneau dit « Marge », le bouton de la barre garde « Repères »", async ({ page }) => {
   await louangeEn(page, "classique");
-  await ouvrirOptions(page);
+  await ouvrirMenu(page, "jejoue");
   await expect(page.getByRole("radio", { name: /Marge/ })).toBeVisible();
   await expect(page.getByRole("radio", { name: /Repères/ })).toHaveCount(0);
   // Le bouton signet de la barre (menu des sections) n'a pas changé de nom.
