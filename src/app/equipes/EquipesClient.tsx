@@ -13,7 +13,7 @@
 import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { Pencil, X } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { OngletsRail } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
@@ -28,7 +28,7 @@ import {
   canEditerEquipes, isAdminUser, peutChangerReferents, peutModifierEquipe, peutPlacerMembre, peutPlacerSousEquipe, peutVoirEquipe,
 } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { CeQueCaOuvre, CorpsLouange, MembreOrganigramme, MentionReferent, ligneGrise, majuscule, resume } from "@/components/equipes/OrganigrammeLouange";
+import { CeQueCaOuvre, CorpsLouange, LigneMembreEdition, MembreOrganigramme, MentionReferent, ligneGrise, majuscule, resume } from "@/components/equipes/OrganigrammeLouange";
 import { COLONNE_LIEU, porteDesLieux, referentSousDe, sousEquipesDe } from "@/lib/equipes/louange";
 import { EQUIPES, uidsAChanger, type EquipeDef } from "@/lib/equipes/organigramme";
 import {
@@ -37,7 +37,7 @@ import {
 import { findMyServices, loadPlanningData, type PlanningData } from "@/lib/planning/names";
 import { categoryLabel } from "@/lib/serviceColors";
 import { SERVICE_LIEUX, SERVICE_ROLE_LABELS, type UserProfile } from "@/types/user";
-import { SOUS_EQUIPES, SOUS_EQUIPES_EDD, type Equipe, type MembreEquipe } from "@/types/equipe";
+import { SOUS_EQUIPES, SOUS_EQUIPES_EDD, type Equipe, type MembreEquipe, type SousEquipe } from "@/types/equipe";
 import { libellesResponsabilites } from "@/lib/equipes/responsabilites";
 import { colonnesEdd } from "@/lib/equipes/edd";
 import { cleNomEquipe } from "@/lib/equipes/table";
@@ -434,6 +434,16 @@ function LigneMembre({
 
 const cleMembre = (m: MembreEquipe) => `${m.uid}|${m.nom}`;
 
+/** Le document à écrire : chaque membre retiré disparaît ; un référent de sous-équipe (`sienne`) ne le retire que de SA
+ *  sous-équipe, et la ligne ne disparaît que s'il n'en reste aucune autre. */
+function appliqueRetraits(membres: MembreEquipe[], retires: Set<string>, sienne: ((s: SousEquipe) => boolean) | null): MembreEquipe[] {
+  return membres.flatMap((m) => {
+    if (!retires.has(cleMembre(m))) return [m];
+    const reste = sienne ? sousEquipesDe(m).filter((s) => !sienne(s)) : [];
+    return reste.length > 0 ? [{ ...m, sousEquipes: reste, referentSous: referentSousDe(m).filter((s) => reste.includes(s)) }] : [];
+  });
+}
+
 function EditionEquipe({
   def, sousTitre, membres, version: versionLue, profils, onClose, onEnregistre,
 }: {
@@ -479,6 +489,9 @@ function EditionEquipe({
   const [ajoutes, setAjoutes] = useState<Set<string>>(() => new Set());
   const ouvrable = (m: MembreEquipe) => ajoutes.has(cleMembre(m)) || peutOuvrir(originaux.get(cleMembre(m)) ?? m);
   const [ouvert, setOuvert] = useState<string | null>(null);
+  // Retraits marqués, appliqués à l'enregistrement seulement (« Remettre » les défait).
+  const [retires, setRetires] = useState<Set<string>>(() => new Set());
+  const sousSeulement = louange && nouveau && !droits.equipe;
 
   const q = recherche.trim().toLowerCase();
   const deja = new Set(brouillon.map((m) => m.uid).filter(Boolean));
@@ -498,18 +511,12 @@ function EditionEquipe({
     setRecherche("");
   }
 
-  function retire(i: number) {
-    const m = brouillon[i];
-    // Un référent de sous-équipe retire de SA sous-équipe ; la ligne ne disparaît que s'il ne reste aucune autre.
-    if (louange && nouveau && !droits.equipe) {
-      const reste = sousEquipesDe(m).filter((s) => !droits.sous(s));
-      if (reste.length > 0) {
-        change(i, { sousEquipes: reste, referentSous: referentSousDe(m).filter((s) => reste.includes(s)) });
-        return;
-      }
-    }
-    setBrouillon((prev) => prev.filter((_, j) => j !== i));
+  function retire(m: MembreEquipe) {
+    setRetires((prev) => new Set(prev).add(cleMembre(m)));
+    setOuvert(null);
   }
+  const remet = (m: MembreEquipe) =>
+    setRetires((prev) => { const n = new Set(prev); n.delete(cleMembre(m)); return n; });
 
   async function recopier(uids: string[], ecrite: Equipe) {
     try {
@@ -530,12 +537,13 @@ function EditionEquipe({
     setErreur("");
     try {
       const nom = profile ? nomComplet(profile) : (user.email ?? "");
+      const aEcrire = appliqueRetraits(brouillon, retires, sousSeulement ? droits.sous : null);
       let ecrite: Equipe;
       try {
-        const nouvelle = await saveEquipe(def.id, brouillon, { uid: user.uid, nom }, version.current);
+        const nouvelle = await saveEquipe(def.id, aEcrire, { uid: user.uid, nom }, version.current);
         version.current = nouvelle ?? version.current;
         ecrite = {
-          id: def.id, membres: brouillon,
+          id: def.id, membres: aEcrire,
           updatedAt: new Date().toISOString(), parUid: user.uid, parNom: nom,
           ...(version.current ? { version: version.current } : {}),
         };
@@ -549,7 +557,7 @@ function EditionEquipe({
       // Seuls les comptes aux lignes changées (ajoutées, retirées, modifiées) : la recopie d'un compte ne lit que ses
       // lignes et l'id de l'équipe, qui ne s'édite pas ici. Le document est déjà écrit : si la recopie échoue, les
       // comptes restent à recopier (« Réessayer »).
-      const touches = [...new Set([...uidsAChanger(membres, brouillon), ...(aRecopier ?? [])])];
+      const touches = [...new Set([...uidsAChanger(membres, aEcrire), ...(aRecopier ?? [])])];
       if (touches.length) await recopier(touches, ecrite);
       else onEnregistre(ecrite);
     } finally {
@@ -608,21 +616,24 @@ function EditionEquipe({
               droits={droits}
               gerer={isAdminUser(user)}
               onChange={(champ) => change(i, champ)}
-              onRetirer={() => retire(i)}
+              onRetirer={() => retire(m)}
+              retire={retires.has(cleMembre(m))}
+              sousSeulement={sousSeulement}
+              onRemettre={() => remet(m)}
             />
           ) : (
-            <div key={`${m.nom}-${i}`} data-testid={`membre-${m.uid || m.nom}`} className="rounded-lg border border-border p-2 space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-semibold text-foreground">{m.nom}</span>
-                <button
-                  type="button"
-                  aria-label={t("equipes.retirer", { nom: m.nom })}
-                  onClick={() => retire(i)}
-                  className="h-8 w-8 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+            <LigneMembreEdition
+              key={`${m.nom}-${i}`}
+              m={m}
+              resumeTexte={m.mention}
+              ouvert={ouvert === cleMembre(m)}
+              ouvrable
+              retire={retires.has(cleMembre(m))}
+              libelleRetirer={t("equipes.retirerDeLEquipe")}
+              onBascule={() => setOuvert((o) => (o === cleMembre(m) ? null : cleMembre(m)))}
+              onRetirer={() => retire(m)}
+              onRemettre={() => remet(m)}
+            >
               <Input
                 value={m.mention}
                 placeholder={t("equipes.mention")}
@@ -647,7 +658,7 @@ function EditionEquipe({
                   {t("equipes.essai")}
                 </label>
               </div>
-            </div>
+            </LigneMembreEdition>
           ))}
         </div>
       </div>

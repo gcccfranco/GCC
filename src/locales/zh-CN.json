@@ -3579,7 +3579,11 @@
     "ajouterMembre": "添加成员",
     "titreEdition_other": "{{equipe}}，{{count}} 人",
     "nomLibre": "添加「{{nom}}」（没有账号）",
-    "retirer": "移除 {{nom}}",
+    "retirerDeLEquipe": "移出团队",
+    "retirerDeMaSousEquipe": "移出我的小组",
+    "remettre": "恢复",
+    "remettreNom": "恢复{{nom}}",
+    "retireALEnregistrement": "{{nom}}，保存后移出",
     "mention": "备注",
     "erreur": "保存失败。",
     "fiche": {

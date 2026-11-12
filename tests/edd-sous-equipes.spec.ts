@@ -61,12 +61,14 @@ test("le référent EDD coche Professeurs cours et Cajon : la personne figure so
   const p = page.getByRole("dialog", { name: /^EDD, \d+ membres?$/ });
   await expect(p).toBeVisible();
   const ligne = p.getByTestId("membre-u-liang");
+  await ligne.getByRole("button", { expanded: false }).click();
   const sous = ligne.getByRole("group", { name: "Sous-équipes", exact: true });
   await expect(sous.getByRole("button")).toHaveText(["Professeurs louange", "Professeurs cours", "Pianistes", "Guitaristes", "Cajon"]);
   await sous.getByRole("button", { name: "Professeurs cours", exact: true }).click();
   await sous.getByRole("button", { name: "Cajon", exact: true }).click();
   await expect(sous.getByRole("button", { name: "Cajon", exact: true })).toHaveAttribute("aria-pressed", "true");
   // Un ancien `groupe` repart de la bonne base : Pianistes est déjà coché, on y ajoute Guitaristes.
+  await p.getByTestId("membre-u-leandre").getByRole("button", { expanded: false }).click();
   const leandre = p.getByTestId("membre-u-leandre").getByRole("group", { name: "Sous-équipes", exact: true });
   await expect(leandre.getByRole("button", { name: "Pianistes", exact: true })).toHaveAttribute("aria-pressed", "true");
   await leandre.getByRole("button", { name: "Guitaristes", exact: true }).click();
@@ -121,6 +123,7 @@ test("le panneau de modification de l'EDD en 中文", async ({ page }) => {
   await ouvrir(page, REFERENT, "/back-office/equipes", DOCS(), "zh-CN");
   await page.getByRole("button", { name: "修改主日学" }).click();
   const p = page.getByRole("dialog");
+  await p.getByTestId("membre-u-liang").getByRole("button", { expanded: false }).click();
   const sous = p.getByTestId("membre-u-liang").getByRole("group").first();
   await expect(sous.getByRole("button", { name: "箱鼓", exact: true })).toBeVisible();
   await capture(page, "panneau-edd-zh", p);

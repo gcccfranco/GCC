@@ -917,6 +917,13 @@
   [data-feuille-equipe][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 150ms !important; }
 }
 
+/* Feuille d'équipe (T7) : la zone dépliée d'un membre s'ouvre en hauteur (≈ 0,3 s) ; mouvement réduit : fondu de 150 ms. */
+@keyframes deplie-membre { from { grid-template-rows: 0fr; opacity: 0; } to { grid-template-rows: 1fr; opacity: 1; } }
+.deplie-membre { display: grid; animation: deplie-membre 300ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .deplie-membre { animation-name: volet-fondu !important; animation-duration: 150ms !important; }
+}
+
 /* « Choisis un chant » (chants-9) : à partir de 520 px de contenu (volet de 560 px moins sa marge), « Nouveaux au
    répertoire » prend la ligne et met ses chants sur deux colonnes, comme « Les plus chantés » ; en dessous, une colonne.
    La largeur est celle du volet (conteneur `[data-choisis-un-chant]`), pas de la fenêtre. */

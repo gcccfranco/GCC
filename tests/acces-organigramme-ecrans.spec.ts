@@ -196,7 +196,7 @@ test("un référent de Musiciens ouvre un musicien, coche Campus, enregistre : l
 
   // Un choriste ne s'ouvre pas, ne se retire pas ; la présidence non plus.
   await expect(p.getByRole("button", { name: /^Tom Vidal/ })).toHaveCount(0);
-  await expect(p.getByRole("button", { name: "Retirer Tom Vidal" })).toHaveCount(0);
+  await expect(membre(page, "u-tom").getByRole("button", { name: /^Retirer/ })).toHaveCount(0);
   await expect(p.getByTestId("membre-u-tom")).toContainText("Tom Vidal");
   await expect(p.getByRole("button", { name: /^Inès Rovel/ })).toHaveCount(0);
   // Mila est aussi musicienne : elle s'ouvre.
@@ -248,7 +248,8 @@ test("un référent de Musiciens qui retire de sa sous-équipe : la ligne reste 
   const db = await ouvrir(page, NOE, "/back-office/equipes");
   await suivreRecopie(page);
   await page.getByRole("button", { name: "Modifier Louange" }).click();
-  await page.getByRole("button", { name: "Retirer Mila Serre" }).click();
+  await membre(page, "u-mila").getByRole("button", { name: /^Mila Serre/ }).click();
+  await membre(page, "u-mila").getByRole("button", { name: "Retirer de ma sous-équipe" }).click();
   await panneau(page).getByRole("button", { name: "Enregistrer" }).click();
   await expect(panneau(page)).toBeHidden();
   const mila = (db.doc("equipes/louange")!.membres as MembreEquipe[]).find((m) => m.uid === "u-mila")!;

@@ -3626,7 +3626,11 @@
     "titreEdition_one": "{{equipe}}, {{count}} membre",
     "titreEdition_other": "{{equipe}}, {{count}} membres",
     "nomLibre": "Ajouter « {{nom}} » sans compte",
-    "retirer": "Retirer {{nom}}",
+    "retirerDeLEquipe": "Retirer de l'équipe",
+    "retirerDeMaSousEquipe": "Retirer de ma sous-équipe",
+    "remettre": "Remettre",
+    "remettreNom": "Remettre {{nom}}",
+    "retireALEnregistrement": "{{nom}}, retiré à l'enregistrement",
     "mention": "Mention",
     "erreur": "L'enregistrement a échoué.",
     "fiche": {

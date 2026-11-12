@@ -252,6 +252,7 @@ test("l'organigramme d'une équipe ordinaire : pas de case Référent, la mentio
   await page.getByRole("button", { name: "Modifier DA" }).click();
   const panneau = page.getByRole("dialog", { name: /^DA, \d+ membres?$/ });
   await expect(panneau.getByRole("checkbox", { name: "Référent" })).toHaveCount(0);
+  await panneau.getByTestId("membre-u-ovide").getByRole("button", { expanded: false }).click();
   await expect(panneau.getByTestId("membre-u-ovide").getByTestId("mention-referent")).toContainText("Référent");
 });
 
