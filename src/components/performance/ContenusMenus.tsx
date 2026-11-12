@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronDown, ChevronLeft, ChevronUp, Maximize, Minus, Pencil, Plus, Timer, Waves } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronUp, Maximize, Minus, Pencil, Plus, Timer, Undo2, Waves } from "lucide-react";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
@@ -216,6 +216,8 @@ export function ContenuSetlist({
   onOuvrirSetlist,
   onglets,
   tousLesChants,
+  onRetirer,
+  retour,
 }: {
   setlistTitle: string;
   setlistDate?: string;
@@ -230,6 +232,10 @@ export function ContenuSetlist({
   onglets?: ReactNode;
   /** Si fourni, remplace l'en-tête et la liste de la setlist. */
   tousLesChants?: ReactNode;
+  /** Retire un chant ajouté (bouton « Retirer » sur sa ligne). */
+  onRetirer?: (slug: string) => void;
+  /** « Revenir à {chant}, page {n} » : visible quand le chant en cours est un ajout. */
+  retour?: { titre: string; page: number; onAller: () => void };
 }) {
   const { t, i18n } = useTranslation();
   return (
@@ -239,6 +245,17 @@ export function ContenuSetlist({
       )}
       {onglets}
       {tousLesChants ?? <>
+      {retour && (
+        <button
+          type="button"
+          data-revenir
+          onClick={() => { retour.onAller(); onFermer(); }}
+          className="-mx-1 mb-1 flex min-h-12 w-[calc(100%+0.5rem)] items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-base font-medium text-foreground transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Undo2 aria-hidden="true" className={`h-5 w-5 shrink-0 ${COULEUR}`} />
+          <span className="min-w-0 flex-1 truncate">{t("performance.revenirA", { titre: retour.titre, n: retour.page })}</span>
+        </button>
+      )}
       <div className="px-1 pb-2">
         <p className="truncate text-base font-semibold text-foreground">{setlistTitle}</p>
         <p className="truncate text-[13px] text-muted-foreground">
@@ -248,11 +265,13 @@ export function ContenuSetlist({
       </div>
       <ol className="-mx-1">
         {songEntries.map(({ block, index }, i) => {
+          const avecAjout = !!onRetirer && songEntries.some((e) => !Number.isInteger(e.block.position) && !!e.block.songSlug);
           const page = pages.findIndex((p) => p.includes(index));
           const courant = i === currentSongEntryIdx;
           const sous = block.titlePinyin || block.artist;
+          const retirable = !!onRetirer && !Number.isInteger(block.position) && !!block.songSlug;
           return (
-            <li key={block.uid}>
+            <li key={block.uid} className={retirable ? `flex items-center rounded-lg ${courant ? LIGNE_COURANTE : ""}` : undefined}>
               <button
                 type="button"
                 aria-current={courant ? "true" : undefined}
@@ -260,7 +279,7 @@ export function ContenuSetlist({
                   if (page >= 0) goToPage(page, pages.length);
                   onFermer();
                 }}
-                className={`flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors ${courant ? LIGNE_COURANTE : "hover:bg-muted/60 active:bg-muted"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+                className={`flex min-h-12 w-full min-w-0 items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors ${courant ? (retirable ? "" : LIGNE_COURANTE) : "hover:bg-muted/60 active:bg-muted"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
               >
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
                   {courant ? <Check aria-hidden="true" className={`h-4 w-4 ${COULEUR}`} /> : Number.isInteger(block.position) ? block.position : "+"}
@@ -273,6 +292,20 @@ export function ContenuSetlist({
                 </span>
                 <span className="shrink-0 text-[13px] tabular-nums text-muted-foreground">{block.songKey}</span>
               </button>
+              {retirable ? (
+                <button
+                  type="button"
+                  data-retirer
+                  onClick={(e) => {
+                    // Le focus passe au bouton de la ligne précédente (toujours là) avant que celle-ci disparaisse.
+                    e.currentTarget.closest("li")?.previousElementSibling?.querySelector("button")?.focus();
+                    onRetirer(block.songSlug!);
+                  }}
+                  className="ml-1 min-h-11 w-20 shrink-0 rounded-lg px-3 text-sm font-medium text-primary transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {t("performance.retirer")}
+                </button>
+              ) : avecAjout ? <span aria-hidden="true" className="w-20 shrink-0" /> : null}
             </li>
           );
         })}

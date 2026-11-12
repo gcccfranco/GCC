@@ -7,6 +7,8 @@ interface RepereChant {
   /** Index de page (0-based) de la première page du chant. */
   page: number;
   titre: string;
+  /** Chant ajouté depuis « Tous les chants » : ses marques sont creuses. */
+  ajout?: boolean;
 }
 
 interface Props {
@@ -85,24 +87,34 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, pa
   const frac = fraction(cible);
 
   // Rangée de points, ou piste continue d'un trait par chant au-delà de MAX_POINTS pages.
+  const ajoutDe = (p: number) => !!reperes.find((r) => r.page === debuts.filter((d) => d <= p).pop())?.ajout;
+  const creux = (couleur: string) => ({ background: "transparent", border: `2px solid ${couleur}` });
   const marques = (pleine: boolean) =>
     total <= MAX_POINTS
-      ? Array.from({ length: total }, (_, p) => (
-          <span
-            key={p}
-            data-point={pleine ? "passe" : "inactif"}
-            className="absolute top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ left: position(p), background: pleine ? COULEUR : COULEUR_INACTIVE }}
-          />
-        ))
+      ? Array.from({ length: total }, (_, p) => {
+          const couleur = pleine ? COULEUR : COULEUR_INACTIVE;
+          const ajout = ajoutDe(p);
+          return (
+            <span
+              key={p}
+              data-point={pleine ? "passe" : "inactif"}
+              data-ajout={ajout ? "" : undefined}
+              className="absolute top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{ left: position(p), ...(ajout ? creux(couleur) : { background: couleur }) }}
+            />
+          );
+        })
       : (debuts.length ? debuts : [0]).map((d, i, tous) => {
           const fin = (tous[i + 1] ?? total) - 1;
+          const couleur = pleine ? COULEUR : COULEUR_INACTIVE;
+          const ajout = ajoutDe(d);
           return (
             <span
               key={d}
               data-point={pleine ? "passe" : "inactif"}
+              data-ajout={ajout ? "" : undefined}
               className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full"
-              style={{ left: position(d), width: `calc((100% - ${2 * MARGE}px) * ${(place(fin) - place(d)) / longueur})`, background: pleine ? COULEUR : COULEUR_INACTIVE }}
+              style={{ left: position(d), width: `calc((100% - ${2 * MARGE}px) * ${(place(fin) - place(d)) / longueur})`, ...(ajout ? creux(couleur) : { background: couleur }) }}
             />
           );
         });

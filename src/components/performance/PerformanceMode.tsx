@@ -418,6 +418,8 @@ interface PerformanceModeProps {
   onOuvrirSetlist?: (id: string) => void;
   /** Menu Setlist, « Tous les chants » : ajoute le chant (après le chant en cours) ; faux si son contenu n'a pas pu être lu. */
   onJouerChant?: (slug: string, avecJianpu: boolean, positionCourante: number) => Promise<boolean>;
+  /** Retire un chant ajouté (menu Setlist, « Retirer »). */
+  onRetirerChant?: (slug: string) => void;
   /** Chants ajoutés : scan ou paroles, choisi à l'ajout (plus fort que la préférence). */
   choixScan?: Record<string, boolean>;
   onClose: () => void;
@@ -436,6 +438,7 @@ export function PerformanceMode({
   jianpuPref,
   onJianpuPrefChange,
   onJouerChant,
+  onRetirerChant,
   choixScan,
   horsLigne = false,
   rolePlanning = null,
@@ -1419,7 +1422,8 @@ export function PerformanceMode({
   const alerteComposition = !!user && !annotateMode && showAnnotations && ancienneCompositionTraits && !alerteAnnotations;
 
   // L5 : à l'entrée en annotation, la taille mémorisée du chant revient avant qu'on dessine.
-  const crayonPret = !slugAnnote || chantsCharges?.[slugAnnote] !== false;
+  const surAjout = !!currentEntry && !Number.isInteger(currentEntry.block.position);
+  const crayonPret = !surAjout && (!slugAnnote || chantsCharges?.[slugAnnote] !== false);
   const basculerAnnotation = () => {
     setPopoverOuvert(null);
     if (!annotateMode && slugAnnote) {
@@ -1495,8 +1499,9 @@ export function PerformanceMode({
     setDemi(false);
     setCurrentPage(p);
   }, []);
-  const { ongletSetlist, setOngletSetlist, focusRecherche, jouer } = useJouerChant({
+  const { ongletSetlist, setOngletSetlist, focusRecherche, jouer, retirer, retour } = useJouerChant({
     songEntries, pages, goToPage, positionCourante: currentEntry?.block.position ?? 0, onJouerChant, popoverOuvert, setPopoverOuvert, annotateMode,
+    onRetirerChant, slugCourant: currentEntry?.block.songSlug, pageDansChant: currentPage - (currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : 0),
     misEnPage: () => layoutBlocksRef.current === blocks,
   });
 
@@ -1739,7 +1744,7 @@ export function PerformanceMode({
   const isLastPageOfSong = pages.length > 0 && currentPage === songEndPage;
   // Repères du curseur de page (L7) : première page de chaque chant à en-tête.
   const reperesChants = songEntries
-    .map(({ block, index }) => ({ page: pages.findIndex((p) => p.includes(index)), titre: block.title }))
+    .map(({ block, index }) => ({ page: pages.findIndex((p) => p.includes(index)), titre: block.title, ajout: !Number.isInteger(block.position) }))
     .filter((r) => r.page >= 0);
 
   // Repères (FS-B) : les sections du chant en cours, dans l'ordre de la page (un scan seul n'en a pas).
@@ -2480,9 +2485,11 @@ export function PerformanceMode({
           onFermer={() => fermerMenu("setlist")}
           chargerToutesSetlists={chargerToutesSetlists}
           onOuvrirSetlist={onOuvrirSetlist}
+          onRetirer={retirer}
+          retour={retour}
           onglets={onJouerChant ? <OngletsSetlist onglet={ongletSetlist} onChange={setOngletSetlist} /> : undefined}
           tousLesChants={onJouerChant && ongletSetlist === "chants"
-            ? <ContenuTousLesChants slugsDansSetlist={new Set(songEntries.flatMap((e) => e.block.songSlug && Number.isInteger(e.block.position) ? [e.block.songSlug] : []))} onJouer={jouer} onFermer={() => fermerMenu("setlist")} autoFocus={focusRecherche} />
+            ? <ContenuTousLesChants slugsDansSetlist={new Set(songEntries.flatMap((e) => e.block.songSlug && Number.isInteger(e.block.position) ? [e.block.songSlug] : []))} onJouer={jouer} slugsCharges={Object.keys(contents)} onFermer={() => fermerMenu("setlist")} autoFocus={focusRecherche} />
             : undefined}
         />
       </MenuLouange>

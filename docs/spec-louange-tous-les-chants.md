@@ -135,3 +135,24 @@ https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue �
   confondre avec l'index A–Z ; (e) l'index se rétrécit pour tenir entier dans la part visible du menu.
   Reste pour plus tard (critique, finition) : fondu au bas de la liste, « Dans la setlist » plus lisible, chant en
   cours marqué dans la liste.
+- 12/11/2026, nuit : **TC-2 faite** (session `session_01UMdfudVWocXk16NNnNUmDD`). Points creux (anneaux de 2 px,
+  `data-ajout`) sur les pages d'un ajout dans la rangée de points, pleins comme en piste continue ; « Retirer » (44 px,
+  bleu, bouton frère de la ligne) dans « Cette setlist », qui ne ferme pas le menu et rend le focus à la ligne d'avant :
+  retiré en cours → première page du chant précédent, sinon même chant et même page ; « Revenir à « {chant} », page
+  {n} » en tête de « Cette setlist » tant que le chant en cours est un ajout (point noté au premier passage d'un chant
+  de la setlist vers un ajout, seulement si l'ajout réussit ; oublié à l'usage ou quand le dernier ajout est retiré) ;
+  Crayon masqué par `surAjout` sur la condition `crayonPret`, gestes intacts ; hors ligne (`useChantsHorsLigne.ts`,
+  neuf : `navigator.onLine` + `caches.match('/api/song/…')` + chants déjà chargés), lignes non gardées grisées,
+  inertes, « Pas sur cet appareil » avec l'icône `CloudOff`, phrase en tête. Logique dans `useJouerChant.ts` ; dans
+  `PerformanceMode.tsx`, des ajouts groupés près de ceux de TC-1. Relecture : point de retour posé avant l'échec d'un
+  ajout, test « Revenir » qui ne prouvait rien, retrait d'un ajout non courant non testé : corrigés. Critique de
+  design : bande de la ligne en cours étendue à « Retirer », colonne des tonalités gardée alignée (place réservée),
+  anneaux à 2 px, tonalité des lignes grisées lisible, titre entre guillemets dans « Revenir à » : corrigés.
+  Tests : `louange-tous-les-chants` 81 passés, 4 ignorés (« / » et Crayon hors ordinateur/tablette), cinq projets,
+  4,5 min ; voisines (`louange-menus`, `louange-barre-titre`, `louange-toutes-setlists`, `mode-louange-forscore`,
+  `annotations-forscore`, `louange-roles-jianpu`) 578 passés, 0 échec, trois appareils, 20 min. Un échec isolé du test
+  TC-1 « onglets sous Toutes mes setlists » au téléphone, non reproduit dans deux passes suivantes (instable, à
+  surveiller). Conflits avec AN : aucun (AN-3b arrivé en cours de tranche, rebase sans recouvrement).
+  Reste pour plus tard (finition) : « Ouvrir » ressemble à un troisième segment de la commande « Avec 简谱 | Sans »
+  (TC-1 ; le sortir du fond gris), thème sombre et largeur de « 移除 » non regardés. **TC-3 attend H8** : la session
+  qui finit H8 la fait (`docs/feuille-de-route.md`, File, point 7).

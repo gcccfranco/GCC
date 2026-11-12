@@ -3,7 +3,8 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Fuse from "fuse.js";
-import { Search } from "lucide-react";
+import { CloudOff, Search } from "lucide-react";
+import { useChantsHorsLigne } from "./useChantsHorsLigne";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { useSongsIndex } from "@/hooks/useSongsIndex";
 import { useJianpuManifest } from "@/lib/jianpu/images";
@@ -42,8 +43,11 @@ export function ContenuTousLesChants({
   onJouer,
   onFermer,
   autoFocus,
+  slugsCharges,
 }: {
   slugsDansSetlist: Set<string>;
+  /** Chants dont le contenu est déjà chargé : ils s'ouvrent hors ligne. */
+  slugsCharges: string[];
   onJouer: (slug: string, avecJianpu: boolean) => void;
   onFermer: () => void;
   autoFocus?: boolean;
@@ -111,6 +115,7 @@ export function ContenuTousLesChants({
   };
   const lacher = () => { derniereLettre.current = null; setLettreActive(null); };
 
+  const { enLigne, disponible } = useChantsHorsLigne(useMemo(() => (songs ?? []).map((s) => s.slug), [songs]), slugsCharges);
   const choisir = (v: boolean) => { setAvec(v); setJianpuAjout(v); };
 
   return (
@@ -144,6 +149,7 @@ export function ContenuTousLesChants({
           </button>
         ))}
       </div>
+      {!enLigne && <p data-hors-ligne className="mb-2 px-1 text-[13px] text-muted-foreground">{t("performance.horsLigneChants")}</p>}
       {!songs ? (
         <p className="px-1 text-[13px] text-muted-foreground">{t(erreur ? "performance.songsError" : "performance.songsLoading")}</p>
       ) : liste.length === 0 ? (
@@ -153,21 +159,25 @@ export function ContenuTousLesChants({
           <ul className="-mx-1 min-w-0 flex-1">
             {liste.map((s) => {
               const sous = s.titlePinyin || s.artist;
+              const indispo = !disponible(s.slug);
               return (
                 <li key={s.slug} id={`tlc-li-${s.slug}`}>
                   <button
                     type="button"
                     data-chant-slug={s.slug}
-                    onClick={() => { onJouer(s.slug, avec); onFermer(); }}
-                    className="flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-disabled={indispo ? "true" : undefined}
+                    data-indisponible={indispo ? "" : undefined}
+                    onClick={() => { if (indispo) return; onJouer(s.slug, avec); onFermer(); }}
+                    className={`flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors ${indispo ? "" : "hover:bg-muted/60 active:bg-muted "}focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-base font-medium text-foreground">{s.title}</span>
+                      <span className={`block truncate text-base font-medium ${indispo ? "text-muted-foreground" : "text-foreground"}`}>{s.title}</span>
                       {sous && <span className={`block truncate text-[13px] text-muted-foreground ${s.titlePinyin ? pinyin_font.className : ""}`}>{sous}</span>}
+                      {indispo && <span className="inline-flex items-center gap-1 text-[13px] text-muted-foreground"><CloudOff aria-hidden="true" className="h-3.5 w-3.5" />{t("performance.pasSurAppareil")}</span>}
                       {slugsDansSetlist.has(s.slug) && <span className="block text-[12px] text-muted-foreground">{t("performance.inSetlist")}</span>}
                     </span>
-                    {manifeste?.[s.slug] && <span aria-hidden="true" data-marque-jianpu className="shrink-0 text-sm font-bold" style={{ color: "var(--jianpu-color)" }}>简</span>}
-                    <span className="w-8 shrink-0 text-right text-[13px] font-semibold tabular-nums text-foreground">{s.originalKey}</span>
+                    {manifeste?.[s.slug] && <span aria-hidden="true" data-marque-jianpu className={`shrink-0 text-sm font-bold${indispo ? " opacity-50" : ""}`} style={{ color: "var(--jianpu-color)" }}>简</span>}
+                    <span className={`w-8 shrink-0 text-right text-[13px] font-semibold tabular-nums ${indispo ? "text-muted-foreground" : "text-foreground"}`}>{s.originalKey}</span>
                   </button>
                 </li>
               );

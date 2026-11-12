@@ -102,7 +102,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      (`docs/spec-ma-partition.md`, § Questions ouvertes, « Réponses de Timothée », et § Tranches, MP-6). À lancer par la
      session qui finit **AN-5**, jamais pendant qu'une autre session modifie `PerformanceMode.tsx` ou les annotations.
   6. **Tous les chants en mode louange, lot TC (TC-1 → TC-2 → TC-3)** : **TC-1 lancée le 12/11 à 20 h 49 UTC (`session_01UMdfuZmdnz7GpDir59knoe`), en
-     parallèle d'AN sur décision de Timothée (« Oui pour les 3 ») ; TC-2 suit ; TC-3 attend H8.** **TC-1 finie** (12/11, § Avancement de la spec) ; TC-2 lancée (`session_01UMdfudVWocXk16NNnNUmDD`, 12/11 21 h 57 UTC). Texte d'origine : **go de Timothée (12/11, soir : « Go »)**,
+     parallèle d'AN sur décision de Timothée (« Oui pour les 3 ») ; TC-2 suit ; TC-3 attend H8.** **TC-1 finie** (12/11, § Avancement de la spec) ; TC-2 lancée (`session_01UMdfudVWocXk16NNnNUmDD`, 12/11 21 h 57 UTC). **TC-2 finie** (12/11, § Avancement de la spec) ; **TC-3 (test du raccord H8) attend la fin de H8 : personne ne la lance avant**, c'est la session qui finit H8 qui la fait (point 7). Texte d'origine : **go de Timothée (12/11, soir : « Go »)**,
      questions toutes tranchées (`docs/spec-louange-tous-les-chants.md`, § Questions tranchées et § Tranches ; un seul
      bouton Setlist à deux onglets). À lancer par la session qui finit **la dernière de MP-6 et H8**, jamais pendant
      qu'une autre session modifie `PerformanceMode.tsx` ; une session par tranche, consigne type ci-dessous ; TC-3

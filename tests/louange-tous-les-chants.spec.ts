@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, lireCompteur, onStage, ouvrirMenu, type Langue } from "./helpers/louange";
+import { attendreCompteur, attendreMiseEnPage, curseurPage, lireCompteur, onStage, ouvrirMenu, type Langue } from "./helpers/louange";
 
 // TC-1 (docs/spec-louange-tous-les-chants.md) : le menu Setlist a deux onglets, « Cette setlist | Tous les chants ».
 // Toucher un chant l'ajoute (local) après le chant en cours, ou y va s'il y est déjà. Comptes et setlists simulés, noms inventés.
@@ -169,5 +169,186 @@ test.describe("« Tous les chants » dans le menu Setlist", () => {
     await ouvrirChants(page, "zh");
     await page.waitForTimeout(500);
     await page.screenshot({ path: `test-results/captures-tc1/${testInfo.project.name}-zh.png` });
+  });
+});
+
+// TC-2 : marques d'un chant ajouté (points creux, « + », « Retirer »), « Revenir à … », Crayon masqué, hors ligne.
+test.describe("TC-2 : chants ajoutés", () => {
+  /** Ajoute un chant depuis l'onglet « Tous les chants » ; le menu se ferme et la page va sur lui. */
+  async function ajouter(page: Page, recherche: string, slug: string, titre: string) {
+    const d = await ouvrirChants(page);
+    await chercher(d, recherche);
+    await ligne(d, slug).click();
+    await expect(d).toBeHidden();
+    await expect(barre(page)).toContainText(titre, { timeout: 15_000 });
+  }
+  async function menuSetlist(page: Page) {
+    const d = await ouvrirMenu(page, "setlist");
+    await onglet(d, "setlist").click();
+    return d;
+  }
+
+  test("points creux, « + » et « Retirer » sur un chant ajouté (un FR, un ZH)", async ({ page }) => {
+    await ouvrir(page);
+    await expect(page.locator("[data-performance-mode] [data-curseur-page] [data-point][data-ajout]")).toHaveCount(0);
+    await ajouter(page, "lum", "lumiere-du-monde", "Lumière du monde");
+    await ajouter(page, "你的", "你的同在", "你的同在");
+    await ajouter(page, "abba", "abba-pere", "Abba");
+    await expect(page.locator("[data-performance-mode] [data-curseur-page] [data-point][data-ajout]").first()).toBeAttached();
+    await expect(page.locator("[data-performance-mode] [data-curseur-page] [data-point]:not([data-ajout])").first()).toBeAttached();
+    const d = await menuSetlist(page);
+    const lignes = d.locator("ol > li");
+    await expect(lignes).toHaveCount(4);
+    for (const i of [1, 2]) {
+      await expect(lignes.nth(i)).toContainText("+");
+      await expect(lignes.nth(i).locator("[data-retirer]")).toHaveText("Retirer");
+      expect((await lignes.nth(i).locator("[data-retirer]").boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    }
+    await expect(d.locator("[data-retirer]")).toHaveCount(2);
+  });
+
+  test("« Retirer » le chant en cours : la ligne disparaît, la page revient au chant précédent, le menu reste ouvert", async ({ page }) => {
+    await ouvrir(page);
+    await ajouter(page, "lum", "lumiere-du-monde", "Lumière du monde");
+    const d = await menuSetlist(page);
+    await expect(d.locator("ol > li")).toHaveCount(3);
+    await d.locator("ol > li").nth(1).locator("[data-retirer]").click();
+    await expect(d.locator("ol > li")).toHaveCount(2);
+    await expect(d).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(d).toBeHidden();
+    await expect(barre(page)).toContainText("À jamais Tu es saint", { timeout: 15_000 });
+  });
+
+  test("« Retirer » une ligne qui n'est pas le chant en cours : le chant en cours reste, le focus reste dans le menu", async ({ page }) => {
+    await ouvrir(page);
+    await ajouter(page, "lum", "lumiere-du-monde", "Lumière du monde");
+    await ajouter(page, "你的", "你的同在", "你的同在");
+    // 你的同在 arrive juste après le chant en cours (Lumière) : on vérifie l'ordre affiché.
+    let d = await menuSetlist(page);
+    const lignes = d.locator("ol > li");
+    await expect(lignes).toHaveCount(4);
+    await expect(lignes.nth(1)).toContainText("Lumière du monde");
+    await expect(lignes.nth(2)).toContainText("你的同在");
+    await lignes.nth(1).locator("button").first().click();
+    await expect(d).toBeHidden();
+    await expect(barre(page)).toContainText("Lumière du monde", { timeout: 15_000 });
+    d = await menuSetlist(page);
+    await expect(lignes.nth(2)).toContainText("你的同在");
+    await lignes.nth(2).locator("[data-retirer]").click();
+    await expect(lignes).toHaveCount(3);
+    await expect(lignes.filter({ hasText: "你的同在" })).toHaveCount(0);
+    expect(await page.evaluate(() => document.activeElement?.tagName), "le focus n'est pas tombé sur body").not.toBe("BODY");
+    expect(await d.evaluate((el) => el.contains(document.activeElement)), "le focus est dans le menu").toBe(true);
+    await page.keyboard.press("Escape");
+    await expect(d).toBeHidden();
+    await expect(barre(page)).toContainText("Lumière du monde");
+  });
+
+  test("zh : « 移除 » sur la ligne ajoutée et « 返回 » dans la ligne de retour", async ({ page }) => {
+    await ouvrir(page, { langue: "zh", id: ZH });
+    let d = await ouvrirMenu(page, "setlist", "zh");
+    await onglet(d, "chants").click();
+    await chercher(d, "你的");
+    await ligne(d, "你的同在").click();
+    await expect(d).toBeHidden();
+    await expect(barre(page)).toContainText("你的同在", { timeout: 15_000 });
+    d = await ouvrirMenu(page, "setlist", "zh");
+    await onglet(d, "setlist").click();
+    await expect(d.locator("[data-retirer]")).toHaveText("移除");
+    await expect(d.locator("[data-revenir]")).toContainText("返回《");
+  });
+
+  test("« Revenir à … » ramène au chant et à la page notés", async ({ page }) => {
+    await ouvrir(page);
+    // Page 2 du chant si le chant en a deux, sinon page 1.
+    await curseurPage(page).focus();
+    await page.keyboard.press("PageDown");
+    const noté = await lireCompteur(page);
+    const pageNotee = Number(noté.split(" / ")[0]);
+    expect(pageNotee, "le chant a au moins deux pages").toBe(2);
+    await expect(barre(page)).toContainText("À jamais Tu es saint");
+    await ajouter(page, "lum", "lumiere-du-monde", "Lumière du monde");
+    const d = await menuSetlist(page);
+    const revenir = d.locator("[data-revenir]");
+    await expect(revenir).toContainText(`Revenir à « À jamais Tu es saint », page ${pageNotee}`);
+    expect((await revenir.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+    await revenir.click();
+    await expect(d).toBeHidden();
+    await expect(barre(page)).toContainText("À jamais Tu es saint", { timeout: 15_000 });
+    // Le chant ajouté reste dans la suite : le total grandit, la page notée ne bouge pas.
+    await attendreCompteur(page, new RegExp(`^${pageNotee} / `));
+    const d2 = await ouvrirMenu(page, "setlist");
+    await expect(d2.locator("[data-revenir]")).toHaveCount(0);
+  });
+
+  test("le Crayon est absent sur un chant ajouté (ordinateur et tablette)", async ({ page }) => {
+    test.skip(page.viewportSize()!.width < 768, "téléphone : le bouton Crayon n'est pas dans la barre");
+    await ouvrir(page);
+    const crayon = page.locator("[data-performance-mode]").getByRole("button", { name: "Crayon", exact: true });
+    await expect(crayon).toBeVisible({ timeout: 15_000 });
+    await ajouter(page, "lum", "lumiere-du-monde", "Lumière du monde");
+    await expect(crayon).toHaveCount(0);
+  });
+
+  test("hors ligne : phrase en tête, chants gardés ouverts, les autres grisés et inertes", async ({ page, context }) => {
+    await ouvrir(page);
+    const d = await ouvrirChants(page);
+    await page.evaluate(() => caches.open("test-tc").then((c) => c.put("/api/song/lumiere-du-monde", new Response("{}"))));
+    try {
+      await context.setOffline(true);
+      await expect(d.locator("[data-hors-ligne]")).toHaveText("Hors ligne : seuls les chants gardés sur cet appareil s'ouvrent.");
+      await chercher(d, "lum");
+      await expect(ligne(d, "lumiere-du-monde")).not.toHaveAttribute("data-indisponible", /.*/);
+      await chercher(d, "你的");
+      const grise = ligne(d, "你的同在");
+      await expect(grise).toHaveAttribute("aria-disabled", "true");
+      await expect(grise).toContainText("Pas sur cet appareil");
+      // aria-disabled : Playwright refuse le clic ordinaire ; on force pour vérifier que le toucher ne fait rien.
+      await grise.click({ force: true });
+      await expect(d).toBeVisible();
+      await onglet(d, "setlist").click();
+      await expect(d.locator("ol > li")).toHaveCount(2);
+    } finally {
+      await context.setOffline(false);
+    }
+  });
+
+  test("fermer le mode puis le rouvrir : aucun chant ajouté", async ({ page }) => {
+    await ouvrir(page);
+    await ajouter(page, "lum", "lumiere-du-monde", "Lumière du monde");
+    await page.getByRole("button", { name: "Quitter" }).click();
+    await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
+    await page.getByRole("button", { name: "Mode Louange" }).first().click();
+    await attendreMiseEnPage(page);
+    const d = await menuSetlist(page);
+    await expect(d.locator("ol > li")).toHaveCount(2);
+    await expect(d.locator("[data-retirer]")).toHaveCount(0);
+  });
+
+  test("captures", async ({ page, context }, testInfo) => {
+    const dossier = "test-results/captures-tc2";
+    mkdirSync(dossier, { recursive: true });
+    const nom = (x: string) => `${dossier}/${testInfo.project.name}-${x}.png`;
+    await ouvrir(page);
+    await ajouter(page, "lum", "lumiere-du-monde", "Lumière du monde");
+    await ajouter(page, "你的", "你的同在", "你的同在");
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: nom("points") });
+    await menuSetlist(page);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: nom("setlist") });
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const d = await ouvrirChants(page);
+    try {
+      await context.setOffline(true);
+      await expect(d.locator("[data-hors-ligne]")).toBeVisible();
+      await chercher(d, "a");
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: nom("hors-ligne") });
+    } finally {
+      await context.setOffline(false);
+    }
   });
 });

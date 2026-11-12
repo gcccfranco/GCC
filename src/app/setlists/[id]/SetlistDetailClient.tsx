@@ -2588,6 +2588,7 @@ export function SetlistDetailClient() {
             setAjoutsLocaux((prev) => [...prev, { slug, position: positionApres(itemsAvecAjouts(stageItems, prev), positionCourante), jianpu: avecJianpu }]);
             return true;
           }}
+          onRetirerChant={(slug) => setAjoutsLocaux((prev) => prev.filter((a) => a.slug !== slug))}
           contents={contents}
           initialShowChords={chordsTouched ? showChords : undefined}
           setlistId={id}
