@@ -72,8 +72,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   plus. La session qui finit un lot : `git pull --rebase`, `list_sessions` (limit 10), et s'il reste une place elle
   lance le premier chantier ci-dessous qui a son go, raye sa ligne (« lancé, identifiant, heure »), pousse, s'arrête.
   En cours le 12/11 à 10 h 40 UTC : AO (FS-F, puis JP-C, JP-D) ; Ma partition (MP-3 → MP-5) ; exemples d'usage
-  (T2 → T7) ; Harmonie H3 (`session_01UMdfubYvNx8M6JbF9S2vnk`, s'arrête après H3).
-  1. **Pupitre PU-1 → PU-6** (`docs/spec-entree-musiciens.md`, go du 12/11). PU-1 = PDF de setlist seulement ; lire
+  (T2 → T7) ; Harmonie H3 fini (`f2a8557`), place passée au pupitre PU-1.
+  1. ~~**Pupitre PU-1 → PU-6**~~ lancé (PU-1, `session_01UMdfuaZsemUJk7tUKJRQiY`, 12/11 10 h 50 UTC, à la fin de
+     Harmonie H3 `f2a8557` ; attend MP-3 vérifiée, enchaîne PU-2 et PU-3) (`docs/spec-entree-musiciens.md`, go du 12/11). PU-1 = PDF de setlist seulement ; lire
      § Tranches (la tranche) et les lignes du 12/11 du § Avancement (questions tranchées). PU-1 à PU-3 s'enchaînent ;
      PU-4 à PU-6 touchent le mode louange : après FS-F, et jamais pendant qu'une autre session modifie
      `PerformanceMode.tsx` (JP-C, MP-5) ; sinon la chaîne attend et rend sa place au suivant de la file.
