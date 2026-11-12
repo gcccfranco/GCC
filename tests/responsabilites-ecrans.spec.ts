@@ -243,14 +243,14 @@ test("l'organigramme : plus de pastille Référent cliquable, une mention et le 
   await expect(roch.getByTestId("mention-referent")).toContainText("Référent · Musiciens");
   await expect(roch.getByRole("link", { name: "Gérer les responsabilités" })).toBeVisible();
   // Les mentions « — Référent·e » des lignes de la carte restent.
-  await page.getByRole("dialog", { name: "Louange", exact: true }).getByRole("button", { name: "Annuler" }).click();
+  await page.getByRole("dialog", { name: /^Louange, \d+ membres?$/ }).getByRole("button", { name: "Annuler" }).click();
   await expect(page.getByTestId("equipe-louange")).toContainText("Roch Valmont — Référent·e");
 });
 
 test("l'organigramme d'une équipe ordinaire : pas de case Référent, la mention seule", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes", DOCS);
   await page.getByRole("button", { name: "Modifier DA" }).click();
-  const panneau = page.getByRole("dialog", { name: "DA", exact: true });
+  const panneau = page.getByRole("dialog", { name: /^DA, \d+ membres?$/ });
   await expect(panneau.getByRole("checkbox", { name: "Référent" })).toHaveCount(0);
   await expect(panneau.getByTestId("membre-u-ovide").getByTestId("mention-referent")).toContainText("Référent");
 });

@@ -3609,6 +3609,8 @@
     "enregistrer": "Enregistrer",
     "annuler": "Annuler",
     "ajouterMembre": "Ajouter un membre",
+    "titreEdition_one": "{{equipe}}, {{count}} membre",
+    "titreEdition_other": "{{equipe}}, {{count}} membres",
     "nomLibre": "Ajouter « {{nom}} » sans compte",
     "retirer": "Retirer {{nom}}",
     "mention": "Mention",

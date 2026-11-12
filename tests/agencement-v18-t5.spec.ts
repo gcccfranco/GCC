@@ -120,12 +120,12 @@ test.describe("T5 : Équipes › Organigramme", () => {
     page.on("console", (m) => { if (/Missing `Description`/.test(m.text())) avertissements.push(m.text()); });
     await ouvrir(page, "/back-office/equipes");
     await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier DA" }).click();
-    await expect(page.getByRole("dialog", { name: "DA", exact: true })).toHaveAccessibleDescription("Direction artistique");
+    await expect(page.getByRole("dialog", { name: /^DA, \d+ membres?$/ })).toHaveAccessibleDescription("Direction artistique");
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     // Une équipe sans sous-titre.
     await page.getByTestId("equipe-traduction").getByRole("button", { name: "Modifier Traduction" }).click();
-    await expect(page.getByRole("dialog", { name: "Traduction", exact: true })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /^Traduction, \d+ membres?$/ })).toBeVisible();
     await page.waitForTimeout(300);
     expect(avertissements).toEqual([]);
   });
@@ -140,7 +140,7 @@ test.describe("T5 : Équipes › Organigramme", () => {
     await expect(page.getByTestId("bandeau-equipes")).toHaveAttribute("data-range", "1");
     const hauteur = (await carte.boundingBox())!.height;
     await carte.getByRole("button", { name: "Modifier DA" }).click();
-    const panneau = page.getByRole("dialog", { name: "DA", exact: true });
+    const panneau = page.getByRole("dialog", { name: /^DA, \d+ membres?$/ });
     await expect(panneau).toBeVisible();
     // La carte garde sa hauteur : l'édition n'est pas dedans.
     expect(Math.abs((await carte.boundingBox())!.height - hauteur)).toBeLessThan(1);
@@ -148,11 +148,14 @@ test.describe("T5 : Équipes › Organigramme", () => {
 
     const largeur = page.viewportSize()!.width;
     // L'animation d'ouverture finie : le panneau est posé contre le bord droit.
-    await expect.poll(async () => Math.round(((b) => b.x + b.width)((await panneau.boundingBox())!))).toBe(largeur);
+    await expect.poll(async () => Math.round(((b) => b.x + b.width)((await panneau.boundingBox())!))).toBe(info.project.name === "tablette" ? Math.round((largeur + 560) / 2) : largeur);
     const boite = (await panneau.boundingBox())!;
     if (estGrandEcran(info)) {
       // 420 px à droite.
       expect(Math.round(boite.width)).toBe(420);
+    } else if (info.project.name === "tablette") {
+      // T6 : feuille de formulaire de 560 px, centrée.
+      expect(Math.round(boite.width)).toBe(560);
     } else {
       // Une feuille sur toute la largeur, en bas.
       expect(Math.round(boite.width)).toBeGreaterThanOrEqual(largeur - 1);

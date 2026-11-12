@@ -93,7 +93,7 @@ async function suivreRecopie(page: Page) {
   return envois;
 }
 
-const panneau = (page: Page, nom = "Louange") => page.getByRole("dialog", { name: nom });
+const panneau = (page: Page, nom = "Louange") => page.getByRole("dialog", { name: new RegExp(`^${nom}, \\d+ membres?$`) });
 const membre = (page: Page, uid: string) => page.getByTestId(`membre-${uid}`);
 const groupe = (p: ReturnType<typeof membre>, nom: string) => p.getByRole("group", { name: nom, exact: true });
 const pastille = (g: ReturnType<typeof groupe>, nom: string) => g.getByRole("button", { name: nom, exact: true });

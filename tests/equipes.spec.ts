@@ -172,7 +172,7 @@ test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fa
   await expect(page.getByText(/Donne le pôle/)).toHaveCount(0);
   // Agencement v18 (B8) : le crayon de la carte ouvre le panneau d'édition.
   await carte.getByRole("button", { name: "Modifier DA" }).click();
-  const panneau = page.getByRole("dialog", { name: "DA", exact: true });
+  const panneau = page.getByRole("dialog", { name: /^DA, \d+ membres?$/ });
   // EQ27 : ni sélecteur « Pôle donné par cette équipe », ni liste de pôles.
   await expect(panneau.getByText("Pôle donné par cette équipe")).toHaveCount(0);
   await expect(panneau.getByRole("combobox")).toHaveCount(0);
@@ -216,7 +216,7 @@ test("Équipes › Organigramme : la recopie échoue après l'écriture — « R
   );
   const carte = page.getByTestId("equipe-da");
   await carte.getByRole("button", { name: "Modifier DA" }).click();
-  const panneau = page.getByRole("dialog", { name: "DA", exact: true });
+  const panneau = page.getByRole("dialog", { name: /^DA, \d+ membres?$/ });
   await panneau.getByPlaceholder("Ajouter un membre").fill("Ruth");
   await panneau.getByRole("button", { name: /Ruth K\./ }).click();
   await panneau.getByRole("button", { name: "Enregistrer" }).click();

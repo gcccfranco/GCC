@@ -913,6 +913,8 @@
 @media (prefers-reduced-motion: reduce) {
   [data-volet][data-vaul-drawer][data-state="open"] { animation-name: volet-fondu !important; animation-duration: 200ms !important; }
   [data-volet][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 200ms !important; }
+  [data-feuille-equipe][data-vaul-drawer][data-state="open"] { animation-name: volet-fondu !important; animation-duration: 150ms !important; }
+  [data-feuille-equipe][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 150ms !important; }
 }
 
 /* « Choisis un chant » (chants-9) : à partir de 520 px de contenu (volet de 560 px moins sa marge), « Nouveaux au

@@ -3563,6 +3563,7 @@
     "enregistrer": "保存",
     "annuler": "取消",
     "ajouterMembre": "添加成员",
+    "titreEdition_other": "{{equipe}}，{{count}} 人",
     "nomLibre": "添加「{{nom}}」（没有账号）",
     "retirer": "移除 {{nom}}",
     "mention": "备注",

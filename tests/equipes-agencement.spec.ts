@@ -311,7 +311,7 @@ test("toucher : le crayon de la carte d'équipe a une zone de 44 px (::after), u
     expect(dessus, "le titre garde son clic").toBe("A");
   }
   await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2 + 18);
-  await expect(page.getByRole("dialog", { name: "DA", exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: /^DA, \d+ membres?$/ })).toBeVisible();
 });
 
 // BO-G, 16 : cibles de toucher de 44 px sans changer le dessin (::after) : rail Organigramme | Personnes, onglets des groupes et des vues, menu de l'index.
@@ -340,7 +340,7 @@ test("tablettes : le rail Organigramme | Personnes, les onglets et le menu ont u
 test("panneau d'édition : ni sélecteur de pôle ni liste de pôles", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes");
   await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier DA" }).click();
-  const panneau = page.getByRole("dialog", { name: "DA", exact: true });
+  const panneau = page.getByRole("dialog", { name: /^DA, \d+ membres?$/ });
   await expect(panneau.getByPlaceholder("Ajouter un membre")).toBeVisible();
   await expect(panneau.getByText("Pôle donné par cette équipe")).toHaveCount(0);
   await expect(panneau.getByRole("combobox")).toHaveCount(0);

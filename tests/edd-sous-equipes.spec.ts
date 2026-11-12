@@ -58,7 +58,7 @@ test("un ancien membre au groupe « Pianistes » apparaît sous Pianistes", asyn
 test("le référent EDD coche Professeurs cours et Cajon : la personne figure sous les deux, l'écriture porte sousEquipesEdd", async ({ page }) => {
   const db = await ouvrir(page, REFERENT, "/back-office/equipes", DOCS([...EDD, M("Léandre Pique", { uid: "u-leandre", groupe: "Pianistes" })]));
   await page.getByRole("button", { name: "Modifier EDD" }).click();
-  const p = page.getByRole("dialog", { name: "EDD", exact: true });
+  const p = page.getByRole("dialog", { name: /^EDD, \d+ membres?$/ });
   await expect(p).toBeVisible();
   const ligne = p.getByTestId("membre-u-liang");
   const sous = ligne.getByRole("group", { name: "Sous-équipes", exact: true });

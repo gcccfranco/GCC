@@ -18,7 +18,7 @@ import { EnTetePage } from "@/components/layout/EnTetePage";
 import { OngletsRail } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { BandeauEquipes } from "@/components/equipes/BandeauEquipes";
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerBarre, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
@@ -242,35 +242,31 @@ function PanneauEquipe({
   onEnregistre: (e: Equipe) => void;
 }) {
   const { t } = useTranslation();
-  const aDroite = useDisposition() === "grand";
+  const disposition = useDisposition();
+  const aDroite = disposition === "grand";
   const sousTitre = def ? t(`equipes.soustitre.${def.id}`) : "";
   return (
     <Drawer open={def !== null} onOpenChange={(o) => !o && onClose()} direction={aDroite ? "right" : "bottom"}>
       <DrawerContent
         // Le sous-titre de l'équipe décrit le panneau ; sans lui, pas de description (Radix).
         {...(sousTitre ? {} : { "aria-describedby": undefined })}
+        data-feuille-equipe
+        formulaire={disposition === "tablette"}
         className={aDroite
           ? "left-auto top-0 bottom-0 mt-0 h-full w-[420px] rounded-none rounded-l-2xl border-y-0 border-r-0 [&>div:first-child]:hidden"
-          : "max-h-[90dvh]"}
+          : disposition === "tablette" ? undefined : "max-h-[90dvh]"}
       >
         {def && (
-          <>
-            <DrawerHeader className="pb-1 text-left">
-              <DrawerTitle>{t(cleNomEquipe(def.id, true))}</DrawerTitle>
-              {sousTitre && <DrawerDescription>{sousTitre}</DrawerDescription>}
-            </DrawerHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
-              <EditionEquipe
-                key={def.id}
-                def={def}
-                membres={equipe?.membres ?? []}
-                version={equipe?.version ?? null}
-                profils={profils}
-                onClose={onClose}
-                onEnregistre={onEnregistre}
-              />
-            </div>
-          </>
+          <EditionEquipe
+            key={def.id}
+            def={def}
+            sousTitre={sousTitre}
+            membres={equipe?.membres ?? []}
+            version={equipe?.version ?? null}
+            profils={profils}
+            onClose={onClose}
+            onEnregistre={onEnregistre}
+          />
         )}
       </DrawerContent>
     </Drawer>
@@ -439,9 +435,10 @@ function LigneMembre({
 const cleMembre = (m: MembreEquipe) => `${m.uid}|${m.nom}`;
 
 function EditionEquipe({
-  def, membres, version: versionLue, profils, onClose, onEnregistre,
+  def, sousTitre, membres, version: versionLue, profils, onClose, onEnregistre,
 }: {
   def: EquipeDef;
+  sousTitre: string;
   membres: MembreEquipe[];
   /** `updateTime` du document lu : précondition de l'écriture (`saveEquipe`). */
   version: string | null;
@@ -561,108 +558,116 @@ function EditionEquipe({
   }
 
   return (
-    <div className="space-y-2.5 border-t border-border pt-3">
-      <div className="space-y-1.5">
-        {brouillon.map((m, i) => aLieux ? (
-          <MembreOrganigramme
-            key={`${m.nom}-${i}`}
-            equipe={def.id as "louange" | "regie"}
-            m={m}
-            profil={profils.find((p) => p.uid === m.uid)}
-            ouvert={ouvert === cleMembre(m)}
-            ouvrable={ouvrable(m)}
-            onBascule={() => setOuvert((o) => (o === cleMembre(m) ? null : cleMembre(m)))}
-            droits={droits}
-            gerer={isAdminUser(user)}
-            onChange={(champ) => change(i, champ)}
-            onRetirer={() => retire(i)}
+    <>
+      <DrawerHeader className="shrink-0 pb-1 text-left">
+        <DrawerTitle>{t("equipes.titreEdition", { equipe: t(cleNomEquipe(def.id, true)), count: brouillon.length })}</DrawerTitle>
+        {sousTitre && <DrawerDescription>{sousTitre}</DrawerDescription>}
+      </DrawerHeader>
+      <div className="shrink-0 space-y-2.5 px-4 pb-3">
+        {peutAjouter && (
+          <Input
+            value={recherche}
+            placeholder={t("equipes.ajouterMembre")}
+            onChange={(e) => setRecherche(e.target.value)}
+            className="h-10"
           />
-        ) : (
-          <div key={`${m.nom}-${i}`} data-testid={`membre-${m.uid || m.nom}`} className="rounded-lg border border-border p-2 space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-foreground">{m.nom}</span>
+        )}
+        {peutAjouter && q && (
+          <div className="max-h-[30dvh] space-y-1 overflow-y-auto">
+            {resultats.map((p) => (
               <button
+                key={p.uid}
                 type="button"
-                aria-label={t("equipes.retirer", { nom: m.nom })}
-                onClick={() => retire(i)}
-                className="h-8 w-8 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center"
+                onClick={() => ajoute({ nom: nomComplet(p), uid: p.uid, mention: "", referent: false, essai: false, groupe: "" })}
+                className="block w-full rounded-lg bg-secondary px-2.5 py-1.5 text-left text-sm text-foreground"
               >
-                <X className="h-4 w-4" />
+                {nomComplet(p)}
               </button>
-            </div>
-            <Input
-              value={m.mention}
-              placeholder={t("equipes.mention")}
-              onChange={(e) => change(i, { mention: e.target.value })}
-              className="h-9"
-            />
-            {edd && droits.equipe && (
-              <PastillesEdd m={m} onChange={(champ) => change(i, champ)} />
-            )}
-            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-              {/* Lot RS : en nouveau mode, le référent se lit ici et se change dans Équipes › Responsabilités. */}
-              {nouveau ? (
-                <MentionReferent m={m} louange={false} gerer={isAdminUser(user)} />
-              ) : (
-                <label className="inline-flex items-center gap-1.5">
-                  <input type="checkbox" checked={m.referent} disabled={!droits.referents} onChange={(e) => change(i, { referent: e.target.checked })} />
-                  {t("equipes.referent")}
-                </label>
-              )}
-              <label className="inline-flex items-center gap-1.5">
-                <input type="checkbox" checked={m.essai} onChange={(e) => change(i, { essai: e.target.checked })} />
-                {t("equipes.essai")}
-              </label>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {peutAjouter && (
-        <Input
-          value={recherche}
-          placeholder={t("equipes.ajouterMembre")}
-          onChange={(e) => setRecherche(e.target.value)}
-          className="h-10"
-        />
-      )}
-      {peutAjouter && q && (
-        <div className="space-y-1">
-          {resultats.map((p) => (
+            ))}
             <button
-              key={p.uid}
               type="button"
-              onClick={() => ajoute({ nom: nomComplet(p), uid: p.uid, mention: "", referent: false, essai: false, groupe: "" })}
-              className="block w-full rounded-lg bg-secondary px-2.5 py-1.5 text-left text-sm text-foreground"
+              onClick={() => ajoute({ nom: recherche.trim(), uid: "", mention: "", referent: false, essai: false, groupe: "" })}
+              className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-muted-foreground"
             >
-              {nomComplet(p)}
+              {t("equipes.nomLibre", { nom: recherche.trim() })}
             </button>
+          </div>
+        )}
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
+        <div className="space-y-1.5">
+          {brouillon.map((m, i) => aLieux ? (
+            <MembreOrganigramme
+              key={`${m.nom}-${i}`}
+              equipe={def.id as "louange" | "regie"}
+              m={m}
+              profil={profils.find((p) => p.uid === m.uid)}
+              ouvert={ouvert === cleMembre(m)}
+              ouvrable={ouvrable(m)}
+              onBascule={() => setOuvert((o) => (o === cleMembre(m) ? null : cleMembre(m)))}
+              droits={droits}
+              gerer={isAdminUser(user)}
+              onChange={(champ) => change(i, champ)}
+              onRetirer={() => retire(i)}
+            />
+          ) : (
+            <div key={`${m.nom}-${i}`} data-testid={`membre-${m.uid || m.nom}`} className="rounded-lg border border-border p-2 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-foreground">{m.nom}</span>
+                <button
+                  type="button"
+                  aria-label={t("equipes.retirer", { nom: m.nom })}
+                  onClick={() => retire(i)}
+                  className="h-8 w-8 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <Input
+                value={m.mention}
+                placeholder={t("equipes.mention")}
+                onChange={(e) => change(i, { mention: e.target.value })}
+                className="h-9"
+              />
+              {edd && droits.equipe && (
+                <PastillesEdd m={m} onChange={(champ) => change(i, champ)} />
+              )}
+              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                {/* Lot RS : en nouveau mode, le référent se lit ici et se change dans Équipes › Responsabilités. */}
+                {nouveau ? (
+                  <MentionReferent m={m} louange={false} gerer={isAdminUser(user)} />
+                ) : (
+                  <label className="inline-flex items-center gap-1.5">
+                    <input type="checkbox" checked={m.referent} disabled={!droits.referents} onChange={(e) => change(i, { referent: e.target.checked })} />
+                    {t("equipes.referent")}
+                  </label>
+                )}
+                <label className="inline-flex items-center gap-1.5">
+                  <input type="checkbox" checked={m.essai} onChange={(e) => change(i, { essai: e.target.checked })} />
+                  {t("equipes.essai")}
+                </label>
+              </div>
+            </div>
           ))}
-          <button
-            type="button"
-            onClick={() => ajoute({ nom: recherche.trim(), uid: "", mention: "", referent: false, essai: false, groupe: "" })}
-            className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-muted-foreground"
-          >
-            {t("equipes.nomLibre", { nom: recherche.trim() })}
-          </button>
         </div>
-      )}
-
-      {erreur && (
-        <p role="alert" className="flex items-center gap-2 text-sm text-destructive">
-          {erreur}
-          {aRecopier && enregistree && (
-            <button type="button" disabled={enCours} onClick={() => { setErreur(""); void recopier(aRecopier, enregistree); }} className="font-semibold underline">
-              {t("groupes.reessayer")}
-            </button>
-          )}
-        </p>
-      )}
-      <div className="flex justify-end gap-2">
+      </div>
+      <div className="shrink-0 px-4">
+        {erreur && (
+          <p role="alert" className="flex items-center gap-2 pb-2 text-sm text-destructive">
+            {erreur}
+            {aRecopier && enregistree && (
+              <button type="button" disabled={enCours} onClick={() => { setErreur(""); void recopier(aRecopier, enregistree); }} className="font-semibold underline">
+                {t("groupes.reessayer")}
+              </button>
+            )}
+          </p>
+        )}
+      </div>
+      <DrawerBarre>
         <Button variant="outline" onClick={onClose} className="h-10">{t("equipes.annuler")}</Button>
         <Button onClick={enregistrer} disabled={enCours} className="h-10">{t("equipes.enregistrer")}</Button>
-      </div>
-    </div>
+      </DrawerBarre>
+    </>
   );
 }
 
