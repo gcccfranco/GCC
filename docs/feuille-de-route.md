@@ -120,6 +120,12 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   joué s'insère dans la suite ; B le titre de la barre devient un champ de recherche ; **C recommandée**, le chant
   ouvert hors setlist se pose par-dessus elle, avec un bandeau « ‹ Revenir à …, page N · Jouer ensuite ». Trois
   questions à Timothée (« Jouer ensuite » local, bandeau visible barre masquée, Échap à trois temps). Spec après ses réponses.
+  **Choix de Timothée (12/11/2026, soir)** : piste **A** (« Cette setlist | Tous les chants » dans le menu Setlist),
+  plus un **bouton à part « Tous les chants »** dans la barre du haut, à côté de Setlist, qui ouvre directement la
+  liste ; et en tête de la liste un interrupteur **« Avec 简谱 / Sans »** qui ouvre les chants dans la version choisie
+  (le bouton 简谱 des Options d'affichage reste pour changer en cours de route). Les questions propres à C tombent ;
+  pour A, la spec proposera l'insertion locale à l'appareil (effacée à la fermeture) et un « Retirer ». Prochaine
+  étape : la spec, puis le go ; codage après AN, MP-6 et H8 (`PerformanceMode.tsx`).
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 
