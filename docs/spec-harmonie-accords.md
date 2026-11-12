@@ -99,6 +99,12 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   Inventaire du site de référence de A à Z : `docs/inventaire-wangshubianqu.md`. Prochain : nouvelle planche d'Harmonie à
   partir de l'inventaire, sur accord de Timothée.
 
+- 12/11/2026 : planche « trois portes » (`docs/planches/planche-harmonie-trois-portes.html`, artefact privé) : un seul
+  contenu, l'harmonie d'un chant passage par passage ; porte 1 = panneau de l'accord touché, porte 2 = feuille ou
+  colonne « Harmonie de ce chant », porte 3 = bibliothèque par ressenti et usage. Pistes A (pupitre), **B (grille du
+  chant, recommandée)**, C (carnet). Critique « à retoucher » : tablette paysage et 1 440 px non dessinés ; boutons
+  Écouter secondaires passés en contour à la relecture. Questions posées, réponses : —
+
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
 69 fiches en 12 familles aujourd'hui. À ajouter, dans l'ordre d'utilité pour le répertoire :
