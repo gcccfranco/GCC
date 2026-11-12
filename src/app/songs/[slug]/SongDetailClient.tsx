@@ -43,6 +43,9 @@ import { getSetlist } from "@/lib/firebase/setlists";
 import { useAuth } from "@/lib/firebase/auth";
 import { compter } from "@/lib/usage";
 import { telechargerBlob } from "@/lib/telecharger";
+import { useMesPartitions } from "@/lib/partition/useMesPartitions";
+import { lire, resoudreConflit } from "@/lib/partition/lecture";
+import { MenuJeLis, LigneMaPartition } from "@/components/partition/MenuJeLis";
 import type { JianpuChords } from "@/types/setList";
 
 interface SongDetailClientProps {
@@ -112,7 +115,24 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
       safeParseParam<number | null>(searchParams.get("item"), null, estNombreOuNul),
     );
     const sourceAdaptee = versionSetlist?.source;
-    const ast = useMemo(() => parseChordPro(sourceAdaptee ?? song.chordProSource), [sourceAdaptee, song.chordProSource]);
+    // Ma partition (docs/spec-ma-partition.md) : « Je lis » = la mienne, une partagée, l'origine — et celle du culte
+    // quand la page s'ouvre depuis une setlist qui a adapté ce chant. Pas de compte : le chant d'origine, sans menu.
+    const { user: compte } = useAuth();
+    const mp = useMesPartitions(compte?.uid, [song.slug]);
+    const mienne = mp.mes[song.slug] ?? null;
+    const lecture = useMemo(
+      () => compte ? lire({
+        origine: song.chordProSource,
+        culte: sourceAdaptee ?? null,
+        mienne,
+        partagees: mp.partagees.filter((p) => p.slug === song.slug),
+        choix: mp.choix[song.slug],
+      }) : null,
+      [compte, song.chordProSource, song.slug, sourceAdaptee, mienne, mp.partagees, mp.choix],
+    );
+    // `source` indéfini : rien de choisi, on garde le comportement d'avant (la version de la setlist, sinon le chant).
+    const sourceLue = lecture && lecture.source !== undefined ? lecture.source : sourceAdaptee;
+    const ast = useMemo(() => parseChordPro(sourceLue ?? song.chordProSource), [sourceLue, song.chordProSource]);
     const isZh = song.language === "zh";
     // Partition 简谱 en image (scan d'origine) — absente pour la plupart des chants
     const jianpuScore = useJianpuScore(song.slug);
@@ -265,6 +285,36 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
       setCustomize(prev => ({ ...prev, currentKey: songKey, semitones: diff }));
       setKeyReady(true);
     }, []); // une seule fois au montage
+
+    // Ma partition : sa tonalité est celle de départ (avant la recommandée), une fois, sauf `?key=` ou setlist (celle du
+    // culte prévaut). Un changement de tonalité ici est enregistré dans ma partition, s'il y en a une (pas de
+    // partition créée pour une tonalité seule : c'est le Crayon, MP-3).
+    const cleSuivie = useRef<string | null>(null);
+    const cleDePartitionPosee = useRef(false);
+    const cleDeMaPartition = lecture?.valeur === "mienne" ? mienne?.key ?? null : null;
+    useEffect(() => {
+      if (!keyReady || !cleDeMaPartition || cleDePartitionPosee.current) return;
+      cleDePartitionPosee.current = true;
+      if (setlistDOrigine || searchParams.get("key") !== null) return;
+      const k = keyLike(originalKey, cleDeMaPartition);
+      cleSuivie.current = k;
+      setCustomize(prev => ({ ...prev, currentKey: k, semitones: semitonesTo(originalKey, k) }));
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [keyReady, cleDeMaPartition]);
+    useEffect(() => {
+      if (!keyReady) return;
+      if (cleSuivie.current === null) { cleSuivie.current = customize.currentKey; return; }
+      if (cleSuivie.current === customize.currentKey) return;
+      cleSuivie.current = customize.currentKey;
+      // Seulement quand je lis ma partition ; regroupé (plusieurs pas de tonalité = une écriture).
+      if (!mienne || setlistDOrigine || lecture?.valeur !== "mienne") return;
+      const cle = customize.currentKey;
+      const minuteur = window.setTimeout(() => {
+        mp.enregistrer({ ...mienne, key: cle }).catch(() => { /* la page garde la tonalité */ });
+      }, 800);
+      return () => window.clearTimeout(minuteur);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [keyReady, customize.currentKey]);
 
     useEffect(() => {
       if (!setlistDOrigine || !keyReady) return;
@@ -479,6 +529,12 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
             setBarPinned(true);
           }}
         >
+          {lecture && lecture.options.length > 1 && (
+            <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 print:hidden" onClick={(e) => e.stopPropagation()}>
+              <MenuJeLis lecture={lecture} onChoisir={(v) => mp.choisir(song.slug, v)} />
+              {lecture.valeur === "mienne" && <LigneMaPartition date={lecture.mienne?.updatedAt} enAttente={mp.enAttente} />}
+            </div>
+          )}
           {/* L'en-tête du site reste au-dessus du scan (K3) ; le segment « 简谱 · Paroles »
               à droite des pastilles règle la préférence de l'appareil (D5). */}
             <SongView
@@ -536,6 +592,8 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
               sectionNuances={sectionsNuance}
               sectionKeys={sectionsKeys}
               disposition={disposition}
+              marques={lecture?.marques}
+              onConflit={lecture?.modifiable ? (index, choix) => { mp.enregistrer(resoudreConflit(lecture, index, choix)).catch(() => {}); } : undefined}
             />
         </main>
 

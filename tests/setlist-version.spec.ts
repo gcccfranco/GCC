@@ -196,7 +196,6 @@ test("ma structure : le corps la suit, le bandeau, le sommaire et la liste reste
   await expect(bodySections(page, 1).nth(0)).toContainText("Couplet 1");
   await expect(bodySections(page, 1).nth(1)).toContainText("Refrain");
   await expect(bodySections(page, 1).nth(2)).toContainText("Pont");
-  await expect(song(page, 1).getByText("Ma version", { exact: true })).toBeVisible();
   await expect(strip(page, 1), "le bandeau garde la structure de la présidence").toHaveText(["I", "C1", "R", "Int", "C2", "P"]);
   const deuxVolets = await enDeuxVolets(page);
   if (deuxVolets) await expect(pastilles(page, 1), "le sommaire suit ce qui est affiché").toHaveText(["C1", "R", "P"]);
@@ -312,8 +311,8 @@ const MY_ZH = readFileSync("content/songs/一生爱你.cho", "utf8")
   .split("\n")
   .filter((l) => !l.replace(/\[[^\]]*\]/g, "").includes("宝贵") && !l.startsWith("qīn ài de bǎo guì"))
   .join("\n");
-// Le choix de version est un menu (T3c) : le déclencheur se nomme « Version : <choix> », le panneau est dans le portail de la page.
-const versionSelect = (page: Page, position: number) => song(page, position).getByRole("button", { name: /^Version : / });
+// Le choix de partition est le menu « Je lis » (MP-2) : le déclencheur se nomme « Je lis : <choix> », le panneau est dans le portail de la page.
+const versionSelect = (page: Page, position: number) => song(page, position).getByRole("button", { name: /^Je lis : / });
 const choisirVersion = async (page: Page, position: number, libelle: string) => {
   await versionSelect(page, position).click();
   await page.getByRole("menuitemradio", { name: libelle, exact: true }).click();
@@ -323,9 +322,9 @@ const copyButton = (page: Page, position: number) => song(page, position).getByR
 test("une version partagée se choisit, et le choix suit mon compte jusqu'en mode louange", async ({ page }) => {
   const db = await openPartitions(page, { [VERSION_DOC]: RUTH_SHARED }, CHRISTELLE);
   await expect(lyricLine(page, "planait")).toHaveCount(1);
-  await expect(versionSelect(page, 1)).toHaveAccessibleName("Version : Présidence");
+  await expect(versionSelect(page, 1)).toHaveAccessibleName("Je lis : Le chant d'origine");
   await expect(versionSelect(page, 2), "pas d'alternative sur le second chant").toHaveCount(0);
-  await choisirVersion(page, 1, "Ruth K.");
+  await choisirVersion(page, 1, "Version de Ruth K.");
 
   await expect(lyricLine(page, "flottait")).toHaveCount(1);
   await expect(song(page, 1).getByText("Version de Ruth K.", { exact: true })).toBeVisible();
@@ -398,11 +397,13 @@ test("choisir « Présidence » alors que j'ai ma version, sans la perdre", asyn
     [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
   });
   await expect(lyricLine(page, "flottait")).toHaveCount(1);
-  await expect(versionSelect(page, 1)).toHaveAccessibleName("Version : Moi");
-  await choisirVersion(page, 1, "Présidence");
+  await expect(versionSelect(page, 1)).toHaveAccessibleName("Je lis : Ma version");
+  await choisirVersion(page, 1, "Le chant d'origine");
 
   await expect(lyricLine(page, "planait")).toHaveCount(1);
   await expect(song(page, 1).getByText("Ma version", { exact: true })).toHaveCount(0);
+  // L'écriture du choix suit l'affichage (MP-2) : on l'attend.
+  await expect.poll(() => db.writes.filter((w) => w.path === VERSION_DOC).length).toBeGreaterThan(0);
   const last = db.writes.filter((w) => w.path === VERSION_DOC).pop()!;
   expect(last.data.choices).toEqual({ "abba-pere": "presidence" });
   expect(Object.keys(last.data.items as object)).toEqual(["abba-pere"]);
@@ -414,7 +415,7 @@ test("chant chinois : la version partagée de Ruth, avec son pinyin", async ({ p
     [VERSION_DOC]: myDoc({ "一生爱你": { content: MY_ZH, structure: null, shared: true } }),
   }, CHRISTELLE);
   await expect(lyricLine(page, "宝")).toHaveCount(1);
-  await choisirVersion(page, 2, "Ruth K.");
+  await choisirVersion(page, 2, "Version de Ruth K.");
   await expect(lyricLine(page, "宝")).toHaveCount(0);
   await expect(song(page, 2).locator("span").filter({ hasText: /^wǒ$/ }).first()).toBeVisible();
   await expect(song(page, 2).getByText("Version de Ruth K.", { exact: true })).toBeVisible();
@@ -431,7 +432,7 @@ test("« Copier les paroles » n'existe que si je suis la setlist de la préside
   });
   await expect(copyButton(page, 1), "ma version d'accords et paroles").toHaveCount(0);
   await expect(copyButton(page, 2), "ma structure").toHaveCount(0);
-  await choisirVersion(page, 1, "Présidence");
+  await choisirVersion(page, 1, "Le chant d'origine");
   await expect(copyButton(page, 1), "de retour sur la présidence").toHaveCount(1);
   await expect(copyButton(page, 2)).toHaveCount(0);
 });

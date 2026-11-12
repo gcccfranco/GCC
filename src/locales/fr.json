@@ -2543,6 +2543,24 @@
     "copierTaches_other": "Copier aussi ses {{count}} tâches, aux mêmes délais ?",
     "copierTachesOui": "Copier les tâches"
   },
+  "maPartition": {
+    "jeLis": "Je lis",
+    "mienne": "Ma partition",
+    "culte": "Celle du culte",
+    "partageePar": "Partition de {{nom}}",
+    "origine": "Le chant d'origine",
+    "dansLaSetlist": "Dans cette setlist",
+    "maVersion": "Ma version",
+    "versionDe": "Version de {{nom}}",
+    "quelquUn": "Quelqu'un",
+    "retouchee": "Ma partition · retouchée le {{date}}",
+    "retoucheeSansDate": "Ma partition",
+    "enAttente": " · En attente",
+    "conflit": "Le chant a changé ici",
+    "garderLaMienne": "Garder la mienne",
+    "prendreCelleDuChant": "Prendre celle du chant",
+    "erreurEnregistrement": "Échec de l'enregistrement — réessaie."
+  },
   "moi": {
     "title": "Moi",
     "settings": "Réglages",

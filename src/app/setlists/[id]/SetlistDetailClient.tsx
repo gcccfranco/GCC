@@ -68,10 +68,13 @@ import {
   songVersionView,
   withChosenItem,
   withMineItem,
+  withMyJianpuItem,
   withMineStructureItem,
   myStructureOf,
   type SongVersionView,
 } from "@/lib/setlist/versionChoice";
+import { useMesPartitions } from "@/lib/partition/useMesPartitions";
+import { lire, resoudreConflit, type Lecture } from "@/lib/partition/lecture";
 import { adresseVue, lireAdresse, poser, surLaSetlist } from "@/lib/setlist/adresseVue";
 import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, scansAbsentsDuCache, urlsJianpuAGarder, useJianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled } from "@/lib/jianpu/preference";
@@ -315,9 +318,14 @@ export function SetlistDetailClient() {
   function withMine(item: SetlistItem): SetlistItem {
     return withMineItem(item, myItems);
   }
-  /** Version d'un chant pour moi : la présidence, la mienne, ou celle d'un
-   *  autre partagée et choisie. */
-  function viewOf(item: SetlistItem): SongVersionView | undefined {
+  // Ma partition (docs/spec-ma-partition.md) : mes partitions, celles qu'on m'a partagées, mon choix « Je lis ».
+  const slugsPartitions = useMemo(
+    () => (setlist?.items ?? []).filter((i) => i.songSlug && i.type !== "fusion").map((i) => i.songSlug),
+    [setlist],
+  );
+  const mesPartitions = useMesPartitions(user?.uid, slugsPartitions);
+  /** Ancienne version perso de la setlist affichée pour un chant (`versions/{uid}`). */
+  function ancienneVue(item: SetlistItem): SongVersionView | undefined {
     return user
       ? songVersionView(item.songSlug, user.uid, versions, {
           structure: item.structureOverride,
@@ -325,9 +333,63 @@ export function SetlistDetailClient() {
         })
       : undefined;
   }
-  /** Item tel qu'affiché : les accords et paroles de la version choisie. */
+  /** Quelle partition se lit, par chant : la mienne, celle du culte, une partagée, l'origine, ou une ancienne version. */
+  const lectures = useMemo(() => {
+    const out: Record<string, Lecture> = {};
+    if (!user) return out;
+    for (const item of setlist?.items ?? []) {
+      const origine = contents[item.songSlug]?.source;
+      if (!item.songSlug || item.type === "fusion" || origine === undefined || out[item.songSlug]) continue;
+      const v = ancienneVue(item)!;
+      out[item.songSlug] = lire({
+        origine,
+        culte: item.contentOverride ?? null,
+        mienne: mesPartitions.mes[item.songSlug] ?? null,
+        partagees: mesPartitions.partagees.filter((p) => p.slug === item.songSlug),
+        choix: mesPartitions.choix[item.songSlug],
+        anciennes: v.options
+          .filter((o) => o.kind !== "presidence")
+          .map((o) => ({ valeur: o.value, nom: o.kind === "mine" ? undefined : o.name || t("maPartition.quelquUn") })),
+        ancienneValeur: v.value,
+      });
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, setlist, contents, versions, mesPartitions.mes, mesPartitions.partagees, mesPartitions.choix, t]);
+  /** Ma partition lue à la place de la présidence (sinon : les anciennes versions décident). */
+  const lectureNeuve = (item: SetlistItem) => {
+    const l = lectures[item.songSlug];
+    return l && l.source !== undefined ? l : undefined;
+  };
+  /** Version d'un chant pour moi : la présidence, la mienne, ou celle d'un
+   *  autre partagée et choisie. */
+  function viewOf(item: SetlistItem): SongVersionView | undefined {
+    const v = ancienneVue(item);
+    return v && lectureNeuve(item) ? { ...v, shown: "presidence", content: null, value: "presidence", bodyStructure: null } : v;
+  }
+  /** Item tel qu'affiché : les accords et paroles de la partition lue. */
   function withChosen(item: SetlistItem): SetlistItem {
-    return withChosenItem(item, viewOf(item), myItems);
+    const l = lectureNeuve(item);
+    if (!l) return withChosenItem(item, viewOf(item), myItems);
+    const source = l.source ?? undefined;
+    return withMyJianpuItem((item.contentOverride ?? undefined) === source ? item : { ...item, contentOverride: source }, myItems);
+  }
+  async function choisirLecture(itemIndex: number, valeur: string) {
+    const slug = setlist!.items[itemIndex].songSlug;
+    mesPartitions.choisir(slug, valeur);
+    // Les anciennes versions de la setlist restent à jour : « v:… » les choisit, « culte » et « origine » reviennent à la présidence.
+    if (valeur.startsWith("v:")) await persistChoice(slug, valeur.slice(2));
+    else if ((valeur === "culte" || valeur === "origine") && lectures[slug]?.options.some((o) => o.type === "ancienne")) await persistChoice(slug, "presidence");
+  }
+  /** « Garder la mienne » / « Prendre celle du chant » : ma partition réécrite, base = la couche du dessous. */
+  async function reglerConflit(itemIndex: number, index: number, choix: "mienne" | "chant") {
+    const l = lectures[setlist!.items[itemIndex].songSlug];
+    if (!l?.modifiable) return;
+    try {
+      await mesPartitions.enregistrer(resoudreConflit(l, index, choix));
+    } catch {
+      flashFeedback(t("maPartition.erreurEnregistrement"));
+    }
   }
   /** Structure que suit le corps du chant en « Ma version » : la mienne si
    *  j'en ai une, sinon celle de la présidence. */
@@ -1407,6 +1469,8 @@ export function SetlistDetailClient() {
   // « Copier les paroles » de chaque chant, PartitionView).
   const toutSuitLaPresidence = setlist.items.every((item) => {
     if (!item.songSlug || item.type === "fusion") return true;
+    const l = editMine ? undefined : lectureNeuve(item);
+    if (l) return l.suitLaPresidence;
     const v = viewOf(item);
     const shown = editMine ? (v?.mine?.content ? "mine" : "presidence") : (v?.shown ?? "presidence");
     return shown === "presidence" && !v?.mine?.structure?.length;
@@ -1574,7 +1638,10 @@ export function SetlistDetailClient() {
             presidency: item.structureOverride,
           });
         }}
-        onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
+        lectures={editPartitions || editMine ? undefined : lectures}
+        onChoisirLecture={choisirLecture}
+        onConflit={reglerConflit}
+        enAttente={mesPartitions.enAttente}
         onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
         onEditJianpu={handleEditJianpu}
         onRetryChant={rechargerUnChant}

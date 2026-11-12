@@ -21,7 +21,8 @@ import { compter } from "@/lib/usage";
 import { playedSections } from "@/lib/setlist/playedSections";
 import { isLastPhraseOnly } from "@/lib/setlist/lastPhrase";
 import { Button } from "@/components/ui/button";
-import { Menu } from "@/components/ui/menu";
+import { MenuJeLis, LigneMaPartition } from "@/components/partition/MenuJeLis";
+import type { Lecture } from "@/lib/partition/lecture";
 import { Check, Copy, Link2, ListOrdered, MessageSquare, RotateCcw, Sparkles } from "lucide-react";
 import { TOUCHER_44 } from "@/lib/toucher44";
 import type { ChordProAST, ChordProLine, ChordProSection } from "@/types/chordPro";
@@ -88,13 +89,22 @@ export function PartitionsView({
   onSelectLine,
   onRevert,
   onEditStructure,
-  onChooseVersion,
   onShare,
   onEditJianpu,
   onIdees,
   onRetryChant,
   titres,
+  lectures,
+  onChoisirLecture,
+  onConflit,
+  enAttente = false,
 }: {
+  /** Ma partition (docs/spec-ma-partition.md) : par chant, quelle partition se lit, le menu « Je lis » et les signes. */
+  lectures?: Record<string, Lecture>;
+  onChoisirLecture?: (itemIndex: number, valeur: string) => void;
+  onConflit?: (itemIndex: number, index: number, choix: "mienne" | "chant") => void;
+  /** Des écritures de ma partition attendent le réseau (« En attente »). */
+  enAttente?: boolean;
   /** Le titre de chaque chant mène à sa page, dans les réglages de la setlist. */
   setlistId: string;
   items: SetlistItem[];
@@ -121,7 +131,6 @@ export function PartitionsView({
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
   onRevert?: (itemIndex: number) => void;
   onEditStructure?: (itemIndex: number) => void;
-  onChooseVersion?: (itemIndex: number, value: string) => void;
   onShare?: (itemIndex: number, shared: boolean) => void;
   /** Retouche d'accords sur un scan 简谱 (lot 9) : l'item pour la présidence,
    *  ma version pour moi — la page tranche. */
@@ -357,12 +366,15 @@ export function PartitionsView({
             onSelectLine={onSelectLine}
             onRevert={onRevert}
             onEditStructure={onEditStructure}
-            onChooseVersion={onChooseVersion}
             onShare={onShare}
             onEditJianpu={onEditJianpu}
             onIdees={onIdees}
             onRetryChant={onRetryChant}
             titre={titres?.[item.songSlug]}
+            lecture={lectures?.[item.songSlug]}
+            onChoisirLecture={onChoisirLecture}
+            onConflit={onConflit}
+            enAttente={enAttente}
           />
         );
       })}
@@ -387,13 +399,20 @@ function NormalSongItem({
   onSelectLine,
   onRevert,
   onEditStructure,
-  onChooseVersion,
   onShare,
   onEditJianpu,
   onIdees,
   onRetryChant,
   titre,
+  lecture,
+  onChoisirLecture,
+  onConflit,
+  enAttente,
 }: {
+  lecture?: Lecture;
+  onChoisirLecture?: (itemIndex: number, valeur: string) => void;
+  onConflit?: (itemIndex: number, index: number, choix: "mienne" | "chant") => void;
+  enAttente: boolean;
   setlistId: string;
   item: SetlistItem;
   origIndex: number;
@@ -409,7 +428,6 @@ function NormalSongItem({
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
   onRevert?: (itemIndex: number) => void;
   onEditStructure?: (itemIndex: number) => void;
-  onChooseVersion?: (itemIndex: number, value: string) => void;
   onShare?: (itemIndex: number, shared: boolean) => void;
   onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
   onIdees?: (itemIndex: number) => void;
@@ -424,7 +442,9 @@ function NormalSongItem({
   const isMine = shown === "mine" || (shown === "presidence" && !!mine?.structure?.length);
   // Copier les paroles (régie) : seulement en suivant la setlist de la
   // présidence — ni ma version, ni ma structure, ni celle d'un autre.
-  const followsPresidency = shown === "presidence" && !mine?.structure?.length;
+  const followsPresidency = lecture && lecture.source !== undefined
+    ? lecture.suitLaPresidence
+    : shown === "presidence" && !mine?.structure?.length;
   // Parse (contentOverride) + transposition mémoïsés : la vue Partitions se
   // re-rend à chaque toggle de la barre au scroll, inutile de re-parser.
   // `songKey` est la tonalité du chant lui-même : `ast` sort déjà transposé,
@@ -484,7 +504,7 @@ function NormalSongItem({
           tant que la partition 简谱 remplace le chant. Le dire, plutôt que
           d'afficher « Version modifiée » sur un scan intact. Une « Dernière
           phrase » seule n'est pas une modification : pas de badge. */}
-      {shown === "other" ? (
+      {editMode && (shown === "other" ? (
         <span className={AMBER_BADGE}>
           {t("setlists.myVersion.badgeOther", { name: version?.shownName || t("setlists.history.someone") })}
         </span>
@@ -498,7 +518,7 @@ function NormalSongItem({
             ? t("setlists.contentEdit.modifiedHidden")
             : t("setlists.contentEdit.modifiedBadge", { defaultValue: "Version modifiée" })}
         </span>
-      )}
+      ))}
       {editMode && (editMine ? isMine || mesRetouches : !!item.contentOverride || aDesRetouches(item.jianpuChords)) && (
         <button
           type="button"
@@ -542,23 +562,8 @@ function NormalSongItem({
           {t("setlists.myVersion.share")}
         </button>
       )}
-      {!editMode && version && version.options.length > 1 && (
-        <Menu
-          label={t("setlists.myVersion.version")}
-          value={version.value}
-          defaultValue={version.value}
-          onChange={(v) => onChooseVersion?.(origIndex, v)}
-          className="print:hidden"
-          options={version.options.map((o) => ({
-            valeur: o.value,
-            libelle: o.kind === "presidence"
-              ? t("setlists.myVersion.presidence")
-              : o.kind === "mine"
-                ? t("setlists.myVersion.me")
-                : o.name || t("setlists.history.someone"),
-          }))}
-        />
-      )}
+      {!editMode && lecture && <MenuJeLis lecture={lecture} onChoisir={(v) => onChoisirLecture?.(origIndex, v)} />}
+      {!editMode && lecture?.valeur === "mienne" && <LigneMaPartition date={lecture.mienne?.updatedAt} enAttente={enAttente} />}
     </>
   );
   return (
@@ -586,6 +591,8 @@ function NormalSongItem({
         bodyStructure={version?.bodyStructure}
         titleHref={titleHref}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
+        marques={editMode ? undefined : lecture?.marques}
+        onConflit={!editMode && lecture?.modifiable && onConflit ? (index, choix) => onConflit(origIndex, index, choix) : undefined}
         corps={
           // Partition 简谱 : le scan prend la place des paroles, sous le même
           // en-tête (K3). Structure seule : ni l'un ni l'autre.

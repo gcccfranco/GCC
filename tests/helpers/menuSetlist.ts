@@ -11,7 +11,7 @@ export async function cliquerMenuSetlist(page: Page, nom: string | RegExp) {
  *  en portrait). Le seuil suit le CSS (`max-[430px]:hidden` / `min-[431px]:hidden`). */
 export async function basculerMode(page: Page, nom: "Adapter" | "Ma version") {
   if (page.viewportSize()!.width >= 431) {
-    await page.getByRole("button", { name: nom }).click();
+    await page.getByRole("button", { name: nom, exact: true }).click();
     return;
   }
   await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).first().click();
@@ -22,7 +22,7 @@ export async function basculerMode(page: Page, nom: "Adapter" | "Ma version") {
  *  l'entrée du menu « ⋯ », refermé ensuite. */
 export async function verifierMode(page: Page, nom: "Adapter" | "Ma version", actif?: boolean) {
   if (page.viewportSize()!.width >= 431) {
-    const bouton = page.getByRole("button", { name: nom });
+    const bouton = page.getByRole("button", { name: nom, exact: true }); // exact : « Je lis : Ma version » (MP-2)
     await expect(bouton).toBeVisible();
     if (actif !== undefined) await expect(bouton).toHaveAttribute("aria-pressed", String(actif));
     return;

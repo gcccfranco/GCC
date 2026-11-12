@@ -259,6 +259,8 @@
     /* Semantic music colors */
     --chord-color: #3f63cf;   /* bleu PDF FR */
     --jianpu-color: #b3261d;
+    /* Ma partition (docs/spec-ma-partition.md, « Signes ») : filet et souligné de mes retouches. */
+    --graphite: #5a5e66;
     /* Encre du scan 简谱 (piste A, docs/spec-jianpu-integration.md) : = --foreground en clair. */
     --jianpu-encre: 240 3.4% 11.4%;  /* #1c1c1e */
     --pinyin-color: #8a8f98;
@@ -330,6 +332,7 @@
 
     --chord-color: #8fb0ff;   /* bleu PDF FR dark */
     --jianpu-color: #ff7d72;
+    --graphite: #a3a7ae;
     --jianpu-encre: 240 5.9% 90%;    /* #e4e4e7 : encre adoucie du scan (D10), distincte de --foreground */
     --pinyin-color: #888e98;
     --sheet-accent: #63c3cf;
@@ -1087,3 +1090,14 @@
     padding-right: 0.75rem;
   }
 }
+
+/* Ma partition, signes de lecture (docs/spec-ma-partition.md, « Signes ») : un filet dans la marge, sans effet sur la mise
+   en page. Retouché par moi : 2 px graphite ; retouché pour le culte : double filet d'encre (forme distincte). Une parole
+   retouchée reste à l'encre, soulignée d'un trait fin graphite ; un accord retouché garde sa graisse (déjà
+   en gras sur le site : 600 l'aurait rendu plus léger que ses voisins) ; le filet suffit. */
+[data-marque] { position: relative; }
+[data-marque]::before { content: ""; position: absolute; top: 0; bottom: 0; left: -8px; border-left: 2px solid var(--graphite); }
+[data-marque="culte"]::before,
+[data-marque="conflit"][data-conflit="chant"]::before { border-left: 3px double currentColor; }
+[data-retouche="paroles"] { text-decoration: underline; text-decoration-color: var(--graphite); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+@media print { [data-marque]::before { display: none; } }

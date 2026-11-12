@@ -44,6 +44,8 @@ import {
 import type { SectionNuance } from "@/types/setList";
 import { nuanceDef, nuanceLabel, nuanceFull } from "@/lib/setlist/nuances";
 import { TempoPartition } from "@/components/song/NoteNoire";
+import type { Marques } from "@/lib/partition/lecture";
+import { TOUCHER_44 } from "@/lib/toucher44";
 
 // ---------------------------------------------------------------------------
 // Thèmes et styles de sections
@@ -917,9 +919,13 @@ interface SectionViewProps {
   couleurDe?: string;
   /** Slug du chant (exceptions de mots chinois, motsChinois.ts) ; absent : segmentation seule. */
   slug?: string;
+  /** Ma partition : signes des lignes, par `srcLine` (`data-marque` sur la ligne). */
+  marques?: Marques;
+  /** Conflit « Le chant a changé ici » : sans elle, les deux versions se montrent sans boutons. */
+  onConflit?: (index: number, choix: "mienne" | "chant") => void;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, marques, onConflit }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -1000,7 +1006,25 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
             </div>
           );
         }
-        return <div key={i}>{rendered}</div>;
+        const m = marques && (marques[line.srcLine ?? -1] ?? marques[line.pinyinSrcLine ?? -1]);
+        if (!m) return <div key={i}>{rendered}</div>;
+        const bouton = `${TOUCHER_44} h-8 rounded-full border border-border bg-background px-3 text-xs font-semibold hover:bg-secondary`;
+        return (
+          <Fragment key={i}>
+            {m.conflit?.debut && (
+              <div data-conflit-mention data-copy-ignore className="my-1 flex flex-wrap items-center gap-2 text-xs print:hidden">
+                <span className="font-semibold">{t("maPartition.conflit")}</span>
+                {onConflit && (
+                  <>
+                    <button type="button" className={bouton} onClick={() => onConflit(m.conflit!.index, "mienne")}>{t("maPartition.garderLaMienne")}</button>
+                    <button type="button" className={bouton} onClick={() => onConflit(m.conflit!.index, "chant")}>{t("maPartition.prendreCelleDuChant")}</button>
+                  </>
+                )}
+              </div>
+            )}
+            <div data-marque={m.marque} data-conflit={m.conflit?.cote} data-retouche={m.retouche}>{rendered}</div>
+          </Fragment>
+        );
       })}
     </div>
   ) : null;
@@ -1230,6 +1254,9 @@ interface SongViewProps {
   pageChant?: boolean;
   /** Slug du chant (exceptions de mots chinois, motsChinois.ts) ; absent : segmentation seule. */
   slug?: string;
+  /** Ma partition : signes des lignes par `srcLine` (docs/spec-ma-partition.md, « Signes »), et règlement des conflits. */
+  marques?: Marques;
+  onConflit?: (index: number, choix: "mienne" | "chant") => void;
 }
 
 export function SongView({
@@ -1252,6 +1279,8 @@ export function SongView({
   statistiques,
   pageChant = false,
   slug,
+  marques,
+  onConflit,
 }: SongViewProps) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
@@ -1439,6 +1468,8 @@ export function SongView({
                 onLineSelect={onLineSelect}
                 occurrenceUids={uids}
                 slug={slug}
+                marques={marques}
+                onConflit={onConflit}
               />
               {withDetails && step.transition && <TransitionNote text={step.transition} />}
             </div>
