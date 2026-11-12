@@ -326,3 +326,6 @@ qu'après quelques semaines de données.
   comptée depuis MP-3 (`44da10f`) : la session « Ma partition » repose le compte si la commande existe encore, sinon
   retire la clé (message envoyé). (2) T4 n'a plus besoin de go (`CLAUDE.md` § Go, règle du 12/11) mais passe après
   Harmonie H3 et le pupitre dans la file : elle ne sert qu'après quelques semaines de données.
+- 12/11/2026 — **T4 lancée** (`session_01UMdfuaPmCAo5WCMLAs8RDy`) à la demande de Timothée (« si PU-1 ne peut pas être
+  codé pour le moment, lance autre chose »). Question 4 : **décision déléguée (pilote, 12/11)**, option (a), un simple
+  tableau trié, sans planche (proposition de la spec : outil de bilan réservé aux admins).

@@ -78,7 +78,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      § Tranches (la tranche) et les lignes du 12/11 du § Avancement (questions tranchées). PU-1 à PU-3 s'enchaînent ;
      PU-4 à PU-6 touchent le mode louange : après FS-F, et jamais pendant qu'une autre session modifie
      `PerformanceMode.tsx` (JP-C, MP-5) ; sinon la chaîne attend et rend sa place au suivant de la file.
-  2. **Comptage T4** (`docs/spec-comptage-usage.md`, § Découpage, T4 ; go couvert par la règle des tranches) : écran
+  2. ~~**Comptage T4**~~ lancé (`session_01UMdfuaPmCAo5WCMLAs8RDy`, 12/11 10 h 57 UTC, sur demande de Timothée :
+     PU-1 attend la vérification de MP-3 et ne code pas ; PU-1 garde sa place et ne code que s'il y a moins de quatre
+     chantiers qui codent) (`docs/spec-comptage-usage.md`, § Découpage, T4 ; go couvert par la règle des tranches) : écran
      `/back-office/usage`, derrière `BACK_OFFICE`, spec ajoutée à `SPECS_GRAND_ECRAN`, suite complète en fin de lot.
   3. **AN réécrit** : après MP-5 seulement ; pas de go, ne pas lancer. **Harmonie H4 et suivants** : un go par lot,
      ne pas lancer.
