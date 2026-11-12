@@ -1476,7 +1476,7 @@ export function SongView({
 
       {/* Corps : ordre joué, ou chaque section une fois (les réglages
           d'occurrence restent dans le bandeau), ou rien du tout — ou le scan. */}
-      {corps ?? <div>
+      {corps ?? <div className={`${isZh && showPinyin ? "" : "[@container_partition_(min-width:1000px)]:grid [@container_partition_(min-width:1000px)]:grid-cols-2 [@container_partition_(min-width:1000px)]:gap-x-6 [@container_partition_(min-width:1000px)]:items-start [@container_partition_(min-width:1000px)]:[&>:last-child_[data-section]]:!mb-0 [@container_partition_(min-width:1000px)]:[&>:nth-last-child(2):nth-child(odd)_[data-section]]:!mb-0"} print:block`}>
         {shown.map(({ step, uids, withDetails }, i) => {
           const { section } = step;
           // Modulation (升调) : la section s'affiche transposée dans sa tonalité cible.

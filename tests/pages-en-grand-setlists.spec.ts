@@ -236,7 +236,7 @@ test.describe("Setlists : les dispositions", () => {
   // T3 du lot « exemples d'usage » (remplace dimanche-7 / V5) : la colonne de lecture va jusqu'à 920 px, alignée à gauche contre le rail ;
   // l'en-tête est une rangée pleine largeur, « Mode Louange » à son bord droit, à 1 440 px comme à 1 940 px de fenêtre.
   for (const largeur of [1440, 1940]) {
-    test(`ordinateur-1440 : à ${largeur} px, la colonne de lecture est plafonnée à 920 px, alignée à gauche ; « Mode Louange » reste dans l'en-tête`, async ({ page }, info) => {
+    test(`ordinateur-1440 : à ${largeur} px, la colonne de lecture est plafonnée à 920 px (1 080 px dès 1 000 px de zone, T4), alignée à gauche ; « Mode Louange » reste dans l'en-tête`, async ({ page }, info) => {
       test.skip(info.project.name !== "ordinateur-1440", "ordinateur large : la partition est plafonnée à 920 px");
       await page.setViewportSize({ width: largeur, height: 900 });
       await ouvrir(page, "/setlists/sl-1");
@@ -257,7 +257,7 @@ test.describe("Setlists : les dispositions", () => {
         const c = getComputedStyle(el);
         return { gauche: b.left + parseFloat(c.paddingLeft), droite: b.right - parseFloat(c.paddingRight) };
       });
-      expect(Math.abs(lecture.width - Math.min(920, volet.droite - volet.gauche)), "min(920, place)").toBeLessThan(2);
+      expect(Math.abs(lecture.width - Math.min((volet.droite - volet.gauche) >= 1000 ? 1080 : 920, volet.droite - volet.gauche)), "min(920 ou 1 080 dès 1 000 px de zone, place)").toBeLessThan(2);
       expect(Math.abs(lecture.x - volet.gauche), "alignée à gauche contre le rail").toBeLessThan(2);
     });
   }

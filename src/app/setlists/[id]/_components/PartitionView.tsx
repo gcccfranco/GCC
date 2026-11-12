@@ -266,7 +266,7 @@ export function PartitionsView({
                   }))}
                 />
                 {item.position === positionPremierChant && <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none"><AideAccordsEnLigne /></div>}
-                <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none pt-2">
+                <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none pt-2 [@container_partition_(min-width:1000px)]:grid [@container_partition_(min-width:1000px)]:grid-cols-2 [@container_partition_(min-width:1000px)]:gap-x-6 [@container_partition_(min-width:1000px)]:items-start [@container_partition_(min-width:1000px)]:[&>:last-child_[data-section]]:!mb-0 [@container_partition_(min-width:1000px)]:[&>:nth-last-child(2):nth-child(odd)_[data-section]]:!mb-0 print:block">
                   {shownPassages.map(({ ms, ast, section, fusionSong, keyChange }, msIdx) => {
                     const sectionNote = ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId];
                     const sectionNuance = ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId];
@@ -609,7 +609,7 @@ function NormalSongItem({
           // Partition 简谱 : le scan prend la place des paroles, sous le même
           // en-tête (K3). Structure seule : ni l'un ni l'autre.
           jianpuScore && layout !== "structure" ? (
-            <>
+            <div data-enveloppe-scan className="max-w-[920px] print:max-w-none">
               {/* Un 升调 ne se voit pas sur un scan : le dire au-dessus (lot 9). */}
               {steps
                 .filter((st) => st.targetKey)
@@ -637,7 +637,7 @@ function NormalSongItem({
                   editMode && onEditJianpu ? (next) => onEditJianpu(origIndex, next) : undefined
                 }
               />
-            </>
+            </div>
           ) : undefined
         }
       />

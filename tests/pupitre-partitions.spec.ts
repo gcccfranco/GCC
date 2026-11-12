@@ -157,8 +157,10 @@ test("deux volets : la colonne de partition a son plafond de 920 px (T3)", async
     const c = el.querySelector("[class*='max-w-[var(--colonne-partition']")!;
     return { plafond: getComputedStyle(c).maxWidth, largeur: c.getBoundingClientRect().width };
   });
-  expect(m.plafond).toBe(`${COLONNE_DEUX_VOLETS}px`);
-  expect(m.largeur).toBeLessThanOrEqual(COLONNE_DEUX_VOLETS + 0.5);
+  // T4 : 1 080 px dès que la zone atteint 1 000 px (1 440), 920 px en dessous.
+  const plafond = info.project.name === "ordinateur-1440" ? 1080 : COLONNE_DEUX_VOLETS;
+  expect(m.plafond).toBe(`${plafond}px`);
+  expect(m.largeur).toBeLessThanOrEqual(plafond + 0.5);
 });
 
 test("captures : vue Partitions et vue Liste, clair, puis sombre au téléphone et à 1 440", async ({ page }, info) => {
@@ -319,7 +321,7 @@ test("grand écran : la zone de partition mesure 892 px ± 16 en 1 080 × 810, 9
   const l = (await zonePartition(page).boundingBox())!.width;
   const cible = LARGEUR_ZONE[info.project.name];
   if (cible) expect(Math.abs(l - cible), `zone de partition : ${l} px`).toBeLessThanOrEqual(16);
-  else expect(l, "plafond de 920 px à 1 440").toBeLessThanOrEqual(920.5);
+  else expect(l, "plafond de 1 080 px à 1 440 (T4)").toBeLessThanOrEqual(1080.5);
   // Alignée à gauche contre le rail, sans défilement horizontal.
   const [rail, zone] = await Promise.all([boutonRail(page).boundingBox(), zonePartition(page).boundingBox()]);
   expect(zone!.x, "la partition après le rail").toBeGreaterThanOrEqual(rail!.x + rail!.width);
@@ -485,4 +487,71 @@ test("capture T3 sombre : 1 440 px, panneau fermé puis ouvert", async ({ page }
   await page.screenshot({ path: "test-results/t3-pupitre/ordinateur-1440-panneau-ferme-sombre.png" });
   await boutonRail(page).click();
   await page.screenshot({ path: "test-results/t3-pupitre/ordinateur-1440-panneau-ouvert-sombre.png" });
+});
+
+// ─── T4 : deux colonnes en rangées dès 1 000 px de zone, 简谱 jamais en colonne ───────────────────────────────────────
+const sectionsDe = (page: Page, n: number) =>
+  page.locator(`[data-outline-item="${n}"] [data-section]`).evaluateAll((els) =>
+    els.map((el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, droite: r.right }; }));
+const lignesCoupees = (page: Page, n: number) =>
+  page.locator(`[data-outline-item="${n}"] [data-copy-line]`).evaluateAll((els) =>
+    els.filter((el) => el.querySelectorAll("[data-rangee]").length > 1).map((el) => el.textContent?.slice(0, 40)));
+
+test("ordinateur-1440 : deux colonnes de 528 px en rangées, gouttière de 24 px, aucune ligne coupée (T4)", async ({ page }, info) => {
+  test.skip(info.project.name !== "ordinateur-1440", "1 440 × 900");
+  await ouvrir(page, "stxt", info.project.name);
+  const s = await sectionsDe(page, 1);
+  expect(s.length).toBeGreaterThanOrEqual(3);
+  expect(Math.abs(s[0].w - 528), "colonne de 528").toBeLessThanOrEqual(16);
+  expect(Math.abs(s[1].x - s[0].droite - 24), "gouttière de 24").toBeLessThanOrEqual(4);
+  expect(s[1].x, "2e section à droite de la 1re").toBeGreaterThan(s[0].x + s[0].w);
+  expect(Math.abs(s[1].y - s[0].y), "2e section sur la rangée de la 1re").toBeLessThan(4);
+  expect(s[2].y, "3e sous la 1re").toBeGreaterThan(s[0].y + 20);
+  expect(Math.abs(s[2].x - s[0].x), "3e dans la colonne de gauche").toBeLessThan(2);
+  expect(new Set(s.map((x) => Math.round(x.x))).size, "jamais de 3e colonne").toBeLessThanOrEqual(2);
+  expect(Math.max(...s.map((x) => x.droite)), "rien au-delà de 1 440").toBeLessThanOrEqual(1440);
+  expect(await lignesCoupees(page, 1), "Hosanna : lignes coupées").toEqual([]);
+  expect(await lignesCoupees(page, 2), "一切歌颂赞美 en texte : lignes coupées").toEqual([]);
+  const couplet = page.locator('[data-outline-item="1"] [data-section]').nth(1);
+  expect((await couplet.boundingBox())!.y / 900, "couplet 1 à 27 % au plus").toBeLessThanOrEqual(0.27);
+  await page.screenshot({ path: "test-results/t4-pupitre/ordinateur-1440-fr-clair.png" });
+});
+
+test("ordinateur : à 1 280 px, toujours une colonne de 920 px (T4)", async ({ page }, info) => {
+  test.skip(info.project.name !== "ordinateur", "1 280 × 720");
+  await ouvrir(page, "stxt", info.project.name);
+  const s = await sectionsDe(page, 1);
+  expect(new Set(s.map((x) => Math.round(x.x))).size, "une seule colonne").toBe(1);
+  expect(Math.abs((await zonePartition(page).first().boundingBox())!.width - 920)).toBeLessThanOrEqual(16);
+  await page.screenshot({ path: "test-results/t4-pupitre/ordinateur-1280.png" });
+});
+
+test("ordinateur-1440 sombre : captures FR et 简谱 (T4)", async ({ page }, info) => {
+  test.skip(info.project.name !== "ordinateur-1440", "Sombre : 1 440 seulement");
+  await ouvrir(page, "stxt", info.project.name, true);
+  await page.screenshot({ path: "test-results/t4-pupitre/ordinateur-1440-fr-sombre.png" });
+});
+
+test("简谱 : l'image et son calque ont la même largeur, au plus 920 px, sans section à côté (T4)", async ({ page }, info) => {
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "always"));
+  await ouvrir(page, "sjp", info.project.name);
+  const zone = page.locator('[data-outline-item="2"] [data-jianpu-page]').first();
+  await expect(zone).toBeVisible();
+  await page.waitForFunction(() => Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every((i) => i.complete && i.naturalWidth > 0));
+  const m = await zone.evaluate((p) => {
+    const img = p.querySelector("img")!.getBoundingClientRect();
+    const calque = (p.querySelector("[data-jianpu-calque]") ?? p).getBoundingClientRect();
+    const item = p.closest("[data-outline-item]")!;
+    const sections = Array.from(item.querySelectorAll("[data-section]")).map((e) => e.getBoundingClientRect());
+    // La marge blanche du scan déborde volontairement de la colonne (JianpuSheet) : le plafond de 920 px se mesure sur l'enveloppe.
+    const colonne = p.closest("[data-enveloppe-scan]")!.getBoundingClientRect().width;
+    return { img: img.width, calque: calque.width, colonne, droite: img.right, fenetre: document.documentElement.clientWidth,
+      voisines: sections.filter((r) => r.bottom > img.top && r.top < img.bottom && r.width > 0).length };
+  });
+  expect(Math.abs(m.img - m.calque), "image = calque").toBeLessThan(2);
+  expect(m.colonne, "enveloppe du scan").toBeLessThanOrEqual(920.5);
+  expect(m.droite).toBeLessThanOrEqual(m.fenetre);
+  expect(m.voisines, "aucune section à côté du scan").toBe(0);
+  await zone.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `test-results/t4-pupitre/${info.project.name}-jianpu-clair.png` });
 });

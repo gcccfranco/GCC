@@ -624,7 +624,7 @@ const T4_SETLIST = {
   title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
   language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
   items: [
-    { songSlug: "abba-pere", position: 1 },
+    { songSlug: "abba-pere", position: 1, notes: "Avec la batterie" },
     { songSlug: SLUG, position: 2, jianpuSheet: true, keyOverride: "D", notes: "Plus calme", sectionKeys: { "chorus-3": "E" } },
     { songSlug: "a-la-croix", position: 3 },
   ].map((over) => ({
@@ -668,8 +668,9 @@ test("L3-T4 vue Partitions : un chant sur scan a le même en-tête qu'un chant e
   expect(Math.abs(scan.dy - paroles.dy), "titre à la même hauteur").toBeLessThan(1);
   expect(Math.abs(scan.rondY - paroles.rondY), "n° à la même hauteur").toBeLessThan(1);
   const bloc = page.locator('[data-outline-item="2"]');
-  await expect(bloc.getByText("曾祥怡词 / 游智婷曲")).toBeVisible();
-  await expect(bloc.getByText("♩")).toBeVisible();
+  // Depuis l'en-tête compact (exemples d'usage, T2), l'auteur ne paraît plus à l'écran, seulement à l'impression.
+  await expect(bloc.getByText("曾祥怡词 / 游智婷曲")).toBeAttached();
+  await expect(bloc.getByText("♩").locator("visible=true")).toHaveCount(1); // l’en-tête complet reste dans la page pour l’impression
   await expect(bloc.getByText("D", { exact: true }).first()).toBeVisible();
   await expect(bloc.getByText("Plus calme")).toBeVisible();
   // Titre, puis bandeau, puis le scan.
@@ -685,7 +686,7 @@ test("L3-T4 vue Partitions : le chant suivant commence au même écart après un
   // chant suivant ; mesuré d'un coup, et attendu stable (la fenêtre se coupe après l'image).
   const ecarts = () => page.evaluate(() => {
     const bloc = (i: number) => document.querySelector(`[data-outline-item="${i}"]`)!;
-    const bas = (els: NodeListOf<Element>) => els[els.length - 1].getBoundingClientRect().bottom;
+    const bas = (els: NodeListOf<Element>) => Math.max(...Array.from(els, (e) => e.getBoundingClientRect().bottom)); // T4 : deux colonnes, la dernière section n'est plus forcément la plus basse
     const rond = (i: number) => Array.from(bloc(i).querySelectorAll("span")).find((s) => s.textContent === String(i))!.getBoundingClientRect();
     return {
       apresParoles: rond(2).top - bas(bloc(1).querySelectorAll("[data-section]")),
@@ -1073,7 +1074,7 @@ test("10 PDF téléchargé : 一生爱你 en D — le scan ré-encodé fait w ×
   await signInAs(page, MUSICIEN, {
     "setlists/setlist-t6": {
       title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
-      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false, editeurs: ["uid-musicien"],
       items: [{ songSlug: SLUG, position: 1, keyOverride: "D", showChords: true, showPinyin: true, useJianpu: false,
         structureOverride: null, sectionNotes: {}, notes: "", jianpuSheet: true }],
     },

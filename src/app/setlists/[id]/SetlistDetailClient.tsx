@@ -1937,9 +1937,9 @@ export function SetlistDetailClient() {
                 }}
               />
             </div>
-            <div className="min-w-0 pb-16 pl-6 pr-4 pt-5">
+            <div className="min-w-0 pb-16 pl-6 pr-4 pt-5 [container-type:inline-size] [container-name:partition]">
               {/* T3 : colonne de lecture de 920 px, alignée à gauche contre le rail ; seul ce volet pose la variable. */}
-              <div className="w-full max-w-[920px] [--colonne-partition:920px]">
+              <div className="w-full max-w-[920px] [--colonne-partition:920px] [@container_partition_(min-width:1000px)]:max-w-[1080px] [@container_partition_(min-width:1000px)]:[--colonne-partition:1080px]">
               {/* Ce que garde la question 4, sous le titre : historique, langue, qui peut
                   modifier ; la régie ajoute ou change ici le lien de la présentation. */}
               <div id="entete-setlist-dv" className={`mb-4 ${enteteOuvert ? "" : "hidden print:block"}`}>
