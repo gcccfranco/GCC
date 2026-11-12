@@ -88,7 +88,8 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      chantiers qui codent) (`docs/spec-comptage-usage.md`, § Découpage, T4 ; go couvert par la règle des tranches) : écran
      `/back-office/usage`, derrière `BACK_OFFICE`, spec ajoutée à `SPECS_GRAND_ECRAN`, suite complète en fin de lot.
   3. **AN (AN-3a → AN-2 → AN-3b → AN-4 → AN-5)** : **go de Timothée (12/11, 16 h 15 UTC)** ; à lancer par la session qui finit PU-6 (12/11, après MP-5 `ddbaa13` : `spec-mode-louange-forscore-2.md` § AN, tranches AN-3a, AN-2, AN-3b, AN-4, AN-5 ; se code après PU-6, jamais pendant qu'une autre session modifie `PerformanceMode.tsx` ; une session par tranche, consigne type ci-dessous ; AN-Q1 : pas d'animation hors l'anneau d'appui long). **Harmonie H4** : go de Timothée, lancé (`session_01UMdfuaiAxiKUENyB4RqBb4`, 12/11 14 h 08 UTC,
-     cinquième chantier). **Harmonie H5 et suivants** : un go par lot,
+     cinquième chantier) ; **H4 fini** le 12/11 (`4ebf04be`, H4-2 colonne) : place libre, rien dans la file n'a de go
+     disponible (AN attend PU-6). **Harmonie H5 et suivants** : un go par lot,
      ne pas lancer.
   Consigne de lancement (`create_session`) : `source_url` https://github.com/gcccfranco/GCC, `source_revision` et
   `outcome_branch` `claude/corrections-design`, modèle `claude-opus-5-5` ; une tranche, la section de spec à lire,
