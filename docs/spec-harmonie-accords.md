@@ -241,6 +241,16 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   l'interface chinoise (contenu des fiches, H9) ; « Essayer » d'un bloc replié (×n) vise la première reprise. Son réel
   non écouté (à faire sur iOS et Android). Prochain : H4-2 (colonne), session neuve.
 
+- 12/11/2026 : critique-design de H4-1 (4 captures) : « à retoucher ». **À faire en tête de H4-2** (décisions
+  déléguées, session H4, 12/11) : (1) lettres de la grille sans pastille, en gris, toujours touchables (variante de
+  `AccordTouchable`), seuls les chiffres en `--chord-color` ; (2) nom du passage en `text-base font-semibold`, nom
+  d'idée en `text-sm font-semibold` ; (3) bouton d'entrée texte seul « Harmonie » / « 和声 », sans étincelle, page
+  chant et puce setlist, libellé gardé à tous les niveaux de `data-libelles` (ce sont les autres libellés qui
+  tombent) ; (4) transition dans l'ordre joué « A → B → E », chant suivant et tonalité sur leur ligne ; (5) « À
+  vérifier en jouant » une seule fois, en tête des idées de la feuille ; (6) chaque côté de la flèche des chiffres en
+  `whitespace-nowrap` ; plus un bouton de fermeture visible (croix) et `lang="fr"` sur le nom des fiches en interface
+  chinoise.
+
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
 69 fiches en 12 familles aujourd'hui. À ajouter, dans l'ordre d'utilité pour le répertoire :
