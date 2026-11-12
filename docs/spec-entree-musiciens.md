@@ -398,3 +398,8 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   elle ne convient pas ; (7) PU-1 à PU-3 d'abord, PU-4 à PU-6 après FS-F, jamais en même temps qu'une session dans
   `PerformanceMode.tsx`. Motif : aucune ne sort de ce que Timothée a déjà décidé, toutes se défont sans perte.
   **Plus aucune question ouverte. Aucun go de code donné** : attend « go pour le pupitre » (ou par tranche).
+- 12/11/2026 : **Timothée revient sur la décision 2** (« Ah si, tout le monde [doit] avoir accès aux PDF ») : le PDF
+  d'un chant reste ouvert à tous, avec ou sans compte ; `canExporterPdfChant` et la lecture « équipe d'une setlist à
+  venir » (question 4) **ne se construisent pas**. Reste à confirmer par Timothée : le PDF d'une **setlist**
+  (décision 1, réservé à qui peut la modifier et à la présidence) est-il ouvert à tous lui aussi ? Si oui, PU-1 tombe
+  en entier. PU-1 ne part pas avant cette réponse.
