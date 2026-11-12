@@ -135,6 +135,10 @@ pas seulement en mémoire.
     qu'elle touche et leurs voisines, sur les trois appareils ; la suite complète tourne **une fois, en fin de lot**
     (dernière tranche). Après des corrections, un seul tour, limité aux specs qui avaient échoué. Chaque ligne
     d'Avancement donne la durée des tests de la tranche (à relire après deux ou trois tranches).
+    **Suite complète** (Timothée, 12/11/2026 après-midi, « oui suite complète à la fin de tout » : elle compte 21 400
+    tests, environ 8 h) : elle ne tourne plus en fin de lot. En fin de lot : les specs du lot et des pages qu'il
+    touche. La suite complète tourne une seule fois, quand tous les chantiers en cours sont finis et avant la mise
+    en ligne, en tâche de fond et par fragments.
   - *Quatre chantiers* (même date, « go pour Harmonie H2 » en quatrième) : la limite ci-dessous passe de trois à
     quatre chantiers de code en même temps ; pas au-delà sans nouvel accord de Timothée.
     **Cinq** depuis le 12/11/2026 après-midi (Timothée : « on peut passer à 5 sessions en simultanées ») : partout où

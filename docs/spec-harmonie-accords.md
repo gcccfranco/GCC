@@ -210,3 +210,5 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
 - 12/11/2026 : **go de Timothée pour H3** (« tu peux lancer h3 », au pilote). Les quatre places de code sont prises :
   H3 part à la première place libre (fin du comptage T3), avant le pupitre (une tranche courte passe devant une chaîne
   de six ; décision déléguée, pilote, 12/11). H4 et suivants : un go par lot.
+- 12/11/2026 (après-midi) — **Go de Timothée pour H4** (« go pour Harmonie H4 »). Lancé en cinquième chantier ; H5 et
+  suivants gardent leur go.
