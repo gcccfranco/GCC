@@ -126,6 +126,8 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   (le bouton 简谱 des Options d'affichage reste pour changer en cours de route). Les questions propres à C tombent ;
   pour A, la spec proposera l'insertion locale à l'appareil (effacée à la fermeture) et un « Retirer ». Prochaine
   étape : la spec, puis le go ; codage après AN, MP-6 et H8 (`PerformanceMode.tsx`).
+  **Spec écrite** (12/11/2026) : `docs/spec-louange-tous-les-chants.md`, lot TC en trois tranches (TC-1 liste, bouton
+  et insertion ; TC-2 marques, retrait, retour, hors ligne ; TC-3 raccord H8) ; attend le go de Timothée.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 
