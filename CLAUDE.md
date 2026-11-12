@@ -118,6 +118,12 @@ pas seulement en mémoire.
     pousse, lance elle-même la session de la tranche suivante (`create_session`, même branche, Opus, consigne
     reprise de la sienne avec le numéro de tranche changé) puis s'arrête. Elle ne lance pas la suivante si la tranche
     est bloquée, si le lot est fini ou si le go ne couvre pas la suite : elle écrit alors au pilote.
+  - *Tests d'une tranche* (Timothée, 12/11/2026, « oui applique les trois ») : une tranche fait tourner les specs
+    qu'elle touche et leurs voisines, sur les trois appareils ; la suite complète tourne **une fois, en fin de lot**
+    (dernière tranche). Après des corrections, un seul tour, limité aux specs qui avaient échoué. Chaque ligne
+    d'Avancement donne la durée des tests de la tranche (à relire après deux ou trois tranches).
+  - *Quatre chantiers* (même date, « go pour Harmonie H2 » en quatrième) : la limite ci-dessous passe de trois à
+    quatre chantiers de code en même temps ; pas au-delà sans nouvel accord de Timothée.
   - *Pas de réveil* : une orchestratrice n'envoie pas de message de suivi à la session d'origine ; elle écrit une
     ligne datée par tranche dans la spec et pousse. Un message seulement pour une question bloquante ou la fin du lot.
   - *Lire par section* : une spec ou un document de plus de 30 000 caractères se lit par section (grep des titres

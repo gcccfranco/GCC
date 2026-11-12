@@ -134,6 +134,8 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   chant, recommandée)**, C (carnet). Critique « à retoucher » : tablette paysage et 1 440 px non dessinés ; boutons
   Écouter secondaires passés en contour à la relecture. Questions posées.
 - 12/11/2026 : Timothée valide toutes les recommandations ; décisions et lots H2 à H9 réécrits. Prochain : go pour H2 ?
+- 12/11/2026 : **go de Timothée pour H2** (« go pour Harmonie H2 », au pilote), en quatrième chantier de code. Session
+  neuve lancée par le pilote ; le go ne couvre pas H3.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
