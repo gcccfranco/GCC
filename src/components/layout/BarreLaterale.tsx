@@ -29,6 +29,7 @@ import { entreesBackOffice } from "@/lib/access";
 import { useProfile } from "@/lib/firebase/users";
 import { getBarreReduite, setBarreReduite, suivreBarreReduite } from "@/lib/barreLateralePref";
 import { usePastilles } from "@/lib/tableauDeBord/usePastilles";
+import { compter } from "@/lib/usage";
 import { Cloche } from "@/components/layout/Cloche";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
 import { SelecteurEspace, useFormeAffichee } from "@/components/layout/SelecteurEspace";
@@ -383,7 +384,7 @@ function ContenuBarre({
               )}
               {langue()}
               <button
-                onClick={() => setTheme(dark ? "light" : "dark")}
+                onClick={() => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); }}
                 aria-label={dark ? t("common.aria.modeClair") : t("common.aria.modeSombre")}
                 className={PASTILLE}
               >

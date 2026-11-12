@@ -25,6 +25,7 @@ import { cleNomEquipe } from "@/lib/equipes/table";
 import { getAccueilVu, setAccueilVu, VERSION_VISITE } from "@/lib/firebase/onboarding";
 import { useProfile } from "@/lib/firebase/users";
 import { cartesDeLaVisite, type Carte, type Ligne } from "@/lib/onboarding/visite";
+import { compter } from "@/lib/usage";
 import { isIOS, isPushSupported, isStandalone, isSubscribed, subscribeToPush } from "@/lib/push/client";
 import { categoryLabel } from "@/lib/serviceColors";
 import type { ServiceRole } from "@/types/user";
@@ -98,6 +99,7 @@ const EVENEMENT_VISITE = "gcc:visite";
 
 /** Rouvre la visite à la demande (Moi, Guide) : le mode « revoir », qui n'écrit rien. */
 export function ouvrirVisite() {
+  compter("cmd.compte.onboarding");
   window.dispatchEvent(new Event(EVENEMENT_VISITE));
 }
 

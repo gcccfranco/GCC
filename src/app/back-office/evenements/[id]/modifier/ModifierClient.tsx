@@ -6,6 +6,7 @@
 // Agencement v18 (B3, B4) : en grand, le formulaire s'ouvre dans le volet de droite ; en un volet, c'est
 // une page, avec « ‹ Évènements » pour retour ; une réunion s'intitule « Modifier la réunion » et revient à sa fiche.
 
+import { compter } from "@/lib/usage"
 import { useEffect, useState } from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
@@ -78,6 +79,7 @@ export function ModifierClient() {
       titreCache={!deuxVolets}
       onSubmit={async (values) => {
         await updateEvenement(evenement.id, values)
+        compter("cmd.evenement.modifier")
         router.push(`${base}/${evenement.id}`)
       }}
       onCancel={() => router.push(`${base}/${evenement.id}`)}
@@ -92,6 +94,7 @@ export function ModifierClient() {
       inscrits={evenement.inscrits}
       onSubmit={async (values) => {
         await updateEvenement(evenement.id, values)
+        compter("cmd.evenement.modifier")
         router.push(`${base}/${evenement.id}`)
       }}
       onCancel={() => router.push(`${base}/${evenement.id}`)}

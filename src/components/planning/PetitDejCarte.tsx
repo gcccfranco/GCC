@@ -22,6 +22,7 @@ import { TOUCHER_44 } from "@/lib/toucher44"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { Coffee, Pencil, Trash2 } from "lucide-react"
 import { MenuActions } from "@/components/layout/MenuActions"
+import { compter } from "@/lib/usage"
 import { PassesReplies } from "./PassesReplies"
 import { Tile } from "@/components/ui/tile"
 import { canGererPetitDej } from "@/lib/access"
@@ -120,6 +121,7 @@ export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
       const r = await inscrire(dimanche, nom, user.uid)
       // Quelqu'un vient de prendre ce dimanche : rien n'est écrit (Q11).
       if ("deja" in r) setAnnonce({ dimanche, texte: t("planning.petitDej.vientDeSInscrire", { nom: r.deja.map((l) => l.nom).join(", ") }) })
+      else compter("cmd.planning.petitDej")
     })
   }
 

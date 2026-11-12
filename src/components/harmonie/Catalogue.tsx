@@ -24,6 +24,7 @@ import { useTerme } from "@/components/harmonie/AvisLangue";
 import { ContexteCatalogue, useCatalogueHarmonie } from "@/components/harmonie/catalogueContexte";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useAccesHarmonie, useCatalogue, useInstrument } from "@/lib/harmonie/useHarmonie";
+import { compter } from "@/lib/usage";
 import { getSetlists } from "@/lib/firebase/setlists";
 import { cn } from "@/lib/utils";
 import { MOMENTS, SENSATIONS, type Fiche, type HarmonieIndex, type Instrument, type Niveau } from "@/types/harmonie";
@@ -46,6 +47,17 @@ export function HarmonieCatalogue({ children }: { children: React.ReactNode }) {
   const { fiches, parcours, chargement } = useCatalogue();
   const [instrument, setInstrument] = useInstrument(acces);
   const [filtres, setFiltres] = useState<Filtres>(SANS_FILTRE);
+  // Une rafale de réglages se compte une fois (3 s depuis le dernier compte), comme `modifierLigne` des setlists ;
+  // un réglage qui ne change rien ne compte pas.
+  const dernierFiltre = useRef(0);
+  const filtrer = (f: Filtres) => {
+    const maintenant = Date.now();
+    if (JSON.stringify(f) !== JSON.stringify(filtres) && maintenant - dernierFiltre.current > 3000) {
+      compter("cmd.harmonie.filtre");
+      dernierFiltre.current = maintenant;
+    }
+    setFiltres(f);
+  };
 
   const visibles = useMemo(
     () =>
@@ -94,7 +106,7 @@ export function HarmonieCatalogue({ children }: { children: React.ReactNode }) {
             visibles={visibles}
             parcours={parcours}
             filtres={filtres}
-            setFiltres={setFiltres}
+            setFiltres={filtrer}
           />
         }
         premier={visibles[0] ? <FicheHarmonie id={visibles[0].id} /> : null}

@@ -16,6 +16,7 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { espaceDe, labelDeSection } from "@/lib/navigation";
+import { compter } from "@/lib/usage";
 import { Cloche } from "@/components/layout/Cloche";
 import { IconeMessages, IconeMessagesRetenue } from "@/components/layout/IconeMessages";
 import { useBarreMontree } from "@/components/layout/BarreLaterale";
@@ -50,7 +51,7 @@ export function Navbar() {
   const attente = authLoading && probablementConnecte;
   const membre = !!user || attente;
   const dark = mounted && resolvedTheme === "dark";
-  const toggleTheme = () => setTheme(dark ? "light" : "dark");
+  const toggleTheme = () => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); };
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

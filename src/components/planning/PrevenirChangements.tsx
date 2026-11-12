@@ -23,6 +23,7 @@ import {
 import type { PublishablePlanning } from "@/lib/planning/releases"
 import { fdLongL } from "@/lib/planning/utils"
 import { useEtatsAnnonces } from "@/lib/planning/useGrilleApp"
+import { compter } from "@/lib/usage"
 import { changementPlanningMessage, changementPlanningParDefaut } from "@/lib/push/messages"
 
 // « Prévenir des changements » (lot 3, docs/spec-planning-gestes.md, PG33 à PG47) : dans un trimestre
@@ -234,7 +235,7 @@ function Feuille({ prev, prevenir, definition, onFermer, onIgnorer, onEnvoye }: 
       message !== null && message.trim() && message !== defaut.body ? message : undefined,
     )
     setEnCours(false)
-    if (r.ok) onEnvoye(r.data.prevenus ?? cochees.length)
+    if (r.ok) { compter("cmd.planning.prevenir"); onEnvoye(r.data.prevenus ?? cochees.length) }
     else setErreur(t(r.status === 409 ? "planning.prevenir.conflit" : "planning.prevenir.echec"))
   }
 

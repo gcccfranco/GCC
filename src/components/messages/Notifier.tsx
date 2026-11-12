@@ -19,6 +19,7 @@ import { Pilules } from "@/components/layout/Onglets";
 import { categoryColor } from "@/lib/serviceColors";
 import { libelleAudience } from "@/components/admin/libelles";
 import { ApercuNotification, DerniersEnvois } from "./ApercuNotification";
+import { compter } from "@/lib/usage";
 
 // Au-delà de ce nombre de destinataires (ou « tout le monde »), on demande confirmation.
 const CONFIRM_THRESHOLD = 20;
@@ -174,6 +175,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
+        compter("cmd.notifier.envoyer");
         setFeedback(t("notifier.envoye", { n: data.sent ?? 0 }));
         setTitle("");
         setBody("");

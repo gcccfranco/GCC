@@ -15,6 +15,7 @@ import { RefusDesRegles, ajouterLigne, renommerLigne, retirerLigne } from "@/lib
 import { useProfile } from "@/lib/firebase/users"
 import { lirePetitDej } from "@/lib/petitdej/lignes"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { compter } from "@/lib/usage"
 import type { LignePetitDej } from "@/types/petitDej"
 
 const COULEUR = PLANNING_COLORS.table
@@ -83,7 +84,7 @@ export function usePetitDejGrille(actif: boolean, onLignes: (lignes: LignePetitD
     if (!user || !Array.isArray(lignes)) return
     const noms = nomsAAjouter(texte, lignes.filter((l) => l.dimanche === dimanche).map((l) => l.nom))
     if (!noms.length) return
-    await ecrire(dimanche, async () => { for (const nom of noms) await ajouterLigne(dimanche, nom, user.uid) })
+    await ecrire(dimanche, async () => { for (const nom of noms) await ajouterLigne(dimanche, nom, user.uid); compter("cmd.planning.petitDej") })
   }
 
   async function renommer(l: LignePetitDej, nom: string) {

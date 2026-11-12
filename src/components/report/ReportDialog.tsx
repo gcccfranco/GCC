@@ -9,6 +9,7 @@ import { authHeader } from "@/lib/firebase/setlists";
 import { REPORT_LIMITS } from "@/lib/report/reportValidator";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ReportKind } from "@/types/report";
+import { compter } from "@/lib/usage";
 
 interface ReportDialogProps {
   open: boolean;
@@ -53,6 +54,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle, titreIn
           songTitle: kind === "song" ? songTitle ?? "" : "",
         }),
       });
+      if (res.ok && kind === "song") compter("cmd.chant.signaler");
       setStatus(res.ok ? "done" : "error");
     } catch {
       setStatus("error");

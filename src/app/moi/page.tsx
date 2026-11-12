@@ -29,6 +29,7 @@ import { useSetLanguage } from "@/lib/I18nProvider";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { audiencesNotifiables, equipesDesTaches, isAdminUser } from "@/lib/access";
+import { compter } from "@/lib/usage";
 import { BACK_OFFICE } from "@/lib/backOffice";
 
 const TOGGLE = "rounded-full bg-secondary px-3 py-1.5 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.96] cursor-pointer";
@@ -83,7 +84,7 @@ function MoiClient() {
               <GroupRow leading={<Globe />} onClick={() => setLanguage(isZh ? "fr" : "zh-CN")} trailing={isZh ? "中文" : t("moi.french")}>
                 {t("moi.language")}
               </GroupRow>
-              <GroupRow leading={<Moon />} onClick={() => setTheme(dark ? "light" : "dark")} trailing={dark ? t("moi.dark") : t("moi.light")}>
+              <GroupRow leading={<Moon />} onClick={() => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); }} trailing={dark ? t("moi.dark") : t("moi.light")}>
                 {t("moi.theme")}
               </GroupRow>
             </>
@@ -102,7 +103,7 @@ function MoiClient() {
               <GroupRow
                 leading={<Moon />}
                 trailing={
-                  <button type="button" onClick={() => setTheme(dark ? "light" : "dark")} className={TOGGLE}>
+                  <button type="button" onClick={() => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); }} className={TOGGLE}>
                     {dark ? t("moi.light") : t("moi.dark")}
                   </button>
                 }

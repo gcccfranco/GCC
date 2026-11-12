@@ -1,5 +1,6 @@
 "use client"
 
+import { compter } from "@/lib/usage"
 import { useState } from "react"
 import { Send, EyeOff } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -42,6 +43,7 @@ export function BoutonPublication({ planningKey, planningLabel, annee, tri, publ
       })
       const data = (await res.json().catch(() => ({}))) as { published?: string[]; error?: string; dejaAnnonce?: boolean; notified?: boolean }
       if (res.ok) {
+        if (publish) compter("cmd.planning.publier")
         onChange(data.published ?? [], data.notified === true)
         // « Prévenir des changements » n'existe pas en ligne (back-office coupé) : le texte n'y renvoie pas.
         if (data.dejaAnnonce) setInfo(t(BACK_OFFICE ? "planning.dejaAnnonce" : "planning.dejaAnnonceEnLigne"))

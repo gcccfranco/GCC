@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { compter } from "@/lib/usage";
 
 /**
  * Tirer-vers-le-bas pour actualiser (téléphone/tablette, utile surtout en PWA
@@ -15,6 +16,7 @@ export function PullToRefresh() {
   const { t } = useTranslation();
   const [state, setState] = useState<"idle" | "armed" | "refreshing">("idle");
   const startY = useRef<number | null>(null);
+  const compte = useRef(false);
 
   useEffect(() => {
     const THRESHOLD = 70;
@@ -32,6 +34,8 @@ export function PullToRefresh() {
       if (startY.current !== null && window.scrollY <= 0) {
         setState((s) => {
           if (s === "armed") {
+            // Une mise à jour d'état peut être rejouée (mode strict) : un seul compte avant le rechargement.
+            if (!compte.current) { compte.current = true; compter("cmd.general.rafraichir"); }
             window.location.reload();
             return "refreshing";
           }

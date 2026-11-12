@@ -16,6 +16,7 @@ import { joursAvant } from "@/lib/planning/accueil"
 import { cleDuService } from "@/lib/planning/mesServices"
 import { serviceColor } from "@/lib/serviceColors"
 import { serviceButtonFill } from "@/lib/serviceButton"
+import { compter } from "@/lib/usage"
 import { Tile } from "@/components/ui/tile"
 import { KeyPill } from "@/components/ui/key-pill"
 
@@ -81,12 +82,13 @@ export function PourMoi({
         })}
       </ol>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Link href={`/setlists/${setlist.id}`} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+        <Link href={`/setlists/${setlist.id}`} onClick={() => compter("cmd.accueil.pourMoi")} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
           <ListMusic className="h-4 w-4" aria-hidden />
           {t("planning.accueil.ouvrir")}
         </Link>
         <Link
           href={`/setlists/${setlist.id}?louange=1`}
+          onClick={() => compter("cmd.accueil.pourMoi")}
           className="inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-transform duration-150 active:scale-[.97]"
           style={{ background: serviceButtonFill(couleur) }}
         >
@@ -103,7 +105,7 @@ export function PourMoi({
       <section aria-labelledby="pour-moi">
         <h2 id="pour-moi" className="sr-only">{t("planning.accueil.pourMoi")}</h2>
         <article data-carte className="carte-groupe rounded-2xl p-4">
-          <Link href="/mes-services" className="flex items-center gap-3">
+          <Link href="/mes-services" onClick={() => compter("cmd.accueil.pourMoi")} className="flex items-center gap-3">
             {tuile}
             <span className="min-w-0 flex-1">
               <span className="block text-xs font-semibold text-muted-foreground">{t("planning.nextService")}</span>
@@ -157,7 +159,7 @@ export function PourMoi({
               </ul>
             </>
           )}
-          <Link href="/mes-services" className="mt-auto inline-flex items-center gap-1 pt-2.5 text-sm font-semibold">
+          <Link href="/mes-services" onClick={() => compter("cmd.accueil.pourMoi")} className="mt-auto inline-flex items-center gap-1 pt-2.5 text-sm font-semibold">
             {t("mesServices.title")}
             <ChevronRight className="h-3.5 w-3.5" aria-hidden />
           </Link>

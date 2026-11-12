@@ -27,6 +27,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { ChoixInscriptions, useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
+import { compter } from "@/lib/usage"
 import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
@@ -109,6 +110,7 @@ export function Inscriptions({ evenement: e, user, organisateur, onInscrits }: {
     ev.preventDefault()
     run(async () => {
       const r = await inscrire(e.id, invites, user ? undefined : nom.trim())
+      compter("cmd.evenement.inscrire")
       onInscrits(r.inscrits)
       if (user) setMine(r.mine); else setDone(true)
       setChoosing(false)

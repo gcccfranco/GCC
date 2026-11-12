@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
 import { DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { CercleChromatique } from "@/components/performance/CercleChromatique";
+import { compter } from "@/lib/usage";
 import { useAuth } from "@/lib/firebase/auth";
 import { setCouleurAccords, useChoixCouleursAccords } from "@/lib/couleurAccords";
 import { FOND_CLAIR, FOND_SOMBRE, SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE, TEINTES, garderContraste } from "@/lib/performance/couleurIcones";
@@ -56,8 +57,9 @@ export function ChoixCouleurAccords({ variante, theme }: { variante: "menu" | "p
     const valeur = choix[langue];
     const choisie = valeur === null ? "origine" : PRETES.find((c) => c.hex === valeur)?.id ?? "autre";
     const lid = `${titre}-${langue}`;
-    const aller = (id: string) => {
+    const aller = (id: string, repetition = false) => {
       if (id === "autre") return setOuvert(langue);
+      if (id !== choisie && !repetition) compter("cmd.louange.couleurAccords");
       setOuvert(null);
       setCouleurAccords(uid ?? null, langue, id === "origine" ? null : PRETES.find((c) => c.id === id)!.hex);
     };
@@ -93,7 +95,7 @@ export function ChoixCouleurAccords({ variante, theme }: { variante: "menu" | "p
             // Partir de la pastille qui a le focus (l'arc-en-ciel ouvert n'est pas la teinte retenue), sinon de la teinte retenue.
             const depart = (e.target as HTMLElement).closest<HTMLElement>("[data-teinte]")?.dataset.teinte ?? choisie;
             const suivant = IDS[(IDS.indexOf(depart) + d + IDS.length) % IDS.length];
-            aller(suivant);
+            aller(suivant, e.repeat);
             e.currentTarget.querySelector<HTMLElement>(`[data-teinte="${suivant}"]`)?.focus();
           }}
         >
@@ -122,7 +124,7 @@ export function ChoixCouleurAccords({ variante, theme }: { variante: "menu" | "p
       <button
         type="button"
         disabled={loading || (choix.fr === null && choix.zh === null)}
-        onClick={() => { setOuvert(null); setCouleurAccords(uid ?? null, "fr", null); setCouleurAccords(uid ?? null, "zh", null); }}
+        onClick={() => { compter("cmd.louange.couleurAccords"); setOuvert(null); setCouleurAccords(uid ?? null, "fr", null); setCouleurAccords(uid ?? null, "zh", null); }}
         className="flex min-h-11 items-center rounded-md px-2 text-sm font-medium text-[color:var(--chord-color)] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
       >
         {t("couleurAccords.lien")}

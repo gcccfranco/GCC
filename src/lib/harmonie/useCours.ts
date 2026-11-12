@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/firebase/auth";
+import { compter } from "@/lib/usage";
 import { getCoursProgres, marquerChapitre, type Progres } from "@/lib/firebase/coursProgres";
 import type { Chapitre, ChapitreResume, CoursIndex } from "@/types/cours";
 
@@ -81,6 +82,7 @@ export function useCoursProgres(): { fini: Progres; chargement: boolean; marquer
     });
     try {
       await marquerChapitre(uid, id, date);
+      if (fait) compter("cmd.harmonie.chapitre");
     } catch {
       annoncer(await getCoursProgres(uid).catch(() => ({})));
     }

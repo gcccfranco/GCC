@@ -1,5 +1,6 @@
 "use client"
 
+import { compter } from "@/lib/usage"
 import { useState } from "react"
 import { Plus } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -38,6 +39,7 @@ export function AjouterDate({ annee, dimanches, moments, onAjouter }: {
     setEchec(false)
     try {
       await onAjouter(choisie, moments ? leMoment : undefined)
+      compter("cmd.planning.grille.ajouterDate")
       if (!dimanches) setDate("")
     } catch {
       setEchec(true)

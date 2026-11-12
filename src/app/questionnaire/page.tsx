@@ -22,6 +22,7 @@ import { useDisposition } from "@/hooks/useDisposition";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { Impasse } from "@/components/layout/Impasse";
 import { Squelette } from "@/components/layout/Squelette";
+import { compter } from "@/lib/usage";
 
 function isAnswered(a: SurveyAnswer | undefined): boolean {
   if (a === undefined) return false;
@@ -241,6 +242,7 @@ export default function QuestionnairePage() {
     try {
       await persist(isLast);
       if (isLast) {
+        compter("cmd.questionnaire.envoyer");
         setDone(true);
         setResumed(false);
         window.scrollTo({ top: 0, behavior: "smooth" });

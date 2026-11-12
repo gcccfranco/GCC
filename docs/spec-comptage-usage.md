@@ -54,7 +54,7 @@ le crochet de T1 et ne sont pas relistés ici, sauf quand l'écran est la foncti
 
 | Domaine | Fonctionnalité | Clé | Tranche |
 | --- | --- | --- | --- |
-| Accueil | « Ce dimanche » (ouvrir la setlist) | `cmd.accueil.ceDimanche` | T3 |
+| Accueil | « Ce dimanche » (ouvrir la setlist) | `cmd.accueil.ceDimanche` | T3 : absente du code (la carte n'ouvre pas de setlist) |
 | Accueil | « Pour moi » (ouvrir un élément) | `cmd.accueil.pourMoi` | T3 |
 | Chants | Recherche (une recherche aboutie : résultat ouvert) | `cmd.chants.recherche` | T2 |
 | Chants | Bascule 中文 de la liste | `cmd.chants.basculeZh` | T2 |
@@ -113,7 +113,7 @@ le crochet de T1 et ne sont pas relistés ici, sauf quand l'écran est la foncti
 | Harmonie | Idée : ajouter, modifier, supprimer | `cmd.harmonie.idee.<action>` | T3 |
 | Harmonie | RD-2000 | `ecran.harmonie/rd2000*` | T1 |
 | Harmonie | Cours : cocher un chapitre | `cmd.harmonie.chapitre` | T3 |
-| Harmonie | Avis sur la langue | `cmd.harmonie.avisLangue` | T3 |
+| Harmonie | Avis sur la langue | `cmd.harmonie.avisLangue` | T3 : absente du code (bloc d'information, sans geste) |
 | Compte | Absences : ajouter, supprimer | `cmd.compte.absence` | T3 |
 | Compte | Réglages de notifications | `cmd.compte.notifPrefs` | T3 |
 | Compte | Activer les notifications push | `cmd.compte.push` | T3 |
@@ -122,7 +122,7 @@ le crochet de T1 et ne sont pas relistés ici, sauf quand l'écran est la foncti
 | Équipes, tâches | Fiches, listes | `ecran.equipes*`, `ecran.taches*` | T1 |
 | Évènements | Créer, modifier, s'inscrire, compte rendu | `cmd.evenement.<action>` | T3 |
 | Évènements | Scène | `ecran.evenements/scene*` | T1 |
-| Annonces | Bascule « annonce » | `cmd.annonce.bascule` | T3 |
+| Annonces | Bascule « annonce » | `cmd.annonce.bascule` | T3 : absente du code (note statique, sans interrupteur) |
 | Notifications | Ouvrir la cloche | `cmd.cloche.ouvrir` | T3 |
 | Notifications | Envoyer (Notifier) | `cmd.notifier.envoyer` | T3 |
 | Questionnaire | Envoyer | `cmd.questionnaire.envoyer` | T3 |
@@ -130,6 +130,7 @@ le crochet de T1 et ne sont pas relistés ici, sauf quand l'écran est la foncti
 | Général | Langue FR / 中文 | `cmd.general.langue` | T3 |
 | Général | Thème clair / sombre / auto | `cmd.general.theme` | T3 |
 | Général | Tirer pour rafraîchir | `cmd.general.rafraichir` | T3 |
+| Mode louange, page chant | Couleur des accords (lot CA) : pastille, couleurs d'origine | `cmd.louange.couleurAccords` | T3 |
 | Général | Site installé (PWA) au lancement | `cmd.general.pwa` | T1 |
 | Back-office | Chaque écran (équipes, personnes, tâches, évènements, réunions, calendrier, planning, messages, admin) | `ecran.back-office/*`, `ecran.admin` | T1 |
 
@@ -300,3 +301,24 @@ qu'après quelques semaines de données.
   ajoute à l'inventaire la ligne `cmd.louange.couleurAccords` (T3) et la pose comme les autres. Motif : la règle du
   registre veut une clé par commande, et une commande sans clé resterait invisible au tri des candidates. T4 attend
   toujours son go.
+- 12/11/2026 — **T3 codée** (session orchestratrice, executant → testeur → relecteur) : 32 clés `cmd.*` au registre
+  (`src/lib/usageCles.ts`, bloc « T3 »), toutes littérales (`cmd.planning.grille.copie|historique|ajouterDate`,
+  `cmd.harmonie.idee.ajouter|modifier|supprimer`, `cmd.compte.absence.ajouter|supprimer`,
+  `cmd.evenement.creer|modifier|inscrire|compteRendu`), plus `cmd.louange.couleurAccords` posée une fois dans
+  `ChoixCouleurAccords.tsx` (page chant, setlist, mode louange). Aucun changement visible. **Absentes du code, non
+  comptées** : `cmd.accueil.ceDimanche`, `cmd.harmonie.avisLangue`, `cmd.annonce.bascule` (marquées à l'inventaire).
+  **Choix faits, à confirmer** : `petitDej` compte l'inscription réussie (pas de case à cocher) ; `onboarding` compte
+  « Revoir la visite », pas la visite automatique de première connexion ; `evenement.creer|modifier` comptent aussi
+  les réunions (mêmes pages) ; `chant.signaler` seulement pour un chant ; le cercle « Autre couleur » n'ajoute pas de
+  compte `couleurAccords` (il compte déjà `cmd.louange.cercle`) ; `choisirNom` et `grille.copie` comptent au geste
+  validé, avant le résultat de l'écriture (`enregistrer`, `appliquer` ne rendent pas de succès exploitable) ;
+  `harmonie.filtre` : un compte par rafale de 3 s, rien si le réglage ne change rien (correction de relecture).
+  Tests `tests/usage-reste.spec.ts` : 7 commandes par l'interface (planning : année ; harmonie : filtre ; compte :
+  absence ; évènements : s'inscrire ; cloche ; langue ; couleur des accords), plus un test Node : chaque
+  `compter("…")` de `src/` cite une clé du registre. Specs `usage-reste`, `usage-dimanche`, `usage` sur trois
+  appareils : 92 passés, 1 sauté (vue Partitions en deux volets), 3 échecs (même test, trois appareils), durée
+  3,1 min, plus 16 s pour le test harmonie rejoué après correction. **L'échec ne vient pas de T3** : le test de
+  registre de `usage-dimanche` signale `cmd.chant.partagerVersion` jamais comptée, parce que le commit 44da10f
+  (« Ma partition », MP-3, non relu) a retiré `persistMine` qui la comptait. À régler par le chantier « Ma
+  partition » (reposer le compte sur le partage de sa version, ou retirer la clé du registre). `tsc` passe, lint
+  sans nouvelle alerte. T4 attend son go.

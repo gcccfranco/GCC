@@ -16,6 +16,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { ChampSelect } from "@/components/ui/champ-select";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
+import { compter } from "@/lib/usage";
 import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
 import {
@@ -219,6 +220,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
     if (!user) return;
     // Un refus par section couverte : le format des refus ne change pas.
     await Promise.all((s.ids ?? [s.id]).map((id) => ecarterSuggestion(slug, id, { uid: user.uid, auteur: nom })));
+    compter("cmd.harmonie.suggestion");
     setRejets(await getRejets(slug));
   }
 
@@ -382,6 +384,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                       className="shrink-0 underline underline-offset-4"
                       onClick={async () => {
                         await Promise.all(ligne.rejets.map((r) => remettreSuggestion(slug, r.suggestion)));
+                        compter("cmd.harmonie.suggestion");
                         setRejets(await getRejets(slug));
                       }}
                     >
@@ -518,8 +521,8 @@ function IdeesEquipe({
     const range = (accords: string) =>
       accords.trim() && versOrigine ? transposeLabel(accords.trim(), versOrigine, tonaliteOrigine) : accords.trim();
     const values = { texte: texte.trim(), avant: range(avant), apres: range(apres), ficheId: fiche };
-    if (edite) await modifierIdee(slug, edite, values);
-    else await ajouterIdee(slug, values, { uid: moi.uid, auteur: moi.nom, instrument });
+    if (edite) { await modifierIdee(slug, edite, values); compter("cmd.harmonie.idee.modifier"); }
+    else { await ajouterIdee(slug, values, { uid: moi.uid, auteur: moi.nom, instrument }); compter("cmd.harmonie.idee.ajouter"); }
     reinitialiser();
     await recharger();
   }
@@ -570,7 +573,7 @@ function IdeesEquipe({
                 <button
                   type="button"
                   className="text-destructive underline underline-offset-4"
-                  onClick={async () => { await supprimerIdee(slug, i.id); await recharger(); }}
+                  onClick={async () => { await supprimerIdee(slug, i.id); compter("cmd.harmonie.idee.supprimer"); await recharger(); }}
                 >
                   {t("harmonie.idee.supprimer")}
                 </button>

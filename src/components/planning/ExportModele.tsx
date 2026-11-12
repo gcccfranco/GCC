@@ -1,5 +1,6 @@
 "use client"
 
+import { compter } from "@/lib/usage"
 import { useState, useSyncExternalStore } from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { Check, FileText, X } from "lucide-react"
@@ -136,6 +137,7 @@ function Choix({
       await exporterModele(format, {
         portee, key: definition.key, annee: exporter.annee, rang: exporter.rang, periodeCourte,
       })
+      compter("cmd.planning.export")
       onFini()
     } catch {
       setEchec(true)

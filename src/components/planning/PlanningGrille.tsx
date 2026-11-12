@@ -31,6 +31,7 @@ import { useCopiePrecedent } from "./hooks/useCopiePrecedent"
 import { PrevenirChangements, usePrevenir, type PrevenirProp } from "./PrevenirChangements"
 import { couleurSombre, styleTexteService } from "@/lib/couleurSombre"
 import { useFonduLateral } from "@/hooks/useFonduLateral"
+import { compter } from "@/lib/usage"
 import { EtatVide } from "@/components/layout/EtatVide"
 import { TOUCHER_44 } from "@/lib/toucher44"
 import { GrilleEnTete } from "./GrilleEnTete"
@@ -879,6 +880,7 @@ export function PlanningGrille({
           proposer={(recherche) => propositions(definition, choix?.c.cle ?? "", comptes, lignes.map((l) => l.row), recherche)}
           onEcrire={(nom) => {
             if (!choix) return
+            compter("cmd.planning.choisirNom")
             setChoix(null)
             setEnregistre(false)
             void enregistrer(choix.l, choix.c, nom.trim())
@@ -1052,7 +1054,7 @@ export function PlanningGrille({
         definition={definition}
         ouvert={histoOuvert}
         entrees={entrees}
-        onBascule={() => { const ouvre = !histoOuvert; setHistoOuvert(ouvre); if (ouvre) void rechargerHistorique() }}
+        onBascule={() => { const ouvre = !histoOuvert; setHistoOuvert(ouvre); if (ouvre) { compter("cmd.planning.grille.historique"); void rechargerHistorique() } }}
       />
     </div>
   )

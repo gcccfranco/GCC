@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { Bell } from "lucide-react";
 import type { NotificationItem } from "@/hooks/useNotifications";
 import { useNotificationsPartagees } from "@/components/layout/NotificationsPartagees";
+import { compter } from "@/lib/usage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,7 +50,7 @@ export function Cloche({
   const { items: notifItems, unreadCount, markAllSeen } = useNotificationsPartagees();
 
   return (
-    <DropdownMenu onOpenChange={(open) => { if (open) markAllSeen(); }}>
+    <DropdownMenu onOpenChange={(open) => { if (open) { compter("cmd.cloche.ouvrir"); markAllSeen(); } }}>
       <DropdownMenuTrigger asChild>
         <button aria-label={t("notifications.title")} className={`relative ${boutonClassName}`}>
           <Bell className="h-[18px] w-[18px]" />
