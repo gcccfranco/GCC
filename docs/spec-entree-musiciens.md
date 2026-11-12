@@ -376,3 +376,8 @@ dans ce fichier (JP-C, JP-D, MP-5 ; Q7).
   Faits revérifiés sur `3a70d06` (un `chercheur`) : deux entrées PDF sur la page de setlist, pas trois ; aucune liste des
   copies hors-ligne ; `?louange=1` sans chant de départ ; lots Harmonie renumérotés (bascule H7, mode louange H8).
   En attente : lecture du pilote, réponses aux questions, puis « go pour PU-N ».
+- 12/11/2026 : réponses de Timothée au pilote sur les questions ouvertes. **Question 3 tranchée, contre la
+  proposition** : « La présidence et les choristes ils ont pas besoin de séparer en tout le chant et classique ils
+  font ce qu'ils veulent » : le rôle Présidence ou Choriste n'impose ni ordre ni disposition, la personne garde ce
+  qu'elle a choisi (PU-5 à écrire ainsi). **Question 2 : pas comprise** telle qu'elle est écrite ; le pilote la lui
+  réexplique, elle reste ouverte. Questions 1, 4, 5, 6, 7 : sans réponse. Aucun go de code donné.

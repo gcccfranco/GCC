@@ -49,10 +49,19 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   **Annotations** : AN (AO) et « Ma partition » (AP, `spec-ma-partition.md`) avaient chacun un go sur les mêmes
   traits, avec deux rangements ; ordre retenu, celui du cadrage AP (`spec-pupitre-musicien.md` § Ordre recommandé,
   point 3) : MP d'abord, AN ensuite, réécrit sur le nouveau rangement (suspension d'AN à confirmer par Timothée).
-- **Pilotage délégué depuis le 12/11/2026** (`CLAUDE.md`, § Sessions cloud) : session « Pilotage · AO et AP »,
+- **Pilotage délégué depuis le 12/11/2026** (`CLAUDE.md`, § Sessions cloud) : session « Pilotage · AO et AP (2) »,
   lancée par « Incohérence entre sessions » (`session_01UMdfubTRUV3nKS69sehVcU`) ; son identifiant :
-  `session_01UMdfuaG5Kou4ye2eij6aMr`. File des chantiers de code, trois au plus : AO (FS-F, puis JP-C et JP-D) ; les deux exemples (T1 à T7) ;
+  `session_01UMdfub76N5NaHByomwCgTB` (depuis le 12/11 à 10 h UTC ; avant : `session_01UMdfuaG5Kou4ye2eij6aMr`, plafond atteint). File des chantiers de code, trois au plus : AO (FS-F, puis JP-C et JP-D) ; les deux exemples (T1 à T7) ;
   « Ma partition » (MP-1 à MP-5) ; ensuite le comptage d'usage (T3), Harmonie (H2 et suivants), AN réécrit après MP-5.
+  **État au 12/11, 10 h 10 UTC** : limite portée à **quatre** chantiers de code, une session par tranche, tests
+  ciblés (`CLAUDE.md`, § Économie de contexte) ; sessions lancées en Opus 5.5. En cours : FS-F (AO,
+  `session_01UMdfubYiUCKu2qWDJ3Sp6S`, sur `claude/friendly-cerf-cy7hio`, tests avant push ; JP-C puis JP-D ensuite
+  par « Repo update et relance ») ; Ma partition MP-3 à vérifier (`session_01UMdfuaeUi8Rj8DRw1ZtGP3`, lance MP-4 puis
+  MP-5) ; exemples T2 (`session_01UMdfudEbsAbMKJ3gzmCuJo`, lance T3 à T7) ; Harmonie H2 (`session_01UMdfuc5BHmNuwdhdc1YadF`,
+  go de Timothée, ne lance pas H3). En attente : comptage T3 (session neuve, à la prochaine place ; « Couleur des
+  accords » n'a pas de clé de comptage) ; pupitre PU-1 à PU-6 (spec écrite, pas de go, questions 1, 2, 4 à 7
+  ouvertes) ; H3 et suivants (un go par lot) ; AN après MP-5 (suspension non confirmée par Timothée) ; trois
+  questions avant MP-6. À Timothée : publier `firestore.rules` (Ma partition MP-1 ; `usage/{mois}` du comptage).
   **Planche « direction du site » du 11/11 : écartée** par Timothée le 12/11 (« j'aime pas ») ; artefact supprimé,
   session archivée, rien n'en est entré dans le dépôt. Ne pas la reprendre ; la direction visuelle reste à rechoisir.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
