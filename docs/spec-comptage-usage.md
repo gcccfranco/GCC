@@ -322,3 +322,7 @@ qu'après quelques semaines de données.
   (« Ma partition », MP-3, non relu) a retiré `persistMine` qui la comptait. À régler par le chantier « Ma
   partition » (reposer le compte sur le partage de sa version, ou retirer la clé du registre). `tsc` passe, lint
   sans nouvelle alerte. T4 attend son go.
+- 12/11/2026 — **décisions déléguées (pilote, 12/11)** après la fin de T3 : (1) `cmd.chant.partagerVersion` n'est plus
+  comptée depuis MP-3 (`44da10f`) : la session « Ma partition » repose le compte si la commande existe encore, sinon
+  retire la clé (message envoyé). (2) T4 n'a plus besoin de go (`CLAUDE.md` § Go, règle du 12/11) mais passe après
+  Harmonie H3 et le pupitre dans la file : elle ne sert qu'après quelques semaines de données.

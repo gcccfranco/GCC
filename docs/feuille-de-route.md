@@ -61,7 +61,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   go de Timothée, ne lance pas H3). **10 h 15** : H2 fini (`622f778`, étiquettes « (proposé) » à valider par Timothée) ;
   comptage T3 lancé à sa place (`session_01UMdfubRJjSZsD9FwQ3owSa`, clé `cmd.louange.couleurAccords` ajoutée). Pupitre :
   questions toutes tranchées, **go de Timothée (12/11)** ; PU-1 part à la première place libre (fin du comptage T3),
-  PU-4 à PU-6 après FS-F. En attente : pupitre PU-1 à PU-6 (spec écrite, pas de go, questions 1, 2, 4 à 7
+  PU-4 à PU-6 après FS-F. **10 h 32** : comptage T3 fini (`1b165ac` ; `cmd.chant.partagerVersion` plus comptée depuis
+  MP-3, correction confiée à la session MP-3) ; **Harmonie H3 lancé** à sa place (`session_01UMdfubYvNx8M6JbF9S2vnk`, go de
+  Timothée). File, dans l'ordre : pupitre PU-1 à PU-6, puis comptage T4 (tranches enchaînées, `CLAUDE.md` § Go). En attente : pupitre PU-1 à PU-6 (spec écrite, pas de go, questions 1, 2, 4 à 7
   ouvertes) ; H3 et suivants (un go par lot) ; AN après MP-5 (suspension non confirmée par Timothée) ; trois
   questions avant MP-6. À Timothée : publier `firestore.rules` (Ma partition MP-1 ; `usage/{mois}` du comptage).
   **Planche « direction du site » du 11/11 : écartée** par Timothée le 12/11 (« j'aime pas ») ; artefact supprimé,
