@@ -79,6 +79,10 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      § Tranches (la tranche) et les lignes du 12/11 du § Avancement (questions tranchées). PU-1 à PU-3 s'enchaînent ;
      PU-4 à PU-6 touchent le mode louange : après FS-F, et jamais pendant qu'une autre session modifie
      `PerformanceMode.tsx` (JP-C, MP-5) ; sinon la chaîne attend et rend sa place au suivant de la file.
+  1 bis. **Pupitre PU-4 → PU-6** (go du 12/11 ; PU-1 à PU-3 faites, PU-3 `0963e7a2`) : **à lancer** dès que ni MP-5
+     (`session_01UMdfuZ8LxzZ5DHx86qYUw7`) ni JP-D (`session_01UMdfubEaKHYh9fbxpXqErH`) ne modifient plus
+     `PerformanceMode.tsx`. Celle des deux qui finit en dernier lance PU-4 (`docs/spec-entree-musiciens.md`, § Tranches,
+     PU-4, et § Avancement ; consigne type ci-dessous ; pas de suite complète ; enchaîne PU-5 puis PU-6) et raye cette ligne.
   2. ~~**Comptage T4**~~ lancé puis **fini** (`0c2a152f`, lot comptage fini ; `session_01UMdfuaPmCAo5WCMLAs8RDy`, 12/11 10 h 57 UTC, sur demande de Timothée :
      PU-1 attend la vérification de MP-3 et ne code pas ; PU-1 garde sa place et ne code que s'il y a moins de quatre
      chantiers qui codent) (`docs/spec-comptage-usage.md`, § Découpage, T4 ; go couvert par la règle des tranches) : écran
