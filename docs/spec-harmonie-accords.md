@@ -444,3 +444,24 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   orphelines `harmonie.niveau.titre|tous`, `moment.titre|tous`, `sensation.titre` à retirer si H6-2 les laisse
   orphelines. `critique-design` passera une fois, à la fin de H6-2, sur la liste et la fiche. Connu : pilules de
   28 px de haut (composant commun, hors lot) ; noms des fiches en français en 中文 (H9). Prochain : H6-2, session neuve.
+- 12/11/2026 — **H9 T3 faite, lot H9 fini** : 11 fiches en français, statut « à valider », ressenti et usage
+  « (proposé) », chacune « **Règle.** Aucune : catalogue seul ». Famille nouvelle **13 · Mineur**
+  (`docs/harmonie/13-mineur.md`, code N, libellé `harmonie.familles.mineur` : « Mineur » / « 小调 ») : N1 le 6m comme
+  centre, N2 le 5 majeur qui ramène au mineur. Boucles L7 `1 – 4 – 5 – 1`, L8 `1 – 6m – 4 – 5`, L9 `4 – 1 – 5 – 6m`,
+  L10 `1 – 5 – 4` ; rythme R5 le stop au début du dernier refrain, R6 le demi-temps au pont ; voicings V7 piano, les
+  deux mains pour débuter, V8 guitare, les accords à quatre cordes ; transitions T7 du 6/8 vers le 4/4. Plan du
+  README remis à jour (91 fiches, 13 familles ; il était resté à 69 après T2). Décisions déléguées (orchestratrice H9
+  T3, 12/11) : la liste de la spec compte **11** fiches et non 12 (le découpage avait arrondi) : 91 fiches, pas 92 ;
+  code **N** pour le mineur (M est pris par les montées) ; angles distincts là où une fiche voisine existait : N1
+  (section qui part du 6m et y revient) face à L3 et à la cadence rompue S4, N2 (cadence qui conclut en mineur,
+  après le 4m) face à P1 et P7, R5 (silence **dans** le refrain) face à M5 (silence avant), V7 (recette débutant)
+  face à V1 et V2, V8 (même accord sur quatre cordes) face à V4 (cordes à vide), L9 dite comme rotation de L3. T7
+  cite seulement les trois chants notés en 6/8 ou 12/8 (pas de passage : une transition vit entre deux chants).
+  Passages relevés par script sur les `.cho` (degrés de `passagesDuChant`), vérifiés un à un par le relecteur
+  (28 citations, 20 doigtés : rien à corriger ; F# ajouté à la liste de V8, à laquelle renvoie N2). Reste à faire,
+  code, hors périmètre : (1) le gras « **La boucle** » / « **Le principe** » des fiches L n'est pas un intertitre
+  de `fiches.ts` : la boucle n'arrive pas dans l'app (L1 à L10) ; (2) T7 pourrait être proposée dans la setlist
+  d'après `{time}` (`transitions.ts`) ; (3) le 中文 des fiches et une règle de suggestion par fiche, à proposer à
+  part. Tests (5,0 min) : build:index (91 fiches), validate, tsc ; `harmonie-catalogue`, `harmonie-regles`,
+  `harmonie-passages`, `agencement-v18-harmonie`, `pages-en-grand-harmonie-corrections` sur les trois appareils
+  (cinq projets) : 244 passés, 6 ignorés, aucun échec. Les tests comptent 91 fiches.

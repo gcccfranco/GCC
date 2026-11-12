@@ -137,3 +137,76 @@ Main droite : peu de mouvement.
 **À la guitare.** Garder la même rythmique, changer d'accord à chaque demi-mesure.
 
 **Règle.** Aucune : catalogue seul.
+
+---
+
+## R5 · Le stop au début du dernier refrain
+
+| | |
+| --- | --- |
+| Id | `rythme/stop-dernier-refrain` |
+| Statut | à valider |
+| Sensations | Surprise · Majesté |
+| Moments | Refrain |
+| Ressenti | couleur · élan (proposé) |
+| Usage | refrain (proposé) |
+| Niveau | piano : facile · guitare : facile · **à préparer avec l'équipe** |
+
+**Avant → après** : dernier refrain `| G | A | Bm | D |` joué par tous devient
+`| G (un coup) | – | – | – |` : un seul accord sur le premier temps, puis
+plus rien ; l'assemblée chante la première phrase seule, et tout le monde
+reprend `| G | A | Bm | D |` à la phrase suivante.
+
+**Pourquoi ça marche.** Le chant continue, seuls les instruments s'arrêtent :
+on entend soudain les voix de l'assemblée. Quand la musique revient, le
+refrain repart plus grand. M5 place le silence **avant** le refrain, sur le
+5 ; ici il tombe **dans** le refrain, après son premier accord.
+
+**Quand l'éviter.**
+- Quand l'assemblée connaît mal le chant : les voix seules s'effondrent.
+- Sans signe clair pour la reprise : celui qui dirige compte ou lève la main.
+- Avec M5 dans le même chant : un seul silence suffit.
+
+**Au piano.** Plaque le G sur le premier temps, lâche. Reprends au début de la
+phrase suivante, plus fort (V1).
+
+**À la guitare.** Un coup sur G, puis la paume étouffe les cordes. Reprends
+avec la rythmique pleine.
+
+**Règle.** Aucune : catalogue seul.
+
+---
+
+## R6 · Le demi-temps au pont
+
+| | |
+| --- | --- |
+| Id | `rythme/demi-temps-pont` |
+| Statut | à valider |
+| Sensations | Gravité et recueillement · Suspendu et planant |
+| Moments | Pont |
+| Ressenti | mélancolique · couleur (proposé) |
+| Usage | pré-refrain (proposé) |
+| Niveau | piano : facile · guitare : intermédiaire · **à préparer avec l'équipe** |
+
+**Avant → après** : au pont, la grille ne change pas (`| Bm | G | D | A |`),
+mais la pulsation est divisée par deux : la batterie frappe la caisse claire
+sur le 3 au lieu du 2 et du 4, la guitare gratte deux fois moins de coups, le
+piano plaque une fois par mesure. Le chant garde son tempo.
+
+**Pourquoi ça marche.** Le tempo ne bouge pas, les accords non plus : seule la
+pulsation ressentie ralentit. Le pont respire et prend du poids, et le dernier
+refrain, qui repart à plein temps, semble accélérer. R1 retire des accords ;
+ici on garde les accords et on change le pas.
+
+**Quand l'éviter.**
+- Sur un chant déjà lent : la pulsation s'effondre.
+- Sans le batteur : le demi-temps se décide ensemble.
+
+**Au piano.** Une note grave et l'accord sur le premier temps, tenus toute la
+mesure ; rien sur le 2 ni sur le 4.
+
+**À la guitare.** Un coup large par demi-mesure, ou un arpège lent. Garder la
+rythmique serrée pour le refrain.
+
+**Règle.** Aucune : catalogue seul.

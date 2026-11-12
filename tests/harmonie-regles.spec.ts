@@ -16,8 +16,8 @@ const fichiers = fs.readdirSync(DOSSIER).filter((f) => /^\d\d-.+\.md$/.test(f) &
 
 const fiches: Fiche[] = fichiers.flatMap((f) => lireFamille(lire(f), f));
 
-test("les 80 fiches se lisent, avec leur vocabulaire", () => {
-  expect(fiches).toHaveLength(80);
+test("les 91 fiches se lisent, avec leur vocabulaire", () => {
+  expect(fiches).toHaveLength(91);
   for (const f of fiches) {
     expect(f.id, `${f.code} : un id`).toMatch(/^[a-z0-9-]+\/[a-z0-9-]+$/);
     expect(f.nom.length, `${f.code} : un nom`).toBeGreaterThan(3);

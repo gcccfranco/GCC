@@ -1,5 +1,5 @@
 {
-  "genereLe": "2026-11-12T17:27:08.950Z",
+  "genereLe": "2026-11-12T17:37:47.800Z",
   "fiches": [
     {
       "id": "substitutions/2m7-pour-4",
@@ -15725,6 +15725,46 @@
       "ecoutes": []
     },
     {
+      "id": "transitions/6-8-vers-4-4",
+      "code": "T7",
+      "famille": "transitions",
+      "familleNom": "Transitions entre deux chants",
+      "nom": "D'un chant en 6/8 vers un chant en 4/4",
+      "statut": "a-valider",
+      "sensations": [
+        "repos",
+        "joie"
+      ],
+      "moments": [
+        "transition"
+      ],
+      "ressentis": [
+        "chaleureux",
+        "elan"
+      ],
+      "usages": [
+        "transition"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "intermediaire",
+        "guitare": "intermediaire"
+      },
+      "niveauNote": "à préparer avec l'équipe",
+      "avantApres": "fin du chant en 6/8 sur `D`, silence, décompte du chant\nen 4/4 devient fin sur `D` tenu, puis **la noire pointée du 6/8 devient la\nnoire du 4/4** : on garde la même pulsation (les deux grands temps de la\nmesure en 6/8) et on la compte « 1 2 3 4 » ; le chant suivant part sur ce\ncompte.",
+      "pourquoi": "Un 6/8 se sent en deux grands temps, chacun partagé en\ntrois. Si l'on garde ce grand temps comme nouvelle noire, le pied de\nl'assemblée ne change pas de vitesse : seule la subdivision passe de trois à\ndeux. Le chant suivant arrive sans coup de frein ni d'accélérateur. Un 12/8\nse sent en quatre grands temps : le passage au 4/4 est encore plus direct.\nSi la tonalité change aussi, enchaîner ensuite avec T1 à T6.",
+      "eviter": [
+        "Quand le chant en 4/4 est bien plus rapide ou plus lent : garder la pulsation donnerait un faux tempo. Faire un vrai arrêt.",
+        "Sans le batteur ou celui qui donne les départs : il compte les quatre temps à voix haute ou au charleston."
+      ],
+      "piano": "Sur la dernière mesure en 6/8, la main gauche joue seulement les\ndeux grands temps (D, D). Puis des noires régulières sur D, au même pas,\njusqu'au départ du chant suivant.",
+      "guitare": "Dernière mesure en 6/8 : deux coups larges, sur le 1 et sur\nle 4. Puis des coups réguliers sur D, au même pas, en comptant 1 2 3 4.",
+      "repertoire": "为我而来 (en C, 6/8) · 十字架 (en E, 6/8) · 活出爱 (en\nC, 12/8).",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
       "id": "voicings/piano-ouvrir",
       "code": "V1",
       "famille": "voicings",
@@ -15954,6 +15994,82 @@
       "ecoutes": []
     },
     {
+      "id": "voicings/piano-deux-mains",
+      "code": "V7",
+      "famille": "voicings",
+      "familleNom": "Voicings",
+      "nom": "Piano : les deux mains pour débuter",
+      "statut": "a-valider",
+      "instrument": "piano",
+      "sensations": [
+        "douceur",
+        "repos"
+      ],
+      "moments": [
+        "couplet",
+        "refrain"
+      ],
+      "ressentis": [
+        "chaleureux"
+      ],
+      "usages": [
+        "couplet",
+        "refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile"
+      },
+      "avantApres": "`D – A – Bm – G` joués en accords plaqués à la main\ndroite seule devient, pour chaque accord, **1 et 5 à la main gauche** (D-A,\nA-E, B-F#, G-D) et **la triade la plus proche** à la main droite :\n`F#-A-D → E-A-C# → F#-B-D → G-B-D`.",
+      "pourquoi": "Une recette pour lire n'importe quelle grille dès le\npremier jour : la main gauche ne cherche que deux notes (la fondamentale et\nsa quinte), la main droite bouge le moins possible. Le son est plein sans être\nlourd, et chaque main n'a qu'une chose à apprendre. Ensuite, V1 ouvre la main\ngauche (quinte et octave) et V2 affine la main droite.",
+      "eviter": [
+        "Avec un bassiste : jouer la main gauche plus haut, ou ne garder que la fondamentale.",
+        "Sur un accord avec une basse écrite (`A/C#`) : la main gauche joue la note après la barre (C#), pas le 1 et le 5."
+      ],
+      "piano": "Main gauche : petit doigt sur la fondamentale, pouce sur la\nquinte (D grave et le A au-dessus). Main droite : commence par F#-A-D au\nmilieu du clavier, puis cherche pour chaque accord la position où les doigts\nbougent le moins.",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "voicings/guitare-quatre-cordes",
+      "code": "V8",
+      "famille": "voicings",
+      "familleNom": "Voicings",
+      "nom": "Guitare : les accords à quatre cordes à la place des barrés",
+      "statut": "a-valider",
+      "instrument": "guitare",
+      "sensations": [
+        "douceur",
+        "lumiere"
+      ],
+      "moments": [
+        "couplet",
+        "refrain"
+      ],
+      "ressentis": [
+        "chaleureux"
+      ],
+      "usages": [
+        "couplet",
+        "refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "guitare": "facile"
+      },
+      "avantApres": "Bm barré `x24432` devient Bm à quatre cordes `xx4432` ;\nF#m `244222` devient `xx4222`.",
+      "pourquoi": "On ne joue que les quatre cordes aiguës : un ou deux\ndoigts de moins, pas de barré à tenir, et le même accord (les mêmes trois\nnotes). Le son est plus léger et plus clair ; à côté d'un piano ou d'un\nbassiste qui tiennent le grave, c'est souvent mieux. V4 change l'accord pour\nlaisser sonner des cordes à vide (Bm7 `x20202`) ; ici l'accord reste\nexactement celui de la grille.",
+      "eviter": [
+        "Seul à la guitare sur un refrain plein : il manque le grave. Garder le barré.",
+        "Quand les deux cordes graves sonnent malgré tout en grattant : les étouffer du bout d'un doigt de la main gauche, sinon elles sonnent faux."
+      ],
+      "guitare": "Les formes à quatre cordes les plus utiles : Bm `xx4432` ·\nF#m `xx4222` · F# `xx4322` · F `xx3211` · Bb `xx3331` · Gm `xx0333` · C#m `xx2120`.",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
       "id": "rythme/tenir",
       "code": "R1",
       "famille": "rythme",
@@ -16103,6 +16219,85 @@
       ],
       "piano": "Main gauche : la ligne de basse G – G – A – C# – B – A – G – A.\nMain droite : peu de mouvement.",
       "guitare": "Garder la même rythmique, changer d'accord à chaque demi-mesure.",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "rythme/stop-dernier-refrain",
+      "code": "R5",
+      "famille": "rythme",
+      "familleNom": "Rythme harmonique",
+      "nom": "Le stop au début du dernier refrain",
+      "statut": "a-valider",
+      "sensations": [
+        "surprise",
+        "majeste"
+      ],
+      "moments": [
+        "refrain"
+      ],
+      "ressentis": [
+        "couleur",
+        "elan"
+      ],
+      "usages": [
+        "refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "facile"
+      },
+      "niveauNote": "à préparer avec l'équipe",
+      "avantApres": "dernier refrain `| G | A | Bm | D |` joué par tous devient\n`| G (un coup) | – | – | – |` : un seul accord sur le premier temps, puis\nplus rien ; l'assemblée chante la première phrase seule, et tout le monde\nreprend `| G | A | Bm | D |` à la phrase suivante.",
+      "pourquoi": "Le chant continue, seuls les instruments s'arrêtent :\non entend soudain les voix de l'assemblée. Quand la musique revient, le\nrefrain repart plus grand. M5 place le silence **avant** le refrain, sur le\n5 ; ici il tombe **dans** le refrain, après son premier accord.",
+      "eviter": [
+        "Quand l'assemblée connaît mal le chant : les voix seules s'effondrent.",
+        "Sans signe clair pour la reprise : celui qui dirige compte ou lève la main.",
+        "Avec M5 dans le même chant : un seul silence suffit."
+      ],
+      "piano": "Plaque le G sur le premier temps, lâche. Reprends au début de la\nphrase suivante, plus fort (V1).",
+      "guitare": "Un coup sur G, puis la paume étouffe les cordes. Reprends\navec la rythmique pleine.",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "rythme/demi-temps-pont",
+      "code": "R6",
+      "famille": "rythme",
+      "familleNom": "Rythme harmonique",
+      "nom": "Le demi-temps au pont",
+      "statut": "a-valider",
+      "sensations": [
+        "gravite",
+        "suspendu"
+      ],
+      "moments": [
+        "pont"
+      ],
+      "ressentis": [
+        "melancolique",
+        "couleur"
+      ],
+      "usages": [
+        "pre-refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "intermediaire"
+      },
+      "niveauNote": "à préparer avec l'équipe",
+      "avantApres": "au pont, la grille ne change pas (`| Bm | G | D | A |`),\nmais la pulsation est divisée par deux : la batterie frappe la caisse claire\nsur le 3 au lieu du 2 et du 4, la guitare gratte deux fois moins de coups, le\npiano plaque une fois par mesure. Le chant garde son tempo.",
+      "pourquoi": "Le tempo ne bouge pas, les accords non plus : seule la\npulsation ressentie ralentit. Le pont respire et prend du poids, et le dernier\nrefrain, qui repart à plein temps, semble accélérer. R1 retire des accords ;\nici on garde les accords et on change le pas.",
+      "eviter": [
+        "Sur un chant déjà lent : la pulsation s'effondre.",
+        "Sans le batteur : le demi-temps se décide ensemble."
+      ],
+      "piano": "Une note grave et l'accord sur le premier temps, tenus toute la\nmesure ; rien sur le 2 ni sur le 4.",
+      "guitare": "Un coup large par demi-mesure, ou un arpège lent. Garder la\nrythmique serrée pour le refrain.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
       "ecoutes": []
@@ -16335,6 +16530,246 @@
       ],
       "piano": "Garde la même main gauche le plus longtemps possible ; c'est la\nmain droite qui fait évoluer.",
       "guitare": "Passe d'arpèges à une rythmique, ou de formes ouvertes (V4)\naux triades aiguës (V5).",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "boucles/1-4-5-1",
+      "code": "L7",
+      "famille": "boucles",
+      "familleNom": "Boucles pour la prière libre",
+      "nom": "1 – 4 – 5 – 1, la boucle qui se referme",
+      "statut": "a-valider",
+      "sensations": [
+        "joie",
+        "repos"
+      ],
+      "moments": [
+        "refrain",
+        "transition"
+      ],
+      "ressentis": [
+        "elan",
+        "chaleureux"
+      ],
+      "usages": [
+        "refrain",
+        "transition"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "facile"
+      },
+      "pourquoi": "Les trois accords majeurs du ton, et un retour au 1 à\nchaque tour : chaque tour se ferme. Simple, joyeux, facile à suivre pour toute\nl'assemblée ; c'est la boucle d'un « alléluia » repris en chœur. Contrairement\nà L3 ou L4, elle ne relance pas : elle se pose.",
+      "eviter": [
+        "Sur une longue prière : se refermer à chaque tour lasse vite. Préférer L1 ou L3, ou faire évoluer la boucle (L6).",
+        "Pour amener un refrain : s'arrêter sur le 5, sans le dernier D."
+      ],
+      "piano": "Main gauche : D – G – A – D. Main droite : D-F#-A → D-G-B →\nC#-E-A → D-F#-A (notes communes, V2).",
+      "guitare": "D `xx0232` – G `320033` – A `x02220` – D `xx0232` ; un\nAsus4 `x02230` avant le A ajoute un peu de tension.",
+      "repertoire": "*Je célèbrerai* (refrain, en C : C – F – G – C) ·\n*Reçois l'adoration* (couplet 1, en C : C – F – G – C) · *Feu du fondeur*\n(refrain, en E : E – A – B – E – A – B) · 不停赞美 (主歌, en D : D – G – A – D)\n· 伯利恒的喜讯 (副歌, en Eb : Eb – Ab – Bb – Eb).",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "boucles/1-6m-4-5",
+      "code": "L8",
+      "famille": "boucles",
+      "familleNom": "Boucles pour la prière libre",
+      "nom": "1 – 6m – 4 – 5, la boucle tendre",
+      "statut": "a-valider",
+      "sensations": [
+        "tendresse",
+        "douceur"
+      ],
+      "moments": [
+        "couplet",
+        "refrain"
+      ],
+      "ressentis": [
+        "melancolique",
+        "chaleureux"
+      ],
+      "usages": [
+        "couplet",
+        "refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "facile"
+      },
+      "pourquoi": "Partie du 1, elle glisse vers le 6m (deux notes\ncommunes : D et F#), passe par le 4 et finit sur le 5, qui ramène au 1 à\nchaque tour. Le 5 en fin de tour relance sans brusquer : une boucle tendre,\nun peu nostalgique, qui porte bien un couplet ou une prière calme.",
+      "eviter": [
+        "Quand on cherche de l'élan : L3 (6m – 4 – 1 – 5) ou L4 montent plus.",
+        "Toute une prière sans changement : la tendresse devient vite sucrée. Faire évoluer la boucle (L6)."
+      ],
+      "piano": "Main gauche : D – B – G – A. Main droite : F#-A-D → F#-B-D →\nG-B-D → E-A-C#.",
+      "guitare": "D `xx0232` – Bm7 `x20202` – G `320033` – A `x02220`.",
+      "repertoire": "*Éternel, Notre Seigneur* (refrain, en G : G – Em –\nC – D) · *Mon seul souhait* (couplet 1, en C : C – Am7 – F – G) · *Toi et\nmoi* (refrain, en G : G – Em7 – C – C/D – D) · 亲眼看见你 (副歌, en D : D –\nBm7 – G – A) · 全然向你 (主歌, en D : D – Bm – G – A7).",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "boucles/4-1-5-6m",
+      "code": "L9",
+      "famille": "boucles",
+      "familleNom": "Boucles pour la prière libre",
+      "nom": "4 – 1 – 5 – 6m, la boucle qui part du 4",
+      "statut": "a-valider",
+      "sensations": [
+        "lumiere",
+        "joie"
+      ],
+      "moments": [
+        "refrain",
+        "intro"
+      ],
+      "ressentis": [
+        "chaleureux",
+        "elan"
+      ],
+      "usages": [
+        "refrain",
+        "transition"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "facile"
+      },
+      "pourquoi": "Elle commence en l'air, sur le 4, passe par le 1 sans\ns'y poser et finit sur le 6m : une question ouverte à chaque tour. C'est la\nboucle de beaucoup de refrains d'aujourd'hui. Les mêmes accords que L3\n(6m – 4 – 1 – 5), décalés : ici le tour finit sur le 6m, plus doux que le 5,\net le 4 en tête donne un souffle lumineux.",
+      "eviter": [
+        "Pour finir un chant : la boucle ne se pose pas. En sortir par `G – A – D`.",
+        "Juste après L3 : ce sont les mêmes accords, l'oreille n'entend pas de changement."
+      ],
+      "piano": "Main gauche : G – D – A – B. Main droite : G-B-D → F#-A-D →\nE-A-C# → F#-B-D.",
+      "guitare": "G `320033` – D `xx0232` – A `x02220` (ou A/C# `x42220`) –\nBm7 `x20202`.",
+      "repertoire": "*Bénis Dieu (10000 raisons)* (refrain, en D : G – D\n– A/C# – Bm) · *De grâce en grâce* (refrain, en A : D – A – E – F#m) · *Avec\nnous (Emmanuel)* (intro, en E : A – E – B – C#m) · 住在你里面 (副歌, en D :\nG/A – D – A/C# – Bm) · 从这代到那代 (副歌, en E : A/B – E – B/D# – C#m).",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "boucles/1-5-4",
+      "code": "L10",
+      "famille": "boucles",
+      "familleNom": "Boucles pour la prière libre",
+      "nom": "1 – 5 – 4, trois accords qui descendent",
+      "statut": "a-valider",
+      "sensations": [
+        "majeste",
+        "joie"
+      ],
+      "moments": [
+        "refrain",
+        "couplet"
+      ],
+      "ressentis": [
+        "elan"
+      ],
+      "usages": [
+        "refrain",
+        "couplet"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "facile"
+      },
+      "pourquoi": "Le 5 vient tout de suite après le 1, puis on retombe\nsur le 4 au lieu de revenir au 1 : la basse descend D, A, G. Un son large et\nfranc, sans accord mineur. Le 4 → 1 qui referme le tour est une cadence douce\n(comme un « amen ») : rien ne tire, tout respire.",
+      "eviter": [
+        "Sur un temps intime : la boucle sonne grande. Prendre L2 ou L5.",
+        "Trop longtemps sans accord mineur : ajouter un Bm de temps en temps (L6)."
+      ],
+      "piano": "Main gauche : D – A – G. Main droite : F#-A-D → E-A-C# →\nD-G-B.",
+      "guitare": "D `xx0232` – A `x02220` – G `320033` ; pour un son plus\nouvert, Dsus2 `xx0230` – Asus4 `x02230` – G `320033`.",
+      "repertoire": "*Béni soit Ton Nom* (couplet 1, en A : A – E – D) ·\n*Que Ton règne vienne* (refrain, en E : E – B – A) · *La passion* (refrain,\nen D : D – A – G – D) · *Lumière du monde* (couplet 1, en D : D – Asus4 –\nGsus2) · 一切歌颂赞美 (主歌, en E : E – B – A – E).",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "mineur/6m-centre",
+      "code": "N1",
+      "famille": "mineur",
+      "familleNom": "Mineur",
+      "nom": "Le 6m comme centre",
+      "statut": "a-valider",
+      "sensations": [
+        "gravite",
+        "tendresse"
+      ],
+      "moments": [
+        "couplet",
+        "pont"
+      ],
+      "ressentis": [
+        "melancolique"
+      ],
+      "usages": [
+        "couplet",
+        "pre-refrain"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "facile"
+      },
+      "avantApres": "`Bm – G – D – A – D` (la section finit sur le 1) devient\n`Bm – G – D – A – Bm` (elle revient au 6m) · degrés `6m – 4 – 1 – 5 – 1`\ndevient `6m – 4 – 1 – 5 – 6m`.",
+      "pourquoi": "Quand une section part de Bm et y revient, l'oreille\nentend Bm comme la maison : le chant est en mineur le temps de cette section,\nmême si la tonalité notée est D. Ce sont les accords de L3 (qui tourne sans\nfin) et le A → Bm de la cadence rompue (S4, une surprise dans un chant\nmajeur) ; ici, A → Bm n'étonne plus, c'est le repos. Savoir où est la maison\nchange le jeu : on ralentit, on tient et on finit sur Bm, pas sur D. En\nvariante, `A/C# – Bm` : la basse descend d'un ton vers le B.",
+      "eviter": [
+        "Dans un chant de fête : le centre mineur assombrit. Le garder pour un couplet ou un pont.",
+        "Quand le refrain qui suit part de D et que l'équipe attend la fin sur D : le décider en répétition."
+      ],
+      "piano": "Main gauche : B – G – D – A, puis B tenu à la fin. Main droite :\ngarder les notes communes (V2) ; sur le dernier Bm, laisser le D en haut.",
+      "guitare": "Bm7 `x20202` – G `320033` – D `xx0232` – A `x02220`, puis\nBm7 `x20202` laissé sonner.",
+      "repertoire": "*Dieu a tant aimé* (couplet 1, en G : Em – C – G –\nD/F# – Em) · *Sauve avec puissance* (pont, en A : F#m – D – A – E – F#m) ·\n你坐着为王 (主歌, en F : Dm – Bb – F – C – Dm) · *À l'agneau* (refrain, noté\nen Am : F – G – Am).",
+      "regle": "Aucune : catalogue seul.",
+      "exemples": [],
+      "ecoutes": []
+    },
+    {
+      "id": "mineur/5-majeur",
+      "code": "N2",
+      "famille": "mineur",
+      "familleNom": "Mineur",
+      "nom": "Le 5 majeur qui ramène au mineur",
+      "statut": "a-valider",
+      "sensations": [
+        "tension",
+        "gravite"
+      ],
+      "moments": [
+        "fin",
+        "couplet"
+      ],
+      "ressentis": [
+        "elan",
+        "melancolique"
+      ],
+      "usages": [
+        "fin",
+        "couplet"
+      ],
+      "etiquettesProposees": true,
+      "niveau": {
+        "piano": "facile",
+        "guitare": "intermediaire"
+      },
+      "avantApres": "`Em – F#m – Bm` devient `Em – F# – Bm` · degrés, lus\ndepuis Bm, `4m – 5m – 1m` devient `4m – 5 – 1m` (lus depuis D : `2m – 3m –\n6m` devient `2m – 3 – 6m`).",
+      "pourquoi": "Dans la gamme de Bm, le 5 est mineur (F#m) : il ne\ntire pas vers Bm. En haussant sa tierce (A devient A#), on obtient F#, dont\nl'A# monte d'un demi-ton sur le B : la fin se referme, grave et nette. C'est\nla cadence du mineur « harmonique ». P1 et P7 jouent le même accord en\npassant, dans un chant majeur ; ici, il conclut une section ou un chant qui\nest en mineur, après le 4m. F#7 (on ajoute E) tire encore plus ; avec la basse qui monte,\n`F#7 – E/G# – F#/A# – Bm`.",
+      "eviter": [
+        "Quand la mélodie chante A (sans dièse) sur cet accord : il frotte d'un demi-ton avec l'A#.",
+        "Pour une fin ouverte et paisible : F#m, ou A puis Bm (b7 → 1m), referme moins."
+      ],
+      "piano": "Main gauche : F# puis B. Main droite : F#-A#-C# puis F#-B-D\n(l'A# monte au B, le C# monte au D, le F# reste).",
+      "guitare": "F# en barré `244322`, ou à quatre cordes `xx4322` (V8),\npuis Bm `x24432`.",
+      "repertoire": "*Reçois ma vie* (refrain, noté en Am : E7 – D/F# –\nE/G# – Am) · *Christ est la lumière* (couplet 1, en C : E7/G# – Am).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
       "ecoutes": []

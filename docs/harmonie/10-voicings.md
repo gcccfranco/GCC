@@ -2,7 +2,8 @@
 
 **Le même accord, un autre son.** On ne change pas les accords : on change la
 façon de les jouer (quelles notes, où, dans quel ordre). Ces fiches sont
-**propres à un instrument** : V1 à V3 pour le piano, V4 à V6 pour la guitare.
+**propres à un instrument** : V1 à V3 et V7 pour le piano, V4 à V6 et V8
+pour la guitare.
 Elles vivent dans le catalogue seulement (pas de suggestion par chant).
 
 Tout est écrit en D.
@@ -199,5 +200,80 @@ le son s'élargit.
 
 **À la guitare.** Dans l'app, le réglage capo transforme les accords et les
 diagrammes en formes : choisis le capo, lis les formes.
+
+**Règle.** Aucune : catalogue seul.
+
+---
+
+## V7 · Piano : les deux mains pour débuter
+
+| | |
+| --- | --- |
+| Id | `voicings/piano-deux-mains` |
+| Statut | à valider |
+| Instrument | piano |
+| Sensations | Douceur et intimité · Repos |
+| Moments | Couplet · Refrain |
+| Ressenti | chaleureux (proposé) |
+| Usage | couplet · refrain (proposé) |
+| Niveau | facile |
+
+**Avant → après** : `D – A – Bm – G` joués en accords plaqués à la main
+droite seule devient, pour chaque accord, **1 et 5 à la main gauche** (D-A,
+A-E, B-F#, G-D) et **la triade la plus proche** à la main droite :
+`F#-A-D → E-A-C# → F#-B-D → G-B-D`.
+
+**Pourquoi ça marche.** Une recette pour lire n'importe quelle grille dès le
+premier jour : la main gauche ne cherche que deux notes (la fondamentale et
+sa quinte), la main droite bouge le moins possible. Le son est plein sans être
+lourd, et chaque main n'a qu'une chose à apprendre. Ensuite, V1 ouvre la main
+gauche (quinte et octave) et V2 affine la main droite.
+
+**Quand l'éviter.**
+- Avec un bassiste : jouer la main gauche plus haut, ou ne garder que la
+  fondamentale.
+- Sur un accord avec une basse écrite (`A/C#`) : la main gauche joue la note
+  après la barre (C#), pas le 1 et le 5.
+
+**Au piano.** Main gauche : petit doigt sur la fondamentale, pouce sur la
+quinte (D grave et le A au-dessus). Main droite : commence par F#-A-D au
+milieu du clavier, puis cherche pour chaque accord la position où les doigts
+bougent le moins.
+
+**Règle.** Aucune : catalogue seul.
+
+---
+
+## V8 · Guitare : les accords à quatre cordes à la place des barrés
+
+| | |
+| --- | --- |
+| Id | `voicings/guitare-quatre-cordes` |
+| Statut | à valider |
+| Instrument | guitare |
+| Sensations | Douceur et intimité · Lumière et espérance |
+| Moments | Couplet · Refrain |
+| Ressenti | chaleureux (proposé) |
+| Usage | couplet · refrain (proposé) |
+| Niveau | facile |
+
+**Avant → après** : Bm barré `x24432` devient Bm à quatre cordes `xx4432` ;
+F#m `244222` devient `xx4222`.
+
+**Pourquoi ça marche.** On ne joue que les quatre cordes aiguës : un ou deux
+doigts de moins, pas de barré à tenir, et le même accord (les mêmes trois
+notes). Le son est plus léger et plus clair ; à côté d'un piano ou d'un
+bassiste qui tiennent le grave, c'est souvent mieux. V4 change l'accord pour
+laisser sonner des cordes à vide (Bm7 `x20202`) ; ici l'accord reste
+exactement celui de la grille.
+
+**Quand l'éviter.**
+- Seul à la guitare sur un refrain plein : il manque le grave. Garder le
+  barré.
+- Quand les deux cordes graves sonnent malgré tout en grattant : les étouffer
+  du bout d'un doigt de la main gauche, sinon elles sonnent faux.
+
+**À la guitare.** Les formes à quatre cordes les plus utiles : Bm `xx4432` ·
+F#m `xx4222` · F# `xx4322` · F `xx3211` · Bb `xx3331` · Gm `xx0333` · C#m `xx2120`.
 
 **Règle.** Aucune : catalogue seul.
