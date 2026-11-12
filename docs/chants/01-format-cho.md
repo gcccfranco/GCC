@@ -284,6 +284,7 @@ L'accord s'écrit **tel que gravé**, à l'orthographe près d'un même symbole 
 | 大声地 | dà shēng de |
 | 都交托 | dōu jiāo tuō |
 | 你名为 | nǐ míng wéi |
+| 心为我 | xīn wéi wǒ |
 
 ## Source
 
