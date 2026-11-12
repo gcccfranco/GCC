@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DISPOSITION_AVANT_LECTURE, getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { TOUCHER_44, TOUCHER_RANGEE } from "@/lib/toucher44";
@@ -36,7 +37,7 @@ import type { SectionItem } from "@/types/song";
 import type { SectionNuance } from "@/types/setList";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
-import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
+import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
 import { AccordsProvider } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
@@ -492,7 +493,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
       return [...el.children].every((c) => c.getBoundingClientRect().right <= fin + 0.5);
     };
     const ajuster = () => {
-      for (const niveau of ["2", "1", "0"]) {
+      for (const niveau of ["3", "2", "1", "0"]) {
         el.dataset.libelles = niveau;
         if (tient()) break;
       }
@@ -537,6 +538,19 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
             </Button>
             {/* Transposition rapide */}
             <PiluleTonalite currentKey={customize.currentKey} originalKey={originalKey} keySuffix={keySuffix} setCustomize={setCustomize} />
+            {accesHarmonie.peut && (
+              <Button
+                variant="secondary"
+                aria-label={t("harmonie.idees")}
+                title={t("harmonie.idees")}
+                onClick={() => setShowIdees(true)}
+                className={`raised ${TOUCHER_44} h-10 lg:h-9 bouton-harmonie shrink-0 gap-1.5 rounded-full text-xs font-semibold bg-card text-foreground hover:bg-card`}
+              >
+                <Sparkles className="h-4 w-4" aria-hidden />
+                {/* Le libellé s'ajoute au niveau 3 de la rangée (`data-libelles`, globals.css) ; sinon l'icône seule. */}
+                <span className="libelle-harmonie">{t("harmonie.idees")}</span>
+              </Button>
+            )}
 
             <div className="groupe-chant raised ml-auto flex gap-0.5 items-center justify-end rounded-full p-0.5">
               {/* Taille du texte */}
@@ -598,13 +612,13 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
                 Personnaliser et Signaler (globals.css, `.actions-chant`). */}
             <div className="actions-chant ml-auto shrink-0 items-center gap-1">
               <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-              <ActionsChant variante="rangee" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} pdf={pdf} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
+              <ActionsChant variante="rangee" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} pdf={pdf} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} menuChant={menuChant} />
             </div>
           </div>
           {/* Téléphone, couché compris (Q5) : les actions sur une seconde rangée, qui défile en
               largeur, colle sous la première et s'escamote avec elle (globals.css, `.actions-tel`). */}
           <div className="actions-tel max-w-2xl mx-auto w-full gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <ActionsChant variante="tel" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} pdf={pdf} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
+            <ActionsChant variante="tel" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} pdf={pdf} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} menuChant={menuChant} />
           </div>
 
           {/* Embed YouTube */}
@@ -749,7 +763,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
         )}
         
         {/* Idées d'harmonie du chant (lot 9) */}
-        <IdeesSheet
+        <HarmonieDuChant
           open={showIdees}
           onClose={() => setShowIdees(false)}
           slug={song.slug}

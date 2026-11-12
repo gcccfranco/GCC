@@ -329,9 +329,9 @@ test.describe("idées d'harmonie", () => {
     });
     await sansAide(page);
     await signInAs(page, AMBROISE, {}, "/songs/au-nom-de-jesus");
-    await page.getByTestId("barre-outils").getByRole("button", { name: "Idées d'harmonie" }).click();
+    await page.getByTestId("barre-outils").getByRole("button", { name: "Harmonie", exact: true }).click();
     await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
-    // Le premier accord proposé de la feuille (aperçu d'une carte).
+    // Le premier accord de la feuille (grille du premier passage, H4-1) ; les cartes d'idées en ont aussi.
     const accord = page.locator("[data-idees-harmonie] [data-accord-touchable]").first();
     await expect(accord).toBeVisible();
     return accord;

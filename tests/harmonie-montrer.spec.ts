@@ -57,13 +57,13 @@ async function ouvrir(page: Page, setlist: Record<string, unknown> = SETLIST) {
  *  avec la section annoncée par l'idée. */
 async function montrer(page: Page, position: number, n: number) {
   const chant = page.locator(`[data-outline-item="${position}"]`);
-  await chant.getByRole("button", { name: "Idées d'harmonie" }).first().click();
+  await chant.getByRole("button", { name: "Harmonie", exact: true }).first().click();
   const feuille = page.locator("[data-idees-harmonie]");
   await expect(feuille).toBeVisible();
   const idee = feuille.locator("[data-suggestion]").nth(n);
   await expect(idee).toBeVisible();
-  // Sous le nom de l'idée : « Refrain » ou « Refrain · 2 endroits ».
-  const annonce = ((await idee.locator("p").first().textContent()) ?? "").split(" · ")[0].trim();
+  // « Montrer » va au passage de la carte : son nom est le titre du bloc (« Refrain », « Refrain ×2 »).
+  const annonce = ((await idee.locator("xpath=ancestor::*[@data-passage]").locator("h3").first().textContent()) ?? "").replace(/ ×\d+$/, "").trim();
   await idee.getByRole("button", { name: "Montrer" }).click();
   const surligne = page.locator(".harmonie-surligne");
   await expect(surligne).toHaveCount(1);
@@ -87,7 +87,7 @@ test("« Montrer » met en avant la section annoncée par l'idée, dans le bon c
   await ouvrir(page);
   for (const pos of [1, 2]) {
     const nb = await (async () => {
-      await page.locator(`[data-outline-item="${pos}"]`).getByRole("button", { name: "Idées d'harmonie" }).first().click();
+      await page.locator(`[data-outline-item="${pos}"]`).getByRole("button", { name: "Harmonie", exact: true }).first().click();
       const c = await page.locator("[data-idees-harmonie] [data-suggestion]").count();
       await page.keyboard.press("Escape");
       await expect(page.locator("[data-idees-harmonie]")).toHaveCount(0);
@@ -107,9 +107,8 @@ test("« Montrer » met en avant la section annoncée par l'idée, dans le bon c
  *  le chant (data-chant-slug) et la position de la section mise en avant. */
 async function montrerDepuis(page: Page, bouton: ReturnType<Page["getByRole"]>, section: RegExp) {
   await bouton.click();
-  // Une idée sur une section que la setlist joue (pas une intro retirée) : dont la
-  // première section — celle que « Montrer » vise d'abord, lot IR — est jouée.
-  const idee = page.locator("[data-idees-harmonie] [data-suggestion]").filter({ has: page.locator("p", { hasText: section }) }).first();
+  // Une idée du premier passage dont le titre correspond à la section cherchée.
+  const idee = page.locator("[data-idees-harmonie] [data-passage]").filter({ has: page.locator("h3", { hasText: section }) }).locator("[data-suggestion]").first();
   await expect(idee).toBeVisible();
   await idee.getByRole("button", { name: "Montrer" }).click();
   const surligne = page.locator(".harmonie-surligne");
@@ -142,7 +141,7 @@ for (const [nom, melange] of [
 ] as const) {
   test(`fusion (${nom}) : « Montrer » sur une idée du 2e chant de la fusion reste dans ce chant`, async ({ page }) => {
     await ouvrir(page, { ...SETLIST, items: [item({ songSlug: "gloire-a-son-nom", position: 1 }), fusion(melange)] });
-    const r = await montrerDepuis(page, page.getByRole("button", { name: /Idées d'harmonie · 一生爱你/ }), /^(主歌|副歌|Couplet|Refrain)/);
+    const r = await montrerDepuis(page, page.getByRole("button", { name: /Harmonie · 一生爱你/ }), /^(主歌|副歌|Couplet|Refrain)/);
     expect(r.position).toBe("2");
     expect(r.chant).toBe("一生爱你");
   });
@@ -158,6 +157,6 @@ test("structure modifiée dans la setlist : « Montrer » trouve la section dans
       item({ songSlug: "一生爱你", position: 2, jianpuSheet: false }),
     ],
   });
-  const r = await montrerDepuis(page, page.locator('[data-outline-item="1"]').getByRole("button", { name: "Idées d'harmonie" }).first(), /^(Refrain|Couplet)/);
+  const r = await montrerDepuis(page, page.locator('[data-outline-item="1"]').getByRole("button", { name: "Harmonie", exact: true }).first(), /^(Refrain|Couplet)/);
   expect(r.position, "la section montrée est dans Abba Père").toBe("1");
 });

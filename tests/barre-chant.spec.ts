@@ -31,7 +31,7 @@ async function ouvrir(page: Page, slug: string) {
   await signInAs(page, ADMIN, {}, `/songs/${encodeURIComponent(slug)}`);
   await expect(page.locator("main.song-zoom").getByRole("heading", { level: 1 })).toBeVisible();
   // Le bouton Idées arrive avec le profil : la rangée est complète quand il est là.
-  await expect(barre(page).getByRole("button", { name: "Idées d'harmonie" })).toBeAttached();
+  await expect(barre(page).getByRole("button", { name: "Harmonie", exact: true })).toBeAttached();
 }
 
 async function uneSeuleLigne(page: Page) {
@@ -62,8 +62,8 @@ for (const chant of CHANTS) {
       await expect(b.getByRole("button", { name: "Pinyin" })).toHaveCount(chant.zh ? 1 : 0);
 
       if (actionsDansLaBarre(page)) {
-        // Q2 : lire à gauche, faire à droite — Vidéo, PDF, Crayon (MP-3), Idées, puis ⋯ au bout.
-        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Crayon", "Idées d'harmonie", "Plus d'actions"];
+        // Q2 : lire à gauche, faire à droite — Vidéo, PDF, Crayon (MP-3), puis ⋯ au bout.
+        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Crayon", "Plus d'actions"];
         const boites = await Promise.all(noms.map((n) => b.getByRole("button", { name: n, exact: true }).boundingBox()));
         const accords = (await b.getByRole("button", { name: "Accords", exact: true }).boundingBox())!;
         let x = accords.x;
@@ -100,7 +100,7 @@ for (const chant of CHANTS) {
         // Vidéo · PDF · Idées · ⋯, qui défile en largeur (pas d'« Écouter » : YouTube seul, 18/10/2026).
         const seconde = b.locator(".actions-tel");
         await expect(seconde).toBeVisible();
-        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Crayon", "Idées d'harmonie", "Plus d'actions"];
+        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Crayon", "Plus d'actions"];
         for (const n of noms) await expect(seconde.getByRole("button", { name: n, exact: true })).toBeAttached();
         await expect(rangee(page).getByRole("button", { name: "Plus d'actions" })).toHaveCount(0);
         await expect(seconde.getByRole("button", { name: "Écouter" })).toHaveCount(0);
@@ -123,7 +123,8 @@ for (const chant of CHANTS) {
         await expect(page.getByRole("dialog")).toBeVisible();
         await page.keyboard.press("Escape");
         await expect(page.getByRole("dialog")).toHaveCount(0);
-        await seconde.getByRole("button", { name: "Idées d'harmonie" }).click();
+        // « Harmonie » est à côté de la pilule de tonalité, en icône seule sur la rangée.
+        await rangee(page).getByRole("button", { name: "Harmonie", exact: true }).click();
         await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
       }
     });
@@ -200,10 +201,11 @@ test.describe("deux volets : partition et barre jusqu'à 900 px (Q8)", () => {
 
   test("à 1 440 px, Abba Père a tous ses libellés sur une ligne", async ({ page }) => {
     await ouvrir(page, "abba-pere");
-    await expect(rangee(page)).toHaveAttribute("data-libelles", "2");
+    // 3 = tout, avec le mot « Harmonie » ; 2 quand il ne tient pas.
+    await expect(rangee(page)).toHaveAttribute("data-libelles", /^[23]$/);
     for (const n of ["Accords", "Vidéo", "PDF"]) await expect(rangee(page).getByText(n, { exact: true })).toBeVisible();
-    // Idées d'harmonie : l'icône seule (Timothée, 18/10/2026), son nom reste pour les lecteurs d'écran.
-    expect(await rangee(page).getByRole("button", { name: "Idées d'harmonie" }).innerText()).toBe("");
+    // Harmonie : l'icône seule quand la place manque, son nom reste pour les lecteurs d'écran.
+    await expect(rangee(page).getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await uneSeuleLigne(page);
   });
 

@@ -767,9 +767,17 @@
    rangée la plus chargée (Retour, ↺, Pinyin), cachaient tout sur la tablette couchée. */
 .rangee-chant { container-type: inline-size; }
 .libelle-chant, .libelle-action { display: none; }
+/* Un libellé de la barre ne se coupe jamais : la mesure `data-libelles` retombe au niveau inférieur. */
+.libelle-chant, .libelle-action, .libelle-harmonie { white-space: nowrap; }
 /* Téléphone : comme avant, pas de libellé sous 620 px de rangée (la pilule de tonalité, qui
    rétrécit, ne ferait jamais déborder la ligne : la mesure ne suffit pas). */
-@container (min-width: 620px) { .rangee-chant[data-libelles="2"] .libelle-chant { display: inline; } }
+@container (min-width: 620px) { .rangee-chant:is([data-libelles="2"], [data-libelles="3"]) .libelle-chant { display: inline; } }
+/* Bouton « Harmonie » de la page chant : l'icône seule, carrée ; son libellé en plus au niveau 3 (tout tient). */
+.libelle-harmonie { display: none; }
+.rangee-chant .bouton-harmonie { width: 2.5rem; padding-inline: 0; }
+.rangee-chant[data-libelles="3"] .bouton-harmonie { width: auto; padding-inline: 0.75rem; }
+.rangee-chant[data-libelles="3"] .libelle-harmonie { display: inline; }
+@media (min-width: 1024px) { .rangee-chant .bouton-harmonie { width: 2.25rem; } .rangee-chant[data-libelles="3"] .bouton-harmonie { width: auto; } }
 /* Téléphone, même couché (moins de 500 px de haut) : la rangée d'avant, sans ⋯ ; dessous, la
    seconde rangée d'actions (Q5, `.actions-tel`) — 44 px de plus sous la barre, d'où les marges
    hautes de la partition et de la vidéo (48 et 82 px sans elle). Dès la tablette debout : la
@@ -784,8 +792,8 @@
 }
 @media (min-width: 768px) and (min-height: 500px) {
   .rangee-chant { padding-inline: 1rem; }
-  .rangee-chant[data-libelles="2"] .libelle-chant,
-  .rangee-chant:is([data-libelles="1"], [data-libelles="2"]) .libelle-action { display: inline; }
+  .rangee-chant:is([data-libelles="2"], [data-libelles="3"]) .libelle-chant,
+  .rangee-chant:is([data-libelles="1"], [data-libelles="2"], [data-libelles="3"]) .libelle-action { display: inline; }
   .actions-chant { display: flex; }
   .actions-tel { display: none; }
   .groupe-chant { margin-left: 0; }

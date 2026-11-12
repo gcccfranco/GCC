@@ -256,7 +256,7 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
     const barre = page.getByTestId("barre-outils");
     await expect(barre).toBeVisible();
     await expect(barre.getByRole("link", { name: "Retour" })).toHaveCount(0);
-    await expect(barre.getByRole("button", { name: "Idées d'harmonie" })).toBeVisible();
+    await expect(barre.getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await expect(barre.getByRole("button", { name: "PDF" })).toBeVisible();
     const [b, l, d] = await Promise.all([barre.boundingBox(), liste(page).boundingBox(), droite(page).boundingBox()]);
     expect(b!.x, "la barre commence au bord du volet").toBeGreaterThanOrEqual(l!.x + l!.width - 1);
@@ -452,7 +452,7 @@ test.describe("Chants en un volet (téléphone, tablette debout)", () => {
     await signInAs(page, ADMIN, {}, "/songs/abba-pere");
     const barre = page.getByTestId("barre-outils");
     await expect(barre.getByRole("link", { name: "Retour" })).toBeVisible();
-    await expect(barre.getByRole("button", { name: "Idées d'harmonie" })).toBeVisible();
+    await expect(barre.getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await expect(barre.getByRole("button", { name: "PDF" })).toBeVisible();
     expect(await barre.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
     await capture(page, "chants-chant-tablette");
@@ -464,10 +464,10 @@ test.describe("Chants en un volet (téléphone, tablette debout)", () => {
     const barre = page.getByTestId("barre-outils");
     await expect(barre.getByRole("link", { name: "Retour" })).toBeVisible();
     await expect(barre.getByRole("button", { name: "PDF" })).toBeVisible();
-    await expect(barre.getByRole("button", { name: "Idées d'harmonie" })).toBeVisible();
+    await expect(barre.getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await barre.getByRole("button", { name: "Plus d'actions" }).click();
     await expect(page.getByRole("menuitem", { name: "PDF" })).toHaveCount(0);
-    await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toHaveCount(0);
+    await expect(page.getByRole("menuitem", { name: "Harmonie", exact: true })).toHaveCount(0);
   });
 });
 

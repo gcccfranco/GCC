@@ -143,7 +143,7 @@ Une seule tranche ; aucun écran ne change (H4 à H6 posent le bouton).
 
 Deux tranches. La première remplace le contenu et garde la feuille à toutes les tailles ; la seconde pose la colonne.
 - **H4-1, contenu et feuille.** `IdeesSheet.tsx` devient `HarmonieDuChant.tsx` (mêmes props, `git mv`) ; titre
-  « Harmonie de ce chant » / « 本歌和声 » ; feuille aux deux tiers de la hauteur (`67dvh`).
+  « Harmonie de ce chant » / « 这首歌的和声 » ; feuille aux deux tiers de la hauteur (`67dvh`).
   - **Un bloc par passage**, dans l'ordre du chant (`harmonieDuChant`, refus appliqués) ; les reprises d'une même
     section (`idDeSection` identique) se replient dans le premier bloc, nom suivi de « ×n », idées dédoublonnées par
     fiche. Bloc : filet gauche `--sec-<type>`, nom (`formatSectionName`), grille en chiffres (`font-chord`,
@@ -224,6 +224,22 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   Tests : tsc, lint (0 erreur), validate ; nouvelle `harmonie-ecoute.spec.ts` (pure, chant FR `a-jamais-tu-es-saint`,
   ZH `一切歌颂赞美`) et trois specs harmonie voisines × 3 appareils, 87 passés, 19 s. Non testé : le son réel (aucune
   page avant H4) ; à écouter sur iOS et Android quand H4 posera le bouton.
+
+- 12/11/2026 : **H4-1 fait** (session orchestratrice, executant + testeur + relecteur + regard) : `IdeesSheet.tsx`
+  devient `HarmonieDuChant.tsx`, « Harmonie de ce chant » / « 这首歌的和声 » : un bloc par passage (filet de
+  section, grille en chiffres et lettres, phrase de fonction FR et 中文, Écouter), idées calculées par passage (3 puis
+  « Voir plus »), idées de l'équipe du passage, choix « Passage » au formulaire ; setlist : modulation après le
+  dernier refrain, « Vers le chant suivant » en dernier avec Écouter. Bouton « Harmonie » / « 和声 » après la pilule
+  de tonalité (icône étincelle seule quand la barre manque de place, niveau 3 de `data-libelles` ; libellés de la
+  barre en `nowrap`) ; puce setlist « Harmonie ». **Décisions déléguées (session H4, 12/11)** : « Ne marche pas sur ce
+  chant » refuse la fiche dans tous les passages (comme le libellé) ; titre chinois « 这首歌的和声 » plutôt que
+  « 本歌和声 » (plus naturel, à la relecture) ; les specs « Montrer i/n », « Essayer où ? » et la contraction
+  « Couplets 1 et 2 » sont retirées (sans objet). Tests : tsc, lint (0 erreur), validate ; 12 specs voisines × projets,
+  373 passés et 23 échecs au premier tour (12,2 min), puis les specs en échec : 137 + 109 passés (≈ 9 min). Restent
+  rouges, hors tranche (relecteur : rouges aussi sur la tête sans ce diff, ou course) : `chants-deux-volets.spec.ts:495`
+  et `:512` (ordinateur, tablette paysage). Connu, non corrigé : les noms des fiches restent en français dans
+  l'interface chinoise (contenu des fiches, H9) ; « Essayer » d'un bloc replié (×n) vise la première reprise. Son réel
+  non écouté (à faire sur iOS et Android). Prochain : H4-2 (colonne), session neuve.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 

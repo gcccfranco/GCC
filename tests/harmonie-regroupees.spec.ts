@@ -51,14 +51,15 @@ async function ouvrirChant(page: Page, docs: Record<string, Record<string, unkno
 }
 
 async function ouvrirLaFeuille(page: Page) {
-  await page.getByTestId("barre-outils").getByRole("button", { name: "Idées d'harmonie" }).click();
+  await page.getByTestId("barre-outils").getByRole("button", { name: "Harmonie", exact: true }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 }
 
-/** La carte d'une fiche, « Voir plus » si elle n'est pas dans les cinq premières. */
-async function carte(page: Page, fiche: string): Promise<Locator> {
-  const cartes = page.locator(`[data-suggestion^="${fiche}__"]`);
-  const voirPlus = page.getByRole("button", { name: "Voir plus" });
+/** La carte d'une fiche dans le bloc d'un passage, « Voir plus » du bloc si elle n'est pas dans les trois premières. */
+async function carte(page: Page, passage: string, fiche: string): Promise<Locator> {
+  const bloc = page.locator(`[data-idees-harmonie] [data-passage="${passage}"]`);
+  const cartes = bloc.locator(`[data-suggestion^="${fiche}__"]`);
+  const voirPlus = bloc.getByRole("button", { name: "Voir plus" });
   // Les cartes arrivent avec le catalogue des fiches : les attendre avant de compter.
   await expect(page.locator("[data-suggestion]").first()).toBeVisible();
   if ((await cartes.count()) === 0 && (await voirPlus.isVisible())) await voirPlus.click();
@@ -66,42 +67,43 @@ async function carte(page: Page, fiche: string): Promise<Locator> {
   return cartes;
 }
 
-test("une idée qui revient dans trois sections n'est qu'une carte, ses sections sous le titre", async ({ page }) => {
+// Plus de regroupement (H4-1, docs/spec-harmonie-accords.md) : une carte par idée et par passage.
+// Supprimés, sans objet : « Montrer i/n » (un seul « Montrer », qui va au passage), la contraction
+// « Couplets 1 et 2 · Pont » sous le titre, le compteur d'endroits, « Essayer où ? » et ses puces de section.
+test("une idée qui revient dans trois sections a une carte dans chacun de ces passages", async ({ page }) => {
   await ouvrirChant(page);
   await ouvrirLaFeuille(page);
-  await carte(page, "couleurs/m7");
-  const maj7 = await carte(page, "couleurs/maj7");
-  await expect(maj7.locator("p").first()).toContainText("Couplets 1 et 2 · Pont");
-  await expect(maj7, "pas de compteur d'endroits quand la carte couvre plusieurs sections").not.toContainText("endroits");
-  await maj7.scrollIntoViewIfNeeded();
-  await capture(page, "idees-regroupees");
+  for (const uid of [COUPLET_1, COUPLET_2, PONT]) {
+    const maj7 = await carte(page, uid, "couleurs/maj7");
+    await expect(maj7).toContainText("Gmaj7");
+  }
+  const premiere = await carte(page, COUPLET_1, "couleurs/maj7");
+  await premiere.scrollIntoViewIfNeeded();
+  await capture(page, "idees-par-passage");
 });
 
-test("« Montrer 1/3 » entoure le Couplet 1, puis la feuille rouverte dit 2/3 et mène au Couplet 2", async ({ page }) => {
+test("« Montrer » d'une carte entoure son passage : Couplet 1, puis Couplet 2", async ({ page }) => {
   await ouvrirChant(page);
   await ouvrirLaFeuille(page);
-  let maj7 = await carte(page, "couleurs/maj7");
-  await maj7.getByRole("button", { name: "Montrer 1/3" }).click();
+  let maj7 = await carte(page, COUPLET_1, "couleurs/maj7");
+  await maj7.getByRole("button", { name: "Montrer", exact: true }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeHidden();
   const entouree = page.locator(".harmonie-surligne");
   await expect(entouree).toHaveCount(1);
-  const premiere = await entouree.getAttribute("data-section-uids");
-  expect(premiere?.split(" ")).toContain(COUPLET_1);
-  await expect(entouree, "l'entourage s'efface avant le pas suivant").toHaveCount(0, { timeout: 6000 });
+  expect((await entouree.getAttribute("data-section-uids"))?.split(" ")).toContain(COUPLET_1);
+  await expect(entouree, "l'entourage s'efface").toHaveCount(0, { timeout: 6000 });
 
   await ouvrirLaFeuille(page);
-  maj7 = await carte(page, "couleurs/maj7");
-  await maj7.getByRole("button", { name: "Montrer 2/3" }).click();
+  maj7 = await carte(page, COUPLET_2, "couleurs/maj7");
+  await maj7.getByRole("button", { name: "Montrer", exact: true }).click();
   await expect(entouree).toHaveCount(1);
-  const seconde = await entouree.getAttribute("data-section-uids");
-  expect(seconde, "une autre section que la première").not.toBe(premiere);
-  expect(seconde?.split(" ")).toContain(COUPLET_2);
+  expect((await entouree.getAttribute("data-section-uids"))?.split(" ")).toContain(COUPLET_2);
 });
 
-test("« Ne marche pas » écarte la carte entière : un refus par section, une ligne dans les écartées", async ({ page }) => {
+test("« Ne marche pas » écarte l'idée dans tout le chant : un refus par passage, une ligne par fiche dans les écartées", async ({ page }) => {
   const db = await ouvrirChant(page);
   await ouvrirLaFeuille(page);
-  const maj7 = await carte(page, "couleurs/maj7");
+  const maj7 = await carte(page, COUPLET_1, "couleurs/maj7");
   await maj7.getByRole("button", { name: "Ne marche pas sur ce chant" }).click();
   await expect(page.locator('[data-suggestion^="couleurs/maj7__"]')).toHaveCount(0);
 
@@ -111,13 +113,13 @@ test("« Ne marche pas » écarte la carte entière : un refus par section, une 
   );
 
   const ecartees = page.getByText("1 idée écartée");
-  await expect(ecartees, "une ligne pour la carte, pas trois").toBeVisible();
+  await expect(ecartees, "une ligne pour la fiche, pas trois").toBeVisible();
   await ecartees.click();
   await expect(page.locator("details li")).toHaveCount(1);
   await expect(page.locator("details li")).toContainText("Velin");
 });
 
-test("un ancien refus d'une seule section retire cette section de la carte, pas les autres", async ({ page }) => {
+test("un refus d'une seule section retire la carte de ce passage, pas celles des autres", async ({ page }) => {
   const ancien = `couleurs/maj7__${COUPLET_2}`;
   await ouvrirChant(page, {
     [`harmonie/${SLUG}/rejets/${ancien.replace(/\//g, "~")}`]: {
@@ -125,9 +127,9 @@ test("un ancien refus d'une seule section retire cette section de la carte, pas 
     },
   });
   await ouvrirLaFeuille(page);
-  const maj7 = await carte(page, "couleurs/maj7");
-  await expect(maj7.locator("p").first()).toContainText("Couplet 1 · Pont");
-  await expect(maj7.getByRole("button", { name: "Montrer 1/2" })).toBeVisible();
+  await carte(page, COUPLET_1, "couleurs/maj7");
+  await carte(page, PONT, "couleurs/maj7");
+  await expect(page.locator(`[data-passage="${COUPLET_2}"] [data-suggestion^="couleurs/maj7__"]`)).toHaveCount(0);
   const ecartees = page.getByText("1 idée écartée");
   await expect(ecartees).toBeVisible();
   await ecartees.click();
@@ -155,23 +157,18 @@ const SETLIST = {
   }],
 };
 
-test("Essayer dans Ma version : on choisit la section, et seule celle-ci change", async ({ page }) => {
+test("Essayer dans Ma version : la carte d'un passage s'applique à ce passage, et à lui seul", async ({ page }) => {
   await routeSheet(page);
   const db = await signInAs(page, AMBROISE, { [SETLIST_DOC]: SETLIST }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);
   await basculerMode(page, "Ma version");
-  await page.getByRole("button", { name: "Idées d'harmonie" }).first().click();
+  await page.getByRole("button", { name: "Harmonie", exact: true }).first().click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 
-  const maj7 = await carte(page, "couleurs/maj7");
-  await maj7.getByRole("button", { name: "Essayer dans Ma version…" }).click();
-  await expect(maj7.getByText("Essayer dans Ma version, où ?")).toBeVisible();
-  const puces = maj7.getByRole("button", { name: /^(Couplet [12]|Pont)$/ });
-  await expect(puces).toHaveCount(3);
+  const maj7 = await carte(page, COUPLET_2, "couleurs/maj7");
   await maj7.scrollIntoViewIfNeeded();
-  await capture(page, "essayer-ou");
-
-  await puces.filter({ hasText: "Couplet 2" }).click();
+  await capture(page, "essayer-passage");
+  await maj7.getByRole("button", { name: "Essayer dans Ma version", exact: true }).click();
   await expect.poll(() => db.writes.filter((w) => w.path === VERSION_DOC).length).toBeGreaterThan(0);
   const dernier = db.writes.filter((w) => w.path === VERSION_DOC).pop()!;
   const contenu = String(dernier.data.content);
@@ -184,19 +181,14 @@ test("Essayer dans Ma version : on choisit la section, et seule celle-ci change"
   ).toHaveLength(0);
 });
 
-test("chant chinois, interface en 中文 : les trois premiers 主歌 se contractent en « 主歌 1–3 »", async ({ page }) => {
+test("chant chinois, interface en 中文 : la feuille « 这首歌的和声 » a un bloc par passage et des cartes avec « 指出位置 »", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await routeSheet(page);
   await signInAs(page, AMBROISE, {}, `/songs/${encodeURIComponent("永活盼望")}`);
-  await page.getByTestId("barre-outils").getByRole("button", { name: "和声灵感" }).click();
-  await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
-  const cartes = page.locator('[data-suggestion^="couleurs/maj7__"]');
-  const voirPlus = page.getByRole("button", { name: "查看更多" });
-  await expect(page.locator("[data-suggestion]").first()).toBeVisible();
-  if ((await cartes.count()) === 0 && (await voirPlus.isVisible())) await voirPlus.click();
-  const maj7 = cartes.filter({ hasText: "主歌 1–3 · 主歌 4 (To Chorus)" });
-  await expect(maj7).toHaveCount(1);
-  await expect(maj7.getByRole("button", { name: "指出位置 1/4" })).toBeVisible();
-  await maj7.scrollIntoViewIfNeeded();
-  await capture(page, "idees-regroupees-zh");
+  await page.getByTestId("barre-outils").getByRole("button", { name: "和声", exact: true }).click();
+  const feuille = page.locator("[data-idees-harmonie]");
+  await expect(feuille).toBeVisible();
+  await expect(feuille.locator("[data-passage]").first()).toBeVisible();
+  await expect(feuille.locator("[data-suggestion]").first().getByRole("button", { name: "指出位置" })).toBeVisible();
+  await capture(page, "idees-par-passage-zh");
 });

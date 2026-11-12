@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
+import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
 import { AccordsProvider } from "@/components/accords/AccordsProvider";
 import { appliquerDansLaSource } from "@/lib/harmonie/appliquer";
 import { semitonesTo } from "@/lib/transpose";
@@ -76,7 +76,7 @@ export function IdeesDuChant({
   return (
     // Les accords proposés s'ouvrent au toucher, même en « Ma version » (DA-3, Q13).
     <AccordsProvider chant={{ slug, titre: songsMap[slug]?.title ?? slug }}>
-    <IdeesSheet
+    <HarmonieDuChant
       open
       onClose={() => { setIdeesTarget(null); setIdeesChant(null); }}
       slug={slug}

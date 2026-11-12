@@ -67,13 +67,12 @@ async function openPartitions(page: Page, extra: Record<string, Record<string, u
 }
 
 const ouvrirLesIdees = async (page: Page) => {
-  await page.getByRole("button", { name: "Idées d'harmonie" }).first().click();
+  await page.getByRole("button", { name: "Harmonie", exact: true }).first().click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 };
 
-/** Une idée qui ne touche qu'une section : « Essayer dans Ma version » s'applique
- *  d'un clic (une carte regroupée sur plusieurs sections demande d'abord « où ? »,
- *  lot IR — voir harmonie-regroupees.spec.ts). */
+/** Une carte d'un passage : « Essayer dans Ma version » s'applique d'un clic, à ce passage
+ *  (H4-1 : plus de « Essayer où ? »). */
 const uneSection = (page: Page) =>
   page.locator("[data-suggestion]").filter({ has: page.getByRole("button", { name: "Essayer dans Ma version", exact: true }) }).first();
 
@@ -87,9 +86,19 @@ test("un pianiste ouvre les idées d'un chant de la setlist, avec la transition 
   await capture(page, "idees-setlist");
 });
 
-test("« Idées d'harmonie » est une puce de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
+test("la modulation suit le bloc du dernier refrain, la transition vers le chant suivant vient en dernier", async ({ page }) => {
   await openPartitions(page);
-  await verifierPuce(page.locator('[data-outline-item="1"]').getByRole("button", { name: "Idées d'harmonie" }), info);
+  await ouvrirLesIdees(page);
+  const bloc = page.locator("[data-idees-harmonie] [data-passage]").filter({ has: page.locator("[data-modulation]") });
+  await expect(bloc, "la modulation est dans un seul bloc").toHaveCount(1);
+  await expect(bloc.locator("h3").first()).toContainText(/Refrain/);
+  await expect(page.locator("[data-idees-harmonie] .overflow-y-auto > :last-child")).toContainText("Vers le chant suivant");
+  await expect(page.locator("[data-idees-harmonie] .overflow-y-auto > :last-child").getByRole("button", { name: "Écouter" })).toBeVisible();
+});
+
+test("« Harmonie » est une puce de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
+  await openPartitions(page);
+  await verifierPuce(page.locator('[data-outline-item="1"]').getByRole("button", { name: "Harmonie", exact: true }), info);
 });
 
 test("hors « Ma version », l'idée se lit mais ne s'applique pas", async ({ page }) => {
@@ -139,7 +148,7 @@ test("chant lu sur son scan 简谱 : l'app rappelle de reporter le changement", 
   await openPartitions(page);
   await basculerMode(page, "Ma version");
   // Le chant à scan est le second (Abba Père, en premier, n'en a pas).
-  await page.locator('[data-outline-item="2"]').getByRole("button", { name: "Idées d'harmonie" }).click();
+  await page.locator('[data-outline-item="2"]').getByRole("button", { name: "Harmonie", exact: true }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
   const premiere = page.locator("[data-suggestion]").first();
   await premiere.getByRole("button", { name: "Essayer dans Ma version" }).click();
@@ -151,7 +160,7 @@ test("chant sans scan 简谱 : pas de rappel « À reporter sur la partition 简
   // la retouche se voit directement dans la version texte.
   const db = await openPartitions(page);
   await basculerMode(page, "Ma version");
-  await page.locator('[data-outline-item="1"]').getByRole("button", { name: "Idées d'harmonie" }).click();
+  await page.locator('[data-outline-item="1"]').getByRole("button", { name: "Harmonie", exact: true }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
   const premiere = uneSection(page);
   await premiere.getByRole("button", { name: "Essayer dans Ma version" }).click();
@@ -188,5 +197,5 @@ test("un chanteur ne voit pas le bouton", async ({ page }) => {
   await signInAs(page, { ...MUSICIEN, ...musicien("batterie") }, { [SETLIST_DOC]: SETLIST }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Idées d'harmonie" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Harmonie", exact: true })).toHaveCount(0);
 });
