@@ -295,3 +295,8 @@ qu'après quelques semaines de données.
 - 11/11/2026 — T3 relancée après la remise à zéro de la limite, puis **mise en attente** (règle des trois chantiers
   décidée par Timothée ; ordre de reprise : « Ma partition », Harmonie, puis le comptage). Rien de T3 n'est commité ;
   reprise au début de T3 (même consigne), après `git pull --rebase`.
+- 12/11/2026 — **décision déléguée (pilote, 12/11)** : T3 reprend dans une session neuve (place libérée par Harmonie
+  H2 ; go de Timothée du 11/11). Le réglage « Couleur des accords » (lot CA, mode louange) n'avait pas de clé : T3
+  ajoute à l'inventaire la ligne `cmd.louange.couleurAccords` (T3) et la pose comme les autres. Motif : la règle du
+  registre veut une clé par commande, et une commande sans clé resterait invisible au tri des candidates. T4 attend
+  toujours son go.
