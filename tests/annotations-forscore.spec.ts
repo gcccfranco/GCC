@@ -5,6 +5,7 @@ import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui } from "../src/lib/perfo
 import { FOND_CLAIR, garderContraste } from "../src/lib/performance/couleurIcones";
 import { annuler, historiqueVide, MAX_ETATS, noter, peutAnnuler, peutRetablir, retablir } from "../src/lib/annotations/historique";
 import type { Trait } from "../src/types/partition";
+import { accrocheSuivante, lirePosition, normaliser, placerBarre, poserBarre, type Zone } from "../src/lib/performance/barreAnnotation";
 
 // Annotations façon forScore, tranche AN-3a (docs/spec-mode-louange-forscore-2.md, « AN ») : la barre d'annotation
 // attachée (à la place de la barre de titre, ou en haut et en bas au téléphone), Annuler / Rétablir par chant,
@@ -440,4 +441,200 @@ test("(m) sortie à 8 s sans toucher après une entrée au stylet seulement", as
   await expect(racine(page)).toBeVisible();
   await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(2);
   expect(ailleursQuePartitions(db)).toEqual([]);
+});
+
+// AN-3b : la barre détachable. La barre qui se détache est celle d'en haut (tablette, ordinateur) ou du bas (téléphone).
+test.describe("point d'accroche de la barre : fonctions pures (sans page)", () => {
+  const zone: Zone = { left: 8, top: 8, right: 1016, bottom: 760 };
+  const rect = (left: number, top: number, width = 400, height = 52) => ({ left, top, width, height });
+  const repos = { x: 0, y: 0 };
+
+  test("à moins de 48 px d'un bord, l'aimant l'accroche (le plus proche des deux)", () => {
+    expect(poserBarre(rect(30, 300), zone, repos).accroche).toBe("gauche");
+    expect(poserBarre(rect(300, 40), zone, repos).accroche).toBe("haut");
+    expect(poserBarre(rect(20, 30), zone, repos).accroche).toBe("gauche"); // 12 px du bord gauche, 22 px du haut
+    expect(poserBarre(rect(60, 300), zone, repos).accroche).toBe("libre"); // 52 px : hors de l'aimant
+  });
+
+  test("lancée vite vers le bas, elle s'accroche en bas ; lâchée lentement au milieu, elle reste libre en fractions", () => {
+    expect(poserBarre(rect(300, 300), zone, { x: 0, y: 1 }).accroche).toBe("bas");
+    const libre = poserBarre(rect(308, 300), zone, { x: 0.1, y: 0.1 });
+    expect(libre.accroche).toBe("libre");
+    expect(libre.x).toBeCloseTo((308 - 8) / (1008 - 400), 3);
+    expect(libre.y).toBeCloseTo((300 - 8) / (752 - 52), 2);
+  });
+
+  test("placerBarre reste dans la zone : libre à (1,1), zone réduite par une rotation, colonne contre un bord", () => {
+    const taille = { largeur: 400, hauteur: 52 };
+    const etroite = { largeur: 200, hauteur: 52 };
+    const coin = placerBarre({ accroche: "libre", x: 1, y: 1 }, taille, zone);
+    expect(coin).toEqual({ left: 1016 - 400, top: 760 - 52, colonne: false });
+    const petite: Zone = { left: 8, top: 8, right: 300, bottom: 200 };
+    const p = placerBarre({ accroche: "libre", x: 1, y: 1 }, etroite, petite);
+    expect(p.left).toBeGreaterThanOrEqual(petite.left);
+    expect(p.left + etroite.largeur).toBeLessThanOrEqual(petite.right);
+    expect(p.top + etroite.hauteur).toBeLessThanOrEqual(petite.bottom);
+    const col = placerBarre({ accroche: "gauche" }, { largeur: 52, hauteur: 500 }, zone);
+    expect(col).toEqual({ left: 8, top: 8 + (752 - 500) / 2, colonne: true });
+  });
+
+  test("« attachée » est l'origine partout ; haut/bas ne sont que des capsules ; le cycle clavier boucle", () => {
+    expect(lirePosition(null)).toEqual({ accroche: "attachee" });
+    expect(lirePosition("pas du json")).toEqual({ accroche: "attachee" });
+    expect(lirePosition('{"accroche":"libre","x":"a"}')).toEqual({ accroche: "attachee" });
+    expect(lirePosition('{"accroche":"gauche"}')).toEqual({ accroche: "gauche" });
+    expect(normaliser({ accroche: "haut" }, false)).toEqual({ accroche: "attachee" });
+    expect(normaliser({ accroche: "haut" }, true)).toEqual({ accroche: "haut" });
+    expect(normaliser({ accroche: "bas" }, true)).toEqual({ accroche: "attachee" });
+    const tour = (tel: boolean) => { const r = []; let a = accrocheSuivante("attachee", tel); for (let i = 0; i < 4; i++, a = accrocheSuivante(a, tel)) r.push(a); return r; };
+    expect(tour(false)).toEqual(["droite", "bas", "gauche", "attachee"]);
+    expect(tour(true)).toEqual(["droite", "haut", "gauche", "attachee"]);
+  });
+
+  test("au téléphone la zone commence sous la barre du haut : une barre posée « haut » ne la recouvre pas", () => {
+    const barreHaut = 64;
+    const sousBarre: Zone = { left: 8, top: barreHaut + 8, right: 382, bottom: 836 };
+    const p = placerBarre({ accroche: "haut" }, { largeur: 280, hauteur: 52 }, sousBarre);
+    expect(p.top).toBeGreaterThanOrEqual(barreHaut);
+    expect(poserBarre(rect(50, 0, 280), sousBarre, repos).accroche).toBe("haut");
+  });
+});
+
+/** Le badge « N » de `next dev` recouvre un coin de l'écran et intercepte la souris : on le masque. */
+const sansBadgeDev = (page: Page) => page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+const detachable = (page: Page) => (telephone(page) ? page.locator("[data-performance-mode] [data-crayon-barre-bas]") : barre(page));
+const poignee = (page: Page) => detachable(page).getByRole("button", { name: "Déplacer la barre", exact: true });
+
+/** Glisse la poignée au pointeur (en plusieurs pas) ; la pause avant le lâcher garde la vitesse nulle. */
+async function glisserPoignee(page: Page, x: number, y: number, pause = 150) {
+  const b = (await poignee(page).boundingBox())!;
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(x, y, { steps: 10 });
+  await page.waitForTimeout(pause);
+  await page.mouse.up();
+}
+
+test("(n) glisser la poignée vers le bord gauche pose la barre en colonne, et elle marche encore", async ({ page }) => {
+  const db = await ouvrirLouange(page);
+  await sansBadgeDev(page);
+  await basculerAnnoter(page);
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "attachee");
+  const vh = page.viewportSize()!.height;
+  await glisserPoignee(page, 20, vh / 2);
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "gauche");
+  await expect(detachable(page)).toHaveAttribute("data-colonne", "");
+  const b = (await detachable(page).boundingBox())!;
+  expect(b.height).toBeGreaterThan(b.width);
+  expect(b.x).toBeLessThanOrEqual(12);
+  await tracer(page);
+  await expect(bouton(page, "Annuler")).toBeEnabled();
+  await bouton(page, "Annuler").click();
+  await expect(bouton(page, "Annuler")).toBeDisabled();
+  await bouton(page, "Terminé").click();
+  expect(ailleursQuePartitions(db)).toEqual([]);
+});
+
+test("(o) la position est retenue après rechargement", async ({ page }) => {
+  await ouvrirLouange(page);
+  await sansBadgeDev(page);
+  await basculerAnnoter(page);
+  await glisserPoignee(page, 20, page.viewportSize()!.height / 2);
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "gauche");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("annot-barre-position"))).toBe('{"accroche":"gauche"}');
+  await page.reload();
+  await ouvrirMode(page);
+  await sansBadgeDev(page);
+  await basculerAnnoter(page);
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "gauche");
+});
+
+test("(p) la barre libre reste dans l'écran après une rotation", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("annot-barre-position", JSON.stringify({ accroche: "libre", x: 1, y: 1 })));
+  await ouvrirLouange(page);
+  await sansBadgeDev(page);
+  await basculerAnnoter(page);
+  const libre = page.locator('[data-performance-mode] [data-accroche="libre"]');
+  await expect(libre).toBeVisible();
+  const dedans = async () => {
+    const b = (await libre.boundingBox())!;
+    const v = await page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }));
+    return b.x >= 0 && b.y >= 0 && b.x + b.width <= v.width && b.y + b.height <= v.height;
+  };
+  expect(await dedans()).toBe(true);
+  // Le mode louange est plein écran : `setViewportSize` échoue (fenêtre plein écran), on émule la rotation par CDP.
+  const { width, height } = page.viewportSize()!;
+  const cdp = await page.context().newCDPSession(page);
+  const tourner = (w: number, h: number) => cdp.send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: telephone(page) });
+  await tourner(height, width);
+  await expect.poll(() => page.evaluate(() => window.innerWidth)).toBe(height);
+  await expect.poll(dedans).toBe(true);
+  await tourner(width, height);
+  await expect.poll(() => page.evaluate(() => window.innerWidth)).toBe(width);
+  await expect.poll(dedans).toBe(true);
+});
+
+test("(q) (téléphone) la barre du bas détachée et lâchée tout en haut ne recouvre pas ‹ ›", async ({ page }) => {
+  test.skip(!telephone(page), "propre au téléphone");
+  await ouvrirLouange(page);
+  await sansBadgeDev(page);
+  await basculerAnnoter(page);
+  // Capsule centrée : un bord latéral à égalité avec le haut (capsule aussi large que la zone) donnerait « droite ».
+  const h = (await poignee(page).boundingBox())!;
+  await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(h.x + h.width / 2, h.y - 30, { steps: 5 });
+  const largeur = (await detachable(page).boundingBox())!.width;
+  await page.mouse.move(page.viewportSize()!.width / 2 - largeur / 2 + 26, 5, { steps: 10 });
+  await page.waitForTimeout(150);
+  await page.mouse.up();
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "haut");
+  const b = (await detachable(page).boundingBox())!;
+  for (const nom of ["Page précédente", "Page suivante"]) {
+    const c = (await bouton(page, nom).boundingBox())!;
+    const separes = b.y >= c.y + c.height || c.y >= b.y + b.height || b.x >= c.x + c.width || c.x >= b.x + b.width;
+    expect(separes, nom).toBe(true);
+  }
+});
+
+test("(r) Entrée sur la poignée fait tourner les accroches : gauche, attachée, droite", async ({ page }) => {
+  await ouvrirLouange(page);
+  await sansBadgeDev(page);
+  await basculerAnnoter(page);
+  await glisserPoignee(page, 20, page.viewportSize()!.height / 2);
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "gauche");
+  await poignee(page).focus();
+  await page.keyboard.press("Enter");
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "attachee");
+  await expect(detachable(page)).not.toHaveAttribute("data-colonne", "");
+  await poignee(page).focus();
+  await page.keyboard.press("Enter");
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "droite");
+});
+
+test("(s) détacher puis rattacher ne déplace pas le contenu de la page", async ({ page }) => {
+  await ouvrirLouange(page);
+  await sansBadgeDev(page);
+  await basculerAnnoter(page);
+  const ligne = () => onStage(page, "[data-trait-section]").first().boundingBox().then((b) => b!.y);
+  const avant = await ligne();
+  await glisserPoignee(page, 20, page.viewportSize()!.height / 2);
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "gauche");
+  expect(Math.abs((await ligne()) - avant)).toBeLessThanOrEqual(1);
+  await poignee(page).click();
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "attachee");
+  expect(Math.abs((await ligne()) - avant)).toBeLessThanOrEqual(1);
+});
+
+test("(t) un toucher simple sur la poignée d'une barre détachée la rattache", async ({ page }) => {
+  await ouvrirLouange(page);
+  await sansBadgeDev(page);
+  await basculerAnnoter(page);
+  await glisserPoignee(page, 20, page.viewportSize()!.height / 2);
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "gauche");
+  const b = (await poignee(page).boundingBox())!;
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(detachable(page)).toHaveAttribute("data-accroche", "attachee");
 });

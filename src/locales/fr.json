@@ -844,6 +844,8 @@
       "shortcuts": "Raccourcis",
       "loupe": "Loupe",
       "handle": "Poignée",
+      "deplacerBarre": "Déplacer la barre",
+      "deplacerBarreAide": "Glisser pour détacher · toucher pour rattacher",
       "prevPage": "Page précédente",
       "nextPage": "Page suivante",
       "pageCourte": "p. {{n}}/{{total}}",
