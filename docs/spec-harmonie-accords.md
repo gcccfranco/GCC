@@ -128,6 +128,17 @@ Aucun écran ne change ; H4 à H6 lisent ces données. Une seule tranche.
   Suspendu → couleur ; Couplet → couplet ; Montée et Pont → pré-refrain ; Refrain → refrain ; Fin → fin ; Intro et
   Transition → transition. Les sensations et moments restent dans les fiches jusqu'à H6.
 
+### H3 — écoute (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Une seule tranche ; aucun écran ne change (H4 à H6 posent le bouton).
+- **Module** `src/lib/audio/synthese.ts` : partie pure, `planDeLecture` (suite d'accords → pas datés avec leurs
+  fréquences, voicing de `voicingPiano` : basse puis accord serré, do de base = C3) et `planAvantApres` (avant, un
+  silence, après) ; un accord illisible garde sa place en silence. Partie navigateur : un seul `AudioContext`, créé
+  ou repris **au geste** (iOS), oscillateurs triangle avec enveloppe courte ; une lecture en arrête une autre.
+- **Bouton** `src/components/harmonie/BoutonEcouter.tsx` : « Écouter / 试听 », « Arrêter / 停止 » pendant la lecture,
+  `aria-pressed` ; accepte une suite ou un avant / après ; même style que les petits boutons secondaires existants ;
+  rien si le navigateur n'a pas Web Audio. Pas de survol : un appui joue, un second arrête. Jamais en mode louange.
+
 Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
 nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
 
@@ -171,6 +182,15 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   build:index ; 7 specs harmonie × 3 appareils, 189 passés, 3,0 min (nouvelle `harmonie-passages.spec.ts` : chant FR
   `a-jamais-tu-es-saint`, chant ZH `一切歌颂赞美`). **À valider par Timothée** : les ressentis et usages proposés,
   fiche par fiche dans `docs/harmonie/*.md` (retirer « (proposé) » une fois validé). H3 attend son go.
+
+- 12/11/2026 : **H3 fait** (une tranche, session orchestratrice) : `src/lib/audio/synthese.ts` (plan pur : accord →
+  fréquences par `voicingPiano`, do de base C3, 1,2 s par accord, un illisible garde sa place en silence ; avant /
+  après séparés de 0,8 s ; lecture Web Audio, un seul `AudioContext` créé ou repris dans le geste, une lecture arrête
+  l'autre et rend « Écouter » au bouton qui jouait) ; `BoutonEcouter.tsx` (« Écouter / 试听 », « Arrêter / 停止 »,
+  `aria-pressed`, caché sans Web Audio, désactivé si rien n'est lisible), posé dans aucun écran : H4 à H6 le poseront.
+  Tests : tsc, lint (0 erreur), validate ; nouvelle `harmonie-ecoute.spec.ts` (pure, chant FR `a-jamais-tu-es-saint`,
+  ZH `一切歌颂赞美`) et trois specs harmonie voisines × 3 appareils, 87 passés, 19 s. Non testé : le son réel (aucune
+  page avant H4) ; à écouter sur iOS et Android quand H4 posera le bouton.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 

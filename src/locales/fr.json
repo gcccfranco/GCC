@@ -3041,6 +3041,7 @@
     }
   },
   "harmonie": {
+    "ecoute": { "ecouter": "Écouter", "arreter": "Arrêter" },
     "rd2000": {
       "titre": "Sons du RD-2000",
       "premierChoix": "Premier choix",

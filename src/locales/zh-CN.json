@@ -3005,6 +3005,7 @@
     }
   },
   "harmonie": {
+    "ecoute": { "ecouter": "试听", "arreter": "停止" },
     "rd2000": {
       "titre": "RD-2000 音色",
       "premierChoix": "首选",
