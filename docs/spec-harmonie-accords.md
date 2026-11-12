@@ -225,7 +225,7 @@ d'écoute, `BoutonEcouter` (H5), `SongView` ou `PerformanceMode`.
     sans « … » (musiciens-7). Badge « à relire » gardé.
   - **Par où commencer** replié partout en une ligne qui se déplie sur place, comme déjà en deux volets
     (musiciens-11) ; il s'efface toujours au premier filtre.
-  - **Largeur** : en deux volets, liste de **320 px** (au lieu de 400) : la fiche passe de ~530 à ≥ 640 px à
+  - **Largeur** : en deux volets, liste de **280 px** (au lieu de 400 ; 320 laissait 608 px, mesuré) : la fiche passe de ~530 à ≥ 640 px à
     l'ordinateur 1 280 (musiciens-10, planche : 320 + 712). Tablette portrait (un volet) : les lignes en cartes sur
     deux colonnes (`md:grid-cols-2`), sans trous sous les cartes courtes.
   - **Ordre partagé** : le contexte du catalogue expose `ordre` (ids de la liste visible, dans l'ordre affiché) ; la

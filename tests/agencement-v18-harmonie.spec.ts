@@ -65,11 +65,11 @@ const nomCourant = async (page: Page, info: TestInfo) => {
 const contenu = (page: Page, info: TestInfo, attendu: string) =>
   estGrandEcran(info) ? page.locator("[data-deux-volets]") : page.locator(attendu).first();
 // Les onglets visibles (R4) : plus de rail de section (EM-2) ; reste celui des vues du RD-2000 (Par moment ·
-// Tous les sons · Paramètres) ; en pilules, le filtre sensation du catalogue (moment et niveau sont des menus), rien ailleurs.
+// Tous les sons · Paramètres) ; en pilules, les filtres Ressenti et Usage du catalogue, rien ailleurs.
 // Le pianiste ne joue pas de la guitare : pas de rail Piano · Guitare.
 const ONGLETS = [
   // Le titre et la ligne d'état suivent la page (harmonie-1) : « Théorie musicale » et « Sons du RD-2000 » ont le leur.
-  { adresse: "/harmonie", nom: "Harmonie", titre: "Harmonie", etat: /^\d+ fiches, au piano et à la guitare$/, attendu: "[data-harmonie]", onglets: { rail: 0, pilules: 1 } },
+  { adresse: "/harmonie", nom: "Harmonie", titre: "Harmonie", etat: /^\d+ fiches, au piano et à la guitare$/, attendu: "[data-harmonie]", onglets: { rail: 0, pilules: 2 } },
   { adresse: "/harmonie/cours", nom: "Théorie", titre: "Théorie musicale", etat: /^\d+ \/ \d+ chapitres finis$/, attendu: "[data-cours]", onglets: { rail: 0, pilules: 0 } },
   { adresse: "/harmonie/rd2000", nom: "RD-2000", titre: "Sons du RD-2000", etat: /^\d+ essentiels sur [\d\s\u202F\u00A0.,]+$/, attendu: "[data-rd2000]", onglets: { rail: 1, pilules: 0 } },
 ] as const;
@@ -195,7 +195,8 @@ test.describe("Harmonie en onglets (T11)", () => {
     await expect(instrument).toHaveAttribute("data-onglets", "rail");
     await instrument.getByRole("tab", { name: "Guitare" }).click();
     await expect(instrument.getByRole("tab", { name: "Guitare" })).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator("[data-harmonie]").getByRole("group", { name: "Sensation" })).toHaveAttribute("data-onglets", "pilules");
+    await expect(page.locator("[data-harmonie]").getByRole("group", { name: "Ressenti" })).toHaveAttribute("data-onglets", "pilules");
+    await expect(page.locator("[data-harmonie]").getByRole("group", { name: "Usage" })).toHaveAttribute("data-onglets", "pilules");
   });
 
   const DIRECTS = [

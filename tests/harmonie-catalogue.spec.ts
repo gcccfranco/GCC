@@ -54,10 +54,9 @@ test("un batteur ne voit ni la ligne ni le catalogue", async ({ page }) => {
 test("le parcours « Par où commencer » mène à sa première fiche", async ({ page }) => {
   await ouvrir(page, JO, "/harmonie");
   const parcours = page.locator("[data-parcours]");
-  // Sur deux volets le parcours est replié au départ : on le déplie.
+  // Le parcours est replié au départ, partout : on le déplie.
   await expect(parcours).toBeVisible();
-  const replie = parcours.getByRole("button", { name: /Par où commencer/ });
-  if (await replie.count()) await replie.click();
+  await parcours.getByRole("button", { name: /Par où commencer/ }).click();
   // Trois étapes visibles, les dix après « Voir les 7 autres » (un téléphone ne tient
   // pas dix lignes avant les filtres).
   await expect(parcours.getByRole("link")).toHaveCount(3);
@@ -75,30 +74,23 @@ test("les filtres réduisent la liste, et « Tout afficher » la rend", async ({
   const fiches = page.locator("[data-harmonie] a[href^='/harmonie/']:not([href^='/harmonie/cours']):not([href^='/harmonie/rd2000'])");
   await expect(fiches.first(), "le catalogue est chargé avant de compter").toBeVisible();
   const total = await fiches.count();
-  await page.getByRole("group", { name: "Sensation" }).getByRole("button", { name: "Tension" }).click();
+  await page.getByRole("group", { name: "Ressenti" }).getByRole("button", { name: "Chaleureux" }).click();
   await expect.poll(async () => fiches.count(), { message: "moins de fiches avec un filtre" }).toBeLessThan(total);
-  await page.getByRole("group", { name: "Sensation" }).getByRole("button", { name: "Tension" }).click();
+  await page.getByRole("group", { name: "Ressenti" }).getByRole("button", { name: "Chaleureux" }).click();
   await expect.poll(async () => fiches.count()).toBe(total);
 });
 
-test("Moment et Niveau sont des menus : choisir une valeur réduit la liste, « Tous les moments » la rend", async ({ page }) => {
+test("Usage est une rangée de pilules : choisir « Refrain » réduit la liste, un second appui la rend ; plus de menus Moment ni Niveau", async ({ page }) => {
   await ouvrir(page, JO, "/harmonie");
   const fiches = page.locator("[data-harmonie] a[href^='/harmonie/']:not([href^='/harmonie/cours']):not([href^='/harmonie/rd2000'])");
   await expect(fiches.first()).toBeVisible();
   const total = await fiches.count();
-  const moment = page.locator('[data-harmonie] [data-menu][aria-label^="Moment"]');
-  await expect(moment).toBeVisible();
-  await expect(moment).not.toHaveAttribute("data-pose", "");
-  await moment.click();
-  await page.getByRole("menuitemradio", { name: "Refrain", exact: true }).click();
-  await expect(moment).toContainText("Refrain");
-  await expect(moment).toHaveAttribute("data-pose", "");
-  await expect.poll(async () => fiches.count(), { message: "moins de fiches avec un moment" }).toBeLessThan(total);
-  await expect(page.getByRole("menu"), "le panneau est refermé").toHaveCount(0);
-  await moment.click();
-  await page.getByRole("menuitemradio", { name: "Tous les moments" }).click();
+  const refrain = page.getByRole("group", { name: "Usage" }).getByRole("button", { name: "Refrain", exact: true });
+  await refrain.click();
+  await expect.poll(async () => fiches.count(), { message: "moins de fiches avec un usage" }).toBeLessThan(total);
+  await refrain.click();
   await expect.poll(async () => fiches.count()).toBe(total);
-  await expect(page.locator('[data-harmonie] [data-menu][aria-label^="Niveau"]')).toBeVisible();
+  await expect(page.locator("[data-harmonie] [data-menu]"), "ni Moment ni Niveau en menu").toHaveCount(0);
   expect(await page.locator("[data-harmonie] select:visible").count(), "aucun <select> dans le catalogue").toBe(0);
 });
 
@@ -129,12 +121,13 @@ test("une fiche montre avant → après, le pourquoi, les pièges et les exemple
 
 test("musiciens-8 : toutes les fiches sont à relire, donc aucune ne porte de badge ; le bandeau reste", async ({ page }) => {
   await ouvrir(page, JO, "/harmonie");
-  await expect(page.locator("[data-famille]").first()).toBeVisible();
-  await expect(page.locator("[data-famille]").getByText("à relire", { exact: true })).toHaveCount(0);
+  const lignes = page.locator("[data-harmonie] a[href^='/harmonie/']:not([href^='/harmonie/cours']):not([href^='/harmonie/rd2000'])");
+  await expect(lignes.first()).toBeVisible();
+  await expect(lignes.getByText("à relire", { exact: true })).toHaveCount(0);
   await expect(page.locator("[data-harmonie]").getByText(/Les fiches sont en relecture/)).toBeVisible();
 });
 
-test("harmonie-5 : en 中文, la fiche porte l'avis de langue et de relecture dans un seul bloc, la famille est traduite ; en français, pas d'avis de langue", async ({ page }) => {
+test("harmonie-5 : en 中文, la fiche porte l'avis de langue et de relecture dans un seul bloc, la famille est traduite dans la fiche, la liste porte son ordre en 中文 ; en français, pas d'avis de langue", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrir(page, JO, "/harmonie/substitutions/2m7-pour-4");
   const avis = page.locator("[data-avis-langue]");
@@ -144,8 +137,8 @@ test("harmonie-5 : en 中文, la fiche porte l'avis de langue et de relecture da
   await expect(page.locator("[data-fiche]").getByText("替代和弦", { exact: false }).first()).toBeVisible();
   await expect(page.locator("[data-fiche] [lang=fr]").first()).toBeVisible();
   await page.goto("/harmonie");
-  await expect(page.locator("[data-famille]").first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: "替代和弦" }).first()).toBeVisible();
+  await expect(page.locator("[data-harmonie] a[href^='/harmonie/substitutions']").first()).toBeVisible();
+  await expect(page.getByText("由浅入深")).toBeVisible();
 });
 
 test("harmonie-5 : en français, la fiche n'a pas d'avis de langue", async ({ page }) => {
@@ -231,5 +224,6 @@ test("en 中文 : le catalogue est traduit", async ({ page }) => {
   await ouvrir(page, JO, "/harmonie");
   await expect(page.getByRole("heading", { name: "和声" })).toBeVisible();
   await expect(page.getByRole("group", { name: "感觉" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "张力" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "温暖" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "用在" }).getByRole("button", { name: "主歌" })).toBeVisible();
 });

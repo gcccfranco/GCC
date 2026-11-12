@@ -2,7 +2,7 @@
 
 // Catalogue « Harmonie » (lot 9, H1, docs/spec-harmonie.md) : ce qu'on peut faire pour
 // réharmoniser un chant, fiche par fiche. Réservé aux pianistes et aux guitaristes (colonnes
-// des plannings) et aux admins. Deux entrées : les filtres sensation × moment × niveau, puis
+// des plannings) et aux admins. Deux entrées : les filtres ressenti × usage (le niveau ordonne la liste), puis
 // le parcours « Par où commencer » (question 5 de U4 bis : un seul ordre partout).
 //
 // Lot U4 bis, B3 (docs/spec-pages-en-grand.md, Q6) : le catalogue vit dans le layout de la
@@ -17,8 +17,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { OngletsRail, Pilules } from "@/components/layout/Onglets";
-import { Group, GroupRow } from "@/components/ui/group";
-import { Menu } from "@/components/ui/menu";
+import { GroupRow } from "@/components/ui/group";
 import { FicheHarmonie } from "@/components/harmonie/FicheHarmonie";
 import { useTerme } from "@/components/harmonie/AvisLangue";
 import { ContexteCatalogue, useCatalogueHarmonie } from "@/components/harmonie/catalogueContexte";
@@ -27,13 +26,13 @@ import { useAccesHarmonie, useCatalogue, useInstrument } from "@/lib/harmonie/us
 import { compter } from "@/lib/usage";
 import { getSetlists } from "@/lib/firebase/setlists";
 import { cn } from "@/lib/utils";
-import { MOMENTS, SENSATIONS, type Fiche, type HarmonieIndex, type Instrument, type Niveau } from "@/types/harmonie";
+import { RESSENTIS, USAGES, type Fiche, type HarmonieIndex, type Instrument, type Ressenti, type Usage } from "@/types/harmonie";
 import { ImpasseHarmonie } from "@/components/harmonie/ImpasseHarmonie";
 
-const NIVEAUX: Niveau[] = ["facile", "intermediaire", "avance"];
+const RANG_NIVEAU = ["facile", "intermediaire", "avance"];
 
-type Filtres = { sensation: string | null; moment: string | null; niveau: string | null };
-const SANS_FILTRE: Filtres = { sensation: null, moment: null, niveau: null };
+type Filtres = { ressenti: Ressenti | null; usage: Usage | null };
+const SANS_FILTRE: Filtres = { ressenti: null, usage: null };
 
 /** L'identifiant de la fiche ouverte, lu dans l'adresse (`/harmonie/substitutions/2m7-pour-4`). */
 function ficheDeLAdresse(chemin: string): string | null {
@@ -60,14 +59,20 @@ export function HarmonieCatalogue({ children }: { children: React.ReactNode }) {
   };
 
   const visibles = useMemo(
-    () =>
-      fiches.filter(
-        (f) =>
-          (!f.instrument || f.instrument === instrument) &&
-          (!filtres.sensation || f.sensations.includes(filtres.sensation as never)) &&
-          (!filtres.moment || f.moments.includes(filtres.moment as never)) &&
-          (!filtres.niveau || f.niveau[instrument] === filtres.niveau),
-      ),
+    () => {
+      const rang = (f: Fiche) => {
+        const i = RANG_NIVEAU.indexOf(f.niveau[instrument] as string);
+        return i < 0 ? 3 : i;
+      };
+      return fiches
+        .filter(
+          (f) =>
+            (!f.instrument || f.instrument === instrument) &&
+            (!filtres.ressenti || f.ressentis.includes(filtres.ressenti)) &&
+            (!filtres.usage || f.usages.includes(filtres.usage)),
+        )
+        .sort((a, b) => rang(a) - rang(b)); // tri stable : ordre du catalogue à niveau égal
+    },
     [fiches, instrument, filtres],
   );
   // Les setlists (pour classer les exemples d'une fiche) : lues une fois pour la section, à la
@@ -85,8 +90,8 @@ export function HarmonieCatalogue({ children }: { children: React.ReactNode }) {
     return comptes.current;
   }, []);
   const valeur = useMemo(
-    () => ({ acces, fiches, instrument, setInstrument, comptesDesChants }),
-    [acces, fiches, instrument, setInstrument, comptesDesChants],
+    () => ({ acces, fiches, instrument, setInstrument, comptesDesChants, ordre: visibles.map((f) => f.id) }),
+    [acces, fiches, instrument, setInstrument, comptesDesChants, visibles],
   );
 
   if (acces.chargement || chargement) return null;
@@ -100,7 +105,7 @@ export function HarmonieCatalogue({ children }: { children: React.ReactNode }) {
       <DeuxVolets
         fond="blanc"
         racine="/harmonie"
-        largeurListe={400}
+        largeurListe={280}
         liste={
           <ListeCatalogue
             visibles={visibles}
@@ -134,17 +139,11 @@ function ListeCatalogue({
   const deuxVolets = useDeuxVolets();
   const ouverte = ficheDeLAdresse(usePathname() ?? "/harmonie") ?? (deuxVolets ? visibles[0]?.id : null);
   const [toutLeParcours, setToutLeParcours] = useState(false);
-  // Sur deux volets, le parcours est replié au départ en une ligne qui se déplie sur place.
+  // Le parcours est replié au départ en une ligne qui se déplie sur place.
   const [parcoursOuvert, setParcoursOuvert] = useState(false);
 
-  const familles = useMemo(() => {
-    const out = new Map<string, { nom: string; liste: Fiche[] }>();
-    for (const f of visibles) out.set(f.famille, { nom: f.familleNom, liste: [...(out.get(f.famille)?.liste ?? []), f] });
-    return [...out.entries()];
-  }, [visibles]);
-
   const parFiche = useMemo(() => new Map(fiches.map((f) => [f.id, f])), [fiches]);
-  const filtre = filtres.sensation || filtres.moment || filtres.niveau;
+  const filtre = filtres.ressenti || filtres.usage;
   // Dix lignes prenaient tout le premier écran d'un téléphone : on en montre
   // trois, le reste se déplie.
   const etapes = toutLeParcours ? parcours : parcours.slice(0, 3);
@@ -170,38 +169,25 @@ function ListeCatalogue({
               choisir={(v) => setInstrument(v as Instrument)}
             />
           )}
-          <Menu
-            label={t("harmonie.moment.titre")}
-            nom={t("harmonie.moment.titre")}
-            surGris={deuxVolets}
-            value={filtres.moment ?? ""}
-            defaultValue=""
-            onChange={(v) => setFiltres({ ...filtres, moment: v || null })}
-            options={[{ valeur: "", libelle: t("harmonie.moment.tous") }, ...MOMENTS.map((m) => ({ valeur: m as string, libelle: t(`harmonie.moment.${m}`) }))]}
-          />
-          <Menu
-            label={t("harmonie.niveau.titre")}
-            nom={t("harmonie.niveau.titre")}
-            surGris={deuxVolets}
-            value={filtres.niveau ?? ""}
-            defaultValue=""
-            onChange={(v) => setFiltres({ ...filtres, niveau: v || null })}
-            options={[{ valeur: "", libelle: t("harmonie.niveau.tous") }, ...NIVEAUX.map((n) => ({ valeur: n as string, libelle: t(`harmonie.niveau.${n}`) }))]}
-          />
         </div>
         <Pilules
-          etiquette={t("harmonie.sensation.titre")}
-          options={SENSATIONS.map((s) => ({ cle: s, nom: t(`harmonie.sensation.${s}`) }))}
-          valeur={filtres.sensation}
-          choisir={(sensation) => setFiltres({ ...filtres, sensation })}
+          etiquette={t("harmonie.ressenti.titre")}
+          options={RESSENTIS.map((x) => ({ cle: x, nom: t(`harmonie.ressenti.${x}`) }))}
+          valeur={filtres.ressenti}
+          choisir={(ressenti) => setFiltres({ ...filtres, ressenti })}
+        />
+        <Pilules
+          etiquette={t("harmonie.usage.titre")}
+          options={USAGES.map((x) => ({ cle: x, nom: t(`harmonie.usage.${x}`) }))}
+          valeur={filtres.usage}
+          choisir={(usage) => setFiltres({ ...filtres, usage })}
         />
       </div>
 
       {/* Parcours : dix fiches dans l'ordre, sans suivi ; il s'efface au premier filtre. */}
       {!filtre && parcours.length > 0 && (
         <section data-parcours>
-          {deuxVolets ? (
-            <button
+          <button
               type="button"
               aria-expanded={parcoursOuvert}
               onClick={() => setParcoursOuvert((v) => !v)}
@@ -212,12 +198,9 @@ function ListeCatalogue({
                 <span className="block text-sm text-muted-foreground">{t("harmonie.parcoursSous", { count: parcours.length })}</span>
               </span>
               <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform duration-150", parcoursOuvert && "rotate-180")} aria-hidden />
-            </button>
-          ) : (
-            <h2 className="mb-1.5 text-sm font-semibold text-muted-foreground">{t("harmonie.parcours")}</h2>
-          )}
-          {(!deuxVolets || parcoursOuvert) && (<>
-          <div className={cn(deuxVolets && "mt-1.5", cartes && "md:grid md:grid-cols-3 md:gap-3")}>
+          </button>
+          {parcoursOuvert && (<>
+          <div className={cn("mt-1.5", cartes && "md:grid md:grid-cols-3 md:gap-3")}>
             {etapes.map((e) => {
               const id = e.fiches.find((x) => parFiche.get(x)?.instrument === instrument) ?? e.fiches[0];
               const fiche = parFiche.get(id);
@@ -263,29 +246,30 @@ function ListeCatalogue({
           </button>
         </div>
       ) : (
-        <div className={cn(cartes ? "max-md:space-y-5 md:columns-2 md:gap-4" : "space-y-5")}>
-          {familles.map(([idFamille, { nom, liste }]) => (
-            <div key={idFamille} data-famille className={cn(cartes && "md:bloc-info md:blanc-sur-gris md:mb-4 md:break-inside-avoid md:rounded-2xl md:px-5 md:pt-3.5 md:pb-1.5")}>
-              <Group title={terme(`harmonie.familles.${idFamille}`, nom).texte} className={cn(cartes && "md:[&>h2]:text-lg md:[&>h2]:text-foreground")}>
-                {liste.map((f) => (
-                  <GroupRow key={f.id} href={`/harmonie/${f.id}`} chevron actif={f.id === ouverte} className={cn(cartes && f.id !== ouverte && "md:hover:bg-secondary-fond md:active:bg-secondary-fond")}>
-                    <span className="flex items-center gap-2">
-                      <span className="line-clamp-2 font-medium" lang="fr">{f.nom}</span>
-                      {badgeARelire && f.statut !== "validee" && (
-                        <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-xs", f.id === ouverte ? "bg-background font-medium text-foreground" : "bg-secondary text-muted-foreground")}>
-                          {t("harmonie.aRelire")}
-                        </span>
-                      )}
+        <>
+          <p className="-mb-3 text-sm text-muted-foreground">{t("harmonie.duPlusSimple")}</p>
+          <div className={cn(cartes && "md:grid md:grid-cols-2 md:gap-3")}>
+            {visibles.map((f) => (
+              <GroupRow key={f.id} href={`/harmonie/${f.id}`} chevron actif={f.id === ouverte} className={cn(carte, cartes && f.id !== ouverte && "md:hover:bg-secondary-fond md:active:bg-secondary-fond", cartes && "md:items-start")}>
+                <span className="flex items-center gap-2">
+                  <span className="line-clamp-2 font-medium" lang="fr">{f.nom}</span>
+                  {badgeARelire && f.statut !== "validee" && (
+                    <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-xs", f.id === ouverte ? "bg-background font-medium text-foreground" : "bg-secondary text-muted-foreground")}>
+                      {t("harmonie.aRelire")}
                     </span>
-                    <span className="line-clamp-2 text-sm text-muted-foreground">
-                      {f.sensations.map((s) => t(`harmonie.sensation.${s}`)).join(" · ")}
-                    </span>
-                  </GroupRow>
-                ))}
-              </Group>
-            </div>
-          ))}
-        </div>
+                  )}
+                </span>
+                <span className="block text-sm text-muted-foreground">
+                  {[
+                    f.ressentis.map((x) => t(`harmonie.ressenti.${x}`)).join(" · "),
+                    f.usages.map((x) => t(`harmonie.usage.${x}`)).join(", "),
+                    f.niveau[instrument] ? t(`harmonie.niveau.${f.niveau[instrument]}`) : "",
+                  ].filter(Boolean).join(" · ")}
+                </span>
+              </GroupRow>
+            ))}
+          </div>
+        </>
       )}
 
       <p className="text-sm text-muted-foreground">

@@ -3204,6 +3204,22 @@
       "titre": "难度",
       "tous": "全部难度"
     },
+    "ressenti": {
+      "titre": "感觉",
+      "chaleureux": "温暖",
+      "melancolique": "忧伤",
+      "elan": "推进",
+      "couleur": "色彩"
+    },
+    "usage": {
+      "titre": "用在",
+      "couplet": "主歌",
+      "pre-refrain": "副歌前奏",
+      "refrain": "副歌",
+      "fin": "结尾",
+      "transition": "过渡"
+    },
+    "duPlusSimple": "由浅入深",
     "sensation": {
       "titre": "感觉",
       "epique": "史诗",

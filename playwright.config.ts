@@ -16,6 +16,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 const SPECS_GRAND_ECRAN = [
   // Harmonie H4-2 (docs/spec-harmonie-accords.md) : la colonne « Harmonie de ce chant » dès 1 024 px, la feuille en dessous.
   /harmonie-colonne\.spec\.ts/,
+  // Harmonie H6-1 : la bibliothèque (filtres Ressenti et Usage, liste ordonnée par niveau, fiche ≥ 640 px à l'ordinateur).
+  /harmonie-bibliotheque\.spec\.ts/,
   // Lot Pupitre, PU-2 (docs/spec-entree-musiciens.md) : « Mon prochain service » en tête de l'onglet Setlists (rangées, vignettes, volet de droite en deux volets).
   /pupitre-onglet\.spec\.ts/,
   // Lot Pupitre, PU-3 : « Prêt hors-ligne » dans le bloc (téléphone et tablette debout surtout).

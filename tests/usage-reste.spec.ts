@@ -94,7 +94,7 @@ test("harmonie : filtrer le catalogue compte cmd.harmonie.filtre", async ({ page
   const { recus } = await preparer(page, pianiste, "/harmonie");
   await expect(page.locator("[data-harmonie]")).toBeVisible();
   await hydrate(page);
-  await page.locator("[data-harmonie]").getByRole("group", { name: "Sensation" }).getByRole("button", { name: "Épique" }).click();
+  await page.locator("[data-harmonie]").getByRole("group", { name: "Ressenti" }).getByRole("button", { name: "Chaleureux" }).click();
   await verifier(page, recus, "cmd.harmonie.filtre");
 });
 

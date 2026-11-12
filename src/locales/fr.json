@@ -3247,6 +3247,22 @@
       "titre": "Niveau",
       "tous": "Tous les niveaux"
     },
+    "ressenti": {
+      "titre": "Ressenti",
+      "chaleureux": "Chaleureux",
+      "melancolique": "Mélancolique",
+      "elan": "Élan",
+      "couleur": "Couleur"
+    },
+    "usage": {
+      "titre": "Usage",
+      "couplet": "Couplet",
+      "pre-refrain": "Pré-refrain",
+      "refrain": "Refrain",
+      "fin": "Fin",
+      "transition": "Transition"
+    },
+    "duPlusSimple": "Du plus simple au plus avancé",
     "sensation": {
       "titre": "Sensation",
       "epique": "Épique",

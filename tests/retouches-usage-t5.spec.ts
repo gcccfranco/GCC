@@ -85,10 +85,10 @@ test("musiciens-1 : le nom d'un son du RD-2000 ne se casse plus en pleine syllab
   }
 });
 
-test("musiciens-7 : les ambiances du catalogue passent à la ligne (deux lignes au plus)", async ({ page }) => {
+test("musiciens-7 : le sous-titre des lignes du catalogue passe à la ligne (deux lignes au plus)", async ({ page }) => {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: CULTE }));
   await signInAs(page, JO, {}, "/harmonie");
-  const ambiances = page.locator("[data-famille] a > span.min-w-0 > span:last-child").filter({ visible: true });
+  const ambiances = page.locator("[data-harmonie] a > span.min-w-0 > span:last-child").filter({ visible: true });
   await expect(ambiances.first()).toBeVisible();
   const m = await ambiances.evaluateAll((els) => els.map((el) => {
     const s = getComputedStyle(el);
