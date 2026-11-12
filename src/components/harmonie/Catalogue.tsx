@@ -250,7 +250,7 @@ function ListeCatalogue({
           <p className="-mb-3 text-sm text-muted-foreground">{t("harmonie.duPlusSimple")}</p>
           <div className={cn(cartes && "md:grid md:grid-cols-2 md:gap-3")}>
             {visibles.map((f) => (
-              <GroupRow key={f.id} href={`/harmonie/${f.id}`} chevron actif={f.id === ouverte} className={cn(carte, cartes && f.id !== ouverte && "md:hover:bg-secondary-fond md:active:bg-secondary-fond", cartes && "md:items-start")}>
+              <GroupRow key={f.id} href={`/harmonie/${f.id}`} chevron actif={f.id === ouverte} className={cn(carte, cartes && f.id !== ouverte && "md:hover:bg-secondary-fond md:active:bg-secondary-fond", cartes && "md:items-center")}>
                 <span className="flex items-center gap-2">
                   <span className="line-clamp-2 font-medium" lang="fr">{f.nom}</span>
                   {badgeARelire && f.statut !== "validee" && (
@@ -262,7 +262,7 @@ function ListeCatalogue({
                 <span className="block text-sm text-muted-foreground">
                   {[
                     f.ressentis.map((x) => t(`harmonie.ressenti.${x}`)).join(" · "),
-                    f.usages.map((x) => t(`harmonie.usage.${x}`)).join(", "),
+                    f.usages.map((x) => t(`harmonie.usage.${x}`)).join(t("harmonie.usage.separateur")),
                     f.niveau[instrument] ? t(`harmonie.niveau.${f.niveau[instrument]}`) : "",
                   ].filter(Boolean).join(" · ")}
                 </span>

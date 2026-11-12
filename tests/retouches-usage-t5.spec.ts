@@ -85,7 +85,7 @@ test("musiciens-1 : le nom d'un son du RD-2000 ne se casse plus en pleine syllab
   }
 });
 
-test("musiciens-7 : le sous-titre des lignes du catalogue passe à la ligne (deux lignes au plus)", async ({ page }) => {
+test("musiciens-7 : le sous-titre des lignes du catalogue passe à la ligne (deux lignes au plus, trois dans le volet de 280 px)", async ({ page }) => {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: CULTE }));
   await signInAs(page, JO, {}, "/harmonie");
   const ambiances = page.locator("[data-harmonie] a > span.min-w-0 > span:last-child").filter({ visible: true });
@@ -101,11 +101,13 @@ test("musiciens-7 : le sous-titre des lignes du catalogue passe à la ligne (deu
       police: parseFloat(s.fontSize),
     };
   }));
+  // H6-1 : le volet de liste fait 280 px en deux volets (fiche ≥ 640 px) ; le texte entier prime, trois lignes y sont permises.
+  const auPlus = (await page.locator("[data-deux-volets]").count()) > 0 ? 3 : 2;
   for (const n of m) {
     expect(n.nowrap, `« ${n.texte} » : retour à la ligne permis`).toBe(false);
     expect(n.points, `« ${n.texte} » : sans points de suspension`).toBe(false);
     expect(n.coupe, `« ${n.texte} » tient dans sa boîte`).toBe(false);
-    expect(n.lignes, `« ${n.texte} » : deux lignes au plus`).toBeLessThanOrEqual(2);
+    expect(n.lignes, `« ${n.texte} » : ${auPlus} lignes au plus`).toBeLessThanOrEqual(auPlus);
     expect(n.police).toBeGreaterThanOrEqual(12);
   }
 });

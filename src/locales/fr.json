@@ -3256,6 +3256,7 @@
     },
     "usage": {
       "titre": "Usage",
+      "separateur": ", ",
       "couplet": "Couplet",
       "pre-refrain": "Pré-refrain",
       "refrain": "Refrain",

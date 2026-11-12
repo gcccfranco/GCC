@@ -425,3 +425,22 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   `agencement-v18-harmonie`, `pages-en-grand-harmonie-corrections` sur les trois appareils : 244 passés, 6 ignorés.
   Les 6 échecs de la ligne « Règle » sont corrigés et `harmonie-regles` repasse (27). Les tests comptent 80 fiches.
   Prochaine tranche : T3.
+- 12/11/2026 : **H6-1 faite** (session orchestratrice de H6, executant + testeur + relecteur + regard) : bibliothèque
+  avec deux rangées de pilules **Ressenti** et **Usage** (menus Moment et Niveau et pilules d'ambiances retirés),
+  liste à plat ordonnée par niveau de l'instrument (« Du plus simple au plus avancé » / « 由浅入深 »), sous-titre
+  « ressentis · usages · niveau » en entier (usages séparés par « 、 » en 中文), « Par où commencer » replié partout,
+  cartes sur deux colonnes en tablette portrait, `ordre` de la liste dans le contexte du catalogue (pour H6-2).
+  **Décisions déléguées (session H6, 12/11)** : (1) liste de **280 px** en deux volets, pas 320 : à 320 la fiche ne
+  mesurait que 608 px à 1 280 ; (2) dans ce volet, le sous-titre peut prendre trois lignes (le texte entier prime,
+  musiciens-7) ; (3) liste à plat sans familles (le niveau ne peut ordonner qu'une liste). Tests : tsc, lint
+  (0 erreur), validate ; `harmonie-bibliotheque.spec.ts` (nouvelle, dans `SPECS_GRAND_ECRAN`) et voisines
+  (`harmonie-catalogue`, `pages-en-grand-harmonie*`, `agencement-v18-harmonie`, `usage-reste`,
+  `retouches-usage-t5`) : premier tour 355 passés / 13 échecs (8,2 min), puis les specs en échec 92 passés (2 min) et
+  un dernier tour après retouches 85 + 3 passés (2,2 min). Reste rouge, hors tranche : `usage-reste.spec.ts:157`
+  (`cmd.setlists.pupitre.jouer` de `Pupitre.tsx` absent de `CLES_USAGE`, chantier du pupitre). **Pour H6-2**
+  (regard, 20 captures) : à 1 280 et 1 440, la fiche passe à deux colonnes et laisse un grand vide sous « Pourquoi »
+  (la colonne de droite empile instrument et « Quand l'éviter ») ; « Où l'entendre » : les chants chinois n'ont ni
+  détail ni accords, rangées inégales ; en-tête de fiche encore en ambiances / moments (H6-2 le remplace) ; clés
+  orphelines `harmonie.niveau.titre|tous`, `moment.titre|tous`, `sensation.titre` à retirer si H6-2 les laisse
+  orphelines. `critique-design` passera une fois, à la fin de H6-2, sur la liste et la fiche. Connu : pilules de
+  28 px de haut (composant commun, hors lot) ; noms des fiches en français en 中文 (H9). Prochain : H6-2, session neuve.
