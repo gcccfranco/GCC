@@ -236,3 +236,18 @@ Vrais mais hors lot 1, parce qu'ils déplacent, réorganisent ou demandent un de
   quatre dispositions ; « Réponse attendue » déplacée après « · Plusieurs réponses possibles » (la ligne commençait
   par un point). Reste à nettoyer (hors lot, signalé) : l'ancienne `nomsSansCompte` de `tableauDeBord/donnees.ts` n'est
   plus utilisée que par `tableau-de-bord.spec.ts`. **Reste : T4.**
+- 12/11/2026 : **T4 faite, lot 1 terminé.** `menu.tsx` : plus de plafond fixe (294 / 320 px), le menu grandit jusqu'à
+  la place disponible moins 8 px, au toucher comme à la souris ; `MenuActions.tsx` : `collisionPadding` de 8 px et
+  largeur au plus `min(20rem, 100vw − 1rem)`. `tests/retouches-usage-t4.spec.ts` : « Tous les services » au téléphone
+  et en tablette, déclencheur remonté en haut, aucun défilement intérieur, dernière ligne entière, bas à 8 px au moins
+  de la fenêtre (mesures après l'animation d'ouverture) ; « ⋯ » du dimanche dans la fenêtre au téléphone.
+  `menu-primitive.spec.ts` suit la décision (bas à 8 px au lieu du plafond de 320). `harmonie-catalogue.spec.ts` :
+  la mesure des lignes de 44 px ne compte plus les titres de « Où l'entendre » devenus liens en T6. Passe : t4, t3,
+  `menu-primitive`, puis les huit specs qui mesurent des menus sur les cinq projets : 916 passés, 3 rouges (le test
+  d'Harmonie ci-dessus), corrigés et repassés verts. Captures du menu regardées sur les quatre dispositions : au
+  téléphone et en tablette portrait, le menu descend jusqu'à 8 px du bas et passe au-dessus de la barre d'onglets.
+  **Points à trancher par Timothée** (tout le lot) : écart de 12 px entre les lignes des cartes du planning au
+  téléphone (T3) ; `ChoisirNom` non fait (lignes de 40 px jointives, il faudrait un dessin, lot 2) ; pastilles du
+  Sommaire qui se recouvrent en hauteur quand elles passent à la ligne (T1) ; bouton retour de la setlist sans libellé
+  court (T5) ; bouton « Voir » des inscriptions à 36 px (T1) ; en deux volets, pas de retour vers l'équipe dans la fiche
+  d'une tâche (T6). Mise en ligne sur `main` : attend son ordre.

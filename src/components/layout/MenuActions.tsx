@@ -76,7 +76,8 @@ export function MenuActions({ actions, label, onOuvert, compact }: {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="min-w-48"
+        collisionPadding={8}
+        className="min-w-48 max-w-[min(20rem,calc(100vw-1rem))]"
         onCloseAutoFocus={(e) => {
           const a = enAttente.current;
           if (!a) return;

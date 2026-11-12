@@ -112,7 +112,8 @@ test("une fiche montre avant → après, le pourquoi, les pièges et les exemple
   await expect(page.getByRole("heading", { name: "Dans le répertoire" })).toBeVisible();
   await expect(page.getByText(/chants? qui le joue/), "les exemples sont comptés").toBeVisible();
   // harmonie-10 : toutes les lignes de chants ont la même hauteur (44 px) ; « Voir les N autres » déplie le reste.
-  const lignes = page.locator('[data-fiche] a[href^="/songs/"]');
+  // Les titres de « Où l'entendre » (liens depuis les retouches d'usage T6) ne sont pas des lignes de cette liste.
+  const lignes = page.locator('[data-fiche] a[href^="/songs/"]:not([data-ou-l-entendre] a)');
   await expect(lignes.first()).toBeVisible();
   const hauteurs = await lignes.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().height)));
   expect(new Set(hauteurs), "des lignes d'une seule hauteur").toEqual(new Set([44]));
