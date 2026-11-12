@@ -784,6 +784,10 @@
 /* Niveau 3, le plus large : le suffixe de tonalité « (orig.) » / « (reco.) » en plus ; il tombe le premier
    (H4-2, « Harmonie » ne tombant plus, décision déléguée du 12/11). */
 .rangee-chant:not([data-libelles="3"]) .suffixe-tonalite { display: none; }
+/* Bascule Lettres / Chiffres (H7-1) : dans la barre tant que les libellés ne perdent qu'un cran (`data-bascule`, mesuré avec
+   eux) ; plus serrée, elle reste dans le menu ⋯ (décision déléguée, session H7, 12/11 : la rangée d'Abba Père ne tenait
+   plus à 1 280 px, même sans libellés). */
+.rangee-chant[data-bascule="0"] .bascule-notation { display: none; }
 /* Téléphone : comme avant, pas de libellé sous 620 px de rangée (la pilule de tonalité, qui
    rétrécit, ne ferait jamais déborder la ligne : la mesure ne suffit pas). */
 @container (min-width: 620px) { .rangee-chant:is([data-libelles="2"], [data-libelles="3"]) .libelle-chant { display: inline; } }

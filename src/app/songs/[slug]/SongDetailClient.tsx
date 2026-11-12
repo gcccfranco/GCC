@@ -503,17 +503,23 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
       const fin = el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight);
       return [...el.children].every((c) => c.getBoundingClientRect().right <= fin + 0.5);
     };
+    const signature = () => `${el.clientWidth}:` + [...el.children].map((c) => Math.round(c.getBoundingClientRect().width)).join(",");
+    let apres = "";
     const ajuster = () => {
-      for (const niveau of ["3", "2", "1", "0"]) {
+      // La bascule Lettres / Chiffres (H7-1) tient tant que les libellés ne perdent qu'un cran ; ensuite elle passe au menu ⋯.
+      for (const [niveau, bascule] of [["3", "1"], ["2", "1"], ["3", "0"], ["2", "0"], ["1", "0"], ["0", "0"]]) {
         el.dataset.libelles = niveau;
+        el.dataset.bascule = bascule;
         if (tient()) break;
       }
+      apres = signature();
     };
     ajuster();
-    const ro = new ResizeObserver(ajuster);
+    // Les enfants aussi (H7-1) : un libellé 中文 ou une police arrivés après la première mesure élargissent la rangée sans
+    // changer sa taille, et la barre débordait de la carte à 1 280 px. Leurs tailles après `ajuster` sont gardées : les
+    // changements qu'il cause lui-même ne le relancent pas (sinon la bascule clignotait).
+    const ro = new ResizeObserver(() => { if (signature() !== apres) ajuster(); });
     ro.observe(el);
-    // Les enfants aussi : un libellé traduit après coup (中文) ou une police arrivée tard élargit la rangée sans
-    // changer sa taille ; la mesure restait celle d'avant et la barre débordait de la carte (H7-1, 1 280 px).
     for (const c of el.children) ro.observe(c);
     document.fonts?.ready.then(ajuster);
     return () => ro.disconnect();

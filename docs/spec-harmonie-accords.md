@@ -454,7 +454,14 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   `notation-accords` (nouvelle, cinq projets), `accords-toucher*`, `harmonie-porte1`, `libelles-langues`, `coherence`,
   `statistiques-chant`, `usage-dimanche` : 307 / 20 (8 min), 72 / 22 (3,4 min), 85 / 9 (3,2 min), 47 / 9 (2,3 min),
   puis 56 / 0 (1,9 min). Captures 390 à 1 440, FR et 中文, clair et sombre. Non couvert par un test : la vue partitions
-  de setlist et une section `keyChange`. Prochain : H7-2, session neuve.
+  de setlist et une section `keyChange`. **Reprise après `regard`** : à 1 280 px la barre débordait de la carte (la
+  mesure des libellés ne voyait pas les libellés 中文 arrivés après coup ; la bascule ajoutait 74 px à une rangée qui
+  tenait au pixel près). La mesure suit maintenant les éléments de la rangée (sans se relancer sur ses propres
+  changements) et **décision déléguée (session H7, 12/11)** : la bascule reste dans la barre tant que les libellés ne
+  perdent qu'un cran (`data-bascule`), sinon elle n'est que dans le menu ⋯ (Abba Père à 1 280 px, un membre connecté
+  à 820 px). `notation-accords` passe par un membre fictif et choisit par la barre ou par le menu. Tests :
+  `barre-chant` + `notation-accords` 79 / 5 (2,7 min), puis `notation-accords` 38 / 0 (1,1 min).
+  Prochain : H7-2, session neuve.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 

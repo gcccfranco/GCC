@@ -39,7 +39,7 @@ export function ChoixNotation({ variante }: { variante: "barre" | "menu" }) {
     );
   };
   const segments = (
-    <div role="group" aria-label={t("notationAccords.titre")} className={variante === "barre" ? "raised hidden sm:flex items-center gap-0.5 rounded-full p-0.5" : "flex gap-1 rounded-full border border-border p-0.5"}>
+    <div role="group" aria-label={t("notationAccords.titre")} className={variante === "barre" ? "bascule-notation raised hidden sm:flex items-center gap-0.5 rounded-full p-0.5" : "flex gap-1 rounded-full border border-border p-0.5"}>
       {bouton("lettres")}
       {bouton("chiffres")}
     </div>

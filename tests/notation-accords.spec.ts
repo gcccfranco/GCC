@@ -1,6 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { chiffrerEtiquette } from "../src/lib/harmonie/degres";
 import { openSheet } from "./helpers/jianpu";
+import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+
+// Membre fictif : la préférence se garde par compte, et la bascule attend la fin de la lecture du compte.
+const ROMANE: FakeProfile = { uid: "uid-romane", email: "romane@example.com", firstName: "Romane", lastName: "V." };
 
 // Harmonie H7-1 (docs/spec-harmonie-accords.md) : la bascule Lettres / Chiffres des accords de la partition.
 
@@ -26,13 +30,25 @@ const accords = (page: Page) => page.locator("[data-section] [data-copy-line] [d
 const textes = (page: Page) => accords(page).evaluateAll((els) => els.map((e) => e.textContent ?? ""));
 const barre = (page: Page, n: "lettres" | "chiffres") => page.getByTestId("barre-outils").locator(`[data-notation="${n}"]`);
 
+/** Choisit une notation par la barre si elle y est (rangée assez large), sinon par le menu ⋯. */
+async function choisir(page: Page, n: "lettres" | "chiffres") {
+  const b = barre(page, n);
+  if (await b.isVisible()) {
+    await b.click();
+  } else {
+    await page.getByRole("button", { name: /Plus d'actions|更多操作/ }).filter({ visible: true }).first().click();
+    await page.getByRole("menu").locator(`[data-notation="${n}"]`).click();
+    await page.keyboard.press("Escape");
+  }
+}
+
 async function ouvrir(page: Page, slug: string, zh: boolean, query = "") {
   await page.addInitScript(() => localStorage.setItem("accords-aide-vue", "1"));
   if (zh) {
     await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   }
-  await page.goto(`/songs/${encodeURIComponent(slug)}${query}`);
+  await signInAs(page, ROMANE, {}, `/songs/${encodeURIComponent(slug)}${query}`);
   await expect(accords(page).first()).toBeVisible();
 }
 
@@ -42,9 +58,8 @@ for (const c of CHANTS) {
     await ouvrir(page, c.slug, c.zh);
     const lettres = await textes(page);
     expect(lettres.some((t) => /^[A-G]/.test(t))).toBe(true);
-    await expect(barre(page, "lettres")).toHaveAttribute("aria-pressed", "true");
-    await barre(page, "chiffres").click();
-    await expect(barre(page, "chiffres")).toHaveAttribute("aria-pressed", "true");
+    await choisir(page, "chiffres");
+    await expect.poll(async () => (await textes(page)).every((t) => CHIFFRE.test(t))).toBe(true);
     const chiffres = await textes(page);
     expect(chiffres).toHaveLength(lettres.length);
     for (const t of chiffres) expect(t).toMatch(CHIFFRE);
@@ -53,13 +68,13 @@ for (const c of CHANTS) {
     await page.reload();
     await expect(accords(page).first()).toBeVisible();
     await expect.poll(() => textes(page)).toEqual(chiffres);
-    await barre(page, "lettres").click();
+    await choisir(page, "lettres");
     await expect.poll(() => textes(page)).toEqual(lettres);
   });
 }
 
 test("transposer ne change pas les chiffres", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("accords-notation", "chiffres"));
+  await page.addInitScript(() => localStorage.setItem("accords-notation-uid-romane", "chiffres"));
   await ouvrir(page, "hosanna", false);
   // Le compte se charge avant que la préférence s'applique : attendre les chiffres.
   await expect.poll(async () => (await textes(page)).every((t) => CHIFFRE.test(t))).toBe(true);
@@ -72,7 +87,7 @@ test("transposer ne change pas les chiffres", async ({ page }) => {
 
 for (const c of CHANTS) {
   test(`chant ${c.zh ? "ZH" : "FR"} : toucher un chiffre ouvre le panneau de la lettre`, async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem("accords-notation", "chiffres"));
+    await page.addInitScript(() => localStorage.setItem("accords-notation-uid-romane", "chiffres"));
     await ouvrir(page, c.slug, c.zh);
     const accord = accords(page).nth(2);
     const lettre = await accord.getAttribute("data-accord-touchable");
@@ -95,8 +110,8 @@ test("calque 简谱 inchangé en chiffres", async ({ page }) => {
 
 test("la bascule de barre est cachée au téléphone, le menu ⋯ la porte", async ({ page }, info) => {
   await ouvrir(page, "hosanna", false);
-  const visible = info.project.name !== "telephone";
-  await expect(barre(page, "chiffres")).toBeVisible({ visible });
+  // Au téléphone la bascule n'est jamais dans la barre ; ailleurs elle y est si la rangée a la place (data-bascule).
+  if (info.project.name === "telephone") await expect(barre(page, "chiffres")).toBeHidden();
   await page.getByRole("button", { name: /Plus d'actions|更多操作/ }).filter({ visible: true }).first().click();
   const menu = page.getByRole("menu");
   await expect(menu.getByText("Notation des accords")).toBeVisible();
