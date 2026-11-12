@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { attendreCompteur } from "./helpers/louange";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { enDeuxVolets } from "./helpers/setlist";
+import { enDeuxVolets, ouvrirSommaire } from "./helpers/setlist";
 
 // Lot U5, tranche T6 (docs/spec-deux-volets.md, « Finitions ») : le parcours du
 // dimanche sur les cinq projets, interface en français et en 中文, clair et sombre.
@@ -145,7 +145,8 @@ for (const langue of ["fr", "zh"] as const) {
       const deux = await enDeuxVolets(page);
       expect(deux, "deux volets sur les grands écrans seulement").toBe(grand);
       if (deux) {
-        await expect(page.getByRole("navigation", { name: L.sommaire })).toBeVisible();
+        // Le sommaire est un rail de numéros (T3 du lot exemples d'usage) ; son panneau s'ouvre à la demande.
+        await expect(page.getByRole("button", { name: /^(Ouvrir|Fermer) le sommaire$|^(展开|收起)目录$/ })).toBeVisible();
         await expect(page.getByTestId("bascule-vues")).toHaveCount(0);
       } else {
         await expect(page.getByTestId("bascule-vues").getByRole("button", { name: L.liste, exact: true })).toBeVisible();
@@ -155,7 +156,10 @@ for (const langue of ["fr", "zh"] as const) {
 
       // ── Les partitions, au chant ZH sur son scan ────────────────────────────
       // Toucher le chant 2 : son entrée du sommaire en deux volets, sa ligne sur G.
-      if (deux) await page.locator('[data-sommaire="2"] [data-sommaire-chant]').click();
+      if (deux) {
+        await ouvrirSommaire(page);
+        await page.locator('[data-sommaire="2"] [data-sommaire-chant]').click();
+      }
       else await page.locator('[data-ligne="2"] a').first().click();
       await expect(page.locator('[data-outline-item="2"] img').first()).toBeVisible({ timeout: 15_000 });
       await ecran(page, "partitions", langue, theme);

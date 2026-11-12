@@ -44,7 +44,7 @@ import { useEntreeLouange } from "./_hooks/useEntreeLouange";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
 import { compter } from "@/lib/usage";
-import { Sommaire } from "./_components/Sommaire";
+import { RailSommaire } from "./_components/Sommaire";
 import { PresentationLink } from "./_components/PresentationLink";
 import { exporterFreeShow } from "./_components/ExportFreeShow";
 import { CartesFete, RepereFete, SousTitreFete, usePassageDeLaSetlist } from "./_components/FeteDeLaSetlist";
@@ -1714,7 +1714,8 @@ export function SetlistDetailClient() {
       handleShare={handleShare}
       canChangerLien={peutChangerPresentation}
       aUnLien={!!setlist.presentationUrl}
-      onLien={() => setEditionLien(true)}
+      // Le champ du lien est dans l'en-tête déplié (T2, T3) : « Ajouter le lien » le déplie.
+      onLien={() => { setEditionLien(true); setEnteteOuvert(true); }}
       canExporter={peutExporterFreeShow(user, profile, setlist)}
       exportPret={tousLesChantsCharges}
       onExporter={() => { compter("cmd.setlist.presentation"); exporterFreeShow(setlist, contents); }}
@@ -1789,6 +1790,29 @@ export function SetlistDetailClient() {
       onReessayer={() => { window.dispatchEvent(new Event(RELIRE_PROFIL)); setRetryKey((k) => k + 1); }}
     />
   );
+  // Bloc titre de la barre compacte (T2 en volet unique, T3 en deux volets) : un bouton qui déplie l'en-tête complet.
+  const titreCompact = (
+    <>
+      {!enteteOuvert && <h1 className="sr-only">{titreAffiche(setlist, langueCourte(i18n.language))}</h1>}
+      <button
+        type="button"
+        aria-expanded={enteteOuvert}
+        aria-controls={deuxVolets ? "entete-setlist-dv" : "entete-setlist"}
+        aria-label={`${titreAffiche(setlist, langueCourte(i18n.language))}, ${t("setlists.detail.afficherDetails")}`}
+        onClick={() => setEnteteOuvert((o) => !o)}
+        className={`${TOUCHER_44} flex min-h-8 min-w-0 flex-1 items-center gap-1.5 rounded-lg px-1.5 py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+      >
+        <span className="min-w-0 flex-1">
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="truncate text-[15px] font-semibold leading-tight tracking-[-0.01em] text-foreground sm:text-[17px]">{titreAffiche(setlist, langueCourte(i18n.language))}</span>
+            {setlist.date && <span className="hidden shrink-0 text-xs text-muted-foreground min-[480px]:inline">{formatJourMois(setlist.date, i18n.language)}</span>}
+          </span>
+          {setlist.notes && <span className="block truncate text-xs italic leading-tight text-muted-foreground">{setlist.notes}</span>}
+        </span>
+        <ChevronDown aria-hidden className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none ${enteteOuvert ? "rotate-180" : ""}`} />
+      </button>
+    </>
+  );
   return (
     <div className="relative min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist.category ?? "")} />
@@ -1810,15 +1834,10 @@ export function SetlistDetailClient() {
             }}
           >
             <FondDeBarre />
-            {/* L1 (dimanche-7, lot CD T4b ; V5, validation du 07/11/2026) : la rangée finit où finit la colonne de lecture
-                (860 px, `--colonne-partition`, centrée dans le volet de droite) : 380 px de sommaire + 28 de marge + 860 centrés
-                dans le reste, plus 28 de marge = 50 % + 648 px ; vaut toute la largeur sous 1 296 px. */}
-            <div className="flex max-w-[calc(50%+648px)] flex-wrap items-end gap-x-6 gap-y-3 px-7 pb-4 pt-5">
-              {/* Le titre garde 18rem au moins : sinon les boutons passent dessous. */}
-              <TitreEnTete setlist={setlist} passage={passageFete} />
-              {/* Présentation · Crayon · Modifier · PDF · ⋯ · Mode louange,
-                  libellés compris ; la rangée passe sous le titre quand elle n'y tient pas. */}
-              <div className="flex flex-wrap items-center gap-2">
+            {/* Une rangée (T3) : le bloc titre déplie `#entete-setlist-dv`, en tête de la colonne de partition ; à droite les outils. */}
+            <div className="flex items-center gap-x-4 px-7 py-1.5">
+              {titreCompact}
+              <div className="flex shrink-0 items-center gap-2">
                 {presentationHref && (
                   <a href={presentationHref} target="_blank" rel="noopener noreferrer" className={PILULE}>
                     <Presentation className="h-4 w-4" aria-hidden />
@@ -1907,10 +1926,10 @@ export function SetlistDetailClient() {
             )}
           </header>
 
-          <div className="grid grid-cols-[380px_minmax(0,1fr)]">
-            {/* Le filet descend jusqu'en bas de la page ; le sommaire colle sous l'en-tête. */}
+          <div className="grid grid-cols-[57px_minmax(0,1fr)] pl-4">
+            {/* Le filet descend jusqu'en bas de la page ; le rail colle sous l'en-tête, son panneau s'ouvre par-dessus la partition. */}
             <div className="border-r border-border print:hidden">
-              <Sommaire
+              <RailSommaire
                 items={stageItems}
                 contents={contents}
                 songsMap={songsMap}
@@ -1920,19 +1939,21 @@ export function SetlistDetailClient() {
                 onGo={allerA}
                 copier={toutSuitLaPresidence ? () => setlistLyricsText(setlist.items, contents) : undefined}
                 copierPret={tousLesChantsCharges}
-                className="sticky transition-[top,height] duration-300"
+                className="sticky z-[15] transition-[top,height] duration-300"
                 style={{
                   top: scrollVisible ? `calc(var(--nav-h) + ${enTeteH}px)` : "var(--nav-h)",
                   height: scrollVisible ? `calc(100dvh - var(--nav-h) - ${enTeteH}px)` : "calc(100dvh - var(--nav-h))",
                 }}
               />
             </div>
-            <div className="min-w-0 px-7 pb-16 pt-6">
-              {/* V5 : colonne de lecture de 860 px (au lieu de 42rem), centrée dans le volet ; seul ce volet pose la variable. */}
-              <div className="mx-auto w-full max-w-[860px] [--colonne-partition:860px]">
+            <div className="min-w-0 pb-16 pl-6 pr-4 pt-5">
+              {/* T3 : colonne de lecture de 920 px, alignée à gauche contre le rail ; seul ce volet pose la variable. */}
+              <div className="w-full max-w-[920px] [--colonne-partition:920px]">
               {/* Ce que garde la question 4, sous le titre : historique, langue, qui peut
                   modifier ; la régie ajoute ou change ici le lien de la présentation. */}
-              <div className="mb-4 print:hidden">
+              <div id="entete-setlist-dv" className={`mb-4 ${enteteOuvert ? "" : "hidden print:block"}`}>
+              <TitreEnTete setlist={setlist} passage={passageFete} />
+              <div className="mt-3 print:hidden">
                 {/* Une seule rangée : droits (phrase dans le ⓘ), langue, historique (dimanche-16). */}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   {droitsDeModifier}
@@ -1949,6 +1970,7 @@ export function SetlistDetailClient() {
                   onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
                   sansLien
                 />
+              </div>
               </div>
               {setlist.items.length === 0 ? (
                 <p className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
@@ -1991,28 +2013,7 @@ export function SetlistDetailClient() {
 
                 {/* Vue Partitions : le bloc titre, un bouton qui déplie l'en-tête complet (T2). Le <h1> reste
                     pour les lecteurs d'écran : celui de l'en-tête déplié, sinon celui-ci. */}
-                {compacte && (
-                  <>
-                    {!enteteOuvert && <h1 className="sr-only">{titreAffiche(setlist, langueCourte(i18n.language))}</h1>}
-                    <button
-                      type="button"
-                      aria-expanded={enteteOuvert}
-                      aria-controls="entete-setlist"
-                      aria-label={`${titreAffiche(setlist, langueCourte(i18n.language))}, ${t("setlists.detail.afficherDetails")}`}
-                      onClick={() => setEnteteOuvert((o) => !o)}
-                      className={`${TOUCHER_44} flex min-h-8 min-w-0 flex-1 items-center gap-1.5 rounded-lg px-1.5 py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring`}
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="flex min-w-0 items-baseline gap-2">
-                          <span className="truncate text-[15px] font-semibold leading-tight tracking-[-0.01em] text-foreground sm:text-[17px]">{titreAffiche(setlist, langueCourte(i18n.language))}</span>
-                          {setlist.date && <span className="hidden shrink-0 text-xs text-muted-foreground min-[480px]:inline">{formatJourMois(setlist.date, i18n.language)}</span>}
-                        </span>
-                        {setlist.notes && <span className="block truncate text-xs italic leading-tight text-muted-foreground">{setlist.notes}</span>}
-                      </span>
-                      <ChevronDown aria-hidden className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none ${enteteOuvert ? "rotate-180" : ""}`} />
-                    </button>
-                  </>
-                )}
+                {compacte && titreCompact}
 
                 {/* Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : la même barre côté Liste
                     et côté Partitions — Affichage, Adapter, Accords, Ma version ; la bascule

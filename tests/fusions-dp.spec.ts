@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreEditeur, reglerElement } from "./helpers/editeurSetlist";
-import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
+import { enDeuxVolets, ouvrirPartitions, ouvrirSommaire } from "./helpers/setlist";
 import { withoutLastPhrases } from "../src/lib/setlist/lastPhrase";
 import { diffSetlists } from "../src/lib/setlist/history";
 import { playedSections } from "../src/lib/setlist/playedSections";
@@ -83,8 +83,10 @@ test("historique : une Dernière phrase se reconnaît dans les deux formats (oth
 
 /** Pastilles d'un chant du Sommaire (deux volets, docs/spec-deux-volets.md, Q6), à la
  *  manière de la structure abrégée de la liste : « C1 · R · Dp ». */
-const pastillesDuSommaire = async (page: Page, position: number) =>
-  (await page.locator(`[data-sommaire="${position}"] [data-pastille]`).allTextContents()).join(" · ");
+const pastillesDuSommaire = async (page: Page, position: number) => {
+  await ouvrirSommaire(page); // le panneau du rail (T3 du lot exemples d'usage)
+  return (await page.locator(`[data-sommaire="${position}"] [data-pastille]`).allTextContents()).join(" · ");
+};
 
 test("liste (sommaire en deux volets) : une Dernière phrase écrite dans l'ancien format s'affiche « Dp », pas « other »", async ({ page }) => {
   await ouvrir(page, setlist([

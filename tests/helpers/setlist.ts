@@ -86,3 +86,13 @@ export async function enDeuxVolets(page: Page): Promise<boolean> {
   await page.getByTestId("barre-outils").or(enTete).first().waitFor();
   return enTete.isVisible();
 }
+
+/** Le sommaire en deux volets (T3 du lot exemples d'usage) : un rail de numéros, dont le bouton ouvre le
+ *  panneau « Sommaire » par-dessus la partition. Le panneau se referme après un choix, un toucher en
+ *  dehors ou Échap : à rouvrir avant chaque geste dans le sommaire. Rend la nav « Sommaire ». */
+export async function ouvrirSommaire(page: Page): Promise<Locator> {
+  const nav = page.getByRole("navigation", { name: /^(Sommaire|目录)$/ });
+  if (!(await nav.isVisible())) await page.getByRole("button", { name: /^(Ouvrir le sommaire|展开目录)$/ }).click();
+  await expect(nav).toBeVisible();
+  return nav;
+}

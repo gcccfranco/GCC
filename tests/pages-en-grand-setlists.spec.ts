@@ -231,32 +231,32 @@ test.describe("Setlists : les dispositions", () => {
     expect(Math.abs(action.x + action.width - (colonne.x + colonne.width)), "action au bord droit de la colonne").toBeLessThan(2);
   });
 
-  // dimanche-7, seconde moitié (lot CD, T4b ; V5, validation du 07/11/2026) : la colonne de lecture va jusqu'à 860 px, centrée dans le volet de
-  // droite, et la rangée de boutons de l'en-tête finit à son bord droit, à 1 440 px comme à 1 940 px de fenêtre.
+  // T3 du lot « exemples d'usage » (remplace dimanche-7 / V5) : la colonne de lecture va jusqu'à 920 px, alignée à gauche contre le rail ;
+  // l'en-tête est une rangée pleine largeur, « Mode Louange » à son bord droit, à 1 440 px comme à 1 940 px de fenêtre.
   for (const largeur of [1440, 1940]) {
-    test(`ordinateur-1440 : à ${largeur} px, « Mode Louange » finit au bord droit de la colonne de lecture, centrée dans son volet`, async ({ page }, info) => {
-      test.skip(info.project.name !== "ordinateur-1440", "ordinateur large : la partition est plafonnée à 860 px");
+    test(`ordinateur-1440 : à ${largeur} px, la colonne de lecture est plafonnée à 920 px, alignée à gauche ; « Mode Louange » reste dans l'en-tête`, async ({ page }, info) => {
+      test.skip(info.project.name !== "ordinateur-1440", "ordinateur large : la partition est plafonnée à 920 px");
       await page.setViewportSize({ width: largeur, height: 900 });
       await ouvrir(page, "/setlists/sl-1");
       const partition = page.locator(".grid > .min-w-0 [class*='max-w-[var(--colonne-partition']").first();
       await expect(partition).toBeVisible();
-      // La rangée de l'en-tête (son contenu, marge de 28 px ôtée) finit où finit la partition ; « Mode Louange » finit là aussi
-      // quand les boutons tiennent à côté du titre (avec tous les boutons, ils peuvent passer sous le titre).
-      const bouton = page.locator("[data-en-tete]").getByRole("button", { name: "Mode Louange" });
-      const rangee = bouton.locator("xpath=ancestor::div[contains(@class,'px-7')][1]");
-      const r = await rangee.evaluate((el) => ({ droite: el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight) }));
       const lecture = (await partition.boundingBox())!;
-      expect(Math.abs(r.droite - (lecture.x + lecture.width)), "un seul bord droit pour l'en-tête et la colonne de lecture").toBeLessThan(2);
+      const bouton = page.locator("[data-en-tete]").getByRole("button", { name: "Mode Louange" });
       const louange = (await bouton.boundingBox())!;
-      expect(louange.x + louange.width, "« Mode Louange » ne dépasse pas la colonne").toBeLessThanOrEqual(lecture.x + lecture.width + 1);
-      // La colonne fait min(860, place) et laisse autant d'espace à gauche qu'à droite dans son volet (marges de 28 px ôtées).
+      expect(louange.x + louange.width, "« Mode Louange » ne sort pas de la fenêtre").toBeLessThanOrEqual(largeur);
+      expect(louange.x + louange.width, "« Mode Louange » au bord droit de l'en-tête").toBeGreaterThan(largeur - 48);
+      // Une seule rangée : « Mode Louange » est à droite du bouton titre, à sa hauteur.
+      const titre = (await page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ }).boundingBox())!;
+      expect(louange.x, "à droite du titre").toBeGreaterThan(titre.x + titre.width - 1);
+      expect(Math.abs(louange.y + louange.height / 2 - (titre.y + titre.height / 2)), "même rangée que le titre").toBeLessThan(8);
+      // La colonne fait min(920, place) et part du bord gauche de son volet (marge de 24 px ôtée) : plus de centrage.
       const volet = await page.locator(".grid > .min-w-0").first().evaluate((el) => {
         const b = el.getBoundingClientRect();
         const c = getComputedStyle(el);
         return { gauche: b.left + parseFloat(c.paddingLeft), droite: b.right - parseFloat(c.paddingRight) };
       });
-      expect(Math.abs(lecture.width - Math.min(860, volet.droite - volet.gauche)), "min(860, place)").toBeLessThan(2);
-      expect(Math.abs(lecture.x - volet.gauche - (volet.droite - lecture.x - lecture.width)), "écarts gauche et droit égaux").toBeLessThan(2);
+      expect(Math.abs(lecture.width - Math.min(920, volet.droite - volet.gauche)), "min(920, place)").toBeLessThan(2);
+      expect(Math.abs(lecture.x - volet.gauche), "alignée à gauche contre le rail").toBeLessThan(2);
     });
   }
 

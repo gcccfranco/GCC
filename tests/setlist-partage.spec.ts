@@ -380,6 +380,10 @@ test.describe("partage : l'éditeur", () => {
     await expect(page.getByText(/^Seuls le créateur de la setlist/)).toBeVisible();
     await expect(page.locator("[data-liste-courte]")).toHaveCount(0);
     await page.goto(`/setlists/${ID}`);
+    // Deux volets : « Lecture seule » est dans le bloc que déplie le titre de l'en-tête (T3).
+    const titreDv = page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ });
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeAttached(); // la page est chargée
+    if (await titreDv.count()) await titreDv.click();
     await expect(page.getByText("Lecture seule")).toBeVisible();
     // Les droits sont repliés derrière le bouton « i » (G15 ; toutes tailles depuis dimanche-16).
     await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
@@ -498,10 +502,13 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
   test.beforeEach(({}, info) => { test.skip(!GRAND.includes(info.project.name), "page en deux volets : ordinateur et tablette couchée"); });
   test.use({ permissions: ["clipboard-read", "clipboard-write"] });
   const menu = (page: Page) => page.locator("[data-en-tete]").getByRole("button", { name: "Plus d'actions" });
+  // Les droits sont dans le bloc que déplie le titre de l'en-tête (T3 du lot exemples d'usage).
+  const deplier = (page: Page) => page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ }).click();
 
   test("Joël (équipe) sur la privée : peut modifier, ne supprime pas, droits en toutes lettres", async ({ page }) => {
     await planningVide(page);
     await signInAs(page, fp(JOEL), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-priv");
+    await deplier(page);
     await expect(page.getByText("Tu peux modifier")).toBeVisible();
     // Les droits sont repliés derrière le bouton « i », sur toutes les tailles (dimanche-16).
     await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
@@ -514,6 +521,7 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
   test("publique avec équipe : « Modifiable par son créateur et son équipe seulement » ; Léa supprime", async ({ page }) => {
     await planningVide(page);
     await signInAs(page, fp(LEA), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-pub");
+    await deplier(page);
     await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
     await expect(page.getByText("Modifiable par son créateur et son équipe seulement (et les admins)")).toBeVisible();
     await menu(page).click();
@@ -523,6 +531,7 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
   test("sans équipe, les textes d'avant restent", async ({ page }) => {
     await planningVide(page);
     await signInAs(page, fp(LEA), { ...ANNUAIRE, "setlists/sl-x": DOC({ isPrivate: true }) }, "/setlists/sl-x");
+    await deplier(page);
     await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
     await expect(page.getByText("Privée — visible et modifiable uniquement par son créateur").filter({ visible: true }).first()).toBeVisible();
   });

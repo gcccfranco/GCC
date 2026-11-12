@@ -303,10 +303,10 @@ async function barreDeSetlistAuBord(page: Page, largeur: number, bord: number) {
   expect(await debordement(page), `${largeur} px`).toBe(0);
 }
 
-/** Le Sommaire des deux volets : le volet de gauche, jamais sous la barre latérale, à
- *  gauche des partitions. */
+/** Le rail du Sommaire des deux volets (T3 du lot exemples d'usage) : le volet de gauche, jamais sous la barre
+ *  latérale, à gauche des partitions. */
 async function sommaireAGauche(page: Page, bord: number) {
-  const sommaire = page.getByRole("navigation", { name: "Sommaire" });
+  const sommaire = page.getByRole("button", { name: /^(Ouvrir|Fermer) le sommaire$/ });
   await expect(sommaire).toBeVisible();
   const s = (await sommaire.boundingBox())!;
   expect(s.x, "jamais sous la barre").toBeGreaterThanOrEqual(bord);
@@ -337,7 +337,7 @@ test.describe("navigation sur grand écran (U4) : rien ne passe sous la barre, o
     await sommaireAGauche(page, 248);
     // 1 147 px, barre dépliée : 899 px utiles, un volet (G).
     await page.setViewportSize({ width: 1147, height: 900 });
-    await expect(page.getByRole("navigation", { name: "Sommaire" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^(Ouvrir|Fermer) le sommaire$/ })).toHaveCount(0);
     await expect(page.getByTestId("bascule-vues")).toBeVisible();
   });
 

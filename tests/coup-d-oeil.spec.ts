@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { basculerMode } from "./helpers/menuSetlist";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreEditeur, reglerElement } from "./helpers/editeurSetlist";
-import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { fermerMenus, ouvrirAffichage, ouvrirPartitions, ouvrirSommaire } from "./helpers/setlist";
 import { ouvrirJeJoue } from "./helpers/louange";
 import { abbreviateSection } from "../src/lib/chordpro/abbreviations";
 import { uniqueSections } from "../src/lib/setlist/uniqueSections";
@@ -261,11 +261,13 @@ test.describe("modes d'affichage de la vue partitions", () => {
       test.skip(info.project.name !== "ordinateur", "deux volets : une fois suffit (ordinateur)");
       await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
       await openPartitions(page);
+      await ouvrirSommaire(page);
       const pastilles = page.getByRole("navigation", { name: "Sommaire" }).locator('[data-sommaire="1"] [data-pastille]');
       await expect(pastilles).toHaveText(["C1", "R", "R"]);
       await pastilles.nth(2).click();
       const refrain = page.locator('[data-outline-item="1"] [data-section-uids~="chorus-3-2"]');
       await expect.poll(async () => (await refrain.boundingBox())!.y).toBeLessThan(250);
+      await ouvrirSommaire(page); // le choix a refermé le panneau
       await expect(pastilles.nth(2)).toHaveAttribute("aria-current", "true");
     });
   });

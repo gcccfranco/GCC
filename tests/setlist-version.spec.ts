@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage } from "./helpers/louange";
-import { enDeuxVolets, ouvrirAffichage, ouvrirListe, ouvrirPartitions } from "./helpers/setlist";
+import { enDeuxVolets, ouvrirAffichage, ouvrirListe, ouvrirPartitions, ouvrirSommaire } from "./helpers/setlist";
 import { verifierPuce } from "./helpers/puce";
 import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 
@@ -199,7 +199,10 @@ test("ma structure : le corps la suit, le bandeau, le sommaire et la liste reste
   await expect(bodySections(page, 1).nth(2)).toContainText("Pont");
   await expect(strip(page, 1), "le bandeau garde la structure de la présidence").toHaveText(["I", "C1", "R", "Int", "C2", "P"]);
   const deuxVolets = await enDeuxVolets(page);
-  if (deuxVolets) await expect(pastilles(page, 1), "le sommaire suit ce qui est affiché").toHaveText(["C1", "R", "P"]);
+  if (deuxVolets) {
+    await ouvrirSommaire(page);
+    await expect(pastilles(page, 1), "le sommaire suit ce qui est affiché").toHaveText(["C1", "R", "P"]);
+  }
   await capture(page, "v2-ma-structure");
   if (deuxVolets) return; // pas de vue liste en deux volets
 

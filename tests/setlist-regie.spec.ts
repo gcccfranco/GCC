@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ouvrirPartitions } from "./helpers/setlist";
+import { ouvrirPartitions, ouvrirSommaire } from "./helpers/setlist";
 import { isOnDutyRegie, parsePresentationUrl } from "../src/lib/setlist/presentationLink";
 import type { Servant } from "../src/lib/planning/names";
 import { cliquerMenuSetlist } from "./helpers/menuSetlist";
@@ -83,8 +83,7 @@ test.describe("sommaire", () => {
 
   test("sur ordinateur, le sommaire liste chants et étapes jouées et y amène au clic", async ({ page }) => {
     await openPartitions(page);
-    const sommaire = page.getByRole("navigation", { name: "Sommaire" });
-    await expect(sommaire).toBeVisible();
+    const sommaire = await ouvrirSommaire(page);
     const chant = (n: number) => sommaire.locator(`[data-sommaire="${n}"] [data-sommaire-chant]`);
     await expect(chant(1)).toHaveText("Abba Père");
     await expect(chant(2)).toHaveText("一生爱你");
@@ -96,6 +95,8 @@ test.describe("sommaire", () => {
     await chant(2).click();
     const song2 = page.locator('[data-outline-item="2"]');
     await expect.poll(async () => (await song2.boundingBox())!.y).toBeLessThan(250);
+    // Le choix a refermé le panneau : on le rouvre.
+    await ouvrirSommaire(page);
     await expect(chant(2)).toHaveAttribute("aria-current", "true");
 
     // Retour à une section précise du 1ᵉʳ chant.

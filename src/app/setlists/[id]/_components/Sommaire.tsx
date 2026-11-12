@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type ComponentProps, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { TOUCHER_PILULE } from "@/lib/toucher44";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, ListOrdered } from "lucide-react";
 import type { SetlistItem } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
 import type { SongContent } from "@/lib/api/songs";
@@ -147,6 +147,99 @@ export function Sommaire({
       </div>
       {copier && <CopierTout copier={copier} pret={copierPret} />}
     </nav>
+  );
+}
+
+/** Grand écran (docs/spec-exemples-usage.md, T3) : le sommaire devient un rail de 56 px, un numéro par chant ;
+ *  son bouton ouvre le `Sommaire` en panneau par-dessus la partition. Toucher un numéro amène au chant sans
+ *  ouvrir le panneau ; Échap, un toucher en dehors ou un choix dans le panneau le ferment. */
+export function RailSommaire({ className, style, ...sommaire }: ComponentProps<typeof Sommaire>) {
+  const { t } = useTranslation();
+  const [ouvert, setOuvert] = useState(false);
+  const boutonRef = useRef<HTMLButtonElement>(null);
+  const panneauRef = useRef<HTMLDivElement>(null);
+  const { items, songsMap, current, onGo } = sommaire;
+  const chants = [...items].sort((a, b) => a.position - b.position).filter((item) => item.type !== "transition");
+
+  useEffect(() => {
+    if (!ouvert) return;
+    // Le chant lu, sinon le premier (le chant lu peut être une proposition, absente du panneau).
+    (panneauRef.current?.querySelector<HTMLElement>("[data-sommaire-chant][aria-current]")
+      ?? panneauRef.current?.querySelector<HTMLElement>("[data-sommaire-chant]"))?.focus({ preventScroll: true });
+    const dehors = (e: PointerEvent) => {
+      const cible = e.target as Node;
+      if (!panneauRef.current?.contains(cible) && !boutonRef.current?.contains(cible)) setOuvert(false);
+    };
+    const echap = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOuvert(false);
+      boutonRef.current?.focus({ preventScroll: true });
+    };
+    document.addEventListener("pointerdown", dehors);
+    document.addEventListener("keydown", echap);
+    return () => {
+      document.removeEventListener("pointerdown", dehors);
+      document.removeEventListener("keydown", echap);
+    };
+  }, [ouvert]);
+
+  const libelle = t(ouvert ? "setlists.detail.fermerSommaire" : "setlists.detail.ouvrirSommaire");
+  return (
+    <div className={className} style={style}>
+      <div className="flex h-full w-14 flex-col items-center gap-1.5 overflow-y-auto pb-4">
+        <button
+          ref={boutonRef}
+          type="button"
+          aria-expanded={ouvert}
+          aria-controls="sommaire-panneau"
+          aria-label={libelle}
+          title={libelle}
+          onClick={() => setOuvert((o) => !o)}
+          className="flex h-11 w-14 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ListOrdered className="h-5 w-5" aria-hidden />
+        </button>
+        {chants.map((item, i) => {
+          if (item.type === "proposition") return null;
+          const lu = item.position === current;
+          const titre =
+            item.type === "fusion" && item.fusionSongs
+              ? item.fusionSongs.map((fs) => songsMap[fs.songSlug]?.title ?? fs.songSlug).join(" / ")
+              : (songsMap[item.songSlug]?.title ?? item.songSlug);
+          const nom = `${i + 1}. ${titre}`;
+          return (
+            <button
+              key={item.position}
+              type="button"
+              data-rail-numero={item.position}
+              aria-current={lu ? "true" : undefined}
+              aria-label={nom}
+              title={nom}
+              onClick={() => onGo(item.position)}
+              className={`h-11 w-14 shrink-0 rounded-xl text-base font-bold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                lu ? "bg-foreground text-background" : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
+      </div>
+      {ouvert && (
+        <div ref={panneauRef} id="sommaire-panneau" className="absolute left-full top-0 z-10 h-full w-[380px] border-r border-border bg-background shadow-xl">
+          <Sommaire
+            {...sommaire}
+            onGo={(position, uid) => {
+              setOuvert(false);
+              onGo(position, uid);
+              // Le focus ne tombe pas sur la page : il revient au bouton du rail.
+              boutonRef.current?.focus({ preventScroll: true });
+            }}
+            className="h-full"
+          />
+        </div>
+      )}
+    </div>
   );
 }
 

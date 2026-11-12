@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirSommaire } from "./helpers/setlist";
 import { compterLesRendus, defilerImageParImage } from "./helpers/rendus";
 
 // Lot U5, tranche T4 (docs/spec-deux-volets.md, questions 1, 6 à 8, 14) : sur
@@ -83,6 +84,9 @@ const sommaire = (page: Page) => page.getByRole("navigation", { name: "Sommaire"
 /** Entrée du sommaire, par position de l'élément (celle de `?chant=`). */
 const entree = (page: Page, n: number) => sommaire(page).locator(`[data-sommaire="${n}"]`);
 const boutonChant = (page: Page, n: number) => entree(page, n).locator("[data-sommaire-chant]");
+/** Le rail (T3 du lot exemples d'usage) : son bouton, et le numéro d'un chant. */
+const boutonRail = (page: Page) => page.getByRole("button", { name: /^(Ouvrir|Fermer) le sommaire$/ });
+const numero = (page: Page, n: number) => page.locator(`[data-rail-numero="${n}"]`);
 const pastilles = (page: Page, n: number) => entree(page, n).locator("[data-pastille]");
 /** Un chant en partition (PartitionView). */
 const chant = (page: Page, n: number) => page.locator(`[data-outline-item="${n}"]`);
@@ -118,13 +122,18 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await ouvrir(page);
     await expect(page.getByTestId("bascule-vues")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Retour", exact: true })).toHaveCount(0);
-    await expect(enTete(page).getByRole("heading", { level: 1, name: "Culte du 4 octobre" })).toBeVisible();
-    await expect(sommaire(page)).toBeVisible();
-    const [s, p, e] = await Promise.all([sommaire(page).boundingBox(), chant(page, 1).boundingBox(), enTete(page).boundingBox()]);
-    expect(s!.x + s!.width, "le sommaire à gauche des partitions").toBeLessThanOrEqual(p!.x);
+    await expect(enTete(page).getByRole("heading", { level: 1, name: "Culte du 4 octobre" })).toBeAttached();
+    // Le sommaire est un rail de numéros de 56 px ; son panneau, fermé, n'est pas là.
+    await expect(sommaire(page)).toHaveCount(0);
+    const [s, p, e] = await Promise.all([boutonRail(page).boundingBox(), chant(page, 1).boundingBox(), enTete(page).boundingBox()]);
+    expect(s!.x + s!.width, "le rail à gauche des partitions").toBeLessThanOrEqual(p!.x);
     expect(s!.y, "sous l'en-tête").toBeGreaterThanOrEqual(e!.y + e!.height - 1);
-    expect(s!.width, "volet de gauche de 320 à 400 px").toBeGreaterThanOrEqual(320);
-    expect(s!.width).toBeLessThanOrEqual(400);
+    expect(s!.width, "rail de 56 px").toBe(56);
+    const nav = await ouvrirSommaire(page);
+    const panneau = (await nav.boundingBox())!;
+    expect(panneau.width, "panneau de 380 px").toBeGreaterThanOrEqual(375);
+    expect(panneau.width).toBeLessThanOrEqual(385);
+    expect(panneau.x, "collé au rail").toBeGreaterThanOrEqual(s!.x + s!.width - 1);
     await expect(chant(page, 2)).toBeAttached();
     expect(params(page), "rien dans l'adresse avant de lire").toEqual({});
     await capture(page, "deux-volets");
@@ -133,15 +142,22 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
   test("l'en-tête : catégorie et date, titre, présidence ; Présentation · Crayon · Modifier · PDF · ⋯ · Mode louange", async ({ page }) => {
     await ouvrir(page);
     const e = enTete(page);
-    await expect(e).toContainText("Culte Francophone");
-    await expect(e).toContainText(/dimanche 4 octobre/i);
-    await expect(e).toContainText("Présidence : Présidence T.");
+    // Replié (une rangée) : le titre ; catégorie, date et présidence sont dans le bloc qu'il déplie.
+    const titre = e.getByRole("button", { name: "Culte du 4 octobre, Afficher les détails de la setlist" });
+    const bloc = page.locator("#entete-setlist-dv");
+    await expect(titre).toHaveAttribute("aria-expanded", "false");
+    await expect(bloc).toBeHidden();
+    await titre.click();
+    await expect(titre).toHaveAttribute("aria-expanded", "true");
+    await expect(bloc).toContainText("Culte Francophone");
+    await expect(bloc).toContainText(/dimanche 4 octobre/i);
+    await expect(bloc).toContainText("Présidence : Présidence T.");
     const noms = await e.locator("a, button").evaluateAll((els) =>
       els
         .filter((el) => (el as HTMLElement).offsetParent !== null)
         .map((el) => el.getAttribute("aria-label") ?? el.textContent?.trim() ?? ""),
     );
-    expect(noms).toEqual(["Présentation", "Crayon", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
+    expect(noms).toEqual(["Culte du 4 octobre, Afficher les détails de la setlist", "Présentation", "Crayon", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
     // Libellés compris : ils se lisent, pas seulement à l'oreille.
     for (const nom of ["Crayon", "Modifier", "Mode Louange"]) {
       await expect(e.getByRole(nom === "Modifier" ? "link" : "button", { name: nom, exact: true })).toContainText(nom);
@@ -149,8 +165,8 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await expect(e.getByRole("link", { name: "Présentation" })).toHaveAttribute("href", CANVA);
     await expect(e.getByRole("link", { name: "Modifier", exact: true })).toHaveAttribute("href", new RegExp(`/setlists/${SETLIST_ID}/edit/?$`));
     // Ce que garde la question 4 : sous le titre, pas dans le menu.
-    await expect(page.getByText("Tu peux modifier")).toBeVisible();
-    await expect(page.getByText("Thème : la grâce.")).toBeVisible();
+    await expect(bloc.getByText("Tu peux modifier")).toBeVisible();
+    await expect(bloc.getByText("Thème : la grâce.")).toBeVisible();
   });
 
   test("⋯ : Accords, Affichage, Prévenir l'équipe, Dupliquer, Partager, Supprimer", async ({ page }) => {
@@ -178,6 +194,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
 
   test("Sommaire complet : numéros, titres, tonalités et « orig. », pastilles des étapes, notes, « Partition 简谱 »", async ({ page }) => {
     await ouvrir(page);
+    await ouvrirSommaire(page);
     await expect(sommaire(page).getByText("Sommaire", { exact: true })).toBeVisible();
     // Abba Père : G au lieu de A, couplet puis refrain deux fois (sans « ×2 »).
     await expect(entree(page, 1)).toContainText("1");
@@ -203,14 +220,19 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
 
   test("un chant touché vient sous l'en-tête et devient le chant lu ; l'adresse le suit", async ({ page }) => {
     await ouvrir(page);
+    await ouvrirSommaire(page);
     await boutonChant(page, 2).click();
     await expect.poll(() => ecartSousEnTete(page, chant(page, 2))).toBe(SOUS_EN_TETE);
+    // Le choix referme le panneau ; on le rouvre pour lire le chant lu.
+    await expect(sommaire(page)).toHaveCount(0);
+    await ouvrirSommaire(page);
     await expect(boutonChant(page, 2)).toHaveAttribute("aria-current", "true");
     await expect(boutonChant(page, 1)).not.toHaveAttribute("aria-current", "true");
     await expect(enTete(page)).toBeInViewport();
     await expect.poll(() => params(page)).toEqual({ vue: "partitions", chant: "2" });
     // Le dernier chant, qui ne peut pas monter jusqu'en haut, reste le chant lu.
     await boutonChant(page, 4).click();
+    await ouvrirSommaire(page);
     await expect(boutonChant(page, 4)).toHaveAttribute("aria-current", "true");
     await page.waitForTimeout(300);
     await expect(boutonChant(page, 4)).toHaveAttribute("aria-current", "true");
@@ -218,16 +240,19 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
 
   test("une pastille amène à sa section, et la marque", async ({ page }) => {
     await ouvrir(page);
+    await ouvrirSommaire(page);
     // Le second refrain d'Abba Père (sa troisième étape).
     await pastilles(page, 1).nth(2).click();
     const section = chant(page, 1).locator("[data-section]").nth(2);
     await expect.poll(() => ecartSousEnTete(page, section)).toBe(SOUS_EN_TETE);
+    await ouvrirSommaire(page);
     await expect(pastilles(page, 1).nth(2)).toHaveAttribute("aria-current", "true");
     await expect(pastilles(page, 1).nth(0)).not.toHaveAttribute("aria-current", "true");
   });
 
   test("le surlignage suit le défilement, et l'adresse aussi (sans entrée d'historique)", async ({ page }) => {
     await ouvrir(page);
+    await ouvrirSommaire(page); // reste ouvert : le défilement n'est pas un toucher
     const avant = await page.evaluate(() => history.length);
     const y = await chant(page, 2).evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
     await defiler(page, y);
@@ -241,26 +266,28 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
   test("ouvert par l'adresse au chant 2 : il est sous l'en-tête ; rechargé, il y reste", async ({ page }) => {
     await ouvrir(page, `/setlists/${SETLIST_ID}?vue=partitions&chant=2`);
     await expect.poll(() => ecartSousEnTete(page, chant(page, 2))).toBe(SOUS_EN_TETE);
+    await ouvrirSommaire(page);
     await expect(boutonChant(page, 2)).toHaveAttribute("aria-current", "true");
     await page.reload();
     await chant(page, 2).waitFor();
     await expect.poll(() => ecartSousEnTete(page, chant(page, 2))).toBe(SOUS_EN_TETE);
   });
 
-  test("l'en-tête colle en haut et s'escamote au défilement ; le sommaire monte avec lui", async ({ page }) => {
+  test("l'en-tête colle en haut et s'escamote au défilement ; le rail monte avec lui", async ({ page }) => {
     await ouvrir(page);
     const hauteur = (await enTete(page).boundingBox())!.height;
-    await expect.poll(async () => Math.round((await sommaire(page).boundingBox())!.y)).toBe(Math.round(hauteur));
+    await expect.poll(async () => Math.round((await boutonRail(page).boundingBox())!.y)).toBe(Math.round(hauteur));
     await defiler(page, 600);
     await expect.poll(async () => { const b = (await enTete(page).boundingBox())!; return b.y + b.height; }).toBeLessThanOrEqual(1);
-    await expect.poll(async () => Math.round((await sommaire(page).boundingBox())!.y)).toBe(0);
+    await expect.poll(async () => Math.round((await boutonRail(page).boundingBox())!.y)).toBe(0);
     await defiler(page, -120);
     await expect.poll(async () => Math.round((await enTete(page).boundingBox())!.y)).toBe(0);
-    await expect.poll(async () => Math.round((await sommaire(page).boundingBox())!.y)).toBe(Math.round(hauteur));
+    await expect.poll(async () => Math.round((await boutonRail(page).boundingBox())!.y)).toBe(Math.round(hauteur));
   });
 
   test("« Copier toutes les paroles » : FR puis ZH (caractères puis pinyin), deux lignes vides entre deux chants", async ({ page }) => {
     await ouvrir(page);
+    await ouvrirSommaire(page);
     await sommaire(page).getByRole("button", { name: "Copier toutes les paroles" }).click();
     const text = await page.evaluate(() => navigator.clipboard.readText());
     const chants = text.split("\n\n\n");
@@ -282,6 +309,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await ouvrir(page, `/setlists/${SETLIST_ID}`, {
       [VERSION_DOC]: { authorUid: MUSICIEN.uid, authorName: "Test M.", items: { "abba-pere": { content: mien, structure: null, shared: false } }, choices: {} },
     });
+    await ouvrirSommaire(page);
     await expect(entree(page, 1)).toBeVisible();
     await expect(sommaire(page).getByRole("button", { name: "Copier toutes les paroles" })).toHaveCount(0);
   });
@@ -306,7 +334,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await expect(crayon).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByText("Crayon : touche un accord ou un mot pour le retoucher.")).toBeVisible();
     await expect(page.locator("[data-barre-crayon]")).toBeVisible();
-    await expect(sommaire(page)).toBeVisible();
+    await expect(boutonRail(page)).toBeVisible();
     await capture(page, "deux-volets-crayon");
     await page.locator("[data-barre-crayon]").getByRole("button", { name: "Terminé", exact: true }).click();
     await expect(crayon).toHaveAttribute("aria-pressed", "false");
@@ -337,14 +365,14 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await page.setViewportSize({ width: 1147, height: 800 });
     await ouvrir(page, `/setlists/${SETLIST_ID}?vue=partitions&chant=1`);
     await expect(page.getByTestId("bascule-vues")).toBeVisible();
-    await expect(sommaire(page)).toHaveCount(0);
+    await expect(boutonRail(page)).toHaveCount(0);
     await page.setViewportSize({ width: 1148, height: 800 });
-    await expect(sommaire(page)).toBeVisible();
+    await expect(boutonRail(page)).toBeVisible();
     await expect(page.getByTestId("bascule-vues")).toHaveCount(0);
     await page.setViewportSize({ width: 1024, height: 768 });
     await expect(page.getByTestId("bascule-vues")).toBeVisible();
     await page.getByRole("button", { name: "Réduire la barre latérale" }).click();
-    await expect(sommaire(page)).toBeVisible();
+    await expect(boutonRail(page)).toBeVisible();
     await expect(page.getByTestId("bascule-vues")).toHaveCount(0);
   });
 });
@@ -368,7 +396,7 @@ test.describe("relecture : défilement, copie (deux volets)", () => {
     expect(avant, "le crochet voit les rendus").toBeGreaterThan(0);
     await defilerImageParImage(page, 3, 20);
     const pendant = (await rendus.lire()).slice(avant);
-    await expect(boutonChant(page, 1)).toHaveAttribute("aria-current", "true");
+    await expect(numero(page, 1)).toHaveAttribute("aria-current", "true");
     // Un ou deux au passage d'une section (sa pastille marquée), jamais un par image. Avant la relecture :
     // deux par image, 40 ; la marge absorbe un scan ou une police arrivés en retard sous charge.
     expect(pendant.length, `vingt images dans le même chant : ${pendant.join(" | ")}`).toBeLessThanOrEqual(8);
@@ -382,6 +410,7 @@ test.describe("relecture : défilement, copie (deux volets)", () => {
       await route.continue();
     });
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: SETLIST }, `/setlists/${SETLIST_ID}`);
+    await ouvrirSommaire(page);
     const bouton = sommaire(page).getByRole("button", { name: "Copier toutes les paroles" });
     await expect(bouton).toBeVisible();
     await expect(bouton, "le chant ZH n'est pas encore là").toBeDisabled();
@@ -397,6 +426,7 @@ test.describe("relecture : défilement, copie (deux volets)", () => {
   test("« Copier toutes les paroles » reste inactif si un chant n'a pas pu être chargé", async ({ page }) => {
     await page.route((url) => estLeChantZh(url), (route) => route.abort("internetdisconnected"));
     await ouvrir(page);
+    await ouvrirSommaire(page);
     const bouton = sommaire(page).getByRole("button", { name: "Copier toutes les paroles" });
     await expect(bouton).toBeVisible();
     await expect(bouton).toBeDisabled();

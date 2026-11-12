@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ouvrirListe, ouvrirPartitions } from "./helpers/setlist";
+import { ouvrirListe, ouvrirPartitions, ouvrirSommaire } from "./helpers/setlist";
 
 // Lot « pupitre », tranche T1 (docs/spec-exemples-usage.md § 5) : en volet unique (téléphone, tablette debout) la vue
 // Partitions va jusqu'à `--marge-page` des deux côtés, la vue Liste tient en 720 px au plus avec le même bord gauche,
@@ -33,11 +33,14 @@ const DOCS = {
 // calculée de « Couplet 1 » de Hosanna en clair (`--sec-c` de la section, que T1 ne touche pas).
 const PAROLES_PX = { telephone: 0.88 * 1.1 * 16, tablette: 0.88 * 1.2 * 16 };
 const COULEUR_COUPLET = "rgb(44, 138, 125)";
-const COLONNE_DEUX_VOLETS = 860; // `--colonne-partition` posée par le volet de droite (SetlistDetailClient)
+const COLONNE_DEUX_VOLETS = 920; // `--colonne-partition` posée par le volet de droite (SetlistDetailClient ; 860 avant T3)
 
 const FENETRES: Record<string, { width: number; height: number }> = {
   telephone: { width: 390, height: 844 },
   tablette: { width: 820, height: 1180 },
+  "tablette-paysage": { width: 1080, height: 810 },
+  ordinateur: { width: 1280, height: 720 },
+  "ordinateur-1440": { width: 1440, height: 900 },
 };
 
 async function ouvrir(page: Page, id: "sjp" | "stxt" | "szh", projet?: string, sombre = false, aideVue = true) {
@@ -146,10 +149,10 @@ test("简谱 de 一切歌颂赞美 : image et calque de même largeur, rien ne d
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), "pas de défilement horizontal").toBe(true);
 });
 
-test("deux volets : la colonne de partition garde son plafond de 860 px", async ({ page }, info) => {
+test("deux volets : la colonne de partition a son plafond de 920 px (T3)", async ({ page }, info) => {
   test.skip(volet(info.project.name), pasDeuxVolets);
   await ouvrir(page, "sjp", info.project.name);
-  // Le plafond des deux volets est inchangé : la colonne garde `max-width: 860px` (posé par `--colonne-partition`).
+  // T3 : la colonne passe de 860 à 920 px (`max-width: 920px`, posé par `--colonne-partition`).
   const m = await page.locator("[data-outline-item]").first().evaluate((el) => {
     const c = el.querySelector("[class*='max-w-[var(--colonne-partition']")!;
     return { plafond: getComputedStyle(c).maxWidth, largeur: c.getBoundingClientRect().width };
@@ -299,4 +302,187 @@ test("capture T2 sombre : téléphone, vue Partitions", async ({ page }, info) =
   await ouvrir(page, "sjp", "telephone", true, false);
   await expect(aide(page)).toBeVisible();
   await page.screenshot({ path: "test-results/t2-pupitre/telephone-partitions-sombre.png" });
+});
+
+// ─── T3 : grand écran, rail du sommaire et colonne de 920 px (tablette couchée, ordinateur, 1 440) ─────────────────────
+// Fenêtres : 1 080 × 810 (barre latérale de 68 px), 1 280 × 720 (248 px), 1 440 × 900, posées par `ouvrir` (FENETRES).
+const pasGrand = "Test propre aux grands écrans (tablette couchée, ordinateur, 1 440)";
+const enTeteDeux = (page: Page) => page.locator("[data-en-tete]");
+const boutonRail = (page: Page) => page.getByRole("button", { name: /^(Ouvrir|Fermer) le sommaire$/ });
+const numeroRail = (page: Page, n: number) => page.locator(`[data-rail-numero="${n}"]`);
+const zonePartition = (page: Page) => page.locator("[class*='colonne-partition:920px']");
+
+const LARGEUR_ZONE: Record<string, number> = { "tablette-paysage": 892, ordinateur: 920 };
+test("grand écran : la zone de partition mesure 892 px ± 16 en 1 080 × 810, 920 px ± 16 en 1 280 × 720, 920 px au plus à 1 440", async ({ page }, info) => {
+  test.skip(volet(info.project.name), pasGrand);
+  await ouvrir(page, "sjp", info.project.name);
+  const l = (await zonePartition(page).boundingBox())!.width;
+  const cible = LARGEUR_ZONE[info.project.name];
+  if (cible) expect(Math.abs(l - cible), `zone de partition : ${l} px`).toBeLessThanOrEqual(16);
+  else expect(l, "plafond de 920 px à 1 440").toBeLessThanOrEqual(920.5);
+  // Alignée à gauche contre le rail, sans défilement horizontal.
+  const [rail, zone] = await Promise.all([boutonRail(page).boundingBox(), zonePartition(page).boundingBox()]);
+  expect(zone!.x, "la partition après le rail").toBeGreaterThanOrEqual(rail!.x + rail!.width);
+  expect(zone!.x - (rail!.x + rail!.width), "écart rail → partition").toBeLessThanOrEqual(32);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+});
+
+test("ordinateur : aucune ligne de paroles de Hosanna (FR) coupée sur deux lignes à 1 280 px", async ({ page }, info) => {
+  test.skip(info.project.name !== "ordinateur" && info.project.name !== "ordinateur-1440", "Largeur de 1 280 px et plus");
+  await ouvrir(page, "sjp", info.project.name);
+  const lignes = await page.locator('[data-outline-item="1"] [data-copy-line]').evaluateAll((els) =>
+    els.map((el) => ({ texte: el.textContent?.slice(0, 40) ?? "", rangees: el.querySelectorAll("[data-rangee]").length })),
+  );
+  expect(lignes.length, "Hosanna a des lignes de paroles").toBeGreaterThan(5);
+  expect(lignes.filter((x) => x.rangees > 1), "lignes coupées").toEqual([]);
+});
+
+const SEUILS_GRAND: { projet: string; aide: number; vue: number }[] = [
+  { projet: "tablette-paysage", aide: 38, vue: 38 },
+  { projet: "ordinateur", aide: 42, vue: 42 },
+];
+for (const m of SEUILS_GRAND) {
+  test(`${m.projet} (grand écran) : « Couplet 1 » de Hosanna à ${m.aide} % au plus, avec et sans l'aide des accords`, async ({ page }, info) => {
+    test.skip(info.project.name !== m.projet, "Mesure propre à cette fenêtre");
+    await ouvrir(page, "sjp", m.projet, false, false);
+    await expect(aide(page)).toBeVisible();
+    const avec = await hautEtiquette(page, "sjp");
+    expect(avec, `aide affichée : étiquette à ${avec.toFixed(1)} %`).toBeLessThanOrEqual(m.aide);
+    await aide(page).getByRole("button").click();
+    await expect(aide(page)).toHaveCount(0);
+    const sans = await hautEtiquette(page, "sjp");
+    expect(sans, `aide vue : étiquette à ${sans.toFixed(1)} %`).toBeLessThanOrEqual(Math.min(m.vue, avec));
+  });
+}
+
+test("grand écran : le rail nomme chaque chant « n. titre », Tab atteint le bouton puis les numéros", async ({ page }, info) => {
+  test.skip(volet(info.project.name), pasGrand);
+  await ouvrir(page, "sjp", info.project.name);
+  await expect(boutonRail(page)).toHaveAttribute("aria-expanded", "false");
+  await expect(boutonRail(page)).toHaveAttribute("aria-controls", "sommaire-panneau");
+  await expect(page.getByRole("navigation", { name: /^(Sommaire|目录)$/ })).toHaveCount(0);
+  for (const [n, titre] of [[1, /^1\. Hosanna/i], [2, /^2\. 一切歌颂赞美/]] as const) {
+    const num = numeroRail(page, n);
+    await expect(num).toHaveAttribute("aria-label", titre);
+    await expect(num).toHaveAttribute("title", (await num.getAttribute("aria-label"))!);
+    expect((await num.boundingBox())!.width, "numéro de 56 px").toBe(56);
+  }
+  await expect(numeroRail(page, 1)).toHaveAttribute("aria-current", "true");
+  await expect(numeroRail(page, 2)).not.toHaveAttribute("aria-current", "true");
+  // Tab : du dernier bouton de l'en-tête au bouton du rail, puis aux numéros.
+  await enTeteDeux(page).getByRole("button", { name: "Mode Louange" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(boutonRail(page)).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(numeroRail(page, 1)).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(numeroRail(page, 2)).toBeFocused();
+});
+
+test("grand écran : Entrée sur le bouton du rail ouvre le panneau (focus dedans), Échap le ferme et rend le focus, un toucher dehors aussi", async ({ page }, info) => {
+  test.skip(volet(info.project.name), pasGrand);
+  await ouvrir(page, "sjp", info.project.name);
+  const nav = page.getByRole("navigation", { name: /^(Sommaire|目录)$/ });
+  await boutonRail(page).focus();
+  await page.keyboard.press("Enter");
+  await expect(nav).toBeVisible();
+  await expect(boutonRail(page)).toHaveAttribute("aria-expanded", "true");
+  await expect(boutonRail(page)).toHaveAccessibleName(/^(Fermer le sommaire|收起目录)$/);
+  await expect(nav.locator("[data-sommaire-chant][aria-current]")).toBeFocused();
+  // Par-dessus la partition, collé au rail, fond opaque.
+  const [r, p] = await Promise.all([boutonRail(page).boundingBox(), nav.locator("xpath=..").boundingBox()]);
+  expect(p!.x, "collé au rail").toBeGreaterThanOrEqual(r!.x + r!.width - 1);
+  expect(Math.abs(p!.width - 380), "panneau de 380 px").toBeLessThanOrEqual(5);
+  // Rien de la partition (accords, pastilles collées) ne passe par-dessus le panneau : on teste une grille de points.
+  const dessus = await page.evaluate(() => {
+    const panneau = document.getElementById("sommaire-panneau")!;
+    const b = panneau.getBoundingClientRect();
+    const fautes: string[] = [];
+    for (let x = b.left + 20; x < b.right - 10; x += 40)
+      for (let y = b.top + 20; y < Math.min(b.bottom, innerHeight) - 10; y += 30) {
+        const el = document.elementFromPoint(x, y);
+        if (el && !panneau.contains(el)) fautes.push(`${Math.round(x)},${Math.round(y)} ${el.tagName}`);
+      }
+    return fautes;
+  });
+  expect(dessus, "le panneau est au-dessus de la partition").toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(nav).toHaveCount(0);
+  await expect(boutonRail(page)).toBeFocused();
+  await expect(boutonRail(page)).toHaveAttribute("aria-expanded", "false");
+  // Un toucher en dehors du panneau et du bouton le ferme.
+  await boutonRail(page).click();
+  await expect(nav).toBeVisible();
+  // (La marge droite de la page : le panneau couvre le début de la partition.)
+  await page.mouse.click(page.viewportSize()!.width - 6, 500);
+  await expect(nav).toHaveCount(0);
+});
+
+test("grand écran : un numéro du rail amène à son chant sans ouvrir le panneau ; le panneau se referme après un choix", async ({ page }, info) => {
+  test.skip(volet(info.project.name), pasGrand);
+  await ouvrir(page, "sjp", info.project.name);
+  const sousEnTete = async (n: number) =>
+    page.evaluate((i) => document.querySelector(`[data-outline-item="${i}"]`)!.getBoundingClientRect().top - document.querySelector("[data-en-tete]")!.getBoundingClientRect().bottom, n);
+  await numeroRail(page, 2).click();
+  await expect.poll(async () => Math.round(await sousEnTete(2))).toBeLessThanOrEqual(40);
+  expect(await sousEnTete(2), "pas au-dessus du bas de l'en-tête").toBeGreaterThanOrEqual(-2);
+  await expect(page.getByRole("navigation", { name: /^(Sommaire|目录)$/ })).toHaveCount(0);
+  await expect(numeroRail(page, 2)).toHaveAttribute("aria-current", "true");
+  // Dans le panneau : le choix du chant 1 le referme.
+  const nav = await ouvrirSommaire(page);
+  await nav.locator('[data-sommaire="1"] [data-sommaire-chant]').click();
+  await expect(nav).toHaveCount(0);
+  await expect.poll(async () => Math.round(await sousEnTete(1))).toBeLessThanOrEqual(40);
+});
+
+test("grand écran : le titre de l'en-tête déplie `#entete-setlist-dv` (aria-expanded) ; l'en-tête tient sur une rangée", async ({ page }, info) => {
+  test.skip(volet(info.project.name), pasGrand);
+  await ouvrir(page, "sjp", info.project.name);
+  const titre = enTeteDeux(page).getByRole("button", { name: /^.+, (Afficher les détails de la setlist|显示歌单详情)$/ });
+  const bloc = page.locator("#entete-setlist-dv");
+  await expect(titre).toHaveAttribute("aria-controls", "entete-setlist-dv");
+  await expect(titre).toHaveAttribute("aria-expanded", "false");
+  await expect(bloc).toBeHidden();
+  await expect(enTeteDeux(page).getByText(NOTE)).toBeVisible();
+  const h = (await enTeteDeux(page).boundingBox())!.height;
+  expect(h, `rangée de 52 à 64 px, mesurée ${h}`).toBeLessThanOrEqual(64);
+  await titre.click();
+  await expect(titre).toHaveAttribute("aria-expanded", "true");
+  await expect(bloc).toBeVisible();
+  await expect(bloc.getByText("Culte Francophone")).toBeVisible();
+  await expect(bloc.getByRole("heading", { level: 1, name: "Culte du 8 novembre" })).toBeVisible();
+  await titre.click();
+  await expect(bloc).toBeHidden();
+});
+
+test("grand écran : un chant ZH (一切歌颂赞美) en texte, sans débordement horizontal à 1 080 px", async ({ page }, info) => {
+  test.skip(info.project.name !== "tablette-paysage", "Largeur de 1 080 px");
+  await ouvrir(page, "stxt", info.project.name);
+  await page.locator('[data-outline-item="2"]').scrollIntoViewIfNeeded();
+  const m = await page.evaluate(() => {
+    const c = document.querySelector('[data-outline-item="2"]')!.getBoundingClientRect();
+    return { droit: c.right, fenetre: document.documentElement.clientWidth, defile: document.documentElement.scrollWidth > document.documentElement.clientWidth };
+  });
+  expect(m.droit, "le chant ne dépasse pas la fenêtre").toBeLessThanOrEqual(m.fenetre);
+  expect(m.defile, "pas de défilement horizontal").toBe(false);
+  await page.screenshot({ path: "test-results/t3-pupitre/tablette-paysage-zh-1080.png" });
+});
+
+test("captures T3 : panneau fermé et ouvert, en clair ; sombre à 1 440", async ({ page }, info) => {
+  const nom = info.project.name;
+  test.skip(volet(nom), pasGrand);
+  const dossier = "test-results/t3-pupitre";
+  await ouvrir(page, "sjp", nom);
+  await page.screenshot({ path: `${dossier}/${nom}-panneau-ferme-clair.png` });
+  await boutonRail(page).click();
+  await expect(page.getByRole("navigation", { name: /^(Sommaire|目录)$/ })).toBeVisible();
+  await page.screenshot({ path: `${dossier}/${nom}-panneau-ouvert-clair.png` });
+});
+
+test("capture T3 sombre : 1 440 px, panneau fermé puis ouvert", async ({ page }, info) => {
+  test.skip(info.project.name !== "ordinateur-1440", "Sombre : 1 440 seulement");
+  await ouvrir(page, "sjp", info.project.name, true);
+  await page.screenshot({ path: "test-results/t3-pupitre/ordinateur-1440-panneau-ferme-sombre.png" });
+  await boutonRail(page).click();
+  await page.screenshot({ path: "test-results/t3-pupitre/ordinateur-1440-panneau-ouvert-sombre.png" });
 });

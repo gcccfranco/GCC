@@ -406,6 +406,10 @@ test("éditeur : « Partition 简谱 » coché d'office ; « Paroles » s'écrit
   await fermerFeuille(page);
   await page.getByRole("button", { name: "Terminé" }).click();
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/setlists/${SETLIST_ID}`);
+  // Deux volets : l'historique est dans le bloc que déplie le titre de l'en-tête (T3 du lot exemples d'usage).
+  const titreDv = page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ });
+  await expect(page.getByRole("heading", { level: 1 }).first()).toBeAttached(); // la page est chargée
+  if (await titreDv.count()) await titreDv.click();
   await page.getByRole("button", { name: /Modifiée par Léa M\./ }).click();
   const historique = page.getByRole("dialog", { name: "Historique des modifications" });
   await expect(historique.getByText("一生爱你 joué sur les paroles")).toBeVisible();

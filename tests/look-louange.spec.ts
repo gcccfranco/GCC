@@ -169,11 +169,12 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           return { nom: el.getAttribute("aria-label") ?? el.textContent?.trim() ?? "", milieu: r.top + r.height / 2, haut: r.top, gauche: r.left, droite: r.right };
         }),
     );
-    expect(boites.map((b) => b.nom)).toEqual(["Crayon", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
+    const nomTitre = "高班, Afficher les détails de la setlist";
+    expect(boites.map((b) => b.nom)).toEqual([nomTitre, "Crayon", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
     const milieux = boites.map((b) => b.milieu);
     expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
-    const titre = (await enTete.getByRole("heading", { level: 1 }).boundingBox())!;
-    for (const b of boites) {
+    const titre = (await enTete.getByRole("button", { name: nomTitre }).boundingBox())!;
+    for (const b of boites.filter((b) => b.nom !== nomTitre)) {
       expect.soft(b.gauche, `${b.nom} ne passe pas sous la barre latérale`).toBeGreaterThanOrEqual(bord);
       expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
       expect.soft(b.gauche >= titre.x + titre.width || b.haut >= titre.y + titre.height, `${b.nom} ne passe pas sur le titre`).toBe(true);
