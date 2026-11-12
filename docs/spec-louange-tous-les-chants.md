@@ -98,13 +98,20 @@ https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue �
 - Un test : un chant ajouté qui a une idée d'harmonie montre le point en marge et la bande quand le réglage d'H8 est
   allumé. Rien à coder si H8 lit déjà les items par `songSlug` ; sinon le corriger là.
 
-## Questions restantes (proposition à chacune)
+## Questions tranchées
 
-1. **L'ajout est-il local ?** Je propose : oui, à cet appareil, le temps du mode louange, effacé à la fermeture. Un
-   musicien ne modifie pas la setlist d'un responsable depuis la scène ; un ajout partagé demanderait des droits, une
-   écriture Firestore et la synchronisation entre pupitres.
-2. **Comment retirer un ajout ?** Je propose : une action « Retirer » (44 px) sur sa ligne dans « Cette setlist »,
-   sans glissé caché ; c'est le seul moyen, et fermer le mode efface tout de toute façon.
+1. **Ajout local** : oui, à cet appareil, le temps du mode louange, effacé à la fermeture (Timothée, 12/11/2026 : « Oui »).
+2. **Retrait** : une action « Retirer » (44 px) sur sa ligne dans « Cette setlist », sans glissé (Timothée, 12/11/2026 : « oui »).
+
+## Question ouverte (Timothée, 12/11/2026)
+
+Timothée : « L'icône bibliothèque doit ouvrir juste la liste de tous les chants. L'icône de la setlist reste comme
+elle est. Est-ce que c'est mieux de fusionner les deux icônes pour éviter que ça fasse trop chargé dans la barre du
+haut ? » Deux formes, la réponse fixe TC-1 :
+- **Deux boutons** : Setlist inchangé (sans onglets) ; « Chants » n'ouvre que la liste de tous les chants. Au
+  téléphone, Repères passe dans Options.
+- **Un seul bouton (proposé)** : Setlist ouvre un menu à deux onglets « Cette setlist | Tous les chants », qui
+  rouvre sur le dernier onglet utilisé ; la barre reste celle d'aujourd'hui, Repères compris au téléphone.
 
 ## Avancement
 
