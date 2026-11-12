@@ -462,6 +462,27 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   à 820 px). `notation-accords` passe par un membre fictif et choisit par la barre ou par le menu. Tests :
   `barre-chant` + `notation-accords` 79 / 5 (2,7 min), puis `notation-accords` 38 / 0 (1,1 min).
   Prochain : H7-2, session neuve.
+- 12/11/2026 : **H7-2 faite, lot H7 fini** (session orchestratrice de H7-2 ; `/tranche` : executant, testeur, relecteur,
+  conseil ; puis regard). Porte 2 : `Contenu` pose la notation du compte (`useNotationDuCompte`, extrait de
+  `NotationAccordsProvider`) et la tonalité du panneau ; la grille d'un passage n'a plus qu'une ligne, touchable, en
+  couleur d'accord (lettres ou chiffres) ; les cartes avant → après perdent leur ligne de degrés ; dernier refrain,
+  chant suivant et idées de l'équipe suivent par `AccordTouchable`. Porte 1 : « Ensuite » replié et déplié (une seule
+  colonne d'accord, grille à trois colonnes) et « Ici » dans la notation choisie ; titre du panneau inchangé.
+  **Décisions déléguées (session H7-2, 12/11)** : la phrase de fonction (« Finit sur le 3m ») reste en degrés ; « Vers le
+  chant suivant » et l'approche d'une modulation se chiffrent dans la tonalité du chant en cours ; la grille en chiffres
+  passe par `chiffrerEtiquette` (« 1 – 2m7 ») au lieu de l'ancien résumé non touchable, et « Ensuite » / « Ici » aussi
+  (le regard avait vu « 2m » à côté de « 2m7 ») ; **un reste qui commence par des chiffres passe en exposant**
+  (`A7` → `5⁷`, `D2` → `1²` : collé au degré, il se lisait « 57 », « 12 » ; vaut aussi pour les partitions de H7-1) ;
+  la variante `nu` d'`AccordTouchable` prend la couleur de son parent (ses deux seuls usages sont ces lignes).
+  Corrigé hors lot : `retouches-usage-t1.spec.ts` attendait encore `text-sm` pour « Ne marche pas sur ce chant »
+  (passé en `text-xs` par H4-2, décision de la spec). Tests : tsc, lint (0 erreur) ; specs nommées 271 / 4 (6,1 min,
+  les 4 dans `retouches-usage-t1`) ; `notation-accords` 58 / 0 (1,5 min) ; `notation-accords` + `harmonie-porte1` 153 / 0
+  (2,9 min) ; `harmonie-colonne`, `-montrer`, `-setlist`, `retouches-usage-t1` 141 / 2 (3,7 min) : les 2 sont « tonalités
+  du réglage » (`retouches-usage-t1.spec.ts:49`), rouge aussi sur la base, instable, sans lien. Captures 390 à 1 440, FR et
+  中文, lettres et chiffres. Relevé par le regard, hors lot : noms des fiches en français dans l'interface chinoise (déjà
+  en attente), bas du panneau d'accord rogné à 1 180-1 440 px en FR, coupures de ligne des trajets de notes ;
+  `critique-design` non lancé (aucun signalement de design propre à la tranche). Non couvert par un test : « Ici » en
+  lettres transposées (capo). Suivant de la file : H8, qui attend AN et le pupitre.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 

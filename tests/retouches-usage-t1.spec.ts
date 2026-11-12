@@ -116,7 +116,7 @@ test.describe("zones de 44 px posées par le source (T1)", () => {
   contient(R, /\$\{TOUCHER_44\} flex h-8 items-center gap-1 rounded-full border border-border/, "« + section » : TOUCHER_44");
   contient(R, /\$\{TOUCHER_44\} flex h-8 items-center gap-1 rounded-full border border-dashed/, "« + Dernière phrase » : TOUCHER_44");
   contient(R, /\$\{TOUCHER_PILULE\} flex h-\[26px\]/, "Note, Nuance, Transition, Modulation : TOUCHER_PILULE");
-  contient("src/components/harmonie/HarmonieDuChant.tsx", /\$\{TOUCHER_44\} ml-auto text-sm/, "« Ne marche pas sur ce chant » : TOUCHER_44");
+  contient("src/components/harmonie/HarmonieDuChant.tsx", /\$\{TOUCHER_44\} ml-auto text-xs/, "« Ne marche pas sur ce chant » : TOUCHER_44");
   contient("src/app/setlists/[id]/_components/Sommaire.tsx", /\$\{TOUCHER_PILULE\} h-\[18px\]/, "pastilles de Sommaire : TOUCHER_PILULE");
   contient("src/app/setlists/[id]/_components/Sommaire.tsx", /relative mt-1\.5 flex flex-wrap gap-1\.5/, "pastilles de Sommaire : écart de 6 px");
   contient("src/components/moi/Apercus.tsx", /\$\{TOUCHER_44\} -mr-1 inline-flex/, "« Tout voir » : TOUCHER_44");

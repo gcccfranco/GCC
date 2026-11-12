@@ -24,7 +24,6 @@ import {
 } from "@/lib/firebase/harmonie";
 import { apercuDuChangement, cinqPremieres, type Suggestion } from "@/lib/harmonie/suggestions";
 import { harmonieDuChant, type AccordDuPassage, type Passage, type PassageAvecIdees } from "@/lib/harmonie/passages";
-import { chiffreDuDegre, degresDeLaSuite } from "@/lib/harmonie/degres";
 import { semitonesTo, transposeLabel } from "@/lib/transpose";
 import { idDeSection } from "@/lib/setlist/sectionOrigins";
 import { ficheDeLaTransition, transitionEntre } from "@/lib/harmonie/transitions";
@@ -38,6 +37,8 @@ import type { Fiche, Instrument } from "@/types/harmonie";
 import { ParagrapheFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
 import { useOuvrirAccord } from "@/components/accords/AccordsProvider";
+import { useNotationDuCompte } from "@/components/song/NotationAccordsProvider";
+import { NotationAccordsContext } from "@/lib/notationAccords";
 import { BoutonEcouter } from "@/components/harmonie/BoutonEcouter";
 
 type Props = {
@@ -179,13 +180,6 @@ function Colonne(props: Props & { titreId: string }) {
   );
 }
 
-/** « 4 – 5 » : les degrés d'une suite d'accords, en chiffres (décision du
- *  17/09/2026 : le degré s'écrit en petit à côté du nom de l'accord). */
-function degres(accords: string, tonalite: string): string {
-  const suite = degresDeLaSuite(accords.split(/\s*[–-]\s*/), tonalite);
-  return suite.length ? suite.map(chiffreDuDegre).join(" – ") : "";
-}
-
 type Bloc = {
   p: PassageAvecIdees;
   /** Les uid des reprises repliées dans ce bloc (le sien en premier). */
@@ -196,21 +190,23 @@ type Bloc = {
   equipe: Idee[];
 };
 
-/** La grille d'un passage : chiffres, lettres dessous, et les accords à écouter. */
+/** La grille d'un passage : une ligne d'accords (lettres ou chiffres selon la préférence) et les accords à écouter. */
 function grilleDuPassage(p: Passage) {
   const cle = (l: AccordDuPassage[]) => l.map((a) => a.chiffre).join(" ");
   if (p.boucle) {
     const suite = p.lignes.flat().filter((a, i, tous) => a.chiffre !== tous[i - 1]?.chiffre).slice(0, p.resume.length);
-    return { chiffres: p.resume.join(" "), lignes: [suite.map((a) => a.texte)] };
+    return { lignes: [suite.map((a) => a.texte)] };
   }
   const uniques = p.lignes.filter((l, i) => i === 0 || cle(l) !== cle(p.lignes[i - 1]));
-  return { chiffres: uniques.map(cle).join(" · "), lignes: uniques.map((l) => l.map((a) => a.texte)) };
+  return { lignes: uniques.map((l) => l.map((a) => a.texte)) };
 }
 
 function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage }: Props) {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
   const { fiches, chargement } = useCatalogue();
+  const notation = useNotationDuCompte();
+  const notationCtx = useMemo(() => ({ notation, tonalite }), [notation, tonalite]);
   // Nombre de réponses (réussies ou non) de getRejets et getIdees : 2 = tout est là.
   const [recus, setRecus] = useState(0);
   const [rejets, setRejets] = useState<Rejet[]>([]);
@@ -382,6 +378,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
   );
 
   return (
+    <NotationAccordsContext.Provider value={notationCtx}>
     <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-8">
       {!sansTitre && <p className="mb-3 text-sm text-muted-foreground">{titre}</p>}
       {blocs.some((b) => b.idees.length > 0) && (
@@ -393,7 +390,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
       <div className="space-y-5">
         {blocs.map((b) => {
           const { p } = b;
-          const { chiffres, lignes } = grilleDuPassage(p);
+          const { lignes } = grilleDuPassage(p);
           const { premieres, suite } = cinqPremieres(b.idees, instrument, 3);
           const montrees = deplies.includes(p.uid) ? [...premieres, ...suite] : premieres;
           const dernier = p.lignes.at(-1)?.at(-1);
@@ -413,20 +410,17 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                 {b.n > 1 && ` ×${b.n}`}
               </h3>
               {lignes.length > 0 && (
-                <>
-                  <p className="mt-1 text-base">
-                    <span className="font-chord font-semibold text-[var(--chord-color)]">{chiffres}</span>
-                    {p.boucle && <span className="ml-2 text-sm text-muted-foreground">{t("harmonie.boucle")}</span>}
-                  </p>
-                  <p className="font-chord text-sm text-muted-foreground">
+                <p className="mt-1 text-base">
+                  <span className="font-chord font-semibold text-[var(--chord-color)]">
                     {lignes.map((l, i) => (
                       <span key={i}>
                         {i > 0 && " · "}
                         <AccordTouchable etiquette={l.join(" – ")} visible variante="nu" />
                       </span>
                     ))}
-                  </p>
-                </>
+                  </span>
+                  {p.boucle && <span className="ml-2 text-sm text-muted-foreground">{t("harmonie.boucle")}</span>}
+                </p>
               )}
               <p className="mt-1 text-sm text-muted-foreground">
                 {t(`harmonie.fonction.${{ repos: "repos", "vers-refrain": "versRefrain", suspens: "suspens", "sans-accords": "sansAccords" }[p.fonction]}`, { x })}
@@ -453,13 +447,6 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                             <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.avant} visible /></span>
                             <span className="mx-1.5 text-muted-foreground">→</span>
                             <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.apres} visible /></span>
-                            {/* Le degré en petit dessous : la même idée se relit dans
-                                n'importe quelle tonalité. */}
-                            <span className="mt-0.5 block text-sm text-[var(--chord-color)]">
-                              <span className="whitespace-nowrap">{degres(apercu.avant, tonalite)}</span>
-                              {" → "}
-                              <span className="whitespace-nowrap">{degres(apercu.apres, tonalite)}</span>
-                            </span>
                           </p>
                         ) : (
                           // Les idées sans remplacement d'accords (tag, intro absente)
@@ -602,6 +589,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
         </section>
       )}
     </div>
+    </NotationAccordsContext.Provider>
   );
 }
 

@@ -48,8 +48,9 @@ const VISIBLE =
   "[-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-ring " +
   "[@media(hover:hover)]:hover:underline active:bg-[color-mix(in_srgb,currentColor_20%,transparent)]";
 
-// « nu » : une lettre grise sans fond ni gras, mais toujours touchable (cible de 44 px).
-const NU = REPOS.replace("before:h-10", "before:h-11").replace("before:min-w-8", "before:min-w-11") + " text-muted-foreground";
+// « nu » : sans fond ni gras propres, de la couleur de son parent (H7-2 : grille d'un passage, « Ensuite »),
+// mais toujours touchable (cible de 44 px).
+const NU = REPOS.replace("before:h-10", "before:h-11").replace("before:min-w-8", "before:min-w-11");
 
 export function AccordTouchable({
   etiquette,

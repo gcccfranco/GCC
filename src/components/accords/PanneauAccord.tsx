@@ -13,9 +13,11 @@ import { AccordTouchable } from "./AccordTouchable";
 import { LigneIci } from "./LigneIci";
 import type { HarmonieDuPanneau } from "./AccordsProvider";
 import { BoutonEcouter } from "@/components/harmonie/BoutonEcouter";
-import { chiffreDuDegre, degreDeLAccord } from "@/lib/harmonie/degres";
+import { chiffreDuDegre, chiffrerEtiquette, degreDeLAccord } from "@/lib/harmonie/degres";
 import { ensuite, notesGardeesEtMouvantes } from "@/lib/harmonie/suites";
 import { transposeChord } from "@/lib/transpose";
+import { useNotationDuCompte } from "@/components/song/NotationAccordsProvider";
+import { NotationAccordsContext } from "@/lib/notationAccords";
 import { DiagrammeGuitare, ClavierMains } from "@/components/harmonie/Diagrammes";
 import { positionsGuitare } from "@/lib/accords/guitare";
 import type { Accord } from "@/lib/accords/analyse";
@@ -103,6 +105,7 @@ function Fleches({
 function Ensuite({ accord, harmonie, capo, bulle }: { accord: string; harmonie: HarmonieDuPanneau; capo?: number; bulle: boolean }) {
   const { t } = useTranslation();
   const [ouvert, setOuvert] = useState(false);
+  const notation = useNotationDuCompte();
   const { tonalite } = harmonie;
   const degre = degreDeLAccord(accord, tonalite);
   if (!degre) return null;
@@ -125,18 +128,18 @@ function Ensuite({ accord, harmonie, capo, bulle }: { accord: string; harmonie: 
       >
         <span className="min-w-0 flex-1">
           {t("accords.ensuite")}{" "}
-          <span className="font-chord font-semibold text-[color:var(--chord-color)]">{lignes.map((l) => l.chiffre).join(" · ")}</span>
+          <span className="font-chord font-semibold text-[color:var(--chord-color)]">{lignes.map((l) => (notation === "chiffres" ? chiffrerEtiquette(l.accord, tonalite) : l.accord)).join(" · ")}</span>
         </span>
         <Fleche className="h-4 w-4 shrink-0" aria-hidden />
       </button>
       {ouvert && (
+        <NotationAccordsContext.Provider value={{ notation, tonalite }}>
         <ul data-ensuite="" className="mt-1 divide-y divide-border">
           {lignes.map((l) => {
             const notes = notesGardeesEtMouvantes(accord, l.accord);
             return (
-              <li key={l.chiffre} className={`grid items-center gap-x-2 py-1 text-sm ${bulle ? "grid-cols-[2.25rem_2.75rem_1fr_auto]" : "min-h-11 grid-cols-[2.75rem_3.5rem_1fr_auto]"}`}>
-                <span className="font-chord font-semibold text-[color:var(--chord-color)]">{l.chiffre}</span>
-                <span className="font-chord font-semibold"><AccordTouchable etiquette={l.accord} visible variante="nu" /></span>
+              <li key={l.chiffre} className={`grid items-center gap-x-2 py-1 text-sm ${bulle ? "grid-cols-[2.75rem_1fr_auto]" : "min-h-11 grid-cols-[3.5rem_1fr_auto]"}`}>
+                <span className="font-chord font-semibold text-[color:var(--chord-color)]"><AccordTouchable etiquette={l.accord} visible variante="nu" /></span>
                 <span className="min-w-0 text-muted-foreground">
                   {l.dansCeChant && <span className="block text-xs">{t("accords.dansCeChant")}</span>}
                   {notes && (
@@ -153,6 +156,7 @@ function Ensuite({ accord, harmonie, capo, bulle }: { accord: string; harmonie: 
             );
           })}
         </ul>
+        </NotationAccordsContext.Provider>
       )}
     </div>
   );
