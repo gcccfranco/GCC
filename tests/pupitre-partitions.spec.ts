@@ -312,6 +312,9 @@ const pasGrand = "Test propre aux grands écrans (tablette couchée, ordinateur,
 const enTeteDeux = (page: Page) => page.locator("[data-en-tete]");
 const boutonRail = (page: Page) => page.getByRole("button", { name: /^(Ouvrir|Fermer) le sommaire$/ });
 const numeroRail = (page: Page, n: number) => page.locator(`[data-rail-numero="${n}"]`);
+/** Le panneau du sommaire a fini de glisser (ni transform ni transition en cours). */
+const panneauPose = (page: Page) =>
+  expect.poll(() => page.evaluate(() => { const el = document.getElementById("sommaire-panneau"); return !!el && getComputedStyle(el).transform === "none"; })).toBe(true);
 const zonePartition = (page: Page) => page.locator("[class*='colonne-partition:920px']");
 
 const LARGEUR_ZONE: Record<string, number> = { "tablette-paysage": 892, ordinateur: 920 };
@@ -392,6 +395,7 @@ test("grand écran : Entrée sur le bouton du rail ouvre le panneau (focus dedan
   await expect(boutonRail(page)).toHaveAccessibleName(/^(Fermer le sommaire|收起目录)$/);
   await expect(nav.locator("[data-sommaire-chant][aria-current]")).toBeFocused();
   // Par-dessus la partition, collé au rail, fond opaque.
+  await panneauPose(page); // le panneau glisse en 400 ms : on mesure une fois posé
   const [r, p] = await Promise.all([boutonRail(page).boundingBox(), nav.locator("xpath=..").boundingBox()]);
   expect(p!.x, "collé au rail").toBeGreaterThanOrEqual(r!.x + r!.width - 1);
   expect(Math.abs(p!.width - 380), "panneau de 380 px").toBeLessThanOrEqual(5);
@@ -478,6 +482,7 @@ test("captures T3 : panneau fermé et ouvert, en clair ; sombre à 1 440", async
   await page.screenshot({ path: `${dossier}/${nom}-panneau-ferme-clair.png` });
   await boutonRail(page).click();
   await expect(page.getByRole("navigation", { name: /^(Sommaire|目录)$/ })).toBeVisible();
+  await panneauPose(page);
   await page.screenshot({ path: `${dossier}/${nom}-panneau-ouvert-clair.png` });
 });
 
@@ -486,7 +491,16 @@ test("capture T3 sombre : 1 440 px, panneau fermé puis ouvert", async ({ page }
   await ouvrir(page, "sjp", info.project.name, true);
   await page.screenshot({ path: "test-results/t3-pupitre/ordinateur-1440-panneau-ferme-sombre.png" });
   await boutonRail(page).click();
+  await panneauPose(page);
   await page.screenshot({ path: "test-results/t3-pupitre/ordinateur-1440-panneau-ouvert-sombre.png" });
+});
+
+test("capture T5 : 1 440 px, panneau du sommaire en plein glissement (rien ne passe sur le rail)", async ({ page }, info) => {
+  test.skip(info.project.name !== "ordinateur-1440", "1 440 seulement");
+  await ouvrir(page, "sjp", info.project.name);
+  await boutonRail(page).click();
+  await page.waitForTimeout(80);
+  await page.screenshot({ path: "test-results/t5-pupitre/ordinateur-1440-panneau-glisse.png" });
 });
 
 // ─── T4 : deux colonnes en rangées dès 1 000 px de zone, 简谱 jamais en colonne ───────────────────────────────────────
@@ -554,4 +568,168 @@ test("简谱 : l'image et son calque ont la même largeur, au plus 920 px, sans 
   expect(m.voisines, "aucune section à côté du scan").toBe(0);
   await zone.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `test-results/t4-pupitre/${info.project.name}-jianpu-clair.png` });
+});
+
+// T5 : le mouvement de la vue Partitions (docs/spec-exemples-usage.md § 4 « Mouvement »).
+const LECTURE_MOUVEMENT = `new Promise((fin) => {
+  const vu = { transforms: [], opacite150: false };
+  const fin_ = performance.now() + 1500;
+  const tour = () => {
+    const v = document.querySelector("[data-vue]");
+    if (v && v.style.transform) vu.transforms.push(v.style.transform);
+    if (document.getAnimations().some((a) => a.effect && a.effect.getKeyframes().some((k) => "opacity" in k) && a.effect.getTiming().duration === 150)) vu.opacite150 = true;
+    performance.now() < fin_ ? requestAnimationFrame(tour) : fin(vu);
+  };
+  tour();
+})`;
+const sourisBascule = (page: Page, nom: "Liste" | "Partitions") =>
+  page.getByTestId("bascule-vues").getByRole("button", { name: nom, exact: true });
+
+async function basculeEtLit(page: Page, nom: "Liste" | "Partitions") {
+  const lecture = page.evaluate(LECTURE_MOUVEMENT) as Promise<{ transforms: string[]; opacite150: boolean }>;
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+  await sourisBascule(page, nom).click();
+  return lecture;
+}
+
+async function etatFinal(page: Page, nom: "Liste" | "Partitions") {
+  await expect(sourisBascule(page, nom)).toHaveAttribute("aria-pressed", "true");
+  if (nom === "Partitions") {
+    await expect(page.locator("[data-outline-item]").first()).toBeVisible();
+    expect(page.url()).toContain("vue=partitions");
+  } else {
+    await expect(page.locator("[data-outline-item]")).toHaveCount(0);
+    expect(page.url()).not.toContain("vue=partitions");
+  }
+  await expect.poll(() => page.evaluate(() => (document.querySelector("[data-vue]") as HTMLElement).style.transform)).toBe("");
+}
+
+test.describe("T5 : toucher sur Liste | Partitions", () => {
+  test("téléphone et tablette debout : le toucher glisse la vue comme le geste (transform non nul), état final du geste", async ({ page }, info) => {
+    test.skip(!volet(info.project.name), pasVolet);
+    await ouvrir(page, "sjp", info.project.name);
+    for (const nom of ["Liste", "Partitions"] as const) {
+      const vu = await basculeEtLit(page, nom === "Liste" ? "Liste" : "Partitions");
+      expect(vu.transforms.length, `transform vu pendant la bascule vers ${nom}`).toBeGreaterThan(0);
+      await etatFinal(page, nom);
+    }
+  });
+
+  test.describe("mouvement réduit", () => {
+    test.use({ contextOptions: { reducedMotion: "reduce" } });
+    test("téléphone et tablette debout : aucun transform, fondu d'opacité de 150 ms, état final du geste", async ({ page }, info) => {
+      test.skip(!volet(info.project.name), pasVolet);
+      await ouvrir(page, "sjp", info.project.name);
+      for (const nom of ["Liste", "Partitions"] as const) {
+        const vu = await basculeEtLit(page, nom);
+        expect(vu.transforms, `aucun transform vers ${nom}`).toEqual([]);
+        expect(vu.opacite150, `fondu de 150 ms vers ${nom}`).toBe(true);
+        await etatFinal(page, nom);
+      }
+    });
+  });
+});
+
+for (const [id, chant] of [["sjp", "Hosanna"], ["szh", "一切歌颂赞美"]] as const) {
+  test(`téléphone et tablette debout : l'en-tête déplié se replie une fois sorti par le haut, sans décalage (${chant})`, async ({ page }, info) => {
+    test.skip(!volet(info.project.name), pasVolet);
+    await ouvrir(page, id, info.project.name);
+    const bouton = boutonDetails(page);
+    await bouton.click();
+    await expect(bouton).toHaveAttribute("aria-expanded", "true");
+    const haut = () => page.evaluate(() => document.querySelector("[data-outline-item] [data-section]")!.getBoundingClientRect().top);
+    // Défile par petits pas jusqu'au repli ; la section visible doit suivre le défilement sans saut.
+    let avant = await haut();
+    let replie = false;
+    for (let i = 0; i < 40 && !replie; i++) {
+      await page.mouse.wheel(0, 60);
+      await page.waitForTimeout(60);
+      const apres = await haut();
+      expect(Math.abs(apres - avant + 60), `pas ${i} : décalage de ${(apres - avant + 60).toFixed(1)} px`).toBeLessThanOrEqual(1.5);
+      avant = apres;
+      replie = (await bouton.getAttribute("aria-expanded")) === "false";
+    }
+    expect(replie, "l'en-tête s'est replié").toBe(true);
+    await expect(page.locator("#entete-setlist")).toBeHidden();
+    // La barre d'outils reste escamotée (le défilement de compensation ne la rappelle pas).
+    await page.waitForTimeout(300);
+    await expect(barre(page)).toHaveCSS("transform", /matrix\(1, 0, 0, 1, 0, -\d+/);
+    // Rouvert depuis le milieu de la page (barre revenue) : il se montre, il ne s'ouvre pas hors de l'écran.
+    await page.mouse.wheel(0, -60);
+    await expect(barre(page)).toHaveCSS("transform", /none|matrix\(1, 0, 0, 1, 0, 0\)/);
+    await bouton.click();
+    await expect(bouton).toHaveAttribute("aria-expanded", "true");
+    await expect.poll(() => page.evaluate(() => document.getElementById("entete-setlist")!.getBoundingClientRect().top)).toBeGreaterThanOrEqual(0);
+  });
+}
+
+test.describe("T5 : ressort du rail du sommaire", () => {
+  test("grand écran : le panneau glisse (transform intermédiaire) ; Échap avant 400 ms le referme depuis là, focus au bouton", async ({ page }, info) => {
+    test.skip(volet(info.project.name), pasGrand);
+    await ouvrir(page, "sjp", info.project.name);
+    const intermediaires: string[] = [];
+    await page.exposeFunction("noterTransform", (t: string) => intermediaires.push(t));
+    await page.evaluate(() => {
+      const tour = () => {
+        const el = document.getElementById("sommaire-panneau");
+        if (el) (window as unknown as { noterTransform: (t: string) => void }).noterTransform(getComputedStyle(el).transform);
+        requestAnimationFrame(tour);
+      };
+      tour();
+    });
+    await boutonRail(page).click();
+    await expect.poll(() => intermediaires.some((t) => t !== "none" && t !== "matrix(1, 0, 0, 1, 0, 0)")).toBe(true);
+    await panneauPose(page);
+    // Décalage horizontal du panneau (px) : 0 ouvert, -380 fermé.
+    const decalage = () =>
+      page.evaluate(() => {
+        const el = document.getElementById("sommaire-panneau");
+        return el ? new DOMMatrix(getComputedStyle(el).transform).m41 : null;
+      });
+    // Échap pendant la fermeture n'a rien à faire ; on ferme, puis on rouvre en pleine fermeture : le panneau repart de là où il est.
+    await page.keyboard.press("Escape");
+    await expect(boutonRail(page)).toHaveAttribute("aria-expanded", "false");
+    await expect(boutonRail(page)).toBeFocused();
+    await page.waitForTimeout(120);
+    const enFermeture = (await decalage())!;
+    expect(enFermeture, "en pleine fermeture").toBeLessThan(-5);
+    expect(enFermeture, "en pleine fermeture").toBeGreaterThan(-375);
+    await boutonRail(page).click();
+    const repris = (await decalage())!;
+    expect(repris, "rouvert depuis là, sans repartir du bord").toBeGreaterThan(-375);
+    await panneauPose(page);
+    // Échap pendant l'ouverture : il se referme depuis là, puis est retiré.
+    await boutonRail(page).click();
+    await expect(page.locator("#sommaire-panneau")).toHaveCount(0);
+    await boutonRail(page).click();
+    await page.waitForTimeout(100);
+    await page.keyboard.press("Escape");
+    await expect(boutonRail(page)).toHaveAttribute("aria-expanded", "false");
+    await expect(boutonRail(page)).toBeFocused();
+    await expect(page.locator("#sommaire-panneau")).toHaveCount(0);
+  });
+
+  test.describe("mouvement réduit", () => {
+    test.use({ contextOptions: { reducedMotion: "reduce" } });
+    test("grand écran : aucun transform, opacité animée, panneau ouvert puis fermé", async ({ page }, info) => {
+      test.skip(volet(info.project.name), pasGrand);
+      await ouvrir(page, "sjp", info.project.name);
+      await page.evaluate(() => {
+        (window as unknown as { vus: string[] }).vus = [];
+        const tour = () => {
+          const el = document.getElementById("sommaire-panneau");
+          if (el) (window as unknown as { vus: string[] }).vus.push(getComputedStyle(el).transform);
+          requestAnimationFrame(tour);
+        };
+        tour();
+      });
+      await boutonRail(page).click();
+      await expect(page.locator("#sommaire-panneau")).toHaveCSS("opacity", "1");
+      await boutonRail(page).click();
+      await expect(page.locator("#sommaire-panneau")).toHaveCount(0);
+      const vus = await page.evaluate(() => (window as unknown as { vus: string[] }).vus);
+      expect(vus.length).toBeGreaterThan(0);
+      expect(vus.filter((t) => t !== "none"), "aucun transform").toEqual([]);
+    });
+  });
 });

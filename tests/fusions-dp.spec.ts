@@ -338,9 +338,9 @@ test("idées d'harmonie : chaque chant d'une fusion a les siennes, mélangée ou
   await ouvrirPartitions(page);
 
   const suite = page.locator('[data-outline-item="2"]');
-  await expect(suite.getByRole("button", { name: /Idées d'harmonie/ })).toHaveCount(2);
+  await expect(suite.getByRole("button", { name: /^Harmonie · / })).toHaveCount(2);
   const mixte = page.locator('[data-outline-item="3"]');
-  await mixte.getByRole("button", { name: "Idées d'harmonie · 一生爱你" }).click();
+  await mixte.getByRole("button", { name: "Harmonie · 一生爱你" }).click();
   const feuille = page.locator("[data-idees-harmonie]");
   await expect(feuille).toBeVisible();
   await expect(feuille).toContainText("一生爱你");

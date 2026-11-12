@@ -128,6 +128,34 @@ export function useSwipeViews(options: Options) {
     anim.current = requestAnimationFrame(pas);
   };
 
+  const retour = () => {
+    if (x.current !== 0) ressort(0, 0);
+  };
+
+  const valider = (sens: -1 | 1, vitesse: number, reduit: boolean) => {
+    const o = opts.current;
+    const aller = sens < 0 ? o.versGauche : o.versDroite;
+    if (!aller) return retour();
+    entree.current = { sens, vitesse, fondu: reduit };
+    // Si la vue ne change pas (rien à ouvrir), elle revient.
+    window.clearTimeout(attente.current);
+    attente.current = window.setTimeout(() => {
+      if (!entree.current) return;
+      entree.current = null;
+      retour();
+    }, 1000);
+    if (reduit) return aller();
+    const largeur = window.innerWidth;
+    ressort(sens * largeur, vitesse, aller, (pos) => Math.abs(pos) >= largeur * 0.98);
+  };
+
+  /** Bascule au toucher d'un bouton : même chemin que le geste validé (la vue part, la nouvelle arrive). */
+  const glisser = (sens: -1 | 1) => {
+    const o = opts.current;
+    if (!o.actif || entree.current) return (sens < 0 ? o.versGauche : o.versDroite)?.();
+    valider(sens, 0, window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  };
+
   // La nouvelle vue est là : elle arrive du bord opposé au geste (ou en fondu).
   useLayoutEffect(() => {
     const e = entree.current;
@@ -136,7 +164,7 @@ export function useSwipeViews(options: Options) {
     entree.current = null;
     window.clearTimeout(attente.current);
     if (e.fondu) {
-      el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: "ease-out" });
+      el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: "ease-out" });
       return;
     }
     const largeur = window.innerWidth;
@@ -162,27 +190,6 @@ export function useSwipeViews(options: Options) {
       reduit: boolean;
       hist: { x: number; t: number }[];
     } | null = null;
-
-    const retour = () => {
-      if (x.current !== 0) ressort(0, 0);
-    };
-
-    const valider = (sens: -1 | 1, vitesse: number, reduit: boolean) => {
-      const o = opts.current;
-      const aller = sens < 0 ? o.versGauche : o.versDroite;
-      if (!aller) return retour();
-      entree.current = { sens, vitesse, fondu: reduit };
-      // Si la vue ne change pas (rien à ouvrir), elle revient.
-      window.clearTimeout(attente.current);
-      attente.current = window.setTimeout(() => {
-        if (!entree.current) return;
-        entree.current = null;
-        retour();
-      }, 1000);
-      if (reduit) return aller();
-      const largeur = window.innerWidth;
-      ressort(sens * largeur, vitesse, aller, (pos) => Math.abs(pos) >= largeur * 0.98);
-    };
 
     // Après un glissement, le doigt levé ne touche pas la ligne ou le lien de départ. Le
     // clic de ce doigt, s'il vient, suit aussitôt son lâcher : le toucher suivant (un
@@ -284,4 +291,6 @@ export function useSwipeViews(options: Options) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- les rappels sont lus dans `opts`
   }, [options.actif]);
+
+  return { glisser };
 }

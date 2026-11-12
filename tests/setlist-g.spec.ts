@@ -339,6 +339,9 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await lienLigne(page, 2).click();
     await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
     await boutonVue(page, "Liste").click();
+    // La vue glisse (T5) : on attend la Liste posée avant de toucher le Crayon.
+    await expect(page.locator("[data-outline-item]")).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => (document.querySelector("[data-vue]") as HTMLElement | null)?.style.transform ?? "")).toBe("");
     await basculerMode(page);
     await expect(page.getByText("Crayon : touche un accord ou un mot pour le retoucher.")).toBeVisible();
     expect(params(page)).toEqual({ vue: "partitions", chant: "2" });

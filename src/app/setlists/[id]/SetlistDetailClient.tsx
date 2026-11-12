@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronDown, Pencil, SlidersHorizontal, PenLine, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
@@ -707,7 +707,7 @@ export function SetlistDetailClient() {
 
   // Glissement entre les deux vues (Q13) : la Liste à gauche, les Partitions à
   // droite ; même chemin que la bascule (historique, chant lu, retour à la ligne).
-  useSwipeViews({
+  const { glisser } = useSwipeViews({
     zone: zoneRef,
     vue: vueRef,
     cle: view,
@@ -715,6 +715,50 @@ export function SetlistDetailClient() {
     versDroite: view === "partitions" ? versListe : undefined,
     actif: !!setlist && setlist.items.length > 0 && !performanceMode && !deuxVolets,
   });
+
+  // Toucher sur Liste | Partitions : le même glissement que le geste (si la vue est déjà la bonne, comportement d'avant).
+  const basculerListe = () => { marquerBascule("liste"); if (view === "partitions") glisser(1); else versListe(); };
+  const basculerPartitions = () => { marquerBascule("partitions"); if (view === "liste") glisser(-1); else versPartitions(); };
+
+  // En-tête déplié : il défile avec la page ; une fois sorti par le haut il se replie, défilement compensé (rien ne bouge).
+  const repli = useRef<{ suivant: Element; avant: number } | null>(null);
+  useEffect(() => {
+    if (!enteteOuvert || !(compacte || deuxVolets)) return;
+    let image = 0;
+    const onScroll = () => {
+      if (image) return;
+      image = requestAnimationFrame(() => {
+        image = 0;
+        const el = document.getElementById(deuxVolets ? "entete-setlist-dv" : "entete-setlist");
+        const suivant = el?.nextElementSibling;
+        if (!el || !suivant || el.getBoundingClientRect().bottom > 0) return;
+        repli.current = { suivant, avant: suivant.getBoundingClientRect().top };
+        setEnteteOuvert(false);
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(image);
+      repli.current = null;
+    };
+  }, [enteteOuvert, compacte, deuxVolets]);
+  useLayoutEffect(() => {
+    const r = repli.current;
+    if (enteteOuvert) {
+      // Déplié alors que la page est défilée : il serait au-dessus de l'écran (et replié au défilement suivant), on le montre.
+      const el = document.getElementById(deuxVolets ? "entete-setlist-dv" : "entete-setlist");
+      if ((compacte || deuxVolets) && el && el.getBoundingClientRect().top < 0) window.scrollTo({ top: 0, behavior: "instant" });
+      return;
+    }
+    if (!r) return;
+    repli.current = null;
+    const racine = document.documentElement;
+    racine.setAttribute("data-defilement-compense", "");
+    window.scrollTo({ top: window.scrollY + (r.suivant.getBoundingClientRect().top - r.avant), behavior: "instant" });
+    requestAnimationFrame(() => requestAnimationFrame(() => racine.removeAttribute("data-defilement-compense")));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seul le dépli ou le repli compte, pas un changement de vue
+  }, [enteteOuvert]);
 
   // Amène la vue affichée à sa cible, une fois les partitions là.
   useEffect(() => {
@@ -2223,7 +2267,7 @@ export function SetlistDetailClient() {
 
                   {/* Bascule « Liste | Partitions » dans la barre (vue Partitions, un volet) */}
                   {compacte && setlist.items.length > 0 && (
-                    <BasculeVues dansBarre view={view} versListe={() => { marquerBascule("liste"); versListe(); }} versPartitions={() => { marquerBascule("partitions"); versPartitions(); }} />
+                    <BasculeVues dansBarre view={view} versListe={basculerListe} versPartitions={basculerPartitions} />
                   )}
 
                   {/* Mode Louange — action principale en live */}
@@ -2378,8 +2422,8 @@ export function SetlistDetailClient() {
                 scrollVisible={scrollVisible}
                 toolbarH={toolbarH}
                 view={view}
-                versListe={() => { marquerBascule("liste"); versListe(); }}
-                versPartitions={() => { marquerBascule("partitions"); versPartitions(); }}
+                versListe={basculerListe}
+                versPartitions={basculerPartitions}
               />
             )}
 

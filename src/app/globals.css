@@ -196,6 +196,8 @@
 
 @layer base {
   :root {
+    /* Ressort critique (sans rebond), réponse 0,35 s, échantillonné sur 400 ms. */
+    --ressort-sans-rebond: linear(0, 0.075 6.25%, 0.227 12.5%, 0.39 18.75%, 0.536 25%, 0.656 31.25%, 0.75 37.5%, 0.821 43.75%, 0.873 50%, 0.911 56.25%, 0.938 62.5%, 0.957 68.75%, 0.971 75%, 0.98 81.25%, 0.986 87.5%, 0.991 93.75%, 1);
     /* Zone sûre du haut : 0 partout, SAUF pour une icône installée pendant les quelques
        heures du 21/09/2026 où la page montait sous la barre d'état. iOS fige ce réglage
        à l'installation et ne le relit jamais : ces appareils passent donc toujours sous
@@ -375,6 +377,14 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Panneau du sommaire (rail, grand écran) : glisse en ressort ; mouvement réduit : fondu de 150 ms, sans transform. */
+.sommaire-panneau { transform: translateX(-100%); transition: transform 400ms var(--ressort-sans-rebond); }
+.sommaire-panneau[data-ouvert] { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .sommaire-panneau { transform: none; opacity: 0; transition: opacity 150ms linear !important; }
+  .sommaire-panneau[data-ouvert] { opacity: 1; }
 }
 
 @layer base {

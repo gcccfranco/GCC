@@ -13,6 +13,9 @@ export function useScrollDirection() {
       const delta = currentY - lastY.current;
       lastY.current = currentY;
 
+      // Défilement de compensation (repli de l'en-tête, rien ne bouge à l'écran) : la barre ne réagit pas.
+      if (document.documentElement.hasAttribute("data-defilement-compense")) return;
+
       // Défilement piloté (index A–Z sous le doigt) : les barres restent en
       // place, sinon elles se cachent et reviennent à chaque changement de sens.
       if (document.documentElement.hasAttribute("data-nav-lock")) {

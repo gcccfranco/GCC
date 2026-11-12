@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ComponentProps, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ComponentProps, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { TOUCHER_PILULE } from "@/lib/toucher44";
 import { Check, Copy, ListOrdered } from "lucide-react";
@@ -155,11 +155,26 @@ export function Sommaire({
  *  ouvrir le panneau ; Échap, un toucher en dehors ou un choix dans le panneau le ferment. */
 export function RailSommaire({ className, style, ...sommaire }: ComponentProps<typeof Sommaire>) {
   const { t } = useTranslation();
-  const [ouvert, setOuvert] = useState(false);
+  // Phases du panneau : monté pour toutes sauf « ferme » ; « entree » le monte en position fermée, puis « ouvert » le fait glisser.
+  const [phase, setPhase] = useState<"ferme" | "entree" | "ouvert" | "fermeture">("ferme");
+  const ouvert = phase === "entree" || phase === "ouvert";
+  const ouvrir = () => setPhase((p) => (p === "fermeture" ? "ouvert" : p === "ferme" ? "entree" : p));
+  const fermer = () => setPhase((p) => (p === "entree" || p === "ouvert" ? "fermeture" : p));
   const boutonRef = useRef<HTMLButtonElement>(null);
   const panneauRef = useRef<HTMLDivElement>(null);
   const { items, songsMap, current, onGo } = sommaire;
   const chants = [...items].sort((a, b) => a.position - b.position).filter((item) => item.type !== "transition");
+
+  useLayoutEffect(() => {
+    if (phase !== "entree") return;
+    panneauRef.current?.getBoundingClientRect(); // reflow : la position fermée est peinte avant la transition
+    setPhase("ouvert");
+  }, [phase]);
+  useEffect(() => {
+    if (phase !== "fermeture") return;
+    const minuteur = window.setTimeout(() => setPhase("ferme"), 400);
+    return () => window.clearTimeout(minuteur);
+  }, [phase]);
 
   useEffect(() => {
     if (!ouvert) return;
@@ -168,11 +183,11 @@ export function RailSommaire({ className, style, ...sommaire }: ComponentProps<t
       ?? panneauRef.current?.querySelector<HTMLElement>("[data-sommaire-chant]"))?.focus({ preventScroll: true });
     const dehors = (e: PointerEvent) => {
       const cible = e.target as Node;
-      if (!panneauRef.current?.contains(cible) && !boutonRef.current?.contains(cible)) setOuvert(false);
+      if (!panneauRef.current?.contains(cible) && !boutonRef.current?.contains(cible)) fermer();
     };
     const echap = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      setOuvert(false);
+      fermer();
       boutonRef.current?.focus({ preventScroll: true });
     };
     document.addEventListener("pointerdown", dehors);
@@ -194,7 +209,7 @@ export function RailSommaire({ className, style, ...sommaire }: ComponentProps<t
           aria-controls="sommaire-panneau"
           aria-label={libelle}
           title={libelle}
-          onClick={() => setOuvert((o) => !o)}
+          onClick={ouvert ? fermer : ouvrir}
           className="flex h-11 w-14 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ListOrdered className="h-5 w-5" aria-hidden />
@@ -225,18 +240,26 @@ export function RailSommaire({ className, style, ...sommaire }: ComponentProps<t
           );
         })}
       </div>
-      {ouvert && (
-        <div ref={panneauRef} id="sommaire-panneau" className="absolute left-full top-0 z-10 h-full w-[380px] border-r border-border bg-background shadow-xl">
+      {phase !== "ferme" && (
+        <div className="absolute left-full top-0 z-10 h-full w-[380px]" style={{ clipPath: "inset(0 -48px 0 0)" }}>
+        <div
+          ref={panneauRef}
+          id="sommaire-panneau"
+          inert={phase === "fermeture"}
+          data-ouvert={phase === "ouvert" ? "" : undefined}
+          className="sommaire-panneau h-full w-full border-r border-border bg-background shadow-xl"
+        >
           <Sommaire
             {...sommaire}
             onGo={(position, uid) => {
-              setOuvert(false);
+              fermer();
               onGo(position, uid);
               // Le focus ne tombe pas sur la page : il revient au bouton du rail.
               boutonRef.current?.focus({ preventScroll: true });
             }}
             className="h-full"
           />
+        </div>
         </div>
       )}
     </div>

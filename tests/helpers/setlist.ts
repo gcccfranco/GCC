@@ -19,6 +19,10 @@ const partitions = (page: Page) => page.locator("[data-outline-item]");
 /** La page a lu la setlist : la bascule ou les partitions sont là. Attente
  *  bornée par le test seul, comme le clic qu'elle remplace (le premier passage
  *  compile la page sous `next dev`). */
+/** Le toucher glisse la vue (T5) : on rend la main une fois posée, sans transform. */
+const vuePosee = (page: Page) =>
+  expect.poll(() => page.evaluate(() => (document.querySelector("[data-vue]") as HTMLElement | null)?.style.transform ?? "")).toBe("");
+
 async function setlistAffichee(page: Page, bouton: Locator) {
   await bouton.or(partitions(page)).first().waitFor();
 }
@@ -30,6 +34,7 @@ export async function ouvrirPartitions(page: Page): Promise<void> {
   await setlistAffichee(page, bouton);
   if (await bouton.isVisible()) await bouton.click();
   await partitions(page).first().waitFor();
+  await vuePosee(page);
 }
 
 /** Revient à la Liste : touche « Liste » si la bascule est là. En deux volets
@@ -40,6 +45,7 @@ export async function ouvrirListe(page: Page): Promise<void> {
   if (!(await bouton.isVisible())) return;
   await bouton.click();
   await expect(partitions(page)).toHaveCount(0);
+  await vuePosee(page);
 }
 
 /** Ouvre les réglages d'affichage (ordre joué, sections uniques, structure seule,
@@ -92,7 +98,14 @@ export async function enDeuxVolets(page: Page): Promise<boolean> {
  *  dehors ou Échap : à rouvrir avant chaque geste dans le sommaire. Rend la nav « Sommaire ». */
 export async function ouvrirSommaire(page: Page): Promise<Locator> {
   const nav = page.getByRole("navigation", { name: /^(Sommaire|目录)$/ });
-  if (!(await nav.isVisible())) await page.getByRole("button", { name: /^(Ouvrir le sommaire|展开目录)$/ }).click();
+  // Le panneau qui se ferme est encore visible (400 ms) mais inerte : le bouton dit « Ouvrir », on le clique.
+  const ouvrir = page.getByRole("button", { name: /^(Ouvrir le sommaire|展开目录)$/ });
+  if (!(await nav.isVisible()) || (await ouvrir.isVisible())) await ouvrir.click();
   await expect(nav).toBeVisible();
+  // Le panneau glisse en ressort (T5) : on rend la main une fois posé.
+  await expect.poll(() => page.evaluate(() => {
+    const el = document.getElementById("sommaire-panneau");
+    return !el || (el.hasAttribute("data-ouvert") && getComputedStyle(el).transform === "none");
+  })).toBe(true);
   return nav;
 }
