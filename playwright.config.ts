@@ -36,6 +36,8 @@ const SPECS_GRAND_ECRAN = [
   /ma-partition-partage\.spec\.ts/,
   // Ma partition, MP-5 (docs/spec-ma-partition.md) : traits accrochés au texte du mode louange, qui suivent le mot quand la page se recompose (quatre dispositions), rubrique « Partition » de « Je joue ».
   /ma-partition-traits\.spec\.ts/,
+  // Annotations façon forScore, AN-3a (docs/spec-mode-louange-forscore-2.md) : la barre d'annotation attachée à la place de la barre de titre (deux barres au téléphone) sur les quatre dispositions.
+  /annotations-forscore\.spec\.ts/,
   // Lot pupitre, T1 (docs/spec-exemples-usage.md) : partitions pleine largeur en volet unique, vue Liste à 720 px, étiquettes de section, 简谱 ; deux volets inchangés.
   /pupitre-partitions\.spec\.ts/,
   // Exemples d'usage, T6 (docs/spec-exemples-usage.md) : feuille d'équipe (champ d'ajout en tête, barre collée) sur les quatre dispositions.

@@ -820,7 +820,23 @@
       "clearAll": "Tout effacer",
       "zoomIn": "Zoomer",
       "zoomOut": "Dézoomer",
-      "resetZoom": "Revenir à 100 %"
+      "resetZoom": "Revenir à 100 %",
+      "redo": "Rétablir",
+      "done": "Terminé",
+      "tools": "Outils",
+      "more": "Plus",
+      "shortcuts": "Raccourcis",
+      "loupe": "Loupe",
+      "handle": "Poignée",
+      "prevPage": "Page précédente",
+      "nextPage": "Page suivante",
+      "pageCourte": "p. {{n}}/{{total}}",
+      "saved": "Enregistré",
+      "pending": "En attente",
+      "loading": "Chargement…",
+      "clearConfirmTitle": "Effacer mes traits de cette page ?",
+      "clearConfirmBody": "Tu pourras les rendre avec Annuler.",
+      "eraserSize": "Taille de la gomme"
     }
   },
   "notifications": {

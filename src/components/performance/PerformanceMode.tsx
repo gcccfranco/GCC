@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { langAccent } from "./langAccent";
 import { BarreHaut, ICONES_ROLE } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
+import { BarreAnnotation } from "./BarreAnnotation";
 import { MenuLouange, type MenuId } from "./MenuLouange";
 import { LigneFeuilleDeRoute } from "./FeuilleDeRoute";
 import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo, LignesTempo, TitreRubrique, VALEUR, type ListeSetlistsMenu } from "./ContenusMenus";
@@ -36,8 +37,10 @@ import { TempoPartition } from "@/components/song/NoteNoire";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { dpOrigin } from "@/lib/setlist/dp";
-import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
-import { ANCIEN_RAPPEL, type AnnotationData, type Stroke } from "@/lib/annotations/strokes";
+import { AnnotationCanvas, StrokesLayer, COLORS, MAX_ZOOM, ZOOM_STEP, clampPan } from "./AnnotationCanvas";
+import { ANCIEN_RAPPEL, type AnnotationData, type Stroke, type StrokeTool } from "@/lib/annotations/strokes";
+import { annuler as annulerHistorique, historiqueVide, noter, peutAnnuler, peutRetablir, retablir as retablirHistorique, type Historique } from "@/lib/annotations/historique";
+import { useConfirmer } from "@/components/layout/Confirmer";
 import { libelleLecture } from "@/components/partition/MenuJeLis";
 import type { Lecture, Marques } from "@/lib/partition/lecture";
 import type { Trait } from "@/types/partition";
@@ -405,6 +408,8 @@ interface PerformanceModeProps {
   chantsCharges?: Record<string, boolean>;
   /** Change quand une écriture de traits échoue : l'écran revient à l'état enregistré. */
   echecTraits?: number;
+  /** Des traits n'ont pas pu s'écrire et attendent le retour du réseau (file locale) : la barre du Crayon dit « En attente ». */
+  traitsEnAttente?: boolean;
   /** Menu Setlist, « ‹ Toutes mes setlists » : lit les setlists à venir (appelée à l'ouverture du menu) ; absente = pas de ligne. */
   chargerToutesSetlists?: () => Promise<ListeSetlistsMenu>;
   /** Ouvre cette setlist en mode louange (la page change de setlist). */
@@ -433,6 +438,7 @@ export function PerformanceMode({
   onTraitsChange,
   chantsCharges,
   echecTraits = 0,
+  traitsEnAttente = false,
   chargerToutesSetlists,
   onOuvrirSetlist,
   onClose,
@@ -490,6 +496,12 @@ export function PerformanceMode({
   // + déplacement. Possédée ici car elle agrandit aussi le texte (transform CSS).
   const [annotZoom, setAnnotZoom] = useState(1);
   const [annotPan, setAnnotPan] = useState({ x: 0, y: 0 });
+  // Outils du Crayon (barre d'annotation) : la gomme est un interrupteur à part, l'outil de trait se garde dessous.
+  const [outilCrayon, setOutilCrayon] = useState<StrokeTool>("pen");
+  const [gommeCrayon, setGommeCrayon] = useState(false);
+  const [couleurCrayon, setCouleurCrayon] = useState(COLORS[0]);
+  const [tailleCrayon, setTailleCrayon] = useState(1);
+  const [tailleGomme, setTailleGomme] = useState(1);
   // Barre visible à la toute première ouverture du mode sur l'appareil, masquée ensuite (drapeau posé par l'effet ci-dessous).
   const [showChrome, setShowChrome] = useState(() => !barreDejaVue());
   // FS-B : un seul menu ouvert à la fois ; lu par les trois gardes (toucher, clavier, Échap). `popoverRef` : la valeur
@@ -797,7 +809,8 @@ export function PerformanceMode({
     ro.observe(haut, { box: "border-box" });
     ro.observe(bas, { box: "border-box" });
     return () => ro.disconnect();
-  }, []);
+    // Le Crayon remplace les barres (autres éléments, mêmes refs) : on les observe de nouveau.
+  }, [annotateMode, ecran.largeur < 768]); // eslint-disable-line react-hooks/exhaustive-deps
   const tapStart = useRef<{ x: number; y: number; time: number; pastille?: boolean } | null>(null);
 
   // Annotations vectorielles de la page courante (toujours chargées, pas
@@ -1341,9 +1354,59 @@ export function PerformanceMode({
     }
     if (!touches.size) return;
     if (neufs && user && !horsLigne) for (let k = 0; k < neufs; k++) compter("cmd.chant.annoter");
-    setMiensLocaux((m) => ({ ...m, ...Object.fromEntries([...touches].map((slug) => [slug, suivants[slug]])) }));
-    for (const slug of touches) onTraitsChange?.(slug, suivants[slug]);
+    // Une gomme qui glisse est une seule action par chant : un chant atteint plus tard dans le même geste est noté à son tour.
+    const aNoter = gommeCrayon ? [...touches].filter((slug) => !gesteNote.current.has(slug)) : [...touches];
+    if (aNoter.length) poserHistorique(noter(historiqueRef.current, Object.fromEntries(aNoter.map((slug) => [slug, actuels[slug]?.miens ?? []]))));
+    for (const slug of touches) gesteNote.current.add(slug);
+    setDernierSlugTrace([...touches][0]);
+    appliquerTraits(Object.fromEntries([...touches].map((slug) => [slug, suivants[slug]])));
   };
+  // Annuler / Rétablir / Tout effacer (AN-3a) : un historique par chant (src/lib/annotations/historique.ts), gardé tant que le mode louange est ouvert.
+  const confirmer = useConfirmer();
+  const [historique, setHistorique] = useState<Historique>(historiqueVide);
+  const historiqueRef = useRef(historique);
+  const poserHistorique = (h: Historique) => { historiqueRef.current = h; setHistorique(h); };
+  // Un échec d'écriture ou un autre compte efface mes traits locaux : leur historique part avec eux.
+  useEffect(() => { historiqueRef.current = historiqueVide(); setHistorique(historiqueVide()); }, [uid, echecTraits]);
+  const [dernierSlugTrace, setDernierSlugTrace] = useState<string | null>(null);
+  const gesteNote = useRef(new Set<string>());
+  const appliquerTraits = (suivants: Record<string, Trait[]>) => {
+    // Mis à jour tout de suite : deux ⌘Z avant le rendu suivant lisent le bon état.
+    const avant = traitsChantsRef.current;
+    traitsChantsRef.current = { ...avant, ...Object.fromEntries(Object.entries(suivants).map(([slug, l]) => [slug, { miens: l, autres: avant[slug]?.autres ?? [] }])) };
+    setMiensLocaux((m) => ({ ...m, ...suivants }));
+    for (const [slug, l] of Object.entries(suivants)) onTraitsChange?.(slug, l);
+  };
+  const slugsPage = [...new Set(currentPageIndices.map((i) => { const b = blocks[i]; return b && "songSlug" in b ? b.songSlug : undefined; }).filter((x): x is string => !!x))];
+  // Le chant visé : celui où l'on a tracé en dernier s'il est sur la page affichée (deux chants à l'écran), sinon celui de la page.
+  const slugVise = dernierSlugTrace && slugsPage.includes(dernierSlugTrace) ? dernierSlugTrace : slugAnnote;
+  const defaireCrayon = (sens: "annuler" | "retablir") => {
+    if (!slugVise) return;
+    const miens = Object.fromEntries(Object.entries(traitsChantsRef.current).map(([slug, v]) => [slug, v.miens]));
+    const r = (sens === "annuler" ? annulerHistorique : retablirHistorique)(historiqueRef.current, slugVise, miens);
+    if (!r) return;
+    poserHistorique(r.h);
+    appliquerTraits(r.rendus);
+  };
+  const toutEffacer = async () => {
+    const avecTraits = (slugs: string[]) => slugs.filter((slug) => (traitsChantsRef.current[slug]?.miens.length ?? 0) > 0);
+    if (!avecTraits(slugsPage).length) return;
+    if (!(await confirmer({ titre: t("performance.tools.clearConfirmTitle"), texte: t("performance.tools.clearConfirmBody"), action: t("performance.tools.clearAll"), destructif: true }))) return;
+    const concernes = avecTraits(slugsPage);
+    if (!concernes.length) return;
+    poserHistorique(noter(historiqueRef.current, Object.fromEntries(concernes.map((slug) => [slug, traitsChantsRef.current[slug].miens]))));
+    setDernierSlugTrace(concernes[0]);
+    appliquerTraits(Object.fromEntries(concernes.map((slug) => [slug, []])));
+  };
+  // Loupe par les boutons de la barre (le pincer reste au canvas) : zoom autour du centre de l'écran.
+  const zoomerPar = (delta: number) => {
+    const z = Math.min(MAX_ZOOM, Math.max(1, Math.round((annotZoom + delta * ZOOM_STEP) * 10) / 10));
+    const x = window.innerWidth / 2;
+    const y = window.innerHeight / 2;
+    setAnnotZoom(z);
+    setAnnotPan(clampPan(z, { x: x - ((x - annotPan.x) / annotZoom) * z, y: y - ((y - annotPan.y) / annotZoom) * z }));
+  };
+  const etatTraits = slugAnnote && chantsCharges?.[slugAnnote] === false ? "chargement" : traitsEnAttente ? "en-attente" : "enregistre";
   // Un seul bandeau : celui de la taille (il a un bouton qui règle le problème) passe avant.
   const alerteComposition = !!user && !annotateMode && showAnnotations && ancienneCompositionTraits && !alerteAnnotations;
 
@@ -1438,6 +1501,12 @@ export function PerformanceMode({
       const cible = e.target instanceof HTMLElement ? e.target : null;
       // Champs de texte : toutes les touches leur reviennent. Le curseur de page (range) garde Échap.
       if (cible instanceof HTMLTextAreaElement || (cible instanceof HTMLInputElement && cible.type !== "range")) return;
+      // Crayon : ⌘Z / Ctrl+Z annule, ⇧⌘Z / Ctrl+Y rétablit (les deux combinaisons partout).
+      if (annotateMode && !cible?.closest("[role=alertdialog]") && (e.metaKey || e.ctrlKey) && !e.altKey && (e.key.toLowerCase() === "z" || e.key.toLowerCase() === "y")) {
+        e.preventDefault();
+        defaireCrayon(e.key.toLowerCase() === "z" && !e.shiftKey ? "annuler" : "retablir");
+        return;
+      }
       if (e.key !== "Escape") {
         // Curseur de page, feuilles et sommaire ouverts : flèches, PageUp/Down et Espace leur appartiennent.
         if (cible instanceof HTMLInputElement) return;
@@ -1693,6 +1762,37 @@ export function PerformanceMode({
   const apercu = isLastPageOfSong && nextEntry ? null : apercuPossible;
   // Les calques d'annotation ne couvrent pas la bande (bas de page + 16 px de marge + sab).
   const rogneBas = apercuPossible ? `calc(${(APERCU_H + 16) * fontScale}px + var(--sab, 0px))` : undefined;
+  // Crayon : l'encre ne passe pas sur les repères de section (pastilles, lettres de Scène). Leurs rectangles écran
+  // et la bande rognée du bas (en px : un path() ne prend pas de calc) se mesurent au rendu de page, à la loupe et au redimensionnement.
+  const [troues, setTroues] = useState<{ rects: number[][]; bas: number }>({ rects: [], bas: 0 });
+  useLayoutEffect(() => {
+    const racine = contentAreaRef.current;
+    if (!annotateMode || !racine) { setTroues((v) => (v.rects.length || v.bas ? { rects: [], bas: 0 } : v)); return; }
+    const mesurer = () => {
+      const rects = Array.from(racine.querySelectorAll("[data-repere-pastille], [data-scene-bouton]"))
+        .map((el) => el.getBoundingClientRect())
+        .filter((b) => b.width > 0 && b.height > 0)
+        .map((b) => [Math.floor(b.left) - 2, Math.floor(b.top) - 2, Math.ceil(b.right) + 2, Math.ceil(b.bottom) + 2]);
+      let bas = 0;
+      if (rogneBas) {
+        const sonde = document.createElement("div");
+        sonde.style.cssText = `position:absolute;visibility:hidden;height:${rogneBas}`;
+        racine.parentElement?.appendChild(sonde);
+        bas = sonde.offsetHeight;
+        sonde.remove();
+      }
+      setTroues((v) => (JSON.stringify(v) === JSON.stringify({ rects, bas }) ? v : { rects, bas }));
+    };
+    mesurer();
+    const mo = new MutationObserver(mesurer);
+    mo.observe(racine, { childList: true, subtree: true });
+    window.addEventListener("resize", mesurer);
+    return () => { mo.disconnect(); window.removeEventListener("resize", mesurer); };
+  }, [annotateMode, currentPage, annotZoom, annotPan, rogneBas, fontScale]);
+  // shortcut: deux repères qui se chevauchent se re-remplissent (evenodd), à reprendre si on les voit se toucher.
+  const clipEncre = annotateMode && troues.rects.length
+    ? `path(evenodd, "M0 0H${window.innerWidth}V${window.innerHeight - troues.bas}H0Z ${troues.rects.map(([a, b, c, d]) => `M${a} ${b}H${c}V${d}H${a}Z`).join(" ")}")`
+    : undefined;
 
   // Ronds « Sur la page » : tous sur une ligne dans le popover (jusqu'à 7) ; au téléphone, sur deux lignes équilibrées plutôt qu'un rond seul en dessous.
   const nRonds = 1 + [blocks.some((b) => b.kind === "section" && b.showPinyin), hasJianpuSheets && !structureMode, !!user, twoColumnsAvailable, true, true].filter(Boolean).length;
@@ -1724,10 +1824,12 @@ export function PerformanceMode({
       data-deux-colonnes={twoColumns || undefined}
       data-barre-ouverte={showChrome ? "" : undefined}
       data-demi-page={demiActif ? "" : undefined}
+      data-annotation={annotateMode ? "" : undefined}
       data-cle-ancienne={cleAncienne ?? undefined}
       data-cle-page={currentPageKey}
       data-passes-pagination={passesPagination}
-      className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none"
+      // En annotation, les repères de section et les lettres de Scène passent au-dessus de l'encre et ne répondent plus au toucher.
+      className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none [&[data-annotation]_[data-repere-pastille]]:pointer-events-none [&[data-annotation]_[data-scene-bouton]]:pointer-events-none"
       style={{
         "--sat": "env(safe-area-inset-top, 0px)",
         "--sab": "env(safe-area-inset-bottom, 0px)",
@@ -2138,13 +2240,19 @@ export function PerformanceMode({
       })()}
       {/* Crayon : le canvas édite mes traits seulement ; ceux d'un autre restent dessous, en lecture (hors loupe). */}
       {annotateMode && showAnnotations && annotZoom === 1 && tracesAutres.length > 0 && (
-        <StrokesLayer data={donneesAutres} rogneBas={rogneBas} />
+        <StrokesLayer data={donneesAutres} rogneBas={rogneBas} clipPath={clipEncre} />
       )}
       {annotateMode && (
         <AnnotationCanvas
           data={donneesMiens}
           rogneBas={rogneBas}
-          barres={barres}
+          clipPath={clipEncre}
+          tool={gommeCrayon ? "eraser" : outilCrayon}
+          color={couleurCrayon}
+          sizeIdx={tailleCrayon}
+          tailleGomme={tailleGomme}
+          inerte={etatTraits === "chargement"}
+          onDebutGeste={() => { gesteNote.current = new Set(); }}
           onChange={surTracesCrayon}
           zoom={annotZoom}
           pan={annotPan}
@@ -2162,6 +2270,40 @@ export function PerformanceMode({
         aria-hidden={!showChrome}
         inert={!showChrome}
       >
+        {annotateMode ? (
+          <BarreAnnotation
+            barreRef={barreHautRef}
+            barreBasRef={barreBasRef}
+            showChrome={showChrome}
+            disposition={telephone ? "telephone" : ecran.largeur >= 1024 ? "large" : "tablette"}
+            outil={outilCrayon}
+            gomme={gommeCrayon}
+            couleur={couleurCrayon}
+            taille={tailleCrayon}
+            tailleGomme={tailleGomme}
+            onOutil={(o) => { setOutilCrayon(o); setGommeCrayon(false); }}
+            onGomme={setGommeCrayon}
+            onCouleur={(c) => { setCouleurCrayon(c); setGommeCrayon(false); }}
+            onTaille={(i) => { setTailleCrayon(i); setGommeCrayon(false); }}
+            onTailleGomme={setTailleGomme}
+            onAnnuler={() => defaireCrayon("annuler")}
+            onRetablir={() => defaireCrayon("retablir")}
+            peutAnnuler={!!slugVise && peutAnnuler(historique, slugVise)}
+            peutRetablir={!!slugVise && peutRetablir(historique, slugVise)}
+            onPagePrec={() => goToPage(currentPage - 1, pages.length)}
+            onPageSuiv={() => goToPage(currentPage + 1, pages.length)}
+            peutPrec={currentPage > 0}
+            peutSuiv={currentPage < pages.length - 1}
+            page={currentPage}
+            pages={pages.length}
+            zoom={annotZoom}
+            onZoom={zoomerPar}
+            onZoom100={() => { setAnnotZoom(1); setAnnotPan({ x: 0, y: 0 }); }}
+            onToutEffacer={toutEffacer}
+            onTermine={basculerAnnotation}
+            etat={etatTraits}
+          />
+        ) : (
         <BarreHaut
           barreRef={barreHautRef}
           showChrome={showChrome}
@@ -2178,15 +2320,16 @@ export function PerformanceMode({
           onJeJoue={() => basculerMenu("jejoue")}
           onQuitter={onClose}
         />
+        )}
 
-        <BarreBas
+        {!(annotateMode && telephone) && <BarreBas
           barreRef={barreBasRef}
           showChrome={showChrome}
           pageCount={pages.length}
           currentPage={currentPage}
           reperesChants={reperesChants}
           goToPage={goToPage}
-        />
+        />}
       </div>
 
       {/* ── Menus du mode (FS-B) : popover sous l'icône à partir de md, feuille du bas au téléphone ── */}

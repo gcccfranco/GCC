@@ -528,16 +528,17 @@ test("forScore, L5 : trait tracé, taille changée : le trait suit le texte, san
   expect(erreurs).toEqual([]);
 });
 
-test("forScore, L5 : au Crayon A− / A+ sont désactivés, et rouvrir le Crayon rend la taille mémorisée (ancienne annotation)", async ({ page }) => {
+test("forScore, L5 : au Crayon la taille du texte ne se règle pas, et rouvrir le Crayon rend la taille mémorisée (ancienne annotation)", async ({ page }) => {
   const { erreurs } = await ouvrirL5(page);
   await poserTailleAnnotee(page);
   expect(await changerTaille(page, "Agrandir le texte", 2)).toBe("120%");
 
   await basculerAnnoter(page);
   await expect(calqueLecture(page)).toHaveCount(1);
+  // AN-3a : la barre d'annotation remplace la barre de titre, Options d'affichage (A− / A+) n'est plus offert en Crayon.
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Options d'affichage" })).toHaveCount(0);
+  await basculerAnnoter(page);
   const reglages = await ouvrirReglages(page);
-  await expect(reglages.getByRole("button", { name: "Réduire le texte" })).toBeDisabled();
-  await expect(reglages.getByRole("button", { name: "Agrandir le texte" })).toBeDisabled();
   await expect(reglages.getByText(/^\d+%$/)).toHaveText("100%");
   await page.keyboard.press("Escape");
   await expect(reglages).toBeHidden();

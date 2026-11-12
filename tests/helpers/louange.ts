@@ -97,6 +97,12 @@ export async function attendreCompteur(page: Page, motif: string | RegExp, timeo
  *  la fonction est une ligne d'Outils, en tête de la feuille Options d'affichage (FS-B), qu'on ouvre d'abord
  *  (elle la referme en s'exécutant). */
 export async function basculerAnnoter(page: Page) {
+  // En Crayon, la barre d'annotation (AN-3a) remplace la barre de titre : on en sort par « Terminé ».
+  const termine = page.locator("[data-performance-mode] [data-crayon-barre]").getByRole("button", { name: "Terminé", exact: true });
+  if (await termine.count()) {
+    await termine.click();
+    return;
+  }
   if (page.viewportSize()!.width < 768) {
     const outils = await ouvrirOutils(page);
     await outils.getByRole("button", { name: "Crayon", exact: true }).click();

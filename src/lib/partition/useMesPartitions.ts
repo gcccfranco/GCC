@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { enregistrerChoix, lireChoix, lireMesPartitions, lirePartition, lirePartitionsPartageesAvecMoi, type PartitionDeChant } from "@/lib/firebase/partitions";
-import { enregistrerOuMettreEnFile, etatEnregistrement } from "@/lib/partition/fileEnAttente";
+import { enregistrerOuMettreEnFile, etatEnregistrement, rejouerFile } from "@/lib/partition/fileEnAttente";
 import type { ChoixPartitions } from "@/types/partition";
 
 /** Mes partitions des chants `slugs`, celles qu'on m'a partagées, et mon choix « Je lis » (docs/spec-ma-partition.md).
@@ -15,6 +15,14 @@ export function useMesPartitions(uid: string | undefined, slugs: string[]) {
   const [charges, setCharges] = useState<Record<string, boolean>>({});
   // Miroir de `mes` tenu à jour à chaque écriture, sans attendre le rendu (cases cochées vite, « toutes mes partitions »).
   const mesRef = useRef<Record<string, PartitionDeChant>>({});
+
+  // Retour du réseau : auth.ts rejoue la file ; ici « En attente » se relit à la fin d'un rejeu (la file passe en série, celui-ci suit).
+  useEffect(() => {
+    if (!uid) return;
+    const relire = () => { void rejouerFile(uid).then(() => setEnAttente(etatEnregistrement(uid).enAttente > 0)); };
+    window.addEventListener("online", relire);
+    return () => window.removeEventListener("online", relire);
+  }, [uid]);
 
   useEffect(() => {
     setCharges({});

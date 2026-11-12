@@ -2595,6 +2595,7 @@ export function SetlistDetailClient() {
           onTraitsChange={traitsChanges}
           chantsCharges={Object.fromEntries(slugsPartitions.map((s) => [s, !!mesPartitions.charges[s]]))}
           echecTraits={echecTraits}
+          traitsEnAttente={mesPartitions.enAttente}
           chargerToutesSetlists={user ? chargerToutesSetlists : undefined}
           onOuvrirSetlist={(autre) => router.push(`/setlists/${autre}?louange=1`)}
           onClose={() => {
