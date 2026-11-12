@@ -112,6 +112,11 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   aux setlists), et les **idées d'harmonie de chaque chant** intégrées dedans. La seconde moitié recoupe Harmonie H8
   (point en marge et bande, go donné). Change l'organisation d'un écran : planche, puis spec, puis go ; pas avant la
   fin d'AN, MP-6 et H8 (même fichier `PerformanceMode.tsx`). Rien de lancé.
+  Planche faite le 12/11/2026 (`docs/planches/planche-louange-tous-les-chants.html`, artefact privé
+  https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU) : A onglet « Tous les chants » dans le menu Setlist, le chant
+  joué s'insère dans la suite ; B le titre de la barre devient un champ de recherche ; **C recommandée**, le chant
+  ouvert hors setlist se pose par-dessus elle, avec un bandeau « ‹ Revenir à …, page N · Jouer ensuite ». Trois
+  questions à Timothée (« Jouer ensuite » local, bandeau visible barre masquée, Échap à trois temps). Spec après ses réponses.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 
