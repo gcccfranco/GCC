@@ -631,7 +631,8 @@ test("membres : la feuille ne propose que les groupes permis (pas « Franco ») 
   await expect(f.getByRole("radio", { checked: true })).toHaveCount(0);
   await f.getByRole("radio", { name: "Séance louange" }).check();
   await expect(f.getByRole("button", { name: "Choisis quoi et qui" })).toBeDisabled();
-  expect(db.writes.filter((w) => w.method === "POST")).toHaveLength(0);
+  // Seules les écritures du programme comptent : `:commit` est l'envoi quotidien du comptage d'usage (docs/spec-comptage-usage.md).
+  expect(db.writes.filter((w) => w.method === "POST" && w.path.startsWith("programmes/"))).toHaveLength(0);
 });
 
 test("membres : sans limite, la feuille propose tous les groupes ; la coordination n'est jamais limitée", async ({ page }) => {
@@ -858,7 +859,8 @@ test("membres : un créneau qui commence pendant que la feuille est ouverte est 
   await page.clock.setFixedTime(new Date("2026-10-11T15:05:00"));
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(f.getByRole("alert")).toHaveText("Ce créneau a déjà commencé : il ne se réserve plus.");
-  expect(db.writes.filter((w) => w.method === "POST")).toHaveLength(0);
+  // Seules les écritures du programme comptent : `:commit` est l'envoi quotidien du comptage d'usage (docs/spec-comptage-usage.md).
+  expect(db.writes.filter((w) => w.method === "POST" && w.path.startsWith("programmes/"))).toHaveLength(0);
 });
 
 test("hors grille : « Déplacer » vers un créneau qui a commencé entre-temps est refusé (horloge simulée)", async ({ page }) => {
