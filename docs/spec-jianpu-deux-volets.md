@@ -22,8 +22,8 @@ colonnes), **1** (简谱 sur deux volets), **2** (idées d'harmonie : notation, 
 
 | # | Question | Recommandation |
 |---|---|---|
-| Q1 | « Paroles » du responsable dans l'éditeur | **Retiré** (sinon : gardé pour les seuls choristes) |
-| Q2 | Le « Je joue » compte-t-il hors du mode louange ? | **Oui**, partout dans la setlist (choriste et présidence : paroles + pinyin) |
+| Q1 | « Paroles » du responsable dans l'éditeur | **Tranchée : retiré** (Timothée, 13/11 : « oui ») |
+| Q2 | Le « Je joue » compte-t-il hors du mode louange ? | **Tranchée : oui**, partout dans la setlist (Timothée, 13/11 : « oui ») |
 | Q3 | Deux colonnes d'un chant en paroles | **Tranchée : lues en colonnes** (Timothée, 13/11 : « oui pour ce que tu propsoes ») ; rouvre P1 |
 | Q6 | Piste pour le 简谱 en deux volets | **B**, demi-lignes en deux colonnes (taille de lecture gardée) |
 | Q7 | Le mode louange aussi ? | **Oui**, sous l'interrupteur « 2 colonnes » existant |
@@ -270,7 +270,7 @@ les cinq projets pour une spec d'agencement (ajoutée à `SPECS_GRAND_ECRAN`) ; 
 `PartitionView.tsx` : l'une après l'autre ; JV-4 et JV-5 touchent `PerformanceMode.tsx` : pas pendant un autre
 chantier sur ce fichier.
 
-### JV-1 — 简谱 d'office pour les musiciens (S à M ; point 3, Q1 et Q2)
+### JV-1 — 简谱 d'office pour les musiciens (S à M ; point 3, Q1 et Q2 tranchées le 13/11)
 
 - Fichiers : `src/lib/jianpu/preference.ts` (`sheetEnabled(pref, role)`, `prefPourRole` absorbé) ; appelants
   `SetlistDetailClient.tsx:995, :1823`, `PartitionView.tsx:505`, `ListView.tsx:276`, `Sommaire.tsx:76`,
