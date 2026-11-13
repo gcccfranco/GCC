@@ -18,6 +18,22 @@ bizarrement » (point 4 ci-dessous). Le point 5 du pilote (menu Setlist du mode 
 Points, dans l'ordre où ils se codent : **3** (简谱 d'office, codable seul, tranche JV-1), **4** (lecture des deux
 colonnes), **1** (简谱 sur deux volets), **2** (idées d'harmonie : notation, puis scan).
 
+## Questions à Timothée (récapitulatif, la recommandation en premier)
+
+| # | Question | Recommandation |
+|---|---|---|
+| Q1 | « Paroles » du responsable dans l'éditeur | **Retiré** (sinon : gardé pour les seuls choristes) |
+| Q2 | Le « Je joue » compte-t-il hors du mode louange ? | **Oui**, partout dans la setlist (choriste et présidence : paroles + pinyin) |
+| Q3 | Deux colonnes d'un chant en paroles | **Lues en colonnes** (gauche puis droite), comme le mode louange ; rouvre P1 |
+| Q6 | Piste pour le 简谱 en deux volets | **B**, demi-lignes en deux colonnes (taille de lecture gardée) |
+| Q7 | Le mode louange aussi ? | **Oui**, sous l'interrupteur « 2 colonnes » existant |
+| Q4 | Notation de la bande d'idée d'harmonie | **Une seule**, celle choisie par la personne (Lettres par défaut) |
+| Q5 | Idées d'harmonie sur le scan | **Point en marge** à la hauteur de la section, bande au toucher |
+
+Tranchées par la session (décisions déléguées, 13/11, faciles à défaire) : seuil d'une colonne sous 11 px d'accords
+imprimés ; coupe entre colonnes au début de section si l'écart ne dépasse pas deux demi-lignes ; page chant inchangée.
+JV-1 n'attend que Q1 et Q2.
+
 ---
 
 ## Point 3 — 简谱 d'office pour les musiciens dans les setlists
@@ -290,4 +306,6 @@ chantier sur ce fichier.
 
 ## Avancement
 
-- 13/11/2026 : cadrage (diagnostic, planche, spec). Aucun code. Attend le go de Timothée.
+- 13/11/2026 : cadrage (diagnostic par un `chercheur`, planche `/planche`, spec). Aucun code, aucun test lancé. Attend
+  le go de Timothée. Point 5 du pilote (menu Setlist du mode louange) : `docs/spec-louange-tous-les-chants.md` §
+  « Reprise du 13/11 », tranche TC-4.

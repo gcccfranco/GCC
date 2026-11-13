@@ -159,6 +159,13 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   étape : la spec, puis le go ; codage après AN, MP-6 et H8 (`PerformanceMode.tsx`).
   **Spec écrite** (12/11/2026) : `docs/spec-louange-tous-les-chants.md`, lot TC en trois tranches (TC-1 liste, bouton
   et insertion ; TC-2 marques, retrait, retour, hors ligne ; TC-3 raccord H8) ; attend le go de Timothée.
+- **Lot JV, 简谱 en deux volets** (demandes de Timothée du 13/11 : 简谱 sur deux volets, idées d'harmonie sur le
+  scan, 简谱 d'office pour les musiciens dans les setlists ; plus, par le pilote, la lecture des deux colonnes d'un chant
+  en paroles) : `docs/spec-jianpu-deux-volets.md`, planche `docs/planches/planche-jianpu-deux-volets.html` (artefact
+  privé https://claude.ai/artifact/FJmdbWyBhbKPUwkQcUPUqA, piste B recommandée), tranches JV-1 à JV-5 ; JV-1 (简谱
+  d'office) se code seule. Menu Setlist du mode louange en deux onglets : `docs/spec-louange-tous-les-chants.md` §
+  « Reprise du 13/11 », planche https://claude.ai/artifact/DMDRVF8pAy4L4qKBXrDcEe, tranche TC-4. **Attend le go de
+  Timothée** (questions Q1 à Q7 et TC-Q5, TC-Q6, chacune avec sa recommandation). Aucune règle Firestore touchée.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 

@@ -111,6 +111,47 @@ https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue �
    `BarreHaut.tsx` et `MenuLouange.tsx` ne changent pas (pas de `MenuId` `chants`) ; « / » sur ordinateur ouvre le menu
    sur « Tous les chants », champ actif.
 
+## Reprise du 13/11 (cadrage, attend le go de Timothée)
+
+- **Demande (Timothée, 13/11/2026)**, sur une capture du menu Setlist ouvert sur ordinateur (« ‹ Toutes mes setlists »
+  déplié en tête, puis « Cette setlist | Tous les chants », puis la liste) : « ça aussi il faut changer », puis
+  « sépare dans 2 onglets différents une pour tous les chants et une autre avec les setlists ».
+- **Constat** : `ToutesMesSetlists` est rendu en tête de `ContenuSetlist`
+  (`src/components/performance/ContenusMenus.tsx:244`), **au-dessus** des onglets (`OngletsSetlist`,
+  `TousLesChants.tsx:20`, passés par `PerformanceMode.tsx:2553`) : il reste visible dans les deux onglets. C'est ce
+  mélange qu'il ne veut plus. Ce qui ne change pas de la Q3 du 12/11 : un seul bouton Setlist dans la barre, pas de
+  bouton « Chants » (il n'existe pas dans le code, `BarreHaut.tsx:72`), réouverture sur le dernier onglet, « / » sur
+  ordinateur.
+- **Planche** : `docs/planches/planche-louange-setlists-et-chants.html`, artefact privé
+  https://claude.ai/artifact/DMDRVF8pAy4L4qKBXrDcEe. **A, recommandée** : deux onglets dans le même panneau, l'onglet
+  setlists montre la setlist en cours puis, sous un filet, « Mes autres setlists » (dépliées) ; « Toutes mes setlists »
+  quitte la tête du panneau et n'apparaît plus dans « Tous les chants » ; onglets soulignés collés en haut (plus de
+  commande segmentée grise), l'interrupteur « Avec 简谱 | Sans » reste la seule commande segmentée, « Ouvrir » sort du
+  fond gris. B : deux boutons dans la barre (« Setlist » et « Chants »), Repères passe dans Options au téléphone :
+  revient sur la Q3 du 12/11 et coûte un toucher sur le geste le plus fréquent. C : A avec les deux listes côte à côte
+  sur grand écran (panneau de 800 px qui couvre la partition). Critique : « à retoucher » (tablette paysage et 1 440
+  non dessinées ; collision « Setlist » / « Setlists », identiques en chinois 歌单 ; trois niveaux de titres pour les
+  autres setlists ; espaces insécables) ; sans effet sur la recommandation.
+- **Questions à Timothée** :
+  - **TC-Q5 — Disposition** : A, deux onglets dans le même panneau (**recommandé**), B deux boutons, ou C.
+  - **TC-Q6 — Libellé du premier onglet** : « Mes setlists » / 我的歌单 (**recommandé** : se distingue du bouton
+    « Setlist » / 歌单) ou « Setlists » (identique au bouton en chinois).
+  - Tranchées par la session (décisions déléguées, 13/11, faciles à défaire) : autres setlists **dépliées** sous la
+    setlist en cours, une seule rubrique « Mes autres setlists » (les sous-rubriques « Mes services » / « Autres
+    setlists » deviennent de simples filets) ; réouverture sur le dernier onglet, sauf juste après un ajout depuis
+    « Tous les chants » : sur l'onglet setlists (là où sont le chant ajouté, « Retirer » et « Revenir à … ») ; onglets
+    soulignés.
+- **Tranche TC-4 (S à M, après go)** : `ContenusMenus.tsx` (`ToutesMesSetlists` sous la liste, sans dépli « ‹ »,
+  absent de « Tous les chants »), `TousLesChants.tsx` (`OngletsSetlist` en onglets soulignés, `role="tablist"`,
+  flèches ; ligne « Ouvrir »), `PerformanceMode.tsx` (~2540-2556 : ordre de rendu, réouverture après ajout),
+  `src/locales/fr.json` et `zh-CN.json` (中文 à faire relire). `BarreHaut.tsx` et `MenuLouange.tsx` inchangés.
+  Critères : à l'ouverture, aucune ligne de setlist au-dessus des onglets ; « Tous les chants » ne montre aucune
+  setlist ; les autres setlists sous la setlist en cours ; insertion, « Avec 简谱 | Sans », marques, recherche, index
+  et hors ligne inchangés ; aucune animation (R4). Tests : `louange-toutes-setlists`, `louange-tous-les-chants` (le
+  test « onglets sous Toutes mes setlists » s'inverse), `louange-menus` ; cinq projets ; captures aux quatre
+  dispositions. Ne se code pas pendant un autre chantier sur `PerformanceMode.tsx` (JV-4, JV-5 de
+  `docs/spec-jianpu-deux-volets.md`).
+
 ## Avancement
 
 - 12/11/2026 : planche (trois pistes), choix de Timothée (piste A, bouton à part, interrupteur 简谱), spec écrite.
