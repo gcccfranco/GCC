@@ -32,7 +32,7 @@ export function ChoixNotation({ variante }: { variante: "barre" | "menu" }) {
         title={court ? nom : undefined}
         data-notation={n}
         onClick={() => choisir(n)}
-        className={`${court ? `${TOUCHER_44} h-8 min-w-8 px-2 text-sm font-bold` : "min-h-11 flex-1 px-3 text-sm font-medium"} rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${notation === n ? "bg-foreground text-background" : "text-foreground"}`}
+        className={`${court ? `${TOUCHER_44} h-9 min-w-9 lg:h-8 lg:min-w-8 px-2 text-sm font-bold` : "min-h-11 flex-1 px-3 text-sm font-medium"} rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${notation === n ? "bg-foreground text-background" : "text-foreground"}`}
       >
         {court ? (n === "lettres" ? "A" : "1") : nom}
       </button>
