@@ -113,6 +113,10 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      pilote. Le pilote lance, quand plus aucun chantier ne code, la
      **suite complète en quatre parts** (`--shard=k/4`, quatre sessions, résultats dans `docs/feuille-de-route.md`,
      aucune correction sans passer par le pilote). Rien ne part sur `main` : la mise en ligne reste à Timothée.
+  **13/11, 3 h 45 UTC : tous les chantiers de code sont finis** (AN, MP-6, H8, TC, H7 ; tête `8b8b7ff3`). **Suite
+  complète lancée en quatre parts** (Sonnet, aucune correction) : `session_01UMdfudPsUH2e4yP7D7LCDY` (1/4),
+  `session_01UMdfuZSZqGrTzmaRBGT5cV` (2/4), `session_01UMdfuZPpNqJhDNUHVxSo4G` (3/4), `session_01UMdfudbYvxf6yGMX1wGMc8`
+  (4/4) ; bilans dans `docs/tests/suite-2026-11-13-part-K.md`. Les corrections attendent le bilan et Timothée.
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.
