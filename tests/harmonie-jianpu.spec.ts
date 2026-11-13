@@ -322,6 +322,8 @@ for (const langue of ["fr", "zh"] as const) {
     const avant = await lireCompteur(page);
     await premiere.click();
     await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
+    // Dès 768 px, une fenêtre comme le menu Setlist (Timothée, 13/11/2026) : elle ne couvre pas la colonne de droite.
+    if ((page.viewportSize()?.width ?? 0) >= 768) await expect(page.locator("[data-idees-harmonie]")).toHaveAttribute("data-harmonie-fenetre");
     expect(await lireCompteur(page), "le toucher ne tourne pas la page").toBe(avant);
     await capture(page, `jv5c-louange-volet-${langue}`);
   });

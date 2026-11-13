@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { TOUCHER_44 } from "@/lib/toucher44";
 import { ChevronDown, X } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Popover, PopoverAnchor, PopoverArrow, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ChampSelect } from "@/components/ui/champ-select";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
@@ -68,8 +69,11 @@ type Props = {
   /** Dans une setlist : sélecteur du chant lu. Les identifiants de section se
    *  répètent d'un chant à l'autre (« chorus-3-2 ») : « Montrer » cherche là. */
   portee?: string;
-  /** « colonne » : à droite de la partition, sans voile (grand écran) ; sinon la feuille du bas. */
-  disposition?: "feuille" | "colonne";
+  /** « colonne » : à droite de la partition, sans voile (grand écran) ; « fenetre » : mode louange dès 768 px, une
+   *  fenêtre ancrée au nom touché, comme le menu Setlist (`MenuLouange`) ; sinon la feuille du bas. */
+  disposition?: "feuille" | "colonne" | "fenetre";
+  /** Fenêtre : l'élément touché (nom ou étiquette de section) auquel elle s'accroche. */
+  ancre?: HTMLElement | null;
   /** Colonne : où elle colle (page de setlist : sous son en-tête collant) ; sinon sous l'en-tête du site. */
   styleColonne?: CSSProperties;
   /** Page chant en colonne : le titre du chant est déjà à l'écran. */
@@ -138,7 +142,8 @@ function Croix({ onClose }: { onClose: () => void }) {
 
 export function HarmonieDuChant(props: Props) {
   const colonne = props.disposition === "colonne";
-  useStandaloneScrollLock(props.open && !colonne);
+  const fenetre = props.disposition === "fenetre";
+  useStandaloneScrollLock(props.open && !colonne && !fenetre);
   const { t } = useTranslation();
   const titreId = useId();
   // JV-5a : depuis le nom d'une section, la feuille s'ouvre à 50 % de l'écran (deux crans : 50 % et tout).
@@ -151,6 +156,7 @@ export function HarmonieDuChant(props: Props) {
   if (colonne) {
     return props.open ? <Colonne {...props} titreId={titreId} /> : null;
   }
+  if (fenetre) return <Fenetre {...props} titreId={titreId} />;
   return (
     <Drawer
       open={props.open}
@@ -170,6 +176,46 @@ export function HarmonieDuChant(props: Props) {
         {props.open && <Contenu {...props} />}
       </DrawerContent>
     </Drawer>
+  );
+}
+
+/** Mode louange dès 768 px (Timothée, 13/11/2026 : « Fait une fenêtre comme pour les setlists dans le mode louange ») :
+ *  le même popover que le menu Setlist (`MenuLouange`), accroché au nom ou à l'étiquette touchée ; il ne pousse ni ne
+ *  coupe la partition. Toucher ailleurs ou Échap le ferme (`PerformanceMode`, `VoletHarmonieLouange`). */
+function Fenetre(props: Props & { titreId: string }) {
+  const { t } = useTranslation();
+  const dernier = useRef(new DOMRect());
+  const ancre = useRef({
+    getBoundingClientRect: () => {
+      const el = props.ancre;
+      if (el?.isConnected) dernier.current = el.getBoundingClientRect();
+      return dernier.current;
+    },
+  });
+  return (
+    <Popover open={props.open} onOpenChange={(o) => !o && props.onClose()}>
+      <PopoverAnchor virtualRef={ancre} />
+      <PopoverContent
+        aria-labelledby={props.titreId}
+        side="bottom"
+        align="start"
+        sideOffset={6}
+        collisionPadding={{ top: 8, left: 8, right: 8, bottom: 16 }}
+        data-idees-harmonie
+        data-harmonie-fenetre
+        data-chant={props.slug}
+        className="z-[10000] flex max-h-[calc(var(--radix-popover-content-available-height)-2px)] w-[min(26rem,calc(100vw-1rem))] flex-col border-border bg-background p-0 dark:bg-[hsl(var(--raised))] print:hidden"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => { e.preventDefault(); props.ancre?.focus({ preventScroll: true }); }}
+      >
+        <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-3">
+          <h2 id={props.titreId} className="text-base font-semibold">{t("harmonie.titreChant")}</h2>
+          <Croix onClose={props.onClose} />
+        </div>
+        {props.open && <Contenu {...props} />}
+        <PopoverArrow width={18} height={9} className="fill-background stroke-border dark:fill-[hsl(var(--raised))]" />
+      </PopoverContent>
+    </Popover>
   );
 }
 

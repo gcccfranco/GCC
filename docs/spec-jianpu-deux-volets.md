@@ -575,3 +575,18 @@ chantier sur ce fichier.
   droite au milieu d'un caractère : une colonne tant que le volet est ouvert, ou l'accepter ; (7) en 中文, puces
   « C1 C2 R P » et rail « 主 / 副 » : deux nommages sur le même écran ; (8) le volet est une feuille centrée sur la
   page chant à l'ordinateur, un panneau à droite en louange (sans doute antérieur).
+- 13/11/2026 : **Mode louange, les idées d'harmonie dans une fenêtre** (ordre de Timothée transmis par le pilote, ses
+  mots : « Fait une fenêtre comme pour les setlists dans le mode louange » ; il tranche le choix 6 des Finitions).
+  Dès 768 px, le nom ou l'étiquette de section touché ouvre une **fenêtre** accrochée à lui : même popover que le menu
+  Setlist (`MenuLouange` : largeur ≤ 26 rem, fond, bord, flèche), disposition `fenetre` de `HarmonieDuChant`, ancre
+  notée au pointerdown (`VoletHarmonie.tsx`, ou le focus au clavier). Elle ne pousse ni ne coupe la partition et ne
+  tourne pas la page ; toucher ailleurs la ferme sans tourner la page (même drapeau que les menus, `PerformanceMode`) ;
+  Échap la ferme sans quitter le mode. Sous 768 px : la feuille à mi-hauteur d'avant (la forme du menu Setlist au
+  téléphone est aussi une feuille du bas). La colonne de 1 024 px est retirée du mode louange. Contenu inchangé.
+  **Choix 8 assumé** (décision du pilote, 13/11) : la page chant et la vue Partitions gardent leur colonne ou leur
+  feuille ; seul le mode louange a la fenêtre. Tests : `louange-harmonie` (fenêtre à l'aplomb du nom, entière à
+  l'écran, sous la barre ; nouveau test « toucher hors du volet le ferme sans tourner la page », FR et ZH),
+  `harmonie-jianpu` (étiquette du scan → fenêtre dès 768 px) ; tour `harmonie-jianpu`, `louange-harmonie`,
+  `harmonie-volet-section`, `louange-jianpu-deux-colonnes`, `louange-jianpu-tranches`, `louange-roles-jianpu`, cinq
+  projets : 435 passés, 51 sautés, 0 échec (**15,7 min**). tsc, lint : 0 erreur. Captures regardées : paroles 1 440
+  (fr, clair), tablette paysage (中文, sombre), téléphone (中文, feuille) ; scan 1 280 (中文, sombre), tablette portrait (fr).

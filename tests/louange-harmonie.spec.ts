@@ -4,8 +4,10 @@ import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreCompteur, attendreMiseEnPage, lireCompteur, onStage, ouvrirMenu, ouvrirOptions, type Langue } from "./helpers/louange";
 
 // JV-5b (docs/spec-jianpu-deux-volets.md, point 2, « Reprise du 13/11 ») : dans le mode louange, le NOM d'une section ouvre
-// le volet Harmonie du chant (toutes les propositions du passage, une seule notation) posé par-dessus la page : colonne au
-// bord droit dès 1 024 px, feuille à mi-hauteur en dessous ; la page n'est ni tournée, ni rétrécie, ni recomptée. Le point
+// le volet Harmonie du chant (toutes les propositions du passage, une seule notation) posé par-dessus la page : dès 768 px une
+// fenêtre comme le menu Setlist, accrochée au nom touché (Timothée, 13/11/2026 : « Fait une fenêtre comme pour les setlists
+// dans le mode louange » ; elle remplace la colonne de 1 024 px), feuille à mi-hauteur en dessous ; la page n'est ni
+// tournée, ni rétrécie, ni recomptée. Le point
 // et la bande d'H8 sont retirés. Réglage « Idées d'harmonie » éteint par défaut, par compte, absent sans accès harmonie.
 // Spec d'agencement : cinq projets (SPECS_GRAND_ECRAN). Captures : test-results/jv5b-*.png. Noms fictifs.
 
@@ -49,9 +51,9 @@ async function ouvrirMode(page: Page, profil: FakeProfile, c: (typeof CHANTS)[nu
 }
 
 const noms = (page: Page) => onStage(page, "button[data-section-nom-bouton]");
-// La feuille sort dans un portail (body) ; la colonne est dans le mode louange.
+// La feuille et la fenêtre sortent dans un portail (body).
 const volet = (page: Page) => page.locator("[data-idees-harmonie]");
-const grandEcran = (page: Page) => (page.viewportSize()?.width ?? 0) >= 1024;
+const grandEcran = (page: Page) => (page.viewportSize()?.width ?? 0) >= 768;
 
 for (const c of CHANTS) {
   const reglage = c.langue === "zh" ? "和声提示" : "Idées d'harmonie";
@@ -91,12 +93,19 @@ for (const c of CHANTS) {
     await nom.click();
     await expect(volet(page)).toBeVisible();
     if (grandEcran(page)) {
-      await expect(volet(page)).toHaveAttribute("data-harmonie-colonne");
-      const b = await volet(page).boundingBox();
-      expect(b!.x + b!.width, "colonne collée au bord droit").toBeGreaterThanOrEqual(page.viewportSize()!.width - 1);
-      // Sous la barre du haut et au-dessus de celle du bas : la croix du mode louange reste visible.
+      // Une fenêtre comme le menu Setlist, accrochée au nom touché : au-dessus ou au-dessous de lui, à sa hauteur de colonne.
+      await expect(volet(page)).toHaveAttribute("data-harmonie-fenetre");
+      const ecran = page.viewportSize()!;
+      const [b, n] = [(await volet(page).boundingBox())!, (await nom.boundingBox())!];
+      expect(b.x, "fenêtre entière à l'écran").toBeGreaterThanOrEqual(0);
+      expect(b.x + b.width).toBeLessThanOrEqual(ecran.width);
+      expect(b.y + b.height).toBeLessThanOrEqual(ecran.height);
+      expect(b.width, "fenêtre, pas une colonne pleine hauteur").toBeLessThanOrEqual(26 * 16 + 1);
+      expect(b.y >= n.y + n.height - 1 || b.y + b.height <= n.y + 1, "au-dessus ou au-dessous du nom touché").toBe(true);
+      expect(b.x < n.x + n.width && b.x + b.width > n.x, "à l'aplomb du nom touché").toBe(true);
+      // Sous la barre du haut : la croix du mode louange reste visible.
       const haut = await page.locator("[data-performance-mode] [data-barre-haut]").boundingBox();
-      expect(b!.y).toBeGreaterThanOrEqual(haut!.y + haut!.height - 1);
+      expect(b.y).toBeGreaterThanOrEqual(haut!.y + haut!.height - 1);
       await expect(page.locator("[data-performance-mode] [data-barre-haut] button").last()).toBeInViewport();
     } else {
       // Feuille à mi-hauteur : son haut est vers le milieu de l'écran.
@@ -134,6 +143,23 @@ for (const c of CHANTS) {
     await page.mouse.click(b!.x + b!.width / 2, b!.y + Math.min(b!.height - 10, 200));
     await expect(volet(page)).toBeVisible();
     expect(await lireCompteur(page)).toBe(avant);
+  });
+}
+
+for (const c of CHANTS) {
+  test(`chant ${c.langue.toUpperCase()} : toucher hors du volet le ferme sans tourner la page`, async ({ page }) => {
+    await ouvrirMode(page, AVEC_ACCES, c);
+    await noms(page).first().click();
+    await expect(volet(page)).toBeVisible();
+    const avant = await lireCompteur(page);
+    const ecran = page.viewportSize()!;
+    // Bord droit, au tiers de la hauteur : la page (fenêtre accrochée au premier nom, à gauche) ou le fond de la feuille.
+    await expect(async () => {
+      await page.mouse.click(ecran.width - 12, Math.round(ecran.height * 0.3));
+      await expect(volet(page)).toHaveCount(0, { timeout: 1_000 });
+    }).toPass({ timeout: 8_000 });
+    await expect(page.locator("[data-performance-mode]")).toBeVisible();
+    expect(await lireCompteur(page), "le toucher qui ferme ne tourne pas la page").toBe(avant);
   });
 }
 

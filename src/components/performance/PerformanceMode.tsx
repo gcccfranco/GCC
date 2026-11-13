@@ -906,6 +906,21 @@ export function PerformanceMode({
   const ideesActives = reglageIdees && peutHarmonie;
   const [voletHarmonie, setVoletHarmonie] = useState<VoletOuvert | null>(null);
   const icisDuLouange = useIcisDuLouange(blocks, contents, ideesActives && !annotateMode, setVoletHarmonie);
+  // La fenêtre des idées d'harmonie se ferme comme un menu : un toucher dehors la ferme sans tourner la page (même drapeau).
+  // La feuille du téléphone a son fond, que Radix écoute : rien à faire pour elle.
+  const voletOuvert = voletHarmonie !== null;
+  useEffect(() => {
+    if (!voletOuvert) return;
+    const hors = (e: PointerEvent) => {
+      const cible = e.target instanceof Element ? e.target : null;
+      if (e.pointerType === "pen" || !cible) return;
+      if (cible.closest("[data-idees-harmonie], [data-accord-panneau], [data-vaul-overlay], [data-vaul-drawer], [data-menu-louange], [data-menu-declencheur]")) return;
+      if (!cible.closest("[data-barre-haut], [data-barre-bas]")) menuAuToucher.current = { t: e.timeStamp };
+      setVoletHarmonie(null);
+    };
+    document.addEventListener("pointerdown", hors, true);
+    return () => document.removeEventListener("pointerdown", hors, true);
+  }, [voletOuvert]);
 
   const { repeatCount, repeatHidden } = useMemo(
     () => replisStructure(blocks, structureMode, showTransitions, t),
@@ -2948,7 +2963,7 @@ export function PerformanceMode({
             </div>
         </div>
       </MenuLouange>
-      <VoletHarmonieLouange volet={ideesActives && !annotateMode ? voletHarmonie : null} onClose={() => setVoletHarmonie(null)} haut={barres.haut} bas={barres.bas} />
+      <VoletHarmonieLouange volet={ideesActives && !annotateMode ? voletHarmonie : null} onClose={() => setVoletHarmonie(null)} />
     </div>
     </FournisseurIcis>
   );

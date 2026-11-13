@@ -1,18 +1,18 @@
 "use client";
 
 // JV-5b (docs/spec-jianpu-deux-volets.md, point 2, « Reprise du 13/11 ») : dans le mode louange, le nom d'une section ouvre
-// le volet Harmonie du chant (porte 2, `HarmonieDuChant`) au bloc de ce passage, posé par-dessus la page : colonne au bord
-// droit dès 1 024 px, feuille à mi-hauteur en dessous. La page n'est ni rétrécie ni recomptée, le toucher ne la tourne pas.
+// le volet Harmonie du chant (porte 2, `HarmonieDuChant`) au bloc de ce passage, posé par-dessus la page : une fenêtre
+// comme le menu Setlist, accrochée au nom touché, dès 768 px (Timothée, 13/11/2026 ; elle remplace la colonne de
+// 1 024 px, qui coupait la partition), feuille à mi-hauteur en dessous. La page n'est ni rétrécie ni recomptée, le toucher ne la tourne pas.
 // Réglage « Idées d'harmonie » éteint par défaut (`perf-idees-harmonie-<uid>`) ; il remplace le point et la bande d'H8.
 
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from "react";
 import type { ChordProSection } from "@/types/chordPro";
 import type { JianpuSheetBlock, SectionBlock } from "@/lib/performance/blocks";
 import type { SongContent } from "@/lib/api/songs";
 import { ChantDesAccords, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
-import { useGrandEcranHarmonie } from "@/hooks/useColonneHarmonie";
 import { getTransposedKey } from "@/lib/transpose";
 import { compter } from "@/lib/usage";
 
@@ -20,7 +20,21 @@ const cle = (uid: string | null) => (uid ? `perf-idees-harmonie-${uid}` : "perf-
 export const lireReglageIdees = (uid: string | null) => { try { return localStorage.getItem(cle(uid)) === "1"; } catch { return false; } };
 export const ecrireReglageIdees = (uid: string | null, v: boolean) => { try { localStorage.setItem(cle(uid), v ? "1" : "0"); } catch { /* stockage refusé : réglage pour la séance seulement */ } };
 
-export type VoletOuvert = { slug: string; titre: string; sections: ChordProSection[]; tonalite: string; tonaliteOrigine: string; uid: string; cle: number };
+export type VoletOuvert = { slug: string; titre: string; sections: ChordProSection[]; tonalite: string; tonaliteOrigine: string; uid: string; cle: number; ancre: HTMLElement | null };
+
+/** Le nom ou l'étiquette de section touché en dernier (pointerdown) : la fenêtre s'y accroche. Au clavier, le focus. */
+const NOMS = "[data-section-nom-bouton], [data-jianpu-etiquette]";
+let dernierTouche: HTMLElement | null = null;
+const ancreDuToucher = () => {
+  const el = dernierTouche ?? (document.activeElement?.closest?.(NOMS) as HTMLElement | null) ?? null;
+  dernierTouche = null;
+  return el;
+};
+
+/** Dès 768 px (md, comme `MenuLouange`) : la fenêtre ; en dessous, la feuille du bas. */
+const MD = "(min-width: 768px)";
+const suivreMd = (f: () => void) => { const mq = window.matchMedia(MD); mq.addEventListener("change", f); return () => mq.removeEventListener("change", f); };
+const useAuMoinsMd = () => useSyncExternalStore(suivreMd, () => window.matchMedia(MD).matches, () => true);
 
 /** Le chant et la tonalité d'un bloc (une section en 升调 a la sienne ; formes affichées, capo déduit). */
 const groupe = (b: SectionBlock) => `${b.songSlug}|${getTransposedKey(b.keyChange ?? b.songKey, -(b.capo ?? 0))}`;
@@ -47,7 +61,7 @@ export function useIcisDuLouange(blocks: { kind: string }[], contents: Record<st
           sections,
           tonalite,
           tonaliteOrigine,
-          ouvrir: (uid) => { compter("cmd.louange.harmonie"); ouvrir({ slug, titre: b.songTitle, sections, tonalite, tonaliteOrigine, uid, cle: Date.now() }); },
+          ouvrir: (uid) => { compter("cmd.louange.harmonie"); ouvrir({ slug, titre: b.songTitle, sections, tonalite, tonaliteOrigine, uid, cle: Date.now(), ancre: ancreDuToucher() }); },
         };
         m.set(k, ici);
       }
@@ -65,7 +79,7 @@ export function useIcisDuLouange(blocks: { kind: string }[], contents: Record<st
         sections,
         tonalite,
         tonaliteOrigine,
-        ouvrir: (uid) => { compter("cmd.louange.harmonie"); ouvrir({ slug, titre: b.songTitle, sections, tonalite, tonaliteOrigine, uid, cle: Date.now() }); },
+        ouvrir: (uid) => { compter("cmd.louange.harmonie"); ouvrir({ slug, titre: b.songTitle, sections, tonalite, tonaliteOrigine, uid, cle: Date.now(), ancre: ancreDuToucher() }); },
       });
     }
     return m;
@@ -80,7 +94,10 @@ export const FournisseurIcis = Icis.Provider;
 export function NomsTouchables({ block, children }: { block: SectionBlock; children: ReactNode }) {
   const ici = useContext(Icis).get(groupe(block));
   if (!ici || !block.songSlug) return <>{children}</>;
-  const arret = (e: { target: EventTarget; stopPropagation: () => void }) => { if ((e.target as HTMLElement).closest?.("[data-section-nom-bouton]")) e.stopPropagation(); };
+  const arret = (e: { target: EventTarget; stopPropagation: () => void }) => {
+    const nom = (e.target as HTMLElement).closest?.<HTMLElement>("[data-section-nom-bouton]");
+    if (nom) { dernierTouche = nom; e.stopPropagation(); }
+  };
   return (
     <ChantDesAccords chant={{ slug: block.songSlug, titre: block.songTitle }} ici={ici}>
       <div className="contents" onPointerDown={arret} onPointerUp={arret} onPointerCancel={arret}>{children}</div>
@@ -92,7 +109,10 @@ export function NomsTouchables({ block, children }: { block: SectionBlock; child
 export function ScanTouchable({ block, children }: { block: JianpuSheetBlock; children: ReactNode }) {
   const ici = useContext(Icis).get(groupeScan(block));
   if (!ici || !block.songSlug) return <>{children}</>;
-  const arret = (e: { target: EventTarget; stopPropagation: () => void }) => { if ((e.target as HTMLElement).closest?.("[data-jianpu-etiquette]")) e.stopPropagation(); };
+  const arret = (e: { target: EventTarget; stopPropagation: () => void }) => {
+    const etiquette = (e.target as HTMLElement).closest?.<HTMLElement>("[data-jianpu-etiquette]");
+    if (etiquette) { dernierTouche = etiquette; e.stopPropagation(); }
+  };
   return (
     <ChantDesAccords chant={{ slug: block.songSlug, titre: block.songTitle }} ici={ici}>
       <div className="contents" onPointerDown={arret} onPointerUp={arret} onPointerCancel={arret}>{children}</div>
@@ -100,13 +120,12 @@ export function ScanTouchable({ block, children }: { block: JianpuSheetBlock; ch
   );
 }
 
-/** Le volet, par-dessus la page : colonne au bord droit (≥ 1 024 px) entre les barres (`haut`, `bas`, px : leurs boutons
- *  et la croix du mode louange restent visibles), sinon feuille à mi-hauteur. */
-export function VoletHarmonieLouange({ volet, onClose, haut = 0, bas = 0 }: { volet: VoletOuvert | null; onClose: () => void; haut?: number; bas?: number }) {
+/** Le volet, par-dessus la page : fenêtre accrochée au nom touché (≥ 768 px), sinon feuille à mi-hauteur. */
+export function VoletHarmonieLouange({ volet, onClose }: { volet: VoletOuvert | null; onClose: () => void }) {
   const acces = useAccesHarmonie();
   const [instrument] = useInstrument(acces);
-  const grand = useGrandEcranHarmonie();
-  // Colonne : Échap la ferme, et elle seule (marqué avant l'écouteur de la colonne et celui du mode louange, qui quitterait).
+  const grand = useAuMoinsMd();
+  // Fenêtre : Échap la ferme, et elle seule (marqué avant l'écouteur du mode louange, qui quitterait).
   // La feuille est un dialogue : Radix marque son Échap lui-même.
   const ouvert = !!volet;
   useEffect(() => {
@@ -130,17 +149,16 @@ export function VoletHarmonieLouange({ volet, onClose, haut = 0, bas = 0 }: { vo
       tonalite={volet.tonalite}
       tonaliteOrigine={volet.tonaliteOrigine}
       instrument={instrument}
-      disposition={grand ? "colonne" : "feuille"}
-      styleColonne={{ top: 0, marginTop: 0, height: `calc(100dvh - ${haut + bas}px)` }}
-      passage={{ uid: volet.uid, cle: volet.cle, miHauteur: true }}
+      disposition={grand ? "fenetre" : "feuille"}
+      ancre={volet.ancre}
+      passage={{ uid: volet.uid, cle: volet.cle, miHauteur: !grand }}
       louange
     />
   );
   return (
     <div
       data-volet-harmonie-louange
-      className={grand ? "absolute right-0 z-[60] flex select-text print:hidden" : "contents"}
-      style={grand ? { top: haut, bottom: bas } : undefined}
+      className="contents"
       onPointerDown={arret}
       onPointerUp={arret}
       onPointerCancel={arret}
