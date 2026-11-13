@@ -338,5 +338,8 @@ chantier sur ce fichier.
 - 13/11/2026 : cadrage (diagnostic par un `chercheur`, planche `/planche`, spec). Aucun code, aucun test lancé. Attend
   le go de Timothée. Point 5 du pilote (menu Setlist du mode louange) : `docs/spec-louange-tous-les-chants.md` §
   « Reprise du 13/11 », tranche TC-4.
+- 13/11/2026 : **go de Timothée pour JV-1 et JV-2** (« oui », après la question « Go pour JV-1 et JV-2, et je lance la
+  planche des idées d'harmonie ? ») : JV-1 lancée ; JV-2 après JV-3 (même `PartitionView.tsx`), lancée par la session de
+  JV-3 ; planche « toutes les idées d'une section » lancée par la session de cadrage.
 - 13/11/2026 : go de Timothée pour les pistes des deux planches (B ici, A pour TC-4) : JV-3 lancée (session
   orchestratrice neuve), puis JV-4 après TC-4.
