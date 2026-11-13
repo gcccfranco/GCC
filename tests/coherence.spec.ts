@@ -107,12 +107,13 @@ test("Moi : plus de ligne Harmonie, même pour qui a accès au catalogue (retir�
 test("manifeste : une seule source, celle de l'app, au nom et à la couleur du look", async ({ request }) => {
   const res = await request.get("/manifest.webmanifest");
   expect(res.ok()).toBe(true);
-  const m = (await res.json()) as { name: string; short_name: string; theme_color: string; start_url: string; orientation?: string };
+  const m = (await res.json()) as { name: string; short_name: string; theme_color: string; start_url: string; scope?: string; orientation?: string };
   expect(m.name).toBe("GCC");
   expect(m.short_name).toBe("GCC");
   expect(m.theme_color).toBe("#ffffff"); // fond blanc de 5C1 (docs/spec-look.md § 20/09/2026)
   // A3 bis : barre finale, pour que la copie hors ligne se retrouve (la redirection 308 n est pas gardée).
   expect(m.start_url).toBe("/planning/");
+  expect(m.scope).toBe("/"); // portée : tout le site (iPadOS : pas de barre de navigateur hors /planning/)
   // Lot U5 (docs/spec-deux-volets.md, question 7) : l'app installée tourne avec la
   // tablette, sinon ni deux volets ni deux colonnes sur une tablette Android couchée.
   expect(m.orientation, "aucune orientation imposée").toBeUndefined();
