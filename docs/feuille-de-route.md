@@ -152,6 +152,17 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   « S'entraîner ») et `docs/spec-metronome.md` (lot MT, quatre tranches, cinq questions avec recommandation).
   Décisions de Timothée (13/11) : « chacun un métronome, pas de son pendant le culte, un son quand ils veulent
   s'entrainer » : un métronome par appareil ; son coupé par défaut, allumé à la demande pour répéter.
+  **État au 13/11, 22 h UTC (pilote)** : faits et poussés aujourd'hui : son de piano (`ab1064b0`), constats 1, 4, 5 du
+  parcours, manifeste `scope: "/"` (`d336fdb5`, à essayer par Timothée sur l'iPad en réinstallant l'icône), aperçu de
+  page suivante retiré (`6c607fe9`), TC-4 (menu Setlist en deux onglets), lot JV entier (JV-1 à JV-5c).
+  **Go de Timothée (« Go », en réponse à « go pour les finitions »)** : finitions du lot JV : 9 échecs à 1 440 px
+  (`jianpu-integration` 264, 661, 682 ; six tests Crayon d'`harmonie-jianpu`), trois défauts d'apparence laissés par
+  JV-5c, `critique-design` sur les onze captures (§ Avancement de `docs/spec-jianpu-deux-volets.md`).
+  **Attendent Timothée** : publier `firestore.rules` (crayon et Apple Pencil absents sans cela : `crayonPret` faux
+  après le 403 de `partitions/`, diagnostic de `session_01UMdfuZTdptjjrzmrPMcQPN`) ; « go pour le crayon grisé »
+  (retouche de `useMesPartitions`) ; choix sur `docs/spec-reglages-unifies.md` (piste B recommandée) et sur
+  `docs/spec-metronome.md` (piste A recommandée) ; les 17 autres constats de `docs/parcours-oeil-2026-11-13.md`, à
+  lui présenter en liste après la planche des réglages ; écoute du piano ; mise en ligne ; « fumée Safari ».
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.
