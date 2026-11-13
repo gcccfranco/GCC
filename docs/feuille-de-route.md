@@ -162,6 +162,10 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   testé sur les grands écrans), pastille et marges du mode louange retouchées ; huit choix de design de `critique-design`
   « à décider par Timothée » (§ Avancement de la spec, entrée « Finitions »).
   **Mode louange, idées d'harmonie en fenêtre** (ordre de Timothée, choix 6) : fait le 13/11 (`87fb92c`).
+  **État au 13/11, 23 h 30 UTC (pilote)** : RU-4 faite (`81348e32`) ; **RU-5 attend** que `PerformanceMode.tsx` soit
+  libre (lot MT et six points finis), consigne de RU-4 avec RU-5 à la place, à lancer par le pilote ou par la session
+  qui libère le fichier. Six points du rail (go de Timothée) : session `session_01UMdfucWej4KmZA3Be594iz`. MT-2
+  (`4787e9fb`, mise en fenêtre en cours) et MT-3 tournent. Trois chantiers de code.
   **Deux demandes de Timothée du 13/11 au soir** (ses mots), à cadrer : (1) « on a du mal à différencier l'ancienne
   progression et la nouvelle progression d'accord dans les idées d'harmonie » : il choisit « ancienne grisée » (ancienne
   progression en gris discret, nouvelle en bleu, petits mots « avant » / « après » au-dessus) ; retouche, **go à
