@@ -8,7 +8,7 @@ import { attendreCompteur, attendreMiseEnPage, lireCompteur, onStage, ouvrirOpti
 // Réglage « Idées d'harmonie » éteint par défaut, par compte, absent sans accès harmonie. Noms fictifs.
 
 const SETLIST_ID = "setlist-louange-harmonie";
-const SANS_ACCES: FakeProfile = { uid: "uid-camille", email: "camille@example.com", firstName: "Camille", lastName: "V.", planningName: "Camille V." };
+const SANS_ACCES: FakeProfile = { uid: "uid-camille", email: "camille@example.com", firstName: "Camille", lastName: "V.", planningName: "Camille V.", ...musicien("batterie") };
 const AVEC_ACCES: FakeProfile = { uid: "uid-sacha", email: "sacha@example.com", firstName: "Sacha", lastName: "R.", planningName: "Sacha R.", ...musicien("piano") };
 
 const CHANTS = [
@@ -40,7 +40,7 @@ async function ouvrirMode(page: Page, profil: FakeProfile, c: (typeof CHANTS)[nu
     if (on) localStorage.setItem(`perf-idees-harmonie-${u}`, "1");
   }, { u: profil.uid, zh: c.langue === "zh", on: allume });
   await signInAs(page, profil, { [`setlists/${SETLIST_ID}`]: setlist(c.slug, cle) }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: c.langue === "zh" ? /演奏模式|崇拜模式|Mode Louange/ : /Mode Louange/ }).first().click();
+  await page.getByRole("button", { name: c.langue === "zh" ? /敬拜模式/ : /Mode Louange/ }).first().click();
   await attendreMiseEnPage(page);
   await attendreCompteur(page, /^\d+ \/ \d+$/);
 }
@@ -56,6 +56,8 @@ for (const c of CHANTS) {
     const reglage = feuille.getByRole("button", { name: c.langue === "zh" ? "和声提示" : "Idées d'harmonie" });
     await expect(reglage).toBeVisible();
     await reglage.click();
+    await page.keyboard.press("Escape"); // la feuille couvre la scène au téléphone
+    await expect(feuille).toBeHidden();
     await expect(points(page).first()).toBeVisible({ timeout: 15_000 });
     expect(await page.evaluate((u) => localStorage.getItem(`perf-idees-harmonie-${u}`), AVEC_ACCES.uid)).toBe("1");
   });
