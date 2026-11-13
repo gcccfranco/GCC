@@ -703,6 +703,8 @@
     "onPage": "页面显示",
     "twoColumns": "双栏",
     "halfPage": "半页翻页",
+    "ideesHarmonie": "和声提示",
+    "ideeHarmonieSection": "和声提示：{{nom}}",
     "halfPageHandle": "半页",
     "settings": "设置",
     "sectionOrder": "段落顺序",

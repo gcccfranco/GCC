@@ -28,6 +28,7 @@ export const CLES_USAGE: Record<string, string> = {
   "cmd.chant.jeJoue": "Chant : « Je joue » (rôle choisi)",
   "cmd.louange.ouvrir": "Mode louange : ouvrir",
   "cmd.louange.pleinEcran": "Mode louange : plein écran",
+  "cmd.louange.harmonie": "Mode louange : idée d'harmonie en marge (ouvre la bande)",
   "cmd.louange.affichage.unique": "Mode louange : affichage « section unique »",
   "cmd.louange.affichage.played": "Mode louange : affichage « ordre joué »",
   "cmd.louange.affichage.structure": "Mode louange : affichage « structure seule »",

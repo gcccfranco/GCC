@@ -22,7 +22,7 @@ import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
 import { ancrerSurPremiereLigne, ancrerTrace, uniteProche, useTraitsAncres, type TraitsParChant } from "./hooks/useTraitsAncres";
 import { deleteAnnotation } from "@/lib/firebase/annotations";
-import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, AlignLeft, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves, X } from "lucide-react";
+import { Check, Lightbulb, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, AlignLeft, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves, X } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import type { Tranche } from "@/lib/performance/tranchesScan";
 import type { TrancheFenetre } from "@/components/jianpu/JianpuSheet";
@@ -67,6 +67,8 @@ import { FOND_CLAIR, FOND_SOMBRE, SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE, TEIN
 import { getMetronomePref, setMetronomePref } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
+import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
+import { ecrireReglageIdees, FournisseurIdees, IdeeHarmonieMarge, lireReglageIdees, useBandeOuverte, useIdeesHarmonie } from "./IdeeHarmonieMarge";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { compter } from "@/lib/usage";
@@ -171,6 +173,7 @@ function BlockRenderer({
   }
   if (feuilleRoute) return <LigneFeuilleDeRoute block={block} repeat={repeat} couleurDe={couleurDe} disposition={disposition} transition={transitionApres} />;
   return (
+    <IdeeHarmonieMarge block={block}>
     <SectionView
       section={block.section}
       language={block.language}
@@ -191,6 +194,7 @@ function BlockRenderer({
       slug={block.songSlug}
       marques={marques}
     />
+    </IdeeHarmonieMarge>
   );
 }
 
@@ -882,6 +886,14 @@ export function PerformanceMode({
     () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPrefVu, personalKeys, { affichage: affichageVu, choixScan }),
     [items, contents, capoActive, capos, jianpuManifest, jianpuPrefVu, personalKeys, affichageVu, choixScan],
   );
+
+  // H8-1 : idées d'harmonie en marge (réglage par compte, éteint par défaut ; accès comme la porte 2).
+  const { peut: peutHarmonie } = useAccesHarmonie();
+  const [reglageIdees, setReglageIdees] = useState(() => lireReglageIdees(uid));
+  const ideesActives = reglageIdees && peutHarmonie;
+  const ideesDesBlocs = useIdeesHarmonie(blocks, contents, ideesActives);
+  const [bandeOuverte, basculerBande] = useBandeOuverte();
+  const ideesVues = useMemo(() => (annotateMode ? new Map() : ideesDesBlocs), [annotateMode, ideesDesBlocs]);
 
   const { repeatCount, repeatHidden } = useMemo(
     () => replisStructure(blocks, structureMode, showTransitions, t),
@@ -1973,6 +1985,7 @@ export function PerformanceMode({
   );
 
   return (
+    <FournisseurIdees value={{ idees: ideesVues, ouvert: bandeOuverte, basculer: basculerBande }}>
     <div
       data-performance-mode
       data-disposition={disposition}
@@ -2751,6 +2764,11 @@ export function PerformanceMode({
               <BoutonSurPage label={t("performance.halfPage")} allume={demiOn} onClick={basculerDemi}>
                 <PanelTopBottomDashed className="h-5 w-5" />
               </BoutonSurPage>
+              {peutHarmonie && (
+                <BoutonSurPage label={t("performance.ideesHarmonie")} allume={reglageIdees} onClick={() => { ecrireReglageIdees(uid, !reglageIdees); setReglageIdees(!reglageIdees); }}>
+                  <Lightbulb className="h-5 w-5" />
+                </BoutonSurPage>
+              )}
             </div>
             {hasJianpuSheets && !structureMode && <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>}
           </div>
@@ -2854,6 +2872,7 @@ export function PerformanceMode({
         </div>
       </MenuLouange>
     </div>
+    </FournisseurIdees>
   );
 }
 

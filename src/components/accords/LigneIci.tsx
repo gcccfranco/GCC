@@ -19,7 +19,7 @@ import { useNotationDuCompte } from "@/components/song/NotationAccordsProvider";
 
 // Un appel par chant : le panneau se rouvre à chaque accord touché. Vidé si l'appel échoue.
 const cache = new Map<string, Promise<[Rejet[], Idee[]]>>();
-function donneesDuChant(slug: string) {
+export function donneesDuChant(slug: string) {
   let p = cache.get(slug);
   if (!p) {
     p = Promise.all([getRejets(slug), getIdees(slug)]);
@@ -29,14 +29,14 @@ function donneesDuChant(slug: string) {
   return p;
 }
 
-const chiffre = (accord: string, tonalite: string) => {
+export const chiffre = (accord: string, tonalite: string) => {
   const d = degreDeLAccord(accord, tonalite);
   return d ? chiffreDuDegre(d) : "";
 };
-const chiffres = (accords: string[], tonalite: string) => accords.map((a) => chiffre(a, tonalite)).filter(Boolean).join(" ");
+export const chiffres = (accords: string[], tonalite: string) => accords.map((a) => chiffre(a, tonalite)).filter(Boolean).join(" ");
 
 // Les lettres d'une suite, de la tonalité `de` à la tonalité affichée ; comme `chiffres`, sans ce qui n'est pas un accord.
-const lettres = (accords: string[], de: string, vers: string) =>
+export const lettres = (accords: string[], de: string, vers: string) =>
   accords.filter((a) => chiffre(a, de)).map((a) => (de === vers ? a : transposeChord(a, semitonesTo(de, vers), vers))).join(" ");
 
 export function LigneIci({ accord, harmonie, slug, bulle }: { accord: string; harmonie: HarmonieDuPanneau; slug?: string; bulle: boolean }) {
