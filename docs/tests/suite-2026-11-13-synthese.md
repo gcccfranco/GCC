@@ -77,3 +77,4 @@ Une ligne par chantier : échec, qui avait tort (site ou test), correction, comm
   60 px au-dessus du bas des sections). Commit be3be77.
 - C4, rejeu : les trois specs entières sur ordinateur, téléphone et tablette, 209 passés, 34 sautés (prévus), 0 échec
   ni instable, 9 min ; `tsc` et `lint` propres.
+- C5 · `agencement-v18-planning.spec.ts:264`, suite de la décision déléguée : site ; colonne Date à 112 px au toucher seulement (96 à la souris), badge sans retour à la ligne ; ligne de 69 px ; captures du Back-Office en tablette portrait et paysage regardées, rien ne déborde sur Présidence ; 6401de21. `agencement-v18-planning`, `planning-grille`, `-gestes-agencement`, `-copier`, `-clavier`, `-remplir`, `-2027` sur les cinq projets : 552 réussis, 123 sautés, 0 échec, 11,9 min ; `tsc` propre, lint 0 erreur. Bilan C5 : 1 corrigé site, 1 test, 0 à décider.
