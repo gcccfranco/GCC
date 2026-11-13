@@ -118,7 +118,56 @@ attendant le point 1.
 
 ## Point 1 — 简谱 sur deux volets
 
-_Section complétée après la planche (ci-dessous)._
+### Constat (prouvé)
+
+- Vue Partitions : le scan est enveloppé (`data-enveloppe-scan`) et plafonné à 920 px, **sur une rangée entière** de
+  la grille (`_components/PartitionView.tsx:645-650`) ; décision Q3 de T4 (`docs/spec-exemples-usage.md:280`, commit
+  `622160a4`). Les chants en paroles passent en deux colonnes dès 1 000 px de zone ; le scan, jamais : d'où la bande
+  vide à droite sur écran large.
+- 189 scans sur 190 n'ont **qu'une page** (portrait, ≈ 1 600 × 2 353 px ; seul 为我而来 en a deux) : « deux pages
+  côte à côte » n'existe presque jamais ; deux volets veulent dire couper une page (mesure de la planche, sur
+  `public/jianpu/systemes.json`, `marges.json`, `chords.json`).
+- Le découpage existe déjà dans le mode louange : tranches entre deux lignes (lot JP-B, `src/components/performance/PageScan.tsx:15-17`) et
+  demi-lignes au téléphone (lot JP-C, `tranchesDemiLignes`, `JianpuSheet` `tranche.demi`), calque déjà calé et testé
+  sur ces fenêtres. La décision du 03/10/2026 (`docs/spec-deux-volets.md:78`, « un chant en 简谱 reste tel quel, sans
+  coupe en deux pages ») est donc déjà levée de fait pour les tranches.
+- Page chant : colonne de 672 px (`max-w-2xl`), une colonne aussi pour les chants en paroles.
+
+### Planche
+
+`docs/planches/planche-jianpu-deux-volets.html`, artefact privé https://claude.ai/artifact/FJmdbWyBhbKPUwkQcUPUqA. Trois pistes, mesurées sur
+全新的你 (7 lignes, une page) :
+
+| Piste | Idée | Accords imprimés à 1 280 (aujourd'hui 14,4 px) | Verdict |
+|---|---|---|---|
+| A. Recueil ouvert | la page coupée en deux moitiés côte à côte, tout le chant à l'écran | ≈ 7,6 px | illisible à bout de bras |
+| **B. Demi-lignes en deux volets (recommandée)** | chaque ligne coupée sur la barre la plus proche du milieu (comme au téléphone), demi-lignes réparties en deux colonnes équilibrées | ≈ 13,1 px (14,4 à 1 440, plafonnée) | même taille, largeur remplie, cohérente avec les chants en paroles |
+| C. Pupitre, tourne d'un volet | deux volets à hauteur d'écran, tourne d'un volet | comme B | piège le défilement, une tourne de plus à apprendre |
+
+À dire franchement : à taille égale, aucune piste ne montre plus de musique (une page portrait sur un écran paysage
+occupe déjà la surface) ; B supprime la bande vide et fait gagner ≈ 10 % de hauteur, elle ne supprime pas le défilement.
+
+Critique de la planche (critique-design, « à retoucher », non reprise faute d'agent prévu) : les dessins
+d'ordinateur sont réduits (la différence de lisibilité A / B ne se voit pas, l'étiquette d'harmonie fait ≈ 4 px), la
+tablette paysage et le 1 440 ne sont qu'en tableau, A et C sont dessinées avec leurs défauts, et les 2 px entre deux
+moitiés d'une ligne se perdent dans le blanc du scan. À reprendre si Timothée hésite entre A et B ; sans effet sur la
+recommandation, qui tient aux mesures.
+
+### Proposition (piste B)
+
+- **Vue Partitions** (tablette paysage, ordinateur, 1 440) : dès 1 000 px de zone (même règle que les paroles), le scan
+  passe en deux colonnes de demi-lignes, échelle calculée sur la colonne et **plafonnée à celle d'aujourd'hui** (à 1 440
+  l'air reste à droite). Coupe entre les colonnes au début de section le plus proche si les colonnes ne diffèrent pas
+  de plus de deux demi-lignes, sinon au milieu. Une colonne si les accords imprimés tomberaient sous **11 px** (seuil de
+  la planche : 3 scans sur 190 à 1 280). Téléphone et tablette portrait : inchangés.
+- **Mode louange** : le scan suit l'interrupteur « 2 colonnes » existant ; une page d'écran se remplit de deux
+  colonnes de demi-lignes au lieu de tranches de lignes entières ; pagination, « Ensuite » et demi-page inchangées.
+- **Page chant** : une colonne, inchangée dans ce lot.
+- Le calque n'est jamais touché à l'intérieur : chaque demi-ligne est une fenêtre `JianpuSheet` déjà calée.
+
+- **Q6 — Piste** : **B** (**recommandée**), A (tout le chant d'un coup, accords deux fois plus petits) ou C.
+- **Q7 — Mode louange aussi** : oui, le scan suit l'interrupteur « 2 colonnes » (**recommandé**, et la levée de la
+  décision du 03/10 s'écrit datée dans `spec-deux-volets.md`) ou vue Partitions seulement.
 
 ---
 
@@ -161,14 +210,83 @@ _Section complétée après la planche (ci-dessous)._
 
 - **Q4 — Notation de la bande** : une seule, celle de la bascule (**recommandé**, cohérent avec H7-2) ou les deux
   (décision H8 actuelle).
-- **Q5 — Idées sur le scan** : point en marge à la hauteur de la section (**recommandé**, même geste qu'en paroles)
-  ou une liste « Idées d'harmonie » au-dessus du scan (plus simple, mais loin de la musique).
+- **Q5 — Idées sur le scan** : point en marge à la hauteur de la section (**recommandé**, même geste qu'en paroles ;
+  dans la vue Partitions visible d'office pour qui a accès à l'harmonie, dans le mode louange derrière le réglage
+  « Idées d'harmonie » éteint par défaut, comme H8 ; rien écrit sur l'encre ni dans le calque) ou une liste « Idées
+  d'harmonie » au-dessus du scan (plus simple, mais loin de la musique).
 
 ---
 
 ## Tranches
 
-_Complétées après la planche._
+Une session par tranche (`CLAUDE.md`, « Une session par tranche ») ; tests de la tranche sur les trois appareils,
+les cinq projets pour une spec d'agencement (ajoutée à `SPECS_GRAND_ECRAN`) ; captures aux quatre dispositions et à
+1 440 px dès que l'apparence change ; un chant FR et un chant ZH. JV-1 se code seule ; JV-2 et JV-3 touchent
+`PartitionView.tsx` : l'une après l'autre ; JV-4 et JV-5 touchent `PerformanceMode.tsx` : pas pendant un autre
+chantier sur ce fichier.
+
+### JV-1 — 简谱 d'office pour les musiciens (S à M ; point 3, Q1 et Q2)
+
+- Fichiers : `src/lib/jianpu/preference.ts` (`sheetEnabled(pref, role)`, `prefPourRole` absorbé) ; appelants
+  `SetlistDetailClient.tsx:995, :1823`, `PartitionView.tsx:505`, `ListView.tsx:276`, `Sommaire.tsx:76`,
+  `IdeesDuChant.tsx:146`, `SetlistFullPDF.tsx:129`, `Pupitre.tsx:106`, `blocks.ts:172`, `PerformanceMode.tsx:720`
+  (rôle hors louange : `getRole(uid)` de `roleCompte.ts`) ; éditeur `editeur/Volets.tsx:115-130` (radiogroup « Jouer
+  sur » retiré) et `editeur/ListeCourte.tsx:199` (badge retiré) ; libellés devenus orphelins dans `src/locales/`.
+  `choixScan` des ajouts locaux inchangé. Aucune règle Firestore, aucune permission.
+- Critères : préférence non réglée + item `jianpuSheet: false` → le scan pour un musicien et pour une personne sans
+  rôle, dans la vue Partitions, la Liste, le Sommaire, le Pupitre, le PDF et le mode louange ; paroles + pinyin pour
+  choriste et présidence ; « always » / « never » de la personne l'emportent toujours ; l'éditeur n'offre plus
+  « Jouer sur » ; une setlist ancienne avec `jianpuSheet: false` s'ouvre sans erreur.
+- Tests : `tests/jianpu-par-defaut.spec.ts` (table `:28-47` réécrite avec le rôle ; `:211-213` devient « non réglée :
+  le scan, quel que soit le choix du responsable » ; cas choriste et présidence hors louange) ;
+  `tests/louange-roles-jianpu.spec.ts` (voisine) ; `tests/setlist-editeur-piste2.spec.ts:245-256` (le test de
+  l'interrupteur « Jouer sur » se réécrit : il n'existe plus, les accords retouchés restent). Specs qui posent
+  `jianpuSheet: false` pour **forcer les paroles** d'un chant à scan : passer par la préférence « never » de
+  l'appareil (localStorage `jianpu-sheet-pref`) — `accords-toucher.spec.ts:44`, `captures-a6.spec.ts:27`,
+  `harmonie-montrer.spec.ts:42, :158`, `jianpu-par-defaut.spec.ts:177, :289`, `mode-louange-colonnes.spec.ts:215,
+  :343`, `pupitre-partitions.spec.ts:27, :29`. Aucune garde retirée.
+
+### JV-2 — Deux colonnes lues en colonnes (S ; point 4, si Q3 = colonnes)
+
+- Fichiers : `PartitionView.tsx:295` et `src/components/song/SongView.tsx:1496` (même grille, T4) : `grid-cols-2`
+  → `columns: 2` + `break-inside: avoid` sur les sections, mêmes seuil, largeur et gouttière.
+- Critères : à 1 440 × 900, Hosanna se lit colonne gauche de haut en bas puis colonne droite ; aucune section coupée
+  entre deux colonnes ; aucune ligne de paroles coupée ; 1 280 et tablette paysage inchangés (une colonne de 920 px).
+- Tests : `tests/pupitre-partitions.spec.ts` (garde « lecture en rangées » réécrite en « lecture en colonnes ») ;
+  voisines `pages-en-grand-setlists`, `setlist-deux-volets`.
+
+### JV-3 — 简谱 en deux volets dans la vue Partitions (M ; point 1, piste B)
+
+- Fichiers : nouvelle fonction pure dans `src/lib/performance/tranchesScan.ts` (répartir les demi-lignes en deux
+  colonnes, coupe au début de section par `public/jianpu/sections.json`) ; `PartitionView.tsx:645-650` (l'enveloppe
+  passe en deux colonnes sous la même requête de conteneur, échelle plafonnée) ; `JianpuSheet.tsx` seulement appelé
+  avec `tranche.demi` (si le mode demi doit s'ouvrir au rendu en flux : une ligne du conteneur, pas le calque).
+- Critères : à 1 440 et en tablette paysage, deux colonnes de demi-lignes, accords imprimés ≥ 11 px et ≤ ceux
+  d'aujourd'hui ; calque calé sur l'image (étiquette ↔ accord imprimé à ±2 px) ; 为我而来 (deux pages) sans trou ;
+  une colonne sous le seuil ; téléphone et tablette portrait inchangés.
+- Tests : nouvelle `tests/jianpu-deux-volets.spec.ts` (dans `SPECS_GRAND_ECRAN`) ; à changer
+  `pupitre-partitions.spec.ts` (garde « 简谱 ≤ 920 px sur une rangée entière ») ; voisines `jianpu-integration`,
+  `jianpu-tonalite-cho`, `harmonie-jianpu`. `npm run jianpu:audit` sur deux scans, PNG regardés.
+
+### JV-4 — 简谱 en deux colonnes dans le mode louange (M ; si Q7 = oui)
+
+- Fichiers : `PerformanceMode.tsx`, `src/lib/performance/columns.ts`, `PageScan.tsx` ; levée datée dans
+  `docs/spec-deux-volets.md` (tableau des décisions, ligne du 03/10).
+- Critères : interrupteur « 2 colonnes » allumé, ordinateur et tablette paysage : une page d'écran = deux colonnes
+  de demi-lignes ; éteint : comme aujourd'hui ; pagination, « Ensuite », demi-page et annotations inchangées.
+- Tests : `louange-jianpu-tranches.spec.ts`, `mode-louange-colonnes.spec.ts`, `performance-mode.spec.ts` (voisine).
+
+### JV-5 — Idées d'harmonie : notation, puis scan (S puis M ; point 2, Q4 et Q5)
+
+- **JV-5a** : `src/components/performance/IdeeHarmonieMarge.tsx:112` suit `src/lib/notationAccords.ts` (une seule
+  notation) ; `docs/spec-harmonie-accords.md:319` mis à jour. Test : `tests/louange-harmonie.spec.ts` (bande en
+  lettres par défaut, en chiffres si la personne a choisi « Chiffres »).
+- **JV-5b** : lien `sections.json` ↔ passages (`src/lib/setlist/sectionOrigins.ts`) ; point et bande sur le scan
+  (couche sœur du calque, marge gauche de la colonne, hauteur de la première ligne de la section) ; étiquettes du
+  calque avec `data-section-uids` pour « Ici ». Critères : un chant ZH à scan avec idée montre son point dans la vue
+  Partitions (accès harmonie) et dans le mode louange (réglage allumé) ; toucher : la bande s'ouvre sans recouvrir
+  l'encre ; « Ici » dans le panneau d'un accord du calque. Tests : `tests/harmonie-jianpu.spec.ts` (étendue),
+  `tests/louange-harmonie.spec.ts`.
 
 ## Avancement
 
