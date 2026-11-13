@@ -138,6 +138,10 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   (a) corriger les constats 1 (menus du mode louange qui dépassent), 4 (cadres vides du choriste) et 5 (barre de la
   page chant au téléphone) ; (b) planche « réglages et tonalité au même endroit sur les trois écrans » (constats 2
   et 3), sans code avant son choix. Attendent encore son go : JV-1, JV-2, JV-5 (`docs/spec-jianpu-deux-volets.md`).
+  **En attente d'une place (demande de Timothée, 13/11, 16 h 50 UTC)** : cadrage sans code d'un **vrai métronome
+  dans le mode louange** (« un métronome avec du son et un métronome plus visuel qu'un simple trait qui bouge, il
+  faudrait pouvoir choisir si c'est binaire ternaire, les temps fort et tout, en gros tout comme une vrai application
+  de métronome ») : planche + `docs/spec-metronome.md`. Le pilote le lance dès qu'une des cinq sessions en cours finit.
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.
