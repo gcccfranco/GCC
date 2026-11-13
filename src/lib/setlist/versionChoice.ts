@@ -39,15 +39,9 @@ export function songVersionView(
   const mine = versions[uid]?.items[slug];
   const options: SongVersionView["options"] = [{ value: PRESIDENCE, kind: "presidence" }];
   if (mine?.content) options.push({ value: uid, kind: "mine" });
-  for (const [author, doc] of Object.entries(versions)) {
-    const item = doc.items[slug];
-    if (author !== uid && item?.shared && item.content) {
-      options.push({ value: author, kind: "other", name: doc.authorName });
-    }
-  }
+  // Les anciens partages (`shared`) ne sont plus proposés (MP-6) : seule ma propre ancienne version reste.
 
-  // Le choix enregistré, s'il est encore proposé (une version retirée du
-  // partage ramène à la présidence) ; sinon la mienne, sinon la présidence.
+  // Le choix enregistré, s'il est encore proposé (un ancien partage ramène à la présidence) ; sinon la mienne, sinon la présidence.
   const choice = versions[uid]?.choices[slug];
   const chosen =
     options.find((o) => o.value === choice) ??
@@ -81,21 +75,10 @@ export function withMyJianpuItem(item: SetlistItem, myItems: MesItems): SetlistI
   return aDesRetouches(jianpuChords) ? { ...item, jianpuChords } : item;
 }
 
-/** Item en mode « Ma version » : mes accords et paroles à la place de ceux de la présidence. */
-export function withMineItem(item: SetlistItem, myItems: MesItems): SetlistItem {
-  const content = myItems?.[item.songSlug]?.content;
-  return withMyJianpuItem(content ? { ...item, contentOverride: content } : item, myItems);
-}
-
 /** Item tel qu'affiché : les accords et paroles de la version choisie (`view` = `viewOf(item)`). */
 export function withChosenItem(item: SetlistItem, view: SongVersionView | undefined, myItems: MesItems): SetlistItem {
   const content = view?.content;
   return withMyJianpuItem(content ? { ...item, contentOverride: content } : item, myItems);
-}
-
-/** Structure que suit le corps du chant en « Ma version » : la mienne, sinon celle de la présidence. */
-export function myStructureOf(item: SetlistItem, myItems: MesItems): string[] | null {
-  return myItems?.[item.songSlug]?.structure ?? item.structureOverride ?? null;
 }
 
 /** Sommaire et mode louange : ma structure remplace aussi celle de la présidence, sans ses notes,

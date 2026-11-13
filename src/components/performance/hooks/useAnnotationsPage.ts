@@ -27,6 +27,8 @@ export function useAnnotationsPage({
   const [ancienneCompositionTraits, setAncienneCompositionTraits] = useState(false);
   const anciennesStr = anciennesCompositions.join("\n");
   const [pageAnnotations, setPageAnnotations] = useState<AnnotationData | null>(null);
+  // Clé du document ancien réellement lu pour la page (la sienne ou l'ancienne clé) : « Recopier » le supprime.
+  const [cleLue, setCleLue] = useState<string | null>(null);
   // Annotations d'avant le lot : Sections uniques avec rappel = ancienne réserve, sinon 0.
   const annotations = useMemo(
     () =>
@@ -58,6 +60,7 @@ export function useAnnotationsPage({
   useEffect(() => {
     setAnnotationsIndispo(false);
     setAncienneCompositionTraits(false);
+    setCleLue(null);
     if (!user || !currentPageKey) { setPageAnnotations(null); return; }
     let stale = false;
     setPageAnnotations(null);
@@ -65,12 +68,13 @@ export function useAnnotationsPage({
     const minuterie = setTimeout(() => {
       loadAnnotation(user.uid, setlistId, currentPageKey).then(async (lu) => {
         let raw = lu;
-        // Rien sous la nouvelle clé : l'annotation de l'ancienne page (jamais effacée) ; la première
-        // modification l'enregistre sous la nouvelle clé.
-        if (raw === null && cleAncienne) raw = await loadAnnotation(user.uid, setlistId, cleAncienne);
-        return raw;
-      }).then((raw) => {
+        let cle: string | null = lu === null ? null : currentPageKey;
+        // Rien sous la nouvelle clé : l'annotation de l'ancienne page (jamais effacée).
+        if (raw === null && cleAncienne) { raw = await loadAnnotation(user.uid, setlistId, cleAncienne); if (raw !== null) cle = cleAncienne; }
+        return { raw, cle };
+      }).then(({ raw, cle }) => {
         if (stale) return;
+        setCleLue(cle);
         const parsed = raw ? deserializeAnnotations(raw) : null;
         setPageAnnotations(
           parsed ?? { w: window.innerWidth, h: window.innerHeight, strokes: [] },
@@ -101,5 +105,8 @@ export function useAnnotationsPage({
     return () => { stale = true; clearTimeout(minuterie); };
   }, [user, setlistId, currentPageKey, cleAncienne, anciennesStr]);
 
-  return { annotationsIndispo, annotations, annotationsSuivante, ancienneCompositionTraits };
+  /** Après « Recopier dans ma partition » : l'ancien calque se vide (le document est supprimé par l'appelant). */
+  const viderAnciennes = () => { setPageAnnotations((p) => p && { ...p, strokes: [] }); setCleLue(null); };
+
+  return { annotationsIndispo, annotations, annotationsSuivante, ancienneCompositionTraits, cleLue, viderAnciennes };
 }

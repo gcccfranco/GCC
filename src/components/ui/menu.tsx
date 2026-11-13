@@ -93,7 +93,7 @@ export function Menu<T extends string = string>({
         <DropdownMenuRadioGroup value={value} onValueChange={(v) => onChange(v as T)}>
           {options.map((e, i) =>
             estGroupe(e) ? (
-              <React.Fragment key={`g-${e.groupe}`}>
+              <React.Fragment key={`g-${i}`}>
                 {i > 0 && <DropdownMenuSeparator className="mx-1" />}
                 {e.groupe && <DropdownMenuLabel className="px-3 pb-1 pt-2 text-xs font-semibold text-muted-foreground">{e.groupe}</DropdownMenuLabel>}
                 {e.options.map((o) => <LigneMenu key={o.valeur} option={o} />)}

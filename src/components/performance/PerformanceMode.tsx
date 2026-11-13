@@ -20,7 +20,8 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { ancrerTrace, uniteProche, useTraitsAncres, type TraitsParChant } from "./hooks/useTraitsAncres";
+import { ancrerSurPremiereLigne, ancrerTrace, uniteProche, useTraitsAncres, type TraitsParChant } from "./hooks/useTraitsAncres";
+import { deleteAnnotation } from "@/lib/firebase/annotations";
 import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, AlignLeft, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves, X } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import type { Tranche } from "@/lib/performance/tranchesScan";
@@ -408,7 +409,7 @@ interface PerformanceModeProps {
   /** Traits accrochés au texte, par chant : les miens, et ceux de la partition partagée que je lis (si son auteur les partage). */
   traits?: TraitsParChant;
   /** Mes traits d'un chant ont changé : à écrire dans ma partition (regroupé par le parent). */
-  onTraitsChange?: (slug: string, traits: ElementTrait[]) => void;
+  onTraitsChange?: (slug: string, traits: ElementTrait[], immediat?: boolean) => Promise<boolean> | void;
   /** Chants dont ma partition est lue : le Crayon n'est offert qu'alors (sinon l'écriture écraserait le document existant). */
   chantsCharges?: Record<string, boolean>;
   /** Change quand une écriture de traits échoue : l'écran revient à l'état enregistré. */
@@ -1294,7 +1295,7 @@ export function PerformanceMode({
     if (apercuEteint && !layout[currentPage]?.fit) l.push(pageV2 ? cleAvecApercuV2 : cleAvecApercuSansV2);
     return l;
   }, [cleAvantFeuille, pageV2, cleSansV2, trancheCourante, blocks, currentPageIndices, layoutSig, ecran.grand, apercuEteint, layout, currentPage, cleAvecApercuV2, cleAvecApercuSansV2]);
-  const { annotationsIndispo, annotations, annotationsSuivante, ancienneCompositionTraits } = useAnnotationsPage({
+  const { annotationsIndispo, annotations, annotationsSuivante, ancienneCompositionTraits, cleLue, viderAnciennes } = useAnnotationsPage({
     user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, clePageSuivante, rappelSuivantEcran,
   });
   // ── Traits accrochés au texte (MP-5, docs/spec-ma-partition.md, § Traits) ──
@@ -1395,13 +1396,37 @@ export function PerformanceMode({
   useEffect(() => { historiqueRef.current = historiqueVide(); setHistorique(historiqueVide()); }, [uid, echecTraits]);
   const [dernierSlugTrace, setDernierSlugTrace] = useState<string | null>(null);
   const gesteNote = useRef(new Set<string>());
-  const appliquerTraits = (suivants: Record<string, ElementTrait[]>) => {
+  const appliquerTraits = (suivants: Record<string, ElementTrait[]>, immediat?: boolean) => {
     // Mis à jour tout de suite : deux ⌘Z avant le rendu suivant lisent le bon état.
     const avant = traitsChantsRef.current;
     traitsChantsRef.current = { ...avant, ...Object.fromEntries(Object.entries(suivants).map(([slug, l]) => [slug, { miens: l, autres: avant[slug]?.autres ?? [] }])) };
     setMiensLocaux((m) => ({ ...m, ...suivants }));
-    for (const [slug, l] of Object.entries(suivants)) onTraitsChange?.(slug, l);
+    return Promise.all(Object.entries(suivants).map(async ([slug, l]) => (await onTraitsChange?.(slug, l, immediat)) !== false));
   };
+  /** « Recopier dans ma partition » (MP-6) : les anciennes annotations de la page s'ajoutent à mes traits, ancrées à la première ligne ; l'ancien document part. */
+  const recopieEnCours = useRef(false);
+  const recopierAnciennes = async () => {
+    const racine = contentAreaRef.current;
+    if (recopieEnCours.current || !user || !racine || !annotations?.strokes.length || !cleLue || !onTraitsChange) return;
+    const elements = ancrerSurPremiereLigne(annotations, racine, loupe);
+    const slugs = [...new Set(elements.map((e) => e.slug))];
+    // Ma partition pas encore lue : l'écriture écraserait le document existant (comme le Crayon).
+    if (!slugs.length || slugs.some((slug) => chantsCharges?.[slug] === false)) return;
+    recopieEnCours.current = true;
+    try {
+      const ecrit = await appliquerTraits(Object.fromEntries(slugs.map((slug) => [slug, [...(traitsChantsRef.current[slug]?.miens ?? []), ...elements.filter((e) => e.slug === slug).map((e) => e.trait)]])), true);
+      // Écriture refusée : rien n'est supprimé, l'ancien calque reste (le parent a dit l'échec).
+      if (!ecrit.every(Boolean)) return;
+      const cle = cleLue;
+      viderAnciennes();
+      // shortcut: un échec de suppression se tait ; l'ancien calque reviendrait à la prochaine ouverture de la page (traits en double), à reprendre si on s'en plaint.
+      deleteAnnotation(user.uid, setlistId, cle).catch(() => {});
+    } finally {
+      recopieEnCours.current = false;
+    }
+  };
+  const peutChoisirLecture = !!onChoisirLecture && (lectures?.[slugAnnote ?? ""]?.options.length ?? 0) > 1;
+  const peutRecopier = !!onTraitsChange && !!cleLue && showAnnotations && (annotations?.strokes.length ?? 0) > 0 && chantsCharges?.[slugAnnote ?? ""] !== false;
   const slugsPage = [...new Set(currentPageIndices.map((i) => { const b = blocks[i]; return b && "songSlug" in b ? b.songSlug : undefined; }).filter((x): x is string => !!x))];
   // Le chant visé : celui où l'on a tracé en dernier s'il est sur la page affichée (deux chants à l'écran), sinon celui de la page.
   const slugVise = dernierSlugTrace && slugsPage.includes(dernierSlugTrace) ? dernierSlugTrace : slugAnnote;
@@ -2608,10 +2633,10 @@ export function PerformanceMode({
               <ChoixDisposition variante="panneau" langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
             </div>
             {/* Partition (MP-5) : les choix « Je lis » du chant affiché ; ni « Partager… » ni « Garder une copie » (page de setlist). */}
-            {user && !horsLigne && onChoisirLecture && slugAnnote && (lectures?.[slugAnnote]?.options.length ?? 0) > 1 && (
+            {user && !horsLigne && slugAnnote && (peutChoisirLecture || peutRecopier) && (
               <div className="space-y-2 border-t border-border pt-4">
                 <div className="px-1"><TitreRubrique id="perf-partition">{t("performance.partition")}</TitreRubrique></div>
-                <div role="radiogroup" aria-labelledby="perf-partition" data-je-joue-partition className="flex flex-col">
+                {peutChoisirLecture && <div role="radiogroup" aria-labelledby="perf-partition" data-je-joue-partition className="flex flex-col">
                   {lectures![slugAnnote].options.map((o) => {
                     const actif = lectures![slugAnnote].valeur === o.valeur;
                     return (
@@ -2620,7 +2645,7 @@ export function PerformanceMode({
                         type="button"
                         role="radio"
                         aria-checked={actif}
-                        onClick={() => onChoisirLecture(slugAnnote, o.valeur)}
+                        onClick={() => onChoisirLecture?.(slugAnnote, o.valeur)}
                         className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-base font-semibold text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${actif ? "" : "hover:bg-muted/60 active:bg-muted"}`}
                         style={actif ? { background: "color-mix(in srgb, var(--couleur-icones) 12%, transparent)" } : undefined}
                       >
@@ -2629,7 +2654,20 @@ export function PerformanceMode({
                       </button>
                     );
                   })}
-                </div>
+                </div>}
+                {peutRecopier && (
+                  <div className="space-y-1">
+                    <button
+                      type="button"
+                      data-recopier-annotations
+                      onClick={recopierAnciennes}
+                      className="flex min-h-11 w-full items-center rounded-lg px-2 py-2 text-left text-base font-medium text-[color:var(--couleur-icones)] transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-muted"
+                    >
+                      {t("performance.recopier")}
+                    </button>
+                    <p className="px-2 text-xs text-muted-foreground">{t("performance.recopierAide")}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

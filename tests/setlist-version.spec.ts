@@ -303,14 +303,6 @@ const CHRISTELLE: FakeProfile = {
   serviceRoles: { "Culte Francophone": ["musicien"] },
 };
 const CHRISTELLE_DOC = `setlists/${SETLIST_ID}/versions/${CHRISTELLE.uid}`;
-/** La version de Ruth (« flottait »), partagée. */
-const RUTH_SHARED = myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: true } });
-/** Version de Ruth de 一生爱你 : première ligne du couplet (et son pinyin) retirée.
- *  Le filtre lit les paroles sans accords : la partition pose A dans « 宝[A]贵 ». */
-const MY_ZH = readFileSync("content/songs/一生爱你.cho", "utf8")
-  .split("\n")
-  .filter((l) => !l.replace(/\[[^\]]*\]/g, "").includes("宝贵") && !l.startsWith("qīn ài de bǎo guì"))
-  .join("\n");
 // Le choix de partition est le menu « Je lis » (MP-2) : le déclencheur se nomme « Je lis : <choix> », le panneau est dans le portail de la page.
 const versionSelect = (page: Page, position: number) => song(page, position).getByRole("button", { name: /^Je lis : / });
 const choisirVersion = async (page: Page, position: number, libelle: string) => {
@@ -318,30 +310,6 @@ const choisirVersion = async (page: Page, position: number, libelle: string) => 
   await page.getByRole("menuitemradio", { name: libelle, exact: true }).click();
 };
 const copyButton = (page: Page, position: number) => song(page, position).getByRole("button", { name: "Copier les paroles" });
-
-test("une version partagée se choisit, et le choix suit mon compte jusqu'en mode louange", async ({ page }) => {
-  const db = await openPartitions(page, { [VERSION_DOC]: RUTH_SHARED }, CHRISTELLE);
-  await expect(lyricLine(page, "planait")).toHaveCount(1);
-  await expect(versionSelect(page, 1)).toHaveAccessibleName("Je lis : Le chant d'origine");
-  await expect(versionSelect(page, 2), "pas d'alternative sur le second chant").toHaveCount(0);
-  await choisirVersion(page, 1, "Version de Ruth K.");
-
-  await expect(lyricLine(page, "flottait")).toHaveCount(1);
-  await expect(song(page, 1).getByText("Version de Ruth K.", { exact: true })).toBeVisible();
-  await expect(copyButton(page, 1), "pas de copie des paroles hors présidence").toHaveCount(0);
-  await capture(page, "v3-version-choisie");
-  const last = db.writes.filter((w) => w.path === CHRISTELLE_DOC).pop()!;
-  expect(last.data.choices).toEqual({ "abba-pere": MUSICIEN.uid });
-  expect(last.data.authorUid).toBe(CHRISTELLE.uid);
-  expect(db.writes.filter((w) => w.path === SETLIST_DOC)).toHaveLength(0);
-
-  await page.reload();
-  await ouvrirPartitions(page);
-  await expect(lyricLine(page, "flottait"), "le choix est retrouvé au rechargement").toHaveCount(1);
-  await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await attendreMiseEnPage(page);
-  await expect(onStage(page, "flottait").first()).toBeVisible();
-});
 
 test("au Crayon, « Revenir à la présidence » est une puce de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
   await openPartitions(page, { [PARTITION_ABBA]: maPartition(MY_ABBA) });
@@ -383,20 +351,6 @@ test("choisir « Présidence » alors que j'ai ma version, sans la perdre", asyn
   const last = db.writes.filter((w) => w.path === VERSION_DOC).pop()!;
   expect(last.data.choices).toEqual({ "abba-pere": "presidence" });
   expect(Object.keys(last.data.items as object)).toEqual(["abba-pere"]);
-});
-
-test("chant chinois : la version partagée de Ruth, avec son pinyin", async ({ page }) => {
-  await enParoles(page);
-  await openPartitions(page, {
-    [VERSION_DOC]: myDoc({ "一生爱你": { content: MY_ZH, structure: null, shared: true } }),
-  }, CHRISTELLE);
-  await expect(lyricLine(page, "宝")).toHaveCount(1);
-  await choisirVersion(page, 2, "Version de Ruth K.");
-  await expect(lyricLine(page, "宝")).toHaveCount(0);
-  await expect(song(page, 2).locator("span").filter({ hasText: /^wǒ$/ }).first()).toBeVisible();
-  await expect(song(page, 2).getByText("Version de Ruth K.", { exact: true })).toBeVisible();
-  await song(page, 2).scrollIntoViewIfNeeded();
-  await capture(page, "v3-zh");
 });
 
 test("« Copier les paroles » n'existe que si je suis la setlist de la présidence", async ({ page }) => {

@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { adresseVue, lireAdresse, poser, surLaSetlist } from "../src/lib/setlist/adresseVue";
 import {
-  myStructureOf,
   withChosenItem,
-  withMineItem,
   withMineStructureItem,
   withMyJianpuItem,
   type SongVersionView,
@@ -91,19 +89,6 @@ test.describe("choix de version", () => {
     expect(r).toEqual({ ...it, jianpuChords: retouches });
   });
 
-  test("withMineItem", () => {
-    const it = item();
-    expect(withMineItem(it, undefined)).toBe(it);
-    expect(withMineItem(it, mine({ content: "" }))).toBe(it);
-    expect(withMineItem(it, { autre: { content: "x" } as VersionItem })).toBe(it);
-    expect(withMineItem(it, mine({ content: "ma source" }))).toEqual({ ...it, contentOverride: "ma source" });
-    expect(withMineItem(it, mine({ content: "c", jianpuChords: retouches }))).toEqual({
-      ...it,
-      contentOverride: "c",
-      jianpuChords: retouches,
-    });
-  });
-
   test("withChosenItem", () => {
     const it = item();
     expect(withChosenItem(it, undefined, undefined)).toBe(it);
@@ -115,14 +100,6 @@ test.describe("choix de version", () => {
       contentOverride: "choisie",
       jianpuChords: retouches,
     });
-  });
-
-  test("myStructureOf", () => {
-    expect(myStructureOf(item(), undefined)).toBeNull();
-    expect(myStructureOf(item({ structureOverride: ["v1"] }), undefined)).toEqual(["v1"]);
-    const s = ["c", "v1"];
-    expect(myStructureOf(item({ structureOverride: ["v1"] }), mine({ structure: s }))).toBe(s);
-    expect(myStructureOf(item({ structureOverride: ["v1"] }), mine({}))).toEqual(["v1"]);
   });
 
   test("withMineStructureItem", () => {

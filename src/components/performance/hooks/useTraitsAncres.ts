@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { ancrer, ancrerSigne, decouper, estSigne, estTrait, projeter, projeterSigne, type Rect, type Repere } from "@/lib/annotations/ancres";
-import type { Stroke } from "@/lib/annotations/strokes";
+import type { AnnotationData, Stroke } from "@/lib/annotations/strokes";
 import type { ElementTrait, Signe, Trait } from "@/types/partition";
 
 // Traits accrochés au texte (docs/spec-ma-partition.md, § Traits) : mesure du DOM. Le calcul pur est dans
@@ -105,6 +105,49 @@ export function ancrerTrace(s: Stroke, racine: HTMLElement, loupe: Loupe): { slu
     if (!signe && loin > 2 * repere.unite) continue;
     const ancre = { section: el.dataset.traitSection ?? "", ligne: Number(el.dataset.traitLigne), car };
     out.push({ slug: el.dataset.traitSlug ?? "", trait: signe ? ancrerSigne({ ...s, points }, ancre, repere) : ancrer({ ...s, points } as Parameters<typeof ancrer>[0], ancre, repere) });
+  }
+  return out;
+}
+
+/** Reprise des anciennes annotations (MP-6) : chaque tracé de `data` (px du viewport d'origine) va au chant dont le bloc à
+ *  l'écran contient son point de départ (à défaut, le premier chant de la page) et s'ancre à la première ligne de texte de
+ *  ce chant sur la page, ou à son scan 简谱 sans ligne, de sorte qu'il reste là où il est à l'écran. */
+export function ancrerSurPremiereLigne(data: AnnotationData, racine: HTMLElement, loupe: Loupe): { slug: string; trait: Trait | Signe }[] {
+  const mesure = mesureDe(loupe);
+  const lignes = Array.from(racine.querySelectorAll<HTMLElement>("[data-trait-section]")).filter(horsApercu);
+  const scans = Array.from(racine.querySelectorAll<HTMLElement>("[data-trait-scan]")).filter(horsApercu);
+  // Par chant, dans l'ordre de la page : sa première cible (ligne, sinon scan) et la boîte de tous ses éléments.
+  const chants = new Map<string, { cible: HTMLElement; scan: boolean; boite: Rect }>();
+  for (const [el, scan] of [...lignes.map((l) => [l, false] as const), ...scans.map((l) => [l, true] as const)]) {
+    const slug = el.dataset.traitSlug ?? "";
+    if (!slug) continue;
+    const r = mesure(el.getBoundingClientRect());
+    const c = chants.get(slug);
+    if (!c) chants.set(slug, { cible: el, scan, boite: r });
+    else {
+      if (c.scan && !scan) { c.cible = el; c.scan = false; }
+      c.boite = { left: Math.min(c.boite.left, r.left), top: Math.min(c.boite.top, r.top), right: Math.max(c.boite.right, r.right), bottom: Math.max(c.boite.bottom, r.bottom) };
+    }
+  }
+  if (!chants.size) return [];
+  const [sx, sy] = [window.innerWidth / (data.w || window.innerWidth), window.innerHeight / (data.h || window.innerHeight)];
+  const out: { slug: string; trait: Trait | Signe }[] = [];
+  for (const s of data.strokes) {
+    const e = { ...s, size: s.size * ((sx + sy) / 2), points: s.points.map(([x, y]) => [x * sx, y * sy] as [number, number]) };
+    const [x0, y0] = e.points[0];
+    const [slug, c] = [...chants].find(([, v]) => x0 >= v.boite.left && x0 <= v.boite.right && y0 >= v.boite.top && y0 <= v.boite.bottom) ?? [...chants][0];
+    let ancre: Trait["ancre"];
+    let repere: Repere;
+    if (!c.scan) {
+      ancre = { section: c.cible.dataset.traitSection ?? "", ligne: Number(c.cible.dataset.traitLigne), car: 0 };
+      repere = repereTexte(c.cible, 0, mesure, loupe.zoom);
+    } else {
+      const r = mesure(c.cible.getBoundingClientRect());
+      ancre = { scan: true, image: Number(c.cible.dataset.traitScan) };
+      repere = { x: r.left, y: r.top, unite: r.right - r.left };
+    }
+    if (!(repere.unite > 0)) continue;
+    out.push({ slug, trait: s.tool === "text" || s.tool === "stamp" ? ancrerSigne(e, ancre, repere) : ancrer(e as Parameters<typeof ancrer>[0], ancre, repere) });
   }
   return out;
 }

@@ -28,32 +28,13 @@ export async function loadAnnotation(
   return (raw.fields?.strokes?.stringValue as string) ?? null;
 }
 
-export async function saveAnnotation(
-  userId: string,
-  setlistId: string,
-  pageKey: string,
-  strokesJson: string,
-): Promise<void> {
-  try {
-    const headers = await authHeader();
-    const id = docId(userId, setlistId, pageKey);
-    const encodedId = encodeURIComponent(id);
-    const docName = `projects/gcclouange/databases/(default)/documents/annotations/${id}`;
-    await fetch(
-      `${FS_BASE}/annotations/${encodedId}?updateMask.fieldPaths=strokes&updateMask.fieldPaths=updatedAt`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...headers },
-        body: JSON.stringify({
-          name: docName,
-          fields: {
-            strokes: { stringValue: strokesJson },
-            updatedAt: { timestampValue: new Date().toISOString() },
-          },
-        }),
-      },
-    );
-  } catch {
-    // Annotations are best-effort
-  }
+/** Supprime l'ancien document d'annotation (repris dans ma partition). */
+export async function deleteAnnotation(userId: string, setlistId: string, pageKey: string): Promise<void> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}/annotations/${encodeURIComponent(docId(userId, setlistId, pageKey))}`, {
+    method: "DELETE",
+    headers,
+    signal: delaiMax(10_000),
+  });
+  if (!res.ok && res.status !== 404) throw new Error(`Annotation non supprimée (HTTP ${res.status})`);
 }

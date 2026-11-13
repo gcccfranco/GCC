@@ -414,7 +414,7 @@ export function SetlistDetailClient() {
   }, [slugsPartitions, lectures, mesPartitions.mes, mesPartitions.partagees]);
   // Écritures des traits regroupées (≈ 800 ms) : un trait par tracé ferait une écriture par tracé.
   const traitsEnAttente = useRef<Record<string, { traits: ElementTrait[]; minuterie: ReturnType<typeof setTimeout> }>>({});
-  const enregistrerTraitsRef = useRef<(slug: string, traits: ElementTrait[]) => Promise<void>>(async () => {});
+  const enregistrerTraitsRef = useRef<(slug: string, traits: ElementTrait[]) => Promise<boolean>>(async () => false);
   // Un échec d'écriture des traits : le mode louange revient à l'état enregistré.
   const [echecTraits, setEchecTraits] = useState(0);
   const envoyerTraitsRef = useRef<() => void>(() => {});
@@ -436,16 +436,27 @@ export function SetlistDetailClient() {
    *  autre partagée et choisie. */
   function viewOf(item: SetlistItem): SongVersionView | undefined {
     const v = ancienneVue(item);
-    const l = lectureNeuve(item);
-    // Ma partition lue : sa structure est celle du corps du chant.
-    return v && l ? { ...v, shown: "presidence", content: null, value: "presidence", bodyStructure: l.mienne?.structure ?? null } : v;
+    const l = lectures[item.songSlug];
+    if (!v || !l) return v;
+    const culte = item.structureOverride ?? null;
+    // La structure du corps suit la lecture : la mienne (à défaut celle du culte), celle du culte, l'ordre naturel du
+    // chant pour l'origine, celle de l'ancienne version (à défaut celle du culte). Ici `source` est défini : « origine » est un choix posé.
+    if (l.valeur.startsWith("v:")) return { ...v, bodyStructure: v.bodyStructure ?? culte };
+    if (l.source === undefined) return v;
+    const ordre = contents[item.songSlug]?.ast.sections.map((s) => s.id) ?? null;
+    const bodyStructure = l.valeur === "mienne" ? (l.mienne?.structure?.length ? l.mienne.structure : culte)
+      : l.valeur === "culte" ? culte
+      : l.valeur === "origine" ? ordre : null;
+    return { ...v, shown: "presidence", content: null, value: "presidence", bodyStructure };
   }
+  /** Mes éléments de la lecture : l'ancienne « Ma version » seule quand je la lis (la fusion `myItems` donne la partition neuve). */
+  const itemsDe = (item: SetlistItem) => (lectures[item.songSlug]?.valeur.startsWith("v:") ? (user ? versions[user.uid]?.items : undefined) : myItems);
   /** Item tel qu'affiché : les accords et paroles de la partition lue. */
   function withChosen(item: SetlistItem): SetlistItem {
     const l = lectureNeuve(item);
-    if (!l) return withChosenItem(item, viewOf(item), myItems);
+    if (!l) return withChosenItem(item, viewOf(item), itemsDe(item));
     const source = l.source ?? undefined;
-    return withMyJianpuItem((item.contentOverride ?? undefined) === source ? item : { ...item, contentOverride: source }, myItems);
+    return withMyJianpuItem((item.contentOverride ?? undefined) === source ? item : { ...item, contentOverride: source }, itemsDe(item));
   }
   async function choisirLecture(itemIndex: number, valeur: string) {
     const slug = setlist!.items[itemIndex].songSlug;
@@ -474,7 +485,9 @@ export function SetlistDetailClient() {
    *  de la présidence, sans ses notes, nuances et transitions d'occurrence
    *  (elles restent dans le bandeau de la vue partitions). */
   function withMineStructure(item: SetlistItem): SetlistItem {
-    return withMineStructureItem(item, viewOf(item), myItems);
+    // Les réglages d'occurrence du culte ne tombent que si je suis ma structure (celle de ma partition ou de l'ancienne version).
+    const l = lectures[item.songSlug];
+    return withMineStructureItem(item, viewOf(item), !l || l.valeur === "mienne" || l.valeur.startsWith("v:") ? itemsDe(item) : undefined);
   }
   // Feuille « Ordre » du Crayon : chant en cours de réglage.
   const [structureTarget, setStructureTarget] = useState<(MyStructureTarget & { itemIndex: number }) | null>(null);
@@ -1339,9 +1352,14 @@ export function SetlistDetailClient() {
   }
 
   /** Mode louange : mes traits d'un chant ont changé. Réécrit ma partition (créée au besoin, texte et `base` inchangés). */
-  function traitsChanges(slug: string, traits: ElementTrait[]) {
+  function traitsChanges(slug: string, traits: ElementTrait[], immediat?: boolean): Promise<boolean> | void {
     const en = traitsEnAttente.current[slug];
     if (en) clearTimeout(en.minuterie);
+    // Reprise des anciennes annotations : écrit sans délai et dit si l'écriture a réussi (l'ancien document n'est supprimé qu'alors).
+    if (immediat) {
+      delete traitsEnAttente.current[slug];
+      return enregistrerTraitsRef.current(slug, traits);
+    }
     traitsEnAttente.current[slug] = {
       traits,
       minuterie: setTimeout(() => {
@@ -1359,11 +1377,11 @@ export function SetlistDetailClient() {
     }
   }
   envoyerTraitsRef.current = envoyerTraits;
-  async function enregistrerTraits(slug: string, traits: ElementTrait[]) {
+  async function enregistrerTraits(slug: string, traits: ElementTrait[]): Promise<boolean> {
     const item = setlist?.items.find((i) => i.songSlug === slug);
-    if (!user || !item) return;
+    if (!user || !item) return false;
     // Lecture de ma partition pas aboutie : on ne réécrit rien (le document existant perdrait son texte et son partage).
-    if (!mesPartitions.charges[slug]) { flashFeedback(t("maPartition.erreurEnregistrement")); setEchecTraits((n) => n + 1); return; }
+    if (!mesPartitions.charges[slug]) { flashFeedback(t("maPartition.erreurEnregistrement")); setEchecTraits((n) => n + 1); return false; }
     const prev = mesPartitions.lireLocale(slug);
     try {
       await mesPartitions.enregistrer({
@@ -1380,9 +1398,11 @@ export function SetlistDetailClient() {
         sharedWith: prev?.sharedWith ?? [],
         sharedTraits: prev?.sharedTraits ?? false,
       });
+      return true;
     } catch {
       flashFeedback(t("maPartition.erreurEnregistrement"));
       setEchecTraits((n) => n + 1);
+      return false;
     }
   }
   enregistrerTraitsRef.current = enregistrerTraits;

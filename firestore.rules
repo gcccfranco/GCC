@@ -571,8 +571,7 @@ service cloud.firestore {
 
       // Versions perso d'un chant (docs/spec-version-perso.md) : un document
       // par personne, lu par tout connecté (versions partagées), écrit par
-      // son propriétaire seul. Miroir client : canHaveSetlistVersion
-      // (src/lib/access.ts) = qui voit la setlist.
+      // son propriétaire seul.
       match /versions/{uid} {
         allow read: if signedIn();
         allow create, update: if signedIn()

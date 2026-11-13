@@ -22,9 +22,3 @@ export function getTailleAnnotee(uid: string | null, setlistId: string, slug: st
     return null;
   }
 }
-
-export function setTailleAnnotee(uid: string | null, setlistId: string, slug: string, v: number) {
-  if (!uid) return;
-  if (!(v >= MIN_FONT_SCALE && v <= MAX_FONT_SCALE)) return;
-  try { localStorage.setItem(cle(uid, setlistId, slug), String(v)); } catch { /* stockage indisponible */ }
-}

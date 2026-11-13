@@ -564,8 +564,6 @@
       "songs": "歌单的歌曲"
     },
     "contentEdit": {
-      "toggle": "调整",
-      "hint": "调整模式：点击一行歌词即可修改和弦或歌词。修改只影响这份敬拜单。",
       "lineTitle": "修改这一行",
       "lyricsTitle": "修改歌词",
       "instrTitle": "间奏行",
@@ -599,21 +597,12 @@
       "modifiedHidden": "简谱已覆盖修改内容"
     },
     "myVersion": {
-      "toggle": "我的版本",
-      "hint": "我的版本：点击一行即可修改和弦或歌词。只有你自己能看到这些修改，且仅限这份敬拜单。",
-      "badge": "我的版本",
-      "badgeHidden": "简谱已覆盖我的版本",
       "revert": "恢复主领版本",
       "revertConfirm": "你对这首诗歌的版本将会丢失。主领的敬拜单不受影响。",
       "sections": "段落",
       "sectionsHint": "选择你要看的段落及其顺序，仅对你自己有效。结构条和列表仍显示主领的结构。",
       "reset": "重置",
-      "save": "保存",
-      "share": "分享我的版本",
-      "version": "版本",
-      "presidence": "主领",
-      "me": "我",
-      "badgeOther": "{{name}} 的版本"
+      "save": "保存"
     }
   },
   "customize": {
@@ -793,6 +782,8 @@
     "tempoUp": "加快 1",
     "crayon": "画笔",
     "partition": "乐谱",
+    "recopier": "将旧批注复制到我的乐谱",
+    "recopierAide": "它们会放在本页第一行上，旧批注将不再显示。",
     "annotationsIndisponibles": "批注暂时无法使用",
     "annotAutreTaille": "批注是在另一种字号下写的（{{taille}}%）",
     "annotRevenir": "回到这个字号",

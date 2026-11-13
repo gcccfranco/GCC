@@ -724,11 +724,6 @@ export function canSetPresentationLink(
   return canEditSetlist(user, profile, setlist, backOffice) || (!setlist.isPrivate && regie);
 }
 
-/** Version perso d'un chant dans une setlist (docs/spec-version-perso.md) :
- *  qui voit la setlist peut avoir la sienne. Miroir serveur dans
- *  firestore.rules (setlists/{id}/versions/{uid} : écrit par son propriétaire). */
-export const canHaveSetlistVersion = canSeeSetlist;
-
 /** Ma partition (docs/spec-ma-partition.md) : lue par son propriétaire ou une personne de `sharedWith`. Miroir de
  *  firestore.rules (`match /partitions/{id}`, lecture). */
 export function canLirePartition(

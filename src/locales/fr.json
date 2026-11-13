@@ -568,8 +568,6 @@
       "songs": "Chants de la setlist"
     },
     "contentEdit": {
-      "toggle": "Adapter",
-      "hint": "Mode adaptation : touche une ligne pour modifier ses accords ou ses paroles. Les changements ne concernent que cette setlist.",
       "lineTitle": "Modifier la ligne",
       "lyricsTitle": "Modifier les paroles",
       "instrTitle": "Ligne instrumentale",
@@ -603,21 +601,12 @@
       "modifiedHidden": "Adaptation masquée par le 简谱"
     },
     "myVersion": {
-      "toggle": "Ma version",
-      "hint": "Ma version : touche une ligne pour modifier ses accords ou ses paroles. Toi seul vois ces changements, dans cette setlist.",
-      "badge": "Ma version",
-      "badgeHidden": "Ma version masquée par le 简谱",
       "revert": "Revenir à la présidence",
       "revertConfirm": "Ta version de ce chant sera perdue. La setlist de la présidence n'est pas touchée.",
       "sections": "Sections",
       "sectionsHint": "Choisis les sections à voir et leur ordre, pour toi seul. Le bandeau et la liste gardent la structure de la présidence.",
       "reset": "Réinitialiser",
-      "save": "Enregistrer",
-      "share": "Partager ma version",
-      "version": "Version",
-      "presidence": "Présidence",
-      "me": "Moi",
-      "badgeOther": "Version de {{name}}"
+      "save": "Enregistrer"
     }
   },
   "customize": {
@@ -798,6 +787,8 @@
     "tempoUp": "Accélérer de 1",
     "crayon": "Crayon",
     "partition": "Partition",
+    "recopier": "Recopier mes anciennes annotations dans ma partition",
+    "recopierAide": "Elles se posent sur la première ligne de la page ; les anciennes ne s'afficheront plus.",
     "annotationsIndisponibles": "Annotations indisponibles pour l'instant",
     "annotAutreTaille": "Des annotations existent à une autre taille ({{taille}} %)",
     "annotRevenir": "Revenir à cette taille",
