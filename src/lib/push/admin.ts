@@ -22,7 +22,10 @@ function loadServiceAccount(): ServiceAccountJson {
 
 function adminApp(): App {
   if (getApps().length) return getApp();
-  if (!process.env.FIREBASE_SERVICE_ACCOUNT?.trim()) {
+  const useApplicationDefault =
+    Boolean(process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim()) ||
+    !process.env.FIREBASE_SERVICE_ACCOUNT?.trim();
+  if (useApplicationDefault) {
     return initializeApp({
       credential: applicationDefault(),
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
