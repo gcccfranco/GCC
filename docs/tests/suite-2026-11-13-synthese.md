@@ -43,3 +43,6 @@ Trente-deux morceaux (`--shard=k/32 --workers=2 --trace off`), un serveur neuf p
 conteneur ; un quart ou un seizième d'une traite fait tomber `next dev` par manque de mémoire (16 Go). Plus de 20
 `ERR_CONNECTION_REFUSED` : arrêter, ne rien rejouer, relancer le morceau. Rejeu unique des fichiers en échec. La
 session ne rend pas la main tant que les tests tournent. Compter ≈ 20 min par trente-deuxième, plus le rejeu.
+
+## Corrections (go de Timothée, 13/11/2026)
+Une ligne par chantier : échec, qui avait tort (site ou test), correction, commit, specs rejouées et durée.

@@ -120,6 +120,10 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   **13/11, 13 h UTC : suite complète finie** : 22 735 tests, 20 285 passés, 2 255 sautés, 101 instables, **94 échecs
   (31 tests distincts, 16 specs)** ; liste par page dans `docs/tests/suite-2026-11-13-synthese.md`. Aucune correction
   lancée : elles attendent le go de Timothée. La mise en ligne reste sa décision.
+  **13/11, go de Timothée** (« Go pour toutes les corrections, lancent les en parallèle quand c'est possible ») :
+  cinq chantiers de correction, un par zone (numéros de la synthèse) : **C1** scène (5) ; **C2** setlists (1, 3, 7) ;
+  **C3** chant, sections, usage (2, 4, 6, 8, 12) ; **C4** mode louange (9) ; **C5** équipes et planning (10, 11).
+  Chacun écrit sa ligne dans `docs/tests/suite-2026-11-13-synthese.md` (§ Corrections). Rien sur `main`.
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.
