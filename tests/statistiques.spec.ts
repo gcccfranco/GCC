@@ -434,8 +434,9 @@ test.describe("Statistiques (S3) : les plus joués", () => {
     const db = await ouvrirStatistiques(page);
     await page.getByRole("button", { name: "3 mois" }).click();
     await expect.poll(() => setlistsComptees(page)).toBe("3");
-    // La connexion écrit la langue dans `notifPrefs/{uid}` (la barre de navigation) : hors de la page.
-    expect(db.writes.filter((w) => !w.path.startsWith("notifPrefs/"))).toEqual([]);
+    // La connexion écrit la langue dans `notifPrefs/{uid}` (la barre de navigation) et le comptage d'usage envoie
+    // son lot `documents:commit` (docs/spec-comptage-usage.md, pour tout le site) : hors de la page.
+    expect(db.writes.filter((w) => !/^(notifPrefs\/|:commit)/.test(w.path))).toEqual([]);
   });
 });
 
