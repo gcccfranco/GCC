@@ -653,6 +653,16 @@
     "lien": "恢复原色",
     "retenueCompte": "仅用于此账号，保存在本设备上"
   },
+  "armure": {
+    "titre": "调",
+    "pourMoiPage": "仅本页有效",
+    "pourMoiAppareil": "仅本设备",
+    "equipe": "本队",
+    "moi": "我",
+    "changerEquipe": "为整个团队更改",
+    "equipeJoue": "本队用 {{key}} 调",
+    "aria": "调：{{key}}"
+  },
   "notationAccords": {
     "titre": "和弦记法",
     "lettres": "字母",

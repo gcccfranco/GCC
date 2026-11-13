@@ -8,8 +8,8 @@ import { TOUCHER_44 } from "@/lib/toucher44";
 import { compter } from "@/lib/usage";
 
 // Bascule Lettres / Chiffres (lot Harmonie H7) : deux boutons `aria-pressed`. « barre » : dans la barre du chant, libellés
-// courts « A » / « 1 » (titre et aria-label en mots), à partir de 640 px ; « menu » : rubrique en mots (⋯ du chant, réglages de la vue partitions).
-export function ChoixNotation({ variante }: { variante: "barre" | "menu" }) {
+// courts « A » / « 1 » (titre et aria-label en mots), à partir de 640 px ; « fenetre » : fenêtre de l'armure ; « menu » : rubrique en mots (⋯ du chant, réglages de la vue partitions).
+export function ChoixNotation({ variante }: { variante: "barre" | "menu" | "fenetre" }) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
   const uid = loading ? undefined : user?.uid ?? null;
@@ -45,6 +45,13 @@ export function ChoixNotation({ variante }: { variante: "barre" | "menu" }) {
     </div>
   );
   if (variante === "barre") return segments;
+  // « fenetre » : hors menu Radix (fenêtre de l'armure), un libellé simple.
+  if (variante === "fenetre") return (
+    <div className="space-y-1.5">
+      <p className="text-xs text-muted-foreground">{t("notationAccords.titre")}</p>
+      {segments}
+    </div>
+  );
   return (
     // Dans un menu Radix, les touches s'arrêtent ici (comme ChoixCouleurAccords) ; Tab reste au menu.
     <div className="space-y-1.5 pb-1" onKeyDown={(e) => { if (e.key !== "Tab" && e.key !== "ArrowLeft" && e.key !== "ArrowRight") e.stopPropagation(); }}>

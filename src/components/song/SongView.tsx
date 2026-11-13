@@ -1296,6 +1296,8 @@ interface SongViewProps {
   apresBandeau?: React.ReactNode;
   /** Remplace l'en-tête du chant à l'écran (setlist : rangée compacte, T2) ; l'impression garde l'en-tête complet. */
   enTete?: React.ReactNode;
+  /** Page chant : remplace la pastille de tonalité de l'en-tête (composant `Armure`). */
+  armure?: React.ReactNode;
 }
 
 export function SongView({
@@ -1323,6 +1325,7 @@ export function SongView({
   onPasserAuCulte,
   apresBandeau,
   enTete: enTeteFourni,
+  armure,
 }: SongViewProps) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
@@ -1430,14 +1433,14 @@ export function SongView({
           </div>
 
           <div className="flex flex-col items-end gap-2 shrink-0 pt-1">
-            {ast.metadata.key && (
+            {ast.metadata.key && (armure ?? (
               <span
                 className={`text-[14px] font-bold rounded-full px-3 py-[3px] border-[1.5px] leading-none ${chord_font.className}`}
                 style={{ color: langAccent, borderColor: langAccent }}
               >
                 {canUseJianpu ? ast.metadata.jianpuKey ?? `1=${ast.metadata.key}` : ast.metadata.key}
               </span>
-            )}
+            ))}
             {pageChant ? (
               ligneTempo.length > 0 && (
                 <span data-testid="ligne-tempo" className="text-foreground/70 text-xs md:text-sm font-medium flex flex-wrap items-baseline justify-end gap-x-1 whitespace-nowrap">

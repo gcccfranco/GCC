@@ -657,6 +657,16 @@
     "lien": "Couleurs d'origine",
     "retenueCompte": "Retenue pour ce compte sur cet appareil"
   },
+  "armure": {
+    "titre": "Tonalité",
+    "pourMoiPage": "Pour moi, le temps de la page",
+    "pourMoiAppareil": "Pour moi, sur cet appareil",
+    "equipe": "équipe",
+    "moi": "moi",
+    "changerEquipe": "Changer pour toute l'équipe",
+    "equipeJoue": "L'équipe joue en {{key}}",
+    "aria": "Tonalité : {{key}}"
+  },
   "notationAccords": {
     "titre": "Notation des accords",
     "lettres": "Lettres",
@@ -768,7 +778,7 @@
     "pinyin": "Pinyin",
     "affichageHint": "Le même réglage que le menu Affichage de la setlist.",
     "jianpuSheet": "Partition 简谱",
-    "jianpuSheetHint": "Retenu sur cet appareil. Tant que tu n'as pas choisi toi-même entre 简谱 et Paroles (ici ou sur la page d'un chant) : la partition pour les musiciens, les paroles pour choriste et présidence (« Je joue » du mode louange).",
+    "jianpuSheetHint": "Retenu sur cet appareil. Tant que tu n'as pas choisi toi-même entre 简谱 et Paroles (ici ou sur la page d'un chant) : la partition pour les musiciens, les paroles pour choriste et présidence (« Je joue » du mode louange).",
     "annotations": "Annotations",
     "text": "Texte",
     "textSmaller": "Réduire le texte",

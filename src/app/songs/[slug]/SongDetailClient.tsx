@@ -16,6 +16,7 @@ import { useBarreRappelee } from "./_hooks/useBarreRappelee";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { SongView } from "@/components/song/SongView";
+import { Armure } from "@/components/song/Armure";
 import { StatistiquesDuChant } from "@/components/songs/StatistiquesDuChant";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { useJianpuScore } from "@/lib/jianpu/images";
@@ -701,6 +702,21 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
             <SongView
               pageChant
               slug={song.slug}
+              armure={
+                <Armure
+                  titre={song.title}
+                  langue={isZh ? "zh" : "fr"}
+                  tonaliteOrigine={originalKey}
+                  tonaliteReco={recommendedKey}
+                  tonaliteEquipe={setlistDOrigine ? setlistKey : null}
+                  tonalite={customize.currentKey}
+                  portee={setlistDOrigine ? "appareil" : "page"}
+                  onChange={(k) => {
+                    compter("cmd.chant.transposer");
+                    setCustomize((prev) => ({ ...prev, currentKey: k, semitones: semitonesTo(originalKey, k) }));
+                  }}
+                />
+              }
               statistiques={<StatistiquesDuChant slug={song.slug} />}
               bascule={
                 jianpuScore ? (

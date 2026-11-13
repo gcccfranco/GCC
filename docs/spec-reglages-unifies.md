@@ -173,3 +173,14 @@ Aucune règle Firestore touchée (tonalité personnelle en `localStorage`).
   dessinée ; une reprise du maquettiste : feuille au téléphone, tablette paysage au mode louange, barre cachée,
   choriste, armure dans une setlist, mentions de portée alignées), regardée aux quatre tailles, publiée, spec. Attend
   le choix de Timothée.
+- 13/11 : **RU-1 faite** (session RU-1). Composant `src/components/song/Armure.tsx` (armure pleine / au contour / en
+  pointillé, « 1=E » en chinois, fenêtre Radix de douze touches en `radiogroup` avec flèches, légendes équipe / reco. /
+  orig. / moi, Lettres | Chiffres par la nouvelle variante `fenetre` de `ChoixNotation`, capo et « Changer pour toute
+  l'équipe » en props optionnelles, lecture seule « L'équipe joue en G »), libellés fr et zh. Branchée sur la page chant
+  par une prop `armure` de `SongView` qui remplace la pastille (barre et pilule non touchées : RU-3). *Décision
+  déléguée (session RU-1, 13/11)* : capo, lecture seule et « toute l'équipe » ne sont pas branchés sur la page chant
+  (pas de rôle ni d'éditeur ici avant RU-4 et RU-5) ; ils seront testés là. En passant : l'espace fine de
+  `jianpuSheetHint` (fr.json), qui faisait échouer `coherence.spec.ts` depuis JV-1. Tests : `armure.spec.ts` 24/24 sur
+  les trois appareils (51 s) ; voisines (`barre-chant`, `entete-chant-jianpu`, `jianpu-tonalite-cho`,
+  `statistiques-chant`, `coherence`, `nouveau-chant`, `chants-fetes`) vertes, environ 9 min de tests dans la tranche.
+  À regarder en RU-3 : le `jianpuKey` d'un `.cho` (« 1=bB ») n'est plus montré par l'armure, qui écrit « 1= » + tonalité.
