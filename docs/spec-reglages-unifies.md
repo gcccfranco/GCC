@@ -184,3 +184,17 @@ Aucune règle Firestore touchée (tonalité personnelle en `localStorage`).
   les trois appareils (51 s) ; voisines (`barre-chant`, `entete-chant-jianpu`, `jianpu-tonalite-cho`,
   `statistiques-chant`, `coherence`, `nouveau-chant`, `chants-fetes`) vertes, environ 9 min de tests dans la tranche.
   À regarder en RU-3 : le `jianpuKey` d'un `.cho` (« 1=bB ») n'est plus montré par l'armure, qui écrit « 1= » + tonalité.
+- 13/11 : **RU-2 faite** (session RU-2). Crochet `src/hooks/useReglagesAffichage.ts` (clés existantes seulement :
+  disposition, notation, ordre, 简谱, pinyin, taille, rôle ; « Accords affichés » en mémoire ; évènement de fenêtre
+  `gcc:reglages-affichage` pour garder deux instances synchrones) et composant `src/components/song/MargeAffichage.tsx`
+  (trois groupes, une mention « Retenu sur cet appareil / 保存在本设备 » chacun ; colonne de 320 px qui pousse la musique
+  dès 1 024 px ; feuille opaque de 60 dvh sans voile, 560 px dès 768 px, au-dessus de la barre d'onglets, réserve en bas
+  de la musique ; louange sans transition, ressort 300 ms sans rebond, fondu 150 ms en mouvement réduit ; emplacement
+  `groupePage` pour RU-5). `ChoixCouleurAccords` gagne `sansMention`. *Décisions déléguées (session RU-2, 13/11)* : banc de
+  montage `/banc/marge-affichage` (`notFound()` en production ; à retirer quand RU-3 monte la marge) faute d'écran
+  montable sans toucher SongDetailClient, PerformanceMode ni la setlist ; choisir un rôle n'écrit que le rôle (préréglages :
+  RU-5) ; Lettres | Chiffres = `ChoixNotation` variante `fenetre`. À voir plus tard : `getRole` déclenche la migration
+  existante de `roleCompte.ts` ; « Accords affichés » (variable de module) ne se remet pas à oui au changement de compte.
+  Nouveaux libellés zh à faire relire : 显示, 关闭显示, 保存在本设备. Tests : `marge-affichage.spec.ts` 60/60 sur les cinq
+  projets, `armure` et `coherence` vertes (120 passés, 3 sautés) ; environ 5 min de tests hors workflow (≈ 26 min de
+  tranche en tout). Captures des cinq dispositions regardées.

@@ -672,6 +672,20 @@
     "lettres": "Lettres",
     "chiffres": "Chiffres"
   },
+  "margeAffichage": {
+    "titre": "Affichage",
+    "fermer": "Fermer l'affichage",
+    "retenu": "Retenu sur cet appareil",
+    "jeJoue": "Je joue",
+    "jeLis": "Ce que je lis",
+    "laPage": "La page",
+    "ordre": "Ordre des sections",
+    "ordreJoue": "Tout le chant",
+    "ordreUnique": "Une fois chacune",
+    "ordreStructure": "Plan",
+    "score": "简谱 | Paroles",
+    "taille": "Taille du texte"
+  },
   "performance": {
     "indiceRappelJoue": "Points : déjà joué · Pleines : sur cette page, avec leur nuance",
     "indiceRappelUnique": "Pleines : sur cette page, avec leur nuance",

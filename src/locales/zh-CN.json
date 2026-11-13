@@ -668,6 +668,20 @@
     "lettres": "字母",
     "chiffres": "数字"
   },
+  "margeAffichage": {
+    "titre": "显示",
+    "fermer": "关闭显示",
+    "retenu": "保存在本设备",
+    "jeJoue": "我演奏",
+    "jeLis": "阅读内容",
+    "laPage": "页面",
+    "ordre": "段落顺序",
+    "ordreJoue": "完整顺序",
+    "ordreUnique": "每段一次",
+    "ordreStructure": "只看结构",
+    "score": "简谱 | 歌词",
+    "taille": "文字"
+  },
   "performance": {
     "indiceRappelJoue": "圆点：已唱过 · 实心：在本页，下方为力度",
     "indiceRappelUnique": "实心：在本页，下方为力度",

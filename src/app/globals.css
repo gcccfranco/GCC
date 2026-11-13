@@ -1134,3 +1134,15 @@
    posé sur la ligne, le trait descendait dans les blancs sous les accords et sous le pinyin. */
 [data-retouche="paroles"] :is([data-paroles]:not(:has(> [data-copy-ignore])), [data-car]) { text-decoration: underline; text-decoration-color: var(--graphite); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 @media print { [data-marque]::before { display: none; } }
+
+/* Marge « Affichage » (RU-2) : ressort sans rebond sur transform et width ; aucun mouvement au mode louange ;
+   mouvement réduit : fondu d'opacité de 150 ms seulement. */
+.marge-aff { visibility: hidden; }
+.marge-aff[data-ouvert="true"] { visibility: visible; }
+.marge-aff[data-mode="page"] { transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), width 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 300ms; }
+.marge-aff[data-mode="page"][data-ouvert="true"] { transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), width 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }
+.marge-aff[data-mode="louange"] { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .marge-aff[data-mode="page"] { opacity: 0; transition: opacity 150ms linear, visibility 0s linear 150ms !important; }
+  .marge-aff[data-mode="page"][data-ouvert="true"] { opacity: 1; transition: opacity 150ms linear, visibility 0s !important; }
+}
