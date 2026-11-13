@@ -92,9 +92,16 @@ test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches 
   await expect(page.getByTestId("equipe-decoration")).toBeVisible();
   const bandeau = page.getByTestId("bandeau-equipes");
   await expect(bandeau).toHaveAttribute("data-range", "1");
-  // Un titre (h2) ou un nom de sous-groupe n'est jamais rogné : tout son texte tient dans sa boîte.
+  // Un titre (h2) ou un nom de sous-groupe n'est jamais rogné : tout son texte tient dans sa boîte. On mesure le texte
+  // (Range), pas `scrollWidth` : au toucher, la zone invisible de 44 px du lien (`TOUCHER_44`, spec-corrections-design
+  // § 3) dépasse d'un nom court comme « Orga » sans rien rogner.
   for (const titre of await bandeau.locator("h2, p.uppercase").all()) {
-    expect(await titre.evaluate((el) => el.scrollWidth - el.clientWidth), `« ${await titre.textContent()} » entier`).toBeLessThanOrEqual(1);
+    const deborde = await titre.evaluate((el) => {
+      const r = document.createRange();
+      r.selectNodeContents(el);
+      return r.getBoundingClientRect().width - el.clientWidth;
+    });
+    expect(deborde, `« ${await titre.textContent()} » entier`).toBeLessThanOrEqual(1);
   }
   // Les flèches ne flottent plus sur les colonnes : dans la ligne du menu, au-dessus du bandeau, hors flux absolu.
   const suivantes = page.getByRole("button", { name: "Équipes suivantes" });
