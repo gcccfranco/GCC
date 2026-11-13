@@ -128,6 +128,11 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   site corrigés en 7 fichiers et 15 lignes, les autres étaient des tests en retard sur le site) ; `tsc` propre sur la
   tête `bc80a242`. Chaque chantier a rejoué ses specs ; pas de rejeu commun sur la tête réunie. Reste à Timothée : la
   mise en ligne sur `main`, `firestore.rules`, la « fumée Safari ».
+  **13/11, 16 h UTC, deux demandes de Timothée** : (1) cadrage sans code en cours (`session_01UMdfuaTSCuBBDtqAEmCc8H`) :
+  简谱 sur deux volets, idées d'harmonie sur la 简谱, 简谱 d'office pour les musiciens dans les setlists, vue
+  partitions en zigzag ; spec `docs/spec-jianpu-deux-volets.md`, attend son go. (2) **Son de piano** du bouton
+  « Écouter » des fiches d'harmonie : go de Timothée (« oui pour ça », en réponse à « go pour le vrai piano ») :
+  notes d'un vrai piano enregistré, libres de droits, à la place de l'onde triangle de `src/lib/audio/synthese.ts`.
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.
