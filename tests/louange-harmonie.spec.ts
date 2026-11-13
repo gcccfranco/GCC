@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import type { SetlistItem } from "../src/types/setList";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreCompteur, attendreMiseEnPage, lireCompteur, onStage, ouvrirOptions, type Langue } from "./helpers/louange";
+import { attendreCompteur, attendreMiseEnPage, lireCompteur, onStage, ouvrirMenu, ouvrirOptions, type Langue } from "./helpers/louange";
 
 // Lot Harmonie H8-1 (docs/spec-harmonie-accords.md) : dans le mode louange, un point dans la marge des sections qui ont
 // une idée d'harmonie ; le toucher ouvre une bande au-dessus du corps de la section « chiffres → chiffres · lettres → lettres ».
@@ -31,7 +31,7 @@ const setlist = (slug: string, cle: string) => ({
   } satisfies SetlistItem],
 });
 
-async function ouvrirMode(page: Page, profil: FakeProfile, c: (typeof CHANTS)[number], { cle = c.cle, allume = true, capo = 0 } = {}) {
+async function ouvrirMode(page: Page, profil: FakeProfile, c: (typeof CHANTS)[number], { cle = c.cle, allume = true, capo = 0, depart = c.slug } = {}) {
   await page.addInitScript(({ u, zh, on, capo, slug }) => {
     localStorage.setItem("perf-role-preset", capo ? "guitariste" : "pianiste");
     if (capo) localStorage.setItem("perf-capos", JSON.stringify({ [slug]: capo }));
@@ -40,7 +40,7 @@ async function ouvrirMode(page: Page, profil: FakeProfile, c: (typeof CHANTS)[nu
     if (zh) localStorage.setItem("i18nextLng", "zh-CN");
     if (on) localStorage.setItem(`perf-idees-harmonie-${u}`, "1");
   }, { u: profil.uid, zh: c.langue === "zh", on: allume, capo, slug: c.slug });
-  await signInAs(page, profil, { [`setlists/${SETLIST_ID}`]: setlist(c.slug, cle) }, `/setlists/${SETLIST_ID}`);
+  await signInAs(page, profil, { [`setlists/${SETLIST_ID}`]: setlist(depart, cle) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: c.langue === "zh" ? /敬拜模式/ : /Mode Louange/ }).first().click();
   await attendreMiseEnPage(page);
   await attendreCompteur(page, /^\d+ \/ \d+$/);
@@ -106,6 +106,19 @@ for (const c of CHANTS) {
     await page2.context().close();
   });
 
+  test(`chant ${c.langue.toUpperCase()} : bande ouverte, le bas de chaque carte reste au-dessus de la barre du bas`, async ({ page }) => {
+    await ouvrirMode(page, AVEC_ACCES, c);
+    await points(page).first().click();
+    await expect(bande(page)).toHaveCount(1);
+    // La remesure des pages suit l'ouverture (quelques images) : on attend qu'elle ait posé les cartes.
+    await expect(async () => {
+      const barre = await page.locator("[data-performance-mode] [data-barre-bas]").boundingBox();
+      const bas = await onStage(page, "[data-section]").evaluateAll((l) => l.map((e) => e.getBoundingClientRect().bottom));
+      expect(bas.length).toBeGreaterThan(0);
+      for (const b of bas) expect(b).toBeLessThanOrEqual(barre!.y + 1);
+    }).toPass({ timeout: 10_000 });
+  });
+
   test(`chant ${c.langue.toUpperCase()} : avec un capo, la bande montre les formes jouées (tonalité − capo), mêmes chiffres`, async ({ page, browser }) => {
     await ouvrirMode(page, AVEC_ACCES, c);
     await points(page).first().click();
@@ -120,3 +133,18 @@ for (const c of CHANTS) {
     await page2.context().close();
   });
 }
+
+// TC-3 (docs/spec-louange-tous-les-chants.md) : un chant ajouté par l'onglet « Tous les chants » montre point et bande.
+test("chant ajouté par « Tous les chants » : le point et la bande se montrent", async ({ page }) => {
+  await ouvrirMode(page, AVEC_ACCES, CHANTS[0], { depart: "abba-pere" });
+  const d = await ouvrirMenu(page, "setlist");
+  await d.locator('[role=tab][data-onglet="chants"]').click();
+  await d.locator("input[data-recherche-chants]").fill("jamais");
+  await d.locator(`[data-chant-slug="${CHANTS[0].slug}"]`).click();
+  await expect(d).toBeHidden();
+  await expect(page.locator("[data-performance-mode] [data-barre-haut]")).toContainText("À jamais Tu es saint", { timeout: 15_000 });
+  const premier = points(page).first();
+  await expect(premier).toBeVisible({ timeout: 15_000 });
+  await premier.click();
+  await expect(bande(page)).toHaveText(/→.* · .*→/);
+});
