@@ -511,6 +511,30 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   `critique-design` non lancé (aucun signalement de design propre à la tranche). Non couvert par un test : « Ici » en
   lettres transposées (capo). Suivant de la file : H8, qui attend AN et le pupitre.
 
+- 13/11/2026 : **H8-1 faite, lot H8 fini** (session orchestratrice de H8 ; executant, testeur, relecteur, regard).
+  Réglage « Idées d'harmonie » / « 和声提示 » dans la rangée « Sur la page » des Options d'affichage (éteint par
+  défaut, `perf-idees-harmonie-<uid>`, accès harmonie requis) ; `src/components/performance/IdeeHarmonieMarge.tsx`
+  (idées par chant et par tonalité de formes, cache par slug, première idée par section, calculées avant l'équipe) ;
+  point dans la marge, centré sur le nom de section, couleur des accords de la carte (`--accord-fr`, sinon
+  `--chord-color`) ; bande sous le nom, dans la carte, par une prop facultative `sousEntete` de `SectionView` (page
+  chant inchangée) ; une bande à la fois ; pagination relancée à l'ouverture ; comptage `cmd.louange.harmonie`.
+  **Décisions déléguées (session H8, 13/11)** : une seule tranche (pas de planche : rendu fixé par les décisions 4 et
+  7) ; réglage dans « Sur la page » plutôt qu'en rubrique ; bande sous le nom dans la carte (le premier rendu la
+  mettait au-dessus de la carte, le point sautait) ; tonalité des chiffres = tonalité des formes affichées
+  (`keyChange ?? songKey` moins le capo ; `SectionBlock` porte désormais son `capo`) ; la marge laissée par la
+  pagination au-dessus de la barre du bas reste telle quelle (une bande ouverte peut amener une carte au contact de
+  la barre, sans la recouvrir ; changer le budget repaginerait tous les chants). Corrigé après relecture : capo,
+  position, couleur, découpe sur « – ». Tests : tsc, lint (0 erreur), validate ; `louange-harmonie` (nouvelle :
+  éteint par défaut, sans accès, point et bande, page non tournée, transposé, capo, pas de débord sous la barre,
+  chant ajouté par « Tous les chants » = TC-3 ; FR et ZH) 8 / 16 (3,6 min, erreurs de la spec), 24 / 0 (1,1 min),
+  30 / 0 (2,2 min), 39 / 0 (1,7 min) ; voisines `louange-sections-uniques`, `louange-menus`, `performance-mode`,
+  `harmonie-porte1` 615 / 2 (19,9 min), puis avec `accords-toucher` et `louange-harmonie` 434 / 1 (11 min) :
+  l'échec persistant, « un trait dessiné sur la page 2 reste sur sa section » (`louange-sections-uniques.spec.ts:769`,
+  téléphone), échoue aussi sur la base d'avant H8 (`6d249ba7`) : sans lien, à reprendre hors lot. Captures cinq
+  projets, FR et 中文, fermé, bande, options : `regard`, puis trois regardées ; `critique-design` non lancé (rien de
+  propre à la tranche). Relevé hors lot : libellés de « Sur la page » sur deux lignes dès 820 px ; en 中文 au
+  téléphone, l'aide sur les paroles suit la rangée et paraît décrire 和声提示.
+
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
 69 fiches en 12 familles aujourd'hui. À ajouter, dans l'ordre d'utilité pour le répertoire :

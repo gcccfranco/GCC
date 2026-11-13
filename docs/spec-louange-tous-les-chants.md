@@ -156,3 +156,6 @@ https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue �
   Reste pour plus tard (finition) : « Ouvrir » ressemble à un troisième segment de la commande « Avec 简谱 | Sans »
   (TC-1 ; le sortir du fond gris), thème sombre et largeur de « 移除 » non regardés. **TC-3 attend H8** : la session
   qui finit H8 la fait (`docs/feuille-de-route.md`, File, point 7).
+- 13/11/2026 : **TC-3 faite, lot TC fini** (session de H8). Test « chant ajouté par Tous les chants » dans
+  `tests/louange-harmonie.spec.ts` (FR et ZH, trois appareils) : point et bande s'y montrent, réglage allumé ; rien à
+  coder, H8 lit les blocs par `songSlug`, ajouts compris.

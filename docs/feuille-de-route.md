@@ -94,7 +94,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      dans la file donne-leur le go mais ils se lancent chacun leur tour »)**. Un lot Harmonie à la fois ; la session qui
      finit un lot lance le suivant et le raye ici. ~~H5 lancé (`session_01UMdfucJo6tgJLNfc6qtSps`, 12/11)~~ **H5 fini** (12/11, H5-2 « Ici » ; § Avancement de la spec). **17 h 07 UTC, Timothée (« Oui pour les 2 »)** : H9
      (`session_01UMdfubgkvSMaCBBvrLbfxY`, contenu seulement) et H6 (`session_01UMdfuZq2SzB3kmofctkeHc`) lancés en
-     parallèle de H5 ; cinq chantiers en cours. Ni H5, ni H6, ni H9 ne lance de lot à sa fin. **H6 fini** (12/11, H6-2 : fiche ; § Avancement). **H9 fini** (12/11, T3 : 91 fiches, famille Mineur ; `docs/spec-harmonie-accords.md` § Avancement). Restent : ~~**H7**~~ **H7 fini** (12/11, H7-2 : lignes d'harmonie ; § Avancement ; lancé par `session_01UMdfudB2Z8QUHK8vtfS2xW`, 12/11 19 h 40 UTC), puis
+     parallèle de H5 ; cinq chantiers en cours. Ni H5, ni H6, ni H9 ne lance de lot à sa fin. **H6 fini** (12/11, H6-2 : fiche ; § Avancement). **H9 fini** (12/11, T3 : 91 fiches, famille Mineur ; `docs/spec-harmonie-accords.md` § Avancement). **H8 fini** (13/11, H8-1 et TC-3 ; § Avancement). Restaient : ~~**H7**~~ **H7 fini** (12/11, H7-2 : lignes d'harmonie ; § Avancement ; lancé par `session_01UMdfudB2Z8QUHK8vtfS2xW`, 12/11 19 h 40 UTC), puis
      H8. H8 (mode louange) en
      dernier, et seulement quand AN et le pupitre ont fini dans `PerformanceMode.tsx`. `docs/spec-harmonie-accords.md`,
      tableau « Lots ». MP-6 : voir la ligne 5.
@@ -102,7 +102,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      (`docs/spec-ma-partition.md`, § Questions ouvertes, « Réponses de Timothée », et § Tranches, MP-6). À lancer par la
      session qui finit **AN-5**, jamais pendant qu'une autre session modifie `PerformanceMode.tsx` ou les annotations.
   6. **Tous les chants en mode louange, lot TC (TC-1 → TC-2 → TC-3)** : **TC-1 lancée le 12/11 à 20 h 49 UTC (`session_01UMdfuZmdnz7GpDir59knoe`), en
-     parallèle d'AN sur décision de Timothée (« Oui pour les 3 ») ; TC-2 suit ; TC-3 attend H8.** **TC-1 finie** (12/11, § Avancement de la spec) ; TC-2 lancée (`session_01UMdfudVWocXk16NNnNUmDD`, 12/11 21 h 57 UTC). **TC-2 finie** (12/11, § Avancement de la spec) ; **TC-3 (test du raccord H8) attend la fin de H8 : personne ne la lance avant**, c'est la session qui finit H8 qui la fait (point 7). Texte d'origine : **go de Timothée (12/11, soir : « Go »)**,
+     parallèle d'AN sur décision de Timothée (« Oui pour les 3 ») ; TC-2 suit ; TC-3 attend H8.** **TC-1 finie** (12/11, § Avancement de la spec) ; TC-2 lancée (`session_01UMdfudVWocXk16NNnNUmDD`, 12/11 21 h 57 UTC). **TC-2 finie** (12/11, § Avancement de la spec) ; **TC-3 faite le 13/11 par la session de H8 : lot TC fini**, c'est la session qui finit H8 qui la fait (point 7). Texte d'origine : **go de Timothée (12/11, soir : « Go »)**,
      questions toutes tranchées (`docs/spec-louange-tous-les-chants.md`, § Questions tranchées et § Tranches ; un seul
      bouton Setlist à deux onglets). À lancer par la session qui finit **la dernière de MP-6 et H8**, jamais pendant
      qu'une autre session modifie `PerformanceMode.tsx` ; une session par tranche, consigne type ci-dessous ; TC-3
