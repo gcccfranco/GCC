@@ -142,7 +142,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   https://claude.ai/artifact/A8JBDX9ktoBN6ToTKe4Hbk, piste B recommandée (armure au titre, marge « Affichage ») ;
   **Go de Timothée (13/11, « Ok go »)** sur les recommandations (B, tonalité pour moi, rôle sur les trois écrans) :
   RU-1 lancée par la session de la planche (`session_01UMdfuaDLszqyKqkCKMoaBn`, 13/11 17 h 18 UTC ; cinq tranches enchaînées).
-  **Métronome : attend le go de Timothée (demande du 13/11, 16 h 50 UTC ; planche et spec faites le 13/11)** : cadrage sans code d'un **vrai métronome
+  **Métronome : go de Timothée pour la piste A (13/11, 17 h 55 UTC, « go pour A »), lot MT lancé (MT-1 ; MT-2 après RU-2)** : cadrage sans code d'un **vrai métronome
   dans le mode louange** (« un métronome avec du son et un métronome plus visuel qu'un simple trait qui bouge, il
   faudrait pouvoir choisir si c'est binaire ternaire, les temps fort et tout, en gros tout comme une vrai application
   de métronome ») : seconde planche, refaite d'après les applications de métronome à la demande de Timothée

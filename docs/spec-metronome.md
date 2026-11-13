@@ -1,6 +1,6 @@
 # Spec — Métronome du mode louange (lot MT)
 
-État : **cadrage, sans code** (session de planche du 13/11/2026). Rien ne se code avant le go de Timothée.
+État : **go de Timothée pour la piste A (13/11/2026, « go pour A »)**, lot MT en quatre tranches (§ Tranches).
 Planche : `docs/planches/planche-metronome-2.html` (seconde planche, refaite d'après les applications de métronome ;
 artefact privé https://claude.ai/artifact/G1e9txeUQrtE8XW5i5yC83). La première (`planche-metronome.html`) est
 dépassée. Recherche : `docs/recherche-metronomes.md`.
@@ -262,6 +262,15 @@ touchent l'agencement s'ajoutent à `SPECS_GRAND_ECRAN` (cinq projets). Tests su
   appareils (cinq projets pour les specs d'agencement).
 
 ## Avancement
+
+- 13/11/2026, 17 h 55 UTC : **go de Timothée, « go pour A »** (question 1). Questions 2 à 5 : **décision déléguée
+  (session de cadrage, 13/11)**, prises selon la recommandation de cette spec, parce qu'elle est motivée et facile à
+  défaire : noire pointée en 6/8 et 12/8 ; bouton « ♩ 72 ▶ » au bout de la bande au téléphone ; la bande bat
+  toujours en mouvement réduit, par paliers ; son coupé au changement de chant sauf si « S'entraîner » est ouvert.
+  **Ordre** : MT-1 tout de suite (fichiers neufs et un montage court dans `PerformanceMode.tsx`, à côté de TC-4,
+  JV-5 et des corrections du parcours : règle des zones différentes, `git pull --rebase` avant de coder, avant les
+  tests finaux et avant de pousser) ; **MT-2 attend RU-2** (la marge « Affichage », dont le panneau reprend la forme
+  et le composant) ; MT-3 et MT-4 suivent.
 
 - 13/11/2026 : constat, première planche, puis, à la demande de Timothée, recherche sur les applications de
   métronome et seconde planche (retouchée une fois après critique) ; spec réécrite d'après elle. Session de cadrage,
