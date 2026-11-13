@@ -1,7 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, lireCompteur, onStage, ouvrirJeJoue, ouvrirOutils, ouvrirReglages } from "./helpers/louange";
-import { basculerAccords, fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { basculerAccords, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { fermerMarge, marge, ouvrirMarge } from "./helpers/marge";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
 // simulés : aucune lecture ni écriture du Firestore de production.
@@ -243,11 +244,10 @@ test.describe("reprise des réglages", () => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(ZH) }, `/setlists/${SETLIST_ID}`);
     await ouvrirPartitions(page);
-    // Pinyin : dans « Affichage » (bouton sur G, sous-menu du ⋯ en deux volets,
-    // docs/spec-deux-volets.md, Q3 et Q7).
-    await ouvrirAffichage(page);
-    await page.getByRole("menuitemcheckbox", { name: "Pinyin" }).click();
-    await fermerMenus(page);
+    // Pinyin : dans la marge « Affichage » (RU-4), bouton de la barre sur G ou de l'en-tête en deux volets.
+    const marge = await ouvrirAffichage(page);
+    await marge.getByRole("switch", { name: "Pinyin" }).click();
+    await fermerMarge(page);
     await launch(page);
     await expect(lyricLines(page).first()).toBeVisible();
     await expect(pinyin(page)).toHaveCount(0);
@@ -256,13 +256,9 @@ test.describe("reprise des réglages", () => {
   test("texte agrandi sur la page du chant → agrandi en mode louange, et inversement", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await page.goto("/songs/abba-pere");
-    const agrandir = page.getByRole("button", { name: "Agrandir le texte" });
-    // Avant l'hydratation le bouton existe mais reste inerte : un clic y est perdu sans rien dire.
-    await agrandir.waitFor();
-    await page.waitForFunction(() => {
-      const b = document.querySelector('button[aria-label="Agrandir le texte"]');
-      return !!b && Object.keys(b).some((k) => k.startsWith("__reactProps"));
-    });
+    // RU-3 : A− / A+ ont quitté la barre du chant pour la marge « Affichage ».
+    await ouvrirMarge(page);
+    const agrandir = marge(page).getByRole("button", { name: "Agrandir le texte" });
     const transform = () => page.locator("main.song-zoom").evaluate((el) => el.style.transform);
     await agrandir.click();
     await expect.poll(transform).toBe("scale(1.1)");
@@ -288,10 +284,10 @@ test.describe("reprise des réglages", () => {
     await ouvrirPartitions(page);
     // Le batteur lit la setlist en Structure seule, même réglage que le mode
     // louange (D15, docs/spec-jianpu-integration.md) : il revient à l'ordre joué.
-    await ouvrirAffichage(page);
-    await expect(page.getByRole("menuitemradio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
-    await page.getByRole("menuitemradio", { name: "Tout le chant" }).click();
-    await fermerMenus(page);
+    const marge = await ouvrirAffichage(page);
+    await expect(marge.getByRole("radio", { name: "Plan", exact: true })).toHaveAttribute("aria-checked", "true");
+    await marge.getByRole("radio", { name: "Tout le chant" }).click();
+    await fermerMarge(page);
     await basculerAccords(page); // masqués
     await basculerAccords(page); // de nouveau affichés
     await launch(page);
@@ -342,8 +338,11 @@ test.describe("tonalité choisie sur la page du chant", () => {
       await ouvrirPartitions(page);
       await page.locator("[data-outline-item]").getByRole("link", { name: c.title }).click();
       await page.waitForURL(/\/songs\//);
-      // Le sélecteur de la barre du chant : en deux volets, la liste a son choix de thème (lot U5).
-      await page.getByTestId("barre-outils").locator("select").first().selectOption(c.chosen);
+      // RU-3 : l'armure, à côté du titre, a remplacé le sélecteur de la barre du chant.
+      await page.getByTestId("armure").first().click();
+      await page.getByTestId("fenetre-armure").getByRole("radio", { name: new RegExp(`^${c.chosen}(?![♭♯])`) }).click();
+      await expect(page.getByTestId("armure").first()).toHaveText(new RegExp(`(^|=)${c.chosen}$`));
+      await page.keyboard.press("Escape");
       await page.goBack();
       await page.getByRole("button", { name: /Mode Louange/ }).click();
       await attendreMiseEnPage(page);

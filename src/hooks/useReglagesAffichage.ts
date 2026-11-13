@@ -13,7 +13,7 @@ import { getRole, setRole as ecrireRole, type RolePreset } from "@/lib/performan
 // fonctions déjà en place, aucune nouvelle clé. La notation et la couleur des accords ont leurs propres abonnés. Les autres
 // lisent après le montage (pas d'écart d'hydratation) ; seuls leurs modules n'émettent rien : un évènement de fenêtre garde deux
 // instances du crochet synchrones. « Accords affichés » n'a pas de clé : état en mémoire, partagé par le même évènement.
-const EVENEMENT = "gcc:reglages-affichage";
+export const EVENEMENT_REGLAGES = "gcc:reglages-affichage";
 let accordsAffiches = true;
 
 export type ReglagesAffichage = {
@@ -65,11 +65,11 @@ export function useReglagesAffichage(uid: string | null | undefined): ReglagesAf
     // Lecture après montage (pas d'écart d'hydratation) : un setState dans l'effet est voulu.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     relire();
-    window.addEventListener(EVENEMENT, relire);
-    return () => window.removeEventListener(EVENEMENT, relire);
+    window.addEventListener(EVENEMENT_REGLAGES, relire);
+    return () => window.removeEventListener(EVENEMENT_REGLAGES, relire);
   }, [relire]);
 
-  const ecrire = (f: () => void) => { f(); window.dispatchEvent(new Event(EVENEMENT)); };
+  const ecrire = (f: () => void) => { f(); window.dispatchEvent(new Event(EVENEMENT_REGLAGES)); };
 
   return {
     pret: lu && uid !== undefined,

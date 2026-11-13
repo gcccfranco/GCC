@@ -3,7 +3,6 @@ import type { SetlistItem } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
 import { useTranslation } from "react-i18next";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
-import { KeyPill } from "@/components/ui/key-pill";
 import { Link2, MessageSquare, ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
 import type { SectionSummary } from "@/types/song";
 import { useJianpuManifest } from "@/lib/jianpu/images";
@@ -85,6 +84,7 @@ export function ListView({
   current,
   onOpen,
   lienBase = "",
+  personalKeys,
 }: {
   items: SetlistItem[];
   songsMap: Record<string, SongIndexEntry>;
@@ -97,6 +97,8 @@ export function ListView({
   /** Adresse de la setlist quand la liste est montrée ailleurs (aperçu de la liste des
    *  setlists, lot U4 bis, B2) : le lien des lignes y mène. */
   lienBase?: string;
+  /** Tonalités choisies sur cet appareil pour cette setlist (slug → tonalité) : la liste montre la tonalité jouée. */
+  personalKeys?: Record<string, string>;
 }) {
   const { t } = useTranslation();
   // Repère « ce chant se lit sur son 简谱 » — même résolution que la vue
@@ -257,8 +259,11 @@ export function ListView({
 
         // ── Regular song item ──
         const song = songsMap[item.songSlug];
-        const displayKey = item.keyOverride ?? song?.originalKey ?? "?";
+        const equipeKey = item.keyOverride ?? song?.originalKey ?? "?";
         const transposed = !!item.keyOverride && item.keyOverride !== song?.originalKey;
+        const choisie = personalKeys?.[item.songSlug];
+        const perso = choisie && choisie !== equipeKey ? choisie : undefined;
+        const displayKey = perso ?? equipeKey;
         return (
           <li key={`${item.songSlug}-${idx}`} data-ligne={item.position}>
             <LigneLien position={item.position} current={current === item.position} onOpen={onOpen} lienBase={lienBase}>
@@ -346,11 +351,21 @@ export function ListView({
               })()}
               {item.notes && <p className="text-xs text-muted-foreground italic mt-0.5">{item.notes}</p>}
             </div>
-            <KeyPill
-              tonalite={displayKey}
-              langue={song?.language === "zh" ? "zh" : "fr"}
-              origine={transposed ? song?.originalKey : undefined}
-            />
+            {/* Une ligne est un lien : pas de bouton dedans. La tonalité jouée, en encre, dans le style de l'armure (RU-4). */}
+            <span className="flex shrink-0 flex-col items-end gap-0.5">
+              <span
+                data-testid="tonalite"
+                data-armure-liste={perso ? "moi" : "equipe"}
+                className={`inline-flex h-8 min-w-[34px] items-center justify-center whitespace-nowrap rounded-[9px] px-[7px] text-[17px] font-semibold tabular-nums ${perso ? "bg-foreground text-background" : "text-foreground shadow-[inset_0_0_0_1.5px_hsl(var(--foreground))]"}`}
+              >
+                {displayKey}
+              </span>
+              {perso ? (
+                <span data-testid="tonalite-equipe" className="whitespace-nowrap text-xs text-muted-foreground">{t("armure.equipeMention", { key: equipeKey })}</span>
+              ) : transposed && song?.originalKey ? (
+                <span data-testid="tonalite-origine" className="whitespace-nowrap text-xs text-muted-foreground">orig. {song.originalKey}</span>
+              ) : null}
+            </span>
             </LigneLien>
           </li>
         );

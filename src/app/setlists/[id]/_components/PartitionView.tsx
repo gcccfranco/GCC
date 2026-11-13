@@ -4,7 +4,7 @@ import { songHref } from "@/lib/setlist/songHref";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { NotationAccordsProvider } from "@/components/song/NotationAccordsProvider";
-import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, chord_font } from "@/components/song/SongView";
+import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { AccordsProvider, AideAccordsEnLigne, ChantDesAccords, useOuvrirAccord, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
@@ -16,7 +16,8 @@ import type { Volets } from "@/lib/performance/tranchesScan";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { useTranslation } from "react-i18next";
 import { transposeSection, transposerVers } from "@/lib/transposeAST";
-import { semitonesTo } from "@/lib/transpose";
+import { semitonesTo, getTransposedKey } from "@/lib/transpose";
+import { Armure } from "@/components/song/Armure";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { lyricsText } from "@/components/song/copyLyrics";
 import { compter } from "@/lib/usage";
@@ -140,7 +141,16 @@ export function PartitionsView({
   onGarderCopie,
   onConflit,
   enAttente = false,
+  personalKeys,
+  onTonalite,
+  onChangerEquipe,
 }: {
+  /** Tonalités choisies sur cet appareil pour cette setlist (slug → tonalité), les mêmes qu'au mode louange. */
+  personalKeys?: Record<string, string>;
+  /** L'armure d'un chant : `null` = retour à la tonalité de l'équipe. */
+  onTonalite?: (slug: string, tonalite: string | null) => void;
+  /** « Changer pour toute l'équipe » : seulement pour qui peut éditer la setlist. */
+  onChangerEquipe?: (itemIndex: number, tonalite: string) => void;
   /** Ma partition (docs/spec-ma-partition.md) : par chant, quelle partition se lit, le menu « Je lis » et les signes. */
   lectures?: Record<string, Lecture>;
   onChoisirLecture?: (itemIndex: number, valeur: string) => void;
@@ -295,7 +305,7 @@ export function PartitionsView({
                           <Link href={songHref(fs.songSlug, fs, setlistId, item.position)} className="hover:underline underline-offset-2">
                             {ast.metadata.title}
                           </Link>
-                          <span className="ml-1 font-mono text-xs font-normal text-muted-foreground">
+                          <span className="ml-1 font-mono text-xs font-normal text-foreground">
                             {fs.keyOverride ?? ast.metadata.key}
                           </span>
                         </span>
@@ -441,6 +451,9 @@ export function PartitionsView({
             onGarderCopie={onGarderCopie}
             onConflit={onConflit}
             enAttente={enAttente}
+            personalKeys={personalKeys}
+            onTonalite={onTonalite}
+            onChangerEquipe={onChangerEquipe}
             premier={item.position === positionPremierChant}
           />
         );
@@ -477,8 +490,14 @@ function NormalSongItem({
   onGarderCopie,
   onConflit,
   enAttente,
+  personalKeys,
+  onTonalite,
+  onChangerEquipe,
   premier,
 }: {
+  personalKeys?: Record<string, string>;
+  onTonalite?: (slug: string, tonalite: string | null) => void;
+  onChangerEquipe?: (itemIndex: number, tonalite: string) => void;
   lecture?: Lecture;
   onChoisirLecture?: (itemIndex: number, valeur: string) => void;
   partage?: (itemIndex: number, slug: string) => PartageProps | undefined;
@@ -523,11 +542,22 @@ function NormalSongItem({
   // et le comparer à `keyOverride` répondait toujours « la même », ce qui
   // éteignait le calque de la partition 简谱 (accords laissés dans la
   // tonalité gravée pendant que le reste de la setlist est transposé).
-  const { ast, songKey } = useMemo(() => {
+  // La tonalité choisie sur cet appareil (`perf-personal-keys`, celle du mode louange) remplace celle de l'équipe ; les
+  // modulations (升调) suivent du même écart (comme `blocks.ts`).
+  const chosenKey = personalKeys?.[item.songSlug];
+  const { ast, songKey, recommendedKey, equipeKey, personalKey } = useMemo(() => {
     const base = itemAst(item, content);
-    if (!base) return { ast: undefined, songKey: undefined };
-    return { ast: transposerVers(base, item.keyOverride), songKey: base.metadata.key };
-  }, [item, content]);
+    if (!base) return { ast: undefined, songKey: undefined, recommendedKey: null, equipeKey: undefined, personalKey: undefined };
+    const equipe = item.keyOverride ?? base.metadata.key;
+    const perso = chosenKey && chosenKey !== equipe ? chosenKey : undefined;
+    return { ast: transposerVers(base, perso ?? item.keyOverride), songKey: base.metadata.key, recommendedKey: base.metadata.recommendedKey, equipeKey: equipe, personalKey: perso };
+  }, [item, content, chosenKey]);
+  const joueKey = personalKey ?? equipeKey;
+  const decalage = personalKey && equipeKey ? semitonesTo(equipeKey, personalKey) : 0;
+  const sectionKeys = useMemo(
+    () => (decalage ? Object.fromEntries(Object.entries(item.sectionKeys ?? {}).map(([k, v]) => [k, getTransposedKey(v, decalage)])) : item.sectionKeys ?? {}),
+    [item.sectionKeys, decalage],
+  );
   // Partition 简谱 choisie pour cet item : le scan remplace les paroles.
   const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref) ? item.songSlug : null);
   if (!ast) {
@@ -559,7 +589,8 @@ function NormalSongItem({
   const layout: PartitionLayout = editMode ? "played" : layoutPref;
   const playedSections = ordreJoue(ast.sections, item.structureOverride);
   // Partition 简谱 : les 升调 de la structure jouée, qu'un scan ne peut pas montrer.
-  const steps = jianpuScore ? resolveSectionOccurrences(playedSections, item) : [];
+  const steps = (jianpuScore ? resolveSectionOccurrences(playedSections, item) : []).map((st) =>
+    decalage && st.targetKey ? { ...st, targetKey: getTransposedKey(st.targetKey, decalage) } : st);
 
   // Badges d'état : ils ne sont pas dans le scan et suivent donc l'item, que
   // le chant s'affiche en paroles ou en partition.
@@ -594,6 +625,28 @@ function NormalSongItem({
       )}
     </>
   );
+  // L'armure (RU-1) remplace la lettre colorée : pleine = ma tonalité, au contour = celle de l'équipe ; « équipe G » à côté
+  // quand la mienne diffère. Sans droit d'éditer, la transposition reste personnelle (pas de « toute l'équipe »).
+  const armure = ast.metadata.key && equipeKey && songKey && joueKey && (
+    <span className="flex shrink-0 items-center gap-1.5">
+      <Armure
+        titre={ast.metadata.title}
+        langue={ast.metadata.language === "zh" ? "zh" : "fr"}
+        tonaliteOrigine={songKey}
+        tonaliteReco={recommendedKey}
+        tonaliteEquipe={equipeKey}
+        tonalite={joueKey}
+        portee="appareil"
+        onChange={(k) => onTonalite?.(item.songSlug, k === equipeKey ? null : k)}
+        onChangerEquipe={onChangerEquipe ? (k) => onChangerEquipe(origIndex, k) : undefined}
+      />
+      {personalKey && (
+        <span data-testid="tonalite-equipe" className="whitespace-nowrap text-xs text-muted-foreground">
+          {t("armure.equipeMention", { key: equipeKey })}
+        </span>
+      )}
+    </span>
+  );
   // Rangée compacte de la maquette (.shead, 48 px) : n°, titre et pinyin (puis la note, tronquée), tonalité, copie en icône.
   const sousLigne = [ast.metadata.titlePinyin, item.notes].filter(Boolean);
   const enTete = (
@@ -612,14 +665,7 @@ function NormalSongItem({
             </p>
           )}
         </div>
-        {ast.metadata.key && (
-          <span
-            className={`shrink-0 text-sm font-bold ${chord_font.className}`}
-            style={{ color: ast.metadata.language === "zh" ? "var(--jianpu-color)" : "var(--chord-color)" }}
-          >
-            {ast.metadata.key}
-          </span>
-        )}
+        {armure}
         {ast.metadata.tempo && (
           <span className="flex shrink-0 items-baseline gap-0.5 text-xs text-muted-foreground max-[359px]:hidden">
             <span className="text-base leading-none text-foreground/70">♩</span>
@@ -641,6 +687,7 @@ function NormalSongItem({
             {item.position}
           </span>
           {followsPresidency && <CopyLyricsButton sections={playedSections} />}
+          {armure}
           {item.notes && <span className="text-xs text-muted-foreground italic">{item.notes}</span>}
           {badges}
         </div>
@@ -654,7 +701,7 @@ function NormalSongItem({
         sectionNotes={item.sectionNotes ?? {}}
         sectionTransitions={item.sectionTransitions ?? {}}
         sectionNuances={item.sectionNuances ?? {}}
-        sectionKeys={item.sectionKeys ?? {}}
+        sectionKeys={sectionKeys}
         disposition={disposition}
         layout={layout}
         slug={item.songSlug}
@@ -693,7 +740,7 @@ function NormalSongItem({
                 entry={jianpuScore}
                 title={ast.metadata.title}
                 slug={item.songSlug}
-                playedKey={item.keyOverride && item.keyOverride !== songKey ? item.keyOverride : null}
+                playedKey={joueKey && joueKey !== songKey ? joueKey : null}
                 originalKey={songKey}
                 chordEdits={item.jianpuChords}
                 onEditChords={

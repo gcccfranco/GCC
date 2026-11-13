@@ -7,7 +7,8 @@ import type { JianpuManifest } from "../src/lib/jianpu/images";
 import { paginateColumns, pagesUneColonne } from "../src/lib/performance/columns";
 import type { SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { fermerMarge } from "./helpers/marge";
 import { attendreCompteur, basculerAnnoter, lireCompteur, ouvrirJeJoue, ouvrirOutils } from "./helpers/louange";
 
 // Lot 2 du chantier 简谱 (docs/spec-jianpu-integration.md) : « Sections uniques » et
@@ -294,11 +295,11 @@ test.describe("Je joue : rôle et Ordre des sections", () => {
 
     await quitter(page);
     await ouvrirPartitions(page);
-    await ouvrirAffichage(page);
-    await expect(page.getByRole("menuitemradio", { name: "Chaque section une fois" })).toHaveAttribute("aria-checked", "true");
+    const marge = await ouvrirAffichage(page);
+    await expect(marge.getByRole("radio", { name: "Une fois chacune" })).toHaveAttribute("aria-checked", "true");
     // Et dans l'autre sens : la setlist choisit, le mode louange le montre.
-    await page.getByRole("menuitemradio", { name: "Plan du chant" }).click();
-    await fermerMenus(page);
+    await marge.getByRole("radio", { name: "Plan", exact: true }).click();
+    await fermerMarge(page);
     await lancer(page);
     const retour = await jejoue(page);
     await expect(retour.getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");

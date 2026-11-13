@@ -1,10 +1,11 @@
 import { expect, type Page } from "@playwright/test";
 
-// La marge « Affichage » de la page chant (docs/spec-reglages-unifies.md, RU-3) : ouverte par le bouton de la barre.
+// La marge « Affichage » de la page chant (docs/spec-reglages-unifies.md, RU-3) et de la setlist (RU-4) : ouverte par le bouton
+// de la barre (un volet) ou de l'en-tête (deux volets).
 export const marge = (page: Page) => page.getByTestId("marge-affichage");
 
 export async function ouvrirMarge(page: Page) {
-  const bouton = page.getByTestId("barre-outils").getByRole("button", { name: /^(Affichage|显示)$/ });
+  const bouton = page.getByTestId("barre-outils").or(page.locator("[data-en-tete]")).getByRole("button", { name: /^(Affichage|显示)$/ });
   // Un clic avant l'hydratation se perd : on recommence tant que la marge n'est pas ouverte.
   await expect(async () => {
     if ((await marge(page).getAttribute("data-ouvert")) !== "true") await bouton.click();
@@ -12,4 +13,10 @@ export async function ouvrirMarge(page: Page) {
   }).toPass({ timeout: 15_000 });
   await expect(marge(page)).toBeVisible();
   await page.waitForTimeout(400); // fin du ressort
+}
+
+/** Referme la marge par son × (la feuille d'un petit écran couvre le bas de la page) et attend sa fermeture. */
+export async function fermerMarge(page: Page) {
+  if ((await marge(page).getAttribute("data-ouvert")) === "true") await marge(page).getByRole("button", { name: /^(Fermer l'affichage|关闭显示)$/ }).click();
+  await expect(marge(page)).toHaveAttribute("data-ouvert", "false");
 }

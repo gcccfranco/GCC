@@ -3,7 +3,8 @@ import vm from "node:vm";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
-import { fermerMenus, ouvrirAffichage, ouvrirPartitions as afficherPartitions } from "./helpers/setlist";
+import { ouvrirAffichage, ouvrirPartitions as afficherPartitions } from "./helpers/setlist";
+import { fermerMarge } from "./helpers/marge";
 import { attendreEditeur, choisirTonalite, reglerElement, volet } from "./helpers/editeurSetlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
@@ -191,11 +192,10 @@ async function etat(page: Page, position: number): Promise<"scan" | "paroles" | 
 const rendus = (page: Page, positions: number[]) =>
   expect.poll(() => Promise.all(positions.map((n) => etat(page, n))), { timeout: 20_000 });
 
-/** Le menu des réglages d'affichage : le bouton « Affichage » de la barre sur G, le sous-menu
- *  « Affichage » du ⋯ de l'en-tête en deux volets (tests/helpers/setlist.ts). */
+/** La marge « Affichage » (RU-4) : la ligne 简谱 | Paroles ; « 简谱 » est coché quand le scan est montré. */
 const interrupteurMenu = async (page: Page) => {
-  await ouvrirAffichage(page);
-  return page.getByRole("menuitemcheckbox", { name: "Partition 简谱" });
+  const marge = await ouvrirAffichage(page);
+  return marge.getByRole("radio", { name: "简谱", exact: true });
 };
 
 test.describe("setlist, vue Partitions", () => {
@@ -230,20 +230,19 @@ test.describe("setlist, vue Partitions", () => {
     await rendus(page, [1, 2, 3]).toEqual(["paroles", "paroles", "paroles"]);
   });
 
-  test("menu : « Partition 简谱 » est un interrupteur coché, plus de choix à trois", async ({ page }) => {
+  test("marge : « 简谱 | Paroles » est coché sur 简谱, plus de choix à trois", async ({ page }) => {
     await ouvrirPartitions(page, TROIS);
     await rendus(page, [1]).toEqual(["scan"]);
     const interrupteur = await interrupteurMenu(page);
     await expect(interrupteur).toHaveAttribute("aria-checked", "true");
     for (const ancien of ["Choix du responsable", "Toujours", "Jamais"]) {
-      await expect(page.getByRole("menuitemradio", { name: ancien })).toHaveCount(0);
+      await expect(page.getByRole("radio", { name: ancien })).toHaveCount(0);
     }
-    await expect(page.getByText(/les paroles pour choriste et présidence/)).toBeVisible();
 
-    await interrupteur.click();
+    await page.getByTestId("marge-affichage").getByRole("radio", { name: "Paroles", exact: true }).click();
     await expect(interrupteur).toHaveAttribute("aria-checked", "false");
     expect(await lirePref(page)).toBe("never");
-    await fermerMenus(page);
+    await fermerMarge(page);
     await rendus(page, [1, 2]).toEqual(["paroles", "paroles"]);
   });
 

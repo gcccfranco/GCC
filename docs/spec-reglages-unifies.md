@@ -226,3 +226,24 @@ Aucune règle Firestore touchée (tonalité personnelle en `localStorage`).
   tests, 1 131 passés puis échecs corrigés et relancés (176 / 176 hors copie, copie 45 / 45 sur trois répétitions) ;
   environ 2 h 30 de tests dans la tranche (dont 29 min pour la passe complète). Captures regardées aux quatre dispositions
   et à 1 440 px. Pour RU-4 : passer `sansRole` à la marge de la setlist (retour de Timothée).
+- 13/11 : **RU-4 faite** (session RU-4). Vue d'une setlist : la marge « Affichage » (`mode="page"`, `sansRole` : pas de « Je
+  joue ») remplace le menu Affichage (bouton de la barre, sous-menu du ⋯ en deux volets, menu du téléphone) ; colonne de
+  320 px seulement si la musique garde 340 px, sinon feuille de 40 % centrée sur le volet ; Harmonie et Affichage
+  s'excluent. Un seul bouton Affichage à un toucher ; Accords reste dans la barre à toutes tailles (sa copie du ⋯ est
+  retirée). `usePreferencesAffichage` s'appuie sur `useReglagesAffichage` (aucune nouvelle clé ; 简谱 reste tri-état, relu à
+  l'évènement de la marge ; la taille du texte s'applique aux partitions). Armure à côté du titre de chaque chant (plus de
+  lettre bleue) : tonalité personnelle par setlist et par appareil (`perf-personal-keys`, la même que le mode louange),
+  mention « équipe G / 团队 G » quand elle diffère, crayon et modulations suivent ; « Changer pour toute l'équipe » aux
+  seuls éditeurs (`persistOverride`, historique), puis la clé personnelle s'efface. Vue Liste : tonalité jouée en texte
+  encre, « équipe G » si elle diffère. *Décisions déléguées (session RU-4, 13/11)* : pas de capo dans la setlist (reste au
+  mode louange, RU-5) ; pas de lecture seule « L'équipe joue en G » (tout le monde transpose pour soi, RU-Q2) ; chants
+  fusionnés sans tonalité personnelle, tonalité d'équipe en encre ; `MargeAffichage` gagne `jianpuVu` (le « Paroles » du
+  responsable reste vrai dans le segment). Libellé zh à faire relire : 团队 {{key}}. Restes de RU-3 corrigés en passant :
+  `recommended-key.spec.ts` et `performance-mode.spec.ts` (sélecteur et A− / A+ de la page chant → armure et marge),
+  `dispositions-partition.spec.ts` (deux groupes dans la marge de la page chant). Nouvelle `setlist-tonalite-perso.spec.ts`
+  (cinq projets). Tests : 17 specs (dont 4 voisines), 1 701 tests, 1 500 passés au premier tour ; échecs corrigés et
+  relancés isolément, tous verts sauf deux connus : `coup-d-oeil` « Structure seule » à 1 440 px (rouge aussi sur la
+  base) et `louange-sections-uniques` « changer d'Affichage… (C1) » à 1 440 px, vert seul (24 s pour une limite de 30 s,
+  23 s sur la base), rouge sous charge. Environ 1 h 20 de tests dans la tranche. Captures regardées aux quatre
+  dispositions et à 1 440 px. Non fait : `Sommaire.tsx` (rail des deux volets) garde son `KeyPill`.
+

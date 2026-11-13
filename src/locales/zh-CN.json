@@ -661,7 +661,8 @@
     "moi": "我",
     "changerEquipe": "为整个团队更改",
     "equipeJoue": "本队用 {{key}} 调",
-    "aria": "调：{{key}}"
+    "aria": "调：{{key}}",
+    "equipeMention": "团队 {{key}}"
   },
   "notationAccords": {
     "titre": "和弦记法",

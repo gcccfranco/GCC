@@ -127,7 +127,7 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
     await expect(marge(page).getByText("Disposition", { exact: true })).toBeVisible();
     await expect(choixDispo(page)).toHaveText([/Classique/, /Couleurs par section/, /Marge/, /Scène/, /Partition/]);
     await expect(choixDispo(page).filter({ hasText: "Classique" })).toHaveAttribute("aria-checked", "true");
-    await expect(marge(page).getByText("Retenu sur cet appareil")).toHaveCount(3);
+    await expect(marge(page).getByText("Retenu sur cet appareil")).toHaveCount(2);
     // La marge tient dans l'écran.
     const boite = (await marge(page).boundingBox())!;
     expect(boite.x).toBeGreaterThanOrEqual(0);
@@ -168,9 +168,10 @@ test("vue partitions de la setlist : le même choix, à miniatures", async ({ pa
   await ouvrirPartitions(page);
   const partitions = page.locator("[data-disposition]");
   await expect(partitions.first()).toHaveAttribute("data-disposition", "classique");
-  await ouvrirAffichage(page);
-  await expect(page.getByRole("menuitemradio", { name: "Classique" })).toHaveAttribute("aria-checked", "true");
-  await page.getByRole("menuitemradio", { name: "Couleurs par section" }).click();
+  const marge = await ouvrirAffichage(page);
+  const disposition = marge.getByRole("radiogroup", { name: "Disposition" }).getByRole("radio");
+  await expect(disposition.filter({ hasText: "Classique" })).toHaveAttribute("aria-checked", "true");
+  await disposition.filter({ hasText: "Couleurs par section" }).click();
   await expect(partitions.first()).toHaveAttribute("data-disposition", "sections");
   await expect.poll(() => lire(page, "disposition")).toBe("sections");
   await page.reload();

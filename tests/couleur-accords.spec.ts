@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { marge, ouvrirMarge } from "./helpers/marge";
 import { attendreMiseEnPage, lireCompteur, onStage, ouvrirOptions } from "./helpers/louange";
-import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 import { contraste, garderContraste, FOND_CLAIR } from "../src/lib/performance/couleurIcones";
 
 // Lot CA, tranche CA-A (docs/spec-mode-louange-forscore-2.md) : la couleur des accords au choix de chacun, retenue par
@@ -291,8 +291,8 @@ async function ouvrirReglage(page: Page, surface: Surface, ui: Langue = "fr"): P
     return marge(page);
   }
   if (surface === "partitions") {
-    await ouvrirAffichage(page);
-    return page.getByRole("menu").last();
+    // RU-4 : la marge « Affichage » de la setlist (un volet comme deux volets).
+    return ouvrirAffichage(page);
   }
   return ouvrirOptions(page, ui);
 }
@@ -462,30 +462,15 @@ test("captures CA-B : menus à 360 px, deux langues", async ({ page }, info) => 
 
 // ─── CA-B, compléments : sous-menu Affichage, retenue, Échap du mode louange, fonds Classique ─────────────
 
-test("réglage, vue partitions : sous-menu Affichage (là où Affichage est un sous-menu ; sinon sauté) reste ouvert au choix, Échap et clic dehors le ferment", async ({ page }) => {
+test("réglage, vue partitions : la marge « Affichage » reste ouverte au choix, Échap la ferme", async ({ page }) => {
   await preparer(page);
   await ouvrir(page, "partitions", CHANT.fr, ELODIE);
-  const barre = page.getByTestId("barre-outils").getByRole("button", { name: /^(Affichage|显示)$/ });
-  await barre.or(page.locator("[data-en-tete]")).or(page.getByTestId("barre-outils").getByRole("button", { name: "Plus d'actions" })).first().waitFor();
-  // Téléphone, vue Partitions (T2 du lot exemples d'usage) : « Affichage » du ⋯ ouvre un menu à part, pas un sous-menu.
-  test.skip(await barre.isVisible() || (await page.locator("[data-en-tete]").count()) === 0, "Affichage n'est pas un sous-menu ici");
-  const sousMenu = page.getByRole("menu", { name: /^(Affichage|显示)$/ });
-  const rouvrir = async () => { await fermerMenus(page); await ouvrirAffichage(page); await expect(sousMenu).toBeVisible(); };
-
-  await ouvrirAffichage(page);
-  await rangee(sousMenu, "fr").getByRole("radio", { name: "Violet" }).click();
-  await expect(sousMenu).toBeVisible();
+  const m = await ouvrirAffichage(page);
+  await rangee(m, "fr").getByRole("radio", { name: "Violet" }).click();
+  await expect(m).toHaveAttribute("data-ouvert", "true");
   await page.keyboard.press("Escape");
-  await expect(sousMenu).toHaveCount(0);
-
-  await rouvrir();
-  await page.mouse.click(2, 2);
-  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(m).toHaveAttribute("data-ouvert", "false");
 });
-
-// shortcut: ← depuis le lien « Couleurs d'origine » ferme le sous-menu à 1 280 px mais pas à 1 024 ni à 1 440 px (lien
-// bien focalisé, cause non trouvée le 11/11/2026) ; la spec ne demande pas ←, Échap et le clic dehors le ferment partout.
-test.fixme("réglage, vue partitions : ← ferme le sous-menu Affichage depuis le lien « Couleurs d'origine »", async () => {});
 
 // shortcut: pas d'authentification lente simulable simplement (signInAs répond tout de suite), à reprendre avec une option de délai dans fakeSession.
 test.fixme("réglage : grisé pendant le chargement de l'authentification, rien d'écrit", async () => {

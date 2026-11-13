@@ -665,7 +665,8 @@
     "moi": "moi",
     "changerEquipe": "Changer pour toute l'équipe",
     "equipeJoue": "L'équipe joue en {{key}}",
-    "aria": "Tonalité : {{key}}"
+    "aria": "Tonalité : {{key}}",
+    "equipeMention": "équipe {{key}}"
   },
   "notationAccords": {
     "titre": "Notation des accords",

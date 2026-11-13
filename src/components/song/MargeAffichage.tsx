@@ -33,6 +33,8 @@ type Props = {
   zh: boolean;
   /** Le chant a une partition 简谱 : sans elle, pas de ligne 简谱 | Paroles. */
   aJianpu: boolean;
+  /** 简谱 | Paroles tel que l'écran le montre, quand il suit autre chose que la clé seule (setlist : paroles par défaut du choriste, RU-4). */
+  jianpuVu?: boolean;
   uid: string | null | undefined;
   mode: "page" | "louange";
   /** Remplace le contenu du groupe « La page » (RU-5 : colonnes, Demi-page, Thème…). */
@@ -79,7 +81,7 @@ export function Groupe({ titre, mention, children }: { titre: string; mention: s
   );
 }
 
-export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, uid, mode, groupePage, retourFocus, sansColonne, sansRole, children }: Props) {
+export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, mode, groupePage, retourFocus, sansColonne, sansRole, children }: Props) {
   const { t } = useTranslation();
   const r = useReglagesAffichage(uid);
   const placeEcran = usePlace();
@@ -202,7 +204,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, uid, mode, group
                 <Segment
                   label={t("margeAffichage.score")}
                   valeurs={[{ id: "jianpu", nom: "简谱" }, { id: "paroles", nom: t("performance.lyrics") }]}
-                  choisie={r.jianpu ? "jianpu" : "paroles"}
+                  choisie={(jianpuVu ?? r.jianpu) ? "jianpu" : "paroles"}
                   onChoix={(id) => r.setJianpu(id === "jianpu")}
                 />
               </div>
