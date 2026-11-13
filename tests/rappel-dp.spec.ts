@@ -250,10 +250,13 @@ test.describe("bandeau du mode louange : règles des Dp", () => {
     const pastilleZh = liste.locator("li > span:first-child");
     await expect(pastilleZh.nth(2)).toContainText("Dp");
     const [r, dp] = await pastilleZh.evaluateAll((els) =>
-      els.slice(1).map((e) => ({ couleur: getComputedStyle(e).color, fond: getComputedStyle(e).backgroundColor })),
+      els.slice(1).map((e) => ({ couleur: getComputedStyle(e).color, fond: getComputedStyle(e).backgroundColor, contour: getComputedStyle(e).borderTopColor, tete: e.hasAttribute("data-repere-tete") })),
     );
     expect(dp.couleur).toBe(r.couleur);
-    expect(dp.fond).toBe(r.fond);
+    // Tête de feuille (JP-B2, docs/spec-mode-louange-forscore-2.md) : la couleur de section est le contour ; le fond
+    // ne teinte que les repères des sections à l'écran (« allumés »), il ne dit pas la section.
+    if (r.tete) expect(dp.contour).toBe(r.contour);
+    else expect(dp.fond).toBe(r.fond);
     // En colonne, le nom écrit l'origine en entier.
     if ((await liste.evaluate((el) => el.className)).includes("flex-col")) {
       await expect(liste.locator("li").nth(2)).toContainText("最后一句 – Refrain");
