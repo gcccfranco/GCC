@@ -519,10 +519,18 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                           </Link>
                         </div>
                         {apercu ? (
-                          <p className="mt-1.5 text-base">
-                            <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.avant} visible /></span>
-                            <span className="mx-1.5 text-muted-foreground">→</span>
-                            <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.apres} visible /></span>
+                          // Timothée (13/11/2026) : on distinguait mal l'ancienne progression de la nouvelle. L'ancienne en gris,
+                          // la nouvelle dans la couleur des accords, « avant » et « après » au-dessus.
+                          <p className="mt-1.5 flex flex-wrap items-end gap-x-1.5 gap-y-1 text-base" data-avant-apres>
+                            <span className="inline-flex flex-col items-start" data-avant>
+                              <span className="text-xs text-muted-foreground">{t("harmonie.avant")}</span>
+                              <span className="font-chord font-semibold text-muted-foreground"><AccordTouchable etiquette={apercu.avant} visible /></span>
+                            </span>
+                            <span className="pb-0.5 text-muted-foreground" aria-hidden>→</span>
+                            <span className="inline-flex flex-col items-start" data-apres>
+                              <span className="text-xs text-muted-foreground">{t("harmonie.apres")}</span>
+                              <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.apres} visible /></span>
+                            </span>
                           </p>
                         ) : (
                           // Les idées sans remplacement d'accords (tag, intro absente)
