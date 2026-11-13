@@ -787,7 +787,10 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await expect(calque).toHaveCount(1);
     const ecran = page.viewportSize()!;
     const x = ecran.width * 0.4;
-    const y = ecran.height * 0.55;
+    // Sur le texte : un tracé à plus de 2 em de toute ligne n'est pas gardé (MP-5, docs/spec-ma-partition.md,
+    // « Reste noté ») ; au téléphone, la page 2 peut finir au-dessus de 55 % de l'écran.
+    const basSections = await onStage(page, "[data-section]").evaluateAll((els) => Math.max(...els.map((el) => el.getBoundingClientRect().bottom)));
+    const y = Math.min(ecran.height * 0.55, basSections - 60);
     await page.mouse.move(x, y);
     await page.mouse.down();
     await page.mouse.move(x + 40, y + 15, { steps: 4 });
