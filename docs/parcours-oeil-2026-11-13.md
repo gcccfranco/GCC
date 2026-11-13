@@ -43,10 +43,11 @@ coupe en deux lignes ; un paragraphe d'aide de cinq lignes est au milieu des bou
 Spec : le contenu est voulu (`docs/spec-entree-musiciens.md` l. 101 en dresse la liste), la hauteur et le recouvrement
 non. ![](parcours-oeil-2026-11-13/louange-options-ordi.webp)
 Corrigé le 13/11 (minimum demandé) : Options et Je joue tiennent dans l'écran (déjà vrai : popover borné à la hauteur
-disponible, feuille du bas à 85 %) et, tant qu'il reste du contenu dessous, une flèche ronde « Suite » (44 px) se pose
-sur le bas du menu ; un toucher descend d'un écran de menu, elle s'en va en bas de la liste. Le contenu des menus et le
+disponible, feuille du bas à 85 %) et, tant qu'il reste du contenu dessous, une bande « Suite » opaque (48 px, toute
+la largeur, chevron) ferme le bas du menu ; un toucher descend d'un écran de menu, elle s'en va en bas de la liste (une
+flèche flottante, essayée d'abord, cachait une pastille de couleur au téléphone). Le contenu des menus et le
 recouvrement de la partition restent à la planche des réglages (constats 2 et 3). Test : `tests/louange-menus.spec.ts`,
-« constat 1 » (264e6b90).
+« constat 1 » (264e6b90, puis le commit de la bande).
 
 **2. Mode louange, menu Je joue : la « Disposition » est coupée.** tabL, ordi, tel. Les vignettes de disposition
 sortent par le bas ; le menu mêle « ce que je joue » (rôle), l'ordre des sections et la disposition de la page.

@@ -27,10 +27,11 @@ function useAuMoinsMd(): boolean {
   return md;
 }
 
-/** Zone qui défile dans la hauteur disponible ; un fondu léger en bas tant qu'il reste du contenu dessous, et une
- *  flèche « Suite » posée sur ce bas (parcours du 13/11, constat 1 : le fondu seul ne se voyait pas) : un toucher
- *  descend d'une hauteur de zone moins une ligne. Elle disparaît en bas de la liste. */
-function ZoneDefilante({ className, children }: { className?: string; children: ReactNode }) {
+/** Zone qui défile dans la hauteur disponible ; tant qu'il reste du contenu dessous, un fondu léger et une bande
+ *  « Suite » opaque de 48 px, toute la largeur, au bas de la zone (parcours du 13/11, constat 1 : le fondu seul ne se
+ *  voyait pas ; une flèche flottante cachait une pastille au téléphone) : un toucher descend d'une hauteur visible
+ *  moins une ligne. Elle disparaît en bas de la liste. `arrondi` : popover, coins du bas arrondis comme la zone. */
+function ZoneDefilante({ className, arrondi = false, children }: { className?: string; arrondi?: boolean; children: ReactNode }) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const [fondu, setFondu] = useState(false);
@@ -67,11 +68,11 @@ function ZoneDefilante({ className, children }: { className?: string; children: 
           title={t("performance.menuSuite")}
           onClick={() => {
             const el = ref.current;
-            if (el) el.scrollBy({ top: Math.max(40, el.clientHeight - 48), behavior: "smooth" });
+            if (el) el.scrollBy({ top: Math.max(40, el.clientHeight - 88), behavior: "smooth" });
           }}
-          className="absolute bottom-2 left-1/2 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-md dark:bg-[hsl(var(--raised))]"
+          className={`absolute inset-x-0 bottom-0 flex h-12 items-center justify-center border-t border-border bg-background text-foreground dark:bg-[hsl(var(--raised))] ${arrondi ? "rounded-b-xl" : ""}`}
         >
-          <ChevronDown className="h-5 w-5" aria-hidden />
+          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border shadow-sm"><ChevronDown className="h-5 w-5" aria-hidden /></span>
         </button>
       )}
     </div>
@@ -166,7 +167,7 @@ export function MenuLouange({
         onCloseAutoFocus={rendreLeFocus}
         {...arreter}
       >
-        <ZoneDefilante className="max-h-[calc(var(--radix-popover-content-available-height)-2px)] overflow-y-auto rounded-xl p-3">{children}</ZoneDefilante>
+        <ZoneDefilante arrondi className="max-h-[calc(var(--radix-popover-content-available-height)-2px)] overflow-y-auto rounded-xl p-3">{children}</ZoneDefilante>
         <PopoverArrow width={18} height={9} className="fill-background stroke-border dark:fill-[hsl(var(--raised))]" />
       </PopoverContent>
     </Popover>
