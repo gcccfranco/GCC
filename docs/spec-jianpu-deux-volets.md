@@ -458,4 +458,8 @@ chantier sur ce fichier.
   `pupitre-partitions`, `jianpu-deux-volets`, `coherence`, `statistiques-chant`, `retouches-usage-t1`, cinq projets :
   370 passés, 197 sautés, 1 course (`retouches-usage-t1:49`, téléphone, verte seule) (**9,0 min**) ; repasse de la
   spec JV-5a après correctif : 39 passés (**1,2 min**). `regard` sur 17 captures (bloc du Pont en bas de la feuille à
-  la tablette : corrigé). tsc, lint : 0 erreur. JV-5a ne lance rien après elle (JV-5b vient de JV-4).
+  la tablette : corrigé). tsc, lint : 0 erreur. `critique-design` (six captures) : « à retoucher », rien de bloquant ni de propre à la tranche ;
+  suites notées, toutes antérieures : feuille de la page chant centrée sur la page et non sur la lecture à 1 440 ;
+  double cadre du surlignage d'« Ici » (`.harmonie-surligne`, `globals.css`) ; poignée pâle de toutes les feuilles
+  (`drawer.tsx`) ; titres des fiches en français dans l'interface chinoise ; « Ne marche pas sur ce chant » seul sur
+  sa ligne en français. JV-5a ne lance rien après elle (JV-5b vient de JV-4).
