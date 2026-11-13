@@ -78,3 +78,17 @@ Une ligne par chantier : échec, qui avait tort (site ou test), correction, comm
 - C4, rejeu : les trois specs entières sur ordinateur, téléphone et tablette, 209 passés, 34 sautés (prévus), 0 échec
   ni instable, 9 min ; `tsc` et `lint` propres.
 - C5 · `agencement-v18-planning.spec.ts:264`, suite de la décision déléguée : site ; colonne Date à 112 px au toucher seulement (96 à la souris), badge sans retour à la ligne ; ligne de 69 px ; captures du Back-Office en tablette portrait et paysage regardées, rien ne déborde sur Présidence ; 6401de21. `agencement-v18-planning`, `planning-grille`, `-gestes-agencement`, `-copier`, `-clavier`, `-remplir`, `-2027` sur les cinq projets : 552 réussis, 123 sautés, 0 échec, 11,9 min ; `tsc` propre, lint 0 erreur. Bilan C5 : 1 corrigé site, 1 test, 0 à décider.
+- C2 · `setlist-history` (25 tests ordinateur, :200 :215 :495 trois appareils) et `harmonie-jianpu:110` : **le test
+  avait tort**. Depuis T2 et T3 (`docs/spec-exemples-usage.md`), « Modifiée par … » est dans l'en-tête replié en vue
+  Partitions et en deux volets ; nouveau helper `ligneHistorique` (`tests/helpers/setlist.ts`) qui remonte la page
+  (barre escamotée au défilement) et déplie le bouton titre, trouvé par attribut (une feuille qui se ferme cache la
+  page aux rôles). Commits dd76dff, 9ba13d6, 955c055. 81 passés sur trois appareils, 5,1 min (premier tour 6,3 min,
+  rejeux 3,3 et 1,1 min).
+- C2 · `setlist-regie:57` : **le test avait tort** (T2, § 5 : bouton icône de 44 px, nom gardé ; le test le mesure).
+  `:62` : **le site avait tort** : le bouton icône ne disait plus « Copié » aux lecteurs d'écran ; son `aria-label`
+  le dit deux secondes. Commit 6932d18. Spec entière sur cinq projets verte (rejeu groupé, 3,3 min).
+- C2 · `agencement-groupes:248` setlists, clair et sombre : **le site avait tort**. Les vignettes de « Mon prochain
+  service » (PU-2) avaient 8 et 10 px de marge dans un groupe ; passées à 12 px (`Pupitre.tsx`). Commit 65d17560.
+  `agencement-groupes` et `pupitre-onglet` sur cinq projets : 167 passés, 8,3 min ; captures des quatre
+  dispositions et 1 440 px regardées. `tsc` et lint propres (un avertissement ancien dans `Pupitre.tsx`).
+  Bilan C2 : 2 corrigés site, 2 test, 0 à décider.
