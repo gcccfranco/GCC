@@ -414,8 +414,10 @@ export function PlanningGrille({
   }
   const rangDate = (date: string) => datesAffichees.indexOf(date)
   const dansGeste = (date: string, cle: string) => !!geste?.cases.some((c) => c.date === date && c.cle === cle)
-  // plannings-1 : 96 px pour la Date, 84 px par colonne (`<colgroup>` du tableau).
-  const largeurMin = 96 + 84 * colonnes.length
+  // plannings-1 : 96 px pour la Date, 84 px par colonne (`<colgroup>` du tableau). Au toucher, 112 px : le « ⋯ » est sur
+  // la ligne de la date et « Cette semaine » tient sur une ligne dessous (décision déléguée du 13/11/2026, synthèse C5).
+  const largeurDate = survol ? 96 : 112
+  const largeurMin = largeurDate + 84 * colonnes.length
 
   function commencer(l: LigneGrille, c: ColonneGrille) {
     if (mode !== "edition") return
@@ -907,7 +909,7 @@ export function PlanningGrille({
       <div ref={defilement} data-defile={defile.gauche || undefined} data-testid="grille-defilement" role="region" tabIndex={0} aria-label={t("planning.grille.region")} inert={collage ? true : undefined} className="fondu-lateral overflow-x-auto rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
         <table className="w-full table-fixed text-sm border-collapse" style={{ minWidth: largeurMin }}>
           <colgroup>
-            <col style={{ width: 96 }} />
+            <col style={{ width: largeurDate }} />
             {colonnes.map((c) => <col key={c.cle} style={{ width: 84 }} />)}
           </colgroup>
           <GrilleEnTete app={app} couleur={couleur} colonnes={colonnes} groupe={groupe} definition={definition} />
