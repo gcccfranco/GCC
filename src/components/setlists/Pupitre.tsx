@@ -114,11 +114,11 @@ export function Pupitre({
                       <img src={jianpuImageUrl(page.file)} alt="" loading="lazy" className="h-full w-full object-cover object-top dark:[filter:invert(1)_hue-rotate(180deg)_brightness(.85)]" />
                     </div>
                   ) : (
-                    <div data-vignette-structure className="aspect-[16/9] overflow-hidden border-b border-border bg-secondary/50 p-2">
+                    <div data-vignette-structure className="aspect-[16/9] overflow-hidden border-b border-border bg-secondary/50 p-3">
                       <p className="line-clamp-3 text-xs text-muted-foreground">{sections.map((s, i) => <span key={s.uid ?? i}>{i > 0 && " · "}<span className="whitespace-nowrap">{s.name}</span></span>)}</p>
                     </div>
                   )}
-                  <div className="flex items-start gap-2 p-2.5">
+                  <div className="flex items-start gap-2 px-3 py-2.5">
                     <span className="w-4 shrink-0 text-xs font-bold tabular-nums text-muted-foreground">{n}</span>
                     <span className="min-w-0 flex-1 line-clamp-2 text-sm font-semibold">{titre}</span>
                     {!fusion && tonalite && <KeyPill tonalite={tonalite} langue={song?.language === "zh" ? "zh" : "fr"} />}
