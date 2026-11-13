@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreEditeur, champNoteDuChant, champNotes, champPresidence, choisirTonalite, fermerFeuille, ligneSection, reglerElement, retirerChant, retirerSection } from "./helpers/editeurSetlist";
-import { ouvrirPartitions } from "./helpers/setlist";
+import { ligneHistorique, ouvrirPartitions } from "./helpers/setlist";
 import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 
 // Chantier Setlist, lot 2 (docs/spec-setlist.md) : historique des
@@ -78,7 +78,7 @@ async function finishAndOpenHistory(page: Page) {
   await fermerFeuille(page);
   await page.getByRole("button", { name: "Terminé" }).click();
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
+  await (await ligneHistorique(page, /Modifiée par Ruth K\./)).click();
   return page.getByRole("dialog", { name: "Historique des modifications" });
 }
 
@@ -142,7 +142,7 @@ test("la feuille montre la dernière entrée, puis 5, puis toutes", async ({ pag
     ]);
   }
   await signInAs(page, MUSICIEN, docs, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: /Modifiée par Membre 0/ }).click();
+  await (await ligneHistorique(page, /Modifiée par Membre 0/)).click();
   const sheet = page.getByRole("dialog", { name: "Historique des modifications" });
   await expect(sheet.getByRole("article")).toHaveCount(1);
   await expect(sheet.getByRole("article")).toContainText("A ajouté Abba Père");
@@ -165,7 +165,7 @@ test("en 中文, la ligne et les phrases sont traduites", async ({ page }) => {
     },
     `/setlists/${SETLIST_ID}`,
   );
-  await page.getByRole("button", { name: /Ruth K\..*修改/ }).click();
+  await (await ligneHistorique(page, /Ruth K\..*修改/)).click();
   await expect(page.getByRole("dialog").getByText("一生爱你 的调：E → F")).toBeVisible();
 });
 
@@ -178,7 +178,7 @@ test("publier une nouvelle setlist écrit « A créé la setlist »", async ({ p
   await page.getByPlaceholder("Nom", { exact: true }).fill("Jonathan Z.");
   await page.getByRole("button", { name: "Publier" }).click();
   await page.waitForURL(/\/setlists\/fake-/);
-  await page.getByRole("button", { name: /Créée par Ruth K\./ }).click();
+  await (await ligneHistorique(page, /Créée par Ruth K\./)).click();
   await expect(page.getByRole("dialog").getByText("A créé la setlist")).toBeVisible();
 });
 
@@ -208,7 +208,7 @@ test("rétablir l'original d'un chant adapté (vue partitions) s'écrit dans l'h
   await basculerMode(page);
   await page.getByRole("button", { name: "Rétablir l'original" }).click();
   await page.getByRole("button", { name: "Rétablir", exact: true }).click();
-  await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
+  await (await ligneHistorique(page, /Modifiée par Ruth K\./)).click();
   await expect(page.getByRole("dialog").getByText("Adaptation de Abba Père modifiée (accords ou paroles)")).toBeVisible();
 });
 
@@ -221,7 +221,7 @@ test("vue partitions : adapter une ligne puis rétablir l'original ne laisse pas
   await page.getByRole("button", { name: "Supprimer la ligne" }).click();
   await page.getByRole("button", { name: "Supprimer", exact: true }).click();
   await choisirDestination(page, "culte");
-  await expect(page.getByRole("button", { name: /Modifiée par Ruth K\./ })).toBeVisible();
+  await expect((await ligneHistorique(page, /Modifiée par Ruth K\./))).toBeVisible();
 
   await page.getByRole("button", { name: "Rétablir l'original" }).click();
   await page.getByRole("button", { name: "Rétablir", exact: true }).click();
@@ -231,7 +231,7 @@ test("vue partitions : adapter une ligne puis rétablir l'original ne laisse pas
   await expect.poll(phrases).toEqual([0]);
   await page.reload();
   await expect(page.getByRole("heading", { name: "Culte du 21 septembre" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Modifiée par Ruth K\./ })).toHaveCount(0);
+  await expect((await ligneHistorique(page, /Modifiée par Ruth K\./))).toHaveCount(0);
 });
 
 test("éditeur resté ouvert : une retouche 20 min après la précédente ouvre une nouvelle entrée", async ({ page }) => {
@@ -320,7 +320,7 @@ test("H1 — section déplacée, fusion numérotée, ancienne entrée sans avant
     },
     `/setlists/${SETLIST_ID}`,
   );
-  await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
+  await (await ligneHistorique(page, /Modifiée par Ruth K\./)).click();
   const sheet = page.getByRole("dialog", { name: "Historique des modifications" });
 
   const moved = changeItem(sheet, "Structure de Abba Père modifiée");
@@ -349,7 +349,7 @@ test("H1 — ancienne entrée écrite « Pm » (avant le 07/11/2026) : la pastil
     },
     `/setlists/${SETLIST_ID}`,
   );
-  await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
+  await (await ligneHistorique(page, /Modifiée par Ruth K\./)).click();
   const sheet = page.getByRole("dialog", { name: "Historique des modifications" });
   const change = changeItem(sheet, "Structure de Abba Père modifiée");
   const avant = change.getByRole("list", { name: "Avant" }).getByRole("listitem");
@@ -370,7 +370,7 @@ test("H1 — en 中文, avant / après traduits", async ({ page }) => {
     },
     `/setlists/${SETLIST_ID}`,
   );
-  await page.getByRole("button", { name: /Ruth K\..*修改/ }).click();
+  await (await ligneHistorique(page, /Ruth K\..*修改/)).click();
   const change = page.getByRole("dialog").locator("article > ul > li").filter({ hasText: "修改了 一生爱你 的结构" });
   await expect(change.getByRole("list", { name: "之前" }).getByRole("listitem")).toHaveText(["I", "C", "R"]);
   await expect(change.getByRole("list", { name: "之后" }).getByRole("listitem").last()).toHaveText(/R.*新增/);
@@ -402,7 +402,7 @@ test("H2 — chant déplacé, fusion ajoutée ; deux colonnes sauf sur télépho
     },
     `/setlists/${SETLIST_ID}`,
   );
-  await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
+  await (await ligneHistorique(page, /Modifiée par Ruth K\./)).click();
   const sheet = page.getByRole("dialog", { name: "Historique des modifications" });
   const change = changeItem(sheet, "Chants de la setlist");
   await change.getByRole("button", { name: "Voir avant / après" }).click();
@@ -460,7 +460,7 @@ test("H3 — notes de section par section ; une ancienne entrée garde sa phrase
     },
     `/setlists/${SETLIST_ID}`,
   );
-  await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
+  await (await ligneHistorique(page, /Modifiée par Ruth K\./)).click();
   const sheet = page.getByRole("dialog", { name: "Historique des modifications" });
   const change = changeItem(sheet, "Notes de section de Abba Père modifiées");
   await change.getByRole("button", { name: "Voir avant / après" }).click();
@@ -514,7 +514,7 @@ test("H1 — mode Adapter, copie d'une section répétée : pas de phrase de str
   const structure = () => (db.doc(`setlists/${SETLIST_ID}`)?.items as { structureOverride: string[] }[])[0].structureOverride;
   await expect.poll(() => structure()[2], "la copie a bien été faite").not.toBe("verse-2-2");
 
-  await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
+  await (await ligneHistorique(page, /Modifiée par Ruth K\./)).click();
   const sheet = page.getByRole("dialog", { name: "Historique des modifications" });
   await expect(sheet.getByText("Adaptation de Abba Père modifiée (accords ou paroles)")).toBeVisible();
   await expect(sheet.getByText(/Structure de/)).toHaveCount(0);

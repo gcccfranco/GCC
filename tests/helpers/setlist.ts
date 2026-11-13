@@ -109,3 +109,13 @@ export async function ouvrirSommaire(page: Page): Promise<Locator> {
   })).toBe(true);
   return nav;
 }
+
+/** La ligne « Modifiée par … » de l'historique. En vue Partitions et en deux volets, elle est dans l'en-tête
+ *  replié (T2 et T3 du lot exemples d'usage, docs/spec-exemples-usage.md § Avancement) : le bouton titre le
+ *  déplie d'abord. Rend le bouton de l'historique. */
+export async function ligneHistorique(page: Page, name: RegExp): Promise<Locator> {
+  await page.getByTestId("barre-outils").or(page.locator("[data-en-tete]")).first().waitFor();
+  const titre = page.getByRole("button", { name: /, (Afficher les détails de la setlist|显示歌单详情)$/ });
+  if ((await titre.isVisible()) && (await titre.getAttribute("aria-expanded")) === "false") await titre.click();
+  return page.getByRole("button", { name });
+}

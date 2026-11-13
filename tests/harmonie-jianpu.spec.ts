@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ouvrirPartitions } from "./helpers/setlist";
+import { ligneHistorique, ouvrirPartitions } from "./helpers/setlist";
 import { loadChords } from "./helpers/jianpu";
 
 // Lot 9, tranche « 简谱 » (docs/spec-harmonie.md) : retoucher un accord sur le
@@ -122,7 +122,7 @@ test("Crayon, pour tout le culte : toucher un accord imprimé le change, et l'hi
   expect(scanItem(db).jianpuChords).toEqual({ changed: { "0": "Em7" } });
 
   // Même phrase que les autres retouches d'Adapter.
-  await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
+  await (await ligneHistorique(page, /Modifiée par Ruth K\./)).click();
   const histoire = page.getByRole("dialog", { name: "Historique des modifications" });
   await expect(histoire.getByText(`Adaptation de ${SLUG} modifiée (accords ou paroles)`)).toBeVisible();
 });
