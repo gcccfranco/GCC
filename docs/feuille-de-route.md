@@ -142,6 +142,8 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   dans le mode louange** (« un métronome avec du son et un métronome plus visuel qu'un simple trait qui bouge, il
   faudrait pouvoir choisir si c'est binaire ternaire, les temps fort et tout, en gros tout comme une vrai application
   de métronome ») : planche + `docs/spec-metronome.md`. Le pilote le lance dès qu'une des cinq sessions en cours finit.
+  Décisions de Timothée (13/11) : « chacun un métronome, pas de son pendant le culte, un son quand ils veulent
+  s'entrainer » : un métronome par appareil ; son coupé par défaut, allumé à la demande pour répéter.
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.
