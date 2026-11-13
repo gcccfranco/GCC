@@ -39,7 +39,7 @@ function dateCourte(iso: string, langue: string): string {
 const GARDEE_MS = 60_000;
 let lecture: { cle: string; quand: number; promesse: Promise<FSSetlist[]> } | null = null;
 
-function prochainesLues(uid: string, today: string): Promise<FSSetlist[]> {
+export function prochainesLues(uid: string, today: string): Promise<FSSetlist[]> {
   const cle = `${uid}|${today}`;
   if (!lecture || lecture.cle !== cle || Date.now() - lecture.quand > GARDEE_MS) {
     const promesse = getSetlistsFrom(today, 30);

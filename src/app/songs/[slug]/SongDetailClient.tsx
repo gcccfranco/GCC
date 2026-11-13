@@ -43,7 +43,8 @@ import { AccordsProvider, type IciDuChant } from "@/components/accords/AccordsPr
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { useAllerAuPassage } from "@/lib/harmonie/useAllerAuPassage";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
-import { getSetlist, getSetlistsPartagees, getMySetlists, getSetlistsFrom } from "@/lib/firebase/setlists";
+import { getSetlist, getSetlistsPartagees, getMySetlists } from "@/lib/firebase/setlists";
+import { prochainesLues } from "../ChoisisUnChant";
 import { canExporterPdfChant, isAdminUser } from "@/lib/access";
 import { todayIso } from "@/lib/scene/dimanches";
 import type { FSSetlist } from "@/types/setList";
@@ -118,14 +119,14 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
  *  jour (comme `prochainesLues`) quand c'est oui ; un non (ou une lecture en échec, que les lectures rendent vide) se
  *  relit à la visite suivante.
  *  shortcut: le créateur d'une setlist non privée n'est trouvé que parmi les 30 prochaines (`getSetlistsFrom`),
- *  `getMySetlists` ne rendant que les privées. */
+ *  `getMySetlists` ne rendant que les privées. Les 30 prochaines : la lecture gardée de « Choisis un chant ». */
 const equipeLue = new Map<string, Promise<boolean>>();
 function equipeAVenirLue(uid: string): Promise<boolean> {
   const today = todayIso();
   const cle = `${uid}|${today}`;
   let p = equipeLue.get(cle);
   if (!p) {
-    p = Promise.all([getSetlistsPartagees(uid), getMySetlists(uid), getSetlistsFrom(today, 30)]).then((l) =>
+    p = Promise.all([getSetlistsPartagees(uid), getMySetlists(uid), prochainesLues(uid, today)]).then((l) =>
       l.flat().some((s: FSSetlist) => !!s.date && s.date >= today && (s.ownerId === uid || !!s.editeurs?.includes(uid))));
     equipeLue.set(cle, p);
     const lue = p;
