@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, onStage, ouvrirMenu, ouvrirMetronome } from "./helpers/louange";
+import { attendreMiseEnPage, lireCompteur, onStage, ouvrirMenu, ouvrirMetronome } from "./helpers/louange";
 
 // Métronome MT-2 (docs/spec-metronome.md) : le panneau Métronome, sans son ni entraînement. Setlist et compte simulés.
 // Chants : avec-nous (FR, {tempo} 94, 4/4), abba-pere (FR), 为我而来 (ZH, scan 简谱, 6/8).
@@ -279,7 +279,6 @@ test("toutes les cibles du panneau font 44 px au moins (Autre ouvert, 6/8, zh)",
   await ouvrir(page, ["为我而来"], { zh: true });
   const p = await ouvrirParLaBande(page);
   await p.getByRole("radio", { name: "其他", exact: true }).click();
-  await p.locator("[data-panneau-poignee]").click(); // grand cran : le plus de contenu à l'écran
   const petites = await p.locator("button:visible, input:visible, [role=radio]:visible").evaluateAll((els) =>
     els.map((e) => ({ nom: e.getAttribute("aria-label") ?? e.textContent?.trim() ?? e.tagName, r: e.getBoundingClientRect() }))
       .filter(({ r }) => r.width < 43.5 || r.height < 43.5)
@@ -293,7 +292,6 @@ test("zh à 390 px : aucun libellé coupé", async ({ page }) => {
   const p = await ouvrirParLaBande(page);
   await expect(p.getByRole("heading", { name: "节拍器" })).toBeVisible();
   await expect(p.getByRole("button", { name: "第 1 拍，重" })).toBeVisible();
-  await p.locator("[data-panneau-poignee]").click();
   const coupes = await p.locator("h2, h3, button, [role=radio], p:not(.sr-only)").evaluateAll((els) =>
     els.filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => `${e.getAttribute("aria-label") ?? e.textContent?.trim()} ${e.scrollWidth}>${e.clientWidth}`));
   expect(coupes).toEqual([]);
@@ -316,64 +314,43 @@ test("le panneau et les autres menus ne sont jamais ouverts ensemble", async ({ 
   await expect(p).toBeHidden();
 });
 
-test("feuille (sous 1 024 px) : deux crans, poignée de 44 px ; tempo et Marche visibles sans défiler au cran moyen", async ({ page }) => {
-  test.skip(largeur(page) >= 1024, "colonne dès 1 024 px");
+test("une fenêtre comme le menu Setlist (décision de Timothée, 13/11) : popover sous ♩ dès 768 px, feuille du bas au téléphone ; la musique ne bouge pas ; toucher dehors la ferme sans tourner la page", async ({ page }) => {
   await ouvrir(page, ["avec-nous"]);
-  const p = await ouvrirParLaBande(page);
-  const h = page.viewportSize()!.height;
-  await expect(p).toHaveAttribute("data-cran", "moyen");
-  const poignee = p.locator("[data-panneau-poignee]");
-  await expect(poignee).toHaveAttribute("aria-expanded", "false");
-  await expect(poignee).toHaveAttribute("aria-label", "Agrandir le panneau");
-  expect((await poignee.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-  const moyen = (await p.boundingBox())!;
-  expect(Math.abs(moyen.height - h * 0.6)).toBeLessThanOrEqual(2);
-  expect(Math.abs(moyen.y + moyen.height - h)).toBeLessThanOrEqual(1); // posée en bas
-  for (const sel of ["[data-tempo-valeur]", "[data-panneau-marche]", "[data-panneau-taper]"]) {
-    const b = (await p.locator(sel).boundingBox())!;
-    expect(b.y + b.height, sel).toBeLessThanOrEqual(moyen.y + moyen.height + 0.5);
+  const racine = page.locator("[data-performance-mode]");
+  const avant = (await racine.boundingBox())!;
+  await ouvrirMetronome(page);
+  const fenetre = page.locator('[data-menu-louange="metronome"]');
+  await expect(fenetre).toBeVisible();
+  await expect(fenetre.getByTestId("panneau-metronome")).toBeVisible();
+  const f = (await fenetre.boundingBox())!;
+  const vp = page.viewportSize()!;
+  if (largeur(page) >= 768) {
+    // Ancrée sous la barre, à la verticale de ♩, comme Setlist sous son icône.
+    const barre = (await page.locator("[data-barre-haut]").boundingBox())!;
+    const note = (await page.locator('[data-menu-declencheur="metronome"]').boundingBox())!;
+    expect(f.y).toBeGreaterThanOrEqual(barre.y + barre.height - 4);
+    expect(f.x).toBeLessThanOrEqual(note.x + note.width / 2);
+    expect(f.x + f.width).toBeGreaterThanOrEqual(note.x + note.width / 2);
+    expect(f.width).toBeLessThanOrEqual(26 * 16 + 1);
+  } else {
+    // Feuille posée en bas, une fois son entrée finie.
+    await expect.poll(async () => { const b = (await fenetre.boundingBox())!; return Math.abs(b.y + b.height - vp.height); }).toBeLessThanOrEqual(2);
   }
-  expect(Math.round(moyen.width)).toBe(largeur(page)); // pleine largeur, tablette portrait comprise (comme le volet de JV-5b)
-  await poignee.click();
-  await expect(p).toHaveAttribute("data-cran", "grand");
-  await expect(poignee).toHaveAttribute("aria-expanded", "true");
-  await expect(poignee).toHaveAttribute("aria-label", "Réduire le panneau");
-  const grand = (await p.boundingBox())!;
-  // Le grand cran s'arrête sous la bande des temps : elle reste visible pendant qu'on règle les accents.
-  const b = (await page.locator("[data-bande-temps]").boundingBox())!;
-  expect(grand.y).toBeGreaterThanOrEqual(b.y + b.height - 1);
-  expect(grand.y).toBeLessThanOrEqual(b.y + b.height + 2);
-  await poignee.click();
-  await expect(p).toHaveAttribute("data-cran", "moyen");
-});
-
-test("colonne (dès 1 024 px) : elle repousse la musique, rien de la musique sous le panneau ; une colonne de texte", async ({ page }) => {
-  test.skip(largeur(page) < 1024, "feuille sous 1 024 px");
-  for (const slug of ["avec-nous", "为我而来"]) {
-    await ouvrir(page, [slug]);
-    const p = await ouvrirParLaBande(page);
-    const b = (await p.boundingBox())!;
-    expect(Math.round(b.width)).toBe(320);
-    expect(Math.round(b.x + b.width)).toBe(largeur(page));
-    const bord = b.x + 0.5;
-    const depasse = await page.evaluate((limite) => {
-      const racine = document.querySelector("[data-performance-mode]")!;
-      const fautifs: string[] = [];
-      for (const el of racine.querySelectorAll("[data-section], [data-jianpu-page], [data-bande-temps], [data-entete-chant]")) {
-        if (el.closest("[aria-hidden=true]") || el.closest("[data-panneau-metronome]")) continue;
-        // Un scan 简谱 : la boîte qui rogne (le parent), car la feuille peut déborder de ce qu'on voit.
-        const r = (el.hasAttribute("data-jianpu-page") ? el.parentElement! : el).getBoundingClientRect();
-        if (r.width > 0 && r.right > limite) fautifs.push(`${el.tagName}.${el.getAttribute("data-section") ?? ""} ${Math.round(r.right)}`);
-      }
-      return fautifs;
-    }, bord);
-    expect(depasse).toEqual([]);
-    if (largeur(page) - 320 < 960) await expect(page.locator("[data-performance-mode]")).not.toHaveAttribute("data-deux-colonnes", /.*/);
-    await p.getByRole("button", { name: "Fermer le métronome" }).click();
-    await expect(p).toBeHidden();
-    expect(Math.round((await bande(page).boundingBox())!.width)).toBe(largeur(page));
-    await page.goto("about:blank");
-  }
+  // La musique n'est ni repoussée ni rétrécie.
+  expect((await racine.boundingBox())!.width).toBe(avant.width);
+  // Même forme que Setlist : même primitive (attribut de MenuLouange) et même fermeture (Échap).
+  await page.keyboard.press("Escape");
+  await expect(fenetre).toBeHidden();
+  const setlistMenu = await ouvrirMenu(page, "setlist");
+  expect(await setlistMenu.getAttribute("data-menu-louange")).toBe("setlist");
+  await page.keyboard.press("Escape");
+  await expect(setlistMenu).toBeHidden();
+  await ouvrirMetronome(page);
+  await expect(fenetre).toBeVisible();
+  const page0 = await lireCompteur(page);
+  await page.mouse.click(vp.width - 12, vp.height * 0.45);
+  await expect(fenetre).toBeHidden();
+  expect(await lireCompteur(page), "la page n'a pas tourné").toBe(page0);
 });
 
 test("bande : temps fort au repos à 2 px (comme le moyen), chiffres plus grands dès 1 024 px", async ({ page }) => {
@@ -398,7 +375,7 @@ test("contraste du contour des temps du panneau au repos >= 3:1, en clair et en 
     await page.evaluate((s) => document.documentElement.classList.toggle("dark", s), sombre);
     const [contour, fond] = await p.evaluate((el) => [
       getComputedStyle(el.querySelector('[data-panneau-temps] [data-temps="2"] > span')!).borderTopColor,
-      getComputedStyle(el).backgroundColor,
+      getComputedStyle(el.closest("[data-menu-louange]")!).backgroundColor, // le fond est celui de la fenêtre (MenuLouange)
     ]);
     const rgba = (c: string) => (c.match(/[\d.]+/g) ?? []).map(Number);
     const [fr, fg, fb] = rgba(fond);

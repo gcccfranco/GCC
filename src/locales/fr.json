@@ -690,8 +690,6 @@
   "panneauMetronome": {
     "titre": "Métronome",
     "fermer": "Fermer le métronome",
-    "agrandir": "Agrandir le panneau",
-    "reduire": "Réduire le panneau",
     "tempo": "Tempo",
     "saisir": "Tempo {{tempo}}, toucher pour saisir",
     "saisieNom": "Tempo, de {{min}} à {{max}}",

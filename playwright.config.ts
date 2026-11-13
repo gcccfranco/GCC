@@ -14,7 +14,7 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
-  // Métronome MT-2 (docs/spec-metronome.md) : le panneau Métronome (colonne de 320 px qui repousse la musique dès 1 024 px, feuille à deux crans en dessous) et ses réglages.
+  // Métronome MT-2 (docs/spec-metronome.md) : le panneau Métronome, fenêtre comme le menu Setlist (popover dès 768 px, feuille du bas au téléphone), et ses réglages.
   /metronome-panneau\.spec\.ts/,
   // Lot RU, RU-4 (docs/spec-reglages-unifies.md) : la setlist, armure et tonalité personnelle, marge « Affichage » (colonne ou feuille), Accords à un toucher.
   /setlist-tonalite-perso\.spec\.ts/,

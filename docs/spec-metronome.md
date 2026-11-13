@@ -123,16 +123,16 @@ douze pastilles groupées par trois**, ce qui rend le ternaire visible.
 Le rangement des réglages est décidé (`docs/spec-reglages-unifies.md`, piste B, go de Timothée le 13/11) : une marge
 « Affichage » / 显示 qui **repousse** la musique (colonne de 320 px à droite en grand écran, feuille basse au
 téléphone et en tablette portrait), et « Outils » du mode louange garde le métronome. Le panneau Métronome prend
-**la même forme** que cette marge, sans en être une section : c'est un outil qu'on ouvre et ferme pendant qu'on joue.
+**la forme du menu « Setlist »** (décision de Timothée, 13/11, ci-dessous) : c'est un outil qu'on ouvre et ferme pendant qu'on joue.
 
 - **Ouvrir le panneau** : toucher la bande des temps, ou la pastille « ♩ 72 » de la barre (tablette, ordinateur),
   ou « Métronome » dans Outils.
 - **Lancer / arrêter sans ouvrir** : le ▶ / ■ de la pastille (grand écran) ou du bouton au bout de la bande
   (téléphone).
-- **Tablette paysage et ordinateur** : colonne de 320 px qui repousse ; les deux colonnes de musique se replient en
-  une tant qu'elle est ouverte (règle RU des 340 px). **Téléphone et tablette portrait** : feuille basse à deux crans,
-  « moyen » (tempo, mesure, temps, Marche, Son ; le haut de la page reste visible) et « grand » (tout).
-- Si la marge « Affichage » est ouverte, le panneau Métronome la remplace (une seule colonne à la fois).
+- **Forme (décision de Timothée, 13/11, remplace la colonne et la feuille à deux crans)** : une fenêtre comme le menu
+  « Setlist » du mode louange (`MenuLouange` : popover sous ♩ de la barre dès 768 px, feuille du bas au téléphone) ;
+  toucher ailleurs ou Échap la ferme. La musique ne bouge pas.
+- Un seul menu ou panneau ouvert à la fois (`popoverOuvert`), marge « Affichage » comprise quand RU-5 la montera.
 
 ## Indicateur visuel et panneau (planche)
 
@@ -262,6 +262,17 @@ touchent l'agencement s'ajoutent à `SPECS_GRAND_ECRAN` (cinq projets). Tests su
   appareils (cinq projets pour les specs d'agencement).
 
 ## Avancement
+
+- 13/11/2026, nuit : **décision de Timothée (13/11, transmise par le pilote)** : « Fait une fenêtre comme pour les setlists
+  dans le mode louange, il faudrait que le métronome aussi soit comme ça c'est à dire une fenêtre comme pour les
+  setlists. » Le panneau Métronome est donc converti : il s'ouvre dans `MenuLouange` (`id="metronome"`), la même
+  primitive que le menu « Setlist » (popover ancré sous ♩ de la barre dès 768 px, feuille du bas au téléphone), avec ses
+  bords et sa fermeture (toucher ailleurs, Échap). Plus de colonne de 320 px qui repousse la musique, plus de feuille à
+  deux crans ni de poignée : les § « Où il se range » et MT-2 sont dépassés sur ce point. Le contenu ne change pas ; la
+  bande des temps non plus. Un toucher hors de la fenêtre la ferme sans tourner la page, comme les autres menus.
+  Fait dans la session MT-2 : tests `metronome-panneau` (cinq projets, le test de forme remplace ceux de la colonne et de
+  la feuille), `metronome-bande`, `louange-menus`, `usage-dimanche` verts ; ≈ 22 min. Captures regardées (tablette
+  portrait et paysage, téléphone, clair et sombre, FR et 为我而来).
 
 - 13/11/2026, nuit : **MT-2 faite** (le panneau, sans son ni entraînement). `PanneauMetronome.tsx` (colonne de 320 px qui
   repousse la musique dès 1 024 px, deux colonnes repliées en une ; feuille pleine largeur à deux crans dessous, « moyen »

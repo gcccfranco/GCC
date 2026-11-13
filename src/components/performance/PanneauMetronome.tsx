@@ -3,16 +3,15 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Minus, Plus } from "lucide-react";
-import { Groupe, Segment, usePlace } from "@/components/song/MargeAffichage";
+import { Groupe, Segment } from "@/components/song/MargeAffichage";
+import { MenuLouange } from "@/components/performance/MenuLouange";
 import { IconeNote, type TypeNote } from "@/components/performance/IconeNote";
 import { clampTempo, TEMPO_MAX, TEMPO_MIN, type Decompte, type Subdivision } from "@/lib/performance/tempo";
 import type { Accent, Mesure } from "@/lib/performance/metronome";
 
-// Le panneau Métronome (lot MT, MT-2) : même forme que la marge « Affichage » (colonne de 320 px dès 1 024 px, feuille de 560 px
-// dès 768 px, feuille pleine largeur dessous) ; la feuille a deux crans (60 % et 92 % de l'écran). Pas d'animation en mode louange.
-// Il remplacera la marge « Affichage » quand elle sera montée en louange (RU-5) : une seule colonne à la fois.
+// Le panneau Métronome (lot MT, MT-2) : une fenêtre comme le menu « Setlist » du mode louange (décision de Timothée, 13/11) :
+// MenuLouange, popover ancré sous ♩ de la barre dès 768 px, feuille du bas au téléphone ; toucher ailleurs ou Échap le ferme.
 const MESURES = ["2/4", "3/4", "4/4", "6/8", "12/8"];
-const NIVEAUX: Accent[] = ["fort", "moyen", "faible", "muet"];
 const APPUI_LONG_MS = 500;
 const REPETITION_MS = 250;
 const PAUSE_TAPER_MS = 2000;
@@ -88,7 +87,7 @@ function Pastilles({ label, valeurs, choisie, onChoix }: { label: string; valeur
 
 export function PanneauMetronome({
   ouvert, onFermer, tempo, tempoAppareil, tempoFichier, fixerTempo, effacerTempo, mesure, mesureTexte, changerMesure,
-  accents, tournerAccent, subdivision, changerSubdivision, decompte, changerDecompte, marche, onMarche, bande, setBande, basBande,
+  accents, tournerAccent, subdivision, changerSubdivision, decompte, changerDecompte, marche, onMarche, bande, setBande, couleur,
 }: {
   ouvert: boolean;
   onFermer: () => void;
@@ -110,41 +109,19 @@ export function PanneauMetronome({
   onMarche: () => void;
   bande: boolean;
   setBande: (v: boolean) => void;
-  /** Bas de la bande des temps (CSS) : le grand cran de la feuille s'arrête dessous, la bande reste visible. */
-  basBande: string;
+  /** `--couleur-icones` corrigée (le Portal du menu sort de la racine du mode). */
+  couleur: string;
 }) {
   const { t } = useTranslation();
-  const lieu = usePlace();
-  const colonne = lieu === "colonne";
   const titre = useId();
-  const fermer = useRef<HTMLButtonElement>(null);
-  const [grand, setGrand] = useState(false);
   const [saisie, setSaisie] = useState<string | null>(null);
   const [autre, setAutre] = useState(() => !MESURES.includes(mesureTexte));
-  const fermerRef = useRef(onFermer);
-  fermerRef.current = onFermer;
   const tempoRef = useRef(tempo);
   tempoRef.current = tempo;
   const appuis = useRef<number[]>([]);
 
-  // Le focus entre dans le panneau à l'ouverture et revient au bouton qui l'a ouvert.
-  useEffect(() => {
-    if (!ouvert) return;
-    setAutre(false);
-    const ouvreur = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    fermer.current?.focus();
-    // Échap en capture : la feuille Outils (Radix) qui se referme encore marque l'évènement « pris » avant PerformanceMode ;
-    // le champ du tempo garde le sien.
-    const echap = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || (e.target instanceof HTMLInputElement && e.target.type !== "range")) return;
-      e.preventDefault();
-      fermerRef.current();
-    };
-    window.addEventListener("keydown", echap, true);
-    return () => { window.removeEventListener("keydown", echap, true); if (ouvreur?.isConnected) ouvreur.focus(); };
-  }, [ouvert]);
-
-  if (!ouvert) return null;
+  // « Autre » se replie à chaque ouverture (le focus et Échap : Radix, comme les autres menus).
+  useEffect(() => { if (ouvert) setAutre(false); }, [ouvert]);
 
   const pas = (d: number) => { tempoRef.current = clampTempo(tempoRef.current + d); fixerTempo(tempoRef.current); };
   const valider = () => {
@@ -169,12 +146,6 @@ export function PanneauMetronome({
   const aFixe = tempoAppareil !== null && tempoAppareil !== tempoFichier;
   const ternaire = subdivision === "triolets";
   const unite = mesure.unite;
-  const geometrie = colonne
-    ? { position: "fixed", top: 0, right: 0, width: 320, height: "100dvh", borderLeft: "1px solid hsl(var(--foreground))" } as const
-    : {
-        position: "fixed", bottom: 0, height: grand ? `calc(100dvh - ${basBande})` : "60dvh", borderRadius: "18px 18px 0 0", borderTop: "1px solid hsl(var(--border))", boxShadow: "0 -1px 0 hsl(var(--border))",
-        left: 0, right: 0, // pleine largeur aussi en tablette portrait (comme le volet Harmonie de JV-5b) : pas de musique coupée de part et d'autre
-      } as const;
   const decomptes: { id: string; nom: string }[] = [
     { id: "0", nom: t("panneauMetronome.aucun") },
     { id: "1", nom: t("panneauMetronome.mesure1") },
@@ -182,40 +153,17 @@ export function PanneauMetronome({
   ];
 
   return (
-    <aside
+    <MenuLouange id="metronome" titre={t("panneauMetronome.titre")} ouvert={ouvert} onOuvertChange={(o) => !o && onFermer()} couleur={couleur} titreCache>
+    <div
       data-panneau-metronome
       data-testid="panneau-metronome"
-      data-place={lieu}
-      data-cran={colonne ? undefined : grand ? "grand" : "moyen"}
-      role="complementary"
       aria-labelledby={titre}
-      className="marge-aff bg-card text-foreground"
-      data-mode="louange"
-      data-ouvert="true"
-      style={{ ...geometrie, zIndex: 40, fontFamily: "system-ui, -apple-system, sans-serif", fontVariantNumeric: "tabular-nums" }}
-      onPointerDown={(e) => e.stopPropagation()}
-      onPointerUp={(e) => e.stopPropagation()}
-      onPointerMove={(e) => e.stopPropagation()}
-      onPointerCancel={(e) => e.stopPropagation()}
+      className="-mx-1 text-foreground"
+      style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontVariantNumeric: "tabular-nums" }}
     >
-      <div className="flex h-full flex-col" style={colonne ? { width: 320 } : undefined}>
-        {!colonne && (
-          <button
-            type="button"
-            data-panneau-poignee
-            aria-label={t(grand ? "panneauMetronome.reduire" : "panneauMetronome.agrandir")}
-            aria-expanded={grand}
-            onClick={() => setGrand((g) => !g)}
-            className="mx-auto grid h-11 w-24 shrink-0 place-items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <span aria-hidden className="h-1 w-9 rounded-full bg-border" />
-          </button>
-        )}
-        <div className="flex shrink-0 items-center justify-between gap-2 px-4" style={{ paddingTop: colonne ? 8 : 0 }}>
+        <div className="flex items-center justify-between gap-2 px-4">
           <h2 id={titre} className="min-w-0 truncate text-base font-semibold">{t("panneauMetronome.titre")}</h2>
-          <span className="flex items-center gap-1">
-            <button ref={fermer} type="button" aria-label={t("panneauMetronome.fermer")} onClick={onFermer} className="grid h-11 w-11 place-items-center rounded-full text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">×</button>
-          </span>
+          <button type="button" aria-label={t("panneauMetronome.fermer")} onClick={onFermer} className="grid h-11 w-11 place-items-center rounded-full text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">×</button>
         </div>
         <button
           type="button"
@@ -233,7 +181,7 @@ export function PanneauMetronome({
           {t(marche ? "panneauMetronome.enMarche" : "panneauMetronome.arrete", { tempo, mesure: `${mesure.temps}/${mesure.unite}` })}
         </p>
 
-        <div data-testid="panneau-corps" className="min-h-0 flex-1 overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
+        <div data-testid="panneau-corps">
           <div className="space-y-2 px-4 pb-3 pt-1">
             {/* (a) grand tempo */}
             <div className="flex items-center justify-between gap-2">
@@ -413,8 +361,8 @@ export function PanneauMetronome({
             )}
           </div>
         </div>
-      </div>
-    </aside>
+    </div>
+    </MenuLouange>
   );
 }
 

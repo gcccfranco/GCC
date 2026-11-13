@@ -22,7 +22,7 @@ import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
 import { ancrerSurPremiereLigne, ancrerTrace, uniteProche, useTraitsAncres, type TraitsParChant } from "./hooks/useTraitsAncres";
 import { deleteAnnotation } from "@/lib/firebase/annotations";
-import { Check, Lightbulb, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, AlignLeft, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves, X } from "lucide-react";
+import { Check, Lightbulb, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, AlignLeft, FileMusic, Languages, Music, PanelTopBottomDashed, Waves, X } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import type { Tranche } from "@/lib/performance/tranchesScan";
 import type { TrancheFenetre } from "@/components/jianpu/JianpuSheet";
@@ -60,7 +60,6 @@ import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui, classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { BandeTemps } from "@/components/performance/BandeTemps";
 import { PanneauMetronome } from "./PanneauMetronome";
-import { usePlace } from "@/components/song/MargeAffichage";
 import { TEMPO_DEPART } from "@/lib/performance/tempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { ROLE_IDS, getRole, roleDemande, setRole, type RolePreset } from "@/lib/performance/roleCompte";
@@ -554,7 +553,7 @@ export function PerformanceMode({
   // Un toucher hors du menu le ferme, y compris sur les barres (qui arrêtent la propagation et cachent le toucher à Radix,
   // écouté plus haut dans le document) : écoute en capture. Sur la page, il est marqué pour que son pointerup ne tourne rien.
   useEffect(() => {
-    if (popoverOuvert === null || popoverOuvert === "metronome") return; // le panneau Métronome reste ouvert pendant qu'on joue (× ou Échap le ferme)
+    if (popoverOuvert === null) return;
     const hors = (e: PointerEvent) => {
       const cible = e.target instanceof Element ? e.target : null;
       if (e.pointerType === "pen") return;
@@ -781,9 +780,7 @@ export function PerformanceMode({
     }
   });
   // Panneau Métronome en colonne (≥ 1 024 px) : il repousse la musique, dont la largeur de mise en page perd 320 px.
-  const lieuMetro = usePlace();
-  const colonneMetro = popoverOuvert === "metronome" && lieuMetro === "colonne";
-  const twoColumnsAvailable = twoColumnsPossible(ecran.grand, ecran.largeur - (colonneMetro ? 320 : 0), fontScale) && !structureMode;
+  const twoColumnsAvailable = twoColumnsPossible(ecran.grand, ecran.largeur, fontScale) && !structureMode;
   const twoColumns = twoColumnsAvailable && twoColumnsPref !== "0";
   const [demiOn, setDemiOn] = useState(getDemiPagePref);
   const [demiPart, setDemiPartEtat] = useState(getDemiPart);
@@ -1057,7 +1054,7 @@ export function PerformanceMode({
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
       const insetG = mcs ? Math.max(0, (parseFloat(mcs.paddingLeft) || 0) - 1.5 * rem) : 0;
       const insetD = mcs ? Math.max(0, (parseFloat(mcs.paddingRight) || 0) - 1.5 * rem) : 0;
-      const largeurPleine = (window.innerWidth - (colonneMetro ? 320 : 0)) / fontScale - 8 - insetG - insetD;
+      const largeurPleine = window.innerWidth / fontScale - 8 - insetG - insetD;
       const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, largeurPleine);
       const hauteurScan = window.innerHeight / fontScale - 4 - (barres.haut + barres.bas) / fontScale - bandeH / fontScale;
       const telephonePortrait = ecran.largeur < 768 && ecran.hauteur > ecran.largeur;
@@ -1146,7 +1143,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, jianpuLabelH, metronome, icisDuLouange, jianpuSections, colonneMetro]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, jianpuLabelH, metronome, icisDuLouange, jianpuSections]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -1722,7 +1719,7 @@ export function PerformanceMode({
       if (e.key !== "Escape") {
         // Curseur de page, feuilles et sommaire ouverts : flèches, PageUp/Down et Espace leur appartiennent.
         if (cible instanceof HTMLInputElement) return;
-        if (popoverOuvert && popoverOuvert !== "metronome") return;
+        if (popoverOuvert) return;
         if (cible?.closest("[role=dialog]")) return;
         // Espace active le bouton, le lien, le curseur ou l'élément de menu qui a le focus (comportement natif)
         // seulement si le focus y est venu au clavier (pas de pointerdown depuis le dernier Tab / Échap) ; un focus resté après un clic, un toucher ou
@@ -1847,7 +1844,7 @@ export function PerformanceMode({
     }
     let grossier = false;
     try { grossier = window.matchMedia("(pointer: coarse)").matches; } catch { /* sans matchMedia : zones par défaut */ }
-    const largeurMusique = window.innerWidth - (colonneMetro ? 320 : 0);
+    const largeurMusique = window.innerWidth;
     const zone = largeurZoneLaterale(largeurMusique, window.innerHeight, grossier);
 
     if (e.clientX < largeurMusique * zone) {
@@ -1857,7 +1854,7 @@ export function PerformanceMode({
     } else if (!annotateModeRef.current) {
       setShowChrome(!showChrome);
     }
-  }, [showChrome, tourner, annulerAppui, colonneMetro]);
+  }, [showChrome, tourner, annulerAppui]);
 
   // Current page song info for chrome
   // Un chant joué sur sa partition 简谱 n'a pas de bloc « section » : la barre
@@ -2066,7 +2063,6 @@ export function PerformanceMode({
       // En annotation, les repères de section et les lettres de Scène passent au-dessus de l'encre et ne répondent plus au toucher.
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none [-webkit-touch-callout:none] [&[data-annotation]_[data-repere-pastille]]:pointer-events-none [&[data-annotation]_[data-scene-bouton]]:pointer-events-none"
       style={{
-        ...(colonneMetro ? { right: 320 } : null),
         "--sat": "env(safe-area-inset-top, 0px)",
         "--sab": "env(safe-area-inset-bottom, 0px)",
         "--sal": "env(safe-area-inset-left, 0px)",
@@ -2788,7 +2784,7 @@ export function PerformanceMode({
         onMarche={() => setMetroMarche((m) => !m)}
         bande={metronome}
         setBande={setMetronome}
-        basBande={`calc(${showChrome || trancheCourante ? `${barres.haut}px` : "var(--sat, 0px)"} + 36px)`}
+        couleur={couleurMenus}
       />
       <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurMenus}>
         {contenuOutils}

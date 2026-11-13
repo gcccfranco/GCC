@@ -686,8 +686,6 @@
   "panneauMetronome": {
     "titre": "节拍器",
     "fermer": "关闭节拍器",
-    "agrandir": "展开面板",
-    "reduire": "收起面板",
     "tempo": "速度",
     "saisir": "速度 {{tempo}}，点按输入",
     "saisieNom": "速度，{{min}} 至 {{max}}",
