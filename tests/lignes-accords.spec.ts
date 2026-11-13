@@ -83,9 +83,9 @@ for (const slug of ["abba-pere", "grace-infinie", "一切歌颂赞美", "一切�
 for (const slug of ["tu-m-aimes", "abrite-moi", "abba-pere"]) {
   test(`${slug} — texte agrandi au maximum, rien ne dépasse sur les côtés`, async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("disposition", "classique"));
+    // Taille maximale posée par la clé de l'appareil (le bouton A+ est dans la marge « Affichage » depuis RU-3).
+    await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5"));
     await ouvrir(page, slug);
-    const plus = page.getByRole("button", { name: "Agrandir le texte" }).first();
-    while (await plus.isEnabled()) await plus.click();
     await page.waitForTimeout(300);
     const mesure = await page.evaluate(() => {
       const doc = document.documentElement;
@@ -101,7 +101,12 @@ for (const slug of ["tu-m-aimes", "abrite-moi", "abba-pere"]) {
 
 test("grace-infinie — accords masqués, les syllabes se recollent", async ({ page }) => {
   await ouvrir(page, "grace-infinie");
-  await page.locator("[data-testid='barre-outils'] button[aria-label='Accords']").click();
+  // Le bouton n'agit qu'une fois la page hydratée : on retouche jusqu'à ce qu'il soit éteint.
+  const accords = page.locator("[data-testid='barre-outils'] button[aria-label='Accords']");
+  await expect(async () => {
+    if ((await accords.getAttribute("aria-pressed")) !== "false") await accords.click();
+    await expect(accords).toHaveAttribute("aria-pressed", "false", { timeout: 1000 });
+  }).toPass();
   // textContent et non innerText : innerText sépare chaque colonne flex (« sau vé »).
   const lignes = await page.locator("[data-copy-line]").evaluateAll((ls) => ls.map((l) => (l.textContent ?? "").replace(/\s+/g, " ").trim()));
   expect(lignes).toContain("Grâce infinie qui m'a sauvé,");
@@ -137,8 +142,10 @@ for (const slug of ["abba-pere", "tu-m-aimes"]) {
     expect(await motsCoupes(page), "taille de départ").toEqual([]);
     const dir = process.env.PW_CAPTURES;
     if (dir) await page.screenshot({ path: `${dir}/mots-${slug}-${test.info().project.name}.png` });
-    const plus = page.getByRole("button", { name: "Agrandir le texte" }).first();
-    while (await plus.isEnabled()) await plus.click();
+    // Taille maximale posée par la clé de l'appareil (le bouton A+ est dans la marge « Affichage » depuis RU-3).
+    await page.evaluate(() => localStorage.setItem("perf-font-scale", "1.5"));
+    await page.reload();
+    await expect(page.locator("main.song-zoom [data-copy-line]").first()).toBeVisible();
     await page.waitForTimeout(300);
     expect(await motsCoupes(page), "texte agrandi au maximum").toEqual([]);
   });

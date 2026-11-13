@@ -486,6 +486,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
                       {showPinyin && !hideLyrics && !aucuneParole && (
                         <span
                           data-copy-ignore
+                          data-ligne="pinyin"
                           className={pinyin_font.className}
                           style={{
                             fontSize: pinyinEm,
@@ -1359,10 +1360,9 @@ export function SongView({
         : layout === "unique"
           ? uniqueSections(steps, ast.metadata.key).map((u) => ({ ...u, withDetails: false }))
           : steps.map((step) => ({ step, uids: [step.section.uid], withDetails: true }));
-  // Ligne sous la pastille de la page chant : « 1=D · 4/4 · ♩ = 66 » sur le scan, « 4/4 · ♩ = 66 » en paroles.
+  // Ligne sous l'armure de la page chant : « 4/4 · ♩ = 66 » (le « 1=D » est dans l'armure, RU-3).
   const ligneTempo: React.ReactNode[] = [];
   if (pageChant) {
-    if (corps !== undefined && ast.metadata.key) ligneTempo.push(`1=${ast.metadata.key}`);
     if (ast.metadata.time) ligneTempo.push(ast.metadata.time);
     if (ast.metadata.tempo) {
       ligneTempo.push(

@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { chiffrerEtiquette } from "../src/lib/harmonie/degres";
 import { openSheet } from "./helpers/jianpu";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { marge, ouvrirMarge } from "./helpers/marge";
 
 // Membre fictif : la préférence se garde par compte, et la bascule attend la fin de la lecture du compte.
 const ROMANE: FakeProfile = { uid: "uid-romane", email: "romane@example.com", firstName: "Romane", lastName: "V." };
@@ -32,18 +33,12 @@ const CHANTS = [
 const CHIFFRE = /^[b#]?[1-7]/;
 const accords = (page: Page) => page.locator("[data-section] [data-copy-line] [data-accord-touchable]");
 const textes = (page: Page) => accords(page).evaluateAll((els) => els.map((e) => e.textContent ?? ""));
-const barre = (page: Page, n: "lettres" | "chiffres") => page.getByTestId("barre-outils").locator(`[data-notation="${n}"]`);
-
-/** Choisit une notation par la barre si elle y est (rangée assez large), sinon par le menu ⋯. */
+/** Choisit une notation dans la marge « Affichage » (RU-3 : plus de bascule dans la barre ni dans le menu ⋯). */
 async function choisir(page: Page, n: "lettres" | "chiffres") {
-  const b = barre(page, n);
-  if (await b.isVisible()) {
-    await b.click();
-  } else {
-    await page.getByRole("button", { name: /Plus d'actions|更多操作/ }).filter({ visible: true }).first().click();
-    await page.getByRole("menu").locator(`[data-notation="${n}"]`).click();
-    await page.keyboard.press("Escape");
-  }
+  await ouvrirMarge(page);
+  await marge(page).locator(`[data-notation="${n}"]`).click();
+  await page.keyboard.press("Escape");
+  await expect(marge(page)).toHaveAttribute("data-ouvert", "false");
 }
 
 async function ouvrir(page: Page, slug: string, zh: boolean, query = "") {
@@ -57,8 +52,7 @@ async function ouvrir(page: Page, slug: string, zh: boolean, query = "") {
 }
 
 for (const c of CHANTS) {
-  test(`chant ${c.zh ? "ZH" : "FR"} : chiffres puis retour aux lettres, préférence gardée au rechargement (ordinateur, tablette)`, async ({ page }, info) => {
-    test.skip(info.project.name === "telephone", "la bascule de barre est cachée au téléphone : voir le test du menu ⋯");
+  test(`chant ${c.zh ? "ZH" : "FR"} : chiffres puis retour aux lettres, préférence gardée au rechargement`, async ({ page }) => {
     await ouvrir(page, c.slug, c.zh);
     const lettres = await textes(page);
     expect(lettres.some((t) => /^[A-G]/.test(t))).toBe(true);
@@ -112,16 +106,16 @@ test("calque 简谱 inchangé en chiffres", async ({ page }) => {
   expect(await calque.first().textContent()).toBe("F");
 });
 
-test("la bascule de barre est cachée au téléphone, le menu ⋯ la porte", async ({ page }, info) => {
+test("la bascule Lettres | Chiffres est dans la marge Affichage, ni dans la barre ni dans le menu ⋯", async ({ page }) => {
   await ouvrir(page, "hosanna", false);
-  // Au téléphone la bascule n'est jamais dans la barre ; ailleurs elle y est si la rangée a la place (data-bascule).
-  if (info.project.name === "telephone") await expect(barre(page, "chiffres")).toBeHidden();
+  await expect(page.getByTestId("barre-outils").locator("[data-notation]")).toHaveCount(0);
   await page.getByRole("button", { name: /Plus d'actions|更多操作/ }).filter({ visible: true }).first().click();
-  const menu = page.getByRole("menu");
-  await expect(menu.getByText("Notation des accords")).toBeVisible();
-  await menu.getByRole("button", { name: "Chiffres" }).click();
-  await expect(menu.getByRole("button", { name: "Chiffres" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("menu").locator("[data-notation]")).toHaveCount(0);
   await page.keyboard.press("Escape");
+  await ouvrirMarge(page);
+  const chiffres = marge(page).getByRole("button", { name: "Chiffres" });
+  await chiffres.click();
+  await expect(chiffres).toHaveAttribute("aria-pressed", "true");
   await expect.poll(async () => (await textes(page)).every((t) => CHIFFRE.test(t))).toBe(true);
 });
 

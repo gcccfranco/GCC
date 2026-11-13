@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { Switch } from "@/components/ui/switch";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
@@ -13,7 +13,7 @@ import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 
 // La marge « Affichage » (docs/spec-reglages-unifies.md, RU-2, piste B) : trois groupes (Je joue, Ce que je lis, La page),
 // une mention de portée sous chacun. Dès 1 024 px (tablette paysage) : colonne de 320 px qui POUSSE la musique (`children`,
-// rendus à côté d'elle, jamais dessous) ; en dessous : feuille basse opaque, sans voile, de 60 % de l'écran (560 px de large
+// rendus à côté d'elle, jamais dessous) ; en dessous : feuille basse opaque, sans voile, de 40 % de l'écran (560 px de large
 // dès 768 px) ; la musique garde alors une réserve en bas égale à la feuille. Les styles de mouvement : globals.css (.marge-aff).
 type Place = "colonne" | "feuille-large" | "feuille";
 const COLONNE = "(min-width: 1024px)";
@@ -39,6 +39,10 @@ type Props = {
   groupePage?: ReactNode;
   /** Le bouton qui a ouvert la marge : le focus lui revient à la fermeture. */
   retourFocus?: RefObject<HTMLElement | null>;
+  /** Page chant : pas de groupe « Je joue », tout est montré (le rôle reste propre au mode louange). */
+  sansRole?: boolean;
+  /** Pas de colonne même dès 1 024 px (la musique garderait moins de 340 px) : feuille de 560 px. */
+  sansColonne?: boolean;
   /** La musique : placée à côté de la colonne, avec une réserve en bas sous la feuille. */
   children?: ReactNode;
 };
@@ -75,13 +79,28 @@ function Groupe({ titre, mention, children }: { titre: string; mention: string; 
   );
 }
 
-export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, uid, mode, groupePage, retourFocus, children }: Props) {
+export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, uid, mode, groupePage, retourFocus, sansColonne, sansRole, children }: Props) {
   const { t } = useTranslation();
   const r = useReglagesAffichage(uid);
-  const lieu = usePlace();
+  const placeEcran = usePlace();
+  const lieu: Place = sansColonne && placeEcran === "colonne" ? "feuille-large" : placeEcran;
   const fermer = useRef<HTMLButtonElement>(null);
+  const enveloppe = useRef<HTMLDivElement>(null);
+  // Feuille large d'une page en deux volets : centrée sur le conteneur de la marge (le volet du chant), pas sur la fenêtre.
+  const [volet, setVolet] = useState<{ centre: number; largeur: number } | null>(null);
+  const surVolet = sansColonne && lieu === "feuille-large";
+  useEffect(() => {
+    const el = enveloppe.current;
+    if (!surVolet || !el) { setVolet(null); return; }
+    const mesure = () => { const r = el.getBoundingClientRect(); setVolet({ centre: r.left + r.width / 2, largeur: Math.min(560, r.width - 16) }); };
+    mesure();
+    const ro = new ResizeObserver(mesure);
+    ro.observe(el);
+    window.addEventListener("resize", mesure);
+    return () => { ro.disconnect(); window.removeEventListener("resize", mesure); };
+  }, [surVolet]);
   const titre = useId();
-  const choriste = r.role === "choriste" || r.role === "presidence";
+  const choriste = !sansRole && (r.role === "choriste" || r.role === "presidence");
   const mention = t("margeAffichage.retenu");
   const vuDejaOuvert = useRef(false);
 
@@ -107,15 +126,20 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, uid, mode, group
 
   const colonne = lieu === "colonne";
   const geometrie = colonne
-    ? { position: "sticky", top: 0, width: ouvert ? 320 : 0, height: "100dvh", flex: "none", overflow: "hidden", alignSelf: "flex-start" } as const
+    ? {
+        position: "sticky", width: ouvert ? 320 : 0, flex: "none", ...(mode === "page" && ouvert ? { marginLeft: 24 } : {}), overflow: "hidden", alignSelf: "flex-start",
+        // Page chant : sous la barre du haut et la barre du chant, comme la colonne Harmonie.
+        ...(mode === "page" ? { top: "var(--nav-h)", marginTop: 48, height: "calc(100dvh - var(--nav-h) - 48px)" } : { top: 0, height: "100dvh" }),
+      } as const
     : {
-        position: "fixed", bottom: 0, height: "60dvh", zIndex: 50, borderRadius: "18px 18px 0 0", boxShadow: "0 -1px 0 hsl(var(--border))",
-        ...(lieu === "feuille-large" ? { left: "50%", width: 560, transform: `translateX(-50%) translateY(${ouvert ? 0 : 100}%)` } : { left: 0, right: 0, transform: `translateY(${ouvert ? 0 : 100}%)` }),
+        position: "fixed", bottom: 0, height: "40dvh", zIndex: 50, borderRadius: "18px 18px 0 0", boxShadow: "0 -1px 0 hsl(var(--border))",
+        ...(lieu === "feuille-large" ? { left: surVolet && volet ? volet.centre : "50%", width: surVolet && volet ? volet.largeur : 560, transform: `translateX(-50%) translateY(${ouvert ? 0 : 100}%)` } : { left: 0, right: 0, transform: `translateY(${ouvert ? 0 : 100}%)` }),
       } as const;
 
   const retenue = (
     <aside
       className="marge-aff bg-card text-foreground"
+      id="marge-affichage"
       data-testid="marge-affichage"
       data-mode={mode}
       data-ouvert={ouvert}
@@ -139,7 +163,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, uid, mode, group
           </button>
         </div>
         <div data-testid="marge-corps" className="min-h-0 flex-1 overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
-          <Groupe titre={t("margeAffichage.jeJoue")} mention={mention}>
+          {!sansRole && <Groupe titre={t("margeAffichage.jeJoue")} mention={mention}>
             <div role="radiogroup" aria-label={t("margeAffichage.jeJoue")} className="flex flex-wrap gap-1.5 py-1">
               {ROLE_IDS.map((id) => (
                 <button
@@ -154,7 +178,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, uid, mode, group
                 </button>
               ))}
             </div>
-          </Groupe>
+          </Groupe>}
 
           <Groupe titre={t("margeAffichage.jeLis")} mention={mention}>
             {!choriste && (
@@ -230,8 +254,8 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, uid, mode, group
 
   if (children === undefined) return retenue;
   return (
-    <div style={{ display: "flex", alignItems: "flex-start" }}>
-      <div style={{ flex: 1, minWidth: 0, paddingBottom: !colonne && ouvert ? "60dvh" : 0 }}>{children}</div>
+    <div ref={enveloppe} style={{ display: "flex", alignItems: "flex-start" }}>
+      <div style={{ flex: 1, minWidth: 0, paddingBottom: !colonne && ouvert ? "40dvh" : 0 }}>{children}</div>
       {retenue}
     </div>
   );

@@ -116,6 +116,15 @@ chrome du mode louange passe à l'encre, ce n'est pas `--chord-color`).
 - Le menu ⋯ de la page chant ne garde que Personnaliser et Signalement ; « Outils » du mode louange garde métronome,
   annotations, idées d'harmonie (la tonalité et le capo passent dans la fenêtre de l'armure).
 
+**Retour de Timothée sur RU-3 (13/11, ses mots : « Commandes trop cachées, la feuille qui recouvre la moitié de la page,
+et aussi dans la page des chants on a pas besoin de savoir si on veut la vu pianiste et tout, pareil dans les setlists »)** :
+- Accords (et Pinyin pour un chant chinois) restent dans la barre de la page chant, à un toucher, à côté d'Affichage ; la
+  barre tient toujours sur une ligne à 412 px.
+- La feuille d'Affichage est plus basse (40 % de l'écran au lieu de 60 %) : la musique reste visible au-dessus.
+- **RU-Q3 revue** : le groupe « Je joue » (rôle) n'apparaît pas dans la marge de la page chant ni de la setlist ; le rôle
+  reste propre au mode louange (RU-5). Le constat 12 (choriste qui voit les accords dans la setlist) se règle par
+  l'interrupteur Accords, retenu.
+
 ## Tranches (après go seulement ; une session par tranche, `CLAUDE.md` § Coder)
 
 Ordre imposé par les chantiers en cours : RU-4 (mode louange) **après** TC-4 et JV-4/JV-5, jamais pendant qu'une autre
@@ -198,3 +207,22 @@ Aucune règle Firestore touchée (tonalité personnelle en `localStorage`).
   Nouveaux libellés zh à faire relire : 显示, 关闭显示, 保存在本设备. Tests : `marge-affichage.spec.ts` 60/60 sur les cinq
   projets, `armure` et `coherence` vertes (120 passés, 3 sautés) ; environ 5 min de tests hors workflow (≈ 26 min de
   tranche en tout). Captures des cinq dispositions regardées.
+- 13/11 : **RU-3 faite** (session RU-3). Page chant : barre sur une ligne (←, Harmonie, Vidéo, Crayon, Accords, Pinyin
+  pour un chant zh, Affichage, ⋯), pilule, A− / A+ et Lettres | Chiffres retirés de la barre (armure et marge) ; PDF dans
+  le menu ⋯ (PDF, Personnaliser, Signalement) ; plus de « 1=… » dans la ligne de tempo (l'armure le porte, tonalité
+  courante, transposée comprise, à la place du `jianpuKey` du .cho). Marge montée par `useReglagesAffichage` : accords,
+  pinyin, 简谱 | Paroles (la bascule de l'en-tête reste et écrit la même clé), taille, disposition, ordre (`layout` de
+  SongView, pas de scan en « Plan ») ; « Accords affichés » reste en mémoire (pas de clé, comme RU-2). Banc
+  `/banc/marge-affichage` retiré, `marge-affichage.spec.ts` repointée sur la page chant ; nouvelle
+  `page-chant-reglages.spec.ts` (cinq projets). *Décisions déléguées (session RU-3, 13/11)* : PDF dans le menu ⋯ ; une
+  seule colonne à droite (Affichage et Harmonie s'excluent) ; colonne seulement si la musique garde 340 px, sinon feuille
+  (en deux volets jusqu'à 1 440 px, c'est la feuille, centrée sur le volet du chant) ; 24 px entre musique et colonne ;
+  `cmd.chant.toniqueOrigine` compté par l'armure. **Retour de Timothée** (bloc plus haut) appliqué : Accords et Pinyin
+  dans la barre, feuille à 40 %, pas de « Je joue » sur la page chant (`sansRole`). Specs adaptées : barre-chant,
+  chant-defilement-haut, notation-accords, couleur-accords, dispositions-partition, entete-chant-jianpu,
+  chants-deux-volets, export-pdf, copy-lyrics, paroles-sans-accords, lignes-accords, ma-partition-lecture, key-selector,
+  look-louange, usage-dimanche, transposition-mineure, guide-captures. Restent sur l'ancienne pilule, non lancés par la
+  CI : `scripts/rude-epreuve/{chants,fuzz}.spec.ts`, `scripts/video-bienvenue/captures*.spec.ts`. Tests : 16 specs, 1 274
+  tests, 1 131 passés puis échecs corrigés et relancés (176 / 176 hors copie, copie 45 / 45 sur trois répétitions) ;
+  environ 2 h 30 de tests dans la tranche (dont 29 min pour la passe complète). Captures regardées aux quatre dispositions
+  et à 1 440 px. Pour RU-4 : passer `sansRole` à la marge de la setlist (retour de Timothée).

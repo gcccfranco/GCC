@@ -8,7 +8,7 @@ for (const slug of ["abba-pere", "活着为要敬拜你"]) {
   test(`pas de bande vide en haut en défilant doucement — ${slug}`, async ({ page }) => {
     await page.goto(`/songs/${encodeURIComponent(slug)}`);
     const barre = page.getByTestId("barre-outils");
-    await expect(barre.locator("select").first()).toBeVisible();
+    await expect(barre.getByRole("button", { name: /Plus d'actions|更多操作/ })).toBeVisible();
     await page.waitForFunction(() => {
       const b = document.querySelector('[data-testid="barre-outils"]');
       return !!b && Object.keys(b).some((k) => k.startsWith("__reactProps"));

@@ -107,7 +107,7 @@ function ChoixPanneau({ disposition, changeDisposition, langue, couleur = ACCENT
             <span className="block max-w-full rounded-md p-0.5" style={{ boxShadow: choisie ? `0 0 0 2px ${couleur}` : "0 0 0 1px transparent" }}>
               <MiniatureDisposition disposition={d} langue={langue} taille="panneau" />
             </span>
-            <span className={`${NOM} ${choisie ? "font-bold" : "font-medium"}`} style={choisie ? { color: couleur } : undefined}>
+            <span className={`${NOM} flex-1 ${choisie ? "font-bold" : "font-medium"}`} style={choisie ? { color: couleur } : undefined}>
               {t(`dispositions.${d}`)}
             </span>
           </button>

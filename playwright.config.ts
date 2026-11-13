@@ -14,6 +14,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Lot RU, RU-3 (docs/spec-reglages-unifies.md) : la page chant, barre sur une ligne, armure, marge « Affichage » montée (colonne ou feuille) et réglages retenus.
+  /page-chant-reglages\.spec\.ts/,
   // Lot RU, RU-2 (docs/spec-reglages-unifies.md) : la marge « Affichage » : colonne de 320 px qui pousse la musique dès la tablette paysage, feuille basse de 60 % en dessous.
   /marge-affichage\.spec\.ts/,
   // Harmonie H4-2 (docs/spec-harmonie-accords.md) : la colonne « Harmonie de ce chant » dès 1 024 px, la feuille en dessous.
@@ -28,7 +30,7 @@ const SPECS_GRAND_ECRAN = [
   /harmonie-bibliotheque\.spec\.ts/,
   // Harmonie H5-1 : le panneau d'un accord enrichi (chiffre, Écouter, Ensuite) en feuille et en bulle.
   /harmonie-porte1\.spec\.ts/,
-  // Harmonie H7-1 : la bascule Lettres / Chiffres dans la barre du chant (dès 640 px) et le menu ⋯.
+  // Harmonie H7-1 : la bascule Lettres / Chiffres des accords (dans la marge « Affichage » de la page chant depuis RU-3).
   /notation-accords\.spec\.ts/,
   // Lot Pupitre, PU-2 (docs/spec-entree-musiciens.md) : « Mon prochain service » en tête de l'onglet Setlists (rangées, vignettes, volet de droite en deux volets).
   /pupitre-onglet\.spec\.ts/,

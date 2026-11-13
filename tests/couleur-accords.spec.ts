@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { marge, ouvrirMarge } from "./helpers/marge";
 import { attendreMiseEnPage, lireCompteur, onStage, ouvrirOptions } from "./helpers/louange";
 import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 import { contraste, garderContraste, FOND_CLAIR } from "../src/lib/performance/couleurIcones";
@@ -263,9 +264,10 @@ test("hors partition : variables globales intactes, badge de tonalité et Harmon
     return { fr: s.getPropertyValue("--accord-fr"), zh: s.getPropertyValue("--accord-zh"), chord: s.getPropertyValue("--chord-color").trim(), jianpu: s.getPropertyValue("--jianpu-color").trim() };
   });
   expect(racine).toEqual({ fr: "", zh: "", chord: "#3f63cf", jianpu: "#b3261d" });
-  const badge = page.locator('main span[class*="border-[1.5px]"]').first();
+  // RU-3 : l'armure remplace la pastille bleue ; elle garde la couleur du texte, pas celle des accords choisie.
+  const badge = page.getByTestId("armure").first();
   await expect(badge).toBeVisible();
-  expect(await badge.evaluate((el) => getComputedStyle(el).color)).toBe(rgb("#3f63cf"));
+  expect(await badge.evaluate((el) => getComputedStyle(el).color)).not.toBe(rgb(garderContraste(VIOLET, FOND_CLAIR)));
   await page.goto("/harmonie");
   await page.waitForLoadState("networkidle");
   for (const c of await page.locator(".font-chord").evaluateAll((els) => els.map((e) => getComputedStyle(e).color))) {
@@ -276,7 +278,6 @@ test("hors partition : variables globales intactes, badge de tonalité et Harmon
 
 // ─── CA-B : le réglage (rubrique « Couleur des accords » des trois menus d'affichage) ───────────────────
 
-const NOM_MENU_CHANT = /Plus d'actions|更多操作/;
 const NOMS = {
   fr: { origine: /Couleur d'origine/, violet: "Violet", encre: "Encre", autre: /^Autre couleur/, lien: "Couleurs d'origine" },
   zh: { origine: /原色/, violet: "紫色", encre: "墨黑", autre: /^其他颜色/, lien: "恢复原色" },
@@ -285,8 +286,9 @@ const NOMS = {
 /** Ouvre le menu d'affichage de la surface et rend sa portée (menu Radix ou panneau d'options du mode louange). */
 async function ouvrirReglage(page: Page, surface: Surface, ui: Langue = "fr"): Promise<Locator> {
   if (surface === "chant") {
-    await page.getByRole("button", { name: NOM_MENU_CHANT }).filter({ visible: true }).first().click();
-    return page.getByRole("menu");
+    // RU-3 : la couleur des accords est dans la marge « Affichage » (plus dans le menu ⋯).
+    await ouvrirMarge(page);
+    return marge(page);
   }
   if (surface === "partitions") {
     await ouvrirAffichage(page);
@@ -354,7 +356,7 @@ test("réglage : couleur venue du cercle, égale au bleu d'origine, reste un cho
   await expect(menu.getByRole("button", { name: "Couleurs d'origine" })).toBeEnabled();
 });
 
-test("réglage, clavier : flèches en boucle dans la rangée, le menu reste ouvert, Échap ferme d'abord le cercle", async ({ page }) => {
+test("réglage, clavier : flèches en boucle dans la rangée, la marge reste ouverte, Échap ferme d'abord le cercle", async ({ page }) => {
   await preparer(page);
   await ouvrir(page, "chant", CHANT.fr, ELODIE);
   const menu = await ouvrirReglage(page, "chant");
@@ -375,7 +377,7 @@ test("réglage, clavier : flèches en boucle dans la rangée, le menu reste ouve
   await expect(fr.locator("[data-cercle-chromatique]")).toHaveCount(0);
   await expect(menu).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(menu).toHaveCount(0);
+  await expect(menu).toHaveAttribute("data-ouvert", "false"); // la marge se ferme, elle reste dans la page
 });
 
 test("réglage, mode louange : les flèches dans une rangée ne tournent pas la page", async ({ page }) => {
@@ -494,11 +496,12 @@ test.fixme("réglage : grisé pendant le chargement de l'authentification, rien 
 test("réglage : ligne de rétention, « pour ce compte » connecté, « sur cet appareil » sans compte (page du chant)", async ({ page }) => {
   await preparer(page);
   await ouvrir(page, "chant", CHANT.fr, ELODIE);
-  await expect(await ouvrirReglage(page, "chant")).toContainText("Retenue pour ce compte sur cet appareil");
+  // RU-3 : la marge n'a qu'une mention, « Retenu sur cet appareil », connecté ou non.
+  await expect(await ouvrirReglage(page, "chant")).toContainText("Retenu sur cet appareil");
   await changerDeCompte(page);
   await ouvrir(page, "chant", CHANT.fr, null);
   const menu = await ouvrirReglage(page, "chant");
-  await expect(menu).toContainText("Retenue sur cet appareil");
+  await expect(menu).toContainText("Retenu sur cet appareil");
   await expect(menu).not.toContainText("pour ce compte");
 });
 
