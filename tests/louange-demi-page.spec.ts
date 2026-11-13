@@ -353,7 +353,8 @@ async function mesurerScan(page: Page) {
 for (const slug of ["一生爱你", "为我而来"]) {
   test(`demi-page : un scan certifié (${slug}) se coupe entre deux lignes, jamais dans une portée`, async ({ page }, testInfo) => {
     test.setTimeout(90_000);
-    await ouvrir(page, { slugs: [slug] });
+    // Lignes entières (« 2 colonnes » éteint) : la coupe horizontale ; en deux colonnes, louange-jianpu-deux-colonnes (JV-4).
+    await ouvrir(page, { slugs: [slug], uneColonne: true });
     await expect(page.locator("[data-performance-mode] [data-jianpu-page] img").first()).toBeVisible();
     await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
     const total = Number((await lireCompteur(page)).split("/")[1]);

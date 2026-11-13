@@ -31,8 +31,8 @@ import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
 import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, SUFFIXE_FEUILLE, type AncreLecture } from "@/lib/performance/blocks";
 import { PASTILLE_SUIVANT_H, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
 import { layoutFeuilleDeRoute, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
-import { useJianpuManifest, useJianpuMargesToutes, useJianpuSections, useJianpuSystemes } from "@/lib/jianpu/images";
-import { bornesX, LARGEUR_FEUILLE_MAX, sectionsDeTranche, trancheDeSection, tranchesDemiLignes, tranchesScan } from "@/lib/performance/tranchesScan";
+import { loadJianpuChords, useJianpuManifest, useJianpuMargesToutes, useJianpuSections, useJianpuSystemes } from "@/lib/jianpu/images";
+import { bornesX, LARGEUR_FEUILLE_MAX, sectionsDeTranche, trancheDeSection, tranchesDemiLignes, tranchesDeuxColonnes, tranchesScan } from "@/lib/performance/tranchesScan";
 import { interrupteurAllume, prefDepuisInterrupteur, prefPourRole, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, zh_lyric_font } from "@/components/song/SongView";
@@ -854,6 +854,9 @@ export function PerformanceMode({
   // sont pas chargés, ou si un chant n'y figure pas : un scan par page d'écran, comme avant).
   const jianpuSystemes = useJianpuSystemes();
   const jianpuMarges = useJianpuMargesToutes();
+  // Lot JV (JV-4) : hauteur des accords imprimés de chaque scan (`chords.json`), pour le seuil des deux colonnes.
+  const [jianpuLabelH, setJianpuLabelH] = useState<Record<string, number> | null>(null);
+  useEffect(() => { let vivant = true; loadJianpuChords().then((m) => { if (vivant) setJianpuLabelH(Object.fromEntries(Object.entries(m).map(([k, c]) => [k, c.labelH]))); }); return () => { vivant = false; }; }, []);
   // Feuille de route allumée et menu Repères sur un scan certifié : début de chaque section (page, ligne).
   const jianpuSections = useJianpuSections();
   // Le réglage 简谱 n'apparaît que si un chant de la setlist a un scan.
@@ -1041,6 +1044,10 @@ export function PerformanceMode({
         const reserve = dernierDuChant && suivi ? 56 / fontScale : 0;
         // Lot JP-C : téléphone en portrait, chaque ligne se coupe en deux moitiés empilées ; sinon, lignes entières.
         if (telephonePortrait) return tranchesDemiLignes(sp.lignes, sp.h, x0, x1, largeurScan, Math.max(1, hauteurScan), reserve);
+        // Lot JV (JV-4) : « 2 colonnes » allumé, deux colonnes de demi-lignes à la taille des lignes entières ; sous le seuil, lignes entières.
+        const labelH = jianpuLabelH?.[b.songSlug];
+        const volets = twoColumns && labelH ? tranchesDeuxColonnes(sp.lignes, sp.h, x0, x1, largeurScan, Math.max(1, hauteurScan), largeurScan / Math.max(1, x1 - x0), labelH, reserve) : null;
+        if (volets) return volets;
         return tranchesScan(sp.lignes, sp.h, x1 - x0, largeurScan, Math.max(1, hauteurScan), reserve);
       };
       const ctxPagination = { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe, pastille: PASTILLE_SUIVANT_H, tranchesDe };
@@ -1108,7 +1115,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, bandeOuverte, ideesVues]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, bandeOuverte, ideesVues, jianpuLabelH]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -1211,9 +1218,10 @@ export function PerformanceMode({
   // bouge encore.
   // « j4-<y0> » sur une tranche d'un scan certifié (lot JP-B) : deux tranches d'un même scan ont deux clés ;
   // un scan non certifié garde « j2 » / « j3 ». « j5-<y0> » sur une page en demi-lignes (lot JP-C, téléphone en portrait) :
-  // la mise en page diffère, les traits d'une feuille en lignes entières ne se reposent pas dessus.
+  // la mise en page diffère, les traits d'une feuille en lignes entières ne se reposent pas dessus. « j6-<y0> » : deux colonnes
+  // de demi-lignes (lot JV, JV-4, « 2 colonnes » allumé).
   const trancheCourante = layout[currentPage]?.fit ? layout[currentPage].tranche : undefined;
-  const cleScan = layout[currentPage]?.fit ? (trancheCourante ? `${trancheCourante.demi ? "j5" : "j4"}-${trancheCourante.y0}` : ecran.grand ? "j3" : "j2") : "";
+  const cleScan = layout[currentPage]?.fit ? (trancheCourante ? `${trancheCourante.demi ? (trancheCourante.demi.colonne2 !== undefined ? "j6" : "j5") : "j4"}-${trancheCourante.y0}` : ecran.grand ? "j3" : "j2") : "";
   // FS-E : la demi-page entre les pages `n` et `n + 1` (ni annotation, ni loupe) : deux pages de texte, ou (lot JP-B) deux
   // écrans successifs du MÊME scan 简谱 certifié (deux tranches, ou la dernière d'une page de scan et la première de la
   // suivante) ; un scan non certifié (page sans tranche) n'en a jamais, ni un texte suivi d'un scan.
@@ -1246,7 +1254,7 @@ export function PerformanceMode({
   // Demi-page : clé qu'aurait la page suivante en page entière (même formule que `currentPageKey`).
   const demiSuivante = layout[currentPage + 1];
   const clePageSuivante = demiActif && demiSuivante
-    ? computePageKey(blocks, pages[currentPage + 1] ?? [], `${layoutSig}${demiSuivante.twoColumns ? "x2" : ""}${demiSuivante.fit ? (demiSuivante.tranche ? `${demiSuivante.tranche.demi ? "j5" : "j4"}-${demiSuivante.tranche.y0}` : ecran.grand ? "j3" : "j2") : ""}${demiSuivante.coupe ? "v2" : ""}`)
+    ? computePageKey(blocks, pages[currentPage + 1] ?? [], `${layoutSig}${demiSuivante.twoColumns ? "x2" : ""}${demiSuivante.fit ? (demiSuivante.tranche ? `${demiSuivante.tranche.demi ? (demiSuivante.tranche.demi.colonne2 !== undefined ? "j6" : "j5") : "j4"}-${demiSuivante.tranche.y0}` : ecran.grand ? "j3" : "j2") : ""}${demiSuivante.coupe ? "v2" : ""}`)
     : undefined;
   useLayoutEffect(() => {
     const el = demiActif ? refDemiRappelHaut.current : null;

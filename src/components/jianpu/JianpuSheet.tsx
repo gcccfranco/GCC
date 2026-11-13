@@ -809,6 +809,21 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           </div>
         );
       }
+      // Mode louange, « 2 colonnes » (lot JV, JV-4) : les demi-lignes de la tranche en deux colonnes de même largeur.
+      const d2 = fit && tranche?.demi?.colonne2 !== undefined ? tranche.demi : null;
+      if (d2 && shownPages[0]) {
+        const largeurCol = Math.max(...d2.fenetres.map((f) => f.x1 - f.x0)) * d2.echelle;
+        const cols = [d2.fenetres.slice(0, d2.colonne2), d2.fenetres.slice(d2.colonne2)];
+        return (
+          <div data-jianpu-volets className="mx-auto grid items-start gap-x-6" style={{ gridTemplateColumns: `repeat(2, ${largeurCol}px)` }}>
+            {cols.map((col, c) => (
+              <div key={c} data-jianpu-volet={c} className="flex min-w-0 flex-col items-start">
+                {col.map((demi, nf) => fenetre(shownPages[0], firstShown, `${shownPages[0].file}-${c}-${nf}`, c === 0 && nf === 0, { ...tranche!, ...demi, premiere: demi.ligne, derniere: demi.ligne }, demi, nf, d2.echelle))}
+              </div>
+            ))}
+          </div>
+        );
+      }
       return shownPages.flatMap((page, n) => (fit && tranche?.demi ? tranche.demi.fenetres : [null]).map((demi, nf) => {
         // Tranche (lot JP-B) : seulement en `fit`, sur la page montrée.
         // Demi-ligne (lot JP-C, téléphone en portrait) : la fenêtre d'une moitié, sur la seule ligne `demi.ligne`.

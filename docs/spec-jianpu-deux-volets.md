@@ -463,3 +463,21 @@ chantier sur ce fichier.
   double cadre du surlignage d'« Ici » (`.harmonie-surligne`, `globals.css`) ; poignée pâle de toutes les feuilles
   (`drawer.tsx`) ; titres des fiches en français dans l'interface chinoise ; « Ne marche pas sur ce chant » seul sur
   sa ligne en français. JV-5a ne lance rien après elle (JV-5b vient de JV-4).
+- 13/11/2026 : **JV-4 codée** (session orchestratrice). `tranchesDeuxColonnes` (`tranchesScan.ts`, pur) : sous « 2 colonnes »
+  allumé (ordinateur, tablette paysage, 1 440), chaque page d'écran d'un scan certifié montre deux colonnes de
+  demi-lignes (gauche, puis droite, puis page suivante ; dernière page équilibrée ; jamais de coupe entre les deux
+  moitiés d'une ligne), échelle = colonne / plus large fenêtre, **plafonnée à celle des lignes entières** ; sous 11 px
+  d'accords imprimés (`chords.json`, `labelH`) ou pour une ligne seule, les tranches d'avant. `Demi.colonne2` (indice de
+  la première fenêtre de droite) ; `JianpuSheet` pose les deux colonnes (`data-jianpu-volets`, gouttière 24 px, calque
+  intact) ; `PageScan` cale la tête de feuille sur leur largeur ; clé d'annotation **« j6-<y0> »** (composition
+  nouvelle, comme j4 / j5) ; `DemiPage` : les colonnes de scan comptent comme celles du texte (coupe verticale, filet
+  dans la gouttière). Éteint : lignes entières comme avant ; téléphone et tablette portrait inchangés. Levée de la
+  décision du 03/10 écrite datée dans `spec-deux-volets.md`. Décisions déléguées (session, 13/11) : coupe gloutonne
+  par page d'écran (la coupe « au début de section » de JV-3 ne s'applique pas : la page d'écran borne déjà les
+  colonnes) ; chaque page de scan se pagine seule (为我而来 : ses deux pages ne se mêlent pas, comme JP-B) ; demi-page en
+  coupe verticale (même règle que le texte en deux colonnes). Tests : nouvelle `louange-jianpu-deux-colonnes.spec.ts`
+  (`SPECS_GRAND_ECRAN` ; pur, toutes les lignes une fois, éteint, petits écrans, clé j6, 为我而来, demi-page, captures FR
+  et ZH clair et sombre) ; `louange-jianpu-tranches` et le test scan de `louange-demi-page` passent « 2 colonnes »
+  éteint (ils gardent le chemin des lignes entières). Premier tour (six specs, cinq projets) : 726 passés, 30 échecs
+  attendus (anciens tests en deux colonnes) (25 min) ; repasse : 434 passés, 3 échecs **antérieurs** (`jianpu-integration`
+  264, 661, 682 à 1 440, vue Partitions, rouges aussi sans la tranche) (**16 min**). tsc, lint : 0 erreur.

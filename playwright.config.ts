@@ -50,6 +50,8 @@ const SPECS_GRAND_ECRAN = [
   /pupitre-partitions\.spec\.ts/,
   // Lot JV, JV-3 (docs/spec-jianpu-deux-volets.md) : le scan 简谱 en deux volets de demi-lignes dès 1 000 px de zone, une colonne en dessous.
   /jianpu-deux-volets\.spec\.ts/,
+  // Lot JV, JV-4 : le scan 简谱 du mode louange en deux colonnes de demi-lignes sous « 2 colonnes » (ordinateur, tablette paysage).
+  /louange-jianpu-deux-colonnes\.spec\.ts/,
   // Exemples d'usage, T6 (docs/spec-exemples-usage.md) : feuille d'équipe (champ d'ajout en tête, barre collée) sur les quatre dispositions.
   /equipes-feuille\.spec\.ts/,
   // Lot 1 du rapport d'usage, T5 (docs/spec-retouches-usage.md) : textes coupés, cellule Date, barre de la setlist, sur les quatre dispositions.
