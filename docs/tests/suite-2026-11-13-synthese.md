@@ -51,3 +51,11 @@ Une ligne par chantier : échec, qui avait tort (site ou test), correction, comm
   quotidien du comptage d'usage (`docs/spec-comptage-usage.md`, même cause probable que le point 4). Assertion
   limitée aux écritures `programmes/`. Commit 35320b62. Rejoué : les deux specs, trois appareils, 294 passés,
   6 sautés, 0 échec (6 min 19 s) ; `tsc` et lint sans erreur. À décider : rien.
+- C3 · `section-labels.spec.ts:11, :19, :31` : test (noms de section en casse normale depuis DP-D, `d93adcca`, spec forscore-2) ; attentes en casse normale ; d0c7098f.
+- C3 · `statistiques.spec.ts:433` : test (le lot `documents:commit` est le comptage d'usage, `docs/spec-comptage-usage.md`, pour tout le site) ; exclu comme `notifPrefs/` ; 43747d74.
+- C3 · `retouches-usage-t6.spec.ts:202` : test (« Où l'entendre » vise le premier passage, `?passage=`, spec harmonie § H6) ; attente du lien avec passage ; 0e41b73d.
+- C3 · `chants-deux-volets.spec.ts:495` : site (la page chant, PU-1 `33d6cc32`, relisait les 30 prochaines setlists avec son propre cache) ; `equipeAVenirLue` reprend `prochainesLues` ; 3474c1dd ; `pdf-droits` voisine verte (54/54, 1,6 min).
+- C3 · `chants-fetes-setlist.spec.ts:184` : test (en deux volets, l'en-tête se déplie par le titre, T3 de `docs/spec-exemples-usage.md`) ; dépli comme `jianpu-par-defaut` ; 202e8933.
+- C3 · `rappel-dp.spec.ts:243` : test (tête de feuille JP-B2 : couleur au contour, fond seulement si la section est à l'écran) ; contour comparé ; e67e0aec.
+- C3 · `page-chant-a6.spec.ts:110` : test (Mode Louange en rond à icône seule au téléphone, T2 exemples d'usage) ; bouton vérifié par son nom ; ebc6c8e8.
+- C3 · rejeu unique des sept specs sur les cinq projets : 29 réussis, 4 sautés, 56 s ; `tsc` propre, lint 0 erreur. 1 corrigé site, 6 test, 0 à décider.
