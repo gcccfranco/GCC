@@ -125,8 +125,9 @@ test("la lecture retardée d'une ancienne composition ne retarde pas la page ; l
   expect(Date.now() - debut, "calque d'édition avant la fin du délai").toBeLessThan(DELAI - 1_000);
   expect(retardee, "la lecture de l'ancienne clé a bien été demandée").toBe(true);
 
-  // Puis, hors annotation, le bandeau arrive quand la lecture retardée aboutit.
-  await montrerChrome(page);
+  // Puis, hors annotation, le bandeau arrive quand la lecture retardée aboutit. En Crayon, la barre d'annotation
+  // remplace la barre de titre (AN-3a, docs/spec-mode-louange-forscore-2.md) : pas de « Quitter », on sort par
+  // « Terminé » (basculerAnnoter).
   await basculerAnnoter(page);
   await expect(page.locator("[data-alerte-composition]")).toBeVisible({ timeout: DELAI + 7_000 });
   expect(db.writes.filter((x) => x.path.startsWith("annotations/")), "aucune écriture").toEqual([]);
