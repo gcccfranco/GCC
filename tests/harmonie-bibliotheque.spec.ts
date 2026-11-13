@@ -96,6 +96,44 @@ test("la carte « Avant → après » a un bouton Écouter pour l'avant et pour 
   await expect(rangee.getByRole("button", { name: "Écouter" })).toHaveCount(2);
 });
 
+// Piano enregistré (13/11/2026) : les notes se chargent au premier « Écouter », pas à l'ouverture, et deviennent des
+// sources audio ; sans elles (hors ligne), l'onde triangle prend le relais.
+async function compterSources(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __sources: { piano: number; onde: number } };
+    w.__sources = { piano: 0, onde: 0 };
+    const proto = AudioContext.prototype;
+    const buf = proto.createBufferSource;
+    const osc = proto.createOscillator;
+    proto.createBufferSource = function () { w.__sources.piano++; return buf.call(this); };
+    proto.createOscillator = function () { w.__sources.onde++; return osc.call(this); };
+  });
+}
+const sources = (page: Page) => page.evaluate(() => (window as unknown as { __sources: { piano: number; onde: number } }).__sources);
+
+test("« Écouter » charge les notes de piano au premier appui et joue des sources de piano", async ({ page }) => {
+  await compterSources(page);
+  const notes: string[] = [];
+  page.on("request", (r) => { if (r.url().includes("/audio/piano/")) notes.push(r.url()); });
+  await ouvrirFiche(page);
+  const bouton = page.locator("[data-ecouter-avant-apres]").getByRole("button", { name: "Écouter" }).first();
+  await expect(bouton).toBeVisible();
+  expect(notes).toHaveLength(0);
+  await bouton.click();
+  await expect.poll(async () => (await sources(page)).piano).toBeGreaterThan(0);
+  expect(notes).toHaveLength(12);
+  expect((await sources(page)).onde).toBe(0);
+});
+
+test("« Écouter » sans les notes de piano joue l'onde de repli", async ({ page }) => {
+  await compterSources(page);
+  await page.route(/\/audio\/piano\//, (route) => route.abort());
+  await ouvrirFiche(page);
+  await page.locator("[data-ecouter-avant-apres]").getByRole("button", { name: "Écouter" }).first().click();
+  await expect.poll(async () => (await sources(page)).onde).toBeGreaterThan(0);
+  expect((await sources(page)).piano).toBe(0);
+});
+
 test("« Où l'entendre » : une ligne par chant, le lien mène au premier passage", async ({ page }) => {
   await ouvrirFiche(page);
   const liens = page.locator("[data-ecoutes] a");

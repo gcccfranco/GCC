@@ -534,6 +534,16 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   projets, FR et 中文, fermé, bande, options : `regard`, puis trois regardées ; `critique-design` non lancé (rien de
   propre à la tranche). Relevé hors lot : libellés de « Sur la page » sur deux lignes dès 820 px ; en 中文 au
   téléphone, l'aide sur les paroles suit la rangée et paraît décrire 和声提示.
+- 13/11/2026 : **vrai piano pour « Écouter »** (go de Timothée du 13/11, « oui pour ça » ; session seule, sans
+  agent). Douze notes du **Salamander Grand Piano V3** (Yamaha C5, Alexander Holm, archive.org, **CC-BY 3.0**,
+  mention dans `public/audio/piano/LICENCE.md`), une par tierce mineure de C3 à A5 (tessiture de `voicingPiano`),
+  2,5 s, mono, MP3 64 kbit/s : **246 Ko** en tout. `synthese.ts` les charge au premier « Écouter » et les transpose
+  par `playbackRate` (±1,5 demi-ton au plus) ; une note absente joue l'onde triangle (repli), et un chargement
+  incomplet se retente au prochain appui. `sw.js` inchangé : hors ligne, les notes viennent du cache HTTP du
+  navigateur, sinon le repli. Interface inchangée. Tests : deux ajoutés dans `harmonie-bibliotheque` (chargement au
+  premier appui, 12 requêtes, sources de piano ; repli si `/audio/piano/` est coupé), 10 / 0 (1 min) ; avec
+  `harmonie-ecoute`, `harmonie-porte1`, `harmonie-porte2` 168 / 0, 4 ignorés (4 min). Son **pas jugé à l'oreille** :
+  à écouter par Timothée (niveau 1,5 / nombre de notes, choisi sans écoute).
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
