@@ -870,7 +870,9 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         const largeurCol = Math.max(...d2.fenetres.map((f) => (f.x1 - f.x0) * echelleFenetre(f, d2.echelle, d2.largeurCol)));
         const cols = [d2.fenetres.slice(0, d2.colonne2), d2.fenetres.slice(d2.colonne2)];
         return (
-          <div data-jianpu-volets className="mx-auto grid items-start gap-x-6" style={{ gridTemplateColumns: rail ? `repeat(2, calc(${largeurCol}px + var(--rail-etiquettes)))` : `repeat(2, ${largeurCol}px)` }}>
+          // Avec le rail, chaque colonne a sa marge d'étiquettes à gauche : la grille centrée laisserait plus de blanc
+          // à gauche de l'encre qu'à droite. Un retrait à droite égal au rail (borné par la place libre) rééquilibre.
+          <div data-jianpu-volets className="mx-auto grid items-start gap-x-6" style={rail ? { gridTemplateColumns: `repeat(2, calc(${largeurCol}px + var(--rail-etiquettes)))`, paddingRight: `clamp(0px, calc(100% - ${2 * largeurCol + 24}px - 2 * var(--rail-etiquettes)), var(--rail-etiquettes))` } : { gridTemplateColumns: `repeat(2, ${largeurCol}px)` }}>
             {cols.map((col, c) => (
               <div key={c} data-jianpu-volet={c} className={`flex min-w-0 flex-col items-start${rail ? " " + RAIL_CLS : ""}`}>
                 {col.map((demi, nf) => fenetre(shownPages[0], firstShown, `${shownPages[0].file}-${c}-${nf}`, c === 0 && nf === 0, { ...tranche!, ...demi, premiere: demi.ligne, derniere: demi.ligne }, demi, nf, echelleFenetre(demi, d2.echelle, d2.largeurCol)))}
