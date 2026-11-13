@@ -794,6 +794,7 @@
     "pageSliderValue": "第 {{n}} 页，共 {{total}} 页",
     "pageEtiquette": "第 {{n}} / {{total}} 页",
     "iPlay": "我演奏",
+    "menuSuite": "查看菜单下方内容",
     "tempo": "节拍",
     "toolsMenu": "工具",
     "displayOptions": "显示选项",

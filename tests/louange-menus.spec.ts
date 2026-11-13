@@ -717,3 +717,51 @@ test("finitions : « p. n » des Repères sur la ligne de base du libellé, libe
   const taille = await options.locator('[role=group][aria-labelledby="perf-sur-page"] > button span:last-child').first().evaluate((el) => getComputedStyle(el).fontSize);
   expect(taille).toBe(telephone(page) ? "11px" : "13px");
 });
+
+// Parcours à l'œil du 13/11, constat 1 : Options et Je joue dépassaient en hauteur sans signe qu'ils défilent (un fondu
+// de 2 rem ne se voyait pas). Le menu tient dans l'écran ; tant qu'il reste du contenu dessous, une flèche « Suite »
+// visible est posée sur son bas ; un toucher fait descendre la liste ; en bas, la flèche s'en va et la dernière ligne
+// est entière.
+for (const langue of ["fr", "zh"] as const) {
+  for (const menu of ["options", "jejoue"] as const) {
+    test(`${menu} (${langue}) : tient dans l'écran, défile avec une flèche « Suite » visible (parcours du 13/11, constat 1)`, async ({ page }) => {
+      await ouvrir(page, { langue });
+      const dialogue = await ouvrirMenu(page, menu, langue);
+      await attendreOuverture(page);
+      const ecran = page.viewportSize()!;
+      const b = (await dialogue.boundingBox())!;
+      expect(b.y, "le haut du menu est dans l'écran").toBeGreaterThanOrEqual(0);
+      expect(b.y + b.height, "le bas du menu est dans l'écran").toBeLessThanOrEqual(ecran.height + 0.5);
+      const mesure = () => dialogue.evaluate((d) => {
+        const z = [...d.querySelectorAll<HTMLElement>("div")].find((el) => getComputedStyle(el).overflowY === "auto")!;
+        const r = z.getBoundingClientRect();
+        const dernier = z.firstElementChild!.getBoundingClientRect();
+        return { deborde: z.scrollHeight - z.clientHeight > 2, haut: z.scrollTop, bas: r.bottom, finContenu: dernier.bottom };
+      });
+      const suite = dialogue.locator("[data-menu-suite]");
+      const avant = await mesure();
+      // Le cas du constat (1 280 × 720) et le téléphone : Options y déborde toujours ; plus haut, il peut tenir entier.
+      if (menu === "options" && ecran.height < 800) expect(avant.deborde, "Options déborde : le cas du constat").toBe(true);
+      if (!avant.deborde) {
+        await expect(suite).toHaveCount(0);
+        return;
+      }
+      await expect(suite, "un signe visible qu'il reste du contenu").toBeVisible();
+      const s = (await suite.boundingBox())!;
+      expect(s.y + s.height, "la flèche est dans l'écran").toBeLessThanOrEqual(ecran.height);
+      expect(s.y + s.height, "la flèche est dans le menu").toBeLessThanOrEqual(b.y + b.height);
+      expect(s.width, "assez grande pour le doigt").toBeGreaterThanOrEqual(44);
+      await suite.click();
+      await expect.poll(async () => (await mesure()).haut, { message: "un toucher fait descendre la liste" }).toBeGreaterThan(avant.haut + 20);
+      await expect(page.getByRole("dialog"), "le menu reste ouvert").toHaveCount(1);
+      // Jusqu'en bas : la flèche s'en va, la dernière ligne est entière dans la zone.
+      await dialogue.evaluate((d) => {
+        const z = [...d.querySelectorAll<HTMLElement>("div")].find((el) => getComputedStyle(el).overflowY === "auto")!;
+        z.scrollTop = z.scrollHeight;
+      });
+      await expect(suite).toHaveCount(0);
+      const fin = await mesure();
+      expect(fin.finContenu).toBeLessThanOrEqual(fin.bas + 1);
+    });
+  }
+}

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Popover, PopoverAnchor, PopoverArrow, PopoverContent } from "@/components/ui/popover";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /** Les menus du mode louange (FS-B) : un seul est ouvert à la fois (`popoverOuvert` de PerformanceMode). */
 export type MenuId = "setlist" | "reperes" | "jejoue" | "outils" | "options" | "tempo";
@@ -25,8 +27,11 @@ function useAuMoinsMd(): boolean {
   return md;
 }
 
-/** Zone qui défile dans la hauteur disponible ; un fondu léger en bas tant qu'il reste du contenu dessous. */
+/** Zone qui défile dans la hauteur disponible ; un fondu léger en bas tant qu'il reste du contenu dessous, et une
+ *  flèche « Suite » posée sur ce bas (parcours du 13/11, constat 1 : le fondu seul ne se voyait pas) : un toucher
+ *  descend d'une hauteur de zone moins une ligne. Elle disparaît en bas de la liste. */
 function ZoneDefilante({ className, children }: { className?: string; children: ReactNode }) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const [fondu, setFondu] = useState(false);
   const maj = useCallback(() => {
@@ -44,13 +49,31 @@ function ZoneDefilante({ className, children }: { className?: string; children: 
   }, [maj]);
   const masque = "linear-gradient(to bottom, black calc(100% - 2rem), transparent)";
   return (
-    <div
-      ref={ref}
-      onScroll={maj}
-      className={className}
-      style={fondu ? { maskImage: masque, WebkitMaskImage: masque } : undefined}
-    >
-      <div>{children}</div>
+    <div className="relative">
+      <div
+        ref={ref}
+        onScroll={maj}
+        className={className}
+        style={fondu ? { maskImage: masque, WebkitMaskImage: masque } : undefined}
+      >
+        <div>{children}</div>
+      </div>
+      {fondu && (
+        <button
+          type="button"
+          tabIndex={-1}
+          data-menu-suite
+          aria-label={t("performance.menuSuite")}
+          title={t("performance.menuSuite")}
+          onClick={() => {
+            const el = ref.current;
+            if (el) el.scrollBy({ top: Math.max(40, el.clientHeight - 48), behavior: "smooth" });
+          }}
+          className="absolute bottom-2 left-1/2 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-md dark:bg-[hsl(var(--raised))]"
+        >
+          <ChevronDown className="h-5 w-5" aria-hidden />
+        </button>
+      )}
     </div>
   );
 }

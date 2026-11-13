@@ -42,6 +42,11 @@ icônes sont sous le bord sans signe qu'il défile ; « Partition 简谱 » et �
 coupe en deux lignes ; un paragraphe d'aide de cinq lignes est au milieu des boutons.
 Spec : le contenu est voulu (`docs/spec-entree-musiciens.md` l. 101 en dresse la liste), la hauteur et le recouvrement
 non. ![](parcours-oeil-2026-11-13/louange-options-ordi.webp)
+Corrigé le 13/11 (minimum demandé) : Options et Je joue tiennent dans l'écran (déjà vrai : popover borné à la hauteur
+disponible, feuille du bas à 85 %) et, tant qu'il reste du contenu dessous, une flèche ronde « Suite » (44 px) se pose
+sur le bas du menu ; un toucher descend d'un écran de menu, elle s'en va en bas de la liste. Le contenu des menus et le
+recouvrement de la partition restent à la planche des réglages (constats 2 et 3). Test : `tests/louange-menus.spec.ts`,
+« constat 1 » (commit « constat 1 »).
 
 **2. Mode louange, menu Je joue : la « Disposition » est coupée.** tabL, ordi, tel. Les vignettes de disposition
 sortent par le bas ; le menu mêle « ce que je joue » (rôle), l'ordre des sections et la disposition de la page.
@@ -55,7 +60,7 @@ Spec : non prévu (`docs/spec-mode-louange-forscore-2.md` replie une rangée d'a
 Corrigé le 13/11 : accords non montrés (Choriste, Présidence, « Accords » éteint), une section sans paroles, note,
 nuance ni modulation n'est plus affichée au mode louange (ni rendue ni comptée en hauteur) ; le pianiste la garde.
 Décision déléguée écrite dans `docs/spec-entree-musiciens.md`. Test : `tests/louange-role-regle.spec.ts`, « pas de cadre
-vide » (commit qui porte cette ligne, « constat 4 »).
+vide » (72c01574).
 
 **4. Mode louange : changer de chant sans savoir où on va.** Toutes dispositions. Le bas de l'écran n'a que des points
 (treize pour cinq chants à l'ordinateur), groupés par chant mais sans numéro ni titre ; aucune capture ne montre le titre du

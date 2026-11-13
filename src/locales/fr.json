@@ -799,6 +799,7 @@
     "pageSliderValue": "Page {{n}} sur {{total}}",
     "pageEtiquette": "page {{n}} / {{total}}",
     "iPlay": "Je joue",
+    "menuSuite": "Voir la suite du menu",
     "tempo": "Tempo",
     "toolsMenu": "Outils",
     "displayOptions": "Options d'affichage",
