@@ -209,7 +209,8 @@ test.describe("musiciens-5 : « Où l'entendre » ouvre le chant", () => {
     const bloc = page.locator("[data-ou-l-entendre]").filter({ visible: true });
     await expect(bloc).toBeVisible();
     const lien = bloc.getByRole("link", { name: "Hosanna", exact: true });
-    await expect(lien).toHaveAttribute("href", /\/songs\/hosanna\/?$/);
+    // Le lien vise le premier passage du chant (`?passage=`, docs/spec-harmonie-accords.md § H6).
+    await expect(lien).toHaveAttribute("href", /\/songs\/hosanna\/?\?passage=(%22|")[\w-]+(%22|")$/);
     await lien.click();
     await expect(page).toHaveURL(/\/songs\/hosanna\/?(\?.*)?$/);
   });
