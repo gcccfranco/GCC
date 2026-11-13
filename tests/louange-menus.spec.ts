@@ -306,7 +306,7 @@ test("Tempo : − / +, « Tempo du fichier », métronome visuel (bouton rond on
   await expect(metronome).toHaveAttribute("aria-pressed", "false");
   await metronome.click();
   await expect(metronome).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("[data-liseret]")).toHaveCount(1);
+  await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
 });
 
 test("Métronome visuel : un bouton rond allumé / éteint dans Options aussi (plus de segmenté Activé / Désactivé)", async ({ page }) => {
@@ -318,7 +318,7 @@ test("Métronome visuel : un bouton rond allumé / éteint dans Options aussi (p
   await expect(metronome).toHaveAttribute("aria-pressed", "false");
   await metronome.click();
   await expect(metronome).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("[data-liseret]")).toHaveCount(1);
+  await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
 });
 
 test("Options : bouton rond Accords (aria-pressed) bascule les accords ; ronds d'au moins 44 px", async ({ page }) => {

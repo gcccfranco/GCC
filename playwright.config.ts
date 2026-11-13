@@ -192,6 +192,8 @@ const SPECS_GRAND_ECRAN = [
   /barre-chant\.spec\.ts/,
   // Tranche B4b de docs/spec-corrections-audit.md : la règle de largeur (colonne de 960 px, pleine largeur des grilles).
   /largeurs-b4\.spec\.ts/,
+  // Métronome MT-1 (docs/spec-metronome.md) : la bande des temps, sur les quatre dispositions et 1 440 px.
+  /metronome-bande\.spec\.ts/,
 ];
 
 // Lot AO : les tests sans page importent src/lib/access.ts, dont le mode par défaut suit

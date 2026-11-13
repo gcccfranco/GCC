@@ -58,7 +58,9 @@ import { getTransposedKey, noteToIndex } from "@/lib/transpose";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui, classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
-import { LiseretTempo } from "@/components/performance/LiseretTempo";
+import { BandeTemps } from "@/components/performance/BandeTemps";
+import { accentsParDefaut, parseMesure } from "@/lib/performance/metronome";
+import { TEMPO_DEPART } from "@/lib/performance/tempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { ROLE_IDS, getRole, roleDemande, setRole, type RolePreset } from "@/lib/performance/roleCompte";
 import { barreDejaVue, marquerBarreVue } from "@/lib/performance/barreVue";
@@ -602,6 +604,8 @@ export function PerformanceMode({
   // relu du stockage à chaque rendu (`tempoTick` relance le rendu après une écriture).
   const [metronome, setMetronomeState] = useState(() => getMetronomePref());
   const setMetronome = (v: boolean) => { compter("cmd.louange.metronome"); setMetronomeState(v); setMetronomePref(v); };
+  const [metroMarche, setMetroMarche] = useState(false);
+  const bandeH = metronome ? 36 : 0; // la bande des temps (MT-1) : la page descend de cette hauteur
 
   // ── Thème scène (indépendant du thème du site, mémorisé) ──
   const { stageTheme, setTheme } = useThemeScene();
@@ -1031,7 +1035,7 @@ export function PerformanceMode({
       const insetG = mcs ? Math.max(0, (parseFloat(mcs.paddingLeft) || 0) - 1.5 * rem) : 0;
       const insetD = mcs ? Math.max(0, (parseFloat(mcs.paddingRight) || 0) - 1.5 * rem) : 0;
       const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, window.innerWidth / fontScale - 8 - insetG - insetD);
-      const hauteurScan = window.innerHeight / fontScale - 4 - (barres.haut + barres.bas) / fontScale;
+      const hauteurScan = window.innerHeight / fontScale - 4 - (barres.haut + barres.bas) / fontScale - bandeH / fontScale;
       const telephonePortrait = ecran.largeur < 768 && ecran.hauteur > ecran.largeur;
       const tranchesDe = (i: number) => {
         const b = blocks[i];
@@ -1115,7 +1119,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, bandeOuverte, ideesVues, jianpuLabelH]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, bandeOuverte, ideesVues, jianpuLabelH, metronome]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -1837,6 +1841,8 @@ export function PerformanceMode({
   // Métronome visuel : tempo réglé sur l'appareil pour ce chant, sinon celui du fichier.
   const tempoChantId = currentEntry?.block.songSlug;
   const { tempoAppareil, tempoLiseret, changerTempo, effacerTempo } = useTempoChant(tempoChantId, currentSong?.tempo);
+  useEffect(() => setMetroMarche(false), [tempoChantId]); // arrêt au changement de chant
+  const mesureBande = parseMesure(currentSong?.time);
 
   // Progression dans le chant courant + chant suivant
   const songStartPage = currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : -1;
@@ -1904,7 +1910,7 @@ export function PerformanceMode({
     "--marge-bande-d": twoColumns ? "0px" : `calc(1.5rem + var(--sar, 0px) / ${fontScale})`,
     // Partition : les repères se suspendent dans la marge HORS encoche (l'air se compte depuis le bord de la zone sûre).
     "--marge-rep": twoColumns ? "0px" : "1.5rem",
-    paddingTop: `calc(1rem + var(--sat, 0px) / ${fontScale})`,
+    paddingTop: `calc(1rem + var(--sat, 0px) / ${fontScale} + ${bandeH / fontScale}px)`,
     paddingBottom: `calc(1rem + var(--sab, 0px) / ${fontScale})`,
     paddingLeft: `calc(1.5rem + var(--sal, 0px) / ${fontScale})`,
     paddingRight: `calc(1.5rem + var(--sar, 0px) / ${fontScale})`,
@@ -1937,7 +1943,7 @@ export function PerformanceMode({
   const renderPadding: React.CSSProperties = fitPage
     ? {
         // Page de scan certifié : la tête de feuille occupe la place de la barre du haut, le scan commence dessous.
-        paddingTop: trancheCourante ? 0 : barres.haut ? `calc(0.25rem + ${barres.haut / fontScale}px)` : `calc(0.25rem + var(--sat, 0px) / ${fontScale})`,
+        paddingTop: trancheCourante ? 0 : barres.haut ? `calc(0.25rem + ${barres.haut / fontScale}px + ${bandeH / fontScale}px)` : `calc(0.25rem + var(--sat, 0px) / ${fontScale} + ${bandeH / fontScale}px)`,
         paddingBottom: barres.bas ? `calc(0.25rem + ${barres.bas / fontScale}px)` : `calc(0.25rem + var(--sab, 0px) / ${fontScale})`,
         paddingLeft: `calc(0.25rem + var(--sal, 0px) / ${fontScale})`,
         paddingRight: `calc(0.25rem + var(--sar, 0px) / ${fontScale})`,
@@ -2186,7 +2192,8 @@ export function PerformanceMode({
           };
           // Tête de feuille d'un scan certifié : hauteur exacte de la barre de titre, repères des sections de la tranche allumés.
           const teteFeuille = (b: PerformanceBlock | undefined, tr: Tranche) => ({
-            hauteur: barres.haut ? `${barres.haut / fontScale}px` : `calc(var(--sat, 0px) / ${fontScale})`,
+            // La bande des temps (MT-1) se pose sur les derniers px de la tête : le scan commence dessous.
+            hauteur: barres.haut ? `${(barres.haut + bandeH) / fontScale}px` : `calc(var(--sat, 0px) / ${fontScale} + ${bandeH / fontScale}px)`,
             encoche: `calc(var(--sat, 0px) / ${fontScale})`,
             allumes: b?.kind === "jianpu-sheet" ? sectionsDeTranche(jianpuSections?.[b.songSlug]?.sections ?? [], b.pageIndex + 1, tr) : new Set<string>(),
           });
@@ -2489,7 +2496,18 @@ export function PerformanceMode({
       </div>
 
       {/* ── Métronome visuel : liseré silencieux, sous le chrome ── */}
-      {metronome && tempoLiseret ? <LiseretTempo tempo={tempoLiseret} top={showChrome ? `${barres.haut}px` : "var(--sat, 0px)"} /> : null}
+      {metronome ? (
+        <BandeTemps
+          tempo={tempoLiseret ?? TEMPO_DEPART}
+          mesure={mesureBande}
+          accents={accentsParDefaut(mesureBande)}
+          marche={metroMarche}
+          onMarche={() => setMetroMarche((m) => !m)}
+          onOuvrir={() => basculerMenu(telephone ? "outils" : "tempo")}
+          top={showChrome || trancheCourante ? `${barres.haut}px` : "var(--sat, 0px)"}
+          telephone={telephone}
+        />
+      ) : null}
 
       {/* ── Chrome (auto-hide overlay) ── */}
       <div
@@ -2550,6 +2568,10 @@ export function PerformanceMode({
           onMenu={basculerMenu}
           onJeJoue={() => basculerMenu("jejoue")}
           onQuitter={onClose}
+          bande={metronome}
+          tempoRegle={tempoLiseret}
+          marche={metroMarche}
+          onMarche={() => setMetroMarche((m) => !m)}
         />
         )}
 

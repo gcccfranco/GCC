@@ -263,6 +263,21 @@ touchent l'agencement s'ajoutent à `SPECS_GRAND_ECRAN` (cinq projets). Tests su
 
 ## Avancement
 
+- 13/11/2026, soir : **MT-1 faite** (bande des temps, sans son). `metronome.ts` (mesure, accents par défaut, horloge :
+  tempo au temps suivant, mesure à la mesure suivante), `BandeTemps.tsx` à la place du liseré, `{time}` porté jusqu'au
+  mode louange, ▶ / ■ dans la barre (grand écran) et au bout de la bande (téléphone), arrêt au changement de chant, page
+  descendue de 36 px (scan compris). Q2 relue sur les scans : 为我而来 et 活出爱 portent bien « ♩. = 74 / 63 » ; 十字架
+  n'a pas de tempo. **Décisions déléguées (session MT-1, 13/11)** : un chant sans tempo affiche la bande à ♩ 72 (départ
+  de § Réglages) ; la pastille ♩ de la barre montre le tempo joué (réglage de l'appareil, sinon le fichier), le même que
+  la bande ; toucher la bande ouvre la feuille Tempo (Outils au téléphone) jusqu'au panneau de MT-2. Retouches après
+  `critique-design` : 12/8 au téléphone resserré (le « 10 » tenait mal), ♩ du bouton à la taille de la barre, chiffres au
+  repos à 65 % en clair (≥ 4,5:1), chiffre clair gardé 40 % du fondu. **Reste pour MT-2** : critère du temps muet tramé
+  (accents pas réglables avant MT-2 ; CSS écrit), largeur de la bande calée sur la musique à 1 440 px (aujourd'hui la
+  zone de 1 440 px), chiffres un peu plus grands en grand écran, temps fort qui peut se lire comme un onglet choisi ;
+  fondu de 150 ms de la bande en mouvement réduit non fait (elle ne glisse pas). Le liseré coupé en haut du scan de
+  活出爱 existait avant la bande. Tests : `metronome-bande`, `mode-louange-forscore`, `louange-menus` (+ `coherence`),
+  trois appareils et cinq projets pour la bande : verts (deux courses relancées seules, vertes) ; ≈ 40 min en deux passes.
+
 - 13/11/2026, 17 h 55 UTC : **go de Timothée, « go pour A »** (question 1). Questions 2 à 5 : **décision déléguée
   (session de cadrage, 13/11)**, prises selon la recommandation de cette spec, parce qu'elle est motivée et facile à
   défaire : noire pointée en 6/8 et 12/8 ; bouton « ♩ 72 ▶ » au bout de la bande au téléphone ; la bande bat

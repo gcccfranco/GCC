@@ -2,8 +2,9 @@
 
 import type { ComponentType, ReactNode, RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Bookmark, Drum, Guitar, ListMusic, Mic, MicVocal, Music, Pencil, Piano, Type, Wrench, X } from "lucide-react";
+import { Bookmark, Drum, Guitar, ListMusic, Mic, MicVocal, Music, Pencil, Piano, Play, Square, Type, Wrench, X } from "lucide-react";
 import type { JianpuSheetBlock, SectionBlock } from "@/lib/performance/blocks";
+import { TEMPO_DEPART } from "@/lib/performance/tempo";
 import type { MenuId } from "./MenuLouange";
 
 export const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> = {
@@ -36,6 +37,10 @@ export function BarreHaut({
   onMenu,
   onJeJoue,
   onQuitter,
+  bande,
+  marche,
+  onMarche,
+  tempoRegle,
 }: {
   barreRef: RefObject<HTMLDivElement | null>;
   showChrome: boolean;
@@ -51,10 +56,16 @@ export function BarreHaut({
   onMenu: (id: MenuId) => void;
   onJeJoue: () => void;
   onQuitter: () => void;
+  /** La bande des temps est allumée (métronome actif) : ♩ s'affiche même sans tempo, avec ▶ / ■ (grand écran). */
+  bande: boolean;
+  marche: boolean;
+  onMarche: () => void;
+  /** Tempo joué (réglage de l'appareil, sinon le fichier) : le même que la bande. */
+  tempoRegle?: number;
 }) {
   const { t } = useTranslation();
   const IconeRole = (rolePreset && ICONES_ROLE[rolePreset]) || Music;
-  const tempo = currentSong?.tempo;
+  const tempo = tempoRegle ?? currentSong?.tempo ?? (bande ? TEMPO_DEPART : undefined);
   return (
     <div
       ref={barreRef}
@@ -113,6 +124,11 @@ export function BarreHaut({
             </span>
           </BtnBarre>
         ) : null}
+        {bande && (
+          <BtnBarre label={t(marche ? "performance.metronomeArreter" : "performance.metronomeLancer")} active={marche} onClick={onMarche} cacheTel bascule={marche}>
+            {marche ? <Square className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}
+          </BtnBarre>
+        )}
         {onAnnoter && (
           <BtnBarre label={t("performance.crayon")} active={annotateMode} onClick={onAnnoter} cacheTel>
             <Pencil className="h-5 w-5" />
@@ -141,6 +157,7 @@ function BtnBarre({
   menuOuvert,
   texte = false,
   cacheTel = false,
+  bascule,
   onClick,
   children,
 }: {
@@ -151,6 +168,8 @@ function BtnBarre({
   menuOuvert?: MenuId | null;
   texte?: boolean;
   cacheTel?: boolean;
+  /** Bouton ▶ / ■ du métronome : `aria-pressed` = cette valeur, repéré par `data-metronome-marche`. */
+  bascule?: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
@@ -162,6 +181,8 @@ function BtnBarre({
       aria-label={label}
       title={label}
       data-menu-declencheur={menu}
+      data-metronome-marche={bascule === undefined ? undefined : ""}
+      aria-pressed={bascule}
       aria-haspopup={menu ? "dialog" : undefined}
       aria-expanded={menu ? ouvert : undefined}
       className={`${cacheTel ? "hidden md:flex" : "flex"} h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg px-2.5 text-[color:var(--couleur-icones)] transition-colors active:bg-muted ${

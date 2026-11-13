@@ -336,7 +336,7 @@ test("L3 colonne scan 简谱 (paysage grand écran seulement) : « Ensuite » de
   expect(erreurs).toEqual([]);
 });
 
-// Lot L4 : tempo sur toutes les pages, métronome visuel (liseré silencieux).
+// Lot L4 : tempo sur toutes les pages, métronome visuel (bande des temps).
 
 async function ouvrirChantL4(
   page: Page,
@@ -354,14 +354,9 @@ async function ouvrirChantL4(
   await attendreMiseEnPage(page);
 }
 
-const largeurs = async (page: Page) => {
-  const vus: number[] = [];
-  for (let i = 0; i < 8; i++) {
-    vus.push(await page.locator("[data-liseret-barre]").evaluate((el) => el.getBoundingClientRect().width));
-    await page.waitForTimeout(250);
-  }
-  return vus;
-};
+/** Bouton ▶ / ■ du métronome : celui de la barre (grand écran) ou celui de la bande (téléphone). */
+const marcheBtn = (page: Page) => page.locator("[data-metronome-marche]:visible").first();
+const tempsActif = (page: Page) => page.locator("[data-bande-temps] [data-actif]").getAttribute("data-temps");
 
 test("un chant avec {tempo} affiche ♩ N dans la barre, sur une page texte", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
@@ -371,40 +366,50 @@ test("un chant avec {tempo} affiche ♩ N dans la barre, sur une page texte", as
   expect(erreurs).toEqual([]);
 });
 
-test("un chant sans tempo n'affiche ni ♩ ni liseré, même métronome actif", async ({ page }) => {
+test("un chant sans tempo, métronome actif : la bande est à ♩ 72", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirChantL4(page, "abba-pere", { metronome: true });
-  await expect(page.locator("[data-tempo-barre]")).toHaveCount(0);
-  await expect(page.locator("[data-performance-mode] .material-chrome").first()).not.toContainText("♩");
-  await expect(page.locator("[data-liseret]")).toHaveCount(0);
+  await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
+  await expect(page.locator("[data-tempo-barre]")).toHaveText(/♩\s*72/);
   expect(erreurs).toEqual([]);
 });
 
-test("métronome inactif par défaut : pas de liseré, même avec un tempo", async ({ page }) => {
+test("métronome inactif par défaut : pas de bande, même avec un tempo", async ({ page }) => {
   await ouvrirChantL4(page, "avec-nous");
   await expect(page.locator("[data-tempo-barre]")).toHaveCount(1);
-  await expect(page.locator("[data-liseret]")).toHaveCount(0);
+  await expect(page.locator("[data-bande-temps]")).toHaveCount(0);
 });
 
-test("métronome actif : le liseré se remplit au fil des pulsations", async ({ page }) => {
+test("métronome actif : la bande (36 px) est là et la pastille allumée change au fil des temps après Marche", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirChantL4(page, "avec-nous", { metronome: true });
-  const liseret = page.locator("[data-liseret]");
-  await expect(liseret).toHaveCount(1);
-  await expect(liseret).toHaveAttribute("aria-hidden", "true");
-  await expect(liseret).toHaveCSS("pointer-events", "none");
-  await expect(liseret).toHaveCSS("height", "3px");
-  const vus = await largeurs(page);
-  expect(new Set(vus.map((w) => Math.round(w))).size).toBeGreaterThanOrEqual(2);
+  const bande = page.locator("[data-bande-temps]");
+  await expect(bande).toHaveCount(1);
+  await expect(bande).toHaveCSS("height", "36px");
+  await expect(bande.locator("[data-actif]")).toHaveCount(0);
+  await marcheBtn(page).click();
+  await expect(marcheBtn(page)).toHaveAttribute("aria-pressed", "true");
+  await expect(bande.locator("[data-actif]")).toHaveCount(1);
+  const vus = new Set<string | null>();
+  for (let i = 0; i < 8; i++) {
+    vus.add(await tempsActif(page).catch(() => null));
+    await page.waitForTimeout(200);
+  }
+  expect(vus.size).toBeGreaterThanOrEqual(2);
   expect(erreurs).toEqual([]);
 });
 
-test("mouvement réduit : le liseré ne bouge pas", async ({ page }) => {
+test("mouvement réduit : pas de transition sur les pastilles, le temps avance", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await ouvrirChantL4(page, "avec-nous", { metronome: true });
-  await expect(page.locator("[data-liseret]")).toHaveCount(1);
-  const vus = await largeurs(page);
-  expect(new Set(vus.map((w) => Math.round(w))).size).toBe(1);
+  await expect(page.locator("[data-bande-temps] [data-temps]").first()).toHaveCSS("animation-name", "none");
+  await marcheBtn(page).click();
+  const vus = new Set<string | null>();
+  for (let i = 0; i < 8; i++) {
+    vus.add(await tempsActif(page).catch(() => null));
+    await page.waitForTimeout(200);
+  }
+  expect(vus.size).toBeGreaterThanOrEqual(2);
 });
 
 /** Le menu du tempo : « Tempo » (♩ de la barre) à partir de md ; au téléphone, ses lignes sont dans Outils. */
@@ -884,14 +889,15 @@ test("forScore, L7 : glisser le curseur montre le titre du chant visé en bulle"
 test("forScore, clavier : Réglages ouverts, Espace et flèche droite ne tournent pas la page", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrir(page, { chants: 4 });
-  const avant = await lirePage(page);
+  const avant = await numero(page);
   const reglages = await ouvrirReglages(page);
   await reglages.locator("[data-metronome]").focus();
   await page.keyboard.press("Space");
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("PageDown");
   await page.waitForTimeout(300);
-  expect(await lirePage(page)).toBe(avant);
+  // Espace bascule le métronome : la bande fait descendre la page, le total de pages change ; le numéro, non.
+  expect(await numero(page)).toBe(avant);
   // Échap referme la feuille, puis les flèches tournent de nouveau la page.
   await page.keyboard.press("Escape");
   await expect(reglages).toBeHidden();
@@ -1069,12 +1075,12 @@ test("barre masquée à l'ouverture : la pastille « Ensuite » est dans le flux
   expect(erreurs).toEqual([]);
 });
 
-test("barre masquée à l'ouverture : le liseré du métronome se pose sous la zone de sécurité, sous la barre une fois ouverte", async ({ page }) => {
+test("barre masquée à l'ouverture : la bande du métronome se pose sous la zone de sécurité, sous la barre une fois ouverte", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirChantL4(page, "avec-nous", { metronome: true });
   await rouvrirApresRechargement(page);
   await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
-  const liseret = page.locator("[data-liseret]");
+  const liseret = page.locator("[data-bande-temps]");
   await expect(liseret).toHaveCount(1);
   const haute = (await page.locator(BARRES).first().boundingBox())!;
   await expect.poll(async () => (await liseret.boundingBox())!.y).toBeLessThan(haute.y + haute.height - 1);
@@ -1178,9 +1184,9 @@ test("forScore, L5 : barre ouverte, la bannière « autre taille » reste toucha
   expect(erreurs).toEqual([]);
 });
 
-test("forScore, L4 : barre ouverte, le liseré du métronome est visible sous la barre haute", async ({ page }) => {
+test("forScore, L4 : barre ouverte, la bande du métronome est visible sous la barre haute", async ({ page }) => {
   await ouvrirChantL4(page, "avec-nous", { metronome: true });
-  const liseret = page.locator("[data-liseret]");
+  const liseret = page.locator("[data-bande-temps]");
   await expect(liseret).toHaveCount(1);
   await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
   const haute = (await page.locator(BARRES).first().boundingBox())!;
@@ -1216,7 +1222,7 @@ test("forScore : un toucher sur le fond sombre d'une feuille ne tourne pas la pa
 
 test.describe("tempo du fichier aberrant", () => {
   test.use({ serviceWorkers: "block" });
-  test("{tempo: 600} est ramené aux bornes : le liseré bat à 240, pas à 10 Hz", async ({ page }) => {
+  test("{tempo: 600} est ramené aux bornes : la bande bat à 240, pas à 10 Hz", async ({ page }) => {
     const erreurs = surveillerErreurs(page);
     await page.route("**/api/song/avec-nous", async (route) => {
       const rep = await route.fetch();
@@ -1224,10 +1230,10 @@ test.describe("tempo du fichier aberrant", () => {
       await route.fulfill({ response: rep, body: corps });
     });
     await ouvrirChantL4(page, "avec-nous", { metronome: true });
-    await expect(page.locator("[data-liseret]")).toHaveCount(1);
+    await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
     await expect.poll(() =>
-      page.locator("[data-liseret-barre]").evaluate((el) => (el as HTMLElement).style.getPropertyValue("--battement")),
-    ).toBe("0.25s");
+      page.locator("[data-bande-temps]").evaluate((el) => (el as HTMLElement).style.getPropertyValue("--duree-temps")),
+    ).toBe("250ms");
     expect(erreurs).toEqual([]);
   });
 });

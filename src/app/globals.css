@@ -903,15 +903,52 @@
    au lieu de glisser depuis le bas. `!important` : le glissé est posé par la feuille de style de
    vaul, et la règle générale du mouvement réduit ramène toute animation à 0,01 ms (ce sélecteur,
    plus précis, garde sa durée). */
-/* Liseré du métronome visuel (mode louange, L4) : se remplit en une pulsation (`--battement`).
-   Mouvement réduit : plus d'animation, la bande reste pleine, à opacité réduite. */
-@keyframes liseret-battement { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.liseret-tempo-barre {
-  transform-origin: left;
-  animation: liseret-battement var(--battement, 1s) linear infinite;
+/* Bande des temps du métronome (lot MT, MT-1) : 36 px sous la barre, une pastille par temps ; accents par la forme
+   au repos, le temps en cours s'allume d'un coup (`--plein`) et revient au repos sur 60 % du temps (`--duree-temps`).
+   Aucune teinte. Mouvement réduit : ni transition ni animation, le temps en cours reste allumé. */
+[data-bande-temps] {
+  --plein: hsl(var(--foreground));
+  --repos: color-mix(in srgb, hsl(var(--foreground)) 60%, transparent);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
+[data-bande-temps] { --repos: color-mix(in srgb, hsl(var(--foreground)) 65%, transparent); } /* clair : chiffres ≥ 4,5:1 */
+.dark [data-bande-temps] { --plein: color-mix(in srgb, hsl(var(--foreground)) 85%, transparent); --repos: color-mix(in srgb, hsl(var(--foreground)) 60%, transparent); }
+[data-bande-interieur] {
+  position: relative; display: flex; align-items: center; height: 100%; max-width: 1440px; margin-inline: auto;
+  padding-left: calc(1.5rem + env(safe-area-inset-left)); padding-right: calc(1.5rem + env(safe-area-inset-right));
+}
+[data-bande-ouvrir] { position: absolute; inset: 0; background: none; border: 0; }
+[data-bande-pastilles] { position: relative; flex: 1; display: flex; justify-content: center; gap: 16px; pointer-events: none; }
+[data-bande-groupe] { display: flex; flex-basis: 0; justify-content: center; align-items: center; gap: 6px; }
+[data-bande-groupe] > [data-temps] {
+  position: relative; flex: 1; max-width: 160px; display: flex; align-items: center; justify-content: center;
+  box-sizing: border-box; border: 1.5px solid var(--repos); border-radius: 9999px; height: 20px;
+  color: var(--repos); font-size: 12px; line-height: 1;
+}
+[data-bande-groupe] > [data-accent="fort"] { height: 28px; border-width: 2.5px; font-weight: 700; font-size: 14px; }
+[data-bande-groupe] > [data-accent="moyen"] { height: 24px; border-width: 2px; }
+[data-bande-groupe] > [data-accent="muet"] { border-style: dashed; }
+[data-bande-groupe] > [data-compact] { max-height: 24px; font-size: 11px; letter-spacing: -0.04em; border-width: 1.5px; }
+[data-bande-groupe]:has(> [data-compact]) { gap: 3px; }
+[data-bande-groupe] > [data-actif] { animation: bande-battement calc(var(--duree-temps) * 0.6) ease-out; }
+[data-bande-groupe] > [data-actif][data-accent="muet"] { border-style: solid; border-color: var(--plein); animation: none; color: var(--repos); }
+[data-bande-groupe] > [data-actif][data-accent="muet"]::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0;
+  background: repeating-linear-gradient(45deg, var(--plein) 0 2px, transparent 2px 6px);
+  animation: bande-trame calc(var(--duree-temps) * 0.6) ease-out;
+}
+@keyframes bande-battement { from { background: var(--plein); border-color: var(--plein); color: hsl(var(--background)); } 40% { color: hsl(var(--background)); } }
+@keyframes bande-trame { from { opacity: 1; } }
+[data-bande-interieur] > [data-metronome-marche] {
+  position: relative; flex: none; min-width: 44px; height: 36px; display: flex; align-items: center; justify-content: center; gap: 4px;
+  margin-left: 8px; background: none; border: 0; font-size: 13px; font-weight: 600; color: hsl(var(--foreground));
+}
+[data-bande-interieur] > [data-metronome-marche]::after { content: ""; position: absolute; inset: -4px 0; }
 @media (prefers-reduced-motion: reduce) {
-  .liseret-tempo-barre { animation: none !important; transform: none; opacity: 0.35; }
+  [data-bande-groupe] > [data-temps] { transition: none !important; animation: none !important; } /* !important : bat la règle globale à 0.01ms */
+  [data-bande-groupe] > [data-actif]:not([data-accent="muet"]) { background: var(--plein); border-color: var(--plein); color: hsl(var(--background)); }
+  [data-bande-groupe] > [data-actif][data-accent="muet"]::before { animation: none !important; opacity: 1; }
 }
 @keyframes volet-fondu { from { opacity: 0; } }
 @keyframes volet-fondu-sortie { to { opacity: 0; } }
