@@ -16,27 +16,30 @@
 // morceaux où il veut (`children`). Le Back-Office (P8) pose aussi « ⋯ » et « Déplacer » dans son
 // tableau de toutes les réservations : la même feuille, le même menu.
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import { ArrowLeftRight, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react"
+import { ArrowLeftRight, ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react"
 import type { User } from "firebase/auth"
 import { canEditCreneau, canReserverPour, isCoordination } from "@/lib/access"
 import { createCreneau, deleteCreneau, listCreneaux, updateCreneau } from "@/lib/firebase/programmes"
 import { overlaps, todayIso } from "@/lib/scene/dimanches"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import {
   commence, creneauxLibres, heureLocale, lignesDuJour, quiPermis, saisonDe, semainesDe, type Place, type Semaine,
 } from "@/lib/scene/saison"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { styleTexteService } from "@/lib/couleurSombre"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 import type { Creneau, Programme } from "@/types/programme"
 import type { UserProfile } from "@/types/user"
 import { Button } from "@/components/ui/button"
 import { MenuActions, type ActionDuMenu } from "@/components/layout/MenuActions"
-import { BadgeHorsGrille } from "./Apercu"
+import { BadgeHorsGrille, Fleche, TuileDate } from "./pieces"
 import { CreneauForm, type CreneauValues } from "./CreneauForm"
 import { LigneJour } from "./LigneJour"
-import { bornesSemaine, jourCourt, jourEnLettres, joursCourts, semaineCourte, titreDuJour, tuileDate } from "./libelles"
+import { bornesSemaine, jourCourt, jourEnLettres, joursCourts, semaineCourte, titreDuJour } from "./libelles"
 import { libelleQui } from "@/lib/fetes/qui"
 
 const COLOR = PLANNING_COLORS.scene
@@ -123,7 +126,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   const [erreurRetrait, setErreurRetrait] = useState("")
 
   const conflicts = new Set(creneaux.filter((c) => creneaux.some((o) => o.id !== c.id && overlaps(c, o))).map((c) => c.id))
-  const quiDe = (c: Creneau) => c.qui.map((q) => libelleQui(q, lang === "zh-CN" ? "zh" : "fr")).join(", ")
+  const quiDe = (c: Creneau) => c.qui.map((q) => libelleQui(q, langueCourte(lang))).join(", ")
   const slotLabel = (c: Creneau) => `${c.debut} – ${c.fin} · ${c.quoi} · ${quiDe(c)} (${c.auteurNom})`
   const auteurNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
   // Q4 : la coordination n'est pas limitée ; un membre choisit parmi les groupes permis.
@@ -229,11 +232,11 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     choisir(lundiDe(c.dimanche))
   }
 
-  const places = (libres: number, cases: number) => (cases === 0 ? null : libres ? t("planning.semaines.placesLibres", { count: libres }) : t("planning.semaines.complet"))
+  const places = (libres: number, cases: number, court = false) => (cases === 0 ? null : libres ? t(court ? "planning.semaines.libresCourt" : "planning.semaines.placesLibres", { count: libres }) : t("planning.semaines.complet"))
   const mesResas = creneaux
     .filter((c) => c.auteurUid === user.uid && (c.dimanche > today || (c.dimanche === today && c.fin > maintenant)))
     .sort((a, b) => (a.dimanche + a.debut).localeCompare(b.dimanche + b.debut))
-  const titreSection = deuxVolets ? "px-1 text-[13px] font-semibold text-muted-foreground" : "text-[17px] font-bold text-foreground"
+  const titreSection = deuxVolets ? "px-1 text-sm font-semibold text-muted-foreground" : "text-lg font-bold text-foreground"
 
   // ─── Mes réservations (Q14) ──────────────────────────────────────────────
 
@@ -241,9 +244,9 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     <section aria-labelledby="scene-mes" className="space-y-2">
       <div className="flex items-baseline justify-between gap-3">
         <h3 id="scene-mes" className={titreSection}>{t("planning.semaines.mes")}</h3>
-        <span data-testid="compte" className="px-1 text-[13px] tabular-nums text-muted-foreground">{mesResas.length}</span>
+        <span data-testid="compte" className="px-1 text-sm tabular-nums text-muted-foreground">{mesResas.length}</span>
       </div>
-      <ul className="raised rounded-2xl p-1.5">
+      <ul className="carte-groupe rounded-2xl p-1.5">
         {mesResas.map((c) => (
           <li key={c.id} className="flex items-center gap-1 pr-1.5">
             <button
@@ -253,8 +256,8 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
             >
               <TuileDate iso={c.dimanche} lang={lang} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold">{c.quoi} · {quiDe(c)}</span>
-                <span className="block text-[13px] text-muted-foreground tabular-nums">{jourCourt(c.dimanche, lang)} · {c.debut} – {c.fin}</span>
+                <span className="block truncate text-base font-semibold">{c.quoi} · {quiDe(c)}</span>
+                <span className="block text-sm text-muted-foreground tabular-nums">{jourCourt(c.dimanche, lang)} · {c.debut} – {c.fin}</span>
               </span>
             </button>
             {menu(c)}
@@ -273,8 +276,9 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
         <h3 id="scene-entrainements" className={titreSection}>{t("planning.programme.entrainements")}</h3>
         {passees.length > 0 && (
           <button type="button" aria-expanded={voirPassees} onClick={() => setShowPast(!voirPassees)}
-            className="px-1 text-[13px] font-semibold text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground">
-            {t("planning.semaines.passees", { n: passees.length })}
+            className="inline-flex min-h-11 items-center gap-1 px-1 text-sm font-semibold text-muted-foreground hover:text-foreground">
+            {voirPassees ? t("planning.semaines.masquerPassees") : t("planning.semaines.passees", { n: passees.length })}
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 motion-reduce:transition-none ${voirPassees ? "rotate-180" : ""}`} aria-hidden />
           </button>
         )}
       </div>
@@ -287,7 +291,9 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       >
         {visibles.map((s) => {
           const actif = semaineActive && s === choisie
-          const detail = [joursCourts(s.jours, lang, t("planning.fete.et")), places(s.libres, s.cases.length)].filter(Boolean).join(" · ")
+          const detailLong = [joursCourts(s.jours, lang, t("planning.fete.et")), places(s.libres, s.cases.length)].filter(Boolean).join(" · ")
+          // Une colonne : le détail court se voit, le long reste dit aux lecteurs d'écran (critique).
+          const detailCourt = deuxVolets ? null : places(s.libres, s.cases.length, true)
           return (
             <li key={s.lundi} className={deuxVolets ? "py-0.5" : "shrink-0"}>
               <button
@@ -296,11 +302,13 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
                 onClick={() => choisir(s.lundi)}
                 className={deuxVolets
                   ? `flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${actif ? "bg-foreground text-background" : "hover:bg-secondary"}`
-                  : `flex min-w-[124px] flex-col gap-1.5 whitespace-nowrap rounded-2xl px-3 py-2.5 text-left transition-colors ${actif ? "bg-foreground text-background" : "raised"}`}
+                  : `flex min-w-[124px] flex-col gap-1.5 whitespace-nowrap rounded-2xl px-3 py-2.5 text-left transition-colors ${actif ? "bg-foreground text-background" : "sur-gris"}`}
               >
                 <span className={deuxVolets ? "min-w-0 flex-1" : "contents"}>
-                  <span className="block text-[15px] font-semibold tabular-nums">{semaineCourte(s.jours, lang)}</span>
-                  <span className={deuxVolets ? `block text-[13px] ${actif ? "opacity-75" : "text-muted-foreground"}` : "sr-only"}>{detail}</span>
+                  <span className="block text-base font-semibold tabular-nums">{semaineCourte(s.jours, lang)}</span>
+                  {detailCourt === null
+                    ? <span className={`block text-sm ${actif ? "opacity-75" : "text-muted-foreground"}`}>{detailLong}</span>
+                    : <><span aria-hidden className={`block text-sm ${actif ? "opacity-75" : "text-muted-foreground"}`}>{detailCourt}</span><span className="sr-only">{detailLong}</span></>}
                 </span>
                 <Cases cases={s.cases} actif={actif} />
                 {deuxVolets && <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />}
@@ -322,10 +330,10 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       {deuxVolets && (
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[24px] leading-tight font-bold tracking-tight text-foreground">
+            <h2 className="text-xl leading-tight font-bold tracking-tight text-foreground">
               {bornes!.au ? t("planning.semaines.titre", bornes!) : t("planning.semaines.titreJour", { du: bornes!.du })}
             </h2>
-            <p className="mt-1 text-[13.5px] text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               {[places(choisie.libres, choisie.cases.length), t("planning.semaines.unCreneau", { duree: t(`planning.saison.dureeCourte.${saison.duree}`) })].filter(Boolean).join(" · ")}
             </p>
           </div>
@@ -345,11 +353,11 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
         const libres = lignes.filter((l) => l.type === "libre" && !commence(d, l.debut, today, maintenant)).length
         const grille = lignes.filter((l) => l.type === "libre" || l.couvre > 0).length
         return (
-          <section key={d} id={`scene-jour-${d}`} aria-label={label} className="raised rounded-2xl scroll-mt-[calc(var(--nav-h)+12px)]">
+          <section key={d} id={`scene-jour-${d}`} aria-label={label} className="carte-groupe rounded-2xl scroll-mt-[calc(var(--nav-h)+12px)]">
             <div className="flex items-center gap-3 px-4 pt-3.5 pb-2">
               <TuileDate iso={d} lang={lang} />
-              <h3 className="min-w-0 flex-1 text-[17px] font-bold text-foreground">{label}</h3>
-              {d >= today && <span className="shrink-0 text-[13px] text-muted-foreground">{places(libres, grille)}</span>}
+              <h3 className="min-w-0 flex-1 text-lg font-bold text-foreground">{label}</h3>
+              {d >= today && <span className="shrink-0 text-sm text-muted-foreground">{places(libres, grille)}</span>}
             </div>
             <ul className="px-3 pb-3 space-y-1.5">
               {lignes.map((l) => {
@@ -360,7 +368,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
                       key={`${l.type}-${l.debut}`}
                       ligne={l}
                       droite={libre ? (
-                        <Button size="sm" className="h-11 -my-2 -mr-2 px-4 svc-ink hover:opacity-80"
+                        <Button size="sm" className={`h-8 px-4 svc-ink hover:opacity-80 ${TOUCHER_44}`}
                           style={{ "--svc": COLOR, background: `${COLOR}1f` } as CSSProperties}
                           aria-label={t("planning.saison.reserverA", { debut: l.debut, fin: l.fin })}
                           onClick={() => ouvrir({ type: "nouveau", place: { jour: d, debut: l.debut, fin: l.fin } })}>
@@ -386,7 +394,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
                     droite={
                       <>
                         {c.auteurUid === user.uid
-                          ? <span className="rounded-full bg-foreground px-2.5 py-0.5 text-[12px] font-semibold text-background">{t("planning.semaines.aMoi")}</span>
+                          ? <span className="rounded-full bg-foreground px-2.5 py-0.5 text-xs font-semibold text-background">{t("planning.semaines.aMoi")}</span>
                           : <span className="text-foreground/80">{c.auteurNom}</span>}
                         {menu(c)}
                       </>
@@ -443,38 +451,16 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   )
 }
 
-/** La tuile de date (planche : « 11 » sur « oct. »). */
-export function TuileDate({ iso, lang }: { iso: string; lang: string }) {
-  const { jour, mois } = tuileDate(iso, lang)
-  return (
-    <span className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl leading-none svc-ink"
-      style={{ "--svc": COLOR, background: `color-mix(in srgb, ${COLOR} 10%, transparent)` } as CSSProperties}>
-      <span className="text-[15px] font-bold tabular-nums">{jour}</span>
-      <span className="mt-0.5 text-[10.5px] font-semibold">{mois}</span>
-    </span>
-  )
-}
-
 /** Une case par créneau de la semaine : pleine = pris (Q12). */
 function Cases({ cases, actif }: { cases: boolean[]; actif: boolean }) {
   if (cases.length === 0) return null
-  const c = actif ? "currentColor" : COLOR
+  // Hors carte active, la teinte du service en variante sombre (`texte-service`) ; sur la carte active, l'encre de la carte.
   return (
-    <span aria-hidden className="flex shrink-0 flex-wrap gap-[3px]">
+    <span aria-hidden className={`flex shrink-0 flex-wrap gap-[3px] ${actif ? "" : "texte-service"}`} style={actif ? undefined : styleTexteService(COLOR)}>
       {cases.map((pris, i) => (
         <span key={i} data-case={pris ? "pris" : "libre"} className="h-[8px] w-[8px] rounded-[2.5px] border-[1.5px]"
-          style={{ borderColor: pris ? c : `color-mix(in srgb, ${c} 45%, transparent)`, background: pris ? c : undefined }} />
+          style={{ borderColor: pris ? "currentColor" : "color-mix(in srgb, currentColor 60%, transparent)", background: pris ? "currentColor" : undefined }} />
       ))}
     </span>
-  )
-}
-
-/** ‹ et › de la semaine (deux volets). */
-export function Fleche({ label, disabled, onClick, children }: { label: string; disabled: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button type="button" aria-label={label} disabled={disabled} onClick={onClick}
-      className="raised flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-opacity disabled:opacity-40">
-      {children}
-    </button>
   )
 }

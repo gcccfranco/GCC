@@ -9,6 +9,7 @@ import { UserRound } from "lucide-react";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { GROUPES, SERVICE_LIEUX, SERVICE_ROLE_LABELS, type ServiceRole } from "@/types/user";
 import { EDD_CLASSES } from "@/lib/planning/utils";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 // Même ordre que le formulaire du profil (ProfileFields) : cultes, groupes, EDD ; rôles idem.
 const ORDRE_SERVICES: readonly string[] = [...SERVICE_LIEUX, ...GROUPES, ...EDD_CLASSES];
@@ -43,16 +44,16 @@ export function CarteCompte({
   const initiale = (nom || email).trim().charAt(0).toUpperCase();
 
   return (
-    <section aria-label={t("moi.compte")} className="raised rounded-2xl p-5">
+    <section aria-label={t("moi.compte")} className="carte-groupe rounded-2xl p-5">
       <div className="flex items-center gap-4">
         <span aria-hidden className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-foreground text-2xl font-semibold text-background">
           {initiale}
         </span>
         <div className="min-w-0">
           <h2 className="truncate text-xl font-bold text-foreground">{nom || email}</h2>
-          <p className="truncate text-[13px] text-muted-foreground">{email}</p>
+          <p className="truncate text-sm text-muted-foreground">{email}</p>
           {admin && (
-            <span className="mt-0.5 inline-block rounded-md bg-foreground px-1.5 py-px text-[11px] font-bold text-background">
+            <span className="mt-0.5 inline-block rounded-md bg-foreground px-1.5 py-px text-xs font-bold text-background">
               {t("moi.admin")}
             </span>
           )}
@@ -61,14 +62,14 @@ export function CarteCompte({
 
       {planningName && (
         <div className="mt-4">
-          <p className="text-[13px] text-muted-foreground">{t("profile.fields.planningName")}</p>
+          <p className="text-sm text-muted-foreground">{t("profile.fields.planningName")}</p>
           <p className="font-semibold text-foreground">{planningName}</p>
         </div>
       )}
 
       {services.length > 0 && (
         <div className="mt-3">
-          <p className="text-[13px] text-muted-foreground">{t("profile.fields.accessTitle")}</p>
+          <p className="text-sm text-muted-foreground">{t("profile.fields.accessTitle")}</p>
           <ul className="mt-1.5 flex flex-wrap gap-1.5">
             {services.map(({ service, roles }) => {
               const couleur = categoryColor(service);
@@ -76,8 +77,8 @@ export function CarteCompte({
                 <li
                   key={service}
                   data-testid="service-role"
-                  className="rounded-md px-2 py-0.5 text-[13px] font-semibold"
-                  style={{ color: couleur, background: `${couleur}1f` }}
+                  className="rounded-md px-2 py-0.5 text-sm font-semibold texte-service"
+                  style={{ ...styleTexteService(couleur), background: `${couleur}1f` }}
                 >
                   {zh ? t(`categories.${service}`, { defaultValue: service }) : categoryLabel(service)}
                   {roles.length > 0 &&
@@ -91,7 +92,7 @@ export function CarteCompte({
 
       <Link
         href="/profil"
-        className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-full bg-secondary px-4 text-[15px] font-semibold text-foreground transition-transform duration-150 active:scale-[.97]"
+        className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-full bg-secondary px-4 text-base font-semibold text-foreground transition-transform duration-150 active:scale-[.97]"
       >
         <UserRound className="h-4 w-4" aria-hidden />
         {t("common.header.profile")}

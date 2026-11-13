@@ -366,8 +366,13 @@ test("(page) « Repartir d'une setlist passée » : la plus récente d'abord, «
 
 test("(page) planning vide : le message, et les deux autres entrées restent", async ({ page }) => {
   await ouvrir(page, "/setlists/new", { planning: false });
-  await expect(page.getByText("Aucun service à venir sans setlist dans tes catégories.")).toBeVisible();
+  await expect(page.getByText("Le planning n'a aucun service à venir sans setlist dans tes catégories.")).toBeVisible();
   await expect(services(page)).toHaveCount(0);
+  // Plus de cadre pointillé ; une seule carte pour les deux entrées, de 720 px au plus.
+  await expect(page.locator("section[aria-labelledby='pour-quel-service'] .border-dashed")).toHaveCount(0);
+  const carte = page.getByTestId("autres-entrees");
+  await expect(carte.getByRole("listitem")).toHaveCount(2);
+  expect((await carte.boundingBox())!.width).toBeLessThanOrEqual(720);
   await expect(page.getByRole("link", { name: /Autre setlist/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Repartir d'une setlist passée/ })).toBeVisible();
 });
@@ -387,15 +392,16 @@ test("(page) 中文 : l'entrée et ses cartes", async ({ page }) => {
   await expect(page.getByRole("link", { name: /从以往的歌单开始/ })).toBeVisible();
 });
 
-test("(page) disposition : une colonne sur téléphone, deux sur tablette, trois sur ordinateur", async ({ page }, testInfo) => {
+test("(page) disposition : une colonne sur téléphone, deux ailleurs (plafond de 720 px, services-3)", async ({ page }, testInfo) => {
   await ouvrir(page, "/setlists/new");
   await expect(services(page)).toHaveCount(3);
   const y = async (i: number) => Math.round((await services(page).nth(i).boundingBox())!.y);
   const [a, b, c] = [await y(0), await y(1), await y(2)];
-  const colonnes = { telephone: 1, tablette: 2, ordinateur: 3 }[testInfo.project.name] ?? 3;
+  const colonnes = testInfo.project.name === "telephone" ? 1 : 2;
   if (colonnes === 1) expect(a < b && b < c).toBe(true);
   if (colonnes === 2) expect(a === b && c > a).toBe(true);
-  if (colonnes === 3) expect(a === b && b === c).toBe(true);
+  const grille = (await page.getByRole("list", { name: "Pour quel service ?" }).boundingBox())!;
+  expect(grille.width).toBeLessThanOrEqual(720);
   await page.screenshot({ path: testInfo.outputPath(`pour-quel-service-${testInfo.project.name}.png`), fullPage: true });
 });
 
@@ -450,6 +456,7 @@ test("(page) « Modifier » : changer de présidence ne déplace pas la date de 
     title: "Culte Francophone 18/10",
     date: "2026-10-18",
     leader: "Présidence C",
+    ownerId: MUSICIENNE.uid, // depuis SC1 (18/10/2026), seul le créateur modifie une setlist
     items: [{ songSlug: "abba-pere", position: 1, keyOverride: null, showChords: true, showPinyin: false, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" }],
   };
   const db = await ouvrir(page, "/setlists/sl-1018/edit", { docs: { "setlists/sl-1018": doc } });

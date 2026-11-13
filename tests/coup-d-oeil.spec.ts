@@ -1,8 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
+import { basculerMode } from "./helpers/menuSetlist";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreEditeur, reglerElement } from "./helpers/editeurSetlist";
-import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
-import { ouvrirReglages } from "./helpers/louange";
+import { fermerMenus, ouvrirAffichage, ouvrirPartitions, ouvrirSommaire } from "./helpers/setlist";
+import { ouvrirJeJoue } from "./helpers/louange";
 import { abbreviateSection } from "../src/lib/chordpro/abbreviations";
 import { uniqueSections } from "../src/lib/setlist/uniqueSections";
 import { isLastPhraseOnly, materializeLastPhrase } from "../src/lib/setlist/lastPhrase";
@@ -74,7 +75,7 @@ async function openPartitions(page: Page, data = setlist()) {
 
 // ── Abréviations (fonction pure) ────────────────────────────────────────────
 
-test("abréviations : une lettre par sorte de section, le numéro des couplets, Dp et Pm", () => {
+test("abréviations : une lettre par sorte de section, le numéro des couplets, Dp, Int et Inst", () => {
   const s = (type: string, name?: string, number?: string) => ({ type, name, number });
   expect(abbreviateSection(s("intro", "Intro"))).toBe("I");
   expect(abbreviateSection(s("verse", "Couplet 1", "1"))).toBe("C1");
@@ -85,9 +86,9 @@ test("abréviations : une lettre par sorte de section, le numéro des couplets, 
   expect(abbreviateSection(s("postchorus", "Post-refrain"))).toBe("Po");
   expect(abbreviateSection(s("bridge", "Pont"))).toBe("P");
   // Le nom écrit l'emporte sur le type, comme pour le libellé complet.
-  expect(abbreviateSection(s("intro", "Interlude"))).toBe("Pm");
-  expect(abbreviateSection(s("other", "Instrumental"))).toBe("Pm");
-  expect(abbreviateSection(s("other", "间奏"))).toBe("Pm");
+  expect(abbreviateSection(s("intro", "Interlude"))).toBe("Int");
+  expect(abbreviateSection(s("other", "Instrumental"))).toBe("Inst");
+  expect(abbreviateSection(s("other", "间奏"))).toBe("Int");
   expect(abbreviateSection(s("outro", "Outro"))).toBe("F");
   // « Final » sous une directive outro (01) s'abrège comme une outro, en 中文 aussi.
   expect(abbreviateSection(s("outro", "Final"))).toBe("F");
@@ -132,7 +133,7 @@ test("page du chant : même bandeau, sans nuances, plus de ligne ORDRE", async (
   await page.goto("/songs/abba-pere");
   await expect(page.getByText("ORDRE", { exact: true })).toHaveCount(0);
   const strip = page.getByRole("list", { name: "Structure" });
-  await expect(strip.getByRole("listitem")).toHaveText(["I", "C1", "R", "Pm", "C2", "P"]);
+  await expect(strip.getByRole("listitem")).toHaveText(["I", "C1", "R", "Int", "C2", "P"]);
   // L'abréviation garde son nom complet pour les lecteurs d'écran.
   await expect(strip.getByRole("listitem").nth(3).locator("abbr")).toHaveAttribute("title", "Interlude");
 });
@@ -177,17 +178,17 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await expect(song1Sections(page).nth(1)).toHaveAttribute("data-section-uids", "chorus-3-1");
     await expect(song1Sections(page).nth(2)).toHaveAttribute("data-section-uids", "chorus-3-2");
     await expect(page.locator('[data-outline-item="1"] [data-section] [data-nuance]')).toHaveText(["f", "f"]);
-    expect(await page.evaluate(() => localStorage.getItem("partition-layout")), "le défaut n'est pas un choix : rien n'est retenu").toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien")), "le défaut n'est pas un choix : rien n'est retenu").toBeNull();
   });
 
   test("« Sections uniques » : le refrain repris n'est imprimé qu'une fois, sa nuance dans le bandeau ; le choix est retenu sur l'appareil", async ({ page }) => {
     await openPartitions(page);
-    await choose(page, "Sections uniques");
+    await choose(page, "Chaque section une fois");
     await expect(song1Sections(page)).toHaveCount(2);
     await expect(song1Sections(page).nth(1)).toHaveAttribute("data-section-uids", "chorus-3-1 chorus-3-2");
     await expect(page.locator('[data-outline-item="1"] [data-section] [data-nuance]')).toHaveCount(0);
     await expect(page.getByRole("list", { name: "Structure" }).first().locator("[data-nuance]")).toHaveText("f");
-    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("unique");
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien"))).toBe("unique");
   });
 
   test("le choix retenu s'applique à l'ouverture", async ({ page }) => {
@@ -199,7 +200,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
   test("« Structure seule » : bandeau sans paroles ; sur un scan 简谱, pas de scan", async ({ page }) => {
     await openPartitions(page);
     await expect(page.locator('[data-outline-item="2"] img')).toHaveCount(1);
-    await choose(page, "Structure seule");
+    await choose(page, "Plan du chant");
     await expect(page.locator("[data-section]")).toHaveCount(0);
     await expect(page.getByRole("list", { name: "Structure" })).toHaveCount(2);
     await expect(page.locator('[data-outline-item="2"] img')).toHaveCount(0);
@@ -216,11 +217,11 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await page.addInitScript(() => localStorage.setItem("perf-role-asked", "1"));
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
     await page.getByRole("button", { name: /Mode Louange/ }).click();
-    const reglages = await ouvrirReglages(page);
-    const affichage = reglages.getByRole("radiogroup", { name: "Affichage" });
-    await expect(affichage.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
-    await affichage.getByRole("radio", { name: "Sections uniques" }).click();
-    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("unique");
+    const jejoue = await ouvrirJeJoue(page);
+    const affichage = jejoue.getByRole("radiogroup", { name: "Ordre des sections" });
+    await expect(affichage.getByRole("radio", { name: "Tout le chant" })).toHaveAttribute("aria-checked", "true");
+    await affichage.getByRole("radio", { name: "Chaque section une fois" }).click();
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien"))).toBe("unique");
 
     // Quitter le mode louange (Échap referme d'abord la feuille).
     await page.keyboard.press("Escape");
@@ -237,16 +238,17 @@ test.describe("modes d'affichage de la vue partitions", () => {
 
     await ouvrirPartitions(page);
     await ouvrirAffichage(page);
-    await expect(page.getByRole("menuitemradio", { name: "Sections uniques" })).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("menuitemradio", { name: "Chaque section une fois" })).toHaveAttribute("aria-checked", "true");
     await fermerMenus(page);
     await expect(song1Sections(page)).toHaveCount(2);
   });
 
-  test("mode Adapter : ordre joué forcé, le bandeau reste", async ({ page }) => {
+  test("Crayon : ordre joué forcé, le bandeau reste", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
-    await openPartitions(page);
+    // Depuis SC1 (18/10/2026), seul le créateur adapte et modifie une setlist : la musicienne est la créatrice de la sienne.
+    await openPartitions(page, setlist({ ownerId: MUSICIEN.uid }));
     await expect(song1Sections(page)).toHaveCount(2);
-    await page.getByRole("button", { name: "Adapter" }).click();
+    await basculerMode(page);
     await expect(song1Sections(page)).toHaveCount(3);
     await expect(page.getByRole("list", { name: "Structure" }).first()).toBeVisible();
   });
@@ -259,11 +261,13 @@ test.describe("modes d'affichage de la vue partitions", () => {
       test.skip(info.project.name !== "ordinateur", "deux volets : une fois suffit (ordinateur)");
       await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
       await openPartitions(page);
+      await ouvrirSommaire(page);
       const pastilles = page.getByRole("navigation", { name: "Sommaire" }).locator('[data-sommaire="1"] [data-pastille]');
       await expect(pastilles).toHaveText(["C1", "R", "R"]);
       await pastilles.nth(2).click();
       const refrain = page.locator('[data-outline-item="1"] [data-section-uids~="chorus-3-2"]');
       await expect.poll(async () => (await refrain.boundingBox())!.y).toBeLessThan(250);
+      await ouvrirSommaire(page); // le choix a refermé le panneau
       await expect(pastilles.nth(2)).toHaveAttribute("aria-current", "true");
     });
   });
@@ -317,7 +321,8 @@ test("badge « Version modifiée » : rien à dire quand seul un Dp a été ajou
 
 test("éditeur : la Dernière phrase du refrain s'enregistre, puis s'affiche « Dp » avec ses accords, sans badge", async ({ page }) => {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
-  const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}/edit`);
+  // Depuis SC1 (18/10/2026), seul le créateur modifie une setlist : la musicienne est la créatrice de la sienne.
+  const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist({ ownerId: MUSICIEN.uid }) }, `/setlists/${SETLIST_ID}/edit`);
   await attendreEditeur(page, "Abba Père");
   await reglerElement(page, "Abba Père");
   await page.getByRole("button", { name: "Dernière phrase", exact: true }).click();

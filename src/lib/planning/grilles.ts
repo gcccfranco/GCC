@@ -15,7 +15,7 @@
 // `dimanches/{date}` ne porte qu'une ligne.
 
 import { PLANNING_COLORS } from "@/lib/serviceColors"
-import { TRI_ORDER, triRank, triVisibilities, triVisibilitiesAnnee } from "./releases"
+import { TRI_ORDER, triRank, triVisibilities, triVisibilitiesAnnee } from "./trimestres"
 import { EDD_CLASSES, getAnnee, getTri } from "./utils"
 
 export type ColonneGrille = {
@@ -29,7 +29,8 @@ export type ColonneGrille = {
   optionnelle?: boolean
   /** Colonne remplie ailleurs, affichée sans se modifier (lot U3, Q12 : le petit
    *  déj vient des inscriptions) : jamais un bouton en « Modifier », jamais semée,
-   *  importée ni comptée parmi les noms sans compte. */
+   *  importée ni comptée parmi les noms sans compte. La page peut lui donner sa propre
+   *  case en modification (`casesAPart` de PlanningGrille). */
   lectureSeule?: boolean
 }
 
@@ -100,7 +101,8 @@ export const COLONNES_CULTE: ColonneGrille[] = [
   col("sono", "sono", 7),
   col("ppt", "ppt", 8),
   col("orateur", "orateur", 9),
-  col("traduction", "trad", 10),
+  // Traduction facultative (Timothée, 31/10/2026) : on n'a pas toujours besoin d'un traducteur.
+  col("traduction", "trad", 10, true),
   // Ajoutée au T4 2026 : masquée tant qu'aucune case de la période ne la porte.
   col("sainteCene", "sainteCene", 11, true),
 ]
@@ -127,7 +129,7 @@ export const GRILLE_INTERGROUPE: DefinitionGrille = {
     col("presidence", "presidence", 1), col("choriste1", "choriste1", 2), col("choriste2", "choriste2", 3),
     col("choriste3", "choriste3", 4), col("piano", "piano", 5), col("guitare", "guitare", 6),
     col("cajonBatterie", "cajonBatt", 7), col("sonoLive", "sonoLive", 8), col("ppt", "ppt", 9),
-    col("orateur", "orateur", 10), col("traduction", "trad", 11),
+    col("orateur", "orateur", 10), col("traduction", "trad", 11, true),
   ],
 }
 
@@ -140,7 +142,7 @@ export const GRILLE_INTERFRANCO: DefinitionGrille = {
   colonnes: [
     col("presidence", "presidence", 1), col("choriste1", "choriste1", 2), col("choriste2", "choriste2", 3),
     col("piano", "piano", 4), col("guitare", "guitare", 5), col("cajonBatterie", "cajonBatt", 6),
-    col("sonoLive", "sonoLive", 7), col("ppt", "ppt", 8), col("orateur", "orateur", 9), col("traduction", "trad", 10),
+    col("sonoLive", "sonoLive", 7), col("ppt", "ppt", 8), col("orateur", "orateur", 9), col("traduction", "trad", 10, true),
   ],
 }
 
@@ -199,7 +201,8 @@ export const GRILLE_FIDELITE_MUSICIENS: DefinitionGrille = {
 }
 
 // Prépa. Table du Seigneur + petit déjeuner : deux cases par dimanche. Le petit
-// déj affiche les inscriptions (lot U3, T9) et se gère dans sa carte, au-dessus.
+// déj affiche les inscriptions (lot U3, T9) ; au Back-Office, la page lui donne sa
+// propre case (`PetitDejCase.tsx`, 30/10/2026).
 export const GRILLE_TABLE: DefinitionGrille = {
   key: "table",
   label: "Prépa. Table",

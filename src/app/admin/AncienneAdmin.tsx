@@ -6,6 +6,7 @@
 // les blocs sont montés (onglets masqués par `hidden`) : leurs données se chargent dès
 // l'ouverture et les pastilles des onglets sont justes, comme avant.
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CalendarDays, DoorOpen, Inbox, MessageSquareHeart, ShieldCheck, Users, type LucideIcon } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
@@ -15,10 +16,12 @@ import { Personnes } from "@/components/admin/Personnes";
 import { InscriptionsComptes } from "@/components/admin/InscriptionsComptes";
 import { SansCompte } from "@/components/admin/SansCompte";
 import { ReserveAuxAdmins } from "@/components/admin/commun";
+import { Squelette } from "@/components/layout/Squelette";
 
 type AdminTab = "reception" | "membres" | "inscriptions" | "planning" | "questionnaire";
 
 export function AncienneAdmin() {
+  const { t } = useTranslation();
   const { user, loading } = useProfile();
   const admin = isAdminUser(user);
   const [tab, setTab] = useState<AdminTab>("membres");
@@ -30,21 +33,17 @@ export function AncienneAdmin() {
   const surSansCompte = useCallback((n: number) => setSansCompte(n), []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Chargement…</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   if (!user || !admin) return <ReserveAuxAdmins connecte={!!user} retour="/admin" />;
 
   const TABS: { key: AdminTab; label: string; Icon: LucideIcon; count?: number; always?: boolean }[] = [
-    { key: "reception", label: "Réception", Icon: Inbox, count: enAttente },
-    { key: "membres", label: "Membres", Icon: Users, count: inscrits, always: true },
-    { key: "inscriptions", label: "Inscriptions", Icon: DoorOpen },
-    { key: "planning", label: "Planning", Icon: CalendarDays, count: sansCompte },
-    { key: "questionnaire", label: "Questionnaire", Icon: MessageSquareHeart },
+    { key: "reception", label: t("backOffice.parties.reception"), Icon: Inbox, count: enAttente },
+    { key: "membres", label: t("admin.membres"), Icon: Users, count: inscrits, always: true },
+    { key: "inscriptions", label: t("admin.inscriptions"), Icon: DoorOpen },
+    { key: "planning", label: t("backOffice.entrees.planning"), Icon: CalendarDays, count: sansCompte },
+    { key: "questionnaire", label: t("backOffice.parties.questionnaire"), Icon: MessageSquareHeart },
   ];
 
   return (
@@ -52,7 +51,7 @@ export function AncienneAdmin() {
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-5">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-lg font-bold text-foreground">Administration</h1>
+          <h1 className="text-lg font-bold text-foreground">{t("admin.titre")}</h1>
         </div>
 
         {/* ── Onglets ── */}
@@ -64,7 +63,7 @@ export function AncienneAdmin() {
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[13px] font-semibold transition-colors ${
+                className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors ${
                   active
                     ? "bg-foreground text-background"
                     : "bg-secondary text-muted-foreground hover:text-foreground"

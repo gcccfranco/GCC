@@ -5,9 +5,11 @@
 // plages, Un créneau dure, Qui peut réserver — qui ouvre une feuille avec ce réglage seul. La
 // feuille est la carte de la saison réduite à ce réglage (`SaisonForm seul`) : même écriture à
 // chaque changement, même erreur sous le champ, rien d'écrit tant qu'elle s'affiche. Refermer la
-// feuille oublie un réglage refusé : le résumé dit ce qui est en base.
+// feuille oublie un réglage refusé : le résumé dit ce qui est en base. « Terminé » enregistre d'abord la
+// plage en cours d'édition (comme son « OK ») et laisse la feuille ouverte si elle est refusée ; une plage
+// ajoutée par « + Plage » et laissée intacte est oubliée.
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ChevronRight } from "lucide-react"
 import { famillesDe, saisonDe } from "@/lib/scene/saison"
@@ -15,7 +17,7 @@ import type { Programme } from "@/types/programme"
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
-import { SaisonForm, type AutreFete, type ReglageSeul, type SaisonPatch } from "@/app/evenements/scene/SaisonForm"
+import { SaisonForm, type AutreFete, type ReglageSeul, type SaisonFormHandle, type SaisonPatch } from "@/app/evenements/scene/SaisonForm"
 import { heureCourte, jourCourt, semaineCourte } from "@/app/evenements/scene/libelles"
 
 export function ResumeSaison({ programme, onSave, jourJCalcule, autre, onErreur }: {
@@ -32,6 +34,7 @@ export function ResumeSaison({ programme, onSave, jourJCalcule, autre, onErreur 
   const [montre, setMontre] = useState<ReglageSeul | null>(null)
   const [ouverte, setOuverte] = useState(false)
   useStandaloneScrollLock(ouverte)
+  const form = useRef<SaisonFormHandle>(null)
   const s = saisonDe(programme)
   const annee = programme.jourJ.slice(0, 4)
 
@@ -59,7 +62,7 @@ export function ResumeSaison({ programme, onSave, jourJCalcule, autre, onErreur 
 
   return (
     <>
-      <ul aria-label={t("planning.gestion.reglagesSaison")} className="raised divide-y divide-border overflow-hidden rounded-2xl">
+      <ul aria-label={t("planning.gestion.reglagesSaison")} className="carte-groupe divide-y divide-border overflow-hidden rounded-2xl">
         {lignes.map((l) => (
           <li key={l.cle}>
             <button
@@ -67,8 +70,8 @@ export function ResumeSaison({ programme, onSave, jourJCalcule, autre, onErreur 
               onClick={() => { setMontre(l.cle); setOuverte(true) }}
               className="flex min-h-[52px] w-full items-center gap-3 py-2 pr-3 pl-4 text-left transition-colors hover:bg-secondary"
             >
-              <span className="shrink-0 text-[15px] font-semibold text-foreground">{l.titre}</span>
-              <span className="ml-auto min-w-0 text-right text-[14px] text-muted-foreground">{l.valeur}</span>
+              <span className="shrink-0 text-base font-semibold text-foreground">{l.titre}</span>
+              <span className="ml-auto min-w-0 text-right text-sm text-muted-foreground">{l.valeur}</span>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
             </button>
           </li>
@@ -83,6 +86,7 @@ export function ResumeSaison({ programme, onSave, jourJCalcule, autre, onErreur 
             {montre && (
               <SaisonForm
                 key={`${programme.id}-${montre}`}
+                ref={form}
                 seul={montre}
                 programme={programme}
                 onSave={onSave}
@@ -91,7 +95,7 @@ export function ResumeSaison({ programme, onSave, jourJCalcule, autre, onErreur 
                 onErreur={onErreur}
               />
             )}
-            <Button type="button" className="h-12 w-full rounded-full text-[15px]" onClick={fermer}>{t("planning.gestion.termine")}</Button>
+            <Button type="button" className="h-12 w-full rounded-full text-base" onClick={() => { if (form.current?.terminer() === false) return; fermer() }}>{t("planning.gestion.termine")}</Button>
           </div>
         </DrawerContent>
       </Drawer>

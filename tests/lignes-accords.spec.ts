@@ -27,8 +27,9 @@ function accordsAuNiveauDesParoles(page: Page): Promise<string[]> {
       const colonnes = Array.from(ligne.querySelectorAll<HTMLElement>(zh ? "span[style*='column']" : "span.flex-col"));
       const cases = colonnes.map((c) => {
         const enfants = Array.from(c.children) as HTMLElement[];
+        const bande = c.querySelector<HTMLElement>("[data-accord]"); // ZhLine : absente d'une rangée sans accord (R2)
         const accord = zh
-          ? enfants[0] && getComputedStyle(enfants[0]).visibility === "visible" ? enfants[0] : undefined
+          ? bande && getComputedStyle(bande).visibility === "visible" ? bande : undefined
           : enfants.find((e) => e.classList.contains("font-chord"));
         const parole = enfants[enfants.length - 1];
         return { c, accord, parole: parole !== accord && (parole?.textContent ?? "").trim() ? parole : undefined };
@@ -81,7 +82,7 @@ for (const slug of ["abba-pere", "grace-infinie", "一切歌颂赞美", "一切�
 // n'ont alors pas de cadre pour rogner ce qui dépasse, et le contenu glisse.
 for (const slug of ["tu-m-aimes", "abrite-moi", "abba-pere"]) {
   test(`${slug} — texte agrandi au maximum, rien ne dépasse sur les côtés`, async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem("chart-style", "0"));
+    await page.addInitScript(() => localStorage.setItem("disposition", "classique"));
     await ouvrir(page, slug);
     const plus = page.getByRole("button", { name: "Agrandir le texte" }).first();
     while (await plus.isEnabled()) await plus.click();
@@ -112,7 +113,9 @@ test("grace-infinie — accords masqués, les syllabes se recollent", async ({ p
 function motsCoupes(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const out: string[] = [];
-    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line].items-end"))) {
+    const lignes = Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line][data-coupe]"));
+    if (!lignes.length) throw new Error("motsCoupes : aucune ligne française examinée");
+    for (const ligne of lignes) {
       const morceaux = Array.from(ligne.querySelectorAll<HTMLElement>("span.flex-col"));
       for (let i = 1; i < morceaux.length; i++) {
         const avant = morceaux[i - 1].lastElementChild?.textContent ?? "";
@@ -141,3 +144,64 @@ for (const slug of ["abba-pere", "tu-m-aimes"]) {
   });
 }
 
+
+// dimanche-13 (téléphone) : une ligne ne se coupe qu'avant un accord. Un segment (un accord et ses paroles
+// jusqu'à l'accord suivant) qui tient dans la ligne reste sur une seule rangée ; une rangée sans aucun accord
+// n'existe que dans un segment plus large que la ligne (qui se coupe alors à l'intérieur, garde-fou).
+async function segmentsCoupes(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const out: string[] = [];
+    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line]"))) {
+      const zh = ligne.classList.contains("items-start");
+      const colonnes = Array.from(ligne.querySelectorAll<HTMLElement>(zh ? "span[style*='column']" : "span.flex-col"));
+      const aUnAccord = (c: HTMLElement) =>
+        zh ? !!c.querySelector("[data-accord]") && getComputedStyle(c.querySelector("[data-accord]")!).visibility === "visible" && !!c.querySelector("[data-accord]")!.textContent?.trim() && c.querySelector("[data-accord]")!.textContent !== "x"
+           : !!c.querySelector(".font-chord");
+      if (!colonnes.some(aUnAccord)) continue;
+      const largeur = ligne.getBoundingClientRect().width;
+      const rangees = new Map<number, HTMLElement[]>();
+      const large = new Set<HTMLElement>();
+      for (const chunk of Array.from(ligne.children) as HTMLElement[]) {
+        const tient = chunk.getBoundingClientRect().width < largeur - 1;
+        const cols = colonnes.filter((c) => chunk.contains(c));
+        if (tient) {
+          const tops = new Set(cols.map((c) => Math.round(c.getBoundingClientRect().top / 6)));
+          if (tops.size > 1) out.push(`segment coupé alors qu'il tient — ${chunk.textContent?.slice(0, 40)}`);
+        } else cols.forEach((c) => large.add(c));
+      }
+      for (const c of colonnes) {
+        const cle = Math.round(c.getBoundingClientRect().top / 6);
+        rangees.set(cle, [...(rangees.get(cle) ?? []), c]);
+      }
+      // Les mots d'avant le premier accord peuvent former leurs propres rangées (la ligne se coupe entre eux).
+      const avant = new Set(colonnes.slice(0, colonnes.findIndex(aUnAccord)));
+      for (const cols of rangees.values()) {
+        if (!cols.some(aUnAccord) && !cols.every((c) => large.has(c) || avant.has(c))) out.push(`rangée sans accord hors segment large — ${cols.map((c) => c.textContent).join("").slice(0, 40)}`);
+      }
+    }
+    return out;
+  });
+}
+
+for (const slug of ["abba-pere", "tu-m-aimes", "一切歌颂赞美"]) {
+  test(`${slug} — téléphone : une ligne ne se coupe qu'avant un accord, aucune rangée d'accords vide`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "telephone", "propre au téléphone");
+    await ouvrir(page, slug);
+    expect(await segmentsCoupes(page)).toEqual([]);
+  });
+}
+
+// dimanche-14 : une rangée d'accords sans paroles, suivie d'une ligne avec paroles, laisse l'écart normal
+// entre deux lignes (>= 0,4 em) ; elle tenait à line-height 0 et touchait la ligne suivante.
+test("hosanna — rangée d'accords sans paroles du Pont : écart >= 0,4 em avec la ligne suivante", async ({ page }) => {
+  await ouvrir(page, "hosanna");
+  const mesure = await page.evaluate(() => {
+    const lignes = Array.from(document.querySelectorAll<HTMLElement>("main.song-zoom [data-copy-line]"));
+    const i = lignes.findIndex((l) => l.textContent?.replace(/\s+/g, " ").trim() === "Bm7 D Em7 F#m7");
+    if (i < 0) return null;
+    const em = parseFloat(getComputedStyle(lignes[i]).fontSize);
+    return { gap: lignes[i + 1].getBoundingClientRect().top - lignes[i].getBoundingClientRect().bottom, em };
+  });
+  expect(mesure, "rangée « Bm7 D Em7 F#m7 » trouvée").not.toBeNull();
+  expect(mesure!.gap).toBeGreaterThanOrEqual(0.4 * mesure!.em);
+});

@@ -15,6 +15,7 @@ import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { useCoursIndex, useCoursProgres } from "@/lib/harmonie/useCours";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { ImpasseHarmonie } from "@/components/harmonie/ImpasseHarmonie";
 
 /** Le chapitre de l'adresse (`/harmonie/cours/les-cadences`), ou rien sur la liste. */
 function chapitreDeLAdresse(chemin: string): string | undefined {
@@ -33,7 +34,7 @@ export function CoursHarmonie({ children }: { children: React.ReactNode }) {
 
   if (acces.chargement || chargement || progresEnCours) return null;
   if (!acces.peut) {
-    return <p className="mx-auto max-w-2xl px-4 py-10 text-center text-muted-foreground">{t("common.noAccess")}</p>;
+    return <ImpasseHarmonie />;
   }
 
   const enCours = chapitreEnCours(chapitres, fini);
@@ -42,9 +43,10 @@ export function CoursHarmonie({ children }: { children: React.ReactNode }) {
   return (
     <ContexteCours.Provider value={valeur}>
       <DeuxVolets
+        fond="blanc"
         racine="/harmonie/cours"
         liste={
-          <div className={cn(deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-4 pb-10 md:max-w-none md:px-6")}>
+          <div className={cn(deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-[var(--marge-page)] pb-10 md:max-w-none")}>
             <SommaireCours ouvert={ouvert} />
           </div>
         }

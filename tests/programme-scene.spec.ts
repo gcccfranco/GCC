@@ -28,7 +28,7 @@ const AVANT_OUVERTURE = new Date("2026-09-20T10:00:00");
 
 const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L." };
 const ALICE: FakeProfile = {
-  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true,
+  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */, // lot AO : Coordination = référent EDD
 };
 
 // Lot U6, B3 (U1 Q12) : la gestion est au Back-Office ; l'App garde les réservations, celles de
@@ -184,7 +184,8 @@ test("réserver : un chevauchement est refusé à la relecture, rien n'est écri
   await feuille.getByRole("checkbox", { name: "Gp Paix" }).check();
   await feuille.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(feuille.getByText(/chevauche/)).toContainText("17:00 – 18:30");
-  expect(db.writes.filter((w) => w.method === "POST")).toHaveLength(0);
+  // Seules les écritures du programme comptent : `:commit` est l'envoi quotidien du comptage d'usage (docs/spec-comptage-usage.md).
+  expect(db.writes.filter((w) => w.method === "POST" && w.path.startsWith("programmes/"))).toHaveLength(0);
 });
 
 test("droits : l'auteur et la coordination modifient ou retirent un créneau, pas un autre membre", async ({ page }) => {

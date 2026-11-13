@@ -9,7 +9,8 @@ import { membresDeLEquipe } from "@/lib/taches/serveur";
 import type { Evenement } from "@/types/evenement";
 
 export class HttpError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+  /** `code` : court, renvoyé au client qui traduit le refus (src/lib/evenements/inscription.ts). */
+  constructor(public status: number, message: string, public code?: string) { super(message); }
 }
 
 export const ID = /^[\w-]+$/;
@@ -28,7 +29,7 @@ export async function optionalUser(req: NextRequest): Promise<{ uid: string; ema
 }
 
 export function errorResponse(e: unknown) {
-  if (e instanceof HttpError) return NextResponse.json({ error: e.message }, { status: e.status });
+  if (e instanceof HttpError) return NextResponse.json({ error: e.message, ...(e.code ? { code: e.code } : {}) }, { status: e.status });
   return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
 }
 
@@ -51,6 +52,9 @@ const REFUS: Record<RefusInscription, string> = {
   complet: "Il n'y a plus assez de places.",
 };
 
+/** Places (personnes + invités) offertes aux inscriptions sans compte, par évènement. */
+export const PLAFOND_SANS_COMPTE = 60;
+
 /** L'inscription de /api/evenements/inscription, base passée (testable) : avec compte, une place au
  *  nom du profil (id = uid, réinscription = mise à jour des invités) ; sans compte, `nomLibre`, id
  *  aléatoire. Le compteur et la place s'écrivent dans une même transaction. HttpError 403 (sans
@@ -72,22 +76,27 @@ export async function inscrire(
 
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists) throw new HttpError(404, "Évènement introuvable");
+    if (!snap.exists) throw new HttpError(404, "Évènement introuvable", "introuvable");
     const e = snap.data() as Evenement;
-    if (!user && !e.sansCompte) throw new HttpError(403, "Inscription réservée aux membres connectés.");
+    if (!user && !e.sansCompte) throw new HttpError(403, "Inscription réservée aux membres connectés.", "reserveMembres");
     // Évènement d'équipe (retouches v18, E6 ; EQ20) : ceux qui le voient seulement.
-    if (!canInscrireEvenement(user, profil, e)) throw new HttpError(403, "Évènement réservé aux membres de l'équipe.");
+    if (!canInscrireEvenement(user, profil, e)) throw new HttpError(403, "Évènement réservé aux membres de l'équipe.", "reserveEquipe");
     const iid = user ? user.uid : ref.collection("inscriptions").doc().id;
     const iref = ref.collection("inscriptions").doc(iid);
     const existing = user ? await tx.get(iref) : null;
     const prev = existing?.exists ? 1 + ((existing.data()?.invites as number) ?? 0) : 0;
     const sansMoi = (e.inscrits ?? 0) - prev;
     const refus = refusInscription({ ...e, inscrits: sansMoi }, invites, nowIsoParis());
-    if (refus) throw new HttpError(409, REFUS[refus]);
+    if (refus) throw new HttpError(409, REFUS[refus], refus);
+    // Plafond des places sans compte, tenu dans la même transaction.
+    const sansCompte = e.inscritsSansCompte ?? 0;
+    if (!user && sansCompte + 1 + invites > PLAFOND_SANS_COMPTE) {
+      throw new HttpError(409, "La limite des inscriptions sans compte est atteinte.", "limiteSansCompte");
+    }
     const createdAt = existing?.exists ? (existing.data()?.createdAt as string) : new Date().toISOString();
     const inscrits = sansMoi + 1 + invites;
     tx.set(iref, { uid: user?.uid ?? null, nom, invites, createdAt });
-    tx.update(ref, { inscrits });
+    tx.update(ref, user ? { inscrits } : { inscrits, inscritsSansCompte: sansCompte + 1 + invites });
     return { inscrits, mine: { id: iid, uid: user?.uid ?? null, nom, invites, createdAt } };
   });
 }

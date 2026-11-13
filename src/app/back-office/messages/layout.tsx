@@ -26,8 +26,6 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
     <>
       <EnTetePage
         titre={t("backOffice.entrees.messages")}
-        // Le sous-titre parle de Réception : sans elle (Notifier seul), pas de sous-titre.
-        sousTitre={admin ? t("backOffice.reception.sousTitreSection") : undefined}
         onglets={onglets.length > 1 ? <OngletsRail etiquette={t("backOffice.entrees.messages")} onglets={onglets} /> : undefined}
       />
       {children}

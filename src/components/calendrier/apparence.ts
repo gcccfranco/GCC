@@ -17,21 +17,20 @@ export const ICONES: Record<SourceCalendrier, LucideIcon> = {
   setlists: ListMusic,
 };
 
-/** Teintes de la planche pour le petit déj, dérivées de `serviceColor("Petit déj")` (#c87941). */
-const PETIT_DEJ = { fond: "#f8ece2", texte: "#9a5a2c" } as const;
-const ENCRE = "#1c1c1e";
+/** Teinte du texte du petit déj, dérivée de `serviceColor("Petit déj")` (#c87941). */
+const PETIT_DEJ = { texte: "#9a5a2c" } as const;
 
-/** Fond et texte d'une entrée dans sa case. */
+/** Fond et texte d'une entrée dans sa case ; hors service, des jetons de `globals.css` qui s'éclaircissent en sombre (bo-evenements-7). */
 export function styleCase(e: EntreeCalendrier): CSSProperties {
   switch (e.source) {
     case "evenements":
-      return { background: COULEURS_CALENDRIER.evenements.fond, color: ENCRE };
+      return { background: "var(--cal-evenement-fond)", color: "var(--cal-evenement-texte)" };
     case "taches":
-      return { background: COULEURS_CALENDRIER.taches.fond, color: ENCRE };
+      return { background: "var(--cal-tache-fond)", color: "var(--cal-tache-texte)" };
     case "reunions":
-      return { background: COULEURS_CALENDRIER.reunions.fond, color: COULEURS_CALENDRIER.reunions.point };
+      return { background: "var(--cal-reunion-fond)", color: "var(--cal-reunion-texte)" };
     case "petitDej":
-      return { background: PETIT_DEJ.fond, color: PETIT_DEJ.texte };
+      return { background: "var(--cal-petitdej-fond)", color: "var(--cal-petitdej-texte)" };
     default:
       return { background: e.couleur, color: "#fff" };
   }

@@ -72,7 +72,8 @@ export function PageDatesChoisies({ definition, lire, lireAutre }: {
         titre={t(definition.i18nTitre)}
         couleur={definition.couleur}
         detail={periode}
-        sousTitreBO={[t(definition.i18nTitre), t("planning.barre.casesVidesAnnee", { count: compterCasesVides(definition, lignesSimples(lignes)) })].join(" · ")}
+        // Le nom du planning est dans la pastille active de la rangée : pas de second nom en sous-titre.
+        sousTitreBO={t("planning.barre.casesVidesAnnee", { count: compterCasesVides(definition, lignesSimples(lignes)) })}
         chargement={loading}
       >
         <AnneeSelecteur annees={annees} annee={effAnnee} onChange={setAnnee} />

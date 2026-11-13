@@ -1,0 +1,388 @@
+{
+  "songs": {
+    "tab": {
+      "x": 9.6,
+      "y": 16.9,
+      "rx": 8.6,
+      "ry": 2.4,
+      "gauche": 1.1,
+      "droite": 18.2,
+      "haut": 14.5,
+      "bas": 19.4
+    },
+    "search": {
+      "x": 35.7,
+      "y": 17.4,
+      "rx": 12,
+      "ry": 2.9,
+      "gauche": 23.8,
+      "droite": 47.7,
+      "haut": 14.5,
+      "bas": 20.3
+    },
+    "dot": {
+      "x": 46.3,
+      "y": 52.8,
+      "rx": 1.4,
+      "ry": 1.6,
+      "gauche": 44.9,
+      "droite": 47.7,
+      "haut": 51.1,
+      "bas": 54.4
+    }
+  },
+  "song": {
+    "tonalite": {
+      "x": 62,
+      "y": 18,
+      "rx": 7.1,
+      "ry": 2.3,
+      "gauche": 54.9,
+      "droite": 69.1,
+      "haut": 15.8,
+      "bas": 20.3
+    },
+    "menu": {
+      "x": 93.8,
+      "y": 18,
+      "rx": 1.3,
+      "ry": 2,
+      "gauche": 92.5,
+      "droite": 95,
+      "haut": 16,
+      "bas": 20
+    },
+    "customize": {
+      "x": 86.9,
+      "y": 26.6,
+      "rx": 7.8,
+      "ry": 1.9,
+      "gauche": 79.1,
+      "droite": 94.7,
+      "haut": 24.8,
+      "bas": 28.5
+    }
+  },
+  "customize": {
+    "transpose": {
+      "x": 62,
+      "y": 18,
+      "rx": 7.1,
+      "ry": 2.3,
+      "gauche": 54.9,
+      "droite": 69.1,
+      "haut": 15.8,
+      "bas": 20.3
+    },
+    "sections": {
+      "x": 85,
+      "y": 8.8,
+      "rx": 13.8,
+      "ry": 1.1,
+      "gauche": 71.3,
+      "droite": 98.8,
+      "haut": 7.6,
+      "bas": 9.9
+    },
+    "reinit": {
+      "x": 74.8,
+      "y": 96.6,
+      "rx": 3.6,
+      "ry": 1.9,
+      "gauche": 71.3,
+      "droite": 78.4,
+      "haut": 94.8,
+      "bas": 98.5
+    }
+  },
+  "performance": {
+    "annoter": {
+      "x": 86.3,
+      "y": 4.3,
+      "rx": 1.7,
+      "ry": 2.8,
+      "gauche": 84.5,
+      "droite": 88,
+      "haut": 1.5,
+      "bas": 7
+    },
+    "reglages": {
+      "x": 93.4,
+      "y": 4.3,
+      "rx": 1.7,
+      "ry": 2.8,
+      "gauche": 91.7,
+      "droite": 95.2,
+      "haut": 1.5,
+      "bas": 7
+    },
+    "page": {
+      "x": 50,
+      "y": 96.8,
+      "rx": 3.9,
+      "ry": 2.8,
+      "gauche": 46.1,
+      "droite": 53.9,
+      "haut": 94,
+      "bas": 99.5
+    },
+    "quitter": {
+      "x": 97,
+      "y": 4.3,
+      "rx": 1.7,
+      "ry": 2.8,
+      "gauche": 95.3,
+      "droite": 98.8,
+      "haut": 1.5,
+      "bas": 7
+    }
+  },
+  "setlists": {
+    "open": {
+      "x": 38.1,
+      "y": 38.3,
+      "rx": 15.3,
+      "ry": 4.8,
+      "gauche": 22.8,
+      "droite": 53.4,
+      "haut": 33.5,
+      "bas": 43.1
+    },
+    "nouvelle": {
+      "x": 91.1,
+      "y": 5.8,
+      "rx": 4.4,
+      "ry": 1.3,
+      "gauche": 86.8,
+      "droite": 95.5,
+      "haut": 4.4,
+      "bas": 7.1
+    }
+  },
+  "composeInfos": {
+    "titre": {
+      "x": 32.7,
+      "y": 9.1,
+      "rx": 11.4,
+      "ry": 2.1,
+      "gauche": 21.3,
+      "droite": 44.1,
+      "haut": 7,
+      "bas": 11.3
+    },
+    "categorie": {
+      "x": 28.2,
+      "y": 15.5,
+      "rx": 4.7,
+      "ry": 1.1,
+      "gauche": 23.5,
+      "droite": 32.9,
+      "haut": 14.4,
+      "bas": 16.6
+    },
+    "publier": {
+      "x": 45.1,
+      "y": 95.3,
+      "rx": 3.6,
+      "ry": 2.8,
+      "gauche": 41.5,
+      "droite": 48.7,
+      "haut": 92.5,
+      "bas": 98
+    }
+  },
+  "composeSongs": {
+    "recherche": {
+      "x": 75.3,
+      "y": 13.4,
+      "rx": 21.9,
+      "ry": 2.9,
+      "gauche": 53.4,
+      "droite": 97.2,
+      "haut": 10.5,
+      "bas": 16.3
+    },
+    "plus": {
+      "x": 95.9,
+      "y": 61.8,
+      "rx": 1.3,
+      "ry": 2,
+      "gauche": 94.7,
+      "droite": 97.2,
+      "haut": 59.8,
+      "bas": 63.8
+    }
+  },
+  "composeAdvanced": {
+    "tonalites": {
+      "x": 75.3,
+      "y": 9.1,
+      "rx": 21.9,
+      "ry": 3.3,
+      "gauche": 53.4,
+      "droite": 97.2,
+      "haut": 5.8,
+      "bas": 12.4
+    },
+    "structure": {
+      "x": 75.3,
+      "y": 17.1,
+      "rx": 21.9,
+      "ry": 1.1,
+      "gauche": 53.4,
+      "droite": 97.2,
+      "haut": 15.9,
+      "bas": 18.2
+    },
+    "derniere": {
+      "x": 65.2,
+      "y": 36.9,
+      "rx": 5.6,
+      "ry": 2,
+      "gauche": 59.6,
+      "droite": 70.8,
+      "haut": 34.9,
+      "bas": 38.9
+    },
+    "fusionner": {
+      "x": 58.1,
+      "y": 95.7,
+      "rx": 4.6,
+      "ry": 2.5,
+      "gauche": 53.4,
+      "droite": 62.7,
+      "haut": 93.2,
+      "bas": 98.2
+    }
+  },
+  "planning": {
+    "premier": {
+      "x": 25.3,
+      "y": 13.5,
+      "rx": 2.8,
+      "ry": 1.8,
+      "gauche": 22.5,
+      "droite": 28,
+      "haut": 11.8,
+      "bas": 15.3
+    },
+    "dernier": {
+      "x": 74.6,
+      "y": 13.5,
+      "rx": 3.7,
+      "ry": 1.8,
+      "gauche": 70.9,
+      "droite": 78.3,
+      "haut": 11.8,
+      "bas": 15.3
+    },
+    "tab": {
+      "x": 9.6,
+      "y": 27.2,
+      "rx": 8.6,
+      "ry": 2.4,
+      "gauche": 1.1,
+      "droite": 18.2,
+      "haut": 24.8,
+      "bas": 29.6
+    },
+    "pourMoi": {
+      "x": 82,
+      "y": 48.3,
+      "rx": 13.6,
+      "ry": 1.8,
+      "gauche": 68.4,
+      "droite": 95.6,
+      "haut": 46.5,
+      "bas": 50
+    }
+  },
+  "services": {
+    "moi": {
+      "x": 9.6,
+      "y": 32.3,
+      "rx": 8.6,
+      "ry": 2.4,
+      "gauche": 1.1,
+      "droite": 18.2,
+      "haut": 29.9,
+      "bas": 34.8
+    },
+    "titre": {
+      "x": 59.7,
+      "y": 5.3,
+      "rx": 37.2,
+      "ry": 2.3,
+      "gauche": 22.5,
+      "droite": 96.9,
+      "haut": 3,
+      "bas": 7.5
+    },
+    "onglets": {
+      "x": 27,
+      "y": 34.4,
+      "rx": 3,
+      "ry": 1.9,
+      "gauche": 24,
+      "droite": 29.9,
+      "haut": 32.5,
+      "bas": 36.3
+    },
+    "ligne": {
+      "x": 37.9,
+      "y": 50.4,
+      "rx": 8.6,
+      "ry": 1.1,
+      "gauche": 29.4,
+      "droite": 46.5,
+      "haut": 49.3,
+      "bas": 51.5
+    }
+  },
+  "notifications": {
+    "toggle": {
+      "x": 95.5,
+      "y": 10.9,
+      "rx": 1.7,
+      "ry": 1.5,
+      "gauche": 93.8,
+      "droite": 97.2,
+      "haut": 9.4,
+      "bas": 12.4
+    }
+  },
+  "profile": {
+    "planningName": {
+      "x": 37.8,
+      "y": 40.1,
+      "rx": 13.7,
+      "ry": 0.8,
+      "gauche": 24.1,
+      "droite": 51.5,
+      "haut": 39.3,
+      "bas": 40.9
+    }
+  },
+  "admin": {
+    "membres": {
+      "x": 49.1,
+      "y": 10.6,
+      "rx": 5.2,
+      "ry": 2.3,
+      "gauche": 43.8,
+      "droite": 54.3,
+      "haut": 8.4,
+      "bas": 12.9
+    },
+    "liste": {
+      "x": 45.5,
+      "y": 81.1,
+      "rx": 4.5,
+      "ry": 1.3,
+      "gauche": 40.9,
+      "droite": 50,
+      "haut": 79.8,
+      "bas": 82.4
+    }
+  }
+}

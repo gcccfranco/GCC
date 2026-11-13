@@ -4,7 +4,7 @@
 
 // Noms écrits en toutes lettres : Tailwind ne garde une classe de `@layer utilities`
 // que s'il la lit telle quelle dans le code.
-const CLASSES = { page: "halo", fiche: "halo halo-fiche", chant: "halo halo-chant", moi: "halo halo-moi", chants: "halo halo-chants" };
+const CLASSES = { page: "halo", fiche: "halo halo-fiche" };
 
 export function Halo({ color, variant = "page" }: { color: string; variant?: keyof typeof CLASSES }) {
   return (

@@ -2,7 +2,7 @@
 // pour « Pour moi » — le prochain service, les suivants, la setlist du service. Pur,
 // testé sans navigateur.
 
-import type { FSSetlist } from "@/lib/firebase/setlists"
+import type { FSSetlist } from "@/types/setList"
 import { normalizeName, serviceCategory, type ServiceEntry } from "./names"
 import { grouperServices } from "./mesServices"
 

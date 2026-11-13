@@ -5,6 +5,10 @@
 // n'entendent pas la mélodie : chaque suggestion porte « À vérifier en
 // jouant », et sa sûreté sert à choisir les cinq premières.
 //
+// Les refus s'appliquent par section dans `suggestionsPour` ; la fusion des
+// sections qui donnent le même changement se fait ensuite, dans `regrouper`
+// (spec-idees-regroupees.md).
+//
 // Pur : le composant s'occupe de l'affichage, Firestore des refus.
 
 import type { ChordProSection } from "@/types/chordPro";
@@ -24,6 +28,10 @@ export interface Suggestion {
   section: number;
   endroits: Endroit[];
   surete: Surete;
+  /** Après `regrouper` : une entrée par section couverte, dans l'ordre du chant. */
+  sections?: { uid: string; nom: string; rang: number; endroits: Endroit[] }[];
+  /** Après `regrouper` : les `<fiche>__<section>` couverts (un refus par id). */
+  ids?: string[];
 }
 
 const RANG_SURETE: Record<Surete, number> = { "tres-sure": 0, sure: 1, "a-ecouter": 2 };
@@ -122,6 +130,36 @@ export function suggestionsPour(
   return out
     .filter((s) => !ecartes.has(s.id))
     .sort((a, b) => a.section - b.section || place(a) - place(b) || a.fiche.code.localeCompare(b.fiche.code));
+}
+
+/**
+ * Une carte par fiche et par changement : les suggestions d'une même fiche
+ * dont l'aperçu (`avant → après`, dans la tonalité jouée) est identique
+ * fusionnent. La carte garde l'identité du premier membre ; `sections` et `ids`
+ * disent tout ce qu'elle couvre. Les idées sans aperçu (tag, intro absente) ne
+ * fusionnent jamais. L'ordre du chant est conservé.
+ */
+export function regrouper(suggestions: Suggestion[], tonalite: string): Suggestion[] {
+  const groupes = new Map<string, Suggestion[]>();
+  const out: Suggestion[][] = [];
+  for (const s of suggestions) {
+    const apercu = apercuDuChangement(s, tonalite);
+    const cle = apercu ? `${s.fiche.id}|${apercu.avant}|${apercu.apres}` : null;
+    const groupe = cle ? groupes.get(cle) : undefined;
+    if (groupe) {
+      groupe.push(s);
+      continue;
+    }
+    const nouveau = [s];
+    if (cle) groupes.set(cle, nouveau);
+    out.push(nouveau);
+  }
+  return out.map((membres) => ({
+    ...membres[0],
+    endroits: membres.flatMap((m) => m.endroits),
+    sections: membres.map((m) => ({ uid: m.sectionUid, nom: m.sectionNom, rang: m.section, endroits: m.endroits })),
+    ids: membres.map((m) => m.id),
+  }));
 }
 
 /**

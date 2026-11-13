@@ -84,6 +84,12 @@ test("chant ZH : le pinyin est copié même masqué à l'écran", async ({ page 
   await page.goto(`/songs/${encodeURIComponent("爱的约定")}`);
   const line = page.locator("[data-copy-line]", { hasText: "两" }).first();
   await line.waitFor();
+  // Comme copyFromPageTopToSongEnd : attendre l'hydratation. Un clic sur « Pinyin » avant elle est
+  // perdu (le pinyin reste affiché), et le copieur ne s'abonne à « copy » qu'au montage.
+  await page.waitForFunction(() => {
+    const button = document.querySelector("button");
+    return !!button && Object.keys(button).some((k) => k.startsWith("__reactProps"));
+  });
   // Masque le pinyin à l'écran : la régie en a quand même besoin.
   await page.getByRole("button", { name: "Pinyin" }).click();
   await expect(line).not.toContainText("liǎng");

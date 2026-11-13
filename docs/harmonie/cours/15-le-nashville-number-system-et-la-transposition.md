@@ -63,9 +63,9 @@ L'annexe 24 donne tous les accords dans les 12 tonalités pour vérifier.
 
 | Situation | Écart habituel | Exemple |
 | --- | --- | --- |
-| Chant écrit pour un leader homme, chanté par une femme | Une quarte ou une quinte | Si (B) → Mi (E) ou Fa# (F#) |
+| Chant écrit pour un leader homme, chanté par une femme | Une quarte ou une quinte | Si (B) → Mi (E) ou Fa♯ (F#) |
 | Chant trop haut pour l'assemblée | Un ton à une tierce plus bas | Si (B) → La (A) ou Sol (G) |
-| Dernier refrain plus lumineux | Un demi-ton ou un ton plus haut | Sol → Lab ou La |
+| Dernier refrain plus lumineux | Un demi-ton ou un ton plus haut | Sol → La♭ ou La |
 | Deux chants à enchaîner | Vers la tonalité du second | Ré → Mi |
 
 ## 15.6 Le capo pour les guitaristes
@@ -75,19 +75,19 @@ Le capo remonte toutes les cordes d'un demi-ton par case. On joue des formes sim
 | Tonalité souhaitée | Options de capo (case : formes jouées) |
 | --- | --- |
 | Do (C) | Sans capo : Do ; capo 3 : La ; capo 5 : Sol |
-| Réb (Db) | Capo 1 : Do ; capo 4 : La ; capo 6 : Sol |
+| Ré♭ (Db) | Capo 1 : Do ; capo 4 : La ; capo 6 : Sol |
 | Ré (D) | Sans capo : Ré ; capo 2 : Do ; capo 5 : La |
-| Mib (Eb) | Capo 1 : Ré ; capo 3 : Do ; capo 6 : La |
+| Mi♭ (Eb) | Capo 1 : Ré ; capo 3 : Do ; capo 6 : La |
 | Mi (E) | Sans capo : Mi ; capo 2 : Ré ; capo 4 : Do |
 | Fa (F) | Capo 1 : Mi ; capo 3 : Ré ; capo 5 : Do |
-| Fa# (F#) | Capo 2 : Mi ; capo 4 : Ré ; capo 6 : Do |
+| Fa♯ (F#) | Capo 2 : Mi ; capo 4 : Ré ; capo 6 : Do |
 | Sol (G) | Sans capo : Sol ; capo 3 : Mi ; capo 5 : Ré |
-| Lab (Ab) | Capo 1 : Sol ; capo 4 : Mi ; capo 6 : Ré |
+| La♭ (Ab) | Capo 1 : Sol ; capo 4 : Mi ; capo 6 : Ré |
 | La (A) | Sans capo : La ; capo 2 : Sol ; capo 5 : Mi |
-| Sib (Bb) | Capo 1 : La ; capo 3 : Sol ; capo 6 : Mi |
+| Si♭ (Bb) | Capo 1 : La ; capo 3 : Sol ; capo 6 : Mi |
 | Si (B) | Capo 2 : La ; capo 4 : Sol ; capo 7 : Mi |
 
-**Communication dans l'équipe :** le guitariste annonce toujours la tonalité réelle (« on est en Lab »), jamais seulement les formes jouées (« je joue en Sol capo 1 »). Sinon, le clavier et la basse joueront dans la mauvaise tonalité.
+**Communication dans l'équipe :** le guitariste annonce toujours la tonalité réelle (« on est en La♭ »), jamais seulement les formes jouées (« je joue en Sol capo 1 »). Sinon, le clavier et la basse joueront dans la mauvaise tonalité.
 
 ## 15.7 Nashville, jianpu et chiffres romains
 
@@ -109,4 +109,4 @@ Un chanteur qui lit le jianpu lit donc déjà presque une grille Nashville. C'es
 
 1. Écris en Nashville la grille de trois chants du répertoire.
 2. Joue la grille de la section 15.3 en Do, Sol, Ré, La et Mi sans rien écrire.
-3. Guitaristes : joue le même chant en Lab avec deux capos différents, et choisissez en équipe celui qui sonne le mieux avec le clavier.
+3. Guitaristes : joue le même chant en La♭ avec deux capos différents, et choisissez en équipe celui qui sonne le mieux avec le clavier.

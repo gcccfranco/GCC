@@ -16,6 +16,8 @@ Tout est écrit en D. `1/3` = accord du 1 avec la tierce à la basse (D/F#).
 | Statut | à valider |
 | Sensations | Douceur et intimité · Tendresse et nostalgie |
 | Moments | Couplet · Intro |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | couplet · transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `D → Bm → G` devient `D – A/C# – Bm – Bm/A – G` · degrés
@@ -56,6 +58,8 @@ en C : C – G/B – Am) · *Au dessus de tout* (couplet, en A : A – A/G# – 
 | Statut | à valider |
 | Sensations | Joie et élan · Lumière et espérance |
 | Moments | Montée · Refrain |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | pré-refrain · refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `G → Bm` devient `G – A – Bm` · degrés `4 → 6m` devient
@@ -93,6 +97,8 @@ Dm) · 使命 (主歌, en A : D – E – F#m).
 | Statut | à valider |
 | Sensations | Joie et élan · Lumière et espérance |
 | Moments | Couplet · Montée |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `D → G` devient `D – D/F# → G` · degrés `1 → 4` devient
@@ -128,6 +134,8 @@ C/E – F).
 | Statut | à valider |
 | Sensations | Repos · Joie et élan |
 | Moments | Couplet · Refrain · Fin |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | couplet · refrain · fin (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `A → D` devient `A/C# → D` · degrés `5 → 1` devient
@@ -164,6 +172,8 @@ demi-ton sur D. Le retour au 1 est plus lié, plus chantant qu'un saut A → D.
 | Statut | à valider |
 | Sensations | Repos · Suspendu et planant |
 | Moments | Intro · Pont · Fin |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | pré-refrain · fin · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `D → G → D` devient `D – G/D – D` · degrés `1 → 4 → 1`
@@ -203,6 +213,8 @@ D) · *Je fléchis le genou* (refrain, en G : G – C/G – G) · *Je célèbrer
 | Statut | à valider |
 | Sensations | Tendresse et nostalgie · Gravité et recueillement |
 | Moments | Couplet · Pont |
+| Ressenti | mélancolique (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : `D → D → G` devient `D – D/C# – D/C – G/B` · degrés

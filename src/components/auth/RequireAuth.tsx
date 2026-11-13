@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/firebase/auth";
+import { Squelette } from "@/components/layout/Squelette";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
@@ -19,11 +20,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   }, [loading, user, router, pathname]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
   if (!user) return null;
   return <>{children}</>;

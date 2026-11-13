@@ -1,13 +1,15 @@
 import {
   FS_BASE,
   authHeader,
+  lireRequete,
   checkRest,
   toFsFields,
   fromFsValue,
   type RawDoc,
 } from "./setlists";
-import { FIREBASE_PROJECT_ID } from "./config";
+import { versDate } from "@/lib/utils/formatDate";
 import type { SongProposal, SongProposalStatus } from "@/types/songProposal";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 
 function fromFsProposal(raw: RawDoc): SongProposal {
   const id = raw.name.split("/").pop()!;
@@ -22,27 +24,18 @@ function fromFsProposal(raw: RawDoc): SongProposal {
     status: (data.status as SongProposalStatus) ?? "pending",
     authorId: (data.authorId as string) ?? "",
     authorName: (data.authorName as string) ?? "",
-    createdAt: (data.createdAt as Date | null) ?? null,
+    createdAt: versDate(data.createdAt),
     ...(data.setlistId ? { setlistId: data.setlistId as string, setlistTitre: (data.setlistTitre as string) ?? "" } : {}),
   };
 }
 
 /** Toutes les propositions, les plus récentes d'abord (lecture réservée aux admins). */
 export async function getSongProposals(): Promise<SongProposal[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "songProposals" }],
-        orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "songProposals" }],
+    orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
   });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => fromFsProposal(r.document!));
+  return (docs ?? []).map(fromFsProposal);
 }
 
 export async function createSongProposal(
@@ -58,6 +51,7 @@ export async function createSongProposal(
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields }),
   });
+  viderGardesTableau(); // pastille Messages et « À faire » (lot LF)
   await checkRest(res);
   const doc = (await res.json()) as RawDoc;
   return doc.name.split("/").pop()!;
@@ -68,7 +62,7 @@ export async function setProposalStatus(
   status: SongProposalStatus
 ): Promise<void> {
   const headers = await authHeader();
-  const docName = `projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/songProposals/${id}`;
+  const docName = `projects/gcclouange/databases/(default)/documents/songProposals/${id}`;
   const res = await fetch(
     `${FS_BASE}/songProposals/${id}?updateMask.fieldPaths=status`,
     {
@@ -77,6 +71,7 @@ export async function setProposalStatus(
       body: JSON.stringify({ name: docName, fields: toFsFields({ status }) }),
     }
   );
+  viderGardesTableau(); // pastille Messages et « À faire » (lot LF)
   await checkRest(res);
 }
 
@@ -86,5 +81,6 @@ export async function deleteSongProposal(id: string): Promise<void> {
     method: "DELETE",
     headers,
   });
+  viderGardesTableau(); // pastille Messages et « À faire » (lot LF)
   await checkRest(res);
 }

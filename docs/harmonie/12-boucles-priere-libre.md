@@ -19,6 +19,8 @@ chant.
 | Statut | à valider |
 | Sensations | Douceur et intimité · Tendresse et nostalgie · Repos |
 | Moments | Transition · Pont |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **La boucle** : `D – A/C# – Bm – G`, puis on recommence.
@@ -56,6 +58,8 @@ E – B/D# – C#m – A).
 | Statut | à valider |
 | Sensations | Suspendu et planant · Émerveillement · Douceur et intimité |
 | Moments | Transition · Intro |
+| Ressenti | couleur (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **La boucle** : `Dmaj7 – G/D`, deux accords, deux mesures chacun.
@@ -85,6 +89,8 @@ C'est la boucle la plus contemplative.
 | Statut | à valider |
 | Sensations | Lumière et espérance · Joie et élan |
 | Moments | Transition · Refrain |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **La boucle** : `Bm – G – D – A`, puis on recommence.
@@ -119,6 +125,8 @@ en F : Dm – Bb – F – C) · 哦十字架 (桥段, en F : Dm – Bb – F �
 | Statut | à valider |
 | Sensations | Tension · Épique · Joie et élan |
 | Moments | Transition · Montée |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **La boucle** : `G – A – Bm`, puis retour à `G` (sans passer par D).
@@ -152,6 +160,8 @@ traverserai avec Toi ») · *Abba Père* (refrain, en A : D – E – F#m) · �
 | Statut | à valider |
 | Sensations | Suspendu et planant · Douceur et intimité |
 | Moments | Transition · Pont |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **La boucle** : `D – Em7`, deux mesures chacun (ou `D – Em7/D`, basse tenue).
@@ -182,6 +192,8 @@ texte par-dessus.
 | Statut | à valider |
 | Sensations | Suspendu et planant · Douceur et intimité · Épique |
 | Moments | Transition |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Le principe** : garder **la même boucle** plusieurs minutes, mais changer
@@ -206,5 +218,161 @@ main droite qui fait évoluer.
 
 **À la guitare.** Passe d'arpèges à une rythmique, ou de formes ouvertes (V4)
 aux triades aiguës (V5).
+
+**Règle.** Aucune : catalogue seul.
+
+---
+
+## L7 · 1 – 4 – 5 – 1, la boucle qui se referme
+
+| | |
+| --- | --- |
+| Id | `boucles/1-4-5-1` |
+| Statut | à valider |
+| Sensations | Joie et élan · Repos |
+| Moments | Refrain · Transition |
+| Ressenti | élan · chaleureux (proposé) |
+| Usage | refrain · transition (proposé) |
+| Niveau | piano : facile · guitare : facile |
+
+**La boucle** : `D – G – A – D`, puis on recommence.
+
+**Pourquoi ça marche.** Les trois accords majeurs du ton, et un retour au 1 à
+chaque tour : chaque tour se ferme. Simple, joyeux, facile à suivre pour toute
+l'assemblée ; c'est la boucle d'un « alléluia » repris en chœur. Contrairement
+à L3 ou L4, elle ne relance pas : elle se pose.
+
+**Quand l'éviter.**
+- Sur une longue prière : se refermer à chaque tour lasse vite. Préférer L1
+  ou L3, ou faire évoluer la boucle (L6).
+- Pour amener un refrain : s'arrêter sur le 5, sans le dernier D.
+
+**Au piano.** Main gauche : D – G – A – D. Main droite : D-F#-A → D-G-B →
+C#-E-A → D-F#-A (notes communes, V2).
+
+**À la guitare.** D `xx0232` – G `320033` – A `x02220` – D `xx0232` ; un
+Asus4 `x02230` avant le A ajoute un peu de tension.
+
+**Dans le répertoire** : *Je célèbrerai* (refrain, en C : C – F – G – C) ·
+*Reçois l'adoration* (couplet 1, en C : C – F – G – C) · *Feu du fondeur*
+(refrain, en E : E – A – B – E – A – B) · 不停赞美 (主歌, en D : D – G – A – D)
+· 伯利恒的喜讯 (副歌, en Eb : Eb – Ab – Bb – Eb).
+
+**Règle.** Aucune : catalogue seul.
+
+---
+
+## L8 · 1 – 6m – 4 – 5, la boucle tendre
+
+| | |
+| --- | --- |
+| Id | `boucles/1-6m-4-5` |
+| Statut | à valider |
+| Sensations | Tendresse et nostalgie · Douceur et intimité |
+| Moments | Couplet · Refrain |
+| Ressenti | mélancolique · chaleureux (proposé) |
+| Usage | couplet · refrain (proposé) |
+| Niveau | piano : facile · guitare : facile |
+
+**La boucle** : `D – Bm – G – A`, puis on recommence.
+
+**Pourquoi ça marche.** Partie du 1, elle glisse vers le 6m (deux notes
+communes : D et F#), passe par le 4 et finit sur le 5, qui ramène au 1 à
+chaque tour. Le 5 en fin de tour relance sans brusquer : une boucle tendre,
+un peu nostalgique, qui porte bien un couplet ou une prière calme.
+
+**Quand l'éviter.**
+- Quand on cherche de l'élan : L3 (6m – 4 – 1 – 5) ou L4 montent plus.
+- Toute une prière sans changement : la tendresse devient vite sucrée. Faire
+  évoluer la boucle (L6).
+
+**Au piano.** Main gauche : D – B – G – A. Main droite : F#-A-D → F#-B-D →
+G-B-D → E-A-C#.
+
+**À la guitare.** D `xx0232` – Bm7 `x20202` – G `320033` – A `x02220`.
+
+**Dans le répertoire** : *Éternel, Notre Seigneur* (refrain, en G : G – Em –
+C – D) · *Mon seul souhait* (couplet 1, en C : C – Am7 – F – G) · *Toi et
+moi* (refrain, en G : G – Em7 – C – C/D – D) · 亲眼看见你 (副歌, en D : D –
+Bm7 – G – A) · 全然向你 (主歌, en D : D – Bm – G – A7).
+
+**Règle.** Aucune : catalogue seul.
+
+---
+
+## L9 · 4 – 1 – 5 – 6m, la boucle qui part du 4
+
+| | |
+| --- | --- |
+| Id | `boucles/4-1-5-6m` |
+| Statut | à valider |
+| Sensations | Lumière et espérance · Joie et élan |
+| Moments | Refrain · Intro |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | refrain · transition (proposé) |
+| Niveau | piano : facile · guitare : facile |
+
+**La boucle** : `G – D – A – Bm`, puis on recommence.
+
+**Pourquoi ça marche.** Elle commence en l'air, sur le 4, passe par le 1 sans
+s'y poser et finit sur le 6m : une question ouverte à chaque tour. C'est la
+boucle de beaucoup de refrains d'aujourd'hui. Les mêmes accords que L3
+(6m – 4 – 1 – 5), décalés : ici le tour finit sur le 6m, plus doux que le 5,
+et le 4 en tête donne un souffle lumineux.
+
+**Quand l'éviter.**
+- Pour finir un chant : la boucle ne se pose pas. En sortir par `G – A – D`.
+- Juste après L3 : ce sont les mêmes accords, l'oreille n'entend pas de
+  changement.
+
+**Au piano.** Main gauche : G – D – A – B. Main droite : G-B-D → F#-A-D →
+E-A-C# → F#-B-D.
+
+**À la guitare.** G `320033` – D `xx0232` – A `x02220` (ou A/C# `x42220`) –
+Bm7 `x20202`.
+
+**Dans le répertoire** : *Bénis Dieu (10000 raisons)* (refrain, en D : G – D
+– A/C# – Bm) · *De grâce en grâce* (refrain, en A : D – A – E – F#m) · *Avec
+nous (Emmanuel)* (intro, en E : A – E – B – C#m) · 住在你里面 (副歌, en D :
+G/A – D – A/C# – Bm) · 从这代到那代 (副歌, en E : A/B – E – B/D# – C#m).
+
+**Règle.** Aucune : catalogue seul.
+
+---
+
+## L10 · 1 – 5 – 4, trois accords qui descendent
+
+| | |
+| --- | --- |
+| Id | `boucles/1-5-4` |
+| Statut | à valider |
+| Sensations | Majesté · Joie et élan |
+| Moments | Refrain · Couplet |
+| Ressenti | élan (proposé) |
+| Usage | refrain · couplet (proposé) |
+| Niveau | piano : facile · guitare : facile |
+
+**La boucle** : `D – A – G`, puis retour à `D` (ou `D – A – G – G` pour
+remplir quatre mesures).
+
+**Pourquoi ça marche.** Le 5 vient tout de suite après le 1, puis on retombe
+sur le 4 au lieu de revenir au 1 : la basse descend D, A, G. Un son large et
+franc, sans accord mineur. Le 4 → 1 qui referme le tour est une cadence douce
+(comme un « amen ») : rien ne tire, tout respire.
+
+**Quand l'éviter.**
+- Sur un temps intime : la boucle sonne grande. Prendre L2 ou L5.
+- Trop longtemps sans accord mineur : ajouter un Bm de temps en temps (L6).
+
+**Au piano.** Main gauche : D – A – G. Main droite : F#-A-D → E-A-C# →
+D-G-B.
+
+**À la guitare.** D `xx0232` – A `x02220` – G `320033` ; pour un son plus
+ouvert, Dsus2 `xx0230` – Asus4 `x02230` – G `320033`.
+
+**Dans le répertoire** : *Béni soit Ton Nom* (couplet 1, en A : A – E – D) ·
+*Que Ton règne vienne* (refrain, en E : E – B – A) · *La passion* (refrain,
+en D : D – A – G – D) · *Lumière du monde* (couplet 1, en D : D – Asus4 –
+Gsus2) · 一切歌颂赞美 (主歌, en E : E – B – A – E).
 
 **Règle.** Aucune : catalogue seul.

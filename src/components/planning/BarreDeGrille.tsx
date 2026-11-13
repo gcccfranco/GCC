@@ -15,6 +15,7 @@ import { createPortal } from "react-dom"
 import { usePathname } from "next/navigation"
 import { Lock, User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { Pilules, type OngletRail } from "@/components/layout/Onglets"
 import { useProfile } from "@/lib/firebase/users"
 import { planningsDuBackOffice } from "@/lib/access"
@@ -99,13 +100,13 @@ export function FiltreDeNom({ filtre, couleur }: { filtre: FiltreNom; couleur: s
             value={filtre.nom}
             onChange={(e) => filtre.changerNom(e.target.value)}
             placeholder={t("planning.table.myName")}
-            className="h-9 w-full rounded-full border border-border bg-card pl-8 pr-8 text-[16px] font-semibold text-foreground placeholder:font-normal sm:text-[13px] focus:outline-none focus:ring-2 focus:ring-ring/20"
+            className="h-9 w-full rounded-full border border-border bg-card pl-8 pr-8 text-[16px] font-semibold text-foreground placeholder:font-normal sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/20"
           />
           {filtre.nom && (
             <button
               type="button"
               onClick={filtre.effacer}
-              className="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 text-muted-foreground hover:text-foreground active:text-foreground"
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 text-muted-foreground hover:text-foreground active:text-foreground [@media(pointer:coarse)]:after:absolute [@media(pointer:coarse)]:after:-inset-[6px] [@media(pointer:coarse)]:after:content-['']"
               aria-label={t("planning.table.clear")}
             >
               <X className="h-3 w-3" />
@@ -118,7 +119,7 @@ export function FiltreDeNom({ filtre, couleur }: { filtre: FiltreNom; couleur: s
           type="button"
           aria-pressed={filtre.mesDates}
           onClick={filtre.basculerMesDates}
-          className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
+          className={`${TOUCHER_44} inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
             filtre.mesDates ? "text-white" : "border border-border bg-card text-foreground hover:bg-secondary"
           }`}
           style={filtre.mesDates ? { background: couleur } : undefined}
@@ -179,6 +180,11 @@ function PlanningsDuBackOffice() {
   )
 }
 
+/** Hors grand (téléphone, tablette debout), le sélecteur « Intergroupe ⌄ » dit déjà le planning : le h2
+ *  ne reste que pour les lecteurs d'écran. En grand, les pilules de l'en-tête et le h2 de la rangée coexistent. */
+const SR_HORS_GRAND =
+  "sr-only [@media(pointer:fine)_and_(min-width:1024px)]:not-sr-only [@media(pointer:coarse)_and_(orientation:landscape)_and_(min-width:1024px)]:not-sr-only"
+
 export function BarreDeGrille({
   titre,
   couleur,
@@ -202,26 +208,26 @@ export function BarreDeGrille({
   const gestion = useGestionPlanning()
   const enCours = chargement && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>
   return (
-    // Au Back-Office, en grand, une seule rangée : les plannings défilent en largeur s'ils ne
-    // tiennent pas à côté de la période (sept plannings et deux années à 1 280 px), estompés au bord.
-    <div data-testid="barre-grille" className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 ${gestion ? "lg:flex-nowrap" : ""}`}>
+    // Au Back-Office, deux rangées partout : les plannings prennent leur propre ligne pleine largeur,
+    // année, trimestre et « Mes dates » dessous, à gauche.
+    <div data-testid="barre-grille" className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5">
       {gestion ? (
         <>
           <DansLEnTete ou="sousTitre">{sousTitreBO ?? titre}</DansLEnTete>
           {enCours && <DansLEnTete ou="outils">{enCours}</DansLEnTete>}
-          <div className="min-w-0 max-w-full lg:flex-1 lg:[mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)]">
+          <div className="min-w-0 basis-full">
             <PlanningsDuBackOffice />
           </div>
         </>
       ) : (
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
           <span aria-hidden className="h-2.5 w-2.5 shrink-0 self-center rounded-full" style={{ background: couleur }} />
-          <h2 className="text-[22px] font-bold leading-7 text-foreground">{titre}</h2>
-          {detail && <span className="text-[14px] text-muted-foreground">{detail}</span>}
+          <h2 className={`text-xl font-bold leading-7 text-foreground ${SR_HORS_GRAND}`}>{titre}</h2>
+          {detail && <span className="text-sm text-muted-foreground">{detail}</span>}
           {enCours}
         </div>
       )}
-      {children && <div className={`flex max-w-full flex-wrap items-center gap-2 ${gestion ? "lg:shrink-0 lg:flex-nowrap" : ""}`}>{children}</div>}
+      {children && <div className="flex max-w-full flex-wrap items-center gap-2">{children}</div>}
     </div>
   )
 }

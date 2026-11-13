@@ -180,8 +180,8 @@ test("la liste courte : transition, note du chant, tonalité et « orig. », pas
   const yisheng = liste.locator("[data-element]").filter({ hasText: "一生爱你" });
   await expect(yisheng.getByTestId("tonalite")).toHaveText("F");
   await expect(yisheng.getByTestId("tonalite-origine")).toHaveText("orig. E");
-  // Pastilles de structure d'Abba Père : I C1 R Pm C2 P.
-  await expect(liste.locator("[data-element]").first().locator("[data-pastille]")).toHaveText(["I", "C1", "R", "Pm", "C2", "P"]);
+  // Pastilles de structure d'Abba Père : I C1 R Int C2 P.
+  await expect(liste.locator("[data-element]").first().locator("[data-pastille]")).toHaveText(["I", "C1", "R", "Int", "C2", "P"]);
   // Ni « Sélectionner » ni recherche à côté de la liste : elle est courte.
   await expect(page.getByRole("button", { name: "Sélectionner" })).toHaveCount(0);
   await expect(page.getByPlaceholder("Chercher un chant à ajouter…")).toHaveCount(0);
@@ -207,7 +207,7 @@ for (const [langue, libelle] of [["fr", "Modulation"], ["zh-CN", "升调"]] as c
     if (langue === "zh-CN") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrirT3(page);
     await reglerElement(page, "Abba Père");
-    const bouton = ligneSection(volet(page), "Refrain").first().getByTitle("Modulation (升调)");
+    const bouton = ligneSection(volet(page), langue === "zh-CN" ? "副歌" : "Refrain").first().getByTitle("Modulation (升调)");
     await expect(bouton).toHaveText(libelle);
   });
 }
@@ -431,19 +431,21 @@ test("clavier (Q13) : la poignée d'un chant le déplace — espace, flèche bas
 test("clavier (Q13) : flèches gauche et droite déplacent une pastille de structure, le focus la suit ; Entrée la choisit", async ({ page }) => {
   const db = await ouvrirT3(page);
   await reglerElement(page, "Abba Père");
-  await volet(page).getByRole("button", { name: "Intro, étape 1", exact: true }).focus();
+  // L'intro d'Abba Père s'appelle « Intro (x2) » depuis la reprise du corpus (commit 1b488bdf, 11/10/2026,
+  // content/songs/abba-pere.cho:9) : la pastille porte le nom de la section.
+  await volet(page).getByRole("button", { name: "Intro (x2), étape 1", exact: true }).focus();
   await page.keyboard.press("ArrowRight");
-  await expect(volet(page).getByRole("button", { name: "Intro, étape 2", exact: true })).toBeFocused();
+  await expect(volet(page).getByRole("button", { name: "Intro (x2), étape 2", exact: true })).toBeFocused();
   await expect
     .poll(() => etapes(itemsEnBase(db)[0] ?? ({} as SetlistItem)).slice(0, 3), { timeout: 10_000 })
     .toEqual(["verse-2", "intro-1", "chorus-3"]);
   await page.keyboard.press("ArrowLeft");
-  await expect(volet(page).getByRole("button", { name: "Intro, étape 1", exact: true })).toBeFocused();
+  await expect(volet(page).getByRole("button", { name: "Intro (x2), étape 1", exact: true })).toBeFocused();
   // Revenue à l'ordre du chant : plus de structure propre (`structureOverride: null`).
   await expect.poll(() => itemsEnBase(db)[0]?.structureOverride, { timeout: 10_000 }).toBeNull();
   await page.keyboard.press("Enter");
-  await expect(volet(page).getByRole("button", { name: "Intro, étape 1", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(volet(page).getByRole("button", { name: "Retirer l'étape Intro", exact: true })).toBeVisible();
+  await expect(volet(page).getByRole("button", { name: "Intro (x2), étape 1", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(volet(page).getByRole("button", { name: "Retirer l'étape Intro (x2)", exact: true })).toBeVisible();
 });
 
 test("ordinateur, barre dépliée (Q6) : feuilles sous 1 054 px de fenêtre (moins de 806 px d'éditeur), deux colonnes au-delà ; barre réduite, deux colonnes", async ({ page }, testInfo) => {
@@ -472,4 +474,97 @@ test("petits écrans, mouvement réduit : la feuille arrive en fondu, sans gliss
     return { nom: s.animationName, duree: s.animationDuration };
   });
   expect(style).toEqual({ nom: "volet-fondu", duree: "0.2s" });
+});
+
+// ─── Corrections du design, groupe Dimanche (docs/spec-corrections-design/dimanche.md) ───
+
+test("dimanche-3 : tonalité choisie, la lettre suit le thème (blanc en clair, --primary-foreground en sombre)", async ({ page }) => {
+  await ouvrirT3(page);
+  await reglerElement(page, "Abba Père");
+  const choisie = () => groupeTonalites(page, "Abba Père").getByRole("radio", { checked: true }).locator("span").first();
+  const couleur = (sombre: boolean) =>
+    choisie().evaluate((el, s) => {
+      const sonde = document.createElement("i");
+      sonde.style.color = s ? "hsl(var(--primary-foreground))" : "rgb(255, 255, 255)";
+      document.body.appendChild(sonde);
+      const attendu = getComputedStyle(sonde).color;
+      sonde.remove();
+      return { vu: getComputedStyle(el).color, attendu };
+    }, sombre);
+  const c = await couleur(false);
+  expect(c.vu).toBe(c.attendu);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect.poll(async () => { const d = await couleur(true); return d.vu === d.attendu; }).toBe(true);
+});
+
+test("dimanche-4 : « Notes pour l'équipe » est une zone de texte sous son libellé, deux phrases lisibles en entier", async ({ page }) => {
+  const db = await ouvrirT3(page);
+  const note = "Intro douce, enchaîner sans pause.\nRefrain en canon au dernier passage, finir sur le D tenu.";
+  const champ = champNotes(page);
+  await expect(champ).toHaveJSProperty("tagName", "TEXTAREA");
+  await expect(page.locator("label", { hasText: "Notes pour l'équipe" }).locator("span").first()).toHaveText("Notes pour l'équipe");
+  await champ.fill(note);
+  const m = await champ.evaluate((el: HTMLTextAreaElement) => ({ coupe: el.scrollHeight > el.clientHeight + 1, hauteur: el.getBoundingClientRect().height }));
+  expect(m.coupe, "trois lignes au plus, sans défilement pour ces deux phrases").toBe(false);
+  expect(m.hauteur).toBeLessThanOrEqual(90);
+  await expect.poll(() => db.doc(SETLIST_DOC)?.notes, { timeout: 10_000 }).toBe(note);
+});
+
+test("dimanche-5 : en 中文, les noms de section de l'éditeur sont traduits, le nom stocké ne change pas", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  const db = await ouvrirT3(page);
+  await reglerElement(page, "Abba Père");
+  const v = volet(page);
+  await expect(v.getByRole("button", { name: "前奏 (x2)", exact: true })).toBeVisible();
+  const texte = await v.innerText();
+  expect(texte).toContain("前奏");
+  expect(texte).toContain("主歌 1");
+  expect(texte).not.toMatch(/Intro|Couplet|Refrain|Pont/);
+  await v.getByRole("button", { name: "副歌", exact: true }).click();
+  await expect
+    .poll(() => (itemsEnBase(db)[0].structureOverride ?? []).some((u) => u.startsWith("chorus")), { timeout: 10_000 })
+    .toBe(true);
+});
+
+test("dimanche-6 : « Autre » fusionne menu et champ en une puce à fond blanc ; le nom se tape dans la puce", async ({ page }) => {
+  const db = await ouvrirT3(page);
+  const nom = page.getByLabel("Nom de la présidence");
+  await expect(nom).toBeVisible();
+  await nom.fill("Gaspard T.");
+  await expect(nom).toHaveValue("Gaspard T.");
+  await expect.poll(() => db.doc(SETLIST_DOC)?.leader, { timeout: 10_000 }).toBe("Gaspard T.");
+  // Une seule puce : l'<input> et le <select> de présidence ont le même parent, au fond blanc.
+  const puce = nom.locator("..");
+  await expect(puce.getByLabel("Présidence", { exact: true })).toHaveCount(1);
+  const fond = await puce.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const blanc = await page.evaluate(() => {
+    const s = document.createElement("i");
+    s.style.color = "hsl(var(--background))";
+    document.body.appendChild(s);
+    const c = getComputedStyle(s).color;
+    s.remove();
+    return c;
+  });
+  expect(fond).toBe(blanc);
+  // « Partagée » et « Équipe » restent groupées : jamais « Équipe » seule sur sa rangée.
+  const groupe = page.getByLabel("Visibilité").locator("xpath=ancestor::span[contains(@class,'whitespace-nowrap')][1]");
+  await expect(groupe).toHaveCount(1);
+});
+
+test("dimanche-23 : poignée de 20 px, icône non transparente, zone de toucher de 44 px sous pointer: coarse", async ({ page }, testInfo) => {
+  await ouvrirT3(page);
+  // Abba Père est la ligne choisie (points clairs, translucides par décision) : on mesure une ligne non choisie.
+  const poignee = listeCourte(page).getByRole("button", { name: "Réordonner 一生爱你", exact: true });
+  const icone = poignee.locator("svg");
+  const m = await icone.evaluate((el) => ({ w: el.getBoundingClientRect().width, c: getComputedStyle(el).color }));
+  expect(m.w).toBe(20);
+  expect(m.c, "sans transparence").not.toMatch(/rgba\(.*,\s*0\.\d+\)$/);
+  if (testInfo.project.name !== "ordinateur" && testInfo.project.name !== "ordinateur-1440") {
+    const zone = await poignee.evaluate((el) => {
+      const a = getComputedStyle(el, "::after");
+      return { h: parseFloat(a.height), w: parseFloat(a.width), contenu: a.content };
+    });
+    expect(zone.h).toBeGreaterThanOrEqual(44);
+    expect(zone.w).toBeGreaterThanOrEqual(44);
+  }
 });

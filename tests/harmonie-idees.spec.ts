@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Lot 9 / H2 et H3 (docs/spec-harmonie.md) : la feuille « Idées d'harmonie »
 // d'un chant — cinq idées au plus, chacune « À vérifier en jouant », le refus
@@ -11,8 +11,8 @@ const CULTE = csv([
   ["20/09", "Paul W.", "", "", "Jo L.", "Éloïse M.", "Yiyi C.", "", "", "Hewei", "", ""],
 ]);
 
-const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", planningName: "Jo L." };
-const YIYI: FakeProfile = { uid: "uid-yiyi", email: "yiyi@example.com", planningName: "Yiyi C." };
+const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", planningName: "Jo L.", ...musicien("piano") };
+const YIYI: FakeProfile = { uid: "uid-yiyi", email: "yiyi@example.com", planningName: "Yiyi C.", ...musicien("batterie") };
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, name: string) {
@@ -32,24 +32,30 @@ async function ouvrirChant(page: Page, qui: FakeProfile, docs: Record<string, Re
  *  sur la seconde rangée du téléphone (docs/spec-barre-chant.md, Q2, Q5). */
 async function ouvrirLaFeuille(page: Page) {
   // Le bouton arrive avec le profil (accès à l'Harmonie) : `click` l'attend.
-  await page.getByTestId("barre-outils").getByRole("button", { name: "Idées d'harmonie" }).click();
+  await page.getByTestId("barre-outils").getByRole("button", { name: "Harmonie", exact: true }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 }
 
-test("un pianiste ouvre les idées d'un chant : cinq au plus, à vérifier en jouant", async ({ page }) => {
+test("un pianiste ouvre les idées d'un chant : trois au plus par passage, à vérifier en jouant", async ({ page }) => {
   await ouvrirChant(page, JO);
   await ouvrirLaFeuille(page);
-  const idees = page.locator("[data-suggestion]");
-  await expect(idees).toHaveCount(5);
+  await expect(page.locator("[data-suggestion]").first()).toBeVisible();
+  for (const bloc of await page.locator("[data-idees-harmonie] [data-passage]").all()) {
+    expect(await bloc.locator("[data-suggestion]").count(), "trois idées au plus par passage").toBeLessThanOrEqual(3);
+  }
   await expect(page.getByText("À vérifier en jouant").first()).toBeVisible();
   await capture(page, "idees-harmonie");
 });
 
-test("« Voir plus » donne la suite", async ({ page }) => {
+test("« Voir plus » d'un passage donne la suite de ce passage", async ({ page }) => {
   await ouvrirChant(page, JO);
   await ouvrirLaFeuille(page);
-  await page.getByRole("button", { name: "Voir plus" }).click();
-  await expect.poll(async () => page.locator("[data-suggestion]").count()).toBeGreaterThan(5);
+  // Le bloc se retrouve par son uid : une fois « Voir plus » cliqué, le bouton disparaît.
+  const uid = await page.locator("[data-idees-harmonie] [data-passage]").filter({ has: page.getByRole("button", { name: "Voir plus" }) }).first().getAttribute("data-passage");
+  const bloc = page.locator(`[data-idees-harmonie] [data-passage="${uid}"]`);
+  await expect(bloc.locator("[data-suggestion]")).toHaveCount(3);
+  await bloc.getByRole("button", { name: "Voir plus" }).click();
+  await expect.poll(async () => bloc.locator("[data-suggestion]").count()).toBeGreaterThan(3);
 });
 
 test("« Ne marche pas sur ce chant » retire l'idée et garde qui l'a dit", async ({ page }) => {
@@ -133,19 +139,23 @@ test("« Montrer » ferme la feuille et entoure la section visée", async ({ pag
   await ouvrirChant(page, JO);
   await ouvrirLaFeuille(page);
   const premiere = page.locator("[data-suggestion]").first();
-  const section = await premiere.locator("p").first().innerText();
+  // Le nom du passage est le titre de son bloc (« Couplet 1 », « Refrain ×2 »).
+  const section = (await premiere.locator("xpath=ancestor::*[@data-passage]").locator("h3").first().innerText()).replace(/ ×\d+$/, "");
+  const enColonne = (await page.locator("[data-harmonie-colonne]").count()) > 0;
   await premiere.getByRole("button", { name: "Montrer" }).click();
-  await expect(page.locator("[data-idees-harmonie]"), "la feuille s'efface pour laisser voir").toBeHidden();
+  // En colonne : elle reste ouverte à côté de la partition ; la feuille, elle, s'efface pour laisser voir.
+  if (enColonne) await expect(page.locator("[data-harmonie-colonne]")).toBeVisible();
+  else await expect(page.locator("[data-idees-harmonie]"), "la feuille s'efface pour laisser voir").toBeHidden();
   const entouree = page.locator(".harmonie-surligne");
   await expect(entouree).toHaveCount(1);
-  await expect(entouree).toContainText(section.split(" · ")[0], { ignoreCase: true });
+  await expect(entouree).toContainText(section, { ignoreCase: true });
 });
 
 test("un batteur n'a pas l'entrée « Idées d'harmonie »", async ({ page }) => {
   await ouvrirChant(page, YIYI);
   await page.getByRole("button", { name: /Plus d'actions|More actions|更多操作/ }).click();
-  await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Idées d'harmonie" })).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: "Harmonie", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Harmonie", exact: true })).toHaveCount(0);
 });
 
 // Retour du 01/10/2026 : une idée sans remplacement d'accords (« Le tag : répéter
@@ -157,8 +167,10 @@ test("une idée qui cite sa fiche la rend comme la fiche : du gras, pas de ** br
   });
   await signInAs(page, JO, {}, `/songs/${encodeURIComponent("一生爱你")}`);
   await ouvrirLaFeuille(page);
-  const voirPlus = page.getByRole("button", { name: "Voir plus" });
-  if (await voirPlus.isVisible()) await voirPlus.click();
+  // Les cartes arrivent avec le catalogue des fiches : les attendre avant de chercher « Voir plus ».
+  await expect(page.locator("[data-suggestion]").first()).toBeVisible();
+  // Chaque clic fait disparaître son bouton : toujours le premier.
+  while (await page.getByRole("button", { name: "Voir plus" }).count()) await page.getByRole("button", { name: "Voir plus" }).first().click();
   const tag = page.locator("[data-suggestion]", { hasText: "Le tag" });
   await expect(tag).toBeVisible();
   await expect(tag).not.toContainText("**");

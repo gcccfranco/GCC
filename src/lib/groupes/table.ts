@@ -7,7 +7,7 @@
 
 export type GroupeId = "paix" | "fidelite" | "bonte" | "amour" | "joie";
 
-export interface GroupeDef {
+interface GroupeDef {
   id: GroupeId;
   /** Catégorie (audience de notification, clé de `serviceRoles` pour les trois premiers). */
   categorie: string;

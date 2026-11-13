@@ -1,9 +1,10 @@
 // L'équipe d'une setlist (docs/spec-partage-setlist.md, PS-A) : des comptes choisis par le
 // propriétaire dans l'éditeur (`editeurs`, avec leur rôle dans `rolesPartage`). Fonctions pures.
 
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { UserProfile } from "@/types/user";
 import { normalizeName } from "@/lib/planning/names";
+import { rolesDeService } from "@/lib/acces/rolesDeService";
 import type { RoleEquipe } from "@/lib/setlist/equipeDuService";
 
 export type RolePartage = "musicien" | "chanteur";
@@ -28,7 +29,7 @@ export function candidatsDeLEquipe(profils: UserProfile[], categorie: string, ow
   const autres = profils.filter((p) => p.uid !== ownerId);
   const duService = categorie
     ? autres.filter((p) => {
-        const r = p.serviceRoles?.[categorie] ?? [];
+        const r = rolesDeService(p)[categorie] ?? [];
         return r.includes("musicien") || r.includes("chanteur");
       })
     : [];
@@ -37,10 +38,11 @@ export function candidatsDeLEquipe(profils: UserProfile[], categorie: string, ow
 
 /** Rôle proposé à l'ajout (PS4) : celui de la catégorie, sinon un autre, musicien avant choriste. */
 export function roleParDefaut(p: UserProfile, categorie: string): RolePartage {
-  const ici = p.serviceRoles?.[categorie] ?? [];
+  const roles = rolesDeService(p);
+  const ici = roles[categorie] ?? [];
   if (ici.includes("musicien")) return "musicien";
   if (ici.includes("chanteur")) return "chanteur";
-  const ailleurs = Object.values(p.serviceRoles ?? {}).flat();
+  const ailleurs = Object.values(roles).flat();
   return ailleurs.includes("musicien") ? "musicien" : ailleurs.includes("chanteur") ? "chanteur" : "musicien";
 }
 

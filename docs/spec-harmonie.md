@@ -173,6 +173,8 @@ Invisibles pour les autres. Jamais en mode louange.
   l'équipe en lecture ; toujours ni transition, ni Essayer, ni Appliquer — `spec-fusions-dp.md`,
   T5.)*
 
+Regroupement des idées identiques d'une section à l'autre : `spec-idees-regroupees.md` (lot IR).
+
 **Ma version : retoucher un seul passage.** À l'enregistrement d'une retouche
 dans une section répétée : **« Toutes les répétitions »** (par défaut, comme
 aujourd'hui) ou **« Seulement ce passage »** (mécanisme d'Adapter). Version

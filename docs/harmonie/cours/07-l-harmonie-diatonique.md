@@ -95,5 +95,5 @@ Choisissez une convention en équipe et écrivez-la en haut de chaque grille.
 ## 7.8 Exercices
 
 1. Joue les 7 accords de Do majeur en triades, puis en tétrades, en montant la gamme.
-2. Fais la même chose en Sol, Ré, Fa et Sib : ce sont les tonalités les plus fréquentes à l'église.
+2. Fais la même chose en Sol, Ré, Fa et Si♭ : ce sont les tonalités les plus fréquentes à l'église.
 3. Prends la mélodie d'un refrain simple. Sous chaque note longue, essaie les trois accords possibles du tableau 7.6 et garde celui qui sert le mieux les paroles.

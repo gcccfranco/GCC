@@ -108,7 +108,15 @@ test.describe("plannings : une feuille en tuiles sur téléphone (V7 ter)", () =
         };
         const canal = (v: number) => (v / 255 <= 0.03928 ? v / 255 / 12.92 : ((v / 255 + 0.055) / 1.055) ** 2.4);
         const lum = ([r, g, b]: number[]) => 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(b);
-        const fondPage = rgb(getComputedStyle(document.body).backgroundColor);
+        // La tuile est posée sur la feuille (aplat `--background` / `--raised`), pas sur le fond de la page derrière (gris sur le
+        // Planning) : on compose sur le premier ancêtre opaque, ce que l'œil voit.
+        const fondPage = els.length > 0 ? (() => {
+          for (let a: HTMLElement | null = els[0].parentElement; a; a = a.parentElement) {
+            const c = rgb(getComputedStyle(a).backgroundColor);
+            if (c[3] === 255) return c;
+          }
+          return rgb(getComputedStyle(document.body).backgroundColor);
+        })() : rgb(getComputedStyle(document.body).backgroundColor);
         return els.map((el) => {
           const s = getComputedStyle(el);
           const [r, g, b, a] = rgb(s.backgroundColor);

@@ -2,8 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
 import { HttpError, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 import { isAdminEmail } from "@/lib/access";
-import { exigerDroitEquipes, lireEquipes, lireGroupes, recalculerDepuisOrganigramme, recalculerRattachement } from "@/lib/equipes/serveur";
+import { exigerDroitEquipes, lireEquipes, lireGroupes, appelantPeut, recalculerDepuisOrganigramme, recalculerRattachement } from "@/lib/equipes/serveur";
 import { BACK_OFFICE } from "@/lib/backOffice"
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
+import { lireEquipeRattachement, lireUidsRattachement } from "@/lib/push/bornes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,18 +24,23 @@ export async function POST(req: NextRequest) {
   try {
     const user = await optionalUser(req);
     await exigerDroitEquipes(user);
-    const body = (await req.json().catch(() => ({}))) as { uids?: unknown; tous?: unknown };
+    const raw = await req.json().catch(() => ({}));
+    const body = (raw && typeof raw === "object" ? raw : {}) as { tous?: unknown };
     if (body.tous === true) {
       if (!isAdminEmail(user!.email)) throw new HttpError(403, "Réservé aux admins");
       return NextResponse.json({ ok: true, maj: await recalculerDepuisOrganigramme(adminDb()) });
     }
-    const uids = Array.isArray(body.uids) ? body.uids.filter((u): u is string => typeof u === "string") : null;
-    if (!uids) throw new HttpError(400, "Requête incomplète");
+    const uids = lireUidsRattachement(raw);
+    const equipe = lireEquipeRattachement(raw);
 
     const db = adminDb();
+    // Les référents ne changent que pour l'équipe éditée, et si l'appelant peut changer ceux de cette équipe (profil relu ici).
+    const profilAppelant = ((await db.collection("users").doc(user!.uid).get()).data() ?? null) as ProfilOrganigramme | null;
+    const admin = isAdminEmail(user!.email);
+    const peut = appelantPeut(admin, profilAppelant, equipe);
     // Les groupes aussi (lot 2, OG20) : la recopie n'efface ni les ids de comité ni les listes par rôle.
     const [equipes, groupes] = await Promise.all([lireEquipes(db), lireGroupes(db)]);
-    const { maj } = await recalculerRattachement(db, uids, equipes, groupes);
+    const { maj } = await recalculerRattachement(db, uids, equipes, groupes, { peut, equipe });
     return NextResponse.json({ ok: true, maj });
   } catch (e) {
     return errorResponse(e);

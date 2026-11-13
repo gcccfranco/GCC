@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { Check, ChevronRight, Lock } from "lucide-react";
-import { type FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { useTranslation } from "react-i18next";
-import { formatDate } from "@/lib/utils/formatDate";
+import { formatDate, langueCourte } from "@/lib/utils/formatDate";
 import { categoryColor } from "@/lib/serviceColors";
 import { Tile } from "@/components/ui/tile";
 import { KeyPill } from "@/components/ui/key-pill";
@@ -56,12 +56,12 @@ export function SetlistCard({
       <Tile color={color} big={jour.getDate()} small={mois} size="lg" className={actif ? "!bg-background" : undefined} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-base font-semibold text-foreground">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</span>
+          <span className="truncate text-base font-semibold text-foreground">{titreAffiche(setlist, langueCourte(i18n.language))}</span>
           {setlist.isPrivate && (
             <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label={t("setlists.list.private")} />
           )}
           {dansLEquipe && (
-            <span className="shrink-0 rounded-full border border-current/30 px-1.5 text-[11px] font-semibold text-muted-foreground">
+            <span className="shrink-0 rounded-full border border-current/30 px-1.5 text-xs font-semibold text-muted-foreground">
               {t("setlists.equipe.dejaLa")}
             </span>
           )}
@@ -72,7 +72,7 @@ export function SetlistCard({
           ) : (
             <>
               {setlist.leader && <span className="shrink-0">{setlist.leader}&nbsp;·&nbsp;</span>}
-              <span className="truncate capitalize">{formatDate(setlist.date, i18n.language)}</span>
+              <span className="inline-block max-w-full truncate align-bottom first-letter:uppercase">{formatDate(setlist.date, i18n.language)}</span>
             </>
           )}
         </span>
@@ -151,7 +151,7 @@ export function SetlistCarteChants({
     .filter((i) => i.type !== "transition")
     .sort((a, b) => a.position - b.position);
   return (
-    <article data-testid="carte-setlist" className="raised rounded-2xl px-4 pb-2 pt-2">
+    <article data-testid="carte-setlist" className="carte-groupe rounded-2xl px-4 pb-2 pt-2">
       <SetlistCard {...ligne} />
       <ol className="mt-1">
         {chants.map((it, n) => {
@@ -160,7 +160,7 @@ export function SetlistCarteChants({
           const titre = fusion ? it.fusionSongs!.map((f) => songsMap[f.songSlug]?.title ?? f.songSlug).join(" / ") : (it.proposition?.titre ?? song?.title ?? it.songSlug);
           const tonalite = it.keyOverride ?? song?.originalKey;
           return (
-            <li key={`${it.position}-${n}`} className="flex min-h-9 items-center gap-2.5 border-t border-border/70 py-1 text-[15px]">
+            <li key={`${it.position}-${n}`} className="flex min-h-9 items-center gap-2.5 border-t border-border/70 py-1 text-base">
               <span className="w-4 shrink-0 text-xs font-bold tabular-nums text-muted-foreground">{n + 1}</span>
               <span className="min-w-0 flex-1 truncate font-semibold">{titre}</span>
               {!fusion && tonalite && <KeyPill tonalite={tonalite} langue={song?.language === "zh" ? "zh" : "fr"} />}

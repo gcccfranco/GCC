@@ -1,12 +1,19 @@
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { aCommence } from "@/lib/evenements/agenda";
 import type { Evenement } from "@/types/evenement";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
+import type { Partition } from "@/types/partition";
 import type { Tache } from "@/types/tache";
+import type { DateServie } from "@/types/planning";
 import { EQUIPES } from "@/lib/equipes/table";
 import { COMITES, groupeDef } from "@/lib/groupes/table";
-import { PUBLISHABLE_PLANNINGS, peutPrevenir } from "@/lib/planning/releases";
+import { PUBLISHABLE_PLANNINGS, droitsDePrevenir, peutPrevenir } from "@/lib/planning/releases";
 import { audiencesNotifiables } from "@/lib/push/audiences";
+import { BACK_OFFICE } from "@/lib/backOffice";
+import * as org from "@/lib/acces/organigramme";
+import { categoriesDesPlannings, gereUnPlanning, responsabilitesDe } from "@/lib/acces/responsabilites";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
+import type { SousEquipe } from "@/types/equipe";
 import { ENTREES, WIDGETS, type Entree, type WidgetId } from "@/types/backOffice";
 import {
   GROUPES,
@@ -35,6 +42,11 @@ export function isAdminUser(user: { email?: string | null } | null): boolean {
   return isAdminEmail(user?.email);
 }
 
+/** Lire le comptage d'usage (`usage/{mois}`) : administrateurs seuls. Miroir : la règle `usage/{mois}` de firestore.rules. */
+export function peutLireUsage(user: { email?: string | null } | null): boolean {
+  return isAdminUser(user);
+}
+
 /** Modification du profil : autorisée tant qu'il n'existe pas encore (première
  *  complétion par l'intéressé) ; une fois complété, réservé aux admins.
  *  Miroir serveur dans firestore.rules (users/{uid} : create libre, update admin). */
@@ -48,6 +60,12 @@ export function canEditProfile(
 // ─── Équipes (lot 1 du chantier « équipes et groupes », docs/spec-equipes-sans-poles.md) ───
 
 type ProfilEquipes = { dansEquipes?: string[]; referentDe?: string[]; serviceRoles?: Record<string, unknown>; groupe?: string | null };
+// Lot AO (docs/spec-acces-organigramme.md) : chaque fonction dont la réponse change prend un dernier paramètre
+// `backOffice` (patron d'audiencesNotifiables, droitsDePublication). `false` = l'ancien mode, code d'avant le
+// lot inchangé ; `true` = le nouveau, calculé par src/lib/acces/organigramme.ts, qui ne lit ni `serviceRoles` ni
+// les droits cochés (`coordination`, `annonces`, `notify`, `plannings`, `equipes`). Les admins (`ADMIN_EMAILS`)
+// ont tout dans les deux modes (A3). Miroir des règles (firestore.rules) : « ancien ∪ nouveau » (tranche AO-C),
+// elles suivent les deux modes.
 /** Les équipes de l'église, puis les comités des cinq groupes (lot 2, OG17, OG20) : un comité est une
  *  équipe calculée depuis groupes/{id}, sans document equipes/comite-*. */
 const ORDRE_EQUIPES = [...EQUIPES.map((e) => e.id), ...COMITES];
@@ -58,19 +76,24 @@ const rangEquipe = (id: string) => (ORDRE_EQUIPES.includes(id) ? ORDRE_EQUIPES.i
  *  `serviceRoles` suffit, même sans rôle (décisions 5 et 42) — ou un groupe (champ `groupe` non
  *  vide, lot 2, OG38), dans l'ordre de la table (équipes de l'église, puis comités). Seule
  *  fonction qui calcule « mes équipes » côté client. Miroir serveur : membresDeLEquipe
- *  (src/lib/taches/serveur.ts) ; miroir des règles : estDeLEquipe(equipe) dans firestore.rules. */
-export function equipesDe(profile: ProfilEquipes | null): string[] {
+ *  (src/lib/taches/serveur.ts) ; miroir des règles : estDeLEquipe(equipe) dans firestore.rules.
+ *  Lot AO (`backOffice`) : « louange » ne vient plus de `serviceRoles` (A4), seulement de l'organigramme
+ *  (`dansEquipes`) ou d'un groupe non vide. */
+export function equipesDe(profile: ProfilEquipes | null, backOffice: boolean = BACK_OFFICE): string[] {
   const ids = [...new Set(profile?.dansEquipes ?? [])];
-  const louange = Object.keys(profile?.serviceRoles ?? {}).length > 0 || (typeof profile?.groupe === "string" && profile.groupe !== "");
+  const parGroupe = typeof profile?.groupe === "string" && profile.groupe !== "";
+  const louange = (!backOffice && Object.keys(profile?.serviceRoles ?? {}).length > 0) || parGroupe;
   if (louange && !ids.includes("louange")) ids.push("louange");
   return ids.sort((a, b) => rangEquipe(a) - rangEquipe(b));
 }
 
 /** Être d'une équipe (EQ3, EQ4) : un de ses membres, le public Louange élargi pour « louange », un
  *  admin. Miroir : estDeLEquipe(equipe) dans firestore.rules. */
-export function estDeLEquipe(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, equipe: string): boolean {
+export function estDeLEquipe(
+  user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, equipe: string, backOffice: boolean = BACK_OFFICE,
+): boolean {
   if (!user) return false;
-  return isAdminUser(user) || equipesDe(profile).includes(equipe);
+  return isAdminUser(user) || equipesDe(profile, backOffice).includes(equipe);
 }
 
 /** En être référent (EQ3) : `referentDe`, recopié par le serveur ; un admin l'est de toutes. Les
@@ -78,6 +101,15 @@ export function estDeLEquipe(user: AuthUser | { email?: string | null } | null, 
 export function estReferentDe(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, equipe: string): boolean {
   if (!user) return false;
   return isAdminUser(user) || (profile?.referentDe ?? []).includes(equipe);
+}
+
+/** Voir la page d'une équipe, `/equipes/<id>` ou `/back-office/equipes/<id>` (piste A, BO4, BO7) : un
+ *  membre de l'équipe (estDeLEquipe), un référent ou un admin. Affichage seulement : equipes/{id}/taches
+ *  et evenements/{id} gardent leurs règles. Ids valides : EQUIPES et COMITES (ORDRE_EQUIPES). */
+export function peutVoirEquipe(
+  user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, equipe: string, backOffice: boolean = BACK_OFFICE,
+): boolean {
+  return estDeLEquipe(user, profile, equipe, backOffice) || estReferentDe(user, profile, equipe);
 }
 
 /** Changer l'état d'une fois d'une tâche, « cocher » (EQ8, décisions 3 et 41) : les référents de son
@@ -88,17 +120,20 @@ export function peutCocher(
   user: AuthUser | null,
   profile: ProfilEquipes | null,
   tache: Pick<Tache, "equipe" | "responsableUid">,
+  backOffice: boolean = BACK_OFFICE,
 ): boolean {
   if (!user) return false;
   return estReferentDe(user, profile, tache.equipe)
-    || (estDeLEquipe(user, profile, tache.equipe) && tache.responsableUid === user.uid);
+    || (estDeLEquipe(user, profile, tache.equipe, backOffice) && tache.responsableUid === user.uid);
 }
 
 /** Les équipes dont on lit les tâches (EQ9) : les siennes, Louange élargi (`equipesDe`) ; toutes pour
  *  un admin. Affichage : equipes/{equipe}/taches garde sa règle (estDeLEquipe). */
-export function equipesDesTaches(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null): string[] {
+export function equipesDesTaches(
+  user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, backOffice: boolean = BACK_OFFICE,
+): string[] {
   if (!user) return [];
-  return isAdminUser(user) ? [...ORDRE_EQUIPES] : equipesDe(profile);
+  return isAdminUser(user) ? [...ORDRE_EQUIPES] : equipesDe(profile, backOffice);
 }
 
 /** Les équipes où l'on crée une tâche (EQ8, EQ9) : celles dont on est référent, dans l'ordre de la
@@ -109,16 +144,23 @@ export function equipesOuCreer(user: AuthUser | { email?: string | null } | null
   return [...new Set(profile?.referentDe ?? [])].sort((a, b) => rangEquipe(a) - rangEquipe(b));
 }
 
+/** Profil lu par la coordination : la case cochée (ancien mode) et l'organigramme (nouveau). */
+type ProfilCoordination = { coordination?: boolean } & ProfilOrganigramme;
+
 /** Coordination (lot 3 bis ; lot 1 du chantier « équipes et groupes », EQ24) : le
  *  droit `coordination` du profil, coché par un admin dans Personnes, + admins. Aucune
  *  équipe ne la donne. Règle la scène (programmes, ordre de
  *  passage, tout créneau), crée pour toute l'église, modifie tout évènement.
- *  Miroir serveur : isCoordination() dans firestore.rules. */
+ *  Lot AO (`backOffice`, A2, D5) : plus de case. Lot RS (Q11) : le Comité Orga seul (responsabilité `orga`,
+ *  `coordination` de src/lib/acces/organigramme.ts) — plus le référent Louange ni EDD, ni le placement dans Orga.
+ *  Miroir serveur : isCoordination() dans firestore.rules (ancien ∪ nouveau, tranche AO-C). */
 export function isCoordination(
   user: { email?: string | null } | null,
-  profile: { coordination?: boolean } | null
+  profile: ProfilCoordination | null,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
-  return isAdminUser(user) || profile?.coordination === true;
+  if (isAdminUser(user)) return true;
+  return backOffice ? org.coordination(profile) : profile?.coordination === true;
 }
 
 /** Organigramme (lot 16, docs/spec-organigramme.md) : tout membre connecté le
@@ -134,13 +176,59 @@ export function canVoirEquipes(user: AuthUser | null): boolean {
  *  porte sur tout l'organigramme, d'où un booléen et non une liste. Miroir
  *  serveur : isEquipier() dans firestore.rules pour equipes/{id}, et
  *  exigerDroitEquipes (src/lib/equipes/serveur.ts) pour le rattachement, qui reste
- *  écrit par le serveur seul — `allow update` des profils ne bouge pas. */
+ *  écrit par le serveur seul — `allow update` des profils ne bouge pas.
+ *  Lot AO (`backOffice`, A2) : plus de case « Équipes » — vrai pour qui tient quelque chose dans
+ *  l'organigramme (Orga, un référent d'équipe, un référent de sous-équipe) ; `peutModifierEquipe`,
+ *  `peutPlacerSousEquipe` et `peutPlacerMembre` disent quoi. */
 export function canEditerEquipes(
   user: AuthUser | null,
-  profile: { equipes?: boolean } | null
+  profile: ({ equipes?: boolean } & ProfilOrganigramme) | null,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (!user) return false;
-  return isAdminUser(user) || profile?.equipes === true;
+  if (isAdminUser(user)) return true;
+  if (!backOffice) return profile?.equipes === true;
+  const t = org.tientOrganigramme(profile);
+  return t.tout || t.equipes.length > 0 || t.sousEquipes.length > 0;
+}
+
+type ProfilTenir = { equipes?: boolean } & ProfilOrganigramme;
+
+/** Tenir toute une équipe (lot AO) : ancien mode, le droit Équipes (tout l'organigramme) ; nouveau, Orga et le
+ *  référent de cette équipe (le référent Louange tient Louange). Les admins dans les deux. */
+export function peutModifierEquipe(
+  user: AuthUser | null, profile: ProfilTenir | null, equipeId: string, backOffice: boolean = BACK_OFFICE
+): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || (backOffice ? org.peutTenirEquipe(profile, equipeId) : profile?.equipes === true);
+}
+
+/** Tenir une sous-équipe de Louange (lot AO, B3, F2) : Orga, le référent Louange, ou le référent de cette
+ *  sous-équipe — ajouter, retirer de la sienne, cocher « Où il sert » et « Ce qu'il joue ». */
+export function peutPlacerSousEquipe(
+  user: AuthUser | null, profile: ProfilTenir | null, sous: SousEquipe, backOffice: boolean = BACK_OFFICE
+): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || (backOffice ? org.peutTenirSousEquipe(profile, sous) : profile?.equipes === true);
+}
+
+/** Placer ce membre (lot AO) : tenir son équipe ou, dans Louange, l'une des sous-équipes concernées (celles qu'il a,
+ *  ou celle où on l'ajoute) — le référent Musiciens place un musicien, pas un choriste. */
+export function peutPlacerMembre(
+  user: AuthUser | null, profile: ProfilTenir | null, equipeId: string, sousEquipes: readonly string[] = [],
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || (backOffice ? org.peutPlacerMembre(profile, equipeId, sousEquipes) : profile?.equipes === true);
+}
+
+/** Changer les référents d'une équipe (lot AO, B3) : Orga, le référent Louange pour Louange et ses sous-équipes,
+ *  les admins — ni un référent de sous-équipe, ni celui d'une autre équipe. Ancien mode : comme tenir l'organigramme. */
+export function peutChangerReferents(
+  user: AuthUser | null, profile: ProfilTenir | null, equipeId: string, backOffice: boolean = BACK_OFFICE
+): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || (backOffice ? org.peutChangerReferents(profile, equipeId) : profile?.equipes === true);
 }
 
 /** Tenir l'organigramme d'un groupe (lot 2, OG9, OG26) : admin, ou président / VP du groupe — leur
@@ -164,7 +252,7 @@ export { audiencesNotifiables };
 /** Créneau sur scène : son auteur + la coordination. Miroir : programmes/{id}/creneaux dans firestore.rules. */
 export function canEditCreneau(
   user: AuthUser,
-  profile: { coordination?: boolean } | null,
+  profile: ProfilCoordination | null,
   creneau: { auteurUid: string }
 ): boolean {
   return creneau.auteurUid === user.uid || isCoordination(user, profile);
@@ -174,15 +262,19 @@ export function canEditCreneau(
 
 /** Réserver pour ces groupes : la coordination toujours ; un membre si la saison
  *  est ouverte et que chaque groupe est permis (liste vide = tous).
+ *  Lot RS (`backOffice`, Q12) : la scène est réservée au Comité Orga et aux gestionnaires de planning, qui réservent
+ *  toujours (`gereUnPlanning`).
  *  Miroir serveur : reservable() sous programmes/{id}/creneaux, firestore.rules. */
 export function canReserverPour(
   user: AuthUser | null,
-  profile: { coordination?: boolean } | null,
+  profile: ProfilCoordination | null,
   programme: { ouvert?: boolean; fermees?: boolean; quiAutorises?: string[] },
-  qui: string[]
+  qui: string[],
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (!user) return false;
-  if (isCoordination(user, profile)) return true;
+  if (isCoordination(user, profile, backOffice)) return true;
+  if (backOffice && gereUnPlanning(profile)) return true;
   if (programme.ouvert === false) return false;
   // Fermée à la main (docs/spec-fermer-reservations.md, FR10) : miroir de reservable().
   if (programme.fermees === true) return false;
@@ -198,7 +290,7 @@ type EvenementDroits = { pour: string; organisateurUid: string; reunion?: boolea
 type ProfilEvenement = {
   serviceRoles?: Record<string, unknown>; coordination?: boolean; annonces?: string[];
   dansEquipes?: string[]; referentDe?: string[];
-};
+} & ProfilOrganigramme;
 
 /** Réunion d'équipe (lot U6, R4, Q8) : `pour` = « equipe:<id> » ; null sinon.
  *  Même motif que les règles (`equipe:[a-z0-9-]+`). */
@@ -224,19 +316,22 @@ export function estReunion(e: { pour: string; reunion?: boolean | null }): boole
  *  la coordination ; une réunion d'équipe = les membres de l'équipe (Louange élargi,
  *  estDeLEquipe), l'organisateur et les admins (lot U6, R4 ; EQ20). Un évènement d'équipe
  *  qui n'est pas une réunion (retouches v18, D22) : les mêmes, plus la coordination.
- *  Un visiteur sans compte ne voit que « eglise ». */
+ *  Un visiteur sans compte ne voit que « eglise ».
+ *  Lot AO (`backOffice`) : une section se voit par la catégorie qu'on voit en setlists (le lieu où l'on sert, son
+ *  groupe) et non plus par `serviceRoles` — la spec ne dit rien de cette ligne, lecture à confirmer. */
 export function canSeeEvenement(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
-  e: EvenementDroits
+  e: EvenementDroits,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (e.pour === "eglise") return true;
   if (!user) return false;
   if (e.organisateurUid === user.uid) return true;
   const equipe = equipeDuPour(e.pour);
-  if (equipe) return estDeLEquipe(user, profile, equipe) || (!estReunion(e) && isCoordination(user, profile));
-  if (isCoordination(user, profile)) return true;
-  return e.pour in (profile?.serviceRoles ?? {});
+  if (equipe) return estDeLEquipe(user, profile, equipe, backOffice) || (!estReunion(e) && isCoordination(user, profile, backOffice));
+  if (isCoordination(user, profile, backOffice)) return true;
+  return backOffice ? org.categoriesVisibles(profile).includes(e.pour) : e.pour in (profile?.serviceRoles ?? {});
 }
 
 /** S'inscrire (route /api/evenements/inscription, retouches v18, E6) : un évènement d'équipe, ceux
@@ -245,27 +340,31 @@ export function canSeeEvenement(
 export function canInscrireEvenement(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
-  e: EvenementDroits
+  e: EvenementDroits,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
-  return !publicDeReunion(e.pour) || canSeeEvenement(user, profile, e);
+  return !publicDeReunion(e.pour) || canSeeEvenement(user, profile, e, backOffice);
 }
 
 /** Qui crée pour un public donné : une réunion ou un évènement d'équipe, ses référents et les
  *  admins (lot U6, R4 ; décisions 3 et 43) ; sinon la coordination pour tout, ou un membre dont
  *  le droit d'annonces couvre la section (le droit d'annonces devient un droit de création pour
  *  sa section, tranché le 15/09/2026). Un autre public préfixé (EQ19) ne se crée plus :
- *  miroir de la garde des règles. */
+ *  miroir de la garde des règles. Lot AO (`backOffice`) : plus de droit d'annonces. Lot RS (Q11) : seuls les admins et
+ *  le Comité Orga créent pour « eglise » ou une section (`isCoordination`, `sectionsCreables`) ; un référent crée
+ *  toujours pour l'équipe dont il est référent. */
 export function canCreateEvenement(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
-  pour: string
+  pour: string,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (!user) return false;
   const equipe = equipeDuPour(pour);
   if (equipe) return estReferentDe(user, profile, equipe);
   if (pour.includes(":")) return false;
-  if (isCoordination(user, profile)) return true;
-  return (profile?.annonces ?? []).includes(pour);
+  if (isCoordination(user, profile, backOffice)) return true;
+  return backOffice ? org.sectionsCreables(profile, [pour]).length > 0 : (profile?.annonces ?? []).includes(pour);
 }
 
 /** Publics pour lesquels la personne peut créer (vide = aucun bouton) : ses
@@ -274,12 +373,14 @@ export function canCreateEvenement(
 export function creatableEvenementPours(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
-  sections: readonly string[]
+  sections: readonly string[],
+  backOffice: boolean = BACK_OFFICE
 ): string[] {
   if (!user) return [];
   const equipes = ORDRE_EQUIPES.filter((id) => estReferentDe(user, profile, id)).map((id) => `equipe:${id}`);
-  if (isCoordination(user, profile)) return ["eglise", ...sections, ...equipes];
-  return [...sections.filter((s) => (profile?.annonces ?? []).includes(s)), ...equipes];
+  if (isCoordination(user, profile, backOffice)) return ["eglise", ...sections, ...equipes];
+  const siennes = backOffice ? org.sectionsCreables(profile, sections) : sections.filter((s) => (profile?.annonces ?? []).includes(s));
+  return [...siennes, ...equipes];
 }
 
 /** Voir qui est inscrit (noms et invités) : tout membre connecté (Timothée,
@@ -289,14 +390,16 @@ export function canSeeInscrits(user: AuthUser | null): boolean {
   return user !== null;
 }
 
-/** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination. */
+/** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination
+ *  (lot RS : le Comité Orga) + admins. */
 export function canEditEvenement(
   user: AuthUser | null,
-  profile: { coordination?: boolean } | null,
-  e: EvenementDroits
+  profile: ProfilCoordination | null,
+  e: EvenementDroits,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (!user) return false;
-  return e.organisateurUid === user.uid || isCoordination(user, profile);
+  return e.organisateurUid === user.uid || isCoordination(user, profile, backOffice);
 }
 
 // ─── Sujets d'une réunion (lot U6, R1, docs/spec-back-office.md) — miroir : ───
@@ -311,12 +414,13 @@ export function canEditEvenement(
 export function estDeLaReunion(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
-  e: EvenementDroits
+  e: EvenementDroits,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (!user) return false;
   if (isAdminUser(user) || e.organisateurUid === user.uid) return true;
   const equipe = equipeDuPour(e.pour);
-  return equipe !== null && estDeLEquipe(user, profile, equipe);
+  return equipe !== null && estDeLEquipe(user, profile, equipe, backOffice);
 }
 
 /** Ajouter un sujet : une personne de la réunion, jusqu'au début. La borne se
@@ -326,9 +430,10 @@ export function peutAjouterSujet(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
   e: EvenementDroits & Pick<Evenement, "type" | "date" | "heure">,
-  nowIso: string
+  nowIso: string,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
-  return estDeLaReunion(user, profile, e) && !aCommence(e, nowIso);
+  return estDeLaReunion(user, profile, e, backOffice) && !aCommence(e, nowIso);
 }
 
 /** Retirer un sujet : son auteur, l'organisateur, un admin. */
@@ -353,44 +458,69 @@ export function peutOrdonnerSujets(user: AuthUser | null, e: EvenementDroits): b
  *  rôle, Publier inclut Remplir). Ne donne PAS le droit de publier un trimestre
  *  (canPublishPlanning, src/lib/planning/releases.ts, qui dépend de `notify`) :
  *  deux gestes différents, deux droits (D10).
- *  Miroir serveur : plannings/{key}/dimanches dans firestore.rules. */
+ *  Lot AO (`backOffice`) : plus de case `plannings`. Lot RS (Q5, Q10) : le gestionnaire du planning (`planning:<x>`,
+ *  `colonnesRemplies` de l'organigramme) remplit toute sa grille ; ni les référents, ni les rôles de groupe, ni Orga
+ *  ne remplissent plus ; un planning sans gestionnaire n'est rempli que par les admins.
+ *  Miroir serveur : plannings/{key}/dimanches dans firestore.rules (ancien ∪ nouveau, tranche AO-C). */
 export function canEditPlanning(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[]; remplitParRole?: string[] } | null,
-  key: string
+  profile: ({ plannings?: string[] } & ProfilOrganigramme) | null,
+  key: string,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (!user) return false;
-  return isAdminUser(user) || (profile?.plannings ?? []).includes(key) || (profile?.remplitParRole ?? []).includes(key);
+  if (isAdminUser(user)) return true;
+  if (backOffice) return org.colonnesRemplies(profile, key) !== null;
+  return (profile?.plannings ?? []).includes(key) || (profile?.remplitParRole ?? []).includes(key);
+}
+
+/** Les colonnes qu'on remplit sur un planning (lot AO) : `"toutes"` ou `null` (lot RS : plus de liste partielle).
+ *  Ancien mode : toutes ou rien (`canEditPlanning`). Les admins : toutes. */
+export function colonnesModifiables(
+  user: { email?: string | null } | null,
+  profile: ({ plannings?: string[] } & ProfilOrganigramme) | null,
+  key: string,
+  backOffice: boolean = BACK_OFFICE
+): "toutes" | readonly string[] | null {
+  if (!user) return null;
+  if (isAdminUser(user)) return "toutes";
+  if (backOffice) return org.colonnesRemplies(profile, key);
+  return canEditPlanning(user, profile, key, false) ? "toutes" : null;
 }
 
 /** Congés et absences (SC3, docs/spec-createur-corbeille-absences.md ; Q8, Q9) : « ceux qui font les
  *  plannings », c'est-à-dire les admins et les profils dont `plannings` n'est pas vide. Ils saisissent une
  *  absence pour quelqu'un d'autre et lisent celles de tous.
+ *  Lot AO (`backOffice`) : qui remplit au moins un planning (`remplitUnPlanning`). Lot RS : gestionnaire d'au moins un planning.
  *  Miroir serveur : faitDesPlannings() et users/{uid}/absences/{id} dans firestore.rules. */
 export function faitDesPlannings(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[] } | null
+  profile: ({ plannings?: string[] } & ProfilOrganigramme) | null,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (!user) return false;
-  return isAdminUser(user) || (profile?.plannings ?? []).length > 0;
+  if (isAdminUser(user)) return true;
+  return backOffice ? org.remplitUnPlanning(profile) : (profile?.plannings ?? []).length > 0;
 }
 
 /** Saisir ou supprimer une absence : la personne elle-même, ou qui fait les plannings. */
 export function canSaisirAbsence(
   user: { uid: string; email?: string | null } | null,
-  profile: { plannings?: string[] } | null,
-  uidCible: string
+  profile: ({ plannings?: string[] } & ProfilOrganigramme) | null,
+  uidCible: string,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (!user) return false;
-  return user.uid === uidCible || faitDesPlannings(user, profile);
+  return user.uid === uidCible || faitDesPlannings(user, profile, backOffice);
 }
 
 /** Lire les absences de tous (la grille des plannings). */
 export function canVoirAbsencesDeTous(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[] } | null
+  profile: ({ plannings?: string[] } & ProfilOrganigramme) | null,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
-  return faitDesPlannings(user, profile);
+  return faitDesPlannings(user, profile, backOffice);
 }
 
 /** Le motif d'une absence : la personne et les admins. Côté navigateur seulement, comme le reste de la
@@ -410,9 +540,10 @@ export function canVoirMotifAbsence(
  *  dans firestore.rules. */
 export function canGererPetitDej(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[] } | null
+  profile: ({ plannings?: string[] } & ProfilOrganigramme) | null,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
-  return canEditPlanning(user, profile, "table");
+  return canEditPlanning(user, profile, "table", backOffice);
 }
 
 /** Réécrire ou retirer une ligne : l'inscrit (`ligne.uid`) ou canGererPetitDej,
@@ -420,12 +551,13 @@ export function canGererPetitDej(
  *  côté client seulement, comme le reste du filtrage du site). */
 export function canEditPetitDej(
   user: AuthUser | null,
-  profile: { plannings?: string[] } | null,
+  profile: ({ plannings?: string[] } & ProfilOrganigramme) | null,
   ligne: { uid: string; dimanche: string },
-  dimancheEnCours: string
+  dimancheEnCours: string,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (!user || ligne.dimanche < dimancheEnCours) return false;
-  return ligne.uid === user.uid || canGererPetitDej(user, profile);
+  return ligne.uid === user.uid || canGererPetitDej(user, profile, backOffice);
 }
 
 /** Lot U2 (Q10, docs/spec-planning-2027.md) : les plannings dont les dates se
@@ -434,14 +566,17 @@ export function canEditPetitDej(
 export const PLANNINGS_DATES_CHOISIES = ["interfranco", "intergroupe", "campusMatin", "campusSoir"] as const;
 
 /** Retirer une date (supprimer son document) : qui peut remplir ce planning,
- *  sur un planning à dates choisies seulement.
+ *  sur un planning à dates choisies seulement. Lot AO (`backOffice`) : il faut pouvoir remplir TOUTES les colonnes —
+ *  le retrait efface toutes les cases (lot RS : le gestionnaire du planning).
  *  Miroir serveur : `allow delete` de plannings/{key}/dimanches dans firestore.rules. */
 export function canRetirerDate(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[] } | null,
-  key: string
+  profile: ({ plannings?: string[] } & ProfilOrganigramme) | null,
+  key: string,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
-  return (PLANNINGS_DATES_CHOISIES as readonly string[]).includes(key) && canEditPlanning(user, profile, key);
+  return (PLANNINGS_DATES_CHOISIES as readonly string[]).includes(key)
+    && colonnesModifiables(user, profile, key, backOffice) === "toutes";
 }
 
 /** Harmonie (lot 9, docs/spec-harmonie.md) : le catalogue et les « Idées
@@ -460,13 +595,36 @@ export function canSeeTeamCoursProgres(user: { email?: string | null } | null): 
   return isAdminUser(user);
 }
 
+/** Lot AO (`backOffice`, A1) : l'instrument vient de l'organigramme — Musiciens avec piano ou guitare dans
+ *  « Ce qu'il joue » (`joue`) — et non plus des colonnes du planning ; `services` est alors ignoré. */
 export function canUseHarmonie(
   user: { email?: string | null } | null,
   services: { role: string }[],
+  profile: ProfilOrganigramme | null = null,
+  backOffice: boolean = BACK_OFFICE,
 ): { piano: boolean; guitare: boolean } {
   if (isAdminUser(user)) return { piano: true, guitare: true };
+  if (backOffice) return org.harmonie(profile);
   const roles = new Set(services.map((s) => s.role));
   return { piano: roles.has("Piano"), guitare: roles.has("Guitare") };
+}
+
+/** Rôles du planning qui désignent un instrument. Le planning n'a pas de colonne Basse : un bassiste est reconnu
+ *  par l'organigramme seul. */
+export const ROLES_INSTRUMENT = ["Piano", "Guitare", "Batterie", "Cajon/Batterie", "Cajon", "Percussion", "Musicien"];
+
+/** Qui est musicien (spec-espace-musiciens, Q1) : admin, ou organigramme (`joue` non vide ou sous-équipe
+ *  Musiciens), ou un service du planning dont le rôle est un instrument. Les deux sources comptent quel que soit
+ *  l'interrupteur BACK_OFFICE. Sert seulement à afficher l'espace Musiciens : ne ferme aucune page, aucune règle
+ *  Firestore. */
+export function estMusicien(
+  user: { email?: string | null } | null,
+  profile: ProfilOrganigramme | null,
+  services: { role: string }[],
+): boolean {
+  if (isAdminUser(user)) return true;
+  if (org.musicien(profile)) return true;
+  return services.some((s) => ROLES_INSTRUMENT.includes(s.role));
 }
 
 const LEVEL_RANK: Record<AccessLevel, number> = { view: 0, create: 1, edit: 2 };
@@ -487,13 +645,19 @@ export function categoryLevel(category: string, roles: ServiceRole[]): AccessLev
   return isGroupeOrEdd(category) ? "create" : "view";
 }
 
-/** Catégories visibles (la personne y sert, tout niveau) : la régie voit ses cultes en lecture seule. */
-export function visibleCategories(profile: UserProfile): string[] {
-  return Object.keys(profile.serviceRoles);
+/** Catégories visibles (la personne y sert, tout niveau) : la régie voit ses cultes en lecture seule.
+ *  Lot AO (`backOffice`, C2, C3) : ce qui vient de l'organigramme — les lieux où un membre de Louange sert, son
+ *  groupe, l'EDD, plus les lieux de la Régie en lecture ; la lecture d'une date où l'on sert (F1) est à part
+ *  (`canSeeSetlist`). Sans équipe : aucune catégorie de lieu. */
+export function visibleCategories(profile: UserProfile, backOffice: boolean = BACK_OFFICE): string[] {
+  return backOffice ? [...new Set([...org.categoriesVisibles(profile), ...categoriesDesPlannings(profile)])] : Object.keys(profile.serviceRoles);
 }
 
-/** Catégories où la personne peut CRÉER une setlist (niveau ≥ create — la régie en est exclue). */
-export function creatableCategories(profile: UserProfile): string[] {
+/** Catégories où la personne peut CRÉER une setlist (niveau ≥ create — la régie en est exclue).
+ *  Lot AO (`backOffice`) : les lieux de Louange, le groupe, les trois classes de l'EDD. */
+export function creatableCategories(profile: UserProfile, backOffice: boolean = BACK_OFFICE): string[] {
+  // Lot RS (Q10) : un gestionnaire est traité comme quelqu'un qui sert dans le lieu de son planning.
+  if (backOffice) return [...new Set([...org.categoriesCreables(profile), ...categoriesDesPlannings(profile)])];
   return Object.keys(profile.serviceRoles).filter(
     (c) => LEVEL_RANK[categoryLevel(c, profile.serviceRoles[c])] >= LEVEL_RANK.create
   );
@@ -502,10 +666,11 @@ export function creatableCategories(profile: UserProfile): string[] {
 /** Peut-on créer au moins une setlist (bouton « Créer ») ? Admins toujours. */
 export function canCreateSetlist(
   user: { email?: string | null } | null,
-  profile: UserProfile | null
+  profile: UserProfile | null,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (isAdminUser(user)) return true;
-  return !!profile && creatableCategories(profile).length > 0;
+  return !!profile && creatableCategories(profile, backOffice).length > 0;
 }
 
 /** Peut-on dupliquer cette setlist ? Qui la voit (SC1.3, docs/spec-createur-corbeille-absences.md) :
@@ -514,17 +679,24 @@ export function canCreateSetlist(
 export function canDuplicateSetlist(
   user: AuthUser,
   profile: UserProfile | null,
-  setlist: FSSetlist
+  setlist: FSSetlist,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   // Une setlist de fête naît d'un passage (docs/spec-chants-fetes.md, CF15) : pas de copie, admin compris.
   if (setlist.fete) return false;
-  return canSeeSetlist(user, profile, setlist);
+  return canSeeSetlist(user, profile, setlist, undefined, backOffice);
 }
 
+/** Voir une setlist. Lot AO (`backOffice`, F1) : en plus de la catégorie visible, la setlist de la date et de la
+ *  catégorie où la personne est inscrite au planning (`datesServies`) — lecture seule, cette setlist seulement
+ *  (ni la semaine suivante, ni une autre catégorie), sans rien ouvrir d'autre : modifier, supprimer, créer
+ *  restent aux droits ci-dessous. Sans `datesServies`, pas de F1. */
 export function canSeeSetlist(
   user: AuthUser,
   profile: UserProfile | null,
-  setlist: FSSetlist
+  setlist: FSSetlist,
+  datesServies?: readonly DateServie[],
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (setlist.ownerId === user.uid) return true;
   if (setlist.editeurs?.includes(user.uid)) return true;
@@ -532,7 +704,9 @@ export function canSeeSetlist(
   if (setlist.fete) return true;
   if (setlist.isPrivate) return false;
   if (isAdminUser(user)) return true;
-  return profile ? visibleCategories(profile).includes(setlist.category) : false;
+  if (profile && visibleCategories(profile, backOffice).includes(setlist.category)) return true;
+  return backOffice && !!datesServies?.some((d) =>
+    d.date === setlist.date && d.categorie === setlist.category && (!d.moment || !setlist.moment || d.moment === setlist.moment));
 }
 
 /** Lien de la présentation (PPT) : qui peut modifier la setlist, plus la régie
@@ -544,22 +718,45 @@ export function canSetPresentationLink(
   user: AuthUser,
   profile: UserProfile | null,
   setlist: FSSetlist,
-  regie: boolean
+  regie: boolean,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
-  return canEditSetlist(user, profile, setlist) || (!setlist.isPrivate && regie);
+  return canEditSetlist(user, profile, setlist, backOffice) || (!setlist.isPrivate && regie);
 }
 
-/** Version perso d'un chant dans une setlist (docs/spec-version-perso.md) :
- *  qui voit la setlist peut avoir la sienne. Miroir serveur dans
- *  firestore.rules (setlists/{id}/versions/{uid} : écrit par son propriétaire). */
-export const canHaveSetlistVersion = canSeeSetlist;
+/** Ma partition (docs/spec-ma-partition.md) : lue par son propriétaire ou une personne de `sharedWith`. Miroir de
+ *  firestore.rules (`match /partitions/{id}`, lecture). */
+export function canLirePartition(
+  user: AuthUser | null,
+  p: Pick<Partition, "ownerUid" | "sharedWith">,
+): boolean {
+  return !!user && (p.ownerUid === user.uid || (p.sharedWith ?? []).includes(user.uid));
+}
+
+/** Écriture : le propriétaire seul. Miroir de firestore.rules (`match /partitions/{id}`, create / update / delete). */
+export function canEcrirePartition(user: AuthUser | null, p: Pick<Partition, "ownerUid" | "sharedWith">): boolean {
+  return !!user && p.ownerUid === user.uid;
+}
+
+/** Export PDF réservé (docs/spec-entree-musiciens.md) : un masquage, pas une permission. Pas de miroir dans
+ *  firestore.rules : le PDF se fait dans le navigateur à partir de données déjà lisibles (exception assumée à la
+ *  règle des permissions en double). Setlist : l'équipe (modification) ou la présidence du service. Chant : sans
+ *  compte, tout le monde ; connecté, les admins et l'équipe d'une setlist à venir. */
+export function canExporterPdfSetlist(user: AuthUser | null, profile: UserProfile | null, setlist: FSSetlist, presidence: boolean): boolean {
+  return !!user && (canEditSetlist(user, profile, setlist) || presidence);
+}
+
+export function canExporterPdfChant(user: AuthUser | null, equipeAVenir: boolean): boolean {
+  return !user || isAdminUser(user) || equipeAVenir;
+}
 
 export function canEditSetlist(
   user: AuthUser,
   profile: UserProfile | null,
-  setlist: FSSetlist
+  setlist: FSSetlist,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
-  return canDeleteSetlist(user, profile, setlist) || !!setlist.editeurs?.includes(user.uid);
+  return canDeleteSetlist(user, profile, setlist, backOffice) || !!setlist.editeurs?.includes(user.uid);
 }
 
 /** Suppression : le créateur seul (SC1, docs/spec-createur-corbeille-absences.md), plus les admins sur
@@ -570,12 +767,13 @@ export function canEditSetlist(
 export function canDeleteSetlist(
   user: AuthUser,
   profile: UserProfile | null,
-  setlist: FSSetlist
+  setlist: FSSetlist,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (setlist.ownerId === user.uid) return true;
   // Setlist de fête : la coordination la supprime (et la modifie, via canEditSetlist) ; ownerId est
   // `null` et personne ne sert dans la catégorie Noël ou Pâques. Miroir : canDeleteSetlistDoc.
-  if (setlist.fete && isCoordination(user, profile)) return true;
+  if (setlist.fete && isCoordination(user, profile, backOffice)) return true;
   if (setlist.isPrivate) return false;
   return isAdminUser(user);
 }
@@ -590,11 +788,12 @@ export const canChangeSetlistCategory = canDeleteSetlist;
 export function canSetSetlistTeam(
   user: AuthUser,
   profile: UserProfile | null,
-  setlist: FSSetlist
+  setlist: FSSetlist,
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   // Une setlist de fête a ses `editeurs` écrits par le serveur seul (CF18), même pour un admin.
   if (setlist.fete) return false;
-  return canEditSetlist(user, profile, setlist) && (setlist.ownerId === user.uid || isAdminUser(user));
+  return canEditSetlist(user, profile, setlist, backOffice) && (setlist.ownerId === user.uid || isAdminUser(user));
 }
 
 /** Lien de présentation d'une setlist de fête (CF27, décision 45, Q7) : la régie hors planning =
@@ -607,6 +806,30 @@ export function estRegieDeFete(
   return !!setlist.fete && !!profile?.dansEquipes?.includes("regie");
 }
 
+/** Régie de la setlist, côté client (affichage). Lot AO (interrupteur ouvert seulement) : « Où il sert » à la
+ *  Régie (`lieuxRegie`) au lieu du rôle `regie` du profil. Fête : TEAM RÉGIE (`estRegieDeFete`). */
+export function estRegieDeLaSetlist(
+  profile: UserProfile | null,
+  setlist: FSSetlist,
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  if (setlist.fete) return estRegieDeFete(profile, setlist);
+  if (backOffice) return !!profile?.lieuxRegie?.includes(setlist.category);
+  return !!profile?.serviceRoles?.[setlist.category]?.includes("regie");
+}
+
+/** Entrée « Exporter pour FreeShow » du menu ⋯ (docs/spec-export-freeshow.md, FS1) : la régie de la setlist et les admins
+ *  (Timothée, 01/11/2026), pas `canEditSetlist` ; setlist non privée. Affichage seulement : l'export se fabrique
+ *  dans le navigateur et n'écrit rien, donc aucune règle Firestore. */
+export function peutExporterFreeShow(
+  user: { email?: string | null } | null,
+  profile: UserProfile | null,
+  setlist: FSSetlist,
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  return !setlist.isPrivate && (isAdminUser(user) || estRegieDeLaSetlist(profile, setlist, backOffice));
+}
+
 // ─── Back-Office (lot U6, docs/spec-back-office.md) ──────────────────────────
 // Affichage seulement : le sélecteur et le menu ne protègent aucune donnée,
 // chaque sous-partie garde sa règle dans firestore.rules (signalements, profils,
@@ -616,26 +839,42 @@ type ProfilResponsable = {
   serviceRoles?: Record<string, unknown>; coordination?: boolean; plannings?: string[];
   notify?: string[]; annonces?: string[]; equipes?: boolean; referentDe?: string[]; dansEquipes?: string[];
   groupe?: string | null; remplitParRole?: string[]; publieParRole?: string[]; notifieParRole?: string[];
-};
+} & ProfilOrganigramme;
 const nonVide = (l: string[] | undefined) => (l?.length ?? 0) > 0;
 
 /** Responsable (Q1) : admin, ou au moins un droit donné par un admin ou par l'organigramme —
  *  coordination (EQ18), `plannings`, `notify`, `annonces`,
  *  droit Équipes, référent d'une équipe, un droit venu d'un rôle de groupe (lot 2, OG26). Être membre d'une équipe ou du public Louange (un rôle
- *  de service) ne fait pas un responsable (question 2). */
-export function estResponsable(user: AuthUser | null, profile: ProfilResponsable | null): boolean {
+ *  de service) ne fait pas un responsable (question 2). Lot AO (`backOffice`) : plus aucune case — la
+ *  coordination (Orga, référents Louange et EDD), un référent d'équipe ou de sous-équipe, un droit venu
+ *  d'un rôle de groupe. Lot RS (`backOffice`, Q22) : admin, ou au moins une responsabilité, ou référent d'une équipe ou
+ *  d'une sous-équipe ; les rôles de groupe ne comptent plus. */
+export function estResponsable(user: AuthUser | null, profile: ProfilResponsable | null, backOffice: boolean = BACK_OFFICE): boolean {
   if (!user) return false;
   if (isAdminUser(user)) return true;
   if (!profile) return false;
+  if (backOffice) {
+    return responsabilitesDe(profile).length > 0 || nonVide(profile.referentDe) || nonVide(profile.referentSous);
+  }
   return profile.coordination === true || nonVide(profile.plannings) || nonVide(profile.notify)
     || nonVide(profile.annonces) || profile.equipes === true || nonVide(profile.referentDe)
     || nonVide(profile.remplitParRole) || nonVide(profile.publieParRole) || nonVide(profile.notifieParRole);
 }
 
-/** Statistiques des chants (lot U7, docs/spec-statistiques.md, Q2) : admins seulement (T1).
- *  Sans règle Firestore : rien de nouveau n'est lu ni écrit (précédent `canUseHarmonie`). */
+/** Statistiques des chants (lot U7, docs/spec-statistiques.md) : T1 et T7 de spec-statistiques.md remplacés par
+ *  D5 (30/10/2026, docs/spec-jianpu-entete-statistiques.md) : tout membre connecté ; sans règle Firestore. */
 export function canVoirStatistiques(user: { email?: string | null } | null): boolean {
+  return user !== null;
+}
+
+/** D5 : le filtre présidence reste aux admins. */
+export function canFiltrerPresidence(user: { email?: string | null } | null): boolean {
   return isAdminUser(user);
+}
+
+/** Lot SP, P2 : les stats d'une personne sont à elle et aux admins ; filtre côté site seulement, sans règle Firestore. */
+export function canVoirStatsPersonne(user: { uid?: string | null; email?: string | null } | null, uidCible: string): boolean {
+  return !!user && ((!!user.uid && user.uid === uidCible) || isAdminUser(user));
 }
 
 /** Entrées et widgets qui arrivent avec leur lot (Q17). Chaque lot retire la sienne de ces
@@ -644,31 +883,49 @@ export function canVoirStatistiques(user: { email?: string | null } | null): boo
 const ENTREES_A_VENIR: readonly Entree[] = [];
 const WIDGETS_A_VENIR: readonly WidgetId[] = [];
 
-/** Les entrées du Back-Office d'une personne (table Q2), dans l'ordre du menu. Pour qui n'est
- *  pas responsable mais a une équipe (`equipesDe` : membre d'une équipe, ou public Louange par un
- *  rôle de service) : Tâches et Réunions, rien d'autre (décisions 4 et 5, EQ17) ; rien sinon. */
-export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsable | null): Entree[] {
+/** Les entrées du Back-Office d'une personne, dans l'ordre du menu (piste A, BO1 et BO4,
+ *  docs/spec-back-office-piste-a.md) : À faire et Calendrier pour tout responsable, puis Planning,
+ *  Équipes et Messages selon les droits. Qui n'est pas responsable n'a aucune entrée, même membre
+ *  d'une équipe (BO4) ; rien sans compte. Tâches, Réunions, Évènements et Statistiques ne sont plus des
+ *  entrées : leurs pages gardent leur adresse (`droitsDesPages` dit qui les ouvre). */
+export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsable | null, backOffice: boolean = BACK_OFFICE): Entree[] {
   if (!user) return [];
-  const equipes = equipesDe(profile).length > 0;
-  if (!estResponsable(user, profile)) return equipes ? ["taches", "reunions"] : [];
+  if (!estResponsable(user, profile, backOffice)) return [];
   const admin = isAdminUser(user);
   const visible: Record<Entree, boolean> = {
-    tableau: true,
+    afaire: true,
     calendrier: true,
-    planning: admin || nonVide(profile?.plannings) || planningsDuBackOffice(user, profile).length > 0,
+    // Même condition que le lien « Scène des fêtes » du Calendrier (SF-1).
+    scene: isCoordination(user, profile, backOffice),
+    planning: admin || (!backOffice && nonVide(profile?.plannings)) || planningsDuBackOffice(user, profile, backOffice).length > 0,
+    equipes: canEditerEquipes(user, profile, backOffice) || tientUnGroupe(user, profile),
+    // Le Back-Office n'existe qu'interrupteur ouvert (OG27) : les rôles comptent ici, sans dépendre de
+    // la variable du processus (un test pur ne la voit pas).
+    // Ancien mode : `notify` ∪ rôles de groupe (les rôles comptent ici sans dépendre de la variable du processus).
+    messages: admin || (backOffice ? audiencesNotifiables(profile, true).length > 0 : nonVide(profile?.notify) || nonVide(profile?.notifieParRole)),
+  };
+  return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));
+}
+
+/** Les pages du Back-Office qui ne sont plus des entrées du menu (BO1) mais gardent leur adresse
+ *  (`/back-office/taches`, `/evenements`, `/reunions`) : qui les ouvre, d'après les mêmes droits que
+ *  les anciennes entrées. Tout faux pour qui n'est pas responsable (BO4). Affichage seulement. */
+export function droitsDesPages(
+  user: AuthUser | null,
+  profile: ProfilResponsable | null,
+  backOffice: boolean = BACK_OFFICE
+): { taches: boolean; evenements: boolean; reunions: boolean } {
+  if (!user || !estResponsable(user, profile, backOffice)) return { taches: false, evenements: false, reunions: false };
+  const admin = isAdminUser(user);
+  const equipes = equipesDe(profile, backOffice).length > 0;
+  return {
     taches: admin || equipes,
     // Agencement v18 (B15) : Évènements = ceux qu'on gère ou crée (un référent crée pour son
     // équipe, décision 43) ; Réunions = ses équipes (Louange élargi). Affichage seulement :
     // evenements/{id} garde ses règles.
-    evenements: admin || isCoordination(user, profile) || nonVide(profile?.annonces) || nonVide(profile?.referentDe),
+    evenements: admin || isCoordination(user, profile, backOffice) || (!backOffice && nonVide(profile?.annonces)) || nonVide(profile?.referentDe),
     reunions: admin || equipes || nonVide(profile?.referentDe),
-    equipes: canEditerEquipes(user, profile) || tientUnGroupe(user, profile),
-    // Le Back-Office n'existe qu'interrupteur ouvert (OG27) : les rôles comptent ici, sans dépendre de
-    // la variable du processus (un test pur ne la voit pas).
-    messages: admin || audiencesNotifiables(profile, true).length > 0,
-    statistiques: canVoirStatistiques(user),
   };
-  return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));
 }
 
 /** Les onglets du planning (`/planning/<onglet>`), dans leur ordre. */
@@ -676,7 +933,7 @@ export const ONGLETS_PLANNING = ["culte", "table", "groupes", "edd", "campus", "
 export type OngletPlanning = (typeof ONGLETS_PLANNING)[number];
 
 /** L'onglet qui porte une grille (clé de `GRILLES` ou de `PUBLISHABLE_PLANNINGS`). */
-function ongletDeLaGrille(key: string): OngletPlanning | null {
+export function ongletDeLaGrille(key: string): OngletPlanning | null {
   if (key === "paix" || key === "bonte" || key.startsWith("fidelite")) return "groupes";
   if (key.startsWith("edd")) return "edd";
   if (key.startsWith("campus")) return "campus";
@@ -689,10 +946,18 @@ function ongletDeLaGrille(key: string): OngletPlanning | null {
  *  l'ordre des onglets ; tous pour un admin. */
 export function planningsDuBackOffice(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[]; notify?: string[]; remplitParRole?: string[]; publieParRole?: string[]; notifieParRole?: string[] } | null
+  profile: ({ plannings?: string[]; notify?: string[]; remplitParRole?: string[]; publieParRole?: string[]; notifieParRole?: string[] } & ProfilOrganigramme) | null,
+  backOffice: boolean = BACK_OFFICE
 ): OngletPlanning[] {
   if (!user) return [];
   if (isAdminUser(user)) return [...ONGLETS_PLANNING];
+  if (backOffice) {
+    // Lot AO : les grilles remplies, plus les publications ou prévenances. Lot RS : par un gestionnaire seulement.
+    const publiees = PUBLISHABLE_PLANNINGS.filter((p) => droitsDePrevenir(p, false, profile, true)).map((p) => p.key);
+    const remplies = org.TOUS_LES_PLANNINGS.filter((k) => org.colonnesRemplies(profile, k) !== null);
+    const siens = new Set([...remplies, ...publiees].map(ongletDeLaGrille));
+    return ONGLETS_PLANNING.filter((o) => siens.has(o));
+  }
   const publies = PUBLISHABLE_PLANNINGS.filter((p) =>
     peutPrevenir(p, false, profile?.notify ?? [], profile?.publieParRole ?? [], profile?.notifieParRole ?? [])).map((p) => p.key);
   const siens = new Set([...(profile?.plannings ?? []), ...(profile?.remplitParRole ?? []), ...publies].map(ongletDeLaGrille));
@@ -701,18 +966,20 @@ export function planningsDuBackOffice(
 
 /** Les widgets qu'une personne peut ajouter à son tableau de bord (table des widgets), dans
  *  l'ordre du catalogue. Vide pour qui n'est pas responsable (il n'a pas de tableau de bord). */
-export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null): WidgetId[] {
-  if (!estResponsable(user, profile)) return [];
-  const entrees = entreesBackOffice(user, profile);
+export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null, backOffice: boolean = BACK_OFFICE): WidgetId[] {
+  if (!estResponsable(user, profile, backOffice)) return [];
+  const entrees = entreesBackOffice(user, profile, backOffice);
+  const pages = droitsDesPages(user, profile, backOffice);
   const admin = isAdminUser(user);
   const permis: Record<WidgetId, boolean> = {
     dimanche: true,
     calendrier: true,
-    afaire: entrees.includes("taches"),
-    setlists: canCreateSetlist(user, profile),
+    afaire: pages.taches,
+    setlists: canCreateSetlist(user, profile, backOffice),
     planning: entrees.includes("planning"),
-    // Une seule entrée couvrait les deux avant v18 : le widget reste permis avec l'une ou l'autre.
-    evenements: entrees.includes("evenements") || entrees.includes("reunions"),
+    // Depuis TB2 les réunions ont leur widget et sortent d'Évènements : seule l'entrée Évènements le permet (TB2-corrections).
+    evenements: pages.evenements,
+    reunions: pages.reunions,
     chants: canVoirStatistiques(user),
     petitdej: true,
     scene: true,
@@ -726,16 +993,17 @@ export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null
  *  gère ou crée : admin, coordination, droit d'annonces, référent d'une équipe, décision 43) ·
  *  Scène (coordination, U1). Les réunions ont leur entrée depuis l'agencement v18 (B15).
  *  Affichage seulement. */
-export type SousPartieEvenements = "evenements" | "scene";
+type SousPartieEvenements = "evenements" | "scene";
 export function sousPartiesEvenements(
   user: AuthUser | null,
-  profile: ProfilResponsable | null
+  profile: ProfilResponsable | null,
+  backOffice: boolean = BACK_OFFICE
 ): SousPartieEvenements[] {
   if (!user) return [];
   const admin = isAdminUser(user);
-  const coordination = isCoordination(user, profile);
+  const coordination = isCoordination(user, profile, backOffice);
   const parties: SousPartieEvenements[] = [];
-  if (admin || coordination || nonVide(profile?.annonces) || nonVide(profile?.referentDe)) parties.push("evenements");
+  if (admin || coordination || (!backOffice && nonVide(profile?.annonces)) || nonVide(profile?.referentDe)) parties.push("evenements");
   if (coordination) parties.push("scene");
   return parties;
 }

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<!-- Vidéo de bienvenue : une composition par disposition. render.mjs injecte window.CFG = { device, boxes }
+     (boxes.json des captures, en px CSS) avant le chargement ; chaque image est render(t), fonction pure du temps. -->
+<style>
+@font-face{font-family:"HanS";src:url("../../public/fonts/SourceHanSansCN-Medium.otf")}
+:root{--ink:#1c1c1e;--muted:#6c6c72;--brand:#cf2a20;--chord:#3f63cf}
+html,body{margin:0;width:1080px;height:1080px;overflow:hidden;background:#fff}
+#stage{position:absolute;inset:0;overflow:hidden;font-family:Inter,"HanS",sans-serif;color:var(--ink);background:#f6f6f7}
+.halo{position:absolute;border-radius:50%;filter:blur(90px);width:760px;height:620px}
+.abs{position:absolute}
+.scene{position:absolute;inset:0;display:none}
+.cap{position:absolute;left:60px;right:60px;top:86px;text-align:center;font-weight:700;font-size:70px;line-height:1.08;letter-spacing:-0.025em}
+.zh{font-family:"HanS";font-weight:500;letter-spacing:0}
+.dev{position:absolute;background:#1c1c1e;box-shadow:0 40px 90px rgba(28,28,30,.22),0 4px 12px rgba(28,28,30,.12)}
+.dev .screen{position:relative;overflow:hidden;background:#fff}
+.dev.desktop{background:#e9e9ec;border:1px solid rgba(28,28,30,.12)}
+.dev.desktop .bar{height:34px;display:flex;align-items:center;gap:8px;padding:0 14px}
+.dev.desktop .bar i{width:11px;height:11px;border-radius:50%;background:#c9c9ce}
+.card{position:absolute;overflow:hidden;border-radius:36px;background:#fff;box-shadow:0 30px 80px rgba(28,28,30,.16),0 2px 6px rgba(28,28,30,.08)}
+img{display:block;max-width:none}
+.ripple{position:absolute;border-radius:50%;border:6px solid var(--chord);box-sizing:border-box}
+.chip{position:absolute;padding:14px 28px;border-radius:999px;background:var(--ink);color:#fff;font-weight:700;font-size:40px;white-space:nowrap}
+.ring{position:absolute;border-radius:999px;border:5px solid var(--brand);box-sizing:border-box}
+.logo{position:absolute;border-radius:50%;box-shadow:0 18px 50px rgba(207,42,32,.25)}
+</style></head>
+<body><div id="stage">
+  <div class="halo" id="h1" style="background:rgba(207,42,32,.20)"></div>
+  <div class="halo" id="h2" style="background:rgba(63,99,207,.20)"></div>
+
+  <div id="s1" class="scene">
+    <img id="s1logo" src="../../public/logo.png" class="logo" style="width:240px;height:240px;left:420px;top:230px">
+    <div id="s1t" class="abs" style="left:0;right:0;top:540px;text-align:center;font-weight:700;font-size:96px;letter-spacing:-0.03em">Bienvenue dans GCC</div>
+    <div id="s1s" class="abs" style="left:0;right:0;top:672px;text-align:center;font-weight:500;font-size:56px;color:var(--muted);letter-spacing:-0.015em">L'app de l'église.</div>
+  </div>
+  <div id="s2" class="scene"><div class="cap" id="s2c">Tous les chants, en français et&nbsp;en&nbsp;<span class="zh">中文</span>.</div></div>
+  <div id="s3" class="scene"><div class="cap" id="s3c">Dans ta tonalité, en&nbsp;un&nbsp;geste.</div></div>
+  <div id="s4" class="scene"><div class="cap" id="s4c">Les partitions <span class="zh">简谱</span>, transposées sur le&nbsp;scan.</div></div>
+  <div id="s5" class="scene"><div class="cap" id="s5c">Les chants du culte, dans&nbsp;l'ordre.</div></div>
+  <div id="s6" class="scene"></div>
+  <div id="s7" class="scene">
+    <img id="s7logo" src="../../public/logo.png" class="logo" style="width:200px;height:200px;left:440px;top:150px">
+    <div id="s7t" class="abs" style="left:0;right:0;top:390px;text-align:center;font-weight:700;font-size:120px;letter-spacing:-0.035em">C'est parti.</div>
+  </div>
+</div>
+<script>
+const CFG = window.CFG ?? { device: "telephone", boxes: {} };
+const D = CFG.device, B = CFG.boxes, VP = B.viewport, SH = `shots/${D}/`;
+const PORTRAIT = D === "telephone" || D === "tablette";
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, css, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (css) e.style.cssText = css; if (html) e.innerHTML = html; parent.appendChild(e); return e; };
+const img = (src, k, x0, y0, parent, extra = "") => el("img", "abs", `width:${VP.width * k}px;left:${-x0 * k}px;top:${-y0 * k}px;${extra}`, parent).setAttribute("src", src) ?? parent.lastChild;
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ramp = (t, a, b) => cl((t - a) / (b - a));
+const eo = (x) => 1 - Math.pow(1 - x, 3);
+const eio = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const back = (x) => { const c = 1.4; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const lerp = (a, b, p) => a + (b - a) * p;
+
+/** Un appareil : téléphone, tablette (cadre noir arrondi) ou fenêtre d'ordinateur. Rend { box, screen, k }. */
+function appareil(parent, width, left, top) {
+  const kind = D === "ordinateur" ? "desktop" : D === "telephone" ? "phone" : "tablet";
+  const pad = kind === "phone" ? 14 : kind === "tablet" ? 18 : 0;
+  const rad = kind === "phone" ? 70 : kind === "tablet" ? 44 : 18;
+  const box = el("div", `dev ${kind}`, `left:${left}px;top:${top}px;width:${width}px;padding:${pad}px;border-radius:${rad}px`, parent);
+  if (kind === "desktop") el("div", "bar", "", box, "<i></i><i></i><i></i>");
+  const k = width / VP.width;
+  const screen = el("div", "screen", `width:${width}px;height:${VP.height * k}px;border-radius:${kind === "desktop" ? "0 0 18px 18px" : rad - pad + "px"}`, box);
+  return { box, screen, k, outerH: VP.height * k + 2 * pad + (kind === "desktop" ? 34 : 0), outerW: width + 2 * pad };
+}
+
+// Largeur d'écran de l'appareil selon la disposition (cadre carré de 1080).
+const W_LARGE = { telephone: 572, tablette: 620, "tablette-paysage": 860, ordinateur: 900 }[D];
+
+// ── S2 : la liste, dans l'appareil ──
+const a2 = appareil($("s2"), W_LARGE, 0, 310);
+a2.box.style.left = (1080 - a2.outerW) / 2 + "px";
+const s2img = img(SH + "01-liste.png", a2.k, 0, 0, a2.screen);
+
+// ── S3 : le chant, recadré de la barre de tonalité au couplet 1 ──
+const pl = B.pilule, it = B.intro, cp = B.couplet, plus = B.plus;
+const x0 = Math.min(pl.x, it.x) - 14, x1 = Math.max(pl.x + pl.width, it.x + it.width) + 14;
+const y0 = Math.max(0, pl.y - 14), y1 = cp.y + cp.height + 14;
+const k3 = Math.min(900 / (x1 - x0), 770 / (y1 - y0));
+const c3w = (x1 - x0) * k3, c3h = (y1 - y0) * k3;
+const card3 = el("div", "card", `left:${(1080 - c3w) / 2}px;top:${260 + (770 - c3h) / 2}px;width:${c3w}px;height:${c3h}px`, $("s3"));
+const zoom3 = el("div", "abs", `left:0;top:0;width:${c3w}px;height:${c3h}px;transform-origin:0 0`, card3);
+img(SH + "02-chant.png", k3, x0, y0, zoom3);
+const s3b = img(SH + "03-chant-plus1.png", k3, x0, y0, zoom3, "opacity:0");
+const rip = el("div", "ripple", "", zoom3);
+const chip = el("div", "chip", "", card3, "+1 demi-ton");
+const px = (plus.x + plus.width / 2 - x0) * k3, py = (plus.y + plus.height / 2 - y0) * k3;
+// Cible du zoom : intro + couplet 1.
+const zr = { x: (cp.x - 14 - x0) * k3, y: (it.y - 14 - y0) * k3, w: (cp.width + 28) * k3, h: (cp.y + cp.height - it.y + 28) * k3 };
+const ZZ = Math.min(c3w / zr.w, c3h / zr.h, 1.9);
+const ZT = { x: -zr.x * ZZ + (c3w - zr.w * ZZ) / 2, y: -zr.y * ZZ + (c3h - zr.h * ZZ) / 2 };
+
+// ── S4 : la page 简谱 de l'appareil ──
+const J = B.jianpu, c4w = 780, c4h = 760, j4h = c4w * J.height / J.width;
+const card4 = el("div", "card", `left:150px;top:300px;width:${c4w}px;height:${c4h}px`, $("s4"));
+const s4img = el("img", "abs", `width:${c4w}px;left:0;top:0`, card4); s4img.src = SH + "04-jianpu-page.png";
+
+// ── S5 : les rangées de la setlist ──
+const R = B.rows;
+const r0 = Math.min(...R.map((r) => r.x)) - 10, r1 = Math.max(...R.map((r) => r.x + r.width)) + 10;
+const ry0 = Math.min(...R.map((r) => r.y)) - 14, ry1 = Math.max(...R.map((r) => r.y + r.height)) + 14;
+const k5 = Math.min(960 / (r1 - r0), 740 / (ry1 - ry0), 3);
+const c5w = (r1 - r0) * k5, c5h = (ry1 - ry0) * k5;
+const card5 = el("div", "card", `left:${(1080 - c5w) / 2}px;top:${280 + (740 - c5h) / 2}px;width:${c5w}px;height:${c5h}px`, $("s5"));
+const rows5 = R.map((r, i) => {
+  const top = i === 0 ? ry0 : r.y, bot = i === R.length - 1 ? ry1 : R[i + 1].y;
+  const d = el("div", "abs", `left:0;top:${(top - ry0) * k5}px;width:${c5w}px;height:${(bot - top) * k5 + 1}px;overflow:hidden;background:#fff`, card5);
+  img(SH + "05-setlist.png", k5, r0, top, d);
+  return d;
+});
+
+// ── S6 : le Mode Louange, page suivante d'un glissé, puis « Ensuite » ──
+let a6, cap6;
+if (PORTRAIT) {
+  cap6 = el("div", "abs", "left:56px;top:370px;width:540px;font-weight:700;font-size:66px;line-height:1.08;letter-spacing:-0.025em", $("s6"),
+    "Et le dimanche,<br><span style=\"color:var(--brand)\">le Mode Louange.</span>");
+  a6 = appareil($("s6"), D === "telephone" ? 430 : 440, 0, 0);
+  a6.box.style.left = 1080 - a6.outerW - 40 + "px";
+  a6.box.style.top = (1080 - a6.outerH) / 2 + "px";
+} else {
+  cap6 = el("div", "cap", "", $("s6"), "Et le dimanche, <span style=\"color:var(--brand)\">le Mode&nbsp;Louange.</span>");
+  a6 = appareil($("s6"), W_LARGE, 0, 300);
+  a6.box.style.left = (1080 - a6.outerW) / 2 + "px";
+}
+const s6a = img(SH + "06-louange-a.png", a6.k, 0, 0, a6.screen);
+const s6b = img(SH + "06-louange-b.png", a6.k, 0, 0, a6.screen);
+const E = B.ensuite;
+const ring = el("div", "ring", E ? `left:${E.x * a6.k - 8}px;top:${E.y * a6.k - 8}px;width:${E.width * a6.k + 16}px;height:${E.height * a6.k + 16}px` : "display:none", a6.screen);
+const slideW = VP.width * a6.k;
+
+// ── S7 : la barre d'onglets (téléphone, tablette) ou l'app dans l'appareil (grands écrans) ──
+let s7bar;
+if (PORTRAIT) {
+  const N = B.nav, k7 = 800 / N.width;
+  s7bar = el("div", "abs", `left:140px;top:640px;width:800px;height:${N.height * k7}px;overflow:hidden;border-radius:${N.height * k7 / 2}px;box-shadow:0 24px 60px rgba(28,28,30,.18)`, $("s7"));
+  img(SH + "01-liste.png", k7, N.x, N.y, s7bar);
+} else {
+  const a7 = appareil($("s7"), W_LARGE, 0, 600);
+  a7.box.style.left = (1080 - a7.outerW) / 2 + "px";
+  img(SH + "01-liste.png", a7.k, 0, 0, a7.screen);
+  s7bar = a7.box;
+}
+
+const S = [[0, 2.5], [2.5, 5], [5, 10], [10, 12.5], [12.5, 15], [15, 17.5], [17.5, 99]];
+const vis = (t, i) => t >= S[i][0] && t < S[i][1];
+const enter = (t, i, d = 0, len = 0.45) => eo(ramp(t, S[i][0] + d, S[i][0] + d + len));
+const leave = (t, i) => (i === 6 ? 0 : eio(ramp(t, S[i][1] - 0.28, S[i][1])));
+const show = (e, o, dy = 0, sc = 1) => { e.style.opacity = o; e.style.transform = `translateY(${dy}px) scale(${sc})`; };
+const caption = (t, i, e) => { const l = leave(t, i), c = enter(t, i, 0.05, 0.35); show(e, c * (1 - l), 30 * (1 - c) - 20 * l); };
+const rise = (t, i, e, dist = 60) => { const l = leave(t, i), c = enter(t, i, 0, 0.5); e.style.opacity = c * (1 - l); e.style.transform = `translateY(${dist * (1 - c) - 30 * l}px)`; };
+
+window.render = function (t) {
+  $("h1").style.transform = `translate(${-260 + 40 * Math.sin(t * 0.35)}px,${-260 + 30 * Math.cos(t * 0.3)}px)`;
+  $("h2").style.transform = `translate(${580 + 40 * Math.cos(t * 0.3)}px,${700 + 30 * Math.sin(t * 0.4)}px)`;
+  for (let i = 0; i < 7; i++) $("s" + (i + 1)).style.display = vis(t, i) ? "block" : "none";
+
+  if (vis(t, 0)) {
+    const l = leave(t, 0), p = back(ramp(t, 0.05, 0.6));
+    $("s1logo").style.opacity = ramp(t, 0.05, 0.3) * (1 - l);
+    $("s1logo").style.transform = `scale(${0.6 + 0.4 * p}) translateY(${-30 * l}px)`;
+    show($("s1t"), enter(t, 0, 0.3) * (1 - l), 40 * (1 - enter(t, 0, 0.3)) - 30 * l);
+    show($("s1s"), enter(t, 0, 0.75) * (1 - l), 30 * (1 - enter(t, 0, 0.75)) - 30 * l);
+  }
+  if (vis(t, 1)) {
+    caption(t, 1, $("s2c")); rise(t, 1, a2.box, 600);
+    const p = eio(ramp(t, 3.1, 4.9));
+    s2img.style.transform = `translateY(${-40 * p}px) scale(${1 + 0.03 * p})`; s2img.style.transformOrigin = "50% 0";
+  }
+  if (vis(t, 2)) {
+    caption(t, 2, $("s3c")); rise(t, 2, card3);
+    const T = 6.25, r = ramp(t, T - 0.12, T + 0.45), sz = 40 + 120 * r;
+    rip.style.cssText = `left:${px - sz / 2}px;top:${py - sz / 2}px;width:${sz}px;height:${sz}px;opacity:${t < T - 0.12 ? 0 : 1 - r}`;
+    s3b.style.opacity = ramp(t, T, T + 0.14);
+    const c = back(ramp(t, T + 0.05, T + 0.45)), co = cl(ramp(t, T + 0.05, T + 0.2)) * (1 - ramp(t, 7.7, 7.95));
+    const cx = Math.min(Math.max(px - 150, 16), c3w - 316);
+    chip.style.cssText = `left:${cx}px;top:${Math.min(py + 60, c3h - 100)}px;opacity:${co};transform:scale(${0.7 + 0.3 * c})`;
+    const z = eio(ramp(t, 7.6, 8.6));
+    zoom3.style.transform = `translate(${lerp(0, ZT.x, z)}px,${lerp(0, ZT.y, z)}px) scale(${lerp(1, ZZ, z)})`;
+  }
+  if (vis(t, 3)) {
+    caption(t, 3, $("s4c")); rise(t, 3, card4);
+    const p = eio(ramp(t, 10.3, 12.3));
+    s4img.style.transform = `translateY(${-p * Math.max(0, j4h - c4h) * 0.7}px) scale(${1 + 0.04 * p})`;
+  }
+  if (vis(t, 4)) {
+    caption(t, 4, $("s5c")); rise(t, 4, card5);
+    rows5.forEach((r, i) => { const a = 12.5 + 0.3125 * (i + 1) + 0.15, q = eo(ramp(t, a, a + 0.35)); r.style.opacity = q; r.style.transform = `translateX(${80 * (1 - q)}px)`; });
+  }
+  if (vis(t, 5)) {
+    caption(t, 5, cap6);
+    const l = leave(t, 5), e = enter(t, 5, 0, 0.5);
+    a6.box.style.opacity = 1 - l; a6.box.style.transform = `translateY(${(1 - e) * 600 - 30 * l}px)`;
+    const sw = eio(ramp(t, 16.1, 16.45));
+    s6a.style.transform = `translateX(${-slideW * sw}px)`; s6b.style.transform = `translateX(${slideW * (1 - sw)}px)`;
+    const pu = back(ramp(t, 16.55, 16.9));
+    ring.style.opacity = cl(ramp(t, 16.55, 16.7)) * (1 - ramp(t, 17.15, 17.35)); ring.style.transform = `scale(${0.85 + 0.15 * pu})`;
+  }
+  if (vis(t, 6)) {
+    const p = back(ramp(t, 17.55, 18.1));
+    $("s7logo").style.opacity = ramp(t, 17.55, 17.8); $("s7logo").style.transform = `scale(${0.6 + 0.4 * p})`;
+    show($("s7t"), enter(t, 6, 0.25), 40 * (1 - enter(t, 6, 0.25)));
+    const b = enter(t, 6, 0.6, 0.5); show(s7bar, b, (PORTRAIT ? 50 : 300) * (1 - b));
+  }
+};
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {}))]).then(() => true);
+</script></body></html>

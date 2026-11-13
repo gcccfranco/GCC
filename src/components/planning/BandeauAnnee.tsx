@@ -2,6 +2,7 @@
 
 import { Lock } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { Bandeau } from "@/components/layout/Bandeau"
 
 // Bandeau d'une année à venir (lot U2, planche bo-planning-2027) : « 2027 ·
 // brouillon… » pour qui voit le brouillon d'un planning publié par trimestre,
@@ -17,12 +18,13 @@ export function BandeauAnnee({ annee, brouillon, dimanches }: {
   const { t } = useTranslation()
   if (!brouillon && dimanches === null) return null
   return (
-    <p data-testid="bandeau-annee" className="flex gap-2 rounded-xl bg-secondary px-3.5 py-2.5 text-sm text-foreground">
-      {brouillon && <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />}
-      <span>
-        {brouillon && <span className="font-semibold">{t("planning.annee.brouillon", { annee })} </span>}
-        {dimanches !== null && t("planning.annee.poses", { annee, avant: annee - 1, n: dimanches })}
-      </span>
-    </p>
+    <Bandeau
+      ton="info"
+      testId="bandeau-annee"
+      icone={brouillon ? <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden /> : undefined}
+    >
+      {brouillon && <span className="font-semibold">{t("planning.annee.brouillon", { annee })} </span>}
+      {dimanches !== null && t("planning.annee.poses", { annee, avant: annee - 1, n: dimanches })}
+    </Bandeau>
   )
 }

@@ -3,7 +3,7 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, estTelephone, interdireDialoguesNatifs, repondreDansLeSite } from "./helpers/agencement";
-import { fermerFeuille, reglageSaison, versToutesLesReservations } from "./helpers/saisonScene";
+import { fermerFeuille, reglageSaison, resumeSaison, versToutesLesReservations } from "./helpers/saisonScene";
 import { canReserverPour } from "../src/lib/access";
 import {
   commence, creneauxLibres, erreursSaison, FAMILLES, famillesDe, grilleDuJour, horsGrille, joursReservables,
@@ -210,7 +210,8 @@ test("règles Firestore : les créneaux passent par reservable(), miroir de canR
   // Jusqu'à l'accolade qui ferme le bloc (celle de « {cid} » viendrait avant : tranche vide).
   const del = bloc.slice(bloc.indexOf("allow delete"), bloc.indexOf("}", bloc.indexOf("allow delete")));
   expect(create).toContain("request.resource.data.auteurUid == request.auth.uid");
-  expect(create).toContain("isCoordination() || reservable(id, request.resource.data.qui)");
+  // lot RS : un gestionnaire de planning réserve aussi (gereUnPlanning), comme canReserverPour
+  expect(create).toContain("isCoordination() || gereUnPlanning() || reservable(id, request.resource.data.qui)");
   expect(update).toContain("reservable(id, request.resource.data.qui)");
   expect(del).toContain("resource.data.auteurUid == request.auth.uid");
   expect(del).not.toContain("reservable");
@@ -219,7 +220,7 @@ test("règles Firestore : les créneaux passent par reservable(), miroir de canR
 // ─── S3 : l'écran de la coordination ────────────────────────────────────────
 
 const NOE: FakeProfile = { uid: "uid-noe", email: "noe@example.com", firstName: "Noé", lastName: "L." };
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */, coordination: true }; // lot AO : la Coordination vient du référent EDD ; `coordination` ne sert plus qu'à `ouvrir` (choix de l'adresse)
 
 /** « Noël 2026 » de la Réussite, en brouillon. */
 const NOEL26 = {
@@ -266,7 +267,8 @@ const SAISON_NOEL = "/back-office/evenements/scene/noel?vue=saison";
 async function horsGrilleDuTableau(page: Page, n: number) {
   await versToutesLesReservations(page);
   await page.getByRole("group", { name: "Filtrer les réservations" }).getByRole("button", { name: `Hors grille ${n}` }).click();
-  return page.getByRole("table", { name: "Toutes les réservations" }).locator("tbody tr");
+  // Le tableau à partir de 640 px de conteneur, dessous la liste « par jour » (bo-evenements-1) : les lignes du rendu visible.
+  return page.locator('[data-testid="reservations-tableau"] tbody tr, [data-testid="reservations-liste"] li').filter({ visible: true });
 }
 
 test("brouillon : un membre a l'onglet Noël (fixe, P4) mais ni grille ni réservation", async ({ page }) => {
@@ -419,6 +421,44 @@ test("plages : la pastille s'ouvre pour changer la plage ; retirer la seule plag
   await expect(c.getByRole("button", { name: "sam.", exact: true, pressed: false })).toBeVisible();
   await expect(c.getByText("Chaque jour coché a au moins une plage.")).toHaveCount(0);
   await expect.poll(() => patches(db).at(-1)?.data.plages).toEqual([{ jour: 0, debut: "14:00", fin: "19:00" }]);
+});
+
+const UNE_PLAGE = { ...NOEL26, ouvert: true, plages: [{ jour: 0, debut: "14:00", fin: "19:00" }] };
+
+test("téléphone : « Terminé » enregistre la plage en cours d'édition", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "la feuille et son bouton « Terminé » n'existent que sur téléphone");
+  const db = await ouvrir(page, ALICE, { "programmes/noel": UNE_PLAGE }, "2026-11-03T10:00:00", SAISON_NOEL);
+  const c = await reglageSaison(page, "Jours et plages");
+  await c.getByRole("button", { name: "dim. 14:00 – 19:00" }).click();
+  await c.getByLabel("Début de la plage").fill("17:00");
+  await page.getByRole("dialog").getByRole("button", { name: "Terminé", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect.poll(() => patches(db).at(-1)?.data.plages).toEqual([{ jour: 0, debut: "17:00", fin: "19:00" }]);
+  await expect(resumeSaison(page)).toContainText("dim. 17–19");
+});
+
+test("téléphone : « Terminé » avec une plage refusée garde la feuille ouverte et n'écrit rien", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "la feuille et son bouton « Terminé » n'existent que sur téléphone");
+  const db = await ouvrir(page, ALICE, { "programmes/noel": UNE_PLAGE }, "2026-11-03T10:00:00", SAISON_NOEL);
+  const c = await reglageSaison(page, "Jours et plages");
+  await c.getByRole("button", { name: "dim. 14:00 – 19:00" }).click();
+  await c.getByLabel("Fin de la plage").fill("13:00");
+  await page.getByRole("dialog").getByRole("button", { name: "Terminé", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("dialog").getByText("La fin d'une plage doit être après son début.")).toBeVisible();
+  expect(db.writes.filter((w) => JSON.stringify(w.data ?? w).includes("plages"))).toHaveLength(0);
+});
+
+test("téléphone : « + Plage » laissée intacte puis « Terminé » ferme la feuille sans rien écrire", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "la feuille et son bouton « Terminé » n'existent que sur téléphone");
+  const db = await ouvrir(page, ALICE, { "programmes/noel": UNE_PLAGE }, "2026-11-03T10:00:00", SAISON_NOEL);
+  const c = await reglageSaison(page, "Jours et plages");
+  await c.getByRole("button", { name: "Ajouter une plage" }).click();
+  await expect(c.getByLabel("Début de la plage")).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Terminé", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(db.writes.filter((w) => JSON.stringify(w.data ?? w).includes("plages"))).toHaveLength(0);
+  await expect(resumeSaison(page)).toContainText("dim. 14–19");
 });
 
 test("plages : « + Plage » ajoute une seconde plage au dimanche, rangée par heure", async ({ page }) => {
@@ -591,7 +631,8 @@ test("membres : la feuille ne propose que les groupes permis (pas « Franco ») 
   await expect(f.getByRole("radio", { checked: true })).toHaveCount(0);
   await f.getByRole("radio", { name: "Séance louange" }).check();
   await expect(f.getByRole("button", { name: "Choisis quoi et qui" })).toBeDisabled();
-  expect(db.writes.filter((w) => w.method === "POST")).toHaveLength(0);
+  // Seules les écritures du programme comptent : `:commit` est l'envoi quotidien du comptage d'usage (docs/spec-comptage-usage.md).
+  expect(db.writes.filter((w) => w.method === "POST" && w.path.startsWith("programmes/"))).toHaveLength(0);
 });
 
 test("membres : sans limite, la feuille propose tous les groupes ; la coordination n'est jamais limitée", async ({ page }) => {
@@ -805,7 +846,8 @@ test("hors grille : une réservation d'un jour passé n'est plus signalée ; cel
   await ouvrir(page, ALICE, { "programmes/noel": NOEL, "programmes/noel/creneaux/p": passee, "programmes/noel/creneaux/v": aVenir }, "2026-10-15T10:00:00");
   const hors = await horsGrilleDuTableau(page, 1);
   await expect(hors).toHaveCount(1);
-  await expect(hors).toContainText("dim. 18 oct.");
+  // Le jour est dans la première cellule du tableau, ou dans le titre du groupe de la liste.
+  await expect(page.getByText("dim. 18 oct.", { exact: true }).filter({ visible: true })).toHaveCount(1);
 });
 
 test("membres : un créneau qui commence pendant que la feuille est ouverte est refusé à la validation (horloge simulée)", async ({ page }) => {
@@ -817,7 +859,8 @@ test("membres : un créneau qui commence pendant que la feuille est ouverte est 
   await page.clock.setFixedTime(new Date("2026-10-11T15:05:00"));
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(f.getByRole("alert")).toHaveText("Ce créneau a déjà commencé : il ne se réserve plus.");
-  expect(db.writes.filter((w) => w.method === "POST")).toHaveLength(0);
+  // Seules les écritures du programme comptent : `:commit` est l'envoi quotidien du comptage d'usage (docs/spec-comptage-usage.md).
+  expect(db.writes.filter((w) => w.method === "POST" && w.path.startsWith("programmes/"))).toHaveLength(0);
 });
 
 test("hors grille : « Déplacer » vers un créneau qui a commencé entre-temps est refusé (horloge simulée)", async ({ page }) => {
@@ -844,7 +887,7 @@ test("« Retirer » qui échoue le dit au-dessus du tableau de toutes les réser
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   await repondreDansLeSite(page, "Retirer");
   await expect(toutes.getByRole("alert")).toHaveText("Enregistrement impossible. Vérifie ta connexion et réessaie.");
-  await expect(toutes.getByRole("table")).toContainText("15:00 – 16:00");
+  await expect(toutes.locator('[data-testid="reservations-tableau"], [data-testid="reservations-liste"]').filter({ visible: true })).toContainText("15:00 – 16:00");
 });
 
 test("membres : la feuille range les groupes permis par famille, comme la planche (Groupes, EDD)", async ({ page }) => {

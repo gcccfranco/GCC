@@ -1,13 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-// Planning › Sans compte : les noms des plannings liés à aucun compte (admins ; bloc de l'ancienne administration, table Q3).
-import { useProfile } from "@/lib/firebase/users";
-import { isAdminUser } from "@/lib/access";
-import { SansCompte } from "@/components/admin/SansCompte";
-import { ReserveAuxAdmins } from "@/components/admin/commun";
-
+// « Sans compte » est passé dans Équipes › Personnes (piste A, BO7).
 export default function Page() {
-  const { user } = useProfile();
-  if (!isAdminUser(user)) return <ReserveAuxAdmins connecte={!!user} retour="/back-office/planning/sans-compte" />;
-  return <SansCompte />;
+  redirect("/back-office/equipes/personnes/sans-compte");
 }

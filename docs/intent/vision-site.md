@@ -585,6 +585,87 @@ designs avant tout code** (`feuille-de-route.md` § 3.U).
   l'organigramme ne dépasse jamais la hauteur de l'écran : il défile de gauche à droite (05/10/2026). Planche
   version 17 validée : le design du chantier est fini, place au code (05/10/2026).
 
+### Le rôle du Back-Office (23/10/2026)
+
+Timothée n'aime pas le tableau de bord : « j'ai l'impression que les données qu'on met servent à rien ». Une
+planche (https://claude.ai/artifact/6SUhvx1m9gfUrYK1m6D39d) montre pourquoi : onze widgets de même poids, des
+listes brutes, rien qui dise quoi faire. La cause est plus haut : le Back-Office n'avait pas de mission. Sa
+vision : « C'est tout le travail qu'on fait en amont d'un événement, voir si tout se passe bien, faire toutes les
+tâches que les autres ne voient pas (réunions, planning, événements et tout). Ça doit être un espace pour aider
+les gens qui ont accès au backoffice à faire au mieux les tâches qu'ils ont à faire. » Il servira à une dizaine de
+responsables, plusieurs fois par semaine, sur les quatre dispositions, dans une église de 150 à 200 personnes.
+Entretien (*grilling*) en quatre tours, les questions restantes tranchées sur les recommandations à sa demande.
+
+**Définition** : *les coulisses de GCC — tout ce qui se prépare avant un culte ou un évènement, pour que les
+responsables sachent ce qui est prêt, ce qui manque et qui relancer, et fassent leur part au mieux.*
+
+- **Ce qu'on prépare** : le **Culte Franco** et les **évènements publics** (sorties, repas, Pâques, Noël…). Le
+  Culte 中文 et l'EDD ne sont pas préparés dans le Back-Office (leurs grilles de planning et leurs setlists restent
+  comme aujourd'hui). Réunions et répétitions sont des outils, pas des évènements.
+- **Une fiche de préparation par évènement**, de l'avant au jour J ; un **bilan après** seulement pour le Culte
+  Franco, facultatif.
+- **Modèles par type d'évènement** : l'app coche seule ce qu'elle peut vérifier (setlist publiée, postes remplis,
+  présentation prête…), le reste se coche à la main ; modèles modifiés par les admins, « Garder pour la prochaine
+  fois » depuis une fiche.
+- **Une partie par équipe** dans chaque fiche (Louange, Médias, Orga, DA…) : les membres de l'équipe modifient la
+  leur, les admins tout, les autres responsables lisent tout. Chaque ligne non faite dit **qui en est chargé**.
+- **Un référent par culte qui ne prépare pas** : il surveille et relance, en privé sur **WeChat** (pas de
+  WhatsApp) ; personne fixe désignée par les admins, sinon tout responsable peut relancer. « Copier le rappel »
+  prépare le message dans la langue de la personne ; « Copier tous les rappels ».
+- **Aucune notification** du Back-Office. Les rappels de l'App pour ceux qui servent restent, comme « Notifier »
+  dans la partie Communication (prévenir l'église).
+- **Communication** dans la fiche : un plan d'échéances tiré du modèle ; la fiche du culte reçoit les annonces à
+  faire ce dimanche-là.
+- **Le Back-Office fait foi** pour ce qui est structuré (planning, tâches, inscriptions, déroulés) ; WeChat reste
+  pour discuter.
+- **Pas de suivi pastoral** ; une seule donnée nouvelle sur les personnes : le **nombre de services par trimestre
+  et par équipe**. Chaque équipe a un **nombre par défaut** ; on ne signale que **les trimestres où l'on veut faire
+  moins**, avec une raison si l'on veut (facultative ; précisions de Timothée, 23/10/2026). Le planning montre « prévu 4 sur 3 » et propose
+  d'abord ceux qui sont en dessous ; placer quelqu'un au-delà **ne bloque rien**, c'est seulement signalé à l'œil.
+- **Tâches** rattachées à une équipe, et à un évènement si besoin. **Réunions d'équipe** ouvertes sur un état des
+  lieux tout fait (prochains évènements de l'équipe, ce qui manque, tâches en retard, souhaits et planning).
+- **Jour J** : la fiche complète pour les responsables ; dans l'App, ceux qui servent voient le déroulé et leur rôle.
+- **Menu** (8) : Accueil · Évènements (fiches, modèles) · Planning · Tâches · Équipes (réunions comprises) ·
+  Calendrier · Messages · Statistiques. **Accueil fixe**, le même pour tous : prochains évènements (Culte Franco en
+  tête : « 4 sur 6 », ce qui manque, qui, « Copier le rappel »), Pour toi, Tes équipes. Le tableau de bord à
+  widgets disparaît ; barre du bas personnalisable, calendrier et statistiques restent.
+- **Réussite** : moins d'oublis le dimanche matin ; Noël et Pâques sans tout réinventer ; une charge mieux
+  répartie ; des réunions plus courtes.
+
+**Corrigé le même jour, et mis en pause** : « il faut que le culte franco ne soit plus vu comme un événement »
+(Timothée). Le culte reste **un planning parmi d'autres** ; pas de fiche de préparation pour lui. Le chantier des fiches
+(`spec-coulisses.md`) est en pause ; pour l'instant, **seul le tableau de bord est revu** (`spec-tableau-de-bord-v2.md`),
+et le Back-Office garde son rôle : le travail d'organisation que les autres ne voient pas (plannings, évènements,
+réunions, tâches).
+
+### Le site devient le pupitre (11/11/2026, demande AP)
+
+Détail : `docs/spec-pupitre-musicien.md`. Décisions de Timothée ce jour-là :
+- **But** : que chaque musicien de service joue sur le site et plus sur forScore. Les musiciens n'ont rien contre
+  forScore (« ils adorent même ») : on ne force pas, la partition du site doit être meilleure, la sienne, annotée,
+  et le suivre d'une setlist à l'autre.
+- **« Ma version » et « Adapter » fusionnent** ; la personne choisit si elle partage, et à qui (liste de personnes).
+- **Une annotation reste sur le chant** : dans une nouvelle setlist, on retrouve la partition annotée.
+- **Export PDF retiré aux musiciens** : « je pense que oui » (à confirmer sur planche : qui le garde).
+- **Idées d'harmonie dans le mode louange** : la décision du 17/09/2026 (« jamais en mode louange ») est rouverte.
+- **Accords en chiffres** (number system) sur les partitions.
+- **Compter l'usage de toutes les fonctionnalités**, pour retirer ensuite celles qui ne servent pas.
+- **Toutes les pages** revues pour l'usage, sur toutes les dispositions ; de petites animations.
+- Contenu des fiches d'harmonie et des cours, ordre des chantiers avec AO : délégués à Claude.
+
+**Après le rapport d'usage (11/11/2026, soir).** Timothée valide : commencer par les retouches sans dessin et par
+une planche pour ses deux exemples ; les partitions prennent la largeur de l'écran (la règle « colonne alignée à
+gauche » du 07/11/2026 ne vaut plus pour elles) ; toucher Liste | Partitions fait glisser la vue comme le doigt ; le
+mode louange reste sans animation. Détail : `docs/spec-pupitre-musicien.md`, `docs/audit-usage-2026-11-11.md`.
+
+**Après la planche des deux exemples (11/11/2026, nuit).** Timothée retient la piste « Pupitre » : en vue
+Partitions, le haut de page se resserre pour que le premier couplet arrive tôt, le sommaire devient un rail de
+numéros sur grand écran, la note de la setlist tient en une ligne dans la barre, deux colonnes lues en rangées à
+partir d'environ 1 360 px ; la vue Liste reste une colonne d'environ 720 px au même bord gauche ; « Mode Louange »
+est un bouton rond au téléphone ; les étiquettes de sections passent en minuscules semi-grasses. Feuille d'une
+équipe : ajouter en tête, une ligne par membre qui se déplie, retirer depuis les réglages avec « Remettre », boutons
+collés en bas, feuille centrée de 560 px en tablette debout. Détail : `docs/spec-pupitre-musicien.md`.
+
 ## Historique des changements d'avis
 
 | Date | Avant | Après |
@@ -611,3 +692,8 @@ designs avant tout code** (`feuille-de-route.md` § 3.U).
 | 20/09/2026 → 03/10/2026 | Section Évènements coupée en ligne, sans date de bascule. | Le Sheet « Calendrier des événements » fait foi jusqu'en décembre 2026 (le calendrier de l'app le lit) ; évènements sur le site à partir de janvier 2027, sans import. |
 | 18/09/2026 → 03/10/2026 | Plannings ouverts dans l'app un par un, le Sheet en archive. | Le planning 2027 se fait entièrement dans le Back-Office (colonnes et horaires de 2026, tous les dimanches posés d'office) ; export au modèle du Sheet. |
 | 03/10/2026 → 04/10/2026 | iPad paysage : exactement l'apparence de l'ordinateur, barre latérale dépliée et réductible. | Tablette en paysage : barre latérale toujours réduite (icônes) ; l'ordinateur garde le choix. |
+| 03/10/2026 → 23/10/2026 | Tableau de bord du Back-Office personnalisable, à widgets (ajouter, glisser, tailles, réglages). | Back-Office = les coulisses de la préparation des évènements ; accueil fixe, le même pour tous (prochains évènements prêts ou non, Pour toi, Tes équipes) ; plus de widgets. |
+| 23/10/2026 (entretien) → 23/10/2026 (soir) | Le Culte Franco a sa fiche de préparation, comme un évènement. | Le culte n'est pas un évènement : c'est un planning parmi d'autres. Fiches en pause, seul le tableau de bord est revu. |
+| 26/10/2026 → 07/11/2026 | Mode louange « façon forScore » par les gestes seulement ; l'apparence du site (matériaux, polices) gardée. | Le mode louange ressemble à forScore aussi par l'apparence, partout : barre, menus, page, vues par rôle (`../feuille-de-route.md` § 3.AO). La vue par rôle est **proposée** d'après le planning, jamais imposée ; cajon = vue Batteur ; rôle retenu par compte sur un appareil partagé (`../chantier-forscore/04-role-suggere.md`). |
+| 16/09/2026 → 08/11/2026 | Deux dispositions des paroles, un interrupteur « Couleurs par section » (appareil neuf en Couleurs par section). | **Cinq dispositions au choix (08/11/2026) : Classique (ex-Bleu, appareil neuf), Couleurs par section, Repères, Scène (page de la piste B) et Partition (page de la piste A)**, avec miniatures ; spec `../spec-mode-louange-forscore-2.md` ; 3 ou 4 dispositions au choix, partagées par la page du chant, la vue partitions et le mode louange ; appareil neuf en **Bleu** ; le mode louange garde les paroles du site sous la barre forScore (`../feuille-de-route.md` § 3.AO). |
+| 14/09/2026 → 07/11/2026 | Interlude et instrumental abrégés « Pm » (pont musical). | Interlude « Int », instrumental « Inst » : « Pm » se lisait comme une sorte de Pont « P » (signalement d'un membre, `../spec-abreviation-interlude.md`). |

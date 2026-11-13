@@ -7,11 +7,10 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { entreesBackOffice } from "@/lib/access";
+import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
-import { entreesBarre, espaceDe, estEntreeActive, ongletsBackOffice, ONGLET_PLUS } from "@/lib/navigation";
-import { barreAffichee } from "@/lib/tableauDeBord/barre";
-import { useBarreDuBas } from "@/lib/tableauDeBord/useBarreDuBas";
+import { entreesBarre, espaceAffiche, estEntreeActive, ongletsBackOffice, ongletsMusiciens, ONGLET_APP } from "@/lib/navigation";
+import { useDernierePage, useFormeAffichee } from "@/components/layout/SelecteurEspace";
 
 /**
  * Barre d'onglets fixée en bas d'écran, sur téléphone et tablette en portrait ;
@@ -19,17 +18,25 @@ import { useBarreDuBas } from "@/lib/tableauDeBord/useBarreDuBas";
  * et sur la tablette en paysage, qui ont la barre latérale (lot U4). Masquée en
  * plein écran (vue partition / pupitre) pour ne jamais recouvrir une
  * partition ; le mode louange (z-9999) passe par-dessus de toute façon.
- * Au Back-Office (lot U6, B6), un responsable a la sienne : 4 onglets choisis + « Plus »,
- * « Plus » marqué sur toute page qui n'est pas dans la barre ; celle de l'App ne change pas.
+ * Au Back-Office (piste A, BO2), un responsable a la sienne : cinq onglets fixes, À faire ·
+ * Calendrier · Planning · Équipes · App (ceux qu'il a le droit de voir) ; Messages est une icône
+ * de l'en-tête. Celle de l'App ne change pas. Chez les musiciens (EM-2) : leurs entrées puis App.
  */
 export function MobileTabBar() {
   const { t } = useTranslation();
   const pathname = usePathname() || "";
-  const { user, loading } = useAuth();
-  const { profile, loading: profilEnCours } = useProfile();
-  const auBackOffice = BACK_OFFICE && espaceDe(pathname) === "back-office";
-  const permises = auBackOffice ? entreesBackOffice(user, profile) : [];
-  const barre = useBarreDuBas(permises.length > 0 && user ? user.uid : null);
+  const { user, loading, probablementConnecte } = useAuth();
+  // Lot CH (C1, C2) : la marque « était connecté » fait dessiner la barre du membre pendant l'attente.
+  const attente = loading && probablementConnecte;
+  // C6 : pendant l'attente du profil, les onglets du Back-Office que la dernière visite avait donnés.
+  const forme = useFormeAffichee();
+  const { loading: profilEnCours } = useProfile();
+  const { chargement: accesEnCours } = useAccesHarmonie();
+  const espace = espaceAffiche(pathname, { musicien: forme.musiciens.length > 0 });
+  const auBackOffice = BACK_OFFICE && espace === "back-office";
+  const chezLesMusiciens = espace === "musiciens";
+  const permises = auBackOffice ? forme.entrees : [];
+  const app = useDernierePage("app");
   const [mounted, setMounted] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   // Comme la navbar du haut : masquée au scroll vers le bas, réaffichée dès
@@ -44,16 +51,20 @@ export function MobileTabBar() {
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
-  if (!mounted || loading || fullscreen) return null;
-  // Au Back-Office, on attend le profil et la barre enregistrée : jamais une barre qui change sous le doigt.
-  if (auBackOffice && (profilEnCours || (permises.length > 0 && !barre.charge))) return null;
+  if (!mounted || (loading && !attente) || fullscreen) return null;
+  // Au Back-Office, on attend le profil : jamais une barre qui change sous le doigt (sauf la forme retenue, C6).
+  if (auBackOffice && profilEnCours && !forme.retenue) return null;
+  // Chez les musiciens, on attend aussi la lecture du planning (qui dit l'instrument), sauf forme retenue.
+  if (chezLesMusiciens && (profilEnCours || accesEnCours) && !forme.retenue) return null;
   // Mêmes entrées que la barre latérale (lot U4) ; back-office coupé (lot 18) :
   // la section Évènements n'est pas en ligne.
-  const tabs = permises.length > 0
-    ? ongletsBackOffice(barreAffichee(barre.enregistree, permises))
-    : entreesBarre("app", { connecte: !!user, backOffice: BACK_OFFICE });
-  // « Plus » couvre les pages du Back-Office qui ne sont pas dans la barre.
-  const horsBarre = permises.length > 0 && !tabs.some((e) => estEntreeActive(e, pathname));
+  const tabs = chezLesMusiciens
+    ? ongletsMusiciens(forme.musiciens, app)
+    : permises.length > 0
+    ? ongletsBackOffice(permises, app)
+    : entreesBarre("app", { connecte: !!user || attente, backOffice: BACK_OFFICE });
+  // Une seule destination (visiteur : « Chants ») : pas de barre, ni sa cale de 110 px (C8, audit 24/10/2026).
+  if (tabs.length <= 1) return null;
 
   return (
     <>
@@ -69,20 +80,21 @@ export function MobileTabBar() {
       >
         <div className="flex h-16 gap-0.5 p-1.5">
           {tabs.map((entree) => {
-            const { href, cle, Icone } = entree;
-            const active = estEntreeActive(entree, pathname) || (horsBarre && entree === ONGLET_PLUS);
+            const { href, cle, Icone, cleCourte } = entree;
+            const active = estEntreeActive(entree, pathname);
             return (
               <Link
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
+                aria-label={entree.cle === ONGLET_APP.cle ? t("backOffice.barre.appAria") : t(cle)}
                 // `flex-auto` : un libellé long (« Évènements ») prend la place qu'il lui faut, même à 320 px.
                 className={`flex flex-auto flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-[26px] px-1.5 text-xs font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97] ${
                   active ? "bg-primary text-primary-foreground" : "text-muted-foreground"
                 }`}
               >
                 <Icone className="h-[22px] w-[22px]" strokeWidth={active ? 2.2 : 1.9} aria-hidden />
-                {t(cle)}
+                {t(cleCourte ?? cle)}
               </Link>
             );
           })}

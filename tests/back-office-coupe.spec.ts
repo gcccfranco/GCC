@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { BASE_URL_COUPE } from "../playwright.config";
 import { abonneAuxNotifications, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { interdireDialoguesNatifs, ongletsRail, verifierAgencement, verifierSansDebordement } from "./helpers/agencement";
@@ -21,13 +22,21 @@ const ADMIN: FakeProfile = {
 const barreDuBas = (page: Page) => page.getByRole("navigation", { name: "Navigation principale" });
 const phone = { viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 };
 
+// Remontrée à tous (lot VB-R) : la visite revient aussi aux comptes du lot 8 quand le back-office est coupé.
+test("un compte qui avait vu l'accueil du lot 8 revoit la visite, back-office coupé aussi", async ({ page }) => {
+  await signInAs(page, { ...ADMIN, uid: "uid-visite-lot8", email: "lot8.visite@example.com", accueilLot8: true }, {}, "/moi");
+  await expect(page.getByRole("heading", { name: "Moi", level: 1 })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Bienvenue dans GCC" })).toBeVisible();
+});
+
 test.describe("back-office coupé : les entrées disparaissent", () => {
-  test("barre du bas à quatre onglets pour un membre, Chants seul pour un visiteur (téléphone)", async ({ browser }) => {
+  test("barre du bas à quatre onglets pour un membre, aucune barre pour un visiteur (téléphone)", async ({ browser }) => {
     const contexte = await browser.newContext({ ...phone, baseURL: BASE_URL_COUPE });
     const page = await contexte.newPage();
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Chants"]);
+    // Une seule destination : pas de barre du tout (C8, audit du 24/10/2026).
+    await expect(page.getByTestId("barre-du-bas")).toHaveCount(0);
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await expect(barreDuBas(page).getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Moi"]);
@@ -42,13 +51,68 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
     await expect(moi.getByRole("link", { name: /tâches/i })).toHaveCount(0);
   });
 
-  // Lot U6 (B1) : le sélecteur « App · Back-Office » n'apparaît pour personne, même un admin.
-  test("aucun sélecteur App · Back-Office, même pour un admin", async ({ page }) => {
+  // Lot AO, AO-B et AO-F : en ligne, rien ne change — Moi garde sa carte des services et rôles déclarés,
+  // l'inscription propose encore les rôles de service.
+  test("« Moi » montre encore la carte des services et rôles, sans Mes équipes ni Ce que tu peux faire", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/moi");
+    const compte = page.getByRole("region", { name: "Mon compte" });
+    await expect(compte.getByTestId("service-role")).toHaveText(["Culte Franco · Musicien"]);
+    await expect(page.getByRole("region", { name: "Ce que tu peux faire" })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Mes équipes" })).toHaveCount(0);
+  });
+
+  test("l'inscription propose encore les rôles de service (étape « Services »)", async ({ page }) => {
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    // Inscriptions ouvertes : le document de réglage est absent (aucune lecture de la vraie base).
+    await page.route(/firestore\.googleapis\.com/, (route) => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
+    await page.goto("/signup");
+    const etapes = page.getByTestId("panneau-marque").getByTestId("etape");
+    await expect(etapes).toHaveText(["1Compte", "2Identité", "3Services"]);
+    await page.getByLabel(/^Email/).fill("nouveau@example.com");
+    await page.getByLabel(/^Mot de passe/).fill("secret1");
+    await page.getByLabel(/^Confirmer/).fill("secret1");
+    await page.getByRole("button", { name: "Suivant" }).click();
+    await page.getByLabel("Prénom").fill("Nadia");
+    await page.locator("#profile-lastname").fill("Perrin");
+    await page.getByRole("button", { name: "Suivant" }).click();
+    await expect(page.locator(".grille-services")).toHaveCount(1);
+    await expect(page.locator(".grille-services").getByRole("button", { name: "Culte Franco" })).toBeVisible();
+  });
+
+  test("le profil propose encore « Tes services et rôles »", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/profil");
+    await expect(page.getByRole("group", { name: "Tes services et rôles" })).toBeVisible();
+  });
+
+  // Lot U6 (B1) : le Back-Office n'apparaît pour personne, même un admin. Depuis EM (spec-espace-musiciens, Q1),
+  // l'espace Musiciens existe aussi interrupteur coupé : un admin (compté musicien) a le sélecteur App · Musiciens,
+  // jamais de segment Back-Office.
+  test("aucun Back-Office dans le sélecteur, même pour un admin (App · Musiciens seulement)", async ({ page }) => {
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await expect(page.getByRole("navigation", { name: "Navigation principale" }).first()).toBeAttached();
-    await expect(page.getByRole("group", { name: "Choisir l'espace" })).toHaveCount(0);
+    const segments = page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true }).first().getByRole("link");
+    await expect.poll(() => segments.evaluateAll((liens) => liens.map((l) => l.getAttribute("aria-label") || l.textContent?.trim()))).toEqual(["App", "Musiciens"]);
     await expect(page.getByRole("link", { name: "Back-Office" })).toHaveCount(0);
+  });
+
+  // Lot ST (ST3, D5) : Statistiques est ouverte à tout connecté, hors de l'interrupteur du back-office.
+  test("Chants a le bouton Statistiques (lot ST), qui ouvre /songs/statistiques", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect(page.getByRole("heading", { level: 1, name: "Chants" })).toBeVisible();
+    const lien = page.getByRole("link", { name: "Statistiques" }).filter({ visible: true });
+    await expect(lien).toHaveAttribute("href", /^\/songs\/statistiques\/?$/);
+    await lien.click();
+    await expect(page).toHaveURL(/\/songs\/statistiques\/?$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
+  });
+
+  test("/back-office/statistiques redirige vers /songs/statistiques/, même interrupteur coupé", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/songs");
+    await page.goto("/back-office/statistiques?vue=jamais-joues");
+    await expect(page).toHaveURL(/\/songs\/statistiques\/\?vue=jamais-joues/);
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
   });
 
   // Lot U4 : sur ordinateur, la barre latérale remplace la navbar.
@@ -64,7 +128,7 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
 });
 
 test.describe("back-office coupé : une adresse tapée à la main tombe dans le vide", () => {
-  for (const chemin of ["/taches", "/taches/da", "/taches/medias", "/equipes", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/evenements/scene/noel", "/annonces", "/back-office", "/back-office/taches", "/back-office/taches/da", "/back-office/taches/medias", "/back-office/evenements", "/back-office/evenements/reunions", "/back-office/evenements/scene", "/back-office/evenements/scene/paques", "/back-office/evenements/nouveau", "/back-office/evenements/foot", "/back-office/evenements/foot/modifier", "/back-office/statistiques", "/back-office/calendrier", "/back-office/reunions", "/back-office/reunions/foot", "/back-office/reunions/nouvelle", "/back-office/reunions/foot/modifier"]) {
+  for (const chemin of ["/taches", "/taches/da", "/taches/medias", "/equipes", "/equipes/da", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/evenements/scene/noel", "/annonces", "/back-office", "/back-office/taches", "/back-office/taches/da", "/back-office/taches/medias", "/back-office/evenements", "/back-office/evenements/reunions", "/back-office/evenements/scene", "/back-office/evenements/scene/paques", "/back-office/evenements/nouveau", "/back-office/evenements/foot", "/back-office/evenements/foot/modifier", "/back-office/calendrier", "/back-office/reunions", "/back-office/reunions/foot", "/back-office/reunions/nouvelle", "/back-office/reunions/foot/modifier"]) {
     test(`${chemin} répond 404`, async ({ page }) => {
       const reponse = await page.goto(chemin);
       expect(reponse?.status()).toBe(404);
@@ -77,6 +141,15 @@ test.describe("back-office coupé : une adresse tapée à la main tombe dans le 
       expect(reponse.status()).toBe(404);
     });
   }
+});
+
+// Lot SF : rien de la scène des fêtes du Back-Office (entrée « Scène », carte d'À faire) tant que l'interrupteur est coupé.
+test("back-office coupé : ni entrée « Scène » ni lien vers la scène du Back-Office, même pour un admin", async ({ page }) => {
+  await signInAs(page, ADMIN, {}, "/moi");
+  await expect(page.getByRole("heading", { name: "Moi", level: 1 })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Scène", exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("carte-scene-des-fetes")).toHaveCount(0);
+  await expect(page.locator('a[href*="/back-office/evenements/scene"]')).toHaveCount(0);
 });
 
 // Lot U6 (B2) : en ligne, l'Admin et Notifier restent les pages d'aujourd'hui (le
@@ -134,7 +207,9 @@ test.describe("back-office coupé : l'administration et Notifier restent où ils
     await expect(moi.getByRole("link", { name: "Admin" })).toBeVisible();
   });
 
-  for (const chemin of ["/back-office/planning", "/back-office/planning/culte", "/back-office/equipes", "/back-office/equipes/personnes", "/back-office/messages", "/back-office/messages/notifier"]) {
+  for (const chemin of ["/back-office/planning", "/back-office/planning/culte", "/back-office/equipes", "/back-office/equipes/personnes", "/back-office/equipes/da", "/back-office/messages", "/back-office/messages/notifier",
+    // BO16 (g) : les adresses ajoutées par la piste A (BO15, BO7) et l'ancienne page Plus (redirigée par BO-A).
+    "/back-office/equipes/personnes/sans-compte", "/back-office/planning/sans-compte", "/back-office/plus", "/equipes/louange"]) {
     test(`${chemin} répond 404`, async ({ page }) => {
       const reponse = await page.goto(chemin);
       expect(reponse?.status()).toBe(404);
@@ -518,7 +593,11 @@ test.describe("back-office coupé : les setlists de fête n'existent pas", () =>
     await signInAs(page, MO, docs, "/setlists");
     await expect(page.getByText("Aucun culte à venir.")).toBeVisible();
     await expect(page.getByRole("link", { name: /Noël 2026/ })).toHaveCount(0);
-    await expect(page.locator('optgroup[label="Fêtes"]')).toHaveCount(0);
+    await page.getByRole("button", { name: /^Filtrer par catégorie/ }).click();
+    const panneau = page.getByRole("menu");
+    await expect(panneau.getByRole("menuitemradio", { name: "Tous les services" })).toBeVisible();
+    await expect(panneau.getByText("Fêtes", { exact: true })).toHaveCount(0);
+    await expect(panneau.getByRole("menuitemradio", { name: /Noël|Pâques/ })).toHaveCount(0);
   });
 
   test("sa page est introuvable", async ({ page }) => {
@@ -536,4 +615,42 @@ test.describe("back-office coupé : les setlists de fête n'existent pas", () =>
     await signInAs(page, MO, { ...docs, "setlists/culte-18": ordinaire }, "/setlists?cat=No%C3%ABl");
     await expect(page.getByRole("link", { name: /Culte du 18/ })).toBeVisible();
   });
+});
+
+// A2 ter : en ligne, « Prévenir des changements » n'existe pas — le texte « déjà annoncé » ne renvoie pas vers lui,
+// et le « Trimestre … publié » du panneau passe par la traduction.
+test.describe("back-office coupé : textes de publication d'un trimestre", () => {
+  const fr = JSON.parse(readFileSync("src/locales/fr.json", "utf8")).planning;
+  const zh = JSON.parse(readFileSync("src/locales/zh-CN.json", "utf8")).planning;
+
+  test("la variante en ligne de « déjà annoncé » ne parle pas de « Prévenir des changements », en français et en 中文", () => {
+    expect(fr.dejaAnnonce).toContain("Prévenir des changements");
+    expect(fr.dejaAnnonceEnLigne).not.toContain("Prévenir des changements");
+    expect(zh.dejaAnnonce).toContain("通知改动");
+    expect(zh.dejaAnnonceEnLigne).not.toContain("通知改动");
+    expect(fr.trimestrePublie).toContain("{{tri}}");
+    expect(zh.trimestrePublie).toContain("{{tri}}");
+  });
+
+  test("BoutonPublication et PublishPlanningPanel choisissent la variante selon BACK_OFFICE", () => {
+    for (const f of ["src/components/planning/BoutonPublication.tsx", "src/components/planning/PublishPlanningPanel.tsx"]) {
+      const source = readFileSync(f, "utf8");
+      expect(source, f).toContain('BACK_OFFICE ? "planning.dejaAnnonce" : "planning.dejaAnnonceEnLigne"');
+    }
+    expect(readFileSync("src/components/planning/PublishPlanningPanel.tsx", "utf8")).not.toMatch(/`Trimestre \$\{tri\} publié/);
+  });
+});
+
+// eglise-18 : le sommaire replié du guide dit combien d'entrées il ouvre (SECTIONS.length) : 14 sans le back-office
+// (évènements, scène et tâches des équipes retirés), 17 interrupteur ouvert (pages-en-grand-guide-equipes.spec.ts).
+test("guide, téléphone : le sommaire replié dit 14 entrées, et la liste ouverte en compte 14", async ({ browser }) => {
+  const contexte = await browser.newContext({ ...phone, baseURL: BASE_URL_COUPE });
+  const page = await contexte.newPage();
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, ADMIN, {}, "/guide");
+  const bouton = page.getByRole("button", { name: "Sur cette page (14)" });
+  await expect(bouton).toHaveAttribute("aria-expanded", "false");
+  await bouton.click();
+  await expect(page.getByRole("navigation", { name: "Sur cette page" }).getByRole("link")).toHaveCount(14);
+  await contexte.close();
 });

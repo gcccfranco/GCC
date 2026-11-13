@@ -6,10 +6,10 @@ import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Plus, X } from "lucide-react";
-import { keyOptions } from "@/lib/transpose";
+import { keyLike, keyOptions } from "@/lib/transpose";
 import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
-import { sectionKindOfName } from "@/lib/chordpro/parser";
+import { formatSectionName, sectionKindOfName } from "@/lib/chordpro/parser";
 import { SECTION_PALETTE_KEY } from "@/components/song/SongView";
 import { NUANCES } from "@/lib/setlist/nuances";
 import type { FormSectionItem } from "@/lib/setlist/formItems";
@@ -22,6 +22,7 @@ import {
   type LastPhraseTarget,
 } from "@/components/setlists/SetlistFormRows";
 import type { SectionSummary, SongIndexEntry } from "@/types/song";
+import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44";
 
 // Réglages d'un chant dans le volet de l'éditeur (lot U5 bis, T3, planche
 // `creer-piste2-ordinateur`) : tonalités en boutons, structure en pastilles,
@@ -36,13 +37,21 @@ export function dessinSection(sections: SectionSummary[], sectionId: string, nom
   return { abbr: abbreviateSection(s ?? { type: "other", name: nom }), cle };
 }
 
+/** Le nom d'une étape tel qu'on le lit dans la langue du site (dimanche-5) : traduit à partir du type et du numéro,
+ *  comme la page de lecture. Un nom qui n'est pas celui de la section (nom personnalisé) est gardé ; le nom stocké
+ *  (`item.name`) ne change pas, il fait les ids des structures, notes et annotations. */
+export function nomAffiche(t: (key: string, options?: { defaultValue?: string }) => string, sections: SectionSummary[], sectionId: string, nom: string) {
+  const s = sections.find((x) => x.id === sectionId);
+  return s && s.name === nom ? formatSectionName(s, t) : nom;
+}
+
 /** Pastille ronde d'une section (« C1 », « R », « Dp »), teintée par sa sorte. */
 export function PastilleSection({ abbr, cle, grande, className = "" }: { abbr: string; cle: string; grande?: boolean; className?: string }) {
   return (
     <span
       data-pastille
       className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold leading-none ${
-        grande ? "h-10 min-w-10 px-1.5 text-[13px]" : "h-[22px] min-w-[22px] px-1 text-[10.5px]"
+        grande ? "h-10 min-w-10 px-1.5 text-sm" : "h-[22px] min-w-[22px] px-1 text-xs"
       } ${className}`}
       style={{ color: `var(--sec-${cle})`, background: `var(--sec-${cle}-tint)` }}
     >
@@ -63,8 +72,10 @@ export function Tonalites({
   onChange: (key: string | null) => void;
 }) {
   const { t } = useTranslation();
-  const choisie = keyOverride ?? song.originalKey;
-  const options = keyOptions(keyOverride, song.originalKey);
+  // Une tonalité majeure d'une ancienne setlist sur un chant mineur se lit comme son relatif mineur.
+  const surcharge = keyOverride ? keyLike(song.originalKey, keyOverride) : null;
+  const choisie = surcharge ?? song.originalKey;
+  const options = keyOptions(surcharge, song.originalKey);
   const couleur = song.language === "zh" ? "var(--zh-accent)" : "var(--fr-accent)";
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const choisir = (k: string) => onChange(k === song.originalKey ? null : k);
@@ -95,17 +106,17 @@ export function Tonalites({
             data-origine={k === song.originalKey ? "" : undefined}
             onClick={() => choisir(k)}
             onKeyDown={(e) => onKeyDown(e, i)}
-            className="group flex w-10 flex-col items-center gap-1 rounded-lg focus-visible:outline-none"
+            className={`${TOUCHER_44} group flex w-10 flex-col items-center gap-1 rounded-lg focus-visible:outline-none`}
           >
             <span
               className={`flex h-9 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors group-focus-visible:ring-2 group-focus-visible:ring-ring ${
-                on ? "text-white" : "bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-muted"
+                on ? "text-white dark:text-primary-foreground" : "bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-muted"
               }`}
               style={on ? { background: couleur } : undefined}
             >
               {k}
             </span>
-            {legende && <span className="text-[11px] leading-none text-muted-foreground">{legende}</span>}
+            {legende && <span className="text-xs leading-none text-muted-foreground">{legende}</span>}
           </button>
         );
       })}
@@ -135,6 +146,7 @@ function PastilleEtape({
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.uid });
   const { abbr, cle } = dessinSection(sections, item.sectionId, item.name);
+  const nom = nomAffiche(t, sections, item.sectionId, item.name);
   return (
     <div
       ref={setNodeRef}
@@ -156,9 +168,9 @@ function PastilleEtape({
           }
         }}
         onClick={onChoisir}
-        aria-label={t("setlists.editeur.etape", { nom: item.name, n: index + 1 })}
+        aria-label={t("setlists.editeur.etape", { nom, n: index + 1 })}
         aria-pressed={choisie}
-        title={item.name}
+        title={nom}
         style={{ touchAction: "none" }}
         className={`block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
           choisie ? "ring-2 ring-offset-2 ring-offset-background" : ""
@@ -175,7 +187,7 @@ function PastilleEtape({
         <button
           type="button"
           onClick={onRetirer}
-          aria-label={t("setlists.editeur.retirerEtape", { nom: item.name })}
+          aria-label={t("setlists.editeur.retirerEtape", { nom })}
           className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="h-3 w-3" strokeWidth={3} />
@@ -238,7 +250,7 @@ export function StructurePastilles({
 
   return (
     <section className="space-y-2.5">
-      <h3 className="text-[13px] font-semibold text-muted-foreground">{t("setlists.editeur.structure")}</h3>
+      <h3 className="text-sm font-semibold text-muted-foreground">{t("setlists.editeur.structure")}</h3>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={sectionItems.map((s) => s.uid)} strategy={rectSortingStrategy}>
           {/* `data-vaul-no-drag` : dans une feuille (T4), glisser une pastille ne tire pas la feuille. */}
@@ -275,17 +287,17 @@ export function StructurePastilles({
             key={s.id}
             type="button"
             onClick={() => onChange([...sectionItems, nouvelleEtape(s.id, s.name)])}
-            className="flex h-8 items-center gap-1 rounded-full border border-border px-3 text-[13px] font-medium text-foreground transition-colors hover:bg-muted"
+            className={`${TOUCHER_44} flex h-8 items-center gap-1 rounded-full border border-border px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted`}
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
-            {s.name}
+            {formatSectionName(s, t)}
           </button>
         ))}
         {lastPhrase && (
           <button
             type="button"
             onClick={() => setDpOuverte(true)}
-            className="flex h-8 items-center gap-1 rounded-full border border-dashed border-border px-3 text-[13px] font-medium text-foreground transition-colors hover:bg-muted"
+            className={`${TOUCHER_44} flex h-8 items-center gap-1 rounded-full border border-dashed border-border px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted`}
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {t("setlists.form.lastPhrase.add")}
@@ -335,7 +347,7 @@ function BoutonChamp({
       title={title}
       aria-expanded={ouvert}
       onClick={onClick}
-      className={`flex h-[26px] max-w-[14rem] items-center gap-1 rounded-md px-2 text-[12.5px] font-medium transition-colors ${
+      className={`${TOUCHER_PILULE} flex h-[26px] max-w-[14rem] items-center gap-1 rounded-md px-2 text-xs font-medium transition-colors ${
         rempli ? filled : "text-muted-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:text-foreground hover:bg-muted"
       } ${ouvert ? ring : ""}`}
     >
@@ -363,6 +375,7 @@ function LigneParSection({
   const { t } = useTranslation();
   const [ouvert, setOuvert] = useState<Champ | null>(null);
   const { abbr, cle } = dessinSection(sections, item.sectionId, item.name);
+  const nom = nomAffiche(t, sections, item.sectionId, item.name);
   const basculer = (c: Champ) => setOuvert(ouvert === c ? null : c);
   const nuance = [
     ...item.nuanceTags.map((id) => NUANCES.find((n) => n.id === id)?.label ?? id),
@@ -374,8 +387,8 @@ function LigneParSection({
         <span className="flex w-8 shrink-0 justify-center">
           <PastilleSection abbr={abbr} cle={cle} />
         </span>
-        <span data-nom-section className="w-28 shrink-0 truncate text-sm font-medium text-foreground" title={item.name}>
-          {item.name}
+        <span data-nom-section className="w-28 shrink-0 truncate text-sm font-medium text-foreground" title={nom}>
+          {nom}
         </span>
         <div className="flex min-w-0 flex-wrap gap-1.5">
           <BoutonChamp champ="note" rempli={!!item.note.trim()} ouvert={ouvert === "note"} texte={item.note.trim() || t("setlists.editeur.note")} onClick={() => basculer("note")} />
@@ -438,7 +451,7 @@ export function ParSection({
   if (sectionItems.length === 0) return null;
   return (
     <section className="space-y-1">
-      <h3 className="text-[13px] font-semibold text-muted-foreground">{t("setlists.editeur.parSection")}</h3>
+      <h3 className="text-sm font-semibold text-muted-foreground">{t("setlists.editeur.parSection")}</h3>
       <div className="border-t border-border">
         {sectionItems.map((si, i) => (
           <LigneParSection

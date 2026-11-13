@@ -1,20 +1,20 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Cours d'Harmonie (docs/spec-cours-harmonie.md, décisions du 02/10/2026) :
 // C1 lire le cours, C2 « J'ai fini » et la progression, C4 la progression de
 // l'équipe pour les admins. Accès : celui d'Harmonie (pianistes, guitaristes, admins).
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-// Ruth tient le piano, Yiyi la batterie : c'est le planning qui le dit.
+// Ruth tient le piano, Yiyi la batterie (lot AO : c'est « Ce qu'il joue » de leur profil qui le dit).
 const CULTE = csv([
   ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono", "PPT", "Orateur", "Traducteur", "Sainte cène"],
   ["04/10", "Jonathan Z.", "", "", "Ruth K.", "Éloïse M.", "Yiyi C.", "", "", "Hewei", "", ""],
 ]);
 
-const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "Kouassi", planningName: "Ruth K." };
-const YIYI: FakeProfile = { uid: "uid-yiyi", email: "yiyi@example.com", firstName: "Yiyi", lastName: "C.", planningName: "Yiyi C." };
+const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "Kouassi", planningName: "Ruth K.", ...musicien("piano") };
+const YIYI: FakeProfile = { uid: "uid-yiyi", email: "yiyi@example.com", firstName: "Yiyi", lastName: "C.", planningName: "Yiyi C.", ...musicien("batterie") };
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." };
 
 const INDEX = JSON.parse(readFileSync("public/harmonie-cours/index.json", "utf8")) as {
@@ -39,9 +39,9 @@ async function capture(page: Page, name: string) {
 
 // ── L'import (C0) contre le document ─────────────────────────────────────────
 
-test("le cours importé : 23 chapitres à cocher, 79 exercices, niveaux de 5 · 6 · 5 · 7, deux schémas", () => {
+test("le cours importé : 23 chapitres à cocher, 81 exercices, niveaux de 5 · 6 · 5 · 7, deux schémas", () => {
   expect(LECONS).toHaveLength(23);
-  expect(LECONS.reduce((n, c) => n + c.exercices, 0)).toBe(79);
+  expect(LECONS.reduce((n, c) => n + c.exercices, 0)).toBe(81);
   expect([1, 2, 3, 4].map((n) => LECONS.filter((c) => c.niveau === n).length)).toEqual([5, 6, 5, 7]);
   const schemas = INDEX.chapitres.flatMap((c) =>
     JSON.stringify(JSON.parse(readFileSync(`public/harmonie-cours/${c.id}.json`, "utf8"))).match(/"t":"schema"/g) ?? [],
@@ -53,9 +53,9 @@ test("le cours importé : 23 chapitres à cocher, 79 exercices, niveaux de 5 · 
 
 test("un pianiste trouve le cours en tête d'Harmonie, rangé par niveau", async ({ page }) => {
   await entrer(page, RUTH, "/harmonie");
-  // Agencement v18 (A16) : la carte du cours sur téléphone, l'onglet « Cours » du rail dès 768 px.
-  if (test.info().project.name === "telephone") await page.getByRole("link", { name: /Cours de théorie musicale/ }).click();
-  else await page.locator("header[data-entete-page]").getByRole("link", { name: "Cours", exact: true }).click();
+  // La carte du cours au téléphone a disparu du catalogue (T3b) : l'entrée « Théorie » de la barre de l'espace Musiciens
+  // (du bas au téléphone et en portrait, latérale en grand) est la seule visible à porter ce nom.
+  await page.getByRole("link", { name: /^Théorie/ }).filter({ visible: true }).click();
   await page.waitForURL(/\/harmonie\/cours\/?$/);
   await expect(page.getByRole("link", { name: "Mode d'emploi" })).toBeVisible();
   for (const [n, nom, total] of [[1, "Fondations", 5], [2, "Accompagnateur", 6], [3, "Musicien d'équipe", 5], [4, "Directeur musical", 7]] as const) {
@@ -103,7 +103,8 @@ test("une liste à cocher du texte (20.5) se dessine avec ses cases, sans les cr
 test("interface 中文 : libellés chinois, et une ligne dit que le chapitre est en français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await entrer(page, RUTH, `/harmonie/cours/${CH(1).id}`);
-  await expect(page.getByText("本章尚未翻译，暂以法文显示。")).toBeVisible();
+  await expect(page.locator("[data-avis-langue]")).toHaveText("以下内容尚未翻译，暂以法文显示。");
+  await expect(page.locator("[data-avis-langue]")).toHaveCount(1);
   await expect(page.getByRole("button", { name: "我学完了" })).toBeVisible();
   await page.goto("/harmonie/cours");
   await expect(page.getByRole("heading", { name: "第 1 级 · 基础 · 0 / 5" })).toBeVisible();
@@ -124,6 +125,9 @@ test("« J'ai fini » n'écrit que ce chapitre dans coursProgres/<mon uid>, et t
   await expect(page.getByText(/^Fini le /)).toBeVisible();
   // Sous la leçon : en grand, la liste du cours à gauche a aussi sa ligne « Prochain chapitre » (U4 bis, B3).
   await expect(page.locator("[data-j-ai-fini]").getByRole("link", { name: /Prochain chapitre/ })).toContainText("2.");
+  // harmonie-1 : en deux volets, l'en-tête suit la coche sans recharger (même progrès que la liste).
+  const progresEnTete = page.locator("header[data-entete-page] [data-cours-progres]");
+  if (test.info().project.name === "ordinateur") await expect(progresEnTete).toHaveText("1 / 23 chapitres finis");
   const cours = () => db.writes.filter((w) => w.path.startsWith("coursProgres/"));
   await expect.poll(() => cours().map((w) => `${w.method} ${w.path}`)).toEqual([`PATCH coursProgres/${RUTH.uid}`]);
   expect(Object.keys((cours()[0].data.fini ?? {}) as object), "ce seul chapitre").toEqual([ch1.id]);
@@ -162,7 +166,7 @@ test("le niveau 1 fini : « Niveau terminé », et le prochain chapitre est le 6
 test("un admin voit la progression de l'équipe ; un pianiste ne voit que la sienne", async ({ page }) => {
   const docs = {
     [`coursProgres/${RUTH.uid}`]: { fini: { [CH(1).id]: "2026-10-01T10:00:00.000Z", [CH(6).id]: "2026-10-02T10:00:00.000Z" } },
-    [`users/${RUTH.uid}`]: { uid: RUTH.uid, email: RUTH.email, firstName: "Ruth", lastName: "Kouassi", planningName: "Ruth K." },
+    [`users/${RUTH.uid}`]: { uid: RUTH.uid, email: RUTH.email, firstName: "Ruth", lastName: "Kouassi", planningName: "Ruth K.", ...musicien("piano") },
   };
   await entrer(page, ADMIN, "/harmonie/cours", docs);
   const equipe = page.locator("[data-cours-equipe]");

@@ -5,8 +5,8 @@
 // 20:00 · Salle 2 · organisée par Alice Q. » ; à droite, pour qui la gère, « Dupliquer pour la prochaine »,
 // « Modifier » et « ⋯ » (Supprimer).
 // Agencement v18 (B4, planche `v18-bo-reunions`) : en grand, la fiche est dans le volet de droite, sous
-// l'en-tête « Réunions » : badge de l'équipe, titre en h2 de 24 px. En un volet, la fiche est une page : l'en-tête
-// commun (`EnTetePage`) avec « ‹ Réunions » pour seul retour (R8), le titre en h1.
+// la bande du haut : badge de l'équipe, titre en h1 de 28 px (le seul de la page). En un volet, la fiche est une page :
+// l'en-tête commun (`EnTetePage`) avec « ‹ Calendrier » pour seul retour (R8), le titre en h1.
 import type { CSSProperties } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
@@ -19,6 +19,7 @@ import type { Evenement } from "@/types/evenement"
 import { EnTetePage } from "@/components/layout/EnTetePage"
 import { MenuActions } from "@/components/layout/MenuActions"
 import { Button } from "@/components/ui/button"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 
 export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gestion: boolean; onSupprimer: () => void }) {
@@ -34,18 +35,18 @@ export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gesti
   ].filter(Boolean).join(" · ")
 
   const badge = (
-    <p className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[12.5px] font-semibold svc-ink"
+    <p className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold svc-ink"
       style={{ "--svc": categoryColor(e.pour), backgroundColor: `${categoryColor(e.pour)}18` } as CSSProperties}>
       <Users className="h-3.5 w-3.5" aria-hidden /> {libelle}
     </p>
   )
   const dupliquer = gestion && (
-    <Button asChild size="sm" variant="outline" className="rounded-full">
+    <Button asChild size="sm" variant="outline" className={`rounded-full ${TOUCHER_44}`}>
       <Link href={`/back-office/reunions/nouvelle?from=${e.id}`}><Copy aria-hidden /> {t("backOffice.dupliquerProchaine")}</Link>
     </Button>
   )
   const modifier = gestion && (
-    <Button asChild size="sm" variant="outline" className="rounded-full">
+    <Button asChild size="sm" variant="outline" className={`rounded-full ${TOUCHER_44}`}>
       <Link href={`/back-office/reunions/${e.id}/modifier`}><Pencil aria-hidden /> {t("evenements.modifier")}</Link>
     </Button>
   )
@@ -57,13 +58,13 @@ export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gesti
     return (
       <>
         <EnTetePage
-          retour={{ href: "/back-office/reunions", label: t("backOffice.parties.reunions") }}
+          retour={{ href: "/back-office/calendrier?vue=agenda&filtre=reunions", label: t("backOffice.entrees.calendrier") }}
           titre={e.titre}
           outils={gestion && <>{modifier}{menu}</>}
         />
         <div className="space-y-2">
           {badge}
-          <p className="text-[13px] text-muted-foreground">{ligne}</p>
+          <p className="text-sm text-muted-foreground">{ligne}</p>
           {dupliquer}
         </div>
       </>
@@ -75,11 +76,11 @@ export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gesti
       <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
         <div className="min-w-0 flex-1">
           {badge}
-          <h2 className="mt-1.5 text-2xl font-bold leading-tight tracking-tight text-foreground text-balance">{e.titre}</h2>
+          <h1 className="mt-1.5 text-2xl font-bold leading-tight tracking-[-0.02em] text-foreground text-balance">{e.titre}</h1>
         </div>
         {gestion && <div className="flex flex-wrap items-center gap-2">{dupliquer}{modifier}{menu}</div>}
       </div>
-      <p className="mt-1 text-[13px] text-muted-foreground">{ligne}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{ligne}</p>
     </header>
   )
 }

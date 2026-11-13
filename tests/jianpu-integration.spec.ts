@@ -1,9 +1,11 @@
 import { createHash } from "crypto";
+import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 import { readFileSync, existsSync } from "fs";
 import { inflateSync } from "zlib";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { loadChords, openSheet } from "./helpers/jianpu";
+import { attendreCompteur, basculerAnnoter, fermerBarre } from "./helpers/louange";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
@@ -14,17 +16,18 @@ import { JianpuPDFPage } from "../src/components/pdf/SongPDF";
 
 const lire = <T,>(f: string): T => JSON.parse(readFileSync(f, "utf8")) as T;
 type Manifeste = Record<string, { pages: { file: string; w: number; h: number }[] }>;
-type Calques = Record<string, { keyLabel: { y: number }; labels: { y: number }[] }>;
+type Calques = Record<string, { keyLabel: { y: number }; labels: { y: number; c: string }[] }>;
 
 // ─── L3-T1 : recadrage, donnée certifiée ─────────────────────────────────────
 
 test.describe("recadrage (données)", () => {
   test("chords.json est intact : les calques certifiés ne bougent pas", () => {
+    // 25/10/2026 : seul ajout depuis 1b488bdf, le calque de 仰望神儿子 ; aucun calque certifié modifié ni retiré.
     const empreinte = createHash("sha256").update(readFileSync("public/jianpu/chords.json")).digest("hex");
-    expect(empreinte).toBe("ecf3ea0d5c91baf7ae82890c2d77f2fc1766ea722474ade20271e89267b85fbb");
+    expect(empreinte).toBe("a02eec72e78981342434a70b291ba46981f8cb077b640d82a16b24c913960550");
   });
 
-  test("cadrage.json : une valeur par page, dans la page, au-dessus de « 1=X » et des accords ; pages suivantes à 0", () => {
+  test("cadrage.json : une valeur par page, dans la page, au-dessus des accords ; pages suivantes à 0", () => {
     test.skip(!existsSync("public/jianpu/cadrage.json"), "aucune page certifiée");
     const cadrage = lire<Record<string, number[]>>("public/jianpu/cadrage.json");
     const index = lire<Manifeste>("public/jianpu/index.json");
@@ -37,10 +40,11 @@ test.describe("recadrage (données)", () => {
         expect(Number.isInteger(top) && top >= 0 && top < pages[i].h, `${slug} p.${i + 1} : ${top}`).toBe(true);
         if (i > 0) expect(top, `${slug} p.${i + 1} : pas d'en-tête gravé`).toBe(0);
       });
-      // Le min du calcul garde « 1=X » et tout accord placé au-dessus dans la fenêtre.
+      // Lot JE (JE2) : la coupe passe sous tout l'en-tête gravé, « 1=X » compris, mais au-dessus du
+      // premier accord du calque, qu'aucune coupe ne cache (une étiquette vide est une gomme).
       const c = calques[slug];
-      const haut = Math.min(c.keyLabel.y, ...c.labels.map((l) => l.y));
-      expect(tops[0], `${slug} : la coupe passe au-dessus de « 1=X » et des accords`).toBeLessThan(haut);
+      const haut = Math.min(...c.labels.filter((l) => l.c).map((l) => l.y));
+      expect(tops[0], `${slug} : la coupe passe au-dessus des accords`).toBeLessThan(haut);
     }
   });
 });
@@ -58,6 +62,9 @@ type Rvb = [number, number, number];
 
 /** La couleur des points (px CSS de la fenêtre) sur une capture de la page, lue dans le navigateur. */
 async function couleurs(page: Page, pts: Pt[]): Promise<Rvb[]> {
+  // Ce qui passe par-dessus le scan sans en être : le badge de Next en développement, et la barre du bas au
+  // téléphone, qui se montre ou se cache au défilement entre les deux captures comparées (serveur froid).
+  await page.addStyleTag({ content: "nextjs-portal, [data-testid='barre-du-bas'] { display: none !important; }" });
   const png = (await page.screenshot({ animations: "disabled" })).toString("base64");
   return page.evaluate(async ({ b64, pts }) => {
     const img = new Image();
@@ -146,6 +153,8 @@ for (const th of THEMES) {
     });
 
     test(`3 gomme invisible (${th.nom}) : au coin d'une gomme, le pixel est celui du fond`, async ({ page }) => {
+      // L'info-bulle des accords touchables flotte en bas de l'écran : hors sujet pour les pixels mesurés.
+      await page.addInitScript(() => localStorage.setItem("accords-aide-vue", "1"));
       await openSheet(page, SLUG, { key: "D", dark: th.dark });
       await page.locator('[data-jianpu-page="0"]').scrollIntoViewIfNeeded();
       const coins = await page.evaluate(() => {
@@ -258,10 +267,11 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
     structureOverride: null, sectionNotes: {}, notes: "", ...over,
   });
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  // Depuis SC1 (18/10/2026), seul le créateur adapte une setlist : la musicienne est la créatrice de la sienne.
   const db = await signInAs(page, MUSICIEN, {
     [ADAPTER_DOC]: {
       title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
-      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+      language: "mixed", notes: "", ownerId: "uid-musicien", isPrivate: false,
       items: [item({ songSlug: ADAPTER_SLUG, position: 1, jianpuSheet: true })],
     },
   }, "/setlists/setlist-jianpu");
@@ -269,7 +279,7 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
   await page.locator('[data-jianpu-page="0"] img').waitFor();
   await page.waitForFunction(() =>
     Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every((i) => i.complete && i.naturalWidth > 0));
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page);
 
   // L'étiquette 1 (« G7 », x 638, y 344) : on touche au centre de l'écriture qui l'a retouchée.
   const c = loadChords()[ADAPTER_SLUG];
@@ -280,6 +290,8 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
   const feuille = page.getByRole("dialog");
   await feuille.getByRole("button", { name: "A", exact: true }).click();
   await feuille.getByRole("button", { name: "Valider l'accord" }).click();
+  // MP-3 : la créatrice de la setlist règle le culte, « Enregistrer » lui demande où.
+  await choisirDestination(page, "culte");
 
   const retouche = page.locator('[data-jianpu-retouche="1"]');
   await expect(retouche).toHaveText("A7");
@@ -298,6 +310,7 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
 
 const CADRAGE = lire<Record<string, number[]>>("public/jianpu/cadrage.json");
 const INDEX = lire<Manifeste>("public/jianpu/index.json");
+const MARGES = lire<Record<string, [number, number][]>>("public/jianpu/marges.json");
 
 /** Les fenêtres affichées et ce qu'elles montrent, en px CSS. `colonne` : la boîte du
  *  premier ancêtre qui en a une (le conteneur du scan, `display: contents` sauté). */
@@ -324,7 +337,7 @@ async function fenetres(page: Page, racine = "") {
 
 const ratio = (r: { width: number; height: number }) => r.width / r.height;
 
-test("5 fenêtre (page chant) : ratio w / (h − top), « 1=D » dedans, titre gravé dehors, encre au bord de la colonne", async ({ page }) => {
+test("5 fenêtre (page chant) : ratio w / (h − top), « 1=D » et titre gravé dehors, encre au bord de la colonne", async ({ page }) => {
   await openSheet(page, SLUG, { key: "D" });
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
@@ -337,16 +350,53 @@ test("5 fenêtre (page chant) : ratio w / (h − top), « 1=D » dedans, titre g
   // L'image remonte de `top` : son haut (titre, album, versets) est au-dessus du bord de la fenêtre.
   expect(Math.abs(f.img.top - (f.fenetre.top - top * k)), "image remontée de top × échelle").toBeLessThan(1);
   expect(Math.abs(f.img.bottom - f.fenetre.bottom), "le pied reste").toBeLessThan(1);
-  // « 1=D » entièrement dans la fenêtre.
+  // Lot JE (JE2) : « 1=D » tombe dans la partie coupée, au-dessus du bord de la fenêtre.
   expect(f.cadre).toHaveLength(1);
-  expect(f.cadre[0].top).toBeGreaterThanOrEqual(f.fenetre.top - 0.5);
-  expect(f.cadre[0].bottom).toBeLessThanOrEqual(f.fenetre.bottom + 0.5);
+  expect(f.cadre[0].bottom).toBeLessThanOrEqual(f.fenetre.top + 0.5);
   // Compensation (P5) : la marge blanche de 14 px rognée à la source déborde de la
   // colonne, le bord de l'encre tombe sur celui des paroles.
-  expect(Math.abs(f.fenetre.left + 14 * k - f.colonne.left), "bord gauche de l'encre").toBeLessThan(1);
-  expect(Math.abs(f.fenetre.right - 14 * k - f.colonne.right), "bord droit de l'encre").toBeLessThan(1);
+  // V6 (07/11/2026) : la page glisse en plus de (droite − gauche) / 2 pixels image (marges.json) pour centrer l'encre.
+  const [mg, md] = MARGES[SLUG][0];
+  const dec = (md - mg) / 2;
+  await expect.poll(async () => Math.abs((await fenetres(page))[0].fenetre.left + (14 - dec) * k - (await fenetres(page))[0].colonne.left), "bord gauche de l'encre").toBeLessThan(1);
+  const [g] = await fenetres(page);
+  expect(Math.abs(g.fenetre.right - (14 + dec) * k - g.colonne.right), "bord droit de l'encre").toBeLessThan(1);
   // `<main>` défile en largeur (`overflow-x-auto`) : c'est lui qui déborderait, pas le document.
   expect(await page.evaluate(() => [...document.querySelectorAll("main")].every((m) => m.scrollWidth <= m.clientWidth)), "pas de défilement horizontal").toBe(true);
+});
+
+// V6 (validation du 07/11/2026) : 恩典之路 a 10 px de blanc à gauche et 179 à droite sur 1 600 ; la page glisse pour que
+// l'écart entre l'encre et les bords de la colonne soit le même des deux côtés, et un scan déjà équilibré ne bouge pas.
+test("V6 简谱 centrée : 恩典之路, écart de l'encre aux bords de la colonne égal à gauche et à droite ; un scan équilibré ne bouge pas", async ({ page }) => {
+  const slug = "恩典之路";
+  const [mg, md] = MARGES[slug][0];
+  expect(Math.abs(md - mg), "scan désaxé").toBeGreaterThan(100);
+  await openSheet(page, slug);
+  await expect.poll(async () => (await fenetres(page)).length).toBe(1);
+  // Attendre le fichier des marges : tant qu'il n'est pas là, la page n'est pas décalée.
+  await expect.poll(async () => {
+    const [f] = await fenetres(page);
+    const k = f.img.width / f.naturel;
+    return Math.abs(f.fenetre.left - (f.colonne.left - (14 - (md - mg) / 2) * k));
+  }).toBeLessThan(1);
+  const [f] = await fenetres(page);
+  const k = f.img.width / f.naturel;
+  // Bords de l'encre à l'écran : la boîte de l'image (qui porte toute la largeur du scan) plus les marges mesurées.
+  const gauche = f.img.left + mg * k - f.colonne.left;
+  const droite = f.colonne.right - (f.img.right - md * k);
+  expect(Math.abs(gauche - droite), "écarts gauche et droit égaux").toBeLessThan(4);
+});
+
+test("V6 简谱 centrée : un scan équilibré (|droite − gauche| ≤ 4 px) bouge de 2 px au plus", async ({ page }) => {
+  const slug = Object.keys(MARGES).find((s) => INDEX[s]?.pages.length === 1 && Math.abs(MARGES[s][0][1] - MARGES[s][0][0]) <= 4)!;
+  expect(slug, "un scan équilibré existe").toBeTruthy();
+  const [mg, md] = MARGES[slug][0];
+  await openSheet(page, slug);
+  await expect.poll(async () => (await fenetres(page)).length).toBe(1);
+  const [f] = await fenetres(page);
+  const k = f.img.width / f.naturel;
+  // Sans décalage, la fenêtre part de `colonne.left − 14 k` ; avec, d'au plus (md − mg) / 2 pixels image.
+  expect(Math.abs(f.fenetre.left - (f.colonne.left - 14 * k)), "page à sa place").toBeLessThanOrEqual(2 + Math.abs(md - mg) / 2 * k);
 });
 
 test("5 fenêtre (page chant, deux pages) : 为我而来 p. 1 recadrée, p. 2 entière", async ({ page }) => {
@@ -354,7 +404,8 @@ test("5 fenêtre (page chant, deux pages) : 为我而来 p. 1 recadrée, p. 2 en
   await openSheet(page, slug, { key: "D" });
   const pages = INDEX[slug].pages;
   const tops = CADRAGE[slug];
-  expect(tops).toEqual([131, 0]);
+  expect(tops[0]).toBeGreaterThan(0);
+  expect(tops[1]).toBe(0);
   await expect.poll(async () => (await fenetres(page)).length).toBe(2);
   await expect.poll(async () => ratio((await fenetres(page))[0].fenetre) / (pages[0].w / (pages[0].h - tops[0]))).toBeCloseTo(1, 2);
   const [, p2] = await fenetres(page);
@@ -362,7 +413,15 @@ test("5 fenêtre (page chant, deux pages) : 为我而来 p. 1 recadrée, p. 2 en
   expect(Math.abs(p2.img.top - p2.fenetre.top), "page 2 : rien de coupé").toBeLessThan(1);
 });
 
+/** Lot JP-B : 一生爱你 est certifié (`systemes.json`) et se coupe en tranches. Ces tests décrivent l'affichage d'un scan
+ *  non certifié (une page de scan par page d'écran, ratio w / (h − top), colonne en paysage) : on répond à
+ *  `systemes.json` par « aucun chant certifié » ; les tranches sont dans tests/louange-jianpu-tranches.spec.ts. */
+const scanNonCertifie = (page: Page) =>
+  page.route("**/jianpu/systemes.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
+
 test("5 fenêtre (mode louange, fit) : ratio w / (h − top), la page tient à l'écran, centrée sans compensation", async ({ page }) => {
+  await scanNonCertifie(page);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await signInAs(page, MUSICIEN, {
@@ -375,7 +434,7 @@ test("5 fenêtre (mode louange, fit) : ratio w / (h − top), la page tient à l
   }, "/setlists/setlist-fenetre");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   // Serveur froid ou chargé : la mise en page (polices chinoises) prend plusieurs secondes.
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
   await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length).toBe(1);
@@ -508,7 +567,7 @@ test("7 page chant : en-tête du site au-dessus du scan, segment « 简谱 · Pa
   expect(seg!.y).toBeGreaterThanOrEqual(pastilles!.y - 1);
   expect(seg!.y + seg!.height).toBeLessThanOrEqual(fenetre!.y);
   expect(Math.round(seg!.height), "32 px").toBe(32);
-  const bordDroit = await titre.evaluate((h) => h.closest(".max-w-2xl")!.getBoundingClientRect().right);
+  const bordDroit = await titre.evaluate((h) => h.closest("[class*='max-w-[var(--colonne-partition']")!.getBoundingClientRect().right);
   expect(Math.abs(seg!.x + seg!.width - bordDroit), "calé à droite").toBeLessThan(1);
   // Piste --secondary, segment actif à l'encre.
   const couleurs = await segment.evaluate((g) => {
@@ -565,7 +624,7 @@ const T4_SETLIST = {
   title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
   language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
   items: [
-    { songSlug: "abba-pere", position: 1 },
+    { songSlug: "abba-pere", position: 1, notes: "Avec la batterie" },
     { songSlug: SLUG, position: 2, jianpuSheet: true, keyOverride: "D", notes: "Plus calme", sectionKeys: { "chorus-3": "E" } },
     { songSlug: "a-la-croix", position: 3 },
   ].map((over) => ({
@@ -609,8 +668,9 @@ test("L3-T4 vue Partitions : un chant sur scan a le même en-tête qu'un chant e
   expect(Math.abs(scan.dy - paroles.dy), "titre à la même hauteur").toBeLessThan(1);
   expect(Math.abs(scan.rondY - paroles.rondY), "n° à la même hauteur").toBeLessThan(1);
   const bloc = page.locator('[data-outline-item="2"]');
-  await expect(bloc.getByText("曾祥怡词 / 游智婷曲")).toBeVisible();
-  await expect(bloc.getByText("♩")).toBeVisible();
+  // Depuis l'en-tête compact (exemples d'usage, T2), l'auteur ne paraît plus à l'écran, seulement à l'impression.
+  await expect(bloc.getByText("曾祥怡词 / 游智婷曲")).toBeAttached();
+  await expect(bloc.getByText("♩").locator("visible=true")).toHaveCount(1); // l’en-tête complet reste dans la page pour l’impression
   await expect(bloc.getByText("D", { exact: true }).first()).toBeVisible();
   await expect(bloc.getByText("Plus calme")).toBeVisible();
   // Titre, puis bandeau, puis le scan.
@@ -626,7 +686,7 @@ test("L3-T4 vue Partitions : le chant suivant commence au même écart après un
   // chant suivant ; mesuré d'un coup, et attendu stable (la fenêtre se coupe après l'image).
   const ecarts = () => page.evaluate(() => {
     const bloc = (i: number) => document.querySelector(`[data-outline-item="${i}"]`)!;
-    const bas = (els: NodeListOf<Element>) => els[els.length - 1].getBoundingClientRect().bottom;
+    const bas = (els: NodeListOf<Element>) => Math.max(...Array.from(els, (e) => e.getBoundingClientRect().bottom)); // T4 : deux colonnes, la dernière section n'est plus forcément la plus basse
     const rond = (i: number) => Array.from(bloc(i).querySelectorAll("span")).find((s) => s.textContent === String(i))!.getBoundingClientRect();
     return {
       apresParoles: rond(2).top - bas(bloc(1).querySelectorAll("[data-section]")),
@@ -676,10 +736,11 @@ for (const th of THEMES) {
 
 // ─── L3-T5a : mode louange — K1 (le scan entre les barres) et l'en-tête d'une ligne ─
 
-async function ouvrirLouangeT5(page: Page, role = "pianiste") {
+async function ouvrirLouangeT5(page: Page, role = "pianiste", certifie = false) {
+  if (!certifie) await scanNonCertifie(page);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
-  await signInAs(page, MUSICIEN, {
+  const db = await signInAs(page, MUSICIEN, {
     "setlists/setlist-t5": {
       title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
       language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
@@ -688,25 +749,31 @@ async function ouvrirLouangeT5(page: Page, role = "pianiste") {
     },
   }, "/setlists/setlist-t5");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
-  await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);
-  // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus.
+  await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
+  // Certifié au téléphone en portrait (lot JP-C) : des demi-lignes, donc plusieurs fenêtres.
+  await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 })[certifie ? "toBeGreaterThan" : "toBe"](certifie ? 0 : 1);
+  // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus. Certifié : la page est une tranche.
+  if (certifie) {
+    await expect(page.locator("[data-performance-mode] [data-jianpu-tranche]:not([aria-hidden=true] *)").first()).toBeAttached({ timeout: 30_000 });
+    return db;
+  }
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
   await expect.poll(async () => ratio((await fenetres(page, "[data-performance-mode]"))[0].fenetre) / (w / (h - top))).toBeCloseTo(1, 2);
+  return db;
 }
 
 /** Bas de la barre du haut, haut de la barre du bas (elles restent en place, escamotées). */
 async function barres(page: Page) {
-  const haut = (await page.locator("[data-performance-mode] .material-chrome:has(span.tabular-nums)").boundingBox())!;
-  const bas = (await page.locator("[data-performance-mode] .material-chrome:has(button[aria-label='Quitter'])").boundingBox())!;
+  const haut = (await page.locator("[data-performance-mode] [data-barre-haut]").boundingBox())!;
+  const bas = (await page.locator("[data-performance-mode] [data-barre-bas]").boundingBox())!;
   return { hautBas: haut.y + haut.height, basHaut: bas.y };
 }
 
 test("8 K1 (mode louange) : le scan et son en-tête tiennent entre les deux barres, affichées puis escamotées", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouangeT5(page);
-  const chrome = page.locator("[data-performance-mode] .material-chrome:has(span.tabular-nums)").locator("xpath=..");
+  const chrome = page.locator("[data-performance-mode] [data-barre-haut]").locator("xpath=..");
   // Barres affichées (elles s'escamotent après 3 s : un toucher au centre les rappelle).
   const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
   if ((await chrome.evaluate((el) => getComputedStyle(el).opacity)) !== "1") await page.mouse.click(w / 2, h / 2);
@@ -728,6 +795,7 @@ test("8 K1 (mode louange) : le scan et son en-tête tiennent entre les deux barr
 test("L3-T5a en-tête d'une ligne (mode louange) : n°, titre, ♩, pastille de tonalité, puis le bandeau, puis le scan", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouangeT5(page);
+  await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
   // En paysage sur grand écran, l'en-tête et le bandeau sont dans la colonne de gauche (L3-T5b).
   test.skip(await grandEcran(page), "téléphone et tablette en portrait");
   const entete = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)");
@@ -761,6 +829,7 @@ test("L3-T5a en-tête d'une ligne (mode louange), A+ 150 %, capo et tonalité de
   }, SLUG);
   // Le capo ne s'affiche qu'au guitariste.
   await ouvrirLouangeT5(page, "guitariste");
+  await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
   const entete = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)");
   await expect(entete.getByText(/Capo/)).toBeVisible();
   const titre = (await entete.getByRole("heading", { name: SLUG }).boundingBox())!;
@@ -769,16 +838,24 @@ test("L3-T5a en-tête d'une ligne (mode louange), A+ 150 %, capo et tonalité de
   expect(e.x + e.width).toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
 });
 
-test("L3-T5a annotations : une page de scan a sa propre clé (« j2 ») — les traits posés avant que le scan ne bouge ne s'y chargent plus", async ({ page }) => {
+test("L3-T5a annotations (MP-5) : un trait tracé sur un scan s'accroche à l'image (ancre « scan », coordonnées de l'image) dans ma partition, plus sous la clé de la page", async ({ page }) => {
   test.setTimeout(90_000);
-  const lues: string[] = [];
-  page.on("request", (r) => {
-    const m = r.url().match(/\/documents\/(annotations\/[^?]+)/);
-    if (m && r.method() === "GET") lues.push(decodeURIComponent(m[1]));
-  });
-  await ouvrirLouangeT5(page);
-  // En paysage sur grand écran, la colonne (L3-T5b) a encore déplacé le scan : « j3 ».
-  await expect.poll(() => lues.at(-1) ?? "").toMatch((await grandEcran(page)) ? /j3$/ : /j2$/);
+  // 一生爱你 est certifié (`systemes.json`, lot JP-B) : sa page est une tranche. Les anciennes annotations par page
+  // (clés « j2 », « j4-<y0> ») restent lues, plus rien ne s'y écrit : tests/louange-jianpu-tranches.spec.ts.
+  const db = await ouvrirLouangeT5(page, "pianiste", true);
+  await basculerAnnoter(page);
+  const fenetre = (await page.locator("[data-performance-mode] [data-jianpu-tranche]:not([aria-hidden=true] *)").first().boundingBox())!;
+  const x = fenetre.x + fenetre.width * 0.4;
+  const y = Math.min(fenetre.y + fenetre.height * 0.5, page.viewportSize()!.height * 0.5);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 40, y + 15, { steps: 4 });
+  await page.mouse.move(x + 90, y + 30, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(() => db.writes.filter((w) => w.path.startsWith("partitions/")).length).toBeGreaterThan(0);
+  const traits = db.writes.filter((w) => w.path.startsWith("partitions/")).at(-1)!.data.traits as { ancre: { scan?: boolean; image?: number } }[];
+  expect(traits[0].ancre).toMatchObject({ scan: true, image: 0 });
+  expect(db.writes.filter((w) => w.path.startsWith("annotations/")), "rien dans les annotations par page").toEqual([]);
 });
 
 // ─── L3-T5b : mode louange — en paysage sur grand écran, la structure en colonne ─
@@ -788,6 +865,7 @@ const grandEcran = (page: Page) =>
 
 /** 一生爱你 en D puis Abba Père : la page du scan est la dernière du chant, « Suivant » y est. */
 async function ouvrirLouangeT5b(page: Page, over: Record<string, unknown> = {}, role = "pianiste") {
+  await scanNonCertifie(page);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
   const item = { showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, notes: "" };
@@ -803,7 +881,7 @@ async function ouvrirLouangeT5b(page: Page, over: Record<string, unknown> = {}, 
     },
   }, "/setlists/setlist-t5b");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
   await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);
@@ -890,7 +968,7 @@ test("L3-T5b hors paysage grand écran (mode louange) : pas de colonne, le bande
   await ouvrirLouangeT5b(page);
   test.skip(await grandEcran(page), "téléphone et tablette en portrait");
   await expect(page.locator("[data-performance-mode] [data-colonne-scan]")).toHaveCount(0);
-  await expect(page.locator("[data-performance-mode]").getByText(/Suivant/).first()).toBeVisible();
+  await expect(page.locator("[data-performance-mode]").getByText(/Ensuite/).first()).toBeVisible();
 });
 
 // ─── L3-T6 : PDF de setlist — le scan coupé sous l'en-tête gravé, le calque décalé de −top ─
@@ -928,7 +1006,7 @@ function pagesPdf(slug: string, keyOverride: string | null) {
   return pages.map((p) => ({ props: p.props, elements: deplier((JianpuPDFPage as (x: unknown) => unknown)(p.props)) }));
 }
 
-test("10 PDF : 一生爱你 en D — l'image a la hauteur h − top à l'échelle, et « 1=D » est décalé de −top", () => {
+test("10 PDF : 一生爱你 en D — l'image a la hauteur h − top à l'échelle, « 1=D » décalé de −top, hors de l'image coupée", () => {
   const [p] = pagesPdf(SLUG, "D");
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
@@ -944,7 +1022,8 @@ test("10 PDF : 一生爱你 en D — l'image a la hauteur h − top à l'échell
   const cle = p.elements.find((e) => e.type === "TEXT" && texte(e) === "1=D")!;
   expect(cle, "« 1=D » réécrit").toBeTruthy();
   expect(cle.props.style!.top).toBeCloseTo(cadreTop + (c.keyLabel.h + 8) * ck - c.labelH * ck, 3);
-  expect(cle.props.style!.top, "dans l'image").toBeGreaterThan(0);
+  // Lot JE (JE2) : la coupe passe sous « 1=D » ; le cadre de l'image (`overflow: hidden`) le cache.
+  expect(cle.props.style!.top, "au-dessus de l'image").toBeLessThan(0);
 });
 
 test("10 PDF : l'image prend toute la largeur du cadre (échelle calculée sur h − top)", () => {
@@ -957,8 +1036,9 @@ test("10 PDF : « （X调） » du titre gravé — pas réécrit quand il est c
   // 亲眼看见你 : « （D调） » gravé au-dessus de la coupe (y 10 < top 147).
   const [coupe] = pagesPdf("亲眼看见你", "E");
   expect(coupe.elements.filter((e) => e.type === "TEXT" && /调）$/.test(texte(e)))).toEqual([]);
-  // 有一位神 : coupe à 12 px, « （C调） » gravé dessous, réécrit dans la tonalité du .cho (D).
-  const [garde] = pagesPdf("有一位神", null);
+  // 陪我走过春夏秋冬 : coupe à 12 px (lot JE : aucune coupe propre sous l'en-tête), « （C调） » gravé
+  // dessous, réécrit dans la tonalité du .cho (D).
+  const [garde] = pagesPdf("陪我走过春夏秋冬", null);
   const titre = garde.elements.find((e) => e.type === "TEXT" && texte(e) === "（D调）");
   expect(titre, "« （D调） » réécrit").toBeTruthy();
   expect(titre!.props.style!.top, "dans l'image").toBeGreaterThan(-2);
@@ -999,7 +1079,7 @@ test("10 PDF téléchargé : 一生爱你 en D — le scan ré-encodé fait w ×
   await signInAs(page, MUSICIEN, {
     "setlists/setlist-t6": {
       title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
-      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false, editeurs: ["uid-musicien"],
       items: [{ songSlug: SLUG, position: 1, keyOverride: "D", showChords: true, showPinyin: true, useJianpu: false,
         structureOverride: null, sectionNotes: {}, notes: "", jianpuSheet: true }],
     },

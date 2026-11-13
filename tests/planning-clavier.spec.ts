@@ -1,12 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeDb, type FakeProfile, remplit } from "./helpers/fakeSession";
 
 // Lot 3 (docs/spec-planning-gestes.md), tranche PG-D : copier-coller au clavier (PG22 à PG32).
 // Ordinateur seulement (pointeur fin) ; Culte T1 2027 et Paix T1 2027 simulés. Noms fictifs.
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] })
 
-const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", plannings: ["culte", "paix"] }
+const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", ...remplit("culte", "paix") }
 
 const DOCS: Record<string, Record<string, unknown>> = {
   "plannings/culte/dimanches/2027-01-24": { date: "2027-01-24", piano: "Yann M.", guitare: "Éloïse M." },
@@ -67,6 +67,9 @@ test("ordinateur — Maj + clic fait une plage ; la barre dit « 8 cases · 4 di
   await laCase(page, "2027-02-14", "guitare").click({ modifiers: ["Shift"] })
   await expect(page.getByTestId("barre-selection")).toContainText("8 cases · 4 dimanches × 2 colonnes")
   await expect(page.locator("[data-selection]").filter({ visible: true })).toHaveCount(8)
+  // L'aide est derrière le « ? » (BO11) : fermée d'office, un clic l'ouvre.
+  await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
+  await page.getByRole("button", { name: "Raccourcis clavier" }).click()
   await expect(page.getByText("Au clavier", { exact: false })).toBeVisible()
   // Maj + clic n'ouvre rien.
   await expect(page.getByRole("button", { name: /Écrire un nom sans compte/ })).toHaveCount(0)
@@ -213,6 +216,7 @@ test("telephone, tablette — ni légende « Au clavier » ni barre de sélectio
   await ouvrirCulte2027(page)
   await laCase(page, "2027-01-24", "piano").click()
   await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Raccourcis clavier" })).toHaveCount(0)
   await expect(page.getByTestId("barre-selection")).toHaveCount(0)
   await expect(page.locator("[data-selection]")).toHaveCount(0)
 })
@@ -326,6 +330,7 @@ test("ordinateur — sous 640 px (cartes), ni légende, ni barre, ni ⌫ qui éc
   await page.keyboard.press("Escape")
   await page.keyboard.press("Backspace")
   await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Raccourcis clavier" })).toHaveCount(0)
   await expect(page.getByTestId("barre-selection")).toHaveCount(0)
   expect(ecritures(db, "2027-01-24")).toHaveLength(0)
 })
@@ -334,7 +339,7 @@ test("ordinateur — le petit déj (colonne en lecture seule) est refusé au col
   ordinateurSeul()
   await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"))
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }))
-  const db = await signInAs(page, { ...ECRIVAIN, plannings: ["table"] }, {}, "/back-office/planning/table")
+  const db = await signInAs(page, { ...ECRIVAIN, responsabilites: ["planning:table"] } /* lot RS : gestionnaire de la Table */, {}, "/back-office/planning/table")
   await page.getByRole("tab", { name: "2027", exact: true }).click()
   await expect(page.locator("[data-date-cell='2027-01-10']").filter({ visible: true })).toHaveCount(1)
   await poserPresse(page, "Équipe E.\tFamille X")
@@ -360,7 +365,35 @@ test("tablette — avec un trackpad ou une souris, la sélection et la légende 
   await choisir(page, "2027-01-24", "piano")
   await laCase(page, "2027-01-31", "guitare").click({ modifiers: ["Shift"] })
   await expect(page.getByTestId("barre-selection")).toContainText("4 cases · 2 dimanches × 2 colonnes")
+  // L'aide est derrière le « ? » (BO11) : fermée d'office, un clic l'ouvre.
+  await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
+  await page.getByRole("button", { name: "Raccourcis clavier" }).click()
   await expect(page.getByText("Au clavier", { exact: false })).toBeVisible()
+})
+
+test("ordinateur — le « ? » ouvre l'aide ; Échap la ferme, rend le focus au bouton et garde la sélection", async ({ page }) => {
+  ordinateurSeul()
+  await ouvrirCulte2027(page)
+  await choisir(page, "2027-01-24", "piano")
+  const aide = page.getByRole("button", { name: "Raccourcis clavier" })
+  await expect(aide).toHaveAttribute("aria-expanded", "false")
+  // BO-G, 5 : le « ? » est dans la barre d'outils de l'en-tête du planning, au-dessus de la grille, plus seul dessous.
+  await expect(page.locator("header[data-entete-page]").getByRole("button", { name: "Raccourcis clavier" })).toBeVisible()
+  const boutonAide = (await aide.boundingBox())!
+  const grille = (await page.getByTestId("grille-defilement").boundingBox())!
+  expect(boutonAide.y + boutonAide.height, "le « ? » est au-dessus de la grille").toBeLessThan(grille.y)
+  // bo-messages-planning-10 : le « ? » a la hauteur d'« Exporter » (36 px).
+  const exporter = (await page.locator("header[data-entete-page]").getByRole("button", { name: /Exporter/ }).boundingBox())!
+  expect(Math.abs(boutonAide.height - exporter.height), "« ? » et « Exporter » de même hauteur").toBeLessThanOrEqual(1)
+  await aide.click()
+  await expect(aide).toHaveAttribute("aria-expanded", "true")
+  await expect(page.getByText("Au clavier", { exact: false })).toBeVisible()
+  // BO-E2 : l'aide s'ouvre dans une zone vive posée d'avance, donc annoncée aux lecteurs d'écran.
+  await expect(page.getByRole("status").filter({ hasText: "Au clavier" })).toHaveAttribute("aria-live", "polite")
+  await page.keyboard.press("Escape")
+  await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
+  await expect(aide).toBeFocused()
+  await expect(laCase(page, "2027-01-24", "piano")).toHaveAttribute("data-selection", "ancre")
 })
 
 test("ordinateur — Ctrl+C et Ctrl+V (Windows, Linux) copient et collent", async ({ page }) => {

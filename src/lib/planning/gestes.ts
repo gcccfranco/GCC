@@ -13,8 +13,8 @@ import { getAnnee, getTri } from "./utils"
 /** Une case qu'un geste change : sa valeur affichée avant, celle d'après. */
 export type CaseGeste = { date: string; cle: string; avant: string; apres: string }
 
-export type LireCase = (date: string, cle: string) => string
-export type VerrouCase = (date: string, cle: string) => boolean
+type LireCase = (date: string, cle: string) => string
+type VerrouCase = (date: string, cle: string) => boolean
 
 const MS_JOUR = 86_400_000
 const midi = (iso: string) => new Date(`${iso}T12:00:00Z`).getTime()
@@ -118,7 +118,7 @@ export function lireCollage(texte: string): string[][] {
 }
 
 /** Longueur au-delà de laquelle une cellule collée est refusée. */
-export const CELLULE_MAX = 200
+const CELLULE_MAX = 200
 
 /** Coller un bloc à partir d'une ancre (PG26 et PG27). */
 export function planCollage(p: {

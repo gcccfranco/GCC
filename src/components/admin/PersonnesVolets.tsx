@@ -7,13 +7,13 @@
 // choisie, lue dans l'adresse (`?uid=`, remplacée sans entrée d'historique) ; la première de la
 // liste d'office. « Modifier » montre le formulaire d'aujourd'hui dans le volet. Un volet
 // (tablette debout, téléphone) : la liste, puis la personne en page entière (planche).
-// Anciens blocs d'administration : en français seulement (Q16 de U6).
-import { useState, type ReactNode } from "react";
+// Bilingue depuis B5b (docs/spec-corrections-audit.md).
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProfile } from "@/lib/firebase/users";
 import { useTranslation } from "react-i18next";
-import { Bell, CalendarDays, ChevronLeft, ChevronRight, Link2, Pencil, PenLine, ShieldCheck, UserRound, Users } from "lucide-react";
+import { Bell, CalendarDays, ChevronLeft, ChevronRight, KeyRound, Link2, Pencil, PenLine, ShieldCheck, UserRound, Users } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useDisposition } from "@/hooks/useDisposition";
@@ -22,24 +22,49 @@ import { useConfirmer } from "@/components/layout/Confirmer";
 import { Panneau } from "@/components/groupes/Panneau";
 import { changerGroupeDe } from "@/lib/firebase/groupes";
 import { groupeDe } from "@/lib/groupes/organigramme";
-import { droitsParRoles, libellePoste, nombreSansGroupe, postesDeCompte } from "@/lib/groupes/personnes";
+import { droitsParRoles, libellePoste, nombreSansGroupe, nomsSansCompte, postesDeCompte, titulairesSansCompte } from "@/lib/groupes/personnes";
+import { cleNomEquipe } from "@/lib/equipes/table";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { TABLE_GROUPES, groupeDef } from "@/lib/groupes/table";
 import type { OrganigrammeGroupe } from "@/types/groupe";
 import { findMyServices, type PlanningData } from "@/lib/planning/names";
 import { GRILLES, grilleDe } from "@/lib/planning/grilles";
-import { categoryColor, categoryLabel } from "@/lib/serviceColors";
+import { categoryColor } from "@/lib/serviceColors";
 import { todayIso } from "@/lib/scene/dimanches";
-import { SERVICE_ROLE_LABELS, type UserProfile } from "@/types/user";
+import type { UserProfile } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { RailEquipes } from "@/app/back-office/equipes/RailEquipes";
+import { CeQueCaOuvre } from "@/components/equipes/OrganigrammeLouange";
+import { libellesResponsabilites } from "@/lib/equipes/responsabilites";
 import { InscriptionsComptes } from "./InscriptionsComptes";
+import { libelleRole, libelleRolePlanning, libelleService, libelleServicePlanning } from "./libelles";
 import {
-  Avatar, FiltresPersonnes, FormulairePersonne, LignePersonne, ListePersonnes, isRecent,
+  Avatar, FiltresPersonnes, FormulairePersonne, LignePersonne, ListePersonnes, RetirerFiltreSansEquipe, isRecent, texteListeVide,
   useDonneesPersonnes, useFiltresPersonnes,
 } from "./Personnes";
 
 const RACINE = "/back-office/equipes/personnes";
 const nom = (p: UserProfile) => `${p.firstName} ${p.lastName}`.trim() || p.email;
+
+/** Un bouton-lien ou un bouton secondaire de la fiche : 32 px de dessin, 44 px de zone au toucher (bo-equipes-6, 7). */
+const BOUTON_CONTOUR = `inline-flex h-8 shrink-0 items-center rounded-full bg-background px-3 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`;
+
+/** La première ligne de la liste (bo-equipes-1) : les noms du planning sans compte, avec leur nombre ; elle ouvre la page « Sans compte ». */
+function RangeeSansCompte({ n }: { n: number | null }) {
+  const { t } = useTranslation();
+  if (n === null) return null;
+  return (
+    <Link
+      href={`${RACINE}/sans-compte`}
+      data-testid="rangee-sans-compte"
+      className="flex h-[52px] items-center gap-3 rounded-xl bg-secondary/60 px-4 hover:bg-secondary"
+    >
+      <span className="min-w-0 flex-1 line-clamp-2 text-balance text-base leading-[18px] font-semibold text-foreground">{t("backOffice.equipe.sansCompte")}</span>
+      <span className="shrink-0 text-sm text-muted-foreground">{t("groupes.personnes.sansCompteNombre", { count: n })}</span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
+    </Link>
+  );
+}
 
 export function PersonnesVolets() {
   const { t } = useTranslation();
@@ -66,14 +91,16 @@ export function PersonnesVolets() {
   };
 
   const { stats } = d;
+  // Le nombre de noms du planning sans compte (le même calcul que la page « Sans compte ») ; pas de rangée tant qu'il n'est pas connu.
+  const sansCompte = useMemo(
+    () => (d.planningData && !d.loadingProfiles && d.groupes ? nomsSansCompte(d.planningNames, d.profiles, titulairesSansCompte(d.groupes)).length : null),
+    [d.planningData, d.loadingProfiles, d.groupes, d.planningNames, d.profiles],
+  );
   const ouvertHorsGrand = !grand && uid ? d.profiles.find((p) => p.uid === uid) ?? null : null;
   const entete = (
     <EnTetePage
       titre={t("backOffice.entrees.equipes")}
-      sousTitre={d.loadingProfiles ? undefined : [
-        t("equipes.compte.inscrits", { count: d.profiles.length }),
-        t("groupes.personnes.groupesSansGroupe", { count: nombreSansGroupe(d.profiles) }),
-      ].join(" · ")}
+      sousTitre={d.loadingProfiles ? undefined : t("groupes.personnes.inscritsDontSansGroupe", { count: d.profiles.length, sans: nombreSansGroupe(d.profiles) })}
       onglets={<RailEquipes />}
       apres={<InscriptionsComptes court nouveaux={stats.nouveaux} onVoir={voirNouveaux} />}
     />
@@ -92,8 +119,8 @@ export function PersonnesVolets() {
           {t("groupes.personnes.retour")}
         </button>
         {modif ? (
-          <div className="raised rounded-2xl p-4 space-y-4">
-            <h2 className="text-[22px] font-bold leading-tight text-foreground">{nom(ouvertHorsGrand)}</h2>
+          <div className="carte-groupe rounded-2xl p-4 space-y-4">
+            <h2 className="text-xl font-bold leading-tight text-foreground">{nom(ouvertHorsGrand)}</h2>
             <FormulairePersonne
               key={ouvertHorsGrand.uid}
               p={ouvertHorsGrand}
@@ -114,26 +141,27 @@ export function PersonnesVolets() {
       <>
         {entete}
         <div className="px-[var(--marge-page)] pb-10">
-          <div className="raised rounded-2xl p-3 space-y-3 sm:p-4">
+          <div className="carte-groupe rounded-2xl p-3 space-y-3 sm:p-4">
+            <RangeeSansCompte n={sansCompte} />
             <FiltresPersonnes f={f} />
             {/* Un volet : la personne de l'adresse s'ouvre en page entière (ci-dessus). */}
-            <ListePersonnes d={d} f={f} deplie={null} setDeplie={choisir} />
+            <ListePersonnes d={d} f={f} deplie={null} setDeplie={choisir} ouvrePage />
           </div>
         </div>
       </>
     );
 
-  // Dans la colonne de 400 px, les filtres se replient sur plusieurs lignes (planche) au lieu de
-  // défiler en largeur comme la rangée de `Pilules` le fait ailleurs.
   const liste = (
-    <div className="p-3 space-y-3 [&_[data-onglets=pilules]]:mx-0 [&_[data-onglets=pilules]]:flex-wrap [&_[data-onglets=pilules]]:overflow-visible [&_[data-onglets=pilules]]:px-0">
+    <div className="p-3 space-y-3">
+      <RangeeSansCompte n={sansCompte} />
       <FiltresPersonnes f={f} />
       {d.loadingProfiles ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">Chargement…</p>
+        <p className="py-6 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : f.displayed.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">
-          {d.profiles.length === 0 ? "Aucun profil pour l'instant." : "Aucun membre ne correspond."}
-        </p>
+        <div className="space-y-3 py-6 text-center">
+          <p className="text-sm text-muted-foreground">{texteListeVide(t, d.profiles.length, f)}</p>
+          <RetirerFiltreSansEquipe f={f} />
+        </div>
       ) : (
         <div className="space-y-0.5">
           {f.displayed.map((p) => {
@@ -142,11 +170,10 @@ export function PersonnesVolets() {
               <div key={p.uid} className={`rounded-xl transition-colors ${actif ? "bg-secondary" : "hover:bg-secondary/60"}`}>
                 <LignePersonne
                   p={p}
-                  compact
                   groupes={d.groupes}
                   actif={actif}
                   onClick={() => choisir(p.uid)}
-                  fin={<ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />}
+                  fin={<ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground/60" aria-hidden />}
                 />
               </div>
             );
@@ -156,17 +183,15 @@ export function PersonnesVolets() {
     </div>
   );
 
-  const droite = !choisi ? (
-    <p className="py-10 text-sm text-muted-foreground">
-      {d.loadingProfiles ? "Chargement…" : "Aucun profil pour l'instant."}
-    </p>
-  ) : modif ? (
+  // BO9 : sans personne choisie (liste vide ou sans correspondance), la liste prend seule la colonne et dit
+  // elle-même pourquoi : un seul message.
+  const droite = !choisi ? null : modif ? (
     <div className="max-w-[760px] space-y-4">
       <div className="flex items-center gap-4">
         <Avatar p={choisi} grand />
-        <h2 className="text-[24px] font-bold leading-tight tracking-tight text-foreground">{nom(choisi)}</h2>
+        <h2 className="text-xl font-bold leading-tight tracking-tight text-foreground">{nom(choisi)}</h2>
       </div>
-      <div className="raised rounded-2xl p-5">
+      <div className="carte-groupe rounded-2xl p-5">
         <FormulairePersonne
           key={choisi.uid}
           p={choisi}
@@ -194,7 +219,7 @@ export function PersonnesVolets() {
   return (
     <>
       {entete}
-      <DeuxVolets racine={RACINE} liste={liste} premier={droite} largeurListe={400}>
+      <DeuxVolets racine={RACINE} liste={liste} premier={droite} largeurListe={400} colonneSeule={!choisi}>
         {null}
       </DeuxVolets>
     </>
@@ -204,10 +229,10 @@ export function PersonnesVolets() {
 /** Une carte de la fiche : titre, puis ses lignes. */
 function Carte({ titre, note, children, className }: { titre: string; note?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section aria-label={titre} className={`raised rounded-2xl px-5 py-4 ${className ?? ""}`}>
-      <div className="mb-2 flex items-baseline justify-between gap-3">
-        <h3 className="text-[16px] font-bold text-foreground">{titre}</h3>
-        {note && <span className="text-[12px] text-muted-foreground">{note}</span>}
+    <section aria-label={titre} className={`carte-groupe rounded-2xl px-5 py-4 ${className ?? ""}`}>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <h3 className="text-base font-bold text-foreground">{titre}</h3>
+        {note && <span className="text-xs text-muted-foreground">{note}</span>}
       </div>
       {children}
     </section>
@@ -264,7 +289,7 @@ function FicheDuMembre({
     ? findMyServices(planning, p.planningName).filter((s) => s.date >= aujourdhui).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5)
     : [];
   // Un droit d'un planning retiré (« fideliteMusiciens », lot F) ne s'affiche plus.
-  const plannings = (p.plannings ?? []).flatMap((k) => GRILLES.find((g) => g.key === k)?.label ?? []);
+  const plannings = (p.plannings ?? []).flatMap((k) => { const l = GRILLES.find((g) => g.key === k)?.label; return l ? [libelleServicePlanning(t, zh, l)] : []; });
   const ligne = "flex items-center justify-between gap-3 border-t border-border py-2 text-sm first:border-t-0";
 
   return (
@@ -272,23 +297,23 @@ function FicheDuMembre({
       <header className="flex items-center gap-4">
         <Avatar p={p} grand />
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-[24px] font-bold leading-tight tracking-tight text-foreground">{nom(p)}</h2>
+          <h2 className="truncate text-xl font-bold leading-tight tracking-tight text-foreground">{nom(p)}</h2>
           <p className="truncate text-sm text-muted-foreground">
             {p.email}
-            {p.createdAt ? ` · inscrit le ${p.createdAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}` : ""}
+            {p.createdAt ? ` · ${t("admin.membre.inscritLe", { date: p.createdAt.toLocaleDateString(zh ? "zh-CN" : "fr-FR", { day: "numeric", month: "long", year: "numeric" }) })}` : ""}
           </p>
         </div>
         <button
           type="button"
           onClick={onModifier}
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-background px-4 text-[14px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
+          className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-background px-4 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`}
         >
           <Pencil className="h-4 w-4" aria-hidden />
-          Modifier
+          {t("common.buttons.edit")}
         </button>
       </header>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-start gap-4">
+      <div className="space-y-4">
         {(groupes !== null || BACK_OFFICE) && (
         <div className="space-y-4">
           <Carte
@@ -299,7 +324,7 @@ function FicheDuMembre({
                 onClick={() => setFeuille(true)}
                 disabled={enCours}
                 aria-busy={enCours}
-                className="inline-flex h-9 items-center rounded-full bg-background px-3 text-[13px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
+                className={`inline-flex h-9 items-center rounded-full bg-background px-3 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`}
               >
                 {t("groupes.personnes.changer")}
               </button>
@@ -310,17 +335,16 @@ function FicheDuMembre({
                 <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: def ? categoryColor(def.categorie) : "#94a3b8" }} />
                 {def ? nomGroupe : t("groupes.personnes.sansGroupe")}
               </span>
-              <span className="text-muted-foreground">{t("groupes.personnes.unSeul")}</span>
             </p>
-            <p className="mt-2 text-[12px] text-muted-foreground">
+            <p className="mt-2 text-xs text-muted-foreground">
               {def ? t("groupes.personnes.changerAide", { groupe: nomGroupe }) : t("groupes.personnes.changerAideSans")}
             </p>
-            {erreur && <p role="alert" className="mt-2 text-[12px] text-destructive">{erreur}</p>}
+            {erreur && <p role="alert" className="mt-2 text-xs text-destructive">{erreur}</p>}
           </Carte>
           {def && (
             <Carte
               titre={t("groupes.personnes.rolesDans", { groupe: nomGroupe })}
-              note={<Link href={`/back-office/equipes?groupe=${def.id}`} className="font-semibold text-foreground underline underline-offset-2">{t("groupes.personnes.organigramme")}</Link>}
+              note={<Link href={`/back-office/equipes?groupe=${def.id}`} className={BOUTON_CONTOUR}>{t("groupes.personnes.organigramme")}</Link>}
             >
               {postes.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t("groupes.aucunRole")}</p>
@@ -335,10 +359,10 @@ function FicheDuMembre({
                       {x.role && zh && x.role.nomZh && <span className="text-muted-foreground">{x.role.nom}</span>}
                       {x.role && !zh && x.role.nomZh && <span className="text-muted-foreground">{x.role.nomZh}</span>}
                     </span>
-                    <span className="flex flex-wrap justify-end gap-1.5 text-[11px] font-semibold">
-                      {x.role?.comite && <span className="rounded-full bg-secondary px-2 py-0.5 text-muted-foreground">{t("groupes.auComite")}</span>}
+                    <span className="flex flex-wrap justify-end gap-1.5 text-xs font-semibold">
+                      {x.role?.comite && <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{t("groupes.auComite")}</span>}
                       {col && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
                           <Link2 className="h-3 w-3" aria-hidden />{t("groupes.pastille.colonne", { colonne: col })}
                         </span>
                       )}
@@ -351,19 +375,21 @@ function FicheDuMembre({
         </div>
         )}
         <Carte
-          titre={BACK_OFFICE ? t("groupes.personnes.servicesEquipes") : "Services et rôles"}
-          note={BACK_OFFICE ? t("groupes.personnes.transition") : undefined}
+          titre={BACK_OFFICE ? t("groupes.personnes.servicesEquipes") : t("admin.membre.servicesRoles")}
         >
-          {Object.keys(p.serviceRoles).length === 0 ? (
-            !(BACK_OFFICE && (p.dansEquipes ?? []).length > 0) && <p className="text-sm text-muted-foreground">Ne sert pas.</p>
+          {/* Lot AO-B : en nouveau mode, ni `serviceRoles` ni rôles déclarés — seulement l'organigramme. */}
+          {BACK_OFFICE ? (
+            (p.dansEquipes ?? []).length === 0 && <p className="text-sm text-muted-foreground">{t("equipes.organigramme.personnes.sansEquipe")}</p>
+          ) : Object.keys(p.serviceRoles).length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("admin.membre.neSertPasPoint")}</p>
           ) : (
             Object.entries(p.serviceRoles).map(([cat, roles]) => (
               <div key={cat} className={ligne}>
                 <span className="flex items-center gap-2 font-semibold text-foreground">
                   <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: categoryColor(cat) }} />
-                  {categoryLabel(cat)}
+                  {libelleService(t, zh, cat)}
                 </span>
-                <span className="text-muted-foreground">{roles.map((r) => SERVICE_ROLE_LABELS[r]).join(" · ") || "—"}</span>
+                <span className="text-muted-foreground">{roles.map((r) => libelleRole(t, zh, r)).join(" · ") || "—"}</span>
               </div>
             ))
           )}
@@ -371,54 +397,92 @@ function FicheDuMembre({
             <div key={id} className={ligne}>
               <span className="flex items-center gap-2 font-semibold text-foreground">
                 <Users className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
-                {t(`equipes.team.${id}`, { defaultValue: id })}
+                {t(cleNomEquipe(id, true), { defaultValue: id })}
               </span>
-              <span className="text-muted-foreground">{(p.referentDe ?? []).includes(id) ? t("groupes.personnes.referent") : t("groupes.personnes.membre")}</span>
+              <span className="text-right text-muted-foreground">
+                {[
+                  (p.referentDe ?? []).includes(id) ? t("groupes.personnes.referent") : t("groupes.personnes.membre"),
+                  ...(id === "louange" ? (p.sousEquipes ?? []).map((x) => t(`acces.sousEquipe.${x}`)) : []),
+                ].join(" · ")}
+              </span>
             </div>
           ))}
         </Carte>
         <div className="space-y-4">
-          <Carte titre="Droits">
+          <Carte titre={t("admin.membre.droits")}>
             <div className={ligne}>
-              <span className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4" aria-hidden />Admin</span>
-              <span className="text-foreground">{isAdminUser(p) ? "Oui" : "Non"}</span>
+              <span className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4" aria-hidden />{t("admin.membre.adminMaj")}</span>
+              <span className="text-foreground">{isAdminUser(p) ? t("admin.membre.oui") : t("admin.membre.non")}</span>
             </div>
-            {/* Lot 1 du chantier « équipes et groupes » (EQ26) : la case cochée par un admin. */}
-            <div className={ligne}>
-              <span className="flex items-center gap-2 text-muted-foreground"><Users className="h-4 w-4" aria-hidden />{t("personnes.coordination")}</span>
-              <span className="text-foreground">{p.coordination ? "Oui" : "Non"}</span>
-            </div>
-            <div className={ligne}>
-              <span className="flex items-center gap-2 text-muted-foreground"><CalendarDays className="h-4 w-4" aria-hidden />Écrit dans</span>
-              <span className="text-right text-foreground">{plannings.length ? plannings.join(", ") : "—"}</span>
-            </div>
+            {/* Lot 1 du chantier « équipes et groupes » (EQ26) : la case cochée par un admin. Lot AO-B : plus de case
+                en nouveau mode, les droits viennent de l'organigramme (« Ce que ça lui ouvre », plus bas). */}
+            {!BACK_OFFICE && (<>
+              <div className={ligne}>
+                <span className="flex items-center gap-2 text-muted-foreground"><Users className="h-4 w-4" aria-hidden />{t("personnes.coordination")}</span>
+                <span className="text-foreground">{p.coordination ? t("admin.membre.oui") : t("admin.membre.non")}</span>
+              </div>
+              <div className={ligne}>
+                <span className="flex items-center gap-2 text-muted-foreground"><CalendarDays className="h-4 w-4" aria-hidden />{t("admin.membre.ecritDans")}</span>
+                <span className="text-right text-foreground">{plannings.length ? plannings.join(", ") : "—"}</span>
+              </div>
+            </>)}
             {BACK_OFFICE && (<>
               <div className={ligne}>
                 <span className="flex items-center gap-2 text-muted-foreground"><PenLine className="h-4 w-4" aria-hidden />{t("groupes.personnes.parRoles")}</span>
                 <span className="text-right text-foreground">
-                  {parRoles.publie ? t("groupes.personnes.remplitPublie") : parRoles.remplit ? t("groupes.personnes.remplit") : "—"}
+                  {parRoles.publie ? t("groupes.personnes.remplitPublie") : parRoles.remplit ? t("groupes.personnes.remplit") : t("groupes.personnes.aucun")}
                 </span>
               </div>
               <div className={ligne}>
                 <span className="flex items-center gap-2 text-muted-foreground"><Bell className="h-4 w-4" aria-hidden />{t("groupes.personnes.notifications")}</span>
                 <span className="text-right text-foreground">
-                  {notifie.length ? notifie.map((n) => t("groupes.personnes.celles", { groupe: n })).join(", ") : "—"}
+                  {notifie.length ? notifie.map((n) => t("groupes.personnes.celles", { groupe: n })).join(", ") : t("responsabilites.aucune")}
                 </span>
               </div>
-              <p className="pt-2 text-[12px] text-muted-foreground">{t("groupes.personnes.noteDroits")}</p>
             </>)}
+            {/* Lot RS : lecture seule ; l'admin les change sur la page Responsabilités. */}
+            {/* bo-equipes-7 : pour l'admin la ligne entière est le lien (44 px, chevron) ; pour un autre, une ligne de texte. */}
+            {BACK_OFFICE && (() => {
+              const contenu = (
+                <>
+                  <span className="flex items-center gap-2 text-muted-foreground"><KeyRound className="h-4 w-4" aria-hidden />{t("responsabilites.ligne")}</span>
+                  <span className="flex items-center gap-1 text-right text-foreground">
+                    {libellesResponsabilites(p, (c, o) => t(c, o)).join(" · ") || t("responsabilites.aucune")}
+                    {admin && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />}
+                  </span>
+                </>
+              );
+              return admin ? (
+                <Link
+                  href="/back-office/equipes/responsabilites"
+                  aria-label={t("responsabilites.gerer")}
+                  data-testid="fiche-responsabilites"
+                  className={`${ligne} min-h-11`}
+                >
+                  {contenu}
+                </Link>
+              ) : (
+                <div className={ligne} data-testid="fiche-responsabilites">{contenu}</div>
+              );
+            })()}
             <div className={ligne}>
-              <span className="flex items-center gap-2 text-muted-foreground"><UserRound className="h-4 w-4" aria-hidden />Nom au planning</span>
+              <span className="flex items-center gap-2 text-muted-foreground"><UserRound className="h-4 w-4" aria-hidden />{t("admin.membre.nomAuPlanning")}</span>
               <span className="text-foreground">{p.planningName || "—"}</span>
             </div>
           </Carte>
         </div>
       </div>
 
-      <Carte titre="Ses prochains services" note={<Link href="/planning" className="font-semibold text-foreground underline underline-offset-2">Planning</Link>}>
+      {BACK_OFFICE && (
+        <section aria-label={t("equipes.organigramme.ceQueCaOuvre")} className="carte-groupe rounded-2xl px-5 py-4">
+          <CeQueCaOuvre profil={p} nu note={<Link href="/back-office/equipes" className={BOUTON_CONTOUR}>{t("equipes.organigramme.voir")}</Link>} />
+        </section>
+      )}
+
+      <Carte titre={t("admin.membre.prochainsServices")} note={<Link href="/planning" className={BOUTON_CONTOUR}>{t("common.header.planning")}</Link>}>
         {services.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            {planning ? "Aucun service à venir dans les plannings." : "Chargement…"}
+            {planning ? t("admin.membre.aucunService") : t("common.loading")}
           </p>
         ) : (
           services.map((s, i) => {
@@ -427,12 +491,12 @@ function FicheDuMembre({
               <div key={`${s.date}-${s.service}-${s.role}-${i}`} className={ligne}>
                 <span className="flex items-center gap-3">
                   <span className="flex h-10 w-10 flex-col items-center justify-center rounded-lg bg-secondary leading-none">
-                    <span className="text-[15px] font-bold text-foreground">{date.getDate()}</span>
-                    <span className="text-[10px] text-muted-foreground">{date.toLocaleDateString("fr-FR", { month: "short" })}</span>
+                    <span className="text-base font-bold leading-none text-foreground">{date.getDate()}</span>
+                    <span className="text-xs leading-none text-muted-foreground">{date.toLocaleDateString(zh ? "zh-CN" : "fr-FR", { month: "short" })}</span>
                   </span>
-                  <span className="font-semibold text-foreground">{s.service}</span>
+                  <span className="font-semibold text-foreground">{libelleServicePlanning(t, zh, s.service)}</span>
                 </span>
-                <span className="text-muted-foreground">{s.role}</span>
+                <span className="text-muted-foreground">{libelleRolePlanning(t, zh, s.role)}</span>
               </div>
             );
           })
@@ -460,7 +524,7 @@ function FicheDuMembre({
                   <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: id ? categoryColor(groupeDef(id)!.categorie) : "#94a3b8" }} />
                   {label}
                 </span>
-                {actuel && <span className="text-[12px] font-normal text-muted-foreground">{t("groupes.personnes.actuel")}</span>}
+                {actuel && <span className="text-xs font-normal text-muted-foreground">{t("groupes.personnes.actuel")}</span>}
               </button>
             );
           })}

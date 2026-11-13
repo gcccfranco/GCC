@@ -9,6 +9,7 @@ import type { SectionSummary } from "@/types/song";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { itemSections } from "@/lib/setlist/formItems";
+import { idDeSection } from "@/lib/setlist/sectionOrigins";
 
 /** Palette rotative pour relier chaque transition à son occurrence dans le fil :
  *  la section colorée et sa note en dessous partagent la même couleur. */
@@ -31,7 +32,7 @@ function sectionNamesFor(
 ): { name: string; keyChange?: string }[] {
   if (structureOverride && structureOverride.length > 0) {
     return structureOverride.map((ov) => {
-      const baseId = ov.replace(/-\d+$/, "");
+      const baseId = idDeSection(ov);
       const s = allSections.find((sec) => sec.uid === ov || sec.id === ov || sec.id === baseId);
       if (s) return { name: abbreviateSection(s), keyChange: sectionKeys[ov] ?? sectionKeys[s.id] };
       const type = ov.replace(/(-\d+)+$/, "");
@@ -102,7 +103,7 @@ export function ListView({
   // Partitions, pour que la liste dise ce qui sera réellement affiché.
   const jianpuManifest = useJianpuManifest();
   return (
-    <ol className="divide-y divide-border">
+    <ol className="max-w-[720px] divide-y divide-border">
       {(() => {
         const sorted = [...items].sort((a, b) => a.position - b.position);
         return sorted.map((item, idx) => {
@@ -173,10 +174,10 @@ export function ListView({
                         <>
                           <div className="space-y-0.5">
                             {runs.map((run, i) => (
-                              <p key={i} className="text-[11px] leading-tight">
+                              <p key={i} className="text-xs leading-tight text-muted-foreground">
                                 <span className="font-medium text-muted-foreground/90">{run.title}</span>
                                 <span className="text-muted-foreground/40"> · </span>
-                                <span className="text-muted-foreground/60">
+                                <span className="text-muted-foreground">
                                   {run.names.map((n, j) => (
                                     <span key={j}>
                                       {j > 0 && " · "}
@@ -197,7 +198,7 @@ export function ListView({
                           {transitions.length > 0 && (
                             <ul className="space-y-0.5">
                               {transitions.map((tr, i) => (
-                                <li key={i} className="text-[11px] text-muted-foreground/60 italic leading-tight flex gap-1">
+                                <li key={i} className="text-xs text-muted-foreground italic leading-tight flex gap-1">
                                   <span className={`shrink-0 ${tr.color}`}>↳ {tr.name} :</span>
                                   <span className="whitespace-pre-wrap">{tr.text}</span>
                                 </li>
@@ -218,7 +219,7 @@ export function ListView({
                       const names = song?.sections ? sectionNamesFor(itemSections(song, fs.contentOverride), fs.structureOverride, t, fs.sectionKeys) : [];
                       return (
                         <div key={fs.songSlug}>
-                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
                             <span>{song?.title ?? fs.songSlug}</span>
                             <span className={`font-mono text-xs px-1 py-0.5 rounded ${
                               transposed
@@ -229,7 +230,7 @@ export function ListView({
                             </span>
                           </div>
                           {names.length > 0 && (
-                            <p className="text-[11px] text-muted-foreground/60 leading-tight pl-1 mt-0.5">
+                            <p className="text-xs text-muted-foreground leading-tight pl-1 mt-0.5">
                               {names.map((n, i) => (
                                 <span key={i}>
                                   {i > 0 && " · "}
@@ -291,7 +292,7 @@ export function ListView({
                 // Chaque section → nom affichable + transition interne éventuelle.
                 const entries: { name: string; transition?: string; keyChange?: string }[] = item.structureOverride
                   ? item.structureOverride.map((ov) => {
-                      const baseId = ov.replace(/-\d+$/, "");
+                      const baseId = idDeSection(ov);
                       const s = allSections.find((sec) => sec.uid === ov || sec.id === ov || sec.id === baseId);
                       if (s) return { name: abbreviateSection(s), transition: st[ov] ?? st[s.id], keyChange: sk[ov] ?? sk[s.id] };
                       // Section non résolue (ex. copie « Mode Adapter » absente de
@@ -315,7 +316,7 @@ export function ListView({
                 const transitions = colored.filter((e) => e.transition);
                 return (
                   <>
-                    <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-tight">
+                    <p className="text-xs text-muted-foreground/70 mt-0.5 leading-tight">
                       {colored.map((e, i) => (
                         <span key={i}>
                           {i > 0 && <span className="text-muted-foreground/40"> · </span>}
@@ -333,7 +334,7 @@ export function ListView({
                     {transitions.length > 0 && (
                       <ul className="mt-1 space-y-0.5">
                         {transitions.map((e, i) => (
-                          <li key={i} className="text-[11px] text-muted-foreground/60 italic leading-tight flex gap-1">
+                          <li key={i} className="text-xs text-muted-foreground italic leading-tight flex gap-1">
                             <span className={`shrink-0 ${e.color}`}>↳ {e.name} :</span>
                             <span className="whitespace-pre-wrap">{e.transition}</span>
                           </li>

@@ -1,11 +1,11 @@
 // Rappels des entraînements sur scène (lot 3 bis) : fondus dans les rappels
 // regroupés des services (src/lib/push/reminderMessage.ts). Fonctions pures.
 
-import type { ReminderService } from "@/lib/push/reminderMessage";
+import type { ReminderService } from "@/types/rappels";
 import type { Creneau } from "@/types/programme";
 import { libelleQui } from "@/lib/fetes/qui";
 
-export const SCENE_SERVICE = "Entraînement sur scène";
+const SCENE_SERVICE = "Entraînement sur scène";
 
 // « Qui » d'un créneau → catégorie de l'app (clé de serviceRoles) dont les
 // membres reçoivent le rappel. Sans correspondance (EDD 小班, Gp Amour, Gp Joie,

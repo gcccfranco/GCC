@@ -33,6 +33,8 @@ import { useDisposition } from "@/hooks/useDisposition"
 import type { Evenement } from "@/types/evenement"
 import { EntreeSheetCarte, EvenementCard, EvenementCarte } from "./EvenementCard"
 import { EvenementClient } from "./[id]/EvenementClient"
+import { Squelette } from "@/components/layout/Squelette";
+import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 
 export function CalendrierClient({ enTete, peutCreer, children }: {
   enTete: React.ReactNode
@@ -115,7 +117,7 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
   )
 
   const agenda = chargement ? (
-    <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+    <Squelette enTete={false} className="p-0" />
   ) : (
     <div className={grand ? "space-y-5" : "max-w-2xl mx-auto space-y-6 md:max-w-none"}>
       {infos.length > 0 && (
@@ -127,7 +129,7 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
       {upcoming.length === 0 && vide}
       {upcoming.map((g) => (
         <section key={g.key} className={grand ? "space-y-1" : "space-y-3"}>
-          <h2 className="text-sm font-semibold text-muted-foreground px-1 capitalize">{g.label}</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground px-1 first-letter:uppercase">{g.label}</h2>
           {grand ? (
             g.elements.map((x, i) => x.source === "app"
               ? <EvenementCard key={x.evenement.id} evenement={x.evenement} actif={x.evenement.id === idActif} inscrit={!!user && inscrits.has(x.evenement.id)} />
@@ -159,13 +161,16 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
           {t("evenements.loginHint")} <Link href="/login?from=%2Fevenements" className="font-semibold underline">{t("evenements.login")}</Link>
         </p>
       )}
+      {peutCreer && <div className="md:hidden"><BoutonNouveau dansLeFlux label={t("evenements.nouveau")} href="/back-office/evenements/nouveau" /></div>}
       <GuideLien section="evenements" />
     </div>
   )
 
   if (grand) {
+    // Pas de marge basse ici : `DeuxVolets` pose déjà la sienne (pb-6). Les deux ensemble (88 px) faisaient défiler
+    // une page courte dans le vide à 1 440 × 900 (tests/agencement-groupes.spec.ts, mesure e).
     return (
-      <div className="pb-16">
+      <div>
         {enTete}
         <DeuxVolets
           racine="/evenements"

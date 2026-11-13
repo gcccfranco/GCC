@@ -15,7 +15,7 @@ function collectHydrationErrors(page: Page) {
 }
 
 for (const [path, zhText] of [
-  ["/login", "GCC 敬拜诗歌"],
+  ["/login", "GCC 敬拜"],
   ["/songs/abba-pere", "诗歌"],
 ] as const) {
   test(`${path} en 中文 : pas d'erreur d'hydratation, page affichée en chinois`, async ({ page }) => {
@@ -34,14 +34,19 @@ for (const [path, zhText] of [
 test("le bouton de langue bascule en 中文, est retenu au rechargement, et revient en français", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/login");
+  // eglise-11 : sur /login, plus de « Connexion » dans la barre latérale ; « FR » glisse sous le badge de
+  // développement de Next (absent en ligne), qui intercepterait le clic.
+  const sansBadgeDev = () => page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  await sansBadgeDev();
   await expect(page.getByText("GCC Louange", { exact: true }).filter({ visible: true }).first()).toBeVisible();
 
   await page.getByRole("button", { name: "切换为中文" }).click();
-  await expect(page.getByText("GCC 敬拜诗歌", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("GCC 敬拜", { exact: true }).filter({ visible: true }).first()).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem("i18nextLng"))).toBe("zh-CN");
 
   await page.reload();
-  await expect(page.getByText("GCC 敬拜诗歌", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("GCC 敬拜", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await sansBadgeDev();
 
   await page.getByRole("button", { name: "Changer en français" }).click();
   await expect(page.getByText("GCC Louange", { exact: true }).filter({ visible: true }).first()).toBeVisible();

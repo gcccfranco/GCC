@@ -1,8 +1,13 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import path from "node:path";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { canInscrireEvenement, canSeeEvenement, entreesBackOffice, estReunion, publicDeReunion } from "../src/lib/access";
-import { destinatairesEvenement, inscrire } from "../src/lib/evenements/serveur";
+import { coordination, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { canInscrireEvenement, canSeeEvenement, droitsDesPages, entreesBackOffice, estReunion, publicDeReunion } from "../src/lib/access";
+import { HttpError, PLAFOND_SANS_COMPTE, destinatairesEvenement, errorResponse, inscrire } from "../src/lib/evenements/serveur";
+import { limiteAtteinte, limiteSansCompte } from "../src/lib/evenements/limiteAdresse";
+import i18n from "i18next";
+import frTranslations from "../src/locales/fr.json";
+import zhTranslations from "../src/locales/zh-CN.json";
+import { messageTraduit } from "../src/lib/messageTraduit";
 import { baseBackOffice } from "../src/lib/navigation";
 import { ouvertureDuJour } from "../src/lib/evenements/rappel";
 import { evenementsAVenir } from "../src/lib/tableauDeBord/donnees";
@@ -35,7 +40,7 @@ const ev = (x: Record<string, unknown>) => ({ ...x, id: "x" }) as unknown as Eve
 
 // Alice : référente de TEAM DA et droit d'annonces du Groupe Paix (Évènements et Réunions au Back-Office).
 const ALICE: FakeProfile = {
-  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["da"], referentDe: ["da"], annonces: ["Groupe Paix"],
+  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["da", "comite-paix"], referentDe: ["da", "comite-paix"], groupe: "paix", annonces: ["Groupe Paix"],
 };
 /** Bruno : simple membre de TEAM DA. */
 const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"] };
@@ -106,25 +111,27 @@ test("« Nouvel évènement » pour une équipe : avec inscriptions, écrit « r
   // Ouverte sous Réunions, elle repart sous Évènements.
   await page.goto(`/back-office/reunions/${id}`);
   await page.waitForURL(new RegExp(`/back-office/evenements/${id}/?$`));
-  // Listée dans Évènements…
+  // Listée dans Évènements (BO-C : l'Agenda du Calendrier filtré sur les évènements)…
   await page.goto("/back-office/evenements");
-  await expect(page.getByRole("link", { name: /Soirée DA/ }).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=evenements$/);
+  await expect(page.getByRole("button", { name: /Soirée DA/ }).first()).toBeVisible();
   await capture(page, info, "liste-evenements");
-  // … et pas dans Réunions.
+  // … et pas dans Réunions (le même Agenda, filtré sur les réunions : rien).
   await page.goto("/back-office/reunions");
-  await expect(page.getByText("Aucune réunion").first()).toBeVisible();
-  await expect(page.getByRole("link", { name: /Soirée DA/ })).toHaveCount(0);
+  await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+  await expect(page.getByText(/Rien de prévu/).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Soirée DA/ })).toHaveCount(0);
 });
 
 test("« + Nouvelle réunion » : sans inscriptions, écrit « reunion: true », rangée sous Réunions", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   const db = await signInAs(page, ALICE, {}, "/back-office/reunions/nouvelle");
   await sansPush(page);
-  await expect(page.getByLabel("Public")).toHaveValue("equipe:da");
+  await expect(page.getByLabel("Équipe", { exact: true })).toHaveValue("equipe:da");
   await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
-  await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
+  await page.getByLabel("Nom de la réunion").fill("Réunion DA");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
-  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await page.getByRole("button", { name: "Créer la réunion" }).click();
   await page.waitForURL(/\/back-office\/reunions\/fake-\d+\/?$/);
   expect(creee(db).data).toMatchObject({ pour: "equipe:da", reunion: true, inscriptions: "fermees" });
 });
@@ -155,7 +162,7 @@ test("fiche de l'App : un membre de l'équipe voit l'évènement d'équipe avec 
 
 // Clara : référente de TEAM MÉDIAS (pas DA). Chloé : coordination (cochée), sans équipe.
 const CLARA: FakeProfile = { uid: "uid-clara", email: "clara@example.com", firstName: "Clara", lastName: "V.", dansEquipes: ["medias"], referentDe: ["medias"] };
-const CHLOE: FakeProfile = { uid: "uid-chloe", email: "chloe@example.com", firstName: "Chloé", lastName: "R.", coordination: true };
+const CHLOE: FakeProfile = { uid: "uid-chloe", email: "chloe@example.com", firstName: "Chloé", lastName: "R.", coordination: true, ...coordination() };
 const ADMIN = { uid: "uid-admin", email: "tc328829@gmail.com" };
 const qui = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 
@@ -276,27 +283,32 @@ test("relecture, retournée par la décision 43 : un référent a l'entrée Év�
   // un référent sans droit d'annonces crée les évènements de son équipe.
   const profil = (p: FakeProfile) => p as unknown as UserProfile;
   const referent = { ...BRUNO, referentDe: ["da"] };
-  expect(entreesBackOffice(qui(referent), profil(referent))).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
-  expect(entreesBackOffice(qui(BRUNO), profil(BRUNO))).toEqual(["taches", "reunions"]);
-  expect(entreesBackOffice(qui(ALICE), profil(ALICE))).toContain("evenements");
+  expect(droitsDesPages(qui(referent), profil(referent))).toEqual({ taches: true, evenements: true, reunions: true });
+  // Piste A (BO4) : un simple membre n'a plus de Back-Office.
+  expect(entreesBackOffice(qui(BRUNO), profil(BRUNO))).toEqual([]);
+  expect(droitsDesPages(qui(ALICE), profil(ALICE)).evenements).toBe(true);
 });
 
-test("relecture : depuis l'en-tête de BO › Évènements, « Nouvel évènement » propose l'équipe de la personne", async ({ page }) => {
+test("relecture : depuis « Ajouter » du Calendrier, « Évènement » propose l'équipe de la personne", async ({ page }, info) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  await signInAs(page, ALICE, {}, "/back-office/evenements");
-  await page.getByRole("link", { name: "Nouvel évènement" }).click();
-  await page.waitForURL(/\/back-office\/evenements\/nouveau\/?$/);
-  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix", "TEAM DA"]);
+  await signInAs(page, ALICE, {}, "/back-office/calendrier");
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  // Téléphone : la feuille du jour (« Nouvel évènement le … ») ; ailleurs, le menu « Évènement | Réunion ».
+  if (info.project.name === "telephone") await page.getByRole("link", { name: /^Nouvel évènement le / }).click();
+  else await page.getByRole("menuitem", { name: "Évènement", exact: true }).click();
+  await page.waitForURL(/\/back-office\/evenements\/nouveau\/?(\?date=\d{4}-\d{2}-\d{2})?$/);
+  await expect(page.getByLabel("Public").locator("option")).toHaveText(["TEAM DA", "COMITÉ PAIX"]); // lot RS : la présidence de Paix ne crée plus d'évènement « Groupe Paix » (réunion de son comité seulement) ; le référent DA crée pour son équipe
 });
 
 test("relecture : un évènement d'équipe n'a pas « sans compte » — la case disparaît et rien n'est écrit", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  const db = await signInAs(page, ALICE, {}, "/back-office/evenements/nouveau");
+  // lot RS : les sections ne se créent plus que par le Comité Orga ; Alice est ici dans Orga pour avoir une section.
+  const db = await signInAs(page, { ...ALICE, responsabilites: ["orga"] }, {}, "/back-office/evenements/nouveau");
   await sansPush(page);
   await page.getByLabel("Nom de l'évènement").fill("Soirée DA");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
   // Pour une section, la case existe ; cochée, puis le public passe à l'équipe.
-  await expect(page.getByLabel("Public")).toHaveValue("Groupe Paix");
+  await page.getByLabel("Public").selectOption({ label: "Groupe Paix" });
   await page.getByText("Plus d'options").click();
   const sansCompte = page.getByRole("checkbox", { name: "Les personnes sans compte peuvent s'inscrire" });
   await sansCompte.check();
@@ -372,4 +384,97 @@ test("E6 : la route d'inscription lit le profil en base — un membre de l'équi
   await expect(inscrire(db, { uid: "uid-rose", email: "rose@example.com" }, { evenementId: "regie", invites: 0, nomLibre: "" }))
     .resolves.toMatchObject({ inscrits: 1 });
   await expect(inscrire(db, qui(CLARA), { evenementId: "regie", invites: 0, nomLibre: "" })).rejects.toMatchObject({ status: 403 });
+});
+
+// ─── S9 : inscriptions sans compte, limite par adresse et plafond par évènement ───
+
+test("S9 : 5 inscriptions sans compte par adresse et par 10 minutes, la sixième est refusée", () => {
+  const hits = new Map<string, number[]>();
+  const t0 = Date.parse("2099-01-01T10:00:00Z");
+  for (let i = 0; i < 5; i++) expect(limiteAtteinte(hits, "203.0.113.7", t0 + i * 1000)).toBe(false);
+  expect(limiteAtteinte(hits, "203.0.113.7", t0 + 6000)).toBe(true);
+  // Une autre adresse n'est pas touchée ; la même, dix minutes plus tard, repart à zéro.
+  expect(limiteAtteinte(hits, "203.0.113.8", t0 + 6000)).toBe(false);
+  expect(limiteAtteinte(hits, "203.0.113.7", t0 + 11 * 60 * 1000)).toBe(false);
+});
+
+test("S9 : au plus 60 places sans compte par évènement, invités compris ; avec compte, rien ne change", async () => {
+  const ouvert = { ...BASE, pour: "eglise", date: "2099-10-10", sansCompte: true, organisateurUid: "uid-autre" };
+  const { db, ecrits } = baseSimulee({
+    "evenements/presque": { ...ouvert, inscrits: 58, inscritsSansCompte: PLAFOND_SANS_COMPTE - 2 },
+    "evenements/plein": { ...ouvert, inscrits: 70, inscritsSansCompte: PLAFOND_SANS_COMPTE },
+    "users/uid-bruno": { firstName: "Bruno", lastName: "M.", dansEquipes: ["da"] },
+  });
+  // 58 + 1 + 1 invité = 60 : accepté, compteur tenu dans la même écriture.
+  await expect(inscrire(db, null, { evenementId: "presque", invites: 1, nomLibre: "Visiteur" })).resolves.toMatchObject({ inscrits: 60 });
+  expect(ecrits["evenements/presque"]).toMatchObject({ inscrits: 60, inscritsSansCompte: PLAFOND_SANS_COMPTE });
+  // 58 + 1 + 2 invités = 61 : refusé, avec son code.
+  await expect(inscrire(db, null, { evenementId: "presque", invites: 2, nomLibre: "Visiteur" })).rejects.toMatchObject({ status: 409, code: "limiteSansCompte" });
+  await expect(inscrire(db, null, { evenementId: "plein", invites: 0, nomLibre: "Visiteur" })).rejects.toMatchObject({ status: 409, code: "limiteSansCompte" });
+  // Un membre connecté passe, et le compteur sans compte n'est pas touché.
+  await expect(inscrire(db, qui(BRUNO), { evenementId: "plein", invites: 0, nomLibre: "" })).resolves.toMatchObject({ inscrits: 71 });
+  expect(ecrits["evenements/plein"]).not.toHaveProperty("inscritsSansCompte", 61);
+});
+
+// Routes et messages : la route tourne sur le serveur de test (interrupteur ouvert), sans base.
+
+test("S9 : la route refuse (429) la sixième inscription sans compte d'une même adresse en 10 minutes", async ({ request }) => {
+  // Adresse tirée au hasard : le compteur vit dans le serveur de test, un second passage ne doit pas en hériter.
+  const adresse = `198.51.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 254) + 1}, 10.0.0.1`;
+  const poster = (headers: Record<string, string>) =>
+    request.post("/api/evenements/inscription", { headers: { "x-forwarded-for": adresse, ...headers }, data: { evenementId: "x", invites: 0, nom: "Visiteur" } });
+  // Les cinq premières passent la limite (sans base elles échouent plus loin, jamais en 429).
+  for (let i = 0; i < 5; i++) expect((await poster({})).status()).not.toBe(429);
+  expect((await poster({})).status()).toBe(429);
+  expect(await (await poster({})).json()).toMatchObject({ code: "tropDeDemandes" });
+});
+
+test("S9 : la limite par adresse ne vise que les inscriptions sans compte", () => {
+  const hits = new Map<string, number[]>();
+  const t0 = Date.parse("2099-01-01T10:00:00Z");
+  for (let i = 0; i < 8; i++) expect(limiteSansCompte({ uid: "uid-bruno", email: "bruno@example.com" }, hits, "203.0.113.9", t0 + i)).toBe(false);
+  expect(hits.size).toBe(0);
+  for (let i = 0; i < 5; i++) expect(limiteSansCompte(null, hits, "203.0.113.9", t0 + i)).toBe(false);
+  expect(limiteSansCompte(null, hits, "203.0.113.9", t0 + 6)).toBe(true);
+});
+
+test("S9 : le plafond atteint, refusé par inscrire, sort de la route en 409 avec son code", async () => {
+  const { db } = baseSimulee({
+    "evenements/plein": { ...BASE, pour: "eglise", date: "2099-10-10", sansCompte: true, organisateurUid: "uid-autre", inscrits: 70, inscritsSansCompte: PLAFOND_SANS_COMPTE },
+  });
+  const erreur = await inscrire(db, null, { evenementId: "plein", invites: 0, nomLibre: "Visiteur" }).then(() => null, (e: unknown) => e);
+  expect(erreur).toBeInstanceOf(HttpError);
+  const res = errorResponse(erreur);
+  expect(res.status).toBe(409);
+  expect(await res.json()).toMatchObject({ code: "limiteSansCompte" });
+});
+
+test("un refus d'inscription s'affiche en 中文 dans la fiche quand la page est en 中文", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, BRUNO, { "evenements/soiree": SOIREE }, "/evenements/soiree");
+  await page.route("**/api/evenements/inscription", (route) =>
+    route.fulfill({ status: 409, json: { error: "Il n'y a plus assez de places.", code: "complet" } }));
+  await page.getByRole("button", { name: zhTranslations.evenements.sinscrire, exact: true }).click();
+  await page.getByRole("button", { name: zhTranslations.evenements.confirmer, exact: true }).click();
+  await expect(page.getByText(zhTranslations.evenements.refus.complet)).toBeVisible();
+  await expect(page.getByText(frTranslations.evenements.refus.complet)).toHaveCount(0);
+});
+
+test("refus d'inscription : en 中文 quand <html lang> est zh-CN", () => {
+  if (!i18n.isInitialized) {
+    void i18n.init({ resources: { fr: { translation: frTranslations }, "zh-CN": { translation: zhTranslations } }, lng: "fr", fallbackLng: "fr", interpolation: { escapeValue: false } });
+  }
+  const g = globalThis as unknown as { document?: unknown };
+  const avant = g.document;
+  try {
+    g.document = { documentElement: { lang: "zh-CN" } };
+    for (const cle of ["evenements.refus.limiteSansCompte", "evenements.refus.complet", "evenements.inscriptionError"]) {
+      expect(messageTraduit(cle)).toMatch(/[\u4e00-\u9fff]/);
+    }
+    g.document = { documentElement: { lang: "fr" } };
+    expect(messageTraduit("evenements.refus.limiteSansCompte")).toBe("La limite des inscriptions sans compte est atteinte.");
+  } finally {
+    g.document = avant;
+  }
 });

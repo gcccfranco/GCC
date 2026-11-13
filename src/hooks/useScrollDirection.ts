@@ -13,6 +13,9 @@ export function useScrollDirection() {
       const delta = currentY - lastY.current;
       lastY.current = currentY;
 
+      // Défilement de compensation (repli de l'en-tête, rien ne bouge à l'écran) : la barre ne réagit pas.
+      if (document.documentElement.hasAttribute("data-defilement-compense")) return;
+
       // Défilement piloté (index A–Z sous le doigt) : les barres restent en
       // place, sinon elles se cachent et reviennent à chaque changement de sens.
       if (document.documentElement.hasAttribute("data-nav-lock")) {
@@ -21,7 +24,11 @@ export function useScrollDirection() {
         return;
       }
 
-      if (currentY < 10) {
+      // Page chant : les barres restent tant que la place qu'elles réservent en haut est à l'écran,
+      // sinon cette bande reste vide (bug du 12/11/2026). `offsetTop` ignore le `transform` qui les cache.
+      const barre = document.querySelector<HTMLElement>(".barre-chant");
+      const seuil = barre && getComputedStyle(barre).position === "fixed" ? barre.offsetTop + barre.offsetHeight : 10;
+      if (currentY < seuil) {
         setVisible(true);
         accumulated.current = 0;
       } else if (delta > 0) {

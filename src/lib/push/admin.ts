@@ -4,7 +4,7 @@
 
 import { applicationDefault, initializeApp, getApps, getApp, cert, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
-import { getAuth, type DecodedIdToken } from "firebase-admin/auth";
+import { getAuth, type Auth, type DecodedIdToken } from "firebase-admin/auth";
 
 interface ServiceAccountJson {
   project_id: string;
@@ -42,6 +42,11 @@ function adminApp(): App {
 
 export function adminDb(): Firestore {
   return getFirestore(adminApp());
+}
+
+/** Comptes Firebase Auth (accès Admin) : sert à résoudre des adresses en uid. */
+export function adminAuth(): Auth {
+  return getAuth(adminApp());
 }
 
 /** Vérifie un ID token Firebase Auth (en-tête Authorization du client). */

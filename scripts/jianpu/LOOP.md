@@ -324,6 +324,229 @@ en direct (spec : `docs/spec-jianpu-integration.md`, D7, O9).
    `public/jianpu/cadrage.json` ; un chant absent n'est pas recadré. `chords.json` et `index.json` ne changent jamais.
    `python3 scripts/jianpu/cadrage.py etat` liste les chants restants.
 
+**Lot JE (31/10/2026, `docs/spec-jianpu-entete-statistiques.md`, JE2) : la coupe descend sous tout l'en-tête gravé.**
+`propose --sous-entete` : `top` = la dernière rangée blanche au-dessus du **premier accord** du calque (une étiquette vide
+est une gomme, ignorée), « 1=X 4/4 » et la tonalité du titre compris dans la partie coupée ; garde-fou à 1,5 système.
+La planche lit alors la proposition avant la valeur certifiée : `npm run jianpu:audit <slug> -- --cadrage --propose`.
+Accepter si la ligne passe au-dessus de la **première ligne de musique** (un repère gravé comme « W » ou « 【Verse】 »
+reste avec elle) sans rien trancher ; refuser si une note, un point, une liaison, une étiquette ou un reste de crédit est
+tranché, ou si une ligne de musique sans accord passe sous la coupe. Sans coupe propre (crédits, prélude ou accords hauts
+sur la bande du « 1=X », filigrane), la valeur se règle à la main au mieux, ou garde l'ancienne. La mesure, le sous-titre
+et la référence biblique se relèvent sur la partie coupée et s'écrivent dans le `.cho` (`{time}`, `{subtitle}`, `{bible}`).
+Le PDF de setlist coupe son calque au cadre de l'image (`overflow: hidden`) : le « 1=X » réécrit n'y déborde plus.
+
+## Lignes et barres des scans (lot AO, JP-A)
+
+Le mode louange affiche une **tranche** de la page du scan (jamais un chiffre rapetissé) et, au téléphone, coupe chaque ligne
+sur une barre de mesure (`docs/spec-mode-louange-forscore-2.md`, § JP). Il lui faut, par page : les **lignes** (systèmes)
+et les x de leurs **barres**, en pixels du WebP. Même méthode que le recadrage : proposer, regarder, certifier à l'œil.
+Un scan absent de `public/jianpu/systemes.json` n'est pas certifié et garde l'affichage d'aujourd'hui.
+
+Une **ligne** = un système complet : repère gravé au-dessus (【Chorus】, crochets de volta, « 先低后高 »), rangée d'accords,
+rangée de chiffres (points d'octave, liaisons, triolets) et **toutes** les rangées de paroles qui la suivent (1 à 4
+couplets), jusqu'au blanc qui précède le système suivant. L'en-tête de la page 1 (titre, album, versets, crédits, « 1=E 4/4 »,
+♩=65) et le pied (crédit « 灵栖清泉制谱… », numéro de page, logo) ne sont **pas** des lignes.
+
+1. **Proposer** : `python3 scripts/jianpu/systemes.py propose [slug…]` (sans argument : les 190 chants, ~20 s). Une ligne par
+   page : slug, page, nombre de lignes, barres par ligne, puis les ⚠ (étiquette de `chords.json` hors de toute ligne ·
+   lignes qui se recouvrent ou à moins de 4 px · ligne à moins de 2 barres · hauteur hors de [0,5 ; 1,8] × la médiane ·
+   page sans ligne). Écrit `scripts/jianpu/debug/systemes-propose.json` (ignoré par git, fusionné avec l'existant). Règle :
+   docstring de `systemes.py` (barres = traits verticaux fins plus hauts qu'un chiffre ; coupe entre deux systèmes au
+   plus grand blanc, après la première rangée de paroles, au-dessus des accords du dessous).
+2. **Regarder** : `PW_PORT=<port> npm run jianpu:audit -- --systemes <slug…> [--propose]` (plusieurs slugs, un seul serveur et
+   un seul navigateur ; ou `npm run jianpu:audit <slug> -- --systemes`) → `scripts/jianpu/debug/_pw-<slug>-systemes-p<n>.png`,
+   une PNG par page, 1 000 px de large : le scan entier tel que le navigateur le rend, bandeau « slug — p.N — proposé |
+   certifié — n lignes » en tête ; chaque ligne en bande translucide bleue / verte alternée (bords haut et bas pleins),
+   son numéro L1, L2… dans la marge gauche ; chaque barre en trait rouge ; **la barre la plus proche du milieu de la ligne**
+   (celle où JP-C coupera au téléphone) en magenta épais ; le `top` de `cadrage.json` en pointillé gris ; les sections
+   (JP-A2, `debug/sections-propose.json` ou `public/jianpu/sections.json`) en étiquettes jaunes à gauche de leur ligne. Les
+   données viennent de `systemes.json` si le chant y est, sinon de la proposition (`--propose` : la proposition d'abord).
+   **Lire chaque PNG** (Read), jamais sur parole.
+3. **Accepter** si, sur chaque page : chaque bande enferme son système entier (repère, accords, chiffres, **toutes** les
+   rangées de paroles) ; l'en-tête et le pied sont hors de toute bande ; chaque barre de mesure a son trait rouge et rien
+   d'autre n'en porte un. **Refuser** si une bande coupe une rangée de chiffres, d'accords ou de paroles ; si une rangée de
+   paroles est rattachée au mauvais système (la bande du dessous les avale, ou celle du dessus avale les accords du suivant) ;
+   si l'en-tête (♩=65, « 1=X », crédits) ou le pied (ligne de crédit, logo) est dans une ligne ; si une barre manque (une
+   mesure sans trait) ou si un trait qui n'est pas une barre est marqué (un « 1 », un trait de caractère, un « ⊕ »). Une
+   barre double, de reprise (« |: », « :‖ ») ou finale = un seul trait. Les limites connues (docstring de `systemes.py`) sont
+   à regarder en premier : repère collé aux paroles, 2 rangées d'accords, hymnaire en gros caractères, bloc de texte sous le
+   dernier système.
+4. **Corriger** : éditer `scripts/jianpu/debug/systemes-propose.json` à la main (y0 / y1 / `barres` du chant et de la page),
+   relancer la planche avec `--propose`, regarder de nouveau. `propose` écrase la proposition d'un slug : ne le relancer
+   qu'avant de corriger. Une correction à la main ne se reconstruit pas, elle se certifie aussitôt.
+5. **Certifier** : `python3 scripts/jianpu/systemes.py certifier <slug…>` copie la proposition (la proposer si absente) dans
+   `public/jianpu/systemes.json`, **après** avoir revérifié contre `index.json` la `source`, et pour chaque page `file`, `w`,
+   `h`, puis que chaque ligne a 0 ≤ y0 < y1 ≤ h, que les lignes sont croissantes sans recouvrement, que les barres sont dans
+   [0, w] et croissantes ; il refuse sinon. `retirer <slug…>` enlève un chant du fichier ; `etat` donne le nombre de chants
+   certifiés et les restants.
+6. **Format et version** : `public/jianpu/systemes.json` = `{"version": 1, "chants": {slug: entrée}}`, une entrée =
+   `{"source", "pages": [{"file", "w", "h", "lignes": [{"y0", "y1", "barres": [x…]}]}]}`, clés triées, une ligne par chant,
+   UTF-8 sans échappement. `version` est la version du **format** (elle change si la forme change). La **validité d'une
+   entrée se vérifie contre `index.json`** : même `source` et, pour chaque page, mêmes `file`, `w`, `h` ; le site ignore une
+   entrée qui ne correspond plus (scan refait) et un scan absent garde l'affichage d'aujourd'hui. `index.json`, `chords.json`,
+   `cadrage.json` et `marges.json` ne changent jamais.
+
+### Sections (JP-A2)
+
+Le mode louange saute d'une section à l'autre : pour chaque section de `content/songs/<slug>.cho`, il lui faut la **page** et
+la **ligne** du scan (comptées depuis 1, L1 de la planche = ligne 1) où elle commence. Sections du .cho = chaque
+`{start_of_<type>[: libellé]}` hors `{start_of_jianpu}` ; id = `<type>-<n>`, n = rang parmi toutes les `start_of_` hors jianpu
+(la convention de `src/lib/chordpro/parser.ts`) ; libellé = la valeur après « : ».
+
+1. **Proposer** : `python3 scripts/jianpu/sections.py propose [slug…]` (sans argument : les 190 chants, < 5 s). Une ligne par
+   chant : slug, `lignes certifiées` ou `proposées` (celles de `systemes.json` si le chant y est, sinon de
+   `debug/systemes-propose.json`, fabriquée au besoin), `id→pPLn` par section (`↑` = anacrouse, `null` = à placer à la main), puis
+   les ⚠. Écrit `scripts/jianpu/debug/sections-propose.json` (ignoré par git, fusionné). Méthode (docstring de `sections.py`) :
+   les accords du .cho sont comparés, relativement à la tonalité, aux étiquettes de `chords.json` (page 1 seulement) rangées par
+   ligne ; une programmation dynamique découpe la suite des étiquettes en tranches de lignes, une par section dans l'ordre du
+   .cho, en maximisant le rappel (part des accords de la section retrouvée dans la plus longue sous-suite commune), le Dice ne départageant
+   que les égalités (les étiquettes qui suivent le dernier accord apparié, interlude compris, ne comptent pas). Une section que le
+   .cho répète à l'identique n'est tenue pour gravée à part qu'avec un rappel ≥ 75 % ; sinon, comme toute section répétée que le
+   scan ne grave pas (couplet 2 sous le couplet 1), elle prend la ligne de la section qu'elle répète. **Anacrouse** : le premier accord
+   de la section tombe dans la dernière mesure de sa ligne (après la dernière barre intérieure ; la barre du bord droit n'en est
+   pas une) → la section va à la ligne suivante avec `anacrouse: true`.
+2. **Lire les ⚠** : `null` (page sans calque, comme la p. 2 de 为我而来 ; accords non appariés) · `appariement faible (xx %)` (la
+   tranche de lignes ressemble peu aux accords : le .cho et le scan n'ont pas la même harmonie, ou la ligne est fausse) ·
+   `commence comme X : mis sur sa ligne` (début identique à une section plus haut : couplet gravé sous le précédent, ou gravure
+   séparée ?) · `a les accords de X mais est placée…` (même question pour un .cho identique). Un chant sans ⚠ n'est pas pour autant
+   juste : il se regarde.
+3. **Regarder** : `npm run jianpu:audit -- --systemes <slug…> [--propose]` ajoute à chaque planche le libellé de chaque section
+   (fond jaune, texte noir, 18 px, `[id]`) à gauche du bord haut de la ligne où elle commence, `↑ anacrouse` devant quand
+   l'anacrouse est vraie, empilés sans recouvrement quand plusieurs sections tombent sur la même ligne ; le bandeau liste les
+   sections `null` (`⚠ sections à placer : …`). Certifié (`public/jianpu/sections.json`) d'abord, sinon la proposition (`--propose`
+   : la proposition d'abord). **Lire chaque PNG** avec le .cho à côté : chaque section est-elle sur la ligne où son premier
+   accord (ou sa première syllabe, en anacrouse) est gravé ?
+4. **Corriger** : éditer `scripts/jianpu/debug/sections-propose.json` (page, ligne, anacrouse du chant), relancer la planche avec
+   `--propose`. `propose` écrase la proposition d'un slug : ne le relancer qu'avant de corriger.
+5. **Certifier** : `python3 scripts/jianpu/sections.py certifier <slug…>` ; il **refuse** si le chant n'a pas ses lignes
+   certifiées dans `systemes.json`, si `source` ≠ `index.json`, si les ids/libellés ne sont pas ceux du .cho, ou si une page/ligne
+   n'existe pas (ou si un seul des deux est null) ; il **avertit** (sans refuser) si les lignes ne croissent pas dans l'ordre du
+   .cho hors reprises. `retirer <slug…>` et `etat` comme pour les lignes.
+6. **Format** : `public/jianpu/sections.json` = `{"version": 1, "chants": {slug: {"source", "sections": [{"id", "label", "page":
+   int|null, "ligne": int|null, "anacrouse": bool}]}}}`, dans l'ordre du .cho, clés triées, une ligne par chant, UTF-8. Une section
+   absente du scan : `page` et `ligne` null.
+
+### Contrôles, étiquettes et procédure (corrections de JP-A)
+
+**Conventions des données**
+- `y1` est **inclusif** : c'est la dernière rangée d'encre de la ligne (y0 ≤ y ≤ y1 est « dans la ligne »).
+- **Sens d'`anacrouse`** : `ligne` = la ligne où commence le CORPS de la section ; `anacrouse: true` = sa levée (quelques
+  notes, souvent sans accord) est gravée en fin de `ligne − 1` (même page).
+
+**Règle des étiquettes** (`systemes.py verifier`, refus de `certifier`) : `chords.json[slug]` ne s'applique qu'à la **page 1**
+(les pages suivantes n'ont pas de calque). Toute étiquette dont `c` n'est pas vide (accord ou avis de modulation) appartient à
+la ligne qui contient son centre vertical (y + h/2) ; il faut y0_ligne ≤ y_étiquette, tolérance 0. Une étiquette dont le centre
+n'est dans aucune ligne, ou qui déborde au-dessus du haut de sa ligne, est refusée (« p.N : étiquette « C » (y=…) hors ligne /
+au-dessus du haut de Lk (y0=…) »). Refusés aussi : une page sans aucune ligne, une ligne à moins de 2 barres.
+
+**Cadre « 1=X »** : la boîte `keyLabel` de `chords.json` (page 1) est **entièrement dans L1 ou entièrement dehors, jamais
+tranchée** ; `verifier()` refuse si 0 < chevauchement < hauteur avec une ligne. (Les six cas connus — 一切都更新, 旷野中唯一的力量,
+求充满这地, 握住幸福, 复兴的火, 爱使我们勇敢 — sont corrigés dans les données.) `sections.py` ne lit que le calque de la page 1 :
+une section de la page 2 ou suivante est « invérifiable ».
+
+**Masques (champ optionnel `"masques": [[x0, y0, x1, y1], …]` d'une ligne de `systemes.json`)** : rectangles en pixels du WebP,
+bornes **inclusives** (x0 ≤ x ≤ x1, y0 ≤ y ≤ y1, comme `y1` d'une ligne), à couvrir dans la tranche de cette ligne parce qu'ils
+appartiennent à la ligne voisine (ex. la 2e rangée de paroles de L(n), à gauche, partage sa hauteur avec les accords de L(n+1), à
+droite : les tranches de deux lignes se recouvrent alors en y). Règles de `verifier()` :
+- (a) un masque est un rectangle valide, dans [0, w] × [y0, y1] de sa ligne ;
+- (b) le recouvrement en y de deux lignes successives n'est permis que si, pour chaque y de la bande commune, les intervalles x
+  visibles dans L(n) (le complément de ses masques à ce y) et dans L(n+1) ne se chevauchent pas ; refus « visible dans les deux à y=… » ;
+- (c) chaque étiquette non vide du calque est visible dans **exactement une** ligne (`systemes.visible()`, aussi utilisée par
+  `sections.py`) : son centre (x + w/2, y + h/2) est dans [y0, y1] de la ligne et hors de ses masques, avec toujours y0_ligne ≤ y
+  de l'étiquette ; 0 ou 2 lignes = refus. Le cadre « 1=X » n'est pas jugé tranché dans une ligne où son centre est masqué.
+Sans masque, rien ne change (0 refus sur les 187 certifiés). La planche `--systemes` dessine chaque masque en hachures grises
+semi-transparentes à bord pointillé (le scan reste lisible dessous). **JP-B les rendra** (couleur du fond sous le filtre d'encre) ;
+dans cette tranche (JP-A) les étiquettes masquées ne sont pas affichées, seulement contrôlées.
+
+**Commandes**
+- `python3 scripts/jianpu/systemes.py verifier [slug…] [--propose]` : applique `verifier()` au fichier certifié (ou à la proposition)
+  sans rien écrire et imprime les refus ; sans slug, tous les chants certifiés.
+- `python3 scripts/jianpu/sections.py controle [slug…] [--propose]` : **contrôle indépendant** des sections. Le premier accord de
+  chaque section (dans le .cho, tonalité d'origine, tel qu'écrit entre crochets ; « X (Y) » : X et Y candidats) doit figurer parmi
+  les étiquettes de sa ligne (centre vertical dans [y0, y1]) ; si `anacrouse`, aussi dans la dernière mesure de la ligne précédente
+  (étiquette au-delà de la dernière barre intérieure). Égalité après normalisation (espaces et parenthèses retirés, ♭→b, ♯→#) ;
+  une étiquette « X (Y) » est comparée partie par partie. Page sans calque (≥ 2) ou section sans accord : « invérifiable ». Imprime
+  chaque écart (slug, id, page, ligne, anacrouse, accord cherché, étiquettes de la ligne), marque les écarts couverts par une
+  exception, puis un résumé (chants contrôlés, écarts, couverts, non justifiés). `certifier` refuse tout écart non couvert.
+- `sections.py rattacher <slug…>` : recalcule l'**empreinte** de la proposition sur les lignes certifiées actuelles, sans rien changer
+  d'autre. `propose` écrit l'empreinte (12 premiers caractères du sha1 des lignes du chant) dans chaque entrée ; `certifier` refuse
+  si elle diffère de celle des lignes certifiées (« lignes changées depuis la proposition ») et l'écrit dans l'entrée certifiée (le
+  site l'ignore). **À n'utiliser qu'après avoir regardé la planche** : c'est l'aveu que les sections vont toujours avec les lignes.
+
+**Procédure** : corriger (lignes, puis sections) → regarder la planche (`--systemes <slug…> --propose`) → `rattacher` si les lignes
+ont changé depuis la proposition → `systemes.py certifier` → `sections.py controle <slug>` → `sections.py certifier`.
+
+### Exceptions du contrôle des sections
+
+Un écart du contrôle se justifie ici, une exception par ligne, au format exact `- \`slug\` \`id\` : raison` (sections.py lit ces
+lignes, et elles seules, sous ce titre jusqu'au titre suivant). Raisons admises : reprise non regravée, section sans accord, page
+sans calque, levée sans accord.
+Raisons ajoutées après relecture des planches (08/11/2026) : accord du `.cho` écrit autrement que la gravure (triade
+contre maj7, intro ou interlude réharmonisés) quand la planche montre la section à cette ligne.
+
+- `为我而来` `bridge-4` : page sans calque (p.2) ; 【Bridge】 gravé en p.2 L3, levée « 在 » en fin de L2
+- `从早晨到夜晚` `chorus-6` : reprise non regravée (« Refrain 2 (G) »), pointée vers le refrain gravé en L4
+- `唯独依靠你` `chorus-5` : reprise non regravée (« Refrain (F#) »), pointée vers le refrain gravé en L3
+- `在这里` `chorus-4` : reprise non regravée (« Refrain 2 (G) »), pointée vers le refrain gravé en L3
+- `旷野中唯一的力量` `chorus-5` : reprise non regravée (« Refrain 2 (G) »), même ligne que le refrain 1 (L4)
+- `不停赞美你` `intro-1` : accord écrit autrement (.cho « C », gravé « Cmaj7 »)
+- `不停赞美你` `verse-2` : accord écrit autrement (.cho « C », gravé « Cmaj7 »)
+- `不停赞美你` `chorus-3` : accord écrit autrement (.cho « C », gravé « Cmaj7 »)
+- `是耶稣的名` `intro-1` : accord écrit autrement (.cho « Emaj7 », gravé triade « G » un ton et demi plus haut)
+- `是耶稣的名` `chorus-3` : accord écrit autrement (.cho « Emaj7 », gravé triade ; corps du refrain en L4)
+- `我需要有你在我生命中` `verse-2` : accord écrit autrement (couplet 2 réharmonisé dans le .cho, gravé sous la même portée que le couplet 1)
+- `只需要你` `intro-1` : intro réharmonisée dans le .cho (gravée F G C/E Am en L1)
+- `打开天窗` `intro-1` : intro réharmonisée dans le .cho ([D] ×4 ; gravée Bm F#m G A en L1)
+- `打开天窗` `intro-4` : interlude réharmonisé dans le .cho (gravé en L6)
+- `握住幸福` `chorus-5` : levée sans accord gravé à l'identique (« Cm6/Eb D) » gravé, « Cm6/D » dans le .cho), corps en L5
+- `永恒唯一的盼望` `intro-1` : section sans accord gravé (intro « W » gravée sans étiquette en L1)
+- `求充满这地` `verse-2` : levée sans accord (« [A/B] » du .cho non gravé), couplet 2 sous la même portée que le couplet 1 (L1)
+- `遇见你` `verse-2` : levée sans accord (« [A] » du .cho non gravé), corps en L3
+
+### Corrections après relecture (08/11/2026)
+
+Contrôles rejoués sur les 187 chants certifiés : `systemes.py verifier` 0 refus ; `sections.py controle` 18 écarts, tous
+couverts par une exception ci-dessus, 0 non justifié. 20 lignes corrigées (étiquettes et cadres « 1=X » jamais tranchés,
+tempo et « 4/4 » hors de L1, repère 【Bridge】 de 为我而来 p.2 rendu à L3, fausses barres autour de « 1= D » retirées) ;
+sections corrigées sur 29 chants (anacrouse au sens documenté, couplets sous une même portée, refrains repris).
+
+**Crédits dans la bande de L1** : sur 复兴的火 et 爱使我们勇敢, les crédits « 游智婷 曲 » sont imprimés à droite, à la hauteur
+des premiers accords de L1 (« Dm(b5)/C », « Bm », « C ») ; aucune coupe horizontale ne les sépare : ils sont **masqués** dans L1
+(champ `masques`), ainsi que la fin de la note « [原调F->G。制作了很多张不同组合] » d'爱使我们勇敢. Leur cadre « 1=X » reste entier
+dans L1.
+
+### Les trois derniers scans (décision 24 révisée, 08/11/2026)
+
+Une page entière met les chiffres à ~8 px au téléphone : les trois scans d'abord laissés de côté sont découpés à la main.
+- **十字架** : 4 systèmes ; les rangées de paroles (4 couplets) refondues dans leur système ; barres placées à la main au
+  centre des traits pleine hauteur de la rangée de chiffres (le « 1 » et les traits des hanzi n'en sont pas).
+- **大手牵着小手** : la 2ᵉ rangée de paroles de L2, L4, L5 partage sa hauteur avec les accords ou les annotations de la ligne
+  suivante, de l'autre côté de la page ; frontières posées par `bord` (ligne du haut d'un côté de x, ligne du bas de l'autre),
+  masques complémentaires sur la bande commune. L6 reprend sa 2ᵉ rangée « 望，期待那一天… » qui était dans L7. L9 masque le
+  coin du logo du pied.
+- **荣耀至高神** : même chose pour L1/L2 (« 耶稣基督神爱子… » à droite, « [先低后高] Bm7 » à gauche) et L4/L5
+  (« 配得所有赞美… » à droite, volta de L5 à gauche) ; L2 reprend sa 2ᵉ rangée « 向你跪拜 ».
+
+### Bilan de la certification (JP-A3, 08/11/2026)
+
+**187 scans sur 190 certifiés** (190 depuis la décision 24 révisée, ci-dessus) dans `systemes.json` et `sections.json`, chaque planche `--systemes` regardée.
+Corrections à la main les plus fréquentes (dans `scripts/jianpu/debug/*-propose.json`, puis `certifier`) :
+- **le pied** (ligne de crédit « 灵栖清泉制谱… », logo, note de bas de page, bloc « Rap ») entré dans la dernière
+  ligne : `y1` ramené au bas des paroles ;
+- **l'en-tête** (♩=, crédits) au-dessus de L1 : `y0` descendu ;
+- **les hymnaires en gros caractères** (一生跟随, 十字架的传达者, 你们要赞美耶和华, 哦十字架) : chaque rangée de
+  paroles prise pour une ligne ; les rangées refondues dans leur système, barres de la rangée de chiffres gardées ;
+- **les sections** : couplets gravés sur les mêmes lignes (couplets 1 et 2 sous une seule portée → même ligne),
+  refrain qui commence par une anacrouse en fin de ligne précédente (`anacrouse: true`), refrain ou pont repris
+  dans une autre tonalité (« Refrain 2 (G) ») ou non gravé → la ligne où il est gravé ; `certifier` avertit alors
+  « avant la section précédente », c'est attendu.
+
+**Laissés non certifiés** (le site garde l'affichage d'aujourd'hui) :
+- 十字架 : hymnaire en gros caractères, cinq rangées par système ; le chiffre 1 et les traits des caractères passent
+  pour des barres, les barres vraies ne se distinguent pas ;
+- 大手牵着小手, 荣耀至高神 : lignes imbriquées ; la seconde rangée de paroles d'une ligne partage sa hauteur avec les
+  accords ou le repère de la suivante, aucune coupe horizontale ne les sépare.
+
 ## Critère d'arrêt
 
 ≥ 95 % des 124 partitions résolues, **ou** deux itérations consécutives sans

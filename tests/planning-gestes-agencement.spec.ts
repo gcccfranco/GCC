@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile, remplit, publie } from "./helpers/fakeSession";
 import { interdireDialoguesNatifs, margeAttendue, verifierSansDebordement, zoneDeContenu } from "./helpers/agencement";
 
 // Lot 3 (docs/spec-planning-gestes.md, section 7), PG-Z : l'agencement des gestes du planning, sur les cinq
@@ -9,8 +9,8 @@ import { interdireDialoguesNatifs, margeAttendue, verifierSansDebordement, zoneD
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] })
 
-const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", plannings: ["culte"] }
-const PUBLIEUR: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", notify: ["Groupe Paix"], plannings: ["paix"] }
+const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", ...remplit("culte") }
+const PUBLIEUR: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", ...publie("paix"), ...remplit("paix") }
 
 const CULTE = {
   "plannings/culte/dimanches/2027-01-17": {

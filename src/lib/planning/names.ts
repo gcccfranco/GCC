@@ -13,6 +13,7 @@ import { PREMIERE_ANNEE_APP, completerMusiciensFidelite, marquerDimanchesSpeciau
 import { PUBLISHABLE_PLANNINGS, getPublishedQuarters, triRank } from "./releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import type { ServiceRole } from "@/types/user"
+import type { DateServie } from "@/types/planning"
 
 export interface PlanningData {
   culte: string[][]
@@ -158,6 +159,18 @@ export function splitNames(cell: string): string[] {
     )
 }
 
+/** Musicien seulement : le préfixe d'instrument (« Piano: Lina R. » → « Piano ») de la part de la case qui porte `name`,
+ *  tel qu'écrit, sans le deux-points ; undefined sans préfixe ou si le nom n'y est pas. Même découpe que `splitNames`. */
+export function instrumentDuNom(cell: string | undefined, name: string): string | undefined {
+  if (!cell) return undefined
+  const target = normalize(name)
+  for (const part of cell.replace(/"+/g, "").split(/[,，;；/]/)) {
+    const m = /^([^:：]{1,12})[:：]\s*/.exec(part)
+    if (m && normalize(part.slice(m[0].length)) === target) return m[1].trim()
+  }
+  return undefined
+}
+
 function cellHasName(cell: string | undefined, name: string): boolean {
   if (!cell) return false
   const target = normalize(name)
@@ -176,16 +189,16 @@ export const CULTE_ROLES: [number, string][] = [
 // Lot U2, P5 : Percussion (groupes, index 5) et Cours (EDD, index 6), colonnes
 // du Sheet de 2026 que l'app ignorait. Les lecteurs ne les rendent que derrière
 // l'interrupteur (`sheets.ts`) : en ligne, ces index restent vides.
-const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"], [5, "Percussion"]]
+export const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"], [5, "Percussion"]]
 // Lot F (D24, D26) : un seul planning ; le pianiste est celui du groupe.
-const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"], [5, "Guitare"], [6, "Batterie"]]
-const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"], [6, "Cours"]]
-const INTERGROUPE_ROLES: [number, string][] = [
+export const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"], [5, "Guitare"], [6, "Batterie"]]
+export const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"], [6, "Cours"]]
+export const INTERGROUPE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Choriste"],
   [5, "Piano"], [6, "Guitare"], [7, "Cajon/Batterie"], [8, "Sono"], [9, "PPT"],
   [10, "Orateur"], [11, "Traduction"],
 ]
-const INTERFRANCO_ROLES: [number, string][] = [
+export const INTERFRANCO_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Piano"],
   [5, "Guitare"], [6, "Cajon/Batterie"], [7, "Sono"], [8, "PPT"],
   [9, "Orateur"], [10, "Traduction"],
@@ -302,6 +315,9 @@ export interface ServiceEntry {
   leader?: string
   /** Moment de la séance Campus (matin/soir) — clé de matching exact avec la setlist. */
   moment?: "matin" | "soir"
+  /** Musicien seulement : le préfixe de la case avant « : » (« Piano: Lina R. ») qui précède le nom de la personne,
+   *  tel qu'écrit ; absent sans préfixe. */
+  instrument?: string
 }
 
 /** Toutes les dates où `name` apparaît dans les plannings, triées chronologiquement. */
@@ -315,7 +331,10 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
     for (const r of rows) {
       const leader = presCol != null ? (splitNames(r[presCol] ?? "")[0] ?? "") : ""
       for (const [i, role] of roles) {
-        if (cellHasName(r[i], name)) out.push({ date: r[0], service, role, leader })
+        if (cellHasName(r[i], name)) {
+          const instrument = role === "Musicien" ? instrumentDuNom(r[i], name) : undefined
+          out.push(instrument ? { date: r[0], service, role, leader, instrument } : { date: r[0], service, role, leader })
+        }
       }
     }
   }
@@ -347,11 +366,13 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
     if (cellHasName(s.ch, name)) roles.push("Chant")
     if (cellHasName(s.mu, name)) roles.push("Musicien")
     if (cellHasName(s.rg, name)) roles.push("Régie")
+    const instrument = instrumentDuNom(s.mu, name)
     for (const role of roles) {
-      out.push({ date: dt, service: moment, role, leader, moment: seanceMoment })
+      const inst = role === "Musicien" && instrument ? { instrument } : {}
+      out.push({ date: dt, service: moment, role, leader, moment: seanceMoment, ...inst })
       // Répétition associée : date / heure / lieu propres, distincts de la séance.
       // setlistDate = date de la séance pour lier la setlist (chants à réviser).
-      if (s.ent) out.push({ date: s.ent, service: "Campus (répét.)", role, time: s.entTime, location: s.entLieu, setlistDate: dt, leader, moment: seanceMoment })
+      if (s.ent) out.push({ date: s.ent, service: "Campus (répét.)", role, time: s.entTime, location: s.entLieu, setlistDate: dt, leader, moment: seanceMoment, ...inst })
     }
   }
 
@@ -368,6 +389,34 @@ export function serviceCategory(service: string): string | null {
   if (service === "Intergroupe") return "Intergroupe"
   if (service === "Interfranco") return "Interfranco"
   return null
+}
+
+/** Nom affiché d'un service (services-2) : « Culte Franco » du planning devient « Culte Francophone » (法语崇拜),
+ *  de même les groupes, l'Intergroupe et l'Interfranco ; Campus, EDD et le reste restent tels quels. */
+export function nomDuService(service: string, t: (cle: string, options?: { defaultValue: string }) => string): string {
+  if (service === "Culte Franco" || service.startsWith("Groupe ") || service === "Intergroupe" || service === "Interfranco") {
+    return t("categories." + serviceCategory(service), { defaultValue: service })
+  }
+  return service
+}
+
+/** Les dates où la personne sert, avec la catégorie de setlist de chacune (lot AO, F1) : de quoi lire la setlist
+ *  de ce jour-là, et elle seule (`canSeeSetlist`, src/lib/access.ts). Mêmes lignes que « Mes services »
+ *  (`findMyServices`) ; une répétition du Campus compte pour la date de sa séance (`setlistDate`) ; les services sans
+ *  setlist (Prépa. Table, petit déj) n'y sont pas. Sans doublon. */
+export function datesServies(planning: PlanningData, planningName: string): DateServie[] {
+  const vus = new Set<string>()
+  const out: DateServie[] = []
+  for (const e of findMyServices(planning, planningName)) {
+    const categorie = serviceCategory(e.service)
+    if (!categorie) continue
+    const date = e.setlistDate ?? e.date
+    const cle = `${date}|${categorie}|${e.moment ?? ""}`
+    if (vus.has(cle)) continue
+    vus.add(cle)
+    out.push(e.moment ? { date, categorie, moment: e.moment } : { date, categorie })
+  }
+  return out
 }
 
 // ─── Séances du planning par catégorie (sélecteur de setlist) ──────────────────
@@ -491,7 +540,7 @@ export function servantsForDate(data: PlanningData, dateISO: string): Servant[] 
   return out
 }
 
-export interface Rehearsal {
+interface Rehearsal {
   /** Graphie du nom telle qu'écrite dans le planning */
   name: string
   /** Heure de la répétition (ex. "17:00"), "" si non renseignée */

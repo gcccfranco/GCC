@@ -9,6 +9,7 @@ import { ChevronRight, CirclePlus, GripVertical, MessageSquare } from "lucide-re
 import { useJianpuScore } from "@/lib/jianpu/images";
 import { isFormChant, isFormFusion, isFormProposition, isFormTransition, itemSections, type FormItem, type FormListItem } from "@/lib/setlist/formItems";
 import { KeyPill } from "@/components/ui/key-pill";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { PastilleSection, dessinSection } from "@/components/setlists/editeur/Reglages";
 
 // La setlist en liste courte (lot U5 bis, T3, planche `creer-piste2-ordinateur`) :
@@ -18,7 +19,7 @@ import { PastilleSection, dessinSection } from "@/components/setlists/editeur/Re
 // à la souris et au clavier (espace, flèches, espace — Q13).
 
 /** Titre d'un élément tel que la liste le nomme (et son bouton) : le chant, « A / B », « Transition ». */
-export function titreElement(item: FormListItem, transition: string): string {
+function titreElement(item: FormListItem, transition: string): string {
   if (isFormTransition(item)) return transition;
   if (isFormProposition(item)) return item.titre;
   if (isFormFusion(item)) return item.songs.map((s) => s.song.title).join(" / ");
@@ -34,11 +35,11 @@ function Poignee({ titre, attributes, listeners, choisi }: { titre: string; attr
       {...listeners}
       aria-label={t("setlists.editeur.reordonner", { titre })}
       style={{ touchAction: "none" }}
-      className={`relative z-10 -ml-1 mt-0.5 flex h-7 w-6 shrink-0 cursor-grab items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing ${
-        choisi ? "text-background/60" : "text-muted-foreground/60"
+      className={`relative z-10 -ml-1 mt-0.5 flex h-7 w-6 shrink-0 cursor-grab items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing ${TOUCHER_44} [@media(pointer:coarse)]:after:-z-10 [@media(pointer:coarse)]:after:rounded-lg [@media(pointer:coarse)]:active:after:bg-secondary ${
+        choisi ? "text-background/60" : "text-muted-foreground"
       }`}
     >
-      <GripVertical className="h-4 w-4" aria-hidden />
+      <GripVertical className="h-5 w-5" aria-hidden />
     </button>
   );
 }
@@ -72,7 +73,7 @@ function BoutonInserer({ label, actif, onClick }: { label: string; actif: boolea
       }`}
     >
       <span className="h-[1.5px] flex-1 rounded-full bg-current" aria-hidden />
-      <span className="flex items-center gap-1 rounded-full bg-background px-1.5 text-[13px] font-semibold leading-none">
+      <span className="flex items-center gap-1 rounded-full bg-background px-1.5 text-sm font-semibold leading-none">
         <CirclePlus className="h-3.5 w-3.5" aria-hidden />
         {t("setlists.editeur.insererIci")}
       </span>
@@ -159,8 +160,8 @@ function LigneElement({
           <div className="min-w-0 flex-1">
             {bouton(
               <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <span className="text-[15px] font-semibold leading-snug">{titre}</span>
-                <span className="rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "#ea580c1f", color: "#c2410c" }}>
+                <span className="text-base font-semibold leading-snug">{titre}</span>
+                <span className="rounded-full px-2 py-0.5 text-xs font-semibold text-orange-700 dark:text-orange-300" style={{ background: "#ea580c1f" }}>
                   {t("planning.fete.propositionEnAttente")}
                 </span>
               </span>,
@@ -177,7 +178,7 @@ function LigneElement({
       {boutonInserer}
       <div
         className={`relative flex items-start gap-3 rounded-xl px-3 py-3 ${
-          choisi ? "bg-foreground text-background shadow-soft" : "hover:bg-muted/50"
+          choisi ? "bg-foreground text-background" : "hover:bg-muted/50"
         } ${isDragging ? "shadow-md" : ""}`}
       >
         <Poignee titre={titre} attributes={attributes} listeners={listeners} choisi={choisi} />
@@ -191,23 +192,23 @@ function LigneElement({
         <div className="min-w-0 flex-1">
           {bouton(
             <span className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className="text-[15px] font-semibold leading-snug">{titre}</span>
+              <span className="text-base font-semibold leading-snug">{titre}</span>
               {chant?.song.titlePinyin && (
-                <span className={`text-[13px] ${choisi ? "text-background/70" : "text-muted-foreground"}`}>{chant.song.titlePinyin}</span>
+                <span className={`text-sm ${choisi ? "text-background/70" : "text-muted-foreground"}`}>{chant.song.titlePinyin}</span>
               )}
               {scan && chant?.jianpuSheet !== false && (
-                <span className={`rounded px-1 text-[11px] font-semibold ${choisi ? "bg-background/15" : "bg-secondary text-foreground"}`}>
+                <span className={`rounded px-1 text-xs font-semibold ${choisi ? "bg-background/15" : "bg-secondary text-foreground"}`}>
                   {t("setlists.form.jianpuSheet")}
                 </span>
               )}
             </span>,
           )}
-          <p className={`text-[13px] ${choisi ? "text-background/70" : "text-muted-foreground"}`}>
+          <p className={`text-sm ${choisi ? "text-background/70" : "text-muted-foreground"}`}>
             {fusion ? t("setlists.editeur.fusion") : chant?.song.artist}
           </p>
           {chant && chant.sectionItems.length > 0 && <Pastilles chant={chant} choisi={choisi} />}
           {chant?.notes.trim() && (
-            <p className={`mt-1.5 text-[13px] italic ${choisi ? "text-background/80" : "text-muted-foreground"}`}>{chant.notes}</p>
+            <p className={`mt-1.5 text-sm italic ${choisi ? "text-background/80" : "text-muted-foreground"}`}>{chant.notes}</p>
           )}
         </div>
         {chant && (

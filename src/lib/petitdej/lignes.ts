@@ -8,7 +8,7 @@
 // src/lib/firebase/petitDej.ts. Le reste du module est pur.
 
 import type { LignePetitDej } from "@/types/petitDej"
-import type { ReminderService } from "@/lib/push/reminderMessage"
+import type { ReminderService } from "@/types/rappels"
 
 const FS_DOCS =
   "https://firestore.googleapis.com/v1/projects/gcclouange/databases/(default)/documents"

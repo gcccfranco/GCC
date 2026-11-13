@@ -2,10 +2,10 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { isAdminEmail, canChangeSetlistCategory, canDeleteSetlist, canEditSetlist, canDuplicateSetlist } from "../src/lib/access";
+import { ADMIN_EMAILS, isAdminEmail, canChangeSetlistCategory, canDeleteSetlist, canEditSetlist, canDuplicateSetlist } from "../src/lib/access";
 type AuthUser = { uid: string; email?: string | null };
 import type { UserProfile } from "../src/types/user";
-import type { FSSetlist } from "../src/lib/firebase/setlists";
+import type { FSSetlist } from "../src/types/setList";
 import { normalizeName } from "../src/lib/planning/names";
 import { NOTIF_TYPES, DEFAULT_NOTIF_PREFS } from "../src/types/user";
 import { planningReleaseMessage, setlistReadyMessage } from "../src/lib/push/messages";
@@ -17,9 +17,10 @@ import { planningReleaseMessage, setlistReadyMessage } from "../src/lib/push/mes
 const ROOT = path.resolve(__dirname, "..");
 const lire = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
 
+const ADMIN_EMAIL = ADMIN_EMAILS[0];
 const ADMIN: FakeProfile = {
-  uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C.",
-  planningName: "Timothée C.", dansEquipes: ["da"], referentDe: ["da"], equipes: true, plannings: ["culte"], coordination: true,
+  uid: "admin1", email: ADMIN_EMAIL, firstName: "Aurèle", lastName: "V.",
+  planningName: "Aurèle V.", dansEquipes: ["da"], referentDe: ["da"], equipes: true, plannings: ["culte"], coordination: true,
 };
 const MEMBRE_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Denis", lastName: "F.", dansEquipes: ["da"], referentDe: ["da"] };
 const MEMBRE: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
@@ -44,11 +45,12 @@ async function open(page: Page, who: FakeProfile, to: string, docs: Record<strin
 
 test("profil : un admin qui enregistre son profil garde ses équipes et ses plannings", async ({ page }) => {
   const db = await open(page, ADMIN, "/profil");
-  await page.getByLabel("Prénom").fill("Timo");
+  await page.getByLabel("Prénom").fill("Aurel");
   await page.getByRole("button", { name: "Enregistrer mon profil" }).click();
-  await page.waitForURL(/\/setlists\/?$/);
+  // T6 (accueil-compte-3) : sans ?from=, l'enregistrement ramène à Moi.
+  await page.waitForURL(/\/moi\/?$/);
   const doc = db.doc("users/admin1");
-  expect(doc?.firstName).toBe("Timo");
+  expect(doc?.firstName).toBe("Aurel");
   expect(doc?.dansEquipes).toEqual(["da"]);
   expect(doc?.equipes).toBe(true);
   expect(doc?.plannings).toEqual(["culte"]);
@@ -80,7 +82,7 @@ test("cloche : la réunion d'un pôle reste invisible pour qui n'en est pas", as
 
 // ─── C1 et harmonie : Équipes et Harmonie se trouvent depuis le menu ───────
 
-test("ordinateur : le menu du compte mène à Équipes, et à Harmonie pour qui y a accès", async ({ page }) => {
+test("ordinateur : le menu du compte mène à Équipes, et n'offre plus Harmonie (espace Musiciens, EM-3)", async ({ page }) => {
   test.skip(test.info().project.name !== "ordinateur", "le menu du compte n'existe que sur ordinateur");
   await open(page, ADMIN, "/evenements");
   // L'indicateur de Next (développement seulement) est posé en bas à gauche, sur l'initiale
@@ -88,13 +90,13 @@ test("ordinateur : le menu du compte mène à Équipes, et à Harmonie pour qui 
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   await page.getByRole("button", { name: "Compte" }).click();
   await expect(page.getByRole("menuitem", { name: "Équipes" })).toHaveAttribute("href", /\/equipes/);
-  await expect(page.getByRole("menuitem", { name: "Harmonie" })).toHaveAttribute("href", /\/harmonie/);
+  await expect(page.getByRole("menuitem", { name: "Harmonie" })).toHaveCount(0);
 });
 
-test("Moi : la ligne Harmonie n'apparaît qu'à qui a accès au catalogue", async ({ page }) => {
+test("Moi : plus de ligne Harmonie, même pour qui a accès au catalogue (retirée le 02/11/2026)", async ({ page }) => {
   test.skip(test.info().project.name === "ordinateur", "la page Moi est celle du tactile");
   await open(page, ADMIN, "/moi");
-  await expect(page.getByRole("link", { name: "Harmonie" })).toHaveAttribute("href", /\/harmonie/);
+  await expect(page.getByRole("main").getByRole("link", { name: /Harmonie/ })).toHaveCount(0);
   await open(page, MEMBRE, "/moi");
   await expect(page.getByRole("link", { name: "Équipes" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Harmonie" })).toHaveCount(0);
@@ -109,7 +111,8 @@ test("manifeste : une seule source, celle de l'app, au nom et à la couleur du l
   expect(m.name).toBe("GCC");
   expect(m.short_name).toBe("GCC");
   expect(m.theme_color).toBe("#ffffff"); // fond blanc de 5C1 (docs/spec-look.md § 20/09/2026)
-  expect(m.start_url).toBe("/planning");
+  // A3 bis : barre finale, pour que la copie hors ligne se retrouve (la redirection 308 n est pas gardée).
+  expect(m.start_url).toBe("/planning/");
   // Lot U5 (docs/spec-deux-volets.md, question 7) : l'app installée tourne avec la
   // tablette, sinon ni deux volets ni deux colonnes sur une tablette Android couchée.
   expect(m.orientation, "aucune orientation imposée").toBeUndefined();
@@ -152,7 +155,7 @@ test("SC1 : créateur, admin, équipe, musicien de la catégorie — modifier, s
   const musicien = { uid: "u-musicien", email: "musicien@exemple.test" } as AuthUser;
   const choriste = { uid: "u-choriste", email: "choriste@exemple.test" } as AuthUser;
   const equipier = { uid: "u-equipier", email: "equipier@exemple.test" } as AuthUser;
-  const admin = { uid: "u-admin", email: "tc328829@gmail.com" } as AuthUser;
+  const admin = { uid: "u-admin", email: ADMIN_EMAIL } as AuthUser;
   const profil = (roles: string[]) => ({ serviceRoles: { "Culte Francophone": roles } }) as unknown as UserProfile;
   const s = { ownerId: createur.uid, category: "Culte Francophone", isPrivate: false, editeurs: [equipier.uid], items: [] } as unknown as FSSetlist;
 
@@ -216,11 +219,25 @@ test("push : « Setlist prête » et « Planning en ligne » existent en frança
   });
 });
 
+// ─── bo-equipes-13 : guillemets français à espace fine insécable, pas d'émoji dans l'interface ─────
+
+test("langues : aucun guillemet français à espace ordinaire dans fr.json (espace fine insécable), aucun ✅", () => {
+  const fr = lire("src/locales/fr.json");
+  const lignes = fr.split("\n");
+  const ouvrants = lignes.map((l, i) => [i + 1, l] as const).filter(([, l]) => l.includes("« "));
+  const fermants = lignes.map((l, i) => [i + 1, l] as const).filter(([, l]) => l.includes(" »"));
+  expect(ouvrants.map(([n]) => n), "« suivi d'une espace ordinaire").toEqual([]);
+  expect(fermants.map(([n]) => n), "» précédé d'une espace ordinaire").toEqual([]);
+  expect(fr.includes("«\u202f"), "l'espace fine insécable est bien là").toBe(true);
+  expect(fr.includes("✅")).toBe(false);
+  expect(lire("src/locales/zh-CN.json").includes("✅")).toBe(false);
+});
+
 // ─── I11 : la casse d'un e-mail admin ne compte pas, côté serveur non plus ─
 
 test("admin : l'adresse est reconnue quelle que soit sa casse, partout", () => {
-  expect(isAdminEmail("TC328829@GMAIL.COM")).toBe(true);
-  expect(isAdminEmail("tc328829@gmail.com")).toBe(true);
+  expect(isAdminEmail(ADMIN_EMAIL.toUpperCase())).toBe(true);
+  expect(isAdminEmail(ADMIN_EMAIL)).toBe(true);
   expect(isAdminEmail("jo@example.com")).toBe(false);
   expect(isAdminEmail(null)).toBe(false);
   for (const rel of [

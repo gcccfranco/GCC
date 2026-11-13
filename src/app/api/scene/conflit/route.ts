@@ -1,11 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminDb, verifyIdToken } from "@/lib/push/admin";
+import { adminDb } from "@/lib/push/admin";
+import { authentifier } from "@/lib/api/authentifier";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { loadNotifLangs } from "@/lib/push/recipients";
 import { conflictKey, conflictMessage } from "@/lib/scene/conflit";
 import { overlaps } from "@/lib/scene/dimanches";
 import type { Creneau } from "@/types/programme";
+import { apresEnvoi, reserverPuisEnvoyer } from "@/lib/push/reserver";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -21,14 +23,8 @@ const ID = /^[\w-]+$/;
 export async function POST(req: NextRequest) {
   // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
   if (!BACK_OFFICE) return new Response(null, { status: 404 })
-  const authz = req.headers.get("authorization") ?? "";
-  const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  try {
-    await verifyIdToken(token);
-  } catch {
-    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
-  }
+  const appelant = await authentifier(req);
+  if (appelant instanceof NextResponse) return appelant;
 
   const { programmeId, creneauIds } = (await req.json().catch(() => ({}))) as { programmeId?: string; creneauIds?: string[] };
   if (
@@ -48,22 +44,20 @@ export async function POST(req: NextRequest) {
 
   const key = conflictKey(programmeId, creneauIds);
   const uids = [...new Set([a.auteurUid, b.auteurUid].filter(Boolean))];
-  const fresh: string[] = [];
-  for (const u of uids) {
-    if (!(await db.collection("notifLog").doc(`${key}-${u}`).get()).exists) fresh.push(u);
-  }
-  if (!fresh.length) return NextResponse.json({ ok: true, notified: 0 });
-
-  const langs = await loadNotifLangs(fresh);
-  await Promise.all(
-    fresh.map(async (u) => {
-      const payload = { ...conflictMessage(a, b, langs.get(u) ?? "fr"), url: "/evenements", tag: key };
-      await sendPushToUids([u], payload);
-      await recordNotification({ ...payload, kind: "scene", recipients: [u] });
-    }),
-  );
-  const batch = db.batch();
-  for (const u of fresh) batch.set(db.collection("notifLog").doc(`${key}-${u}`), { programmeId, uid: u, at: Date.now() });
-  await batch.commit();
+  // Chaque uid est réservé AVANT l'envoi (create), dans le try ; rendu si son envoi échoue. Une cloche ratée après
+  // l'envoi se journalise : la notification est partie, la clé reste.
+  const fresh = await reserverPuisEnvoyer(db, uids, key, { programmeId }, async (reserves, envoyes) => {
+    const langs = await loadNotifLangs(reserves);
+    const resultats = await Promise.allSettled(
+      reserves.map(async (u) => {
+        const payload = { ...conflictMessage(a, b, langs.get(u) ?? "fr"), url: "/evenements", tag: key };
+        await sendPushToUids([u], payload);
+        envoyes.add(u);
+        await apresEnvoi(() => recordNotification({ ...payload, kind: "scene", recipients: [u] }), "scene/conflit");
+      }),
+    );
+    const echec = resultats.find((r): r is PromiseRejectedResult => r.status === "rejected");
+    if (echec) throw echec.reason;
+  });
   return NextResponse.json({ ok: true, notified: fresh.length });
 }

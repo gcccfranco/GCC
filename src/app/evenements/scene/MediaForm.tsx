@@ -48,7 +48,7 @@ function Champs({ initial, onSubmit, onCancel }: {
 
   const sous = (champ: string) => erreur?.champ === champ && <p role="alert" className="text-sm text-destructive">{erreur.message}</p>
   const facultatif = <span className="font-normal"> · {t("planning.fete.media.facultatif")}</span>
-  const etiquette = "text-[13px] font-semibold text-muted-foreground"
+  const etiquette = "text-sm font-semibold text-muted-foreground"
 
   return (
     <form onSubmit={submit} noValidate className="px-4 pb-6 space-y-4 overflow-y-auto">

@@ -12,7 +12,7 @@
 // Lu par l'export brut de chaque onglet, pas par gviz : gviz efface les noms de
 // la colonne « Nom », où les numéros de jour dominent (vérifié le 04/10/2026).
 
-export const SHEET_EVENEMENTS_ID = "12FxK1sMrk08bFrVnL7BjCTJd6FXTqvRXyZoyDYhgPU8"
+const SHEET_EVENEMENTS_ID = "12FxK1sMrk08bFrVnL7BjCTJd6FXTqvRXyZoyDYhgPU8"
 
 /** Mois → gid de son onglet. Août → décembre 2026 : U9 n'en ajoute aucun. */
 export const ONGLETS_SHEET: Record<string, number> = {
@@ -58,30 +58,11 @@ export function lienOngletSheet(date: string): string {
 
 // ─── CSV ──────────────────────────────────────────────────────────────────────
 
-/** CSV de l'export : virgules et retours à la ligne entre guillemets gardés, lignes vides comprises
- *  (les rangs comptent dans la grille). */
-export function lireCSV(texte: string): string[][] {
-  const lignes: string[][] = []
-  let ligne: string[] = []
-  let cellule = ""
-  let entreGuillemets = false
-  for (let i = 0; i < texte.length; i++) {
-    const c = texte[i]
-    if (entreGuillemets) {
-      if (c !== '"') cellule += c
-      else if (texte[i + 1] === '"') { cellule += '"'; i++ }
-      else entreGuillemets = false
-    } else if (c === '"') entreGuillemets = true
-    else if (c === ",") { ligne.push(cellule); cellule = "" }
-    else if (c === "\n" || c === "\r") {
-      if (c === "\r" && texte[i + 1] === "\n") i++
-      ligne.push(cellule); lignes.push(ligne)
-      ligne = []; cellule = ""
-    } else cellule += c
-  }
-  if (cellule || ligne.length) { ligne.push(cellule); lignes.push(ligne) }
-  return lignes
-}
+import { delaiMax } from "@/lib/delaiMax";
+import { lireCSV } from "@/lib/csv"
+
+/** Lecteur CSV partagé avec le planning (src/lib/csv.ts) ; ré-exporté pour les tests. */
+export { lireCSV }
 
 // ─── Heures ───────────────────────────────────────────────────────────────────
 
@@ -169,8 +150,7 @@ export function lireMoisSheet(rows: string[][], mois: string): EntreeSheet[] {
 const TTL_MS = 5 * 60_000
 const DELAI_MS = 8_000
 const ENV: EnvSheet = {
-  // `AbortSignal.timeout` manque aux vieux Safari (avant 16) : sans lui, pas de délai.
-  fetch: (url) => fetch(url, { cache: "no-store", signal: AbortSignal.timeout?.(DELAI_MS) }),
+  fetch: (url) => fetch(url, { cache: "no-store", signal: delaiMax(DELAI_MS) }),
   maintenant: () => Date.now(),
   cache: new Map(),
 }

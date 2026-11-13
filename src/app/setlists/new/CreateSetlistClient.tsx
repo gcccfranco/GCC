@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { SetlistForm } from "@/components/setlists/SetlistForm";
 import { useProfile } from "@/lib/firebase/users";
 import { creatableCategories, isAdminUser } from "@/lib/access";
@@ -12,6 +13,7 @@ import { ALL_CATEGORIES } from "@/lib/firebase/setlists";
 import { lirePreremplissage } from "@/lib/setlist/prochainsServices";
 import { PourQuelService } from "./PourQuelService";
 import { SetlistsPassees } from "./SetlistsPassees";
+import { Squelette } from "@/components/layout/Squelette";
 
 // `/setlists/new` (lot U5 bis, docs/spec-editeur-setlist.md, « Modèle ») :
 // sans paramètre, « Pour quel service ? » ; `?cat=…&date=…(&moment=…)`,
@@ -32,17 +34,11 @@ export function CreateSetlistClient() {
   const categoriesDuProfil = useMemo(() => (profile ? creatableCategories(profile) : []), [profile]);
 
   useEffect(() => {
-    fetch("/songs-index.json")
-      .then((r) => r.json())
-      .then((data) => setSongs(data.songs ?? []));
+    chargerIndexChants().then(setSongs).catch(() => {}); // hors ligne : bibliothèque vide, comme avant
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   if (!user) {

@@ -160,14 +160,49 @@ test("un volet : la liste, puis la fiche en page ; « Modifier » ouvre le formu
   await expect(page).toHaveURL(/\/taches\/?$/);
 });
 
-test("tablette portrait : « À faire pour moi » et les tâches des équipes côte à côte", async ({ page }, info) => {
+test("tablette portrait : la carte « Les tâches des équipes » sous « À faire pour moi », même largeur", async ({ page }, info) => {
   test.skip(disposition(info) !== "tablette", "tablette portrait");
   await ouvrir(page, "/taches");
-  const aFaire = page.locator("section", { has: page.getByRole("heading", { name: "À faire pour moi" }) });
+  const aFaire = page.locator("section", { has: page.getByRole("heading", { name: "À faire pour moi" }) }).first();
   const equipes = page.getByRole("link", { name: /Les tâches des équipes/ });
   await expect(equipes).toBeVisible();
-  const [a, b] = [(await aFaire.boundingBox())!, (await equipes.boundingBox())!];
-  expect(b.x).toBeGreaterThan(a.x + a.width - 1);
+  const carte = page.locator("section", { has: equipes }).last();
+  const [a, b] = [(await aFaire.boundingBox())!, (await carte.boundingBox())!];
+  expect(b.y).toBeGreaterThan(a.y + a.height - 1);
+  expect(Math.abs(b.width - a.width)).toBeLessThan(2);
+  expect(Math.abs(b.x - a.x)).toBeLessThan(2);
+});
+
+test("la fiche : le nom de l'équipe est un texte gris sous le titre, jamais une pastille", async ({ page }, info) => {
+  await ouvrir(page, "/taches/da/t3");
+  const nom = page.getByText("DA", { exact: true }).first();
+  await expect(nom).toBeVisible();
+  expect(await nom.evaluate((el) => el.tagName)).toBe("P");
+  await expect(page.locator("article span.rounded-full").filter({ hasText: /^DA$/ })).toHaveCount(0);
+  if (disposition(info) === "grand") {
+    const titre = detail(page).getByRole("heading", { name: "Planning du trimestre", level: 2 });
+    const [t, n] = [(await titre.boundingBox())!, (await nom.boundingBox())!];
+    expect(n.y).toBeGreaterThan(t.y + t.height - 1);
+  }
+});
+
+test("la fiche en cours : plus de grand rond ni de libellé gras, la phrase d'état à côté du segment", async ({ page }) => {
+  await ouvrir(page, "/taches/da/t1");
+  await expect(page.getByText("En cours", { exact: true })).toHaveCount(1); // le seul radio
+  await expect(fiche(page).getByText(/En cours depuis 3 jours/)).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "État" }).getByRole("radio", { name: "En cours" })).toBeChecked();
+});
+
+test("la ligne ouverte en pastille d'encre : le filet du rond reste visible", async ({ page }, info) => {
+  test.skip(disposition(info) !== "grand", "la pastille d'encre n'existe qu'en deux volets");
+  await ouvrir(page, "/taches/da/t3");
+  const rond = liste(page).getByRole("checkbox", { name: /Planning du trimestre/ }).locator("span").first();
+  const [filet, fond] = await rond.evaluate((el) => {
+    let n: Element | null = el; let f = "";
+    for (; n; n = n.parentElement) { f = getComputedStyle(n).backgroundColor; if (f !== "rgba(0, 0, 0, 0)") break; }
+    return [getComputedStyle(el).borderTopColor, f];
+  });
+  expect(filet).not.toBe(fond);
 });
 
 test("capture : Mes tâches", async ({ page }, info) => {

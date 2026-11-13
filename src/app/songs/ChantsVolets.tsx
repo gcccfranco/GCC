@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { Halo } from "@/components/layout/Halo";
+import { BoutonStatistiques } from "@/components/songs/BoutonStatistiques";
 import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useSongsIndex } from "@/hooks/useSongsIndex";
@@ -24,23 +24,24 @@ export function ChantsVolets({ themes, nombre, children }: { themes: Theme[]; no
   const { t } = useTranslation();
   const pathname = usePathname();
   const surListe = /^\/songs\/?$/.test(pathname);
+  const surStatistiques = /^\/songs\/statistiques\/?$/.test(pathname);
   const actif = surListe ? null : decodeURIComponent(pathname.replace(/^\/songs\//, "").replace(/\/$/, ""));
   const deuxVolets = useDeuxVolets();
   // Lu seulement quand la liste est montée (sur /songs, ou en deux volets).
-  const { songs, erreur, reessayer } = useSongsIndex(surListe || deuxVolets);
+  const { songs, erreur, reessayer } = useSongsIndex(!surStatistiques && (surListe || deuxVolets));
+
+  // La page Statistiques (ST3) a toute la largeur : ni en-tête Chants ni liste.
+  if (surStatistiques) return <>{children}</>;
 
   return (
     <div className="chants-volets" data-sur-liste={surListe ? "" : undefined}>
-      {/* Le halo de /songs, un seul, juste dès le premier affichage : en un volet celui de la
-          liste (bleu des accords, à gauche) ; en deux volets celui de « Choisis un chant »
-          (vert des couplets, à droite, planche `chants-accueil`) — le CSS en décide
-          (`--halo-chants`, `.halo-chants`). Sur la page d'un chant, c'est le sien. */}
-      {surListe && <Halo variant="chants" color="var(--halo-chants, var(--chord-color))" />}
       {/* Affiché par le CSS là où la liste l'est : dès le rendu du serveur, à sa place. */}
       <div className="chants-entete">
         <EnTetePage
+          fond="blanc"
           titre={t("common.header.songs")}
           sousTitre={t("songs.list.sousTitre", { count: nombre })}
+          outils={<span className="max-md:hidden"><BoutonStatistiques /></span>}
           action={<SongProposalDrawer enTete />}
         />
       </div>

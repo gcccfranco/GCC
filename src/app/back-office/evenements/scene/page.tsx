@@ -8,11 +8,12 @@ import { useTranslation } from "react-i18next";
 import { useProfile } from "@/lib/firebase/users";
 import { isCoordination } from "@/lib/access";
 import { VersLaFete } from "@/app/evenements/scene/VersLaFete";
+import { Squelette } from "@/components/layout/Squelette";
 
 export default function ScenePage() {
   const { t } = useTranslation();
   const { user, profile, loading } = useProfile();
-  if (loading) return <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("common.loading")}</p>;
+  if (loading) return <Squelette enTete={false} />;
   if (!isCoordination(user, profile)) return <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("backOffice.sceneReserve")}</p>;
   return (
     <Suspense fallback={null}>

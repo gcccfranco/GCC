@@ -10,6 +10,7 @@ import { loadPlanningData, setlistSeances, type SetlistSeance } from "@/lib/plan
 import { lienPreparer, prochainsServicesSansSetlist } from "@/lib/setlist/prochainsServices";
 import { categoryColor } from "@/lib/serviceColors";
 import { todayIso } from "@/lib/scene/dimanches";
+import { EtatVide } from "@/components/layout/EtatVide";
 
 // Entrée de « Nouvelle setlist » (lot U5 bis, docs/spec-editeur-setlist.md,
 // Q3) : les prochains services sans setlist d'après le planning, « Préparer »
@@ -58,28 +59,26 @@ export function PourQuelService({ categories }: { categories: string[] }) {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative">
       {/* Agencement v18 (R1, R8, tranche Z) : l'en-tête commun et son seul retour. */}
       <EnTetePage retour={{ href: "/setlists", label: t("common.header.setlists") }} titre={t("setlists.form.titleNew")} />
       <div className="px-[var(--marge-page)] pb-28">
         <section aria-labelledby="pour-quel-service">
-          <h2 id="pour-quel-service" className="text-[17px] font-bold text-foreground lg:text-xl">
+          <h2 id="pour-quel-service" className="text-lg font-bold text-foreground lg:text-xl">
             {t("setlists.entree.pourQuelService")}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t("setlists.entree.pourQuelServiceHint")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {Array.isArray(etat) && etat.length === 0 ? t("setlists.entree.aucunService") : t("setlists.entree.pourQuelServiceHint")}
+          </p>
 
           {etat === "chargement" ? (
             <p className="py-8 text-sm text-muted-foreground">{t("common.loading")}</p>
           ) : etat === "erreur" ? (
-            <p role="status" className="mt-3 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+            <EtatVide role="status" compact surGris className="mt-3">
               {t("setlists.entree.planningIllisible")}
-            </p>
-          ) : etat.length === 0 ? (
-            <p role="status" className="mt-3 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
-              {t("setlists.entree.aucunService")}
-            </p>
-          ) : (
-            <ul aria-labelledby="pour-quel-service" className="mt-3 grid gap-2.5 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+            </EtatVide>
+          ) : etat.length === 0 ? null : (
+            <ul aria-labelledby="pour-quel-service" className="mt-3 grid max-w-[720px] grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
               {etat.map((s) => {
                 const couleur = categoryColor(s.category);
                 const service = t("categories." + s.category, { defaultValue: s.category });
@@ -88,17 +87,17 @@ export function PourQuelService({ categories }: { categories: string[] }) {
                 return (
                   <li
                     key={`${s.category}|${s.date}|${s.moment ?? ""}`}
-                    className="raised flex items-center gap-3 rounded-xl px-4 py-3.5"
+                    className="carte-groupe flex items-center gap-3 px-4 py-3.5"
                   >
                     <div className="min-w-0 flex-1">
                       <p
-                        className="svc-ink flex items-center gap-1.5 text-[13px] font-bold"
+                        className="svc-ink flex items-center gap-1.5 text-sm font-bold"
                         style={{ "--svc": couleur } as React.CSSProperties}
                       >
                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: couleur }} aria-hidden />
                         <span className="truncate">{service}</span>
                       </p>
-                      <p className="mt-0.5 text-[17px] font-bold text-foreground">
+                      <p className="mt-0.5 text-lg font-bold text-foreground">
                         {moment ? `${jour} · ${moment}` : jour}
                       </p>
                       <p className="truncate text-sm text-muted-foreground">
@@ -121,18 +120,18 @@ export function PourQuelService({ categories }: { categories: string[] }) {
           )}
         </section>
 
-        <ul className="mt-6 grid md:grid-cols-2 md:gap-x-8">
+        <ul data-testid="autres-entrees" className="carte-groupe mt-3 max-w-[720px] divide-y divide-border/70 rounded-2xl">
           {autres.map(({ href, Icone, titre, sous }) => (
-            <li key={href} className="border-t border-border">
+            <li key={href}>
               <Link
                 href={href}
-                className="flex min-h-14 items-center gap-3 px-0.5 py-3 transition-colors duration-150 active:bg-secondary/70"
+                className="flex min-h-14 items-center gap-3 px-4 py-3 transition-colors duration-150 active:bg-secondary/70"
               >
                 <span className="grid h-9 w-9 shrink-0 place-content-center rounded-[10px] bg-secondary text-foreground" aria-hidden>
                   <Icone className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[15px] font-semibold text-foreground">{titre}</span>
+                  <span className="block text-base font-semibold text-foreground">{titre}</span>
                   <span className="block text-sm text-muted-foreground">{sous}</span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />

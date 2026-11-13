@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { compter } from "@/lib/usage";
 
 /**
  * Tirer-vers-le-bas pour actualiser (téléphone/tablette, utile surtout en PWA
@@ -15,6 +16,7 @@ export function PullToRefresh() {
   const { t } = useTranslation();
   const [state, setState] = useState<"idle" | "armed" | "refreshing">("idle");
   const startY = useRef<number | null>(null);
+  const compte = useRef(false);
 
   useEffect(() => {
     const THRESHOLD = 70;
@@ -32,6 +34,8 @@ export function PullToRefresh() {
       if (startY.current !== null && window.scrollY <= 0) {
         setState((s) => {
           if (s === "armed") {
+            // Une mise à jour d'état peut être rejouée (mode strict) : un seul compte avant le rechargement.
+            if (!compte.current) { compte.current = true; compter("cmd.general.rafraichir"); }
             window.location.reload();
             return "refreshing";
           }
@@ -54,7 +58,7 @@ export function PullToRefresh() {
   if (state === "idle") return null;
 
   return (
-    <div className="fixed top-[calc(var(--nav-h)+10px)] left-[calc(50%+var(--barre-laterale)/2)] -translate-x-1/2 z-40 flex items-center gap-2 px-3.5 py-2 rounded-full bg-foreground text-background text-xs font-semibold shadow-lg print:hidden">
+    <div className="fixed top-[calc(var(--nav-h)+10px)] left-[calc(50%+var(--barre-laterale)/2)] -translate-x-1/2 z-40 flex items-center gap-2 px-3.5 py-2 rounded-full bg-foreground text-background text-xs font-semibold [box-shadow:var(--shadow-flottant)] print:hidden">
       <RefreshCw className={`h-3.5 w-3.5 ${state === "refreshing" ? "animate-spin" : ""}`} />
       {state === "refreshing" ? t("common.pull.refreshing") : t("common.pull.release")}
     </div>

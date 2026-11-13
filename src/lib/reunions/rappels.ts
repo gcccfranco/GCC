@@ -9,7 +9,8 @@ import type { Evenement } from "@/types/evenement";
 import type { Sujet } from "@/types/reunion";
 import type { NotifLang } from "@/types/user";
 import { evenementReminder, ligneOuverture, ouverturesTitre, avecLignes } from "@/lib/evenements/rappel";
-import { reminderBody, reminderTitle, type ReminderService, type ReminderTag } from "@/lib/push/reminderMessage";
+import { reminderBody, reminderTitle, type ReminderTag } from "@/lib/push/reminderMessage";
+import type { ReminderService } from "@/types/rappels";
 import { corpsAvecTaches, rappelTachesTitre, type RappelTache } from "@/lib/taches/messages";
 import { jourDuMois } from "@/lib/reunions/sujets";
 import { ligneDeplacement } from "@/lib/calendrier/prevenir";
@@ -56,7 +57,7 @@ function texte(l: LigneEvenement, lang: NotifLang): string {
 
 export interface ServiceDuJour { tag: ReminderTag; date: string; services: ReminderService[] }
 
-export interface NotificationDuMatin {
+interface NotificationDuMatin {
   title: string;
   body: string;
   url: string;

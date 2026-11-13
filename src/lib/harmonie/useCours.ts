@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/firebase/auth";
+import { compter } from "@/lib/usage";
 import { getCoursProgres, marquerChapitre, type Progres } from "@/lib/firebase/coursProgres";
 import type { Chapitre, ChapitreResume, CoursIndex } from "@/types/cours";
 
@@ -39,6 +40,8 @@ export function useChapitre(id: string): { chapitre: Chapitre | null; chargement
   return { chapitre, chargement };
 }
 
+const EVENEMENT_PROGRES = "gcc:cours-progres";
+
 /** Les chapitres finis par la personne connectée, et de quoi cocher / décocher
  *  (affiché tout de suite, écrit ensuite ; relu si l'écriture échoue). */
 export function useCoursProgres(): { fini: Progres; chargement: boolean; marquer: (id: string, fait: boolean) => Promise<void> } {
@@ -58,19 +61,30 @@ export function useCoursProgres(): { fini: Progres; chargement: boolean; marquer
     return () => { vivant = false; };
   }, [uid, loading]);
 
+  // Plusieurs lecteurs du même progrès (l'en-tête d'Harmonie et la liste du cours, harmonie-1) : chaque
+  // coche est annoncée aux autres instances, qui suivent sans relire Firestore.
+  useEffect(() => {
+    const suivre = (e: Event) => setFini((e as CustomEvent<Progres>).detail);
+    window.addEventListener(EVENEMENT_PROGRES, suivre);
+    return () => window.removeEventListener(EVENEMENT_PROGRES, suivre);
+  }, []);
+
   const marquer = useCallback(async (id: string, fait: boolean) => {
     if (!uid) return;
     const date = fait ? new Date().toISOString() : null;
+    const annoncer = (p: Progres) => window.dispatchEvent(new CustomEvent<Progres>(EVENEMENT_PROGRES, { detail: p }));
     setFini((p) => {
       const suite = { ...p };
       if (date) suite[id] = date;
       else delete suite[id];
+      queueMicrotask(() => annoncer(suite));
       return suite;
     });
     try {
       await marquerChapitre(uid, id, date);
+      if (fait) compter("cmd.harmonie.chapitre");
     } catch {
-      setFini(await getCoursProgres(uid).catch(() => ({})));
+      annoncer(await getCoursProgres(uid).catch(() => ({})));
     }
   }, [uid]);
 

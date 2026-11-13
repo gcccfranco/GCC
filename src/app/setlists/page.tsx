@@ -2,14 +2,13 @@
 
 import { GuideLien } from "@/components/guide/GuideLien";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { ALL_CATEGORIES, FETE_CATEGORIES, getSetlists, getMySetlists, getSetlistsPartagees, deleteSetlist, deleteSetlists, getCorbeille, mettreALaCorbeilleGroupe, restaurerSetlist, type FSSetlist } from "@/lib/firebase/setlists";
+import { ALL_CATEGORIES, FETE_CATEGORIES, getSetlists, getMySetlists, getSetlistsPartagees, deleteSetlist, deleteSetlists, getCorbeille, mettreALaCorbeilleGroupe, restaurerSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories, canCreateSetlist, canDeleteSetlist, canSeeSetlist, isAdminUser } from "@/lib/access";
 import {
   loadPlanningData,
-  findMyServices,
-  serviceCategory,
-  normalizeName,
+  datesServies,
   type PlanningData,
 } from "@/lib/planning/names";
 import { estDansLePartage, nomCourt } from "@/lib/setlist/partage";
@@ -20,32 +19,47 @@ import { anneeDe, editionsDe, feteDe, libelleEdition } from "@/lib/scene/fetes";
 import { jourEnLettres } from "@/app/evenements/scene/libelles";
 import { titreAffiche } from "@/lib/fetes/droits";
 import type { Programme } from "@/types/programme";
-import { Search, X, Lock, LogIn, UserPen, ChevronDown } from "lucide-react";
-import Link from "next/link";
+import { Lock } from "lucide-react";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { OngletsRail } from "@/components/layout/Onglets";
+import { Menu } from "@/components/ui/menu";
+import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44";
 import { SetlistCard, SetlistCarteChants } from "@/components/setlists/SetlistCard";
 import { BandeauCorbeille } from "@/components/setlists/BandeauCorbeille";
 import { ApercuSetlist } from "@/components/setlists/ApercuSetlist";
+import { Pupitre } from "@/components/setlists/Pupitre";
+import { servicesDuCompte } from "@/lib/petitdej/services";
+import { joursAvant, pourMoi, reunirServices, setlistDuService } from "@/lib/planning/accueil";
+import { listerCopies } from "@/lib/setlist/copieHorsLigne";
+import { demanderPrecache, garderServices, precacheFait, urlsAGarder } from "@/lib/setlist/gardeServices";
+import { loadJianpuManifest } from "@/lib/jianpu/images";
+import { roleDuPlanning } from "@/lib/planning/rolePlanning";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useDisposition } from "@/hooks/useDisposition";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import type { SongIndexEntry } from "@/types/song";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
-import { Halo } from "@/components/layout/Halo";
+import { GROUPE } from "@/components/ui/group";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
-import { formatDate } from "@/lib/utils/formatDate";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useSetlistsNavState, type Tab } from "@/hooks/useSetlistsNavState";
+import { EtatVide } from "@/components/layout/EtatVide";
+import { Squelette } from "@/components/layout/Squelette";
+import { useMessageTemporaire } from "@/hooks/useMessageTemporaire";
+import { clesDeMesServices, estDeMesServices, trierSetlists } from "@/lib/setlist/liste";
+import { EcranConnexionRequise, EcranProfilRequis } from "./_components/EcransAccesListe";
+import { SectionCorbeille } from "./_components/SectionCorbeille";
+import { ConfirmationSuppressionGroupee, ConfirmationSuppressionDefinitive } from "./_components/ConfirmationsSuppression";
+import { compter } from "@/lib/usage";
+
+/** Date du jour en heure locale (pas UTC : décalée autour de minuit), comme l'accueil. */
+function aujourdhuiLocal(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
 
 // Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q4) : en grand, la liste à gauche et l'aperçu
 // de la setlist choisie à droite (`?apercu=<id>`, sans aperçu choisi la première de la liste,
@@ -77,8 +91,8 @@ export default function SetlistsPage() {
   const avecChants = disposition !== "telephone";
   useEffect(() => {
     if (!avecChants) return;
-    fetch("/songs-index.json").then((r) => r.json())
-      .then((index: { songs?: SongIndexEntry[] }) => setSongsMap(Object.fromEntries((index.songs ?? []).map((x) => [x.slug, x]))))
+    chargerIndexChants()
+      .then((index) => setSongsMap(Object.fromEntries(index.map((x) => [x.slug, x]))))
       .catch(() => {});
   }, [avecChants]);
 
@@ -88,25 +102,15 @@ export default function SetlistsPage() {
     loadPlanningData().then(setPlanning);
   }, []);
 
-  // Clés des services réels de l'utilisateur (filtre « Mes services »). Campus : matin et
-  // soir partagent date + catégorie → clés par moment (setlists récentes) ET par président
-  // (anciennes setlists sans moment) pour ne matcher que la séance où l'on sert réellement.
-  const myServiceKeys = useMemo(() => {
-    const set = new Set<string>();
-    if (!planning || !profile?.planningName) return set;
-    for (const e of findMyServices(planning, profile.planningName)) {
-      const cat = serviceCategory(e.service);
-      if (!cat) continue;
-      const date = e.setlistDate ?? e.date;
-      if (cat === "Campus") {
-        if (e.moment) set.add(`${date}|Campus|m:${e.moment}`);
-        set.add(`${date}|Campus|l:${normalizeName(e.leader ?? "")}`);
-      } else {
-        set.add(`${date}|${cat}`);
-      }
-    }
-    return set;
-  }, [planning, profile]);
+  // Clés des services réels de l'utilisateur (filtre « Mes services »), `src/lib/setlist/liste.ts` : pour Campus,
+  // la séance où l'on sert réellement (moment, ou président pour les anciennes setlists).
+  const myServiceKeys = useMemo(() => clesDeMesServices(planning, profile?.planningName), [planning, profile]);
+
+  // Lot AO (F1) : les dates où l'on sert — leur setlist se lit même sans équipe (`canSeeSetlist`).
+  const datesDuCompte = useMemo(
+    () => (planning && profile?.planningName ? datesServies(planning, profile.planningName) : undefined),
+    [planning, profile]
+  );
 
   // Catégories accessibles selon le profil (services + EDD + groupe) — admins : toutes
   const admin = isAdminUser(user);
@@ -204,7 +208,7 @@ export default function SetlistsPage() {
       (categoryFilter === "Toutes" || s.category === categoryFilter) &&
       (!q ||
         s.title.toLowerCase().includes(q) ||
-        titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr").toLowerCase().includes(q) ||
+        titreAffiche(s, langueCourte(i18n.language)).toLowerCase().includes(q) ||
         (s.leader ?? "").toLowerCase().includes(q) ||
         s.date.includes(q));
   }, [categoryFilter, query, i18n.language]);
@@ -216,35 +220,103 @@ export default function SetlistsPage() {
     // « Mes services » restreint en plus aux dates où l'on sert réellement (accès conservé).
     const list = toutes.filter(
       (s) =>
-        !!user && canSeeSetlist(user, profile, s) &&
+        !!user && canSeeSetlist(user, profile, s, datesDuCompte) &&
         listee(s) &&
         matches(s) &&
         (!useMine ||
           estDansLePartage(s, user.uid) ||
           // Sous « Noël » ou « Pâques », toutes les setlists de la fête : rien ne s'y rattache à un service.
           (!!s.fete && feteFiltree) ||
-          (s.category === "Campus"
-            ? (!!s.moment && myServiceKeys.has(`${s.date}|Campus|m:${s.moment}`)) ||
-              myServiceKeys.has(`${s.date}|Campus|l:${normalizeName(s.leader ?? "")}`)
-            : myServiceKeys.has(`${s.date}|${s.category}`)) ||
+          estDeMesServices(s, myServiceKeys) ||
           s.ownerId === user?.uid)
     );
     // Un même jour, les setlists d'une fête suivent l'ordre de passage.
-    const memeJour = (a: FSSetlist, b: FSSetlist) =>
-      (a.fete ? 1 : 0) - (b.fete ? 1 : 0) || (a.fete?.programme ?? "").localeCompare(b.fete?.programme ?? "") || rangPassage(a) - rangPassage(b);
-    return tab === "upcoming"
-      ? list.filter((s) => s.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date) || memeJour(a, b))
-      : list.filter((s) => s.date < todayStr).sort((a, b) => b.date.localeCompare(a.date) || memeJour(a, b));
+    return trierSetlists(list, tab === "upcoming", todayStr, rangPassage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, toutes, mySetlists, matches, todayStr, user, profile, onlyMine, myServiceKeys, programmes, feteFiltree]);
+  }, [tab, toutes, mySetlists, matches, todayStr, user, profile, onlyMine, myServiceKeys, programmes, feteFiltree, datesDuCompte]);
+
+  // « Mon prochain service » (PU-2) : le prochain jour où le compte sert, et la setlist reliée à l'un de ses
+  // services (même règle que l'accueil : jamais une privée, un brouillon ni une qu'il ne pourrait pas ouvrir).
+  // Aucun service ou aucune setlist reliée : null, l'onglet est celui d'avant.
+  // (Pas de useMemo : le compilateur de React ne sait pas le préserver ici ; le calcul est court.)
+  const pupitre = (() => {
+    if (!user || !planning) return null;
+    const entries = servicesDuCompte(planning, [], user.uid, profile?.planningName ?? "");
+    const p = pourMoi(entries, aujourdhuiLocal(), 0);
+    if (!p) return null;
+    const lisibles = toutes.filter((s) => !s.isPrivate && !s.isDraft && canSeeSetlist(user, profile, s, datesDuCompte));
+    for (const service of p.prochain) {
+      const setlist = setlistDuService(lisibles, service);
+      if (setlist) {
+        const role = roleDuPlanning(entries, { date: setlist.date, category: setlist.category, moment: setlist.moment }, profile?.joue);
+        return { setlist, services: p.prochain, role };
+      }
+    }
+    return null;
+  })();
+  const aUnPupitre = !!pupitre;
+  const prochaine = pupitre?.setlist;
+  // Gardé hors ligne d'office (PU-3) : les services du compte des 14 prochains jours sont copiés et mis en cache à
+  // l'ouverture de l'onglet ; `pret` dit si le prochain l'est (copie + cache), revérifié toutes les 3 s pendant
+  // 2 minutes. Hors ligne : rien n'est tenté, le test tourne une fois (une copie d'avant peut suffire). Le « prêt »
+  // est celui d'une setlist (son id) : un autre prochain service ne l'hérite pas. Manifeste 简谱 illisible : pas prêt.
+  const [pretId, setPretId] = useState<string | null>(null);
+  const pret = !!prochaine && pretId === prochaine.id;
+  useEffect(() => {
+    if (!user || !planning || authLoading || loading) return;
+    const uid = user.uid;
+    let vivant = true;
+    let minuterie: ReturnType<typeof setInterval> | undefined;
+    (async () => {
+      const aujourdhui = aujourdhuiLocal();
+      const lisibles = toutes.filter((s) => !s.isPrivate && !s.isDraft && canSeeSetlist(user, profile, s, datesDuCompte));
+      const entries = servicesDuCompte(planning, [], uid, profile?.planningName ?? "");
+      const aGarder: FSSetlist[] = [];
+      for (const service of reunirServices(entries).filter((x) => x.date >= aujourdhui)) {
+        const sl = setlistDuService(lisibles, service);
+        if (sl && !aGarder.some((x) => x.id === sl.id)) aGarder.push(sl);
+      }
+      const manifest = await loadJianpuManifest();
+      if (!vivant) return;
+      await garderServices({ uid, setlists: aGarder, manifest, aujourdhui });
+      if (!vivant || !prochaine) return;
+      const verifier = async () => {
+        const urls = urlsAGarder(prochaine, manifest);
+        const ok = Object.keys(manifest).length > 0 &&
+          (await listerCopies(uid)).some((c) => c.setlist.id === prochaine.id) && (await precacheFait(urls));
+        if (vivant) setPretId(ok ? prochaine.id : null);
+        return ok;
+      };
+      // Le prochain service hors de la garde (plus de 14 jours) : un seul test, sans redemande au service worker.
+      if ((await verifier()) || navigator.onLine === false || joursAvant(prochaine.date, aujourdhui) > 14) return;
+      if (!vivant) return;
+      const debut = Date.now();
+      minuterie = setInterval(async () => {
+        if (!vivant) { clearInterval(minuterie); return; }
+        // Un service worker qui prend la main après coup n'a pas reçu le message : on le redemande.
+        if (Date.now() - debut > 120_000 || (await verifier())) clearInterval(minuterie);
+        else demanderPrecache(urlsAGarder(prochaine, manifest));
+      }, 3000);
+    })();
+    return () => { vivant = false; clearInterval(minuterie); };
+  }, [user, authLoading, loading, planning, toutes, profile, datesDuCompte, prochaine]);
+  // Sans index chargé par la disposition (téléphone), le bloc a besoin des titres.
+  useEffect(() => {
+    if (!aUnPupitre || avecChants) return;
+    chargerIndexChants()
+      .then((index) => setSongsMap(Object.fromEntries(index.map((x) => [x.slug, x]))))
+      .catch(() => {});
+  }, [aUnPupitre, avecChants]);
+  // En grand, le bloc prend le volet de droite tant qu'aucune setlist n'est choisie.
+  const pupitreAffiche = grand && !!pupitre && !apercu;
 
   // L'aperçu (en grand) : celui de l'adresse, sinon la première setlist de la liste filtrée (Q3).
   // Une adresse peut viser une setlist d'un autre onglet (lien partagé) : seulement si la page
   // de la setlist l'ouvrirait (`canSeeSetlist`, même règle que sa page).
-  const choisie =
+  const choisie = pupitreAffiche ? null :
     (apercu &&
       (displayed.find((s) => s.id === apercu) ??
-        [...toutes, ...mySetlists].find((s) => s.id === apercu && !!user && canSeeSetlist(user, profile, s)))) ||
+        [...toutes, ...mySetlists].find((s) => s.id === apercu && !!user && canSeeSetlist(user, profile, s, datesDuCompte)))) ||
     displayed[0] ||
     null;
 
@@ -256,7 +328,7 @@ export default function SetlistsPage() {
   const [coches, setCoches] = useState<Set<string>>(new Set());
   const [enCours, setEnCours] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, montrerMessage] = useMessageTemporaire();
 
   const peutSupprimer = (s: FSSetlist) => !!user && canDeleteSetlist(user, profile, s);
   const supprimables = displayed.filter(peutSupprimer);
@@ -265,12 +337,6 @@ export default function SetlistsPage() {
   const avecFete = selection.some((s) => !!s.fete);
   // La corbeille ne montre que ce qu'on pourrait supprimer : un musicien ne voit pas celle d'un autre.
   const corbeilleVisible = corbeille.filter(peutSupprimer);
-  const dateCourte = (iso: string) => {
-    const d = new Date(iso);
-    return i18n.language === "zh-CN"
-      ? `${d.getMonth() + 1}月${d.getDate()}日`
-      : new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(d);
-  };
 
   // Changer d'onglet vide la sélection : aucune ligne n'est commune d'un onglet
   // à l'autre, et revenir ne doit pas ramener des cases cochées oubliées.
@@ -314,11 +380,12 @@ export default function SetlistsPage() {
     setCoches(new Set(ko));
     const rates = cibles.filter((s) => ko.includes(s.id)).map((s) => `« ${s.title} »`);
     if (vers.ok.length) {
+      compter("cmd.setlist.corbeille.mettre");
       setEnCorbeille(vers.ok);
       setVersionCorbeille((v) => v + 1);
     }
     // Les mises à la corbeille se disent par le bandeau « Annuler » ; ici, les suppressions définitives et les échecs.
-    setMessage(
+    montrerMessage(
       [
         definitives.ok.length ? t("setlists.list.deleteDone", { count: definitives.ok.length }) : null,
         rates.length
@@ -328,7 +395,6 @@ export default function SetlistsPage() {
         .filter(Boolean)
         .join(" ")
     );
-    window.setTimeout(() => setMessage(null), 6000);
     setEnCours(false);
     if (ko.length === 0) setSelectionMode(false);
   }
@@ -337,9 +403,9 @@ export default function SetlistsPage() {
     const ids = enCorbeille;
     try {
       for (const id of ids) await restaurerSetlist(id);
+      compter("cmd.setlist.corbeille.restaurer");
     } catch {
-      setMessage(t("setlists.corbeille.erreur"));
-      window.setTimeout(() => setMessage(null), 6000);
+      montrerMessage(t("setlists.corbeille.erreur"));
     }
     setEnCorbeille([]);
     await rafraichir().catch(() => {});
@@ -348,10 +414,10 @@ export default function SetlistsPage() {
   async function restaurer(s: FSSetlist) {
     try {
       await restaurerSetlist(s.id);
+      compter("cmd.setlist.corbeille.restaurer");
       await rafraichir();
     } catch {
-      setMessage(t("setlists.corbeille.erreur"));
-      window.setTimeout(() => setMessage(null), 6000);
+      montrerMessage(t("setlists.corbeille.erreur"));
     }
   }
 
@@ -359,10 +425,10 @@ export default function SetlistsPage() {
     setEnCours(true);
     try {
       await deleteSetlist(s.id);
+      compter("cmd.setlist.corbeille.supprimer");
       setVersionCorbeille((v) => v + 1);
     } catch {
-      setMessage(t("setlists.corbeille.erreur"));
-      window.setTimeout(() => setMessage(null), 6000);
+      montrerMessage(t("setlists.corbeille.erreur"));
     }
     setEnCours(false);
     setASupprimerDefinitivement(null);
@@ -377,68 +443,19 @@ export default function SetlistsPage() {
     : t("setlists.list.emptyArchived");
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   // Non connecté : les setlists sont réservées aux membres
   if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="text-center space-y-4 max-w-sm">
-          <Lock className="h-8 w-8 mx-auto text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">{t("setlists.list.loginRequired")}</p>
-          <div className="flex flex-col gap-2">
-            <Link
-              href="/login?from=/setlists"
-              className="flex items-center justify-center gap-2 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-            >
-              <LogIn className="h-4 w-4" />
-              {t("common.header.login")}
-            </Link>
-            <Link
-              href="/signup"
-              className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-border text-foreground text-sm font-semibold hover:bg-muted/50 transition-colors"
-            >
-              {t("common.header.signup")}
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
+    return <EcranConnexionRequise />;
   }
 
   // Connecté mais profil incomplet (les admins passent quand même)
   if (!profile && !admin) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="text-center space-y-4 max-w-sm">
-          <UserPen className="h-8 w-8 mx-auto text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">{t("setlists.list.profileRequired")}</p>
-          <Link
-            href="/profil?from=/setlists"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
-            {t("common.header.profile")}
-          </Link>
-        </div>
-      </div>
-    );
+    return <EcranProfilRequis />;
   }
 
-  // Agencement v18 (A9, R1 à R3, R7 de docs/spec-agencement-v18.md) : l'en-tête sur toute la
-  // largeur, au-dessus des deux volets ; « + Nouvelle setlist » y est l'action principale
-  // (pilule dès 768 px, rond fixe sur téléphone). La liste n'a plus de titre.
-  const enTete = (
-    <EnTetePage
-      titre={t("common.header.setlists")}
-      sousTitre={t("setlists.list.sousTitre")}
-      action={canCreate ? <BoutonNouveau label={t("setlists.list.newButton")} href="/setlists/new" /> : undefined}
-    />
-  );
 
   // « Mes services » : seul sur sa ligne au téléphone (inchangé) ; en tête de la rangée des
   // filtres en grand et sur tablette (planches `setlists-*`).
@@ -447,13 +464,13 @@ export default function SetlistsPage() {
       type="button"
       aria-pressed={onlyMine}
       onClick={() => setOnlyMine((v) => !v)}
-      className={`shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97] ${
+      className={`inline-flex h-7 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-sm font-semibold transition-colors duration-150 [@media(pointer:coarse)]:h-8 ${TOUCHER_PILULE} ${
         onlyMine
-          ? "bg-foreground text-background"
-          : "bg-secondary text-muted-foreground hover:text-foreground"
+          ? "bg-primary text-primary-foreground"
+          : "bg-secondary-fond dark:bg-secondary text-foreground active:bg-secondary/70"
       }`}
     >
-      {onlyMine ? `✓ ${t("setlists.list.myServicesFilter")}` : t("setlists.list.myServicesFilter")}
+      {t("setlists.list.myServicesFilter")}
     </button>
   );
 
@@ -473,8 +490,8 @@ export default function SetlistsPage() {
     : [];
   const enteteFete = editionFiltree && (
     <div className="mb-4 space-y-1">
-      <h2 className="text-[15px] font-semibold text-foreground">
-        {libelleEdition(feteDe(editionFiltree)!, anneeDe(editionFiltree) ?? 0, i18n.language === "zh-CN" ? "zh" : "fr")}
+      <h2 className="text-base font-semibold text-foreground">
+        {libelleEdition(feteDe(editionFiltree)!, anneeDe(editionFiltree) ?? 0, langueCourte(i18n.language))}
         {" · "}
         {jourEnLettres(editionFiltree.jourJ, i18n.language)}
       </h2>
@@ -482,15 +499,14 @@ export default function SetlistsPage() {
   );
   // « Sans chant » en bas de la liste (CF13) ; pas pendant une recherche, qui réduit la liste.
   const piedFete = editionFiltree && sansChant.length > 0 && !loading && !query.trim() && (
-    <p className="mt-4 text-[13px] text-muted-foreground">{t("setlists.fete.sansChant", { liste: sansChant.join(", ") })}</p>
+    <p className="mt-4 text-sm text-muted-foreground">{t("setlists.fete.sansChant", { liste: sansChant.join(", ") })}</p>
   );
 
-  const contenuListe = (
-      <>
-        {/* ── Vues : le rail (R4) ── */}
+  const rail = (
         <OngletsRail
           etiquette={t("common.header.setlists")}
-          className="mb-4 flex w-full [&>button]:flex-1"
+          surGris
+          pleineLargeur={disposition === "telephone"}
           actif={tab}
           choisir={(o) => changerOnglet(o as Tab)}
           onglets={[
@@ -500,7 +516,7 @@ export default function SetlistsPage() {
               id: "mine",
               label: (
                 <>
-                  <Lock className="hidden sm:block h-3.5 w-3.5" aria-hidden />
+                  <Lock className="h-3.5 w-3.5" aria-hidden />
                   {t("setlists.list.mySetlists")}
                   {mySetlists.length > 0 && (
                     <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-secondary text-muted-foreground">
@@ -512,76 +528,67 @@ export default function SetlistsPage() {
             },
           ]}
         />
-
-        {/* ── Barre de filtres partagée ── */}
-        <div className="space-y-3 mb-5">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <input
-              type="search"
-              enterKeyHint="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("setlists.list.searchPlaceholder")}
-              className={`w-full pl-9 pr-9 py-2.5 rounded-xl border border-transparent ${grand ? "bg-secondary" : "bg-card"} text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] sm:text-sm [&::-webkit-search-cancel-button]:hidden`}
-            />
-            {query && (
-              <button
-                onClick={() => setQuery("")}
-                aria-label={t("common.buttons.reset")}
-                className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground active:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+  );
+  const filtres = (
+        <div className={`space-y-3 ${grand ? "max-w-[400px]" : ""}`}>
+          <ChampRecherche
+            value={query}
+            onChange={setQuery}
+            placeholder={t("setlists.list.searchPlaceholder")}
+            label={t("setlists.list.searchPlaceholder")}
+            surGris
+          />
 
           {disposition === "telephone" && mesServices}
 
           <div className="flex items-center gap-2">
             {disposition !== "telephone" && mesServices}
+            <Menu
+              label={t("setlists.list.filterCategoryLabel")}
+              surGris
+              value={categoryFilter}
+              defaultValue="Toutes"
+              onChange={setCategoryFilter}
+              options={[
+                { valeur: "Toutes", libelle: t("setlists.list.allCategories") },
+                ...[
+                  { groupe: t("setlists.list.mainMeetings"), cats: ALL_CATEGORIES.slice(0, 4).filter((cat) => myCategories.includes(cat)) },
+                  { groupe: t("setlists.list.groupsLabel"), cats: ALL_CATEGORIES.slice(4).filter((cat) => myCategories.includes(cat)) },
+                  ...(BACK_OFFICE ? [{ groupe: t("setlists.list.fetes"), cats: [...FETE_CATEGORIES] }] : []),
+                ]
+                  .filter((g) => g.cats.length > 0)
+                  .map((g) => ({ groupe: g.groupe, options: g.cats.map((cat) => ({ valeur: cat as string, libelle: t("categories." + cat, { defaultValue: cat }) })) })),
+              ]}
+            />
             {!selectionMode && supprimables.length > 0 && (
               <button
                 type="button"
                 onClick={() => setSelectionMode(true)}
-                className="shrink-0 h-9 px-4 rounded-full bg-secondary text-foreground text-sm font-semibold hover:bg-muted transition-[background-color,transform] duration-150 active:scale-[.97]"
+                className={`ml-auto shrink-0 text-sm font-semibold text-foreground underline underline-offset-2 cursor-pointer ${TOUCHER_44}`}
               >
                 {t("setlists.list.select")}
               </button>
             )}
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="min-w-0 flex-1 h-9 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
-            >
-              <option value="Toutes">{t("setlists.list.allCategories")}</option>
-              <optgroup label={t("setlists.list.mainMeetings")}>
-                {ALL_CATEGORIES.slice(0, 4).filter((cat) => myCategories.includes(cat)).map((cat) => (
-                  <option key={cat} value={cat}>
-                    {t("categories." + cat, { defaultValue: cat })}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label={t("setlists.list.groupsLabel")}>
-                {ALL_CATEGORIES.slice(4).filter((cat) => myCategories.includes(cat)).map((cat) => (
-                  <option key={cat} value={cat}>
-                    {t("categories." + cat, { defaultValue: cat })}
-                  </option>
-                ))}
-              </optgroup>
-              {BACK_OFFICE && (
-                <optgroup label={t("setlists.list.fetes")}>
-                  {FETE_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {t("categories." + cat, { defaultValue: cat })}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
           </div>
         </div>
+  );
+  // Agencement v18 (A9, R1 à R3, R7 de docs/spec-agencement-v18.md) : l'en-tête sur toute la
+  // largeur, au-dessus des deux volets ; « + Nouvelle setlist » y est l'action principale
+  // (pilule dès 768 px, rond fixe sur téléphone). La liste n'a plus de titre. Recette de surface (C) :
+  // le rail et les filtres sont des contrôles posés sur le gris (sous le titre), seule la liste est un groupe blanc.
+  const enTete = (
+    <EnTetePage
+      titre={t("common.header.setlists")}
+      sousTitre={t("setlists.list.sousTitre")}
+      action={canCreate ? <BoutonNouveau label={t("setlists.list.newButton")} href="/setlists/new" /> : undefined}
+      milieu={!grand && pupitre ? <Pupitre setlist={pupitre.setlist} services={pupitre.services} songsMap={songsMap} role={pupitre.role} disposition={disposition} pret={pret} /> : undefined}
+      onglets={rail}
+      apres={filtres}
+    />
+  );
 
+  const contenuListe = (
+      <>
         {feteFiltree && tab !== "mine" && enteteFete}
 
         {/* ── Résultat de la dernière suppression ── */}
@@ -626,20 +633,22 @@ export default function SetlistsPage() {
 
         {/* ── Contenu ── */}
         {(tab === "mine" ? loadingMine : loading || !programmesLus) ? (
-          <div className="text-sm text-muted-foreground text-center py-16">
-            {t("common.loading")}
-          </div>
+          <Squelette enTete={false} className="px-0" />
         ) : displayed.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-border rounded-xl space-y-3">
-            <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-            {/* Qui peut créer a « + Nouvelle setlist » dans l'en-tête : pas de seconde action ici (R7). */}
-            {tab === "upcoming" && !query && !canCreate && (
-              <p className="text-sm text-muted-foreground">{t("setlists.list.emptyUpcomingHint")}</p>
-            )}
-          </div>
+          <EtatVide
+            surGris={!grand}
+            action={
+              /* Qui peut créer a « + Nouvelle setlist » dans l'en-tête : pas de seconde action ici (R7). */
+              tab === "upcoming" && !query && !canCreate ? (
+                <p className="text-sm text-muted-foreground">{t("setlists.list.emptyUpcomingHint")}</p>
+              ) : undefined
+            }
+          >
+            {emptyMessage}
+          </EtatVide>
         ) : (
           disposition === "tablette" ? (
-            <ul className="grid grid-cols-2 items-start gap-4">
+            <ul className="space-y-4">
               {displayed.map((s) => (
                 <li key={s.id}>
                   <SetlistCarteChants
@@ -655,7 +664,7 @@ export default function SetlistsPage() {
               ))}
             </ul>
           ) : (
-          <ul>
+          <ul className={grand ? undefined : `${GROUPE} px-4 py-1`}>
             {displayed.map((s) => (
               <li key={s.id} className="group-row relative">
                 <SetlistCard
@@ -675,68 +684,48 @@ export default function SetlistsPage() {
         )}
         {feteFiltree && tab !== "mine" && piedFete}
         {tab === "archived" && corbeilleVisible.length > 0 && (
-          <section className="mt-8" data-testid="corbeille">
-            <button
-              type="button"
-              aria-expanded={corbeilleOuverte}
-              onClick={() => setCorbeilleOuverte((o) => !o)}
-              className="flex min-h-11 w-full items-center justify-between gap-3 text-left"
-            >
-              <span className="min-w-0">
-                <span className="block text-[15px] font-semibold text-foreground">
-                  {t("setlists.corbeille.titre", { count: corbeilleVisible.length })}
-                </span>
-                <span className="block text-[13px] text-muted-foreground">{t("setlists.corbeille.aide")}</span>
-              </span>
-              <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 ${corbeilleOuverte ? "rotate-180" : ""}`} aria-hidden />
-            </button>
-            {corbeilleOuverte && (
-              <ul className="mt-1">
-                {corbeilleVisible.map((s) => (
-                  <li key={s.id} className="border-t border-border/70 py-3">
-                    <p className="text-[15px] font-semibold text-foreground">{titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr")}</p>
-                    <p className="text-[13px] text-muted-foreground">
-                      <span className="capitalize">{formatDate(s.date, i18n.language)}</span>
-                      {" · "}
-                      {t("setlists.corbeille.supprimeeLe", { date: dateCourte(s.supprimeeLe!) })}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => void restaurer(s)}
-                        className="h-11 rounded-full bg-secondary px-5 text-sm font-semibold text-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[.97]"
-                      >
-                        {t("setlists.corbeille.restaurer")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setASupprimerDefinitivement(s)}
-                        className="h-11 rounded-full px-4 text-sm font-semibold text-destructive transition-[background-color,transform] duration-150 hover:bg-destructive/10 active:scale-[.97]"
-                      >
-                        {t("setlists.corbeille.supprimerDefinitivement")}
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <SectionCorbeille
+            setlists={corbeilleVisible}
+            ouverte={corbeilleOuverte}
+            onBasculer={() => setCorbeilleOuverte((o) => !o)}
+            onRestaurer={(s) => void restaurer(s)}
+            onSupprimer={setASupprimerDefinitivement}
+          />
         )}
-        <GuideLien section="setlists" />
+        {!grand && <GuideLien section="setlists" />}
       </>
   );
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative">
       <PullToRefresh />
-      <Halo color="var(--chord-color)" />
       {enTete}
       {grand ? (
         <DeuxVolets
           racine="/setlists"
           largeurListe={400}
-          liste={<div className="relative px-4 pb-4 pt-4">{contenuListe}</div>}
-          premier={choisie && (
+          // V3 (validation du 07/11/2026) : plus de colonne seule tant qu'on n'a rien touché ; la première
+          // setlist de la liste est montrée d'emblée (`choisie`). Seule une liste vide reste en colonne seule.
+          colonneSeule={!choisie && !pupitre}
+          liste={
+            <div className="relative px-4 pb-4 pt-4">
+              {pupitre && (
+                <button
+                  type="button"
+                  data-pupitre-retour
+                  aria-pressed={pupitreAffiche}
+                  onClick={() => setApercu(null)}
+                  className={`mb-3 flex h-10 w-full items-center rounded-xl px-3 text-left text-sm font-semibold transition-colors duration-150 ${pupitreAffiche ? "bg-secondary" : "active:bg-secondary/70"}`}
+                >
+                  {t("setlists.pupitre.retour")}
+                </button>
+              )}
+              {contenuListe}
+            </div>
+          }
+          premier={pupitreAffiche && pupitre ? (
+            <Pupitre setlist={pupitre.setlist} services={pupitre.services} songsMap={songsMap} role={pupitre.role} disposition={disposition} pret={pret} />
+          ) : choisie && (
             <ApercuSetlist setlist={choisie} songsMap={songsMap} planning={planning} monNom={profile ? nomCourt(profile) : ""} />
           )}
         >
@@ -745,72 +734,25 @@ export default function SetlistsPage() {
       ) : (
         <div className="relative px-[var(--marge-page)] pb-10">{contenuListe}</div>
       )}
+      {/* « Comment ça marche ? » : sous la liste, sur le gris, jamais dans le groupe. */}
+      {grand && <div className="px-[var(--marge-page)] pb-6"><GuideLien section="setlists" /></div>}
         {/* ── Confirmation : elle NOMME ce qui va disparaître (D3) ── */}
-        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {avecFete ? t("setlists.list.deleteSelectedTitle", { count: selection.length }) : t("setlists.list.trashTitle", { count: selection.length })}
-              </AlertDialogTitle>
-              <AlertDialogDescription asChild>
-                <div>
-                  <ul className="list-disc pl-5 space-y-0.5">
-                    {selection.slice(0, 8).map((s) => (
-                      <li key={s.id}>
-                        {titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr")}
-                        {" · "}
-                        <span className="capitalize">{formatDate(s.date, i18n.language)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {selection.length > 8 && (
-                    <p className="mt-1">
-                      {t("setlists.list.deleteMore", { count: selection.length - 8 })}
-                    </p>
-                  )}
-                  <p className="mt-2">
-                    {avecFete ? t("setlists.list.deleteSelectedBody") : t("setlists.list.trashBody", { count: selection.length })}
-                  </p>
-                </div>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={enCours}>{t("setlists.detail.deleteCancel")}</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={enCours}
-                onClick={() => void supprimerSelection()}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {enCours ? "…" : avecFete ? t("setlists.detail.deleteYes") : t("setlists.list.trashYes")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmationSuppressionGroupee
+          ouvert={confirmOpen}
+          onOuvertChange={setConfirmOpen}
+          selection={selection}
+          avecFete={avecFete}
+          enCours={enCours}
+          onConfirmer={() => void supprimerSelection()}
+        />
 
         {/* ── Suppression définitive depuis la corbeille ── */}
-        <AlertDialog open={!!aSupprimerDefinitivement} onOpenChange={(o) => !o && setASupprimerDefinitivement(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {t("setlists.corbeille.definitifTitre", { titre: aSupprimerDefinitivement ? titreAffiche(aSupprimerDefinitivement, i18n.language === "zh-CN" ? "zh" : "fr") : "" })}
-              </AlertDialogTitle>
-              <AlertDialogDescription>{t("setlists.corbeille.definitifCorps")}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={enCours}>{t("setlists.detail.deleteCancel")}</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={enCours}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (aSupprimerDefinitivement) void supprimerDefinitivement(aSupprimerDefinitivement);
-                }}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {enCours ? "…" : t("setlists.corbeille.supprimerDefinitivement")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmationSuppressionDefinitive
+          setlist={aSupprimerDefinitivement}
+          onFermer={() => setASupprimerDefinitivement(null)}
+          enCours={enCours}
+          onConfirmer={(s) => void supprimerDefinitivement(s)}
+        />
     </div>
   );
 }

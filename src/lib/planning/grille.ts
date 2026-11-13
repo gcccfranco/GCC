@@ -12,10 +12,6 @@ import { GRILLES, grilleDe, type DefinitionGrille } from "./grilles"
  *  (« pouvoir modifier tous les plannings sur le site »). */
 export const PLANNINGS_APP = GRILLES.map((g) => g.key)
 
-export function ecritDansLApp(key: string): boolean {
-  return PLANNINGS_APP.includes(key)
-}
-
 const FS_DOCS =
   `https://firestore.googleapis.com/v1/projects/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "gcclouange"}/databases/(default)/documents`
 

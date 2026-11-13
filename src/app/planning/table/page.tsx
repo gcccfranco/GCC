@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { OngletsRail } from "@/components/layout/Onglets"
 import { BarreDeGrille, FiltreDeNom, compterCasesVides, ongletsDePeriode, useFiltreNom, useTrimestreEnLettres } from "@/components/planning/BarreDeGrille"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
+import { CasePetitDej, usePetitDejGrille } from "@/components/planning/PetitDejCase"
 import { PetitDejCarte, TonPetitDej, usePetitDej } from "@/components/planning/PetitDejCarte"
 import { Tile } from "@/components/ui/tile"
 import { StaleBanner } from "@/components/planning/StaleBanner"
@@ -23,6 +24,7 @@ import { BACK_OFFICE } from "@/lib/backOffice"
 import { useGestionPlanning } from "@/lib/planning/gestion"
 import { avecPetitDej, rangeesPetitDej } from "@/lib/petitdej/lignes"
 import type { LignePetitDej } from "@/types/petitDej"
+import { PassesReplies } from "@/components/planning/PassesReplies"
 import { AncienTableau } from "./AncienTableau"
 
 // Prépa. Table du Seigneur + petit déjeuner : une grille à deux cases par
@@ -30,10 +32,11 @@ import { AncienTableau } from "./AncienTableau"
 // le droit ; les dimanches non écrits viennent encore du Sheet. Les données de
 // secours (équipes de 2026) restent le repli si le Sheet est injoignable.
 // Lot U3, PD2 (docs/spec-petit-dej.md) : la carte « Petit déj » en tête, où
-// chacun s'inscrit ; la case Petit déj de la grille l'affiche, sans se modifier.
+// chacun s'inscrit ; la case Petit déj de la grille l'affiche.
 // Lot U6, B2 (Q14) : dans l'App, la carte Petit déj et la carte compacte de la
-// Table (le dimanche qui vient), sans grille ; au Back-Office, la grille seule —
-// la carte Petit déj reste le seul endroit où l'on écrit ses lignes.
+// Table (le dimanche qui vient), sans grille ; au Back-Office, la grille seule.
+// 30/10/2026 (Timothée) : plus d'« Inscrire quelqu'un » ni de ⋯ sur les lignes des autres dans
+// l'App ; on les gère dans la case Petit déj de la grille du Back-Office (`PetitDejCase.tsx`).
 // Agencement v18, A4 (piste A) : dans l'App, deux colonnes en grand — la carte Petit déj du
 // trimestre à gauche, « Prépa. Table du Seigneur » (les équipes du trimestre) et « Ton petit
 // déj » à droite ; l'une sous l'autre ailleurs.
@@ -53,11 +56,11 @@ function TablePage() {
   const filtre = useFiltreNom()
   const trimestre = useTrimestreEnLettres()
   const peutModifier = gestion && canEditPlanning(user, profile, GRILLE_TABLE.key)
-  // Les comptes : « Choisir » de la grille (Back-Office), suggestions de la carte Petit
-  // déj (App) — les mêmes personnes, écrivains de la Table et admins.
+  // Les comptes : « Choisir » de la grille (Back-Office).
   const { datesDansLApp, comptes, absenceDe } = useGrilleApp(GRILLE_TABLE.key, canGererPetitDej(user, profile))
-  // Lot U3 : la carte Petit déj suggère les noms de planning des comptes.
-  const nomsDesComptes = comptes.map((c) => c.nom).filter(Boolean)
+  // La case Petit déj de la grille (Back-Office) : lignes à part, `petitDej/{id}`.
+  const peutGererPetitDej = gestion && canGererPetitDej(user, profile)
+  const petitDej = usePetitDejGrille(peutGererPetitDej, setInscriptions)
   // Lot U2 : l'année suivante s'ouvre à qui remplit, et à tous dès une case remplie.
   const anneeCourante = new Date().getFullYear()
   const [annee, setAnnee] = useState(anneeCourante)
@@ -88,7 +91,7 @@ function TablePage() {
       <StaleBanner show={status === "stale"} />
       <BandeauAnnee annee={effAnnee} brouillon={false} dimanches={suivante ? dimanchesDe(effAnnee).length : null} />
 
-      {!gestion && <PetitDejEtTable rows={rows} annee={effAnnee} tri={tri} nomsDesComptes={nomsDesComptes} onLignes={setInscriptions} />}
+      {!gestion && <PetitDejEtTable rows={rows} annee={effAnnee} tri={tri} onLignes={setInscriptions} />}
 
       {gestion && <PlanningGrille
         definition={GRILLE_TABLE}
@@ -100,6 +103,11 @@ function TablePage() {
         datesDansLApp={datesDansLApp}
         comptes={comptes}
         absenceDe={absenceDe}
+        casesAPart={peutGererPetitDej ? {
+          // Rien ne bouge un dimanche passé (Q2) ; lecture en échec : la case reste du texte.
+          ouverte: (date, c) => c.cle === "petitDej" && date >= currentSundayStr() && Array.isArray(petitDej.lignes),
+          rendre: (date) => <CasePetitDej etat={petitDej} dimanche={date} />,
+        } : undefined}
         exporter={peutModifier ? { annee: effAnnee, rang: Number(tri.slice(1)), tout: isAdminUser(user) } : undefined}
       />}
     </div>
@@ -109,18 +117,17 @@ function TablePage() {
 /** L'App (A4) : la carte Petit déj, puis la Table du Seigneur et « Ton petit déj », côte à côte
  *  en grand. Un seul état pour les deux cartes du petit déj (`usePetitDej`) : il n'est monté que
  *  dans l'App, le Back-Office n'en lit rien. */
-function PetitDejEtTable({ rows, annee, tri, nomsDesComptes, onLignes }: {
+function PetitDejEtTable({ rows, annee, tri, onLignes }: {
   rows: string[][]
   annee: number
   tri: string
-  nomsDesComptes: readonly string[]
   onLignes: (lignes: LignePetitDej[]) => void
 }) {
   const etat = usePetitDej(onLignes)
   const grand = useDisposition() === "grand"
   return (
     <div className={grand ? "grid grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] items-start gap-5" : "flex flex-col gap-4"}>
-      <PetitDejCarte etat={etat} annee={annee} tri={tri} nomsDesComptes={nomsDesComptes} />
+      <PetitDejCarte etat={etat} annee={annee} tri={tri} />
       <div className="flex min-w-0 flex-col gap-4">
         <TableDuSeigneur rows={rows} annee={annee} tri={tri} />
         <TonPetitDej etat={etat} annee={annee} tri={tri} />
@@ -130,8 +137,8 @@ function PetitDejEtTable({ rows, annee, tri, nomsDesComptes, onLignes }: {
 }
 
 /** « Prépa. Table du Seigneur » : les équipes du trimestre choisi, une par dimanche de sainte cène
- *  qui en a une (planche v18-app-planning-table-a : tuile de date, noms, « Dimanche de sainte
- *  cène ») ; les dimanches passés en gris. */
+ *  qui en a une (planche v18-app-planning-table-a : tuile de date, noms ; aucune mention de la sainte
+ *  cène, Timothée, 01/11/2026) ; les dimanches passés en gris. */
 function TableDuSeigneur({ rows, annee, tri }: { rows: string[][]; annee: number; tri: string }) {
   const { t, i18n } = useTranslation()
   const titreId = useId()
@@ -140,26 +147,34 @@ function TableDuSeigneur({ rows, annee, tri }: { rows: string[][]; annee: number
   const lignes = rows
     .filter((r) => r[0].startsWith(`${annee}-`) && getTri(r[0]) === tri && r[1]?.trim())
     .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+  const passees = lignes.filter((r) => r[0] < dimanche)
+  const aVenir = lignes.filter((r) => r[0] >= dimanche)
+  const ligne = (r: string[]) => {
+    const jour = new Date(`${r[0]}T12:00:00`)
+    return (
+      <li key={r[0]} data-dimanche={r[0]} className={`flex items-center gap-3 border-t border-border py-2.5 ${r[0] < dimanche ? "opacity-60" : ""}`}>
+        <Tile color={GRILLE_TABLE.couleur} big={jour.getDate()} small={new Intl.DateTimeFormat(langue, { month: "short" }).format(jour)} size="lg" />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground">{r[1]}</p>
+        </div>
+      </li>
+    )
+  }
   return (
-    <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-1.5">
+    <section aria-labelledby={titreId} className="carte-groupe min-w-0 rounded-2xl px-4 pt-3 pb-1.5">
       <div className="flex items-baseline gap-2 pb-2">
-        <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.pages.table")}</h3>
+        <h3 id={titreId} className="text-lg font-bold text-foreground">{t("planning.pages.table")}</h3>
       </div>
       {lignes.length ? (
-        <ul>
-          {lignes.map((r) => {
-            const jour = new Date(`${r[0]}T12:00:00`)
-            return (
-              <li key={r[0]} data-dimanche={r[0]} className={`flex items-center gap-3 border-t border-border py-2.5 ${r[0] < dimanche ? "opacity-60" : ""}`}>
-                <Tile color={GRILLE_TABLE.couleur} big={jour.getDate()} small={new Intl.DateTimeFormat(langue, { month: "short" }).format(jour)} size="lg" />
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{r[1]}</p>
-                  <p className="text-[12.5px] text-muted-foreground">{t("planning.table.dimancheSainteCene")}</p>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+        // Les dimanches passés se replient devant les à venir (plannings-7) ; tous passés ou tous à venir, rien ne se replie.
+        passees.length > 0 && aVenir.length > 0 ? (
+          <>
+            <PassesReplies count={passees.length}><ul>{passees.map(ligne)}</ul></PassesReplies>
+            <ul>{aVenir.map(ligne)}</ul>
+          </>
+        ) : (
+          <ul>{lignes.map(ligne)}</ul>
+        )
       ) : (
         <p className="border-t border-border py-2.5 text-sm text-muted-foreground">{t("planning.table.noData")}</p>
       )}

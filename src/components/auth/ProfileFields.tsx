@@ -14,6 +14,7 @@ import { normalizeName } from "@/lib/planning/names";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { styleTexteService } from "@/lib/couleurSombre";
 
 export interface ProfileFormValue {
   firstName: string;
@@ -31,7 +32,7 @@ export const EMPTY_PROFILE_FORM: ProfileFormValue = {
 };
 
 /** Fonction de dérivation des rôles depuis le planning, pour pré-remplir le formulaire. */
-export type DeriveFromPlanning = (name: string) => Record<string, ServiceRole[]>;
+type DeriveFromPlanning = (name: string) => Record<string, ServiceRole[]>;
 
 function toggle<T>(arr: T[], v: T): T[] {
   return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -131,7 +132,8 @@ export function ServiceGrid({
   onChange,
   deriveFromPlanning,
 }: SectionProps & { deriveFromPlanning?: DeriveFromPlanning }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
   const sr = value.serviceRoles;
   const setSr = (next: Record<string, ServiceRole[]>) => onChange({ ...value, serviceRoles: next });
 
@@ -181,11 +183,11 @@ export function ServiceGrid({
                   <button
                     type="button"
                     onClick={() => toggleCat(cat)}
-                    className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium"
-                    style={active ? { color } : undefined}
+                    className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium${active ? " texte-service" : ""}`}
+                    style={active ? styleTexteService(color) : undefined}
                   >
                     <span className={active ? "" : "text-muted-foreground"}>
-                      {active ? "✓ " : ""}{categoryLabel(cat)}
+                      {active ? "✓ " : ""}{zh ? t(`categories.${cat}`, { defaultValue: cat }) : categoryLabel(cat)}
                     </span>
                   </button>
                   {active && (
@@ -194,7 +196,7 @@ export function ServiceGrid({
                         <CheckPill
                           key={role}
                           checked={(sr[cat] ?? []).includes(role)}
-                          label={SERVICE_ROLE_LABELS[role]}
+                          label={zh ? t(`equipes.role.${role === "chanteur" ? "choriste" : role}`) : SERVICE_ROLE_LABELS[role]}
                           color={color}
                           onToggle={() => toggleRole(cat, role)}
                         />
@@ -295,7 +297,7 @@ export function PlanningNameField({
       </button>
 
       {open && (
-        <div className="mt-1 rounded-lg border border-transparent bg-secondary shadow-sm overflow-hidden">
+        <div className="mt-1 rounded-lg border border-transparent bg-secondary overflow-hidden">
           <div className="p-2 border-b border-border">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />

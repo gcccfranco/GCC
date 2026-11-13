@@ -10,7 +10,9 @@ import { getSetlistHistory, type HistoryEntry } from "@/lib/firebase/setlistHist
 import { compareSequences, type HistoryChange, type SectionNote, type SequenceMark } from "@/lib/setlist/history";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { SECTION_PALETTE_KEY } from "@/components/song/SongView";
+import { sectionColorKind } from "@/lib/sectionPalette";
 import type { SongIndexEntry } from "@/types/song";
+import { compter } from "@/lib/usage";
 
 // Historique des modifications (docs/spec-setlist.md, lot 2) : une ligne sous
 // le titre de la setlist, qui ouvre une feuille — la dernière entrée, puis les
@@ -84,6 +86,15 @@ const TYPE_OF_ABBREVIATION: Record<string, string> = {
   I: "intro", C: "verse", Pr: "prechorus", R: "chorus", Po: "postchorus", P: "bridge", F: "outro",
 };
 
+/** Libellé d'une section tel que l'historique l'a écrit : interlude et
+ *  instrumental s'abrégeaient « Pm » avant le 07/11/2026 (« Int », « Inst »
+ *  depuis), et les entrées déjà enregistrées le gardent. */
+const OLD_LABEL = /^(?:Int|Inst)(\d*)$/;
+const writtenAs = (section: { type: string; name?: string; number?: string }, abbr: string) => {
+  const current = abbreviateSection(section);
+  return current === abbr || current.replace(OLD_LABEL, "Pm$1") === abbr;
+};
+
 /** Avant : seul le retiré est marqué ; après : l'ajouté et le déplacé. */
 function shownMark(mark: SequenceMark, side: "before" | "after"): SequenceMark {
   if (side === "before") return mark === "removed" ? mark : "same";
@@ -101,14 +112,14 @@ function SectionPill({ label, songs, mark, side, songsMap }: {
   const { t } = useTranslation();
   const [, number, abbr] = label.match(/^(?:(\d+) )?(.*)$/) ?? [];
   const slug = songs[number ? Number(number) - 1 : 0];
-  const section = songsMap[slug]?.sections?.find((s) => abbreviateSection(s) === abbr);
-  const type = section?.type ?? TYPE_OF_ABBREVIATION[abbr.replace(/\d+$/, "")] ?? "other";
+  const section = songsMap[slug]?.sections?.find((s) => writtenAs(s, abbr));
+  const type = (section && sectionColorKind(section)) ?? TYPE_OF_ABBREVIATION[abbr.replace(/\d+$/, "")] ?? "other";
   const key = SECTION_PALETTE_KEY[type] ?? "other";
   const shown = shownMark(mark, side);
   return (
     <li
       data-mark={shown}
-      className={`relative inline-flex h-7 min-w-7 items-center justify-center gap-0.5 rounded-full px-2 text-[13px] font-bold leading-none ${
+      className={`relative inline-flex h-7 min-w-7 items-center justify-center gap-0.5 rounded-full px-2 text-sm font-bold leading-none ${
         shown === "removed" ? "opacity-60" : ""
       } ${shown === "added" ? "ring-2 ring-emerald-600 ring-offset-1 ring-offset-background dark:ring-emerald-400" : ""}`}
       style={{ background: `var(--sec-${key}-tint)`, color: `var(--sec-${key})` }}
@@ -118,7 +129,7 @@ function SectionPill({ label, songs, mark, side, songsMap }: {
         <span aria-hidden className="pointer-events-none absolute inset-x-1 top-1/2 h-[1.5px] -translate-y-1/2 -rotate-[20deg] rounded-full bg-current" />
       )}
       {shown === "moved" && <ArrowUpDown className="h-3 w-3" aria-hidden />}
-      {number && <span className="text-[10px] font-semibold opacity-75">{number} </span>}
+      {number && <span className="text-xs font-semibold opacity-75">{number} </span>}
       <abbr title={section?.name} className="no-underline">{abbr}</abbr>
       {shown !== "same" && <span className="sr-only"> ({t(`setlists.history.${shown}`)})</span>}
     </li>
@@ -357,7 +368,7 @@ export function SetlistHistory({ setlistId, songsMap }: { setlistId: string; son
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => { compter("cmd.setlist.historique"); setOpen(true); }}
         className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground print:hidden"
       >
         <History className="h-3.5 w-3.5" aria-hidden />

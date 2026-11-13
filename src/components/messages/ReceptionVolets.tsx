@@ -10,6 +10,7 @@
 // grand, `DeuxVolets` (la liste en carte) sous l'en-tête commun de Messages ; « Supprimer » passe
 // dans « ⋯ » (confirmé dans le site) ; sous le message, « Le chant signalé » (titre, tonalité,
 // sections, lus dans l'index) et « Du même membre » (lus dans la liste déjà chargée).
+import { lienDeLaPage, origineDuSite } from "@/lib/report/lienPage";
 import { Fragment, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -20,10 +21,12 @@ import { useSongsIndex } from "@/hooks/useSongsIndex";
 import type { Report } from "@/types/report";
 import type { SongProposal } from "@/types/songProposal";
 import { useReception } from "@/components/admin/Reception";
+import { EtatVide } from "@/components/layout/EtatVide";
 import { Pilules } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 type Filtre = "tout" | "signalements" | "propositions";
 /** Un message de la Réception : un signalement ou une proposition de chant. */
@@ -53,6 +56,12 @@ export function ReceptionVolets() {
   const propositions = rec.proposals.map(proposition);
   const tous = [...(voirS ? signalements : []), ...(voirP ? propositions : [])];
   const choisi = tous.find((m) => m.cle === choix) ?? tous.find(enAttente) ?? null;
+  // Rien à montrer (après filtre) : un seul message vide à la place des sections.
+  const vide = !rec.loadingReports && !rec.loadingProposals && tous.length === 0;
+  // Aucun message du tout (avant filtre) : le cadre seul, sans filtres, sur toutes les dispositions (bo-messages-planning-11).
+  const rienDuTout = !rec.loadingReports && !rec.loadingProposals && signalements.length + propositions.length === 0;
+  const cleVide = rienDuTout || disposition === "tablette" || filtre === "tout" ? "backOffice.boE1.aucunMessage"
+    : filtre === "signalements" ? "backOffice.reception.aucunSignalement" : "backOffice.reception.aucuneProposition";
 
   const date = (d: Date | null) => (d ? ` · ${d.toLocaleDateString(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR")}` : "");
   const auteur = (m: Message) => (m.r ? m.r.authorName : t("backOffice.reception.proposePar", { nom: m.p.authorName })) + date((m.r ?? m.p).createdAt);
@@ -81,11 +90,15 @@ export function ReceptionVolets() {
               <Music className="h-3.5 w-3.5" aria-hidden />{m.r.songTitle || t("backOffice.reception.voirChant")}
             </Link>
           ),
-          m.r.pageUrl && (
+          m.r.pageUrl && (lienDeLaPage(m.r.pageUrl, origineDuSite()) ? (
             <a key="page" href={m.r.pageUrl} target="_blank" rel="noopener noreferrer" className={lien}>
               <Link2 className="h-3.5 w-3.5" aria-hidden />{t("backOffice.reception.page")}
             </a>
-          ),
+          ) : (
+            <span key="page" className={lien}>
+              <Link2 className="h-3.5 w-3.5" aria-hidden />{t("backOffice.reception.page")} : {m.r.pageUrl}
+            </span>
+          )),
         ]
       : [
           <a key="yt" href={m.p.youtubeUrl} target="_blank" rel="noopener noreferrer" className={lien}>
@@ -100,7 +113,7 @@ export function ReceptionVolets() {
     const texte = m.r?.description;
     const contenu = (
       <>
-        {texte && <p className={cn("whitespace-pre-wrap text-foreground", grand ? "text-[15px] leading-[23px]" : "text-sm leading-[21px]")}>{texte}</p>}
+        {texte && <p className={cn("whitespace-pre-wrap text-foreground", grand ? "text-base leading-[23px]" : "text-sm leading-[21px]")}>{texte}</p>}
         {liens.some(Boolean) && <div className={cn("flex flex-wrap gap-x-4 gap-y-2", texte && "mt-3")}>{liens}</div>}
       </>
     );
@@ -142,7 +155,7 @@ export function ReceptionVolets() {
     if (grand)
       return (
         <>
-          {(texte || liens.some(Boolean)) && <div className="raised rounded-2xl px-5 py-[18px]">{contenu}</div>}
+          {(texte || liens.some(Boolean)) && <div className="carte-groupe rounded-2xl px-5 py-[18px]">{contenu}</div>}
           <div className="mt-4">{actions}</div>
           <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] items-start gap-4">
             {chantSignale(m)}
@@ -164,9 +177,9 @@ export function ReceptionVolets() {
     const chant = songs?.find((c) => c.slug === m.r!.songSlug);
     const id = `chant-${m.r.id}`;
     return (
-      <section aria-labelledby={id} className="raised rounded-2xl px-5 py-4">
+      <section aria-labelledby={id} className="carte-groupe rounded-2xl px-5 py-4">
         <div className="flex items-center justify-between gap-3">
-          <h3 id={id} className="text-[15px] font-bold text-foreground">{t("backOffice.reception.chantSignale")}</h3>
+          <h3 id={id} className="text-base font-bold text-foreground">{t("backOffice.reception.chantSignale")}</h3>
           <Link href={`/songs/${m.r.songSlug}`} className={BOUTON}>
             <FileText className="h-4 w-4" aria-hidden />{t("backOffice.reception.ouvrirPartition")}
           </Link>
@@ -197,8 +210,8 @@ export function ReceptionVolets() {
       return t(st === "pending" ? "backOffice.reception.enAttenteCourt" : st === "rejected" ? "backOffice.reception.refuseCourt" : "backOffice.reception.traiteCourt");
     };
     return (
-      <section aria-labelledby={id} className="raised rounded-2xl px-5 py-4">
-        <h3 id={id} className="text-[15px] font-bold text-foreground">{t("backOffice.reception.memeMembre")}</h3>
+      <section aria-labelledby={id} className="carte-groupe rounded-2xl px-5 py-4">
+        <h3 id={id} className="text-base font-bold text-foreground">{t("backOffice.reception.memeMembre")}</h3>
         <ul className="mt-2">
           {autres.map((x) => (
             <li key={x.cle} className="border-t border-border first:border-t-0">
@@ -206,7 +219,7 @@ export function ReceptionVolets() {
                 <span className="block text-sm font-semibold text-foreground hover:underline">
                   {x.r ? x.r.title : t("backOffice.reception.proposition", { titre: x.p.title })}
                 </span>
-                <span className="block text-[12px] text-muted-foreground">{statut(x)}{date((x.r ?? x.p).createdAt)}</span>
+                <span className="block text-xs text-muted-foreground">{statut(x)}{date((x.r ?? x.p).createdAt)}</span>
               </button>
             </li>
           ))}
@@ -225,8 +238,8 @@ export function ReceptionVolets() {
           className={cn("flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left transition-colors duration-150",
             actif ? "bg-foreground text-background" : "hover:bg-secondary", traite && !actif && "opacity-60")}>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[15px] font-semibold">{titre}</span>
-            <span className={cn("block truncate text-[13px]", actif ? "text-background/75" : "text-muted-foreground")}>{auteur(m)}</span>
+            <span className="block truncate text-base font-semibold">{titre}</span>
+            <span className={cn("block truncate text-sm", actif ? "text-background/75" : "text-muted-foreground")}>{auteur(m)}</span>
           </span>
           <span className="flex shrink-0 items-center gap-1.5">{badges(m, actif)}</span>
           <ChevronRight className={cn("h-4 w-4 shrink-0", actif ? "text-background" : "text-muted-foreground/60")} aria-hidden />
@@ -239,8 +252,8 @@ export function ReceptionVolets() {
         <button type="button" aria-expanded={deplie} onClick={() => setOuvert(deplie ? null : m.cle)}
           className="flex w-full items-center gap-2.5 py-2.5 text-left">
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[15px] font-bold text-foreground">{titre}</span>
-            <span className="block truncate text-[13px] text-muted-foreground">{auteur(m)}</span>
+            <span className="block truncate text-base font-bold text-foreground">{titre}</span>
+            <span className="block truncate text-sm text-muted-foreground">{auteur(m)}</span>
           </span>
           <span className="flex shrink-0 items-center gap-1.5">{badges(m)}</span>
           {deplie ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}
@@ -259,19 +272,19 @@ export function ReceptionVolets() {
     const id = `reception-${type}`;
     const grand = disposition === "grand";
     return (
-      <section aria-labelledby={id} className={cn(disposition === "tablette" && "raised min-w-0 rounded-2xl px-[18px] py-3.5")}>
+      <section aria-labelledby={id} className={cn(disposition === "tablette" && "carte-groupe min-w-0 rounded-2xl px-[18px] py-3.5")}>
         <div className={cn("flex items-center gap-2", grand ? "px-2.5 pb-1 pt-3" : "pb-1")}>
-          <h2 id={id} className={grand ? "text-[13px] font-semibold text-muted-foreground" : "text-[15px] font-bold text-foreground"}>
+          <h2 id={id} className={grand ? "text-sm font-semibold text-muted-foreground" : "text-base font-bold text-foreground"}>
             {t(type === "s" ? "backOffice.reception.titreSignalements" : "backOffice.reception.titrePropositions")}
           </h2>
           {attente.length > 0 && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
               {t("backOffice.reception.enAttente", { n: attente.length })}
             </span>
           )}
         </div>
         {disposition === "tablette" && (
-          <p className="mb-2 text-[13px] text-muted-foreground">{t(type === "s" ? "backOffice.reception.aideSignalements" : "backOffice.reception.aidePropositions")}</p>
+          <p className="mb-2 text-sm text-muted-foreground">{t(type === "s" ? "backOffice.reception.aideSignalements" : "backOffice.reception.aidePropositions")}</p>
         )}
         {chargement ? (
           <p className="py-4 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
@@ -284,7 +297,7 @@ export function ReceptionVolets() {
             <div className={grand ? "space-y-0.5" : undefined}>{vus.map((m) => <Fragment key={m.cle}>{ligne(m)}</Fragment>)}</div>
             {traites > 0 && (
               <button type="button" onClick={() => setTraitesVus((v) => ({ ...v, [type]: !v[type] }))}
-                className={cn("block w-full border-t border-border py-2.5 text-left text-[13px] font-semibold text-muted-foreground hover:text-foreground", grand && "px-2.5")}>
+                className={cn("block w-full border-t border-border py-2.5 text-left text-sm font-semibold text-muted-foreground hover:text-foreground", grand && "px-2.5")}>
                 {traitesVus[type] ? t("backOffice.reception.masquerTraites") : t("backOffice.reception.voirTraites", { n: traites })}
               </button>
             )}
@@ -306,7 +319,9 @@ export function ReceptionVolets() {
       obligatoire
     />
   );
-  const sections = (
+  const sections = vide ? (
+    <EtatVide compact surGris={disposition === "tablette" || (disposition === "telephone" && rienDuTout)} sansFond={disposition === "grand"} className={disposition === "tablette" ? "col-span-2" : undefined}>{t(cleVide)}</EtatVide>
+  ) : (
     <>
       {voirS && section("s")}
       {voirP && section("p")}
@@ -317,7 +332,7 @@ export function ReceptionVolets() {
     return (
       <div>
         <div className="flex gap-1.5">{badges(m)}</div>
-        <h2 className="mt-2 text-[24px] font-bold leading-[30px] tracking-tight text-foreground text-balance">{(m.r ?? m.p).title}</h2>
+        <h2 className="mt-2 text-xl font-bold tracking-tight text-foreground text-balance">{(m.r ?? m.p).title}</h2>
         <p className="mb-4 mt-0.5 text-sm text-muted-foreground">{auteur(m)}</p>
         {m.p?.setlistId && <p className="mb-4 text-sm text-muted-foreground">{t("backOffice.reception.pourSetlist", { setlist: m.p.setlistTitre, id: m.p.id })}</p>}
         {corps(m, true)}
@@ -330,15 +345,18 @@ export function ReceptionVolets() {
       <DeuxVolets
         racine="/back-office/messages"
         largeurListe={380}
+        colonneSeule={!choisi}
         liste={
-          <div className="px-2.5 pb-4 pt-3">
-            <div className="px-2.5 pb-1">{pilules}</div>
+          <div className={rienDuTout ? "p-4" : "px-2.5 pb-4 pt-3"}>
+            {/* Volet de droite caché : l'alerte d'erreur reste visible, en tête de la liste. */}
+            {!choisi && erreur}
+            {!rienDuTout && <div className="px-2.5 pb-1">{pilules}</div>}
             {sections}
           </div>
         }
         premier={
           <section aria-label={t("backOffice.reception.message")} className="min-w-0">
-            {erreur}
+            {choisi && erreur}
             {choisi ? detail(choisi) : <p className="text-sm text-muted-foreground">{t("backOffice.reception.aucunEnAttente")}</p>}
           </section>
         }
@@ -353,10 +371,12 @@ export function ReceptionVolets() {
       {disposition === "tablette" ? (
         <div className="grid grid-cols-2 items-start gap-3.5">{sections}</div>
       ) : (
-        <>
-          <div className="mb-3">{pilules}</div>
-          <div className="raised space-y-4 rounded-2xl px-4 py-3">{sections}</div>
-        </>
+        rienDuTout ? sections : (
+          <>
+            <div className="mb-3">{pilules}</div>
+            <div className="carte-groupe space-y-4 rounded-2xl px-4 py-3">{sections}</div>
+          </>
+        )
       )}
     </div>
   );
@@ -364,8 +384,8 @@ export function ReceptionVolets() {
 
 function Etiquette({ couleur, plein, children }: { couleur: string; plein?: boolean; children: ReactNode }) {
   return (
-    <span className="rounded-full px-1.5 py-px text-[11px] font-bold"
-      style={{ color: couleur, background: plein ? "#fff" : `${couleur}17`, boxShadow: `inset 0 0 0 1px ${couleur}4d` }}>
+    <span className={`rounded-full px-1.5 py-px text-xs font-bold${plein ? "" : " texte-service"}`}
+      style={{ ...(plein ? { color: couleur } : styleTexteService(couleur)), background: plein ? "#fff" : `${couleur}17`, boxShadow: `inset 0 0 0 1px ${couleur}4d` }}>
       {children}
     </span>
   );

@@ -1,10 +1,9 @@
-import { expect, test, type BrowserContextOptions, type Locator, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
-import { repondreDansLeSite } from "./helpers/agencement";
+import { referentLouange, signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import {
-  ajouterWidget, catalogue, changerReglages, changerTaille, deplacerWidget, dispositionAffichee, dispositionParDefaut, retirerWidget,
+  ajouterWidget, catalogue, changerReglages, changerTaille, deplacerWidget, dispositionAffichee, dispositionParDefaut, retirerWidget, VERSION_TABLEAU,
 } from "../src/lib/tableauDeBord/disposition";
 import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
 import { EQUIPES } from "../src/lib/equipes/table";
@@ -12,9 +11,12 @@ import { COMITES } from "../src/lib/groupes/table";
 import {
   aFaireDuTableau, ceDimanche, creneauxAVenir, etatInscriptions, evenementsAVenir, nomsSansCompte, nouveauxComptes,
   petitDejAVenir, equipesAFaire, prochainsDimanches, raccourcisPermis, seancesDesServices, servicesDuDimanche, servicesSetlists,
+  absencesEnConflit, creneauxVides, equipeDeLaColonne, etatsDuDimanche, evenementsDuTableau, fermeBientot, planningsDuTableau,
+  prochainDimanche, quiRelancer, reunionsDuTableau, estSienEvenement, sujetsOuverts, tachesDuTableau, texteDuRappel,
 } from "../src/lib/tableauDeBord/donnees";
+import { widgetsPermis } from "../src/lib/access";
 import { casesVides } from "../src/lib/planning/casesVides";
-import { GRILLE_CULTE, GRILLE_INTERFRANCO } from "../src/lib/planning/grilles";
+import { GRILLE_CULTE, GRILLE_INTERFRANCO, GRILLE_INTERGROUPE } from "../src/lib/planning/grilles";
 import type { Evenement } from "../src/types/evenement";
 import type { Creneau } from "../src/types/programme";
 import type { Tache } from "../src/types/tache";
@@ -42,6 +44,11 @@ const LES_DEUX: FakeProfile = {
   uid: "uid-deux", email: "deux@example.com", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true,
   serviceRoles: { "Culte Francophone": ["musicien"] }, plannings: ["culte"],
 };
+// Lot AO : pour les tests d'écran (interrupteur ouvert), la Coordination et le droit de remplir le Culte viennent de places
+// d'organigramme, plus de cases : Alice est aussi référente EDD, Lou référente Louange. Les tests purs ci-dessous (ancien
+// mode, `profil(p)`) gardent ALICE et LOUANGE.
+const ALICE_ORGA: FakeProfile = { ...ALICE, dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
+const LOUANGE_ORGA: FakeProfile = { ...LOUANGE, ...referentLouange() };
 const ANNONCES: FakeProfile = { uid: "uid-an", email: "an@example.com", annonces: ["Culte Francophone"] };
 
 const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
@@ -102,59 +109,48 @@ async function ouvrir(page: Page, qui: FakeProfile, docs: Record<string, Record<
   return signInAs(page, qui, { ...DOCS, ...docs }, "/back-office");
 }
 
-const grille = (page: Page) => page.getByTestId("grille-widgets");
-const widget = (page: Page, nom: string) => grille(page).getByRole("region", { name: nom, exact: true });
-const widgetsAffiches = (page: Page) =>
-  grille(page).locator("[data-widget]").evaluateAll((els) => els.map((e) => e.getAttribute("data-widget")));
-
-/** Colonnes de la grille selon l'appareil (Q10) : 4 sur ordinateur et tablette en paysage,
- *  2 sur tablette en portrait, 1 sur téléphone. */
-function colonnes(info: TestInfo): 1 | 2 | 4 {
-  if (info.project.name === "telephone") return 1;
-  if (info.project.name === "tablette") return 2;
-  return 4;
-}
-
-/** Part de la largeur de la grille qu'occupe un widget (1 = toute la ligne). */
-async function part(cadre: Locator, w: Locator): Promise<number> {
-  const g = (await cadre.boundingBox())!;
-  const b = (await w.boundingBox())!;
-  return b.width / g.width;
-}
-
 // ─── Règles pures ─────────────────────────────────────────────────────────────
 
-test.describe("Tableau de bord (B4) : disposition par défaut selon le rôle (Q11)", () => {
-  test("admin : tous les widgets permis, dans l'ordre de la planche (Calendrier depuis U8 C8 ; Chants les plus joués : U7, S5)", () => {
+// Lot TB2, T9 : le même défaut pour tout le monde (admin compris), filtré par les droits de chaque widget.
+const DEFAUT_T9 = ["dimanche", "planning", "evenements", "afaire", "reunions", "comptes"];
+const TAILLES_T9: Record<string, string> = { dimanche: "s", planning: "l", evenements: "m", afaire: "m", reunions: "s", comptes: "s" };
+
+test.describe("Tableau de bord (TB2-c) : disposition par défaut (T9)", () => {
+  test("admin : les six, dans l'ordre de T9, aux tailles de T9, sans réglage", () => {
     const d = dispositionParDefaut(user(ADMIN), null);
-    expect(ids(d)).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"]);
-    expect(d.map((w) => w.taille)).toEqual(["m", "m", "m", "s", "s", "m", "m", "s", "s", "s", "s"]);
+    expect(ids(d)).toEqual(DEFAUT_T9);
+    expect(d.map((w) => w.taille)).toEqual(["s", "l", "m", "m", "s", "s"]);
     expect(d.every((w) => Object.keys(w.reglages).length === 0)).toBe(true);
   });
 
-  test("évènement (pôle Événement) : Ce dimanche, À faire, Prochains évènements, Scène", () => {
-    expect(ids(dispositionParDefaut(user(ALICE), profil(ALICE)))).toEqual(["dimanche", "afaire", "evenements", "scene"]);
+  test("le défaut de chacun : les six filtrés par ses droits (widgetsPermis), dans le même ordre", () => {
+    for (const qui of [ALICE, LOUANGE, LES_DEUX, DA, ANNONCES]) {
+      const permis = widgetsPermis(user(qui), profil(qui));
+      const d = dispositionParDefaut(user(qui), profil(qui));
+      expect(ids(d), qui.uid).toEqual(DEFAUT_T9.filter((id) => permis.includes(id as never)));
+      expect(d.map((w) => w.taille), qui.uid).toEqual(ids(d).map((id) => TAILLES_T9[id]));
+    }
   });
 
-  test("évènement par le droit d'annonces, sans pôle : À faire n'est pas permis", () => {
-    expect(ids(dispositionParDefaut(user(ANNONCES), profil(ANNONCES)))).toEqual(["dimanche", "evenements", "scene"]);
+  test("pôle Événement (Alice) : Ce dimanche, Évènements, Tâches, Réunions ; pas de Comptes", () => {
+    expect(ids(dispositionParDefaut(user(ALICE), profil(ALICE)))).toEqual(["dimanche", "evenements", "afaire", "reunions"]);
   });
 
-  test("louange (rôle de service, plannings) : Ce dimanche, À faire, Setlists, Cases vides", () => {
-    const d = dispositionParDefaut(user(LOUANGE), profil(LOUANGE));
-    expect(ids(d)).toEqual(["dimanche", "afaire", "setlists", "planning"]);
-    expect(d.map((w) => w.taille)).toEqual(["m", "m", "s", "s"]);
+  test("louange (rôle de service, plannings) : s'y ajoute Plannings, en deuxième", () => {
+    // Sans l'entrée Évènements, plus le widget des évènements (TB2-corrections : Réunions ne le permet plus).
+    expect(ids(dispositionParDefaut(user(LOUANGE), profil(LOUANGE)))).toEqual(["dimanche", "planning", "afaire", "reunions"]);
   });
 
-  test("les deux : l'union, dans l'ordre de la planche", () => {
-    expect(ids(dispositionParDefaut(user(LES_DEUX), profil(LES_DEUX))))
-      .toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "scene"]);
-  });
-
-  test("pôle DA seul : Ce dimanche et À faire ; un non-responsable : rien", () => {
-    expect(ids(dispositionParDefaut(user(DA), profil(DA)))).toEqual(["dimanche", "afaire"]);
+  test("droit d'annonces seul : Ce dimanche et Évènements ; pôle DA seul : sans Plannings ; un non-responsable : rien", () => {
+    expect(ids(dispositionParDefaut(user(ANNONCES), profil(ANNONCES)))).toEqual(["dimanche", "evenements"]);
+    expect(ids(dispositionParDefaut(user(DA), profil(DA)))).toEqual(["dimanche", "evenements", "afaire", "reunions"]);
     const choriste: FakeProfile = { uid: "uid-ch", email: "ch@example.com", serviceRoles: { "Culte Francophone": ["chanteur"] } };
     expect(dispositionParDefaut(user(choriste), profil(choriste))).toEqual([]);
+  });
+
+  test("Setlists, Petit déj, Scène, Calendrier, Chants, Raccourcis ne sont plus au défaut : ils restent au catalogue", () => {
+    const d = dispositionParDefaut(user(ADMIN), null);
+    expect(catalogue(d, user(ADMIN), null)).toEqual(["calendrier", "setlists", "chants", "petitdej", "raccourcis", "scene"]);
   });
 });
 
@@ -162,6 +158,15 @@ test.describe("Tableau de bord (B4) : disposition enregistrée (backOffice/{uid}
   test("absente : le défaut du rôle, recalculé", () => {
     expect(dispositionAffichee(null, user(DA), profil(DA))).toEqual(dispositionParDefaut(user(DA), profil(DA)));
     expect(dispositionAffichee({ majLe: "2026-10-01" }, user(DA), profil(DA))).toEqual(dispositionParDefaut(user(DA), profil(DA)));
+  });
+
+  test("T10 : une disposition sans versionTableau, ou de la version 1, est ignorée : le défaut s'affiche", () => {
+    const sienne = [{ id: "calendrier" as const, taille: "l" as const, reglages: {} }];
+    const defaut = dispositionParDefaut(user(DA), profil(DA));
+    expect(dispositionAffichee({ tableauDeBord: sienne, majLe: "2026-10-01" }, user(DA), profil(DA))).toEqual(defaut);
+    expect(dispositionAffichee({ tableauDeBord: sienne, versionTableau: 1, majLe: "2026-10-01" }, user(DA), profil(DA))).toEqual(defaut);
+    expect(dispositionAffichee({ tableauDeBord: sienne, versionTableau: VERSION_TABLEAU, majLe: "2026-10-01" }, user(DA), profil(DA))).toEqual(sienne);
+    expect(VERSION_TABLEAU).toBe(2);
   });
 
   test("présente : son ordre, ses tailles, ses réglages ; sans widget non permis, inconnu, à venir ni doublon", () => {
@@ -174,16 +179,18 @@ test.describe("Tableau de bord (B4) : disposition enregistrée (backOffice/{uid}
         { id: "dimanche", taille: "x" as never, reglages: {} }, // taille illisible : celle du catalogue
         { id: "evenements", taille: "s", reglages: {} },        // doublon
       ],
+      versionTableau: 2,
       majLe: "2026-10-01",
     }, user(ALICE), profil(ALICE));
     expect(d).toEqual([
       { id: "evenements", taille: "l", reglages: { nombre: 5 } },
-      { id: "dimanche", taille: "m", reglages: {} },
+      { id: "chants", taille: "m", reglages: {} },           // lot ST (D5) : permis à tout connecté
+      { id: "dimanche", taille: "s", reglages: {} },
     ]);
   });
 
   test("tout retiré : un tableau vide reste vide (ce n'est pas l'absence)", () => {
-    expect(dispositionAffichee({ tableauDeBord: [], majLe: "2026-10-01" }, user(ALICE), profil(ALICE))).toEqual([]);
+    expect(dispositionAffichee({ tableauDeBord: [], versionTableau: 2, majLe: "2026-10-01" }, user(ALICE), profil(ALICE))).toEqual([]);
   });
 });
 
@@ -210,7 +217,17 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
     const r = casesVides(GRILLE_CULTE, [], ["2027-01-03"]);
     expect(r).toHaveLength(1);
     expect(r[0].colonnes.map((c) => c.cle)).toEqual(
-      ["presidence", "choriste1", "choriste2", "piano", "guitare", "batterie", "sono", "ppt", "orateur", "traduction"]);
+      // La traduction est facultative (31/10/2026) : elle n'est pas une case à remplir.
+      ["presidence", "choriste1", "choriste2", "piano", "guitare", "batterie", "sono", "ppt", "orateur"]);
+  });
+
+  test("traduction facultative (31/10/2026) : vide, elle ne compte pas au Culte, à l'Intergroupe ni à l'Interfranco", () => {
+    for (const g of [GRILLE_CULTE, GRILLE_INTERGROUPE, GRILLE_INTERFRANCO]) {
+      // Une ligne entièrement remplie, sauf la traduction (et la Sainte cène, déjà facultative).
+      const ligne = ["2027-01-10", ...g.colonnes.map((c) => (c.optionnelle ? "" : "Pers. A"))];
+      expect(g.colonnes.find((c) => c.cle === "traduction")?.optionnelle, g.key).toBe(true);
+      expect(casesVides(g, [ligne], ["2027-01-10"]), g.key).toEqual([]);
+    }
   });
 
   test("cases vides d'un planning à dates choisies : seulement ses dates posées", () => {
@@ -262,6 +279,7 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
     const [culte] = ceDimanche({ culte: [["2026-10-04", ...plein]] }, [setlist], ["Culte Francophone"], "2026-10-04");
     expect(culte.libelle).toBe("Culte Franco");
     expect(culte.vides).toBe(1);
+    expect([culte.grille, culte.date]).toEqual(["culte", "2026-10-04"]);
     expect(culte.setlist).toBe(true);
     expect(culte.presentation).toBe(true);
     expect(culte.lignes.map((l) => l.cle)).not.toContain("sainteCene");
@@ -271,7 +289,7 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
     expect(brouillon.setlist).toBe(false);
     // Sans ligne ce dimanche-là (Sheet de 2026) : rien ; dès 2027, un dimanche vide est montré vide.
     expect(ceDimanche({ culte: [] }, [], ["Culte Francophone"], "2026-10-04")).toEqual([]);
-    expect(ceDimanche({ culte: [] }, [], ["Culte Francophone"], "2027-01-03")[0].vides).toBe(10);
+    expect(ceDimanche({ culte: [] }, [], ["Culte Francophone"], "2027-01-03")[0].vides).toBe(9); // la traduction, facultative (31/10/2026), ne compte pas
   });
 
   test("setlists à préparer : séances des services, sans setlist publiée, sur l'horizon", () => {
@@ -325,197 +343,6 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
   });
 });
 
-// ─── Écrans ───────────────────────────────────────────────────────────────────
-// Le site sert ses adresses avec une barre oblique finale (`trailingSlash`) : liens en motif.
-
-test.describe("Tableau de bord (B4) : écrans", () => {
-  test("admin sans disposition enregistrée : tous ses widgets, dans l'ordre du défaut", async ({ page }) => {
-    await ouvrir(page, ADMIN);
-    await expect(widget(page, "Ce dimanche")).toBeVisible();
-    expect(await widgetsAffiches(page)).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"]);
-  });
-
-  test("Ce dimanche : le Culte du 4 octobre, setlist, présentation, case vide", async ({ page }) => {
-    await ouvrir(page, ADMIN);
-    const w = widget(page, "Ce dimanche");
-    await expect(w.getByRole("heading", { name: "Ce dimanche · 4 octobre" })).toBeVisible();
-    await expect(w.getByText("Culte Franco", { exact: true })).toBeVisible();
-    await expect(w.getByText("Setlist publiée")).toBeVisible();
-    await expect(w.getByText("Présentation prête")).toBeVisible();
-    await expect(w.getByText("1 case vide")).toBeVisible();
-    await expect(w.getByTestId("ligne-dimanche").filter({ hasText: "Présidence" })).toContainText("Pers. A");
-    await expect(w.getByTestId("ligne-dimanche").filter({ hasText: "Batterie" })).toContainText("Personne");
-  });
-
-  test("Ce dimanche : un réglage de services change le contenu", async ({ page }) => {
-    await ouvrir(page, ADMIN, {
-      "backOffice/uid-admin": { tableauDeBord: [{ id: "dimanche", taille: "m", reglages: { services: ["Groupe Bonté"] } }], majLe: "2026-10-01" },
-    });
-    const w = widget(page, "Ce dimanche");
-    await expect(w.getByText("Rien au planning ce dimanche.")).toBeVisible();
-    await expect(w.getByText("Culte Franco", { exact: true })).toHaveCount(0);
-  });
-
-  test("Alice (pôle Événement) : ses quatre widgets et leurs données", async ({ page }) => {
-    await ouvrir(page, ALICE);
-    await expect(widget(page, "Scène")).toBeVisible();
-    expect(await widgetsAffiches(page)).toEqual(["dimanche", "afaire", "evenements", "scene"]);
-
-    const aFaire = widget(page, "À faire");
-    await expect(aFaire.getByText("1 en retard")).toBeVisible();
-    await expect(aFaire.getByText("Affiche de Noël")).toBeVisible();
-    await expect(aFaire.getByText("Réserver la salle")).toBeVisible();
-    await expect(aFaire.getByText("Fond du culte")).toHaveCount(0);
-
-    const evts = widget(page, "Prochains évènements");
-    await expect(evts.getByTestId("ligne-evenement")).toHaveText([/Foot au parc.*4 inscrits sur 10/, /Repas de section.*sans limite/, /Sortie d'automne/]);
-    await expect(evts.getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /\/back-office\/evenements\/?$/);
-
-    const scene = widget(page, "Scène");
-    await expect(scene.getByRole("heading", { name: "Scène · Noël 2026" })).toBeVisible();
-    await expect(scene.getByTestId("ligne-creneau")).toHaveText([/4 oct\. 17:00.*Chant · EDD 中班/, /11 oct\. 14:00.*Sketch · Culte Francophone/]);
-  });
-
-  test("louange : setlists à préparer et cases vides du Culte", async ({ page }) => {
-    await ouvrir(page, LOUANGE);
-    const setlists = widget(page, "Setlists à préparer");
-    await expect(setlists.getByTestId("ligne-setlist")).toHaveText([/Culte Franco · 11 oct\./, /Culte Franco · 18 oct\./, /Culte Franco · 25 oct\./]);
-    await expect(setlists.getByRole("link", { name: /Culte Franco · 11 oct\./ }))
-      .toHaveAttribute("href", /^\/setlists\/new\/?\?cat=Culte\+Francophone&date=2026-10-11$/);
-
-    const vides = widget(page, "Cases vides du planning");
-    await expect(vides.getByTestId("ligne-case-vide")).toHaveText([/4 oct\.\s*Batterie/, /11 oct\.\s*Guitare, Batterie/, /18 oct\.\s*PPT/]);
-  });
-
-  test("admin : petit déj, raccourcis, comptes", async ({ page }) => {
-    await ouvrir(page, ADMIN);
-    await expect(widget(page, "Petit déj").getByTestId("ligne-petitdej"))
-      .toHaveText([/4 oct\.\s*Libre/, /11 oct\.\s*Libre/, /18 oct\.\s*Famille Test/, /25 oct\.\s*Libre/]);
-
-    const raccourcis = widget(page, "Raccourcis");
-    await expect(raccourcis.getByRole("link", { name: "Tâche" })).toHaveAttribute("href", /^\/back-office\/taches\/?$/);
-    await expect(raccourcis.getByRole("link", { name: "Évènement" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
-    await expect(raccourcis.getByRole("link", { name: "Notifier" })).toHaveAttribute("href", /^\/back-office\/messages\/notifier\/?$/);
-    await expect(raccourcis.getByRole("link", { name: "Setlist" })).toHaveAttribute("href", /^\/setlists\/new\/?$/);
-
-    const comptes = widget(page, "Comptes");
-    await expect(comptes.getByText("Noms du planning sans compte")).toBeVisible();
-    await expect(comptes.getByText("Pers. A", { exact: true })).toHaveCount(0);
-    await expect(comptes.getByRole("link", { name: "Voir la liste" })).toHaveAttribute("href", /^\/back-office\/planning\/sans-compte\/?$/);
-  });
-
-  test("disposition enregistrée : son ordre, ses tailles selon l'appareil (Q10), ses réglages", async ({ page }, info) => {
-    await ouvrir(page, ADMIN, {
-      "backOffice/uid-admin": {
-        tableauDeBord: [
-          { id: "evenements", taille: "l", reglages: { nombre: 5 } },
-          { id: "planning", taille: "s", reglages: { horizon: 2 } },
-          { id: "dimanche", taille: "m", reglages: {} },
-          { id: "chants", taille: "m", reglages: {} },
-        ],
-        majLe: "2026-10-01T09:00:00Z",
-      },
-    });
-    await expect(widget(page, "Prochains évènements").getByTestId("ligne-evenement")).toHaveCount(5);
-    // « chants » (U7, S5) : permis à un admin, donc affiché.
-    expect(await widgetsAffiches(page)).toEqual(["evenements", "planning", "dimanche", "chants"]);
-    // Réglage « 2 dimanches » : le 4 et le 11 seulement.
-    await expect(widget(page, "Cases vides du planning").getByTestId("ligne-case-vide")).toHaveCount(2);
-
-    const n = colonnes(info);
-    if (n === 4) {
-      // Agencement v18 (B14) : en grand, hors personnalisation, des colonnes (deux ici : barre dépliée,
-      // ou tablette couchée). Le « Grand » (L) prend la colonne large ; le premier des autres (S) va
-      // dans l'étroite, vide jusque-là. Un widget prend la largeur de sa colonne : L ≈ 1,55 × S ;
-      // M (« Ce dimanche »), celle de la colonne où le place sa hauteur.
-      await expect(grille(page)).toHaveAttribute("data-disposition", "colonnes");
-      const L = widget(page, "Prochains évènements");
-      const S = widget(page, "Cases vides du planning");
-      const M = widget(page, "Ce dimanche");
-      await expect(L).toHaveAttribute("data-colonne", "0");
-      await expect(S).toHaveAttribute("data-colonne", "1");
-      const large = (await L.boundingBox())!.width;
-      const etroite = (await S.boundingBox())!.width;
-      expect(large / etroite, "la colonne large").toBeCloseTo(1.55, 1);
-      const m = (await M.boundingBox())!.width;
-      expect(Math.min(Math.abs(m - large), Math.abs(m - etroite)), "M a la largeur d'une des deux colonnes").toBeLessThanOrEqual(1);
-      return;
-    }
-    const L = await part(grille(page), widget(page, "Prochains évènements"));
-    const S = await part(grille(page), widget(page, "Cases vides du planning"));
-    const M = await part(grille(page), widget(page, "Ce dimanche"));
-    expect(L).toBeCloseTo(1, 1);
-    expect(M).toBeCloseTo(n === 2 ? 0.5 : 1, 1);
-    expect(S).toBeCloseTo(n === 2 ? 0.5 : 1, 1);
-  });
-
-  // Relecture du lot U6 : les deux widgets partagent une lecture des setlists, bornée aux
-  // setlists à venir ; une lecture en échec n'est jamais « pas de setlist » (U3 Q10).
-  test("Ce dimanche et Setlists à préparer : une seule lecture des setlists, celles d'aujourd'hui et après", async ({ page }) => {
-    const lectures: { where?: unknown; limit?: number }[] = [];
-    page.on("request", (r) => {
-      if (!r.url().includes(":runQuery")) return;
-      const q = (r.postDataJSON() as { structuredQuery: { from: { collectionId: string }[]; where?: unknown; limit?: number } }).structuredQuery;
-      // La cloche lit les setlists récentes à part (`limit`) : pas les widgets.
-      if (q.from[0].collectionId === "setlists" && !q.limit) lectures.push(q);
-    });
-    // Ces deux widgets seuls : « Chants les plus joués » (U7) lit toutes les setlists, à part et sans
-    // cache (`getSetlists()`, comme la page Statistiques) : coût accepté par Q1 de spec-statistiques.md
-    // (une visite de l'onglet Setlists, ~150 lectures sur un quota de 50 000 par jour).
-    await ouvrir(page, ADMIN, {
-      "backOffice/uid-admin": {
-        tableauDeBord: [{ id: "dimanche", taille: "m", reglages: {} }, { id: "setlists", taille: "s", reglages: {} }],
-        majLe: "2026-10-01",
-      },
-    });
-    await expect(widget(page, "Ce dimanche").getByText("Setlist publiée")).toBeVisible();
-    await expect(widget(page, "Setlists à préparer").getByTestId("ligne-setlist").first()).toBeVisible();
-    expect(lectures).toEqual([expect.objectContaining({
-      where: { fieldFilter: { field: { fieldPath: "date" }, op: "GREATER_THAN_OR_EQUAL", value: { stringValue: "2026-10-01" } } },
-    })]);
-  });
-
-  test("setlists illisibles : « Lecture impossible » dans les deux widgets, jamais « Pas de setlist »", async ({ page }) => {
-    await ouvrir(page, ADMIN);
-    await expect(widget(page, "Ce dimanche").getByText("Setlist publiée")).toBeVisible();
-    // Posée après la base simulée, cette route passe avant elle ; le rechargement relit tout.
-    await page.route(/documents:runQuery/, (route) => {
-      const q = (route.request().postDataJSON() as { structuredQuery?: { from?: { collectionId: string }[]; limit?: number } }).structuredQuery;
-      if (q?.from?.[0]?.collectionId === "setlists" && !q.limit) {
-        return route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refusé" } }) });
-      }
-      return route.fallback();
-    });
-    await page.reload();
-    await expect(widget(page, "Ce dimanche").getByText("Lecture impossible pour l'instant.")).toBeVisible();
-    await expect(widget(page, "Setlists à préparer").getByText("Lecture impossible pour l'instant.")).toBeVisible();
-    await expect(widget(page, "Ce dimanche").getByText("Pas de setlist")).toHaveCount(0);
-    await expect(widget(page, "Setlists à préparer").getByTestId("ligne-setlist")).toHaveCount(0);
-  });
-
-  test("un widget réservé aux admins enregistré par Alice ne s'affiche pas", async ({ page }) => {
-    await ouvrir(page, ALICE, {
-      "backOffice/uid-alice": { tableauDeBord: [{ id: "comptes", taille: "s", reglages: {} }, { id: "scene", taille: "s", reglages: {} }], majLe: "2026-10-01" },
-    });
-    await expect(widget(page, "Scène")).toBeVisible();
-    expect(await widgetsAffiches(page)).toEqual(["scene"]);
-  });
-
-  test("captures du tableau de bord (à regarder)", async ({ page }, info) => {
-    await ouvrir(page, ADMIN);
-    await expect(widget(page, "Comptes")).toBeVisible();
-    await expect(widget(page, "Ce dimanche").getByText("Setlist publiée")).toBeVisible();
-    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-admin.png`, fullPage: true });
-  });
-
-  test("中文 : titres des widgets traduits", async ({ page }) => {
-    await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
-    await ouvrir(page, ALICE);
-    await expect(grille(page).getByRole("region", { name: "本主日" })).toBeVisible();
-    await expect(grille(page).getByRole("region", { name: "待办" })).toBeVisible();
-  });
-});
-
 // ═══ B5 — Personnaliser ═══════════════════════════════════════════════════════
 // Planche `bo-tableau-de-bord` (mode personnalisation) : « Personnaliser » devient
 // « Terminé » avec « Disposition par défaut » ; bandeau « Ajouter un widget » ; par widget,
@@ -524,26 +351,20 @@ test.describe("Tableau de bord (B4) : écrans", () => {
 // la disposition du document (absente = défaut du rôle, jamais recopié, Q5).
 
 const ROOT = path.resolve(__dirname, "..");
-const ALICE_DEFAUT = ["dimanche", "afaire", "evenements", "scene"];
+/** Le défaut d'Alice (T9) ; la disposition d'avant TB2-c (Ce dimanche, À faire, Évènements, Scène) sert aux tests de personnalisation. */
+const ALICE_DEFAUT = ["dimanche", "evenements", "afaire", "reunions"];
+/** Lot AO : la disposition d'avant TB2-c d'Alice quand elle est référente EDD (`ALICE_ORGA`), enregistrée (version 2) par les tests d'écran de personnalisation. */
+const ALICE_ORGA_DEFAUT = ["dimanche", "afaire", "setlists", "planning", "evenements", "scene"];
 
 /** La dernière écriture de `backOffice/{uid}`. */
 const ecrituresBO = (db: FakeDb, uid: string) => db.writes.filter((w) => w.path === `backOffice/${uid}`);
-const idsEcrits = (db: FakeDb, uid: string) =>
-  ((ecrituresBO(db, uid).at(-1)?.data.tableauDeBord ?? null) as { id: string }[] | null)?.map((w) => w.id) ?? null;
-
-async function personnaliser(page: Page) {
-  await expect(widget(page, "Scène")).toBeVisible();
-  await page.getByRole("button", { name: "Personnaliser" }).click();
-  await expect(page.getByRole("button", { name: "Terminé" })).toBeVisible();
-}
-const catalogueDe = (page: Page) => page.getByRole("region", { name: "Ajouter un widget" });
-
 test.describe("Personnaliser (B5) : règles pures", () => {
   test("catalogue : les widgets permis non affichés, dans l'ordre de la planche ; jamais un widget non permis", () => {
     const d = dispositionParDefaut(user(ALICE), profil(ALICE));
-    expect(catalogue(d, user(ALICE), profil(ALICE))).toEqual(["calendrier", "petitdej", "raccourcis"]);
-    expect(catalogue([], user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "petitdej", "raccourcis", "scene"]);
-    expect(catalogue(dispositionParDefaut(user(ADMIN), null), user(ADMIN), null)).toEqual([]);
+    expect(catalogue(d, user(ALICE), profil(ALICE))).toEqual(["calendrier", "chants", "petitdej", "raccourcis", "scene"]); // lot ST (D5) : chants pour tous
+    expect(catalogue([], user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "reunions", "chants", "petitdej", "raccourcis", "scene"]);
+    expect(catalogue(dispositionParDefaut(user(ADMIN), null), user(ADMIN), null)).toEqual(["calendrier", "setlists", "chants", "petitdej", "raccourcis", "scene"]);
+    expect(catalogue(ajouterWidget(ajouterWidget(dispositionParDefaut(user(ADMIN), null), "calendrier"), "setlists"), user(ADMIN), null)).toEqual(["chants", "petitdej", "raccourcis", "scene"]);
   });
 
   test("ajouter (à la fin, taille de la table), retirer, déplacer, taille, réglages", () => {
@@ -552,9 +373,9 @@ test.describe("Personnaliser (B5) : règles pures", () => {
     expect(ids(plus)).toEqual([...ALICE_DEFAUT, "petitdej"]);
     expect(plus.at(-1)).toEqual({ id: "petitdej", taille: "s", reglages: {} });
     expect(ids(ajouterWidget(plus, "petitdej")), "jamais deux fois").toEqual(ids(plus));
-    expect(ids(retirerWidget(d, "afaire"))).toEqual(["dimanche", "evenements", "scene"]);
-    expect(ids(deplacerWidget(d, 3, 0))).toEqual(["scene", "dimanche", "afaire", "evenements"]);
-    expect(ids(deplacerWidget(d, 0, 1))).toEqual(["afaire", "dimanche", "evenements", "scene"]);
+    expect(ids(retirerWidget(d, "afaire"))).toEqual(["dimanche", "evenements", "reunions"]);
+    expect(ids(deplacerWidget(d, 3, 0))).toEqual(["reunions", "dimanche", "evenements", "afaire"]);
+    expect(ids(deplacerWidget(d, 0, 1))).toEqual(["evenements", "dimanche", "afaire", "reunions"]);
     expect(ids(deplacerWidget(d, 0, -1)), "hors bornes : rien").toEqual(ALICE_DEFAUT);
     expect(changerTaille(d, "evenements", "l").find((w) => w.id === "evenements")!.taille).toBe("l");
     expect(changerReglages(d, "evenements", { nombre: 5 }).find((w) => w.id === "evenements")!.reglages).toEqual({ nombre: 5 });
@@ -562,7 +383,7 @@ test.describe("Personnaliser (B5) : règles pures", () => {
     expect(ids(d)).toEqual(ALICE_DEFAUT);
   });
 
-  test("réglages de Prochains évènements : nombre 3 / 5 / 10, section (toutes)", () => {
+  test("réglages d'Évènements : nombre 3 / 5 / 10, section (toutes)", () => {
     const [nombre, section] = groupesDeReglages("evenements", {}, user(ALICE), profil(ALICE));
     expect([nombre.cle, nombre.plusieurs, nombre.choix.map((c) => c.valeur), nombre.actifs]).toEqual(["nombre", false, ["3", "5", "10"], ["3"]]);
     expect([section.cle, section.choix.map((c) => c.valeur), section.actifs])
@@ -588,12 +409,13 @@ test.describe("Personnaliser (B5) : règles pures", () => {
         .map((x) => [x.cle, x.choix.map((c) => c.valeur), x.actifs]);
     expect(g("dimanche", DA)[0][2]).toEqual(["Culte Francophone"]);
     expect(g("planning", null)).toEqual([
-      ["plannings", expect.arrayContaining(["culte", "campusMatin"]), ["culte"]], ["horizon", ["2", "4", "8"], ["4"]],
+      ["plannings", expect.arrayContaining(["culte", "campusMatin"]), ["culte"]], ["horizon", ["2", "4", "8"], ["4"]],  // dimanches suivants (TB2-b)
     ]);
     expect(g("setlists", LOUANGE)).toEqual([["services", ["Culte Francophone"], ["Culte Francophone"]], ["horizon", ["2", "4"], ["4"]]]);
     expect(g("petitdej", ALICE)).toEqual([["horizon", ["4", "8"], ["4"]]]);
     expect(g("scene", ALICE, [{ id: "p1", nom: "Noël" }])).toEqual([["programme", ["", "p1"], [""]]]);
-    expect(g("comptes", null)).toEqual([["liste", ["sansCompte", "nouveaux"], ["sansCompte"]]]);
+    // Lot TB2-b : Comptes montre deux nombres, plus de liste : aucun réglage.
+    expect(g("comptes", null)).toEqual([]);
     expect(g("raccourcis", ALICE)).toEqual([["raccourcis", ["tache", "evenement"], ["tache", "evenement"]]]);
   });
 
@@ -603,175 +425,622 @@ test.describe("Personnaliser (B5) : règles pures", () => {
   });
 });
 
-test.describe("Personnaliser (B5) : écrans", () => {
-  test("Personnaliser : Terminé, Disposition par défaut, catalogue des widgets permis (pas Comptes)", async ({ page }) => {
-    await ouvrir(page, ALICE);
-    await expect(page.getByRole("button", { name: "Monter" })).toHaveCount(0);
-    await personnaliser(page);
-    await expect(page.getByRole("button", { name: "Disposition par défaut" })).toBeVisible();
-    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Calendrier", "Petit déj", "Raccourcis"]);
-    // Les outils de chaque widget ; Monter grisé en tête, Descendre en queue.
-    await expect(widget(page, "Ce dimanche").getByRole("button", { name: "Monter" })).toBeDisabled();
-    await expect(widget(page, "Scène").getByRole("button", { name: "Descendre" })).toBeDisabled();
-    await expect(widget(page, "Prochains évènements").getByRole("button", { name: "M", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await page.getByRole("button", { name: "Terminé" }).click();
-    await expect(page.getByRole("button", { name: "Personnaliser" })).toBeVisible();
-    await expect(catalogueDe(page)).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Monter" })).toHaveCount(0);
+// ─── Lot TB2, tranche TB2-a : les règles pures du tableau de bord v2 ──────────
+// Aucun nom réel : « Ysaline », « Corentin », « Maëlys »… inventés pour ces tests.
+
+test.describe("Tableau de bord v2 (TB2-a) : règles pures", () => {
+  const PLEIN = ["Pers. A", "Pers. B", "Pers. C", "Pers. D", "Pers. E", "Pers. F", "Pers. G", "Pers. H", "Pers. I", "Pers. B", ""];
+  const ligneCulte = (date: string, trous: Record<number, string> = {}) =>
+    [date, ...PLEIN.map((v, i) => trous[i] ?? v)];
+  const setlist = (x: Record<string, unknown> = {}) =>
+    ({ category: "Culte Francophone", date: "2026-10-25", leader: "Pers. A", presentationUrl: "https://exemple.test/ppt", ...x });
+  const nos = (m: { cle: string }[]) => m.map((x) => x.cle);
+  const i18nCulte = (cle: string) => GRILLE_CULTE.colonnes.find((c) => c.cle === cle)!.i18n;
+
+  test("prochain dimanche : jeudi, dimanche avant midi, dimanche à midi", () => {
+    expect(prochainDimanche("2026-10-22T10:00")).toBe("2026-10-25");
+    expect(prochainDimanche("2026-10-25T09:30")).toBe("2026-10-25");
+    expect(prochainDimanche("2026-10-25T12:00")).toBe("2026-11-01");
+    expect(prochainDimanche("2026-10-26T08:00")).toBe("2026-11-01");
   });
 
-  test("ajouter puis retirer un widget : écrit à chaque geste", async ({ page }) => {
-    const db = await ouvrir(page, ALICE);
-    await personnaliser(page);
-    await catalogueDe(page).getByRole("button", { name: "Petit déj" }).click();
-    await expect(widget(page, "Petit déj").getByTestId("ligne-petitdej").first()).toBeVisible();
-    expect(await widgetsAffiches(page)).toEqual([...ALICE_DEFAUT, "petitdej"]);
-    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Calendrier", "Raccourcis"]);
-    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual([...ALICE_DEFAUT, "petitdej"]);
-    expect(ecrituresBO(db, "uid-alice").at(-1)!.data.majLe).toEqual(expect.stringMatching(/^2026-10-01T/));
-
-    await widget(page, "À faire").getByRole("button", { name: "Retirer le widget" }).click();
-    await expect(widget(page, "À faire")).toHaveCount(0);
-    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Calendrier", "À faire", "Raccourcis"]);
-    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["dimanche", "evenements", "scene", "petitdej"]);
+  test("Ce dimanche : batterie vide et pas de setlist, puis présentation, puis prêt", () => {
+    const rows = { culte: [ligneCulte("2026-10-25", { 5: "" })] };
+    const [vide] = etatsDuDimanche(rows, [], ["Culte Francophone"], "2026-10-25", null);
+    expect(vide).toMatchObject({ categorie: "Culte Francophone", planning: "culte", libelle: "Culte Franco" });
+    expect(nos(vide.manques)).toEqual(["batterie", "setlist"]);
+    expect(vide.manques[1].i18n).toBe("tableauDeBord.dimanche.manque.setlist");
+    const plein = { culte: [ligneCulte("2026-10-25")] };
+    const [sansPpt] = etatsDuDimanche(plein, [setlist({ presentationUrl: "" })], ["Culte Francophone"], "2026-10-25", null);
+    expect(sansPpt.manques).toEqual([{ cle: "presentation", i18n: "tableauDeBord.dimanche.manque.presentation" }]);
+    const [pret] = etatsDuDimanche(plein, [setlist()], ["Culte Francophone"], "2026-10-25", null);
+    expect(pret.manques).toEqual([]);
   });
 
-  test("tous affichés : « Tous les widgets sont déjà affichés. »", async ({ page }) => {
+  test("Ce dimanche : Sainte cène vide non comptée ; brouillon ou privée ne sont pas publiées ; autre date ignorée", () => {
+    const plein = { culte: [ligneCulte("2026-10-25")] };
+    const manques = (s: Record<string, unknown>) => nos(etatsDuDimanche(plein, [setlist(s)], ["Culte Francophone"], "2026-10-25", null)[0].manques);
+    expect(manques({})).toEqual([]);
+    expect(manques({ isDraft: true })).toEqual(["setlist"]);
+    expect(manques({ isPrivate: true })).toEqual(["setlist"]);
+    expect(manques({ date: "2026-10-18" })).toEqual(["setlist"]);
+  });
+
+  test("Ce dimanche : un planning de groupe n'a ni setlist ni présentation à compter", () => {
+    const rows = { paix: [["2026-10-25", "Pers. A", "Pers. B", "Pers. C", "Pers. D", ""]] };
+    const [paix] = etatsDuDimanche(rows, [], ["Groupe Paix"], "2026-10-25", null);
+    expect(paix.planning).toBe("paix");
+    expect(nos(paix.manques)).not.toContain("setlist");
+  });
+
+  test("Ce dimanche : la Table ajoute le petit déj seulement s'il est lu", () => {
+    const rows = { culte: [ligneCulte("2026-10-25")], table: [["2026-10-25", "Pers. A", ""]] };
+    const avec = etatsDuDimanche(rows, [setlist()], ["Culte Francophone"], "2026-10-25", []);
+    expect(avec.map((e) => e.planning)).toEqual(["culte", "table"]);
+    expect(avec[1]).toMatchObject({ categorie: "table", libelle: "Prépa. Table" });
+    expect(avec[1].manques).toEqual([{ cle: "petitDej", i18n: "tableauDeBord.dimanche.manque.petitDej" }]);
+    const l = { id: "x", dimanche: "2026-10-25", nom: "Famille Test", uid: "", auteurUid: "", creeLe: "", modifieLe: "" };
+    expect(etatsDuDimanche(rows, [setlist()], ["Culte Francophone"], "2026-10-25", [l])[1].manques).toEqual([]);
+    expect(etatsDuDimanche(rows, [setlist()], ["Culte Francophone"], "2026-10-25", null).map((e) => e.planning)).toEqual(["culte"]);
+  });
+
+  const REFERENTS = {
+    musiciens: { uid: "u-mus", firstName: "Ysaline", lastName: "V.", referentSous: ["musiciens"] },
+    louange: { uid: "u-lou", firstName: "Corentin", lastName: "R.", referentDe: ["louange"] },
+    regie: { uid: "u-reg", firstName: "Maëlys", lastName: "T.", referentDe: ["regie"] },
+    edd: { uid: "u-edd", firstName: "Anselme", lastName: "K.", referentDe: ["edd"] },
+  };
+  const tous = Object.values(REFERENTS);
+
+  test("qui relancer : la sous-équipe d'abord, sinon Louange, la Régie, l'EDD", () => {
+    expect(quiRelancer("culte", "batterie", tous)).toEqual({ uid: "u-mus", prenom: "Ysaline", nom: "Ysaline V.", equipe: "louange", sous: "musiciens" });
+    // Pas de référent Présidence : repli sur le référent Louange, sans sous-équipe.
+    expect(quiRelancer("culte", "presidence", tous)).toEqual({ uid: "u-lou", prenom: "Corentin", nom: "Corentin R.", equipe: "louange" });
+    // lot RS, RS-D : Sono, Sono Live et PPT ne sont plus attribuées à la Régie, elles suivent le cas général (Louange).
+    expect(quiRelancer("culte", "ppt", tous)).toMatchObject({ uid: "u-lou", equipe: "louange" });
+    expect(quiRelancer("eddDaban", "cours", tous)).toMatchObject({ uid: "u-edd", equipe: "edd" });
+    expect(quiRelancer("culte", "orateur", tous)).toMatchObject({ uid: "u-lou" });
+  });
+
+  test("qui relancer : planning de groupe, aucun référent, deux référents", () => {
+    expect(equipeDeLaColonne("paix", "presidence")).toBeNull();
+    expect(quiRelancer("paix", "presidence", tous)).toBeNull();
+    // lot RS, RS-D : sans colonne Régie, le référent Louange est relancé pour PPT ; un seul référent Régie ne l'est plus.
+    expect(quiRelancer("culte", "ppt", [REFERENTS.louange])).toMatchObject({ uid: "u-lou" });
+    expect(quiRelancer("culte", "ppt", [REFERENTS.regie])).toBeNull();
+    const deux = [
+      { uid: "u2", firstName: "Zélie", lastName: "A.", referentSous: ["musiciens"] },
+      { uid: "u1", firstName: "Étienne", lastName: "Z.", referentSous: ["musiciens"] },
+    ];
+    expect(quiRelancer("culte", "piano", deux)!.uid).toBe("u1");
+    expect(equipeDeLaColonne("culte", "choriste2")).toEqual({ equipe: "louange", sous: "choristes" });
+    expect(equipeDeLaColonne("table", "equipe")).toEqual({ equipe: "orga" });
+  });
+
+  const profilsAbs = [{ uid: "u-ysa", planningName: "Ysaline V." }, { uid: "u-vide", planningName: "" }];
+  const abs = (uid: string, du: string, au: string) => ({ id: uid + du, uid, du, au, motif: "Voyage privé" });
+
+  test("absences en conflit : une entrée sans motif, hors date rien, casse et accents ignorés, sans profil rien", () => {
+    const rows = [ligneCulte("2026-10-25", { 5: "Ysaline V." })];
+    const r = absencesEnConflit(GRILLE_CULTE, rows, ["2026-10-25"], profilsAbs, [abs("u-ysa", "2026-10-20", "2026-10-27")]);
+    expect(r).toHaveLength(1);
+    expect(r[0]).toEqual({ planning: "culte", date: "2026-10-25", nom: "Ysaline V.", colonne: { cle: "batterie", i18n: i18nCulte("batterie") } });
+    expect(Object.keys(r[0]).sort()).toEqual(["colonne", "date", "nom", "planning"]);
+    expect(JSON.stringify(r)).not.toContain("Voyage");
+    expect(absencesEnConflit(GRILLE_CULTE, rows, ["2026-10-25"], profilsAbs, [abs("u-ysa", "2026-11-01", "2026-11-02")])).toEqual([]);
+    const accents = [ligneCulte("2026-10-25", { 5: "YSALINE v" })];
+    expect(absencesEnConflit(GRILLE_CULTE, accents, ["2026-10-25"], profilsAbs, [abs("u-ysa", "2026-10-25", "2026-10-25")])).toHaveLength(1);
+    // Nom sans profil, et profil à planningName vide : rien.
+    expect(absencesEnConflit(GRILLE_CULTE, rows, ["2026-10-25"], [{ uid: "u-vide", planningName: "" }], [abs("u-vide", "2026-10-25", "2026-10-25")])).toEqual([]);
+  });
+
+  test("plannings du tableau : vides du prochain dimanche avec qui relancer, conflits sur 5 dimanches, plus tard", () => {
+    const rows = {
+      culte: [
+        ligneCulte("2026-10-25", { 5: "" }),
+        ligneCulte("2026-11-01", { 5: "Ysaline V." }),
+        ligneCulte("2026-11-08", { 5: "", 7: "" }),
+        ligneCulte("2026-11-15", { 5: "" }),
+        ligneCulte("2026-11-22"),
+      ],
+    };
+    const suivants = ["2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22"];
+    const profils = [...tous.map((p) => ({ ...p, planningName: "" })), { uid: "u-ysa", firstName: "Ysaline", lastName: "V.", planningName: "Ysaline V.", referentSous: ["musiciens"] }];
+    const r = planningsDuTableau(rows, ["culte", "inconnu"], "2026-10-25", suivants, profils, [abs("u-ysa", "2026-11-01", "2026-11-01")]);
+    expect(r.vides).toHaveLength(1);
+    expect(r.vides[0]).toMatchObject({ planning: "culte", date: "2026-10-25", colonne: { cle: "batterie" }, relancer: { uid: "u-mus" } });
+    expect(r.conflits.map((c) => [c.date, c.nom])).toEqual([["2026-11-01", "Ysaline V."]]);
+    expect(r.plusTard.jusquau).toBe("2026-11-22");
+    expect(r.plusTard.nombre).toBe(3);
+    expect(r.plusTard.parPlanning).toEqual([{ planning: "culte", colonnes: [{ cle: "batterie", i18n: i18nCulte("batterie"), n: 2 }, { cle: "ppt", i18n: i18nCulte("ppt"), n: 1 }] }]);
+    expect(planningsDuTableau({}, [], "2026-10-25", [], [], []).plusTard).toEqual({ jusquau: "", nombre: 0, parPlanning: [] });
+  });
+
+  test("texte du rappel : l'exemple, 1er novembre, colonne inconnue, Table, EDD", () => {
+    const lien = "https://exemple.test/back-office/planning/culte";
+    expect(texteDuRappel({ prenom: "Corentin", planning: "culte", colonne: "batterie", date: "2026-10-25", lien }))
+      .toBe("Salut Corentin, pour le culte de dimanche 25 octobre, il manque encore quelqu'un à la batterie. Tu peux t'en occuper d'ici samedi ? Merci ! " + lien);
+    expect(texteDuRappel({ prenom: "Maëlys", planning: "intergroupe", colonne: "sonoLive", date: "2026-11-01", lien }))
+      .toContain("pour le culte Intergroupe de dimanche 1er novembre, il manque encore quelqu'un à la sono live.");
+    expect(texteDuRappel({ prenom: "Maëlys", planning: "culte", colonne: "lumiere", date: "2026-11-01", lien })).toContain("au poste « lumiere »");
+    expect(texteDuRappel({ prenom: "Maëlys", planning: "table", colonne: "equipe", date: "2026-11-01", lien }))
+      .toContain("pour la Table du Seigneur de dimanche 1er novembre, il manque encore quelqu'un pour l'équipe.");
+    expect(texteDuRappel({ prenom: "Maëlys", planning: "eddDaban", colonne: "cours", date: "2026-11-01", lien })).toMatch(/pour le cours de l'EDD \(.+\) de dimanche/);
+  });
+
+  const evt = (x: Partial<Evenement>) => ({
+    id: "e", titre: "E", type: "loisir", pour: "eglise", date: "2026-11-07", heure: "", heureFin: "", dateFin: "", lienExterne: "",
+    inscriptions: "ouvertes", inscriptionDebut: "", inscriptionFin: "", placesMax: null, inscrits: 0, expiresAt: null, organisateurUid: "autre", ...x,
+  }) as Evenement;
+
+  test("évènements : le sien (organisé, porté par mon équipe) et les autres", () => {
+    expect(estSienEvenement({ organisateurUid: "moi", pour: "eglise" }, "moi", [])).toBe(true);
+    expect(estSienEvenement({ organisateurUid: "x", pour: "equipe:da" }, "moi", ["da"])).toBe(true);
+    expect(estSienEvenement({ organisateurUid: "x", pour: "equipe:da" }, "moi", ["louange"])).toBe(false);
+    expect(estSienEvenement({ organisateurUid: "x", pour: "eglise" }, "moi", ["da"])).toBe(false);
+  });
+
+  test("évènements : ferme bientôt", () => {
+    const maintenant = "2026-10-22T10:00";
+    expect(fermeBientot(evt({ inscriptions: "auto", inscriptionFin: "2026-10-25" }), maintenant)).toBe(true);
+    expect(fermeBientot(evt({ inscriptions: "auto", inscriptionFin: "2026-11-01" }), maintenant)).toBe(false);
+    expect(fermeBientot(evt({ inscriptions: "fermees", date: "2026-10-23" }), maintenant)).toBe(false);
+    expect(fermeBientot(evt({ lienExterne: "https://exemple.test/form", date: "2026-10-23" }), maintenant)).toBe(false);
+    // « Ouvertes » forcées : la fin est le début de l'évènement.
+    expect(fermeBientot(evt({ date: "2026-10-26", heure: "19:00" }), maintenant)).toBe(true);
+    expect(fermeBientot(evt({ date: "2026-11-07" }), maintenant)).toBe(false);
+    // Déjà terminée : plus d'inscription possible.
+    expect(fermeBientot(evt({ inscriptions: "auto", inscriptionFin: "2026-10-20" }), maintenant)).toBe(false);
+  });
+
+  test("évènements : créneaux vides par date", () => {
+    const c = (id: string, dimanche: string, qui: string[]) => ({ id, dimanche, qui }) as Creneau;
+    const cr = [c("a", "2026-11-01", []), c("b", "2026-11-01", ["  "]), c("c", "2026-11-01", ["Gp Paix"]), c("d", "2026-11-08", []), c("e", "2026-10-25", [])];
+    expect(creneauxVides({ date: "2026-11-01", dateFin: "" }, cr).map((x) => x.id)).toEqual(["a", "b"]);
+    expect(creneauxVides({ date: "2026-11-01", dateFin: "2026-11-08" }, cr).map((x) => x.id)).toEqual(["a", "b", "d"]);
+  });
+
+  test("évènements du tableau : les siens d'abord, puis les autres, bornés, réunions exclues", () => {
+    const moi = { uid: "uid-moi", email: "moi@example.com" };
+    const p = { uid: "uid-moi", firstName: "Moi", lastName: "X", dansEquipes: ["da"] } as unknown as UserProfile;
+    const tousEv = [
+      evt({ id: "autre1", date: "2026-10-26" }),
+      evt({ id: "sien", date: "2026-10-30", organisateurUid: "uid-moi" }),
+      evt({ id: "equipe", date: "2026-11-02", pour: "equipe:da", reunion: false }),
+      evt({ id: "reunion", date: "2026-10-27", pour: "equipe:da" }),
+      evt({ id: "autre2", date: "2026-11-03" }),
+    ];
+    const r = evenementsDuTableau(tousEv, [], moi, p, "2026-10-22", {});
+    expect(r.siens.map((x) => x.id)).toEqual(["sien", "equipe"]);
+    expect(r.autres.map((x) => x.date)).toEqual(["2026-10-26"]);
+    const grand = evenementsDuTableau(tousEv, [], moi, p, "2026-10-22", { nombre: 5 });
+    expect(grand.siens).toHaveLength(2);
+    expect(grand.autres).toHaveLength(2);
+    expect(evenementsDuTableau(tousEv, [], moi, p, "2026-10-22", { nombre: 1 })).toMatchObject({ siens: [{ id: "sien" }], autres: [] });
+  });
+
+  test("tâches : en retard d'abord, puis les miennes, puis la date ; J+8 exclu ; retard compté en entier", () => {
+    const t = (id: string, echeance: string, resp: string | null) =>
+      ({ tache: { id, echeance, responsableUid: resp } as Tache, date: echeance, fois: null });
+    const lignes = [
+      t("futurAutre", "2026-10-23", "x"), t("futurMoi", "2026-10-25", "moi"), t("retardAutre", "2026-10-15", "x"),
+      t("retardMoi", "2026-10-18", "moi"), t("futurMoiTot", "2026-10-22", "moi"), t("loin", "2026-10-30", "moi"),
+    ];
+    const r = tachesDuTableau(lignes, "moi", "2026-10-22");
+    expect(r.lignes.map((l) => l.tache.id)).toEqual(["retardMoi", "retardAutre", "futurMoiTot", "futurMoi", "futurAutre"]);
+    expect(r.lignes.map((l) => l.aMoi)).toEqual([true, false, true, true, false]);
+    expect(r.enRetard).toBe(2);
+    const bornes = tachesDuTableau(lignes, "moi", "2026-10-22", 2);
+    expect(bornes.lignes).toHaveLength(2);
+    expect(bornes.enRetard).toBe(2);
+  });
+
+  test("réunions : celles dont on est, à venir, triées, bornées ; précédente sans compte rendu", () => {
+    const moi = { uid: "uid-moi", email: "moi@example.com" };
+    const p = { uid: "uid-moi", firstName: "Moi", lastName: "X", dansEquipes: ["da"] } as unknown as UserProfile;
+    const cr = { url: "https://exemple.test/cr", parUid: "x", parNom: "X", le: "2026-10-01T10:00:00Z" };
+    const re = (id: string, date: string, pour: Evenement["pour"], x: Partial<Evenement> = {}) => evt({ id, date, pour, reunion: true, ...x });
+    const tousEv = [
+      re("passeSans", "2026-10-15", "equipe:da"),
+      re("passeAvec", "2026-10-08", "equipe:evenementiel", { compteRendu: cr }),
+      re("b", "2026-11-05", "equipe:da", { heure: "20:00" }),
+      re("a", "2026-10-29", "equipe:da"),
+      re("pasLaMienne", "2026-10-30", "equipe:louange"),
+      re("evenementOrdinaire", "2026-10-31", "eglise"),
+      re("c", "2026-11-12", "equipe:da"),
+      re("d", "2026-11-19", "equipe:da"),
+    ];
+    const r = reunionsDuTableau(tousEv, moi, p, "2026-10-22T10:00");
+    expect(r.map((x) => x.reunion.id)).toEqual(["a", "b", "c"]);
+    expect(r[0].precedenteSansCompteRendu?.id).toBe("passeSans");
+    expect(reunionsDuTableau(tousEv, moi, p, "2026-10-22T10:00", 1)).toHaveLength(1);
+    const avec = [re("passeAvec2", "2026-10-15", "equipe:da", { compteRendu: cr }), re("a", "2026-10-29", "equipe:da")];
+    expect(reunionsDuTableau(avec, moi, p, "2026-10-22T10:00")[0].precedenteSansCompteRendu).toBeNull();
+    expect(sujetsOuverts([{ traite: false }, { traite: true }, { traite: false }])).toBe(2);
+  });
+});
+
+// ═══ Piste A, BO-B : les écrans du tableau de bord sont devenus À faire ═══════════════════════════════════════════
+// Les widgets, « Personnaliser » et la grille ont disparu de /back-office (docs/spec-back-office-piste-a.md, BO6) ; les
+// fonctions de données ci-dessus restent. Chaque test d'écran d'avant est repris ici par son équivalent sur À faire
+// (Plannings → « Remplir » avec qui relancer, Tâches → ordre et retard, Évènements → « Voir les inscrits » et « Attribuer »,
+// Réunions → « Écrire le compte rendu », Comptes → « Relier », Ce dimanche → la colonne de droite, Personnaliser → absent).
+// Jeu d'essai : jeudi 1er octobre 2026 10:00 (`ouvrir`) → prochain dimanche = 4 octobre. Personnes inventées pour ces tests.
+
+const lignes = (page: Page) => page.getByTestId("ligne-a-faire");
+const ligne = (page: Page, texte: string | RegExp) => lignes(page).filter({ hasText: texte });
+const verbe = (l: Locator, nom: string) => l.getByRole("link", { name: new RegExp(`^${nom}`) });
+const barreMontree = (page: Page) => page.evaluate(() =>
+  window.matchMedia("(pointer: fine) and (min-width: 1024px), (pointer: coarse) and (orientation: landscape) and (min-width: 1024px)").matches);
+const WIDGETS_DISPARUS = ["Ce dimanche", "Plannings", "Tâches", "Évènements", "Réunions", "Comptes", "Scène", "Calendrier", "Setlists à préparer", "Petit déj", "Raccourcis"];
+async function sansWidgets(page: Page) {
+  await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+  await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Personnaliser|Terminé/ })).toHaveCount(0);
+  for (const nom of WIDGETS_DISPARUS) await expect(page.getByRole("region", { name: nom, exact: true })).toHaveCount(0);
+}
+
+test.describe("À faire (BO-B) : équivalents des écrans du tableau de bord (B4)", () => {
+  test("admin sans disposition enregistrée : À faire, aucun widget (les six du défaut ont disparu)", async ({ page }) => {
     await ouvrir(page, ADMIN);
-    await expect(widget(page, "Comptes")).toBeVisible();
-    await page.getByRole("button", { name: "Personnaliser" }).click();
-    await expect(catalogueDe(page).getByText("Tous les widgets sont déjà affichés.")).toBeVisible();
+    await expect(lignes(page).first()).toBeVisible();
+    await sansWidgets(page);
   });
 
-  test("Monter et Descendre", async ({ page }) => {
-    const db = await ouvrir(page, ALICE);
-    await personnaliser(page);
-    await widget(page, "Scène").getByRole("button", { name: "Monter" }).click();
-    await expect.poll(() => widgetsAffiches(page)).toEqual(["dimanche", "afaire", "scene", "evenements"]);
-    await widget(page, "Ce dimanche").getByRole("button", { name: "Descendre" }).click();
-    await expect.poll(() => widgetsAffiches(page)).toEqual(["afaire", "dimanche", "scene", "evenements"]);
-    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["afaire", "dimanche", "scene", "evenements"]);
+  test("Ce dimanche : le Culte du 4 octobre manque la batterie (ligne « Remplir »), les autres cases sont dans la colonne de droite (grand écran)", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    await expect(verbe(ligne(page, "Culte Franco : Batterie"), "Remplir")).toHaveAttribute("href", /\/back-office\/planning\/culte\/?$/);
+    const colonne = page.getByTestId("colonne-droite");
+    if (!(await barreMontree(page))) {
+      await expect(colonne).toHaveCount(0);
+      return;
+    }
+    await expect(colonne.getByRole("heading", { name: "Ce dimanche, 4 octobre" })).toBeVisible();
+    const culte = colonne.getByTestId("service-dimanche").filter({ hasText: "Culte Franco" });
+    await expect(culte).toContainText("10:30");
+    // Une paire rôle / nom est un dt / dd (bo-messages-planning-4) ; un poste vide s'écrit « — » et mène à sa case du planning (V2).
+    const rang = (poste: string) => culte.locator("dl > div").filter({ has: page.locator("dt", { hasText: poste }) });
+    await expect(rang("Présidence").locator("dd")).toHaveText("Pers. A");
+    await expect(rang("Batterie").locator("dd").getByRole("link", { name: "à choisir — Ouvrir le planning" }))
+      .toHaveAttribute("href", /\/back-office\/planning\/culte\/?\?case=culte%7C2026-10-04%7Cbatterie$/);
   });
 
-  test("glisser un widget par sa poignée", async ({ page }) => {
-    const db = await ouvrir(page, ALICE);
-    await personnaliser(page);
-    const poignee = widget(page, "Scène").getByRole("button", { name: "Déplacer « Scène »" });
-    const cible = widget(page, "Prochains évènements");
-    await cible.evaluate((e) => e.scrollIntoView({ block: "center" }));
-    const from = (await poignee.boundingBox())!;
-    const to = (await cible.boundingBox())!;
-    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 - 12, { steps: 4 });
-    await expect(poignee).toHaveAttribute("aria-pressed", "true");
-    await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 12 });
-    await expect(page.getByText("« Scène » en position 3 sur 4.")).toBeAttached();
-    await page.mouse.up();
-    await expect.poll(() => widgetsAffiches(page)).toEqual(["dimanche", "afaire", "scene", "evenements"]);
-    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["dimanche", "afaire", "scene", "evenements"]);
-  });
-
-  test("tailles S / M / L : la place change selon l'appareil (Q10), et s'écrit", async ({ page }, info) => {
-    const db = await ouvrir(page, ALICE);
-    await personnaliser(page);
-    const evts = widget(page, "Prochains évènements");
-    await evts.getByRole("button", { name: "L", exact: true }).click();
-    await expect(evts.getByRole("button", { name: "L", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await expect.poll(() => part(grille(page), evts)).toBeCloseTo(1, 1);
-    await evts.getByRole("button", { name: "S", exact: true }).click();
-    const n = colonnes(info);
-    await expect.poll(() => part(grille(page), evts)).toBeCloseTo(n === 4 ? 0.25 : n === 2 ? 0.5 : 1, 1);
-    await expect.poll(() => (ecrituresBO(db, "uid-alice").at(-1)?.data.tableauDeBord as { id: string; taille: string }[] | undefined)
-      ?.find((w) => w.id === "evenements")?.taille).toBe("s");
-  });
-
-  test("un réglage change le contenu et s'écrit", async ({ page }) => {
-    const db = await ouvrir(page, ALICE);
-    const evts = widget(page, "Prochains évènements");
-    await expect(evts.getByTestId("ligne-evenement")).toHaveCount(3);
-    await personnaliser(page);
-    const reglages = evts.getByRole("button", { name: "Réglages du widget" });
-    await reglages.click();
-    await expect(reglages).toHaveAttribute("aria-expanded", "true");
-    const afficher = evts.getByRole("group", { name: "Afficher" });
-    await expect(afficher.getByRole("button", { name: "3", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await afficher.getByRole("button", { name: "5", exact: true }).click();
-    await expect(evts.getByTestId("ligne-evenement")).toHaveCount(5);
-    await expect.poll(() => (ecrituresBO(db, "uid-alice").at(-1)?.data.tableauDeBord as { id: string; reglages: object }[] | undefined)
-      ?.find((w) => w.id === "evenements")?.reglages).toEqual({ nombre: 5 });
-  });
-
-  test("Réussite 2 : Alice ajoute Petit déj, monte Scène en tête, passe Prochains évènements en L ; relue sur un autre appareil, la même", async ({ page, browser }, info) => {
-    const db = await ouvrir(page, ALICE);
-    await personnaliser(page);
-    await catalogueDe(page).getByRole("button", { name: "Petit déj" }).click();
-    for (let i = 0; i < 3; i++) await widget(page, "Scène").getByRole("button", { name: "Monter" }).click();
-    await widget(page, "Prochains évènements").getByRole("button", { name: "L", exact: true }).click();
-    const voulu = ["scene", "dimanche", "afaire", "evenements", "petitdej"];
-    await expect.poll(() => widgetsAffiches(page)).toEqual(voulu);
-    await expect.poll(() => (db.doc("backOffice/uid-alice")?.tableauDeBord as { taille: string }[] | undefined)?.[3]?.taille).toBe("l");
-
-    // Un autre appareil, une autre session : il ne lit que la base.
-    const { defaultBrowserType: _ignore, ...use } = info.project.use as Record<string, unknown>;
-    const autre = await browser.newContext({ ...(use as BrowserContextOptions), baseURL: new URL(page.url()).origin });
-    try {
-      const page2 = await autre.newPage();
-      await ouvrir(page2, ALICE, { "backOffice/uid-alice": db.doc("backOffice/uid-alice")! });
-      await expect(widget(page2, "Petit déj")).toBeVisible();
-      expect(await widgetsAffiches(page2)).toEqual(voulu);
-      // Agencement v18 (B14) : en grand, hors personnalisation, le « Grand » va dans la colonne large.
-      if (colonnes(info) === 4) await expect(widget(page2, "Prochains évènements")).toHaveAttribute("data-colonne", "0");
-      else expect(await part(grille(page2), widget(page2, "Prochains évènements"))).toBeCloseTo(1, 1);
-    } finally {
-      await autre.close();
+  test("Ce dimanche : sans réglage de services, le Culte Franco par défaut (le réglage de services n'existe plus)", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    await expect(lignes(page).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Réglages du widget/ })).toHaveCount(0);
+    if (await barreMontree(page)) {
+      await expect(page.getByTestId("colonne-droite").getByTestId("service-dimanche")).toHaveCount(1);
+      await expect(page.getByTestId("colonne-droite").getByTestId("service-dimanche")).toContainText("Culte Franco");
     }
   });
 
-  test("Disposition par défaut : confirmation, puis le défaut du rôle, retiré du document", async ({ page }) => {
-    const db = await ouvrir(page, ALICE, {
-      "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }], majLe: "2026-09-30T10:00:00Z" },
+  test("Alice (pôle Événement, référente EDD) : ses tâches (en retard d'abord), pas celles de DA ; pas de Comptes", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA);
+    await expect(lignes(page).first()).toBeVisible();
+    await expect(page.getByTestId("groupe-enRetard").getByTestId("ligne-a-faire")).toHaveText([/Affiche de Noël/]);
+    await expect(page.getByTestId("groupe-semaine").getByTestId("ligne-a-faire")).toHaveText([/Réserver la salle/]);
+    // BO16 (c) (docs/spec-back-office-piste-a.md) : « Fait » mène à la tâche.
+    await expect(verbe(ligne(page, "Affiche de Noël"), "Fait")).toHaveAttribute("href", /\/back-office\/taches\/evenementiel\/[^/]+\/?$/);
+    await expect(page.getByText("Fond du culte")).toHaveCount(0);
+    await expect(page.getByText("Noms du planning sans compte")).toHaveCount(0);
+    await expect(page.getByText("Messages à lire")).toHaveCount(0);
+  });
+
+  test("louange : les cases vides du Culte en « Remplir » ; plus de Setlists à préparer", async ({ page }) => {
+    await ouvrir(page, LOUANGE_ORGA);
+    const cette = ligne(page, "Dimanche 4 octobre");
+    await expect(cette).toContainText("Culte Franco : Batterie");
+    await expect(verbe(cette, "Remplir")).toBeVisible();
+    // Les suivants (11, 18 octobre) : une ligne « plus tard ».
+    await expect(page.getByTestId("groupe-plusTard").getByTestId("ligne-a-faire")).toContainText(/Guitare.*PPT|PPT.*Guitare/);
+    await expect(page.getByRole("region", { name: "Setlists à préparer", exact: true })).toHaveCount(0);
+    await expect(page.getByTestId("ligne-setlist")).toHaveCount(0);
+  });
+
+  test("admin : « Relier » pour les noms sans compte ; ni petit déj ni raccourcis", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    const comptes = ligne(page, "Noms du planning sans compte");
+    await expect(comptes).toContainText("noms à relier à un compte");
+    await expect(verbe(comptes, "Relier")).toHaveAttribute("href", /\/back-office\/equipes\/personnes\/sans-compte\/?$/);
+    await expect(page.getByTestId("compte-sans-compte")).toHaveCount(0);
+    await expect(page.getByTestId("compte-nouveaux")).toHaveCount(0);
+    for (const nom of ["Petit déj", "Raccourcis"]) await expect(page.getByRole("region", { name: nom, exact: true })).toHaveCount(0);
+  });
+
+  test("une disposition enregistrée (ordre, tailles, réglages) n'a plus d'effet", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, {
+      "backOffice/uid-alice": {
+        tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }, { id: "evenements", taille: "s", reglages: { nombre: 10 } }], versionTableau: 2, majLe: "2026-09-30T10:00:00Z",
+      },
     });
-    await expect(widget(page, "Scène")).toBeVisible();
-    await page.getByRole("button", { name: "Personnaliser" }).click();
-    // Refusée : rien ne change, rien ne s'écrit.
-    await page.getByRole("button", { name: "Disposition par défaut" }).click();
-    await repondreDansLeSite(page, "Annuler");
-    expect(await widgetsAffiches(page)).toEqual(["scene"]);
-    expect(ecrituresBO(db, "uid-alice")).toHaveLength(0);
-    // Acceptée : le défaut d'Alice, et plus de disposition enregistrée.
-    await page.getByRole("button", { name: "Disposition par défaut" }).click();
-    await repondreDansLeSite(page, "Remettre par défaut");
-    await expect.poll(() => widgetsAffiches(page)).toEqual(ALICE_DEFAUT);
-    await expect.poll(() => ecrituresBO(db, "uid-alice").length).toBe(1);
-    expect(db.doc("backOffice/uid-alice")!.tableauDeBord).toBeUndefined();
-    expect(db.doc("backOffice/uid-alice")!.majLe).toEqual(expect.stringMatching(/^2026-10-01T/));
+    await expect(lignes(page).first()).toBeVisible();
+    await sansWidgets(page);
   });
 
-  test("écriture refusée : la disposition reste à l'écran et un message le dit", async ({ page }) => {
-    await ouvrir(page, ALICE);
-    await page.route(/firestore\.googleapis\.com.*backOffice/, (route) =>
-      route.request().method() === "PATCH"
-        ? route.fulfill({ status: 403, contentType: "application/json", body: "{}" })
-        : route.fallback());
-    await personnaliser(page);
-    await widget(page, "À faire").getByRole("button", { name: "Retirer le widget" }).click();
-    await expect(page.getByRole("alert").filter({ hasText: "Disposition non enregistrée" })).toBeVisible();
-    expect(await widgetsAffiches(page)).toEqual(["dimanche", "evenements", "scene"]);
+  test("setlists illisibles : ni « Lecture impossible » ni « Pas de setlist » (À faire ne les lit pas) ; la liste est là", async ({ page }) => {
+    await page.route(/documents\/setlists/, (route) =>
+      route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refusé" } }) }));
+    await ouvrir(page, ADMIN);
+    await expect(lignes(page).first()).toBeVisible();
+    await expect(page.getByText("Lecture impossible")).toHaveCount(0);
+    await expect(page.getByText("Pas de setlist")).toHaveCount(0);
   });
 
-  test("captures en personnalisation (à regarder)", async ({ page }, info) => {
-    await ouvrir(page, ALICE);
-    await personnaliser(page);
-    await widget(page, "Prochains évènements").getByRole("button", { name: "Réglages du widget" }).click();
-    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-personnaliser.png`, fullPage: true });
+  test("un widget réservé aux admins enregistré par Alice ne s'affiche pas, et ses lignes non plus", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, {
+      "backOffice/uid-alice": { tableauDeBord: [{ id: "comptes", taille: "s", reglages: {} }], versionTableau: 2, majLe: "2026-09-30T10:00:00Z" },
+    });
+    await expect(lignes(page).first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "Comptes", exact: true })).toHaveCount(0);
+    await expect(page.getByText("Noms du planning sans compte")).toHaveCount(0);
   });
 
-  test("中文 : Personnaliser traduit", async ({ page }) => {
+  test("captures d'À faire (à regarder)", async ({ page }, info) => {
+    await ouvrir(page, ADMIN);
+    await expect(lignes(page).first()).toBeVisible();
+    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-admin.png`, fullPage: true, animations: "disabled" });
+  });
+
+  test("中文 : les groupes et les verbes (à la place des titres de widgets)", async ({ page }) => {
     await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
-    await ouvrir(page, ALICE);
-    await page.getByRole("button", { name: "自定义" }).click();
-    await expect(page.getByRole("button", { name: "完成" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "添加小组件" })).toBeVisible();
+    await ouvrir(page, ALICE_ORGA);
+    await expect(page.getByRole("heading", { level: 2, name: "已逾期" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^完成/ }).first()).toBeVisible();
+    for (const nom of ["本主日", "任务", "会议"]) await expect(page.getByRole("region", { name: nom, exact: true })).toHaveCount(0);
+  });
+});
+
+test.describe("À faire (BO-B) : équivalents de Personnaliser (B5) : plus de personnalisation", () => {
+  test("ni « Personnaliser », ni « Ajouter un widget », ni « Disposition par défaut », ni poignée, ni S / M / L ; rien n'est écrit", async ({ page }) => {
+    const db = await ouvrir(page, ALICE_ORGA, {
+      "backOffice/uid-alice": { tableauDeBord: ALICE_ORGA_DEFAUT.map((id) => ({ id, taille: "m", reglages: {} })), versionTableau: 2, majLe: "2026-09-30T10:00:00Z" },
+    });
+    await expect(lignes(page).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Personnaliser" })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Ajouter un widget" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Disposition par défaut" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Monter|Descendre|Retirer le widget|Réglages du widget/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "L", exact: true })).toHaveCount(0);
+    expect(ecrituresBO(db, "uid-alice")).toEqual([]);
+  });
+
+  test("le catalogue d'un admin n'offre plus Setlists, Petit déj, Scène, Calendrier, Chants, Raccourcis", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    await expect(lignes(page).first()).toBeVisible();
+    for (const nom of ["Setlists à préparer", "Petit déj", "Scène", "Calendrier", "Chants les plus joués", "Raccourcis"]) {
+      await expect(page.getByRole("button", { name: nom, exact: true })).toHaveCount(0);
+    }
+  });
+
+  test("中文 : pas de « 自定义 » ni de catalogue", async ({ page }) => {
+    await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+    await ouvrir(page, ADMIN);
+    await expect(lignes(page).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /自定义|个性化/ })).toHaveCount(0);
+  });
+});
+
+test.describe("À faire (BO-B) : équivalents de Tableau de bord v2 (TB2-b)", () => {
+  const CORENTIN: Record<string, unknown> = {
+    email: "corentin@example.com", firstName: "Corentin", lastName: "R.", planningName: "", serviceRoles: {}, annonces: [], notify: [],
+    dansEquipes: ["louange"], sousEquipes: ["musiciens"], referentSous: ["musiciens"],
+  };
+  const JEU: Record<string, Record<string, unknown>> = {
+    "users/uid-corentin": CORENTIN,
+    // Pers. B joue le 11 octobre et s'est déclarée absente ce jour-là : le motif ne se montre jamais.
+    "users/uid-pers-b": { email: "b@example.com", firstName: "Pers", lastName: "B", planningName: "Pers. B", serviceRoles: {}, annonces: [], notify: [] },
+    "users/uid-pers-b/absences/a1": { du: "2026-10-11", au: "2026-10-11", motif: "Motif secret" },
+  };
+
+  test("Plannings : la batterie du 4 octobre dit qui relancer, et « Remplir » mène au planning du Culte", async ({ page }) => {
+    await ouvrir(page, LOUANGE_ORGA, JEU);
+    const cette = ligne(page, "Dimanche 4 octobre");
+    await expect(cette).toContainText("Culte Franco : Batterie");
+    await expect(cette).toContainText("à relancer : Corentin");
+    await expect(verbe(cette, "Remplir")).toHaveAttribute("href", /\/back-office\/planning\/culte\/?$/);
+    // Une seule ligne pour le prochain dimanche : les autres cases sont « plus tard ».
+    await expect(page.getByTestId("groupe-semaine").getByTestId("ligne-a-faire").filter({ hasText: "Culte Franco" })).toHaveCount(1);
+  });
+
+  test("Plannings : sans référent, « aucun référent à relancer »", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    await expect(ligne(page, "Dimanche 4 octobre")).toContainText("aucun référent à relancer");
+  });
+
+  // BO13 (docs/spec-back-office-piste-a.md, 26/10/2026) : l'absence en conflit revient dans « À faire », une ligne
+  // par poste tenu (Pers. B chante et traduit), « Remplacer » vers le planning ; le motif, jamais.
+  test("Plannings : une absence déclarée fait une ligne « Remplacer » par poste, et le motif n'apparaît jamais", async ({ page }) => {
+    await ouvrir(page, LOUANGE_ORGA, JEU);
+    await expect(lignes(page).first()).toBeVisible();
+    const absences = lignes(page).filter({ hasText: "Pers. B est absent·e" });
+    await expect(absences).toHaveCount(2);
+    for (const l of await absences.all()) await expect(verbe(l, "Remplacer")).toHaveAttribute("href", /\/back-office\/planning\/culte\/?$/);
+    await expect(page.getByText("Motif secret")).toHaveCount(0);
+  });
+
+  test("Plannings : « jusqu'au 1er novembre », les cases vides des quatre dimanches suivants en une ligne « plus tard »", async ({ page }) => {
+    await ouvrir(page, LOUANGE_ORGA);
+    const plus = page.getByTestId("groupe-plusTard").getByTestId("ligne-a-faire");
+    await expect(plus).toHaveCount(1);
+    await expect(plus).toContainText("Jusqu'au 1er novembre");
+    await expect(verbe(plus, "Remplir")).toHaveAttribute("href", /\/back-office\/planning\/culte\/?$/);
+  });
+
+  test("Plannings : tout est rempli, aucune ligne de cases (« Rien à faire »)", async ({ page }) => {
+    const plein = { presidence: "Pers. A", choriste1: "Pers. B", choriste2: "Pers. C", piano: "Pers. D", guitare: "Pers. E", batterie: "Pers. F", sono: "Pers. G", ppt: "Pers. H", orateur: "Pers. I", traduction: "Pers. B" };
+    await ouvrir(page, LOUANGE_ORGA, {
+      "plannings/culte/dimanches/2026-10-04": { date: "2026-10-04", ...plein },
+      "plannings/culte/dimanches/2026-10-11": { date: "2026-10-11", ...plein },
+      "plannings/culte/dimanches/2026-10-18": { date: "2026-10-18", ...plein },
+      "plannings/culte/dimanches/2026-10-25": { date: "2026-10-25", ...plein },
+    });
+    await expect(page.getByRole("status").filter({ hasText: "Rien à faire pour l'instant." })).toBeVisible();
+    await expect(ligne(page, "Culte Franco")).toHaveCount(0);
+  });
+
+  test("Ce dimanche : le Culte plein et publié, sans manque (grand écran), sans setlist sur la colonne : plus de « manque »", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    await expect(lignes(page).first()).toBeVisible();
+    // Les manques de setlist ou de présentation ne sont plus comptés : À faire ne parle que de cases à remplir.
+    await expect(page.getByText(/setlist manque|présentation manque/i)).toHaveCount(0);
+  });
+
+  test("Évènements : celui que j'organise donne « Voir les inscrits » (il ferme bientôt) et « Attribuer » (scène), avant un plus lointain", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, {
+      // Le sien : le 18 octobre, inscriptions automatiques qui finissent le 4 (dans 3 jours), un créneau de scène sans personne ce jour-là.
+      "evenements/e8": {
+        titre: "Atelier cuisine", type: "loisir", pour: "eglise", date: "2026-10-18", heure: "15:00", placesMax: 12, inscrits: 5,
+        inscriptions: "auto", inscriptionFin: "2026-10-04", organisateurUid: "uid-alice",
+      },
+      "programmes/p1/creneaux/c3": { dimanche: "2026-10-18", debut: "16:00", fin: "17:00", quoi: "Danse", qui: [], note: "" },
+    });
+    const inscrits = ligne(page, "Atelier cuisine : les inscriptions");
+    await expect(inscrits).toContainText("5 inscrits sur 12 places");
+    await expect(verbe(inscrits, "Voir les inscrits")).toHaveAttribute("href", /\/back-office\/evenements\/e8\/?$/);
+    const scene = ligne(page, "Scène : Atelier cuisine");
+    await expect(scene).toContainText("1 passage sans personne, dès le 18 octobre");
+    await expect(verbe(scene, "Attribuer")).toHaveAttribute("href", /\/back-office\/evenements\/scene\/?$/);
+    // Ceux des autres (Foot au parc, Repas de section) n'y sont plus : À faire ne liste que ce qui demande une action.
+    await expect(page.getByText("Foot au parc")).toHaveCount(0);
+    await expect(inscrits).toHaveAttribute("data-a-moi", "true");
+  });
+
+  test("Évènements : les passages de scène vides, quand les inscriptions ne ferment pas bientôt : « Attribuer » seul", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, {
+      "evenements/e8": {
+        titre: "Atelier cuisine", type: "loisir", pour: "eglise", date: "2026-10-18", heure: "15:00", placesMax: null, inscrits: 3,
+        inscriptions: "fermees", organisateurUid: "uid-alice",
+      },
+      "programmes/p1/creneaux/c3": { dimanche: "2026-10-18", debut: "16:00", fin: "17:00", quoi: "Danse", qui: [], note: "" },
+    });
+    await expect(ligne(page, "Scène : Atelier cuisine")).toBeVisible();
+    await expect(ligne(page, "les inscriptions ferment bientôt")).toHaveCount(0);
+  });
+
+  test("Tâches : la mienne passe avant celle de l'équipe à la même échéance, le retard reste en tête", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, {
+      "equipes/evenementiel/taches/t4": { titre: "Brief des bénévoles", responsableUid: "uid-alice", responsableNom: "Alice", echeance: "2026-10-05", repetition: null },
+    });
+    await expect(lignes(page).filter({ hasText: /Affiche de Noël|Brief des bénévoles|Réserver la salle/ })).toHaveText([/Affiche de Noël/, /Brief des bénévoles/, /Réserver la salle/]);
+    const retard = ligne(page, "Affiche de Noël");
+    await expect(retard).toHaveAttribute("data-a-moi", "false");
+    await expect(retard).toContainText("en retard depuis le 28/09");
+    const brief = ligne(page, "Brief des bénévoles");
+    await expect(brief).toHaveAttribute("data-a-moi", "true");
+    await expect(brief).toContainText("À toi");
+    await expect(brief).toContainText("pour le 05/10");
+    await expect(ligne(page, "Réserver la salle")).toHaveAttribute("data-a-moi", "false");
+    await expect(ligne(page, "Réserver la salle")).not.toContainText("À toi");
+  });
+
+  test("Comptes : « Relier » mène aux noms sans compte", async ({ page }) => {
+    await ouvrir(page, ADMIN, JEU);
+    const comptes = ligne(page, "Noms du planning sans compte");
+    await expect(verbe(comptes, "Relier")).toHaveAttribute("href", /\/back-office\/equipes\/personnes\/sans-compte\/?$/);
+    await expect(comptes).toHaveAttribute("data-sorte", "comptes");
+    // Piste A (BO7) : « Relier » arrive sur la sous-page « Noms du planning sans compte » de Équipes › Personnes.
+    await verbe(comptes, "Relier").click();
+    await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
+    await expect(page.getByRole("heading", { level: 2, name: "Noms du planning sans compte" })).toBeVisible();
+  });
+
+  test("中文 : Plannings, Évènements, Tâches, Comptes : les verbes sont traduits", async ({ page }) => {
+    await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+    await ouvrir(page, ADMIN);
+    await expect(page.getByRole("link", { name: /^填写/ }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /^完成/ }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /^关联/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "复制提醒" })).toHaveCount(0);
+  });
+});
+
+test.describe("À faire (BO-B) : équivalents de Tableau de bord v2 (TB2-c)", () => {
+  const reunion = (titre: string, pour: string, date: string, x: Record<string, unknown> = {}) => ({
+    titre, type: "eglise", pour, reunion: true, date, heure: "20:00", placesMax: null, inscrits: 0, ...x,
+  });
+  /** Une réunion de l'équipe d'Alice, la précédente sans compte rendu, une réunion d'une autre équipe. */
+  const REUNIONS: Record<string, Record<string, unknown>> = {
+    "evenements/e7": reunion("Ancienne réunion", "equipe:evenementiel", "2026-09-10", { compteRendu: { url: "https://exemple.test/cr", parUid: "uid-alice", parNom: "Alice Q.", le: "2026-09-11T10:00:00Z" } }),
+    "evenements/r0": reunion("Point des Bâtisseurs", "equipe:evenementiel", "2026-09-24"),
+    "evenements/r1": reunion("Point des Bâtisseurs", "equipe:evenementiel", "2026-10-08"),
+    "evenements/r2": reunion("Réunion des Veilleurs", "equipe:louange", "2026-10-09"),
+  };
+
+  test("Réunions : la précédente sans lien de compte rendu donne « Écrire le compte rendu » (en retard), une autre équipe n'apparaît pas", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, REUNIONS);
+    const cr = ligne(page, "Compte rendu : Point des Bâtisseurs");
+    await expect(cr).toHaveCount(1);
+    await expect(cr).toContainText("Réunion du 24 septembre, sans lien de compte rendu");
+    await expect(page.getByTestId("groupe-enRetard").getByTestId("ligne-a-faire").filter({ hasText: "Compte rendu" })).toHaveCount(1);
+    await expect(verbe(cr, "Écrire le compte rendu")).toHaveAttribute("href", /\/back-office\/reunions\/r0\/?$/);
+    await expect(page.getByText("Veilleurs")).toHaveCount(0);
+  });
+
+  test("Réunions : la prochaine est dans la colonne de droite (grand écran), liée à sa fiche", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, REUNIONS);
+    await expect(lignes(page).first()).toBeVisible();
+    if (!(await barreMontree(page))) {
+      await expect(page.getByText("Prochaine réunion")).toHaveCount(0);
+      return;
+    }
+    const lien = page.getByTestId("colonne-droite").getByRole("link", { name: /Point des Bâtisseurs/ });
+    await expect(lien).toContainText("Jeudi 8 octobre, 20:00");
+    await expect(lien).toHaveAttribute("href", /\/back-office\/reunions\/r1\/?$/);
+  });
+
+  test("Réunions : le compte rendu de la précédente est lié, la ligne disparaît", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, {
+      ...REUNIONS,
+      "evenements/r0": reunion("Point des Bâtisseurs", "equipe:evenementiel", "2026-09-24", {
+        compteRendu: { url: "https://exemple.test/cr0", parUid: "uid-alice", parNom: "Alice Q.", le: "2026-09-25T10:00:00Z" },
+      }),
+    });
+    await expect(lignes(page).first()).toBeVisible();
+    await expect(page.getByText("Compte rendu : Point des Bâtisseurs")).toHaveCount(0);
+  });
+
+  test("Réunions : des sujets illisibles ne changent rien (À faire ne les lit pas) : la ligne reste", async ({ page }) => {
+    await page.route(/documents\/evenements\/r1:runQuery/, (route) =>
+      route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refusé" } }) }));
+    await ouvrir(page, ALICE_ORGA, REUNIONS);
+    await expect(ligne(page, "Compte rendu : Point des Bâtisseurs")).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: "Une partie" })).toHaveCount(0);
+  });
+
+  test("Réunions : aucune réunion à venir ni sans compte rendu : aucune ligne, aucun bloc « Prochaine réunion »", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, { "evenements/e7": { ...REUNIONS["evenements/e7"] } });
+    await expect(lignes(page).filter({ hasText: "Compte rendu" })).toHaveCount(0);
+    await expect(page.getByText("Prochaine réunion")).toHaveCount(0);
+  });
+
+  test("T9 : le défaut d'Alice (référente EDD) est À faire, et ses lignes dans l'ordre : retard, semaine", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, REUNIONS);
+    await expect(page.getByRole("heading", { level: 2 }).filter({ hasText: /^(En retard|Cette semaine|Plus tard|À lire ou à relier)$/ }).first()).toHaveText("En retard");
+    await sansWidgets(page);
+  });
+
+  test("T10 : une ancienne disposition (sans version, avec barre du bas) est ignorée, et rien n'est écrit", async ({ page }) => {
+    const masques: string[][] = [];
+    page.on("request", (r) => {
+      if (r.method() === "PATCH" && /\/backOffice\//.test(r.url())) masques.push(new URL(r.url()).searchParams.getAll("updateMask.fieldPaths"));
+    });
+    await ouvrir(page, ALICE_ORGA, {
+      "backOffice/uid-alice": {
+        tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }], barreDuBas: ["afaire", "calendrier"], majLe: "2026-09-30T10:00:00Z",
+      },
+    });
+    await expect(lignes(page).first()).toBeVisible();
+    await sansWidgets(page);
+    expect(masques).toEqual([]);
+  });
+
+  test("T10 : une disposition de la version 2 est la sienne, mais n'est ni lue ni remplacée par À faire", async ({ page }) => {
+    const db = await ouvrir(page, ALICE_ORGA, {
+      "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }], versionTableau: 2, majLe: "2026-09-30T10:00:00Z" },
+    });
+    await expect(lignes(page).first()).toBeVisible();
+    expect(ecrituresBO(db, "uid-alice")).toEqual([]);
+    expect(db.doc("backOffice/uid-alice")!.tableauDeBord).toBeDefined();
   });
 });

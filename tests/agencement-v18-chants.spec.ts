@@ -87,25 +87,26 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     await capture(page, "v18-chants-visiteur");
   });
 
-  test("deux volets : la liste est une carte, le titre au-dessus des deux, « Choisis un chant » en h2 de 24 px (grands écrans)", async ({ page }, info) => {
+  test("deux volets : la liste est une carte, le titre au-dessus des deux, « Choisis un chant » en h2 de 22 px (grands écrans)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
     await page.goto("/songs");
     await listePrete(page);
     const l = liste(page);
     expect(await l.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("16px");
-    expect(await l.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe("none");
+    // Recette de surface C (T2b) : carte sans ombre en clair ; le liseré n'existe qu'en sombre.
+    expect(await l.evaluate((el) => getComputedStyle(el).boxShadow)).toBe("none");
     const [bEntete, bListe, bDroite] = await Promise.all([enTete(page).boundingBox(), l.boundingBox(), droite(page).boundingBox()]);
     expect(bEntete!.y + bEntete!.height, "l'en-tête au-dessus de la liste").toBeLessThanOrEqual(bListe!.y + 1);
     expect(bEntete!.y + bEntete!.height, "… et au-dessus de la fiche").toBeLessThanOrEqual(bDroite!.y + 1);
     expect(bListe!.x + bListe!.width).toBeLessThan(bDroite!.x);
     const choisis = droite(page).getByRole("heading", { level: 2, name: "Choisis un chant" });
     await expect(choisis).toBeVisible();
-    expect(await choisis.evaluate((el) => getComputedStyle(el).fontSize)).toBe("24px");
-    // Le volet de droite va jusqu'à la marge de droite.
+    expect(await choisis.evaluate((el) => getComputedStyle(el).fontSize)).toBe("22px");
+    // Le volet de droite va jusqu'à la marge de droite ; son contenu rentre de 24 px (corrections du design, T2a reprise).
     const marge = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--marge-page")));
     const largeurFenetre = await page.evaluate(() => document.documentElement.clientWidth);
     const finDuContenu = await droite(page).locator("[data-choisis-un-chant]").evaluate((el) => el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight));
-    expect(Math.abs(finDuContenu - (largeurFenetre - marge))).toBeLessThanOrEqual(1);
+    expect(Math.abs(finDuContenu - (largeurFenetre - marge - 24))).toBeLessThanOrEqual(1);
   });
 
   test("deux volets : l'index A–Z tient entier dans la carte, page en haut comme défilée (grands écrans)", async ({ page }, info) => {
@@ -161,7 +162,7 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     await signInAs(page, MUSICIEN, PASSEES, "/songs");
     await listePrete(page);
     const dansEntete = enTete(page).getByRole("button", { name: "Proposer un chant" });
-    const dansListe = liste(page).getByRole("button", { name: "Proposer un nouveau chant" });
+    const dansListe = liste(page).getByRole("button", { name: "Proposer un chant" });
     if (estTelephone(info)) {
       await expect(dansEntete).toBeHidden();
       await expect(dansListe).toBeVisible();
@@ -175,6 +176,41 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     }
     await expect(page.getByRole("dialog").getByText("Proposer un nouveau chant")).toBeVisible();
   });
+
+  // chants-8 : tablette debout, liste sur une colonne — les actions de l'en-tête finissent où finissent la recherche et la liste.
+  test("tablette portrait : « Proposer un chant » finit au même x que la recherche (même fin que la liste en groupe)", async ({ page }, info) => {
+    test.skip(info.project.name !== "tablette", "tablette debout seulement");
+    await signInAs(page, MUSICIEN, PASSEES, "/songs");
+    await listePrete(page);
+    const [action, recherche] = await Promise.all([
+      enTete(page).getByRole("button", { name: "Proposer un chant" }).boundingBox(),
+      liste(page).getByRole("searchbox").boundingBox(),
+    ]);
+    expect(Math.abs(action!.x + action!.width - (recherche!.x + recherche!.width)), "même bord droit").toBeLessThanOrEqual(2);
+  });
+
+  // chants-5 (T1c) : « Statistiques » et « Proposer un chant » sont deux boutons libellés de 44 px au
+  // téléphone ; la ligne du compteur se replie sur la largeur réelle, sans débordement ni coupure.
+  for (const largeur of [412, 390, 360]) {
+    for (const filtre of [false, true]) {
+      test(`téléphone ${largeur} px${filtre ? ", filtre posé" : ""} : boutons de 44 px, ligne sans débordement`, async ({ page }, info) => {
+        test.skip(!estTelephone(info), "la ligne du compteur ne porte les boutons qu'au téléphone");
+        await page.setViewportSize({ width: largeur, height: 800 });
+        await signInAs(page, MUSICIEN, PASSEES, "/songs");
+        await listePrete(page);
+        if (filtre) await liste(page).locator("input[type=search]").fill("abba");
+        const stats = liste(page).getByRole("link", { name: "Statistiques" });
+        const proposer = liste(page).getByRole("button", { name: "Proposer un chant" });
+        await expect(stats).toBeVisible();
+        await expect(proposer).toBeVisible();
+        const [bS, bP] = await Promise.all([stats.boundingBox(), proposer.boundingBox()]);
+        expect(Math.round(bS!.height), "Statistiques : 44 px").toBe(44);
+        expect(Math.round(bP!.height), "Proposer : 44 px").toBe(44);
+        for (const b of [bS!, bP!]) expect(b.x + b.width, "dans l'écran").toBeLessThanOrEqual(largeur);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "pas de débordement horizontal").toBe(true);
+      });
+    }
+  }
 });
 
 test.describe("le volet de droite avant d'avoir choisi (A5 à A8, grands écrans)", () => {
@@ -285,6 +321,11 @@ test.describe("le volet de droite avant d'avoir choisi (A5 à A8, grands écrans
     await listePrete(page);
     const plus = carte(page, "Les plus chantés à GCC");
     await expect(plus).toContainText("ces 3 derniers mois");
+    // Lot ST (ST3) : « Tout voir » mène à la page Statistiques, sous la grille, aligné à droite.
+    const toutVoir = plus.getByRole("link", { name: "Tout voir" });
+    await expect(toutVoir).toHaveAttribute("href", /^\/songs\/statistiques\/?$/);
+    const [bc, bl] = [await plus.boundingBox(), await toutVoir.boundingBox()];
+    expect(bl!.x + bl!.width, "à droite de la carte").toBeGreaterThan(bc!.x + bc!.width - 40);
     const lignes = lignesDe(page, "Les plus chantés à GCC");
     // abba-pere 3, 一生爱你 2, puis abrite-moi et tout-puissant 1 (le plus récent d'abord) ; a-l-agneau, trop vieux, non.
     await expect(lignes).toHaveCount(4);

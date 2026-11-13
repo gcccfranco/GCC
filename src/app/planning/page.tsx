@@ -8,22 +8,24 @@ import {
   FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK,
   PAIX_FALLBACK, BONTE_FALLBACK, DEJEUNER_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK
 } from "@/lib/planning/data"
-import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fetchBonte, fetchEDD, fetchCampus, fetchIntergroupe, fetchInterfranco } from "@/lib/planning/sheets"
+import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fetchBonte, fetchEDD, fetchCampus, fetchIntergroupe, fetchInterfranco, copiesServiesSheet } from "@/lib/planning/sheets"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
 import { completerMusiciensFidelite } from "@/lib/planning/grilles"
-import { avecDimanchesSpeciaux, sansBrouillon, trimestresPublies, type PlanningData } from "@/lib/planning/names"
+import { avecDimanchesSpeciaux, datesServies, sansBrouillon, trimestresPublies, type PlanningData } from "@/lib/planning/names"
 import { lirePetitDej } from "@/lib/petitdej/lignes"
 import { servicesDuCompte } from "@/lib/petitdej/services"
 import type { LignePetitDej } from "@/types/petitDej"
 import { pourMoi, setlistDuService } from "@/lib/planning/accueil"
-import { getSetlistsFrom, type FSSetlist } from "@/lib/firebase/setlists"
+import { getSetlistsFrom } from "@/lib/firebase/setlists"
+import type { FSSetlist } from "@/types/setList"
 import { listEvenements } from "@/lib/firebase/evenements"
 import { isExpired, isInfo, isPast } from "@/lib/evenements/agenda"
 import { canSeeEvenement, canSeeSetlist, estReunion } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { useDisposition } from "@/hooks/useDisposition"
+import { chargerIndexChants } from "@/hooks/useSongsIndex"
 import type { Evenement } from "@/types/evenement"
 import type { SongIndexEntry } from "@/types/song"
 import { PourMoi } from "@/components/accueil/PourMoi"
@@ -74,6 +76,7 @@ export default function PlanningAccueil() {
   }, [])
 
   useEffect(() => {
+    const copiesAvant = copiesServiesSheet()
     Promise.allSettled([
       fetchCulte().then(d => setCulte(d)),
       fetchDejeuner().then(d => { if (d.length) setDej(d) }),
@@ -85,7 +88,7 @@ export default function PlanningAccueil() {
       fetchCampus().then(({ louange }) => { if (louange.length) setCampus(louange) }),
       fetchIntergroupe().then(d => { if (d.length) setIntergroupe(d) }),
       fetchInterfranco().then(d => { if (d.length) setInterfranco(d) }),
-    ]).then(results => setStale(results.some(r => r.status === "rejected")))
+    ]).then(results => setStale(results.some(r => r.status === "rejected") || copiesServiesSheet() > copiesAvant))
     // Même lecture que fetchPetitDej (cache partagé) ; en échec, rien de plus.
     if (BACK_OFFICE) lirePetitDej().then(l => { setLignesPetitDej(l); setPetitDejLu(true) }, () => {})
   }, [])
@@ -96,14 +99,17 @@ export default function PlanningAccueil() {
   // « Pour moi » : le prochain service de la personne connectée (d'après son nom de
   // planning, et ses petits déj par son compte, U3) et les suivants — deux en grand, trois sur
   // tablette, aucun sur téléphone.
-  const mesServices = useMemo(() => {
+  const planningDuCompte = useMemo((): PlanningData | null => {
     if (!user || !profile) return null
     const lu: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, bonte, edd, campus, intergroupe, interfranco }
     // Lot U2 (Q4, Q5) : comme `loadPlanningData`, ni trimestre à venir non
     // publié, ni président de groupe fantôme un dimanche d'Interfranco ou d'Intergroupe.
-    const data = BACK_OFFICE ? avecDimanchesSpeciaux(sansBrouillon(lu, new Date().getFullYear(), getCurrentTri(), publies)) : lu
-    return pourMoi(servicesDuCompte(data, lignesPetitDej, user.uid, profile.planningName ?? ""), aujourdhui, disposition === "tablette" ? 3 : 2)
-  }, [user, profile, culte, dej, petitDej, lignesPetitDej, paix, fid, bonte, edd, campus, intergroupe, interfranco, publies, aujourdhui, disposition])
+    return BACK_OFFICE ? avecDimanchesSpeciaux(sansBrouillon(lu, new Date().getFullYear(), getCurrentTri(), publies)) : lu
+  }, [user, profile, culte, dej, petitDej, paix, fid, bonte, edd, campus, intergroupe, interfranco, publies])
+  const mesServices = useMemo(() => {
+    if (!user || !profile || !planningDuCompte) return null
+    return pourMoi(servicesDuCompte(planningDuCompte, lignesPetitDej, user.uid, profile.planningName ?? ""), aujourdhui, disposition === "tablette" ? 3 : 2)
+  }, [user, profile, planningDuCompte, lignesPetitDej, aujourdhui, disposition])
 
   // La setlist de ce service (règle de Mes services), puis les titres et tonalités de ses chants.
   // L'accueil est la page la plus visitée : jamais toute la collection, seulement les setlists
@@ -118,15 +124,17 @@ export default function PlanningAccueil() {
   // Seulement une setlist que la personne peut ouvrir (même règle que sa page) : jamais un lien vers « pas d'accès ».
   const setlist = useMemo(() => {
     if (!user || !mesServices) return null
-    const lisibles = setlists.filter(s => canSeeSetlist(user, profile, s))
+    // Lot AO (F1) : la setlist d'une date où l'on sert se lit même sans équipe.
+    const dates = planningDuCompte ? datesServies(planningDuCompte, profile?.planningName ?? "") : undefined
+    const lisibles = setlists.filter(s => canSeeSetlist(user, profile, s, dates))
     return mesServices.prochain.map(s => setlistDuService(lisibles, s)).find(Boolean) ?? null
-  }, [user, profile, mesServices, setlists])
+  }, [user, profile, mesServices, setlists, planningDuCompte])
   const setlistId = setlist?.id
   const [songs, setSongs] = useState<Record<string, SongIndexEntry>>({})
   useEffect(() => {
     if (!setlistId) return
-    fetch("/songs-index.json").then(r => r.json())
-      .then((index: { songs?: SongIndexEntry[] }) => setSongs(Object.fromEntries((index.songs ?? []).map(s => [s.slug, s]))))
+    chargerIndexChants()
+      .then((index) => setSongs(Object.fromEntries(index.map(s => [s.slug, s]))))
       .catch(() => {})
   }, [setlistId])
 
@@ -208,7 +216,9 @@ export default function PlanningAccueil() {
     <div className="relative space-y-6">
       <StaleBanner show={stale} />
 
-      {disposition === "grand" ? (
+      {disposition === "grand" && !pourMoiBloc ? (
+        ceDimanche
+      ) : disposition === "grand" ? (
         <div className="grid grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] items-start gap-5">
           {ceDimanche}
           {pourMoiBloc}
@@ -221,11 +231,11 @@ export default function PlanningAccueil() {
       )}
 
       {/* Verset (question 1 de la spec : gardé en bas) */}
-      <blockquote className="bg-secondary rounded-xl p-5">
-        <p className="text-sm text-muted-foreground italic leading-relaxed mb-3">
+      <blockquote>
+        <p className="mb-3 text-base text-foreground/70">
           {t("planning.verse.text")}
         </p>
-        <footer className="text-xs font-semibold text-muted-foreground text-right">{t("planning.verse.ref")}</footer>
+        <footer className="text-right text-sm font-semibold text-foreground/70">{t("planning.verse.ref")}</footer>
       </blockquote>
       <GuideLien section="planning" />
     </div>

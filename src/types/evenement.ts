@@ -11,7 +11,6 @@ export type EvenementType = (typeof EVENEMENT_TYPES)[number];
  *  d'équipe, lot U6, R4 : ses membres ; `equipe:louange`, le public Louange élargi).
  *  Seul `equipe:<id>` désigne une équipe (lot 1 du chantier « équipes et groupes », EQ19). */
 export type EvenementPour = "eglise" | AnnonceSection | `equipe:${string}`;
-export const POUR_EGLISE = "eglise" as const;
 
 /** Lien du compte rendu d'une réunion (lot U6, docs/spec-back-office.md) :
  *  collé par une personne de la réunion (R3), lu par « Réunions précédentes » (R2). */
@@ -90,6 +89,8 @@ export interface Evenement {
   reunion?: boolean;
   /** Inscrits + invités — tenu par le serveur seulement. */
   inscrits: number;
+  /** Places (personnes + invités) prises sans compte — tenu par le serveur, plafonné (PLAFOND_SANS_COMPTE). */
+  inscritsSansCompte?: number;
   createdAt: string;
   updatedAt: string;
 }

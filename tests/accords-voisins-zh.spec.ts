@@ -24,9 +24,9 @@ function tropProches(page: Page, ecartMin: number): Promise<string[]> {
       return r.getBoundingClientRect();
     };
     const out: string[] = [];
-    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line].flex-wrap"))) {
+    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line][data-coupe].items-start"))) {
       const colonnes = Array.from(ligne.querySelectorAll<HTMLElement>("span[style*='column']")).map((c) => {
-        const accord = c.children[0] as HTMLElement | undefined;
+        const accord = c.querySelector<HTMLElement>("[data-accord]") ?? undefined; // absente d'une rangée sans accord (R2)
         return { el: c, accord: accord && getComputedStyle(accord).visibility === "visible" ? accord : undefined };
       });
       const rangees: (typeof colonnes)[] = [];
@@ -53,6 +53,11 @@ async function ouvrir(page: Page, slug: string): Promise<string[]> {
   await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   await page.goto(`/songs/${encodeURIComponent(slug)}`);
   await page.locator("[data-copy-line]").first().waitFor();
+  // Avant l'hydratation la ligne n'est pas coupée (la coupure se mesure dans le navigateur) : on attend que React tienne la page.
+  await page.waitForFunction(() => {
+    const b = document.querySelector("[data-testid='barre-outils'] button[aria-label='Accords']");
+    return !!b && Object.keys(b).some((k) => k.startsWith("__reactProps"));
+  });
   await page.evaluate(() => document.fonts.ready);
   return tropProches(page, ECART_MIN_PX);
 }

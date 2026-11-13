@@ -7,7 +7,8 @@ import { useTranslation } from "react-i18next";
 import { KeyPill } from "@/components/ui/key-pill";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useSongsIndex } from "@/hooks/useSongsIndex";
-import { getSetlistsDepuis, getSetlistsFrom, type FSSetlist } from "@/lib/firebase/setlists";
+import { getSetlistsDepuis, getSetlistsFrom } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { useProfile } from "@/lib/firebase/users";
 import { todayIso } from "@/lib/scene/dimanches";
 import { songHref } from "@/lib/setlist/songHref";
@@ -15,6 +16,7 @@ import { upcomingSetlists } from "@/lib/setlist/upcoming";
 import { categoryColor } from "@/lib/serviceColors";
 import { debutPlusChantes, plusChantes } from "@/lib/stats/plusChantes";
 import type { SongIndexEntry } from "@/types/song";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 /** « 30 sept. » / « 9月30日 » : la date d'ajout d'un chant (« Nouveaux au répertoire »). */
 function jourCourt(iso: string, langue: string): string {
@@ -37,7 +39,7 @@ function dateCourte(iso: string, langue: string): string {
 const GARDEE_MS = 60_000;
 let lecture: { cle: string; quand: number; promesse: Promise<FSSetlist[]> } | null = null;
 
-function prochainesLues(uid: string, today: string): Promise<FSSetlist[]> {
+export function prochainesLues(uid: string, today: string): Promise<FSSetlist[]> {
   const cle = `${uid}|${today}`;
   if (!lecture || lecture.cle !== cle || Date.now() - lecture.quand > GARDEE_MS) {
     const promesse = getSetlistsFrom(today, 30);
@@ -136,35 +138,34 @@ export function ChoisisUnChant() {
   );
 
   return (
-    <div data-choisis-un-chant className="relative flex flex-col gap-4 pb-12 pr-[var(--marge-page)]">
-      {/* Son halo est celui de /songs (songs/ChantsVolets), réglé par le CSS. */}
+    <div data-choisis-un-chant className="relative flex flex-col gap-4 pb-12 [container-type:inline-size]">
       <div>
-        <h2 className="text-[24px] font-bold leading-[29px] tracking-[-0.02em] text-foreground">{t("songs.choose.title")}</h2>
-        <p className="mt-1 text-[14px] text-muted-foreground">
+        <h2 className="text-xl font-bold tracking-[-0.02em] text-foreground">{t("songs.choose.title")}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           {prochaines.length > 0 ? t("songs.choose.subtitle") : recents.length > 0 ? t("songs.choose.subtitleRecents") : t("songs.choose.subtitleListOnly")}
         </p>
       </div>
 
       {prochaines.length > 0 ? (
         <section aria-labelledby="prochaines-setlists" className="mt-2">
-          <h2 id="prochaines-setlists" className="text-[17px] font-bold text-foreground">{t("songs.choose.upcoming")}</h2>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">{t("songs.choose.upcomingHelp")}</p>
-          <div className="mt-4 grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(216px,1fr))]">
+          <h2 id="prochaines-setlists" className="text-lg font-bold text-foreground">{t("songs.choose.upcoming")}</h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t("songs.choose.upcomingHelp")}</p>
+          <div className="mt-4 grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(216px,300px))]">
             {prochaines.map((s) => (
               <CarteSetlist key={s.id} setlist={s} langue={i18n.language} />
             ))}
           </div>
         </section>
       ) : connecte && lues !== null && (
-        <div data-sans-setlist className="raised flex items-center gap-3.5 rounded-2xl px-[18px] py-3.5">
+        <div data-sans-setlist className="bloc-info flex items-center gap-3.5 rounded-2xl px-[18px] py-3.5">
           <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-secondary text-foreground">
             <ListMusic className="h-[18px] w-[18px]" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[14.5px] font-semibold text-foreground">{t("songs.choose.sansSetlist")}</p>
-            <p className="text-[13px] text-muted-foreground">{t("songs.choose.sansSetlistTexte")}</p>
+            <p className="text-base font-semibold text-foreground">{t("songs.choose.sansSetlist")}</p>
+            <p className="text-sm text-muted-foreground">{t("songs.choose.sansSetlistTexte")}</p>
           </div>
-          <Link href="/setlists" className="shrink-0 text-[14px] font-semibold text-foreground underline underline-offset-2">
+          <Link href="/setlists" className="shrink-0 text-sm font-semibold text-foreground underline underline-offset-2">
             {t("songs.choose.voirSetlists")}
           </Link>
         </div>
@@ -178,17 +179,19 @@ export function ChoisisUnChant() {
             </CarteChants>
           )}
           {nouveaux.length > 0 && (
-            <CarteChants titre={t("songs.choose.nouveaux")}>
-              {nouveaux.map((s) => (
-                <LigneChant key={s.slug} chant={s} sous={t("songs.choose.ajouteLe", { date: jourCourt(s.ajouteLe!, i18n.language) })} />
-              ))}
+            <CarteChants titre={t("songs.choose.nouveaux")} classe="carte-nouveaux">
+              <div className="nouveaux-chants grid gap-x-7">
+                {nouveaux.map((s) => (
+                  <LigneChant key={s.slug} chant={s} sous={t("songs.choose.ajouteLe", { date: jourCourt(s.ajouteLe!, i18n.language) })} />
+                ))}
+              </div>
             </CarteChants>
           )}
         </div>
       )}
 
       {plus.length > 0 && (
-        <CarteChants titre={t("songs.choose.plusChantes")} aide={t("songs.choose.plusChantesAide")}>
+        <CarteChants titre={t("songs.choose.plusChantes")} aide={t("songs.choose.plusChantesAide")} lien={{ href: "/songs/statistiques", label: t("songs.choose.toutVoir") }}>
           <div className="grid grid-cols-2 gap-x-7">
             {plus.map((l) => {
               const chant = parSlug.get(l.slug);
@@ -204,15 +207,20 @@ export function ChoisisUnChant() {
 }
 
 /** Une carte titrée du volet (planche `carte`) : titre 15 px en gras, une aide à droite. */
-function CarteChants({ titre, aide, children }: { titre: string; aide?: string; children: React.ReactNode }) {
+function CarteChants({ titre, aide, lien, classe, children }: { titre: string; aide?: string; lien?: { href: string; label: string }; classe?: string; children: React.ReactNode }) {
   return (
-    <section className="raised min-w-0 rounded-2xl px-[18px] pb-2 pt-3.5">
+    <section className={`bloc-info min-w-0 rounded-2xl px-[18px] pb-2 pt-3.5${classe ? ` ${classe}` : ""}`}>
       {/* Une carte étroite (tablette couchée) passe l'aide à la ligne plutôt que de couper le titre. */}
       <div className="mb-1.5 flex flex-wrap items-baseline gap-x-2">
-        <h3 className="text-[15px] font-bold text-foreground">{titre}</h3>
-        {aide && <span className="ml-auto whitespace-nowrap text-[13px] font-semibold text-muted-foreground">{aide}</span>}
+        <h3 className="text-base font-bold text-foreground">{titre}</h3>
+        {aide && <span className="ml-auto whitespace-nowrap text-sm font-semibold text-muted-foreground">{aide}</span>}
       </div>
       {children}
+      {lien && (
+        <Link href={lien.href} className="mb-1.5 mt-1 block text-right text-sm font-semibold text-foreground underline underline-offset-2">
+          {lien.label}
+        </Link>
+      )}
     </section>
   );
 }
@@ -223,12 +231,12 @@ function LigneChant({ chant, sous, rang }: { chant: SongIndexEntry; sous?: strin
   const zh = chant.language === "zh";
   return (
     <div data-ligne-chant className="flex min-w-0 items-center gap-3 border-t border-border py-2">
-      {rang !== undefined && <span className="w-4 shrink-0 text-[12px] font-bold tabular-nums text-muted-foreground">{rang}</span>}
+      {rang !== undefined && <span className="w-4 shrink-0 text-xs font-bold tabular-nums text-muted-foreground">{rang}</span>}
       <div className="min-w-0 flex-1">
-        <Link href={`/songs/${chant.slug}`} data-titre className="block truncate text-[14.5px] font-semibold text-foreground hover:underline underline-offset-2">
+        <Link href={`/songs/${chant.slug}`} data-titre className="block truncate text-base font-semibold text-foreground hover:underline underline-offset-2">
           {chant.title}
         </Link>
-        <p className="truncate text-[12.5px] text-muted-foreground">
+        <p className="truncate text-xs text-muted-foreground">
           {sous ?? (chant.titlePinyin ? `${chant.titlePinyin} · ${chant.artist}` : chant.artist)}
         </p>
       </div>
@@ -247,17 +255,17 @@ function CarteSetlist({ setlist, langue }: { setlist: FSSetlist; langue: string 
   const chants = setlist.items.filter((i) => i.type !== "transition");
 
   return (
-    <article data-carte-setlist className="raised rounded-2xl px-[18px] pb-3 pt-4">
-      <p className="flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: couleur }}>
+    <article data-carte-setlist className="bloc-info rounded-2xl px-[18px] pb-3 pt-4">
+      <p className="flex items-center gap-1.5 text-sm font-semibold texte-service" style={styleTexteService(couleur)}>
         <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: couleur }} />
         {t("categories." + setlist.category, { defaultValue: setlist.category })}
       </p>
-      <h3 className="mt-1 text-[17px] font-bold leading-snug text-foreground">
+      <h3 className="mt-1 text-lg font-bold leading-snug text-foreground">
         <Link href={`/setlists/${setlist.id}`} className="hover:underline underline-offset-2">
           {setlist.title}
         </Link>
       </h3>
-      <p className="mt-0.5 text-[13px] text-muted-foreground">
+      <p className="mt-0.5 text-sm text-muted-foreground">
         {dateCourte(setlist.date, langue)}
         {setlist.leader && ` · ${setlist.leader}`}
       </p>
@@ -267,8 +275,8 @@ function CarteSetlist({ setlist, langue }: { setlist: FSSetlist; langue: string 
           const entree: SongIndexEntry | undefined = fusion ? undefined : parSlug.get(item.songSlug);
           return (
             <li key={item.position} data-carte-chant className="flex min-h-[39px] items-center gap-3 border-t border-border py-1.5">
-              <span className="w-3 shrink-0 text-[13px] tabular-nums text-muted-foreground">{n + 1}</span>
-              <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-foreground">
+              <span className="w-3 shrink-0 text-sm tabular-nums text-muted-foreground">{n + 1}</span>
+              <span className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">
                 {fusion ? (
                   // Une fusion : « A / B », chaque chant dans ses réglages de la fusion.
                   fusion.map((fs, k) => (

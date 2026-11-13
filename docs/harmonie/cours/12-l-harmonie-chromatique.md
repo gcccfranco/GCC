@@ -12,11 +12,11 @@ Chaque accord de la gamme (sauf vii°) peut être précédé de son propre accor
 
 | Accord visé | Dominante secondaire | Notation | Note étrangère | Effet |
 | --- | --- | --- | --- | --- |
-| Dm (ii) | A7 | V7/ii | Do# | Élan, très courant |
-| Em (iii) | B7 | V7/iii | Ré#, Fa# | Tension, plus rare |
-| F (IV) | C7 | V7/IV | Sib | Chaleur gospel |
-| G (V) | D7 | V7/V | Fa# | Poussée vers la dominante |
-| Am (vi) | E7 | V7/vi | Sol# | Drame, émotion forte |
+| Dm (ii) | A7 | V7/ii | Do♯ | Élan, très courant |
+| Em (iii) | B7 | V7/iii | Ré♯, Fa♯ | Tension, plus rare |
+| F (IV) | C7 | V7/IV | Si♭ | Chaleur gospel |
+| G (V) | D7 | V7/V | Fa♯ | Poussée vers la dominante |
+| Am (vi) | E7 | V7/vi | Sol♯ | Drame, émotion forte |
 
 **Trouver la dominante secondaire :** monte d'une quinte depuis l'accord visé et joue un accord de septième. Pour Am : La → Mi → E7.
 
@@ -60,9 +60,9 @@ Il n'existe que trois accords diminués 7 différents. Chacun a quatre noms.
 
 | Groupe | Notes | Noms équivalents | Résout un demi-ton au-dessus vers |
 | --- | --- | --- | --- |
-| 1 | Do Mib Solb La | C°7 = Eb°7 = Gb°7 = A°7 | Db, E, G, Bb (majeur ou mineur) |
-| 2 | Do# Mi Sol Sib | C#°7 = E°7 = G°7 = Bb°7 | D, F, Ab, B (majeur ou mineur) |
-| 3 | Ré Fa Lab Si | D°7 = F°7 = Ab°7 = B°7 | Eb, Gb, A, C (majeur ou mineur) |
+| 1 | Do Mi♭ Sol♭ La | C°7 = Eb°7 = Gb°7 = A°7 | Db, E, G, Bb (majeur ou mineur) |
+| 2 | Do♯ Mi Sol Si♭ | C#°7 = E°7 = G°7 = Bb°7 | D, F, Ab, B (majeur ou mineur) |
+| 3 | Ré Fa La♭ Si | D°7 = F°7 = Ab°7 = B°7 | Eb, Gb, A, C (majeur ou mineur) |
 
 | Usage | Exemple en Do | Effet |
 | --- | --- | --- |
@@ -88,16 +88,16 @@ On saute vers un accord majeur situé une tierce plus haut ou plus bas, en garda
 
 | Nom | Accords | Ligne qui bouge | Usage |
 | --- | --- | --- | --- |
-| Majeur descendant | C – Cmaj7 – C7 – F | Do – Si – Sib – La | Vers le IV, gospel doux |
-| Majeur montant | C – Caug – C6 – C7 | Sol – Sol# – La – Sib | Élan, attente |
-| Mineur descendant | Am – Am(maj7) – Am7 – Am6 | La – Sol# – Sol – Fa# | Mystère, ponts, intros |
-| Basse chromatique | C – C/B – C7/Bb – F/A – Fm/Ab – C/G | Do – Si – Sib – La – Lab – Sol | Transition couplet → refrain |
+| Majeur descendant | C – Cmaj7 – C7 – F | Do – Si – Si♭ – La | Vers le IV, gospel doux |
+| Majeur montant | C – Caug – C6 – C7 | Sol – Sol♯ – La – Si♭ | Élan, attente |
+| Mineur descendant | Am – Am(maj7) – Am7 – Am6 | La – Sol♯ – Sol – Fa♯ | Mystère, ponts, intros |
+| Basse chromatique | C – C/B – C7/Bb – F/A – Fm/Ab – C/G | Do – Si – Si♭ – La – La♭ – Sol | Transition couplet → refrain |
 
 ## 12.7 L'accord augmenté de passage
 
 - **I – I+ – vi :** C – Caug – Am/C. Le Sol monte vers le La.
 - **I – I+ – IV :** C – Caug – F/C. Même mouvement, arrivée plus lumineuse.
-- **V7(#5) – I :** G7(#5) – C. La quinte augmentée (Ré#) monte vers Mi : dominante tendue, très gospel.
+- **V7(#5) – I :** G7(#5) – C. La quinte augmentée (Ré♯) monte vers Mi : dominante tendue, très gospel.
 
 ## 12.8 Les résolutions surprenantes de V7
 
@@ -116,7 +116,7 @@ G7 n'est pas obligé d'aller vers C. Chaque résolution raconte autre chose :
 ## 12.9 Pour aller plus loin (usage rare en louange)
 
 - **Accord napolitain (bII) :** Db/F – G7 – C. Dramatique et solennel.
-- **Sixtes augmentées :** Lab – Do – Fa# (italienne), Lab – Do – Ré – Fa# (française), Lab – Do – Mib – Fa# (allemande). Elles résolvent sur V (G).
+- **Sixtes augmentées :** La♭ – Do – Fa♯ (italienne), La♭ – Do – Ré – Fa♯ (française), La♭ – Do – Mi♭ – Fa♯ (allemande). Elles résolvent sur V (G).
 - **Chaînes de dominantes :** E7 – A7 – D7 – G7 – C. Chaque accord résout sur le suivant.
 
 ## 12.10 Les règles d'usage en louange

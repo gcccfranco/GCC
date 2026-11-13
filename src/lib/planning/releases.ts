@@ -13,7 +13,12 @@
 
 import { NOTIFY_ALL } from "@/lib/push/audiences"
 import { BACK_OFFICE } from "@/lib/backOffice"
-import type { EtatAnnonce } from "./prevenir"
+import { previentPlanning, publiePlanning, type ProfilOrganigramme } from "@/lib/acces/organigramme"
+import type { EtatAnnonce } from "@/types/planning"
+import { TRI_ORDER, triRank, triVisibilities, triVisibilitiesAnnee } from "./trimestres"
+
+// Les trimestres vivent dans `trimestres.ts` (module feuille, voir son en-tête) ; réexportés pour les pages.
+export { TRI_ORDER, triRank, triVisibilities, triVisibilitiesAnnee }
 
 export interface PublishablePlanning {
   /** Clé stable : id Firestore + sélecteur de groupe de la page Groupes. */
@@ -37,13 +42,6 @@ export const PUBLISHABLE_PLANNINGS: PublishablePlanning[] = [
 
 export function getPlanning(key: string): PublishablePlanning | undefined {
   return PUBLISHABLE_PLANNINGS.find((p) => p.key === key)
-}
-
-export const TRI_ORDER = ["T1", "T2", "T3", "T4"] as const
-export type Tri = (typeof TRI_ORDER)[number]
-
-export function triRank(tri: string): number {
-  return TRI_ORDER.indexOf(tri as Tri)
 }
 
 /** Admins + porteurs du droit notif « tout le monde » + porteurs du droit notif
@@ -73,67 +71,28 @@ export function peutPrevenir(
 }
 
 /** Les listes d'un profil que lisent la publication et « Prévenir » ; celles des rôles ne comptent
- *  que si `backOffice` (OG27 : local et en ligne partagent Firestore). */
-type ProfilPublie = { notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] }
+ *  que si `backOffice` (OG27 : local et en ligne partagent Firestore). Lot AO : l'organigramme aussi. */
+type ProfilPublie = { notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] } & ProfilOrganigramme
 
-/** Publier ce planning, profil relu (route /api/planning/release, pages du planning). */
+/** Publier ce planning, profil relu (route /api/planning/release, pages du planning). Lot AO (`backOffice`) :
+ *  plus de droit `notify`. Lot RS : le gestionnaire du planning le publie (`publiePlanning`,
+ *  src/lib/acces/organigramme.ts) ; ni les référents ni les rôles de groupe. */
 export function droitsDePublication(
   planning: PublishablePlanning, isAdmin: boolean, profil: ProfilPublie | null, backOffice: boolean = BACK_OFFICE
 ): boolean {
+  if (backOffice) return isAdmin || publiePlanning(profil, planning.key)
   return canPublishPlanning(planning, isAdmin, profil?.notify ?? [], backOffice ? profil?.publieParRole ?? [] : [])
 }
 
-/** Prévenir des changements de ce planning, profil relu (route /api/planning/changements, pages). */
+/** Prévenir des changements de ce planning, profil relu (route /api/planning/changements, pages). Lot AO
+ *  (`backOffice`) : ceux qui le publient. Lot RS : son gestionnaire (`previentPlanning`) ; un rôle « Notifier »
+ *  (`notifieParRole`) ne donne plus rien. */
 export function droitsDePrevenir(
   planning: PublishablePlanning, isAdmin: boolean, profil: ProfilPublie | null, backOffice: boolean = BACK_OFFICE
 ): boolean {
+  if (backOffice) return isAdmin || previentPlanning(profil, planning.key)
   return peutPrevenir(planning, isAdmin, profil?.notify ?? [],
     backOffice ? profil?.publieParRole ?? [] : [], backOffice ? profil?.notifieParRole ?? [] : [])
-}
-
-export interface TriVisibility {
-  tri: string
-  /** Affiché à l'utilisateur courant ? (membre : courant/passé OU publié ; publieur : toujours) */
-  visible: boolean
-  /** Trimestre futur non encore publié → badge « Non publié » (vu par les publieurs uniquement). */
-  unpublished: boolean
-}
-
-/** Décide, pour chaque trimestre, sa visibilité et l'état « non publié ».
- *  Règle membre : visible si `triRank(tri) <= triRank(courant)` (le trimestre
- *  courant et les passés s'affichent toujours) OU s'il est publié. Un publieur
- *  (`canPublish`) voit tout, les trimestres futurs non publiés étant marqués
- *  pour relecture avant publication. */
-export function triVisibilities(
-  available: readonly string[],
-  published: string[],
-  currentTri: string,
-  canPublish: boolean
-): TriVisibility[] {
-  const cur = triRank(currentTri)
-  return available.map((tri) => {
-    const futureUnpublished = triRank(tri) > cur && !published.includes(tri)
-    return { tri, visible: canPublish || !futureUnpublished, unpublished: futureUnpublished }
-  })
-}
-
-/** Lot U2 : les trimestres d'une année choisie dans le sélecteur. Année passée :
- *  tout se lit. Année en cours : `triVisibilities`. Année suivante : un
- *  trimestre sort quand il est publié ; avant, seuls ceux qui voient le
- *  brouillon (qui remplit ou publie ce planning, les admins) le voient, marqué. */
-export function triVisibilitiesAnnee(
-  annee: number,
-  anneeCourante: number,
-  published: string[],
-  currentTri: string,
-  voitBrouillon: boolean
-): TriVisibility[] {
-  if (annee < anneeCourante) return TRI_ORDER.map((tri) => ({ tri, visible: true, unpublished: false }))
-  if (annee === anneeCourante) return triVisibilities(TRI_ORDER, published, currentTri, voitBrouillon)
-  return TRI_ORDER.map((tri) => {
-    const pub = published.includes(tri)
-    return { tri, visible: pub || voitBrouillon, unpublished: !pub }
-  })
 }
 
 // ─── Lecture publique de l'état de publication (REST Firestore, sans auth) ─────

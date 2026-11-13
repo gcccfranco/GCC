@@ -116,11 +116,15 @@ test.describe("page chant", () => {
     await expect(page.locator("[data-jianpu-page]")).toHaveCount(2);
     await page.locator("[data-jianpu-page]").last().scrollIntoViewIfNeeded();
     await scanCharge(page);
+    const barre = page.getByRole("navigation", { name: "Navigation principale" });
+    // Depuis A6 (docs/spec-corrections-audit.md, commit a0160b48), la cale K2 n'est posée que si la barre
+    // est rendue (`body:has([data-testid=barre-du-bas])`) ; la barre arrive avec la session : on l'attend
+    // avant d'aller en bas, sinon la page s'allonge après le défilement.
+    await expect(barre).toBeAttached();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     // Un léger retour vers le haut fait revenir la barre, comme au doigt.
     await page.waitForTimeout(300);
     await page.evaluate(() => window.scrollBy(0, -1));
-    const barre = page.getByRole("navigation", { name: "Navigation principale" });
     await expect(barre).toBeInViewport();
     await page.waitForTimeout(400); // fin de la transition de la barre
     const basDeLaFeuille = await page.locator("[data-jianpu-page]").last().evaluate((el) => el.getBoundingClientRect().bottom);
@@ -160,7 +164,8 @@ const setlist = (items: Record<string, unknown>[]) => ({
   date: "2026-10-11",
   language: "mixed",
   notes: "",
-  ownerId: "uid-owner",
+  // Depuis SC1 (18/10/2026), seul le créateur adapte et modifie une setlist : la musicienne est la créatrice de la sienne.
+  ownerId: "uid-musicien",
   isPrivate: false,
   items,
 });
@@ -246,7 +251,7 @@ test.describe("setlist, vue Partitions", () => {
   }
 });
 
-test("mode louange : le scan par défaut ; l'interrupteur des Réglages est celui de la setlist", async ({ page }) => {
+test("mode louange : le scan par défaut ; le bouton des Options d'affichage est celui de la setlist", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await ouvrirPartitions(page, [item({ songSlug: "一生爱你", position: 1 })]);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
@@ -254,10 +259,10 @@ test("mode louange : le scan par défaut ; l'interrupteur des Réglages est celu
   await expect(onStage(page, "[data-jianpu-page]").first()).toBeVisible();
 
   const reglages = await ouvrirReglages(page);
-  const interrupteur = reglages.getByRole("switch", { name: "Partition 简谱" });
-  await expect(interrupteur).toBeChecked();
+  const interrupteur = reglages.getByRole("button", { name: "Partition 简谱" });
+  await expect(interrupteur).toHaveAttribute("aria-pressed", "true");
   await interrupteur.click();
-  await expect(interrupteur).not.toBeChecked();
+  await expect(interrupteur).toHaveAttribute("aria-pressed", "false");
   expect(await lirePref(page)).toBe("never");
   await page.keyboard.press("Escape");
   await expect(onStage(page, "[data-section]").first()).toBeVisible();
@@ -305,6 +310,7 @@ test("service worker : les scans et leurs manifestes sont gardés pour le hors-l
     match: async () => undefined,
     put: async (req: { url: string }) => { misEnCache.push(req.url); },
     addAll: async () => {},
+    keys: async () => [],
   };
   const origin = "https://louange.example.org";
   vm.runInNewContext(readFileSync("public/sw.js", "utf8"), {
@@ -319,11 +325,15 @@ test("service worker : les scans et leurs manifestes sont gardés pour le hors-l
   });
   const charger = async (chemin: string) => {
     let reponse: Promise<unknown> | undefined;
+    // A3 : les écritures du cache passent par event.waitUntil.
+    const attentes: Promise<unknown>[] = [];
     handlers.fetch({
       request: { method: "GET", url: origin + chemin, mode: "no-cors" },
       respondWith: (p: Promise<unknown>) => { reponse = p; },
+      waitUntil: (p: Promise<unknown>) => { attentes.push(p); },
     });
     await reponse;
+    await Promise.all(attentes);
     await new Promise((r) => setTimeout(r, 0));
   };
   // Forme réelle : images non optimisées, le navigateur demande le nom encodé.
@@ -396,6 +406,10 @@ test("éditeur : « Partition 简谱 » coché d'office ; « Paroles » s'écrit
   await fermerFeuille(page);
   await page.getByRole("button", { name: "Terminé" }).click();
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/setlists/${SETLIST_ID}`);
+  // Deux volets : l'historique est dans le bloc que déplie le titre de l'en-tête (T3 du lot exemples d'usage).
+  const titreDv = page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ });
+  await expect(page.getByRole("heading", { level: 1 }).first()).toBeAttached(); // la page est chargée
+  if (await titreDv.count()) await titreDv.click();
   await page.getByRole("button", { name: /Modifiée par Léa M\./ }).click();
   const historique = page.getByRole("dialog", { name: "Historique des modifications" });
   await expect(historique.getByText("一生爱你 joué sur les paroles")).toBeVisible();

@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ChordPad } from "@/components/setlists/ChordPad";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { transposeLabel } from "@/lib/transpose";
+import { isCJK } from "@/lib/cjk";
 import {
   type EditableLine,
   parseEditableLine,
@@ -51,15 +52,12 @@ export type EditLineTarget = {
   originalKey: string;
   /** Index de la ligne dans le source — sert aussi de clé d'identité de la sheet. */
   srcLine?: number;
+  /** Crayon : « Paroles » ouvre la feuille sur les paroles, « Accord » (défaut) sur la ligne et ses accords. */
+  cible?: "accord" | "paroles";
 };
 
 type PadTarget = { kind: "add"; offset: number } | { kind: "edit"; index: number } | null;
 type Mode = "line" | "lyrics" | "instr";
-
-function isCJK(ch: string) {
-  const cp = ch.codePointAt(0) ?? 0;
-  return (cp >= 0x4e00 && cp <= 0x9fff) || (cp >= 0x3400 && cp <= 0x4dbf);
-}
 
 function transposeLine(line: EditableLine, semitones: number, targetKey: string): EditableLine {
   if (semitones === 0) return line;
@@ -80,7 +78,7 @@ function InsertDot({ onTap, active, small = false }: { onTap: () => void; active
       className={`self-end mb-1 shrink-0 rounded-full border border-dashed flex items-center justify-center transition-colors ${
         small ? "mx-px h-5 w-5" : "mx-0.5 h-6 w-6"
       } ${
-        active ? "border-foreground bg-secondary text-foreground" : "border-border text-muted-foreground/60 hover:text-foreground hover:border-foreground"
+        active ? "border-foreground bg-secondary text-foreground" : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
       }`}
     >
       <Plus className={small ? "h-3 w-3" : "h-3.5 w-3.5"} />
@@ -93,10 +91,10 @@ function Chip({ chord, selected, onTap }: { chord: string; selected: boolean; on
     <button
       type="button"
       onClick={onTap}
-      className={`h-8 px-2 mb-0.5 rounded-sm border text-[15px] font-bold whitespace-nowrap transition-colors ${
+      className={`h-8 px-2 mb-0.5 rounded-sm border text-base font-bold whitespace-nowrap transition-colors ${
         selected
           ? "border-foreground bg-foreground text-background"
-          : "border-[color:var(--chord-color,#2563EB)]/40 bg-[color:var(--chord-color,#2563EB)]/10 text-[color:var(--chord-color,#2563EB)]"
+          : "border-[color:var(--chord-color,#3f63cf)]/40 bg-[color:var(--chord-color,#3f63cf)]/10 text-[color:var(--chord-color,#3f63cf)]"
       }`}
     >
       {/* Convention zh `[ ]` : accord « espace » (colonne vide) — rendu ␣ pour rester tappable */}
@@ -314,10 +312,11 @@ function SheetBody({
   );
 
   const [draft, setDraft] = useState<EditableLine>(initial);
-  const [mode, setMode] = useState<Mode>(initialInstr ? "instr" : "line");
+  const surLesParoles = target.cible === "paroles" && !initialInstr;
+  const [mode, setMode] = useState<Mode>(initialInstr ? "instr" : surLesParoles ? "lyrics" : "line");
   const [padTarget, setPadTarget] = useState<PadTarget>(null);
-  const [lyricsDraft, setLyricsDraft] = useState("");
-  const [pinyinDraft, setPinyinDraft] = useState("");
+  const [lyricsDraft, setLyricsDraft] = useState(surLesParoles ? initial.text : "");
+  const [pinyinDraft, setPinyinDraft] = useState(surLesParoles ? initial.pinyin ?? "" : "");
   const [instrNew, setInstrNew] = useState(false);
   const [instrAnnotation, setInstrAnnotation] = useState(initialParts.annotation);
   const [instrChords, setInstrChords] = useState<string[]>(initialParts.chords);
@@ -376,7 +375,7 @@ function SheetBody({
         : t("setlists.contentEdit.lineTitle", { defaultValue: "Modifier la ligne" });
 
   const actionBtn =
-    "h-10 px-3 rounded-sm border border-border bg-card text-[13px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors";
+    "h-10 px-3 rounded-sm border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors";
 
   return (
     <>
@@ -384,7 +383,7 @@ function SheetBody({
         <DrawerTitle className="flex items-center justify-between gap-2">
           <span>{title}</span>
           {target.semitones !== 0 && (
-            <span className="text-[11px] font-normal text-muted-foreground">
+            <span className="text-xs font-normal text-muted-foreground">
               {t("setlists.contentEdit.displayedKey", {
                 defaultValue: "Tonalité affichée : {{key}}",
                 key: target.targetKey,
@@ -404,7 +403,7 @@ function SheetBody({
                 type="button"
                 aria-pressed={repeatScope === scope}
                 onClick={() => onRepeatScope?.(scope)}
-                className={`h-8 px-3 rounded-full text-[13px] font-semibold transition-colors ${
+                className={`h-8 px-3 rounded-full text-sm font-semibold transition-colors ${
                   repeatScope === scope
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -427,10 +426,10 @@ function SheetBody({
               autoFocus
             />
             {target.language === "zh" && (
-              <div>
-                <label className="text-xs text-muted-foreground">Pinyin</label>
+              <label className="block">
+                <span className="text-xs text-muted-foreground">Pinyin</span>
                 <Input value={pinyinDraft} onChange={(e) => setPinyinDraft(e.target.value)} className="mt-1" />
-              </div>
+              </label>
             )}
             {!lyricsDraft.trim() && (
               <p className="text-xs text-destructive">
@@ -440,7 +439,7 @@ function SheetBody({
               </p>
             )}
             {pinyinMismatch && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
+              <p className="text-xs text-amber-700 dark:text-amber-400">
                 {t("setlists.contentEdit.pinyinMismatch", {
                   defaultValue:
                     "Attention : {{py}} mot(s) pinyin pour {{zh}} caractère(s) chinois — l'alignement sera décalé.",
@@ -494,7 +493,7 @@ function SheetBody({
               <button
                 type="button"
                 onClick={() => setInstrPad(-1)}
-                className={`h-8 px-2.5 rounded-sm border border-dashed text-[13px] font-semibold flex items-center gap-1 ${
+                className={`h-8 px-2.5 rounded-sm border border-dashed text-sm font-semibold flex items-center gap-1 ${
                   instrPad === -1 ? "border-foreground text-foreground" : "border-border text-muted-foreground"
                 }`}
               >
@@ -576,7 +575,7 @@ function SheetBody({
               onInsert={(offset) => setPadTarget({ kind: "add", offset })}
             />
             {target.language === "fr" && !padTarget && (
-              <p className="text-[11px] text-muted-foreground -mt-1">
+              <p className="text-xs text-muted-foreground -mt-1">
                 {t("setlists.contentEdit.tapWordHint", {
                   defaultValue:
                     "Touche un mot pour choisir la lettre exacte où placer l'accord.",

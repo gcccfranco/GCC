@@ -5,7 +5,7 @@ import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsR
 // Agencement v18, tranche T9 — App Setlists et Mes services (docs/spec-agencement-v18.md, A9 et
 // A11) : l'en-tête commun (titre, sous-titre, « + Nouvelle setlist ») au-dessus des deux volets,
 // la liste en carte, ses vues dans le rail (À venir · Archives · Mes setlists, À venir · Passés) ;
-// la fiche de droite se titre en h2 de 24 px. « + Nouvelle setlist » : pilule à libellé dès
+// la fiche de droite se titre en h2 de 22 px. « + Nouvelle setlist » : pilule à libellé dès
 // 768 px, rond sur téléphone. Cinq projets (`agencement-v18-*` est dans SPECS_GRAND_ECRAN).
 // Feuilles Google, Firestore et date simulés ; personnes fictives.
 
@@ -65,17 +65,18 @@ async function capture(page: Page, nom: string) {
 }
 
 /** La liste est une carte en relief (rayon 16 px, ombre), l'en-tête au-dessus des deux volets. */
-async function verifierDeuxVolets(page: Page) {
+async function verifierDeuxVolets(page: Page, taille = "22px") {
   const l = liste(page);
   expect(await l.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("16px");
-  expect(await l.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe("none");
+  // Recette C : la liste est un groupe qui se détache de la page, par son aplat blanc en clair, par son ombre en sombre.
+  expect(await l.evaluate((el) => getComputedStyle(el).boxShadow !== "none" || getComputedStyle(el).backgroundColor !== getComputedStyle(document.body).backgroundColor)).toBe(true);
   const [bEntete, bListe, bDetail] = await Promise.all([enTete(page).boundingBox(), l.boundingBox(), detail(page).boundingBox()]);
   expect(bEntete!.y + bEntete!.height, "l'en-tête au-dessus de la liste").toBeLessThanOrEqual(bListe!.y + 1);
   expect(bEntete!.y + bEntete!.height, "… et au-dessus de la fiche").toBeLessThanOrEqual(bDetail!.y + 1);
   expect(bListe!.x + bListe!.width, "la fiche à droite de la liste").toBeLessThan(bDetail!.x);
   // La fiche ne pose plus de marge (R10) : son contenu part à l'écart de la carte, et son haut est celui de la carte.
   const titre = detail(page).getByRole("heading", { level: 2 }).first();
-  expect(await titre.evaluate((el) => getComputedStyle(el).fontSize), "la fiche : un h2 de 24 px").toBe("24px");
+  expect(await titre.evaluate((el) => getComputedStyle(el).fontSize), `la fiche : un h2 de ${taille}`).toBe(taille);
   const ecart = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ecart-volets")));
   expect(Math.abs(bDetail!.x - (bListe!.x + bListe!.width) - ecart)).toBeLessThanOrEqual(1);
 }
@@ -86,6 +87,7 @@ test.describe("Setlists (A9)", () => {
     await expect(ligneSetlist(page, "Culte du 4 octobre")).toBeVisible();
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Setlists", exact: true })).toBeVisible();
     await expect(enTete(page).getByText("Les chants prévus pour chaque service", { exact: true })).toBeVisible();
+    // V3 (validation du 07/11/2026) : sans setlist choisie, la première est montrée d'emblée : deux volets pleine zone.
     await verifierAgencement(page, { contenu: blocSetlists(page, info), onglets: { rail: 1, pilules: 0 } });
     // Plus de titre dans la liste ; les vues dans le rail.
     await expect(page.getByRole("heading", { name: "Setlists" })).toHaveCount(1);
@@ -98,14 +100,69 @@ test.describe("Setlists (A9)", () => {
     expect((await enTete(page).boundingBox())!.y + 1, "le titre au-dessus du rail").toBeLessThan((await rail.boundingBox())!.y);
   });
 
-  test("deux volets : la liste en carte, l'en-tête au-dessus des deux, l'aperçu en h2 de 24 px (grands écrans)", async ({ page }, info) => {
-    test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
+  test("jeu B : le rail à la largeur de son contenu (pleine largeur au téléphone), « Mes services » en pilule, aucun <select>", async ({ page }, info) => {
     await ouvrir(page, "/setlists");
+    await expect(ligneSetlist(page, "Culte du 4 octobre")).toBeVisible();
+    const rail = ongletsRail(page).filter({ visible: true });
+    const largeur = (await rail.boundingBox())!.width;
+    if (estTelephone(info)) {
+      expect(largeur, "pleine largeur au téléphone").toBeGreaterThan(page.viewportSize()!.width - 48);
+    } else {
+      expect(largeur, "à la largeur du contenu").toBeLessThanOrEqual(420);
+    }
+    const mes = page.getByRole("button", { name: "Mes services", exact: true });
+    const avant = await mes.getAttribute("aria-pressed");
+    expect(["true", "false"]).toContain(avant);
+    await mes.click();
+    await expect(mes).toHaveAttribute("aria-pressed", avant === "true" ? "false" : "true");
+    await expect(mes).not.toContainText("✓");
+    expect(await page.locator("select:visible:not(form select)").count(), "aucun <select> hors formulaire").toBe(0);
+    // Le filtre de catégorie est un Menu : au repos « Tous les services », une catégorie choisie le met à l'encre.
+    const menu = page.locator("[data-menu]").filter({ hasText: "Tous les services" });
+    await expect(menu).toBeVisible();
+    await expect(menu).not.toHaveAttribute("data-pose", "");
+    await menu.click();
+    await expect(page.getByRole("menu")).toBeVisible();
+    const premiere = page.getByRole("menu").getByRole("menuitemradio").nth(1);
+    const nom = (await premiere.innerText()).trim();
+    await premiere.click();
+    const pose = page.locator("[data-menu][data-pose]");
+    await expect(pose).toContainText(nom);
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    await pose.click();
+    await expect(page.getByRole("menu")).toBeVisible();
+    await page.getByRole("menu").getByRole("menuitemradio", { name: "Tous les services" }).click();
+    await expect(page.locator("[data-menu][data-pose]")).toHaveCount(0);
+  });
+
+  test("l'onglet « Mes setlists » garde son cadenas à 360 px, sans coupure (dimanche-25)", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await ouvrir(page, "/setlists");
+    await expect(ligneSetlist(page, "Culte du 4 octobre")).toBeVisible();
+    const onglet = ongletsRail(page).filter({ visible: true }).getByRole("tab", { name: /Mes setlists/ });
+    await expect(onglet.locator("svg").first()).toBeVisible();
+    const mesure = await onglet.evaluate((el) => ({ coupe: el.scrollWidth > el.clientWidth + 1, hauteur: el.getBoundingClientRect().height }));
+    expect(mesure.coupe, "l'onglet ne déborde pas").toBe(false);
+    expect(mesure.hauteur, "le libellé tient sur une ligne").toBeLessThan(60);
+    await capture(page, "v18-setlists-cadenas-360");
+  });
+
+  test("deux volets : la liste en carte, l'en-tête au-dessus des deux, l'aperçu en h2 de 22 px (grands écrans)", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
+    // Une setlist choisie (`?apercu=`) : les deux volets ; sans elle, la liste seule dans la colonne (largeurs-b4).
+    await ouvrir(page, "/setlists?apercu=sl-1");
     await expect(detail(page).getByRole("heading", { level: 2, name: "Culte du 4 octobre" })).toBeVisible();
     await verifierDeuxVolets(page);
-    // Le rail et la recherche dans la carte, « Comment ça marche ? » en bas de la carte.
-    await expect(liste(page).locator('[data-onglets="rail"]')).toBeVisible();
-    await expect(liste(page).getByRole("searchbox")).toBeVisible();
+    // Recette C : le rail, la recherche et les filtres sont des contrôles posés sur le gris, dans l'en-tête, au-dessus
+    // de la carte (seule la liste est un groupe blanc).
+    await expect(liste(page).locator('[data-onglets="rail"]')).toHaveCount(0);
+    await expect(liste(page).getByRole("searchbox")).toHaveCount(0);
+    const bListe = (await liste(page).boundingBox())!;
+    for (const controle of [ongletsRail(page).filter({ visible: true }), page.getByRole("searchbox")]) {
+      await expect(controle).toBeVisible();
+      const b = (await controle.boundingBox())!;
+      expect(b.y + b.height, "le contrôle au-dessus de la carte").toBeLessThanOrEqual(bListe.y + 1);
+    }
     await capture(page, "v18-setlists");
   });
 
@@ -190,11 +247,12 @@ test.describe("Mes services (A11)", () => {
     await capture(page, "v18-mes-services-360");
   });
 
-  test("deux volets : la liste en carte, l'en-tête au-dessus des deux, le service en h2 de 24 px (grands écrans)", async ({ page }, info) => {
+  test("deux volets : la liste en carte, l'en-tête au-dessus des deux, le service en h2 de 22 px (grands écrans)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
     await ouvrir(page, "/mes-services");
     await expect(detail(page).getByRole("heading", { level: 2, name: "Dimanche 4 octobre" })).toBeVisible();
-    await verifierDeuxVolets(page);
+    // Lot CD, services-9 : le titre du service passe à `xl` (22 px) en deux volets.
+    await verifierDeuxVolets(page, "22px");
     // Un lien direct vers un service : l'en-tête reste, au même endroit.
     const avant = (await enTete(page).locator("h1").boundingBox())!;
     await page.getByRole("link", { name: /Culte Franco.*18 oct/ }).click();

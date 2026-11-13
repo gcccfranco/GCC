@@ -25,6 +25,9 @@ Dans cet ordre, une directive par ligne, puis une ligne vide :
 {artist: 赞美之泉}
 {key: F}
 {tempo: 67}
+{subtitle: Coming Home}                   ← s'il est gravé
+{time: 4/4}
+{bible: 路15:11-32}                       ← s'il est gravé
 {language: zh}
 {themes: Engagement, Action de grâce}
 {youtube: https://www.youtube.com/watch?v=…}
@@ -38,6 +41,9 @@ Dans cet ordre, une directive par ligne, puis une ligne vide :
 | `artist` | le nom sous lequel le chant est connu : l'interprète ou le groupe (Samuel Olivier, Hillsong, 赞美之泉). Les auteurs gravés (詞/曲, « paroles et musique ») ne sont repris que s'ils sont aussi l'interprète. Si la partition fournie ne nomme pas le groupe : le prendre sur une autre feuille du même chant dans `Partitions/`, ou du groupe connu de l'auteur, et le dire dans le rapport | ligne omise |
 | `key` | tonalité gravée sur la partition fournie (`1= F`, case « D », « Tonalité : A ») ; majuscule, `b`/`#` ; mineure : `Am`. Rien de gravé (gravure chorale, hymnaire) : déduite de l'**armure** et de l'**accord final** (armure vide et dernier accord `Do` → `C` ; armure vide et dernier accord `Lam` → `Am` ; un bémol et dernier accord `Fa` → `F`), et toujours un `{needs_review: tonalité déduite de l'armure et de l'accord final}` dans l'en-tête | — |
 | `tempo` | le `♩=` de la partition, ou la valeur donnée par Timothée | ligne omise |
+| `subtitle` | sous-titre gravé sous le titre (« Coming Home »), tel quel ; ni album, ni crédits d'édition (équipe de transcription, traducteur) | ligne omise |
+| `time` | mesure gravée (`4/4`, `3/4`, `6/8`), forme `n/n` ; la première si elle change en cours de chant | ligne omise |
+| `bible` | référence biblique gravée (« 路15:11-32 », « Psaume 23 »), telle quelle | ligne omise |
 | `language` | `fr` ou `zh` | — |
 | `themes` | 1 à 3 `name_fr` de `content/themes.json`, séparés par `, `, **même pour un chant chinois** (le filtre du site ne reconnaît que ces noms). Critère : ce que le chant dit d'abord (à qui il s'adresse, ce qu'il affirme), thème principal en premier ; les autres thèmes défendables vont dans le rapport, pas dans le fichier | — |
 | `youtube` | lien fourni par Timothée | ligne omise |

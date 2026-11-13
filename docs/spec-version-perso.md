@@ -17,8 +17,9 @@ Un musicien ouvre une setlist et se fait **sa version** d'un chant : les
 sections qu'il veut voir et dans quel ordre (par exemple C R P, une fois
 chacune), et des accords ou des paroles retouchés. Elle ne change rien pour
 les autres : la structure et la version préparées par la présidence restent
-celles de la liste, du bandeau, du PDF, du lien de présentation et des autres
-musiciens. S'il **partage** sa version, elle devient « Version de Christelle »,
+celles de la liste, du bandeau, du lien de présentation et des autres
+musiciens. Le PDF de la setlist propose « Ma version » (Timothée, 29/10/2026 :
+chacun peut exporter sa propre version, voir plus bas). S'il **partage** sa version, elle devient « Version de Christelle »,
 que chacun voit et peut choisir à la place de celle de la présidence, en
 gardant son propre choix. La structure perso, elle, ne se partage jamais. La
 version vit **dans cette setlist seulement**.
@@ -126,8 +127,17 @@ structure de la présidence.
   uniques » sont sans effet sur un chant à structure perso, qui est déjà ce
   que je veux voir.
 - Le **sommaire** suit ce qui est affiché (il sert à y aller). Le bandeau, la
-  vue liste, le PDF, le lien de présentation et la copie des paroles pour la
+  vue liste, le lien de présentation et la copie des paroles pour la
   régie restent sur la présidence.
+- **PDF** (Timothée, 29/10/2026, à la place de « le PDF reste sur la
+  présidence ») : quand j'ai dans cette setlist une version différente de la
+  présidence (la mienne, accords/paroles ou structure, ou celle d'un autre que
+  j'ai choisie), « Quel PDF ? » propose « Ma version » (par défaut) ou
+  « Version de la présidence ». « Ma version » imprime ce que montre la vue
+  partitions : contenu choisi, ma structure, mes retouches 简谱. Classique,
+  Couleurs et Compact ; la Liste reste sur la présidence. Le PDF d'un chant
+  ouvert depuis la setlist reste sur la présidence (la page chant ne lit pas
+  les versions perso).
 - Ma structure s'applique quelle que soit la version d'accords choisie (la
   mienne, celle de la présidence ou celle d'un autre) ; une section absente de
   la version choisie est ignorée.
@@ -151,7 +161,7 @@ structure de la présidence.
 
 ### Ne change pas
 
-Vue liste, bandeau, PDF (chant et setlist), lien de présentation, copie des
+Vue liste, bandeau, PDF du chant et PDF « Liste » (le PDF de la setlist propose « Ma version », Timothée, 29/10/2026), lien de présentation, copie des
 paroles pour la régie (possible seulement en suivant la présidence : le
 bouton disparaît sur une autre version), notifications, historique de la
 setlist, éditeur de setlist. Fusions : pas de version perso (V1). Le Dp de la présidence apparaît
@@ -232,7 +242,8 @@ Précisions de réalisation :
   paroles de la version choisie ; en mode « Ma version », la mienne) pour la
   vue partitions, et des items « de scène » (ma structure en plus, sans les
   notes, nuances et transitions d'occurrence) pour le sommaire et le mode
-  louange. Liste, PDF, historique et éditeur gardent `setlist.items`.
+  louange. Liste, historique et éditeur gardent `setlist.items` ; le PDF
+  aussi, sauf en « Ma version » (items affichés + ma structure, 29/10/2026).
 - **Copier les paroles** (régie) n'est proposé que si le chant affiché suit
   la setlist de la présidence : le bouton disparaît sur ma version, ma
   structure ou la version d'un autre (Timothée, 15/09/2026).

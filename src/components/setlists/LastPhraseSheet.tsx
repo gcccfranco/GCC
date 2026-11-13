@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { ChampSelect } from "@/components/ui/champ-select";
 import { Button } from "@/components/ui/button";
 import { SectionView } from "@/components/song/SongView";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
@@ -14,7 +15,7 @@ import { semitonesTo } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
 import type { SectionSummary, SongIndexEntry } from "@/types/song";
 
-export type LastPhraseResult = { contentOverride: string; sectionId: string; name: string };
+type LastPhraseResult = { contentOverride: string; sectionId: string; name: string };
 
 type Props = {
   open: boolean;
@@ -90,15 +91,14 @@ function LastPhraseForm({ onClose, song, contentOverride, keyOverride, sections,
         <div className="flex flex-wrap items-end gap-4">
           <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
             {t("setlists.form.lastPhrase.section")}
-            <select
+            <ChampSelect
               value={sectionId}
               onChange={(e) => setSectionId(e.target.value)}
-              className="h-9 px-2 border border-border rounded-md bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
             >
               {sections.map((s) => (
                 <option key={s.id} value={s.id}>{formatSectionName(s, t)}</option>
               ))}
-            </select>
+            </ChampSelect>
           </label>
           <div className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
             {t("setlists.form.lastPhrase.lines")}

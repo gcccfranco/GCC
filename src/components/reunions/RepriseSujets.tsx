@@ -25,7 +25,7 @@ export function RepriseSujets({ aReprendre, onChoix }: {
     <AlertDialog open={liste.length > 0}>
       <AlertDialogContent onEscapeKeyDown={(ev) => ev.preventDefault()}
         className="w-[calc(100%-2.5rem)] max-w-sm gap-0 rounded-[20px] border-0 bg-card p-[18px] sm:rounded-[20px]">
-        <AlertDialogTitle className="text-[17px] font-bold leading-snug text-foreground">{t("evenements.reprise.titre")}</AlertDialogTitle>
+        <AlertDialogTitle className="text-lg font-bold leading-snug text-foreground">{t("evenements.reprise.titre")}</AlertDialogTitle>
         <AlertDialogDescription className="mb-2.5 mt-1.5">
           {reunions === 1
             ? t("evenements.reprise.uneReunion", { date: liste[0] ? date(liste[0]) : "", count: liste.length })
@@ -41,10 +41,10 @@ export function RepriseSujets({ aReprendre, onChoix }: {
           ))}
         </ul>
         <div className="mt-3.5 grid grid-cols-2 gap-2">
-          <AlertDialogCancel onClick={() => onChoix(false)} className="mt-0 h-auto min-h-11 whitespace-normal border-0 bg-secondary px-2 py-2 text-[15px] text-secondary-foreground hover:bg-secondary/80">
+          <AlertDialogCancel onClick={() => onChoix(false)} className="mt-0 h-auto min-h-11 whitespace-normal border-0 bg-secondary px-2 py-2 text-base text-secondary-foreground hover:bg-secondary/80">
             {t("evenements.reprise.non")}
           </AlertDialogCancel>
-          <AlertDialogAction onClick={() => onChoix(true)} className="h-auto min-h-11 whitespace-normal px-2 py-2 text-[15px]">{t("evenements.reprise.oui")}</AlertDialogAction>
+          <AlertDialogAction onClick={() => onChoix(true)} className="h-auto min-h-11 whitespace-normal px-2 py-2 text-base">{t("evenements.reprise.oui")}</AlertDialogAction>
         </div>
         <p className="mt-2.5 text-xs text-muted-foreground">{t(reunions === 1 ? "evenements.reprise.noteUne" : "evenements.reprise.notePlusieurs")}</p>
       </AlertDialogContent>

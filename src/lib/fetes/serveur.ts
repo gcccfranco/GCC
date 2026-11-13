@@ -3,7 +3,8 @@
 // « aujourd'hui » en paramètres.
 
 import { FieldValue } from "firebase-admin/firestore";
-import { isAdminEmail } from "@/lib/access";
+import { isCoordination } from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { HttpError } from "@/lib/evenements/serveur";
 import { lireGroupes } from "@/lib/equipes/serveur";
 import { groupeDe } from "@/lib/groupes/organigramme";
@@ -15,7 +16,7 @@ import {
 } from "./droits";
 import { nouvelIdPassage, validerMedias } from "./passages";
 
-export type Appelant = { uid: string; email: string };
+type Appelant = { uid: string; email: string };
 
 /** Une édition lue dans `programmes/{id}` : refusée si ce n'est pas une fête (programme ordinaire). */
 interface EditionFete {
@@ -35,13 +36,15 @@ function lireEdition(id: string, data: Record<string, unknown> | undefined): Edi
   return { fete, annee, jourJ, passages: Array.isArray(data.passages) ? (data.passages as Passage[]) : [] };
 }
 
-/** Les comptes et les groupes, tels que `ayantsDroitDuQui` les lit. La coordination de l'appelant vient
- *  de son jeton (un admin sans profil, ou dont l'e-mail du profil manque, reste coordination). */
+/** Les comptes et les groupes, tels que `ayantsDroitDuQui` les lit. La coordination se calcule comme au
+ *  back-office (`isCoordination`, lot RS : le Comité Orga, `responsabilites` du profil entier passé tel quel) ; l'adresse d'admin est celle du jeton de l'appelant (un admin sans profil reste
+ *  coordination), jamais l'e-mail d'un profil. Seule celle de l'appelant sert aux droits. */
 export async function lireContexteFetes(
   db: FirebaseFirestore.Firestore,
   jourJ: string,
   edd: PlanningEddFete,
   appelant: Appelant,
+  backOffice: boolean = BACK_OFFICE,
 ): Promise<ContexteFetes> {
   const [users, groupes] = await Promise.all([db.collection("users").get(), lireGroupes(db)]);
   const liste = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
@@ -54,19 +57,18 @@ export async function lireContexteFetes(
       serviceRoles,
       dansEquipes: liste(x.dansEquipes),
       planningName: typeof x.planningName === "string" ? x.planningName : "",
-      coordination: isAdminEmail(x.email as string | undefined) || x.coordination === true,
+      coordination: isCoordination(d.id === appelant.uid ? { email: appelant.email } : null, x, backOffice),
     };
   });
   const moi = profils.find((p) => p.uid === appelant.uid);
-  if (!moi) profils.push({ uid: appelant.uid, groupe: null, serviceRoles: {}, dansEquipes: [], planningName: "", coordination: isAdminEmail(appelant.email) });
-  else if (isAdminEmail(appelant.email)) moi.coordination = true;
+  if (!moi) profils.push({ uid: appelant.uid, groupe: null, serviceRoles: {}, dansEquipes: [], planningName: "", coordination: isCoordination({ email: appelant.email }, null, backOffice) });
   return { profils, groupes: Object.fromEntries(groupes.map((g) => [g.id, g])), edd, jourJ };
 }
 
 /** Un jeton valide ne dit rien du jour J : « jusqu'au jour J compris » (décision 45, Q9). */
 const apresLeJourJ = (aujourdhui: string, jourJ: string) => aujourdhui > jourJ;
 
-export interface DroitsPassage extends DroitsDeSaisie { id: string }
+interface DroitsPassage extends DroitsDeSaisie { id: string }
 
 /**
  * `POST /api/fetes/droits` (CF16) : donne un `id` aux passages qui n'en ont pas (CF1, une transaction,
@@ -156,13 +158,14 @@ export async function saisirChants(
       if ((x.fete as { programme?: string } | undefined)?.programme !== programme || x.ownerId != null) {
         throw new HttpError(409, "Cette setlist existe déjà : demande à un admin")
       }
-      tx.update(slRef, { editeurs: ayants, title: titre, date: ed.jourJ, fete });
+      tx.update(slRef, { editeurs: ayants, title: titre, date: ed.jourJ, fete, majLe: FieldValue.serverTimestamp() });
     } else {
-      // Pas de `updatedAt` : `getSetlistsSince` l'interroge comme un horodatage.
+      // Pas de `updatedAt` : `getSetlistsSince` l'interroge comme un horodatage. `majLe` : synchro de
+      // la liste (lot LF, docs/spec-lectures-firestore.md).
       tx.set(slRef, {
         title: titre, leader: auteur, category: ed.fete === "noel" ? "Noël" : "Pâques", date: ed.jourJ,
         language: "fr", notes: "", items: [], isDraft: false, isPrivate: false, ownerId: null,
-        createdAt: FieldValue.serverTimestamp(), editeurs: ayants, fete,
+        createdAt: FieldValue.serverTimestamp(), majLe: FieldValue.serverTimestamp(), editeurs: ayants, fete,
       });
     }
   });

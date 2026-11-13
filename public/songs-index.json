@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-23T19:45:47.868Z",
+  "generatedAt": "2026-10-29T19:39:20.858Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -109,7 +109,7 @@
       "recommendedKey": null,
       "tempo": 64,
       "themes": [
-        "noël",
+        "noel",
         "grace",
         "esperance"
       ],
@@ -248,7 +248,7 @@
       "slug": "aimez-vous-les-uns-les-autres",
       "title": "Aimez-vous les uns les autres",
       "titlePinyin": null,
-      "artist": "Inconnu",
+      "artist": "Glorious",
       "language": "fr",
       "originalKey": "F",
       "recommendedKey": null,
@@ -257,12 +257,12 @@
         "famille-de-dieu",
         "engagement"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=_wNTCx2stXM",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
-      "ajouteLe": null,
+      "ajouteLe": "2026-10-18",
       "sections": [
         {
           "id": "verse-1",
@@ -1400,7 +1400,7 @@
       "recommendedKey": null,
       "tempo": 147,
       "themes": [
-        "noël",
+        "noel",
         "salut"
       ],
       "youtubeUrl": null,
@@ -2165,7 +2165,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
-      "ajouteLe": null,
+      "ajouteLe": "2026-10-18",
       "sections": [
         {
           "id": "chorus-1",
@@ -2644,7 +2644,7 @@
       "recommendedKey": null,
       "tempo": 90,
       "themes": [
-        "noël",
+        "noel",
         "mission"
       ],
       "youtubeUrl": null,
@@ -4241,6 +4241,54 @@
       ]
     },
     {
+      "slug": "gloire-a-dieu",
+      "title": "Gloire à Dieu",
+      "titlePinyin": null,
+      "artist": "Parfaitement Imparfait",
+      "language": "fr",
+      "originalKey": "A",
+      "recommendedKey": null,
+      "tempo": null,
+      "themes": [
+        "adoration"
+      ],
+      "youtubeUrl": "https://www.youtube.com/watch?v=-TAbUSI8koQ",
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "ajouteLe": null,
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "prechorus-2",
+          "name": "Pré-refrain",
+          "type": "prechorus"
+        },
+        {
+          "id": "chorus-3",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "chorus-4",
+          "name": "Post-Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-5",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
+        }
+      ]
+    },
+    {
       "slug": "gloire-a-son-nom",
       "title": "Gloire à Son Nom",
       "titlePinyin": null,
@@ -4590,9 +4638,9 @@
       "recommendedKey": null,
       "tempo": 132,
       "themes": [
-        "noël",
+        "noel",
         "salut",
-        "groupe-fidelite"
+        "noel_fidelite"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -4694,7 +4742,7 @@
       "tempo": 68,
       "themes": [
         "adoration",
-        "noël"
+        "noel"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -6213,7 +6261,7 @@
       "tempo": 96,
       "themes": [
         "adoration",
-        "noël"
+        "noel"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -7040,7 +7088,7 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "noël",
+        "noel",
         "adoration"
       ],
       "youtubeUrl": null,
@@ -7268,7 +7316,7 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "noël",
+        "noel",
         "adoration",
         "grace"
       ],
@@ -7429,7 +7477,7 @@
       "recommendedKey": null,
       "tempo": 160,
       "themes": [
-        "noël",
+        "noel",
         "adoration"
       ],
       "youtubeUrl": null,
@@ -7828,7 +7876,7 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "noël",
+        "noel",
         "adoration"
       ],
       "youtubeUrl": null,
@@ -8278,7 +8326,7 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "noël"
+        "noel"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -9064,7 +9112,7 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "noël",
+        "noel",
         "adoration",
         "esperance"
       ],
@@ -9675,7 +9723,12 @@
       "sections": [
         {
           "id": "verse-1",
-          "name": "Couplet",
+          "name": "Couplet 1",
+          "type": "verse"
+        },
+                {
+          "id": "verse-2",
+          "name": "Couplet 2",
           "type": "verse"
         },
         {
@@ -10879,7 +10932,7 @@
       "tempo": null,
       "themes": [
         "adoration",
-        "noël",
+        "noel",
         "resurrection"
       ],
       "youtubeUrl": null,
@@ -11470,7 +11523,7 @@
       "recommendedKey": null,
       "tempo": 134,
       "themes": [
-        "noël",
+        "noel",
         "adoration",
         "salut"
       ],
@@ -11833,7 +11886,7 @@
       "recommendedKey": null,
       "tempo": 68,
       "themes": [
-        "noël",
+        "noel",
         "salut",
         "adoration"
       ],
@@ -13015,7 +13068,7 @@
       "titlePinyin": null,
       "artist": "Impact",
       "language": "fr",
-      "originalKey": "D",
+      "originalKey": "A",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -13654,7 +13707,7 @@
       "recommendedKey": null,
       "tempo": 74,
       "themes": [
-        "noël",
+        "noel",
         "salut"
       ],
       "youtubeUrl": null,
@@ -15485,7 +15538,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
-      "ajouteLe": null,
+      "ajouteLe": "2026-10-18",
       "sections": [
         {
           "id": "verse-1",
@@ -15583,7 +15636,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
-      "ajouteLe": null,
+      "ajouteLe": "2026-10-17",
       "sections": [
         {
           "id": "intro-1",
@@ -16160,7 +16213,7 @@
       "recommendedKey": null,
       "tempo": 126,
       "themes": [
-        "noël",
+        "noel",
         "adoration"
       ],
       "youtubeUrl": null,
@@ -17298,7 +17351,7 @@
       "recommendedKey": null,
       "tempo": 110,
       "themes": [
-        "noël",
+        "noel",
         "salut"
       ],
       "youtubeUrl": null,

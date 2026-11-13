@@ -1,14 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { cartesDeLaVisite } from "../src/lib/onboarding/visite";
 import { presentationMessage } from "../src/lib/setlist/presentationLink";
 import { nouvelEvenementMessage } from "../src/lib/evenements/rappel";
 import { auditKey, certifiedSlugs, halfStepUp, loadChords, openSheet, slugsWithoutOverlay, songKey } from "./helpers/jianpu";
 
-// Lot 8 « Nouveaux membres et 中文 » (docs/spec-nouveaux-membres.md).
+// Lot 8 « Nouveaux membres et 中文 » (docs/spec-nouveaux-membres.md). L'accueil est la visite par rôle
+// (docs/spec-visite-par-role.md) : écrans Bienvenue, Où trouver quoi, une carte par profil, Notifications, C'est parti.
 
 const NOUVEAU: FakeProfile = { uid: "uid-neuf", email: "neuf@example.com", firstName: "Léa", lastName: "Martin", accueil: true };
-const PRESIDENCE: FakeProfile = { ...NOUVEAU, serviceRoles: { "Culte Francophone": ["presidence", "chanteur"] } };
-const MUSICIEN: FakeProfile = { ...NOUVEAU, serviceRoles: { "Groupe Paix": ["musicien"] } };
+// Lot AO (AO-F) : le rôle de l'écran d'accueil vient des sous-équipes de Louange (organigramme), plus de `serviceRoles`.
+const PRESIDENCE: FakeProfile = { ...NOUVEAU, dansEquipes: ["louange"], sousEquipes: ["presidence", "choristes"], lieuxLouange: ["Culte Francophone"] };
+const MUSICIEN: FakeProfile = { ...NOUVEAU, dansEquipes: ["louange"], sousEquipes: ["musiciens"], lieuxLouange: ["Culte Francophone"], joue: ["guitare"] };
 
 const accueil = (page: Page) => page.getByRole("dialog", { name: /Bienvenue dans GCC|欢迎使用 GCC/ });
 
@@ -27,13 +30,14 @@ test("un compte qui n'a pas vu l'accueil le voit, le parcourt et « Commencer »
   await expect(d.getByRole("heading", { name: "Bienvenue dans GCC" })).toBeVisible();
   await d.getByRole("button", { name: "Suivant" }).click();
   await expect(d.getByText("Setlists")).toBeVisible();
-  await d.getByRole("button", { name: "Suivant" }).click();
-  await d.getByRole("button", { name: "Suivant" }).click();
-  await d.getByRole("button", { name: "Suivant" }).click();
+  // Où trouver quoi, puis les cartes réelles du profil, puis Notifications (proposées sur les trois appareils).
+  const cartes = cartesDeLaVisite({ uid: MUSICIEN.uid, email: MUSICIEN.email }, MUSICIEN as Parameters<typeof cartesDeLaVisite>[1], true).length;
+  for (let i = 0; i < cartes + 2; i++) await d.getByRole("button", { name: "Suivant" }).click();
   await expect(d.getByRole("link", { name: "Ouvrir le guide" })).toBeVisible();
   await d.getByRole("button", { name: "Commencer" }).click();
   await expect(accueil(page)).toHaveCount(0);
   await expect.poll(() => db.doc("onboarding/uid-neuf")?.vu).toBe(true);
+  expect(db.doc("onboarding/uid-neuf")?.version).toBe(4);
 });
 
 test("« Passer » ferme l'accueil et le mémorise aussi", async ({ page }) => {
@@ -63,13 +67,13 @@ test("sans compte, jamais d'accueil", async ({ page }) => {
 test("écran du rôle : présidence, musicien, sans rôle", async ({ page }) => {
   await signInAs(page, PRESIDENCE, {}, "/moi");
   await jusquAuRole(page);
-  await expect(accueil(page).getByRole("heading", { name: "Préparer une setlist" })).toBeVisible();
+  await expect(accueil(page).getByRole("heading", { name: "Tu présides le culte" })).toBeVisible();
 });
 
 test("écran du rôle : un musicien répète avec le mode louange", async ({ page }) => {
   await signInAs(page, MUSICIEN, {}, "/moi");
   await jusquAuRole(page);
-  await expect(accueil(page).getByRole("heading", { name: "Répéter avant le dimanche" })).toBeVisible();
+  await expect(accueil(page).getByRole("heading", { name: "Tu joues le dimanche" })).toBeVisible();
 });
 
 test("écran du rôle : sans rôle, la vie de l'église", async ({ page }) => {
@@ -171,7 +175,7 @@ test("en 中文, aucun texte français sur les écrans membres principaux", asyn
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   const francais = textesFrancais();
   await signInAs(page, { ...MEMBRE, dansEquipes: ["da"], referentDe: ["da"] }, {}, "/moi");
-  for (const chemin of ["/moi", "/songs", "/taches", "/back-office/taches/da", "/setlists", "/evenements"]) {
+  for (const chemin of ["/moi", "/songs", "/taches", "/back-office/equipes/da", "/setlists", "/evenements"]) {
     if (chemin !== "/moi") await page.goto(chemin);
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     await page.waitForTimeout(800);
@@ -202,10 +206,10 @@ test("en 中文, la proposition de chant n'a plus de français", async ({ page }
 
 test("en 中文, le formulaire de nouvelle tâche n'a plus de français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-  await signInAs(page, { ...MEMBRE, dansEquipes: ["da"], referentDe: ["da"] }, {}, "/back-office/taches/da");
-  // Agencement v18 (T1, B2) : en grand, le formulaire dans le volet ; sur un volet, la feuille.
+  await signInAs(page, { ...MEMBRE, dansEquipes: ["da"], referentDe: ["da"] }, {}, "/back-office/equipes/da");
+  // Piste A (BO7) : « 新任务 » est un lien de la section Tâches de la page de l'équipe ; il ouvre en grand le formulaire dans la page, sur un volet la feuille.
   const enGrand = ["ordinateur", "ordinateur-1440", "tablette-paysage"].includes(test.info().project.name);
-  await page.getByRole(enGrand ? "link" : "button", { name: "新任务" }).click();
+  await page.getByRole("link", { name: "新任务" }).click();
   await expect(page.getByRole(enGrand ? "form" : "dialog", { name: "新任务" })).toBeVisible();
   expect(await francaisAffiche(page, textesFrancais())).toEqual([]);
 });

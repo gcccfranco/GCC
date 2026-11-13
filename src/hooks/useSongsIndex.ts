@@ -11,7 +11,8 @@ import type { SongIndexEntry } from "@/types/song";
 let cache: SongIndexEntry[] | null = null;
 let enCours: Promise<SongIndexEntry[]> | null = null;
 
-function charger(): Promise<SongIndexEntry[]> {
+/** Lecture partagée de l'index (une seule requête, gardée en mémoire) ; rejette hors ligne. */
+export function chargerIndexChants(): Promise<SongIndexEntry[]> {
   enCours ??= fetch("/songs-index.json")
     .then((r) => {
       if (!r.ok) throw new Error(`songs-index.json : HTTP ${r.status}`);
@@ -25,7 +26,7 @@ function charger(): Promise<SongIndexEntry[]> {
   return enCours;
 }
 
-export type SongsIndex = {
+type SongsIndex = {
   /** Les chants de l'index ; `null` tant qu'ils ne sont pas lus. */
   songs: SongIndexEntry[] | null;
   /** Vrai quand la lecture a échoué (hors ligne, sans copie du service worker). */
@@ -44,7 +45,7 @@ export function useSongsIndex(lire = true): SongsIndex {
   useEffect(() => {
     if (songs || !lire) return;
     let vivant = true;
-    charger()
+    chargerIndexChants()
       .then((s) => { if (vivant) setSongs(s); })
       .catch(() => { if (vivant) setErreur(true); });
     return () => { vivant = false; };

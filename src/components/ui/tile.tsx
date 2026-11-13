@@ -16,7 +16,7 @@ export function Tile({
   color: string;
   big: React.ReactNode;
   small?: React.ReactNode;
-  size?: "md" | "lg";
+  size?: "md" | "lg" | "xl";
   className?: string;
 }) {
   return (
@@ -24,13 +24,13 @@ export function Tile({
       data-testid="tuile"
       className={cn(
         "svc-ink flex shrink-0 flex-col items-center justify-center rounded-lg font-bold leading-none tabular-nums",
-        size === "lg" ? "h-11 w-11" : "h-10 w-10",
+        size === "xl" ? "h-14 w-14 rounded-xl" : size === "lg" ? "h-11 w-11" : "h-10 w-10",
         className,
       )}
       style={{ background: `color-mix(in srgb, ${color} var(--svc-tint), transparent)`, "--svc": color } as React.CSSProperties}
     >
-      <span className="text-[15px]">{big}</span>
-      {small && <span className="mt-0.5 text-xs font-semibold">{small}</span>}
+      <span className={size === "xl" ? "text-xl leading-none" : "text-base leading-none"}>{big}</span>
+      {small && <span className={cn("font-semibold leading-none", size === "xl" ? "mt-1 text-xs" : "mt-0.5 text-xs")}>{small}</span>}
     </span>
   );
 }

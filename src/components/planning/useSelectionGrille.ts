@@ -17,7 +17,7 @@ const suivre = (rappel: () => void) => {
 export const useClavier = () => useSyncExternalStore(suivre, () => window.matchMedia(POINTEUR_FIN).matches, () => false)
 
 export type CaseChoisie = { date: string; cle: string }
-export type Plage = { r0: number; r1: number; c0: number; c1: number }
+type Plage = { r0: number; r1: number; c0: number; c1: number }
 
 /** Ce que le clavier demande à la grille ; la grille le relit à chaque rendu. */
 export interface Poignees {
@@ -86,14 +86,16 @@ export function useSelectionGrille(
       const p = poignees.current
       const { ancre, deplacer: aller, effacer: fermer } = etat.current
       if (e.key === "Escape") {
+        // Échap sur l'aide clavier ne ferme que l'aide (BO11), la sélection reste.
+        if (e.target instanceof HTMLElement && e.target.closest("[data-aide-clavier]")) return
         if (p.occupe || dansUnChamp(e.target) || document.querySelector("[role=dialog],[role=alertdialog],[role=menu]")) return
         if (p.apercu) p.annulerApercu()
         else fermer()
         return
       }
       if (p.occupe || dansUnChamp(e.target) || !surLaGrille(e.target)) return
-      // Un bouton hors des cases (une pastille, la barre) garde son Entrée.
-      const surBouton = e.target instanceof HTMLElement && !!e.target.closest("button,a") && !e.target.closest("[data-case]")
+      // Un bouton hors des cases (une pastille, la barre) garde son Entrée, comme ceux d'une case à part (le petit déj).
+      const surBouton = e.target instanceof HTMLElement && !!e.target.closest("button,a") && (!e.target.closest("[data-case]") || !!e.target.closest("[data-case-a-part]"))
       if (p.apercu) {
         if (e.key === "Enter" && !surBouton) { e.preventDefault(); p.validerApercu() }
         return

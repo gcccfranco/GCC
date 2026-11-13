@@ -11,6 +11,7 @@
 // créneaux libres, en pastilles jour par jour (le créneau actuel compris), sans
 // liste déroulante, et ne touche ni quoi ni qui.
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { CalendarClock, Check } from "lucide-react"
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { titreDuJour } from "./libelles"
 import { libelleQui } from "@/lib/fetes/qui"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -40,7 +42,7 @@ export type CreneauValues = {
  *  que la coordination la décoche ; elle n'est plus proposée à un nouveau passage (CF3). */
 export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (qui: string[]) => void }) {
   const { t, i18n } = useTranslation()
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr"
+  const langue = langueCourte(i18n.language)
   const retires = value.filter((q) => !(QUI as readonly string[]).includes(q))
   return (
     <fieldset className="space-y-1">
@@ -50,8 +52,8 @@ export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (
           const checked = value.includes(q)
           const retire = retires.includes(q)
           return (
-            <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "" : "bg-background border-border text-muted-foreground"} ${retire ? "opacity-60" : ""}`}
-              style={checked ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, color: PLANNING_COLORS.scene } : undefined}>
+            <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "texte-service" : "bg-background border-border text-muted-foreground"} ${retire ? "opacity-60" : ""}`}
+              style={checked ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, ...styleTexteService(PLANNING_COLORS.scene) } : undefined}>
               <input type="checkbox" className="h-3.5 w-3.5" checked={checked}
                 onChange={() => onChange(checked ? value.filter((x) => x !== q) : [...value, q])} />
               {libelleQui(q, langue)}
@@ -90,7 +92,7 @@ function Pastille({ type, name, label, checked, onChange, retire }: {
 function Groupe({ legende, children }: { legende: ReactNode; children: ReactNode }) {
   return (
     <fieldset>
-      <legend className="mb-2 text-[13px] font-semibold text-muted-foreground">{legende}</legend>
+      <legend className="mb-2 text-sm font-semibold text-muted-foreground">{legende}</legend>
       <div className="flex flex-wrap gap-2">{children}</div>
     </fieldset>
   )
@@ -133,7 +135,7 @@ export function CreneauForm({ open, title, onCancel, ...champs }: Props) {
 
 function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
   const { t, i18n } = useTranslation()
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr"
+  const langue = langueCourte(i18n.language)
   const [v, setV] = useState<CreneauValues>(initial)
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
@@ -153,7 +155,7 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, on
   return (
     <form onSubmit={submit} className="px-4 pb-6 space-y-4 overflow-y-auto">
       {place && (
-        <p className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[15px] font-semibold svc-ink"
+        <p className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-base font-semibold svc-ink"
           style={{ "--svc": COLOR, background: `${COLOR}1a` } as CSSProperties}>
           <CalendarClock className="h-5 w-5 shrink-0" aria-hidden />
           {t("planning.saison.place", { jour: titreDuJour(place.jour, i18n.language), debut: place.debut, fin: place.fin })}
@@ -190,7 +192,7 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, on
             })}
           </Groupe>
           <div className="space-y-2">
-            <label htmlFor="creneau-note" className="text-[13px] font-semibold text-muted-foreground">
+            <label htmlFor="creneau-note" className="text-sm font-semibold text-muted-foreground">
               {t("planning.programme.note")}<span className="font-normal"> · {t("planning.saison.facultatif")}</span>
             </label>
             <Input id="creneau-note" className="h-11 rounded-xl" value={v.note} maxLength={120} placeholder={t("planning.programme.noteHint")} onChange={(e) => setV({ ...v, note: e.target.value })} />

@@ -1,4 +1,4 @@
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
   enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ouvrirAvecBarre, verifierAgencement, verifierSansDebordement,
@@ -54,7 +54,7 @@ const SETLISTS = {
   "setlists/s2": setlist("2026-09-20", [chant("zh-001")]),
 };
 
-async function ouvrirStatistiques(page: Page, chemin = "/back-office/statistiques") {
+async function ouvrirStatistiques(page: Page, chemin = "/songs/statistiques") {
   interdireDialoguesNatifs(page);
   await page.clock.setFixedTime(new Date("2026-10-04T10:00:00"));
   await page.route(/\/songs-index\.json/, (route) =>
@@ -80,7 +80,7 @@ test.describe("T6 — Statistiques (B13)", () => {
       onglets: { rail: 1, pilules: 1 },
     });
     await expect(enTete(page).locator("p").first()).toHaveText(
-      "Visible par les admins seulement · 2 setlists comptées, du 31 mai 2026 au 20 septembre 2026");
+      "Setlists publiées, depuis le 31 mai 2026 · 2 setlists comptées, du 31 mai 2026 au 20 septembre 2026");
     for (const nom of ["Jamais joués", "À redécouvrir", "Les plus joués"]) {
       await vue(page, nom).click();
       await expect(vue(page, nom)).toHaveAttribute("aria-selected", "true");
@@ -101,8 +101,8 @@ test.describe("T6 — Statistiques (B13)", () => {
     await expect(periodes).toHaveAttribute("aria-label", "Période");
     await expect(periodes.getByRole("button", { name: "12 mois" })).toHaveAttribute("aria-pressed", "true");
     expect((await periodes.boundingBox())!.y, "les filtres sous le rail").toBeGreaterThanOrEqual(r.y + r.height);
-    await expect(enTete(page).getByRole("combobox", { name: "Service" })).toBeVisible();
-    await expect(enTete(page).getByRole("combobox", { name: "Présidence" })).toBeVisible();
+    await expect(enTete(page).locator('[data-menu][aria-label^="Service :"]')).toBeVisible();
+    await expect(enTete(page).locator('[data-menu][aria-label^="Présidence :"]')).toBeVisible();
 
     await periodes.getByRole("button", { name: "3 mois" }).click();
     await expect(page).toHaveURL(/periode=3/);
@@ -111,7 +111,7 @@ test.describe("T6 — Statistiques (B13)", () => {
   });
 
   test("« Jamais joués » : deux cartes, « En français » puis « En chinois », ne dépassent pas deux écrans avant « Tout afficher »", async ({ page }, info) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues");
     await expect(carteFr(page).getByRole("heading", { name: "En français · 119" })).toBeVisible();
     await expect(carteZh(page).getByRole("heading", { name: "En chinois · 59" })).toBeVisible();
     const [fr, zh] = estTelephone(info) ? [10, 10] : [40, 20];
@@ -135,7 +135,7 @@ test.describe("T6 — Statistiques (B13)", () => {
 
   test("« Jamais joués » en grand : le français sur deux colonnes, le chinois sur une, côte à côte", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "en grand seulement (ordinateur, tablette couchée)");
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues");
     await expect(lignesVisibles(carteFr(page))).toHaveCount(40);
     const xs = async (carte: ReturnType<typeof carteFr>) =>
       new Set(await lignesVisibles(carte).evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().x))));
@@ -149,7 +149,7 @@ test.describe("T6 — Statistiques (B13)", () => {
   });
 
   test("« Jamais joués » avec la langue « FR » : la seule carte en français", async ({ page }) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues&langue=fr");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues&langue=fr");
     await expect(carteFr(page)).toBeVisible();
     await expect(carteZh(page)).toHaveCount(0);
   });
@@ -157,7 +157,7 @@ test.describe("T6 — Statistiques (B13)", () => {
   // Relecture de T6 : « Tout afficher » restait ouvert après un changement de filtre, sans bouton
   // pour replier (sur téléphone, des centaines de lignes).
   test("« Jamais joués » : un filtre changé replie la carte dépliée par « Tout afficher »", async ({ page }, info) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues");
     await carteFr(page).getByRole("button", { name: "Tout afficher" }).click();
     await expect(lignesVisibles(carteFr(page))).toHaveCount(119);
     await enTete(page).locator('[data-onglets="pilules"]').getByRole("button", { name: "3 mois" }).click();
@@ -188,101 +188,57 @@ test.describe("T6 — Statistiques (B13)", () => {
   });
 });
 
-// ─── Tableau de bord (B14) ──────────────────────────────────────────────────
+// ─── Tableau de bord (B14), devenu « À faire » (piste A, BO-B) ───────────────
+// Les widgets, leur grille et leurs colonnes sont partis avec le tableau de bord : l'agencement qui reste à voir est
+// celui d'À faire (en-tête commun, liste, colonne de droite quand la barre latérale est là). `repartirWidgets` et
+// `fractionsPour` restent des modules purs, testés plus bas.
 
-async function ouvrirTableau(page: Page, barre?: "depliee" | "reduite") {
+async function ouvrirAFaire(page: Page, barre?: "depliee" | "reduite") {
   interdireDialoguesNatifs(page);
   if (barre) await ouvrirAvecBarre(page, barre);
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await sansSheet(page);
-  await signInAs(page, ADMIN, {}, "/back-office");
-  await expect(page.getByTestId("grille-widgets").locator('[data-widget="dimanche"]')).toBeVisible();
+  await signInAs(page, ADMIN, {
+    // Une ancienne disposition enregistrée n'a plus d'effet.
+    "backOffice/uid-admin": {
+      tableauDeBord: [{ id: "dimanche", taille: "m", reglages: {} }], versionTableau: 2, majLe: "2026-09-30T10:00:00Z",
+    },
+    // De quoi remplir « Ce dimanche » : sans lui, la colonne de droite est vide.
+    "plannings/culte/dimanches/2026-10-04": { date: "2026-10-04", presidence: "Pers. A", choriste1: "Pers. B", piano: "Pers. D", sono: "Pers. G" },
+    "equipes/da/taches/t1": { titre: "Fond du culte", responsableUid: null, responsableNom: "", echeance: "2026-09-28", repetition: null },
+  }, "/back-office");
+  await expect(page.getByTestId("ligne-a-faire").first()).toBeVisible();
 }
 
-const zoneWidgets = (page: Page) => page.getByTestId("grille-widgets");
-/** Les colonnes : chaque widget dit la sienne (`data-colonne`, 0 = la large) ; de haut en bas. */
-const colonnesAffichees = (page: Page) =>
-  zoneWidgets(page).locator("[data-widget][data-colonne]").evaluateAll((els) => {
-    const cols: { largeur: number; ids: string[]; ys: number[] }[] = [];
-    for (const e of els) {
-      const c = Number(e.getAttribute("data-colonne"));
-      const r = e.getBoundingClientRect();
-      cols[c] ??= { largeur: r.width, ids: [], ys: [] };
-      cols[c].ids.push(e.getAttribute("data-widget")!);
-      cols[c].ys.push(r.y);
-    }
-    return cols;
-  });
-
-/** L'ordre du défaut d'un admin (tests/tableau-de-bord.spec.ts). */
-const DEFAUT_ADMIN = ["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"];
-
-async function verifierColonnes(page: Page, nombre: number) {
-  await expect.poll(async () => (await colonnesAffichees(page)).length, { message: `${nombre} colonnes` }).toBe(nombre);
-  await expect(zoneWidgets(page)).toHaveAttribute("data-disposition", "colonnes");
-  const cols = await colonnesAffichees(page);
-  const fractions = nombre === 3 ? COLONNES_TROIS : COLONNES_DEUX;
-  expect(cols[0].largeur / cols[1].largeur, "la colonne large").toBeCloseTo(fractions[0], 1);
-  expect(cols[0].ids[0], "la colonne large commence par le premier widget").toBe("dimanche");
-  // Chaque widget une fois, chaque colonne remplie, l'ordre du tableau gardé dans chaque colonne.
-  expect(cols.flatMap((c) => c.ids).sort()).toEqual([...DEFAUT_ADMIN].sort());
-  for (const c of cols) {
-    expect(c.ids.length, "aucune colonne vide").toBeGreaterThan(0);
-    const rangs = c.ids.map((id) => DEFAUT_ADMIN.indexOf(id));
-    expect(rangs).toEqual([...rangs].sort((a, b) => a - b));
-    expect(c.ys, "de haut en bas, dans l'ordre du tableau").toEqual([...c.ys].sort((a, b) => a - b));
-  }
-}
-
-const nombreDeColonnes = (info: TestInfo, barre: "depliee" | "reduite") =>
-  barre === "reduite" && info.project.name === "ordinateur-1440" ? 3 : 2;
-
-test.describe("T6 — Tableau de bord (B14)", () => {
-  test("l'agencement commun ; « Personnaliser » en contour dans l'en-tête", async ({ page }) => {
-    await ouvrirTableau(page);
-    // Les widgets sur toute la zone ; ni rail ni pilules.
-    await verifierAgencement(page, { contenu: page.getByTestId("grille-widgets"), onglets: { rail: 0, pilules: 0 } });
-    await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Tableau de bord");
-    await expect(enTete(page).getByRole("button", { name: "Personnaliser" })).toHaveCSS("border-top-width", "1px"); // en contour
+test.describe("T6 — Tableau de bord (B14) : devenu À faire", () => {
+  test("l'agencement commun : « À faire » en h1 et son sélecteur dans l'en-tête ; plus de « Personnaliser » ni de grille", async ({ page }) => {
+    await ouvrirAFaire(page);
+    await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("À faire");
+    await expect(enTete(page).getByRole("group", { name: "Afficher" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Personnaliser" })).toHaveCount(0);
+    await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
   });
 
   for (const barre of ["depliee", "reduite"] as const) {
-    test(`en grand, barre ${barre === "depliee" ? "dépliée" : "réduite"} : les widgets en colonnes, une large et ${barre === "depliee" ? "une étroite" : "deux étroites dès 1 440 px"}`, async ({ page }, info) => {
+    test(`en grand, barre ${barre === "depliee" ? "dépliée" : "réduite"} : la liste à gauche, la colonne de droite à côté, sans débordement`, async ({ page }, info) => {
       test.skip(!estGrandEcran(info), "en grand seulement (ordinateur, tablette couchée)");
-      await ouvrirTableau(page, barre);
-      await verifierColonnes(page, nombreDeColonnes(info, barre));
-      await capture(page, `t6-tableau-${barre}`);
+      await ouvrirAFaire(page, barre);
+      const colonne = page.getByTestId("colonne-droite");
+      await expect(colonne).toBeVisible();
+      const liste = (await page.getByTestId("ligne-a-faire").first().boundingBox())!;
+      const droite = (await colonne.boundingBox())!;
+      expect(liste.x + liste.width, "la liste est à gauche de la colonne").toBeLessThanOrEqual(droite.x);
+      await verifierSansDebordement(page);
+      await capture(page, `t6-a-faire-${barre}`);
     });
   }
 
-  test("en grand, « Personnaliser » rend la grille ; « Terminé » rend les colonnes", async ({ page }, info) => {
-    test.skip(!estGrandEcran(info), "en grand seulement (ordinateur, tablette couchée)");
-    await ouvrirTableau(page);
-    await verifierColonnes(page, 2);
-    await page.getByRole("button", { name: "Personnaliser" }).click();
-    await expect(zoneWidgets(page)).toHaveAttribute("data-disposition", "grille");
-    await expect(zoneWidgets(page).locator("[data-colonne]")).toHaveCount(0);
-    await capture(page, "t6-tableau-personnaliser");
-    await page.getByRole("button", { name: "Terminé" }).click();
-    await verifierColonnes(page, 2);
-  });
-
-  // Relecture de T6 : trois colonnes dès 1 200 px de zone, c'était trois colonnes barre dépliée dès
-  // une fenêtre de 1 528 px. B14 : deux colonnes barre dépliée, trois barre réduite dès 1 440 px.
-  test("barre dépliée sur un écran de 1 600 px : toujours deux colonnes (ordinateur)", async ({ page }, info) => {
-    test.skip(!info.project.name.startsWith("ordinateur"), "ordinateur seulement : la fenêtre passe à 1 600 px");
-    await page.setViewportSize({ width: 1600, height: 900 });
-    await ouvrirTableau(page, "depliee");
-    await verifierColonnes(page, 2);
-    await capture(page, "t6-tableau-1600-depliee");
-  });
-
-  test("téléphone et tablette en portrait : la grille d'aujourd'hui", async ({ page }, info) => {
+  test("téléphone et tablette en portrait : la liste seule, pas de colonne de droite", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "téléphone et tablette en portrait seulement");
-    await ouvrirTableau(page);
-    await expect(zoneWidgets(page)).toHaveAttribute("data-disposition", "grille");
-    await expect(zoneWidgets(page).locator("[data-colonne]")).toHaveCount(0);
-    await capture(page, "t6-tableau");
+    await ouvrirAFaire(page);
+    await expect(page.getByTestId("colonne-droite")).toHaveCount(0);
+    await verifierSansDebordement(page);
+    await capture(page, "t6-a-faire");
   });
 });
 

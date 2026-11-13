@@ -65,13 +65,13 @@ const EVENEMENT = {
 const DOCS = { "setlists/sl-1": SETLIST, "evenements/ev-1": EVENEMENT };
 
 /** Jeudi 1er octobre 2026 : « Ce dimanche » est le 4 octobre. */
-async function ouvrir(page: Page, profil: FakeProfile = RUTH, feuilles: Record<string, string> = FEUILLES) {
+async function ouvrir(page: Page, profil: FakeProfile = RUTH, feuilles: Record<string, string> = FEUILLES, docs: Record<string, Record<string, unknown>> = DOCS) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
     return route.fulfill({ status: 200, contentType: "text/csv", body: feuilles[feuille] ?? "" });
   });
-  await signInAs(page, profil, DOCS, "/planning");
+  await signInAs(page, profil, docs, "/planning");
 }
 
 /** Les requêtes sur la collection des setlists (`runQuery`), relevées pendant le test : leur
@@ -167,7 +167,9 @@ test.describe("Accueil A : les quatre dispositions", () => {
   });
 
   test("une setlist que la personne ne peut pas ouvrir n'est pas proposée", async ({ page }) => {
-    await ouvrir(page, { ...RUTH, serviceRoles: {} });
+    // Lot AO (F1) : qui sert à une date lit la setlist de cette date, même sans rôle déclaré. Ce qu'on ne peut pas ouvrir,
+    // c'est une setlist privée d'un autre.
+    await ouvrir(page, { ...RUTH, serviceRoles: {} }, FEUILLES, { ...DOCS, "setlists/sl-1": { ...SETLIST, isPrivate: true } });
     await expect(cePourMoi(page).getByText("Culte Franco").first()).toBeVisible();
     await expect(ceDimanche(page).getByTestId("ligne-edd").first()).toBeVisible();
     await expect(cePourMoi(page).getByRole("link", { name: "Ouvrir" })).toHaveCount(0);
@@ -178,6 +180,11 @@ test.describe("Accueil A : les quatre dispositions", () => {
     // Le planning est lu (la feuille du Culte aussi) : l'absence n'est pas un chargement.
     await expect(ceDimanche(page).getByText("Noé T., Inès V.")).toBeVisible();
     await expect(cePourMoi(page)).toHaveCount(0);
+    // quotidien-1 : la colonne vide s'efface, « Ce dimanche » prend toute la largeur du contenu en grand.
+    if (disposition(test.info()) === "grand") {
+      const [cd, contenu] = [await boite(ceDimanche(page)), await boite(ceDimanche(page).locator("xpath=.."))];
+      expect(Math.abs(cd.width - contenu.width), "« Ce dimanche » sur toute la largeur").toBeLessThan(2);
+    }
   });
 
   // Relecture du lot : l'accueil, page la plus visitée, ne relit jamais toute la collection des
@@ -232,9 +239,20 @@ test.describe("Accueil A : les quatre dispositions", () => {
     await expect(cd.getByText("Famille Lam")).toBeVisible();
     // Interrupteur ouvert : petit déj libre (« Je m'inscris » mène à Planning › Table) et évènements.
     await expect(cd.getByRole("link", { name: "Je m'inscris" })).toHaveAttribute("href", /^\/planning\/table/);
+    // quotidien-8 : zone de toucher de 44 px au moins (pseudo-élément ::after, au toucher), dessin inchangé (32 px).
+    const inscrire = await cd.getByRole("link", { name: "Je m'inscris" }).evaluate((el) => ({
+      coarse: matchMedia("(pointer:coarse)").matches,
+      haut: el.getBoundingClientRect().height,
+      zone: parseFloat(getComputedStyle(el, "::after").height),
+    }));
+    expect(inscrire.haut, "le dessin reste à 32 px").toBeLessThan(34);
+    expect(inscrire.coarse, "pointeur grossier sur les appareils tactiles").toBe(!!test.info().project.use.hasTouch);
+    if (inscrire.coarse) expect(inscrire.zone, "zone de toucher").toBeGreaterThanOrEqual(44);
     await expect(cd.getByText("Soirée louange")).toBeVisible();
     // Le verset reste en bas (question 1).
     await expect(page.getByText("— Colossiens 3 : 23-24")).toBeVisible();
+    // quotidien-12 : le verset est en romain.
+    expect(await page.locator("blockquote").evaluate((el) => getComputedStyle(el.querySelector("p")!).fontStyle)).toBe("normal");
   });
 
   // Retours du 06/10/2026 : « Timothée C. » passait à la ligne au milieu de sa pastille (carte
@@ -269,6 +287,8 @@ test.describe("Accueil A : les quatre dispositions", () => {
     const d = disposition(info);
     if (d === "grand") {
       expect(pm.x, "« Pour moi » à droite").toBeGreaterThan(cd.x + cd.width - 1);
+      const contenu = await boite(ceDimanche(page).locator("xpath=.."));
+      expect(cd.width, "avec un service, deux colonnes").toBeLessThan(contenu.width - 100);
       expect(Math.abs(pm.y - cd.y), "les deux colonnes partent ensemble").toBeLessThan(4);
       await expect(cartes).toHaveCount(2);
       const [a, b] = [await boite(cartes.nth(0)), await boite(cartes.nth(1))];

@@ -86,7 +86,7 @@ function sectionType(key: string): ChordProSection["type"] {
   return SECTION_TYPE_MAP[key] ?? "other";
 }
 
-export function parseSectionHeader(typeKey: string, value: string) {
+function parseSectionHeader(typeKey: string, value: string) {
   let type: ChordProSection["type"] = sectionType(typeKey);
   let number: string | undefined = undefined;
   let suffix: string | undefined = undefined;
@@ -261,6 +261,9 @@ export function parseChordPro(source: string): ChordProAST {
     proposition: null,
     jianpuKey: null,
     tempo: null,
+    subtitle: null,
+    time: null,
+    bible: null,
     language: "fr",
     themes: [],
     youtubeUrl: null,
@@ -367,6 +370,15 @@ export function parseChordPro(source: string): ChordProAST {
           break;
         case "tempo":
           metadata.tempo = value ? parseInt(value, 10) : null;
+          break;
+        case "subtitle":
+          metadata.subtitle = value || null;
+          break;
+        case "time":
+          metadata.time = value || null;
+          break;
+        case "bible":
+          metadata.bible = value || null;
           break;
         case "language":
           metadata.language = (value as Language) || "fr";

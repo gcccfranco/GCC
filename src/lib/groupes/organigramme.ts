@@ -34,6 +34,22 @@ export function groupeDe(profil: ProfilGroupe): GroupeId | null {
   return cles.length === 1 ? cles[0].id : null;
 }
 
+/** Les groupes qui ont un planning : Paix, Fidélité, Bonté (page Groupes, plannings-4). */
+export type GroupePlanning = "paix" | "fidelite" | "bonte";
+const GROUPES_PLANNING: readonly GroupePlanning[] = ["paix", "fidelite", "bonte"];
+
+/**
+ * Le groupe ouvert sur la page Groupes : `?groupe=` s'il vaut `paix`, `fidelite` ou `bonte` ; sinon le groupe de la
+ * personne s'il a un planning ; sinon Paix. Une seule règle, lue par la rangée des plannings (`PlanningTabs`) et par la
+ * page : l'onglet et la page s'accordent toujours.
+ */
+export function groupePlanning(param: string | null, profil: ProfilGroupe | null | undefined): GroupePlanning {
+  const demande = GROUPES_PLANNING.find((g) => g === param);
+  if (demande) return demande;
+  const sien = profil ? groupeDe(profil) : null;
+  return GROUPES_PLANNING.find((g) => g === sien) ?? "paix";
+}
+
 /**
  * Destinataires d'un groupe (OG28, D17) : la clé du groupe dans `serviceRoles` (comme avant) ou le
  * groupe de la personne (`groupeDe`). Les droits venus des organigrammes ne comptent que si
@@ -151,7 +167,7 @@ export function membresComite(groupe: OrganigrammeGroupe): Titulaire[] {
 
 // ─── Colonnes reliables (OG12) ───────────────────────────────────────────────
 
-export interface ColonneReliable {
+interface ColonneReliable {
   cle: string;
   /** Clé de `planning.roles.*`, déjà traduite en 中文. */
   i18n: string;
@@ -205,7 +221,7 @@ export function comptesCites(groupe: OrganigrammeGroupe): string[] {
 
 // ─── Ce que le serveur recopie sur un profil (OG19, OG3) ─────────────────────
 
-export interface RecopieGroupe {
+interface RecopieGroupe {
   /** Le groupe après OG3 : celui de la personne, ou celui où elle entre. */
   groupe: GroupeId | null;
   /** Vrai = une personne sans groupe entre dans `groupe` : le serveur écrit alors le champ. */

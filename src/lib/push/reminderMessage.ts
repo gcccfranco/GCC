@@ -4,18 +4,10 @@
 // cron (/api/cron/reminders) et les tests. Voir docs/spec-planning-petits-lots.md.
 
 import { findMyServices, type PlanningData } from "@/lib/planning/names";
+import type { ReminderService } from "@/types/rappels";
 import type { NotifLang } from "@/types/user";
 
 export type ReminderTag = "J7" | "J3" | "J1";
-
-export interface ReminderService {
-  /** Libellé de findMyServices : « Culte Franco », « Prépa. Table », « Campus (répét.) »… */
-  service: string;
-  /** Rôles réunis (« Piano », « Sainte cène »…) ; vide pour la Prépa. Table. */
-  roles: string[];
-  time?: string;
-  location?: string;
-}
 
 // Les séances Campus (matin/soir) restent hors rappels : pendant la semaine du
 // campus on sert tous les jours, seule la répétition est rappelée (règle conservée).
@@ -52,7 +44,7 @@ const SERVICES_ZH: Record<string, string> = {
   "Groupe Fidélité": "信实团契",
   "Groupe Bonté": "良善团契",
   Intergroupe: "联合聚会",
-  Interfranco: "法语团契聚会",
+  Interfranco: "法语联合聚会",
   "Campus (répét.)": "夏令营排练",
   "Entraînement sur scène": "舞台排练",
 };
@@ -103,4 +95,10 @@ export function reminderBody(dateISO: string, tag: ReminderTag, services: Remind
   return lang === "fr"
     ? `${formatReminderDate(dateISO, "fr")} (${WHEN.fr[tag]}) : ${list}`
     : `${formatReminderDate(dateISO, "zh-CN")}（${WHEN["zh-CN"][tag]}）：${list}`;
+}
+
+/** Ajoute une entrée (entraînement sur scène…) aux services d'un compte SANS modifier sa liste : le cron
+ *  partage une même liste entre les comptes d'un même nom de planning, un `push` la changerait pour tous. */
+export function ajouterAuxRappels(parUid: Map<string, ReminderService[]>, uid: string, entree: ReminderService): void {
+  parUid.set(uid, [...(parUid.get(uid) ?? []), entree]);
 }

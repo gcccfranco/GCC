@@ -6,26 +6,28 @@
 // case a changé quand sa valeur affichée en diffère.
 
 import type { DefinitionGrille } from "./grilles"
+import type { EtatAnnonce } from "@/types/planning"
+
 import { colonneDePersonnes } from "./choisir"
 import { normalizeName, splitNames } from "./names"
 import { getAnnee, getTri } from "./utils"
-
-/** Ce qui a été annoncé d'un trimestre : les cases non vides (`AAAA-MM-JJ|clé` → valeur). */
-export type EtatAnnonce = {
-  cases: Record<string, string>
-  /** Date de la dernière écriture de l'état, et son auteur (uid). */
-  le?: string
-  par?: string
-  /** Date de la publication (posée seulement après « Publier le T… », PG37 a). */
-  publieLe?: string
-}
 
 /** Une case changée depuis l'état annoncé. */
 export type ChangementAnnonce = { date: string; cle: string; avant: string; apres: string }
 
 /** Une valeur de case dans l'état annoncé : tronquée (client et serveur pareil), jamais rejetée. */
-export const MAX_VALEUR = 200
+const MAX_VALEUR = 200
 export const borne = (v: string) => v.slice(0, MAX_VALEUR)
+
+/** Une référence envoyée par la grille remplace-t-elle l'état annoncé ? `siAbsent` : seulement s'il n'y en a pas.
+ *  `apresPublication` : toujours — la grille ne l'envoie que si la publication vient d'être notifiée (`notified`), et
+ *  alors tout est annoncé. Une republication déjà annoncée (`dejaAnnonce`) n'envoie rien : les cases corrigées pendant
+ *  le masquage restent à annoncer. */
+export function referenceRemplace(demande: { siAbsent?: boolean; apresPublication?: boolean }, existant: EtatAnnonce | undefined): boolean {
+  if (!existant) return true
+  if (demande.apresPublication) return true
+  return !demande.siAbsent
+}
 
 export const cleDeCase = (date: string, cle: string) => `${date}|${cle}`
 
@@ -83,7 +85,7 @@ export function changementsDepuis(
 
 export const datesDesChangements = (chs: readonly ChangementAnnonce[]): string[] => [...new Set(chs.map((c) => c.date))].sort()
 
-export type PersonneTouchee = {
+type PersonneTouchee = {
   nom: string
   /** Un compte lui correspond-il ? Sinon : « à prévenir toi-même ». */
   compte: boolean
@@ -155,7 +157,7 @@ export function verifierChangements(
 }
 
 /** Le plafond de cases d'une référence : un trimestre en a une centaine ; l'état tient dans un document. */
-export const MAX_CASES_REFERENCE = 600
+const MAX_CASES_REFERENCE = 600
 
 /**
  * Ce que le serveur vérifie d'une référence envoyée par la grille : des cases du trimestre seulement, et,

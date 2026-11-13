@@ -6,10 +6,12 @@ import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { SetlistCard } from "@/components/setlists/SetlistCard";
-import { duplicateSetlist, getMySetlists, getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
+import { duplicateSetlist, getMySetlists, getSetlists } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { useProfile } from "@/lib/firebase/users";
 import { canDuplicateSetlist, canSeeSetlist } from "@/lib/access";
 import { todayIso } from "@/lib/scene/dimanches";
+import { EtatVide } from "@/components/layout/EtatVide";
 
 // « Repartir d'une setlist passée » (lot U5 bis, Q14) : les setlists passées
 // que la personne voit et peut dupliquer, la plus récente d'abord. « Reprendre »
@@ -71,7 +73,7 @@ export function SetlistsPassees() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative">
       {/* Agencement v18 (R1, R8, tranche Z) : l'en-tête commun et son seul retour. */}
       <EnTetePage
         retour={{ href: "/setlists/new", label: t("setlists.form.titleNew") }}
@@ -89,7 +91,7 @@ export function SetlistsPassees() {
             onChange={(e) => setRecherche(e.target.value)}
             placeholder={t("setlists.entree.passeesRecherche")}
             aria-label={t("setlists.entree.passeesRecherche")}
-            className="raised w-full rounded-full border border-transparent py-2.5 pl-9 pr-9 text-[16px] text-foreground placeholder:text-muted-foreground/60 focus:border-ring/50 focus:outline-none focus:ring-[3px] focus:ring-ring/10 sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+            className="sur-gris w-full rounded-full border border-transparent py-2.5 pl-9 pr-9 text-[16px] text-foreground placeholder:text-muted-foreground focus:border-ring/50 focus:outline-none focus:ring-[3px] focus:ring-ring/10 sm:text-sm [&::-webkit-search-cancel-button]:hidden"
           />
           {recherche && (
             <button
@@ -112,9 +114,9 @@ export function SetlistsPassees() {
         {setlists === null ? (
           <p className="py-8 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
         ) : affichees.length === 0 ? (
-          <p role="status" className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+          <EtatVide role="status" surGris>
             {t(recherche.trim() ? "setlists.entree.aucunePasseeRecherche" : "setlists.entree.aucunePassee")}
-          </p>
+          </EtatVide>
         ) : (
           <ul aria-label={t("setlists.entree.passee")}>
             {affichees.map((s) => (

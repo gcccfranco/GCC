@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Altérations du cours d'Harmonie (harmonie-4) : ♯ ♭ ♮ 𝄪 𝄫 seuls, sous-ensemble de Noto Music (OFL,
+   scripts/build-fonts.py), plus piano, mezzo, forte, crescendo, decrescendo et point d'orgue des tampons du Crayon (AN-5).
+   Hors de ces signes, le navigateur garde la police du texte. */
+@font-face {
+  font-family: "Noto Music";
+  src: url("/fonts/NotoMusic-alterations.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+266D-266F, U+1D12A-1D12B, U+1D110, U+1D112, U+1D18F-1D193;
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -16,13 +28,14 @@
      nette entre le flou et le reste se voit toujours, quelle qu'en soit la douceur.
      Depuis V8 (27/09/2026), le contenu ne passe plus dessous : chacune a un fond opaque
      qui repeint la page et son halo (`.barre-fond`, plus bas).
-     `.material-steady` garde voile et flou : les deux barres du mode louange sont
-     posées sur les paroles, et doivent s'en détacher pour rester lisibles. */
+     `.material-steady` (mode louange) suit la même règle V8 : fond opaque, ni voile ni
+     flou. Les deux barres ne laissent plus transparaître les paroles ni le titre du
+     chant qu'elles couvrent (T1d-B, 04/11/2026). */
   .material-steady {
-    background-color: hsl(var(--background) / 0.8);
-    -webkit-backdrop-filter: blur(20px) saturate(1.4);
-    backdrop-filter: blur(20px) saturate(1.4);
+    background-color: hsl(var(--background));
   }
+  /* Une altération dans un texte : un peu plus grande que les lettres, sur leur ligne de base. */
+  .alteration { font-family: "Noto Music", sans-serif; font-size: 1.15em; position: relative; top: -0.05em; line-height: 1; }
   /* Rangée qui glisse (V7) : elle s'estompe du côté où il reste quelque chose à voir,
      au lieu de trancher une pastille en deux au bord de la colonne. Les deux largeurs
      sont posées par `useFonduLateral` ; à 0 le dégradé est de longueur nulle, donc rien
@@ -31,6 +44,34 @@
     -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
     mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
   }
+  /* Grille d'un planning (plannings-1) : une fois défilée, un filet de 1 px sépare la colonne Date collante. */
+  [data-defile] td[data-date-cell],
+  [data-defile] thead th:first-child { box-shadow: 1px 0 0 hsl(var(--border)); }
+  /* Volet qui défile (harmonie-2) : il s'estompe en haut dès qu'on a défilé et en bas tant qu'il y a une suite.
+     Posées par `useFonduVertical`, les deux hauteurs valent 0 quand rien n'est à estomper. Deux voiles collants
+     de la couleur de la carte plutôt qu'un masque : un masque tronquerait aussi l'ombre `--shadow-raised`. */
+  .fondu-vertical::before,
+  .fondu-vertical::after {
+    content: "";
+    display: block;
+    position: sticky;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .fondu-vertical::before {
+    top: 0;
+    height: var(--fondu-haut, 0px);
+    margin-bottom: calc(-1 * var(--fondu-haut, 0px));
+    background: linear-gradient(to bottom, hsl(var(--raised)), hsl(var(--raised) / 0));
+  }
+  .fondu-vertical::after {
+    bottom: 0;
+    height: var(--fondu-bas, 0px);
+    margin-top: calc(-1 * var(--fondu-bas, 0px));
+    background: linear-gradient(to top, hsl(var(--raised)), hsl(var(--raised) / 0));
+  }
+  /* Coupures de ligne des fiches Harmonie et des légendes d'accords : pas de mot seul en dernière ligne (musiciens-5). */
+  [data-fiche] p, [data-fiche] li, .accords-legende { text-wrap: pretty; }
   /* Lignes d'une liste : un filet d'un bord à l'autre, aligné sur le titre de la page (5C1). */
   .group-row + .group-row::before {
     content: "";
@@ -47,7 +88,7 @@
     background-color: hsl(var(--raised) / 0.82);
     -webkit-backdrop-filter: blur(22px) saturate(1.5);
     backdrop-filter: blur(22px) saturate(1.5);
-    box-shadow: 0 14px 40px rgba(28, 28, 30, 0.2), 0 2px 6px rgba(28, 28, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    box-shadow: var(--shadow-flottant);
   }
   .dark .material-bar {
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 14px 40px rgba(0, 0, 0, 0.8);
@@ -81,29 +122,16 @@
     opacity: 0.1;
     filter: blur(40px);
   }
-  /* Fiche d'une setlist, puis page d'un chant (à droite) : géométries des planches C et B.
+  /* Fiche d'une setlist : géométrie de la planche C.
      Chaque variante vaut aussi pour la copie que repeignent les barres (V8) : celle-ci ne
      porte pas la classe de la page, elle la lit par `:has()`. */
   .halo-fiche::before, :root:has(.halo-fiche) .barre-halo::before { left: -40px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
-  /* « Moi » (V7) : l'écran n'appartient à aucune section, donc l'encre — plus discrète
-     que les couleurs, un gris franc se lirait comme une salissure et non comme une lumière. */
-  .halo-moi::before, :root:has(.halo-moi) .barre-halo::before { opacity: 0.08; }
-  /* Le halo par défaut (`HaloParDefaut`, retours du 06/10/2026) : l'encre de Moi, sur les pages
-     sans couleur à elles ; il s'efface dès qu'une page pose son propre halo. */
-  .halo-defaut::before, :root:not(:has(.halo:not(.halo-defaut, .barre-halo))) .barre-halo::before { opacity: 0.08; }
-  :root:has(.halo:not(.halo-defaut, .barre-halo)) .halo-defaut { display: none; }
-  /* Au Back-Office (agencement v18, R12) : le halo par défaut prend le bleu gris de la planche
-     (`--halo-back-office`), à l'opacité de la planche ; la copie des barres suit. */
-  .halo-defaut[data-back-office]::before,
-  :root:has(.halo-defaut[data-back-office]):not(:has(.halo:not(.halo-defaut, .barre-halo))) .barre-halo::before { opacity: 0.8; }
-  .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -80px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
   /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
      colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
      Agrandi à l'écran, il repasse sous le logo et atteint le titre. */
   @media (min-width: 1024px) {
     .halo { height: 560px; }
     .halo::before, .halo-fiche::before, :root:has(.halo-fiche) .barre-halo::before { left: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
-    .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
   }
   @media print { .halo { display: none; } }
   /* Fond des barres (V8, 27/09/2026, `FondDeBarre`) : le texte passait derrière le logo et
@@ -115,7 +143,7 @@
     inset: 0 0 -12px 0;
     z-index: -1;
     pointer-events: none;
-    background-color: hsl(var(--background));
+    background-color: hsl(var(--fond-page));
     /* La copie du halo est fixe comme l'original, donc toujours à sa place, même sous une
        barre qui colle en cours de défilement : `clip-path` la coupe au bord du fond, ce que
        `overflow` ne sait pas faire d'un élément fixe. */
@@ -130,6 +158,8 @@
   /* Une barre qui glisse au défilement est transformée, donc le repère de la copie fixe :
      celle-ci remonte de la hauteur où la barre est posée (`--barre-top`, sur la barre). */
   .barre-halo { top: calc(-1 * var(--barre-top, 0px)); }
+  /* Une page sans halo (partout-q2) ne laisse aucune copie sous les barres. */
+  :root:not(:has(.halo:not(.barre-halo))) .barre-halo { display: none; }
   /* Fondu d'entrée des pages (PageTransition) : l'opacité seule. Le `animate-in` de
      tailwindcss-animate porte un `transform`, qui ferait de la page le repère des
      éléments fixes le temps du fondu : le halo sauterait de la hauteur de la navbar. */
@@ -167,6 +197,8 @@
 
 @layer base {
   :root {
+    /* Ressort critique (sans rebond), réponse 0,35 s, échantillonné sur 400 ms. */
+    --ressort-sans-rebond: linear(0, 0.075 6.25%, 0.227 12.5%, 0.39 18.75%, 0.536 25%, 0.656 31.25%, 0.75 37.5%, 0.821 43.75%, 0.873 50%, 0.911 56.25%, 0.938 62.5%, 0.957 68.75%, 0.971 75%, 0.98 81.25%, 0.986 87.5%, 0.991 93.75%, 1);
     /* Zone sûre du haut : 0 partout, SAUF pour une icône installée pendant les quelques
        heures du 21/09/2026 où la page montait sous la barre d'état. iOS fige ce réglage
        à l'installation et ne le relit jamais : ces appareils passent donc toujours sous
@@ -201,29 +233,45 @@
     --muted-foreground: 240 2.7% 43.5%; /* #6c6c72 */
     --accent: 240 8.3% 95.3%;        /* survol des menus */
     --accent-foreground: 240 3.4% 11.4%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;        /* #dc2828 : 4,8 sur blanc, 4,6 pour le texte #fafafa du bouton */
     --destructive-foreground: 0 0% 98%;
     --border: 240 2% 89.5%;          /* filet, #e4e4e5 = rgba(60,60,67,.14) sur blanc */
     --input: 240 2% 89.5%;
     --ring: 240 3.4% 11.4%;          /* focus encre */
     --radius: 0.75rem;               /* 12 : groupes et champs ; 8 : petits contrôles ; pilules : rounded-full */
     /* Les listes n'ont pas d'ombre : ce sont des filets. */
-    --shadow-soft: 0 0 0 0 transparent;
     /* Ce qui se touche (recherche, pilule d'outils, boutons, barre du bas). */
     --raised: 0 0% 100%;
     --shadow-raised: 0 4px 14px rgba(28, 28, 30, 0.1), 0 1px 2px rgba(28, 28, 30, 0.06);
+    /* Recette de surface (C, lot CD, T2a) : fond des pages de liste et de gestion, groupe blanc
+       dessus (rayon 16, ni bordure ni ombre), piste des contrôles posés sur ce gris. Les pages de
+       lecture gardent `--background`. */
+    --fond-groupe: 240 24% 96%;      /* #f2f2f7 */
+    --radius-groupe: 16px;
+    --secondary-fond: 240 11% 91%;   /* #e5e5ea */
+    /* Ce qui est « posé » sur une piste ou sur la page (lot CD, T3a, back-office-3) : segment actif du sélecteur d'espace,
+       curseur du rail, bouton `outline`. Blanc en clair (= `--background`, rien ne change), gris moyen en sombre. */
+    --pose: 0 0% 100%;
+    /* Ce qui flotte (barre d'onglets, menus, feuilles, toasts) : l'ombre de la barre d'onglets. */
+    --shadow-flottant: 0 14px 40px rgba(28, 28, 30, 0.2), 0 2px 6px rgba(28, 28, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    /* Fond que peignent la page et les barres : blanc, ou gris sur les pages de liste (`data-fond-groupe`). */
+    --fond-page: var(--background);
     /* Teinte d'une vignette de service. */
     --svc-tint: 13%;
 
     /* Semantic music colors */
     --chord-color: #3f63cf;   /* bleu PDF FR */
     --jianpu-color: #b3261d;
+    /* Ma partition (docs/spec-ma-partition.md, « Signes ») : filet et souligné de mes retouches. */
+    --graphite: #5a5e66;
     /* Encre du scan 简谱 (piste A, docs/spec-jianpu-integration.md) : = --foreground en clair. */
     --jianpu-encre: 240 3.4% 11.4%;  /* #1c1c1e */
     --pinyin-color: #8a8f98;
     --sheet-accent: #1c6e7c;
 
     /* Section identity — accent (label / rail) + tint (block bg) */
+    /* Repères (DP-B) : encre du sigle sur les pastilles foncées (pont, fin, autre) — blanc en clair, encre en sombre. */
+    --rep-encre-claire: #ffffff;
     --sec-intro: #5b7fa6;        --sec-intro-tint: #eef3f9;
     --sec-verse: #2c8a7d;        --sec-verse-tint: #e8f3f0;
     --sec-prechorus: #c1871f;    --sec-prechorus-tint: #faf2e1;
@@ -242,6 +290,15 @@
     --zh-accent: #b3261d;
     --zh-box-fill: #fbeae9; 
     --zh-box-border: #e5c4c2;
+
+    /* Pastilles du calendrier hors service (bo-evenements-7) ; les services gardent leur couleur. */
+    --cal-evenement-fond: #fff3d6;  --cal-evenement-texte: #1c1c1e;
+    --cal-tache-fond: #f2f2f4;      --cal-tache-texte: #1c1c1e;
+    --cal-reunion-fond: #f0ecf9;    --cal-reunion-texte: #6b4a8e;
+    --cal-petitdej-fond: #f8ece2;   --cal-petitdej-texte: #9a5a2c;
+    /* Point de la pastille d'état (bo-evenements-10). */
+    --etat-ouvert: #1f9d55;
+    --etat-attente: #d99a00;
   }
 
   .dark {
@@ -263,22 +320,27 @@
     --muted-foreground: 240 3.5% 61%; /* #98989f */
     --accent: 240 2.2% 17.6%;
     --accent-foreground: 240 23.8% 95.9%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 68%;        /* #f26969 : 5,7 sur #1c1c1e, 4,65 sur #2c2c2e */
+    --destructive-foreground: 240 3.4% 11.4%; /* #1c1c1e : encre sur le rouge clair, 5,7 (le blanc ne donne que 3,0) */
     --border: 240 1.8% 22%;          /* #373739 — filet des groupes ; le mode louange s'en sert aussi */
     --input: 240 1.8% 22%;
     --ring: 240 23.8% 95.9%;         /* focus blanc cassé */
-    --shadow-soft: 0 0 0 0 transparent;
     --raised: 240 3.4% 11.4%;        /* #1c1c1e */
     --shadow-raised: 0 0 0 1px rgba(255, 255, 255, 0.1);
+    --fond-groupe: 0 0% 0%;
+    --secondary-fond: 240 2.2% 17.6%;
+    --pose: 240 1.7% 23.1%;      /* #3a3a3c : plus clair que la piste #2c2c2e, jamais noir sur gris */
+    --shadow-flottant: 0 0 0 1px rgba(255, 255, 255, 0.1);
     --svc-tint: 26%;
 
     --chord-color: #8fb0ff;   /* bleu PDF FR dark */
     --jianpu-color: #ff7d72;
+    --graphite: #a3a7ae;
     --jianpu-encre: 240 5.9% 90%;    /* #e4e4e7 : encre adoucie du scan (D10), distincte de --foreground */
     --pinyin-color: #888e98;
     --sheet-accent: #63c3cf;
 
+    --rep-encre-claire: #0e0e10;
     --sec-intro: #8fb2dc;        --sec-intro-tint: #161f2a;
     --sec-verse: #59bdac;        --sec-verse-tint: #112320;
     --sec-prechorus: #e0b35b;    --sec-prechorus-tint: #251e0f;
@@ -297,6 +359,13 @@
     --zh-accent: #f2b8b5;  
     --zh-box-fill: #2d1412; 
     --zh-box-border: #5c2e2b; 
+
+    --cal-evenement-fond: #43371a;  --cal-evenement-texte: #ffd66b;
+    --cal-tache-fond: #2c2c2e;      --cal-tache-texte: #f2f2f7;
+    --cal-reunion-fond: #30283a;    --cal-reunion-texte: #c9b3e6;
+    --cal-petitdej-fond: #423026;   --cal-petitdej-texte: #e8a878;
+    --etat-ouvert: #34c759;
+    --etat-attente: #d99a00;
     }
 }
 
@@ -311,16 +380,41 @@
   }
 }
 
+/* Panneau du sommaire (rail, grand écran) : glisse en ressort ; mouvement réduit : fondu de 150 ms, sans transform. */
+.sommaire-panneau { transform: translateX(-100%); transition: transform 400ms var(--ressort-sans-rebond); }
+.sommaire-panneau[data-ouvert] { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .sommaire-panneau { transform: none; opacity: 0; transition: opacity 150ms linear !important; }
+  .sommaire-panneau[data-ouvert] { opacity: 1; }
+}
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: hsl(var(--fond-page));
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  /* Pages de liste et de gestion : le gris tient toute la page et repeint les barres (`.barre-fond`).
+     Posé par `EnTetePage` et `DeuxVolets` (`data-fond-groupe`), jamais par les pages de lecture. Chants :
+     la liste est sur le gris (un volet sur /songs, deux volets partout, voir `.chants-volets` plus bas) ;
+     la page d'un chant seule reste blanche. Sur le gris, la liste des chants est un groupe (`--card`, rayon 16)
+     à toutes les tailles. */
+  :root:is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) { --fond-page: var(--fond-groupe); }
+  /* Rail et pilules posés directement sur le gris (hors d'un groupe blanc) : piste et pilules inactives en `--secondary-fond`,
+     libellés à 70 % d'encre (≥ 4,5:1). Clair seulement : en sombre `--secondary` est déjà distinct du noir. */
+  :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) [data-onglets="rail"]:not(.carte-groupe *, .chants-chant *) { background-color: hsl(var(--secondary-fond)); }
+  :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) [data-onglets="rail"]:not(.carte-groupe *, .chants-chant *) :is([role="tab"]:not([aria-selected="true"]), a:not([aria-current])) { color: hsl(var(--foreground) / 0.7); }
+  /* Le sélecteur d'espaces de la barre du haut (App · Musiciens · Back-Office) est un rail comme les autres : sur le gris, `--secondary-fond` (R2, garde-fou des groupes). */
+  :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) .material-chrome .rail-sur-gris { background-color: hsl(var(--secondary-fond)); }
+  :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) [data-onglets="pilules"]:not(.carte-groupe *, .chants-chant *) > :is(button[aria-pressed="false"], a:not([aria-current])) { background-color: hsl(var(--secondary-fond)); }
+  /* Un contrôle rond posé sur le gris (cloche, menu « Accueil ⌄ ») est blanc, sans ombre, en clair seulement :
+     en sombre il garde son `--secondary`. */
+  :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) .blanc-sur-gris { background-color: hsl(var(--card)); }
 }
 
 @layer utilities {
@@ -329,6 +423,10 @@
      pour 4,5 exigé), on les éclaircit à l'affichage, sans toucher au fichier. */
   .svc-ink { color: var(--svc); }
   .dark .svc-ink { color: color-mix(in srgb, var(--svc) 55%, white); }
+  /* Texte dans une couleur de service passée en style inline (`styleTexteService`, src/lib/couleurSombre.ts) :
+     --svc-sombre est la couleur éclaircie jusqu'à 4,5:1 sur #2c2c2e. */
+  .texte-service { color: var(--svc-clair); }
+  .dark .texte-service { color: var(--svc-sombre); }
   .svc-line { border-left-color: var(--svc); }
   .dark .svc-line { border-left-color: color-mix(in srgb, var(--svc) 55%, white); }
   /* Tuile d'un service (V7 ter) : le fond porte la couleur, le libellé la reprend
@@ -346,10 +444,25 @@
     background-color: hsl(var(--raised));
     box-shadow: var(--shadow-raised);
   }
-  .shadow-soft {
-    box-shadow: var(--shadow-soft);
-  }
+}
 
+@layer components {
+  /* Recette de surface C (lot CD) : un groupe est un aplat `--card` de rayon 16, ni bordure ni ombre ; en sombre il
+     garde le liseré de `--shadow-raised` (aucun changement visible). `.sur-gris` : même aplat pour un contrôle posé
+     directement sur le fond gris (bouton rond, recherche). `.flottant` : ce qui flotte (menu, feuille, panneau). */
+  .sur-gris, .carte-groupe { background-color: hsl(var(--card)); }
+  .dark .sur-gris, .dark .carte-groupe { background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  .carte-groupe { border-radius: var(--radius-groupe); }
+  /* Dans un groupe blanc, la recherche est un aplat `--secondary` (clair seulement : en sombre elle garde son relief). */
+  :root:not(.dark) .carte-groupe input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
+  .flottant { background-color: hsl(var(--raised)); box-shadow: var(--shadow-flottant); }
+  /* Bloc d'information posé sur une page blanche (ou dans un groupe) : aplat `--secondary` en clair, sans ombre ;
+     en sombre, rendu de `.raised` (fond `--raised` + liseré). */
+  .bloc-info { background-color: hsl(var(--secondary)); }
+  .dark .bloc-info { background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+}
+
+@layer utilities {
   /* Harmonie (lot 9) : la section visée par une idée s'entoure un instant
      quand on touche « Montrer ». */
   .harmonie-surligne {
@@ -535,6 +648,8 @@
     :root[data-barre="reduite"] .barre-laterale .barre-si-depliee,
     :root[data-barre="reduite"] .barre-laterale .barre-texte { display: none; }
     :root[data-barre="reduite"] .barre-laterale .barre-si-reduite { display: flex; }
+    /* BO-G, 10 : la pastille de non-lus devient un point sur l'icône (le nombre reste dans le DOM, pour la description). */
+    :root[data-barre="reduite"] .barre-laterale .barre-pastille { position: absolute; top: 7px; right: 7px; width: 10px; height: 10px; padding: 0; font-size: 0; line-height: 0; overflow: hidden; margin: 0; }
     :root[data-barre="reduite"] .barre-laterale .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
     :root[data-barre="reduite"] .barre-laterale .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
     /* L'initiale tout en bas, sous la cloche (planche) ; Tab garde l'ordre du document. */
@@ -547,6 +662,7 @@
     .barre-laterale .barre-si-depliee,
     .barre-laterale .barre-texte { display: none; }
     .barre-laterale .barre-si-reduite { display: flex; }
+    .barre-laterale .barre-pastille { position: absolute; top: 7px; right: 7px; width: 10px; height: 10px; padding: 0; font-size: 0; line-height: 0; overflow: hidden; margin: 0; }
     .barre-laterale .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
     .barre-laterale .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
     .barre-laterale .barre-fin { order: 1; }
@@ -570,7 +686,9 @@
 }
 
 /* Libellés de la barre d'outils de la setlist : à partir de 1 024 px de fenêtre comme avant
-   (en dessous, téléphones même couchés et iPad en portrait : icônes), et seulement s'ils tiennent dans la
+   (en dessous, téléphones même couchés et iPad en portrait : icône et libellé court dessous ; de même
+   au-dessus de 1 024 px quand la rangée a moins de 880 px : dimanche-9, `PILULE_EMPILEE` et
+   `LIBELLE_COURT` de SetlistDetailClient), et seulement s'ils tiennent dans la
    rangée, donc à côté de la barre latérale. Requête de conteneur sur la rangée, qui ne
    contient aucun élément fixe (Q9 : jamais sur `main` ni ses ancêtres). Seuil mesuré le
    05/10/2026 : la rangée avec ses libellés fait 852 px en français dans le pire cas (Adapter,
@@ -595,10 +713,12 @@
 
 /* Un service de Mes services (lot U4 bis, B4, Q7) : la setlist et l'équipe côte à côte quand le
    volet en a la place, l'une sous l'autre sinon. Agencement v18 (T9) : la liste en carte à la
-   marge laisse au volet ~530 px à 1 280 px et sur iPad couché, d'où le seuil à 520 px. */
+   marge laisse au volet ~530 px à 1 280 px et sur iPad couché. Lot CD, V4 (validation du 07/11/2026) : comme l'aperçu
+   d'une setlist, setlist et équipe côte à côte dès 680 px de volet (la grille `auto-fill` de T4b laissait la carte
+   d'équipe seule dans une case de 300 px) ; sans setlist, une carte « pas encore de setlist » tient sa place. */
 .service-detail { container-type: inline-size; }
-@container (min-width: 520px) {
-  .service-colonnes { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+@container (min-width: 680px) {
+  .service-colonnes { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
 }
 
 /* Fiche d'un évènement à droite de l'agenda (lot U4 bis, B2, Q5) : deux colonnes quand le volet
@@ -632,16 +752,46 @@
 .chants-volets:where([data-sur-liste]) > .chants-chant,
 .chants-volets:where(:not([data-sur-liste])) > .chants-entete,
 .chants-volets:where(:not([data-sur-liste])) > .chants-liste { display: none; }
+/* Sur le fond gris (un volet, /songs), la liste est un groupe : `--card`, rayon 16, ni bordure ni ombre, à la marge
+   de la page. `:where` : les deux volets (plus bas) la posent eux-mêmes, d'où leur `margin-inline: 0`. En clair
+   seulement : en sombre le fond est noir et la liste reste nue. */
+:where(:root:not(.dark)) :where(.chants-volets[data-sur-liste]) { --index-hors: 44px; --index-fond: transparent; }
+:where(:root:not(.dark)) :where(.chants-volets[data-sur-liste]) > .chants-liste { margin-inline: var(--marge-page) calc(var(--marge-page) + var(--index-hors)); border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
+:where(:root:not(.dark)) :where(.chants-volets[data-sur-liste]) .chants-liste-corps { padding: 14px 16px 8px; }
+/* Un volet, clair : la liste finit avant l'index A–Z, qui reste sur le gris à droite (colonne de 44 px, `--index-hors`,
+   remise à 0 en deux volets où l'index est dans la carte). Dans le groupe blanc, la recherche est en aplat `--secondary`. */
+.chants-liste-contenu { padding-right: calc(1.75rem - var(--index-hors, 0px)); }
+.index-az-colonne { right: calc(-1rem - var(--index-hors, 0px)); }
+.index-az { background-color: var(--index-fond, hsl(var(--background) / 0.7)); }
+:root:not(.dark) .chants-volets[data-sur-liste] .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
+/* Tablette debout, liste sur une colonne (chants-8, R2) : les actions de l'en-tête finissent où finissent la recherche
+   et la liste, à la gouttière de 28 px de l'index A–Z (`pr-7` de SongListClient). Deux volets : l'en-tête garde toute la largeur. */
+@media (min-width: 768px) {
+  .chants-entete { padding-right: 1.75rem; }
+  /* Liste en groupe sur un seul volet, en clair (T2a) : la liste est décalée de --index-hors et garde 16 px de chaque côté. */
+  :where(:root:not(.dark) .chants-volets[data-sur-liste]) > .chants-entete { padding-right: calc(var(--index-hors) + 16px); }
+}
 
 /* Barre du chant, piste A (docs/spec-barre-chant.md, Q4) : libellés par priorité, jamais de
-   deuxième ligne — tous (2), ceux des actions Vidéo et PDF seuls (1), aucun (0) ; Idées et ⋯
-   restent des icônes. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`) : des seuils fixes, calés sur la
+   deuxième ligne — tous (2), ceux des actions Vidéo et PDF seuls (1), aucun (0) ; « Harmonie » (texte seul)
+   et ⋯ restent affichés à tous les niveaux. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`) : des seuils fixes, calés sur la
    rangée la plus chargée (Retour, ↺, Pinyin), cachaient tout sur la tablette couchée. */
 .rangee-chant { container-type: inline-size; }
 .libelle-chant, .libelle-action { display: none; }
+/* Un libellé de la barre ne se coupe jamais : la mesure `data-libelles` retombe au niveau inférieur. */
+.libelle-chant, .libelle-action, .libelle-harmonie { white-space: nowrap; }
+/* Rangée serrée (niveaux 0 et 1) : « Harmonie », qui ne tombe jamais, perd 4 px de rembourrage de chaque côté. */
+.rangee-chant:is([data-libelles="0"], [data-libelles="1"]) .bouton-harmonie { padding-inline: 0.375rem; }
+/* Niveau 3, le plus large : le suffixe de tonalité « (orig.) » / « (reco.) » en plus ; il tombe le premier
+   (H4-2, « Harmonie » ne tombant plus, décision déléguée du 12/11). */
+.rangee-chant:not([data-libelles="3"]) .suffixe-tonalite { display: none; }
+/* Bascule Lettres / Chiffres (H7-1) : dans la barre tant que les libellés ne perdent qu'un cran (`data-bascule`, mesuré avec
+   eux) ; plus serrée, elle reste dans le menu ⋯ (décision déléguée, session H7, 12/11 : la rangée d'Abba Père ne tenait
+   plus à 1 280 px, même sans libellés). */
+.rangee-chant[data-bascule="0"] .bascule-notation { display: none; }
 /* Téléphone : comme avant, pas de libellé sous 620 px de rangée (la pilule de tonalité, qui
    rétrécit, ne ferait jamais déborder la ligne : la mesure ne suffit pas). */
-@container (min-width: 620px) { .rangee-chant[data-libelles="2"] .libelle-chant { display: inline; } }
+@container (min-width: 620px) { .rangee-chant:is([data-libelles="2"], [data-libelles="3"]) .libelle-chant { display: inline; } }
 /* Téléphone, même couché (moins de 500 px de haut) : la rangée d'avant, sans ⋯ ; dessous, la
    seconde rangée d'actions (Q5, `.actions-tel`) — 44 px de plus sous la barre, d'où les marges
    hautes de la partition et de la vidéo (48 et 82 px sans elle). Dès la tablette debout : la
@@ -652,12 +802,12 @@
 @media screen and (max-width: 767.98px), screen and (max-height: 499.98px) {
   .song-zoom { margin-top: 92px; }
   .video-chant { margin-top: 126px; }
-  .video-chant ~ .song-zoom { margin-top: 48px; }
+  .video-chant ~ .song-zoom, .video-chant ~ .corps-chant > .song-zoom { margin-top: 48px; }
 }
 @media (min-width: 768px) and (min-height: 500px) {
   .rangee-chant { padding-inline: 1rem; }
-  .rangee-chant[data-libelles="2"] .libelle-chant,
-  .rangee-chant:is([data-libelles="1"], [data-libelles="2"]) .libelle-action { display: inline; }
+  .rangee-chant:is([data-libelles="2"], [data-libelles="3"]) .libelle-chant,
+  .rangee-chant:is([data-libelles="1"], [data-libelles="2"], [data-libelles="3"]) .libelle-action { display: inline; }
   .actions-chant { display: flex; }
   .actions-tel { display: none; }
   .groupe-chant { margin-left: 0; }
@@ -670,8 +820,9 @@
    06/10/2026 : bornés à `--largeur-lecture` et centrés, ils laissaient une bande vide à côté de la barre).
    Agencement v18 (R10, A5) : l'en-tête « Chants » sur toute la largeur, au-dessus des deux volets ;
    la liste est une carte en relief (rayon 16 px, sans filet) à `--marge-page` du bord, collante
-   20 px sous la barre du haut ; la page à `--ecart-volets` de la carte (« Choisis un chant » pose
-   lui-même la marge de droite : la page d'un chant garde ses marges, hors du lot). Le chant
+   20 px sous la barre du haut ; la page à `--ecart-volets` de la carte ; le volet du chant porte la marge de droite
+   (`.chants-chant`, chants-8 B) et, comme un groupe de lecture, 16 px en haut et 24 px de chaque côté : le chant, sa barre
+   et « Choisis un chant » y rentrent, sans marge propre ; la barre colle au même décalage que la liste (20 px). Le chant
    s'étire sur toute la rangée : un chant court sous une liste plus haute garde sa barre collée.
    L'index A–Z se centre dans `--cadre-index`, la part de la carte toujours à l'écran : page en haut,
    la carte part sous l'en-tête (104 px : 24 + titre 36 + 4 + sous-titre 20 + 20) et finit sous le
@@ -681,42 +832,69 @@
    qu'il porte) et la rangée de la barre vont jusqu'à 900 px au lieu de 672 ; la 简谱 suit la
    colonne, l'intérieur de `JianpuSheet` n'est pas touché. */
 @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
-  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
-  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
-  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  :root:has(.chants-volets) { --fond-page: var(--fond-groupe); }
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --index-hors: 0px; --index-fond: hsl(var(--background) / 0.7); }
+  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
+  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
   .chants-liste .chants-liste-fond { min-height: 0; }
+  .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
+  .dark .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
-  .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
-  .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); margin-bottom: 24px; padding: 16px 24px 0; border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
+  .chants-chant .barre-fond { background-color: hsl(var(--background)); }
+  .chants-chant .barre-chant { position: sticky; top: calc(var(--nav-h) + 36px); --barre-top: calc(var(--nav-h) + 36px); --barre-decalage: 36px; --barre-ombre: 24px; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  .chants-chant .barre-chant[data-collee] .barre-fond { top: -16px; left: -24px; right: -24px; border-radius: var(--radius-groupe) var(--radius-groupe) 0 0; }
+  .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
+  .dark .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
-  .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
+  .chants-chant .song-zoom, .chants-chant .video-chant, .chants-chant .colonne-harmonie { margin-top: 0; }
+  .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  .chants-chant main.song-zoom { --marge-bande: 0px; } /* plus de remplissage : la bande Scène ne sort pas de la colonne */
+  .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 @media screen and (pointer: fine) and (min-width: 1024px) {
-  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
-  :root[data-barre="reduite"] .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
-  :root[data-barre="reduite"] .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  :root[data-barre="reduite"]:has(.chants-volets) { --fond-page: var(--fond-groupe); }
+  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --index-hors: 0px; --index-fond: hsl(var(--background) / 0.7); }
+  :root[data-barre="reduite"] .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
+  :root[data-barre="reduite"] .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
   :root[data-barre="reduite"] .chants-liste .chants-liste-fond { min-height: 0; }
+  :root[data-barre="reduite"] .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
+  :root.dark[data-barre="reduite"] .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
   :root[data-barre="reduite"] .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
-  :root[data-barre="reduite"] .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
-  :root[data-barre="reduite"] .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); margin-bottom: 24px; padding: 16px 24px 0; border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
+  :root[data-barre="reduite"] .chants-chant .barre-fond { background-color: hsl(var(--background)); }
+  :root[data-barre="reduite"] .chants-chant .barre-chant { position: sticky; top: calc(var(--nav-h) + 36px); --barre-top: calc(var(--nav-h) + 36px); --barre-decalage: 36px; --barre-ombre: 24px; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  :root[data-barre="reduite"] .chants-chant .barre-chant[data-collee] .barre-fond { top: -16px; left: -24px; right: -24px; border-radius: var(--radius-groupe) var(--radius-groupe) 0 0; }
+  :root[data-barre="reduite"] .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
+  :root.dark[data-barre="reduite"] .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
-  :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
+  :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant, :root[data-barre="reduite"] .chants-chant .colonne-harmonie { margin-top: 0; }
+  :root[data-barre="reduite"] .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  :root[data-barre="reduite"] .chants-chant main.song-zoom { --marge-bande: 0px; }
+  :root[data-barre="reduite"] .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   :root[data-barre="reduite"] .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 @media screen and (pointer: fine) and (min-width: 1148px) {
-  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
-  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
-  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  :root:has(.chants-volets) { --fond-page: var(--fond-groupe); }
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --index-hors: 0px; --index-fond: hsl(var(--background) / 0.7); }
+  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
+  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
   .chants-liste .chants-liste-fond { min-height: 0; }
+  .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
+  .dark .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
-  .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
-  .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); margin-bottom: 24px; padding: 16px 24px 0; border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
+  .chants-chant .barre-fond { background-color: hsl(var(--background)); }
+  .chants-chant .barre-chant { position: sticky; top: calc(var(--nav-h) + 36px); --barre-top: calc(var(--nav-h) + 36px); --barre-decalage: 36px; --barre-ombre: 24px; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  .chants-chant .barre-chant[data-collee] .barre-fond { top: -16px; left: -24px; right: -24px; border-radius: var(--radius-groupe) var(--radius-groupe) 0 0; }
+  .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
+  .dark .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
-  .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
+  .chants-chant .song-zoom, .chants-chant .video-chant, .chants-chant .colonne-harmonie { margin-top: 0; }
+  .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  .chants-chant main.song-zoom { --marge-bande: 0px; } /* plus de remplissage : la bande Scène ne sort pas de la colonne */
+  .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 
@@ -725,11 +903,38 @@
    au lieu de glisser depuis le bas. `!important` : le glissé est posé par la feuille de style de
    vaul, et la règle générale du mouvement réduit ramène toute animation à 0,01 ms (ce sélecteur,
    plus précis, garde sa durée). */
+/* Liseré du métronome visuel (mode louange, L4) : se remplit en une pulsation (`--battement`).
+   Mouvement réduit : plus d'animation, la bande reste pleine, à opacité réduite. */
+@keyframes liseret-battement { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.liseret-tempo-barre {
+  transform-origin: left;
+  animation: liseret-battement var(--battement, 1s) linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .liseret-tempo-barre { animation: none !important; transform: none; opacity: 0.35; }
+}
 @keyframes volet-fondu { from { opacity: 0; } }
 @keyframes volet-fondu-sortie { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   [data-volet][data-vaul-drawer][data-state="open"] { animation-name: volet-fondu !important; animation-duration: 200ms !important; }
   [data-volet][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 200ms !important; }
+  [data-feuille-equipe][data-vaul-drawer][data-state="open"] { animation-name: volet-fondu !important; animation-duration: 150ms !important; }
+  [data-feuille-equipe][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 150ms !important; }
+}
+
+/* Feuille d'équipe (T7) : la zone dépliée d'un membre s'ouvre en hauteur (≈ 0,3 s) ; mouvement réduit : fondu de 150 ms. */
+@keyframes deplie-membre { from { grid-template-rows: 0fr; opacity: 0; } to { grid-template-rows: 1fr; opacity: 1; } }
+.deplie-membre { display: grid; animation: deplie-membre 300ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .deplie-membre { animation-name: volet-fondu !important; animation-duration: 150ms !important; }
+}
+
+/* « Choisis un chant » (chants-9) : à partir de 520 px de contenu (volet de 560 px moins sa marge), « Nouveaux au
+   répertoire » prend la ligne et met ses chants sur deux colonnes, comme « Les plus chantés » ; en dessous, une colonne.
+   La largeur est celle du volet (conteneur `[data-choisis-un-chant]`), pas de la fenêtre. */
+@container (min-width: 520px) {
+  .carte-nouveaux { grid-column: 1 / -1; }
+  .nouveaux-chants { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* Services et rôles du profil et de l'inscription (lot U4 bis, B5, Q10 et Q13) : les cartes des
@@ -740,26 +945,19 @@
   .grille-services-cartes { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 }
 
-/* Panneau de marque de la connexion et de l'inscription (lot U4 bis, B5, Q13) : le rouge du logo
-   et le bleu des accords en deux halos très pâles (planches `connexion-*`, `inscription-*`). */
-.panneau-marque {
-  background:
-    radial-gradient(ellipse 75% 55% at 15% 12%, rgb(207 42 32 / 0.13), transparent 70%),
-    radial-gradient(ellipse 75% 55% at 85% 88%, rgb(63 99 207 / 0.12), transparent 70%),
-    hsl(var(--secondary) / 0.5);
-}
-.dark .panneau-marque {
-  background:
-    radial-gradient(ellipse 75% 55% at 15% 12%, rgb(207 42 32 / 0.22), transparent 70%),
-    radial-gradient(ellipse 75% 55% at 85% 88%, rgb(63 99 207 / 0.2), transparent 70%),
-    hsl(var(--secondary) / 0.5);
-}
+/* Panneau de marque de la connexion et de l'inscription (partout-q2) : un panneau uni, le logo seul le décore ;
+   la teinte `--secondary` à 50 % est composée sur `--background` en une couleur opaque (pas de dégradé) pour qu'aucun
+   bloc placé derrière (le panneau est `sticky`) ne transparaisse. */
+.panneau-marque { background-color: color-mix(in srgb, hsl(var(--secondary)) 50%, hsl(var(--background))); }
 
 /* Équipes en bandeau (lot U4 bis, B6, Q12) : la page tient dans la hauteur de l'écran, sous la
    navbar et au-dessus de la cale de la barre du bas (`MobileTabBar`, 78 px + `--tabbar-bottom`) ;
    sans barre du bas (ordinateur, tablette en paysage : mêmes requêtes que le bloc « Lot U4 »),
    jusqu'au bas de l'écran. */
 .equipes-ecran { height: calc(100dvh - var(--nav-h) - 78px - var(--tabbar-bottom)); }
+@media screen and (max-width: 639px) {
+  .equipes-ecran { height: auto; }
+}
 @media screen and (pointer: fine) and (min-width: 1024px) {
   .equipes-ecran { height: calc(100dvh - var(--nav-h)); }
 }
@@ -774,15 +972,16 @@
                        tablette couchée. Rien n'est centré dans une borne : la place gagnée en
                        réduisant la barre va au contenu.
    --ecart-volets      entre la liste-carte et la fiche : 24 px, 20 px barre réduite.
-   --halo-back-office  le halo par défaut sous `/back-office` (bleu gris de la planche).
+   --colonne-liste     largeur de contenu d'une liste ou d'un formulaire seul (L1, lot CD T4b) : 720 px, alignée
+                       à gauche sur le titre, jamais centrée ; `DeuxVolets` (`colonneSeule`), l'en-tête qui la
+                       suit (règle plus bas), les vues en page de la scène.
    Mêmes requêtes que le bloc « Lot U4 » : la disposition se décide ici. */
 @layer base {
   :root {
     --marge-page: 16px;
     --ecart-volets: 24px;
-    --halo-back-office: #e4e7f6;
+    --colonne-liste: 720px;
   }
-  .dark { --halo-back-office: #262b45; }
   @media screen and (min-width: 768px) {
     :root { --marge-page: 24px; }
   }
@@ -796,9 +995,142 @@
 }
 
 @layer components {
+  /* L1 (lot CD T4b, dimanche-7) : quand la page montre une liste seule (`DeuxVolets` pose `data-colonne-seule`),
+     l'en-tête prend la largeur de cette colonne : le titre part de son bord gauche, l'action finit à son bord droit. */
+  body:has([data-colonne-seule]) header[data-entete-page] { max-width: calc(var(--colonne-liste) + 2 * var(--marge-page)); }
+
   /* Le titre de la page, le h1 de `EnTetePage` (R2) : 24 px sur téléphone, 30 px dès 768 px. */
-  .titre-page { font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  .titre-page { font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
   @media (min-width: 768px) {
     .titre-page { font-size: 30px; line-height: 36px; }
   }
 }
+
+/* Lot CH (C1) : un membre qui rouvre le site (marque `data-connecte`, posée avant le premier affichage)
+   ne voit pas le bouton de connexion des visiteurs pendant que Firebase lit sa session. */
+:root[data-connecte="1"] .connexion-visiteur { visibility: hidden; }
+
+/* Lot CH (C6) : un responsable (ou, EM-2, un musicien) qui rouvre le site (`data-responsable`, posé avant le premier affichage d'après la
+   forme retenue) garde, avant l'hydratation, la place du sélecteur App · Back-Office : sur téléphone le sélecteur
+   remplace le nom « GCC », sur les autres tailles il s'ajoute après lui. Masqué dès que la barre dessine le vrai. */
+.place-selecteur { display: none; }
+:root[data-responsable="1"] .place-selecteur { display: block; height: 38px; width: 172px; flex-shrink: 0; border-radius: 9999px; background: var(--secondary); }
+/* EM-2 : trois segments (App · Musiciens · Back-Office) pour un responsable qui est aussi musicien. */
+:root[data-selecteur3="1"] .place-selecteur { width: 258px; }
+@media (max-width: 639px) {
+  :root[data-responsable="1"] .brand-nom { display: none; }
+}
+
+/* Feuille « Agrandir la capture » du guide (eglise-6) : scrim assombri, entrée sans rebond (réponse 0,35 s) depuis
+   la figure (`transform-origin` posé en ligne) ; fondu de 200 ms sous `prefers-reduced-motion` ; scrim opaque sous
+   `prefers-reduced-transparency`. */
+/* Le voile de Dialog (35 %) est déjà dessous : 40 % de plus donnent environ 60 % de noir. Le voile se fond,
+   seule la feuille grandit (depuis la figure). */
+.capture-scrim { background-color: rgb(0 0 0 / 0.4); animation: capture-fondu 200ms linear; }
+.capture-scrim .capture-feuille { animation: capture-entree 350ms cubic-bezier(.32, .72, 0, 1); }
+@keyframes capture-entree { from { opacity: 0; transform: scale(.92); } }
+@keyframes capture-fondu { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .capture-scrim .capture-feuille { animation: capture-fondu 200ms linear; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .capture-scrim { background-color: #0b0b0c; }
+}
+
+/* P13 (T4a, 2026-11) : à partir de 1 024 px, le texte gris en `text-xs` passe de 12/16 à
+   13/18 ; l'encre en 12 px (badges) ne bouge pas. Mécanisme : `:where()` ramène la
+   spécificité du sélecteur à celle d'une classe seule (0,1,0), la même que `.text-xs` et
+   que `.lg:text-sm`, `.sm:text-base`… ; entre égaux l'ordre du CSS produit décide, et
+   cette règle, rangée dans `@layer utilities`, sort après `.text-xs` mais avant les
+   variantes responsives de Tailwind : elle relève donc le gris sans écraser une taille
+   plus grande posée par une variante (`text-xs md:text-base` reste à 15, `text-xs lg:text-lg`
+   à 17). Le gris est lu dans l'attribut `class` et non par `.text-muted-foreground` : avec
+   cette classe dans le sélecteur, Tailwind fabriquait des variantes `marker:` de la règle.
+   `[class~=…]` vaut la classe ; le gris à opacité (`text-muted-foreground/70`) est pris en
+   tête de liste ou après une espace (un `hover:text-muted-foreground/70` n'est pas du gris
+   au repos). L'interligne de 18 px ne se pose que sans `leading-*` : la
+   règle sort après les `.leading-*` et les écraserait (relecture du 07/11/2026). Le gris
+   hérité d'un parent (enfant `text-xs` sans classe grise) n'est pas couvert. */
+@layer utilities {
+  @media (min-width: 1024px) {
+    .text-xs:where([class~="text-muted-foreground"], [class^="text-muted-foreground/"], [class*=" text-muted-foreground/"]) {
+      font-size: 13px;
+    }
+    .text-xs:where([class~="text-muted-foreground"], [class^="text-muted-foreground/"], [class*=" text-muted-foreground/"]):where(:not([class*="leading-"])) {
+      line-height: 18px;
+    }
+  }
+}
+
+/* Champs de date et d'heure du site (`Input`, classes `champ-date` / `champ-heure` ; retouche iPhone du 08/11/2026,
+   Nouvelle réunion) : sur iOS, Safari donne aux sélecteurs natifs une largeur minimale à lui ; dans une rangée à deux
+   colonnes, le champ d'heure débordait de la carte. Hors des couches (`@layer`), pour passer devant les classes
+   utilitaires : apparence native retirée, largeur libre, valeur alignée à gauche comme dans les autres champs. Le
+   sélecteur s'ouvre toujours au toucher. Vide, iOS n'affiche aucun gabarit (« --:-- ») : un pictogramme calendrier ou
+   horloge à droite dit ce qu'on attend. L'indicateur natif de Chromium (ordinateur) reste là, transparent, posé sur le
+   pictogramme : il ouvre toujours le sélecteur. Les champs bruts (`<input>` hors `Input`) gardent l'apparence native. */
+.champ-date,
+.champ-heure {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  position: relative;
+  padding-right: 2.25rem;
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem 1rem;
+}
+.champ-date {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236c6c72' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2v4M16 2v4'/%3E%3Crect width='18' height='18' x='3' y='4' rx='2'/%3E%3Cpath d='M3 10h18'/%3E%3C/svg%3E");
+}
+.champ-heure {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236c6c72' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 6v6l4 2'/%3E%3C/svg%3E");
+}
+.dark .champ-date {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398989f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2v4M16 2v4'/%3E%3Crect width='18' height='18' x='3' y='4' rx='2'/%3E%3Cpath d='M3 10h18'/%3E%3C/svg%3E");
+}
+.dark .champ-heure {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398989f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 6v6l4 2'/%3E%3C/svg%3E");
+}
+.champ-date::-webkit-calendar-picker-indicator,
+.champ-heure::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2.25rem;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.champ-date:disabled::-webkit-calendar-picker-indicator,
+.champ-heure:disabled::-webkit-calendar-picker-indicator {
+  cursor: not-allowed;
+}
+.champ-date::-webkit-date-and-time-value,
+.champ-heure::-webkit-date-and-time-value {
+  text-align: left;
+}
+/* Firefox dessine déjà son bouton calendrier dans le champ date : pas de second pictogramme. */
+@supports (-moz-appearance: none) {
+  .champ-date,
+  .dark .champ-date {
+    background-image: none;
+    padding-right: 0.75rem;
+  }
+}
+
+/* Ma partition, signes de lecture (docs/spec-ma-partition.md, « Signes ») : un filet dans la marge, sans effet sur la mise
+   en page. Retouché par moi : 2 px graphite ; retouché pour le culte : double filet d'encre (forme distincte). Une parole
+   retouchée reste à l'encre, soulignée d'un trait fin graphite ; un accord retouché garde sa graisse (déjà
+   en gras sur le site : 600 l'aurait rendu plus léger que ses voisins) ; le filet suffit. */
+[data-marque] { position: relative; }
+[data-marque]::before { content: ""; position: absolute; top: 0; bottom: 0; left: -8px; border-left: 2px solid var(--graphite); }
+[data-marque="culte"]::before,
+[data-marque="conflit"][data-conflit="chant"]::before { border-left: 3px double currentColor; }
+/* Sur le texte des paroles seul (caractère chinois sans son pinyin, mot français sans l'espace qui tient un accord) :
+   posé sur la ligne, le trait descendait dans les blancs sous les accords et sous le pinyin. */
+[data-retouche="paroles"] :is([data-paroles]:not(:has(> [data-copy-ignore])), [data-car]) { text-decoration: underline; text-decoration-color: var(--graphite); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+@media print { [data-marque]::before { display: none; } }

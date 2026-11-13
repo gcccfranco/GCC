@@ -16,6 +16,8 @@ Tout est écrit en D. `b6` = Bb, `b7` = C, `b3` = F, `4m` = Gm.
 | Statut | à valider |
 | Sensations | Tendresse et nostalgie · Douceur et intimité |
 | Moments | Fin · Refrain |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | refrain · fin (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `G → D` devient `G – Gm → D` · degrés `4 → 1` devient
@@ -52,6 +54,8 @@ F#-A-D. Main gauche : G, G, D.
 | Statut | à valider |
 | Sensations | Épique · Majesté · Joie et élan |
 | Moments | Fin · Montée · Refrain |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · refrain · fin (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `A → D` (toute fin) devient `Bb – C → D` · degrés
@@ -89,6 +93,8 @@ final · remplacement `b6 – b7 → 1` · sûreté : **à écouter**.
 | Statut | à valider |
 | Sensations | Joie et élan · Épique · Majesté |
 | Moments | Refrain · Intro · Fin |
+| Ressenti | élan (proposé) |
+| Usage | refrain · fin · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `G → D` devient `C – G → D` · degrés `4 → 1` devient
@@ -124,6 +130,8 @@ Ab – Eb).
 | Statut | à valider |
 | Sensations | Épique · Joie et élan |
 | Moments | Intro · Montée |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `D → G` devient `D – F → G` · degrés `1 → 4` devient
@@ -155,6 +163,8 @@ D → F → G, avec un accord « bluesy » au milieu. Énergique, un peu rock.
 | Statut | à valider |
 | Sensations | Majesté · Émerveillement · Épique |
 | Moments | Fin |
+| Ressenti | élan · couleur (proposé) |
+| Usage | fin (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `G → D` (toute fin) devient `Bb → D` · degrés `4 → 1`
@@ -176,3 +186,88 @@ s'ouvre, comme un rideau qui se lève sur l'accord final.
 
 **Règle.** Portée : dernière occurrence, toute fin du chant · motif `4 → 1`
 final · remplacement `b6 → 1` · sûreté : **à écouter**.
+
+---
+
+## E6 · Le 4m6 avant le dernier 1
+
+| | |
+| --- | --- |
+| Id | `emprunts/4m6` |
+| Statut | à valider |
+| Sensations | Tendresse et nostalgie · Émerveillement |
+| Moments | Fin |
+| Ressenti | mélancolique · couleur (proposé) |
+| Usage | fin (proposé) |
+| Niveau | piano : intermédiaire · guitare : intermédiaire |
+
+**Avant → après** : `G → D` devient `G – Gm6 → D` · degrés `4 → 1` devient
+`4 – 4m6 → 1`.
+
+**Pourquoi ça marche.** Gm6, c'est G-Bb-D-E. Comme dans E1, le B descend sur
+Bb (emprunté à D mineur), puis sur le A de D. Le E en plus (la 6) adoucit
+l'ombre : l'accord sonne moins triste que Gm, plus « gospel ». Une couleur
+d'avant la fin, à tenir.
+
+**Quand l'éviter.**
+- Quand la mélodie chante B (sans bémol) sur ce temps.
+- Plus d'une fois par chant : la couleur s'use. Garde-la pour la dernière
+  fin.
+
+**Variante.** Sur la basse du 5 : `Gm6/A → D`, la basse annonce déjà le
+retour.
+
+**Au piano.** Main gauche : G. Main droite : B-D-G, puis Bb-D-E, puis A-D-F#
+(Bb descend sur A, E monte sur F#, D reste).
+
+**À la guitare.** Gm6 en `3x2333` (G, E, Bb, D, G).
+
+**Dans le répertoire** (en chinois) : 握住幸福 (副歌 2, en G : Cm6/D – G, sur
+la basse du 5) · 奔跑不放弃 (副歌, en E : A/B – (Am6) – E, entre parenthèses
+dans la grille).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).
+
+---
+
+## E7 · Le b7 qui conclut (cadence mixolydienne)
+
+| | |
+| --- | --- |
+| Id | `emprunts/b7-1` |
+| Statut | à valider |
+| Sensations | Joie et élan · Majesté |
+| Moments | Fin · Intro · Refrain |
+| Ressenti | élan (proposé) |
+| Usage | fin · transition · refrain (proposé) |
+| Niveau | piano : facile · guitare : facile |
+
+**Avant → après** : `A → D` devient `C → D` · degrés `5 → 1` devient
+`b7 → 1`.
+
+**Pourquoi ça marche.** C monte sur D d'un ton entier, toutes ses notes
+ensemble. Il n'y a pas de C# (la note qui « tire » vers D) : la fin ne se
+referme pas, elle s'élève. Un son ouvert, de fête, qu'on appelle mixolydien :
+le « Hosanna » de beaucoup de chants rock de louange. Là où E3 passe par le 4
+(`C – G → D`), ici le b7 conclut seul.
+
+**Quand l'éviter.**
+- Quand la mélodie chante C# juste avant le 1 : il frotte contre le C.
+- Dans un chant doux et intime : la couleur est trop rock.
+
+**Variante.** En boucle sur une intro ou une fin : `D – C – D – C`. Précédé
+du b6 : c'est E2.
+
+**Au piano.** Main gauche : C puis D. Main droite : C-E-G puis D-F#-A (tout
+monte d'un ton).
+
+**À la guitare.** C en `x32010` puis D en `xx0232` ; en riff, D – C – D sur la
+même pulsation.
+
+**Dans le répertoire** : *Au nom de Jésus* (intro, en D : D – C – D – C – D) ·
+奔跑不放弃 (副歌, en E : … – D – E/G#, après des accords
+entre parenthèses).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).

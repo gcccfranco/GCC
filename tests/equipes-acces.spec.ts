@@ -1,16 +1,15 @@
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ongletsRail } from "./helpers/agencement";
 import {
-  canCreateEvenement, creatableEvenementPours, entreesBackOffice, equipesDe, equipesDesTaches, equipesOuCreer, estDeLEquipe,
+  canCreateEvenement, creatableEvenementPours, droitsDesPages, entreesBackOffice, equipesDe, equipesDesTaches, equipesOuCreer, estDeLEquipe,
   estReferentDe, estResponsable, isCoordination, peutCocher, sousPartiesEvenements, widgetsPermis,
 } from "../src/lib/access";
 import { aFairePour, type Ligne } from "../src/lib/taches/echeances";
 import type { Tache } from "../src/types/tache";
-import { barreParDefaut } from "../src/lib/tableauDeBord/barre";
 import { raccourcisPermis } from "../src/lib/tableauDeBord/donnees";
 import { ANNONCE_SECTIONS } from "../src/types/annonce";
 import { EQUIPES } from "../src/lib/equipes/table";
+import { COMITES } from "../src/lib/groupes/table";
 import type { UserProfile } from "../src/types/user";
 
 // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md), tranche EQ-B :
@@ -130,12 +129,13 @@ test.describe("pur : cocher une tâche et « à moi » (EQ8, EQ9, EQ15, décisio
   test("equipesDesTaches : ses équipes (toutes pour un admin) ; equipesOuCreer : celles dont on est référent", () => {
     expect(equipesDesTaches(user(JOEL), profil(JOEL))).toEqual(["medias"]);
     expect(equipesDesTaches(user(MAELLE), profil(MAELLE))).toEqual(["louange"]);
-    expect(equipesDesTaches(user(ADMIN), null)).toEqual(EQUIPES.map((e) => e.id));
+    // Les cinq comités de groupe suivent les équipes (OG-B, OG17).
+    expect(equipesDesTaches(user(ADMIN), null)).toEqual([...EQUIPES.map((e) => e.id), ...COMITES]);
     expect(equipesDesTaches(null, profil(JOEL))).toEqual([]);
     expect(equipesOuCreer(user(JOEL), profil(JOEL))).toEqual([]);
     expect(equipesOuCreer(user(LEA), profil(LEA))).toEqual(["medias"]);
     expect(equipesOuCreer(user(MAELLE), profil(MAELLE)), "un choriste ne crée rien").toEqual([]);
-    expect(equipesOuCreer(user(ADMIN), null)).toEqual(EQUIPES.map((e) => e.id));
+    expect(equipesOuCreer(user(ADMIN), null)).toEqual([...EQUIPES.map((e) => e.id), ...COMITES]);
   });
 });
 
@@ -148,26 +148,20 @@ test.describe("pur : qui est responsable, ses entrées (EQ17, EQ18, décision 43
     for (const p of [JOEL, HUGO, MAELLE, PAUL, SACHA, ANCIEN]) expect(estResponsable(user(p), profil(p)), p.uid).toBe(false);
   });
 
-  test("un simple membre ou un choriste : Tâches et Réunions, rien d'autre ; un ancien pôle seul : rien", () => {
-    for (const p of [JOEL, HUGO, MAELLE, PAUL, SACHA]) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual(["taches", "reunions"]);
-    expect(entreesBackOffice(user(ANCIEN), profil(ANCIEN))).toEqual([]);
+  test("un simple membre ou un choriste : aucune entrée de Back-Office (piste A, BO4) ; un ancien pôle seul non plus", () => {
+    for (const p of [JOEL, HUGO, MAELLE, PAUL, SACHA, ANCIEN]) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual([]);
   });
 
-  test("une référente sans autre droit : tableau, calendrier, tâches, évènements, réunions (décision 43)", () => {
-    expect(entreesBackOffice(user(LEA), profil(LEA))).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
+  test("une référente sans autre droit : À faire, Calendrier ; ses pages Tâches, Évènements, Réunions restent (décision 43)", () => {
+    expect(entreesBackOffice(user(LEA), profil(LEA))).toEqual(["afaire", "calendrier"]);
+    expect(droitsDesPages(user(LEA), profil(LEA))).toEqual({ taches: true, evenements: true, reunions: true });
     expect(sousPartiesEvenements(user(LEA), profil(LEA))).toEqual(["evenements"]);
     expect(sousPartiesEvenements(user(JOEL), profil(JOEL))).toEqual([]);
   });
 
-  test("la coordination seule : Évènements, ni Tâches ni Réunions (elle n'ouvre aucune équipe, EQ25)", () => {
-    expect(entreesBackOffice(user(IRIS), profil(IRIS))).toEqual(["tableau", "calendrier", "evenements"]);
-  });
-
-  test("barre du bas par défaut d'une référente : Évènements prend la place de Réunions sans Planning", () => {
-    expect(barreParDefaut(entreesBackOffice(user(LEA), profil(LEA)))).toEqual(["tableau", "calendrier", "taches", "evenements"]);
-    const avecPlanning = { ...LEA, plannings: ["culte"] };
-    expect(barreParDefaut(entreesBackOffice(user(avecPlanning), profil(avecPlanning)))).toEqual(["tableau", "calendrier", "taches", "planning"]);
-    expect(barreParDefaut(entreesBackOffice(user(JOEL), profil(JOEL)))).toEqual(["taches", "reunions"]);
+  test("la coordination seule : la page Évènements et l'entrée Scène (SF-1), ni Tâches ni Réunions (elle n'ouvre aucune équipe, EQ25)", () => {
+    expect(entreesBackOffice(user(IRIS), profil(IRIS))).toEqual(["afaire", "calendrier", "scene"]);
+    expect(droitsDesPages(user(IRIS), profil(IRIS))).toEqual({ taches: false, evenements: true, reunions: false });
   });
 
   test("raccourcis d'une référente : « Nouvel évènement » compris", () => {
@@ -188,7 +182,8 @@ test.describe("pur : plus de public de pôle (EQ19, EQ21)", () => {
     expect(creatableEvenementPours(user(ANCIEN), profil(ANCIEN), ANNONCE_SECTIONS)).toEqual([]);
     const admin = creatableEvenementPours(user(ADMIN), null, ANNONCE_SECTIONS);
     expect(admin.filter((p) => p.startsWith("pole:"))).toEqual([]);
-    expect(admin).toEqual(["eglise", ...ANNONCE_SECTIONS, ...EQUIPES.map((e) => `equipe:${e.id}`)]);
+    // Les cinq comités de groupe suivent les équipes (OG-B, OG17).
+    expect(admin).toEqual(["eglise", ...ANNONCE_SECTIONS, ...EQUIPES.map((e) => `equipe:${e.id}`), ...COMITES.map((c) => `equipe:${c}`)]);
     expect(creatableEvenementPours(user(IRIS), profil(IRIS), ANNONCE_SECTIONS)).toEqual(["eglise", ...ANNONCE_SECTIONS]);
   });
 
@@ -203,13 +198,7 @@ test.describe("pur : plus de public de pôle (EQ19, EQ21)", () => {
 
 // ─── Écrans ──────────────────────────────────────────────────────────────────
 
-const estOrdinateur = (info: TestInfo) => info.project.name.startsWith("ordinateur");
 const selecteur = (page: Page) => page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true });
-/** Le menu du Back-Office : la barre latérale sur ordinateur ; la barre du bas ailleurs. */
-const menu = (page: Page, info: TestInfo) => estOrdinateur(info)
-  ? page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" })
-  : page.getByTestId("barre-du-bas");
-
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, nom: string) {
   const dir = process.env.PW_CAPTURES;
@@ -223,39 +212,43 @@ async function ouvrir(page: Page, qui: FakeProfile, to: string, docs: Record<str
 }
 
 test.describe("écrans : le Back-Office d'un simple membre (EQ17)", () => {
-  test("Joël F. voit App · Back-Office ; le menu n'a que Tâches et Réunions", async ({ page }, info) => {
+  // Piste A (BO4) : un simple membre n'a plus de Back-Office ni d'interrupteur App · Back-Office ; ses
+  // équipes sont dans l'app (Moi › Mes équipes, `/equipes/<id>`), mêmes sections que le Back-Office
+  // (BO7) sans les actions de responsable.
+  test("Joël F. n'a ni interrupteur App · Back-Office ni entrée ; sa page d'équipe est dans l'app (BO4)", async ({ page }) => {
     await ouvrir(page, JOEL, "/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toBeVisible();
-    await selecteur(page).getByRole("link", { name: "Back-Office" }).click();
-    // Pas de tableau de bord : sa première entrée, Tâches.
-    await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toHaveCount(0);
-    await expect(menu(page, info).getByRole("link")).toHaveText(estOrdinateur(info) ? ["Tâches", "Réunions"] : ["Tâches", "Réunions", "Plus"]);
-    await page.goto("/back-office/reunions");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
+    await expect(selecteur(page)).toHaveCount(0);
+    await page.goto("/back-office");
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+    await page.goto("/equipes/medias");
+    await expect(page.getByRole("heading", { level: 1, name: "Médias" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Tâches" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Réunions" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Nouvelle tâche|Nouvelle réunion/ })).toHaveCount(0);
     await capture(page, "membre-reunions");
   });
 
-  test("/back-office, le calendrier et Évènements le ramènent à Tâches ; Réunions et Plus restent", async ({ page }) => {
-    await ouvrir(page, JOEL, "/back-office/reunions");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
-    for (const ailleurs of ["/back-office", "/back-office/calendrier", "/back-office/evenements"]) {
+  test("/back-office, le calendrier et Évènements lui répondent « réservé » ; les adresses de son équipe le mènent à sa page dans l'app (BO4, BO7)", async ({ page }) => {
+    await ouvrir(page, JOEL, "/back-office/equipes/medias");
+    await page.waitForURL(/\/equipes\/medias\/?$/);
+    await expect(page).not.toHaveURL(/back-office/);
+    await page.goto("/back-office/taches/medias");
+    await page.waitForURL(/\/equipes\/medias\/?$/);
+    for (const ailleurs of ["/back-office", "/back-office/calendrier", "/back-office/evenements", "/back-office/plus"]) {
       await page.goto(ailleurs);
-      await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+      await expect(page.getByText("Réservé aux responsables."), ailleurs).toBeVisible();
     }
-    await page.goto("/back-office/plus");
-    await expect(page).toHaveURL(/\/back-office\/plus\/?$/);
   });
 
-  test("un choriste sans équipe : le Back-Office s'ouvre, Tâches ne montre que Louange", async ({ page }, info) => {
+  test("un choriste sans équipe : pas de Back-Office, ses tâches sont sur la page de l'équipe Louange dans l'app (BO4)", async ({ page }) => {
     await ouvrir(page, MAELLE, "/back-office", {
       "equipes/louange/taches/t1": { equipe: "louange", titre: "Choisir les chants de Noël", responsableUid: null, responsableNom: "", echeance: "2026-10-15", repetition: null },
     });
-    await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^Louange/]);
-    // « Tâches » peut porter sa pastille (le compte de ce qui est à faire).
-    await expect(menu(page, info).getByRole("link")).toHaveText(estOrdinateur(info) ? [/^Tâches/, "Réunions"] : [/^Tâches/, "Réunions", "Plus"]);
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+    await page.goto("/equipes/louange");
+    await expect(page.getByRole("heading", { level: 1, name: "Louange" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Tâches" }).getByRole("button", { name: /Choisir les chants de Noël/ })).toBeVisible();
     await capture(page, "choriste-taches");
   });
 

@@ -1,5 +1,12 @@
 import type { Page, Route } from "@playwright/test";
 import { ADMIN_EMAILS } from "../../src/lib/access";
+import { groupeDe } from "../../src/lib/groupes/organigramme";
+import { EDD_CLASSES } from "../../src/lib/planning/utils";
+import { SERVICE_LIEUX } from "../../src/types/user";
+import { responsabilitesDeLaReprise } from "../../src/lib/acces/repriseResponsabilites";
+
+// Miroir de src/lib/firebase/onboarding.ts (ce module tire le SDK Firebase : pas importé côté Node).
+const VERSION_VISITE = 4;
 
 // Connexion Firebase et Firestore **simulés** : les pages réservées aux membres
 // (setlists) se testent sans identifiants ni écriture en production. Le SDK
@@ -38,10 +45,86 @@ export type FakeProfile = {
   remplitParRole?: string[];
   publieParRole?: string[];
   notifieParRole?: string[];
+  /** Lot AO — recopiés de l'organigramme par le serveur seul : sous-équipes de Louange (et celles dont la personne est
+   *  référente), lieux où elle sert (Louange, Régie), ce qu'elle joue (Musiciens). */
+  sousEquipes?: string[];
+  referentSous?: string[];
+  lieuxLouange?: string[];
+  lieuxRegie?: string[];
+  joue?: string[];
+  /** Lot RS — les responsabilités de gestion (`planning:<x>`, `orga`), écrites par les admins seuls. */
+  responsabilites?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
-   *  Par défaut l'accueil est déjà vu, pour ne pas masquer les pages testées. */
+   *  Par défaut la visite est déjà vue (`version: VERSION_VISITE`), pour ne pas masquer les pages testées. */
   accueil?: boolean;
+  /** Vrai = compte qui avait vu l'accueil du lot 8 : `onboarding/{uid}` sans `version` (docs/spec-visite-par-role.md).
+   *  La visite s'ouvre de nouveau, en mode première (lot VB-R). */
+  accueilLot8?: boolean;
+  /** Version de la visite déjà vue, pour simuler un compte d'une version plus ancienne (ex. 2). Sans effet si
+   *  `accueilLot8` est posé. */
+  visiteVersion?: number;
+  /** Lot AO — `false` interdit la traduction automatique d'un profil « à l'ancienne » (voir `traduitCommeMigration`). */
+  organigramme?: false;
 };
+
+/**
+ * Lot AO — traduit comme la migration (src/lib/acces/migration.ts, `citer` + `recopieDe`) : un profil « à
+ * l'ancienne » (rôles déclarés dans `serviceRoles`) reçoit les champs que le serveur recopierait de
+ * l'organigramme, sinon le serveur principal (interrupteur du back-office ouvert, accès lus dans l'organigramme)
+ * ne lui ouvrirait plus rien. Appliquée aux deux serveurs : sur le serveur coupé (ancien mode) ces champs ne sont
+ * pas lus. Rien n'est traduit si le profil porte déjà un champ d'organigramme du lot AO (`sousEquipes`,
+ * `referentSous`, `lieuxLouange`, `lieuxRegie`, `joue`) ou si `organigramme: false`.
+ *   - chanteur / musicien / presidence sur un des 4 lieux : `dansEquipes` ∋ louange, `sousEquipes`
+ *     (choristes / musiciens / presidence), `lieuxLouange` ;
+ *   - régie sur un lieu : `dansEquipes` ∋ regie, `lieuxRegie` ;
+ *   - clé de classe EDD : `dansEquipes` ∋ edd ; une seule clé de groupe : `groupe` (id, comme `groupeDe` le déduit) s'il est absent ;
+ *   - `joue` reste vide (un test d'Harmonie le pose lui-même).
+ * Les droits cochés (`coordination`, `annonces`, `notify`, `plannings`, `equipes`) ne sont PAS traduits : un test qui
+ * les utilise se reprend avec `remplit`, `publie`, `coordination`, `notifieTout`… (en bas de ce fichier).
+ */
+const SOUS_PAR_ROLE: Record<string, string> = { presidence: "presidence", musicien: "musiciens", chanteur: "choristes" };
+function traduitCommeMigration(data: Record<string, unknown>): Record<string, unknown> {
+  const AO = ["sousEquipes", "referentSous", "lieuxLouange", "lieuxRegie", "joue"];
+  if (AO.some((k) => k in data)) return data;
+  const roles = (data.serviceRoles ?? {}) as Record<string, string[]>;
+  const sous = new Set<string>();
+  const lieuxLouange = new Set<string>();
+  const lieuxRegie = new Set<string>();
+  const dans = new Set<string>((data.dansEquipes as string[] | undefined) ?? []);
+  let groupe = data.groupe as string | undefined;
+  for (const [cle, rs] of Object.entries(roles)) {
+    const lieu = (SERVICE_LIEUX as readonly string[]).includes(cle);
+    for (const r of rs) {
+      if (lieu && SOUS_PAR_ROLE[r]) { sous.add(SOUS_PAR_ROLE[r]); lieuxLouange.add(cle); }
+      if (lieu && r === "regie") { lieuxRegie.add(cle); dans.add("regie"); }
+    }
+    if ((EDD_CLASSES as readonly string[]).includes(cle)) dans.add("edd");
+  }
+  // Le groupe, comme l'app le déduit (`groupeDe`) : exactement une clé de groupe dans `serviceRoles`, sinon rien.
+  if (groupe === undefined) groupe = groupeDe({ serviceRoles: roles }) ?? undefined;
+  if (sous.size) dans.add("louange");
+  if (!dans.size && !groupe) return data;
+  const ordre = <T extends string>(tout: readonly T[], ens: Set<string>) => tout.filter((x) => ens.has(x));
+  return {
+    ...data,
+    ...(dans.size ? { dansEquipes: [...dans] } : {}),
+    ...(groupe !== undefined ? { groupe } : {}),
+    ...(sous.size ? { sousEquipes: ordre(["presidence", "musiciens", "choristes"], sous), lieuxLouange: ordre(SERVICE_LIEUX, lieuxLouange) } : {}),
+    ...(lieuxRegie.size ? { lieuxRegie: ordre(SERVICE_LIEUX, lieuxRegie) } : {}),
+  };
+}
+
+/**
+ * Lot RS — traduit comme la reprise (src/lib/acces/repriseResponsabilites.ts, lancée par Timothée le 30/10/2026) : un
+ * profil sans `responsabilites` reçoit celles que la reprise lui aurait données (référent Louange → les quatre plannings
+ * du culte ; référent EDD → l'EDD ; placé dans Orga → `orga` ; `remplitParRole`, `publieParRole`, `plannings` → le
+ * planning). Un profil qui pose `responsabilites` lui-même (même vide) n'est pas touché.
+ */
+function traduitCommeReprise(data: Record<string, unknown>): Record<string, unknown> {
+  if ("responsabilites" in data) return data;
+  const r = responsabilitesDeLaReprise(data);
+  return r.length ? { ...data, responsabilites: r } : data;
+}
 
 /** Document Firestore REST à partir d'un objet JS (miroir de toFsFields). */
 function fsValue(v: unknown): unknown {
@@ -224,6 +307,7 @@ export async function fakeFirestore(
           from: { collectionId: string; allDescendants?: boolean }[];
           orderBy?: { field: { fieldPath: string }; direction?: string }[];
           limit?: number;
+          where?: { fieldFilter?: { field: { fieldPath: string }; op: string; value: unknown } };
         };
       }).structuredQuery;
       const order = q.orderBy?.[0];
@@ -235,6 +319,18 @@ export async function fakeFirestore(
       let paths = q.from[0].allDescendants
         ? [...store.keys()].filter((p) => p.split("/").slice(-2, -1)[0] === q.from[0].collectionId)
         : children(parent ? `${parent}/${q.from[0].collectionId}` : q.from[0].collectionId);
+      // Ma partition (MP-1) : `where` EQUAL / ARRAY_CONTAINS appliqué sur `partitions` seulement. // shortcut: les autres collections
+      // ignorent toujours `where` (des specs en dépendent), à étendre quand elles auront leurs fixtures filtrées.
+      const filtre = q.where?.fieldFilter;
+      if (filtre && q.from[0].collectionId === "partitions") {
+        const attendu = jsValue(filtre.value);
+        paths = paths.filter((p) => {
+          const v = jsValue(store.get(p)?.[filtre.field.fieldPath]);
+          if (filtre.op === "ARRAY_CONTAINS") return Array.isArray(v) && v.includes(attendu);
+          if (filtre.op === "EQUAL") return v === attendu;
+          return true;
+        });
+      }
       if (order) {
         paths.sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
         if (order.direction === "DESCENDING") paths.reverse();
@@ -352,8 +448,17 @@ export async function signInAs(
     }),
   );
 
+  // Un autre document users/* garde son ancien rôle sans traduction avec `organigramme: false` (champ retiré du document).
+  const autreProfil = (d: Record<string, unknown>) => {
+    if (d.organigramme !== false) return traduitCommeReprise(traduitCommeMigration(d));
+    const { organigramme: _non, ...reste } = d;
+    return reste;
+  };
+  const serviParLeProfil = (d: Record<string, unknown>) => (profile.organigramme === false ? d : traduitCommeReprise(traduitCommeMigration(d)));
+  const traduits = Object.fromEntries(Object.entries(docs).map(([chemin, d]) =>
+    [chemin, /^users\/[^/]+$/.test(chemin) ? (chemin === `users/${profile.uid}` ? serviParLeProfil(d) : autreProfil(d)) : d]));
   const db = await fakeFirestore(page, {
-    [`users/${profile.uid}`]: {
+    [`users/${profile.uid}`]: serviParLeProfil({
       email: profile.email,
       firstName: profile.firstName ?? "Test",
       lastName: profile.lastName ?? "Régie",
@@ -370,9 +475,19 @@ export async function signInAs(
       ...(profile.remplitParRole ? { remplitParRole: profile.remplitParRole } : {}),
       ...(profile.publieParRole ? { publieParRole: profile.publieParRole } : {}),
       ...(profile.notifieParRole ? { notifieParRole: profile.notifieParRole } : {}),
-    },
-    ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
-    ...docs,
+      ...(profile.sousEquipes ? { sousEquipes: profile.sousEquipes } : {}),
+      ...(profile.referentSous ? { referentSous: profile.referentSous } : {}),
+      ...(profile.lieuxLouange ? { lieuxLouange: profile.lieuxLouange } : {}),
+      ...(profile.lieuxRegie ? { lieuxRegie: profile.lieuxRegie } : {}),
+      ...(profile.joue ? { joue: profile.joue } : {}),
+      ...(profile.responsabilites ? { responsabilites: profile.responsabilites } : {}),
+    }),
+    ...(profile.accueil ? {} : {
+      [`onboarding/${profile.uid}`]: profile.accueilLot8
+        ? { vu: true, le: "2026-09-01T10:00:00Z" }
+        : { vu: true, version: profile.visiteVersion ?? VERSION_VISITE, le: "2026-09-01T10:00:00Z" },
+    }),
+    ...traduits,
   }, partage);
 
   await page.goto(`/login?from=${encodeURIComponent(to)}`);
@@ -408,3 +523,43 @@ export async function abonneAuxNotifications(page: Page): Promise<void> {
     Object.defineProperty(Navigator.prototype, "standalone", { configurable: true, get: () => true });
   });
 }
+
+/**
+ * Lot AO : ce que le serveur recopie sur le profil d'une personne qui remplit ces plannings — l'équivalent, dans
+ * l'organigramme, de l'ancien droit `plannings` coché par un admin. Le culte et ses variantes (Intergroupe,
+ * Interfranco, Campus) : référent Louange ; l'EDD : référent EDD ; la Table : membre d'Orga ; un groupe (Paix,
+ * Bonté, Fidélité) : le rôle « remplit » de son organigramme. Les trois listes sont toujours rendues (vides
+ * comprises) : `{ ...ECRIVAIN, ...remplit("table") }` remplace tout ce qu'`ECRIVAIN` donnait.
+ */
+export function remplit(...cles: string[]): Pick<FakeProfile, "dansEquipes" | "referentDe" | "remplitParRole"> {
+  const groupes = ["paix", "bonte", "fidelite", "fideliteMusiciens"];
+  const equipes = (id: string) => (cles.some((k) => (id === "louange" ? !groupes.includes(k) && k !== "table" && !k.startsWith("edd") : id === "edd" ? k.startsWith("edd") : k === "table")) ? [id] : []);
+  const referentDe = [...equipes("louange"), ...equipes("edd")];
+  return {
+    dansEquipes: [...referentDe, ...equipes("orga")],
+    referentDe,
+    remplitParRole: cles.filter((k) => groupes.includes(k)),
+  };
+}
+
+/** Lot AO : qui publie (et prévient) ces plannings de groupe — le rôle « publie » de l'organigramme du groupe (ancien droit `notify`). */
+export const publie = (...cles: string[]): Pick<FakeProfile, "publieParRole"> => ({ publieParRole: cles });
+
+/** Lot AO : un Musicien de Louange (Culte Francophone) qui joue ces instruments — ce que le serveur recopie sur le profil ;
+ *  `joue` ouvre Harmonie (piano, guitare). Un test d'Harmonie le pose lui-même, `traduitCommeMigration` ne le fait pas. */
+export const musicien = (...joue: string[]): Pick<FakeProfile, "dansEquipes" | "sousEquipes" | "lieuxLouange" | "joue"> =>
+  ({ dansEquipes: ["louange"], sousEquipes: ["musiciens"], lieuxLouange: ["Culte Francophone"], joue });
+
+/** Lot RS : la Coordination (scène, fêtes, évènements de l'Église) vient du Comité Orga seul (Q11). */
+export const coordination = (): Pick<FakeProfile, "responsabilites"> => ({ responsabilites: ["orga"] });
+/** Lot AO : référent Louange — Coordination, tout le planning du culte, évènements « Culte Francophone », notifier Louange, tenir Louange. */
+export const referentLouange = (): Pick<FakeProfile, "dansEquipes" | "referentDe"> => ({ dansEquipes: ["louange"], referentDe: ["louange"] });
+/** Lot AO : membre d'Orga — Coordination, la Table, notifier toute l'Église, tenir tout l'organigramme. */
+export const orga = (): Pick<FakeProfile, "dansEquipes"> => ({ dansEquipes: ["orga"] });
+
+/** Lot AO : président ou VP d'un groupe (`paix`, `bonte`, `fidelite`, `amour`, `joie`) — l'équivalent, dans l'organigramme, de
+ *  l'ancien droit d'annonces de sa section : son comité, `groupe`, et la création d'évènements de sa catégorie. */
+export const presidentGroupe = (id: string): Pick<FakeProfile, "dansEquipes" | "referentDe" | "groupe"> =>
+  ({ dansEquipes: [`comite-${id}`], referentDe: [`comite-${id}`], groupe: id });
+/** Lot AO : le rôle « Notifier » d'un groupe (ancien droit `notify`) — ses audiences, ici les catégories (« Groupe Paix »…). */
+export const notifie = (...audiences: string[]): Pick<FakeProfile, "notifieParRole"> => ({ notifieParRole: audiences });

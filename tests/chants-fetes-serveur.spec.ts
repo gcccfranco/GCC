@@ -4,7 +4,7 @@ import {
   canDeleteSetlist, canDuplicateSetlist, canEditSetlist, canSeeSetlist, canSetSetlistTeam,
   canSetPresentationLink, estRegieDeFete, ADMIN_EMAILS,
 } from "../src/lib/access";
-import type { FSSetlist } from "../src/lib/firebase/setlists";
+import type { FSSetlist } from "../src/types/setList";
 import type { UserProfile } from "../src/types/user";
 import type { OrganigrammeGroupe } from "../src/types/groupe";
 import type { PlanningEddFete } from "../src/lib/fetes/droits";
@@ -214,6 +214,24 @@ test.describe("CF-B · contexte, droits, saisir, musiques (CF1, CF16-CF18, CF23)
     expect(d[0].chants).toBe(true);
     await expect(droitsDeLEdition(db, app("ruth"), "scene-hiver", EDD, AVANT)).rejects.toMatchObject({ status: 409 });
     await expect(droitsDeLEdition(db, app("ruth"), "inconnu", EDD, AVANT)).rejects.toMatchObject({ status: 404 });
+  });
+
+  test("coordination : le Comité Orga l'a (pas le référent Louange) sans case cochée ; un e-mail de profil d'admin ne la donne pas, le jeton si", async () => {
+    const { db, docs } = base();
+    // lot RS : la coordination vient de `responsabilites: ["orga"]` ; un référent Louange n'a plus de droit de gestion.
+    docs.users.pilote = { email: "pilote@example.com", firstName: "Pia", lastName: "Roux", responsabilites: ["orga"] };
+    docs.users.referent = { email: "referent@example.com", firstName: "Zélie", lastName: "Marchand", referentDe: ["louange"], dansEquipes: ["louange"] };
+    docs.users.intrus = { email: ADMIN_EMAILS[0], firstName: "Ian", lastName: "Noel" };
+    const coord = async (uid: string, email: string, backOffice: boolean) =>
+      (await lireContexteFetes(db, "2026-12-24", EDD, app(uid, email), backOffice)).profils.find((p) => p.uid === uid)?.coordination;
+    expect(await coord("pilote", "pilote@example.com", true)).toBe(true);
+    expect(await coord("pilote", "pilote@example.com", false)).toBe(false);
+    expect(await coord("referent", "referent@example.com", true)).toBe(false);
+    expect(await coord("intrus", "intrus@example.com", true)).toBe(false);
+    expect(await coord("intrus", ADMIN_EMAILS[0], true)).toBe(true);
+    // Les autres profils ne sont pas coordination d'après leur e-mail de profil.
+    const ctx = await lireContexteFetes(db, "2026-12-24", EDD, app("membre"), true);
+    expect(ctx.profils.find((p) => p.uid === "intrus")?.coordination).toBe(false);
   });
 
   test("saisir : crée la setlist complète (titre, éditeurs, createdAt serveur, ownerId null, sans updatedAt) ; idempotent", async () => {

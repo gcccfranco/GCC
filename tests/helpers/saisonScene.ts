@@ -45,5 +45,6 @@ export async function versToutesLesReservations(page: Page) {
     adresse.searchParams.delete("semaine");
     await page.goto(adresse.pathname + adresse.search);
   }
-  await expect(page.getByRole("table")).toBeVisible();
+  // Le tableau à partir de 640 px de conteneur, dessous la liste « par jour » (bo-evenements-1) : la page est là dès que son titre l'est.
+  await expect(page.getByRole("heading", { name: /^(Toutes les réservations|全部预约)$/, level: 2 })).toBeVisible();
 }

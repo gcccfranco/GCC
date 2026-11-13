@@ -1,7 +1,12 @@
-import { auth, FIREBASE_PROJECT_ID } from "@/lib/firebase/config";
+import { delaiMax } from "@/lib/delaiMax";
+import { auth } from "@/lib/firebase/config";
 import { SERVICE_LIEUX } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import type { SetlistItem } from "@/types/setList";
+import type { FSSetlist } from "@/types/setList";
+import { effacerCopie, lireCopie } from "@/lib/setlist/copieHorsLigne";
+import { ecrireCopieListe, lireCopieListe } from "@/lib/setlist/copieListe";
+import { repairCopyIds } from "@/lib/setlist/sectionOrigins";
+import type { SetlistVersions } from "@/types/setlistVersions";
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 
@@ -24,53 +29,30 @@ export const ALL_CATEGORIES = [...RESTRICTED_CATEGORIES, ...FREE_CATEGORIES];
  *  `ALL_CATEGORIES` (statistiques, prochaines setlists, profil) ne changent pas. */
 export const FETE_CATEGORIES = ["Noël", "Pâques"] as const;
 
-// ─── Firestore types ──────────────────────────────────────────────────────────
-
-export interface FSSetlist {
-  id: string;
-  title: string;
-  leader: string;
-  category: string;
-  date: string;
-  language: "fr" | "zh" | "mixed";
-  notes: string;
-  /** Séance Campus liée — distingue matin/soir d'un même jour pour le matching
-   *  setlist↔service. Absent pour les setlists hors planning / autres catégories. */
-  moment?: "matin" | "soir";
-  createdAt: Date | null;
-  updatedAt?: Date | null;
-  items: SetlistItem[];
-  isDraft?: boolean;
-  isPrivate?: boolean;
-  ownerId?: string | null;
-  /** Lien de la présentation (PPT) de la régie — écrit par /api/setlist/presentation. */
-  presentationUrl?: string;
-  /** L'équipe de la setlist (docs/spec-partage-setlist.md) : uids qui la voient et la modifient,
-   *  choisis par le propriétaire ou un admin. Absent = personne. */
-  editeurs?: string[];
-  /** Rôle de chaque personne de `editeurs`, pour l'affichage (absent = musicien). */
-  rolesPartage?: Record<string, "musicien" | "chanteur">;
-  /** Setlist d'un passage de fête (docs/spec-chants-fetes.md) : l'édition (`programmes/{id}`), le
-   *  passage et son seul « Qui » à la dernière saisie. Écrit par le serveur seul ; absent = setlist
-   *  ordinaire. */
-  fete?: { programme: string; passage: string; qui: string };
-  /** Corbeille (SC2, docs/spec-createur-corbeille-absences.md) : date-heure ISO de la mise à la corbeille
-   *  et uid de qui l'a faite. Absents = setlist en place ; présents = elle n'apparaît que dans la corbeille
-   *  et le cron la purge après 30 jours. */
-  supprimeeLe?: string;
-  supprimeePar?: string;
-}
-
 // ─── Firestore REST API ───────────────────────────────────────────────────────
 // Using the REST API instead of the Firebase SDK to avoid WebChannel
 // connectivity issues in certain browser environments.
 
-export const FS_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+export const FS_BASE = "https://firestore.googleapis.com/v1/projects/gcclouange/databases/(default)/documents";
 
 export async function authHeader(): Promise<Record<string, string>> {
   if (!auth.currentUser) return {};
   const token = await auth.currentUser.getIdToken();
   return { Authorization: `Bearer ${token}` };
+}
+
+/** Une requête structurée (`:runQuery`) sous `parent` (« » = racine) : les documents rendus, dans l'ordre de la
+ *  réponse. `null` = la requête a échoué (réponse en erreur) ; à l'appelant de choisir `[]`, `null` ou de lever. */
+export async function lireRequete(parent: string, structuredQuery: Record<string, unknown>): Promise<RawDoc[] | null> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}${parent ? `/${parent}` : ""}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ structuredQuery }),
+  });
+  if (!res.ok) return null;
+  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+  return rows.filter((r) => r.document).map((r) => r.document!);
 }
 
 // ─── Value conversion: JS → Firestore REST ────────────────────────────────────
@@ -132,7 +114,18 @@ function fromFsDoc(raw: RawDoc): FSSetlist {
   const data = Object.fromEntries(
     Object.entries(raw.fields).map(([k, v]) => [k, fromFsValue(v)])
   );
-  return { id, ...data } as FSSetlist;
+  const setlist = { id, ...data } as FSSetlist;
+  if (!Array.isArray(setlist.items)) return setlist;
+  // Copies d'Adapter enregistrées avec l'id de leur original (11-25/10/2026) :
+  // réparées à la lecture, jamais réécrites ici.
+  return {
+    ...setlist,
+    items: setlist.items.map((item) =>
+      item.contentOverride && item.sectionOrigins
+        ? { ...item, contentOverride: repairCopyIds(item.contentOverride, item.sectionOrigins) }
+        : item
+    ),
+  };
 }
 
 export async function checkRest(res: Response): Promise<void> {
@@ -161,24 +154,103 @@ const horsCorbeille = (s: FSSetlist): boolean => !s.supprimeeLe;
 
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
 
-export async function getSetlists(): Promise<FSSetlist[]> {
-  const headers = await authHeader();
+// Lecture de `getSetlists` (lot LF, LF1, docs/spec-lectures-firestore.md) : une copie de la liste sur
+// l'appareil (`copieListe.ts`), mise à jour par une requête delta sur `majLe` plutôt que par une relecture de
+// toute la collection. Lecture complète sans copie, ou si la dernière a plus de 24 h (elle rattrape les
+// suppressions définitives faites ailleurs). En mémoire : la promesse, 60 s, propre au compte (uid courant),
+// jamais pour un échec (refus ou exception) ; vidée par toute écriture de ce module (la copie reste, la delta
+// suivante part sans attendre). Pas de borne par date : les appelants (historique, statistiques, catalogue)
+// lisent toute la liste.
+const CACHE_SETLISTS_MS = 60_000;
+const COMPLETE_MAX_MS = 24 * 60 * 60_000;
+const MARGE_DELTA_MS = 10 * 60_000; // horloges des appareils
+let cacheSetlists: { uid: string | null; at: number; promesse: Promise<FSSetlist[] | null> } | null = null;
+
+function viderCacheSetlists(): void {
+  cacheSetlists = null;
+}
+
+const gardee = (s: FSSetlist): boolean => !s.isPrivate && !s.isDraft && sansFetes(s) && horsCorbeille(s);
+const parCreation = (a: FSSetlist, b: FSSetlist): number => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
+
+/** Une requête sur `setlists` : les documents et le `readTime` (celui de la première ligne qui en a un ; à défaut
+ *  l'heure de l'appareil notée juste avant l'envoi). Null si la réponse est refusée. */
+async function requeteSetlists(
+  structuredQuery: Record<string, unknown>,
+  headers: Record<string, string>,
+): Promise<{ docs: FSSetlist[]; readTime: number } | null> {
+  const avant = Date.now();
   const res = await fetch(`${FS_BASE}:runQuery`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "setlists" }],
-        orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
-      },
-    }),
+    body: JSON.stringify({ structuredQuery }),
   });
-  if (!res.ok) return [];
-  const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsDoc(r.document!))
-    .filter((s) => !s.isPrivate && !s.isDraft && sansFetes(s) && horsCorbeille(s));
+  if (!res.ok) return null;
+  const rows = await res.json() as Array<{ document?: RawDoc; readTime?: string }>;
+  const lu = rows.find((r) => r.readTime)?.readTime;
+  const readTime = lu && !Number.isNaN(Date.parse(lu)) ? Date.parse(lu) : avant;
+  return { docs: rows.filter((r) => r.document).map((r) => fromFsDoc(r.document!)), readTime };
+}
+
+/** Une lecture partie avant une déconnexion ou un changement de compte ne réécrit pas la copie qui vient
+ *  d'être effacée. */
+const memeCompte = (uid: string | null): boolean => !!uid && auth.currentUser?.uid === uid;
+
+async function lireSetlists(uid: string | null): Promise<FSSetlist[] | null> {
+  const headers = await authHeader();
+  // IndexedDB en échec : on retombe sur la lecture complète, sans rien montrer.
+  const copie = uid ? await lireCopieListe(uid).catch(() => null) : null;
+
+  if (copie && Date.now() - copie.completeLe < COMPLETE_MAX_MS) {
+    const delta = await requeteSetlists({
+      from: [{ collectionId: "setlists" }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "majLe" },
+          op: "GREATER_THAN",
+          value: { timestampValue: new Date(copie.lueLe - MARGE_DELTA_MS).toISOString() },
+        },
+      },
+    }, headers);
+    if (!delta) return null;
+    const parId = new Map(copie.setlists.map((s) => [s.id, s]));
+    for (const s of delta.docs) {
+      if (gardee(s)) parId.set(s.id, s);
+      else parId.delete(s.id);
+    }
+    const liste = [...parId.values()].sort(parCreation);
+    if (memeCompte(uid)) await ecrireCopieListe({ uid: uid!, lueLe: delta.readTime, completeLe: copie.completeLe, setlists: liste }).catch(() => {});
+    return liste;
+  }
+
+  const complete = await requeteSetlists({
+    from: [{ collectionId: "setlists" }],
+    orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
+  }, headers);
+  if (!complete) return null;
+  const liste = complete.docs.filter(gardee);
+  if (memeCompte(uid)) await ecrireCopieListe({ uid: uid!, lueLe: complete.readTime, completeLe: complete.readTime, setlists: liste }).catch(() => {});
+  return liste;
+}
+
+export async function getSetlists(): Promise<FSSetlist[]> {
+  const uid = auth.currentUser?.uid ?? null;
+  const c = cacheSetlists;
+  if (c && c.uid === uid && Date.now() - c.at < CACHE_SETLISTS_MS) {
+    const memoire = await c.promesse;
+    return memoire ? [...memoire] : [];
+  }
+  const entree = { uid, at: Date.now(), promesse: lireSetlists(uid) };
+  cacheSetlists = entree;
+  const clear = () => { if (cacheSetlists === entree) cacheSetlists = null; };
+  try {
+    const liste = await entree.promesse;
+    if (!liste) { clear(); return []; }
+    return [...liste]; // une copie par appelant : un tri sur place ne touche pas les autres
+  } catch (e) {
+    clear();
+    throw e;
+  }
 }
 
 /** Setlists datées de `today` (AAAA-MM-JJ) ou après, par date, `max` au plus : la lecture
@@ -280,24 +352,14 @@ export async function getSetlistsSince(sinceMs: number, max: number): Promise<FS
 /** Les setlists dont `uid` est de l'équipe (`editeurs`), brouillons écartés. Refiltrée par
  *  l'appelant : la requête n'est pas crue sur parole. */
 export async function getSetlistsPartagees(uid: string): Promise<FSSetlist[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "setlists" }],
-        where: {
-          fieldFilter: { field: { fieldPath: "editeurs" }, op: "ARRAY_CONTAINS", value: { stringValue: uid } },
-        },
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "setlists" }],
+    where: {
+      fieldFilter: { field: { fieldPath: "editeurs" }, op: "ARRAY_CONTAINS", value: { stringValue: uid } },
+    },
   });
-  if (!res.ok) return [];
-  const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsDoc(r.document!))
+  return (docs ?? [])
+    .map(fromFsDoc)
     .filter((s) => !s.isDraft && !!s.editeurs?.includes(uid) && sansFetes(s) && horsCorbeille(s));
 }
 
@@ -305,52 +367,32 @@ export async function getSetlistsPartagees(uid: string): Promise<FSSetlist[]> {
  *  (la requête n'est pas crue sur parole). Sans l'interrupteur du back-office : rien (CF24). */
 export async function getSetlistsDeFete(programme: string): Promise<FSSetlist[]> {
   if (!BACK_OFFICE) return [];
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "setlists" }],
-        where: {
-          fieldFilter: { field: { fieldPath: "fete.programme" }, op: "EQUAL", value: { stringValue: programme } },
-        },
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "setlists" }],
+    where: {
+      fieldFilter: { field: { fieldPath: "fete.programme" }, op: "EQUAL", value: { stringValue: programme } },
+    },
   });
-  if (!res.ok) return [];
-  const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsDoc(r.document!))
+  return (docs ?? [])
+    .map(fromFsDoc)
     .filter((s) => !s.isDraft && s.fete?.programme === programme && horsCorbeille(s));
 }
 
 export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
-  const headers = await authHeader();
   // No orderBy to avoid requiring a composite index on (ownerId, createdAt).
   // Sorting is done client-side instead.
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "setlists" }],
-        where: {
-          fieldFilter: {
-            field: { fieldPath: "ownerId" },
-            op: "EQUAL",
-            value: { stringValue: uid },
-          },
-        },
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "setlists" }],
+    where: {
+      fieldFilter: {
+        field: { fieldPath: "ownerId" },
+        op: "EQUAL",
+        value: { stringValue: uid },
       },
-    }),
+    },
   });
-  if (!res.ok) return [];
-  const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsDoc(r.document!))
+  return (docs ?? [])
+    .map(fromFsDoc)
     .filter((s) => s.isPrivate === true && !s.isDraft && sansFetes(s) && horsCorbeille(s))
     .sort((a, b) => {
       const aTs = a.createdAt?.getTime() ?? 0;
@@ -359,17 +401,58 @@ export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
     });
 }
 
+/** Échec de lecture dû au réseau (fetch qui lève, réponse 5xx, délai dépassé) : le seul cas où la copie hors ligne sert. */
+class ErreurReseau extends Error {}
+
+/** Délai d'une lecture de setlist : au-delà, c'est une ErreurReseau (un réseau qui traîne ne bloque plus la page). */
+const DELAI_LECTURE_MS = 10_000;
+
 export async function getSetlist(id: string): Promise<FSSetlist | null> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}/setlists/${id}`, { headers });
+  let res: Response;
+  try {
+    const headers = await withTimeout(authHeader(), DELAI_LECTURE_MS, "Délai dépassé (jeton)");
+    res = await fetch(`${FS_BASE}/setlists/${id}`, { headers, signal: delaiMax(DELAI_LECTURE_MS) });
+  } catch (e) {
+    throw new ErreurReseau(e instanceof Error ? e.message : "réseau");
+  }
   // 404 = inexistante, 403 = accès refusé par les rules (setlist privée d'un
   // autre) → null. Toute autre erreur (réseau, 5xx) est levée pour que
   // l'appelant puisse proposer de réessayer au lieu d'afficher « introuvable ».
   if (res.status === 404 || res.status === 403) return null;
+  if (res.status >= 500) throw new ErreurReseau(`Erreur Firestore (HTTP ${res.status})`);
   await checkRest(res);
   const raw = await res.json() as RawDoc;
   const setlist = fromFsDoc(raw);
   return sansFetes(setlist) && horsCorbeille(setlist) ? setlist : null;
+}
+
+/** Lecture de la page d'une setlist (D1, décision C2) : si la lecture échoue par le réseau, sert la copie
+ *  locale (`copieLueLe` = date de sa lecture). Setlist introuvable ou refusée : la copie est effacée, jamais
+ *  servie. La copie ne s'écrit pas ici : c'est la page qui la garde, une fois l'accès établi (canSeeSetlist). */
+export async function getSetlistOuCopie(id: string): Promise<{
+  setlist: FSSetlist | null;
+  copieLueLe: number | null;
+  /** Versions perso gardées avec la copie (null quand la setlist vient d'être lue en ligne). */
+  copieVersions: Record<string, SetlistVersions> | null;
+}> {
+  try {
+    const setlist = await getSetlist(id);
+    if (!setlist) void effacerCopie(id);
+    return { setlist, copieLueLe: null, copieVersions: null };
+  } catch (e) {
+    if (e instanceof ErreurReseau) {
+      const copie = await lireCopieDuCompte(id);
+      if (copie) return { setlist: copie.setlist, copieLueLe: copie.lueLe, copieVersions: copie.versions };
+    }
+    throw e;
+  }
+}
+
+/** La copie de cette setlist si elle a été lue par le compte connecté (le SDK a déjà restauré la session, le profil
+ *  n'est pas attendu) ; la copie d'un autre compte est effacée. */
+export async function lireCopieDuCompte(id: string) {
+  await auth.authStateReady().catch(() => {});
+  return lireCopie(id, auth.currentUser?.uid);
 }
 
 export async function createSetlist(
@@ -379,6 +462,7 @@ export async function createSetlist(
   const fields = {
     ...toFsFields(data as Record<string, unknown>),
     createdAt: { timestampValue: new Date().toISOString() },
+    majLe: { timestampValue: new Date().toISOString() },
   };
 
   const res = await withTimeout(
@@ -391,6 +475,7 @@ export async function createSetlist(
     "Délai dépassé — vérifie ta connexion internet et réessaie."
   );
 
+  viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
   const doc = await res.json() as RawDoc;
   return doc.name.split("/").pop()!;
@@ -404,9 +489,10 @@ export async function updateSetlist(
   const fields = {
     ...toFsFields(data as Record<string, unknown>),
     updatedAt: { timestampValue: new Date().toISOString() },
+    majLe: { timestampValue: new Date().toISOString() },
   };
-  const docName = `projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/setlists/${id}`;
-  const mask = [...Object.keys(data), "updatedAt"]
+  const docName = `projects/gcclouange/databases/(default)/documents/setlists/${id}`;
+  const mask = [...Object.keys(data), "updatedAt", "majLe"]
     .map((f) => `updateMask.fieldPaths=${encodeURIComponent(f)}`)
     .join("&");
   const res = await withTimeout(
@@ -419,15 +505,16 @@ export async function updateSetlist(
     "Délai dépassé — vérifie ta connexion internet et réessaie."
   );
 
+  viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
 }
 
-const MASQUE_CORBEILLE = ["supprimeeLe", "supprimeePar"]
+const MASQUE_CORBEILLE = ["supprimeeLe", "supprimeePar", "majLe"]
   .map((f) => `updateMask.fieldPaths=${f}`)
   .join("&");
 
-/** Met une setlist à la corbeille (SC2.1) : deux champs, pas de `updatedAt` (la setlist n'a pas été
- *  modifiée, et la cloche ne doit pas la signaler). Se défait par `restaurerSetlist`. */
+/** Met une setlist à la corbeille (SC2.1) : deux champs et `majLe` (synchro de la liste), pas de `updatedAt` (la
+ *  setlist n'a pas été modifiée, et la cloche ne doit pas la signaler). Se défait par `restaurerSetlist`. */
 export async function mettreALaCorbeille(id: string, uid: string): Promise<void> {
   const headers = await authHeader();
   const docName = `projects/gcclouange/databases/(default)/documents/setlists/${id}`;
@@ -437,12 +524,13 @@ export async function mettreALaCorbeille(id: string, uid: string): Promise<void>
       headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify({
         name: docName,
-        fields: toFsFields({ supprimeeLe: new Date().toISOString(), supprimeePar: uid }),
+        fields: { ...toFsFields({ supprimeeLe: new Date().toISOString(), supprimeePar: uid }), majLe: { timestampValue: new Date().toISOString() } },
       }),
     }),
     20_000,
     "Délai dépassé — vérifie ta connexion internet et réessaie."
   );
+  viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
 }
 
@@ -462,7 +550,7 @@ export async function mettreALaCorbeilleGroupe(ids: string[], uid: string): Prom
 }
 
 /** Sort une setlist de la corbeille (SC2.4) : le masque nomme les deux champs, le corps n'en porte
- *  aucun, Firestore les retire. */
+ *  aucun, Firestore les retire ; seul `majLe` est écrit. */
 export async function restaurerSetlist(id: string): Promise<void> {
   const headers = await authHeader();
   const docName = `projects/gcclouange/databases/(default)/documents/setlists/${id}`;
@@ -470,33 +558,24 @@ export async function restaurerSetlist(id: string): Promise<void> {
     fetch(`${FS_BASE}/setlists/${id}?${MASQUE_CORBEILLE}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...headers },
-      body: JSON.stringify({ name: docName, fields: {} }),
+      body: JSON.stringify({ name: docName, fields: { majLe: { timestampValue: new Date().toISOString() } } }),
     }),
     20_000,
     "Délai dépassé — vérifie ta connexion internet et réessaie."
   );
+  viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
 }
 
 /** Les setlists à la corbeille, la plus récemment supprimée d'abord. Même requête que `getSetlists` ;
  *  l'appelant garde celles que la personne pourrait supprimer. */
 export async function getCorbeille(): Promise<FSSetlist[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "setlists" }],
-        orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "setlists" }],
+    orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
   });
-  if (!res.ok) return [];
-  const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsDoc(r.document!))
+  return (docs ?? [])
+    .map(fromFsDoc)
     .filter((s) => !!s.supprimeeLe && !s.isDraft && sansFetes(s))
     .sort((a, b) => (b.supprimeeLe ?? "").localeCompare(a.supprimeeLe ?? ""));
 }
@@ -507,7 +586,16 @@ export async function deleteSetlist(id: string): Promise<void> {
   // Sans ce contrôle, un refus des règles (403) se résolvait comme une
   // réussite : la fiche redirigeait vers une liste où la setlist était encore
   // là (docs/spec-suppression-groupee.md, R2).
+  viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
+  // Suppression définitive : l'id sort de la copie de la liste (best effort ; sinon la lecture complète de 24 h).
+  const uid = auth.currentUser?.uid;
+  if (uid) {
+    try {
+      const copie = await lireCopieListe(uid);
+      if (copie) await ecrireCopieListe({ ...copie, setlists: copie.setlists.filter((s) => s.id !== id) });
+    } catch { /* la copie est un confort */ }
+  }
 }
 
 /** Supprime plusieurs setlists l'une après l'autre, et **continue après un

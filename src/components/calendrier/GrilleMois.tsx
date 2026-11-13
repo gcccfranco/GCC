@@ -19,7 +19,7 @@ import type { NotifLang } from "@/types/user";
 import { ICONES, styleCase } from "./apparence";
 
 const PAR_CASE = 3;
-const PASTILLE = "flex min-w-0 items-center gap-1 rounded-md px-1 py-0.5 text-[11.5px] font-semibold leading-[15px] lg:px-1.5";
+const PASTILLE = "flex min-w-0 items-center gap-1 rounded-md px-1 py-0.5 text-xs font-semibold leading-[15px] lg:px-1.5";
 /** Les annonces de dnd-kit sont en anglais et ne servent qu'au glisser à la souris ou au
  *  doigt : la confirmation dit tout. Le clavier a « Déplacer… ». */
 const SILENCE = { onDragStart: () => undefined, onDragOver: () => undefined, onDragEnd: () => undefined, onDragCancel: () => undefined };
@@ -29,7 +29,7 @@ function Contenu({ e, lang }: { e: EntreeCalendrier; lang: NotifLang }) {
   return (
     <>
       <Icone aria-hidden className="hidden h-3 w-3 shrink-0 sm:block" />
-      <span className="truncate">{libelleCourt(e, lang)}</span>
+      <span className="line-clamp-2 min-w-0">{libelleCourt(e, lang)}</span>
     </>
   );
 }
@@ -72,6 +72,7 @@ function Case({
   lang,
   glissee,
   deplacable,
+  contour,
   onChoisir,
 }: {
   date: string;
@@ -82,6 +83,8 @@ function Case({
   lang: NotifLang;
   glissee: EntreeCalendrier | null;
   deplacable: boolean;
+  /** Le jour choisi porte un contour encre de 2 px (le volet du jour est ouvert). */
+  contour: boolean;
   onChoisir: (date: string) => void;
 }) {
   const { t } = useTranslation();
@@ -102,14 +105,15 @@ function Case({
       className={cn(
         "flex min-h-[88px] min-w-0 flex-col items-stretch gap-[3px] border-b border-r border-border p-1 text-left transition-colors duration-150 hover:bg-muted/50 focus-visible:relative focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-foreground lg:min-h-[118px] lg:px-1.5",
         choisi && "bg-muted/70",
+        choisi && contour && "relative z-10 outline outline-2 outline-offset-[-2px] outline-foreground",
         visee && "bg-muted/70",
       )}
     >
       <span
         className={cn(
           "self-start rounded-full px-1 py-0.5 text-xs font-bold tabular-nums",
-          horsMois ? "text-muted-foreground/50" : "text-foreground/85",
-          estAujourdhui && "min-w-[22px] bg-brand text-center text-white",
+          horsMois ? "text-muted-foreground" : "text-foreground/85",
+          estAujourdhui && "min-w-[22px] bg-brand text-center text-white dark:text-black",
         )}
       >
         {Number(date.slice(8))}
@@ -118,11 +122,11 @@ function Case({
         deplacable && e.deplacable ? <PastilleDeplacable key={e.cle} e={e} lang={lang} /> : <Pastille key={e.cle} e={e} lang={lang} />,
       )}
       {entrees.length > PAR_CASE && (
-        <span data-testid="plus-n" className="px-1 text-[11.5px] font-semibold text-muted-foreground">
+        <span data-testid="plus-n" className="px-1 text-xs font-semibold text-muted-foreground">
           +{entrees.length - PAR_CASE}
         </span>
       )}
-      {visee && <span className="px-1 text-[11px] leading-tight text-muted-foreground">{t("calendrier.deplacer.deposer")}</span>}
+      {visee && <span className="px-1 text-xs leading-tight text-muted-foreground">{t("calendrier.deplacer.deposer")}</span>}
     </button>
   );
 }
@@ -134,6 +138,7 @@ export function GrilleMois({
   aujourdhui,
   choisi,
   lang,
+  contourChoisi = false,
   onChoisir,
   onDeposer,
 }: {
@@ -143,6 +148,8 @@ export function GrilleMois({
   aujourdhui: string;
   choisi: string | null;
   lang: NotifLang;
+  /** Un contour encre autour du jour choisi (volet du jour flottant ouvert, bo-evenements-2). */
+  contourChoisi?: boolean;
   onChoisir: (date: string) => void;
   /** C6 : une entrée déposée sur un autre jour. Sans elle, rien ne se soulève. */
   onDeposer?: (entree: EntreeCalendrier, vers: string) => void;
@@ -168,7 +175,9 @@ export function GrilleMois({
       onDragEnd={fin}
       onDragCancel={() => setGlissee(null)}
     >
-      <div data-testid="grille-mois" className="grid grid-cols-7 border-l border-t border-border">
+      {/* Groupe blanc (recette de surface C) : le -1 px de droite et du bas rogne les filets du bord, `overflow-hidden` arrondit les coins. */}
+      <div className="carte-groupe overflow-hidden">
+      <div data-testid="grille-mois" className="-mb-px -mr-px grid grid-cols-7">
         {joursDeLaSemaine(lang).map((j) => (
           <div
             key={j}
@@ -189,9 +198,11 @@ export function GrilleMois({
             lang={lang}
             glissee={glissee}
             deplacable={!!onDeposer}
+            contour={contourChoisi}
             onChoisir={onChoisir}
           />
         ))}
+      </div>
       </div>
       {/* Planche : l'entrée soulevée, cernée d'encre et penchée. */}
       <DragOverlay dropAnimation={null}>

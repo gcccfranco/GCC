@@ -1,3 +1,5 @@
+import type { Tranche } from "@/lib/performance/tranchesScan";
+
 // Pagination du mode louange (PerformanceMode.tsx) — pur, sans DOM.
 // Une colonne : les pages d'aujourd'hui. Deux colonnes (lot U5, T1,
 // docs/spec-deux-volets.md Q2 à Q5) : sur tablette couchée et sur ordinateur,
@@ -9,7 +11,23 @@
  *  à l'échelle de la hauteur disponible au lieu d'être paginée (une image ne se
  *  coupe pas). `twoColumns` : page posée en deux colonnes hors vue structure ;
  *  ses annotations ont leur propre clé (« x2 »). */
-export type PerfPage = { header: number | null; cols: number[][]; scale: number; fit?: boolean; twoColumns?: boolean };
+export type PerfPage = { header: number | null; cols: number[][]; scale: number; fit?: boolean; twoColumns?: boolean;
+  /** Lot CV : au moins une ligne de la page n'est pas posée en une seule rangée (coupure des vers). Sa clé de
+   *  page porte « v2 » ; une page dont tous les vers tiennent sur une rangée garde sa clé d'avant CV. */
+  coupe?: boolean;
+  /** Page de scan 简谱 certifié (lot JP-B) : la tranche de la page de partition qu'elle montre (lignes entières,
+   *  y en px image). Absent : le scan entier, comme avant. Sa clé de page est « j4-<y0> » (« j5-<y0> » en demi-lignes, téléphone en portrait, lot JP-C). */
+  tranche?: Tranche;
+  /** Dernière page d'un chant suivi d'un autre : indice de la colonne qui porte la pastille « Ensuite »
+   *  (posée à la fin de cette colonne, dans le flux). Absent : pas de pastille dans le flux. */
+  suivant?: number;
+  /** Vue structure (FS-D) : les lignes de la feuille de route grossissent puis s'étirent pour remplir la page. */
+  etire?: boolean;
+  /** Avec `etire` : somme des hauteurs naturelles (échelle 1) des lignes de la page. */
+  naturel?: number };
+
+/** Place gardée à la pastille « Ensuite » dans le flux (44 px de bouton + marge). */
+export const PASTILLE_SUIVANT_H = 64;
 
 /** Dispositions « ordinateur » et « tablette paysage » de U4
  *  (spec-navigation-grand-ecran.md Q1, globals.css bloc « Lot U4 ») : les mêmes
@@ -35,7 +53,7 @@ const hauteurDePage = (premier: number | undefined, breakBefore: Set<number>, pa
 
 // Mode normal : une colonne par page. Chaque chant commence sur une nouvelle page
 // (breakBefore = en-têtes de chant) ; à l'intérieur d'un chant, remplissage glouton.
-export function paginateBlocks(
+function paginateBlocks(
   idxs: number[],
   heights: number[],
   viewportH: number,
@@ -69,11 +87,18 @@ export function pagesUneColonne(
   pageHeight: number,
   breakBefore: Set<number>,
   reserveSuite = 0,
+  pastille = 0,
 ): PerfPage[] {
-  return paginateBlocks(flow, heights, pageHeight, breakBefore, reserveSuite).map((idxs) => {
-    const pageH = idxs.reduce((s, i) => s + heights[i], 0);
+  const pages = paginateBlocks(flow, heights, pageHeight, breakBefore, reserveSuite);
+  return pages.map((idxs, p) => {
+    // Dernière page d'un chant suivi d'un autre : la pastille « Ensuite » compte comme un bloc de plus,
+    // sous le dernier ; si elle n'a pas la place, la page est réduite d'autant (repli A).
+    const avecPastille = pastille > 0 && p === pages.length - 1;
+    const pageH = idxs.reduce((s, i) => s + heights[i], 0) + (avecPastille ? pastille : 0);
     const room = Math.max(1, hauteurDePage(idxs[0], breakBefore, pageHeight, reserveSuite));
-    return { header: null, cols: [idxs], scale: Math.min(1, room / Math.max(1, pageH)) };
+    const page: PerfPage = { header: null, cols: [idxs], scale: Math.min(1, room / Math.max(1, pageH)) };
+    if (avecPastille) page.suivant = 0;
+    return page;
   });
 }
 
@@ -92,6 +117,7 @@ export function paginateColumns({
   heightsColumn,
   pageHeight,
   reserveSuite = 0,
+  pastille = 0,
 }: {
   /** Blocs du chant hors en-tête, dans l'ordre joué. */
   flow: number[];
@@ -102,11 +128,13 @@ export function paginateColumns({
   pageHeight: number;
   /** Place gardée en haut des pages suivantes pour le rappel de structure. */
   reserveSuite?: number;
+  /** Hauteur de la pastille « Ensuite » à poser sur la dernière page (chant suivi d'un autre) ; 0 : aucune. */
+  pastille?: number;
 }): PerfPage[] {
   const all = header != null ? [header, ...flow] : flow;
   const sum = (idxs: number[], h: number[]) => idxs.reduce((s, i) => s + h[i], 0);
   if (heightsColumn.length === 0 || flow.length < 2 || sum(all, heightsFull) <= pageHeight) {
-    return pagesUneColonne(all, heightsFull, pageHeight, new Set(header != null ? [header] : []), reserveSuite);
+    return pagesUneColonne(all, heightsFull, pageHeight, new Set(header != null ? [header] : []), reserveSuite, pastille);
   }
 
   const headerH = header != null ? heightsFull[header] : 0;
@@ -147,12 +175,19 @@ export function paginateColumns({
   }
 
   return pages.map((c, p) => {
-    const tallest = Math.max(...c.map((col) => sum(col, heightsColumn)));
+    const hauteurs = c.map((col) => sum(col, heightsColumn));
+    // Pastille « Ensuite » : à la fin de la colonne la plus courte (la gauche à égalité). Sans place
+    // dans aucune des deux, la page est réduite d'autant (repli A).
+    const dernier = p === pages.length - 1 && pastille > 0;
+    const colPastille = dernier ? (hauteurs.length > 1 && hauteurs[1] < hauteurs[0] ? 1 : 0) : -1;
+    if (dernier) hauteurs[colPastille] += pastille;
+    const tallest = Math.max(...hauteurs);
     return {
       header: p === 0 ? header : null,
       cols: c,
       scale: Math.min(1, room(p) / Math.max(1, tallest)),
       twoColumns: true,
+      ...(dernier ? { suivant: colPastille } : {}),
     };
   });
 }

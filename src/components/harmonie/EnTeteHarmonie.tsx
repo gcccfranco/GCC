@@ -1,23 +1,63 @@
 "use client";
 
 // L'en-tête de toute la section Harmonie (agencement v18, A16 de docs/spec-agencement-v18.md ;
-// planche `v18-app-harmonie`) : « Harmonie », son sous-titre et le rail Fiches · Cours · Sons du
-// RD-2000, posé par `app/harmonie/layout.tsx` au-dessus des trois listes (qui n'ont plus de titre).
-// L'onglet se lit dans l'adresse. Sons du RD-2000 : pour les pianistes seulement, comme la page.
+// planche `v18-app-harmonie`) : « Harmonie » et son sous-titre, posé par `app/harmonie/layout.tsx`
+// au-dessus des trois listes (qui n'ont plus de titre). Le rail Fiches · Cours · Sons du RD-2000 est
+// parti (EM-2, spec-espace-musiciens.md) : la barre de l'espace Musiciens porte ces entrées.
 // Une fiche, une leçon ou un son ouvert seul (un volet : téléphone, tablette portrait) a son propre
-// titre et son « ‹ » : l'en-tête de la section s'efface alors.
-// Pendant la lecture des plannings (qui disent l'instrument), le rail est déjà posé avec Fiches · Cours :
-// l'en-tête ne bouge pas quand l'accès arrive, seul l'onglet des sons s'ajoute. Sans accès (ni piano ni
-// guitare), pas d'en-tête : la page dit seulement qu'elle est réservée aux musiciens.
+// titre et son « ‹ » : l'en-tête de la section s'efface alors. Sans accès (ni piano ni guitare), pas
+// d'en-tête : la page dit seulement qu'elle est réservée aux musiciens.
 
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { OngletsRail, type OngletRail } from "@/components/layout/Onglets";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
-import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
+import { useRd2000 } from "@/lib/harmonie/rd2000";
+import { leconsDansLOrdre, useCoursIndex, useCoursProgres } from "@/lib/harmonie/useCours";
+import { useAccesHarmonie, useCatalogue } from "@/lib/harmonie/useHarmonie";
 
 const LISTES = ["/harmonie", "/harmonie/cours", "/harmonie/rd2000"];
+
+// Le titre dit la page où l'on est (Théorie musicale, Sons du RD-2000, sinon Harmonie) et, dessous, une
+// ligne d'état calculée sur les données (harmonie-1). Un espace insécable tient la place pendant le
+// chargement : l'en-tête ne bouge pas. Chaque état charge ses données sur sa seule page.
+const ESPACE = "\u00A0";
+
+function EtatFiches() {
+  const { t } = useTranslation();
+  const { fiches } = useCatalogue();
+  return <>{fiches.length ? t("harmonie.compteFiches", { count: fiches.length }) : ESPACE}</>;
+}
+
+function EtatCours() {
+  const { t } = useTranslation();
+  const { chapitres } = useCoursIndex();
+  const { fini, chargement } = useCoursProgres();
+  const lecons = leconsDansLOrdre(chapitres);
+  const faits = lecons.filter((c) => fini[c.id]).length;
+  return (
+    <>
+      <span data-cours-progres>{lecons.length && !chargement ? t("harmonie.cours.progres", { fait: faits, total: lecons.length }) : ESPACE}</span>
+      <span className="mt-2 block h-1 w-60 max-w-full overflow-hidden rounded-full bg-secondary" aria-hidden>
+        <span className="block h-full rounded-full bg-[var(--sec-verse)]" style={{ width: `${lecons.length && !chargement ? (100 * faits) / lecons.length : 0}%` }} />
+      </span>
+    </>
+  );
+}
+
+function EtatSons({ actif }: { actif: boolean }) {
+  const { t, i18n } = useTranslation();
+  const { donnees } = useRd2000(actif);
+  if (!donnees) return <>{ESPACE}</>;
+  return (
+    <>
+      {t("harmonie.rd2000.resume", {
+        essentiels: donnees.sons.filter((s) => s.premier).length,
+        total: donnees.sons.length.toLocaleString(i18n.language),
+      })}
+    </>
+  );
+}
 
 export function EnTeteHarmonie() {
   const { t } = useTranslation();
@@ -28,17 +68,19 @@ export function EnTeteHarmonie() {
   if (!deuxVolets && !LISTES.includes(chemin)) return null;
   if (!acces.chargement && !acces.peut) return null;
 
-  const onglets: OngletRail[] = [
-    { id: "fiches", label: t("harmonie.fiches"), href: "/harmonie" },
-    { id: "cours", label: t("harmonie.cours.titre"), href: "/harmonie/cours" },
-    ...(acces.piano ? [{ id: "rd2000", label: t("harmonie.rd2000.titre"), href: "/harmonie/rd2000" }] : []),
-  ];
+  const page = chemin === "/harmonie/cours" || chemin.startsWith("/harmonie/cours/") ? "cours"
+    : chemin === "/harmonie/rd2000" || chemin.startsWith("/harmonie/rd2000/") ? "sons"
+    : "fiches";
 
   return (
     <EnTetePage
-      titre={t("harmonie.titre")}
-      sousTitre={t("harmonie.sousTitre")}
-      onglets={<OngletsRail etiquette={t("harmonie.titre")} onglets={onglets} />}
+      fond="blanc"
+      titre={page === "cours" ? t("harmonie.cours.titre") : page === "sons" ? t("harmonie.rd2000.titre") : t("harmonie.titre")}
+      sousTitre={
+        page === "cours" ? <EtatCours />
+          : page === "sons" ? <EtatSons actif={acces.piano} />
+          : <EtatFiches />
+      }
     />
   );
 }

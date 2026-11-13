@@ -1,34 +1,43 @@
 "use client"
 
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react"
-import { ChevronDown, Copy, History, Lock, Trash2 } from "lucide-react"
+import { langueCourte } from "@/lib/utils/formatDate";
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react"
+import { ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Copy, Lock, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { MenuActions } from "@/components/layout/MenuActions"
-import { currentSundayStr, fdFullL, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
+import { currentSundayStr, fdFullL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
 import { PREMIERE_ANNEE_APP, type ColonneGrille, type DefinitionGrille, type LigneGrille } from "@/lib/planning/grilles"
-import { phraseDuChangement } from "@/lib/planning/historique"
+import { colonneDe, doitSemer, motifDuRefus, sansCompteDe, styleCase } from "@/lib/planning/grilleAffichage"
 import { ecrireCases, retirerDate } from "@/lib/firebase/planningGrille"
-import { getHistoriqueGrille, noterChangements, type EntreeGrille } from "@/lib/firebase/planningHistorique"
+import { noterChangements } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
 import { colonneDePersonnes, periodeAbsence, propositions, propositionsReliees, type CompteDuPlanning } from "@/lib/planning/choisir"
 import type { Absence } from "@/types/absence"
-import { roleDeColonne } from "@/lib/groupes/organigramme"
-import { groupeDef } from "@/lib/groupes/table"
 import type { OrganigrammeGroupe } from "@/types/groupe"
-import { Link2 } from "lucide-react"
 import { normalizeName, splitNames } from "@/lib/planning/names"
-import { canRetirerDate } from "@/lib/access"
+import { canRetirerDate, colonnesModifiables } from "@/lib/access"
 import { ExportModele, type ExportPlanning } from "./ExportModele"
 import { ChoisirNom, useOrdinateur } from "./ChoisirNom"
 import { DansLEnTete, type FiltreNom } from "./BarreDeGrille"
 import { useGestionPlanning } from "@/lib/planning/gestion"
-import { colonnesACopier, datesApres, enTexteTabule, lignePrecedente, lireCollage, parDimanche, planCollage, planCopie, planRemplir, type CaseGeste } from "@/lib/planning/gestes"
+import { datesApres, enTexteTabule, lireCollage, parDimanche, planCollage, planRemplir, type CaseGeste } from "@/lib/planning/gestes"
 import { BanniereGeste, BarreCollage, BarreSelection } from "./BanniereGeste"
 import { useClavier, useSelectionGrille, type Poignees } from "./useSelectionGrille"
-import { FenetreCopie, type DemandeCopie } from "./FenetreCopie"
+import { FenetreCopie } from "./FenetreCopie"
+import { useHistoriqueGrille } from "./hooks/useHistoriqueGrille"
+import { useCopiePrecedent } from "./hooks/useCopiePrecedent"
 import { PrevenirChangements, usePrevenir, type PrevenirProp } from "./PrevenirChangements"
+import { couleurSombre, styleTexteService } from "@/lib/couleurSombre"
+import { useFonduLateral } from "@/hooks/useFonduLateral"
+import { compter } from "@/lib/usage"
+import { EtatVide } from "@/components/layout/EtatVide"
+import { TOUCHER_44 } from "@/lib/toucher44"
+import { GrilleEnTete } from "./GrilleEnTete"
+import { GrilleCelluleDate } from "./GrilleCelluleDate"
+import { GrilleHistorique } from "./GrilleHistorique"
+import { CarteDimanche, LigneDeCarte, ZONE_CASE, ouvrirLaCase } from "./GrilleCarte"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -42,7 +51,7 @@ import { PrevenirChangements, usePrevenir, type PrevenirProp } from "./PrevenirC
 // l'appareil, « Mes dates », séparateurs de mois, pastille « Cette semaine »,
 // badge de date, cartes sur téléphone.
 
-export interface PlanningGrilleProps {
+interface PlanningGrilleProps {
   definition: DefinitionGrille
   /** Lignes déjà filtrées par la publication (lignesPubliees). */
   lignes: LigneGrille[]
@@ -89,6 +98,8 @@ export interface PlanningGrilleProps {
   prevenir?: PrevenirProp
   /** Les cases écrites dans l'app (`date|clé`, `useGrilleApp`) : seules celles-ci peuvent être « changées » (PG38). */
   casesEcrites?: ReadonlySet<string>
+  /** Une case que la page gère elle-même (le petit déj : des lignes à part, `petitDej/{id}`). */
+  casesAPart?: { ouverte: (date: string, c: ColonneGrille) => boolean; rendre: (date: string, c: ColonneGrille) => ReactNode }
 }
 
 const AVEC_SURVOL = "(hover: hover)"
@@ -106,6 +117,10 @@ type DernierGeste = { texte: string; notes: string[]; cases: CaseGeste[]; sansCo
 /** Un collage qui remplace des noms, en attente de « Coller » (PG29) : rien n'est encore écrit. */
 type Collage = { cases: CaseGeste[]; remplace: number; notes: string[] }
 
+
+/** Le rond « ‹ » « › » du bord de la grille (plannings-1) : 28 px dessinés, cible de 44 px, pointeur fin seulement. */
+const rondDefilement =
+  "absolute top-[5px] z-20 hidden h-7 w-7 items-center justify-center rounded-full bg-secondary text-foreground [@media(pointer:fine)]:flex after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
 
 export function PlanningGrille({
   definition,
@@ -126,6 +141,7 @@ export function PlanningGrille({
   lignesDuPlanning,
   prevenir,
   casesEcrites,
+  casesAPart,
 }: PlanningGrilleProps) {
   const { t, i18n } = useTranslation()
   const confirmer = useConfirmer()
@@ -145,8 +161,7 @@ export function PlanningGrille({
   const [choix, setChoix] = useState<{ l: LigneGrille; c: ColonneGrille; ancre: DOMRect } | null>(null)
   const [refus, setRefus] = useState<"" | "droitRetire" | "horsLigne">("")
   const [enregistre, setEnregistre] = useState(false)
-  const [histoOuvert, setHistoOuvert] = useState(false)
-  const [entrees, setEntrees] = useState<EntreeGrille[]>([])
+  const { histoOuvert, setHistoOuvert, entrees, rechargerHistorique } = useHistoriqueGrille(definition)
   // Dimanches semés pendant la séance : leur document n'existait pas encore.
   const semes = useRef(new Set<string>())
   const [geste, setGeste] = useState<DernierGeste | null>(null)
@@ -154,14 +169,15 @@ export function PlanningGrille({
   const [enCours, setEnCours] = useState(false)
   const enCoursRef = useRef(false)
   const fini = useRef(false)
-  // « Copier le dimanche précédent » (PG13 à PG15) : le dimanche dont l'aperçu est posé, et la fenêtre.
-  const [apercu, setApercu] = useState<string | null>(null)
-  const [fenetreCopie, setFenetreCopie] = useState<DemandeCopie | null>(null)
   const survol = useSurvol()
   const [collage, setCollage] = useState<Collage | null>(null)
   // Un refus qui n'a rien écrit (collage ou ⌫ sans case à écrire) : il se dit, sans toucher à l'« Annuler » du dernier geste.
   const [avis, setAvis] = useState<string[]>([])
   const enveloppe = useRef<HTMLDivElement>(null)
+  // Aide clavier derrière un « ? » (BO11) : fermée au départ, Échap la ferme et rend le focus au bouton.
+  const [aideOuverte, setAideOuverte] = useState(false)
+  const boutonAide = useRef<HTMLButtonElement>(null)
+  const idAide = useId()
   const poignees = useRef<Poignees>(null as unknown as Poignees)
   const [posBarre, setPosBarre] = useState<CSSProperties | null>(null)
   const clavier = useClavier()
@@ -201,23 +217,33 @@ export function PlanningGrille({
 
   /** La valeur affichée d'une case, par date et clé de colonne (gestes, PG3). */
   const lireCase = (date: string, cle: string) => {
-    const c = definition.colonnes.find((x) => x.cle === cle)
+    const c = colonneDe(definition, cle)
     return c ? valeur(date, c, lignesParDate.get(date) ?? []) : ""
   }
+  /** Lot AO (B) : le référent Régie ne remplit que Sono, Sono Live et PPT (`colonnesModifiables` rend alors
+   *  une liste). Ses autres colonnes restent en lecture. Et une date encore au Sheet n'est pas la sienne : la
+   *  première écriture recopierait toutes les colonnes (« semer »), la règle la refuserait. */
+  const seulesColonnes = (() => {
+    const m = colonnesModifiables(user, profile, definition.key)
+    return Array.isArray(m) ? (m as readonly string[]) : null
+  })()
+  const caseOuverte = (date: string, c: ColonneGrille) =>
+    !c.lectureSeule &&
+    (!seulesColonnes ||
+      (seulesColonnes.includes(c.cle) && (getAnnee(date) >= PREMIERE_ANNEE_APP || datesDansLApp.includes(date))))
   /** Une case qu'un geste n'écrit jamais : présidence imposée, colonne en lecture seule (PG2). */
   const verrou = (date: string, cle: string) => {
-    const c = definition.colonnes.find((x) => x.cle === cle)
-    return !c || !!c.lectureSeule || !!imposee(date, c)
+    const c = colonneDe(definition, cle)
+    return !c || !caseOuverte(date, c) || !!imposee(date, c)
   }
 
   // La page donne les lignes du trimestre choisi (demande de Timothée du
   // 18/09/2026 : « L'affichage du planning doit être affiché trimestre par
   // trimestre ») : la grille n'a plus de fenêtre à elle.
-  const dansLaFenetre = lignes
   const affichees = mesDates && aUnNom
-    ? dansLaFenetre.filter((l) => definition.colonnes.some((c) => estMoi(valeur(l.row[0], c, l.row))))
-    : dansLaFenetre
-  const toutes = dansLaFenetre.map((l) => l.row)
+    ? lignes.filter((l) => definition.colonnes.some((c) => estMoi(valeur(l.row[0], c, l.row))))
+    : lignes
+  const toutes = lignes.map((l) => l.row)
 
   // Une colonne optionnelle (Sainte cène) ne s'affiche que si une case de la
   // période la porte — sauf en modification, où il faut pouvoir la remplir.
@@ -225,12 +251,73 @@ export function PlanningGrille({
     (c) =>
       !c.optionnelle ||
       mode === "edition" ||
-      dansLaFenetre.some((l) => valeur(l.row[0], c, l.row).trim())
+      lignes.some((l) => valeur(l.row[0], c, l.row).trim())
   )
+
+  const sansLigne = affichees.length === 0
+  const toutBrouillon = !sansLigne && affichees.every((l) => l.nonPublie)
+
+  // `?case=grille|date|cle` (le lien d'une case vide de « À faire ») : la case défile au centre, porte un anneau
+  // ~2,5 s et reçoit le focus. Lu dans l'adresse (pas `useSearchParams`, qui veut un Suspense autour de chaque page).
+  // Une fois par adresse, quand la case existe (les lignes arrivent du Sheet / de Firestore, donc après le montage).
+  const racine = useRef<HTMLDivElement>(null)
+  const casesVisees = useRef(new Set<string>())
+  useEffect(() => {
+    const visee = new URLSearchParams(window.location.search).get("case")
+    if (!visee || casesVisees.current.has(visee)) return
+    const [grille, date, cle] = visee.split("|")
+    if (grille !== definition.key || !date || !cle) return
+    const vu = (el: Element) => el.getClientRects().length > 0
+    // La grille et les cartes sont toutes deux dans le DOM (l'une masquée par CSS) : on prend celle qu'on voit.
+    const cible = [...(racine.current?.querySelectorAll<HTMLElement>(`[data-case="${date}|${cle}"]`) ?? [])].find(vu)
+      ?? [...(racine.current?.querySelectorAll<HTMLElement>(`[data-date-carte="${date}"]`) ?? [])].find(vu)
+    if (!cible) return
+    casesVisees.current.add(visee)
+    const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    cible.scrollIntoView({ block: "center", inline: "center", behavior: reduit ? "auto" : "smooth" })
+    cible.setAttribute("data-cible", "")
+    cible.style.outline = "2px solid hsl(var(--ring))"
+    cible.style.outlineOffset = "-2px"
+    cible.querySelector<HTMLElement>("[data-ouvrir], button")?.focus({ preventScroll: true })
+    // Pas de nettoyage au démontage de l'effet : un rendu de plus ne doit pas effacer l'anneau avant la fin.
+    window.setTimeout(() => {
+      cible.removeAttribute("data-cible")
+      cible.style.outline = ""
+      cible.style.outlineOffset = ""
+    }, 2500)
+  }, [definition.key, lignes.length, sansLigne])
+
+  // plannings-1 : l'enveloppe qui défile s'estompe à droite seulement (la colonne Date est collante à gauche) ;
+  // les ronds « ‹ » « › » (pointeur fin) et le filet de la colonne Date se lisent dans `defile`.
+  const defilement = useFonduLateral<HTMLDivElement>(`${colonnes.length}-${sansLigne}`, { gauche: false })
+  const [defile, setDefile] = useState({ gauche: false, droite: false })
+  useEffect(() => {
+    const el = defilement.current
+    if (!el) return
+    const maj = () => {
+      const gauche = el.scrollLeft > 1
+      const droite = el.scrollWidth - el.clientWidth - el.scrollLeft > 1
+      setDefile((p) => (p.gauche === gauche && p.droite === droite ? p : { gauche, droite }))
+    }
+    maj()
+    el.addEventListener("scroll", maj, { passive: true })
+    const observateur = new ResizeObserver(maj)
+    observateur.observe(el)
+    return () => {
+      el.removeEventListener("scroll", maj)
+      observateur.disconnect()
+    }
+  }, [defilement, colonnes.length, sansLigne])
+  const defiler = (sens: 1 | -1) => {
+    const el = defilement.current
+    if (!el) return
+    const doux = !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    el.scrollBy({ left: sens * 0.8 * el.clientWidth, behavior: doux ? "smooth" : "auto" })
+  }
 
   // Prévenir des changements (PG33 à PG47) : les cases changées depuis l'état annoncé (un point chacune).
   const ecritesAppEtSeance = new Set([...(casesEcrites ?? []), ...Object.keys(modifs)])
-  const prev = usePrevenir({ prevenir, definition, rows: dansLaFenetre.map(ligneAffichee), speciaux: dimanchesSpeciaux, ecrites: ecritesAppEtSeance, comptes })
+  const prev = usePrevenir({ prevenir, definition, rows: lignes.map(ligneAffichee), speciaux: dimanchesSpeciaux, ecrites: ecritesAppEtSeance, comptes })
   const aChange = (date: string, cle: string) => prev.points.has(`${date}|${cle}`) || undefined
   const pointChange = (date: string, cle: string) => aChange(date, cle) && (
     <>
@@ -243,7 +330,7 @@ export function PlanningGrille({
   const marqueAbsent = (date: string, val: string) => {
     const absence = val ? absenceDe?.(val, date) : null
     return absence && (
-      <span title={periodeAbsence(absence, i18n.language === "zh-CN" ? "zh" : "fr")} className="ml-1.5 text-[11px] text-amber-700 dark:text-amber-400">
+      <span title={periodeAbsence(absence, langueCourte(i18n.language))} className="ml-1.5 text-xs text-amber-700 dark:text-amber-400">
         {t("planning.choisir.absentMarque")}
       </span>
     )
@@ -258,47 +345,12 @@ export function PlanningGrille({
   const clesPlage = plage ? clesAffichees.slice(plage.c0, plage.c1 + 1) : []
   useEffect(() => { effacer() }, [definition.key, periode, effacer])
 
-  /** Copier le dimanche précédent sur `date` (PG10 à PG16) ; null : pas en modification. Un planning
-   *  hebdomadaire dont le J−7 manque garde sa source (vide, PG10) ; à dates choisies sans date
-   *  précédente, `source` est null. Dans les deux cas rien n'est offert (PG16). */
-  const copiePour = (date: string) => {
-    if (mode !== "edition") return null
-    const source = lignePrecedente(definition, datesDuPlanning, date)
-      ?? (definition.dates === "dimanches" ? new Date(new Date(`${date}T12:00:00Z`).getTime() - 7 * 86_400_000).toISOString().slice(0, 10) : null)
-    if (!source) return { source: null, plan: { vides: [], remplace: [], verrouillees: 0 }, offert: false }
-    const plan = planCopie({ colonnes: colonnesACopier(definition), source, cible: date, lire: lireCase, verrou })
-    return { source, plan, offert: plan.vides.length + plan.remplace.length > 0 }
-  }
-  /** L'aide de l'infobulle et du menu : ce qui sera copié, et ce qui ne l'est pas (PG14, PG15). */
-  const colonnesExclues = () =>
-    definition.colonnes.filter((x) => x.cle === "orateur" || x.cle === "theme").map((x) => t(x.i18n)).join(", ")
-  const aideCopie = (c: NonNullable<ReturnType<typeof copiePour>>) => {
-    if (!c.source) return undefined
-    const d = fdShort(c.source)
-    if (!c.offert) return t("planning.gestes.rienACopier", { date: d })
-    const base = c.plan.vides.length
-      ? t("planning.gestes.copierAide", { date: d, count: c.plan.vides.length })
-      : t("planning.gestes.copierAideRemplacer", { date: d, count: c.plan.remplace.length })
-    const exclues = colonnesExclues()
-    return exclues ? `${base} ${t("planning.gestes.exclues", { colonnes: exclues })}` : base
-  }
-  /** L'infobulle de la pastille (PG14) : « Les N cases vides reprennent le 17/1. … Un nom déjà posé reste. » */
-  const infobulleCopie = (c: NonNullable<ReturnType<typeof copiePour>>) => {
-    if (!c.source) return ""
-    const d = fdShort(c.source)
-    const exclues = colonnesExclues()
-    return [
-      c.plan.vides.length
-        ? t("planning.gestes.copierInfobulle", { date: d, count: c.plan.vides.length })
-        : t("planning.gestes.copierAideRemplacer", { date: d, count: c.plan.remplace.length }),
-      exclues && t("planning.gestes.exclues", { colonnes: exclues }),
-      c.plan.vides.length && t("planning.gestes.nomPoseReste"),
-    ].filter(Boolean).join(" ")
-  }
+  const { apercu, setApercu, fenetreCopie, copiePour, aideCopie, infobulleCopie, copier, choixDeLaFenetre } =
+    useCopiePrecedent({ definition, mode, datesDuPlanning, lireCase, verrou, appliquer, t })
   /** « Remplir vers le bas » pour la case dont « Choisir » est ouvert (PG18, PG19) : null si la case
    *  ne porte pas un seul nom. Les dimanches sont les lignes données à la grille, « Mes dates » ignoré. */
   const remplirPour = () => {
-    if (!choix || mode !== "edition" || choix.c.lectureSeule) return null
+    if (!choix || mode !== "edition" || !caseOuverte(choix.l.row[0], choix.c)) return null
     const date = choix.l.row[0]
     const nom = valeur(date, choix.c, choix.l.row).trim()
     if (!nom || !colonneDePersonnes(choix.c.cle) || splitNames(nom).length > 1 || imposee(date, choix.c)) return null
@@ -319,34 +371,13 @@ export function PlanningGrille({
       : laCase(l, c)
   }
 
-  function faireCopie(source: string, cible: string, cases: CaseGeste[], verrouillees: number) {
-    void appliquer(
-      cases,
-      t("planning.gestes.copie", { cible: fdShort(cible), source: fdShort(source), count: cases.length }),
-      verrouillees ? [t("planning.gestes.verrouillees", { count: verrouillees })] : [],
-    )
-  }
-  /** Le geste (PG12, PG13) : sans fenêtre quand il ne tombe que dans des cases vides. */
-  function copier(date: string) {
-    const c = copiePour(date)
-    setApercu(null)
-    if (!c?.offert || !c.source) return
-    if (c.plan.remplace.length) setFenetreCopie({ source: c.source, cible: date, vides: c.plan.vides, remplace: c.plan.remplace, verrouillees: c.plan.verrouillees })
-    else faireCopie(c.source, date, c.plan.vides, c.plan.verrouillees)
-  }
-  function choixDeLaFenetre(choix: "vides" | "tout" | null) {
-    const d = fenetreCopie
-    setFenetreCopie(null)
-    if (!d || !choix) return
-    faireCopie(d.source, d.cible, choix === "tout" ? [...d.vides, ...d.remplace] : d.vides, d.verrouillees)
-  }
-
   /** Le « ⋯ » du dimanche (PG15) : tablette, téléphone, et les cartes. */
-  const menuCopie = (date: string) => {
+  const menuCopie = (date: string, compact?: boolean) => {
     const c = copiePour(date)
     if (!c) return null
     return (
       <MenuActions
+        compact={compact}
         onOuvert={(ouvert) => setApercu(ouvert ? date : null)}
         actions={[{ label: t("planning.gestes.copierPrecedent"), icone: Copy, aide: aideCopie(c), desactive: !c.offert, onSelect: () => copier(date) }]}
       />
@@ -367,7 +398,7 @@ export function PlanningGrille({
         onBlur={() => setApercu(null)}
         title={`${t("planning.gestes.copierPrecedent")}. ${infobulleCopie(c)}`}
         aria-describedby={`copie-aide-${date}`}
-        className="mt-1 inline-flex min-h-7 items-center gap-1 rounded-full border border-dashed border-border bg-card px-2 text-[11px] font-semibold text-foreground opacity-0 transition-opacity hover:bg-secondary focus-visible:opacity-100 group-hover/ligne:opacity-100"
+        className="mt-1 inline-flex min-h-7 items-center gap-1 rounded-full border border-dashed border-border bg-card px-2 text-xs font-semibold text-foreground opacity-0 transition-opacity hover:bg-secondary focus-visible:opacity-100 group-hover/ligne:opacity-100"
       >
         <Copy className="h-3 w-3" aria-hidden />
         {t("planning.gestes.copierLe", { date: fdShort(c.source) })}
@@ -383,13 +414,10 @@ export function PlanningGrille({
   }
   const rangDate = (date: string) => datesAffichees.indexOf(date)
   const dansGeste = (date: string, cle: string) => !!geste?.cases.some((c) => c.date === date && c.cle === cle)
-  const largeurMin = 104 + 96 * colonnes.length
-
-  async function rechargerHistorique() {
-    try {
-      setEntrees((await getHistoriqueGrille(definition.key, 20)).filter((e) => e.changes.length))
-    } catch { /* historique illisible : le panneau reste vide */ }
-  }
+  // plannings-1 : 96 px pour la Date, 84 px par colonne (`<colgroup>` du tableau). Au toucher, 112 px : le « ⋯ » est sur
+  // la ligne de la date et « Cette semaine » tient sur une ligne dessous (décision déléguée du 13/11/2026, synthèse C5).
+  const largeurDate = survol ? 96 : 112
+  const largeurMin = largeurDate + 84 * colonnes.length
 
   function commencer(l: LigneGrille, c: ColonneGrille) {
     if (mode !== "edition") return
@@ -417,9 +445,7 @@ export function PlanningGrille({
         // Dimanche absent de la grille : ses autres cases viennent du Sheet, on
         // les recopie une fois, sans quoi la fusion les perdrait. Dès 2027 (lot
         // U2, Q2), rien à recopier : la case n'écrit qu'elle.
-        semer: getAnnee(date) >= PREMIERE_ANNEE_APP || datesDansLApp.includes(date) || semes.current.has(date)
-          ? undefined
-          : ligneASemer(l),
+        semer: doitSemer(date, datesDansLApp, semes.current) ? ligneASemer(l) : undefined,
       })
       semes.current.add(date)
       setEnregistre(true)
@@ -435,7 +461,7 @@ export function PlanningGrille({
         delete n[cle]
         return n
       })
-      setRefus(typeof navigator !== "undefined" && navigator.onLine === false ? "horsLigne" : "droitRetire")
+      setRefus(motifDuRefus())
     }
   }
 
@@ -478,9 +504,7 @@ export function PlanningGrille({
           date: groupe.date,
           valeurs: groupe.champs,
           auteur: auteur?.name ?? "",
-          semer: !l || getAnnee(groupe.date) >= PREMIERE_ANNEE_APP || datesDansLApp.includes(groupe.date) || semes.current.has(groupe.date)
-            ? undefined
-            : ligneASemer(l),
+          semer: l && doitSemer(groupe.date, datesDansLApp, semes.current) ? ligneASemer(l) : undefined,
         })
         semes.current.add(groupe.date)
         ecrites.push(...duDimanche)
@@ -494,7 +518,7 @@ export function PlanningGrille({
           }
           return n
         })
-        setRefus(typeof navigator !== "undefined" && navigator.onLine === false ? "horsLigne" : "droitRetire")
+        setRefus(motifDuRefus())
         break
       }
     }
@@ -514,25 +538,13 @@ export function PlanningGrille({
   /** La plage en texte tabulé (PG25) ; une présidence imposée se copie vide. */
   function texteCopie() {
     return enTexteTabule(datesPlage, clesPlage, lireCase, (d, cle) => {
-      const c = definition.colonnes.find((x) => x.cle === cle)
+      const c = colonneDe(definition, cle)
       return !!c && !!imposee(d, c)
     })
   }
 
   /** Les noms sans compte parmi les cases écrites (PG30) : aucun `planningName` ne leur correspond. */
   const connus = new Set(comptes.map((c) => normalizeName(c.nom)))
-  function sansCompteDe(cases: CaseGeste[]) {
-    const noms: string[] = []
-    const cles: string[] = []
-    for (const c of cases) {
-      if (!colonneDePersonnes(c.cle)) continue
-      const inconnus = splitNames(c.apres).filter((n) => !connus.has(normalizeName(n)))
-      if (!inconnus.length) continue
-      cles.push(`${c.date}|${c.cle}`)
-      for (const n of inconnus) if (!noms.includes(n)) noms.push(n)
-    }
-    return { noms, cles }
-  }
   const notesCollage = (p: { horsGrille: number; verrouillees: number; tropLongues?: number }, noms: string[]) => [
     ...(p.verrouillees ? [t("planning.gestes.verrouillees", { count: p.verrouillees })] : []),
     ...(p.tropLongues ? [t("planning.gestes.tropLongues", { count: p.tropLongues })] : []),
@@ -545,7 +557,7 @@ export function PlanningGrille({
   ]
 
   function collerCases(cases: CaseGeste[], p: { horsGrille: number; verrouillees: number; tropLongues?: number }) {
-    const { noms, cles } = sansCompteDe(cases)
+    const { noms, cles } = sansCompteDe(cases, connus)
     const remplace = cases.filter((c) => c.avant.trim()).length
     void appliquer(cases, t("planning.gestes.colle", { count: cases.length, remplace }), notesCollage(p, noms), cles)
   }
@@ -571,7 +583,7 @@ export function PlanningGrille({
     if (!c) return
     const cases = videsSeulement ? c.cases.filter((x) => !x.avant.trim()) : c.cases
     // Les notes de l'aperçu (cases verrouillées, hors de la grille) sont refaites avec les noms sans compte.
-    const { noms, cles } = sansCompteDe(cases)
+    const { noms, cles } = sansCompteDe(cases, connus)
     const remplace = cases.filter((x) => x.avant.trim()).length
     void appliquer(cases, t("planning.gestes.colle", { count: cases.length, remplace }), [...c.notes, ...notesCollage({ horsGrille: 0, verrouillees: 0 }, noms)], cles)
   }
@@ -596,7 +608,9 @@ export function PlanningGrille({
     texte: texteCopie,
     coller,
     vider: viderPlage,
-    ouvrir: (c) => enveloppe.current?.querySelector<HTMLElement>(`[data-case="${c.date}|${c.cle}"] button`)?.click(),
+    // Une case à part (le petit déj) s'ouvre sur son « + », pas sur son premier bouton.
+    ouvrir: (c) => (enveloppe.current?.querySelector<HTMLElement>(`[data-case="${c.date}|${c.cle}"] [data-ouvrir]`)
+      ?? enveloppe.current?.querySelector<HTMLElement>(`[data-case="${c.date}|${c.cle}"] button`))?.click(),
     validerApercu: () => validerCollage(false),
     annulerApercu: () => setCollage(null),
   }
@@ -617,18 +631,6 @@ export function PlanningGrille({
     if (!actifClavier) return
     if (e.shiftKey && sel) { e.preventDefault(); e.stopPropagation(); etendre({ date, cle }) }
     else choisirCase({ date, cle })
-  }
-  /** Le trait de la plage, posé en ombre intérieure sur ses seules arêtes. */
-  function styleCase(i: number, j: number, date: string, cle: string): CSSProperties | undefined {
-    const fond = dansGeste(date, cle) ? `${couleur}22` : undefined
-    if (!plage || i < plage.r0 || i > plage.r1 || j < plage.c0 || j > plage.c1) return fond ? { background: fond } : undefined
-    const bords = [
-      i === plage.r0 && `inset 0 2px 0 0 ${couleur}`,
-      i === plage.r1 && `inset 0 -2px 0 0 ${couleur}`,
-      j === plage.c0 && `inset 2px 0 0 0 ${couleur}`,
-      j === plage.c1 && `inset -2px 0 0 0 ${couleur}`,
-    ].filter(Boolean).join(", ")
-    return { background: fond ?? `${couleur}12`, boxShadow: bords }
   }
   const marqueSelection = (i: number, j: number, date: string, cle: string) =>
     !plage || i < plage.r0 || i > plage.r1 || j < plage.c0 || j > plage.c1
@@ -654,7 +656,7 @@ export function PlanningGrille({
     try {
       await retirerDate(definition, date)
     } catch {
-      setRefus(typeof navigator !== "undefined" && navigator.onLine === false ? "horsLigne" : "droitRetire")
+      setRefus(motifDuRefus())
       return
     }
     const auteur = historyAuthor(profile)
@@ -671,7 +673,7 @@ export function PlanningGrille({
       onClick={() => void retirer(date)}
       aria-label={retrait?.libelle}
       title={retrait?.libelle}
-      className="inline-flex min-h-8 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10"
+      className="inline-flex min-h-8 items-center gap-1 rounded-md px-1.5 text-xs font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10"
     >
       <Trash2 className="h-3.5 w-3.5" aria-hidden />
       {avecTexte && retrait?.libelle}
@@ -705,11 +707,16 @@ export function PlanningGrille({
       />
   )
 
+  /** Case remplie : contour plein discret (20 % de la couleur du service, 35 % éclaircie en sombre), fond de carte. */
+  const CASE_REMPLIE = "w-full min-h-8 truncate rounded-md border border-solid bg-card px-1.5 py-1 text-left text-foreground border-[color:var(--contour-clair)] dark:border-[color:var(--contour-sombre)] hover:bg-secondary active:bg-secondary"
+  const contourCase = { "--contour-clair": `${couleur}33`, "--contour-sombre": `${couleurSombre(couleur)}59` } as CSSProperties
+
   function laCase(l: LigneGrille, c: ColonneGrille): ReactNode {
     const val = valeur(l.row[0], c, l.row)
     if (edition?.date === l.row[0] && edition.cle === c.cle) return champ(l, c)
+    if (mode === "edition" && casesAPart?.ouverte(l.row[0], c)) return casesAPart.rendre(l.row[0], c)
     // Une colonne en lecture seule (le petit déj, géré dans sa carte) reste du texte.
-    const modifiable = mode === "edition" && !c.lectureSeule
+    const modifiable = mode === "edition" && caseOuverte(l.row[0], c)
     const service = imposee(l.row[0], c)
     if (service && modifiable) {
       // Tirée de la grille du service : rien à modifier ici (planche bo-planning-2027).
@@ -735,7 +742,8 @@ export function PlanningGrille({
           <button
             type="button"
             onClick={ouvrir}
-            className="inline-flex min-h-8 items-center gap-1 rounded-lg border-[1.5px] border-dashed border-border px-2 py-1 text-[13px] text-muted-foreground hover:bg-secondary active:bg-secondary"
+            className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-lg border-[1.5px] border-dashed px-1.5 py-1 text-sm font-semibold texte-service border-[color:var(--contour-clair)] dark:border-[color:var(--contour-sombre)] hover:bg-secondary active:bg-secondary"
+            style={{ ...styleTexteService(couleur), "--contour-clair": couleur, "--contour-sombre": couleurSombre(couleur) } as CSSProperties}
           >
             {t("planning.choisir.bouton")}
             <ChevronDown className="h-3 w-3" aria-hidden />
@@ -746,8 +754,9 @@ export function PlanningGrille({
         <button
           type="button"
           onClick={ouvrir}
-          className="w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
-          style={{ borderColor: `${couleur}55` }}
+          title={val}
+          className={CASE_REMPLIE}
+          style={contourCase}
         >
           {val}
           {marqueAbsent(l.row[0], val)}
@@ -759,10 +768,11 @@ export function PlanningGrille({
         <button
           type="button"
           onClick={() => commencer(l, c)}
-          // Trait pointillé : sans lui, une case modifiable ne se distingue pas
-          // d'un simple texte (vu à l'œil sur la planche du 18/09/2026).
-          className="w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
-          style={{ borderColor: `${couleur}55` }}
+          // Un contour garde le signe « modifiable » : plein pour une case remplie, pointillé pour le texte libre vide
+          // (bo-messages-planning-7).
+          title={val || undefined}
+          className={val ? CASE_REMPLIE : "w-full min-h-8 truncate rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"}
+          style={val ? contourCase : { borderColor: `${couleur}55` }}
         >
           {val || <span className="text-muted-foreground">+</span>}
         </button>
@@ -771,27 +781,14 @@ export function PlanningGrille({
     // La couleur du service reste aux dates (A2) : son nom se repère en encre.
     return (
       <>
-        <span className={estMoi(val) ? "rounded-md bg-foreground px-1.5 py-0.5 font-semibold text-background" : ""}>{val || "—"}</span>
+        <span title={val || undefined} className={`inline-block max-w-full truncate align-bottom ${estMoi(val) ? "rounded-md bg-foreground px-1.5 py-0.5 font-semibold text-background" : ""}`}>{val || "—"}</span>
         {marqueAbsent(l.row[0], val)}
       </>
     )
   }
 
-  const phrase = (auteurNom: string, ch: EntreeGrille["changes"][number]) => {
-    if (ch.kind === "import") return t("planning.grille.importe", { auteur: auteurNom, count: ch.count })
-    if (ch.kind === "dimanche") return t(`planning.grille.${phraseDuChangement(ch)}`, { auteur: auteurNom, date: fdLongL(ch.date, i18n.language) })
-    const col = definition.colonnes.find((x) => x.cle === ch.colonne)
-    return t(`planning.grille.${phraseDuChangement(ch)}`, {
-      auteur: auteurNom,
-      avant: ch.from,
-      apres: ch.to,
-      colonne: col ? t(col.i18n) : ch.colonne,
-      date: fdLongL(ch.date, i18n.language),
-    })
-  }
-
   return (
-    <div className="space-y-3" data-grille={definition.key}>
+    <div ref={racine} className="space-y-3" data-grille={definition.key}>
       {/* Agencement v18 (B6) : l'export et « Enregistré » dans les outils de l'en-tête ; le service,
           la période et les filtres dans la rangée de la grille (BarreDeGrille). */}
       <DansLEnTete ou="outils">
@@ -799,8 +796,23 @@ export function PlanningGrille({
           <span aria-live="polite" className="text-xs text-muted-foreground">{t("planning.grille.enregistre")}</span>
         )}
         {exporter && <ExportModele definition={definition} periode={periode} exporter={exporter} />}
+        {actifClavier && (
+          <button
+            ref={boutonAide}
+            data-aide-clavier=""
+            type="button"
+            aria-label={t("backOffice.boE1.aideClavier")}
+            aria-expanded={aideOuverte}
+            aria-controls={idAide}
+            onClick={() => setAideOuverte((v) => !v)}
+            onKeyDown={(e) => { if (e.key === "Escape" && aideOuverte) { e.stopPropagation(); setAideOuverte(false); boutonAide.current?.focus() } }}
+            className={`hidden h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:text-foreground sm:inline-flex ${TOUCHER_44}`}
+          >
+            <CircleHelp className="h-4 w-4" aria-hidden />
+          </button>
+        )}
       </DansLEnTete>
-      {legende && <h3 className="text-[15px] font-bold text-foreground">{legende}</h3>}
+      {legende && <h3 className="text-base font-bold text-foreground">{legende}</h3>}
 
       {refus && (
         <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-foreground">
@@ -837,7 +849,7 @@ export function PlanningGrille({
       {peutModifier && (
         <FenetreCopie
           demande={fenetreCopie}
-          libelle={(cle) => { const x = definition.colonnes.find((d) => d.cle === cle); return x ? t(x.i18n) : cle }}
+          libelle={(cle) => { const x = colonneDe(definition, cle); return x ? t(x.i18n) : cle }}
           onChoix={choixDeLaFenetre}
         />
       )}
@@ -866,10 +878,11 @@ export function PlanningGrille({
             },
           } : undefined}
           absenceDe={absenceDe && choix ? (nom) => absenceDe(nom, choix.l.row[0]) : undefined}
-          reliees={groupe ? (recherche) => propositionsReliees(definition, choix?.c.cle ?? "", groupe, comptes, dansLaFenetre.map(ligneAffichee), recherche) : undefined}
+          reliees={groupe ? (recherche) => propositionsReliees(definition, choix?.c.cle ?? "", groupe, comptes, lignes.map(ligneAffichee), recherche) : undefined}
           proposer={(recherche) => propositions(definition, choix?.c.cle ?? "", comptes, lignes.map((l) => l.row), recherche)}
           onEcrire={(nom) => {
             if (!choix) return
+            compter("cmd.planning.choisirNom")
             setChoix(null)
             setEnregistre(false)
             void enregistrer(choix.l, choix.c, nom.trim())
@@ -877,40 +890,30 @@ export function PlanningGrille({
         />
       )}
 
+      {/* ── Vide : un seul bloc, au téléphone comme en grand (plannings-1) ── */}
+      {sansLigne && <EtatVide compact surGris>{vide ?? t("planning.grille.aVenir")}</EtatVide>}
+
+      {/* bo-messages-planning-1 : « Non publié » une fois en tête quand tout le trimestre est en brouillon. */}
+      {toutBrouillon && (
+        <p data-non-publie-trimestre className="flex items-center gap-1 text-xs font-semibold text-muted-foreground" title={t("planning.unpublishedTooltip")}>
+          <Lock className="h-3 w-3" aria-hidden />
+          {t("planning.grille.nonPublie")}
+        </p>
+      )}
+
       {/* ── Grille (ordinateur, tablette) ── */}
-      <div ref={enveloppe} data-en-cours={enCours || undefined} inert={enCours ? true : undefined} className="relative">
-      <div data-testid="grille-defilement" inert={collage ? true : undefined} className={`hidden sm:block overflow-x-auto ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
-        <table className="w-full text-sm border-collapse" style={{ minWidth: largeurMin }}>
-          <thead>
-            <tr data-testid="grille-colonnes" className={app ? "bg-secondary text-muted-foreground" : "text-white"}>
-              <th
-                className={`sticky left-0 z-20 px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap ${app ? "bg-secondary" : ""}`}
-                style={app ? undefined : { background: couleur }}
-              >
-                {t("planning.roles.date")}
-              </th>
-              {colonnes.map((c) => (
-                <th key={c.cle} className="px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap" style={app ? undefined : { background: couleur }}>
-                  {t(c.i18n)}
-                  {!app && groupe && groupeDef(groupe.id)?.planning === definition.key && roleDeColonne(groupe, c.cle) && (
-                    <Link2
-                      role="img"
-                      aria-label={t("groupes.choisir.reliee", { role: (i18n.language === "zh-CN" && roleDeColonne(groupe, c.cle)!.nomZh) || roleDeColonne(groupe, c.cle)!.nom })}
-                      className="ml-1 inline h-3 w-3 align-[-1px] opacity-80"
-                    />
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
+      {!sansLigne && <div ref={enveloppe} data-en-cours={enCours || undefined} inert={enCours ? true : undefined} className="relative">
+      {/* La carte porte l'ombre (`raised`, sans `overflow-hidden`) ; l'enveloppe intérieure défile, avec un fondu à droite.
+          Requête de conteneur : « Cette semaine » devient une pastille quand la grille tient (GrilleCelluleDate). */}
+      <div className={`hidden sm:block relative [container-type:inline-size] carte-groupe rounded-2xl`}>
+      <div ref={defilement} data-defile={defile.gauche || undefined} data-testid="grille-defilement" role="region" tabIndex={0} aria-label={t("planning.grille.region")} inert={collage ? true : undefined} className="fondu-lateral overflow-x-auto rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+        <table className="w-full table-fixed text-sm border-collapse" style={{ minWidth: largeurMin }}>
+          <colgroup>
+            <col style={{ width: largeurDate }} />
+            {colonnes.map((c) => <col key={c.cle} style={{ width: 84 }} />)}
+          </colgroup>
+          <GrilleEnTete app={app} couleur={couleur} colonnes={colonnes} groupe={groupe} definition={definition} />
           <tbody>
-            {affichees.length === 0 && (
-              <tr>
-                <td colSpan={colonnes.length + 1} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  {vide ?? t("planning.grille.aVenir")}
-                </td>
-              </tr>
-            )}
             {affichees.map((l, i) => {
               const date = l.row[0]
               const mois = getMois(date)
@@ -922,39 +925,25 @@ export function PlanningGrille({
                   {sep && (
                     <tr className={app ? "bg-secondary/50" : undefined} style={app ? undefined : { background: `${couleur}15` }}>
                       <td colSpan={colonnes.length + 1} className="px-3 py-1.5">
-                        <span className="sticky left-3 inline-block text-xs font-bold uppercase tracking-wider" style={{ color: couleur }}>
+                        <span className="sticky left-3 inline-block text-xs font-bold uppercase tracking-wider texte-service" style={styleTexteService(couleur)}>
                           {sep}
                         </span>
                       </td>
                     </tr>
                   )}
                   <tr className="group/ligne border-t border-border" style={{ background: fond }}>
-                    <td
-                      data-date-cell={date}
-                      className="sticky left-0 z-10 w-[112px] px-3 py-2 font-semibold whitespace-nowrap bg-card"
-                      style={{ color: couleur, backgroundImage: fond ? `linear-gradient(${fond}, ${fond})` : undefined }}
-                    >
-                      {/* La date, puis « Cette semaine » dessous (planches `v18-app-planning-grille-a`, `v18-bo-planning-a`). */}
-                      <div>{fdShort(date)}</div>
-                      {cetteSemaine && (
-                        <span className={`mt-0.5 mr-1 inline-block text-xs font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
-                          {t("planning.table.thisWeek")}
-                        </span>
-                      )}
-                      {l.nonPublie && (
-                        <span
-                          data-non-publie={date}
-                          title={t("planning.unpublishedTooltip")}
-                          className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"
-                        >
-                          <Lock className="h-3 w-3" aria-hidden />
-                          {t("planning.grille.nonPublie")}
-                        </span>
-                      )}
-                      {dateBadge?.(l.row, toutes)}
-                      {peutRetirer(date) && <div className="-ml-1.5 mt-0.5">{boutonRetirer(date, false)}</div>}
-                      {survol ? pastilleCopie(date) : <div className="mt-1">{menuCopie(date)}</div>}
-                    </td>
+                    <GrilleCelluleDate
+                      date={date}
+                      app={app}
+                      couleur={couleur}
+                      fond={fond}
+                      cetteSemaine={cetteSemaine}
+                      nonPublie={l.nonPublie && !toutBrouillon}
+                      badge={dateBadge?.(l.row, toutes)}
+                      retirer={peutRetirer(date) && <div className="-ml-1.5 mt-0.5">{boutonRetirer(date, false)}</div>}
+                      copie={survol ? pastilleCopie(date) : null}
+                      menu={survol ? null : menuCopie(date, true)}
+                    />
                     {colonnes.map((c, j) => (
                       <td
                         key={c.cle}
@@ -966,8 +955,9 @@ export function PlanningGrille({
                         data-changement={aChange(date, c.cle)}
                         onMouseDownCapture={(e) => { if (actifClavier && e.shiftKey) e.preventDefault() }}
                         onClickCapture={(e) => surCase(e, date, c.cle)}
-                        className={`relative px-3 py-2 text-foreground ${aChange(date, c.cle) ? "bg-amber-100/70 dark:bg-amber-500/15" : ""} ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
-                        style={styleCase(rangDate(date), j, date, c.cle)}
+                        onClick={ouvrirLaCase}
+                        className={`relative ${ZONE_CASE} px-2.5 py-2 text-foreground ${j === colonnes.length - 1 ? "pr-3" : ""} ${aChange(date, c.cle) ? "bg-amber-100/70 dark:bg-amber-500/15" : ""} ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
+                        style={styleCase(plage, couleur, dansGeste(date, c.cle), rangDate(date), j)}
                       >
                         {caseOuApercu(l, c)}
                         {pointChange(date, c.cle)}
@@ -980,6 +970,18 @@ export function PlanningGrille({
           </tbody>
         </table>
       </div>
+      {/* Au pointeur fin seulement (au doigt, le fondu suffit) : un rond dessiné de 28 px, cible de 44 px. */}
+      {defile.droite && (
+        <button type="button" onClick={() => defiler(1)} aria-label={t("planning.grille.colonnesSuivantes")} className={rondDefilement + " right-2"}>
+          <ChevronRight className="h-4 w-4" aria-hidden />
+        </button>
+      )}
+      {defile.gauche && (
+        <button type="button" onClick={() => defiler(-1)} aria-label={t("planning.grille.colonnesPrecedentes")} className={rondDefilement + " left-[104px]"}>
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+        </button>
+      )}
+      </div>
       {actifClavier && plage && posBarre && !collage && (
         <BarreSelection
           count={datesPlage.length * clesPlage.length}
@@ -989,99 +991,73 @@ export function PlanningGrille({
           onFermer={effacer}
         />
       )}
-      </div>
+      </div>}
 
       {/* ── Une carte par dimanche (téléphone) ── */}
-      <div inert={enCours ? true : undefined} data-cartes-en-cours={enCours || undefined} className="sm:hidden space-y-2.5">
-        {affichees.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
-            {vide ?? t("planning.grille.aVenir")}
-          </p>
-        )}
+      {!sansLigne && <div inert={enCours ? true : undefined} data-cartes-en-cours={enCours || undefined} className="sm:hidden space-y-2.5">
         {affichees.map((l) => {
           const date = l.row[0]
           const cetteSemaine = date === sun
           return (
-            <div
+            <CarteDimanche
               key={date}
-              data-testid="grille-carte"
-              data-date-carte={date}
-              className="rounded-xl border border-transparent bg-card shadow-soft overflow-hidden"
-              style={{ borderColor: cetteSemaine ? couleur : undefined }}
+              date={date}
+              couleur={couleur}
+              cetteSemaine={cetteSemaine}
+              nonPublie={l.nonPublie && !toutBrouillon}
+              badge={dateBadge?.(l.row, toutes)}
+              actions={(peutRetirer(date) || mode === "edition") && (
+                <span className="ml-auto flex items-center gap-1">
+                  {peutRetirer(date) && boutonRetirer(date, true)}
+                  {menuCopie(date)}
+                </span>
+              )}
             >
-              <div
-                className="px-3.5 py-2 flex items-center gap-2 flex-wrap"
-                style={{ background: cetteSemaine ? `${couleur}1a` : `${couleur}0d` }}
-              >
-                <span className="text-sm font-bold" style={{ color: couleur }}>{fdShort(date)}</span>
-                {cetteSemaine && (
-                  <span className="text-xs font-bold px-1.5 py-0.5 rounded text-white" style={{ background: couleur }}>
-                    {t("planning.table.thisWeek")}
-                  </span>
-                )}
-                {l.nonPublie && (
-                  <span data-non-publie={date} className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                    <Lock className="h-3 w-3" aria-hidden />
-                    {t("planning.grille.nonPublie")}
-                  </span>
-                )}
-                {dateBadge?.(l.row, toutes)}
-                {(peutRetirer(date) || mode === "edition") && (
-                  <span className="ml-auto flex items-center gap-1">
-                    {peutRetirer(date) && boutonRetirer(date, true)}
-                    {menuCopie(date)}
-                  </span>
-                )}
-              </div>
-              <div className="px-3.5 py-2.5 space-y-1">
-                {colonnes
-                  // En lecture, une case vide ne prend pas de place ; en
-                  // modification, toutes s'affichent pour pouvoir les remplir
-                  // (sauf celles en lecture seule, qui ne se remplissent pas ici). Une case vidée depuis
-                  // la publication reste, pour porter son point.
-                  .filter((c) => (mode === "edition" && !c.lectureSeule) || valeur(date, c, l.row).trim() || aChange(date, c.cle))
-                  .map((c) => (
-                    <div key={c.cle} className="flex items-baseline gap-2 text-[13px]">
-                      <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{t(c.i18n)}</span>
-                      <span data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} data-apercu={marqueApercu(date, c.cle)} data-changement={aChange(date, c.cle)} className={`relative min-w-0 flex-1 rounded-md ${aChange(date, c.cle) ? "bg-amber-100/70 pr-4 dark:bg-amber-500/15" : ""}`} style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>{caseOuApercu(l, c)}{pointChange(date, c.cle)}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
+              {colonnes
+                // En lecture, une case vide ne prend pas de place ; en
+                // modification, toutes s'affichent pour pouvoir les remplir
+                // (sauf celles en lecture seule, qui ne se remplissent pas ici). Une case vidée depuis
+                // la publication reste, pour porter son point.
+                .filter((c) => (mode === "edition" && (caseOuverte(date, c) || casesAPart?.ouverte(date, c))) || valeur(date, c, l.row).trim() || aChange(date, c.cle))
+                .map((c) => (
+                  <LigneDeCarte
+                    key={c.cle}
+                    libelle={t(c.i18n)}
+                    dataCase={`${date}|${c.cle}`}
+                    dansGeste={dansGeste(date, c.cle)}
+                    apercu={marqueApercu(date, c.cle)}
+                    changement={aChange(date, c.cle)}
+                    couleur={couleur}
+                  >
+                    {caseOuApercu(l, c)}{pointChange(date, c.cle)}
+                  </LigneDeCarte>
+                ))}
+            </CarteDimanche>
           )
         })}
-      </div>
+      </div>}
 
 
-      {actifClavier && <p className="hidden sm:block text-xs text-muted-foreground">{t("planning.gestes.clavier")}</p>}
+      {/* BO-G, 5 : le « ? » est dans la barre d'outils (en-tête) ; le texte de l'aide, lui, s'ouvre ici, dans sa zone vive. */}
+      {actifClavier && (
+        <div data-aide-clavier="" className="hidden sm:block">
+          {/* Zone vive posée d'avance : l'aide qui s'y glisse est lue par les lecteurs d'écran (un ajout dans une zone absente ne l'est pas). */}
+          <div aria-live="polite" role="status">
+            {aideOuverte && <p id={idAide} className="text-xs text-muted-foreground">{t("planning.gestes.clavier")}</p>}
+          </div>
+        </div>
+      )}
 
       {/* ── Pied de grille : on prévient, on ne se retire pas (T3) ── */}
       <p className="text-xs text-muted-foreground">{t("planning.grille.pasDispo")}</p>
 
       {/* ── Historique nommé (T6) ── */}
-      <div>
-        <button
-          onClick={() => { const ouvre = !histoOuvert; setHistoOuvert(ouvre); if (ouvre) void rechargerHistorique() }}
-          aria-expanded={histoOuvert}
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <History className="h-3.5 w-3.5" aria-hidden />
-          {t("planning.grille.historique")}
-        </button>
-        {histoOuvert && (
-          <ul className="mt-2 space-y-1.5">
-            {entrees.map((e) => (
-              <li key={e.id} className="rounded-lg bg-muted/40 px-3 py-2 text-sm text-foreground">
-                <ul className="space-y-0.5">
-                  {e.changes.map((ch, i) => (
-                    <li key={i}>{phrase(e.authorName || t("setlists.history.someone"), ch)}</li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <GrilleHistorique
+        definition={definition}
+        ouvert={histoOuvert}
+        entrees={entrees}
+        onBascule={() => { const ouvre = !histoOuvert; setHistoOuvert(ouvre); if (ouvre) { compter("cmd.planning.grille.historique"); void rechargerHistorique() } }}
+      />
     </div>
   )
 }

@@ -24,7 +24,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
 /** Membre d'un groupe, sans droit de création. */
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", firstName: "Membre", lastName: "Essai", serviceRoles: { "Groupe Paix": ["chanteur"] } };
 /** Pôle Événement et la coordination (cochée), qui gère les évènements. */
-const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] }; // lot RS : la Coordination est le Comité Orga (Q11), plus le référent EDD
 
 /** Le partage et le presse-papiers simulés : chaque appel est noté dans `window.__partage`.
  *  `share` : la feuille de partage existe (`true`), est fermée sans partager (`"annule"`, AbortError)
@@ -79,7 +79,7 @@ async function capture(page: Page, nom: string) {
 }
 
 test.describe("R1 : « Partager » sur la fiche d'un évènement", () => {
-  test("membre : « Partager » à droite du titre en grand, dans la barre de la fiche sinon", async ({ page }, info) => {
+  test("membre : « Partager » à droite, sur la rangée des étiquettes au-dessus du titre en grand, dans la barre de la fiche sinon", async ({ page }, info) => {
     await simulerPartage(page, false);
     await ouvrir(page, MEMBRE, "/evenements/foot");
     const bouton = partager(page);
@@ -90,8 +90,9 @@ test.describe("R1 : « Partager » sur la fiche d'un évènement", () => {
     if (estGrandEcran(info)) {
       const titre = volet(page).getByRole("heading", { level: 2, name: "Foot au parc" });
       const t = (await titre.boundingBox())!;
-      expect(b.x, "à droite du titre").toBeGreaterThan(t.x + t.width - 1);
-      expect(b.y, "sur la rangée du titre").toBeLessThan(t.y + t.height);
+      // eglise-8 : « Partager » est monté sur la rangée des étiquettes, au-dessus du titre, aligné à droite de sa colonne.
+      expect(b.y + b.height, "au-dessus du titre, sur la rangée des étiquettes").toBeLessThanOrEqual(t.y + 1);
+      expect(b.x + b.width, "aligné à droite de la colonne du titre").toBeGreaterThan(t.x + t.width - 120);
       await expect(bouton.getByText("Partager"), "libellé visible en grand").toBeVisible();
     } else {
       await expect(page.getByTestId("barre-fiche").getByRole("button", { name: "Partager" })).toHaveCount(1);
@@ -331,13 +332,15 @@ const mesurerListe = (page: Page) => page.evaluate(() => {
 });
 
 const PAGES_R3 = [
-  { nom: "Setlists", adresse: "/setlists" },
+  // Une setlist choisie : sans elle, la liste seule dans la colonne de 720 px (B4b), sans volet collant.
+  { nom: "Setlists", adresse: "/setlists?apercu=s0" },
   { nom: "Mes services", adresse: "/mes-services" },
   { nom: "Tâches", adresse: "/taches" },
-  { nom: "Back-Office › Tâches", adresse: "/back-office/taches/da" },
-  { nom: "Réunions", adresse: "/back-office/reunions" },
+  // Retiré (piste A, BO-D) : « Back-Office › Tâches » n'a plus deux volets, la liste est la section « Tâches » de la page de l'équipe.
+  // BO8 : les adresses de liste mènent au Calendrier ; la liste-carte des deux volets (À venir · Passées) est celle d'une fiche.
+  { nom: "Réunions", adresse: "/back-office/reunions/r0" },
   { nom: "Évènements", adresse: "/evenements" },
-  { nom: "Back-Office › Évènements", adresse: "/back-office/evenements" },
+  { nom: "Back-Office › Évènements", adresse: "/back-office/evenements/e0" },
   { nom: "Personnes", adresse: "/back-office/equipes/personnes" },
   { nom: "Réception", adresse: "/back-office/messages" },
   { nom: "Harmonie", adresse: "/harmonie" },
@@ -382,7 +385,7 @@ test.describe("R3 : la liste-carte des deux volets tient dans la fenêtre", () =
 
   test("l'en-tête change de hauteur après le chargement, page courte : le bas de la carte suit (grands écrans)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : grands écrans");
-    await ouvrirR3(page, "/setlists");
+    await ouvrirR3(page, "/setlists?apercu=s0");
     const liste = page.locator('[data-volet="liste"]');
     await expect.poll(() => liste.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeGreaterThan(40);
     // Une page plus courte que la fenêtre : `html` garde la hauteur de la fenêtre quoi que fasse l'en-tête.
@@ -406,16 +409,16 @@ test.describe("R3 : la liste-carte des deux volets tient dans la fenêtre", () =
     await expect.poll(basAttendu, { message: "marge de l'en-tête rendue" }).toBeLessThanOrEqual(2);
   });
 
-  test("un volet (téléphone, tablette debout), Back-Office › Tâches : la liste suit la page, sans défilement propre", async ({ page }, info) => {
+  test("un volet (téléphone, tablette debout), Back-Office › Équipe › Tâches : la liste suit la page, sans défilement propre", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "un volet : petits écrans");
-    await ouvrirR3(page, "/back-office/taches/da");
-    const liste = page.locator('[data-volet="liste"]');
+    await ouvrirR3(page, "/back-office/equipes/da");
+    const liste = page.getByRole("region", { name: "Tâches", exact: true });
     await expect(liste.getByText("Tâche d'essai 1", { exact: true }).first()).toBeVisible();
     expect(await liste.evaluate((el) => [getComputedStyle(el).overflowY, getComputedStyle(el).position])).toEqual(["visible", "static"]);
   });
 });
 
-// R7 : les heures sur la carte « Ce dimanche » (D14 : Culte Franco 10:30, Groupes 13:00, EDD 13:00,
+// R7 : les heures sur la carte « Ce dimanche » (D14 : Culte Franco 10:30, Groupes 13:00, EDD 15:30–17:00,
 // Table 10:00 ; planches v18-app-planning-accueil et -reduite) ; plus de « un dimanche par mois » sur
 // la Prépa. Table du Seigneur (D15) ; en 中文, le bouton de Chants dit 推荐新诗歌 (D18). Feuilles
 // Google simulées ; personnes fictives.
@@ -434,13 +437,13 @@ const FEUILLES_R7: Record<string, string> = {
 };
 const PIANISTE_R7: FakeProfile = { uid: "uid-pianiste", email: "pianiste@example.com", firstName: "Pianiste", lastName: "C.", planningName: "Pianiste C.", serviceRoles: { "Culte Francophone": ["musicien"] } };
 
-async function ouvrirR7(page: Page, vers: string, zh = false) {
+async function ouvrirR7(page: Page, vers: string, zh = false, feuilles: Record<string, string> = FEUILLES_R7, maintenant = "2026-10-01T10:00:00") {
   interdireDialoguesNatifs(page);
   if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await page.clock.setFixedTime(new Date(maintenant));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
-    return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES_R7[feuille] ?? "" });
+    return route.fulfill({ status: 200, contentType: "text/csv", body: feuilles[feuille] ?? "" });
   });
   return signInAs(page, PIANISTE_R7, {}, vers);
 }
@@ -449,12 +452,14 @@ test.describe("R7 : heures de « Ce dimanche », Prépa. Table, 推荐新诗歌"
   const ceDimanche = (page: Page) => page.locator('section[aria-labelledby="ce-dimanche"]');
   const carte = (page: Page, testId: string) => ceDimanche(page).getByTestId(testId).first().locator("xpath=ancestor-or-self::article[1]");
 
-  test("« Ce dimanche » : Culte Franco 10:30, Groupes 13:00, EDD 13:00, Table 10:00", async ({ page }) => {
+  test("« Ce dimanche » : Culte Franco 10:30, Groupes 13:00, EDD 15:30–17:00, Table 10:00", async ({ page }) => {
     await ouvrirR7(page, "/planning");
     await expect(ceDimanche(page).getByText("Présidente A.")).toBeVisible();
-    await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toHaveText(/^Culte Franco\s*10:30$/);
+    await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toHaveText(/^Culte Franco\s*10:30\s*Sainte Cène$/);
+    // Le 04/10 est le premier dimanche du mois : le badge de la page Culte à côté de l'heure (01/11/2026).
+    await expect(carte(page, "carte-culte").getByTestId("badge-sainte-cene")).toBeVisible();
     await expect(carte(page, "ligne-groupe").getByRole("heading", { level: 3 })).toHaveText("Groupes · 13:00");
-    await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toHaveText("EDD · 13:00");
+    await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toHaveText("EDD · 15:30–17:00");
     // La Table : « Table · 10:00 » en en-tête quand elle est sur deux étages (en grand), sinon l'heure
     // au bout de la ligne « Prépa. Table ». Une seule heure visible.
     const table = ceDimanche(page).getByTestId("carte-table");
@@ -473,12 +478,20 @@ test.describe("R7 : heures de « Ce dimanche », Prépa. Table, 推荐新诗歌"
     await capture(page, "r7-ce-dimanche-reduite");
   });
 
+  test("« Ce dimanche » : pas de badge Sainte Cène un autre dimanche que le premier du mois", async ({ page }) => {
+    const feuilles = { ...FEUILLES_R7, Franco_Louange: FEUILLES_R7.Franco_Louange.replace('"04/10"', '"11/10"') };
+    await ouvrirR7(page, "/planning", false, feuilles, "2026-10-08T10:00:00");
+    await expect(ceDimanche(page).getByText("Présidente A.")).toBeVisible();
+    await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toHaveText(/^Culte Franco\s*10:30$/);
+    await expect(carte(page, "carte-culte").getByTestId("badge-sainte-cene")).toHaveCount(0);
+  });
+
   test("中文 : les mêmes heures", async ({ page }) => {
     await ouvrirR7(page, "/planning", true);
     await expect(ceDimanche(page).getByText("Présidente A.")).toBeVisible();
     await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toContainText("10:30");
     await expect(carte(page, "ligne-groupe").getByRole("heading", { level: 3 })).toContainText("· 13:00");
-    await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toContainText("· 13:00");
+    await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toContainText("· 15:30–17:00");
     await expect(ceDimanche(page).getByTestId("carte-table").getByText("10:00").filter({ visible: true })).toHaveCount(1);
   });
 

@@ -6,7 +6,9 @@ setlist, en lecture seule : le site connaît la tonalité des deux chants et
 choisit la fiche qui correspond (lot H4).
 
 Tout est écrit en partant d'un chant en D. Pas d'exemples tirés du répertoire :
-les transitions vivent entre les chants.
+les transitions vivent entre les chants (T7 cite seulement les chants notés en
+6/8 ou 12/8). T7 change de mesure, pas de tonalité : le site ne la choisit pas
+seul, elle vit dans le catalogue.
 
 ---
 
@@ -18,6 +20,8 @@ les transitions vivent entre les chants.
 | Statut | à valider |
 | Sensations | Repos · Douceur et intimité |
 | Moments | Transition |
+| Ressenti | chaleureux (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : fin sur `D`, silence, intro du chant suivant devient fin
@@ -50,6 +54,8 @@ la même tonalité.
 | Statut | à valider |
 | Sensations | Repos · Joie et élan |
 | Moments | Transition |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : chant en D, puis chant en G : finir sur `D` (ou `D7`),
@@ -78,6 +84,8 @@ quarte plus haut (D → G).
 | Statut | à valider |
 | Sensations | Lumière et espérance · Joie et élan |
 | Moments | Transition |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : chant en D, puis chant en A : `D → E (ou Esus4 – E) →
@@ -107,6 +115,8 @@ quinte plus haut (D → A).
 | Statut | à valider |
 | Sensations | Épique · Joie et élan · Lumière et espérance |
 | Moments | Transition |
+| Ressenti | élan (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : chant en D, puis chant en E : `D → B7 → E` (ou
@@ -136,6 +146,8 @@ ton plus haut (D → E).
 | Statut | à valider |
 | Sensations | Douceur et intimité · Repos |
 | Moments | Transition |
+| Ressenti | chaleureux (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : chant en D, puis chant en C : `D → Dm7 – G7 → C`.
@@ -165,6 +177,8 @@ ton plus bas (D → C).
 | Statut | à valider |
 | Sensations | Suspendu et planant · Surprise |
 | Moments | Transition |
+| Ressenti | couleur (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : avancé · guitare : avancé |
 
 **Avant → après** : chant en D, puis chant en Bb : fin sur `D`, **une seule
@@ -187,3 +201,48 @@ Bb `x13331`.
 **Règle.** Calculée dans la setlist : proposée quand aucune des fiches T1 à T5
 ne correspond ; le site cherche la note commune et le 5 de la nouvelle
 tonalité.
+
+---
+
+## T7 · D'un chant en 6/8 vers un chant en 4/4
+
+| | |
+| --- | --- |
+| Id | `transitions/6-8-vers-4-4` |
+| Statut | à valider |
+| Sensations | Repos · Joie et élan |
+| Moments | Transition |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | transition (proposé) |
+| Niveau | piano : intermédiaire · guitare : intermédiaire · **à préparer avec l'équipe** |
+
+**Avant → après** : fin du chant en 6/8 sur `D`, silence, décompte du chant
+en 4/4 devient fin sur `D` tenu, puis **la noire pointée du 6/8 devient la
+noire du 4/4** : on garde la même pulsation (les deux grands temps de la
+mesure en 6/8) et on la compte « 1 2 3 4 » ; le chant suivant part sur ce
+compte.
+
+**Pourquoi ça marche.** Un 6/8 se sent en deux grands temps, chacun partagé en
+trois. Si l'on garde ce grand temps comme nouvelle noire, le pied de
+l'assemblée ne change pas de vitesse : seule la subdivision passe de trois à
+deux. Le chant suivant arrive sans coup de frein ni d'accélérateur. Un 12/8
+se sent en quatre grands temps : le passage au 4/4 est encore plus direct.
+Si la tonalité change aussi, enchaîner ensuite avec T1 à T6.
+
+**Quand l'éviter.**
+- Quand le chant en 4/4 est bien plus rapide ou plus lent : garder la
+  pulsation donnerait un faux tempo. Faire un vrai arrêt.
+- Sans le batteur ou celui qui donne les départs : il compte les quatre temps
+  à voix haute ou au charleston.
+
+**Au piano.** Sur la dernière mesure en 6/8, la main gauche joue seulement les
+deux grands temps (D, D). Puis des noires régulières sur D, au même pas,
+jusqu'au départ du chant suivant.
+
+**À la guitare.** Dernière mesure en 6/8 : deux coups larges, sur le 1 et sur
+le 4. Puis des coups réguliers sur D, au même pas, en comptant 1 2 3 4.
+
+**Dans le répertoire** : 为我而来 (en C, 6/8) · 十字架 (en E, 6/8) · 活出爱 (en
+C, 12/8).
+
+**Règle.** Aucune : catalogue seul.

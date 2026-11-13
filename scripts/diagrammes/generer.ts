@@ -5,7 +5,7 @@
 //   npx tsx scripts/diagrammes/generer.ts
 // .puppeteerrc.cjs empêche le téléchargement d'un Chrome pendant cette install.
 //
-// Régénère la documentation visuelle : `npm run docs:diagrammes`.
+// Régénère la documentation visuelle : `npx tsx scripts/diagrammes/generer.ts`.
 //
 //   1. dependency-cruiser analyse src/ et scripts/ ; les graphes de dépendances
 //      regroupés par dossier sont réécrits dans docs/diagrammes/4x-*.mmd.
@@ -286,7 +286,9 @@ function ecrireConfigs(): { mermaid: Record<Theme, string>; puppeteer: string } 
     throw new Error(`Chromium de Playwright introuvable (${executablePath}) : lancer « npx playwright install chromium ».`);
   }
   const puppeteer = path.join(TMP, "puppeteer.json");
-  fs.writeFileSync(puppeteer, JSON.stringify({ executablePath, headless: true }));
+  // En root (conteneur des sessions cloud), Chromium refuse de démarrer sans --no-sandbox.
+  const args = process.getuid?.() === 0 ? ["--no-sandbox"] : [];
+  fs.writeFileSync(puppeteer, JSON.stringify({ executablePath, headless: true, args }));
   const mermaid = {} as Record<Theme, string>;
   for (const theme of Object.keys(THEMES) as Theme[]) {
     mermaid[theme] = path.join(TMP, `mermaid-${theme}.json`);
@@ -443,7 +445,7 @@ ${catalogue.introduction.map((p, i) => `<p${i === 0 ? ' class="chapo"' : ""}>${e
 <div><dt>modules analysés</dt><dd>${chiffres.modules}</dd></div>
 <div><dt>diagrammes</dt><dd>${diagrammes.length}</dd></div>
 </dl>
-<p class="date">Généré le ${date} par <code>npm run docs:diagrammes</code>.</p>
+<p class="date">Généré le ${date} par <code>npx tsx scripts/diagrammes/generer.ts</code>.</p>
 </header>
 <section class="partie" id="etat">
 <h2><span class="directive">{section: ${catalogue.fonctionnalites.length} lignes}</span>Ce qui existe</h2>
@@ -469,7 +471,7 @@ ${sections}
 
 function markdown(date: string): string {
   const l: string[] = [
-    "<!-- Fichier généré par `npm run docs:diagrammes` (scripts/diagrammes/generer.ts). Modifier docs/diagrammes/*.mmd et docs/diagrammes/catalogue.json, pas ce fichier. -->",
+    "<!-- Fichier généré par `npx tsx scripts/diagrammes/generer.ts`. Modifier docs/diagrammes/*.mmd et docs/diagrammes/catalogue.json, pas ce fichier. -->",
     "",
     `# ${catalogue.titre}`,
     "",

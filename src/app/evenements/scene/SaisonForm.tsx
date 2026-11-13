@@ -9,7 +9,7 @@
 // de l'autre fête (`autre`) ; `onErreur` dit à l'écran si une erreur bloque « Lancer ».
 // P9 (Q22) : `seul` ne montre qu'un réglage, pour la feuille ouverte depuis le résumé du téléphone.
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react"
+import { useEffect, useId, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react"
 import { useTranslation } from "react-i18next"
 import { Plus } from "lucide-react"
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/lib/scene/saison"
 import type { Plage, Programme } from "@/types/programme"
 import { Button } from "@/components/ui/button"
+import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { jourEnLettres, nomDuJour } from "./libelles"
 
@@ -26,6 +27,9 @@ export type SaisonPatch = Partial<Pick<Programme, "jourJ" | "debut" | "fin" | "p
 
 /** Un réglage seul (P9, une feuille du téléphone) ; les jours et les plages vont ensemble. */
 export type ReglageSeul = "jourJ" | "dates" | "joursPlages" | "duree" | "qui"
+
+/** « Terminé » de la feuille du téléphone : enregistre la plage en cours d'édition, sauf une nouvelle plage laissée intacte ; faux si elle est refusée. */
+export type SaisonFormHandle = { terminer: () => boolean }
 
 /** La période de réservation de l'édition de l'autre fête (Q8), et son titre pour l'erreur. */
 export type AutreFete = { debut: string; fin: string; titre: string }
@@ -48,7 +52,7 @@ function Pilule({ actif, onClick, children }: { actif: boolean; onClick: () => v
       type="button"
       aria-pressed={actif}
       onClick={onClick}
-      className={`h-8 px-3 rounded-full text-[13px] font-semibold whitespace-nowrap transition-colors duration-150 active:scale-[.97] ${
+      className={`h-8 px-3 rounded-full text-sm font-semibold whitespace-nowrap transition-colors duration-150 active:scale-[.97] ${
         actif ? "bg-foreground text-background" : "bg-secondary text-foreground/80 hover:text-foreground"
       }`}
     >
@@ -62,9 +66,9 @@ function Reglage({ titre, aide, erreurs, children }: { titre: string; aide?: str
   const id = useId()
   return (
     <div role="group" aria-labelledby={id} className="space-y-1.5">
-      <p id={id} className="text-[13px] font-semibold text-muted-foreground">{titre}</p>
+      <p id={id} className="text-sm font-semibold text-muted-foreground">{titre}</p>
       <div className="flex flex-wrap gap-1.5">{children}</div>
-      {aide && <p className="text-[12.5px] text-muted-foreground">{aide}</p>}
+      {aide && <p className="text-xs text-muted-foreground">{aide}</p>}
       {erreurs?.map((e) => <p key={e} role="alert" className="text-sm text-destructive">{e}</p>)}
     </div>
   )
@@ -103,7 +107,7 @@ function DatePastille({ prefixe, label, value, max, avecAnnee = false, onChange 
   )
 }
 
-export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, seul }: {
+export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, seul, ref }: {
   programme: Programme
   /** Écrit les champs changés (updateMask), puis recharge la page ; ne rejette
    *  jamais (un échec d'écriture s'affiche en haut de l'écran de la saison). */
@@ -115,6 +119,7 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
   onErreur?: (erreur: boolean) => void
   /** Ce réglage seul, sans la carte autour (P9). */
   seul?: ReglageSeul
+  ref?: Ref<SaisonFormHandle>
 }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
@@ -173,17 +178,30 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
   }
 
   function validerPlage() {
-    if (!editeur) return
+    if (!editeur) return true
     const plages = triPlages(editeur.index === null
       ? [...s.plages, editeur.plage]
       : s.plages.map((p, i) => (i === editeur.index ? editeur.plage : p)))
     const next = { ...s, plages, jours: joursDes(plages) }
     const textes = verifier(next)
     // Plage refusée : l'éditeur reste ouvert sur elle, rien ne bouge.
-    if (textes.length > 0) { setErreur({ champ: "plages", textes }); return }
+    if (textes.length > 0) { setErreur({ champ: "plages", textes }); return false }
     setEditeur(null)
     appliquer(next, "plages")
+    return true
   }
+
+  /** « Terminé » : comme « OK », sauf une nouvelle plage restée telle que « + Plage » l'a proposée, oubliée. */
+  function terminer() {
+    const proposee = s.plages.at(-1) ?? PLAGES_DEFAUT[0]
+    if (editeur?.index === null && editeur.plage.jour === proposee.jour && editeur.plage.debut === proposee.debut && editeur.plage.fin === proposee.fin) {
+      setEditeur(null)
+      return true
+    }
+    return validerPlage()
+  }
+
+  useImperativeHandle(ref, () => ({ terminer }))
 
   function retirerPlage() {
     if (editeur?.index == null) return
@@ -211,7 +229,7 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
     .join(" ") || undefined
 
   return (
-    <section aria-label={t("planning.saison.carte")} className={seul ? "space-y-4" : "bg-card shadow-soft rounded-2xl p-5 space-y-4"}>
+    <section aria-label={t("planning.saison.carte")} className={seul ? "space-y-4" : "carte-groupe p-5 space-y-4"}>
 
       {montrer("jourJ") && <Reglage
         titre={t("planning.gestion.jourJ")}
@@ -242,7 +260,7 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
           </button>
         ))}
         <button type="button" aria-label={t("planning.saison.ajouterPlage")} aria-expanded={editeur?.index === null}
-          className="h-[30px] self-center inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 text-[13px] font-semibold"
+          className="h-[30px] self-center inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 text-sm font-semibold"
           onClick={() => setEditeur({ index: null, plage: { ...(s.plages.at(-1) ?? PLAGES_DEFAUT[0]) } })}>
           <Plus className="h-3.5 w-3.5" aria-hidden /> {t("planning.saison.plage")}
         </button>
@@ -250,20 +268,19 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
           <div className="basis-full mt-1 flex flex-wrap items-end gap-2 rounded-xl border border-border p-3">
             <label className="space-y-1 text-xs font-semibold">
               <span className="block">{t("planning.saison.jour")}</span>
-              <select aria-label={t("planning.saison.jourPlage")} value={editeur.plage.jour}
-                className="h-10 rounded-md border border-input bg-background px-2 text-sm"
+              <ChampSelect aria-label={t("planning.saison.jourPlage")} value={editeur.plage.jour}
                 onChange={(e) => setEditeur({ ...editeur, plage: { ...editeur.plage, jour: Number(e.target.value) } })}>
                 {ORDRE_JOURS.map((j) => <option key={j} value={j}>{jourCourt(j)}</option>)}
-              </select>
+              </ChampSelect>
             </label>
             <label className="space-y-1 text-xs font-semibold">
               <span className="block">{t("planning.programme.debut")}</span>
-              <Input type="time" step={900} aria-label={t("planning.saison.debutPlage")} value={editeur.plage.debut} className="w-28"
+              <Input type="time" step={900} aria-label={t("planning.saison.debutPlage")} value={editeur.plage.debut} className="w-32"
                 onChange={(e) => setEditeur({ ...editeur, plage: { ...editeur.plage, debut: e.target.value } })} />
             </label>
             <label className="space-y-1 text-xs font-semibold">
               <span className="block">{t("planning.programme.fin")}</span>
-              <Input type="time" step={900} aria-label={t("planning.saison.finPlage")} value={editeur.plage.fin} className="w-28"
+              <Input type="time" step={900} aria-label={t("planning.saison.finPlage")} value={editeur.plage.fin} className="w-32"
                 onChange={(e) => setEditeur({ ...editeur, plage: { ...editeur.plage, fin: e.target.value } })} />
             </label>
             <div className="flex gap-1">
@@ -290,7 +307,7 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
         ))}
       </Reglage>}
 
-      {!seul && <p className="text-[13px] text-muted-foreground">{t("planning.saison.regle")}</p>}
+      {!seul && <p className="text-sm text-muted-foreground">{t("planning.saison.regle")}</p>}
     </section>
   )
 }

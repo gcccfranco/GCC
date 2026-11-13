@@ -10,10 +10,13 @@
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
-import { Check, FileText, X } from "lucide-react"
+import { FileText, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { BOUTON_CHAMP_ACTION, CHAMP_ACTION } from "@/components/reunions/champAction"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { majCompteRendu } from "@/lib/firebase/evenements"
 import { lienCompteRendu, sourceDuLien } from "@/lib/reunions/compteRendu"
+import { compter } from "@/lib/usage"
 import type { CompteRendu, Evenement } from "@/types/evenement"
 import type { UserProfile } from "@/types/user"
 
@@ -41,6 +44,7 @@ export function CompteRenduCarte({ evenement: e, user, profile, onChange }: {
     setErreur("")
     try {
       await majCompteRendu(e.id, valeur)
+      if (valeur) compter("cmd.evenement.compteRendu")
       onChange(valeur)
       setSaisie("")
     } catch {
@@ -65,7 +69,7 @@ export function CompteRenduCarte({ evenement: e, user, profile, onChange }: {
 
   if (cr) {
     return (
-      <section aria-labelledby="compte-rendu-titre" data-testid="compte-rendu-carte" className="space-y-2 raised rounded-2xl px-4 py-3.5">
+      <section aria-labelledby="compte-rendu-titre" data-testid="compte-rendu-carte" className="space-y-2 carte-groupe rounded-2xl px-4 py-3.5">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--chord-color)]"
             style={{ background: "color-mix(in srgb, var(--chord-color) 14%, transparent)" }}>
@@ -91,22 +95,22 @@ export function CompteRenduCarte({ evenement: e, user, profile, onChange }: {
   }
 
   return (
-    <section aria-labelledby="compte-rendu-titre" data-testid="compte-rendu-carte" className="space-y-3 raised rounded-2xl p-4">
+    <section aria-labelledby="compte-rendu-titre" data-testid="compte-rendu-carte" className="space-y-3 carte-groupe rounded-2xl p-4">
       <div className="space-y-1">
         <h3 id="compte-rendu-titre" className="text-base font-semibold text-foreground">{t("evenements.compteRendu.titre")}</h3>
         <p className="text-sm text-muted-foreground">{t("evenements.compteRendu.aide")}</p>
       </div>
       <form onSubmit={enregistrer} noValidate className="space-y-3">
-        <label className="flex h-11 items-center gap-2 rounded-full border-[1.5px] border-dashed border-muted-foreground/40 bg-background px-3.5 ring-offset-background focus-within:border-solid focus-within:border-foreground focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+        <label className={CHAMP_ACTION}>
           <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <input type="url" inputMode="url" value={saisie} onChange={(ev) => { setSaisie(ev.target.value); setErreur("") }}
             aria-label={t("evenements.compteRendu.lien")} placeholder={t("evenements.compteRendu.placeholder")}
             className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground" />
+          <Button type="submit" size="sm" disabled={busy || !saisie.trim()} className={`${BOUTON_CHAMP_ACTION} ${TOUCHER_44}`}>
+            {t("evenements.compteRendu.enregistrer")}
+          </Button>
         </label>
         {alerte}
-        <Button type="submit" disabled={busy || !saisie.trim()} className="gap-1.5">
-          <Check className="h-4 w-4" aria-hidden />{t("evenements.compteRendu.enregistrer")}
-        </Button>
       </form>
     </section>
   )

@@ -123,7 +123,7 @@ export type PropositionTitulaire = {
 }
 
 /** `fixe` : « Président » ou « Vice-président » (absent pour un rôle créé, même du même nom). */
-export type RoleAffiche = { nom: string; nomZh: string; fixe?: "president" | "vp" }
+type RoleAffiche = { nom: string; nomZh: string; fixe?: "president" | "vp" }
 
 export type PropositionMembre = {
   nom: string

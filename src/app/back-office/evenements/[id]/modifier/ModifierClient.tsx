@@ -4,8 +4,9 @@
 // compteur d'inscrits n'est jamais envoyé. Lot U6, B3 : au Back-Office ; une réunion sous
 // Réunions, un évènement sous Évènements (agencement v18, B15), l'autre adresse redirige.
 // Agencement v18 (B3, B4) : en grand, le formulaire s'ouvre dans le volet de droite ; en un volet, c'est
-// une page, avec « ‹ Évènements » (ou « ‹ Réunions ») pour retour.
+// une page, avec « ‹ Évènements » pour retour ; une réunion s'intitule « Modifier la réunion » et revient à sa fiche.
 
+import { compter } from "@/lib/usage"
 import { useEffect, useState } from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
@@ -17,8 +18,10 @@ import { getEvenement, updateEvenement } from "@/lib/firebase/evenements"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
 import type { Evenement } from "@/types/evenement"
 import { EvenementForm } from "@/components/evenements/EvenementForm"
+import { ReunionForm } from "@/components/reunions/ReunionForm"
 import { EnTetePage } from "@/components/layout/EnTetePage"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
+import { Squelette } from "@/components/layout/Squelette";
 
 export function ModifierClient() {
   const { t } = useTranslation()
@@ -41,15 +44,22 @@ export function ModifierClient() {
   const reunion = !!evenement && estReunion(evenement)
   const page = (contenu: React.ReactNode) => deuxVolets ? <div className="max-w-[720px]">{contenu}</div> : (
     <>
-      <EnTetePage
-        retour={{ href: reunion ? "/back-office/reunions" : "/back-office/evenements", label: t(reunion ? "backOffice.parties.reunions" : "backOffice.parties.evenements") }}
-        titre={evenement ? evenement.titre : t("evenements.modifier")}
-        sousTitre={evenement ? t("evenements.modifier") : undefined}
-      />
+      {reunion ? (
+        <EnTetePage
+          retour={{ href: `/back-office/reunions/${id}`, label: evenement.titre }}
+          titre={t("backOffice.modifierReunion")}
+        />
+      ) : (
+        <EnTetePage
+          retour={{ href: "/back-office/evenements", label: t("backOffice.parties.evenements") }}
+          titre={evenement ? evenement.titre : t("evenements.modifier")}
+          sousTitre={evenement ? t("evenements.modifier") : undefined}
+        />
+      )}
       <div className="px-[var(--marge-page)]">{contenu}</div>
     </>
   )
-  if (profileLoading || !user || evenement === undefined) return page(<p className="text-sm text-muted-foreground">{t("common.loading")}</p>)
+  if (profileLoading || !user || evenement === undefined) return page(<Squelette enTete={false} className="p-0" />)
   if (!evenement) return page(<p className="text-sm text-muted-foreground">{t("evenements.notFound")}</p>)
   if (!canEditEvenement(user, profile, evenement)) return page(<p className="text-sm text-muted-foreground">{t("evenements.reserved")}</p>)
 
@@ -59,14 +69,32 @@ export function ModifierClient() {
   // L'organisateur garde le public de sa fiche même s'il ne pourrait plus le choisir aujourd'hui.
   const pours = Array.from(new Set([evenement.pour, ...creatableEvenementPours(user, profile, ANNONCE_SECTIONS)]))
 
+  // Une réunion a son propre formulaire (Timothée, 08/11/2026 : « une réunion n'est pas un évènement ») ; ses champs
+  // d'évènement (bannière, fin) restent en base tels quels.
+  if (reunion) return page(
+    <ReunionForm
+      initial={initial}
+      pours={pours}
+      creation={false}
+      titreCache={!deuxVolets}
+      onSubmit={async (values) => {
+        await updateEvenement(evenement.id, values)
+        compter("cmd.evenement.modifier")
+        router.push(`${base}/${evenement.id}`)
+      }}
+      onCancel={() => router.push(`${base}/${evenement.id}`)}
+    />
+  )
   return page(
     <EvenementForm
       initial={initial}
       pours={pours}
       creation={false}
+      titreCache={!deuxVolets}
       inscrits={evenement.inscrits}
       onSubmit={async (values) => {
         await updateEvenement(evenement.id, values)
+        compter("cmd.evenement.modifier")
         router.push(`${base}/${evenement.id}`)
       }}
       onCancel={() => router.push(`${base}/${evenement.id}`)}

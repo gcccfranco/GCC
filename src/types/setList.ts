@@ -1,5 +1,3 @@
-import { Language } from "@/types/common";
-
 /** Nuance d'une section : étiquettes prédéfinies (voir lib/setlist/nuances.ts)
  *  + texte libre optionnel en complément. */
 export type SectionNuance = {
@@ -82,13 +80,40 @@ export type SetlistItem = {
   proposition?: { id: string; titre: string };
 };
 
-export type Setlist = {
+export interface FSSetlist {
   id: string;
   title: string;
+  leader: string;
+  category: string;
   date: string;
-  theme: string | null;
-  leader: string | null;
-  language: Language;
+  language: "fr" | "zh" | "mixed";
   notes: string;
+  /** Séance Campus liée — distingue matin/soir d'un même jour pour le matching
+   *  setlist↔service. Absent pour les setlists hors planning / autres catégories. */
+  moment?: "matin" | "soir";
+  createdAt: Date | null;
+  updatedAt?: Date | null;
+  /** Dernière écriture, par n'importe quel écrivain (lot LF) : sert seulement à la synchronisation de la copie
+   *  de la liste. `updatedAt` garde son sens (« setlist modifiée » de la cloche). */
+  majLe?: Date | null;
   items: SetlistItem[];
-};
+  isDraft?: boolean;
+  isPrivate?: boolean;
+  ownerId?: string | null;
+  /** Lien de la présentation (PPT) de la régie — écrit par /api/setlist/presentation. */
+  presentationUrl?: string;
+  /** L'équipe de la setlist (docs/spec-partage-setlist.md) : uids qui la voient et la modifient,
+   *  choisis par le propriétaire ou un admin. Absent = personne. */
+  editeurs?: string[];
+  /** Rôle de chaque personne de `editeurs`, pour l'affichage (absent = musicien). */
+  rolesPartage?: Record<string, "musicien" | "chanteur">;
+  /** Setlist d'un passage de fête (docs/spec-chants-fetes.md) : l'édition (`programmes/{id}`), le
+   *  passage et son seul « Qui » à la dernière saisie. Écrit par le serveur seul ; absent = setlist
+   *  ordinaire. */
+  fete?: { programme: string; passage: string; qui: string };
+  /** Corbeille (SC2, docs/spec-createur-corbeille-absences.md) : date-heure ISO de la mise à la corbeille
+   *  et uid de qui l'a faite. Absents = setlist en place ; présents = elle n'apparaît que dans la corbeille
+   *  et le cron la purge après 30 jours. */
+  supprimeeLe?: string;
+  supprimeePar?: string;
+}

@@ -5,42 +5,42 @@
 //   + déplacement. Marche partout (tablette au stylet, téléphone doigt+stylet)
 //   sans détection d'appareil, et sans jamais entrer en conflit avec le trait.
 // - rendu au devicePixelRatio → traits nets, jamais pixelisés (même zoomés)
-// - gomme TRAIT par trait, annuler, tailles S/M/L par outil
+// - gomme TRAIT par trait ; outil, couleur, tailles et annuler vivent dans BarreAnnotation et PerformanceMode
 // - le zoom/déplacement (loupe) est possédé par le parent (PerformanceMode), qui
 //   l'applique aussi au texte ; ici on s'en sert pour le rendu et la conversion
 //   écran→données. Le parent possède aussi les données (AnnotationData).
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Highlighter, Eraser, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
+import { TAILLE_NUANCE, polylignes, type EntreeSigne } from "@/lib/annotations/tampons";
 import {
   type AnnotationData,
   type Stroke,
   type StrokeTool,
   drawStrokes,
   simplifyStroke,
+  styleTrait,
   strokeHitTest,
+  textesSignes,
 } from "@/lib/annotations/strokes";
 
-const COLORS = ["#1a1a1a", "#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#ffffff"];
+// Stylo et surligneur : épaisseur, couleur et transparence viennent des préréglages (`src/lib/annotations/prereglages.ts`).
+export const SIZES = { eraser: [12, 24, 40] };
+/** Corps d'un texte posé (AN-5), en px à la loupe 100 %. */
+const TAILLE_TEXTE = 17;
+const LONGUEUR_MAX_TEXTE = 80;
 
-const SIZES: Record<"pen" | "highlighter" | "eraser", [number, number, number]> = {
-  pen: [2, 3.5, 6],
-  highlighter: [12, 20, 32],
-  eraser: [12, 24, 40],
-};
+export type Tool = StrokeTool | "eraser";
 
-type Tool = StrokeTool | "eraser";
+export const MAX_ZOOM = 3;
+export const ZOOM_STEP = 0.5;
 
-const MAX_ZOOM = 3;
-const ZOOM_STEP = 0.5;
-
-type Pan = { x: number; y: number };
+export type Pan = { x: number; y: number };
 const dist = (a: Pan, b: Pan) => Math.hypot(a.x - b.x, a.y - b.y);
 const mid = (a: Pan, b: Pan): Pan => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 // Borne le déplacement pour que le contenu couvre toujours le viewport
 // (à 100 %, force le pan à 0 → la loupe se réinitialise d'elle-même).
-function clampPan(zoom: number, p: Pan): Pan {
+export function clampPan(zoom: number, p: Pan): Pan {
   const w = window.innerWidth;
   const h = window.innerHeight;
   return {
@@ -50,36 +50,56 @@ function clampPan(zoom: number, p: Pan): Pan {
 }
 
 /** Calque de LECTURE : affiche les traits, sans interaction. */
-export function StrokesLayer({ data }: { data: AnnotationData }) {
+// `rogneBas` : hauteur (CSS) du bas de l'écran que le calque ne couvre pas (aperçu de page, lot L6).
+// clip-path garde les coordonnées intactes et retire aussi les touchers de la bande.
+// `clipPath` (px écran) remplace `rogneBas` : le Crayon y ajoute des trous (repères de section, au-dessus de l'encre).
+// Demi-page : `clip` (clip-path en px écran, sur un cadre fixe) et `decalage` (px écran) rognent et descendent les traits comme le texte.
+export function StrokesLayer({ data, rogneBas, clip, decalage, clipPath, fond }: { data: AnnotationData; rogneBas?: string; clip?: string; decalage?: number; clipPath?: string; fond?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { i18n } = useTranslation();
+  const w = window.innerWidth;
+  const h = window.innerHeight;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const dpr = window.devicePixelRatio || 1;
-    const w = window.innerWidth;
-    const h = window.innerHeight;
     canvas.width = w * dpr;
     canvas.height = h * dpr;
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    drawStrokes(ctx, data.strokes, {
+    const dessiner = () => drawStrokes(ctx, data.strokes, {
       dpr,
       scaleX: w / (data.w || w),
       scaleY: h / (data.h || h),
+      fond,
+      langue: i18n.language,
+      redessiner: dessiner, // la police des nuances est arrivée
     });
-  }, [data]);
+    dessiner();
+  }, [data, w, h, fond, i18n.language]);
 
-  return (
+  const canvas = (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 5 }}
+      // Boîtes englobantes des tracés (px écran) : lues par les tests, qui comparent un trait à son mot.
+      data-strokes-boites={JSON.stringify(data.strokes.map((s) => {
+        const xs = s.points.map((p) => p[0] * w / (data.w || w));
+        const ys = s.points.map((p) => p[1] * h / (data.h || h));
+        return [Math.round(Math.min(...xs)), Math.round(Math.min(...ys)), Math.round(Math.max(...xs)), Math.round(Math.max(...ys))];
+      }))}
+      // Couleurs réellement dessinées (garde de lisibilité comprise) : lues par les tests.
+      data-strokes-couleurs={JSON.stringify(data.strokes.map((s) => styleTrait(s, fond).color))}
+      // Texte affiché de chaque texte et tampon (AN-5) : lu par les tests.
+      data-strokes-signes={JSON.stringify(textesSignes(data.strokes, i18n.language))}
+      style={{ zIndex: clip ? undefined : 5, clipPath: clipPath ?? (rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined), transform: decalage ? `translateY(${decalage}px)` : undefined }}
       aria-hidden="true"
     />
   );
+  return clip ? <div data-strokes-demi className="absolute inset-0 pointer-events-none" style={{ zIndex: 5, clipPath: clip }}>{canvas}</div> : canvas;
 }
 
 // ─── Canvas d'édition ─────────────────────────────────────────────────────────
@@ -91,14 +111,39 @@ interface Props {
   zoom: number;
   pan: Pan;
   onZoomPanChange: (zoom: number, pan: Pan) => void;
+  /** Bas de l'écran non couvert (aperçu de page, lot L6). */
+  rogneBas?: string;
+  /** Remplace `rogneBas` si fourni (clip-path en px écran, avec des trous : repères de section au-dessus de l'encre). */
+  clipPath?: string;
+  /** Outil, couleur, épaisseur (px), transparence et taille de gomme : possédés par le parent, qui porte la barre d'outils. */
+  tool: Tool;
+  color: string;
+  size: number;
+  alpha: number;
+  /** Fond de la page (garde de lisibilité au rendu, AN-4). */
+  fond: string;
+  tailleGomme: number;
+  /** Aucun tracé ni gomme (partition pas encore lue) ; la loupe reste. */
+  inerte?: boolean;
+  /** Un tracé ou un passage de gomme commence (le parent regroupe ce qui suit en une action à annuler). */
+  onDebutGeste?: () => void;
+  /** AN-2 : « le doigt ne dessine pas » : un doigt seul ne trace pas, ses évènements remontent à la page (deux doigts gardent la loupe). */
+  doigtLibre?: boolean;
+  /** AN-2 : contact du stylet qui a ouvert le Crayon ; le premier trait commence là, repris au montage. */
+  contactInitial?: { x: number; y: number; id: number } | null;
+  /** AN-2 : un trait vient d'être fini au stylet. */
+  onTraitStylet?: () => void;
+  /** AN-5 : signe pris dans « Texte, tampons et formes » ; il remplace le trait libre (la gomme reste prioritaire). */
+  signe?: EntreeSigne | null;
+  /** AN-5 : em (px sans loupe) de la ligne la plus proche du point (espace des données), pour la taille des signes. */
+  unite?: (x: number, y: number) => number;
+  /** AN-5 : page affichée ; un champ de texte encore ouvert à son changement est fermé, jamais posé sur la nouvelle page. */
+  cle?: number;
 }
 
-export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }: Props) {
-  const { t } = useTranslation();
+export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas, clipPath, tool, color, size, alpha, fond, tailleGomme, inerte, onDebutGeste, doigtLibre, contactInitial, onTraitStylet, signe, unite, cle }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [tool, setTool] = useState<Tool>("pen");
-  const [color, setColor] = useState(COLORS[0]);
-  const [sizeIdx, setSizeIdx] = useState(1); // S/M/L → 0/1/2
+  const { t, i18n } = useTranslation();
 
   // Pointeurs actifs sur le canvas (multi-touch). 1 = tracé, 2 = pincer/déplacer.
   const pointers = useRef<Map<number, Pan>>(new Map());
@@ -109,7 +154,6 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
   // jusqu'à relâchement complet (évite un trait parasite en levant un doigt).
   const suppressDraw = useRef(false);
   const livePoints = useRef<[number, number][]>([]);
-  const history = useRef<Stroke[][]>([]);
   // Cercle de prévisualisation qui suit le pointeur (position pilotée hors React)
   const cursorRef = useRef<HTMLDivElement>(null);
 
@@ -127,7 +171,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
     [data.w, data.h, zoom, pan.x, pan.y],
   );
 
-  const redraw = useCallback(() => {
+  const redraw = useCallback((strokes: Stroke[] = data.strokes) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -135,15 +179,18 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
     const dpr = window.devicePixelRatio || 1;
     const w = window.innerWidth;
     const h = window.innerHeight;
-    drawStrokes(ctx, data.strokes, {
+    drawStrokes(ctx, strokes, {
       dpr,
       scaleX: w / (data.w || w),
       scaleY: h / (data.h || h),
       zoom,
       panX: pan.x,
       panY: pan.y,
+      fond,
+      langue: i18n.language,
+      redessiner: () => redraw(),
     });
-  }, [data, zoom, pan.x, pan.y]);
+  }, [data, zoom, pan.x, pan.y, fond, i18n.language]);
 
   // Dimensionner au devicePixelRatio (et au resize)
   useEffect(() => {
@@ -167,9 +214,31 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
 
   useEffect(() => { redraw(); }, [redraw]);
 
-  const pushHistory = () => {
-    history.current.push(data.strokes);
-    if (history.current.length > 30) history.current.shift();
+  // ── AN-5 : texte, tampons et formes ──
+  const toEcran = ([x, y]: [number, number]): [number, number] => [x * (window.innerWidth / (data.w || window.innerWidth)) * zoom + pan.x, y * (window.innerHeight / (data.h || window.innerHeight)) * zoom + pan.y];
+  // Champ de saisie d'un texte : à l'endroit touché (px écran) ; `cible` = texte rouvert en modification.
+  const [champ, setChamp] = useState<null | { x: number; y: number; texte: string; cible?: Stroke }>(null);
+  const champRef = useRef(champ);
+  const champEl = useRef<HTMLInputElement>(null);
+  useEffect(() => { champRef.current = null; setChamp(null); }, [cle]); // eslint-disable-line react-hooks/set-state-in-effect -- ferme le champ au changement de page
+  const ouvrirChamp = (c: NonNullable<typeof champ>) => { champRef.current = c; setChamp(c); };
+  // Texte déplacé au glisser : le texte touché, l'écart du doigt à son point, et sa nouvelle place.
+  const deplacement = useRef<null | { cible: Stroke; dx: number; dy: number; nouveau?: [number, number] }>(null);
+  /** Entrée, perte du focus ou toucher ailleurs : le texte est posé (vide : rien ; vide sur un texte rouvert : il est retiré). */
+  const validerChamp = (texte: string) => {
+    const c = champRef.current;
+    if (!c) return;
+    champRef.current = null;
+    setChamp(null);
+    const v = texte.trim().slice(0, LONGUEUR_MAX_TEXTE);
+    if (c.cible) {
+      if (v === c.cible.texte) return;
+      onDebutGeste?.();
+      onChange({ ...data, strokes: v ? data.strokes.map((s) => (s === c.cible ? { ...s, texte: v } : s)) : data.strokes.filter((s) => s !== c.cible) });
+    } else if (v) {
+      onDebutGeste?.();
+      onChange({ ...data, strokes: [...data.strokes, { tool: "text", texte: v, size: TAILLE_TEXTE, color, points: [toOrig(c.x, c.y)] }] });
+    }
   };
 
   const eraseAt = useCallback(
@@ -178,13 +247,13 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
       // Gomme de taille fixe à l'écran → rayon en espace données = rayon écran
       // ramené par l'échelle viewport↔données et par le zoom de la loupe.
       const w = window.innerWidth;
-      const radius = (SIZES.eraser[sizeIdx] * ((data.w || w) / w)) / zoom;
+      const radius = (SIZES.eraser[tailleGomme] * ((data.w || w) / w)) / zoom;
       const remaining = data.strokes.filter((s) => !strokeHitTest(s, ox, oy, radius));
       if (remaining.length !== data.strokes.length) {
         onChange({ ...data, strokes: remaining });
       }
     },
-    [data, onChange, sizeIdx, toOrig, zoom],
+    [data, onChange, tailleGomme, toOrig, zoom],
   );
 
   // ── Cercle indicateur de taille (suit le pointeur, piloté hors React) ──
@@ -209,11 +278,13 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.strokeStyle = color;
+    const st = tool === "eraser" ? null : styleTrait({ tool, size, color, alpha, points: [] }, fond);
+    ctx.strokeStyle = st?.color ?? color;
     // Le segment live est tracé en coordonnées écran (sans la matrice de zoom) :
     // on multiplie donc l'épaisseur par le zoom pour coller au rendu final.
-    ctx.lineWidth = SIZES[tool === "eraser" ? "pen" : tool][sizeIdx] * zoom;
-    ctx.globalAlpha = tool === "highlighter" ? 0.35 : 1;
+    ctx.lineWidth = size * zoom;
+    ctx.globalAlpha = st?.alpha ?? 1;
+    if (st) ctx.globalCompositeOperation = st.composite;
     ctx.beginPath();
     ctx.moveTo(prev[0], prev[1]);
     ctx.lineTo(x, y);
@@ -225,25 +296,98 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
   const cancelStroke = () => {
     drawingPointer.current = null;
     livePoints.current = [];
+    deplacement.current = null;
     hideCursor();
     redraw(); // efface le segment live partiel
   };
 
-  // Zoom autour d'un point écran (centre par défaut), en gardant ce point ancré.
-  const zoomAround = (newZoom: number, anchor: Pan) => {
-    const z = Math.min(MAX_ZOOM, Math.max(1, newZoom));
-    const p0x = (anchor.x - pan.x) / zoom;
-    const p0y = (anchor.y - pan.y) / zoom;
-    onZoomPanChange(z, clampPan(z, { x: anchor.x - p0x * z, y: anchor.y - p0y * z }));
-  };
-  const zoomBy = (delta: number) =>
-    zoomAround(Math.round((zoom + delta) * 10) / 10, { x: window.innerWidth / 2, y: window.innerHeight / 2 });
-  const resetZoom = () => onZoomPanChange(1, { x: 0, y: 0 });
+  // Un doigt seul qui ne dessine pas : ses évènements remontent à la page (tourner la page).
+  const doigtSeul = (e: React.PointerEvent) => !!doigtLibre && e.pointerType === "touch";
+
+  // Premier trait du stylet qui a ouvert le Crayon : il commence au point de contact.
+  useEffect(() => {
+    if (!contactInitial) return;
+    pointers.current.set(contactInitial.id, { x: contactInitial.x, y: contactInitial.y });
+    try { canvasRef.current?.setPointerCapture(contactInitial.id); } catch { /* pointeur simulé : refusé */ }
+    debuterTrace(contactInitial.id, contactInitial.x, contactInitial.y);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function debuterTrace(id: number, x: number, y: number) {
+    drawingPointer.current = id;
+    onDebutGeste?.();
+    showCursorAt(x, y);
+    if (tool === "eraser") {
+      eraseAt(x, y);
+      return;
+    }
+    livePoints.current = [[x, y]];
+    deplacement.current = null;
+    if (signe?.nature === "texte") {
+      // Un texte touché se déplace au glisser, se rouvre au toucher.
+      const [ox, oy] = toOrig(x, y);
+      const cible = [...data.strokes].reverse().find((s) => s.tool === "text" && strokeHitTest(s, ox, oy, 4 / zoom));
+      if (cible) deplacement.current = { cible, dx: cible.points[0][0] - ox, dy: cible.points[0][1] - oy };
+    }
+  }
+
+  // Forme en cours de glisser (flèche, cercle, trait) : aperçu par-dessus le dessin.
+  function apercuForme(a: [number, number], b: [number, number]) {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!signe || !ctx || tool === "eraser") return;
+    redraw();
+    const dpr = window.devicePixelRatio || 1;
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = (tool === "pen" ? size : 3.5) * zoom;
+    for (const pl of polylignes(signe.cle, a, b, 0)) {
+      ctx.beginPath();
+      pl.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Fin du geste d'un signe : texte (champ ou déplacement), tampon (un toucher) ou forme (de `a` à `b`).
+  function poserSigne(sg: EntreeSigne, a: [number, number], b: [number, number]) {
+    const d = deplacement.current;
+    deplacement.current = null;
+    if (sg.nature === "texte") {
+      if (d?.nouveau) onChange({ ...data, strokes: data.strokes.map((s) => (s === d.cible ? { ...s, points: [d.nouveau!] } : s)) });
+      else if (d) { const [x, y] = toEcran(d.cible.points[0]); ouvrirChamp({ x, y, texte: d.cible.texte ?? "", cible: d.cible }); }
+      else ouvrirChamp({ x: a[0], y: a[1], texte: "" });
+      return;
+    }
+    const [oa, ob] = [toOrig(...a), toOrig(...b)];
+    if (sg.glisser && Math.hypot(b[0] - a[0], b[1] - a[1]) < 6) return;
+    const u = unite?.(oa[0], oa[1]) ?? 16;
+    if (sg.nature === "stamp") {
+      onChange({ ...data, strokes: [...data.strokes, { tool: "stamp", genre: sg.genre, size: TAILLE_NUANCE * u, color, points: [oa] }] });
+    } else {
+      const epais = tool === "pen" ? size : 3.5; // sur le surligneur, les signes se tracent au stylo
+      onChange({ ...data, strokes: [...data.strokes, ...polylignes(sg.cle, oa, ob, u).map((points): Stroke => ({ tool: "pen", size: epais, color, alpha: tool === "pen" ? alpha : 1, points }))] });
+    }
+  }
 
   function onPointerDown(e: React.PointerEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    // Un champ de texte ouvert : ce toucher le valide, sans poser autre chose.
+    if (champRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      validerChamp(champEl.current?.value ?? "");
+      return;
+    }
+    // Un doigt posé pendant un trait au stylet est une paume : ignorée, sans tourner la page.
+    const paume = doigtSeul(e) && drawingPointer.current !== null;
+    if (!doigtSeul(e) || paume) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (paume) return;
+    try { (e.target as HTMLElement).setPointerCapture(e.pointerId); } catch { /* pointeur simulé : refusé */ }
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
     // 2e pointeur → bascule en geste pincer + déplacement
@@ -256,15 +400,8 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
     if (pointers.current.size > 2) return; // geste à 2 prioritaire
 
     // 1 pointeur = tracé (sauf juste après un geste : attendre le relâchement total)
-    if (suppressDraw.current) return;
-    drawingPointer.current = e.pointerId;
-    showCursorAt(e.clientX, e.clientY);
-    if (tool === "eraser") {
-      pushHistory();
-      eraseAt(e.clientX, e.clientY);
-      return;
-    }
-    livePoints.current = [[e.clientX, e.clientY]];
+    if (suppressDraw.current || inerte || doigtSeul(e)) return;
+    debuterTrace(e.pointerId, e.clientX, e.clientY);
   }
 
   function onPointerMove(e: React.PointerEvent) {
@@ -286,11 +423,23 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
       return;
     }
 
-    showCursorAt(e.clientX, e.clientY); // survol + dessin : le cercle suit toujours
+    if (!doigtSeul(e)) showCursorAt(e.clientX, e.clientY); // survol + dessin : le cercle suit toujours
     if (e.pointerId !== drawingPointer.current) return;
     e.preventDefault();
     if (tool === "eraser") {
       eraseAt(e.clientX, e.clientY);
+      return;
+    }
+    if (signe) {
+      const d = deplacement.current;
+      const [a] = livePoints.current;
+      if (d) {
+        if (!d.nouveau && Math.hypot(e.clientX - a[0], e.clientY - a[1]) < 6) return;
+        const [ox, oy] = toOrig(e.clientX, e.clientY);
+        d.nouveau = [ox + d.dx, oy + d.dy];
+        redraw(data.strokes.map((s) => (s === d.cible ? { ...s, points: [d.nouveau!] } : s)));
+      } else if (signe.glisser) apercuForme(a, [e.clientX, e.clientY]);
+      livePoints.current = [a, [e.clientX, e.clientY]];
       return;
     }
     drawLiveSegment(e.clientX, e.clientY);
@@ -298,7 +447,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
   }
 
   function onPointerUp(e: React.PointerEvent) {
-    e.stopPropagation();
+    if (!doigtSeul(e)) e.stopPropagation();
     pointers.current.delete(e.pointerId);
 
     // Fin (ou allègement) d'un geste à 2 pointeurs
@@ -319,47 +468,65 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
     const pts = livePoints.current;
     livePoints.current = [];
     if (pts.length === 0) return;
-    pushHistory();
+    if (signe) {
+      poserSigne(signe, pts[0], pts[pts.length - 1]);
+      if (e.pointerType === "pen") onTraitStylet?.();
+      return;
+    }
     const stroke: Stroke = {
       tool,
-      size: SIZES[tool][sizeIdx],
+      size,
       color,
+      alpha,
       points: simplifyStroke(pts.map(([x, y]) => toOrig(x, y))),
     };
     onChange({ ...data, strokes: [...data.strokes, stroke] });
+    if (e.pointerType === "pen") onTraitStylet?.();
   }
 
-  function undo() {
-    const prev = history.current.pop();
-    if (prev) onChange({ ...data, strokes: prev });
-  }
-
-  function clearAll() {
-    if (data.strokes.length === 0) return;
-    pushHistory();
-    onChange({ ...data, strokes: [] });
-  }
-
-  // Aperçu de taille dans le menu : barre (stylo/surligneur) à l'épaisseur réelle
-  // du trait, ou disque (gomme) à son diamètre — plafonnés pour tenir dans le bouton.
-  const sizeBar = (i: number) => Math.min(SIZES[tool][i], 14 + i * 4);
-  const eraserDot = (i: number) => Math.min(SIZES.eraser[i], 30); // 12 / 24 / 30
   // Diamètre du cercle qui suit le pointeur : empreinte de la gomme (= 2× son rayon,
   // taille fixe à l'écran), ou épaisseur du trait stylo/surligneur — qui suit le zoom.
-  const cursorDiameter = tool === "eraser" ? SIZES.eraser[sizeIdx] * 2 : SIZES[tool][sizeIdx] * zoom;
+  const cursorDiameter = tool === "eraser" ? SIZES.eraser[tailleGomme] * 2 : size * zoom;
 
   return (
     <>
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none"
-        style={{ zIndex: 10, cursor: tool === "eraser" ? "cell" : "crosshair" }}
+        style={{
+          zIndex: 10,
+          cursor: tool === "eraser" ? "cell" : "crosshair",
+          clipPath: clipPath ?? (rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined),
+        }}
+        data-reperes-dessus={clipPath?.includes("Z M") ? "" : undefined}
+        data-strokes-signes={JSON.stringify(textesSignes(data.strokes, i18n.language))}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         onPointerLeave={hideCursor}
       />
+
+      {champ && (
+        <input
+          ref={champEl}
+          autoFocus
+          defaultValue={champ.texte}
+          maxLength={LONGUEUR_MAX_TEXTE}
+          aria-label={t("performance.signes.champ")}
+          className="absolute rounded-md border border-border bg-background px-2 py-1 text-foreground shadow-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          style={{ zIndex: 11, left: champ.x, top: champ.y - 18, width: Math.min(256, window.innerWidth - champ.x - 8), minWidth: 120, fontSize: TAILLE_TEXTE, fontWeight: 600 }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.nativeEvent.isComposing) return; // saisie en cours (pinyin) : Entrée et Échap sont à la méthode de saisie
+            if (e.key === "Enter") { e.preventDefault(); validerChamp(e.currentTarget.value); }
+            else if (e.key === "Escape") { e.preventDefault(); champRef.current = null; setChamp(null); }
+          }}
+          onBlur={(e) => validerChamp(e.currentTarget.value)}
+        />
+      )}
 
       {/* Cercle qui suit le pointeur : montre la taille réelle de l'outil.
           Position/visibilité pilotées hors React (style.transform / opacity). */}
@@ -369,6 +536,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
         className="absolute top-0 left-0 rounded-full pointer-events-none opacity-0"
         style={{
           zIndex: 10,
+          display: signe && tool !== "eraser" ? "none" : undefined,
           width: cursorDiameter,
           height: cursorDiameter,
           marginLeft: -cursorDiameter / 2,
@@ -378,127 +546,6 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
           boxShadow: "0 0 0 1px rgba(0,0,0,0.25)",
         }}
       />
-
-      {/* Panneau d'outils — bord droit, centré */}
-      <div
-        className="absolute top-1/2 -translate-y-1/2 flex flex-col gap-1.5 material-panel border border-border rounded-xl p-2 shadow-lg max-h-[85vh] overflow-y-auto"
-        style={{ zIndex: 11, right: "calc(0.75rem + var(--sar, 0px))" }}
-        onPointerDown={(e) => e.stopPropagation()}
-        onPointerUp={(e) => e.stopPropagation()}
-      >
-        {/* Zoom (loupe) : pincer à 2 doigts OU ces boutons. Le % réinitialise à 100 %. */}
-        <ToolBtn active={false} title={t("performance.tools.zoomIn")} onClick={() => zoomBy(ZOOM_STEP)}>
-          <ZoomIn className="h-5 w-5" />
-        </ToolBtn>
-        <button
-          title={t("performance.tools.resetZoom")}
-          aria-label={t("performance.tools.resetZoom")}
-          onClick={resetZoom}
-          disabled={zoom === 1}
-          className="w-11 h-6 flex items-center justify-center rounded-lg text-xs font-semibold tabular-nums text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
-        >
-          {Math.round(zoom * 100)}%
-        </button>
-        <ToolBtn active={false} title={t("performance.tools.zoomOut")} onClick={() => zoomBy(-ZOOM_STEP)}>
-          <ZoomOut className="h-5 w-5" />
-        </ToolBtn>
-
-        <div className="w-full h-px bg-border my-0.5" />
-
-        <ToolBtn active={tool === "pen"} title={t("performance.tools.pen")} onClick={() => setTool("pen")}>
-          <Pencil className="h-5 w-5" />
-        </ToolBtn>
-        <ToolBtn active={tool === "highlighter"} title={t("performance.tools.highlighter")} onClick={() => setTool("highlighter")}>
-          <Highlighter className="h-5 w-5" />
-        </ToolBtn>
-        <ToolBtn active={tool === "eraser"} title={t("performance.tools.eraser")} onClick={() => setTool("eraser")}>
-          <Eraser className="h-5 w-5" />
-        </ToolBtn>
-
-        <div className="w-full h-px bg-border my-0.5" />
-
-        {/* Tailles S / M / L pour l'outil courant */}
-        {([0, 1, 2] as const).map((i) => (
-          <button
-            key={i}
-            title={[t("performance.tools.small"), t("performance.tools.medium"), t("performance.tools.large")][i]}
-            onClick={() => setSizeIdx(i)}
-            className={`w-11 h-9 flex items-center justify-center rounded-lg transition-colors ${
-              sizeIdx === i ? "bg-primary/15" : "hover:bg-muted"
-            }`}
-          >
-            <span
-              className="rounded-full"
-              style={{
-                width: tool === "eraser" ? eraserDot(i) : 24,
-                height: tool === "eraser" ? eraserDot(i) : sizeBar(i),
-                background: tool === "eraser" ? "var(--muted-foreground)" : color,
-                opacity: tool === "highlighter" ? 0.35 : 1,
-                boxShadow:
-                  tool !== "eraser" && color === "#ffffff"
-                    ? "inset 0 0 0 1px var(--border)"
-                    : undefined,
-              }}
-            />
-          </button>
-        ))}
-
-        {tool !== "eraser" && (
-          <>
-            <div className="w-full h-px bg-border my-0.5" />
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                title={c}
-                onClick={() => setColor(c)}
-                className="w-8 h-8 mx-auto rounded-full border-2 transition-transform"
-                style={{
-                  backgroundColor: c,
-                  borderColor: color === c ? "var(--primary)" : "var(--border)",
-                  transform: color === c ? "scale(1.15)" : "scale(1)",
-                  boxShadow: c === "#ffffff" ? "inset 0 0 0 1px var(--border)" : undefined,
-                }}
-              />
-            ))}
-          </>
-        )}
-
-        <div className="w-full h-px bg-border my-0.5" />
-
-        <ToolBtn active={false} title={t("performance.tools.undo")} onClick={undo}>
-          <Undo2 className="h-5 w-5" />
-        </ToolBtn>
-        <ToolBtn active={false} title={t("performance.tools.clearAll")} onClick={clearAll}>
-          <Trash2 className="h-5 w-5 text-destructive" />
-        </ToolBtn>
-      </div>
     </>
-  );
-}
-
-function ToolBtn({
-  active,
-  title,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  title: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      className={`w-11 h-11 flex items-center justify-center rounded-lg transition-colors ${
-        active
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-      }`}
-    >
-      {children}
-    </button>
   );
 }

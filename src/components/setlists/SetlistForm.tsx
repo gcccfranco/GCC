@@ -14,7 +14,7 @@ import {
 } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { creatableCategories, isAdminUser, canDeleteSetlist, canSetSetlistTeam } from "@/lib/access";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { notifierSetlistPrete, type RolePartage } from "@/lib/setlist/partage";
 import { loadPlanningData, setlistSeances, normalizeName, type PlanningData, type SetlistSeance } from "@/lib/planning/names";
 import { useTranslation } from "react-i18next";
@@ -45,6 +45,7 @@ import { EditeurDeuxColonnes, type ProprietesEditeur } from "@/components/setlis
 import type { ContexteFeteEditeur } from "@/components/setlists/editeur/EnTeteEditeur";
 import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
 import { EditeurFeuilles } from "@/components/setlists/editeur/EditeurFeuilles";
+import { compter } from "@/lib/usage";
 
 export interface SetlistFormInitial {
   title: string;
@@ -63,7 +64,7 @@ export interface SetlistFormInitial {
   items: FormListItem[];
 }
 
-export interface SetlistFormProps {
+interface SetlistFormProps {
   mode: "create" | "edit";
   /** Requis en mode edit */
   setlistId?: string;
@@ -442,6 +443,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill, contexte
   // ── Song actions ───────────────────────────────────────
   /** Ajoute un chant à la fin, ou à `index` (le « + » entre deux éléments, Q8). */
   function addSong(song: SongIndexEntry, index?: number) {
+    compter("cmd.setlist.ajouterChant");
     // Un chant ajouté démarre dans la tonalité recommandée (la plus chantée à GCC).
     const item: FormItem = { uid: nextUid(), song, keyOverride: song.recommendedKey ?? null, notes: "", sectionItems: makeDefaultSections(song.sections ?? []) };
     setItems((prev) => insererA(prev, Math.min(index ?? prev.length, prev.length), item));
@@ -462,7 +464,13 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill, contexte
     setItems((prev) => prev.map((i) => (i.uid === uid && isFormTransition(i) ? { ...i, text } : i)));
   }
 
+  // Une modification de ligne se compte une fois par rafale : saisir une note touche de nombreuses fois `patch`.
+  const derniereModif = useRef<{ uid: string; t: number } | null>(null);
   function patch(uid: string, update: Partial<FormItem>) {
+    const maintenant = Date.now();
+    const d = derniereModif.current;
+    if (!d || d.uid !== uid || maintenant - d.t > 3000) compter("cmd.setlist.modifierLigne");
+    derniereModif.current = { uid, t: maintenant };
     setItems((prev) =>
       prev.map((i) => (i.uid === uid && isFormChant(i) ? { ...i, ...update } : i))
     );
@@ -528,6 +536,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill, contexte
         savedId = await createSetlist(published);
       }
       committedIdRef.current = savedId;
+      compter("cmd.setlist.creer");
       const author = historyAuthor(profile);
       if (author) await recordCreation(savedId, author);
       // Prévient automatiquement l'équipe si la setlist est prête (≥ 4 chants),
@@ -581,6 +590,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill, contexte
 
   const proprietes: ProprietesEditeur = {
     isEdit,
+    setlistId: isEdit ? setlistId ?? null : null,
     items,
     setItems,
     songs,

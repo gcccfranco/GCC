@@ -14,29 +14,133 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Harmonie H4-2 (docs/spec-harmonie-accords.md) : la colonne « Harmonie de ce chant » dès 1 024 px, la feuille en dessous.
+  /harmonie-colonne\.spec\.ts/,
+  // Harmonie H6-1 : la bibliothèque (filtres Ressenti et Usage, liste ordonnée par niveau, fiche ≥ 640 px à l'ordinateur).
+  /harmonie-bibliotheque\.spec\.ts/,
+  // Harmonie H5-1 : le panneau d'un accord enrichi (chiffre, Écouter, Ensuite) en feuille et en bulle.
+  /harmonie-porte1\.spec\.ts/,
+  // Harmonie H7-1 : la bascule Lettres / Chiffres dans la barre du chant (dès 640 px) et le menu ⋯.
+  /notation-accords\.spec\.ts/,
+  // Lot Pupitre, PU-2 (docs/spec-entree-musiciens.md) : « Mon prochain service » en tête de l'onglet Setlists (rangées, vignettes, volet de droite en deux volets).
+  /pupitre-onglet\.spec\.ts/,
+  // Lot Pupitre, PU-3 : « Prêt hors-ligne » dans le bloc (téléphone et tablette debout surtout).
+  /pupitre-hors-ligne\.spec\.ts/,
+  // Lot Pupitre, PU-6 : « ‹ Toutes mes setlists » dans le menu Setlist du mode louange.
+  /louange-toutes-setlists\.spec\.ts/,
+  // Lot TC, TC-1 : menu Setlist à deux onglets, liste « Tous les chants » (recherche, index, interrupteur 简谱) et insertion.
+  /louange-tous-les-chants\.spec\.ts/,
+  // Comptage d'usage, T4 (docs/spec-comptage-usage.md) : l'écran de lecture /back-office/usage (tableau trié) sur les quatre dispositions.
+  /usage-lecture\.spec\.ts/,
+  // Ma partition, MP-2 (docs/spec-ma-partition.md) : menu « Je lis », filets et mention de conflit sur les quatre dispositions.
+  /ma-partition-lecture\.spec\.ts/,
+  // Ma partition, MP-3 (docs/spec-ma-partition.md) : la barre basse du Crayon et la feuille « Pour moi / Pour tout le culte » sur les quatre dispositions.
+  /ma-partition-crayon\.spec\.ts/,
+  // Ma partition, MP-4 (docs/spec-ma-partition.md) : la feuille « Partager ma partition » (feuille du bas au téléphone, popover de 380 px ailleurs) sur les quatre dispositions.
+  /ma-partition-partage\.spec\.ts/,
+  // Ma partition, MP-5 (docs/spec-ma-partition.md) : traits accrochés au texte du mode louange, qui suivent le mot quand la page se recompose (quatre dispositions), rubrique « Partition » de « Je joue ».
+  /ma-partition-traits\.spec\.ts/,
+  // Annotations façon forScore, AN-3a (docs/spec-mode-louange-forscore-2.md) : la barre d'annotation attachée à la place de la barre de titre (deux barres au téléphone) sur les quatre dispositions.
+  /annotations-forscore\.spec\.ts/,
+  // Lot pupitre, T1 (docs/spec-exemples-usage.md) : partitions pleine largeur en volet unique, vue Liste à 720 px, étiquettes de section, 简谱 ; deux volets inchangés.
+  /pupitre-partitions\.spec\.ts/,
+  // Exemples d'usage, T6 (docs/spec-exemples-usage.md) : feuille d'équipe (champ d'ajout en tête, barre collée) sur les quatre dispositions.
+  /equipes-feuille\.spec\.ts/,
+  // Lot 1 du rapport d'usage, T5 (docs/spec-retouches-usage.md) : textes coupés, cellule Date, barre de la setlist, sur les quatre dispositions.
+  /retouches-usage-t5\.spec\.ts/,
+  // Lot JP-B (docs/spec-mode-louange-forscore-2.md) : un scan 简谱 certifié coupé en tranches, une seule feuille large, sur les quatre dispositions.
+  /louange-jianpu-tranches\.spec\.ts/,
+  // Lot RP (tranche 2) : la pastille « d'après le planning » du mode louange (centrée sous la barre) sur les quatre dispositions.
+  /louange-role-planning\.spec\.ts/,
+  // Lot FS-E : la demi-page du mode louange (filet et poignée, coupe entre deux blocs) sur les quatre dispositions.
+  /louange-demi-page\.spec\.ts/,
+  // Lot FS-D : la feuille de route du batteur (lignes à la hauteur de l'écran) sur les quatre dispositions.
+  /louange-feuille-route\.spec\.ts/,
+  // Lot DP (docs/spec-mode-louange-forscore-2.md) : la disposition de la partition, ses menus à miniatures et le mode louange.
+  /dispositions-partition\.spec\.ts/,
+  // Lot CA, CA-A (docs/spec-mode-louange-forscore-2.md) : la couleur des accords au choix de chacun (page du chant, vue partitions, mode louange) sur les quatre dispositions.
+  /couleur-accords\.spec\.ts/,
+  // Lot CH (docs/spec-chargement.md) : la forme du membre pendant l'attente de Firebase, sur les quatre dispositions.
+  /chargement\.spec\.ts/,
+  // Lot CD, T1h (bo-reunions-taches-1) : aucun débordement horizontal des pages du Back-Office, aux largeurs du téléphone.
+  /debordement-back-office\.spec\.ts/,
+  // Lot CD, services-3 : la page « Pour quel service ? » (carte des entrées plafonnée à 720 px) sur les quatre dispositions.
+  /setlist-pour-quel-service\.spec\.ts/,
+  // Connexion (docs/spec-corrections-design/eglise.md, eglise-11 et eglise-13) : liens, retour, largeur du formulaire, nom du site.
+  /connexion\.spec\.ts/,
+  // Lot SF (docs/spec-espace-musiciens.md) : l'entrée « Scène » de la barre latérale et la carte d'À faire.
+  /scene-des-fetes\.spec\.ts/,
+  // Lot VB-E (docs/spec-video-bienvenue.md) : les extraits de la visite, sur les quatre dispositions.
+  /extraits-visite\.spec\.ts/,
   /navigation-grand-ecran\.spec\.ts/,
   /look-navigation\.spec\.ts/,
   /look-halo(-defilement)?\.spec\.ts/,
   /look-louange\.spec\.ts/,
+  /edd-sous-equipes\.spec\.ts/,
+  // Lot RS, RS-C : la page Équipes › Responsabilités et les fiches (docs/spec-responsabilites.md).
+  /responsabilites-ecrans\.spec\.ts/,
+  // Lot RS (docs/spec-rappel-structure-louange.md) : le rappel de structure et ses règles de Dp sur les quatre dispositions.
+  /rappel-dp\.spec\.ts/,
+  /rappel-ordre-joue\.spec\.ts/,
+  /rappel-indice\.spec\.ts/,
+  // Lot CV (docs/spec-mode-louange-forscore-2.md) : la coupure des vers français sur les quatre dispositions.
+  /coupure-vers\.spec\.ts/,
+  // Lot CV, CV-3 : copie de mesure et rendu au même calcul de coupure, clé de page « v2 », bandeau de composition.
+  /louange-coupure\.spec\.ts/,
   /performance-mode\.spec\.ts/,
+  /mode-louange-forscore\.spec\.ts/,
+  // Lot FS-A (docs/spec-mode-louange-forscore-2.md) : barre de titre, rangée de points, couleur des icônes.
+  /louange-barre-titre\.spec\.ts/,
+  // Lot FS-B (docs/spec-mode-louange-forscore-2.md) : les menus du mode louange (Setlist, Repères, Outils, Tempo, Options).
+  /louange-menus\.spec\.ts/,
+  // Lot FS-C (docs/spec-mode-louange-forscore-2.md) : « Je joue », le menu du rôle (ancrage sous l'icône, première ouverture).
+  /louange-je-joue\.spec\.ts/,
   /setlist-regie\.spec\.ts/,
   /setlist-partage\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,
+  /equipes-page\.spec\.ts/,
+  // Reprise R2 (docs/orchestration.md § 4) : le garde-fou mesuré des groupes (gris sur gris, marges, voisins, pages courtes).
+  /agencement-groupes\.spec\.ts/,
+  // Lot DA, DA-2 (docs/spec-dictionnaire-accords.md) : la page /accords (carte + groupes d'accords).
+  /accords-page\.spec\.ts/,
+  // … DA-3 : le panneau d'un accord touché (bulle sur ordinateur, feuille ailleurs) et la bulle d'aide.
+  /accords-toucher-agencement\.spec\.ts/,
+  // Lot EM, EM-2 (docs/spec-espace-musiciens.md) : l'espace Musiciens, son sélecteur et ses barres.
+  /espace-musiciens\.spec\.ts/,
+  // Corrections de l'audit, A6 : captures de la page chant et de la setlist.
+  /captures-a6\.spec\.ts/,
   // Chantier 简谱, lot 3 (docs/spec-jianpu-integration.md) : la piste A sur toutes les surfaces.
   /jianpu-integration\.spec\.ts/,
+  // Lot JE, JE3 et JE4 (docs/spec-jianpu-entete-statistiques.md) : l'en-tête de la page chant et les deux colonnes sur 简谱.
+  /entete-chant-jianpu\.spec\.ts/,
   // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-D) : l'organigramme sans pôles.
   /equipes-agencement\.spec\.ts/,
+  // Lot AO, AO-B (docs/spec-acces-organigramme.md) : les écrans de l'organigramme (Louange en trois sous-équipes, panneau, Personnes).
+  /acces-organigramme-ecrans\.spec\.ts/,
   // Lot « chants des fêtes » (docs/spec-chants-fetes.md, CF-C) : la page de la fête, chants et musiques dans l'ordre de passage.
   /chants-fetes-agencement\.spec\.ts/,
+  // Lot SP, SP-B (docs/spec-stats-personnes-groupes.md) : « Mes présidences » dans Moi, feuille ou panneau.
+  /mes-presidences\.spec\.ts/,
+  // Lot SP, SP-C : la rangée du groupe et les présidences de la page Statistiques.
+  /statistiques-groupes\.spec\.ts/,
   // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
   /setlist-deux-volets\.spec\.ts/,
   // … et Chants en deux volets.
   /chants-deux-volets\.spec\.ts/,
+  // Lot ST, ST4 (docs/spec-jianpu-entete-statistiques.md) : statistiques du chant, feuille du bas ou panneau à droite.
+  /statistiques-chant\.spec\.ts/,
+  /statistiques-editeur\.spec\.ts/,
+  // Visite de première connexion selon le rôle (docs/spec-visite-par-role.md) : la fenêtre sur les quatre dispositions.
+  /visite-par-role\.spec\.ts/,
   // … le mode louange en deux colonnes, et le parcours de T6 (captures, FR et ZH, clair et sombre).
   /mode-louange-colonnes\.spec\.ts/,
   /deux-volets-finitions\.spec\.ts/,
   // Lot U4 bis (docs/spec-pages-en-grand.md, Q16) : toutes les pages en grand.
   /pages-en-grand-.*\.spec\.ts/,
+  // Lot IR (docs/spec-idees-regroupees.md) : la feuille « Idées d'harmonie » regroupée, aux quatre dispositions.
+  /harmonie-regroupees\.spec\.ts/,
+  // Lot AO, AO-B et AO-F (docs/spec-acces-organigramme.md) : Moi (Mes équipes, Ce que tu peux faire), la grille du référent Régie.
+  /acces-moi\.spec\.ts/,
   // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.
   /back-office-espace\.spec\.ts/,
   // Lot U8 (spec-calendrier.md, Tests) : la page du calendrier, Mois sur la tablette couchée.
@@ -49,6 +153,8 @@ const SPECS_GRAND_ECRAN = [
   /back-office-admin\.spec\.ts/,
   // B4 : le tableau de bord (grille de 4 en paysage et à 1 440 px).
   /tableau-de-bord\.spec\.ts/,
+  // Piste A, BO-B (docs/spec-back-office-piste-a.md, BO6) : l'écran « À faire » et sa colonne de droite.
+  /a-faire\.spec\.ts/,
   // Lot U5 bis (docs/spec-editeur-setlist.md) : l'éditeur de setlist en deux colonnes.
   /setlist-editeur-piste2\.spec\.ts/,
   // … et sa bibliothèque (T5 : « + » entre deux éléments sur ordinateur, pas sur tablette couchée).
@@ -76,7 +182,14 @@ const SPECS_GRAND_ECRAN = [
   /organigrammes-groupes-agencement\.spec\.ts/,
   // Barre de la page d'un chant, piste A (docs/spec-barre-chant.md) : la rangée sur les quatre dispositions et 1 440 px.
   /barre-chant\.spec\.ts/,
+  // Tranche B4b de docs/spec-corrections-audit.md : la règle de largeur (colonne de 960 px, pleine largeur des grilles).
+  /largeurs-b4\.spec\.ts/,
 ];
+
+// Lot AO : les tests sans page importent src/lib/access.ts, dont le mode par défaut suit
+// `NEXT_PUBLIC_BACK_OFFICE`. Le lanceur ne la voit jamais (une session cloud l'exporte, un Mac
+// non) : chaque test passe le mode lui-même, les serveurs reçoivent la leur plus bas.
+delete process.env.NEXT_PUBLIC_BACK_OFFICE;
 
 export default defineConfig({
   testDir: "./tests",

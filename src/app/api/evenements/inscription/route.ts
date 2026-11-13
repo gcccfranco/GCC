@@ -1,10 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
+import { limiteSansCompte } from "@/lib/evenements/limiteAdresse";
 import { HttpError, ID, errorResponse, inscrire, optionalUser } from "@/lib/evenements/serveur";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const hits = new Map<string, number[]>();
 
 // Inscription à un évènement (lot 6, docs/spec-evenements.md). Avec compte :
 // une place au nom du profil (id = uid, réinscription = mise à jour des
@@ -12,7 +15,8 @@ export const dynamic = "force-dynamic";
 // aléatoire. Le compteur `inscrits` (personnes + invités) et la place sont
 // écrits dans une même transaction ; refus si l'inscription se fait sur un
 // formulaire externe (lot 11), si c'est fermé, pas encore ouvert, terminé,
-// commencé ou complet (période d'inscription, 17/09/2026). La transaction est
+// commencé ou complet (période d'inscription, 17/09/2026). Sans compte : au plus
+// 5 inscriptions par adresse et par 10 minutes (429), 60 places par évènement (409). La transaction est
 // `inscrire` (src/lib/evenements/serveur.ts), testable avec une base simulée.
 
 export async function POST(req: NextRequest) {
@@ -25,7 +29,9 @@ export async function POST(req: NextRequest) {
     const invites = Number.isInteger(body.invites) && (body.invites as number) >= 0 && (body.invites as number) <= 5 ? (body.invites as number) : null;
     const nomLibre = typeof body.nom === "string" ? body.nom.trim().slice(0, 40) : "";
     if (!evenementId || invites === null) throw new HttpError(400, "Requête incomplète");
-    if (!user && !nomLibre) throw new HttpError(401, "Non authentifié");
+    if (!user && !nomLibre) throw new HttpError(401, "Non authentifié", "nonAuthentifie");
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (limiteSansCompte(user, hits, ip, Date.now())) throw new HttpError(429, "Trop de demandes, réessaie plus tard.", "tropDeDemandes");
 
     const result = await inscrire(adminDb(), user, { evenementId, invites, nomLibre });
     return NextResponse.json({ ok: true, ...result });

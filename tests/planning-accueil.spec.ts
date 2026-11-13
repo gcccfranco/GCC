@@ -69,6 +69,6 @@ test("en 中文 : le service remplaçant porte son nom traduit", async ({ page }
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await openPlanning(page, "2026-06-14");
   const dimanche = page.getByRole("region", { name: /本主日/ });
-  await expect(dimanche.getByText("法语团契聚会", { exact: true })).toBeVisible();
+  await expect(dimanche.getByText("法语联合聚会", { exact: true })).toBeVisible();
   await expect(dimanche.getByText("团契", { exact: true })).toHaveCount(0);
 });

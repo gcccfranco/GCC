@@ -3,7 +3,8 @@
 // uniquement (Admin).
 
 import { NextResponse, type NextRequest } from "next/server";
-import { adminDb, verifyIdToken } from "@/lib/push/admin";
+import { adminDb } from "@/lib/push/admin";
+import { authentifier } from "@/lib/api/authentifier";
 import { equipesDe, estDeLEquipe, estReferentDe, peutCocher } from "@/lib/access";
 import type { Tache } from "@/types/tache";
 
@@ -23,15 +24,7 @@ export function equipeDuChemin(chemin: string): string | null {
 
 /** Appelant authentifié (jeton vérifié), sinon la réponse d'erreur. */
 export async function appelant(req: NextRequest): Promise<{ uid: string; email: string } | NextResponse> {
-  const authz = req.headers.get("authorization") ?? "";
-  const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  try {
-    const decoded = await verifyIdToken(token);
-    return { uid: decoded.uid, email: (decoded.email ?? "").toLowerCase() };
-  } catch {
-    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
-  }
+  return authentifier(req);
 }
 
 /** Ce que revérifient /api/taches/assigne et /fait (EQ11), dans la base passée (testable) : l'appelant
@@ -69,7 +62,7 @@ export async function membresDeLEquipe(equipe: string, db: FirebaseFirestore.Fir
 
 /** uid des référents d'une équipe (EQ12) : les profils dont `referentDe` la contient. Pour
  *  « louange », les référents de TEAM LOUANGE. La base se passe pour les tests. */
-export async function referentsDeLEquipe(equipe: string, db: FirebaseFirestore.Firestore = adminDb()): Promise<string[]> {
+async function referentsDeLEquipe(equipe: string, db: FirebaseFirestore.Firestore = adminDb()): Promise<string[]> {
   const snap = await db.collection("users").get();
   return snap.docs.filter((d) => ((d.data().referentDe as string[] | undefined) ?? []).includes(equipe)).map((d) => d.id);
 }
@@ -82,19 +75,4 @@ export async function ciblesDuRappel(
   db: FirebaseFirestore.Firestore = adminDb(),
 ): Promise<string[]> {
   return tache.responsableUid ? [tache.responsableUid] : referentsDeLEquipe(tache.equipe, db);
-}
-
-/** Garde les uid pas encore prévenus pour cette clé, et les marque. */
-export async function premiereFois(uids: string[], key: string, meta: Record<string, unknown>): Promise<string[]> {
-  const db = adminDb();
-  const fresh: string[] = [];
-  for (const u of uids) {
-    if (!(await db.collection("notifLog").doc(`${key}-${u}`).get()).exists) fresh.push(u);
-  }
-  if (fresh.length) {
-    const batch = db.batch();
-    for (const u of fresh) batch.set(db.collection("notifLog").doc(`${key}-${u}`), { ...meta, uid: u, at: Date.now() });
-    await batch.commit();
-  }
-  return fresh;
 }

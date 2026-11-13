@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   darkMode: ["class"],
@@ -50,6 +51,9 @@ const config: Config = {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
+        "fond-groupe": "hsl(var(--fond-groupe))",
+        "secondary-fond": "hsl(var(--secondary-fond))",
+        pose: "hsl(var(--pose))",
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
@@ -74,10 +78,12 @@ const config: Config = {
         mono: ["JetBrains Mono", "Courier New", "monospace"],
       },
       // Échelle de texte de l'interface (hors chants) : six crans, interligne
-      // et interlettrage liés à la taille (audit F1). Les chants gardent
-      // --lyric-size.
+      // et interlettrage liés à la taille (audit F1). Échelle B (T4a, 2026-11) :
+      // plancher de 12 px (`xs`), plus aucune taille arbitraire `text-[Npx]` hors
+      // exceptions (champs à 16 px, mode louange, 简谱, PDF, pastilles de ton).
+      // Les chants gardent --lyric-size.
       fontSize: {
-        xs: ["11px", { lineHeight: "14px", letterSpacing: "0.01em" }],
+        xs: ["12px", { lineHeight: "16px", letterSpacing: "0.005em" }],
         sm: ["13px", { lineHeight: "18px" }],
         base: ["15px", { lineHeight: "21px" }],
         lg: ["17px", { lineHeight: "23px", letterSpacing: "-0.01em" }],
@@ -85,6 +91,7 @@ const config: Config = {
         "2xl": ["30px", { lineHeight: "34px", letterSpacing: "-0.02em" }],
       },
       borderRadius: {
+        groupe: "var(--radius-groupe)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
@@ -105,7 +112,21 @@ const config: Config = {
       },
     },
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [
+    tailwindcssAnimate,
+    // Scène (DP-G1) : cotes larges (colonne de lettre de 64 px, nom visible) dès la tablette (768 px) ; les cotes compactes du
+    // téléphone (40 px, lettre de 26 px, nom dans la bulle) en dessous, et dans les deux colonnes du mode louange
+    // (`data-deux-colonnes`) quand la bande (`data-scene-cadre`, container-type inline-size) fait moins de 600 px (~500 px à
+    // 1 024 px). Seuil : en cotes larges la gouttière prend 134 px, un vers long (~450 px) ne tient plus sous ~590 px ;
+    // 1 440 px en deux colonnes (~680) reste large. La page du chant (513 px à 1 280 px avec sa barre latérale) n'a pas de
+    // colonnes : elle garde les cotes larges.
+    plugin(({ addVariant }) => {
+      addVariant("scene-large", [
+        "@media (min-width: 768px) { [data-scene-cadre]:not([data-deux-colonnes] *) & }",
+        "@media (min-width: 768px) { @container (min-width: 600px) { & } }",
+      ]);
+    }),
+  ],
 };
 
 export default config;

@@ -3,12 +3,14 @@ import * as fs from "fs";
 import * as path from "path";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { lireFamille } from "../src/lib/harmonie/fiches";
-import { cinqPremieres, suggestionsPour } from "../src/lib/harmonie/suggestions";
+import { apercuDuChangement, cinqPremieres, regrouper, suggestionsPour } from "../src/lib/harmonie/suggestions";
 import type { Fiche } from "../src/types/harmonie";
 
 // Lot 9 / H2 (docs/spec-harmonie.md) : les « Idées d'harmonie » d'un chant.
 // Une règle × une section = UNE suggestion, avec la liste de ses endroits ;
 // cinq au plus, les plus sûres puis les plus faciles, dans l'ordre du chant.
+// `regrouper` fusionne ensuite, par fiche, les sections qui donnent le même
+// changement d'accords : une carte par changement (docs/spec-idees-regroupees.md).
 
 const DOSSIER = path.join(process.cwd(), "docs", "harmonie");
 const fiches: Fiche[] = fs
@@ -105,4 +107,59 @@ test("un vrai chant du répertoire reçoit des idées, pas un tas", () => {
   const { premieres } = cinqPremieres(idees, "guitare");
   expect(premieres, "cinq au plus à l'écran").toHaveLength(5);
   for (const s of premieres) expect(s.fiche.nom.length).toBeGreaterThan(3);
+});
+
+// Lot IR (docs/spec-idees-regroupees.md) : une carte par fiche et par changement.
+const lireChant = (nom: string) => parseChordPro(fs.readFileSync(path.join(process.cwd(), "content", "songs", nom), "utf-8"));
+
+test("regrouper : au nom de Jésus en D, Bm → Bm7 est une seule carte de sept sections", () => {
+  const chant = lireChant("au-nom-de-jesus.cho");
+  const brutes = suggestionsPour(chant.sections, "D", fiches);
+  expect(brutes.filter((s) => s.fiche.id === "couleurs/m7"), "sept suggestions avant").toHaveLength(7);
+  const cartes = regrouper(brutes, "D");
+  const m7 = cartes.filter((s) => s.fiche.id === "couleurs/m7");
+  expect(m7, "une seule carte").toHaveLength(1);
+  expect(m7[0].sections).toHaveLength(7);
+  expect(m7[0].ids).toHaveLength(7);
+  expect(m7[0].id, "la carte garde l'identité de son premier membre").toBe(m7[0].ids![0]);
+
+  // Deux cartes d'une même fiche ne disent jamais la même chose.
+  const parFiche = new Map<string, string[]>();
+  for (const c of cartes) {
+    const a = apercuDuChangement(c, "D");
+    if (!a) continue;
+    parFiche.set(c.fiche.id, [...(parFiche.get(c.fiche.id) ?? []), `${a.avant} → ${a.apres}`]);
+  }
+  for (const [fiche, apercus] of parFiche) expect(new Set(apercus).size, `${fiche} : aperçus distincts`).toBe(apercus.length);
+});
+
+test("regrouper : 永活盼望 en D, Gmaj7 couvre les quatre 主歌 dans l'ordre du chant", () => {
+  const chant = lireChant("永活盼望.cho");
+  const maj7 = regrouper(suggestionsPour(chant.sections, "D", fiches), "D").filter((s) => s.fiche.id === "couleurs/maj7");
+  const couplets = chant.sections.filter((s) => s.type === "verse" && /^主歌/.test(s.name ?? ""));
+  expect(couplets, "le chant a quatre 主歌").toHaveLength(4);
+  const carte = maj7.find((c) => c.sections!.some((x) => x.uid === couplets[0].uid));
+  expect(carte, "une carte part du 主歌 1").toBeTruthy();
+  expect(carte!.sections!.map((x) => x.uid)).toEqual(couplets.map((c) => c.uid));
+});
+
+test("regrouper : un refus ancien sur une seule section retire cette section seule", () => {
+  const chant = lireChant("au-nom-de-jesus.cho");
+  const couplet2 = chant.sections.find((s) => s.name === "Couplet 2")!;
+  const sans = regrouper(suggestionsPour(chant.sections, "D", fiches, [`couleurs/maj7__${couplet2.uid}`]), "D");
+  const maj7 = sans.find((c) => c.fiche.id === "couleurs/maj7" && c.sections!.some((x) => x.nom === "Pont"))!;
+  expect(maj7.sections!.map((x) => x.nom)).toEqual(["Couplet 1", "Pont"]);
+  expect(maj7.ids).not.toContain(`couleurs/maj7__${couplet2.uid}`);
+});
+
+test("regrouper : l'ordre du chant reste, le tag et l'intro absente ne fusionnent pas", () => {
+  const cartes = regrouper(toutes, "D");
+  const sections = cartes.map((c) => c.section);
+  expect([...sections].sort((a, b) => a - b), "toujours dans l'ordre du chant").toEqual(sections);
+  for (const id of ["intros-fins/tag", "intros-fins/intro-fin-du-refrain"]) {
+    const c = cartes.filter((x) => x.fiche.id === id);
+    expect(c, `${id} : une carte`).toHaveLength(1);
+    expect(c[0].sections, `${id} : une seule section`).toHaveLength(1);
+  }
+  expect(cartes.length, "une carte regroupe, elle ne multiplie pas").toBeLessThanOrEqual(toutes.length);
 });

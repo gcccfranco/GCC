@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Check } from "lucide-react";
 import { useProfile, saveProfile } from "@/lib/firebase/users";
 import { canEditProfile } from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import {
   loadPlanningData,
   collectPlanningNames,
@@ -24,7 +25,9 @@ import {
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { PushToggle } from "@/components/push/PushToggle";
 import { MesAbsences } from "@/components/profil/MesAbsences";
+import { CarteMesEquipes } from "@/components/moi/CartesAcces";
 import { cn } from "@/lib/utils";
+import { Squelette } from "@/components/layout/Squelette";
 
 const FORMULAIRE = "formulaire-profil";
 
@@ -67,11 +70,7 @@ export default function ProfilPage() {
   }, [loading, profile, form]);
 
   if (loading || !user || !form) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -85,19 +84,21 @@ export default function ProfilPage() {
 
     setSaving(true);
     try {
+      // Lot AO (AO-F) : au Back-Office, les rôles de service ne s'écrivent plus (ni ici, ni à l'inscription).
+      const { serviceRoles, ...sansRoles } = form;
       await saveProfile({
         uid: user.uid,
         email: user.email ?? "",
-        ...form,
+        ...(BACK_OFFICE ? sansRoles : { ...sansRoles, serviceRoles }),
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         planningName: form.planningName.trim(),
         // Les droits (annonces, notify, coordination, equipes, plannings) ne sont pas
         // envoyés : saveProfile n'écrit que les champs donnés, ils restent intacts.
       });
-      // Retour à la page d'origine (?from=…) plutôt que /setlists systématique
+      // Retour à la page d'origine (?from=…, chemin du site seulement) ; sans paramètre, à Moi.
       const from = new URLSearchParams(window.location.search).get("from");
-      router.push(from && from.startsWith("/") ? from : "/setlists");
+      router.push(from && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/\\") ? from : "/moi");
     } catch {
       setError(t("profile.saveError"));
       setSaving(false);
@@ -105,7 +106,7 @@ export default function ProfilPage() {
   }
 
   const canEdit = canEditProfile(user, profile);
-  const deriveFromPlanning = planningData
+  const deriveFromPlanning = !BACK_OFFICE && planningData
     ? (name: string) => deriveServiceRolesFromPlanning(planningData, name)
     : undefined;
 
@@ -121,7 +122,7 @@ export default function ProfilPage() {
         titre={t("profile.title")}
         sousTitre={user.email}
         action={canEdit && (
-          <Button type="submit" form={FORMULAIRE} disabled={saving} aria-label={t("profile.save")} className="hidden h-10 gap-2 rounded-full px-[18px] text-[14.5px] font-semibold md:inline-flex">
+          <Button type="submit" form={FORMULAIRE} disabled={saving} aria-label={t("profile.save")} className="hidden h-10 gap-2 rounded-full px-[18px] text-base font-semibold md:inline-flex">
             <Check className="h-4 w-4" strokeWidth={2.4} aria-hidden />
             {enregistrer}
           </Button>
@@ -157,7 +158,7 @@ export default function ProfilPage() {
             <fieldset
               disabled={!canEdit}
               aria-label={t("signup.steps.identity")}
-              className={cn("raised min-w-0 space-y-6 rounded-2xl p-5", !canEdit && "opacity-60")}
+              className={cn("carte-groupe min-w-0 space-y-6 rounded-2xl p-5", !canEdit && "opacity-60")}
             >
               <IdentityFields value={form} onChange={setForm} />
               <PlanningNameField
@@ -167,18 +168,26 @@ export default function ProfilPage() {
                 deriveFromPlanning={deriveFromPlanning}
               />
             </fieldset>
-            <section aria-label={t("moi.notifications")} className="raised overflow-hidden rounded-2xl">
+            <section aria-label={t("moi.notifications")} className="carte-groupe overflow-hidden rounded-2xl">
               <PushToggle />
             </section>
           </div>
 
-          <fieldset
-            disabled={!canEdit}
-            aria-label={t("profile.fields.accessTitle")}
-            className={cn("raised order-3 min-w-0 rounded-2xl p-5 md:col-start-2 md:row-span-2 md:row-start-1", !canEdit && "opacity-60")}
-          >
-            <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
-          </fieldset>
+          {BACK_OFFICE ? (
+            // Lot AO (AO-F) : plus de services ni de rôles à déclarer ; à leur place, les équipes où l'organigramme
+            // place la personne (lecture seule — c'est son référent qui la place).
+            <div className="order-3 min-w-0 md:col-start-2 md:row-span-2 md:row-start-1">
+              <CarteMesEquipes profile={profile} />
+            </div>
+          ) : (
+            <fieldset
+              disabled={!canEdit}
+              aria-label={t("profile.fields.accessTitle")}
+              className={cn("carte-groupe order-3 min-w-0 rounded-2xl p-5 md:col-start-2 md:row-span-2 md:row-start-1", !canEdit && "opacity-60")}
+            >
+              <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
+            </fieldset>
+          )}
 
           {canEdit && (
             <Button type="submit" disabled={saving} className="order-4 h-11 w-full md:hidden">

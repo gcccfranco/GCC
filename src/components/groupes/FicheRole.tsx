@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, Link2, Music, Pencil, Plus, Send, SquarePen, Trash2, UserMinus, UserRoundCheck } from "lucide-react";
+import { Link2, Music, Pencil, Plus, Trash2, UserMinus, UserRoundCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { MenuActions } from "@/components/layout/MenuActions";
@@ -19,6 +19,7 @@ import type { OrganigrammeGroupe, RoleGroupe, Titulaire } from "@/types/groupe";
 import { Initiales } from "./Initiales";
 import { LignePlaces, Pastille } from "./CarteRole";
 import { Panneau } from "./Panneau";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 /** Les trois prochains dimanches écrits dans la grille du groupe, avec la case de la colonne. */
 function useProchains(groupeId: string, colonne: string | null): { date: string; nom: string }[] {
@@ -64,7 +65,6 @@ export function FicheRole({
   const { t, i18n } = useTranslation();
   const prochains = useProchains(groupe.id, role?.colonne ?? null);
   const def = groupeDef(groupe.id);
-  const nomGroupe = t(`categories.${def?.categorie ?? ""}`);
   const colonne = role?.colonne ? colonnesReliables(groupe.id).find((c) => c.cle === role.colonne) : undefined;
   const date = (iso: string) =>
     new Date(`${iso}T12:00:00`).toLocaleDateString(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { day: "numeric", month: "short" });
@@ -155,7 +155,7 @@ export function FicheRole({
               <ul>
                 {prochains.map((p) => (
                   <li key={p.date} className="flex items-center gap-3 border-t border-border py-2 text-sm">
-                    <span className="w-14 shrink-0 text-xs font-semibold" style={{ color: couleur }}>{date(p.date)}</span>
+                    <span className="w-14 shrink-0 text-xs font-semibold texte-service" style={styleTexteService(couleur)}>{date(p.date)}</span>
                     {p.nom ? <span className="text-foreground">{p.nom}</span>
                       : <span className="font-semibold text-orange-700 dark:text-orange-400">{t("groupes.places.personne")}</span>}
                   </li>
@@ -167,12 +167,8 @@ export function FicheRole({
           <section aria-label={t("groupes.fiche.droits")}>
             <h3 className="pb-1 text-sm font-bold text-foreground">{t("groupes.fiche.droits")}</h3>
             <ul>
-              {def?.planning && droit(<SquarePen className="h-4 w-4 text-muted-foreground" aria-hidden />, t("groupes.droit.remplir"), role.droits.remplir || role.droits.publier)}
-              {def?.planning && droit(<Send className="h-4 w-4 text-muted-foreground" aria-hidden />, t("groupes.droit.publier"), role.droits.publier)}
-              {droit(<Bell className="h-4 w-4 text-muted-foreground" aria-hidden />, t("groupes.droit.notifier"), role.droits.notifier)}
               {droit(<Music className="h-4 w-4 text-muted-foreground" aria-hidden />, t("groupes.droit.saisirFetes"), role.droits.saisirFetes)}
             </ul>
-            <p className="pt-2 text-xs text-muted-foreground">{t("groupes.fiche.recoivent", { groupe: nomGroupe })}</p>
           </section>
         </div>
       )}

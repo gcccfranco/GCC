@@ -1,0 +1,664 @@
+# Spec : Harmonie et Accords (chantier 4 de la demande AP)
+
+Statut : **recommandations acceptées par Timothée (« Go », 11/11/2026) ; spec écrite, chaque lot attend son go de code.** Cadrage : `docs/spec-pupitre-musicien.md` (§ Le site de référence, § Chantiers proposés, réponse 7).
+Planche : `docs/planches/planche-harmonie-accords.html`, artefact privé « Planche — Harmonie et Accords ».
+
+## Demande (Timothée, 11/11/2026)
+
+Revoir l'onglet Harmonie (« pas très pratique ») ; compléter les idées d'harmonie (« il manque beaucoup de choses ») ;
+bibliothèque d'accords : « quand on change d'accord au piano, ça fait des zooms sur le clavier » ; accords en chiffres
+sur les partitions ; idées d'harmonie dans le mode louange ; reprendre ce qui est bien sur wangshubianqu.com/chord-map.
+
+## Constat technique
+
+Le « zoom » : `ClavierMains` (`src/components/harmonie/Diagrammes.tsx:236`) dessine 2 ou 3 octaves selon l'accord
+(336 ou 504 px), puis `PanneauAccord.tsx:241` le réduit à la largeur (`[&_svg]:max-w-full`) : l'échelle change à
+chaque accord.
+
+## Pistes de la planche
+
+- **A. Le cahier des boucles (recommandée)** : on entre par la boucle jouée, en chiffres (1 5 6m 4 · 146 chants) ;
+  toucher un chiffre de la boucle liste les idées qui s'y jouent, puis les chants qui la jouent (liens). Les 69 fiches
+  restent dans « Toutes les idées », en familles. Fiche : « Avant → après » en chiffres et en lettres, « Où
+  l'entendre » en liens, précédente / suivante. Ordinateur : deux volets jusqu'à 1 440 px (fiche ≥ 640 px).
+- **B. La roue des quintes** : carte du cycle, flèches « quel accord ensuite » avec notes communes. Belle, lente au
+  pouce sur scène ; la moitié des fiches n'y a pas de place.
+- **C. Le parcours de répétition** : six chiffres → dix boucles → idées par moment du chant, avec « étape suivante ».
+- **/accords (commun)** : clavier fixe à trois octaves (16 px par touche au téléphone, 24 ailleurs), variantes
+  au-dessus du diagramme au téléphone, « ‹ Chants » retiré, chiffre de chaque variante dans la tonalité si l'on vient
+  d'une fiche.
+
+Critique : « à retoucher ». Corrigé à la relecture : compteurs non mesurés en gris « — chants » (plus d'orange),
+5/7 au lieu de 5/3, bascule « Lettres / Chiffres », police système, deux volets à l'ordinateur. Restent visibles sur
+la planche : /accords dessinée trois fois presque pareil, tablette paysage non dessinée, octave grave non grisée,
+« 4 sur 5 » rangée sous « Idées sur le 4 ». Seules trois boucles sont mesurées (146, 103, 102).
+
+## Questions posées à Timothée (recommandation en premier)
+
+1. Piste : A, B ou C ? → A, en reprenant « Et ensuite ? » de B en texte et le pied précédente / suivante de C.
+2. Clavier : trois octaves fixes, ou deux (main droite, basse écrite) ? → trois octaves.
+3. Chiffres sur les partitions : bascule « Lettres / Chiffres » près de la tonalité, mémorisée par musicien, basse en
+   degré (5/7) ; rien sur le calque 简谱 ; PDF en lettres. → oui.
+4. Idées en mode louange (décision du 17/09 rouverte) : un point en marge, au plus un par section, bande « Avant →
+   après » sans animation, désactivé par défaut. → oui, ou les laisser en répétition seulement.
+5. Écoute : synthèse Web Audio sur demande (fiche, /accords), jamais en mode louange. → oui, tranche optionnelle.
+6. Exercices d'oreille : → pas dans ce lot.
+
+## Décisions de Timothée (11/11/2026, « Go » sur les six recommandations)
+
+Ce « Go » valide les décisions et la spec ; il ne vaut pas go de code (un go par lot, après la spec).
+
+1. Piste **A, le cahier des boucles**, avec « Et ensuite ? » de B en texte (sans roue) et le pied précédente / suivante
+   de C.
+2. Clavier d'accord **fixe à trois octaves** : 21 touches blanches, octave grave grisée pour la main gauche, 16 px par
+   touche au téléphone, 24 ailleurs ; la largeur ne dépend plus de l'accord.
+3. **Chiffres sur les partitions** : bascule « Lettres / Chiffres » (字母 / 数字) à côté de la tonalité, mémorisée par
+   musicien ; mêmes positions, `--chord-color` ; basse en degré (A/C# en D = 5/7) ; rien sur le calque 简谱 ; PDF en
+   lettres.
+4. **Idées d'harmonie en mode louange** : oui, désactivées par défaut, activables par musicien ; un point
+   `--chord-color` en marge, au plus un par section ; la touche ouvre sans animation une bande d'une ligne
+   « 4 5 → 2m7 5 · G A → Em7 A », la touche suivante la referme ; aucun « Pourquoi » sur scène.
+5. **Écoute** : synthèse Web Audio sur demande (fiche, /accords), jamais en lecture automatique ni en mode louange ;
+   lot optionnel.
+6. **Exercices d'oreille** : pas dans ce chantier.
+
+## Décisions de Timothée (12/11/2026, « Ok pour tes recommandations » sur la planche « trois portes »)
+
+Elles remplacent le point 1 (piste A, entrée par boucles, écartée) et complètent les points 2 à 6 ci-dessus.
+
+1. Piste **B, la grille du chant** : un seul contenu, l'harmonie d'un chant passage par passage, ouvert par trois
+   portes. **Porte 1**, panneau de l'accord touché dans la partition : doigté, chiffre (« 4 dans D »), Écouter, ligne
+   « Ensuite : 1 · 6m · 4 » dépliable (notes gardées / qui bougent), ligne « Ici : 4 → 2m7 » si une idée s'applique,
+   qui ouvre la porte 2 au passage. **Porte 2**, « Harmonie de ce chant » (remplace la feuille « Idées
+   d'harmonie ») : bouton « Harmonie 和声 » près de la tonalité (page chant) et dans la barre du chant courant
+   (setlist) ; par passage : filet de section, grille, ce qu'il fait en une phrase, Écouter, idées avec avant / après ;
+   un passage sans idée n'a pas de bloc vide ; dans une setlist, « Faire monter le dernier refrain » au dernier
+   refrain et « Vers le chant suivant » en dernier. **Porte 3**, l'onglet Harmonie (gardé dans Musiciens) : bibliothèque.
+2. Porte 2 : **feuille** au téléphone et en tablette portrait (deux tiers de la hauteur) ; **colonne** sans voile en
+   tablette paysage et à l'ordinateur, **fermée par défaut**, mémorisée par musicien.
+3. Filtres : **Ressenti** à quatre valeurs (chaleureux 温暖, mélancolique 忧伤, élan 推进, couleur 色彩) à la place des
+   onze ambiances ; **Usage** à cinq (couplet, pré-refrain, refrain, fin, transition) ; instrument gardé ; le niveau
+   ordonne la liste au lieu de la filtrer. Correspondance ambiances → ressentis à valider fiche par fiche.
+4. Idées de l'équipe **rangées au passage** qu'elles concernent, sous les idées calculées.
+5. « **Jouer ensemble** » = un **cours** (rôles, piano main gauche et basse, deux guitares, intro / pont / fin), dont
+   les exemples renvoient à des passages de chants de GCC.
+6. Les lignes d'harmonie **suivent la bascule Lettres / Chiffres** (une seule notation).
+7. Mode louange : **le point en marge et la bande d'une ligne**, sans animation, désactivés par défaut.
+8. Écoute centrale (un même bouton Écouter dans les trois portes), synthèse dans le navigateur, sur demande, jamais en
+   mode louange. Exercices d'oreille : plus tard.
+
+À dessiner au moment de la spec du lot concerné (manque de la planche) : tablette paysage 1 180 × 820 et page chant à
+1 440 px avec la colonne, la bulle de l'accord fermée quand la colonne est ouverte.
+
+## Lots (chacun attend son go ; H1 fait)
+
+| Lot | Contenu | Dépend de |
+| --- | --- | --- |
+| **H1** | /accords : clavier fixe, « Les plus joués » au-dessus du diagramme au téléphone (fait, 991cf38) | — |
+| **H2** | Données : pour chaque chant, ses passages (section) avec grille en degrés et fonction ; idées calculées et idées de l'équipe ancrées à un passage ; « Où l'entendre » → chant + section ; étiquettes ressenti / usage des 69 fiches (proposées, à valider) | rien |
+| **H3** | Écoute : un module de synthèse (accord, suite d'accords, avant / après) et le bouton Écouter commun | rien |
+| **H4** | Porte 2 : « Harmonie de ce chant » en feuille et en colonne, page chant et setlist (remplace `IdeesSheet`) | H2, H3 |
+| **H5** | Porte 1 : panneau d'accord enrichi (chiffre, Écouter, Ensuite, Ici) | H2, H3 |
+| **H6** | Porte 3 : bibliothèque (filtres, fiche avec liens vers les passages, précédente / suivante, fiche ≥ 640 px à l'ordinateur) | H2, H3 |
+| **H7** | Bascule Lettres / Chiffres sur les partitions, suivie par les lignes d'harmonie | rien |
+| **H8** | Mode louange : point en marge et bande | H5, état AO |
+| **H9** | Contenu : cours « Jouer ensemble » et fiches manquantes (liste ci-dessous) | H2 |
+
+### H2 — contrat de données (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Aucun écran ne change ; H4 à H6 lisent ces données. Une seule tranche.
+- **Passages** (`src/lib/harmonie/passages.ts`, pur, calculé dans le navigateur comme les suggestions) : un passage
+  par section du chant (`uid`, nom, type, rang). Grille = lignes d'accords lus en degrés (`chiffreDuDegre`) avec leur
+  **fonction tonale** (`T` : 1, 3m, 6m ; `SD` : 2m, 4 ; `D` : 5, 7dim ; `autre` : le reste, emprunts et passages) ;
+  `resume` = la suite sans répétitions immédiates, ramenée à sa **boucle** si elle se répète (« 1 5 6m 4 ») ;
+  **fonction du passage** en code (`repos` : finit sur le 1 ; `vers-refrain` : finit ailleurs et précède un refrain ;
+  `suspens` : finit ailleurs ; `sans-accords`). La phrase affichée sera écrite en FR et 中文 par H4, pas ici.
+  Pourquoi au navigateur : les degrés ne dépendent pas de la tonalité et l'AST est déjà chargé ; pas de second index.
+- **Idées ancrées** : `harmonieDuChant` range les suggestions calculées (`suggestionsPour`, refus appliqués) et les
+  idées de l'équipe dans leur passage, calculées d'abord. Une idée d'équipe porte désormais `passage` (uid de section)
+  et `passageNom` (Firestore, champs facultatifs ; `firestore.rules` ne filtre pas les champs : rien à publier). Uid
+  disparu (chant réécrit) → rattachée par le nom ; sinon dans `sansPassage` (les idées d'avant H2 aussi).
+- **Où l'entendre** : `fiche.ecoutes` = `{ slug, section, nom }` par chant **et** section où le « après » est joué
+  (`build-harmonie.ts`), à côté de `exemples` (gardé pour l'onglet actuel).
+- **Ressenti / usage** : deux lignes `Ressenti` et `Usage` dans le tableau de chaque fiche (`docs/harmonie/*.md`),
+  vocabulaire fermé (chaleureux · mélancolique · élan · couleur ; couplet · pré-refrain · refrain · fin ·
+  transition), suivies de « (proposé) » tant que Timothée ne les a pas validées (`fiche.etiquettesProposees`).
+  Proposition tirée des **deux premières** sensations de la fiche (au plus deux ressentis : quatre ne filtraient
+  plus rien) et des moments : Douceur, Repos, Lumière → chaleureux ; Tendresse, Gravité → mélancolique ; Épique, Majesté, Joie, Tension → élan ; Surprise, Émerveillement,
+  Suspendu → couleur ; Couplet → couplet ; Montée et Pont → pré-refrain ; Refrain → refrain ; Fin → fin ; Intro et
+  Transition → transition. Les sensations et moments restent dans les fiches jusqu'à H6.
+
+### H3 — écoute (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Une seule tranche ; aucun écran ne change (H4 à H6 posent le bouton).
+- **Module** `src/lib/audio/synthese.ts` : partie pure, `planDeLecture` (suite d'accords → pas datés avec leurs
+  fréquences, voicing de `voicingPiano` : basse puis accord serré, do de base = C3) et `planAvantApres` (avant, un
+  silence, après) ; un accord illisible garde sa place en silence. Partie navigateur : un seul `AudioContext`, créé
+  ou repris **au geste** (iOS), oscillateurs triangle avec enveloppe courte ; une lecture en arrête une autre.
+- **Bouton** `src/components/harmonie/BoutonEcouter.tsx` : « Écouter / 试听 », « Arrêter / 停止 » pendant la lecture,
+  `aria-pressed` ; accepte une suite ou un avant / après ; même style que les petits boutons secondaires existants ;
+  rien si le navigateur n'a pas Web Audio. Pas de survol : un appui joue, un second arrête. Jamais en mode louange.
+
+### H4 — porte 2, « Harmonie de ce chant » (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Deux tranches. La première remplace le contenu et garde la feuille à toutes les tailles ; la seconde pose la colonne.
+- **H4-1, contenu et feuille.** `IdeesSheet.tsx` devient `HarmonieDuChant.tsx` (mêmes props, `git mv`) ; titre
+  « Harmonie de ce chant » / « 这首歌的和声 » ; feuille aux deux tiers de la hauteur (`67dvh`).
+  - **Un bloc par passage**, dans l'ordre du chant (`harmonieDuChant`, refus appliqués) ; les reprises d'une même
+    section (`idDeSection` identique) se replient dans le premier bloc, nom suivi de « ×n », idées dédoublonnées par
+    fiche. Bloc : filet gauche `--sec-<type>`, nom (`formatSectionName`), grille en chiffres (`font-chord`,
+    `--chord-color`) avec les lettres en dessous en gris (H7 fera la bascule) — `resume` si `boucle` (suivi de
+    « en boucle / 循环 »), sinon les lignes jointes par « · », lignes consécutives identiques fusionnées ; une phrase
+    selon `fonction` (FR et 中文 : `repos` « Finit sur le 1 : le passage se pose. », `vers-refrain` « Finit sur le
+    {x} : il appelle le refrain. », `suspens` « Finit sur le {x} : il reste en suspens. », `sans-accords` « Pas
+    d'accords dans ce passage. ») ; `BoutonEcouter` sur la suite du passage en lettres (une fois la boucle).
+  - **Idées calculées** sous la grille : une carte par idée et par passage (plus de « Essayer où ? » ni de
+    « Montrer i/n » : « Montrer » va à ce passage, « Essayer » s'y applique) ; avant → après en lettres et en
+    chiffres, `BoutonEcouter` avant / après, « Ne marche pas sur ce chant ». Ordre et limite de `cinqPremieres` par
+    passage (3 montrées, « Voir plus » dans le bloc). Puis les **idées de l'équipe** du passage. Un passage sans idée
+    n'a pas de bloc d'idées vide.
+  - **En bas** : idées de l'équipe sans passage, idées écartées (comme aujourd'hui), formulaire d'ajout avec un choix
+    « Passage » (facultatif, « Tout le chant » par défaut) qui écrit `passage` et `passageNom`.
+  - **Setlist** : « Faire monter le dernier refrain » juste après le bloc du dernier refrain (au lieu d'une section à
+    part), « Vers le chant suivant » en dernier, avec un `BoutonEcouter` (dernier accord du chant, accord
+    d'approche s'il y en a, accord du 1 du chant suivant).
+  - **Boutons d'entrée** : page chant, un bouton texte « Harmonie » / « 和声 » juste après `PiluleTonalite` (l'icône
+    étincelle de `ActionsChant` disparaît) ; setlist, la puce du chant courant et les liens de fusion disent
+    « Harmonie ». Mêmes conditions d'accès qu'aujourd'hui (`accesHarmonie.peut`).
+- **H4-2, colonne.** En tablette paysage (≥ 1 024 px) et à l'ordinateur, la porte 2 est une colonne de 400 px à droite
+  de la partition, sans voile, avec sa croix ; **fermée par défaut**, ouverte ou fermée mémorisé par appareil
+  (`localStorage`, comme les autres préférences de lecture). La lecture garde son plafond de 1 440 px : à 1 440 px,
+  partition et colonne côte à côte ; la bulle d'un accord se ferme à l'ouverture de la colonne. Même colonne dans la
+  setlist (chant courant). Le téléphone et la tablette portrait gardent la feuille. Après « Exemples d'usage T4 »
+  (deux colonnes de `SongView`) : la tranche se pose sur leur travail.
+
+### H5 — porte 1, panneau d'accord enrichi (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Deux tranches. Le panneau (`PanneauAccord`, feuille au téléphone, bulle ailleurs) garde tout ce qu'il montre ; les
+ajouts n'apparaissent que pour un accord touché **dans la partition d'un chant** (page chant, setlist), jamais sur
+/accords ni dans la porte 2, ni en mode louange (`PerformanceMode` n'a pas le panneau).
+- **Données** : un contexte `HarmonieDesAccords` (dans `AccordsProvider` ou à côté), donné par la page chant et par
+  chaque chant de la setlist (`ChantDesAccords`) : tonalité **affichée** (celle des étiquettes, capo compris : les
+  degrés ne bougent pas), passages du chant (`harmonieDuChant`, refus appliqués) et, pour H5-2, l'ouverture de la
+  porte 2. Le passage de l'accord touché se lit au DOM : `closest("[data-section-uids]")` de l'ancre, et la place de
+  l'accord parmi les `[data-accord-touchable]` de cette section (ce qui suit dans la partition). Accord hors section
+  (calque 简谱, en-tête) : chiffre et Écouter seulement.
+- **H5-1, chiffre, Écouter, Ensuite.**
+  - **Chiffre** sous le nom, devant la description : « 4 dans D » / « D 调的 4 » (`chiffreDuDegre`, en
+    `--chord-color`, `font-chord`) ; un accord hors tonalité garde son chiffre d'emprunt (« b7 dans D ») ; rien si la
+    tonalité est inconnue.
+  - **Écouter** (`BoutonEcouter`, l'accord seul, en sons réels : étiquette + capo) à droite du nom, à côté de la croix.
+  - **Ensuite** : une ligne repliée « Ensuite : 5 · 6m · 1 » / « 接下来：5 · 6m · 1 » (chiffres), au plus trois
+    accords : d'abord celui qui suit **vraiment** dans la partition (s'il diffère), marqué « dans ce chant » / « 本歌中 »,
+    puis les suites usuelles par degré (`src/lib/harmonie/suites.ts`, pur : 1 → 4, 5, 6m ; 2m → 5, 4 ; 3m → 6m, 4 ;
+    4 → 5, 1, 2m ; 5 → 1, 6m, 4 ; 6m → 4, 2m, 5 ; 7dim → 1 ; le reste → 1, 5), sans doublon. Un appui déplie (bouton,
+    `aria-expanded`) une ligne par suite : chiffre, lettre (`AccordTouchable` « nu », qui ouvre son propre panneau),
+    étiquette « dans ce chant » s'il y a lieu, et les notes : « garde B D · G → F# » / « 保留 B D · G → F# » (notes
+    communes, puis chaque note qui bouge vers la plus proche du nouvel accord ; « tout bouge » / « 全部移动 » si rien
+    n'est commun), avec un `BoutonEcouter` des deux accords (ceci → suite). Pas de clavier dans la ligne (le panneau en
+    a déjà un). Repliée à chaque ouverture du panneau.
+- **H5-2, Ici.** Si une idée du passage de l'accord (calculée ou de l'équipe, refus appliqués) a cet accord dans son
+  « avant », une ligne « Ici : 4 → 2m7 » / « 这里：4 → 2m7 » (chiffres, nom de la fiche en dessous, `lang="fr"`) sous
+  Ensuite ; un appui ferme le panneau et ouvre la porte 2 (feuille ou colonne, selon la place) **au bloc de ce
+  passage**, défilé et mis en valeur comme « Montrer ». Mêmes conditions d'accès que la porte 2
+  (`accesHarmonie.peut`) ; au plus une ligne Ici (la première idée du passage qui s'applique).
+- Tests : nouvelle spec `harmonie-porte1.spec.ts` (chant FR `a-jamais-tu-es-saint`, chant ZH `一切歌颂赞美`, fonctions
+  pures de `suites.ts`, chiffre, Ensuite déplié, Ici ouvre la porte 2) ; voisines `accords-toucher*`, `harmonie-*`.
+  Captures : feuille au téléphone, bulle en tablette portrait, paysage, ordinateur et 1 440 px, FR et 中文.
+
+### H6 — porte 3, bibliothèque (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Deux tranches. La première refait la liste, la seconde la fiche. Les données de H2 suffisent (`ressentis`, `usages`,
+`etiquettesProposees`, `ecoutes`) : rien dans `docs/harmonie/` (H9 y écrit), ni dans le panneau d'accord, le module
+d'écoute, `BoutonEcouter` (H5), `SongView` ou `PerformanceMode`.
+- **H6-1, liste.** (`Catalogue.tsx`)
+  - **Filtres** : deux rangées de `Pilules`, **Ressenti** (chaleureux 温暖, mélancolique 忧伤, élan 推进, couleur 色彩)
+    puis **Usage** (couplet 主歌, pré-refrain 副歌前奏, refrain 副歌, fin 结尾, transition 过渡 : les mots chinois
+    des sections du site) ; un appui choisit, un second rend « tous ». Les menus Moment et Niveau et les pilules
+    d'ambiances disparaissent ; Piano · Guitare gardé. Le compteur `cmd.harmonie.filtre` reste.
+  - **Le niveau ordonne** : liste à plat, du plus simple au plus avancé pour l'instrument choisi (facile,
+    intermédiaire, avancé, puis sans niveau), ordre du catalogue à niveau égal ; une ligne grise au-dessus
+    « Du plus simple au plus avancé » / « 由浅入深 ». Plus de groupes par famille (la famille reste dans la fiche).
+    Pourquoi à plat : le niveau ne peut ordonner qu'une seule liste ; les familles coupaient l'ordre en douze.
+  - **Ligne** : nom de la fiche (`lang="fr"`, deux lignes au plus), dessous en gris les ressentis puis les usages
+    puis le niveau, **en entier** (« Chaleureux · Élan · Couplet, pré-refrain · Facile »), sur deux lignes au besoin,
+    sans « … » (musiciens-7). Badge « à relire » gardé.
+  - **Par où commencer** replié partout en une ligne qui se déplie sur place, comme déjà en deux volets
+    (musiciens-11) ; il s'efface toujours au premier filtre.
+  - **Largeur** : en deux volets, liste de **280 px** (au lieu de 400 ; 320 laissait 608 px, mesuré) : la fiche passe de ~530 à ≥ 640 px à
+    l'ordinateur 1 280 (musiciens-10, planche : 320 + 712). Tablette portrait (un volet) : les lignes en cartes sur
+    deux colonnes (`md:grid-cols-2`), sans trous sous les cartes courtes.
+  - **Ordre partagé** : le contexte du catalogue expose `ordre` (ids de la liste visible, dans l'ordre affiché) ; la
+    fiche s'en sert en H6-2.
+  - Tests : nouvelle spec `harmonie-bibliotheque.spec.ts` (dans `SPECS_GRAND_ECRAN` : largeur de la fiche ≥ 640 px
+    sur `ordinateur`), filtres Ressenti et Usage, ordre par niveau, lignes sans troncature, parcours replié ; mises à
+    jour des specs qui cherchaient les ambiances ou les menus (`harmonie-catalogue`, `pages-en-grand-harmonie*`,
+    `agencement-v18-harmonie`).
+- **H6-2, fiche.** (`FicheHarmonie.tsx`, plus un petit hook pour la page chant)
+  - **En-tête** : nom, puis une rangée de pastilles grises (ressentis, usages, niveau) à la place des lignes
+    d'ambiances et de moments ; famille gardée en petit au-dessus ou à côté ; si `etiquettesProposees`, un mot gris
+    « proposées » / « 待确认 » après les pastilles.
+  - **Écouter** : dans la carte « Avant → après », un `BoutonEcouter` avant / après lu dans le texte de la fiche (les
+    deux premiers accords entre accents graves avant « · degrés » : `` `G → A` devient `Em7 → A` ``, flèches et « … »
+    séparent, parenthèses ôtées), transposé avec le menu Tonalité ; texte illisible → pas de bouton. Fonction pure
+    dans `src/lib/harmonie/` (testée).
+  - **Où l'entendre en liens vers les passages** (musiciens-5) : avec `fiche.ecoutes`, **une ligne par chant**
+    (classés par setlists comme les exemples, 6 puis « Voir les autres ») : titre (et pinyin) en lien vers
+    `/songs/<slug>?passage=<uid JSON>` (premier passage), dessous les noms des passages en gris (type traduit par
+    les clés de section du site + numéro, repli sur `nom`), trois au plus puis « +n ». Ces chants sortent de la liste
+    « n chants qui le jouent déjà », qui ne garde que les autres. Les titres de la phrase écrite « Où l'entendre »
+    (`repertoire`) restent des liens vers le chant, à la section si un passage d'`ecoutes` du même chant existe.
+  - **Page chant** : un hook `useAllerAuPassage` (fichier à part, une ligne d'appel dans `SongDetailClient`) lit
+    `passage` (JSON, comme les autres paramètres), attend la section (`[data-section-uids]`, uid exact puis même
+    `idDeSection`), la fait défiler au centre et l'entoure comme « Montrer » (`harmonie-surligne`) ; introuvable :
+    rien. Une fois.
+  - **Précédente / suivante** (musiciens-12) : en bas de chaque fiche, une rangée de deux liens « ‹ nom » / « nom › »
+    (« Fiche précédente » / « 上一张 », « Fiche suivante » / « 下一张 » en `aria-label`) qui suit `ordre` (liste
+    filtrée) ; rien aux bouts ; une fiche hors de la liste filtrée suit l'ordre complet.
+  - Tests : `harmonie-bibliotheque.spec.ts` complétée (Écouter présent, liens d'Où l'entendre avec `passage`, la page
+    chant défile au passage — chant FR `a-jamais-tu-es-saint` —, précédente / suivante suit le filtre, fonction
+    avant / après) ; voisines `harmonie-catalogue`, `pages-en-grand-harmonie*`, `harmonie-ecoute`.
+- Captures des deux tranches : téléphone, tablette portrait, tablette paysage, ordinateur 1 280 et 1 440, FR et
+  中文 ; `regard`, puis `critique-design` sur ses signalements.
+
+### H7 — bascule Lettres / Chiffres (décisions de l'orchestratrice du lot, 12/11/2026, déléguées)
+
+Reprend les décisions de Timothée du 11/11 (point 3) et du 12/11 (point 6). Deux tranches.
+- **Préférence** : `src/lib/notationAccords.ts`, sur le modèle de `couleurAccords.ts` (lot CA) : par compte sur
+  l'appareil (`accords-notation-<uid>`, `accords-notation` sans compte), `"lettres"` par défaut, `useSyncExternalStore`,
+  rien dans Firestore. « Mémorisée par musicien » = comme la couleur des accords, déjà réglée par compte.
+- **Chiffre** : la racine et la basse remplacées par leur degré, écrit comme dans les fiches (`CHIFFRES` de
+  `src/lib/harmonie/degres.ts` : 1 · b3 · #4 · b7) ; le reste de l'étiquette est gardé tel quel (`D` en D → `1`,
+  `Em7` → `2m7`, `Gmaj7` → `4maj7`, `Asus4` → `5sus4`, `A/C#` → `5/7`, `Bm/A` → `6m/5`). Une fonction pure
+  `chiffrerEtiquette(accord, tonalité)` à côté de `chiffreDuDegre` ; un accord illisible (N.C., coquille) reste en
+  lettres. Tonalité = celle des étiquettes affichées (capo déduit, comme `tonaliteDesEtiquettes`) ; une section
+  modulée (`keyChange` d'une fusion de setlist) se chiffre dans sa tonalité. Un chant en mineur se chiffre comme les
+  fiches (tonique sans « m » : Em en Em = 1m).
+- **H7-1, partitions et bascule.** Rendu en chiffres des accords des partitions FR (`ChordLine`) et ZH (`ZhLine`) de la
+  page chant et de la vue partitions de setlist : mêmes positions, `font-chord`, `--accord-fr` / `--chord-color` ; la
+  largeur réservée suit le texte affiché. Le toucher ouvre toujours l'accord **en lettres** (le panneau dit déjà « 4 dans
+  D »). Restent en lettres : le calque 简谱, le PDF, le mode louange (`PerformanceMode.tsx`, H8), les lignes d'édition, le
+  copier des paroles. **Bascule** : contrôle segmenté de deux boutons (`aria-pressed`) « Lettres | Chiffres » /
+  « 字母 | 数字 » ; dans la barre du chant, juste après `PiluleTonalite`, à partir de 640 px, en libellés courts
+  « A » / « 1 » (titre et `aria-label` en mots) ; au téléphone la barre est déjà pleine (elle replie ses libellés) :
+  la bascule y est dans le menu ⋯ du chant, en mots, sous la couleur des accords ; même rubrique dans les réglages de
+  la vue partitions de setlist (`MenusSetlist`, à côté de `ChoixCouleurAccords`). Comptage `cmd.chant.notation`
+  (`usageCles.ts`). Tests : `notation-accords.spec.ts` (nouvelle, `SPECS_GRAND_ECRAN`) — Hosanna et 一切歌颂赞美 en
+  chiffres puis retour, transposition sans changement des chiffres, capo, préférence gardée au rechargement, le
+  toucher ouvre la lettre, PDF et calque 简谱 inchangés.
+- **H7-2, lignes d'harmonie.** Les lignes d'harmonie d'un chant suivent la bascule, **une seule notation** : porte 2
+  (`HarmonieDuChant` : grilles, cartes avant → après, « Faire monter le dernier refrain », « Vers le chant suivant »)
+  et porte 1 (« Ensuite », « Ici ») ; en chiffres, les chiffres seuls (les lettres grises dessous disparaissent) ; en
+  lettres, les lettres seules à la place des chiffres. Le titre du panneau d'un accord garde lettre et chiffre (« G ·
+  4 dans D », c'est son sujet). La bibliothèque (`/harmonie`, fiches sans tonalité) reste en degrés. Tests :
+  `harmonie-porte1`, `harmonie-colonne`, `harmonie-montrer`, `harmonie-setlist` et `notation-accords` complétées.
+- Captures des deux tranches : 390, 820, 1 180, 1 280 et 1 440, FR et 中文, clair et sombre pour H7-1 ; `regard`, puis
+  `critique-design` sur ses signalements.
+
+### H8 — mode louange, point en marge et bande (décisions de l'orchestratrice du lot, 13/11/2026, déléguées)
+
+Une tranche (H8-1), petite ; la même session fait ensuite TC-3 (`docs/spec-louange-tous-les-chants.md`). Le rendu est
+fixé par les décisions 4 (11/11) et 7 (12/11) : pas de planche.
+- **Réglage** : « Idées d'harmonie » / « 和声提示 » dans « Options d'affichage » du mode louange (`BarreHaut`), un
+  interrupteur, **éteint par défaut**, mémorisé **par compte** sur l'appareil (`perf-idees-harmonie-<uid>`, comme
+  `accords-notation-<uid>`). Montré seulement si `useAccesHarmonie().peut` (mêmes conditions que la porte 2) ; sans
+  accès, rien ne se montre, même si la clé dit oui.
+- **Données** : pour chaque chant affiché (items de la setlist **et** chants ajoutés du lot TC, par `songSlug`),
+  `harmonieDuChant` sur les sections du chant dans la tonalité **affichée** (transposition, `keyChange` d'une section
+  fusionnée), refus et idées de l'équipe chargés une fois par chant (cache du module, comme `LigneIci`) ; sans réseau,
+  les idées calculées seules. Rien n'est chargé tant que le réglage est éteint.
+- **Point** : au plus un par section qui a une idée (la première : calculées avant celles de l'équipe, comme « Ici »),
+  rond de 8 px en `--chord-color` dans la marge gauche, à la hauteur du nom de la section ; zone de toucher 44 px ;
+  `aria-label` « Idée d'harmonie : <nom de la section> » / « 和声提示：… », `aria-expanded`. Le toucher ne tourne pas la
+  page (propagation arrêtée) ; masqué pendant l'annotation (barre d'annotation ouverte) et à l'impression.
+- **Bande** : le toucher ouvre, **sans animation**, une ligne sous le nom de la section : chiffres avant → après, puis
+  « · », puis lettres avant → après (« 4 5 → 2m7 5 · G A → Em7 A », `font-chord`, `--chord-color`, une ligne, coupée
+  par une ellipse si trop longue) ; ni nom de fiche, ni « Pourquoi », ni Écouter (décision 8). Le toucher suivant
+  sur le point la referme ; une seule bande ouverte à la fois ; tourner la page ne la ferme pas. Le contenu en dessous
+  descend (pas de recouvrement).
+- Notation : la bande montre les deux (le mode louange ne suit pas la bascule Lettres / Chiffres).
+- Tests : nouvelle spec `louange-harmonie.spec.ts` (trois appareils) : réglage éteint par défaut, absent sans accès ;
+  allumé, un point sur une section à idée (chant FR et chant ZH), bande ouverte puis refermée, page non tournée ; un
+  chant transposé montre ses lettres transposées. Voisines : `louange-sections-uniques`, `louange-menus`,
+  `performance-mode`, `harmonie-porte1`. Captures : quatre dispositions et 1 440 px, FR et 中文, bande ouverte.
+
+Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
+nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
+
+## Avancement
+
+- 11/11/2026 : captures de l'existant (téléphone, tablette, ordinateur), un `/planche` (3 agents), retouches à la
+  relecture, artefact publié, questions posées.
+- 11/11/2026 : « Go » de Timothée sur les six recommandations ; décisions et lots écrits. Prochain : go pour H1 ?
+- 11/11/2026 : go de Timothée pour H1 ; H1 codé (non testé, non commité), puis **en attente, règle des trois chantiers ;
+  reprise au début de H1**.
+- 11/11/2026 : « reprends » de Timothée ; H1 relancé dans une session orchestratrice, réduit au clavier fixe et à
+  « Les plus joués » au téléphone (le retour « ‹ Chants » est fait par T6 des retouches d'usage). Ensuite : une
+  session par tranche, enchaînées (Timothée).
+- 11/11/2026 : **H1 fait** (session neuve) : clavier piano toujours 3 octaves (viewBox 504×96, octave main gauche en
+  `fill-muted`), « Les plus joués » sous les 12 notes au téléphone (`md:hidden` / `hidden md:block`) ; nouveau test de
+  largeur C = F#m7b5 (`accords-page.spec.ts`). tsc et lint propres ; `tests/accords-*` : 219 passés, 1 rouge, la course
+  préexistante « chant ZH : le panneau d'un accord » [telephone] (`accords-toucher-agencement.spec.ts:82`, élément
+  détaché ; rouge aussi sans H1, 4 fois sur 12). Captures 390/820/1180/1440 : largeur du clavier identique pour C et
+  F#m7b5 (308/299/326/389 px), aucun débordement. Le gris de l'octave gauche se voit à peine en thème clair.
+
+- 11/11/2026 : H1 fini par sa session (commit 991cf38). Timothée n'aime pas l'entrée par boucles : H2 à H4 suspendus.
+  Inventaire du site de référence de A à Z : `docs/inventaire-wangshubianqu.md`. Prochain : nouvelle planche d'Harmonie à
+  partir de l'inventaire, sur accord de Timothée.
+
+- 12/11/2026 : planche « trois portes » (`docs/planches/planche-harmonie-trois-portes.html`, artefact privé) : un seul
+  contenu, l'harmonie d'un chant passage par passage ; porte 1 = panneau de l'accord touché, porte 2 = feuille ou
+  colonne « Harmonie de ce chant », porte 3 = bibliothèque par ressenti et usage. Pistes A (pupitre), **B (grille du
+  chant, recommandée)**, C (carnet). Critique « à retoucher » : tablette paysage et 1 440 px non dessinés ; boutons
+  Écouter secondaires passés en contour à la relecture. Questions posées.
+- 12/11/2026 : Timothée valide toutes les recommandations ; décisions et lots H2 à H9 réécrits. Prochain : go pour H2 ?
+- 12/11/2026 : **go de Timothée pour H2** (« go pour Harmonie H2 », au pilote), en quatrième chantier de code. Session
+  neuve lancée par le pilote ; le go ne couvre pas H3.
+- 12/11/2026 : **H2 fait** (une tranche, session orchestratrice) : `src/lib/harmonie/passages.ts` (passages par
+  section, grille en degrés avec fonction tonale T / SD / D / autre, résumé ramené à la boucle, fonction du passage
+  `repos` / `vers-refrain` / `suspens` / `sans-accords` ; `harmonieDuChant` range les idées calculées puis celles de
+  l'équipe dans leur passage) ; idée d'équipe : champs `passage` et `passageNom` (rien à publier dans les rules) ;
+  `fiche.ecoutes` au build (2 374 écoutes chant + section sur 38 fiches à règle) ; lignes `Ressenti` et `Usage`
+  « (proposé) » dans les 69 fiches. Décision en route : au plus deux ressentis par fiche, tirés des deux premières
+  sensations (la première passe en donnait jusqu'à quatre). À savoir pour H4 : une boucle doit se répéter au moins
+  deux fois en entier ; le repli par nom prend le premier passage du même nom. Tests : tsc, lint (0 erreur), validate,
+  build:index ; 7 specs harmonie × 3 appareils, 189 passés, 3,0 min (nouvelle `harmonie-passages.spec.ts` : chant FR
+  `a-jamais-tu-es-saint`, chant ZH `一切歌颂赞美`). **À valider par Timothée** : les ressentis et usages proposés,
+  fiche par fiche dans `docs/harmonie/*.md` (retirer « (proposé) » une fois validé). H3 attend son go.
+
+- 12/11/2026 : **H3 fait** (une tranche, session orchestratrice) : `src/lib/audio/synthese.ts` (plan pur : accord →
+  fréquences par `voicingPiano`, do de base C3, 1,2 s par accord, un illisible garde sa place en silence ; avant /
+  après séparés de 0,8 s ; lecture Web Audio, un seul `AudioContext` créé ou repris dans le geste, une lecture arrête
+  l'autre et rend « Écouter » au bouton qui jouait) ; `BoutonEcouter.tsx` (« Écouter / 试听 », « Arrêter / 停止 »,
+  `aria-pressed`, caché sans Web Audio, désactivé si rien n'est lisible), posé dans aucun écran : H4 à H6 le poseront.
+  Tests : tsc, lint (0 erreur), validate ; nouvelle `harmonie-ecoute.spec.ts` (pure, chant FR `a-jamais-tu-es-saint`,
+  ZH `一切歌颂赞美`) et trois specs harmonie voisines × 3 appareils, 87 passés, 19 s. Non testé : le son réel (aucune
+  page avant H4) ; à écouter sur iOS et Android quand H4 posera le bouton.
+
+- 12/11/2026 : **H4-1 fait** (session orchestratrice, executant + testeur + relecteur + regard) : `IdeesSheet.tsx`
+  devient `HarmonieDuChant.tsx`, « Harmonie de ce chant » / « 这首歌的和声 » : un bloc par passage (filet de
+  section, grille en chiffres et lettres, phrase de fonction FR et 中文, Écouter), idées calculées par passage (3 puis
+  « Voir plus »), idées de l'équipe du passage, choix « Passage » au formulaire ; setlist : modulation après le
+  dernier refrain, « Vers le chant suivant » en dernier avec Écouter. Bouton « Harmonie » / « 和声 » après la pilule
+  de tonalité (icône étincelle seule quand la barre manque de place, niveau 3 de `data-libelles` ; libellés de la
+  barre en `nowrap`) ; puce setlist « Harmonie ». **Décisions déléguées (session H4, 12/11)** : « Ne marche pas sur ce
+  chant » refuse la fiche dans tous les passages (comme le libellé) ; titre chinois « 这首歌的和声 » plutôt que
+  « 本歌和声 » (plus naturel, à la relecture) ; les specs « Montrer i/n », « Essayer où ? » et la contraction
+  « Couplets 1 et 2 » sont retirées (sans objet). Tests : tsc, lint (0 erreur), validate ; 12 specs voisines × projets,
+  373 passés et 23 échecs au premier tour (12,2 min), puis les specs en échec : 137 + 109 passés (≈ 9 min). Restent
+  rouges, hors tranche (relecteur : rouges aussi sur la tête sans ce diff, ou course) : `chants-deux-volets.spec.ts:495`
+  et `:512` (ordinateur, tablette paysage). Connu, non corrigé : les noms des fiches restent en français dans
+  l'interface chinoise (contenu des fiches, H9) ; « Essayer » d'un bloc replié (×n) vise la première reprise. Son réel
+  non écouté (à faire sur iOS et Android). Prochain : H4-2 (colonne), session neuve.
+
+- 12/11/2026 : critique-design de H4-1 (4 captures) : « à retoucher ». **À faire en tête de H4-2** (décisions
+  déléguées, session H4, 12/11) : (1) lettres de la grille sans pastille, en gris, toujours touchables (variante de
+  `AccordTouchable`), seuls les chiffres en `--chord-color` ; (2) nom du passage en `text-base font-semibold`, nom
+  d'idée en `text-sm font-semibold` ; (3) bouton d'entrée texte seul « Harmonie » / « 和声 », sans étincelle, page
+  chant et puce setlist, libellé gardé à tous les niveaux de `data-libelles` (ce sont les autres libellés qui
+  tombent) ; (4) transition dans l'ordre joué « A → B → E », chant suivant et tonalité sur leur ligne ; (5) « À
+  vérifier en jouant » une seule fois, en tête des idées de la feuille ; (6) chaque côté de la flèche des chiffres en
+  `whitespace-nowrap` ; plus un bouton de fermeture visible (croix) et `lang="fr"` sur le nom des fiches en interface
+  chinoise.
+- 12/11/2026 : **H4-2 faite, H4 fait** (session orchestratrice de H4-2). Retouches de la critique de H4-1 : lettres de
+  la grille grises sans pastille et touchables (`AccordTouchable` variante `nu`), noms en semibold, bouton texte seul
+  « Harmonie » / « 和声 » (page chant et puce setlist), actif (`bg-foreground`) quand la porte est ouverte, transition
+  « A → B → E » avec le chant suivant sur sa ligne, « À vérifier en jouant » une fois, flèches en `nowrap`, légende des
+  chiffres sous les pastilles, « Ne marche pas sur ce chant » en `text-xs` gris, croix (« Fermer » / 关闭) dans la
+  feuille et la colonne, `lang="fr"` sur les noms de fiches. **Colonne** : `<aside data-harmonie-colonne>` de 400 px à
+  droite de la partition, collante, sans voile, fermée par défaut, préférence `gcc-harmonie-colonne` par appareil
+  (`src/hooks/useColonneHarmonie.ts`), Échap et croix ferment et rendent le focus, bulle d'accord fermée à l'ouverture
+  (sans déplacer le focus, `fermerSansFocus`), « Montrer » et « Essayer » la laissent ouverte. **Décisions déléguées
+  (session H4-2, 12/11)** : (1) la colonne ne s'ouvre que si la **zone de lecture** mesure au moins 824 px
+  (400 + 24 + 400 de partition) ; en deçà, la feuille. Conséquence : la setlist a la colonne dès 1 024 px, mais la
+  page chant, déjà en deux volets (liste des chants à gauche) dès 1 024 px, ne l'a que vers 1 650 px de fenêtre ;
+  avant, la partition tombait à 90-216 px (titre coupé mot à mot, accords chevauchés). Piste pour plus tard : replier
+  la liste des chants quand la colonne s'ouvre (à décider, changement d'agencement des deux volets). (2) Dans la
+  setlist, la colonne relit la préférence et suit le chant lu ; elle garde le nom du chant (plusieurs chants), masqué
+  sur la page chant. (3) « Harmonie » ne tombant plus, le suffixe de tonalité « (orig.) / (reco.) » de la barre tombe
+  le premier (visible au seul niveau 3 de `data-libelles`). Connu, laissé : la puce setlist ne se marque pas active ;
+  marges de la colonne calées sur `pb-16`/`pb-8` de la zone (`SetlistDetailClient`) ; noms des fiches en français en
+  interface chinoise (H9). Tests : tsc, lint (0 erreur), validate ; `harmonie-colonne.spec.ts` (nouvelle, dans
+  `SPECS_GRAND_ECRAN`) ; specs Harmonie, `barre-chant`, `chants-deux-volets`, `accords-toucher*`, `pupitre-partitions`
+  sur tous les projets : premier tour 369 passés / 18 échecs (12 min, code en cours de retouche), puis après
+  corrections 111 + 209 passés (10 min) et un tour ciblé des trois derniers rouges (1 min). Restent rouges, hors
+  tranche : `chants-deux-volets.spec.ts:495` (trois projets) et `:512` (tablette paysage, débordement de 12 px déjà
+  rouge avant). Instable, non lié : `accords-toucher-agencement.spec.ts:75` (téléphone, élément détaché ; 3/3 seul).
+  Durée totale des tests ≈ 45 min. `regard` sur 17 captures, `critique-design` sur 6 (« à retoucher » : 5 retouches
+  faites), relecteur (Échap, deux volets, focus : corrigés). Reposée sur « Exemples d'usage T4 » (conflit dans
+  `SetlistDetailClient`) : colonne fermée, les partitions gardent la requête de conteneur `partition` de T4 (1 080 px, deux
+  colonnes) ; colonne ouverte, partition à 920 px en une colonne. `harmonie-colonne`, `pupitre-partitions`,
+  `harmonie-setlist`, `harmonie-montrer`, `pages-en-grand-setlists` verts après la reprise (8 min).
+
+- 12/11/2026 : **H5-1 faite** (session orchestratrice H5 ; executant, testeur, relecteur, regard). Panneau d'un accord
+  touché dans la partition (page chant, setlist) : chiffre « 5 dans A » / « A 调的 5 » sous le nom (tonalité des
+  étiquettes, capo compris), Écouter dans l'en-tête (son réel, capo ajouté), ligne « Ensuite : 1/3 · 6m · 4 » /
+  « 接下来 » **sous le doigté**, dépliable en rangées (chiffre, lettre touchable, « dans ce chant » / « 本歌中 »,
+  « garde E A · B → C# » / « 保留 », « tout bouge » / « 全部移动 », Écouter des deux accords). `src/lib/harmonie/suites.ts`
+  (pur : suites usuelles par degré, `1m` compris, notes gardées / qui bougent, `tonaliteDesEtiquettes`) ; tonalité passée
+  par une prop `tonalite` d'`AccordsProvider` et de `ChantDesAccords` (le panneau est rendu hors des enfants du
+  fournisseur, un contexte posé dessous ne l'atteindrait pas) ; accord suivant lu au DOM dans
+  `[data-section-uids]`. **Décisions déléguées (session H5, 12/11)** : « Ensuite » sous le dessin (le doigté reste le
+  cœur du panneau) ; calque 简谱 hors section : chiffre et Écouter seulement ; doublons écartés sur le chiffre sans
+  basse (D → D/F# ou Dsus4 n'est pas une suite) ; la bulle garde son haut quand son contenu grandit et défile
+  dedans ; ronds de la bulle à 44 px sous `pointer: coarse`. Interface : `BoutonEcouter` gagne une prop facultative
+  `compact` (icône seule), `PanneauAccord` une prop facultative `harmonie` ; rien ne change sans elles (dit à H6).
+  Tests : tsc, lint (0 erreur), validate ; `harmonie-porte1.spec.ts` (nouvelle, `SPECS_GRAND_ECRAN`) et voisines
+  `accords-toucher*`, `accords-page`, `harmonie-colonne`, `harmonie-montrer`, `harmonie-setlist` : 253 passés / 1 (7 min),
+  puis 223 / 1 (3,9 min), puis après retouches 122 passés, 0 échec (2,4 min). Instable corrigé :
+  `accords-toucher-agencement.spec.ts:82` (`scrollIntoViewIfNeeded` sur élément détaché, retiré ; mêmes appels l.66 et
+  l.116 laissés). Captures 390 / 820 / 1 180 / 1 280 / 1 440, FR et 中文, regardées. Connu : le choix Guitare | Piano
+  de la bulle reste à 32 px en tablette paysage ; pas de test « pas de chiffre dans la porte 2 ». Prochain : H5-2
+  (« Ici »), session neuve.
+- 12/11/2026 : **H5-2 faite, lot H5 fini** (session orchestratrice H5-2 ; executant, testeur, relecteur, regard). Ligne
+  « Ici : 2m 5 → 2 5 » / « 这里：4 → 4 » sous Ensuite, nom de la fiche dessous (`lang="fr"`), chevron ; un appui ferme le
+  panneau et ouvre la porte 2 (feuille ou colonne) au bloc du passage, surligné 2,5 s, focus, l'idée nommée dépliée
+  (« Voir plus ») et centrée. `src/components/accords/LigneIci.tsx` (nouveau) ; prop `ici` (`IciDuChant`) sur
+  `AccordsProvider` / `ChantDesAccords` ; `PanneauAccord` gagne une prop facultative `chant` (rien ne change sans elle,
+  `BoutonEcouter` intact : rien pour H6) ; `HarmonieDuChant` une prop `passage` ; page chant et setlist (`onIci` de
+  `PartitionView`, qui ouvre sans basculer). Décisions déléguées (session H5-2, 12/11) : correspondance de l'accord et de
+  l'« avant » par chiffre (le capo ne change rien) ; idées calculées avant celles de l'équipe ; la ligne montre tous les
+  chiffres de l'avant → l'après de l'idée (« 4 → 4 » pour un maj7, comme le chiffre de la porte 2) ; idées chargées une
+  fois par chant (cache du module) ; section modulée d'une fusion : tonalité et sections du `keyChange` ; le bloc défile
+  après le chargement des idées et se recale (`ResizeObserver`, 1,5 s, arrêté au premier geste). Corrigé en route : clé
+  React commune à `Ensuite` et `LigneIci` (dupliquait « Ensuite »). Tests : tsc, lint (0 erreur), validate ;
+  `harmonie-porte1` (+5 tests : Ici FR et ZH, sans accès, /accords) et voisines `accords-toucher*`, `harmonie-colonne`,
+  `harmonie-montrer`, `harmonie-setlist`, tous projets : 217 / 7 (7,5 min), 154 / 3 (4 min), 122 / 0 (3,7 min), 219 / 5
+  (6,9 min, test FR Ici à adapter : un bloc plus haut que la zone ne montre pas à la fois son haut et la fiche), puis
+  `harmonie-porte1` 75 / 0 (1,1 min), puis `harmonie-porte1` + `harmonie-montrer` 90 / 0 (2,6 min). Comptage
+  `cmd.chant.ici` (déclaré dans `usageCles.ts`). Instable corrigé : `harmonie-porte1` ZH téléphone (clic
+  avant hydratation, refait par `toPass`). Captures FR et 中文, cinq projets, regardées. Connu : la bulle d'un accord
+  haut placé peut recouvrir la barre d'outils à 1 280 px (placement H5-1) ; espace après « ： » en 中文 (comme 接下来) ;
+  `harmonie-colonne.spec.ts:138` (setlist, ordinateur) a échoué une fois sur la transition de l'en-tête, passé ensuite.
+- 12/11/2026 : **H7-1 faite** (session orchestratrice de H7 ; executant, testeur, relecteur, regard). Préférence
+  `src/lib/notationAccords.ts` (par compte sur l'appareil, lettres par défaut) ; `chiffrerEtiquette` dans `degres.ts` ;
+  `NotationAccordsProvider` autour de chaque `SectionView` (tonalité `keyChange ?? key` ; le calque 简谱 reste hors du
+  fournisseur, donc en lettres) ; `ChordLine` et `ZhLine` réservent la largeur du texte affiché ; `AccordTouchable`
+  affiche le chiffre et ouvre la lettre ; `ChoixNotation` (barre « A | 1 » dès 640 px, rubrique en mots dans les menus
+  du chant et de la setlist) ; comptage `cmd.chant.notation`. Corrigé en route, hors lot mais rouge sur la base :
+  `usage-dimanche.spec.ts` (test PDF sans setlist à venir depuis PU-1) et la clé `cmd.setlists.pupitre.jouer` de
+  `Pupitre.tsx`, renommée `cmd.setlist.pupitre.jouer` et déclarée. Tests : tsc, lint (0 erreur), validate ;
+  `notation-accords` (nouvelle, cinq projets), `accords-toucher*`, `harmonie-porte1`, `libelles-langues`, `coherence`,
+  `statistiques-chant`, `usage-dimanche` : 307 / 20 (8 min), 72 / 22 (3,4 min), 85 / 9 (3,2 min), 47 / 9 (2,3 min),
+  puis 56 / 0 (1,9 min). Captures 390 à 1 440, FR et 中文, clair et sombre. Non couvert par un test : la vue partitions
+  de setlist et une section `keyChange`. **Reprise après `regard`** : à 1 280 px la barre débordait de la carte (la
+  mesure des libellés ne voyait pas les libellés 中文 arrivés après coup ; la bascule ajoutait 74 px à une rangée qui
+  tenait au pixel près). La mesure suit maintenant les éléments de la rangée (sans se relancer sur ses propres
+  changements) et **décision déléguée (session H7, 12/11)** : la bascule reste dans la barre tant que les libellés ne
+  perdent qu'un cran (`data-bascule`), sinon elle n'est que dans le menu ⋯ (Abba Père à 1 280 px, un membre connecté
+  à 820 px). `notation-accords` passe par un membre fictif et choisit par la barre ou par le menu. Tests :
+  `barre-chant` + `notation-accords` 79 / 5 (2,7 min), puis `notation-accords` 38 / 0 (1,1 min).
+  Prochain : H7-2, session neuve.
+- 12/11/2026 : **H7-2 faite, lot H7 fini** (session orchestratrice de H7-2 ; `/tranche` : executant, testeur, relecteur,
+  conseil ; puis regard). Porte 2 : `Contenu` pose la notation du compte (`useNotationDuCompte`, extrait de
+  `NotationAccordsProvider`) et la tonalité du panneau ; la grille d'un passage n'a plus qu'une ligne, touchable, en
+  couleur d'accord (lettres ou chiffres) ; les cartes avant → après perdent leur ligne de degrés ; dernier refrain,
+  chant suivant et idées de l'équipe suivent par `AccordTouchable`. Porte 1 : « Ensuite » replié et déplié (une seule
+  colonne d'accord, grille à trois colonnes) et « Ici » dans la notation choisie ; titre du panneau inchangé.
+  **Décisions déléguées (session H7-2, 12/11)** : la phrase de fonction (« Finit sur le 3m ») reste en degrés ; « Vers le
+  chant suivant » et l'approche d'une modulation se chiffrent dans la tonalité du chant en cours ; la grille en chiffres
+  passe par `chiffrerEtiquette` (« 1 – 2m7 ») au lieu de l'ancien résumé non touchable, et « Ensuite » / « Ici » aussi
+  (le regard avait vu « 2m » à côté de « 2m7 ») ; **un reste qui commence par des chiffres passe en exposant**
+  (`A7` → `5⁷`, `D2` → `1²` : collé au degré, il se lisait « 57 », « 12 » ; vaut aussi pour les partitions de H7-1) ;
+  la variante `nu` d'`AccordTouchable` prend la couleur de son parent (ses deux seuls usages sont ces lignes).
+  Corrigé hors lot : `retouches-usage-t1.spec.ts` attendait encore `text-sm` pour « Ne marche pas sur ce chant »
+  (passé en `text-xs` par H4-2, décision de la spec). Tests : tsc, lint (0 erreur) ; specs nommées 271 / 4 (6,1 min,
+  les 4 dans `retouches-usage-t1`) ; `notation-accords` 58 / 0 (1,5 min) ; `notation-accords` + `harmonie-porte1` 153 / 0
+  (2,9 min) ; `harmonie-colonne`, `-montrer`, `-setlist`, `retouches-usage-t1` 141 / 2 (3,7 min) : les 2 sont « tonalités
+  du réglage » (`retouches-usage-t1.spec.ts:49`), rouge aussi sur la base, instable, sans lien. Captures 390 à 1 440, FR et
+  中文, lettres et chiffres. Relevé par le regard, hors lot : noms des fiches en français dans l'interface chinoise (déjà
+  en attente), bas du panneau d'accord rogné à 1 180-1 440 px en FR, coupures de ligne des trajets de notes ;
+  `critique-design` non lancé (aucun signalement de design propre à la tranche). Non couvert par un test : « Ici » en
+  lettres transposées (capo). Suivant de la file : H8, qui attend AN et le pupitre.
+
+- 13/11/2026 : **H8-1 faite, lot H8 fini** (session orchestratrice de H8 ; executant, testeur, relecteur, regard).
+  Réglage « Idées d'harmonie » / « 和声提示 » dans la rangée « Sur la page » des Options d'affichage (éteint par
+  défaut, `perf-idees-harmonie-<uid>`, accès harmonie requis) ; `src/components/performance/IdeeHarmonieMarge.tsx`
+  (idées par chant et par tonalité de formes, cache par slug, première idée par section, calculées avant l'équipe) ;
+  point dans la marge, centré sur le nom de section, couleur des accords de la carte (`--accord-fr`, sinon
+  `--chord-color`) ; bande sous le nom, dans la carte, par une prop facultative `sousEntete` de `SectionView` (page
+  chant inchangée) ; une bande à la fois ; pagination relancée à l'ouverture ; comptage `cmd.louange.harmonie`.
+  **Décisions déléguées (session H8, 13/11)** : une seule tranche (pas de planche : rendu fixé par les décisions 4 et
+  7) ; réglage dans « Sur la page » plutôt qu'en rubrique ; bande sous le nom dans la carte (le premier rendu la
+  mettait au-dessus de la carte, le point sautait) ; tonalité des chiffres = tonalité des formes affichées
+  (`keyChange ?? songKey` moins le capo ; `SectionBlock` porte désormais son `capo`) ; la marge laissée par la
+  pagination au-dessus de la barre du bas reste telle quelle (une bande ouverte peut amener une carte au contact de
+  la barre, sans la recouvrir ; changer le budget repaginerait tous les chants). Corrigé après relecture : capo,
+  position, couleur, découpe sur « – ». Tests : tsc, lint (0 erreur), validate ; `louange-harmonie` (nouvelle :
+  éteint par défaut, sans accès, point et bande, page non tournée, transposé, capo, pas de débord sous la barre,
+  chant ajouté par « Tous les chants » = TC-3 ; FR et ZH) 8 / 16 (3,6 min, erreurs de la spec), 24 / 0 (1,1 min),
+  30 / 0 (2,2 min), 39 / 0 (1,7 min) ; voisines `louange-sections-uniques`, `louange-menus`, `performance-mode`,
+  `harmonie-porte1` 615 / 2 (19,9 min), puis avec `accords-toucher` et `louange-harmonie` 434 / 1 (11 min) :
+  l'échec persistant, « un trait dessiné sur la page 2 reste sur sa section » (`louange-sections-uniques.spec.ts:769`,
+  téléphone), échoue aussi sur la base d'avant H8 (`6d249ba7`) : sans lien, à reprendre hors lot. Captures cinq
+  projets, FR et 中文, fermé, bande, options : `regard`, puis trois regardées ; `critique-design` non lancé (rien de
+  propre à la tranche). Relevé hors lot : libellés de « Sur la page » sur deux lignes dès 820 px ; en 中文 au
+  téléphone, l'aide sur les paroles suit la rangée et paraît décrire 和声提示.
+- 13/11/2026 : **vrai piano pour « Écouter »** (go de Timothée du 13/11, « oui pour ça » ; session seule, sans
+  agent). Douze notes du **Salamander Grand Piano V3** (Yamaha C5, Alexander Holm, archive.org, **CC-BY 3.0**,
+  mention dans `public/audio/piano/LICENCE.md`), une par tierce mineure de C3 à A5 (tessiture de `voicingPiano`),
+  2,5 s, mono, MP3 64 kbit/s : **246 Ko** en tout. `synthese.ts` les charge au premier « Écouter » et les transpose
+  par `playbackRate` (±1,5 demi-ton au plus) ; une note absente joue l'onde triangle (repli), et un chargement
+  incomplet se retente au prochain appui. `sw.js` inchangé : hors ligne, les notes viennent du cache HTTP du
+  navigateur, sinon le repli. Interface inchangée. Tests : deux ajoutés dans `harmonie-bibliotheque` (chargement au
+  premier appui, 12 requêtes, sources de piano ; repli si `/audio/piano/` est coupé), 10 / 0 (1 min) ; avec
+  `harmonie-ecoute`, `harmonie-porte1`, `harmonie-porte2` 168 / 0, 4 ignorés (4 min). Son **pas jugé à l'oreille** :
+  à écouter par Timothée (niveau 1,5 / nombre de notes, choisi sans écoute).
+
+## Fiches d'harmonie qui manquent (choix délégué par Timothée)
+
+69 fiches en 12 familles aujourd'hui. À ajouter, dans l'ordre d'utilité pour le répertoire :
+- **substitutions** : **5/4 → 3m** (« le 3m après le 4 »), **1/5 avant 5** (quarte-sixte de cadence), **6m pour 4** (« 1 6m 5 » au lieu de « 1 4 5 »).
+- **couleurs** : **add9 sur le 4 et le 1** (le 2 des chants à la guitare), **m9 sur le 6m**, **5 7sus4 → 5 7** pour
+  une fin, **1 sur 1 avec la 9 à la basse de la main droite** (son « pad »).
+- **passage** : **3 majeur (5 du 6m) dans un couplet**, **dominante secondaire du 2m avant le 2m7-5**.
+- **emprunts** : **4m6** (couleur gospel d'avant la fin), **b7 en mineur → 1** (« Hosanna » mixolydien).
+- **mineur** : famille absente ; **6m comme tonique** (chants en mineur : 6m 4 1 5 lu depuis le 6m), **5 majeur en
+  mineur** (cadence harmonique).
+- **boucles** : une fiche par boucle mesurée qui n'en a pas : **1 4 5 1**, **1 6m 4 5**, **4 1 5 6m**, **1 5 4**.
+- **rythme** : **arrêt sur le temps (stop) avant le dernier refrain**, **demi-temps au pont**.
+- **voicings** : **guitare : accords de 4 à la place des barrés**, **piano : 1 et 5 à gauche, triade à droite en
+  renversement le plus proche** (fiche « mains » pour débuter).
+- **transitions** : **d'un chant en 6/8 vers un 4/4** (même tempo de noire pointée).
+- 12/11/2026 : **go de Timothée pour H3** (« tu peux lancer h3 », au pilote). Les quatre places de code sont prises :
+  H3 part à la première place libre (fin du comptage T3), avant le pupitre (une tranche courte passe devant une chaîne
+  de six ; décision déléguée, pilote, 12/11). H4 et suivants : un go par lot.
+- 12/11/2026 (après-midi) — **Go de Timothée pour H4** (« go pour Harmonie H4 »). Lancé en cinquième chantier ; H5 et
+  suivants gardent leur go.
+- 12/11/2026 (16 h 55 UTC) — **Go de Timothée pour H5 à H9** (« tout ce qui est dans la file donne-leur le go mais ils se
+  lancent chacun leur tour »). Ordre : H5, H6, H7, H9, puis H8 en dernier (mode louange, après AN et le pupitre) ; un
+  lot à la fois, chaque session lance le suivant. H5 lancé.
+- 12/11/2026 — **H9, découpage** (orchestratrice H9, décision déléguée) : trois tranches. **T1** le cours « Jouer
+  ensemble » ; **T2** les fiches qui entrent dans les familles existantes, première moitié (substitutions, couleurs,
+  passage, emprunts : 11 fiches) ; **T3** le reste (famille **mineur** nouvelle, boucles, rythme, voicings,
+  transitions : 12 fiches). Fiches en français seulement, comme les 69 (README : le 中文 d'une famille s'écrit après la
+  validation de son français) ; les noms des fiches en interface chinoise (relevé par H4) attendent donc cette
+  validation, pas H9. Ressenti et usage « (proposé) » selon la règle de H2. Pas de règle de suggestion nouvelle
+  (`regles.ts` est du code) : à proposer à part, fiche par fiche. T3 : la famille `mineur` demande sa ligne
+  `harmonie.familles.mineur` dans `src/locales/fr.json` et `zh-CN.json` (libellés, pas un composant).
+- 12/11/2026 — **H9 T1 faite** : le chapitre 17 du cours devient « Jouer ensemble » (même Id `jouer-en-groupe`, la
+  progression des musiciens reste) plutôt qu'un chapitre de plus (décision déléguée : 17 couvrait déjà les rôles ; un
+  nouveau chapitre aurait renuméroté 18 à 26). Trois parties ajoutées : 17.8 piano main gauche et basse, 17.9 deux
+  guitares, 17.10 intro / pont / fin, avec des passages de nos chants (*Digne est Ton Nom*, *Ébloui*, *Ce Nom si
+  merveilleux*, *Amour sans fin*, 你是我的平安, 得胜的宣告), et deux exercices (81 au lieu de 79 :
+  `harmonie-cours.spec.ts` suit). Statut du chapitre : « à valider » (Timothée). Reste à faire, code : les exemples
+  sont du texte ; un lien vers le passage (chant + section) demanderait une syntaxe de lien dans `cours.ts` et
+  `LecteurCours`. Tests : build:index, validate, tsc ; `harmonie-cours` et `harmonie-cours-lecture` sur les trois
+  appareils, 51 passés (1,4 min). Relecteur : exact ; une basse précisée. Prochaine : T2.
+- 12/11/2026 — **H9 T2 faite** : 11 fiches en français, statut « à valider », ressenti et usage « (proposé) » :
+  S7 le 3m après le 4 (`4 – 5/4 – 3m – 6m`), S8 la quarte-sixte de cadence, S9 le 6m à la place du 4 ; C8 les deux
+  notes du haut tenues, C9 le m9 sur le 6m, C10 le sus4 qui se résout sur le 7, C11 le 1 tenu en nappe ; P7 le 3m
+  qui devient majeur, P8 le 2m7b5 de passage ; E6 le 4m6 avant le dernier 1, E7 le b7 qui conclut. Passages du
+  répertoire relevés par script sur les `.cho`, puis vérifiés un à un par le relecteur (quatre citations corrigées).
+  Décisions déléguées (orchestratrice H9 T2, 12/11) : cinq idées de la liste recouvraient une fiche existante. Elles
+  ont donc pris un angle distinct : « add9 sur le 4 et le 1 » devient C8 (toute une grille sur deux notes tenues, C1
+  colorait un seul accord) ; « 3 majeur » part d'un 3m déjà écrit (P1 part du 1/3) ; « dominante secondaire du 2m
+  avant le 2m7-5 » devient P8, le 2m7b5 de passage, avec P3 en variante (aucun `3m7b5 – 6 7 → 2m` dans le
+  répertoire, le 2m7b5 y est deux fois) ; le 4m6 et le b7 → 1 se distinguent de E1 et de E3 par leur couleur et
+  leur arrivée directe. C11 reste proche de C1 (même accord, tenu en nappe) : Timothée peut la fondre dans C1.
+  Chaque fiche porte « **Règle.** Aucune : catalogue seul » (convention des familles sans règle ; le test exige la
+  ligne). Reste à faire, en code et hors périmètre : une règle de suggestion par fiche, à proposer à part. Tests
+  (5,2 min) : build:index (80 fiches), validate, tsc ; `harmonie-catalogue`, `harmonie-regles`, `harmonie-passages`,
+  `agencement-v18-harmonie`, `pages-en-grand-harmonie-corrections` sur les trois appareils : 244 passés, 6 ignorés.
+  Les 6 échecs de la ligne « Règle » sont corrigés et `harmonie-regles` repasse (27). Les tests comptent 80 fiches.
+  Prochaine tranche : T3.
+- 12/11/2026 : **H6-1 faite** (session orchestratrice de H6, executant + testeur + relecteur + regard) : bibliothèque
+  avec deux rangées de pilules **Ressenti** et **Usage** (menus Moment et Niveau et pilules d'ambiances retirés),
+  liste à plat ordonnée par niveau de l'instrument (« Du plus simple au plus avancé » / « 由浅入深 »), sous-titre
+  « ressentis · usages · niveau » en entier (usages séparés par « 、 » en 中文), « Par où commencer » replié partout,
+  cartes sur deux colonnes en tablette portrait, `ordre` de la liste dans le contexte du catalogue (pour H6-2).
+  **Décisions déléguées (session H6, 12/11)** : (1) liste de **280 px** en deux volets, pas 320 : à 320 la fiche ne
+  mesurait que 608 px à 1 280 ; (2) dans ce volet, le sous-titre peut prendre trois lignes (le texte entier prime,
+  musiciens-7) ; (3) liste à plat sans familles (le niveau ne peut ordonner qu'une liste). Tests : tsc, lint
+  (0 erreur), validate ; `harmonie-bibliotheque.spec.ts` (nouvelle, dans `SPECS_GRAND_ECRAN`) et voisines
+  (`harmonie-catalogue`, `pages-en-grand-harmonie*`, `agencement-v18-harmonie`, `usage-reste`,
+  `retouches-usage-t5`) : premier tour 355 passés / 13 échecs (8,2 min), puis les specs en échec 92 passés (2 min) et
+  un dernier tour après retouches 85 + 3 passés (2,2 min). Reste rouge, hors tranche : `usage-reste.spec.ts:157`
+  (`cmd.setlists.pupitre.jouer` de `Pupitre.tsx` absent de `CLES_USAGE`, chantier du pupitre). **Pour H6-2**
+  (regard, 20 captures) : à 1 280 et 1 440, la fiche passe à deux colonnes et laisse un grand vide sous « Pourquoi »
+  (la colonne de droite empile instrument et « Quand l'éviter ») ; « Où l'entendre » : les chants chinois n'ont ni
+  détail ni accords, rangées inégales ; en-tête de fiche encore en ambiances / moments (H6-2 le remplace) ; clés
+  orphelines `harmonie.niveau.titre|tous`, `moment.titre|tous`, `sensation.titre` à retirer si H6-2 les laisse
+  orphelines. `critique-design` passera une fois, à la fin de H6-2, sur la liste et la fiche. Connu : pilules de
+  28 px de haut (composant commun, hors lot) ; noms des fiches en français en 中文 (H9). Prochain : H6-2, session neuve.
+- 12/11/2026 — **H9 T3 faite, lot H9 fini** : 11 fiches en français, statut « à valider », ressenti et usage
+  « (proposé) », chacune « **Règle.** Aucune : catalogue seul ». Famille nouvelle **13 · Mineur**
+  (`docs/harmonie/13-mineur.md`, code N, libellé `harmonie.familles.mineur` : « Mineur » / « 小调 ») : N1 le 6m comme
+  centre, N2 le 5 majeur qui ramène au mineur. Boucles L7 `1 – 4 – 5 – 1`, L8 `1 – 6m – 4 – 5`, L9 `4 – 1 – 5 – 6m`,
+  L10 `1 – 5 – 4` ; rythme R5 le stop au début du dernier refrain, R6 le demi-temps au pont ; voicings V7 piano, les
+  deux mains pour débuter, V8 guitare, les accords à quatre cordes ; transitions T7 du 6/8 vers le 4/4. Plan du
+  README remis à jour (91 fiches, 13 familles ; il était resté à 69 après T2). Décisions déléguées (orchestratrice H9
+  T3, 12/11) : la liste de la spec compte **11** fiches et non 12 (le découpage avait arrondi) : 91 fiches, pas 92 ;
+  code **N** pour le mineur (M est pris par les montées) ; angles distincts là où une fiche voisine existait : N1
+  (section qui part du 6m et y revient) face à L3 et à la cadence rompue S4, N2 (cadence qui conclut en mineur,
+  après le 4m) face à P1 et P7, R5 (silence **dans** le refrain) face à M5 (silence avant), V7 (recette débutant)
+  face à V1 et V2, V8 (même accord sur quatre cordes) face à V4 (cordes à vide), L9 dite comme rotation de L3. T7
+  cite seulement les trois chants notés en 6/8 ou 12/8 (pas de passage : une transition vit entre deux chants).
+  Passages relevés par script sur les `.cho` (degrés de `passagesDuChant`), vérifiés un à un par le relecteur
+  (28 citations, 20 doigtés : rien à corriger ; F# ajouté à la liste de V8, à laquelle renvoie N2). Reste à faire,
+  code, hors périmètre : (1) le gras « **La boucle** » / « **Le principe** » des fiches L n'est pas un intertitre
+  de `fiches.ts` : la boucle n'arrive pas dans l'app (L1 à L10) ; (2) T7 pourrait être proposée dans la setlist
+  d'après `{time}` (`transitions.ts`) ; (3) le 中文 des fiches et une règle de suggestion par fiche, à proposer à
+  part. Tests (5,0 min) : build:index (91 fiches), validate, tsc ; `harmonie-catalogue`, `harmonie-regles`,
+  `harmonie-passages`, `agencement-v18-harmonie`, `pages-en-grand-harmonie-corrections` sur les trois appareils
+  (cinq projets) : 244 passés, 6 ignorés, aucun échec. Les tests comptent 91 fiches.
+- 12/11/2026 : **H6-2 faite, lot H6 fini** (session orchestratrice de H6-2, executant + testeur + relecteur + regard +
+  critique-design) : en-tête de fiche en pastilles grises (ressentis, usages, niveau ; « proposées » / « 待确认 »,
+  famille en petit au-dessus) ; deux `BoutonEcouter` Avant / Après dans la carte « Avant → après », lus par
+  `src/lib/harmonie/avantApres.ts` (« → », « … » et « – » séparent, parenthèses ôtées ; 10 cartes sur 64 restent sans
+  bouton : « … A → D | refrain en D », transitions de tonalité, texte libre) ; « Où l'entendre » : une ligne par chant
+  d'`ecoutes` en lien `?passage=`, noms des passages en gris (trois puis « +n »), les titres de la phrase écrite
+  mènent au passage ; hook `useAllerAuPassage` (une ligne dans `SongDetailClient`) ; liens précédente / suivante qui
+  suivent `ordre`. **Décisions déléguées (session H6-2, 12/11)**, après `critique-design` : (1) « Quand l'éviter »
+  pleine largeur sous la rangée Pourquoi / instrument (supprime le vide sous « Pourquoi » à 1 280 et 1 440 ; en une
+  colonne : Pourquoi, instrument, Quand l'éviter) ; (2) un chant déjà cité dans la phrase écrite ne se répète pas
+  dans la liste d'`ecoutes` ; (3) chant de la phrase sans détail : son pinyin en gris dessous (plus de rangées
+  creuses pour les chants chinois) ; (4) le sous-titre « Où l'entendre » n'apparaît que si la liste « n chants qui le
+  jouent déjà » le suit ; (5) un mot gris visible « Précédente » / « Suivante » (上一张 / 下一张) au-dessus des liens.
+  Clés retirées : `harmonie.sensation.*`, `harmonie.moment.*`, `harmonie.niveau.titre|tous`. Tests : tsc, validate ;
+  `harmonie-bibliotheque` (cinq projets), `harmonie-catalogue`, `harmonie-ecoute`, `pages-en-grand-harmonie*`,
+  `retouches-v18-pilules-stats` : premier tour 333 passés / 14 échecs (6,2 min : sélecteurs et tests périmés par
+  H6-1 et la nouvelle disposition), deuxième 244 / 5 (4,5 min, `trailingSlash` dans un sélecteur), puis après les
+  retouches 145 + 125 passés (4,5 min) et, après rebase sur H5-1, 77 passés (1,1 min). Reste, hors lot : la ligne
+  « Portée … sûreté » en bas de fiche reste en français en 中文 ; le surlignage `harmonie-surligne` touche le bord
+  droit de la colonne à 1 440 sur la page chant (classe partagée avec « Montrer »).

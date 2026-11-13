@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  HALO_BACK_OFFICE, HALO_BACK_OFFICE_SOMBRE, enTete, estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs,
+  enTete, estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs,
   margeAttendue, ongletsRail, ouvrirAvecBarre, pilules, verifierAgencement, verifierPleineLargeur, zoneDeContenu,
 } from "./helpers/agencement";
 
@@ -47,7 +47,8 @@ async function ouvrir(page: Page, chemin: string) {
   await page.clock.setFixedTime(new Date("2026-10-06T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await signInAs(page, ADMIN, DOCS, chemin);
-  await expect(enTete(page).locator("h1").filter({ visible: true }).first()).toBeVisible();
+  // Un h1 visible dans la page : dans l'en-tête, ou dans le volet de la fiche en deux volets (bo-reunions-taches-5).
+  await expect(page.locator("h1").filter({ visible: true }).first()).toBeVisible();
 }
 
 /** Capture à regarder à l'œil et à comparer aux planches v18 (PW_CAPTURES=<dossier>), une par appareil. */
@@ -69,10 +70,10 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     const y = async (l: typeof h1) => (await l.boundingBox())!.y;
     expect(await y(retour)).toBeLessThan(await y(h1));
     expect(await y(h1)).toBeLessThan(await y(sous));
-    // Le seul retour : « ‹ Section », 14 px gras gris, vers la section.
+    // Le seul retour : « ‹ Section », 13 px gras gris, vers la section.
     await expect(retour).toHaveAttribute("href", /^\/moi\/?$/); // trailingSlash de next.config
-    expect(await retour.evaluate((el) => [getComputedStyle(el).fontSize, getComputedStyle(el).fontWeight])).toEqual(["14px", "600"]);
-    expect(await sous.evaluate((el) => getComputedStyle(el).fontSize)).toBe("14px");
+    expect(await retour.evaluate((el) => [getComputedStyle(el).fontSize, getComputedStyle(el).fontWeight])).toEqual(["13px", "600"]);
+    expect(await sous.evaluate((el) => getComputedStyle(el).fontSize)).toBe("13px");
     if (!estTelephone(info)) {
       // L'action principale est à droite du titre, sur sa ligne.
       const action = entete.getByRole("button", { name: "Enregistrer" });
@@ -84,7 +85,7 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
   });
 
   test("Statistiques : le titre, puis le rail, puis la rangée (filtres en pilules)", async ({ page }) => {
-    await ouvrir(page, "/back-office/statistiques");
+    await ouvrir(page, "/songs/statistiques");
     const entete = enTete(page);
     const h1 = entete.getByRole("heading", { level: 1, name: "Statistiques" });
     const rail = entete.locator('[data-onglets="rail"]');
@@ -100,6 +101,7 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     const jeton = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--marge-page").trim());
     expect(jeton).toBe(`${await margeAttendue(page)}px`);
     // En grand, les deux volets prennent toute la zone (un volet : la liste de la page elle-même).
+    // (V3, validation du 07/11/2026 : la première setlist est montrée d'emblée, donc deux volets pleine zone.)
     await verifierAgencement(page, { contenu: estGrandEcran(info) ? page.locator("[data-deux-volets]") : undefined });
     // La vérification de pleine largeur mord : le titre n'occupe pas la zone.
     await expect(verifierPleineLargeur(page, enTete(page).locator("h1"))).rejects.toThrow();
@@ -128,9 +130,9 @@ test.describe("ConfirmerProvider, useConfirmer (R9)", () => {
   });
 
   test("la page change pendant que la fenêtre est ouverte (Précédent) : la fenêtre se ferme", async ({ page }) => {
-    await ouvrir(page, "/back-office/taches/da");
-    // Une navigation dans le site (un clic dans la liste), puis la fenêtre sur la fiche ouverte.
-    await page.locator('[data-volet="liste"], main').getByText("Fond PPT du culte").first().click();
+    await ouvrir(page, "/back-office/equipes/da");
+    // Une navigation dans le site (un clic dans la liste de la page de l'équipe), puis la fenêtre sur la fiche ouverte.
+    await page.getByRole("region", { name: "Tâches", exact: true }).getByText("Fond PPT du culte").first().click();
     await page.waitForURL(/\/back-office\/taches\/da\/t2/);
     await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).click();
     await page.getByRole("menuitem", { name: "Supprimer" }).click();
@@ -139,7 +141,7 @@ test.describe("ConfirmerProvider, useConfirmer (R9)", () => {
     // Précédent, fenêtre ouverte : sa demande ne doit pas survivre sur la page d'avant (un clic sur
     // « Supprimer » agirait pour une fiche quittée).
     await page.goBack();
-    await page.waitForURL(/\/back-office\/taches\/da\/?$/);
+    await page.waitForURL(/\/back-office\/equipes\/da\/?$/);
     await expect(fenetre).toBeHidden();
   });
 });
@@ -153,9 +155,9 @@ test.describe("MenuActions (R9)", () => {
     const menu = page.getByRole("menu");
     await expect(menu).toBeVisible();
     await capture(page, "f1-menu");
-    // Au clavier : Début et Fin vont à la première et à la dernière action.
+    // Au clavier : Début et Fin vont à la première et à la dernière action (« Voir comme un membre » ouvre le menu : commit c7d7f3e, fiche de gestion).
     await page.keyboard.press("Home");
-    await expect(menu.getByRole("menuitem", { name: "Dupliquer" })).toBeFocused();
+    await expect(menu.getByRole("menuitem", { name: "Voir comme un membre" })).toBeFocused();
     await page.keyboard.press("End");
     await expect(menu.getByRole("menuitem", { name: "Supprimer" })).toBeFocused();
     await page.keyboard.press("Enter");
@@ -169,7 +171,7 @@ test.describe("MenuActions (R9)", () => {
 
 test.describe("OngletsRail et Pilules (R4, R5)", () => {
   test("rail en boutons (Statistiques) : un tablist, un seul arrêt de tabulation, les flèches, Entrée choisit", async ({ page }) => {
-    await ouvrir(page, "/back-office/statistiques");
+    await ouvrir(page, "/songs/statistiques");
     const rail = enTete(page).locator('[data-onglets="rail"]');
     await expect(rail).toHaveAttribute("role", "tablist");
     const premier = rail.getByRole("tab", { name: "Les plus joués" });
@@ -220,7 +222,8 @@ test.describe("DeuxVolets en liste-carte (R10)", () => {
       test.skip(!estGrandEcran(info), "deux volets : grands écrans");
       test.skip(etat === "depliee" && info.project.name === "tablette-paysage", "la tablette couchée a toujours la barre réduite");
       await ouvrirAvecBarre(page, etat);
-      await ouvrir(page, "/setlists");
+      // Une setlist choisie : sans elle, la liste seule dans la colonne de 720 px (largeurs-b4).
+      await ouvrir(page, "/setlists?apercu=s1");
       const liste = page.locator('[data-volet="liste"]');
       const detail = page.locator('[data-volet="detail"]');
       await expect(detail.getByRole("heading", { level: 2, name: "Culte du 11 octobre" })).toBeVisible();
@@ -228,14 +231,15 @@ test.describe("DeuxVolets en liste-carte (R10)", () => {
       const marge = await margeAttendue(page);
       const bL = (await liste.boundingBox())!;
       const bD = (await detail.boundingBox())!;
-      // La liste : une carte en relief (rayon 16 px, ombre), à la marge de la zone, sans filet.
+      // La liste : un groupe blanc (rayon 16 px, aplat sans ombre : recette de surface C, T2), à la marge de la zone, sans filet.
       expect(Math.round(bL.x - zone.gauche)).toBe(marge);
       const style = await liste.evaluate((el) => {
         const s = getComputedStyle(el);
-        return { rayon: s.borderTopLeftRadius, ombre: s.boxShadow, filet: s.borderRightWidth };
+        return { rayon: s.borderTopLeftRadius, ombre: s.boxShadow, fond: s.backgroundColor, filet: s.borderRightWidth };
       });
       expect(style.rayon).toBe("16px");
-      expect(style.ombre).not.toBe("none");
+      expect(style.ombre).toBe("none");
+      expect(style.fond).toBe("rgb(255, 255, 255)");
       expect(style.filet).toBe("0px");
       // La fiche prend le reste, jusqu'à la marge de droite : aucune bande vide.
       expect(bD.x).toBeGreaterThan(bL.x + bL.width);
@@ -246,48 +250,20 @@ test.describe("DeuxVolets en liste-carte (R10)", () => {
     });
   }
 
-  test("un volet (téléphone, tablette portrait), Back-Office › Tâches : la liste seule", async ({ page }, info) => {
+  test("un volet (téléphone, tablette portrait), Back-Office › Équipe › Tâches : la liste seule", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "un volet : petits écrans");
-    await ouvrir(page, "/back-office/taches/da");
-    await expect(page.locator('[data-volet="liste"]').getByText("Fond PPT du culte")).toBeVisible();
+    await ouvrir(page, "/back-office/equipes/da");
+    await expect(page.getByRole("region", { name: "Tâches", exact: true }).getByText("Fond PPT du culte").first()).toBeVisible();
     await expect(page.locator('[data-volet="detail"]')).toHaveCount(0);
   });
 });
 
-test.describe("Halo du Back-Office (R12)", () => {
-  test("sous /back-office, sans halo à elle, la page prend le bleu gris", async ({ page }) => {
-    await ouvrir(page, "/back-office");
-    const halo = page.getByTestId("halo-defaut");
-    await expect(halo).toBeVisible();
-    const [variable, bleuGris] = await page.evaluate(() => {
-      const st = getComputedStyle(document.documentElement);
-      return [st.getPropertyValue("--halo").trim(), st.getPropertyValue("--halo-back-office").trim()];
+test.describe("Pas de halo par défaut (partout-q2)", () => {
+  for (const chemin of ["/back-office", "/profil"]) {
+    test(`${chemin} : ni halo ni --halo`, async ({ page }) => {
+      await ouvrir(page, chemin);
+      await expect(page.locator('[data-testid="halo"], [data-testid="halo-defaut"]')).toHaveCount(0);
+      expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--halo").trim())).toBe("");
     });
-    expect(bleuGris).toBe(HALO_BACK_OFFICE);
-    expect(variable).toBe(HALO_BACK_OFFICE);
-    expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor)).toBe("rgb(228, 231, 246)");
-    await capture(page, "f1-halo-back-office");
-  });
-
-  test("en sombre, le halo du Back-Office prend la valeur sombre du bleu gris", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "dark" });
-    await ouvrir(page, "/back-office");
-    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-    const halo = page.getByTestId("halo-defaut");
-    await expect(halo).toBeVisible();
-    const lire = () => page.evaluate(() => {
-      const st = getComputedStyle(document.documentElement);
-      return [st.getPropertyValue("--halo").trim(), st.getPropertyValue("--halo-back-office").trim()];
-    });
-    await expect.poll(lire).toEqual([HALO_BACK_OFFICE_SOMBRE, HALO_BACK_OFFICE_SOMBRE]);
-    expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor)).toBe("rgb(38, 43, 69)");
-    await capture(page, "f1-halo-back-office-sombre");
-  });
-
-  test("hors du Back-Office (Mon profil), le halo par défaut reste l'encre", async ({ page }) => {
-    await ouvrir(page, "/profil");
-    const halo = page.getByTestId("halo-defaut");
-    await expect(halo).toBeVisible();
-    expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor)).toBe("rgb(28, 28, 30)");
-  });
+  }
 });

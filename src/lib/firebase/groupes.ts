@@ -1,5 +1,6 @@
 import { FS_BASE, authHeader, checkRest, toFsFields, fromFsValue, type RawDoc } from "./setlists";
 import { ModifieEntreTemps } from "./programmes";
+import { viderCacheProfils } from "./users";
 import { lireGroupe } from "@/lib/groupes/organigramme";
 import { TABLE_GROUPES } from "@/lib/groupes/table";
 import type { OrganigrammeGroupe } from "@/types/groupe";
@@ -82,6 +83,7 @@ async function appelerRoute(corps: Record<string, unknown>): Promise<ReponseRout
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify(corps),
   });
+  viderCacheProfils(); // même en cas d'échec : le serveur a pu écrire (lot LF)
   const json = (await res.json().catch(() => ({}))) as Partial<ReponseRoute> & { error?: string };
   if (!res.ok) throw new Error(json.error ?? `Erreur ${res.status}`);
   return { maj: json.maj ?? 0, ignores: json.ignores ?? [] };

@@ -15,6 +15,8 @@ Tout est écrit en D. Degrés en chiffres (voir `README.md`).
 | Statut | à valider |
 | Sensations | Douceur et intimité · Tension |
 | Moments | Couplet · Montée |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `G → A` devient `Em7 → A` · degrés `4 → 5` devient
@@ -55,6 +57,8 @@ différente) · remplacement `2m7 → 5` · sûreté : **très sûre**.
 | Statut | à valider |
 | Sensations | Douceur et intimité · Tendresse et nostalgie |
 | Moments | Couplet · Refrain |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | couplet · refrain (proposé) |
 | Niveau | piano : facile · guitare : facile (avec Bm7) |
 
 **Avant → après** : `D … D` devient `D … Bm` · degrés `1 → 1` devient
@@ -94,6 +98,8 @@ sûreté : **sûre**.
 | Statut | à valider |
 | Sensations | Lumière et espérance · Joie et élan |
 | Moments | Refrain · Montée |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | pré-refrain · refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `Em → A` devient `G → A` · degrés `2m → 5` devient
@@ -132,6 +138,8 @@ S1 vient d'être essayée (les deux fiches se renverraient la balle).
 | Statut | à valider |
 | Sensations | Surprise · Tension · Tendresse et nostalgie |
 | Moments | Refrain · Fin |
+| Ressenti | élan · couleur (proposé) |
+| Usage | refrain · fin (proposé) |
 | Niveau | piano : facile · guitare : facile · **à préparer avec l'équipe** |
 
 **Avant → après** : `A → D` devient `A → Bm` · degrés `5 → 1` devient
@@ -177,6 +185,8 @@ dernière fois · sûreté : **sûre**.
 | Statut | à valider |
 | Sensations | Tendresse et nostalgie · Émerveillement |
 | Moments | Couplet · Pont |
+| Ressenti | mélancolique · couleur (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : `D → Bm` devient `F#m → Bm` (ou `D → G` devient
@@ -219,6 +229,8 @@ ni le premier accord de la section ni le dernier de sa ligne · remplacement du
 | Statut | à valider |
 | Sensations | Suspendu et planant · Douceur et intimité |
 | Moments | Montée · Fin · Intro |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | pré-refrain · fin · transition (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `A → D` devient `G/A → D` · degrés `5 → 1` devient
@@ -251,3 +263,135 @@ C/D – D) · *Il m'aime* · *Que tous soient un* · 医治我 · 不停赞美�
 **Règle.** Portée : fin de ligne ou fin de section · motif `5 → 1` (le 5 sans
 septième ni basse différente) · remplacement `4/5 → 1` · sûreté : **à
 écouter** (le C# de la mélodie, fréquent juste avant D).
+
+---
+
+## S7 · Le 3m après le 4 (4 – 5/4 – 3m – 6m)
+
+| | |
+| --- | --- |
+| Id | `substitutions/3m-apres-le-4` |
+| Statut | à valider |
+| Sensations | Tendresse et nostalgie · Lumière et espérance |
+| Moments | Couplet · Refrain |
+| Ressenti | mélancolique · chaleureux (proposé) |
+| Usage | couplet · refrain (proposé) |
+| Niveau | piano : facile · guitare : intermédiaire |
+
+**Avant → après** : `G → A → Bm` devient `G – A/G → F#m → Bm` · degrés
+`4 → 5 → 6m` devient `4 – 5/4 → 3m → 6m`.
+
+**Pourquoi ça marche.** La basse descend pas à pas : G, G, F#, puis B. A/G
+garde le G en bas pendant que le haut monte (M3). Puis F#m garde deux notes de
+A (A et C#) et tombe d'une quinte sur Bm : le chemin le plus naturel qui soit.
+On arrive sur le 6m sans à-coup, par une marche descendante.
+
+**Quand l'éviter.**
+- Quand la mélodie chante D sur le temps où arrive F#m : D frotte contre le C#
+  de l'accord.
+- Quand le passage doit monter avec force vers le refrain : `4 → 5 → 1` pousse
+  plus.
+
+**Variante.** `G → A → F#m7 → Bm7` sans la basse G : la suite « 4 5 3m 6m »
+toute simple. F# majeur au lieu de F#m : voir P7.
+
+**Au piano.** Main gauche : G, G, F#, B. Main droite : B-D-G, puis A-C#-E (sur
+la même basse G), puis A-C#-F#, puis B-D-F#.
+
+**À la guitare.** A/G en `3x2220` (le G au pouce ou à l'annulaire) ; F#m en
+barré 2e case (`244222`) ; Bm en `x24432`.
+
+**Dans le répertoire** (`4 – 5/4 – 3m – 6m` dans une ligne : 31 chants) :
+*Quand je contemple* (refrain, en C : Fmaj7 – G/F – Em7 – Am) · *Que tous
+soient un* (couplets, en E : A – B/A – G#m – C#m) · *Seigneur, par la clarté*
+(couplet 1, en A : D – E/D – C#m – F#m) · 为我而来 (主歌, en C : Fmaj7 – G –
+Em7 – Am, sans la basse G).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).
+
+---
+
+## S8 · La quarte-sixte de cadence (1/5 avant le 5)
+
+| | |
+| --- | --- |
+| Id | `substitutions/quarte-sixte-de-cadence` |
+| Statut | à valider |
+| Sensations | Majesté · Repos |
+| Moments | Fin · Refrain |
+| Ressenti | élan · chaleureux (proposé) |
+| Usage | fin · refrain (proposé) |
+| Niveau | piano : facile · guitare : facile |
+
+**Avant → après** : `A → D` devient `D/A – A → D` · degrés `5 → 1` devient
+`1/5 – 5 → 1`.
+
+**Pourquoi ça marche.** D/A a déjà la basse du 5 (A), mais en haut ce sont les
+notes de D. Elles glissent ensuite vers celles de A (D descend sur C#, F# sur
+E), puis reviennent sur D. On entend l'arrivée deux fois : la fin paraît plus
+large, plus solennelle. C'est la cadence des hymnes.
+
+**Quand l'éviter.**
+- Sur une fin rapide où le 5 ne dure qu'un temps : pas la place pour deux
+  accords.
+- Quand la basse joue D sous D/A : tout l'effet vient de la basse A tenue.
+
+**Variante.** `D/A – Asus4 – A → D` (la 4 entre les deux, voir C2) ; ou
+`D/A – A7 → D`.
+
+**Au piano.** Main gauche : A, tenu sur les deux accords. Main droite : D-F#-A,
+puis C#-E-A, puis D-F#-A.
+
+**À la guitare.** D/A en `x00232`, puis A en `x02220`, puis D en `xx0232` : la
+5e corde (A) reste en basse sur les deux premiers.
+
+**Dans le répertoire** (`1/5 – 5 → 1` dans une ligne : 11 chants) : *Attaché
+à la croix* (refrain, en D : D/A – A – D) · *Noël est arrivé* (refrain 1, en
+F : Bb – F/C – C – F) · 你是我的一切 (主歌 1, en D : D/A – A – D) · 何等恩典
+(副歌, en G : G/D – Dsus4 – G).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).
+
+---
+
+## S9 · Le 6m à la place du 4 (1 6m 5)
+
+| | |
+| --- | --- |
+| Id | `substitutions/6m-pour-4` |
+| Statut | à valider |
+| Sensations | Tendresse et nostalgie · Douceur et intimité |
+| Moments | Couplet · Pont |
+| Ressenti | mélancolique · chaleureux (proposé) |
+| Usage | couplet · pré-refrain (proposé) |
+| Niveau | piano : facile · guitare : facile |
+
+**Avant → après** : `D → G → A` devient `D → Bm → A` · degrés `1 → 4 → 5`
+devient `1 → 6m → 5`.
+
+**Pourquoi ça marche.** Bm et G ont deux notes en commun (B et D) : l'accord
+tient la même place, mais la couleur passe en mineur. Bm prépare A moins
+franchement que G : la marche vers le 5 est plus retenue, plus intime. La
+basse descend D, B, A.
+
+**Quand l'éviter.**
+- Quand la mélodie tient G sur cet accord : G frotte contre le F# de Bm.
+- Dans un refrain qui doit s'ouvrir : le 4 est plus lumineux.
+
+**Variante.** `D → Bm7 → A` (C6, plus doux) ; ou `D → Bm → G → A` pour garder
+les deux.
+
+**Au piano.** Main droite : de D-F#-A à D-F#-B (un seul doigt bouge, A monte
+sur B), puis C#-E-A. Main gauche : D, B, A.
+
+**À la guitare.** Bm en `x24432` ; plus léger, Bm7 en `x20202`.
+
+**Dans le répertoire** (`1 6m 5` dans une ligne : 20 chants) : *En Toi je sais
+qui je suis* (couplets, en F : F – Dm – C – F) · *Il est temps* (refrain, en
+B : B – G#m – F#) · *Infiniment grand* (couplet 1, en C : C – Am7 – G) ·
+*Avec nous (Emmanuel)* (pont, en E : E – C#m – B).
+
+**Règle.** Aucune : catalogue seul (une règle de suggestion
+se proposera à part).

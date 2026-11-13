@@ -29,7 +29,10 @@ OUT = os.path.join(HERE, "debug")
 SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
 # tonalités qui s'écrivent avec des bémols
-FLAT_KEYS = {"F", "Bb", "Eb", "Ab", "Db", "Gb", "Dm", "Gm", "Cm", "Fm", "Bbm"}
+FLAT_KEYS = {"F", "Bb", "Eb", "Ab", "Db", "Gb", "Dm", "Gm", "Cm", "Fm", "Bbm", "Ebm"}
+# Degrés épelés en bémol même dans une tonalité à dièses : b3, b6 et b7 (Bb en
+# Do, et non A#). Miroir de FLAT_DEGREES dans src/lib/transpose.ts.
+FLAT_DEGREES = {3, 8, 10}
 
 FONT_CANDIDATES = [
     "/System/Library/Fonts/Supplemental/Times New Roman.ttf",
@@ -63,9 +66,37 @@ def note_index(note: str) -> int:
     raise ValueError(f"note inconnue : {note}")
 
 
-def transpose_note(note: str, semitones: int, target_key: str) -> str:
-    table = FLAT if target_key in FLAT_KEYS else SHARP
-    return table[(note_index(note) + semitones) % 12]
+# Relatif majeur d'une tonalité mineure : il décide de l'orthographe
+# (miroir de spellingKey, src/lib/transpose.ts).
+RELATIVE_MAJOR = {"Cm": "Eb", "C#m": "E", "Dm": "F", "Ebm": "Gb", "Em": "G", "Fm": "Ab",
+                  "F#m": "A", "Gm": "Bb", "G#m": "B", "Am": "C", "Bbm": "Db", "Bm": "D"}
+MINOR_KEYS = list(RELATIVE_MAJOR)
+
+
+def spelling_key(key: str) -> str:
+    if re.match(r"^[A-G][#b]?m$", key):
+        return RELATIVE_MAJOR[MINOR_KEYS[note_index(key[:-1])]]
+    return key
+
+
+def transpose_note(note: str, semitones: int, target_key: str, bass: bool = False, root: str = "") -> str:
+    """`bass` : la basse suit la fondamentale (`root`, déjà transposée) si celle-ci est
+    bémolisée ; sinon seul le b7 de la tonalité est bémolisé, sauf tierce majeure de
+    l'accord (Gm/Bb en Do, F#/A#) — miroir de transposeChord."""
+    target_key = spelling_key(target_key)
+    idx = (note_index(note) + semitones) % 12
+    tonic = note_index(target_key)
+    if target_key in FLAT_KEYS:
+        return FLAT[idx]
+    if bass:
+        if root[1:2] == "b":
+            return FLAT[idx]
+        if (idx - tonic) % 12 == 10 and root and (idx - note_index(root)) % 12 != 4:
+            return FLAT[idx]
+        return SHARP[idx]
+    if (idx - tonic) % 12 in FLAT_DEGREES:
+        return FLAT[idx]
+    return SHARP[idx]
 
 
 CHORD_RE = re.compile(r"^([A-G][#b]?)(.*)$")
@@ -86,7 +117,8 @@ def transpose_chord(chord: str, semitones: int, target_key: str) -> str:
         return transpose_chord(chord[:-1], semitones, target_key) + ")"
     if "/" in chord:
         left, right = chord.split("/", 1)
-        return f"{transpose_chord(left, semitones, target_key)}/{transpose_note(right, semitones, target_key)}"
+        new_left = transpose_chord(left, semitones, target_key)
+        return f"{new_left}/{transpose_note(right, semitones, target_key, bass=True, root=new_left)}"
     m = CHORD_RE.match(chord)
     if not m:
         return chord

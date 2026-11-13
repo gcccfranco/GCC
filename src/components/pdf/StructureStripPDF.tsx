@@ -1,6 +1,7 @@
 import { Text, View } from "@react-pdf/renderer";
 import type { StripGroup } from "@/lib/pdf/compact";
 import { nuanceDef, nuanceLabel } from "@/lib/setlist/nuances";
+import { sectionColorKind } from "@/lib/sectionPalette";
 import { nuanceTextPdfColor, sectionPdfPalette } from "@/lib/pdf/colors";
 
 // Bandeau de structure du PDF compact (lot 5, docs/spec-export-pdf.md) : la
@@ -70,7 +71,7 @@ export function StructureStripPDF({
     <View style={{ marginTop: 8, marginBottom: 10 }} wrap={false}>
       <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", columnGap: 10, rowGap: 8 }}>
         {groups.map((g, i) => {
-          const pal = sectionPdfPalette(g.step.section.type);
+          const pal = sectionPdfPalette(sectionColorKind(g.step.section));
           const targetKey = g.step.targetKey && g.step.targetKey !== songKey ? g.step.targetKey : undefined;
           const n = noteNumber.get(g);
           const nuance = g.step.nuance;

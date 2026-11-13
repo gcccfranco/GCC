@@ -4,8 +4,8 @@
 // `mes-services-detail-telephone`) : la date, le service à sa couleur et les rôles, la
 // répétition (Campus), la setlist liée (« Ouvrir », « Mode louange ») et l'équipe du service
 // d'après le planning. En grand, la setlist et l'équipe côte à côte, sans « Retour » ; en un
-// volet, « ‹ Mes services », puis l'équipe avant la setlist.
-// Agencement v18 (A11, R3, R8, R10) : en deux volets, le titre est un h2 de 24 px (le h1 est celui
+// volet, « ‹ Mes services », puis l'équipe avant la setlist. Sans setlist, une carte simple tient sa place (V4).
+// Agencement v18 (A11, R3, R8, R10) : en deux volets, le titre est un h2 de 22 px (`xl`) (le h1 est celui
 // de l'en-tête de la section) et la fiche ne pose plus de marge ; en un volet, le service en page
 // garde son h1 et le seul retour du site, `Retour`.
 
@@ -19,15 +19,18 @@ import { KeyPill } from "@/components/ui/key-pill";
 import { CarteEquipe } from "@/components/setlists/CarteEquipe";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { joursAvant } from "@/lib/planning/accueil";
-import { serviceCategory } from "@/lib/planning/names";
+import { nomDuService, serviceCategory } from "@/lib/planning/names";
 import { repetitionsDe, type ServiceGroupe } from "@/lib/planning/mesServices";
 import { equipeDuService } from "@/lib/setlist/equipeDuService";
 import { serviceColor } from "@/lib/serviceColors";
 import { serviceButtonFill } from "@/lib/serviceButton";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
 import { cn } from "@/lib/utils";
-import { useMesServices } from "./SectionMesServices";
+import { TOUCHER_44 } from "@/lib/toucher44";
+import { lienPartition } from "@/components/setlists/editeur/Volets";
+import { useMesServices } from "./contexteMesServices";
+import { PastilleRole } from "./PastilleRole";
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -35,14 +38,9 @@ const dateLongue = (iso: string, lang: string) =>
   majuscule(new Intl.DateTimeFormat(locale(lang), { weekday: "long", day: "numeric", month: "long" }).format(new Date(`${iso}T12:00:00`)));
 
 function Roles({ s }: { s: ServiceGroupe }) {
-  const couleur = serviceColor(s.service);
   return (
     <span className="flex flex-wrap gap-1">
-      {s.roles.map((r) => (
-        <span key={r} className="rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: `color-mix(in srgb, ${couleur} 13%, transparent)`, color: couleur }}>
-          {r}
-        </span>
-      ))}
+      {s.roles.map((r) => <PastilleRole key={r} role={r} service={s.service} />)}
     </span>
   );
 }
@@ -76,33 +74,44 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
 
   const Titre = deuxVolets ? "h2" : "h1";
   const carteEquipe = equipe.length > 0 && <CarteEquipe equipe={equipe} monNom={monNom} niveau={2} />;
-  const carteSetlist = setlist && <CarteSetlist setlist={setlist} songs={songs} couleur={couleur} boutonsEnTete={!deuxVolets} />;
+  // La place de la setlist : sa carte, ou, quand le service a une équipe mais pas de setlist, une carte simple (V4, 07/11/2026).
+  const carteSetlist = setlist
+    ? <CarteSetlist setlist={setlist} songs={songs} couleur={couleur} boutonsEnTete={!deuxVolets} />
+    : equipe.length > 0 && (
+      <section className="carte-groupe rounded-2xl px-5 pb-3 pt-4">
+        <p className="text-sm text-muted-foreground">{t("mesServices.pasDeSetlist")}</p>
+      </section>
+    );
+  // Côte à côte (dès 680 px de volet, `.service-colonnes`), la setlist est toujours dans la colonne large (la première)
+  // et l'équipe dans l'étroite, quel que soit l'ordre du DOM (qui garde, en dessous, l'ordre de la pile).
+  const enColonne = (large: boolean, carte: React.ReactNode) =>
+    carte && <div className={cn("min-w-0", large ? "[@container(min-width:680px)]:order-1" : "[@container(min-width:680px)]:order-2")}>{carte}</div>;
 
+  // En deux volets, `DeuxVolets` pose déjà la marge basse (pb-6) : pas de seconde (lot CD, T4b).
   return (
-    <div className={cn("service-detail space-y-4 pb-10", !deuxVolets && "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}>
+    <div className={cn("service-detail space-y-4", !deuxVolets && "px-[var(--marge-page)] pb-10 pt-3")}>
       {!deuxVolets && <Retour href="/mes-services">{t("mesServices.title")}</Retour>}
 
       <header className="flex items-start gap-4">
-        <Tile color={couleur} big={jour.getDate()} small={mois} size="lg" className="h-14 w-14 rounded-xl [&>span:first-child]:text-2xl" />
+        <Tile color={couleur} big={jour.getDate()} small={mois} size="lg" className="h-14 w-14 rounded-xl [&>span:first-child]:text-2xl [&>span:first-child]:leading-none" />
         <div className="min-w-0 flex-1">
-          <p className="svc-ink text-[13px] font-semibold" style={{ "--svc": couleur } as React.CSSProperties}>{s.service}</p>
-          <Titre className={cn("font-bold leading-tight tracking-tight", deuxVolets ? "text-[24px]" : "text-2xl lg:text-[28px]")}>{dateLongue(s.date, i18n.language)}</Titre>
+          <p className="svc-ink text-sm font-semibold" style={{ "--svc": couleur } as React.CSSProperties}>{nomDuService(s.service, t)}</p>
+          <Titre className={cn("font-bold leading-tight tracking-tight", deuxVolets ? "text-xl" : "text-xl md:text-2xl")}>{dateLongue(s.date, i18n.language)}</Titre>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
             {quand && <span className="text-sm text-muted-foreground">{quand}</span>}
-            {!deuxVolets && <Roles s={s} />}
+            <Roles s={s} />
           </div>
           <HeureLieu s={s} />
         </div>
-        {deuxVolets && <div className="shrink-0 pt-1"><Roles s={s} /></div>}
       </header>
 
       {repetitions.map((r) => (
-        <article key={`${r.date}|${r.service}`} className="raised flex items-center gap-3.5 rounded-2xl px-4 py-3.5">
+        <article key={`${r.date}|${r.service}`} className="carte-groupe flex items-center gap-3.5 rounded-2xl px-4 py-3.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-muted-foreground">
             <Clock className="h-5 w-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] text-muted-foreground">{r.service}</p>
+            <p className="text-sm text-muted-foreground">{nomDuService(r.service, t)}</p>
             <p className="text-base font-bold">{dateLongue(r.date, i18n.language)}{r.time && ` · ${r.time}`}</p>
             {r.location && <p className="inline-flex items-center gap-1 text-sm"><MapPin className="h-3.5 w-3.5" aria-hidden />{r.location}</p>}
           </div>
@@ -112,7 +121,9 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
 
       {(carteEquipe || carteSetlist) && (
         <div className="service-colonnes grid items-start gap-4">
-          {deuxVolets ? <>{carteSetlist}{carteEquipe}</> : <>{carteEquipe}{carteSetlist}</>}
+          {deuxVolets
+            ? <>{enColonne(true, carteSetlist)}{enColonne(false, carteEquipe)}</>
+            : <>{enColonne(false, carteEquipe)}{enColonne(true, carteSetlist)}</>}
         </div>
       )}
     </div>
@@ -130,7 +141,7 @@ function CarteSetlist({ setlist, songs, couleur, boutonsEnTete }: {
   const { t } = useTranslation();
   const id = useId();
   const boutons = (
-    <div className="flex flex-wrap gap-2 [&>a]:flex-1 [&>a]:justify-center sm:[&>a]:flex-none">
+    <div className="flex flex-wrap gap-2 [&>a]:flex-[1_1_136px] [&>a]:justify-center">
       <Link href={`/setlists/${setlist.id}`} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
         <ListMusic className="h-4 w-4" aria-hidden />
         {t("planning.accueil.ouvrir")}
@@ -146,11 +157,11 @@ function CarteSetlist({ setlist, songs, couleur, boutonsEnTete }: {
     </div>
   );
   return (
-    <section aria-labelledby={id} className="raised space-y-3 rounded-2xl px-5 pb-4 pt-4">
+    <section aria-labelledby={id} className="carte-groupe space-y-3 rounded-2xl px-5 pb-4 pt-4">
       <div>
-        <h2 id={id} className="text-[13px] font-semibold text-muted-foreground">{t("planning.accueil.setlistDuService")}</h2>
+        <h2 id={id} className="text-sm font-semibold text-muted-foreground">{t("planning.accueil.setlistDuService")}</h2>
         <p className="text-lg font-bold leading-snug">{setlist.title}</p>
-        {setlist.leader && <p className="text-[13px] text-muted-foreground">{t("planning.accueil.presidence", { nom: setlist.leader })}</p>}
+        {setlist.leader && <p className="text-sm text-muted-foreground">{t("planning.accueil.presidence", { nom: setlist.leader })}</p>}
       </div>
       {boutonsEnTete && boutons}
       <ol>
@@ -163,8 +174,10 @@ function CarteSetlist({ setlist, songs, couleur, boutonsEnTete }: {
             <li key={it.position} className="flex min-h-12 items-center gap-3 border-t border-border/70 py-1.5">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold tabular-nums text-muted-foreground">{i + 1}</span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold">{titre}</span>
-                {!fusion && song?.artist && <span className="block truncate text-[13px] text-muted-foreground">{song.artist}</span>}
+                {fusion
+                  ? <span className="block truncate text-base font-semibold">{titre}</span>
+                  : <Link href={lienPartition(it.songSlug, tonalite ?? null)} className={cn("block rounded-sm text-base font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", TOUCHER_44)}><span className="block truncate">{titre}</span></Link>}
+                {!fusion && song?.artist && <span className="block truncate text-sm text-muted-foreground">{song.artist}</span>}
               </span>
               {!fusion && tonalite && <KeyPill tonalite={tonalite} langue={song?.language === "zh" ? "zh" : "fr"} />}
             </li>

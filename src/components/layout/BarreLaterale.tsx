@@ -10,7 +10,7 @@
 // PAR-DESSUS la page (feuille `vaul` par la gauche, sans mise à l'échelle), sur un voile ; elle
 // se referme au choix d'une entrée, sur un toucher du voile, par Échap, « Réduire » ou à la
 // déconnexion, et ne retient rien.
-// Au Back-Office (U6, Q15), les entrées Tâches et Messages portent leur pastille (planche
+// Au Back-Office (U6, Q15), l'entrée Messages porte sa pastille (planche
 // bo-tableau-de-bord), lue seulement quand la barre est montrée ; réduite, la barre n'en a pas.
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type Ref } from "react";
 import { createPortal } from "react-dom";
@@ -24,14 +24,15 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { useAuth } from "@/lib/firebase/auth";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { entreeBackOffice, entreesBarre, espaceDe, estEntreeActive, labelDeSection, listeSetlistsRetenue } from "@/lib/navigation";
+import { entreeBackOffice, entreesBarre, espaceDe, espaceAffiche, estEntreeActive, labelDeSection, listeSetlistsRetenue } from "@/lib/navigation";
 import { entreesBackOffice } from "@/lib/access";
 import { useProfile } from "@/lib/firebase/users";
 import { getBarreReduite, setBarreReduite, suivreBarreReduite } from "@/lib/barreLateralePref";
 import { usePastilles } from "@/lib/tableauDeBord/usePastilles";
+import { compter } from "@/lib/usage";
 import { Cloche } from "@/components/layout/Cloche";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
-import { SelecteurEspace } from "@/components/layout/SelecteurEspace";
+import { SelecteurEspace, useFormeAffichee } from "@/components/layout/SelecteurEspace";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { Drawer, DrawerOverlay, DrawerPortal, DrawerTitle } from "@/components/ui/drawer";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
@@ -73,7 +74,7 @@ const suivreBarreMontree = (changement: () => void) => {
   m.addEventListener("change", changement);
   return () => m.removeEventListener("change", changement);
 };
-function useBarreMontree() {
+export function useBarreMontree() {
   return useSyncExternalStore(suivreBarreMontree, () => window.matchMedia(BARRE_MONTREE).matches, () => false);
 }
 const rienASuivre = () => () => {};
@@ -90,8 +91,8 @@ export function BarreLaterale() {
   const auBackOffice = BACK_OFFICE && !!user && espaceDe(pathname) === "back-office";
   const comptes = usePastilles(montree && auBackOffice ? entreesBackOffice(user, profile) : []);
   const pastilles: Record<string, number> = {
-    [entreeBackOffice("taches").href]: comptes.taches ?? 0,
     [entreeBackOffice("messages").href]: comptes.messages ?? 0,
+    [entreeBackOffice("afaire").href]: comptes.afaire ?? 0,
   };
   // Lus hors de React, sans effet : monté (le thème ne se lit que dans le navigateur) et
   // réduite (pour les infobulles seulement ; la mise en page, elle, suit le CSS dès l'en-tête).
@@ -172,7 +173,8 @@ export function BarreLaterale() {
             kind="site"
             onClose={() => {
               setSignaler(false);
-              deplierRef.current?.focus();
+              // Après le démontage : tant que la fenêtre est là, son piège à focus le reprendrait.
+              setTimeout(() => deplierRef.current?.focus(), 0);
             }}
           />,
           document.body,
@@ -210,22 +212,26 @@ function ContenuBarre({
 }) {
   const { t, i18n } = useTranslation();
   const pathname = usePathname() || "";
-  const { user, loading } = useAuth();
-  const { profile } = useProfile();
+  const { user, loading, probablementConnecte } = useAuth();
+  // Lot CH (C1, C2, C6) : la marque « était connecté » fait dessiner la forme du membre pendant l'attente,
+  // et les entrées du Back-Office que le profil avait données.
+  const forme = useFormeAffichee();
+  const attente = loading && probablementConnecte;
+  const musicien = forme.musiciens.length > 0;
+  const label = t(labelDeSection(pathname, musicien));
   const { resolvedTheme, setTheme } = useTheme();
   const dark = mounted && resolvedTheme === "dark";
   const setLanguage = useSetLanguage();
   const isZh = i18n.language === "zh-CN";
-  const label = t(labelDeSection(pathname));
   const { displayName, initial, planningName } = useNomDuMembre();
   const compte = useACoteDeLaBarre();
   const cloche = useACoteDeLaBarre();
   const idPastille = useId();
   // Back-office coupé (lot 18) : la section Évènements n'est pas en ligne. Au Back-Office (U6),
   // les entrées que donnent les droits (`entreesBackOffice`).
-  const entrees = loading
+  const entrees = loading && !attente
     ? []
-    : entreesBarre(espaceDe(pathname), { connecte: !!user, backOffice: BACK_OFFICE, permises: entreesBackOffice(user, profile) });
+    : entreesBarre(espaceAffiche(pathname, { musicien }), { connecte: !!user || attente, backOffice: BACK_OFFICE, permises: forme.entrees, musiciens: forme.musiciens });
   // Sur une setlist, « Setlists » rouvre la liste filtrée qu'on a quittée (U5, Q7).
   const listeSetlists = useSyncExternalStore(rienASuivre, listeSetlistsRetenue, () => "/setlists");
 
@@ -245,11 +251,11 @@ function ContenuBarre({
       {/* Logo et label contextuel (comportement gelé : contextuel, rouge du logo, en fondu),
           puis « Réduire » ; barre réduite : le logo seul. */}
       <div className="flex items-center gap-1">
-        <Link href={user ? "/planning" : "/songs"} onClick={onChoix} className="flex min-w-0 items-center gap-2.5 rounded-xl px-1.5 py-0.5">
+        <Link href={user || attente ? "/planning" : "/songs"} onClick={onChoix} className="relative flex min-w-0 items-center gap-2.5 rounded-xl px-1.5 py-0.5 after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']">
           <span className="relative h-[30px] w-[30px] shrink-0 overflow-hidden rounded-full">
             <Image src="/logo.png" alt="GCC Logo" fill sizes="30px" className="object-contain" priority />
           </span>
-          <span className="barre-texte whitespace-nowrap text-[17px] font-bold tracking-[-0.01em] text-foreground">
+          <span className="barre-texte whitespace-nowrap text-lg font-bold tracking-[-0.01em] text-foreground">
             GCC{" "}
             <span key={label} data-testid="label-section" className="text-brand animate-in fade-in duration-150">
               {label}
@@ -271,12 +277,14 @@ function ContenuBarre({
       <div data-testid="place-selecteur" className="barre-si-depliee empty:hidden">
         <SelecteurEspace pleineLargeur onChoix={onChoix} />
       </div>
+      {/* BO-G, 10 : barre réduite, le même interrupteur en deux icônes (le CSS ne le montre que réduite). */}
+      <SelecteurEspace compact />
 
       <nav aria-label={t("common.aria.navigationPrincipale")} className="flex flex-col gap-0.5">
         {entrees.map((entree) => {
           const { href, cle, Icone } = entree;
           const active = estEntreeActive(entree, pathname);
-          const n = pastilles[href] ?? 0;
+          const n = forme.retenue ? 0 : (pastilles[href] ?? 0);
           return (
             <Link
               key={href}
@@ -286,7 +294,7 @@ function ContenuBarre({
               aria-describedby={n > 0 ? `${idPastille}-${cle}` : undefined}
               title={enIcones ? t(cle) : undefined}
               onClick={onChoix}
-              className={`barre-entree flex items-center gap-3 rounded-xl px-3 py-[9px] text-[15px] font-semibold transition-colors duration-150 ${
+              className={`barre-entree relative flex items-center gap-3 rounded-xl px-3 py-[9px] text-base font-semibold transition-colors duration-150 ${
                 active ? "bg-primary text-primary-foreground" : "text-foreground/85 hover:bg-foreground/5"
               }`}
             >
@@ -297,7 +305,7 @@ function ContenuBarre({
                 <span
                   data-testid="pastille"
                   id={`${idPastille}-${cle}`}
-                  className={`barre-texte ml-auto rounded-full px-[7px] py-px text-xs font-bold ${
+                  className={`barre-pastille ml-auto rounded-full px-[7px] py-px text-xs font-bold ${
                     active ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"
                   }`}
                 >
@@ -323,6 +331,17 @@ function ContenuBarre({
       )}
 
       <div data-testid="pied-barre" className="barre-pied barre-laterale-filet mt-auto flex items-center gap-2 border-t px-1.5 pt-2">
+        {attente && (
+          // Forme du membre, sans le compte ni les droits : avatar, nom, cloche et langue gardent leur place.
+          <>
+            <span aria-hidden className="barre-fin h-8 w-8 shrink-0 rounded-full bg-secondary" />
+            <div aria-hidden className="barre-si-depliee min-w-0 flex-1" />
+            <div aria-hidden className="flex shrink-0 gap-1.5">
+              <span className={`${PASTILLE} pointer-events-none`} />
+              <span className={`${PASTILLE} barre-si-depliee pointer-events-none`} />
+            </div>
+          </>
+        )}
         {!loading &&
           (user ? (
             <>
@@ -331,13 +350,13 @@ function ContenuBarre({
                   <button
                     aria-label={t("common.header.account")}
                     title={displayName}
-                    className="barre-fin h-8 w-8 shrink-0 rounded-full bg-foreground text-background text-[13px] font-bold flex items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
+                    className="barre-fin relative h-8 w-8 shrink-0 rounded-full after:absolute after:-inset-1.5 after:content-[''] bg-foreground text-background text-sm font-bold flex items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
                   >
                     {initial}
                   </button>
                 </MenuCompte>
               </span>
-              <div className="barre-si-depliee min-w-0 flex-1 text-[13px] leading-4">
+              <div className="barre-si-depliee min-w-0 flex-1 text-sm leading-4">
                 <div className="truncate font-bold text-foreground">{displayName}</div>
                 {planningName && planningName !== displayName && (
                   <div className="truncate text-muted-foreground">{planningName}</div>
@@ -352,18 +371,20 @@ function ContenuBarre({
             </>
           ) : (
             <>
-              <Link
-                href="/login"
-                aria-label={t("common.header.login")}
-                title={enIcones ? t("common.header.login") : undefined}
-                className="barre-connexion h-9 min-w-0 flex-1 rounded-full bg-primary px-3 text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] flex items-center justify-center gap-1.5 text-sm font-semibold"
-              >
-                <LogIn className="h-4 w-4 shrink-0" aria-hidden />
-                <span className="barre-texte truncate">{t("common.header.login")}</span>
-              </Link>
+              {!pathname.startsWith("/login") && !pathname.startsWith("/signup") && (
+                <Link
+                  href="/login"
+                  aria-label={t("common.header.login")}
+                  title={enIcones ? t("common.header.login") : undefined}
+                  className="barre-connexion h-9 min-w-0 flex-1 rounded-full bg-primary px-3 text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] flex items-center justify-center gap-1.5 text-sm font-semibold"
+                >
+                  <LogIn className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="barre-texte truncate">{t("common.header.login")}</span>
+                </Link>
+              )}
               {langue()}
               <button
-                onClick={() => setTheme(dark ? "light" : "dark")}
+                onClick={() => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); }}
                 aria-label={dark ? t("common.aria.modeClair") : t("common.aria.modeSombre")}
                 className={PASTILLE}
               >

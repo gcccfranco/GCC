@@ -1,13 +1,13 @@
 import "./helpers/cleFirebase";
 import { expect, test, type Page, type Route } from "@playwright/test";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { coordination, signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { interdireDialoguesNatifs, verifierAgencement } from "./helpers/agencement";
 
 // Lot « chants des fêtes », tranche CF-C (docs/spec-chants-fetes.md, CF1, CF5-CF9, CF22-CF23) : la page
 // de la fête. Comptes, programmes, setlists simulés ; les routes /api/fetes/* sont interceptées. Noms fictifs.
 
 const MEMBRE: FakeProfile = { uid: "uid-mo", email: "mo@example.com", firstName: "Mo", lastName: "M.", serviceRoles: { "Groupe Paix": ["musicien"] } };
-const COORD: FakeProfile = { uid: "uid-cora", email: "cora@example.com", firstName: "Cora", lastName: "D.", coordination: true };
+const COORD: FakeProfile = { uid: "uid-cora", email: "cora@example.com", firstName: "Cora", lastName: "D.", ...coordination() };
 
 const passage = (id: string, titre: string, quoi: string, qui: string[], medias?: unknown[]) => ({ id, titre, quoi, qui, ...(medias ? { medias } : {}) });
 const DANSE = { id: "m1", type: "danse", titre: "Lumière dans la nuit, chorégraphie", lien: "https://exemple.org/danse", duree: "3:40", depart: "0:12", note: "Fumée au refrain" };
@@ -201,7 +201,7 @@ test.describe("CF-C · Back-Office : chants et musiques en lecture (CF9)", () =>
     await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
     await page.route("**/api/fetes/**", (route) => route.abort());
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
-    await signInAs(page, { ...COORD, dansEquipes: ["evenementiel"], referentDe: ["evenementiel"] }, DOCS, "/back-office/evenements/scene/noel?vue=ordre");
+    await signInAs(page, COORD, DOCS, "/back-office/evenements/scene/noel?vue=ordre");
     const liste = page.getByRole("list", { name: "Ordre de Passage jour J" });
     await expect(liste).toContainText("À jamais Tu es saint");
     await expect(liste).toContainText("Lumière dans la nuit, chorégraphie");
@@ -215,7 +215,7 @@ test.describe("CF-C · ids des passages (CF1)", () => {
     interdireDialoguesNatifs(page);
     await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
-    const db: FakeDb = await signInAs(page, { ...COORD, dansEquipes: ["evenementiel"], referentDe: ["evenementiel"] }, DOCS, "/back-office/evenements/scene/noel?vue=ordre");
+    const db: FakeDb = await signInAs(page, COORD, DOCS, "/back-office/evenements/scene/noel?vue=ordre");
     await page.getByRole("button", { name: "Ajouter un passage" }).click();
     await page.getByLabel("Titre").fill("Chant de clôture");
     await page.getByRole("group", { name: "Qui" }).getByLabel("Gp Amour").check();

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS } from "../src/lib/access";
 import type { DonneesCalendrier, EntreeCalendrier } from "../src/lib/calendrier/entrees";
 import { champsDecales, decaler, ecartJours, planDeplacement, questionDeplacement } from "../src/lib/calendrier/deplacer";
@@ -321,7 +321,7 @@ test.describe("prévenir (pur)", () => {
     expect(route).not.toContain("`rappel-evenement-${e.id}`");
     expect(route.match(/cleVeille\(e\)/g)).toHaveLength(2);
     // Derrière l'interrupteur, comme les autres lignes d'évènements (lot 18).
-    expect(route).toContain("BACK_OFFICE ? await lignesEvenements(db, today)");
+    expect(route).toContain("BACK_OFFICE ? await lignesEvenements(db, reservations, today)");
   });
 });
 
@@ -341,7 +341,7 @@ const P_ORGA: FakeProfile = { uid: "u-orga", email: "orga@example.org", firstNam
 /** Référent de TEAM DA qui n'organise rien. */
 const P_MEMBRE: FakeProfile = { uid: "u-membre", email: "membre@example.org", firstName: "Mael", lastName: "B.", dansEquipes: ["da"], referentDe: ["da"] };
 /** Auteur de créneaux, responsable des plannings, sans équipe (pas la coordination). */
-const P_AUTEUR: FakeProfile = { uid: "u-auteur", email: "auteur@example.org", firstName: "Ines", lastName: "R.", plannings: ["culte"] };
+const P_AUTEUR: FakeProfile = { uid: "u-auteur", email: "auteur@example.org", firstName: "Ines", lastName: "R.", ...remplit("paix") };
 
 const DOCS: Record<string, Record<string, unknown>> = {
   "evenements/ping": {
@@ -471,7 +471,11 @@ test.describe("C6 : glisser en vue Mois", () => {
   test("rien ne se soulève : tâche répétée, entrée du Sheet, service, setlist, petit déj, évènement passé (ordinateur et tablettes)", async ({ page }, info) => {
     test.skip(estTelephone(info), GLISSER);
     const db = await ouvrir(page);
-    await page.getByRole("group", { name: "Sources affichées" }).getByRole("button", { name: "Setlists" }).click();
+    // BO-C : les pastilles des sources sont dans la feuille « Sources ».
+    await page.getByRole("button", { name: "Sources", exact: true }).click();
+    await page.getByRole("dialog", { name: "Sources" }).getByRole("group", { name: "Sources affichées" }).getByRole("button", { name: "Setlists" }).click();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: "Sources" })).toHaveCount(0);
     const immobiles = [
       jour(page, "2026-10-02").locator('[data-source="taches"]'), // tâche répétée
       jour(page, "2026-10-06").locator('[data-source="evenements"]').first(), // Sheet
@@ -504,7 +508,9 @@ test.describe("C6 : glisser en vue Mois", () => {
     test.skip(estTelephone(info), GLISSER);
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
-    await signInAs(page, P_AUTEUR, {
+    // lot RS : un gestionnaire de planning réserve toujours (Q12), la saison ne le limite pas ; ce test regarde un
+    // auteur sans responsabilité (référent d'équipe, qui a le Back-Office), que la saison limite.
+    await signInAs(page, { ...P_MEMBRE, uid: "u-auteur", firstName: "Ines", lastName: "R." }, {
       ...DOCS,
       "programmes/noel": { ...DOCS["programmes/noel"], quiAutorises: ["Jeunes"] },
       "programmes/noel/creneaux/chorale": {

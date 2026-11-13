@@ -1,8 +1,6 @@
 export const MOIS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
-export const JOURC = ["dim","lun","mar","mer","jeu","ven","sam"]
 
 export const EDD_PERIODES = ["P1_JanFev","P2_MarAvr","P3_MaiJun","P4_JulAou","P5_SepOct","P6_NovDec"] as const
-export const EDD_PERIODES_LABELS = ["Janv–Fév","Mars–Avr","Mai–Jun","Juil–Aoû","Sep–Oct","Nov–Déc"]
 export const EDD_CLASSES = ["中班","大班","高班"] as const
 
 export type EddPeriode = typeof EDD_PERIODES[number]
@@ -33,9 +31,12 @@ export function fdShort(dateStr: string) {
   return `${parseInt(dd)}/${parseInt(mm)}`
 }
 
-export function fdLong(dateStr: string) {
-  const [, mm, dd] = dateStr.split("-")
-  return `${parseInt(dd)} ${MOIS[parseInt(mm)-1]}`
+/** Date courte avec jour de la semaine : « Lun. 27/7 » en français, « 7/27 周一 » en chinois (plannings-5). */
+export function jourCourtL(iso: string, lang: string) {
+  const [y, m, d] = iso.split("-").map(Number)
+  const zh = lang === "zh-CN"
+  const jour = new Date(y, m - 1, d).toLocaleDateString(zh ? "zh-CN" : "fr-FR", { weekday: "short" })
+  return zh ? `${m}/${d} ${jour}` : `${jour.charAt(0).toUpperCase()}${jour.slice(1)} ${d}/${m}`
 }
 
 /** Nom du mois (1–12) localisé selon la langue de l'interface. */
@@ -67,12 +68,12 @@ export function currentSundayStr() {
   return `${sun.getFullYear()}-${pad(sun.getMonth()+1)}-${pad(sun.getDate())}`
 }
 
-export function isFirstSundayOfMonth(dateStr: string, allRows: string[][]): boolean {
-  const m = getMois(dateStr)
-  for (const row of allRows) {
-    if (getMois(row[0]) === m) return row[0] === dateStr
-  }
-  return false
+/** Premier dimanche du mois : un dimanche tombant du 1 au 7. La date seule décide (ISO AAAA-MM-JJ,
+ *  comme `row[0]` des grilles) — ni les autres lignes, ni l'année. `_allRows` n'est plus lu : gardé
+ *  pour les appelants. */
+export function isFirstSundayOfMonth(dateStr: string, _allRows?: string[][]): boolean {
+  const jour = parseInt(dateStr.split("-")[2])
+  return jour >= 1 && jour <= 7
 }
 
 export function getCurrentEddPeriode(): EddPeriode {

@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import { useProfile } from "@/lib/firebase/users";
 import { EquipesClient } from "./EquipesClient";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { Halo } from "@/components/layout/Halo";
 import { OrganigrammeGroupe, useOrganigrammes } from "@/components/groupes/OrganigrammeGroupe";
 import { SelecteurGroupes } from "@/components/groupes/SelecteurGroupes";
 import { groupeDe } from "@/lib/groupes/organigramme";
@@ -63,7 +62,6 @@ function Attente({ selecteur, erreur = false, relire }: { selecteur: ReactNode; 
   const { t } = useTranslation();
   return (
     <div className="relative" aria-busy={!erreur}>
-      <Halo variant="moi" color="hsl(var(--foreground))" />
       <div className="relative">
         <EnTetePage
           titre={t("equipes.title")}

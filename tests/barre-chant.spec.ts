@@ -31,14 +31,17 @@ async function ouvrir(page: Page, slug: string) {
   await signInAs(page, ADMIN, {}, `/songs/${encodeURIComponent(slug)}`);
   await expect(page.locator("main.song-zoom").getByRole("heading", { level: 1 })).toBeVisible();
   // Le bouton Idées arrive avec le profil : la rangée est complète quand il est là.
-  await expect(barre(page).getByRole("button", { name: "Idées d'harmonie" })).toBeAttached();
+  await expect(barre(page).getByRole("button", { name: "Harmonie", exact: true })).toBeAttached();
 }
 
 async function uneSeuleLigne(page: Page) {
   const r = rangee(page);
   // Une ligne : la hauteur d'un bouton (36 px) et ses marges (2 × 8 px), pas deux.
   await expect.poll(async () => (await r.boundingBox())!.height).toBeLessThanOrEqual(56);
-  expect(await r.evaluate((el) => el.scrollWidth - el.clientWidth), "rien ne déborde de la rangée").toBeLessThanOrEqual(1);
+  // Au toucher, la zone de 44 px (`::after`, src/lib/toucher44.ts) du dernier bouton dépasse de quelques pixels quand la rangée n'a
+  // plus de marge intérieure (deux volets tactiles seulement, chants-8 ; au téléphone, aucune tolérance) : `scrollWidth` la compte, l'œil non (les bords des éléments, eux, sont mesurés plus bas).
+  const toucher = await page.evaluate(() => (matchMedia("(pointer: coarse)").matches && innerWidth >= 1024 ? 6 : 0));
+  expect(await r.evaluate((el) => el.scrollWidth - el.clientWidth), "rien ne déborde de la rangée").toBeLessThanOrEqual(1 + toucher);
   // … ni dans sa marge intérieure, que `scrollWidth` ne compte pas.
   const depasse = await r.evaluate((el) => {
     const fin = el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight);
@@ -59,8 +62,8 @@ for (const chant of CHANTS) {
       await expect(b.getByRole("button", { name: "Pinyin" })).toHaveCount(chant.zh ? 1 : 0);
 
       if (actionsDansLaBarre(page)) {
-        // Q2 : lire à gauche, faire à droite — Vidéo, PDF, Idées, puis ⋯ au bout.
-        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Idées d'harmonie", "Plus d'actions"];
+        // Q2 : lire à gauche, faire à droite — Vidéo, PDF, Crayon (MP-3), puis ⋯ au bout.
+        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Crayon", "Plus d'actions"];
         const boites = await Promise.all(noms.map((n) => b.getByRole("button", { name: n, exact: true }).boundingBox()));
         const accords = (await b.getByRole("button", { name: "Accords", exact: true }).boundingBox())!;
         let x = accords.x;
@@ -73,14 +76,17 @@ for (const chant of CHANTS) {
         const main = (await page.locator("main.song-zoom").boundingBox())!;
         const premier = (await rangee(page).locator(":scope > :visible").first().boundingBox())!;
         const dernier = boites.at(-1)!;
-        expect(Math.abs(premier.x - (main.x + 16)), "bord gauche de la partition").toBeLessThanOrEqual(2);
-        expect(Math.abs(dernier.x + dernier.width - (main.x + main.width - 16)), "bord droit de la partition").toBeLessThanOrEqual(2);
+        // Même marge intérieure que `main` : 16 px en un volet, 0 en deux volets (chants-8, les bords du chant sont ceux du volet).
+        const [gauche, droit] = await page.locator("main.song-zoom").evaluate((el) => [parseFloat(getComputedStyle(el).paddingLeft), parseFloat(getComputedStyle(el).paddingRight)]);
+        expect(Math.abs(premier.x - (main.x + gauche)), "bord gauche de la partition").toBeLessThanOrEqual(2);
+        expect(Math.abs(dernier.x + dernier.width - (main.x + main.width - droit)), "bord droit de la partition").toBeLessThanOrEqual(2);
         await capture(page, `barre-chant-${chant.zh ? "zh" : "fr"}`);
         // Q3 : le menu ⋯ ne garde que l'écoute, les couleurs, Personnaliser et Signaler.
         await b.getByRole("button", { name: "Plus d'actions" }).click();
         await expect(page.getByRole("menuitem", { name: "Personnaliser" })).toBeVisible();
         await expect(page.getByRole("menuitem", { name: "Signalement" })).toBeVisible();
-        await expect(page.getByRole("menuitemcheckbox")).toHaveCount(1);
+        await expect(page.getByRole("menuitemcheckbox")).toHaveCount(0);
+        await expect(page.getByRole("menuitemradio")).toHaveText([/Classique/, /Couleurs par section/, /Marge/, /Scène/, /Partition/]);
         for (const n of ["Vidéo", "PDF", "Idées d'harmonie"]) await expect(page.getByRole("menuitem", { name: n })).toHaveCount(0);
         // Ni Spotify ni Apple Music (Timothée, 18/10/2026) : Personnaliser et Signalement, plus Couleurs.
         await expect(page.getByRole("menuitem")).toHaveCount(2);
@@ -94,7 +100,7 @@ for (const chant of CHANTS) {
         // Vidéo · PDF · Idées · ⋯, qui défile en largeur (pas d'« Écouter » : YouTube seul, 18/10/2026).
         const seconde = b.locator(".actions-tel");
         await expect(seconde).toBeVisible();
-        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Idées d'harmonie", "Plus d'actions"];
+        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Crayon", "Plus d'actions"];
         for (const n of noms) await expect(seconde.getByRole("button", { name: n, exact: true })).toBeAttached();
         await expect(rangee(page).getByRole("button", { name: "Plus d'actions" })).toHaveCount(0);
         await expect(seconde.getByRole("button", { name: "Écouter" })).toHaveCount(0);
@@ -117,14 +123,15 @@ for (const chant of CHANTS) {
         await expect(page.getByRole("dialog")).toBeVisible();
         await page.keyboard.press("Escape");
         await expect(page.getByRole("dialog")).toHaveCount(0);
-        await seconde.getByRole("button", { name: "Idées d'harmonie" }).click();
+        // « Harmonie » est à côté de la pilule de tonalité, en icône seule sur la rangée.
+        await rangee(page).getByRole("button", { name: "Harmonie", exact: true }).click();
         await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
       }
     });
 
     test("+1 demi-ton change la tonalité", async ({ page }) => {
       await ouvrir(page, chant.slug);
-      const courante = page.getByTestId("tonalite-courante");
+      const courante = page.getByTestId("tonalite-lettre");
       await expect(courante).toHaveText(new RegExp(`^${chant.tonalite}`));
       await barre(page).getByRole("button", { name: "+", exact: true }).click();
       await expect(courante).toHaveText(chant.plusUn);
@@ -183,7 +190,9 @@ test("barre rappelée d'un tap après défilement : collée en haut, sans trou s
   await expect.poll(async () => { const n = await page.locator("header").first().boundingBox(); return n ? n.y + n.height : 0; }).toBeLessThanOrEqual(1);
   // Mesurer une fois la glissade finie (300 ms), pas en route.
   await barre(page).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
-  expect(Math.abs((await barre(page).boundingBox())!.y), "la barre colle en haut de l'écran").toBeLessThanOrEqual(1);
+  // En deux volets, elle colle 16 px sous le haut du panneau qu'elle dessine, lui-même aligné sur la liste (20 px) : 36 px.
+  const decalage = await barre(page).evaluate((el) => (getComputedStyle(el).position === "sticky" ? 36 : 0));
+  expect(Math.abs((await barre(page).boundingBox())!.y - decalage), "la barre colle en haut de l'écran").toBeLessThanOrEqual(1);
   await capture(page, "barre-chant-rappelee");
 });
 
@@ -192,10 +201,11 @@ test.describe("deux volets : partition et barre jusqu'à 900 px (Q8)", () => {
 
   test("à 1 440 px, Abba Père a tous ses libellés sur une ligne", async ({ page }) => {
     await ouvrir(page, "abba-pere");
-    await expect(rangee(page)).toHaveAttribute("data-libelles", "2");
+    // 3 = tout, avec le mot « Harmonie » ; 2 quand il ne tient pas.
+    await expect(rangee(page)).toHaveAttribute("data-libelles", /^[23]$/);
     for (const n of ["Accords", "Vidéo", "PDF"]) await expect(rangee(page).getByText(n, { exact: true })).toBeVisible();
-    // Idées d'harmonie : l'icône seule (Timothée, 18/10/2026), son nom reste pour les lecteurs d'écran.
-    expect(await rangee(page).getByRole("button", { name: "Idées d'harmonie" }).innerText()).toBe("");
+    // Harmonie : l'icône seule quand la place manque, son nom reste pour les lecteurs d'écran.
+    await expect(rangee(page).getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await uneSeuleLigne(page);
   });
 
@@ -221,3 +231,40 @@ test.describe("deux volets : partition et barre jusqu'à 900 px (Q8)", () => {
     });
   }
 });
+
+// chants-2 (docs/spec-corrections-design/chants.md) : au téléphone, les deux rangées de la barre sont
+// alignées sur la gouttière de 16 px.
+for (const largeur of [412, 390]) {
+  test(`téléphone ${largeur} px : le retour et le début de la 2e rangée sont à 16 px du bord`, async ({ page }, info) => {
+    test.skip(info.project.name !== "telephone", "la seconde rangée n'existe qu'au téléphone");
+    await page.setViewportSize({ width: largeur, height: 800 });
+    await ouvrir(page, "abba-pere");
+    const retour = (await barre(page).locator(".retour-chant").boundingBox())!;
+    const premierBouton = (await barre(page).locator(".actions-tel").getByRole("button").first().boundingBox())!;
+    expect(retour.x, "retour").toBe(16);
+    expect(premierBouton.x, "début de la 2e rangée").toBe(16);
+    const fin = (await barre(page).locator(".groupe-chant").boundingBox())!;
+    expect(fin.x + fin.width, "fin de la capsule à 16 px du bord droit").toBeLessThanOrEqual(largeur - 16 + 1);
+  });
+}
+
+// chants-3 : Accords et Pinyin actifs à l'encre pleine, aria-pressed, fond différent de l'éteint.
+for (const sombre of [false, true]) {
+  test(`Accords et Pinyin : aria-pressed et fond d'encre quand actifs (${sombre ? "sombre" : "clair"})`, async ({ page }) => {
+    await ouvrir(page, "一生爱你");
+    await page.evaluate((s) => document.documentElement.classList.toggle("dark", s), sombre);
+    const fond = (nom: string) => barre(page).getByRole("button", { name: nom, exact: true }).evaluate((el) => getComputedStyle(el).backgroundColor);
+    const encre = sombre ? "rgb(242, 242, 247)" : "rgb(28, 28, 30)";
+    for (const nom of ["Accords", "Pinyin"]) {
+      const bouton = barre(page).getByRole("button", { name: nom, exact: true });
+      await expect(bouton).toHaveAttribute("aria-pressed", "true");
+      await expect.poll(() => fond(nom), "actif : encre pleine").toBe(encre);
+      await bouton.click();
+      await expect(bouton).toHaveAttribute("aria-pressed", "false");
+      await expect.poll(() => fond(nom), "éteint : sans fond").not.toBe(encre);
+      await bouton.click();
+      await expect(bouton).toHaveAttribute("aria-pressed", "true");
+      await expect.poll(() => fond(nom)).toBe(encre);
+    }
+  });
+}

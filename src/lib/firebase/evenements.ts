@@ -1,11 +1,13 @@
 import {
   FS_BASE,
   authHeader,
+  lireRequete,
   checkRest,
   toFsFields,
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import type { CompteRendu, Deplacement, Evenement, Inscription } from "@/types/evenement";
 import { modeInscriptions } from "@/lib/evenements/agenda";
 import { estReunion } from "@/lib/access";
@@ -26,7 +28,7 @@ function docData(raw: RawDoc): { id: string; data: Record<string, unknown> } {
   };
 }
 
-export function fromFsEvenement(raw: RawDoc): Evenement {
+function fromFsEvenement(raw: RawDoc): Evenement {
   const { id, data } = docData(raw);
   return {
     id,
@@ -76,15 +78,7 @@ function fromFsInscription(raw: RawDoc): Inscription {
 }
 
 async function runQuery(parent: string, structuredQuery: Record<string, unknown>): Promise<RawDoc[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}${parent ? `/${parent}` : ""}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({ structuredQuery }),
-  });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => r.document!);
+  return (await lireRequete(parent, structuredQuery)) ?? [];
 }
 
 /** Tous les évènements lisibles : `publicOnly` (sans compte) = « pour = eglise » seulement. */
@@ -159,6 +153,7 @@ export async function createEvenement(data: Omit<Evenement, "id">): Promise<stri
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(data as unknown as Record<string, unknown>) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   changed();
   return ((await res.json()) as RawDoc).name.split("/").pop()!;
@@ -174,6 +169,7 @@ export async function updateEvenement(id: string, data: Partial<Omit<Evenement, 
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(fields) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   changed();
 }
@@ -187,6 +183,7 @@ export async function majCompteRendu(id: string, compteRendu: CompteRendu | null
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields({ compteRendu }) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   changed();
 }
@@ -194,6 +191,7 @@ export async function majCompteRendu(id: string, compteRendu: CompteRendu | null
 export async function deleteEvenement(id: string): Promise<void> {
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}/evenements/${id}`, { method: "DELETE", headers });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   changed();
 }

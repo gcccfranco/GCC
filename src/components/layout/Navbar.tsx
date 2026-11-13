@@ -15,14 +15,17 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
-import { labelDeSection } from "@/lib/navigation";
+import { espaceDe, labelDeSection } from "@/lib/navigation";
+import { compter } from "@/lib/usage";
 import { Cloche } from "@/components/layout/Cloche";
+import { IconeMessages, IconeMessagesRetenue } from "@/components/layout/IconeMessages";
+import { useBarreMontree } from "@/components/layout/BarreLaterale";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
-import { SelecteurEspace, useResponsable } from "@/components/layout/SelecteurEspace";
+import { SelecteurEspace, useFormeAffichee, useRetenirForme } from "@/components/layout/SelecteurEspace";
 
 // Bouton d'icône de la barre : rond, sans bordure, réponse dès l'appui.
 const ICON_BUTTON =
-  "h-10 w-10 shrink-0 rounded-full bg-secondary text-foreground/80 hover:text-foreground transition-[background-color,color,transform] duration-150 active:scale-[.94] flex items-center justify-center cursor-pointer";
+  "blanc-sur-gris h-10 w-10 shrink-0 rounded-full bg-secondary text-foreground/80 hover:text-foreground transition-[background-color,color,transform] duration-150 active:scale-[.94] flex items-center justify-center cursor-pointer";
 const SECTION_LINK = "px-3 py-[7px] rounded-full text-sm font-semibold transition-colors duration-150 whitespace-nowrap";
 const sectionClass = (active: boolean) =>
   `${SECTION_LINK} ${active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`;
@@ -39,12 +42,16 @@ export function Navbar() {
   const { t, i18n } = useTranslation();
   const pathname = usePathname() || "";
   const { resolvedTheme, setTheme } = useTheme();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, probablementConnecte } = useAuth();
   const { profile } = useProfile();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  // Lot CH (C1, C2) : pendant que Firebase lit la session, la marque « était connecté » fait dessiner la forme
+  // du membre (jamais l'en-tête des visiteurs) ; les éléments qui demandent le compte ou le profil gardent leur place.
+  const attente = authLoading && probablementConnecte;
+  const membre = !!user || attente;
   const dark = mounted && resolvedTheme === "dark";
-  const toggleTheme = () => setTheme(dark ? "light" : "dark");
+  const toggleTheme = () => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); };
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -99,12 +106,20 @@ export function Navbar() {
   const isActiveEvenements = pathname.startsWith("/evenements");
   const isActiveTaches = pathname.startsWith("/taches");
   const admin = isAdminUser(user);
-  const headerLabel = t(labelDeSection(pathname));
   const { displayName, initial } = useNomDuMembre();
   // Lot U6 (spec-back-office.md, question 5) : pour un responsable, le sélecteur
   // « App · Back-Office » suit le label ; sur téléphone il en prend la place, et la
   // langue passe par « Moi » (à 390 px, les quatre ne tiennent pas ensemble).
-  const responsable = useResponsable();
+  const forme = useFormeAffichee();
+  const musicien = forme.musiciens.length > 0;
+  // EM-2 : le sélecteur est aussi celui d'un musicien (App · Musiciens).
+  const responsable = forme.responsable || musicien;
+  const headerLabel = t(labelDeSection(pathname, musicien));
+  useRetenirForme();
+  // Piste A, BO2 : Messages n'est pas un onglet de la barre du bas, c'est une icône ici, à côté de la cloche.
+  // Là où la barre latérale est montrée, c'est elle qui porte Messages et lit ses comptes : pas deux fois.
+  const barreMontree = useBarreMontree();
+  const avecMessages = !barreMontree && (!!user || forme.retenue) && forme.responsable && espaceDe(pathname) === "back-office" && forme.messages;
 
   return (
     <>
@@ -114,9 +129,9 @@ export function Navbar() {
         }`}
       >
         <FondDeBarre />
-        <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3">
+        <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3 max-sm:gap-2">
           {/* Brand */}
-          <Link href={user ? "/planning" : "/songs"} className="flex items-center gap-2.5 shrink-0">
+          <Link href={membre ? "/planning" : "/songs"} className="relative flex items-center gap-2.5 shrink-0 after:absolute after:-inset-1 after:content-['']">
             <div className="relative h-9 w-9 rounded-full overflow-hidden shadow-sm">
               <Image
                 src="/logo.png"
@@ -127,7 +142,7 @@ export function Navbar() {
                 priority
               />
             </div>
-            <span className={`font-bold text-lg text-foreground min-w-[111px] whitespace-nowrap flex items-center gap-1 ${responsable ? "max-sm:hidden" : ""}`}>
+            <span className={`brand-nom font-bold text-lg text-foreground min-w-[111px] whitespace-nowrap flex items-center gap-1 ${responsable ? "max-sm:hidden" : ""}`}>
               GCC{" "}
               <span
                 key={headerLabel}
@@ -139,16 +154,18 @@ export function Navbar() {
           </Link>
 
           {responsable && <SelecteurEspace />}
+          {/* C6 : avant l'hydratation, `data-responsable` (posé par le script) garde la place du sélecteur. */}
+          {!responsable && <span aria-hidden className="place-selecteur" />}
 
           {/* Sections (ordinateur) */}
           <nav className="hidden lg:flex items-center gap-1 ml-2" aria-label={t("common.aria.sections")}>
-            {!authLoading && user && (
+            {membre && (
               <Link href="/planning" className={sectionClass(isActivePlanning)}>
                 {t("common.header.planning")}
               </Link>
             )}
             {/* Louange : menu déroulant (connecté) ou lien direct vers les chants (visiteur) */}
-            {!authLoading && user ? (
+            {membre ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((v) => !v)}
@@ -170,7 +187,7 @@ export function Navbar() {
                       : "opacity-0 invisible -translate-y-1"
                   }`}
                 >
-                  <div className="bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[160px]">
+                  <div className="bg-popover rounded-xl [box-shadow:var(--shadow-flottant)] py-1 min-w-[160px]">
                     <Link
                       href="/songs"
                       onClick={() => setDropdownOpen(false)}
@@ -199,12 +216,12 @@ export function Navbar() {
                 </Link>
               )
             )}
-            {BACK_OFFICE && !authLoading && (
+            {BACK_OFFICE && (!authLoading || attente) && (
               <Link href="/evenements" className={sectionClass(isActiveEvenements)}>
                 {t("common.header.evenements")}
               </Link>
             )}
-            {!authLoading && user && (
+            {membre && (
               <Link href="/mes-services" className={sectionClass(isActiveMesServices)}>
                 {t("common.header.myServices")}
               </Link>
@@ -219,8 +236,10 @@ export function Navbar() {
 
           {/* Actions — pushed to far right */}
           <div className="ml-auto flex items-center gap-2">
+            {avecMessages && (forme.retenue ? <IconeMessagesRetenue boutonClassName={ICON_BUTTON} /> : <IconeMessages boutonClassName={ICON_BUTTON} />)}
             {/* Notifications */}
             {!authLoading && user && <Cloche boutonClassName={ICON_BUTTON} />}
+            {attente && <span aria-hidden className={`${ICON_BUTTON} pointer-events-none`} />}
 
             {/* Langue : partout, pour les sinophones sans compte aussi */}
             <button
@@ -229,35 +248,36 @@ export function Navbar() {
               className={`${ICON_BUTTON} w-auto min-w-10 px-3 gap-1.5 text-sm font-semibold ${responsable ? "max-sm:hidden" : ""}`}
             >
               <Globe className="h-4 w-4" aria-hidden />
-              <span className={user ? "" : "hidden min-[400px]:inline"}>{isZh ? "中文" : "FR"}</span>
+              <span className={membre ? "" : "hidden min-[400px]:inline"}>{isZh ? "中文" : "FR"}</span>
             </button>
 
             {/* Thème : sur ordinateur ; sur tactile, un membre le trouve dans « Moi » */}
             <button
               onClick={toggleTheme}
               aria-label={dark ? t("common.aria.modeClair") : t("common.aria.modeSombre")}
-              className={`${ICON_BUTTON} ${user ? "hidden lg:flex" : "hidden sm:flex"}`}
+              className={`${ICON_BUTTON} ${membre ? "hidden lg:flex" : "hidden sm:flex"}`}
             >
               {dark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
             </button>
 
             {/* Compte (ordinateur) ou Connexion */}
+            {attente && <span aria-hidden className="hidden lg:flex h-9 w-9 shrink-0 rounded-full bg-secondary" />}
             {!authLoading && (
               user ? (
                 <MenuCompte>
                   <button
                     aria-label={t("common.header.account")}
                     title={displayName}
-                    className="hidden lg:flex h-9 w-9 shrink-0 rounded-full bg-foreground text-background text-sm font-bold items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
+                    className="relative hidden lg:flex h-9 w-9 shrink-0 rounded-full after:absolute after:-inset-1 after:content-[''] bg-foreground text-background text-sm font-bold items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
                   >
                     {initial}
                   </button>
                 </MenuCompte>
-              ) : (
+              ) : pathname.startsWith("/login") || pathname.startsWith("/signup") ? null : (
                 <Link
                   aria-label={t("common.header.login")}
                   href="/login"
-                  className="flex h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-sm font-semibold"
+                  className="connexion-visiteur flex h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-sm font-semibold"
                 >
                   <LogIn className="h-4 w-4" aria-hidden />
                   <span className="max-[359px]:hidden">{t("common.header.login")}</span>

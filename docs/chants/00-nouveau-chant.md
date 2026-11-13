@@ -26,7 +26,10 @@ Ce qu'il faut avoir avant de commencer : le ou les fichiers de la
 partition ; la langue ; la tonalité à retenir **si** plusieurs partitions du
 même chant sont fournies (sinon celle de la partition) ; un lien YouTube
 seulement s'il est donné. Le tempo vient de la partition (`♩=`), ou de
-Timothée, sinon il manque.
+Timothée, sinon il manque. La **mesure**, le **sous-titre** et la
+**référence biblique** se relèvent sur l'en-tête gravé du scan **avant** de le
+couper (`{time}`, `{subtitle}`, `{bible}`, `01-format-cho.md`) : la coupe
+l'efface de la page (lot JE) ; illisible ou absent, rien ne s'écrit.
 
 **Chant né d'une proposition.** Si le chant répond à une proposition de chant
 (une setlist de Noël ou de Pâques l'attend, `docs/spec-chants-fetes.md`),

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, ADMIN_EMAIL, type FakeProfile } from "./helpers/fakeSession";
 import {
-  enTete, estGrandEcran, fenetreDuSite, interdireDialoguesNatifs, ongletsRail, pilules,
+  enTete, estGrandEcran, fenetreDuSite, interdireDialoguesNatifs, ongletsRail,
   repondreDansLeSite, verifierAgencement,
 } from "./helpers/agencement";
 import type { MembreEquipe } from "../src/types/equipe";
@@ -71,11 +71,11 @@ test.describe("T5 : Équipes › Organigramme", () => {
     await expect(enTete(page)).not.toContainText("pôles");
     await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
     const bandeau = page.getByTestId("bandeau-equipes");
-    // Deux rangées de pilules depuis le lot 2 (OG-C) : le sélecteur Église · Paix · … et Équipes · Musiciens.
-    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 1, pilules: 2 } });
-    // Rail : Organigramme · Personnes ; sous-onglets Équipes · Musiciens en pilules.
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Organigramme", "Personnes"]);
-    await expect(pilules(page).filter({ hasText: "Musiciens" }).getByRole("button")).toHaveText(["Équipes", "Musiciens"]);
+    // Trois rails depuis le lot CD, T3c : Organigramme · Personnes, le sélecteur Église · Paix · … et Équipes · Musiciens.
+    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 3, pilules: 0 } });
+    // Rail : Organigramme · Personnes ; vues Équipes · Musiciens en rail aussi.
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Organigramme", "Personnes", "Responsabilités"]); // lot RS : la page Responsabilités (admins)
+    await expect(page.getByRole("tablist", { name: "Vue" }).getByRole("tab")).toHaveText(["Équipes", "Musiciens"]);
     await expect(enTete(page).getByRole("button", { name: "Recalculer depuis l'organigramme" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Nouvelle équipe/ }), "les treize équipes sont fixes").toHaveCount(0);
   });
@@ -107,10 +107,11 @@ test.describe("T5 : Équipes › Organigramme", () => {
   });
 
   test("droit Équipes sans être admin : ni rail ni sa marge dans l'en-tête", async ({ page }) => {
-    const equipier: FakeProfile = { uid: "u-equipier", email: "equipier@example.com", firstName: "Elsa", lastName: "N.", equipes: true };
+    // Lot AO : tenir l'organigramme vient d'une place (ici référente de TEAM DA : elle tient son équipe), plus de la case « Équipes ».
+    const equipier: FakeProfile = { uid: "u-equipier", email: "equipier@example.com", firstName: "Elsa", lastName: "N.", dansEquipes: ["da"], referentDe: ["da"] };
     await ouvrir(page, "/back-office/equipes", DOCS, equipier);
-    await expect(page.getByTestId("equipe-da").getByRole("button", { name: "Modifier TEAM DA" })).toBeVisible();
-    await expect(ongletsRail(page)).toHaveCount(0);
+    await expect(page.getByTestId("equipe-da").getByRole("button", { name: "Modifier DA" })).toBeVisible();
+    await expect(page.locator('nav[data-onglets="rail"]')).toHaveCount(0);
     await expect(enTete(page).locator(":scope > div:empty"), "aucun bloc vide (la place du rail)").toHaveCount(0);
   });
 
@@ -118,13 +119,13 @@ test.describe("T5 : Équipes › Organigramme", () => {
     const avertissements: string[] = [];
     page.on("console", (m) => { if (/Missing `Description`/.test(m.text())) avertissements.push(m.text()); });
     await ouvrir(page, "/back-office/equipes");
-    await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier TEAM DA" }).click();
-    await expect(page.getByRole("dialog", { name: "TEAM DA" })).toHaveAccessibleDescription("Direction Artistique");
+    await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier DA" }).click();
+    await expect(page.getByRole("dialog", { name: /^DA, \d+ membres?$/ })).toHaveAccessibleDescription("Direction artistique");
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     // Une équipe sans sous-titre.
-    await page.getByTestId("equipe-traduction").getByRole("button", { name: "Modifier TEAM TRADUCTION" }).click();
-    await expect(page.getByRole("dialog", { name: "TEAM TRADUCTION" })).toBeVisible();
+    await page.getByTestId("equipe-traduction").getByRole("button", { name: "Modifier Traduction" }).click();
+    await expect(page.getByRole("dialog", { name: /^Traduction, \d+ membres?$/ })).toBeVisible();
     await page.waitForTimeout(300);
     expect(avertissements).toEqual([]);
   });
@@ -138,8 +139,8 @@ test.describe("T5 : Équipes › Organigramme", () => {
     await expect(carte).toContainText("Bérénice A.");
     await expect(page.getByTestId("bandeau-equipes")).toHaveAttribute("data-range", "1");
     const hauteur = (await carte.boundingBox())!.height;
-    await carte.getByRole("button", { name: "Modifier TEAM DA" }).click();
-    const panneau = page.getByRole("dialog", { name: "TEAM DA" });
+    await carte.getByRole("button", { name: "Modifier DA" }).click();
+    const panneau = page.getByRole("dialog", { name: /^DA, \d+ membres?$/ });
     await expect(panneau).toBeVisible();
     // La carte garde sa hauteur : l'édition n'est pas dedans.
     expect(Math.abs((await carte.boundingBox())!.height - hauteur)).toBeLessThan(1);
@@ -147,11 +148,14 @@ test.describe("T5 : Équipes › Organigramme", () => {
 
     const largeur = page.viewportSize()!.width;
     // L'animation d'ouverture finie : le panneau est posé contre le bord droit.
-    await expect.poll(async () => Math.round(((b) => b.x + b.width)((await panneau.boundingBox())!))).toBe(largeur);
+    await expect.poll(async () => Math.round(((b) => b.x + b.width)((await panneau.boundingBox())!))).toBe(info.project.name === "tablette" ? Math.round((largeur + 560) / 2) : largeur);
     const boite = (await panneau.boundingBox())!;
     if (estGrandEcran(info)) {
       // 420 px à droite.
       expect(Math.round(boite.width)).toBe(420);
+    } else if (info.project.name === "tablette") {
+      // T6 : feuille de formulaire de 560 px, centrée.
+      expect(Math.round(boite.width)).toBe(560);
     } else {
       // Une feuille sur toute la largeur, en bas.
       expect(Math.round(boite.width)).toBeGreaterThanOrEqual(largeur - 1);
@@ -168,9 +172,16 @@ test.describe("T5 : Équipes › Organigramme", () => {
   });
 
   test("Musiciens : la matrice sous le même en-tête", async ({ page }) => {
-    await ouvrir(page, "/back-office/equipes");
-    await pilules(page).getByRole("button", { name: "Musiciens" }).click();
-    await expect(pilules(page).getByRole("button", { name: "Musiciens" })).toHaveAttribute("aria-pressed", "true");
+    // Lot AO : les Musiciens viennent de l'équipe Louange de l'organigramme (plus du planning ni des rôles déclarés).
+    await ouvrir(page, "/back-office/equipes", {
+      ...DOCS,
+      "equipes/louange": {
+        membres: [M("Bérénice A.", { uid: "u-berenice", sousEquipes: ["musiciens"], joue: ["piano"], lieux: ["Culte Francophone"] })],
+        updatedAt: "2026-09-18T10:00:00Z", parUid: "", parNom: "",
+      },
+    });
+    await page.getByRole("tab", { name: "Musiciens" }).click();
+    await expect(page.getByRole("tab", { name: "Musiciens" })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByTestId("bandeau-equipes")).toHaveCount(0);
     await expect(titre(page)).toHaveText("Équipes");
     await expect(page.getByText("Bérénice A.").filter({ visible: true }).first()).toBeVisible();
@@ -184,14 +195,50 @@ test.describe("T5 : Équipes › Personnes", () => {
     interdireDialoguesNatifs(page);
     await ouvrir(page, "/back-office/equipes/personnes");
     await expect(titre(page)).toHaveText("Équipes");
-    await expect(enTete(page)).toContainText("4 inscrits · 5 groupes · 4 sans groupe");
+    await expect(enTete(page)).toContainText("4 inscrits, dont 4 sans groupe");
     const inscriptions = enTete(page).getByRole("region", { name: "Inscriptions" });
     await expect(inscriptions).toContainText("Inscriptions ouvertes");
     await expect(inscriptions.getByRole("switch")).toBeChecked();
     await expect(inscriptions, "aucun compte de la semaine").not.toContainText("nouveau compte");
     await expect(page.getByRole("button", { name: /Bérénice A\./ })).toBeVisible();
-    await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 1, pilules: 1 } });
+    await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 2, pilules: 1 } });
     await expect(ongletsRail(page).getByRole("link", { name: "Personnes" })).toHaveAttribute("aria-current", "page");
+  });
+
+  // bo-equipes-2 : le texte d'aide du champ dit quoi taper et tient en entier (mesuré au canvas, avec la police du champ).
+  for (const zh of [false, true]) {
+    test(`le texte d'aide du champ de recherche tient en entier${zh ? " (中文)" : ""}`, async ({ page }, info) => {
+      if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+      await ouvrir(page, "/back-office/equipes/personnes");
+      const champ = estGrandEcran(info) ? page.locator('[data-volet="liste"]').getByRole("searchbox") : page.getByRole("searchbox").first();
+      await expect(champ).toBeVisible();
+      const aide = await champ.getAttribute("placeholder");
+      expect(aide).toBe(zh ? "姓名、邮箱或排班名" : "Nom, e-mail ou nom au planning");
+      await expect(champ).toHaveAttribute("aria-label", zh ? "按姓名、邮箱或排班名搜索成员" : "Rechercher un membre par nom, e-mail ou nom au planning");
+      const { texte, utile } = await champ.evaluate((el, a) => {
+        const s = getComputedStyle(el);
+        const ctx = document.createElement("canvas").getContext("2d")!;
+        ctx.font = `${s.fontStyle} ${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;
+        return { texte: ctx.measureText(a ?? "").width, utile: el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight) };
+      }, aide);
+      expect(texte, "largeur du texte d'aide < largeur utile du champ").toBeLessThan(utile);
+    });
+  }
+
+  // bo-equipes-11 : sur une ligne qui ouvre une page (un volet) ou choisit une personne (deux volets), un chevron droit, jamais « ˅ ».
+  test("une ligne de la liste ne se déplie pas : chevron droit, pas d'aria-expanded", async ({ page }) => {
+    await ouvrir(page, "/back-office/equipes/personnes");
+    const ligne = page.getByRole("button", { name: /Gaspard O\./ });
+    await expect(ligne).toBeVisible();
+    await expect(ligne).not.toHaveAttribute("aria-expanded", /.*/);
+    await expect(ligne.locator("svg.lucide-chevron-down")).toHaveCount(0);
+    await expect(ligne.locator("svg.lucide-chevron-right")).toHaveCount(1);
+    // Centré sur la ligne.
+    await expect.poll(async () => {
+      const l = (await ligne.boundingBox())!;
+      const c = (await ligne.locator("svg.lucide-chevron-right").boundingBox())!;
+      return Math.abs(c.y + c.height / 2 - (l.y + l.height / 2));
+    }, { message: "chevron centré sur la ligne" }).toBeLessThanOrEqual(2);
   });
 
   test("l'interrupteur ferme les inscriptions ; son nom ne change pas, son état dit ouvert ou fermé", async ({ page }) => {
@@ -214,7 +261,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     const inscriptions = enTete(page).getByRole("region", { name: "Inscriptions" });
     await expect(inscriptions).toContainText("4 nouveaux comptes");
     await inscriptions.getByRole("button", { name: "Voir les 4" }).click();
-    await expect(page.getByRole("button", { name: "Récents" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("tab", { name: "Récents" })).toHaveAttribute("aria-selected", "true");
     if (estGrandEcran(info)) {
       // La personne choisie : le plus récent des nouveaux comptes (ici le premier de la liste).
       await expect(page).toHaveURL(/[?&]uid=u-berenice/);
@@ -230,9 +277,11 @@ test.describe("T5 : Équipes › Personnes", () => {
     // Tri « Récents » : le compte le plus récent d'abord.
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
     await expect(fiche).toContainText("Services et équipes");
-    // Lot 1 du chantier « équipes et groupes » (EQ26) : la carte « Pôles » cède la place à la ligne
-    // « Coordination » de la carte Droits.
-    await expect(fiche).toContainText("Coordination");
+    // Lot 1 du chantier « équipes et groupes » (EQ26) : la carte « Pôles » cède la place à la carte Droits ;
+    // lot AO : plus de ligne « Coordination » cochée, mais « Ce que ça lui ouvre », calculé depuis l'organigramme.
+    await expect(fiche).not.toContainText("Coordination");
+    await expect(fiche).toContainText("Ce que ça lui ouvre");
+    await expect(fiche).toContainText("Tenir l'équipe DA dans l'organigramme");
     await expect(fiche).not.toContainText("Pôles");
     await expect(fiche).toContainText("Droits");
     await expect(fiche).toContainText("Ses prochains services");
@@ -261,11 +310,14 @@ test.describe("T5 : Équipes › Personnes", () => {
     const db = await ouvrir(page, "/back-office/equipes/personnes?uid=u-ysee");
     const fiche = page.locator('[data-volet="detail"]');
     await fiche.getByRole("button", { name: "Modifier" }).click();
-    await fiche.getByRole("button", { name: /Équipes \(tout l'organigramme\)/ }).click();
+    // Lot AO : le formulaire n'a plus de case de droit (Équipes…) — l'identité seule, et « Ce que ça lui ouvre ».
+    await expect(fiche.getByRole("button", { name: /Équipes \(tout l'organigramme\)/ })).toHaveCount(0);
+    await expect(fiche.getByRole("button", { name: "Enregistrer" })).toBeVisible();
     await fiche.getByRole("button", { name: "Enregistrer" }).click();
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Ysée R.");
     await expect(fiche.getByRole("button", { name: "Modifier" })).toBeVisible();
-    await expect.poll(() => db.doc("users/u-ysee")?.equipes).toBe(true);
+    await expect.poll(() => db.writes.some((w) => w.path === "users/u-ysee")).toBe(true);
+    expect(Object.keys(db.writes.find((w) => w.path === "users/u-ysee")!.data).sort()).toEqual(["firstName", "lastName", "planningName"]);
   });
 
   test("en grand : « Modifier » garde la personne quand la liste change (recherche, tri)", async ({ page }, info) => {
@@ -278,43 +330,55 @@ test.describe("T5 : Équipes › Personnes", () => {
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
     await fiche.getByRole("button", { name: "Modifier" }).click();
     await expect(fiche.getByRole("button", { name: "Enregistrer" })).toBeVisible();
-    await liste.getByPlaceholder(/Rechercher un membre/).fill("Gaspard");
+    await liste.getByRole("searchbox", { name: /Rechercher un membre/ }).fill("Gaspard");
     await expect(liste.getByRole("button", { name: /Gaspard O\./ })).toBeVisible();
     await expect(liste.getByRole("button", { name: /Bérénice A\./ })).toHaveCount(0);
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
     await expect(fiche.getByRole("button", { name: "Enregistrer" })).toBeVisible();
-    await liste.getByRole("button", { name: "A–Z" }).click();
+    await liste.getByRole("tab", { name: "A–Z" }).click();
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
     await expect(page).toHaveURL(/[?&]uid=u-berenice/);
   });
 
-  test("en grand : une ligne de la liste = avatar, nom, services (ni e-mail ni date)", async ({ page }, info) => {
+  test("en grand : une ligne de la liste = avatar, nom, e-mail, services (ni nom au planning ni date, bo-equipes-9)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "propre aux grands écrans");
     await ouvrir(page, "/back-office/equipes/personnes");
     const ligne = page.locator('[data-volet="liste"]').getByRole("button", { name: /Gaspard O\./ });
     await expect(ligne).toContainText("Présidence");
-    await expect(ligne).not.toContainText("gaspard@example.com");
+    await expect(ligne).toContainText("gaspard@example.com");
     await expect(ligne).not.toContainText("planning :");
     await expect(ligne).not.toContainText("inscrit le");
   });
 
-  test("en grand : les filtres se replient dans la colonne de la liste, sans défiler en largeur", async ({ page }, info) => {
+  test("en grand : les filtres tiennent sur une ligne dans la colonne de la liste (deux menus et une pastille), le tri dessous à droite", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "propre aux grands écrans");
-    // Relecture : dans la colonne de 400 px, la rangée de pilules défilait et coupait la dernière ;
-    // la planche les replie sur plusieurs lignes.
+    // Lot CD, T3c (bo-equipes-10) : plus de rangée de pilules à plier ; Service et Groupe sont des menus, « Sans équipe » une
+    // pastille-bascule, « Trier » un rail de deux segments sur sa propre ligne.
     await ouvrir(page, "/back-office/equipes/personnes");
     const liste = page.locator('[data-volet="liste"]');
-    const filtres = liste.getByRole("group", { name: "Filtrer les membres" });
-    await expect(filtres.getByRole("button", { name: "Ne sert pas" })).toBeVisible();
-    const { defile, lignes } = await filtres.evaluate((e) => ({
-      defile: e.scrollWidth > e.clientWidth + 1,
-      lignes: new Set([...e.children].map((b) => Math.round(b.getBoundingClientRect().top))).size,
-    }));
-    expect(defile, "aucun défilement en largeur").toBe(false);
-    expect(lignes, "plusieurs lignes de pilules").toBeGreaterThan(1);
-    const boite = (await liste.boundingBox())!;
-    const derniere = (await filtres.getByRole("button", { name: "Ne sert pas" }).boundingBox())!;
-    expect(derniere.x + derniere.width, "la dernière pilule entière dans la colonne").toBeLessThanOrEqual(boite.x + boite.width);
+    const service = liste.getByRole("button", { name: /^Service( :|$)/ });
+    const groupe = liste.getByRole("button", { name: /^Groupe( :|$)/ });
+    const sansEquipe = liste.getByRole("button", { name: "Sans équipe" });
+    await expect(sansEquipe).toBeVisible();
+    await expect(liste.locator("select:visible"), "aucun select").toHaveCount(0);
+    // Lues ensemble (la rangée « sans compte » arrive après et pousse les filtres : trois lectures séparées se croisaient).
+    const lire = async () => [(await service.boundingBox())!, (await groupe.boundingBox())!, (await sansEquipe.boundingBox())!];
+    await expect.poll(async () => new Set((await lire()).map((b) => Math.round(b.y))).size, { message: "une seule ligne" }).toBe(1);
+    const boites = await lire();
+    const colonne = (await liste.boundingBox())!;
+    for (const b of boites) expect(b.x + b.width, "entier dans la colonne").toBeLessThanOrEqual(colonne.x + colonne.width);
+    const tri = liste.getByRole("tablist", { name: "Trier", exact: true });
+    await expect(tri.getByRole("tab")).toHaveText(["Récents", "A–Z"]);
+    const t = (await tri.boundingBox())!;
+    expect(t.y, "le tri sur sa propre ligne").toBeGreaterThan(boites[0].y + boites[0].height - 1);
+    // Un seul filtre à la fois : choisir un groupe remet le service à « Tous ».
+    await service.click();
+    await page.getByRole("menuitemradio", { name: "Campus", exact: true }).click();
+    await expect(service).toHaveAttribute("aria-label", "Service : Campus");
+    await groupe.click();
+    await page.getByRole("menuitemradio", { name: "Groupe Paix" }).click();
+    await expect(service).toHaveAttribute("aria-label", "Service");
+    await expect(groupe).toHaveAttribute("aria-label", "Groupe : Groupe Paix");
   });
 });
 
@@ -365,7 +429,8 @@ test.describe("T5 : Messages", () => {
     await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 1, pilules: filtres } });
     const ici = async () => (await titre(page).boundingBox())!;
     const a = await ici();
-    await expect(enTete(page)).toContainText("Ce que les membres signalent et proposent");
+    // compte-11 : « Messages » n'a plus de sous-titre (il décrivait la seule Réception).
+    await expect(enTete(page)).not.toContainText("Ce que les membres signalent et proposent");
 
     await ongletsRail(page).getByRole("link", { name: "Notifier" }).click();
     await expect(page).toHaveURL(/\/back-office\/messages\/notifier\/?$/);
@@ -376,7 +441,10 @@ test.describe("T5 : Messages", () => {
     await ongletsRail(page).getByRole("link", { name: "Questionnaire" }).click();
     await expect(page).toHaveURL(/\/back-office\/messages\/questionnaire\/?$/);
     await expect(page.getByText("Aucune réponse pour l'instant.").filter({ visible: true }).first()).toBeVisible();
-    await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 1, pilules: 0 } });
+    // Sans réponse, en grand, l'état vide est une colonne de 720 px calée sur le titre (BO9, `colonneSeule`) ;
+    // en un volet (téléphone, tablette portrait), toute la zone (L1 : aucune colonne plus étroite qu'avant).
+    const seule = (await page.locator("[data-colonne-seule]").count()) > 0;
+    await verifierAgencement(page, { contenu: sousEnTete(page), colonne: seule ? 720 : undefined, onglets: { rail: 1, pilules: 0 } });
     const c = await ici();
     for (const r of [b, c]) {
       expect(Math.abs(r.x - a.x)).toBeLessThan(1);
@@ -420,21 +488,55 @@ test.describe("T5 : Messages", () => {
     await expect(message.getByRole("heading", { level: 2 })).toHaveText("Un chant proposé");
   });
 
-  test("Notifier : l'aperçu reprend le titre et le message tapés ; pied « Annuler · Envoyer à n personnes »", async ({ page }) => {
+  test("Notifier : l'aperçu reprend le titre et le message tapés ; pied « Effacer · Envoyer à n personnes » et ce qui manque (compte-12, compte-13)", async ({ page }) => {
     interdireDialoguesNatifs(page);
     await ouvrir(page, "/back-office/messages/notifier", DOCS);
     const apercu = page.getByRole("region", { name: "Aperçu" });
     await expect(apercu).toContainText("GCC Louange");
+    // compte-13 : un seul aperçu, neutre (ni heure, ni dégradé) ; sous `lg` dans le formulaire (entre Message et « Ouvre au clic »), au-delà à droite.
+    await expect(apercu).toHaveCount(1);
+    await expect(apercu).not.toContainText("9:41");
+    const banniere = apercu.locator("div.bg-card");
+    expect(await banniere.evaluate((el) => getComputedStyle(el).backgroundImage)).toBe("none");
+    const largeur = page.viewportSize()!.width;
+    const yApercu = (await apercu.boundingBox())!.y;
+    const yMessage = (await page.locator("#notif-message").boundingBox())!.y;
+    const yDestination = (await page.locator("#notif-destination").boundingBox())!.y;
+    if (largeur < 1024) {
+      expect(yApercu, "sous le champ Message").toBeGreaterThan(yMessage);
+      expect(yApercu, "avant « Ouvre au clic »").toBeLessThan(yDestination);
+    } else {
+      const xMessage = (await page.locator("#notif-message").boundingBox())!.x;
+      expect((await apercu.boundingBox())!.x, "dans la colonne de droite").toBeGreaterThan(xMessage);
+    }
+    // compte-12 : vide, « Effacer » absent, « Envoyer » grisé, la première condition qui manque dessous.
+    const aide = page.locator("#notif-manque");
+    await expect(page.getByRole("button", { name: "Effacer" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Envoyer", exact: true })).toBeDisabled();
+    await expect(aide).toHaveText("Choisis à qui écrire.");
+    await expect(page.getByRole("button", { name: "Envoyer", exact: true })).toHaveAttribute("aria-describedby", "notif-manque");
     await page.getByRole("textbox", { name: "Titre" }).fill("Répétition déplacée");
+    await expect(page.getByRole("button", { name: "Effacer" })).toBeVisible();
+    await page.getByRole("group", { name: "Audience" }).getByRole("button", { name: "Cultes" }).click();
+    await page.getByRole("group", { name: "Cultes" }).getByRole("button", { name: "Culte Franco" }).click();
+    await expect(aide).toHaveText("Ajoute un message.");
     await page.getByRole("textbox", { name: "Message" }).fill("Rendez-vous à 18 h au lieu de 17 h.");
     await expect(apercu).toContainText("Répétition déplacée");
     await expect(apercu).toContainText("Rendez-vous à 18 h au lieu de 17 h.");
 
-    // Audience en pilules : « Cultes » puis « Culte Franco » (un musicien et une présidence).
-    await page.getByRole("group", { name: "Audience" }).getByRole("button", { name: "Cultes" }).click();
-    await page.getByRole("group", { name: "Cultes" }).getByRole("button", { name: "Culte Franco" }).click();
+    // bo-messages-planning-8 : « À qui » passe à la ligne ; chaque pilule est dans la carte, sans défilement horizontal.
+    const aQui = page.getByRole("group", { name: "Audience" });
+    const carteNotifier = (await aQui.locator("xpath=ancestor::div[contains(@class,'carte-groupe')][1]").boundingBox())!;
+    for (const b of await aQui.getByRole("button").all()) {
+      const r = (await b.boundingBox())!;
+      expect(r.x + r.width, "pilule dans la carte").toBeLessThanOrEqual(carteNotifier.x + carteNotifier.width);
+    }
+    expect(await aQui.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    // Audience en pilules : « Cultes » puis « Culte Franco » (un musicien et une présidence), choisie plus haut.
     await expect(page.getByRole("button", { name: "Envoyer à 2 personnes" })).toBeEnabled();
-    await page.getByRole("button", { name: "Annuler" }).click();
+    await expect(aide).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Annuler" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Effacer" }).click();
     await expect(page.getByRole("textbox", { name: "Titre" })).toHaveValue("");
     await expect(apercu).not.toContainText("Répétition déplacée");
   });
@@ -460,8 +562,9 @@ test.describe("T5 : Messages", () => {
     await expect(envois).not.toContainText("Envoi 2");
   });
 
-  test("Notifier seul (le droit de notifier, sans être admin) : pas le sous-titre de Réception", async ({ page }) => {
-    const notifieur: FakeProfile = { uid: "u-notifieur", email: "notifieur@example.com", firstName: "Noé", lastName: "T.", notify: ["Groupe Paix"] };
+  // Lot RS : le droit de notifier d'un non-admin vient de la responsabilité de gestionnaire (Q10), plus d'un rôle « Notifier ».
+  test("Notifier seul (gestionnaire de Paix, sans être admin) : pas le sous-titre de Réception", async ({ page }) => {
+    const notifieur: FakeProfile = { uid: "u-notifieur", email: "notifieur@example.com", firstName: "Noé", lastName: "T.", responsabilites: ["planning:paix"] };
     await ouvrir(page, "/back-office/messages/notifier", DOCS, notifieur);
     await expect(page.getByRole("region", { name: "Aperçu" })).toBeVisible();
     await expect(titre(page)).toHaveText("Messages");
@@ -555,7 +658,7 @@ test.describe("T5 : Messages", () => {
       // La moyenne d'une question s'écrit comme celle de la partie (planche : « 4,0 »).
       await expect(partie).toContainText("4,0/5 (3)");
       await expect(partie).not.toContainText("4.0/5");
-      await expect(sommaire.getByRole("link", { name: "Voir la page du questionnaire" })).toHaveAttribute("href", /\/questionnaire/);
+      await expect(sommaire.getByRole("link", { name: "Ouvrir le questionnaire" })).toHaveAttribute("href", /\/questionnaire/);
     } else {
       // Un volet : les parties dépliables, la première ouverte.
       await expect(page.getByRole("button", { name: "Toi et ton usage" })).toHaveAttribute("aria-expanded", "true");
@@ -572,7 +675,7 @@ test("captures : Équipes et Messages", async ({ page }, info) => {
   const dossier = "test-results/agencement-v18-t5";
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${dossier}/organigramme-${info.project.name}.png` });
-  await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier TEAM DA" }).click();
+  await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier DA" }).click();
   await page.waitForTimeout(500);
   await page.screenshot({ path: `${dossier}/organigramme-panneau-${info.project.name}.png` });
   for (const [nom, chemin] of [

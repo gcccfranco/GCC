@@ -84,6 +84,10 @@ const ligne = (page: Page, slug: string) => liste(page).locator(`[id="song-li-${
 const titreChant = (page: Page) => droite(page).getByRole("heading", { level: 1 });
 const recherche = (page: Page) => liste(page).getByRole("searchbox");
 
+/** Au toucher, la zone de 44 px (`::after`, src/lib/toucher44.ts) des derniers boutons dépasse de quelques pixels le bord de la
+ *  barre, maintenant que le chant n'a plus de marge intérieure dans les volets (chants-8) : `scrollWidth` la compte, l'œil non. */
+const debordementDeToucher = (page: Page) => page.evaluate(() => (matchMedia("(pointer: coarse)").matches ? 6 : 0));
+
 /** Liste prête : chargée depuis l'index et hydratée. */
 async function listePrete(page: Page) {
   await expect(ligne(page, "abba-pere")).toBeAttached({ timeout: 15_000 });
@@ -175,7 +179,7 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
     await listePrete(page);
     await cartes(page).first().locator("[data-carte-chant]").first().getByRole("link").click();
     await expect(titreChant(page)).toHaveText(/Abba Père/i);
-    await expect(page.getByTestId("tonalite-courante")).toHaveText(/^G/);
+    await expect(page.getByTestId("tonalite-lettre")).toHaveText(/^G/);
     const params = new URL(page.url()).searchParams;
     expect(params.get("key")).toBe('"G"');
     expect(params.get("setlist")).toBe('"culte-4"');
@@ -236,14 +240,14 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
   test("arrivé par une adresse : le chant dans sa tonalité, sa ligne dans la vue ; les filtres n'effacent pas ?key=", async ({ page }) => {
     await page.goto("/songs/tout-puissant/?key=%22F%22");
     await listePrete(page);
-    await expect(page.getByTestId("tonalite-courante")).toHaveText(/^F/);
+    await expect(page.getByTestId("tonalite-lettre")).toHaveText(/^F/);
     const l = ligne(page, "tout-puissant");
     await expect(l).toHaveAttribute("aria-current", "page");
     await expect(l).toBeInViewport();
     await liste(page).getByRole("tab", { name: "FR", exact: true }).click();
     await page.waitForTimeout(200);
     expect(new URL(page.url()).searchParams.get("key")).toBe('"F"');
-    await expect(page.getByTestId("tonalite-courante")).toHaveText(/^F/);
+    await expect(page.getByTestId("tonalite-lettre")).toHaveText(/^F/);
   });
 
   test("la barre du chant est en haut du volet de droite : sans Retour, Idées d'harmonie et PDF en boutons", async ({ page }) => {
@@ -252,13 +256,13 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
     const barre = page.getByTestId("barre-outils");
     await expect(barre).toBeVisible();
     await expect(barre.getByRole("link", { name: "Retour" })).toHaveCount(0);
-    await expect(barre.getByRole("button", { name: "Idées d'harmonie" })).toBeVisible();
+    await expect(barre.getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await expect(barre.getByRole("button", { name: "PDF" })).toBeVisible();
     const [b, l, d] = await Promise.all([barre.boundingBox(), liste(page).boundingBox(), droite(page).boundingBox()]);
     expect(b!.x, "la barre commence au bord du volet").toBeGreaterThanOrEqual(l!.x + l!.width - 1);
     expect(Math.round(b!.x + b!.width)).toBeLessThanOrEqual(Math.round(d!.x + d!.width));
     // Ni ligne de boutons qui déborde, ni défilement horizontal de la page.
-    expect(await barre.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+    expect(await barre.evaluate((el) => el.scrollWidth - el.clientWidth), "pas de ligne qui déborde (hors zone de toucher de 44 px)").toBeLessThanOrEqual(await debordementDeToucher(page));
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
     // La barre colle : le chant défile, elle s'escamote ; on remonte un peu, elle revient
     // collée sous la barre du haut, au-dessus du volet (et non en haut de la page). Agencement v18
@@ -268,8 +272,21 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
     await page.mouse.wheel(0, 800);
     await expect.poll(async () => (await barre.boundingBox())!.y + b!.height).toBeLessThanOrEqual(0);
     await page.mouse.wheel(0, -120);
-    const hautDuVolet = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 0);
-    await expect.poll(async () => Math.round((await barre.boundingBox())!.y)).toBe(Math.round(hautDuVolet));
+    // Corrections du design, T2a reprise : collée, elle dessine le haut d'un panneau aligné sur la carte de la liste
+    // (`--nav-h` + 20 px) et se pose 16 px dessous, comme au repos ; jamais au bord de la fenêtre.
+    const hautDuVolet = await page.evaluate(() => (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 0) + 20);
+    await expect.poll(async () => Math.round((await barre.boundingBox())!.y)).toBe(Math.round(hautDuVolet + 16));
+    await expect(barre, "la barre collée le sait").toHaveAttribute("data-collee", "");
+    const fond = await barre.locator(".barre-fond").boundingBox();
+    expect(Math.abs(fond!.y - hautDuVolet), "le haut du panneau dessiné par la barre = le haut de la carte de la liste").toBeLessThanOrEqual(1);
+    expect(Math.abs(fond!.x - d!.x), "le fond de la barre collée prend toute la largeur du panneau").toBeLessThanOrEqual(1);
+    // Au-dessus, la bande repeinte au gris de la page (le chant ne passe plus dans les 20 px du haut) : du haut de l'écran à la barre.
+    const bande = await barre.evaluate((el) => {
+      const z = getComputedStyle(el, "::before"), r = el.getBoundingClientRect();
+      return { fond: z.backgroundColor, page: getComputedStyle(document.body).backgroundColor, haut: r.top - parseFloat(z.height) };
+    });
+    expect(bande.fond, "la bande au-dessus de la barre collée a le fond de la page").toBe(bande.page);
+    expect(bande.haut, "la bande part du haut de l'écran").toBeLessThanOrEqual(0.5);
     expect(await page.evaluate(() => window.scrollY), "toujours au milieu du chant").toBeGreaterThan(300);
     await page.waitForTimeout(350);
     await capture(page, "chants-chant");
@@ -283,10 +300,117 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
     await expect(scan).toBeVisible();
     // L'en-tête du site reste au-dessus du scan (K3, L3-T3).
     await expect(droite(page).getByRole("heading", { level: 1, name: "一生爱你" })).toBeVisible();
-    const [s, d] = await Promise.all([scan.boundingBox(), droite(page).boundingBox()]);
-    expect(s!.x).toBeGreaterThanOrEqual(d!.x);
-    expect(s!.x + s!.width).toBeLessThanOrEqual(d!.x + d!.width + 1);
+    // La fenêtre du scan (`data-jianpu-fenetre`) fait déborder la marge blanche de la source de la colonne, pour que le bord de
+    // l'encre tombe sur celui des paroles (JianpuSheet, MARGE_SOURCE). Le chant n'ayant plus de marge intérieure (chants-8,
+    // 03/11/2026), cette marge blanche (moins de 2 % de la colonne) passe dans l'écart du volet ; l'encre, elle, reste dans le volet.
+    const [s, d] = await Promise.all([droite(page).locator("[data-jianpu-fenetre]").first().boundingBox(), droite(page).boundingBox()]);
+    const blanc = d!.width * 0.02;
+    expect(s!.x).toBeGreaterThanOrEqual(d!.x - blanc);
+    expect(s!.x + s!.width).toBeLessThanOrEqual(d!.x + d!.width + blanc + 1);
     await capture(page, "chants-chant-zh-scan");
+  });
+
+  // chants-8 (docs/spec-corrections-design/chants.md) : le volet de droite finit à la marge de la page, « Choisis un chant »
+  // et le chant commencent au même x, et le chant finit où finit « Proposer un chant » (ouvrir un chant ne déplace rien).
+  // Corrections du design, T2a reprise : le volet est un groupe de lecture à marge intérieure de 24 px ; « Proposer un chant »
+  // finit au bord du volet, « Choisis un chant » et le chant 24 px en dedans.
+  test("« Choisis un chant », le chant et l'en-tête partagent les mêmes bords gauche et droit", async ({ page }) => {
+    await signInAs(page, MUSICIEN, SETLISTS, "/songs");
+    await listePrete(page);
+    const marge = await droite(page).evaluate((el) => parseFloat(getComputedStyle(el).paddingRight));
+    expect(marge, "marge intérieure du volet").toBe(24);
+    const finDuVolet = async () => { const b = (await droite(page).boundingBox())!; return b.x + b.width - marge; };
+    const proposer = (await page.locator("header[data-entete-page]").getByRole("button", { name: "Proposer un chant" }).boundingBox())!;
+    expect(Math.abs(proposer.x + proposer.width - (await finDuVolet()) - marge), "« Proposer un chant » finit au bord du volet").toBeLessThanOrEqual(1);
+    const xChoisis = (await choisis(page).boundingBox())!.x;
+    expect(Math.abs(xChoisis - ((await droite(page).boundingBox())!.x + marge)), "« Choisis un chant » à 24 px du bord gauche du volet").toBeLessThanOrEqual(1);
+    const racine = (await page.locator("[data-choisis-un-chant]").boundingBox())!;
+    expect(Math.abs(racine.x + racine.width - (await finDuVolet())), "« Choisis un chant » finit à la marge du volet").toBeLessThanOrEqual(1);
+
+    await page.goto("/songs/abba-pere");
+    await listePrete(page);
+    const titre = (await titreChant(page).boundingBox())!;
+    expect(Math.abs(titre.x - xChoisis), "le titre du chant commence où commence « Choisis un chant »").toBeLessThanOrEqual(1);
+    const main = (await droite(page).locator("main.song-zoom").boundingBox())!;
+    expect(Math.abs(main.x + main.width - (await finDuVolet())), "le chant finit à la marge du volet").toBeLessThanOrEqual(1);
+    const pastille = (await droite(page).locator("main.song-zoom").getByText("A", { exact: true }).first().boundingBox())!;
+    expect(pastille.x + pastille.width, "la pastille du ton ne dépasse pas la marge").toBeLessThanOrEqual((await finDuVolet()) + 1);
+    await capture(page, "chants-bords-volets");
+  });
+
+  test("un chant du bas de la liste : sa ligne vient dans la vue de la liste, la page reste en haut", async ({ page }) => {
+    await page.goto("/songs/" + encodeURIComponent("Ta-parole-écriture"));
+    await listePrete(page);
+    await expect(titreChant(page)).toBeVisible();
+    const ligneActive = liste(page).locator(`[id="song-li-Ta-parole-écriture"]`);
+    await expect.poll(async () => {
+      const [lg, v] = await Promise.all([ligneActive.boundingBox(), liste(page).boundingBox()]);
+      return !!lg && !!v && lg.y >= v.y - 1 && lg.y + lg.height <= v.y + v.height + 1;
+    }, { message: "la ligne du chant ouvert est dans la vue de la liste" }).toBe(true);
+    expect(await page.evaluate(() => window.scrollY), "la fenêtre n'a pas défilé").toBe(0);
+  });
+
+  // Corrections du design, T2a reprise (docs/spec-corrections-design.md) : le panneau du chant est un vrai groupe de lecture,
+  // frère du groupe de la liste : même haut, rayon de 16 px, 24 px de marge de chaque côté, barre à 16 px du haut.
+  test("le panneau du chant : même haut que la liste, rayon 16, contenu à 24 px des bords, barre à 16 px du haut, titre à 24 px de la barre", async ({ page }) => {
+    await page.goto("/songs/abba-pere");
+    await listePrete(page);
+    await expect(titreChant(page)).toBeVisible();
+    // La ligne du chant actif vient dans la vue de la liste seule : la fenêtre s'ouvre en haut (elle défilait de 58 px à 1 440).
+    expect(await page.evaluate(() => window.scrollY), "la page du chant s'ouvre en haut").toBe(0);
+    const barre = page.getByTestId("barre-outils");
+    await expect.poll(async () => Math.round((await barre.boundingBox())!.y - (await droite(page).boundingBox())!.y)).toBe(16);
+    const [l, d, b, m, h] = await Promise.all([liste(page).boundingBox(), droite(page).boundingBox(), barre.boundingBox(), droite(page).locator("main.song-zoom").boundingBox(), titreChant(page).boundingBox()]);
+    expect(Math.abs(d!.y - l!.y), "haut du panneau = haut de la liste").toBeLessThanOrEqual(1);
+    expect(await droite(page).evaluate((el) => getComputedStyle(el).borderTopLeftRadius), "rayon du panneau").toBe("16px");
+    expect(await droite(page).evaluate((el) => getComputedStyle(el).borderTopRightRadius), "rayon du panneau").toBe("16px");
+    expect(b!.y - d!.y, "barre à 16 px du haut du panneau").toBeGreaterThanOrEqual(16);
+    expect(Math.abs(b!.x - (d!.x + 24)), "barre à 24 px du bord gauche").toBeLessThanOrEqual(1);
+    expect(Math.abs(b!.x + b!.width - (d!.x + d!.width - 24)), "barre à 24 px du bord droit").toBeLessThanOrEqual(1);
+    expect(Math.abs(h!.x - (d!.x + 24)), "titre à 24 px du bord gauche").toBeLessThanOrEqual(1);
+    expect(Math.abs(m!.x - (d!.x + 24)), "partition à 24 px du bord gauche").toBeLessThanOrEqual(1);
+    expect(Math.abs(m!.x + m!.width - (d!.x + d!.width - 24)), "partition à 24 px du bord droit").toBeLessThanOrEqual(1);
+    expect(h!.y - (b!.y + b!.height), "écart barre → titre").toBeLessThanOrEqual(24);
+    // Les cadres de sections et les pastilles suivent la partition : rien ne touche les bords du panneau.
+    const cadre = (await droite(page).locator("main.song-zoom [data-section]").first().boundingBox())!;
+    expect(cadre.x, "cadre de section").toBeGreaterThanOrEqual(d!.x + 24 - 1);
+    expect(cadre.x + cadre.width, "cadre de section").toBeLessThanOrEqual(d!.x + d!.width - 24 + 1);
+    // « Choisis un chant » : même marge, même haut.
+    await page.goto("/songs");
+    await listePrete(page);
+    await expect(choisis(page)).toBeVisible();
+    const [l2, d2, r2] = await Promise.all([liste(page).boundingBox(), droite(page).boundingBox(), page.locator("[data-choisis-un-chant]").boundingBox()]);
+    expect(Math.abs(d2!.y - l2!.y), "haut du panneau = haut de la liste").toBeLessThanOrEqual(1);
+    expect(Math.abs(r2!.x - (d2!.x + 24)), "« Choisis un chant » à 24 px du bord gauche").toBeLessThanOrEqual(1);
+    expect(Math.abs(r2!.x + r2!.width - (d2!.x + d2!.width - 24)), "« Choisis un chant » à 24 px du bord droit").toBeLessThanOrEqual(1);
+    await capture(page, "chants-panneau");
+  });
+
+  // chants-9 : une carte de setlist fait 300 px au plus ; « Nouveaux au répertoire » passe sur deux colonnes dès 560 px de volet.
+  test("une carte de setlist ne dépasse pas 300 px ; « Nouveaux au répertoire » : deux colonnes dès 560 px de volet, une en dessous", async ({ page }, info) => {
+    const AJOUTS: Record<string, string> = {
+      "abba-pere": "2026-07-01", "abrite-moi": "2026-09-27", "a-l-agneau": "2026-08-15", "一生爱你": "2026-09-30",
+      "tout-puissant": "2026-05-02", "我们的神": "2026-09-01",
+    };
+    await page.route(/\/songs-index\.json/, async (route) => {
+      const r = await route.fetch();
+      const index = await r.json();
+      for (const s of index.songs) s.ajouteLe = AJOUTS[s.slug] ?? null;
+      await route.fulfill({ response: r, json: index });
+    });
+    await signInAs(page, MUSICIEN, SETLISTS, "/songs");
+    await listePrete(page);
+    const nouveaux = droite(page).locator("section").filter({ has: page.getByRole("heading", { level: 3, name: "Nouveaux au répertoire", exact: true }) });
+    const colonnes = async () => new Set(await nouveaux.locator("[data-ligne-chant]").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().x)))).size;
+    const largeurs = info.project.name === "tablette-paysage" ? [null] : [null, { width: 1180, height: 900 }];
+    for (const taille of largeurs) {
+      if (taille) await page.setViewportSize(taille);
+      await expect(nouveaux).toBeVisible();
+      for (const carte of await cartes(page).all()) expect((await carte.boundingBox())!.width, "carte de setlist").toBeLessThanOrEqual(300.5);
+      const volet = (await droite(page).boundingBox())!.width;
+      const marge = await droite(page).evaluate((el) => parseFloat(getComputedStyle(el).paddingRight));
+      await expect.poll(colonnes, `volet de ${Math.round(volet)} px`).toBe(volet - 2 * marge >= 520 ? 2 : 1);
+    }
   });
 
   test("ordinateur, barre dépliée, fenêtre de 1 024 px : un seul volet", async ({ page }, info) => {
@@ -328,7 +452,7 @@ test.describe("Chants en un volet (téléphone, tablette debout)", () => {
     await signInAs(page, ADMIN, {}, "/songs/abba-pere");
     const barre = page.getByTestId("barre-outils");
     await expect(barre.getByRole("link", { name: "Retour" })).toBeVisible();
-    await expect(barre.getByRole("button", { name: "Idées d'harmonie" })).toBeVisible();
+    await expect(barre.getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await expect(barre.getByRole("button", { name: "PDF" })).toBeVisible();
     expect(await barre.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
     await capture(page, "chants-chant-tablette");
@@ -340,10 +464,10 @@ test.describe("Chants en un volet (téléphone, tablette debout)", () => {
     const barre = page.getByTestId("barre-outils");
     await expect(barre.getByRole("link", { name: "Retour" })).toBeVisible();
     await expect(barre.getByRole("button", { name: "PDF" })).toBeVisible();
-    await expect(barre.getByRole("button", { name: "Idées d'harmonie" })).toBeVisible();
+    await expect(barre.getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await barre.getByRole("button", { name: "Plus d'actions" }).click();
     await expect(page.getByRole("menuitem", { name: "PDF" })).toHaveCount(0);
-    await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toHaveCount(0);
+    await expect(page.getByRole("menuitem", { name: "Harmonie", exact: true })).toHaveCount(0);
   });
 });
 
@@ -394,7 +518,7 @@ test.describe("relecture : Chants en deux volets", () => {
     const retour = barre.getByRole("link", { name: "Retour" });
     await expect(retour).toBeVisible();
     // La barre tient toujours sur sa ligne, Retour compris.
-    expect(await barre.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+    expect(await barre.evaluate((el) => el.scrollWidth - el.clientWidth), "pas de ligne qui déborde (hors zone de toucher de 44 px)").toBeLessThanOrEqual(await debordementDeToucher(page));
     await capture(page, "chants-retour-setlist");
     await retour.click();
     await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === "/setlists/culte-4");

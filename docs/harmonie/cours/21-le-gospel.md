@@ -46,9 +46,9 @@ Le gospel est né dans les églises afro-américaines. Sa musique chante la joie
 | --- | --- | --- | --- |
 | Montée vers IV | Do – Ré – Mi – Fa | C – Dm7 – C/E – F | Avant un refrain sur IV |
 | Montée vers I | Sol – La – Si – Do | G – Am – G/B – C | Retour au refrain |
-| Descente vers IV | Do – Si – Sib – La | C – C/B – C7/Bb – F/A | Transition émotionnelle |
-| Montée vers V | Fa – Fa# – Sol | F – F#°7 – G | Relance |
-| Descente chromatique vers I | Mi – Mib – Ré – Réb – Do | C/E – Eb°7 – Dm7 – Db7 – C | Fin de phrase gospel |
+| Descente vers IV | Do – Si – Si♭ – La | C – C/B – C7/Bb – F/A | Transition émotionnelle |
+| Montée vers V | Fa – Fa♯ – Sol | F – F#°7 – G | Relance |
+| Descente chromatique vers I | Mi – Mi♭ – Ré – Ré♭ – Do | C/E – Eb°7 – Dm7 – Db7 – C | Fin de phrase gospel |
 
 ## 21.5 Le cercle gospel : 3 – 6 – 2 – 5 – 1
 
@@ -90,6 +90,6 @@ La progression la plus caractéristique du gospel suit le cercle des quintes ver
 
 ## 21.9 Exercices
 
-1. Joue le tableau 21.3 en entier en Do, puis en Fa et en Sib.
+1. Joue le tableau 21.3 en entier en Do, puis en Fa et en Si♭.
 2. Travaille la fin gospel complète dans les trois tonalités les plus fréquentes de ton église.
 3. Ajoute un seul accord de passage dans la transition entre le refrain et le couplet d'un chant du répertoire.

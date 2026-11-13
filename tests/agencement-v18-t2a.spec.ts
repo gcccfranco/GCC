@@ -1,14 +1,14 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { notifie, presidentGroupe, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, interdireDialoguesNatifs, repondreDansLeSite } from "./helpers/agencement";
-import { entreesBackOffice, sousPartiesEvenements, widgetsPermis } from "../src/lib/access";
+import { droitsDesPages, entreesBackOffice, sousPartiesEvenements, widgetsPermis } from "../src/lib/access";
 import { entreesBarre } from "../src/lib/navigation";
-import { barreAffichee } from "../src/lib/tableauDeBord/barre";
 import { raccourcisPermis } from "../src/lib/tableauDeBord/donnees";
 import type { UserProfile } from "../src/types/user";
 
 // Agencement v18 (docs/spec-agencement-v18.md), tranche T2a — l'entrée Réunions (B15) :
-// neuf entrées au menu du Back-Office, Réunions juste après Évènements ; Évènements = admin,
+// (neuf entrées au menu du Back-Office jusqu'à la piste A, BO1 : Réunions et Évènements n'en sont plus, leurs
+// pages gardent leur adresse et leurs droits, `droitsDesPages`) ; Évènements = admin,
 // coordination ou droit d'annonces ; Réunions = admin, un pôle (Louange compris), référent
 // ou membre d'une équipe ; adresses `/back-office/reunions/*` qui montent les composants
 // d'aujourd'hui ; les trois anciennes adresses redirigent ; « Plus », la barre du bas et sa
@@ -20,14 +20,14 @@ import type { UserProfile } from "../src/types/user";
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** TEAM ÉVÉNEMENTIEL et la coordination (cochée) ; son pôle sert encore aux tâches jusqu'à EQ-C. */
 const COORD: FakeProfile = {
-  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], coordination: true,
+  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["edd"], coordination: true, responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */,
 };
 /** Référent de TEAM DA, sans droit d'annonces ; son pôle sert encore aux tâches jusqu'à EQ-C. */
 const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"], referentDe: ["da"] };
 const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", annonces: ["Culte Francophone"] };
 const REFERENTE: FakeProfile = { uid: "uid-ref", email: "ref@example.com", dansEquipes: ["regie"], referentDe: ["regie"] };
 /** Responsable (notifier) et membre d'une équipe, sans en être référent. */
-const NOTIFY_EQUIPE: FakeProfile = { uid: "uid-ne", email: "ne@example.com", notify: ["Campus"], dansEquipes: ["regie"] };
+const NOTIFY_EQUIPE: FakeProfile = { uid: "uid-ne", email: "ne@example.com", notify: ["Campus"], ...notifie("Campus"), dansEquipes: ["regie"] };
 
 const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
@@ -72,27 +72,28 @@ async function menuLateral(page: Page, info: TestInfo) {
 }
 const barreDuBas = (page: Page) => page.getByTestId("barre-du-bas");
 const sousParties = (page: Page) => page.getByRole("navigation", { name: "Sous-parties" });
-const feuille = (page: Page) => page.getByRole("dialog", { name: "Ta barre du bas" });
 
 // ─── Règles pures ────────────────────────────────────────────────────────────────
 
 test.describe("T2a : les droits d'affichage (B15)", () => {
-  test("un admin a neuf entrées, Réunions juste après Évènements", () => {
-    expect(permises(ADMIN)).toEqual(["tableau", "calendrier", "planning", "taches", "evenements", "reunions", "equipes", "messages", "statistiques"]);
+  test("un admin a les six entrées (piste A + Scène, SF-1) et ouvre les pages Réunions, Évènements, Tâches", () => {
+    expect(permises(ADMIN)).toEqual(["afaire", "calendrier", "scene", "planning", "equipes", "messages"]);
+    expect(droitsDesPages(user(ADMIN), profil(ADMIN))).toEqual({ taches: true, evenements: true, reunions: true });
   });
 
   test("membre d'équipe responsable sans droit d'annonces : Réunions, pas Évènements ; droit d'annonces seul : l'inverse ; coordination, référent : les deux", () => {
-    expect(permises(NOTIFY_EQUIPE)).toEqual(["tableau", "calendrier", "taches", "reunions", "messages"]);
-    expect(permises(DA), "référent (décision 43)").toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
-    expect(permises(ANNONCEUR)).toEqual(["tableau", "calendrier", "evenements"]);
-    expect(permises(COORD)).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
+    const pages = (p: FakeProfile) => droitsDesPages(user(p), profil(p));
+    expect(pages(NOTIFY_EQUIPE)).toEqual({ taches: true, evenements: false, reunions: true });
+    expect(permises(NOTIFY_EQUIPE)).toEqual(["afaire", "calendrier", "messages"]);
+    expect(pages(DA), "référent (décision 43)").toEqual({ taches: true, evenements: true, reunions: true });
+    expect(pages(ANNONCEUR)).toEqual({ taches: false, evenements: true, reunions: false });
+    expect(pages(COORD)).toEqual({ taches: true, evenements: true, reunions: true });
   });
 
   test("un référent, ou un responsable membre d'une équipe, a Réunions ; le référent, Tâches et Évènements aussi (décision 43)", () => {
-    expect(permises(REFERENTE)).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
-    expect(permises(NOTIFY_EQUIPE)).toEqual(["tableau", "calendrier", "taches", "reunions", "messages"]);
-    // Sa barre du bas par défaut : Évènements prend la place de Réunions, qui va dans « Plus » (EQ18).
-    expect(barreAffichee(null, permises(REFERENTE))).toEqual(["tableau", "calendrier", "taches", "evenements"]);
+    expect(droitsDesPages(user(REFERENTE), profil(REFERENTE))).toEqual({ taches: true, evenements: true, reunions: true });
+    expect(droitsDesPages(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE)).reunions).toBe(true);
+    expect(permises(REFERENTE)).toEqual(["afaire", "calendrier"]);
   });
 
   test("les sous-parties d'Évènements n'ont plus « Réunions »", () => {
@@ -103,107 +104,88 @@ test.describe("T2a : les droits d'affichage (B15)", () => {
     expect(sousPartiesEvenements(user(DA), profil(DA)), "référent (décision 43)").toEqual(["evenements"]);
   });
 
-  test("« Prochains évènements » permis avec l'une ou l'autre entrée ; le raccourci « Nouvel évènement » suit Évènements seul", () => {
-    expect(widgetsPermis(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE))).toContain("evenements");
+  test("« Prochains évènements » et le raccourci « Nouvel évènement » suivent Évènements seul (TB2-corrections)", () => {
+    // Depuis TB2, les réunions ont leur widget : Réunions seul ne permet plus celui des évènements.
+    expect(widgetsPermis(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE))).not.toContain("evenements");
+    expect(widgetsPermis(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE))).toContain("reunions");
     expect(widgetsPermis(user(ANNONCEUR), profil(ANNONCEUR))).toContain("evenements");
     expect(raccourcisPermis(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE), {}).map((r) => r.id)).not.toContain("evenement");
     expect(raccourcisPermis(user(DA), profil(DA), {}).map((r) => r.id), "référent (décision 43)").toContain("evenement");
     expect(raccourcisPermis(user(ANNONCEUR), profil(ANNONCEUR), {}).map((r) => r.id)).toContain("evenement");
   });
 
-  test("la barre latérale mène à /back-office/reunions, juste après Évènements", () => {
+  test("la barre latérale n'a plus d'entrée Évènements ni Réunions (piste A, BO1) : leurs adresses restent", () => {
     const hrefs = entreesBarre("back-office", { connecte: true, backOffice: true, permises: permises(ADMIN) }).map((e) => e.href);
-    expect(hrefs.slice(4, 6)).toEqual(["/back-office/evenements", "/back-office/reunions"]);
-  });
-
-  test("une barre enregistrée avec Évènements, relue pour qui n'a que Réunions, se complète dans l'ordre du menu", () => {
-    expect(barreAffichee(["tableau", "evenements", "calendrier", "taches"], permises(NOTIFY_EQUIPE))).toEqual(["tableau", "calendrier", "taches", "reunions"]);
+    expect(hrefs).not.toContain("/back-office/evenements");
+    expect(hrefs).not.toContain("/back-office/reunions");
   });
 });
 
 // ─── Menu ────────────────────────────────────────────────────────────────────────
 
 test.describe("T2a : le menu", () => {
-  test("un admin : neuf entrées, Réunions après Évènements, active sur /back-office/reunions/*", async ({ page }, info) => {
+  test("un admin : six entrées ; sur une page Réunions, Calendrier seul est la page courante (Réunions n'est plus une entrée, evenements-app-1)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "la barre latérale : grand écran");
     await ouvrir(page, ADMIN, "/back-office/reunions/reu-da");
     await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     const menu = await menuLateral(page, info);
-    await expect(menu.getByRole("link")).toHaveText(
-      ["Tableau de bord", "Calendrier", "Planning", "Tâches", "Évènements", "Réunions", "Équipes", "Messages", "Statistiques"]);
-    await expect(menu.getByRole("link", { name: "Réunions" })).toHaveAttribute("aria-current", "page");
-    await expect(menu.getByRole("link", { name: "Évènements" })).not.toHaveAttribute("aria-current", "page");
+    await expect(menu.getByRole("link")).toHaveText([/^À faire\d*$/, "Calendrier", "Scène", "Planning", "Équipes", "Messages"]);
+    await expect(menu.locator("[aria-current]")).toHaveCount(1);
+    await expect(menu.getByRole("link", { name: "Calendrier" })).toHaveAttribute("aria-current", /.+/);
   });
 
-  test("membre d'équipe responsable : Réunions dans la barre du bas par défaut (téléphone, tablette portrait), marqué sur sa page", async ({ page }, info) => {
+  test("membre d'équipe responsable : sa barre du bas (téléphone, tablette portrait) n'a plus Réunions, l'adresse mène au Calendrier filtré (BO-C)", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "la barre du bas : téléphone et tablette en portrait");
-    await ouvrir(page, NOTIFY_EQUIPE, "/back-office/reunions");
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Accueil", "Calendrier", "Tâches", "Réunions", "Plus"]);
-    await expect(barreDuBas(page).getByRole("link", { name: "Réunions" })).toHaveAttribute("aria-current", "page");
+    // lot RS (Q22) : le rôle Notifier seul n'ouvre plus le Back-Office ; un référent d'équipe, oui.
+    await ouvrir(page, { ...REFERENTE, uid: "uid-ne" }, "/back-office/reunions");
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    // lot RS : le référent tient son équipe, d'où « Équipes ».
+    await expect(barreDuBas(page).getByRole("link")).toHaveText(["À faire", "Calendrier", "Équipes", "App"]);
+    await expect(barreDuBas(page).locator("[aria-current]")).toHaveCount(1);
+    await expect(barreDuBas(page).getByRole("link", { name: "Calendrier" })).toHaveAttribute("aria-current", /.+/);
+    await expect(page.getByRole("heading", { level: 1, name: "Calendrier" })).toBeVisible();
   });
 
-  test("une barre enregistrée avec Évènements, pour qui n'a que Réunions : elle se complète sans erreur", async ({ page }, info) => {
+  test("une barre enregistrée avec Évènements est ignorée : la barre est fixe", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "la barre du bas : téléphone et tablette en portrait");
-    await ouvrir(page, NOTIFY_EQUIPE, "/back-office", {
+    // lot RS (Q22) : un référent d'équipe, le rôle Notifier seul n'ouvrant plus le Back-Office.
+    await ouvrir(page, { ...REFERENTE, uid: "uid-ne" }, "/back-office", {
       ...DOCS, "backOffice/uid-ne": { barreDuBas: ["tableau", "evenements", "calendrier", "taches"], majLe: "2026-09-30T10:00:00Z" },
     });
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Accueil", "Calendrier", "Tâches", "Réunions", "Plus"]);
+    await expect(barreDuBas(page).getByRole("link")).toHaveText(["À faire", "Calendrier", "Équipes", "App"]);
   });
 
-  test("« Plus » montre Réunions après Évènements, avec son contenu", async ({ page }, info) => {
-    test.skip(estGrandEcran(info), "la page « Plus » : téléphone et tablette en portrait");
-    await ouvrir(page, ADMIN, "/back-office/plus");
-    const cartes = page.getByTestId("plus-entree");
-    await expect(cartes).toHaveText([/Évènements/, /Réunions.*Sujets, comptes rendus/, /Équipes/, /Messages/, /Statistiques/]);
-    await expect(cartes.filter({ hasText: "Réunions" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
-  });
-
-  test("la feuille « Ta barre du bas » propose neuf cases ; Réunions peut y être cochée", async ({ page }, info) => {
-    test.skip(estGrandEcran(info), "la feuille : téléphone et tablette en portrait");
-    const db = await ouvrir(page, ADMIN, "/back-office/plus");
-    await page.getByRole("button", { name: "Personnaliser la barre" }).click();
-    await expect(feuille(page)).toBeVisible();
-    await expect(feuille(page).getByRole("checkbox")).toHaveCount(9);
-    await feuille(page).getByRole("checkbox", { name: "Planning", exact: true }).click();
-    await feuille(page).getByRole("checkbox", { name: "Réunions", exact: true }).click();
-    await feuille(page).getByRole("button", { name: "Terminé" }).click();
-    await expect(feuille(page)).toBeHidden();
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Accueil", "Calendrier", "Tâches", "Réunions", "Plus"]);
-    await expect.poll(() => db.doc("backOffice/uid-admin")?.barreDuBas).toEqual(["tableau", "calendrier", "taches", "reunions"]);
-  });
-
-  test("en 中文 : « 会议 » au menu, et son contenu dans « Plus »", async ({ page }, info) => {
+  test("en 中文 : « 会议 » est le filtre où mène l'adresse des réunions (BO-C)", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-    if (estGrandEcran(info)) {
-      await ouvrir(page, ADMIN, "/back-office/reunions");
-      // Le titre avant d'ouvrir le menu : sur l'iPad en paysage, la barre dépliée par-dessus est modale
-      // et cache le reste de la page aux lecteurs d'écran (aria-hidden), h1 compris.
-      await expect(page.getByRole("heading", { level: 1, name: "会议" })).toBeVisible();
-      const menu = await menuLateral(page, info);
-      await expect(menu.getByRole("link", { name: "会议" })).toHaveAttribute("aria-current", "page");
-    } else {
-      await ouvrir(page, ADMIN, "/back-office/plus");
-      await expect(page.getByTestId("plus-entree").filter({ hasText: "会议" })).toContainText("议题、会议记录");
-    }
+    await ouvrir(page, ADMIN, "/back-office/reunions");
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    await expect(page.getByRole("heading", { level: 1, name: "日历" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "筛选日历" }).getByRole("button", { name: "会议" })).toHaveAttribute("aria-pressed", "true");
   });
 });
 
 // ─── Pages et redirections ───────────────────────────────────────────────────────
 
 test.describe("T2a : les adresses /back-office/reunions/*", () => {
-  test("la liste : titre « Réunions », sans sous-parties ; ses lignes et « Nouvelle réunion » restent sous Réunions", async ({ page }) => {
+  test("la liste : l'adresse mène au Calendrier en Agenda filtré sur les réunions ; « Réunion » dans le menu « Ajouter »", async ({ page }, info) => {
     await ouvrir(page, DA, "/back-office/reunions");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
-    await expect(sousParties(page)).toHaveCount(0);
-    await expect(page.getByRole("link", { name: /Réunion DA/ }).first()).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
-    await expect(page.getByRole("link", { name: "Nouvelle réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
-    await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Calendrier" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Filtrer le calendrier" }).getByRole("button", { name: "Réunions" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("agenda")).toBeVisible();
+    await expect(page.getByRole("button", { name: /Réunion DA/ }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Fête de rentrée/ })).toHaveCount(0);
+    if (info.project.name !== "telephone") {
+      await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+      await expect(page.getByRole("menuitem", { name: "Réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?(\?date=\d{4}-\d{2}-\d{2})?$/);
+    }
   });
 
-  test("le rail d'Évènements n'a plus « Réunions »", async ({ page }) => {
-    await ouvrir(page, COORD, "/back-office/evenements");
-    await expect(page.getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
-    await expect(sousParties(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
+  test("la scène : titre « Scène des fêtes », rail Pâques · Noël (plus « Évènements »), retour « Calendrier »", async ({ page }) => {
+    await ouvrir(page, COORD, "/back-office/evenements/scene");
+    await expect(page.getByRole("heading", { level: 1, name: "Scène des fêtes" })).toBeVisible();
+    await expect(sousParties(page).getByRole("link")).toHaveText(["Pâques", "Noël"]);
+    await expect(page.getByRole("main").getByRole("link", { name: "Calendrier", exact: true })).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
   });
 
   test("la fiche : Modifier, Dupliquer pour la prochaine et les réunions précédentes restent sous Réunions", async ({ page }, info) => {
@@ -213,30 +195,131 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await expect(page.getByRole("link", { name: "Dupliquer pour la prochaine" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?from=reu-da$/);
     await expect(page.getByRole("region", { name: "Réunions précédentes" }).getByRole("link", { name: "5 sept.", exact: true }))
       .toHaveAttribute("href", /^\/back-office\/reunions\/reu-da-sept\/?$/);
-    // En un volet, la fiche est une page : « ‹ Réunions » pour seul retour (agencement v18, T2b) ; en grand, la liste est à côté.
+    // En un volet, la fiche est une page : « ‹ Calendrier » pour seul retour, vers l'Agenda des réunions (corrections du design, -6) ; en grand, la liste est à côté.
     if (!estGrandEcran(info)) {
-      await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Réunions" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+      await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Calendrier" })).toHaveAttribute("href", /^\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
     }
   });
 
-  test("supprimer une réunion ramène à la liste des réunions", async ({ page }) => {
+  test("supprimer une réunion ramène à la liste des réunions (l'Agenda du Calendrier, filtré sur les réunions)", async ({ page }) => {
     await ouvrir(page, DA, "/back-office/reunions/reu-da");
     await page.getByRole("button", { name: "Plus d'actions" }).click();
     await page.getByRole("menuitem", { name: "Supprimer" }).click();
     await repondreDansLeSite(page, "Supprimer");
-    await expect(page).toHaveURL(/\/back-office\/reunions\/?$/);
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    await expect(page.getByRole("group", { name: "Filtrer le calendrier" }).getByRole("button", { name: "Réunions", exact: true })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  // Corrections du design (bo-reunions-taches-5, -6, -9) : un seul grand titre par page, le retour dit « Calendrier »,
+  // « Modifier » n'est écrit qu'une fois. Quatre dispositions plus 1 440 px (les cinq projets).
+  test("la fiche : un seul h1 (le titre de la réunion, 30 px) ; ni « Réunions » ni sous-titre ; retour « ‹ Calendrier »", async ({ page }, info) => {
+    await ouvrir(page, DA, "/back-office/reunions/reu-da");
+    await expect(page.getByRole("heading", { level: 1, name: "Réunion DA", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    await expect(page.getByRole("heading", { name: "Réunions", exact: true })).toHaveCount(0);
+    await expect(page.getByText("Les réunions de tes équipes")).toHaveCount(0);
+    if (estGrandEcran(info)) {
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-size", "30px");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-weight", "700");
+    }
+    const retour = page.locator("header[data-entete-page]").getByRole("link", { name: "Calendrier" }).first();
+    await expect(retour).toHaveAttribute("href", /^\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+  });
+
+  test("« Nouvelle réunion » et « Modifier » : un seul h1, le retour de la page à un volet, « Modifier » écrit une fois", async ({ page }, info) => {
+    await ouvrir(page, DA, "/back-office/reunions/nouvelle");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Nouvelle réunion");
+    if (!estGrandEcran(info)) {
+      await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Calendrier" })).toHaveAttribute("href", /^\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    }
+    await page.goto("/back-office/reunions/reu-da/modifier");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Modifier la réunion");
+    await expect(page.getByLabel("Nom de la réunion")).toHaveValue("Réunion DA");
+    await expect(page.getByText("Modifier", { exact: true })).toHaveCount(0);
+    if (!estGrandEcran(info)) {
+      await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Réunion DA" })).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
+    }
+  });
+
+  // Timothée, 08/11/2026 : « une réunion n'est pas un évènement » — son propre formulaire (ReunionForm).
+  test("« Nouvelle réunion » : son formulaire, sans bannière, ni fin, ni « Plus d'options » ; liens visibles, membres prévenus", async ({ page }) => {
+    await ouvrir(page, DA, "/back-office/reunions/nouvelle");
+    await expect(page.getByLabel("Nom de la réunion")).toBeVisible();
+    const labels = await page.locator("form label[for]").evaluateAll((els) => els.map((el) => el.textContent?.trim()));
+    expect(labels.slice(0, 7)).toEqual(["Nom de la réunion", "Équipe", "Date", "Horaire", "Lieu", "Responsable", "Description"]);
+    await expect(page.getByLabel("Catégorie")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Créer la réunion" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Annuler" })).toBeVisible();
+    expect(await page.locator("form").innerText()).not.toMatch(/évènement/i);
+    await expect(page.getByText("Ajouter une bannière")).toHaveCount(0);
+    await expect(page.getByText("Plus d'options")).toHaveCount(0);
+    await expect(page.getByLabel("Heure de fin", { exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("Date de fin", { exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Ajouter un lien" })).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Prévenir les membres" })).toBeChecked();
+  });
+
+  test("modifier une réunion : son formulaire, seules ses équipes au choix ; bannière et fin plus anciennes gardées", async ({ page }) => {
+    const db = await ouvrir(page, DA, "/back-office/reunions/reu-da/modifier", {
+      ...DOCS, "evenements/reu-da": { ...REU, titre: "Réunion DA", date: "2026-10-10", heureFin: "21:30", images: ["data:image/png;base64,AAAA"] },
+    });
+    await expect(page.getByLabel("Nom de la réunion")).toHaveValue("Réunion DA");
+    await expect(page.getByText("Ajouter une bannière")).toHaveCount(0);
+    await expect(page.getByLabel("Heure de fin", { exact: true })).toHaveCount(0);
+    const publics = await page.getByLabel("Équipe", { exact: true }).locator("option").allTextContents();
+    expect(publics.some((p) => /église/i.test(p)), "pas « toute l'église » : la réunion deviendrait un évènement").toBe(false);
+    await page.getByLabel("Lieu").fill("Salle 3");
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
+    const ecrit = db.writes.filter((w) => w.method === "PATCH" && w.path === "evenements/reu-da").pop()!;
+    expect(ecrit, "la réunion est enregistrée").toBeTruthy();
+    expect(JSON.stringify(ecrit.data)).toContain("Salle 3");
+    expect(db.doc("evenements/reu-da")?.heureFin, "la fin d'une réunion plus ancienne reste").toBe("21:30");
+    expect((db.doc("evenements/reu-da")?.images as string[] | undefined)?.length, "sa bannière aussi").toBe(1);
+  });
+
+  test("modifier une réunion : reportée après son ancienne fin, elle la perd", async ({ page }) => {
+    const db = await ouvrir(page, DA, "/back-office/reunions/reu-da/modifier", {
+      ...DOCS, "evenements/reu-da": { ...REU, titre: "Réunion DA", date: "2026-10-10", dateFin: "2026-10-10", heureFin: "21:30" },
+    });
+    await page.getByLabel("Date", { exact: true }).fill("2026-12-01");
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
+    expect(db.doc("evenements/reu-da")?.date).toBe("2026-12-01");
+    expect(db.doc("evenements/reu-da")?.dateFin, "pas de fin avant le début").toBe("");
+    expect(db.doc("evenements/reu-da")?.heureFin).toBe("");
+  });
+
+  test("champs de date et d'heure : dans leur colonne, pictogramme, sans apparence native (iPhone)", async ({ page }) => {
+    await ouvrir(page, DA, "/back-office/reunions/nouvelle");
+    const carte = (await page.getByTestId("form-carte").boundingBox())!;
+    for (const [nom, classe] of [["Date", "champ-date"], ["Horaire", "champ-heure"]] as const) {
+      const champ = page.getByLabel(nom, { exact: true });
+      await expect(champ).toHaveClass(new RegExp(classe));
+      expect(await champ.evaluate((el) => getComputedStyle(el).appearance)).toBe("none");
+      expect(await champ.evaluate((el) => getComputedStyle(el).minWidth)).toBe("0px");
+      const b = (await champ.boundingBox())!;
+      expect(b.x + b.width, `${nom} reste dans la carte`).toBeLessThanOrEqual(carte.x + carte.width - 15);
+    }
+    const date = (await page.getByLabel("Date", { exact: true }).boundingBox())!;
+    const heure = (await page.getByLabel("Horaire", { exact: true }).boundingBox())!;
+    expect(Math.abs(date.y - heure.y), "même rangée").toBeLessThan(1);
+    expect(heure.x, "l'heure ne chevauche pas la date").toBeGreaterThanOrEqual(date.x + date.width);
   });
 
   test("créer une réunion : seulement les réunions au choix, puis sa fiche sous Réunions", async ({ page }) => {
     await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
     await ouvrir(page, DA, "/back-office/reunions/nouvelle");
-    await expect(page.getByLabel("Public")).toBeVisible();
-    const publics = await page.getByLabel("Public").locator("option").allTextContents();
+    await expect(page.getByLabel("Équipe", { exact: true })).toBeVisible();
+    const publics = await page.getByLabel("Équipe", { exact: true }).locator("option").allTextContents();
     expect(publics.length).toBeGreaterThan(0);
-    expect(publics.every((p) => p.startsWith("TEAM"))).toBe(true);
-    await page.getByLabel("Nom de l'évènement").fill("Réunion de rentrée");
+    // Bo-reunions-taches-8 : les équipes s'écrivent en nom court (« DA »), pas « TEAM DA ».
+    expect(publics.every((p) => !p.startsWith("TEAM"))).toBe(true);
+    await page.getByLabel("Nom de la réunion").fill("Réunion de rentrée");
     await page.getByLabel("Date", { exact: true }).fill("2026-10-20");
-    await page.getByRole("button", { name: "Créer l'évènement" }).click();
+    await page.getByRole("button", { name: "Créer la réunion" }).click();
     await expect(page).toHaveURL(/\/back-office\/reunions\/fake-\d+\/?$/);
     await expect(page.getByRole("heading", { name: "Réunion de rentrée", exact: true })).toBeVisible();
   });
@@ -249,7 +332,7 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
 
   test("modifier une réunion : enregistrer ramène à sa fiche sous Réunions", async ({ page }) => {
     const db = await ouvrir(page, DA, "/back-office/reunions/reu-da/modifier");
-    await page.getByLabel("Nom de l'évènement").fill("Réunion DA d'octobre");
+    await page.getByLabel("Nom de la réunion").fill("Réunion DA d'octobre");
     await page.getByRole("button", { name: "Enregistrer" }).click();
     await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
     expect(db.doc("evenements/reu-da")).toMatchObject({ titre: "Réunion DA d'octobre" });
@@ -257,8 +340,8 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
 
   test("anciennes adresses : la liste, la fiche d'une réunion et « nouveau?reunion=1 » redirigent", async ({ page }) => {
     await ouvrir(page, DA, "/back-office/evenements/reunions");
-    await expect(page).toHaveURL(/\/back-office\/reunions\/?$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Calendrier" })).toBeVisible();
     await page.goto("/back-office/evenements/reu-da");
     await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
     await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
@@ -282,22 +365,32 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
 
 // ─── Relecture du lot (07/10/2026) ───────────────────────────────────────────────
 
-test.describe("T2a, relecture : là où mènent le widget et le guide", () => {
-  /** Le widget « Prochains évènements » seul au tableau de bord. */
-  const avecLeWidget = (p: FakeProfile) => ({
-    ...DOCS,
-    [`backOffice/${p.uid}`]: { tableauDeBord: [{ id: "evenements", taille: "m", reglages: {} }], majLe: "2026-10-01T09:00:00Z" },
-  });
-  const widget = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Prochains évènements", exact: true });
+test.describe("T2a, relecture : là où mènent À faire et le guide", () => {
+  // BO-B : le tableau de bord et ses widgets ont laissé place à « À faire » ; les droits des sources restent ceux des widgets.
+  const ligne = (page: Page, texte: string) => page.getByTestId("ligne-a-faire").filter({ hasText: texte });
 
-  test("membre d'équipe responsable (Réunions sans Évènements) : « Tout voir » du widget mène à ses réunions", async ({ page }) => {
-    await ouvrir(page, NOTIFY_EQUIPE, "/back-office", avecLeWidget(NOTIFY_EQUIPE));
-    await expect(widget(page).getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+  test("membre d'équipe responsable (Réunions sans Évènements) : le compte rendu de sa réunion mène à la réunion, pas d'inscriptions à voir (TB2-corrections)", async ({ page }) => {
+    const docs = {
+      ...DOCS,
+      "evenements/reu-regie-sept": { ...REU, pour: "equipe:regie", titre: "Réunion Régie", date: "2026-09-28" },
+      "evenements/reu-regie": { ...REU, pour: "equipe:regie", titre: "Réunion Régie", date: "2026-10-12" },
+      "evenements/kermesse": { ...EV, titre: "Kermesse", pour: "equipe:regie", organisateurUid: "uid-ne", inscriptionFin: "2026-10-08" },
+    };
+    // lot RS : le rôle Notifier ne donne plus l'accès au Back-Office ; le référent de l'équipe, lui, y tient ses
+    // réunions (et a aussi les Évènements de son équipe : sa Kermesse est la sienne, « Voir les inscrits » est permis).
+    await ouvrir(page, { ...REFERENTE, uid: "uid-ne" }, "/back-office", docs);
+    await expect(ligne(page, "Réunion Régie").getByRole("link", { name: /^Écrire le compte rendu/ }))
+      .toHaveAttribute("href", /^\/back-office\/reunions\/reu-regie-sept\/?$/);
+    await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
   });
 
-  test("droit d'annonces (Évènements) : « Tout voir » du widget mène aux Évènements", async ({ page }) => {
-    await ouvrir(page, ANNONCEUR, "/back-office", avecLeWidget(ANNONCEUR));
-    await expect(widget(page).getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
+  test("droit d'annonces (Évènements) : « Voir les inscrits » de son évènement mène à sa fiche dans les Évènements", async ({ page }) => {
+    // Lot AO : le droit d'annonces d'une section vient de l'organigramme (ici : président du Groupe Bonté).
+    const president: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", ...presidentGroupe("bonte") };
+    const docs = { ...DOCS, "evenements/kermesse": { ...EV, titre: "Kermesse", organisateurUid: "uid-hugo", inscriptionFin: "2026-10-08" } };
+    await ouvrir(page, president, "/back-office", docs);
+    await expect(ligne(page, "Kermesse").getByRole("link", { name: /^Voir les inscrits/ }))
+      .toHaveAttribute("href", /^\/back-office\/evenements\/kermesse\/?$/);
   });
 
   test("le guide dit que les réunions d'équipe se créent dans Réunions", async ({ page }) => {

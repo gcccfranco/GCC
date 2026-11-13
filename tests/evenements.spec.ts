@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { fakeFirestore, presidentGroupe, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { groupByMonth, isPast, modeInscriptions, placesRestantes, refusInscription } from "../src/lib/evenements/agenda";
 import type { Evenement } from "../src/types/evenement";
@@ -137,11 +137,11 @@ test("onglets : un connecté voit le programme de scène à côté du calendrier
 
 // ─── Tranche E2 : créer, modifier, dupliquer, supprimer, push à la création ──
 
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */ };
 // Lot U6, B3 : la gestion d'un évènement est au Back-Office, ouvert aux responsables ; Steph
 // organise avec le droit d'annonces de sa section.
-const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", annonces: ["Groupe Bonté"] };
-const RESP_PAIX: FakeProfile = { uid: "uid-resp", email: "resp@example.com", firstName: "Ruth", lastName: "K.", serviceRoles: { "Groupe Paix": ["presidence"] }, annonces: ["Groupe Paix"] };
+const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", ...presidentGroupe("bonte") };
+const RESP_PAIX: FakeProfile = { uid: "uid-resp", email: "resp@example.com", firstName: "Ruth", lastName: "K.", serviceRoles: { "Groupe Paix": ["presidence"] }, ...presidentGroupe("paix") };
 
 /** Agencement v18 (B3) : au Back-Office, Dupliquer et Supprimer sont dans le menu « ⋯ » de la fiche de gestion. */
 async function dansLeMenu(page: Page, action: string) {
@@ -184,22 +184,22 @@ test("créer : la coordination remplit la fiche ; écriture à son nom, compteur
   expect(pushed!.evenementId).toBe(created!.path.split("/").pop());
 });
 
-test("créer : un responsable avec le droit d'annonces ne crée que pour sa section, sans push si décoché", async ({ page }) => {
+test("créer : le président d'un groupe ne crée que pour sa section et son comité, sans push si décoché", async ({ page }) => {
   const db = await member(page, RESP_PAIX, "/evenements");
   let pushed = false;
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
   await page.getByRole("link", { name: "Nouvel évènement" }).click();
-  // Sa section seule : un rôle de service le met dans le public Louange, mais seuls les référents de
-  // TEAM LOUANGE créent pour lui (lot 1 du chantier « équipes et groupes », décision 5).
-  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix"]);
-  await expect(page.getByLabel("Public")).toHaveValue("Groupe Paix");
+  // lot RS : le président d'un groupe ne crée plus d'évènement de sa section (Comité Orga seul) ; il propose son comité
+  // (réunion, car il en est référent). Un rôle de service le met dans le public Louange, mais seuls les référents de
+  // TEAM LOUANGE créent pour lui (décision 5).
+  await expect(page.getByLabel("Public").locator("option")).toHaveText(["COMITÉ PAIX"]);
   await page.getByLabel("Nom de l'évènement").fill("Prière du groupe");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-20");
   await page.getByLabel("Prévenir les membres").uncheck();
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
   await expect(page.getByRole("heading", { name: "Prière du groupe" })).toBeVisible();
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
-  expect(created?.data).toMatchObject({ pour: "Groupe Paix", organisateurUid: "uid-resp" });
+  expect(created?.data).toMatchObject({ pour: "equipe:comite-paix", organisateurUid: "uid-resp" });
   await page.waitForTimeout(300);
   expect(pushed).toBe(false);
 });
@@ -317,7 +317,8 @@ test("supprimer : l'organisateur confirme, la fiche disparaît", async ({ page }
   const db = await member(page, STEPH, "/back-office/evenements/foot");
   await dansLeMenu(page, "Supprimer");
   await repondreDansLeSite(page, "Supprimer");
-  await expect(page).toHaveURL(/\/evenements\/?$/);
+  // `/back-office/evenements` mène à l'Agenda filtré (BO-C) : l'une ou l'autre adresse, selon la vitesse de l'appareil.
+  await expect(page).toHaveURL(/\/evenements\/?$|\/back-office\/calendrier\/?\?vue=agenda&filtre=evenements$/);
   expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("evenements/foot");
 });
 
@@ -664,10 +665,17 @@ test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable p
   await expect(page.getByLabel("Responsable")).toHaveValue("Alice Q.");
   await expect(page.getByText("Ajouter une bannière")).toBeVisible();
   await expect(page.getByRole("radio", { name: "Automatique" })).toBeChecked();
-  await expect(page.getByLabel("Fin de l'évènement (heure)")).toBeHidden();
+  await expect(page.getByLabel("Heure de fin", { exact: true })).toBeHidden();
   await expect(page.getByLabel("Places")).toBeHidden();
+  // Chevron du site, pas le triangle du navigateur (retouche iPhone du 08/11/2026).
+  expect(await page.locator("summary", { hasText: "Plus d'options" }).evaluate((el) => getComputedStyle(el).listStyleType)).toBe("none");
   await page.getByText("Plus d'options").click();
-  await expect(page.getByLabel("Fin de l'évènement (heure)")).toBeVisible();
+  await expect(page.getByLabel("Heure de fin", { exact: true })).toBeVisible();
+  // Fin : « Date de fin | Heure de fin », dans l'ordre de « Date | Horaire », sur la même rangée.
+  const finDate = (await page.getByLabel("Date de fin", { exact: true }).boundingBox())!;
+  const finHeure = (await page.getByLabel("Heure de fin", { exact: true }).boundingBox())!;
+  expect(Math.abs(finDate.y - finHeure.y), "même rangée").toBeLessThan(1);
+  expect(finHeure.x, "la date de fin d'abord").toBeGreaterThan(finDate.x);
   await expect(page.getByLabel("Places")).toBeVisible();
   await expect(page.getByLabel("Les personnes sans compte peuvent s'inscrire")).toBeVisible();
 });
@@ -676,14 +684,15 @@ test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable p
 
 const BLANC = "rgb(255, 255, 255)";
 
-test("L6 fiche : tout le contenu dans une carte blanche, zone d'attente quand il n'y a pas de bannière", async ({ page }, info) => {
+test("L6 fiche : tout le contenu dans une carte blanche, vignette de date quand il n'y a pas de bannière", async ({ page }, info) => {
   // En grand, la fiche est en deux colonnes (planche `evenements-ordinateur`) : pages-en-grand-evenements.spec.ts.
   test.skip(enGrand(info), "en grand, la fiche est en deux colonnes (U4 bis, B2, Q5)");
   await member(page, JO, "/evenements/paix");
   const carte = page.getByTestId("fiche-carte");
   await expect(carte).toBeVisible();
   expect(await carte.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(BLANC);
-  await expect(carte.getByTestId("banniere")).toBeVisible();
+  await expect(carte.getByTestId("banniere"), "plus de cadre gris").toHaveCount(0);
+  await expect(carte.getByTestId("tuile"), "la vignette de date").toBeVisible();
   await expect(carte.getByRole("heading", { name: "Repas Groupe Paix" })).toBeVisible();
   await expect(carte.getByText("Parc de Bercy")).toBeVisible();
   await expect(carte.getByRole("button", { name: "S'inscrire" })).toBeVisible();
@@ -719,28 +728,31 @@ test("L6 organisateur : le compteur n'est écrit qu'une fois", async ({ page }) 
 
 // Agencement v18 (B3, piste A) : au Back-Office, la fiche de gestion remplace la carte du 17/09/2026 ;
 // la fiche des membres (avec « S'inscrire ») est dans l'App, par « Voir comme un membre ».
-test("organisateur : fiche de gestion au Back-Office (titre, badges, Voir comme un membre, Modifier, « ⋯ », inscriptions, lien)", async ({ page }) => {
+test("organisateur : fiche de gestion au Back-Office (titre, badges, Modifier, « ⋯ » dont Voir comme un membre, inscriptions, lien)", async ({ page }) => {
   await member(page, STEPH, "/back-office/evenements/foot");
   const gestion = page.getByTestId("fiche-gestion");
   await expect(gestion.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
   await expect(gestion.getByText("Sport")).toBeVisible();
-  await expect(gestion.getByRole("link", { name: "Voir comme un membre" })).toHaveAttribute("href", /^\/evenements\/foot\/?$/);
+  // bo-evenements-4 : « Voir comme un membre » n'est plus un bouton de l'en-tête, c'est la première entrée du menu « ⋯ ».
+  await expect(gestion.getByRole("link", { name: "Voir comme un membre" })).toHaveCount(0);
   await expect(gestion.getByRole("link", { name: "Modifier" })).toBeVisible();
   await gestion.getByRole("button", { name: "Plus d'actions" }).click();
-  await expect(page.getByRole("menuitem")).toHaveText(["Dupliquer", "Supprimer"]);
-  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menuitem")).toHaveText(["Voir comme un membre", "Dupliquer", "Supprimer"]);
+  // Un filet avant « Supprimer ».
+  await expect(page.getByRole("separator")).toHaveCount(1);
+  await page.getByRole("menuitem", { name: "Voir comme un membre" }).click();
+  await expect(page).toHaveURL(/\/evenements\/foot\/?$/);
   await expect(gestion.getByRole("region", { name: "Période d'inscription" })).toContainText("Ouvertes");
   await expect(gestion.getByText("Lien d'inscription")).toBeVisible();
   await expect(gestion.getByRole("img", { name: /QR code/ })).toBeVisible();
   await expect(gestion.getByRole("button", { name: "S'inscrire" })).toHaveCount(0);
 });
 
-test("organisateur : « Modifier » et « Voir comme un membre » sont des pilules à bord ; « Supprimer » est en rouge dans « ⋯ »", async ({ page }) => {
+test("organisateur : « Modifier » est une pilule à bord ; « Supprimer » est en rouge dans « ⋯ »", async ({ page }) => {
   await member(page, STEPH, "/back-office/evenements/foot");
   const bord = (name: string) =>
     page.getByTestId("fiche-gestion").getByRole("link", { name }).evaluate((el) => getComputedStyle(el).borderTopWidth);
   expect(await bord("Modifier")).toBe("1px");
-  expect(await bord("Voir comme un membre")).toBe("1px");
   await page.getByTestId("fiche-gestion").getByRole("button", { name: "Plus d'actions" }).click();
   await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveClass(/text-destructive/);
 });
@@ -786,11 +798,11 @@ test("fiche : la date n'est pas en gras", async ({ page }) => {
   expect(poids).toBeLessThan(600);
 });
 
-test("formulaire : libellés discrets, « Prévenir les membres » et le bouton pleine largeur dans la carte", async ({ page }) => {
+test("formulaire : libellés de 13 px semi-gras gris (corrections du design, -13), « Prévenir les membres » et le bouton pleine largeur dans la carte", async ({ page }) => {
   await member(page, ALICE, "/back-office/evenements/nouveau");
   const carte = page.getByTestId("form-carte");
-  const poids = await carte.locator("label[for='ev-titre']").evaluate((el) => Number(getComputedStyle(el).fontWeight));
-  expect(poids).toBeLessThan(600);
+  const libelle = await carte.locator("label[for='ev-titre']").evaluate((el) => { const c = getComputedStyle(el); return { poids: c.fontWeight, taille: c.fontSize }; });
+  expect(libelle).toEqual({ poids: "600", taille: "13px" });
   await expect(carte.getByLabel("Prévenir les membres")).toBeVisible();
   const bouton = carte.getByRole("button", { name: "Créer l'évènement" });
   await expect(bouton).toBeVisible();
@@ -810,7 +822,7 @@ test("calendrier : un évènement à venir est une grande carte comme la maquett
   test.skip(enGrand(info), CARTES_EN_UN_VOLET);
   await member(page, JO, "/evenements", { ...DOCS, "evenements/foot": { ...FOOT, heureFin: "21:00", contact: "Steph R." } });
   const carte = page.getByRole("link", { name: /Foot au parc/ });
-  await expect(carte.getByTestId("banniere")).toBeVisible();
+  await expect(carte.getByTestId("tuile"), "sans image : la vignette de date").toBeVisible();
   for (const texte of ["Sport", "Toute l'église", "samedi 10 octobre 2026", "19:00 – 21:00", "Parc de Bercy", "Pour plus d'infos : Steph R.", "S'inscrire", "4 déjà inscrits"]) {
     await expect(carte).toContainText(texte);
   }
@@ -1066,3 +1078,82 @@ test("lot 11 中文 : la fiche et le formulaire montrent les nouveaux libellés"
   await expect(page.getByLabel("外部报名链接")).toHaveValue(FORMULAIRE);
   await expect(page.getByText(/应用不再统计名额和报名人数/)).toBeVisible();
 });
+
+// Corrections du design, bo-evenements-6 : « Nouvel évènement » dit l'action dans un titre unique, le retour dit l'objet
+// (« ‹ Calendrier »), ni sous-titre ni second bouton « Nouvel évènement » ; le formulaire cache son titre.
+test("bo-evenements-6 — Nouveau : un seul h1 « Nouvel évènement », retour « ‹ Calendrier », le formulaire n'a pas de second titre visible", async ({ page }) => {
+  await member(page, ALICE, "/back-office/evenements/nouveau")
+  await expect(page.getByLabel("Nom de l'évènement")).toBeVisible()
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1)
+  await expect(page.getByRole("heading", { level: 1, name: "Nouvel évènement" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Nouvel évènement" })).toHaveCount(0)
+  await expect(page.getByRole("main").getByRole("link", { name: "Calendrier", exact: true })).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/)
+  await expect(page.getByText("Ce que voit l'assemblée, et sa gestion")).toHaveCount(0)
+  // Le titre du formulaire reste pour les lecteurs d'écran, jamais à l'écran.
+  const titreForm = page.locator("#evenement-form-title")
+  expect(await titreForm.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1)
+})
+
+// bo-evenements-14 : le lien externe et le groupe « Inscriptions » sont deux blocs frères de la carte du formulaire,
+// séparés par le filet de `divide-y` ; avec un lien externe, le second disparaît.
+test("bo-evenements-14 — l'aide du lien externe et « Inscriptions » : deux blocs, un filet, plus de 24 px entre eux ; un lien externe retire le second", async ({ page }) => {
+  await member(page, ALICE, "/back-office/evenements/nouveau")
+  const carte = page.getByTestId("form-carte")
+  const aide = carte.getByText(/^Google Forms, Sheets…/)
+  const titre = carte.getByText("Inscriptions", { exact: true })
+  await expect(aide).toBeVisible()
+  await expect(titre).toBeVisible()
+  const blocLien = carte.locator("> div").filter({ has: page.locator("#ev-lien-externe") })
+  const blocInscriptions = carte.locator("> div").filter({ has: page.getByText("Inscriptions", { exact: true }) })
+  await expect(blocLien).toHaveCount(1)
+  await expect(blocInscriptions).toHaveCount(1)
+  expect(await blocLien.evaluate((a, b) => a !== b, await blocInscriptions.elementHandle())).toBe(true)
+  const a = (await aide.boundingBox())!
+  const t = (await titre.boundingBox())!
+  expect(t.y - (a.y + a.height), "l'aide et le titre « Inscriptions » ne se touchent plus").toBeGreaterThan(24)
+  expect(await blocInscriptions.evaluate((el) => getComputedStyle(el).borderTopWidth), "le filet de divide-y").toBe("1px")
+  await carte.locator("#ev-lien-externe").fill("https://forms.example.org/inscription")
+  await expect(blocInscriptions).toHaveCount(0)
+})
+
+// bo-evenements-10 : la même pastille sur la fiche de gestion, point vert « Ouvertes », en 中文 « 开放中 ».
+test("bo-evenements-10 — la fiche de gestion : pastille neutre, point `aria-hidden` vert en « Ouvertes » ; en 中文 « 开放中 »", async ({ page }) => {
+  await member(page, STEPH, "/back-office/evenements/foot")
+  const etat = page.getByTestId("etat-inscriptions")
+  await expect(etat).toHaveText("Ouvertes")
+  const point = etat.locator('[aria-hidden="true"]')
+  await expect(point).toHaveCount(1)
+  expect(await point.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(31, 157, 85)")
+})
+
+test("bo-evenements-10 — en 中文, la pastille de la fiche dit 开放中", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"))
+  await member(page, STEPH, "/back-office/evenements/foot")
+  await expect(page.getByTestId("etat-inscriptions")).toHaveText("开放中")
+})
+
+// bo-evenements-4 : le titre d'abord, les étiquettes dessous, puis les actions ; à 720 px de volet et plus, « Modifier » et « ⋯ »
+// passent à droite du titre. Deux volets seulement (ordinateur) : la fenêtre fixe la largeur du volet.
+for (const [largeur, cote] of [[1280, "dessous"], [1600, "droite"]] as const) {
+  test(`bo-evenements-4 — fiche en deux volets à ${largeur} px : le titre tient sur une ligne, les actions ${cote === "droite" ? "sont à droite du titre" : "sont sous les étiquettes"}`, async ({ page }, info) => {
+    test.skip(info.project.name !== "ordinateur", "deux volets : l'ordinateur, dont la fenêtre est réglée ici")
+    await page.setViewportSize({ width: largeur, height: 900 })
+    await member(page, STEPH, "/back-office/evenements/pique", { ...DOCS, "evenements/pique": { ...FOOT, titre: "Pique-nique de rentrée" } })
+    const gestion = page.getByTestId("fiche-gestion")
+    const titre = gestion.getByRole("heading", { name: "Pique-nique de rentrée", level: 2 })
+    await expect(titre).toBeVisible()
+    const h = await titre.evaluate((el) => ({ hauteur: el.getBoundingClientRect().height, ligne: parseFloat(getComputedStyle(el).lineHeight) }))
+    expect(h.hauteur, "une seule ligne").toBeLessThan(h.ligne * 1.5)
+    const t = (await titre.boundingBox())!
+    const modifier = (await gestion.getByRole("link", { name: "Modifier" }).boundingBox())!
+    const types = (await gestion.getByText("Sport", { exact: true }).boundingBox())!
+    expect(types.y, "les étiquettes sont sous le titre").toBeGreaterThan(t.y + t.height - 1)
+    if (cote === "droite") {
+      expect(modifier.x, "« Modifier » est à droite du titre").toBeGreaterThan(t.x + t.width - 1)
+      expect(modifier.y, "sur sa première ligne").toBeLessThan(t.y + t.height)
+    } else {
+      expect(modifier.y, "« Modifier » est sous les étiquettes").toBeGreaterThan(types.y + types.height - 1)
+    }
+  })
+}

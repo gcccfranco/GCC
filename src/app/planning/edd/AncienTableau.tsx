@@ -12,6 +12,7 @@ import { EDD_FALLBACK } from "@/lib/planning/data"
 import { fetchEDD } from "@/lib/planning/sheets"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { EddDataStructure, EddPeriode, EddClasse } from "@/lib/planning/utils"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.edd
 const PERIODE_KEYS = ["p1", "p2", "p3", "p4", "p5", "p6"] as const
@@ -57,9 +58,9 @@ export function AncienTableau() {
             key={c}
             onClick={() => setClasse(c)}
             className={`flex-1 py-1.5 px-3 rounded-lg border text-sm font-semibold text-center transition-all duration-150 cursor-pointer ${
-              c === classe ? "border-transparent" : "bg-card border-border text-muted-foreground hover:text-foreground"
+              c === classe ? "border-transparent texte-service" : "bg-card border-border text-muted-foreground hover:text-foreground"
             }`}
-            style={c === classe ? { background: `${COLOR}15`, borderColor: COLOR, color: COLOR } : {}}
+            style={c === classe ? { background: `${COLOR}15`, borderColor: COLOR, ...styleTexteService(COLOR) } : {}}
           >
             {c}
           </button>

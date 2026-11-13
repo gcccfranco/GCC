@@ -16,6 +16,24 @@ const Texte = ({ texte }: { texte: string }) => <TexteFiche texte={texte} demiTo
  *  se cocher — on ne retient que les chapitres finis. */
 const CASE = /^\[[ xX]\] /;
 
+/** Texte brut d'une case : sans les marques du markdown léger (gras, italique, accents graves). */
+const brut = (texte: string) => texte.replace(/\*\*|\*|`/g, "");
+
+/** Une case qui ne contient que des altérations (colonne « Symbole ») : les signes se lisent en 17/23. */
+const SEULEMENT_ALTERATIONS = /^[\u266D-\u266F\u{1D12A}\u{1D12B}]+$/u;
+
+/** Une colonne est « courte » quand sa plus longue case tient en 12 caractères ou moins. La tête peut passer
+ *  à la ligne (deux lignes au plus) : elle compte par son mot le plus long. Partagé par la largeur des
+ *  colonnes (harmonie-3) et la règle d'empilement au téléphone (harmonie-12). */
+const SEUIL_COLONNE_COURTE = 12;
+export function colonnesCourtes(entetes: string[], lignes: string[][]): boolean[] {
+  return entetes.map((entete, j) => {
+    const tete = Math.max(0, ...brut(entete).split(/\s+/).map((mot) => [...mot].length));
+    const cases = Math.max(0, ...lignes.map((ligne) => [...brut(ligne[j] ?? "")].length));
+    return Math.max(tete, cases) <= SEUIL_COLONNE_COURTE;
+  });
+}
+
 function Liste({ ordonnee, items }: { ordonnee: boolean; items: ItemListe[] }) {
   const Balise = ordonnee ? "ol" : "ul";
   const cases = !ordonnee && items.every((item) => CASE.test(item.texte));
@@ -40,24 +58,29 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
     case "paragraphe":
       return <p><Texte texte={bloc.texte} /></p>;
     case "titre":
-      return <h3 className="pt-1 text-[17px] font-semibold">{bloc.texte}</h3>;
+      return <h3 className="pt-1 text-lg font-semibold">{bloc.texte}</h3>;
     case "liste":
       return <Liste ordonnee={bloc.ordonnee} items={bloc.items} />;
     case "tableau": {
-      // Un tableau large défile dans son cadre, jamais la page. Sur téléphone, au-delà de trois
-      // colonnes (« Toutes les cadences », six), chaque ligne devient un bloc : la première case
-      // en titre, les autres sous leur en-tête (lot U4 bis, B3, question 4) ; rien ne glisse.
-      const empile = bloc.entetes.length > 3;
+      // Un tableau large défile dans son cadre, jamais la page. Sur téléphone, dès que deux colonnes
+      // sont longues (« Toutes les cadences », six ; le tableau 1.1), chaque ligne devient un bloc :
+      // la première case en titre, les autres sous leur en-tête (lot U4 bis, B3, question 4) ; rien
+      // ne glisse. Un tableau qui n'a qu'une colonne longue reste un tableau, colonnes courtes au plus juste.
+      const courtes = colonnesCourtes(bloc.entetes, bloc.lignes);
+      const empile = courtes.filter((c) => !c).length >= 2;
       return (
         <div
           className={cn("overflow-x-auto rounded-xl border border-border", empile && "max-sm:overflow-visible")}
           data-cours-tableau
         >
-          <table className={cn("w-full border-collapse text-[15px]", empile && "max-sm:block")}>
+          <table className={cn("w-full border-collapse text-base", empile && "max-sm:block")}>
             <thead className={cn(empile && "max-sm:hidden")}>
               <tr className="bg-secondary/60">
                 {bloc.entetes.map((e, i) => (
-                  <th key={i} className="whitespace-nowrap px-3 py-2 text-left font-semibold"><Texte texte={e} /></th>
+                  <th key={i} className={cn("py-2 text-left text-sm font-semibold leading-[18px]", courtes[i] ? "w-px px-2 first:pl-3 last:pr-3" : "px-3")}>
+                    {/* Tête de plusieurs mots d'une colonne courte : deux lignes au plus, pas une par mot (au téléphone, la place va au texte). */}
+                    {courtes[i] && /\s/.test(brut(e).trim()) ? <span className="block sm:min-w-24"><Texte texte={e.replace(/\(([^)]*)\)/g, (m) => m.replace(/ /g, "\u00A0"))} /></span> : <Texte texte={e} />}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -68,14 +91,17 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
                     <td
                       key={j}
                       className={cn(
-                        "px-3 py-2 align-top",
+                        "py-2 align-top text-base leading-[21px]",
+                        courtes[j] ? (empile ? "px-2 sm:first:pl-3 sm:last:pr-3" : "px-2 first:pl-3 last:pr-3") : "px-3",
+                        SEULEMENT_ALTERATIONS.test(brut(c).trim()) && "text-lg leading-[23px]",
+                        courtes[j] && (empile ? "sm:w-px sm:whitespace-nowrap" : "w-px whitespace-nowrap"),
                         empile && (j === 0
-                          ? "max-sm:block max-sm:px-0 max-sm:pt-0 max-sm:pb-1 max-sm:text-[17px] max-sm:font-semibold"
-                          : "max-sm:grid max-sm:grid-cols-[6.5rem_1fr] max-sm:gap-2 max-sm:px-0 max-sm:py-0.5"),
+                          ? "max-sm:block max-sm:px-0 max-sm:pt-0 max-sm:pb-1 max-sm:text-lg max-sm:font-semibold"
+                          : "max-sm:block max-sm:px-0 max-sm:py-1"),
                       )}
                     >
                       {empile && j > 0 && (
-                        <span className="text-[13px] leading-6 text-muted-foreground sm:hidden"><Texte texte={bloc.entetes[j] ?? ""} /></span>
+                        <span className="block text-sm leading-[18px] text-muted-foreground sm:hidden"><Texte texte={bloc.entetes[j] ?? ""} /></span>
                       )}
                       <span><Texte texte={c} /></span>
                     </td>
@@ -89,7 +115,7 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
     }
     case "code":
       return (
-        <pre className="overflow-x-auto rounded-xl bg-secondary/60 px-3 py-2.5 font-chord text-[15px] leading-relaxed" data-cours-grille>
+        <pre className="overflow-x-auto rounded-xl bg-secondary/60 px-3 py-2.5 font-chord text-base leading-relaxed" data-cours-grille>
           {bloc.texte}
         </pre>
       );
@@ -104,7 +130,7 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
       return (
         <figure className="space-y-2" data-cours-schema={bloc.nom}>
           {Schema && <Schema />}
-          <figcaption className="text-[13px] text-muted-foreground">{t(`harmonie.cours.schema.${bloc.nom}`)}</figcaption>
+          <figcaption className="text-sm text-muted-foreground">{t(`harmonie.cours.schema.${bloc.nom}`)}</figcaption>
         </figure>
       );
     }
@@ -113,7 +139,7 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
 
 export function LecteurCours({ blocs, schemas = {} }: { blocs: BlocCours[]; schemas?: Record<string, React.ComponentType> }) {
   return (
-    <div className="space-y-3 text-[17px] leading-relaxed">
+    <div className="space-y-3 text-lg leading-relaxed" lang="fr">
       {blocs.map((b, i) => <Bloc key={i} bloc={b} schemas={schemas} />)}
     </div>
   );

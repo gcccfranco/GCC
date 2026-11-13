@@ -23,7 +23,7 @@ export interface EtatEquipe {
 }
 
 const bouton =
-  "rounded-full px-3 py-1.5 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "rounded-full px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function VoletEquipe({ equipe }: { equipe: EtatEquipe }) {
   const { t } = useTranslation();

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, MessageSquareHeart, Star } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import { getMySurveyResponse, saveSurveyResponse } from "@/lib/firebase/survey";
@@ -18,8 +18,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { Halo } from "@/components/layout/Halo";
 import { useDisposition } from "@/hooks/useDisposition";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
+import { Impasse } from "@/components/layout/Impasse";
+import { Squelette } from "@/components/layout/Squelette";
+import { compter } from "@/lib/usage";
 
 function isAnswered(a: SurveyAnswer | undefined): boolean {
   if (a === undefined) return false;
@@ -32,28 +35,32 @@ function QuestionField({
   q,
   value,
   onChange,
+  manquante,
 }: {
   q: SurveyQuestion;
   value: SurveyAnswer | undefined;
   onChange: (value: SurveyAnswer) => void;
+  /** « Suivant » a été refusé et cette question obligatoire attend sa réponse. */
+  manquante?: boolean;
 }) {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-2.5 py-3.5">
-      <p className="text-[15px] font-semibold text-foreground leading-snug">
+    <div id={`question-${q.id}`} className="scroll-mt-32 space-y-2.5 py-3.5">
+      <p className="text-base font-semibold text-foreground leading-snug">
         {t(`survey.q.${q.id}.label`)}
         {q.required ? (
           <span className="text-destructive"> *</span>
         ) : (
-          <span className="text-muted-foreground/70 font-normal"> {t("survey.optional")}</span>
+          <span className="text-muted-foreground font-normal"> {t("survey.optional")}</span>
         )}
         {q.type === "multi" && (
-          <span className="text-muted-foreground/70 font-normal">
+          <span className="text-muted-foreground font-normal">
             {" · "}
             {t("survey.multiHint")}
           </span>
         )}
+        {manquante && <span className="block text-sm font-semibold text-destructive">{t("survey.attendue")}</span>}
       </p>
 
       {q.type === "rating" && (
@@ -67,7 +74,7 @@ function QuestionField({
                   type="button"
                   onClick={() => onChange(n)}
                   aria-label={`${n}/${RATING_MAX}`}
-                  className="h-10 w-10 rounded-lg border border-transparent bg-secondary flex items-center justify-center transition-colors hover:border-muted-foreground/50"
+                  className={`${TOUCHER_44} h-10 w-10 rounded-lg border border-transparent bg-secondary flex items-center justify-center transition-colors hover:border-muted-foreground/50`}
                 >
                   <Star
                     className={`h-[18px] w-[18px] ${
@@ -78,7 +85,7 @@ function QuestionField({
               );
             })}
           </div>
-          <div className="flex justify-between text-[11px] text-muted-foreground max-w-[224px]">
+          <div className="flex justify-between text-xs text-muted-foreground max-w-[224px]">
             <span>{t(`survey.q.${q.id}.low`)}</span>
             <span>{t(`survey.q.${q.id}.high`)}</span>
           </div>
@@ -109,7 +116,7 @@ function QuestionField({
                   );
                 }}
                 aria-pressed={checked}
-                className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[14px] font-semibold transition-colors duration-150 ${
+                className={`${TOUCHER_PILULE} inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors duration-150 ${
                   checked
                     ? "bg-foreground text-background"
                     : "bg-card text-foreground/80 ring-1 ring-inset ring-border hover:text-foreground"
@@ -144,6 +151,7 @@ export default function QuestionnairePage() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [manquantes, setManquantes] = useState<string[]>([]);
   // "done" = questionnaire envoyé et non rouvert pour modification
   const [done, setDone] = useState(false);
   // Une réponse partielle a été reprise (enregistrement automatique à chaque étape)
@@ -179,27 +187,22 @@ export default function QuestionnairePage() {
   // A15 (agencement v18 ; planche `v18-app-questionnaire`) : en grand, la lecture (R14) — les étapes
   // en sommaire à gauche (260 px), les questions de l'étape à 720 px ; ailleurs, la progression d'avant.
   const disposition = useDisposition();
+  // La barre du haut se cache au défilement vers le bas (téléphone) : la bande d'étape monte alors en haut de l'écran.
+  const barreVisible = useScrollDirection();
   const grand = disposition === "grand";
 
   if (loading || (user && loadingAnswers)) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4 text-center">
-        <MessageSquareHeart className="h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">{t("survey.loginRequired")}</p>
-        <Link
-          href="/login?from=/questionnaire"
-          className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground"
-        >
-          {t("common.header.login")}
-        </Link>
+      <div className="min-h-screen bg-background">
+        <Impasse
+          icone={MessageSquareHeart}
+          titre={t("survey.loginRequired")}
+          sortie={{ href: "/login?from=/questionnaire", label: t("mesServices.login") }}
+        />
       </div>
     );
   }
@@ -222,6 +225,7 @@ export default function QuestionnairePage() {
   function goTo(next: number) {
     setStep(next);
     setError("");
+    setManquantes([]);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -229,12 +233,16 @@ export default function QuestionnairePage() {
     const missing = questions.filter((q) => q.required && !isAnswered(answers[q.id]));
     if (missing.length > 0) {
       setError(t("survey.errorRequired"));
+      setManquantes(missing.map((q) => q.id));
+      // La page défile jusqu'à la première question obligatoire sans réponse.
+      document.getElementById(`question-${missing[0].id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     setSaving(true);
     try {
       await persist(isLast);
       if (isLast) {
+        compter("cmd.questionnaire.envoyer");
         setDone(true);
         setResumed(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -248,7 +256,7 @@ export default function QuestionnairePage() {
     }
   }
 
-  const entete = <EnTetePage retour={{ href: "/moi", label: t("moi.title") }} titre={t("survey.title")} sousTitre={t("survey.sousTitre")} />;
+  const entete = <EnTetePage fond="blanc" retour={{ href: "/moi", label: t("moi.title") }} titre={t("survey.title")} sousTitre={t("survey.sousTitre")} />;
   const lecture = (sommaire: ReactNode, colonne: ReactNode) => (
     <div
       className={
@@ -265,12 +273,11 @@ export default function QuestionnairePage() {
   if (done) {
     return (
       <div className="relative min-h-screen pb-10">
-        <Halo variant="moi" color="hsl(var(--foreground))" />
         <div className="relative">
           {entete}
           {lecture(
             grand && <div aria-hidden />,
-            <div className="raised flex flex-col items-center gap-3 rounded-2xl p-8 text-center">
+            <div className="bloc-info flex flex-col items-center gap-3 rounded-2xl p-8 text-center">
               <CheckCircle2 className="h-10 w-10 text-green-500" />
               <h2 className="text-lg font-bold text-foreground">{t("survey.thanksTitle")}</h2>
               <p className="text-sm text-muted-foreground">{t("survey.thanksBody")}</p>
@@ -291,13 +298,14 @@ export default function QuestionnairePage() {
     );
   }
 
-  const progress = steps.length > 1 ? (step / (steps.length - 1)) * 100 : 100;
+  // La bande dit « Étape 1 / 3 » : la barre en montre déjà un tiers (critique).
+  const progress = steps.length > 0 ? ((step + 1) / steps.length) * 100 : 100;
   const etapeSur = t("survey.stepOf", { step: step + 1, total: steps.length });
 
   // En grand : les étapes, l'étape en cours en encre (on y avance par « Suivant », comme avant).
   const sommaire = grand ? (
     <nav aria-label={t("survey.etapes")} className="sticky top-[calc(var(--nav-h)+24px)] self-start">
-      <p className="px-2.5 pb-2 pt-1 text-[13px] font-semibold text-muted-foreground">{etapeSur}</p>
+      <p className="px-2.5 pb-2 pt-1 text-sm font-semibold text-muted-foreground">{etapeSur}</p>
       <ol className="flex flex-col gap-0.5">
         {steps.map((s, i) => {
           const courante = i === step;
@@ -305,7 +313,7 @@ export default function QuestionnairePage() {
             <li
               key={s.id}
               aria-current={courante ? "step" : undefined}
-              className={`flex items-center gap-3 rounded-[10px] px-2.5 py-2 text-[14.5px] ${courante ? "bg-foreground font-semibold text-background" : "text-foreground/80"}`}
+              className={`flex items-center gap-3 rounded-[10px] px-2.5 py-2 text-base ${courante ? "bg-foreground font-semibold text-background" : "text-foreground/80"}`}
             >
               <span
                 aria-hidden
@@ -318,27 +326,30 @@ export default function QuestionnairePage() {
           );
         })}
       </ol>
-      <p className="px-2.5 pt-3.5 text-[13px] leading-[19px] text-muted-foreground">
+      <p className="px-2.5 pt-3.5 text-sm leading-[19px] text-muted-foreground">
         {t("survey.sautees")} {t("survey.autosave")}
       </p>
     </nav>
   ) : (
-    /* Ailleurs : la progression d'avant. */
-    <div className="space-y-1.5">
-      <div className="flex items-baseline justify-between gap-2">
-        <p className="text-sm font-semibold text-muted-foreground">{t(`survey.steps.${current.id}`)}</p>
-        <span className="text-[11px] text-muted-foreground shrink-0 tabular-nums">{etapeSur}</span>
+    /* Ailleurs (compte-15) : une bande collante de 44 px sous la barre du haut, la barre de 3 px sur son bord bas. */
+    <div
+      data-testid="bande-etape"
+      className="material-bar sticky z-20 max-md:-mx-[var(--marge-page)] !shadow-none transition-[top] duration-300 motion-reduce:transition-none"
+      style={{ top: barreVisible ? "var(--nav-h)" : "var(--sat, 0px)" }}
+    >
+      <div className="flex h-[41px] items-center justify-between gap-2 max-md:px-[var(--marge-page)]">
+        <p className="min-w-0 truncate text-sm font-semibold text-foreground">{t(`survey.steps.${current.id}`)}</p>
+        <span className="shrink-0 text-sm font-semibold tabular-nums text-muted-foreground">{etapeSur}</span>
       </div>
-      <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-        <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${progress}%` }} />
+      <div className="h-[3px] bg-secondary">
+        <div className="h-full bg-primary transition-[width] duration-300 [transition-timing-function:cubic-bezier(.32,.72,0,1)] motion-reduce:transition-none" style={{ width: `${progress}%` }} />
       </div>
-      <p className="text-xs text-muted-foreground">{t("survey.sautees")}</p>
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-full h-3 bg-gradient-to-b from-background/80 to-transparent" />
     </div>
   );
 
   return (
     <div className="relative min-h-screen pb-10">
-      <Halo variant="moi" color="hsl(var(--foreground))" />
       <div className="relative">
         {entete}
         {lecture(
@@ -350,6 +361,8 @@ export default function QuestionnairePage() {
               </Alert>
             )}
 
+            {!grand && <p className="text-sm text-muted-foreground">{t("survey.sautees")}</p>}
+
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -357,17 +370,18 @@ export default function QuestionnairePage() {
             )}
 
             {/* Une carte par étape, un bloc par section : moins de scroll qu'une carte par question. */}
-            <section data-testid="questions" aria-label={t(`survey.steps.${current.id}`)} className="raised rounded-2xl px-5 pb-4 pt-5 md:px-6">
+            <section data-testid="questions" aria-label={t(`survey.steps.${current.id}`)} className="pb-4 pt-5">
               {groups.map((group, i) => (
                 <div key={group.id} className={i > 0 ? "mt-4 border-t border-border pt-5" : ""}>
-                  <h2 className="text-[19px] font-bold leading-tight text-foreground">{t(`survey.s.${group.id}.title`)}</h2>
-                  <p className="mt-0.5 text-[14px] text-muted-foreground">{t(`survey.s.${group.id}.hint`)}</p>
+                  <h2 className="text-lg font-bold leading-tight text-foreground">{t(`survey.s.${group.id}.title`)}</h2>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{t(`survey.s.${group.id}.hint`)}</p>
                   <div className="mt-2 divide-y divide-border border-t border-border">
                     {group.questions.map((q) => (
                       <QuestionField
                         key={q.id}
                         q={q}
                         value={answers[q.id]}
+                        manquante={manquantes.includes(q.id) && !isAnswered(answers[q.id])}
                         onChange={(value) => setAnswers((prev) => ({ ...prev, [q.id]: value }))}
                       />
                     ))}
@@ -375,20 +389,32 @@ export default function QuestionnairePage() {
                 </div>
               ))}
 
-              <div className="mt-1 flex flex-wrap items-center gap-3 border-t border-border pt-4">
-                <span className="min-w-0 flex-1 text-[13px] text-muted-foreground">{t("survey.identityNotice", { name: authorName })}</span>
-                <div className="flex gap-2">
+              {error && (
+                <Alert variant="destructive" className="mt-3">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className={grand ? "mt-1 flex flex-wrap items-center gap-3 border-t border-border pt-4" : "mt-1 space-y-3 border-t border-border pt-4"}>
+                <span className={grand ? "min-w-0 flex-1 text-sm text-muted-foreground" : "block text-sm text-muted-foreground"}>{t("survey.identityNotice", { name: authorName })}</span>
+                <div className={grand ? "flex gap-2" : "grid grid-cols-2 gap-2"}>
+                  {(grand || step > 0) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => goTo(step - 1)}
+                      disabled={step === 0 || saving}
+                      className={grand ? "h-10 rounded-full" : "h-11 rounded-full"}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-1.5" />
+                      {t("survey.previous")}
+                    </Button>
+                  )}
                   <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => goTo(step - 1)}
-                    disabled={step === 0 || saving}
-                    className="h-10 rounded-full"
+                    onClick={handleNext}
+                    disabled={saving}
+                    className={grand ? "h-10 rounded-full" : `h-11 rounded-full ${step === 0 ? "col-span-2" : ""}`}
                   >
-                    <ArrowLeft className="h-4 w-4 mr-1.5" />
-                    {t("survey.previous")}
-                  </Button>
-                  <Button onClick={handleNext} disabled={saving} className="h-10 rounded-full">
                     {saving
                       ? t("survey.submitting")
                       : isLast

@@ -9,6 +9,7 @@
 // ouvre en page (`?vue=ordre`). Les paramètres d'adresse (`?vue=`, `?annee=`) remplacent
 // l'adresse sans entrée d'historique. Rien ne s'écrit ici : ouvrir l'onglet ne crée rien (Q6).
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -35,6 +36,8 @@ import { Entrainements } from "./Entrainements"
 import { OrdrePassage } from "./OrdrePassage"
 import { OrdreAvecChants } from "./OrdreAvecChants"
 import { joursDeLaSemaine, jourEnLettres } from "./libelles"
+import { styleTexteService } from "@/lib/couleurSombre"
+import { Squelette } from "@/components/layout/Squelette";
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -46,7 +49,7 @@ const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 export function FeteClient({ fete }: { fete: Fete }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
-  const langue = lang === "zh-CN" ? "zh" : "fr"
+  const langue = langueCourte(lang)
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
@@ -90,7 +93,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
     )
   }
   if (profileLoading || !programmes || !user) {
-    return <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("common.loading")}</p>
+    return <Squelette enTete={false} />
   }
 
   const today = todayIso()
@@ -136,8 +139,8 @@ export function FeteClient({ fete }: { fete: Fete }) {
 
   const enTeteEdition = (
     <div>
-      <h2 className="text-[22px] leading-tight font-bold tracking-tight text-foreground">{titre}</h2>
-      <p className="mt-1 text-[13.5px] text-muted-foreground">
+      <h2 className="text-xl leading-tight font-bold tracking-tight text-foreground">{titre}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
         {t("planning.programmes.jourJLabel", { date: dateDuJour(jourJ) })}
         {(etat === "bientot" || etat === "ouvertes") && jours.length > 0 && <> · {t("planning.fete.jusquau", { date: jourEnLettres(jours.at(-1)!, lang) })}</>}
       </p>
@@ -161,8 +164,8 @@ export function FeteClient({ fete }: { fete: Fete }) {
     if (etat === "fermees") return <CarteInfo titre={t("planning.fete.fermees")} texte={t("planning.fete.fermeesDetail")} />
     if (etat === "passee") {
       return (
-        <section className="raised rounded-2xl p-4 space-y-1.5" aria-labelledby="scene-passee-titre">
-          <h3 id="scene-passee-titre" className="text-[15px] font-bold" style={{ color: COLOR }}>{t("planning.scene.passed", { nom: titre })}</h3>
+        <section className="carte-groupe rounded-2xl p-4 space-y-1.5" aria-labelledby="scene-passee-titre">
+          <h3 id="scene-passee-titre" className="text-base font-bold texte-service" style={styleTexteService(COLOR)}>{t("planning.scene.passed", { nom: titre })}</h3>
           <p className="text-sm text-muted-foreground">{t("planning.scene.passedHint")}</p>
         </section>
       )
@@ -172,7 +175,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
 
   const anneesPassees = avantOuverture && passees.length > 0 && (
     <section aria-labelledby="scene-annees-passees" className="space-y-1">
-      <h3 id="scene-annees-passees" className="px-1 text-[13px] font-semibold text-muted-foreground">{t("planning.fete.anneesPassees")}</h3>
+      <h3 id="scene-annees-passees" className="px-1 text-sm font-semibold text-muted-foreground">{t("planning.fete.anneesPassees")}</h3>
       <div className="space-y-1">
         {passees.map((p) => {
           const choisie = p.id === passeeChoisie?.id
@@ -185,8 +188,8 @@ export function FeteClient({ fete }: { fete: Fete }) {
               className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${choisie ? "bg-foreground text-background" : "hover:bg-secondary"}`}
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-semibold">{libelleEdition(fete, anneeDe(p)!, langue)}</span>
-                <span className={`block text-[13px] ${choisie ? "opacity-75" : "text-muted-foreground"}`}>{jourEnLettres(p.jourJ, lang)} · {numeros(p)}</span>
+                <span className="block text-base font-semibold">{libelleEdition(fete, anneeDe(p)!, langue)}</span>
+                <span className={`block text-sm ${choisie ? "opacity-75" : "text-muted-foreground"}`}>{jourEnLettres(p.jourJ, lang)} · {numeros(p)}</span>
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
             </button>
@@ -206,12 +209,12 @@ export function FeteClient({ fete }: { fete: Fete }) {
       onClick={() => changer({ vue: "ordre", annee: null })}
       className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors ${deuxVolets && vueOrdre ? "bg-secondary" : "hover:bg-secondary"}`}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ background: `color-mix(in srgb, ${COLOR} 12%, transparent)`, color: COLOR }}>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg texte-service" style={{ background: `color-mix(in srgb, ${COLOR} 12%, transparent)`, ...styleTexteService(COLOR) }}>
         <ListOrdered className="h-[18px] w-[18px]" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold">{t("planning.fete.ordreEntree")}</span>
-        <span className="block text-[13px] text-muted-foreground">{jourEnLettres(jourJ, lang)} · {programme!.passages.length ? t("planning.fete.passagesEtChants", { count: programme!.passages.length }) : t("planning.fete.aucunNumero")}</span>
+        <span className="block text-base font-semibold">{t("planning.fete.ordreEntree")}</span>
+        <span className="block text-sm text-muted-foreground [text-wrap:pretty]">{jourEnLettres(jourJ, lang)} · {programme!.passages.length ? t("planning.fete.passagesEtChants", { count: programme!.passages.length }) : t("planning.fete.aucunNumero")}</span>
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
     </button>
@@ -229,10 +232,10 @@ export function FeteClient({ fete }: { fete: Fete }) {
   const ordreDe = (p: Programme, sousTitre: string, courante = false) => {
     const entete = (
       <div>
-        <h2 id={`ordre-${p.id}`} className="text-[22px] leading-tight font-bold tracking-tight text-foreground">
+        <h2 id={`ordre-${p.id}`} className="text-xl leading-tight font-bold tracking-tight text-foreground">
           {t("planning.fete.ordreTitre", { edition: libelleEdition(fete, anneeDe(p)!, langue) })}
         </h2>
-        <p className="mt-1 text-[13.5px] text-muted-foreground">{sousTitre}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{sousTitre}</p>
       </div>
     )
     return (
@@ -248,11 +251,11 @@ export function FeteClient({ fete }: { fete: Fete }) {
   }
   const ordreCourant = programme && ordreDe(programme, majuscule(fdFullL(jourJ, lang)), true)
   const commentReserver = (
-    <div className="raised rounded-2xl flex items-start gap-3 p-4">
+    <div className="carte-groupe rounded-2xl flex items-start gap-3 p-4">
       <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-foreground" aria-hidden />
       <div>
-        <p className="text-[15px] font-semibold">{t("planning.fete.commentReserver")}</p>
-        <p className="text-[13.5px] text-muted-foreground">
+        <p className="text-base font-semibold">{t("planning.fete.commentReserver")}</p>
+        <p className="text-sm text-muted-foreground">
           {t("planning.fete.commentReserverTexte", { duree: t(`planning.saison.dureeCourte.${saison.duree}`) })}
         </p>
       </div>
@@ -279,34 +282,38 @@ export function FeteClient({ fete }: { fete: Fete }) {
         {carteEtat}
         {enPlus}
         {anneesPassees}
-        {deuxVolets && entreeOrdre && <div className="border-t border-border pt-3">{entreeOrdre}</div>}
       </div>
     )
 
+    // Pied de la carte de la liste : l'ordre de passage reste entier au bas, la colonne défile au-dessus. Au-dessus du
+    // voile `.fondu-vertical::after` (z-index 1) de DeuxVolets, qui sinon estomperait le bas du bouton ; le pied porte donc
+    // son propre fondu de 24 px au-dessus du filet (critique : la liste semblait tranchée net).
+    const pied = entreeOrdre && <div className="sticky bottom-0 z-[2] border-t border-border bg-card px-5 py-0.5 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-[linear-gradient(to_top,hsl(var(--raised)),hsl(var(--raised)/0))] before:content-['']">{entreeOrdre}</div>
+
     if (deuxVolets) {
       return (
-        <DeuxVolets racine={pathname} liste={colonne} premier={aDroite} largeurListe={400}>
+        <DeuxVolets racine={pathname} liste={<>{colonne}{pied}</>} premier={aDroite} largeurListe={400}>
           {null}
         </DeuxVolets>
       )
     }
 
-    // Une colonne : l'ordre de passage en page, ou la colonne puis ce qui se lit dessous (l'ordre
+    // Une colonne, plafonnée à `--colonne-liste` (720 px) et alignée à gauche (evenements-app-3, L1) : l'ordre de passage en page, ou la colonne puis ce qui se lit dessous (l'ordre
     // de l'année passée choisie, la semaine choisie, l'ordre de l'édition), et l'entrée de l'ordre
     // de passage en carte tout en bas (planche `v18-scene-a-membres-telephone`).
     if (vueOrdre) {
       return (
-        <div className="space-y-3 px-[var(--marge-page)]">
+        <div data-colonne-plafonnee="" className="space-y-3 px-[var(--marge-page)] max-w-[calc(var(--colonne-liste)+2*var(--marge-page))]">
           <Retour href={pathname}>{titre}</Retour>
           {ordreCourant}
         </div>
       )
     }
     return (
-      <div className="space-y-5 px-[var(--marge-page)]">
+      <div data-colonne-plafonnee="" className="space-y-5 px-[var(--marge-page)] max-w-[calc(var(--colonne-liste)+2*var(--marge-page))]">
         {colonne}
         {aDroite}
-        {entreeOrdre && <div className="raised rounded-2xl p-1">{entreeOrdre}</div>}
+        {entreeOrdre && <div className="carte-groupe rounded-2xl p-1">{entreeOrdre}</div>}
       </div>
     )
   }
@@ -329,13 +336,13 @@ export function FeteClient({ fete }: { fete: Fete }) {
 /** Une carte d'annonce de la colonne (planche : icône de calendrier, titre, texte). */
 function CarteInfo({ titre, texte }: { titre: string; texte?: string }) {
   return (
-    <div className="raised rounded-2xl flex items-start gap-3 p-4">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${COLOR} 12%, transparent)`, color: COLOR }}>
+    <div className="carte-groupe rounded-2xl flex items-start gap-3 p-4">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl texte-service" style={{ background: `color-mix(in srgb, ${COLOR} 12%, transparent)`, ...styleTexteService(COLOR) }}>
         <CalendarClock className="h-5 w-5" aria-hidden />
       </span>
       <div className="min-w-0">
-        <p className="text-[16px] leading-snug font-bold text-foreground">{titre}</p>
-        {texte && <p className="mt-1 text-[13.5px] text-muted-foreground">{texte}</p>}
+        <p className="text-base leading-snug font-bold text-foreground">{titre}</p>
+        {texte && <p className="mt-1 text-sm text-muted-foreground">{texte}</p>}
       </div>
     </div>
   )

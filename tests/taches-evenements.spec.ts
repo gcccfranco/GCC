@@ -97,10 +97,10 @@ async function autrePage(browser: Browser): Promise<Page> {
 
 const carte = (page: Page) => page.getByTestId("taches-carte");
 
-/** Back-Office › Tâches (agencement v18, T1) : la ligne ouvre la fiche, « Modifier » le formulaire,
- *  dans le volet en grand, en feuille sur un volet. */
+/** Back-Office › page de l'équipe, section « Tâches » (piste A, BO7) : la ligne ouvre la fiche, « Modifier » le
+ *  formulaire, dans la page en grand, en feuille sur un volet. */
 async function modifier(page: Page, ligne: RegExp) {
-  await page.locator('[data-volet="liste"]').getByRole("button", { name: ligne }).click();
+  await page.getByRole("region", { name: "Tâches", exact: true }).getByRole("button", { name: ligne }).click();
   await expect(page).toHaveURL(/\/back-office\/taches\/da\/t\d/);
   await page.getByRole("button", { name: "Modifier", exact: true }).click();
   return page.getByRole(estGrandEcran(test.info()) ? "form" : "dialog", { name: "Modifier la tâche" });
@@ -110,7 +110,7 @@ test("une tâche sans champ evenement se lit non liée", async ({ page }) => {
   // Document d'avant le lot 14 : aucun champ `evenement`, aucune migration.
   const { evenement, ...avant } = tacheDoc({ titre: "Fond PPT" });
   void evenement;
-  const db = await signInAs(page, RUTH_DA, { "equipes/da/taches/t1": avant }, "/back-office/taches/da");
+  const db = await signInAs(page, RUTH_DA, { "equipes/da/taches/t1": avant }, "/back-office/equipes/da");
   await expect(page.locator(".group-row", { hasText: "Fond PPT" })).toBeVisible();
   await expect(page.getByText(/^pour /)).toHaveCount(0);
   const form = await modifier(page, /^Fond PPT/);
@@ -153,6 +153,14 @@ test("fiche : sans tâche, le bloc le dit ; une info sans date n'a pas de bloc",
   await expect(carte(page)).toHaveCount(0);
 });
 
+test("fiche : une réunion sans tâche dit « Aucune tâche pour cette réunion. » (bo-reunions-taches-8)", async ({ page }) => {
+  await member(page, RUTH_DA, "/evenements/reunion", {
+    "evenements/reunion": { ...NOEL, titre: "Réunion DA", type: "info", pour: "equipe:da", date: "2026-10-10", heure: "20:00" },
+  });
+  await expect(carte(page)).toContainText("Aucune tâche pour cette réunion.");
+  await expect(carte(page)).not.toContainText("évènement");
+});
+
 test("fiche : une réunion d'équipe a aussi son bloc Tâches", async ({ page }) => {
   await member(page, RUTH_DA, "/evenements/reunion", {
     "evenements/reunion": { ...NOEL, titre: "Réunion DA", type: "info", pour: "equipe:da", date: "2026-10-10", heure: "20:00" },
@@ -191,11 +199,14 @@ test("fiche : Nouvelle tâche crée une tâche liée dans l'équipe choisie, à 
   await expect(form).toContainText("Noël 2026");
   await expect(form.getByLabel("Répétition")).toHaveCount(0);
   await expect(form.getByLabel("Échéance")).toHaveValue("");
-  await form.getByLabel("Équipe").selectOption({ label: "Médias" });
+  // Lot CD, T3c (bo-reunions-taches-12) : l'équipe se choisit dans un menu.
+  await form.getByRole("button", { name: /^Équipe : / }).click();
+  await page.getByRole("menuitemradio", { name: "Médias", exact: true }).click();
+  await expect(form.getByRole("button", { name: "Équipe : Médias" })).toBeVisible();
   await form.getByLabel("Titre").fill("Diaporama des enfants");
   await form.getByLabel("Échéance").fill("2026-12-17");
   await capture(page, "evenement-tache-nouvelle");
-  await form.getByRole("button", { name: "Enregistrer" }).click();
+  await form.getByRole("button", { name: "Créer la tâche" }).click();
   await expect(form).toHaveCount(0);
   const cree = db.writes.filter((w) => w.method === "POST" && w.path.startsWith("equipes/"));
   expect(cree).toHaveLength(1);
@@ -215,7 +226,7 @@ test("fiche : avec une seule équipe, le formulaire ne demande pas l'équipe", a
   await expect(form.getByLabel("Équipe")).toHaveCount(0);
   await form.getByLabel("Titre").fill("Carte de vœux");
   await form.getByLabel("Échéance").fill("2026-12-01");
-  await form.getByRole("button", { name: "Enregistrer" }).click();
+  await form.getByRole("button", { name: "Créer la tâche" }).click();
   await expect(form).toHaveCount(0);
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/"));
   expect(cree?.path).toMatch(/^equipes\/da\/taches\//);
@@ -248,7 +259,7 @@ test("fiche : cocher depuis la fiche cycle À faire → En cours → Terminé et
 });
 
 test("ligne : une tâche liée dit “pour Noël 2026” sur la page de l'équipe et dans Mes tâches", async ({ page }) => {
-  await signInAs(page, RUTH_DA, DOCS, "/back-office/taches/da");
+  await signInAs(page, RUTH_DA, DOCS, "/back-office/equipes/da");
   const liee = page.locator(".group-row", { hasText: "Fond PPT de Noël" });
   await expect(liee).toContainText("pour Noël 2026");
   await expect(page.locator(".group-row", { hasText: "Vidéo d'annonce" })).not.toContainText("pour ");
@@ -257,7 +268,7 @@ test("ligne : une tâche liée dit “pour Noël 2026” sur la page de l'équip
 });
 
 test("formulaire : Détacher écrit evenement: null ; une tâche liée ne propose pas de répétition", async ({ page }) => {
-  const db = await signInAs(page, RUTH_DA, DOCS, "/back-office/taches/da");
+  const db = await signInAs(page, RUTH_DA, DOCS, "/back-office/equipes/da");
   const form = await modifier(page, /^Fond PPT de Noël/);
   await expect(form).toContainText("Noël 2026");
   await expect(form.getByLabel("Répétition")).toHaveCount(0);
@@ -271,8 +282,8 @@ test("formulaire : Détacher écrit evenement: null ; une tâche liée ne propos
   const ecrit = db.writes.find((w) => w.method === "PATCH" && w.path === "equipes/da/taches/t1");
   expect(ecrit?.data).toHaveProperty("evenement", null);
   expect(db.doc("equipes/da/taches/t1")?.evenement).toBeNull();
-  // Sur un volet, la fiche est une page : la ligne se relit sur la liste.
-  await page.goto("/back-office/taches/da");
+  // La fiche est une page : la ligne se relit sur la page de l'équipe.
+  await page.goto("/back-office/equipes/da");
   await expect(page.locator(".group-row", { hasText: "Fond PPT de Noël" })).not.toContainText("pour Noël 2026");
 });
 
@@ -288,7 +299,7 @@ test("évènement supprimé : la tâche reste, avec le titre mémorisé", async 
   // Rien n'est écrit chez les tâches : ni suppression, ni détachement.
   expect(db.writes.filter((w) => w.path.startsWith("equipes/"))).toEqual([]);
   expect(db.doc("equipes/da/taches/t1")?.evenement).toEqual(LIE_A_NOEL);
-  await page.goto("/back-office/taches/da");
+  await page.goto("/back-office/equipes/da");
   await expect(page.locator(".group-row", { hasText: "Fond PPT de Noël" })).toContainText("pour Noël 2026");
 });
 
@@ -305,7 +316,7 @@ test("中文 : bloc, ligne et confirmation en chinois", async ({ page }) => {
   await expect(carte(page)).toContainText("此活动还没有任务。");
 
   // La ligne, sur la page de l'équipe.
-  await page.goto("/back-office/taches/da");
+  await page.goto("/back-office/equipes/da");
   await expect(page.locator(".group-row", { hasText: "Fond PPT de Noël" })).toContainText("用于 Noël 2026");
 
   // Dupliquer Noël : la question est posée en chinois, avec le nombre de tâches.

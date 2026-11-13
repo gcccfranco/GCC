@@ -43,18 +43,15 @@ const compte = (page: Page) => page.getByRole("region", { name: "Mon compte" });
 const reglages = (page: Page) => page.getByRole("region", { name: "Réglages" });
 
 test.describe("Moi (Q9)", () => {
-  test("la carte du compte : nom, e-mail, rôle, nom dans les plannings, services et rôles, « Mon profil »", async ({ page }) => {
+  test("la carte du compte : nom, e-mail, rôle, nom dans les plannings, « Mon profil » ; plus de services et rôles déclarés", async ({ page }) => {
     await ouvrir(page, ADMIN, "/moi");
     const c = compte(page);
     await expect(c.getByRole("heading", { name: "Noé T." })).toBeVisible();
     await expect(c.getByText("Admin", { exact: true })).toBeVisible();
     await expect(c.getByText("Ton nom dans les plannings")).toBeVisible();
     await expect(c.getByText("Noé T.", { exact: true }).last()).toBeVisible();
-    await expect(c.getByTestId("service-role")).toHaveText([
-      "Culte Franco · Musicien",
-      "Campus · Présidence, Musicien",
-      "Groupe Fidélité · Musicien",
-    ]);
+    // Lot AO (AO-B) : au Back-Office, « Mes équipes » (acces-moi.spec.ts) remplace les services et rôles déclarés.
+    await expect(c.getByTestId("service-role")).toHaveCount(0);
     await expect(c.getByRole("link", { name: "Mon profil" })).toHaveAttribute("href", /^\/profil\/?$/);
     await capture(page, "b5-moi");
   });
@@ -64,7 +61,7 @@ test.describe("Moi (Q9)", () => {
     await expect(compte(page).getByRole("heading", { name: "Léa M." })).toBeVisible();
     await expect(compte(page).getByText("lea@example.com"), "l'e-mail du compte").toBeVisible();
     await expect(compte(page).getByText("Admin", { exact: true })).toHaveCount(0);
-    await expect(compte(page).getByTestId("service-role")).toHaveText(["Culte Franco · Choriste"]);
+    await expect(compte(page).getByTestId("service-role")).toHaveCount(0);
   });
 
   // Agencement v18, A12 : les colonnes de Q9 deviennent le compte et les réglages à gauche, les aperçus
@@ -85,13 +82,49 @@ test.describe("Moi (Q9)", () => {
       expect(r.x, "les réglages à droite du compte").toBeGreaterThan(c.x + c.width - 1);
       expect(Math.abs(r.y - c.y)).toBeLessThan(2);
       expect(services.y, "les aperçus dessous").toBeGreaterThan(c.y + c.height - 1);
-      expect(deconnexion.x, "la déconnexion à droite").toBeGreaterThan(c.x + c.width - 1);
+      // BO-G, 12 : « Déconnexion » sous le compte (plus de grand vide sous « Mon profil »), les réglages à sa droite.
+      expect(deconnexion.y, "la déconnexion sous le compte").toBeGreaterThan(c.y + c.height - 1);
+      expect(deconnexion.x, "dans la colonne du compte").toBeLessThan(r.x);
     } else {
       expect(services.y, "une colonne : les aperçus sous le compte").toBeGreaterThan(c.y + c.height - 1);
       expect(r.y, "puis les réglages").toBeGreaterThan(services.y);
       expect(deconnexion.y, "la déconnexion en dernier").toBeGreaterThan(r.y + r.height - 1);
     }
+    // quotidien-3 : deux piles seulement au-delà de 720 px de conteneur (1 440 px, tablette portrait), une colonne ailleurs.
+    const pileGauche = await boite(page.getByRole("region", { name: "Mes services", exact: true }));
+    const tache = page.getByRole("region", { name: /Mes tâches|Mes équipes|Ce que tu peux faire/ }).first();
+    await expect(tache, "pile de droite (back-office ouvert)").toBeVisible();
+    {
+      const droite = await boite(tache);
+      if (info.project.name === "ordinateur-1440" || d === "tablette") {
+        expect(droite.x, "la pile de droite à droite de celle de gauche").toBeGreaterThan(pileGauche.x + pileGauche.width - 1);
+        expect(Math.abs(droite.y - pileGauche.y), "hauts alignés").toBeLessThan(40);
+      } else if (d === "grand") {
+        expect(Math.abs(droite.x - pileGauche.x), "une colonne").toBeLessThan(2);
+      }
+    }
+    // quotidien-4 : aucune ligne d'aperçu coupée par « … » (une colonne de 592 px à 1 280 px).
+    expect(await page.evaluate(() => [...document.querySelectorAll("section.raised .truncate")].filter(e => e.scrollWidth > e.clientWidth + 1).length), "lignes d'aperçu coupées").toBe(0);
+    if (d === "grand") {
+      expect(await compte(page).evaluate((el) => getComputedStyle(el.parentElement!).position), "compte collant en grand").toBe("sticky");
+    }
     expect(await sansDefilementHorizontal(page), "pas de défilement horizontal").toBe(true);
+  });
+
+  test("compte-6 : notifications refusées, un bandeau d'alerte avec l'état puis trois étapes numérotées (13 px au moins)", async ({ page }) => {
+    await page.addInitScript(() => {
+      const enregistrement = { pushManager: { getSubscription: async () => null } };
+      Object.defineProperty(ServiceWorkerContainer.prototype, "ready", { configurable: true, get: () => Promise.resolve(enregistrement) });
+      Object.defineProperty(Notification, "permission", { configurable: true, get: () => "denied" });
+      Object.defineProperty(Navigator.prototype, "standalone", { configurable: true, get: () => true });
+    });
+    await ouvrir(page, MEMBRE, "/profil");
+    const bandeau = page.getByRole("status").filter({ hasText: "Notifications bloquées dans ce navigateur" });
+    await expect(bandeau).toBeVisible();
+    await expect(bandeau.getByRole("listitem")).toHaveCount(3);
+    await expect(bandeau.getByRole("listitem").first()).toHaveText("Ouvre l'icône à gauche de l'adresse.");
+    expect(await bandeau.locator("li").first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(13);
+    expect(await bandeau.evaluate((el) => getComputedStyle(el).color)).not.toBe("rgb(224, 86, 10)");
   });
 
   test("Réglages = Notifications · Langue · Thème ; « Notifications » ouvre ses réglages", async ({ page }, info) => {
@@ -149,7 +182,8 @@ test.describe("Profil (Q10, revu par A13)", () => {
   test("disposition : deux colonnes dès la tablette portrait (identité · services), « Enregistrer » dans l'en-tête ; une sur téléphone, « Enregistrer » en bas", async ({ page }, info) => {
     await ouvrir(page, ADMIN, "/profil");
     const identite = await boite(page.getByRole("group", { name: "Identité" }));
-    const services = await boite(page.getByRole("group", { name: "Tes services et rôles" }));
+    // Lot AO (AO-F) : plus de services et rôles à déclarer ; à leur place, « Mes équipes » (lecture seule).
+    const services = await boite(page.getByRole("region", { name: "Mes équipes" }));
     if (disposition(info) === "telephone") {
       const enregistrer = await boite(page.locator("form").getByRole("button", { name: "Enregistrer mon profil" }));
       expect(services.y, "les services sous l'identité").toBeGreaterThan(identite.y + identite.height - 1);
@@ -202,7 +236,7 @@ test.describe("Connexion et inscription (Q13)", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Créer un compte" })).toBeVisible();
     const marque = page.getByTestId("panneau-marque");
     const etapes = marque.getByTestId("etape");
-    await expect(etapes).toHaveText(["1Compte", "2Identité", "3Services"]);
+    await expect(etapes).toHaveText(["1Compte", "2Identité", "3Planning"]);
     await expect(etapes.nth(0)).toHaveAttribute("aria-current", "step");
     await page.getByLabel(/^Email/).fill("nouveau@example.com");
     await page.getByLabel(/^Mot de passe/).fill("secret1");

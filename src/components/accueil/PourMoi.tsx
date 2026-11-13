@@ -9,13 +9,14 @@
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
 import { ChevronRight, ListMusic, Play } from "lucide-react"
-import type { FSSetlist } from "@/lib/firebase/setlists"
+import type { FSSetlist } from "@/types/setList"
 import type { SongIndexEntry } from "@/types/song"
 import type { ServiceDuJour } from "@/lib/planning/accueil"
 import { joursAvant } from "@/lib/planning/accueil"
 import { cleDuService } from "@/lib/planning/mesServices"
 import { serviceColor } from "@/lib/serviceColors"
 import { serviceButtonFill } from "@/lib/serviceButton"
+import { compter } from "@/lib/usage"
 import { Tile } from "@/components/ui/tile"
 import { KeyPill } from "@/components/ui/key-pill"
 
@@ -72,7 +73,7 @@ export function PourMoi({
           const titre = fusion ? it.fusionSongs!.map((f) => songs[f.songSlug]?.title ?? f.songSlug).join(" / ") : (song?.title ?? it.songSlug)
           const tonalite = it.keyOverride ?? song?.originalKey
           return (
-            <li key={it.position} className="flex min-h-9 items-center gap-2.5 border-t border-border/70 py-1 text-[15px]">
+            <li key={it.position} className="flex min-h-9 items-center gap-2.5 border-t border-border/70 py-1 text-base">
               <span className="w-3.5 shrink-0 text-xs font-bold tabular-nums text-muted-foreground">{i + 1}</span>
               <span className="min-w-0 flex-1 truncate font-semibold">{titre}</span>
               {!fusion && tonalite && <KeyPill tonalite={tonalite} langue={song?.language === "zh" ? "zh" : "fr"} />}
@@ -81,12 +82,13 @@ export function PourMoi({
         })}
       </ol>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Link href={`/setlists/${setlist.id}`} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+        <Link href={`/setlists/${setlist.id}`} onClick={() => compter("cmd.accueil.pourMoi")} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
           <ListMusic className="h-4 w-4" aria-hidden />
           {t("planning.accueil.ouvrir")}
         </Link>
         <Link
           href={`/setlists/${setlist.id}?louange=1`}
+          onClick={() => compter("cmd.accueil.pourMoi")}
           className="inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-transform duration-150 active:scale-[.97]"
           style={{ background: serviceButtonFill(couleur) }}
         >
@@ -102,8 +104,8 @@ export function PourMoi({
     return (
       <section aria-labelledby="pour-moi">
         <h2 id="pour-moi" className="sr-only">{t("planning.accueil.pourMoi")}</h2>
-        <article data-carte className="raised rounded-2xl p-4">
-          <Link href="/mes-services" className="flex items-center gap-3">
+        <article data-carte className="carte-groupe rounded-2xl p-4">
+          <Link href="/mes-services" onClick={() => compter("cmd.accueil.pourMoi")} className="flex items-center gap-3">
             {tuile}
             <span className="min-w-0 flex-1">
               <span className="block text-xs font-semibold text-muted-foreground">{t("planning.nextService")}</span>
@@ -130,10 +132,10 @@ export function PourMoi({
 
   return (
     <section aria-labelledby="pour-moi" className="min-w-0">
-      <h2 id="pour-moi" className="mb-3 text-[17px] font-bold">{t("planning.accueil.pourMoi")}</h2>
+      <h2 id="pour-moi" className="mb-3 text-lg font-bold">{t("planning.accueil.pourMoi")}</h2>
       <div className={disposition === "tablette" ? "grid grid-cols-2 items-stretch gap-3.5" : "flex flex-col gap-3.5"}>
-        <article data-carte className="raised flex flex-col rounded-2xl p-4">
-          <p className="mb-2.5 text-[13px] font-semibold text-muted-foreground">{t("planning.nextService")}</p>
+        <article data-carte className="carte-groupe flex flex-col rounded-2xl p-4">
+          <p className="mb-2.5 text-sm font-semibold text-muted-foreground">{t("planning.nextService")}</p>
           <div className="flex items-center gap-3.5">
             {tuile}
             <div className="min-w-0">
@@ -141,12 +143,12 @@ export function PourMoi({
               {prochain.map((s) => (
                 <p key={cleDuService(s)} className="text-sm"><ServiceRoles s={s} /></p>
               ))}
-              <p className="text-[13px] text-muted-foreground">{quand}</p>
+              <p className="text-sm text-muted-foreground">{quand}</p>
             </div>
           </div>
           {ensuite.length > 0 && (
             <>
-              <p className="mt-3 text-[13px] text-muted-foreground">{t("planning.accueil.ensuite")}</p>
+              <p className="mt-3 text-sm text-muted-foreground">{t("planning.accueil.ensuite")}</p>
               <ul>
                 {ensuite.map((s) => (
                   <li key={cleDuService(s)} data-testid="ensuite" className="flex gap-3 border-t border-border/70 py-1.5 text-sm">
@@ -157,16 +159,16 @@ export function PourMoi({
               </ul>
             </>
           )}
-          <Link href="/mes-services" className="mt-auto inline-flex items-center gap-1 pt-2.5 text-[13px] font-semibold">
+          <Link href="/mes-services" onClick={() => compter("cmd.accueil.pourMoi")} className="mt-auto inline-flex items-center gap-1 pt-2.5 text-sm font-semibold">
             {t("mesServices.title")}
             <ChevronRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
         </article>
         {setlist && (
-          <article data-carte className="raised rounded-2xl p-4">
-            <p className="text-[13px] font-semibold text-muted-foreground">{t("planning.accueil.setlistDuService")}</p>
+          <article data-carte className="carte-groupe rounded-2xl p-4">
+            <p className="text-sm font-semibold text-muted-foreground">{t("planning.accueil.setlistDuService")}</p>
             <p className="text-base font-bold">{setlist.title}</p>
-            {presidence && <p className="text-[13px] text-muted-foreground">{presidence}</p>}
+            {presidence && <p className="text-sm text-muted-foreground">{presidence}</p>}
             {chants}
           </article>
         )}

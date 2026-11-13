@@ -48,19 +48,19 @@ test.describe("BO Planning, piste A", () => {
   test("l'agencement commun ; le titre « Planning », le planning et ses cases vides en sous-titre, « Exporter » dans l'en-tête", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/planning/culte");
     await expect(page.locator('[data-grille="culte"]')).toBeVisible();
-    // La grille pleine zone ; les sous-parties, l'année et le trimestre en rail, les plannings en pilules.
-    await verifierAgencement(page, { premierBloc: barre(page), contenu: page.locator('[data-grille="culte"]'), onglets: { rail: 3, pilules: 1 } });
+    // La grille pleine zone ; l'année et le trimestre en rail (plus de rail de sous-parties, BO7), les plannings en pilules.
+    await verifierAgencement(page, { premierBloc: barre(page), contenu: page.locator('[data-grille="culte"]'), onglets: { rail: 2, pilules: 1 } });
     await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
     const sousTitre = enTete(page).locator("p").first();
     await expect(sousTitre).toContainText("Culte Franco");
     await expect(sousTitre).toContainText("Dimanche 10:30");
     await expect(sousTitre).toContainText(/\d+ cases? vides? ce trimestre/);
     await expect(enTete(page).getByRole("button", { name: /Exporter/ })).toBeVisible();
-    // Le rail des sous-parties (admins) dans l'en-tête.
-    await expect(enTete(page).locator('[data-onglets="rail"]').getByRole("link")).toHaveText(["Plannings", "Sans compte"]);
+    // Piste A (BO7) : « Sans compte » est passé dans Équipes › Personnes ; plus de rail de sous-parties dans l'en-tête.
+    await expect(enTete(page).locator('[data-onglets="rail"]')).toHaveCount(0);
   });
 
-  test("deux rangées de commandes : le rail, puis les plannings en pilules, la période et « Mes dates »", async ({ page }, info) => {
+  test("une rangée de commandes sous l'en-tête : les plannings en pilules, la période et « Mes dates »", async ({ page }, info) => {
     await ouvrir(page, ADMIN, "/back-office/planning/culte");
     const plannings = barre(page).getByRole("navigation", { name: "Plannings" });
     await expect(plannings).toHaveAttribute("data-onglets", "pilules");
@@ -77,10 +77,14 @@ test.describe("BO Planning, piste A", () => {
     await expect(page.locator('[data-grille="culte"]').getByRole("button", { name: /Exporter/ })).toHaveCount(0);
 
     if (estGrandEcran(info)) {
-      // Plannings et période sur la même rangée, sous le rail ; la grille juste dessous.
-      expect(Math.abs((await milieuY(plannings)) - (await milieuY(periode)))).toBeLessThan(12);
-      const rail = enTete(page).locator('[data-onglets="rail"]');
-      expect(await milieuY(rail)).toBeLessThan(await milieuY(plannings));
+      // bo-messages-planning-2 : les plannings sur leur propre ligne, la période dessous ; les sept liens sont dans le cadre de la barre.
+      expect(await milieuY(plannings)).toBeLessThan(await milieuY(periode));
+      const cadre = (await barre(page).boundingBox())!;
+      for (const lien of await plannings.getByRole("link").all()) {
+        const r = (await lien.boundingBox())!;
+        expect(r.x + r.width, "lien dans le cadre de la barre").toBeLessThanOrEqual(cadre.x + cadre.width);
+      }
+      expect(await milieuY(enTete(page).getByRole("heading", { level: 1 }))).toBeLessThan(await milieuY(plannings));
       const finBarre = (await barre(page).boundingBox())!;
       const grille = (await page.getByTestId("grille-defilement").boundingBox())!;
       expect(grille.y - (finBarre.y + finBarre.height), "rien entre la rangée et la grille").toBeLessThan(32);
@@ -103,10 +107,21 @@ test.describe("BO Planning, piste A", () => {
     expect(await page.getByTestId("halo").evaluate((el) => (el as HTMLElement).style.getPropertyValue("--halo"))).toBe(PLANNING_COLORS.culte);
   });
 
-  test("Sans compte : même en-tête, sans rangée de grille", async ({ page }) => {
-    await ouvrir(page, ADMIN, "/back-office/planning/sans-compte");
+  // BO-G, 16 devenu BO7 : « Sans compte » a quitté le Planning, le rail Plannings | Sans compte n'existe plus, sur aucun appareil.
+  test("plus de rail de sous-parties dans l'en-tête, même pour un admin (BO7)", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/back-office/planning/culte");
     await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
-    await expect(enTete(page).locator('[data-onglets="rail"]').getByRole("link", { name: "Sans compte" })).toHaveAttribute("aria-current", "page");
+    await expect(enTete(page).locator('[data-onglets="rail"]')).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "Sous-parties" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Sans compte", exact: true })).toHaveCount(0);
+  });
+
+  test("Sans compte : l'adresse redirige vers la sous-page Équipes › Personnes › Noms du planning sans compte, sans rangée de grille", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/back-office/planning/sans-compte");
+    // Piste A (BO7) : plus d'en-tête « Planning » ni d'onglet actif ; sous-page de Personnes, en-tête « Équipes ».
+    await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
+    await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Équipes");
+    await expect(page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte \(\d+\)$/ })).toBeVisible();
     await expect(page.getByTestId("barre-grille")).toHaveCount(0);
   });
 
@@ -131,8 +146,8 @@ const CHAQUE_PLANNING: { cle: string; onglet: string; service: string; sousTitre
   { cle: "groupes", onglet: "Groupes", service: "Groupes", sousTitreBO: /^Paix · .*\d+ cases? vides? ce trimestre$/ },
   { cle: "edd", onglet: "EDD", service: "EDD — École du Dimanche", sousTitreBO: /^EDD — École du Dimanche · .*\d+ cases? vides? sur la période$/ },
   { cle: "campus", onglet: "Campus", service: "Campus", sousTitreBO: /^Campus · \d+ cases? vides? cette année$/ },
-  { cle: "intergroupe", onglet: "Intergroupe", service: "Intergroupe", sousTitreBO: /^Intergroupe · \d+ cases? vides? cette année$/ },
-  { cle: "interfranco", onglet: "Interfranco", service: "Interfranco", sousTitreBO: /^Interfranco · \d+ cases? vides? cette année$/ },
+  { cle: "intergroupe", onglet: "Intergroupe", service: "Intergroupe", sousTitreBO: /^\d+ cases? vides? cette année$/ },
+  { cle: "interfranco", onglet: "Interfranco", service: "Interfranco", sousTitreBO: /^\d+ cases? vides? cette année$/ },
 ];
 
 test.describe("Relecture : chaque planning a l'en-tête « Planning » et sa rangée", () => {
@@ -251,6 +266,14 @@ test.describe("App Planning : le titre « Planning », le service en h2", () => 
       const ligne = page.locator('[data-date-cell="2026-11-15"], [data-date-carte="2026-11-15"]').filter({ visible: true });
       await expect(ligne).toContainText("15/11");
       await expect(ligne).toContainText("Cette semaine");
+      // bo-messages-planning-10 : au toucher, le « ⋯ » est sur la ligne de la date et la ligne reste basse.
+      const menu = ligne.getByRole("button", { name: "Plus d'actions" });
+      if ((await ligne.getAttribute("data-date-cell")) !== null && await menu.count()) {
+        const m = (await menu.boundingBox())!;
+        const d = (await ligne.boundingBox())!;
+        expect(Math.abs(m.y + m.height / 2 - (d.y + 24)), "« ⋯ » sur la ligne de la date").toBeLessThan(6);
+        expect(d.height, "ligne basse").toBeLessThanOrEqual(70);
+      }
     });
   }
 
@@ -350,6 +373,34 @@ test.describe("T4b — Planning, accueil (A1)", () => {
       // « Pour moi » à droite de « Ce dimanche ».
       expect((await boite(pourMoi)).x).toBeGreaterThan((await boite(ceDimanche(page))).x + 100);
     }
+  });
+
+  // quotidien-11 : EDD sur deux étages comme Groupes, les deux cartes de la rangée à la même hauteur.
+  test("Groupes et EDD de même hauteur de rangée", async ({ page }, info) => {
+    test.skip(info.project.name === "telephone", "téléphone : pile");
+    await ouvrirAccueilOuTable(page, "/planning");
+    await expect(carteDeLaTable(page)).toContainText("Famille Test");
+    await expect(ceDimanche(page).getByTestId("ligne-edd")).toHaveCount(3);
+    const [g, e] = [await boite(carteDesGroupes(page)), await boite(carteEdd(page))];
+    expect(Math.abs(g.y - e.y), "Groupes et EDD sur la même rangée").toBeLessThan(2);
+    expect(Math.abs(g.height - e.height), "Groupes et EDD").toBeLessThan(2);
+    // Deux étages : la classe, puis « Présidence … » ou « — » dessous (et non à côté).
+    for (const ligne of await ceDimanche(page).getByTestId("ligne-edd").all()) {
+      const [classe, detail] = [await boite(ligne.locator("b").first()), await boite(ligne.locator("p").first())];
+      expect(detail.y, "second étage sous la classe").toBeGreaterThanOrEqual(classe.y + classe.height - 1);
+      expect(Math.abs(detail.x - classe.x), "étages alignés à gauche").toBeLessThan(1);
+    }
+  });
+
+  // quotidien-10 : onglets de section de la tablette portrait, 44 px, actif noir.
+  test("tablette portrait : onglets du Planning de 44 px, l'actif en noir", async ({ page }, info) => {
+    test.skip(info.project.name !== "tablette", "tablette portrait");
+    await ouvrirAccueilOuTable(page, "/planning");
+    const onglet = page.getByTestId("onglets-section").getByRole("link", { name: "Accueil" });
+    await expect(onglet).toHaveAttribute("aria-current", "page");
+    expect((await boite(onglet)).height, "44 px").toBeGreaterThanOrEqual(43.5);
+    const encre = await page.locator("body").evaluate((el) => getComputedStyle(el).color);
+    expect(await fond(onglet), "actif noir (bg-foreground)").toBe(encre);
   });
 
   test("barre dépliée : la Table sous Groupes et EDD, sur une ligne", async ({ page }, info) => {
@@ -470,11 +521,11 @@ test.describe("T4b — Prépa. Table (A4)", () => {
     await expect(table.getByText("Famille Y.", { exact: true })).toBeVisible();
     await expect(table.getByText("Famille X.", { exact: true })).toBeVisible();
     await expect(table.getByText("Famille Z.", { exact: true }), "le 27/09 est au T3").toHaveCount(0);
-    // Planche v18-app-planning-table-a : une tuile de date et « Dimanche de sainte cène » par équipe ;
+    // Planche v18-app-planning-table-a : une tuile de date par équipe, aucune mention de la sainte cène (01/11/2026) ;
     // la mention « un dimanche par mois » est retirée (retouches v18, D15).
     await expect(table.getByText("un dimanche par mois")).toHaveCount(0);
     await expect(table.locator('[data-dimanche="2026-10-04"]').getByTestId("tuile")).toContainText("4");
-    await expect(table.getByText("Dimanche de sainte cène")).toHaveCount(3);
+    await expect(table.getByText(/sainte c[eè]ne/i)).toHaveCount(0);
     await barre(page).getByRole("tablist", { name: "Trimestre" }).getByRole("tab", { name: /^T3/ }).click();
     await expect(table.getByText("Famille Z.", { exact: true })).toBeVisible();
     await expect(table.getByText("Famille Test", { exact: true })).toHaveCount(0);
@@ -608,4 +659,236 @@ test("captures T4b : accueil et Prépa. Table", async ({ page }, info) => {
   await page.getByRole("menuitem", { name: "Modifier" }).click();
   await expect(carteTonPetitDej(page).getByRole("textbox", { name: "Modifier" })).toBeFocused();
   await capture("app-table-ton-petit-dej-modifier");
+});
+
+// ─── Corrections du design, T1g Plannings (docs/spec-corrections-design/plannings.md) ─────────────
+
+const fondu = (l: Locator, nom: "--fondu-gauche" | "--fondu-droite") => l.evaluate((el, n) => (el as HTMLElement).style.getPropertyValue(n), nom);
+/** Le centre horizontal d'un bloc. */
+const milieuX = async (l: Locator) => {
+  const b = (await l.boundingBox())!;
+  return b.x + b.width / 2;
+};
+
+test.describe("plannings-1 : le bord de la grille parle", () => {
+  test("Culte : tient entier à l'ordinateur et en paysage ; défile en portrait, fondu à droite seulement, sans rond au doigt", async ({ page }, info) => {
+    test.skip(estTelephone(info), "au téléphone, une carte par date (pas de tableau)");
+    await ouvrir(page, MEMBRE, "/planning/culte");
+    const defilement = page.getByTestId("grille-defilement");
+    await expect(page.locator('[data-case="2026-11-15|presidence"]').filter({ visible: true })).toContainText("Président J.");
+    const mesure = () => defilement.evaluate((el) => ({ trop: el.scrollWidth - el.clientWidth }));
+    if (estGrandEcran(info)) {
+      expect((await mesure()).trop, "le tableau tient sans défiler").toBeLessThanOrEqual(0);
+      expect(await fondu(defilement, "--fondu-droite")).toBe("0px");
+      await expect(page.getByRole("button", { name: "Voir les colonnes suivantes" })).toHaveCount(0);
+    } else {
+      // Tablette portrait : le tableau défile, fondu de 24 px à droite, pas de rond (pointeur grossier).
+      expect((await mesure()).trop).toBeGreaterThan(0);
+      await expect.poll(() => fondu(defilement, "--fondu-droite")).toBe("24px");
+      expect(await fondu(defilement, "--fondu-gauche")).toBe("0px");
+      await expect(page.getByRole("button", { name: "Voir les colonnes suivantes" })).toHaveCount(0);
+      await defilement.evaluate((el) => { el.scrollLeft = el.scrollWidth; });
+      await expect(defilement).toHaveAttribute("data-defile", "true");
+      await expect.poll(() => fondu(defilement, "--fondu-droite")).toBe("0px");
+      expect(await fondu(defilement, "--fondu-gauche"), "jamais de fondu à gauche (colonne Date collante)").toBe("0px");
+      // Le filet de 1 px sur le bord droit de la colonne Date.
+      expect(await page.locator('[data-date-cell="2026-11-15"]').evaluate((el) => getComputedStyle(el).boxShadow)).toContain("1px 0px 0px 0px");
+    }
+  });
+
+  test("ordinateur, fenêtre étroite : le rond « › » défile d'un cran, « ‹ » revient, les deux de 28 px dessinés", async ({ page }, info) => {
+    test.skip(info.project.name !== "ordinateur", "pointeur fin : l'ordinateur");
+    await page.setViewportSize({ width: 1024, height: 800 });
+    await ouvrir(page, MEMBRE, "/planning/culte");
+    const defilement = page.getByTestId("grille-defilement");
+    await expect(page.locator('[data-case="2026-11-15|presidence"]').filter({ visible: true })).toContainText("Président J.");
+    const suivant = page.getByRole("button", { name: "Voir les colonnes suivantes" });
+    await expect(suivant).toBeVisible();
+    const b = (await suivant.boundingBox())!;
+    expect(Math.round(b.width), "28 px dessinés").toBe(28);
+    await expect(page.getByRole("button", { name: "Voir les colonnes précédentes" })).toHaveCount(0);
+    await suivant.click();
+    await expect.poll(() => defilement.evaluate((el) => el.scrollLeft)).toBeGreaterThan(40);
+    const precedent = page.getByRole("button", { name: "Voir les colonnes précédentes" });
+    await expect(precedent).toBeVisible();
+    expect(await fondu(defilement, "--fondu-gauche"), "pas de fondu à gauche").toBe("0px");
+    await precedent.click();
+    await expect.poll(() => defilement.evaluate((el) => el.scrollLeft)).toBeLessThan(2);
+    await expect(precedent).toHaveCount(0);
+  });
+
+  test("sans date : ni tableau ni en-têtes, « Planning à venir » centré", async ({ page }, info) => {
+    await ouvrir(page, MEMBRE, "/planning/interfranco");
+    await expect(barre(page).getByRole("heading", { level: 2 })).toHaveText("Interfranco");
+    const bloc = page.getByText("Planning à venir", { exact: true }).filter({ visible: true });
+    await expect(bloc).toBeVisible();
+    await expect(page.getByTestId("grille-colonnes")).toHaveCount(0);
+    await expect(page.locator("table")).toHaveCount(0);
+    const zone = (await barre(page).boundingBox())!;
+    expect(Math.abs((await milieuX(bloc)) - (zone.x + zone.width / 2)), `centré (${info.project.name})`).toBeLessThanOrEqual(20);
+    // Le texte lui-même, au centre de sa carte (±2 px).
+    const ecart = await bloc.evaluate((el) => {
+      const r = document.createRange();
+      r.selectNodeContents(el);
+      const texte = r.getBoundingClientRect();
+      const carte = el.parentElement!.getBoundingClientRect();
+      return Math.abs(texte.x + texte.width / 2 - (carte.x + carte.width / 2));
+    });
+    expect(ecart, "texte centré dans sa carte").toBeLessThanOrEqual(2);
+  });
+
+  test("« Cette semaine » : pastille de 6 px quand la grille tient (conteneur ≥ 960 px), badge texte sinon", async ({ page }, info) => {
+    test.skip(estTelephone(info), "au téléphone, une carte par date");
+    await ouvrir(page, MEMBRE, "/planning/culte");
+    const cellule = page.locator('[data-date-cell="2026-11-15"]').filter({ visible: true });
+    await expect(cellule).toContainText("15/11");
+    const largeur = await page.getByTestId("grille-defilement").evaluate((el) => el.parentElement!.getBoundingClientRect().width);
+    const pastille = cellule.locator("span[aria-hidden].rounded-full");
+    const badge = cellule.locator("span.inline-block", { hasText: "Cette semaine" });
+    if (largeur >= 960) {
+      await expect(pastille).toBeVisible();
+      const b = (await pastille.boundingBox())!;
+      expect(Math.round(b.width), "pastille de 6 px").toBe(6);
+      await expect(badge).toBeHidden();
+    } else {
+      await expect(badge).toBeVisible();
+      await expect(pastille).toBeHidden();
+    }
+  });
+
+  test("un nom plus long que la case se coupe et garde son nom complet au survol", async ({ page }, info) => {
+    test.skip(estTelephone(info), "au téléphone, une carte par date");
+    const long = "Prénom-Composé Nom-Très-Long-De-Famille";
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE.replace("Président J.", long) : "" });
+    });
+    interdireDialoguesNatifs(page);
+    await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"));
+    await signInAs(page, MEMBRE, {}, "/planning/culte");
+    const nom = page.locator('[data-case="2026-11-15|presidence"]').filter({ visible: true }).locator("span[title]").first();
+    await expect(nom).toHaveAttribute("title", long);
+    expect(await nom.evaluate((el) => el.scrollWidth > el.clientWidth), "coupé par des points de suspension").toBe(true);
+  });
+});
+
+test.describe("plannings-2 : le rail serré ramène l'actif en vue", () => {
+  test("EDD, période Nov–Déc : la pastille active est entière dans le rail, fondu à gauche seulement ; un autre choix la ramène en vue", async ({ page }, info) => {
+    await ouvrir(page, MEMBRE, "/planning/edd");
+    const piste = barre(page).getByRole("tablist", { name: "Période" });
+    // T3a : la piste (le tablist) est dans un défilant transparent, qui porte le fondu et borne la vue (`useFonduLateral`).
+    const rail = piste.locator("xpath=..");
+    await expect(piste.getByRole("tab")).toHaveCount(6);
+    const actif = piste.getByRole("tab", { selected: true });
+    const dedans = async (a: Locator) => {
+      const [r, t] = [(await rail.boundingBox())!, (await a.boundingBox())!];
+      return t.x >= r.x - 0.5 && t.x + t.width <= r.x + r.width + 0.5;
+    };
+    if (estTelephone(info)) {
+      await expect(actif).toContainText("Nov");
+      await expect.poll(() => dedans(actif)).toBe(true);
+      expect(await fondu(rail, "--fondu-gauche")).toBe("24px");
+      expect(await fondu(rail, "--fondu-droite")).toBe("0px");
+      await piste.getByRole("tab").first().click();
+      const premier = piste.getByRole("tab", { selected: true });
+      await expect.poll(() => dedans(premier)).toBe(true);
+      await expect.poll(() => fondu(rail, "--fondu-droite")).toBe("24px");
+      expect(await fondu(rail, "--fondu-gauche")).toBe("0px");
+    } else {
+      // Les six périodes tiennent : ni fondu ni défilement.
+      expect(await rail.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+      expect(await fondu(rail, "--fondu-gauche")).toBe("0px");
+      expect(await fondu(rail, "--fondu-droite")).toBe("0px");
+    }
+  });
+});
+
+/** Campus fictif : 27/7 soir seul, 28 à 30/7 matin et soir, 31/7 matin seul. */
+const CAMPUS_FICTIF = csv([
+  ["DATE", "MOMENT", "PRESIDENT", "CHORISTE", "CHORISTE", "PIANO", "GUITARE", "BATTERIE", "SONO", "PPT", "CHANT 1", "CHANT 2", "CHANT 3", "CHANT 4", "REPETITION"],
+  ...[["27", "Soir"], ["28", "Matin"], ["28", "Soir"], ["29", "Matin"], ["29", "Soir"], ["30", "Matin"], ["30", "Soir"], ["31", "Matin"]].map(([j, m]) =>
+    [`${j}/07/2026`, m, "Président X.", "Choriste Y.", "", "Pianiste Z.", "", "", "", "", "", "", "", "", ""]),
+]);
+
+test.describe("plannings-3 : Campus en colonnes de journal", () => {
+  test("à partir de lg, la deuxième carte est sous la première, à 16 px ; sous lg une seule colonne", async ({ page }) => {
+    interdireDialoguesNatifs(page);
+    await page.clock.setFixedTime(new Date("2026-06-01T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Campus_Louange" ? CAMPUS_FICTIF : "" });
+    });
+    await signInAs(page, MEMBRE, {}, "/planning/campus");
+    const cartes = page.getByTestId("campus-cartes").locator("> div");
+    await expect(cartes).toHaveCount(5);
+    const [a, b, c] = [await boite(cartes.nth(0)), await boite(cartes.nth(1)), await boite(cartes.nth(4))];
+    if (page.viewportSize()!.width >= 1024) {
+      expect(Math.abs(b.x - a.x), "même colonne").toBeLessThan(2);
+      expect(Math.abs(b.y - (a.y + a.height + 16)), "16 px sous la première").toBeLessThanOrEqual(2);
+      expect(c.x, "la fin dans la colonne de droite").toBeGreaterThan(a.x + a.width - 1);
+    } else {
+      expect(Math.abs(b.x - a.x)).toBeLessThan(2);
+      expect(Math.abs(c.x - a.x)).toBeLessThan(2);
+      expect(c.y).toBeGreaterThan(b.y);
+    }
+  });
+});
+
+test.describe("plannings-4 : Groupes prend la couleur du groupe ouvert", () => {
+  const couleurTexte = (l: Locator) => l.evaluate((el) => getComputedStyle(el).color);
+  test("Fidélité : l'adresse porte le groupe, l'onglet ou le menu prend sa couleur", async ({ page }, info) => {
+    await ouvrir(page, MEMBRE, "/planning/groupes");
+    const groupes = barre(page).getByRole("tablist", { name: "Groupes" });
+    await groupes.getByRole("tab", { name: "Fidélité" }).click();
+    await expect(page).toHaveURL(/\/planning\/groupes\/?\?groupe=fidelite$/);
+    await expect(groupes.getByRole("tab", { name: "Fidélité" })).toHaveAttribute("aria-selected", "true");
+    if (estGrandEcran(info)) {
+      await expect.poll(() => fond(enTete(page).getByRole("navigation", { name: "Plannings" }).getByRole("link", { name: "Groupes" }))).toBe(rgb(PLANNING_COLORS.fidelite));
+    } else if (estTelephone(info)) {
+      await expect.poll(() => couleurTexte(page.getByTestId("menu-plannings"))).toBe(rgb(PLANNING_COLORS.fidelite));
+    }
+    await groupes.getByRole("tab", { name: "Bonté" }).click();
+    await expect(page).toHaveURL(/groupe=bonte$/);
+    if (estGrandEcran(info)) {
+      await expect.poll(() => fond(enTete(page).getByRole("navigation", { name: "Plannings" }).getByRole("link", { name: "Groupes" }))).toBe(rgb(PLANNING_COLORS.bonte));
+    }
+  });
+
+  test("le lien ?groupe=fidelite s'ouvre sur Fidélité ; un membre sans groupe arrive sur Paix", async ({ page }) => {
+    await ouvrir(page, MEMBRE, "/planning/groupes?groupe=fidelite");
+    await expect(barre(page).getByRole("tab", { name: "Fidélité" })).toHaveAttribute("aria-selected", "true");
+    await page.goto("/planning/groupes");
+    await expect(barre(page).getByRole("tab", { name: "Paix" }), "un membre sans groupe : Paix").toHaveAttribute("aria-selected", "true");
+  });
+
+  test("téléphone, thème sombre : le menu des plannings en couleur de Fidélité garde un contraste ≥ 4,5", async ({ page }, info) => {
+    test.skip(!estTelephone(info), "le menu des plannings : au téléphone");
+    await page.emulateMedia({ colorScheme: "dark" });
+    await ouvrir(page, MEMBRE, "/planning/groupes?groupe=fidelite");
+    const menu = page.getByTestId("menu-plannings");
+    await expect(menu).toBeVisible();
+    const ratio = await menu.evaluate((el) => {
+      const lire = (c: string) => (c.match(/[\d.]+/g) ?? []).slice(0, 4).map(Number);
+      const fondDe = (e: Element | null): number[] => {
+        for (; e; e = e.parentElement) {
+          const v = lire(getComputedStyle(e).backgroundColor);
+          if (v.length === 3 || v[3] > 0.9) return v.slice(0, 3);
+        }
+        return lire(getComputedStyle(document.body).backgroundColor).slice(0, 3);
+      };
+      const lum = ([r, g, b]: number[]) => {
+        const f = (x: number) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
+        return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+      };
+      const [a, b] = [lum(lire(getComputedStyle(el).color).slice(0, 3)), lum(fondDe(el))];
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    });
+    expect(ratio).toBeGreaterThanOrEqual(4.5);
+  });
+
+  test("un membre dont le groupe est Bonté arrive sur Bonté", async ({ page }) => {
+    await ouvrir(page, { ...MEMBRE, uid: "uid-bonte", email: "bonte@example.com", groupe: "bonte" }, "/planning/groupes");
+    await expect(barre(page).getByRole("tab", { name: "Bonté" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator('[data-grille="bonte"]')).toBeVisible();
+  });
 });

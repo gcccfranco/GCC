@@ -110,20 +110,20 @@ export function DialogueDeplacer({
     <AlertDialog open onOpenChange={(o) => !o && !enCours && onFermer()}>
       <AlertDialogContent className="max-w-md gap-5 rounded-3xl max-sm:w-[calc(100%-32px)] max-sm:rounded-3xl">
         <AlertDialogHeader className="text-left sm:text-left">
-          <AlertDialogTitle className="text-[17px] leading-snug">{titre}</AlertDialogTitle>
+          <AlertDialogTitle className="text-lg leading-snug">{titre}</AlertDialogTitle>
           {/* Le titre porte déjà la phrase ; la description, ce qui l'accompagne. */}
-          <AlertDialogDescription asChild className="flex flex-col gap-3 text-[15px] text-foreground">
+          <AlertDialogDescription asChild className="flex flex-col gap-3 text-base text-foreground">
             <div>
               {avecChamp && (
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-[13px] font-semibold text-muted-foreground">{t("calendrier.deplacer.nouvelleDate")}</span>
+                  <span className="text-sm font-semibold text-muted-foreground">{t("calendrier.deplacer.nouvelleDate")}</span>
                   <input
                     type="date"
                     min={aujourdhui}
                     max="9999-12-31"
                     value={date}
                     onChange={(e) => { setDate(e.target.value); setErreur(false); }}
-                    className="h-11 rounded-xl border border-border bg-background px-3 text-[15px] text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                    className="h-11 rounded-xl border border-border bg-background px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
                   />
                 </label>
               )}
@@ -143,17 +143,17 @@ export function DialogueDeplacer({
                       ? t("calendrier.deplacer.prevenirMembres")
                       : t("calendrier.deplacer.prevenirInscrits", { count: plan.prevenir.inscrits })}
                   </label>
-                  <p className="ml-[28px] mt-0.5 text-[13px] text-muted-foreground">{t("calendrier.deplacer.rappel")}</p>
+                  <p className="ml-[28px] mt-0.5 text-sm text-muted-foreground">{t("calendrier.deplacer.rappel")}</p>
                 </div>
               )}
               {plan?.type === "evenement" && plan.tachesLiees.length > 0 && (
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   {t("calendrier.deplacer.tachesLiees", { liste: plan.tachesLiees.join(", ") })}
                 </p>
               )}
               {plan?.type === "creneau" && (
                 <div>
-                  <p id="deplacer-places" className="mb-1.5 text-[13px] font-semibold text-muted-foreground">
+                  <p id="deplacer-places" className="mb-1.5 text-sm font-semibold text-muted-foreground">
                     {t("calendrier.deplacer.creneauxLibres", { jour: lang === "fr" ? minuscule(titreJour(vers, lang)) : titreJour(vers, lang) })}
                   </p>
                   <div role="radiogroup" aria-labelledby="deplacer-places" className="flex flex-wrap gap-2">

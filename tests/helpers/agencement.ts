@@ -67,23 +67,34 @@ export const pilules = (page: Page) => page.locator('[data-onglets="pilules"]');
 /**
  * Un seul `header[data-entete-page]` visible, un seul h1 dedans, à la bonne taille ; le h1 part de
  * la zone + la marge (au pixel près) ; `premierBloc` (le premier bloc de contenu sous l'en-tête,
- * par défaut l'élément qui suit l'en-tête) commence au même x.
+ * par défaut l'élément qui suit l'en-tête) commence au même x. Avec `colonne` (règle de largeur du
+ * 25/10/2026 : une lecture ou une liste seule tient dans une colonne de 720 px, calée sur le titre
+ * depuis quotidien-5), le bloc commence au x du titre ; `colonne` ne sert plus qu'au contrôle de largeur.
  */
-export async function verifierEnTete(page: Page, options: { premierBloc?: Locator } = {}) {
+export async function verifierEnTete(page: Page, options: { premierBloc?: Locator; colonne?: number; titreDansLeVolet?: boolean } = {}) {
   const entete = enTete(page).filter({ visible: true });
   await expect(entete, "un seul en-tête de page").toHaveCount(1);
-  const h1 = entete.locator("h1");
-  await expect(h1, "un seul h1 dans l'en-tête").toHaveCount(1);
-  await expect(page.locator("h1").filter({ visible: true }), "un seul h1 dans la page").toHaveCount(1);
-
-  const taille = await tailleDuTitreAttendue(page);
-  expect(await h1.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "taille du titre").toBe(taille);
-
   const zone = await zoneDeContenu(page);
   const marge = await margeAttendue(page);
-  await expect
-    .poll(async () => Math.round((await h1.boundingBox())!.x - zone.gauche), { message: "bord gauche du titre = zone + marge" })
-    .toBe(marge);
+  if (options.titreDansLeVolet) {
+    // Corrections du design (bo-reunions-taches-5) : en deux volets, une fiche est le grand titre ; la bande du haut ne garde
+    // que le retour et l'action. Un seul h1 dans la page, hors de la bande, de 30 px (`text-2xl`, échelle B du lot CD, T4a).
+    await expect(entete.locator("h1"), "pas de h1 dans la bande du haut").toHaveCount(0);
+    const h1 = page.locator("h1").filter({ visible: true });
+    await expect(h1, "un seul h1 dans la page").toHaveCount(1);
+    expect(await h1.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "taille du titre de la fiche").toBe(30);
+  } else {
+    const h1 = entete.locator("h1");
+    await expect(h1, "un seul h1 dans l'en-tête").toHaveCount(1);
+    await expect(page.locator("h1").filter({ visible: true }), "un seul h1 dans la page").toHaveCount(1);
+
+    const taille = await tailleDuTitreAttendue(page);
+    expect(await h1.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "taille du titre").toBe(taille);
+
+    await expect
+      .poll(async () => Math.round((await h1.boundingBox())!.x - zone.gauche), { message: "bord gauche du titre = zone + marge" })
+      .toBe(marge);
+  }
 
   // Par défaut, le premier frère VISIBLE de l'en-tête : un bloc masqué à cette taille (la barre
   // collante des plannings, cachée en grand, R6) ne compte pas.
@@ -103,8 +114,9 @@ export async function verifierEnTete(page: Page, options: { premierBloc?: Locato
       const r = e.getBoundingClientRect();
       return { x: r.x, contenu: r.x };
     }, zone.gauche);
-    expect(Math.abs(contenu - zone.gauche - marge) <= 1 || Math.abs(x - zone.gauche - marge) <= 1,
-      `le premier bloc commence au x du titre (bloc ${Math.round(x)}, contenu ${Math.round(contenu)}, attendu ${zone.gauche + marge})`).toBe(true);
+    const attendu = zone.gauche + marge;
+    expect(Math.abs(contenu - attendu) <= 1 || Math.abs(x - attendu) <= 1,
+      `le premier bloc commence au x du titre (bloc ${Math.round(x)}, contenu ${Math.round(contenu)}, attendu ${attendu})`).toBe(true);
   }
 }
 
@@ -113,30 +125,26 @@ export async function verifierSansDebordement(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), "aucun défilement horizontal").toBeLessThanOrEqual(0);
 }
 
-/** Le bleu gris du halo du Back-Office (R12), clair et sombre. */
-export const HALO_BACK_OFFICE = "#e4e7f6";
-export const HALO_BACK_OFFICE_SOMBRE = "#262b45";
-
-/** Un halo visible ; sous `/back-office`, sans halo propre à la page, `--halo` vaut le bleu gris. */
+/** Au plus un halo visible (partout-q2 : seules les pages porteuses d'une couleur en ont un) ; sans halo, rien sur la racine. */
 export async function verifierHalo(page: Page) {
-  const halos = page.locator('[data-testid="halo"], [data-testid="halo-defaut"]').filter({ visible: true });
-  await expect(halos, "un halo visible").toHaveCount(1);
-  const auBackOffice = new URL(page.url()).pathname.startsWith("/back-office");
-  if (auBackOffice && (await halos.getAttribute("data-testid")) === "halo-defaut") {
-    const [halo, attendu] = await page.evaluate(() => {
-      const st = getComputedStyle(document.documentElement);
-      return [st.getPropertyValue("--halo").trim(), st.getPropertyValue("--halo-back-office").trim()];
-    });
-    expect(halo, "halo du Back-Office : le bleu gris").toBe(attendu);
+  const halos = page.locator('[data-testid="halo"]').filter({ visible: true });
+  expect(await halos.count(), "un halo au plus").toBeLessThanOrEqual(1);
+  if ((await halos.count()) === 0) {
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--halo").trim()), "sans halo, pas de --halo").toBe("");
   }
 }
 
 /** Un bloc de contenu prend toute la zone moins deux marges (une lecture : 720 px). */
-export async function verifierPleineLargeur(page: Page, bloc: Locator, options: { lecture?: boolean } = {}) {
+export async function verifierPleineLargeur(page: Page, bloc: Locator, options: { lecture?: boolean; colonne?: number } = {}) {
   const zone = await zoneDeContenu(page);
   const marge = await margeAttendue(page);
   const largeur = (await bloc.boundingBox())!.width;
-  if (options.lecture) expect(largeur, "une lecture : 720 px au plus").toBeLessThanOrEqual(721);
+  if (options.colonne !== undefined) {
+    const attendue = Math.min(options.colonne, zone.droite - zone.gauche - 2 * marge);
+    // Le bloc peut porter les marges en dedans (la colonne et ses deux marges) ou en dehors.
+    const ecart = Math.min(Math.abs(largeur - attendue), Math.abs(largeur - attendue - 2 * marge));
+    expect(ecart, `une colonne : ${options.colonne} px au plus, la zone sinon`).toBeLessThanOrEqual(2);
+  } else if (options.lecture) expect(largeur, "une lecture : 720 px au plus").toBeLessThanOrEqual(721);
   else expect(largeur, "toute la zone moins deux marges").toBeGreaterThanOrEqual(zone.droite - zone.gauche - 2 * marge - 1);
 }
 
@@ -174,11 +182,11 @@ export async function repondreDansLeSite(page: Page, bouton: string) {
  */
 export async function verifierAgencement(
   page: Page,
-  options: { premierBloc?: Locator; contenu?: Locator; lecture?: boolean; onglets?: { rail?: number; pilules?: number } } = {},
+  options: { premierBloc?: Locator; contenu?: Locator; lecture?: boolean; colonne?: number; titreDansLeVolet?: boolean; onglets?: { rail?: number; pilules?: number } } = {},
 ) {
   await verifierEnTete(page, options);
   await verifierSansDebordement(page);
   await verifierHalo(page);
-  if (options.contenu) await verifierPleineLargeur(page, options.contenu, { lecture: options.lecture });
+  if (options.contenu) await verifierPleineLargeur(page, options.contenu, { lecture: options.lecture, colonne: options.colonne });
   if (options.onglets) await verifierOnglets(page, options.onglets);
 }

@@ -1,4 +1,4 @@
-import { FS_BASE, authHeader, checkRest, fromFsValue, toFsFields, type RawDoc } from "./setlists";
+import { FS_BASE, authHeader, lireRequete, checkRest, fromFsValue, toFsFields, type RawDoc } from "./setlists";
 
 // Harmonie (lot 9, H2 et H3, docs/spec-harmonie.md) : ce que l'équipe écrit
 // autour d'un chant, en REST comme le reste du site.
@@ -31,11 +31,14 @@ export type Idee = {
   apres?: string;
   /** Fiche du catalogue à laquelle l'idée se rattache. */
   ficheId?: string;
+  /** Passage du chant visé : uid de section, puis son nom si le chant a été réécrit (H2). */
+  passage?: string;
+  passageNom?: string;
   creeLe: string;
   modifieLe: string;
 };
 
-export type IdeeValues = Pick<Idee, "texte" | "avant" | "apres" | "ficheId">;
+type IdeeValues = Pick<Idee, "texte" | "avant" | "apres" | "ficheId" | "passage" | "passageNom">;
 
 function docData(raw: RawDoc): { id: string; data: Record<string, unknown> } {
   return {
@@ -45,16 +48,8 @@ function docData(raw: RawDoc): { id: string; data: Record<string, unknown> } {
 }
 
 async function liste(slug: string, collectionId: string): Promise<RawDoc[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}/harmonie/${encodeURIComponent(slug)}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({ structuredQuery: { from: [{ collectionId }] } }),
-  });
   // Un chant sans document `harmonie/{slug}` répond vide : c'est le cas normal.
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => r.document!);
+  return (await lireRequete(`harmonie/${encodeURIComponent(slug)}`, { from: [{ collectionId }] })) ?? [];
 }
 
 async function remove(path: string): Promise<void> {
@@ -114,6 +109,8 @@ export async function getIdees(slug: string): Promise<Idee[]> {
       avant: (data.avant as string) || undefined,
       apres: (data.apres as string) || undefined,
       ficheId: (data.ficheId as string) || undefined,
+      passage: (data.passage as string) || undefined,
+      passageNom: (data.passageNom as string) || undefined,
       creeLe: (data.creeLe as string) ?? "",
       modifieLe: (data.modifieLe as string) ?? "",
     };

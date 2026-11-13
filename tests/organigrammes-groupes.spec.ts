@@ -15,7 +15,7 @@ import { datesCourtes, propositions, propositionsReliees, type CompteDuPlanning 
 import { GRILLE_BONTE, GRILLE_CULTE, GRILLE_PAIX } from "../src/lib/planning/grilles";
 import { readFileSync } from "node:fs";
 import {
-  ADMIN_EMAILS, audiencesNotifiables, canEditPlanning, canTenirGroupe, creatableEvenementPours, entreesBackOffice,
+  ADMIN_EMAILS, audiencesNotifiables, canEditPlanning, canTenirGroupe, creatableEvenementPours, droitsDesPages, entreesBackOffice,
   equipesDe, equipesDesTaches, equipesOuCreer, estDeLEquipe, estResponsable, planningsDuBackOffice, tientUnGroupe,
 } from "../src/lib/access";
 import { canPublishPlanning, droitsDePublication, getPlanning, peutPrevenir } from "../src/lib/planning/releases";
@@ -522,7 +522,7 @@ const docGroupe = ({ id: _id, ...g }: OrganigrammeGroupe) => g as unknown as Rec
 test.describe("OG-B · recopie partagée en base simulée (OG3, OG19, OG20)", () => {
   test("un document equipes/comite-paix écrit à la main n'ajoute ni membre ni référent au comité", async () => {
     const equipes = [{ id: "comite-paix", membres: [{ nom: "Pirate", uid: "pirate", referent: true }] }];
-    expect(rattachementDe("pirate", equipes)).toEqual({ dansEquipes: [], referentDe: [] });
+    expect(rattachementDe("pirate", equipes)).toMatchObject({ dansEquipes: [], referentDe: [] });
     const { db } = fausseBaseGroupes({ pirate: { equipes: true } }, {}, { "comite-paix": { membres: equipes[0].membres } });
     await recalculerRattachement(db, ["pirate"], await lireEquipes(db), await lireGroupes(db));
     const lu = (await db.collection("users").doc("pirate").get()).data() as Record<string, unknown>;
@@ -655,8 +655,12 @@ test.describe("OG-B · miroirs client (OG22 à OG27)", () => {
     expect(peutPrevenir(paix, false, [], [], [])).toBe(false);
   });
 
-  test("audiencesNotifiables = notify ∪ notifieParRole ; interrupteur coupé → notify seul", () => {
-    expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, true)).toEqual(["Campus", "Groupe Joie"]);
+  // Lot AO (docs/spec-acces-organigramme.md, A2) : interrupteur ouvert, le droit coché `notify` ne compte plus.
+  // Lot RS (Q10, Q11) : le Comité Orga notifie « * », un gestionnaire l'audience de son service ; `notifieParRole` ne donne plus rien.
+  test("audiencesNotifiables = responsabilités (lot RS) ; interrupteur coupé → notify seul", () => {
+    expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, true), "lot RS : un rôle Notifier ne notifie plus").toEqual([]);
+    expect(audiencesNotifiables({ notify: ["Campus"], responsabilites: ["planning:paix"] }, true)).toEqual(["Groupe Paix"]);
+    expect(audiencesNotifiables({ responsabilites: ["orga"] }, true)).toEqual(["*"]);
     expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, false)).toEqual(["Campus"]);
     expect(audiencesNotifiables(null, true)).toEqual([]);
   });
@@ -674,9 +678,10 @@ test.describe("OG-B · miroirs client (OG22 à OG27)", () => {
     expect(tientUnGroupe(null, PRESIDENT)).toBe(false);
   });
 
-  test("entreesBackOffice d'un président sans droit Équipes : Équipes et Planning en plus de Tâches, Réunions, Évènements", () => {
+  test("entreesBackOffice d'un président sans droit Équipes : Équipes, Planning et Messages ; ses pages Tâches, Réunions, Évènements restent", () => {
     const entrees = entreesBackOffice(u("ruth"), PRESIDENT);
-    for (const e of ["equipes", "planning", "taches", "reunions", "evenements", "messages"] as const) expect(entrees, e).toContain(e);
+    for (const e of ["equipes", "planning", "messages"] as const) expect(entrees, e).toContain(e);
+    expect(droitsDesPages(u("ruth"), PRESIDENT)).toEqual({ taches: true, evenements: true, reunions: true });
     expect(estResponsable(u("ruth"), PRESIDENT)).toBe(true);
     expect(estResponsable(u("x"), { remplitParRole: ["paix"] })).toBe(true);
     expect(estResponsable(u("x"), { publieParRole: ["paix"] })).toBe(true);
@@ -740,8 +745,9 @@ test.describe("OG-B · règles Firestore (miroir, texte de firestore.rules)", ()
     }
   });
 
-  test("peutEcrirePlanning lit aussi remplitParRole ; création d'un profil sans groupe ni listes par rôle", () => {
-    expect(rules).toMatch(/function peutEcrirePlanning\(key\)[\s\S]*?key in profile\(\)\.get\('remplitParRole', \[\]\)/);
+  // Lot RS : peutEcrirePlanning lit `responsabilites` (gerePlanning), plus remplitParRole.
+  test("peutEcrirePlanning = admin ou gestionnaire du planning ; création d'un profil sans groupe ni listes par rôle", () => {
+    expect(rules).toMatch(/function peutEcrirePlanning\(key\)\s*\{\s*return isAdmin\(\) \|\| gerePlanning\(key\);/);
     const creation = rules.slice(rules.indexOf("match /users/{uid}"), rules.indexOf("allow update: if isAdmin();"));
     expect(creation).toMatch(/request\.resource\.data\.get\('groupe', null\) == null/);
     for (const champ of ["remplitParRole", "publieParRole", "notifieParRole"]) {
@@ -778,15 +784,18 @@ test.describe("OG-B · destinataires, audiences, routes (OG24, OG25, OG28)", () 
     expect(isValidAudience("Groupe Joie", false)).toBe(false);
   });
 
-  test("publication et Notifier : acceptés par un rôle, refusés sans ; rôles ignorés interrupteur coupé", () => {
+  // Lot RS : publier et notifier viennent de la responsabilité de gestionnaire ; les rôles de groupe (`publieParRole`,
+  // `notifieParRole`) ne donnent plus rien.
+  test("publication et Notifier : acceptés par un gestionnaire, refusés sans ; rien interrupteur coupé", () => {
     const paix = getPlanning("paix")!;
-    const moi = { notify: [], publieParRole: ["paix"], notifieParRole: ["Groupe Joie"] };
+    const moi = { notify: [], responsabilites: ["planning:paix"], publieParRole: ["bonte"], notifieParRole: ["Groupe Joie"] };
     expect(droitsDePublication(paix, false, moi, true)).toBe(true);
     expect(droitsDePublication(paix, false, moi, false)).toBe(false);
+    expect(droitsDePublication(getPlanning("bonte")!, false, moi, true), "lot RS : publieParRole ne publie plus").toBe(false);
     expect(droitsDePublication(paix, false, { notifieParRole: ["Groupe Paix"] }, true)).toBe(false);
-    expect(peutNotifierAudience("Groupe Joie", false, moi, true)).toBe(true);
-    expect(peutNotifierAudience("Groupe Joie", false, moi, false)).toBe(false);
-    expect(peutNotifierAudience("Groupe Paix", false, moi, true)).toBe(false);
+    expect(peutNotifierAudience("Groupe Paix", false, moi, true)).toBe(true);
+    expect(peutNotifierAudience("Groupe Paix", false, moi, false)).toBe(false);
+    expect(peutNotifierAudience("Groupe Joie", false, moi, true), "lot RS : notifieParRole ne notifie plus").toBe(false);
     expect(peutNotifierAudience("Groupe Paix", true, null, true)).toBe(true);
   });
 });
@@ -819,31 +828,32 @@ test.describe("OG-B · navigateur", () => {
     await expect.poll(() => corps).toEqual([{ key: "paix", tri: "T4", publish: true, year: 2026 }]);
   });
 
-  test("un titulaire « Notifier » seul de Paix : entrée Planning, grille en lecture, pas de « Publier le T… »", async ({ page }) => {
+  // Lot RS : un rôle « Notifier » seul ne donne plus d'entrée Planning ni de droit de notifier ; sans responsabilité ni référent,
+  // le Back-Office reste fermé (Q22).
+  test("lot RS : un titulaire « Notifier » seul de Paix n'a plus d'entrée Planning : « Réservé aux responsables. »", async ({ page }) => {
     await ouvrir(page, NOTIFIE, "/back-office/planning", {
       "plannings/paix/dimanches/2026-09-20": { date: "2026-09-20", musiciens: "Joël F." },
     });
-    await expect(page).toHaveURL(/\/back-office\/planning\/groupes\/?$/);
-    await expect(page.locator("[data-grille]")).toBeVisible();
-    const laCase = page.locator('[data-case="2026-09-20|musiciens"]').filter({ visible: true });
-    await expect(laCase).toHaveText("Joël F.");
-    await expect(laCase.getByRole("button")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /^Publier le T\d/ })).toHaveCount(0);
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+    await expect(page.locator("[data-grille]")).toHaveCount(0);
+    await expect(page).not.toHaveURL(/\/back-office\/planning\/groupes/);
   });
 
-  test("Notifier : un titulaire « Notifier » de Joie voit « Groupe Joie », ses destinataires comptent les membres du groupe", async ({ page }) => {
-    const JOIE_NOTIFIE: FakeProfile = { uid: "zoe", email: "zoe@example.com", firstName: "Zoé", lastName: "W.", groupe: "joie", notifieParRole: ["Groupe Joie"] };
+  // Lot RS (Q10) : le scénario « Notifier de Joie » n'a plus d'objet (Joie n'a pas de planning, donc pas de gestionnaire) ; le cas
+  // voisin est le gestionnaire de Paix, qui notifie l'audience de son service.
+  test("Notifier : un gestionnaire de Paix voit « Groupe Paix », ses destinataires comptent les membres du groupe", async ({ page }) => {
+    const PAIX_GESTIONNAIRE: FakeProfile = { uid: "zoe", email: "zoe@example.com", firstName: "Zoé", lastName: "W.", groupe: "paix", responsabilites: ["planning:paix"] };
     const membre = (uid: string, prenom: string, o: Record<string, unknown>) =>
       ({ [`users/${uid}`]: { email: `${uid}@example.com`, firstName: prenom, lastName: "T.", planningName: "", serviceRoles: {}, ...o } });
-    await ouvrir(page, JOIE_NOTIFIE, "/back-office/messages/notifier", {
-      ...membre("ana", "Ana", { groupe: "joie" }),
-      ...membre("tom", "Tom", { groupe: "joie" }),
-      ...membre("luc", "Luc", { groupe: "paix" }),
-      ...membre("zoe", "Zoé", { groupe: "joie", notifieParRole: ["Groupe Joie"] }),
+    await ouvrir(page, PAIX_GESTIONNAIRE, "/back-office/messages/notifier", {
+      ...membre("ana", "Ana", { groupe: "paix" }),
+      ...membre("tom", "Tom", { groupe: "paix" }),
+      ...membre("luc", "Luc", { groupe: "joie" }),
+      ...membre("zoe", "Zoé", { groupe: "paix", responsabilites: ["planning:paix"] }),
     });
     await page.getByRole("group", { name: "Audience" }).getByRole("button", { name: "Groupes" }).click();
-    await expect(page.getByRole("group", { name: "Groupes" }).getByRole("button")).toHaveText(["Groupe Joie"]);
-    await page.getByRole("group", { name: "Groupes" }).getByRole("button", { name: "Groupe Joie" }).click();
+    await expect(page.getByRole("group", { name: "Groupes" }).getByRole("button")).toHaveText(["Groupe Paix"]);
+    await page.getByRole("group", { name: "Groupes" }).getByRole("button", { name: "Groupe Paix" }).click();
     await page.getByRole("textbox", { name: "Titre" }).fill("Pique-nique");
     await page.getByRole("textbox", { name: "Message" }).fill("Dimanche après le culte.");
     await expect(page.getByRole("button", { name: "Envoyer à 3 personnes" })).toBeEnabled();
@@ -892,23 +902,24 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
     const db = await signInAs(page, qui, d, to);
     return { db, routes };
   }
-  const selecteur = (page: Page) => page.getByRole("group", { name: "Organigrammes", exact: true });
+  const selecteur = (page: Page) => page.getByRole("tablist", { name: "Organigrammes", exact: true });
   const carte = (page: Page, id: string) => page.locator(`[data-role="${id}"]`);
   const ecrituresGroupe = (db: { writes: { method: string; path: string; data: Record<string, unknown> }[] }, id: string) =>
     db.writes.filter((w) => w.path === `groupes/${id}` || (w.method === "POST" && w.path.startsWith("groupes")));
 
   test("admin : Église garde le bandeau et Équipes · Musiciens ; Paix montre En tête, le comité et les rôles", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/equipes");
-    await expect(selecteur(page).getByRole("button")).toHaveText(["Église", "Paix", "Fidélité", "Bonté", "Amour", "Joie"]);
+    await expect(selecteur(page).getByRole("tab")).toHaveText(["Église", "Paix", "Fidélité", "Bonté", "Amour", "Joie"]);
     await expect(page.getByTestId("equipe-orga")).toBeVisible();
-    await expect(page.getByRole("group", { name: "Vue" }).getByRole("button", { name: "Musiciens" })).toBeVisible();
-    await selecteur(page).getByRole("button", { name: "Paix" }).click();
+    await expect(page.getByRole("tablist", { name: "Vue" }).getByRole("tab", { name: "Musiciens" })).toBeVisible();
+    await selecteur(page).getByRole("tab", { name: "Paix" }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/?\?groupe=paix$/);
     await expect(page.getByRole("region", { name: "En tête" })).toContainText("Ruth K.");
     await expect(page.getByRole("region", { name: "Le comité" }).first()).toContainText("Noé P.");
     await expect(carte(page, "r-mus")).toContainText("3 sur 3 places");
     await expect(carte(page, "r-mus")).toContainText("Colonne Musiciens");
-    await expect(carte(page, "r-resp")).toContainText("Publie");
+    // Lot RS, RS-D : plus de pastille Remplit · Publie · Notifie sur les rôles de groupe.
+    await expect(carte(page, "r-resp")).not.toContainText("Publie");
     await expect(carte(page, "r-resp")).not.toContainText("Remplit le planning");
     await expect(page.getByTestId("equipe-orga")).toHaveCount(0);
   });
@@ -946,32 +957,31 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
   test("président sans droit Équipes : entrée Équipes, Paix ouvert et modifiable ; ni « Nommer » ni plafond ; Bonté et Église en lecture ; pas de rail", async ({ page }) => {
     await ouvrir(page, RUTH, "/back-office/equipes");
     // Sans `?groupe=`, la page s'ouvre sur le groupe qu'il tient.
-    await expect(selecteur(page).getByRole("button", { name: "Paix" })).toHaveAttribute("aria-pressed", "true");
+    await expect(selecteur(page).getByRole("tab", { name: "Paix" })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("button", { name: "Nouveau rôle" })).toBeVisible();
     await expect(carte(page, "r-mus").getByRole("button", { name: "Modifier le rôle Musiciens" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Nommer", exact: true })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Personnes" })).toHaveCount(0);
-    await selecteur(page).getByRole("button", { name: "Bonté" }).click();
+    await selecteur(page).getByRole("tab", { name: "Bonté" }).click();
     await expect(carte(page, "b-acc")).toContainText("Marc A.");
     await expect(carte(page, "b-acc").getByRole("button", { name: /Modifier le rôle/ })).toHaveCount(0);
     await expect(carte(page, "b-acc").getByRole("button", { name: "Ajouter un titulaire" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Nouveau rôle" })).toHaveCount(0);
-    await selecteur(page).getByRole("button", { name: "Église" }).click();
+    await selecteur(page).getByRole("tab", { name: "Église" }).click();
     await expect(page.getByTestId("equipe-orga")).toBeVisible();
     await expect(page.getByRole("button", { name: /^Modifier TEAM/ })).toHaveCount(0);
   });
 
-  test("« Nouveau rôle » Paix : Thème absent, cadenas d'une colonne prise, Publier coche Remplir, quatre cases ; écrit droits.saisirFetes puis appelle la route", async ({ page }) => {
+  test("« Nouveau rôle » Paix : Thème absent, cadenas d'une colonne prise, deux cases (lot RS : plus de Remplir ni Publier) ; écrit droits.saisirFetes puis appelle la route", async ({ page }) => {
     const { db, routes } = await ouvrir(page, RUTH, "/back-office/equipes?groupe=paix");
     await page.getByRole("button", { name: "Nouveau rôle" }).click();
     const form = page.getByRole("form", { name: "Nouveau rôle" });
     const colonnes = form.getByRole("group", { name: "Colonne du planning reliée" });
     await expect(colonnes.getByRole("button", { name: /Thème/ })).toHaveCount(0);
     await expect(colonnes.getByRole("button", { name: /Musiciens/ })).toBeDisabled();
-    await expect(form.getByRole("checkbox")).toHaveCount(5); // au comité + quatre droits
-    await form.getByRole("checkbox", { name: /Publier le planning/ }).check();
-    await expect(form.getByRole("checkbox", { name: /Remplir le planning du groupe/ })).toBeChecked();
-    await expect(form.getByRole("checkbox", { name: /Remplir le planning du groupe/ })).toBeDisabled();
+    await expect(form.getByRole("checkbox")).toHaveCount(2); // lot RS : au comité + Saisir les chants des fêtes
+    await expect(form.getByRole("checkbox", { name: /Publier le planning/ })).toHaveCount(0);
+    await expect(form.getByRole("checkbox", { name: /Remplir le planning du groupe/ })).toHaveCount(0);
     await expect(form.getByRole("button", { name: "Créer le rôle" })).toBeDisabled();
     await form.getByRole("textbox", { name: "Nom du rôle" }).fill("Accueil");
     await colonnes.getByRole("button", { name: /Orateur/ }).click();
@@ -981,14 +991,14 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
     const ecrit = ecrituresGroupe(db, "paix").at(-1)!;
     expect(ecrit.method).toBe("PATCH");
     expect((ecrit.data.roles as RoleGroupe[]).at(-1)).toMatchObject({
-      nom: "Accueil", colonne: "orateur", droits: { remplir: true, publier: true, notifier: false, saisirFetes: true },
+      nom: "Accueil", colonne: "orateur", droits: { remplir: false, publier: false, notifier: false, saisirFetes: true },
     });
     await expect.poll(() => routes.length).toBe(1);
     const accueil = page.locator("[data-role]").filter({ hasText: "Accueil" });
     await expect(accueil).toContainText("Saisit les chants des fêtes");
   });
 
-  test("« Nouveau rôle » Joie : la phrase sans planning, Notifier et Saisir les chants des fêtes seulement", async ({ page }) => {
+  test("« Nouveau rôle » Joie : la phrase sans planning, Saisir les chants des fêtes seulement (lot RS : plus de Notifier)", async ({ page }) => {
     const { db } = await ouvrir(page, ADMIN, "/back-office/equipes?groupe=joie");
     // Groupe sans rôle : « Nouveau rôle » en tête et sous « Aucun rôle pour l'instant ».
     await expect(page.getByText("Aucun rôle pour l'instant")).toBeVisible();
@@ -996,7 +1006,7 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
     const form = page.getByRole("form", { name: "Nouveau rôle" });
     await expect(form).toContainText("Le Groupe Joie n'a pas de planning : pas de colonne à relier, ni de droit sur le planning.");
     await expect(form.getByRole("group", { name: "Colonne du planning reliée" })).toHaveCount(0);
-    await expect(form.getByRole("checkbox")).toHaveCount(3); // au comité, Notifier, Saisir les chants
+    await expect(form.getByRole("checkbox")).toHaveCount(2); // lot RS : au comité, Saisir les chants
     await form.getByRole("textbox", { name: "Nom du rôle" }).fill("Accueil");
     await form.getByRole("checkbox", { name: /Saisir les chants des fêtes/ }).check();
     await form.getByRole("button", { name: "Créer le rôle" }).click();
@@ -1110,9 +1120,9 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
     expect((ecrit.data.vp as { uid: string }[]).map((v) => v.uid)).toEqual(["lea", "clara", "joel"]);
   });
 
-  test("simple membre : /back-office/equipes refusé (renvoyé à ses tâches)", async ({ page }) => {
+  test("simple membre : /back-office/equipes refusé (garde « Réservé aux responsables », piste A BO4)", async ({ page }) => {
     await ouvrir(page, LUC, "/back-office/equipes");
-    await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Équipes" })).toHaveCount(0);
     await expect(selecteur(page)).toHaveCount(0);
   });
@@ -1248,28 +1258,37 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
   }
   const fiche = (page: Page) => page.locator("article");
 
-  test("Personnes : le sous-titre compte les inscrits, les groupes et les comptes sans groupe ; trois filtres de plus", async ({ page }) => {
+  test("Personnes : le sous-titre compte les inscrits et ceux sans groupe ; trois filtres de plus", async ({ page }) => {
     await ouvrir(page, "/back-office/equipes/personnes");
     // Sans groupe : Marc (clé de Bonté seule : déduit Bonté, donc avec groupe), Yann, Eva (deux clés) et l'admin : 3.
-    await expect(page.locator("header[data-entete-page]")).toContainText("7 inscrits · 5 groupes · 3 sans groupe");
-    const filtres = page.getByRole("group", { name: "Filtrer les membres" });
-    await expect(filtres.getByRole("button", { name: "Groupe Amour" })).toBeVisible();
-    await expect(filtres.getByRole("button", { name: "Groupe Joie" })).toBeVisible();
-    await filtres.getByRole("button", { name: "Sans groupe" }).click();
+    await expect(page.locator("header[data-entete-page]")).toContainText("7 inscrits, dont 3 sans groupe");
+    await expect(page.locator("header[data-entete-page]")).not.toContainText("5 groupes");
+    // Lot CD, T3c : les groupes se choisissent dans le menu « Groupe » (Sans groupe en dernier, à part).
+    const groupe = page.getByRole("button", { name: /^Groupe( :|$)/ });
+    await groupe.click();
+    await expect(page.getByRole("menuitemradio", { name: "Groupe Amour" })).toBeVisible();
+    await expect(page.getByRole("menuitemradio", { name: "Groupe Joie" })).toBeVisible();
+    await expect(page.getByRole("menuitemradio").last()).toHaveText("Sans groupe");
+    await page.getByRole("menuitemradio", { name: "Sans groupe", exact: true }).click();
     const lignes = page.getByRole("button", { name: /Yann M\.|Eva D\./ });
     await expect(lignes).toHaveCount(2);
     await expect(page.getByRole("button", { name: /Joël F\./ })).toHaveCount(0);
-    await filtres.getByRole("button", { name: "Groupe Joie" }).click();
+    await groupe.click();
+    await page.getByRole("menuitemradio", { name: "Groupe Joie" }).click();
     await expect(page.getByRole("button", { name: /Ana T\./ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Yann M\./ })).toHaveCount(0);
   });
 
-  test("Personnes : la ligne dit le groupe et les rôles ; « Sans groupe » pour qui n'en a pas", async ({ page }) => {
+  test("Personnes : la ligne dit le groupe et les rôles ; rien pour qui n'a pas de groupe (bo-equipes-9)", async ({ page }) => {
     await ouvrir(page, "/back-office/equipes/personnes");
     const joel = page.getByRole("button", { name: /Joël F\./ });
     await expect(joel).toContainText("Groupe Paix · Responsable louange, Musiciens");
-    await expect(page.getByRole("button", { name: /Yann M\./ })).toContainText("Sans groupe");
+    await expect(page.getByRole("button", { name: /Yann M\./ })).not.toContainText("Sans groupe");
     await expect(page.getByRole("button", { name: /Ruth K\./ })).toContainText("Groupe Paix · Président");
+    // L'e-mail seul en deuxième ligne : ni « planning : … » ni « inscrit le … » dans la liste.
+    await expect(joel).toContainText("joel@example.com");
+    await expect(joel).not.toContainText("planning :");
+    await expect(joel).not.toContainText("inscrit le");
   });
 
   test("la fiche : carte Groupe, Rôles dans le Groupe Paix, Droits « par ses rôles », Services et équipes", async ({ page }) => {
@@ -1278,8 +1297,9 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     await expect(f.getByRole("heading", { level: 2 })).toHaveText("Joël F.");
     const groupe = f.getByRole("region", { name: "Groupe", exact: true });
     await expect(groupe).toContainText("Groupe Paix");
-    await expect(groupe).toContainText("un seul groupe par personne");
-    await expect(groupe).toContainText("Changer de groupe retire ses rôles du Groupe Paix (admin seulement).");
+    // Une seule phrase d'aide (bo-equipes-8) : plus de « un seul groupe par personne » à côté du nom du groupe.
+    await expect(groupe).toContainText("Un seul groupe par personne ; changer de groupe retire ses rôles du Groupe Paix (admin seulement).");
+    await expect(groupe.locator("p")).toHaveCount(2);
     const roles = f.getByRole("region", { name: "Rôles dans le Groupe Paix" });
     await expect(roles).toContainText("Responsable louange");
     await expect(roles).toContainText("敬拜负责人");
@@ -1291,8 +1311,9 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     await expect(droitsCarte).toContainText("Par ses rôles");
     await expect(droitsCarte).toContainText("Remplit et publie le planning");
     await expect(droitsCarte).toContainText("Celles du Groupe Paix");
-    await expect(droitsCarte).toContainText("Coordination : cochée par un admin. Admin : liste des adresses, ne se coche pas.");
-    await expect(f.getByRole("region", { name: "Services et équipes" })).toContainText("pendant la transition");
+    // Lot AO-B : plus de case de coordination, la note qui la disait cochée par un admin a disparu.
+    await expect(droitsCarte).not.toContainText("cochée par un admin");
+    await expect(f.getByRole("region", { name: "Services et équipes" })).not.toContainText("pendant la transition");
     await expect(f).not.toContainText("Services et rôles");
   });
 
@@ -1301,7 +1322,12 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     const f = fiche(page);
     await expect(f.getByRole("region", { name: "Groupe", exact: true })).toContainText("Sans groupe");
     await expect(f.getByRole("region", { name: /^Rôles dans le/ })).toHaveCount(0);
-    await expect(f.getByRole("region", { name: "Droits" })).toContainText(/Par ses rôles\s*—/);
+    // bo-equipes-8 : « Aucun » et « Aucune » à la place des « — ».
+    const droits = f.getByRole("region", { name: "Droits" });
+    await expect(droits).toContainText(/Par ses rôles\s*Aucun/);
+    await expect(droits).toContainText(/Notifications\s*Aucune/);
+    await expect(droits).not.toContainText(/(Par ses rôles|Notifications)\s*—/);
+    await expect(f.getByRole("region", { name: "Groupe", exact: true })).toContainText("Un seul groupe par personne ; seul un admin peut le changer.");
   });
 
   test("« Changer de groupe » : feuille des cinq groupes et « Sans groupe », confirmation dans le site, route changerGroupe", async ({ page }) => {
@@ -1335,20 +1361,21 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     await expect(page.getByRole("button", { name: /Yann M\./ })).toBeVisible();
   });
 
-  test("Planning › Sans compte : un nom écrit aussi dans un planning n'est compté qu'une fois (OG32)", async ({ page }) => {
+  test("Personnes › Sans compte (ex-Planning › Sans compte) : un nom écrit aussi dans un planning n'est compté qu'une fois (OG32)", async ({ page }) => {
     const csv = [["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
       ["11/10", "Ma Lin", "", "", "Zoé Q.", "", "", "", "", "", "", "", ""]].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: new URL(route.request().url()).searchParams.get("sheet") === "Franco_Louange" ? csv : "" }));
     await page.route("**/api/equipes/groupes", (route) => route.fulfill({ json: { ok: true, maj: 0, ignores: [] } }));
-    await signInAs(page, ADMIN, docs(), "/back-office/planning/sans-compte");
+    await signInAs(page, ADMIN, docs(), "/back-office/equipes/personnes/sans-compte");
     await expect(page.getByRole("region", { name: /^Titulaires sans compte/ })).toContainText("Ma Lin");
-    const planning = page.locator("div.rounded-xl", { hasText: /^Planning sans compte/ }).first();
+    // BO-G, 7 : un seul titre, « Noms du planning sans compte (N) », sur la carte même.
+    const planning = page.locator("div", { has: page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte/ }) }).last();
     await expect(planning).toContainText("Zoé Q.");
     await expect(planning).not.toContainText("Ma Lin");
   });
 
-  test("Planning › Sans compte : le bloc « Titulaires sans compte » mène à l'organigramme du groupe", async ({ page }) => {
-    await ouvrir(page, "/back-office/planning/sans-compte");
+  test("Personnes › Sans compte (ex-Planning › Sans compte) : le bloc « Titulaires sans compte » mène à l'organigramme du groupe", async ({ page }) => {
+    await ouvrir(page, "/back-office/equipes/personnes/sans-compte");
     const bloc = page.getByRole("region", { name: /^Titulaires sans compte/ });
     await expect(bloc).toContainText("Titulaires sans compte (1)");
     const ligne = bloc.getByRole("link", { name: /Ma Lin/ });
@@ -1385,13 +1412,13 @@ test.describe("OG-E · App › Équipes", () => {
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     return signInAs(page, qui, docs(), to);
   }
-  const selecteur = (page: Page) => page.getByRole("group", { name: "Organigrammes", exact: true });
+  const selecteur = (page: Page) => page.getByRole("tablist", { name: "Organigrammes", exact: true });
   const carte = (page: Page, id: string) => page.locator(`[data-role="${id}"]`);
 
-  test("six pilules ; la page s'ouvre sur le groupe de la personne, « Toi », son nom marqué, une place libre, aucun outil de modification", async ({ page }, info) => {
+  test("six onglets ; la page s'ouvre sur le groupe de la personne, « Toi », son nom marqué, une place libre, aucun outil de modification", async ({ page }, info) => {
     await ouvrir(page, JOEL);
-    await expect(selecteur(page).getByRole("button")).toHaveText(["Église", "Paix", "Fidélité", "Bonté", "Amour", "Joie"]);
-    await expect(selecteur(page).getByRole("button", { name: "Paix" })).toHaveAttribute("aria-pressed", "true");
+    await expect(selecteur(page).getByRole("tab")).toHaveText(["Église", "Paix", "Fidélité", "Bonté", "Amour", "Joie"]);
+    await expect(selecteur(page).getByRole("tab", { name: "Paix" })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Équipes");
     await expect(page.locator("header[data-entete-page]")).toContainText("Organigrammes de l'église et des groupes");
     const moi = page.locator("[data-moi-bandeau]");
@@ -1417,8 +1444,8 @@ test.describe("OG-E · App › Équipes", () => {
   test("sans groupe : l'église, avec le sélecteur et Équipes · Musiciens ; choisir Bonté lit Bonté, sans bandeau « Toi »", async ({ page }) => {
     await ouvrir(page, YANN);
     await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
-    await expect(selecteur(page).getByRole("button", { name: "Église" })).toHaveAttribute("aria-pressed", "true");
-    await selecteur(page).getByRole("button", { name: "Bonté" }).click();
+    await expect(selecteur(page).getByRole("tab", { name: "Église" })).toHaveAttribute("aria-selected", "true");
+    await selecteur(page).getByRole("tab", { name: "Bonté" }).click();
     await expect(page).toHaveURL(/\/equipes\/?\?groupe=bonte$/);
     await expect(carte(page, "b-acc")).toContainText("Marc A.");
     await expect(page.locator("[data-moi-bandeau]")).toHaveCount(0);
@@ -1451,7 +1478,7 @@ test.describe("OG-E · App › Équipes", () => {
 
   test("中文 : sélecteur, sous-titre et bandeau « Toi » traduits", async ({ page }) => {
     await ouvrir(page, JOEL, "/equipes", true);
-    await expect(page.getByRole("group", { name: "组织架构", exact: true })).toBeVisible();
+    await expect(page.getByRole("tablist", { name: "组织架构", exact: true })).toBeVisible();
     await expect(page.locator("header[data-entete-page]")).toContainText("教会及各团契的组织架构");
     await expect(page.locator("[data-moi-bandeau]")).toContainText("你");
     await expect(page.locator("[data-moi-bandeau]")).toContainText("我的服事");

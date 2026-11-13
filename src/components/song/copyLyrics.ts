@@ -10,7 +10,7 @@
 // numéro du chant, hors du chant ; la copie native partait alors, en HTML mis
 // en page que PowerPoint et Canva collent d'un bloc.
 
-import type { ChordProSection } from "@/types/chordPro";
+import type { ChordProLine, ChordProSection } from "@/types/chordPro";
 import type { SetlistItem } from "@/types/setList";
 import { estUnChant } from "@/lib/setlist/propositions";
 import type { SongContent } from "@/lib/api/songs";
@@ -23,6 +23,18 @@ const BLOCK_TAGS = new Set(["DIV", "P", "H1", "H2", "H3", "LI"]);
  *  l'accord, ce n'est pas une parole. Le latin garde ses espaces entre mots. */
 const BLANC_CHINOIS = /\s+(?=[\u3000-\u303f\u3400-\u9fff\uff00-\uffef])|(?<=[\u3000-\u303f\u3400-\u9fff\uff00-\uffef])\s+/g;
 
+/** Texte d'une ligne de chant : paroles seules, sans accords, espaces ramenés à un seul,
+ *  blancs parasites du chinois retirés. Partagé par « Copier les paroles » et l'export FreeShow. */
+export function paroleDeLigne(line: ChordProLine): string {
+  return line.tokens
+    .filter((t) => t.type === "lyric")
+    .map((t) => t.value)
+    .join("")
+    .replace(/\s+/g, " ")
+    .replace(BLANC_CHINOIS, "")
+    .trim();
+}
+
 /** Paroles d'un chant pour la régie (bouton « Copier les paroles ») : les
  *  sections dans l'ordre donné, reprises comprises, une ligne vide entre deux
  *  sections, sans accords ni noms de section ; en chinois, chaque ligne suivie
@@ -33,13 +45,7 @@ export function lyricsText(sections: ChordProSection[]): string {
     .map((section) =>
       section.lines
         .map((line) => {
-          const lyric = line.tokens
-            .filter((t) => t.type === "lyric")
-            .map((t) => t.value)
-            .join("")
-            .replace(/\s+/g, " ")
-            .replace(BLANC_CHINOIS, "")
-            .trim();
+          const lyric = paroleDeLigne(line);
           const pinyin = line.pinyin?.trim().split(/\s+/).join(" ");
           return lyric && pinyin ? `${lyric}\n${pinyin}` : lyric;
         })

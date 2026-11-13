@@ -3,22 +3,26 @@
 // Mes services (lot U4 bis, B4, docs/spec-pages-en-grand.md, Q7 ; planches `mes-services-*`) :
 // la section lit tout une fois (plannings, petits déj, setlists, index des chants) et la liste
 // vit ici, dans le layout de `/mes-services` (Q2). En grand, la liste à gauche, le service à
-// droite (la page `/mes-services/[date]`), ou le premier de la liste sur son adresse (Q3).
+// droite (la page `/mes-services/[date]`), ou le premier de la liste sur son adresse (Q3) ; sans
+// aucun service, la liste seule dans la colonne de 720 px (`--colonne-liste`) (règle de largeur du 25/10/2026, B4b).
 // Un volet : la liste, puis le service en page.
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Lock, UserPen } from "lucide-react";
+import { Impasse } from "@/components/layout/Impasse";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { useProfile } from "@/lib/firebase/users";
-import { getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
-import { loadPlanningData, type PlanningData } from "@/lib/planning/names";
+import { getSetlists } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
+import { datesServies, loadPlanningData, type PlanningData } from "@/lib/planning/names";
 import { setlistDuService } from "@/lib/planning/accueil";
-import { grouperServices, serviceDeLAdresse, cleDuService, type ServiceGroupe } from "@/lib/planning/mesServices";
+import { grouperServices, serviceDeLAdresse, cleDuService } from "@/lib/planning/mesServices";
 import { canSeeSetlist } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { lirePetitDej } from "@/lib/petitdej/lignes";
@@ -27,25 +31,7 @@ import type { LignePetitDej } from "@/types/petitDej";
 import type { SongIndexEntry } from "@/types/song";
 import { ListeMesServices, type Onglet } from "./ListeMesServices";
 import { DetailService } from "./DetailService";
-
-type Valeur = {
-  /** Tous les services de la personne, dans l'ordre des dates. */
-  services: ServiceGroupe[];
-  aujourdhui: string;
-  planning: PlanningData;
-  songs: Record<string, SongIndexEntry>;
-  monNom: string;
-  /** La setlist liée à un service, si la personne peut l'ouvrir. */
-  setlistDe: (s: ServiceGroupe) => FSSetlist | undefined;
-};
-
-const Contexte = createContext<Valeur | null>(null);
-
-export function useMesServices(): Valeur {
-  const v = useContext(Contexte);
-  if (!v) throw new Error("useMesServices hors de SectionMesServices");
-  return v;
-}
+import { FournirMesServices, type Valeur } from "./contexteMesServices";
 
 /** Date du jour en heure LOCALE (pas UTC) — sinon le partage à venir / passés est décalé
  *  d'un jour quelques heures autour de minuit. */
@@ -79,8 +65,8 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
     loadPlanningData().then(setData);
     // Même lecture que loadPlanningData (cache partagé) ; en échec, aucune ligne.
     if (BACK_OFFICE) lirePetitDej().then(setLignesPetitDej, () => setLignesPetitDej([]));
-    fetch("/songs-index.json").then((r) => r.json())
-      .then((index: { songs?: SongIndexEntry[] }) => setSongs(Object.fromEntries((index.songs ?? []).map((s) => [s.slug, s]))))
+    chargerIndexChants()
+      .then((index) => setSongs(Object.fromEntries(index.map((s) => [s.slug, s]))))
       .catch(() => {});
   }, []);
 
@@ -105,7 +91,9 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
 
   const valeur = useMemo<Valeur | null>(() => {
     if (!data || !user) return null;
-    const lisibles = setlists.filter((s) => canSeeSetlist(user, profile, s));
+    // Lot AO (F1) : la setlist d'une date où l'on sert se lit même sans équipe.
+    const dates = datesServies(data, profile?.planningName ?? "");
+    const lisibles = setlists.filter((s) => canSeeSetlist(user, profile, s, dates));
     return {
       services,
       aujourdhui,
@@ -141,14 +129,12 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
 
   if (!profile || (!profile.planningName && !aDesPetitsDej)) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4 text-center">
-        <UserPen className="h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground max-w-sm">
-          {profile ? t("mesServices.chooseName") : t("mesServices.completeProfile")}
-        </p>
-        <Link href="/profil" className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground">
-          {t("mesServices.myProfile")}
-        </Link>
+      <div className="min-h-screen bg-background">
+        <Impasse
+          icone={UserPen}
+          titre={profile ? t("mesServices.chooseName") : t("mesServices.completeProfile")}
+          sortie={{ href: "/profil", label: t("mesServices.myProfile") }}
+        />
       </div>
     );
   }
@@ -168,6 +154,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
       aujourdhui={aujourdhui}
       actif={choisi ? cleDuService(choisi) : undefined}
       setlistDe={valeur?.setlistDe}
+      seule={deuxVolets && !affiches[0] && !date}
     />
   );
 
@@ -176,7 +163,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
   const avecEnTete = deuxVolets || !date;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative">
       {avecEnTete && (
         <EnTetePage
           titre={t("mesServices.title")}
@@ -189,16 +176,18 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
           }
         />
       )}
-      <Contexte.Provider value={valeur}>
+      <FournirMesServices value={valeur}>
         <DeuxVolets
           racine="/mes-services"
           largeurListe={400}
+          colonneSeule={!affiches[0]}
+          groupeSeule={false}
           liste={liste}
           premier={valeur && affiches[0] ? <DetailService s={affiches[0]} /> : null}
         >
           {valeur ? children : null}
         </DeuxVolets>
-      </Contexte.Provider>
+      </FournirMesServices>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { canSaisirAbsence, canVoirAbsencesDeTous, canVoirMotifAbsence, faitDesPlannings } from "../src/lib/access";
 import { absenceLe, periodeAbsence, rangerParAbsence } from "../src/lib/planning/choisir";
 import type { Absence } from "../src/types/absence";
@@ -70,7 +70,8 @@ test.describe("SC3 · droits (access.ts) et règles (firestore.rules)", () => {
     const regles = readFileSync("firestore.rules", "utf8");
     expect(regles).toContain("match /users/{uid}/absences/{id}");
     expect(regles).toContain("match /{chemin=**}/absences/{id}");
-    expect(regles).toMatch(/function faitDesPlannings\(\)[^}]*plannings/);
+    // Lot RS, RS-D : ceux qui font les plannings = les gestionnaires (`gereUnPlanning()`), plus le droit coché `plannings`.
+    expect(regles).toMatch(/function faitDesPlannings\(\)[^}]*gereUnPlanning\(\)/);
     expect(regles).toMatch(/function absenceValide\(\)/);
     const bloc = regles.slice(regles.indexOf("match /users/{uid}/absences/{id}"));
     expect(bloc.slice(0, 500)).toContain("faitDesPlannings()");
@@ -82,7 +83,7 @@ test.describe("SC3 · droits (access.ts) et règles (firestore.rules)", () => {
 
 test.describe("SC3 · Mes absences (Mon profil)", () => {
   const MEMBRE: FakeProfile = { uid: "uid-mia", email: "mia@example.com", firstName: "Mia", lastName: "Z.", planningName: "Mia Z." };
-  const RESPONSABLE: FakeProfile = { uid: "uid-resp", email: "resp@example.com", firstName: "Rémi", lastName: "Y.", planningName: "Rémi Y.", plannings: ["culte"] };
+  const RESPONSABLE: FakeProfile = { uid: "uid-resp", email: "resp@example.com", firstName: "Rémi", lastName: "Y.", planningName: "Rémi Y.", ...remplit("culte") };
   const section = (page: Page) => page.getByRole("region", { name: /Mes absences|我的请假/ });
 
   async function ouvrir(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>> = {}) {
@@ -162,7 +163,7 @@ test.describe("SC3 · « Choisir » du planning en grille (Back-Office)", () => 
     ["20/09", "Président A.", "Choriste B.", "Choriste C.", "Pianiste D.", "", "Batteur F.", "Sono G.", "Projection H.", "Orateur I.", "", "", ""],
     ["27/09", "Président J.", "Choriste K.", "Alice Q.", "Pianiste M.", "Guitariste N.", "Batteur O.", "Sono P.", "Projection Q.", "Orateur R.", "", "", ""],
   ]);
-  const PLANIFICATEUR: FakeProfile = { uid: "uid-plan", email: "plan@example.com", firstName: "Sara", lastName: "W.", planningName: "Sara W.", plannings: ["culte"] };
+  const PLANIFICATEUR: FakeProfile = { uid: "uid-plan", email: "plan@example.com", firstName: "Sara", lastName: "W.", planningName: "Sara W.", ...remplit("culte") };
   const compte = (prenom: string, roles: string[]) =>
     ({ email: `${prenom.toLowerCase()}@example.com`, firstName: prenom, lastName: "T.", planningName: `${prenom} T.`, serviceRoles: roles.length ? { "Culte Francophone": roles } : {}, plannings: [] });
   const DOCS = {

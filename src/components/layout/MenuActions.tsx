@@ -16,14 +16,15 @@
 // `evenements/[id]/Inscriptions.tsx`) : le menu, déjà fermé, n'a rien pour les montrer, et une
 // erreur qui en sort n'est rattrapée par personne.
 
-import { useId, useRef } from "react";
+import { Fragment, useId, useRef } from "react";
 import type { LucideIcon } from "lucide-react";
 import { MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { useConfirmer, type DemandeDeConfirmation } from "./Confirmer";
 
 export type ActionDuMenu = {
@@ -46,9 +47,11 @@ export type ActionDuMenu = {
   desactive?: boolean;
 };
 
-export function MenuActions({ actions, label, onOuvert }: {
+export function MenuActions({ actions, label, onOuvert, compact }: {
   actions: ActionDuMenu[];
   label?: string;
+  /** Rond de 32 px au lieu de 36 (une cellule étroite) ; la zone de toucher reste de 44 px. */
+  compact?: boolean;
   /** Appelé à l'ouverture et à la fermeture du menu (un aperçu posé tant qu'il est ouvert). */
   onOuvert?: (ouvert: boolean) => void;
 }) {
@@ -67,13 +70,14 @@ export function MenuActions({ actions, label, onOuvert }: {
     <DropdownMenu modal={false} onOpenChange={onOuvert}>
       <DropdownMenuTrigger
         aria-label={label ?? t("common.moreActions")}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className={cn("flex shrink-0 items-center justify-center rounded-full bg-pose text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", TOUCHER_44, compact ? "h-8 w-8" : "h-9 w-9")}
       >
         <MoreHorizontal className="h-4 w-4" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="min-w-48"
+        collisionPadding={8}
+        className="min-w-48 max-w-[min(20rem,calc(100vw-1rem))]"
         onCloseAutoFocus={(e) => {
           const a = enAttente.current;
           if (!a) return;
@@ -85,9 +89,11 @@ export function MenuActions({ actions, label, onOuvert }: {
         {actions.map((a, i) => {
           const Icone = a.icone;
           return (
+            <Fragment key={i}>
+            {/* Un filet avant la première action destructive qui en suit une autre (bo-evenements-4). */}
+            {a.destructif && i > 0 && !actions[i - 1].destructif && <DropdownMenuSeparator />}
             <DropdownMenuItem
               // L'ordre des actions ne change pas d'un rendu à l'autre ; deux libellés peuvent se répéter.
-              key={i}
               // Le menu se ferme d'abord : la fenêtre de confirmation prend alors le focus.
               onSelect={() => { void choisir(a); }}
               disabled={a.desactive}
@@ -102,6 +108,7 @@ export function MenuActions({ actions, label, onOuvert }: {
                 </span>
               ) : a.label}
             </DropdownMenuItem>
+            </Fragment>
           );
         })}
       </DropdownMenuContent>

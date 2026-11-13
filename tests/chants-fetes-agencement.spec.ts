@@ -122,8 +122,12 @@ for (const langue of ["fr", "zh-CN"] as const) {
     await page.addInitScript((l) => localStorage.setItem("i18nextLng", l), langue);
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
-    await signInAs(page, MEMBRE, DOCS_CFD, "/setlists?cat=No%C3%ABl");
-    await expect(page.getByRole("link", { name: /Gp Joie/ }).first()).toBeVisible();
+    // Règle de largeur du 25/10/2026 (tranche B4b de docs/spec-corrections-audit.md, § 5 ; commit bc613d14) :
+    // en grand, sans `?apercu=`, la liste est seule dans sa colonne de 720 px. La première setlist de l'ordre
+    // de passage choisie : les deux volets et son aperçu.
+    await signInAs(page, MEMBRE, DOCS_CFD, "/setlists?cat=No%C3%ABl&apercu=noel-2026-p1aaaaaa");
+    // En 中文 le groupe se lit 喜乐团契 dans le titre (bo-evenements-9, src/lib/fetes/qui.ts) ; la valeur stockée reste « Gp Joie ».
+    await expect(page.getByRole("link", { name: langue === "fr" ? /Gp Joie/ : /喜乐团契/ }).first()).toBeVisible();
     await expect(page.getByText(langue === "fr" ? /Sans chant : 3 · Le grand spectacle/ : /没有诗歌：3 · Le grand spectacle/)).toBeVisible();
     if (estGrandEcran(info)) {
       // Deux volets : l'aperçu porte les cartes « Musiques et danses » et « L'ordre de passage ».

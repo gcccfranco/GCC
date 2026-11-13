@@ -1,4 +1,5 @@
 import { FS_BASE, authHeader, checkRest, toFsFields } from "./setlists";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import { oublierGrille } from "@/lib/planning/grille";
 import type { DefinitionGrille } from "@/lib/planning/grilles";
 
@@ -9,7 +10,7 @@ import type { DefinitionGrille } from "@/lib/planning/grilles";
 // Le document se crée s'il n'existe pas. Droits : firestore.rules
 // (plannings/{key}/dimanches) et canEditPlanning (src/lib/access.ts).
 
-export type EcritureCase = {
+type EcritureCase = {
   definition: DefinitionGrille;
   date: string;
   /** Clé de colonne (`piano`…). */
@@ -28,14 +29,10 @@ export type EcritureCase = {
   semer?: string[];
 };
 
-export type EcritureCases = Omit<EcritureCase, "colonne" | "valeur"> & {
+type EcritureCases = Omit<EcritureCase, "colonne" | "valeur"> & {
   /** Clé de colonne → valeur : tout un dimanche s'écrit en un seul PATCH (lot 3, PG4). */
   valeurs: Record<string, string>;
 };
-
-export function ecrireCase({ colonne, valeur, ...reste }: EcritureCase): Promise<void> {
-  return ecrireCases({ ...reste, valeurs: { [colonne]: valeur } });
-}
 
 export async function ecrireCases({ definition, date, valeurs, auteur, semer }: EcritureCases): Promise<void> {
   const champs: Record<string, unknown> = {
@@ -56,6 +53,7 @@ export async function ecrireCases({ definition, date, valeurs, auteur, semer }: 
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ fields: toFsFields(champs) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   oublierGrille(definition.key);
 }
@@ -74,6 +72,7 @@ export async function poserDate(definition: DefinitionGrille, date: string, aute
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ fields: toFsFields(champs) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   oublierGrille(definition.key);
 }
@@ -83,6 +82,7 @@ export async function retirerDate(definition: DefinitionGrille, date: string): P
     method: "DELETE",
     headers: await authHeader(),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   oublierGrille(definition.key);
 }

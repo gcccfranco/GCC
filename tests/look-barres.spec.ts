@@ -10,8 +10,8 @@ import { enDeuxVolets } from "./helpers/setlist";
 // fond opaque (`FondDeBarre`) qui repeint ce qu'il cache, le fond de la page et son
 // halo ; la barre reste donc invisible tant que rien n'est dessous. Sous la dernière
 // barre, le contenu s'efface sur 12 px au lieu d'être tranché (ni voile, ni flou, ni
-// filet : V7 les a écartés). Le mode louange garde ses deux barres voilées (20/09/2026).
-const VOILE = "rgba(255, 255, 255, 0.8)";
+// filet : V7 les a écartés). Le mode louange a gardé ses deux barres voilées du 20/09/2026 au 03/11/2026 ;
+// depuis dimanche-1 (lot CD), elles sont opaques, sans flou : le contenu ne passe plus dessous (V8).
 const FONDU = 12;
 
 const MUSICIEN: FakeProfile = {
@@ -46,7 +46,11 @@ const barres = (page: Page) =>
         fond: fond ? getComputedStyle(fond).backgroundColor : null,
         // Écart entre le bas du fond et le bas de la barre : le fondu.
         deborde: f ? Math.round(f.bottom - b.bottom) : null,
-        couvre: f ? Math.round(f.top - b.top) === 0 && Math.round(f.left - b.left) === 0 && Math.round(f.right - b.right) === 0 : false,
+        // Collée dans le panneau du chant (reprise 1b0c716 : `[data-collee]`), le fond déborde de -16 / -24 px pour repeindre le panneau
+        // jusqu'à ses bords : il doit alors contenir la barre ; sinon il la recouvre exactement.
+        couvre: !f ? false : el.hasAttribute("data-collee")
+          ? Math.round(f.top - b.top) <= 0 && Math.round(f.left - b.left) <= 0 && Math.round(f.right - b.right) >= 0 && Math.round(f.bottom - b.bottom) >= 0
+          : Math.round(f.top - b.top) === 0 && Math.round(f.left - b.left) === 0 && Math.round(f.right - b.right) === 0,
         glisse: getComputedStyle(el).transitionProperty,
       };
     })
@@ -127,6 +131,10 @@ async function sansEnTeteDeChants(page: Page) {
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect.poll(() => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) =>
     els.filter((el) => el.getClientRects().length > 0).every((el) => getComputedStyle(el).transform === "matrix(1, 0, 0, 1, 0, 0)"))).toBe(true);
+  // Chant en deux volets (reprise 1b0c716) : sans l'en-tête, le haut du panneau tombe pile au seuil où la barre se dit
+  // collée (haut du panneau + 16 = son haut collant) et un demi-pixel en décide. Sur le vrai site, l'en-tête est là et
+  // la barre n'est jamais collée en haut de page : on la remet dans cet état. Défilée, elle se recolle (étape 2).
+  await page.evaluate(() => document.querySelector(".barre-chant")?.removeAttribute("data-collee"));
 }
 
 /**
@@ -168,6 +176,17 @@ async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: strin
   const transformations = () => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => els.filter((el) => el.getClientRects().length > 0).map((el) => getComputedStyle(el).transform));
   const enPlace = Array(combien).fill("matrix(1, 0, 0, 1, 0, 0)");
   await page.addStyleTag({ content: "body{min-height:3000px}" });
+  // `body` porte `min-h-screen` (classe, plus forte que ce sélecteur) : sur une page courte (Planning, depuis que sa mise en page
+  // n'ajoute plus `min-h-screen`), rien ne défilerait. On ajoute alors du vide en fin de page, juste assez pour défiler de 600 px.
+  await page.evaluate(() => {
+    const manque = 700 - (document.documentElement.scrollHeight - window.innerHeight);
+    if (manque > 0 && document.documentElement.scrollHeight - window.innerHeight < 150) {
+      const cale = document.createElement("div");
+      cale.setAttribute("aria-hidden", "true");
+      cale.style.height = `${manque}px`;
+      document.body.appendChild(cale);
+    }
+  });
   await page.mouse.move(zone.x + zone.width / 2, 400);
   await page.mouse.wheel(0, 600);
   await expect.poll(transformations, "les barres se rangent quand on descend").not.toEqual(enPlace);
@@ -187,8 +206,24 @@ async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: strin
   } else {
     // Attendu jusqu'à ce que le rendu se pose (1 fois sur 90, la capture tombait juste après
     // le défilement) : du contenu visible sous une barre, lui, ne disparaîtrait jamais.
-    await expect.poll(async () => ecart(page, fondSeul, await page.screenshot({ clip: zone })), "rien ne transparaît sous les barres")
-      .toMatchObject({ trop: 0 });
+    // Chant en deux volets (reprise de la page du chant, 1b0c716) : la barre collée repeint le panneau (`.barre-fond` décalé de
+    // -16 / -24 px, rayon du panneau en haut) et un voile de `--fond-page` couvre le haut de l'écran ; la zone n'est donc plus
+    // celle de la page en haut. Ce que la barre garantit reste identique : rien du chant n'apparaît dessous. On compare la zone
+    // à elle-même, le chant (partition, vidéo) masqué : si du contenu transparaissait, les deux images différeraient.
+    const colleeDansLePanneau = (await page.locator(".barre-chant[data-collee]").count()) > 0;
+    if (colleeDansLePanneau) {
+      const sansChant = async () => {
+        const cache = await page.addStyleTag({ content: ".chants-chant :is(main.song-zoom, .rangee-chant, .video-chant) { visibility: hidden !important }" });
+        const image = await page.screenshot({ clip: zone });
+        await cache.evaluate((el) => (el as ChildNode).remove());
+        return image;
+      };
+      await expect.poll(async () => ecart(page, await sansChant(), await page.screenshot({ clip: zone })), "rien ne transparaît sous les barres")
+        .toMatchObject({ trop: 0 });
+    } else {
+      await expect.poll(async () => ecart(page, fondSeul, await page.screenshot({ clip: zone })), "rien ne transparaît sous les barres")
+        .toMatchObject({ trop: 0 });
+    }
   }
 
   await masque.evaluate((el) => (el as ChildNode).remove());
@@ -230,6 +265,8 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
     await signInAs(page, MUSICIEN, {}, "/planning");
     await page.getByRole("heading", { level: 1, name: "Planning" }).waitFor();
     await barresOpaquesEtInvisibles(page, avecNavbar(2), "planning", { sousLeTitre: true });
+    // Recette de surface (C) : le Planning est une page de liste, les barres repeignent le gris #f2f2f7.
+    for (const { fond } of await barres(page)) expect(fond).toBe("rgb(242, 242, 247)");
   });
 
   test("en sombre aussi, le fond repeint la page", async ({ page }) => {
@@ -250,15 +287,20 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
     expect((await barres(page)).map((b) => b.deborde)).toEqual(sansNavbar() ? [FONDU] : [1, FONDU]);
   });
 
-  // Rien ne dépend de React : ni bande blanche ni halo absent le temps qu'il démarre.
-  test("dès le premier affichage, avant que React ne démarre, la navbar repeint déjà le halo", async ({ page }) => {
+  // Rien ne dépend de React : ni bande blanche le temps qu'il démarre. Lot CD (partout-q2) : /songs n'a plus de halo,
+  // donc la navbar n'en peint aucune copie, dès le premier affichage (les pages à halo — Planning, fiche de setlist,
+  // scène — sont derrière la connexion : leur copie se vérifie hydratée, plus haut).
+  test("dès le premier affichage, avant que React ne démarre, la navbar couvre la page et ne peint aucune copie de halo", async ({ page }) => {
     test.skip(sansNavbar(), "là où il y a une navbar : pas sur ordinateur (lot U4)");
     await page.route(/\/_next\/.*\.js(\?|$)/, (route) => route.abort());
     await page.goto("/songs");
     await page.locator("header").first().waitFor();
     expect((await barres(page)).map((b) => b.couvre)).toEqual([true]);
-    const halo = await page.evaluate(() => getComputedStyle(document.querySelector("header .barre-halo")!, "::before").backgroundColor);
-    expect(halo, "la copie du halo a sa couleur").not.toBe("rgba(0, 0, 0, 0)");
+    const copie = await page.evaluate(() => {
+      const el = document.querySelector("header .barre-halo");
+      return el ? getComputedStyle(el).display : "absente";
+    });
+    expect(copie, "aucune copie de halo visible sous la navbar").toMatch(/^(none|absente)$/);
   });
 
   // Qui demande moins de transparence garde des barres pleines.
@@ -271,14 +313,17 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
     await expect.poll(() => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor))).toEqual(["rgb(255, 255, 255)"]);
   });
 
-  test("le mode louange garde ses deux barres voilées", async ({ page }) => {
+  test("le mode louange a deux barres opaques, sans flou (dimanche-1)", async ({ page }) => {
     await sansSheet(page);
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIEN, { "setlists/culte": FICHE }, "/setlists/culte");
     await page.getByRole("button", { name: "Mode louange" }).click();
     await attendreMiseEnPage(page);
-    const voilees = page.locator(".material-chrome.material-steady");
-    await expect(voilees).toHaveCount(2); // la barre du haut et celle du bas
-    for (const fond of await voilees.evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor))) expect(fond).toBe(VOILE);
+    const barres = page.locator(".material-chrome.material-steady");
+    await expect(barres).toHaveCount(2); // la barre du haut et celle du bas
+    for (const { fond, flou } of await barres.evaluateAll((els) => els.map((el) => ({ fond: getComputedStyle(el).backgroundColor, flou: getComputedStyle(el).backdropFilter })))) {
+      expect(fond).toBe("rgb(255, 255, 255)");
+      expect(flou === "none" || flou === "").toBe(true);
+    }
   });
 });

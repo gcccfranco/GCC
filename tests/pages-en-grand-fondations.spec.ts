@@ -61,8 +61,9 @@ test.describe("rangerEnColonnes : l'organigramme en bandeau (Q12)", () => {
   });
 
   test("les petites l'une sous l'autre tant qu'elles tiennent, écart compris", () => {
-    // 200 + 16 + 200 + 16 + 200 = 632 ≤ 650 ; la quatrième passe à la colonne suivante.
-    expect(rangerEnColonnes([200, 200, 200, 200], 650, { ecart: 16 }).map((c) => c.cartes)).toEqual([[0, 1, 2], [3]]);
+    // 200 + 16 + 200 + 16 + 200 = 632 ≤ 650 : le rangement glouton ferait deux colonnes (3 puis 1) ; recoupées en
+    // deux tranches voisines (bo-equipes-4), ce sont 2 et 2.
+    expect(rangerEnColonnes([200, 200, 200, 200], 650, { ecart: 16 }).map((c) => c.cartes)).toEqual([[0, 1], [2, 3]]);
     // Sans l'écart, 200 × 3 = 600 ≤ 620 ; avec 16 px entre les cartes, 632 > 620.
     expect(rangerEnColonnes([200, 200, 200], 620).map((c) => c.cartes)).toEqual([[0, 1, 2]]);
     expect(rangerEnColonnes([200, 200, 200], 620, { ecart: 16 }).map((c) => c.cartes)).toEqual([[0, 1], [2]]);
@@ -79,6 +80,23 @@ test.describe("rangerEnColonnes : l'organigramme en bandeau (Q12)", () => {
     }
     // La carte de 900 px est seule dans sa colonne.
     expect(colonnes.find((c) => c.cartes.includes(1))?.cartes).toEqual([1]);
+  });
+
+  test("équilibrées : le nombre de colonnes du glouton, des hauteurs voisines (bo-equipes-4)", () => {
+    // 11 cartes de 100 px, 600 px de haut : le glouton ferait 5, 5 puis 1 ; recoupées en trois tranches voisines, 4, 4 et 3.
+    const colonnes = rangerEnColonnes(Array(11).fill(100), 600, { ecart: 16 });
+    expect(colonnes.map((c) => c.cartes.length)).toEqual([4, 4, 3]);
+    expect(colonnes.flatMap((c) => c.cartes)).toEqual(Array.from({ length: 11 }, (_, i) => i));
+    // Les hauteurs inégales : la plus haute colonne reste la plus basse possible, l'ordre est gardé.
+    const hauteurs = [300, 280, 160, 180, 170, 240, 150, 220, 100, 100, 130];
+    const c2 = rangerEnColonnes(hauteurs, 700, { ecart: 16 });
+    expect(c2.map((c) => c.cartes)).toEqual([[0, 1], [2, 3, 4], [5, 6], [7, 8, 9, 10]]);
+    expect(c2.flatMap((c) => c.cartes)).toEqual(hauteurs.map((_, i) => i));
+  });
+
+  test("une carte plus haute que le maximum reste seule, les autres se répartissent autour", () => {
+    const colonnes = rangerEnColonnes([100, 100, 900, 100, 100], 400, { ecart: 0 });
+    expect(colonnes.map((c) => c.cartes)).toEqual([[0, 1], [2], [3, 4]]);
   });
 
   test("colonnes larges en dernier, une par carte, dans leur ordre ; les autres gardent le leur", () => {

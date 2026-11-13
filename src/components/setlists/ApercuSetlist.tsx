@@ -13,12 +13,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { ListMusic, Play, Presentation } from "lucide-react";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { PlanningData } from "@/lib/planning/names";
 import type { SongIndexEntry } from "@/types/song";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { serviceButtonFill } from "@/lib/serviceButton";
-import { formatDate } from "@/lib/utils/formatDate";
+import { formatDate, langueCourte } from "@/lib/utils/formatDate";
 import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
 import { equipeDuService } from "@/lib/setlist/equipeDuService";
 import { equipeDeLaSetlist } from "@/lib/setlist/partage";
@@ -70,14 +70,14 @@ export function ApercuSetlist({
     <section aria-label={t("setlists.apercu.region")} className="apercu-setlist space-y-5 pb-10">
       <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
         <div className="min-w-0 flex-1 basis-72">
-          <p className="flex items-center gap-2 text-[13px] font-semibold">
+          <p className="flex items-center gap-2 text-sm font-semibold">
             <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: couleur }} />
             <span className="svc-ink" style={{ "--svc": couleur } as React.CSSProperties}>
               {i18n.language === "zh-CN" ? t("categories." + setlist.category, { defaultValue: setlist.category }) : categoryLabel(setlist.category)}
               {" · "}{formatDate(setlist.date, i18n.language)}
             </span>
           </p>
-          <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-foreground text-balance">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</h2>
+          <h2 className="mt-1 text-xl font-bold leading-tight tracking-tight text-foreground text-balance">{titreAffiche(setlist, langueCourte(i18n.language))}</h2>
           {(setlist.leader || presentation) && (
             <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
               {setlist.leader && <span>{t("planning.accueil.presidence", { nom: setlist.leader })}</span>}
@@ -94,7 +94,8 @@ export function ApercuSetlist({
           <SetlistHistory key={setlist.id} setlistId={setlist.id} songsMap={songsMap} />
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
-          <Link href={lien} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+          {/* Sur le gris de la page (V3 : l'aperçu est montré d'emblée) : la recette « outline » du bouton, pas l'aplat --secondary. */}
+          <Link href={lien} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-input bg-pose px-4 text-sm font-semibold text-foreground transition-transform duration-150 hover:bg-accent active:scale-[.97]">
             <ListMusic className="h-4 w-4" aria-hidden />
             {t("planning.accueil.ouvrir")}
           </Link>
@@ -110,7 +111,7 @@ export function ApercuSetlist({
       </div>
 
       <div className="apercu-colonnes grid items-start gap-4">
-        <article className="raised rounded-2xl px-5 pb-2 pt-4">
+        <article className="carte-groupe rounded-2xl px-5 pb-2 pt-4">
           <p className="flex items-baseline justify-between gap-3 border-b border-border pb-2">
             <b className="text-base font-bold">{t("setlists.list.songCounter", { count: chants })}</b>
             <span className="text-xs text-muted-foreground">{t("setlists.apercu.tonalites")}</span>

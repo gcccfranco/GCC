@@ -10,6 +10,7 @@ import { setlistLyricsText } from "../src/components/song/copyLyrics";
 import { buildPerformanceBlocks } from "../src/lib/performance/blocks";
 import type { SetlistItem } from "../src/types/setList";
 import type { SongIndexEntry } from "../src/types/song";
+import { cliquerMenuSetlist } from "./helpers/menuSetlist";
 
 // Lot « chants des fêtes », tranche CF-D (docs/spec-chants-fetes.md, CF14, CF15, CF19, CF20, CF21, CF27) :
 // l'éditeur et la page d'une setlist de fête, « Proposer » et les éléments « proposition ». Comptes, programmes
@@ -98,7 +99,7 @@ test.describe("CF-D · éditeur d'une setlist de fête (CF19, CF15)", () => {
     page.on("request", (r) => { if (r.url().includes("/api/push/notify-setlist")) appels.push(r.url()); });
     const db = await ouvrir(page, MEMBRE, "/setlists/noel-2026-p1aaaaaa/edit?depuis=fete");
     await attendreEditeur(page, "À jamais Tu es saint");
-    await page.locator("label", { hasText: "Notes pour l'équipe" }).locator("input").fill("Thème : la lumière");
+    await page.locator("label", { hasText: "Notes pour l'équipe" }).locator("textarea").fill("Thème : la lumière");
     await expect.poll(() => db.doc("setlists/noel-2026-p1aaaaaa")?.notes, { timeout: 10_000 }).toBe("Thème : la lumière");
     const doc = db.doc("setlists/noel-2026-p1aaaaaa")!;
     expect(doc.category).toBe("Noël");
@@ -182,6 +183,10 @@ test.describe("CF-D · bascule d'une proposition (CF21)", () => {
 test.describe("CF-D · page d'une setlist de fête (CF14, CF27)", () => {
   test("en-tête, sous-titre, carte « Musiques et danses », « L'ordre de passage » et passages voisins", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/setlists/noel-2026-p1aaaaaa");
+    // Deux volets : l'en-tête se déplie par le titre (T3 de docs/spec-exemples-usage.md), comme jianpu-par-defaut.
+    const titreDv = page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ });
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeAttached(); // la page est chargée
+    if (await titreDv.count()) await titreDv.click();
     await expect(page.getByText("Noël · jeudi 24 décembre · passage 1", { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/Ouverture · saisie par Ruth K\./).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Page de Noël 2026" }).first()).toHaveAttribute("href", /\/evenements\/scene\/noel/);
@@ -214,7 +219,7 @@ test.describe("CF-D · page d'une setlist de fête (CF14, CF27)", () => {
     const corps: unknown[] = [];
     await page.route("**/api/setlist/presentation", async (route) => { corps.push(route.request().postDataJSON()); await route.fulfill({ json: { ok: true, presentationUrl: "https://www.canva.com/design/noel" } }); });
     await ouvrir(page, REGIE, "/setlists/noel-2026-p1aaaaaa");
-    await page.getByRole("button", { name: "Ajouter le lien de la présentation" }).click();
+    await cliquerMenuSetlist(page, "Ajouter le lien de la présentation");
     await page.getByRole("textbox", { name: "Lien de la présentation" }).fill("https://www.canva.com/design/noel");
     await page.getByRole("button", { name: "Enregistrer" }).click();
     await expect.poll(() => corps.length).toBe(1);
@@ -224,7 +229,8 @@ test.describe("CF-D · page d'une setlist de fête (CF14, CF27)", () => {
   test("sans équipe : pas de bouton du lien, pas de « Modifier », pas de « Dupliquer »", async ({ page }) => {
     await ouvrir(page, SANS, "/setlists/noel-2026-p1aaaaaa");
     await expect(page.getByText("Noël 2026 · Gp Paix").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Ajouter le lien de la présentation" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Plus d'actions" }).first().click();
+    await expect(page.getByRole("menuitem", { name: "Ajouter le lien de la présentation" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Modifier" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Dupliquer/ })).toHaveCount(0);
   });

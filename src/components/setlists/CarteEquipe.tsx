@@ -37,7 +37,7 @@ export function CarteEquipe({
   const id = useId();
   const Titre = niveau === 2 ? "h2" : "h3";
   return (
-    <section aria-labelledby={id} className="raised rounded-2xl px-5 pb-3 pt-4">
+    <section aria-labelledby={id} className="carte-groupe rounded-2xl px-5 pb-3 pt-4">
       <Titre id={id} className="text-base font-bold">{t(titre)}</Titre>
       <p className="text-xs text-muted-foreground">{t(sousTitre)}</p>
       <dl className="mt-2">

@@ -43,19 +43,22 @@ const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
     overlayClassName?: string
+    /** Feuille de formulaire : flotte à 7,5 % du bas, 560 px, sans poignée. */
+    formulaire?: boolean
   }
->(({ className, overlayClassName, children, ...props }, ref) => (
+>(({ className, overlayClassName, formulaire, children, ...props }, ref) => (
   <DrawerPortal>
     <DrawerOverlay className={overlayClassName} />
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
+        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-xl bg-background dark:bg-[hsl(var(--raised))] [box-shadow:var(--shadow-flottant)]",
+        formulaire && "inset-x-0 mx-auto mt-0 w-[560px] max-w-[calc(100vw-2rem)] max-h-[85dvh] bottom-[7.5dvh] rounded-2xl after:hidden",
         className
       )}
       {...props}
     >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+      {!formulaire && <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />}
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>
@@ -83,6 +86,17 @@ const DrawerFooter = ({
   />
 )
 DrawerFooter.displayName = "DrawerFooter"
+
+const DrawerBarre = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn("shrink-0 flex items-center justify-end gap-2 border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]", className)}
+    {...props}
+  />
+)
+DrawerBarre.displayName = "DrawerBarre"
 
 const DrawerTitle = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Title>,
@@ -120,6 +134,7 @@ export {
   DrawerContent,
   DrawerHeader,
   DrawerFooter,
+  DrawerBarre,
   DrawerTitle,
   DrawerDescription,
 }

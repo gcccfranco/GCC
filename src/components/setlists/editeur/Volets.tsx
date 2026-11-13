@@ -3,6 +3,7 @@
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, Link2, Shuffle, Trash2, Unlink } from "lucide-react";
+import { formatSectionName } from "@/lib/chordpro/parser";
 import { useJianpuScore } from "@/lib/jianpu/images";
 import { nextUid } from "@/lib/uid";
 import {
@@ -23,7 +24,7 @@ import { BoutonOK, TitreVolet, useFeuille } from "@/components/setlists/editeur/
 // fusionner. Chaque réglage écrit comme l'éditeur d'aujourd'hui. Les mêmes
 // contenus s'ouvrent dans une feuille sur téléphone et tablette en portrait (T4).
 
-const titreDeSection = "text-[13px] font-semibold text-muted-foreground";
+const titreDeSection = "text-sm font-semibold text-muted-foreground";
 const boutonGris =
   "flex h-10 items-center gap-2 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const boutonRetirer =
@@ -37,7 +38,7 @@ function EnTeteVolet({ surtitre, titre, sousTitre, lien }: { surtitre: string; t
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0">
-        {!feuille && <p className="text-[13px] font-medium text-muted-foreground">{surtitre}</p>}
+        {!feuille && <p className="text-sm font-medium text-muted-foreground">{surtitre}</p>}
         <TitreVolet className="mt-0.5 text-2xl font-bold leading-tight tracking-tight text-foreground">{titre}</TitreVolet>
         {sousTitre && <p className="mt-1 text-sm text-muted-foreground">{sousTitre}</p>}
         {feuille && lien && <div className="mt-1.5">{lien}</div>}
@@ -74,7 +75,7 @@ export function VoletChant({
   const [etape, setEtape] = useState<string | null>(null);
   const sections = useMemo(() => itemSections(item.song, item.contentOverride), [item.song, item.contentOverride]);
   const allSections = item.song.sections ?? [];
-  const noms = [...new Set(allSections.map((s) => s.name))].join(", ");
+  const noms = [...new Set(allSections.map((s) => formatSectionName(s, t)))].join(t("setlists.editeur.separateurSections"));
   const sousTitre = [item.song.artist, noms].filter(Boolean).join(" · ");
   const idNote = useId();
   const lastPhrase: LastPhraseTarget = {
@@ -126,7 +127,7 @@ export function VoletChant({
                   aria-checked={on}
                   onClick={() => onPatch({ jianpuSheet: sur })}
                   className={`h-8 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    on ? "bg-background text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"
+                    on ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {libelle}
@@ -437,7 +438,7 @@ export function ChoixFusion({
           ),
         )}
       </ul>
-      <p className="text-[13px] leading-relaxed text-muted-foreground">{t("setlists.editeur.fusionnerPerte")}</p>
+      <p className="text-sm leading-relaxed text-muted-foreground">{t("setlists.editeur.fusionnerPerte")}</p>
       <div className="flex justify-end gap-3">
         <button type="button" onClick={onAnnuler} className={boutonGris}>
           {t("setlists.editeur.annuler")}

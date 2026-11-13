@@ -4,6 +4,7 @@
 // Dates ISO « AAAA-MM-JJ » et heures « HH:MM », comparées comme du texte.
 
 import { QUI, type Duree, type Plage } from "@/types/programme";
+import { JOUR_MS as DAY, versUtc as utc, versIso as iso } from "@/lib/dates/iso";
 import { lastSundayBefore } from "./dimanches";
 
 /** La saison complète d'un programme, défauts compris. `jours` = jours cochés
@@ -28,28 +29,17 @@ export const ORDRE_JOURS = [1, 2, 3, 4, 5, 6, 0] as const;
 /** Saison d'un programme d'avant U1 (Q7) : le dimanche, 14:00–19:00. */
 export const PLAGES_DEFAUT: readonly Plage[] = [{ jour: 0, debut: "14:00", fin: "19:00" }];
 
-const DAY = 86_400_000;
-
-function utc(iso: string): number {
-  const [y, m, d] = iso.split("-").map(Number);
-  return Date.UTC(y, m - 1, d);
-}
-
-function iso(ms: number): string {
-  return new Date(ms).toISOString().slice(0, 10);
-}
-
 /** Jour de la semaine d'une date ISO (0 = dimanche). */
 export function jourDeSemaine(date: string): number {
   return new Date(utc(date)).getUTCDay();
 }
 
-export function minutes(hhmm: string): number {
+function minutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
   return h * 60 + m;
 }
 
-export function hhmm(min: number): string {
+function hhmm(min: number): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${p(Math.floor(min / 60))}:${p(min % 60)}`;
 }
@@ -217,7 +207,7 @@ export function horsGrille<C extends CreneauLike>(
 }
 
 /** Ce qui empêche d'enregistrer une saison. */
-export type ErreurSaison =
+type ErreurSaison =
   | "dateInvalide"
   | "finApresJourJ"
   | "finAvantDebut"

@@ -5,16 +5,17 @@
 // un clic ailleurs sur la carte → fiche du rôle (D10).
 
 import type { MouseEvent, ReactNode } from "react";
-import { Bell, Link2, Music, Pencil, Plus, Send, SquarePen } from "lucide-react";
+import { Link2, Music, Pencil, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { colonnesReliables } from "@/lib/groupes/organigramme";
 import { etatPlaces } from "@/lib/groupes/edition";
 import type { RoleGroupe, Titulaire } from "@/types/groupe";
 import { Initiales } from "./Initiales";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 export function Pastille({ icone, children }: { icone?: ReactNode; children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-foreground/80">
+    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-foreground/80">
       {icone}
       {children}
     </span>
@@ -39,15 +40,12 @@ export function LignePlaces({ role, couleur }: { role: Pick<RoleGroupe, "places"
   );
 }
 
-/** Les pastilles d'un rôle : colonne reliée, puis ses droits (« Publie » seule quand Publier est coché). */
-export function PastillesRole({ role, groupeId }: { role: RoleGroupe; groupeId: string }) {
+/** Les pastilles d'un rôle : colonne reliée, puis ses droits (seule « Saisit les chants des fêtes » reste, lot RS, RS-D). */
+function PastillesRole({ role, groupeId }: { role: RoleGroupe; groupeId: string }) {
   const { t } = useTranslation();
   const colonne = role.colonne ? colonnesReliables(groupeId).find((c) => c.cle === role.colonne) : undefined;
   const p: ReactNode[] = [];
   if (colonne) p.push(<Pastille key="c" icone={<Link2 className="h-3 w-3" aria-hidden />}>{t("groupes.pastille.colonne", { colonne: t(colonne.i18n) })}</Pastille>);
-  if (role.droits.publier) p.push(<Pastille key="p" icone={<Send className="h-3 w-3" aria-hidden />}>{t("groupes.pastille.publie")}</Pastille>);
-  else if (role.droits.remplir) p.push(<Pastille key="r" icone={<SquarePen className="h-3 w-3" aria-hidden />}>{t("groupes.pastille.remplit")}</Pastille>);
-  if (role.droits.notifier) p.push(<Pastille key="n" icone={<Bell className="h-3 w-3" aria-hidden />}>{t("groupes.pastille.notifie")}</Pastille>);
   if (role.droits.saisirFetes) p.push(<Pastille key="f" icone={<Music className="h-3 w-3" aria-hidden />}>{t("groupes.pastille.saisitFetes")}</Pastille>);
   return p.length ? <div className="flex flex-wrap gap-1.5">{p}</div> : null;
 }
@@ -77,7 +75,7 @@ export function CarteRole({
       data-role={role.id}
       aria-label={role.nom}
       onClick={onFiche}
-      className="raised mb-3 cursor-pointer break-inside-avoid space-y-2.5 rounded-2xl p-4"
+      className="carte-groupe mb-3 cursor-pointer break-inside-avoid space-y-2.5 rounded-2xl p-4"
     >
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -90,7 +88,7 @@ export function CarteRole({
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <LignePlaces role={role} couleur={couleur} />
             {role.comite && (
-              <span className="rounded-full px-1.5 py-0.5 text-[11px] font-semibold" style={{ background: `${couleur}1f`, color: couleur }}>
+              <span className="rounded-full px-1.5 py-0.5 text-xs font-semibold texte-service" style={{ background: `${couleur}1f`, ...styleTexteService(couleur) }}>
                 {t("groupes.auComite")}
               </span>
             )}
@@ -117,7 +115,7 @@ export function CarteRole({
                 <Initiales nom={x.nom} pointille={!x.uid} />
                 <span className={c ? "min-w-0 truncate rounded-full bg-foreground px-2 py-0.5 font-semibold text-background" : "min-w-0 truncate text-foreground"}>{x.nom}{c && <span className="sr-only"> ({t("groupes.app.toi")})</span>}</span>
                 {!x.uid && <Pastille>{t("groupes.sansCompte")}</Pastille>}
-                {autre && <span className="text-[11px] text-muted-foreground">{autre}</span>}
+                {autre && <span className="text-xs text-muted-foreground">{autre}</span>}
               </li>
             );
           })}

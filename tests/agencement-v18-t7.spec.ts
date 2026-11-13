@@ -8,7 +8,7 @@ import {
 // `v18-app-evenements`, `v18-app-evenements-reduite`). L'en-tête de toute la section (agenda et scène) :
 // « Évènements », « Les rendez-vous de l'église et les inscriptions », « + Nouvel évènement » (pilule à
 // libellé en grand, rond sur téléphone), les onglets en rail sous le titre ; sur l'onglet de la scène, le
-// même en-tête sans action principale. En grand, la fiche dans le volet : titre en h2 de 24 px, une
+// même en-tête sans action principale. En grand, la fiche dans le volet : titre en h2 de 22 px, une
 // colonne sous 760 px de volet, deux au-delà ; sans image, elle commence par son titre (plus de cadre
 // gris) ; « Gérer dans le Back-Office » en contour à côté du titre. Firestore et date simulés ;
 // personnes fictives.
@@ -32,8 +32,8 @@ const DOCS: Record<string, Record<string, unknown>> = {
 
 /** Membre d'un groupe, sans droit de création. */
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", firstName: "Membre", lastName: "Essai", serviceRoles: { "Groupe Paix": ["chanteur"] } };
-/** Pôle Événement et la coordination (cochée), qui crée des évènements. */
-const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+/** Pôle Événement et la coordination (lot AO : référent EDD, plus la case cochée), qui crée des évènements. */
+const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */ };
 
 async function ouvrir(page: Page, qui: FakeProfile, to: string) {
   interdireDialoguesNatifs(page);
@@ -73,13 +73,13 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     await capture(page, "agenda");
   });
 
-  test("en grand : la liste n'a plus de titre, la fiche se titre en h2 de 24 px", async ({ page }, info) => {
+  test("en grand : la liste n'a plus de titre, la fiche se titre en h2 de 22 px", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : grand écran");
     await ouvrir(page, MEMBRE, "/evenements");
     await expect(liste(page).getByRole("heading", { name: "Évènements" })).toHaveCount(0);
     const titre = volet(page).getByRole("heading", { level: 2, name: "Soirée louange" });
     await expect(titre).toBeVisible();
-    expect(await titre.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBe(24);
+    expect(await titre.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBe(22);
     // La liste est une carte en relief, sans marge de plus autour de la fiche (R10).
     const [l, d] = [(await liste(page).boundingBox())!, (await volet(page).boundingBox())!];
     const premier = (await titre.boundingBox())!;
@@ -87,19 +87,22 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     expect(d.x).toBeGreaterThan(l.x + l.width);
   });
 
-  test("responsable : « + Nouvel évènement » à libellé en grand et sur tablette, rond sur téléphone", async ({ page }, info) => {
+  test("responsable : « + Nouvel évènement » à libellé dans l'en-tête dès 768 px, pilule dans le flux sur téléphone", async ({ page }, info) => {
     await ouvrir(page, COORDINATION, "/evenements");
     const bouton = nouvel(page);
     await expect(bouton).toHaveCount(1);
     await expect(bouton).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
-    await expect(enTete(page).getByRole("link", { name: "Nouvel évènement" }), "dans l'en-tête").toHaveCount(1);
-    const boite = (await bouton.boundingBox())!;
     if (estTelephone(info)) {
-      expect(await bouton.evaluate((el) => getComputedStyle(el).position), "rond fixe").toBe("fixed");
-      expect(Math.round(boite.width)).toBe(52);
-      expect(Math.round(boite.height)).toBe(52);
-      await expect(bouton.getByText("Nouvel évènement"), "libellé pour les lecteurs d'écran seulement").toHaveClass(/sr-only/);
+      // eglise-1 : plus de rond fixe sur le contenu ; une pilule de 44 px au bas de la liste.
+      await expect(enTete(page).getByRole("link", { name: "Nouvel évènement" }), "plus dans l'en-tête").toHaveCount(0);
+      await bouton.scrollIntoViewIfNeeded();
+      const boite = (await bouton.boundingBox())!;
+      expect(await bouton.evaluate((el) => getComputedStyle(el).position), "dans le flux").not.toBe("fixed");
+      expect(Math.round(boite.height)).toBe(44);
+      await expect(bouton.getByText("Nouvel évènement"), "libellé visible").not.toHaveClass(/sr-only/);
     } else {
+      await expect(enTete(page).getByRole("link", { name: "Nouvel évènement" }), "dans l'en-tête").toHaveCount(1);
+      const boite = (await bouton.boundingBox())!;
       await expect(bouton.getByText("Nouvel évènement")).toBeVisible();
       expect(boite.width, "pilule à libellé").toBeGreaterThan(120);
       const h1 = (await enTete(page).locator("h1").boundingBox())!;
@@ -210,14 +213,15 @@ test.describe("T7 : la fiche dans le volet", () => {
     expect(Math.round(g.y - bas), "un seul écart de 16 px, pas deux").toBe(16);
   });
 
-  test("« Gérer dans le Back-Office » en contour, à côté du titre", async ({ page }) => {
+  // eglise-8 : « Gérer » et « Partager » montent sur la rangée des étiquettes, alignés à droite, le titre dessous.
+  test("« Gérer dans le Back-Office » en contour, sur la rangée des étiquettes au-dessus du titre, à droite", async ({ page }) => {
     await ouvrir(page, COORDINATION, "/evenements/foot");
     const titre = volet(page).getByRole("heading", { level: 2, name: "Foot au parc" });
     const gerer = volet(page).getByRole("link", { name: "Gérer dans le Back-Office" });
     await expect(gerer).toHaveAttribute("href", /^\/back-office\/evenements\/foot\/?$/);
     const [t, g] = [(await titre.boundingBox())!, (await gerer.boundingBox())!];
-    expect(g.x, "à droite du titre").toBeGreaterThan(t.x + t.width - 1);
-    expect(g.y, "sur la rangée du titre").toBeLessThan(t.y + t.height);
+    expect(g.y + g.height, "au-dessus du titre, sur la rangée des étiquettes").toBeLessThanOrEqual(t.y + 1);
+    expect(g.x + g.width, "aligné à droite de la colonne du titre").toBeGreaterThan(t.x + t.width - 120);
     expect(parseFloat(await gerer.evaluate((el) => getComputedStyle(el).borderTopWidth)), "en contour").toBeGreaterThanOrEqual(1);
   });
 });

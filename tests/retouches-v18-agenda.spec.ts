@@ -5,9 +5,8 @@ import { ADMIN_EMAILS } from "../src/lib/access";
 
 // Retouches v18, tranche R4 (docs/spec-retouches-v18.md, D6 et D7 ; planche `v18-bo-calendrier-agenda-a`) :
 // Back-Office › Calendrier.
-// - D6 : la rangée des filtres (sources, « Seulement moi ») reste sur UNE ligne, à droite de la période,
-//   et défile de côté avec un bord fondu du côté où il reste des filtres, comme les plannings — sur
-//   l'iPad debout, elle passait sur trois rangées.
+// - D6 : la rangée des filtres (sources, « Seulement moi ») est à droite de la période ; remplacée par BO-G (3) :
+//   elle passe à la ligne au lieu de défiler (plus de bord fondu), rien n'est coupé.
 // - D7 : « Ajouter ce jour-là » suit la planche : le bouton, puis une flèche ronde (« Évènement, tâche ou
 //   réunion ») qui ouvre le même menu ; la ligne de l'entrée ouverte dans l'agenda est surlignée.
 // Firestore, Sheets et date simulés ; personnes fictives. Cinq projets (le téléphone garde ses pilules
@@ -34,6 +33,8 @@ const DOCS: Record<string, Record<string, unknown>> = {
 /** Jeudi 1er octobre 2026, en Agenda ; les Sheets (évènements, planning) répondent vides. */
 async function ouvrirAgenda(page: Page, lang?: "zh-CN") {
   interdireDialoguesNatifs(page);
+  // Le panneau fixe du jour n'existe qu'à partir de 1 600 px (bo-evenements-2) ; en dessous, l'Agenda n'a pas de volet.
+  if (estGrandEcran(test.info()) && (page.viewportSize()?.width ?? 0) >= 1024) await page.setViewportSize({ width: 1600, height: 900 });
   if (lang) await page.addInitScript((l) => localStorage.setItem("i18nextLng", l), lang);
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
@@ -69,84 +70,79 @@ async function capture(page: Page, nom: string) {
   await page.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png` });
 }
 
-test.describe("R4 · D6 : les filtres du calendrier sur une seule rangée qui défile", () => {
+// T3c (bo-reunions-taches-2) : la rangée des filtres est la même aux quatre dispositions, sous la période : le filtre,
+// un filet, « Seulement moi », « Sources ». Elle tient sur une ligne en tablette et sur ordinateur (rien à défiler,
+// donc aucun fondu à découvrir) ; le téléphone, lui, la fait défiler (agencement-v18-calendrier.spec.ts).
+test.describe("R4 · D6 (BO-G, 3, puis T3c) : la rangée des filtres du calendrier, sous la période", () => {
   test.beforeEach(() => {
-    test.skip(estTelephone(test.info()), "le téléphone garde « Tout · Seulement moi » et la feuille des sources");
+    test.skip(estTelephone(test.info()), "le téléphone fait défiler la rangée (agencement-v18-calendrier.spec.ts)");
   });
 
-  test("une seule ligne, à droite de la période ; bord fondu du côté où il reste des filtres", async ({ page }, info) => {
+  test("sous la période, sur une ligne : tous les filtres visibles, rien à défiler, aucun fondu", async ({ page }) => {
     await ouvrirAgenda(page);
     const rangee = filtres(page);
     const boutons = rangee.getByRole("button");
     // Les sources de l'admin et « Seulement moi ».
     expect(await boutons.count()).toBeGreaterThan(4);
     await expect(rangee.getByRole("button", { name: "Seulement moi" })).toHaveCount(1);
-    // Une seule ligne : tous les filtres au même y, à la hauteur de la période.
-    const ys = await boutons.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
-    expect(Math.max(...ys) - Math.min(...ys), `filtres sur une ligne (y : ${ys.join(", ")})`).toBeLessThanOrEqual(1);
     const mois = (await page.getByTestId("mois-affiche").boundingBox())!;
     const premier = (await boutons.first().boundingBox())!;
-    expect(Math.abs(premier.y + premier.height / 2 - (mois.y + mois.height / 2)), "à la hauteur de la période").toBeLessThanOrEqual(2);
-    expect(premier.x, "à droite de la période").toBeGreaterThan(mois.x + mois.width);
-    // Elle défile de côté, la page jamais.
-    const avant = await fondu(page);
-    expect(avant.defile).toBe("auto");
+    expect(premier.y, "sous la période").toBeGreaterThan(mois.y + mois.height);
+    // Une seule ligne : tous les boutons à la même hauteur.
+    for (const b of await boutons.all()) {
+      const r = (await b.boundingBox())!;
+      expect(Math.abs(r.y - premier.y), "une seule ligne").toBeLessThanOrEqual(2);
+    }
+    const etat = await fondu(page);
+    expect(etat.deborde, "rien à défiler").toBe(false);
+    expect(["", "0px"]).toContain(etat.gauche);
+    expect(["", "0px"]).toContain(etat.droite);
     await verifierSansDebordement(page);
-    // Sur l'iPad debout, les filtres ne tiennent pas : bord fondu à droite, pas à gauche.
-    if (info.project.name === "tablette") expect(avant.deborde, "l'iPad debout fait défiler les filtres").toBe(true);
-    expect(avant).toMatchObject({ gauche: "0px", droite: avant.deborde ? "24px" : "0px", masque: true });
-    await capture(page, "r4-filtres-depart");
-    if (!avant.deborde) return;
-    // Au bout de la rangée : le fondu passe à gauche.
-    await rangee.evaluate((el) => el.scrollTo({ left: el.scrollWidth }));
-    await expect.poll(async () => (await fondu(page)).gauche).toBe("24px");
-    expect((await fondu(page)).droite).toBe("0px");
-    await capture(page, "r4-filtres-fin");
+    const largeur = page.viewportSize()!.width;
+    for (const b of await boutons.all()) {
+      await expect(b).toBeVisible();
+      const r = (await b.boundingBox())!;
+      expect(r.x + r.width, "rien de coupé à droite").toBeLessThanOrEqual(largeur);
+    }
+    await capture(page, "r4-filtres-a-la-ligne");
   });
 
-  test("en Mois aussi : la même rangée, sur une ligne", async ({ page }) => {
+  test("en Mois aussi : la même rangée, rien de coupé", async ({ page }) => {
     await ouvrirAgenda(page);
     const onglet = page.getByRole("tablist", { name: "Affichage" }).getByRole("tab", { name: "Mois" });
     await onglet.click();
     await expect(onglet).toHaveAttribute("aria-selected", "true");
     const boutons = filtres(page).getByRole("button");
     expect(await boutons.count()).toBeGreaterThan(4);
-    const ys = await boutons.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
-    expect(Math.max(...ys) - Math.min(...ys)).toBeLessThanOrEqual(1);
+    expect((await fondu(page)).deborde).toBe(false);
     await verifierSansDebordement(page);
   });
 
-  test("ordinateur : la fenêtre passe du téléphone à la tablette, le bord fondu suit la nouvelle rangée", async ({ page }, info) => {
+  test("ordinateur : à 800 px, la rangée est là et tient sur une ligne", async ({ page }, info) => {
     test.skip(info.project.name !== "ordinateur", "ordinateur seulement : la fenêtre change de taille");
-    // Ouverte en largeur de téléphone (pilules « Tout · Seulement moi »), puis agrandie (un téléphone
-    // tourné, une fenêtre élargie) : la rangée des filtres apparaît, elle doit recevoir son bord fondu.
-    await page.setViewportSize({ width: 600, height: 900 });
-    await ouvrirAgenda(page);
-    await expect(filtres(page)).toHaveCount(0);
     await page.setViewportSize({ width: 800, height: 900 });
+    await ouvrirAgenda(page);
     await expect(filtres(page)).toBeVisible();
     const etat = await fondu(page);
-    expect(etat.deborde, "à 800 px, les filtres ne tiennent pas").toBe(true);
-    expect(etat).toMatchObject({ gauche: "0px", droite: "24px" });
-    // Et le défilement le fait suivre.
-    await filtres(page).evaluate((el) => el.scrollTo({ left: el.scrollWidth }));
-    await expect.poll(async () => (await fondu(page)).gauche).toBe("24px");
+    expect(etat.deborde).toBe(false);
+    const dernier = (await filtres(page).getByRole("button").last().boundingBox())!;
+    expect(dernier.x + dernier.width, "à 800 px, le dernier filtre est dans la fenêtre").toBeLessThanOrEqual(800);
   });
 
-  test("passée en 中文, la rangée garde un bord fondu juste (libellés d'une autre largeur)", async ({ page }, info) => {
+  test("passée en 中文, la rangée tient encore (libellés d'une autre largeur)", async ({ page }, info) => {
     test.skip(info.project.name === "tablette-paysage", "la langue se change dans la barre latérale, réduite sur la tablette couchée");
     await ouvrirAgenda(page);
-    const avant = await fondu(page);
-    expect(avant.droite).toBe(avant.deborde ? "24px" : "0px");
     await page.locator('button[aria-label="切换为中文"]:visible').first().click();
     await expect(filtres(page).getByRole("button", { name: "只看我的" })).toBeVisible();
-    await expect.poll(async () => {
-      const apres = await fondu(page);
-      return apres.droite === (apres.deborde ? "24px" : "0px");
-    }, { message: "le fondu droit dit s'il reste des filtres à voir" }).toBe(true);
+    await expect.poll(async () => (await fondu(page)).deborde).toBe(false);
+    const largeur = page.viewportSize()!.width;
+    for (const b of await filtres(page).getByRole("button").all()) {
+      const r = (await b.boundingBox())!;
+      expect(r.x + r.width).toBeLessThanOrEqual(largeur);
+    }
   });
 
-  test("un filtre se touche toujours dans la rangée qui défile", async ({ page }) => {
+  test("un filtre se touche toujours dans la rangée", async ({ page }) => {
     await ouvrirAgenda(page);
     const moi = filtres(page).getByRole("button", { name: "Seulement moi" });
     await moi.click();
@@ -176,7 +172,7 @@ test.describe("R4 · D7 : « Ajouter ce jour-là » et la ligne ouverte", () => 
     // La flèche ouvre le menu du jour : évènement, tâche, réunion.
     await fleche.click();
     const menu = page.getByRole("menu");
-    await expect(menu.getByRole("menuitem")).toHaveText(["Nouvel évènement le 01/10", "Nouvelle tâche pour le 01/10", "Nouvelle réunion le 01/10"]);
+    await expect(menu.getByRole("menuitem")).toHaveText(["Nouvel évènement le 01/10", "Nouvelle réunion le 01/10", "Nouvelle tâche pour le 01/10"]);
     await capture(page, "r4-ajouter-menu");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);

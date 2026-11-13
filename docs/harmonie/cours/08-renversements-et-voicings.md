@@ -65,10 +65,10 @@ Le voicing est la façon de disposer les notes d'un accord sur l'instrument. Le 
 
 | Triade à la main droite | Notes | Résultat | Couleur |
 | --- | --- | --- | --- |
-| La majeur | La Do# Mi | G13(#11) | Lumineux, lydien |
-| Mi majeur | Mi Sol# Si | G13(b9) | Gospel, dramatique |
-| Mib majeur | Mib Sol Sib | G7(#9, b13) | Altéré, sombre |
-| Réb majeur | Réb Fa Lab | G7(b9, b5) | Tension maximale |
+| La majeur | La Do♯ Mi | G13(#11) | Lumineux, lydien |
+| Mi majeur | Mi Sol♯ Si | G13(b9) | Gospel, dramatique |
+| Mi♭ majeur | Mi♭ Sol Si♭ | G7(#9, b13) | Altéré, sombre |
+| Ré♭ majeur | Ré♭ Fa La♭ | G7(b9, b5) | Tension maximale |
 
 ## 8.6 Adapter le voicing au moment
 

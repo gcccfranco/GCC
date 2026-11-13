@@ -1,5 +1,9 @@
-// Back-Office › Évènements › Évènements : ceux qu'on gère. La liste vit dans le layout
-// (agencement v18, B3) : en grand, le volet de droite montre le prochain ; sinon, la liste seule.
+// Back-Office › Évènements : absorbé par le Calendrier (BO-C, BO8, docs/spec-back-office-piste-a.md).
+// L'ancienne adresse mène à l'Agenda filtré sur les évènements ; les fiches gardent leurs adresses.
+import { notFound, redirect } from "next/navigation";
+import { BACK_OFFICE } from "@/lib/backOffice";
+
 export default function EvenementsPage() {
-  return null;
+  if (!BACK_OFFICE) notFound();
+  redirect("/back-office/calendrier?vue=agenda&filtre=evenements");
 }

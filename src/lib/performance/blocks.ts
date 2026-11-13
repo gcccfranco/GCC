@@ -1,15 +1,17 @@
 import type { SetlistItem, SectionNuance } from "@/types/setList";
 import type { ChordProSection, ChordProAST } from "@/types/chordPro";
 import type { SongContent } from "@/lib/api/songs";
-import { transposeAST, transposeSection } from "@/lib/transposeAST";
+import { transposeAST, transposeSection, transposerVers } from "@/lib/transposeAST";
 import { semitonesTo, getTransposedKey } from "@/lib/transpose";
-import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { ordreJoue } from "@/lib/chordpro/structure";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import type { JianpuEntry, JianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { uniqueSections } from "@/lib/setlist/uniqueSections";
+import type { Disposition } from "@/lib/dispositionPref";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
+import { isDp } from "@/lib/setlist/dp";
 
 export type SongHeaderBlock = {
   kind: "song-header";
@@ -20,6 +22,8 @@ export type SongHeaderBlock = {
   songKey: string;
   position: number;
   language?: "fr" | "zh";
+  /** Tempo du chant (♩ = …) : l'en-tête de la disposition Partition l'affiche sous le titre. */
+  tempo?: number;
   /** Slug du chant (absent pour les fusions) — cible du réglage capo */
   songSlug?: string;
   /** Capo appliqué (frets) : les accords des sections sont déjà transposés */
@@ -47,10 +51,19 @@ export type SectionBlock = {
   keyChange?: string;
   songTitle: string;
   songKey: string;
+  /** Lot CV : le chant de la section, pour ses exceptions de mots chinois (motsChinois.ts). */
+  songSlug?: string;
   songSourceLabel?: string;
+  /** Tempo du `.cho` (♩), repris par la barre haute. */
+  tempo?: number;
   /** Occurrences de la structure jouée que ce bloc représente (une en ordre
    *  joué, toutes les reprises en sections uniques). */
   occurrenceUids?: string[];
+  /** Ordre joué : le même Dp joué plusieurs fois de suite n'est imprimé qu'une
+   *  fois, « ×n » à côté du nom (le bloc garde les uids de tous ses passages). */
+  repeat?: number;
+  /** Capo du chant (frets) : `songKey` et `keyChange` sont sonores, les accords de `section` sont déjà transposés de −capo. */
+  capo?: number;
 };
 
 export type TransitionIntraBlock = {
@@ -101,14 +114,8 @@ export type PerformanceBlock =
   | TransitionIntraBlock
   | TransitionInterBlock;
 
-function getTransposed(ast: ChordProAST, keyOverride: string | null): ChordProAST {
-  if (!keyOverride || keyOverride === ast.metadata.key) return ast;
-  return transposeAST(ast, semitonesTo(ast.metadata.key, keyOverride), keyOverride);
-}
-
 function resolveSections(ast: ChordProAST, structureOverride: string[] | null): ChordProSection[] {
-  if (!structureOverride?.length) return ast.sections;
-  return resolveStructureOverride(ast.sections, structureOverride);
+  return ordreJoue(ast.sections, structureOverride);
 }
 
 /** Déroulé pour le bandeau : une modulation vers la tonalité jouée n'en est pas une. */
@@ -120,6 +127,27 @@ function bandeau(occurrences: SectionOccurrence[], key: string): SectionOccurren
 function applyCapo(ast: ChordProAST, playedKey: string, capo: number): ChordProAST {
   if (!capo) return ast;
   return transposeAST(ast, -capo, getTransposedKey(playedKey, -capo));
+}
+
+/** Ordre joué : le même Dp (même section) joué de suite n'est imprimé qu'une fois.
+ *  Le bloc garde la nuance de son 1er passage et les uids de tous ; une
+ *  transition entre deux passages (bloc à part) coupe la suite. */
+function fusionnerDp(blocks: PerformanceBlock[]): PerformanceBlock[] {
+  const out: PerformanceBlock[] = [];
+  for (const b of blocks) {
+    const prev = out[out.length - 1];
+    if (
+      b.kind === "section" && prev?.kind === "section" &&
+      isDp(b.section) && isDp(prev.section) &&
+      b.section.id === prev.section.id && b.songTitle === prev.songTitle && b.keyChange === prev.keyChange
+    ) {
+      prev.occurrenceUids = [...(prev.occurrenceUids ?? [prev.section.uid]), ...(b.occurrenceUids ?? [b.section.uid])];
+      prev.repeat = (prev.repeat ?? 1) + 1;
+      continue;
+    }
+    out.push(b);
+  }
+  return out;
 }
 
 export function buildPerformanceBlocks(
@@ -134,13 +162,14 @@ export function buildPerformanceBlocks(
   /** Affichage (même préférence que la setlist, `partition-layout`) :
    *  ordre joué ; chaque section une fois, notes et transitions laissées au
    *  bandeau ; ou structure seule, où un chant à scan donne ses sections. */
-  { affichage = "played" }: { affichage?: PartitionLayout } = {},
+  { affichage = "played", choixScan }: { affichage?: PartitionLayout; choixScan?: Record<string, boolean> } = {},
 ): PerformanceBlock[] {
   const blocks: PerformanceBlock[] = [];
   const unique = affichage === "unique";
   // Le responsable coche le 简谱 par chant ; la préférence de l'appareil peut
   // le suivre, l'imposer partout, ou ne jamais l'utiliser.
-  const wantsSheet = (item: SetlistItem) => sheetEnabled(jianpuPref, item.jianpuSheet);
+  // `choixScan` : choix fait à l'ajout d'un chant (mode louange), plus fort que la préférence.
+  const wantsSheet = (item: SetlistItem) => choixScan?.[item.songSlug] ?? sheetEnabled(jianpuPref, item.jianpuSheet);
   let c = 0;
   const uid = () => `pb-${c++}`;
 
@@ -159,7 +188,7 @@ export function buildPerformanceBlocks(
       const asts: Record<string, ChordProAST> = {};
       for (const fs of item.fusionSongs) {
         const ast = itemAst(fs, contents[fs.songSlug]);
-        if (ast) asts[fs.songSlug] = getTransposed(ast, fs.keyOverride);
+        if (ast) asts[fs.songSlug] = transposerVers(ast, fs.keyOverride);
       }
 
       if (item.mixedStructure?.length) {
@@ -221,6 +250,7 @@ export function buildPerformanceBlocks(
           blocks.push({
             kind: "section",
             uid: uid(),
+            songSlug: ms.songSlug,
             section: msKeyChange
               ? transposeSection(section, semitonesTo(fusionKey, msKeyChange), msKeyChange)
               : section,
@@ -254,6 +284,7 @@ export function buildPerformanceBlocks(
             songKey: fusionKey,
             position: item.position,
             language: ast.metadata.language,
+            tempo: ast.metadata.tempo ?? undefined,
             steps: bandeau(occurrences, fusionKey),
           });
           const shown = unique
@@ -265,6 +296,7 @@ export function buildPerformanceBlocks(
             blocks.push({
               kind: "section",
               uid: uid(),
+              songSlug: item.songSlug,
               section: secKeyChange
                 ? transposeSection(sec, semitonesTo(fusionKey, secKeyChange), secKeyChange)
                 : sec,
@@ -298,7 +330,7 @@ export function buildPerformanceBlocks(
     const playedKey = personalKey ?? setlistKey;
     const personalShift = personalKey ? semitonesTo(setlistKey, personalKey) : 0;
     const capo = capos?.[item.songSlug] ?? 0;
-    const ast = applyCapo(getTransposed(baseAst, personalKey ?? item.keyOverride), playedKey, capo);
+    const ast = applyCapo(transposerVers(baseAst, personalKey ?? item.keyOverride), playedKey, capo);
     const sections = resolveSections(ast, item.structureOverride);
     const occurrences = resolveSectionOccurrences(sections, item).map((o) =>
       personalShift && o.targetKey ? { ...o, targetKey: getTransposedKey(o.targetKey, personalShift) } : o,
@@ -313,6 +345,7 @@ export function buildPerformanceBlocks(
       songKey: playedKey,
       position: item.position,
       language: ast.metadata.language,
+      tempo: ast.metadata.tempo ?? undefined,
       songSlug: item.songSlug,
       capo: capo || undefined,
       setlistKey: personalKey ? setlistKey : undefined,
@@ -369,6 +402,7 @@ export function buildPerformanceBlocks(
       blocks.push({
         kind: "section",
         uid: uid(),
+        songSlug: item.songSlug,
         section: shownSec,
         language: ast.metadata.language,
         chordsEnabled: showChordsGlobal && item.showChords,
@@ -378,28 +412,34 @@ export function buildPerformanceBlocks(
         keyChange,
         songTitle: ast.metadata.title,
         songKey: playedKey,
+        tempo: ast.metadata.tempo ?? undefined,
         occurrenceUids: uids,
+        capo: capo || undefined,
       });
       if (transition) blocks.push({ kind: "transition-intra", uid: uid(), text: transition });
     }
   }
 
-  return blocks;
+  return affichage === "played" ? fusionnerDp(blocks) : blocks;
 }
 
 /** Signature de mise en page d'une page du mode louange, partie de la clé de
- *  ses annotations : accords, transitions, paroles, style « chart » (s1),
+ *  ses annotations : accords, transitions, paroles, disposition (rien en
+ *  Classique, s1 en Couleurs par section, dR Repères, dS Scène, dP Partition),
  *  capo (kN), tonalité choisie sur l'appareil (p…) et taille du texte.
  *  L'affichage y entre aussi (O12) : rien en Ordre joué, pour que les clés
  *  d'aujourd'hui ne changent pas ; « au » en Sections uniques ; Structure
  *  seule s'écrit comme la vue ossature qu'elle rend (accords coupés, paroles
  *  masquées) — la vue structure du batteur garde ainsi ses traits, par quelque
  *  chemin qu'on y arrive. */
+/** Marque de la vue Structure (FS-D) : la feuille de route a remplacé la mise en page d'avant, les traits posés sur les anciennes cartes ne se chargent plus ici (ils restent dans Firestore). */
+export const SUFFIXE_FEUILLE = "f2";
+
 export function signatureAffichage({
   showChords,
   showTransitions,
   hideLyrics,
-  chartStyle,
+  disposition,
   capo,
   personalKey,
   fontScale,
@@ -408,7 +448,7 @@ export function signatureAffichage({
   showChords: boolean;
   showTransitions: boolean;
   hideLyrics: boolean;
-  chartStyle: boolean;
+  disposition: Disposition;
   capo?: number;
   personalKey?: string;
   fontScale: number;
@@ -417,7 +457,8 @@ export function signatureAffichage({
   const ossature = affichage === "structure";
   const accords = showChords && !ossature;
   const paroles = !hideLyrics && !ossature;
-  return `c${accords ? 1 : 0}t${showTransitions ? 1 : 0}l${paroles ? 0 : 1}${chartStyle ? "s1" : ""}${capo ? `k${capo}` : ""}${personalKey ? `p${personalKey}` : ""}z${Math.round(fontScale * 100)}${affichage === "unique" ? "au" : ""}`;
+  const suffixeDisposition = disposition === "sections" ? "s1" : disposition === "reperes" ? "dR" : disposition === "scene" ? "dS" : disposition === "partition" ? "dP" : "";
+  return `c${accords ? 1 : 0}t${showTransitions ? 1 : 0}l${paroles ? 0 : 1}${suffixeDisposition}${capo ? `k${capo}` : ""}${personalKey ? `p${personalKey}` : ""}z${Math.round(fontScale * 100)}${affichage === "unique" ? "au" : ""}${ossature ? SUFFIXE_FEUILLE : ""}`;
 }
 
 /** Identité stable d'un bloc d'une mise en page à l'autre : les indices ne le

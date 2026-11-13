@@ -11,6 +11,7 @@ import { listProgrammes } from "@/lib/firebase/programmes"
 import { todayIso } from "@/lib/scene/dimanches"
 import { editionCourante, FETES, jourJParDefaut, type Fete } from "@/lib/scene/fetes"
 import type { Programme } from "@/types/programme"
+import { Squelette } from "@/components/layout/Squelette";
 
 function feteLaPlusProche(programmes: Programme[], today: string): Fete {
   const ecart = (f: Fete) => {
@@ -31,5 +32,5 @@ export function VersLaFete({ base = "/evenements/scene" }: { base?: string }) {
       .then((programmes) => { if (!fini) router.replace(`${base}/${feteLaPlusProche(programmes, todayIso())}`) })
     return () => { fini = true }
   }, [router, base])
-  return <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("common.loading")}</p>
+  return <Squelette enTete={false} />
 }

@@ -48,8 +48,9 @@ test.describe("navigation par sections (T2), téléphone", () => {
       await expect(page.getByRole("link", { name: nom }).first()).toBeVisible();
     }
     await expect(page.getByRole("button", { name: "Signaler un problème" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Sombre" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "中文", exact: true })).toBeVisible();
+    // BO-G, 12 : langue et thème sont des lignes d'état (libellé + valeur), plus des pilules d'action.
+    await expect(page.getByRole("button", { name: /^Thème\s*Clair$/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Langue\s*Français$/ })).toBeVisible();
     await expect(page.getByRole("button", { name: "Déconnexion" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Admin" })).toHaveCount(0);
     // En sombre, une ligne-bouton est aussi lisible qu'une ligne-lien.
@@ -109,7 +110,7 @@ test.describe("navigation par sections (T2), onglets de section", () => {
   // Cible tactile (16/09/2026) : les pilules faisaient 30 px de haut. Depuis V7
   // (21/09/2026), sous 1024 px c'est la pastille du menu qui se touche.
   // Retouches v18 (R5, D9) : compacte (≈ 28 px) en grand avec un pointeur fin, 40 px au doigt.
-  test("une pilule de section fait au moins 40 px de haut au doigt, ≈ 28 px à la souris en grand", async ({ page }) => {
+  test("une pilule de section : zone de 44 px au doigt (pastille du menu ≥ 40 px au téléphone), ≈ 28 px à la souris en grand", async ({ page }) => {
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await signInAs(page, MEMBRE, {}, "/planning");
     // Le téléphone a la pastille qui ouvre la feuille ; dès la tablette, les huit
@@ -125,7 +126,17 @@ test.describe("navigation par sections (T2), onglets de section", () => {
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const box = await pilule.boundingBox();
     if (projet.startsWith("ordinateur")) expect(Math.abs(box!.height - 28)).toBeLessThanOrEqual(2);
-    else expect(box!.height).toBeGreaterThanOrEqual(40);
+    else if (projet === "telephone" || projet === "tablette") expect(box!.height).toBeGreaterThanOrEqual(40);
+    else {
+      // Tablette en paysage (T3a) : la pilule de l'en-tête se dessine à 32 px (28 à la souris) ; c'est la zone `::after` de TOUCHER_PILULE qui est portée à 44 px au doigt.
+      expect(box!.height, "dessin de la pilule : 32 px").toBeGreaterThanOrEqual(30);
+      const zone = await pilule.evaluate((el) => {
+        const a = getComputedStyle(el, "::after");
+        return { hauteur: parseFloat(a.height), position: a.position };
+      });
+      expect(zone.position, "zone de toucher en `::after`").toBe("absolute");
+      expect(zone.hauteur, "zone de toucher d'au moins 44 px au doigt").toBeGreaterThanOrEqual(44);
+    }
   });
 });
 
@@ -204,5 +215,49 @@ test.describe("navigation par sections (T2), ordinateur : la barre latérale (lo
     await expect(barreLaterale(page).getByRole("link", { name: "Évènements" })).toBeVisible();
     await expect(barreLaterale(page).getByRole("link", { name: "Connexion" })).toBeVisible();
     await expect(page.getByTestId("barre-du-bas")).toBeHidden();
+  });
+});
+
+// Lot CD, T1a : Équipes est une page de « Moi » (equipes-app-1, back-office-8) ; le retour « ‹ Moi » est une cible de 44 px
+// au toucher (evenements-app-6 : zone élargie par `::after`, sans bouger le titre).
+test.describe("Moi sur /equipes, marque « Équipes », retour à 44 px", () => {
+  const EQUIPIER = { ...MEMBRE, uid: "u-noor", email: "noor@example.com", firstName: "Noor", lastName: "A.", planningName: "Noor A.", dansEquipes: ["da"] };
+  const DOCS = { "equipes/da": { pole: "da", membres: [{ nom: "Noor A.", uid: "", mention: "", referent: false, essai: false, groupe: "" }], updatedAt: "2026-09-18T10:00:00Z", parUid: "", parNom: "" } };
+  const lienMoi = (page: Page) =>
+    page.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Moi" }).filter({ visible: true }).first();
+  const marque = (page: Page, info: { project: { name: string } }) =>
+    info.project.name.startsWith("ordinateur") || info.project.name === "tablette-paysage"
+      ? page.getByTestId("label-section")
+      : header(page).locator(".brand-nom");
+
+  for (const adresse of ["/equipes", "/equipes/da"]) {
+    test(`${adresse} : « Moi » porte aria-current, la marque dit « Équipes » (jumeau de /taches)`, async ({ page }, info) => {
+      await signInAs(page, EQUIPIER, DOCS, adresse);
+      await expect(lienMoi(page)).toHaveAttribute("aria-current", "page");
+      await expect(marque(page, info)).toContainText("Équipes");
+    });
+  }
+
+  test("/taches garde « Moi » allumé et la marque « Tâches »", async ({ page }, info) => {
+    await signInAs(page, EQUIPIER, DOCS, "/taches");
+    await expect(lienMoi(page)).toHaveAttribute("aria-current", "page");
+    await expect(marque(page, info)).toContainText("Tâches");
+  });
+
+  test("au toucher, 20 px au-dessus et au-dessous du texte du retour, le lien reste atteint ; la souris n'a pas de zone élargie", async ({ page }) => {
+    await signInAs(page, EQUIPIER, DOCS, "/equipes");
+    const retour = page.locator("header[data-entete-page]").getByRole("link", { name: "Moi" });
+    await expect(retour).toBeVisible();
+    const tactile = await page.evaluate(() => matchMedia("(pointer: coarse)").matches);
+    const b = (await retour.boundingBox())!;
+    const atteint = (dy: number) =>
+      page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest("a")?.getAttribute("href") ?? null, { x: b.x + b.width / 2, y: b.y + b.height / 2 + dy });
+    const href = await retour.getAttribute("href");
+    for (const dy of [-20, 20]) {
+      if (tactile) expect(await atteint(dy), `zone de 44 px (${dy} px)`).toBe(href);
+      else expect(await atteint(dy), `souris : pas de zone élargie (${dy} px)`).not.toBe(href);
+    }
+    // Rien ne bouge : le dessin du lien garde ses 20 px de haut.
+    expect(b.height).toBeLessThan(26);
   });
 });

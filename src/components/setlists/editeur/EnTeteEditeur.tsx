@@ -104,7 +104,7 @@ function jourCourt(iso: string, langue: string): string {
 export function LienMusiquesEtDanses({ fete }: { fete: ContexteFeteEditeur }) {
   const { t } = useTranslation();
   return (
-    <p className="mt-4 text-[13px] text-muted-foreground">
+    <p className="mt-4 text-sm text-muted-foreground">
       <Link href={`/evenements/scene/${fete.fete}`} className="underline underline-offset-2 hover:text-foreground">
         {t("setlists.fete.musiquesSur", { fete: fete.titreFete })}
       </Link>
@@ -132,7 +132,7 @@ export function EnTeteEditeur({
   // Setlist de fête ouverte depuis la page de la fête : « ‹ Noël 2026 » y ramène (CF19) ; l'enregistrement
   // en cours part au démontage de l'éditeur.
   const retourFete = f?.depuisFete ? (
-    <div className="flex items-center gap-2.5 text-[15px] font-medium text-muted-foreground">
+    <div className="flex items-center gap-2.5 text-base font-medium text-muted-foreground">
       <Link href={`/evenements/scene/${f.fete}`} aria-label={t("common.buttons.back")} className={rondRetour}>
         <ChevronLeft className="h-4 w-4" aria-hidden />
       </Link>
@@ -143,7 +143,7 @@ export function EnTeteEditeur({
   return (
     <div className="space-y-3.5">
       {retourFete ?? (retour ? (
-        <div className="flex items-center gap-2.5 text-[15px] font-medium text-muted-foreground">
+        <div className="flex items-center gap-2.5 text-base font-medium text-muted-foreground">
           {retour.onClick ? (
             <button type="button" onClick={retour.onClick} aria-label={t("common.buttons.back")} className={rondRetour}>
               <ChevronLeft className="h-4 w-4" aria-hidden />
@@ -156,7 +156,7 @@ export function EnTeteEditeur({
           <span>{nomPage}</span>
         </div>
       ) : (
-        <nav aria-label={t("setlists.editeur.fil")} className="text-[13px] text-muted-foreground">
+        <nav aria-label={t("setlists.editeur.fil")} className="text-sm text-muted-foreground">
           <Link href="/setlists" className="hover:text-foreground hover:underline">{t("common.header.setlists")}</Link>
           <span aria-hidden> › </span>
           <span>{nomPage}</span>
@@ -164,7 +164,7 @@ export function EnTeteEditeur({
       ))}
 
       {f ? (
-        <h1 className="text-[24px] font-bold leading-tight tracking-tight text-foreground sm:text-[28px]">{f.titreAffiche}</h1>
+        <h1 className="text-xl font-bold leading-tight tracking-tight text-foreground sm:text-2xl">{f.titreAffiche}</h1>
       ) : (
         <div className="flex items-center gap-2">
           <input
@@ -174,7 +174,7 @@ export function EnTeteEditeur({
             onChange={(e) => c.setTitle(e.target.value)}
             aria-label={t("setlists.form.titleLabel")}
             placeholder={t("setlists.form.titlePlaceholder")}
-            className="min-w-0 max-w-full rounded-lg bg-transparent text-[24px] sm:text-[28px] [field-sizing:content] font-bold leading-tight tracking-tight text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            className="min-w-0 max-w-full rounded-lg bg-transparent text-xl sm:text-2xl [field-sizing:content] font-bold leading-tight tracking-tight text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           />
           <button
             type="button"
@@ -272,33 +272,52 @@ export function EnTeteEditeur({
               </Puce>
             )}
 
-            <Puce icone={<Mic className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}>
-              <select
-                value={c.leaderOther ? "__other__" : c.leader}
-                onChange={(e) => c.onLeaderSelect(e.target.value)}
-                aria-label={t("setlists.form.leaderLabel")}
-                className={selectDePuce}
-              >
+            {c.leaderOther ? (
+              // « Autre » : le nom se tape dans la puce ; le chevron est le menu des présidences, transparent, posé dessus.
+              <span className={`${puce} pr-9`}>
+                <Mic className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                <input
+                  type="text"
+                  value={c.leader}
+                  onChange={(e) => c.setLeader(e.target.value)}
+                  aria-label={t("setlists.editeur.nomPresidence")}
+                  placeholder={t("setlists.form.leaderPlaceholder")}
+                  className="w-24 min-w-[4.5rem] max-w-40 bg-transparent supports-[field-sizing:content]:w-auto [field-sizing:content] text-sm font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:outline-none"
+                />
+                <select
+                  value="__other__"
+                  onChange={(e) => c.onLeaderSelect(e.target.value)}
+                  aria-label={t("setlists.form.leaderLabel")}
+                  className="absolute -bottom-0.5 -top-0.5 right-0 w-9 cursor-pointer appearance-none rounded-full bg-transparent opacity-0"
+                >
                 <option value="">{t("setlists.form.presidencePlaceholder")}</option>
                 {c.categoryLeaders.map((m) => (
                   <option key={m} value={m}>{m}</option>
                 ))}
                 <option value="__other__">{t("setlists.form.presidenceOther")}</option>
-              </select>
-            </Puce>
-            {c.leaderOther && (
-              <input
-                type="text"
-                value={c.leader}
-                onChange={(e) => c.setLeader(e.target.value)}
-                aria-label={t("setlists.editeur.nomPresidence")}
-                placeholder={t("setlists.form.leaderPlaceholder")}
-                className="h-10 w-40 rounded-full border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
-              />
+                </select>
+                <Chevron />
+              </span>
+            ) : (
+              <Puce icone={<Mic className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}>
+                <select
+                  value={c.leader}
+                  onChange={(e) => c.onLeaderSelect(e.target.value)}
+                  aria-label={t("setlists.form.leaderLabel")}
+                  className={selectDePuce}
+                >
+                <option value="">{t("setlists.form.presidencePlaceholder")}</option>
+                {c.categoryLeaders.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+                <option value="__other__">{t("setlists.form.presidenceOther")}</option>
+                </select>
+              </Puce>
             )}
           </>
         )}
 
+        <span className="inline-flex gap-2 whitespace-nowrap">
         <Puce icone={c.isPrivate ? <Lock className="h-4 w-4 shrink-0 text-violet-600" aria-hidden /> : <Globe className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}>
           <select
             value={c.isPrivate ? "privee" : "partagee"}
@@ -324,6 +343,7 @@ export function EnTeteEditeur({
             {c.equipe.editeurs.length > 0 && ` · ${c.equipe.editeurs.length}`}
           </button>
         )}
+        </span>
       </div>}
 
       {c.needsAuth && (
@@ -341,14 +361,14 @@ export function EnTeteEditeur({
         </p>
       )}
 
-      <label className="flex h-11 items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 text-sm focus-within:ring-2 focus-within:ring-ring/30">
-        <span className="shrink-0 text-muted-foreground">{t("setlists.editeur.notes")}</span>
-        <input
-          type="text"
+      <label className="block">
+        <span className="mb-1.5 block text-sm text-muted-foreground">{t("setlists.editeur.notes")}</span>
+        <textarea
+          rows={2}
           value={c.notes}
           onChange={(e) => c.setNotes(e.target.value)}
           placeholder={t("setlists.form.notesPlaceholder")}
-          className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+          className="block min-h-11 max-h-[84px] w-full resize-none overflow-y-auto rounded-xl border border-border bg-background px-3.5 py-2.5 text-base leading-snug text-foreground [field-sizing:content] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
         />
       </label>
     </div>

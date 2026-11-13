@@ -98,14 +98,16 @@ function CultePage() {
         )}
         {canPublish && effTri && aVenir && (
           <BoutonPublication
+            key={`${CULTE.key}_${effAnnee}_${effTri}`}
             planningKey={CULTE.key}
             planningLabel={CULTE.label}
             annee={effAnnee}
             tri={effTri}
             publie={!unpublishedTris.includes(effTri)}
-            onChange={(p) => {
+            onChange={(p, notified) => {
               setPublished((prev) => ({ ...prev, [effAnnee]: p }))
-              if (p.includes(effTri)) setPublications((n) => n + 1)
+              // L'état annoncé de départ ne s'écrit que si la publication vient d'être notifiée (dejaAnnonce : rien).
+              if (p.includes(effTri) && notified) setPublications((n) => n + 1)
             }}
           />
         )}

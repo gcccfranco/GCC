@@ -1,10 +1,6 @@
 export const SERVICE_ROLES = ["chanteur", "musicien", "presidence", "regie"] as const;
 export type ServiceRole = (typeof SERVICE_ROLES)[number];
 
-// Rôles « exécutants » : donnent le droit de créer/éditer des setlists du service
-// où l'on sert. La régie en est exclue (accès en lecture seule aux cultes).
-export const PERFORMER_ROLES: ServiceRole[] = ["chanteur", "musicien", "presidence"];
-
 export const SERVICE_ROLE_LABELS: Record<ServiceRole, string> = {
   chanteur: "Choriste",
   musicien: "Musicien",
@@ -23,11 +19,7 @@ export const SERVICE_LIEUX = [
 ] as const;
 export type ServiceLieu = (typeof SERVICE_LIEUX)[number];
 
-export const EDD_ROLES = ["musicien", "presidence"] as const;
-export type EddRole = (typeof EDD_ROLES)[number];
-
 export const GROUPES = ["Groupe Paix", "Groupe Fidélité", "Groupe Bonté"] as const;
-export type Groupe = (typeof GROUPES)[number];
 
 export interface UserProfile {
   uid: string;
@@ -77,6 +69,18 @@ export interface UserProfile {
   remplitParRole?: string[];
   publieParRole?: string[];
   notifieParRole?: string[];
+  /** Lot AO (docs/spec-acces-organigramme.md) — recopiés depuis l'organigramme par le serveur seul
+   *  (`recalculerRattachement`), jamais écrits par la personne : ses sous-équipes de Louange et celles
+   *  dont elle est référente, les lieux où elle sert (Louange, Régie), ce qu'elle joue (Musiciens).
+   *  Absents = aucun. Cf. src/lib/acces/organigramme.ts. */
+  sousEquipes?: string[];
+  referentSous?: string[];
+  lieuxLouange?: string[];
+  lieuxRegie?: string[];
+  joue?: string[];
+  /** Lot RS (docs/spec-responsabilites.md) : les responsabilités de gestion (`planning:<x>`, `orga`), écrites par les
+   *  admins seuls — clés de RESPONSABILITES, src/lib/acces/responsabilites.ts. Absent = aucune. */
+  responsabilites?: string[];
   /** Date d'inscription = createTime du document Firestore users/{uid}, en lecture
    *  seule (jamais persisté comme champ). Renseigné pour tous les profils existants. */
   createdAt?: Date;

@@ -7,9 +7,10 @@ import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { EnTeteEditeur, LienMusiquesEtDanses } from "@/components/setlists/editeur/EnTeteEditeur";
 import { ListeCourte } from "@/components/setlists/editeur/ListeCourte";
-import { BoutonFinal, type ProprietesEditeur } from "@/components/setlists/editeur/EditeurDeuxColonnes";
+import { BoutonFinal, contexteBibliotheque, type ProprietesEditeur } from "@/components/setlists/editeur/EditeurDeuxColonnes";
 import { FeuilleContexte } from "@/components/setlists/editeur/feuille";
 import { useVolet } from "@/components/setlists/editeur/useVolet";
+import { EtatVide } from "@/components/layout/EtatVide"
 
 // Éditeur de setlist « piste 2 » sur téléphone et tablette en portrait (lot U5 bis, T4,
 // docs/spec-editeur-setlist.md ; planches `creer-piste2-telephone-setlist`,
@@ -22,6 +23,7 @@ import { useVolet } from "@/components/setlists/editeur/useVolet";
 
 export function EditeurFeuilles({
   isEdit,
+  setlistId = null,
   items,
   setItems,
   songs,
@@ -36,7 +38,7 @@ export function EditeurFeuilles({
   const { t } = useTranslation();
   const [ouverte, setOuverte] = useState(false);
   const feuille = useMemo(() => ({ fermer: () => setOuverte(false) }), []);
-  const v = useVolet({ items, setItems, songs, actions, feuille, equipe: champs.equipe, proposer });
+  const v = useVolet({ items, setItems, songs, actions, feuille, equipe: champs.equipe, proposer, contexte: contexteBibliotheque(champs, setlistId) });
   useStandaloneScrollLock(ouverte);
 
   const ouvrir = (uid: string) => {
@@ -62,9 +64,7 @@ export function EditeurFeuilles({
               onDragEnd={actions.onDragEnd}
             />
           ) : (
-            <p className="rounded-xl border border-dashed border-border py-6 text-center text-sm text-muted-foreground">
-              {t("setlists.editeur.listeVide")}
-            </p>
+            <EtatVide compact>{t("setlists.editeur.listeVide")}</EtatVide>
           )}
         </div>
         <button
@@ -77,7 +77,7 @@ export function EditeurFeuilles({
           {t("setlists.form.addTransition")}
         </button>
         {champs.fete && <LienMusiquesEtDanses fete={champs.fete} />}
-        {items.length > 0 && <p className="mt-4 text-[13px] text-muted-foreground">{t("setlists.editeur.aideListe")}</p>}
+        {items.length > 0 && <p className="mt-4 text-sm text-muted-foreground">{t("setlists.editeur.aideListe")}</p>}
       </div>
 
       {/* Barre du bas. z-50 : devant la barre d'onglets (z-40, fixée en bas elle aussi) ;

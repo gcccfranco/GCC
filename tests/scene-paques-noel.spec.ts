@@ -1,7 +1,7 @@
 import "./helpers/cleFirebase";
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page, type Route } from "@playwright/test";
-import { fsDoc, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { fsDoc, presidentGroupe, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
   editionCourante, editionProche, editionsAffichees, editionsDe, etatEdition, FETES, feteDe, anneeDe, idEdition,
   jourJParDefaut, libelleEdition, paques, reglagesRepris,
@@ -13,6 +13,8 @@ import { entreesCalendrier, type DonneesCalendrier, type EntreeCalendrier, type 
 import { compteCreneaux, erreursSaison, FAMILLES, lignesDuJour, saisonDe, semainesDe } from "../src/lib/scene/saison";
 import { semaineCourte } from "../src/app/evenements/scene/libelles";
 import { creerEdition } from "../src/lib/firebase/programmes";
+import { libelleQui } from "../src/lib/fetes/qui";
+import zhCN from "../src/locales/zh-CN.json";
 import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsRail, repondreDansLeSite, verifierAgencement, verifierPleineLargeur, verifierSansDebordement } from "./helpers/agencement";
 import { fermerFeuille, reglageSaison, resumeSaison, versToutesLesReservations } from "./helpers/saisonScene";
 import type { Creneau, Programme } from "../src/types/programme";
@@ -405,50 +407,61 @@ test("`currentProgramme` a disparu ; le cron des rappels lit les éditions affic
   expect(cron).not.toMatch(/currentProgramme/);
 });
 
-// Le widget « Scène » du tableau de bord (Alice, pôle Événement, seul widget affiché).
-const DOCS_WIDGET: Record<string, Record<string, unknown>> = {
-  "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "m", reglages: {} }], majLe: "2026-10-01" },
+// Le widget « Scène » du tableau de bord a disparu (piste A, BO-B) : la scène d'Alice (pôle Événement) se lit dans À faire,
+// où un évènement à elle dont un passage n'a personne donne une ligne « Attribuer » qui mène à la page Scène.
+const DOCS_SCENE: Record<string, Record<string, unknown>> = {
+  // Une ancienne disposition « Scène » enregistrée : elle n'a plus d'effet.
+  "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "m", reglages: {} }], versionTableau: 2, majLe: "2026-10-01" },
   "programmes/x7Kq2": { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
   "programmes/x7Kq2/creneaux/n1": { ...resaDe("n1", "2026-10-11", "14:00", "15:00"), quoi: "Sketch", qui: ["Franco"] },
+  // Le dimanche 11 octobre : un passage sans personne, pour l'évènement qu'Alice organise.
+  "programmes/x7Kq2/creneaux/n2": { ...resaDe("n2", "2026-10-11", "16:00", "17:00"), quoi: "Danse", qui: [] },
   "programmes/paques-2027": { nom: "Pâques 2027", fete: "paques", annee: 2027, jourJ: "2027-03-28", debut: "2027-02-01", ouvert: true, passages: [], createdBy: "uid-alice", updatedAt: "" },
-  "programmes/paques-2027/creneaux/p1": { ...resaDe("p1", "2027-02-07", "15:00", "16:00"), quoi: "Danse", qui: ["Gp Paix"] },
+  "programmes/paques-2027/creneaux/p1": { ...resaDe("p1", "2027-02-07", "15:00", "16:00"), quoi: "Danse", qui: [] },
   "programmes/noel-2027": { nom: "Noël 2027", fete: "noel", annee: 2027, jourJ: "2027-12-24", debut: "2027-10-01", ouvert: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
+  "evenements/soiree": {
+    titre: "Veillée d'automne", type: "loisir", pour: "eglise", date: "2026-10-11", heure: "14:00", placesMax: null, inscrits: 0,
+    inscriptions: "fermees", organisateurUid: "uid-alice",
+  },
 };
-const ALICE_EVT: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const ALICE_EVT: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */ }; // lot AO : Coordination = référent EDD
 
-async function tableauDeBord(page: Page, docs: Record<string, Record<string, unknown>>) {
+async function aFaire(page: Page, docs: Record<string, Record<string, unknown>>) {
   await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await signInAs(page, ALICE_EVT, docs, "/back-office");
-  return page.getByTestId("grille-widgets").getByRole("region", { name: "Scène", exact: true });
+  await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+  return page.getByTestId("ligne-a-faire").filter({ hasText: "Scène :" });
 }
 
-test("widget Scène : sans réglage, l'édition au jour J le plus proche — « Scène · Noël 2026 » et ses créneaux", async ({ page }) => {
-  const w = await tableauDeBord(page, DOCS_WIDGET);
-  await expect(w.getByRole("heading", { name: "Scène · Noël 2026" })).toBeVisible();
-  await expect(w.getByTestId("ligne-creneau")).toHaveText([/11 oct\. 14:00.*Sketch · Culte Francophone/]);
+test("À faire (ex-widget Scène) : un passage sans personne d'un évènement d'Alice donne « Attribuer », vers la page Scène", async ({ page }) => {
+  const scene = await aFaire(page, DOCS_SCENE);
+  await expect(scene).toHaveCount(1);
+  await expect(scene).toContainText("Scène : Veillée d'automne");
+  await expect(scene).toContainText("1 passage sans personne, dès le 11 octobre");
+  await expect(scene.getByRole("link", { name: /^Attribuer/ })).toHaveAttribute("href", /\/back-office\/evenements\/scene\/?$/);
+  // Le widget et sa grille ne sont plus là.
+  await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Scène", exact: true })).toHaveCount(0);
 });
 
-test("widget Scène : ses réglages proposent les éditions affichées (Pâques 2027, Noël 2026), jamais un brouillon", async ({ page }) => {
-  const w = await tableauDeBord(page, DOCS_WIDGET);
-  await expect(w.getByRole("heading", { name: "Scène · Noël 2026" })).toBeVisible();
-  await page.getByRole("button", { name: "Personnaliser" }).click();
-  await w.getByRole("button", { name: "Réglages du widget" }).click();
-  const groupe = w.getByRole("group", { name: "Programme" });
-  await expect(groupe.getByRole("button")).toHaveText(["Celui qui est affiché", "Pâques 2027", "Noël 2026"]);
-  await groupe.getByRole("button", { name: "Pâques 2027" }).click();
-  await expect(w.getByRole("heading", { name: "Scène · Pâques 2027" })).toBeVisible();
-  await expect(w.getByTestId("ligne-creneau")).toHaveText([/7 févr\. 15:00.*Danse · Gp Paix/]);
+test("À faire (ex-widget Scène) : plus de réglages de programme ; seules les éditions affichées comptent, la Pâques 2027 n'ayant rien à voir avec un évènement d'octobre", async ({ page }) => {
+  const scene = await aFaire(page, DOCS_SCENE);
+  await expect(scene).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Personnaliser" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Réglages du widget" })).toHaveCount(0);
+  await expect(page.getByText("Pâques 2027")).toHaveCount(0);
 });
 
-test("widget Scène : un brouillon seul n'est pas montré", async ({ page }) => {
-  const w = await tableauDeBord(page, {
-    "backOffice/uid-alice": DOCS_WIDGET["backOffice/uid-alice"],
+test("À faire (ex-widget Scène) : un brouillon seul n'est pas lu, donc aucune ligne « Scène »", async ({ page }) => {
+  const scene = await aFaire(page, {
+    "backOffice/uid-alice": DOCS_SCENE["backOffice/uid-alice"],
+    "evenements/soiree": DOCS_SCENE["evenements/soiree"],
     "programmes/noel-2026": { nom: "Noël 2026", fete: "noel", annee: 2026, jourJ: "2026-12-24", debut: "2026-10-01", ouvert: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
-    "programmes/noel-2026/creneaux/b1": { ...resaDe("b1", "2026-10-11", "14:00", "15:00") },
+    "programmes/noel-2026/creneaux/b1": { ...resaDe("b1", "2026-10-11", "14:00", "15:00"), qui: [] },
   });
-  await expect(w.getByText("Aucun programme affiché.")).toBeVisible();
-  await expect(w.getByRole("heading", { name: /Noël 2026/ })).toHaveCount(0);
+  await expect(scene).toHaveCount(0);
+  await expect(page.getByRole("status").filter({ hasText: "Rien à faire pour l'instant." })).toBeVisible();
 });
 
 // ─── P4 : App — onglets de fête, en-tête, états sans grille ─────────────────
@@ -692,17 +705,26 @@ test("P5 — la liste des semaines : jours, places libres, une case par créneau
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
   const semaines = listeSemaines(page).getByRole("button");
   await expect(semaines).toHaveCount(11);
-  await expect(semaines.first()).toHaveText(/^10 – 11 oct\.\s*sam\. et dim\. · 3 places libres/);
-  await expect(semaines.nth(1)).toHaveText(/^17 – 18 oct\.\s*sam\. et dim\. · 6 places libres/);
+  // Deux volets : les jours et les places en toutes lettres ; une colonne : le détail court sous la date (evenements-app-7).
+  const grand = estGrandEcran(test.info());
+  await expect(semaines.first()).toHaveText(grand ? /^10 – 11 oct\.\s*sam\. et dim\. · 3 places libres/ : /^10 – 11 oct\.\s*3 libres/);
+  await expect(semaines.nth(1)).toHaveText(grand ? /^17 – 18 oct\.\s*sam\. et dim\. · 6 places libres/ : /^17 – 18 oct\.\s*6 libres/);
+  if (!grand) await expect(semaines.first().getByText(/libres?|complet/).first()).toBeVisible();
   await expect(semaines.nth(3)).toHaveText(/^31 oct\. – 1er nov\./);
   await expect(semaines.first().locator("[data-case]")).toHaveCount(7);
   await expect(semaines.first().locator('[data-case="pris"]')).toHaveCount(4);
   await expect(semaines.last()).toHaveText(/^19 – 20 déc\./);
-  const passees = page.getByRole("button", { name: "Semaines passées (1)" });
+  // Le libellé change à l'ouverture (« Masquer… ») : on tient le bouton par son état, pas par son nom.
+  const passees = page.locator("button[aria-expanded]").filter({ hasText: /Semaines passées|Masquer les semaines passées/ });
+  await expect(passees).toHaveText(/Semaines passées \(1\)/);
   await expect(passees).toHaveAttribute("aria-expanded", "false");
   await expect(listeSemaines(page).getByRole("button", { name: /^3 – 4 oct\./ })).toHaveCount(0);
   await passees.click();
   await expect(passees).toHaveAttribute("aria-expanded", "true");
+  // Un vrai bouton qui déplie (evenements-app-9) : plus de soulignement, 44 px de haut, un libellé « Masquer… » une fois ouvert.
+  await expect(page.getByRole("button", { name: "Masquer les semaines passées" })).toBeVisible();
+  expect(await passees.evaluate((el) => getComputedStyle(el).textDecorationLine)).toBe("none");
+  expect((await passees.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await expect(semaines).toHaveCount(12);
   await expect(semaines.first()).toHaveText(/^3 – 4 oct\./);
 });
@@ -713,7 +735,7 @@ test("P5 — une semaine pleine dit « complet »", async ({ page }) => {
     "programmes/x7Kq2": court,
     "programmes/x7Kq2/creneaux/a": { ...resaDe("a", "2026-10-11", "14:00", "15:00"), auteurUid: "uid-lea", auteurNom: "Léa M." },
   });
-  await expect(semaineChoisie(page)).toHaveText(/^11 oct\.\s*dim\. · complet/);
+  await expect(semaineChoisie(page)).toHaveText(estGrandEcran(test.info()) ? /^11 oct\.\s*dim\. · complet/ : /^11 oct\.\s*complet/);
   await expect(jour(page, "Dimanche 11 octobre")).toContainText("complet");
 });
 
@@ -778,8 +800,10 @@ test("P5 — en chinois : 我的预约, les semaines et leurs places", async ({ 
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
   await expect(mesReservations(page)).toHaveCount(0);
   await expect(page.getByRole("region", { name: "我的预约" })).toBeVisible();
-  await expect(page.getByRole("list", { name: "周次" }).locator('[aria-current="true"]')).toHaveText(/^10月10日 – 11日\s*周六和周日 · 剩余 3 个名额/);
+  await expect(page.getByRole("list", { name: "周次" }).locator('[aria-current="true"]')).toHaveText(estGrandEcran(test.info()) ? /^10月10日 – 11日\s*周六和周日 · 剩余 3 个名额/ : /^10月10日 – 11日\s*余 3/);
   await expect(page.getByRole("button", { name: "过去的周（1）" })).toBeVisible();
+  await page.getByRole("button", { name: "过去的周（1）" }).click();
+  await expect(page.getByRole("button", { name: "收起过去的周" })).toHaveAttribute("aria-expanded", "true");
   if (estGrandEcran(test.info())) await expect(page.getByRole("heading", { level: 2, name: "10月10日至11日这一周" })).toBeVisible();
 });
 
@@ -979,7 +1003,7 @@ test("P6 — « ⋯ » › Retirer : la confirmation de l'app, aucune fenêtre d
 test("P6 — en chinois : « 我的 », le menu et la feuille", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  const sketch = page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" });
+  const sketch = page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("listitem").filter({ hasText: "Sketch · 仁爱团契" });
   await expect(sketch).toContainText("我的");
   await sketch.getByRole("button", { name: /^更多操作/ }).click();
   await expect(page.getByRole("menuitem")).toHaveText([/^调整/, /^修改/, /^删除/]);
@@ -1016,25 +1040,27 @@ test("P6 — captures à regarder (planches v18-scene-a-membres-* et v18-scene-a
 // Alice (coordination) au Back-Office › Évènements › Pâques ou Noël ; horloge au 09/10/2026 sauf mention.
 
 const BO = "/back-office/evenements/scene";
-const MO_ANNONCES: FakeProfile = { uid: "uid-mo", email: "mo@example.com", firstName: "Mo", lastName: "R.", annonces: ["Culte Francophone"] };
+const MO_ANNONCES: FakeProfile = { uid: "uid-mo", email: "mo@example.com", firstName: "Mo", lastName: "R.", ...presidentGroupe("paix") }; // lot AO : l'ancien droit d'annonces d'une section = président de son groupe
 const carteSaison = (page: Page) => page.getByRole("region", { name: "Mettre en place la saison" });
 const apercuMembres = (page: Page) => page.getByRole("region", { name: "Aperçu des membres" });
 const colonneFete = (page: Page) => page.getByRole("region", { name: "Cette fête" });
 const ecrituresProgrammes = (db: { writes: { method: string; path: string; data: Record<string, unknown> }[] }) =>
   db.writes.filter((w) => w.path.startsWith("programmes"));
 
-test("P7 — coordination : rail « Évènements · Pâques · Noël » au Back-Office, sans « Scène » ni Réunions", async ({ page }) => {
+test("P7 — coordination : rail « Pâques · Noël » au Back-Office, sans « Scène » ni Réunions", async ({ page }) => {
   await ouvrirFete(page, `${BO}/paques`, {}, "2026-10-09", ALICE_EVT);
-  await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
+  // Piste A (BO8) : la liste des évènements est dans le Calendrier ; la scène des fêtes garde son rail Pâques · Noël.
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["Pâques", "Noël"]);
   await expect(ongletsRail(page).getByRole("link", { name: "Pâques" })).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Évènements");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Scène des fêtes");
   await expect(page.getByRole("link", { name: /Nouvel évènement/ })).toHaveCount(0);
   await verifierAgencement(page);
 });
 
 test("P7 — un membre qui publie des annonces, hors coordination, n'a ni Pâques ni Noël au Back-Office", async ({ page }) => {
   await ouvrirFete(page, "/back-office/evenements", {}, "2026-10-09", MO_ANNONCES);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Évènements");
+  // Piste A (BO8) : /back-office/evenements mène à l'Agenda du Calendrier.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Calendrier");
   await expect(page.getByRole("link", { name: "Pâques", exact: true })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveCount(0);
   await page.goto(`${BO}/noel`);
@@ -1165,16 +1191,20 @@ test("P7 — jour J dans la saison : le changer écrit `jourJ` seul ; la fermetu
   expect(ecrituresProgrammes(db)[0].data.jourJ).toBe("2027-04-04");
 });
 
-test("P7 — colonne de la fête : menu des années, état, « Cette fête », années passées en brouillon, ordre de passage en bas", async ({ page }) => {
+test("P7 — colonne de la fête : menu des années, état, « Cette fête », années passées en brouillon, ordre de passage", async ({ page }) => {
   await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2026": DOC_PAQUES_2026, "programmes/a1b2": DOC_PAQUES_2025 }, "2026-10-09", ALICE_EVT);
   const colonne = colonneFete(page);
   await expect(colonne.getByText("Rien n'est visible des membres tant que la saison est en brouillon. Ils voient « Les réservations de Pâques 2027 ne sont pas encore ouvertes. ».")).toBeVisible();
-  // Sur une colonne (P9), les années passées et l'ordre de passage sont sous la saison.
+  // Sur une colonne (P9), les années passées sont sous la saison ; l'ordre de passage est la troisième ligne de « Cette fête » (bo-evenements-13).
   const annees = page.getByRole("region", { name: "Les années passées" });
   await expect(annees.getByRole("button")).toHaveText([/Pâques 2026\s*dimanche 5 avril · 5 numéros/, /Pâques 2025\s*dimanche 20 avril · 7 numéros/]);
   const ordre = page.getByRole("button", { name: /Ordre de passage du jour J/ });
   await expect(ordre).toContainText("dimanche 28 mars · aucun numéro pour l'instant");
-  expect((await ordre.boundingBox())!.y).toBeGreaterThan((await annees.boundingBox())!.y);
+  // Deux volets : la troisième ligne de « Cette fête », au-dessus des années passées ; sur une colonne, la carte tout en bas.
+  const dansLaColonne = (await colonne.getByRole("button", { name: /Ordre de passage du jour J/ }).count()) === 1;
+  const [yOrdre, yAnnees] = [(await ordre.boundingBox())!.y, (await annees.boundingBox())!.y];
+  if (dansLaColonne) expect(yOrdre).toBeLessThan(yAnnees);
+  else expect(yOrdre).toBeGreaterThan(yAnnees);
   // Le menu des années : toutes les éditions de la fête, la plus récente d'abord.
   const avant = await historique(page);
   await colonne.getByRole("button", { name: "Pâques 2027" }).click();
@@ -1244,7 +1274,8 @@ test("P7 — l'ordre de passage d'une fête sans document : ajouter un numéro c
 test("P7 — Back-Office en chinois : 复活节 et 圣诞节 dans le rail, « 启动预约 »", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrirFete(page, `${BO}/paques`, {}, "2026-10-09", ALICE_EVT);
-  await expect(ongletsRail(page).getByRole("link")).toHaveText(["活动", "复活节", "圣诞节"]);
+  // Piste A (BO8) : plus d'onglet « 活动 », la liste des évènements est dans le Calendrier.
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["复活节", "圣诞节"]);
   await expect(page.getByRole("region", { name: "本次节日" }).getByRole("heading", { level: 2 })).toHaveText("复活节 2027");
   await expect(page.getByRole("button", { name: "启动预约", exact: true })).toBeVisible();
 });
@@ -1270,7 +1301,11 @@ const DOCS_P8 = {
   "programmes/x7Kq2/creneaux/p": { ...resaDe("p", "2026-10-03", "10:00", "11:00"), quoi: "Danse", qui: ["Gp Joie"], auteurUid: "uid-lea", auteurNom: "Léa M." },
 };
 const tableau = (page: Page) => page.getByRole("table", { name: "Toutes les réservations" });
-const lignesTableau = (page: Page) => tableau(page).locator("tbody tr");
+/** Le rendu visible de « Toutes les réservations » : le tableau ou, sous 640 px de conteneur, la liste « par jour » (bo-evenements-1). */
+const vueReservations = (page: Page) => page.locator('[data-testid="reservations-tableau"], [data-testid="reservations-liste"]').filter({ visible: true });
+/** Les lignes du rendu visible : le tableau à partir de 640 px de conteneur, dessous la liste « par jour » (bo-evenements-1). */
+const lignesTableau = (page: Page) => page.locator('[data-testid="reservations-tableau"] tbody tr, [data-testid="reservations-liste"] li').filter({ visible: true });
+const enListe = (page: Page) => page.getByTestId("reservations-liste").isVisible();
 const filtres = (page: Page) => page.getByRole("group", { name: "Filtrer les réservations" });
 /** Noël 2026 comme l'a laissé la saison : trois familles, samedi et dimanche, 1 h. */
 const DOC_NOEL_2026 = {
@@ -1287,14 +1322,22 @@ test("P8 — réservations ouvertes : « Toutes les réservations » par défaut
   else await versToutesLesReservations(page);
   await expect(page.getByRole("heading", { name: "Toutes les réservations", level: 2 })).toBeVisible();
   await expect(page.getByText("Noël 2026 · qui a réservé quoi, jour par jour")).toBeVisible();
-  await expect(tableau(page).getByRole("columnheader")).toHaveText(["Jour", "Créneau", "Quoi", "Qui", "Réservé par", ""]);
   const lignes = lignesTableau(page);
   await expect(lignes).toHaveCount(4);
-  await expect(lignes.nth(0)).toContainText(/sam\. 10 oct\.\s*10:00 – 11:00\s*Séance louange\s*Culte Francophone\s*Léa M\./);
-  await expect(lignes.nth(1)).toContainText(/dim\. 11 oct\.\s*16:00 – 17:00\s*Sketch\s*Gp Amour\s*Jo L\./);
-  // Le second créneau du dimanche : le jour n'est pas répété.
-  await expect(lignes.nth(2).locator("td").first()).toHaveText("");
-  await expect(lignes.nth(2)).toContainText("17:00 – 18:30");
+  if (await enListe(page)) {
+    // Sous 640 px de conteneur : un groupe par jour, le créneau, le type, le groupe, « Réservé par … » (bo-evenements-1).
+    await expect(page.getByTestId("reservations-liste").getByRole("heading", { level: 3 })).toHaveText(["sam. 10 oct.", "dim. 11 oct.", "sam. 17 oct."]);
+    await expect(lignes.nth(0)).toContainText(/10:00 – 11:00\s*Séance louange\s*Culte Francophone\s*Réservé par Léa M\./);
+    await expect(lignes.nth(1)).toContainText(/16:00 – 17:00\s*Sketch\s*Gp Amour\s*Réservé par Jo L\./);
+    await expect(lignes.nth(2)).toContainText("17:00 – 18:30");
+  } else {
+    await expect(tableau(page).getByRole("columnheader")).toHaveText(["Jour", "Créneau", "Quoi", "Qui", "Réservé par", ""]);
+    await expect(lignes.nth(0)).toContainText(/sam\. 10 oct\.\s*10:00 – 11:00\s*Séance louange\s*Culte Francophone\s*Léa M\./);
+    await expect(lignes.nth(1)).toContainText(/dim\. 11 oct\.\s*16:00 – 17:00\s*Sketch\s*Gp Amour\s*Jo L\./);
+    // Le second créneau du dimanche : le jour n'est pas répété.
+    await expect(lignes.nth(2).locator("td").first()).toHaveText("");
+    await expect(lignes.nth(2)).toContainText("17:00 – 18:30");
+  }
   await verifierAgencement(page);
 });
 
@@ -1311,7 +1354,7 @@ test("P8 — filtres en pilules : « À venir 4 · Passées 1 · Hors grille 1 �
   await expect(plus(lignesTableau(page).filter({ hasText: "Sketch" }))).toHaveCount(1);
   await filtres(page).getByRole("button", { name: "Passées 1" }).click();
   await expect(lignesTableau(page)).toHaveCount(1);
-  await expect(lignesTableau(page)).toContainText(/sam\. 3 oct\.\s*10:00 – 11:00\s*Danse\s*Gp Joie\s*Léa M\./);
+  await expect(lignesTableau(page)).toContainText(/10:00 – 11:00\s*Danse\s*Gp Joie\s*(Réservé par )?Léa M\./);
   await filtres(page).getByRole("button", { name: "Hors grille 1" }).click();
   await expect(lignesTableau(page)).toHaveCount(1);
   await expect(lignesTableau(page)).toContainText("Chant");
@@ -1364,12 +1407,12 @@ test("P8 — deux volets : Entraînements dans la colonne, aucune semaine choisi
   await expect(page).not.toHaveURL(/[?&]vue=/);
   await expect(semaineChoisie(page)).toContainText("10 – 11 oct.");
   await expect(colonne.getByRole("button", { name: /^Toutes les réservations/ })).not.toHaveAttribute("aria-current", "true");
-  await expect(tableau(page)).toHaveCount(0);
+  await expect(vueReservations(page)).toHaveCount(0);
   await expect(plus(jour(page, "Samedi 10 octobre"))).toHaveCount(1);
   await expect(plus(jour(page, "Dimanche 11 octobre"))).toHaveCount(2);
   // Revenir au tableau.
   await colonne.getByRole("button", { name: /^Toutes les réservations/ }).click();
-  await expect(tableau(page)).toBeVisible();
+  await expect(vueReservations(page)).toBeVisible();
   await expect(listeSemaines(page).locator('[aria-current="true"]')).toHaveCount(0);
 });
 
@@ -1554,8 +1597,8 @@ test("P9 — tablette portrait et grands écrans : la carte de saison entière, 
   await expect(resumeSaison(page)).toHaveCount(0);
 });
 
-test("P9 — une colonne (téléphone, tablette portrait) : « Lancer les réservations » pleine largeur, sous la saison, puis l'aperçu", async ({ page }) => {
-  test.skip(estGrandEcran(test.info()), "propre au téléphone et à la tablette debout");
+test("P9 — une colonne (téléphone ; la tablette portrait a deux colonnes, bo-evenements-12, scene-des-fetes.spec.ts) : « Lancer les réservations » pleine largeur, sous la saison, puis l'aperçu", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "une colonne : le téléphone seul depuis bo-evenements-12 (lot CD, T4b)");
   await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON }, "2026-10-09", ALICE_EVT);
   const lancer = page.getByRole("button", { name: "Lancer les réservations", exact: true });
   const saison = estTelephone(test.info()) ? resumeSaison(page) : carteSaison(page);
@@ -1568,8 +1611,8 @@ test("P9 — une colonne (téléphone, tablette portrait) : « Lancer les réser
   await verifierAgencement(page);
 });
 
-test("P9 — une colonne (téléphone, tablette portrait) : saison lancée → « Cette fête », « Cette semaine » en cartes par jour avec « ⋯ », l'ordre de passage en carte en bas", async ({ page }) => {
-  test.skip(estGrandEcran(test.info()), "propre au téléphone et à la tablette debout");
+test("P9 — une colonne (téléphone ; la tablette portrait a deux colonnes, bo-evenements-12, scene-des-fetes.spec.ts) : saison lancée → « Cette fête », « Cette semaine » en cartes par jour avec « ⋯ », l'ordre de passage en carte en bas", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "une colonne : le téléphone seul depuis bo-evenements-12 (lot CD, T4b)");
   await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
   const colonne = colonneFete(page);
   await expect(colonne.getByRole("button", { name: /^Saison/ })).toContainText("sam. 10–12, dim. 14–19 · 1 h · tout membre");
@@ -1584,7 +1627,7 @@ test("P9 — une colonne (téléphone, tablette portrait) : saison lancée → �
   await expect(plus(samedi)).toHaveCount(1);
   await expect(plus(dimanche)).toHaveCount(2);
   // Ni tableau ni liste des semaines sur une colonne : le tableau est à un toucher.
-  await expect(tableau(page)).toHaveCount(0);
+  await expect(vueReservations(page)).toHaveCount(0);
   await expect(listeSemaines(page)).toHaveCount(0);
   const ordre = page.getByRole("button", { name: /Ordre de passage du jour J/ });
   expect(await ordre.evaluate((e) => e.getBoundingClientRect().top + window.scrollY))
@@ -1597,7 +1640,7 @@ test("P9 — une colonne (téléphone, tablette portrait) : « Toutes les réser
   await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
   await colonneFete(page).getByRole("button", { name: /^Toutes les réservations/ }).click();
   await expect(page).toHaveURL(/[?&]vue=reservations/);
-  await expect(tableau(page)).toBeVisible();
+  await expect(vueReservations(page)).toBeVisible();
   await expect(cetteSemaine(page)).toHaveCount(0);
   await verifierSansDebordement(page);
   await page.getByRole("link", { name: "Noël 2026", exact: true }).click();
@@ -1709,7 +1752,7 @@ test("relecture — « ⋯ » d'une réservation : une ligne d'aide sous chaque 
 test("relecture — en chinois, l'aide sous chaque action du « ⋯ »", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  const sketch = page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" });
+  const sketch = page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("listitem").filter({ hasText: "Sketch · 仁爱团契" });
   await sketch.getByRole("button", { name: /^更多操作/ }).click();
   await expect(page.getByRole("menuitem", { name: "调整", exact: true })).toHaveAccessibleDescription("选择另一个空闲时段");
   await expect(page.getByRole("menuitem", { name: "修改", exact: true })).toHaveAccessibleDescription("内容、参与者、备注");
@@ -1749,4 +1792,149 @@ test("relecture — captures à regarder (menu « ⋯ » avec ses aides, lecture
   await page.reload();
   await expect(page.getByRole("alert").filter({ hasText: "Impossible de charger la scène" })).toBeVisible();
   await page.screenshot({ path: `${dir}/relecture-echec-${nom}.png` });
+});
+
+test("evenements-app-2 — deux volets, 1 280 × 720 : « Ordre de passage du jour J » est le pied de la carte, entier et dans la fenêtre", async ({ page }) => {
+  test.skip(!estGrandEcran(test.info()), "pied de carte : deux volets seulement");
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  const carte = page.locator('[data-volet="liste"]');
+  const ordre = carte.getByRole("button", { name: /Ordre de passage du jour J/ });
+  await expect(ordre).toBeVisible();
+  await page.getByRole("button", { name: /Semaines passées/ }).click();
+  const c = (await carte.boundingBox())!;
+  const o = (await ordre.boundingBox())!;
+  expect(o.y + o.height, "le pied ne dépasse pas le bas de la carte").toBeLessThanOrEqual(c.y + c.height + 1);
+  expect(o.y + o.height, "ni le bas de la fenêtre").toBeLessThanOrEqual(720);
+});
+
+test("evenements-app-7 — thème sombre : les carrés pris des semaines prennent la variante sombre de la scène", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.addInitScript(() => { try { localStorage.setItem("theme", "dark"); } catch {} });
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  const pris = listeSemaines(page).locator('button:not([aria-current])').locator('[data-case="pris"]').first(); // la carte active garde l'encre inversée
+  await expect(pris).toBeAttached();
+  expect(await pris.evaluate((el) => getComputedStyle(el).borderTopColor)).toBe("rgb(159, 168, 209)");
+});
+
+// Corrections du design, bo-evenements-1 : « Toutes les réservations » en tableau à partir de 640 px de conteneur, en liste
+// « par jour » dessous ; chaque réservation garde son « ⋯ » (ou « Déplacer »), dans la fenêtre, sans défilement horizontal.
+test("bo-evenements-1 — le tableau au-dessus de 720 px de conteneur, la liste « par jour » dessous : « ⋯ » ou « Déplacer » dans la fenêtre, rien ne défile", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  await versToutesLesReservations(page);
+  const section = page.getByRole("region", { name: "Toutes les réservations" });
+  const largeur = (await section.boundingBox())!.width;
+  await expect(page.getByTestId("reservations-tableau")).toBeVisible({ visible: largeur >= 720 });
+  await expect(page.getByTestId("reservations-liste")).toBeVisible({ visible: largeur < 720 });
+  const lignes = lignesTableau(page);
+  await expect(lignes).toHaveCount(4);
+  const fenetre = page.viewportSize()!.width;
+  for (const ligne of await lignes.all()) {
+    const bouton = ligne.getByRole("button", { name: /^(Plus d'actions|Déplacer)/ });
+    await expect(bouton).toHaveCount(1);
+    const b = (await bouton.boundingBox())!;
+    expect(b.x + b.width, "le bouton reste dans la fenêtre").toBeLessThanOrEqual(fenetre);
+  }
+  const cadre = page.getByTestId(largeur >= 720 ? "reservations-tableau" : "reservations-liste");
+
+  expect(await cadre.evaluate((el) => el.scrollWidth - el.clientWidth), "aucun défilement horizontal du cadre").toBeLessThanOrEqual(0);
+  // Une réservation hors grille garde son fond et « Déplacer ».
+  const hors = lignes.filter({ hasText: "17:00 – 18:30" });
+  await expect(hors).toHaveAttribute("data-hors-grille", "true");
+  await expect(hors.getByRole("button", { name: "Déplacer" })).toBeVisible();
+});
+
+// bo-evenements-9 : en 中文, le type de réservation et le groupe se lisent en chinois, dans « Toutes les réservations » comme
+// dans « Cette semaine » ; en français rien ne change ; une valeur sans clé s'affiche telle que stockée.
+test("bo-evenements-9 — en 中文, « Danse · Gp Joie » se lit 舞蹈 · 喜乐团契 ; en français, « Danse » et « Gp Joie »", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  const docs = {
+    ...DOCS_P8,
+    "programmes/x7Kq2/creneaux/q": { ...resaDe("q", "2026-10-17", "10:00", "11:00"), quoi: "Théâtre", qui: ["Groupe Amour"], auteurUid: "uid-lea", auteurNom: "Léa M." },
+  };
+  await ouvrirFete(page, `${BO}/noel`, docs, "2026-10-09", ALICE_EVT);
+  // En deux volets, « Toutes les réservations » est la vue d'une saison ouverte ; sur une colonne, elle s'ouvre en page.
+  if (!estGrandEcran(test.info())) await versToutesLesReservations(page);
+  const filtresZh = page.getByRole("group", { name: "筛选预约" });
+  await filtresZh.getByRole("button", { name: /^已过/ }).click();
+  await expect(lignesTableau(page)).toContainText(/舞蹈/);
+  await expect(lignesTableau(page)).toContainText(/喜乐团契/);
+  await filtresZh.getByRole("button", { name: /^即将到来/ }).click();
+  await expect(lignesTableau(page).filter({ hasText: "Théâtre" })).toContainText("Groupe Amour");
+});
+
+test("bo-evenements-9 — en français, « Danse » et « Gp Joie » restent tels quels", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  await versToutesLesReservations(page);
+  await filtres(page).getByRole("button", { name: "Passées 1" }).click();
+  await expect(lignesTableau(page)).toContainText(/Danse/);
+  await expect(lignesTableau(page)).toContainText(/Gp Joie/);
+});
+
+test("bo-evenements-9 — libelleQui rend en chinois les mêmes caractères que `categories.Groupe …` de zh-CN.json", () => {
+  for (const g of ["Paix", "Fidélité", "Bonté", "Amour", "Joie"]) {
+    expect(libelleQui(`Gp ${g}`, "zh")).toBe((zhCN.categories as Record<string, string>)[`Groupe ${g}`]);
+    expect(libelleQui(`Gp ${g}`, "fr")).toBe(`Gp ${g}`);
+  }
+  expect(libelleQui("Franco", "zh")).toBe("法语崇拜");
+  expect(libelleQui("EDD 小班", "zh")).toBe("EDD 小班");
+});
+
+// bo-evenements-11 : plus de sous-titre recopié sous le titre de la scène.
+test("bo-evenements-11 — la scène n'a plus de sous-titre sous son titre", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  await expect(page.getByRole("heading", { level: 1, name: "Scène des fêtes" })).toBeVisible();
+  await expect(page.getByText("Ce que voit l'assemblée, et sa gestion")).toHaveCount(0);
+});
+
+// bo-evenements-13 : la carte de gauche prend sa hauteur naturelle, c'est la page qui défile, le panneau de droite reste en place ;
+// « Ordre de passage du jour J » est la troisième ligne de « Cette fête ».
+test("bo-evenements-13 — deux volets, 1 280 × 720 : plus d'ascenseur dans la carte, la dernière semaine est atteignable, l'ordre de passage est la troisième ligne, le panneau de droite colle", async ({ page }) => {
+  test.skip(!estGrandEcran(test.info()), "deux volets seulement");
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P5, "2026-10-09", ALICE_EVT);
+  const carte = page.locator('[data-volet="liste"]');
+  await expect(carte).toBeVisible();
+  await page.getByRole("button", { name: /Semaines passées/ }).click();
+  const defilement = await carte.evaluate((el) => { const c = getComputedStyle(el); return { overflowY: c.overflowY, maxHeight: c.maxHeight, position: c.position }; });
+  expect(defilement.overflowY, "pas d'ascenseur interne").not.toMatch(/auto|scroll/);
+  expect(defilement.maxHeight).toBe("none");
+  expect(defilement.position).not.toBe("sticky");
+  // La dernière semaine : atteignable en faisant défiler la page, entière.
+  const semaines = listeSemaines(page).getByRole("button");
+  const derniere = semaines.last();
+  await derniere.scrollIntoViewIfNeeded();
+  const b = (await derniere.boundingBox())!;
+  expect(b.y).toBeGreaterThanOrEqual(0);
+  expect(b.y + b.height, "la dernière semaine n'est pas coupée").toBeLessThanOrEqual(720);
+  // « Ordre de passage du jour J » : la troisième ligne de « Cette fête », sous « Toutes les réservations ».
+  const ordre = carte.getByRole("button", { name: /Ordre de passage du jour J/ });
+  const toutes = carte.getByRole("button", { name: /^Toutes les réservations/ });
+  await expect(ordre).toHaveCount(1);
+  expect(await ordre.evaluate((el, autre) => el.parentElement === (autre as HTMLElement).parentElement, await toutes.elementHandle())).toBe(true);
+  // Le panneau de droite (« Cette semaine ») reste en vue pendant le défilement, quand il tient dans la fenêtre.
+  const panneau = page.getByTestId("panneau-collant");
+  const haut = (await panneau.boundingBox())!;
+  if (haut.height <= 720 - 100) {
+    await page.evaluate(() => window.scrollTo(0, 400));
+    await expect.poll(async () => (await panneau.boundingBox())!.y).toBeLessThan(120);
+    await expect.poll(async () => (await panneau.boundingBox())!.y).toBeGreaterThan(0);
+  }
+});
+
+// bo-evenements-10 : la pastille d'état est neutre, avec un point de couleur ; un seul composant, le mot reste dans l'élément.
+test("bo-evenements-10 — « Ouvertes » : pastille neutre, point vert `aria-hidden` en dehors du texte ; en 中文 « 开放中 »", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-10-09", ALICE_EVT);
+  const etat = colonneFete(page).getByTestId("etat-edition");
+  await expect(etat).toHaveText("Ouvertes");
+  const point = etat.locator('[aria-hidden="true"]');
+  await expect(point).toHaveCount(1);
+  expect(await point.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(31, 157, 85)");
+  expect(await etat.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe("rgba(0, 0, 0, 0)");
+});
+
+test("bo-evenements-10 — en 中文, la pastille de la scène dit 开放中", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirFete(page, `${BO}/noel`, { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-10-09", ALICE_EVT);
+  await expect(page.getByTestId("etat-edition")).toHaveText("开放中");
 });

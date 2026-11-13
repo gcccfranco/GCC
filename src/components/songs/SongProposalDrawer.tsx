@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
+import { compter } from "@/lib/usage";
 
 function isHttpUrl(s: string): boolean {
   return /^https?:\/\//i.test(s.trim());
@@ -23,7 +24,7 @@ function isHttpUrl(s: string): boolean {
 
 /** Mode « setlist de fête » (docs/spec-chants-fetes.md, CF20) : le tiroir est ouvert par l'éditeur (pas de bouton),
  *  le titre est prérempli, la proposition garde la setlist qui l'attend, et `onAjoutee` la reçoit une fois créée. */
-export interface ProposerPourUneFete {
+interface ProposerPourUneFete {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   titreInitial: string;
@@ -94,6 +95,7 @@ export function SongProposalDrawer({ enTete = false, controle }: { enTete?: bool
         authorName,
         ...(controle ? { setlistId: controle.setlistId, setlistTitre: controle.setlistTitre } : {}),
       });
+      compter("cmd.chants.proposer");
       if (controle) {
         controle.onAjoutee({ id, titre: title.trim() });
         setOpen(false);
@@ -123,10 +125,10 @@ export function SongProposalDrawer({ enTete = false, controle }: { enTete?: bool
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-2 hover:underline"
+          className="inline-flex h-11 items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-2 hover:underline"
         >
           <Music4 className="h-4 w-4" />
-          {t("proposition.titre")}
+          {t("songs.list.proposer")}
         </button>
       )}
 
@@ -179,7 +181,7 @@ export function SongProposalDrawer({ enTete = false, controle }: { enTete?: bool
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                   {t("proposition.partition")}{" "}
-                  <span className="text-muted-foreground/70">{t("signalement.optionnel")}</span>
+                  <span className="text-muted-foreground">{t("signalement.optionnel")}</span>
                 </label>
                 <Input
                   type="url"

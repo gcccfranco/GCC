@@ -19,6 +19,14 @@ export type Sensation = (typeof SENSATIONS)[number];
 export const MOMENTS = ["intro", "couplet", "montee", "refrain", "pont", "fin", "transition"] as const;
 export type Moment = (typeof MOMENTS)[number];
 
+/** Les 4 ressentis (H2) : ce que la fiche fait sentir, filtre simple qui remplacera les sensations (H6). */
+export const RESSENTIS = ["chaleureux", "melancolique", "elan", "couleur"] as const;
+export type Ressenti = (typeof RESSENTIS)[number];
+
+/** Les 5 usages (H2) : où la fiche se joue dans un chant, qui remplaceront les moments (H6). */
+export const USAGES = ["couplet", "pre-refrain", "refrain", "fin", "transition"] as const;
+export type Usage = (typeof USAGES)[number];
+
 /** Le français des fiches → la clé stable. Le 中文 vit dans les locales. */
 export const SENSATION_FR: Record<string, Sensation> = {
   "Épique": "epique",
@@ -43,6 +51,21 @@ export const MOMENT_FR: Record<string, Moment> = {
   Pont: "pont",
   Fin: "fin",
   Transition: "transition",
+};
+
+export const RESSENTI_FR: Record<string, Ressenti> = {
+  chaleureux: "chaleureux",
+  mélancolique: "melancolique",
+  élan: "elan",
+  couleur: "couleur",
+};
+
+export const USAGE_FR: Record<string, Usage> = {
+  couplet: "couplet",
+  "pré-refrain": "pre-refrain",
+  refrain: "refrain",
+  fin: "fin",
+  transition: "transition",
 };
 
 export const NIVEAU_FR: Record<string, Niveau> = {
@@ -72,6 +95,11 @@ export interface Fiche {
   instrument?: Instrument;
   sensations: Sensation[];
   moments: Moment[];
+  /** Ressentis et usages (H2), vides si la fiche n'en porte pas. */
+  ressentis: Ressenti[];
+  usages: Usage[];
+  /** Ressentis et usages encore « (proposé) » : Timothée ne les a pas validés. */
+  etiquettesProposees: boolean;
   /** Niveau par instrument ; une fiche propre à un instrument n'en a qu'un. */
   niveau: Partial<Record<Instrument, Niveau>>;
   /** Remarque écrite à côté du niveau (« à préparer avec l'équipe »). */
@@ -88,6 +116,8 @@ export interface Fiche {
   /** Slugs des chants qui jouent **déjà** le « après », calculés au build,
    *  du plus chanté au moins chanté une fois dans le navigateur. */
   exemples: string[];
+  /** Où entendre le « après » : un chant et une de ses sections (H2), calculé au build. */
+  ecoutes: { slug: string; section: string; nom: string }[];
 }
 
 /** Une étape du parcours « Par où commencer ». */

@@ -1,16 +1,17 @@
 import { expect, test, type Page, type Request, type Route, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs, margeAttendue, ongletsRail, ouvrirAvecBarre,
-  repondreDansLeSite, verifierAgencement,
+  estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs, margeAttendue, ouvrirAvecBarre,
+  repondreDansLeSite, verifierAgencement, zoneDeContenu,
 } from "./helpers/agencement";
 
 // Agencement v18, tranche T1 (docs/spec-agencement-v18.md, B1 et B2 ; planches `v18-bo-taches`,
-// `v18-bo-tache-nouvelle`) : Back-Office › Tâches en deux volets. En-tête « Tâches » au-dessus des
-// deux volets, rail des équipes avec le compte, « + Nouvelle tâche » ; à gauche la liste de l'équipe en
-// carte (En retard · Cette semaine · Plus tard, « Terminées (n) » repliées), à droite la fiche à
-// lire (état, infos, Note et Historique), « Modifier » et « ⋯ › Supprimer ». En grand, « Nouvelle
-// tâche » et « Modifier » ouvrent le formulaire dans le volet ; sur un volet, la feuille.
+// `v18-bo-tache-nouvelle`), reprise à la piste A (BO-D, BO7) : plus de deux volets ni de rail des équipes.
+// La liste de l'équipe est la section « Tâches » de sa page `/back-office/equipes/<équipe>` (En retard ·
+// Cette semaine · Plus tard, « Terminées (n) » repliées, « Nouvelle tâche » en lien) ; la fiche (état,
+// infos, Note et Historique, « Modifier » et « ⋯ › Supprimer ») et le formulaire sont en une colonne, sous
+// un retour « ‹ <équipe> ». En grand, « Nouvelle tâche » et « Modifier » ouvrent le formulaire dans la page ;
+// sur un volet, la feuille.
 // Firestore et date simulés, personnes fictives, aucune vraie notification.
 
 const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
@@ -54,12 +55,36 @@ async function ouvrir(page: Page, adresse: string) {
   return signInAs(page, RUTH, DOCS, adresse);
 }
 
-const liste = (page: Page) => page.locator('[data-volet="liste"]');
-const detail = (page: Page) => page.locator('[data-volet="detail"]');
+/** La page de l'équipe (BO7) : sa section « Tâches » est la liste ; la fiche et le formulaire ont leur adresse. */
+const PAGE_DA = "/back-office/equipes/da";
+const liste = (page: Page) => page.getByRole("region", { name: "Tâches", exact: true });
+const detail = (page: Page) => page.locator("article");
+const formulaire = (page: Page, nom: string) => page.getByRole("form", { name: nom });
 const ligne = (page: Page, titre: string) => liste(page).getByRole("button", { name: new RegExp(`^${titre}`) });
-/** Le bloc des volets (ou la liste seule) : toute la zone ; un rail (les équipes), aucune rangée de pilules. */
-const surLaListe = (page: Page) => ({ contenu: liste(page).locator(".."), onglets: { rail: 1, pilules: 0 } });
-const nouvelleTache = (page: Page) => page.getByRole(estGrandEcran(test.info()) ? "link" : "button", { name: "Nouvelle tâche" });
+/** La page de l'équipe. Barre latérale montrée (ordinateur, tablette paysage) : deux colonnes (back-office-10, `grid-cols-[minmax(0,1fr)_300px] gap-8`),
+ *  le corps prend toute la zone moins deux marges, « Tâches » à gauche et Réunions à droite dans 300 px, hauts alignés. Sinon (BO-G, 2 : la
+ *  largeur d'« À faire », plus de plafond à 720 px) : la section « Tâches » prend toute la zone moins deux marges, Réunions dessous. Ni rail ni pilules. */
+async function verifierEquipe(page: Page) {
+  const zone = await zoneDeContenu(page);
+  const marge = await margeAttendue(page);
+  await verifierAgencement(page, { onglets: { rail: 0, pilules: 0 } });
+  const corps = (await page.getByTestId("corps-equipe").boundingBox())!;
+  expect(corps.width, "le corps : toute la zone moins deux marges").toBeGreaterThanOrEqual(zone.droite - zone.gauche - 2 * marge - 1);
+  const taches = (await liste(page).boundingBox())!;
+  const reunions = (await page.getByRole("heading", { level: 2, name: "Réunions" }).boundingBox())!;
+  const titreTaches = (await page.getByRole("heading", { level: 2, name: "Tâches", exact: true }).boundingBox())!;
+  if (zone.gauche > 0) {
+    // Le corps porte les marges en dedans (`px-[var(--marge-page)]`) : la grille mesure le corps moins deux marges.
+    expect(Math.abs(taches.width - (corps.width - 2 * marge - 300 - 32)), "Tâches : le corps moins la colonne de 300 px et l'écart de 32 px").toBeLessThanOrEqual(1);
+    expect(reunions.x, "Réunions à droite de Tâches, à 32 px").toBeGreaterThanOrEqual(taches.x + taches.width + 31);
+    expect(Math.abs(corps.x + corps.width - marge - (reunions.x + 300)), "colonne de droite de 300 px, au bord de la grille").toBeLessThanOrEqual(1);
+    expect(Math.abs(reunions.y - titreTaches.y), "titres alignés").toBeLessThanOrEqual(2);
+  } else {
+    expect(taches.width, "Tâches : toute la zone moins deux marges").toBeGreaterThanOrEqual(zone.droite - zone.gauche - 2 * marge - 1);
+    expect(reunions.y, "Réunions sous Tâches").toBeGreaterThan(taches.y + taches.height - 1);
+  }
+}
+const nouvelleTache = (page: Page) => page.getByRole("link", { name: "Nouvelle tâche" });
 
 /** Chemin Firestore d'une requête (`equipes/da:runQuery`, `equipes/da/taches/t3`), sans le préfixe du projet. */
 const cheminFirestore = (url: string) => decodeURIComponent(new URL(url).pathname.split("/documents")[1] ?? "").replace(/^\//, "");
@@ -87,33 +112,37 @@ async function capture(page: Page, nom: string) {
   await page.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png` });
 }
 
-test("l'agencement commun : en-tête « Tâches », rail des équipes avec le compte, aucune fenêtre native", async ({ page }) => {
-  await ouvrir(page, "/back-office/taches/da");
+test("l'agencement commun : en-tête = le nom de l'équipe, section « Tâches » avec ses lignes, aucune fenêtre native", async ({ page }) => {
+  await ouvrir(page, PAGE_DA);
   await expect(ligne(page, "Affiche de Noël")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Tâches");
-  await expect(page.locator("header[data-entete-page]")).toContainText("Les tâches de tes équipes : ce qui est en retard d'abord");
-  const rail = ongletsRail(page).filter({ visible: true });
-  await expect(rail.getByRole("link")).toHaveText([/^DA\s*·\s*3$/, /^Médias\s*·\s*1$/]);
-  await expect(rail.getByRole("link", { name: /^DA/ })).toHaveAttribute("aria-current", "page");
-  await verifierAgencement(page, surLaListe(page));
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("DA");
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(["Tâches", "Réunions", "Membres"]);
+  // Les trois tâches de TEAM DA à faire (le compte de l'ancien rail « DA · 3 ») : quatre lignes, la tâche répétée en a deux.
+  await expect(liste(page).getByRole("checkbox")).toHaveCount(4);
+  for (const titre of ["Affiche de Noël", "Fond PPT du culte", "Livret de l'Avent"]) await expect(ligne(page, titre).first()).toBeVisible();
+  await verifierEquipe(page);
   await capture(page, "v18-bo-taches");
+  // Une autre équipe, sa page : le titre et une seule tâche (« Médias · 1 »).
+  await page.goto("/back-office/equipes/medias");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Médias");
+  await expect(liste(page).getByRole("checkbox")).toHaveCount(1);
 });
 
-test("pendant la lecture des tâches : ni « Aucune tâche », ni compte à zéro dans le rail", async ({ page }) => {
+test("pendant la lecture des tâches : ni « Aucune tâche », ni compte à zéro dans la section", async ({ page }) => {
   interdireDialoguesNatifs(page);
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await signInAs(page, RUTH, DOCS, "/back-office");
   // Les tâches de TEAM DA tardent à venir (réseau lent).
   const lecture = await retenir(page, (r) => cheminFirestore(r.url()) === "equipes/da:runQuery");
-  await page.goto("/back-office/taches/da");
+  await page.goto(PAGE_DA);
   await expect.poll(lecture.vues).toBeGreaterThan(0);
-  const rail = ongletsRail(page).filter({ visible: true });
-  await expect(rail.getByRole("link", { name: /^DA/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("DA");
+  await expect(liste(page)).toBeVisible();
   await expect(page.getByText(/^Aucune tâche pour l'instant/)).toHaveCount(0);
-  await expect(rail.getByRole("link", { name: /^DA/ })).toHaveText(/^DA$/);
+  await expect(liste(page).getByRole("checkbox")).toHaveCount(0);
   lecture.relacher();
   await expect(ligne(page, "Affiche de Noël")).toBeVisible();
-  await expect(rail.getByRole("link")).toHaveText([/^DA\s*·\s*3$/, /^Médias\s*·\s*1$/]);
+  await expect(liste(page).getByRole("checkbox")).toHaveCount(4);
 });
 
 test("changer l'état d'une tâche ne relit que son équipe", async ({ page }) => {
@@ -143,7 +172,7 @@ test("« Modifier » : le responsable est déjà choisi pendant la lecture des m
 });
 
 test("la liste : En retard, Cette semaine, Plus tard ; « Terminées (1) » repliées puis dépliées", async ({ page }) => {
-  await ouvrir(page, "/back-office/taches/da");
+  await ouvrir(page, PAGE_DA);
   await expect(liste(page).getByRole("heading", { name: "En retard" })).toBeVisible();
   await expect(liste(page).getByRole("heading", { name: "Cette semaine" })).toBeVisible();
   await expect(liste(page).getByRole("heading", { name: "Plus tard" })).toBeVisible();
@@ -156,50 +185,57 @@ test("la liste : En retard, Cette semaine, Plus tard ; « Terminées (1) » repl
 });
 
 test.describe("en grand (deux volets)", () => {
-  test.beforeEach(({}, info: TestInfo) => { test.skip(!estGrandEcran(info), "deux volets : ordinateur et iPad paysage"); });
+  test.beforeEach(({}, info: TestInfo) => { test.skip(!estGrandEcran(info), "formulaire dans la page : ordinateur et iPad paysage"); });
 
-  test("la liste en carte et la première tâche à faire en fiche à lire, titrée en h2", async ({ page }) => {
-    await ouvrir(page, "/back-office/taches/da");
-    await expect(liste(page)).toHaveClass(/raised/);
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Affiche de Noël" })).toBeVisible();
-    await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
-    await expect(ligne(page, "Affiche de Noël")).toHaveAttribute("aria-current", "page");
+  test("la section « Tâches » en carte ; toucher une tâche ouvre sa fiche à lire, titrée en h1", async ({ page }) => {
+    await ouvrir(page, PAGE_DA);
+    await expect(liste(page).locator(".carte-groupe").first()).toBeVisible();
+    // (Plus de première tâche ouverte à côté, ni de ligne allumée : la fiche a son adresse, R11 n'existe plus.)
+    await ligne(page, "Affiche de Noël").click();
+    await expect(page).toHaveURL(/\/back-office\/taches\/da\/t1\/?$/);
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Affiche de Noël" })).toBeVisible();
     // État, infos, Note et Historique.
     await expect(detail(page).getByRole("radio", { name: "En cours" })).toHaveAttribute("aria-checked", "true");
     await expect(detail(page).getByText("Culte de Noël")).toBeVisible();
     await expect(detail(page).getByText("Format A3 et version Instagram")).toBeVisible();
-    const historique = detail(page).locator("section", { has: page.getByRole("heading", { name: "Historique" }) });
-    await expect(historique.getByRole("listitem")).toHaveText(["Commencée par Ruth K. · 29 sept.", "Créée par Léa M. · 21 sept."]);
+    // Corrections du design (-11) : l'historique est une liste étiquetée hors carte, en lignes grises de 13 px.
+    const historique = detail(page).getByRole("list", { name: "Historique" });
+    // Retouches d'usage T7 : « commencée par » n'est écrit qu'une fois, dans le sous-titre, plus dans l'historique.
+    await expect(historique.getByRole("listitem")).toHaveText(["Créée par Léa M. le 21 sept."]);
+    await expect(detail(page).getByText(/Commencée par Ruth K\./i)).toHaveCount(1);
+    await expect(historique.getByRole("listitem").first()).toHaveCSS("font-size", "13px");
+    await expect(detail(page).locator("section", { has: page.getByRole("heading", { name: "Historique" }) })).toHaveCount(0);
     await expect(detail(page).getByRole("button", { name: "Modifier" })).toBeVisible();
     await expect(detail(page).getByRole("button", { name: "Plus d'actions" })).toBeVisible();
   });
 
   test("toucher une tâche change l'adresse et la fiche", async ({ page }) => {
-    await ouvrir(page, "/back-office/taches/da");
+    await ouvrir(page, PAGE_DA);
     await ligne(page, "Livret de l'Avent").click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/t3\/?$/);
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Livret de l'Avent" })).toBeVisible();
-    await expect(ligne(page, "Livret de l'Avent")).toHaveAttribute("aria-current", "page");
-    await expect(detail(page).locator("section", { has: page.getByRole("heading", { name: "Historique" }) }).getByRole("listitem"))
-      .toHaveText(["Créée par Ruth K. · 1 sept."]);
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Livret de l'Avent" })).toBeVisible();
+    await expect(detail(page).getByRole("list", { name: "Historique" }).getByRole("listitem")).toHaveText(["Créée par Ruth K. le 1 sept."]);
   });
 
-  test("un lien direct vers une tâche ouvre la liste et sa fiche", async ({ page }) => {
+  test("un lien direct vers une tâche ouvre sa fiche, et « ‹ Tâches de DA » ramène à la page de l'équipe, sur sa ligne", async ({ page }) => {
     await ouvrir(page, "/back-office/taches/da/t2?date=2026-10-08");
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Fond PPT du culte" })).toBeVisible();
+    await verifierAgencement(page, { contenu: detail(page), lecture: true, titreDansLeVolet: true, onglets: { rail: 0, pilules: 0 } });
+    await page.getByRole("link", { name: "Tâches de DA", exact: true }).click();
+    await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
     await expect(ligne(page, "Affiche de Noël")).toBeVisible();
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Fond PPT du culte" })).toBeVisible();
-    await expect(liste(page).getByRole("button", { name: /^Fond PPT du culte.*8 oct/ })).toHaveAttribute("aria-current", "page");
-    await verifierAgencement(page, surLaListe(page));
+    await expect(liste(page).getByRole("button", { name: /^Fond PPT du culte.*8 oct/ })).toBeVisible();
+    await verifierEquipe(page);
   });
 
-  test("« + Nouvelle tâche » ouvre le formulaire dans le volet ; créer l'ajoute et ouvre sa fiche", async ({ page }) => {
-    const db = await ouvrir(page, "/back-office/taches/da");
+  test("« + Nouvelle tâche » ouvre le formulaire dans la page ; créer ouvre sa fiche", async ({ page }) => {
+    const db = await ouvrir(page, PAGE_DA);
     await nouvelleTache(page).click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/nouvelle\/?$/);
-    const form = detail(page).getByRole("form", { name: "Nouvelle tâche" });
+    const form = formulaire(page, "Nouvelle tâche");
     await expect(form).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(form.getByRole("group", { name: "Équipe" }).getByRole("button", { name: "DA" })).toHaveAttribute("aria-pressed", "true");
+    await expect(form.getByRole("button", { name: "Équipe : DA" })).toBeVisible();
     await form.getByLabel("Titre").fill("Affiche de la retraite");
     await form.getByLabel("Échéance").fill("2026-10-06");
     await form.getByRole("tablist", { name: "Répétition" }).getByRole("tab", { name: "Semaine", exact: true }).click();
@@ -212,16 +248,18 @@ test.describe("en grand (deux volets)", () => {
     expect(cree.data).toMatchObject({ titre: "Affiche de la retraite", equipe: "da", echeance: "2026-10-06", repetition: { rythme: "semaine" }, auteurUid: "uid-ruth" });
     const id = cree.path.split("/").pop();
     await expect(page).toHaveURL(new RegExp(`/back-office/taches/da/${id}/?$`));
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Affiche de la retraite" })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Affiche de la retraite" })).toBeVisible();
+    // Et la tâche est dans la section « Tâches » de la page de l'équipe.
+    await page.getByRole("link", { name: "Tâches de DA", exact: true }).click();
     await expect(ligne(page, "Affiche de la retraite")).toBeVisible();
   });
 
   test("la page « Nouvelle tâche » : l'agencement commun ; « Annuler · Créer la tâche » en bas à droite (R13)", async ({ page }) => {
     await ouvrir(page, "/back-office/taches/da/nouvelle");
-    const form = detail(page).getByRole("form", { name: "Nouvelle tâche" });
+    const form = formulaire(page, "Nouvelle tâche");
     await expect(form).toBeVisible();
-    // Le formulaire ajoute au rail des équipes l'équipe en pilules et la répétition en rail (B2, planche `v18-bo-tache-nouvelle`).
-    await verifierAgencement(page, { contenu: liste(page).locator(".."), onglets: { rail: 2, pilules: 1 } });
+    // Le formulaire a l'équipe en menu (T3c) et la répétition en rail (B2, planche `v18-bo-tache-nouvelle`) ; le rail des équipes a disparu (BO7).
+    await verifierAgencement(page, { contenu: form, lecture: true, onglets: { rail: 1, pilules: 0 } });
     const carte = (await form.boundingBox())!;
     const annuler = (await form.getByRole("button", { name: "Annuler" }).boundingBox())!;
     const creer = (await form.getByRole("button", { name: "Créer la tâche" }).boundingBox())!;
@@ -230,22 +268,25 @@ test.describe("en grand (deux volets)", () => {
     expect(carte.x + carte.width - (creer.x + creer.width), "le bouton plein au bord droit (marge de la carte)").toBeLessThanOrEqual(21);
   });
 
-  test("barre réduite : l'en-tête et les volets suivent (marge de 28 px, toute la zone)", async ({ page }, info) => {
+  test("barre réduite : l'en-tête et la colonne suivent (marge de 28 px)", async ({ page }, info) => {
     test.skip(!info.project.name.startsWith("ordinateur"), "la barre se réduit sur ordinateur ; l'iPad couché l'a toujours réduite");
     await ouvrirAvecBarre(page, "reduite");
-    await ouvrir(page, "/back-office/taches/da");
+    await ouvrir(page, PAGE_DA);
     await expect(ligne(page, "Affiche de Noël")).toBeVisible();
     expect(await margeAttendue(page), "la barre est bien réduite").toBe(28);
-    await verifierAgencement(page, surLaListe(page));
+    await verifierEquipe(page);
     await ligne(page, "Livret de l'Avent").click();
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Livret de l'Avent" })).toBeVisible();
-    await verifierAgencement(page, surLaListe(page));
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Livret de l'Avent" })).toBeVisible();
+    await verifierAgencement(page, { contenu: detail(page), lecture: true, titreDansLeVolet: true, onglets: { rail: 0, pilules: 0 } });
   });
 
-  test("l'équipe d'une nouvelle tâche se choisit en pilules", async ({ page }) => {
+  test("l'équipe d'une nouvelle tâche se choisit dans un menu", async ({ page }) => {
     const db = await ouvrir(page, "/back-office/taches/da/nouvelle");
-    const form = detail(page).getByRole("form", { name: "Nouvelle tâche" });
-    await form.getByRole("group", { name: "Équipe" }).getByRole("button", { name: "Médias" }).click();
+    const form = formulaire(page, "Nouvelle tâche");
+    await form.getByRole("button", { name: "Équipe : DA" }).click();
+    await page.getByRole("menuitemradio", { name: "Médias" }).click();
+    await expect(form.getByRole("button", { name: "Équipe : Médias" })).toBeVisible();
+    await expect(form.locator("select#tache-equipe")).toHaveCount(0);
     await form.getByLabel("Titre").fill("Montage du teaser");
     await form.getByLabel("Échéance").fill("2026-10-12");
     await form.getByRole("button", { name: "Créer la tâche" }).click();
@@ -255,25 +296,92 @@ test.describe("en grand (deux volets)", () => {
 
   test("Annuler referme le formulaire sans rien écrire", async ({ page }) => {
     const db = await ouvrir(page, "/back-office/taches/da/nouvelle");
-    await detail(page).getByRole("button", { name: "Annuler" }).click();
-    await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Affiche de Noël" })).toBeVisible();
+    await formulaire(page, "Nouvelle tâche").getByRole("button", { name: "Annuler" }).click();
+    await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
+    await expect(ligne(page, "Affiche de Noël")).toBeVisible();
     expect(db.writes.filter((w) => w.path.startsWith("equipes/"))).toEqual([]);
   });
 
   test("« Modifier » ouvre le formulaire dans le volet ; enregistrer met la fiche à jour", async ({ page }) => {
     const db = await ouvrir(page, "/back-office/taches/da/t3");
     await detail(page).getByRole("button", { name: "Modifier" }).click();
-    const form = detail(page).getByRole("form", { name: "Modifier la tâche" });
+    const form = formulaire(page, "Modifier la tâche");
     await expect(form).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(form.getByLabel("Titre")).toHaveValue("Livret de l'Avent");
     await form.getByLabel("Titre").fill("Livret de l'Avent 2026");
     await form.getByRole("button", { name: "Enregistrer" }).click();
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Livret de l'Avent 2026" })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Livret de l'Avent 2026" })).toBeVisible();
     expect(db.doc("equipes/da/taches/t3")).toMatchObject({ titre: "Livret de l'Avent 2026" });
   });
 });
+
+// Corrections du design (bo-reunions-taches-5, -10) : un seul grand titre, le retour nomme l'équipe, l'état n'est écrit
+// qu'une fois (« État », puis le segmenté avec le signe de chaque état), son sous-titre dessous.
+test("la fiche : un seul h1, retour « Tâches de DA », ni badge ni titre « Tâches » ; l'état dans le segmenté seul", async ({ page }, info) => {
+  await ouvrir(page, "/back-office/taches/da/t1");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  await expect(page.getByRole("heading", { level: 1, name: "Affiche de Noël" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tâches", exact: true })).toHaveCount(0);
+  await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches de DA", exact: true })).toHaveAttribute("href", /^\/back-office\/(equipes|taches)\/da\/?$/);
+  if (estGrandEcran(info)) {
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-size", "30px");
+    await expect(detail(page).getByText("DA", { exact: true })).toHaveCount(0);
+  }
+  const section = detail(page).locator("section").first();
+  await expect(section.getByText("État", { exact: true })).toBeVisible();
+  const etat = section.getByRole("radiogroup", { name: "État" });
+  await expect(etat.getByRole("radio")).toHaveText(["À faire", "En cours", "Terminée"]);
+  for (const radio of await etat.getByRole("radio").all()) {
+    await expect(radio.locator("span[aria-hidden]"), "le signe de l'état").toHaveCount(1);
+    expect((await radio.boundingBox())!.height).toBeGreaterThanOrEqual(36);
+  }
+  await expect(section.getByText("À faire", { exact: true })).toHaveCount(1);
+  const sous = (await section.getByText(/Ruth K\./).boundingBox())!;
+  const rail = (await etat.boundingBox())!;
+  expect(sous.y, "le sous-titre est sous le segmenté").toBeGreaterThanOrEqual(rail.y + rail.height - 1);
+});
+
+for (const largeur of [393, 360]) {
+  test(`téléphone ${largeur} px : la feuille « Nouvelle tâche » a la répétition pleine largeur, « Créer la tâche » de 50 px, « Annuler » dessous`, async ({ page }, info) => {
+    test.skip(!estTelephone(info), "propre au téléphone");
+    await page.setViewportSize({ width: largeur, height: 800 });
+    await ouvrir(page, PAGE_DA);
+    await nouvelleTache(page).click();
+    const feuille = page.getByRole("dialog", { name: "Nouvelle tâche" });
+    await expect(feuille).toBeVisible();
+    // Une seule lecture des boîtes, la feuille arrêtée (elle glisse à l'ouverture).
+    await feuille.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((x) => x.finished)));
+    const m = await feuille.evaluate((el) => {
+      const r = (e: Element | null) => { const b = e!.getBoundingClientRect(); return { y: b.y, h: b.height, w: b.width }; };
+      const bouton = (nom: string) => Array.from(el.querySelectorAll("button")).find((b) => b.textContent?.trim() === nom) ?? null;
+      return { form: r(el.querySelector("form")), repetition: r(el.querySelector("#tache-repetition")), creer: r(bouton("Créer la tâche")), annuler: r(bouton("Annuler")) };
+    });
+    expect(m.repetition.w, "Répétition occupe toute la largeur du formulaire").toBeGreaterThanOrEqual(m.form.w - 32.5);
+    expect(m.creer.h).toBeCloseTo(50, 0);
+    expect(m.creer.w, "bouton plein pleine largeur").toBeGreaterThanOrEqual(m.form.w - 32.5);
+    expect(m.annuler.y, "Annuler dessous").toBeGreaterThanOrEqual(m.creer.y + m.creer.h - 1);
+    expect(m.annuler.h).toBeGreaterThanOrEqual(43.5);
+  });
+}
+
+for (const theme of ["light", "dark"] as const) {
+  test(`${theme} : « Annuler » du formulaire en ligne est un texte de 44 px, sans fond ni contour, à gauche du bouton plein`, async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "le formulaire dans la page : ordinateur et iPad paysage");
+    await page.emulateMedia({ colorScheme: theme });
+    await ouvrir(page, "/back-office/taches/da/nouvelle");
+    const form = formulaire(page, "Nouvelle tâche");
+    const annuler = form.getByRole("button", { name: "Annuler" });
+    await expect(annuler).toBeVisible();
+    const s = await annuler.evaluate((e) => { const c = getComputedStyle(e); return { fond: c.backgroundColor, bordure: c.borderTopWidth, hauteur: e.getBoundingClientRect().height }; });
+    expect(s.fond).toBe("rgba(0, 0, 0, 0)");
+    expect(s.bordure).toBe("0px");
+    expect(s.hauteur).toBeCloseTo(44, 0);
+    const creer = (await form.getByRole("button", { name: "Créer la tâche" }).boundingBox())!;
+    const a = (await annuler.boundingBox())!;
+    expect(a.x + a.width).toBeLessThanOrEqual(creer.x);
+  });
+}
 
 test("« ⋯ › Supprimer » : la fenêtre du site ; Annuler garde la tâche, Supprimer la retire", async ({ page }) => {
   const db = await ouvrir(page, "/back-office/taches/da/t3");
@@ -287,7 +395,7 @@ test("« ⋯ › Supprimer » : la fenêtre du site ; Annuler garde la tâche, S
   await menu.click();
   await page.getByRole("menuitem", { name: "Supprimer" }).click();
   await repondreDansLeSite(page, "Supprimer");
-  await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
+  await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
   await expect.poll(() => db.doc("equipes/da/taches/t3")).toBeUndefined();
   await expect(ligne(page, "Livret de l'Avent")).toHaveCount(0);
 });
@@ -314,32 +422,35 @@ test.describe("un volet (téléphone, tablette portrait)", () => {
   test.beforeEach(({}, info: TestInfo) => { test.skip(estGrandEcran(info), "un volet : téléphone et tablette portrait"); });
 
   test("la liste, puis la fiche en page avec « ‹ Tâches »", async ({ page }) => {
-    await ouvrir(page, "/back-office/taches/da");
+    await ouvrir(page, PAGE_DA);
     await expect(ligne(page, "Livret de l'Avent")).toBeVisible();
-    await verifierAgencement(page, surLaListe(page));
+    await verifierEquipe(page);
     await ligne(page, "Livret de l'Avent").click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/t3\/?$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Livret de l'Avent");
     await expect(liste(page)).toHaveCount(0);
-    // La fiche en page : toute la zone, ni rail ni pilules (« ‹ Tâches » ramène à la liste).
-    await verifierAgencement(page, { contenu: detail(page), onglets: { rail: 0, pilules: 0 } });
+    // La fiche en page : ni rail ni pilules (« ‹ Tâches » ramène à la page de l'équipe).
+    await verifierAgencement(page, { contenu: detail(page), lecture: true, onglets: { rail: 0, pilules: 0 } });
     await capture(page, "v18-bo-tache-fiche");
-    await page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches", exact: true }).click();
-    await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
+    await page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches de DA", exact: true }).click();
+    await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
     await expect(ligne(page, "Livret de l'Avent")).toBeVisible();
   });
 
-  test("« Nouvelle tâche » ouvre la feuille d'aujourd'hui", async ({ page }) => {
-    const db = await ouvrir(page, "/back-office/taches/da");
+  test("« Nouvelle tâche » ouvre la feuille d'aujourd'hui ; créer ouvre la fiche de la tâche", async ({ page }) => {
+    const db = await ouvrir(page, PAGE_DA);
     await nouvelleTache(page).click();
     const feuille = page.getByRole("dialog", { name: "Nouvelle tâche" });
     await expect(feuille).toBeVisible();
     await feuille.getByLabel("Titre").fill("Affiche de la retraite");
     await feuille.getByLabel("Échéance").fill("2026-10-09");
-    await feuille.getByRole("button", { name: "Enregistrer" }).click();
+    await feuille.getByRole("button", { name: "Créer la tâche" }).click();
     await expect(feuille).toHaveCount(0);
-    await expect(ligne(page, "Affiche de la retraite")).toBeVisible();
     expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/da/taches/"))?.data).toMatchObject({ titre: "Affiche de la retraite" });
+    // La page de la nouvelle tâche, puis la liste de l'équipe l'a.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Affiche de la retraite");
+    await page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches de DA", exact: true }).click();
+    await expect(ligne(page, "Affiche de la retraite")).toBeVisible();
   });
 
   test("« Modifier » ouvre la feuille d'aujourd'hui", async ({ page }) => {
@@ -349,18 +460,13 @@ test.describe("un volet (téléphone, tablette portrait)", () => {
   });
 });
 
-test("téléphone : un rond « + » en bas à droite, aucune pilule « Nouvelle tâche »", async ({ page }) => {
+test("téléphone : « Nouvelle tâche » est un lien dans la section « Tâches », plus de rond « + » flottant", async ({ page }) => {
   test.skip(!estTelephone(test.info()), "téléphone seulement");
-  await ouvrir(page, "/back-office/taches/da");
-  const rond = page.getByRole("button", { name: "Nouvelle tâche" });
-  await expect(rond).toBeVisible();
-  const boite = (await rond.boundingBox())!;
-  const fenetre = page.viewportSize()!;
-  expect(Math.round(boite.width)).toBe(52);
-  expect(boite.x + boite.width).toBeGreaterThan(fenetre.width - 30);
-  expect(boite.y).toBeGreaterThan(fenetre.height / 2);
-  // Un seul « Nouvelle tâche » : le rond, sans libellé visible (pas de pilule).
-  await expect(page.getByRole("link", { name: "Nouvelle tâche" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Nouvelle tâche" })).toHaveCount(1);
-  expect(await rond.evaluate((el) => el.querySelector("span")!.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
+  await ouvrir(page, PAGE_DA);
+  // Piste A, BO7 : le rond fixe de `BoutonNouveau` (52 px) n'existe plus sur la page d'une équipe ; le bouton est dans l'en-tête de la section.
+  const lien = liste(page).getByRole("link", { name: "Nouvelle tâche" });
+  await expect(lien).toBeVisible();
+  expect((await lien.boundingBox())!.height).toBeGreaterThanOrEqual(32);
+  await expect(page.getByRole("link", { name: "Nouvelle tâche" })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Nouvelle tâche" })).toHaveCount(0);
 });

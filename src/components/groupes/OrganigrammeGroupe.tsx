@@ -10,11 +10,11 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import Link from "next/link";
 import { ChevronRight, Link2, Lock } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
-import { Halo } from "@/components/layout/Halo";
 import { libellePoste, postesDeCompte } from "@/lib/groupes/personnes";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { Button } from "@/components/ui/button";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { useDisposition } from "@/hooks/useDisposition";
 import { listProfiles, useProfile } from "@/lib/firebase/users";
 import { enregistrerGroupe, listGroupes, majGroupe, ModifieEntreTemps, type GroupeLu } from "@/lib/firebase/groupes";
@@ -198,7 +198,7 @@ export function OrganigrammeGroupe({
   const moi = app ? user?.uid : undefined;
   const moiPostes = app && user && profile && groupeDe(profile) === groupe.id ? postesDeCompte(groupe, user.uid).map((x) => libellePoste(t, zh, x)) : null;
   const bandeauMoi = moiPostes && (
-    <p data-moi-bandeau="" className="mx-[var(--marge-page)] mb-4 rounded-2xl bg-secondary px-4 py-3 text-sm text-foreground">
+    <p data-moi-bandeau="" className="mx-[var(--marge-page)] mb-4 carte-groupe rounded-2xl px-4 py-3 text-sm text-foreground">
       <Trans
         i18nKey={moiPostes.length ? (telephone ? "groupes.app.toiRoles" : "groupes.app.toiDansRoles") : "groupes.app.toiDans"}
         values={{ groupe: nomGroupe, roles: moiPostes.join(", ") }}
@@ -208,12 +208,12 @@ export function OrganigrammeGroupe({
   );
 
   const enTete = (
-    <section aria-label={t("groupes.enTete.titre")} className="raised rounded-2xl p-4">
+    <section aria-label={t("groupes.enTete.titre")} className="carte-groupe rounded-2xl p-4">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <h2 className="whitespace-nowrap text-base font-bold text-foreground">{t("groupes.enTete.titre")}</h2>
         <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-muted-foreground"><Lock className="h-3 w-3" aria-hidden />{t("groupes.enTete.nommesParAdmin")}</span>
         {admin && (
-          <Button variant="outline" className="ml-auto h-8" onClick={() => { setErreurForm(""); setNommer({ president: groupe.president, vp: groupe.vp, maxVp: groupe.maxVp }); }}>
+          <Button variant="outline" className={`ml-auto h-8 ${TOUCHER_44}`} onClick={() => { setErreurForm(""); setNommer({ president: groupe.president, vp: groupe.vp, maxVp: groupe.maxVp }); }}>
             {t("groupes.enTete.nommer")}
           </Button>
         )}
@@ -226,7 +226,7 @@ export function OrganigrammeGroupe({
   );
 
   const carteComite = (
-    <section aria-label={t("groupes.comite.titre")} className="raised rounded-2xl p-4">
+    <section aria-label={t("groupes.comite.titre")} className="carte-groupe rounded-2xl p-4">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <h2 className="text-base font-bold text-foreground">{t("groupes.comite.titre")}</h2>
         <span className="text-xs text-muted-foreground">{t("groupes.comite.personnes", { count: comite.length })}</span>
@@ -263,7 +263,7 @@ export function OrganigrammeGroupe({
   );
 
   const aucun = (
-    <div className="raised rounded-2xl p-6 text-center">
+    <div className="carte-groupe rounded-2xl p-6 text-center">
       <p className="text-sm text-muted-foreground">{t("groupes.aucunRole")}</p>
       {peutTenir && <Button className="mt-3 h-10" onClick={() => { setErreurForm(""); setForm({ role: null }); }}>{t("groupes.role.nouveau")}</Button>}
     </div>
@@ -398,7 +398,6 @@ export function OrganigrammeGroupe({
   if (!app) return page;
   return (
     <div className="relative">
-      <Halo variant="moi" color="hsl(var(--foreground))" />
       <div className="relative">{page}</div>
     </div>
   );

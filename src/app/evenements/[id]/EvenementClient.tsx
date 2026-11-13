@@ -28,14 +28,15 @@ import { useEffect, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { baseBackOffice } from "@/lib/navigation"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { ArrowRight, Check, Share2 } from "lucide-react"
+import { Check, Settings2, Share2 } from "lucide-react"
 import { Retour } from "@/components/layout/EnTetePage"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditEvenement, canSeeEvenement, entreesBackOffice, estDeLaReunion, estResponsable, estReunion } from "@/lib/access"
+import { canEditEvenement, canSeeEvenement, droitsDesPages, estDeLaReunion, estResponsable, estReunion } from "@/lib/access"
 import { deleteEvenement, getEvenement, listReunionsDu } from "@/lib/firebase/evenements"
 import { listSujets, retirerSujet } from "@/lib/firebase/sujets"
 import { isInfo } from "@/lib/evenements/agenda"
@@ -53,6 +54,8 @@ import { EnTeteReunion } from "@/components/reunions/EnTeteReunion"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 import { FicheGestion } from "@/app/back-office/evenements/FicheGestion"
 import styles from "@/app/back-office/evenements/gestion.module.css"
+import { styleTexteService } from "@/lib/couleurSombre"
+import { Squelette } from "@/components/layout/Squelette";
 
 const COLOR = PLANNING_COLORS.scene
 const URL_RE = /(https?:\/\/[^\s]+)/g
@@ -63,7 +66,7 @@ function Linkified({ text }: { text: string }) {
     <p className="text-sm whitespace-pre-wrap break-words">
       {text.split(URL_RE).map((part, i) =>
         URL_RE.test(part)
-          ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: COLOR }}>{part}</a>
+          ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline texte-service" style={styleTexteService(COLOR)}>{part}</a>
           : <span key={i}>{part}</span>,
       )}
     </p>
@@ -156,11 +159,11 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   // Retouches v18, lot G (G2, D28) : une réunion n'est plus dans l'App ; son adresse mène à sa
   // fiche de Back-Office › Réunions pour qui la voit et a cette entrée.
   const versReunions = espace === "app" && !!evenement && estReunion(evenement) && canSeeEvenement(user, profile, evenement)
-    && entreesBackOffice(user, profile).includes("reunions")
+    && droitsDesPages(user, profile).reunions
   useEffect(() => { if (versReunions) router.replace(`/back-office/reunions/${id}`) }, [versReunions, id, router])
 
   if (authLoading || (user && profileLoading) || evenement === undefined) {
-    return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+    return <Squelette />
   }
   if (ailleurs || versReunions) return null
   if (!evenement || !canSeeEvenement(user, profile, evenement)) {
@@ -237,7 +240,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
       {e.liens.length > 0 && (
         <ul className="space-y-1 text-sm">
           {e.liens.map((l, i) => (
-            <li key={i}><a href={l.url} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: COLOR }}>{l.label || l.url}</a></li>
+            <li key={i}><a href={l.url} target="_blank" rel="noopener noreferrer" className="underline texte-service" style={styleTexteService(COLOR)}>{l.label || l.url}</a></li>
           ))}
         </ul>
       )}
@@ -290,27 +293,28 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   if (!backOffice && grand) {
     return (
       <div className="fiche-grand space-y-4">
-        <div className="flex items-end gap-3">
-          <div className="min-w-0 flex-1"><TitreEvenement e={e} niveau="h2" grand /></div>
-          {gestionnaire && estResponsable(user, profile) && (
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link href={`${baseBackOffice(e)}/${e.id}`}>
-                <ArrowRight aria-hidden />
-                {t("backOffice.gerer")}
-              </Link>
-            </Button>
-          )}
-          <Partager e={e} className={buttonVariants({ variant: "outline", size: "sm", className: "shrink-0" })} />
-        </div>
+        <TitreEvenement e={e} niveau="h2" grand actions={
+          <>
+            {gestionnaire && estResponsable(user, profile) && (
+              <Button asChild variant="outline" size="sm" className="shrink-0">
+                <Link href={`${baseBackOffice(e)}/${e.id}`}>
+                  <Settings2 aria-hidden />
+                  {t("backOffice.gerer")}
+                </Link>
+              </Button>
+            )}
+            <Partager e={e} className={buttonVariants({ variant: "outline", size: "sm", className: "shrink-0" })} />
+          </>
+        } />
         <div className="fiche-colonnes">
           <div>
             {e.images[0] && <div className="order-1"><Banniere e={e} /></div>}
             <div className="order-3 space-y-4 empty:hidden">{contenu}</div>
             {/* La gestion des inscriptions (organisateur) : la colonne large, ses trois choix y tiennent. */}
-            {panneau && <div data-testid="gestion-carte" className="raised order-4 space-y-4 rounded-2xl p-4">{panneau}</div>}
+            {panneau && <div data-testid="gestion-carte" className="carte-groupe order-4 space-y-4 rounded-2xl p-4">{panneau}</div>}
           </div>
           <div>
-            <div data-testid="fiche-carte" className="raised order-2 space-y-4 rounded-2xl p-4">
+            <div data-testid="fiche-carte" className="carte-groupe order-2 space-y-4 rounded-2xl p-4">
               <InfosEvenement e={e} titrees />
               <PlusInfos e={e} />
               {inscriptions}
@@ -333,12 +337,12 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
           <Retour href={liste}>{t("evenements.title")}</Retour>
           <div className="flex min-w-0 items-center gap-2">
             {gestionnaire && estResponsable(user, profile) && (
-              <Link href={`${baseBackOffice(e)}/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
-                <ArrowRight className="h-4 w-4" aria-hidden />
-                {t("backOffice.gerer")}
+              <Link href={`${baseBackOffice(e)}/${e.id}`} aria-label={t("backOffice.gerer")} title={t("backOffice.gerer")} className={`${TOUCHER_44} sur-gris inline-flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 rounded-full p-0 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:w-auto sm:px-4`}>
+                <Settings2 className="h-[18px] w-[18px] sm:h-4 sm:w-4" aria-hidden />
+                <span className="max-sm:sr-only">{t("backOffice.gerer")}</span>
               </Link>
             )}
-            <Partager e={e} compact className="raised inline-flex h-10 min-w-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:px-4" />
+            <Partager e={e} compact className={`${TOUCHER_44} sur-gris inline-flex h-10 min-w-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:px-4`} />
           </div>
         </div>
         {gestionnaire && (

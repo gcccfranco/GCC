@@ -1,5 +1,8 @@
 # Spec : lot U7 — statistiques des chants (admins)
 
+> **30/10/2026** : T1 (admins seulement) et T7 (rien dans l'éditeur) sont remplacés par D5 et D6 de
+> `docs/spec-jianpu-entete-statistiques.md` (statistiques pour tout membre connecté, page chant, éditeur).
+
 Spec écrite le 04/10/2026, validée avec le go du 04/10/2026 (redit le 05/10/2026) : les questions ouvertes
 prennent leur recommandation. Lot codé (S1 à S5) et relu le 05/10/2026, voir « Avancement ».
 

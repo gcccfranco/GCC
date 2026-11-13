@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeDb, type FakeProfile, remplit } from "./helpers/fakeSession";
 
 // Lot 3 (docs/spec-planning-gestes.md), tranche PG-B : « Copier le dimanche précédent »
 // (PG10 à PG17). Culte T1 2027 simulé ; aucune vraie base. Noms fictifs seulement.
 
-const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", plannings: ["culte"] };
+const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", ...remplit("culte") };
 
 // 17/01/2027 : 8 colonnes de personnes remplies, plus un Orateur (jamais recopié).
 const SOURCE = {
@@ -184,7 +184,7 @@ test("« Mes dates » activé : la source reste le dimanche précédent, même m
 
 // ─── Présidence imposée par Interfranco et Intergroupe (PG2) ───
 
-const PAIX: FakeProfile = { uid: "uid-paix", email: "paix@example.com", planningName: "Écrivain E.", plannings: ["paix"] }
+const PAIX: FakeProfile = { uid: "uid-paix", email: "paix@example.com", planningName: "Écrivain E.", ...remplit("paix") }
 const DOCS_PAIX = {
   "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." },
   "plannings/intergroupe/dimanches/2027-03-14": { date: "2027-03-14" },
@@ -221,7 +221,7 @@ test("Interfranco : la date posée qui précède (10/1 pour le 14/3), pas le dim
     "plannings/interfranco/dimanches/2027-01-10": { date: "2027-01-10", presidence: "Ruth K.", choriste1: "Alice Q." },
     "plannings/interfranco/dimanches/2027-03-14": { date: "2027-03-14" },
   }
-  const db = await ouvrir(page, { ...ECRIVAIN, plannings: ["interfranco"] }, "/back-office/planning/interfranco", docs)
+  const db = await ouvrir(page, { ...ECRIVAIN, ...remplit("interfranco") }, "/back-office/planning/interfranco", docs)
   await page.getByRole("tab", { name: "2027", exact: true }).click()
   await expect(ligne(page, "2027-03-14")).toHaveCount(1)
   await ouvrirCopie(page, "2027-03-14", "10/1")
@@ -229,9 +229,11 @@ test("Interfranco : la date posée qui précède (10/1 pour le 14/3), pas le dim
   await expect.poll(() => db.doc("plannings/interfranco/dimanches/2027-03-14")?.choriste1).toBe("Alice Q.")
 })
 
-test("Back-Office sans le droit d'écrire la grille (publieur seul) : ni pastille ni ⋯ de dimanche", async ({ page }) => {
-  const publieur: FakeProfile = { uid: "uid-pub", email: "pub@example.com", planningName: "Publieur P.", notify: ["Groupe Paix"], plannings: [] }
-  await ouvrir(page, publieur, "/back-office/planning/groupes", { ...DOCS_PAIX, "planningReleases/paix_2027": { published: ["T1"] } })
+// Lot RS : le « publieur seul » n'existe plus (le gestionnaire remplit et publie) ; le cas voisin est celui qui lit : un membre
+// sans responsabilité n'a ni pastille « Copier » ni ⋯ sur la grille de l'App.
+test("lot RS : sans le droit d'écrire la grille (membre qui lit) : ni pastille ni ⋯ de dimanche", async ({ page }) => {
+  const membre: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Membre M.", responsabilites: [] }
+  await ouvrir(page, membre, "/planning/groupes", { ...DOCS_PAIX, "planningReleases/paix_2027": { published: ["T1"] } })
   await page.getByRole("tab", { name: "2027", exact: true }).click()
   await page.getByRole("tab", { name: "T1", exact: true }).click()
   await expect(ligne(page, "2027-01-24")).toHaveCount(1)

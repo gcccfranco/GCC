@@ -1,11 +1,13 @@
-import type { SetlistVersions, VersionItem } from "@/lib/firebase/setlistVersions";
+import type { SetlistVersions, VersionItem } from "@/types/setlistVersions";
 import { structureWithCopies } from "@/lib/setlist/sectionOrigins";
+import { aDesRetouches } from "@/lib/jianpu/retouches";
+import type { SetlistItem } from "@/types/setList";
 
 // Version d'un chant affichée à une personne (docs/spec-version-perso.md, V3) :
 // la présidence, la sienne, ou celle qu'un autre a partagée et qu'elle a
 // choisie. Tout est calculé depuis les documents `setlists/{id}/versions`.
 
-export const PRESIDENCE = "presidence";
+const PRESIDENCE = "presidence";
 
 export type SongVersionView = {
   /** Ma version (structure appliquée au corps, badge, partage). */
@@ -37,15 +39,9 @@ export function songVersionView(
   const mine = versions[uid]?.items[slug];
   const options: SongVersionView["options"] = [{ value: PRESIDENCE, kind: "presidence" }];
   if (mine?.content) options.push({ value: uid, kind: "mine" });
-  for (const [author, doc] of Object.entries(versions)) {
-    const item = doc.items[slug];
-    if (author !== uid && item?.shared && item.content) {
-      options.push({ value: author, kind: "other", name: doc.authorName });
-    }
-  }
+  // Les anciens partages (`shared`) ne sont plus proposés (MP-6) : seule ma propre ancienne version reste.
 
-  // Le choix enregistré, s'il est encore proposé (une version retirée du
-  // partage ramène à la présidence) ; sinon la mienne, sinon la présidence.
+  // Le choix enregistré, s'il est encore proposé (un ancien partage ramène à la présidence) ; sinon la mienne, sinon la présidence.
   const choice = versions[uid]?.choices[slug];
   const chosen =
     options.find((o) => o.value === choice) ??
@@ -66,4 +62,32 @@ export function songVersionView(
       : mine?.structure ?? null;
 
   return { mine, shown: chosen.kind, shownName: chosen.name, content, value: chosen.value, options, bodyStructure };
+}
+
+// Items tels qu'affichés (lot N, N4b : sortis de SetlistDetailClient). `myItems` = mes items de
+// `versions[uid].items` ; chaque fonction rend l'objet d'entrée lui-même quand rien ne change.
+
+type MesItems = Record<string, VersionItem> | undefined;
+
+/** Mes retouches d'accords sur un scan 简谱 remplacent celles de la présidence. */
+export function withMyJianpuItem(item: SetlistItem, myItems: MesItems): SetlistItem {
+  const jianpuChords = myItems?.[item.songSlug]?.jianpuChords;
+  return aDesRetouches(jianpuChords) ? { ...item, jianpuChords } : item;
+}
+
+/** Item tel qu'affiché : les accords et paroles de la version choisie (`view` = `viewOf(item)`). */
+export function withChosenItem(item: SetlistItem, view: SongVersionView | undefined, myItems: MesItems): SetlistItem {
+  const content = view?.content;
+  return withMyJianpuItem(content ? { ...item, contentOverride: content } : item, myItems);
+}
+
+/** Sommaire et mode louange : ma structure remplace aussi celle de la présidence, sans ses notes,
+ *  nuances et transitions d'occurrence (`view` = `viewOf(item)`). */
+export function withMineStructureItem(item: SetlistItem, view: SongVersionView | undefined, myItems: MesItems): SetlistItem {
+  const structure = view?.bodyStructure;
+  if (!structure?.length) return item;
+  // Les réglages d'occurrence de la présidence ne suivent que si je garde sa structure.
+  return myItems?.[item.songSlug]?.structure?.length
+    ? { ...item, structureOverride: structure, sectionNotes: {}, sectionTransitions: {}, sectionNuances: {} }
+    : { ...item, structureOverride: structure };
 }

@@ -23,6 +23,7 @@ import {
 import type { PublishablePlanning } from "@/lib/planning/releases"
 import { fdLongL } from "@/lib/planning/utils"
 import { useEtatsAnnonces } from "@/lib/planning/useGrilleApp"
+import { compter } from "@/lib/usage"
 import { changementPlanningMessage, changementPlanningParDefaut } from "@/lib/push/messages"
 
 // « Prévenir des changements » (lot 3, docs/spec-planning-gestes.md, PG33 à PG47) : dans un trimestre
@@ -53,7 +54,7 @@ const appeler = async (corps: Corps) => {
   }
 }
 
-export type Prevenir = ReturnType<typeof usePrevenir>
+type Prevenir = ReturnType<typeof usePrevenir>
 
 export function usePrevenir({ prevenir, definition, rows, speciaux, ecrites, comptes }: {
   prevenir?: PrevenirProp
@@ -83,9 +84,10 @@ export function usePrevenir({ prevenir, definition, rows, speciaux, ecrites, com
   const publis = prevenir?.publications ?? 0
   const dejaVu = useRef(publis)
   useEffect(() => {
-    if (publis === dejaVu.current) return
+    // Un trimestre masqué (brouillon) n'a pas de `prevenir` : le compteur lu y vaut 0 sans que rien n'ait changé,
+    // `dejaVu` ne le suit pas — une republication déjà annoncée n'envoie donc aucune référence.
+    if (!prevenir || publis === dejaVu.current) return
     dejaVu.current = publis
-    if (!prevenir) return
     void appeler({ action: "reference", key: prevenir.planning.key, annee: prevenir.annee, tri: prevenir.tri, cases: casesRef.current, apresPublication: true })
       .then((r) => { if (r.ok) void relire() })
   }, [publis, prevenir, relire])
@@ -233,7 +235,7 @@ function Feuille({ prev, prevenir, definition, onFermer, onIgnorer, onEnvoye }: 
       message !== null && message.trim() && message !== defaut.body ? message : undefined,
     )
     setEnCours(false)
-    if (r.ok) onEnvoye(r.data.prevenus ?? cochees.length)
+    if (r.ok) { compter("cmd.planning.prevenir"); onEnvoye(r.data.prevenus ?? cochees.length) }
     else setErreur(t(r.status === 409 ? "planning.prevenir.conflit" : "planning.prevenir.echec"))
   }
 
@@ -292,7 +294,7 @@ function Feuille({ prev, prevenir, definition, onFermer, onIgnorer, onEnvoye }: 
                   <label htmlFor={`prevenir-${i}`} className={`min-w-0 flex-1 ${p.compte ? "" : "text-muted-foreground"}`}>
                     <span className="font-semibold">{p.nom}</span>{" "}
                     {[...new Set(p.motifs.map((m) => m.sens))].map((s) => (
-                      <span key={s} className={`mr-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${s === "ajout" ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200" : "bg-secondary text-foreground"}`}>
+                      <span key={s} className={`mr-1 rounded-full px-1.5 py-0.5 text-xs font-semibold ${s === "ajout" ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200" : "bg-secondary text-foreground"}`}>
                         {t(`planning.prevenir.${s}`)}
                       </span>
                     ))}

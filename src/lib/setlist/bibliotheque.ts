@@ -1,4 +1,4 @@
-import Fuse from "fuse.js";
+import Fuse, { type IFuseOptions } from "fuse.js";
 import type { SongIndexEntry } from "@/types/song";
 import type { ChordProAST, Token } from "@/types/chordPro";
 import { semitonesTo } from "@/lib/transpose";
@@ -26,12 +26,34 @@ export function trancheDeTempo(bpm: number | null): Tempo | null {
   return "rapide";
 }
 
+/** Le pinyin d'un titre sans tons, espaces ni ponctuation, en minuscules : « Yī shēng » → « yisheng ». */
+function pinyinColle(titlePinyin: string | null | undefined): string {
+  return (titlePinyin ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/** Réglages de recherche partagés par la page Chants et la bibliothèque de l'éditeur : titre, pinyin
+ *  (avec tons, puis collé et sans tons), artiste ; `ignoreLocation` pour trouver un mot en fin de chaîne. */
+export const OPTIONS_RECHERCHE_CHANTS: IFuseOptions<SongIndexEntry> = {
+  keys: [
+    "title",
+    "titlePinyin",
+    { name: "pinyinColle", getFn: (song) => pinyinColle(song.titlePinyin) },
+    "artist",
+  ],
+  threshold: 0.4,
+  ignoreLocation: true,
+};
+
 /** Chants à montrer : par pertinence s'il y a une recherche (mêmes clés et seuil
  *  que la page Chants), sinon dans l'ordre reçu ; sans limite de nombre. */
 export function chantsDeLaBibliotheque(songs: SongIndexEntry[], f: FiltresBibliotheque): SongIndexEntry[] {
   const recherche = f.recherche.trim();
   const trouves = recherche
-    ? new Fuse(songs, { keys: ["title", "titlePinyin", "artist"], threshold: 0.4 }).search(recherche).map((r) => r.item)
+    ? new Fuse(songs, OPTIONS_RECHERCHE_CHANTS).search(recherche).map((r) => r.item)
     : songs;
   return trouves.filter(
     (s) =>
@@ -56,4 +78,24 @@ export function premieresLignes(ast: ChordProAST, cible: string, n = 2): Token[]
     }
   }
   return lignes;
+}
+
+/** La clé du recueil (`scripts/build-index.ts`) : le titre, le pinyin pour un chant chinois, sans tons ni ponctuation. */
+function cleAlphabetique(s: SongIndexEntry): string {
+  const cle = s.language === "zh" && s.titlePinyin ? s.titlePinyin : s.title;
+  return cle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+/** Tri « Moins joués ici » (lot ST, ST5) : les chants jamais joués dans le service d'abord (A→Z, pinyin pour
+ *  les chinois), puis la dernière fois dans ce service la plus ancienne d'abord (à égalité, A→Z). */
+export function trierMoinsJouesIci(songs: SongIndexEntry[], stats: Map<string, { dansService: { derniere: string } | null }>): SongIndexEntry[] {
+  const az = (a: SongIndexEntry, b: SongIndexEntry) => cleAlphabetique(a).localeCompare(cleAlphabetique(b), "fr", { sensitivity: "base" });
+  const derniere = (s: SongIndexEntry) => stats.get(s.slug)?.dansService?.derniere ?? null;
+  return [...songs].sort((a, b) => {
+    const da = derniere(a), db = derniere(b);
+    if (da === null && db === null) return az(a, b);
+    if (da === null) return -1;
+    if (db === null) return 1;
+    return da.localeCompare(db) || az(a, b);
+  });
 }

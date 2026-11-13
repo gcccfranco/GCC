@@ -7,12 +7,14 @@
 // volets) ; `Personnes` les assemble comme avant pour l'ancienne administration.
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ChevronUp, Search, UserRound, X } from "lucide-react";
+import type { TFunction } from "i18next";
+import { TOUCHER_44 } from "@/lib/toucher44";
+import { ChevronDown, ChevronRight, ChevronUp, UserRound } from "lucide-react";
 import { listProfiles, saveProfile } from "@/lib/firebase/users";
 import { listGroupes } from "@/lib/firebase/groupes";
 import { groupeDe } from "@/lib/groupes/organigramme";
 import { FILTRE_SANS_GROUPE, correspondAuFiltreGroupe, filtresPersonnes, libellePoste, postesDeCompte } from "@/lib/groupes/personnes";
-import { TABLE_GROUPES, groupeDef } from "@/lib/groupes/table";
+import { groupeDef, groupeDeLaCategorie } from "@/lib/groupes/table";
 import type { OrganigrammeGroupe } from "@/types/groupe";
 import { isAdminUser } from "@/lib/access";
 import {
@@ -22,21 +24,25 @@ import {
   type PlanningData,
   normalizeName,
 } from "@/lib/planning/names";
-import { ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
-import { SERVICE_ROLE_LABELS, type ServiceRole, type UserProfile } from "@/types/user";
+import { IdentityFields, PlanningNameField, ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
+import Link from "next/link";
+import { CeQueCaOuvre } from "@/components/equipes/OrganigrammeLouange";
+import { SERVICE_LIEUX } from "@/types/user";
+import { type ServiceRole, type UserProfile } from "@/types/user";
 import { EDD_CLASSES } from "@/lib/planning/utils";
-import { ANNONCE_SECTIONS } from "@/types/annonce";
-import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
-import { GRILLES } from "@/lib/planning/grilles";
-import { categoryColor, categoryLabel } from "@/lib/serviceColors";
+import { NOTIFY_ALL, NOTIFY_GROUPS } from "@/lib/push/audiences";
+import { categoryColor } from "@/lib/serviceColors";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Pilules } from "@/components/layout/Onglets";
+import { OngletsRail, Pilules } from "@/components/layout/Onglets";
+import { Menu, type GroupeMenu } from "@/components/ui/menu";
 import { Pill } from "./commun";
+import { libelleAudience, libelleRole, libelleService } from "./libelles";
+import { EtatVide } from "@/components/layout/EtatVide"
 
-export function profileToForm(p: UserProfile): ProfileFormValue {
+function profileToForm(p: UserProfile): ProfileFormValue {
   return {
     firstName: p.firstName,
     lastName: p.lastName,
@@ -46,11 +52,10 @@ export function profileToForm(p: UserProfile): ProfileFormValue {
 }
 
 /** Les filtres de la liste : Amour, Joie et « Sans groupe » s'y ajoutent interrupteur ouvert (OG-D). */
-export const FILTERS = filtresPersonnes();
+const FILTERS = filtresPersonnes();
 
 // Une inscription est « nouvelle » pendant ses 7 premiers jours.
 const NEW_DAYS = 7;
-const GROUPES_CATEGORIES = new Set(TABLE_GROUPES.map((x) => x.categorie));
 export function isRecent(d?: Date): boolean {
   return !!d && Date.now() - d.getTime() < NEW_DAYS * 86_400_000;
 }
@@ -108,6 +113,12 @@ export function useFiltresPersonnes(profiles: UserProfile[]) {
           if (!hay.includes(q)) return false;
         }
         if (filter === "Tous") return true;
+        // Lot AO-B : les filtres lisent l'organigramme (équipes recopiées, lieux), plus `serviceRoles`.
+        if (BACK_OFFICE && filter === "EDD") return (p.dansEquipes ?? []).includes("edd");
+        if (BACK_OFFICE && filter === "Ne sert pas") return (p.dansEquipes ?? []).length === 0;
+        if (BACK_OFFICE && (SERVICE_LIEUX as readonly string[]).includes(filter)) {
+          return [...(p.lieuxLouange ?? []), ...(p.lieuxRegie ?? [])].includes(filter);
+        }
         if (filter === "EDD") return (EDD_CLASSES as readonly string[]).some((c) => c in p.serviceRoles);
         if (filter === "Ne sert pas") return Object.keys(p.serviceRoles).length === 0;
         // Groupes : `groupeDe` interrupteur ouvert, la clé de serviceRoles sinon (OG-D).
@@ -129,57 +140,97 @@ export function useFiltresPersonnes(profiles: UserProfile[]) {
   return { query, setQuery, filter, setFilter, sort, setSort, displayed };
 }
 
-/** Recherche, filtres en pilules (R4), tri Récents · A–Z. */
-export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonnes> }) {
+// Lot CD, T3c (bo-equipes-10) : les filtres se rangent en deux menus (service, groupe) et une pilule-bascule
+// (« Sans équipe »). Un seul `filter` : en choisir un dans un menu remet l'autre à « Tous ».
+const FILTRES_SANS_EQUIPE = "Ne sert pas";
+const estGroupe = (x: string) => x !== FILTRE_SANS_GROUPE && groupeDeLaCategorie(x) !== undefined;
+const FILTRES_SERVICE = FILTERS.filter((x) => x !== "Tous" && x !== FILTRES_SANS_EQUIPE && x !== FILTRE_SANS_GROUPE && !estGroupe(x));
+const FILTRES_GROUPE = FILTERS.filter(estGroupe);
+const AVEC_SANS_GROUPE = FILTERS.includes(FILTRE_SANS_GROUPE);
+
+/** Liste vide : « Sans équipe » seul (ni recherche) vide, c'est que tout le monde a une équipe ; la sortie est de retirer le filtre. */
+export function texteListeVide(t: TFunction, nbProfils: number, f: ReturnType<typeof useFiltresPersonnes>): string {
+  if (nbProfils === 0) return t("admin.membre.aucunProfil");
+  if (f.filter === FILTRES_SANS_EQUIPE && f.query.trim() === "") return t("admin.membre.toutLeMondeALEquipe");
+  return t("admin.membre.aucunCorrespond");
+}
+
+export function RetirerFiltreSansEquipe({ f }: { f: ReturnType<typeof useFiltresPersonnes> }) {
   const { t } = useTranslation();
+  if (f.filter !== FILTRES_SANS_EQUIPE) return null;
+  return (
+    <Button type="button" variant="outline" size="sm" onClick={() => f.setFilter("Tous")} className={TOUCHER_44}>
+      {t("admin.membre.retirerFiltre")}
+    </Button>
+  );
+}
+
+/** Recherche, filtres (menus Service et Groupe, pastille Sans équipe), tri Récents · A–Z (rail). */
+export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonnes> }) {
+  const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
+  const duService = FILTRES_SERVICE.includes(f.filter);
+  const duGroupe = FILTRES_GROUPE.includes(f.filter) || f.filter === FILTRE_SANS_GROUPE;
+  // Retoucher « Tous » dans un menu dont le filtre n'est pas posé ne retire pas celui de l'autre.
+  const choisirDans = (propre: boolean) => (v: string) => { if (v !== "Tous" || propre) f.setFilter(v); };
+  const sansGroupe: GroupeMenu[] = AVEC_SANS_GROUPE
+    ? [{ groupe: "", options: [{ valeur: FILTRE_SANS_GROUPE, libelle: t("groupes.personnes.sansGroupe") }] }]
+    : [];
   return (
     <div className="space-y-2">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        <Input
-          type="search"
-          value={f.query}
-          onChange={(e) => f.setQuery(e.target.value)}
-          placeholder="Rechercher un membre (nom, email, nom de planning)…"
-          className="h-11 pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden"
-        />
-        {f.query && (
-          <button
-            onClick={() => f.setQuery("")}
-            aria-label="Effacer la recherche"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-      <Pilules
-        etiquette="Filtrer les membres"
-        options={FILTERS.map((x) => ({
-          cle: x,
-          nom: x === FILTRE_SANS_GROUPE ? t("groupes.personnes.sansGroupe") : x === "Tous" || x === "EDD" || x === "Ne sert pas" ? x : categoryLabel(x),
-          couleur: x === "EDD" ? "#3b6d11" : x !== "Tous" && x !== "Ne sert pas" && x !== FILTRE_SANS_GROUPE ? categoryColor(x) : undefined,
-        }))}
-        valeur={f.filter}
-        choisir={(v) => f.setFilter(v ?? "Tous")}
-        obligatoire
+      <ChampRecherche
+        value={f.query}
+        onChange={f.setQuery}
+        placeholder={t("admin.membre.rechercherPlaceholder")}
+        label={t("admin.membre.rechercher")}
+        surGris
       />
-      <div className="flex items-center gap-1.5 text-[11px]">
-        <span className="font-semibold text-muted-foreground">Trier :</span>
-        {(["recent", "name"] as const).map((x) => (
-          <button
-            key={x}
-            onClick={() => f.setSort(x)}
-            aria-pressed={f.sort === x}
-            className={`px-2.5 py-1 rounded-full font-semibold border transition-colors ${
-              f.sort === x
-                ? "bg-foreground text-background border-transparent"
-                : "bg-background border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {x === "recent" ? "Récents" : "A–Z"}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Menu
+          label={t("stats.service")}
+          // Sans filtre posé, le déclencheur dit « Service ⌄ » (planche bo-equipes-10 : les trois filtres sur une ligne de 400 px).
+          texteDeclencheur={duService ? undefined : t("stats.service")}
+          value={duService ? f.filter : "Tous"}
+          defaultValue="Tous"
+          onChange={choisirDans(duService)}
+          surGris
+          options={[
+            { valeur: "Tous", libelle: t("stats.tousServices") },
+            ...FILTRES_SERVICE.map((x) => ({ valeur: x, libelle: x === "EDD" ? t("notifier.groupe.EDD") : libelleService(t, zh, x) })),
+          ]}
+        />
+        {FILTRES_GROUPE.length > 0 && (
+          <Menu
+            label={t("groupes.personnes.groupe")}
+            texteDeclencheur={duGroupe ? undefined : t("groupes.personnes.groupe")}
+            value={duGroupe ? f.filter : "Tous"}
+            defaultValue="Tous"
+            onChange={choisirDans(duGroupe)}
+            surGris
+            options={[
+              { valeur: "Tous", libelle: t("admin.membre.tousGroupes") },
+              ...FILTRES_GROUPE.map((x) => ({ valeur: x, libelle: libelleService(t, zh, x) })),
+              ...sansGroupe,
+            ]}
+          />
+        )}
+        <Pilules
+          etiquette={t("admin.membre.filtrer")}
+          options={[{ cle: FILTRES_SANS_EQUIPE, nom: BACK_OFFICE ? t("equipes.organigramme.personnes.sansEquipe") : t("admin.membre.neSertPas") }]}
+          valeur={f.filter === FILTRES_SANS_EQUIPE ? FILTRES_SANS_EQUIPE : null}
+          choisir={(v) => f.setFilter(v ?? "Tous")}
+        />
+      </div>
+      <div className="flex items-center justify-end gap-2">
+        {/* Le mot visible : sans lui, le rail se lit comme un choix de vue (critique-design, T3c). */}
+        <span aria-hidden className="text-sm font-semibold text-muted-foreground">{t("admin.membre.trier")}</span>
+        <OngletsRail
+          etiquette={t("admin.membre.trier").replace(/\s*[:：]$/, "")}
+          surGris
+          onglets={[{ id: "recent", label: t("admin.membre.recents") }, { id: "name", label: t("admin.membre.az") }]}
+          actif={f.sort}
+          choisir={(v) => f.setSort(v as "recent" | "name")}
+        />
       </div>
     </div>
   );
@@ -199,71 +250,73 @@ export function Avatar({ p, grand }: { p: UserProfile; grand?: boolean }) {
 /** Les services d'un membre en étiquettes (« Nouveau » d'abord). Interrupteur ouvert : « Groupe Paix ·
  *  Responsable louange, Musiciens » (rôles lus dans `groupes` s'ils le sont) ou « Sans groupe » remplace les
  *  étiquettes de clé de groupe de `serviceRoles` (OG-D). */
-export function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: OrganigrammeGroupe[] | null }) {
+function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: OrganigrammeGroupe[] | null }) {
   const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
   const avecGroupes = BACK_OFFICE;
   const g = avecGroupes ? groupeDe(p) : null;
   const def = g ? groupeDef(g) : undefined;
   const postes = def ? postesDeCompte(groupes?.find((x) => x.id === def.id), p.uid) : [];
-  const roles = Object.entries(p.serviceRoles).filter(([cat]) => !(avecGroupes && GROUPES_CATEGORIES.has(cat)));
+  // Lot AO-B : en nouveau mode, ni `serviceRoles` ni rôles déclarés — les sous-équipes et les lieux de l'organigramme.
+  const roles = avecGroupes ? [] : Object.entries(p.serviceRoles);
+  const lieux = SERVICE_LIEUX.filter((l) => [...(p.lieuxLouange ?? []), ...(p.lieuxRegie ?? [])].includes(l));
+  // bo-equipes-9 : une personne sans groupe ni rien à dire n'a pas de troisième ligne (le filtre dit « Sans groupe »).
+  const rien = !isRecent(p.createdAt) && !def && (p.sousEquipes ?? []).length === 0 && lieux.length === 0 && roles.length === 0 && (avecGroupes || Object.keys(p.serviceRoles).length > 0);
+  if (rien) return null;
   return (
     <div className="flex flex-wrap gap-1">
-      {isRecent(p.createdAt) && <Pill label="Nouveau" color="#16a34a" />}
-      {avecGroupes && (def
-        ? <Pill
-            label={[t(`categories.${def.categorie}`), ...(postes.length ? [postes.map((x) => libellePoste(t, i18n.language === "zh-CN", x)).join(", ")] : [])].join(" · ")}
-            color={categoryColor(def.categorie)}
-          />
-        : <Pill label={t("groupes.personnes.sansGroupe")} />)}
+      {isRecent(p.createdAt) && <Pill label={t("admin.membre.nouveau")} color="#16a34a" />}
+      {avecGroupes && def && (
+        <Pill
+          label={[t(`categories.${def.categorie}`), ...(postes.length ? [postes.map((x) => libellePoste(t, i18n.language === "zh-CN", x)).join(", ")] : [])].join(" · ")}
+          color={categoryColor(def.categorie)}
+        />
+      )}
+      {avecGroupes && (p.sousEquipes ?? []).map((x) => <Pill key={x} label={`${t("equipes.public.louange")} · ${t(`acces.sousEquipe.${x}`)}`} />)}
+      {avecGroupes && lieux.map((l) => <Pill key={l} label={libelleService(t, zh, l)} color={categoryColor(l)} />)}
       {roles.map(([cat, roles]) => (
         <Pill
           key={cat}
-          label={`${categoryLabel(cat)}${roles.length ? " · " + roles.map((r) => SERVICE_ROLE_LABELS[r]).join("/") : ""}`}
+          label={`${libelleService(t, zh, cat)}${roles.length ? " · " + roles.map((r) => libelleRole(t, zh, r)).join("/") : ""}`}
           color={categoryColor(cat)}
         />
       ))}
-      {Object.keys(p.serviceRoles).length === 0 && !avecGroupes && <Pill label="Ne sert pas" />}
+      {Object.keys(p.serviceRoles).length === 0 && !avecGroupes && <Pill label={t("admin.membre.neSertPas")} />}
     </div>
   );
 }
 
-/** Une ligne de la liste : avatar, nom, e-mail, services. `fin` : chevron ou autre. */
+/** Une ligne de la liste : avatar, nom (et « admin »), e-mail, puis groupe et services ; « inscrit le… » et le nom au
+ *  planning sont dans la fiche (bo-equipes-9). `fin` : chevron ou autre. */
 export function LignePersonne({
-  p, onClick, compact, actif, deplie, fin, groupes,
+  p, onClick, actif, deplie, fin, groupes,
 }: {
   p: UserProfile;
   groupes?: OrganigrammeGroupe[] | null;
   onClick: () => void;
-  /** Deux volets (B9) : avatar, nom, services ; l'e-mail et la date sont dans la fiche. */
-  compact?: boolean;
   /** Choisie dans les deux volets (`aria-current`). */
   actif?: boolean;
   /** Dépliée sur place (un volet, `aria-expanded`). */
   deplie?: boolean;
   fin?: ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
     <button
       onClick={onClick}
       aria-current={actif ? "true" : undefined}
       aria-expanded={deplie}
-      className="w-full flex items-start gap-3 px-4 py-3 text-left"
+      className="group w-full flex items-start gap-3 px-4 py-3 text-left"
     >
       <Avatar p={p} />
       <div className="min-w-0 flex-1 space-y-1">
-        <p className="text-sm font-semibold text-foreground truncate">
-          {p.firstName} {p.lastName}
+        <p className="flex items-center gap-2">
+          <span className="min-w-0 truncate text-base font-semibold leading-[21px] text-foreground">{p.firstName} {p.lastName}</span>
           {isAdminUser(p) && (
-            <span className="ml-2 text-xs font-semibold text-muted-foreground">admin</span>
+            <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-secondary px-2 text-xs font-semibold leading-4 text-muted-foreground group-aria-[current=true]:bg-background">{t("admin.membre.admin")}</span>
           )}
         </p>
-        {!compact && (
-          <p className="text-xs text-muted-foreground truncate">
-            {p.email}
-            {p.planningName ? ` · planning : ${p.planningName}` : ""}
-            {p.createdAt ? ` · inscrit le ${p.createdAt.toLocaleDateString("fr-FR")}` : ""}
-          </p>
-        )}
+        <p className="truncate text-sm leading-[18px] text-muted-foreground">{p.email}</p>
         <ServicesDuMembre p={p} groupes={groupes} />
       </div>
       {fin}
@@ -282,13 +335,10 @@ export function FormulairePersonne({
   onAnnule: () => void;
   onEnregistre: (maj: UserProfile) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
   const [form, setForm] = useState<ProfileFormValue>(() => profileToForm(p));
-  const [annonceRights, setAnnonceRights] = useState<string[]>(p.annonces ?? []);
   const [notifyRights, setNotifyRights] = useState<string[]>(p.notify ?? []);
-  const [equipesRight, setEquipesRight] = useState(p.equipes ?? false);
-  const [coordination, setCoordination] = useState(p.coordination ?? false);
-  const [planningRights, setPlanningRights] = useState<string[]>(p.plannings ?? []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -300,14 +350,21 @@ export function FormulairePersonne({
     setSaving(true);
     setError("");
     try {
+      // Lot AO-B : en nouveau mode, l'identité seule — aucun droit ni rôle de service ne s'écrit d'ici.
+      if (BACK_OFFICE) {
+        const identite = { uid: p.uid, firstName: form.firstName, lastName: form.lastName, planningName: form.planningName };
+        await saveProfile(identite);
+        onEnregistre({ ...p, ...identite });
+        return;
+      }
       // Seuls les champs tenus ici sont écrits (saveProfile n’envoie que le
       // masque) : `dansEquipes` et `referentDe` viennent des équipes (lot 16, D9) et ne sont
       // jamais renvoyés, même périmés. Jusqu’au 19/09/2026 le document entier était remplacé.
-      const patch = { uid: p.uid, ...form, annonces: annonceRights, notify: notifyRights, equipes: equipesRight, coordination, plannings: planningRights };
+      const patch = { uid: p.uid, ...form, annonces: p.annonces ?? [], notify: notifyRights, equipes: p.equipes ?? false, coordination: p.coordination ?? false, plannings: p.plannings ?? [] };
       await saveProfile(patch);
       onEnregistre({ ...p, ...patch });
     } catch {
-      setError("Erreur lors de l'enregistrement du profil.");
+      setError(t("admin.membre.erreurEnregistrer"));
     } finally {
       setSaving(false);
     }
@@ -320,121 +377,35 @@ export function FormulairePersonne({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+      {BACK_OFFICE ? (
+        <div className="space-y-6">
+          <IdentityFields value={form} onChange={setForm} />
+          <PlanningNameField value={form} onChange={setForm} planningNames={planningNames} />
+          <CeQueCaOuvre profil={p} />
+          <p className="text-sm text-muted-foreground">
+            {t("equipes.organigramme.personnes.aide")}{" "}
+            <Link href="/back-office/equipes" className="font-semibold text-foreground underline underline-offset-2">
+              {t("equipes.organigramme.voir")}
+            </Link>
+          </p>
+        </div>
+      ) : (
       <ProfileFields
         value={form}
         onChange={setForm}
         planningNames={planningNames}
         deriveFromPlanning={deriveFromPlanning}
       />
+      )}
 
-      {/* Back-office coupé (lot 18) : ces trois droits n'ont pas d'objet en ligne. */}
-      {BACK_OFFICE && (<>
-      {/* Droit de tenir l'organigramme (lot 16, D4) — réservé aux admins */}
-      <div className="rounded-lg border border-dashed border-border p-3">
-        <p className="text-sm font-semibold text-muted-foreground mb-2">
-          Peut modifier l&apos;organigramme :
-        </p>
-        <button
-          type="button"
-          onClick={() => setEquipesRight((v) => !v)}
-          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-            equipesRight
-              ? "bg-secondary border-foreground/30 text-foreground"
-              : "bg-background border-border text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {equipesRight ? "✓ " : ""}Équipes (tout l&apos;organigramme)
-        </button>
-      </div>
-
-      {/* Coordination (lot 1 du chantier « équipes et groupes », EQ24 à EQ26) — cochée par un
-          admin seul : aucune équipe ne la donne plus. */}
-      <div className="rounded-lg border border-dashed border-border p-3">
-        <p className="text-sm font-semibold text-muted-foreground mb-2">
-          {t("personnes.coordinationAide")} :
-        </p>
-        <button
-          type="button"
-          aria-pressed={coordination}
-          onClick={() => setCoordination((v) => !v)}
-          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-            coordination
-              ? "bg-secondary border-foreground/30 text-foreground"
-              : "bg-background border-border text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {coordination && <span aria-hidden>✓ </span>}{t("personnes.coordination")}
-        </button>
-      </div>
-
-      {/* Qui remplit les plannings dans l'app (lot 17) — réservé aux admins.
-          Ne donne pas le droit de PUBLIER un trimestre (droits de notification). */}
-      <div className="rounded-lg border border-dashed border-border p-3">
-        <p className="text-sm font-semibold text-muted-foreground mb-2">
-          Peut remplir les plannings :
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {GRILLES.map((pl) => {
-            const checked = planningRights.includes(pl.key);
-            const color = pl.couleur;
-            return (
-              <button
-                key={pl.key}
-                type="button"
-                onClick={() =>
-                  setPlanningRights((prev) =>
-                    checked ? prev.filter((x) => x !== pl.key) : [...prev, pl.key]
-                  )
-                }
-                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-                  checked ? "" : "bg-background border-border text-muted-foreground hover:text-foreground"
-                }`}
-                style={checked ? { background: `${color}15`, borderColor: color, color } : undefined}
-              >
-                {checked ? "✓ " : ""}{pl.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      </>)}
-
-      {BACK_OFFICE && (<>
-      {/* Droits de publication d'annonces — réservé aux admins */}
-      <div className="rounded-lg border border-dashed border-border p-3">
-        <p className="text-sm font-semibold text-muted-foreground mb-2">
-          Peut créer des évènements et des infos pour :
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {ANNONCE_SECTIONS.map((s) => {
-            const checked = annonceRights.includes(s);
-            const color = categoryColor(s);
-            return (
-              <button
-                key={s}
-                type="button"
-                onClick={() =>
-                  setAnnonceRights((prev) =>
-                    checked ? prev.filter((x) => x !== s) : [...prev, s]
-                  )
-                }
-                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-                  checked ? "" : "bg-background border-border text-muted-foreground hover:text-foreground"
-                }`}
-                style={checked ? { background: `${color}15`, borderColor: color, color } : undefined}
-              >
-                {checked ? "✓ " : ""}{categoryLabel(s)}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      </>)}
+      {/* Lot AO-B (A2) : plus de case de droit (Équipes, Coordination, plannings, évènements) — les droits viennent de
+          l'organigramme ; hors du nouveau mode, ces cases n'existaient pas non plus (lot 18). */}
 
       {/* Droits d'envoi de notifications manuelles — réservé aux admins */}
+      {!BACK_OFFICE && (
       <div className="rounded-lg border border-dashed border-border p-3">
         <p className="text-sm font-semibold text-muted-foreground mb-2">
-          Peut envoyer des notifications à :
+          {t("admin.membre.peutNotifier")}
         </p>
         <div className="flex flex-wrap gap-2">
           {[NOTIFY_ALL, ...NOTIFY_GROUPS.flatMap((g) => g.audiences)].map((a) => {
@@ -458,19 +429,20 @@ export function FormulairePersonne({
                 }`}
                 style={checked && color ? { background: `${color}15`, borderColor: color, color } : undefined}
               >
-                {checked ? "✓ " : ""}{audienceLabel(a)}
+                {checked ? "✓ " : ""}{libelleAudience(t, zh, a)}
               </button>
             );
           })}
         </div>
       </div>
+      )}
 
       <div className="flex items-center gap-2 justify-end">
         <Button variant="outline" onClick={onAnnule} className="h-11">
-          Annuler
+          {t("common.buttons.cancel")}
         </Button>
         <Button onClick={() => void saveEdit()} disabled={saving} className="h-11">
-          {saving ? "Enregistrement…" : "Enregistrer"}
+          {saving ? t("admin.membre.enregistrement") : t("common.buttons.save")}
         </Button>
       </div>
     </div>
@@ -480,6 +452,7 @@ export function FormulairePersonne({
 /** Ancienne administration (`/admin`, interrupteur coupé) : la carte « Membres », chaque
  *  membre se déplie sur place. `onCompte` : nombre d'inscrits (pastille de l'onglet). */
 export function Personnes({ onCompte }: { onCompte?: (n: number) => void }) {
+  const { t } = useTranslation();
   const d = useDonneesPersonnes();
   const f = useFiltresPersonnes(d.profiles);
   const [editingUid, setEditingUid] = useState<string | null>(null);
@@ -490,14 +463,13 @@ export function Personnes({ onCompte }: { onCompte?: (n: number) => void }) {
   }, [onCompte, profiles.length]);
 
   return (
-    <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
+    <div className="carte-groupe p-5 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-muted-foreground">
-          Membres
+          {t("admin.membres")}
         </h2>
         <span className="text-xs text-muted-foreground">
-          {profiles.length} inscrit(s) · {stats.musiciens} musicien(s) · {stats.chanteurs}{" "}
-          chanteur(s) · {stats.presidences} présidence(s)
+          {t("admin.membre.compte", { inscrits: profiles.length, musiciens: stats.musiciens, chanteurs: stats.chanteurs, presidences: stats.presidences })}
         </span>
       </div>
 
@@ -510,21 +482,22 @@ export function Personnes({ onCompte }: { onCompte?: (n: number) => void }) {
 
 /** La liste, un membre déplié sur place avec son formulaire (un volet). */
 export function ListePersonnes({
-  d, f, deplie, setDeplie,
+  d, f, deplie, setDeplie, ouvrePage = false,
 }: {
   d: ReturnType<typeof useDonneesPersonnes>;
   f: ReturnType<typeof useFiltresPersonnes>;
   deplie: string | null;
   setDeplie: (uid: string | null) => void;
+  /** La ligne ouvre la fiche en page entière au lieu de se déplier : chevron droit, pas d'`aria-expanded` (bo-equipes-11). */
+  ouvrePage?: boolean;
 }) {
+  const { t } = useTranslation();
   const { profiles, loadingProfiles } = d;
   const maj = (u: UserProfile) => d.setProfiles((prev) => prev.map((x) => (x.uid === u.uid ? u : x)));
-  if (loadingProfiles) return <p className="text-sm text-muted-foreground py-6 text-center">Chargement…</p>;
+  if (loadingProfiles) return <p className="text-sm text-muted-foreground py-6 text-center">{t("common.loading")}</p>;
   if (f.displayed.length === 0)
     return (
-      <p className="text-sm text-muted-foreground py-6 text-center border border-dashed border-border rounded-xl">
-        {profiles.length === 0 ? "Aucun profil pour l'instant." : "Aucun membre ne correspond."}
-      </p>
+      <EtatVide compact action={<RetirerFiltreSansEquipe f={f} />}>{texteListeVide(t, profiles.length, f)}</EtatVide>
     );
   return (
     <div className="space-y-2">
@@ -534,10 +507,12 @@ export function ListePersonnes({
           <div key={p.uid} className="rounded-xl bg-card">
             <LignePersonne
               p={p}
-              deplie={isEditing}
+              deplie={ouvrePage ? undefined : isEditing}
               groupes={d.groupes}
               onClick={() => setDeplie(isEditing ? null : p.uid)}
-              fin={isEditing
+              fin={ouvrePage
+                ? <ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground/60" aria-hidden />
+                : isEditing
                 ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
                 : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />}
             />

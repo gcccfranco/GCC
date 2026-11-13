@@ -6,14 +6,17 @@ import { auth } from "./config";
 import {
   FS_BASE,
   authHeader,
+  lireRequete,
   checkRest,
   toFsFields,
   fromFsValue,
   type RawDoc,
 } from "./setlists";
 import { useAuth } from "./auth";
+import { CLES_RESPONSABILITES } from "@/lib/acces/responsabilites";
 import { lireChampsGroupe } from "@/lib/groupes/organigramme";
 import type { ServiceRole, UserProfile } from "@/types/user";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 
 export async function signUp(email: string, password: string): Promise<User> {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -42,6 +45,14 @@ function fromFsProfile(raw: RawDoc): UserProfile {
     dansEquipes: (data.dansEquipes as string[]) ?? [],
     referentDe: (data.referentDe as string[]) ?? [],
     ...lireChampsGroupe(data),
+    // Lot AO : recopiés par le serveur seul.
+    sousEquipes: (data.sousEquipes as string[]) ?? [],
+    referentSous: (data.referentSous as string[]) ?? [],
+    lieuxLouange: (data.lieuxLouange as string[]) ?? [],
+    lieuxRegie: (data.lieuxRegie as string[]) ?? [],
+    joue: (data.joue as string[]) ?? [],
+    // Lot RS : écrit par les admins seuls.
+    responsabilites: (data.responsabilites as string[]) ?? [],
     // Date d'inscription = createTime du document (créé à l'inscription) ; disponible
     // rétroactivement pour tous les profils, contrairement à un champ écrit à la main.
     createdAt: raw.createTime ? new Date(raw.createTime) : undefined,
@@ -58,7 +69,7 @@ export async function getProfile(uid: string): Promise<UserProfile | null> {
 
 /** Ce qu'un formulaire envoie : l'uid et les seuls champs qu'il tient. `createdAt`
  *  est dérivé du createTime du document Firestore, jamais persisté. */
-export type ProfilePatch = { uid: string } & Partial<Omit<UserProfile, "uid" | "createdAt">>;
+type ProfilePatch = { uid: string } & Partial<Omit<UserProfile, "uid" | "createdAt">>;
 
 function profilVide(uid: string): UserProfile {
   return { uid, email: "", firstName: "", lastName: "", planningName: "", serviceRoles: {}, annonces: [], notify: [], coordination: false, equipes: false, plannings: [] };
@@ -78,31 +89,61 @@ export async function saveProfile(patch: ProfilePatch): Promise<void> {
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(data) }),
   });
+  viderCacheProfils(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
   const avant = profileCache.get(uid) ?? profilVide(uid);
   profileCache.set(uid, { ...avant, ...data, uid } as UserProfile);
 }
 
-/** Tous les profils, triés par nom — réservé à la page admin. */
-export async function listProfiles(): Promise<UserProfile[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: { from: [{ collectionId: "users" }] },
-    }),
-  });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsProfile(r.document!))
+/** Lot RS : les responsabilités d'un compte, écrites par un admin (`allow update: if isAdmin()`), ce champ seul
+ *  (updateMask). La liste part triée dans l'ordre de CLES_RESPONSABILITES, sans doublon ni clé inconnue. */
+export async function changerResponsabilites(uid: string, cles: readonly string[]): Promise<void> {
+  await saveProfile({ uid, responsabilites: CLES_RESPONSABILITES.filter((c) => cles.includes(c)) });
+}
+
+// Garde de `listProfiles` (lot LF, docs/spec-lectures-firestore.md) : la promesse, 10 min, propre au compte
+// (uid courant), jamais pour un échec (refus ou exception) ; vidée par toute écriture de profil côté client.
+const CACHE_PROFILS_MS = 10 * 60_000;
+let cacheProfils: { uid: string | null; at: number; promesse: Promise<UserProfile[] | null> } | null = null;
+
+/** À appeler après toute écriture qui change un profil `users/{uid}` (réussie ou non), y compris les routes
+ *  serveur qui en écrivent (`/api/equipes/rattachement`, `/api/equipes/groupes`). */
+export function viderCacheProfils(): void {
+  cacheProfils = null;
+  viderGardesTableau(); // « À faire » (Comptes, plannings) lit les profils
+}
+
+async function lireProfils(): Promise<UserProfile[] | null> {
+  const docs = await lireRequete("", { from: [{ collectionId: "users" }] });
+  if (!docs) return null;
+  return docs
+    .map(fromFsProfile)
     .sort(
       (a, b) =>
         a.lastName.localeCompare(b.lastName, "fr") ||
         a.firstName.localeCompare(b.firstName, "fr")
     );
+}
+
+/** Tous les profils, triés par nom — gardés 10 min en mémoire (lot LF). */
+export async function listProfiles(): Promise<UserProfile[]> {
+  const uid = auth.currentUser?.uid ?? null;
+  const c = cacheProfils;
+  if (c && c.uid === uid && Date.now() - c.at < CACHE_PROFILS_MS) {
+    const memoire = await c.promesse;
+    return memoire ? [...memoire] : [];
+  }
+  const entree = { uid, at: Date.now(), promesse: lireProfils() };
+  cacheProfils = entree;
+  const clear = () => { if (cacheProfils === entree) cacheProfils = null; };
+  try {
+    const liste = await entree.promesse;
+    if (!liste) { clear(); return []; }
+    return [...liste]; // une copie par appelant : un tri sur place ne touche pas les autres
+  } catch (e) {
+    clear();
+    throw e;
+  }
 }
 
 // ─── Inscriptions ouvertes / fermées (doc config/app, modifiable par les admins) ──
@@ -150,10 +191,30 @@ function lireProfil(uid: string): Promise<UserProfile | null> {
   return lecture;
 }
 
+/** Évènement de la fenêtre : « relis le profil » (le bouton Réessayer du bandeau de copie hors ligne). */
+export const RELIRE_PROFIL = "gcc:relire-profil";
+
 export function useProfile() {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  // Profil introuvable faute de réseau (A3 bis) : on le relit au retour du réseau, sinon une page rouverte
+  // sur sa copie hors ligne jugerait ensuite la vraie setlist avec un profil vide.
+  const [tentative, setTentative] = useState(0);
+  const manque = !!user && !profile && !profileLoading;
+  useEffect(() => {
+    if (!manque) return;
+    const relire = () => setTentative((n) => n + 1);
+    const siVisible = () => { if (document.visibilityState === "visible") relire(); };
+    window.addEventListener("online", relire);
+    window.addEventListener(RELIRE_PROFIL, relire);
+    document.addEventListener("visibilitychange", siVisible);
+    return () => {
+      window.removeEventListener("online", relire);
+      window.removeEventListener(RELIRE_PROFIL, relire);
+      document.removeEventListener("visibilitychange", siVisible);
+    };
+  }, [manque]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -170,8 +231,10 @@ export function useProfile() {
     setProfileLoading(true);
     lireProfil(user.uid)
       .then(setProfile)
+      // Hors ligne (A3) : pas de profil, rien en cache ; la prochaine lecture réessaie.
+      .catch(() => setProfile(null))
       .finally(() => setProfileLoading(false));
-  }, [user, authLoading]);
+  }, [user, authLoading, tentative]);
 
   return { user, profile, loading: authLoading || profileLoading };
 }

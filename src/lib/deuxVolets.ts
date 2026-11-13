@@ -3,9 +3,35 @@
 // navigateur. Le « en grand » vient de `useDeuxVolets` (U5, Q1) ; l'adresse dit si un
 // élément est choisi : l'adresse de la liste n'en choisit aucun, celle d'une fiche si.
 
+import { getBarreReduite, suivreBarreReduite } from "@/lib/barreLateralePref";
+
+// Requêtes communes à `useDeuxVolets` et `useEditeurDeuxColonnes` : seule la requête « large »
+// (barre dépliée) change d'un hook à l'autre. Mêmes requêtes que le bloc « Lot U4 » de globals.css.
+export const ORDINATEUR = "(pointer: fine) and (min-width: 1024px)";
+export const TABLETTE_PAYSAGE = "(pointer: coarse) and (orientation: landscape) and (min-width: 1024px)";
+
+/** Tablette paysage : toujours ; ordinateur barre réduite : toujours ; barre dépliée : selon `large`. */
+export function dispositionMaintenant(large: string): boolean {
+  const m = (q: string) => window.matchMedia(q).matches;
+  if (m(TABLETTE_PAYSAGE)) return true;
+  if (!m(ORDINATEUR)) return false;
+  return getBarreReduite() || m(large);
+}
+
+/** Pour `useSyncExternalStore` : prévenu quand la fenêtre ou la barre change la disposition. */
+export function suivreDisposition(large: string, changement: () => void) {
+  const listes = [ORDINATEUR, TABLETTE_PAYSAGE, large].map((q) => window.matchMedia(q));
+  listes.forEach((l) => l.addEventListener("change", changement));
+  const finBarre = suivreBarreReduite(changement);
+  return () => {
+    listes.forEach((l) => l.removeEventListener("change", changement));
+    finBarre();
+  };
+}
+
 /** Ce que montre chaque volet. `droite` : la page de l'adresse (une fiche), le premier
  *  élément de la liste (Q3, en grand sans élément choisi), ou rien (un volet, sur la liste). */
-export interface Volets {
+interface Volets {
   liste: boolean;
   droite: "page" | "premier" | null;
 }

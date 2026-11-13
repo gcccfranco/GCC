@@ -14,6 +14,7 @@ import { Retour } from "@/components/layout/EnTetePage";
 import { useTranslation } from "react-i18next";
 import { Group, GroupRow } from "@/components/ui/group";
 import { Button } from "@/components/ui/button";
+import { AvisLangue } from "@/components/harmonie/AvisLangue";
 import { LecteurCours } from "@/components/harmonie/cours/LecteurCours";
 import { SCHEMAS_DU_COURS } from "@/components/harmonie/cours/schemas";
 import { PanneauSommaire, useCoursCharge } from "@/components/harmonie/cours/SommaireCours";
@@ -36,7 +37,7 @@ export function ChapitreHarmonie({ id }: { id: string }) {
 
   return (
     <div
-      className={cn("space-y-6 pb-10", deuxVolets ? "max-w-[860px]" : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
+      className={cn("space-y-6 pb-10", deuxVolets ? "max-w-[860px]" : "max-w-2xl px-[var(--marge-page)] pt-3 md:max-w-3xl")}
       data-chapitre={chapitre.id}
     >
       {!deuxVolets && (
@@ -47,7 +48,7 @@ export function ChapitreHarmonie({ id }: { id: string }) {
             <button
               type="button"
               onClick={() => setSommaire(true)}
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-4 text-[15px] font-semibold text-background"
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-4 text-base font-semibold text-background"
             >
               <List className="h-4 w-4" aria-hidden />
               {t("harmonie.cours.sommaire")}
@@ -59,28 +60,26 @@ export function ChapitreHarmonie({ id }: { id: string }) {
 
       <header>
         {/* En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seule, le h1. */}
-        <Titre className={deuxVolets ? "text-[24px] font-bold leading-tight" : "text-[22px] font-bold leading-tight lg:text-[28px]"}>
+        <Titre className={deuxVolets ? "text-xl font-bold leading-tight" : "text-xl font-bold leading-tight lg:text-2xl"}>
           {chapitre.numero !== null && `${chapitre.numero}. `}
-          {chapitre.titre}
+          <span lang="fr">{chapitre.titre}</span>
         </Titre>
         {chapitre.niveau !== null && (
-          <p className="mt-1 text-[13px] text-muted-foreground">{t(`harmonie.cours.niveau${chapitre.niveau}`)}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t(`harmonie.cours.niveau${chapitre.niveau}`)}</p>
         )}
-        {i18n.language.startsWith("zh") && (
-          <p className="mt-2 rounded-xl bg-card px-3 py-2 text-[13px] text-muted-foreground">{t("harmonie.cours.nonTraduit")}</p>
-        )}
+        {i18n.language.startsWith("zh") && <div className="mt-2"><AvisLangue /></div>}
       </header>
 
       {/* Téléphone : le sommaire de la leçon en tête ; en grand et sur tablette, il est dans la liste du cours. */}
       {!deuxVolets && chapitre.contenu.length > 1 && (
-        <div className="raised rounded-2xl px-4 pt-3 pb-1 md:hidden">
-          <p className="text-[13px] font-semibold text-muted-foreground">{t("harmonie.cours.sommaire")}</p>
+        <div className="bloc-info rounded-2xl px-4 pt-3 pb-1 md:hidden">
+          <p className="text-sm font-semibold text-muted-foreground">{t("harmonie.cours.sommaire")}</p>
           <nav aria-label={t("harmonie.cours.sommaire")}>
-            <ol className="divide-y divide-border text-[15px]">
+            <ol className="divide-y divide-border text-base">
               {chapitre.contenu.map((s, i) => (
                 <li key={i}>
                   <a href={`#partie-${i}`} className="flex items-center justify-between gap-3 py-2.5 active:text-muted-foreground">
-                    <span>{s.titre}</span>
+                    <span lang="fr">{s.titre}</span>
                     <span aria-hidden className="text-muted-foreground/60">↓</span>
                   </a>
                 </li>
@@ -94,7 +93,7 @@ export function ChapitreHarmonie({ id }: { id: string }) {
 
       {chapitre.contenu.map((s, i) => (
         <section key={i} id={`partie-${i}`} className="scroll-mt-[calc(var(--nav-h)+4rem)] space-y-3" data-sous-partie>
-          <h2 className="text-[19px] font-bold leading-snug">{s.titre}</h2>
+          <h2 className="text-lg font-bold leading-snug" lang="fr">{s.titre}</h2>
           <LecteurCours blocs={s.blocs} schemas={SCHEMAS_DU_COURS} />
         </section>
       ))}
@@ -121,7 +120,7 @@ function JaiFini({ date, marquer, prochain }: {
   return (
     <div className="space-y-3 border-t border-border pt-5" data-j-ai-fini>
       {date ? (
-        <p className="flex flex-wrap items-center gap-x-2 text-[15px]">
+        <p className="flex flex-wrap items-center gap-x-2 text-base">
           <Check className="h-4 w-4 text-[var(--sec-verse)]" aria-hidden />
           <span>{t("harmonie.cours.finiLe", { date: jour })}</span>
           <span className="text-muted-foreground" aria-hidden>·</span>
@@ -135,7 +134,7 @@ function JaiFini({ date, marquer, prochain }: {
       {date && prochain && (
         <Group>
           <GroupRow href={`/harmonie/cours/${prochain.id}`} chevron>
-            <span className="block text-[13px] text-muted-foreground">{t("harmonie.cours.prochain")}</span>
+            <span className="block text-sm text-muted-foreground">{t("harmonie.cours.prochain")}</span>
             <span className="block truncate font-medium">{prochain.numero}. {prochain.titre}</span>
           </GroupRow>
         </Group>

@@ -54,7 +54,7 @@ const CULTE = [
 
 /** `premierBloc` : le bloc de contenu sous l'en-tête, quand ce n'est pas son premier frère visible
  *  (le Planning : la barre collante des plannings, R6, s'intercale sur téléphone et tablette). */
-type PageAVerifier = { chemin: string; lecture?: boolean; premierBloc?: string };
+type PageAVerifier = { chemin: string; lecture?: boolean; premierBloc?: string; colonne?: number };
 const SOUS_LE_PLANNING = "header[data-entete-page] ~ main";
 
 /** Les adresses de la spec (Z), plus les pages qui portaient encore l'ancien titre (`PageTitle`). */
@@ -64,14 +64,16 @@ const APP: PageAVerifier[] = [
   { chemin: "/songs" }, { chemin: "/setlists" }, { chemin: "/setlists/new" }, { chemin: "/setlists/new?depuis=passee" },
   { chemin: "/evenements" }, { chemin: "/evenements/scene/noel" }, { chemin: "/mes-services" }, { chemin: "/moi" },
   { chemin: "/profil" }, { chemin: "/guide", lecture: true }, { chemin: "/questionnaire", lecture: true },
-  { chemin: "/harmonie" }, { chemin: "/taches" }, { chemin: "/equipes" },
+  { chemin: "/harmonie" }, { chemin: "/taches" }, { chemin: "/equipes" }, { chemin: "/songs/statistiques" },
 ];
 const BACK_OFFICE: PageAVerifier[] = [
-  { chemin: "/back-office" }, { chemin: "/back-office/taches/da" }, { chemin: "/back-office/evenements" },
+  { chemin: "/back-office" }, { chemin: "/back-office/equipes/da" }, { chemin: "/back-office/evenements" },
   { chemin: "/back-office/evenements/scene/noel" }, { chemin: "/back-office/reunions" }, { chemin: "/back-office/calendrier" },
   { chemin: "/back-office/planning" }, { chemin: "/back-office/equipes" }, { chemin: "/back-office/equipes/personnes" },
-  { chemin: "/back-office/messages" }, { chemin: "/back-office/messages/notifier" }, { chemin: "/back-office/messages/questionnaire" },
-  { chemin: "/back-office/statistiques" }, { chemin: "/back-office/plus" },
+  // Réception et Questionnaire sans message ni réponse : la liste seule dans la colonne de 720 px calée sur le titre (BO9).
+  { chemin: "/back-office/messages", colonne: 720 }, { chemin: "/back-office/messages/notifier" },
+  { chemin: "/back-office/messages/questionnaire", colonne: 720 },
+  { chemin: "/back-office/plus" },
 ];
 
 async function ouvrir(page: Page, chemin: string) {
@@ -95,13 +97,15 @@ async function capture(page: Page, nom: string) {
   await page.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png` });
 }
 
-async function verifierPage(page: Page, { chemin, lecture, premierBloc }: PageAVerifier, grand: boolean) {
-  await verifierAgencement(page, { premierBloc: premierBloc ? page.locator(premierBloc) : undefined });
+// `colonne` : liste seule dans la colonne de 720 px, alignée à gauche (règle de largeur du 25/10/2026, B4b), en grand seulement.
+async function verifierPage(page: Page, { chemin, lecture, premierBloc, colonne }: PageAVerifier, grand: boolean) {
+  const col = grand ? colonne : undefined;
+  await verifierAgencement(page, { premierBloc: premierBloc ? page.locator(premierBloc) : undefined, colonne: col });
   if (!grand) return;
   // En grand : deux volets sur toute la zone, et jamais de volet vide (R10, R11).
   const volets = page.locator("[data-deux-volets]").filter({ visible: true });
   if (!lecture && (await volets.count())) {
-    await verifierPleineLargeur(page, volets.first());
+    await verifierPleineLargeur(page, volets.first(), { colonne: col });
     const detail = volets.first().locator('[data-volet="detail"]');
     if (await detail.count()) {
       await expect.poll(() => detail.evaluate((el) => (el as HTMLElement).innerText.trim().length), { message: `${chemin} : le volet de droite n'est pas vide` })

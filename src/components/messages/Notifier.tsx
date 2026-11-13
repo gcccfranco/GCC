@@ -1,29 +1,34 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
-import { Send, Lock, Search, X } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
+import { Send, Lock } from "lucide-react";
+import { ChampSelect } from "@/components/ui/champ-select";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
 import { normalizeName } from "@/lib/planning/names";
 import { authHeader } from "@/lib/firebase/setlists";
 import type { UserProfile } from "@/types/user";
-import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel, audiencesNotifiables } from "@/lib/push/audiences";
+import { NOTIFY_ALL, NOTIFY_GROUPS, audiencesNotifiables } from "@/lib/push/audiences";
 import { estDuGroupe } from "@/lib/groupes/organigramme";
 import { PUBLISHABLE_PLANNINGS, canPublishPlanning } from "@/lib/planning/releases";
 import { PublishPlanningPanel } from "@/components/planning/PublishPlanningPanel";
 import { Pilules } from "@/components/layout/Onglets";
 import { categoryColor } from "@/lib/serviceColors";
+import { libelleAudience } from "@/components/admin/libelles";
 import { ApercuNotification, DerniersEnvois } from "./ApercuNotification";
+import { compter } from "@/lib/usage";
 
 // Au-delà de ce nombre de destinataires (ou « tout le monde »), on demande confirmation.
 const CONFIRM_THRESHOLD = 20;
 
 // Destinations possibles au clic sur la notification (chemins internes sûrs).
-const DESTINATIONS: { value: string; label: string }[] = [
-  { value: "/mes-services", label: "Mes services" },
-  { value: "/planning", label: "Planning" },
-  { value: "/annonces", label: "Annonces" },
+const DESTINATIONS: { value: string; cle: string }[] = [
+  { value: "/mes-services", cle: "common.header.myServices" },
+  { value: "/planning", cle: "common.header.planning" },
+  { value: "/annonces", cle: "common.header.annonces" },
 ];
 
 /** Composer une notification manuelle. On choisit une audience (tout le monde / un
@@ -38,7 +43,17 @@ const DESTINATIONS: { value: string; label: string }[] = [
  *  Agencement v18 (B11 de docs/spec-agencement-v18.md ; planche `v18-bo-messages-notifier`) : au
  *  Back-Office, le formulaire en carte à gauche (audience en pilules, pied « Annuler · Envoyer à
  *  n personnes »), à droite l'aperçu de la notification puis les derniers envois. */
+const LARGE = "(min-width: 1024px)";
+const suivreLarge = (changement: () => void) => {
+  const m = window.matchMedia(LARGE);
+  m.addEventListener("change", changement);
+  return () => m.removeEventListener("change", changement);
+};
+
 export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; titre?: ReactNode }) {
+  const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
+  const aud = (a: string) => libelleAudience(t, zh, a);
   const { user, profile, loading } = useProfile();
   const admin = isAdminUser(user);
   // Lot 2 (OG24) : les audiences de `notify` et celles d'un rôle de groupe (`notifieParRole`).
@@ -110,11 +125,18 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
     setPeopleQuery("");
   }, [audience, profiles]);
 
+  // compte-13 : l'aperçu est dans le formulaire sous `lg`, dans la colonne de droite au-delà (un seul rendu).
+  const large = useSyncExternalStore(suivreLarge, () => window.matchMedia(LARGE).matches, () => false);
   const allSelected = pool.length > 0 && selected.size === pool.length;
   const broadcast = audience === NOTIFY_ALL && allSelected;
   const canSend = !!title.trim() && !!body.trim() && !busy && selected.size > 0;
+  // compte-12 : la première condition qui manque, dite sous « Envoyer » tant qu'il est grisé.
+  const manque = busy || canSend ? null
+    : selected.size === 0 ? (!audience && groupe === "Cultes" ? "culte" : "destinataires")
+    : !title.trim() ? "titre"
+    : "message";
   const needsConfirm = broadcast || selected.size > CONFIRM_THRESHOLD;
-  const recipLabel = broadcast ? "tout le monde" : `${selected.size} personne(s)`;
+  const recipLabel = broadcast ? t("notifier.toutLeMondeMin") : t("notifier.personnesN", { count: selected.size });
 
   // Toute édition referme une éventuelle confirmation en attente.
   useEffect(() => setConfirmOpen(false), [audience, selected, title, body, dest]);
@@ -153,15 +175,16 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        setFeedback(`Envoyé (${data.sent ?? 0} notification(s)).`);
+        compter("cmd.notifier.envoyer");
+        setFeedback(t("notifier.envoye", { n: data.sent ?? 0 }));
         setTitle("");
         setBody("");
         setEnvois((n) => n + 1);
       } else {
-        setFeedback(data.error || "Échec de l'envoi.");
+        setFeedback(data.error || t("notifier.echec"));
       }
     } catch {
-      setFeedback("Échec de l'envoi.");
+      setFeedback(t("notifier.echec"));
     } finally {
       setBusy(false);
     }
@@ -170,7 +193,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Chargement…</p>
+        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
       </div>
     );
   }
@@ -180,11 +203,11 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4 text-center">
         <Lock className="h-8 w-8 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
-          Tu n&apos;as pas l&apos;autorisation d&apos;envoyer des notifications.
+          {t("notifier.nonAutorise")}
         </p>
         {!user && (
           <Link href={`/login?from=${backOffice ? "/back-office/messages/notifier" : "/notifier"}`} className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground">
-            Se connecter
+            {t("backOffice.seConnecter")}
           </Link>
         )}
       </div>
@@ -194,26 +217,26 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
   const selectAudience = (
     <>
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
-          Audience
+        <label htmlFor="notif-audience" className="text-sm font-medium text-foreground">
+          {t("notifier.audience")}
         </label>
-        <select
+        <ChampSelect
+          id="notif-audience"
           value={audience}
           onChange={(e) => setAudience(e.target.value)}
-          className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
         >
-          <option value="">Choisir…</option>
-          {canAll && <option value={NOTIFY_ALL}>{audienceLabel(NOTIFY_ALL)}</option>}
+          <option value="">{t("notifier.choisir")}</option>
+          {canAll && <option value={NOTIFY_ALL}>{aud(NOTIFY_ALL)}</option>}
           {groups.map((g) => (
-            <optgroup key={g.label} label={g.label}>
+            <optgroup key={g.label} label={t(`notifier.groupe.${g.label}`)}>
               {g.audiences.map((a) => (
                 <option key={a} value={a}>
-                  {audienceLabel(a)}
+                  {aud(a)}
                 </option>
               ))}
             </optgroup>
           ))}
-        </select>
+        </ChampSelect>
       </div>
     </>
   );
@@ -224,7 +247,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-foreground">
-              Destinataires
+              {t("notifier.destinataires")}
             </label>
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground">
@@ -237,33 +260,21 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
                 }
                 className="text-xs font-semibold text-foreground underline underline-offset-2 hover:text-muted-foreground"
               >
-                {allSelected ? "Tout décocher" : "Tout cocher"}
+                {allSelected ? t("notifier.toutDecocher") : t("notifier.toutCocher")}
               </button>
             </div>
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <input
-              type="search"
-              value={peopleQuery}
-              onChange={(e) => setPeopleQuery(e.target.value)}
-              placeholder="Filtrer la liste…"
-              className="w-full h-10 pl-9 pr-9 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
-            />
-            {peopleQuery && (
-              <button
-                onClick={() => setPeopleQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          <ChampRecherche
+            value={peopleQuery}
+            onChange={setPeopleQuery}
+            placeholder={t("notifier.filtrerPlaceholder")}
+            label={t("notifier.filtrerLabel")}
+          />
           <div className="max-h-64 overflow-y-auto rounded-xl bg-card divide-y divide-border">
             {profiles === null ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Chargement…</p>
+              <p className="text-sm text-muted-foreground text-center py-6">{t("common.loading")}</p>
             ) : shownPool.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Aucun membre.</p>
+              <p className="text-sm text-muted-foreground text-center py-6">{t("notifier.aucunMembre")}</p>
             ) : (
               shownPool.map((p) => {
                 const checked = selected.has(p.uid);
@@ -287,7 +298,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
                       </span>
                       {p.planningName && (
                         <span className="text-xs text-muted-foreground truncate block">
-                          planning : {p.planningName}
+                          {t("notifier.planningNom", { nom: p.planningName })}
                         </span>
                       )}
                     </span>
@@ -304,7 +315,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
     <>
       <div className="space-y-1.5">
         <label htmlFor="notif-titre" className="text-sm font-medium text-foreground">
-          Titre
+          {t("notifier.titre")}
         </label>
         <input
           id="notif-titre"
@@ -312,14 +323,14 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={80}
-          placeholder="Ex. Changement de planning"
+          placeholder={t("notifier.titrePlaceholder")}
           className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
         />
       </div>
 
       <div className="space-y-1.5">
         <label htmlFor="notif-message" className="text-sm font-medium text-foreground">
-          Message
+          {t("notifier.message")}
         </label>
         <textarea
           id="notif-message"
@@ -327,27 +338,28 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
           onChange={(e) => setBody(e.target.value)}
           maxLength={300}
           rows={3}
-          placeholder="Ex. Le planning du Culte a été mis à jour, vérifie tes dates."
+          placeholder={t("notifier.messagePlaceholder")}
           className="w-full px-3 py-2.5 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 resize-none"
         />
       </div>
 
+      {backOffice && !large && <ApercuNotification titre={title} message={body} />}
+
       <div className="space-y-1.5">
         <label htmlFor="notif-destination" className="text-sm font-medium text-foreground">
-          Ouvre au clic
+          {t("notifier.ouvreAuClic")}
         </label>
-        <select
+        <ChampSelect
           id="notif-destination"
           value={dest}
           onChange={(e) => setDest(e.target.value)}
-          className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
         >
           {DESTINATIONS.filter((d) => !backOffice || d.value !== "/annonces").map((d) => (
             <option key={d.value} value={d.value}>
-              {d.label}
+              {t(d.cle)}
             </option>
           ))}
-        </select>
+        </ChampSelect>
       </div>
     </>
   );
@@ -357,14 +369,14 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
       {confirmOpen ? (
         <div className="rounded-xl bg-card p-3 space-y-3">
           <p className="text-sm text-foreground">
-            Envoyer cette notification à <span className="font-semibold">{recipLabel}</span> ?
+            <Trans i18nKey="notifier.confirmer" values={{ dest: recipLabel }} components={{ b: <span className="font-semibold" /> }} />
           </p>
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setConfirmOpen(false)}
               className="h-9 px-4 rounded-full bg-secondary text-sm font-semibold text-muted-foreground hover:text-foreground"
             >
-              Annuler
+              {t("common.buttons.cancel")}
             </button>
             <button
               onClick={doSend}
@@ -372,7 +384,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
               className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50"
             >
               <Send className="h-4 w-4" />
-              {busy ? "Envoi…" : "Confirmer"}
+              {busy ? t("notifier.envoi") : t("common.buttons.confirm")}
             </button>
           </div>
         </div>
@@ -384,7 +396,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
             className="inline-flex items-center gap-1.5 h-11 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
-            {busy ? "Envoi…" : "Envoyer"}
+            {busy ? t("notifier.envoi") : t("notifier.envoyer")}
           </button>
         </div>
       )}
@@ -405,20 +417,21 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
     };
     return (
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 px-[var(--marge-page)] pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)]">
-        <div className="raised rounded-2xl p-5 space-y-4 sm:p-6">
+        <div className="carte-groupe rounded-2xl p-5 space-y-4 sm:p-6">
           <div>
-            <h2 className="text-[18px] font-bold text-foreground">Prévenir des membres</h2>
+            <h2 className="text-lg font-bold text-foreground">{t("notifier.prevenir")}</h2>
             <p className="text-sm text-muted-foreground">
-              Une notification sur leur téléphone, et le message dans « Notifications ».
+              {t("notifier.prevenirAide")}
             </p>
           </div>
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">À qui</p>
+            <p className="text-sm font-medium text-foreground">{t("notifier.aQui")}</p>
             <Pilules
-              etiquette="Audience"
+              aLaLigne
+              etiquette={t("notifier.audience")}
               options={[
-                ...(canAll ? [{ cle: NOTIFY_ALL, nom: audienceLabel(NOTIFY_ALL) }] : []),
-                ...groups.map((g) => ({ cle: g.label, nom: g.label })),
+                ...(canAll ? [{ cle: NOTIFY_ALL, nom: aud(NOTIFY_ALL) }] : []),
+                ...groups.map((g) => ({ cle: g.label, nom: t(`notifier.groupe.${g.label}`) })),
               ]}
               valeur={audience === NOTIFY_ALL ? NOTIFY_ALL : groupe}
               choisir={(v) => {
@@ -428,8 +441,9 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
             />
             {groupeChoisi && (
               <Pilules
-                etiquette={groupeChoisi.label}
-                options={groupeChoisi.audiences.map((a) => ({ cle: a, nom: audienceLabel(a), couleur: categoryColor(a) }))}
+                aLaLigne
+                etiquette={t(`notifier.groupe.${groupeChoisi.label}`)}
+                options={groupeChoisi.audiences.map((a) => ({ cle: a, nom: aud(a), couleur: categoryColor(a) }))}
                 valeur={audience || null}
                 choisir={(v) => setAudience(v ?? "")}
               />
@@ -441,32 +455,42 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
           {confirmOpen ? (
             envoi
           ) : (
-            <div className="flex justify-end gap-2 border-t border-border pt-4">
-              <button
-                type="button"
-                onClick={annuler}
-                className="h-10 rounded-full bg-background px-4 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={attemptSend}
-                disabled={!canSend}
-                className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-              >
-                <Send className="h-4 w-4" aria-hidden />
-                {busy
-                  ? "Envoi…"
-                  : selected.size === 0
-                  ? "Envoyer"
-                  : `Envoyer à ${selected.size} personne${selected.size > 1 ? "s" : ""}`}
-              </button>
+            <div className="border-t border-border pt-4">
+              <div className="flex justify-end gap-2">
+                {(title.trim() || body.trim() || audience || groupe) && (
+                  <button
+                    type="button"
+                    onClick={annuler}
+                    className="h-11 rounded-full px-4 text-sm font-semibold text-foreground/70 lg:h-10 hover:bg-secondary hover:text-foreground"
+                  >
+                    {t("notifier.effacer")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={attemptSend}
+                  disabled={!canSend}
+                  aria-describedby={manque ? "notif-manque" : undefined}
+                  className="inline-flex h-11 items-center gap-1.5 rounded-full bg-primary px-5 lg:h-10 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:border-transparent disabled:bg-secondary disabled:text-muted-foreground"
+                >
+                  <Send className="h-4 w-4" aria-hidden />
+                  {busy
+                    ? t("notifier.envoi")
+                    : selected.size === 0
+                    ? t("notifier.envoyer")
+                    : t("notifier.envoyerA", { count: selected.size })}
+                </button>
+              </div>
+              {manque && (
+                <p id="notif-manque" className="mt-2 text-right text-sm text-muted-foreground motion-safe:transition-opacity motion-safe:duration-150">
+                  {t(`notifier.manque.${manque}`)}
+                </p>
+              )}
             </div>
           )}
         </div>
-        <div className="space-y-4">
-          <ApercuNotification titre={title} message={body} />
+        <div className="space-y-4 lg:sticky lg:top-[calc(var(--nav-h)+24px)]">
+          {large && <div className="carte-groupe rounded-2xl px-[18px] py-4"><ApercuNotification titre={title} message={body} /></div>}
           <DerniersEnvois cle={envois} />
         </div>
       </div>
@@ -477,15 +501,15 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
     <div className="space-y-5">
       {titre}
       <p className="text-sm text-muted-foreground">
-        Prévenir une audience d&apos;un changement de planning, ou de la mise en ligne du planning du trimestre.
+        {t("notifier.aideAncienne")}
       </p>
 
       {canPublishAny && (
         <div className="flex gap-2">
           {(
             [
-              ["notif", "Notification"],
-              ["publish", "Publier un planning"],
+              ["notif", t("notifier.modeNotification")],
+              ["publish", t("notifier.modePublier")],
             ] as const
           ).map(([m, label]) => (
             <button
@@ -506,7 +530,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
       {mode === "publish" ? (
         <PublishPlanningPanel isAdmin={admin} notifyRights={notifyRights} />
       ) : (
-      <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
+      <div className="carte-groupe p-5 space-y-4">
         {selectAudience}
         {destinataires}
         {champs}

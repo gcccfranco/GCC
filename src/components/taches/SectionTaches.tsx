@@ -8,7 +8,7 @@
 // fiche en page. Tablette portrait : « À faire pour moi » et « Les tâches des équipes » côte à côte.
 // Lot 1 du chantier « équipes et groupes » (EQ8, EQ15) : « à moi » suit `peutCocher`.
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ListChecks } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -17,52 +17,26 @@ import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Group, GroupRow } from "@/components/ui/group";
 import { TacheLigne } from "@/components/taches/TacheLigne";
 import { FicheTache } from "@/components/taches/FicheTache";
+import { FournirTaches, type Valeur } from "@/components/taches/contexteTaches";
 import { texteRetour } from "@/components/taches/retour";
 import { useDisposition } from "@/hooks/useDisposition";
 import { useProfile } from "@/lib/firebase/users";
-import { entreesBackOffice, equipesDesTaches } from "@/lib/access";
+import { droitsDesPages, equipesDesTaches } from "@/lib/access";
 import { cleNomEquipe } from "@/lib/equipes/table";
 import { estSurLaListe } from "@/lib/deuxVolets";
 import { aFairePour, lignesDeTache, type Ligne } from "@/lib/taches/echeances";
 import { useTaches } from "@/lib/taches/useTaches";
 import { todayIso } from "@/lib/scene/dimanches";
-import { cyclerEtat, type TacheAvecFois } from "@/lib/firebase/taches";
+import { cyclerEtat } from "@/lib/firebase/taches";
 import { prevenirFait } from "@/lib/taches/prevenir";
 import { cn } from "@/lib/utils";
-
-type Valeur = {
-  /** Les équipes de la personne, Louange élargi (`equipesDesTaches` ; un admin : toutes). */
-  equipes: string[];
-  items: TacheAvecFois[];
-  chargement: boolean;
-  /** Sans équipe, relit tout ; avec, seulement cette équipe (après une écriture dans cette équipe). */
-  reload: (equipe?: string) => Promise<void>;
-  aujourdhui: string;
-  /** Nom écrit sur une fois commencée ou terminée. */
-  parNom: string;
-  /** Adresse des fiches : `/taches` (App) ou `/back-office/taches` (agencement v18, B1). */
-  racine: string;
-  /** Back-Office › Tâches (B1, B2) : la fiche porte « ⋯ », l'historique, et « Modifier » ouvre le
-   *  formulaire dans le volet en grand ; dans l'App, la fiche d'aujourd'hui. */
-  backOffice: boolean;
-};
-
-const Contexte = createContext<Valeur | null>(null);
-
-/** Donne les tâches d'une section à ses pages (`SectionTaches` dans l'App ; le layout de
- *  Back-Office › Tâches, agencement v18, B1). */
-export const FournirTaches = Contexte.Provider;
-
-export function useMesTaches(): Valeur {
-  const v = useContext(Contexte);
-  if (!v) throw new Error("useMesTaches hors de SectionTaches");
-  return v;
-}
+import { Squelette } from "@/components/layout/Squelette";
 
 /** Adresse de la fiche d'une ligne ; une tâche répétée dit laquelle de ses fois. */
-export function adresseDeLaLigne(l: Ligne, racine = "/taches"): string {
+export function adresseDeLaLigne(l: Ligne, racine = "/taches", depuis?: "equipe"): string {
   const base = `${racine}/${l.tache.equipe}/${l.tache.id}`;
-  return l.tache.repetition ? `${base}?date=${l.date}` : base;
+  const params = [l.tache.repetition ? `date=${l.date}` : "", depuis ? `depuis=${depuis}` : ""].filter(Boolean).join("&");
+  return params ? `${base}?${params}` : base;
 }
 
 export function SectionTaches({ children }: { children: React.ReactNode }) {
@@ -93,7 +67,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
     }
   }
 
-  if (loading) return <p className="px-4 pt-6 text-sm text-muted-foreground">{t("common.loading")}</p>;
+  if (loading) return <Squelette enTete={false} className="px-4" />;
 
   // La tâche ouverte : celle de l'adresse, ou en grand la première à faire (Q3).
   const [, , equipe, id] = chemin.split("/");
@@ -103,15 +77,15 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
     disposition === "grand" && !!ouverte && l.tache.equipe === ouverte.equipe && l.tache.id === ouverte.id
     && (!ouverte.date || !l.tache.repetition || ouverte.date === l.date);
 
-  const versBackOffice = entreesBackOffice(user, profile).includes("taches");
+  const versBackOffice = droitsDesPages(user, profile).taches;
   const liste = (
     <div className={cn("space-y-6", disposition === "grand" ? "px-4 py-4" : "px-[var(--marge-page)] pb-10")}>
       {retour && <p role="status" className="text-sm text-muted-foreground">{retour}</p>}
       {equipes.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("taches.aucuneEquipe")}</p>
       ) : (
-        <div className={cn("space-y-6", disposition === "tablette" && versBackOffice && "grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] items-start gap-5 space-y-0")}>
-          <Group title={t("taches.aFairePourMoi")} className={cn(disposition !== "grand" && "raised rounded-2xl px-4 pb-1 pt-3")}>
+        <div className="space-y-6">
+          <Group title={t("taches.aFairePourMoi")} className={cn(disposition !== "grand" && "carte-groupe rounded-2xl px-4 pb-1 pt-3")}>
             {miennes.length === 0 ? (
               <GroupRow>{<span className="text-muted-foreground">{t("taches.rienAFaire")}</span>}</GroupRow>
             ) : (
@@ -128,7 +102,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
             )}
           </Group>
           {versBackOffice && (
-            <Group className={cn(disposition !== "grand" && "raised rounded-2xl px-4 py-1")}>
+            <Group className={cn(disposition !== "grand" && "carte-groupe rounded-2xl px-4 py-1")}>
               <GroupRow href="/back-office/taches" leading={<ListChecks />} trailing={t("backOffice.selecteur.backOffice")} chevron>
                 {t("backOffice.tachesDesEquipes")}
               </GroupRow>
@@ -143,18 +117,19 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
   // (et de la liste seule) ; en un volet, la fiche est une page qui pose le sien (« ‹ Tâches »).
   const surLaListe = estSurLaListe(chemin, "/taches");
   return (
-    <div className="min-h-screen bg-background">
-      <Contexte.Provider value={valeur}>
+    <div className="relative">
+      <FournirTaches value={valeur}>
         {(disposition === "grand" || surLaListe) && <EnTetePage titre={t("taches.title")} />}
         <DeuxVolets
           racine="/taches"
           largeurListe={400}
+          colonneSeule={!premiere}
           liste={liste}
           premier={premiere ? <FicheTache equipe={premiere.tache.equipe} id={premiere.tache.id} date={premiere.date} /> : null}
         >
           {children}
         </DeuxVolets>
-      </Contexte.Provider>
+      </FournirTaches>
     </div>
   );
 }

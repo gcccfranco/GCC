@@ -49,10 +49,12 @@ peut ajouter une **« Dernière phrase » (Dp)** dans l'éditeur.
 1. **Abréviations** (`src/lib/chordpro/abbreviations.ts`,
    `abbreviateSection`) : intro **I** ; couplet **C** + numéro ; pré-refrain
    **Pr** ; refrain **R** (+ numéro s'il y en a un) ; post-refrain **Po** ;
-   pont **P** ; interlude / instrumental **Pm** ; outro / coda **F** ; tag
+   pont **P** ; ~~interlude / instrumental **Pm**~~ *revu le 07/11/2026
+   (`spec-abreviation-interlude.md`) :* interlude **Int**, instrumental
+   **Inst** ; outro / coda **F** ; tag
    **Tag** ; « Dernière phrase » **Dp** ; autre → nom écrit. Même table en
    中文. Suit le nom écrit comme `formatSectionName` (un
-   `{start_of_intro: Interlude}` donne Pm).
+   `{start_of_intro: Interlude}` donne ~~Pm~~ Int).
 2. **Bandeau** (`src/components/song/StructureStrip.tsx`) : remplace la ligne
    ORDRE de `SongView` (page du chant et vue partitions) et
    `JianpuStructureStrip` dans la vue partitions. ~~Le mode louange garde le

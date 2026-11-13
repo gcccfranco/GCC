@@ -5,18 +5,20 @@
 // « Musiques et danses — pour la régie » (en lecture) et « L'ordre de passage ». Lus dans le programme et dans les
 // setlists de l'édition ; rien n'est recopié.
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { categoryColor } from "@/lib/serviceColors";
 import { getProgramme } from "@/lib/firebase/programmes";
-import { getSetlistsDeFete, type FSSetlist } from "@/lib/firebase/setlists";
+import { getSetlistsDeFete } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { feteDe, libelleEdition, anneeDe } from "@/lib/scene/fetes";
 import { jourEnLettres } from "@/app/evenements/scene/libelles";
 import { libelleQui } from "@/lib/fetes/qui";
 import type { Passage, Programme } from "@/types/programme";
 
-export interface PassageDeLaSetlist {
+interface PassageDeLaSetlist {
   programme: Programme;
   setlists: FSSetlist[];
   index: number;
@@ -45,7 +47,7 @@ export function usePassageDeLaSetlist(setlist: FSSetlist | null): PassageDeLaSet
     ...lu,
     index: lu.programme.passages.findIndex((p) => p.id === setlist.fete!.passage),
     fete,
-    titreFete: libelleEdition(fete, annee, i18n.language === "zh-CN" ? "zh" : "fr"),
+    titreFete: libelleEdition(fete, annee, langueCourte(i18n.language)),
   };
 }
 
@@ -55,7 +57,7 @@ export function RepereFete({ setlist, passage }: { setlist: FSSetlist; passage: 
   const couleur = categoryColor(setlist.category);
   const numero = passage && passage.index >= 0 ? t("setlists.fete.passageN", { n: passage.index + 1 }) : null;
   return (
-    <p className="flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: couleur }}>
+    <p className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: couleur }}>
       <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: couleur }} />
       {[t("categories." + setlist.category, { defaultValue: setlist.category }), jourEnLettres(setlist.date, i18n.language), numero].filter(Boolean).join(" · ")}
     </p>
@@ -67,7 +69,7 @@ export function SousTitreFete({ setlist, passage }: { setlist: FSSetlist; passag
   const { t } = useTranslation();
   const titre = passage && passage.index >= 0 ? passage.programme.passages[passage.index].titre : "";
   return (
-    <p className="mt-0.5 text-[13px] text-muted-foreground">
+    <p className="mt-0.5 text-sm text-muted-foreground">
       {titre && <>{titre} · </>}
       {setlist.leader && <>{t("setlists.fete.saisiePar", { nom: setlist.leader })} · </>}
       {passage && <Link href={`/evenements/scene/${passage.fete}`} className="underline underline-offset-2 hover:text-foreground">{t("setlists.fete.pageDe", { fete: passage.titreFete })}</Link>}
@@ -78,7 +80,7 @@ export function SousTitreFete({ setlist, passage }: { setlist: FSSetlist; passag
 /** Les deux cartes sous la liste : musiques et danses du passage, ordre de passage. */
 export function CartesFete({ passage }: { passage: PassageDeLaSetlist }) {
   const { t, i18n } = useTranslation();
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr";
+  const langue = langueCourte(i18n.language);
   const quiDe = (p: Passage) => p.qui.map((q) => libelleQui(q, langue)).join(" · ");
   const { programme, setlists, index } = passage;
   if (index < 0) return null;
@@ -91,7 +93,7 @@ export function CartesFete({ passage }: { passage: PassageDeLaSetlist }) {
   };
   const rangees = [voisin(index - 1), { p: courant, i: index, setlist: undefined }, voisin(index + 1)].filter((x) => x !== null);
   const carte = "rounded-2xl border border-border bg-card p-4";
-  const titreCarte = "text-[15px] font-semibold text-foreground";
+  const titreCarte = "text-base font-semibold text-foreground";
   return (
     <div className="mt-6 grid gap-4 md:grid-cols-2 print:hidden">
       <section aria-labelledby="fete-medias" className={carte}>
@@ -107,7 +109,7 @@ export function CartesFete({ passage }: { passage: PassageDeLaSetlist }) {
                 <span aria-hidden>▷</span> {t(`planning.fete.media.${m.type}`)} ·{" "}
                 {m.lien ? <a href={m.lien} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{m.titre}</a> : m.titre}
                 {[m.duree, m.depart && t("planning.fete.departA", { temps: m.depart })].filter(Boolean).map((x) => ` · ${x}`).join("")}
-                {m.note && <span className="block text-[13px] italic text-muted-foreground">{t("planning.fete.regie", { note: m.note })}</span>}
+                {m.note && <span className="block text-sm italic text-muted-foreground">{t("planning.fete.regie", { note: m.note })}</span>}
               </li>
             ))}
           </ul>
@@ -116,13 +118,13 @@ export function CartesFete({ passage }: { passage: PassageDeLaSetlist }) {
 
       <section aria-labelledby="fete-ordre" className={carte}>
         <h2 id="fete-ordre" className={titreCarte}>{t("setlists.fete.ordre")}</h2>
-        <p className="text-[13px] text-muted-foreground">{t("setlists.fete.iSurN", { i: index + 1, n: programme.passages.length })}</p>
+        <p className="text-sm text-muted-foreground">{t("setlists.fete.iSurN", { i: index + 1, n: programme.passages.length })}</p>
         {/* Téléphone : deux boutons ; en grand : le passage d'avant, celui-ci, celui d'après. */}
         <ol className="mt-2 hidden space-y-1 md:block">
           {rangees.map((v) => (
             <li key={v.i} className={`text-sm ${v.i === index ? "font-semibold text-foreground" : "text-muted-foreground"}`} aria-current={v.i === index ? "step" : undefined}>
               {v.setlist ? <Link href={`/setlists/${v.setlist.id}`} className="underline underline-offset-2 hover:text-foreground">{v.i + 1}. {v.p.titre}</Link> : <>{v.i + 1}. {v.p.titre}</>}
-              <span className="block text-[12px] font-normal text-muted-foreground">{quiDe(v.p)}</span>
+              <span className="block text-xs font-normal text-muted-foreground">{quiDe(v.p)}</span>
             </li>
           ))}
         </ol>

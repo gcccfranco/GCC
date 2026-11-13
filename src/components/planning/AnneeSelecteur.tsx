@@ -1,6 +1,7 @@
 "use client"
 
 import { useTranslation } from "react-i18next"
+import { compter } from "@/lib/usage"
 import { OngletsRail } from "@/components/layout/Onglets"
 
 // Sélecteur d'année du planning (lot U2, docs/spec-planning-2027.md) : « 2026 · 2027 ».
@@ -19,7 +20,7 @@ export function AnneeSelecteur({ annees, annee, onChange }: {
       etiquette={t("planning.annee.label")}
       onglets={annees.map((a) => ({ id: String(a), label: <span className="tabular-nums">{a}</span> }))}
       actif={String(annee)}
-      choisir={(id) => onChange(Number(id))}
+      choisir={(id) => { if (Number(id) !== annee) compter("cmd.planning.annee"); onChange(Number(id)) }}
     />
   )
 }

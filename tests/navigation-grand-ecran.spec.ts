@@ -54,10 +54,14 @@ test.describe("navigation sur grand écran (U4) : une seule cloche", () => {
     page.on("request", (r) => {
       if (r.method() === "POST" && r.url().includes(":runQuery") && (r.postData() ?? "").includes('"collectionId":"notifications"')) requetes++;
     });
+    // Lot LF (LF4) : un retour sur la page ne relit pas les notifications moins de 60 s après la passe précédente
+    // (`ECART_MIN_MS`, useNotifications.ts). L'horloge de la page avance donc d'une minute avant le retour.
+    await page.clock.install();
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await expect.poll(() => requetes, { message: "la cloche a chargé" }).toBeGreaterThan(0);
     await page.waitForTimeout(1500);
+    await page.clock.fastForward("01:01");
     requetes = 0;
     await page.evaluate(() => window.dispatchEvent(new Event("focus")));
     await page.waitForTimeout(1500);
@@ -299,10 +303,10 @@ async function barreDeSetlistAuBord(page: Page, largeur: number, bord: number) {
   expect(await debordement(page), `${largeur} px`).toBe(0);
 }
 
-/** Le Sommaire des deux volets : le volet de gauche, jamais sous la barre latérale, à
- *  gauche des partitions. */
+/** Le rail du Sommaire des deux volets (T3 du lot exemples d'usage) : le volet de gauche, jamais sous la barre
+ *  latérale, à gauche des partitions. */
 async function sommaireAGauche(page: Page, bord: number) {
-  const sommaire = page.getByRole("navigation", { name: "Sommaire" });
+  const sommaire = page.getByRole("button", { name: /^(Ouvrir|Fermer) le sommaire$/ });
   await expect(sommaire).toBeVisible();
   const s = (await sommaire.boundingBox())!;
   expect(s.x, "jamais sous la barre").toBeGreaterThanOrEqual(bord);
@@ -333,7 +337,7 @@ test.describe("navigation sur grand écran (U4) : rien ne passe sous la barre, o
     await sommaireAGauche(page, 248);
     // 1 147 px, barre dépliée : 899 px utiles, un volet (G).
     await page.setViewportSize({ width: 1147, height: 900 });
-    await expect(page.getByRole("navigation", { name: "Sommaire" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^(Ouvrir|Fermer) le sommaire$/ })).toHaveCount(0);
     await expect(page.getByTestId("bascule-vues")).toBeVisible();
   });
 
@@ -497,7 +501,6 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     // qui passe de 40 à 28 px barre réduite.
     const margeReduite = await pxVar(page, "--marge-page");
     expect(Math.round(titreDeplie - (await titre.boundingBox())!.x), "le titre suit la zone de contenu").toBe(180 + margeDepliee - margeReduite);
-    expect(Math.round((await page.getByTestId("halo").boundingBox())!.x), "halo au bord de la barre").toBe(68);
     expect(await debordement(page)).toBe(0);
     expect(await barreRetenue(page)).toBe("reduite");
 
@@ -530,6 +533,14 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     expect(cloche.y + cloche.height, "cloche au-dessus de l'initiale").toBeLessThanOrEqual(initiale.y);
     for (const b of [cloche, initiale]) expect(b.x + b.width).toBeLessThanOrEqual(68);
 
+    // partout-q2 : /songs n'a plus de halo ; Planning, qui porte la couleur d'un service, garde le sien.
+    await expect(page.getByTestId("halo"), "/songs : plus de halo").toHaveCount(0);
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await page.goto("/planning");
+    await expect(page.getByTestId("halo")).toBeVisible();
+    expect(Math.round((await page.getByTestId("halo").boundingBox())!.x), "halo au bord de la barre").toBe(68);
+    await page.goto("/songs");
+    await page.getByRole("searchbox").waitFor();
     // « Déplier » rend la barre, ses libellés en fondu, sans infobulle superflue.
     await deplier(page).click();
     await expect.poll(() => largeurBarre(page)).toBe(248);
@@ -569,7 +580,7 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     await dejaReduite(page);
     // Sans React : seuls le HTML du serveur, le CSS et la ligne de script de l'en-tête jouent.
     await page.route(/\/_next\/static\/.*\.js(\?|$)/, (route) => route.abort());
-    await page.goto("/songs");
+    await page.goto("/planning");
     expect(await page.evaluate(() => Object.keys(document.querySelector("main")!).some((k) => k.startsWith("__react"))), "React n'a pas hydraté").toBe(false);
     expect(await paddingGaucheMain(page)).toBe("68px");
     expect(await largeurBarre(page)).toBe(68);
@@ -578,18 +589,20 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
 
   // Relecture du 05/10/2026 : la navbar, qui n'est plus montrée ici, avait ce test (look-barres) ;
   // la barre latérale prend sa place : fond et halo ne doivent rien attendre de React.
-  test("premier affichage sans React : la barre est peinte, le halo part de son bord, dépliée comme réduite", async ({ page }) => {
+  test("premier affichage sans React : la barre est peinte, dépliée comme réduite, et /songs n'a plus de halo", async ({ page }) => {
     await page.route(/\/_next\/.*\.js(\?|$)/, (route) => route.abort());
     await page.goto("/songs");
     expect(await page.evaluate(() => Object.keys(document.querySelector("main")!).some((k) => k.startsWith("__react"))), "React n'a pas hydraté").toBe(false);
     await expect(barreLaterale(page)).toBeVisible();
     expect(await barreLaterale(page).evaluate((el) => getComputedStyle(el).backgroundColor), "fond de la barre").toBe("rgb(247, 247, 248)");
-    const halo = page.getByTestId("halo");
-    expect(Math.round((await halo.boundingBox())!.x), "dépliée : le halo part de 248 px").toBe(248);
-    expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor), "le halo a sa couleur").not.toBe("rgba(0, 0, 0, 0)");
+    // partout-q2 : plus de halo sur /songs ; celui de Planning, qui part du bord de la barre, se mesure
+    // hydraté (test précédent) : la page est derrière la connexion, rien n'en est peint sans React.
+    await expect(page.getByTestId("halo"), "dépliée : pas de halo").toHaveCount(0);
+    expect(Math.round((await barreLaterale(page).boundingBox())!.width), "dépliée : 248 px").toBe(248);
     await page.evaluate(() => localStorage.setItem("barre-laterale", "reduite"));
     await page.goto("/songs");
-    expect(Math.round((await halo.boundingBox())!.x), "réduite : le halo part de 68 px").toBe(68);
+    await expect(page.getByTestId("halo"), "réduite : pas de halo").toHaveCount(0);
+    expect(Math.round((await barreLaterale(page).boundingBox())!.width), "réduite : 68 px").toBe(68);
   });
 
   test("visiteur, barre réduite : langue, thème et « Connexion » en icônes", async ({ page }) => {

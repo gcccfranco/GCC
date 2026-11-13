@@ -10,10 +10,11 @@
 // Agencement v18 (B15) : « Nouvelle réunion » est `/back-office/reunions/nouvelle` (`reunion`),
 // qui ne propose que les réunions ; l'ancienne `…/evenements/nouveau?reunion=1` y redirige.
 // Lot U8, C5 : `?date=AAAA-MM-JJ` (un jour du calendrier) pré-remplit la date.
+// Piste A, BO16 (d) : `?equipe=<id>` (la page d'une équipe) choisit cette équipe, si on peut y créer.
 // Retouches v18, lot E1 : « Nouvelle réunion » écrit `reunion: true` ; « Nouvel évènement » écrit
 // `reunion: false`, quel que soit le public (une équipe comprise : un évènement d'équipe).
 // Agencement v18 (B3, B4) : en grand, le formulaire s'ouvre dans le volet de droite, sous l'en-tête de
-// l'entrée et à côté de la liste ; en un volet, c'est une page, avec « ‹ Évènements » (ou « ‹ Réunions »).
+// l'entrée et à côté de la liste ; en un volet, c'est une page, avec « ‹ Évènements » (ou « ‹ Calendrier » pour une réunion).
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -35,7 +36,11 @@ import { notifyEvenement } from "@/lib/evenements/notify"
 import { tachesDupliquees } from "@/lib/taches/echeances"
 import { useTaches } from "@/lib/taches/useTaches"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
+import type { EvenementPour } from "@/types/evenement"
 import { EMPTY_EVENEMENT, EvenementForm, type EvenementValues } from "@/components/evenements/EvenementForm"
+import { ReunionForm } from "@/components/reunions/ReunionForm"
+import { compter } from "@/lib/usage"
+import { Squelette } from "@/components/layout/Squelette";
 
 export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
   const { t } = useTranslation()
@@ -49,6 +54,7 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
   const ancienneAdresse = !reunion && params.get("reunion") === "1"
   const date = params.get("date") ?? ""
   const vide = { ...EMPTY_EVENEMENT, reunion, ...(/^\d{4}-\d{2}-\d{2}$/.test(date) ? { date } : {}) }
+  const pourDeLEquipe = (params.get("equipe") ? `equipe:${params.get("equipe")}` : "") as EvenementPour
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const [initial, setInitial] = useState<EvenementValues | null>(from ? null : vide)
@@ -86,21 +92,28 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
   const titre = t(reunion ? "backOffice.nouvelleReunion" : "evenements.nouveau")
   const page = (contenu: React.ReactNode) => deuxVolets ? <div className="max-w-[720px]">{contenu}</div> : (
     <>
-      <EnTetePage retour={{ href: base, label: t(reunion ? "backOffice.parties.reunions" : "backOffice.parties.evenements") }} titre={titre} />
+      <EnTetePage
+        retour={reunion
+          ? { href: "/back-office/calendrier?vue=agenda&filtre=reunions", label: t("backOffice.entrees.calendrier") }
+          : { href: "/back-office/calendrier", label: t("backOffice.entrees.calendrier") }}
+        titre={titre}
+      />
       <div className="px-[var(--marge-page)]">{contenu}</div>
     </>
   )
-  if (profileLoading || !user || !initial) return page(<p className="text-sm text-muted-foreground">{t("common.loading")}</p>)
+  if (profileLoading || !user || !initial) return page(<Squelette enTete={false} className="p-0" />)
   if (pours.length === 0) return page(<p className="text-sm text-muted-foreground">{t("evenements.reserved")}</p>)
 
   const nom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
 
+  // Une réunion a son propre formulaire (Timothée, 08/11/2026 : « une réunion n'est pas un évènement »).
+  const Formulaire = reunion ? ReunionForm : EvenementForm
   return page(
     <>
-      <EvenementForm
-        initial={{ ...initial, contact: initial.contact || nom }}
+      <Formulaire
+        initial={{ ...initial, contact: initial.contact || nom, ...(!from && pours.includes(pourDeLEquipe) ? { pour: pourDeLEquipe } : {}) }}
         pours={pours}
-        titreCache={!deuxVolets}
+        titreCache={!reunion || !deuxVolets}
         creation
         onSubmit={async (values, prevenir) => {
           // Réponse avant d'écrire quoi que ce soit : sans réunion créée, rien n'est repris.
@@ -108,6 +121,7 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
           const reprendre = laisses.length > 0 && await demanderReprise(laisses)
           const now = new Date().toISOString()
           const id = await createEvenement({ ...values, reunion, organisateurUid: user.uid, organisateurNom: nom, inscrits: 0, createdAt: now, updatedAt: now })
+          compter("cmd.evenement.creer")
           if (prevenir) await notifyEvenement(id)
           if (reprendre) await reprendreSujets(laisses, id, user.uid)
           const liees = items.map((x) => x.tache).filter((tache) => tache.evenement?.id === from)

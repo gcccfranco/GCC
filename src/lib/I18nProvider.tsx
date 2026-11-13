@@ -3,6 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { I18nextProvider, initReactI18next } from "react-i18next";
 import i18n from "i18next";
+import "@/lib/dispositionPref"; // migration au chargement, avant tout effet (voir le module)
+import { compter } from "@/lib/usage";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
 
@@ -63,9 +65,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, [language]);
 
   const setLanguage = useCallback((lng: Language) => {
+    if (lng !== language) compter("cmd.general.langue");
     setLanguageState(lng);
     try { localStorage.setItem("i18nextLng", lng); } catch { /* stockage indisponible */ }
-  }, []);
+  }, [language]);
 
   return (
     <SetLanguageContext.Provider value={setLanguage}>
@@ -73,4 +76,3 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     </SetLanguageContext.Provider>
   );
 }
-export default i18n;

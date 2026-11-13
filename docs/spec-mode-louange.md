@@ -1,5 +1,7 @@
 # Spec : chantier Mode louange
 
+> Note (27/10/2026) : ce mode a été remplacé par le mode « façon forScore » (voir `spec-mode-louange-forscore.md`), seul mode depuis cette date.
+
 Chantier n° 2 de `docs/intent/vision-site.md` (« Ordre des chantiers »).
 Réalisation choisie par Timothée le 13/09/2026.
 

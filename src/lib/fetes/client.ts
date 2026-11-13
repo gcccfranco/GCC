@@ -2,7 +2,7 @@
 
 import { authHeader } from "@/lib/firebase/setlists";
 
-export type ReponseFetes<T> = { ok: true; data: T } | { ok: false; status: number; erreur: string };
+type ReponseFetes<T> = { ok: true; data: T } | { ok: false; status: number; erreur: string };
 
 /** POST d'une route des fêtes avec le jeton de la personne connectée. Ne lève jamais : un réseau coupé
  *  rend `status: 0`. */

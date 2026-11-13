@@ -1,5 +1,6 @@
 "use client"
 
+import { compter } from "@/lib/usage"
 import { useState, useSyncExternalStore } from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { Check, FileText, X } from "lucide-react"
@@ -63,7 +64,7 @@ export function ExportModele({
         // Agencement v18 (B6) : un outil de l'en-tête, en contour, « Exporter » ; le nom complet
         // reste celui que lisent les lecteurs d'écran.
         aria-label={t("planning.export.bouton")}
-        className="h-9 px-3.5 rounded-full border border-border bg-card text-[13px] font-semibold text-foreground hover:bg-secondary inline-flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer"
+        className="h-9 px-3.5 rounded-full border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary inline-flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer"
       >
         <FileText className="h-3.5 w-3.5" aria-hidden />
         {titre}
@@ -74,7 +75,7 @@ export function ExportModele({
             <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/35" />
             <DialogPrimitive.Content
               aria-describedby={undefined}
-              className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-background p-5 shadow-lg"
+              className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-background p-5 [box-shadow:var(--shadow-flottant)]"
             >
               <div className="mb-3 flex items-center justify-between gap-3">
                 <DialogPrimitive.Title className="text-base font-semibold text-foreground">{titre}</DialogPrimitive.Title>
@@ -136,6 +137,7 @@ function Choix({
       await exporterModele(format, {
         portee, key: definition.key, annee: exporter.annee, rang: exporter.rang, periodeCourte,
       })
+      compter("cmd.planning.export")
       onFini()
     } catch {
       setEchec(true)

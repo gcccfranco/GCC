@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminDb, verifyIdToken } from "@/lib/push/admin";
+import { adminDb } from "@/lib/push/admin";
+import { authentifier } from "@/lib/api/authentifier";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { loadNotifLangs, loadPlanningNameIndex } from "@/lib/push/recipients";
@@ -8,14 +9,16 @@ import { isAdminEmail } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { getPlanning, droitsDePrevenir, triVisibilitiesAnnee, TRI_ORDER } from "@/lib/planning/releases";
 import { getTri } from "@/lib/planning/utils";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { grilleDe } from "@/lib/planning/grilles";
 import { colonneDePersonnes } from "@/lib/planning/choisir";
 import { normalizeName, splitNames } from "@/lib/planning/names";
 import {
-  borne, datesDesChangements, etatApres, personnesTouchees, premierDimancheDepuis, verifierChangements, verifierReference,
-  type ChangementAnnonce, type EtatAnnonce,
+  borne, datesDesChangements, etatApres, personnesTouchees, premierDimancheDepuis, referenceRemplace, verifierChangements, verifierReference,
+  type ChangementAnnonce,
 } from "@/lib/planning/prevenir";
 import { jourDeParis } from "@/lib/evenements/bascule";
+import type { EtatAnnonce } from "@/types/planning";
 import fr from "@/locales/fr.json";
 import zh from "@/locales/zh-CN.json";
 
@@ -47,18 +50,9 @@ export async function POST(req: NextRequest) {
   // Back-office coupé (lot 18) : la route n'existe pas en ligne.
   if (!BACK_OFFICE) return new Response(null, { status: 404 });
 
-  const authz = req.headers.get("authorization") ?? "";
-  const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  let uid: string;
-  let email: string;
-  try {
-    const decoded = await verifyIdToken(token);
-    uid = decoded.uid;
-    email = (decoded.email ?? "").toLowerCase();
-  } catch {
-    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
-  }
+  const appelant = await authentifier(req);
+  if (appelant instanceof NextResponse) return appelant;
+  const { uid, email } = appelant;
 
   const body = (await req.json().catch(() => ({}))) as {
     action?: string; key?: string; annee?: number; tri?: string; cases?: unknown; siAbsent?: boolean; apresPublication?: boolean;
@@ -75,11 +69,13 @@ export async function POST(req: NextRequest) {
 
   // Droits de l'appelant, relus ici (jamais crus sur parole).
   const isAdmin = isAdminEmail(email);
-  // Lot 2 (OG23) : aussi `publieParRole` et `notifieParRole`, relus (interrupteur ouvert seulement).
+  // Lot 2 (OG23) : aussi `publieParRole` et `notifieParRole`, relus (interrupteur ouvert seulement). Lot AO : et l'organigramme
+  // (`referentDe`…), que `droitsDePrevenir` lit à la place de `notify`. Lot RS : `responsabilites` (le gestionnaire du
+  // planning prévient, la Régie et `notifieParRole` ne comptent plus), relu avec le reste du profil.
   const me = isAdmin
     ? null
     : ((await adminDb().collection("users").doc(uid).get()).data() as
-      { notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] } | undefined) ?? null;
+      ({ notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] } & ProfilOrganigramme) | undefined) ?? null;
   if (!droitsDePrevenir(planning, isAdmin, me)) return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
 
   const db = adminDb();
@@ -116,7 +112,8 @@ export async function POST(req: NextRequest) {
       const publies = (snap.data()?.published as string[] | undefined) ?? [];
       const visible = triVisibilitiesAnnee(annee, Number(jour.slice(0, 4)), publies, getTri(jour), false).some((v) => v.tri === tri && v.visible);
       if (!visible || (body.apresPublication && !publies.includes(tri))) throw new Conflit("trimestre non publié");
-      if (body.siAbsent && existant) return false;
+      // Trimestre publié une fois, masqué puis republié : la référence reste (referenceRemplace).
+      if (!referenceRemplace(body, existant)) return false;
       const publieLe = body.apresPublication ? jour : existant?.publieLe;
       tx.set(ref, { annonces: { [tri]: { cases: tronquees, le: maintenant, par: uid, ...(publieLe ? { publieLe } : {}) } } }, { mergeFields: [`annonces.${tri}`] });
       return true;

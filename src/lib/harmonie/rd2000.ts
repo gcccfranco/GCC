@@ -76,7 +76,7 @@ export function parEcran(reglages: Reglage[]): { ecran: string; reglages: Reglag
   return groupes;
 }
 
-export type GroupeEcran = { ecran: string; reglages: Reglage[] };
+type GroupeEcran = { ecran: string; reglages: Reglage[] };
 
 /** Les réglages d'un son sur deux colonnes (lot U4 bis, B3 : la fiche du son en grand).
  *  La première prend la moitié des réglages, arrondie au-dessus ; l'ordre est gardé. Un écran

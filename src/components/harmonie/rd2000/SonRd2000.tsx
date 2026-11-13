@@ -10,12 +10,13 @@
 import { Retour } from "@/components/layout/EnTetePage";
 import { useTranslation } from "react-i18next";
 import { Group, GroupRow } from "@/components/ui/group";
+import { AvisLangue } from "@/components/harmonie/AvisLangue";
 import { useRd2000Charge } from "@/components/harmonie/rd2000/contexte";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { couperEnDeuxColonnes, etoiles, parEcran, type Fiche, type Reglage } from "@/lib/harmonie/rd2000";
 import { cn } from "@/lib/utils";
 
-const CARTE = "raised rounded-2xl px-4 pt-3.5 pb-1";
+const CARTE = "bloc-info rounded-2xl px-4 pt-3.5 pb-1";
 
 function Ecran({ ecran, reglages, suite }: { ecran: string; reglages: Reglage[]; suite?: boolean }) {
   const { t } = useTranslation();
@@ -29,9 +30,9 @@ function Ecran({ ecran, reglages, suite }: { ecran: string; reglages: Reglage[];
         <div key={j} className="border-t border-border py-2.5" data-reglage>
           <p className="flex items-baseline justify-between gap-3">
             <span className="font-medium">{r.parametre}</span>
-            <span className="shrink-0 text-[17px] font-semibold tabular-nums">{r.valeur}</span>
+            <span className="shrink-0 text-lg font-semibold tabular-nums">{r.valeur}</span>
           </p>
-          {r.pourquoi && <p className="text-[13px] text-muted-foreground">{r.pourquoi}</p>}
+          {r.pourquoi && <p className="text-sm text-muted-foreground">{r.pourquoi}</p>}
         </div>
       ))}
     </section>
@@ -88,11 +89,11 @@ export function SonRd2000({ n }: { n: string }) {
   const fiche = donnees.fiches.find((f) => f.n === n);
   // En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seul, le h1.
   const Titre = deuxVolets ? "h2" : "h1";
-  const titre = cn("font-bold leading-tight", deuxVolets ? "text-[24px]" : "text-[22px]");
+  const titre = "text-xl font-bold leading-tight";
 
   return (
     <div
-      className={cn("space-y-6 pb-10", deuxVolets ? undefined : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
+      className={cn("space-y-6 pb-10", deuxVolets ? undefined : "max-w-2xl px-[var(--marge-page)] pt-3 md:max-w-3xl")}
       data-son-page={n}
     >
       {!deuxVolets && (
@@ -105,19 +106,20 @@ export function SonRd2000({ n }: { n: string }) {
         <>
           <header className="space-y-2">
             <div className="flex items-center gap-4">
-              <p className="text-[34px] font-bold leading-none tabular-nums">{son.n}</p>
+              <p className="text-2xl font-bold leading-none tabular-nums">{son.n}</p>
               <div className="min-w-0">
-                <Titre className={titre}>{son.nom}</Titre>
-                <p className="text-[13px] text-muted-foreground">{son.categorie} › {son.sousCategorie}</p>
+                <Titre className={titre} lang="fr">{son.nom}</Titre>
+                <p className="text-sm text-muted-foreground" lang="fr">{son.categorie} › {son.sousCategorie}</p>
               </div>
             </div>
-            <p className="text-[15px]">
+            <p className="text-base">
               <span aria-label={`${son.louange} / 3`}>{etoiles(son.louange)}</span>
-              {son.premier && <span className="ml-2 align-middle rounded-full bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-foreground">{t("harmonie.rd2000.premierChoix")}</span>}
-              {son.commentaire && <span className="text-muted-foreground"> · {son.commentaire}</span>}
+              {son.premier && <span className="ml-2 align-middle rounded-full bg-secondary px-1.5 py-0.5 text-xs font-medium text-foreground">{t("harmonie.rd2000.premierChoix")}</span>}
+              {son.commentaire && <span className="text-muted-foreground" lang="fr"> · {son.commentaire}</span>}
             </p>
+            {!deuxVolets && <AvisLangue />}
           </header>
-          <div className="raised divide-y divide-border rounded-2xl px-4 text-[15px]">
+          <div className="bloc-info divide-y divide-border rounded-2xl px-4 text-base">
             <p className="py-3"><span className="text-muted-foreground">{t("harmonie.rd2000.edition")} : </span>{son.edition}</p>
             <p className="py-3 tabular-nums" data-midi>
               {t("harmonie.rd2000.midi", { msb: son.msb, lsb: son.lsb, pc: son.pc, pcMidi: son.pc - 1 })}
@@ -126,15 +128,15 @@ export function SonRd2000({ n }: { n: string }) {
           {fiche ? (
             <section className="space-y-4">
               <div className="space-y-1">
-                <h2 className="text-[19px] font-bold">{t("harmonie.rd2000.reglages")}</h2>
-                <p className="text-[15px] font-medium">{fiche.intention}</p>
-                {fiche.pourquoi && <p className="text-[15px] text-muted-foreground">{fiche.pourquoi}</p>}
+                <h2 className="text-lg font-bold">{t("harmonie.rd2000.reglages")}</h2>
+                <p className="text-base font-medium" lang="fr">{fiche.intention}</p>
+                {fiche.pourquoi && <p className="text-base text-muted-foreground" lang="fr">{fiche.pourquoi}</p>}
               </div>
               <Reglages fiche={fiche} />
             </section>
           ) : (
             <section className="space-y-4">
-              <p className="text-[15px]" data-sans-fiche>{t("harmonie.rd2000.sansFiche")}</p>
+              <p className="text-base" data-sans-fiche>{t("harmonie.rd2000.sansFiche")}</p>
               <Recettes />
             </section>
           )}
@@ -143,9 +145,10 @@ export function SonRd2000({ n }: { n: string }) {
         recette && (
           <>
             <header className="space-y-1">
-              <p className="text-[34px] font-bold leading-none tabular-nums">{recette.n}</p>
-              <Titre className={titre}>{recette.nom}</Titre>
-              {recette.pourquoi && <p className="text-[15px] text-muted-foreground">{recette.pourquoi}</p>}
+              <p className="text-2xl font-bold leading-none tabular-nums">{recette.n}</p>
+              <Titre className={titre} lang="fr">{recette.nom}</Titre>
+              {recette.pourquoi && <p className="text-base text-muted-foreground" lang="fr">{recette.pourquoi}</p>}
+              {!deuxVolets && <AvisLangue />}
             </header>
             {recette.exemples.length > 0 && (
               <Group title={t("harmonie.rd2000.exemples")} className={cn(CARTE, "pb-2")}>

@@ -5,8 +5,9 @@ import { User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { currentSundayStr, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
 import { useFiltreNom } from "./BarreDeGrille"
+import { EtatVide } from "@/components/layout/EtatVide"
 
-export interface PlanningTableProps {
+interface PlanningTableProps {
   /** cols[0] est la colonne date */
   cols: string[]
   /** row[0] est la date au format YYYY-MM-DD */
@@ -99,7 +100,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           <thead>
             <tr style={{ background: color }} className="text-white">
               {cols.map((c) => (
-                <th key={c} className="px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap">{c}</th>
+                <th key={c} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap">{c}</th>
               ))}
             </tr>
           </thead>
@@ -168,9 +169,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           </div>
         )}
         {mobileRows.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
-            Aucune donnée
-          </p>
+          <EtatVide compact surGris>{t("planning.table.noData")}</EtatVide>
         )}
         {mobileRows.map((row) => {
           const isThis = row[0] === sun
@@ -178,10 +177,10 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           return (
             <Fragment key={row[0]}>
               <div
-                className="rounded-xl border border-transparent bg-card shadow-soft overflow-hidden"
+                className="border border-transparent dark:border-0 carte-groupe overflow-hidden"
                 style={{
-                  borderColor: isThis ? color : undefined,
-                  boxShadow: mine ? `inset 3px 0 0 ${color}` : undefined,
+                  ...(isThis ? { borderColor: color, borderWidth: 1 } : null),
+                  boxShadow: mine ? `inset 3px 0 0 ${color}` : isThis ? "none" : undefined,
                 }}
               >
                 <div
@@ -199,8 +198,8 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
                 <div className="px-3.5 py-2.5 space-y-1">
                   {row.slice(1).map((cell, ci) =>
                     cell ? (
-                      <div key={ci} className="flex items-baseline gap-2 text-[13px]">
-                        <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{cols[ci + 1]}</span>
+                      <div key={ci} className="flex items-baseline gap-2 text-sm">
+                        <span className="w-24 shrink-0 text-xs text-muted-foreground">{cols[ci + 1]}</span>
                         <span
                           className={`min-w-0 ${matchCell(cell) ? "font-bold" : "text-foreground"}`}
                           style={matchCell(cell) ? { color } : undefined}

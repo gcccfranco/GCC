@@ -1,12 +1,14 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { entreesBackOffice, estResponsable, widgetsPermis } from "../src/lib/access";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { droitsDesPages, entreesBackOffice, estResponsable, widgetsPermis } from "../src/lib/access";
 import { entreesBarre } from "../src/lib/navigation";
 import type { UserProfile } from "../src/types/user";
+import zh from "../src/locales/zh-CN.json";
+import { ouvrirAvecBarre } from "./helpers/agencement";
 
 // Lot U6 (docs/spec-back-office.md), tranche B1 — l'espace « Back-Office » :
-// qui est responsable (Q1), quelles entrées chacun voit (Q2, menu à 9 entrées dont
-// Statistiques, là depuis U7 S2 ; Calendrier, depuis U8 C3 ; Réunions, depuis l'agencement v18 B15), quels widgets il pourra
+// qui est responsable (Q1), quelles entrées chacun voit (piste A, BO1 : cinq entrées, À faire · Calendrier ·
+// Planning · Équipes · Messages ; BO4 : un simple membre d'équipe n'en a aucune), quels widgets il pourra
 // ajouter, le sélecteur « App · Back-Office » dans les places de U4 (Q6 ; téléphone :
 // à la place du label, question 5), la mémoire de la dernière page de chaque espace,
 // et « Réservé aux responsables » pour les autres.
@@ -17,6 +19,10 @@ const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firs
 const ALICE: FakeProfile = {
   uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], coordination: true,
 };
+/** Lot AO : Alice dans l'organigramme. La Coordination n'est plus une case : elle vient d'une place (ici référent EDD, la moins
+ *  chargée), qui ouvre aussi le planning EDD, Équipes (tenir l'EDD) et Messages (notifier l'EDD). Pour les tests d'écran
+ *  (interrupteur ouvert) ; les tests purs ci-dessus lisent l'ancien mode avec `ALICE`. */
+const ALICE_ORGA: FakeProfile = { ...ALICE, dansEquipes: ["evenementiel", "edd"], referentDe: ["edd"] };
 /** Bruno, simple membre de TEAM DA. */
 const DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"] };
 const PLANNINGS: FakeProfile = { uid: "uid-pl", email: "pl@example.com", plannings: ["culte"] };
@@ -26,7 +32,7 @@ const EQUIPIER: FakeProfile = { uid: "uid-eq", email: "eq@example.com", equipes:
 const REFERENT: FakeProfile = { uid: "uid-ref", email: "ref@example.com", dansEquipes: ["regie"], referentDe: ["regie"] };
 const MEMBRE_EQUIPE: FakeProfile = { uid: "uid-me", email: "me@example.com", dansEquipes: ["regie"] };
 /** Un choriste sans autre droit (Réussite 1) : le public Louange ne fait pas un responsable (question 2),
- *  mais lui ouvre Tâches et Réunions (EQ17). */
+ *  et, depuis la piste A (BO4), ne lui ouvre plus le Back-Office. */
 const CHORISTE: FakeProfile = {
   uid: "uid-ch", email: "ch@example.com", firstName: "Chloé", lastName: "R.", planningName: "Chloé R.",
   serviceRoles: { "Culte Francophone": ["chanteur"] },
@@ -64,7 +70,7 @@ async function deplierSiTablettePaysage(page: Page, info: TestInfo) {
 }
 
 /** Le menu du Back-Office : la barre latérale sur grand écran ; sur téléphone et tablette en
- *  portrait, la barre du bas du Back-Office (B6 : 4 onglets + « Plus »). */
+ *  portrait, la barre du bas du Back-Office (BO2 : cinq onglets fixes, dont « App »). */
 function menu(page: Page, info: TestInfo) {
   if (estOrdinateur(info)) return page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" });
   if (estTablettePaysage(info)) return page.getByTestId("barre-par-dessus").getByRole("navigation", { name: "Navigation principale" });
@@ -88,62 +94,76 @@ test.describe("Back-Office (B1) : qui est responsable (Q1)", () => {
   });
 });
 
-test.describe("Back-Office (B1) : les entrées selon les droits (Q2)", () => {
-  test("un admin voit 9 entrées (Calendrier depuis U8 C3, Statistiques depuis U7 S2, Réunions depuis v18 B15)", () => {
-    expect(entreesBackOffice(user(ADMIN), profil(ADMIN))).toEqual(["tableau", "calendrier", "planning", "taches", "evenements", "reunions", "equipes", "messages", "statistiques"]);
+test.describe("Back-Office (B1) : les entrées selon les droits (BO1, BO4)", () => {
+  test("un admin voit les six entrées, dans l'ordre : À faire, Calendrier, Scène, Planning, Équipes, Messages", () => {
+    expect(entreesBackOffice(user(ADMIN), profil(ADMIN))).toEqual(["afaire", "calendrier", "scene", "planning", "equipes", "messages"]);
   });
 
-  test("Alice (TEAM ÉVÉNEMENTIEL, coordination) : Tableau de bord, Calendrier, Tâches, Évènements, Réunions — pas de Planning", () => {
-    expect(entreesBackOffice(user(ALICE), profil(ALICE))).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
+  test("Alice (TEAM ÉVÉNEMENTIEL, coordination) : À faire, Calendrier et Scène (la coordination seule)", () => {
+    expect(entreesBackOffice(user(ALICE), profil(ALICE))).toEqual(["afaire", "calendrier", "scene"]);
   });
 
   test("chaque droit ouvre ses entrées, et rien d'autre", () => {
     const cas: [FakeProfile, string[]][] = [
-      // Lot 1 du chantier « équipes et groupes » (EQ17) : un simple membre a Tâches et Réunions.
-      [DA, ["taches", "reunions"]],
-      [PLANNINGS, ["tableau", "calendrier", "planning"]],
+      [PLANNINGS, ["afaire", "calendrier", "planning"]],
       // `notify` donne Messages, et Planning s'il permet de publier un trimestre (canPublishPlanning).
-      [NOTIFY, ["tableau", "calendrier", "planning", "messages"]],
-      [{ ...NOTIFY, uid: "uid-no2", notify: ["Campus"] }, ["tableau", "calendrier", "messages"]],
-      [ANNONCES, ["tableau", "calendrier", "evenements"]],
-      [EQUIPIER, ["tableau", "calendrier", "equipes"]],
-      // Un référent : Tâches de son équipe, et Évènements (décision 43).
-      [REFERENT, ["tableau", "calendrier", "taches", "evenements", "reunions"]],
-      // Le public Louange ne fait pas un responsable, mais compte pour Tâches et Réunions d'un responsable.
-      [{ ...NOTIFY, uid: "uid-no3", serviceRoles: { "Culte Francophone": ["musicien"] } }, ["tableau", "calendrier", "planning", "taches", "reunions", "messages"]],
+      [NOTIFY, ["afaire", "calendrier", "planning", "messages"]],
+      [{ ...NOTIFY, uid: "uid-no2", notify: ["Campus"] }, ["afaire", "calendrier", "messages"]],
+      [ANNONCES, ["afaire", "calendrier"]],
+      [EQUIPIER, ["afaire", "calendrier", "equipes"]],
+      // Un référent : Tâches, Réunions et Évènements ne sont plus des entrées (BO1), leurs pages restent (droitsDesPages).
+      [REFERENT, ["afaire", "calendrier"]],
+      // Le public Louange ne fait pas un responsable : il ne change rien aux entrées d'un responsable.
+      [{ ...NOTIFY, uid: "uid-no3", serviceRoles: { "Culte Francophone": ["musicien"] } }, ["afaire", "calendrier", "planning", "messages"]],
     ];
     for (const [p, attendu] of cas) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual(attendu);
   });
 
-  test("un non-responsable sans équipe n'a aucune entrée ; un membre d'équipe ou un choriste, Tâches et Réunions (EQ17)", () => {
-    for (const p of [CHORISTE, MUSICIEN, MEMBRE_EQUIPE]) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual(["taches", "reunions"]);
-    expect(entreesBackOffice(user(MEMBRE), profil(MEMBRE))).toEqual([]);
+  test("un non-responsable n'a aucune entrée, même membre d'une équipe ou choriste (BO4) ; un visiteur non plus", () => {
+    for (const p of [CHORISTE, MUSICIEN, MEMBRE_EQUIPE, DA, MEMBRE]) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual([]);
     expect(entreesBackOffice(null, null)).toEqual([]);
   });
 
-  test("les entrées deviennent celles des barres dans l'espace « back-office », aux adresses de Q4", () => {
+  test("les pages Tâches, Évènements et Réunions gardent leurs droits (même règle qu'avant), faux pour un non-responsable", () => {
+    expect(droitsDesPages(user(ADMIN), profil(ADMIN))).toEqual({ taches: true, evenements: true, reunions: true });
+    expect(droitsDesPages(user(ALICE), profil(ALICE))).toEqual({ taches: true, evenements: true, reunions: true });
+    expect(droitsDesPages(user(REFERENT), profil(REFERENT))).toEqual({ taches: true, evenements: true, reunions: true });
+    expect(droitsDesPages(user(ANNONCES), profil(ANNONCES))).toEqual({ taches: false, evenements: true, reunions: false });
+    expect(droitsDesPages(user(PLANNINGS), profil(PLANNINGS))).toEqual({ taches: false, evenements: false, reunions: false });
+    for (const p of [CHORISTE, MEMBRE_EQUIPE, DA, MEMBRE]) expect(droitsDesPages(user(p), profil(p)), p.uid).toEqual({ taches: false, evenements: false, reunions: false });
+    expect(droitsDesPages(null, null)).toEqual({ taches: false, evenements: false, reunions: false });
+  });
+
+  test("les entrées deviennent celles des barres dans l'espace « back-office », aux adresses de BO1", () => {
     const entrees = entreesBarre("back-office", { connecte: true, backOffice: true, permises: entreesBackOffice(user(ADMIN), profil(ADMIN)) });
     expect(entrees.map((e) => e.href)).toEqual([
-      "/back-office", "/back-office/calendrier", "/back-office/planning", "/back-office/taches", "/back-office/evenements", "/back-office/reunions", "/back-office/equipes", "/back-office/messages",
-      "/back-office/statistiques",
+      "/back-office", "/back-office/calendrier", "/back-office/evenements/scene", "/back-office/planning", "/back-office/equipes", "/back-office/messages",
     ]);
     // L'espace « app » ne change pas.
     expect(entreesBarre("app", { connecte: true, backOffice: true }).map((e) => e.href)).toEqual(["/songs", "/setlists", "/planning", "/evenements", "/moi"]);
   });
 });
 
+// Lot ST (D5) : « Chants les plus joués » suit `canVoirStatistiques`, ouvert à tout connecté : tout responsable l'a.
 test.describe("Back-Office (B1) : les widgets permis (table des widgets)", () => {
   test("un admin : tous ceux de U6, le Calendrier de U8 et Chants les plus joués (U7, S5)", () => {
-    expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "scene", "comptes", "raccourcis"]);
+    expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "reunions", "chants", "petitdej", "scene", "comptes", "raccourcis"]);
+  });
+
+  test("membre d'une équipe qui notifie un groupe : Réunions sans Évènements, donc le widget Réunions sans celui des Évènements (TB2-corrections)", () => {
+    const p: FakeProfile = { uid: "uid-nr", email: "nr@example.com", notify: ["Groupe Paix"], dansEquipes: ["regie"] };
+    expect(droitsDesPages(user(p), profil(p)).evenements).toBe(false);
+    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "planning", "reunions", "chants", "petitdej", "scene", "raccourcis"]);
   });
 
   test("Alice : ni Setlists à préparer (elle ne crée pas de setlist), ni Cases vides, ni Comptes", () => {
-    expect(widgetsPermis(user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "petitdej", "scene", "raccourcis"]);
+    expect(widgetsPermis(user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "reunions", "chants", "petitdej", "scene", "raccourcis"]);
   });
 
   test("un responsable musicien des plannings : Setlists à préparer et Cases vides ; un non-responsable : rien", () => {
     const p = { ...PLANNINGS, serviceRoles: { "Culte Francophone": ["musicien"] } };
-    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "petitdej", "scene", "raccourcis"]);
+    // Réunions (public Louange) sans Évènements : plus le widget des évènements (TB2-corrections).
+    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "reunions", "chants", "petitdej", "scene", "raccourcis"]);
     expect(widgetsPermis(user(CHORISTE), profil(CHORISTE))).toEqual([]);
   });
 });
@@ -160,17 +180,36 @@ test.describe("Back-Office (B1) : rien de neuf pour l'assemblée", () => {
     }
   });
 
-  test("un choriste voit le sélecteur : le public Louange lui ouvre Tâches et Réunions (EQ17)", async ({ page }, info) => {
-    await signInAs(page, CHORISTE, {}, "/songs");
-    await page.getByRole("searchbox").waitFor();
-    await deplierSiTablettePaysage(page, info);
-    await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toBeVisible();
+  test("un choriste ou un simple membre d'équipe ne voit pas de sélecteur : le Back-Office est aux responsables (BO4)", async ({ page }, info) => {
+    for (const p of [CHORISTE, MEMBRE_EQUIPE]) {
+      await signInAs(page, p, {}, "/songs");
+      await page.getByRole("searchbox").waitFor();
+      await deplierSiTablettePaysage(page, info);
+      await expect(page.getByRole("group", { name: "Choisir l'espace" }), p.uid).toHaveCount(0);
+      await expect(page.getByRole("link", { name: /Back-Office/ }), p.uid).toHaveCount(0);
+    }
+  });
+
+  test("un simple membre d'équipe qui ouvre « /back-office/… » reçoit « Réservé aux responsables », ou est mené à la page de son équipe dans l'App (BO4, BO7)", async ({ page }) => {
+    await signInAs(page, MEMBRE_EQUIPE, {}, "/back-office/taches");
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+    // La barre de responsable ne laisse pas passer la redirection de la page : l'adresse reste celle demandée.
+    expect(page.url()).toMatch(/\/back-office\/taches\/?$/);
+    // Les tâches d'une équipe : sa page dans l'App, et sa fiche de tâche dans l'App.
+    await page.goto("/back-office/taches/regie");
+    await expect(page).toHaveURL(/\/equipes\/regie\/?$/);
+    await expect(page).not.toHaveURL(/back-office/);
+    await page.goto("/back-office/equipes/regie");
+    await expect(page).toHaveURL(/\/equipes\/regie\/?$/);
+    await expect(page).not.toHaveURL(/back-office/);
+    // Pas de barre du Back-Office : si une barre est là, c'est celle de l'App.
+    await expect(page.getByTestId("barre-du-bas").getByRole("link", { name: "À faire" })).toHaveCount(0);
   });
 
   test("« /back-office » répond « Réservé aux responsables » à un membre sans équipe ni rôle", async ({ page }) => {
     await signInAs(page, MEMBRE, {}, "/back-office");
     await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toHaveCount(0);
   });
 
   test("un visiteur sans compte : « Réservé aux responsables » et « Se connecter »", async ({ page }) => {
@@ -181,7 +220,7 @@ test.describe("Back-Office (B1) : rien de neuf pour l'assemblée", () => {
 });
 
 test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
-  test("un admin passe de l'App au Back-Office : tableau de bord, 7 entrées, espace marqué", async ({ page }, info) => {
+  test("un admin passe de l'App au Back-Office : les six entrées, espace marqué", async ({ page }, info) => {
     await sansSheet(page);
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
@@ -190,75 +229,84 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).not.toHaveAttribute("aria-current", "true");
     await selecteur(page).getByRole("link", { name: "Back-Office" }).click();
     await expect(page).toHaveURL(/\/back-office\/?$/);
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
     await expect(menu(page, info).getByRole("link")).toHaveText(
       estOrdinateur(info) || estTablettePaysage(info)
-        ? ["Tableau de bord", "Calendrier", "Planning", "Tâches", "Évènements", "Réunions", "Équipes", "Messages", "Statistiques"]
-        // Barre du bas (B6, Q13) : défaut Accueil · Calendrier · Tâches · Planning, puis « Plus »
-        // (Statistiques, U7, est dans la page « Plus »).
-        : ["Accueil", "Calendrier", "Tâches", "Planning", "Plus"],
+        // « À faire » porte la pastille du nombre de ses lignes quand il y en a (BO-B).
+        ? [/^À faire\d*$/, "Calendrier", "Scène", "Planning", "Équipes", "Messages"]
+        // Barre du bas (BO2) : cinq onglets fixes, sans Scène (SF-1) ; Messages est l'icône de l'en-tête.
+        : ["À faire", "Calendrier", "Planning", "Équipes", "App"],
     );
-    const tableau = estOrdinateur(info) || estTablettePaysage(info) ? "Tableau de bord" : "Accueil";
-    await expect(menu(page, info).getByRole("link", { name: tableau })).toHaveAttribute("aria-current", "page");
+    await expect(menu(page, info).getByRole("link", { name: "À faire" })).toHaveAttribute("aria-current", "page");
   });
 
-  test("Alice voit Tableau de bord, Calendrier, Tâches, Évènements, Réunions", async ({ page }, info) => {
-    await signInAs(page, ALICE, {}, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+  test("Alice (référent EDD, lot AO) voit les cinq entrées : sa Coordination vient d'une place qui ouvre aussi Planning, Équipes, Messages", async ({ page }, info) => {
+    await signInAs(page, ALICE_ORGA, {}, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(menu(page, info).getByRole("link")).toHaveText(
       estOrdinateur(info) || estTablettePaysage(info)
-        ? ["Tableau de bord", "Calendrier", "Tâches", "Évènements", "Réunions"]
-        : ["Accueil", "Calendrier", "Tâches", "Évènements", "Plus"],
+        // « À faire » porte la pastille du nombre de ses lignes quand il y en a (BO-B).
+        ? [/^À faire\d*$/, "Calendrier", "Planning", "Équipes", "Messages"]
+        : ["À faire", "Calendrier", "Planning", "Équipes", "App"],
     );
   });
 
-  test("une entrée du menu mène à sa page du Back-Office (Tâches : l'équipe de la personne, B3)", async ({ page }, info) => {
-    await signInAs(page, ALICE, {
-      "equipes/evenementiel/taches/t1": { equipe: "evenementiel", titre: "Salle", responsableUid: "uid-alice", responsableNom: "Alice Q.", echeance: "2026-10-05", repetition: null },
-    }, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+  test("une entrée du menu mène à sa page du Back-Office (Équipes)", async ({ page }, info) => {
+    await signInAs(page, ALICE_ORGA, {}, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
-    await menu(page, info).getByRole("link", { name: "Tâches" }).click();
-    await expect(page).toHaveURL(/\/back-office\/taches\/evenementiel\/?$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
-    // Agencement v18 (T1, B1) : l'équipe est l'onglet actif du rail.
-    await expect(page.locator('[data-onglets="rail"]').getByRole("link", { name: /^Événementiel/ })).toHaveAttribute("aria-current", "page");
+    await menu(page, info).getByRole("link", { name: "Équipes" }).click();
+    await expect(page).toHaveURL(/\/back-office\/equipes\/?$/, { timeout: 20_000 });
+    // Le choix d'une entrée referme la barre posée par-dessus (tablette en paysage) : on la rouvre pour lire l'entrée courante.
+    await deplierSiTablettePaysage(page, info);
+    await expect(menu(page, info).getByRole("link", { name: "Équipes" })).toHaveAttribute("aria-current", "page");
+    // Le sélecteur reste dans l'espace Back-Office.
+    await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
+  });
+
+  test("la page d'une équipe, sortie du menu (BO1), reste joignable par son adresse (Tâches : l'équipe de la personne, B3)", async ({ page }, info) => {
+    await signInAs(page, ALICE_ORGA, {
+      "equipes/evenementiel/taches/t1": { equipe: "evenementiel", titre: "Salle", responsableUid: "uid-alice", responsableNom: "Alice Q.", echeance: "2026-10-05", repetition: null },
+    }, "/back-office/equipes/evenementiel");
+    // Piste A (BO7) : l'en-tête de la page est le nom de l'équipe ; ses tâches sont la section « Tâches ».
+    await expect(page.getByRole("heading", { level: 1, name: /Événementiel/ })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("region", { name: "Tâches", exact: true }).getByText("Salle")).toBeVisible();
     // Le sélecteur reste dans l'espace Back-Office.
     await deplierSiTablettePaysage(page, info);
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
   });
 
   test("une entrée inconnue répond 404 (Calendrier, U8, et Statistiques, U7, sont arrivés)", async ({ page }) => {
-    await signInAs(page, ALICE, {}, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await signInAs(page, ALICE_ORGA, {}, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     expect((await page.goto("/back-office/nimporte-quoi"))?.status()).toBe(404);
   });
 
   test("le sélecteur rouvre la dernière page de chaque espace (mémoire de session)", async ({ page }, info) => {
     await sansSheet(page);
-    await signInAs(page, ALICE, {}, "/setlists");
+    await signInAs(page, ALICE_ORGA, {}, "/setlists");
     await page.getByRole("heading", { name: "Setlists" }).first().waitFor();
     await deplierSiTablettePaysage(page, info);
     // Rien encore en mémoire côté Back-Office : le tableau de bord.
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("href", /^\/back-office\/?$/);
     await selecteur(page).getByRole("link", { name: "Back-Office" }).click();
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
-    await menu(page, info).getByRole("link", { name: "Évènements" }).click();
-    await expect(page).toHaveURL(/\/back-office\/evenements\/?$/);
+    await menu(page, info).getByRole("link", { name: "Calendrier" }).click();
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?$/);
     await deplierSiTablettePaysage(page, info);
     await expect(selecteur(page).getByRole("link", { name: "App" })).toHaveAttribute("href", /^\/setlists\/?$/);
     await selecteur(page).getByRole("link", { name: "App" }).click();
     await expect(page).toHaveURL(/\/setlists\/?$/);
     await deplierSiTablettePaysage(page, info);
-    await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
+    await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
     // Une nouvelle session (mémoire vidée) repart des défauts : le tableau de bord, et /planning côté App.
     await page.evaluate(() => sessionStorage.clear());
     await page.goto("/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(selecteur(page).getByRole("link", { name: "App" })).toHaveAttribute("href", /^\/planning\/?$/);
   });
@@ -276,6 +324,80 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     expect(s.x + s.width, "dans l'écran").toBeLessThanOrEqual(page.viewportSize()!.width);
   });
 
+  // Lot CD, T1a (back-office-1) : sous 640 px l'espace courant garde icône et libellé, les autres une icône de 36 px dont
+  // la zone de toucher fait 44 px sans recouvrir sa voisine ; la cloche reste à 16 px du bord (3 px avant, à 360 px en français).
+  for (const [largeur, langue] of [[393, "fr"], [375, "fr"], [360, "fr"], [360, "zh"]] as const) {
+    test(`téléphone ${largeur} px en ${langue} : icônes pour les espaces non courants, cloche à 16 px du bord, cibles de 44 px`, async ({ page }, info) => {
+      test.skip(!estTelephone(info), "propre au téléphone");
+      await page.setViewportSize({ width: largeur, height: 800 });
+      if (langue === "zh") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+      await signInAs(page, ADMIN, {}, "/songs");
+      const enTete = page.locator("header.barre-haut");
+      const groupe = enTete.getByRole("group").first();
+      await expect(groupe).toBeVisible();
+      const liens = groupe.getByRole("link");
+      await expect(liens).toHaveCount(3);
+      const noms = await liens.evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
+      expect(noms, "le nom reste en aria-label").toEqual(langue === "zh" ? ["应用", "乐手", "后台"] : ["App", "Musiciens", "Back-Office"]);
+      // Le courant (App) : icône et libellé ; l'autre : icône seule, 36 px.
+      // Sous 375 px le courant lui aussi n'est plus qu'une icône de 36 px (la pastille le marque).
+      await expect(liens.nth(0).locator("span")).toBeVisible({ visible: largeur >= 375 });
+      await expect(liens.nth(0).locator("svg")).toBeVisible();
+      if (largeur < 375) expect((await liens.nth(0).boundingBox())!.width).toBeCloseTo(36, 0);
+      for (const i of [1, 2]) {
+        await expect(liens.nth(i).locator("span")).toBeHidden();
+        await expect(liens.nth(i).locator("svg")).toBeVisible();
+        const autre = (await liens.nth(i).boundingBox())!;
+        expect(autre.width).toBeCloseTo(36, 0);
+        expect(autre.height).toBeCloseTo(36, 0);
+      }
+      // Pas de débordement, la cloche à 16 px ou plus du bord droit.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+      const cloche = (await enTete.getByRole("button", { name: langue === "zh" ? zh.notifications.title : "Notifications" }).boundingBox())!;
+      expect(largeur - (cloche.x + cloche.width), "cloche à 16 px du bord").toBeGreaterThanOrEqual(16);
+      // Zone de toucher : 44 px de haut (21 px de part et d'autre du centre), aux deux bords du segment, sans empiéter sur le voisin.
+      const toucheA = (x: number, y: number) =>
+        page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest("a")?.getAttribute("aria-label") ?? null, { x, y });
+      for (let i = 0; i < 3; i++) {
+        const b = (await liens.nth(i).boundingBox())!;
+        for (const dy of [-21, 21]) {
+          for (const x of [b.x + 2, b.x + b.width - 2]) {
+            expect(await toucheA(x, b.y + b.height / 2 + dy), `zone de ${noms[i]} (${dy} px, x=${Math.round(x)})`).toBe(noms[i]);
+          }
+        }
+      }
+    });
+  }
+
+  // Lot CD, fin de T1 : l'espace courant peut être n'importe lequel des trois ; la cloche reste à 16 px du bord. Sous 375 px le
+  // courant n'est plus qu'une icône de 36 px (libellé en aria-label), de 375 à 639 px il garde icône et libellé.
+  for (const [largeur, langue] of [[375, "fr"], [375, "zh"], [360, "fr"], [360, "zh"]] as const) {
+    for (const [courant, chemin] of [["Back-Office", "/back-office"], ["Musiciens", "/accords"]] as const) {
+      test(`téléphone ${largeur} px en ${langue}, espace courant ${courant} : cloche à 16 px du bord`, async ({ page }, info) => {
+        test.skip(!estTelephone(info), "propre au téléphone");
+        await page.setViewportSize({ width: largeur, height: 800 });
+        if (langue === "zh") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+        await signInAs(page, ADMIN, {}, chemin);
+        const enTete = page.locator("header.barre-haut");
+        const groupe = enTete.getByRole("group").first();
+        await expect(groupe).toBeVisible();
+        const nom = langue === "zh" ? { "Back-Office": "后台", Musiciens: "乐手" }[courant] : courant;
+        const lien = groupe.getByRole("link", { name: nom, exact: true });
+        await expect(lien).toHaveAttribute("aria-current", "true");
+        await expect(lien.locator("svg")).toBeVisible();
+        if (largeur < 375) {
+          await expect(lien.locator("span")).toBeHidden();
+          expect((await lien.boundingBox())!.width).toBeCloseTo(36, 0);
+        } else {
+          await expect(lien.locator("span")).toBeVisible();
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+        const cloche = (await enTete.getByRole("button", { name: langue === "zh" ? zh.notifications.title : "Notifications" }).boundingBox())!;
+        expect(largeur - (cloche.x + cloche.width), "cloche à 16 px du bord").toBeGreaterThanOrEqual(16);
+      });
+    }
+  }
+
   test("tablette en portrait : label, puis sélecteur, cloche et langue", async ({ page }, info) => {
     test.skip(info.project.name !== "tablette", "propre à la tablette en portrait");
     await signInAs(page, ADMIN, {}, "/songs");
@@ -288,7 +410,35 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(enTete.getByRole("button", { name: "切换为中文" })).toBeVisible();
   });
 
-  test("grand écran : le sélecteur sous le label de la barre dépliée, absent de la barre réduite", async ({ page }, info) => {
+  // Lot CD, T1a (chants-1) : « Back-Office » entier dans la barre dépliée, segments de 30 px qui se partagent les 220 px utiles.
+  for (const langue of ["fr", "zh"] as const) {
+    test(`barre dépliée en ${langue} : les trois segments tiennent dans 220 px, sans « … »`, async ({ page }, info) => {
+      test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
+      await ouvrirAvecBarre(page, "depliee");
+      if (langue === "zh") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+      await signInAs(page, { ...ADMIN, ...musicien("piano") }, {}, "/songs");
+      await page.getByRole("searchbox").waitFor();
+      if (estTablettePaysage(info)) await page.getByTestId("barre-laterale").getByRole("button", { name: /Déplier la barre latérale|展开侧边栏/ }).tap();
+      const groupe = page.locator('[data-testid="place-selecteur"]:visible').getByRole("group");
+      await expect(groupe).toBeVisible();
+      const liens = groupe.getByRole("link");
+      const n = await liens.count();
+      expect(n, "App, Musiciens, Back-Office").toBeGreaterThanOrEqual(2);
+      let somme = 0;
+      for (let i = 0; i < n; i++) {
+        const b = (await liens.nth(i).boundingBox())!;
+        somme += b.width;
+        expect(b.height, "hauteur dessinée de 30 px").toBeCloseTo(30, 0);
+        const coupe = await liens.nth(i).locator("span").evaluate((e) => ({ style: getComputedStyle(e).textOverflow, trop: e.scrollWidth > e.clientWidth + 0.5 }));
+        expect(coupe.trop, `« ${await liens.nth(i).getAttribute("aria-label")} » n'est pas coupé`).toBe(false);
+      }
+      expect(somme, "somme des segments").toBeLessThanOrEqual(220.5);
+      const conteneur = (await groupe.boundingBox())!;
+      expect(conteneur.width, "le conteneur ne dépasse pas la barre").toBeLessThanOrEqual(248);
+    });
+  }
+
+  test("grand écran : le sélecteur sous le label de la barre dépliée ; réduite, l'interrupteur reste en deux icônes nommées (BO-G, 10)", async ({ page }, info) => {
     test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
@@ -296,13 +446,33 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     if (estOrdinateur(info)) {
       const place = barre.getByTestId("place-selecteur");
       await expect(place.getByRole("group", { name: "Choisir l'espace" })).toBeVisible();
+      await expect(barre.getByTestId("selecteur-icones"), "dépliée : pas les icônes").toBeHidden();
       await barre.getByRole("button", { name: "Réduire la barre latérale" }).click();
     }
-    // Réduite : ni label, ni sélecteur (U4, question 2) ; on change d'espace en dépliant.
-    await expect(barre.getByRole("group", { name: "Choisir l'espace" })).toBeHidden();
+    // Réduite : plus de sélecteur déplié, mais l'interrupteur reste, en icônes avec un nom accessible (toujours 44 px de cible).
+    await expect(barre.getByTestId("place-selecteur")).toBeHidden();
+    const icones = barre.getByTestId("selecteur-icones");
+    await expect(icones).toBeVisible();
+    await expect(icones).toHaveAttribute("aria-label", "Choisir l'espace");
+    const app = icones.getByRole("link", { name: "App", exact: true });
+    const backOffice = icones.getByRole("link", { name: "Back-Office", exact: true });
+    await expect(app).toHaveAttribute("href", /\/(planning|songs)/);
+    await expect(app).toHaveAttribute("aria-current", "true");
+    await expect(backOffice).toHaveAttribute("href", /\/back-office\/?$/);
+    for (const lien of [app, backOffice]) {
+      const b = (await lien.boundingBox())!;
+      expect(b.x + b.width, "dans la barre réduite").toBeLessThanOrEqual(68);
+      // La cible de toucher dépasse le dessin : 44 px (::after, comme BO-E2).
+      const centre = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+      for (const dy of [-21, 21]) {
+        const touche = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest("a")?.getAttribute("aria-label"), { x: centre.x, y: centre.y + dy });
+        expect(touche, `cible de 44 px autour de ${await lien.getAttribute("aria-label")}`).toBe(await lien.getAttribute("aria-label"));
+      }
+    }
     if (estOrdinateur(info)) {
       await barre.getByRole("button", { name: "Déplier la barre latérale" }).click();
-      await expect(barre.getByRole("group", { name: "Choisir l'espace" })).toBeVisible();
+      await expect(barre.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true })).toHaveCount(1);
+      await expect(barre.getByTestId("place-selecteur")).toBeVisible();
     } else {
       await deplierSiTablettePaysage(page, info);
       await page.getByTestId("barre-par-dessus").getByRole("link", { name: "Back-Office" }).tap();
@@ -312,10 +482,26 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     }
   });
 
+  test("l'en-tête dit « GCC Back-Office » au Back-Office et « GCC Louange » dans l'app (BO-G, 13)", async ({ page }, info) => {
+    await sansSheet(page);
+    await signInAs(page, ADMIN, {}, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    const marque = estOrdinateur(info) || estTablettePaysage(info)
+      ? page.getByTestId("barre-laterale").getByRole("link").first()
+      : page.locator("header.barre-haut").getByRole("link").first();
+    await expect(marque).toContainText("GCC");
+    await expect(marque).toContainText("Back-Office");
+    await expect(marque).not.toContainText("Louange");
+    await page.goto("/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect(marque).toContainText("Louange");
+    await expect(marque).not.toContainText("Back-Office");
+  });
+
   test("en 中文 : 应用 · 后台, et le menu traduit", async ({ page }, info) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-    await signInAs(page, ALICE, {}, "/back-office");
-    await expect(page.getByRole("heading", { name: "仪表盘" })).toBeVisible();
+    await signInAs(page, ALICE_ORGA, {}, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "待办" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(page.getByRole("group", { name: "选择空间" }).filter({ visible: true }).getByRole("link")).toHaveText(["应用", "后台"]);
   });
@@ -335,15 +521,18 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     "equipes/da/taches/t4": { titre: "Fond du culte", responsableUid: "uid-da", responsableNom: "Bruno M.", echeance: "2026-10-03", repetition: null },
   };
 
-  test("grand écran : Tâches (à faire pour moi) et Messages (en attente) portent leur compte", async ({ page }, info) => {
+  test("grand écran : Messages (en attente) porte son compte, À faire le nombre de ses lignes, les autres entrées aucun", async ({ page }, info) => {
     test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
     await sansSheet(page);
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await signInAs(page, ADMIN, PASTILLES, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     const entree = (nom: string) => menu(page, info).getByRole("link", { name: nom, exact: true });
-    await expect(entree("Tâches").getByTestId("pastille")).toHaveText("2");
+    await expect(menu(page, info).getByRole("link", { name: "Tâches" })).toHaveCount(0);
+    // BO-B : À faire porte le nombre de ses lignes (une lecture, la même que la page).
+    await expect(page.getByTestId("ligne-a-faire").first()).toBeVisible();
+    await expect(entree("À faire").getByTestId("pastille")).toHaveText(String(await page.getByTestId("ligne-a-faire").count()));
     await expect(entree("Messages").getByTestId("pastille")).toHaveText("2");
     await expect(entree("Planning").getByTestId("pastille")).toHaveCount(0);
     // Dans l'App, la barre latérale n'a pas de pastille.
@@ -352,29 +541,55 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     await expect(page.getByTestId("barre-laterale").getByTestId("pastille")).toHaveCount(0);
   });
 
-  test("un responsable qui n'est pas admin : Tâches compte, Messages n'est pas lu", async ({ page }, info) => {
+  // BO-G, 10 : barre réduite (ordinateur replié, tablette couchée), la pastille de non-lus reste, en point sur l'icône.
+  test("barre réduite : les pastilles de non-lus restent, en points sur les icônes", async ({ page }, info) => {
+    test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, ADMIN, PASTILLES, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    const barre = page.getByTestId("barre-laterale");
+    if (estOrdinateur(info)) await barre.getByRole("button", { name: "Réduire la barre latérale" }).click();
+    const lien = barre.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Messages", exact: true });
+    const point = lien.getByTestId("pastille");
+    await expect(point).toBeVisible();
+    await expect(point).toHaveText("2");
+    const p = (await point.boundingBox())!;
+    const l = (await lien.boundingBox())!;
+    expect(p.width, "un point").toBeLessThanOrEqual(12);
+    expect(p.height).toBeLessThanOrEqual(12);
+    expect(p.x, "dans l'icône").toBeGreaterThanOrEqual(l.x);
+    expect(p.x + p.width).toBeLessThanOrEqual(l.x + l.width + 1);
+    expect(p.y).toBeGreaterThanOrEqual(l.y - 1);
+    expect(p.y + p.height).toBeLessThanOrEqual(l.y + l.height);
+    await expect(lien, "le compte reste dit en description").toHaveAttribute("aria-describedby", /.+/);
+  });
+
+  test("un responsable qui n'est pas admin : Messages n'a pas de pastille et n'est pas lu", async ({ page }, info) => {
     test.skip(!estOrdinateur(info), "propre à l'ordinateur");
     const lus: string[] = [];
     page.on("request", (r) => { if (r.url().includes(":runQuery")) lus.push(r.postData() ?? ""); });
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-    await signInAs(page, { ...DA, notify: ["Groupe Paix"] }, PASTILLES, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
-    await expect(menu(page, info).getByRole("link", { name: "Tâches", exact: true }).getByTestId("pastille")).toHaveText("1");
+    await signInAs(page, { ...DA, responsabilites: ["planning:paix"] } /* lot RS : gestionnaire de Paix */, PASTILLES, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveCount(0);
     expect(lus.filter((b) => b.includes("\"reports\"") || b.includes("\"songProposals\""))).toEqual([]);
   });
 
-  test("téléphone et tablette en portrait : la barre latérale, cachée, ne lit rien", async ({ page }, info) => {
+  test("téléphone et tablette en portrait : la barre latérale, cachée, ne lit rien ; l'icône Messages de l'en-tête lit une fois", async ({ page }, info) => {
     test.skip(estOrdinateur(info) || estTablettePaysage(info), "propre au téléphone et à la tablette en portrait");
     const lus: string[] = [];
     page.on("request", (r) => { if (r.url().includes(":runQuery")) lus.push(r.postData() ?? ""); });
     await sansSheet(page);
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await signInAs(page, ADMIN, PASTILLES, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await expect(page.getByTestId("barre-du-bas").getByRole("link").first()).toBeVisible();
+    await expect(page.getByTestId("icone-messages").getByTestId("pastille")).toHaveText("2");
     await page.waitForTimeout(500);
-    expect(lus.filter((b) => b.includes("\"reports\"") || b.includes("\"songProposals\""))).toEqual([]);
+    // Une lecture de chaque : celle de l'icône (la barre latérale, cachée, n'en fait aucune).
+    expect(lus.filter((b) => b.includes("\"reports\"")).length).toBe(1);
+    expect(lus.filter((b) => b.includes("\"songProposals\"")).length).toBe(1);
   });
 
   // Comparée à la planche bo-tableau-de-bord (barre latérale : Tâches 3, Messages 2).
@@ -383,8 +598,8 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     await sansSheet(page);
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await signInAs(page, ADMIN, PASTILLES, "/back-office");
-    await page.goto("/back-office/taches/da");
-    await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
+    await page.goto("/back-office/equipes/da");
+    await expect(page.getByRole("heading", { level: 1, name: "DA" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveText("2");
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
@@ -420,7 +635,7 @@ test.describe("Back-Office (B1) : captures à regarder", () => {
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await page.screenshot({ path: `test-results/back-office-captures/${info.project.name}-app.png` });
     await page.goto("/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await page.screenshot({ path: `test-results/back-office-captures/${info.project.name}-tableau.png` });
     if (estTablettePaysage(info)) {
@@ -429,4 +644,58 @@ test.describe("Back-Office (B1) : captures à regarder", () => {
       await page.screenshot({ path: `test-results/back-office-captures/${info.project.name}-deplie.png` });
     }
   });
+});
+
+// ─── Piste A, BO-A : la navigation à cinq entrées ─────────────────────────────────
+
+test.describe("Back-Office (BO-A) : navigation", () => {
+  const SIGNALEMENTS = {
+    "reports/r1": { kind: "site", title: "Lien mort", status: "pending", createdAt: "2026-09-30T10:00:00Z" },
+    "songProposals/p1": { title: "Un chant", youtubeUrl: "https://example.com/v", status: "pending", createdAt: "2026-09-30T10:00:00Z" },
+  };
+
+  test("grand écran : pas de barre du bas ; Messages est dans la barre latérale avec sa pastille, pas dans l'en-tête", async ({ page }, info) => {
+    test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
+    await sansSheet(page);
+    await signInAs(page, ADMIN, SIGNALEMENTS, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    await expect(page.getByTestId("barre-du-bas")).toBeHidden();
+    await deplierSiTablettePaysage(page, info);
+    await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveText("2");
+    await expect(page.locator("header.barre-haut").getByTestId("icone-messages")).toBeHidden();
+  });
+
+  test("« /back-office/plus » ramène à « /back-office » (la page Plus n'existe plus)", async ({ page }) => {
+    await sansSheet(page);
+    await signInAs(page, ADMIN, {}, "/back-office/plus");
+    await expect(page).toHaveURL(/\/back-office\/?$/);
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+  });
+
+  // Captures à regarder (planche de la piste A) : la navigation aux cinq dispositions, FR clair et 中文 sombre.
+  for (const [langue, sombre] of [["fr", false], ["zh-CN", true]] as const) {
+    const suffixe = `${langue}-${sombre ? "sombre" : "clair"}`;
+    test(`capture ${suffixe} : la navigation du Back-Office`, async ({ page }, info) => {
+      await page.emulateMedia({ colorScheme: sombre ? "dark" : "light" });
+      await page.addInitScript(([l, d]) => {
+        localStorage.setItem("i18nextLng", l as string);
+        localStorage.setItem("theme", d ? "dark" : "light");
+      }, [langue, sombre] as const);
+      await sansSheet(page);
+      await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+      await signInAs(page, ADMIN, SIGNALEMENTS, "/back-office");
+      await expect(page.getByRole("heading", { level: 1, name: langue === "fr" ? "À faire" : "待办" })).toBeVisible();
+      if (!estOrdinateur(info) && !estTablettePaysage(info)) {
+        await expect(page.getByTestId("icone-messages").getByTestId("pastille")).toHaveText("2");
+      }
+      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: `test-results/bo-a/${info.project.name}-${suffixe}.png` });
+      if (estTablettePaysage(info)) {
+        await deplierSiTablettePaysage(page, info);
+        await page.waitForTimeout(400);
+        await page.screenshot({ path: `test-results/bo-a/${info.project.name}-${suffixe}-deplie.png` });
+      }
+    });
+  }
 });

@@ -1,13 +1,15 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { readFileSync } from "fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, verifierAgencement } from "./helpers/agencement";
 
 // Agencement v18, tranche T11 (docs/spec-agencement-v18.md, A16 ; planche `v18-app-harmonie`, v17 sur
 // téléphone et tablette portrait). Harmonie en onglets : un layout pose l'en-tête « Harmonie », son
-// sous-titre et le rail Fiches · Cours · Sons du RD-2000 au-dessus des trois listes ; les titres de
-// liste disparaissent ; les cartes Cours et Sons du catalogue restent sur téléphone seulement. Un lien
-// direct vers une fiche, une leçon, un son garde ses deux volets (la fiche s'y titre en h2 de 24 px).
+// sous-titre au-dessus des trois listes ; les titres de liste disparaissent ; EM-2
+// (docs/spec-espace-musiciens.md) : le rail Fiches · Cours · Sons du RD-2000 est parti, les entrées
+// Harmonie · Théorie musicale · RD-2000 de la barre de l'espace Musiciens (barre latérale en grand, barre
+// du bas sinon) le remplacent ; les cartes Cours et Sons du catalogue restent sur téléphone seulement. Un lien
+// direct vers une fiche, une leçon, un son garde ses deux volets (la fiche s'y titre en h2 de 22 px).
 // Plannings simulés ; personnes fictives. Cinq projets.
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
@@ -16,8 +18,8 @@ const CULTE = csv([
   ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono", "PPT", "Orateur", "Traducteur", "Sainte cène"],
   ["04/10", "Léa M.", "", "", "Ruth K.", "Samuel K.", "Paul D.", "", "", "Orateur Z.", "", ""],
 ]);
-const PIANISTE: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K." };
-const GUITARISTE: FakeProfile = { uid: "uid-samuel", email: "samuel@example.com", firstName: "Samuel", lastName: "K.", planningName: "Samuel K." };
+const PIANISTE: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K.", ...musicien("piano") };
+const GUITARISTE: FakeProfile = { uid: "uid-samuel", email: "samuel@example.com", firstName: "Samuel", lastName: "K.", planningName: "Samuel K.", ...musicien("guitare") };
 
 const CATALOGUE = JSON.parse(readFileSync("public/harmonie-index.json", "utf8")) as { fiches: { id: string; instrument?: string }[] };
 const COURS = JSON.parse(readFileSync("public/harmonie-cours/index.json", "utf8")) as { chapitres: { id: string; numero: number | null }[] };
@@ -44,30 +46,44 @@ async function capture(page: Page, name: string) {
 
 const liste = (page: Page) => page.locator('[data-volet="liste"]');
 const detail = (page: Page) => page.locator('[data-volet="detail"]');
-const rail = (page: Page) => enTete(page).locator('[data-onglets="rail"]');
+/** Les entrées de l'espace Musiciens : la barre latérale en grand (ordinateur, tablette paysage), la barre du bas sinon. */
+const barreEspace = (page: Page, info: TestInfo) =>
+  estGrandEcran(info) ? page.getByTestId("barre-laterale").getByRole("navigation") : page.getByTestId("barre-du-bas");
+const entrees = (page: Page, info: TestInfo) => barreEspace(page, info).getByRole("link");
+/** Le nom accessible de chaque entrée (`aria-label` quand la barre est réduite ou courte). */
+const noms = (page: Page, info: TestInfo) =>
+  entrees(page, info).evaluateAll((els) => els.map((e) => e.getAttribute("aria-label") ?? e.textContent?.trim() ?? ""));
+/** L'entrée qui mène à une adresse (avec ou sans « / » final). */
+const entreeVers = (page: Page, info: TestInfo, href: string) => barreEspace(page, info).locator(`a[href="${href}"], a[href="${href}/"]`);
+const courante = (page: Page, info: TestInfo) => barreEspace(page, info).locator('a[aria-current="page"]');
+/** Le nom de l'entrée courante (la barre du bas dit « Théorie », la latérale « Théorie musicale »). */
+const nomCourant = async (page: Page, info: TestInfo) => {
+  await expect(courante(page, info)).toHaveCount(1);
+  return (await courante(page, info).evaluate((e) => e.getAttribute("aria-label") ?? e.textContent?.trim() ?? ""));
+};
 /** Le bloc de contenu (toute la zone moins deux marges) : les deux volets en grand, la liste seule sinon. */
 const contenu = (page: Page, info: TestInfo, attendu: string) =>
   estGrandEcran(info) ? page.locator("[data-deux-volets]") : page.locator(attendu).first();
-// Les onglets visibles (R4) : le rail de la section, plus celui des vues (Par moment · Tous les sons ·
-// Paramètres) ; en pilules, les trois filtres du catalogue (sensation, moment, niveau), rien ailleurs.
+// Les onglets visibles (R4) : plus de rail de section (EM-2) ; reste celui des vues du RD-2000 (Par moment ·
+// Tous les sons · Paramètres) ; en pilules, les filtres Ressenti et Usage du catalogue, rien ailleurs.
 // Le pianiste ne joue pas de la guitare : pas de rail Piano · Guitare.
 const ONGLETS = [
-  { adresse: "/harmonie", nom: "Fiches", attendu: "[data-harmonie]", onglets: { rail: 1, pilules: 3 } },
-  { adresse: "/harmonie/cours", nom: "Cours", attendu: "[data-cours]", onglets: { rail: 1, pilules: 0 } },
-  { adresse: "/harmonie/rd2000", nom: "Sons du RD-2000", attendu: "[data-rd2000]", onglets: { rail: 2, pilules: 0 } },
+  // Le titre et la ligne d'état suivent la page (harmonie-1) : « Théorie musicale » et « Sons du RD-2000 » ont le leur.
+  { adresse: "/harmonie", nom: "Harmonie", titre: "Harmonie", etat: /^\d+ fiches, au piano et à la guitare$/, attendu: "[data-harmonie]", onglets: { rail: 0, pilules: 2 } },
+  { adresse: "/harmonie/cours", nom: "Théorie", titre: "Théorie musicale", etat: /^\d+ \/ \d+ chapitres finis$/, attendu: "[data-cours]", onglets: { rail: 0, pilules: 0 } },
+  { adresse: "/harmonie/rd2000", nom: "RD-2000", titre: "Sons du RD-2000", etat: /^\d+ essentiels sur [\d\s\u202F\u00A0.,]+$/, attendu: "[data-rd2000]", onglets: { rail: 1, pilules: 0 } },
 ] as const;
 
 test.describe("Harmonie en onglets (T11)", () => {
   for (const o of ONGLETS) {
-    test(`${o.adresse} : l'en-tête « Harmonie », le rail, l'onglet « ${o.nom} » allumé, sans titre de liste`, async ({ page }, info) => {
+    test(`${o.adresse} : l'en-tête « ${o.titre} » et sa ligne d'état, sans rail, l'entrée « ${o.nom} » de la barre de l'espace allumée, sans titre de liste`, async ({ page }, info) => {
       await entrer(page, o.adresse);
       await expect(page.locator(o.attendu).first()).toBeVisible();
       const entete = enTete(page);
-      await expect(entete.getByRole("heading", { level: 1, name: "Harmonie", exact: true })).toBeVisible();
-      await expect(entete.getByText("Des idées pour réharmoniser, au piano et à la guitare.")).toBeVisible();
-      await expect(rail(page).getByRole("link")).toHaveText(["Fiches", "Cours", "Sons du RD-2000"]);
-      await expect(rail(page).locator('a[aria-current="page"]')).toHaveText(o.nom);
-      await expect(enTete(page).locator('[data-onglets="rail"]'), "un seul rail dans l'en-tête").toHaveCount(1);
+      await expect(entete.getByRole("heading", { level: 1, name: o.titre, exact: true })).toBeVisible();
+      await expect(entete.locator("p").first()).toHaveText(o.etat);
+      await expect(enTete(page).locator('[data-onglets="rail"]'), "plus de rail dans l'en-tête").toHaveCount(0);
+      expect(await nomCourant(page, info), "l'entrée courante de la barre suit l'adresse").toMatch(new RegExp(`^${o.nom}`));
       // Les titres de liste ont disparu : plus de « Harmonie », « Cours », « Sons du RD-2000 » en titre sous l'en-tête
       // (le seul h1 de la page est celui de l'en-tête, `verifierAgencement`).
       await expect(page.locator("main h2").filter({ hasText: /^(Harmonie|Cours|Sons du RD-2000)$/ }).filter({ visible: true }))
@@ -82,58 +98,72 @@ test.describe("Harmonie en onglets (T11)", () => {
     });
   }
 
-  test("l'onglet suit l'adresse : du catalogue au cours, puis aux sons, et retour arrière", async ({ page }) => {
+  test("l'entrée courante de la barre suit l'adresse : du catalogue au cours, puis aux sons, et retour arrière", async ({ page }, info) => {
     await entrer(page, "/harmonie");
     await expect(page.locator("[data-harmonie]")).toBeVisible();
-    await rail(page).getByRole("link", { name: "Cours", exact: true }).click();
+    expect(await nomCourant(page, info)).toBe("Harmonie");
+    await entreeVers(page, info, "/harmonie/cours").click();
     await expect(page).toHaveURL(/\/harmonie\/cours\/?$/);
     await expect(page.locator("[data-cours]")).toBeVisible();
-    await expect(rail(page).locator('a[aria-current="page"]')).toHaveText("Cours");
-    await rail(page).getByRole("link", { name: "Sons du RD-2000" }).click();
+    expect(await nomCourant(page, info)).toMatch(/^Théorie/);
+    await entreeVers(page, info, "/harmonie/rd2000").click();
     await expect(page).toHaveURL(/\/harmonie\/rd2000\/?$/);
     await expect(page.locator("[data-rd2000]")).toBeVisible();
-    await expect(rail(page).locator('a[aria-current="page"]')).toHaveText("Sons du RD-2000");
+    expect(await nomCourant(page, info)).toBe("RD-2000");
     await page.goBack();
     await expect(page.locator("[data-cours]")).toBeVisible();
-    await expect(rail(page).locator('a[aria-current="page"]')).toHaveText("Cours");
+    expect(await nomCourant(page, info)).toMatch(/^Théorie/);
   });
 
-  test("sans le piano, pas d'onglet « Sons du RD-2000 »", async ({ page }) => {
+  test("sans le piano, pas d'entrée « RD-2000 » dans la barre de l'espace", async ({ page }, info) => {
     await entrer(page, "/harmonie", GUITARISTE);
     await expect(page.locator("[data-harmonie]")).toBeVisible();
-    await expect(rail(page).getByRole("link")).toHaveText(["Fiches", "Cours"]);
+    await expect.poll(() => noms(page, info)).not.toContain("RD-2000");
+    await expect.poll(() => noms(page, info)).toEqual(expect.arrayContaining(["Accords", "Harmonie"]));
   });
 
-  test("pendant la lecture des plannings, le rail est déjà là (Fiches · Cours) : l'en-tête ne bouge pas quand l'accès arrive", async ({ page }) => {
+  test("pendant la lecture des plannings, l'en-tête ne bouge pas : la barre latérale a déjà ses entrées, la barre du bas attend", async ({ page }, info) => {
+    // Lot AO : Harmonie se lit dans « Ce qu'il joue » du profil (plus dans les colonnes du planning) — l'accès est connu dès
+    // le profil lu, sans attendre les plannings : les entrées Harmonie, Théorie et RD-2000 de la barre latérale sont là tout de suite.
     let lacher!: () => void;
     const tenue = new Promise<void>((r) => (lacher = r));
     await entrer(page, "/harmonie", PIANISTE, tenue);
     const entete = enTete(page);
     await expect(entete.getByRole("heading", { level: 1, name: "Harmonie", exact: true })).toBeVisible();
-    await expect(rail(page).getByRole("link"), "Fiches et Cours, ouverts à tout l'accès").toHaveText(["Fiches", "Cours"]);
+    // Barre latérale : les entrées sont déjà là. Barre du bas : elle attend la lecture du planning (MobileTabBar, EM-2 : jamais
+    // une barre qui change sous le doigt) — absente d'abord, complète ensuite, sans rien déplacer dans l'en-tête.
+    if (estGrandEcran(info)) {
+      await expect.poll(() => noms(page, info), "Harmonie, Théorie et le RD-2000 du piano, sans attendre les plannings")
+        .toEqual(expect.arrayContaining(["Harmonie", "Théorie musicale", "RD-2000"]));
+    } else {
+      await expect(barreEspace(page, info), "la barre du bas attend le planning").toHaveCount(0);
+    }
     const avant = (await entete.boundingBox())!.height;
     lacher();
-    await expect(rail(page).getByRole("link"), "les sons, une fois le piano lu").toHaveText(["Fiches", "Cours", "Sons du RD-2000"]);
     await expect(page.locator("[data-harmonie]")).toBeVisible();
+    await expect.poll(() => noms(page, info), "Harmonie, Théorie et le RD-2000 une fois le planning lu")
+      .toEqual(expect.arrayContaining(["Harmonie", "RD-2000"]));
+    expect((await noms(page, info)).filter((n) => /^Théorie/.test(n)), "l'entrée Théorie").toHaveLength(1);
     expect(Math.abs((await entete.boundingBox())!.height - avant), "même hauteur d'en-tête").toBeLessThanOrEqual(1);
   });
 
   test("sans accès à Harmonie (ni piano ni guitare) : pas d'en-tête de section, seulement « réservée aux musiciens »", async ({ page }) => {
-    // Au planning, mais à la présidence : ni pianiste ni guitariste.
-    const PRESIDENTE: FakeProfile = { uid: "uid-lea", email: "lea@example.com", firstName: "Léa", lastName: "M.", planningName: "Léa M." };
+    // De Louange, mais à la présidence : ni pianiste ni guitariste.
+    const PRESIDENTE: FakeProfile = { uid: "uid-lea", email: "lea@example.com", firstName: "Léa", lastName: "M.", planningName: "Léa M.", dansEquipes: ["louange"], sousEquipes: ["presidence"], lieuxLouange: ["Culte Francophone"] };
     await entrer(page, "/harmonie", PRESIDENTE);
     await expect(page.getByText("Cette page est réservée aux musiciens de l'équipe.")).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "Harmonie", exact: true })).toHaveCount(0);
     await expect(page.getByText("Des idées pour réharmoniser, au piano et à la guitare.")).toHaveCount(0);
   });
 
-  test("les cartes Cours et Sons du catalogue : sur téléphone seulement", async ({ page }, info) => {
+  test("les cartes Cours et Sons ne sont plus dans le catalogue : la barre de l'espace Musiciens suffit (T3b)", async ({ page }, info) => {
     await entrer(page, "/harmonie");
     const cat = page.locator("[data-harmonie]");
     await expect(cat).toBeVisible();
-    const cartes = cat.getByRole("link", { name: /Cours de théorie musicale|Sons du RD-2000/ });
-    if (estTelephone(info)) await expect(cartes.filter({ visible: true })).toHaveCount(2);
-    else await expect(cartes.filter({ visible: true })).toHaveCount(0);
+    const cartes = cat.getByRole("link", { name: /Théorie musicale|Sons du RD-2000/ });
+    await expect(cartes.filter({ visible: true })).toHaveCount(0);
+    await expect(entreeVers(page, info, "/harmonie/cours")).toBeVisible();
+    await expect(entreeVers(page, info, "/harmonie/rd2000")).toBeVisible();
   });
 
   // R4 : les vues d'une page en rail (Piano · Guitare, Par moment · Tous les sons · Paramètres), les filtres en pilules.
@@ -149,7 +179,7 @@ test.describe("Harmonie en onglets (T11)", () => {
   });
 
   test("Piano · Guitare en rail pour qui joue des deux", async ({ page }) => {
-    const LES_DEUX: FakeProfile = { uid: "uid-eve", email: "eve@example.com", firstName: "Ève", lastName: "N.", planningName: "Ève N." };
+    const LES_DEUX: FakeProfile = { uid: "uid-eve", email: "eve@example.com", firstName: "Ève", lastName: "N.", planningName: "Ève N.", ...musicien("piano", "guitare") };
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
       const sheet = new URL(route.request().url()).searchParams.get("sheet");
       const deux = csv([
@@ -165,13 +195,14 @@ test.describe("Harmonie en onglets (T11)", () => {
     await expect(instrument).toHaveAttribute("data-onglets", "rail");
     await instrument.getByRole("tab", { name: "Guitare" }).click();
     await expect(instrument.getByRole("tab", { name: "Guitare" })).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator("[data-harmonie]").getByRole("group", { name: "Sensation" })).toHaveAttribute("data-onglets", "pilules");
+    await expect(page.locator("[data-harmonie]").getByRole("group", { name: "Ressenti" })).toHaveAttribute("data-onglets", "pilules");
+    await expect(page.locator("[data-harmonie]").getByRole("group", { name: "Usage" })).toHaveAttribute("data-onglets", "pilules");
   });
 
   const DIRECTS = [
-    { nom: "une fiche", adresse: `/harmonie/${FICHE.id}`, onglet: "Fiches", fiche: `[data-fiche="${FICHE.id}"]`, retour: "Harmonie", onglets: ONGLETS[0].onglets },
-    { nom: "une leçon", adresse: `/harmonie/cours/${CADENCES.id}`, onglet: "Cours", fiche: `[data-chapitre="${CADENCES.id}"]`, retour: "Cours", onglets: ONGLETS[1].onglets },
-    { nom: "un son", adresse: "/harmonie/rd2000/S01", onglet: "Sons du RD-2000", fiche: '[data-son-page="S01"]', retour: "Sons du RD-2000", onglets: ONGLETS[2].onglets },
+    { nom: "une fiche", adresse: `/harmonie/${FICHE.id}`, onglet: "Harmonie", fiche: `[data-fiche="${FICHE.id}"]`, retour: "Harmonie", onglets: ONGLETS[0].onglets },
+    { nom: "une leçon", adresse: `/harmonie/cours/${CADENCES.id}`, onglet: "Théorie", fiche: `[data-chapitre="${CADENCES.id}"]`, retour: "Théorie musicale", onglets: ONGLETS[1].onglets },
+    { nom: "un son", adresse: "/harmonie/rd2000/S01", onglet: "RD-2000", fiche: '[data-son-page="S01"]', retour: "Sons du RD-2000", onglets: ONGLETS[2].onglets },
   ] as const;
   for (const d of DIRECTS) {
     test(`un lien direct vers ${d.nom} garde ses deux volets en grand ; seul avec son retour sinon`, async ({ page }, info) => {
@@ -179,10 +210,10 @@ test.describe("Harmonie en onglets (T11)", () => {
       if (estGrandEcran(info)) {
         await expect(detail(page).locator(d.fiche)).toBeVisible();
         await expect(liste(page)).toBeVisible();
-        await expect(rail(page).locator('a[aria-current="page"]')).toHaveText(d.onglet);
-        // La fiche du volet de droite : un h2 de 24 px, sans marge à gauche (elle part du bord du volet).
+        expect(await nomCourant(page, info)).toMatch(new RegExp(`^${d.onglet}`));
+        // La fiche du volet de droite : un h2 de 22 px, sans marge à gauche (elle part du bord du volet).
         const titre = detail(page).locator("h2").first();
-        expect(await titre.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "titre de fiche : 24 px").toBe(24);
+        expect(await titre.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "titre de fiche : 22 px").toBe(22);
         const fiche = detail(page).locator(d.fiche);
         const [volet, boiteFiche] = [(await detail(page).boundingBox())!, (await fiche.boundingBox())!];
         expect(Math.abs(boiteFiche.x - volet.x), "la fiche part du bord du volet").toBeLessThanOrEqual(1);

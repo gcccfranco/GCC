@@ -24,8 +24,11 @@ import { aCommence, modeInscriptions, nowIsoParis, placesRestantes, refusInscrip
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Evenement, Inscription, ModeInscriptions } from "@/types/evenement"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { ChoixInscriptions, useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
+import { compter } from "@/lib/usage"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
 const INVITES = [0, 1, 2, 3, 4, 5]
@@ -107,6 +110,7 @@ export function Inscriptions({ evenement: e, user, organisateur, onInscrits }: {
     ev.preventDefault()
     run(async () => {
       const r = await inscrire(e.id, invites, user ? undefined : nom.trim())
+      compter("cmd.evenement.inscrire")
       onInscrits(r.inscrits)
       if (user) setMine(r.mine); else setDone(true)
       setChoosing(false)
@@ -148,9 +152,9 @@ export function Inscriptions({ evenement: e, user, organisateur, onInscrits }: {
             )}
             <div className="space-y-1">
               <label htmlFor="ins-invites" className="text-xs font-semibold">{t("evenements.invitesLabel")}</label>
-              <select id="ins-invites" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={invites} onChange={(ev) => setInvites(Number(ev.target.value))}>
+              <ChampSelect id="ins-invites" value={invites} onChange={(ev) => setInvites(Number(ev.target.value))}>
                 {INVITES.map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
+              </ChampSelect>
             </div>
             <div className="flex gap-2">
               <Button type="submit" disabled={busy} className="flex-1">{t("evenements.confirmer")}</Button>
@@ -163,7 +167,7 @@ export function Inscriptions({ evenement: e, user, organisateur, onInscrits }: {
       ) : (
         <p className="text-sm">
           {t("evenements.loginToRegister")}{" "}
-          <Link href={`/login?from=${encodeURIComponent(`/evenements/${e.id}`)}`} className="font-semibold underline" style={{ color: COLOR }}>
+          <Link href={`/login?from=${encodeURIComponent(`/evenements/${e.id}`)}`} className="font-semibold underline texte-service" style={styleTexteService(COLOR)}>
             {t("evenements.login")}
           </Link>
         </p>
@@ -229,10 +233,10 @@ export function PanneauInscriptions({ evenement: e, relire, onInscrits, onMode, 
   }
 
   return (
-    <section aria-label={t("evenements.panneauInscriptions")} className="space-y-3 rounded-xl bg-secondary/60 p-4">
+    <section aria-label={t("evenements.panneauInscriptions")} className="space-y-3">
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">{t("evenements.panneauInscriptions")}</h3>
+        <h3 className="text-base font-semibold text-foreground">{t("evenements.panneauInscriptions")}</h3>
         <span data-testid="etat-inscriptions" className={`rounded-full px-2.5 py-1 text-xs font-semibold ${etat === "ouvertes" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : etat === "bientot" ? "bg-amber-500/15 text-amber-800 dark:text-amber-300" : "bg-secondary text-muted-foreground"}`}>
           {t(`evenements.${etat}`)}
         </span>

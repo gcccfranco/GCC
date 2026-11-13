@@ -27,7 +27,7 @@ const FIXTURE_DECEMBRE = readFileSync(join(__dirname, "fixtures", "sheet-eveneme
 const REFUS = "Jusqu'au 31/12/2026, les évènements de toute l'église s'écrivent dans le Sheet des évènements.";
 
 /** Coordination (cochée) et pôle Évènement : « Toute l'église », les sections, la réunion du pôle. */
-const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.org", firstName: "Lison", lastName: "R.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.org", firstName: "Lison", lastName: "R.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */ };
 const ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
 
 const EV = {
@@ -120,11 +120,11 @@ test.describe("B1 : le formulaire refuse « Toute l'église » avant la bascule"
   test("une réunion d'équipe le 20/12/2026 passe", async ({ page }) => {
     // Retouches v18, lot E : une réunion se crée par « + Nouvelle réunion ».
     const { db } = await ouvrir(page, COORD, "/back-office/reunions/nouvelle", "2026-12-15T10:00:00");
-    await page.getByLabel("Nom de l'évènement").fill("Réunion de fin d'année");
-    await page.getByLabel("Public").selectOption("equipe:evenementiel");
+    await page.getByLabel("Nom de la réunion").fill("Réunion de fin d'année");
+    await page.getByLabel("Équipe", { exact: true }).selectOption("equipe:evenementiel");
     await page.getByLabel("Date", { exact: true }).fill("2026-12-20");
     await expect(page.getByText(REFUS)).toHaveCount(0);
-    await creer(page);
+    await page.getByRole("button", { name: "Créer la réunion" }).click();
     // Agencement v18 (B15) : une réunion se gère sous Réunions.
     await expect(page).toHaveURL(/\/back-office\/reunions\/fake-\d+\/?$/);
     expect(ecrit(db)?.data).toMatchObject({ pour: "equipe:evenementiel", date: "2026-12-20" });
@@ -167,16 +167,12 @@ test("B1, en chinois : le refus compte le 31/12/2026（含）", async ({ page })
   await expect(page.getByRole("link", { name: "打开活动表" })).toHaveAttribute("href", `${SHEET}/edit#gid=${GID_DECEMBRE}`);
 });
 
-/** Les pastilles des sources : en rangée, ou dans la feuille « Sources » sur téléphone. */
-async function pastilles(page: Page, info: TestInfo) {
-  if (info.project.name === "telephone") {
-    await page.getByRole("button", { name: "Sources", exact: true }).click();
-    return page.getByRole("dialog", { name: "Sources" }).getByRole("group", { name: "Sources affichées" });
-  }
-  return page.getByRole("group", { name: "Sources affichées" });
+/** Les pastilles des sources : dans la feuille « Sources » (BO-C : sur toutes les tailles). */
+async function pastilles(page: Page, _info: TestInfo) {
+  await page.getByRole("button", { name: "Sources", exact: true }).click();
+  return page.getByRole("dialog", { name: "Sources" }).getByRole("group", { name: "Sources affichées" });
 }
-async function fermer(page: Page, info: TestInfo) {
-  if (info.project.name !== "telephone") return;
+async function fermer(page: Page, _info: TestInfo) {
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: "Sources" })).toHaveCount(0);
 }
@@ -188,18 +184,19 @@ async function enMois(page: Page) {
 const pret = (page: Page) => expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
 
 test.describe("B1 : la pastille du calendrier selon l'horloge", () => {
-  test("le 15/12/2026 : « Évènements (Sheet) », et décembre lit le Sheet", async ({ page }, info) => {
+  test("le 15/12/2026 : la source dit « Évènements » (plus « (Sheet) »), et décembre lit le Sheet", async ({ page }, info) => {
     const { lus } = await ouvrir(page, ADMIN, "/back-office/calendrier", "2026-12-15T10:00:00");
     await expect(page.getByTestId("mois-affiche")).toHaveText(/^Décembre( 2026)?$/);
     await enMois(page);
     await pret(page);
     const groupe = await pastilles(page, info);
-    await expect(groupe.getByRole("button", { name: "Évènements (Sheet)" })).toBeVisible();
+    await expect(groupe.getByRole("button", { name: "Évènements", exact: true })).toBeVisible();
+    await expect(groupe.getByRole("button", { name: "Évènements (Sheet)" })).toHaveCount(0);
     await fermer(page, info);
     await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);
   });
 
-  test("le 15/12/2026, janvier affiché : la pastille suit l'horloge, elle dit encore « Évènements (Sheet) »", async ({ page }, info) => {
+  test("le 15/12/2026, janvier affiché : la source dit « Évènements » (plus « (Sheet) »)", async ({ page }, info) => {
     await ouvrir(page, ADMIN, "/back-office/calendrier", "2026-12-15T10:00:00");
     await expect(page.getByTestId("mois-affiche")).toHaveText(/^Décembre( 2026)?$/);
     await enMois(page);
@@ -207,7 +204,8 @@ test.describe("B1 : la pastille du calendrier selon l'horloge", () => {
     await expect(page.getByTestId("mois-affiche")).toHaveText(/^Janvier( 2027)?$/);
     await pret(page);
     const groupe = await pastilles(page, info);
-    await expect(groupe.getByRole("button", { name: "Évènements (Sheet)" })).toBeVisible();
+    await expect(groupe.getByRole("button", { name: "Évènements", exact: true })).toBeVisible();
+    await expect(groupe.getByRole("button", { name: "Évènements (Sheet)" })).toHaveCount(0);
     await fermer(page, info);
   });
 
@@ -447,6 +445,7 @@ test("captures B2 : sans compte", async ({ page }, info) => {
 // ─── B3 : l'annonce ───────────────────────────────────────────────────────────
 
 const ANNONCE_AVANT = "Les évènements de 2026 restent dans le Sheet ; ceux de 2027 se créent ici.";
+// BO-C (BO10) : la variante « après » n'existe plus, la note disparaît à partir du 01/01/2027.
 const ANNONCE_APRES = "Les évènements se créent ici ; le Sheet n'est plus lu.";
 const annonce = (page: Page) => page.getByRole("note", { name: "Annonce" });
 
@@ -466,46 +465,56 @@ test.describe("B3 : la ligne d'annonce en tête du Back-Office", () => {
     await expect(page.getByTestId("mois-affiche")).toHaveText(/^Décembre( 2026)?$/);
     await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
     await expect(page.getByText(ANNONCE_APRES)).toHaveCount(0);
+    // T3c : la note est en pied de liste, sous le contenu du calendrier (dernier bloc de la colonne), sans aplat.
+    expect(await annonce(page).evaluate((el) => el.nextElementSibling === null && getComputedStyle(el).backgroundColor === "rgba(0, 0, 0, 0)")).toBe(true);
+    expect((await annonce(page).boundingBox())!.y).toBeGreaterThan((await page.getByTestId("mois-affiche").boundingBox())!.y);
   });
 
-  test("calendrier : le texte d'après le 02/01/2027, encore le 31/01/2027, disparu le 01/02/2027", async ({ page }) => {
+  test("calendrier : plus de note à partir du 01/01/2027 (ni « après », ni « avant »)", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/calendrier", "2027-01-02T10:00:00");
     await expect(page.getByTestId("mois-affiche")).toHaveText(/^Janvier( 2027)?$/);
-    await expect(annonce(page)).toHaveText(ANNONCE_APRES);
+    await pret(page);
+    await expect(annonce(page)).toHaveCount(0);
+    await expect(page.getByText(ANNONCE_APRES)).toHaveCount(0);
     await expect(page.getByText(ANNONCE_AVANT)).toHaveCount(0);
 
     await page.clock.setFixedTime(new Date("2027-01-31T20:00:00"));
     await page.reload();
     await expect(page.getByTestId("mois-affiche")).toHaveText(/^Janvier( 2027)?$/);
-    await expect(annonce(page)).toHaveText(ANNONCE_APRES);
+    await pret(page);
+    await expect(annonce(page)).toHaveCount(0);
+    await expect(page.getByText(ANNONCE_APRES)).toHaveCount(0);
 
     await page.clock.setFixedTime(new Date("2027-02-01T08:00:00"));
     await page.reload();
     await expect(page.getByTestId("mois-affiche")).toHaveText(/^Février( 2027)?$/);
+    await pret(page);
     await expect(annonce(page)).toHaveCount(0);
-    await expect(page.getByText(ANNONCE_APRES)).toHaveCount(0);
   });
 
-  test("gestion des évènements : avant, après, puis disparue", async ({ page }) => {
+  test("BO10 : l'ancienne gestion des évènements mène au Calendrier, où la note n'apparaît qu'une fois ; rien dès 2027", async ({ page }) => {
     await ouvrir(page, COORD, "/back-office/evenements", "2026-12-15T10:00:00");
-    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toBeVisible();
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=evenements$/);
+    await pret(page);
+    await expect(annonce(page)).toHaveCount(1);
     await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
 
     await page.clock.setFixedTime(new Date("2027-01-02T10:00:00"));
     await page.reload();
-    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toBeVisible();
-    await expect(annonce(page)).toHaveText(ANNONCE_APRES);
+    await pret(page);
+    await expect(annonce(page)).toHaveCount(0);
 
     await page.clock.setFixedTime(new Date("2027-02-01T08:00:00"));
     await page.reload();
-    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toBeVisible();
+    await pret(page);
     await expect(annonce(page)).toHaveCount(0);
   });
 
-  test("les réunions d'équipe n'ont pas la ligne (elles ne passent jamais par le Sheet)", async ({ page }) => {
+  test("BO10 : les réunions mènent au Calendrier filtré, la note du Sheet n'y est qu'une fois", async ({ page }) => {
     await ouvrir(page, COORD, "/back-office/reunions", "2026-12-15T10:00:00");
-    await expect(page.getByRole("link", { name: /Nouvelle réunion/ })).toBeVisible();
-    await expect(annonce(page)).toHaveCount(0);
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    await pret(page);
+    await expect(annonce(page)).toHaveCount(1);
   });
 
   test("en chinois, sur les deux pages", async ({ page }) => {
@@ -514,7 +523,8 @@ test.describe("B3 : la ligne d'annonce en tête du Back-Office", () => {
     await expect(page.getByRole("note", { name: "公告" })).toHaveText("2026 年的活动仍记在活动表（Sheet）中；2027 年的活动请在这里创建。");
     await page.clock.setFixedTime(new Date("2027-01-02T10:00:00"));
     await page.goto("/back-office/calendrier");
-    await expect(page.getByRole("note", { name: "公告" })).toHaveText("活动请在这里创建；系统不再读取活动表（Sheet）。");
+    await pret(page);
+    await expect(page.getByRole("note", { name: "公告" })).toHaveCount(0);
   });
 });
 
@@ -536,47 +546,48 @@ test.describe("B3 : le guide dit où créer un évènement", () => {
   });
 });
 
-test("captures B3 : la ligne d'annonce, calendrier et gestion", async ({ page }, info) => {
+test("captures B3 : la ligne d'annonce du calendrier", async ({ page }, info) => {
   const dossier = join(process.cwd(), "test-results", "evenements-2027-captures", info.project.name);
   await ouvrir(page, ADMIN, "/back-office/calendrier", "2026-12-15T10:00:00");
   await expect(annonce(page)).toBeVisible();
   await pret(page);
   await page.screenshot({ path: `${dossier}-annonce-calendrier.png`, animations: "disabled" });
-  await page.clock.setFixedTime(new Date("2027-01-02T10:00:00"));
-  await page.goto("/back-office/evenements");
-  await expect(annonce(page)).toHaveText(ANNONCE_APRES);
-  await page.screenshot({ path: `${dossier}-annonce-evenements.png`, animations: "disabled" });
 });
 
 
-// ─── Fusion de U8 : le widget Calendrier du tableau de bord suit Q6 ─────────────
+// ─── Fusion de U8 : le widget Calendrier a disparu avec le tableau de bord (piste A, BO-B) ─────────────
+// À faire ne montre pas le Calendrier et ne lit pas le Sheet des évènements : ni la bascule du 01/01/2027, ni un
+// Sheet qui ne répond pas ne le concernent. Le Calendrier garde sa page (testée plus haut).
 
-test.describe("Q6 : le widget Calendrier (U8, C8) suit la bascule", () => {
-  const widgetCal = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Calendrier", exact: true });
-  async function tableauDeBord(page: Page, taille: "m" | "l", maintenant: string) {
+test.describe("Q6 : À faire ne montre plus le widget Calendrier et ne lit pas le Sheet des évènements", () => {
+  const widgetCal = (page: Page) => page.getByRole("region", { name: "Calendrier", exact: true });
+  async function aFaire(page: Page, maintenant: string) {
     await page.clock.setFixedTime(new Date(maintenant));
     const lus = await sheets(page);
     await signInAs(page, ADMIN, {
       ...DOCS,
-      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille, reglages: {} }], majLe: "2026-12-01" },
+      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "l", reglages: {} }], versionTableau: 2, majLe: "2026-12-01" },
     }, "/back-office");
-    await expect(widgetCal(page)).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     return lus;
   }
 
-  for (const taille of ["m", "l"] as const) {
-    test(`02/01/2027, ${taille.toUpperCase()} : la période commence le 28/12/2026, aucune requête au Sheet`, async ({ page }) => {
-      const lus = await tableauDeBord(page, taille, "2027-01-02T10:00:00");
-      await expect(widgetCal(page).locator('[data-jour="2026-12-28"]')).toBeVisible();
+  for (const maintenant of ["2027-01-02T10:00:00", "2026-12-15T10:00:00"]) {
+    test(`${maintenant.slice(0, 10)} : pas de widget Calendrier, même enregistré ; le Sheet des évènements n'est pas lu`, async ({ page }) => {
+      const lus = await aFaire(page, maintenant);
+      await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
+      await expect(widgetCal(page)).toHaveCount(0);
       await page.waitForTimeout(300);
-      expect(lus).toEqual([]);
+      expect(lus.includes(GID_DECEMBRE)).toBe(false);
     });
   }
 
-  test("15/12/2026, L : décembre lit encore le Sheet", async ({ page }) => {
-    const lus = await tableauDeBord(page, "l", "2026-12-15T10:00:00");
-    await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);
-    await expect(widgetCal(page).locator('[data-jour="2026-12-06"] [data-source="evenements"]').first()).toBeVisible();
+  test("un Sheet qui ne répond pas ne bloque pas À faire", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-12-15T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.abort());
+    await signInAs(page, ADMIN, DOCS, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    await expect(page.getByRole("status").or(page.getByTestId("ligne-a-faire").first())).toBeVisible();
   });
 });
 
@@ -652,29 +663,30 @@ test.describe("Un appareil à Shanghai, le 31/12/2026 à 18:30 de Paris (01:30 l
     expect(lus).toContain(GID_DECEMBRE);
   });
 
-  test("le calendrier du Back-Office : « Évènements (Sheet) » et l'annonce d'avant la bascule", async ({ page }, info) => {
+  test("le calendrier du Back-Office : « Évènements » et l'annonce d'avant la bascule", async ({ page }, info) => {
     await ouvrir(page, ADMIN, "/back-office/calendrier", INSTANT);
     await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
     await pret(page);
     const groupe = await pastilles(page, info);
-    await expect(groupe.getByRole("button", { name: "Évènements (Sheet)" })).toBeVisible();
+    await expect(groupe.getByRole("button", { name: "Évènements", exact: true })).toBeVisible();
+    await expect(groupe.getByRole("button", { name: "Évènements (Sheet)" })).toHaveCount(0);
     await fermer(page, info);
   });
 
-  test("la gestion des évènements : l'annonce d'avant la bascule", async ({ page }) => {
+  test("l'ancienne gestion des évènements : l'annonce d'avant la bascule, une seule fois (au Calendrier)", async ({ page }) => {
     await ouvrir(page, COORD, "/back-office/evenements", INSTANT);
-    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toBeVisible();
+    await pret(page);
+    await expect(annonce(page)).toHaveCount(1);
     await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
   });
 
-  test("le widget Calendrier (L) lit encore décembre", async ({ page }) => {
+  test("À faire ne lit pas le Sheet des évènements, quel que soit le fuseau", async ({ page }) => {
     await page.clock.setFixedTime(new Date(INSTANT));
     const lus = await sheets(page);
-    await signInAs(page, ADMIN, {
-      ...DOCS,
-      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "l", reglages: {} }], majLe: "2026-12-01" },
-    }, "/back-office");
-    await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Calendrier", exact: true })).toBeVisible();
-    await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);
+    await signInAs(page, ADMIN, DOCS, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Calendrier", exact: true })).toHaveCount(0);
+    await page.waitForTimeout(300);
+    expect(lus.includes(GID_DECEMBRE)).toBe(false);
   });
 });

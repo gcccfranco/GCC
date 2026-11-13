@@ -7,13 +7,17 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { useFonduLateral } from "@/hooks/useFonduLateral";
 import Link from "next/link";
 import Fuse from "fuse.js";
-import { Search, X } from "lucide-react";
+import { OPTIONS_RECHERCHE_CHANTS } from "@/lib/setlist/bibliotheque";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { Button } from "@/components/ui/button";
+import { Menu } from "@/components/ui/menu";
 import { KeyPill } from "@/components/ui/key-pill";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry, Theme } from "@/types/song";
 import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
+import { BoutonStatistiques } from "@/components/songs/BoutonStatistiques";
 import { deuxVoletsMaintenant } from "@/hooks/useDeuxVolets";
+import { compter } from "@/lib/usage";
 
 interface SongListClientProps {
   /** Lus dans l'index (useSongsIndex) : vide tant qu'il n'est pas arrivé. */
@@ -122,11 +126,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
 
   const fuse = useMemo(
     () =>
-      new Fuse(songs, {
-        keys: ["title", "titlePinyin", "artist"],
-        threshold: 0.4,
-        includeScore: true,
-      }),
+      new Fuse(songs, { ...OPTIONS_RECHERCHE_CHANTS, includeScore: true }),
     [songs]
   );
 
@@ -219,6 +219,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
     scrollToLetter(slug);
   }
   function releasePointer() {
+    libererIndex();
     pressingRef.current = false;
     swipeLetterRef.current = null;
     setActiveIndex(null);
@@ -230,7 +231,19 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
   // adresse, ou par le retour du navigateur.
   useEffect(() => {
     if (!actif || !chargee) return;
-    document.getElementById(`song-li-${actif}`)?.scrollIntoView({ block: "nearest" });
+    const ligne = document.getElementById(`song-li-${actif}`);
+    const volet = ligne?.closest<HTMLElement>("[data-volet-liste]");
+    // En deux volets, seule la liste défile : `scrollIntoView` faisait aussi défiler la fenêtre (58 px à 1 440 × 900),
+    // et la page du chant s'ouvrait défilée, sa barre rangée, l'en-tête « Chants » coupé.
+    if (ligne && volet && volet.scrollHeight > volet.clientHeight) {
+      // Page en haut, la carte de la liste dépasse sous l'écran : la ligne vient au-dessus du bas visible.
+      const l = ligne.getBoundingClientRect(), v = volet.getBoundingClientRect();
+      const bas = Math.min(v.bottom, window.innerHeight - 24);
+      if (l.top < v.top) volet.scrollTop += l.top - v.top;
+      else if (l.bottom > bas) volet.scrollTop += l.bottom - bas;
+      return;
+    }
+    ligne?.scrollIntoView({ block: "nearest" });
   }, [actif, chargee]);
 
   const usedThemeSlugs = new Set(songs.flatMap((s) => s.themes));
@@ -246,33 +259,74 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
   const showIndex = letterIndex.length > 1 && filtered.length > 30;
   // 24 px par lettre (cible de l'ancien h-6) + py-1 ; rétréci si l'écran est court, ou si la part
   // de la carte toujours à l'écran l'est (deux volets), à 12 px au moins de ses bords.
-  const indexHeight = `min(78svh, ${letterIndex.length * 24 + 8}px, var(--cadre-index, 100svh) - 24px)`;
+  // V1 (validation du 07/11/2026) : au repos l'index part de la première ligne de la liste
+  // (`--liste-haut`, son haut dans le cadre, relu au défilement) ; il se raccourcit alors pour finir
+  // où finit l'index centré (jamais sous la barre d'onglets ni hors de la carte), puis reprend sa
+  // hauteur et son centre dès que la liste remonte.
+  const hauteurPleine = `min(78svh, ${letterIndex.length * 24 + 8}px, var(--cadre-index, 100svh) - 24px)`;
+  const indexHeight = `min(${hauteurPleine}, (var(--cadre-index, 100svh) + ${hauteurPleine}) / 2 - var(--liste-haut, 0px))`;
+  const repereListe = useRef<HTMLDivElement>(null);
+  const indexRef = useRef<HTMLElement>(null);
+  const indexTop = `calc((var(--cadre-index, 100svh) - ${indexHeight}) / 2)`;
+  // Pendant un geste, l'index ne bouge plus : la liste défile sous le doigt, et l'index au repos
+  // (pas encore collé) monterait avec elle. Figé en px au toucher, rendu à sa règle au relâcher.
+  function figerIndex(el: HTMLElement) {
+    const repere = repereListe.current;
+    const carte = repere?.closest<HTMLElement>(".chants-liste");
+    const defile = carte && /auto|scroll/.test(getComputedStyle(carte).overflowY) ? carte : null;
+    const r = el.getBoundingClientRect();
+    el.style.top = `${r.top - (defile ? defile.getBoundingClientRect().top : 0)}px`;
+    el.style.height = `${r.height}px`;
+  }
+  function libererIndex() {
+    const el = indexRef.current;
+    if (!el) return;
+    el.style.top = indexTop;
+    el.style.height = indexHeight;
+  }
+  useEffect(() => {
+    const repere = repereListe.current;
+    if (!repere || !showIndex) return;
+    let image = 0;
+    const relire = () => {
+      cancelAnimationFrame(image);
+      image = requestAnimationFrame(() => {
+        // Le cadre : la carte quand c'est elle qui défile (deux volets), sinon la fenêtre.
+        const carte = repere.closest<HTMLElement>(".chants-liste");
+        const defile = carte && /auto|scroll/.test(getComputedStyle(carte).overflowY) ? carte : null;
+        const haut = repere.getBoundingClientRect().top - (defile ? defile.getBoundingClientRect().top : 0);
+        repere.style.setProperty("--liste-haut", `${Math.round(haut)}px`);
+      });
+    };
+    relire();
+    window.addEventListener("scroll", relire, { passive: true });
+    window.addEventListener("resize", relire);
+    // La carte qui défile seule (deux volets) : son défilement ne remonte pas à la fenêtre.
+    document.addEventListener("scroll", relire, { passive: true, capture: true });
+    const taille = new ResizeObserver(relire);
+    taille.observe(document.documentElement);
+    return () => {
+      cancelAnimationFrame(image);
+      window.removeEventListener("scroll", relire);
+      window.removeEventListener("resize", relire);
+      document.removeEventListener("scroll", relire, { capture: true });
+      taille.disconnect();
+    };
+  }, [showIndex]);
 
   return (
     // pr-7 : gouttière fixe de l'index A–Z. Elle ne dépend pas de la recherche,
     // pour que le champ ne change pas de largeur pendant la frappe.
-    <div className="relative pr-7" onClickCapture={saveScrollPos}>
+    <div className="chants-liste-contenu relative pr-7" onClickCapture={saveScrollPos}>
       {/* Barre de recherche */}
-      <div className="relative mb-3.5">
-        <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-muted-foreground/70 pointer-events-none" />
-        <input
-          type="search"
-          enterKeyHint="search"
-          placeholder={t("songs.list.searchPlaceholder")}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="raised w-full h-[46px] pl-[42px] pr-10 border border-transparent rounded-full text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
-        />
-        {query && (
-          <button
-            onClick={() => setQuery("")}
-            aria-label={t("songs.list.clearSearch")}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-2.5 rounded-md hover:bg-secondary active:bg-secondary transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+      <ChampRecherche
+        className="mb-3.5"
+        value={query}
+        onChange={setQuery}
+        placeholder={t("songs.list.searchPlaceholder")}
+        label={t("songs.list.searchLabel")}
+        labelEffacer={t("songs.list.clearSearch")}
+      />
 
       {/* Filtres */}
       <div className="flex flex-wrap gap-2 mb-4 items-center">
@@ -280,7 +334,10 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
         <OngletsRail
           etiquette={t("songs.list.filterLanguage")}
           actif={langFilter}
-          choisir={(lang) => setLangFilter(lang as "all" | "fr" | "zh")}
+          choisir={(lang) => {
+            if (lang === "zh" && langFilter !== "zh") compter("cmd.chants.basculeZh");
+            setLangFilter(lang as "all" | "fr" | "zh");
+          }}
           onglets={[
             { id: "all", label: t("songs.list.allLanguages") },
             { id: "fr", label: "FR" },
@@ -288,20 +345,19 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
           ]}
         />
 
-        {/* Thème */}
-        <select
+        {/* Thème : un Menu (jeu de contrôles B, lot CD, T3a/T3b) */}
+        <Menu
+          label={t("songs.list.filterThemeLabel")}
+          nom={t("songs.list.filterThemeNom")}
           value={themeFilter}
-          onChange={(e) => setThemeFilter(e.target.value)}
-          className="h-8 pl-3 pr-7 rounded-sm text-[16px] sm:text-sm font-semibold bg-secondary text-foreground border border-transparent focus:outline-none focus:ring-2 focus:ring-ring/20 cursor-pointer appearance-none"
-          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7079' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 9px center" }}
-        >
-          <option value="">{t("songs.list.filterTheme")}</option>
-          {availableThemes.map((themeItem) => (
-            <option key={themeItem.slug} value={themeItem.slug}>
-              {isZhLocale ? themeItem.name_zh : themeItem.name_fr}
-            </option>
-          ))}
-        </select>
+          defaultValue=""
+          onChange={setThemeFilter}
+          surGris
+          options={[
+            { valeur: "", libelle: t("songs.list.filterTheme") },
+            ...availableThemes.map((themeItem) => ({ valeur: themeItem.slug, libelle: isZhLocale ? themeItem.name_zh : themeItem.name_fr })),
+          ]}
+        />
 
         {hasFilter && (
           <button
@@ -313,6 +369,9 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
         )}
       </div>
 
+      {/* La liste et tout ce qui la suit : le repère de l'index A–Z (V1, validation du 07/11/2026).
+          Sa colonne commence ici, à la première ligne de la liste, et non au-dessus des filtres. */}
+      <div ref={repereListe} className="relative">
       {/* Récemment consultés */}
       {!hasFilter && recentSongs.length > 0 && (
         <div className="mb-4">
@@ -338,7 +397,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
       )}
 
       {/* Compteur + proposition de chant */}
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-3">
         <p className="text-sm text-muted-foreground">
           {!chargee
             ? "\u00a0"
@@ -347,7 +406,8 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
             : t("songs.list.counterFiltered", { count: filtered.length, filteredCount: filtered.length, totalCount: songs.length })}
         </p>
         {/* Dès 768 px, « Proposer un chant » est dans l'en-tête (ChantsVolets, agencement v18 R7). */}
-        <span className="md:hidden">
+        <span className="flex items-center gap-3 md:hidden">
+          <BoutonStatistiques />
           <SongProposalDrawer />
         </span>
       </div>
@@ -374,16 +434,24 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
             <li key={song.slug} id={`song-li-${song.slug}`} className="group-row relative scroll-mt-[calc(var(--nav-h)+8px)]">
               <Link
                 href={`/songs/${song.slug}`}
+                onClick={() => { if (query.trim()) compter("cmd.chants.recherche"); }}
                 aria-current={ouvert ? "page" : undefined}
-                className={`-mx-3 flex min-h-[60px] items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 ${
+                className={`-mx-2 flex min-h-[60px] items-center gap-3 rounded-xl px-2 py-2.5 transition-colors duration-150 ${
                   // Le chant ouvert à droite (deux volets, planche `Main`) : la ligne en encre.
                   ouvert ? "bg-foreground" : "active:bg-secondary/70"
                 }`}
               >
                 <span className="min-w-0 flex-1">
                   <span className={`block truncate text-base font-semibold ${ouvert ? "text-background" : "text-foreground"}`}>{song.title}</span>
-                  <span className={`block truncate text-sm ${ouvert ? "text-background/70" : "text-muted-foreground"}`}>
-                    {song.titlePinyin ? `${song.titlePinyin} · ${song.artist}` : song.artist}
+                  {/* chants-6 : la ligne passe à la ligne au lieu de couper le pinyin. */}
+                  <span className={`flex flex-wrap text-sm ${ouvert ? "text-background/70" : "text-muted-foreground"}`}>
+                    {song.titlePinyin ? (
+                      <>
+                        <span className="min-w-0">{song.titlePinyin}</span>
+                        <span className="shrink-0 whitespace-pre"> · </span>
+                      </>
+                    ) : null}
+                    <span className="min-w-0">{song.artist}</span>
                   </span>
                 </span>
                 {/* Tonalité recommandée (sinon d'origine), à droite, teinte de la langue ; sur
@@ -413,14 +481,19 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
           débordant sur la marge de page pour rester au bord de l'écran sur
           téléphone et collé à la liste sur ordinateur. On le balaye du doigt. */}
       {showIndex && (
-        // La colonne remonte bien au-dessus de la liste (jusqu'au-dessus de l'en-tête de la
-        // page, agencement v18), pour que l'index soit déjà à sa place collante avant le
-        // premier défilement : sinon il glisserait sous le doigt au premier geste.
-        <div className="absolute -top-[100svh] bottom-0 -right-4 w-11 flex justify-end pointer-events-none">
+        // La colonne commence à la première ligne de la liste (V1) : au repos l'index y reste, à sa
+        // place naturelle, jamais à hauteur de la recherche ; dès que la page ou la carte défile,
+        // le collant le recentre dans `--cadre-index`. `right` en ligne : cette colonne n'est plus
+        // dans la gouttière mais dans le contenu, plus à gauche que le bord de la gouttière
+        // (`padding-right` de `.chants-liste-contenu` : 1.75rem − `--index-hors`, jamais négatif) ;
+        // on la retranche à la règle de globals.css, qu'elle remplace.
+        <div className="index-az-colonne absolute top-0 bottom-0 w-11 flex justify-end pointer-events-none" style={{ right: "calc(-1rem - var(--index-hors, 0px) - max(0px, 1.75rem - var(--index-hors, 0px)))" }}>
           <nav
+            ref={indexRef}
             aria-label={t("common.aria.indexAlphabetique")}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
+              figerIndex(e.currentTarget);
               pressingRef.current = true;
               lockNav();
               swipeLetterRef.current = null;
@@ -431,7 +504,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
             }}
             onPointerUp={releasePointer}
             onPointerCancel={releasePointer}
-            className="pointer-events-auto sticky z-30 mr-0.5 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm touch-none select-none"
+            className="index-az pointer-events-auto sticky z-30 mr-0.5 flex flex-col items-center px-0.5 py-1 rounded-full backdrop-blur-sm touch-none select-none"
             // Centré par `top` et non par une translation : en bas de liste,
             // le collant bute sur la fin de la colonne et une translation
             // ferait sortir le haut de l'index de l'écran. Centré dans
@@ -439,7 +512,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
             // toujours à l'écran en deux volets (globals.css, `.chants-volets`).
             style={{
               height: indexHeight,
-              top: `calc((var(--cadre-index, 100svh) - ${indexHeight}) / 2)`,
+              top: indexTop,
             }}
           >
             {activeIndex !== null && (
@@ -447,7 +520,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
                 data-testid="index-letter"
                 role="status"
                 aria-live="polite"
-                className="pointer-events-none absolute right-full mr-2 flex h-9 min-w-9 -translate-y-1/2 items-center justify-center rounded-sm bg-card px-2.5 text-[22px] font-extrabold text-foreground shadow-soft"
+                className="pointer-events-none absolute right-full mr-2 flex h-9 min-w-9 -translate-y-1/2 items-center justify-center rounded-sm bg-card px-2.5 text-xl font-extrabold text-foreground"
                 style={{ top: `calc((${activeIndex} + 0.5) * 100% / ${letterIndex.length})` }}
               >
                 {letterIndex[activeIndex][0]}
@@ -458,7 +531,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
                 key={letter}
                 onClick={() => scrollToLetter(slug)}
                 aria-label={t("common.aria.allerA", { lettre: letter })}
-                className={`w-8 flex-1 min-h-0 flex items-center justify-center text-[11px] font-bold transition-transform duration-100 hover:text-foreground active:text-foreground ${
+                className={`w-8 flex-1 min-h-0 flex items-center justify-center text-xs font-bold transition-transform duration-100 hover:text-foreground active:text-foreground ${
                   i === activeIndex ? "text-foreground scale-125" : "text-muted-foreground"
                 }`}
               >
@@ -468,6 +541,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
           </nav>
         </div>
       )}
+      </div>
     </div>
   );
 }

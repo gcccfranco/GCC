@@ -1,90 +1,63 @@
 # CLAUDE.md — GCC Louange
 
-Site de partitions de louange pour l'église GCC. Spec complète dans `cahier-des-charges-site-louange.md`.
-Specs de fonctionnalités en attente : `docs/` (ex. `docs/spec-ajouter-un-chant.md`).
-Feuille de route (fait / à venir / demandes à trancher, avec l'historique) :
-`docs/feuille-de-route.md` ; vision produit : `docs/intent/vision-site.md`.
+Site de partitions de louange pour l'église GCC. Spec complète dans `cahier-des-charges-site-louange.md` (hors dépôt).
+Specs de fonctionnalités : `docs/spec-*.md` ; vision produit : `docs/intent/vision-site.md`.
+Feuille de route : `docs/feuille-de-route.md` (état courant et index, court) ; l'historique est dans
+`docs/archive/feuille-de-route-2026.md`, à consulter par grep ou par section, jamais en entier.
+Détail technique (lu à la demande, par section) : `docs/reference-technique.md`, « référence » ci-dessous.
 
-## Stack
-Next.js 16 (App Router) · TypeScript · Tailwind CSS + shadcn/ui · Firebase Auth + Firestore · Resend (emails) · Vercel
+Stack : Next.js 16 (App Router) · TypeScript · Tailwind CSS + shadcn/ui · Firebase Auth + Firestore · Vercel
 
 ## Commandes
 ```bash
 npm run dev          # Serveur de développement
 npm run build        # build:index + next build
-npm run build:index  # Parse content/songs/*.cho → public/songs-index.json
+npm run build:index  # glyphes, songs-index.json, harmonie (détail : référence § Build)
 npm run validate     # Valide les fichiers .cho (métadonnées, parsing)
+python3 scripts/build-fonts.py  # polices chinoises (woff2) : à relancer après tout ajout de texte chinois (chant,
+                     # traduction) ; npm run validate signale un caractère manquant ; Vercel ne peut pas le lancer
 npm run lint         # ESLint (flat config, eslint.config.mjs)
 npx tsc --noEmit     # Vérification TypeScript (c'est ce que fait la CI)
+npm test             # Playwright (tests/), next dev sur :3100 ; npm test -- tests/x.spec.ts pour une spec
+npm run jianpu:audit <slug>     # planche d'audit visuel d'une 简谱, dans le navigateur
 ```
+Commandes de test rares (80 简谱 certifiées, lignes chinoises, site sans back-office, un chant) : référence § Tests.
 
 ## Tests — Playwright
-```bash
-npm test                          # suite Playwright (tests/), démarre next dev sur :3100
-npm test -- --ui                  # mode interactif
-PW_SLUGS=all npm test             # les 80 partitions 简谱 certifiées (~2 min)
-PW_CHANTS_ZH=all npm test -- tests/lignes-chinoises.spec.ts --project=telephone --workers=2
-                                  # lignes chinoises coupées, les 188 chants (~4 min)
-npm run jianpu:audit <slug>       # planche d'audit visuel d'une 简谱, dans le navigateur
-npm test -- tests/back-office-coupe.spec.ts   # le site tel qu'en ligne : second serveur (PW_PORT + 1) sans l'interrupteur
-PW_CHANT=<slug> npm test -- tests/nouveau-chant.spec.ts   # un chant : sections, accords, +1 demi-ton, captures 3 appareils
-```
-**Tout test passe par Playwright, y compris la vérification à l'œil des
-简谱** : la planche `npm run jianpu:audit <slug>` rend la page transposée
-telle que le navigateur l'affiche (tranches qui se recouvrent, gravé
-au-dessus, rendu dessous, cadre rouge sur chaque accord converti) et sort des
-PNG dans `scripts/jianpu/debug/` — à *regarder*, jamais à croire sur parole.
-Les rendus PIL de `scripts/jianpu/*.py` restent des dépannages hors ligne :
-ils ne voient pas le composant réel. Détail du protocole dans
-`scripts/jianpu/LOOP.md`.
-
-- **Trois appareils, toujours** (consigne de Timothée du 14/09/2026) : tout test
-  Playwright tourne sur **ordinateur, téléphone et tablette** (un projet par
-  appareil dans `playwright.config.ts`, tous sous Chromium : WebKit écarté). Un test propre à un appareil le dit
-  dans son titre.
+- **Tout test passe par Playwright, y compris la vérification à l'œil des 简谱** : `npm run jianpu:audit <slug>` sort
+  des PNG dans `scripts/jianpu/debug/`, à *regarder*, jamais à croire sur parole (protocole : `scripts/jianpu/LOOP.md`).
+- **Trois appareils, toujours** (consigne de Timothée du 14/09/2026) : tout test Playwright tourne sur **ordinateur,
+  téléphone et tablette** (un projet par appareil dans `playwright.config.ts`, tous sous Chromium : WebKit écarté).
+  Un test propre à un appareil le dit dans son titre.
 - **Quatre dispositions** (`docs/spec-navigation-grand-ecran.md`, Q1) : téléphone, tablette portrait, tablette
   paysage (barre latérale réduite), ordinateur ; lecture plafonnée à 1 440 px. Toute modification d'interface se
   regarde à l'œil sur les quatre, plus 1 440 px pour une page de lecture. Une spec qui teste l'agencement d'une page
   s'ajoute à `SPECS_GRAND_ECRAN` (`playwright.config.ts`) : sans ça, elle ne tourne que sur trois appareils.
-- **Deux serveurs de test** : le second (`PW_PORT + 1`, interrupteur du back-office coupé) a son propre dossier de build `.next-coupe` — Next 16 refuse deux `next dev` dans le même dossier. Au démarrage il peut réécrire une ligne de `next-env.d.ts` (chemin des types) : **ne pas la commiter**, un `npm run dev` ordinaire la remet.
-- `tests/helpers/jianpu.ts` : ouvrir un chant, afficher sa 简谱, lire le calque.
-- La page chant lit ses paramètres d'URL en **JSON** : `?key=%22F%22`, pas `?key=F`.
-- Viser `localhost` et non `127.0.0.1` : `next dev` bloque ses ressources en
-  cross-origin et la page arrive **non hydratée** — visible mais morte.
-- Pièges vus : le service worker charge lui-même polices, `songs-index.json` et `/api/song/*`, hors de portée de
-  `page.route` (`test.use({ serviceWorkers: "block" })` pour les substituer) ; lire `db.writes` **après** un signe à
-  l'écran (`toBeVisible`) — un test qui rougit sur un appareil différent à chaque passe est une course ; en mode
-  louange, viser la scène avec le helper `onStage` de `tests/performance-mode.spec.ts` (une copie de mesure
-  invisible double chaque bloc).
+- Le second serveur de test (`PW_PORT + 1`, back-office coupé) peut réécrire une ligne de `next-env.d.ts` : **ne pas
+  la commiter**. Paramètres d'URL de la page chant en **JSON** (`?key=%22F%22`) ; viser `localhost`, jamais `127.0.0.1`.
+  Autres pièges et helpers : référence § Tests, à lire avant d'écrire une spec.
 
 ## Architecture clé
-- **Chants** : fichiers `.cho` (ChordPro) dans `content/songs/`, parsés au build → `public/songs-index.json` (utilisé côté client pour liste/recherche)
-- **Setlists, profils, annonces** : Firestore — voir `src/lib/firebase/`
+- **Chants** : `.cho` (ChordPro) dans `content/songs/`, parsés au build → `public/songs-index.json` (liste, recherche côté client)
+- **Setlists, profils, annonces** : Firestore, `src/lib/firebase/`
 - **Firestore = API REST uniquement** (`fetch` + token Firebase Auth). Jamais le SDK WebChannel côté navigateur (bloqué sur certains réseaux). Seul `firebase/auth` est utilisé du SDK.
-- **Comptes & rôles** : profils dans `users/{uid}` (rôles, lieux de service, EDD, groupe). Permissions client dans `src/lib/access.ts`, miroir serveur dans `firestore.rules`.
-- **`firestore.rules`** : versionné ici mais doit être **publié manuellement dans la console Firebase** pour prendre effet. La liste des admins doit rester synchronisée avec `ADMIN_EMAILS` dans `src/lib/access.ts`.
-- **Confidentialité (choix assumé)** : les rules autorisent `read: if signedIn()` sur **toutes** les setlists et tous les profils. Le filtrage `isPrivate` / visibilité par service (`canSeeSetlist`, `src/lib/access.ts`) est **côté client uniquement** — un membre connecté peut techniquement lire en REST une setlist privée ou un profil. Acceptable pour un outil interne de confiance ; ne pas re-signaler comme faille sans nouvelle demande de durcissement.
-- **Routes API** (20, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement par email via Resend — env `RESEND_API_KEY`, `MAIL_TO`, `EMAIL_FROM` sur Vercel), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/scene/conflit`, `/api/taches/{assigne,fait}`, `/api/equipes/{rattachement,groupes}`, `/api/planning/{release,changements}`, `/api/fetes/{droits,saisir,musiques}`, `/api/admin/{migrer-annonces,importer-planning}`
+- **Comptes & rôles** : profils dans `users/{uid}`. Permissions client dans `src/lib/access.ts`, miroir serveur dans `firestore.rules`.
+- **`firestore.rules`** : versionné ici mais **publié manuellement dans la console Firebase** pour prendre effet. La liste des admins reste synchronisée avec `ADMIN_EMAILS` (`src/lib/access.ts`).
+- **Confidentialité (choix assumé)** : les rules autorisent `read: if signedIn()` sur toutes les setlists et tous les profils ; le filtrage (`isPrivate`, `canSeeSetlist`) est côté client uniquement. Ne pas re-signaler comme faille sans nouvelle demande de durcissement.
+- **Routes API** : 20, toutes sous `src/app/api/` ; liste dans la référence § Routes API.
 - **Planning** : Google Sheet public lu en CSV (`src/lib/planning/sheets.ts`) + données statiques (`data.ts`)
-- **PWA** : service worker `public/sw.js` — push + cache hors-ligne. Cache versionné (`gcc-louange-vN`, purgé à l'activation). **Rien n'est mis en cache sur un serveur local** (`localhost`, `127.0.0.1`, réseau local) : en développement les fichiers de Next n'ont pas de nom hashé, et le cache servait l'ancien code après chaque modification (16/09/2026). Stratégies : HTML **network-first** (le déploiement en ligne gagne toujours → pas de page périmée), `/_next/static/*` **cache-first** (content-hashé, immuable), polices + `songs-index.json` + `/api/song/*` + scans 简谱 (`/jianpu/*`, gardés hors ligne depuis qu'ils s'affichent par défaut) **stale-while-revalidate**, reste réseau-seul. Firestore/Sheets/YouTube (autres origines) jamais mis en cache.
-- **Hébergement** : Vercel. La CI GitHub (`.github/workflows/deploy.yml`) fait typecheck + validate.
-- **Interrupteur du back-office** (lot 18, 20/09/2026, `docs/spec-mise-en-ligne.md`) : `BACK_OFFICE` (`src/lib/backOffice.ts`) = `NEXT_PUBLIC_BACK_OFFICE === "1"`. Posé à `1` dans `.env.local`, **absent sur Vercel** : en ligne, tâches, équipes, planning en grille, section Évènements, scène et blocs admin associés sont coupés (entrées masquées, pages et routes en 404, planning = `AncienTableau.tsx` lu dans le Sheet seul, rappel du matin réduit aux services). Toute nouvelle fonctionnalité de back-office passe derrière cette constante. ⚠ Local et en ligne partagent le même Firestore.
+- **PWA** : service worker `public/sw.js` (push + cache hors-ligne). Cache versionné (`gcc-louange-v6`) : **le changer à la main quand les stratégies changent**. Avant de toucher `sw.js` : référence § PWA.
+- **Hébergement** : Vercel ; la CI GitHub fait typecheck + validate. **Seul `main` se déploie** (Timothée, 31/10/2026) : `vercel.json` coupe tous les Previews. Ne pas les réactiver ni retirer cette règle sans demande de Timothée ; une branche se vérifie en local (`npm run dev`, Playwright). Détail : référence § Hébergement.
+- **Interrupteur du back-office** (`docs/spec-mise-en-ligne.md`) : `BACK_OFFICE` (`src/lib/backOffice.ts`), ouvert en local **et en ligne** (Timothée, 29/10/2026). **Toute nouvelle fonctionnalité de back-office passe derrière cette constante.** ⚠ Local et en ligne partagent le même Firestore. Détail : référence § Interrupteur.
 
 ## Formats importants
-- ChordPro : `[accord]paroles` dans les lignes, `{directive: valeur}` en en-tête — règles complètes dans `docs/chants/01-format-cho.md` (format, tables) et `docs/chants/02-placement-accords.md` (placement mesuré)
+- ChordPro : `[accord]paroles`, `{directive: valeur}` en en-tête ; règles dans `docs/chants/01-format-cho.md` et `docs/chants/02-placement-accords.md`
 - **Nouveau chant depuis une partition** (fr ou zh, `.cho` + calque 简谱) : suivre `docs/chants/00-nouveau-chant.md`, seul point d'entrée ; outils `scripts/cho/` (`inspect`, `lint`, `pinyin`, `check`, `draft`) ; décisions dans `docs/spec-guidelines-cho.md`. Aucun accord ne se place à l'œil : `check.py` mesure, et tout doute s'écrit `{needs_review: …}`
-- Tonalité recommandée : `{recommended_key: D}` en en-tête, sous `{key}` — la plus chantée à GCC, **validée par Timothée** (`docs/tonalites-recommandees.md`, recalcul en lecture seule : `npx tsx scripts/recommended-keys.ts`) ; affichée par défaut, et un chant ajouté à une setlist y démarre
+- Tonalité recommandée : `{recommended_key: D}` sous `{key}`, **validée par Timothée** (`docs/tonalites-recommandees.md`) ; affichée par défaut, et un chant ajouté à une setlist y démarre
 - Chinois : `[C]caractères   pinyin` (3 espaces min entre chars et pinyin)
 - Jianpu simple : `{jianpu: 3 3 5 6 5}` sur la ligne juste au-dessus des paroles
-- Partition 简谱 : **l'image du scan**, avec un calque des accords (approche image,
-  `src/components/jianpu/JianpuSheet.tsx`, `public/jianpu/`, protocole dans
-  `scripts/jianpu/LOOP.md`). Le bloc `{start_of_jianpu}…{end_of_jianpu}` est encore
-  lu par le parseur mais plus rendu (l'ancien `JianpuScore.tsx` n'existe plus)
-
-## Couleurs spec
-- Accords : `#3f63cf` (bleu, `--chord-color` dans `globals.css` ; le `#2563EB` du cahier des charges n'est plus utilisé)
-- Sections : `#EA580C` (orange)
-- Jianpu : `#B91C1C` (rouge foncé)
+- Partition 简谱 : **l'image du scan** avec un calque des accords (`src/components/jianpu/JianpuSheet.tsx`, `public/jianpu/`). Le bloc `{start_of_jianpu}…{end_of_jianpu}` est encore lu par le parseur mais plus rendu
+- Couleurs : le CSS fait foi (`globals.css` : `--chord-color`, `--sec-*`, `--jianpu-color`), pas le cahier des charges ; valeurs : référence § Couleurs
 
 ## Règles
 - Un commit par étape ou par lot, pas un commit par fichier (consigne de Timothée du 13/09/2026)
@@ -93,87 +66,165 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - Gestes sur les quatre systèmes (Windows, Android, iOS, macOS) : raccourcis par les évènements du navigateur (copy, paste), jamais par ⌘ seul ; Suppr et ⌫ font la même chose ; tout ce qui s'offre au survol a un équivalent au toucher ; les libellés disent ⌘ sur Apple, Ctrl ailleurs.
 
 ## Sessions cloud (claude.ai/code) — règles de Timothée (08/10/2026)
-Une session cloud n'a pas la mémoire des sessions locales : ces règles valent pour elle comme pour les autres
-(complétées le 13/10/2026 avec celles qui n'étaient qu'en mémoire locale). Une nouvelle consigne durable de Timothée
-s'écrit ici, pas seulement en mémoire.
-- **Branches** : `ui/apple-design` = le travail en cours. Tout s'y fait, directement : **aucune autre branche**, pas de
-  branche de lot à fusionner. `main` = le site en ligne (Vercel déploie chaque push) : n'y pousser **que sur un ordre
-  explicite de Timothée, donné au moment même** (un « oui » à une autre question n'en est pas un). Une correction faite
-  sur `main` est ensuite reportée sur `ui/apple-design` par une fusion (jamais de rebase de `main`).
-- **Pousser** : `git pull --rebase` sur la branche juste avant chaque push (d'autres sessions poussent aussi) ; jamais de
+Valables pour toutes les sessions (complétées le 13/10/2026). Une nouvelle consigne durable de Timothée s'écrit ici,
+pas seulement en mémoire.
+- **Branches** (Timothée, 29/10/2026) : on ne passe plus par `ui/apple-design` (fusionnée). `main` = le site en ligne
+  (Vercel déploie chaque push) : n'y pousser **que sur un ordre explicite de Timothée, donné au moment même** (un
+  « oui » à une autre question n'en est pas un). En attendant, le travail se fait sur **`claude/corrections-design`**,
+  la branche de travail commune (Timothée, 12/11/2026 : « Toi aussi mets toi sur la branche claude/corrections-design ») :
+  une session qui a reçu une autre branche (conversation ouverte depuis le téléphone) bascule dessus avant de
+  travailler, et toute session lancée l'est avec `source_revision` et `outcome_branch` = cette branche. Sans cela, AO
+  et AP ont travaillé un jour sur deux branches sans se voir (`docs/feuille-de-route.md`, « Branches réunies »).
+- **Pousser** : `git pull --rebase` juste avant chaque push (d'autres sessions poussent aussi) ; jamais de
   `push --force`, jamais de suppression de branche. Indexer **par nom** (jamais `git add -A`) ; ne jamais commiter
-  `next-env.d.ts` ni `tsconfig.json` réécrits par un serveur de test, `test-results/`, `.next*/`.
-- **Secrets** : l'environnement cloud ne contient que les variables `NEXT_PUBLIC_*` (configuration web, publique).
-  Aucune lecture de la vraie base Firestore, aucune vraie notification : tout est simulé dans les tests
-  (`tests/helpers/fakeSession.ts`). Une modification de `firestore.rules` se publie à la main par Timothée : le dire.
+  `next-env.d.ts` ni `tsconfig.json` réécrits par un serveur de test, `test-results/`, `.next*/`. Un fichier sous
+  `.claude/` s'indexe avec `git add -f` (dossier ignoré). Un commit par lot ou par tranche, message en français.
+- **Secrets** : l'environnement cloud n'a que les variables `NEXT_PUBLIC_*` (publiques). Aucune lecture de la vraie
+  base Firestore, aucune vraie notification : tout est simulé dans les tests (`tests/helpers/fakeSession.ts`). Une
+  modification de `firestore.rules` se publie à la main par Timothée : le dire.
 - **Dépôt public** : aucun nom réel de membre dans les tests, fixtures, specs ou commits ; des noms fictifs, inventés
-  pour chaque nouveau test (les lignes de planning de `src/lib/planning/data.ts`, recopiées dans d'anciens tests, sont
-  de vrais noms).
-- **Tests** : `npx playwright install --with-deps chromium` au début de la session, puis les règles « Tests — Playwright »
-  ci-dessus (trois appareils toujours ; les cinq projets pour les specs d'agencement).
-- **Méthode** : specs dans `docs/`, feuille de route `docs/feuille-de-route.md` ; un commit par lot ou par tranche,
-  message en français.
+  pour chaque nouveau test (les lignes de `src/lib/planning/data.ts`, recopiées dans d'anciens tests, sont de vrais noms).
+- **Tests** : `npx playwright install --with-deps chromium` au début de la session ; trois appareils toujours, les
+  cinq projets pour les specs d'agencement.
 - **Go** : un lot se code sur un mot explicite de Timothée, donné **après** la spec (« go », « feu vert », « vas-y pour
   le lot N ») ; une phrase au futur ou au conditionnel (« tu peux le coder », « je le montrerai ») décrit un plan. Un go
   vaut pour un lot, pas pour le suivant, ni pour une mise en ligne. Dans le doute, demander « go pour le lot N ? ».
-- **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (artefact HTML
-  ou Figma : pistes aux trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go.
+  Exception (Timothée, 11/11/2026, « oui ») : les tranches 2 à 7 de `docs/spec-exemples-usage.md` s'enchaînent sans
+  nouveau go, selon le § 8 de cette spec ; une tranche bloquée arrête la chaîne. La mise en ligne reste à part.
+  Règle générale (Timothée, 12/11/2026 : « Il faut que toutes les tranches se lancent automatiquement quand une est
+  finie ») : le go d'un lot vaut pour **toutes ses tranches** ; chaque session lance la suivante sans nouveau go, et
+  quand un chantier finit, le pilote lance aussitôt le chantier suivant de la file qui a déjà son go. Un lot nouveau
+  garde son go ; une tranche bloquée arrête sa chaîne ; la limite des chantiers (cinq) tient.
+- **Pilotage délégué** (Timothée, 12/11/2026 : « je te laisse orchestrer toutes les prochaines modifications, pour
+  toutes questions qu'on me demandera répond à ma place en faisant des choix éclairé et les bons ») : la session de
+  pilotage nommée dans `docs/feuille-de-route.md` (§ État, « Pilotage ») tient la file des chantiers et répond aux
+  questions des sessions à sa place ; son go, son « reprends » ou son choix vaut celui de Timothée, et elle l'écrit,
+  daté et motivé, dans la spec (« décision déléguée »). Restent à Timothée seul : pousser sur `main`, publier
+  `firestore.rules`, lever un garde-fou de dépense. Ce qu'il écrit lui-même l'emporte ; il reprend la main d'un mot.
+  Pilote économe : réveil sur évènement, aucune transcription lue en entier, passage de main avant le plafond.
+  **Moins de réveils** (Timothée, 12/11/2026, « Oui fais les deux » : un pilote réveillé à froid relit tout son
+  contexte) : (1) la **file** des chantiers est écrite dans `docs/feuille-de-route.md` (§ État, « File ») ; la session
+  qui finit un lot ou libère sa place la lit, compte les chantiers (`list_sessions`, limit 10), lance elle-même le
+  premier de la file qui a son go, raye la ligne et pousse, sans écrire au pilote. (2) **Questions** (Timothée, même
+  jour : « tranche-les pour moi ») : une session tranche elle-même en suivant la proposition motivée de la spec et
+  l'écrit « décision déléguée (session, JJ/MM) » ; elle n'écrit au pilote que si le choix est difficile à défaire,
+  sort des décisions de Timothée ou n'a pas de proposition ; le pilote tranche alors à sa place. (3) Le pilote n'a pas
+  de rappel périodique et passe la main vers 100 000 jetons. (4) Filet : `autoCompactWindow` à 500 000 (Timothée, 12/11 : « Monte à 500k ») dans
+  `.claude/settings.json` ; l'état s'écrit quand même dans le dépôt (un résumé perd des détails).
+- **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (pistes aux
+  trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go. Planche = workflow
+  `/planche` (équipe design, 02/11/2026, `docs/orchestration.md` § 4) ; la conversation principale relit, publie
+  l'artefact et pose les questions. Après une `/tranche` qui change l'apparence, elle lance aussi `critique-design`.
   Zones gelées sauf demande explicite : § 2 « Restent gelés » de `docs/audit-ui-apple-design.md`.
-- **Coder = une session orchestratrice** (Timothée, 18/10/2026) : une session cloud qui reçoit un go ne code pas
-  elle-même ; elle lance une **nouvelle session** (`create_session`) qui orchestre le code (agents `executant`,
-  `testeur`), sur la même branche, avec la spec et les décisions dans sa consigne. La session d'origine garde la spec,
-  les planches et le suivi.
+- **Coder** (Timothée, 18/10/2026 ; seuil du 10/11/2026) : une tranche de spec ou plus → la session qui reçoit le go
+  ne code pas ; elle lance une **nouvelle session** orchestratrice (`create_session`, même branche, spec et décisions
+  dans la consigne) et garde la spec, les planches et le suivi. Une retouche (trois fichiers au plus, pas de spec,
+  pas de décision nouvelle) → la session courante lance directement un `executant` puis un `testeur`, sans nouvelle
+  session. Le go reste requis dans les deux cas.
+- **Économie de contexte** (règles issues de l'audit des sessions, validées par Timothée le
+  10/11/2026, à ajuster après deux ou trois lots) :
+  - *Plafond* : toute session, principale comme orchestratrice, passe la main avant 200 000 tokens (≈ deux ou trois
+    tranches) : elle écrit l'état dans le § Avancement de la spec ou dans la feuille de route, puis une session
+    neuve reprend de là.
+  - *Une session par tranche* (Timothée, 12/11/2026 : « relancer de nouvelles sessions chaque nouvelle tranche pour
+    économiser des tokens ») : une orchestratrice code **une** tranche, la commite, écrit sa ligne d'Avancement,
+    pousse, lance elle-même la session de la tranche suivante (`create_session`, même branche, Opus, consigne
+    reprise de la sienne avec le numéro de tranche changé) puis s'arrête. Elle ne lance pas la suivante si la tranche
+    est bloquée, si le lot est fini ou si le go ne couvre pas la suite : elle écrit alors au pilote.
+  - *Tests d'une tranche* (Timothée, 12/11/2026, « oui applique les trois ») : une tranche fait tourner les specs
+    qu'elle touche et leurs voisines, sur les trois appareils ; la suite complète tourne **une fois, en fin de lot**
+    (dernière tranche). Après des corrections, un seul tour, limité aux specs qui avaient échoué. Chaque ligne
+    d'Avancement donne la durée des tests de la tranche (à relire après deux ou trois tranches).
+    **Suite complète** (Timothée, 12/11/2026 après-midi, « oui suite complète à la fin de tout » : elle compte 21 400
+    tests, environ 8 h) : elle ne tourne plus en fin de lot. En fin de lot : les specs du lot et des pages qu'il
+    touche. La suite complète tourne une seule fois, quand tous les chantiers en cours sont finis et avant la mise
+    en ligne, en tâche de fond et par fragments.
+    **Pour aller plus vite** (Timothée, 12/11/2026 soir, « Oui pour les 3 ») : (1) la suite complète se lance en
+    **quatre parts en même temps** (quatre sessions, `--shard=k/4`), pas en une ; (2) deux lots peuvent coder en même
+    temps dans le mode louange s'ils sont dans des zones différentes du fichier (TC à côté d'AN) : ajouts courts, aucun
+    reformatage, `git pull --rebase` avant de coder, avant les tests finaux et avant de pousser ; (3) deux **petites**
+    tranches voisines peuvent partager une session (un commit et une ligne d'Avancement par tranche).
+    **Méthode mesurée** (13/11/2026 : un quart ou un seizième d'une traite fait tomber `next dev`, 16 Go) : la suite
+    se découpe en **trente-deux morceaux** (`--shard=k/32 --workers=2 --trace off`), un serveur neuf par commande,
+    répartis sur plusieurs sessions Sonnet qui ne rendent pas la main tant que les tests tournent ; ≈ 20 min par
+    morceau. Détail et dernier résultat : `docs/tests/suite-2026-11-13-synthese.md`.
+  - *Quatre chantiers* (même date, « go pour Harmonie H2 » en quatrième) : la limite ci-dessous passe de trois à
+    quatre chantiers de code en même temps ; pas au-delà sans nouvel accord de Timothée.
+    **Cinq** depuis le 12/11/2026 après-midi (Timothée : « on peut passer à 5 sessions en simultanées ») : partout où
+    ce fichier dit trois ou quatre chantiers, lire cinq ; pas au-delà sans nouvel accord.
+  - *Pas de réveil* : une orchestratrice n'envoie pas de message de suivi à la session d'origine ; elle écrit une
+    ligne datée par tranche dans la spec et pousse. Un message seulement pour une question bloquante ou la fin du lot.
+  - *Lire par section* : une spec ou un document de plus de 30 000 caractères se lit par section (grep des titres
+    puis la plage), jamais en entier ; la consigne d'un agent cite la section.
+  - *Captures et diff* : `regard` ouvre toutes les captures ; la conversation principale n'ouvre que celles qu'il
+    signale, et au moins une par disposition (les quatre, plus 1 440 px pour une page de lecture). Elle lit le verdict du `relecteur` et `git diff --stat`, puis
+    seulement les passages signalés.
+  - *Attentes* : un agent ne reste pas en attente de plus de 5 minutes en avant-plan (son cache expire) : Playwright
+    est lancé par le `testeur`, les suites longues en tâche de fond ou en fragments.
+  - *Agents sur captures* (Timothée, 11/11/2026 : une relance d'audit a coûté 85 M de jetons, dont 72,5 M pour
+    douze `critique-design` en Opus qui relisaient leurs captures à chaque tour) : le tri des captures revient à
+    `regard` ; un agent Opus n'ouvre que les captures qu'on lui signale, douze au plus, plusieurs par tour, et ne
+    reçoit ni lot de captures ni liste à balayer. Au-delà, on découpe ou on passe l'agent en Sonnet dans le script.
+  - *Annoncer avant de lancer* (même date) : hors `/tranche` et `/planche` déjà demandés, tout workflow ou tout
+    lancement de plus de trois agents s'annonce d'abord à Timothée : nombre d'agents, modèles, estimation en jetons
+    relectures en cache comprises (taille du contexte × nombre de tours). On lance sur son accord du moment.
+  - *Sessions en parallèle* (même date) : en Opus, avec la consigne d'économie écrite dans la consigne de lancement
+    (un livrable, lecture par section, aucun agent hors ceux nommés, arrêt dès le livrable rendu).
+  - *Trois chantiers de code au plus* (Timothée, 11/11/2026, nuit : six orchestratrices codaient ensemble sur la
+    branche, la limite des 5 h est tombée) : au plus trois chantiers de code en même temps sur la branche ; un
+    nouveau go attend qu'une place se libère. Avant de lancer une orchestratrice, la session compte celles qui
+    tournent (`list_sessions`) ; à trois, elle le dit à Timothée et attend. Un chantier garde sa place d'une tranche
+    à la suivante.
 - **Agents en parallèle** : quelques-uns à la fois (neuf d'un coup ont épuisé la limite de dépense du mois, le
   04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
-- **Déléguer** aux agents de `.claude/agents/` : `chercheur` (Haiku) pour une recherche qui parcourt plusieurs
-  fichiers, `testeur` (Haiku) pour lancer une suite de tests et en rapporter les échecs, `executant` (Sonnet) pour
-  appliquer une modification déjà décidée et décrite. La conversation principale garde le jugement : specs, planches,
-  débogage, relecture du diff, regard sur les captures et les 简谱.
+- **Déléguer** aux agents de `.claude/agents/` : `chercheur`, `testeur` (Haiku) ; `executant`, `relecteur`, `regard`,
+  `maquettiste` (Sonnet) ; `directeur-artistique`, `critique-design` (Opus). Workflows (`docs/orchestration.md`) :
+  `/tranche`, `/verifier-constats`, `/planche` (aucun ne commite) ; `/audit-code` (≈ 60 agents) sur demande seulement.
+  Rôles : référence § Délégation. La conversation principale garde le jugement : specs, planches, débogage,
+  agencement, 简谱.
 
 ## Comportement (guidelines Karpathy)
+- **Penser avant de coder** : expliciter les hypothèses ; incertain ou flou → s'arrêter, nommer ce qui est confus,
+  demander. Plusieurs interprétations → les présenter, ne pas choisir en silence. Approche plus simple → la proposer,
+  pousser en arrière si justifié.
+- **Simplicité d'abord** : le minimum de code qui résout le problème ; rien de spéculatif, pas de features non
+  demandées, pas d'abstraction pour un usage unique, pas de gestion d'erreurs pour des scénarios impossibles.
+- **Changements chirurgicaux** : ne toucher que le nécessaire, sans « améliorer » le code adjacent ; suivre le style
+  existant ; code mort repéré → le mentionner, ne pas le supprimer ; ne nettoyer que les imports et variables rendus
+  orphelins par ses propres changements.
+- **Orienté objectif** : critères de succès vérifiables avant de commencer ; tâche multi-étapes → plan bref avec
+  vérification à chaque étape.
 
-### Penser avant de coder
-- Expliciter les hypothèses avant d'implémenter. Si incertain, demander.
-- Si plusieurs interprétations existent, les présenter — ne pas choisir silencieusement.
-- Si une approche plus simple existe, la proposer. Pousser en arrière si justifié.
-- Si quelque chose est flou, s'arrêter et nommer ce qui est confus.
+## Consignes de Timothée du 12/11/2026 (ses mots)
+This code base is yours: what it's for and how it's built are your call, and you'll keep building it.
 
-### Simplicité d'abord
-- Minimum de code qui résout le problème. Rien de spéculatif.
-- Pas de features au-delà de ce qui est demandé.
-- Pas d'abstractions pour du code à usage unique.
-- Pas de gestion d'erreurs pour des scénarios impossibles.
+### Finishing work
+Please avoid stopping while you still owe work the user asked for before. Be persistent and do not stop unless
+needed.
 
-### Changements chirurgicaux
-- Ne toucher que ce qui est nécessaire. Ne pas "améliorer" le code adjacent.
-- Correspondre au style existant, même si on ferait différemment.
-- Si du code mort est repéré, le mentionner — ne pas le supprimer.
-- Nettoyer uniquement les imports/variables rendus orphelins par SES propres changements.
+I need you to be limit usage aware.
 
-### Exécution orientée objectif
-- Définir des critères de succès vérifiables avant de commencer.
-- Pour les tâches multi-étapes, énoncer un plan bref avec vérification à chaque étape.
+Précisions du pilote (12/11/2026, à corriger par Timothée si besoin) :
+- *Ce qui ne change pas* : le go avant de coder, `main` et `firestore.rules` réservés à Timothée, le plafond de
+  200 000 tokens. « Ne pas s'arrêter » veut dire finir ce qui est dû (ou passer la main par écrit), pas dépasser un go.
+- *Limit usage aware*, en clair : avant chaque lancement, prendre le modèle le moins cher qui suffit (`chercheur`
+  et `testeur` en Haiku, `executant`, `relecteur`, `regard` en Sonnet, Opus pour le jugement seulement) ; le moins
+  d'agents et de tours possible ; ne rien relire d'entier ; ralentir ou attendre quand la limite des 5 h approche,
+  plutôt que de la faire tomber. Les règles chiffrées restent celles du § « Économie de contexte ».
 
 ## Agent skills
-
-### Issue tracker
-
-Pas d'issues GitHub : le travail se suit dans `docs/feuille-de-route.md` et une spec par lot dans `docs/spec-*.md`. Voir `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Les cinq étiquettes par défaut : `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. Voir `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Un seul contexte : `CONTEXT.md` et `docs/adr/` à la racine, créés au besoin. Voir `docs/agents/domain.md`.
+Pas d'issues GitHub : suivi dans `docs/feuille-de-route.md` et une spec par lot (`docs/agents/issue-tracker.md`) ;
+cinq étiquettes de triage par défaut (`docs/agents/triage-labels.md`) ; un seul contexte, `CONTEXT.md` et `docs/adr/`
+à la racine, créés au besoin (`docs/agents/domain.md`).
 
 ## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+Graphe du code dans `graphify-out/` (non versionné ; reconstruit au démarrage de chaque session cloud par
+`scripts/graphify-cloud.sh`). La commande la moins chère par question (mesuré le 11/11/2026, validé par Timothée) :
+- **Un symbole** (fonction, composant, type), qui l'importe et ce qu'il appelle : `graphify explain "<Symbole>"`
+  (≈ 1 000 caractères, trois fois moins que `git grep -n` ; fichiers nommés sans dossier). Lien entre deux
+  symboles : `graphify path "<A>" "<B>"`.
+- **Un chemin, un texte, un libellé, un mot sans symbole connu** : `git grep -ln`, puis `git grep -n` ou
+  `sed -n 'a,bp'` sur les fichiers retenus.
+- **Vue d'ensemble** : `grep -n '^## ' graphify-out/GRAPH_REPORT.md` puis la plage (le rapport entier : 237 000
+  caractères). `graphify query` (≈ 6 000 caractères de voisinage par question) : en dernier recours.
+- Après une modification de code : `graphify update .` (35 s, sans clé d'API).

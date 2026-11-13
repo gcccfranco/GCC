@@ -1,5 +1,5 @@
-// Puppeteer n'arrive ici que par @mermaid-js/mermaid-cli (docs:diagrammes).
+// Puppeteer n'arrive ici que par @mermaid-js/mermaid-cli (scripts/diagrammes/generer.ts).
 // Sans ce réglage, son installation télécharge un Chrome à chaque `npm ci`,
 // y compris sur Vercel et dans la CI. Les diagrammes se rendent avec le
-// Chromium de Playwright (voir scripts/diagrammes/generer.mjs).
+// Chromium de Playwright (voir scripts/diagrammes/generer.ts).
 module.exports = { skipDownload: true };

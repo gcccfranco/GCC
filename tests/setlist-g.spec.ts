@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { compterLesRendus, defilerImageParImage } from "./helpers/rendus";
 import { issueDuGeste, lireIntention, projection } from "../src/hooks/useSwipeViews";
+import { basculerMode, verifierMode } from "./helpers/menuSetlist";
+import { basculerAccords } from "./helpers/setlist";
 
 // Lot U5, tranche T2 (docs/spec-deux-volets.md, questions 3, 9 à 12 et 14) :
 // sur téléphone et tablette portrait, la setlist relie Liste et Partitions (G).
@@ -71,6 +73,7 @@ test.beforeEach(async ({ page }, info) => {
 });
 
 async function ouvrir(page: Page, to = `/setlists/${SETLIST_ID}`) {
+  await page.addInitScript(() => localStorage.setItem("accords-aide-vue", "1"));
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: SETLIST }, to);
 }
 
@@ -84,15 +87,17 @@ const lienLigne = (page: Page, n: number) => ligne(page, n).getByRole("link");
 const chant = (page: Page, n: number) => page.locator(`[data-outline-item="${n}"]`);
 const params = (page: Page) => Object.fromEntries(new URL(page.url()).searchParams);
 
-/** Écart entre le haut du chant `n` et le bas de la bascule, posée sous la barre. */
+/** Écart entre le haut du chant `n` et le bas de ce qui le coiffe : la bascule collée en vue Liste, la barre d'outils
+ *  en vue Partitions (la bascule y est dans la barre compacte, T2 du lot exemples d'usage). */
 async function ecartSousLaBarre(page: Page, n: number) {
+  const enListe = (await page.locator("[data-vue=liste]").count()) > 0;
   const [haut, bas] = await Promise.all([
     chant(page, n).evaluate((el) => el.getBoundingClientRect().top),
-    bascule(page).evaluate((el) => el.getBoundingClientRect().bottom),
+    (enListe ? bascule(page) : barre(page)).evaluate((el) => el.getBoundingClientRect().bottom),
   ]);
   return Math.round(haut - bas);
 }
-/** Le chant commence juste sous la bascule : 12 px, le fondu du bas de la bascule. */
+/** Le chant commence juste sous la bascule (12 px, le fondu de son bas) ou sous la barre : 12 px. */
 const SOUS_LA_BARRE = 12;
 
 /** Libellés des commandes visibles de la barre, dans l'ordre. */
@@ -102,6 +107,23 @@ const commandes = (page: Page) =>
   );
 
 test.describe("setlist G, téléphone et tablette portrait", () => {
+  test("le premier chant commence avant 45 % de la hauteur de l'écran (dimanche-16)", async ({ page }, info) => {
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    const [y, h] = await Promise.all([ligne(page, 1).evaluate((el) => el.getBoundingClientRect().top), page.evaluate(() => innerHeight)]);
+    expect(y / h, `le chant 1 à ${Math.round(y)} px sur ${h}`).toBeLessThan(0.45);
+    // Aucune rangée d'actions de préparation en tête de page : elles sont dans le menu ⋯.
+    await expect(page.getByRole("button", { name: "Ajouter le lien de la présentation" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Exporter pour FreeShow" })).toHaveCount(0);
+  });
+
+  test("les notes de la setlist gardent leurs retours à la ligne à la lecture (dimanche-4)", async ({ page }) => {
+    await ouvrir(page);
+    const note = page.getByText("Thème : la grâce.");
+    await expect(note).toBeVisible();
+    expect(await note.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe("pre-line");
+  });
+
   test("la bascule « Liste | Partitions » est sous l'en-tête, hors de la barre ; la Liste d'abord", async ({ page }) => {
     await ouvrir(page);
     await expect(boutonVue(page, "Liste")).toHaveAttribute("aria-pressed", "true");
@@ -115,6 +137,67 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect(ligne(page, 1)).toBeVisible();
     await expect(chant(page, 1)).toHaveCount(0);
     expect(params(page)).toEqual({});
+  });
+
+  test("au défilement, la barre compacte (et la bascule qu'elle porte) s'escamote, puis revient en remontant", async ({ page }) => {
+    // Vue Partitions : la page est assez longue pour défiler loin.
+    await ouvrir(page, `/setlists/${SETLIST_ID}?vue=partitions`);
+    await expect(bascule(page)).toBeVisible();
+    await expect(barre(page).getByTestId("bascule-vues")).toBeVisible();
+    const defiler = async (de: number, a: number) => {
+      const pas = a > de ? 10 : -10;
+      for (let y = de; pas > 0 ? y <= a : y >= a; y += pas) {
+        await page.evaluate((v) => window.scrollTo(0, v), y);
+        await page.waitForTimeout(30);
+      }
+    };
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
+    await defiler(0, 1500);
+    await page.waitForTimeout(400);
+    const b = (await bascule(page).boundingBox())!;
+    expect(b.y + b.height, "escamotée hors écran avec la barre").toBeLessThanOrEqual(1);
+    // Remonter un peu ramène la barre, la bascule dedans.
+    await defiler(1490, 1430);
+    await page.waitForTimeout(400);
+    await expect(bascule(page)).toBeInViewport({ ratio: 1 });
+  });
+
+  test("vue Liste : la bascule suit la page puis colle sous la barre, s'escamote et revient", async ({ page }) => {
+    await ouvrir(page);
+    await expect(bascule(page)).toBeVisible();
+    // La liste de trois chants ne défile pas jusqu'à 1 500 px : une longue setlist est simulée par la hauteur de la page.
+    // Rallonger la colonne de la bascule (son conteneur collant), pas seulement la page.
+    await bascule(page).evaluate((el) => {
+      const cale = document.createElement("div");
+      cale.style.height = "2400px";
+      el.parentElement!.appendChild(cale);
+    });
+    const haut = async (el: Locator) => (await el.boundingBox())!;
+    const defiler = async (de: number, a: number) => {
+      const pas = a > de ? 10 : -10;
+      for (let y = de; pas > 0 ? y <= a : y >= a; y += pas) {
+        await page.evaluate((v) => window.scrollTo(0, v), y);
+        await page.waitForTimeout(30);
+      }
+    };
+    const y0 = (await haut(bascule(page))).y;
+    const barreBas = await barre(page).evaluate((el) => el.getBoundingClientRect().bottom);
+    // 90 px plus bas, la bascule n'est pas encore à l'endroit où elle collerait.
+    expect(y0 - 90, "assez bas pour ne pas coller").toBeGreaterThan(barreBas);
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
+    await defiler(0, 90);
+    await page.waitForTimeout(400);
+    expect(Math.abs((await haut(bascule(page))).y - (y0 - 90)), "pas de saut : elle suit la page").toBeLessThanOrEqual(2);
+    // Plus bas, elle est escamotée hors de l'écran.
+    await defiler(100, 1500);
+    await page.waitForTimeout(400);
+    const b = await haut(bascule(page));
+    expect(b.y + b.height, "escamotée hors écran").toBeLessThanOrEqual(1);
+    // Remonter un peu ramène les barres, la bascule sous la barre.
+    await defiler(1490, 1430);
+    await page.waitForTimeout(400);
+    const [bb, br] = await Promise.all([haut(bascule(page)), haut(barre(page))]);
+    expect(Math.abs(bb.y - (br.y + br.height)), "revenue sous la barre").toBeLessThanOrEqual(2);
   });
 
   test("bascule : pleine largeur sur téléphone, 360 px au plus sur tablette", async ({ page }, info) => {
@@ -232,32 +315,37 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
   });
 
-  test("la même barre des deux côtés", async ({ page }) => {
+  test("la barre de la Liste, puis la barre compacte des Partitions (titre et bascule dedans)", async ({ page }) => {
     await ouvrir(page);
     await expect(barre(page).getByRole("button", { name: "Mode Louange" })).toBeVisible();
     const cote = await commandes(page);
-    expect(cote).toEqual(["Retour", "Affichage", "Adapter", "Accords", "Ma version", "Mode Louange", "Plus d'actions"]);
+    // Sous 431 px (lot CD, T4a, dimanche-15), « Crayon » vit dans le menu « ⋯ » (MP-3 : il remplace Adapter et Ma version).
+    expect(cote).toEqual(page.viewportSize()!.width >= 431
+      ? ["Retour", "Affichage", "Crayon", "Accords", "Mode Louange", "Plus d'actions"]
+      : ["Retour", "Affichage", "Accords", "Mode Louange", "Plus d'actions"]);
     await boutonVue(page, "Partitions").click();
     await expect(chant(page, 1)).toBeVisible();
-    expect(await commandes(page)).toEqual(cote);
+    // Vue Partitions (T2 du lot exemples d'usage) : le bloc titre et la bascule dans la barre ; sous 640 px, Affichage,
+    // Accords et le Crayon passent dans le menu « ⋯ ».
+    await expect(barre(page).getByTestId("bascule-vues")).toBeVisible();
+    // Le bouton titre se lit « {titre}, Afficher les détails de la setlist » : le titre est ôté pour comparer.
+    expect((await commandes(page)).map((n) => n.replace(/^.+, (Afficher les détails de la setlist)$/, "$1"))).toEqual(page.viewportSize()!.width >= 640
+      ? ["Retour", "Afficher les détails de la setlist", "Affichage", "Crayon", "Accords", "Liste", "Partitions", "Mode Louange", "Plus d'actions"]
+      : ["Retour", "Afficher les détails de la setlist", "Liste", "Partitions", "Mode Louange", "Plus d'actions"]);
   });
 
-  test("Adapter depuis la Liste ouvre les partitions au chant lu, en adaptation", async ({ page }) => {
+  test("Crayon depuis la Liste ouvre les partitions au chant lu, en Crayon", async ({ page }) => {
     await ouvrir(page);
     await lienLigne(page, 2).click();
     await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
     await boutonVue(page, "Liste").click();
-    await barre(page).getByRole("button", { name: "Adapter" }).click();
-    await expect(page.getByText(/Mode adaptation/)).toBeVisible();
+    // La vue glisse (T5) : on attend la Liste posée avant de toucher le Crayon.
+    await expect(page.locator("[data-outline-item]")).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => (document.querySelector("[data-vue]") as HTMLElement | null)?.style.transform ?? "")).toBe("");
+    await basculerMode(page);
+    await expect(page.getByText("Crayon : touche un accord ou un mot pour le retoucher.")).toBeVisible();
     expect(params(page)).toEqual({ vue: "partitions", chant: "2" });
-    await expect(barre(page).getByRole("button", { name: "Adapter" })).toHaveAttribute("aria-pressed", "true");
-  });
-
-  test("Ma version depuis la Liste ouvre les partitions dans ce mode", async ({ page }) => {
-    await ouvrir(page);
-    await barre(page).getByRole("button", { name: "Ma version" }).click();
-    await expect(page.getByText(/^Ma version :/)).toBeVisible();
-    expect(params(page)).toEqual({ vue: "partitions", chant: "1" });
+    await verifierMode(page, "Crayon", true);
   });
 
   test("Accords depuis la Liste change le réglage des partitions", async ({ page }) => {
@@ -271,7 +359,8 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect(chant(page, 1).getByText("Bien avant le chant", { exact: false }).first()).toBeVisible();
     // Abba Père en G : F#m devient Em.
     await expect(chant(page, 1).getByText("Em", { exact: true })).toHaveCount(0);
-    await accords.click();
+    // Vue Partitions au téléphone (T2 du lot exemples d'usage) : « Accords » est dans le menu « ⋯ ».
+    await basculerAccords(page);
     await expect(chant(page, 1).getByText("Em", { exact: true }).first()).toBeVisible();
   });
 
@@ -283,12 +372,12 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     // « Choix du responsable · Toujours · Jamais ».
     await expect(menu.getByRole("menuitemcheckbox", { name: "Partition 简谱" })).toHaveAttribute("aria-checked", "true");
     await expect(menu.getByRole("menuitemradio")).toHaveText([
-      "Ordre joué", "Sections uniques", "Structure seule",
+      "Tout le chant", "Chaque section une fois", "Plan du chant", "Classique", "Couleurs par section", "Marge", "Scène", "Partition",
     ].map((t) => new RegExp(t)));
     await expect(menu.getByRole("menuitemcheckbox", { name: "Pinyin" })).toBeVisible();
-    await expect(menu.getByRole("menuitemcheckbox", { name: "Couleurs par section" })).toBeVisible();
+    await expect(menu.getByRole("menuitemradio", { name: "Couleurs par section" })).toBeVisible();
     // Le réglage choisi sur la Liste vaut pour les partitions.
-    await menu.getByRole("menuitemradio", { name: "Structure seule" }).click();
+    await menu.getByRole("menuitemradio", { name: "Plan du chant" }).click();
     await page.keyboard.press("Escape");
     await boutonVue(page, "Partitions").click();
     await expect(chant(page, 1)).toBeVisible();
@@ -300,7 +389,7 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Culte du 4 octobre" })).toBeVisible();
     await expect(page.getByText("Présidence T.")).toBeVisible();
     await expect(page.getByText("Thème : la grâce.")).toBeVisible();
-    await expect(page.getByText("Vous pouvez modifier")).toBeVisible();
+    await expect(page.getByText("Tu peux modifier")).toBeVisible();
     // Une ligne : numéro, titre, artiste, structure abrégée, notes, tonalité et « orig. », chevron.
     const abba = ligne(page, 1);
     await expect(abba).toContainText("1");

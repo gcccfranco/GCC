@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
 import { canEditPlanning } from "../src/lib/access";
 import { COLONNES_CULTE, GRILLE_CULTE, fusionnerLignes, lignesPubliees } from "../src/lib/planning/grilles";
 import { fusionnerChangements } from "../src/lib/planning/historique";
@@ -25,11 +25,11 @@ const CULTE = csv([
 ]);
 
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Inès L." };
-const PUBLIEUR: FakeProfile = { uid: "uid-pub", email: "pub@example.com", planningName: "Paul W.", notify: ["*"] };
+const PUBLIEUR: FakeProfile = { uid: "uid-pub", email: "pub@example.com", planningName: "Paul W.", ...remplit("culte") };
 const CHRISTELLE: FakeProfile = {
   uid: "uid-christelle", email: "christelle@example.com",
   firstName: "Christelle", lastName: "Zhang", planningName: "Christelle Z.",
-  plannings: ["culte"],
+  ...remplit("culte"),
 };
 
 /** Un autre compte, pour l'autocomplétion : son nom de planning n'est nulle part dans la grille. */
@@ -140,7 +140,8 @@ test("ordinateur et tablette : les colonnes sont dans l'ordre du Sheet", async (
   ordinateurEtTablette();
   await open(page, PUBLIEUR, "/planning/culte");
   await expect(page.getByTestId("grille-colonnes")).toHaveText(
-    /Date.*Présidence.*Choriste 1.*Choriste 2.*Piano.*Guitare.*Batterie.*Sono.*PPT.*Orateur.*Trad\./
+    // La traduction est facultative (31/10/2026) : en lecture, sa colonne ne s'affiche que si la période en a une.
+    /Date.*Présidence.*Choriste 1.*Choriste 2.*Piano.*Guitare.*Batterie.*Sono.*PPT.*Orateur/
   );
 });
 
@@ -173,12 +174,15 @@ test("ordinateur et tablette : la colonne des dates reste visible au défilement
   await page.setViewportSize({ width: 820, height: 800 });
   const defilement = page.getByTestId("grille-defilement");
   const date = page.locator('[data-date-cell="2026-09-20"]').filter({ visible: true });
-  const loin = laCase(page, "2026-09-20", "traduction");
+  const loin = laCase(page, "2026-09-20", "orateur"); // la traduction, facultative, peut être masquée en lecture
   const avant = { date: (await date.boundingBox())!.x, loin: (await loin.boundingBox())!.x };
   await defilement.evaluate((el) => { el.scrollLeft = el.scrollWidth; });
   await expect.poll(async () => Math.round((await loin.boundingBox())!.x), { message: "la grille défile bien" })
     .toBeLessThan(Math.round(avant.loin) - 50);
   expect(Math.abs((await date.boundingBox())!.x - avant.date), "la colonne des dates ne bouge pas").toBeLessThan(3);
+  // plannings-1 : une fois défilée, le filet de 1 px sur la colonne Date et jamais de fondu à gauche.
+  await expect(defilement).toHaveAttribute("data-defile", "true");
+  expect(await defilement.evaluate((el) => el.style.getPropertyValue("--fondu-gauche"))).toBe("0px");
 });
 
 test("téléphone : une carte par dimanche, aucun défilement horizontal de la page", async ({ page }) => {
@@ -204,7 +208,9 @@ test("trimestre non publié : le publieur voit les lignes, marquées", async ({ 
   // Le T4 n'est pas publié : le publieur a sa pilule, le membre ne l'a pas.
   await page.getByRole("tab", { name: "T4" }).click();
   await expect(laCase(page, "2026-10-04", "presidence")).toHaveText("Paul W.");
-  await expect(page.locator('[data-non-publie="2026-10-04"]').filter({ visible: true })).toBeVisible();
+  // Retouches d'usage T5 : tout le trimestre en brouillon → « Non publié » écrit une fois en tête, plus sur chaque ligne.
+  await expect(page.locator("[data-non-publie-trimestre]").filter({ visible: true })).toBeVisible();
+  await expect(page.locator('[data-non-publie="2026-10-04"]').filter({ visible: true })).toHaveCount(0);
   await expect(page.locator('[data-non-publie="2026-09-20"]')).toHaveCount(0);
 });
 
@@ -233,6 +239,20 @@ test("avec le droit : une case s'écrit, tient après rechargement, et la voisin
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
   await expect(laCase(page, "2026-09-27", "guitare")).toContainText("Christelle C.");
   await expect(laCase(page, "2026-09-20", "piano"), "les autres dimanches viennent encore du Sheet").toContainText("Ruth K.");
+});
+
+test("case remplie : contour plein de 1 px ; case vide : pointillé de 1,5 px (bo-messages-planning-7)", async ({ page }) => {
+  await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
+  const remplie = laCase(page, "2026-09-20", "piano").getByRole("button");
+  await expect(remplie).toContainText("Ruth K.");
+  const styleRemplie = await remplie.evaluate((el) => { const c = getComputedStyle(el); return [c.borderTopStyle, c.borderTopWidth]; });
+  expect(styleRemplie).toEqual(["solid", "1px"]);
+  const vide = page.locator("[data-case] button", { hasText: "Choisir" }).filter({ visible: true }).first();
+  await expect(vide, "au moins une case de personne vide").toBeVisible();
+  const styleVide = await vide.evaluate((el) => { const c = getComputedStyle(el); return [c.borderTopStyle, c.borderTopWidth]; });
+  // 1,5 px est arrondi par le navigateur selon la densité de pixels : le style fait foi, la largeur est de 1 px au moins.
+  expect(styleVide[0]).toBe("dashed");
+  expect(parseFloat(styleVide[1])).toBeGreaterThanOrEqual(1);
 });
 
 test("« Choisir » propose les comptes et les noms de la grille ; un nom sans compte s'écrit ; Échap annule", async ({ page }) => {

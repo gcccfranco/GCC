@@ -1,18 +1,20 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeDb, type FakeProfile, remplit, publie } from "./helpers/fakeSession";
 import { repondreDansLeSite } from "./helpers/agencement";
 
 // Lot 3 (docs/spec-planning-gestes.md), tranche PG-E : « Prévenir des changements » (PG33 à PG47).
 // Paix T4 2026 publié, horloge au 15/11/2026 ; la route /api/planning/changements est simulée
 // (aucun vrai push) ; aucune vraie base. Noms fictifs seulement.
 
-const PUBLIEUR: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", notify: ["Groupe Paix"], plannings: ["paix"] };
-const SANS_ECRITURE: FakeProfile = { ...PUBLIEUR, uid: "uid-lecteur", email: "lecteur@example.com", plannings: [] };
-const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", plannings: ["paix"] };
+const PUBLIEUR: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", ...publie("paix"), ...remplit("paix") };
+// Lot RS : plus d'« écrivain sans droit de publier » ni de « publieur sans droit d'écrire » — le gestionnaire du planning fait les
+// deux (Q10) ; un second gestionnaire de Paix, et un membre qui lit seulement.
+const CO_GESTIONNAIRE: FakeProfile = { uid: "uid-cogestionnaire", email: "cogestionnaire@example.com", planningName: "Cogestionnaire C.", responsabilites: ["planning:paix"] };
+const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Membre M.", responsabilites: [] };
 
 const compte = (id: string, prenom: string, nom: string) => [`users/u-${id}`, {
   email: `${id}@example.com`, firstName: prenom, lastName: nom, planningName: `${prenom} ${nom}`,
-  serviceRoles: {}, annonces: [], notify: [], equipes: false, plannings: [],
+  serviceRoles: {}, annonces: [], notify: [], equipes: false, ...remplit(),
 }] as const
 const COMPTES = Object.fromEntries([
   compte("anais", "Anaïs", "P."), compte("ruth", "Ruth", "K."), compte("hugo", "Hugo", "L."), compte("joel", "Joël", "F."), compte("lea", "Léa", "M."),
@@ -81,8 +83,8 @@ test("un publieur voit la bannière « 3 cases ont changé… » et un point par
   await capture(page, "prevenir-banniere")
 })
 
-test("un écrivain sans droit de publier ne voit ni bannière ni points", async ({ page }) => {
-  await ouvrir(page, ECRIVAIN)
+test("lot RS : un membre qui lit le planning ne voit ni bannière ni points", async ({ page }) => {
+  await ouvrir(page, MEMBRE, DOCS, "/planning/groupes")
   await expect(page.locator("[data-case='2026-11-15|presidence']").filter({ visible: true })).toBeVisible()
   await expect(banniere(page)).toHaveCount(0)
   await expect(points(page)).toHaveCount(0)
@@ -98,12 +100,12 @@ test("un trimestre brouillon n'a ni bannière ni points", async ({ page }) => {
   await expect(points(page)).toHaveCount(0)
 })
 
-test("un publieur sans droit d'écrire : grille en lecture, mais bannière, points et feuille sont là (PG35)", async ({ page }) => {
-  await ouvrir(page, SANS_ECRITURE)
+test("lot RS : un cogestionnaire remplit la grille et voit bannière, points et feuille (PG35)", async ({ page }) => {
+  await ouvrir(page, CO_GESTIONNAIRE)
   await expect(banniere(page)).toContainText("3 cases ont changé")
   await expect(points(page)).toHaveCount(3)
-  await expect(page.getByRole("button", { name: /Copier le/ })).toHaveCount(0)
-  await expect(page.getByRole("button", { name: "Choisir" })).toHaveCount(0)
+  // « Copier le… » (signe qu'il écrit la grille) n'est en barre que sur ordinateur.
+  if (test.info().project.name.startsWith("ordinateur")) await expect(page.getByRole("button", { name: /Copier le/ }).first()).toBeVisible()
   await banniere(page).getByRole("button", { name: "Prévenir des changements" }).click()
   await expect(feuille(page)).toBeVisible()
 })
@@ -223,6 +225,37 @@ test("« Publier le T1 » réussi : la grille envoie l'état du trimestre (refer
   const ref = corps.find((c) => c.apresPublication)!
   expect(ref).toMatchObject({ action: "reference", key: "paix", annee: 2027, tri: "T1" })
   expect(ref.cases).toMatchObject({ "2027-01-10|presidence": "Invité A." })
+})
+
+test("republier un trimestre déjà annoncé (dejaAnnonce) : aucune référence n'est envoyée, la première publication en envoie une", async ({ page }) => {
+  const db = await ouvrir(page, PUBLIEUR, { ...DOCS, "plannings/paix/dimanches/2027-01-10": { date: "2027-01-10", presidence: "Invité A." } })
+  const corps = await simulerRoute(page, db)
+  let publications = 0
+  await page.route("**/api/planning/release", async (route) => {
+    const { publish } = route.request().postDataJSON() as { publish: boolean }
+    if (publish) publications++
+    const notified = publish && publications === 1
+    await route.fulfill({
+      status: 200, contentType: "application/json",
+      body: JSON.stringify({ ok: true, published: publish ? ["T1"] : [], notified, sent: 0, dejaAnnonce: publish && !notified }),
+    })
+  })
+  await page.getByRole("tab", { name: "2027", exact: true }).click()
+  await page.getByRole("tab", { name: "T1", exact: true }).click()
+  await page.getByRole("button", { name: "Publier le T1" }).click()
+  await repondreDansLeSite(page, "Publier le T1")
+  await expect.poll(() => corps.filter((c) => c.apresPublication).length).toBe(1)
+  await page.getByRole("button", { name: "Masquer le T1" }).click()
+  await expect(page.getByRole("button", { name: "Publier le T1" })).toBeVisible()
+  await page.getByRole("button", { name: "Publier le T1" }).click()
+  await repondreDansLeSite(page, "Publier le T1")
+  // Le trimestre a déjà été annoncé : le texte le dit et la grille n'envoie aucune nouvelle référence.
+  await expect(page.getByRole("status").filter({ hasText: "Ce trimestre avait déjà été annoncé" })).toBeVisible()
+  expect(publications).toBe(2)
+  expect(corps.filter((c) => c.apresPublication)).toHaveLength(1)
+  // Changer de trimestre efface le texte « déjà annoncé » (le bouton est remonté, clé planning_année_trimestre).
+  await page.getByRole("tab", { name: "T4", exact: true }).click()
+  await expect(page.getByRole("status").filter({ hasText: "Ce trimestre avait déjà été annoncé" })).toHaveCount(0)
 })
 
 test("telephone — la bannière se met en pile et la feuille tient dans l'écran", async ({ page }) => {

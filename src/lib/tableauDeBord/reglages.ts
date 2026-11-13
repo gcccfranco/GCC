@@ -17,9 +17,9 @@ import {
 type AuthUser = { uid: string; email?: string | null };
 
 /** Un choix : son nom est un texte tel quel (service, programme) ou une clé de traduction. */
-export type ChoixReglage = { valeur: string; texte?: string; i18n?: string; params?: Record<string, unknown> };
+type ChoixReglage = { valeur: string; texte?: string; i18n?: string; params?: Record<string, unknown> };
 
-export type GroupeReglages = {
+type GroupeReglages = {
   cle: keyof Reglages;
   /** Clé de traduction du titre du groupe (« Services », « Sur », « Afficher »…). */
   titre: string;
@@ -62,7 +62,8 @@ export function groupesDeReglages(
         plusieurs("plannings", "plannings",
           planningsCasesVides({ plannings: GRILLES.map((g) => g.key) }, user, profile).map((k) => ({ valeur: k, texte: grilleDe(k)!.label })),
           planningsCasesVides(r, user, profile)),
-        unSeul("horizon", "sur", duree("dimanches", [2, 4, 8]), r.horizon ?? 4),
+        // Lot TB2-b : le nombre de dimanches suivants (après le prochain) comptés dans la ligne « plus tard ».
+        unSeul("horizon", "dimanchesSuivants", duree("dimanches", [2, 4, 8]), r.horizon ?? 4),
       ];
     case "evenements":
       return [
@@ -81,8 +82,8 @@ export function groupesDeReglages(
         { valeur: "tout", i18n: `${T}.depuisLeDebut` },
       ], r.periode ?? "12m")];
     case "comptes":
-      return [unSeul("liste", "liste",
-        [{ valeur: "sansCompte", i18n: `${T}.sansCompte` }, { valeur: "nouveaux", i18n: `${T}.nouveaux` }], r.liste ?? "sansCompte")];
+      // Lot TB2-b : deux nombres, plus de liste : le réglage « liste » (resté dans le type) n'a plus de sens.
+      return [];
     case "raccourcis":
       return [plusieurs("raccourcis", "raccourcis",
         raccourcisPermis(user, profile, {}).map((x) => ({ valeur: x.id, i18n: `tableauDeBord.raccourcis.${x.id}` })),

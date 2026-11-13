@@ -8,7 +8,7 @@
 import { noteToIndex, transposeChord } from "@/lib/transpose";
 import type { Fiche } from "@/types/harmonie";
 
-export interface Transition {
+interface Transition {
   ficheId: string;
   /** Demi-tons entre les deux chants, de 0 à 11. */
   ecart: number;

@@ -56,7 +56,7 @@ export function RechercheTitulaire({
           <DialogPrimitive.Content
             aria-describedby={undefined}
             style={{ ...place, width: LARGEUR }}
-            className="fixed z-50 rounded-2xl border bg-popover p-2 text-popover-foreground shadow-lg"
+            className="fixed z-50 rounded-2xl bg-popover p-2 text-popover-foreground [box-shadow:var(--shadow-flottant)]"
           >
             <DialogPrimitive.Title className="px-1.5 pt-1 text-sm font-semibold">{ouverture?.titre}</DialogPrimitive.Title>
             <p className="px-1.5 pb-2 text-xs text-muted-foreground">{ouverture?.sousTitre}</p>
@@ -110,7 +110,7 @@ function Liste({
         >
           <Initiales nom={c.nom} />
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[15px] font-semibold text-foreground sm:text-sm">{c.nom}</span>
+            <span className="block truncate text-base font-semibold text-foreground sm:text-sm">{c.nom}</span>
             <span className="block text-xs text-muted-foreground">{detail}</span>
           </span>
           {actif && <span className="shrink-0 rounded-full bg-foreground px-3 py-1 text-xs font-semibold text-background">{t("groupes.recherche.ajouter")}</span>}
@@ -135,13 +135,13 @@ function Liste({
       </div>
       {liste.length > 0 && (
         <section aria-label={t("groupes.recherche.comptes")}>
-          <h3 className="px-1.5 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("groupes.recherche.comptes")}</h3>
+          <h3 className="px-1.5 pb-1 pt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("groupes.recherche.comptes")}</h3>
           <ul>{liste.map(ligne)}</ul>
         </section>
       )}
       {ouverture.sansCompte && nomLibre && (
         <section aria-label={t("groupes.recherche.sansCompte")}>
-          <h3 className="px-1.5 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("groupes.recherche.sansCompte")}</h3>
+          <h3 className="px-1.5 pb-1 pt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("groupes.recherche.sansCompte")}</h3>
           <button
             type="button"
             onClick={() => onChoisir({ nom: nomLibre, uid: "" })}
@@ -151,7 +151,7 @@ function Liste({
               <Plus className="h-4 w-4" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-semibold text-foreground sm:text-sm">{t("groupes.recherche.ajouterSansCompte", { nom: nomLibre })}</span>
+              <span className="block text-base font-semibold text-foreground sm:text-sm">{t("groupes.recherche.ajouterSansCompte", { nom: nomLibre })}</span>
               <span className="block text-xs text-muted-foreground">{t("groupes.recherche.sansCompteAide")}</span>
             </span>
           </button>

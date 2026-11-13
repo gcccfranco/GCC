@@ -16,7 +16,7 @@ import type { Absence } from "@/types/absence"
 // Menu contre la case sur ordinateur (≥ 1024 px, tablette paysage comprise),
 // feuille sur tablette portrait et téléphone (spec, « Écrans »).
 
-export type OuvertureChoix = {
+type OuvertureChoix = {
   /** « Présidence · 10/1 » : titre de la feuille, nom du menu. */
   titre: string
   /** Libellé de la colonne : la marque des comptes du rôle, le nom du champ libre. */
@@ -40,7 +40,7 @@ const LARGEUR_MENU = 264
 const HAUTEUR_MENU = 440
 
 /** « Remplir vers le bas » (lot 3, PG18 à PG20) : absent, l'entrée n'est pas offerte. */
-export type RemplirVersLeBas = {
+type RemplirVersLeBas = {
   /** Sa phrase d'aide (ou « Aucune case vide plus bas ce trimestre. »). */
   aide: string
   /** Aucune case vide à remplir : l'entrée est grisée. */
@@ -80,6 +80,8 @@ export function ChoisirNom({
     const place = a && {
       left: Math.max(8, Math.min(a.left, window.innerWidth - LARGEUR_MENU - 8)),
       ...(enHaut ? { bottom: window.innerHeight - a.top + 4 } : { top: a.bottom + 4 }),
+      // Ni dessus ni dessous n'ont 440 px (case au milieu d'un écran bas) : le menu tient dans la place qui reste et défile.
+      maxHeight: (enHaut ? a.top : window.innerHeight - a.bottom) - 12,
     }
     return (
       <DialogPrimitive.Root open={!!ouverture} onOpenChange={changer}>
@@ -89,7 +91,7 @@ export function ChoisirNom({
           <DialogPrimitive.Content
             aria-describedby={undefined}
             style={{ ...place, width: LARGEUR_MENU }}
-            className="fixed z-50 rounded-2xl border bg-popover p-1.5 text-popover-foreground shadow-lg"
+            className="fixed z-50 overflow-y-auto overscroll-contain rounded-2xl bg-popover p-1.5 text-popover-foreground [box-shadow:var(--shadow-flottant)]"
           >
             <DialogPrimitive.Title className="sr-only">{ouverture?.titre}</DialogPrimitive.Title>
             {menu}
@@ -194,13 +196,13 @@ function Menu({
       onMouseDown={(e) => e.preventDefault()}
       onMouseMove={() => setActif(i)}
       onClick={() => onEcrire(p.nom)}
-      className={`flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-[15px] sm:text-sm ${
+      className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-base sm:text-sm ${
         i === actif ? "bg-secondary" : ""
       } ${absence ? "text-muted-foreground opacity-70" : ""}`}
     >
       <span className="min-w-[4rem] shrink-0 truncate">
         {p.nom}
-        {sansCompte && <span className="ml-1.5 text-[11px] text-muted-foreground">{t("groupes.sansCompte")}</span>}
+        {sansCompte && <span className="ml-1.5 text-xs text-muted-foreground">{t("groupes.sansCompte")}</span>}
       </span>
       {absence ? <span title={periodeAbsence(absence, langue)} className="min-w-0 max-w-[55%] truncate text-xs">{periodeAbsence(absence, langue)}</span>
         : sous !== undefined ? <span title={sous} className="min-w-0 max-w-[55%] truncate text-xs text-muted-foreground">{sous}</span>
@@ -208,7 +210,7 @@ function Menu({
     </li>
   )
   const entete = (cle: string) => (
-    <li role="presentation" className="px-2.5 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <li role="presentation" className="px-2.5 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
       {t(cle)}
     </li>
   )
@@ -245,7 +247,7 @@ function Menu({
         <div className="mt-1 max-h-[40vh] overflow-y-auto overscroll-contain lg:max-h-60">
           <ul id={`${id}-liste`} role="listbox" aria-label={t("groupes.choisir.titulaires", { role: (zh && rel.role.nomZh) || rel.role.nom })}>
             {relT!.disponibles.length > 0 && (
-              <li role="presentation" className="px-2.5 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <li role="presentation" className="px-2.5 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("groupes.choisir.titulaires", { role: (zh && rel.role.nomZh) || rel.role.nom })}
               </li>
             )}
@@ -261,7 +263,7 @@ function Menu({
               aria-expanded={groupeOuvert}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => { setGroupeOuvert((o) => !o); setActif(0) }}
-              className="flex min-h-10 w-full items-center rounded-lg px-2.5 py-2 text-left text-[15px] sm:text-sm font-medium text-foreground hover:bg-secondary"
+              className="flex min-h-11 w-full items-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm font-medium text-foreground hover:bg-secondary"
             >
               {t("groupes.choisir.voirGroupe", { n: rel.groupe.length })}
             </button>
@@ -308,7 +310,7 @@ function Menu({
           type="button"
           disabled={remplir.grise}
           onClick={remplir.onRemplir}
-          className="flex min-h-10 w-full flex-col items-start justify-center rounded-lg px-2.5 py-2 text-left text-[15px] sm:text-sm text-foreground hover:bg-secondary disabled:opacity-60 disabled:hover:bg-transparent"
+          className="flex min-h-11 w-full flex-col items-start justify-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm text-foreground hover:bg-secondary disabled:opacity-60 disabled:hover:bg-transparent"
         >
           <span className="font-medium">{t("planning.gestes.remplirBas")}</span>
           <span className="text-xs text-muted-foreground">{remplir.aide}</span>
@@ -317,7 +319,7 @@ function Menu({
       <button
         type="button"
         onClick={ecrireALaMain}
-        className="flex min-h-10 w-full items-center rounded-lg px-2.5 py-2 text-left text-[15px] sm:text-sm text-muted-foreground hover:bg-secondary"
+        className="flex min-h-11 w-full items-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm text-muted-foreground hover:bg-secondary"
       >
         {t("planning.choisir.sansCompte")}
       </button>
@@ -325,7 +327,7 @@ function Menu({
         <button
           type="button"
           onClick={() => onEcrire("")}
-          className="flex min-h-10 w-full items-center rounded-lg px-2.5 py-2 text-left text-[15px] sm:text-sm text-destructive hover:bg-secondary"
+          className="flex min-h-11 w-full items-center rounded-lg px-2.5 py-2 text-left text-base sm:text-sm text-destructive hover:bg-secondary"
         >
           {t("planning.choisir.vider")}
         </button>

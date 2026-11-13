@@ -1,9 +1,12 @@
 "use client";
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { getSetlist, type FSSetlist } from "@/lib/firebase/setlists";
+import { getSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { getProgramme } from "@/lib/firebase/programmes";
 import { anneeDe, feteDe, libelleEdition } from "@/lib/scene/fetes";
 import { resoudrePropositions } from "@/lib/setlist/propositions";
@@ -16,6 +19,7 @@ import { buildFormItems } from "@/lib/setlist/formItems";
 import { SetlistForm, type SetlistFormInitial } from "@/components/setlists/SetlistForm";
 import type { ContexteFeteEditeur } from "@/components/setlists/editeur/EnTeteEditeur";
 import type { Programme } from "@/types/programme";
+import { Squelette } from "@/components/layout/Squelette";
 
 export function EditSetlistClient() {
   const { t, i18n } = useTranslation();
@@ -34,7 +38,7 @@ export function EditSetlistClient() {
     if (authLoading || !user) return;
     Promise.all([
       getSetlist(id),
-      fetch("/songs-index.json").then((r) => r.json()),
+      chargerIndexChants().then((songs) => ({ songs })),
     ]).then(async ([sl, indexData]) => {
       if (!sl) { router.push("/setlists"); return; }
       const songsMap: Record<string, SongIndexEntry> = {};
@@ -72,11 +76,7 @@ export function EditSetlistClient() {
   }
 
   if (!initial || !setlist || !user || (setlist.fete && programme === undefined)) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   // Modification : créateur de la setlist + musiciens du même service
@@ -91,7 +91,7 @@ export function EditSetlistClient() {
     );
   }
 
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr";
+  const langue = langueCourte(i18n.language);
   const fete = programme && feteDe(programme);
   const annee = programme && anneeDe(programme);
   const passage = programme?.passages.findIndex((p) => p.id === setlist.fete?.passage) ?? -1;

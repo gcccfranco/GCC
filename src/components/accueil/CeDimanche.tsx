@@ -9,9 +9,12 @@
 import { Fragment } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
+import { ChevronRight } from "lucide-react"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { serviceButtonFill } from "@/lib/serviceButton"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { porteLeNom } from "@/lib/planning/accueil"
+import { isFirstSundayOfMonth } from "@/lib/planning/utils"
 import { Tile } from "@/components/ui/tile"
 import type { Evenement } from "@/types/evenement"
 import type { Disposition } from "./PourMoi"
@@ -19,11 +22,30 @@ import type { Disposition } from "./PourMoi"
 const vide = (v?: string) => !v?.trim() || v.trim() === "—"
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const svc = (couleur: string) => ({ "--svc": couleur }) as React.CSSProperties
-/** Les heures du dimanche (retouches v18, D14 ; planches v18-app-planning-accueil et -reduite). */
-const HEURES = { culte: "10:30", groupes: "13:00", edd: "13:00", table: "10:00" } as const
+/** Les heures du dimanche (retouches v18, D14 ; planches v18-app-planning-accueil et -reduite). EDD : 15:30–17:00
+ *  (Timothée, 01/11/2026). */
+const HEURES = { culte: "10:30", groupes: "13:00", edd: "15:30–17:00", table: "10:00" } as const
 
 function Point({ couleur, className = "" }: { couleur: string; className?: string }) {
   return <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${className}`} style={{ background: couleur }} />
+}
+
+/** Le titre d'une carte mène à son planning, et toute la carte se touche (Timothée, 29/10/2026 : sur
+ *  téléphone, ouvrir un planning depuis l'aperçu sans passer par « Accueil » et sa liste). La carte
+ *  porte `relative` ; un lien posé dedans (« Je m'inscris ») passe au-dessus avec `relative z-10`. */
+function VersPlanning({ href, className = "", children }: { href: string; className?: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className={`after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring ${className}`}
+    >
+      {children}
+    </Link>
+  )
+}
+
+function Chevron() {
+  return <ChevronRight aria-hidden className="ml-auto h-4 w-4 shrink-0 text-muted-foreground/70" />
 }
 
 /** Une case de planning, la personne connectée en évidence (pastille d'encre).
@@ -45,9 +67,12 @@ function Noms({ valeur, monNom }: { valeur: string; monNom: string }) {
 }
 
 /** Un service et ses rôles : deux colonnes en grand et sur tablette, une sur téléphone. */
-function CarteService({ titre, heure, couleur, roles, colonnes, monNom, testId, vide: messageVide }: {
+function CarteService({ titre, href, heure, badge, couleur, roles, colonnes, monNom, testId, vide: messageVide }: {
   titre: string
+  href: string
   heure?: string
+  /** Après l'heure : « Sainte Cène » le premier dimanche du mois (carte du culte, Timothée, 01/11/2026). */
+  badge?: string
   couleur: string
   roles: [string, string][]
   /** « large » : deux colonnes, trois quand « Ce dimanche » dépasse 720 px (requête de conteneur, en grand). */
@@ -58,11 +83,19 @@ function CarteService({ titre, heure, couleur, roles, colonnes, monNom, testId, 
 }) {
   const remplis = roles.filter(([, v]) => !vide(v))
   return (
-    <article data-testid={testId} className="raised rounded-2xl px-4 py-3.5">
-      <h3 className="mb-1.5 flex items-center gap-2">
-        <Point couleur={couleur} />
-        <span className="svc-ink text-base font-bold" style={svc(couleur)}>{titre}</span>
-        {heure && <span className="text-[13px] text-muted-foreground tabular-nums">{heure}</span>}
+    <article data-testid={testId} className="carte-groupe relative rounded-2xl px-4 py-3.5">
+      <h3 className="mb-1.5">
+        <VersPlanning href={href} className="flex items-center gap-2">
+          <Point couleur={couleur} />
+          <span className="svc-ink text-base font-bold" style={svc(couleur)}>{titre}</span>
+          {heure && <span className="text-sm text-muted-foreground tabular-nums">{heure}</span>}
+          {badge && (
+            <span data-testid="badge-sainte-cene" className="inline-block text-xs font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">
+              {badge}
+            </span>
+          )}
+          <Chevron />
+        </VersPlanning>
       </h3>
       {remplis.length ? (
         <dl className={colonnes === "large" ? "grid grid-cols-2 gap-x-6 [@container(min-width:720px)]:grid-cols-3" : colonnes === 2 ? "grid grid-cols-2 gap-x-6" : ""}>
@@ -80,8 +113,8 @@ function CarteService({ titre, heure, couleur, roles, colonnes, monNom, testId, 
   )
 }
 
-export type Groupe = { cle: "paix" | "fidelite" | "bonte"; presidence: string; musiciens: string }
-export type Inter = { key: "interfranco" | "intergroupe"; choristes: string[]; rest: string[]; pres: string }
+type Groupe = { cle: "paix" | "fidelite" | "bonte"; presidence: string; musiciens: string }
+type Inter = { key: "interfranco" | "intergroupe"; choristes: string[]; rest: string[]; pres: string }
 
 export function CeDimanche({
   titre,
@@ -119,7 +152,9 @@ export function CeDimanche({
     <CarteService
       testId="carte-culte"
       titre={t("planning.tabs.culte")}
+      href="/planning/culte"
       heure={HEURES.culte}
+      badge={culte?.[0] && isFirstSundayOfMonth(culte[0]) ? t("planning.sainteCene") : undefined}
       couleur={PLANNING_COLORS.culte}
       colonnes={colonnes}
       monNom={monNom}
@@ -143,6 +178,7 @@ export function CeDimanche({
     <CarteService
       testId="carte-inter"
       titre={t(`planning.tabs.${inter.key}`)}
+      href={`/planning/${inter.key}`}
       couleur={PLANNING_COLORS[inter.key]}
       colonnes={colonnes === "large" ? 2 : colonnes}
       monNom={monNom}
@@ -159,8 +195,13 @@ export function CeDimanche({
       ]}
     />
   ) : (
-    <article className="raised rounded-2xl px-4 py-3.5">
-      <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">{t("planning.tabs.groupes")} · {HEURES.groupes}</h3>
+    <article data-testid="carte-groupes" className="carte-groupe relative rounded-2xl px-4 py-3.5">
+      <h3 className="mb-1 text-sm font-semibold text-muted-foreground">
+        <VersPlanning href="/planning/groupes" className="flex items-center gap-2">
+          {t("planning.tabs.groupes")} · {HEURES.groupes}
+          <Chevron />
+        </VersPlanning>
+      </h3>
       <ul>
         {groupes.map((g) => {
           const resume = ([["presidence", g.presidence], ["musiciens", g.musiciens]] as const).filter(([, v]) => !vide(v))
@@ -169,7 +210,7 @@ export function CeDimanche({
               <Point couleur={PLANNING_COLORS[g.cle]} className="mt-1.5" />
               <div className="min-w-0">
                 <b className="font-semibold">{t(`planning.groupes.${g.cle}`)}</b>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   {resume.length ? resume.map(([cle, v], i) => (
                     <Fragment key={cle}>{i > 0 && " · "}{r(cle)} <Noms valeur={v} monNom={monNom} /></Fragment>
                   )) : "—"}
@@ -183,13 +224,20 @@ export function CeDimanche({
   )
 
   const carteEdd = (
-    <article className="raised rounded-2xl px-4 py-3.5">
-      <h3 className="svc-ink mb-1 text-[13px] font-semibold" style={svc(PLANNING_COLORS.edd)}>{t("planning.tabs.edd")} · {HEURES.edd}</h3>
+    <article data-testid="carte-edd" className="carte-groupe relative rounded-2xl px-4 py-3.5">
+      <h3 className="svc-ink mb-1 text-sm font-semibold" style={svc(PLANNING_COLORS.edd)}>
+        <VersPlanning href="/planning/edd" className="flex items-center gap-2">
+          {t("planning.tabs.edd")} · {HEURES.edd}
+          <Chevron />
+        </VersPlanning>
+      </h3>
       <ul>
         {edd.map((c) => (
-          <li key={c.classe} data-testid="ligne-edd" className="flex gap-2.5 border-t border-border/70 py-2 text-sm">
-            <b className="svc-ink w-12 shrink-0 font-semibold" style={svc(PLANNING_COLORS.edd)}>{c.classe}</b>
-            <span className="min-w-0">{vide(c.presidence) ? "—" : <>{r("presidence")} <Noms valeur={c.presidence} monNom={monNom} /></>}</span>
+          <li key={c.classe} data-testid="ligne-edd" className="flex items-start gap-2.5 border-t border-border/70 py-2 text-sm">
+            <div className="min-w-0">
+              <b className="svc-ink font-semibold" style={svc(PLANNING_COLORS.edd)}>{c.classe}</b>
+              <p className="text-sm text-muted-foreground">{vide(c.presidence) ? "—" : <>{r("presidence")} <Noms valeur={c.presidence} monNom={monNom} /></>}</p>
+            </div>
           </li>
         ))}
       </ul>
@@ -206,27 +254,27 @@ export function CeDimanche({
     : "flex min-h-10 items-center gap-2.5 py-1 text-sm"
   const pointTable = etages ? "[@container(min-width:720px)]:hidden" : ""
   const libelleTable = etages
-    ? "w-28 shrink-0 font-semibold [@container(min-width:720px)]:w-full [@container(min-width:720px)]:text-[13px] [@container(min-width:720px)]:text-muted-foreground"
+    ? "w-28 shrink-0 font-semibold [@container(min-width:720px)]:w-full [@container(min-width:720px)]:text-sm [@container(min-width:720px)]:text-muted-foreground"
     : "w-28 shrink-0 font-semibold"
   const carteTable = (
     <article
       data-testid="carte-table"
       className={etages
-        ? "raised col-span-2 rounded-2xl px-4 py-2 [@container(min-width:720px)]:col-span-1 [@container(min-width:720px)]:py-3"
-        : "raised rounded-2xl px-4 py-2"}
+        ? "carte-groupe relative col-span-2 rounded-2xl px-4 py-2 [@container(min-width:720px)]:col-span-1 [@container(min-width:720px)]:py-3"
+        : "carte-groupe relative rounded-2xl px-4 py-2"}
     >
       {/* Sur deux étages, un en-tête comme Groupes et EDD (planche : `table_empilee`). */}
       {etages && (
-        <h3 className="svc-ink mb-1 hidden text-[13px] font-semibold [@container(min-width:720px)]:block" style={svc(PLANNING_COLORS.table)}>
+        <h3 className="svc-ink mb-1 hidden text-sm font-semibold [@container(min-width:720px)]:block" style={svc(PLANNING_COLORS.table)}>
           {t("planning.accueil.carteTable")} · {HEURES.table}
         </h3>
       )}
       <div className={etages ? `${ligneTable} [@container(min-width:720px)]:border-t [@container(min-width:720px)]:border-border/70` : ligneTable}>
         <Point couleur={PLANNING_COLORS.table} className={pointTable} />
-        <b className={libelleTable}>{t("planning.tabs.table")}</b>
+        <b className={libelleTable}><VersPlanning href="/planning/table">{t("planning.tabs.table")}</VersPlanning></b>
         <span className="min-w-0">{vide(table) ? "—" : <Noms valeur={table} monNom={monNom} />}</span>
         {/* L'heure au bout de la ligne ; sur deux étages, elle est dans l'en-tête « Table · 10:00 ». */}
-        <span className={`ml-auto shrink-0 text-[13px] text-muted-foreground tabular-nums ${pointTable}`}>{HEURES.table}</span>
+        <span className={`ml-auto shrink-0 text-sm text-muted-foreground tabular-nums ${pointTable}`}>{HEURES.table}</span>
       </div>
       {(!vide(petitDej) || libre) && (
         <div className={`${ligneTable} border-t border-border/70`}>
@@ -237,7 +285,7 @@ export function CeDimanche({
               <span className="font-semibold text-amber-700 dark:text-amber-400">{t("planning.accueil.libre")}</span>
               <Link
                 href="/planning/table"
-                className="ml-auto inline-flex h-8 items-center rounded-full px-3.5 text-[13px] font-semibold text-white transition-transform duration-150 active:scale-[.97]"
+                className={`relative z-10 ml-auto inline-flex h-8 items-center rounded-full px-3.5 ${TOUCHER_44} text-sm font-semibold text-white transition-transform duration-150 active:scale-[.97]`}
                 style={{ background: serviceButtonFill(PLANNING_COLORS.table) }}
               >
                 {t("planning.accueil.inscrire")}
@@ -252,8 +300,8 @@ export function CeDimanche({
   )
 
   const carteEvenements = evenements && evenements.length > 0 ? (
-    <article className="raised rounded-2xl px-4 py-3.5">
-      <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">{t("planning.accueil.evenements")}</h3>
+    <article className="carte-groupe rounded-2xl px-4 py-3.5">
+      <h3 className="mb-1 text-sm font-semibold text-muted-foreground">{t("planning.accueil.evenements")}</h3>
       <ul className={disposition === "grand" ? "grid grid-cols-2 gap-4 pt-1.5" : ""}>
         {evenements.map((e) => {
           const jour = new Date(`${e.date}T12:00:00`)
@@ -268,7 +316,7 @@ export function CeDimanche({
                 <Tile color={PLANNING_COLORS.scene} big={jour.getDate()} small={new Intl.DateTimeFormat(locale, { month: "short" }).format(jour)} />
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold">{e.titre}</span>
-                  <span className="block truncate text-[13px] text-muted-foreground">{quand}</span>
+                  <span className="block truncate text-sm text-muted-foreground">{quand}</span>
                 </span>
               </Link>
             </li>
@@ -280,7 +328,7 @@ export function CeDimanche({
 
   return (
     <section aria-labelledby="ce-dimanche" className={disposition === "grand" ? "min-w-0 [container-type:inline-size]" : "min-w-0"}>
-      <h2 id="ce-dimanche" className="mb-3 text-[17px] font-bold">{titre}</h2>
+      <h2 id="ce-dimanche" className="mb-3 text-lg font-bold">{titre}</h2>
       <div className="flex flex-col gap-3.5">
         {carteCulte}
         {disposition === "telephone" ? (
@@ -294,11 +342,11 @@ export function CeDimanche({
           </>
         ) : (
           <>
-            <div className={inter ? "flex flex-col gap-3.5" : "grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3.5"}>
+            <div className={inter ? "flex flex-col gap-3.5" : "grid grid-cols-2 gap-3.5"}>
               {carteGroupes}{carteEdd}
             </div>
             {disposition === "tablette" && carteEvenements ? (
-              <div className="grid grid-cols-2 items-start gap-3.5">{carteTable}{carteEvenements}</div>
+              <div className="grid grid-cols-2 items-stretch gap-3.5">{carteTable}{carteEvenements}</div>
             ) : (
               <>{carteTable}{carteEvenements}</>
             )}

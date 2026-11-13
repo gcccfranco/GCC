@@ -6,6 +6,7 @@ import { ExternalLink, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authHeader } from "@/lib/firebase/setlists";
+import { compter } from "@/lib/usage";
 import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
 
 /** Lien de la présentation (PPT) de la setlist : ouvert par tous, ajouté ou
@@ -14,21 +15,27 @@ import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
 export function PresentationLink({
   setlistId,
   url,
-  canChange,
   onSaved,
   sansLien = false,
+  edition,
+  onEdition,
+  className = "mt-3",
 }: {
   setlistId: string;
   url?: string;
-  canChange: boolean;
   onSaved: (url: string | undefined) => void;
   /** Le lien s'ouvre ailleurs (en-tête des deux volets, docs/spec-deux-volets.md, Q7) :
    *  ici, seulement l'ajouter ou le changer. */
   sansLien?: boolean;
+  /** Le formulaire est ouvert : ni bouton ni état ici, l'entrée « Ajouter / Changer le lien » du menu ⋯ l'ouvre
+   *  (dimanche-16, docs/spec-corrections-design/dimanche.md). */
+  edition: boolean;
+  onEdition: (ouvert: boolean) => void;
+  className?: string;
 }) {
   const { t } = useTranslation();
   const inputId = useId();
-  const [editing, setEditing] = useState(false);
+  const editing = edition;
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -39,13 +46,17 @@ export function PresentationLink({
   // on n'affiche jamais un lien qui ne serait pas https.
   const href = url ? parsePresentationUrl(url) : null;
 
-  if ((!href || sansLien) && !canChange) return null;
-
-  function open() {
-    setDraft(url ?? "");
-    setError(null);
-    setEditing(true);
+  // À chaque ouverture, le champ repart du lien enregistré (ajusté pendant le rendu, sans effet ni rendu périmé).
+  const [ouvertVu, setOuvertVu] = useState(edition);
+  if (edition !== ouvertVu) {
+    setOuvertVu(edition);
+    if (edition) {
+      setDraft(url ?? "");
+      setError(null);
+    }
   }
+
+  if (!editing && (!href || sansLien) && !notice) return null;
 
   async function save(next: string) {
     if (next.trim() && !parsePresentationUrl(next)) {
@@ -65,9 +76,10 @@ export function PresentationLink({
         setError(data.error || t("setlists.detail.presentationError"));
         return;
       }
+      if (next.trim()) compter("cmd.setlist.presentation");
       onSaved(data.presentationUrl ?? undefined);
       setNotice(data.notified > 0 ? "notified" : data.linked === false ? "unlinked" : null);
-      setEditing(false);
+      onEdition(false);
     } catch {
       setError(t("setlists.detail.presentationError"));
     } finally {
@@ -78,7 +90,7 @@ export function PresentationLink({
   if (editing) {
     return (
       <form
-        className="mt-3 space-y-2 print:hidden"
+        className={`${className} basis-full space-y-2 print:hidden`}
         onSubmit={(e) => {
           e.preventDefault();
           save(draft);
@@ -107,7 +119,7 @@ export function PresentationLink({
           <Button type="submit" size="sm" disabled={saving}>
             {saving ? "…" : t("setlists.detail.presentationSave")}
           </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => setEditing(false)}>
+          <Button type="button" size="sm" variant="ghost" onClick={() => onEdition(false)}>
             {t("common.cancel", { defaultValue: "Annuler" })}
           </Button>
           {url && (
@@ -121,7 +133,7 @@ export function PresentationLink({
   }
 
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-2 print:hidden">
+    <div className={`${className} flex flex-wrap items-center gap-2 print:hidden`}>
       {notice && (
         <p role="status" className="basis-full text-xs text-muted-foreground">
           {notice === "notified" ? t("setlists.detail.presentationNotified") : t("setlists.detail.presentationUnlinked")}
@@ -132,22 +144,13 @@ export function PresentationLink({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="h-8 px-3 rounded-sm border border-border bg-card text-[12.5px] font-semibold text-foreground hover:bg-muted flex items-center gap-1.5 transition-colors"
+          className="h-8 px-3 rounded-sm border border-border bg-card text-xs font-semibold text-foreground hover:bg-muted flex items-center gap-1.5 transition-colors"
         >
           <Presentation className="h-3.5 w-3.5 text-foreground" />
           {t("setlists.detail.presentation")}
           <ExternalLink className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
         </a>
       ) : null}
-      {canChange && (
-        <button
-          type="button"
-          onClick={open}
-          className="h-8 px-2 text-[12.5px] font-medium text-muted-foreground hover:text-foreground"
-        >
-          {url ? t("setlists.detail.presentationChange") : t("setlists.detail.presentationAdd")}
-        </button>
-      )}
     </div>
   );
 }

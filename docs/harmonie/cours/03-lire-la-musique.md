@@ -36,8 +36,8 @@ L'armure regroupe les dièses ou les bémols au début de chaque ligne. Elle ind
 
 - **Ordre des dièses :** Fa, Do, Sol, Ré, La, Mi, Si.
 - **Ordre des bémols :** Si, Mi, La, Ré, Sol, Do, Fa (l'ordre inverse).
-- **Astuce dièses :** la tonalité majeure est un demi-ton au-dessus du dernier dièse. Trois dièses (Fa, Do, Sol) : Sol# + un demi-ton = La majeur.
-- **Astuce bémols :** la tonalité majeure est l'avant-dernier bémol. Trois bémols (Si, Mi, La) : Mib majeur. Exception à retenir : un seul bémol = Fa majeur.
+- **Astuce dièses :** la tonalité majeure est un demi-ton au-dessus du dernier dièse. Trois dièses (Fa, Do, Sol) : Sol♯ + un demi-ton = La majeur.
+- **Astuce bémols :** la tonalité majeure est l'avant-dernier bémol. Trois bémols (Si, Mi, La) : Mi♭ majeur. Exception à retenir : un seul bémol = Fa majeur.
 
 ## 3.4 Lire une grille d'accords
 

@@ -4,7 +4,7 @@
 
 import { nuanceDef } from "@/lib/setlist/nuances";
 
-export type NuancePdfColors =
+type NuancePdfColors =
   | { background: string; color: string }
   | { border: string; color: string };
 
@@ -44,6 +44,7 @@ const SEC = {
   bridge: { color: "#7a5bcb", tint: "#f0ecf9" },
   outro: { color: "#4f6477", tint: "#eef1f5" },
   coda: { color: "#4f6477", tint: "#eef1f5" },
+  tag: { color: "#bd476a", tint: "#faedf0" },
   other: { color: "#6b7280", tint: "#f1f3f6" },
 } as const;
 
@@ -57,6 +58,7 @@ const SEC_KEY: Record<string, keyof typeof SEC> = {
   bridge: "bridge",
   outro: "outro",
   coda: "coda",
+  tag: "tag",
 };
 
 export function sectionPdfPalette(type: string): { color: string; tint: string } {

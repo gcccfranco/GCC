@@ -23,6 +23,8 @@ Un ton plus haut, le refrain peut devenir trop aigu.
 | Statut | à valider |
 | Sensations | Épique · Joie et élan · Lumière et espérance |
 | Moments | Refrain · Montée |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · refrain (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `… A → D | refrain en D` devient `… A → B7 | refrain en
@@ -55,6 +57,8 @@ le capo 2 pendant l'interlude et garder les formes de D.
 | Statut | à valider |
 | Sensations | Épique · Joie et élan |
 | Moments | Refrain |
+| Ressenti | élan (proposé) |
+| Usage | refrain (proposé) |
 | Niveau | piano : intermédiaire · guitare : intermédiaire |
 
 **Avant → après** : `… A → D | refrain en D` devient `… A → Bb7 | refrain en
@@ -84,6 +88,8 @@ demi-ton est plus facile pour les voix qu'un ton entier.
 | Statut | à valider |
 | Sensations | Épique · Majesté |
 | Moments | Montée · Refrain |
+| Ressenti | élan (proposé) |
+| Usage | pré-refrain · refrain (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : `… A → D | refrain en D` devient `… C – D | refrain en
@@ -115,6 +121,8 @@ E-G#-B.
 | Statut | à valider |
 | Sensations | Suspendu et planant · Lumière et espérance |
 | Moments | Montée · Refrain |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | pré-refrain · refrain (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : `… A → D | refrain en D` devient `… A/B | refrain en E`.
@@ -142,6 +150,8 @@ douce, lumineuse, sans le côté très annoncé de B7.
 | Statut | à valider |
 | Sensations | Surprise · Joie et élan · Épique |
 | Moments | Refrain |
+| Ressenti | élan · couleur (proposé) |
+| Usage | refrain (proposé) |
 | Niveau | piano : facile · guitare : facile · **à préparer avec l'équipe** |
 
 **Avant → après** : `… A → D | refrain en D` devient `… A → (break) |

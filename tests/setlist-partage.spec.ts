@@ -8,7 +8,7 @@ import {
   estDansLePartage, candidatsDeLEquipe, roleParDefaut, nomCourt, equipeDeLaSetlist, aPrevenir,
   peutPrevenirEquipe, notifierSetlistPrete, horodatageEnvoi,
 } from "../src/lib/setlist/partage";
-import type { FSSetlist } from "../src/lib/firebase/setlists";
+import type { FSSetlist } from "../src/types/setList";
 import type { UserProfile } from "../src/types/user";
 
 // Partage d'une setlist (docs/spec-partage-setlist.md) : personnes fictives.
@@ -153,9 +153,13 @@ test.describe("partage : fonctions pures", () => {
     expect(route).toContain("editeurs?: string[]");
     expect(route).toContain("horodatageEnvoi(");
     // jamais lu dans la requête : la déstructuration du corps sans `editeurs`, et chaque accès `.editeurs` sur le document `sl`
-    const corps = route.match(/const \{([^}]*)\} = \(await req\.json/);
-    expect(corps).not.toBeNull();
-    expect(corps![1]).not.toContain("editeurs");
+    // Le corps passe par lireCorpsNotifySetlist (A2, bornes) : elle n'en garde que `setlistId` et `auto`.
+    expect(route).toContain("lireCorpsNotifySetlist(await req.json()");
+    const bornes = lire("src/lib/push/bornes.ts");
+    const lecture = bornes.match(/export function lireCorpsNotifySetlist\(b: unknown\) \{([\s\S]*?)\n\}/);
+    expect(lecture).not.toBeNull();
+    expect(lecture![1]).toMatch(/const \{ setlistId, auto \} = corps\(b\)/);
+    expect(lecture![1]).not.toContain("editeurs");
     expect(route).not.toMatch(/\b(?:body|data|payload|req)\.editeurs/);
     for (const m of route.matchAll(/(\w+)\??\.editeurs/g)) expect(m[1]).toBe("sl");
   });
@@ -219,7 +223,7 @@ test.describe("partage : l'éditeur", () => {
     await page.getByLabel("Titre").fill("Soirée louange");
     await page.getByLabel("Catégorie").selectOption("Culte Francophone");
     await champPresidence(page).selectOption("__other__");
-    await page.getByPlaceholder("ex. Timothée").fill("Présidence A");
+    await page.getByPlaceholder("Nom", { exact: true }).fill("Présidence A");
     await ajouterChant(page, "Abba Père");
 
     await puceEquipe(page).click();
@@ -268,7 +272,7 @@ test.describe("partage : l'éditeur", () => {
     await volet(page).getByRole("button", { name: "Voir tous les comptes" }).click();
     await volet(page).getByRole("button", { name: "Hugo L.", exact: true }).click();
     await expect.poll(() => db.doc(CHEMIN)?.editeurs, { timeout: 10_000 }).toEqual(["joel", "hugo"]);
-    expect((db.doc(CHEMIN)?.rolesPartage as Record<string, string>).hugo).toBe("chanteur"); // Groupe Bonté : choriste
+    expect((db.doc(CHEMIN)?.rolesPartage as Record<string, string>).hugo).toBe("musicien"); // lot AO (AO-F) : plus de rôle de groupe déclaré (`serviceRoles`) → « musicien » par défaut
     await fermerFeuille(page);
     await expect(puceEquipe(page)).toHaveText(/Équipe · 2/);
   });
@@ -358,7 +362,7 @@ test.describe("partage : l'éditeur", () => {
     await page.getByLabel("Titre").fill("Soirée privée");
     await page.getByLabel("Catégorie").selectOption("Culte Francophone");
     await champPresidence(page).selectOption("__other__");
-    await page.getByPlaceholder("ex. Timothée").fill("Présidence A");
+    await page.getByPlaceholder("Nom", { exact: true }).fill("Présidence A");
     await ajouterChant(page, "Abba Père");
     await page.getByLabel("Visibilité").selectOption("privee");
     await puceEquipe(page).click();
@@ -376,7 +380,13 @@ test.describe("partage : l'éditeur", () => {
     await expect(page.getByText(/^Seuls le créateur de la setlist/)).toBeVisible();
     await expect(page.locator("[data-liste-courte]")).toHaveCount(0);
     await page.goto(`/setlists/${ID}`);
+    // Deux volets : « Lecture seule » est dans le bloc que déplie le titre de l'en-tête (T3).
+    const titreDv = page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ });
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeAttached(); // la page est chargée
+    if (await titreDv.count()) await titreDv.click();
     await expect(page.getByText("Lecture seule")).toBeVisible();
+    // Les droits sont repliés derrière le bouton « i » (G15 ; toutes tailles depuis dimanche-16).
+    await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
     await expect(page.getByText("Modifiable par son créateur seulement (et les admins)")).toBeVisible();
     await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).first().click();
     await expect(page.getByRole("menuitem", { name: "Dupliquer pour mes notes" })).toBeVisible();
@@ -492,11 +502,16 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
   test.beforeEach(({}, info) => { test.skip(!GRAND.includes(info.project.name), "page en deux volets : ordinateur et tablette couchée"); });
   test.use({ permissions: ["clipboard-read", "clipboard-write"] });
   const menu = (page: Page) => page.locator("[data-en-tete]").getByRole("button", { name: "Plus d'actions" });
+  // Les droits sont dans le bloc que déplie le titre de l'en-tête (T3 du lot exemples d'usage).
+  const deplier = (page: Page) => page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ }).click();
 
   test("Joël (équipe) sur la privée : peut modifier, ne supprime pas, droits en toutes lettres", async ({ page }) => {
     await planningVide(page);
     await signInAs(page, fp(JOEL), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-priv");
-    await expect(page.getByText("Vous pouvez modifier")).toBeVisible();
+    await deplier(page);
+    await expect(page.getByText("Tu peux modifier")).toBeVisible();
+    // Les droits sont repliés derrière le bouton « i », sur toutes les tailles (dimanche-16).
+    await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
     await expect(page.getByText("Privée — visible et modifiable par son créateur et son équipe")).toBeVisible();
     await menu(page).click();
     await expect(page.getByRole("menuitem", { name: "Prévenir l'équipe" })).toBeVisible();
@@ -506,6 +521,8 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
   test("publique avec équipe : « Modifiable par son créateur et son équipe seulement » ; Léa supprime", async ({ page }) => {
     await planningVide(page);
     await signInAs(page, fp(LEA), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-pub");
+    await deplier(page);
+    await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
     await expect(page.getByText("Modifiable par son créateur et son équipe seulement (et les admins)")).toBeVisible();
     await menu(page).click();
     await expect(page.getByRole("menuitem", { name: "Supprimer" })).toBeVisible();
@@ -514,7 +531,9 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
   test("sans équipe, les textes d'avant restent", async ({ page }) => {
     await planningVide(page);
     await signInAs(page, fp(LEA), { ...ANNUAIRE, "setlists/sl-x": DOC({ isPrivate: true }) }, "/setlists/sl-x");
-    await expect(page.getByText("Privée — visible et modifiable uniquement par son créateur")).toBeVisible();
+    await deplier(page);
+    await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
+    await expect(page.getByText("Privée — visible et modifiable uniquement par son créateur").filter({ visible: true }).first()).toBeVisible();
   });
 
   test("« Partager » une privée avec équipe copie le lien et le dit", async ({ page }) => {

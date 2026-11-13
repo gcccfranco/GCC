@@ -13,7 +13,7 @@ export const COLONNES_TROIS = [1.6, 1, 1];
  *  défilement), deux en dessous (1 242 px sur un portable de 1 366 px) ; deux barre dépliée
  *  (1 112 px à 1 440, 1 272 px à 1 600). R15 lit la largeur, pas `data-barre` : barre dépliée,
  *  la troisième colonne vient dès un écran de 1 608 px, la place d'un écran de 1 440 barre réduite. */
-export const SEUIL_TROIS_COLONNES = 1280;
+const SEUIL_TROIS_COLONNES = 1280;
 
 export const fractionsPour = (largeur: number) => (largeur >= SEUIL_TROIS_COLONNES ? COLONNES_TROIS : COLONNES_DEUX);
 
@@ -49,11 +49,11 @@ export function repartirWidgets<W extends { id: string; taille: Taille }>(
 }
 
 /** Une autre répartition n'est prise que si elle raccourcit la page d'au moins autant (px). */
-export const GAIN_MINIMAL = 24;
+const GAIN_MINIMAL = 24;
 
 /** La répartition en place : sa clé (colonnes et widgets), ses colonnes (identifiants) et celles
  *  déjà quittées pour cette clé. */
-export type Repartition = { cle: string; colonnes: string[][]; quittees: string[] };
+type Repartition = { cle: string; colonnes: string[][]; quittees: string[] };
 
 /**
  * La répartition à garder après une mesure (fonction pure). `candidat` remplace celle en place s'il
@@ -68,9 +68,4 @@ export function repartitionSuivante(
   const signature = JSON.stringify(candidat);
   if (longueur(avant.colonnes) <= longueur(candidat) + GAIN_MINIMAL || avant.quittees.includes(signature)) return avant;
   return { cle, colonnes: candidat, quittees: [...avant.quittees, JSON.stringify(avant.colonnes)] };
-}
-
-/** Hauteur de la plus haute colonne (même modèle que `repartirWidgets`) : la longueur de la page. */
-export function hauteurMax<W extends { id: string }>(colonnes: W[][], hauteurs: Record<string, number>, fractions: number[]): number {
-  return Math.max(0, ...colonnes.map((col, c) => col.reduce((s, w) => s + (hauteurs[w.id] ?? 0), 0) / fractions[c]));
 }

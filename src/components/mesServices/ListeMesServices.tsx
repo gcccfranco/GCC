@@ -14,12 +14,16 @@ import { OngletsRail } from "@/components/layout/Onglets";
 import { PushPrompt } from "@/components/push/PushPrompt";
 import { Tile } from "@/components/ui/tile";
 import { useDisposition } from "@/hooks/useDisposition";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { MOIS } from "@/lib/planning/utils";
 import { joursAvant } from "@/lib/planning/accueil";
 import { adresseDuService, cleDuService, type ServiceGroupe } from "@/lib/planning/mesServices";
 import { serviceColor } from "@/lib/serviceColors";
+import { GROUPE } from "@/components/ui/group";
 import { cn } from "@/lib/utils";
+import { PastilleRole } from "./PastilleRole";
+import { nomDuService } from "@/lib/planning/names";
+import { EtatVide } from "@/components/layout/EtatVide";
 
 export type Onglet = "upcoming" | "past";
 
@@ -46,7 +50,7 @@ function parMois(entries: ServiceGroupe[], lang: string): { label: string; items
 }
 
 export function ListeMesServices({
-  services, affiches, charge, onglet, setOnglet, aujourdhui, actif, setlistDe,
+  services, affiches, charge, onglet, setOnglet, aujourdhui, actif, setlistDe, seule = false,
 }: {
   services: ServiceGroupe[];
   affiches: ServiceGroupe[];
@@ -57,19 +61,22 @@ export function ListeMesServices({
   /** Clé du service ouvert à droite (en grand). */
   actif?: string;
   setlistDe?: (s: ServiceGroupe) => FSSetlist | undefined;
+  /** Colonne seule en grand (L1, `DeuxVolets colonneSeule`, sans groupe autour) : le bandeau et l'état vide sont chacun
+   *  un groupe blanc sur le gris, le rail est posé sur le gris. */
+  seule?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const disposition = useDisposition();
   const mois = parMois(affiches, i18n.language);
 
   return (
-    <div className={cn("space-y-4", disposition === "grand" ? "px-4 pb-4 pt-4" : "px-[var(--marge-page)] pb-10")}>
-      <PushPrompt />
+    <div className={cn("space-y-4", seule ? "pb-4" : disposition === "grand" ? "px-4 pb-4 pt-4" : "px-[var(--marge-page)] pb-10")}>
+      <PushPrompt surGris={disposition !== "grand" || seule} />
 
       {/* Vues : le rail (R4). */}
       <OngletsRail
         etiquette={t("mesServices.title")}
-        className={cn("flex w-full [&>button]:flex-1", disposition === "tablette" && "max-w-sm")}
+        pleineLargeur={disposition === "telephone"}
         actif={onglet}
         choisir={(o) => setOnglet(o as Onglet)}
         onglets={[
@@ -81,19 +88,15 @@ export function ListeMesServices({
       {!charge ? (
         <p className="text-sm text-muted-foreground text-center py-16">{t("mesServices.loading")}</p>
       ) : affiches.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-border rounded-xl space-y-1">
-          <p className="text-sm text-muted-foreground">
-            {onglet === "upcoming" ? t("mesServices.emptyUpcoming") : t("mesServices.emptyPast")}
-          </p>
-        </div>
+        <EtatVide surGris={disposition !== "grand" || seule} className={seule ? "flex h-24 items-center justify-center py-0" : undefined}>{onglet === "upcoming" ? t("mesServices.emptyUpcoming") : t("mesServices.emptyPast")}</EtatVide>
       ) : (
         <div className="space-y-5">
           {mois.map((m) => (
             <div key={m.label}>
-              <p className={cn("text-sm font-semibold text-muted-foreground mb-1.5 capitalize", disposition !== "tablette" && "px-1")}>{m.label}</p>
+              <p className={cn("text-sm font-semibold text-muted-foreground mb-1.5 first-letter:uppercase", disposition !== "tablette" && "px-1")}>{m.label}</p>
               <ul className={cn(
                 disposition === "tablette" && "grid grid-cols-2 gap-3",
-                disposition === "telephone" && "raised rounded-2xl",
+                disposition === "telephone" && GROUPE,
               )}>
                 {m.items.map((e) => (
                   <LigneService
@@ -135,21 +138,21 @@ function LigneService({ e, href, setlistId, jours, actif, carte, chevron }: {
       data-testid={carte ? "carte-service" : undefined}
       className={cn(
         "relative flex items-center gap-3 px-4 py-3",
-        carte ? "raised rounded-2xl" : "group-row",
+        carte ? "carte-groupe rounded-2xl" : "group-row",
         actif && "rounded-xl bg-foreground text-background [&_.text-muted-foreground]:text-background/70",
       )}
     >
       {/* Toute la ligne ouvre le service ; le lien « Setlist » passe au-dessus. */}
       <Link
         href={href}
-        aria-label={`${e.service}, ${date}`}
+        aria-label={`${nomDuService(e.service, t)}, ${date}`}
         aria-current={actif ? "page" : undefined}
         className="absolute inset-0 rounded-[inherit] transition-colors active:bg-secondary/40"
       />
       <Tile color={color} big={jour.getDate()} small={moisCourt} size="lg" className={cn(actif && "!bg-background")} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-base font-semibold">{e.service}</p>
+          <p className="text-base font-semibold">{nomDuService(e.service, t)}</p>
           {jours === 0 && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-foreground text-background">{t("mesServices.today")}</span>
           )}
@@ -168,13 +171,7 @@ function LigneService({ e, href, setlistId, jours, actif, carte, chevron }: {
       <div className="flex flex-col items-end gap-1.5 shrink-0">
         <div className="flex flex-wrap gap-1 justify-end">
           {e.roles.map((r) => (
-            <span
-              key={r}
-              className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", actif && "!bg-background")}
-              style={{ background: `color-mix(in srgb, ${color} 13%, transparent)`, color }}
-            >
-              {r}
-            </span>
+            <PastilleRole key={r} role={r} service={e.service} actif={actif} />
           ))}
         </div>
         {setlistId && (

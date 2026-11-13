@@ -3,9 +3,12 @@
 import { useId, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfirmer } from "@/components/layout/Confirmer";
-import { OngletsRail, Pilules } from "@/components/layout/Onglets";
+import { OngletsRail } from "@/components/layout/Onglets";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { Champ } from "@/components/ui/champ";
+import { ChampSelect } from "@/components/ui/champ-select";
+import { Menu } from "@/components/ui/menu";
 import { Input } from "@/components/ui/input";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { SERVICE_LIEUX, type UserProfile } from "@/types/user";
@@ -13,9 +16,6 @@ import type { Prevenir, Rythme, Tache } from "@/types/tache";
 import { equipesDe } from "@/lib/access";
 import { EQUIPES, cleNomEquipe } from "@/lib/equipes/table";
 import type { TacheValues } from "@/lib/firebase/taches";
-
-const LABEL = "text-xs font-semibold";
-const FIELD = "w-full h-10 rounded-lg bg-secondary px-3 text-base md:text-sm";
 
 function prevenirValue(p: Prevenir): string {
   if (!p) return "";
@@ -64,7 +64,7 @@ export function TacheForm({ open, enLigne, equipe, equipes, evenement, echeance,
   const { t } = useTranslation();
   if (enLigne) {
     return open ? (
-      <div className="raised max-w-[720px] rounded-2xl pt-5">
+      <div className="carte-groupe max-w-[720px] rounded-2xl pt-5">
         <Champs enLigne equipe={equipe} equipes={equipes} evenement={evenement} echeance={echeance} initial={initial} membres={membres} onSubmit={onSubmit} onDelete={onDelete} onClose={onClose} />
       </div>
     ) : null;
@@ -144,40 +144,30 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
       {enLigne && (
         <div className="flex items-baseline justify-between gap-3">
           <h2 id={titreId} className="text-lg font-bold">{initial ? t("taches.modifier") : t("taches.nouvelle")}</h2>
-          <span className="text-[13px] text-muted-foreground">{t(cleNomEquipe(equipe, true))}</span>
+          <span className="text-sm text-muted-foreground">{t(cleNomEquipe(equipe, true))}</span>
         </div>
       )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {equipes && equipes.length > 1 && (enLigne ? (
-        <div className="space-y-1.5">
-          <p className={LABEL}>{t("taches.champs.equipe")}</p>
-          <Pilules etiquette={t("taches.champs.equipe")} obligatoire valeur={equipe} choisir={(e) => e && changerEquipe(e)}
-            options={equipes.map((e) => ({ cle: e, nom: t(cleNomEquipe(e, true)) }))} />
-        </div>
-      ) : (
-        <div className="space-y-1">
-          <label htmlFor="tache-equipe" className={LABEL}>{t("taches.champs.equipe")}</label>
-          <select id="tache-equipe" className={FIELD} value={equipe} onChange={(e) => changerEquipe(e.target.value)}>
-            {equipes.map((e) => <option key={e} value={e}>{t(cleNomEquipe(e, true))}</option>)}
-          </select>
-        </div>
-      ))}
-      <div className="space-y-1">
-        <label htmlFor="tache-titre" className={LABEL}>{t("taches.champs.titre")}</label>
-        <Input id="tache-titre" value={v.titre} maxLength={80} onChange={(e) => set({ titre: e.target.value })} />
-      </div>
+      {equipes && equipes.length > 1 && (
+        <Champ label={t("taches.champs.equipe")}>
+          <Menu label={t("taches.champs.equipe")} value={equipe} defaultValue={equipe}
+            options={equipes.map((e) => ({ valeur: e, libelle: t(cleNomEquipe(e, true)) }))} onChange={changerEquipe}
+            className="h-11 w-full justify-between rounded-[12px] px-3 text-base font-normal [@media(pointer:coarse)]:h-11" />
+        </Champ>
+      )}
+      <Champ id="tache-titre" label={t("taches.champs.titre")}>
+        <Input id="tache-titre" className="h-11" value={v.titre} maxLength={80} onChange={(e) => set({ titre: e.target.value })} />
+      </Champ>
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label htmlFor="tache-echeance" className={LABEL}>{t("taches.champs.echeance")}</label>
-          <Input id="tache-echeance" type="date" value={v.echeance}
+        <Champ id="tache-echeance" label={t("taches.champs.echeance")}>
+          <Input id="tache-echeance" className="h-11" type="date" value={v.echeance}
             onChange={(e) => set({
               echeance: e.target.value,
               ...(v.repetition?.rythme === "mois" && e.target.value ? { repetition: { rythme: "mois", rang: rangDe(e.target.value) } } : {}),
             })} />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="tache-responsable" className={LABEL}>{t("taches.champs.responsable")}</label>
-          <select id="tache-responsable" className={FIELD} value={v.responsableUid ?? ""}
+        </Champ>
+        <Champ id="tache-responsable" label={t("taches.champs.responsable")}>
+          <ChampSelect id="tache-responsable" value={v.responsableUid ?? ""}
             onChange={(e) => {
               const m = membres.find((x) => x.uid === e.target.value);
               set({ responsableUid: m?.uid ?? null, responsableNom: m ? `${m.firstName} ${m.lastName}`.trim() : "" });
@@ -186,15 +176,14 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
             {proposes.map((m) => <option key={m.uid} value={m.uid}>{`${m.firstName} ${m.lastName}`.trim() || m.email}</option>)}
             {/* Le responsable de la tâche reste affiché, membres pas encore lus ou parti de l'équipe. */}
             {v.responsableUid && !proposes.some((m) => m.uid === v.responsableUid) && <option value={v.responsableUid}>{v.responsableNom}</option>}
-          </select>
-        </div>
+          </ChampSelect>
+        </Champ>
       </div>
       {/* Une tâche liée à un évènement ne se répète pas (lot 14) : l'évènement
           prend la place de la répétition, qui revient si on la détache. */}
       {v.evenement ? (
-        <div className="space-y-1">
-          <p className={LABEL}>{t("taches.champs.evenement")}</p>
-          <div className="flex min-h-10 flex-wrap items-center justify-between gap-x-3 rounded-lg bg-secondary pl-3 pr-1 text-base md:text-sm">
+        <Champ label={t("taches.champs.evenement")}>
+          <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 rounded-lg bg-secondary pl-3 pr-1 text-base md:text-sm">
             <span className="min-w-0 break-words py-2">{v.evenement.titre}</span>
             {/* Détacher n'a de sens que sur une tâche qui existe déjà. */}
             {initial && (
@@ -203,51 +192,46 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
               </Button>
             )}
           </div>
-        </div>
+        </Champ>
       ) : enLigne ? (
-        <div className="space-y-1.5">
-          <p className={LABEL}>{t("taches.champs.repetition")}</p>
+        <Champ label={t("taches.champs.repetition")}>
           <OngletsRail etiquette={t("taches.champs.repetition")} actif={rythme || "aucun"}
             choisir={(id) => setRythme(id === "aucun" ? "" : (id as Rythme))}
             onglets={["aucun", ...RYTHMES].map((r) => ({ id: r, label: t(`taches.rythmeCourt.${r}`) }))} />
           {rythme === "an" && <p className="text-xs text-muted-foreground">{t("taches.anAide")}</p>}
           {rythme === "mois" && (
-            <div className="max-w-xs space-y-1 pt-1.5">
-              <label htmlFor="tache-rang" className={LABEL}>{t("taches.champs.rang")}</label>
-              <select id="tache-rang" className={FIELD} value={String(v.repetition?.rang ?? 1)}
+            <Champ id="tache-rang" label={t("taches.champs.rang")} className="max-w-xs pt-1.5">
+              <ChampSelect id="tache-rang" value={String(v.repetition?.rang ?? 1)}
                 onChange={(e) => set({ repetition: { rythme: "mois", rang: Number(e.target.value) } })}>
                 {["1", "2", "3", "4", "-1"].map((r) => <option key={r} value={r}>{t(`taches.rang.${r}`)}</option>)}
-              </select>
-            </div>
+              </ChampSelect>
+            </Champ>
           )}
-        </div>
+        </Champ>
       ) : (
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label htmlFor="tache-repetition" className={LABEL}>{t("taches.champs.repetition")}</label>
-          <select id="tache-repetition" className={FIELD} value={rythme} onChange={(e) => setRythme(e.target.value as Rythme | "")}>
+      <div className="space-y-4">
+        <Champ id="tache-repetition" label={t("taches.champs.repetition")}>
+          <ChampSelect id="tache-repetition" value={rythme} onChange={(e) => setRythme(e.target.value as Rythme | "")}>
             <option value="">{t("taches.rythme.aucun")}</option>
             <option value="semaine">{t("taches.rythme.semaine")}</option>
             <option value="2semaines">{t("taches.rythme.2semaines")}</option>
             <option value="mois">{t("taches.rythme.mois")}</option>
             <option value="an">{t("taches.rythme.an")}</option>
-          </select>
+          </ChampSelect>
           {rythme === "an" && <p className="text-xs text-muted-foreground">{t("taches.anAide")}</p>}
-        </div>
+        </Champ>
         {rythme === "mois" && (
-          <div className="space-y-1">
-            <label htmlFor="tache-rang" className={LABEL}>{t("taches.champs.rang")}</label>
-            <select id="tache-rang" className={FIELD} value={String(v.repetition?.rang ?? 1)}
+          <Champ id="tache-rang" label={t("taches.champs.rang")}>
+            <ChampSelect id="tache-rang" value={String(v.repetition?.rang ?? 1)}
               onChange={(e) => set({ repetition: { rythme: "mois", rang: Number(e.target.value) } })}>
               {["1", "2", "3", "4", "-1"].map((r) => <option key={r} value={r}>{t(`taches.rang.${r}`)}</option>)}
-            </select>
-          </div>
+            </ChampSelect>
+          </Champ>
         )}
       </div>
       )}
-      <div className="space-y-1">
-        <label htmlFor="tache-prevenir" className={LABEL}>{t("taches.champs.prevenir")}</label>
-        <select id="tache-prevenir" className={FIELD} value={prevenirValue(v.prevenir)} onChange={(e) => set({ prevenir: parsePrevenir(e.target.value) })}>
+      <Champ id="tache-prevenir" label={t("taches.champs.prevenir")}>
+        <ChampSelect id="tache-prevenir" value={prevenirValue(v.prevenir)} onChange={(e) => set({ prevenir: parsePrevenir(e.target.value) })}>
           <option value="">{t("taches.prevenirPersonne")}</option>
           {/* Les autres équipes, sous leur nom (EQ10), puis les régies. */}
           {EQUIPES.filter((e) => e.id !== equipe).map((e) => (
@@ -256,28 +240,26 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
           {SERVICE_LIEUX.map((s) => (
             <option key={s} value={`regie:${s}`}>{t("taches.prevenirRegie", { service: t(`categories.${s}`, { defaultValue: s }) })}</option>
           ))}
-        </select>
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="tache-lien" className={LABEL}>{t("taches.champs.lien")}</label>
-        <Input id="tache-lien" type="url" inputMode="url" value={v.lien} placeholder="https://" onChange={(e) => set({ lien: e.target.value })} />
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="tache-note" className={LABEL}>{t("taches.champs.note")}</label>
-        <Input id="tache-note" value={v.note} maxLength={160} onChange={(e) => set({ note: e.target.value })} />
-      </div>
+        </ChampSelect>
+      </Champ>
+      <Champ id="tache-lien" label={t("taches.champs.lien")}>
+        <Input id="tache-lien" className="h-11" type="url" inputMode="url" value={v.lien} placeholder="https://" onChange={(e) => set({ lien: e.target.value })} />
+      </Champ>
+      <Champ id="tache-note" label={t("taches.champs.note")}>
+        <Input id="tache-note" className="h-11" value={v.note} maxLength={160} onChange={(e) => set({ note: e.target.value })} />
+      </Champ>
       {enLigne ? (
-        // Formulaires (R13) : en bas de la carte, à droite, « Annuler » puis le bouton plein.
+        // Formulaires (R13) : en bas de la carte, à droite, « Annuler » (texte, 44 px) puis le bouton plein.
         <div className="flex justify-end gap-2 border-t border-border/70 pt-4">
-          <Button type="button" variant="outline" className="rounded-full" onClick={onClose}>{t("taches.annuler")}</Button>
-          <Button type="submit" className="rounded-full" disabled={busy}>{initial ? t("taches.enregistrer") : t("taches.creer")}</Button>
+          <Button type="button" variant="ghost" className="h-11 text-foreground" onClick={onClose}>{t("taches.annuler")}</Button>
+          <Button type="submit" className="h-11 rounded-full" disabled={busy}>{initial ? t("taches.enregistrer") : t("taches.creer")}</Button>
         </div>
       ) : (
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        <Button type="submit" disabled={busy}>{t("taches.enregistrer")}</Button>
-        <Button type="button" variant="ghost" onClick={onClose}>{t("taches.annuler")}</Button>
+      <div className="flex flex-col gap-2 pt-1">
+        <Button type="submit" className="h-[50px] w-full" disabled={busy}>{initial ? t("taches.enregistrer") : t("taches.creer")}</Button>
+        <Button type="button" variant="ghost" className="h-11 w-full" onClick={onClose}>{t("taches.annuler")}</Button>
         {onDelete && (
-          <Button type="button" variant="ghost" className="ml-auto text-destructive" disabled={busy} onClick={remove}>
+          <Button type="button" variant="ghost" className="h-11 w-full text-destructive" disabled={busy} onClick={remove}>
             {t("taches.supprimer")}
           </Button>
         )}

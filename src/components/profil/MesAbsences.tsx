@@ -1,5 +1,6 @@
 "use client";
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Trash2 } from "lucide-react";
@@ -10,8 +11,10 @@ import { dateAbsence } from "@/lib/planning/choisir";
 import type { Absence } from "@/types/absence";
 import type { UserProfile } from "@/types/user";
 import { Button } from "@/components/ui/button";
+import { ChampSelect } from "@/components/ui/champ-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { compter } from "@/lib/usage";
 
 // « Mes absences » (SC3.2, docs/spec-createur-corbeille-absences.md) : congés, vacances ou absence d'un
 // jour, vus par ceux qui font les plannings. En ligne (pas derrière BACK_OFFICE, Q11). Qui fait les
@@ -26,7 +29,7 @@ const nomAffiche = (p: UserProfile) => p.planningName || `${p.firstName} ${p.las
 
 export function MesAbsences() {
   const { t, i18n } = useTranslation();
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr";
+  const langue = langueCourte(i18n.language);
   const { user, profile } = useProfile();
   const responsable = faitDesPlannings(user, profile);
 
@@ -95,6 +98,7 @@ export function MesAbsences() {
     setErreur("");
     try {
       await ajouterAbsence(uidCible, { du, au, motif: voirMotif ? motif : undefined });
+      compter("cmd.compte.absence.ajouter");
       await recharger(uidCible);
       setOuvert(false);
     } catch {
@@ -108,6 +112,7 @@ export function MesAbsences() {
     setErreur("");
     try {
       await supprimerAbsence(uidCible, a.id);
+      compter("cmd.compte.absence.supprimer");
       await recharger(uidCible);
     } catch {
       setErreur(t("absences.erreur"));
@@ -115,7 +120,7 @@ export function MesAbsences() {
   }
 
   return (
-    <section aria-label={t("absences.titre")} className="raised rounded-2xl p-5 space-y-4">
+    <section aria-label={t("absences.titre")} className="carte-groupe rounded-2xl p-5 space-y-4">
       <div>
         <h2 className="text-sm font-bold text-foreground">{t("absences.titre")}</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">{t("absences.aide")}</p>
@@ -124,15 +129,14 @@ export function MesAbsences() {
       {responsable && (
         <div className="space-y-1.5">
           <Label htmlFor="absences-pour-qui">{t("absences.pourQui")}</Label>
-          <select
+          <ChampSelect
             id="absences-pour-qui"
             value={uidCible}
             onChange={(e) => { setCible(e.target.value === user.uid ? "" : e.target.value); setOuvert(false); }}
-            className="h-10 w-full rounded-lg border border-transparent bg-secondary px-3 text-base md:text-sm"
           >
             <option value={user.uid}>{t("absences.moi")}</option>
             {autres.map((p) => <option key={p.uid} value={p.uid}>{nomAffiche(p)}</option>)}
-          </select>
+          </ChampSelect>
         </div>
       )}
 

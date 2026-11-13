@@ -6,27 +6,30 @@
 // Lot U4 bis, B5 (docs/spec-pages-en-grand.md, Q9) : carte du compte, colonnes selon
 // la disposition, et les notifications dans Réglages.
 // Agencement v18, A12 (docs/spec-agencement-v18.md ; planche `v18-app-moi-a`) : l'en-tête commun,
-// des aperçus utiles (Mes services, Mes tâches, Harmonie, Mes équipes) et trois cartes d'aide.
+// des aperçus utiles (Mes services, Mes tâches, Mes équipes) et trois cartes d'aide. L'aperçu Harmonie est
+// retiré le 02/11/2026 (Timothée) : Harmonie vit dans l'espace Musiciens (docs/spec-espace-musiciens.md).
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
-import { BookOpen, ChevronRight, Globe, LogOut, Megaphone, MessageSquareHeart, Moon, ShieldCheck, TriangleAlert } from "lucide-react";
+import { BookOpen, ChevronRight, Globe, LogOut, Megaphone, MessageSquareHeart, Moon, RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useDisposition } from "@/hooks/useDisposition";
 import { CarteCompte } from "@/components/moi/CarteCompte";
+import { CarteCeQueTuPeuxFaire, CarteMesEquipes } from "@/components/moi/CartesAcces";
 import { ReglagesNotifications } from "@/components/moi/ReglagesNotifications";
-import { ApercuEquipes, ApercuHarmonie, ApercuServices, ApercuTaches } from "@/components/moi/Apercus";
-import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
+import { ApercuServices, ApercuTaches } from "@/components/moi/Apercus";
+import { MesPresidences } from "@/components/stats/MesPresidences";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { Halo } from "@/components/layout/Halo";
 import { Group, GroupRow } from "@/components/ui/group";
+import { ouvrirVisite } from "@/components/onboarding/Accueil";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { audiencesNotifiables, equipesDesTaches, isAdminUser } from "@/lib/access";
+import { compter } from "@/lib/usage";
 import { BACK_OFFICE } from "@/lib/backOffice";
 
 const TOGGLE = "rounded-full bg-secondary px-3 py-1.5 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.96] cursor-pointer";
@@ -36,9 +39,6 @@ function MoiClient() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { resolvedTheme, setTheme } = useTheme();
-  // Catalogue « Harmonie » (lot 9) : jusqu'au 19/09/2026 il n'était joignable
-  // que depuis l'onglet Chants et la page d'un chant.
-  const harmonie = useAccesHarmonie();
   const setLanguage = useSetLanguage();
   const [reportOpen, setReportOpen] = useState(false);
   const disposition = useDisposition();
@@ -51,7 +51,7 @@ function MoiClient() {
   // « Mes tâches » (lot 7 ; EQ15) : seulement pour les membres d'une équipe (Louange élargi) et les admins.
   const equipes = useMemo(() => equipesDesTaches(user, profile), [user, profile]);
 
-  const carte = "raised rounded-2xl px-4 py-1.5";
+  const carte = "carte-groupe rounded-2xl px-4 py-1.5";
   const blocs = {
     compte: (
       <CarteCompte
@@ -60,7 +60,8 @@ function MoiClient() {
         email={user?.email ?? ""}
         admin={admin}
         planningName={profile?.planningName ?? ""}
-        serviceRoles={profile?.serviceRoles ?? {}}
+        // Lot AO (AO-B) : au Back-Office, les services et rôles déclarés laissent la place à « Mes équipes ».
+        serviceRoles={BACK_OFFICE ? {} : profile?.serviceRoles ?? {}}
       />
     ),
     // Lot U6, B2 : Notifier et l'administration sont au Back-Office (Messages, Équipes…) ;
@@ -73,29 +74,44 @@ function MoiClient() {
     ),
     // Q9 : Réglages = Notifications · Langue · Thème (les notifications ont quitté le profil).
     reglages: (
-      <section key="reglages" aria-label={t("moi.settings")} className="raised rounded-2xl px-4 pb-1.5 pt-3">
+      <section key="reglages" aria-label={t("moi.settings")} className="carte-groupe rounded-2xl px-4 pb-1.5 pt-3">
         <Group title={t("moi.settings")}>
           {profile && <ReglagesNotifications feuille={disposition === "telephone"} />}
-          <GroupRow
-            leading={<Globe />}
-            trailing={
-              <button type="button" onClick={() => setLanguage(isZh ? "fr" : "zh-CN")} className={TOGGLE}>
-                {isZh ? t("moi.french") : "中文"}
-              </button>
-            }
-          >
-            {t("moi.language")}
-          </GroupRow>
-          <GroupRow
-            leading={<Moon />}
-            trailing={
-              <button type="button" onClick={() => setTheme(dark ? "light" : "dark")} className={TOGGLE}>
-                {dark ? t("moi.light") : t("moi.dark")}
-              </button>
-            }
-          >
-            {t("moi.theme")}
-          </GroupRow>
+          {/* BO-G, 12 : au Back-Office, un état (« Langue  Français »), pas un bouton d'action ; toucher la ligne bascule.
+              En ligne (interrupteur coupé), les boutons d'avant. */}
+          {BACK_OFFICE ? (
+            <>
+              <GroupRow leading={<Globe />} onClick={() => setLanguage(isZh ? "fr" : "zh-CN")} trailing={isZh ? "中文" : t("moi.french")}>
+                {t("moi.language")}
+              </GroupRow>
+              <GroupRow leading={<Moon />} onClick={() => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); }} trailing={dark ? t("moi.dark") : t("moi.light")}>
+                {t("moi.theme")}
+              </GroupRow>
+            </>
+          ) : (
+            <>
+              <GroupRow
+                leading={<Globe />}
+                trailing={
+                  <button type="button" onClick={() => setLanguage(isZh ? "fr" : "zh-CN")} className={TOGGLE}>
+                    {isZh ? t("moi.french") : "中文"}
+                  </button>
+                }
+              >
+                {t("moi.language")}
+              </GroupRow>
+              <GroupRow
+                leading={<Moon />}
+                trailing={
+                  <button type="button" onClick={() => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); }} className={TOGGLE}>
+                    {dark ? t("moi.light") : t("moi.dark")}
+                  </button>
+                }
+              >
+                {t("moi.theme")}
+              </GroupRow>
+            </>
+          )}
         </Group>
       </section>
     ),
@@ -108,18 +124,28 @@ function MoiClient() {
   const { compte, notifierAdmin, reglages, deconnexion } = blocs;
 
   // A12 (agencement v18) : des aperçus utiles à la place des lignes de liens d'avant (Mes services,
-  // Équipes, Harmonie, Tâches) ; leur « Tout voir » mène aux pages, rien ne disparaît.
+  // Équipes, Tâches ; Harmonie retiré le 02/11/2026) ; leur « Tout voir » mène aux pages, rien ne disparaît.
   const apercus = (
-    <div key="apercus" className="grid items-start gap-4 md:grid-cols-2">
-      <ApercuServices />
-      {BACK_OFFICE && equipes.length > 0 && user && <ApercuTaches equipes={equipes} />}
-      {!harmonie.chargement && harmonie.peut && <ApercuHarmonie piano={harmonie.piano} />}
-      {BACK_OFFICE && user && <ApercuEquipes uid={user.uid} />}
+    <div key="apercus" className="min-w-0 [container-type:inline-size]">
+      <div className="grid items-start gap-4 [@container(min-width:720px)]:grid-cols-2">
+        <div className="min-w-0 space-y-4">
+          <ApercuServices />
+          <MesPresidences profile={profile} />
+        </div>
+        {BACK_OFFICE && (
+          <div className="min-w-0 space-y-4">
+            {equipes.length > 0 && user && <ApercuTaches equipes={equipes} />}
+            <CarteMesEquipes profile={profile} />
+            <CarteCeQueTuPeuxFaire profile={profile} admin={admin} />
+          </div>
+        )}
+      </div>
     </div>
   );
   const aide = (
-    <div key="aide" className="grid gap-4 md:[grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
+    <div key="aide" className="grid gap-4">
       <CarteAide href="/guide" icone={<BookOpen />} titre={t("common.header.guide")} sous={t("moi.apercus.guideSous")} />
+      <CarteAide onClick={ouvrirVisite} icone={<RotateCcw />} titre={t("accueil.revoir")} sous={t("accueil.revoirSous")} />
       <CarteAide href="/questionnaire" icone={<MessageSquareHeart />} titre={t("survey.title")} sous={t("moi.apercus.avisSous")} />
       <CarteAide onClick={() => setReportOpen(true)} icone={<TriangleAlert />} titre={t("common.report")} sous={t("moi.apercus.signalerSous")} />
     </div>
@@ -134,10 +160,12 @@ function MoiClient() {
   const telephone = disposition === "telephone";
   const contenu = (
     <div className={grand ? "grid grid-cols-[340px_minmax(0,1fr)] items-start gap-5" : "space-y-4"}>
-      <div className={grand ? "space-y-4" : telephone ? undefined : "grid grid-cols-2 items-start gap-4"}>
+      <div className={grand ? "space-y-4 sticky top-[calc(var(--nav-h)+20px)]" : telephone ? undefined : "grid grid-cols-2 items-start gap-4"}>
         {compte}
-        {!telephone && <div className="space-y-4">{reglages}{notifierAdmin}{deconnexion}</div>}
+        {!telephone && <div className="space-y-4">{reglages}{notifierAdmin}{grand && deconnexion}</div>}
       </div>
+      {/* R2, n° 1 : en tablette, « Déconnexion » en rangée pleine largeur sous la paire compte / réglages (ni vide gris sous l'une, ni colonne inégale). */}
+      {!grand && !telephone && deconnexion}
       <div className="min-w-0 space-y-4">{apercus}{aide}</div>
       {telephone && <div className="space-y-4">{notifierAdmin}{reglages}{deconnexion}</div>}
     </div>
@@ -145,7 +173,6 @@ function MoiClient() {
 
   return (
     <div className="relative">
-      <Halo variant="moi" color="hsl(var(--foreground))" />
       <div className="relative pb-10">
         <EnTetePage titre={t("moi.title")} sousTitre={admin ? `${name || user?.email} · ${t("moi.admin")}` : name || user?.email} />
         <div className="px-[var(--marge-page)]">{contenu}</div>
@@ -155,19 +182,19 @@ function MoiClient() {
   );
 }
 
-/** Une carte d'aide (Guide, Ton avis, Signaler un problème) : icône, titre, une ligne, chevron. */
+/** Une carte d'aide (Guide, Ton avis, Signaler un problème) : icône, titre, description entière, chevron (lignes pleine largeur, G14). */
 function CarteAide({ href, onClick, icone, titre, sous }: { href?: string; onClick?: () => void; icone: ReactNode; titre: string; sous: string }) {
   const inner = (
     <>
       <span aria-hidden className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px] bg-secondary [&_svg]:h-4 [&_svg]:w-4">{icone}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold leading-5">{titre}</span>
-        <span className="block truncate text-[13px] text-muted-foreground">{sous}</span>
+        <span className="block text-base font-semibold leading-5">{titre}</span>
+        <span className="block text-sm text-muted-foreground">{sous}</span>
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
     </>
   );
-  const classe = "raised flex min-w-0 items-center gap-3 rounded-2xl px-4 py-3.5 text-left text-foreground transition-transform duration-150 active:scale-[.98]";
+  const classe = "carte-groupe flex min-w-0 items-center gap-3 rounded-2xl px-4 py-3.5 text-left text-foreground transition-transform duration-150 active:scale-[.98]";
   return href ? <Link href={href} className={classe}>{inner}</Link> : <button type="button" onClick={onClick} className={classe}>{inner}</button>;
 }
 

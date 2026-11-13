@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Pas de réseau, 无网络</title>
+<style>
+  :root { color-scheme: light dark; --fond: #fff; --texte: #1c1c1e; --doux: #6c6c72; --filet: #e4e4e5; }
+  @media (prefers-color-scheme: dark) { :root { --fond: #000; --texte: #f2f2f7; --doux: #98989f; --filet: #373739; } }
+  html, body { margin: 0; background: var(--fond); color: var(--texte); }
+  body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box;
+         font: 15px/21px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans SC", sans-serif; }
+  main { max-width: 26rem; text-align: center; }
+  .logo { display: inline-flex; width: 48px; height: 48px; margin-bottom: 16px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px var(--filet); overflow: hidden; }
+  .logo img { width: 100%; height: 100%; object-fit: contain; }
+  p { margin: 0 0 8px; }
+  p.premier { font-size: 17px; line-height: 23px; font-weight: 600; color: var(--texte); }
+  p.second { font-size: 15px; line-height: 21px; font-weight: 400; color: var(--doux); margin-bottom: 24px; }
+  nav { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  a { flex: 1 1 140px; box-sizing: border-box; height: 44px; padding: 0 20px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border: 1px solid var(--filet); color: var(--texte); font-weight: 600; text-decoration: none; }
+  a.plein { background: var(--texte); border-color: var(--texte); color: var(--fond); }
+  a span { display: block; }
+  a span.premier { font-size: 15px; line-height: 17px; }
+  a span.second { font-size: 12px; line-height: 14px; font-weight: 400; }
+</style>
+</head>
+<body>
+<main>
+  <span class="logo"><img src="/logo.png" width="48" height="48" alt=""></span>
+  <p id="fr" class="premier" lang="fr">Pas de réseau. Cette page n'a pas encore été ouverte sur cet appareil.</p>
+  <p id="zh" class="second" lang="zh-CN">无网络。此页面尚未在此设备上打开过。</p>
+  <nav>
+    <a href="#" id="reessayer" class="plein"><span class="premier" lang="fr">Réessayer</span><span class="second" lang="zh-CN">重试</span></a>
+    <a href="/songs/" id="chants"><span class="premier" lang="fr">Les chants</span><span class="second" lang="zh-CN">诗歌</span></a>
+  </nav>
+</main>
+<script>
+  document.getElementById("reessayer").addEventListener("click", function (e) { e.preventDefault(); location.reload(); });
+  // La langue de l'interface (clé posée par le site, même origine), à défaut celle du navigateur : le chinois d'abord si elle commence par zh.
+  var langue = "";
+  try { langue = localStorage.getItem("i18nextLng") || ""; } catch (e) {}
+  if (!langue) { try { langue = navigator.language || ""; } catch (e) {} }
+  if (/^zh/i.test(langue)) {
+    var fr = document.getElementById("fr"), zh = document.getElementById("zh");
+    zh.parentNode.insertBefore(zh, fr);
+    zh.className = "premier"; fr.className = "second";
+    ["reessayer", "chants"].forEach(function (id) {
+      var a = document.getElementById(id), un = a.firstChild, deux = a.lastChild;
+      a.insertBefore(deux, un);
+      deux.className = "premier"; un.className = "second";
+    });
+    document.documentElement.lang = "zh-CN";
+    document.title = "无网络，Pas de réseau";
+  }
+</script>
+</body>
+</html>

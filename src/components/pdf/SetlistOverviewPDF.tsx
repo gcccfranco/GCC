@@ -1,7 +1,7 @@
 import {
   Document, Page, Text, View, StyleSheet, Font,
 } from "@react-pdf/renderer";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
 import { formatDate } from "@/lib/utils/formatDate";
 import { enAttente } from "@/lib/setlist/propositions";

@@ -3,12 +3,11 @@
 // Menu « Compte » (sorti de la Navbar au lot U4) : le même derrière l'initiale de la
 // barre du haut et derrière celle du pied de la barre latérale. Le déclencheur est
 // fourni par la barre (`children`, rendu tel quel par Radix).
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { LogOut, UserRound, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck, Network, Sparkles } from "lucide-react";
-import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
+import { LogOut, UserRound, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck, Network } from "lucide-react";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
@@ -54,6 +53,8 @@ export function MenuCompte({
   const { profile } = useProfile();
   const { displayName, planningName } = useNomDuMembre();
   const [reportOpen, setReportOpen] = useState(false);
+  // Le bouton « Compte » : à la fermeture de « Signaler », le focus y revient (le menu, lui, est déjà parti).
+  const declencheur = useRef<HTMLElement | null>(null);
   const admin = isAdminUser(user);
   // Lot U6, B2 : Notifier et l'administration passent au Back-Office (sélecteur) ; en ligne,
   // interrupteur coupé, le menu les garde.
@@ -62,7 +63,7 @@ export function MenuCompte({
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu onOpenChange={(o) => { if (o) declencheur.current = document.activeElement as HTMLElement | null; }}>
         <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
         <DropdownMenuContent side={side} align={align} sideOffset={sideOffset} className="w-64">
           <DropdownMenuLabel>
@@ -80,7 +81,6 @@ export function MenuCompte({
               <Link href="/equipes"><Network aria-hidden />{t("equipes.title")}</Link>
             </DropdownMenuItem>
           )}
-          <HarmonieMenuItem label={t("harmonie.titre")} />
           <DropdownMenuItem asChild>
             <Link href="/guide"><BookOpen aria-hidden />{t("common.header.guide")}</Link>
           </DropdownMenuItem>
@@ -109,20 +109,7 @@ export function MenuCompte({
       </DropdownMenu>
       {/* Hors de la barre : une barre transformée (navbar) ou masquée serait le repère
           du dialogue fixe, qui s'afficherait dans sa bande ou pas du tout. */}
-      {reportOpen && createPortal(<ReportDialog open onClose={() => setReportOpen(false)} kind="site" />, document.body)}
+      {reportOpen && createPortal(<ReportDialog open onClose={() => { setReportOpen(false); setTimeout(() => declencheur.current?.focus(), 0); }} kind="site" />, document.body)}
     </>
-  );
-}
-
-/** Entrée « Harmonie » du menu du compte. Rendue seulement une fois le menu ouvert,
- *  donc l'accès (qui lit les plannings pour trouver l'instrument) n'est calculé qu'à
- *  ce moment-là, jamais à chaque page. */
-function HarmonieMenuItem({ label }: { label: string }) {
-  const acces = useAccesHarmonie();
-  if (acces.chargement || !acces.peut) return null;
-  return (
-    <DropdownMenuItem asChild>
-      <Link href="/harmonie"><Sparkles aria-hidden />{label}</Link>
-    </DropdownMenuItem>
   );
 }

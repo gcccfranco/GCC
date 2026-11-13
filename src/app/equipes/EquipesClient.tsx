@@ -10,27 +10,39 @@
 // sous l'en-tête commun (`enTete`) ; une carte s'édite dans un panneau (420 px à droite en
 // grand, feuille sinon), pour garder des cartes de hauteur fixe.
 
-import { useEffect, useMemo, useState, type ComponentProps, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { Pencil, X } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { Pilules } from "@/components/layout/Onglets";
+import { OngletsRail } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
-import { Halo } from "@/components/layout/Halo";
 import { BandeauEquipes } from "@/components/equipes/BandeauEquipes";
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerBarre, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
 import { listEquipes, majRattachement, saveEquipe } from "@/lib/firebase/equipes";
-import { canEditerEquipes, isAdminUser } from "@/lib/access";
-import { EQUIPES, type EquipeDef } from "@/lib/equipes/organigramme";
-import { COLONNES_MUSICIENS, matriceMusiciens, type LigneMusicien } from "@/lib/equipes/musiciens";
+import { ModifieEntreTemps } from "@/lib/firebase/programmes";
+import {
+  canEditerEquipes, isAdminUser, peutChangerReferents, peutModifierEquipe, peutPlacerMembre, peutPlacerSousEquipe, peutVoirEquipe,
+} from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
+import { CeQueCaOuvre, CorpsLouange, LigneMembreEdition, MembreOrganigramme, MentionReferent, ligneGrise, majuscule, resume } from "@/components/equipes/OrganigrammeLouange";
+import { COLONNE_LIEU, porteDesLieux, referentSousDe, sousEquipesDe } from "@/lib/equipes/louange";
+import { EQUIPES, uidsAChanger, type EquipeDef } from "@/lib/equipes/organigramme";
+import {
+  COLONNES_MUSICIENS, matriceMusiciens, matriceMusiciensOrganigramme, type LigneMusicien,
+} from "@/lib/equipes/musiciens";
 import { findMyServices, loadPlanningData, type PlanningData } from "@/lib/planning/names";
 import { categoryLabel } from "@/lib/serviceColors";
-import { SERVICE_ROLE_LABELS, type UserProfile } from "@/types/user";
-import type { Equipe, MembreEquipe } from "@/types/equipe";
+import { SERVICE_LIEUX, SERVICE_ROLE_LABELS, type UserProfile } from "@/types/user";
+import { SOUS_EQUIPES, SOUS_EQUIPES_EDD, type Equipe, type MembreEquipe, type SousEquipe } from "@/types/equipe";
+import { libellesResponsabilites } from "@/lib/equipes/responsabilites";
+import { colonnesEdd } from "@/lib/equipes/edd";
+import { cleNomEquipe } from "@/lib/equipes/table";
+import { TOUCHER_44 } from "@/lib/toucher44";
+import { PastillesEdd } from "@/components/equipes/OrganigrammeEdd";
 
 const nomComplet = (p: UserProfile) =>
   `${p.firstName} ${p.lastName}`.trim() || p.planningName || p.email;
@@ -49,7 +61,7 @@ export function EquipesClient({
    *  à droite (en dessous sur téléphone et tablette debout). */
   selecteur?: ReactNode;
   /** Au Back-Office : l'en-tête commun (titre, sous-titre, outils, rail) ; `sousEnTete` se pose
-   *  sous les pilules Équipes · Musiciens (le résultat de « Recalculer »). */
+   *  sous le rail Équipes · Musiciens (le résultat de « Recalculer »). */
   enTete?: Omit<ComponentProps<typeof EnTetePage>, "apres"> & { sousEnTete?: ReactNode };
 }) {
   const { t } = useTranslation();
@@ -64,10 +76,17 @@ export function EquipesClient({
   useEffect(() => {
     listEquipes().then(setEquipes);
     listProfiles().then(setProfils);
-    loadPlanningData().then(setPlanning);
+    // Nouveau mode (lot AO) : ni le planning ni `serviceRoles` ne servent plus ici, l'organigramme suffit.
+    if (!BACK_OFFICE) loadPlanningData().then(setPlanning);
   }, []);
 
   const peutEditer = gestion && canEditerEquipes(user, profile);
+  // Lot AO-B : le crayon n'apparaît que sur les cartes qu'on peut modifier (Orga, référent de l'équipe, référent
+  // d'une sous-équipe de Louange) ; l'ancien mode garde le droit « Équipes » pour toutes.
+  const modifiable = (id: string) =>
+    !peutEditer ? false
+      : !BACK_OFFICE ? true
+      : peutModifierEquipe(user, profile, id) || (id === "louange" && SOUS_EQUIPES.some((s) => peutPlacerSousEquipe(user, profile, s)));
   const onglets = [t("equipes.onglet.equipes"), t("equipes.onglet.musiciens")];
   // Lot U4 bis, B6 (Q12) : l'organigramme est un bandeau qui défile de gauche à droite et la
   // page tient dans la hauteur de l'écran. Au Back-Office aussi depuis la v18 (B8) : l'édition
@@ -81,24 +100,25 @@ export function EquipesClient({
       key={def.id}
       def={def}
       equipe={equipeDe(def.id)}
-      peutEditer={peutEditer}
+      peutEditer={modifiable(def.id)}
+      // Piste A (BO7, BO4) : le nom de l'équipe ouvre sa page à qui peut la voir (coupée en ligne).
+      href={BACK_OFFICE && peutVoirEquipe(user, profile, def.id) ? gestion ? `/back-office/equipes/${def.id}` : `/equipes/${def.id}?depuis=equipes` : undefined}
       enBandeau={bandeau}
       onFiche={setFiche}
       onModifier={() => setEditee(def.id)}
     />
   );
 
-  // Équipes · Musiciens : un sous-onglet, en pilules (agencement v18, R4), App et Back-Office.
+  // Équipes · Musiciens : une vue de la page, en rail (arbitrage 3 du lot CD), App et Back-Office.
   const vues = (
-    <Pilules
+    <OngletsRail
       etiquette={t("equipes.vue")}
-      options={[
-        { cle: "equipes" as const, nom: onglets[0] },
-        { cle: "musiciens" as const, nom: onglets[1] },
+      onglets={[
+        { id: "equipes", label: onglets[0] },
+        { id: "musiciens", label: onglets[1] },
       ]}
-      valeur={onglet}
-      choisir={(v) => v && setOnglet(v)}
-      obligatoire
+      actif={onglet}
+      choisir={(v) => setOnglet(v as typeof onglet)}
     />
   );
 
@@ -114,8 +134,8 @@ export function EquipesClient({
   );
 
   if (gestion) {
-    // Back-Office (agencement v18, B8) : l'en-tête commun, Équipes · Musiciens en pilules
-    // (un sous-onglet, R4) ; le bandeau sous l'en-tête, ou la matrice des musiciens.
+    // Back-Office (agencement v18, B8) : l'en-tête commun, Équipes · Musiciens en rail
+    // (une vue de la page) ; le bandeau sous l'en-tête, ou la matrice des musiciens.
     const defEditee = EQUIPES.find((d) => d.id === editee) ?? null;
     const entete = (
       <EnTetePage
@@ -124,7 +144,7 @@ export function EquipesClient({
         apres={
           <>
             {selecteur ? (
-              <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">{selecteur}</div>
                 <div className="shrink-0">{vues}</div>
               </div>
@@ -147,7 +167,7 @@ export function EquipesClient({
           <>
             {entete}
             <div className="px-[var(--marge-page)] pb-10">
-              <Matrice profils={profils} planning={planning} onFiche={setFiche} />
+              <Matrice profils={profils} equipes={equipes} planning={planning} onFiche={setFiche} />
             </div>
           </>
         )}
@@ -165,14 +185,15 @@ export function EquipesClient({
     );
   }
 
-  // App (agencement v18, tranche Z) : l'en-tête commun, Équipes · Musiciens dessous.
+  // App (agencement v18, tranche Z) : l'en-tête commun, Équipes · Musiciens (rail) dessous.
   // Lot 2 (OG-E) : le sélecteur Église · Paix · … à gauche, Équipes · Musiciens à droite, et le sous-titre des organigrammes.
   const enTeteApp = (
     <EnTetePage
+      retour={{ href: "/moi", label: t("moi.title") }}
       titre={t("equipes.title")}
       sousTitre={selecteur ? t("groupes.app.sousTitre") : t("equipes.sousTitre")}
       apres={selecteur ? (
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">{selecteur}</div>
           <div className="shrink-0">{vues}</div>
         </div>
@@ -182,7 +203,6 @@ export function EquipesClient({
   if (bandeau) {
     return (
       <div className="relative">
-        <Halo variant="moi" color="hsl(var(--foreground))" />
         <div className="equipes-ecran relative flex flex-col">
           {enTeteApp}
           <BandeauEquipes
@@ -197,11 +217,10 @@ export function EquipesClient({
   // App, vue des musiciens.
   return (
     <div className="relative">
-      <Halo variant="moi" color="hsl(var(--foreground))" />
       <div className="relative">
         {enTeteApp}
         <div className="px-[var(--marge-page)] pb-10">
-          <Matrice profils={profils} planning={planning} onFiche={setFiche} />
+          <Matrice profils={profils} equipes={equipes} planning={planning} onFiche={setFiche} />
         </div>
         {fichePersonne}
       </div>
@@ -223,34 +242,31 @@ function PanneauEquipe({
   onEnregistre: (e: Equipe) => void;
 }) {
   const { t } = useTranslation();
-  const aDroite = useDisposition() === "grand";
+  const disposition = useDisposition();
+  const aDroite = disposition === "grand";
   const sousTitre = def ? t(`equipes.soustitre.${def.id}`) : "";
   return (
     <Drawer open={def !== null} onOpenChange={(o) => !o && onClose()} direction={aDroite ? "right" : "bottom"}>
       <DrawerContent
         // Le sous-titre de l'équipe décrit le panneau ; sans lui, pas de description (Radix).
         {...(sousTitre ? {} : { "aria-describedby": undefined })}
+        data-feuille-equipe
+        formulaire={disposition === "tablette"}
         className={aDroite
           ? "left-auto top-0 bottom-0 mt-0 h-full w-[420px] rounded-none rounded-l-2xl border-y-0 border-r-0 [&>div:first-child]:hidden"
-          : "max-h-[90dvh]"}
+          : disposition === "tablette" ? undefined : "max-h-[90dvh]"}
       >
         {def && (
-          <>
-            <DrawerHeader className="pb-1 text-left">
-              <DrawerTitle>{t(`equipes.team.${def.id}`)}</DrawerTitle>
-              {sousTitre && <DrawerDescription>{sousTitre}</DrawerDescription>}
-            </DrawerHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
-              <EditionEquipe
-                key={def.id}
-                def={def}
-                membres={equipe?.membres ?? []}
-                profils={profils}
-                onClose={onClose}
-                onEnregistre={onEnregistre}
-              />
-            </div>
-          </>
+          <EditionEquipe
+            key={def.id}
+            def={def}
+            sousTitre={sousTitre}
+            membres={equipe?.membres ?? []}
+            version={equipe?.version ?? null}
+            profils={profils}
+            onClose={onClose}
+            onEnregistre={onEnregistre}
+          />
         )}
       </DrawerContent>
     </Drawer>
@@ -260,11 +276,13 @@ function PanneauEquipe({
 // ── Une équipe ──────────────────────────────────────────────────────────────
 
 function CarteEquipe({
-  def, equipe, peutEditer, enBandeau, onFiche, onModifier,
+  def, equipe, peutEditer, href, enBandeau, onFiche, onModifier,
 }: {
   def: EquipeDef;
   equipe: Equipe | null;
   peutEditer: boolean;
+  /** La page de l'équipe, pour qui peut la voir. */
+  href?: string;
   /** Dans le bandeau (U4 bis, B6 ; Back-Office depuis la v18) : carte en relief ; Louange et
    *  EDD rangent leurs sous-groupes sur trois colonnes, sous le référent. */
   enBandeau: boolean;
@@ -277,45 +295,71 @@ function CarteEquipe({
   const soustitre = t(`equipes.soustitre.${def.id}`);
   const groupes = [...new Set(membres.map((m) => m.groupe))];
   const enColonnes = enBandeau && !!def.sousColonnes;
-  const nom = t(`equipes.team.${def.id}`);
+  const nom = t(cleNomEquipe(def.id, true));
+
+  // Lot AO-B : Louange en trois sous-équipes, lignes grises des lieux pour Louange et Régie.
+  const nouveauLouange = BACK_OFFICE && def.id === "louange";
+  const nouveauRegie = BACK_OFFICE && def.id === "regie";
+  // Sous-équipes de l'EDD (docs/spec-edd-sous-equipes.md) : à la place du regroupement par `groupe`.
+  const nouveauEdd = BACK_OFFICE && def.id === "edd";
 
   const groupe = (g: string) => (
     <div key={g} className="break-inside-avoid space-y-0.5">
       {g && (
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g}</p>
+        <p className="break-words hyphens-auto text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g}</p>
       )}
       {membres.filter((m) => m.groupe === g).sort(referentsDabord).map((m, i) => (
-        <LigneMembre key={`${m.nom}-${i}`} membre={m} onFiche={onFiche} />
+        <LigneMembre key={`${m.nom}-${i}`} membre={m} onFiche={onFiche} detail={nouveauRegie ? ligneGrise(t, m, false) : undefined} />
       ))}
     </div>
   );
+
+  const colonneEdd = (id: string, titre: string | null, liste: MembreEquipe[]) => (
+    <div key={id} data-testid={`edd-${id}`} className="break-inside-avoid space-y-0.5">
+      {titre && (
+        <p className="break-words hyphens-auto text-xs font-semibold uppercase tracking-wide text-muted-foreground">{titre}</p>
+      )}
+      {liste.map((m, i) => (
+        <LigneMembre key={`${m.uid || m.nom}-${i}`} membre={m} onFiche={onFiche} />
+      ))}
+    </div>
+  );
+  const corpsEdd = () => {
+    const { parSous, sans } = colonnesEdd(membres);
+    const blocs = SOUS_EQUIPES_EDD.filter((s) => parSous[s].length > 0).map((s) => colonneEdd(`sous-${s}`, t(`equipes.sousEquipeEdd.${s}`), parSous[s]));
+    // « Sans sous-équipe » en dernier, sans intertitre si personne n'a de sous-équipe.
+    if (sans.length > 0) blocs.push(colonneEdd("sans", blocs.length > 0 ? t("equipes.sousEquipeEdd.sans") : null, sans));
+    return enColonnes ? <div className="columns-3 gap-4 [&>div]:pb-2">{blocs}</div> : <div className="space-y-2">{blocs}</div>;
+  };
 
   return (
     <section
       data-testid={`equipe-${def.id}`}
       className={enBandeau
-        ? "raised rounded-2xl p-4 space-y-2.5"
-        : "mb-3 break-inside-avoid rounded-xl bg-card shadow-soft p-4 space-y-2.5"}
+        ? "carte-groupe rounded-2xl p-4 space-y-2.5"
+        : "mb-3 break-inside-avoid carte-groupe p-4 space-y-2.5"}
     >
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-2">
-          <h2 className="text-base font-bold text-foreground">{nom}</h2>
+          <h2 className="min-w-0 break-words hyphens-auto text-lg font-bold leading-[23px] text-foreground">
+            {href ? <Link href={href} className={`rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${TOUCHER_44}`}>{nom}</Link> : nom}
+          </h2>
           {peutEditer && (
             <button
               type="button"
               onClick={onModifier}
               aria-label={t("equipes.modifierEquipe", { nom })}
               title={t("equipes.modifier")}
-              className="-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary"
+              className={`-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pose text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary ${TOUCHER_44}`}
             >
               <Pencil className="h-3.5 w-3.5" aria-hidden />
             </button>
           )}
         </div>
-        {soustitre && <p className="text-xs text-muted-foreground">{soustitre}</p>}
+        {soustitre && <p className="text-sm leading-[18px] text-muted-foreground">{soustitre}</p>}
         <div className="flex flex-wrap items-center gap-1.5">
           {membres.length > 0 && (
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {t("equipes.membres", { count: membres.length })}
             </span>
           )}
@@ -324,6 +368,13 @@ function CarteEquipe({
 
       {membres.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("equipes.aucunMembre")}</p>
+      ) : nouveauLouange ? (
+        <CorpsLouange
+          membres={membres}
+          ligne={(m, { referent, detail }) => <LigneMembre membre={m} onFiche={onFiche} referentTexte={referent} detail={detail} />}
+        />
+      ) : nouveauEdd ? (
+        corpsEdd()
       ) : enColonnes ? (
         <div>
           {groupes.includes("") && <div className="pb-2">{groupe("")}</div>}
@@ -338,20 +389,33 @@ function CarteEquipe({
   );
 }
 
-function LigneMembre({ membre, onFiche }: { membre: MembreEquipe; onFiche: (uid: string) => void }) {
+function LigneMembre({
+  membre, onFiche, detail, referentTexte,
+}: {
+  membre: MembreEquipe;
+  onFiche: (uid: string) => void;
+  /** Lot AO-B : la ligne grise sous le nom (lieux, instruments). */
+  detail?: string;
+  /** Lot AO-B (Louange) : le nom en gras avec « — Référent·e » ; `null` = pas référent ici ; absent = l'ancien affichage. */
+  referentTexte?: string | null;
+}) {
   const { t } = useTranslation();
+  const nouveau = referentTexte !== undefined;
+  const gras = nouveau ? referentTexte !== null : membre.referent;
   const contenu = (
     <>
-      <span className={membre.referent ? "font-semibold" : ""}>{membre.nom}</span>
+      <span className={gras ? "font-semibold" : ""}>{membre.nom}</span>
       {membre.mention && <span className="text-muted-foreground"> — {membre.mention}</span>}
-      {membre.referent && !/^R[ée]f/i.test(membre.mention) && (
-        <span className="ml-1.5 text-[11px] font-semibold text-muted-foreground">{t("equipes.referent")}</span>
+      {nouveau && referentTexte && !/^R[ée]f/i.test(membre.mention) && <span className="text-muted-foreground"> — {referentTexte}</span>}
+      {!nouveau && membre.referent && !/^R[ée]f/i.test(membre.mention) && (
+        <span className="ml-1.5 text-xs font-semibold text-muted-foreground">{t("equipes.referent")}</span>
       )}
       {membre.essai && (
-        <span className="ml-1.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+        <span className="ml-1.5 text-xs font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
           {t("equipes.essai")}
         </span>
       )}
+      {detail && <span className="block text-xs text-muted-foreground">{detail}</span>}
     </>
   );
   if (!membre.uid) return <p className="text-sm text-foreground">{contenu}</p>;
@@ -368,11 +432,26 @@ function LigneMembre({ membre, onFiche }: { membre: MembreEquipe; onFiche: (uid:
 
 // ── Édition (droit « Équipes ») ─────────────────────────────────────────────
 
+const cleMembre = (m: MembreEquipe) => `${m.uid}|${m.nom}`;
+
+/** Le document à écrire : chaque membre retiré disparaît ; un référent de sous-équipe (`sienne`) ne le retire que de SA
+ *  sous-équipe, et la ligne ne disparaît que s'il n'en reste aucune autre. */
+function appliqueRetraits(membres: MembreEquipe[], retires: Set<string>, sienne: ((s: SousEquipe) => boolean) | null): MembreEquipe[] {
+  return membres.flatMap((m) => {
+    if (!retires.has(cleMembre(m))) return [m];
+    const reste = sienne ? sousEquipesDe(m).filter((s) => !sienne(s)) : [];
+    return reste.length > 0 ? [{ ...m, sousEquipes: reste, referentSous: referentSousDe(m).filter((s) => reste.includes(s)) }] : [];
+  });
+}
+
 function EditionEquipe({
-  def, membres, profils, onClose, onEnregistre,
+  def, sousTitre, membres, version: versionLue, profils, onClose, onEnregistre,
 }: {
   def: EquipeDef;
+  sousTitre: string;
   membres: MembreEquipe[];
+  /** `updateTime` du document lu : précondition de l'écriture (`saveEquipe`). */
+  version: string | null;
   profils: UserProfile[];
   onClose: () => void;
   onEnregistre: (e: Equipe) => void;
@@ -383,6 +462,36 @@ function EditionEquipe({
   const [recherche, setRecherche] = useState("");
   const [erreur, setErreur] = useState("");
   const [enCours, setEnCours] = useState(false);
+  // Le document est écrit mais la recopie des profils a échoué : les comptes à recopier, que « Réessayer » renvoie
+  // (comme `aRecopier` d'OrganigrammeGroupe). Le panneau reste ouvert tant que la recopie n'a pas passé.
+  const [aRecopier, setARecopier] = useState<string[] | null>(null);
+  const [enregistree, setEnregistree] = useState<Equipe | null>(null);
+  // Version du document : celle de la lecture, puis celle de la dernière écriture de ce panneau.
+  const version = useRef<string | null>(versionLue);
+
+  // Lot AO-B (B3, F2) : en nouveau mode, Louange et Régie s'éditent par pastilles, et les droits se lisent
+  // dans access.ts. Orga, admin, référent de l'équipe : tout ; un référent de sous-équipe : les membres de la
+  // sienne seulement.
+  const nouveau = BACK_OFFICE;
+  const aLieux = nouveau && porteDesLieux(def.id);
+  const louange = def.id === "louange";
+  const edd = nouveau && def.id === "edd";
+  const droits = {
+    equipe: !nouveau || peutModifierEquipe(user, profile, def.id),
+    sous: (s: (typeof SOUS_EQUIPES)[number]) => peutPlacerSousEquipe(user, profile, s),
+    referents: !nouveau || peutChangerReferents(user, profile, def.id),
+  };
+  const siennes = SOUS_EQUIPES.filter((s) => droits.sous(s));
+  const peutAjouter = !nouveau || droits.equipe || (louange && siennes.length > 0);
+  const peutOuvrir = (m: MembreEquipe) => (louange ? peutPlacerMembre(user, profile, "louange", sousEquipesDe(m)) : droits.equipe);
+  // Qui s'ouvre est décidé sur la ligne d'arrivée : décocher sa propre sous-équipe ne ferme pas la ligne.
+  const originaux = useMemo(() => new Map(membres.map((m) => [cleMembre(m), m])), [membres]);
+  const [ajoutes, setAjoutes] = useState<Set<string>>(() => new Set());
+  const ouvrable = (m: MembreEquipe) => ajoutes.has(cleMembre(m)) || peutOuvrir(originaux.get(cleMembre(m)) ?? m);
+  const [ouvert, setOuvert] = useState<string | null>(null);
+  // Retraits marqués, appliqués à l'enregistrement seulement (« Remettre » les défait).
+  const [retires, setRetires] = useState<Set<string>>(() => new Set());
+  const sousSeulement = louange && nouveau && !droits.equipe;
 
   const q = recherche.trim().toLowerCase();
   const deja = new Set(brouillon.map((m) => m.uid).filter(Boolean));
@@ -394,8 +503,32 @@ function EditionEquipe({
     setBrouillon((prev) => prev.map((m, j) => (j === i ? { ...m, ...champ } : m)));
 
   function ajoute(m: MembreEquipe) {
-    setBrouillon((prev) => [...prev, m]);
+    // Un référent de sous-équipe place quelqu'un dans la sienne (F2).
+    const arrivee: MembreEquipe = aLieux && louange && !droits.equipe && siennes.length > 0 ? { ...m, sousEquipes: [siennes[0]] } : m;
+    setBrouillon((prev) => [...prev, arrivee]);
+    setAjoutes((prev) => new Set(prev).add(cleMembre(arrivee)));
+    if (aLieux) setOuvert(cleMembre(arrivee));
     setRecherche("");
+  }
+
+  function retire(m: MembreEquipe) {
+    setRetires((prev) => new Set(prev).add(cleMembre(m)));
+    setOuvert(null);
+  }
+  const remet = (m: MembreEquipe) =>
+    setRetires((prev) => { const n = new Set(prev); n.delete(cleMembre(m)); return n; });
+
+  async function recopier(uids: string[], ecrite: Equipe) {
+    try {
+      await majRattachement(uids, def.id);
+    } catch {
+      setARecopier(uids);
+      setEnregistree(ecrite);
+      setErreur(t("groupes.droitsNonRecopies"));
+      return;
+    }
+    setARecopier(null);
+    onEnregistre(ecrite);
   }
 
   async function enregistrer() {
@@ -404,97 +537,216 @@ function EditionEquipe({
     setErreur("");
     try {
       const nom = profile ? nomComplet(profile) : (user.email ?? "");
-      await saveEquipe(def.id, brouillon, { uid: user.uid, nom });
+      const aEcrire = appliqueRetraits(brouillon, retires, sousSeulement ? droits.sous : null);
+      let ecrite: Equipe;
+      try {
+        const nouvelle = await saveEquipe(def.id, aEcrire, { uid: user.uid, nom }, version.current);
+        version.current = nouvelle ?? version.current;
+        ecrite = {
+          id: def.id, membres: aEcrire,
+          updatedAt: new Date().toISOString(), parUid: user.uid, parNom: nom,
+          ...(version.current ? { version: version.current } : {}),
+        };
+      } catch (e) {
+        setErreur(e instanceof ModifieEntreTemps
+          ? (e.prenom ? t("planning.programme.modifieEntreTemps", { prenom: e.prenom }) : t("planning.programme.modifieEntreTempsSansNom"))
+          : t("equipes.erreur"));
+        return;
+      }
       // Le rattachement se repose côté serveur : le navigateur n'écrit pas un profil.
-      const touches = [...membres, ...brouillon].map((m) => m.uid).filter(Boolean);
-      await majRattachement([...new Set(touches)]);
-      onEnregistre({
-        id: def.id, membres: brouillon,
-        updatedAt: new Date().toISOString(), parUid: user.uid, parNom: nom,
-      });
-    } catch {
-      setErreur(t("equipes.erreur"));
+      // Seuls les comptes aux lignes changées (ajoutées, retirées, modifiées) : la recopie d'un compte ne lit que ses
+      // lignes et l'id de l'équipe, qui ne s'édite pas ici. Le document est déjà écrit : si la recopie échoue, les
+      // comptes restent à recopier (« Réessayer »).
+      const touches = [...new Set([...uidsAChanger(membres, aEcrire), ...(aRecopier ?? [])])];
+      if (touches.length) await recopier(touches, ecrite);
+      else onEnregistre(ecrite);
     } finally {
       setEnCours(false);
     }
   }
 
   return (
-    <div className="space-y-2.5 border-t border-border pt-3">
-      <div className="space-y-1.5">
-        {brouillon.map((m, i) => (
-          <div key={`${m.nom}-${i}`} className="rounded-lg border border-border p-2 space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-foreground">{m.nom}</span>
+    <>
+      <DrawerHeader className="shrink-0 pb-1 text-left">
+        <DrawerTitle>{t("equipes.titreEdition", { equipe: t(cleNomEquipe(def.id, true)), count: brouillon.length })}</DrawerTitle>
+        {sousTitre && <DrawerDescription>{sousTitre}</DrawerDescription>}
+      </DrawerHeader>
+      <div className="shrink-0 space-y-2.5 px-4 pb-3">
+        {peutAjouter && (
+          <Input
+            value={recherche}
+            placeholder={t("equipes.ajouterMembre")}
+            onChange={(e) => setRecherche(e.target.value)}
+            className="h-10"
+          />
+        )}
+        {peutAjouter && q && (
+          <div className="max-h-[30dvh] space-y-1 overflow-y-auto">
+            {resultats.map((p) => (
               <button
+                key={p.uid}
                 type="button"
-                aria-label={t("equipes.retirer", { nom: m.nom })}
-                onClick={() => setBrouillon((prev) => prev.filter((_, j) => j !== i))}
-                className="h-8 w-8 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center"
+                onClick={() => ajoute({ nom: nomComplet(p), uid: p.uid, mention: "", referent: false, essai: false, groupe: "" })}
+                className="block w-full rounded-lg bg-secondary px-2.5 py-1.5 text-left text-sm text-foreground"
               >
-                <X className="h-4 w-4" />
+                {nomComplet(p)}
               </button>
-            </div>
-            <Input
-              value={m.mention}
-              placeholder={t("equipes.mention")}
-              onChange={(e) => change(i, { mention: e.target.value })}
-              className="h-9"
-            />
-            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-              <label className="inline-flex items-center gap-1.5">
-                <input type="checkbox" checked={m.referent} onChange={(e) => change(i, { referent: e.target.checked })} />
-                {t("equipes.referent")}
-              </label>
-              <label className="inline-flex items-center gap-1.5">
-                <input type="checkbox" checked={m.essai} onChange={(e) => change(i, { essai: e.target.checked })} />
-                {t("equipes.essai")}
-              </label>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <Input
-        value={recherche}
-        placeholder={t("equipes.ajouterMembre")}
-        onChange={(e) => setRecherche(e.target.value)}
-        className="h-10"
-      />
-      {q && (
-        <div className="space-y-1">
-          {resultats.map((p) => (
+            ))}
             <button
-              key={p.uid}
               type="button"
-              onClick={() => ajoute({ nom: nomComplet(p), uid: p.uid, mention: "", referent: false, essai: false, groupe: "" })}
-              className="block w-full rounded-lg bg-secondary px-2.5 py-1.5 text-left text-sm text-foreground"
+              onClick={() => ajoute({ nom: recherche.trim(), uid: "", mention: "", referent: false, essai: false, groupe: "" })}
+              className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-muted-foreground"
             >
-              {nomComplet(p)}
+              {t("equipes.nomLibre", { nom: recherche.trim() })}
             </button>
+          </div>
+        )}
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
+        <div className="space-y-1.5">
+          {brouillon.map((m, i) => aLieux ? (
+            <MembreOrganigramme
+              key={`${m.nom}-${i}`}
+              equipe={def.id as "louange" | "regie"}
+              m={m}
+              profil={profils.find((p) => p.uid === m.uid)}
+              ouvert={ouvert === cleMembre(m)}
+              ouvrable={ouvrable(m)}
+              onBascule={() => setOuvert((o) => (o === cleMembre(m) ? null : cleMembre(m)))}
+              droits={droits}
+              gerer={isAdminUser(user)}
+              onChange={(champ) => change(i, champ)}
+              onRetirer={() => retire(m)}
+              retire={retires.has(cleMembre(m))}
+              sousSeulement={sousSeulement}
+              onRemettre={() => remet(m)}
+            />
+          ) : (
+            <LigneMembreEdition
+              key={`${m.nom}-${i}`}
+              m={m}
+              resumeTexte={m.mention}
+              ouvert={ouvert === cleMembre(m)}
+              ouvrable
+              retire={retires.has(cleMembre(m))}
+              libelleRetirer={t("equipes.retirerDeLEquipe")}
+              onBascule={() => setOuvert((o) => (o === cleMembre(m) ? null : cleMembre(m)))}
+              onRetirer={() => retire(m)}
+              onRemettre={() => remet(m)}
+            >
+              <Input
+                value={m.mention}
+                placeholder={t("equipes.mention")}
+                onChange={(e) => change(i, { mention: e.target.value })}
+                className="h-9"
+              />
+              {edd && droits.equipe && (
+                <PastillesEdd m={m} onChange={(champ) => change(i, champ)} />
+              )}
+              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                {/* Lot RS : en nouveau mode, le référent se lit ici et se change dans Équipes › Responsabilités. */}
+                {nouveau ? (
+                  <MentionReferent m={m} louange={false} gerer={isAdminUser(user)} />
+                ) : (
+                  <label className="inline-flex items-center gap-1.5">
+                    <input type="checkbox" checked={m.referent} disabled={!droits.referents} onChange={(e) => change(i, { referent: e.target.checked })} />
+                    {t("equipes.referent")}
+                  </label>
+                )}
+                <label className="inline-flex items-center gap-1.5">
+                  <input type="checkbox" checked={m.essai} onChange={(e) => change(i, { essai: e.target.checked })} />
+                  {t("equipes.essai")}
+                </label>
+              </div>
+            </LigneMembreEdition>
           ))}
-          <button
-            type="button"
-            onClick={() => ajoute({ nom: recherche.trim(), uid: "", mention: "", referent: false, essai: false, groupe: "" })}
-            className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-muted-foreground"
-          >
-            {t("equipes.nomLibre", { nom: recherche.trim() })}
-          </button>
         </div>
-      )}
-
-      {erreur && <p className="text-sm text-destructive">{erreur}</p>}
-      <div className="flex justify-end gap-2">
+      </div>
+      <div className="shrink-0 px-4">
+        {erreur && (
+          <p role="alert" className="flex items-center gap-2 pb-2 text-sm text-destructive">
+            {erreur}
+            {aRecopier && enregistree && (
+              <button type="button" disabled={enCours} onClick={() => { setErreur(""); void recopier(aRecopier, enregistree); }} className="font-semibold underline">
+                {t("groupes.reessayer")}
+              </button>
+            )}
+          </p>
+        )}
+      </div>
+      <DrawerBarre>
         <Button variant="outline" onClick={onClose} className="h-10">{t("equipes.annuler")}</Button>
         <Button onClick={enregistrer} disabled={enCours} className="h-10">{t("equipes.enregistrer")}</Button>
-      </div>
-    </div>
+      </DrawerBarre>
+    </>
   );
 }
 
 // ── Vue d'ensemble des musiciens ────────────────────────────────────────────
 
 function Matrice({
+  profils, equipes, planning, onFiche,
+}: {
+  profils: UserProfile[];
+  equipes: Equipe[];
+  planning: PlanningData | null;
+  onFiche: (uid: string) => void;
+}) {
+  if (BACK_OFFICE) return <MatriceOrganigramme equipes={equipes} onFiche={onFiche} />;
+  return <MatriceAncienne profils={profils} planning={planning} onFiche={onFiche} />;
+}
+
+/** Lot AO-B : les Musiciens de l'organigramme, ce qu'ils jouent et où ils servent (plus de `serviceRoles` ni de planning). */
+function MatriceOrganigramme({ equipes, onFiche }: { equipes: Equipe[]; onFiche: (uid: string) => void }) {
+  const { t } = useTranslation();
+  const lignes = useMemo(() => matriceMusiciensOrganigramme(equipes), [equipes]);
+  const instruments = (joue: readonly string[]) => joue.map((i) => majuscule(t(`acces.instrument.${i}`))).join(", ");
+  const nom = (l: (typeof lignes)[number]) =>
+    l.uid ? <button type="button" onClick={() => onFiche(l.uid)} className="hover:underline">{l.nom}</button> : <span>{l.nom}</span>;
+  if (lignes.length === 0) return <p className="text-sm text-muted-foreground">{t("equipes.matriceVide")}</p>;
+  return (
+    <>
+      <div data-testid="matrice-table" role="region" tabIndex={0} aria-label={t("equipes.matriceRegion")} className="hidden sm:block overflow-x-auto rounded-xl bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="sticky top-0 bg-card">
+              <th className="px-3 py-2 text-left font-semibold text-muted-foreground">{t("equipes.nom")}</th>
+              <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground">{t("equipes.organigramme.ceQuIlJoue")}</th>
+              {SERVICE_LIEUX.map((l) => (
+                <th key={l} className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground">{t(`equipes.colonne.${COLONNE_LIEU[l]}`)}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {lignes.map((l) => (
+              <tr key={l.cle} className="border-t border-border">
+                <th scope="row" className="px-3 py-1.5 text-left font-semibold">{nom(l)}</th>
+                <td className="px-2 py-1.5 text-xs text-muted-foreground">{instruments(l.joue)}</td>
+                {SERVICE_LIEUX.map((lieu) => (
+                  <td key={lieu} className="px-2 py-1.5 text-xs text-muted-foreground">
+                    {l.lieux.includes(lieu) && <span aria-label={t("equipes.organigramme.sertLa")}>●</span>}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div data-testid="matrice-cartes" className="sm:hidden space-y-2">
+        {lignes.map((l) => (
+          <div key={l.cle} className="rounded-xl bg-card p-3 space-y-1">
+            <p className="text-sm font-semibold text-foreground">{nom(l)}</p>
+            {l.joue.length > 0 && <p className="text-xs text-muted-foreground">{instruments(l.joue)}</p>}
+            {l.lieux.length > 0 && <p className="text-xs text-muted-foreground">{l.lieux.map((x) => t(`equipes.colonne.${COLONNE_LIEU[x]}`)).join(" · ")}</p>}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function MatriceAncienne({
   profils, planning, onFiche,
 }: {
   profils: UserProfile[];
@@ -515,7 +767,7 @@ function Matrice({
 
   return (
     <>
-      <div data-testid="matrice-table" className="hidden sm:block overflow-x-auto rounded-xl bg-card">
+      <div data-testid="matrice-table" role="region" tabIndex={0} aria-label={t("equipes.matriceRegion")} className="hidden sm:block overflow-x-auto rounded-xl bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <table className="w-full text-sm">
           <thead>
             <tr className="sticky top-0 bg-card">
@@ -581,9 +833,11 @@ function FichePersonne({
   const { t } = useTranslation();
   const p = profils.find((x) => x.uid === uid) ?? null;
   const siennes = equipes.filter((e) => e.membres.some((m) => m.uid === uid));
-  const roles = planning && p?.planningName
+  // Nouveau mode (lot AO-B) : ni `serviceRoles` ni le planning, seulement l'organigramme.
+  const roles = !BACK_OFFICE && planning && p?.planningName
     ? [...new Set(findMyServices(planning, p.planningName).map((s) => s.role))]
     : [];
+  const anciensServices = !BACK_OFFICE && p && Object.keys(p.serviceRoles).length > 0;
 
   return (
     <Drawer open={uid !== null} onOpenChange={(o) => !o && onClose()}>
@@ -596,18 +850,39 @@ function FichePersonne({
             <section className="space-y-1">
               <h3 className="text-xs font-semibold uppercase text-muted-foreground">{t("equipes.fiche.equipes")}</h3>
               {siennes.map((e) => {
-                const m = e.membres.find((x) => x.uid === uid)!;
+                const m = e.membres.filter((x) => x.uid === uid).reduce((a, b) => ({
+                  ...a, referent: a.referent || b.referent, essai: a.essai && b.essai,
+                  sousEquipes: [...(a.sousEquipes ?? []), ...(b.sousEquipes ?? [])],
+                  referentSous: [...(a.referentSous ?? []), ...(b.referentSous ?? [])],
+                  lieux: [...(a.lieux ?? []), ...(b.lieux ?? [])],
+                  joue: [...(a.joue ?? []), ...(b.joue ?? [])],
+                }));
+                // Louange et Régie : les sous-équipes, les lieux et les instruments de sa ligne.
+                const detail = BACK_OFFICE && porteDesLieux(e.id) ? resume(t, e.id, m) : "";
                 return (
                   <p key={e.id} className="text-sm text-foreground">
-                    {t(`equipes.team.${e.id}`)}
-                    {m.referent && <span className="ml-1.5 text-xs text-muted-foreground">{t("equipes.referent")}</span>}
+                    {t(cleNomEquipe(e.id, true))}
+                    {!detail && m.referent && <span className="ml-1.5 text-xs text-muted-foreground">{t("equipes.referent")}</span>}
                     {m.essai && <span className="ml-1.5 text-xs text-muted-foreground">{t("equipes.essai")}</span>}
+                    {detail && <span className="block text-xs text-muted-foreground">{detail}</span>}
                   </p>
                 );
               })}
             </section>
           )}
-          {p && Object.keys(p.serviceRoles).length > 0 && (
+          {BACK_OFFICE && p && (
+            <section className="space-y-1" data-testid="fiche-responsabilites">
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground">{t("responsabilites.ligne")}</h3>
+              <p className="text-sm text-foreground">{libellesResponsabilites(p, (c, o) => t(c, o)).join(" · ") || t("responsabilites.aucune")}</p>
+              {admin && (
+                <Link href="/back-office/equipes/responsabilites" className="block text-sm font-semibold text-foreground underline underline-offset-2">
+                  {t("responsabilites.gerer")}
+                </Link>
+              )}
+            </section>
+          )}
+          {BACK_OFFICE && p && <CeQueCaOuvre profil={p} />}
+          {anciensServices && p && (
             <section className="space-y-1">
               <h3 className="text-xs font-semibold uppercase text-muted-foreground">{t("equipes.fiche.services")}</h3>
               {Object.entries(p.serviceRoles).map(([cat, r]) => (
@@ -623,7 +898,7 @@ function FichePersonne({
               <p className="text-sm text-foreground">{roles.join(", ")}</p>
             </section>
           )}
-          {siennes.length === 0 && roles.length === 0 && (!p || Object.keys(p.serviceRoles).length === 0) && (
+          {siennes.length === 0 && roles.length === 0 && !anciensServices && !BACK_OFFICE && (
             <p className="text-sm text-muted-foreground">{t("equipes.fiche.rien")}</p>
           )}
           {admin && p && (

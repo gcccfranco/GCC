@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { presentationNotifKey, presidentRecipients } from "../src/lib/setlist/presentationLink";
+import { cliquerMenuSetlist } from "./helpers/menuSetlist";
 
 // Lot 2 (docs/spec-notif-president.md) : quand la régie pose ou remplace le
 // lien de la présentation, le président de la setlist est prévenu
@@ -50,7 +51,7 @@ test.describe("retour à la régie", () => {
   async function saveLink(page: import("@playwright/test").Page, response: Record<string, unknown>) {
     await signInAs(page, REGIE, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
     await page.route(API, (route) => route.fulfill({ json: { ok: true, presentationUrl: CANVA, ...response } }));
-    await page.getByRole("button", { name: "Ajouter le lien de la présentation" }).click();
+    await cliquerMenuSetlist(page, "Ajouter le lien de la présentation");
     await page.getByRole("textbox", { name: "Lien de la présentation" }).fill(CANVA);
     await page.getByRole("button", { name: "Enregistrer" }).click();
     await expect(page.getByRole("link", { name: "Présentation" })).toHaveAttribute("href", CANVA);

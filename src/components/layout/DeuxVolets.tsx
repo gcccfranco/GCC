@@ -3,6 +3,7 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
+import { useFonduVertical } from "@/hooks/useFonduVertical";
 import { disposerVolets, estSurLaListe } from "@/lib/deuxVolets";
 
 // Deux volets des pages de liste (lot U4 bis, docs/spec-pages-en-grand.md, Q1 à Q3).
@@ -29,6 +30,10 @@ export function DeuxVolets({
   liste,
   premier = null,
   largeurListe = 380,
+  colonneSeule = false,
+  groupeSeule = true,
+  listeNaturelle = false,
+  fond = "groupe",
   children,
 }: {
   /** Adresse de la liste (`/mes-services`) : sur elle, aucun élément n'est choisi. */
@@ -40,6 +45,21 @@ export function DeuxVolets({
   premier?: ReactNode;
   /** Largeur du volet de gauche en grand, en px (380 à 420 sur la planche). */
   largeurListe?: number;
+  /** Règle de largeur du 25/10/2026 : sur l'adresse de la liste, sans élément choisi, la liste
+   *  prend seule la colonne de lecture (`--colonne-liste`, 720 px, alignée à gauche sur le titre) au lieu d'un volet collé à gauche avec un
+   *  vide à droite ; `premier` n'est alors pas montré. Dès qu'un élément est choisi (une fiche à
+   *  l'adresse, ou `colonneSeule` retiré par la page), les deux volets reviennent. Le même arbre :
+   *  seules les classes changent, la liste n'est pas remontée. */
+  colonneSeule?: boolean;
+  /** Avec `colonneSeule` : la liste seule est posée dans un groupe blanc (défaut). Faux : la colonne est transparente et
+   *  la page y pose ses propres groupes sur le gris (Mes services, lot CD T4b, cas pilote de L1). */
+  groupeSeule?: boolean;
+  /** La carte de liste prend sa hauteur naturelle : ni collante ni bornée, c'est la page qui défile
+   *  (bo-evenements-13, la scène des fêtes). Le volet de droite s'étire alors sur la rangée, pour que la page
+   *  puisse y coller son contenu. */
+  listeNaturelle?: boolean;
+  /** Fond de la page : `groupe` (défaut, gris `--fond-groupe`, la liste est un groupe blanc) ou `blanc` (page de lecture : Harmonie). */
+  fond?: "groupe" | "blanc";
   /** La page de l'adresse : la fiche choisie. */
   children: ReactNode;
 }) {
@@ -48,10 +68,16 @@ export function DeuxVolets({
   const volets = disposerVolets(deuxVolets, estSurLaListe(chemin, racine));
   const carte = useRef<HTMLDivElement>(null);
   const avecListe = Boolean(volets.liste);
+  const seule = deuxVolets && colonneSeule && volets.droite === "premier";
+  const bornee = !listeNaturelle;
+  // Un groupe blanc sans ombre sur le gris ; sur une page de lecture blanche : aplat `--secondary`, sans ombre.
+  const surface = fond === "groupe" ? "carte-groupe" : "bg-secondary";
+
+  useFonduVertical(carte, deuxVolets && avecListe && !seule && bornee);
 
   useEffect(() => {
     const el = carte.current;
-    if (!deuxVolets || !avecListe || !el) return;
+    if (!deuxVolets || !avecListe || seule || !bornee || !el) return;
     let image = 0;
     const relire = () => {
       cancelAnimationFrame(image);
@@ -74,7 +100,7 @@ export function DeuxVolets({
       taille.disconnect();
       el.style.removeProperty("--haut-liste");
     };
-  }, [deuxVolets, avecListe]);
+  }, [deuxVolets, avecListe, seule, bornee]);
   // Les deux emplacements restent à la même place quel que soit le cas : la page n'est pas
   // remontée quand la fenêtre passe d'un volet à deux (rien n'est relu ni refait). La section
   // n'est pas remontée d'une adresse à l'autre (`SECTIONS_EN_DEUX_VOLETS`, PageTransition) :
@@ -82,7 +108,13 @@ export function DeuxVolets({
   return (
     <div
       data-deux-volets={deuxVolets ? "" : undefined}
-      className={deuxVolets ? "flex items-start gap-[var(--ecart-volets)] px-[var(--marge-page)] pb-6" : undefined}
+      data-colonne-seule={seule ? "" : undefined}
+      data-fond-groupe={fond === "groupe" ? "" : undefined}
+      className={
+        seule
+          ? "w-full max-w-[calc(var(--colonne-liste)+2*var(--marge-page))] px-[var(--marge-page)] pb-6"
+          : deuxVolets ? `flex ${bornee ? "items-start" : "items-stretch"} gap-[var(--ecart-volets)] px-[var(--marge-page)] pb-6` : undefined
+      }
       style={deuxVolets ? ({ "--largeur-liste": `${largeurListe}px` } as CSSProperties) : undefined}
     >
       {volets.liste && (
@@ -90,15 +122,19 @@ export function DeuxVolets({
           ref={carte}
           data-volet="liste"
           className={
-            deuxVolets
-              ? "page-fade sticky top-[calc(var(--nav-h)+20px)] max-h-[calc(100dvh-var(--haut-liste,calc(var(--nav-h)+20px))-24px)] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain raised rounded-2xl"
+            seule
+              ? `page-fade ${groupeSeule ? `${surface} rounded-groupe` : ""}`
+              : deuxVolets && !bornee
+              ? `page-fade ${surface} w-[var(--largeur-liste)] shrink-0 self-start rounded-groupe`
+              : deuxVolets
+              ? `page-fade fondu-vertical sticky top-[calc(var(--nav-h)+20px)] max-h-[calc(100dvh-var(--haut-liste,calc(var(--nav-h)+20px))-24px)] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain rounded-groupe ${surface}`
               : "page-fade"
           }
         >
           {liste}
         </div>
       )}
-      {volets.droite && (
+      {volets.droite && !seule && (
         <div key={chemin} data-volet="detail" className={deuxVolets ? "page-fade min-w-0 flex-1" : "page-fade"}>
           {volets.droite === "page" ? children : premier}
         </div>

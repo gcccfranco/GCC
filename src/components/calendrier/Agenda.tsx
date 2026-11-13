@@ -8,16 +8,22 @@
 // les semaines, une ligne par jour (jour de la semaine et numéro, le jour choisi en encre), une ligne
 // par entrée (trait de couleur, heure, titre, détail, étiquette du type) ; toucher un jour ou une de
 // ses lignes le choisit (volet du jour à droite, ou sa feuille). Le téléphone garde `ListeAgenda`.
+// BO-C (docs/spec-back-office-piste-a.md, BO8, BO10) : une entrée du Sheet porte l'étiquette « Sheet »
+// (`EtiquetteSheet`) ; une entrée de la scène, pour la coordination, offre « Ouvrir la scène dans le
+// back-office » (`LienOuvrirScene`, aussi dans le volet du jour).
 // Retouches v18 (R4, D7) : la ligne de l'entrée ouverte (touchée) est surlignée, comme sur la planche.
 
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { isCoordination } from "@/lib/access";
+import { useProfile } from "@/lib/firebase/users";
 import type { EntreeCalendrier } from "@/lib/calendrier/entrees";
 import { jourDeLaSemaine, jourEtMois, lundiDe, titreJour } from "@/lib/calendrier/grille";
 import { cn } from "@/lib/utils";
 import type { NotifLang } from "@/types/user";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ICONES, couleurSource, couleurTrait, styleCase } from "./apparence";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 /** « Aujourd'hui · jeudi 1er octobre », sinon « Vendredi 2 octobre ». */
 export function useTitreDuJour(lang: NotifLang, aujourdhui: string) {
@@ -29,6 +35,44 @@ export function useTitreDuJour(lang: NotifLang, aujourdhui: string) {
   };
 }
 
+/** La petite étiquette des entrées lues dans le Sheet (BO10). */
+export function EtiquetteSheet() {
+  const { t } = useTranslation();
+  return (
+    <span className="ml-1.5 inline-flex shrink-0 items-center rounded-md bg-secondary px-1.5 py-px text-xs font-semibold text-foreground/70 align-middle">
+      {t("backOffice.calendrier.etiquetteSheet")}
+    </span>
+  );
+}
+
+/** « Ouvrir la scène dans le back-office » : pour la coordination, sous une entrée de la scène. */
+export function LienOuvrirScene({ e, className }: { e: EntreeCalendrier; className?: string }) {
+  const { t } = useTranslation();
+  const { user, profile } = useProfile();
+  if (e.source !== "scene" || !isCoordination(user, profile)) return null;
+  return (
+    <Link href={e.lien.replace(/^\/evenements\/scene/, "/back-office/evenements/scene")} className={className}>
+      {t("backOffice.calendrier.ouvrirScene")}
+    </Link>
+  );
+}
+
+/** Le compteur d'inscrits, à droite de la ligne du titre : « 12/40 », « Complet » (en encre pleine) quand c'est plein. */
+export function CompteurInscrits({ e }: { e: EntreeCalendrier }) {
+  const { t } = useTranslation();
+  if (!e.compteur) return null;
+  return (
+    <span
+      role="img"
+      data-compteur
+      aria-label={e.complet ? `${t("evenements.complet")}, ${e.compteurAria}` : e.compteurAria}
+      className={cn("shrink-0 text-sm tabular-nums", e.complet ? "font-semibold text-foreground" : "text-foreground/70")}
+    >
+      {e.complet ? t("evenements.complet") : e.compteur}
+    </span>
+  );
+}
+
 function CarteAgenda({ e, onOuvrir }: { e: EntreeCalendrier; onOuvrir: (e: EntreeCalendrier) => void }) {
   const Icone = ICONES[e.source];
   return (
@@ -36,14 +80,17 @@ function CarteAgenda({ e, onOuvrir }: { e: EntreeCalendrier; onOuvrir: (e: Entre
       type="button"
       data-source={e.source}
       onClick={() => onOuvrir(e)}
-      className="raised flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+      className="carte-groupe flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
     >
       <span aria-hidden style={styleCase(e)} className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px]">
         <Icone className="h-[18px] w-[18px]" />
       </span>
-      <span className="min-w-0">
-        <span className="block truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}</span>
-        {e.detail && <span className="block truncate text-[13px] text-muted-foreground">{e.detail}</span>}
+      <span className="min-w-0 flex-1">
+        <span className="flex items-baseline gap-2">
+          <span className="min-w-0 flex-1 truncate text-base font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
+          <CompteurInscrits e={e} />
+        </span>
+        {e.detail && <span className="block truncate text-sm text-muted-foreground">{e.detail}</span>}
       </span>
     </button>
   );
@@ -79,7 +126,7 @@ export function ListeAgenda({
     <div data-testid="agenda">
       {[...parJour].map(([date, entrees]) => (
         <section key={date} data-jour={date} aria-labelledby={`agenda-${date}`}>
-          <h2 id={`agenda-${date}`} className="mx-0.5 mb-1.5 mt-4 text-[13px] font-semibold text-muted-foreground">
+          <h2 id={`agenda-${date}`} className="mx-0.5 mb-1.5 mt-4 text-sm font-semibold text-muted-foreground">
             {titreDuJour(date)}
           </h2>
           <CartesDuJour entrees={entrees} onOuvrir={onOuvrir} />
@@ -117,13 +164,16 @@ function LigneAgenda({ e, ouverte, onChoisir }: { e: EntreeCalendrier; ouverte: 
         {e.heureFin && <span className="block text-xs text-muted-foreground">{e.heureFin}</span>}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}</span>
-        {detail && <span className="block truncate text-[13px] text-muted-foreground">{detail}</span>}
+        <span className="flex items-baseline gap-2">
+          <span className="min-w-0 flex-1 truncate text-base font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
+          <CompteurInscrits e={e} />
+        </span>
+        {detail && <span className="block truncate text-sm text-muted-foreground">{detail}</span>}
       </span>
       <span
         data-etiquette
-        className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold"
-        style={{ background: `color-mix(in srgb, ${couleur} 12%, transparent)`, color: couleurSource(e) }}
+        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold${couleurSource(e) ? " texte-service" : ""}`}
+        style={{ background: `color-mix(in srgb, ${couleur} 12%, transparent)`, ...(couleurSource(e) ? styleTexteService(couleurSource(e)!) : {}) }}
       >
         {t(`calendrier.carte.${e.source}`)}
       </span>
@@ -163,7 +213,7 @@ export function AgendaSemaines({
       {semaines.size === 0 && <p className="mt-4 text-sm text-muted-foreground">{vide}</p>}
       {[...semaines].map(([lundi, jours]) => (
         <section key={lundi} aria-labelledby={`semaine-${lundi}`}>
-          <h2 id={`semaine-${lundi}`} className="pb-1.5 pt-4 text-[13px] font-semibold text-muted-foreground">
+          <h2 id={`semaine-${lundi}`} className="pb-1.5 pt-4 text-sm font-semibold text-muted-foreground">
             {t("calendrier.semaineDu", { date: jourEtMois(lundi, lang) })}
           </h2>
           {jours.map(([date, entrees]) => {
@@ -204,10 +254,10 @@ export function AgendaSemaines({
 }
 
 const BOUTON_PLEIN =
-  "flex h-11 w-full items-center justify-center rounded-full bg-foreground text-[15px] font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "flex h-11 w-full items-center justify-center rounded-full bg-foreground text-base font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 const BOUTON_SECOND =
-  "flex h-11 w-full items-center justify-center rounded-full bg-secondary text-[15px] font-semibold text-foreground transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "flex h-11 w-full items-center justify-center rounded-full bg-secondary text-base font-semibold text-foreground transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 /** La feuille d'une entrée : sa source, son titre, sa date, son détail, « Ouvrir », et
  *  « Déplacer… » si elle bouge (C6 : seul moyen sur téléphone, Q5) ; une tâche répétée
@@ -232,16 +282,17 @@ export function FeuilleEntree({
         {entree && (
           <>
             <DrawerHeader className="pb-2 text-left">
-              <span className="text-xs font-bold" style={{ color: couleurSource(entree) }}>
+              <span className={`text-xs font-bold${couleurSource(entree) ? " texte-service" : ""}`} style={couleurSource(entree) ? styleTexteService(couleurSource(entree)!) : undefined}>
                 {t(`calendrier.carte.${entree.source}`)}
               </span>
               <DrawerTitle>{entree.titre}</DrawerTitle>
               <DrawerDescription>{titreJour(entree.date, lang)}</DrawerDescription>
             </DrawerHeader>
             <div className="flex flex-col gap-1 px-4 pb-8">
-              {entree.detail && <p className="text-[15px] text-foreground">{entree.detail}</p>}
+              {entree.detail && <p className="text-base text-foreground">{entree.detail}</p>}
+              {entree.compteurAria && <p className="text-base text-foreground">{entree.compteurAria}</p>}
               {entree.duSheet && <p className="text-xs text-muted-foreground">{t("calendrier.duSheet")}</p>}
-              {entree.repetee && <p className="text-[13px] text-muted-foreground">{t("calendrier.deplacer.repetee")}</p>}
+              {entree.repetee && <p className="text-sm text-muted-foreground">{t("calendrier.deplacer.repetee")}</p>}
               <div className="mt-4 flex flex-col gap-2">
                 {entree.duSheet ? (
                   <a href={entree.lien} target="_blank" rel="noopener noreferrer" className={BOUTON_PLEIN}>
@@ -252,6 +303,7 @@ export function FeuilleEntree({
                     {t("calendrier.ouvrir")}
                   </Link>
                 )}
+                <LienOuvrirScene e={entree} className={BOUTON_SECOND} />
                 {entree.deplacable && (
                   <button type="button" onClick={() => onDeplacer(entree)} className={BOUTON_SECOND}>
                     {t("calendrier.deplacer.bouton")}

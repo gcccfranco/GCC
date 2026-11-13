@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Sons du RD-2000 (docs/spec-sons-rd2000.md, tranches S1 à S4) : le catalogue
 // du clavier de l'église, pour les pianistes et les admins. Rien n'est joué.
@@ -11,17 +11,18 @@ const CULTE = csv([
   ["04/10", "Jonathan Z.", "", "", "Jo L.", "Éloïse M.", "Yiyi C.", "", "", "Hewei", "", ""],
 ]);
 
-const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", planningName: "Jo L." };
-const ELOISE: FakeProfile = { uid: "uid-eloise", email: "eloise@example.com", firstName: "Éloïse", lastName: "M.", planningName: "Éloïse M." };
+const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", planningName: "Jo L.", ...musicien("piano") };
+const ELOISE: FakeProfile = { uid: "uid-eloise", email: "eloise@example.com", firstName: "Éloïse", lastName: "M.", planningName: "Éloïse M.", ...musicien("guitare") };
 
 const DONNEES = JSON.parse(readFileSync("public/rd2000.json", "utf8")) as {
-  sons: { n: string; nom: string; louange: number }[];
-  moments: { groupe: string; moment: string; son: string; layer: string }[];
+  sons: { n: string; nom: string; louange: number; premier?: boolean }[];
+  moments: { groupe: string; moment: string; son: string; layer: string; conseil: string }[];
   recettes: { n: string; exemples: string[] }[];
   fiches: { n: string; reglages: { ecran: string }[] }[];
   parametres: unknown[];
 };
-const ESSENTIELS = DONNEES.sons.filter((s) => s.louange === 3).length;
+const ESSENTIELS = DONNEES.sons.filter((s) => s.premier).length;
+const TROIS_ETOILES = DONNEES.sons.filter((s) => s.louange === 3).length;
 
 async function entrer(page: Page, qui: FakeProfile, to: string) {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
@@ -39,15 +40,16 @@ async function capture(page: Page, name: string) {
 
 test("un pianiste trouve les sons en tête d'Harmonie, ouverts sur « Par moment »", async ({ page }, info) => {
   await entrer(page, JO, "/harmonie");
-  // Agencement v18 (A16) : l'onglet « Sons du RD-2000 » du rail partout ; la carte, sur téléphone seulement.
-  const onglet = page.locator("header[data-entete-page]").getByRole("link", { name: "Sons du RD-2000" });
+  // Espace Musiciens (EM-2) : l'entrée « RD-2000 » de la barre (latérale en grand, du bas sinon). La carte du catalogue au
+  // téléphone est partie au lot CD (T3b) ; son compte des essentiels est la ligne d'état de l'en-tête des sons (harmonie-1).
+  const barre = ["ordinateur", "tablette-paysage"].includes(info.project.name) || (await page.getByTestId("barre-laterale").isVisible())
+    ? page.getByTestId("barre-laterale").getByRole("navigation")
+    : page.getByTestId("barre-du-bas");
+  const onglet = barre.locator('a[href="/harmonie/rd2000"], a[href="/harmonie/rd2000/"]');
   await expect(onglet).toBeVisible();
-  if (info.project.name === "telephone") {
-    const ligne = page.locator("[data-harmonie]").getByRole("link", { name: /Sons du RD-2000/ });
-    await expect(ligne).toContainText(`${ESSENTIELS} essentiels sur ${DONNEES.sons.length.toLocaleString("fr-FR")}`);
-    await ligne.click();
-  } else await onglet.click();
+  await onglet.click();
   await page.waitForURL(/\/harmonie\/rd2000\/?$/);
+  await expect(page.locator("header[data-entete-page]")).toContainText(`${ESSENTIELS} essentiels sur ${DONNEES.sons.length.toLocaleString("fr-FR")}`);
   await expect(page.getByRole("tab", { name: "Par moment" })).toHaveAttribute("aria-selected", "true");
   await expect(page.locator("[data-moment]")).toHaveCount(DONNEES.moments.length);
   await expect(page.locator("[data-regle]")).toBeVisible();
@@ -59,6 +61,13 @@ test("par moment : le son principal et le layer mènent à leur page", async ({ 
   await entrer(page, JO, "/harmonie/rd2000");
   const moment = page.locator("[data-moment]", { hasText: avecLayer.moment }).first();
   await expect(moment.locator("[data-son]")).toHaveText([avecLayer.son, avecLayer.layer]);
+  // harmonie-8 : le conseil du moment est sous son nom, avant les sons ; le layer porte la pastille « Layer », plus de « + » nu.
+  await expect(moment.locator("[data-layer]")).toHaveText("Layer");
+  await expect(moment.locator("[data-layer]")).toBeVisible();
+  const conseil = moment.getByText(avecLayer.conseil, { exact: true });
+  await expect(conseil).toBeVisible();
+  const avant = await conseil.evaluate((p, n) => Boolean(p.compareDocumentPosition(document.querySelector(`[data-son="${n}"]`)!) & Node.DOCUMENT_POSITION_FOLLOWING), avecLayer.son);
+  expect(avant, "le conseil précède le premier son").toBe(true);
   await moment.locator(`[data-son="${avecLayer.layer}"]`).click();
   await page.waitForURL(new RegExp(`/harmonie/rd2000/${avecLayer.layer}/?$`));
 });
@@ -74,7 +83,7 @@ test("un guitariste n'a ni la ligne ni la page", async ({ page }) => {
 test("tous les sons : ★★★ d'abord, « Tous » donne le catalogue, la recherche porte sur tout", async ({ page }) => {
   await entrer(page, JO, "/harmonie/rd2000");
   await page.getByRole("tab", { name: "Tous les sons" }).click();
-  await expect(page.locator("[data-vue=sons] [data-son]")).toHaveCount(ESSENTIELS);
+  await expect(page.locator("[data-vue=sons] [data-son]")).toHaveCount(TROIS_ETOILES);
   await page.getByRole("button", { name: "Tous", exact: true }).click();
   await expect(page.locator("[data-vue=sons] [data-son]")).toHaveCount(DONNEES.sons.length);
   await page.getByRole("button", { name: "★★★", exact: true }).click();
@@ -142,5 +151,9 @@ test("interface 中文 : libellés chinois, et le contenu est annoncé en franç
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await entrer(page, JO, "/harmonie/rd2000");
   await expect(page.getByRole("tab", { name: "按环节" })).toBeVisible();
-  await expect(page.getByText("内容为法文。").first()).toBeVisible();
+  await expect(page.locator("[data-avis-langue]")).toHaveText("以下内容尚未翻译，暂以法文显示。");
+  await expect(page.locator("[data-avis-langue]")).toHaveCount(1);
+  // Le groupe et le moment sont traduits ; le conseil et le nom du son restent en français, balisés lang="fr".
+  await expect(page.locator("[data-moment]").first().locator("p").first()).toHaveText("迎宾时的背景音乐");
+  await expect(page.locator("[data-son]").first().locator("xpath=..").locator("[lang=fr]").first()).toBeVisible();
 });

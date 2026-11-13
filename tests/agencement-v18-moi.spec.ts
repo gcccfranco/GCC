@@ -6,7 +6,7 @@ import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, margeAtt
 // Agencement v18, tranche T10 (docs/spec-agencement-v18.md, A12 à A15 ; planches `v18-app-moi-a`,
 // `v18-app-profil`, `v18-app-guide`, `v18-app-questionnaire`, v17 sur téléphone et tablette portrait).
 // Moi : en-tête commun, la carte du compte et les réglages à gauche, des aperçus utiles à droite
-// (Mes services, Mes tâches, Harmonie, Mes équipes), trois cartes d'aide dessous. Profil :
+// (Mes services, Mes tâches, Mes équipes ; plus d'aperçu Harmonie depuis le 02/11/2026), trois cartes d'aide dessous. Profil :
 // « Enregistrer » dans l'en-tête dès 768 px, en bas sur téléphone, la carte Notifications revient.
 // Guide et Questionnaire : lecture (sommaire de 260 px, colonne de 720 px), titre au x du sommaire.
 // Feuilles Google, Firestore et date simulés ; personnes fictives. Cinq projets.
@@ -26,14 +26,20 @@ const FEUILLES: Record<string, string> = {
   ]),
 };
 
+// Lot AO (AO-B) : « Mes équipes » vient de l'organigramme, recopié sur le profil par le serveur (`dansEquipes`,
+// `referentDe`, `sousEquipes`…), plus des services et rôles déclarés.
 const ADMIN: FakeProfile = {
   uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Noé", lastName: "T.", planningName: "Noé T.",
   serviceRoles: { "Culte Francophone": ["musicien"] },
+  dansEquipes: ["da", "louange"], referentDe: ["da"], sousEquipes: ["musiciens"], lieuxLouange: ["Culte Francophone"], joue: ["piano"],
 };
-/** Un membre sans service ni pôle : ni tâches ni Harmonie. */
+/** Un membre sans service ni pôle : ni tâches. */
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "lea@example.com", firstName: "Léa", lastName: "M.", planningName: "", serviceRoles: {} };
-/** À la guitare dans le planning (colonne « Guitariste »), jamais au piano : Harmonie sans les sons du RD-2000. */
-const GUITARISTE: FakeProfile = { uid: "uid-samuel", email: "samuel@example.com", firstName: "Samuel", lastName: "K.", planningName: "Samuel K.", serviceRoles: {} };
+/** À la guitare dans le planning (colonne « Guitariste ») : musicien, mais Moi ne montre plus Harmonie (02/11/2026). */
+const GUITARISTE: FakeProfile = {
+  uid: "uid-samuel", email: "samuel@example.com", firstName: "Samuel", lastName: "K.", planningName: "Samuel K.", serviceRoles: {},
+  dansEquipes: ["louange"], sousEquipes: ["musiciens"], lieuxLouange: ["Culte Francophone"], joue: ["guitare"],
+};
 
 const tache = (equipe: string, titre: string, echeance: string, responsableUid: string | null = null) => ({
   equipe, titre, responsableUid, responsableNom: responsableUid ? "Autre P." : "", echeance, repetition: null, lien: "", note: "",
@@ -93,7 +99,8 @@ async function capture(page: Page, name: string) {
 }
 
 const apercu = (page: Page, nom: string) => page.getByRole("region", { name: nom, exact: true });
-const lignes = (page: Page, nom: string) => apercu(page, nom).getByTestId("apercu-ligne");
+// « Mes équipes » est la carte de l'organigramme (CartesAcces.tsx, `equipe-ligne`), les autres des aperçus (`apercu-ligne`).
+const lignes = (page: Page, nom: string) => apercu(page, nom).getByTestId(nom === "Mes équipes" ? "equipe-ligne" : "apercu-ligne");
 const boite = async (l: ReturnType<Page["locator"]>) => (await l.boundingBox())!;
 /** Le bloc de contenu sous l'en-tête (dans l'enveloppe qui pose la marge) : toute la zone moins deux marges. */
 const contenuSousEnTete = (page: Page) => enTete(page).locator("xpath=following-sibling::div[1]/*[1]");
@@ -117,7 +124,7 @@ test.describe("Moi (A12)", () => {
     await verifierAgencement(page, { contenu: contenuSousEnTete(page), onglets: SANS_ONGLETS });
   });
 
-  test("les aperçus d'un admin : services, tâches, Harmonie, équipes, puis l'aide", async ({ page }) => {
+  test("les aperçus d'un admin : services, tâches, équipes, puis l'aide ; plus d'Harmonie", async ({ page }) => {
     await ouvrir(page, ADMIN, "/moi");
 
     // Mes services : les trois prochains, « 4 à venir », « Tout voir » vers la page.
@@ -134,19 +141,13 @@ test.describe("Moi (A12)", () => {
     await expect(apercu(page, "Mes tâches").getByRole("link", { name: /4 à faire/ })).toHaveAttribute("href", /^\/taches\/?$/);
     await expect(lignes(page, "Mes tâches").first().getByRole("link")).toHaveAttribute("href", /^\/taches\/da\/t1\/?$/);
 
-    // Harmonie : le cours (2 / 23 chapitres, le prochain), les fiches et les sons.
-    const h = apercu(page, "Harmonie");
-    await expect(h.getByText("2 / 23 chapitres")).toBeVisible();
-    await expect(h.getByText("Prochain chapitre : 3. Lire la musique")).toBeVisible();
-    await expect(h.getByRole("link", { name: /Prochain chapitre/ })).toHaveAttribute("href", /^\/harmonie\/cours\/lire-la-musique\/?$/);
-    await expect(h.getByRole("link", { name: "Les fiches de réharmonisation" })).toHaveAttribute("href", /^\/harmonie\/?$/);
-    await expect(h.getByRole("link", { name: "Sons du RD-2000" })).toHaveAttribute("href", /^\/harmonie\/rd2000\/?$/);
+    // Harmonie : retirée de Moi le 02/11/2026 (Timothée) ; elle vit dans l'espace Musiciens.
+    await expect(apercu(page, "Harmonie")).toHaveCount(0);
 
-    // Mes équipes : celles où je figure, dans l'ordre de l'organigramme, mon rôle et le nombre.
+    // Mes équipes : celles où l'organigramme me place, dans l'ordre de la table, mon rôle (AO-B).
     await expect(lignes(page, "Mes équipes")).toHaveCount(2);
-    await expect(lignes(page, "Mes équipes").nth(0)).toContainText("DA");
-    await expect(lignes(page, "Mes équipes").nth(0)).toContainText("Référent · 2 membres");
-    await expect(lignes(page, "Mes équipes").nth(1)).toContainText("Pianistes · 3 membres");
+    await expect(lignes(page, "Mes équipes").nth(0)).toHaveText("DA — Référent");
+    await expect(lignes(page, "Mes équipes").nth(1)).toHaveText("Louange · Musiciens");
     await expect(apercu(page, "Mes équipes").getByRole("link", { name: /Organigramme/ })).toHaveAttribute("href", /^\/equipes\/?$/);
 
     // L'aide : Guide, Ton avis, Signaler un problème (qui ouvre sa fenêtre).
@@ -170,11 +171,39 @@ test.describe("Moi (A12)", () => {
     await expect(apercu(page, "Harmonie")).toHaveCount(0);
   });
 
-  test("un guitariste : l'aperçu Harmonie mène aux fiches, pas aux sons du RD-2000 (réservés aux pianistes)", async ({ page }) => {
+  // BO-G, 12 : un simple membre, la carte du compte sans grand vide dessous ; langue et thème en états ; « mes » en minuscule.
+  test("un simple membre : plus de grand vide sous « Mon profil » ; Langue et Thème se lisent comme un état", async ({ page }, info) => {
+    await ouvrir(page, MEMBRE, "/moi");
+    const compte = await boite(page.getByRole("region", { name: "Mon compte" }));
+    const profil = await boite(page.getByRole("region", { name: "Mon compte" }).getByRole("link", { name: "Mon profil" }));
+    const deconnexion = await boite(page.getByRole("button", { name: "Déconnexion" }));
+    const reglages = await boite(page.getByRole("region", { name: "Réglages" }));
+    if (info.project.name === "tablette") {
+      // Compte et réglages côte à côte ; « Déconnexion » en rangée pleine largeur dessous (R2, n° 1) : aucun vide gris sous l'une des deux cartes.
+      expect(Math.abs(reglages.y - compte.y), "compte et réglages côte à côte").toBeLessThan(2);
+      expect(deconnexion.y, "« Déconnexion » sous la paire").toBeGreaterThanOrEqual(Math.max(compte.y + compte.height, reglages.y + reglages.height) - 1);
+      expect(deconnexion.width, "pleine largeur").toBeGreaterThan(compte.width + reglages.width);
+    }
+    expect(compte.y + compte.height - (profil.y + profil.height), "« Mon profil » finit au bas de sa carte").toBeLessThanOrEqual(24);
+    // Langue : libellé + valeur en texte secondaire dans une ligne ; plus de pilule de bouton.
+    const langue = page.getByRole("button", { name: /^Langue/ });
+    await expect(langue).toContainText("Français");
+    const valeur = langue.getByText("Français", { exact: true });
+    expect(await valeur.evaluate((el) => getComputedStyle(el).backgroundColor), "pas une pilule").toBe("rgba(0, 0, 0, 0)");
+    await expect(valeur).toHaveClass(/text-muted-foreground/);
+    const theme = page.getByRole("button", { name: /^Thème/ });
+    await expect(theme).toContainText("Clair");
+    await theme.click();
+    await expect(theme).toContainText("Sombre");
+    await langue.click();
+    await expect(page.getByRole("button", { name: /^语言|^Langue/ })).toContainText("中文");
+  });
+
+  test("un guitariste : pas d'aperçu Harmonie dans Moi (retiré le 02/11/2026)", async ({ page }) => {
     await ouvrir(page, GUITARISTE, "/moi");
-    const h = apercu(page, "Harmonie");
-    await expect(h.getByRole("link", { name: "Les fiches de réharmonisation" })).toHaveAttribute("href", /^\/harmonie\/?$/);
-    await expect(h.getByRole("link", { name: "Sons du RD-2000" })).toHaveCount(0);
+    await expect(apercu(page, "Mes services")).toBeVisible();
+    await expect(apercu(page, "Harmonie")).toHaveCount(0);
+    await expect(page.getByRole("main").getByRole("link", { name: "Sons du RD-2000" })).toHaveCount(0);
   });
 
   test("en 中文 : le titre, le sous-titre, les aperçus et l'aide sont traduits (R18)", async ({ page }) => {
@@ -184,11 +213,7 @@ test.describe("Moi (A12)", () => {
     await expect(enTete(page).getByText("Noé T. · 管理员", { exact: true })).toBeVisible();
     await expect(apercu(page, "我的服事").getByRole("link", { name: /4 个即将到来/ })).toBeVisible();
     await expect(apercu(page, "我的任务").getByRole("link", { name: /4 项待办/ })).toBeVisible();
-    const h = apercu(page, "和声");
-    await expect(h.getByText("乐理课程")).toBeVisible();
-    await expect(h.getByText("2 / 23 章")).toBeVisible();
-    await expect(h.getByRole("link", { name: "和声重配卡片" })).toBeVisible();
-    await expect(h.getByRole("link", { name: "RD-2000 音色" })).toBeVisible();
+    await expect(apercu(page, "和声")).toHaveCount(0);
     await expect(apercu(page, "我的团队").getByRole("link", { name: /组织架构/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /使用指南/ })).toContainText("一步步了解整个网站");
     await expect(page.getByRole("link", { name: /你对网站的意见/ })).toContainText("问卷");
@@ -208,26 +233,20 @@ test.describe("Moi (A12)", () => {
     await expect(s).not.toHaveAttribute("aria-busy", "true");
   });
 
-  test("pendant la lecture des tâches et du cours : ni « Rien à faire » ni « 0 / 23 chapitres »", async ({ page }) => {
+  test("pendant la lecture des tâches : pas de « Rien à faire »", async ({ page }) => {
     await ouvrir(page, ADMIN, "/guide");
     const lacher = await retenirFirestore(page, (url, corps) => corps.includes('"taches"') || url.includes("/coursProgres/"));
     await page.goto("/moi");
     const taches = apercu(page, "Mes tâches");
-    const h = apercu(page, "Harmonie");
     await expect(taches).toHaveAttribute("aria-busy", "true");
-    await expect(h).toHaveAttribute("aria-busy", "true");
     await expect(taches.getByText("Rien à faire pour toi.")).toHaveCount(0);
-    await expect(h.getByText(/^0 \/ 23 chapitres$/)).toHaveCount(0);
-    await expect(h.getByRole("link", { name: /Prochain chapitre : 1\./ })).toHaveCount(0);
     await capture(page, "t10-moi-lecture");
     lacher();
     await expect(lignes(page, "Mes tâches")).toHaveCount(3);
-    await expect(h.getByText("2 / 23 chapitres")).toBeVisible();
     await expect(taches).not.toHaveAttribute("aria-busy", "true");
-    await expect(h).not.toHaveAttribute("aria-busy", "true");
   });
 
-  test("une lecture des équipes en échec ne se dit pas « Tu n'es dans aucune équipe »", async ({ page }) => {
+  test("Mes équipes vient du profil : une lecture des équipes en échec n'y change rien", async ({ page }) => {
     await ouvrir(page, ADMIN, "/guide");
     await page.route(/firestore\.googleapis\.com/, (route) =>
       (route.request().postData() ?? "").includes('"equipes"')
@@ -235,9 +254,9 @@ test.describe("Moi (A12)", () => {
         : route.fallback(),
     );
     await page.goto("/moi");
-    const e = apercu(page, "Mes équipes");
-    await expect(e).toContainText("Lecture impossible pour l'instant. Réessaie plus tard.");
-    await expect(e.getByText("Tu n'es dans aucune équipe.")).toHaveCount(0);
+    await expect(lignes(page, "Mes équipes")).toHaveCount(2);
+    await expect(apercu(page, "Mes équipes")).not.toContainText("Lecture impossible");
+    await expect(apercu(page, "Mes équipes").getByText("Tu n'es dans aucune équipe.")).toHaveCount(0);
   });
 
   test("changer de disposition (rotation, barre, fenêtre) garde les aperçus montés : rien n'est relu", async ({ page }) => {
@@ -247,9 +266,8 @@ test.describe("Moi (A12)", () => {
     });
     await ouvrir(page, ADMIN, "/moi");
     await expect(lignes(page, "Mes équipes")).toHaveCount(2);
-    // À l'ouverture : une lecture (deux sous `next dev`, dont le mode strict joue chaque effet deux fois).
+    // À l'ouverture : les lectures des autres aperçus (Mes tâches lit les équipes) ; « Mes équipes » ne lit rien.
     const aLOuverture = lecturesEquipes;
-    expect(aLOuverture).toBeGreaterThan(0);
     await apercu(page, "Mes équipes").evaluate((el) => { (el as HTMLElement).dataset.marque = "avant"; });
 
     // La carte du compte dit la disposition : 340 px en grand (deux volets), plus large sinon.
@@ -280,15 +298,23 @@ test.describe("Moi (A12)", () => {
     const reglages = await boite(page.getByRole("region", { name: "Réglages" }));
     const services = await boite(apercu(page, "Mes services"));
     const taches = await boite(apercu(page, "Mes tâches"));
-    const harmonie = await boite(apercu(page, "Harmonie"));
     if (estGrandEcran(info)) {
       expect(Math.round(compte.width), "le compte : 340 px").toBe(340);
       expect(reglages.y, "les réglages sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
       expect(services.x, "les aperçus à droite du compte").toBeGreaterThan(compte.x + compte.width - 1);
       expect(Math.abs(services.y - compte.y), "ils partent ensemble").toBeLessThan(2);
-      expect(Math.abs(taches.y - services.y), "deux colonnes d'aperçus").toBeLessThan(2);
-      expect(taches.x).toBeGreaterThan(services.x + services.width - 1);
-      expect(harmonie.y, "Harmonie sous les services").toBeGreaterThan(services.y + services.height - 1);
+      if (info.project.name === "ordinateur-1440") {
+        // quotidien-3, 4 : deux piles, côte à côte dès 720 px de conteneur (1 440 px).
+        expect(Math.abs(taches.y - services.y), "deux colonnes d'aperçus").toBeLessThan(2);
+        expect(taches.x).toBeGreaterThan(services.x + services.width - 1);
+      } else {
+        // 1 280 px : le conteneur des aperçus fait 592 px, sous les 720 px : une colonne (quotidien-4), pile de gauche puis pile de droite.
+        expect(services.width, "une colonne de moins de 720 px").toBeLessThan(720);
+        expect(Math.abs(taches.x - services.x), "une seule colonne d'aperçus").toBeLessThan(2);
+        expect(taches.y, "les tâches sous les services").toBeGreaterThan(services.y + services.height - 1);
+      }
+      const equipes = await boite(apercu(page, "Mes équipes"));
+      expect(equipes.y, "Mes équipes sous les tâches").toBeGreaterThan(taches.y + taches.height - 1);
     } else if (info.project.name === "tablette") {
       expect(Math.abs(reglages.y - compte.y), "compte et réglages côte à côte").toBeLessThan(2);
       expect(reglages.x).toBeGreaterThan(compte.x + compte.width - 1);
@@ -297,7 +323,8 @@ test.describe("Moi (A12)", () => {
     } else {
       expect(services.y, "une colonne : les services sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
       expect(taches.y).toBeGreaterThan(services.y + services.height - 1);
-      expect(reglages.y, "les réglages après les aperçus").toBeGreaterThan(harmonie.y + harmonie.height - 1);
+      const equipes = await boite(apercu(page, "Mes équipes"));
+      expect(reglages.y, "les réglages après les aperçus").toBeGreaterThan(equipes.y + equipes.height - 1);
     }
     await capture(page, "t10-moi-disposition");
   });
@@ -310,7 +337,7 @@ test.describe("Moi, back-office coupé (A12, R17)", () => {
   test("ni Mes tâches ni Mes équipes ; Notifier et Admin restent", async ({ page }) => {
     await ouvrir(page, ADMIN, "/moi");
     await expect(lignes(page, "Mes services")).toHaveCount(3);
-    await expect(apercu(page, "Harmonie")).toBeVisible();
+    await expect(apercu(page, "Harmonie")).toHaveCount(0);
     await expect(apercu(page, "Mes tâches")).toHaveCount(0);
     await expect(apercu(page, "Mes équipes")).toHaveCount(0);
     await expect(page.getByRole("main").getByRole("link", { name: "Notifier" })).toBeVisible();
@@ -335,8 +362,9 @@ test.describe("Profil (A13)", () => {
     // Un seul nom pour les deux : « Enregistrer mon profil » (le libellé court est dedans).
     const enHaut = enTete(page).getByRole("button", { name: "Enregistrer mon profil", includeHidden: true });
     const enBas = page.locator("form").getByRole("button", { name: "Enregistrer mon profil", includeHidden: true });
-    const services = page.getByRole("group", { name: "Tes services et rôles" });
-    await expect(services.getByText("Culte Franco").first()).toBeVisible();
+    // Lot AO (AO-F) : plus de services et rôles à déclarer ; à leur place, « Mes équipes » (lecture seule).
+    const services = page.getByRole("region", { name: "Mes équipes" });
+    await expect(services.getByText("DA", { exact: false }).first()).toBeVisible();
     let bouton = enHaut;
     if (estTelephone(info)) {
       await expect(enHaut).toBeHidden();
@@ -359,14 +387,14 @@ test.describe("Profil (A13)", () => {
     await expect.poll(() => db.doc("users/uid-admin")?.firstName).toBe("Noémie");
   });
 
-  test("la carte Notifications : sous l'identité dès la tablette, services à droite", async ({ page }, info) => {
+  test("la carte Notifications : sous l'identité dès la tablette, Mes équipes à droite", async ({ page }, info) => {
     await abonneAuxNotifications(page);
     await ouvrir(page, ADMIN, "/profil", {});
     const notifs = page.getByRole("region", { name: "Notifications" });
     await expect(notifs.getByRole("switch", { name: "Notifications" })).toBeChecked();
     await expect(notifs.getByRole("switch", { name: "Rappels de service" })).toBeVisible();
     const identite = page.getByRole("group", { name: "Identité" });
-    const services = page.getByRole("group", { name: "Tes services et rôles" });
+    const services = page.getByRole("region", { name: "Mes équipes" });
     // Les champs se remplissent après la lecture des plannings : on mesure une fois la page posée.
     await expect.poll(async () => {
       const i = await boite(identite);
@@ -376,7 +404,7 @@ test.describe("Profil (A13)", () => {
       const i = await boite(identite);
       const s = await boite(services);
       expect(Math.abs((await boite(notifs)).x - i.x)).toBeLessThan(2);
-      expect(s.x, "les services à droite").toBeGreaterThan(i.x + i.width - 1);
+      expect(s.x, "Mes équipes à droite").toBeGreaterThan(i.x + i.width - 1);
       expect(Math.abs(s.y - i.y)).toBeLessThan(2);
     }
     await capture(page, "t10-profil");
@@ -435,7 +463,8 @@ test.describe("Questionnaire (A15)", () => {
     }
     // Même parcours : « Suivant » sans réponse demande les questions obligatoires.
     await page.getByRole("button", { name: "Suivant" }).click();
-    await expect(page.getByText("Merci de répondre aux questions marquées d'une étoile.")).toBeVisible();
+    // Le message est dit en haut et se répète au-dessus du bouton (T7).
+    await expect(page.getByText("Merci de répondre aux questions marquées d'une étoile.").first()).toBeVisible();
     // Une réponse est une pilule, en encre une fois choisie.
     const choix = page.getByRole("button", { name: "Chaque semaine" });
     await choix.click();

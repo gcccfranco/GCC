@@ -5,7 +5,7 @@
 
 import type { NotifLang } from "@/types/user";
 
-export type SetlistReady = { title: string; leader: string; songCount: number; category?: string };
+type SetlistReady = { title: string; leader: string; songCount: number; category?: string };
 
 export function setlistReadyMessage(s: SetlistReady, lang: NotifLang): { title: string; body: string } {
   const sujet = s.title || s.category || "";
@@ -23,7 +23,7 @@ export function setlistReadyMessage(s: SetlistReady, lang: NotifLang): { title: 
 
 /** `annee` : donnée seulement quand ce n'est pas l'année en cours (lot U2 : le
  *  T1 2027 publié en décembre 2026 ne se lit pas comme un trimestre passé). */
-export type PlanningRelease = { label: string; tri: string; annee?: number };
+type PlanningRelease = { label: string; tri: string; annee?: number };
 
 export function planningReleaseMessage(p: PlanningRelease, lang: NotifLang): { title: string; body: string } {
   if (lang === "zh-CN") {
