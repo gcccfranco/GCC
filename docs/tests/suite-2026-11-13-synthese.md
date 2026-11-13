@@ -46,3 +46,8 @@ session ne rend pas la main tant que les tests tournent. Compter ≈ 20 min par 
 
 ## Corrections (go de Timothée, 13/11/2026)
 Une ligne par chantier : échec, qui avait tort (site ou test), correction, commit, specs rejouées et durée.
+- C1 — `programme-scene.spec.ts:177`, `scene-saison.spec.ts:623`, `:852` (trois appareils) : **le test avait tort**.
+  Le refus marche (message affiché, aucune écriture `programmes/…`) ; le POST vu était `:commit`, l'envoi
+  quotidien du comptage d'usage (`docs/spec-comptage-usage.md`, même cause probable que le point 4). Assertion
+  limitée aux écritures `programmes/`. Commit 35320b62. Rejoué : les deux specs, trois appareils, 294 passés,
+  6 sautés, 0 échec (6 min 19 s) ; `tsc` et lint sans erreur. À décider : rien.
