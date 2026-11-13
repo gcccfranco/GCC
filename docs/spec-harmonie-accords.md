@@ -295,6 +295,33 @@ Reprend les décisions de Timothée du 11/11 (point 3) et du 12/11 (point 6). De
 - Captures des deux tranches : 390, 820, 1 180, 1 280 et 1 440, FR et 中文, clair et sombre pour H7-1 ; `regard`, puis
   `critique-design` sur ses signalements.
 
+### H8 — mode louange, point en marge et bande (décisions de l'orchestratrice du lot, 13/11/2026, déléguées)
+
+Une tranche (H8-1), petite ; la même session fait ensuite TC-3 (`docs/spec-louange-tous-les-chants.md`). Le rendu est
+fixé par les décisions 4 (11/11) et 7 (12/11) : pas de planche.
+- **Réglage** : « Idées d'harmonie » / « 和声提示 » dans « Options d'affichage » du mode louange (`BarreHaut`), un
+  interrupteur, **éteint par défaut**, mémorisé **par compte** sur l'appareil (`perf-idees-harmonie-<uid>`, comme
+  `accords-notation-<uid>`). Montré seulement si `useAccesHarmonie().peut` (mêmes conditions que la porte 2) ; sans
+  accès, rien ne se montre, même si la clé dit oui.
+- **Données** : pour chaque chant affiché (items de la setlist **et** chants ajoutés du lot TC, par `songSlug`),
+  `harmonieDuChant` sur les sections du chant dans la tonalité **affichée** (transposition, `keyChange` d'une section
+  fusionnée), refus et idées de l'équipe chargés une fois par chant (cache du module, comme `LigneIci`) ; sans réseau,
+  les idées calculées seules. Rien n'est chargé tant que le réglage est éteint.
+- **Point** : au plus un par section qui a une idée (la première : calculées avant celles de l'équipe, comme « Ici »),
+  rond de 8 px en `--chord-color` dans la marge gauche, à la hauteur du nom de la section ; zone de toucher 44 px ;
+  `aria-label` « Idée d'harmonie : <nom de la section> » / « 和声提示：… », `aria-expanded`. Le toucher ne tourne pas la
+  page (propagation arrêtée) ; masqué pendant l'annotation (barre d'annotation ouverte) et à l'impression.
+- **Bande** : le toucher ouvre, **sans animation**, une ligne sous le nom de la section : chiffres avant → après, puis
+  « · », puis lettres avant → après (« 4 5 → 2m7 5 · G A → Em7 A », `font-chord`, `--chord-color`, une ligne, coupée
+  par une ellipse si trop longue) ; ni nom de fiche, ni « Pourquoi », ni Écouter (décision 8). Le toucher suivant
+  sur le point la referme ; une seule bande ouverte à la fois ; tourner la page ne la ferme pas. Le contenu en dessous
+  descend (pas de recouvrement).
+- Notation : la bande montre les deux (le mode louange ne suit pas la bascule Lettres / Chiffres).
+- Tests : nouvelle spec `louange-harmonie.spec.ts` (trois appareils) : réglage éteint par défaut, absent sans accès ;
+  allumé, un point sur une section à idée (chant FR et chant ZH), bande ouverte puis refermée, page non tournée ; un
+  chant transposé montre ses lettres transposées. Voisines : `louange-sections-uniques`, `louange-menus`,
+  `performance-mode`, `harmonie-porte1`. Captures : quatre dispositions et 1 440 px, FR et 中文, bande ouverte.
+
 Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
 nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
 
