@@ -133,6 +133,11 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   partitions en zigzag ; spec `docs/spec-jianpu-deux-volets.md`, attend son go. (2) **Son de piano** du bouton
   « Écouter » des fiches d'harmonie : go de Timothée (« oui pour ça », en réponse à « go pour le vrai piano ») :
   notes d'un vrai piano enregistré, libres de droits, à la place de l'onde triangle de `src/lib/audio/synthese.ts`.
+  **13/11, 16 h 45 UTC** : son de piano fait (`ab1064b0`, à écouter par Timothée). Parcours à l'œil :
+  `docs/parcours-oeil-2026-11-13.md` (v1, 13 constats ; v2 en cours). **Go de Timothée (« go pour les deux »)** :
+  (a) corriger les constats 1 (menus du mode louange qui dépassent), 4 (cadres vides du choriste) et 5 (barre de la
+  page chant au téléphone) ; (b) planche « réglages et tonalité au même endroit sur les trois écrans » (constats 2
+  et 3), sans code avant son choix. Attendent encore son go : JV-1, JV-2, JV-5 (`docs/spec-jianpu-deux-volets.md`).
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.
