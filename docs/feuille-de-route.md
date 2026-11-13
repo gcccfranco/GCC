@@ -161,6 +161,16 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   **Finitions JV faites le 13/11** : les 9 échecs venaient de JV-3 (tests à revoir, site juste ; Crayon de nouveau
   testé sur les grands écrans), pastille et marges du mode louange retouchées ; huit choix de design de `critique-design`
   « à décider par Timothée » (§ Avancement de la spec, entrée « Finitions »).
+  **Mode louange, idées d'harmonie en fenêtre** (ordre de Timothée, choix 6) : fait le 13/11 (`87fb92c`).
+  **Deux demandes de Timothée du 13/11 au soir** (ses mots), à cadrer : (1) « on a du mal à différencier l'ancienne
+  progression et la nouvelle progression d'accord dans les idées d'harmonie » : il choisit « ancienne grisée » (ancienne
+  progression en gris discret, nouvelle en bleu, petits mots « avant » / « après » au-dessus) ; retouche, **go à
+  recevoir** ; (2) « Quand il y a le jianpu qui est affiché il faut aussi pouvoir cliquer et obtenir les idées
+  d'harmonie » : il demande ce qui est le plus optimal. Proposition de la session : toucher un **accord imprimé du scan**
+  (déjà touchable hors Crayon, `JianpuSheet.tsx` `rendreBoite`) mène aux idées de **sa section** (section retrouvée par
+  `sections.json`, `passageDeSection`) : sur la page chant et la vue Partitions par la ligne « Ici » du panneau
+  d'accord ; en mode louange (accords inertes), directement la fenêtre des idées de la section, réglage allumé. Petite
+  spec à écrire, puis go.
   **Attendent Timothée** : publier `firestore.rules` (crayon et Apple Pencil absents sans cela : `crayonPret` faux
   après le 403 de `partitions/`, diagnostic de `session_01UMdfuZTdptjjrzmrPMcQPN`) ; « go pour le crayon grisé »
   (retouche de `useMesPartitions`) ; choix sur `docs/spec-reglages-unifies.md` (piste B recommandée) et sur
