@@ -65,13 +65,12 @@ test("à 120 en 4/4, la pastille allumée avance d'un temps toutes les 500 ms", 
   await expect(actif(page)).toHaveCount(0);
   await marche(page).click();
   await expect(actif(page)).toHaveCount(1);
-  const vus: (string | null)[] = [];
-  for (let i = 0; i < 5; i++) {
-    vus.push(await actif(page).getAttribute("data-temps"));
+  // React rend le temps suivant après l'image (horloge simulée) : on attend l'attribut au lieu de le lire aussitôt.
+  const debut = Number(await actif(page).getAttribute("data-temps"));
+  for (let i = 1; i < 5; i++) {
     await page.clock.runFor(500);
+    await expect(actif(page)).toHaveAttribute("data-temps", String(((debut - 1 + i) % 4) + 1));
   }
-  const debut = Number(vus[0]);
-  expect(vus.map(Number)).toEqual(Array.from({ length: 5 }, (_, i) => ((debut - 1 + i) % 4) + 1));
 });
 
 test("6/8 : six pastilles en deux groupes, temps 1 fort et 4 moyen", async ({ page }) => {
@@ -103,9 +102,9 @@ test("mouvement réduit : ni transition ni animation sur les pastilles, le temps
   await expect(p).toHaveCSS("transition-duration", "0s");
   await expect(p).toHaveCSS("animation-name", "none");
   await marche(page).click();
-  const a = await actif(page).getAttribute("data-temps");
+  const a = Number(await actif(page).getAttribute("data-temps"));
   await page.clock.runFor(500);
-  expect(await actif(page).getAttribute("data-temps")).not.toBe(a);
+  await expect(actif(page)).toHaveAttribute("data-temps", String((a % 4) + 1));
 });
 
 test("aucun chevauchement entre la bande et le premier élément de la page", async ({ page }) => {
