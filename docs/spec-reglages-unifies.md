@@ -1,7 +1,7 @@
 # Spec : un seul rangement pour les réglages et la tonalité (lot RU)
 
 Statut : **attend le choix de Timothée** (piste et questions ci-dessous). Rien ne se code avant son go.
-Planche : `docs/planches/planche-reglages-unifies.html`, artefact privé ARTEFACT_A_COMPLETER.
+Planche : `docs/planches/planche-reglages-unifies.html`, artefact privé https://claude.ai/artifact/A8JBDX9ktoBN6ToTKe4Hbk.
 Source : `docs/parcours-oeil-2026-11-13.md`, « Les cinq choses » 2 et 3 (constats 6, 7, 8 et 12).
 
 ## Demande (Timothée, 13/11/2026, ses mots)
@@ -106,6 +106,11 @@ chrome du mode louange passe à l'encre, ce n'est pas `--chord-color`).
 - **Noms chinois : on garde ceux déjà en place** (我演奏, 排版, 文字, 钢琴手…) ; seuls les nouveaux (显示, groupes de la
   marge, « 仅本页有效 », « 本队用 G 调 ») sont à faire relire par quelqu'un qui lit le chinois.
 - « Chaque section une fois » devient « Une fois chacune » dans la marge (place) ; 每段一次 inchangé.
+- Mode louange, barre cachée : l'armure flotte dans le coin haut **seulement quand le titre est sorti de l'écran**.
+- Tablette paysage (1 080 px) au mode louange, marge ouverte : chaque colonne tomberait à 332 px (< 340), donc **une
+  colonne** tant que la marge est ouverte ; deux colonnes dès 1 096 px.
+- Nouveaux libellés zh à faire relire : 显示, 阅读内容, 页面, 仅本页有效, 仅本设备, 保存在本设备, 本队用 G 调,
+  为整个团队更改.
 - Le menu ⋯ de la page chant ne garde que Personnaliser et Signalement ; « Outils » du mode louange garde métronome,
   annotations, idées d'harmonie (la tonalité et le capo passent dans la fenêtre de l'armure).
 
@@ -158,5 +163,7 @@ Aucune règle Firestore touchée (tonalité personnelle en `localStorage`).
 
 ## Avancement
 
-- 13/11 : inventaire (`chercheur`), planche (`/planche`, critique « à retoucher », une reprise), spec. Attend le choix
-  de Timothée.
+- 13/11 : inventaire (`chercheur`), planche (`/planche`, critique « à retoucher » : la recommandée était la moins
+  dessinée ; une reprise du maquettiste : feuille au téléphone, tablette paysage au mode louange, barre cachée,
+  choriste, armure dans une setlist, mentions de portée alignées), regardée aux quatre tailles, publiée, spec. Attend
+  le choix de Timothée.

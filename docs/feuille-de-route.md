@@ -138,6 +138,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   (a) corriger les constats 1 (menus du mode louange qui dépassent), 4 (cadres vides du choriste) et 5 (barre de la
   page chant au téléphone) ; (b) planche « réglages et tonalité au même endroit sur les trois écrans » (constats 2
   et 3), sans code avant son choix. Attendent encore son go : JV-1, JV-2, JV-5 (`docs/spec-jianpu-deux-volets.md`).
+  **(b) Planche des réglages faite (13/11)** : `docs/spec-reglages-unifies.md` (lot RU, cinq tranches), planche
+  https://claude.ai/artifact/A8JBDX9ktoBN6ToTKe4Hbk, piste B recommandée (armure au titre, marge « Affichage ») ;
+  **attend le choix de Timothée** (RU-Q1 à RU-Q3).
   **En attente d'une place (demande de Timothée, 13/11, 16 h 50 UTC)** : cadrage sans code d'un **vrai métronome
   dans le mode louange** (« un métronome avec du son et un métronome plus visuel qu'un simple trait qui bouge, il
   faudrait pouvoir choisir si c'est binaire ternaire, les temps fort et tout, en gros tout comme une vrai application
