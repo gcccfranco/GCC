@@ -2,8 +2,9 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as PointerReact, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, CloudOff, Eraser, GripVertical, Highlighter, Pencil, ChevronLeft, ChevronRight, Loader2, MoreHorizontal, Redo2, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
+import { Check, CloudOff, Eraser, GripVertical, Highlighter, Pencil, ChevronLeft, ChevronRight, Loader2, MoreHorizontal, Redo2, Shapes, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
 import { styleTrait } from "@/lib/annotations/strokes";
+import { SIGNES, glyphesTampon, polylignes, texteTampon } from "@/lib/annotations/tampons";
 import { BORNES, INDICES_TELEPHONE, TEINTES_PRETES, type Prereglage } from "@/lib/annotations/prereglages";
 import { CercleChromatique } from "./CercleChromatique";
 import { FOND_SOMBRE, SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE, contraste } from "@/lib/performance/couleurIcones";
@@ -12,7 +13,7 @@ import { accrocheSuivante, lirePosition, normaliser, placerBarre, poserBarre, ty
 
 export type EtatTraits = "chargement" | "enregistre" | "en-attente";
 export type DispositionBarre = "telephone" | "tablette" | "large";
-type MenuId = "reglage" | "gomme" | "plus";
+type MenuId = "reglage" | "gomme" | "signes" | "plus";
 const CLE_POSITION = "annot-barre-position";
 
 /** Zone permise : l'écran moins les marges sûres et 8 px ; au téléphone, sous la barre du haut (sa hauteur mesurée) ;
@@ -51,6 +52,9 @@ export function BarreAnnotation(p: {
   onPrendre: (i: number) => void;
   onModifier: (i: number, pr: Prereglage) => void;
   onGomme: (actif: boolean) => void;
+  /** AN-5 : clé du signe pris dans « Texte, tampons et formes » (`tampons.ts`), ou `null`. Prendre un préréglage ou la gomme le quitte. */
+  signe: string | null;
+  onSigne: (cle: string) => void;
   onTailleGomme: (i: number) => void;
   onAnnuler: () => void;
   onRetablir: () => void;
@@ -208,8 +212,8 @@ export function BarreAnnotation(p: {
   );
   const texteEtat = t(`performance.tools.${p.etat === "chargement" ? "loading" : p.etat === "en-attente" ? "pending" : "saved"}`);
   const IconeEtat = p.etat === "chargement" ? Loader2 : p.etat === "en-attente" ? CloudOff : Check;
-  // En colonne : une icône seule (le texte ne tient pas dans 52 px), le texte reste lisible pour les lecteurs d'écran.
-  const etat = colonne ? (
+  // Icône seule en colonne et au téléphone : le texte ne tient pas (52 px de large, ou une rangée de 396 px avec le bouton des signes).
+  const etat = colonne || tel ? (
     <span data-etat-traits={p.etat} title={texteEtat} className="flex h-5 w-5 items-center justify-center text-muted-foreground">
       <IconeEtat aria-hidden="true" className="h-5 w-5" />
       <span className="sr-only">{texteEtat}</span>
@@ -227,8 +231,8 @@ export function BarreAnnotation(p: {
           pr={p.prereglages[i]}
           fond={p.fond}
           label={t("performance.tools.preset", { n: i + 1, outil: t(p.prereglages[i].outil === "pen" ? "performance.tools.penName" : "performance.tools.highlighter") })}
-          pris={!p.gomme && p.actif === i}
-          onToucher={() => (!p.gomme && p.actif === i ? basculer("reglage") : (setOuvert(null), p.onPrendre(i)))}
+          pris={!p.gomme && !p.signe && p.actif === i}
+          onToucher={() => (!p.gomme && !p.signe && p.actif === i ? basculer("reglage") : (setOuvert(null), p.onPrendre(i)))}
           onAppuiLong={() => { p.onPrendre(i); setOuvert("reglage"); }}
         />
       ))}
@@ -254,6 +258,37 @@ export function BarreAnnotation(p: {
       {ouvert === "gomme" && (
         <Popover className={pop("g")}>
           <Epaisseurs etiquette={t("performance.tools.eraserSize")} valeur={p.tailleGomme} onChoix={p.onTailleGomme} />
+        </Popover>
+      )}
+    </div>
+  );
+
+  const menuSignes = (
+    <div className="relative" data-menu-annotation>
+      <Btn label={t("performance.signes.menu")} actif={!!p.signe} sousBulle={sous ?? !tel} onClick={() => basculer("signes")} menuOuvert={ouvert === "signes"}>
+        {p.signe ? <Pictogramme cle={p.signe} /> : <Shapes className="h-5 w-5" />}
+      </Btn>
+      {ouvert === "signes" && (
+        <Popover className={`${pop("g")} w-64`}>
+          {(["texte", "tampons", "formes"] as const).map((g) => (
+            <Rubrique key={g} titre={t(`performance.signes.groupe${g === "texte" ? "Texte" : g === "tampons" ? "Tampons" : "Formes"}`)}>
+              <div className="grid grid-cols-[repeat(4,minmax(0,1fr))] gap-1">
+                {SIGNES.filter((e) => e.groupe === g).map((e) => (
+                  <button
+                    key={e.cle}
+                    type="button"
+                    aria-pressed={p.signe === e.cle}
+                    data-signe={e.cle}
+                    onClick={() => { setOuvert(null); p.onSigne(e.cle); }}
+                    className={`flex min-h-14 min-w-0 flex-col items-center justify-start gap-0.5 rounded-lg px-0.5 py-1 text-foreground hover:bg-muted ${p.signe === e.cle ? "bg-muted" : ""}`}
+                  >
+                    <span className="flex h-6 items-center"><Pictogramme cle={e.cle} /></span>
+                    <span className="w-full text-center text-[11px] leading-tight [overflow-wrap:anywhere]">{t(`performance.signes.${e.cle}`)}</span>
+                  </button>
+                ))}
+              </div>
+            </Rubrique>
+          ))}
         </Popover>
       )}
     </div>
@@ -297,7 +332,7 @@ export function BarreAnnotation(p: {
               <span className="h-4 w-4 rounded-full bg-background" />
             </span>
           </button>
-          {p.disposition !== "large" && (
+          {(p.disposition !== "large" || colonne) && (
             <Rubrique titre={t("performance.tools.loupe")}>{loupe(false)}</Rubrique>
           )}
           {!tel && (
@@ -383,11 +418,12 @@ export function BarreAnnotation(p: {
             {poignee}
             {menuPrereglages}
             {menuGomme}
+            {menuSignes}
             {menuPlus}
             <span className="ml-auto">{etat}</span>
           </div>
         ))}
-        {!attachee && capsule(<>{poignee}{menuPrereglages}{menuGomme}{menuPlus}<span className={colonne ? "" : "ml-1"}>{etat}</span></>)}
+        {!attachee && capsule(<>{poignee}{menuPrereglages}{menuGomme}{menuSignes}{menuPlus}<span className={colonne ? "" : "ml-1"}>{etat}</span></>)}
       </>
     );
   }
@@ -402,7 +438,8 @@ export function BarreAnnotation(p: {
       <Separateur colonne={colonne} />
       {menuPrereglages}
       {menuGomme}
-      {p.disposition === "large" && loupe(colonne)}
+      {menuSignes}
+      {p.disposition === "large" && !colonne && loupe(false)}
       {menuPlus}
       {colonne ? <>{termine}{etat}</> : <div className="ml-auto flex items-center gap-1">{etat}{termine}</div>}
     </>
@@ -458,6 +495,32 @@ function Popover({ className, children }: { className: string; children: ReactNo
     <div ref={ref} className={`absolute z-30 flex flex-col gap-1 rounded-xl p-2 material-panel [box-shadow:var(--shadow-flottant)] ${className}`}>
       {children}
     </div>
+  );
+}
+
+/** Cadre (début, fin, em en px) dans lequel `polylignes` dessine le signe `pen` sur un pictogramme de 32 × 24. */
+const CADRES: Record<string, [[number, number], [number, number], number]> = {
+  crescendo: [[16, 12], [0, 0], 8], decrescendo: [[16, 12], [0, 0], 8], respiration: [[16, 14], [0, 0], 10], orgue: [[16, 12], [0, 0], 10],
+  fleche: [[4, 20], [28, 4], 0], cercle: [[4, 3], [28, 21], 0], trait: [[4, 20], [28, 4], 0],
+};
+
+/** Le signe d'une entrée du menu : glyphe ou texte du tampon, ou la forme dessinée ; sa couleur est celle du texte (`currentColor`). */
+function Pictogramme({ cle }: { cle: string }) {
+  const { i18n } = useTranslation();
+  const e = SIGNES.find((x) => x.cle === cle);
+  if (!e) return null;
+  if (e.nature === "texte") return <span aria-hidden="true" className="text-base font-semibold leading-none">Aa</span>;
+  if (e.nature === "stamp") {
+    const glyphes = glyphesTampon(e.genre!);
+    return <span aria-hidden="true" className={`leading-none ${glyphes ? "text-xl" : "text-base font-bold"}`} style={glyphes ? { fontFamily: '"Noto Music", sans-serif' } : undefined}>{texteTampon(e.genre!, i18n.language)}</span>;
+  }
+  const [a, b, u] = CADRES[cle];
+  return (
+    <svg width={32} height={24} viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {polylignes(cle, a, b, u).map((pl, i) => (
+        <path key={i} d={(pl.length === 1 ? [pl[0], pl[0]] : pl).map(([x, y], k) => `${k ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join("")} />
+      ))}
+    </svg>
   );
 }
 

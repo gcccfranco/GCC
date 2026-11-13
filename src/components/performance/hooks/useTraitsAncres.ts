@@ -1,14 +1,14 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { ancrer, decouper, estTrait, projeter, type Rect, type Repere } from "@/lib/annotations/ancres";
+import { ancrer, ancrerSigne, decouper, estSigne, estTrait, projeter, projeterSigne, type Rect, type Repere } from "@/lib/annotations/ancres";
 import type { Stroke } from "@/lib/annotations/strokes";
-import type { ElementTrait, Trait } from "@/types/partition";
+import type { ElementTrait, Signe, Trait } from "@/types/partition";
 
 // Traits accrochés au texte (docs/spec-ma-partition.md, § Traits) : mesure du DOM. Le calcul pur est dans
 // `src/lib/annotations/ancres.ts`. Repères posés par `SectionView` (`data-trait-slug|section|ligne` sur chaque ligne)
 // et par `JianpuSheet` (`data-trait-scan` = rang de l'image, + `data-trait-slug`).
 
 export type TraitsParChant = Record<string, { miens: ElementTrait[]; autres: ElementTrait[] }>;
-export type Origine = { slug: string; trait: Trait; mien: boolean };
+export type Origine = { slug: string; trait: Trait | Signe; mien: boolean };
 export type Projection = { strokes: Stroke[]; origines: Map<Stroke, Origine> };
 /** Loupe d'AO : le contenu est translaté puis agrandi ; les mesures sont ramenées à l'espace sans loupe. */
 export type Loupe = { zoom: number; pan: { x: number; y: number } };
@@ -81,7 +81,8 @@ const horsApercu = (el: Element) => !el.closest("[data-apercu-suivant]");
 
 /** Anciens → nouveau : un tracé écran (espace sans loupe) devient un ou plusieurs traits ancrés, un par ligne touchée.
  *  Un tracé qui commence sur l'image d'un scan s'ancre au scan ; sans ligne ni scan sous la page : rien (rendu vide). */
-export function ancrerTrace(s: Stroke, racine: HTMLElement, loupe: Loupe): { slug: string; trait: Trait }[] {
+export function ancrerTrace(s: Stroke, racine: HTMLElement, loupe: Loupe): { slug: string; trait: Trait | Signe }[] {
+  const signe = s.tool === "text" || s.tool === "stamp";
   const mesure = mesureDe(loupe);
   const [x0, y0] = s.points[0];
   const dedans = (r: Rect) => x0 >= r.left && x0 <= r.right && y0 >= r.top && y0 <= r.bottom;
@@ -90,25 +91,34 @@ export function ancrerTrace(s: Stroke, racine: HTMLElement, loupe: Loupe): { slu
   const surScan = scans.find((c) => dedans(c.r)) ?? (lignes.length ? undefined : scans[0]);
   if (surScan) {
     const { el, r } = surScan;
-    return [{ slug: el.dataset.traitSlug ?? "", trait: ancrer(s, { scan: true, image: Number(el.dataset.traitScan) }, { x: r.left, y: r.top, unite: r.right - r.left }) }];
+    const [ancre, repere] = [{ scan: true as const, image: Number(el.dataset.traitScan) }, { x: r.left, y: r.top, unite: r.right - r.left }];
+    return [{ slug: el.dataset.traitSlug ?? "", trait: signe ? ancrerSigne(s, ancre, repere) : ancrer(s as Parameters<typeof ancrer>[0], ancre, repere) }];
   }
-  const out: { slug: string; trait: Trait }[] = [];
+  const out: { slug: string; trait: Trait | Signe }[] = [];
   for (const { ligne, points } of decouper(s.points, lignes.map((l) => l.r))) {
     const { el, r } = lignes[ligne];
     const car = caracterePlusProche(el, points[0][0], points[0][1], mesure);
     const repere = repereTexte(el, car, mesure, loupe.zoom);
     // shortcut: un morceau à plus de 2 em de sa ligne (en-tête, marge, page vide) n'est ancré nulle part et se perd, à reprendre si on veut des traits libres sur la page.
     const loin = Math.min(...points.map(([, y]) => (y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0)));
-    if (loin > 2 * repere.unite) continue;
-    out.push({ slug: el.dataset.traitSlug ?? "", trait: ancrer({ ...s, points }, { section: el.dataset.traitSection ?? "", ligne: Number(el.dataset.traitLigne), car }, repere) });
+    // Un texte ou un tampon s'accroche à la ligne la plus proche, sans cette limite (AN-5).
+    if (!signe && loin > 2 * repere.unite) continue;
+    const ancre = { section: el.dataset.traitSection ?? "", ligne: Number(el.dataset.traitLigne), car };
+    out.push({ slug: el.dataset.traitSlug ?? "", trait: signe ? ancrerSigne({ ...s, points }, ancre, repere) : ancrer({ ...s, points } as Parameters<typeof ancrer>[0], ancre, repere) });
   }
   return out;
 }
 
+/** Em (px, espace sans loupe) de la ligne la plus proche du point, pour dimensionner un signe ; 16 sur un scan ou sans ligne. */
+export function uniteProche(racine: HTMLElement, loupe: Loupe, x: number, y: number): number {
+  const [r] = ancrerTrace({ tool: "stamp", size: 100, color: "", points: [[x, y]] }, racine, loupe);
+  return r && "taille" in r.trait && !("scan" in r.trait.ancre) && r.trait.taille > 0 ? 100 / r.trait.taille : 16;
+}
+
 // Identité d'un trait dans la signature (un trait réécrit à l'identique n'est pas une nouvelle projection).
-const ids = new WeakMap<Trait, number>();
+const ids = new WeakMap<Trait | Signe, number>();
 let suivant = 0;
-const idDe = (t: Trait) => ids.get(t) ?? (ids.set(t, ++suivant), suivant);
+const idDe = (t: Trait | Signe) => ids.get(t) ?? (ids.set(t, ++suivant), suivant);
 
 /** Projette les traits `traits` sur les lignes (et scans) de `racine()` visibles à l'écran. Refait après chaque rendu
  *  (pagination, taille du texte, disposition), au redimensionnement, à l'arrivée des polices et à toute mutation de la
@@ -142,7 +152,7 @@ export function useTraitsAncres({ racine, traits, actif, loupe }: { racine: () =
       }
       for (const [slug, { miens, autres }] of Object.entries(traits)) {
         for (const [mien, liste] of [[true, miens], [false, autres]] as const) {
-          for (const trait of liste.filter(estTrait)) {
+          for (const trait of liste.filter((e): e is Trait | Signe => estTrait(e) || estSigne(e))) {
             const a = trait.ancre;
             const cibles = "scan" in a ? scans.get(`${slug}\n${a.image}`) : lignes.get(`${slug}\n${a.section}\n${a.ligne}`);
             for (const cible of cibles ?? []) {
@@ -152,7 +162,7 @@ export function useTraitsAncres({ racine, traits, actif, loupe }: { racine: () =
                 repere = { x: r.left, y: r.top, unite: r.right - r.left };
               } else repere = repereTexte(cible, a.car, mesure, loupe.zoom);
               if (!(repere.unite > 0)) continue;
-              const stroke = projeter(trait, repere);
+              const stroke = trait.outil === "text" || trait.outil === "stamp" ? projeterSigne(trait, repere) : projeter(trait, repere);
               strokes.push(stroke);
               origines.set(stroke, { slug, trait, mien });
             }

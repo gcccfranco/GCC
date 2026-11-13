@@ -20,7 +20,7 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { ancrerTrace, useTraitsAncres, type TraitsParChant } from "./hooks/useTraitsAncres";
+import { ancrerTrace, uniteProche, useTraitsAncres, type TraitsParChant } from "./hooks/useTraitsAncres";
 import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, AlignLeft, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves, X } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import type { Tranche } from "@/lib/performance/tranchesScan";
@@ -42,12 +42,13 @@ import { dpOrigin } from "@/lib/setlist/dp";
 import { AnnotationCanvas, StrokesLayer, MAX_ZOOM, ZOOM_STEP, clampPan } from "./AnnotationCanvas";
 import { ANCIEN_RAPPEL, type AnnotationData, type Stroke } from "@/lib/annotations/strokes";
 import { INDICES_TELEPHONE, ecrirePrereglages, lirePrereglages, type Prereglage } from "@/lib/annotations/prereglages";
-import { estTrait } from "@/lib/annotations/ancres";
+import { estSigne, estTrait } from "@/lib/annotations/ancres";
+import { SIGNES } from "@/lib/annotations/tampons";
 import { annuler as annulerHistorique, historiqueVide, noter, peutAnnuler, peutRetablir, retablir as retablirHistorique, type Historique } from "@/lib/annotations/historique";
 import { useConfirmer } from "@/components/layout/Confirmer";
 import { libelleLecture } from "@/components/partition/MenuJeLis";
 import type { Lecture, Marques } from "@/lib/partition/lecture";
-import type { ElementTrait, Trait } from "@/types/partition";
+import type { ElementTrait, Signe, Trait } from "@/types/partition";
 import { getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
@@ -521,6 +522,8 @@ export function PerformanceMode({
     ecrirePrereglages(uid, liste);
   };
   const [gommeCrayon, setGommeCrayon] = useState(false);
+  // AN-5 : clé du signe pris dans « Texte, tampons et formes » (`tampons.ts`) ; un préréglage ou la gomme le quitte.
+  const [signeCle, setSigneCle] = useState<string | null>(null);
   const [tailleGomme, setTailleGomme] = useState(1);
   // Barre visible à la toute première ouverture du mode sur l'appareil, masquée ensuite (drapeau posé par l'effet ci-dessous).
   const [showChrome, setShowChrome] = useState(() => !barreDejaVue());
@@ -1332,7 +1335,7 @@ export function PerformanceMode({
   /* eslint-enable react-hooks/exhaustive-deps */
   // Table tracé → traits qu'il représente : un tracé projeté, ou un tracé écran déjà ancré. L'annulation d'AO remet des
   // tracés d'avant (même identité d'objet) : leurs traits reviennent sans être ancrés une seconde fois.
-  const tableTraits = useRef(new WeakMap<Stroke, { slug: string; trait: Trait }[]>());
+  const tableTraits = useRef(new WeakMap<Stroke, { slug: string; trait: Trait | Signe }[]>());
   useEffect(() => {
     for (const [st, o] of projection.origines) tableTraits.current.set(st, [{ slug: o.slug, trait: o.trait }]);
   }, [projection]);
@@ -1345,7 +1348,7 @@ export function PerformanceMode({
     if (!racine) return;
     // Une section jouée plusieurs fois montre le même trait à chaque passage : il est retiré dès qu'un de ses passages
     // manque (gomme), pas quand l'annulation d'AO rend des tracés d'avant (autres objets, mêmes traits).
-    const voulus: { slug: string; trait: Trait }[] = [];
+    const voulus: { slug: string; trait: Trait | Signe }[] = [];
     let neufs = 0;
     for (const st of nouveau.strokes) {
       let traits = tableTraits.current.get(st);
@@ -1357,7 +1360,7 @@ export function PerformanceMode({
       }
       voulus.push(...traits);
     }
-    const denombrer = (traits: Trait[]) => traits.reduce((m, tr) => m.set(tr, (m.get(tr) ?? 0) + 1), new Map<ElementTrait, number>());
+    const denombrer = (traits: (Trait | Signe)[]) => traits.reduce((m, tr) => m.set(tr, (m.get(tr) ?? 0) + 1), new Map<ElementTrait, number>());
     const presents = denombrer(tracesMiens.map((st) => projection.origines.get(st)!.trait));
     const restants = denombrer(voulus.map((v) => v.trait));
     const retires = new Set<ElementTrait>([...presents].filter(([tr, n]) => (restants.get(tr) ?? 0) < n).map(([tr]) => tr));
@@ -1411,15 +1414,15 @@ export function PerformanceMode({
     appliquerTraits(r.rendus);
   };
   const toutEffacer = async () => {
-    const avecTraits = (slugs: string[]) => slugs.filter((slug) => (traitsChantsRef.current[slug]?.miens.filter(estTrait).length ?? 0) > 0);
+    const avecTraits = (slugs: string[]) => slugs.filter((slug) => (traitsChantsRef.current[slug]?.miens.filter((e) => estTrait(e) || estSigne(e)).length ?? 0) > 0);
     if (!avecTraits(slugsPage).length) return;
     if (!(await confirmer({ titre: t("performance.tools.clearConfirmTitle"), texte: t("performance.tools.clearConfirmBody"), action: t("performance.tools.clearAll"), destructif: true }))) return;
     const concernes = avecTraits(slugsPage);
     if (!concernes.length) return;
     poserHistorique(noter(historiqueRef.current, Object.fromEntries(concernes.map((slug) => [slug, traitsChantsRef.current[slug].miens]))));
     setDernierSlugTrace(concernes[0]);
-    // Tout effacer retire les traits de stylo et de surligneur ; les éléments inconnus (tampons, textes d'une version plus récente) restent.
-    appliquerTraits(Object.fromEntries(concernes.map((slug) => [slug, traitsChantsRef.current[slug].miens.filter((e) => !estTrait(e))])));
+    // Tout effacer retire les traits, textes et tampons ; les éléments inconnus (d'une version plus récente) restent.
+    appliquerTraits(Object.fromEntries(concernes.map((slug) => [slug, traitsChantsRef.current[slug].miens.filter((e) => !estTrait(e) && !estSigne(e))])));
   };
   // Loupe par les boutons de la barre (le pincer reste au canvas) : zoom autour du centre de l'écran.
   const zoomerPar = (delta: number) => {
@@ -1438,7 +1441,7 @@ export function PerformanceMode({
   const crayonPret = !surAjout && (!slugAnnote || chantsCharges?.[slugAnnote] !== false);
   const basculerAnnotation = () => {
     setPopoverOuvert(null);
-    if (!annotateMode) { setPrereglagesDe({ uid, liste: lirePrereglages(uid) }); setPrereglageActif(0); }
+    if (!annotateMode) { setPrereglagesDe({ uid, liste: lirePrereglages(uid) }); setPrereglageActif(0); setSigneCle(null); }
     if (!annotateMode && slugAnnote) {
       const memo = getTailleAnnotee(uid, setlistId, slugAnnote);
       if (memo !== null && Math.round(memo * 100) !== Math.round(fontScale * 100)) appliquerTaille(memo);
@@ -2375,6 +2378,9 @@ export function PerformanceMode({
           data={donneesMiens}
           rogneBas={rogneBas}
           clipPath={clipEncre}
+          cle={currentPage}
+          signe={signeCle ? SIGNES.find((e) => e.cle === signeCle) : null}
+          unite={(x, y) => (contentAreaRef.current ? uniteProche(contentAreaRef.current, loupe, x, y) : 16)}
           tool={gommeCrayon ? "eraser" : prereglages[prereglageActif].outil}
           color={prereglages[prereglageActif].couleur}
           size={prereglages[prereglageActif].taille}
@@ -2437,9 +2443,11 @@ export function PerformanceMode({
             fond={fondTrait}
             gomme={gommeCrayon}
             tailleGomme={tailleGomme}
-            onPrendre={(i) => { setPrereglageActif(i); setGommeCrayon(false); }}
+            signe={signeCle}
+            onSigne={(cle) => { setSigneCle(cle); setGommeCrayon(false); }}
+            onPrendre={(i) => { setPrereglageActif(i); setGommeCrayon(false); setSigneCle(null); }}
             onModifier={modifierPrereglage}
-            onGomme={setGommeCrayon}
+            onGomme={(actif) => { setGommeCrayon(actif); if (actif) setSigneCle(null); }}
             onTailleGomme={setTailleGomme}
             onAnnuler={() => defaireCrayon("annuler")}
             onRetablir={() => defaireCrayon("retablir")}

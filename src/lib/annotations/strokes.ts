@@ -6,12 +6,17 @@
 // normalisées par la taille du viewport au moment du dessin, pour résister
 // aux petites variations d'écran.
 
-import { FOND_SOMBRE, contraste, garderContraste } from "@/lib/performance/couleurIcones";
+import { FOND_CLAIR, FOND_SOMBRE, contraste, garderContraste } from "@/lib/performance/couleurIcones";
+import type { GenreTampon } from "@/types/partition";
+import { glyphesTampon, texteTampon } from "./tampons";
 
 export type StrokeTool = "pen" | "highlighter";
 
 export interface Stroke {
-  tool: StrokeTool;
+  /** `text` et `stamp` (AN-5) : un seul point ; `size` = corps du texte en px ; `texte` ou `genre` selon l'outil. */
+  tool: StrokeTool | "text" | "stamp";
+  texte?: string;
+  genre?: GenreTampon;
   /** Épaisseur en px CSS (à l'échelle du viewport d'origine) */
   size: number;
   color: string;
@@ -105,8 +110,28 @@ function distToSegment(px: number, py: number, x1: number, y1: number, x2: numbe
   return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
 }
 
-/** Le point (x,y) touche-t-il le trait (gomme par trait) ? */
+/** Ce que chaque texte et tampon affiche (lu par les tests, et par la boîte de la gomme). */
+export const textesSignes = (strokes: Stroke[], langue: string): string[] =>
+  strokes.filter((s) => s.tool === "text" || s.tool === "stamp").map((s) => (s.tool === "text" ? (s.texte ?? "") : texteTampon(s.genre ?? "p", langue)));
+
+/** Boîte englobante approchée d'un texte ou d'un tampon (px de ses points). */
+// shortcut: largeur estimée au nombre de caractères (0,6 em, 1 em en han), sans mesure de la police ; à reprendre si la gomme rate des signes larges.
+export function boiteSigne(s: Stroke): { left: number; top: number; right: number; bottom: number } {
+  const [x, y] = s.points[0];
+  if (s.tool === "text") {
+    const w = [...(s.texte ?? "")].reduce((n, c) => n + (c.charCodeAt(0) > 0x2e80 ? 1 : 0.6), 0) * s.size;
+    return { left: x, right: x + w, top: y - s.size / 2, bottom: y + s.size / 2 };
+  }
+  const w = Math.max(1, [...texteTampon(s.genre ?? "p", "fr")].length) * s.size * 0.7;
+  return { left: x - w / 2, right: x + w / 2, top: y - s.size / 2, bottom: y + s.size / 2 };
+}
+
+/** Le point (x,y) touche-t-il le trait (gomme par trait) ? Un texte ou un tampon : sa boîte englobante. */
 export function strokeHitTest(stroke: Stroke, x: number, y: number, radius: number): boolean {
+  if (stroke.tool === "text" || stroke.tool === "stamp") {
+    const b = boiteSigne(stroke);
+    return x >= b.left - radius && x <= b.right + radius && y >= b.top - radius && y <= b.bottom + radius;
+  }
   const r = radius + stroke.size / 2;
   const pts = stroke.points;
   if (pts.length === 1) return Math.hypot(x - pts[0][0], y - pts[0][1]) <= r;
@@ -132,16 +157,52 @@ export function styleTrait(s: Stroke, fond?: string): { color: string; alpha: nu
     // En sombre : « screen », la transparence réglée garde son effet relatif (0,35 → 0,45), même rendu pour un ancien et un neuf.
     return sombre ? { color: s.color, alpha: Math.min(1, (alpha * 0.45) / 0.35), composite: "screen" } : { color: s.color, alpha, composite: "source-over" };
   }
-  const lisible = fond && contraste(s.color, fond) < 3 ? garderContraste(s.color, fond, 3) : s.color;
+  const seuil = s.tool === "text" || s.tool === "stamp" ? 4.5 : 3; // texte à lire : 4,5:1 ; traits et formes : 3:1
+  const lisible = fond && contraste(s.color, fond) < seuil ? garderContraste(s.color, fond, seuil) : s.color;
   return { color: lisible, alpha: s.alpha ?? 1, composite: "source-over" };
+}
+
+const POLICE_MUSIQUE = '16px "Noto Music"';
+const NUANCES = "\u{1D18F}\u{1D190}\u{1D191}";
+// Un seul chargement de la police pour tous les calques ; si elle échoue, les nuances se disent en lettres (p, mf, f, ff).
+let chargePolice: Promise<void> | null = null;
+let policeEnPanne = false;
+const attendrePolice = (redessiner?: () => void) => {
+  chargePolice ??= document.fonts.load(POLICE_MUSIQUE, NUANCES).then(
+    () => { policeEnPanne = !document.fonts.check(POLICE_MUSIQUE, NUANCES); },
+    () => { policeEnPanne = true; },
+  );
+  chargePolice.then(() => redessiner?.());
+};
+
+/** Texte ou tampon (AN-5) : liseré de 3 px de la couleur du fond dessous, puis la couleur, passée par une garde 4,5:1 (3:1 pour le stylo). */
+function dessinerSigne(ctx: CanvasRenderingContext2D, s: Stroke, couleur: string, corps: number, [x, y]: [number, number], fond: string, langue: string, redessiner?: () => void): void {
+  let texte = s.tool === "text" ? (s.texte ?? "") : texteTampon(s.genre ?? "p", langue);
+  if (!texte) return;
+  let musique = s.tool === "stamp" && glyphesTampon(s.genre ?? "p");
+  if (musique && document.fonts) {
+    if (policeEnPanne) { musique = false; texte = s.genre!; }
+    else if (!document.fonts.check(POLICE_MUSIQUE, NUANCES)) { attendrePolice(redessiner); return; } // attendue avant de dessiner une nuance
+  }
+  const secours = s.tool === "stamp" && glyphesTampon(s.genre ?? "p") && !musique;
+  ctx.font = musique ? `${corps}px "Noto Music"` : secours ? `italic 700 ${corps}px serif` : `${s.tool === "text" ? 600 : 700} ${corps}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+  ctx.textBaseline = "middle";
+  ctx.textAlign = s.tool === "text" ? "left" : "center";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 6; // 3 px hors du glyphe
+  ctx.strokeStyle = fond;
+  ctx.strokeText(texte, x, y);
+  ctx.fillStyle = couleur;
+  ctx.fillText(texte, x, y);
 }
 
 export function drawStrokes(
   ctx: CanvasRenderingContext2D,
   strokes: Stroke[],
-  opts: { dpr: number; scaleX: number; scaleY: number; zoom?: number; panX?: number; panY?: number; fond?: string },
+  opts: { dpr: number; scaleX: number; scaleY: number; zoom?: number; panX?: number; panY?: number; fond?: string; langue?: string; redessiner?: () => void },
 ): void {
   const { dpr, scaleX, scaleY, zoom = 1, panX = 0, panY = 0, fond } = opts;
+  const langue = opts.langue ?? document.documentElement.lang;
   ctx.save();
   // Effacer toute la surface (espace pixels physiques), indépendamment du zoom/pan
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -153,6 +214,12 @@ export function drawStrokes(
 
   for (const s of strokes) {
     const st = styleTrait(s, fond);
+    if (s.tool === "text" || s.tool === "stamp") {
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      dessinerSigne(ctx, s, st.color, s.size * ((scaleX + scaleY) / 2), [s.points[0][0] * scaleX, s.points[0][1] * scaleY], fond ?? FOND_CLAIR, langue, opts.redessiner);
+      continue;
+    }
     ctx.beginPath();
     ctx.strokeStyle = st.color;
     ctx.lineWidth = s.size * ((scaleX + scaleY) / 2);

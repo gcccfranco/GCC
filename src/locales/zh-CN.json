@@ -862,6 +862,28 @@
       "tint": "颜色",
       "thickness": "粗细",
       "opacity": "透明度"
+    },
+    "signes": {
+      "menu": "文字、记号与形状",
+      "groupeTexte": "文字",
+      "groupeTampons": "记号",
+      "groupeFormes": "形状",
+      "texte": "文字",
+      "champ": "要添加的文字",
+      "p": "弱",
+      "mf": "中强",
+      "f": "强",
+      "ff": "很强",
+      "crescendo": "渐强",
+      "decrescendo": "渐弱",
+      "respiration": "换气",
+      "orgue": "延长",
+      "x2": "反复",
+      "seul": "单独",
+      "tutti": "全体",
+      "fleche": "箭头",
+      "cercle": "圆圈",
+      "trait": "直线"
     }
   },
   "notifications": {

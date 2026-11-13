@@ -13,8 +13,10 @@ FONTS = RACINE / "public" / "fonts"
 CHO = sorted((RACINE / "content" / "songs").glob("*.cho"))
 LOCALES = [RACINE / "src" / "locales" / "zh-CN.json", RACINE / "src" / "locales" / "fr.json"]
 PLAGES = [(0x20, 0x7E), (0xA0, 0xFF), (0x2000, 0x206F), (0x3000, 0x303F), (0xFF00, 0xFFEF)]
-# Altérations du cours d'Harmonie : dièse, bémol, bécarre, double dièse, double bémol.
-ALTERATIONS = {"\u266f", "\u266d", "\u266e", "\U0001d12a", "\U0001d12b"}
+# Altérations du cours d'Harmonie (dièse, bémol, bécarre, double dièse, double bémol), puis les signes des tampons du Crayon
+# (AN-5) : piano, mezzo, forte, crescendo, decrescendo (U+1D18F-1D193), point d'orgue (U+1D110, U+1D112). Même liste dans
+# src/lib/annotations/tampons.ts (CODES_MUSIQUE), contrôlée par `npm run validate`.
+ALTERATIONS = {"\u266f", "\u266d", "\u266e", "\U0001d12a", "\U0001d12b"} | {chr(c) for c in (*range(0x1D18F, 0x1D194), 0x1D110, 0x1D112)}
 TITRE = re.compile(r"^\s*\{\s*(?:title|subtitle)\s*:\s*(.*?)\s*\}\s*$", re.M)
 
 
@@ -46,7 +48,7 @@ def main() -> None:
         corps |= set(f.read_text(encoding="utf-8"))
     sous_ensemble(FONTS / "SourceHanSansCN-Medium.otf", FONTS / "SourceHanSansCN-Medium-sub.woff2", corps | latin())
     sous_ensemble(FONTS / "KaiTi.ttf", FONTS / "KaiTi-titres.woff2", titres | latin() | {c.upper() for c in titres} | {c.lower() for c in titres})
-    # Les altérations du cours d'Harmonie (harmonie-4) : ♯ ♭ ♮ 𝄪 𝄫, absents de Windows et d'Android pour les deux derniers.
+    # Les altérations du cours d'Harmonie (harmonie-4) : ♯ ♭ ♮ 𝄪 𝄫, absents de Windows et d'Android pour les deux derniers ; et les tampons d'AN-5.
     sous_ensemble(FONTS / "NotoMusic-Regular.ttf", FONTS / "NotoMusic-alterations.woff2", ALTERATIONS)
 
 

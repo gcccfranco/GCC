@@ -10,7 +10,9 @@
 //   l'applique aussi au texte ; ici on s'en sert pour le rendu et la conversion
 //   écran→données. Le parent possède aussi les données (AnnotationData).
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { TAILLE_NUANCE, polylignes, type EntreeSigne } from "@/lib/annotations/tampons";
 import {
   type AnnotationData,
   type Stroke,
@@ -19,10 +21,14 @@ import {
   simplifyStroke,
   styleTrait,
   strokeHitTest,
+  textesSignes,
 } from "@/lib/annotations/strokes";
 
 // Stylo et surligneur : épaisseur, couleur et transparence viennent des préréglages (`src/lib/annotations/prereglages.ts`).
 export const SIZES = { eraser: [12, 24, 40] };
+/** Corps d'un texte posé (AN-5), en px à la loupe 100 %. */
+const TAILLE_TEXTE = 17;
+const LONGUEUR_MAX_TEXTE = 80;
 
 export type Tool = StrokeTool | "eraser";
 
@@ -50,6 +56,7 @@ export function clampPan(zoom: number, p: Pan): Pan {
 // Demi-page : `clip` (clip-path en px écran, sur un cadre fixe) et `decalage` (px écran) rognent et descendent les traits comme le texte.
 export function StrokesLayer({ data, rogneBas, clip, decalage, clipPath, fond }: { data: AnnotationData; rogneBas?: string; clip?: string; decalage?: number; clipPath?: string; fond?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { i18n } = useTranslation();
   const w = window.innerWidth;
   const h = window.innerHeight;
 
@@ -63,13 +70,16 @@ export function StrokesLayer({ data, rogneBas, clip, decalage, clipPath, fond }:
     canvas.style.height = `${h}px`;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    drawStrokes(ctx, data.strokes, {
+    const dessiner = () => drawStrokes(ctx, data.strokes, {
       dpr,
       scaleX: w / (data.w || w),
       scaleY: h / (data.h || h),
       fond,
+      langue: i18n.language,
+      redessiner: dessiner, // la police des nuances est arrivée
     });
-  }, [data, w, h, fond]);
+    dessiner();
+  }, [data, w, h, fond, i18n.language]);
 
   const canvas = (
     <canvas
@@ -83,6 +93,8 @@ export function StrokesLayer({ data, rogneBas, clip, decalage, clipPath, fond }:
       }))}
       // Couleurs réellement dessinées (garde de lisibilité comprise) : lues par les tests.
       data-strokes-couleurs={JSON.stringify(data.strokes.map((s) => styleTrait(s, fond).color))}
+      // Texte affiché de chaque texte et tampon (AN-5) : lu par les tests.
+      data-strokes-signes={JSON.stringify(textesSignes(data.strokes, i18n.language))}
       style={{ zIndex: clip ? undefined : 5, clipPath: clipPath ?? (rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined), transform: decalage ? `translateY(${decalage}px)` : undefined }}
       aria-hidden="true"
     />
@@ -121,10 +133,17 @@ interface Props {
   contactInitial?: { x: number; y: number; id: number } | null;
   /** AN-2 : un trait vient d'être fini au stylet. */
   onTraitStylet?: () => void;
+  /** AN-5 : signe pris dans « Texte, tampons et formes » ; il remplace le trait libre (la gomme reste prioritaire). */
+  signe?: EntreeSigne | null;
+  /** AN-5 : em (px sans loupe) de la ligne la plus proche du point (espace des données), pour la taille des signes. */
+  unite?: (x: number, y: number) => number;
+  /** AN-5 : page affichée ; un champ de texte encore ouvert à son changement est fermé, jamais posé sur la nouvelle page. */
+  cle?: number;
 }
 
-export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas, clipPath, tool, color, size, alpha, fond, tailleGomme, inerte, onDebutGeste, doigtLibre, contactInitial, onTraitStylet }: Props) {
+export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas, clipPath, tool, color, size, alpha, fond, tailleGomme, inerte, onDebutGeste, doigtLibre, contactInitial, onTraitStylet, signe, unite, cle }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { t, i18n } = useTranslation();
 
   // Pointeurs actifs sur le canvas (multi-touch). 1 = tracé, 2 = pincer/déplacer.
   const pointers = useRef<Map<number, Pan>>(new Map());
@@ -152,7 +171,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
     [data.w, data.h, zoom, pan.x, pan.y],
   );
 
-  const redraw = useCallback(() => {
+  const redraw = useCallback((strokes: Stroke[] = data.strokes) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -160,7 +179,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
     const dpr = window.devicePixelRatio || 1;
     const w = window.innerWidth;
     const h = window.innerHeight;
-    drawStrokes(ctx, data.strokes, {
+    drawStrokes(ctx, strokes, {
       dpr,
       scaleX: w / (data.w || w),
       scaleY: h / (data.h || h),
@@ -168,8 +187,10 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
       panX: pan.x,
       panY: pan.y,
       fond,
+      langue: i18n.language,
+      redessiner: () => redraw(),
     });
-  }, [data, zoom, pan.x, pan.y, fond]);
+  }, [data, zoom, pan.x, pan.y, fond, i18n.language]);
 
   // Dimensionner au devicePixelRatio (et au resize)
   useEffect(() => {
@@ -192,6 +213,33 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
   }, []);
 
   useEffect(() => { redraw(); }, [redraw]);
+
+  // ── AN-5 : texte, tampons et formes ──
+  const toEcran = ([x, y]: [number, number]): [number, number] => [x * (window.innerWidth / (data.w || window.innerWidth)) * zoom + pan.x, y * (window.innerHeight / (data.h || window.innerHeight)) * zoom + pan.y];
+  // Champ de saisie d'un texte : à l'endroit touché (px écran) ; `cible` = texte rouvert en modification.
+  const [champ, setChamp] = useState<null | { x: number; y: number; texte: string; cible?: Stroke }>(null);
+  const champRef = useRef(champ);
+  const champEl = useRef<HTMLInputElement>(null);
+  useEffect(() => { champRef.current = null; setChamp(null); }, [cle]); // eslint-disable-line react-hooks/set-state-in-effect -- ferme le champ au changement de page
+  const ouvrirChamp = (c: NonNullable<typeof champ>) => { champRef.current = c; setChamp(c); };
+  // Texte déplacé au glisser : le texte touché, l'écart du doigt à son point, et sa nouvelle place.
+  const deplacement = useRef<null | { cible: Stroke; dx: number; dy: number; nouveau?: [number, number] }>(null);
+  /** Entrée, perte du focus ou toucher ailleurs : le texte est posé (vide : rien ; vide sur un texte rouvert : il est retiré). */
+  const validerChamp = (texte: string) => {
+    const c = champRef.current;
+    if (!c) return;
+    champRef.current = null;
+    setChamp(null);
+    const v = texte.trim().slice(0, LONGUEUR_MAX_TEXTE);
+    if (c.cible) {
+      if (v === c.cible.texte) return;
+      onDebutGeste?.();
+      onChange({ ...data, strokes: v ? data.strokes.map((s) => (s === c.cible ? { ...s, texte: v } : s)) : data.strokes.filter((s) => s !== c.cible) });
+    } else if (v) {
+      onDebutGeste?.();
+      onChange({ ...data, strokes: [...data.strokes, { tool: "text", texte: v, size: TAILLE_TEXTE, color, points: [toOrig(c.x, c.y)] }] });
+    }
+  };
 
   const eraseAt = useCallback(
     (clientX: number, clientY: number) => {
@@ -248,6 +296,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
   const cancelStroke = () => {
     drawingPointer.current = null;
     livePoints.current = [];
+    deplacement.current = null;
     hideCursor();
     redraw(); // efface le segment live partiel
   };
@@ -273,9 +322,64 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
       return;
     }
     livePoints.current = [[x, y]];
+    deplacement.current = null;
+    if (signe?.nature === "texte") {
+      // Un texte touché se déplace au glisser, se rouvre au toucher.
+      const [ox, oy] = toOrig(x, y);
+      const cible = [...data.strokes].reverse().find((s) => s.tool === "text" && strokeHitTest(s, ox, oy, 4 / zoom));
+      if (cible) deplacement.current = { cible, dx: cible.points[0][0] - ox, dy: cible.points[0][1] - oy };
+    }
+  }
+
+  // Forme en cours de glisser (flèche, cercle, trait) : aperçu par-dessus le dessin.
+  function apercuForme(a: [number, number], b: [number, number]) {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!signe || !ctx || tool === "eraser") return;
+    redraw();
+    const dpr = window.devicePixelRatio || 1;
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = (tool === "pen" ? size : 3.5) * zoom;
+    for (const pl of polylignes(signe.cle, a, b, 0)) {
+      ctx.beginPath();
+      pl.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Fin du geste d'un signe : texte (champ ou déplacement), tampon (un toucher) ou forme (de `a` à `b`).
+  function poserSigne(sg: EntreeSigne, a: [number, number], b: [number, number]) {
+    const d = deplacement.current;
+    deplacement.current = null;
+    if (sg.nature === "texte") {
+      if (d?.nouveau) onChange({ ...data, strokes: data.strokes.map((s) => (s === d.cible ? { ...s, points: [d.nouveau!] } : s)) });
+      else if (d) { const [x, y] = toEcran(d.cible.points[0]); ouvrirChamp({ x, y, texte: d.cible.texte ?? "", cible: d.cible }); }
+      else ouvrirChamp({ x: a[0], y: a[1], texte: "" });
+      return;
+    }
+    const [oa, ob] = [toOrig(...a), toOrig(...b)];
+    if (sg.glisser && Math.hypot(b[0] - a[0], b[1] - a[1]) < 6) return;
+    const u = unite?.(oa[0], oa[1]) ?? 16;
+    if (sg.nature === "stamp") {
+      onChange({ ...data, strokes: [...data.strokes, { tool: "stamp", genre: sg.genre, size: TAILLE_NUANCE * u, color, points: [oa] }] });
+    } else {
+      const epais = tool === "pen" ? size : 3.5; // sur le surligneur, les signes se tracent au stylo
+      onChange({ ...data, strokes: [...data.strokes, ...polylignes(sg.cle, oa, ob, u).map((points): Stroke => ({ tool: "pen", size: epais, color, alpha: tool === "pen" ? alpha : 1, points }))] });
+    }
   }
 
   function onPointerDown(e: React.PointerEvent) {
+    // Un champ de texte ouvert : ce toucher le valide, sans poser autre chose.
+    if (champRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      validerChamp(champEl.current?.value ?? "");
+      return;
+    }
     // Un doigt posé pendant un trait au stylet est une paume : ignorée, sans tourner la page.
     const paume = doigtSeul(e) && drawingPointer.current !== null;
     if (!doigtSeul(e) || paume) {
@@ -326,6 +430,18 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
       eraseAt(e.clientX, e.clientY);
       return;
     }
+    if (signe) {
+      const d = deplacement.current;
+      const [a] = livePoints.current;
+      if (d) {
+        if (!d.nouveau && Math.hypot(e.clientX - a[0], e.clientY - a[1]) < 6) return;
+        const [ox, oy] = toOrig(e.clientX, e.clientY);
+        d.nouveau = [ox + d.dx, oy + d.dy];
+        redraw(data.strokes.map((s) => (s === d.cible ? { ...s, points: [d.nouveau!] } : s)));
+      } else if (signe.glisser) apercuForme(a, [e.clientX, e.clientY]);
+      livePoints.current = [a, [e.clientX, e.clientY]];
+      return;
+    }
     drawLiveSegment(e.clientX, e.clientY);
     livePoints.current.push([e.clientX, e.clientY]);
   }
@@ -352,6 +468,11 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
     const pts = livePoints.current;
     livePoints.current = [];
     if (pts.length === 0) return;
+    if (signe) {
+      poserSigne(signe, pts[0], pts[pts.length - 1]);
+      if (e.pointerType === "pen") onTraitStylet?.();
+      return;
+    }
     const stroke: Stroke = {
       tool,
       size,
@@ -378,12 +499,34 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
           clipPath: clipPath ?? (rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined),
         }}
         data-reperes-dessus={clipPath?.includes("Z M") ? "" : undefined}
+        data-strokes-signes={JSON.stringify(textesSignes(data.strokes, i18n.language))}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         onPointerLeave={hideCursor}
       />
+
+      {champ && (
+        <input
+          ref={champEl}
+          autoFocus
+          defaultValue={champ.texte}
+          maxLength={LONGUEUR_MAX_TEXTE}
+          aria-label={t("performance.signes.champ")}
+          className="absolute rounded-md border border-border bg-background px-2 py-1 text-foreground shadow-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          style={{ zIndex: 11, left: champ.x, top: champ.y - 18, width: Math.min(256, window.innerWidth - champ.x - 8), minWidth: 120, fontSize: TAILLE_TEXTE, fontWeight: 600 }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.nativeEvent.isComposing) return; // saisie en cours (pinyin) : Entrée et Échap sont à la méthode de saisie
+            if (e.key === "Enter") { e.preventDefault(); validerChamp(e.currentTarget.value); }
+            else if (e.key === "Escape") { e.preventDefault(); champRef.current = null; setChamp(null); }
+          }}
+          onBlur={(e) => validerChamp(e.currentTarget.value)}
+        />
+      )}
 
       {/* Cercle qui suit le pointeur : montre la taille réelle de l'outil.
           Position/visibilité pilotées hors React (style.transform / opacity). */}
@@ -393,6 +536,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
         className="absolute top-0 left-0 rounded-full pointer-events-none opacity-0"
         style={{
           zIndex: 10,
+          display: signe && tool !== "eraser" ? "none" : undefined,
           width: cursorDiameter,
           height: cursorDiameter,
           marginLeft: -cursorDiameter / 2,

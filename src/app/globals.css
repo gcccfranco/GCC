@@ -3,14 +3,15 @@
 @tailwind utilities;
 
 /* Altérations du cours d'Harmonie (harmonie-4) : ♯ ♭ ♮ 𝄪 𝄫 seuls, sous-ensemble de Noto Music (OFL,
-   scripts/build-fonts.py). Hors de ces cinq signes, le navigateur garde la police du texte. */
+   scripts/build-fonts.py), plus piano, mezzo, forte, crescendo, decrescendo et point d'orgue des tampons du Crayon (AN-5).
+   Hors de ces signes, le navigateur garde la police du texte. */
 @font-face {
   font-family: "Noto Music";
   src: url("/fonts/NotoMusic-alterations.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+266D-266F, U+1D12A-1D12B;
+  unicode-range: U+266D-266F, U+1D12A-1D12B, U+1D110, U+1D112, U+1D18F-1D193;
 }
 
 @layer utilities {

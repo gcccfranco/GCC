@@ -4,6 +4,7 @@ import * as path from "path";
 import fontkit from "fontkit";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { slugifyTheme } from "../src/lib/content/loadSongs";
+import { CODES_MUSIQUE } from "../src/lib/annotations/tampons";
 import { propositionsEnDouble, type ChantIndexe } from "../src/lib/setlist/propositions";
 
 const SONGS_DIR = path.join(process.cwd(), "content", "songs");
@@ -47,11 +48,16 @@ function controleSousEnsembles(sources: Map<string, string>): string[] {
     }
     return erreurs;
   };
+  // Les signes des tampons du Crayon (AN-5) : Noto Music doit les porter tous.
+  const musique = ouvrir("NotoMusic-alterations.woff2");
+  const manquantsMusique = CODES_MUSIQUE.filter((cp) => !musique.hasGlyphForCodePoint(cp))
+    .map((cp) => `tampons.ts : U+${cp.toString(16).toUpperCase()} manque à NotoMusic-alterations.woff2 — relancer python3 scripts/build-fonts.py`);
   const cjk = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
   const titres = new Map([...sources].map(([f, s]) => [f, lireTitre(s)]));
   return [
     ...manquants("SourceHanSansCN-Medium-sub.woff2", "SourceHanSansCN-Medium.otf", sources, cjk),
     ...manquants("KaiTi-titres.woff2", "KaiTi.ttf", titres, /\S/),
+    ...manquantsMusique,
   ];
 }
 

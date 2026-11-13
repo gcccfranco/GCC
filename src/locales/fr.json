@@ -867,6 +867,28 @@
       "tint": "Couleur",
       "thickness": "Épaisseur",
       "opacity": "Transparence"
+    },
+    "signes": {
+      "menu": "Texte, tampons et formes",
+      "groupeTexte": "Texte",
+      "groupeTampons": "Tampons",
+      "groupeFormes": "Formes",
+      "texte": "Texte",
+      "champ": "Texte à poser",
+      "p": "piano",
+      "mf": "mezzo-forte",
+      "f": "forte",
+      "ff": "fortissimo",
+      "crescendo": "crescendo",
+      "decrescendo": "decrescendo",
+      "respiration": "respiration",
+      "orgue": "point d'orgue",
+      "x2": "reprise",
+      "seul": "solo",
+      "tutti": "tous ensemble",
+      "fleche": "flèche",
+      "cercle": "cercle",
+      "trait": "trait"
     }
   },
   "notifications": {

@@ -5,8 +5,9 @@ import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, basculerAnnoter, onStage } from "./helpers/louange";
 import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui } from "../src/lib/performance/gestes";
 import { FOND_CLAIR, FOND_SOMBRE, contraste, garderContraste } from "../src/lib/performance/couleurIcones";
-import { styleTrait } from "../src/lib/annotations/strokes";
-import { estTrait, traitsAplatis, traitsValides } from "../src/lib/annotations/ancres";
+import { boiteSigne, strokeHitTest, styleTrait } from "../src/lib/annotations/strokes";
+import { ancrerSigne, decouper, estSigne, estTrait, projeterSigne, traitsAplatis, traitsValides } from "../src/lib/annotations/ancres";
+import { cercle, fleche, glyphesTampon, pointOrgue, polylignes, respiration, soufflet, texteTampon, SIGNES, CODES_MUSIQUE } from "../src/lib/annotations/tampons";
 import { INDICES_TELEPHONE, PREREGLAGES_DEFAUT, lirePrereglages } from "../src/lib/annotations/prereglages";
 import { annuler, historiqueVide, MAX_ETATS, noter, peutAnnuler, peutRetablir, retablir } from "../src/lib/annotations/historique";
 import type { Trait } from "../src/types/partition";
@@ -806,4 +807,336 @@ test("(x) en sombre, un trait #1a1a1a est dessiné éclairci à 3:1 au moins ; e
   const [c] = await couleursDessinees(page);
   expect(c).not.toBe("#1a1a1a");
   expect(contraste(c, FOND_SOMBRE)).toBeGreaterThanOrEqual(3);
+});
+
+// ─── AN-5 : texte, tampons et formes ────────────────────────────────────────────
+
+const TEXTE_AN5 = { ancre: { section: "s", ligne: 1, car: 2 }, outil: "text", texte: "Doucement", points: [[0.5, 0.4]], taille: 1.06, couleur: "#dc2626" };
+const TAMPON_AN5 = { ancre: { scan: true, image: 0 }, outil: "stamp", genre: "ff", points: [[0.25, 0.5]], taille: 0.02, couleur: "#2563eb", futur: { a: 1 } };
+
+test.describe("AN-5 : fonctions pures (sans page)", () => {
+  test("styleTrait : un texte graphite sur fond noir sort à 4,5:1 au moins", () => {
+    const { color } = styleTrait({ tool: "text", size: 16, color: "#2b2b2e", points: [[0.5, 0.5]], texte: "Sol" }, "#000000");
+    expect(contraste(color, "#000000")).toBeGreaterThanOrEqual(4.5);
+  });
+  test("traitsValides et traitsAplatis : texte et tampon font l'aller-retour (points à plat ou en paires), champ inconnu gardé, genre inconnu opaque", () => {
+    const inconnu = { ...TAMPON_AN5, genre: "tres-forte" };
+    const lus = traitsValides([TEXTE_AN5, TAMPON_AN5, inconnu, { ...TEXTE_AN5, points: [0.5, 0.4] }, { ...TEXTE_AN5, texte: 3 }]);
+    expect(lus).toHaveLength(5);
+    expect(lus.map((e) => estSigne(e))).toEqual([true, true, false, true, false]);
+    expect(lus.map((e) => estTrait(e))).toEqual([false, false, false, false, false]);
+    expect(lus[0]).toEqual(TEXTE_AN5);
+    expect(lus[1]).toEqual(TAMPON_AN5);
+    expect(lus[3]).toEqual(TEXTE_AN5);
+    const ecrits = traitsAplatis(lus) as Record<string, unknown>[];
+    expect(ecrits[0]).toMatchObject({ points: [0.5, 0.4] });
+    expect(ecrits[1]).toMatchObject({ points: [0.25, 0.5], futur: { a: 1 }, genre: "ff" });
+    expect(ecrits[2]).toEqual(inconnu);
+    expect(traitsValides(ecrits)).toEqual(lus);
+  });
+
+  test("(f) un ancien client : un tampon relu puis réécrit garde tous ses champs, même ceux qu'il ne connaît pas", () => {
+    const venu = { ...TAMPON_AN5, ancre: { section: "s", ligne: 0, car: 0 }, points: [1, 2], aussi: "nouveau", imbrique: { x: [1, 2] } };
+    const [lu] = traitsValides([venu]);
+    const [reecrit] = traitsAplatis([lu]) as Record<string, unknown>[];
+    expect(reecrit).toEqual(venu);
+  });
+
+  test("ancrerSigne et projeterSigne : texte (em, 2 décimales) et scan (fraction de largeur) font l'aller-retour ; un point loin du texte va à la ligne la plus proche", () => {
+    const texte = { tool: "text" as const, texte: "Doucement", size: 17, color: "#dc2626", points: [[132, 216]] as [number, number][] };
+    const t = ancrerSigne(texte, { section: "s", ligne: 0, car: 3 }, { x: 100, y: 200, unite: 16 });
+    expect(t).toEqual({ ancre: { section: "s", ligne: 0, car: 3 }, outil: "text", texte: "Doucement", couleur: "#dc2626", taille: 1.06, points: [[2, 1]] });
+    expect(projeterSigne(t as Parameters<typeof projeterSigne>[0], { x: 100, y: 200, unite: 16 })).toMatchObject({ tool: "text", texte: "Doucement", points: [[132, 216]] });
+    const tampon = { tool: "stamp" as const, genre: "ff" as const, size: 25.6, color: "#2563eb", points: [[300, 150]] as [number, number][] };
+    const s = ancrerSigne(tampon, { scan: true, image: 1 }, { x: 100, y: 100, unite: 800 });
+    expect(s).toMatchObject({ outil: "stamp", genre: "ff", taille: 0.032, points: [[0.25, 0.0625]] });
+    // Accroche sans limite : `decouper` envoie un point très loin de toute ligne à la plus proche.
+    expect(decouper([[50, 900]], [{ left: 0, top: 0, right: 300, bottom: 20 }, { left: 0, top: 30, right: 300, bottom: 50 }]).map((m) => m.ligne)).toEqual([1]);
+  });
+
+  test("tampons.ts : le menu dans l'ordre de la spec, polylignes des soufflets, respiration, point d'orgue, flèche, cercle ; seul et tutti suivent la langue", () => {
+    expect(SIGNES.map((e) => e.cle)).toEqual(["texte", "p", "mf", "f", "ff", "crescendo", "decrescendo", "respiration", "orgue", "x2", "seul", "tutti", "fleche", "cercle", "trait"]);
+    expect(SIGNES.filter((e) => e.glisser).map((e) => e.cle)).toEqual(["fleche", "cercle", "trait"]);
+    const [cre] = soufflet("<", [100, 50], 10);
+    expect(cre).toHaveLength(3);
+    expect(cre[1]).toEqual([85, 50]); // la pointe à gauche, 3 em de long
+    expect(cre[0][0]).toBe(115);
+    expect(cre[0][1]).toBeLessThan(50);
+    expect(cre[2][1]).toBeGreaterThan(50);
+    const [dec] = soufflet(">", [100, 50], 10);
+    expect(dec[1]).toEqual([115, 50]);
+    expect(respiration([0, 0], 10)).toHaveLength(1);
+    const [arc, point] = pointOrgue([100, 50], 10);
+    expect(arc[0][0]).toBeCloseTo(90);
+    expect(arc[arc.length - 1][0]).toBeCloseTo(110);
+    expect(Math.min(...arc.map((p) => p[1]))).toBeLessThan(arc[0][1]);
+    expect(point).toHaveLength(1);
+    const [tige, pointe] = fleche([0, 0], [100, 0]);
+    expect(tige).toEqual([[0, 0], [100, 0]]);
+    expect(pointe).toHaveLength(3);
+    expect(pointe[1]).toEqual([100, 0]);
+    expect(pointe[0][0]).toBeLessThan(100);
+    expect(pointe[0][1] * pointe[2][1]).toBeLessThan(0);
+    const [ell] = cercle([10, 20], [110, 60]);
+    expect(ell[0][0]).toBeCloseTo(ell[ell.length - 1][0]);
+    expect(ell[0][1]).toBeCloseTo(ell[ell.length - 1][1]);
+    expect(Math.min(...ell.map((p) => p[0]))).toBeCloseTo(10);
+    expect(Math.max(...ell.map((p) => p[0]))).toBeCloseTo(110);
+    expect(Math.min(...ell.map((p) => p[1]))).toBeCloseTo(20);
+    expect(Math.max(...ell.map((p) => p[1]))).toBeCloseTo(60);
+    expect(polylignes("trait", [1, 2], [3, 4], 0)).toEqual([[[1, 2], [3, 4]]]);
+    expect(texteTampon("seul", "fr")).toBe("seul");
+    expect(texteTampon("seul", "zh-CN")).toBe("独");
+    expect(texteTampon("tutti", "zh-CN")).toBe("齐");
+    expect(texteTampon("x2", "zh-CN")).toBe("×2");
+    expect(texteTampon("ff", "fr")).toBe("\u{1D191}\u{1D191}");
+    expect(texteTampon("mf", "fr")).toBe("\u{1D190}\u{1D191}");
+    expect(["p", "mf", "f", "ff", "x2"].map((g) => glyphesTampon(g as "p"))).toEqual([true, true, true, true, false]);
+    expect(CODES_MUSIQUE).toHaveLength(7);
+  });
+
+  test("gomme : un texte et un tampon se touchent sur leur boîte englobante", () => {
+    const texte = { tool: "text" as const, texte: "Doucement", size: 17, color: "#000", points: [[100, 100]] as [number, number][] };
+    expect(boiteSigne(texte).left).toBe(100);
+    expect(strokeHitTest(texte, 110, 100, 4)).toBe(true);
+    expect(strokeHitTest(texte, 100 + 9 * 0.6 * 17 + 10, 100, 4)).toBe(false);
+    expect(strokeHitTest(texte, 110, 140, 4)).toBe(false);
+    const tampon = { tool: "stamp" as const, genre: "ff" as const, size: 25, color: "#000", points: [[200, 200]] as [number, number][] };
+    expect(strokeHitTest(tampon, 200, 205, 4)).toBe(true);
+    expect(strokeHitTest(tampon, 260, 200, 4)).toBe(false);
+  });
+});
+
+/** Boîte (px écran) d'un mot de la première page, mesurée sur les nœuds texte des paroles. */
+const boiteMotAN5 = (page: Page, mot: string) =>
+  page.evaluate((m) => {
+    for (const ligne of document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-trait-section]")) {
+      if (ligne.closest("[aria-hidden=true]")) continue;
+      const noeuds: Text[] = [];
+      for (const el of ligne.querySelectorAll("[data-paroles], [data-car]")) {
+        const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        for (let n = w.nextNode(); n; n = w.nextNode()) noeuds.push(n as Text);
+      }
+      const i = noeuds.map((n) => n.data).join("").indexOf(m);
+      if (i < 0) continue;
+      const place = (rang: number) => {
+        let reste = rang;
+        for (const n of noeuds) { if (reste < n.length) return [n, reste] as const; reste -= n.length; }
+        return [noeuds[noeuds.length - 1], noeuds[noeuds.length - 1].length] as const;
+      };
+      const r = document.createRange();
+      const [n0, o0] = place(i);
+      const [n1, o1] = place(i + m.length - 1);
+      r.setStart(n0, o0);
+      r.setEnd(n1, o1 + 1);
+      const b = r.getBoundingClientRect();
+      return { left: b.left, right: b.right, top: b.top, bottom: b.bottom };
+    }
+    return null;
+  }, mot);
+const centre = (b: { left: number; right: number; top: number; bottom: number }) => [(b.left + b.right) / 2, (b.top + b.bottom) / 2] as const;
+const NOM_MENU_SIGNES = { fr: "Texte, tampons et formes", zh: "文字、记号与形状" };
+/** Ouvre « Texte, tampons et formes » et prend un signe par sa clé (`data-signe`). */
+async function prendreSigne(page: Page, cle: string, langue: "fr" | "zh" = "fr") {
+  await dansBarres(page).getByRole("button", { name: NOM_MENU_SIGNES[langue], exact: true }).click();
+  await page.locator(`[data-menu-annotation] [data-signe="${cle}"]`).click();
+}
+/** Les textes affichés par les calques de signes de la page (celui du Crayon, celui de lecture). */
+const signesAffiches = (page: Page) =>
+  page.locator("[data-performance-mode] canvas[data-strokes-signes]").evaluateAll((cs) => cs.flatMap((c) => JSON.parse(c.getAttribute("data-strokes-signes") ?? "[]") as string[]));
+const boitesLecture = (page: Page) =>
+  page.evaluate(() => {
+    const c = document.querySelector<HTMLElement>("[data-performance-mode] > canvas[data-strokes-boites]");
+    return c ? (JSON.parse(c.getAttribute("data-strokes-boites")!) as [number, number, number, number][]) : [];
+  });
+const surLeMotAN5 = (b: [number, number, number, number], mot: { left: number; right: number; top: number; bottom: number }) => {
+  const [cx, cy] = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
+  expect(Math.max(mot.left - cx, cx - mot.right, mot.top - cy, cy - mot.bottom, 0)).toBeLessThanOrEqual(6);
+};
+
+test("(y) un « ff » et un texte posés à l'écran s'écrivent dans ma partition seulement, et restent sur leur mot après rechargement à une autre taille de fenêtre", async ({ page }) => {
+  const db = await ouvrirLouange(page);
+  await basculerAnnoter(page);
+  const [creation, univers] = [(await boiteMotAN5(page, "créa"))!, (await boiteMotAN5(page, "univers"))!];
+  await prendreSigne(page, "ff");
+  await page.mouse.click(...centre(creation));
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(1);
+  expect(traitsEcrits(db)[0]).toMatchObject({ outil: "stamp", genre: "ff", couleur: PREREGLAGES_DEFAUT[0].couleur });
+  await prendreSigne(page, "texte");
+  await page.mouse.click(univers.left + 4, (univers.top + univers.bottom) / 2);
+  const champ = page.getByLabel("Texte à poser");
+  await champ.fill("Doucement");
+  await champ.press("Enter");
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(2);
+  expect(traitsEcrits(db)[1]).toMatchObject({ outil: "text", texte: "Doucement" });
+  expect(ailleursQuePartitions(db)).toEqual([]);
+  await bouton(page, "Terminé").click();
+  expect(await signesAffiches(page)).toEqual(expect.arrayContaining(["\u{1D191}\u{1D191}", "Doucement"]));
+  // Autre taille de fenêtre, rechargement : les deux signes sont relus et suivent leur mot.
+  const [largeur, hauteur] = telephone(page) ? [820, 1180] : [390, 844];
+  await page.evaluate(() => (document.fullscreenElement ? document.exitFullscreen() : undefined));
+  await page.setViewportSize({ width: largeur, height: hauteur });
+  await page.reload();
+  await ouvrirMode(page);
+  await expect.poll(async () => (await boitesLecture(page)).length, { timeout: 10_000 }).toBe(2);
+  const [m1, m2] = [(await boiteMotAN5(page, "créa"))!, (await boiteMotAN5(page, "univers"))!];
+  const [b1, b2] = await boitesLecture(page);
+  surLeMotAN5(b1, m1);
+  surLeMotAN5(b2, m2);
+  expect(await signesAffiches(page)).toEqual(expect.arrayContaining(["\u{1D191}\u{1D191}", "Doucement"]));
+});
+
+test("(z) un « ff » posé loin du texte (à plus de 2 em sous la dernière ligne) s'accroche quand même à la ligne la plus proche", async ({ page }) => {
+  const db = await ouvrirLouange(page, undefined, "1.6"); // texte grand : la dernière page est entamée à peine, même à 1 440 px
+  await basculerAnnoter(page);
+  while (await bouton(page, "Page suivante").isEnabled()) await bouton(page, "Page suivante").click();
+  // Sous la dernière ligne de la page : plus loin qu'un trait ne s'accroche (2 em). Les bords de l'écran sont des onglets de page.
+  const { x, y, em } = await onStage(page, "[data-trait-section]").evaluateAll((ls) => ({
+    x: ls[0].getBoundingClientRect().left + 60,
+    y: Math.max(...ls.map((l) => l.getBoundingClientRect().bottom)),
+    em: parseFloat(getComputedStyle(ls[0]).fontSize),
+  }));
+  const cible = y + 3 * em;
+  // À 1 440 px le chant tient sur une page en deux colonnes qui descend jusqu'à la barre du bas : aucun vide de plus de 2 em.
+  test.skip(cible >= page.viewportSize()!.height - 70, "pas de place sous le texte à cette taille d'écran");
+  await prendreSigne(page, "ff");
+  await page.mouse.click(x, cible);
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(1);
+  const [ff] = traitsEcrits(db) as { outil: string; genre: string; points: number[] }[];
+  expect(ff).toMatchObject({ outil: "stamp", genre: "ff" });
+  expect(ff.points[1], "plus de 2 em sous le haut du caractère d'ancre").toBeGreaterThan(2);
+});
+
+test("(aa) la gomme efface un texte posé ; Annuler le rend", async ({ page }) => {
+  const db = await ouvrirLouange(page);
+  await basculerAnnoter(page);
+  const mot = (await boiteMotAN5(page, "univers"))!;
+  const [x, y] = [mot.left + 4, (mot.top + mot.bottom) / 2];
+  await prendreSigne(page, "texte");
+  await page.mouse.click(x, y);
+  await page.getByLabel("Texte à poser").fill("Doucement");
+  await page.getByLabel("Texte à poser").press("Enter");
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(1);
+  await page.getByRole("button", { name: /^Gomme/ }).click();
+  await page.mouse.click(x + 6, y);
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(0);
+  await bouton(page, "Annuler").click();
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(1);
+  expect(traitsEcrits(db)[0]).toMatchObject({ outil: "text", texte: "Doucement" });
+});
+
+test("(ab) en Crayon avec l'outil texte, un texte touché se rouvre ; vide, il disparaît ; Échap annule la saisie ; un texte vide n'écrit rien", async ({ page }) => {
+  const db = await ouvrirLouange(page);
+  await basculerAnnoter(page);
+  const mot = (await boiteMotAN5(page, "univers"))!;
+  const [x, y] = [mot.left + 4, (mot.top + mot.bottom) / 2];
+  await prendreSigne(page, "texte");
+  await page.mouse.click(x, y);
+  await page.getByLabel("Texte à poser").press("Escape");
+  await expect(page.getByLabel("Texte à poser")).toHaveCount(0);
+  await page.mouse.click(x, y);
+  await page.getByLabel("Texte à poser").press("Enter"); // vide : rien
+  await expect(page.getByLabel("Texte à poser")).toHaveCount(0);
+  await page.waitForTimeout(1200);
+  expect(traitsEcrits(db)).toHaveLength(0);
+  await page.mouse.click(x, y);
+  await page.getByLabel("Texte à poser").fill("Doucement");
+  await page.getByLabel("Texte à poser").press("Enter");
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(1);
+  await page.mouse.click(x + 3, y); // le texte touché se rouvre
+  await expect(page.getByLabel("Texte à poser")).toHaveValue("Doucement");
+  await page.getByLabel("Texte à poser").fill("Plus fort");
+  await page.getByLabel("Texte à poser").press("Enter");
+  await expect.poll(() => (traitsEcrits(db)[0] as { texte?: string } | undefined)?.texte, { timeout: 10_000 }).toBe("Plus fort");
+  expect(traitsEcrits(db)).toHaveLength(1);
+  await page.mouse.click(x + 3, y);
+  await page.getByLabel("Texte à poser").fill("");
+  await page.getByLabel("Texte à poser").press("Enter");
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(0);
+});
+
+test("(ac) formes et soufflets : une flèche se trace du début à la fin du glisser, un crescendo se pose d'un toucher ; ce sont des traits pen", async ({ page }) => {
+  const db = await ouvrirLouange(page);
+  await basculerAnnoter(page);
+  const mot = (await boiteMotAN5(page, "créa"))!;
+  const [x, y] = centre(mot);
+  await prendreSigne(page, "fleche");
+  await page.mouse.move(x - 20, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 20, y + 2, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(2); // tige et pointe
+  await prendreSigne(page, "crescendo");
+  await page.mouse.click(x, y + 4);
+  await expect.poll(() => traitsEcrits(db).length, { timeout: 10_000 }).toBe(3);
+  expect(traitsEcrits(db).map((t) => (t as { outil: string }).outil)).toEqual(["pen", "pen", "pen"]);
+  expect(ailleursQuePartitions(db)).toEqual([]);
+});
+
+test("(ad) prendre un préréglage ou la gomme quitte le signe ; le bouton montre le signe pris", async ({ page }) => {
+  await ouvrirLouange(page);
+  await basculerAnnoter(page);
+  const menu = dansBarres(page).getByRole("button", { name: NOM_MENU_SIGNES.fr, exact: true });
+  await expect(menu).toBeVisible();
+  await prendreSigne(page, "mf");
+  await expect(menu).toContainText("\u{1D190}\u{1D191}");
+  await place(page, 1).click();
+  await expect(menu).not.toContainText("\u{1D190}\u{1D191}");
+  await prendreSigne(page, "x2");
+  await expect(menu).toContainText("×2");
+  await page.getByRole("button", { name: /^Gomme/ }).click();
+  await expect(menu).not.toContainText("×2");
+});
+
+test("(ae) une partition partagée avec « Inclure mes traits » montre le tampon et le texte au destinataire, en lecture seule", async ({ page }) => {
+  const stamp = { ancre: { section: COUPLET, ligne: 0, car: 0 }, outil: "stamp", genre: "ff", points: [1.5, 0.5], taille: 1.6, couleur: "#2563eb" };
+  const texte = { ancre: { section: COUPLET, ligne: 0, car: 5 }, outil: "text", texte: "Reprise douce", points: [0, 0.5], taille: 1.06, couleur: "#dc2626" };
+  const profil = (p: FakeProfile) => ({ email: p.email, firstName: p.firstName, lastName: p.lastName, planningName: p.planningName, serviceRoles: p.serviceRoles ?? {} });
+  const docs = {
+    ...DOCS,
+    [`users/${ODILE.uid}`]: profil(ODILE),
+    [PARTITION]: { ownerUid: ODILE.uid, ownerName: ODILE.planningName, base: null, content: null, structure: null, key: null, traits: [stamp, texte], sharedWith: [BASTIEN.uid], sharedTraits: true, updatedAt: new Date("2026-11-02T10:00:00Z") },
+    [`partitions/${BASTIEN.uid}__choix`]: { choices: { "abba-pere": ODILE.uid }, partageTout: [] },
+  };
+  await page.addInitScript(() => { localStorage.setItem("perf-role-preset", "pianiste"); localStorage.setItem("accords-aide-vue", "1"); localStorage.setItem("perf-theme", "light"); });
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  const db = await signInAs(page, BASTIEN, docs, `/setlists/${SL}`);
+  await ouvrirMode(page);
+  await expect.poll(() => signesAffiches(page), { timeout: 10_000 }).toEqual(["\u{1D191}\u{1D191}", "Reprise douce"]);
+  expect(await couleursDessinees(page)).toEqual(["#2563eb", "#dc2626"]);
+  await page.waitForTimeout(500);
+  expect(db.writes.filter((w) => decodeURIComponent(w.path).startsWith("partitions/"))).toEqual([]);
+});
+
+test("(af) en 中文, seul et tutti se disent 独 et 齐 dans le menu (sens 单独, 全体) et au rendu ; on enregistre le genre", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("i18nextLng", "zh-CN");
+    localStorage.setItem("perf-role-preset", "pianiste");
+    localStorage.setItem("accords-aide-vue", "1");
+    localStorage.setItem("perf-theme", "light");
+  });
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  const db = await signInAs(page, ODILE, DOCS, `/setlists/${SL}`);
+  await page.getByRole("button", { name: /敬拜模式/ }).click();
+  await attendreMiseEnPage(page);
+  // Le Crayon s'ouvre au stylet (indépendant de la langue), puis la barre en 中文.
+  await expect(async () => {
+    await traitStylet(page);
+    await expect(barre(page)).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  const [creation, univers] = [(await boiteMotAN5(page, "créa"))!, (await boiteMotAN5(page, "univers"))!];
+  await dansBarres(page).getByRole("button", { name: NOM_MENU_SIGNES.zh, exact: true }).click();
+  const seul = page.locator('[data-menu-annotation] [data-signe="seul"]');
+  const tutti = page.locator('[data-menu-annotation] [data-signe="tutti"]');
+  await expect(seul).toContainText("独");
+  await expect(seul).toContainText("单独");
+  await expect(tutti).toContainText("齐");
+  await expect(tutti).toContainText("全体");
+  await seul.click();
+  await page.mouse.click(...centre(creation));
+  await prendreSigne(page, "tutti", "zh");
+  await page.mouse.click(univers.left + 4, (univers.top + univers.bottom) / 2);
+  await expect.poll(() => (traitsEcrits(db) as { outil: string; genre?: string }[]).filter((t) => t.outil === "stamp").map((t) => t.genre), { timeout: 10_000 }).toEqual(["seul", "tutti"]);
+  await expect.poll(() => signesAffiches(page)).toEqual(expect.arrayContaining(["独", "齐"]));
+  expect(ailleursQuePartitions(db)).toEqual([]);
 });

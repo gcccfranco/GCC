@@ -17,10 +17,19 @@ export type Trait = {
   points: [number, number][];
 };
 
-/** Élément de `traits` qu'une version plus ancienne ne comprend pas (tampon, texte…) : gardé tel quel et réécrit à
- *  l'enregistrement (AN-4, « Compatibilité du format »). Seuls les vrais `Trait` se dessinent, s'ancrent ou se gomment. */
+export type GenreTampon = "p" | "mf" | "f" | "ff" | "x2" | "seul" | "tutti";
+
+/** Texte tapé (AN-5), posé au point `points[0]` (début de la ligne de texte, au milieu de sa hauteur) ; `taille` = corps
+ *  en em (ou fraction de largeur sur un scan), comme l'épaisseur d'un trait. */
+export type TexteAncre = { ancre: Trait["ancre"]; outil: "text"; texte: string; points: [number, number][]; taille: number; couleur: string };
+/** Tampon (AN-5) : nuance, ×2, seul, tutti. On enregistre le genre, pas le texte (seul/tutti suivent la langue). `points[0]` = centre. */
+export type Tampon = { ancre: Trait["ancre"]; outil: "stamp"; genre: GenreTampon; points: [number, number][]; taille: number; couleur: string };
+export type Signe = TexteAncre | Tampon;
+
+/** Élément de `traits` qu'une version plus ancienne ne comprend pas (genre de tampon inconnu…) : gardé tel quel et réécrit à
+ *  l'enregistrement (AN-4, « Compatibilité du format »). Seuls les vrais `Trait` et `Signe` se dessinent, s'ancrent ou se gomment. */
 export type ElementInconnu = Record<string, unknown> & { __inconnu?: never };
-export type ElementTrait = Trait | ElementInconnu;
+export type ElementTrait = Trait | Signe | ElementInconnu;
 
 export type Partition = {
   ownerUid: string;
