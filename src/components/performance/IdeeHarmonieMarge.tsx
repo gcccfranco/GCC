@@ -4,7 +4,7 @@
 // « 4 5 → 2m7 5 · G A → Em7 A ». Réglage éteint par défaut (`perf-idees-harmonie-<uid>`), donné aux blocs par un contexte
 // pour que la mesure de la page et le rendu portent la même hauteur.
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { SectionBlock } from "@/lib/performance/blocks";
 import type { SongContent } from "@/lib/api/songs";
@@ -17,6 +17,7 @@ import { useCatalogue } from "@/lib/harmonie/useHarmonie";
 import { donneesDuChant, lettres } from "@/components/accords/LigneIci";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { compter } from "@/lib/usage";
+import { getTransposedKey } from "@/lib/transpose";
 
 export type IdeeMarge = { avantL: string; apresL: string; tonalite: string };
 
@@ -53,7 +54,8 @@ export function useIdeesHarmonie(blocks: { kind: string }[], contents: Record<st
     }
     for (const [k, blocs] of groupes) {
       const slug = blocs[0].songSlug!;
-      const tonalite = blocs[0].keyChange ?? blocs[0].songKey;
+      // Les accords des sections sont transposés de −capo : les formes affichées, pas la tonalité sonore.
+      const tonalite = getTransposedKey(blocs[0].keyChange ?? blocs[0].songKey, -(blocs[0].capo ?? 0));
       const origine = contents[slug]?.ast.metadata.key ?? tonalite;
       const d = donnees[slug];
       const uniques = [...new Map(blocs.map((b) => [b.section.uid, b.section])).values()];
@@ -68,7 +70,7 @@ export function useIdeesHarmonie(blocks: { kind: string }[], contents: Record<st
         }
         for (const i of idee ? [] : p.ideesEquipe) {
           if (!i.avant || !i.apres) continue;
-          const coupe = (x: string) => x.split(/\s*[–-]\s*|\s+/).filter(Boolean);
+          const coupe = (x: string) => x.split(/\s*–\s*|\s+-\s+|\s+/).filter(Boolean);
           idee = { avantL: lettres(coupe(i.avant), origine, tonalite), apresL: lettres(coupe(i.apres), origine, tonalite), tonalite };
           break;
         }
@@ -81,19 +83,38 @@ export function useIdeesHarmonie(blocks: { kind: string }[], contents: Record<st
   }, [sections, donnees, fiches, contents]);
 }
 
-/** Pose le point et la bande autour de la section d'un bloc ; sans idée, ne rend que `children`. */
-export function IdeeHarmonieMarge({ block, children }: { block: SectionBlock; children: ReactNode }) {
+/** Pose le point (dans la marge, à la hauteur du nom) et la bande (passée à `children`, qui la rend sous le nom) ;
+ *  sans idée, `children` reçoit `null`. */
+export function IdeeHarmonieMarge({ block, children }: { block: SectionBlock; children: (bande: ReactNode) => ReactNode }) {
   const { t } = useTranslation();
   const { idees, ouvert, basculer } = useContext(Contexte);
   const idee = idees.get(block.uid);
-  if (!idee) return <>{children}</>;
+  const racine = useRef<HTMLDivElement>(null);
+  const [haut, setHaut] = useState(0);
+  // Le point est hors de la carte : il lit la couleur des accords dans la carte (une disposition les rend neutres).
+  const [teinte, setTeinte] = useState("");
+  // Le point se centre sur la ligne du nom, quelle que soit la disposition ; le nom ne bouge pas quand la bande s'ouvre.
+  useLayoutEffect(() => {
+    const nom = racine.current?.querySelector("[data-section-nom],[data-partition-nom],[data-scene-lettre],[data-repere-pastille]");
+    const carte = racine.current?.querySelector("[data-section]");
+    if (carte) { const v = getComputedStyle(carte); setTeinte(v.getPropertyValue("--accord-fr").trim() || v.getPropertyValue("--chord-color").trim()); }
+    if (nom && racine.current) setHaut(nom.getBoundingClientRect().top + nom.getBoundingClientRect().height / 2 - racine.current.getBoundingClientRect().top - 22);
+  });
+  if (!idee) return <>{children(null)}</>;
   const nom = formatSectionName(block.section, t);
   const estOuvert = ouvert === block.uid;
+  // La couleur des accords de ChordLine (choix du compte, sinon --chord-color), en 中文 comme en français.
+  const couleur = "var(--accord-fr, var(--chord-color))";
   const enChiffres = (l: string) => l.split(" ").map((a) => chiffrerEtiquette(a, idee.tonalite)).join(" ");
   const arret = (e: { stopPropagation: () => void }) => e.stopPropagation();
+  const bande = estOuvert ? (
+    <p data-idee-harmonie-bande className="mb-1 truncate font-chord text-sm font-semibold print:hidden" style={{ color: couleur }}>
+      {enChiffres(idee.avantL)} → {enChiffres(idee.apresL)} · {idee.avantL} → {idee.apresL}
+    </p>
+  ) : null;
   return (
-    <div className="relative">
-      {/* Zone de toucher de 44 px, point de 8 px, dans la marge à la hauteur du nom ; le toucher ne tourne pas la page. */}
+    <div ref={racine} className="relative">
+      {/* Zone de toucher de 44 px, point de 8 px, dans la marge ; la zone s'arrête avant le texte du nom ; le toucher ne tourne pas la page. */}
       <button
         type="button"
         data-idee-harmonie={block.uid}
@@ -103,16 +124,12 @@ export function IdeeHarmonieMarge({ block, children }: { block: SectionBlock; ch
         onPointerUp={arret}
         onPointerCancel={arret}
         onClick={(e) => { e.stopPropagation(); if (!estOuvert) compter("cmd.louange.harmonie"); basculer(block.uid); }}
-        className="absolute -left-7 top-0 z-10 flex h-11 w-11 items-center justify-center print:hidden"
+        style={{ top: haut }}
+        className="absolute -left-[34px] z-10 flex h-11 w-11 items-center justify-center print:hidden"
       >
-        <span className="h-2 w-2 rounded-full bg-[color:var(--chord-color)]" />
+        <span className="h-2 w-2 rounded-full" style={{ background: teinte || couleur }} />
       </button>
-      {estOuvert && (
-        <p data-idee-harmonie-bande className="truncate font-chord text-sm font-semibold text-[color:var(--chord-color)] print:hidden">
-          {enChiffres(idee.avantL)} → {enChiffres(idee.apresL)} · {idee.avantL} → {idee.apresL}
-        </p>
-      )}
-      {children}
+      {children(bande)}
     </div>
   );
 }

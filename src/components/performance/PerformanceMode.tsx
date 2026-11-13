@@ -173,7 +173,7 @@ function BlockRenderer({
   }
   if (feuilleRoute) return <LigneFeuilleDeRoute block={block} repeat={repeat} couleurDe={couleurDe} disposition={disposition} transition={transitionApres} />;
   return (
-    <IdeeHarmonieMarge block={block}>
+    <IdeeHarmonieMarge block={block}>{(bande) =>
     <SectionView
       section={block.section}
       language={block.language}
@@ -193,7 +193,8 @@ function BlockRenderer({
       // Lot CV : les exceptions de mots chinois du chant (motsChinois.ts) s'appliquent au pupitre comme sur la page du chant.
       slug={block.songSlug}
       marques={marques}
-    />
+      sousEntete={bande}
+    />}
     </IdeeHarmonieMarge>
   );
 }
@@ -1090,7 +1091,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuActif, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuActif, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, bandeOuverte, ideesVues]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);

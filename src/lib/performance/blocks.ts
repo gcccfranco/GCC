@@ -62,6 +62,8 @@ export type SectionBlock = {
   /** Ordre joué : le même Dp joué plusieurs fois de suite n'est imprimé qu'une
    *  fois, « ×n » à côté du nom (le bloc garde les uids de tous ses passages). */
   repeat?: number;
+  /** Capo du chant (frets) : `songKey` et `keyChange` sont sonores, les accords de `section` sont déjà transposés de −capo. */
+  capo?: number;
 };
 
 export type TransitionIntraBlock = {
@@ -412,6 +414,7 @@ export function buildPerformanceBlocks(
         songKey: playedKey,
         tempo: ast.metadata.tempo ?? undefined,
         occurrenceUids: uids,
+        capo: capo || undefined,
       });
       if (transition) blocks.push({ kind: "transition-intra", uid: uid(), text: transition });
     }

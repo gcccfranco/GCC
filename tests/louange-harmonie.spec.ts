@@ -31,14 +31,15 @@ const setlist = (slug: string, cle: string) => ({
   } satisfies SetlistItem],
 });
 
-async function ouvrirMode(page: Page, profil: FakeProfile, c: (typeof CHANTS)[number], { cle = c.cle, allume = true } = {}) {
-  await page.addInitScript(({ u, zh, on }) => {
-    localStorage.setItem("perf-role-preset", "pianiste");
+async function ouvrirMode(page: Page, profil: FakeProfile, c: (typeof CHANTS)[number], { cle = c.cle, allume = true, capo = 0 } = {}) {
+  await page.addInitScript(({ u, zh, on, capo, slug }) => {
+    localStorage.setItem("perf-role-preset", capo ? "guitariste" : "pianiste");
+    if (capo) localStorage.setItem("perf-capos", JSON.stringify({ [slug]: capo }));
     localStorage.setItem("accords-aide-vue", "1");
     localStorage.setItem("jianpu-sheet-pref", "never");
     if (zh) localStorage.setItem("i18nextLng", "zh-CN");
     if (on) localStorage.setItem(`perf-idees-harmonie-${u}`, "1");
-  }, { u: profil.uid, zh: c.langue === "zh", on: allume });
+  }, { u: profil.uid, zh: c.langue === "zh", on: allume, capo, slug: c.slug });
   await signInAs(page, profil, { [`setlists/${SETLIST_ID}`]: setlist(c.slug, cle) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: c.langue === "zh" ? /敬拜模式/ : /Mode Louange/ }).first().click();
   await attendreMiseEnPage(page);
@@ -98,6 +99,20 @@ for (const c of CHANTS) {
 
     const page2 = await (await browser.newContext(test.info().project.use)).newPage();
     await ouvrirMode(page2, AVEC_ACCES, c, { cle: c.autre });
+    await points(page2).first().click();
+    const [chiffres2, lettres2] = (await bande(page2).innerText()).split(" · ");
+    expect(chiffres2).toBe(chiffres);
+    expect(lettres2).not.toBe(lettres);
+    await page2.context().close();
+  });
+
+  test(`chant ${c.langue.toUpperCase()} : avec un capo, la bande montre les formes jouées (tonalité − capo), mêmes chiffres`, async ({ page, browser }) => {
+    await ouvrirMode(page, AVEC_ACCES, c);
+    await points(page).first().click();
+    const [chiffres, lettres] = (await bande(page).innerText()).split(" · ");
+
+    const page2 = await (await browser.newContext(test.info().project.use)).newPage();
+    await ouvrirMode(page2, AVEC_ACCES, c, { capo: 2 });
     await points(page2).first().click();
     const [chiffres2, lettres2] = (await bande(page2).innerText()).split(" · ");
     expect(chiffres2).toBe(chiffres);
