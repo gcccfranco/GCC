@@ -442,3 +442,20 @@ chantier sur ce fichier.
   `jianpu-deux-volets`, `statistiques-chant`, cinq projets : 235 passés, 225 sautés (gardes d'appareil), 0 échec
   (**7,7 min**). `regard` sur les douze captures : rien à corriger. tsc, lint : 0 erreur. Le chemin fusion de
   `PartitionView` n'a pas d'assertion de colonnes propre (même classe que SongView). JV-5a lancée à la suite.
+- 13/11/2026 : **JV-5a codée** (session orchestratrice, `/tranche` calé sur des agents `general-purpose`). Le nom de
+  section (`NomSection`, `SongView.tsx` : disposition par défaut, Partition, Repères et Scène sans corps) est un bouton
+  quand l'accès Harmonie est ouvert, hors Crayon ; il appelle `IciDuChant.ouvrir(uid, undefined, { depuisNom })`
+  (`useIciDuChant`, `AccordsProvider.tsx`), page chant et vue Partitions (`iciDe`, `onIci`). Grand écran : la colonne.
+  Téléphone et tablette portrait : feuille à 50 % (crans 0,5 et 1, `HarmonieDuChant.tsx`), la page défile pour garder
+  le nom au-dessus. Décisions déléguées (session, 13/11) : marge basse de 50 dvh sur la page et dans la liste de la
+  feuille tant qu'elle est ouverte à mi-hauteur (sans elles, la dernière section d'un chant court, le Pont de
+  Promesses, ne peut ni monter au-dessus de la feuille ni en haut du volet) ; « Ici » et le bouton Harmonie gardent
+  leur feuille de 67 dvh ; Repères et Scène avec corps (nom en pastille) restent sans bouton. Limite connue : page
+  chant ouverte avec la liste à gauche, la zone de lecture fait moins de 824 px même à 1 440, et c'est la feuille
+  existante qui sort (règle antérieure, comme le bouton Harmonie). Au passage : guillemets de `jianpuSheetHint`
+  (fr.json), rouges dans `coherence.spec.ts` depuis JV-1. Tests : nouvelle `harmonie-volet-section.spec.ts`
+  (`SPECS_GRAND_ECRAN`) ; voisines `harmonie-montrer`, `harmonie-colonne`, `harmonie-setlist`, `harmonie-passages`,
+  `pupitre-partitions`, `jianpu-deux-volets`, `coherence`, `statistiques-chant`, `retouches-usage-t1`, cinq projets :
+  370 passés, 197 sautés, 1 course (`retouches-usage-t1:49`, téléphone, verte seule) (**9,0 min**) ; repasse de la
+  spec JV-5a après correctif : 39 passés (**1,2 min**). `regard` sur 17 captures (bloc du Pont en bas de la feuille à
+  la tablette : corrigé). tsc, lint : 0 erreur. JV-5a ne lance rien après elle (JV-5b vient de JV-4).

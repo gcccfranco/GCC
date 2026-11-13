@@ -49,7 +49,8 @@ export type IciDuChant = {
   /** Tonalité jouée (celle de la porte 2). */
   tonalite: string;
   tonaliteOrigine?: string;
-  ouvrir: (sectionUid: string, idee?: string) => void;
+  /** `depuisNom` : touché sur le nom de la section (JV-5a) ; la feuille s'ouvre à mi-hauteur au téléphone. */
+  ouvrir: (sectionUid: string, idee?: string, options?: { depuisNom?: boolean; /** Le nom touché : la page le remonte sous la barre avant d'ouvrir la feuille. */ element?: HTMLElement | null }) => void;
 };
 
 /** Ce que le panneau sait du chant lu : la tonalité affichée et l'accord qui suit vraiment dans la partition. */
@@ -78,6 +79,8 @@ type Contexte = {
   enregistrer: (el: HTMLElement) => () => void;
   /** Aide « dans le flux » (`aide="flux"`) : présent seulement tant qu'elle est à afficher ; ferme l'aide. */
   fermerAideLigne?: () => void;
+  /** JV-5a : de quoi ouvrir la porte 2 au passage d'une section (nom de section touchable) ; absent sans accès Harmonie. */
+  ici?: IciDuChant;
 };
 
 const Rien: Contexte = { ouvrir: () => {}, fermer: () => {}, fermerSansFocus: () => {}, actif: false, enregistrer: () => () => {} };
@@ -92,6 +95,11 @@ export function useOuvrirAccord(): Contexte {
   return useContext(AccordsContext);
 }
 
+/** JV-5a : l'`ici` du fournisseur le plus proche (le nom d'une section ouvre la porte 2 par le même chemin que « Ici »). */
+export function useIciDuChant(): IciDuChant | undefined {
+  return useContext(AccordsContext).ici;
+}
+
 /** Coupe les accords touchables de tout ce qui est dessous (édition d'une ligne, mode louange). */
 export function AccordsInactifs({ children }: { children: React.ReactNode }) {
   return <AccordsContext.Provider value={Rien}>{children}</AccordsContext.Provider>;
@@ -100,7 +108,7 @@ export function AccordsInactifs({ children }: { children: React.ReactNode }) {
 /** Dit de quel chant sont les accords dessous (une setlist en porte plusieurs). */
 export function ChantDesAccords({ chant, tonalite, ici, children }: { chant: Chant; tonalite?: string; ici?: IciDuChant; children: React.ReactNode }) {
   const parent = useContext(AccordsContext);
-  const valeur = useMemo(() => avecTonalite({ ...parent, chant }, tonalite, ici), [parent, chant, tonalite, ici]);
+  const valeur = useMemo(() => avecTonalite({ ...parent, chant, ici }, tonalite, ici), [parent, chant, tonalite, ici]);
   return <AccordsContext.Provider value={valeur}>{children}</AccordsContext.Provider>;
 }
 
@@ -276,7 +284,7 @@ export function AccordsProvider({
   }, [actif, aideLigne, fermerAide]);
 
   const valeur = useMemo<Contexte>(
-    () => (actif ? { ouvrir: tonalite ? (d: DemandeAccord) => ouvrir({ tonalite, ici, ...d }) : ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined } : Rien),
+    () => (actif ? { ouvrir: tonalite ? (d: DemandeAccord) => ouvrir({ tonalite, ici, ...d }) : ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined, ici } : Rien),
     [actif, ouvrir, fermer, fermerSansFocus, chant, tonalite, ici, enregistrer, aideLigne, fermerAide],
   );
 

@@ -38,7 +38,7 @@ import type { SectionItem } from "@/types/song";
 import type { SectionNuance } from "@/types/setList";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
-import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
+import { HarmonieDuChant, defilerSousLaBarre } from "@/components/harmonie/HarmonieDuChant";
 import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
 import { AccordsProvider, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
@@ -250,7 +250,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     // Idées d'harmonie (lot 9) : pianistes, guitaristes et admins seulement.
     const [showIdees, setShowIdees] = useState(false);
     // H5-2 : le passage visé par « Ici » (la clé change à chaque appui, pour redéfiler).
-    const [passageIci, setPassageIci] = useState<{ uid: string; cle: number; idee?: string } | undefined>();
+    const [passageIci, setPassageIci] = useState<{ uid: string; cle: number; idee?: string; miHauteur?: boolean } | undefined>();
     // Grand écran (≥ 1 024 px) : une colonne à droite de la partition, mémorisée par appareil ; sinon la feuille.
     // La colonne tient si la zone de lecture (partition + colonne) fait 824 px ; sinon, la feuille.
     const [zoneLecture, zoneAssezLarge] = useZoneAssezLarge();
@@ -534,8 +534,9 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
   const ici = useMemo<IciDuChant | undefined>(
     () => accesHarmonie.peut ? {
       sections: displayedAST.sections, tonalite: customize.currentKey, tonaliteOrigine: originalKey,
-      ouvrir: (uid, idee) => {
-        setPassageIci({ uid, cle: Date.now(), idee });
+      ouvrir: (uid, idee, options) => {
+        if (options?.depuisNom && !grandEcran) defilerSousLaBarre(options.element);
+        setPassageIci({ uid, cle: Date.now(), idee, ...(options?.depuisNom ? { miHauteur: true } : null) });
         if (grandEcran) setColonneOuverte(true); else setShowIdees(true);
       },
     } : undefined,

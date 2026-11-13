@@ -37,10 +37,10 @@ const PUCE = `${TOUCHER_44} inline-flex h-8 items-center gap-1.5 rounded-full bo
 /** Copie les paroles d'un chant, dans l'ordre joué, pour la régie (PPT). */
 /** H5-2 : de quoi ouvrir la porte 2 au passage d'un accord touché (`tonalite` : celle que la porte 2 joue). */
 function iciDe(
-  onIci: ((itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string) => void) | undefined,
+  onIci: ((itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string, options?: { depuisNom?: boolean; element?: HTMLElement | null }) => void) | undefined,
   itemIndex: number, slug: string | undefined, sections: ChordProSection[], tonalite: string, tonaliteOrigine?: string,
 ): IciDuChant | undefined {
-  return onIci && { sections, tonalite, tonaliteOrigine, ouvrir: (uid, idee) => onIci(itemIndex, slug, uid, idee) };
+  return onIci && { sections, tonalite, tonaliteOrigine, ouvrir: (uid, idee, options) => onIci(itemIndex, slug, uid, idee, options) };
 }
 
 function CopyLyricsButton({ sections, icone = false }: { sections: ChordProSection[]; icone?: boolean }) {
@@ -184,7 +184,7 @@ export function PartitionsView({
    *  Fusion : `slug` dit lequel de ses chants. */
   onIdees?: (itemIndex: number, slug?: string) => void;
   /** H5-2 « Ici » : ouvre la porte 2 au passage de l'accord touché (sans basculer) — absent sans accès Harmonie. */
-  onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string) => void;
+  onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string, options?: { depuisNom?: boolean; element?: HTMLElement | null }) => void;
   /** Reçoit la fermeture de la bulle d'accord de la partition. */
   onFermerAccord?: (fermer: () => void) => void;
   /** « Chant non chargé — Réessayer » : relit le contenu de ce seul chant. */
@@ -502,7 +502,7 @@ function NormalSongItem({
   onPasserAuCulte?: (itemIndex: number, srcLine: number) => void;
   onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
   onIdees?: (itemIndex: number) => void;
-  onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string) => void;
+  onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string, options?: { depuisNom?: boolean; element?: HTMLElement | null }) => void;
   onRetryChant?: (slug: string) => void | Promise<void>;
   titre?: string;
   /** Premier chant de la setlist : l'aide des accords s'y pose sous les pastilles. */

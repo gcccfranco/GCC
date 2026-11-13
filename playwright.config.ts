@@ -18,6 +18,8 @@ const SPECS_GRAND_ECRAN = [
   /marge-affichage\.spec\.ts/,
   // Harmonie H4-2 (docs/spec-harmonie-accords.md) : la colonne « Harmonie de ce chant » dès 1 024 px, la feuille en dessous.
   /harmonie-colonne\.spec\.ts/,
+  // JV-5a : le nom de section ouvre le volet Harmonie au bloc du passage (colonne en grand écran, feuille à mi-hauteur sinon).
+  /harmonie-volet-section\.spec\.ts/,
   // Harmonie H6-1 : la bibliothèque (filtres Ressenti et Usage, liste ordonnée par niveau, fiche ≥ 640 px à l'ordinateur).
   /harmonie-bibliotheque\.spec\.ts/,
   // Harmonie H5-1 : le panneau d'un accord enrichi (chiffre, Écouter, Ensuite) en feuille et en bulle.

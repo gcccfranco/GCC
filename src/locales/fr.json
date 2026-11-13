@@ -3171,6 +3171,7 @@
     }
   },
   "harmonie": {
+    "ideesDe": "Idées d'harmonie : {{nom}}",
     "ecoute": { "ecouter": "Écouter", "arreter": "Arrêter" },
     "rd2000": {
       "titre": "Sons du RD-2000",

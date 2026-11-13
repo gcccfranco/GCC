@@ -75,7 +75,7 @@ type Props = {
   /** Page chant en colonne : le titre du chant est déjà à l'écran. */
   sansTitre?: boolean;
   /** H5-2 « Ici » : le passage à montrer (la clé change à chaque appui, pour redéfiler). */
-  passage?: { uid: string; cle: number; /** L'idée nommée par « Ici » : sa carte est dépliée et visible. */ idee?: string };
+  passage?: { uid: string; cle: number; /** L'idée nommée par « Ici » : sa carte est dépliée et visible. */ idee?: string; /** JV-5a : ouvert depuis le nom de la section : feuille à mi-hauteur (téléphone, tablette portrait). */ miHauteur?: boolean };
 };
 
 /** La section visée, dans le chant lu : d'abord son occurrence, sinon (structure
@@ -109,6 +109,17 @@ function montrerLEndroit(endroit: Endroit, fermer: (() => void) | undefined, por
   });
 }
 
+/** JV-5a : le nom de section touché monte en haut de la zone visible (sous la barre du haut), pour rester visible au-dessus de la feuille.
+ *  Une section en bas d'un chant court ne peut pas monter : la page reçoit 50 dvh de marge basse tant que la feuille est ouverte
+ *  (retirée par `HarmonieDuChant` à la fermeture). */
+export function defilerSousLaBarre(el: HTMLElement | null | undefined) {
+  if (!el) return;
+  document.body.style.paddingBottom = "50dvh";
+  el.style.scrollMarginTop = "calc(var(--nav-h, 0px) + 56px)";
+  el.scrollIntoView({ block: "start", behavior: "auto" });
+  el.style.scrollMarginTop = "";
+}
+
 function Croix({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   return (
@@ -128,12 +139,23 @@ export function HarmonieDuChant(props: Props) {
   useStandaloneScrollLock(props.open && !colonne);
   const { t } = useTranslation();
   const titreId = useId();
+  // JV-5a : depuis le nom d'une section, la feuille s'ouvre à 50 % de l'écran (deux crans : 50 % et tout).
+  const miHauteur = !!props.passage?.miHauteur;
+  const [cran, setCran] = useState<number | string | null>(0.5);
+  const cleOuverture = props.passage?.cle;
+  useEffect(() => { if (props.open) setCran(0.5); }, [props.open, cleOuverture]);
+  // La marge basse posée par `defilerSousLaBarre` part avec la feuille.
+  useEffect(() => { if (!props.open) document.body.style.paddingBottom = ""; }, [props.open]);
   if (colonne) {
     return props.open ? <Colonne {...props} titreId={titreId} /> : null;
   }
   return (
-    <Drawer open={props.open} onOpenChange={(o) => !o && props.onClose()}>
-      <DrawerContent className="h-[67dvh] max-h-[67dvh] md:max-w-2xl md:mx-auto" data-idees-harmonie>
+    <Drawer
+      open={props.open}
+      onOpenChange={(o) => !o && props.onClose()}
+      {...(miHauteur ? { snapPoints: [0.5, 1], activeSnapPoint: cran, setActiveSnapPoint: setCran } : {})}
+    >
+      <DrawerContent className={miHauteur ? "h-dvh max-h-dvh md:max-w-2xl md:mx-auto" : "h-[67dvh] max-h-[67dvh] md:max-w-2xl md:mx-auto"} data-idees-harmonie>
         <DrawerHeader className="flex shrink-0 items-center justify-between pb-3">
           <DrawerTitle>{t("harmonie.titreChant")}</DrawerTitle>
           <Croix onClose={props.onClose} />
@@ -379,7 +401,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
 
   return (
     <NotationAccordsContext.Provider value={notationCtx}>
-    <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-8">
+    {/* JV-5a : feuille à mi-hauteur, pleine hauteur sous l'écran : 50 dvh de marge pour que le dernier bloc monte en haut. */}
+    <div className={`min-h-0 overflow-y-auto overscroll-contain px-4 ${passage?.miHauteur && disposition !== "colonne" ? "pb-[50dvh]" : "pb-8"}`}>
       {!sansTitre && <p className="mb-3 text-sm text-muted-foreground">{titre}</p>}
       {blocs.some((b) => b.idees.length > 0) && (
         <p className="-mt-1 mb-3">

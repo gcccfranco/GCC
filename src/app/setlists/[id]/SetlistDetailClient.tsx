@@ -93,6 +93,7 @@ import { PdfChoiceSheet, type PdfVersion } from "@/components/pdf/PdfChoiceSheet
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
+import { defilerSousLaBarre } from "@/components/harmonie/HarmonieDuChant";
 import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
 import { semitonesTo } from "@/lib/transpose";
 import { telechargerBlob, demanderPleinEcran } from "@/lib/telecharger";
@@ -1153,7 +1154,7 @@ export function SetlistDetailClient() {
   // Dans une fusion : celui de ses chants dont on lit les idées.
   const [ideesChant, setIdeesChant] = useState<string | null>(null);
   // H5-2 : le passage visé par « Ici » (la clé change à chaque appui, pour redéfiler).
-  const [passageIci, setPassageIci] = useState<{ uid: string; cle: number; idee?: string } | undefined>();
+  const [passageIci, setPassageIci] = useState<{ uid: string; cle: number; idee?: string; miHauteur?: boolean } | undefined>();
   // Préférence « 1 » en grand écran : la colonne s'ouvre sur le chant lu et le suit quand il change.
   const dernierLu = useRef<number | undefined>(undefined);
   useEffect(() => {
@@ -1971,11 +1972,12 @@ export function SetlistDetailClient() {
           setIdeesChant(ferme ? null : slug ?? null);
         } : undefined}
         // « Ici » ouvre sans basculer : un second appui ne doit pas refermer la porte 2.
-        onIci={accesHarmonie.peut ? (itemIndex, slug, uid, idee) => {
+        onIci={accesHarmonie.peut ? (itemIndex, slug, uid, idee, options) => {
+          if (options?.depuisNom && !grandEcran) defilerSousLaBarre(options.element);
           if (grandEcran) setColonneHarmonie(true);
           setIdeesTarget(itemIndex);
           setIdeesChant(slug ?? null);
-          setPassageIci({ uid, cle: Date.now(), idee });
+          setPassageIci({ uid, cle: Date.now(), idee, ...(options?.depuisNom ? { miHauteur: true } : null) });
         } : undefined}
       />
       {/* La barre basse du Crayon ne cache pas la fin du dernier chant. */}
