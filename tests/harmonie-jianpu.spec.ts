@@ -227,7 +227,7 @@ const SANS_HARMONIE: FakeProfile = { uid: "uid-visiteur-jv5c", email: "visiteur-
 const etiquettes = (page: Page) => page.locator("[data-jianpu-etiquette]");
 const voletOuvert = (page: Page) => page.locator("[data-harmonie-colonne], [data-idees-harmonie]").first();
 /** Texte visible (la forme courte et l'initiale sont toutes deux dans le DOM, l'une cachée selon la largeur). */
-const visible = (l: ReturnType<Page["locator"]>) => l.evaluate((el) => (el as HTMLElement).innerText.trim());
+const visible = (l: ReturnType<Page["locator"]>) => l.evaluate((el) => (el as HTMLElement).innerText.replace(/\u2060/g, "").trim());
 const etroit = (page: Page) => (page.viewportSize()?.width ?? 0) < 640;
 
 async function prefs(page: Page, { zh = false, louange = false, sombre = false } = {}) {

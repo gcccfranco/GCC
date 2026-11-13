@@ -137,11 +137,12 @@ function EtiquetteSection({ e, top, onOuvrir }: { e: EtiquetteScan; top: number;
       data-jianpu-etiquette={e.ids.join(" ")}
       aria-label={t("harmonie.ideesDe", { nom: e.nom })}
       onClick={(ev) => onOuvrir(ev.currentTarget)}
-      className={`${TOUCHER_ETIQUETTE} absolute right-full z-10 w-[calc(var(--rail-etiquettes)-8px)] cursor-pointer select-none break-normal rounded-[6px] py-1 text-center text-[11px] font-semibold leading-[1.15] tracking-[-0.01em] outline-none focus-visible:ring-2 focus-visible:ring-ring print:hidden`}
+      className={`${TOUCHER_ETIQUETTE} absolute right-full z-10 min-w-[calc(var(--rail-etiquettes)-8px)] max-w-[var(--rail-etiquettes)] cursor-pointer select-none break-normal rounded-[6px] px-1 py-1 text-center text-[11px] font-semibold leading-[1.15] tracking-[-0.01em] outline-none focus-visible:ring-2 focus-visible:ring-ring print:hidden`}
       style={{ top: `${top}%`, color: `var(--sec-${type}, var(--sec-other))`, background: `var(--sec-${type}-tint, var(--sec-other-tint))` }}
     >
       <span aria-hidden className="sm:hidden">{e.initiale}</span>
-      <span aria-hidden className="hidden sm:inline">{e.court}</span>
+      {/* Jamais de coupure autour du tiret d'une plage (« 1–2 ») : gluons U+2060. */}
+      <span aria-hidden className="hidden sm:inline">{e.court.replace(/–/g, "\u2060–\u2060")}</span>
     </button>
   );
 }
