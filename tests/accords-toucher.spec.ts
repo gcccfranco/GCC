@@ -41,7 +41,7 @@ const setlist = {
   notes: "",
   ownerId: MUSICIENNE.uid, // la créatrice : « Adapter » lui est offert
   isPrivate: false,
-  items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一切歌颂赞美", position: 2, jianpuSheet: false })],
+  items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一切歌颂赞美", position: 2 })],
 };
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
@@ -66,6 +66,7 @@ const csvVide = (page: Page) =>
 async function ouvrirLaSetlist(page: Page) {
   await csvVide(page);
   await sansAide(page);
+  await paroles(page);
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await signInAs(page, MUSICIENNE, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);

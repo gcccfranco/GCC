@@ -169,7 +169,7 @@ export function buildPerformanceBlocks(
   // Le responsable coche le 简谱 par chant ; la préférence de l'appareil peut
   // le suivre, l'imposer partout, ou ne jamais l'utiliser.
   // `choixScan` : choix fait à l'ajout d'un chant (mode louange), plus fort que la préférence.
-  const wantsSheet = (item: SetlistItem) => choixScan?.[item.songSlug] ?? sheetEnabled(jianpuPref, item.jianpuSheet);
+  const wantsSheet = (item: SetlistItem) => choixScan?.[item.songSlug] ?? sheetEnabled(jianpuPref);
   let c = 0;
   const uid = () => `pb-${c++}`;
 

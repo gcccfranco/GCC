@@ -191,7 +191,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     // montage : il ne peut pas s'en écarter.
     const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
     useEffect(() => setJianpuPrefState(getJianpuPref()), []);
-    const showScore = sheetEnabled(jianpuPref, undefined);
+    const showScore = sheetEnabled(jianpuPref);
     const choisirScore = (on: boolean) => {
       const next = prefDepuisInterrupteur(on);
       setJianpuPrefState(next);

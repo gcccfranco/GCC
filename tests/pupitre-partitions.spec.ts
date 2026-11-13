@@ -24,9 +24,9 @@ const setlist = (items: unknown[]) => ({
 const NOTE = "Intro douce, enchaîner sans pause";
 const DOCS = {
   "setlists/sjp": setlist([item("hosanna", 1, {}, NOTE), item("一切歌颂赞美", 2)]),
-  "setlists/stxt": setlist([item("hosanna", 1, {}, NOTE), item("一切歌颂赞美", 2, { jianpuSheet: false })]),
+  "setlists/stxt": setlist([item("hosanna", 1, {}, NOTE), item("一切歌颂赞美", 2)]),
   // T2 : premier chant en texte chinois, même note
-  "setlists/szh": setlist([item("一切歌颂赞美", 1, { jianpuSheet: false }, NOTE), item("hosanna", 2)]),
+  "setlists/szh": setlist([item("一切歌颂赞美", 1, {}, NOTE), item("hosanna", 2)]),
 };
 
 // Valeurs de la base (avant T1), codées en dur : --lyric-size = 0.88rem × 1,1 (écran) ou × 1,2 (dès 768 px) ; couleur
@@ -45,6 +45,8 @@ const FENETRES: Record<string, { width: number; height: number }> = {
 
 async function ouvrir(page: Page, id: "sjp" | "stxt" | "szh", projet?: string, sombre = false, aideVue = true) {
   if (projet && FENETRES[projet]) await page.setViewportSize(FENETRES[projet]);
+  // « stxt » et « szh » : le chant à scan en paroles, par la préférence de l'appareil.
+  if (id !== "sjp") await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   await page.addInitScript(([dark, vue]) => {
     if (vue) localStorage.setItem("accords-aide-vue", "1");
     if (dark) localStorage.setItem("theme", "dark");

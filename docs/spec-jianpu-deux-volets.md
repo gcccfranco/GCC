@@ -380,3 +380,15 @@ chantier sur ce fichier.
   JV-3 ; planche « toutes les idées d'une section » lancée par la session de cadrage.
 - 13/11/2026 : go de Timothée pour les pistes des deux planches (B ici, A pour TC-4) : JV-3 lancée (session
   orchestratrice neuve), puis JV-4 après TC-4.
+- 13/11/2026 : **JV-1 codée** (session orchestratrice). `sheetEnabled(pref, role)` ; le `jianpuSheet` de l'item n'est plus
+  lu (sauf `choixScan`). La page setlist passe `prefPourRole(pref, getRoleSansMigrer(uid))` à la vue Partitions, à la
+  Liste, au Sommaire, aux idées, aux réglages d'affichage et au PDF ; l'aperçu de setlist et le Pupitre lisent le même
+  « Je joue » (le Pupitre ne lit plus le rôle du planning) ; le mode louange garde le sien (`PerformanceMode.tsx:720`
+  inchangé). « Jouer sur » et le badge 简谱 sont retirés de l'éditeur, avec leurs libellés ; l'aide « Partition 简谱 »
+  est réécrite (fr, zh). Décisions déléguées (session, 13/11) : `getRoleSansMigrer` plutôt que `getRole`, pour ne pas
+  migrer le rôle hors du mode louange (même résultat) ; `prefPourRole` gardé, pour que l'interrupteur montre ce que la
+  personne voit, comme dans le mode louange. Tests : huit specs (dont `jianpu-par-defaut`, `louange-roles-jianpu`,
+  `setlist-editeur-piste2`, et six specs passées de `jianpuSheet: false` à la préférence « never »), trois appareils
+  (plus les deux grands écrans pour les specs d'agencement) : 447 passés, 175 sautés (gardes d'appareil), 1 échec de
+  connexion simulée (`pupitre-partitions:716`, ordinateur), repassé seul ; **19,6 min**. tsc, lint : 0 erreur.
+  Relecteur : un appelant oublié (`ApercuSetlist.tsx`), corrigé.

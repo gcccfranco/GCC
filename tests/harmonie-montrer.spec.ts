@@ -39,10 +39,11 @@ const SETLIST = {
   notes: "",
   ownerId: "uid-owner",
   isPrivate: false,
-  items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2, jianpuSheet: false })],
+  items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2 })],
 };
 
 async function ouvrir(page: Page, setlist: Record<string, unknown> = SETLIST) {
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never")); // 一生爱你 en paroles
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const sheet = new URL(route.request().url()).searchParams.get("sheet");
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
@@ -155,7 +156,7 @@ test("structure modifiée dans la setlist : « Montrer » trouve la section dans
     ...SETLIST,
     items: [
       item({ songSlug: "abba-pere", position: 1, structureOverride: ["chorus-3-7", "verse-2-8", "chorus-3-9"] }),
-      item({ songSlug: "一生爱你", position: 2, jianpuSheet: false }),
+      item({ songSlug: "一生爱你", position: 2 }),
     ],
   });
   const r = await montrerDepuis(page, page.locator('[data-outline-item="1"]').getByRole("button", { name: "Harmonie", exact: true }).first(), /^(Refrain|Couplet)/);

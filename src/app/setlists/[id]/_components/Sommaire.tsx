@@ -73,7 +73,7 @@ export function Sommaire({
             const tonalite = item.keyOverride ?? song?.originalKey;
             const transpose = !!item.keyOverride && item.keyOverride !== song?.originalKey;
             const etapes = playedSections(item, contents);
-            const surScan = !fusion && sheetEnabled(jianpuPref, item.jianpuSheet) && !!manifest?.[item.songSlug];
+            const surScan = !fusion && sheetEnabled(jianpuPref) && !!manifest?.[item.songSlug];
             return (
               <li
                 key={item.position}

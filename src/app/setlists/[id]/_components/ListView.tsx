@@ -273,7 +273,7 @@ export function ListView({
                 {song?.titlePinyin && (
                   <span className="text-xs text-muted-foreground">{song.titlePinyin}</span>
                 )}
-                {sheetEnabled(jianpuPref, item.jianpuSheet) && jianpuManifest?.[item.songSlug] && (
+                {sheetEnabled(jianpuPref) && jianpuManifest?.[item.songSlug] && (
                   <span
                     className="text-xs px-1.5 py-0.5 rounded-full border border-primary/30 bg-secondary text-foreground font-semibold"
                     title={t("setlists.form.jianpuSheetHint")}

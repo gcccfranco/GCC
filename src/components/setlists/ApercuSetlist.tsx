@@ -24,7 +24,9 @@ import { equipeDuService } from "@/lib/setlist/equipeDuService";
 import { equipeDeLaSetlist } from "@/lib/setlist/partage";
 import { listProfiles } from "@/lib/firebase/users";
 import type { UserProfile } from "@/types/user";
-import { getJianpuPref } from "@/lib/jianpu/preference";
+import { getJianpuPref, prefPourRole } from "@/lib/jianpu/preference";
+import { getRoleSansMigrer } from "@/lib/performance/roleCompte";
+import { useAuth } from "@/lib/firebase/auth";
 import { ListView } from "@/app/setlists/[id]/_components/ListView";
 import { SetlistHistory } from "@/app/setlists/[id]/_components/SetlistHistory";
 import { CarteEquipe } from "@/components/setlists/CarteEquipe";
@@ -44,6 +46,7 @@ export function ApercuSetlist({
   monNom: string;
 }) {
   const { t, i18n } = useTranslation();
+  const uid = useAuth().user?.uid ?? null;
   const router = useRouter();
   const passageFete = usePassageDeLaSetlist(setlist);
   const couleur = categoryColor(setlist.category);
@@ -119,7 +122,7 @@ export function ApercuSetlist({
           <ListView
             items={resoudrePropositions(setlist.items, Object.values(songsMap))}
             songsMap={songsMap}
-            jianpuPref={getJianpuPref()}
+            jianpuPref={prefPourRole(getJianpuPref(), getRoleSansMigrer(uid))}
             current={null}
             lienBase={lien}
             onOpen={(position) => router.push(`${lien}?vue=partitions&chant=${position}`)}

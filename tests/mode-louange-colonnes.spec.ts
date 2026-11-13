@@ -212,7 +212,8 @@ function grandEcranTests(nom: string) {
   for (const { slug, structureOverride } of CHANTS) {
     test(`${nom} : deux colonnes d'office, en-tête au-dessus, aucune section coupée (${slug})`, async ({ page }) => {
       test.skip(!(await grandEcran(page)), "deux colonnes : tablette paysage et ordinateur seulement");
-      await ouvrirMode(page, [item({ songSlug: slug, position: 1, structureOverride, jianpuSheet: false })]);
+      await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+      await ouvrirMode(page, [item({ songSlug: slug, position: 1, structureOverride })]);
       await verifierInterrupteur(page, "true");
       expect(await colonnes(page)).toBe(2);
       const sections = await onStage(page, "[data-section]").evaluateAll((els) =>
@@ -340,7 +341,8 @@ grandEcranTests("grand écran");
 
 test("téléphone et tablette portrait : pas d'interrupteur, une colonne, même nombre de pages quel que soit le réglage", async ({ page }) => {
   test.skip(await grandEcran(page), "téléphone et tablette portrait seulement");
-  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2, jianpuSheet: false })]);
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2 })]);
   await expect(onStage(page, "[data-section]").first()).toBeVisible();
   await verifierInterrupteur(page, "absent");
   const total = await totalPages(page);

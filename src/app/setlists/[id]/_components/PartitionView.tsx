@@ -502,7 +502,7 @@ function NormalSongItem({
     return { ast: transposerVers(base, item.keyOverride), songKey: base.metadata.key };
   }, [item, content]);
   // Partition 简谱 choisie pour cet item : le scan remplace les paroles.
-  const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref, item.jianpuSheet) ? item.songSlug : null);
+  const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref) ? item.songSlug : null);
   if (!ast) {
     // Chant sans contenu (lecture ratée) : son titre et de quoi le relire, plutôt qu'un trou dans la setlist.
     return (

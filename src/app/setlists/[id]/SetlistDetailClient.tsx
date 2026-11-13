@@ -82,7 +82,8 @@ import { ChoixDestination, type Destination } from "@/components/partition/Choix
 import { adresseVue, lireAdresse, poser, surLaSetlist } from "@/lib/setlist/adresseVue";
 import { demanderPrecache, urlsAGarder } from "@/lib/setlist/gardeServices";
 import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, scansAbsentsDuCache, useJianpuManifest } from "@/lib/jianpu/images";
-import { sheetEnabled } from "@/lib/jianpu/preference";
+import { prefPourRole, sheetEnabled } from "@/lib/jianpu/preference";
+import { getRoleSansMigrer } from "@/lib/performance/roleCompte";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
@@ -504,6 +505,9 @@ export function SetlistDetailClient() {
     showPinyin, disposition, layout, jianpuPref,
     changeDisposition, changeLayout, changeJianpuPref, togglePinyin,
   } = usePreferencesAffichage(user?.uid ?? null, authLoading);
+  // « Je joue » de la personne (lu sans migrer, roleCompte.ts) : choriste et présidence ont paroles + pinyin tant que
+  // la préférence 简谱 n'est pas réglée (spec-jianpu-deux-volets.md, JV-1). Le mode louange applique son propre rôle.
+  const jianpuPrefVu = prefPourRole(jianpuPref, getRoleSansMigrer(user?.uid ?? null));
   // Crayon : le bouton de la barre d'outils et, sur téléphone étroit, l'entrée du menu « ⋯ ».
   // Depuis la Liste, il ouvre les partitions au chant lu (Q11) ; en deux volets, elles sont déjà là.
   const toggleCrayon = () => {
@@ -992,7 +996,7 @@ export function SetlistDetailClient() {
         // « Ma version » : exactement les items de la vue affichée (stageItems).
         const mesItems = version === "mine" ? setlist.items.map(withChosen).map(withMineStructure) : setlist.items;
         const sheetFiles = mesItems.flatMap((it) =>
-          sheetEnabled(jianpuPref, it.jianpuSheet)
+          sheetEnabled(jianpuPrefVu)
             ? (sheets[it.songSlug]?.pages ?? []).map((p, i) => ({ file: p.file, top: cadrage[it.songSlug]?.[i] ?? 0 }))
             : [],
         );
@@ -1012,7 +1016,7 @@ export function SetlistDetailClient() {
             jianpuChords={sheetChords}
             jianpuCadrage={cadrage}
             jianpuImages={sheetImages}
-            jianpuPref={jianpuPref}
+            jianpuPref={jianpuPrefVu}
             sectionStyle={style === "classic" ? "classic" : "colors"}
             layout={style === "compact" ? "unique" : "played"}
             language={i18n.language}
@@ -1820,7 +1824,7 @@ export function SetlistDetailClient() {
     // Hors ligne, un chant dont le scan 简谱 n'est pas dans le cache du navigateur est « non chargé » aussi
     // (image cassée sinon). On ne sait que ce que le cache dit : en ligne, rien n'est vérifié.
     if (setlist && jianpuManifest && (copieLueLe !== null || !navigator.onLine)) {
-      const aScan = setlist.items.filter((it) => it.songSlug && sheetEnabled(jianpuPref, it.jianpuSheet)).map((it) => it.songSlug);
+      const aScan = setlist.items.filter((it) => it.songSlug && sheetEnabled(jianpuPrefVu)).map((it) => it.songSlug);
       for (const slug of await scansAbsentsDuCache(jianpuManifest, aScan)) {
         if (!manquants.includes(slug)) manquants.push(slug);
       }
@@ -1880,7 +1884,7 @@ export function SetlistDetailClient() {
       disposition={disposition}
       changeDisposition={changeDisposition}
       hasJianpuSheets={hasJianpuSheets}
-      jianpuPref={jianpuPref}
+      jianpuPref={jianpuPrefVu}
       changeJianpuPref={changeJianpuPref}
     />
   );
@@ -1933,7 +1937,7 @@ export function SetlistDetailClient() {
         showChordsGlobal={showChords}
         showPinyinGlobal={showPinyin}
         disposition={disposition}
-        jianpuPref={jianpuPref}
+        jianpuPref={jianpuPrefVu}
         layout={layout}
         editMode={crayon}
         versions={versionViews}
@@ -2043,7 +2047,7 @@ export function SetlistDetailClient() {
       canEdit={canEdit}
       instrument={instrumentHarmonie}
       jianpuManifest={jianpuManifest}
-      jianpuPref={jianpuPref}
+      jianpuPref={jianpuPrefVu}
       withMine={withChosen}
       sourceForItem={crayon ? sourceForItem : sourceDuCulte}
       applyNewSource={(i, next, extra) => applyNewSource(i, next, extra, undefined, crayon ? "moi" : "culte")}
@@ -2179,7 +2183,7 @@ export function SetlistDetailClient() {
                 items={stageItems}
                 contents={contents}
                 songsMap={songsMap}
-                jianpuPref={jianpuPref}
+                jianpuPref={jianpuPrefVu}
                 current={current ?? premierChant()}
                 uidsLus={uidsLus}
                 onGo={allerA}
@@ -2490,7 +2494,7 @@ export function SetlistDetailClient() {
             ) : (
               <div ref={vueRef} data-vue={view}>
                 {view === "liste" ? (
-                  <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} current={current} onOpen={versPartitions} />
+                  <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPrefVu} current={current} onOpen={versPartitions} />
                 ) : (
                   partitionsEtColonne
                 )}
