@@ -72,6 +72,9 @@ choriste n'est voulu nulle part (`docs/spec-jianpu-deux-volets.md`, en cours, le
 en chinois ; Vidéo, Crayon et ⋯ passent à la ligne, la page commence sous 130 px de commandes.
 Spec : aucune ne prévoit une tonalité tronquée.
 ![](parcours-oeil-2026-11-13/chant-fr-tel.webp) ![](parcours-oeil-2026-11-13/chant-zh-tel.webp)
+Corrigé le 13/11 : le mot « Ton » / « 调 » passe entier ou disparaît, la lettre reste toujours entière (« A ⌄ » au
+téléphone, « Ton A » dès qu'il y a la place) ; les deux rangées du téléphone sont voulues (`docs/spec-barre-chant.md`,
+Q5) et restent. Test : `tests/key-selector.spec.ts`, « jamais de mot rogné » (cceb1c4).
 
 **6. La tonalité, trois écrans, trois formes.** Page chant : « Ton A − + » dans la barre **et** une pastille « A » à
 droite du titre (en chinois s'y ajoute « 1=C » sous le titre : trois fois la même information). Setlist : une lettre

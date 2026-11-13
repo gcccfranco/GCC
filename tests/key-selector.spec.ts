@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 /** Les douze tonalités attendues, écrites comme une grille d'accords les
  *  écrit. Table **indépendante** de `src/lib/transpose.ts` : un attendu
@@ -127,4 +128,46 @@ test.describe("pilule de tonalité : le mot « Ton » / « 调 » devant la lett
     await expect(select).toHaveValue("E");
     await expect(page.getByTestId("tonalite-courante")).toHaveText(/^调\s*E/, { useInnerText: true });
   });
+});
+
+// Parcours à l'œil du 13/11, constat 5 : au téléphone, « T… A » et « ㅣC ». Le mot devant la lettre passe entier ou
+// pas du tout ; la lettre reste entière dans la pilule et la rangée de la barre ne déborde pas. Pianiste connecté : sa
+// barre porte aussi « Harmonie », la plus chargée.
+const PIANISTE: FakeProfile = { uid: "uid-orane", email: "orane@example.com", firstName: "Orane", lastName: "V.", planningName: "Orane V.", ...musicien("piano") };
+test.describe("pilule de tonalité : jamais de mot rogné (parcours du 13/11, constat 5)", () => {
+  for (const { nom, slug, zh } of [
+    { nom: "chant français, interface française", slug: "abba-pere", zh: false },
+    { nom: "chant chinois, interface chinoise", slug: "一切都更新", zh: true },
+  ]) {
+    test(nom, async ({ page }) => {
+      if (zh) await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+      await signInAs(page, PIANISTE, {}, `/songs/${encodeURIComponent(slug)}`);
+      await expect(page.getByTestId("barre-outils").getByRole("button", { name: zh ? "和声" : "Harmonie" })).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const mesure = () => page.evaluate(() => {
+        const r = (sel: string) => document.querySelector(`[data-testid="${sel}"]`)!.getBoundingClientRect();
+        const cadre = r("tonalite-courante"), mot = r("tonalite-mot"), lettre = r("tonalite-lettre"), pilule = r("pilule-tonalite");
+        const motEl = document.querySelector('[data-testid="tonalite-mot"]') as HTMLElement;
+        const rangee = document.querySelector(".rangee-chant") as HTMLElement;
+        const fin = rangee.getBoundingClientRect().right - parseFloat(getComputedStyle(rangee).paddingRight);
+        return {
+          motEntier: motEl.scrollWidth <= Math.ceil(mot.width) && mot.left >= cadre.left - 0.5 && mot.right <= cadre.right + 0.5 && mot.bottom <= cadre.bottom + 0.5,
+          motMasque: mot.top >= cadre.bottom - 0.5,
+          lettreDansCadre: lettre.left >= cadre.left - 0.5 && lettre.right <= cadre.right + 0.5 && lettre.top >= cadre.top - 0.5 && lettre.bottom <= cadre.bottom + 0.5,
+          lettreDansPilule: lettre.left >= pilule.left && lettre.right <= pilule.right,
+          rangeeTient: [...rangee.children].every((c) => c.getBoundingClientRect().right <= fin + 0.5),
+        };
+      });
+      // Retour, transposition à + 1 : la lettre change, la règle tient toujours.
+      for (const etape of ["origine", "transposé"]) {
+        if (etape === "transposé") await page.getByTestId("pilule-tonalite").getByRole("button", { name: "+" }).click();
+        await expect(page.getByTestId("tonalite-lettre")).toBeVisible();
+        const m = await mesure();
+        expect(m.motEntier || m.motMasque, `${etape} : le mot est entier ou absent, jamais coupé`).toBe(true);
+        expect(m.lettreDansCadre, `${etape} : la lettre est entière`).toBe(true);
+        expect(m.lettreDansPilule, `${etape} : la lettre reste dans la pilule`).toBe(true);
+        expect(m.rangeeTient, `${etape} : la barre ne déborde pas`).toBe(true);
+      }
+    });
+  }
 });
