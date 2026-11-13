@@ -305,7 +305,7 @@ tombent (pas de liste dans la partition, pas de compteur sur le nom).
   Étiquette dans la langue de l'interface, forme courte (« Couplets 1–4 » si plusieurs sections commencent sur la même
   ligne ; initiale seule sous 40 px de marge). Le lien `sections.json` ↔ passages (`sectionOrigins.ts`) est à établir.
 
-Tranches (une session chacune ; **go à demander à Timothée** après cette écriture) :
+Tranches (une session chacune ; **go de Timothée le 13/11/2026 : « Go »**, enchaînées sans nouveau go) :
 - **JV-5a — Le nom de section ouvre le volet** (S à M) : `SongView.tsx` (nom en bouton, sans toucher aux accords),
   `PartitionView.tsx`, `SongDetailClient.tsx`, `SetlistDetailClient.tsx` (même chemin que `onIci`), feuille à
   mi-hauteur au téléphone. Après JV-2 (même `PartitionView.tsx`). Tests : `harmonie-montrer.spec.ts` (voisine),
@@ -412,3 +412,7 @@ chantier sur ce fichier.
   (plus les deux grands écrans pour les specs d'agencement) : 447 passés, 175 sautés (gardes d'appareil), 1 échec de
   connexion simulée (`pupitre-partitions:716`, ordinateur), repassé seul ; **19,6 min**. tsc, lint : 0 erreur.
   Relecteur : un appelant oublié (`ApercuSetlist.tsx`), corrigé.
+- 13/11/2026 : **go de Timothée pour JV-5a à JV-5c** (« Go »). Chaîne : **JV-2 lance JV-5a** à sa fin (même
+  `PartitionView.tsx`) ; **JV-4 lance JV-5b**, qui lance **JV-5c** (même `PerformanceMode.tsx`, puis `PageScan.tsx` et
+  `JianpuSheet.tsx`). JV-5a et JV-5b peuvent tourner en même temps (fichiers distincts ; ajouts courts dans
+  `SetlistDetailClient.tsx`). La dernière tranche du lot fait tourner les specs du lot et écrit au pilote.
