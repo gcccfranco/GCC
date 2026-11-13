@@ -115,7 +115,9 @@ export async function ouvrirSommaire(page: Page): Promise<Locator> {
  *  déplie d'abord. Rend le bouton de l'historique. */
 export async function ligneHistorique(page: Page, name: RegExp): Promise<Locator> {
   await page.getByTestId("barre-outils").or(page.locator("[data-en-tete]")).first().waitFor();
-  const titre = page.getByRole("button", { name: /, (Afficher les détails de la setlist|显示歌单详情)$/ });
+  // Par l'attribut, pas par le rôle : une feuille qui se ferme (confirmation « Rétablir ») cache un instant le reste
+  // de la page aux rôles.
+  const titre = page.locator('button[aria-expanded][aria-label$=", Afficher les détails de la setlist"], button[aria-expanded][aria-label$=", 显示歌单详情"]');
   if (!(await titre.isVisible())) return page.getByRole("button", { name });
   // La barre s'escamote quand on descend (on remonte, comme au doigt) ; une feuille qui se ferme peut prendre le clic.
   await expect(async () => {
