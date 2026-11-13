@@ -183,6 +183,10 @@ test.describe("CF-D · bascule d'une proposition (CF21)", () => {
 test.describe("CF-D · page d'une setlist de fête (CF14, CF27)", () => {
   test("en-tête, sous-titre, carte « Musiques et danses », « L'ordre de passage » et passages voisins", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/setlists/noel-2026-p1aaaaaa");
+    // Deux volets : l'en-tête se déplie par le titre (T3 de docs/spec-exemples-usage.md), comme jianpu-par-defaut.
+    const titreDv = page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ });
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeAttached(); // la page est chargée
+    if (await titreDv.count()) await titreDv.click();
     await expect(page.getByText("Noël · jeudi 24 décembre · passage 1", { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/Ouverture · saisie par Ruth K\./).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Page de Noël 2026" }).first()).toHaveAttribute("href", /\/evenements\/scene\/noel/);
