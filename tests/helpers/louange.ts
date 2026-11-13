@@ -28,6 +28,8 @@ export const NOM_MENU: Record<Langue, Record<Menu, string>> = {
  *  jusqu'à un toucher au centre, qui la montre ou la cache : si le bouton n'est pas visible on la rappelle, et on clique
  *  jusqu'à ce que le dialogue s'ouvre. Rend le dialogue. */
 export async function ouvrirMenu(page: Page, menu: Menu, langue: Langue = "fr") {
+  // « tempo » : la feuille Tempo est devenue le panneau Métronome (MT-2).
+  if (menu === "tempo") return ouvrirMetronome(page, langue);
   // Au téléphone (< 768 px) Outils n'a plus de bouton dans la barre : son contenu est en tête de la feuille Options d'affichage.
   if (menu === "outils" && page.viewportSize()!.width < 768) menu = "options";
   const nom = NOM_MENU[langue][menu];
@@ -45,6 +47,32 @@ export async function ouvrirMenu(page: Page, menu: Menu, langue: Langue = "fr") 
     await expect(dialogue).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 20_000 });
   return dialogue;
+}
+
+/** Ouvre le panneau Métronome (MT-2) : par la pastille ♩ de la barre à partir de 768 px, par la ligne « Métronome » d'Outils
+ *  au téléphone. Rend le panneau. */
+export async function ouvrirMetronome(page: Page, langue: Langue = "fr") {
+  const panneau = page.getByTestId("panneau-metronome");
+  if (page.viewportSize()!.width < 768) {
+    await expect(async () => {
+      if (await panneau.isVisible()) return;
+      await ouvrirMenu(page, "outils", langue);
+      await page.locator("[data-metronome-ouvrir]").click({ timeout: 2_000 });
+      await expect(panneau).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+    return panneau;
+  }
+  const bouton = page.locator('[data-performance-mode] [data-menu-declencheur="metronome"]');
+  await expect(async () => {
+    if (await panneau.isVisible()) return;
+    if ((await page.locator("[data-performance-mode] [data-barre-haut]").getByRole("button", { name: NOM_MENU[langue].tempo, exact: true }).count()) === 0) {
+      const ecran = page.viewportSize()!;
+      await page.mouse.click(ecran.width / 2, ecran.height / 2);
+    }
+    await bouton.click({ timeout: 2_000 });
+    await expect(panneau).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
+  return panneau;
 }
 
 /** Ferme la barre de titre si elle est ouverte (première ouverture du mode sur l'appareil : elle l'est, et l'en-tête du

@@ -412,8 +412,8 @@ test("mouvement réduit : pas de transition sur les pastilles, le temps avance",
   expect(vus.size).toBeGreaterThanOrEqual(2);
 });
 
-/** Le menu du tempo : « Tempo » (♩ de la barre) à partir de md ; au téléphone, ses lignes sont dans Outils. */
-const ouvrirTempo = (page: Page) => (page.viewportSize()!.width < 768 ? ouvrirOutils(page) : ouvrirMenu(page, "tempo"));
+/** Le tempo : le panneau Métronome (♩ de la barre à partir de md ; au téléphone, la ligne « Métronome » d'Outils). */
+const ouvrirTempo = (page: Page) => ouvrirMenu(page, "tempo");
 
 test("tempo réglé par chant : gardé après rechargement, « Tempo du fichier » l'efface", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
@@ -426,20 +426,20 @@ test("tempo réglé par chant : gardé après rechargement, « Tempo du fichier 
   await expect(options).toBeHidden();
   let reglages = await ouvrirTempo(page);
   const valeur = reglages.locator("[data-tempo-valeur]");
-  await expect(valeur).toHaveText(/♩\s*94/);
+  await expect(valeur).toHaveText(/^94$/);
   await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(0);
   await reglages.locator("[data-tempo-plus]").click();
   await reglages.locator("[data-tempo-plus]").click();
-  await expect(valeur).toHaveText(/♩\s*96/);
+  await expect(valeur).toHaveText(/^96$/);
   await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(1);
 
   await page.reload();
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
   reglages = await ouvrirTempo(page);
-  await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/♩\s*96/);
+  await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/^96$/);
   await reglages.locator("[data-tempo-fichier]").click();
-  await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/♩\s*94/);
+  await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/^94$/);
   await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem("perf-tempo-avec-nous"))).toBeNull();
   expect(erreurs).toEqual([]);

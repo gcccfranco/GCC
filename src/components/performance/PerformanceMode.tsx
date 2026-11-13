@@ -10,7 +10,7 @@ import { MenuLouange, type MenuId } from "./MenuLouange";
 import { LigneFeuilleDeRoute } from "./FeuilleDeRoute";
 import { OngletsSetlist, ContenuTousLesChants } from "./TousLesChants";
 import { useJouerChant } from "./useJouerChant";
-import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo, LignesTempo, TitreRubrique, VALEUR, type ListeSetlistsMenu } from "./ContenusMenus";
+import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, TitreRubrique, VALEUR, type ListeSetlistsMenu } from "./ContenusMenus";
 import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
 import { PageTexte } from "./PageTexte";
@@ -59,7 +59,8 @@ import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui, classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { BandeTemps } from "@/components/performance/BandeTemps";
-import { accentsParDefaut, parseMesure } from "@/lib/performance/metronome";
+import { PanneauMetronome } from "./PanneauMetronome";
+import { usePlace } from "@/components/song/MargeAffichage";
 import { TEMPO_DEPART } from "@/lib/performance/tempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { ROLE_IDS, getRole, roleDemande, setRole, type RolePreset } from "@/lib/performance/roleCompte";
@@ -553,11 +554,11 @@ export function PerformanceMode({
   // Un toucher hors du menu le ferme, y compris sur les barres (qui arrêtent la propagation et cachent le toucher à Radix,
   // écouté plus haut dans le document) : écoute en capture. Sur la page, il est marqué pour que son pointerup ne tourne rien.
   useEffect(() => {
-    if (popoverOuvert === null) return;
+    if (popoverOuvert === null || popoverOuvert === "metronome") return; // le panneau Métronome reste ouvert pendant qu'on joue (× ou Échap le ferme)
     const hors = (e: PointerEvent) => {
       const cible = e.target instanceof Element ? e.target : null;
       if (e.pointerType === "pen") return;
-      if (!cible || cible.closest("[data-menu-louange], [data-menu-declencheur], [data-vaul-overlay]")) return;
+      if (!cible || cible.closest("[data-menu-louange], [data-menu-declencheur], [data-vaul-overlay], [data-panneau-metronome]")) return;
       if (!cible.closest("[data-barre-haut], [data-barre-bas]")) menuAuToucher.current = { t: e.timeStamp };
       // La rangée de points (CurseurPage) change de page au pointerdown : menu ouvert, ce toucher ferme seulement le menu.
       if (cible.closest("[data-curseur-page]")) {
@@ -779,7 +780,10 @@ export function PerformanceMode({
       return null;
     }
   });
-  const twoColumnsAvailable = twoColumnsPossible(ecran.grand, ecran.largeur, fontScale) && !structureMode;
+  // Panneau Métronome en colonne (≥ 1 024 px) : il repousse la musique, dont la largeur de mise en page perd 320 px.
+  const lieuMetro = usePlace();
+  const colonneMetro = popoverOuvert === "metronome" && lieuMetro === "colonne";
+  const twoColumnsAvailable = twoColumnsPossible(ecran.grand, ecran.largeur - (colonneMetro ? 320 : 0), fontScale) && !structureMode;
   const twoColumns = twoColumnsAvailable && twoColumnsPref !== "0";
   const [demiOn, setDemiOn] = useState(getDemiPagePref);
   const [demiPart, setDemiPartEtat] = useState(getDemiPart);
@@ -1038,7 +1042,7 @@ export function PerformanceMode({
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
       const insetG = mcs ? Math.max(0, (parseFloat(mcs.paddingLeft) || 0) - 1.5 * rem) : 0;
       const insetD = mcs ? Math.max(0, (parseFloat(mcs.paddingRight) || 0) - 1.5 * rem) : 0;
-      const largeurPleine = window.innerWidth / fontScale - 8 - insetG - insetD;
+      const largeurPleine = (window.innerWidth - (colonneMetro ? 320 : 0)) / fontScale - 8 - insetG - insetD;
       const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, largeurPleine);
       const hauteurScan = window.innerHeight / fontScale - 4 - (barres.haut + barres.bas) / fontScale - bandeH / fontScale;
       const telephonePortrait = ecran.largeur < 768 && ecran.hauteur > ecran.largeur;
@@ -1127,7 +1131,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, jianpuLabelH, metronome, icisDuLouange, jianpuSections]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, jianpuLabelH, metronome, icisDuLouange, jianpuSections, colonneMetro]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -1703,7 +1707,7 @@ export function PerformanceMode({
       if (e.key !== "Escape") {
         // Curseur de page, feuilles et sommaire ouverts : flèches, PageUp/Down et Espace leur appartiennent.
         if (cible instanceof HTMLInputElement) return;
-        if (popoverOuvert) return;
+        if (popoverOuvert && popoverOuvert !== "metronome") return;
         if (cible?.closest("[role=dialog]")) return;
         // Espace active le bouton, le lien, le curseur ou l'élément de menu qui a le focus (comportement natif)
         // seulement si le focus y est venu au clavier (pas de pointerdown depuis le dernier Tab / Échap) ; un focus resté après un clic, un toucher ou
@@ -1828,16 +1832,17 @@ export function PerformanceMode({
     }
     let grossier = false;
     try { grossier = window.matchMedia("(pointer: coarse)").matches; } catch { /* sans matchMedia : zones par défaut */ }
-    const zone = largeurZoneLaterale(window.innerWidth, window.innerHeight, grossier);
+    const largeurMusique = window.innerWidth - (colonneMetro ? 320 : 0);
+    const zone = largeurZoneLaterale(largeurMusique, window.innerHeight, grossier);
 
-    if (e.clientX < window.innerWidth * zone) {
+    if (e.clientX < largeurMusique * zone) {
       tourner(-1);
-    } else if (e.clientX > window.innerWidth * (1 - zone)) {
+    } else if (e.clientX > largeurMusique * (1 - zone)) {
       tourner(1);
     } else if (!annotateModeRef.current) {
       setShowChrome(!showChrome);
     }
-  }, [showChrome, tourner, annulerAppui]);
+  }, [showChrome, tourner, annulerAppui, colonneMetro]);
 
   // Current page song info for chrome
   // Un chant joué sur sa partition 简谱 n'a pas de bloc « section » : la barre
@@ -1851,9 +1856,8 @@ export function PerformanceMode({
 
   // Métronome visuel : tempo réglé sur l'appareil pour ce chant, sinon celui du fichier.
   const tempoChantId = currentEntry?.block.songSlug;
-  const { tempoAppareil, tempoLiseret, changerTempo, effacerTempo } = useTempoChant(tempoChantId, currentSong?.tempo);
+  const { tempoAppareil, tempoFichier, tempoLiseret, fixerTempo, effacerTempo, mesure: mesureBande, mesureTexte, changerMesure, accents, tournerAccent, subdivision, changerSubdivision, decompte, changerDecompte } = useTempoChant(tempoChantId, currentSong?.tempo, currentSong?.time);
   useEffect(() => setMetroMarche(false), [tempoChantId]); // arrêt au changement de chant
-  const mesureBande = parseMesure(currentSong?.time);
 
   // Progression dans le chant courant + chant suivant
   const songStartPage = currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : -1;
@@ -2027,11 +2031,7 @@ export function PerformanceMode({
       setShowTransitions={setShowTransitions}
       onAnnoter={telephone && user && !horsLigne && (crayonPret || crayonIndispo) ? (crayonIndispo ? signalerCrayonIndispo : basculerAnnotation) : undefined}
       annoterIndispo={crayonIndispo}
-      tempoLignes={
-        telephone && tempoChantId ? (
-          <LignesTempo tempo={tempoLiseret} tempoAppareil={tempoAppareil} changerTempo={changerTempo} effacerTempo={effacerTempo} />
-        ) : undefined
-      }
+      onMetronome={telephone && tempoChantId ? () => basculerMenu("metronome") : undefined}
       raccourcis={pointeurFin || clavierVu}
     />
   );
@@ -2051,6 +2051,7 @@ export function PerformanceMode({
       // En annotation, les repères de section et les lettres de Scène passent au-dessus de l'encre et ne répondent plus au toucher.
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none [-webkit-touch-callout:none] [&[data-annotation]_[data-repere-pastille]]:pointer-events-none [&[data-annotation]_[data-scene-bouton]]:pointer-events-none"
       style={{
+        ...(colonneMetro ? { right: 320 } : null),
         "--sat": "env(safe-area-inset-top, 0px)",
         "--sab": "env(safe-area-inset-bottom, 0px)",
         "--sal": "env(safe-area-inset-left, 0px)",
@@ -2512,10 +2513,10 @@ export function PerformanceMode({
         <BandeTemps
           tempo={tempoLiseret ?? TEMPO_DEPART}
           mesure={mesureBande}
-          accents={accentsParDefaut(mesureBande)}
+          accents={accents}
           marche={metroMarche}
           onMarche={() => setMetroMarche((m) => !m)}
-          onOuvrir={() => basculerMenu(telephone ? "outils" : "tempo")}
+          onOuvrir={() => basculerMenu("metronome")}
           top={showChrome || trancheCourante ? `${barres.haut}px` : "var(--sat, 0px)"}
           telephone={telephone}
         />
@@ -2750,17 +2751,30 @@ export function PerformanceMode({
         </div>
       </MenuLouange>
 
-      <MenuLouange id="tempo" titre={t("performance.tempo")} ouvert={popoverOuvert === "tempo"} onOuvertChange={(o) => !o && fermerMenu("tempo")} couleur={couleurMenus}>
-        <ContenuTempo
-          tempo={tempoLiseret}
-          tempoAppareil={tempoAppareil}
-          changerTempo={changerTempo}
-          effacerTempo={effacerTempo}
-          metronome={metronome}
-          setMetronome={setMetronome}
-        />
-      </MenuLouange>
-
+      {/* Panneau Métronome : remplace la feuille Tempo ; il remplacera la marge « Affichage » quand elle sera montée en louange (RU-5). */}
+      <PanneauMetronome
+        ouvert={popoverOuvert === "metronome"}
+        onFermer={() => fermerMenu("metronome")}
+        tempo={tempoLiseret ?? TEMPO_DEPART}
+        tempoAppareil={tempoAppareil}
+        tempoFichier={tempoFichier}
+        fixerTempo={fixerTempo}
+        effacerTempo={effacerTempo}
+        mesure={mesureBande}
+        mesureTexte={mesureTexte}
+        changerMesure={changerMesure}
+        accents={accents}
+        tournerAccent={tournerAccent}
+        subdivision={subdivision}
+        changerSubdivision={changerSubdivision}
+        decompte={decompte}
+        changerDecompte={changerDecompte}
+        marche={metroMarche}
+        onMarche={() => setMetroMarche((m) => !m)}
+        bande={metronome}
+        setBande={setMetronome}
+        basBande={`calc(${showChrome || trancheCourante ? `${barres.haut}px` : "var(--sat, 0px)"} + 36px)`}
+      />
       <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurMenus}>
         {contenuOutils}
       </MenuLouange>

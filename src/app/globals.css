@@ -892,18 +892,22 @@
 [data-bande-temps] { --repos: color-mix(in srgb, hsl(var(--foreground)) 65%, transparent); } /* clair : chiffres ≥ 4,5:1 */
 .dark [data-bande-temps] { --plein: color-mix(in srgb, hsl(var(--foreground)) 85%, transparent); --repos: color-mix(in srgb, hsl(var(--foreground)) 60%, transparent); }
 [data-bande-interieur] {
-  position: relative; display: flex; align-items: center; height: 100%; max-width: 1440px; margin-inline: auto;
+  position: relative; display: flex; align-items: center; height: 100%;
   padding-left: calc(1.5rem + env(safe-area-inset-left)); padding-right: calc(1.5rem + env(safe-area-inset-right));
 }
 [data-bande-ouvrir] { position: absolute; inset: 0; background: none; border: 0; }
 [data-bande-pastilles] { position: relative; flex: 1; display: flex; justify-content: center; gap: 16px; pointer-events: none; }
 [data-bande-groupe] { display: flex; flex-basis: 0; justify-content: center; align-items: center; gap: 6px; }
 [data-bande-groupe] > [data-temps] {
-  position: relative; flex: 1; max-width: 160px; display: flex; align-items: center; justify-content: center;
+  position: relative; flex: 1; max-width: 96px; /* MT-2 : 160 px se lisaient comme des onglets (critique) */ display: flex; align-items: center; justify-content: center;
   box-sizing: border-box; border: 1.5px solid var(--repos); border-radius: 9999px; height: 20px;
   color: var(--repos); font-size: 12px; line-height: 1;
 }
-[data-bande-groupe] > [data-accent="fort"] { height: 28px; border-width: 2.5px; font-weight: 700; font-size: 14px; }
+[data-bande-groupe] > [data-accent="fort"] { height: 28px; border-width: 2px; font-weight: 700; font-size: 14px; } /* MT-2 : contour de 2 px comme le moyen, l'accent porté par la hauteur et le chiffre gras (au repos, le fort ne se lit plus comme un onglet choisi) */
+@media (min-width: 1024px) { /* MT-2 : chiffres un peu plus grands, hauteurs inchangées */
+  [data-bande-groupe] > [data-temps] { font-size: 15px; }
+  [data-bande-groupe] > [data-accent="fort"] { font-size: 17px; }
+}
 [data-bande-groupe] > [data-accent="moyen"] { height: 24px; border-width: 2px; }
 [data-bande-groupe] > [data-accent="muet"] { border-style: dashed; }
 [data-bande-groupe] > [data-compact] { max-height: 24px; font-size: 11px; letter-spacing: -0.04em; border-width: 1.5px; }
@@ -927,6 +931,26 @@
   [data-bande-groupe] > [data-actif]:not([data-accent="muet"]) { background: var(--plein); border-color: var(--plein); color: hsl(var(--background)); }
   [data-bande-groupe] > [data-actif][data-accent="muet"]::before { animation: none !important; opacity: 1; }
 }
+/* Panneau Métronome (lot MT, MT-2) : réglette graduée tous les 10 et pastilles des temps (cible fixe de 44 px, l'accent par le
+   contour et la graisse : mêmes `data-temps` / `data-accent` que la bande). Aucune teinte. */
+[data-panneau-metronome] { --repos: color-mix(in srgb, hsl(var(--foreground)) 65%, transparent); }
+.dark [data-panneau-metronome] { --repos: color-mix(in srgb, hsl(var(--foreground)) 60%, transparent); }
+[data-reglette] { position: relative; }
+[data-reglette]::before { /* 21 intervalles de 10 sur 30 à 240, entre les centres des extrémités du pouce (≈ 14 px de chaque côté) */
+  content: ""; position: absolute; left: 14px; right: 14px; top: 50%; height: 14px; transform: translateY(-50%); pointer-events: none;
+  background: repeating-linear-gradient(to right, var(--repos) 0 1px, transparent 1px calc(100% / 21));
+  border-right: 1px solid var(--repos);
+}
+[data-reglette] > input { position: relative; background: transparent; accent-color: hsl(var(--foreground)); }
+[data-panneau-temps] button { width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; padding: 0; color: var(--repos); }
+[data-panneau-temps] button > span {
+  box-sizing: border-box; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9999px;
+  border: 1.5px solid var(--repos); font-size: 15px; line-height: 1;
+}
+[data-panneau-temps] [data-accent="fort"] > span { border-width: 3px; font-weight: 700; color: hsl(var(--foreground)); border-color: hsl(var(--foreground)); }
+[data-panneau-temps] [data-accent="moyen"] > span { border-width: 2px; font-weight: 600; }
+[data-panneau-temps] [data-accent="muet"] > span { border-style: dashed; }
+[data-panneau-temps] button:focus-visible > span { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 @keyframes volet-fondu { from { opacity: 0; } }
 @keyframes volet-fondu-sortie { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {

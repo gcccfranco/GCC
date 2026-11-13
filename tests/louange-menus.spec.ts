@@ -94,11 +94,12 @@ async function allerPage2(page: Page) {
 
 const attendreOuverture = (page: Page) => page.waitForTimeout(500);
 
-const MENUS: Menu[] = ["setlist", "reperes", "outils", "tempo", "options"];
+// Le tempo n'est plus un menu : c'est le panneau Métronome (tests/metronome-panneau.spec.ts).
+const MENUS: Menu[] = ["setlist", "reperes", "outils", "options"];
 
 for (const menu of MENUS) {
   test(`${menu} : s'ouvre sous son icône (feuille du bas au téléphone) ; un toucher dedans ne tourne jamais la page`, async ({ page }) => {
-    test.skip((menu === "tempo" || menu === "outils") && telephone(page), "au téléphone le tempo et Outils sont en tête de la feuille Options d'affichage (testée sous « options »)");
+    test.skip(menu === "outils" && telephone(page), "au téléphone Outils est en tête de la feuille Options d'affichage (testée sous « options »)");
     await ouvrir(page);
     await allerPage2(page);
     const avant = await lireCompteur(page);
@@ -140,7 +141,7 @@ for (const menu of MENUS) {
   });
 
   test(`${menu} : un toucher dehors le ferme sans tourner la page ni masquer la barre ; flèches sans effet ; Échap ferme puis quitte`, async ({ page }, testInfo) => {
-    test.skip((menu === "tempo" || menu === "outils") && telephone(page), "au téléphone le tempo et Outils sont en tête de la feuille Options d'affichage (testée sous « options »)");
+    test.skip(menu === "outils" && telephone(page), "au téléphone Outils est en tête de la feuille Options d'affichage (testée sous « options »)");
     await ouvrir(page);
     await allerPage2(page);
     const avant = await lireCompteur(page);
@@ -272,13 +273,13 @@ test("Outils : + monte d'un demi-ton (barre), « Revenir à X » apparaît puis 
   // Raccourcis : sur ordinateur (pointeur précis) ; absents au téléphone tant qu'aucune touche n'a été frappée.
   if (ordinateur(testInfo)) await expect(outils.locator("[data-raccourcis]")).toBeVisible();
   if (telephone(page)) await expect(outils.locator("[data-raccourcis]")).toHaveCount(0);
-  // Au téléphone, Crayon et le tempo sont des lignes d'Outils ; ailleurs ils sont dans la barre.
+  // Au téléphone, Crayon et « Métronome » (qui ouvre le panneau) sont des lignes d'Outils ; ailleurs ils sont dans la barre.
   if (telephone(page)) {
     await expect(outils.getByRole("button", { name: "Crayon" })).toBeVisible();
-    await expect(outils.locator("[data-tempo-plus]")).toBeVisible();
+    await expect(outils.locator("[data-metronome-ouvrir]")).toBeVisible();
   } else {
     await expect(outils.getByRole("button", { name: "Crayon" })).toHaveCount(0);
-    await expect(outils.locator("[data-tempo-plus]")).toHaveCount(0);
+    await expect(outils.locator("[data-metronome-ouvrir]")).toHaveCount(0);
   }
   // Au téléphone Outils est la tête de la feuille Options d'affichage : un titre de rubrique « Outils », pas de bouton dans la barre.
   if (telephone(page)) {
@@ -291,17 +292,16 @@ test("Outils : + monte d'un demi-ton (barre), « Revenir à X » apparaît puis 
   }
 });
 
-test("Tempo : − / +, « Tempo du fichier », métronome visuel (bouton rond on/off)", async ({ page }) => {
-  test.skip(telephone(page), "au téléphone le tempo est une ligne d'Outils, en tête d'Options");
+test("Tempo : − / +, « Revenir au tempo du chant », métronome visuel (bouton on/off), dans le panneau Métronome", async ({ page }) => {
   await ouvrir(page);
   const tempo = await ouvrirMenu(page, "tempo");
-  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/♩\s*94/);
+  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/^94$/);
   await expect(tempo.locator("[data-tempo-fichier]")).toHaveCount(0);
   await tempo.locator("[data-tempo-plus]").click();
-  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/♩\s*95/);
+  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/^95$/);
   await expect(tempo.locator("[data-tempo-fichier]")).toHaveCount(1);
   await tempo.locator("[data-tempo-fichier]").click();
-  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/♩\s*94/);
+  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/^94$/);
   const metronome = tempo.getByRole("button", { name: "Métronome visuel" });
   await expect(metronome).toHaveAttribute("aria-pressed", "false");
   await metronome.click();
@@ -537,7 +537,7 @@ for (const langue of ["fr", "zh"] as const) {
     test(`captures FS-B : chaque menu ouvert, ${langue}, ${theme}`, async ({ page }, testInfo) => {
       await ouvrir(page, { langue, theme });
       for (const menu of MENUS) {
-        if ((menu === "tempo" || menu === "outils") && telephone(page)) continue;
+        if (menu === "outils" && telephone(page)) continue;
         const dialogue = await ouvrirMenu(page, menu, langue);
         await attendreOuverture(page);
         await page.screenshot({ path: `${SORTIE}/menu-${menu}-${langue}-${theme}-${testInfo.project.name}.png` });

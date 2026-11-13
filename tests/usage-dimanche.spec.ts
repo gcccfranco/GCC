@@ -229,8 +229,8 @@ test.describe("mode louange", () => {
   test("tempo + compte cmd.louange.tempo", async ({ page }) => {
     const { recus } = await setlistLouangeOuverte(page);
     await ouvrirLeMode(page);
-    // Au téléphone les lignes du tempo sont en tête d'Options (ouvrirMenu « outils » y renvoie).
-    const menu = page.viewportSize()!.width < 768 ? await ouvrirOutils(page) : await ouvrirMenu(page, "tempo");
+    // Le tempo est dans le panneau Métronome (au téléphone, par la ligne « Métronome » d'Outils : ouvrirMenu « tempo » s'en charge).
+    const menu = await ouvrirMenu(page, "tempo");
     await menu.locator("[data-tempo-plus]").click();
     await verifier(page, recus, "cmd.louange.tempo");
   });

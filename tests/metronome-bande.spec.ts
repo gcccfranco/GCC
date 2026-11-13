@@ -93,7 +93,7 @@ test("12/8 : douze pastilles ; au téléphone chiffrées seulement 1, 4, 7, 10 (
   expect(m.width).toBeGreaterThanOrEqual(44);
 });
 
-// shortcut: le temps muet tramé (border-style dashed, trame) n'est pas testé : les accents ne se règlent qu'en MT-2.
+// Le temps muet tramé (tirets au repos, trame en cours) se règle et se vérifie depuis MT-2 : tests/metronome-panneau.spec.ts.
 
 test("mouvement réduit : ni transition ni animation sur les pastilles, le temps avance toujours", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -112,9 +112,18 @@ test("aucun chevauchement entre la bande et le premier élément de la page", as
     await ouvrir(page, [slug]);
     const b = (await bande(page).boundingBox())!;
     // Scan : la boîte qui rogne (parent de [data-jianpu-page]), car une tranche déborde au-dessus de ce qu'on voit.
-    const premier = slug === "avec-nous" ? onStage(page, "[data-section]").first() : onStage(page, "[data-jianpu-page]").first().locator("xpath=..");
+    const premier = slug === "avec-nous" ? onStage(page, "[data-section]").first() : onStage(page, "[data-jianpu-page]").first();
     await expect(premier).toBeVisible();
-    expect((await premier.boundingBox())!.y).toBeGreaterThanOrEqual(b.y + b.height - 0.5);
+    // JV-5c : le parent est un enveloppe `display: contents` ; la boîte qui rogne est le premier ancêtre qui a un rectangle.
+    const hauts = slug === "avec-nous"
+      ? [(await premier.boundingBox())!.y]
+      : await onStage(page, "[data-jianpu-page]").evaluateAll((els) => els.map((e) => {
+        let p = e.parentElement;
+        while (p && p.getBoundingClientRect().width === 0) p = p.parentElement;
+        return p!.getBoundingClientRect();
+      }).filter((r) => r.width > 0 && r.height > 0).map((r) => r.top));
+    expect(hauts.length).toBeGreaterThan(0);
+    expect(Math.min(...hauts)).toBeGreaterThanOrEqual(b.y + b.height - 0.5);
     await page.goto("about:blank");
   }
 });

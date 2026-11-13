@@ -24,7 +24,7 @@ const suivre = (f: () => void) => {
   return () => ms.forEach((m) => m.removeEventListener("change", f));
 };
 const place = (): Place => (window.matchMedia(COLONNE).matches ? "colonne" : window.matchMedia(LARGE).matches ? "feuille-large" : "feuille");
-const usePlace = () => useSyncExternalStore(suivre, place, () => "colonne" as Place);
+export const usePlace = () => useSyncExternalStore(suivre, place, () => "colonne" as Place);
 
 type Props = {
   ouvert: boolean;
@@ -49,7 +49,7 @@ type Props = {
 
 const LIGNE = "flex min-h-11 items-center justify-between gap-3";
 
-function Segment({ valeurs, choisie, onChoix, vertical, label }: { valeurs: { id: string; nom: string }[]; choisie: string; onChoix: (id: string) => void; vertical?: boolean; label: string }) {
+export function Segment({ valeurs, choisie, onChoix, vertical, label }: { valeurs: { id: string; nom: string }[]; choisie: string; onChoix: (id: string) => void; vertical?: boolean; label: string }) {
   return (
     <div role="radiogroup" aria-label={label} className={`${vertical ? "flex flex-col" : "inline-flex"} gap-0.5 rounded-xl border border-border p-0.5`}>
       {valeurs.map((v) => (
@@ -68,7 +68,7 @@ function Segment({ valeurs, choisie, onChoix, vertical, label }: { valeurs: { id
   );
 }
 
-function Groupe({ titre, mention, children }: { titre: string; mention: string; children: ReactNode }) {
+export function Groupe({ titre, mention, children }: { titre: string; mention: string; children: ReactNode }) {
   const id = useId();
   return (
     <section aria-labelledby={id} data-groupe className="space-y-1 border-t border-border px-4 py-3">

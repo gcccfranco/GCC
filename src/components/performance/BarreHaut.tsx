@@ -120,7 +120,7 @@ export function BarreHaut({
 
       <div className="flex flex-1 basis-0 items-center justify-end gap-0.5">
         {tempo ? (
-          <BtnBarre label={t("performance.tempo")} menu="tempo" menuOuvert={menuOuvert} onClick={() => onMenu("tempo")} cacheTel>
+          <BtnBarre label={t("performance.tempo")} menu="metronome" menuOuvert={menuOuvert} onClick={() => onMenu("metronome")} cacheTel>
             <span data-tempo-barre className="flex items-center gap-0.5 text-sm font-semibold tabular-nums">
               <span aria-hidden="true" className="-mr-2 text-xl leading-none">♩</span>
               {tempo}

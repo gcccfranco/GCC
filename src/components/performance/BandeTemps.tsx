@@ -79,7 +79,7 @@ export function BandeTemps({
           {mesure.groupes.map((g, gi) => {
             const d = mesure.groupes.slice(0, gi).reduce((a, b) => a + b, 0);
             return (
-              <div key={gi} data-bande-groupe style={{ flexGrow: g, maxWidth: `${g * 160 + (g - 1) * 6}px` }}>
+              <div key={gi} data-bande-groupe style={{ flexGrow: g, maxWidth: `${g * 96 + (g - 1) * 6}px` }}>
                 {Array.from({ length: g }, (_, j) => {
                   const i = d + j;
                   const actif = pos?.temps === i;

@@ -263,6 +263,26 @@ touchent l'agencement s'ajoutent à `SPECS_GRAND_ECRAN` (cinq projets). Tests su
 
 ## Avancement
 
+- 13/11/2026, nuit : **MT-2 faite** (le panneau, sans son ni entraînement). `PanneauMetronome.tsx` (colonne de 320 px qui
+  repousse la musique dès 1 024 px, deux colonnes repliées en une ; feuille pleine largeur à deux crans dessous, « moyen »
+  60 dvh et « grand » qui s'arrête sous la bande), `IconeNote.tsx` (notes en SVG), réglages `perf-metro-*` dans `tempo.ts`
+  et `useTempoChant.ts` (mesure, accents, subdivision par chant ; décompte par appareil ; la mesure changée remet les
+  accents aux défauts). Tempo : − / + (appui long par 5), pavé, réglette, Taper (quatre derniers intervalles, remise à
+  zéro après 2 s) ; « Revenir au tempo du chant ». La feuille Tempo et `LignesTempo` sont retirées ; au téléphone, Outils
+  a une ligne « Métronome » ; la pastille ♩ et la bande ouvrent le panneau (`popoverOuvert = "metronome"` : un seul menu
+  ou panneau à la fois ; il remplacera la marge « Affichage » quand RU-5 la montera). Restes de MT-1 : fort au repos à
+  2 px, chiffres à 15 / 17 px dès 1 024 px, temps muet tramé testé, bande sans plafond de 1 440 px (mêmes marges que la
+  musique). **Décisions déléguées (session MT-2, 13/11)** : subdivisions et décompte retenus mais sans effet sur la bande
+  (son en MT-3, décompte en MT-4) ; après `critique-design` : « Marche » à `--couleur-icones` (l'accent du mode louange),
+  l'interrupteur « Métronome visuel » en ligne libellée avec un interrupteur (plus un rond muet dans l'en-tête), pastilles
+  de la bande à 96 px au plus (à 160 px, le fort se lisait comme un onglet choisi), feuille pleine largeur en tablette
+  portrait (à 560 px elle coupait la musique de part et d'autre ; même choix que le volet Harmonie de JV-5b), grand cran
+  sous la bande. Non retenu : « Autre » seul sur sa ligne dans la colonne, « Je joue » sur deux lignes en paysage quand la
+  colonne est ouverte. Le test de chevauchement de MT-1 suit le scan de JV-5c (enveloppe `display: contents`). Libellés
+  zh neufs à faire relire : 视觉节拍器, 打拍, 预备拍, 本设备为此歌保存, 恢复歌曲速度. Tests : `metronome-panneau` (nouvelle,
+  cinq projets), `metronome-bande`, `louange-menus`, `usage-dimanche`, `mode-louange-forscore` : verts (Repères à 1 440 px
+  rouge deux fois en fin de passe chargée, vert seul) ; ≈ 75 min en deux passes plus les relances.
+
 - 13/11/2026, soir : **MT-1 faite** (bande des temps, sans son). `metronome.ts` (mesure, accents par défaut, horloge :
   tempo au temps suivant, mesure à la mesure suivante), `BandeTemps.tsx` à la place du liseré, `{time}` porté jusqu'au
   mode louange, ▶ / ■ dans la barre (grand écran) et au bout de la bande (téléphone), arrêt au changement de chant, page

@@ -8,7 +8,6 @@ import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { isDp, paletteKeyOf } from "@/lib/setlist/dp";
 import { formatDate } from "@/lib/utils/formatDate";
-import { TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import type { SectionBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import type { FSSetlist } from "@/types/setList";
 import { compter } from "@/lib/usage";
@@ -348,79 +347,6 @@ export function ContenuReperes({
   );
 }
 
-// ─── Tempo ────────────────────────────────────────────────────────────────────
-
-/** Les lignes du tempo : − / + autour de la valeur, « Tempo du fichier » quand l'appareil en a un autre.
- *  Même composant dans le menu Tempo (md et plus) et dans Outils (téléphone). */
-export function LignesTempo({
-  tempo,
-  tempoAppareil,
-  changerTempo,
-  effacerTempo,
-}: {
-  tempo: number | undefined;
-  tempoAppareil: number | null;
-  changerTempo: (delta: number) => void;
-  effacerTempo: () => void;
-}) {
-  const { t } = useTranslation();
-  const valeur = tempo ?? TEMPO_DEPART;
-  return (
-    <>
-      <LigneMenu label={t("performance.tempoSong")}>
-        <BoutonRond label={t("performance.tempoDown")} onClick={() => changerTempo(-1)} disabled={valeur <= TEMPO_MIN} data-tempo-moins="">
-          <Minus className="h-4 w-4" />
-        </BoutonRond>
-        <span data-tempo-valeur className={`${VALEUR} inline-flex items-baseline justify-center gap-1`}>
-          <span aria-hidden="true">♩</span>
-          {valeur}
-        </span>
-        <BoutonRond label={t("performance.tempoUp")} onClick={() => changerTempo(1)} disabled={valeur >= TEMPO_MAX} data-tempo-plus="">
-          <Plus className="h-4 w-4" />
-        </BoutonRond>
-      </LigneMenu>
-      {tempoAppareil !== null && (
-        <button
-          type="button"
-          data-tempo-fichier
-          onClick={effacerTempo}
-          className={`min-h-11 rounded-lg px-1 text-sm font-semibold ${COULEUR} hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
-        >
-          {t("performance.tempoFile")}
-        </button>
-      )}
-    </>
-  );
-}
-
-export function ContenuTempo({
-  tempo,
-  tempoAppareil,
-  changerTempo,
-  effacerTempo,
-  metronome,
-  setMetronome,
-}: {
-  tempo: number | undefined;
-  tempoAppareil: number | null;
-  changerTempo: (delta: number) => void;
-  effacerTempo: () => void;
-  metronome: boolean;
-  setMetronome: (v: boolean) => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="space-y-1">
-      <LignesTempo tempo={tempo} tempoAppareil={tempoAppareil} changerTempo={changerTempo} effacerTempo={effacerTempo} />
-      <LigneMenu label={t("performance.metronome")}>
-        <BoutonRond label={t("performance.metronome")} allume={metronome} onClick={() => setMetronome(!metronome)} taille={44} data-metronome="">
-          <Waves className="h-5 w-5" />
-        </BoutonRond>
-      </LigneMenu>
-    </div>
-  );
-}
-
 // ─── Outils ───────────────────────────────────────────────────────────────────
 
 /** Plein écran : l'état se lit sur `fullscreenchange` (la touche Échap du navigateur le quitte aussi). */
@@ -451,7 +377,7 @@ export function ContenuOutils({
   setShowTransitions,
   onAnnoter,
   annoterIndispo = false,
-  tempoLignes,
+  onMetronome,
   raccourcis,
 }: {
   /** Tonalité affichée et celle de la setlist ; absentes = pas de ligne tonalité (fusion, aucun chant). */
@@ -466,8 +392,8 @@ export function ContenuOutils({
   onAnnoter: (() => void) | undefined;
   /** Ma partition n'a pas pu être lue : la ligne reste, désactivée (son toucher dit pourquoi). */
   annoterIndispo?: boolean;
-  /** Téléphone seulement : les lignes du tempo, sous le métronome. Absent = pas de ligne. */
-  tempoLignes: ReactNode;
+  /** Téléphone seulement : ouvre le panneau Métronome. Absent = pas de ligne. */
+  onMetronome: (() => void) | undefined;
   raccourcis: boolean;
 }) {
   const { t } = useTranslation();
@@ -532,7 +458,17 @@ export function ContenuOutils({
           {t("performance.crayon")}
         </button>
       )}
-      {tempoLignes}
+      {onMetronome && (
+        <button
+          type="button"
+          data-metronome-ouvrir
+          onClick={onMetronome}
+          className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+        >
+          <Waves aria-hidden="true" className="h-5 w-5 shrink-0" />
+          {t("panneauMetronome.metronomeLigne")}
+        </button>
+      )}
       {raccourcis && (
         <div data-raccourcis className="mt-2 border-t border-border pt-3">
           <TitreRubrique>{t("performance.shortcuts")}</TitreRubrique>
