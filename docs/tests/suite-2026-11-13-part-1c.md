@@ -30,3 +30,10 @@ Le rejeu a aussi échoué sur les autres appareils (64 échecs au total) : voir 
 | statistiques.spec.ts:433 « les plus joués › rien n'est écrit dans la base » | cinq appareils | `toEqual([])`, reçu 7 écritures hors `notifPrefs/` : `statistiques.spec.ts:438` |
 
 Remarques : les numéros « environ » viennent de l'extrait d'erreur ; le détail complet est dans les sorties du scratchpad de la session (non versionnées). Au premier passage les échecs ne portaient que sur `ordinateur` (le trente-deuxième ne tombait que sur ce projet pour ces tests) ; le rejeu complet des fichiers les a retrouvés sur d'autres appareils.
+
+## Tests de frontière (demande du pilote, 13/11)
+Fichiers entiers, `--workers=2 --trace off`, un seul projet chacun :
+- `npm test -- tests/pupitre-partitions.spec.ts --project=ordinateur` : 43 tests, 15 passés, 28 sautés, 0 en échec (35 s).
+- `npm test -- tests/acces-migration.spec.ts --project=tablette` : 19 tests, 19 passés, 0 sauté, 0 en échec (5 s).
+
+Total : 62 tests, 34 passés, 28 sautés, 0 en échec.
