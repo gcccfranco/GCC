@@ -537,5 +537,11 @@ chantier sur ce fichier.
   661, 682 à 1 440), 6 tests Crayon à 1 440 (nouveau projet pour la spec, gardés sur trois appareils) (**27,8 min**) ;
   repasses `harmonie-jianpu` + `louange-jianpu-deux-colonnes` après corrections : 110 passés, 0 échec (**4,4 min**
   chacune, deux fois). `jianpu:audit` 为我而来 et 一切歌颂赞美 : calque calé, PNG regardés (l'audit laisse un `next dev`
-  sur :3100 : le tuer avant de relancer Playwright, sinon tout échoue). tsc, lint : 0 erreur. **Fin du lot JV** (JV-1 à
-  JV-5c codées).
+  sur :3100 : le tuer avant de relancer Playwright, sinon tout échoue). tsc, lint : 0 erreur. `regard` sur 45 captures (cinq projets, FR et ZH, clair et sombre) :
+  rien de bloquant (aucune étiquette sur l'encre ni hors écran, volet au bon bloc). À retoucher, laissés : forme courte à
+  11 px serrée dans sa pastille sur deux lignes (« Couplets 1–2 ») ; marges inégales en louange 2 colonnes (le rail est à
+  gauche de chaque colonne) et ≈ un quart de hauteur vide sous les colonnes en paysage (le prix de la pleine largeur) ;
+  cadre du bloc touché parfois absent sur les captures 中文 du volet (capture prise avant la fin du défilement ?) ;
+  antérieurs : titres des fiches en français dans l'interface 中文. **`critique-design` non lancé** (plafond de contexte de
+  la session) : à faire sur les onze captures signalées par `regard` (regénérables : `PW_CAPTURES=<dossier> npx
+  playwright test tests/harmonie-jianpu.spec.ts -g "JV-5c"`). **Fin du lot JV** (JV-1 à JV-5c codées).
