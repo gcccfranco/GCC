@@ -116,6 +116,13 @@ export async function ouvrirSommaire(page: Page): Promise<Locator> {
 export async function ligneHistorique(page: Page, name: RegExp): Promise<Locator> {
   await page.getByTestId("barre-outils").or(page.locator("[data-en-tete]")).first().waitFor();
   const titre = page.getByRole("button", { name: /, (Afficher les détails de la setlist|显示歌单详情)$/ });
-  if ((await titre.isVisible()) && (await titre.getAttribute("aria-expanded")) === "false") await titre.click();
+  if (!(await titre.isVisible())) return page.getByRole("button", { name });
+  // La barre s'escamote quand on descend (on remonte, comme au doigt) ; une feuille qui se ferme peut prendre le clic.
+  await expect(async () => {
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await expect(titre).toBeInViewport({ timeout: 1_000 });
+    if ((await titre.getAttribute("aria-expanded")) === "false") await titre.click({ timeout: 1_000 });
+    await expect(titre).toHaveAttribute("aria-expanded", "true", { timeout: 1_000 });
+  }).toPass();
   return page.getByRole("button", { name });
 }
