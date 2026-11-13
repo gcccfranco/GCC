@@ -81,6 +81,14 @@ export function coupeMilieu(barres: number[], x0: number, x1: number): number | 
 export const ECART_MOITIES = 2;
 export const ECART_SYSTEMES = 24;
 
+/** Fenêtres d'une ligne : entière, ou deux moitiés coupées sur la barre la plus proche du milieu. */
+function fenetresLigne(l: LigneTranche, k: number, haut: number, bas: number, x0: number, x1: number): FenetreDemi[] {
+  const y0 = l.y0 - haut;
+  const y1 = l.y1 + bas;
+  const c = coupeMilieu(l.barres ?? [], x0, x1);
+  return c === null ? [{ x0, x1, y0, y1, ligne: k }] : [{ x0, x1: c, y0, y1, ligne: k, moitie: "g" }, { x0: c, x1, y0, y1, ligne: k, moitie: "d" }];
+}
+
 /** Tranches en demi-lignes (téléphone en portrait) : chaque ligne coupée sur sa barre la plus proche du milieu donne
  *  deux fenêtres empilées (même `y0..y1`) ; une ligne sans coupe reste entière. Échelle commune à la page :
  *  `largeurDispoPx` / la plus large des fenêtres. On empile des systèmes entiers tant qu'ils tiennent ; un système
@@ -97,12 +105,7 @@ export function tranchesDemiLignes(
 ): Tranche[] {
   if (lignes.length === 0) return [];
   const { haut, bas } = marges(lignes, pageH);
-  const fenetresDe = (k: number): FenetreDemi[] => {
-    const y0 = lignes[k].y0 - haut[k];
-    const y1 = lignes[k].y1 + bas[k];
-    const c = coupeMilieu(lignes[k].barres ?? [], x0, x1);
-    return c === null ? [{ x0, x1, y0, y1, ligne: k }] : [{ x0, x1: c, y0, y1, ligne: k, moitie: "g" }, { x0: c, x1, y0, y1, ligne: k, moitie: "d" }];
-  };
+  const fenetresDe = (k: number) => fenetresLigne(lignes[k], k, haut[k], bas[k], x0, x1);
   const mesure = (fs: FenetreDemi[]) => {
     const echelle = largeurDispoPx / Math.max(1, ...fs.map((f) => f.x1 - f.x0));
     const h = fs.reduce((t, f, n) => t + (f.y1 - f.y0) * echelle + (n === 0 ? 0 : f.moitie === "d" ? ECART_MOITIES : ECART_SYSTEMES), 0);
@@ -164,4 +167,48 @@ export function sectionsDeTranche(sections: SectionScan[], page: number, tranche
 export function trancheDeSection(section: SectionScan, tranchesDeLaPage: Pick<Tranche, "premiere" | "derniere">[]): number {
   const [, ligne] = debutSection(section);
   return tranchesDeLaPage.findIndex((t) => t.premiere + 1 <= ligne && ligne <= t.derniere + 1);
+}
+
+/** Fenêtre d'un volet : une demi-ligne et sa page (0-based). */
+export type FenetreVolet = FenetreDemi & { page: number };
+/** Deux colonnes de demi-lignes (vue Partitions, ≥ 1 000 px) ; échelle commune (px CSS par px image). */
+export type Volets = { echelle: number; colonnes: [FenetreVolet[], FenetreVolet[]] };
+/** Accords imprimés minimaux (px CSS) en deux volets : dessous, le scan reste sur une colonne. */
+export const SEUIL_ACCORD_VOLETS = 11;
+
+/** Répartit les demi-lignes de tout le chant en deux colonnes (jamais coupées entre les deux moitiés d'une ligne).
+ *  Échelle = colonne / plus large fenêtre, plafonnée à `echelleMax`. `null` : une colonne (accords imprimés sous
+ *  `seuilAccordPx`, ou moins de deux systèmes). Coupe au début de section si l'écart reste ≤ 2 demi-lignes, sinon
+ *  au milieu (hauteurs les plus égales). */
+export function voletsDemiLignes(
+  pages: { lignes: LigneTranche[]; h: number; x0: number; x1: number }[],
+  sections: SectionScan[],
+  largeurColonnePx: number,
+  echelleMax: number,
+  hauteurAccordImg: number,
+  seuilAccordPx = SEUIL_ACCORD_VOLETS,
+): Volets | null {
+  const systemes: FenetreVolet[][] = pages.flatMap((p, page) => {
+    const { haut, bas } = marges(p.lignes, p.h);
+    return p.lignes.map((l, k) => fenetresLigne(l, k, haut[k], bas[k], p.x0, p.x1).map((f) => ({ ...f, page })));
+  });
+  if (systemes.length < 2) return null;
+  const large = Math.max(1, ...systemes.flat().map((f) => f.x1 - f.x0));
+  const echelle = Math.min(echelleMax, largeurColonnePx / large);
+  if (hauteurAccordImg * echelle < seuilAccordPx) return null;
+  const hSysteme = (s: FenetreVolet[]) => s.reduce((t, f) => t + (f.y1 - f.y0) * echelle + (f.moitie === "d" ? ECART_MOITIES : 0), 0);
+  // Hauteur d'une colonne de systèmes [a, b[ : écarts entre systèmes compris.
+  const hauteur = (a: number, b: number) => systemes.slice(a, b).reduce((t, s, n) => t + hSysteme(s) + (n === 0 ? 0 : ECART_SYSTEMES), 0);
+  const ecart = (c: number) => Math.abs(hauteur(0, c) - hauteur(c, systemes.length));
+  const meilleure = (cs: number[]) => cs.reduce((m, c) => (ecart(c) < ecart(m) ? c : m));
+  const tous = systemes.map((_, c) => c).filter((c) => c > 0);
+  const debuts = new Set(sections.map((s) => { const [p, l] = debutSection(s); return `${p - 1}-${l - 1}`; }));
+  const deSection = tous.filter((c) => debuts.has(`${systemes[c][0].page}-${systemes[c][0].ligne}`));
+  const nb = (a: number, b: number) => systemes.slice(a, b).reduce((t, s) => t + s.length, 0);
+  let c = meilleure(tous);
+  if (deSection.length > 0) {
+    const cs = meilleure(deSection);
+    if (Math.abs(nb(0, cs) - nb(cs, systemes.length)) <= 2) c = cs;
+  }
+  return { echelle, colonnes: [systemes.slice(0, c).flat(), systemes.slice(c).flat()] };
 }

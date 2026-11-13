@@ -416,3 +416,17 @@ chantier sur ce fichier.
   `PartitionView.tsx`) ; **JV-4 lance JV-5b**, qui lance **JV-5c** (même `PerformanceMode.tsx`, puis `PageScan.tsx` et
   `JianpuSheet.tsx`). JV-5a et JV-5b peuvent tourner en même temps (fichiers distincts ; ajouts courts dans
   `SetlistDetailClient.tsx`). La dernière tranche du lot fait tourner les specs du lot et écrit au pilote.
+- 13/11/2026 : **JV-3 codée** (session orchestratrice, `/tranche`). `voletsDemiLignes` (`tranchesScan.ts`, pur ; fenêtres
+  d'une ligne mises en commun avec `tranchesDemiLignes`, inchangée) ; hook `useVoletsScan` ; `JianpuSheet` reçoit `volets`
+  (conteneur seulement : grille de deux colonnes, même corps de fenêtre que les demi-lignes du téléphone, calque intact,
+  une colonne à l'impression) ; `PartitionView` : `EnveloppeScan`, témoin CSS `@container partition (min-width:1000px)`
+  lu par ResizeObserver, `data-scan-volets`. Décisions déléguées (session, 13/11) : la **tablette paysage** (1 080 px,
+  zone < 1 000 px) et l'ordinateur 1 280 gardent une colonne, comme les paroles (la règle des 1 000 px l'emporte sur la
+  ligne « tablette paysage » des critères) ; en **édition des accords** (Adapter, Ma version) le scan garde la page
+  entière ; sans calque (pas de `chords`), une colonne. Limites connues de la piste B, vues à l'œil et acceptées
+  (`critique-design` : « à livrer ») : liaisons coupées à la coupe de demi-ligne, comme au téléphone ; à 1 440 l'échelle
+  plafonnée laisse ≈ 47 px entre les colonnes. Tests : nouvelle `jianpu-deux-volets.spec.ts` (dans `SPECS_GRAND_ECRAN`),
+  `pupitre-partitions` (garde des 920 px limitée sous 1 000 px de zone), voisines `jianpu-integration`,
+  `jianpu-tonalite-cho`, `harmonie-jianpu`, `louange-jianpu-tranches` : 563 passés au premier tour (17 min), quatre
+  échecs propres à la nouvelle spec corrigés en deux tours ; repasse après rebase sur JV-1 : 268 passés, 0 échec
+  (**8,9 min**). `jianpu:audit` 为我而来 et 全新的你 : calque calé, PNG regardés. tsc, lint : 0 erreur.

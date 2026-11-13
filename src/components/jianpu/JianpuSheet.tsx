@@ -5,7 +5,7 @@ import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords, useJianpuMarges, useJianpuSystemes } from "@/lib/jianpu/images";
-import { ECART_MOITIES, ECART_SYSTEMES, LARGEUR_FEUILLE_MAX, type Demi } from "@/lib/performance/tranchesScan";
+import { ECART_MOITIES, ECART_SYSTEMES, LARGEUR_FEUILLE_MAX, type Demi, type FenetreDemi, type Volets } from "@/lib/performance/tranchesScan";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
@@ -117,7 +117,7 @@ function fitFont(
  *  (`PAD` de `scripts/jianpu/build-images.py`, en pixels de l'image). La
  *  fenêtre la fait déborder de la colonne, pour que le bord de l'encre tombe
  *  sur celui des paroles (piste A, P5). */
-const MARGE_SOURCE = 14;
+export const MARGE_SOURCE = 14;
 
 /** Les messages au-dessus du scan (piste A, P7) : jetons du site, surface
  *  `--secondary`, texte à l'encre du scan, rayon 12 px. */
@@ -193,6 +193,8 @@ type JianpuSheetProps = {
   /** Mode `fit` d'un scan certifié : montrer cette tranche de la page, pleine largeur (bornée à 1 040 px), au lieu de
    *  la page entière. Image et calque se décalent ensemble ; aucune coordonnée du calque ne change. */
   tranche?: TrancheFenetre;
+  /** Flux d'un scan certifié, vue Partitions : deux colonnes de demi-lignes (`voletsDemiLignes`) au lieu des pages. Ignoré en `fit`. */
+  volets?: Volets;
 };
 
 /** Partition 简谱 en image. Les chiffres, durées, points d'octave et
@@ -203,7 +205,7 @@ type JianpuSheetProps = {
  *  Le calque est en HTML positionné en pourcentage de l'image, pas en
  *  PNG pré-rendu : 124 chants × 12 tonalités serait intenable, et la
  *  transposition doit rester instantanée. */
-export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: demandee, originalKey, capo = 0, pageIndex, chordEdits, onEditChords, tranche }: JianpuSheetProps) {
+export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: demandee, originalKey, capo = 0, pageIndex, chordEdits, onEditChords, tranche, volets }: JianpuSheetProps) {
   const { t } = useTranslation();
   const fit = layout === "fit";
   const chords = useJianpuChords(slug);
@@ -609,7 +611,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         </div>
       )}
 
-      {fit && shownPages.map((_, n) => firstShown + n).filter(pageNonTransposee).map(avertissementPage)}
+      {(fit || volets) && shownPages.map((_, n) => firstShown + n).filter(pageNonTransposee).map(avertissementPage)}
 
       {/* `fit` : la zone restante devient un conteneur de taille, ce qui permet
           de borner la page en hauteur (100cqh) autant qu'en largeur (100%).
@@ -620,12 +622,10 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         className={fit ? (tranche?.demi ? "flex min-h-0 w-full flex-1 flex-col items-start" : "flex min-h-0 w-full flex-1 items-start justify-center") : "contents"}
         style={fit && !tranche?.demi ? { containerType: "size" } : undefined}
       >
-      {shownPages.flatMap((page, n) => (fit && tranche?.demi ? tranche.demi.fenetres : [null]).map((demi, nf) => {
-        const i = firstShown + n;
+      {/* Corps d'une fenêtre : `demi` + `echelleDemi` (px CSS par px image) pour une demi-ligne de `fit` ou de volet. */}
+      {(() => {
+      const fenetre = (page: (typeof shownPages)[number], i: number, key: string, prioritaire: boolean, tr: TrancheFenetre | null, demi: FenetreDemi | null, nf: number, echelleDemi: number | null) => {
         const calque = (overlayOn || retouchesOn || retouchable) && i === 0 && chords;
-        // Tranche (lot JP-B) : seulement en `fit`, sur la page montrée.
-        // Demi-ligne (lot JP-C, téléphone en portrait) : la fenêtre d'une moitié, sur la seule ligne `demi.ligne`.
-        const tr = fit && tranche ? (demi ? { ...tranche, ...demi, premiere: demi.ligne, derniere: demi.ligne } : tranche) : null;
         // Masques (décision 24) : le masque d'une ligne cache l'encre d'une ligne VOISINE qui déborde dans la tranche.
         // Si cette voisine est elle-même dans la tranche, son encre doit rester : le masque ne s'applique pas
         // quand il est contenu (en y) dans l'intervalle [y0, y1] d'une autre ligne de la tranche.
@@ -672,19 +672,19 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         const visible = page.h - top;
         const decalage = marges?.[i] ? (marges[i][1] - marges[i][0]) / 2 : 0;
         return (
-        <Fragment key={`${page.file}-${nf}`}>
-        {!fit && pageNonTransposee(i) && avertissementPage(i)}
+        <Fragment key={key}>
+        {!fit && !volets && pageNonTransposee(i) && avertissementPage(i)}
         <div
           data-jianpu-fenetre={tr ? tr.y0 : top}
           data-jianpu-tranche={tr ? `${tr.y0}-${tr.y1}` : undefined}
           data-jianpu-moitie={demi ? (demi.moitie ?? "entiere") : undefined}
           // Bornes (px image) des lignes de la tranche : la demi-page ne coupe qu'entre deux d'entre elles.
           data-jianpu-lignes={tr ? lignesTranche.map((l) => `${l.y0}-${l.y1}`).join(",") : undefined}
-          className={fit ? (demi ? "relative shrink-0 overflow-hidden" : "relative mx-auto overflow-hidden") : "relative overflow-hidden"}
+          className={demi && echelleDemi != null ? "relative shrink-0 overflow-hidden" : fit ? "relative mx-auto overflow-hidden" : "relative overflow-hidden"}
           style={{
             aspectRatio: tr ? `${tr.x1 - tr.x0} / ${tr.y1 - tr.y0}` : `${page.w} / ${visible}`,
-            ...(tr && demi && tranche?.demi
-              ? { width: `${(tr.x1 - tr.x0) * tranche.demi.echelle}px`, marginTop: nf === 0 ? 0 : demi.moitie === "d" ? ECART_MOITIES : ECART_SYSTEMES }
+            ...(tr && demi && echelleDemi != null
+              ? { width: `${(tr.x1 - tr.x0) * echelleDemi}px`, marginTop: nf === 0 ? 0 : demi.moitie === "d" ? ECART_MOITIES : ECART_SYSTEMES }
               : tr
               ? { width: `min(100%, ${LARGEUR_FEUILLE_MAX}px, calc(100cqh * ${tr.x1 - tr.x0} / ${tr.y1 - tr.y0}))` }
               : fit
@@ -730,7 +730,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
               }
               width={page.w}
               height={page.h}
-              priority={n === 0}
+              priority={prioritaire}
               className="h-auto w-full"
               sizes={fit ? "100vw" : "(min-width: 1024px) 900px, 100vw"}
             />
@@ -793,7 +793,29 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         </div>
         </Fragment>
         );
-      }))}
+      };
+      if (!fit && volets) {
+        const page0 = entry.pages;
+        return (
+          <div data-jianpu-volets className="grid w-full grid-cols-2 items-start gap-x-6 print:block">
+            {volets.colonnes.map((col, c) => (
+              <div key={c} data-jianpu-volet={c} className="flex min-w-0 flex-col items-start">
+                {col.map((f, nf) => {
+                  const tr = { y0: f.y0, y1: f.y1, x0: f.x0, x1: f.x1, premiere: f.ligne, derniere: f.ligne };
+                  return fenetre(page0[f.page], f.page, `${f.page}-${f.ligne}-${f.moitie ?? "e"}`, c === 0 && nf === 0, tr, f, nf, volets.echelle);
+                })}
+              </div>
+            ))}
+          </div>
+        );
+      }
+      return shownPages.flatMap((page, n) => (fit && tranche?.demi ? tranche.demi.fenetres : [null]).map((demi, nf) => {
+        // Tranche (lot JP-B) : seulement en `fit`, sur la page montrée.
+        // Demi-ligne (lot JP-C, téléphone en portrait) : la fenêtre d'une moitié, sur la seule ligne `demi.ligne`.
+        const tr = fit && tranche ? (demi ? { ...tranche, ...demi, premiere: demi.ligne, derniere: demi.ligne } : tranche) : null;
+        return fenetre(page, firstShown + n, `${page.file}-${nf}`, n === 0, tr, demi, nf, tranche?.demi?.echelle ?? null);
+      }));
+      })()}
       </div>
 
       {cible && (

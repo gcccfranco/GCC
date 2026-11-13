@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { songHref } from "@/lib/setlist/songHref";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
@@ -10,7 +10,9 @@ import { AccordsProvider, AideAccordsEnLigne, ChantDesAccords, useOuvrirAccord, 
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { ordreJoue } from "@/lib/chordpro/structure";
-import { useJianpuScore } from "@/lib/jianpu/images";
+import { useJianpuScore, type JianpuEntry } from "@/lib/jianpu/images";
+import { useVoletsScan } from "@/components/jianpu/useVoletsScan";
+import type { Volets } from "@/lib/performance/tranchesScan";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { useTranslation } from "react-i18next";
 import { transposeSection, transposerVers } from "@/lib/transposeAST";
@@ -83,6 +85,31 @@ function DonnerFermeture({ onFermer }: { onFermer?: (fermer: () => void) => void
   const { fermerSansFocus } = useOuvrirAccord();
   useEffect(() => onFermer?.(fermerSansFocus), [onFermer, fermerSansFocus]);
   return null;
+}
+
+/** Enveloppe du scan 简谱 (vue Partitions). Dès 1 000 px de zone (conteneur `partition`, même règle que les paroles),
+ *  le scan passe en deux volets (`useVoletsScan`) ; sinon il garde 920 px. Le témoin, visible seulement à ≥ 1 000 px,
+ *  donne la largeur de la zone par ResizeObserver. */
+function EnveloppeScan({ slug, entry, sansVolets, children }: { slug: string; entry: JianpuEntry; sansVolets: boolean; children: (volets: Volets | undefined) => ReactNode }) {
+  const temoin = useRef<HTMLDivElement>(null);
+  const [largeur, setLargeur] = useState<number | null>(null);
+  useEffect(() => {
+    const el = temoin.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setLargeur(el.getBoundingClientRect().width || null));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const volets = useVoletsScan(slug, entry, sansVolets ? null : largeur) ?? undefined;
+  return (
+    <>
+      {/* Hors de l'enveloppe : elle est bornée à 920 px tant qu'il n'y a pas de volets, le témoin mesurerait 920. */}
+      <div ref={temoin} data-temoin-volets aria-hidden className="hidden h-0 w-full [@container_partition_(min-width:1000px)]:block" />
+      <div data-enveloppe-scan data-scan-volets={volets ? "2" : "1"} className={"print:max-w-none " + (volets ? "max-w-[920px] [@container_partition_(min-width:1000px)]:max-w-none" : "max-w-[920px]")}>
+        {children(volets)}
+      </div>
+    </>
+  );
 }
 
 export function PartitionsView({
@@ -643,7 +670,8 @@ function NormalSongItem({
           // Partition 简谱 : le scan prend la place des paroles, sous le même
           // en-tête (K3). Structure seule : ni l'un ni l'autre.
           jianpuScore && layout !== "structure" ? (
-            <div data-enveloppe-scan className="max-w-[920px] print:max-w-none">
+            <EnveloppeScan slug={item.songSlug} entry={jianpuScore} sansVolets={Boolean(editMode && onEditJianpu)}>
+              {(volets) => (<>
               {/* Un 升调 ne se voit pas sur un scan : le dire au-dessus (lot 9). */}
               {steps
                 .filter((st) => st.targetKey)
@@ -661,6 +689,7 @@ function NormalSongItem({
                   </p>
                 ))}
               <JianpuSheet
+                volets={volets}
                 entry={jianpuScore}
                 title={ast.metadata.title}
                 slug={item.songSlug}
@@ -671,7 +700,8 @@ function NormalSongItem({
                   editMode && onEditJianpu ? (next) => onEditJianpu(origIndex, next) : undefined
                 }
               />
-            </div>
+              </>)}
+            </EnveloppeScan>
           ) : undefined
         }
       />

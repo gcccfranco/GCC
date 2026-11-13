@@ -548,12 +548,13 @@ test("ordinateur-1440 sombre : captures FR et 简谱 (T4)", async ({ page }, inf
   await page.screenshot({ path: "test-results/t4-pupitre/ordinateur-1440-fr-sombre.png" });
 });
 
-test("简谱 : l'image et son calque ont la même largeur, au plus 920 px, sans section à côté (T4)", async ({ page }, info) => {
+test("简谱 : l'image et son calque ont la même largeur, au plus 920 px sous 1 000 px de zone, deux volets à 1 440, sans section à côté (T4)", async ({ page }, info) => {
   await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "always"));
   await ouvrir(page, "sjp", info.project.name);
   const zone = page.locator('[data-outline-item="2"] [data-jianpu-page]').first();
   await expect(zone).toBeVisible();
   await page.waitForFunction(() => Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every((i) => i.complete && i.naturalWidth > 0));
+  if (info.project.name === "ordinateur-1440") await expect(zone.locator("xpath=ancestor::*[@data-enveloppe-scan]")).toHaveAttribute("data-scan-volets", "2");
   const m = await zone.evaluate((p) => {
     const img = p.querySelector("img")!.getBoundingClientRect();
     const calque = (p.querySelector("[data-jianpu-calque]") ?? p).getBoundingClientRect();
@@ -565,7 +566,8 @@ test("简谱 : l'image et son calque ont la même largeur, au plus 920 px, sans 
       voisines: sections.filter((r) => r.bottom > img.top && r.top < img.bottom && r.width > 0).length };
   });
   expect(Math.abs(m.img - m.calque), "image = calque").toBeLessThan(2);
-  expect(m.colonne, "enveloppe du scan").toBeLessThanOrEqual(920.5);
+  // JV-3 : dès 1 000 px de zone (1 440) le scan passe en deux volets (tests/jianpu-deux-volets.spec.ts) ; la garde de 920 px vaut en dessous.
+  if (info.project.name !== "ordinateur-1440") expect(m.colonne, "enveloppe du scan").toBeLessThanOrEqual(920.5);
   expect(m.droite).toBeLessThanOrEqual(m.fenetre);
   expect(m.voisines, "aucune section à côté du scan").toBe(0);
   await zone.scrollIntoViewIfNeeded();
