@@ -142,10 +142,12 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   https://claude.ai/artifact/A8JBDX9ktoBN6ToTKe4Hbk, piste B recommandée (armure au titre, marge « Affichage ») ;
   **Go de Timothée (13/11, « Ok go »)** sur les recommandations (B, tonalité pour moi, rôle sur les trois écrans) :
   RU-1 lancée par la session de la planche (`session_01UMdfuaDLszqyKqkCKMoaBn`, 13/11 17 h 18 UTC ; cinq tranches enchaînées).
-  **En attente d'une place (demande de Timothée, 13/11, 16 h 50 UTC)** : cadrage sans code d'un **vrai métronome
+  **Métronome : attend le go de Timothée (demande du 13/11, 16 h 50 UTC ; planche et spec faites le 13/11)** : cadrage sans code d'un **vrai métronome
   dans le mode louange** (« un métronome avec du son et un métronome plus visuel qu'un simple trait qui bouge, il
   faudrait pouvoir choisir si c'est binaire ternaire, les temps fort et tout, en gros tout comme une vrai application
-  de métronome ») : planche + `docs/spec-metronome.md`. Le pilote le lance dès qu'une des cinq sessions en cours finit.
+  de métronome ») : planche `docs/planches/planche-metronome.html` (artefact privé
+  https://claude.ai/artifact/G1e9txeUQrtE8XW5i5yC83, piste A « la mesure » recommandée) et `docs/spec-metronome.md`
+  (lot MT, quatre tranches, cinq questions avec recommandation).
   Décisions de Timothée (13/11) : « chacun un métronome, pas de son pendant le culte, un son quand ils veulent
   s'entrainer » : un métronome par appareil ; son coupé par défaut, allumé à la demande pour répéter.
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
