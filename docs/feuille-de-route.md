@@ -178,7 +178,8 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   « Reprise du 13/11 », planche https://claude.ai/artifact/DMDRVF8pAy4L4qKBXrDcEe, tranche TC-4. **Go de Timothée
   (13/11, « go pour les pistes des 2 artefacts »)** : JV-3 puis JV-4 (piste B) et TC-4 (piste A), lancés ; JV-4 après
   TC-4. Q3 tranchée par Timothée (13/11 : lecture en colonnes, JV-2, après JV-3). Q1 et Q2 tranchées par Timothée (13/11 : « oui ») : go de Timothée pour JV-1 et JV-2 (13/11, « oui ») : JV-1 lancée, JV-2 après JV-3 ; idées d'harmonie
-  (toutes les propositions d'une section au toucher, reprise du 13/11) : planche faite (https://claude.ai/artifact/QyuUMtnuQ6TVvKuPQis6Fp, piste B), attend le go (H-Q1, H-Q2). Aucune règle Firestore touchée.
+  (toutes les propositions d'une section au toucher, reprise du 13/11) : Timothée choisit le volet Harmonie ouvert au toucher du nom de la section (13/11), tranches JV-5a à JV-5c écrites,
+  attendent le go. Aucune règle Firestore touchée.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 

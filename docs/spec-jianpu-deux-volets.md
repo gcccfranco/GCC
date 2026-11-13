@@ -28,7 +28,7 @@ colonnes), **1** (简谱 sur deux volets), **2** (idées d'harmonie : notation, 
 | Q6 | Piste pour le 简谱 en deux volets | **B**, demi-lignes en deux colonnes (taille de lecture gardée) |
 | Q7 | Le mode louange aussi ? | **Oui**, sous l'interrupteur « 2 colonnes » existant |
 | Q4 | Notation de la bande d'idée d'harmonie | **Une seule**, celle choisie par la personne (Lettres par défaut) |
-| Q5 | Idées d'harmonie sur le scan | **Remplacée** : toucher une section montre toutes ses propositions (§ Point 2, « Reprise du 13/11 ») ; planche faite, H-Q1 et H-Q2 |
+| Q5 | Idées d'harmonie sur le scan | **Remplacée** : toucher une section montre toutes ses propositions (§ Point 2, « Reprise du 13/11 ») ; **tranchée : le volet Harmonie** s'ouvre au toucher du nom de la section (Timothée, 13/11, « Ok ») |
 
 Tranchées par la session (décisions déléguées, 13/11, faciles à défaire) : seuil d'une colonne sous 11 px d'accords
 imprimés ; coupe entre colonnes au début de section si l'écart ne dépasse pas deux demi-lignes ; page chant inchangée.
@@ -283,21 +283,41 @@ Critique (« à retoucher ») à corriger en code, sans changer la recommandatio
 compteur collé au nom qui se lit comme un numéro (« Couplet 1 6 » = « Couplet 16 ») ; Écouter à moins de 44 px l'un de
 l'autre dans un groupe ; la section à 9 idées ou plus et le passage en deux colonnes ne sont pas dessinés.
 
-Questions à Timothée (la recommandation en premier) :
-- **H-Q1 — Piste** : **B** (sinon A ou C).
-- **H-Q2 — Signal sur le nom** : remplacer le point de 8 px par un petit compteur dans une pastille ronde après le nom
-  (« Refrain ⑧ », pas un chiffre nu), seulement si l'accès Harmonie est ouvert et, en louange, si le réglage est allumé.
-- Tranchées par la session (décisions déléguées, 13/11, faciles à défaire) : colonne Harmonie déjà ouverte (≥ 1 024 px)
-  → le toucher du nom la fait défiler au bloc, sans liste dans la partition ; étiquette du scan dans la langue de
-  l'interface, en forme courte (« Couplets 1–4 » si plusieurs sections commencent sur la même ligne, initiale seule sous
-  40 px de marge) ; idées « à écouter » montrées en louange, en dernier, en graisse normale.
+**Décision de Timothée (13/11/2026)** : « C'est pas mieux de faire un volet comme quand on clique sur harmonie pour un
+chant ? », puis « Ok » à la proposition ci-dessous. **Le volet Harmonie (piste C, adaptée) remplace B** ; H-Q1 et H-Q2
+tombent (pas de liste dans la partition, pas de compteur sur le nom).
 
-Tranches après go (une session chacune) : **JV-5a** liste commune (fonction pure de groupage dans `src/lib/harmonie/`,
-composant dans `src/components/harmonie/`, nom de section touchable dans `SongView.tsx`, branchée dans
-`PartitionView.tsx` et `SongDetailClient.tsx`) ; **JV-5b** mode louange (`IdeeHarmonieMarge.tsx` : toutes les idées, une
-notation, le nom comme cible ; `PerformanceMode.tsx` : mesure de page liste ouverte ; après TC-4 et JV-4) ; **JV-5c** scan
-(`JianpuSheet.tsx`, `PageScan.tsx`, après JV-3 et JV-4). Tests : `louange-harmonie.spec.ts` étendue, nouvelle spec
-d'agencement dans `SPECS_GRAND_ECRAN`, `harmonie-jianpu.spec.ts` pour le scan.
+- **Geste** : toucher le nom d'une section (« Refrain », « Pont ») ouvre le volet Harmonie du chant (porte 2,
+  `src/components/harmonie/HarmonieDuChant.tsx`) **au bloc de ce passage**, comme « Ici » le fait déjà
+  (`src/components/accords/LigneIci.tsx:3-4` ; branchement `SetlistDetailClient.tsx:1974`, `onIci`). Toutes les
+  propositions y sont, avec nom, « Pourquoi », Écouter et Essayer. Volet déjà ouvert : il défile au bloc. Le nom n'est
+  touchable que si l'accès Harmonie est ouvert (et, en louange, si le réglage « Idées d'harmonie » est allumé).
+- **Tablette paysage, ordinateur, 1 440** (page chant, vue Partitions) : le volet existant, à côté de la partition.
+- **Téléphone et tablette portrait** : une **feuille à mi-hauteur** qui monte du bas, la section touchée restant visible
+  au-dessus ; on la tire vers le haut pour tout voir. Décision déléguée (session de cadrage, 13/11) : mi-hauteur = 50 %
+  de l'écran, poignée et fermeture au glissé vers le bas ou par Échap.
+- **Mode louange** : le volet **se pose par-dessus** le bord droit de la page (feuille à mi-hauteur au téléphone), sans
+  la rétrécir ni recompter les pages ; aucune animation (R4) ; le toucher ne tourne pas la page. Le point et la bande
+  d'H8 (`IdeeHarmonieMarge.tsx`) sont retirés : le nom de section devient la seule cible. Une seule notation, celle de
+  la personne (`src/lib/notationAccords.ts`), dans le volet comme ailleurs (H7-2).
+- **Scan 简谱** : une étiquette de section dans la marge blanche (`public/jianpu/marges.json`), à la hauteur de la ligne
+  où la section commence (`public/jianpu/sections.json`), porte le même geste ; rien sur l'encre ni dans le calque.
+  Étiquette dans la langue de l'interface, forme courte (« Couplets 1–4 » si plusieurs sections commencent sur la même
+  ligne ; initiale seule sous 40 px de marge). Le lien `sections.json` ↔ passages (`sectionOrigins.ts`) est à établir.
+
+Tranches (une session chacune ; **go à demander à Timothée** après cette écriture) :
+- **JV-5a — Le nom de section ouvre le volet** (S à M) : `SongView.tsx` (nom en bouton, sans toucher aux accords),
+  `PartitionView.tsx`, `SongDetailClient.tsx`, `SetlistDetailClient.tsx` (même chemin que `onIci`), feuille à
+  mi-hauteur au téléphone. Après JV-2 (même `PartitionView.tsx`). Tests : `harmonie-montrer.spec.ts` (voisine),
+  nouvelle spec d'agencement `harmonie-volet-section.spec.ts` dans `SPECS_GRAND_ECRAN` (Promesses : toucher « Pont »
+  ouvre le volet au bloc du Pont, F → Fmaj7 visible ; téléphone : feuille à 50 %, le Pont reste visible).
+- **JV-5b — Mode louange** (M) : `PerformanceMode.tsx` (volet posé par-dessus, rendu de `HarmonieDuChant` ou de sa
+  partie « idées du passage »), retrait de `IdeeHarmonieMarge.tsx`. Après TC-4 et JV-4. Tests :
+  `louange-harmonie.spec.ts` réécrite (réglage éteint par défaut ; allumé, le nom ouvre le volet ; page non tournée,
+  pages non recomptées).
+- **JV-5c — Scan 简谱** (M) : étiquettes de marge dans `JianpuSheet.tsx` (couche sœur du calque) et `PageScan.tsx`,
+  lien sections ↔ passages. Après JV-3 et JV-4. Tests : `harmonie-jianpu.spec.ts` étendue, `npm run jianpu:audit` sur
+  deux scans.
 
 ## Tranches
 
