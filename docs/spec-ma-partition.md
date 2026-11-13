@@ -282,3 +282,13 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
   une ligne est ajoutée ou retirée dans ma partition (noté en MP-5) : hors de la reprise, à reprendre dans un lot à
   venir ; le changement de lecture vers une ancienne version écrit encore `versions/{uid}.choices` (voulu). Aucune
   modification de `firestore.rules` hors d'un commentaire (rien à publier pour MP-6).
+- 13/11/2026 : **retouche « crayon absent »** (go de Timothée, « Go », relayé par le pilote). Cause : une lecture de
+  `partitions/{uid}__{slug}` en échec (le plus probable : bloc `partitions` de `firestore.rules` pas encore publié,
+  403) laissait `chantsCharges` à faux sans nouvel essai, donc ni Crayon, ni stylet, ni appui long pour la séance.
+  `useMesPartitions` distingue désormais l'échec (`echecs`) de la lecture en cours et relit seul les échecs (5 s, 15 s,
+  45 s, puis à chaque retour du réseau) ; tant qu'elle échoue, le Crayon reste visible mais désactivé
+  (`aria-disabled`, barre et ligne du menu au téléphone) et son toucher affiche « Partition indisponible pour le
+  moment » (zh « 乐谱暂时无法使用 », **à faire relire**) ; stylet et appui long ne font rien. Lecture en cours :
+  comportement inchangé (Crayon absent, quelques secondes au plus). Non connecté, hors ligne, chant ajouté depuis
+  « Tous les chants » : inchangés. Spec `louange-crayon-indispo` (403 simulé puis lecture acceptée) sur les trois
+  appareils ; voisines (Ma partition ×6, `annotations-forscore`, `louange-barre-titre`) : 464 passés, 0 échec (≈ 21 min). **La vraie correction reste à Timothée : publier `firestore.rules`.**

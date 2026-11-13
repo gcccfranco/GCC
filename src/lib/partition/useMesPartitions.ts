@@ -13,6 +13,9 @@ export function useMesPartitions(uid: string | undefined, slugs: string[]) {
   const [enAttente, setEnAttente] = useState(false);
   // Chants dont la lecture de ma partition a abouti (absente = lue, 404). Une lecture en échec n'y est pas : « pas lue » ≠ « pas de partition ».
   const [charges, setCharges] = useState<Record<string, boolean>>({});
+  // Chants dont la lecture a échoué (≠ en cours) : relus seuls, après 5, 15 puis 45 s et à chaque retour du réseau.
+  const [echecs, setEchecs] = useState<string[]>([]);
+  const essais = useRef(0);
   // Miroir de `mes` tenu à jour à chaque écriture, sans attendre le rendu (cases cochées vite, « toutes mes partitions »).
   const mesRef = useRef<Record<string, PartitionDeChant>>({});
 
@@ -26,6 +29,8 @@ export function useMesPartitions(uid: string | undefined, slugs: string[]) {
 
   useEffect(() => {
     setCharges({});
+    setEchecs([]);
+    essais.current = 0;
     if (!uid) {
       mesRef.current = {};
       setMes({});
@@ -47,6 +52,7 @@ export function useMesPartitions(uid: string | undefined, slugs: string[]) {
       if (!vivant) return;
       mesRef.current = Object.fromEntries(lues.map((l) => l.p).filter((p): p is PartitionDeChant => !!p).map((p) => [p.slug, p]));
       setCharges(Object.fromEntries(slugs.map((s, i) => [s, lues[i].ok])));
+      setEchecs(slugs.filter((_, i) => !lues[i].ok));
       setMes(mesRef.current);
       setPartagees(autres.filter((p) => slugs.includes(p.slug)));
       if (c) setChoix(c);
@@ -55,6 +61,30 @@ export function useMesPartitions(uid: string | undefined, slugs: string[]) {
     return () => { vivant = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, cle]);
+
+  // Relecture des échecs, bornée (trois minuteries, puis seulement au retour du réseau) : jamais de boucle serrée.
+  useEffect(() => {
+    if (!uid || !echecs.length) return;
+    let vivant = true;
+    const relire = () => {
+      void Promise.all(echecs.map((s) => lirePartition(uid, s).then((p) => ({ s, ok: true, p }), () => ({ s, ok: false, p: null as PartitionDeChant | null }))))
+        .then((lues) => {
+          if (!vivant) return;
+          const reussies = lues.filter((l) => l.ok);
+          if (reussies.length) {
+            // Une partition écrite entre-temps (plus récente) n'est pas remplacée par la lecture.
+            for (const l of reussies) if (l.p && !mesRef.current[l.s]) mesRef.current = { ...mesRef.current, [l.s]: l.p };
+            setMes(mesRef.current);
+            setCharges((c) => ({ ...c, ...Object.fromEntries(reussies.map((l) => [l.s, true])) }));
+          }
+          setEchecs(lues.filter((l) => !l.ok).map((l) => l.s));
+        });
+    };
+    const delai = [5_000, 15_000, 45_000][essais.current];
+    const minuterie = delai === undefined ? undefined : setTimeout(() => { essais.current += 1; relire(); }, delai);
+    window.addEventListener("online", relire);
+    return () => { vivant = false; clearTimeout(minuterie); window.removeEventListener("online", relire); };
+  }, [uid, echecs]);
 
   /** « Je lis » : retenu pour ce chant, sur mon compte. */
   const choisir = useCallback((slug: string, valeur: string) => {
@@ -137,5 +167,5 @@ export function useMesPartitions(uid: string | undefined, slugs: string[]) {
   /** Ma partition de ce chant telle qu'elle est maintenant (écritures en cours comprises), sans attendre le rendu. */
   const lireLocale = useCallback((slug: string) => mesRef.current[slug], []);
 
-  return { mes, charges, lireLocale, partagees, choix: choix.choices, partageTout: choix.partageTout, choisir, enregistrer, enAttente, partagerAvec, partagerTraits, partagerTout, garderUneCopie };
+  return { mes, charges, echecs, lireLocale, partagees, choix: choix.choices, partageTout: choix.partageTout, choisir, enregistrer, enAttente, partagerAvec, partagerTraits, partagerTout, garderUneCopie };
 }

@@ -809,6 +809,7 @@
     "tempoDown": "Ralentir de 1",
     "tempoUp": "Accélérer de 1",
     "crayon": "Crayon",
+    "crayonIndispo": "Partition indisponible pour le moment",
     "partition": "Partition",
     "recopier": "Recopier mes anciennes annotations dans ma partition",
     "recopierAide": "Elles se posent sur la première ligne de la page ; les anciennes ne s'afficheront plus.",

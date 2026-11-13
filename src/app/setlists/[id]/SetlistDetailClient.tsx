@@ -2638,6 +2638,7 @@ export function SetlistDetailClient() {
           traits={traitsParChant}
           onTraitsChange={traitsChanges}
           chantsCharges={Object.fromEntries([...slugsPartitions.map((s) => [s, !!mesPartitions.charges[s]]), ...ajoutsLocaux.map((a) => [a.slug, false])])}
+          partitionsEnEchec={mesPartitions.echecs}
           echecTraits={echecTraits}
           traitsEnAttente={mesPartitions.enAttente}
           chargerToutesSetlists={user ? chargerToutesSetlists : undefined}

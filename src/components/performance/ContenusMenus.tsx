@@ -450,6 +450,7 @@ export function ContenuOutils({
   showTransitions,
   setShowTransitions,
   onAnnoter,
+  annoterIndispo = false,
   tempoLignes,
   raccourcis,
 }: {
@@ -463,6 +464,8 @@ export function ContenuOutils({
   setShowTransitions: (v: boolean) => void;
   /** Téléphone seulement : la barre n'a plus « Crayon ». Absent = pas de ligne. */
   onAnnoter: (() => void) | undefined;
+  /** Ma partition n'a pas pu être lue : la ligne reste, désactivée (son toucher dit pourquoi). */
+  annoterIndispo?: boolean;
   /** Téléphone seulement : les lignes du tempo, sous le métronome. Absent = pas de ligne. */
   tempoLignes: ReactNode;
   raccourcis: boolean;
@@ -521,8 +524,9 @@ export function ContenuOutils({
         <button
           type="button"
           data-annoter
+          aria-disabled={annoterIndispo || undefined}
           onClick={onAnnoter}
-          className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+          className={`${annoterIndispo ? "opacity-40 " : ""}flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
         >
           <Pencil aria-hidden="true" className="h-5 w-5 shrink-0" />
           {t("performance.crayon")}

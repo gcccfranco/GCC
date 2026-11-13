@@ -420,6 +420,8 @@ interface PerformanceModeProps {
   onTraitsChange?: (slug: string, traits: ElementTrait[], immediat?: boolean) => Promise<boolean> | void;
   /** Chants dont ma partition est lue : le Crayon n'est offert qu'alors (sinon l'écriture écraserait le document existant). */
   chantsCharges?: Record<string, boolean>;
+  /** Chants dont la lecture de ma partition a échoué (relue seule) : le Crayon reste visible mais désactivé. */
+  partitionsEnEchec?: string[];
   /** Change quand une écriture de traits échoue : l'écran revient à l'état enregistré. */
   echecTraits?: number;
   /** Des traits n'ont pas pu s'écrire et attendent le retour du réseau (file locale) : la barre du Crayon dit « En attente ». */
@@ -460,6 +462,7 @@ export function PerformanceMode({
   traits,
   onTraitsChange,
   chantsCharges,
+  partitionsEnEchec,
   echecTraits = 0,
   traitsEnAttente = false,
   chargerToutesSetlists,
@@ -1535,6 +1538,8 @@ export function PerformanceMode({
   // L5 : à l'entrée en annotation, la taille mémorisée du chant revient avant qu'on dessine.
   const surAjout = !!currentEntry && !Number.isInteger(currentEntry.block.position);
   const crayonPret = !surAjout && (!slugAnnote || chantsCharges?.[slugAnnote] !== false);
+  // Lecture de ma partition en échec : le Crayon se montre désactivé et dit pourquoi au toucher (stylet et appui long ne font rien).
+  const crayonIndispo = !crayonPret && !surAjout && !!slugAnnote && !!partitionsEnEchec?.includes(slugAnnote);
   const basculerAnnotation = () => {
     setPopoverOuvert(null);
     if (!annotateMode) { setPrereglagesDe({ uid, liste: lirePrereglages(uid) }); setPrereglageActif(0); setSigneCle(null); }
@@ -1554,7 +1559,7 @@ export function PerformanceMode({
   const [doigtLibre, setDoigtLibre] = useState(() => { try { return localStorage.getItem("annot-doigt-libre") === "1"; } catch { return false; } });
   const doigtLibreRef = useRef(doigtLibre);
   doigtLibreRef.current = doigtLibre;
-  const [avisDoigt, setAvisDoigt] = useState(false);
+  const [avisDoigt, setAvisDoigt] = useState<false | "doigt" | "indispo">(false);
   const reglerDoigtLibre = (v: boolean) => {
     try { localStorage.setItem("annot-doigt-libre", v ? "1" : "0"); } catch { /* stockage refusé : réglage pour la séance seulement */ }
     setDoigtLibre(v);
@@ -1562,8 +1567,9 @@ export function PerformanceMode({
   const surTraitStylet = () => {
     let absent = false;
     try { absent = localStorage.getItem("annot-doigt-libre") === null; } catch { /* stockage refusé : ni réglage ni avis */ }
-    if (absent) { reglerDoigtLibre(true); setAvisDoigt(true); }
+    if (absent) { reglerDoigtLibre(true); setAvisDoigt("doigt"); }
   };
+  const signalerCrayonIndispo = () => { setPopoverOuvert(null); setAvisDoigt("indispo"); };
   useEffect(() => {
     if (!avisDoigt) return;
     const t = setTimeout(() => setAvisDoigt(false), 4000);
@@ -2019,7 +2025,8 @@ export function PerformanceMode({
       capo={capoActive && entreeSlug && currentEntry ? { frets: currentCapo, set: (f) => setCapo(entreeSlug, f), titre: currentEntry.block.title } : undefined}
       showTransitions={showTransitions}
       setShowTransitions={setShowTransitions}
-      onAnnoter={telephone && user && !horsLigne && crayonPret ? basculerAnnotation : undefined}
+      onAnnoter={telephone && user && !horsLigne && (crayonPret || crayonIndispo) ? (crayonIndispo ? signalerCrayonIndispo : basculerAnnotation) : undefined}
+      annoterIndispo={crayonIndispo}
       tempoLignes={
         telephone && tempoChantId ? (
           <LignesTempo tempo={tempoLiseret} tempoAppareil={tempoAppareil} changerTempo={changerTempo} effacerTempo={effacerTempo} />
@@ -2495,7 +2502,7 @@ export function PerformanceMode({
       <div role="status" data-avis-doigt className="pointer-events-none absolute left-1/2 -translate-x-1/2" style={{ zIndex: 30, bottom: "calc(5rem + var(--sab, 0px))" }}>
         {avisDoigt && (
           <div onPointerDown={(e) => { e.stopPropagation(); setAvisDoigt(false); }} className="pointer-events-auto material-panel rounded-xl px-4 py-2 text-sm text-foreground [box-shadow:var(--shadow-flottant)]">
-            {t("performance.tools.fingerNotice")}
+            {t(avisDoigt === "indispo" ? "performance.crayonIndispo" : "performance.tools.fingerNotice")}
           </div>
         )}
       </div>
@@ -2569,7 +2576,8 @@ export function PerformanceMode({
           annotateMode={annotateMode}
           menuOuvert={popoverOuvert}
           avecReperes={reperes.length > 0}
-          onAnnoter={user && !horsLigne && crayonPret ? basculerAnnotation : undefined}
+          onAnnoter={user && !horsLigne && (crayonPret || crayonIndispo) ? (crayonIndispo ? signalerCrayonIndispo : basculerAnnotation) : undefined}
+          annoterIndispo={crayonIndispo}
           onMenu={basculerMenu}
           onJeJoue={() => basculerMenu("jejoue")}
           onQuitter={onClose}

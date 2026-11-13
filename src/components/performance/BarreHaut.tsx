@@ -34,6 +34,7 @@ export function BarreHaut({
   menuOuvert,
   avecReperes,
   onAnnoter,
+  annoterIndispo = false,
   onMenu,
   onJeJoue,
   onQuitter,
@@ -53,6 +54,8 @@ export function BarreHaut({
   menuOuvert: MenuId | null;
   avecReperes: boolean;
   onAnnoter: (() => void) | undefined;
+  /** Ma partition n'a pas pu être lue : Crayon visible mais désactivé (son toucher dit pourquoi). */
+  annoterIndispo?: boolean;
   onMenu: (id: MenuId) => void;
   onJeJoue: () => void;
   onQuitter: () => void;
@@ -130,7 +133,7 @@ export function BarreHaut({
           </BtnBarre>
         )}
         {onAnnoter && (
-          <BtnBarre label={t("performance.crayon")} active={annotateMode} onClick={onAnnoter} cacheTel>
+          <BtnBarre label={t("performance.crayon")} active={annotateMode} onClick={onAnnoter} cacheTel indispo={annoterIndispo}>
             <Pencil className="h-5 w-5" />
           </BtnBarre>
         )}
@@ -158,6 +161,7 @@ function BtnBarre({
   texte = false,
   cacheTel = false,
   bascule,
+  indispo = false,
   onClick,
   children,
 }: {
@@ -170,6 +174,8 @@ function BtnBarre({
   cacheTel?: boolean;
   /** Bouton ▶ / ■ du métronome : `aria-pressed` = cette valeur, repéré par `data-metronome-marche`. */
   bascule?: boolean;
+  /** Désactivé mais touchable (aria-disabled) : le toucher explique pourquoi. */
+  indispo?: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
@@ -183,9 +189,10 @@ function BtnBarre({
       data-menu-declencheur={menu}
       data-metronome-marche={bascule === undefined ? undefined : ""}
       aria-pressed={bascule}
+      aria-disabled={indispo || undefined}
       aria-haspopup={menu ? "dialog" : undefined}
       aria-expanded={menu ? ouvert : undefined}
-      className={`${cacheTel ? "hidden md:flex" : "flex"} h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg px-2.5 text-[color:var(--couleur-icones)] transition-colors active:bg-muted ${
+      className={`${cacheTel ? "hidden md:flex" : "flex"} h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg px-2.5 text-[color:var(--couleur-icones)] transition-colors ${indispo ? "opacity-40" : ""} active:bg-muted ${
         active || ouvert ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)] dark:bg-[color-mix(in_srgb,var(--couleur-icones)_28%,transparent)]" : "hover:bg-muted/60"
       }`}
     >

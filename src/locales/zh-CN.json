@@ -804,6 +804,7 @@
     "tempoDown": "减慢 1",
     "tempoUp": "加快 1",
     "crayon": "画笔",
+    "crayonIndispo": "乐谱暂时无法使用",
     "partition": "乐谱",
     "recopier": "将旧批注复制到我的乐谱",
     "recopierAide": "它们会放在本页第一行上，旧批注将不再显示。",
