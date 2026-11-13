@@ -24,11 +24,11 @@ colonnes), **1** (简谱 sur deux volets), **2** (idées d'harmonie : notation, 
 |---|---|---|
 | Q1 | « Paroles » du responsable dans l'éditeur | **Retiré** (sinon : gardé pour les seuls choristes) |
 | Q2 | Le « Je joue » compte-t-il hors du mode louange ? | **Oui**, partout dans la setlist (choriste et présidence : paroles + pinyin) |
-| Q3 | Deux colonnes d'un chant en paroles | **Lues en colonnes** (gauche puis droite), comme le mode louange ; rouvre P1 |
+| Q3 | Deux colonnes d'un chant en paroles | **Tranchée : lues en colonnes** (Timothée, 13/11 : « oui pour ce que tu propsoes ») ; rouvre P1 |
 | Q6 | Piste pour le 简谱 en deux volets | **B**, demi-lignes en deux colonnes (taille de lecture gardée) |
 | Q7 | Le mode louange aussi ? | **Oui**, sous l'interrupteur « 2 colonnes » existant |
 | Q4 | Notation de la bande d'idée d'harmonie | **Une seule**, celle choisie par la personne (Lettres par défaut) |
-| Q5 | Idées d'harmonie sur le scan | **Point en marge** à la hauteur de la section, bande au toucher |
+| Q5 | Idées d'harmonie sur le scan | **Remplacée** : toucher une section montre toutes ses propositions (§ Point 2, « Reprise du 13/11 ») ; planche à faire |
 
 Tranchées par la session (décisions déléguées, 13/11, faciles à défaire) : seuil d'une colonne sous 11 px d'accords
 imprimés ; coupe entre colonnes au début de section si l'écart ne dépasse pas deux demi-lignes ; page chant inchangée.
@@ -239,6 +239,29 @@ recommandation, qui tient aux mesures.
 
 ---
 
+
+### Reprise du 13/11 (Timothée, sur cette proposition)
+
+> « ce qu'il faudrait c'est que quand on appuie sur le refrain par exemple il y a toutes les propositions d'harmonie
+> qui apparaissent »
+
+Ce qui change : non plus **la première** idée d'une section (point d'H8, `spec-harmonie-accords.md`, « au plus un
+[point] par section ») mais **toutes** les propositions de la section, au toucher de la section elle-même.
+Proposition, à dessiner sur planche avant le go (changement d'apparence, `CLAUDE.md` § Design) :
+
+- **Geste** : toucher le **nom de la section** (« Refrain », « Pont ») ouvre la liste de toutes les propositions
+  d'harmonie de ce passage ; un second toucher la referme. Sur un scan 简谱, le geste se fait sur une étiquette de
+  section posée dans la marge, à la hauteur où la section commence (`public/jianpu/sections.json`).
+- **Vue Partitions et page chant** : la liste s'ouvre sous le nom de la section, ou bien la colonne Harmonie
+  (porte 2, `HarmonieDuChant`) s'ouvre au bloc de ce passage, mécanisme déjà là pour « Ici »
+  (`src/components/accords/LigneIci.tsx:3-4`). À trancher sur planche.
+- **Mode louange** : la bande d'H8 devient une liste (une ligne par proposition, avant → après, une seule notation),
+  sans animation, sans tourner la page ; le réglage « Idées d'harmonie » reste (éteint par défaut).
+- Notation : une seule, celle que la personne a choisie (Q4 ci-dessus, recommandation gardée).
+
+Prochaine étape : planche « toutes les idées d'une section » (téléphone, tablette, ordinateur ; paroles et scan),
+puis go. JV-5a et JV-5b sont remplacées par cette reprise.
+
 ## Tranches
 
 Une session par tranche (`CLAUDE.md`, « Une session par tranche ») ; tests de la tranche sur les trois appareils,
@@ -268,7 +291,7 @@ chantier sur ce fichier.
   `harmonie-montrer.spec.ts:42, :158`, `jianpu-par-defaut.spec.ts:177, :289`, `mode-louange-colonnes.spec.ts:215,
   :343`, `pupitre-partitions.spec.ts:27, :29`. Aucune garde retirée.
 
-### JV-2 — Deux colonnes lues en colonnes (S ; point 4, si Q3 = colonnes)
+### JV-2 — Deux colonnes lues en colonnes (S ; point 4, Q3 tranchée le 13/11 ; après JV-3, même fichier)
 
 - Fichiers : `PartitionView.tsx:295` et `src/components/song/SongView.tsx:1496` (même grille, T4) : `grid-cols-2`
   → `columns: 2` + `break-inside: avoid` sur les sections, mêmes seuil, largeur et gouttière.

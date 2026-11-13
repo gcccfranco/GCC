@@ -166,7 +166,8 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   d'office) se code seule. Menu Setlist du mode louange en deux onglets : `docs/spec-louange-tous-les-chants.md` §
   « Reprise du 13/11 », planche https://claude.ai/artifact/DMDRVF8pAy4L4qKBXrDcEe, tranche TC-4. **Go de Timothée
   (13/11, « go pour les pistes des 2 artefacts »)** : JV-3 puis JV-4 (piste B) et TC-4 (piste A), lancés ; JV-4 après
-  TC-4. Attendent encore un go : JV-1 (Q1, Q2), JV-2 (Q3), JV-5 (Q4, Q5). Aucune règle Firestore touchée.
+  TC-4. Q3 tranchée par Timothée (13/11 : lecture en colonnes, JV-2, après JV-3). Attendent encore : JV-1 (Q1, Q2) ; idées d'harmonie
+  (toutes les propositions d'une section au toucher, reprise du 13/11) : planche puis go. Aucune règle Firestore touchée.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 

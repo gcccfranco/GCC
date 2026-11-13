@@ -22,7 +22,7 @@ Le responsable d'équipe ajoute, règle et retire un membre sans faire défiler 
 | R2 | Les partitions prennent la largeur (règle du 07/11, « colonne alignée à gauche », rouverte pour elles). |
 | R3 | Liste \| Partitions au toucher : le même glisser que le geste du doigt. |
 | R4 | Mode louange : aucune animation. |
-| P1 | Deux colonnes lues en rangées (Intro \| Couplet 1, puis Refrain \| Couplet 2). |
+| P1 | ~~Deux colonnes lues en rangées (Intro \| Couplet 1, puis Refrain \| Couplet 2).~~ **Rouverte le 13/11/2026** : lues en colonnes, la gauche puis la droite (`spec-jianpu-deux-volets.md`, Q3, JV-2). |
 | P2 | Sommaire en vue Partitions (tablette couchée, ordinateur) : rail de numéros qui s'ouvre au toucher ; ouvert en vue Liste. |
 | P3 | Note de la setlist : une ligne en italique dans la barre du haut, dépliable. |
 | P4 | Vue Liste : colonne d'environ 720 px, alignée sur le même bord gauche que les partitions. |
