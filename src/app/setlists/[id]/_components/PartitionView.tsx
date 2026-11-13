@@ -56,7 +56,7 @@ function CopyLyricsButton({ sections, icone = false }: { sections: ChordProSecti
     <button
       type="button"
       onClick={copy}
-      aria-label={icone ? t("setlists.detail.copyLyrics") : undefined}
+      aria-label={icone ? t(copied ? "setlists.detail.copyLyricsDone" : "setlists.detail.copyLyrics") : undefined}
       className={icone ? `${TOUCHER_44} inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary print:hidden` : PUCE}
     >
       {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
