@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  clampTempo, getAccentsChant, getDecompte, getMesureChant, getSubdivisionChant, getTempoChant, setAccentsChant, setDecompte,
+  clampTempo, getAccentsChant, getDecompte, getSonMetro, getVolumeMetro, setSonMetro, setVolumeMetro, type SonMetro, getMesureChant, getSubdivisionChant, getTempoChant, setAccentsChant, setDecompte,
   setMesureChant, setSubdivisionChant, setTempoChant, TEMPO_DEPART, type Decompte, type Subdivision,
 } from "@/lib/performance/tempo";
 import { accentsParDefaut, parseMesure, type Accent } from "@/lib/performance/metronome";
@@ -37,6 +37,8 @@ export function useTempoChant(tempoChantId: string | undefined, tempoDuFichier: 
   const accents = (tempoChantId ? getAccentsChant(tempoChantId, mesure.temps) : null) ?? accentsParDefaut(mesure);
   const subdivision: Subdivision = (tempoChantId ? getSubdivisionChant(tempoChantId) : null) ?? (mesure.compose ? "triolets" : "aucune");
   const decompte = getDecompte();
+  const sonType = getSonMetro();
+  const volume = getVolumeMetro();
 
   /** Changer la mesure remet les accents du chant aux défauts de la nouvelle mesure. */
   const changerMesure = (texte: string) => {
@@ -58,9 +60,12 @@ export function useTempoChant(tempoChantId: string | undefined, tempoDuFichier: 
     relire();
   };
   const changerDecompte = (n: Decompte) => { setDecompte(n); relire(); };
+  const changerSonType = (s: SonMetro) => { setSonMetro(s); relire(); };
+  const changerVolume = (n: number) => { setVolumeMetro(n); relire(); };
 
   return {
     tempoAppareil, tempoFichier, tempoLiseret, changerTempo, fixerTempo, effacerTempo,
     mesure, mesureTexte, changerMesure, accents, tournerAccent, subdivision, changerSubdivision, decompte, changerDecompte,
+    sonType, changerSonType, volume, changerVolume,
   };
 }

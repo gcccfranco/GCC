@@ -51,17 +51,18 @@ type Props = {
 
 const LIGNE = "flex min-h-11 items-center justify-between gap-3";
 
-export function Segment({ valeurs, choisie, onChoix, vertical, label }: { valeurs: { id: string; nom: string }[]; choisie: string; onChoix: (id: string) => void; vertical?: boolean; label: string }) {
+export function Segment({ valeurs, choisie, onChoix, vertical, label, desactive }: { valeurs: { id: string; nom: string }[]; choisie: string; onChoix: (id: string) => void; vertical?: boolean; label: string; desactive?: boolean }) {
   return (
-    <div role="radiogroup" aria-label={label} className={`${vertical ? "flex flex-col" : "inline-flex"} gap-0.5 rounded-xl border border-border p-0.5`}>
+    <div role="radiogroup" aria-label={label} className={`${vertical ? "flex flex-col" : "inline-flex"} gap-0.5 rounded-xl border border-border p-0.5 ${desactive ? "opacity-40" : ""}`}>
       {valeurs.map((v) => (
         <button
           key={v.id}
           type="button"
           role="radio"
           aria-checked={choisie === v.id}
+          disabled={desactive}
           onClick={() => onChoix(v.id)}
-          className={`min-h-11 rounded-[10px] px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${vertical ? "text-left" : ""} ${choisie === v.id ? "bg-foreground text-background" : "text-foreground"}`}
+          className={`min-h-11 min-w-11 rounded-[10px] px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${vertical ? "text-left" : ""} ${choisie === v.id ? "bg-foreground text-background" : "text-foreground"}`}
         >
           {v.nom}
         </button>

@@ -6,7 +6,8 @@ import { Minus, Plus } from "lucide-react";
 import { Groupe, Segment } from "@/components/song/MargeAffichage";
 import { MenuLouange } from "@/components/performance/MenuLouange";
 import { IconeNote, type TypeNote } from "@/components/performance/IconeNote";
-import { clampTempo, TEMPO_MAX, TEMPO_MIN, type Decompte, type Subdivision } from "@/lib/performance/tempo";
+import { contexteAudio } from "@/lib/audio/contexte";
+import { clampTempo, TEMPO_MAX, TEMPO_MIN, type Decompte, type SonMetro, type Subdivision } from "@/lib/performance/tempo";
 import type { Accent, Mesure } from "@/lib/performance/metronome";
 
 // Le panneau Métronome (lot MT, MT-2) : une fenêtre comme le menu « Setlist » du mode louange (décision de Timothée, 13/11) :
@@ -21,6 +22,9 @@ const BINAIRES: { id: Subdivision; note: TypeNote }[] = [
   { id: "doubles", note: "doubles" },
   { id: "pointee", note: "pointee" },
 ];
+
+/** iPhone ou iPad (y compris l'iPad qui se présente en Macintosh) : le bouton silencieux coupe Web Audio. */
+const surIOS = () => typeof navigator !== "undefined" && (/iPhone|iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1));
 
 /** − / + : un clic = 1, appui long = 5 (après 500 ms, répété toutes les 250 ms) ; au clavier, 1 par appui. */
 function BoutonPas({ delta, label, desactive, onPas, children }: { delta: 1 | -1; label: string; desactive: boolean; onPas: (d: number) => void; children: React.ReactNode }) {
@@ -87,7 +91,7 @@ function Pastilles({ label, valeurs, choisie, onChoix }: { label: string; valeur
 
 export function PanneauMetronome({
   ouvert, onFermer, tempo, tempoAppareil, tempoFichier, fixerTempo, effacerTempo, mesure, mesureTexte, changerMesure,
-  accents, tournerAccent, subdivision, changerSubdivision, decompte, changerDecompte, marche, onMarche, bande, setBande, couleur,
+  accents, tournerAccent, subdivision, changerSubdivision, decompte, changerDecompte, marche, onMarche, bande, setBande, son, setSon, sonType, changerSonType, volume, changerVolume, couleur,
 }: {
   ouvert: boolean;
   onFermer: () => void;
@@ -111,6 +115,12 @@ export function PanneauMetronome({
   setBande: (v: boolean) => void;
   /** `--couleur-icones` corrigée (le Portal du menu sort de la racine du mode). */
   couleur: string;
+  son: boolean;
+  setSon: (v: boolean) => void;
+  sonType: SonMetro;
+  changerSonType: (s: SonMetro) => void;
+  volume: number;
+  changerVolume: (n: number) => void;
 }) {
   const { t } = useTranslation();
   const titre = useId();
@@ -178,7 +188,7 @@ export function PanneauMetronome({
           </span>
         </button>
         <p role="status" className="sr-only">
-          {t(marche ? "panneauMetronome.enMarche" : "panneauMetronome.arrete", { tempo, mesure: `${mesure.temps}/${mesure.unite}` })}
+          {t(marche ? "panneauMetronome.enMarche" : "panneauMetronome.arrete", { tempo, mesure: `${mesure.temps}/${mesure.unite}` })}{son ? ` ${t("panneauMetronome.sonAllume")}` : ""}
         </p>
 
         <div data-testid="panneau-corps">
@@ -314,7 +324,7 @@ export function PanneauMetronome({
             <p className="text-xs text-muted-foreground">{t("panneauMetronome.legende", { fort: niveau("fort"), moyen: niveau("moyen"), faible: niveau("faible"), muet: niveau("muet") })}</p>
           </Groupe>
 
-          {/* (f) binaire / ternaire et subdivisions : retenues, la bande ne les joue pas encore (MT-3) */}
+          {/* (f) binaire / ternaire et subdivisions : la bande les joue, son allumé (subdivisions douces) */}
           <Groupe titre={t("panneauMetronome.subdivision")} mention="">
             <Segment
               label={t("panneauMetronome.subdivision")}
@@ -338,6 +348,48 @@ export function PanneauMetronome({
                   <IconeNote note={s.note} />
                 </button>
               ))}
+            </div>
+          </Groupe>
+
+          {/* (f2) son : jamais retenu allumé ; le son choisi et le volume le sont */}
+          <Groupe titre={t("panneauMetronome.son")} mention="">
+            <button
+              type="button"
+              data-metronome-son
+              aria-pressed={son}
+              onClick={() => { if (!son) contexteAudio(); setSon(!son); }} // le contexte se crée dans le geste (déblocage iOS)
+              className="flex min-h-11 items-center justify-between gap-3 rounded-xl text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span>{t("panneauMetronome.son")}</span>
+              <span aria-hidden="true" className={`flex h-6 w-10 shrink-0 items-center rounded-full p-0.5 ${son ? "justify-end bg-[color:var(--couleur-icones)]" : "justify-start bg-muted-foreground/40"}`}>
+                <span className="h-5 w-5 rounded-full bg-background shadow-sm" />
+              </span>
+            </button>
+            {surIOS() && <p data-son-ios className="text-xs text-muted-foreground">{t("panneauMetronome.sonIos")}</p>}
+            <div data-son-type={sonType}>
+              <Segment
+                label={t("panneauMetronome.sonType")}
+                valeurs={[{ id: "clic", nom: t("panneauMetronome.clic") }, { id: "bois", nom: t("panneauMetronome.bois") }, { id: "cloche", nom: t("panneauMetronome.cloche") }]}
+                choisie={sonType}
+                onChoix={(id) => changerSonType(id as SonMetro)}
+                desactive={!son}
+              />
+            </div>
+            <div className={`flex min-h-11 items-center gap-3 ${son ? "" : "opacity-40"}`}>
+              <span className="text-sm">{t("panneauMetronome.volume")}</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={volume}
+                disabled={!son}
+                data-son-volume
+                aria-label={t("panneauMetronome.volume")}
+                onChange={(e) => changerVolume(Number(e.target.value))}
+                className="h-11 min-w-0 flex-1"
+                style={{ accentColor: "currentColor" }}
+              />
             </div>
           </Groupe>
 

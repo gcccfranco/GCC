@@ -70,6 +70,25 @@ export function creerHorloge() {
       const rel = i - debutRegime;
       return { temps: ((rel % nb) + nb) % nb, mesure: mesuresAvant + Math.floor(rel / nb), fraction: ((t - t0) / dur) - Math.floor((t - t0) / dur) };
     },
+    /** Débuts de temps dont l'instant est dans [de, jusqua[ (sans rien modifier), changements en attente compris :
+     *  instant = t0 + k × durée (jamais une somme de pas), numéro du temps dans la mesure, durée de ce temps. */
+    debuts(de: number, jusqua: number): { instant: number; temps: number; duree: number }[] {
+      const sortie: { instant: number; temps: number; duree: number }[] = [];
+      if (!actif) return sortie;
+      const at = enAttenteTempo;
+      const am = enAttenteMesure;
+      let debut = Math.max(i0, i0 + Math.floor((de - t0) / dur));
+      if (at && debut > at.a) debut = at.a; // estimé à l'ancienne durée : un tempo plus lent en attente sauterait des temps
+      for (let i = debut; ; i++) {
+        const nouveau = at !== null && i >= at.a;
+        const instant = nouveau ? t0 + (at.a - i0) * dur + (i - at.a) * at.dur : t0 + (i - i0) * dur;
+        if (instant >= jusqua) break;
+        if (instant < de) continue;
+        const regime = am && i >= am.a ? { n: am.nb, d: am.a } : { n: nb, d: debutRegime };
+        sortie.push({ instant, temps: (((i - regime.d) % regime.n) + regime.n) % regime.n, duree: nouveau ? at.dur : dur });
+      }
+      return sortie;
+    },
     changerTempo(dureeMs: number, t: number) {
       if (!actif) { dur = dureeMs; return; }
       enAttenteTempo = { dur: dureeMs, a: appliquer(t) + 1 };

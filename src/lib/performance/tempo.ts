@@ -101,3 +101,24 @@ export function getDecompte(): Decompte {
   return n === 1 || n === 2 ? n : 0;
 }
 export function setDecompte(n: Decompte) { ecrire(CLE_DECOMPTE, String(n)); }
+
+// ─── Son du métronome (MT-3) : son choisi et volume par appareil ; le son allumé n'est jamais retenu ───
+
+export type SonMetro = "clic" | "bois" | "cloche";
+export const SONS_METRO: SonMetro[] = ["clic", "bois", "cloche"];
+const CLE_SON = "perf-metro-son";
+const CLE_VOLUME = "perf-metro-volume";
+
+export function getSonMetro(): SonMetro {
+  const brut = lire(CLE_SON);
+  return SONS_METRO.includes(brut as SonMetro) ? (brut as SonMetro) : "clic";
+}
+export function setSonMetro(s: SonMetro) { ecrire(CLE_SON, s); }
+
+/** Volume 0 à 100, 80 au départ. */
+export function getVolumeMetro(): number {
+  const brut = lire(CLE_VOLUME);
+  const n = brut === null ? NaN : Number(brut);
+  return Number.isFinite(n) ? Math.min(100, Math.max(0, Math.round(n))) : 80;
+}
+export function setVolumeMetro(n: number) { ecrire(CLE_VOLUME, String(Math.min(100, Math.max(0, Math.round(n))))); }

@@ -263,6 +263,26 @@ touchent l'agencement s'ajoutent à `SPECS_GRAND_ECRAN` (cinq projets). Tests su
 
 ## Avancement
 
+- 14/11/2026, nuit : **MT-3 faite** (le son). `src/lib/audio/contexte.ts` : un seul `AudioContext`, partagé avec l'écoute
+  d'harmonie (`synthese.ts`), créé dans le geste qui allume le son (`audioSession.type = "playback"` essayé), jamais
+  fermé ; rien n'est créé son coupé. `hooks/useMetronome.ts` (appelé dans PerformanceMode) : horloge `performance.now()`
+  son coupé, `currentTime` son allumé, bascule sans saut par un décalage ; ordonnanceur 25 ms / 100 ms sur
+  `creerHorloge().debuts()` (instants t0 + k × durée, changements en attente compris) ; le temps en cours passe par un
+  petit store lu par `BandeTemps` (`useSyncExternalStore`) pour ne pas re-rendre tout le mode louange à chaque temps.
+  `sonMetronome.ts` : Clic (bruit filtré), Bois (sinus), Cloche (deux partiels), fort / moyen / faible en hauteur et en
+  gain, subdivisions douces, muet sans clic ; en 6/8 et 12/8, un clic par pastille. Bloc Son du panneau (en fenêtre
+  depuis MT-2) entre Subdivision et Décompte ; `perf-metro-son` et `perf-metro-volume` par appareil ; son coupé à chaque
+  ouverture, au changement de chant, page cachée et à la sortie, avis « Son coupé » (3 s) ; ligne du bouton silencieux
+  sur iPhone et iPad. **Décisions déléguées (session MT-3, 14/11)** : Bois en sinus 550 à 900 Hz (aigu de bois plutôt que
+  grave sourd, plus audible sur un haut-parleur de téléphone) ; Segment, volume grisés **et désactivés** son coupé ;
+  `Segment` (MargeAffichage) prend `min-w-11` partout (« 铃 » faisait 37 px) et une prop `desactive` ; réglette de
+  volume à la couleur du texte. L'exception « S'entraîner ouvert » de Q5 reste pour MT-4. Non fait, à noter : gains non
+  observés par le test (le faux AudioParam ignore les rampes), critère « 60 s à 120 » vérifié sur 10 s ; accents d'une
+  mesure changée en cours appliqués un instant avant le changement d'horloge ; avis « Son coupé » et avis du crayon au
+  même endroit (rares ensemble). Libellés zh neufs à faire relire : 声音, 咔嗒, 木鱼, 铃, 音量, 声音已关闭. Tests :
+  `metronome-son` (nouvelle, 11 cas), `metronome-panneau`, `metronome-bande`, `harmonie-ecoute` : verts (165 + 5 après
+  la correction de « 铃 ») ; ≈ 5 min 20 s pour la passe, 4 min 10 s pour le dernier tour (`metronome-son` et `metronome-panneau` ; « jamais ouverts ensemble » rouge une fois au téléphone, vert seul).
+
 - 13/11/2026, nuit : **décision de Timothée (13/11, transmise par le pilote)** : « Fait une fenêtre comme pour les setlists
   dans le mode louange, il faudrait que le métronome aussi soit comme ça c'est à dire une fenêtre comme pour les
   setlists. » Le panneau Métronome est donc converti : il s'ouvre dans `MenuLouange` (`id="metronome"`), la même

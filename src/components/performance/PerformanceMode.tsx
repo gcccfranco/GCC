@@ -60,6 +60,7 @@ import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui, classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { BandeTemps } from "@/components/performance/BandeTemps";
 import { PanneauMetronome } from "./PanneauMetronome";
+import { useMetronome } from "@/components/performance/hooks/useMetronome";
 import { TEMPO_DEPART } from "@/lib/performance/tempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { ROLE_IDS, getRole, roleDemande, setRole, type RolePreset } from "@/lib/performance/roleCompte";
@@ -1868,8 +1869,27 @@ export function PerformanceMode({
 
   // Métronome visuel : tempo réglé sur l'appareil pour ce chant, sinon celui du fichier.
   const tempoChantId = currentEntry?.block.songSlug;
-  const { tempoAppareil, tempoFichier, tempoLiseret, fixerTempo, effacerTempo, mesure: mesureBande, mesureTexte, changerMesure, accents, tournerAccent, subdivision, changerSubdivision, decompte, changerDecompte } = useTempoChant(tempoChantId, currentSong?.tempo, currentSong?.time);
-  useEffect(() => setMetroMarche(false), [tempoChantId]); // arrêt au changement de chant
+  const { tempoAppareil, tempoFichier, tempoLiseret, fixerTempo, effacerTempo, mesure: mesureBande, mesureTexte, changerMesure, accents, tournerAccent, subdivision, changerSubdivision, decompte, changerDecompte, sonType, changerSonType, volume, changerVolume } = useTempoChant(tempoChantId, currentSong?.tempo, currentSong?.time);
+  // Son du métronome (MT-3) : jamais retenu allumé ; se coupe seul (avis « Son coupé »), ne se rallume jamais seul.
+  const [son, setSon] = useState(false);
+  const [avisSon, setAvisSon] = useState(false);
+  const sonRef = useRef(false);
+  sonRef.current = son;
+  const couperSon = () => { if (sonRef.current) { setSon(false); setAvisSon(true); } };
+  const couperSonRef = useRef(couperSon);
+  couperSonRef.current = couperSon;
+  useEffect(() => { setMetroMarche(false); couperSonRef.current(); }, [tempoChantId]); // arrêt au changement de chant
+  useEffect(() => {
+    const cache = () => { if (document.visibilityState === "hidden") couperSonRef.current(); };
+    document.addEventListener("visibilitychange", cache);
+    return () => document.removeEventListener("visibilitychange", cache);
+  }, []);
+  useEffect(() => {
+    if (!avisSon) return;
+    const id = setTimeout(() => setAvisSon(false), 3000);
+    return () => clearTimeout(id);
+  }, [avisSon]);
+  const posMetro = useMetronome(metroMarche, son, { tempo: tempoLiseret ?? TEMPO_DEPART, mesure: mesureBande, accents, subdivision, type: sonType, volume });
 
   // Progression dans le chant courant + chant suivant
   const songStartPage = currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : -1;
@@ -2519,6 +2539,12 @@ export function PerformanceMode({
         )}
       </div>
 
+      <div role="status" data-avis-son className="pointer-events-none absolute left-1/2 -translate-x-1/2" style={{ zIndex: 30, bottom: "calc(5rem + var(--sab, 0px))" }}>
+        {avisSon && (
+          <div className="material-panel rounded-xl px-4 py-2 text-sm text-foreground [box-shadow:var(--shadow-flottant)]">{t("panneauMetronome.sonCoupe")}</div>
+        )}
+      </div>
+
       {/* ── Métronome visuel : liseré silencieux, sous le chrome ── */}
       {metronome ? (
         <BandeTemps
@@ -2526,6 +2552,7 @@ export function PerformanceMode({
           mesure={mesureBande}
           accents={accents}
           marche={metroMarche}
+          pos={posMetro}
           onMarche={() => setMetroMarche((m) => !m)}
           onOuvrir={() => basculerMenu("metronome")}
           top={showChrome || trancheCourante ? `${barres.haut}px` : "var(--sat, 0px)"}
@@ -2785,6 +2812,12 @@ export function PerformanceMode({
         bande={metronome}
         setBande={setMetronome}
         couleur={couleurMenus}
+        son={son}
+        setSon={setSon}
+        sonType={sonType}
+        changerSonType={changerSonType}
+        volume={volume}
+        changerVolume={changerVolume}
       />
       <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurMenus}>
         {contenuOutils}
