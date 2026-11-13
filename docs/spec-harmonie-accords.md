@@ -297,6 +297,11 @@ Reprend les décisions de Timothée du 11/11 (point 3) et du 12/11 (point 6). De
 
 ### H8 — mode louange, point en marge et bande (décisions de l'orchestratrice du lot, 13/11/2026, déléguées)
 
+> **Remplacé par JV-5b (13/11/2026)** : le point et la bande sont retirés (`IdeeHarmonieMarge.tsx` supprimé, prop
+> `sousEntete` de `SectionView` retirée). Réglage allumé, le **nom** de la section ouvre le volet Harmonie du chant
+> posé par-dessus la page, une seule notation (`docs/spec-jianpu-deux-volets.md`, point 2, « Reprise du 13/11 »).
+> Le réglage, sa clé et son accès restent ceux décrits ci-dessous.
+
 Une tranche (H8-1), petite ; la même session fait ensuite TC-3 (`docs/spec-louange-tous-les-chants.md`). Le rendu est
 fixé par les décisions 4 (11/11) et 7 (12/11) : pas de planche.
 - **Réglage** : « Idées d'harmonie » / « 和声提示 » dans « Options d'affichage » du mode louange (`BarreHaut`), un

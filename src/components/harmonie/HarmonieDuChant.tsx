@@ -4,7 +4,7 @@
 // s'ouvre depuis la page d'un chant et depuis une setlist : un bloc par passage
 // (grille en chiffres, fonction, idées calculées puis idées de l'équipe), puis
 // les idées sans passage, les idées écartées, le formulaire d'ajout et — dans
-// une setlist — la transition vers le chant suivant. Jamais en mode louange.
+// une setlist — la transition vers le chant suivant. En mode louange (JV-5b) : posé par-dessus la page, ouvert depuis le nom d'une section.
 
 import { Fragment, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
@@ -76,6 +76,8 @@ type Props = {
   sansTitre?: boolean;
   /** H5-2 « Ici » : le passage à montrer (la clé change à chaque appui, pour redéfiler). */
   passage?: { uid: string; cle: number; /** L'idée nommée par « Ici » : sa carte est dépliée et visible. */ idee?: string; /** JV-5a : ouvert depuis le nom de la section : feuille à mi-hauteur (téléphone, tablette portrait). */ miHauteur?: boolean };
+  /** JV-5b : posé par-dessus le mode louange (z au-dessus de lui ; sans « Montrer », la page paginée ne défile pas). */
+  louange?: boolean;
 };
 
 /** La section visée, dans le chant lu : d'abord son occurrence, sinon (structure
@@ -155,7 +157,11 @@ export function HarmonieDuChant(props: Props) {
       onOpenChange={(o) => !o && props.onClose()}
       {...(miHauteur ? { snapPoints: [0.5, 1], activeSnapPoint: cran, setActiveSnapPoint: setCran } : {})}
     >
-      <DrawerContent className={miHauteur ? "h-dvh max-h-dvh md:max-w-2xl md:mx-auto" : "h-[67dvh] max-h-[67dvh] md:max-w-2xl md:mx-auto"} data-idees-harmonie>
+      <DrawerContent
+        className={`${miHauteur ? "h-dvh max-h-dvh md:max-w-2xl md:mx-auto" : "h-[67dvh] max-h-[67dvh] md:max-w-2xl md:mx-auto"}${props.louange ? " z-[10000]" : ""}`}
+        overlayClassName={props.louange ? "z-[10000]" : undefined}
+        data-idees-harmonie
+      >
         <DrawerHeader className="flex shrink-0 items-center justify-between pb-3">
           <DrawerTitle>{t("harmonie.titreChant")}</DrawerTitle>
           <Croix onClose={props.onClose} />
@@ -223,7 +229,7 @@ function grilleDuPassage(p: Passage) {
   return { lignes: uniques.map((l) => l.map((a) => a.texte)) };
 }
 
-function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage }: Props) {
+function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage, louange }: Props) {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
   const { fiches, chargement } = useCatalogue();
@@ -484,9 +490,11 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                           )
                         )}
                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <Button variant="secondary" size="sm" onClick={() => montrerLEndroit(s.endroits[0], disposition === "colonne" ? undefined : onClose, portee)}>
-                            {t("harmonie.montrer")}
-                          </Button>
+                          {!louange && (
+                            <Button variant="secondary" size="sm" onClick={() => montrerLEndroit(s.endroits[0], disposition === "colonne" ? undefined : onClose, portee)}>
+                              {t("harmonie.montrer")}
+                            </Button>
+                          )}
                           {onEssayer && apercu && (
                             <Button size="sm" onClick={() => onEssayer(s, changements, b.nom)}>
                               {t("harmonie.essayer")}

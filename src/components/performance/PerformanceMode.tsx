@@ -70,7 +70,7 @@ import { getMetronomePref, setMetronomePref } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
-import { ecrireReglageIdees, FournisseurIdees, IdeeHarmonieMarge, lireReglageIdees, useBandeOuverte, useIdeesHarmonie } from "./IdeeHarmonieMarge";
+import { ecrireReglageIdees, FournisseurIcis, lireReglageIdees, NomsTouchables, useIcisDuLouange, VoletHarmonieLouange, type VoletOuvert } from "./VoletHarmonie";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { compter } from "@/lib/usage";
@@ -175,7 +175,7 @@ function BlockRenderer({
   }
   if (feuilleRoute) return <LigneFeuilleDeRoute block={block} repeat={repeat} couleurDe={couleurDe} disposition={disposition} transition={transitionApres} />;
   return (
-    <IdeeHarmonieMarge block={block}>{(bande) =>
+    <NomsTouchables block={block}>
     <SectionView
       section={block.section}
       language={block.language}
@@ -195,9 +195,8 @@ function BlockRenderer({
       // Lot CV : les exceptions de mots chinois du chant (motsChinois.ts) s'appliquent au pupitre comme sur la page du chant.
       slug={block.songSlug}
       marques={marques}
-      sousEntete={bande}
-    />}
-    </IdeeHarmonieMarge>
+    />
+    </NomsTouchables>
   );
 }
 
@@ -891,13 +890,12 @@ export function PerformanceMode({
     [items, contents, capoActive, capos, jianpuManifest, jianpuPrefVu, personalKeys, affichageVu, choixScan],
   );
 
-  // H8-1 : idées d'harmonie en marge (réglage par compte, éteint par défaut ; accès comme la porte 2).
+  // JV-5b : le nom d'une section ouvre le volet Harmonie par-dessus la page (réglage par compte, éteint par défaut ; accès comme la porte 2).
   const { peut: peutHarmonie } = useAccesHarmonie();
   const [reglageIdees, setReglageIdees] = useState(() => lireReglageIdees(uid));
   const ideesActives = reglageIdees && peutHarmonie;
-  const ideesDesBlocs = useIdeesHarmonie(blocks, contents, ideesActives);
-  const [bandeOuverte, basculerBande] = useBandeOuverte();
-  const ideesVues = useMemo(() => (annotateMode ? new Map() : ideesDesBlocs), [annotateMode, ideesDesBlocs]);
+  const [voletHarmonie, setVoletHarmonie] = useState<VoletOuvert | null>(null);
+  const icisDuLouange = useIcisDuLouange(blocks, contents, ideesActives && !annotateMode, setVoletHarmonie);
 
   const { repeatCount, repeatHidden } = useMemo(
     () => replisStructure(blocks, structureMode, showTransitions, t),
@@ -1119,7 +1117,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, bandeOuverte, ideesVues, jianpuLabelH, metronome]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, jianpuLabelH, metronome]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -2025,7 +2023,7 @@ export function PerformanceMode({
   );
 
   return (
-    <FournisseurIdees value={{ idees: ideesVues, ouvert: bandeOuverte, basculer: basculerBande }}>
+    <FournisseurIcis value={icisDuLouange}>
     <div
       data-performance-mode
       data-disposition={disposition}
@@ -2921,8 +2919,9 @@ export function PerformanceMode({
             </div>
         </div>
       </MenuLouange>
+      <VoletHarmonieLouange volet={ideesActives && !annotateMode ? voletHarmonie : null} onClose={() => setVoletHarmonie(null)} />
     </div>
-    </FournisseurIdees>
+    </FournisseurIcis>
   );
 }
 

@@ -947,11 +947,9 @@ interface SectionViewProps {
   onConflit?: (index: number, choix: "mienne" | "chant") => void;
   /** Crayon, pour qui règle le culte : « Passer au culte » sous chaque ligne que j'ai retouchée (`srcLine`). */
   onPasserAuCulte?: (srcLine: number) => void;
-  /** Mode louange (H8-1) : une ligne rendue juste sous le nom de la section, dans la carte. */
-  sousEntete?: React.ReactNode;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, marques, onConflit, onPasserAuCulte, sousEntete }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, marques, onConflit, onPasserAuCulte }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -1096,11 +1094,9 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
             <span><NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{label}</NomSection>{repeat > 1 ? ` ×${repeat}` : ""}</span>
             {suite}
           </div>
-          {sousEntete}
           </div>
         ) : (
           <div className="min-w-0">
-            {sousEntete}
             {suite && <div data-copy-ignore className="mb-1 flex flex-wrap items-center gap-x-2 text-xs">{suite}</div>}
             {corps}
           </div>
@@ -1157,7 +1153,6 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           )}
           {suite && <span className="flex flex-wrap items-center gap-x-2 text-xs">{suite}</span>}
         </div>
-        {sousEntete}
         {corps}
       </div>
     );
@@ -1202,13 +1197,11 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
               <span data-scene-nom-ligne><NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{label}</NomSection></span>
               {suite}
             </div>
-            {sousEntete}
             </div>
           ) : (
             // Retrait droit de la bande : 22 px au téléphone. La coupure laisse un vers déborder de 8 px au plus (DEBORD) ;
             // il garde donc 14 px d'air avant le bord de l'écran, sans toucher à la coupure.
             <div className="min-w-0">
-              {sousEntete}
               {suite && <div data-copy-ignore className="mb-1 flex flex-wrap items-center gap-x-2 text-xs">{suite}</div>}
               {corps}
             </div>
@@ -1259,7 +1252,6 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         </span>
       </div>
 
-      {sousEntete}
       {/* Lignes — corps vide quand paroles ET accords masqués (ossature seule). */}
       {corps}
     </div>
