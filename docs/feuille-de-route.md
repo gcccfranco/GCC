@@ -145,9 +145,11 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   **Métronome : attend le go de Timothée (demande du 13/11, 16 h 50 UTC ; planche et spec faites le 13/11)** : cadrage sans code d'un **vrai métronome
   dans le mode louange** (« un métronome avec du son et un métronome plus visuel qu'un simple trait qui bouge, il
   faudrait pouvoir choisir si c'est binaire ternaire, les temps fort et tout, en gros tout comme une vrai application
-  de métronome ») : planche `docs/planches/planche-metronome.html` (artefact privé
-  https://claude.ai/artifact/G1e9txeUQrtE8XW5i5yC83, piste A « la mesure » recommandée) et `docs/spec-metronome.md`
-  (lot MT, quatre tranches, cinq questions avec recommandation).
+  de métronome ») : seconde planche, refaite d'après les applications de métronome à la demande de Timothée
+  (`docs/recherche-metronomes.md`, `docs/planches/planche-metronome-2.html`, artefact privé
+  https://claude.ai/artifact/G1e9txeUQrtE8XW5i5yC83 ; piste A « un, deux, trois, quatre » recommandée : une pastille
+  chiffrée par temps sous la barre, panneau complet avec accents à quatre niveaux, binaire / ternaire, trois sons,
+  « S'entraîner ») et `docs/spec-metronome.md` (lot MT, quatre tranches, cinq questions avec recommandation).
   Décisions de Timothée (13/11) : « chacun un métronome, pas de son pendant le culte, un son quand ils veulent
   s'entrainer » : un métronome par appareil ; son coupé par défaut, allumé à la demande pour répéter.
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
