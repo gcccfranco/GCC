@@ -140,7 +140,8 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   et 3), sans code avant son choix. Attendent encore son go : JV-1, JV-2, JV-5 (`docs/spec-jianpu-deux-volets.md`).
   **(b) Planche des réglages faite (13/11)** : `docs/spec-reglages-unifies.md` (lot RU, cinq tranches), planche
   https://claude.ai/artifact/A8JBDX9ktoBN6ToTKe4Hbk, piste B recommandée (armure au titre, marge « Affichage ») ;
-  **attend le choix de Timothée** (RU-Q1 à RU-Q3).
+  **Go de Timothée (13/11, « Ok go »)** sur les recommandations (B, tonalité pour moi, rôle sur les trois écrans) :
+  RU-1 lancée par la session de la planche (cinq tranches enchaînées, une session par tranche).
   **En attente d'une place (demande de Timothée, 13/11, 16 h 50 UTC)** : cadrage sans code d'un **vrai métronome
   dans le mode louange** (« un métronome avec du son et un métronome plus visuel qu'un simple trait qui bouge, il
   faudrait pouvoir choisir si c'est binaire ternaire, les temps fort et tout, en gros tout comme une vrai application

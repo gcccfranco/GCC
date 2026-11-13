@@ -1,6 +1,8 @@
 # Spec : un seul rangement pour les réglages et la tonalité (lot RU)
 
-Statut : **attend le choix de Timothée** (piste et questions ci-dessous). Rien ne se code avant son go.
+Statut : **go de Timothée (13/11/2026, « Ok go »)**, donné en réponse au résumé de la planche et de ses recommandations :
+RU-Q1 = **B**, RU-Q2 = **pour moi seulement**, avec « Changer pour toute l'équipe » pour qui édite la setlist,
+RU-Q3 = **oui** (le rôle sur les trois écrans). Le go vaut pour les cinq tranches (`CLAUDE.md`, § Go).
 Planche : `docs/planches/planche-reglages-unifies.html`, artefact privé https://claude.ai/artifact/A8JBDX9ktoBN6ToTKe4Hbk.
 Source : `docs/parcours-oeil-2026-11-13.md`, « Les cinq choses » 2 et 3 (constats 6, 7, 8 et 12).
 
@@ -162,6 +164,10 @@ Fin de lot : specs du lot et des trois pages, sur les trois appareils (la suite 
 Aucune règle Firestore touchée (tonalité personnelle en `localStorage`).
 
 ## Avancement
+
+- 13/11 : **go de Timothée** (« Ok go ») ; RU-1 lancée par la session de la planche. Ordre : RU-1, RU-2, puis RU-3
+  **après** les corrections du parcours (constat 5 : barre de la page chant, même fichier `SongDetailClient.tsx`), RU-4,
+  puis RU-5 après TC-4, JV-4 et JV-5.
 
 - 13/11 : inventaire (`chercheur`), planche (`/planche`, critique « à retoucher » : la recommandée était la moins
   dessinée ; une reprise du maquettiste : feuille au téléphone, tablette paysage au mode louange, barre cachée,
