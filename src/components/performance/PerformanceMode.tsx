@@ -70,7 +70,8 @@ import { getMetronomePref, setMetronomePref } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
-import { ecrireReglageIdees, FournisseurIcis, lireReglageIdees, NomsTouchables, useIcisDuLouange, VoletHarmonieLouange, type VoletOuvert } from "./VoletHarmonie";
+import { ecrireReglageIdees, FournisseurIcis, groupeScan, lireReglageIdees, NomsTouchables, ScanTouchable, useIcisDuLouange, VoletHarmonieLouange, type VoletOuvert } from "./VoletHarmonie";
+import { railEtiquettes } from "@/lib/jianpu/etiquettesSections";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { compter } from "@/lib/usage";
@@ -160,6 +161,7 @@ function BlockRenderer({
   }
   if (block.kind === "jianpu-sheet") {
     return (
+      <ScanTouchable block={block}>
       <JianpuSheet
         entry={block.entry}
         title={block.songTitle}
@@ -171,6 +173,7 @@ function BlockRenderer({
         layout={fit ? "fit" : "flow"}
         tranche={fit ? tranche : undefined}
       />
+      </ScanTouchable>
     );
   }
   if (feuilleRoute) return <LigneFeuilleDeRoute block={block} repeat={repeat} couleurDe={couleurDe} disposition={disposition} transition={transitionApres} />;
@@ -1032,7 +1035,8 @@ export function PerformanceMode({
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
       const insetG = mcs ? Math.max(0, (parseFloat(mcs.paddingLeft) || 0) - 1.5 * rem) : 0;
       const insetD = mcs ? Math.max(0, (parseFloat(mcs.paddingRight) || 0) - 1.5 * rem) : 0;
-      const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, window.innerWidth / fontScale - 8 - insetG - insetD);
+      const largeurPleine = window.innerWidth / fontScale - 8 - insetG - insetD;
+      const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, largeurPleine);
       const hauteurScan = window.innerHeight / fontScale - 4 - (barres.haut + barres.bas) / fontScale - bandeH / fontScale;
       const telephonePortrait = ecran.largeur < 768 && ecran.hauteur > ecran.largeur;
       const tranchesDe = (i: number) => {
@@ -1044,13 +1048,16 @@ export function PerformanceMode({
         const dernierDuChant = enteteDe.get(i + 1) !== enteteDe.get(i);
         const suivi = (enteteDe.get(i) ?? -1) < dernierEntete;
         const reserve = dernierDuChant && suivi ? 56 / fontScale : 0;
+        // JV-5c : réglage « Idées d'harmonie » allumé, le rail des étiquettes de section prend sa place à gauche (de chaque colonne).
+        const rail = icisDuLouange.has(groupeScan(b)) && jianpuSections?.[b.songSlug]?.sections.length ? railEtiquettes(window.innerWidth) : 0;
         // Lot JP-C : téléphone en portrait, chaque ligne se coupe en deux moitiés empilées ; sinon, lignes entières.
-        if (telephonePortrait) return tranchesDemiLignes(sp.lignes, sp.h, x0, x1, largeurScan, Math.max(1, hauteurScan), reserve);
+        if (telephonePortrait) return tranchesDemiLignes(sp.lignes, sp.h, x0, x1, largeurScan - rail, Math.max(1, hauteurScan), reserve);
         // Lot JV (JV-4) : « 2 colonnes » allumé, deux colonnes de demi-lignes à la taille des lignes entières ; sous le seuil, lignes entières.
+        // Paysage (Timothée, 13/11 : « ça ne peut pas prendre toute la largeur ? ») : les deux colonnes prennent toute la largeur, sans le plafond de 1 040 px.
         const labelH = jianpuLabelH?.[b.songSlug];
-        const volets = twoColumns && labelH ? tranchesDeuxColonnes(sp.lignes, sp.h, x0, x1, largeurScan, Math.max(1, hauteurScan), largeurScan / Math.max(1, x1 - x0), labelH, reserve) : null;
+        const volets = twoColumns && labelH ? tranchesDeuxColonnes(sp.lignes, sp.h, x0, x1, largeurPleine - 2 * rail, Math.max(1, hauteurScan), (largeurPleine - rail) / Math.max(1, x1 - x0), labelH, reserve) : null;
         if (volets) return volets;
-        return tranchesScan(sp.lignes, sp.h, x1 - x0, largeurScan, Math.max(1, hauteurScan), reserve);
+        return tranchesScan(sp.lignes, sp.h, x1 - x0, largeurScan - rail, Math.max(1, hauteurScan), reserve);
       };
       const ctxPagination = { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe, pastille: PASTILLE_SUIVANT_H, tranchesDe };
       let ancienne: PerfPage[] = [];
@@ -1117,7 +1124,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, jianpuLabelH, metronome]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, jianpuLabelH, metronome, icisDuLouange, jianpuSections]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);

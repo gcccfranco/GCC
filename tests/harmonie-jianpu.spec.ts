@@ -3,6 +3,8 @@ import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ligneHistorique, ouvrirPartitions } from "./helpers/setlist";
 import { loadChords } from "./helpers/jianpu";
+import { readFileSync } from "node:fs";
+import { attendreMiseEnPage, lireCompteur, onStage } from "./helpers/louange";
 
 // Lot 9, tranche « 简谱 » (docs/spec-harmonie.md) : retoucher un accord sur le
 // scan. Toucher un accord imprimé le change ou l'efface, toucher la ligne
@@ -65,6 +67,9 @@ async function capture(page: Page, name: string) {
 }
 
 async function openPartitions(page: Page, docs: Record<string, Record<string, unknown>> = {}) {
+  // Retouche sur la page entière : les trois appareils seulement (la spec tourne aussi sur les grands écrans pour JV-5c ;
+  // à 1 440 la vue Partitions passe en deux volets, JV-3).
+  test.skip(["tablette-paysage", "ordinateur-1440"].includes(test.info().project.name), "retouche : trois appareils");
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
@@ -202,4 +207,136 @@ test("hors Crayon : les retouches s'affichent, rien ne se touche", async ({ page
   await expect(page.locator('[data-jianpu-retouche="0"]')).toHaveText("Em7");
   await expect(page.locator("[data-jianpu-retouche-zone]")).toHaveCount(0);
   await capture(page, "jianpu-lecture-seule");
+});
+
+// ── JV-5c (docs/spec-jianpu-deux-volets.md, point 2, « Reprise du 13/11 ») ─────────────────────────────────────────────
+// Sur un scan 简谱, une étiquette par ligne où commence une section (`sections.json`), dans le rail laissé à gauche du
+// scan (jamais sur l'encre ni dans le calque) ; langue de l'interface, forme courte, initiale seule sous 640 px. Le toucher
+// ouvre le volet Harmonie au bloc du passage : page chant, vue Partitions, mode louange (réglage « Idées d'harmonie »).
+// 为我而来 : Couplets 1 et 2 sur la ligne 3 de la page 1, Refrain ligne 6, Pont ligne 3 de la page 2. Noms fictifs.
+
+const SCAN = "为我而来";
+const SYSTEMES = JSON.parse(readFileSync("public/jianpu/systemes.json", "utf8")).chants[SCAN].pages as { h: number; lignes: { y0: number }[] }[];
+const ATTENDUES = [
+  { page: 0, ligne: 2, fr: "Couplets 1–2", zh: "主歌 1–2", ini: { fr: "C", zh: "主" }, passage: { fr: /^Couplet 1/, zh: /^主歌 1/ } },
+  { page: 0, ligne: 5, fr: "Refrain", zh: "副歌", ini: { fr: "R", zh: "副" }, passage: { fr: /^Refrain/, zh: /^副歌/ } },
+  { page: 1, ligne: 2, fr: "Pont", zh: "桥段", ini: { fr: "P", zh: "桥" }, passage: { fr: /^Pont/, zh: /^桥段/ } },
+];
+const LECTRICE: FakeProfile = {
+  uid: "uid-lectrice-jv5c", email: "lectrice-jv5c@example.com", firstName: "Maëlle", lastName: "Fontaine", planningName: "Maëlle F.",
+  serviceRoles: { "Culte Francophone": ["musicien"] }, ...musicien("piano"),
+};
+const SANS_HARMONIE: FakeProfile = { uid: "uid-visiteur-jv5c", email: "visiteur-jv5c@example.com", firstName: "Hugo", lastName: "Marchal", planningName: "Hugo M." };
+const etiquettes = (page: Page) => page.locator("[data-jianpu-etiquette]");
+const voletOuvert = (page: Page) => page.locator("[data-harmonie-colonne], [data-idees-harmonie]").first();
+/** Texte visible (la forme courte et l'initiale sont toutes deux dans le DOM, l'une cachée selon la largeur). */
+const visible = (l: ReturnType<Page["locator"]>) => l.evaluate((el) => (el as HTMLElement).innerText.trim());
+const etroit = (page: Page) => (page.viewportSize()?.width ?? 0) < 640;
+
+async function prefs(page: Page, { zh = false, louange = false, sombre = false } = {}) {
+  await page.addInitScript(({ zh, louange, sombre, u }) => {
+    localStorage.setItem("jianpu-sheet-pref", "always");
+    if (zh) localStorage.setItem("i18nextLng", "zh-CN");
+    if (sombre) localStorage.setItem("theme", "dark");
+    if (louange) { localStorage.setItem("perf-role-preset", "pianiste"); localStorage.setItem(`perf-idees-harmonie-${u}`, "1"); }
+  }, { zh, louange, sombre, u: LECTRICE.uid });
+}
+
+async function scanCharge(page: Page) {
+  await page.locator('[data-jianpu-page] img').first().waitFor();
+  await page.waitForFunction(() => Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every((i) => i.complete && i.naturalWidth > 0));
+}
+
+/** Chaque étiquette : texte attendu, à gauche de sa fenêtre (hors de l'encre), à la hauteur de sa ligne (page chant). */
+async function verifierEtiquettes(page: Page, langue: "fr" | "zh", hauteurs = true) {
+  await expect(etiquettes(page)).toHaveCount(ATTENDUES.length, { timeout: 15_000 });
+  for (const [n, a] of ATTENDUES.entries()) {
+    const e = etiquettes(page).nth(n);
+    await expect.poll(() => visible(e)).toBe(etroit(page) ? a.ini[langue] : a[langue]);
+    const g = await e.evaluate((el) => {
+      const f = el.parentElement!.getBoundingClientRect(), b = el.getBoundingClientRect();
+      return { droite: b.right, gauche: b.left, haut: b.top, fG: f.left, fH: f.top, fh: f.height, fen: Number(el.parentElement!.dataset.jianpuFenetre) };
+    });
+    expect(g.droite, "l'étiquette reste à gauche de la fenêtre du scan").toBeLessThanOrEqual(g.fG + 0.5);
+    expect(g.gauche, "l'étiquette ne sort pas de l'écran").toBeGreaterThanOrEqual(-0.5);
+    if (hauteurs) {
+      const p = SYSTEMES[a.page];
+      const attendu = g.fH + ((p.lignes[a.ligne].y0 - g.fen) / (p.h - g.fen)) * g.fh;
+      expect(Math.abs(g.haut - attendu), "à la hauteur de la ligne où la section commence").toBeLessThan(2);
+    }
+  }
+}
+
+for (const langue of ["fr", "zh"] as const) {
+  test(`JV-5c, page chant (${langue}) : une étiquette par ligne de début, dans le rail ; le toucher ouvre le volet au bloc du passage`, async ({ page }) => {
+    await prefs(page, { zh: langue === "zh" });
+    await signInAs(page, LECTRICE, {}, `/songs/${encodeURIComponent(SCAN)}`);
+    await scanCharge(page);
+    await verifierEtiquettes(page, langue);
+    await capture(page, `jv5c-chant-${langue}`);
+    for (const n of [0, 2]) {
+      await etiquettes(page).nth(n).click();
+      await expect(voletOuvert(page)).toBeVisible();
+      const bloc = voletOuvert(page).locator("[data-passage-uids]").filter({ has: page.getByRole("heading", { name: ATTENDUES[n].passage[langue] }) }).first();
+      await expect(bloc).toBeInViewport({ timeout: 10_000 });
+      if (n === 0) await capture(page, `jv5c-chant-volet-${langue}`);
+      await page.keyboard.press("Escape");
+      await expect(page.locator("[data-idees-harmonie]:not([data-harmonie-colonne])")).toHaveCount(0);
+    }
+  });
+}
+
+test("JV-5c, sans accès harmonie : ni étiquette ni rail, le scan garde sa largeur", async ({ page }) => {
+  await prefs(page);
+  await signInAs(page, SANS_HARMONIE, {}, `/songs/${encodeURIComponent(SCAN)}`);
+  await scanCharge(page);
+  await expect(page.locator("[data-jianpu-fenetre]").first()).toBeVisible();
+  await expect(etiquettes(page)).toHaveCount(0);
+  expect(await page.locator("[data-jianpu-fenetre]").first().evaluate((f) => getComputedStyle(f).overflow)).toBe("hidden");
+});
+
+test("JV-5c, vue Partitions : étiquettes du scan, le toucher ouvre le volet au bloc du Refrain", async ({ page }) => {
+  await prefs(page);
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, LECTRICE, { [SETLIST_DOC]: { ...setlist(), ownerId: "uid-owner", items: [item({ songSlug: SCAN, position: 1 })] } }, `/setlists/${SETLIST_ID}`);
+  await ouvrirPartitions(page);
+  await scanCharge(page);
+  // Deux volets dès 1 000 px de zone : les fenêtres sont des demi-lignes, seule la hauteur n'est pas recalculée ici.
+  await verifierEtiquettes(page, "fr", false);
+  await capture(page, "jv5c-partitions-fr");
+  await etiquettes(page).nth(1).click();
+  await expect(voletOuvert(page)).toBeVisible();
+  await expect(voletOuvert(page).locator("[data-passage-uids]").filter({ has: page.getByRole("heading", { name: /^Refrain/ }) }).first()).toBeInViewport({ timeout: 10_000 });
+});
+
+for (const langue of ["fr", "zh"] as const) {
+  test(`JV-5c, mode louange (${langue}) : réglage allumé, les étiquettes ouvrent le volet sans tourner la page`, async ({ page }) => {
+    await prefs(page, { zh: langue === "zh", louange: true, sombre: langue === "zh" });
+    await signInAs(page, LECTRICE, { [SETLIST_DOC]: { ...setlist(), ownerId: "uid-owner", items: [item({ songSlug: SCAN, position: 1 })] } }, `/setlists/${SETLIST_ID}`);
+    await page.getByRole("button", { name: langue === "zh" ? /敬拜模式/ : /Mode Louange/ }).first().click();
+    await attendreMiseEnPage(page);
+    await scanCharge(page);
+    const premiere = onStage(page, "[data-jianpu-etiquette]").first();
+    await expect(premiere).toBeVisible({ timeout: 15_000 });
+    await expect.poll(() => visible(premiere)).toBe(etroit(page) ? ATTENDUES[0].ini[langue] : ATTENDUES[0][langue]);
+    const g = await premiere.evaluate((el) => ({ d: el.getBoundingClientRect().right, f: el.parentElement!.getBoundingClientRect().left }));
+    expect(g.d).toBeLessThanOrEqual(g.f + 0.5);
+    await capture(page, `jv5c-louange-${langue}`);
+    const avant = await lireCompteur(page);
+    await premiere.click();
+    await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
+    expect(await lireCompteur(page), "le toucher ne tourne pas la page").toBe(avant);
+    await capture(page, `jv5c-louange-volet-${langue}`);
+  });
+}
+
+test("JV-5c, mode louange : réglage éteint, aucune étiquette", async ({ page }) => {
+  await prefs(page);
+  await signInAs(page, LECTRICE, { [SETLIST_DOC]: { ...setlist(), ownerId: "uid-owner", items: [item({ songSlug: SCAN, position: 1 })] } }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).first().click();
+  await attendreMiseEnPage(page);
+  await scanCharge(page);
+  await expect(page.locator("[data-performance-mode] [data-jianpu-page]").first()).toBeVisible();
+  // La page de la setlist, dessous, garde les siennes (accès harmonie) : seul le mode louange compte.
+  await expect(onStage(page, "[data-jianpu-etiquette]")).toHaveCount(0);
 });

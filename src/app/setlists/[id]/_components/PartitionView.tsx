@@ -90,7 +90,7 @@ function DonnerFermeture({ onFermer }: { onFermer?: (fermer: () => void) => void
 /** Enveloppe du scan 简谱 (vue Partitions). Dès 1 000 px de zone (conteneur `partition`, même règle que les paroles),
  *  le scan passe en deux volets (`useVoletsScan`) ; sinon il garde 920 px. Le témoin, visible seulement à ≥ 1 000 px,
  *  donne la largeur de la zone par ResizeObserver. */
-function EnveloppeScan({ slug, entry, sansVolets, children }: { slug: string; entry: JianpuEntry; sansVolets: boolean; children: (volets: Volets | undefined) => ReactNode }) {
+function EnveloppeScan({ slug, entry, sansVolets, avecEtiquettes = false, children }: { slug: string; entry: JianpuEntry; sansVolets: boolean; avecEtiquettes?: boolean; children: (volets: Volets | undefined) => ReactNode }) {
   const temoin = useRef<HTMLDivElement>(null);
   const [largeur, setLargeur] = useState<number | null>(null);
   useEffect(() => {
@@ -100,7 +100,7 @@ function EnveloppeScan({ slug, entry, sansVolets, children }: { slug: string; en
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const volets = useVoletsScan(slug, entry, sansVolets ? null : largeur) ?? undefined;
+  const volets = useVoletsScan(slug, entry, sansVolets ? null : largeur, avecEtiquettes) ?? undefined;
   return (
     <>
       {/* Hors de l'enveloppe : elle est bornée à 920 px tant qu'il n'y a pas de volets, le témoin mesurerait 920. */}
@@ -670,7 +670,7 @@ function NormalSongItem({
           // Partition 简谱 : le scan prend la place des paroles, sous le même
           // en-tête (K3). Structure seule : ni l'un ni l'autre.
           jianpuScore && layout !== "structure" ? (
-            <EnveloppeScan slug={item.songSlug} entry={jianpuScore} sansVolets={Boolean(editMode && onEditJianpu)}>
+            <EnveloppeScan slug={item.songSlug} entry={jianpuScore} sansVolets={Boolean(editMode && onEditJianpu)} avecEtiquettes={Boolean(onIci)}>
               {(volets) => (<>
               {/* Un 升调 ne se voit pas sur un scan : le dire au-dessus (lot 9). */}
               {steps

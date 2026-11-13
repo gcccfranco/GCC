@@ -510,3 +510,32 @@ chantier sur ce fichier.
   (70 px d'écart) ; feuille sur la barre du bas sous 1 024 px ; nom touché non marqué sur la page ; antérieurs au volet
   (grille d'accords qui touche le cadre surligné, « · » seul en bout de ligne, double cadre, fiches en français en
   chinois). JV-5c lancée à la suite.
+- 13/11/2026 : **JV-5c codée** (session orchestratrice). Sur un scan 简谱 certifié, une **étiquette de section** par ligne où
+  commence au moins une section (`sections.json`), dans la langue de l'interface (moitié 中文 ou française du libellé),
+  forme courte (« Couplets 1–2 », « 主歌 1–2 » ; noms différents : « Couplet · Refrain »), initiale seule sous 640 px ;
+  couleur de la section. Le toucher ouvre le volet Harmonie au bloc du passage : page chant et vue Partitions
+  (`useIciDuChant`, comme `NomSection`), mode louange avec « Idées d'harmonie » allumé (`ScanTouchable` et
+  `groupeScan`, `VoletHarmonie.tsx` ; le toucher ne tourne pas la page). Lien `sections.json` ↔ passages :
+  `passageDeSection` (`src/lib/jianpu/etiquettesSections.ts`, pur ; `verse-1` → uid `verse-1-0`). `JianpuSheet` : couche
+  sœur du calque (étiquettes hors de la fenêtre, un cadre intérieur rogne la page ; calque intact). **Décision déléguée
+  (session, 13/11)** : la marge blanche réelle des scans est presque nulle à l'écran (médiane 27 px image, dont 14
+  rognés : ≈ 4 px CSS), l'étiquette y serait sur l'encre ; elle va donc dans un **rail réservé à gauche** du scan (de
+  chaque colonne en volets), 28 px sous 640 px d'écran (moins de 40 : l'initiale), 56 px au-delà (forme courte, sur
+  deux lignes au besoin), seulement quand les étiquettes s'affichent (accès Harmonie, hors Crayon ; en louange, réglage
+  allumé). Le scan rétrécit d'autant ; les calculs de largeur le savent (`useVoletsScan`, `avecEtiquettes` ; mode louange,
+  `tranchesDe`, réglage allumé : les pages se recomptent au changement du réglage, pas au toucher). Sans accès, rien ne
+  change (fenêtre et largeurs d'avant, testé). **Retouche demandée par Timothée en cours de tranche** (13/11 : « sur les
+  écrans en paysage, ça ne peut pas prendre toute la largeur ? », puis « oui » au mode louange en 2 colonnes) : les deux
+  colonnes ne sont plus plafonnées à 1 040 px ni réglées sur une ligne sans coupe (elle se rapetisse seule dans sa
+  colonne, `echelleFenetre`, `Demi.largeurCol`) : à 1 280 × 720, colonnes de ≈ 545 px au lieu de ≈ 390 (为我而来 : 6
+  écrans au lieu de 4). Tests : `harmonie-jianpu.spec.ts` étendue (huit tests JV-5c : FR et ZH, page chant, Partitions,
+  louange, sans accès, réglage éteint) et ajoutée à `SPECS_GRAND_ECRAN` (ses tests Crayon restent sur trois appareils :
+  à 1 440 la vue Partitions est en volets) ; `louange-jianpu-deux-colonnes` (test d'échelle réécrit). Tour des specs de la
+  tranche et du lot (harmonie-jianpu, louange-harmonie, harmonie-volet-section, jianpu-deux-volets,
+  louange-jianpu-deux-colonnes, louange-jianpu-tranches, jianpu-par-defaut, louange-roles-jianpu, pupitre-partitions,
+  jianpu-integration), cinq projets : 805 passés, 210 sautés, 9 échecs : 3 antérieurs connus (`jianpu-integration` 264,
+  661, 682 à 1 440), 6 tests Crayon à 1 440 (nouveau projet pour la spec, gardés sur trois appareils) (**27,8 min**) ;
+  repasses `harmonie-jianpu` + `louange-jianpu-deux-colonnes` après corrections : 110 passés, 0 échec (**4,4 min**
+  chacune, deux fois). `jianpu:audit` 为我而来 et 一切歌颂赞美 : calque calé, PNG regardés (l'audit laisse un `next dev`
+  sur :3100 : le tuer avant de relancer Playwright, sinon tout échoue). tsc, lint : 0 erreur. **Fin du lot JV** (JV-1 à
+  JV-5c codées).

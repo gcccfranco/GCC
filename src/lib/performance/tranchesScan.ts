@@ -7,7 +7,12 @@ export type Tranche = { y0: number; y1: number; premiere: number; derniere: numb
 /** Fenêtre d'une demi-ligne (lot JP-C, téléphone en portrait) : `x0..x1` × `y0..y1` px image ; `moitie` absent : ligne entière. */
 export type FenetreDemi = { x0: number; x1: number; y0: number; y1: number; ligne: number; moitie?: "g" | "d" };
 /** Tranche en demi-lignes : fenêtres dans l'ordre d'affichage, échelle commune (px CSS par px image). */
-export type Demi = { echelle: number; fenetres: FenetreDemi[]; /** Deux colonnes (JV-4) : indice de la première fenêtre de droite ; absent : une colonne. */ colonne2?: number };
+export type Demi = { echelle: number; fenetres: FenetreDemi[]; /** Deux colonnes (JV-4) : indice de la première fenêtre de droite ; absent : une colonne. */ colonne2?: number; /** Deux colonnes : largeur d'une colonne (px CSS) ; une fenêtre plus large s'y rapetisse seule (`echelleFenetre`). */ largeurCol?: number };
+
+/** Échelle d'une fenêtre : celle de la page, rapetissée pour une fenêtre plus large que sa colonne (une ligne sans barre
+ *  près du milieu, gardée entière). */
+export const echelleFenetre = (f: { x0: number; x1: number }, echelle: number, largeurCol?: number) =>
+  largeurCol ? Math.min(echelle, largeurCol / Math.max(1, f.x1 - f.x0)) : echelle;
 
 /** Une ligne du scan : `y0`..`y1` inclus, px image ; `barres` : x des barres de mesure (la dernière est la barre finale). */
 export type LigneTranche = { y0: number; y1: number; barres?: number[] };
@@ -218,8 +223,9 @@ export const GOUTTIERE_VOLETS = 24;
 
 /** Mode louange, interrupteur « 2 colonnes » (lot JV, JV-4) : chaque page d'écran montre deux colonnes de demi-lignes
  *  au lieu de lignes entières. Chaque ligne est coupée sur sa barre la plus proche du milieu (`fenetresLigne`).
- *  Échelle = colonne / plus large fenêtre, plafonnée à `echelleMax` (celle des lignes entières : la taille de lecture ne
- *  grandit pas). On remplit demi-ligne par demi-ligne la colonne de gauche, puis celle de droite (la moitié droite d'une
+ *  Échelle = colonne / plus large demi-ligne, plafonnée à `echelleMax` (celle des lignes entières : la taille de lecture ne
+ *  grandit pas) ; une ligne sans coupe, plus large que la colonne, s'y rapetisse seule (Timothée, 13/11/2026 : « sur les
+ *  écrans en paysage, ça ne peut pas prendre toute la largeur ? » ; avant, elle fixait l'échelle de toute la page). On remplit demi-ligne par demi-ligne la colonne de gauche, puis celle de droite (la moitié droite d'une
  *  ligne peut ouvrir la colonne de droite : la lecture continue en haut de la colonne suivante), puis la page suivante ;
  *  une page finit toujours sur une ligne complète (jamais de tourne au milieu d'une ligne). La dernière page s'équilibre
  *  (la plus haute colonne la plus courte). Une ligne seule plus haute que l'écran baisse l'échelle de sa page. `null` :
@@ -240,14 +246,16 @@ export function tranchesDeuxColonnes(
   if (lignes.length < 2) return null;
   const { haut, bas } = marges(lignes, pageH);
   const fs = lignes.flatMap((l, k) => fenetresLigne(l, k, haut[k], bas[k], x0, x1));
-  const large = Math.max(1, ...fs.map((f) => f.x1 - f.x0));
-  const echelle = Math.min(echelleMax, (largeurDispoPx - GOUTTIERE_VOLETS) / 2 / large);
+  const coupees = fs.filter((f) => f.moitie);
+  const large = Math.max(1, ...(coupees.length ? coupees : fs).map((f) => f.x1 - f.x0));
+  const largeurCol = (largeurDispoPx - GOUTTIERE_VOLETS) / 2;
+  const echelle = Math.min(echelleMax, largeurCol / large);
   if (hauteurAccordImg * echelle < seuilAccordPx) return null;
   const n = fs.length;
   // Écart au-dessus de la fenêtre k quand elle suit k - 1 dans la même colonne.
   const ecart = (k: number) => (fs[k].moitie === "d" ? ECART_MOITIES : ECART_SYSTEMES);
   // Hauteur d'une colonne de fenêtres [a, b[ à l'échelle e : hauteurs + écarts (la première sans écart).
-  const hCol = (a: number, b: number, e = echelle) => { let t = 0; for (let k = a; k < b; k++) t += (fs[k].y1 - fs[k].y0) * e + (k > a ? ecart(k) : 0); return t; };
+  const hCol = (a: number, b: number, e = echelle) => { let t = 0; for (let k = a; k < b; k++) t += (fs[k].y1 - fs[k].y0) * echelleFenetre(fs[k], e, largeurCol) + (k > a ? ecart(k) : 0); return t; };
   const fixes = (a: number, b: number) => { let t = 0; for (let k = a + 1; k < b; k++) t += ecart(k); return t; };
   const finDeLigne = (b: number) => b === n || fs[b].moitie !== "d";
   const dispo = (b: number) => hauteurDispoPx - (b === n ? reserveDerniere : 0);
@@ -280,6 +288,6 @@ export function tranchesDeuxColonnes(
       const f = Math.max(fixes(a, c), c < b ? fixes(c, b) : 0);
       e = Math.min(echelle, Math.max(0, place - f) / Math.max(1, (plusHaute - f) / echelle));
     }
-    return { y0: fenetres[0].y0, y1: fenetres[fenetres.length - 1].y1, premiere: fenetres[0].ligne, derniere: fenetres[fenetres.length - 1].ligne, demi: { echelle: e, fenetres, colonne2: c - a } };
+    return { y0: fenetres[0].y0, y1: fenetres[fenetres.length - 1].y1, premiere: fenetres[0].ligne, derniere: fenetres[fenetres.length - 1].ligne, demi: { echelle: e, fenetres, colonne2: c - a, largeurCol } };
   });
 }

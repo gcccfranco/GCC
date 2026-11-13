@@ -7,7 +7,7 @@
 
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
 import type { ChordProSection } from "@/types/chordPro";
-import type { SectionBlock } from "@/lib/performance/blocks";
+import type { JianpuSheetBlock, SectionBlock } from "@/lib/performance/blocks";
 import type { SongContent } from "@/lib/api/songs";
 import { ChantDesAccords, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
@@ -25,7 +25,11 @@ export type VoletOuvert = { slug: string; titre: string; sections: ChordProSecti
 /** Le chant et la tonalité d'un bloc (une section en 升调 a la sienne ; formes affichées, capo déduit). */
 const groupe = (b: SectionBlock) => `${b.songSlug}|${getTransposedKey(b.keyChange ?? b.songKey, -(b.capo ?? 0))}`;
 
-/** Un `ici` par chant et par tonalité : ses sections affichées et l'ouverture du volet. Vide tant que `actif` est faux. */
+/** Le groupe d'une page de scan 简谱 (JV-5c) : son chant et la tonalité de ses formes. */
+export const groupeScan = (b: JianpuSheetBlock) => `${b.songSlug}|${getTransposedKey(b.songKey, -(b.capo ?? 0))}`;
+
+/** Un `ici` par chant et par tonalité : ses sections affichées et l'ouverture du volet. Vide tant que `actif` est faux.
+ *  Un chant lu sur son scan (JV-5c) n'a pas de blocs de section : son `ici` prend les sections du chant. */
 export function useIcisDuLouange(blocks: { kind: string }[], contents: Record<string, SongContent>, actif: boolean, ouvrir: (v: VoletOuvert) => void) {
   return useMemo(() => {
     const m = new Map<string, IciDuChant>();
@@ -49,6 +53,21 @@ export function useIcisDuLouange(blocks: { kind: string }[], contents: Record<st
       }
       if (!ici.sections.some((s) => s.uid === b.section.uid)) ici.sections.push(b.section);
     }
+    for (const b of blocks as JianpuSheetBlock[]) {
+      if (b.kind !== "jianpu-sheet" || !b.songSlug || !contents[b.songSlug]) continue;
+      const k = groupeScan(b);
+      if (m.has(k)) continue;
+      const slug = b.songSlug;
+      const tonalite = getTransposedKey(b.songKey, -(b.capo ?? 0));
+      const sections = contents[slug].ast.sections;
+      const tonaliteOrigine = contents[slug].ast.metadata.key ?? tonalite;
+      m.set(k, {
+        sections,
+        tonalite,
+        tonaliteOrigine,
+        ouvrir: (uid) => { compter("cmd.louange.harmonie"); ouvrir({ slug, titre: b.songTitle, sections, tonalite, tonaliteOrigine, uid, cle: Date.now() }); },
+      });
+    }
     return m;
   }, [actif, blocks, contents, ouvrir]);
 }
@@ -62,6 +81,18 @@ export function NomsTouchables({ block, children }: { block: SectionBlock; child
   const ici = useContext(Icis).get(groupe(block));
   if (!ici || !block.songSlug) return <>{children}</>;
   const arret = (e: { target: EventTarget; stopPropagation: () => void }) => { if ((e.target as HTMLElement).closest?.("[data-section-nom-bouton]")) e.stopPropagation(); };
+  return (
+    <ChantDesAccords chant={{ slug: block.songSlug, titre: block.songTitle }} ici={ici}>
+      <div className="contents" onPointerDown={arret} onPointerUp={arret} onPointerCancel={arret}>{children}</div>
+    </ChantDesAccords>
+  );
+}
+
+/** Rend les étiquettes de section d'un scan touchables (JV-5c, `JianpuSheet`) ; le toucher ne tourne pas la page. */
+export function ScanTouchable({ block, children }: { block: JianpuSheetBlock; children: ReactNode }) {
+  const ici = useContext(Icis).get(groupeScan(block));
+  if (!ici || !block.songSlug) return <>{children}</>;
+  const arret = (e: { target: EventTarget; stopPropagation: () => void }) => { if ((e.target as HTMLElement).closest?.("[data-jianpu-etiquette]")) e.stopPropagation(); };
   return (
     <ChantDesAccords chant={{ slug: block.songSlug, titre: block.songTitle }} ici={ici}>
       <div className="contents" onPointerDown={arret} onPointerUp={arret} onPointerCancel={arret}>{children}</div>

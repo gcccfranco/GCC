@@ -4,12 +4,13 @@ import { Fragment, useMemo, useState, type CSSProperties } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
-import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords, useJianpuMarges, useJianpuSystemes } from "@/lib/jianpu/images";
-import { ECART_MOITIES, ECART_SYSTEMES, LARGEUR_FEUILLE_MAX, type Demi, type FenetreDemi, type Volets } from "@/lib/performance/tranchesScan";
+import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords, useJianpuMarges, useJianpuSections, useJianpuSystemes } from "@/lib/jianpu/images";
+import { etiquettesDuScan, passageDeSection, type EtiquetteScan } from "@/lib/jianpu/etiquettesSections";
+import { ECART_MOITIES, ECART_SYSTEMES, echelleFenetre, LARGEUR_FEUILLE_MAX, type Demi, type FenetreDemi, type Volets } from "@/lib/performance/tranchesScan";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
-import { useOuvrirAccord } from "@/components/accords/AccordsProvider";
+import { useIciDuChant, useOuvrirAccord } from "@/components/accords/AccordsProvider";
 import type { JianpuChords } from "@/types/setList";
 import { altSpellingKey, getTransposedKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 
@@ -119,6 +120,32 @@ function fitFont(
  *  sur celui des paroles (piste A, P5). */
 export const MARGE_SOURCE = 14;
 
+/** JV-5c : largeur du rail des étiquettes de section (`RAIL_ETROIT`, `RAIL_LARGE` de `etiquettesSections.ts`, même seuil). */
+const RAIL_VAR = "[--rail-etiquettes:28px] sm:[--rail-etiquettes:56px]";
+const RAIL_CLS = "pl-[var(--rail-etiquettes)] print:pl-0";
+/** Zone de toucher de 44 px de haut au moins (l'étiquette en fait ≈ 22) ; `TOUCHER_44` poserait `relative` sur un bouton placé. */
+const TOUCHER_ETIQUETTE = "[@media(pointer:coarse)]:after:absolute [@media(pointer:coarse)]:after:content-[''] [@media(pointer:coarse)]:after:-inset-y-3 [@media(pointer:coarse)]:after:-inset-x-1";
+
+/** Une étiquette de section dans le rail, à la hauteur de la ligne où la section commence (`top`, % de la fenêtre) :
+ *  l'initiale sous 640 px (rail de 28 px), la forme courte au-delà. Couleur de la section, jamais sur l'encre. */
+function EtiquetteSection({ e, top, onOuvrir }: { e: EtiquetteScan; top: number; onOuvrir: (el: HTMLElement) => void }) {
+  const { t } = useTranslation();
+  const type = e.ids[0].replace(/-\d+$/, "");
+  return (
+    <button
+      type="button"
+      data-jianpu-etiquette={e.ids.join(" ")}
+      aria-label={t("harmonie.ideesDe", { nom: e.nom })}
+      onClick={(ev) => onOuvrir(ev.currentTarget)}
+      className={`${TOUCHER_ETIQUETTE} absolute right-full z-10 w-[calc(var(--rail-etiquettes)-8px)] cursor-pointer select-none break-normal rounded-[6px] py-1 text-center text-[11px] font-semibold leading-[1.15] tracking-[-0.01em] outline-none focus-visible:ring-2 focus-visible:ring-ring print:hidden`}
+      style={{ top: `${top}%`, color: `var(--sec-${type}, var(--sec-other))`, background: `var(--sec-${type}-tint, var(--sec-other-tint))` }}
+    >
+      <span aria-hidden className="sm:hidden">{e.initiale}</span>
+      <span aria-hidden className="hidden sm:inline">{e.court}</span>
+    </button>
+  );
+}
+
 /** Les messages au-dessus du scan (piste A, P7) : jetons du site, surface
  *  `--secondary`, texte à l'encre du scan, rayon 12 px. */
 const MESSAGE = "w-full max-w-2xl rounded-[12px] bg-secondary px-3 py-2 text-xs";
@@ -206,7 +233,7 @@ type JianpuSheetProps = {
  *  PNG pré-rendu : 124 chants × 12 tonalités serait intenable, et la
  *  transposition doit rester instantanée. */
 export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: demandee, originalKey, capo = 0, pageIndex, chordEdits, onEditChords, tranche, volets }: JianpuSheetProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fit = layout === "fit";
   const chords = useJianpuChords(slug);
   const cadrage = useJianpuCadrage(slug);
@@ -274,6 +301,29 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   // Lecture sous un fournisseur d'accords actif : les accords écrits s'ouvrent au toucher (DA-3).
   // Jamais en retouche, ni en mode louange (pas de fournisseur actif).
   const accordsTouchables = useOuvrirAccord().actif && !retouchable;
+  // JV-5c : étiquettes de section dans un rail à gauche du scan (`etiquettesSections.ts`) ; chacune ouvre le volet
+  // Harmonie au bloc du passage, comme le nom de section (`NomSection`, SongView). Seulement avec l'accès Harmonie
+  // (`ici`), hors retouche, pour un scan certifié dont les sections sont connues (`sections.json`, `systemes.json`).
+  const ici = useIciDuChant();
+  const sectionsScan = useJianpuSections();
+  const zh = (i18n.language ?? "").startsWith("zh");
+  const etiquettes = useMemo(() => {
+    const chant = slug ? systemes?.[slug] : undefined;
+    const debuts = slug ? sectionsScan?.[slug]?.sections : undefined;
+    if (!ici || retouchable || !chant || !debuts) return [];
+    const uids = ici.sections.map((x) => x.uid);
+    return etiquettesDuScan(debuts, zh).flatMap((e) => {
+      const uid = e.ids.map((id) => passageDeSection(id, uids)).find(Boolean);
+      const l = chant.pages[e.page]?.lignes[e.ligne];
+      return uid && l ? [{ ...e, uid, y: l.y0 }] : [];
+    });
+  }, [ici, retouchable, slug, systemes, sectionsScan, zh]);
+  const rail = etiquettes.length > 0;
+  /** Les étiquettes des lignes de la page `i` qui commencent entre `y0` et `y1` (px image), placées en % de la fenêtre. */
+  const rendreEtiquettes = (i: number, y0: number, y1: number, lignes?: [number, number]) =>
+    etiquettes
+      .filter((e) => e.page === i && (lignes ? e.ligne >= lignes[0] && e.ligne <= lignes[1] : e.y >= y0 && e.y < y1))
+      .map((e) => <EtiquetteSection key={`${e.page}-${e.ligne}`} e={e} top={((Math.max(e.y, y0) - y0) / (y1 - y0)) * 100} onOuvrir={(el) => ici?.ouvrir(e.uid, undefined, { depuisNom: true, element: el })} />);
   const staleChords = Boolean(playedKey && !chords);
   // Calque partiel : une partie des accords n'a pas été relevée et reste
   // donc dans la tonalité imprimée. On le dit, et on met en évidence ceux
@@ -562,7 +612,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   };
 
   return (
-    <div className={fit ? "flex h-full w-full flex-col items-center justify-center gap-2" : "flex flex-col items-center gap-6"}>
+    <div className={(fit ? "flex h-full w-full flex-col items-center justify-center gap-2" : "flex flex-col items-center gap-6") + (rail ? " " + RAIL_VAR : "")}>
       <JianpuFiltres />
 
       {staleChords && (
@@ -619,7 +669,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           large débordait alors des deux côtés. Calée en haut : bornée par la
           largeur (téléphone), la page commence sous le bandeau (L3-T5a). */}
       <div
-        className={fit ? (tranche?.demi ? "flex min-h-0 w-full flex-1 flex-col items-start" : "flex min-h-0 w-full flex-1 items-start justify-center") : "contents"}
+        className={(fit ? (tranche?.demi ? "flex min-h-0 w-full flex-1 flex-col items-start" : "flex min-h-0 w-full flex-1 items-start justify-center") : rail && !volets ? "flex w-full flex-col items-center gap-6" : "contents") + (rail && !volets && tranche?.demi?.colonne2 === undefined ? " " + RAIL_CLS : "")}
         style={fit && !tranche?.demi ? { containerType: "size" } : undefined}
       >
       {/* Corps d'une fenêtre : `demi` + `echelleDemi` (px CSS par px image) pour une demi-ligne de `fit` ou de volet. */}
@@ -680,7 +730,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           data-jianpu-moitie={demi ? (demi.moitie ?? "entiere") : undefined}
           // Bornes (px image) des lignes de la tranche : la demi-page ne coupe qu'entre deux d'entre elles.
           data-jianpu-lignes={tr ? lignesTranche.map((l) => `${l.y0}-${l.y1}`).join(",") : undefined}
-          className={demi && echelleDemi != null ? "relative shrink-0 overflow-hidden" : fit ? "relative mx-auto overflow-hidden" : "relative overflow-hidden"}
+          className={(demi && echelleDemi != null ? "relative shrink-0" : fit ? "relative mx-auto" : "relative") + (rail ? "" : " overflow-hidden")}
           style={{
             aspectRatio: tr ? `${tr.x1 - tr.x0} / ${tr.y1 - tr.y0}` : `${page.w} / ${visible}`,
             ...(tr && demi && echelleDemi != null
@@ -701,6 +751,8 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
                 }),
           }}
         >
+        {/* JV-5c : avec le rail, la fenêtre ne rogne plus elle-même (les étiquettes sortent à sa gauche) : un cadre intérieur rogne la page. */}
+        <div className={rail ? "absolute inset-0 overflow-hidden" : "contents"}>
         <div
           data-jianpu-page={i}
           data-trait-scan={i}
@@ -791,6 +843,8 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           )}
         </div>
         </div>
+        {rail && demi?.moitie !== "d" && rendreEtiquettes(i, tr ? tr.y0 : top, tr ? tr.y1 : page.h, tr ? [tr.premiere, tr.derniere] : undefined)}
+        </div>
         </Fragment>
         );
       };
@@ -799,7 +853,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         return (
           <div data-jianpu-volets className="grid w-full grid-cols-2 items-start gap-x-6 print:block">
             {volets.colonnes.map((col, c) => (
-              <div key={c} data-jianpu-volet={c} className="flex min-w-0 flex-col items-start">
+              <div key={c} data-jianpu-volet={c} className={`flex min-w-0 flex-col items-start${rail ? " " + RAIL_CLS : ""}`}>
                 {col.map((f, nf) => {
                   const tr = { y0: f.y0, y1: f.y1, x0: f.x0, x1: f.x1, premiere: f.ligne, derniere: f.ligne };
                   return fenetre(page0[f.page], f.page, `${f.page}-${f.ligne}-${f.moitie ?? "e"}`, c === 0 && nf === 0, tr, f, nf, volets.echelle);
@@ -812,13 +866,13 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
       // Mode louange, « 2 colonnes » (lot JV, JV-4) : les demi-lignes de la tranche en deux colonnes de même largeur.
       const d2 = fit && tranche?.demi?.colonne2 !== undefined ? tranche.demi : null;
       if (d2 && shownPages[0]) {
-        const largeurCol = Math.max(...d2.fenetres.map((f) => f.x1 - f.x0)) * d2.echelle;
+        const largeurCol = Math.max(...d2.fenetres.map((f) => (f.x1 - f.x0) * echelleFenetre(f, d2.echelle, d2.largeurCol)));
         const cols = [d2.fenetres.slice(0, d2.colonne2), d2.fenetres.slice(d2.colonne2)];
         return (
-          <div data-jianpu-volets className="mx-auto grid items-start gap-x-6" style={{ gridTemplateColumns: `repeat(2, ${largeurCol}px)` }}>
+          <div data-jianpu-volets className="mx-auto grid items-start gap-x-6" style={{ gridTemplateColumns: rail ? `repeat(2, calc(${largeurCol}px + var(--rail-etiquettes)))` : `repeat(2, ${largeurCol}px)` }}>
             {cols.map((col, c) => (
-              <div key={c} data-jianpu-volet={c} className="flex min-w-0 flex-col items-start">
-                {col.map((demi, nf) => fenetre(shownPages[0], firstShown, `${shownPages[0].file}-${c}-${nf}`, c === 0 && nf === 0, { ...tranche!, ...demi, premiere: demi.ligne, derniere: demi.ligne }, demi, nf, d2.echelle))}
+              <div key={c} data-jianpu-volet={c} className={`flex min-w-0 flex-col items-start${rail ? " " + RAIL_CLS : ""}`}>
+                {col.map((demi, nf) => fenetre(shownPages[0], firstShown, `${shownPages[0].file}-${c}-${nf}`, c === 0 && nf === 0, { ...tranche!, ...demi, premiere: demi.ligne, derniere: demi.ligne }, demi, nf, echelleFenetre(demi, d2.echelle, d2.largeurCol)))}
               </div>
             ))}
           </div>

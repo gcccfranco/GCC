@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreCompteur, fermerBarre, lireCompteur } from "./helpers/louange";
-import { bornesX, ECART_SYSTEMES, GOUTTIERE_VOLETS, tranchesDeuxColonnes } from "../src/lib/performance/tranchesScan";
+import { bornesX, ECART_SYSTEMES, echelleFenetre, GOUTTIERE_VOLETS, tranchesDeuxColonnes } from "../src/lib/performance/tranchesScan";
 
 // Lot JV, JV-4 (docs/spec-jianpu-deux-volets.md) : dans le mode louange, l'interrupteur « 2 colonnes » allumé pose un
 // scan 简谱 certifié en deux colonnes de demi-lignes par page d'écran (ordinateur, tablette paysage) ; éteint, les
@@ -111,9 +111,12 @@ test.describe("tranchesDeuxColonnes (pur)", () => {
     for (let k = 1; k < t.length; k++) expect(t[k].premiere).toBe(t[k - 1].derniere + 1);
   });
 
-  test("échelle : la colonne sur la plus large fenêtre, plafonnée à celle des lignes entières", () => {
+  test("échelle : la colonne sur la plus large demi-ligne, plafonnée à celle des lignes entières ; une ligne sans coupe se rapetisse seule", () => {
     const etroit = tranchesDeuxColonnes(p.lignes, p.h, x0, x1, 1040, 5000, echelleMax, 40)!;
-    const large = Math.max(...etroit[0].demi!.fenetres.map((f) => f.x1 - f.x0));
+    const fs = etroit[0].demi!.fenetres;
+    const large = Math.max(...(fs.some((f) => f.moitie) ? fs.filter((f) => f.moitie) : fs).map((f) => f.x1 - f.x0));
+    // Paysage (Timothée, 13/11/2026) : chaque fenêtre tient dans sa colonne, aucune n'en déborde.
+    for (const f of fs) expect((f.x1 - f.x0) * echelleFenetre(f, etroit[0].demi!.echelle, etroit[0].demi!.largeurCol)).toBeLessThanOrEqual((1040 - GOUTTIERE_VOLETS) / 2 + 0.01);
     expect(etroit[0].demi!.echelle).toBeCloseTo((1040 - GOUTTIERE_VOLETS) / 2 / large, 5);
     const plafond = tranchesDeuxColonnes(p.lignes, p.h, x0, x1, 1040, 5000, 0.3, 40)!;
     expect(plafond[0].demi!.echelle).toBe(0.3);
@@ -123,14 +126,14 @@ test.describe("tranchesDeuxColonnes (pur)", () => {
     const t = tranchesDeuxColonnes(p.lignes, p.h, x0, x1, 1040, 5000, echelleMax, 40)!;
     expect(t.length).toBe(1);
     const d = t[0].demi!;
-    const h = (fs: typeof d.fenetres) => fs.reduce((s, f, n) => s + (f.y1 - f.y0) * d.echelle + (n === 0 ? 0 : f.moitie === "d" ? 2 : ECART_SYSTEMES), 0);
+    const h = (fs: typeof d.fenetres) => fs.reduce((s, f, n) => s + (f.y1 - f.y0) * echelleFenetre(f, d.echelle, d.largeurCol) + (n === 0 ? 0 : f.moitie === "d" ? 2 : ECART_SYSTEMES), 0);
     const g = h(d.fenetres.slice(0, d.colonne2));
     const dr = h(d.fenetres.slice(d.colonne2));
     expect(Math.abs(g - dr)).toBeLessThan(Math.max(g, dr));
     for (const tr of tranchesDeuxColonnes(p.lignes, p.h, x0, x1, 1040, 600, echelleMax, 40)!) {
       const e = tr.demi!;
       for (const col of [e.fenetres.slice(0, e.colonne2), e.fenetres.slice(e.colonne2)]) {
-        const haut = col.reduce((s, f, n) => s + (f.y1 - f.y0) * e.echelle + (n === 0 ? 0 : f.moitie === "d" ? 2 : ECART_SYSTEMES), 0);
+        const haut = col.reduce((s, f, n) => s + (f.y1 - f.y0) * echelleFenetre(f, e.echelle, e.largeurCol) + (n === 0 ? 0 : f.moitie === "d" ? 2 : ECART_SYSTEMES), 0);
         expect(haut).toBeLessThanOrEqual(600 + 0.5);
       }
     }

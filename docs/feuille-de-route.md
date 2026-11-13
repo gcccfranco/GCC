@@ -188,6 +188,10 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   TC-4. Q3 tranchée par Timothée (13/11 : lecture en colonnes, JV-2, après JV-3). Q1 et Q2 tranchées par Timothée (13/11 : « oui ») : go de Timothée pour JV-1 et JV-2 (13/11, « oui ») : JV-1 lancée, JV-2 après JV-3 ; idées d'harmonie
   (toutes les propositions d'une section au toucher, reprise du 13/11) : Timothée choisit le volet Harmonie ouvert au toucher du nom de la section (13/11) ; **go pour JV-5a à JV-5c** :
   JV-2 lance JV-5a, JV-4 lance JV-5b puis JV-5c (spec, § Avancement). Aucune règle Firestore touchée.
+  **Lot JV fini le 13/11** (JV-5c : étiquettes de section sur le scan 简谱, dans un rail à gauche, qui ouvrent le volet
+  Harmonie ; plus la retouche de Timothée « toute la largeur en paysage » pour le mode louange en 2 colonnes). Specs du
+  lot repassées, cinq projets : 0 échec propre au lot (3 rouges antérieurs de `jianpu-integration` à 1 440). Rien de la
+  file n'a de go en attente : aucun chantier lancé à la suite. Rien sur `main`.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 
