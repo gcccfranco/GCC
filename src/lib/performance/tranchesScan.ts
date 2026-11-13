@@ -217,12 +217,14 @@ export function voletsDemiLignes(
 export const GOUTTIERE_VOLETS = 24;
 
 /** Mode louange, interrupteur « 2 colonnes » (lot JV, JV-4) : chaque page d'écran montre deux colonnes de demi-lignes
- *  au lieu de lignes entières. Chaque ligne est coupée sur sa barre la plus proche du milieu (`fenetresLigne`), jamais
- *  entre ses deux moitiés. Échelle = colonne / plus large fenêtre, plafonnée à `echelleMax` (celle des lignes entières :
- *  la taille de lecture ne grandit pas). On remplit la colonne de gauche, puis celle de droite, puis la page suivante ;
- *  la dernière page s'équilibre (la plus haute colonne la plus courte). Un système seul plus haut que l'écran baisse
- *  l'échelle de sa page. `null` : lignes entières (accords imprimés sous `seuilAccordPx`, ou une seule ligne).
- *  `demi.colonne2` : indice de la première fenêtre de la colonne de droite (= nombre de fenêtres : rien à droite). */
+ *  au lieu de lignes entières. Chaque ligne est coupée sur sa barre la plus proche du milieu (`fenetresLigne`).
+ *  Échelle = colonne / plus large fenêtre, plafonnée à `echelleMax` (celle des lignes entières : la taille de lecture ne
+ *  grandit pas). On remplit demi-ligne par demi-ligne la colonne de gauche, puis celle de droite (la moitié droite d'une
+ *  ligne peut ouvrir la colonne de droite : la lecture continue en haut de la colonne suivante), puis la page suivante ;
+ *  une page finit toujours sur une ligne complète (jamais de tourne au milieu d'une ligne). La dernière page s'équilibre
+ *  (la plus haute colonne la plus courte). Une ligne seule plus haute que l'écran baisse l'échelle de sa page. `null` :
+ *  lignes entières (accords imprimés sous `seuilAccordPx`, ou une seule ligne). `demi.colonne2` : indice de la première
+ *  fenêtre de la colonne de droite (= nombre de fenêtres : rien à droite). */
 export function tranchesDeuxColonnes(
   lignes: LigneTranche[],
   pageH: number,
@@ -237,47 +239,47 @@ export function tranchesDeuxColonnes(
 ): Tranche[] | null {
   if (lignes.length < 2) return null;
   const { haut, bas } = marges(lignes, pageH);
-  const systemes = lignes.map((l, k) => fenetresLigne(l, k, haut[k], bas[k], x0, x1));
-  const large = Math.max(1, ...systemes.flat().map((f) => f.x1 - f.x0));
+  const fs = lignes.flatMap((l, k) => fenetresLigne(l, k, haut[k], bas[k], x0, x1));
+  const large = Math.max(1, ...fs.map((f) => f.x1 - f.x0));
   const echelle = Math.min(echelleMax, (largeurDispoPx - GOUTTIERE_VOLETS) / 2 / large);
   if (hauteurAccordImg * echelle < seuilAccordPx) return null;
-  const fixe = (s: FenetreDemi[]) => (s.length > 1 ? ECART_MOITIES : 0);
-  const hSys = (k: number) => systemes[k].reduce((t, f) => t + (f.y1 - f.y0) * echelle, 0) + fixe(systemes[k]);
-  // Hauteur d'une colonne de systèmes [a, b[ (écarts compris).
-  const hCol = (a: number, b: number) => { let t = 0; for (let k = a; k < b; k++) t += hSys(k) + (k > a ? ECART_SYSTEMES : 0); return t; };
-  const dispo = (fin: number) => hauteurDispoPx - (fin === lignes.length ? reserveDerniere : 0);
-  // Remplissage glouton : chaque page = [a, c[ à gauche, [c, b[ à droite.
+  const n = fs.length;
+  // Écart au-dessus de la fenêtre k quand elle suit k - 1 dans la même colonne.
+  const ecart = (k: number) => (fs[k].moitie === "d" ? ECART_MOITIES : ECART_SYSTEMES);
+  // Hauteur d'une colonne de fenêtres [a, b[ à l'échelle e : hauteurs + écarts (la première sans écart).
+  const hCol = (a: number, b: number, e = echelle) => { let t = 0; for (let k = a; k < b; k++) t += (fs[k].y1 - fs[k].y0) * e + (k > a ? ecart(k) : 0); return t; };
+  const fixes = (a: number, b: number) => { let t = 0; for (let k = a + 1; k < b; k++) t += ecart(k); return t; };
+  const finDeLigne = (b: number) => b === n || fs[b].moitie !== "d";
+  const dispo = (b: number) => hauteurDispoPx - (b === n ? reserveDerniere : 0);
   const pages: [number, number, number][] = [];
   let a = 0;
-  while (a < lignes.length) {
+  while (a < n) {
     let c = a + 1;
-    while (c < lignes.length && hCol(a, c + 1) <= dispo(c + 1)) c++;
-    // Un système trop haut pour l'écran ne s'ouvre pas à droite : il fera sa page.
-    let b = c < lignes.length && hSys(c) <= dispo(c + 1) ? c + 1 : c;
-    while (b > c && b < lignes.length && hCol(c, b + 1) <= dispo(b + 1)) b++;
-    pages.push([a, c, b]);
+    while (c < n && hCol(a, c + 1) <= dispo(c + 1)) c++;
+    let b = c;
+    while (b < n && hCol(c, b + 1) <= dispo(b + 1)) b++;
+    // La page finit sur une ligne complète : on rend la moitié gauche d'une ligne dont la droite n'a pas tenu.
+    while (b > c && !finDeLigne(b)) b--;
+    if (!finDeLigne(b)) { b = c; while (!finDeLigne(b)) b++; }
+    pages.push([a, Math.min(c, b), b]);
     a = b;
   }
-  // Dernière page : la coupe qui rend la plus haute colonne la plus courte (la gauche prend le système de plus à égalité).
+  // Dernière page : la coupe qui rend la plus haute colonne la plus courte (la gauche prend la fenêtre de plus à égalité).
   const [da, , db] = pages[pages.length - 1];
   if (db - da > 1) {
-    let meilleure = da + 1;
-    for (let c = da + 1; c < db; c++) {
-      if (Math.max(hCol(da, c), hCol(c, db)) < Math.max(hCol(da, meilleure), hCol(meilleure, db))) meilleure = c;
-    }
-    pages[pages.length - 1] = [da, meilleure, db];
+    let m = da + 1;
+    for (let c = da + 1; c < db; c++) if (Math.max(hCol(da, c), hCol(c, db)) < Math.max(hCol(da, m), hCol(m, db))) m = c;
+    pages[pages.length - 1] = [da, m, db];
   }
   return pages.map(([a, c, b]) => {
-    const fenetres = systemes.slice(a, b).flat();
-    const plusHaute = Math.max(hCol(a, c), c < b ? hCol(c, b) : 0);
+    const fenetres = fs.slice(a, b);
     const place = dispo(b);
     let e = echelle;
+    const plusHaute = Math.max(hCol(a, c), hCol(c, b));
     if (plusHaute > place) {
-      const fixes = (x: number, y: number) => { let t = 0; for (let k = x; k < y; k++) t += fixe(systemes[k]) + (k > x ? ECART_SYSTEMES : 0); return t; };
       const f = Math.max(fixes(a, c), c < b ? fixes(c, b) : 0);
       e = Math.min(echelle, Math.max(0, place - f) / Math.max(1, (plusHaute - f) / echelle));
     }
-    const colonne2 = systemes.slice(a, c).flat().length;
-    return { y0: fenetres[0].y0, y1: fenetres[fenetres.length - 1].y1, premiere: a, derniere: b - 1, demi: { echelle: e, fenetres, colonne2 } };
+    return { y0: fenetres[0].y0, y1: fenetres[fenetres.length - 1].y1, premiere: fenetres[0].ligne, derniere: fenetres[fenetres.length - 1].ligne, demi: { echelle: e, fenetres, colonne2: c - a } };
   });
 }

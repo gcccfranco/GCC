@@ -465,8 +465,8 @@ chantier sur ce fichier.
   sa ligne en français. JV-5a ne lance rien après elle (JV-5b vient de JV-4).
 - 13/11/2026 : **JV-4 codée** (session orchestratrice). `tranchesDeuxColonnes` (`tranchesScan.ts`, pur) : sous « 2 colonnes »
   allumé (ordinateur, tablette paysage, 1 440), chaque page d'écran d'un scan certifié montre deux colonnes de
-  demi-lignes (gauche, puis droite, puis page suivante ; dernière page équilibrée ; jamais de coupe entre les deux
-  moitiés d'une ligne), échelle = colonne / plus large fenêtre, **plafonnée à celle des lignes entières** ; sous 11 px
+  demi-lignes (gauche, puis droite, puis page suivante ; dernière page équilibrée ; une page finit sur une ligne
+  complète), échelle = colonne / plus large fenêtre, **plafonnée à celle des lignes entières** ; sous 11 px
   d'accords imprimés (`chords.json`, `labelH`) ou pour une ligne seule, les tranches d'avant. `Demi.colonne2` (indice de
   la première fenêtre de droite) ; `JianpuSheet` pose les deux colonnes (`data-jianpu-volets`, gouttière 24 px, calque
   intact) ; `PageScan` cale la tête de feuille sur leur largeur ; clé d'annotation **« j6-<y0> »** (composition
@@ -481,3 +481,11 @@ chantier sur ce fichier.
   éteint (ils gardent le chemin des lignes entières). Premier tour (six specs, cinq projets) : 726 passés, 30 échecs
   attendus (anciens tests en deux colonnes) (25 min) ; repasse : 434 passés, 3 échecs **antérieurs** (`jianpu-integration`
   264, 661, 682 à 1 440, vue Partitions, rouges aussi sans la tranche) (**16 min**). tsc, lint : 0 erreur.
+  `regard` sur 23 captures, puis `critique-design` sur cinq : « à retoucher » (colonnes mal remplies : une ligne haute,
+  gardée entière dans sa colonne, laissait ≈ 240 px vides à 1 280 × 720). **Corrigé** : remplissage demi-ligne par
+  demi-ligne, la moitié droite d'une ligne peut ouvrir la colonne de droite (décision déléguée, session, 13/11 : la
+  lecture continue en haut de la colonne suivante ; jamais de tourne au milieu d'une ligne) ; repasse de la spec JV-4,
+  cinq projets : 57 passés (**2,1 min**), captures regardées à 1 280 et en tablette paysage. Laissés, hors tranche ou
+  antérieurs : trait de volta sur « Fmaj7 » de 为我而来 (scan et calque) ; marge blanche du scan au-dessus d'une ligne qui
+  ouvre la colonne de droite (hauts de colonnes décalés de ≈ 40 px parfois) ; bout de barre de part et d'autre de la
+  coupe et écart entre moitiés (comme au téléphone, JP-C). JV-5b lancée à la suite.

@@ -93,7 +93,7 @@ test.describe("tranchesDeuxColonnes (pur)", () => {
   const { x0, x1 } = bornesX(p.w, undefined);
   const echelleMax = 1040 / (x1 - x0);
 
-  test("toutes les lignes, dans l'ordre, une fois ; jamais de coupe entre les deux moitiés d'une ligne", () => {
+  test("toutes les lignes, dans l'ordre, une fois ; une page finit toujours sur une ligne complète", () => {
     const t = tranchesDeuxColonnes(p.lignes, p.h, x0, x1, 1040, 640, echelleMax, 40)!;
     expect(t).not.toBeNull();
     const lignes = t.flatMap((tr) => tr.demi!.fenetres.map((f) => f.ligne));
@@ -101,8 +101,9 @@ test.describe("tranchesDeuxColonnes (pur)", () => {
     for (const tr of t) {
       const c2 = tr.demi!.colonne2!;
       expect(c2).toBeGreaterThan(0);
-      // La colonne de droite ne commence jamais par la moitié droite d'une ligne.
-      if (c2 < tr.demi!.fenetres.length) expect(tr.demi!.fenetres[c2].moitie).not.toBe("d");
+      // La page commence et finit sur une ligne complète ; la moitié droite d'une ligne peut ouvrir la colonne de droite.
+      expect(tr.demi!.fenetres[0].moitie).not.toBe("d");
+      expect(tr.demi!.fenetres.at(-1)!.moitie).not.toBe("g");
       expect(tr.premiere).toBe(tr.demi!.fenetres[0].ligne);
       expect(tr.derniere).toBe(tr.demi!.fenetres.at(-1)!.ligne);
     }
@@ -165,9 +166,9 @@ test("« 2 colonnes » allumé (grand écran) : chaque écran de scan montre deu
           expect(f.bottom, "rien ne sort de l'écran").toBeLessThanOrEqual(page.viewportSize()!.height + 1);
           largeurDemi = Math.max(largeurDemi, f.right - f.x);
         }
-        // Une colonne ne commence jamais par une moitié droite.
-        if (v.fenetres.length) expect(v.fenetres[0].moitie).not.toBe("d");
       }
+      // L'écran commence sur une ligne complète.
+      expect(g.fenetres[0].moitie).not.toBe("d");
       for (const v of e.volets) for (const f of v.fenetres) if (f.moitie !== "d") lignesVues.push(Number(f.tranche.split("-")[0]));
     }
     if (n < total) await page.keyboard.press("ArrowRight");
