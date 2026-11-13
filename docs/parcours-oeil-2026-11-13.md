@@ -52,6 +52,10 @@ de la setlist ») ; la coupe non. ![](parcours-oeil-2026-11-13/louange-je-joue-t
 seules) garde les sections sans paroles comme des boîtes titrées vides, de la hauteur d'une ligne.
 Spec : non prévu (`docs/spec-mode-louange-forscore-2.md` replie une rangée d'accords vide, rien sur une section vide).
 ![](parcours-oeil-2026-11-13/louange-choriste-tabP.webp)
+Corrigé le 13/11 : accords non montrés (Choriste, Présidence, « Accords » éteint), une section sans paroles, note,
+nuance ni modulation n'est plus affichée au mode louange (ni rendue ni comptée en hauteur) ; le pianiste la garde.
+Décision déléguée écrite dans `docs/spec-entree-musiciens.md`. Test : `tests/louange-role-regle.spec.ts`, « pas de cadre
+vide » (commit qui porte cette ligne, « constat 4 »).
 
 **4. Mode louange : changer de chant sans savoir où on va.** Toutes dispositions. Le bas de l'écran n'a que des points
 (treize pour cinq chants à l'ordinateur), groupés par chant mais sans numéro ni titre ; aucune capture ne montre le titre du
@@ -74,7 +78,7 @@ Spec : aucune ne prévoit une tonalité tronquée.
 ![](parcours-oeil-2026-11-13/chant-fr-tel.webp) ![](parcours-oeil-2026-11-13/chant-zh-tel.webp)
 Corrigé le 13/11 : le mot « Ton » / « 调 » passe entier ou disparaît, la lettre reste toujours entière (« A ⌄ » au
 téléphone, « Ton A » dès qu'il y a la place) ; les deux rangées du téléphone sont voulues (`docs/spec-barre-chant.md`,
-Q5) et restent. Test : `tests/key-selector.spec.ts`, « jamais de mot rogné » (cceb1c4).
+Q5) et restent. Test : `tests/key-selector.spec.ts`, « jamais de mot rogné » (1cd595c2).
 
 **6. La tonalité, trois écrans, trois formes.** Page chant : « Ton A − + » dans la barre **et** une pastille « A » à
 droite du titre (en chinois s'y ajoute « 1=C » sous le titre : trois fois la même information). Setlist : une lettre

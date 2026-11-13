@@ -204,6 +204,14 @@ les numéros de ligne du § « Ce que le code montre » ont glissé, ceux d'ici 
   ligne « Réglé pour piano d'après le planning. Changer » (按排班已设为钢琴。更改) s'affiche à la place de la pastille RP,
   sans animation, jusqu'au premier tour de page ; « Changer » ouvre « Je joue ». Le popover ne s'ouvre seul que si le
   planning ne dit rien (ou est ambigu). La pastille RP (rôle retenu ≠ rôle du planning) ne change pas.
+- **Section sans paroles en « paroles seules »** (parcours à l'œil du 13/11, constat 4) — *décision déléguée (session
+  des corrections du parcours, 13/11)* : quand les accords d'une section ne sont pas montrés (Présidence, Choriste, ou
+  « Accords » éteint), une section qui n'a ni paroles, ni note, ni nuance, ni modulation (intro, interlude) **n'est pas
+  affichée** au mode louange, au lieu d'un cadre titré vide : ni rendue ni comptée en hauteur, comme un passage replié
+  de la vue structure. Lecture la plus simple des trois envisagées (ne rien montrer ; un repère d'une ligne sans cadre ;
+  le cadre réduit à son titre) : la structure du chant reste visible dans l'en-tête (pastilles I, Int…), et Plan du
+  chant garde toutes les sections. Une section qui porte une note ou une nuance reste. `blocsCaches`,
+  `PerformanceMode.tsx` ; test `tests/louange-role-regle.spec.ts`, « pas de cadre vide ».
 
 ### « ‹ Toutes mes setlists » (décision 11)
 

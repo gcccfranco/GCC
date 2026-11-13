@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, ouvrirJeJoue } from "./helpers/louange";
+import { attendreMiseEnPage, curseurPage, lireCompteur, onStage, ouvrirJeJoue } from "./helpers/louange";
 
 // Lot pupitre, tranche PU-5 : choisir un rôle pose aussi l'ordre et la disposition (Pianiste, Guitariste : Tout le chant
 // et Classique ; Batteur : Plan du chant ; Présidence, Choriste : rien d'imposé) ; changer l'ordre ensuite ne retire plus
@@ -137,4 +137,59 @@ test("deux comptes sur le même appareil : chacun garde son ordre, la dispositio
   expect(await lire(page2, `partition-layout-${NOEL.uid}`)).toBe("structure");
   expect(await lire(page2, `partition-layout-${LISE.uid}`), "l'ordre de Lise n'a pas bougé").toBe("unique");
   await contexte.close();
+});
+
+// Parcours à l'œil du 13/11, constat 4 : le choriste (paroles seules) voyait l'intro et l'interlude d'Abba Père en
+// cadres titrés vides. Une section sans paroles n'est plus rendue quand les accords ne sont pas montrés ; le pianiste
+// la garde. Toutes les pages du chant sont parcourues.
+test.describe("paroles seules : pas de cadre vide (parcours du 13/11, constat 4)", () => {
+  const SETLIST_SEULE = "setlist-cadres-vides";
+  const ouvrirAbba = async (page: Page) => {
+    await preparer(page, { [`partition-layout-${LISE.uid}`]: "played", disposition: "classique" });
+    await signInAs(page, LISE, { [`setlists/${SETLIST_SEULE}`]: { ...setlist, items: [item("abba-pere", 1)] } }, `/setlists/${SETLIST_SEULE}`);
+    await page.getByRole("button", { name: /Mode Louange/ }).click();
+    await attendreMiseEnPage(page);
+    await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
+  };
+  /** Sur chaque page : le texte de chaque section affichée (titre, puis lignes). */
+  const sectionsDeToutesLesPages = async (page: Page) => {
+    const vues: { titre: string; lignes: string }[] = [];
+    // Le compteur est relu à chaque page : la mise en page peut se refaire après le choix du rôle.
+    for (let tour = 0; tour < 20; tour++) {
+      for (const sec of await onStage(page, "[data-section]").all()) {
+        vues.push(await sec.evaluate((el) => ({
+          titre: (el.firstElementChild as HTMLElement | null)?.innerText.trim() ?? "",
+          lignes: [...el.querySelectorAll<HTMLElement>("[data-copy-line]")].map((l) => l.innerText.trim()).join(" ").trim(),
+        })));
+      }
+      const [cur, total] = (await lireCompteur(page)).split(" / ");
+      if (cur === total) break;
+      await curseurPage(page).press("ArrowRight");
+      await expect.poll(() => lireCompteur(page)).not.toBe(`${cur} / ${total}`);
+    }
+    return vues;
+  };
+
+  test("Choriste : ni Intro ni Interlude, chaque section affichée porte des paroles", async ({ page }) => {
+    await ouvrirAbba(page);
+    const d = await ouvrirJeJoue(page);
+    await role(d, "Choriste").click();
+    await page.keyboard.press("Escape");
+    await attendreMiseEnPage(page);
+    await expect(onStage(page, "[data-section]").first()).toBeVisible();
+    const vues = await sectionsDeToutesLesPages(page);
+    expect(vues.map((v) => v.titre).join(" | ")).toMatch(/Couplet 1/);
+    expect(vues.filter((v) => /^—?\s*(Intro|Interlude)/.test(v.titre)), "aucun cadre Intro ni Interlude").toEqual([]);
+    expect(vues.filter((v) => v.lignes === ""), "aucune section affichée sans paroles").toEqual([]);
+  });
+
+  test("Pianiste : l'intro reste, avec ses accords", async ({ page }) => {
+    await ouvrirAbba(page);
+    const d = await ouvrirJeJoue(page);
+    await role(d, "Pianiste").click();
+    await page.keyboard.press("Escape");
+    await attendreMiseEnPage(page);
+    await expect(onStage(page, "[data-section]").filter({ hasText: "Intro" }).first()).toBeVisible();
+    await expect(onStage(page, "[data-section]").filter({ hasText: "Intro" }).first()).toContainText("F#m");
+  });
 });

@@ -900,6 +900,19 @@ export function PerformanceMode({
     () => replisStructure(blocks, structureMode, showTransitions, t),
     [blocks, structureMode, showTransitions, t],
   );
+  // Parcours du 13/11, constat 4 : accords non montrés (choriste, présidence, « Accords » éteint), une section sans
+  // paroles ni note, nuance ou modulation (intro, interlude) n'a rien à montrer : ni rendue ni comptée en hauteur,
+  // comme un passage replié, au lieu d'un cadre titré vide.
+  const blocsCaches = useMemo(() => {
+    if (structureMode) return repeatHidden;
+    const caches = new Set(repeatHidden);
+    blocks.forEach((b, i) => {
+      if (b.kind !== "section" || (b.chordsEnabled && chordsShown) || b.note || b.keyChange) return;
+      if (b.nuance && (b.nuance.tags.length > 0 || b.nuance.note)) return;
+      if (!b.section.lines.some((l) => l.tokens.some((tk) => tk.type === "lyric" && tk.value.trim() !== ""))) caches.add(i);
+    });
+    return caches;
+  }, [blocks, structureMode, repeatHidden, chordsShown]);
 
   // Vue structure (FS-D) : la transition qui suit une section (ou le groupe de passages repliés dont elle est la tête)
   // se rend dans sa ligne ; le tempo d'un chant vient de sa première section (l'en-tête ne le porte pas).
@@ -1804,7 +1817,7 @@ export function PerformanceMode({
   // Repères (FS-B) : les sections du chant en cours, dans l'ordre de la page (un scan seul n'en a pas).
   const reperesTexte = currentEntry
     ? blocks.flatMap((b, i) => {
-        if (b.kind !== "section" || i <= currentEntry.index || (nextEntry && i >= nextEntry.index) || repeatHidden.has(i)) return [];
+        if (b.kind !== "section" || i <= currentEntry.index || (nextEntry && i >= nextEntry.index) || blocsCaches.has(i)) return [];
         const page = pages.findIndex((p) => p.includes(i));
         return page >= 0 ? [{ uid: b.uid, section: b.section, page }] : [];
       })
@@ -2028,7 +2041,7 @@ export function PerformanceMode({
               key={block.uid}
               ref={(el) => { blockRefs.current[i] = el; }}
             >
-              {!repeatHidden.has(i) && (
+              {!blocsCaches.has(i) && (
                 <BlockRenderer
                   block={block}
                   showChordsGlobal={chordsShown}
@@ -2074,7 +2087,7 @@ export function PerformanceMode({
               <ConteneurCoupure mesure>
               {blocks.map((block, i) => (
                 <div key={block.uid} ref={(el) => { blockColRefs.current[i] = el; }}>
-                  {block.kind !== "song-header" && block.kind !== "jianpu-sheet" && (
+                  {block.kind !== "song-header" && block.kind !== "jianpu-sheet" && !blocsCaches.has(i) && (
                     <BlockRenderer
                       block={block}
                       showChordsGlobal={chordsShown}
@@ -2129,7 +2142,7 @@ export function PerformanceMode({
           // recalcule, `pages` porte encore des indices trop grands.
           const renderBlock = (i: number, fit = false, tranche?: Tranche) => {
             const block = blocks[i];
-            if (!block || repeatHidden.has(i)) return null;
+            if (!block || blocsCaches.has(i)) return null;
             return (
               <BlockRenderer
                 key={block.uid}
