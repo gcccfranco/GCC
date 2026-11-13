@@ -590,3 +590,15 @@ chantier sur ce fichier.
   `harmonie-volet-section`, `louange-jianpu-deux-colonnes`, `louange-jianpu-tranches`, `louange-roles-jianpu`, cinq
   projets : 435 passés, 51 sautés, 0 échec (**15,7 min**). tsc, lint : 0 erreur. Captures regardées : paroles 1 440
   (fr, clair), tablette paysage (中文, sombre), téléphone (中文, feuille) ; scan 1 280 (中文, sombre), tablette portrait (fr).
+- 13/11/2026 : **Go de Timothée pour six choix des Finitions** (transmis par le pilote ; « Go », en réponse à « go pour
+  les pastilles » / « go pour les six ») : **non codés**, la session des Finitions a passé la main (plafond de contexte).
+  À coder par une session neuve, un commit par point : (2 + 7) le rail du scan reprend **telles quelles les pastilles
+  de l'en-tête du chant** (C1, C2, R, P, Pr, Dp, I… ; couleurs `--sec-*`, forme ronde, les deux langues ; le nom complet
+  dans la fenêtre ou le volet ouvert ; réutiliser le composant ou les classes des pastilles existantes) ; (1) contraste
+  ≥ 4,5:1 en clair et en sombre ; (3) taille lisible au pupitre en mode louange (celle des pastilles de l'en-tête,
+  jamais sur l'encre : élargir le rail plutôt que rapetisser) ; (4) zone de toucher ≥ 44 px au téléphone sans agrandir
+  le dessin ; (5) étiquette et bloc ouvert disent la même chose (choisir ce qui est vrai pour le passage, écrire la
+  décision). Point de départ : `EtiquetteSection` et `RAIL_*` (`src/components/jianpu/JianpuSheet.tsx` ≈ l. 123-147),
+  `formeCourte` / `railEtiquettes` (`src/lib/jianpu/etiquettesSections.ts`), largeurs du rail dans `useVoletsScan` et
+  `tranchesDe` ; tests `harmonie-jianpu.spec.ts` (`ATTENDUES`, `verifierEtiquettes`). Vérifier : cinq projets,
+  `npm run jianpu:audit` sur un chant (aucune pastille sur l'encre), captures FR et 中文, clair et sombre.
