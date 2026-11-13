@@ -98,7 +98,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      H8. H8 (mode louange) en
      dernier, et seulement quand AN et le pupitre ont fini dans `PerformanceMode.tsx`. `docs/spec-harmonie-accords.md`,
      tableau « Lots ». MP-6 : voir la ligne 5.
-  5. ~~**Ma partition MP-6** (reprise de l'existant)~~ lancé par la session d'AN-5 (13/11, voir l'id ci-dessous) : **go de Timothée (12/11, 17 h 10 UTC)**, questions closes
+  5. ~~**Ma partition MP-6** (reprise de l'existant)~~ lancé par la session d'AN-5 (`session_01UMdfuat3nkFJiMZp3inPLc`, 13/11 01 h 13 UTC ; elle lance H8 à sa fin) : **go de Timothée (12/11, 17 h 10 UTC)**, questions closes
      (`docs/spec-ma-partition.md`, § Questions ouvertes, « Réponses de Timothée », et § Tranches, MP-6). À lancer par la
      session qui finit **AN-5**, jamais pendant qu'une autre session modifie `PerformanceMode.tsx` ou les annotations.
   6. **Tous les chants en mode louange, lot TC (TC-1 → TC-2 → TC-3)** : **TC-1 lancée le 12/11 à 20 h 49 UTC (`session_01UMdfuZmdnz7GpDir59knoe`), en
