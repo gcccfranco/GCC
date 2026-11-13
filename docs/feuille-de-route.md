@@ -164,8 +164,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   en paroles) : `docs/spec-jianpu-deux-volets.md`, planche `docs/planches/planche-jianpu-deux-volets.html` (artefact
   privé https://claude.ai/artifact/FJmdbWyBhbKPUwkQcUPUqA, piste B recommandée), tranches JV-1 à JV-5 ; JV-1 (简谱
   d'office) se code seule. Menu Setlist du mode louange en deux onglets : `docs/spec-louange-tous-les-chants.md` §
-  « Reprise du 13/11 », planche https://claude.ai/artifact/DMDRVF8pAy4L4qKBXrDcEe, tranche TC-4. **Attend le go de
-  Timothée** (questions Q1 à Q7 et TC-Q5, TC-Q6, chacune avec sa recommandation). Aucune règle Firestore touchée.
+  « Reprise du 13/11 », planche https://claude.ai/artifact/DMDRVF8pAy4L4qKBXrDcEe, tranche TC-4. **Go de Timothée
+  (13/11, « go pour les pistes des 2 artefacts »)** : JV-3 puis JV-4 (piste B) et TC-4 (piste A), lancés ; JV-4 après
+  TC-4. Attendent encore un go : JV-1 (Q1, Q2), JV-2 (Q3), JV-5 (Q4, Q5). Aucune règle Firestore touchée.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 

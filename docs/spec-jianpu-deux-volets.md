@@ -34,6 +34,12 @@ Tranchées par la session (décisions déléguées, 13/11, faciles à défaire) 
 imprimés ; coupe entre colonnes au début de section si l'écart ne dépasse pas deux demi-lignes ; page chant inchangée.
 JV-1 n'attend que Q1 et Q2.
 
+**Go de Timothée (13/11/2026, 16 h 40 UTC environ : « go pour les pistes des 2 artefacts »)** : Q6 = **B**, Q7 = **oui**
+(le mode louange aussi, dans la piste B de la planche). Couvre **JV-3 puis JV-4** (tranches enchaînées, `CLAUDE.md`
+§ Go), avec les décisions déléguées ci-dessus ; levée de la décision du 03/10 (`spec-deux-volets.md`) à écrire datée en
+JV-4. **Pas encore de go** : JV-1 (Q1, Q2), JV-2 (Q3), JV-5 (Q4, Q5 ; le point d'harmonie dessiné dans la planche B
+reste à faire avec JV-5b). JV-4 ne se code pas pendant TC-4 (même fichier `PerformanceMode.tsx`).
+
 ---
 
 ## Point 3 — 简谱 d'office pour les musiciens dans les setlists
@@ -309,3 +315,5 @@ chantier sur ce fichier.
 - 13/11/2026 : cadrage (diagnostic par un `chercheur`, planche `/planche`, spec). Aucun code, aucun test lancé. Attend
   le go de Timothée. Point 5 du pilote (menu Setlist du mode louange) : `docs/spec-louange-tous-les-chants.md` §
   « Reprise du 13/11 », tranche TC-4.
+- 13/11/2026 : go de Timothée pour les pistes des deux planches (B ici, A pour TC-4) : JV-3 lancée (session
+  orchestratrice neuve), puis JV-4 après TC-4.

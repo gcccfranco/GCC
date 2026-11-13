@@ -111,7 +111,7 @@ https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue �
    `BarreHaut.tsx` et `MenuLouange.tsx` ne changent pas (pas de `MenuId` `chants`) ; « / » sur ordinateur ouvre le menu
    sur « Tous les chants », champ actif.
 
-## Reprise du 13/11 (cadrage, attend le go de Timothée)
+## Reprise du 13/11 (go de Timothée pour la piste A)
 
 - **Demande (Timothée, 13/11/2026)**, sur une capture du menu Setlist ouvert sur ordinateur (« ‹ Toutes mes setlists »
   déplié en tête, puis « Cette setlist | Tous les chants », puis la liste) : « ça aussi il faut changer », puis
@@ -132,7 +132,10 @@ https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue �
   sur grand écran (panneau de 800 px qui couvre la partition). Critique : « à retoucher » (tablette paysage et 1 440
   non dessinées ; collision « Setlist » / « Setlists », identiques en chinois 歌单 ; trois niveaux de titres pour les
   autres setlists ; espaces insécables) ; sans effet sur la recommandation.
-- **Questions à Timothée** :
+- **Go de Timothée (13/11/2026, « go pour les pistes des 2 artefacts »)** : TC-Q5 = **A**. TC-Q6 tranchée par la
+  session de cadrage (décision déléguée, 13/11, facile à défaire) : premier onglet « Mes setlists » / 我的歌单, selon sa
+  recommandation (le bouton reste « Setlist » / 歌单). TC-4 se code.
+- **Questions posées** :
   - **TC-Q5 — Disposition** : A, deux onglets dans le même panneau (**recommandé**), B deux boutons, ou C.
   - **TC-Q6 — Libellé du premier onglet** : « Mes setlists » / 我的歌单 (**recommandé** : se distingue du bouton
     « Setlist » / 歌单) ou « Setlists » (identique au bouton en chinois).
