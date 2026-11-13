@@ -57,6 +57,7 @@ export function useJouerChant({
   }, [aller, misEnPage, songEntries]);
 
   const jouer = useCallback((slug: string, avecJianpu: boolean) => {
+    setOngletSetlist("setlist"); // le menu rouvre sur la setlist, pas sur la liste des chants
     // Premier passage d'un chant de la setlist vers un ajout (déjà ouvert ou à ajouter) : on note où l'on était.
     const dansSetlist = songEntries.some((e) => e.block.songSlug === slug && Number.isInteger(e.block.position));
     const depuis = !dansSetlist && !retourPoint && slugCourant && songEntries.some((e) => e.block.songSlug === slugCourant && Number.isInteger(e.block.position)) ? { slug: slugCourant, page: pageDansChant } : null;

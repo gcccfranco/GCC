@@ -5,7 +5,7 @@ import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession
 import { attendreMiseEnPage, lireCompteur, ouvrirMenu, type Langue } from "./helpers/louange";
 
 // PU-6 (docs/spec-entree-musiciens.md) : « ‹ Toutes mes setlists » dans le menu Setlist du mode louange. Le menu déplie les
-// setlists à venir lisibles par le compte : « Mes services » d'abord (d'après le Sheet du planning), puis « Autres setlists »,
+// setlists à venir lisibles par le compte : « Mes services » d'abord (d'après le Sheet du planning), puis les autres,
 // chacune par date ; un toucher ouvre l'autre setlist en mode louange sur son premier chant. Hors ligne : seulement les copies
 // gardées. Sheet, comptes et setlists simulés, noms inventés ; aucune vraie base.
 test.use({ serviceWorkers: "block", deviceScaleFactor: 1 });
@@ -94,34 +94,31 @@ const idsAffiches = (dialogue: ReturnType<Page["getByRole"]>) =>
   dialogue.locator("[data-autre-setlist]").evaluateAll((els) => els.map((e) => e.getAttribute("data-autre-setlist")));
 
 test.describe("« Toutes mes setlists » dans le menu Setlist", () => {
-  test("la ligne est la première du menu, repliée ; un toucher la déplie sans tourner la page", async ({ page }) => {
+  test("« Mes autres setlists » est sous la setlist en cours, toujours dépliée, sans tourner la page", async ({ page }) => {
     await ouvrir(page);
     await attendreMiseEnPage(page);
-    const dialogue = await ouvrirMenu(page, "setlist");
-    const ligne = dialogue.locator("[data-toutes-setlists]");
-    await expect(ligne).toBeVisible();
-    await expect(ligne).toHaveAttribute("aria-expanded", "false");
-    await expect(ligne).toContainText("Toutes mes setlists");
-    const titre = (await dialogue.getByText("Culte de la courante", { exact: true }).first().boundingBox())!;
-    const haut = (await ligne.boundingBox())!;
-    expect(haut.y, "la ligne est au-dessus du titre de la setlist").toBeLessThan(titre.y);
     const compteur = await lireCompteur(page);
-    await ligne.click();
-    await expect(ligne).toHaveAttribute("aria-expanded", "true");
+    const dialogue = await ouvrirMenu(page, "setlist");
+    const titre = dialogue.locator("[data-toutes-setlists]");
+    await titre.scrollIntoViewIfNeeded();
+    await expect(titre).toBeVisible();
+    await expect(titre).toContainText("Mes autres setlists");
+    await expect(dialogue.locator("[data-autre-setlist]")).toHaveCount(4);
+    const courante = (await dialogue.getByText("Culte de la courante", { exact: true }).first().boundingBox())!;
+    const bas = (await titre.boundingBox())!;
+    expect(bas.y, "le titre est sous la setlist en cours").toBeGreaterThan(courante.y);
     await page.waitForTimeout(400);
     expect(await lireCompteur(page), "la page n'a pas tourné").toBe(compteur);
     await expect(dialogue).toBeVisible();
   });
 
-  test("dépliée : « Mes services » d'abord, puis « Autres setlists », chacune par date ; la courante et la passée sont absentes", async ({ page }) => {
+  test("« Mes services » d'abord, puis les autres, chacune par date, sans sous-titres ; la courante et la passée sont absentes", async ({ page }) => {
     await ouvrir(page);
     await attendreMiseEnPage(page);
     const dialogue = await ouvrirMenu(page, "setlist");
-    await dialogue.locator("[data-toutes-setlists]").click();
     await expect(dialogue.locator("[data-autre-setlist]")).toHaveCount(4);
-    const mesServices = (await dialogue.getByText("Mes services", { exact: true }).boundingBox())!;
-    const autres = (await dialogue.getByText("Autres setlists", { exact: true }).boundingBox())!;
-    expect(mesServices.y, "« Mes services » avant « Autres setlists »").toBeLessThan(autres.y);
+    await expect(dialogue.getByText("Mes services", { exact: true })).toHaveCount(0);
+    await expect(dialogue.getByText("Autres setlists", { exact: true })).toHaveCount(0);
     expect(await idsAffiches(dialogue), "mes services par date, puis les autres par date").toEqual([MIENNE_1, MIENNE_2, AUTRE_FR, AUTRE_ZH]);
     await expect(dialogue.locator(`[data-autre-setlist="${COURANTE}"]`)).toHaveCount(0);
     await expect(dialogue.locator(`[data-autre-setlist="${PASSEE}"]`)).toHaveCount(0);
@@ -132,7 +129,6 @@ test.describe("« Toutes mes setlists » dans le menu Setlist", () => {
     await attendreMiseEnPage(page);
     await expect(barre(page)).toContainText("À jamais Tu es saint");
     const dialogue = await ouvrirMenu(page, "setlist");
-    await dialogue.locator("[data-toutes-setlists]").click();
     await dialogue.locator(`[data-autre-setlist="${AUTRE_FR}"]`).click();
     // `?louange=1` est retiré de l'adresse dès l'ouverture du mode (replaceState) : seul le chemin compte.
     await expect(page).toHaveURL(new RegExp(`/setlists/${AUTRE_FR}/?(\\?|$)`));
@@ -156,7 +152,6 @@ test.describe("« Toutes mes setlists » dans le menu Setlist", () => {
     await attendreMiseEnPage(page);
     await page.route(/firestore\.googleapis\.com/, (route) => route.abort("internetdisconnected"));
     const dialogue = await ouvrirMenu(page, "setlist");
-    await dialogue.locator("[data-toutes-setlists]").click();
     await expect.poll(() => idsAffiches(dialogue), { timeout: 15_000 }).toEqual([MIENNE_1, MIENNE_2, AUTRE_FR]);
     await expect(dialogue.locator(`[data-autre-setlist="${AUTRE_ZH}"]`)).toHaveCount(0);
     await expect(dialogue.locator(`[data-autre-setlist="${PASSEE}"]`)).toHaveCount(0);
@@ -167,7 +162,6 @@ test.describe("« Toutes mes setlists » dans le menu Setlist", () => {
     await ouvrir(page);
     await attendreMiseEnPage(page);
     const dialogue = await ouvrirMenu(page, "setlist");
-    await dialogue.locator("[data-toutes-setlists]").click();
     await expect(dialogue.locator("[data-autre-setlist]")).toHaveCount(4);
     await page.keyboard.press("Escape");
     await expect(dialogue).toBeHidden();
@@ -176,15 +170,12 @@ test.describe("« Toutes mes setlists » dans le menu Setlist", () => {
     await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
   });
 
-  test("libellés en 中文 : « 我的全部歌单 », « 我的服事 », « 其他歌单 »", async ({ page }) => {
+  test("libellés en 中文 : « 我的歌单 », « 我的其他歌单 »", async ({ page }) => {
     await ouvrir(page, { langue: "zh" });
     await attendreMiseEnPage(page);
     const dialogue = await ouvrirMenu(page, "setlist", "zh");
-    const ligne = dialogue.locator("[data-toutes-setlists]");
-    await expect(ligne).toContainText("我的全部歌单");
-    await ligne.click();
-    await expect(dialogue.getByText("我的服事", { exact: true })).toBeVisible();
-    await expect(dialogue.getByText("其他歌单", { exact: true })).toBeVisible();
+    await expect(dialogue.locator("[data-toutes-setlists]")).toContainText("我的其他歌单");
+    await expect(dialogue.locator("[data-onglet=setlist]")).toContainText("我的歌单");
   });
 
   test("sans compte : le mode ne s'ouvre pas, donc pas de « Toutes mes setlists »", async ({ page }) => {
@@ -199,7 +190,7 @@ test.describe("« Toutes mes setlists » dans le menu Setlist", () => {
     await expect(page.locator("[data-toutes-setlists]")).toHaveCount(0);
   });
 
-  test("captures : menu ouvert et liste dépliée, FR et 中文, clair et sombre", async ({ page }, testInfo) => {
+  test("captures : menu ouvert, autres setlists sous la liste, FR et 中文, clair et sombre", async ({ page }, testInfo) => {
     test.setTimeout(240_000);
     const dossier = path.join(process.cwd(), "test-results", "pu6");
     mkdirSync(dossier, { recursive: true });
@@ -209,7 +200,6 @@ test.describe("« Toutes mes setlists » dans le menu Setlist", () => {
         await ouvrir(page, { langue, theme });
         await attendreMiseEnPage(page);
         const dialogue = await ouvrirMenu(page, "setlist", langue);
-        await dialogue.locator("[data-toutes-setlists]").click();
         await expect(dialogue.locator("[data-autre-setlist]")).toHaveCount(4);
         await page.waitForTimeout(400);
         await page.screenshot({ path: path.join(dossier, `${testInfo.project.name}-${langue}-${theme}.png`) });

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronDown, ChevronLeft, ChevronUp, Maximize, Minus, Pencil, Plus, Timer, Undo2, Waves } from "lucide-react";
+import { Check, Maximize, Minus, Pencil, Plus, Timer, Undo2, Waves } from "lucide-react";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
@@ -117,7 +117,7 @@ export function LigneMenu({ label, hint, children }: { label: string; hint?: str
 /** Les setlists à venir du menu : celles de mes services, les autres ; `horsLigne` = seulement les copies gardées. */
 export type ListeSetlistsMenu = { miens: FSSetlist[]; autres: FSSetlist[]; horsLigne: boolean };
 
-/** « ‹ Toutes mes setlists » : se déplie en ligne ; la liste est lue une fois, au montage du menu (le menu fermé démonte son contenu). */
+/** « Mes autres setlists » : toujours dépliée, sous la setlist en cours ; la liste est lue une fois, au montage du menu (le menu fermé démonte son contenu). */
 function ToutesMesSetlists({
   charger,
   onOuvrir,
@@ -128,7 +128,6 @@ function ToutesMesSetlists({
   onFermer: () => void;
 }) {
   const { t, i18n } = useTranslation();
-  const [ouvert, setOuvert] = useState(false);
   const [liste, setListe] = useState<ListeSetlistsMenu | null>(null);
   useEffect(() => {
     let annule = false;
@@ -160,45 +159,20 @@ function ToutesMesSetlists({
       </li>
     );
   };
-  const Chevron = ouvert ? ChevronUp : ChevronDown;
   return (
-    <div className="pb-3">
-      <button
-        type="button"
-        data-toutes-setlists
-        aria-expanded={ouvert}
-        onClick={() => setOuvert((o) => !o)}
-        className="-mx-1 flex min-h-11 w-[calc(100%+0.5rem)] items-center gap-2 rounded-lg px-2 text-left text-base font-medium text-foreground transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <ChevronLeft aria-hidden="true" className={`h-4 w-4 shrink-0 ${COULEUR}`} />
-        <span className="min-w-0 flex-1 truncate">{t("performance.allSetlists")}</span>
-        <Chevron aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
-      </button>
-      {ouvert && (
-        // Filet sous la liste dépliée : la setlist courante (en-tête et chants) ne se lit pas comme une setlist de plus.
-        <div className="mb-1 border-b border-border pb-3 pt-2">
-          {!liste ? (
-            <p className="px-1 text-[13px] text-muted-foreground">{t("performance.loadingSetlists")}</p>
-          ) : (
-            <>
-              {liste.miens.length > 0 && (
-                <>
-                  <TitreRubrique>{t("performance.myServices")}</TitreRubrique>
-                  <ul className="-mx-1 pb-2">{liste.miens.map(ligne)}</ul>
-                </>
-              )}
-              {liste.autres.length > 0 && (
-                <>
-                  <div className={liste.miens.length > 0 ? "mt-2" : undefined}><TitreRubrique>{t("performance.otherSetlists")}</TitreRubrique></div>
-                  <ul className="-mx-1">{liste.autres.map(ligne)}</ul>
-                </>
-              )}
-              {liste.autres.length === 0 && liste.miens.length === 0 && (
-                <p className="px-1 text-[13px] text-muted-foreground">{t(liste.horsLigne ? "performance.noOtherSetlistOffline" : "performance.noOtherSetlist")}</p>
-              )}
-            </>
+    <div className="mt-3 border-t border-border pb-3 pt-3">
+      <p data-toutes-setlists className="px-1 pb-1 text-[15px] font-semibold text-foreground">{t("performance.myOtherSetlists")}</p>
+      {!liste ? (
+        <p className="px-1 text-[13px] text-muted-foreground">{t("performance.loadingSetlists")}</p>
+      ) : (
+        <>
+          {liste.miens.length > 0 && <ul className="-mx-1">{liste.miens.map(ligne)}</ul>}
+          {liste.miens.length > 0 && liste.autres.length > 0 && <div className="my-2 border-t border-border" />}
+          {liste.autres.length > 0 && <ul className="-mx-1">{liste.autres.map(ligne)}</ul>}
+          {liste.autres.length === 0 && liste.miens.length === 0 && (
+            <p className="px-1 text-[13px] text-muted-foreground">{t(liste.horsLigne ? "performance.noOtherSetlistOffline" : "performance.noOtherSetlist")}</p>
           )}
-        </div>
+        </>
       )}
     </div>
   );
@@ -228,7 +202,7 @@ export function ContenuSetlist({
   onFermer: () => void;
   chargerToutesSetlists?: () => Promise<ListeSetlistsMenu>;
   onOuvrirSetlist?: (id: string) => void;
-  /** Onglets « Cette setlist | Tous les chants », sous « ‹ Toutes mes setlists ». */
+  /** Onglets « Mes setlists | Tous les chants », en tête du menu. */
   onglets?: ReactNode;
   /** Si fourni, remplace l'en-tête et la liste de la setlist. */
   tousLesChants?: ReactNode;
@@ -240,9 +214,6 @@ export function ContenuSetlist({
   const { t, i18n } = useTranslation();
   return (
     <div>
-      {chargerToutesSetlists && onOuvrirSetlist && (
-        <ToutesMesSetlists charger={chargerToutesSetlists} onOuvrir={onOuvrirSetlist} onFermer={onFermer} />
-      )}
       {onglets}
       {tousLesChants ?? <>
       {retour && (
@@ -310,6 +281,9 @@ export function ContenuSetlist({
           );
         })}
       </ol>
+      {chargerToutesSetlists && onOuvrirSetlist && (
+        <ToutesMesSetlists charger={chargerToutesSetlists} onOuvrir={onOuvrirSetlist} onFermer={onFermer} />
+      )}
       </>}
     </div>
   );
