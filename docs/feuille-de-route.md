@@ -113,6 +113,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      pilote. Le pilote lance, quand plus aucun chantier ne code, la
      **suite complète en quatre parts** (`--shard=k/4`, quatre sessions, résultats dans `docs/feuille-de-route.md`,
      aucune correction sans passer par le pilote). Rien ne part sur `main` : la mise en ligne reste à Timothée.
+  8. **Accords touchables partout, 简谱 et mode louange (AL-1 → AL-2)** : `docs/spec-accords-louange.md` (13/11),
+     **go à recevoir** et cinq questions (recommandations en premier). AL-1 après la session des pastilles du rail
+     (`JianpuSheet.tsx`) ; AL-2 après MT-3 (`PerformanceMode.tsx`).
   **13/11, 3 h 45 UTC : tous les chantiers de code sont finis** (AN, MP-6, H8, TC, H7 ; tête `8b8b7ff3`). **Suite
   complète lancée en quatre parts** (Sonnet, aucune correction) : `session_01UMdfudPsUH2e4yP7D7LCDY` (1/4),
   `session_01UMdfuZSZqGrTzmaRBGT5cV` (2/4), `session_01UMdfuZPpNqJhDNUHVxSo4G` (3/4), `session_01UMdfudbYvxf6yGMX1wGMc8`
