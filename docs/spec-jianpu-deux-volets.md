@@ -489,3 +489,24 @@ chantier sur ce fichier.
   antérieurs : trait de volta sur « Fmaj7 » de 为我而来 (scan et calque) ; marge blanche du scan au-dessus d'une ligne qui
   ouvre la colonne de droite (hauts de colonnes décalés de ≈ 40 px parfois) ; bout de barre de part et d'autre de la
   coupe et écart entre moitiés (comme au téléphone, JP-C). JV-5b lancée à la suite.
+- 13/11/2026 : **JV-5b codée** (session orchestratrice). Mode louange : réglage « Idées d'harmonie » allumé (accès
+  Harmonie requis, éteint par défaut, clé inchangée), le nom de section (`NomSection`, même bouton que JV-5a) ouvre
+  `HarmonieDuChant` au bloc du passage, **posé par-dessus** la page : colonne de 400 px au bord droit dès 1 024 px, entre
+  les deux barres (la croix du mode louange reste visible) ; feuille à mi-hauteur, pleine largeur, en dessous. Page ni
+  tournée, ni rétrécie, ni recomptée ; Échap ferme le volet seul ; une seule notation (celle de la personne). Nouveau
+  `src/components/performance/VoletHarmonie.tsx` (réglage, un `ici` par chant et tonalité de formes, `NomsTouchables` en
+  `display: contents` qui arrête le toucher, volet) ; `HarmonieDuChant` reçoit `louange` (z au-dessus du mode, sans
+  « Montrer », qui ferait défiler la page paginée). **Retirés** : `IdeeHarmonieMarge.tsx`, la prop `sousEntete` de
+  `SectionView`, le libellé `ideeHarmonieSection` ; la mesure des pages ne dépend plus d'aucune bande. Décisions
+  déléguées (session, 13/11) : le réglage reste (il garde le sens « noms touchables ») ; la feuille garde l'animation
+  de vaul, comme les menus du mode louange ; la section touchée n'est pas remontée au-dessus de la feuille (la page ne
+  défile pas en louange : on tire la feuille ou on la ferme) ; Repères et Scène avec corps restent sans bouton, comme
+  JV-5a. Tests : `louange-harmonie.spec.ts` réécrite (`SPECS_GRAND_ECRAN`), voisines `harmonie-volet-section`,
+  `performance-mode`, `louange-jianpu-deux-colonnes`, `harmonie-colonne`, cinq projets : 307 passés, 52 sautés, 1 course
+  (clic pendant la montée de la feuille, test corrigé : 20/20 en double) (9,1 min) ; repasses de la spec après
+  corrections (≈ 9 min) : **≈ 18 min** en tout. tsc, lint : 0 erreur. `regard` sur 20 captures (FR, ZH, clair, sombre,
+  cinq projets) ; `critique-design` sur quatre : « à retoucher » ; **corrigés** : colonne qui couvrait la barre du haut
+  (croix du mode louange), feuille centrée sur 672 px en tablette portrait. Laissés : croix du volet sous celle du mode
+  (70 px d'écart) ; feuille sur la barre du bas sous 1 024 px ; nom touché non marqué sur la page ; antérieurs au volet
+  (grille d'accords qui touche le cadre surligné, « · » seul en bout de ligne, double cadre, fiches en français en
+  chinois). JV-5c lancée à la suite.

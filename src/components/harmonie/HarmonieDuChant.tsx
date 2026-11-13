@@ -158,7 +158,8 @@ export function HarmonieDuChant(props: Props) {
       {...(miHauteur ? { snapPoints: [0.5, 1], activeSnapPoint: cran, setActiveSnapPoint: setCran } : {})}
     >
       <DrawerContent
-        className={`${miHauteur ? "h-dvh max-h-dvh md:max-w-2xl md:mx-auto" : "h-[67dvh] max-h-[67dvh] md:max-w-2xl md:mx-auto"}${props.louange ? " z-[10000]" : ""}`}
+        // Mode louange : toute la largeur (centrée sur 672 px, la tablette portrait laissait voir des bouts de paroles coupés de chaque côté).
+        className={`${miHauteur ? "h-dvh max-h-dvh" : "h-[67dvh] max-h-[67dvh]"}${props.louange ? " z-[10000]" : " md:max-w-2xl md:mx-auto"}`}
         overlayClassName={props.louange ? "z-[10000]" : undefined}
         data-idees-harmonie
       >

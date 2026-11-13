@@ -2919,7 +2919,7 @@ export function PerformanceMode({
             </div>
         </div>
       </MenuLouange>
-      <VoletHarmonieLouange volet={ideesActives && !annotateMode ? voletHarmonie : null} onClose={() => setVoletHarmonie(null)} />
+      <VoletHarmonieLouange volet={ideesActives && !annotateMode ? voletHarmonie : null} onClose={() => setVoletHarmonie(null)} haut={barres.haut} bas={barres.bas} />
     </div>
     </FournisseurIcis>
   );

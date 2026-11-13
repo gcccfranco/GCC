@@ -69,8 +69,9 @@ export function NomsTouchables({ block, children }: { block: SectionBlock; child
   );
 }
 
-/** Le volet, par-dessus la page : colonne au bord droit (≥ 1 024 px), sinon feuille à mi-hauteur. */
-export function VoletHarmonieLouange({ volet, onClose }: { volet: VoletOuvert | null; onClose: () => void }) {
+/** Le volet, par-dessus la page : colonne au bord droit (≥ 1 024 px) entre les barres (`haut`, `bas`, px : leurs boutons
+ *  et la croix du mode louange restent visibles), sinon feuille à mi-hauteur. */
+export function VoletHarmonieLouange({ volet, onClose, haut = 0, bas = 0 }: { volet: VoletOuvert | null; onClose: () => void; haut?: number; bas?: number }) {
   const acces = useAccesHarmonie();
   const [instrument] = useInstrument(acces);
   const grand = useGrandEcranHarmonie();
@@ -99,7 +100,7 @@ export function VoletHarmonieLouange({ volet, onClose }: { volet: VoletOuvert | 
       tonaliteOrigine={volet.tonaliteOrigine}
       instrument={instrument}
       disposition={grand ? "colonne" : "feuille"}
-      styleColonne={{ top: 0, marginTop: 0, height: "100dvh" }}
+      styleColonne={{ top: 0, marginTop: 0, height: `calc(100dvh - ${haut + bas}px)` }}
       passage={{ uid: volet.uid, cle: volet.cle, miHauteur: true }}
       louange
     />
@@ -107,7 +108,8 @@ export function VoletHarmonieLouange({ volet, onClose }: { volet: VoletOuvert | 
   return (
     <div
       data-volet-harmonie-louange
-      className={grand ? "absolute inset-y-0 right-0 z-[60] flex select-text print:hidden" : "contents"}
+      className={grand ? "absolute right-0 z-[60] flex select-text print:hidden" : "contents"}
+      style={grand ? { top: haut, bottom: bas } : undefined}
       onPointerDown={arret}
       onPointerUp={arret}
       onPointerCancel={arret}

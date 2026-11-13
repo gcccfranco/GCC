@@ -94,6 +94,10 @@ for (const c of CHANTS) {
       await expect(volet(page)).toHaveAttribute("data-harmonie-colonne");
       const b = await volet(page).boundingBox();
       expect(b!.x + b!.width, "colonne collée au bord droit").toBeGreaterThanOrEqual(page.viewportSize()!.width - 1);
+      // Sous la barre du haut et au-dessus de celle du bas : la croix du mode louange reste visible.
+      const haut = await page.locator("[data-performance-mode] [data-barre-haut]").boundingBox();
+      expect(b!.y).toBeGreaterThanOrEqual(haut!.y + haut!.height - 1);
+      await expect(page.locator("[data-performance-mode] [data-barre-haut] button").last()).toBeInViewport();
     } else {
       // Feuille à mi-hauteur : son haut est vers le milieu de l'écran.
       await expect(async () => {
@@ -120,7 +124,13 @@ for (const c of CHANTS) {
     await noms(page).first().click();
     await expect(volet(page)).toBeVisible();
     const avant = await lireCompteur(page);
-    const b = await volet(page).boundingBox();
+    // La feuille monte : on attend qu'elle soit posée (deux lectures égales), sinon le clic tombe sur le fond, qui la ferme.
+    let b = await volet(page).boundingBox();
+    await expect(async () => {
+      const prec = b;
+      b = await volet(page).boundingBox();
+      expect(b!.y).toBe(prec!.y);
+    }).toPass({ timeout: 5_000, intervals: [200] });
     await page.mouse.click(b!.x + b!.width / 2, b!.y + Math.min(b!.height - 10, 200));
     await expect(volet(page)).toBeVisible();
     expect(await lireCompteur(page)).toBe(avant);
