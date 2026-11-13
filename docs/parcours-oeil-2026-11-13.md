@@ -47,7 +47,7 @@ disponible, feuille du bas à 85 %) et, tant qu'il reste du contenu dessous, une
 la largeur, chevron) ferme le bas du menu ; un toucher descend d'un écran de menu, elle s'en va en bas de la liste (une
 flèche flottante, essayée d'abord, cachait une pastille de couleur au téléphone). Le contenu des menus et le
 recouvrement de la partition restent à la planche des réglages (constats 2 et 3). Test : `tests/louange-menus.spec.ts`,
-« constat 1 » (264e6b90, puis le commit de la bande).
+« constat 1 » (264e6b90, 55fb6b29).
 
 **2. Mode louange, menu Je joue : la « Disposition » est coupée.** tabL, ordi, tel. Les vignettes de disposition
 sortent par le bas ; le menu mêle « ce que je joue » (rôle), l'ordre des sections et la disposition de la page.
