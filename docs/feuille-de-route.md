@@ -124,6 +124,10 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   cinq chantiers de correction, un par zone (numéros de la synthèse) : **C1** scène (5) ; **C2** setlists (1, 3, 7) ;
   **C3** chant, sections, usage (2, 4, 6, 8, 12) ; **C4** mode louange (9) ; **C5** équipes et planning (10, 11).
   Chacun écrit sa ligne dans `docs/tests/suite-2026-11-13-synthese.md` (§ Corrections). Rien sur `main`.
+  **13/11, 14 h 45 UTC : les cinq chantiers sont finis**, 0 point à décider : les 31 tests sont réglés (5 défauts du
+  site corrigés en 7 fichiers et 15 lignes, les autres étaient des tests en retard sur le site) ; `tsc` propre sur la
+  tête `bc80a242`. Chaque chantier a rejoué ses specs ; pas de rejeu commun sur la tête réunie. Reste à Timothée : la
+  mise en ligne sur `main`, `firestore.rules`, la « fumée Safari ».
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.
