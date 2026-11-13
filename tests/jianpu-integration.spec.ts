@@ -4,7 +4,7 @@ import { readFileSync, existsSync } from "fs";
 import { inflateSync } from "zlib";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { loadChords, openSheet } from "./helpers/jianpu";
+import { loadChords, openSheet, toucherScan } from "./helpers/jianpu";
 import { attendreCompteur, basculerAnnoter, fermerBarre } from "./helpers/louange";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
@@ -276,17 +276,14 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
     },
   }, "/setlists/setlist-jianpu");
   await ouvrirPartitions(page);
-  await page.locator('[data-jianpu-page="0"] img').waitFor();
+  await page.locator('[data-jianpu-page="0"] img').first().waitFor(); // JV-3 : en volets, une copie par fenêtre
   await page.waitForFunction(() =>
     Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every((i) => i.complete && i.naturalWidth > 0));
   await basculerMode(page);
 
   // L'étiquette 1 (« G7 », x 638, y 344) : on touche au centre de l'écriture qui l'a retouchée.
   const c = loadChords()[ADAPTER_SLUG];
-  const zone = (await page.locator("[data-jianpu-retouche-zone]").boundingBox())!;
-  await page.locator("[data-jianpu-retouche-zone]").click({
-    position: { x: ((c.labels[1].x + c.labels[1].w / 2) / c.w) * zone.width, y: ((c.labels[1].y + c.labels[1].h / 2) / c.h) * zone.height },
-  });
+  await toucherScan(page, c.labels[1].x + c.labels[1].w / 2, c.labels[1].y + c.labels[1].h / 2, c.w, c.h);
   const feuille = page.getByRole("dialog");
   await feuille.getByRole("button", { name: "A", exact: true }).click();
   await feuille.getByRole("button", { name: "Valider l'accord" }).click();
@@ -660,7 +657,7 @@ async function enTete(page: Page, position: number, titre: string) {
 
 test("L3-T4 vue Partitions : un chant sur scan a le même en-tête qu'un chant en paroles (n°, titre lié, auteurs, ♩, pastille, bandeau)", async ({ page }) => {
   await ouvrirSetlistT4(page);
-  await page.locator('[data-outline-item="2"] [data-jianpu-page="0"] img').waitFor();
+  await page.locator('[data-outline-item="2"] [data-jianpu-page="0"] img').first().waitFor(); // JV-3 : en volets, une copie par fenêtre
   const paroles = await enTete(page, 1, "Abba Père");
   const scan = await enTete(page, 2, SLUG);
   // Même place du n° et du titre dans le bloc, même bord gauche.
@@ -681,7 +678,7 @@ test("L3-T4 vue Partitions : un chant sur scan a le même en-tête qu'un chant e
 
 test("L3-T4 vue Partitions : le chant suivant commence au même écart après un scan qu'après des paroles", async ({ page }) => {
   await ouvrirSetlistT4(page);
-  await page.locator('[data-outline-item="2"] [data-jianpu-page="0"] img').waitFor();
+  await page.locator('[data-outline-item="2"] [data-jianpu-page="0"] img').first().waitFor(); // JV-3 : en volets, une copie par fenêtre
   // L'écart qui se voit : de la fin de l'encre (dernière section, dernière fenêtre) au n° du
   // chant suivant ; mesuré d'un coup, et attendu stable (la fenêtre se coupe après l'image).
   const ecarts = () => page.evaluate(() => {

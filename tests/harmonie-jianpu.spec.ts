@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ligneHistorique, ouvrirPartitions } from "./helpers/setlist";
-import { loadChords } from "./helpers/jianpu";
+import { loadChords, toucherScan } from "./helpers/jianpu";
 import { readFileSync } from "node:fs";
 import { attendreMiseEnPage, lireCompteur, onStage } from "./helpers/louange";
 
@@ -67,9 +67,6 @@ async function capture(page: Page, name: string) {
 }
 
 async function openPartitions(page: Page, docs: Record<string, Record<string, unknown>> = {}) {
-  // Retouche sur la page entière : les trois appareils seulement (la spec tourne aussi sur les grands écrans pour JV-5c ;
-  // à 1 440 la vue Partitions passe en deux volets, JV-3).
-  test.skip(["tablette-paysage", "ordinateur-1440"].includes(test.info().project.name), "retouche : trois appareils");
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
@@ -77,7 +74,8 @@ async function openPartitions(page: Page, docs: Record<string, Record<string, un
   await ouvrirPartitions(page);
   // Le scan pèse 1 à 2 Mo et le calque vient d'un fetch à part : sans ces
   // attentes, on touche une image absente ou une géométrie pas encore lue.
-  await page.locator('[data-jianpu-page="0"] img').waitFor();
+  // En deux volets (JV-3 : tablette paysage, 1 440), la page se montre dans plusieurs fenêtres : la première suffit.
+  await page.locator('[data-jianpu-page="0"] img').first().waitFor();
   await page.waitForFunction(() =>
     Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every(
       (img) => img.complete && img.naturalWidth > 0,
@@ -88,11 +86,7 @@ async function openPartitions(page: Page, docs: Record<string, Record<string, un
 
 /** Touche le scan au point (x, y) exprimé en pixels de l'image d'origine. */
 async function toucher(page: Page, x: number, y: number) {
-  const zone = page.locator("[data-jianpu-retouche-zone]");
-  const box = (await zone.boundingBox())!;
-  await zone.click({
-    position: { x: (x / CHORDS.w) * box.width, y: (y / CHORDS.h) * box.height },
-  });
+  await toucherScan(page, x, y, CHORDS.w, CHORDS.h);
 }
 
 /** Pavé d'accord de la feuille : fondamentale, altération, qualité, valider ; puis le choix du lieu (MP-3 : la
@@ -204,7 +198,10 @@ test("hors Crayon : les retouches s'affichent, rien ne se touche", async ({ page
   await openPartitions(page, {
     [SETLIST_DOC]: setlist({ jianpuChords: { changed: { "0": "Em7" } } }),
   });
-  await expect(page.locator('[data-jianpu-retouche="0"]')).toHaveText("Em7");
+  // En deux volets (JV-3), chaque fenêtre porte le calque de la page, rogné : toutes ses copies disent Em7.
+  const retouche = page.locator('[data-jianpu-retouche="0"]');
+  await expect(retouche.first()).toHaveText("Em7");
+  expect(new Set((await retouche.allInnerTexts()).map((t) => t.trim()))).toEqual(new Set(["Em7"]));
   await expect(page.locator("[data-jianpu-retouche-zone]")).toHaveCount(0);
   await capture(page, "jianpu-lecture-seule");
 });
