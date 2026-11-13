@@ -319,7 +319,7 @@ export function PartitionsView({
                   }))}
                 />
                 {item.position === positionPremierChant && <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none"><AideAccordsEnLigne /></div>}
-                <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none pt-2 [@container_partition_(min-width:1000px)]:grid [@container_partition_(min-width:1000px)]:grid-cols-2 [@container_partition_(min-width:1000px)]:gap-x-6 [@container_partition_(min-width:1000px)]:items-start [@container_partition_(min-width:1000px)]:[&>:last-child_[data-section]]:!mb-0 [@container_partition_(min-width:1000px)]:[&>:nth-last-child(2):nth-child(odd)_[data-section]]:!mb-0 print:block">
+                <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none pt-2 [@container_partition_(min-width:1000px)]:columns-2 [@container_partition_(min-width:1000px)]:gap-x-6 [@container_partition_(min-width:1000px)]:[&>*]:break-inside-avoid [@container_partition_(min-width:1000px)]:[&>:last-child_[data-section]]:!mb-0 print:block print:columns-auto">
                   {shownPassages.map(({ ms, ast, section, fusionSong, keyChange }, msIdx) => {
                     const sectionNote = ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId];
                     const sectionNuance = ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId];

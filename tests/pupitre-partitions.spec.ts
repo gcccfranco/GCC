@@ -505,7 +505,7 @@ test("capture T5 : 1 440 px, panneau du sommaire en plein glissement (rien ne pa
   await page.screenshot({ path: "test-results/t5-pupitre/ordinateur-1440-panneau-glisse.png" });
 });
 
-// ─── T4 : deux colonnes en rangées dès 1 000 px de zone, 简谱 jamais en colonne ───────────────────────────────────────
+// ─── T4, JV-2 : lecture en colonnes dès 1 000 px de zone, 简谱 jamais en colonne ───────────────────────────────────────
 const sectionsDe = (page: Page, n: number) =>
   page.locator(`[data-outline-item="${n}"] [data-section]`).evaluateAll((els) =>
     els.map((el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, droite: r.right }; }));
@@ -513,24 +513,44 @@ const lignesCoupees = (page: Page, n: number) =>
   page.locator(`[data-outline-item="${n}"] [data-copy-line]`).evaluateAll((els) =>
     els.filter((el) => el.querySelectorAll("[data-rangee]").length > 1).map((el) => el.textContent?.slice(0, 40)));
 
-test("ordinateur-1440 : deux colonnes de 528 px en rangées, gouttière de 24 px, aucune ligne coupée (T4)", async ({ page }, info) => {
+test("ordinateur-1440 : deux colonnes de 528 px en lecture en colonnes, gouttière de 24 px, aucune section ni ligne coupée (T4, JV-2)", async ({ page }, info) => {
   test.skip(info.project.name !== "ordinateur-1440", "1 440 × 900");
   await ouvrir(page, "stxt", info.project.name);
-  const s = await sectionsDe(page, 1);
+  const s = await page.locator('[data-outline-item="1"] [data-section]').evaluateAll((els) =>
+    els.map((el, i) => { const r = el.getBoundingClientRect(); return { i, x: r.x, y: r.y, w: r.width, droite: r.right, rects: el.getClientRects().length }; }));
   expect(s.length).toBeGreaterThanOrEqual(3);
   expect(Math.abs(s[0].w - 528), "colonne de 528").toBeLessThanOrEqual(16);
-  expect(Math.abs(s[1].x - s[0].droite - 24), "gouttière de 24").toBeLessThanOrEqual(4);
-  expect(s[1].x, "2e section à droite de la 1re").toBeGreaterThan(s[0].x + s[0].w);
-  expect(Math.abs(s[1].y - s[0].y), "2e section sur la rangée de la 1re").toBeLessThan(4);
-  expect(s[2].y, "3e sous la 1re").toBeGreaterThan(s[0].y + 20);
-  expect(Math.abs(s[2].x - s[0].x), "3e dans la colonne de gauche").toBeLessThan(2);
-  expect(new Set(s.map((x) => Math.round(x.x))).size, "jamais de 3e colonne").toBeLessThanOrEqual(2);
+  const xs = [...new Set(s.map((x) => Math.round(x.x)))].sort((p, q) => p - q);
+  expect(xs.length, "au plus deux colonnes").toBeLessThanOrEqual(2);
+  expect(xs.length, "deux colonnes").toBe(2);
+  const gauche = s.filter((x) => Math.abs(x.x - xs[0]) < 4);
+  const droite = s.filter((x) => Math.abs(x.x - xs[1]) < 4);
+  expect(Math.abs(droite[0].x - gauche[0].droite - 24), "gouttière de 24").toBeLessThanOrEqual(4);
+  expect(gauche[0].i, "1re section en haut à gauche").toBe(0);
+  for (const col of [gauche, droite]) {
+    for (let k = 1; k < col.length; k++) expect(col[k].y, "de haut en bas dans la colonne").toBeGreaterThan(col[k - 1].y);
+  }
+  expect(droite[0].i, "gauche puis droite").toBeGreaterThan(Math.max(...gauche.map((x) => x.i)));
+  expect(Math.abs(droite[0].y - s[0].y), "haut de la colonne droite aligné sur la 1re section").toBeLessThanOrEqual(4);
+  expect(s.filter((x) => x.rects !== 1).length, "aucune section coupée entre deux colonnes").toBe(0);
   expect(Math.max(...s.map((x) => x.droite)), "rien au-delà de 1 440").toBeLessThanOrEqual(1440);
   expect(await lignesCoupees(page, 1), "Hosanna : lignes coupées").toEqual([]);
   expect(await lignesCoupees(page, 2), "一切歌颂赞美 en texte : lignes coupées").toEqual([]);
-  const couplet = page.locator('[data-outline-item="1"] [data-section]').nth(1);
-  expect((await couplet.boundingBox())!.y / 900, "couplet 1 à 27 % au plus").toBeLessThanOrEqual(0.27);
   await page.screenshot({ path: "test-results/t4-pupitre/ordinateur-1440-fr-clair.png" });
+});
+
+test("captures JV-2", async ({ page }, info) => {
+  const p = info.project.name;
+  await ouvrir(page, "stxt", p);
+  await page.screenshot({ path: `test-results/jv2/${p}-fr-clair.png` });
+  await page.locator('[data-outline-item="2"]').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `test-results/jv2/${p}-zh-clair.png` });
+  if (p === "ordinateur-1440") {
+    await ouvrir(page, "stxt", p, true);
+    await page.screenshot({ path: `test-results/jv2/${p}-fr-sombre.png` });
+    await page.locator('[data-outline-item="2"]').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `test-results/jv2/${p}-zh-sombre.png` });
+  }
 });
 
 test("ordinateur : à 1 280 px, toujours une colonne de 920 px (T4)", async ({ page }, info) => {

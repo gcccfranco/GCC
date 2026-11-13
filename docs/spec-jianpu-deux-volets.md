@@ -430,3 +430,15 @@ chantier sur ce fichier.
   `jianpu-tonalite-cho`, `harmonie-jianpu`, `louange-jianpu-tranches` : 563 passés au premier tour (17 min), quatre
   échecs propres à la nouvelle spec corrigés en deux tours ; repasse après rebase sur JV-1 : 268 passés, 0 échec
   (**8,9 min**). `jianpu:audit` 为我而来 et 全新的你 : calque calé, PNG regardés. tsc, lint : 0 erreur.
+- 13/11/2026 : **JV-2 codée** (session orchestratrice, `/tranche`). Dès 1 000 px de zone, `PartitionView.tsx` (chants
+  fusionnés) et `SongView.tsx` (corps) passent de `grid-cols-2` à `columns-2` (gouttière 24 px, mêmes seuil et largeur),
+  enfants en `break-inside-avoid` ; règle `nth-last-child(2)` des rangées retirée ; `print:columns-auto` ajouté
+  (`print:block` ne neutralisait plus les colonnes ; relecteur). `EnveloppeScan` (JV-3) et la règle « chinois avec
+  pinyin = une colonne » intacts. À 1 440, Hosanna se lit Intro, Couplet 1, Refrain à gauche puis Couplet 2, Pont à
+  droite ; ≈ 115 px de vide sous la colonne la plus courte (le prix de sections jamais coupées, risque dit à Q3).
+  Garde T4 de `pupitre-partitions` réécrite « lecture en colonnes » (ordre DOM gauche puis droite, hauts alignés,
+  `getClientRects() === 1`) ; « couplet 1 à 27 % » retirée (sans objet en colonnes) ; test « captures JV-2 » (cinq
+  projets, FR et ZH, sombre à 1 440). Tests : `pupitre-partitions`, `pages-en-grand-setlists`, `setlist-deux-volets`,
+  `jianpu-deux-volets`, `statistiques-chant`, cinq projets : 235 passés, 225 sautés (gardes d'appareil), 0 échec
+  (**7,7 min**). `regard` sur les douze captures : rien à corriger. tsc, lint : 0 erreur. Le chemin fusion de
+  `PartitionView` n'a pas d'assertion de colonnes propre (même classe que SongView). JV-5a lancée à la suite.
