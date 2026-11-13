@@ -158,6 +158,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   **Go de Timothée (« Go », en réponse à « go pour les finitions »)** : finitions du lot JV : 9 échecs à 1 440 px
   (`jianpu-integration` 264, 661, 682 ; six tests Crayon d'`harmonie-jianpu`), trois défauts d'apparence laissés par
   JV-5c, `critique-design` sur les onze captures (§ Avancement de `docs/spec-jianpu-deux-volets.md`).
+  **Finitions JV faites le 13/11** : les 9 échecs venaient de JV-3 (tests à revoir, site juste ; Crayon de nouveau
+  testé sur les grands écrans), pastille et marges du mode louange retouchées ; huit choix de design de `critique-design`
+  « à décider par Timothée » (§ Avancement de la spec, entrée « Finitions »).
   **Attendent Timothée** : publier `firestore.rules` (crayon et Apple Pencil absents sans cela : `crayonPret` faux
   après le 403 de `partitions/`, diagnostic de `session_01UMdfuZTdptjjrzmrPMcQPN`) ; « go pour le crayon grisé »
   (retouche de `useMesPartitions`) ; choix sur `docs/spec-reglages-unifies.md` (piste B recommandée) et sur

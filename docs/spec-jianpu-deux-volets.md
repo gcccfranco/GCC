@@ -545,3 +545,33 @@ chantier sur ce fichier.
   antérieurs : titres des fiches en français dans l'interface 中文. **`critique-design` non lancé** (plafond de contexte de
   la session) : à faire sur les onze captures signalées par `regard` (regénérables : `PW_CAPTURES=<dossier> npx
   playwright test tests/harmonie-jianpu.spec.ts -g "JV-5c"`). **Fin du lot JV** (JV-1 à JV-5c codées).
+- 13/11/2026 : **Finitions du lot JV** (go de Timothée du 13/11, « Go »). **Les 9 échecs à 1 440** ont une seule cause :
+  JV-3 (`aabb11c`, prouvé : `jianpu-integration` 661 et 682 passent sur `aabb11c~1`, échouent sur `aabb11c`). Dès
+  1 000 px de zone, la vue Partitions montre la page du scan dans plusieurs fenêtres (une par demi-ligne) : les
+  sélecteurs stricts des tests (`[data-jianpu-page="0"] img`, la zone de retouche, `[data-jianpu-retouche="0"]`) en
+  trouvaient 3, 6 ou 12. **Le test avait tort** (JV-3 veut ces volets) : attente de la première copie, nouveau helper
+  `toucherScan` (`tests/helpers/jianpu.ts`, touche la fenêtre qui montre le point), toutes les copies d'une retouche
+  doivent concorder (`22fd05f`). 264 (« 11 Adapter ») : même cause, en course (vert seul, rouge quand les volets se
+  calculaient avant l'attente). Les six tests Crayon : **JV-5c les avait sautés** sur tablette paysage et 1 440
+  (`test.skip` dans `openPartitions`, « gardés sur trois appareils »), ce qui cachait l'échec ; saut retiré, ils
+  tournent et passent sur les cinq projets (la retouche au Crayon marche en volets). **Défauts d'apparence** :
+  pastille de la forme courte sans marge intérieure (« Couplets » touchait ses bords) et, en 中文, coupée « 主歌 1– /
+  2 » : retrait de 4 px, largeur jusqu'au rail (56 px) sans en sortir, gluons U+2060 autour du tiret (`ffe83f7`) ;
+  marges du mode louange à deux colonnes (≈ 125 px de blanc à gauche de l'encre, 75 à droite à 1 280) : retrait à
+  droite égal au rail, borné par la place libre (`88f7a54`, ≈ 98 / 105 px). Cadre du bloc touché « parfois absent » :
+  **c'est la capture**, le cadre est le surlignage `harmonie-surligne`, retiré après 2,5 s par
+  `HarmonieDuChant.tsx` (≈ l. 310) ; présent sur toutes les captures régénérées. Quart vide sous les colonnes en
+  paysage : non touché. Tests : specs du lot (les dix de JV-5c), cinq projets : 814 passés, 210 sautés (antérieurs,
+  même nombre qu'avant), 0 échec (**26,7 min**) ; `harmonie-jianpu -g JV-5c` trois fois (≈ 1,7 min). tsc, lint :
+  0 erreur. Captures regardées : louange 1 280 (fr), tablette paysage (中文, sombre), page chant tablette portrait
+  (fr), téléphone (中文, volet). **`critique-design`** sur onze captures (louange 1 280, 1 440, téléphone, tablette
+  paysage ; volet 中文 1 280 et téléphone ; page chant tablette et téléphone ; volet fr 1 280 ; Partitions 1 440 et
+  tablette paysage) : « à retoucher », **aucun constat net** (tous des choix de design). **À décider par Timothée** :
+  (1) contraste des pastilles en clair, 3,3 à 4,3:1 pour un texte de 11 px (7,2:1 en sombre) : texte plus grand et
+  gras, ou ton `--sec-*` plus foncé (gelé) ; (2) initiale « C » (téléphone) lue comme un accord de do : « C1–2 »
+  comme les puces du haut, ou autre forme ; (3) étiquette ≈ 10 px en mode louange, illisible au pupitre : corps plus
+  grand en louange seulement ; (4) zone de toucher de ≈ 28 px de large au téléphone : l'élargir vers la gauche ;
+  (5) l'étiquette dit « 主歌 1–2 », le bloc ouvert « 主歌 1 » ; (6) en louange, le volet ouvert tranche la colonne de
+  droite au milieu d'un caractère : une colonne tant que le volet est ouvert, ou l'accepter ; (7) en 中文, puces
+  « C1 C2 R P » et rail « 主 / 副 » : deux nommages sur le même écran ; (8) le volet est une feuille centrée sur la
+  page chant à l'ordinateur, un panneau à droite en louange (sans doute antérieur).
