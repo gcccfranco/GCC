@@ -117,6 +117,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   complète lancée en quatre parts** (Sonnet, aucune correction) : `session_01UMdfudPsUH2e4yP7D7LCDY` (1/4),
   `session_01UMdfuZSZqGrTzmaRBGT5cV` (2/4), `session_01UMdfuZPpNqJhDNUHVxSo4G` (3/4), `session_01UMdfudbYvxf6yGMX1wGMc8`
   (4/4) ; bilans dans `docs/tests/suite-2026-11-13-part-K.md`. Les corrections attendent le bilan et Timothée.
+  **13/11, 13 h UTC : suite complète finie** : 22 735 tests, 20 285 passés, 2 255 sautés, 101 instables, **94 échecs
+  (31 tests distincts, 16 specs)** ; liste par page dans `docs/tests/suite-2026-11-13-synthese.md`. Aucune correction
+  lancée : elles attendent le go de Timothée. La mise en ligne reste sa décision.
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.

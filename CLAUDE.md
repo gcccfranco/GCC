@@ -144,6 +144,10 @@ pas seulement en mémoire.
     temps dans le mode louange s'ils sont dans des zones différentes du fichier (TC à côté d'AN) : ajouts courts, aucun
     reformatage, `git pull --rebase` avant de coder, avant les tests finaux et avant de pousser ; (3) deux **petites**
     tranches voisines peuvent partager une session (un commit et une ligne d'Avancement par tranche).
+    **Méthode mesurée** (13/11/2026 : un quart ou un seizième d'une traite fait tomber `next dev`, 16 Go) : la suite
+    se découpe en **trente-deux morceaux** (`--shard=k/32 --workers=2 --trace off`), un serveur neuf par commande,
+    répartis sur plusieurs sessions Sonnet qui ne rendent pas la main tant que les tests tournent ; ≈ 20 min par
+    morceau. Détail et dernier résultat : `docs/tests/suite-2026-11-13-synthese.md`.
   - *Quatre chantiers* (même date, « go pour Harmonie H2 » en quatrième) : la limite ci-dessous passe de trois à
     quatre chantiers de code en même temps ; pas au-delà sans nouvel accord de Timothée.
     **Cinq** depuis le 12/11/2026 après-midi (Timothée : « on peut passer à 5 sessions en simultanées ») : partout où
