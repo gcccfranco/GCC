@@ -28,7 +28,7 @@ colonnes), **1** (简谱 sur deux volets), **2** (idées d'harmonie : notation, 
 | Q6 | Piste pour le 简谱 en deux volets | **B**, demi-lignes en deux colonnes (taille de lecture gardée) |
 | Q7 | Le mode louange aussi ? | **Oui**, sous l'interrupteur « 2 colonnes » existant |
 | Q4 | Notation de la bande d'idée d'harmonie | **Une seule**, celle choisie par la personne (Lettres par défaut) |
-| Q5 | Idées d'harmonie sur le scan | **Remplacée** : toucher une section montre toutes ses propositions (§ Point 2, « Reprise du 13/11 ») ; planche à faire |
+| Q5 | Idées d'harmonie sur le scan | **Remplacée** : toucher une section montre toutes ses propositions (§ Point 2, « Reprise du 13/11 ») ; planche faite, H-Q1 et H-Q2 |
 
 Tranchées par la session (décisions déléguées, 13/11, faciles à défaire) : seuil d'une colonne sous 11 px d'accords
 imprimés ; coupe entre colonnes au début de section si l'écart ne dépasse pas deux demi-lignes ; page chant inchangée.
@@ -259,8 +259,45 @@ Proposition, à dessiner sur planche avant le go (changement d'apparence, `CLAUD
   sans animation, sans tourner la page ; le réglage « Idées d'harmonie » reste (éteint par défaut).
 - Notation : une seule, celle que la personne a choisie (Q4 ci-dessus, recommandation gardée).
 
-Prochaine étape : planche « toutes les idées d'une section » (téléphone, tablette, ordinateur ; paroles et scan),
-puis go. JV-5a et JV-5b sont remplacées par cette reprise.
+JV-5a et JV-5b sont remplacées par cette reprise.
+
+**Planche** (13/11/2026) : `docs/planches/planche-harmonie-toutes-les-idees.html`, artefact privé
+https://claude.ai/artifact/QyuUMtnuQ6TVvKuPQis6Fp. Comptage sur 1 616 sections (idées calculées, tonalité
+recommandée) : médiane 6 idées, 29 % en ont 9 ou plus, jusqu'à 20 ; 49 n'en ont aucune.
+
+- A. L'ossia : chaque idée écrite en petit au-dessus de l'accord qu'elle change. Belle à deux idées, illisible à six ;
+  impossible sur le scan ; touche au rendu des accords (`ChordLine`).
+- **B. Le tableau d'échange (recommandée)** : sous le nom touché, une liste « ce qu'on joue → ce qu'on peut jouer »
+  alignée sur une colonne de flèches ; l'accord d'origine écrit une fois par groupe ; groupes rangés par sûreté (très
+  sûre, sûre, puis « à écouter » en graisse normale) ; idées de forme sur une ligne « Aussi : intro, tag » ; idées de
+  l'équipe ensuite ; deux colonnes au-delà de six rangées dès 768 px ; le trait de la section descend le long de la
+  liste. Hors mode louange : nom de la fiche en gris, Écouter, lien « Tout sur ce passage » vers la porte 2. Mode
+  louange : rangées seules, à la taille des accords, aucune animation, la page ne tourne pas. Scan : étiquette de section
+  dans la marge blanche (`marges.json`) à la hauteur de sa ligne (`sections.json`), liste insérée entre deux lignes.
+  Exemple : Refrain de Promesses, 8 idées en 5 groupes.
+- C. Le pupitre voisin : la colonne Harmonie s'ouvre à côté, au bloc du passage. La moins chère hors louange, mais elle
+  cache la partition au téléphone et fait recompter les pages en louange.
+
+Critique (« à retoucher ») à corriger en code, sans changer la recommandation : accord d'origine à 55 % trop pâle
+(3,8:1, viser ≥ 4,5:1 : `--muted-foreground`) et flèche invisible (1,27:1 : la tracer en `--muted-foreground`) ;
+compteur collé au nom qui se lit comme un numéro (« Couplet 1 6 » = « Couplet 16 ») ; Écouter à moins de 44 px l'un de
+l'autre dans un groupe ; la section à 9 idées ou plus et le passage en deux colonnes ne sont pas dessinés.
+
+Questions à Timothée (la recommandation en premier) :
+- **H-Q1 — Piste** : **B** (sinon A ou C).
+- **H-Q2 — Signal sur le nom** : remplacer le point de 8 px par un petit compteur dans une pastille ronde après le nom
+  (« Refrain ⑧ », pas un chiffre nu), seulement si l'accès Harmonie est ouvert et, en louange, si le réglage est allumé.
+- Tranchées par la session (décisions déléguées, 13/11, faciles à défaire) : colonne Harmonie déjà ouverte (≥ 1 024 px)
+  → le toucher du nom la fait défiler au bloc, sans liste dans la partition ; étiquette du scan dans la langue de
+  l'interface, en forme courte (« Couplets 1–4 » si plusieurs sections commencent sur la même ligne, initiale seule sous
+  40 px de marge) ; idées « à écouter » montrées en louange, en dernier, en graisse normale.
+
+Tranches après go (une session chacune) : **JV-5a** liste commune (fonction pure de groupage dans `src/lib/harmonie/`,
+composant dans `src/components/harmonie/`, nom de section touchable dans `SongView.tsx`, branchée dans
+`PartitionView.tsx` et `SongDetailClient.tsx`) ; **JV-5b** mode louange (`IdeeHarmonieMarge.tsx` : toutes les idées, une
+notation, le nom comme cible ; `PerformanceMode.tsx` : mesure de page liste ouverte ; après TC-4 et JV-4) ; **JV-5c** scan
+(`JianpuSheet.tsx`, `PageScan.tsx`, après JV-3 et JV-4). Tests : `louange-harmonie.spec.ts` étendue, nouvelle spec
+d'agencement dans `SPECS_GRAND_ECRAN`, `harmonie-jianpu.spec.ts` pour le scan.
 
 ## Tranches
 
