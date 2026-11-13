@@ -50,11 +50,10 @@ export function clampPan(zoom: number, p: Pan): Pan {
 }
 
 /** Calque de LECTURE : affiche les traits, sans interaction. */
-// `rogneBas` : hauteur (CSS) du bas de l'écran que le calque ne couvre pas (aperçu de page, lot L6).
 // clip-path garde les coordonnées intactes et retire aussi les touchers de la bande.
-// `clipPath` (px écran) remplace `rogneBas` : le Crayon y ajoute des trous (repères de section, au-dessus de l'encre).
+// `clipPath` (px écran) : le Crayon y ajoute des trous (repères de section, au-dessus de l'encre).
 // Demi-page : `clip` (clip-path en px écran, sur un cadre fixe) et `decalage` (px écran) rognent et descendent les traits comme le texte.
-export function StrokesLayer({ data, rogneBas, clip, decalage, clipPath, fond }: { data: AnnotationData; rogneBas?: string; clip?: string; decalage?: number; clipPath?: string; fond?: string }) {
+export function StrokesLayer({ data, clip, decalage, clipPath, fond }: { data: AnnotationData; clip?: string; decalage?: number; clipPath?: string; fond?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { i18n } = useTranslation();
   const w = window.innerWidth;
@@ -95,7 +94,7 @@ export function StrokesLayer({ data, rogneBas, clip, decalage, clipPath, fond }:
       data-strokes-couleurs={JSON.stringify(data.strokes.map((s) => styleTrait(s, fond).color))}
       // Texte affiché de chaque texte et tampon (AN-5) : lu par les tests.
       data-strokes-signes={JSON.stringify(textesSignes(data.strokes, i18n.language))}
-      style={{ zIndex: clip ? undefined : 5, clipPath: clipPath ?? (rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined), transform: decalage ? `translateY(${decalage}px)` : undefined }}
+      style={{ zIndex: clip ? undefined : 5, clipPath, transform: decalage ? `translateY(${decalage}px)` : undefined }}
       aria-hidden="true"
     />
   );
@@ -111,9 +110,7 @@ interface Props {
   zoom: number;
   pan: Pan;
   onZoomPanChange: (zoom: number, pan: Pan) => void;
-  /** Bas de l'écran non couvert (aperçu de page, lot L6). */
-  rogneBas?: string;
-  /** Remplace `rogneBas` si fourni (clip-path en px écran, avec des trous : repères de section au-dessus de l'encre). */
+  /** Clip-path en px écran (, avec des trous : repères de section au-dessus de l'encre). */
   clipPath?: string;
   /** Outil, couleur, épaisseur (px), transparence et taille de gomme : possédés par le parent, qui porte la barre d'outils. */
   tool: Tool;
@@ -141,7 +138,7 @@ interface Props {
   cle?: number;
 }
 
-export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas, clipPath, tool, color, size, alpha, fond, tailleGomme, inerte, onDebutGeste, doigtLibre, contactInitial, onTraitStylet, signe, unite, cle }: Props) {
+export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, clipPath, tool, color, size, alpha, fond, tailleGomme, inerte, onDebutGeste, doigtLibre, contactInitial, onTraitStylet, signe, unite, cle }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { t, i18n } = useTranslation();
 
@@ -496,7 +493,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
         style={{
           zIndex: 10,
           cursor: tool === "eraser" ? "cell" : "crosshair",
-          clipPath: clipPath ?? (rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined),
+          clipPath,
         }}
         data-reperes-dessus={clipPath?.includes("Z M") ? "" : undefined}
         data-strokes-signes={JSON.stringify(textesSignes(data.strokes, i18n.language))}

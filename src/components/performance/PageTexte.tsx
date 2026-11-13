@@ -23,10 +23,7 @@ export function PageTexte({
   currentPage,
   scaledBodyRef,
   renderBlock,
-  apercu,
-  apercuHauteur,
   contentPadding,
-  showChrome,
   pastille,
   sansIndice = false,
 }: {
@@ -38,11 +35,7 @@ export function PageTexte({
   currentPage: number;
   scaledBodyRef: RefObject<HTMLDivElement | null>;
   renderBlock: (i: number) => ReactNode;
-  apercu: PerfPage | null;
-  apercuHauteur: number;
   contentPadding: CSSProperties;
-  /** Barres affichées : l'aperçu s'efface (pas d'aperçu pendant qu'on règle quelque chose). */
-  showChrome: boolean;
   /** Pastille « Ensuite » : rendue à la fin de la colonne `page.suivant`, dans le flux. */
   pastille?: ReactNode;
   /** Calques de la demi-page (FS-E) : pas d'indice du rappel (il appartient à la page lue). */
@@ -94,22 +87,6 @@ export function PageTexte({
         </div>
       </div>
     </div>
-    {apercu && (
-      <div
-        data-apercu-suivant
-        aria-hidden="true"
-        data-chrome={showChrome ? "1" : "0"}
-        className={`pointer-events-none absolute left-0 right-0 ease-out motion-reduce:transition-none ${showChrome ? "opacity-0 transition-opacity duration-100" : "opacity-100 transition-opacity duration-150"}`}
-        style={{ bottom: contentPadding.paddingBottom, paddingLeft: contentPadding.paddingLeft, paddingRight: contentPadding.paddingRight }}
-      >
-        <div className="relative overflow-hidden" style={{ height: apercuHauteur }}>
-          <div className="h-0.5 bg-primary/70" />
-          {apercu.header != null && renderBlock(apercu.header)}
-          {apercu.cols.flat().map((i) => renderBlock(i))}
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background to-transparent" />
-        </div>
-      </div>
-    )}
     </>
   );
 }

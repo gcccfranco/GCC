@@ -401,11 +401,12 @@ test("demi-page : « Crayon » remet la page entière", async ({ page }, testInf
   await expect(enDemi(page)).toHaveCount(0);
 });
 
-test("demi-page : tablette portrait, l'aperçu de la page suivante (L6) est présent demi-page coupée, absent allumée", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "tablette", "l'aperçu n'existe qu'en tablette portrait");
+// Aperçu de la page suivante (L6) retiré le 13/11/2026 (go de Timothée, « Oui retire ») : absent, demi-page coupée comme allumée.
+test("demi-page : tablette portrait, aucun aperçu de la page suivante, demi-page coupée comme allumée", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablette", "l'aperçu n'existait qu'en tablette portrait");
   await ouvrir(page, { demi: false });
   await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
-  await expect(onStage(page, "[data-apercu-suivant]")).toHaveCount(1);
+  await expect(onStage(page, "[data-apercu-suivant]")).toHaveCount(0);
   const options = await ouvrirOptions(page);
   await options.getByRole("button", { name: "Demi-page", exact: true }).click();
   await page.keyboard.press("Escape");
@@ -560,23 +561,23 @@ test("demi-page : les traits de la page 2 se voient au-dessus du filet, ceux de 
   await expect(enDemi(page)).toHaveCount(0);
 });
 
-test("demi-page : tablette portrait, des traits posés avec l'aperçu (clé « ap ») donnent le bandeau « ancienne mise en page »", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "tablette", "l'aperçu de la page suivante n'existe qu'en tablette portrait");
-  const db = await ouvrir(page);
+// Aperçu retiré le 13/11/2026 (go de Timothée) : les traits posés avec la bande (clé « ap ») s'affichent, demi-page
+// allumée ou coupée, sans bandeau ni écriture (avant, la demi-page ne les signalait que par le bandeau).
+for (const demi of [true, false]) test(`demi-page ${demi ? "allumée" : "coupée"} : tablette portrait, des traits posés avec l'aperçu (clé « ap ») restent visibles`, async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablette", "l'aperçu de la page suivante n'existait qu'en tablette portrait");
+  const db = await ouvrir(page, { demi });
   await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
   const cle = (await racine(page).getAttribute("data-cle-page"))!;
   expect(cle, "page 1 sans ligne coupée").not.toMatch(/v2$/);
-  expect(cle, "demi-page allumée : pas de suffixe ap").not.toMatch(/ap$/);
+  expect(cle, "plus de suffixe ap").not.toMatch(/ap$/);
   const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
   const cleAp = `${cle}${cle.includes("-") ? "" : "-"}ap`;
   db.set(`annotations/${MUSICIEN.uid}__${SETLIST_ID}__${cleAp}`, { strokes: TRAIT(w, h), updatedAt: new Date() });
   await page.reload();
   await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
   await attendreMiseEnPage(page);
-  const bandeau = page.locator("[data-alerte-composition]");
-  await expect(bandeau).toBeVisible();
-  await expect(bandeau).toHaveText("Des annotations existent avec l'ancienne mise en page");
-  await expect(page.locator("[data-performance-mode] > canvas")).toHaveCount(0);
+  await expect(page.locator("[data-performance-mode] > canvas")).toHaveCount(1);
+  await expect(page.locator("[data-alerte-composition]")).toHaveCount(0);
   expect(db.writes.filter((x) => x.path.startsWith("annotations/")), "aucune écriture").toEqual([]);
 });
 

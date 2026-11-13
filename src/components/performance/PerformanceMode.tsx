@@ -360,11 +360,10 @@ function RappelRangee({ titre, steps, pleines, rappel }: { titre?: string; steps
     </div>
   );
 }
-// Tablette en portrait (lot L6) : bande fixe en bas, début de la page suivante
-// (≈ trois lignes de paroles), sous une ligne bleue de 2 px. Hauteur en px de mise en page :
-// la pagination la retranche de son budget, le rendu la met à l'échelle comme le texte.
+// Aperçu de la page suivante (lot L6), retiré le 13/11/2026 sur demande de Timothée. Sa bande (tablette portrait,
+// ≤ 25 % de la hauteur) réduisait la page de 96 px : la pagination « avec bande » est refaite pour relire les traits
+// posés alors (clé « ap »), jamais effacés.
 const APERCU_H = 96;
-// Repli : au-delà de cette part de la hauteur de l'écran, la bande ne s'affiche pas.
 const APERCU_PART_MAX = 0.25;
 
 
@@ -593,6 +592,8 @@ export function PerformanceMode({
   const [passesPagination, setPassesPagination] = useState(0);
   // Pagination d'avant le rappel refait (lot RS-C) : retrouve les annotations sous leurs anciennes clés.
   const [layoutAncien, setLayoutAncien] = useState<PerfPage[]>([]);
+  // Paginations qu'aurait eues la bande d'aperçu retirée (L6) : courante, puis d'avant le rappel (RS-C).
+  const [layoutsBande, setLayoutsBande] = useState<{ courant: PerfPage[]; ancien: PerfPage[] } | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [remeasureKey, setRemeasureKey] = useState(0);
   // Même taille que la page du chant (fontScalePref).
@@ -771,10 +772,6 @@ export function PerformanceMode({
   });
   const twoColumnsAvailable = twoColumnsPossible(ecran.grand, ecran.largeur, fontScale) && !structureMode;
   const twoColumns = twoColumnsAvailable && twoColumnsPref !== "0";
-  // Aperçu de la page suivante (L6) : tablette portrait, hors vue structure, et
-  // seulement si la bande tient (≤ 25 % de la hauteur) ; sinon la pagination garde son budget.
-  // Demi-page allumée (FS-E) : la demi-page montre déjà le haut de la page suivante, l'aperçu se retire et la pagination
-  // reprend la hauteur de la bande (la clé de page perd alors son suffixe « ap »).
   const [demiOn, setDemiOn] = useState(getDemiPagePref);
   const [demiPart, setDemiPartEtat] = useState(getDemiPart);
   // Demi-page en cours : la page lue est `currentPage`, le haut de l'écran montre déjà le début de la suivante.
@@ -785,9 +782,8 @@ export function PerformanceMode({
   const [zonesDemi, setZonesDemi] = useState<{ haut: Array<[number, number, number, number]>; bas: Array<[number, number, number, number]>; decalage: number } | null>(null);
   const [rappelSuivantEcran, setRappelSuivantEcran] = useState(0);
   const refDemiCorps = useRef<HTMLDivElement>(null);
+  // Là où la bande d'aperçu (retirée) s'affichait : ses anciennes clés « ap » se relisent.
   const apercuPlace = ecran.tabletteVerticale && !structureMode && APERCU_H * fontScale <= ecran.hauteur * APERCU_PART_MAX;
-  const apercuActif = apercuPlace && !demiOn;
-  const apercuEteint = apercuPlace && demiOn;
   const basculerDemi = () => {
     compter("cmd.louange.demiPage");
     const next = !demiOn;
@@ -989,7 +985,7 @@ export function PerformanceMode({
       const mcs = measureInnerRef.current ? getComputedStyle(measureInnerRef.current) : null;
       const padTop = mcs ? parseFloat(mcs.paddingTop) || 0 : 16;
       const padBottom = mcs ? parseFloat(mcs.paddingBottom) || 0 : 16;
-      const viewportH = window.innerHeight / fontScale - padTop - padBottom - safety - (apercuActif ? APERCU_H : 0);
+      const viewportH = window.innerHeight / fontScale - padTop - padBottom - safety;
       // Hauteur réellement occupée par chaque bloc, marges verticales comprises :
       // delta entre le haut du bloc et le haut du bloc suivant dans le flux.
       const flowHeights = (rects: (DOMRect | null)[]) =>
@@ -1049,6 +1045,7 @@ export function PerformanceMode({
       };
       const ctxPagination = { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe, pastille: PASTILLE_SUIVANT_H, tranchesDe };
       let ancienne: PerfPage[] = [];
+      let bande: { courant: PerfPage[]; ancien: PerfPage[] } | null = null;
       let computed: PerfPage[];
       if (structureMode) {
         // Un chant par page : on regroupe l'en-tête et ses lignes, puis layoutFeuilleDeRoute.
@@ -1073,6 +1070,10 @@ export function PerformanceMode({
         const anciennes = new Map<number, number>();
         if (affichageVu === "unique") reserves.forEach((_, i) => anciennes.set(i, ANCIEN_RAPPEL));
         ancienne = paginer(anciennes, ctxPagination);
+        if (apercuPlace) {
+          const ctxBande = { ...ctxPagination, viewportH: viewportH - APERCU_H };
+          bande = { courant: paginer(reserves, ctxBande), ancien: paginer(anciennes, ctxBande) };
+        }
       }
       // Lot CV : une page dont une ligne n'est pas posée en une rangée (lue dans la copie de mesure, à la largeur
       // où la page est posée) a une autre composition qu'avant : sa clé de page porte « v2 ».
@@ -1080,15 +1081,18 @@ export function PerformanceMode({
         const el = (colonne ? blockColRefs.current[i] : blockRefs.current[i]) ?? blockRefs.current[i];
         return !!el && Array.from(el.querySelectorAll("[data-coupe]")).some((n) => !(n.getAttribute("data-coupe") ?? "une").startsWith("une"));
       };
-      computed = computed.map((p) => {
+      const marquerCoupe = (p: PerfPage) => {
         const colonne = !!p.twoColumns && heightsColumn.length > 0;
         const idx = [...(p.header != null ? [p.header] : []), ...p.cols.flat()];
         const coupe = !p.fit && idx.some((i) => ligneCoupee(i, colonne && i !== p.header));
         return coupe ? { ...p, coupe } : p;
-      });
+      };
+      computed = computed.map(marquerCoupe);
+      if (bande) bande = { ...bande, courant: bande.courant.map(marquerCoupe) };
       layoutBlocksRef.current = blocks;
       setLayout(computed);
       setLayoutAncien(ancienne);
+      setLayoutsBande(bande);
       setPassesPagination((n) => n + 1);
       // La lecture reste à l'écran quand la mise en page change (« 2 colonnes »,
       // rotation, taille du texte) : la page qui contient le premier bloc de la
@@ -1104,7 +1108,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuActif, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, bandeOuverte, ideesVues]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, bandeOuverte, ideesVues]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -1229,23 +1233,20 @@ export function PerformanceMode({
   const demiActif = demi && demiPossible(currentPage);
   // FS-D : en vue Structure, la clé sans « f2 » est celle d'avant la feuille de route (même page, mêmes réglages) : lue pour le seul bandeau.
   const cleAvantFeuille = affichageVu === "structure"
-    ? computePageKey(blocks, currentPageIndices, `${layoutSig.slice(0, -SUFFIXE_FEUILLE.length)}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`)
+    ? computePageKey(blocks, currentPageIndices, `${layoutSig.slice(0, -SUFFIXE_FEUILLE.length)}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}`)
     : null;
-  const cleSansV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`);
-  // FS-E : la clé qu'aurait eue la page avec l'aperçu de la page suivante (éteint par la demi-page), sans « v2 » puis avec.
-  const cleAvecApercuSansV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}ap`);
-  const cleAvecApercuV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}apv2`);
+  const cleSansV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}`);
   // Lot CV : « v2 » seulement sur une page dont une ligne est coupée (la composition a changé). La clé sans « v2 »
   // est alors l'ancienne clé de composition : ses traits ne s'affichent pas ici, ils ne sont jamais supprimés.
   const pageV2 = !!layout[currentPage]?.coupe;
   const currentPageKey = pageV2
-    ? computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}v2`)
+    ? computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}v2`)
     : cleSansV2;
 
   // Demi-page : clé qu'aurait la page suivante en page entière (même formule que `currentPageKey`).
   const demiSuivante = layout[currentPage + 1];
   const clePageSuivante = demiActif && demiSuivante
-    ? computePageKey(blocks, pages[currentPage + 1] ?? [], `${layoutSig}${demiSuivante.twoColumns ? "x2" : ""}${demiSuivante.fit ? (demiSuivante.tranche ? `${demiSuivante.tranche.demi ? "j5" : "j4"}-${demiSuivante.tranche.y0}` : ecran.grand ? "j3" : "j2") : ""}${apercuActif && !demiSuivante.fit ? "ap" : ""}${demiSuivante.coupe ? "v2" : ""}`)
+    ? computePageKey(blocks, pages[currentPage + 1] ?? [], `${layoutSig}${demiSuivante.twoColumns ? "x2" : ""}${demiSuivante.fit ? (demiSuivante.tranche ? `${demiSuivante.tranche.demi ? "j5" : "j4"}-${demiSuivante.tranche.y0}` : ecran.grand ? "j3" : "j2") : ""}${demiSuivante.coupe ? "v2" : ""}`)
     : undefined;
   useLayoutEffect(() => {
     const el = demiActif ? refDemiRappelHaut.current : null;
@@ -1272,13 +1273,41 @@ export function PerformanceMode({
     for (const p of layoutAncien) {
       const idx = p.header != null ? [p.header, ...p.cols.flat()] : p.cols.flat();
       if (p.fit || idx.find((i) => blocks[i]?.kind === "section") !== premiereSection) continue;
-      const cle = computePageKey(blocks, idx, `${layoutSig}${p.twoColumns ? "x2" : ""}${apercuActif ? "ap" : ""}`);
+      const cle = computePageKey(blocks, idx, `${layoutSig}${p.twoColumns ? "x2" : ""}`);
       // Sur une page « v2 », la clé sans « v2 » est l'ancienne clé de composition (bandeau), pas une clé RS-C.
       return cle === currentPageKey || cle === cleSansV2 ? null : cle;
     }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layoutAncien, layout, currentPage, blocks, layoutSig, apercuActif, affichageVu, currentPageKey, cleSansV2]);
+  }, [layoutAncien, layout, currentPage, blocks, layoutSig, affichageVu, currentPageKey, cleSansV2]);
+
+  // Aperçu retiré (13/11/2026) : la page qui commence au même bloc dans la pagination avec bande a eu la clé « ap » ;
+  // ses traits s'affichent (même haut de page, la page va seulement plus bas). Sinon, la même règle que RS-C dans la
+  // pagination d'avant le rappel avec bande. Les pages avec bande qui recouvrent celle-ci sans commencer au même
+  // bloc n'alimentent que le bandeau « ancienne composition ».
+  const clesBande = useMemo(() => {
+    const cur = layout[currentPage];
+    if (!layoutsBande || !cur || cur.fit || (affichageVu !== "unique" && affichageVu !== "played")) return { lues: [] as string[], bandeau: [] as string[] };
+    const idxDe = (p: PerfPage) => (p.header != null ? [p.header, ...p.cols.flat()] : p.cols.flat());
+    const cleDe = (p: PerfPage, idx: number[], v2: boolean) => computePageKey(blocks, idx, `${layoutSig}${p.twoColumns ? "x2" : ""}ap${v2 && p.coupe ? "v2" : ""}`);
+    const ici = new Set(currentPageIndices);
+    // D'abord la page telle qu'elle est (mêmes sections), comme la demi-page (FS-E) le faisait.
+    const lues: string[] = [computePageKey(blocks, currentPageIndices, `${layoutSig}${cur.twoColumns ? "x2" : ""}ap${cur.coupe ? "v2" : ""}`)];
+    const bandeau: string[] = [];
+    for (const p of layoutsBande.courant) {
+      const idx = idxDe(p);
+      if (p.fit || !idx.some((i) => ici.has(i))) continue;
+      (idx[0] === currentPageIndices[0] ? lues : bandeau).push(cleDe(p, idx, true));
+    }
+    const premiereSection = currentPageIndices.find((i) => blocks[i]?.kind === "section");
+    if (currentEntry && firstBlockIdx > currentEntry.index && premiereSection !== undefined) {
+      const p = layoutsBande.ancien.find((q) => !q.fit && idxDe(q).find((i) => blocks[i]?.kind === "section") === premiereSection);
+      if (p) lues.push(cleDe(p, idxDe(p), false));
+    }
+    return { lues: [...new Set(lues)], bandeau: bandeau.filter((c) => !lues.includes(c)) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layoutsBande, layout, currentPage, blocks, layoutSig, affichageVu]);
+  const clesAnciennes = useMemo(() => [...(cleAncienne ? [cleAncienne] : []), ...clesBande.lues], [cleAncienne, clesBande]);
 
   // L5 : chant de la page courante, et taille à laquelle il a été annoté sur cet appareil.
   const slugAnnote = currentEntry?.block.songSlug;
@@ -1311,18 +1340,17 @@ export function PerformanceMode({
   // composition (la même sans « v2 »), lue pour le seul bandeau : ses traits ne s'affichent pas (ils ne sont plus à
   // leur place) et ne sont jamais supprimés. La clé RS-C n'est jamais l'ancienne clé de composition (écartée dans
   // `cleAncienne`).
-  // FS-E : demi-page allumée sur une tablette portrait, les traits posés avec l'aperçu (clé « ap ») ne se montrent plus ici.
   const anciennesCompositions = useMemo(() => {
     const l: string[] = [];
     if (cleAvantFeuille) l.push(cleAvantFeuille);
     if (pageV2) l.push(cleSansV2);
     // JP-B : une page de scan découpée en tranches (« j4-<y0> ») a eu, avant, la clé de la page entière (« j2 » / « j3 », sans « ap » : une page fit n'a pas d'aperçu).
     if (trancheCourante) l.push(computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${ecran.grand ? "j3" : "j2"}`));
-    if (apercuEteint && !layout[currentPage]?.fit) l.push(pageV2 ? cleAvecApercuV2 : cleAvecApercuSansV2);
+    l.push(...clesBande.bandeau);
     return l;
-  }, [cleAvantFeuille, pageV2, cleSansV2, trancheCourante, blocks, currentPageIndices, layoutSig, ecran.grand, apercuEteint, layout, currentPage, cleAvecApercuV2, cleAvecApercuSansV2]);
+  }, [cleAvantFeuille, pageV2, cleSansV2, trancheCourante, blocks, currentPageIndices, layoutSig, ecran.grand, layout, currentPage, clesBande]);
   const { annotationsIndispo, annotations, annotationsSuivante, ancienneCompositionTraits, cleLue, viderAnciennes } = useAnnotationsPage({
-    user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, clePageSuivante, rappelSuivantEcran,
+    user, setlistId, currentPageKey, clesAnciennes, anciennesCompositions, rappelEcran, affichageVu, fontScale, clePageSuivante, rappelSuivantEcran,
   });
   // ── Traits accrochés au texte (MP-5, docs/spec-ma-partition.md, § Traits) ──
   // Mes traits écrits ici l'emportent sur ceux des props tant que le parent n'a pas fini d'enregistrer.
@@ -1908,10 +1936,6 @@ export function PerformanceMode({
       }
     : contentPadding;
 
-  // L6 : début de la page suivante, sous la bande réservée par la pagination. Ni dernière page,
-  // ni page de scan 简谱 (courante ou suivante) ; rien non plus sous la loupe d'annotation.
-  const pageSuivante = layout[currentPage + 1];
-  const apercuPossible = apercuActif && !fitPage && annotZoom === 1 && pageSuivante && !pageSuivante.fit ? pageSuivante : null;
   // Pastille « Ensuite : … » (titre + tonalité du chant suivant) ; `classes` en règle la place et le fond.
   const pastilleSuivant = (classes: string, ref?: React.Ref<HTMLButtonElement>, cachee = false) =>
     nextEntry ? (
@@ -1939,40 +1963,28 @@ export function PerformanceMode({
     const couverte = !demiActif && !!el && showChrome && el.getBoundingClientRect().bottom > window.innerHeight - barres.bas;
     setPastilleCouverte(couverte);
   }, [showChrome, currentPage, layout, barres.bas, coupureEcran, demiActif]);
-  // Sur la dernière page d'un chant, la pastille « Ensuite » occupe déjà la bande : pas d'aperçu par-dessous.
-  const apercu = isLastPageOfSong && nextEntry ? null : apercuPossible;
-  // Les calques d'annotation ne couvrent pas la bande (bas de page + 16 px de marge + sab).
-  const rogneBas = apercuPossible ? `calc(${(APERCU_H + 16) * fontScale}px + var(--sab, 0px))` : undefined;
   // Crayon : l'encre ne passe pas sur les repères de section (pastilles, lettres de Scène). Leurs rectangles écran
-  // et la bande rognée du bas (en px : un path() ne prend pas de calc) se mesurent au rendu de page, à la loupe et au redimensionnement.
-  const [troues, setTroues] = useState<{ rects: number[][]; bas: number }>({ rects: [], bas: 0 });
+  // se mesurent au rendu de page, à la loupe et au redimensionnement.
+  const [troues, setTroues] = useState<{ rects: number[][] }>({ rects: [] });
   useLayoutEffect(() => {
     const racine = contentAreaRef.current;
-    if (!annotateMode || !racine) { setTroues((v) => (v.rects.length || v.bas ? { rects: [], bas: 0 } : v)); return; }
+    if (!annotateMode || !racine) { setTroues((v) => (v.rects.length ? { rects: [] } : v)); return; }
     const mesurer = () => {
       const rects = Array.from(racine.querySelectorAll("[data-repere-pastille], [data-scene-bouton]"))
         .map((el) => el.getBoundingClientRect())
         .filter((b) => b.width > 0 && b.height > 0)
         .map((b) => [Math.floor(b.left) - 2, Math.floor(b.top) - 2, Math.ceil(b.right) + 2, Math.ceil(b.bottom) + 2]);
-      let bas = 0;
-      if (rogneBas) {
-        const sonde = document.createElement("div");
-        sonde.style.cssText = `position:absolute;visibility:hidden;height:${rogneBas}`;
-        racine.parentElement?.appendChild(sonde);
-        bas = sonde.offsetHeight;
-        sonde.remove();
-      }
-      setTroues((v) => (JSON.stringify(v) === JSON.stringify({ rects, bas }) ? v : { rects, bas }));
+      setTroues((v) => (JSON.stringify(v) === JSON.stringify({ rects }) ? v : { rects }));
     };
     mesurer();
     const mo = new MutationObserver(mesurer);
     mo.observe(racine, { childList: true, subtree: true });
     window.addEventListener("resize", mesurer);
     return () => { mo.disconnect(); window.removeEventListener("resize", mesurer); };
-  }, [annotateMode, currentPage, annotZoom, annotPan, rogneBas, fontScale]);
+  }, [annotateMode, currentPage, annotZoom, annotPan, fontScale]);
   // shortcut: deux repères qui se chevauchent se re-remplissent (evenodd), à reprendre si on les voit se toucher.
   const clipEncre = annotateMode && troues.rects.length
-    ? `path(evenodd, "M0 0H${window.innerWidth}V${window.innerHeight - troues.bas}H0Z ${troues.rects.map(([a, b, c, d]) => `M${a} ${b}H${c}V${d}H${a}Z`).join(" ")}")`
+    ? `path(evenodd, "M0 0H${window.innerWidth}V${window.innerHeight}H0Z ${troues.rects.map(([a, b, c, d]) => `M${a} ${b}H${c}V${d}H${a}Z`).join(" ")}")`
     : undefined;
 
   // Ronds « Sur la page » : tous sur une ligne dans le popover (jusqu'à 7) ; au téléphone, sur deux lignes équilibrées plutôt qu'un rond seul en dessous.
@@ -2216,10 +2228,7 @@ export function PerformanceMode({
                     currentPage={p}
                     scaledBodyRef={refDemiCorps}
                     renderBlock={renderBlock}
-                    apercu={null}
-                    apercuHauteur={0}
                     contentPadding={contentPadding}
-                    showChrome={false}
                     sansIndice
                   />
                 </ConteneurCoupure>
@@ -2253,10 +2262,7 @@ export function PerformanceMode({
               currentPage={currentPage}
               scaledBodyRef={scaledBodyRef}
               renderBlock={renderBlock}
-              apercu={apercu}
-              apercuHauteur={APERCU_H}
               contentPadding={contentPadding}
-              showChrome={showChrome}
               pastille={isLastPageOfSong && nextEntry && !colonneScan ? pastilleSuivant(`pointer-events-auto max-w-full border-border/60 ${pastilleCouverte ? "invisible" : ""}`, refPastilleFlux, pastilleCouverte) : null}
             />
             </ConteneurCoupure>
@@ -2403,11 +2409,11 @@ export function PerformanceMode({
 
       {/* ── Anciennes annotations par page (lecture seule, jusqu'à MP-6) ── */}
       {showAnnotations && !demiActif && (!annotateMode || annotZoom === 1) && annotations && annotations.strokes.length > 0 && (
-        <StrokesLayer data={annotations} rogneBas={rogneBas} fond={fondTrait} />
+        <StrokesLayer data={annotations} fond={fondTrait} />
       )}
       {/* ── Traits accrochés au texte : lecture (les miens, et ceux de la partition partagée que je lis) ── */}
       {showAnnotations && !annotateMode && !demiActif && projection.strokes.length > 0 && (
-        <StrokesLayer data={donneesTout} rogneBas={rogneBas} fond={fondTrait} />
+        <StrokesLayer data={donneesTout} fond={fondTrait} />
       )}
       {/* Demi-page : les anciennes annotations en lecture seule, la page suivante dans la zone haute, la page en cours dans la zone basse (rognés et décalés comme leur texte) ; les traits accrochés suivent le texte de chaque zone (rognés à la zone). */}
       {showAnnotations && !annotateMode && demiActif && zonesDemi && (() => {
@@ -2423,12 +2429,12 @@ export function PerformanceMode({
       })()}
       {/* Crayon : le canvas édite mes traits seulement ; ceux d'un autre restent dessous, en lecture (hors loupe). */}
       {annotateMode && showAnnotations && annotZoom === 1 && tracesAutres.length > 0 && (
-        <StrokesLayer data={donneesAutres} rogneBas={rogneBas} clipPath={clipEncre} fond={fondTrait} />
+        <StrokesLayer data={donneesAutres} clipPath={clipEncre} fond={fondTrait} />
       )}
       {annotateMode && (
         <AnnotationCanvas
           data={donneesMiens}
-          rogneBas={rogneBas}
+         
           clipPath={clipEncre}
           cle={currentPage}
           signe={signeCle ? SIGNES.find((e) => e.cle === signeCle) : null}
