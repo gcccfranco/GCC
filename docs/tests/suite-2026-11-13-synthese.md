@@ -65,15 +65,15 @@ Une ligne par chantier : échec, qui avait tort (site ou test), correction, comm
 - C5 · deux specs sur les cinq projets : 306 réussis, 54 sautés, 0 échec, 7 min (avant le retrait de l'essai sur le badge ; le planning retombe donc en échec sur tablettes, comme avant) ; `tsc` propre, lint 0 erreur. 0 corrigé site, 1 test, 1 à décider.
 - C4, `louange-bandeau-lecture:47` (trois appareils, « Quitter » invisible) : **le test avait tort**. En Crayon, la barre
   d'annotation remplace la barre de titre (AN-3a, `docs/spec-mode-louange-forscore-2.md` § AN-3a) : on en sort par
-  « Terminé », ce que fait déjà `basculerAnnoter` ; l'appel à `montrerChrome` avant la sortie est retiré. Commit 1217dee.
+  « Terminé », ce que fait déjà `basculerAnnoter` ; l'appel à `montrerChrome` avant la sortie est retiré. Commit 7c96d63.
 - C4, `look-louange:320` ZH et FR (tablette, « Lettres » à 32 px) : **le site avait tort**, une seule cause pour les
   deux langues (la FR échouait aussi, pas instable). La bascule A / 1 de H7-1 (`ChoixNotation`) était en `h-8` partout,
   sous la règle des 36 px au toucher (16/09/2026) ; elle passe à `h-9 min-w-9 lg:h-8 lg:min-w-8`, comme ses voisines
   de la barre. Seule la tablette portrait change (cachée au téléphone, inchangée dès 1 024 px), capture regardée.
-  Commit 66c211a.
+  Commit e3e5cfc.
 - C4, `louange-sections-uniques:769` (téléphone, trait non relu) : **le test avait tort**. Il traçait à 55 % de la
   hauteur, dans le blanc sous la dernière section de la page 2 au téléphone ; un tracé à plus de 2 em de toute ligne
   n'est pas gardé (MP-5, `docs/spec-ma-partition.md`, « Reste noté »). Le tracé se pose désormais sur le texte (au plus
-  60 px au-dessus du bas des sections). Commit 155698f.
+  60 px au-dessus du bas des sections). Commit be3be77.
 - C4, rejeu : les trois specs entières sur ordinateur, téléphone et tablette, 209 passés, 34 sautés (prévus), 0 échec
   ni instable, 9 min ; `tsc` et `lint` propres.
