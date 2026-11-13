@@ -5,7 +5,7 @@ import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords, useJianpuMarges, useJianpuSections, useJianpuSystemes } from "@/lib/jianpu/images";
-import { etiquettesDuScan, passageDeSection, type EtiquetteScan } from "@/lib/jianpu/etiquettesSections";
+import { etiquettesDuScan, passageDeSection } from "@/lib/jianpu/etiquettesSections";
 import { ECART_MOITIES, ECART_SYSTEMES, echelleFenetre, LARGEUR_FEUILLE_MAX, type Demi, type FenetreDemi, type Volets } from "@/lib/performance/tranchesScan";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
@@ -120,29 +120,33 @@ function fitFont(
  *  sur celui des paroles (piste A, P5). */
 export const MARGE_SOURCE = 14;
 
-/** JV-5c : largeur du rail des étiquettes de section (`RAIL_ETROIT`, `RAIL_LARGE` de `etiquettesSections.ts`, même seuil). */
-const RAIL_VAR = "[--rail-etiquettes:28px] sm:[--rail-etiquettes:56px]";
+/** JV-5c : largeur du rail des étiquettes de section (`RAIL_ETROIT`, `RAIL_LARGE` de `etiquettesSections.ts`, même seuil)
+ *  et hauteur d'une pastille (26 px au téléphone, 30 px dès 640 px : la variante `petit` de l'en-tête du chant). */
+const RAIL_VAR = "[--rail-etiquettes:32px] sm:[--rail-etiquettes:56px] [--pastille-h:26px] sm:[--pastille-h:30px]";
 const RAIL_CLS = "pl-[var(--rail-etiquettes)] print:pl-0";
-/** Zone de toucher de 44 px de haut au moins (l'étiquette en fait ≈ 22) ; `TOUCHER_44` poserait `relative` sur un bouton placé. */
-const TOUCHER_ETIQUETTE = "[@media(pointer:coarse)]:after:absolute [@media(pointer:coarse)]:after:content-[''] [@media(pointer:coarse)]:after:-inset-y-3 [@media(pointer:coarse)]:after:-inset-x-1";
+/** Zone de toucher de 44 × 44 px au téléphone sans agrandir le dessin (`TOUCHER_44` poserait `relative` sur un bouton
+ *  placé) : 14 px de plus à gauche, 4 px à droite. Deux pastilles empilées partagent leurs bords de zone (accepté). */
+const TOUCHER_ETIQUETTE = "[@media(pointer:coarse)]:after:absolute [@media(pointer:coarse)]:after:content-[''] [@media(pointer:coarse)]:after:-inset-y-[9px] sm:[@media(pointer:coarse)]:after:-inset-y-[7px] [@media(pointer:coarse)]:after:-left-[14px] [@media(pointer:coarse)]:after:-right-1";
+/** Pastille pleine à la couleur de la section ; encre ≥ 4,5:1 sans toucher aux tons `--sec-*` (même règle que
+ *  `PASTILLE_FONCEE` de SongView) : #0e0e10 sur intro, couplet, pré-refrain, refrain (refrain #e0560a ≈ 5:1, couplet ≈ 4,6:1),
+ *  `--rep-encre-claire` sur les tons foncés (pont blanc ≈ 5:1 en clair ; #0e0e10 en sombre). */
+const PASTILLE_CLAIRE = new Set(["intro", "verse", "prechorus", "chorus"]);
 
-/** Une étiquette de section dans le rail, à la hauteur de la ligne où la section commence (`top`, % de la fenêtre) :
- *  l'initiale sous 640 px (rail de 28 px), la forme courte au-delà. Couleur de la section, jamais sur l'encre. */
-function EtiquetteSection({ e, top, onOuvrir }: { e: EtiquetteScan; top: number; onOuvrir: (el: HTMLElement) => void }) {
+/** Une pastille de section dans le rail, à la hauteur de la ligne où la section commence (`top`, % de la fenêtre),
+ *  la k-ième d'une ligne empilée sous la précédente. Jamais sur l'encre. */
+function EtiquetteSection({ id, abbr, nom, cle, k, top, onOuvrir }: { id: string; abbr: string; nom: string; cle: string; k: number; top: number; onOuvrir: (el: HTMLElement) => void }) {
   const { t } = useTranslation();
-  const type = e.ids[0].replace(/-\d+$/, "");
   return (
     <button
       type="button"
-      data-jianpu-etiquette={e.ids.join(" ")}
-      aria-label={t("harmonie.ideesDe", { nom: e.nom })}
+      data-jianpu-etiquette={id}
+      aria-label={t("harmonie.ideesDe", { nom })}
       onClick={(ev) => onOuvrir(ev.currentTarget)}
-      className={`${TOUCHER_ETIQUETTE} absolute right-full z-10 min-w-[calc(var(--rail-etiquettes)-8px)] max-w-[var(--rail-etiquettes)] cursor-pointer select-none break-normal rounded-[6px] px-1 py-1 text-center text-[11px] font-semibold leading-[1.15] tracking-[-0.01em] outline-none focus-visible:ring-2 focus-visible:ring-ring print:hidden`}
-      style={{ top: `${top}%`, color: `var(--sec-${type}, var(--sec-other))`, background: `var(--sec-${type}-tint, var(--sec-other-tint))` }}
+      className={`${TOUCHER_ETIQUETTE} absolute right-full z-10 mr-1 inline-flex h-[var(--pastille-h)] min-w-[var(--pastille-h)] max-w-[calc(var(--rail-etiquettes)-6px)] cursor-pointer select-none items-center justify-center whitespace-nowrap rounded-full px-[3px] text-[13px] font-bold leading-none tracking-[0.02em] outline-none focus-visible:ring-2 focus-visible:ring-ring print:hidden sm:px-1.5 sm:text-[14px]`}
+      style={{ top: `calc(${top}% + ${k} * (var(--pastille-h) + 4px))`, color: PASTILLE_CLAIRE.has(cle) ? "#0e0e10" : "var(--rep-encre-claire)", background: `var(--sec-${cle}, var(--sec-other))` }}
     >
-      <span aria-hidden className="sm:hidden">{e.initiale}</span>
-      {/* Jamais de coupure autour du tiret d'une plage (« 1–2 ») : gluons U+2060. */}
-      <span aria-hidden className="hidden sm:inline">{e.court.replace(/–/g, "\u2060–\u2060")}</span>
+      {/* Ellipse sur le texte, pas sur le bouton : son `::after` (zone de toucher) déborde. */}
+      <abbr title={nom} className="block min-w-0 overflow-hidden text-ellipsis no-underline">{abbr}</abbr>
     </button>
   );
 }
@@ -314,17 +318,17 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
     if (!ici || retouchable || !chant || !debuts) return [];
     const uids = ici.sections.map((x) => x.uid);
     return etiquettesDuScan(debuts, zh).flatMap((e) => {
-      const uid = e.ids.map((id) => passageDeSection(id, uids)).find(Boolean);
       const l = chant.pages[e.page]?.lignes[e.ligne];
-      return uid && l ? [{ ...e, uid, y: l.y0 }] : [];
+      const jouees = e.pastilles.flatMap((p) => { const uid = passageDeSection(p.id, uids); return uid ? [{ ...p, uid }] : []; });
+      return l && jouees.length ? [{ page: e.page, ligne: e.ligne, y: l.y0, pastilles: jouees }] : [];
     });
   }, [ici, retouchable, slug, systemes, sectionsScan, zh]);
   const rail = etiquettes.length > 0;
-  /** Les étiquettes des lignes de la page `i` qui commencent entre `y0` et `y1` (px image), placées en % de la fenêtre. */
+  /** Les pastilles des lignes de la page `i` qui commencent entre `y0` et `y1` (px image), placées en % de la fenêtre. */
   const rendreEtiquettes = (i: number, y0: number, y1: number, lignes?: [number, number]) =>
     etiquettes
       .filter((e) => e.page === i && (lignes ? e.ligne >= lignes[0] && e.ligne <= lignes[1] : e.y >= y0 && e.y < y1))
-      .map((e) => <EtiquetteSection key={`${e.page}-${e.ligne}`} e={e} top={((Math.max(e.y, y0) - y0) / (y1 - y0)) * 100} onOuvrir={(el) => ici?.ouvrir(e.uid, undefined, { depuisNom: true, element: el })} />);
+      .flatMap((e) => e.pastilles.map((p, k) => <EtiquetteSection key={p.id} {...p} k={k} top={((Math.max(e.y, y0) - y0) / (y1 - y0)) * 100} onOuvrir={(el) => ici?.ouvrir(p.uid, undefined, { depuisNom: true, element: el })} />));
   const staleChords = Boolean(playedKey && !chords);
   // Calque partiel : une partie des accords n'a pas été relevée et reste
   // donc dans la tonalité imprimée. On le dit, et on met en évidence ceux

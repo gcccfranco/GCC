@@ -207,17 +207,19 @@ test("hors Crayon : les retouches s'affichent, rien ne se touche", async ({ page
 });
 
 // ── JV-5c (docs/spec-jianpu-deux-volets.md, point 2, « Reprise du 13/11 ») ─────────────────────────────────────────────
-// Sur un scan 简谱, une étiquette par ligne où commence une section (`sections.json`), dans le rail laissé à gauche du
-// scan (jamais sur l'encre ni dans le calque) ; langue de l'interface, forme courte, initiale seule sous 640 px. Le toucher
-// ouvre le volet Harmonie au bloc du passage : page chant, vue Partitions, mode louange (réglage « Idées d'harmonie »).
-// 为我而来 : Couplets 1 et 2 sur la ligne 3 de la page 1, Refrain ligne 6, Pont ligne 3 de la page 2. Noms fictifs.
+// Sur un scan 简谱, une pastille ronde par section (`sections.json`, sigle de l'en-tête du chant : « C1 », « R »…, le même
+// en fr et en 中文 et à toutes les largeurs), empilées par ligne de début dans le rail laissé à gauche du scan (jamais sur
+// l'encre ni dans le calque). Le toucher ouvre le volet Harmonie au bloc de CETTE section : page chant, vue Partitions,
+// mode louange (réglage « Idées d'harmonie »). 为我而来 : C1 et C2 sur la ligne 3 de la page 1, R ligne 6, P ligne 3 de la
+// page 2. Contraste ≥ 4,5:1 et zone de toucher ≥ 44 px au téléphone. Noms fictifs.
 
 const SCAN = "为我而来";
 const SYSTEMES = JSON.parse(readFileSync("public/jianpu/systemes.json", "utf8")).chants[SCAN].pages as { h: number; lignes: { y0: number }[] }[];
 const ATTENDUES = [
-  { page: 0, ligne: 2, fr: "Couplets 1–2", zh: "主歌 1–2", ini: { fr: "C", zh: "主" }, passage: { fr: /^Couplet 1/, zh: /^主歌 1/ } },
-  { page: 0, ligne: 5, fr: "Refrain", zh: "副歌", ini: { fr: "R", zh: "副" }, passage: { fr: /^Refrain/, zh: /^副歌/ } },
-  { page: 1, ligne: 2, fr: "Pont", zh: "桥段", ini: { fr: "P", zh: "桥" }, passage: { fr: /^Pont/, zh: /^桥段/ } },
+  { page: 0, ligne: 2, k: 0, texte: "C1", passage: { fr: /^Couplet 1/, zh: /^主歌 1/ } },
+  { page: 0, ligne: 2, k: 1, texte: "C2", passage: { fr: /^Couplet 2/, zh: /^主歌 2/ } },
+  { page: 0, ligne: 5, k: 0, texte: "R", passage: { fr: /^Refrain/, zh: /^副歌/ } },
+  { page: 1, ligne: 2, k: 0, texte: "P", passage: { fr: /^Pont/, zh: /^桥段/ } },
 ];
 const LECTRICE: FakeProfile = {
   uid: "uid-lectrice-jv5c", email: "lectrice-jv5c@example.com", firstName: "Maëlle", lastName: "Fontaine", planningName: "Maëlle F.",
@@ -226,9 +228,7 @@ const LECTRICE: FakeProfile = {
 const SANS_HARMONIE: FakeProfile = { uid: "uid-visiteur-jv5c", email: "visiteur-jv5c@example.com", firstName: "Hugo", lastName: "Marchal", planningName: "Hugo M." };
 const etiquettes = (page: Page) => page.locator("[data-jianpu-etiquette]");
 const voletOuvert = (page: Page) => page.locator("[data-harmonie-colonne], [data-idees-harmonie]").first();
-/** Texte visible (la forme courte et l'initiale sont toutes deux dans le DOM, l'une cachée selon la largeur). */
-const visible = (l: ReturnType<Page["locator"]>) => l.evaluate((el) => (el as HTMLElement).innerText.replace(/\u2060/g, "").trim());
-const etroit = (page: Page) => (page.viewportSize()?.width ?? 0) < 640;
+const visible = (l: ReturnType<Page["locator"]>) => l.evaluate((el) => (el as HTMLElement).innerText.trim());
 
 async function prefs(page: Page, { zh = false, louange = false, sombre = false } = {}) {
   await page.addInitScript(({ zh, louange, sombre, u }) => {
@@ -244,39 +244,77 @@ async function scanCharge(page: Page) {
   await page.waitForFunction(() => Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every((i) => i.complete && i.naturalWidth > 0));
 }
 
-/** Chaque étiquette : texte attendu, à gauche de sa fenêtre (hors de l'encre), à la hauteur de sa ligne (page chant). */
+/** Chaque pastille : texte attendu, à gauche de sa fenêtre (hors de l'encre), à la hauteur de sa ligne (page chant ; la
+ *  k-ième d'une ligne s'empile sous la précédente). */
 async function verifierEtiquettes(page: Page, langue: "fr" | "zh", hauteurs = true) {
   await expect(etiquettes(page)).toHaveCount(ATTENDUES.length, { timeout: 15_000 });
+  let basPrecedent = 0;
   for (const [n, a] of ATTENDUES.entries()) {
     const e = etiquettes(page).nth(n);
-    await expect.poll(() => visible(e)).toBe(etroit(page) ? a.ini[langue] : a[langue]);
+    await expect.poll(() => visible(e)).toBe(a.texte);
     const g = await e.evaluate((el) => {
       const f = el.parentElement!.getBoundingClientRect(), b = el.getBoundingClientRect();
-      return { droite: b.right, gauche: b.left, haut: b.top, fG: f.left, fH: f.top, fh: f.height, fen: Number(el.parentElement!.dataset.jianpuFenetre) };
+      return { droite: b.right, gauche: b.left, haut: b.top, bas: b.bottom, fG: f.left, fH: f.top, fh: f.height, fen: Number(el.parentElement!.dataset.jianpuFenetre) };
     });
     expect(g.droite, "l'étiquette reste à gauche de la fenêtre du scan").toBeLessThanOrEqual(g.fG + 0.5);
     expect(g.gauche, "l'étiquette ne sort pas de l'écran").toBeGreaterThanOrEqual(-0.5);
-    if (hauteurs) {
+    if (a.k > 0) {
+      expect(g.haut, "empilée sous la pastille précédente").toBeGreaterThanOrEqual(basPrecedent - 0.5);
+    } else if (hauteurs) {
       const p = SYSTEMES[a.page];
       const attendu = g.fH + ((p.lignes[a.ligne].y0 - g.fen) / (p.h - g.fen)) * g.fh;
       expect(Math.abs(g.haut - attendu), "à la hauteur de la ligne où la section commence").toBeLessThan(2);
+    }
+    basPrecedent = g.bas;
+  }
+}
+
+/** Contraste WCAG de chaque pastille (couleur et fond calculés dans le navigateur) et, au toucher, zone `::after` ≥ 44 × 44. */
+async function verifierContrasteEtToucher(page: Page) {
+  const mesures = await etiquettes(page).evaluateAll((els) => {
+    const lum = (c: string) => {
+      const [r, g, b] = (c.match(/[\d.]+/g) ?? []).slice(0, 3).map((v) => { const x = Number(v) / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    return els.map((el) => {
+      el.scrollIntoView({ block: "center", inline: "center" }); // elementFromPoint ne voit que la fenêtre du navigateur
+      const cs = getComputedStyle(el), b = el.getBoundingClientRect(), abbr = el.querySelector("abbr")!;
+      const [l1, l2] = [lum(cs.color), lum(cs.backgroundColor)].sort((x, y) => y - x);
+      // Toucher réel : le point visé, hors du dessin, renvoie-t-il le bouton ? (Un `overflow` rognerait le `::after`.)
+      const touche = (x: number, y: number) => el.contains(document.elementFromPoint(x, y));
+      return {
+        ratio: (l1 + 0.05) / (l2 + 0.05), rogne: abbr.scrollWidth > abbr.clientWidth + 0.5, tactile: matchMedia("(pointer:coarse)").matches,
+        gauche: touche(b.left - 13, b.top + b.height / 2) && touche(b.right + 3, b.top + b.height / 2),
+        // Deux pastilles empilées partagent leurs bords : la zone dépasse au-dessus ou au-dessous.
+        haut: touche(b.left + b.width / 2, b.top + b.height / 2 - 21) || touche(b.left + b.width / 2, b.top + b.height / 2 + 21), largeur: b.width,
+      };
+    });
+  });
+  for (const m of mesures) {
+    expect(m.ratio, "contraste ≥ 4,5:1").toBeGreaterThanOrEqual(4.5);
+    expect(m.rogne, "le sigle tient dans la pastille").toBe(false);
+    if (m.tactile) {
+      expect(m.largeur, "le dessin n'est pas agrandi").toBeLessThan(44);
+      expect(m.gauche, "zone de toucher de 44 px de large ").toBe(true);
+      expect(m.haut, "zone de toucher de 44 px de haut").toBe(true);
     }
   }
 }
 
 for (const langue of ["fr", "zh"] as const) {
-  test(`JV-5c, page chant (${langue}) : une étiquette par ligne de début, dans le rail ; le toucher ouvre le volet au bloc du passage`, async ({ page }) => {
+  test(`JV-5c, page chant (${langue}) : une pastille par section, dans le rail ; le toucher ouvre le volet au bloc de la section`, async ({ page }) => {
     await prefs(page, { zh: langue === "zh" });
     await signInAs(page, LECTRICE, {}, `/songs/${encodeURIComponent(SCAN)}`);
     await scanCharge(page);
     await verifierEtiquettes(page, langue);
+    await verifierContrasteEtToucher(page);
     await capture(page, `jv5c-chant-${langue}`);
-    for (const n of [0, 2]) {
+    for (const n of [1, 3]) {
       await etiquettes(page).nth(n).click();
       await expect(voletOuvert(page)).toBeVisible();
       const bloc = voletOuvert(page).locator("[data-passage-uids]").filter({ has: page.getByRole("heading", { name: ATTENDUES[n].passage[langue] }) }).first();
       await expect(bloc).toBeInViewport({ timeout: 10_000 });
-      if (n === 0) await capture(page, `jv5c-chant-volet-${langue}`);
+      if (n === 1) await capture(page, `jv5c-chant-volet-${langue}`);
       await page.keyboard.press("Escape");
       await expect(page.locator("[data-idees-harmonie]:not([data-harmonie-colonne])")).toHaveCount(0);
     }
@@ -301,7 +339,7 @@ test("JV-5c, vue Partitions : étiquettes du scan, le toucher ouvre le volet au 
   // Deux volets dès 1 000 px de zone : les fenêtres sont des demi-lignes, seule la hauteur n'est pas recalculée ici.
   await verifierEtiquettes(page, "fr", false);
   await capture(page, "jv5c-partitions-fr");
-  await etiquettes(page).nth(1).click();
+  await etiquettes(page).nth(2).click();
   await expect(voletOuvert(page)).toBeVisible();
   await expect(voletOuvert(page).locator("[data-passage-uids]").filter({ has: page.getByRole("heading", { name: /^Refrain/ }) }).first()).toBeInViewport({ timeout: 10_000 });
 });
@@ -315,7 +353,7 @@ for (const langue of ["fr", "zh"] as const) {
     await scanCharge(page);
     const premiere = onStage(page, "[data-jianpu-etiquette]").first();
     await expect(premiere).toBeVisible({ timeout: 15_000 });
-    await expect.poll(() => visible(premiere)).toBe(etroit(page) ? ATTENDUES[0].ini[langue] : ATTENDUES[0][langue]);
+    await expect.poll(() => visible(premiere)).toBe("C1");
     const g = await premiere.evaluate((el) => ({ d: el.getBoundingClientRect().right, f: el.parentElement!.getBoundingClientRect().left }));
     expect(g.d).toBeLessThanOrEqual(g.f + 0.5);
     await capture(page, `jv5c-louange-${langue}`);
