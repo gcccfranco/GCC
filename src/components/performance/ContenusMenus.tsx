@@ -215,6 +215,8 @@ export function ContenuSetlist({
   return (
     <div>
       {onglets}
+      {/* Panneau relié aux onglets (aria-controls). */}
+      <div role={onglets ? "tabpanel" : undefined} id={onglets ? "panneau-setlist" : undefined} aria-labelledby={onglets ? (tousLesChants ? "onglet-chants" : "onglet-setlist") : undefined}>
       {tousLesChants ?? <>
       {retour && (
         <button
@@ -285,6 +287,7 @@ export function ContenuSetlist({
         <ToutesMesSetlists charger={chargerToutesSetlists} onOuvrir={onOuvrirSetlist} onFermer={onFermer} />
       )}
       </>}
+      </div>
     </div>
   );
 }

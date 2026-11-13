@@ -36,6 +36,8 @@ export function OngletsSetlist({ onglet, onChange }: { onglet: "setlist" | "chan
           key={o}
           type="button"
           role="tab"
+          id={`onglet-${o}`}
+          aria-controls="panneau-setlist"
           data-onglet={o}
           aria-selected={onglet === o}
           tabIndex={onglet === o ? 0 : -1}
@@ -155,7 +157,7 @@ export function ContenuTousLesChants({
               data-jianpu-ajout={v ? "avec" : "sans"}
               aria-pressed={avec === v}
               onClick={() => choisir(v)}
-              className={`min-h-9 flex-none rounded-md px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${avec === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+              className={`relative min-h-9 flex-none rounded-md px-3.5 after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${avec === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
             >
               {t(v ? "performance.withJianpu" : "performance.withoutJianpu")}
             </button>
