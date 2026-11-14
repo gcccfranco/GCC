@@ -169,6 +169,13 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   libre (lot MT et six points finis), consigne de RU-4 avec RU-5 à la place, à lancer par le pilote ou par la session
   qui libère le fichier. Six points du rail (go de Timothée) : session `session_01UMdfucWej4KmZA3Be594iz`. MT-2
   (`4787e9fb`, mise en fenêtre en cours) et MT-3 tournent. Trois chantiers de code.
+  **Cinq corrections, go de Timothée le 14/11 (« go pour les cinq »)**, une seule session, à lancer par le pilote quand
+  AL-2 (`session_01UMdfucpCAyFznSRiMfDdUc`) est poussée : (1) panneau d'accord qui ne s'ouvre pas sur un chant ZH en deux
+  volets (`accords-toucher-agencement`, téléphone et 1 440, 一切歌颂赞美 ; chercher la cause d'abord) ; (2) titres des
+  idées d'harmonie en français en 中文 (`harmonie-index.json` ; libellés à faire relire par Timothée) ; (3) en louange,
+  la fenêtre des idées recouvre la pastille touchée ; (4) fenêtre de l'armure non ancrée au téléphone ; (5) blanc de
+  pagination au téléphone marge ouverte : regarder d'abord, corriger si simple, sinon capture au pilote. Tests : un tour
+  sur les specs touchées, puis les seuls échecs. Lot RU fini (`858e662c`), lot MT fini (`576a98f2`).
   **Deux demandes de Timothée du 13/11 au soir** (ses mots), à cadrer : (1) « on a du mal à différencier l'ancienne
   progression et la nouvelle progression d'accord dans les idées d'harmonie » : il choisit « ancienne grisée » (ancienne
   progression en gris discret, nouvelle en bleu, petits mots « avant » / « après » au-dessus) ; retouche, **go à
