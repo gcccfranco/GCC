@@ -247,3 +247,32 @@ Aucune règle Firestore touchée (tonalité personnelle en `localStorage`).
   23 s sur la base), rouge sous charge. Environ 1 h 20 de tests dans la tranche. Captures regardées aux quatre
   dispositions et à 1 440 px. Non fait : `Sommaire.tsx` (rail des deux volets) garde son `KeyPill`.
 
+- 14/11 : **RU-5 faite, lot RU fini** (orchestratrice RU-5). Mode louange : « Je joue » et « Options » fusionnés dans la
+  marge « Affichage / 显示 » (`MargeAffichage mode="louange"`, nouvelles props `reglages`, `groupeRole`, `groupeLecture`,
+  `avecPinyin` ; groupes Je joue, Ce que je lis — Accords, Lettres | Chiffres, Pinyin, 简谱 | Paroles, Ordre, Paroles,
+  Partition —, La page — Disposition, Taille, Couleur des accords, 2 colonnes, Demi-page, Thème, Couleur des icônes) ;
+  un seul bouton Affichage dans `BarreHaut` (Je joue et T retirés, Outils visible au téléphone) ; la marge est un
+  `MenuId` (« affichage ») du même `popoverOuvert` : jamais ouverte avec le Métronome ni un autre menu. Colonne de 320 px
+  qui raccourcit la zone de lecture dès 1 024 px, feuille de 40 % qui réserve sa hauteur en dessous (la pagination se
+  refait). Armure à côté du titre (tonalité personnelle par setlist et par appareil, capo du guitariste, lecture seule
+  choriste et présidence, « Changer pour toute l'équipe » par la nouvelle prop `onChangerEquipe`, éditeurs seulement) ;
+  elle flotte en coin, barre cachée, quand l'en-tête du chant n'est pas sur la page. Outils perd Tonalité et Capo, gagne
+  Annotations et Idées d'harmonie. Couleur des icônes par défaut : l'encre. `BoutonSurPage` retiré (sans usage).
+  *Décisions déléguées (orchestratrice RU-5, 14/11)* : le rôle reste propre au mode louange ; régler à la main efface le
+  rôle comme avant (pas de ligne « modifié à la main ») ; Outils visible au téléphone ; un toucher sur la page ferme la
+  marge comme les autres menus ; marge ouverte, flèches et pédale ne tournent pas la page (comme tout menu ouvert).
+  *Raccourcis laissés* : deux colonnes repliées sous le seuil existant de 960 px de zone (pas 340 px par colonne : à
+  1 080 px marge ouverte, une colonne, comme voulu ; elles reviennent à 1 280 px au lieu de 1 096) ; `DemiPage.tsx` lit
+  encore `window.innerHeight` (coupe faite sur la hauteur entière quand la feuille est ouverte) ; clés de traduction
+  devenues orphelines non retirées (`performance.iPlay`, `displayOptions`, `onPage`, `personalKeyReset`, `key*`,
+  `sectionOrder`, `affichageHint`, `rolePrompt.subtitle` ; `coherence.spec.ts` verte). Nouvelle `louange-reglages.spec.ts`
+  (cinq projets) ; 15 specs du mode louange adaptées (helpers `ouvrirOptions` / `ouvrirJeJoue` → la marge). Tests :
+  workflow `/tranche` (quatre passages du testeur, deux tours de corrections, conseil Opus) ≈ 6 h de tests ; puis
+  relance des neuf specs non repassées (cohérence, armure, marge, menus, métronome, colonnes, réglages, rôles) :
+  604 passés, un rouge sous charge (`louange-menus.spec.ts:449` à 1 440 px, 24,7 s pour 30 s), vert seul ; 27 min.
+  Courses connues vertes seules : `look-louange:192`, `louange-barre-titre:284` et `:548`, `performance-mode:425`,
+  `louange-demi-page:210` et `:545`, `louange-role-planning:489`, `louange-sections-uniques:358` et `:764`. Captures
+  (30 : cinq projets, FR clair et ZH sombre avec scan 简谱, barre / marge / armure) triées par `regard` : rien de bloquant.
+  À suivre : au téléphone, marge ouverte, la page refaite laisse un grand blanc sous une section qui ne tient plus (4 → 10
+  pages) ; la fenêtre de l'armure, au téléphone, n'est pas ancrée sous l'armure ; scan 简谱 en deux colonnes collé aux bords
+  à l'ordinateur (antérieur à RU-5, JV-4) ; `Sommaire.tsx` garde son `KeyPill` (reste de RU-4).
