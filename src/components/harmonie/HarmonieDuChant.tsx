@@ -524,7 +524,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                           <p className="mt-1.5 flex flex-wrap items-end gap-x-1.5 gap-y-1 text-base" data-avant-apres>
                             <span className="inline-flex flex-col items-start" data-avant>
                               <span className="text-xs text-muted-foreground">{t("harmonie.avant")}</span>
-                              <span className="font-chord font-semibold text-muted-foreground"><AccordTouchable etiquette={apercu.avant} visible /></span>
+                              <span className="font-chord font-semibold !text-[hsl(var(--foreground)/0.7)]"><AccordTouchable etiquette={apercu.avant} visible /></span>
                             </span>
                             <span className="pb-0.5 text-muted-foreground" aria-hidden>→</span>
                             <span className="inline-flex flex-col items-start" data-apres>

@@ -96,6 +96,52 @@ test("sans accès Harmonie : aucun bouton sur le nom de section", async ({ page 
   await expect(page.locator("[data-section-nom-bouton]")).toHaveCount(0);
 });
 
+// Timothée (13/11/2026) : l'ancienne progression d'une idée en gris, la nouvelle dans la couleur des accords,
+// « Avant » / « Après » au-dessus ; le gris garde un contraste ≥ 4,5:1 (fond de la carte et pastille à 12 % compris).
+for (const [l, stockee, avant, apres] of [["fr", "fr", "Avant", "Après"], ["zh", "zh-CN", "改前", "改后"]] as const) {
+  for (const theme of ["clair", "sombre"] as const) {
+    test(`idée : ancienne progression en gris, nouvelle en couleur d'accord, « ${avant} » / « ${apres} » (${l}, ${theme})`, async ({ page }) => {
+      await langue(page, stockee);
+      if (theme === "sombre") {
+        await page.emulateMedia({ colorScheme: "dark" });
+        await page.addInitScript(() => { try { localStorage.setItem("theme", "dark"); } catch { /* ignore */ } });
+      }
+      await ouvrirChant(page, "promesses");
+      await nomPont(page).click();
+      const ligne = blocPont(page).locator("[data-avant-apres]").first();
+      await expect(ligne).toBeVisible();
+      await expect(ligne.locator("[data-avant]")).toContainText(avant);
+      await expect(ligne.locator("[data-apres]")).toContainText(apres);
+      const mesure = await ligne.evaluate((p) => {
+        const rgba = (c: string) => { const v = (c.match(/[\d.]+/g) ?? []).map(Number); return { c: v.slice(0, 3), a: v[3] ?? 1 }; };
+        const rgb = (c: string) => rgba(c).c;
+        const lum = ([r, g, b]: number[]) => {
+          const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+          return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+        };
+        const vieux = p.querySelector("[data-avant] [data-accord-touchable]") as HTMLElement;
+        const neuf = p.querySelector("[data-apres] [data-accord-touchable]") as HTMLElement;
+        const accord = getComputedStyle(document.documentElement).getPropertyValue("--chord-color").trim();
+        const sonde = document.createElement("span");
+        sonde.style.color = accord;
+        document.body.append(sonde);
+        const couleurAccord = getComputedStyle(sonde).color;
+        sonde.remove();
+        const carte = rgb(getComputedStyle(p.closest("[data-suggestion]")!).backgroundColor);
+        // Couleur du texte composée sur la carte (le gris peut être un noir ou un blanc translucide).
+        const brut = rgba(getComputedStyle(vieux).color);
+        const texte = brut.c.map((v, i) => v * brut.a + carte[i] * (1 - brut.a));
+        const fond = carte.map((v, i) => v * 0.88 + texte[i] * 0.12);
+        const [a, b] = [lum(texte), lum(fond)].sort((x, y) => y - x);
+        return { vieux: getComputedStyle(vieux).color, neuf: getComputedStyle(neuf).color, couleurAccord, contraste: (a + 0.05) / (b + 0.05) };
+      });
+      expect(mesure.neuf, "la nouvelle progression est dans la couleur des accords").toBe(mesure.couleurAccord);
+      expect(mesure.vieux, "l'ancienne n'a pas la couleur de la nouvelle").not.toBe(mesure.neuf);
+      expect(mesure.contraste, `contraste du gris ${mesure.vieux}`).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+}
+
 const CAPTURES = "test-results/captures-jv5a";
 const nomCapture = (info: TestInfo, l: string, theme: string, p: string) => `${CAPTURES}/${info.project.name}-${l}-${theme}-${p}.png`;
 
@@ -117,10 +163,20 @@ for (const [l, stockee] of [["fr", "fr"], ["zh", "zh-CN"]] as const) {
   }
 }
 
-test("captures JV-5a : vue Partitions (fr, clair)", async ({ page }, info) => {
-  await ouvrirSetlist(page);
-  await nomPont(page).click();
-  await expect(blocPont(page)).toBeVisible();
-  await page.waitForTimeout(800);
-  await page.screenshot({ path: nomCapture(info, "fr", "clair", "partitions") });
-});
+for (const [l, stockee] of [["fr", "fr"], ["zh", "zh-CN"]] as const) {
+  for (const theme of ["clair", "sombre"] as const) {
+    test(`captures JV-5a : vue Partitions (${l}, ${theme})`, async ({ page }, info) => {
+      test.skip((theme === "sombre" || l === "zh") && info.project.name !== "ordinateur-1440" && info.project.name !== "telephone", "zh et sombre : 1 440 et téléphone");
+      await langue(page, stockee);
+      if (theme === "sombre") {
+        await page.emulateMedia({ colorScheme: "dark" });
+        await page.addInitScript(() => { try { localStorage.setItem("theme", "dark"); } catch { /* ignore */ } });
+      }
+      await ouvrirSetlist(page);
+      await nomPont(page).click();
+      await expect(blocPont(page)).toBeVisible();
+      await page.waitForTimeout(800);
+      await page.screenshot({ path: nomCapture(info, l, theme, "partitions") });
+    });
+  }
+}

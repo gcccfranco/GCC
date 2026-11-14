@@ -602,3 +602,17 @@ chantier sur ce fichier.
   `formeCourte` / `railEtiquettes` (`src/lib/jianpu/etiquettesSections.ts`), largeurs du rail dans `useVoletsScan` et
   `tranchesDe` ; tests `harmonie-jianpu.spec.ts` (`ATTENDUES`, `verifierEtiquettes`). Vérifier : cinq projets,
   `npm run jianpu:audit` sur un chant (aucune pastille sur l'encre), captures FR et 中文, clair et sombre.
+- **14/11/2026 (nuit du 13), idées d'harmonie : ancienne / nouvelle progression** (go de Timothée du 13/11 : « Tu as mon
+  go pour la distinction entre ancienne et nouvelle » ; code `33417017`, testé ici). Défaut trouvé par le nouveau test :
+  `.font-chord` (`globals.css`, couche utilities) l'emportait sur `text-muted-foreground`, l'ancienne restait bleue ;
+  puis le gris sur sa pastille à 12 % ne faisait que 4,47:1 en clair. Correction : l'ancienne en
+  `!text-[hsl(var(--foreground)/0.7)]` (`HarmonieDuChant.tsx`), ≥ 4,5:1 en clair et en sombre. Attente ajoutée
+  (`harmonie-volet-section`, FR et 中文, clair et sombre : couleur ≠ nouvelle, nouvelle = `--chord-color`, « Avant » /
+  « Après », « 改前 » / « 改后 », contraste mesuré sur la carte et la pastille) ; captures Partitions en 中文 et en sombre
+  ajoutées. `harmonie-idees` réparé (la tonalité passe par l'URL : la liste est devenue l'armure, RU-4). Specs
+  rejouées : `harmonie-volet-section`, `louange-harmonie`, `harmonie-jianpu`, `harmonie-porte2`, `harmonie-idees`,
+  `harmonie-regroupees`, `harmonie-setlist`, `harmonie-montrer`, `accords-toucher(-agencement)`, `notation-accords`,
+  tous projets : 433 passés, 12 échecs (20,6 min) ; rejeu des quatre specs touchées : 162 passés (6,2 min), reste
+  **un échec étranger à ce changement** : `accords-toucher-agencement` « chant ZH : le panneau d'un accord » (téléphone,
+  1 440) : sur la page chant à deux volets, le toucher d'un accord ZH n'ouvre pas le panneau (signalé au pilote).
+  Captures regardées sur les cinq dispositions (page chant, Partitions, mode louange ; FR, 中文 ; clair, sombre).

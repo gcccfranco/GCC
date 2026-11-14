@@ -20,12 +20,12 @@ async function capture(page: Page, name: string) {
   if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 
-async function ouvrirChant(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>> = {}) {
+async function ouvrirChant(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>> = {}, chemin = "/songs/hosanna") {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const sheet = new URL(route.request().url()).searchParams.get("sheet");
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
   });
-  return signInAs(page, qui, docs, "/songs/hosanna");
+  return signInAs(page, qui, docs, chemin);
 }
 
 /** « Idées d'harmonie » est un bouton de la barre : au bout de la rangée dès la tablette debout,
@@ -96,10 +96,11 @@ test("une idée de l'équipe s'ajoute, avec l'instrument de son auteur", async (
 });
 
 test("une idée écrite dans une autre tonalité se range dans celle du chant", async ({ page }) => {
-  const db = await ouvrirChant(page, JO);
   // Hosanna est écrit en D. Jo le lit en F : ce qu'il écrit « Bb » (le 4 en F)
   // doit se ranger « G » (le 4 en D), pour rester juste chez les autres.
-  await page.getByLabel("Tonalité").selectOption("F");
+  // La tonalité se choisit par l'armure (RU-4, plus de liste) : on la donne par l'URL, même état.
+  const db = await ouvrirChant(page, JO, {}, `/songs/hosanna?key=${encodeURIComponent('"F"')}`);
+  await expect(page.getByLabel("Tonalité : F")).toBeVisible();
   await ouvrirLaFeuille(page);
   await page.getByRole("button", { name: "Ajouter une idée" }).click();
   await page.getByLabel("L'idée").fill("Refrain : ouvrir l'accord");
