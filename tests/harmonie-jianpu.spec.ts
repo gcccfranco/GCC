@@ -412,8 +412,15 @@ for (const langue of ["fr", "zh"] as const) {
     expect(g.d).toBeLessThanOrEqual(g.f + 0.5);
     await capture(page, `jv5c-louange-${langue}`);
     const avant = await lireCompteur(page);
+    const pastille = (await premiere.boundingBox())!;
     await premiere.click();
     await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
+    // Cinq corrections, point 3 : la fenêtre ou la feuille laisse voir la pastille touchée (au téléphone, la feuille à
+    // mi-hauteur la couvrait quand elle était dans la moitié basse).
+    await page.waitForTimeout(600); // fin du ressort de la feuille
+    const volet = (await page.locator("[data-idees-harmonie]").first().boundingBox())!;
+    const recouvre = volet.x < pastille.x + pastille.width && pastille.x < volet.x + volet.width && volet.y < pastille.y + pastille.height && pastille.y < volet.y + volet.height;
+    expect(recouvre, `pastille ${JSON.stringify(pastille)}, volet ${JSON.stringify(volet)}`).toBe(false);
     // Dès 768 px, une fenêtre comme le menu Setlist (Timothée, 13/11/2026) : elle ne couvre pas la colonne de droite.
     if ((page.viewportSize()?.width ?? 0) >= 768) await expect(page.locator("[data-idees-harmonie]")).toHaveAttribute("data-harmonie-fenetre");
     expect(await lireCompteur(page), "le toucher ne tourne pas la page").toBe(avant);

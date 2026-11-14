@@ -147,15 +147,19 @@ export function VoletHarmonieLouange({ volet, onClose }: { volet: VoletOuvert | 
   const acces = useAccesHarmonie();
   const [instrument] = useInstrument(acces);
   const grand = useAuMoinsMd();
+  // Cinq corrections, point 3 : au téléphone, la feuille à mi-hauteur couvrait une pastille (ou un nom) touchée dans la
+  // moitié basse de l'écran ; là, la fenêtre accrochée la remplace et se pose au-dessus. Moitié haute : la feuille, dessous.
+  const basse = !!volet?.ancre?.isConnected && (() => { const r = volet.ancre!.getBoundingClientRect(); return r.bottom + 8 > window.innerHeight / 2; })();
+  const fenetre = grand || basse;
   // Fenêtre : Échap la ferme, et elle seule (marqué avant l'écouteur du mode louange, qui quitterait).
   // La feuille est un dialogue : Radix marque son Échap lui-même.
   const ouvert = !!volet;
   useEffect(() => {
-    if (!ouvert || !grand) return;
+    if (!ouvert || !fenetre) return;
     const echap = (e: KeyboardEvent) => { if (e.key === "Escape" && !e.defaultPrevented) { e.preventDefault(); onClose(); } };
     document.addEventListener("keydown", echap, true);
     return () => document.removeEventListener("keydown", echap, true);
-  }, [ouvert, grand, onClose]);
+  }, [ouvert, fenetre, onClose]);
   if (!volet) return null;
   // Ni le toucher dans le volet ni celui de sa feuille ne tournent la page (React fait remonter ceux du portail ici) ;
   // le fond de la feuille garde le sien, Radix y lit le toucher extérieur qui la ferme.
@@ -171,9 +175,9 @@ export function VoletHarmonieLouange({ volet, onClose }: { volet: VoletOuvert | 
       tonalite={volet.tonalite}
       tonaliteOrigine={volet.tonaliteOrigine}
       instrument={instrument}
-      disposition={grand ? "fenetre" : "feuille"}
+      disposition={fenetre ? "fenetre" : "feuille"}
       ancre={volet.ancre}
-      passage={{ uid: volet.uid, cle: volet.cle, miHauteur: !grand }}
+      passage={{ uid: volet.uid, cle: volet.cle, miHauteur: !fenetre }}
       louange
     />
   );
