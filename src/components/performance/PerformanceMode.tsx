@@ -1895,6 +1895,8 @@ export function PerformanceMode({
       tourner(geste === "balayage-gauche" ? 1 : -1);
       return;
     }
+    // CL-4 : un accord (touchable seulement réglage « Idées d'harmonie » allumé) ouvre son panneau par son click, bandes latérales comprises : ni page tournée ni barre basculée.
+    if ((e.target as HTMLElement).closest("[data-accord-touchable]")) return;
     let grossier = false;
     try { grossier = window.matchMedia("(pointer: coarse)").matches; } catch { /* sans matchMedia : zones par défaut */ }
     const largeurMusique = window.innerWidth;
@@ -1904,8 +1906,7 @@ export function PerformanceMode({
       tourner(-1);
     } else if (e.clientX > largeurMusique * (1 - zone)) {
       tourner(1);
-    } else if (!annotateModeRef.current && !(e.target as HTMLElement).closest("[data-accord-touchable]")) {
-      // Au centre, un accord ouvre son panneau (son click) : ni page tournée ni barre basculée.
+    } else if (!annotateModeRef.current) {
       setShowChrome(!showChrome);
     }
   }, [showChrome, tourner, annulerAppui]);
@@ -2143,7 +2144,7 @@ export function PerformanceMode({
   return (
     <FournisseurIcis value={icisDuLouange}>
     <FournisseurNoms value={ideesActives && !annotateMode}>
-    <AccordsProvider actif={!annotateMode} louange>
+    <AccordsProvider actif={ideesActives && !annotateMode} louange>
     <div
       data-performance-mode
       data-disposition={disposition}

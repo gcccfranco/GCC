@@ -115,3 +115,14 @@ dépasse du bas de la fenêtre à l'ordinateur (« Voir tout le dictionnaire » 
   `notation-accords`, `louange-reglages`, `louange-accords` : 174/175 sur cinq projets (une course au téléphone,
   verte seule), 9,3 min ; vu à l'écran sur le compte invité (setlist de Noël, 恒久恒久以前). Limite connue : le calque
   ne couvre que la page 1 d'un scan, les pages suivantes restent en lettres gravées.
+- 14/11/2026 : **CL-4 faite** (validée par Timothée, « Ok Go » puis « commit et push maintenant »). Réglage « Idées
+  d'harmonie » allumé : un accord ouvre son panneau partout, bandes latérales comprises (`handlePointerUp` sort sur
+  `[data-accord-touchable]`, `bloquerBande` retiré de `VoletHarmonie.tsx`) ; éteint ou sans accès Harmonie :
+  `AccordsProvider actif={ideesActives && !annotateMode}`, accords inertes, tout toucher tourne la page ou bascule la
+  barre. Tests : `louange-accords` réécrite (bord gauche, bord droit, réglage éteint, sans accès, FR et 中文, cinq
+  projets ; les tests de bord échouent sur la base), `accords-toucher:233` (sans accès : inertes) ; 599/648 au premier
+  tour (24,8 min) puis reprises vertes ; rouges sur la base aussi, hors tranche : `usage-dimanche:221`, `:238`,
+  `usage-reste:147`. Levée de Q1 et Q2 dans `spec-accords-louange.md`. Vu à l'écran : captures Playwright sur compte
+  simulé, quatre dispositions et 1 440 px. **Non vu sur le site réel** (installation d'agent-desktop refusée par les
+  permissions de la session). Non vérifié : bord droit en 中文 au téléphone, à la tablette et à 1 440 px (aucun accord
+  au bord, tests sautés).

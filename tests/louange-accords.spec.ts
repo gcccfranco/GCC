@@ -3,10 +3,12 @@ import type { SetlistItem } from "../src/types/setList";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreCompteur, attendreMiseEnPage, basculerAnnoter, lireCompteur, onStage, ouvrirMenu, type Langue } from "./helpers/louange";
 
-// AL-2 (docs/spec-accords-louange.md) : en mode louange, un accord (paroles ou scan 简谱) ouvre le panneau d'accord au centre de
-// la page, sans tourner la page ni basculer la barre ; dans une bande latérale le toucher tourne la page ; un toucher hors du
-// panneau le ferme sans rien tourner ; en Crayon les accords sont inertes ; l'appui long ouvre le Crayon ; « Ici » (accès
-// Harmonie, réglage éteint) ouvre la fenêtre des idées. Spec d'agencement : cinq projets. Captures : test-results/al2-*.png. Noms fictifs.
+// AL-2 + CL-4 (docs/spec-accords-louange.md, docs/spec-corrections-louange.md) : en mode louange, un accord (paroles ou scan 简谱)
+// n'est touchable que réglage « Idées d'harmonie » allumé (accès Harmonie) ; il ouvre alors le panneau d'accord, au centre comme dans
+// une bande latérale, sans tourner la page ni basculer la barre ; un toucher hors du panneau le ferme sans rien tourner ; en Crayon
+// les accords sont inertes ; l'appui long ouvre le Crayon ; « Ici » ouvre la fenêtre des idées. Réglage éteint ou sans accès :
+// aucun accord touchable, un toucher sur un accord tourne la page comme sur le texte. Spec d'agencement : cinq projets.
+// Captures : test-results/al2-*.png, cl4-*.png. Noms fictifs.
 
 const SETLIST_ID = "setlist-louange-accords";
 const AVEC_ACCES: FakeProfile = { uid: "uid-noemie", email: "noemie@example.com", firstName: "Noémie", lastName: "T.", planningName: "Noémie T.", ...musicien("piano") };
@@ -57,14 +59,13 @@ for (const c of [...CHANTS, SCAN]) {
   const scan = c === SCAN;
   const nom = scan ? "scan 简谱" : c.langue.toUpperCase();
   test(`chant ${nom} : un accord touché au centre ouvre le panneau, sans tourner la page ni basculer la barre`, async ({ page }, info) => {
-    await ouvrirMode(page, SANS_ACCES, c, { scan });
+    await ouvrirMode(page, AVEC_ACCES, c, { scan, allume: true });
     const accord = await accordAuCentre(page, scan);
     const [page0, barre0] = [await lireCompteur(page), await barreOuverte(page)];
     await accord.click();
     await expect(panneau(page)).toBeVisible();
     expect(await lireCompteur(page), "page inchangée").toBe(page0);
     expect(await barreOuverte(page), "barre inchangée").toBe(barre0);
-    await expect(panneau(page).locator("[data-ici]"), "sans accès Harmonie, pas d'« Ici »").toHaveCount(0);
     await page.waitForTimeout(600);
     await page.screenshot({ path: `test-results/al2-${info.project.name}-${scan ? "scan" : c.langue}.png` });
   });
@@ -72,7 +73,7 @@ for (const c of [...CHANTS, SCAN]) {
 
 for (const c of CHANTS) {
   test(`chant ${c.langue.toUpperCase()} : toucher hors du panneau le ferme sans tourner la page ni basculer la barre`, async ({ page }) => {
-    await ouvrirMode(page, SANS_ACCES, c);
+    await ouvrirMode(page, AVEC_ACCES, c, { allume: true });
     const accord = await accordAuCentre(page, false);
     await accord.click();
     await expect(panneau(page)).toBeVisible();
@@ -86,25 +87,50 @@ for (const c of CHANTS) {
     expect(await barreOuverte(page)).toBe(barre0);
   });
 
-  test(`chant ${c.langue.toUpperCase()} : un accord dans la bande latérale tourne la page et n'ouvre pas le panneau`, async ({ page }) => {
-    await ouvrirMode(page, SANS_ACCES, c);
-    const accord = await accordAuCentre(page, false);
+  for (const bord of ["gauche", "droite"] as const) {
+    test(`chant ${c.langue.toUpperCase()} : réglage allumé, un accord de la bande ${bord} ouvre le panneau, sans tourner la page ni basculer la barre`, async ({ page }, info) => {
+      await ouvrirMode(page, AVEC_ACCES, c, { allume: true });
+      const l = accords(page, false);
+      await expect(l.first()).toBeVisible({ timeout: 15_000 });
+      // Zone latérale : 0,3 de la largeur sur tablette, 1/3 ailleurs (largeurZoneLaterale) ; marge prudente : centre dans les 28 % du bord.
+      const w = page.viewportSize()!.width;
+      const n = await l.evaluateAll((els, [w, bord]) => els.findIndex((el) => { const r = el.getBoundingClientRect(); const x = r.left + r.width / 2; const dansBande = bord === "gauche" ? x < w * 0.28 : x > w * 0.72; return r.width > 0 && r.top > 120 && r.bottom < innerHeight - 120 && dansBande && document.elementFromPoint(x, r.top + r.height / 2)?.closest("[data-accord-touchable]") === el; }), [w, bord] as [number, string]);
+      test.skip(n < 0, `aucun accord dans la bande ${bord} à cette taille`);
+      const [page0, barre0] = [await lireCompteur(page), await barreOuverte(page)];
+      await l.nth(n).click();
+      await expect(panneau(page)).toBeVisible();
+      expect(await lireCompteur(page), "page inchangée").toBe(page0);
+      expect(await barreOuverte(page), "barre inchangée").toBe(barre0);
+      await page.waitForTimeout(600);
+      await page.screenshot({ path: `test-results/cl4-${info.project.name}-${c.langue}-${bord}.png` });
+    });
+  }
+
+  test(`chant ${c.langue.toUpperCase()} : réglage éteint, aucun accord touchable ; un toucher sur un accord de la bande droite tourne la page`, async ({ page }) => {
+    await ouvrirMode(page, AVEC_ACCES, c, { allume: false });
+    // Accord inerte : `.font-chord` (ChordLine, FR) ou `[data-accord]` (ZhLine, 中文 ; cases vides en `visibility: hidden`).
+    const inertes = onStage(page, "[data-copy-line] .font-chord, [data-copy-line] [data-accord]");
+    await expect(inertes.first()).toBeVisible({ timeout: 15_000 });
+    await expect(onStage(page, "[data-accord-touchable]")).toHaveCount(0);
     const avant = await lireCompteur(page);
     const [, total] = avant.split(" / ").map(Number);
     test.skip(total < 2, "chant d'une seule page à cette taille : rien à tourner");
-    // Le toucher est rejoué avec une abscisse dans la bande droite (aucun accord n'y est forcément écrit).
-    const x = page.viewportSize()!.width - 8;
-    const init = { clientX: x, clientY: 300, pointerType: "touch", pointerId: 7, isPrimary: true, button: 0, bubbles: true };
-    const el = (await accord.elementHandle())!; // la page tourne au pointerup : le locator `nth` ne retrouverait plus l'accord
-    await el.dispatchEvent("pointerdown", init);
-    await el.dispatchEvent("pointerup", init);
-    await el.dispatchEvent("click", { clientX: x, clientY: 300, bubbles: true });
+    const w = page.viewportSize()!.width;
+    const bord = await inertes.evaluateAll((els, w) => {
+      const e = els.filter((el) => getComputedStyle(el).visibility !== "hidden").map((el) => el.getBoundingClientRect()).find((r) => r.width > 0 && r.top > 120 && r.bottom < innerHeight - 120 && r.left + r.width / 2 > w * 0.8);
+      return e ? { x: e.left + e.width / 2, y: e.top + e.height / 2 } : null;
+    }, w);
+    await page.mouse.click(bord?.x ?? w - 8, bord?.y ?? 300);
     await expect.poll(() => lireCompteur(page)).not.toBe(avant);
+    await expect(panneau(page)).toHaveCount(0);
+    const page2 = await lireCompteur(page);
+    await page.mouse.click(8, page.viewportSize()!.height / 2);
+    await expect.poll(() => lireCompteur(page)).not.toBe(page2);
     await expect(panneau(page)).toHaveCount(0);
   });
 
   test(`chant ${c.langue.toUpperCase()} : Crayon allumé, les accords sont inertes`, async ({ page }) => {
-    await ouvrirMode(page, SANS_ACCES, c);
+    await ouvrirMode(page, AVEC_ACCES, c, { allume: true });
     await expect(accords(page, false).first()).toBeVisible({ timeout: 15_000 });
     // Barre masquée : un toucher en haut de page (aucun accord) la rappelle ; le centre peut tomber sur un accord, qui ouvrirait le panneau.
     if ((await page.locator("[data-barre-ouverte]").count()) === 0) await page.mouse.click(page.viewportSize()!.width / 2, 8);
@@ -115,7 +141,7 @@ for (const c of CHANTS) {
   });
 
   test(`chant ${c.langue.toUpperCase()} : appui long sur un accord (souris) ouvre le Crayon, pas le panneau`, async ({ page }) => {
-    await ouvrirMode(page, SANS_ACCES, c);
+    await ouvrirMode(page, AVEC_ACCES, c, { allume: true });
     const accord = await accordAuCentre(page, false);
     const b = (await accord.boundingBox())!;
     await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
@@ -125,9 +151,8 @@ for (const c of CHANTS) {
     await expect(panneau(page)).toHaveCount(0);
   });
 
-  test(`chant ${c.langue.toUpperCase()} : « Ici » (accès Harmonie, réglage éteint) ouvre la fenêtre des idées sans tourner la page ; les noms restent inertes`, async ({ page }) => {
-    await ouvrirMode(page, AVEC_ACCES, c, { allume: false });
-    await expect(onStage(page, "button[data-section-nom-bouton]")).toHaveCount(0);
+  test(`chant ${c.langue.toUpperCase()} : « Ici » (accès Harmonie, réglage allumé) ouvre la fenêtre des idées sans tourner la page`, async ({ page }) => {
+    await ouvrirMode(page, AVEC_ACCES, c, { allume: true });
     // « Ici » ne paraît que si une idée de la section porte sur l'accord : on essaie les accords du centre jusqu'à en trouver un.
     const l = accords(page, false);
     await expect(l.first()).toBeVisible({ timeout: 15_000 });
@@ -151,16 +176,21 @@ for (const c of CHANTS) {
     await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
     await expect(panneau(page)).toHaveCount(0);
     expect(await lireCompteur(page)).toBe(avant);
-    await expect(onStage(page, "button[data-section-nom-bouton]")).toHaveCount(0);
   });
 }
 
-test("scan 简谱, « Ici » (accès Harmonie, réglage éteint) : un accord du scan ouvre le panneau avec « Ici », sans rail d'étiquettes", async ({ page }) => {
-  await ouvrirMode(page, AVEC_ACCES, SCAN, { scan: true });
-  await expect(onStage(page, "[data-jianpu-etiquette]")).toHaveCount(0);
+test("sans accès Harmonie, aucun accord touchable en louange", async ({ page }) => {
+  await ouvrirMode(page, SANS_ACCES, CHANTS[0], { allume: true });
+  // Accord inerte : `.font-chord` (ChordLine, FR) ou `[data-accord]` (ZhLine, 中文 ; cases vides en `visibility: hidden`).
+    const inertes = onStage(page, "[data-copy-line] .font-chord, [data-copy-line] [data-accord]");
+    await expect(inertes.first()).toBeVisible({ timeout: 15_000 });
+  await expect(onStage(page, "[data-accord-touchable]")).toHaveCount(0);
+});
+
+test("scan 简谱, « Ici » (accès Harmonie, réglage allumé) : un accord du scan ouvre le panneau avec « Ici »", async ({ page }) => {
+  await ouvrirMode(page, AVEC_ACCES, SCAN, { scan: true, allume: true });
   await (await accordAuCentre(page, true)).click();
   await expect(panneau(page)).toBeVisible();
-  await expect(panneau(page).locator("[data-ensuite]")).toHaveCount(0);
 });
 
 // CL-3 : le calque 简谱 du mode louange suit la bascule Lettres | Chiffres de la marge (tonalité d'origine comprise).

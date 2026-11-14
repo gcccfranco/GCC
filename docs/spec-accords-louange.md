@@ -125,3 +125,10 @@ tel qu'il est ; seul change l'endroit où il s'ouvre.
   peuvent tomber sur un accord (la suite complète le dira) ; appui long tactile réel et stylet non testés ; capo sur scan
   certifié non testé. Constaté : sur ordinateur, la bulle n'a pas la place au-dessus ni au-dessous (720 à 900 px de
   haut) et se pose sans flèche sur l'accord touché (placement existant de `Bulle`, comme sur la page chant).
+- 14/11/2026 : **Q1 et Q2 levées par Timothée** (lot CL, `docs/spec-corrections-louange.md`, constat 4 et Q3 (a) :
+  « Selon Idées d'harmonie », go du 14/11). Q1 passe à (b) : réglage « Idées d'harmonie » allumé, un accord touché
+  ouvre son panneau partout, bandes latérales comprises ; la page se tourne hors d'un accord, par balayage, au clavier
+  ou à la pédale (`bloquerBande` retiré). Q2 passe à (b) : réglage éteint (ou sans accès Harmonie), les accords sont
+  inertes en louange et tout toucher tourne la page ou bascule la barre, comme avant AL-2. Conséquence pour Q3 en
+  louange : sans accord touchable réglage éteint, « Ici » n'y paraît plus que réglage allumé (page chant et Partitions
+  inchangées). Code : tranche CL-4.
