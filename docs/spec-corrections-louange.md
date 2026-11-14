@@ -95,14 +95,16 @@ go pour les quatre corrections.** Les énoncés, tels que posés :
 - **Q3. Accord touché.** (a) **Recommandé** : selon le réglage « Idées d'harmonie » (ci-dessus). (b) L'accord s'ouvre
   partout, quel que soit le réglage. (c) Ne rien changer.
 
-## Relevé d'interface (à compléter par Timothée)
+## Relevé d'interface
 
-Vu pendant le parcours, hors des quatre points : le panneau d'un accord dépasse du bas de la fenêtre à l'ordinateur
-(« Voir tout le dictionnaire » sous les points de page, il faut défiler dans le panneau) ; la marge « Affichage »
-s'ouvre d'elle-même à la première entrée et prend 320 px. Les « pleins de problèmes d'UI » de Timothée restent à
-lister par lui.
+Timothée, 14/11 : « y'a pleins de problèmes d'UI aussi », « pas que dans le mode louange partout sur le site ». Le
+relevé se fait à part, sans code : parcours à l'œil de tout le site, livrable `docs/parcours-oeil-2026-11-14.md`
+(session `session_01UMdfuYxHihNxNeVptAXVGj`, une session Opus et deux agents `regard` au plus). Timothée choisit
+ensuite ce qui se corrige. Déjà vus pendant les constats ci-dessus et transmis à ce parcours : le panneau d'un accord
+dépasse du bas de la fenêtre à l'ordinateur (« Voir tout le dictionnaire » sous les points de page) ; la marge
+« Affichage » s'ouvre d'elle-même à la première entrée en mode louange et prend 320 px.
 
 ## Avancement
 
 - 14/11/2026 : constats et spec (session « corrections du mode louange »). Réponses et **go de Timothée** le même
-  jour (ci-dessus). CL-1 et CL-2 lancées dans une session orchestratrice ; elle lance CL-3 et CL-4.
+  jour (ci-dessus). CL-1 et CL-2 lancées dans une session orchestratrice (`session_01UMdfucmd8vZDo4rAt5qL3z`) ; elle lance CL-3 et CL-4.
