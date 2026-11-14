@@ -96,3 +96,15 @@ tel qu'il est ; seul change l'endroit où il s'ouvre.
   d'« Ensuite » sur le scan ; Q5 (a) scan non certifié : panneau sans « Ici ». Le go vaut pour AL-1 et AL-2. AL-1
   part quand la session des pastilles du rail a fini (`JianpuSheet.tsx`) ; AL-2 quand MT-3 a fini
   (`PerformanceMode.tsx`), avant RU-5 ou après, jamais en même temps.
+- 14/11/2026 : **AL-1 fait** (commit ci-dessous, « AL-1 : « Ici » sur le scan 简谱 »). La section d'un accord du scan se
+  déduit de sa ligne (`sectionDeLaBoite`, `JianpuSheet.tsx`, même calcul que les pastilles du rail) et part dans la
+  demande `ouvrir` (`sectionUids`) ; « Ici » se rend sans « Ensuite » (Q4) ; sans étiquettes (scan non certifié, sans
+  accès Harmonie, retouche) : pas d'« Ici » (Q5). Correctif : `ChantDesAccords` joint son `chant` à la demande (vue
+  Partitions : « Ici » n'avait pas de slug) ; effet de bord assumé : les accords des paroles en Partitions gagnent
+  aussi « Ici » et « Signaler » visent le chant. Tests : `harmonie-jianpu` (4 tests AL-1, FR et ZH, cinq projets),
+  `accords-toucher`, `harmonie-porte1`, `harmonie-volet-section` : 9,4 min ; puis AL-1 seuls après correction, 20/20
+  en 55 s. `tsc` et `lint` propres. Captures du panneau (FR, 中文, cinq projets) regardées. Non vérifié : le cas
+  scan non certifié (Q5) n'a pas de test propre ; les accords hors de tout intervalle de ligne ou ajoutés (`ajout-`)
+  n'ont pas d'« Ici » (non testé) ; le calque n'existe que transposé, donc « Ici » sur le scan aussi ; `harmonie-porte1`
+  ZH (ordinateur) a échoué à la première passe puis passé seul (course probable). Hors tranche, signalé : en 中文, le
+  sous-titre de l'idée sous « 这里 » reste en français (« Le 2m7 à la place du 4 », `harmonie-index.json`).

@@ -41,6 +41,8 @@ type DemandeAccord = {
   tonalite?: string;
   /** De quoi ouvrir la porte 2 au passage de l'accord (posé par le fournisseur, jamais par l'appelant). */
   ici?: IciDuChant;
+  /** AL-1 : section d'un accord du scan 简谱 (sans `data-section-uids` au DOM), posée par l'appelant. */
+  sectionUids?: string[];
 };
 
 /** H5-2 : ce qu'il faut pour calculer la ligne « Ici » et ouvrir la porte 2 au bloc d'un passage. */
@@ -87,8 +89,8 @@ const Rien: Contexte = { ouvrir: () => {}, fermer: () => {}, fermerSansFocus: ()
 const AccordsContext = createContext<Contexte>(Rien);
 
 /** Joint la tonalité affichée à chaque demande qui descend du fournisseur (H5-1 ; H5-2 y ajoutera les passages). */
-function avecTonalite(parent: Contexte, tonalite?: string, ici?: IciDuChant): Contexte {
-  return tonalite ? { ...parent, ouvrir: (d) => parent.ouvrir({ tonalite, ici, ...d }) } : parent;
+function avecTonalite(parent: Contexte, tonalite?: string, ici?: IciDuChant, chant?: Chant): Contexte {
+  return tonalite ? { ...parent, ouvrir: (d) => parent.ouvrir({ tonalite, ici, chant, ...d }) } : parent;
 }
 
 export function useOuvrirAccord(): Contexte {
@@ -108,7 +110,7 @@ export function AccordsInactifs({ children }: { children: React.ReactNode }) {
 /** Dit de quel chant sont les accords dessous (une setlist en porte plusieurs). */
 export function ChantDesAccords({ chant, tonalite, ici, children }: { chant: Chant; tonalite?: string; ici?: IciDuChant; children: React.ReactNode }) {
   const parent = useContext(AccordsContext);
-  const valeur = useMemo(() => avecTonalite({ ...parent, chant, ici }, tonalite, ici), [parent, chant, tonalite, ici]);
+  const valeur = useMemo(() => avecTonalite({ ...parent, chant, ici }, tonalite, ici, chant), [parent, chant, tonalite, ici]);
   return <AccordsContext.Provider value={valeur}>{children}</AccordsContext.Provider>;
 }
 
@@ -210,14 +212,14 @@ export function AccordsProvider({
     const tonaliteDuChant = dansPanneau ? courant.current?.harmonie?.tonalite : hors ? undefined : tonaliteDesEtiquettes(d.tonalite, d.capo);
     const section = !dansPanneau && d.ancre?.closest<HTMLElement>("[data-section-uids]");
     const suivant = tonaliteDuChant && section && d.ancre ? accordSuivant(section, d.ancre, accord.texte) : undefined;
-    const sectionUids = section ? section.dataset.sectionUids?.split(" ").filter(Boolean) : undefined;
+    const sectionUids = section ? section.dataset.sectionUids?.split(" ").filter(Boolean) : d.sectionUids;
     const enSection = dansPanneau ? !!courant.current?.harmonie?.enSection : !!section;
     courant.current = {
       accord, ancre, capo, chant: d.chant ?? chant,
       harmonie: tonaliteDuChant
         ? {
             tonalite: tonaliteDuChant, suivant, enSection,
-            ...(dansPanneau ? { sectionUids: courant.current?.harmonie?.sectionUids, ici: courant.current?.harmonie?.ici } : { sectionUids, ici: section ? d.ici : undefined }),
+            ...(dansPanneau ? { sectionUids: courant.current?.harmonie?.sectionUids, ici: courant.current?.harmonie?.ici } : { sectionUids, ici: section || d.sectionUids?.length ? d.ici : undefined }),
           }
         : undefined,
     };

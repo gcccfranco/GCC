@@ -189,6 +189,16 @@ function JianpuFiltres() {
   );
 }
 
+/** AL-1 : la section d'un accord du scan = dernière pastille de la dernière ligne à étiquettes commencée à sa ligne ou avant.
+ *  Rien sans étiquettes (scan non certifié, sans accès Harmonie, retouche) : le panneau s'ouvre sans « Ici ». */
+function sectionDeLaBoite(etiquettes: { page: number; ligne: number; pastilles: { uid: string }[] }[], lignes: { y0: number; y1: number }[] | undefined, page: number, y?: number): string[] | undefined {
+  const ligne = y === undefined ? -1 : (lignes?.findIndex((l) => y >= l.y0 && y <= l.y1) ?? -1);
+  if (ligne < 0) return undefined;
+  const e = etiquettes.filter((x) => x.page < page || (x.page === page && x.ligne <= ligne)).at(-1);
+  const uid = e?.pastilles.at(-1)?.uid;
+  return uid ? [uid] : undefined;
+}
+
 /** Tranche d'une page de scan certifié (lot JP-B) : le rectangle `x0..x1` × `y0..y1` (px image) que la fenêtre
  *  montre, et les lignes (`premiere`..`derniere`, indices dans `systemes.json`) qu'il contient. */
 export type TrancheFenetre = { y0: number; y1: number; x0: number; x1: number; premiere: number; derniere: number; demi?: Demi };
@@ -425,6 +435,8 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
     classe?: string;
     style: CSSProperties;
     texte: string;
+    /** Ordonnée de l'étiquette (px image), pour retrouver sa ligne. */
+    y?: number;
     /** Écriture en bleu (calque partiel) plutôt qu'à l'encre. */
     bleu?: boolean;
     /** Accord ajouté sur une ligne : écriture seule, pas de gomme. */
@@ -524,6 +536,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
       );
       out.push({
         key: `etiquette-${n}`,
+        y: l.y,
         attrs: {
           "data-jianpu-label": l.c,
           // Retouchée : l'accord affiché n'est plus celui de la
@@ -589,7 +602,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
     return out;
   }
 
-  const rendreBoite = (b: Boite, ecriture: boolean) => {
+  const rendreBoite = (b: Boite, ecriture: boolean, page = 0) => {
     const touchable = ecriture && accordsTouchables && b.texte.trim() !== "" && (b.key.startsWith("etiquette-") || b.key.startsWith("ajout-"));
     return (
     <span
@@ -611,7 +624,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         color: ecriture ? (b.bleu ? undefined : "hsl(var(--jianpu-encre))") : "transparent",
       }}
     >
-      {ecriture ? (touchable ? <AccordTouchable etiquette={b.texte} capo={capo || undefined} /> : b.texte) : null}
+      {ecriture ? (touchable ? <AccordTouchable etiquette={b.texte} capo={capo || undefined} sectionUids={sectionDeLaBoite(etiquettes, slug ? systemes?.[slug]?.pages[page]?.lignes : undefined, page, b.y)} /> : b.texte) : null}
     </span>
     );
   };
@@ -818,7 +831,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           {calque && (
             <>
             <div data-jianpu-calque className="pointer-events-none absolute inset-0" aria-hidden={accordsTouchables ? undefined : true}>
-              {cal.map((b) => rendreBoite(b, true))}
+              {cal.map((b) => rendreBoite(b, true, i))}
             </div>
 
             {/* Retouche : toute la page est tactile. Un accord touché s'ouvre

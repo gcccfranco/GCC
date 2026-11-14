@@ -321,6 +321,60 @@ for (const langue of ["fr", "zh"] as const) {
   });
 }
 
+/** AL-1 : l'accord du scan `texte` écrit à l'ordonnée `y` (px image de la page 0, scan joué en D : le calque, donc les accords touchables, n'existe qu'avec une transposition) ; ligne 5 (y 1283-1504) = Refrain. */
+async function accordDuScan(page: Page, texte: string, y: number) {
+  const touchables = page.locator(`[data-jianpu-label] [data-accord-touchable="${texte}"]`);
+  await expect(touchables.first()).toBeVisible({ timeout: 15_000 });
+  const h = JSON.parse(readFileSync("public/jianpu/chords.json", "utf8"))[SCAN].h as number;
+  const n = await touchables.evaluateAll((els, [y, h]) => els.findIndex((el) => Math.abs(parseFloat((el.closest("[data-jianpu-label]") as HTMLElement).style.top) - ((y - 6) / h) * 100) < 0.05), [y, h]);
+  expect(n, `l'accord ${texte} à y = ${y}`).toBeGreaterThanOrEqual(0);
+  return touchables.nth(n);
+}
+
+/** AL-1 : le panneau d'un accord du Refrain porte « Ici », sans « Ensuite » ; « Ici » ouvre le volet au bloc du Refrain. */
+async function verifierIciDuScan(page: Page, langue: "fr" | "zh", capturePath?: string) {
+  await (await accordDuScan(page, "Gmaj7", 1315)).click();
+  const panneau = page.locator("[data-accord-panneau]");
+  await expect(panneau).toBeVisible();
+  await expect(panneau.locator("[data-ici]")).toBeVisible({ timeout: 10_000 });
+  await expect(panneau.locator("[data-ensuite]")).toHaveCount(0);
+  if (capturePath) await page.screenshot({ path: capturePath });
+  await panneau.locator("[data-ici]").click();
+  await expect(voletOuvert(page)).toBeVisible();
+  const refrain = ATTENDUES[2].passage[langue];
+  await expect(voletOuvert(page).locator("[data-passage-uids]").filter({ has: page.getByRole("heading", { name: refrain }) }).first()).toBeInViewport({ timeout: 10_000 });
+}
+
+for (const langue of ["fr", "zh"] as const) {
+  test(`AL-1, page chant (${langue}) : un accord du Refrain sur le scan ouvre le panneau avec « Ici », sans « Ensuite » ; « Ici » ouvre le volet au bloc du Refrain`, async ({ page }) => {
+    await prefs(page, { zh: langue === "zh" });
+    await page.addInitScript(() => localStorage.setItem("accords-aide-vue", "1"));
+    await signInAs(page, LECTRICE, {}, `/songs/${encodeURIComponent(SCAN)}?key=${encodeURIComponent(JSON.stringify("D"))}`);
+    await scanCharge(page);
+    await verifierIciDuScan(page, langue, `test-results/captures-al1/${test.info().project.name}-${langue}.png`);
+  });
+}
+
+test("AL-1, vue Partitions : un accord du Refrain sur le scan ouvre le panneau avec « Ici » ; « Ici » ouvre le volet au bloc du Refrain", async ({ page }) => {
+  await prefs(page);
+  await page.addInitScript(() => localStorage.setItem("accords-aide-vue", "1"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, LECTRICE, { [SETLIST_DOC]: { ...setlist(), ownerId: "uid-owner", items: [item({ songSlug: SCAN, position: 1, keyOverride: "D" })] } }, `/setlists/${SETLIST_ID}`);
+  await ouvrirPartitions(page);
+  await scanCharge(page);
+  await verifierIciDuScan(page, "fr");
+});
+
+test("AL-1, sans accès harmonie : un accord du scan ouvre le panneau sans « Ici »", async ({ page }) => {
+  await prefs(page);
+  await page.addInitScript(() => localStorage.setItem("accords-aide-vue", "1"));
+  await signInAs(page, SANS_HARMONIE, {}, `/songs/${encodeURIComponent(SCAN)}?key=${encodeURIComponent(JSON.stringify("D"))}`);
+  await scanCharge(page);
+  await (await accordDuScan(page, "Gmaj7", 1315)).click();
+  await expect(page.locator("[data-accord-panneau]")).toBeVisible();
+  await expect(page.locator("[data-accord-panneau] [data-ici]")).toHaveCount(0);
+});
+
 test("JV-5c, sans accès harmonie : ni étiquette ni rail, le scan garde sa largeur", async ({ page }) => {
   await prefs(page);
   await signInAs(page, SANS_HARMONIE, {}, `/songs/${encodeURIComponent(SCAN)}`);
