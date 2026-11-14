@@ -108,3 +108,20 @@ tel qu'il est ; seul change l'endroit où il s'ouvre.
   n'ont pas d'« Ici » (non testé) ; le calque n'existe que transposé, donc « Ici » sur le scan aussi ; `harmonie-porte1`
   ZH (ordinateur) a échoué à la première passe puis passé seul (course probable). Hors tranche, signalé : en 中文, le
   sous-titre de l'idée sous « 这里 » reste en français (« Le 2m7 à la place du 4 », `harmonie-index.json`).
+- 14/11/2026 : **AL-2 fait** (commits « AL-2 (en cours) » `3283dedd` et « AL-2 : finitions »). En louange,
+  `AccordsProvider actif={!annotateMode} louange` entoure le mode (panneau en `z-[10000]`). Un accord touché au centre
+  ouvre le panneau sans tourner la page ni basculer la barre ; dans une bande latérale le toucher tourne la page et le
+  click de l'accord est bloqué (`bloquerBande`, `VoletHarmonie.tsx` ; pas au clavier) ; toucher hors du panneau le ferme
+  sans tourner (`menuAuToucher`) ; Crayon : accords inertes ; appui long sur un accord → Crayon. « Ici » dès l'accès
+  Harmonie (Q3) : `ChantDesAccords sansNoms` garde noms et pastilles du rail inertes réglage éteint (`iciAccords`,
+  `useIciDesAccords`), la place du rail n'est réservée que réglage allumé. Tests : nouvelle `louange-accords.spec.ts`
+  (cinq projets, `SPECS_GRAND_ECRAN`) ; `accords-toucher:233` remis au comportement AL-2 ; `louange-harmonie` ouvre le
+  réglage par Outils (reste de RU-5) ; helper `toucherCentre` (`tests/helpers/louange.ts`) évite un accord au centre.
+  Durée : passe du workflow 8,3 + 5,0 min ; passe finale `louange-accords`, `louange-menus`, `accords-toucher:233`
+  sur cinq projets 19,7 min (330 passés, 16 ignorés, 2 rouges à 1 440 px rejoués seuls : `louange-menus:309` passe,
+  `louange-menus:449` dure 28 à 32 s **aussi sans AL-2**, à la limite de 30 s : instable, hors tranche). `tsc`, `lint`
+  propres. Captures FR, 中文, scan aux cinq projets triées par `regard`. Non vérifié : `harmonie-jianpu` et
+  `mode-louange-forscore` non relancées ; les 17 specs qui touchent le centre de la page par `mouse.click` (hors helper)
+  peuvent tomber sur un accord (la suite complète le dira) ; appui long tactile réel et stylet non testés ; capo sur scan
+  certifié non testé. Constaté : sur ordinateur, la bulle n'a pas la place au-dessus ni au-dessous (720 à 900 px de
+  haut) et se pose sans flèche sur l'accord touché (placement existant de `Bulle`, comme sur la page chant).
