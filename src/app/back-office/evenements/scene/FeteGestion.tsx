@@ -29,6 +29,8 @@ import styles from "./FeteGestion.module.css"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { isCoordination } from "@/lib/access"
+import { getSetlistsDeFete, mettreALaCorbeilleGroupe, updateSetlist } from "@/lib/firebase/setlists"
+import { ecartsSetlistsFete } from "@/lib/fetes/suiviSetlists"
 import { creerEdition, listCreneaux, listProgrammes, ModifieEntreTemps, PROGRAMMES_CHANGED, updateProgramme } from "@/lib/firebase/programmes"
 import { archiveDate, todayIso } from "@/lib/scene/dimanches"
 import { reportConflict } from "@/lib/scene/reportConflict"
@@ -194,9 +196,24 @@ export function FeteGestion({ fete }: { fete: Fete }) {
       else setErreur(e.prenom ? t("planning.programme.modifieEntreTemps", { prenom: e.prenom }) : t("planning.programme.modifieEntreTempsSansNom"))
       return false
     }
+    // R3 (parcours du 14/11/2026) : jour J ou ordre de passage changé, les setlists de l'édition suivent.
+    if ("jourJ" in changement || "passages" in changement) {
+      await suivreSetlists({ jourJ: changement.jourJ ?? programme.jourJ, passages: changement.passages ?? programme.passages })
+        .catch(() => setErreur(t("planning.programmes.error")))
+    }
     // Écrit : une relecture qui échoue (réseau) ne le défait pas.
     await reload().catch(() => setErreur(t("planning.programmes.error")))
     return true
+  }
+
+  /** Recale la date des setlists de l'édition sur le jour J et met à la corbeille celles des passages retirés. */
+  async function suivreSetlists(apres: { jourJ: string; passages: Passage[] }) {
+    const { recaler, corbeille } = ecartsSetlistsFete(apres, await getSetlistsDeFete(programme.id))
+    for (const id of recaler) await updateSetlist(id, { date: apres.jourJ })
+    if (corbeille.length && user) {
+      const { ko } = await mettreALaCorbeilleGroupe(corbeille, user.uid)
+      if (ko.length) throw new Error("corbeille")
+    }
   }
 
   /** Lance les réservations ; la saison reste à l'écran (« Fermer les réservations » à la place du bouton) au lieu de
