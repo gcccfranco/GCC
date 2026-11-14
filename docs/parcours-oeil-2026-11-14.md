@@ -39,6 +39,83 @@ code ; aucune spec ici, Timothée choisit ensuite.
 10. **La légende « Points : déjà joué · Pleines : sur cette page… » cache le titre de la section du dessous**
     (Couplet 2), au téléphone, en tablette et à l'ordinateur.
 
+## Vérification sur le site réel (agent-desktop, 14/11 après-midi)
+
+Demande de Timothée : vérifier le relevé avec agent-desktop, sur le site en ligne (compte invité, lecture seule :
+rien créé, modifié ni annoté ; « Je joue » non touché). Bureau virtuel Xvfb + Chromium. Dispositions vues :
+**ordi** (fenêtre de 1 366 px), **1440** (le mode louange passe en plein écran sur un écran de 1 440 px),
+**tabP** (fenêtre de 830 px), **tabL** (fenêtre de 1 100 px, page chant seulement). **Le téléphone ne se voit pas par
+agent-desktop** (une fenêtre ne descend pas sous 500 px environ) : pour lui, le relevé local du matin fait foi.
+Contenus réels vus : une setlist de culte de quatre chants FR à feuille de route annotée, une setlist de Noël (un chant
+FR, un scan 简谱). 14 captures, gardées hors dépôt (elles montrent de vrais noms).
+
+### Les dix choses, vues sur le site réel
+
+1. Fermetures des feuilles : **différent** (ordi, 1440, tabP) : Outils y est une bulle sans titre ni × ; Affichage
+   a titre et × (panneau à l'ordi, feuille du bas en tabP). Métronome et Crayon non ouverts (lecture seule).
+2. Outils, deux sortes de lignes : **oui** (1440, tabP) : cinq ronds noirs ou blancs sans libellé d'état ; « Annotations »
+   double le crayon de la barre.
+3. Affichage, quatre formes : **différent** : panneau latéral sur la setlist (ordi) **et** sur la page chant à
+   1 100 px (pas de feuille à poignée) ; feuille du bas au mode louange en tabP ; panneau au mode louange (1440). Trois
+   formes vues, pas quatre.
+4. Affichage vide la page (tel) : téléphone non vu ; **oui en tabP** : l'Intro seule au-dessus d'un blanc, et le curseur
+   passe de 4 à 8 points.
+5. Accords, Pinyin, Affichage : **oui en partie** (tabL) : pastilles étiquetées « Accords », « Affichage » ; Accords se
+   règle aussi par l'interrupteur de la marge, juste à côté. Chant 中文 et téléphone non vus.
+6. Tonalité et titre au mode louange : **différent** : carré « G » ou « E » à côté du titre, et sur un scan « 1=F »
+   dans la barre (plus de pastille posée sur le scan) ; « Ensuite : 恒久恒久以前 · F » en gris : **oui**.
+7. Repères sur un scan 简谱 : **différent** : au mode louange (ordi), les pages du scan n'ont **aucun** repère (ni
+   carrés ni ronds), alors que la setlist en liste ses cinq sections.
+8. Aide « Touche un accord » : **oui en partie** : bandeau gris avec × sur la setlist (ordi) ; la bulle de la page chant
+   ne s'est pas montrée (déjà fermée sur ce compte ou cet appareil).
+9. Métronome introuvable sans tempo : **oui** (ordi, 1440, tabP) : pas de ♩ dans la barre pour un chant sans tempo, pas
+   de ligne « Métronome » dans Outils ; avec tempo, « ♩ 94 » ou « ♩ 132 » est bien dans la barre.
+10. Légende des points sur un titre de section : **non vu** (aucune page des deux setlists ne l'a montrée).
+
+### Gêne forte (A à G), vue sur le site réel
+
+- A : différent (voir 1). B : oui. C : téléphone non vu, oui en tabP. D : différent (voir 6). E : différent (voir 7).
+  F : non vu. G : oui.
+
+### Ce que seul le site réel montre
+
+**Gêne forte**
+- **R1. La feuille de route s'éclate quand une section porte une note.** ordi, 1440. Sur un chant dont la feuille de
+  route a une consigne longue (« boom avec la batterie puis elle revient plus fort… »), la note se loge dans la rangée
+  des ronds : un rond « R » flotte seul au milieu, les suivants partent au bord droit, et sur la setlist la rangée
+  passe sur deux lignes avec la note en dessous. On ne lit plus l'ordre des sections d'un coup d'œil, c'est-à-dire ce
+  qui sert pendant le culte. Correction : la note sous son rond, en petit, ou en bulle ; la rangée garde le pas des
+  ronds. **S.**
+- **R2. Repères absents sur un scan 简谱 au mode louange** (constat 7 ci-dessus) : pour un chant chinois, plus de repère
+  du tout. **S.** À revoir après CL-1 (lot CL en cours : la page du scan redevient entière et ses Repères sont
+  repris, `docs/spec-corrections-louange.md`) avant d'en faire une correction.
+
+**Gêne moyenne**
+- **R3. Date du service fausse d'un jour sur la page chant.** tabL. La page d'un chant dit « prévu le 24/12, Noël »
+  alors que la setlist est datée du vendredi 25 décembre. Probable décalage de fuseau (date lue en UTC). **S.**
+- **R4. Paroles décalées d'un espace sous un accord en début de ligne.** Toutes dispositions (page chant, setlist, mode
+  louange). Sur un chant réel, chaque vers qui commence sous un accord est poussé d'un caractère à droite (« E / ␣Dans la
+  ville de David »), les autres non : la marge gauche des paroles est en dents de scie. À trancher : contenu du `.cho`
+  ou rendu. **S.**
+- **R5. La barre d'une setlist change selon la setlist.** ordi : « Crayon, Dupliquer pour mes notes, Affichage, ⋯ » sur
+  l'une, « Crayon, Modifier, PDF, Affichage, ⋯ » sur l'autre (droits du compte), sans repère pour l'œil. Complète L.
+- **R6. Couleur du bouton « Mode Louange »** : sarcelle sur une setlist de culte, vert sur une setlist de Noël. Voulu
+  (couleur du service) ou non : à trancher. **S.**
+
+**Gêne faible**
+- Rail de la tablette paysage : **différent** à 1 100 px (barre latérale complète, avec libellés).
+- Retour de la page chant : « ← Retour » avec le mot à 1 100 px (pas la flèche seule).
+- « Classique » et « Couleurs par section » se touchent sous les vignettes de la marge, et « Couleurs par section » tient
+  sur trois lignes : **oui** (ordi, tabL).
+
+### Les dix revues après le site réel
+
+1. Feuille de route éclatée par une note (R1). 2. Métronome introuvable sans tempo (9, G). 3. Affichage vide la page,
+au téléphone et en tablette portrait (4, C). 4. Outils, deux sortes de lignes (2, B). 5. Repères absents sur un scan
+(7, R2). 6. Fermetures des feuilles (1, A). 7. Affichage, trois formes (3, H). 8. Tonalité et titre (6, D). 9. Date du
+service fausse d'un jour (R3). 10. Accords, Pinyin, Affichage (5, I).
+Sortent de la liste : l'aide « Touche un accord » (8, pas revue en bulle) et la légende des points (10, pas vue).
+
 ## Constats
 
 Dispositions : tel, tabP, tabL, ordi, 1440. Taille : S (un composant, quelques lignes), M (plusieurs écrans ou un
