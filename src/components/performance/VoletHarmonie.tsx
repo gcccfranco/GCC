@@ -14,6 +14,7 @@ import { ChantDesAccords, type IciDuChant } from "@/components/accords/AccordsPr
 import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { getTransposedKey } from "@/lib/transpose";
+import { largeurZoneLaterale } from "@/lib/performance/gestes";
 import { compter } from "@/lib/usage";
 
 const cle = (uid: string | null) => (uid ? `perf-idees-harmonie-${uid}` : "perf-idees-harmonie");
@@ -26,7 +27,7 @@ export type VoletOuvert = { slug: string; titre: string; sections: ChordProSecti
 const NOMS = "[data-section-nom-bouton], [data-jianpu-etiquette]";
 let dernierTouche: HTMLElement | null = null;
 const ancreDuToucher = () => {
-  const el = dernierTouche ?? (document.activeElement?.closest?.(NOMS) as HTMLElement | null) ?? null;
+  const el = (dernierTouche?.isConnected ? dernierTouche : null) ?? (document.activeElement?.closest?.(NOMS) as HTMLElement | null) ?? null;
   dernierTouche = null;
   return el;
 };
@@ -88,19 +89,39 @@ export function useIcisDuLouange(blocks: { kind: string }[], contents: Record<st
 
 const Icis = createContext<Map<string, IciDuChant>>(new Map());
 export const FournisseurIcis = Icis.Provider;
+// Les accords des paroles sont déjà en positions (capo déduit, comme `groupe`) ; ceux du scan reçoivent le capo de `JianpuSheet`.
+/** Réglage « Idées d'harmonie » allumé : seulement alors les noms et étiquettes de section sont touchables (l'`ici` du panneau d'accord, lui, suit l'accès). */
+const NomsOn = createContext(false);
+export const FournisseurNoms = NomsOn.Provider;
+
+/** AL-2 : l'accord touché est la dernière ancre (la fenêtre s'y accroche) ; son appui n'est pas arrêté (appui long → Crayon). */
+const noterAccord = (e: { target: EventTarget }) => {
+  const accord = (e.target as HTMLElement).closest?.<HTMLElement>("[data-accord-touchable]");
+  if (accord) dernierTouche = accord;
+};
+/** AL-2 : dans une bande latérale (même zone que `handlePointerUp`) l'accord ne s'ouvre pas : le toucher tourne la page. */
+const bloquerBande = (e: React.MouseEvent) => {
+  // Au clavier (Entrée, Espace), le click n'a pas de position (`detail` 0) : l'accord s'ouvre toujours.
+  if (e.detail === 0 || !(e.target as HTMLElement).closest?.("[data-accord-touchable]")) return;
+  let grossier = false;
+  try { grossier = window.matchMedia("(pointer: coarse)").matches; } catch { /* sans matchMedia : zones par défaut */ }
+  const zone = largeurZoneLaterale(window.innerWidth, window.innerHeight, grossier);
+  if (e.clientX < window.innerWidth * zone || e.clientX > window.innerWidth * (1 - zone)) { e.stopPropagation(); e.preventDefault(); }
+};
 
 /** Rend le nom de la section touchable (`NomSection`, SongView) ; le toucher ne remonte pas jusqu'à la page qui tourne.
  *  `contents` : aucune boîte ajoutée, la mesure des pages ne change pas. Les accords restent inertes (fournisseur inactif). */
 export function NomsTouchables({ block, children }: { block: SectionBlock; children: ReactNode }) {
   const ici = useContext(Icis).get(groupe(block));
-  if (!ici || !block.songSlug) return <>{children}</>;
+  const noms = useContext(NomsOn);
+  if (!block.songSlug) return <>{children}</>;
   const arret = (e: { target: EventTarget; stopPropagation: () => void }) => {
     const nom = (e.target as HTMLElement).closest?.<HTMLElement>("[data-section-nom-bouton]");
     if (nom) { dernierTouche = nom; e.stopPropagation(); }
   };
   return (
-    <ChantDesAccords chant={{ slug: block.songSlug, titre: block.songTitle }} ici={ici}>
-      <div className="contents" onPointerDown={arret} onPointerUp={arret} onPointerCancel={arret}>{children}</div>
+    <ChantDesAccords chant={{ slug: block.songSlug, titre: block.songTitle }} tonalite={getTransposedKey(block.keyChange ?? block.songKey, -(block.capo ?? 0))} ici={ici} sansNoms={!noms}>
+      <div className="contents" onPointerDown={(e) => { noterAccord(e); arret(e); }} onPointerUp={arret} onPointerCancel={arret} onClickCapture={bloquerBande}>{children}</div>
     </ChantDesAccords>
   );
 }
@@ -108,14 +129,15 @@ export function NomsTouchables({ block, children }: { block: SectionBlock; child
 /** Rend les étiquettes de section d'un scan touchables (JV-5c, `JianpuSheet`) ; le toucher ne tourne pas la page. */
 export function ScanTouchable({ block, children }: { block: JianpuSheetBlock; children: ReactNode }) {
   const ici = useContext(Icis).get(groupeScan(block));
-  if (!ici || !block.songSlug) return <>{children}</>;
+  const noms = useContext(NomsOn);
+  if (!block.songSlug) return <>{children}</>;
   const arret = (e: { target: EventTarget; stopPropagation: () => void }) => {
     const etiquette = (e.target as HTMLElement).closest?.<HTMLElement>("[data-jianpu-etiquette]");
     if (etiquette) { dernierTouche = etiquette; e.stopPropagation(); }
   };
   return (
-    <ChantDesAccords chant={{ slug: block.songSlug, titre: block.songTitle }} ici={ici}>
-      <div className="contents" onPointerDown={arret} onPointerUp={arret} onPointerCancel={arret}>{children}</div>
+    <ChantDesAccords chant={{ slug: block.songSlug, titre: block.songTitle }} tonalite={block.songKey} ici={ici} sansNoms={!noms}>
+      <div className="contents" onPointerDown={(e) => { noterAccord(e); arret(e); }} onPointerUp={arret} onPointerCancel={arret} onClickCapture={bloquerBande}>{children}</div>
     </ChantDesAccords>
   );
 }

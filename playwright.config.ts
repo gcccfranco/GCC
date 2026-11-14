@@ -14,6 +14,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Lot AL, AL-2 (docs/spec-accords-louange.md) : accords touchables en mode louange, panneau au centre de la page, bandes latérales, Crayon, « Ici ».
+  /louange-accords\.spec\.ts/,
   // Lot RU, RU-5 (docs/spec-reglages-unifies.md) : le mode louange, bouton « Affichage » (marge), armure dans la barre, rien de la musique sous la marge.
   /louange-reglages\.spec\.ts/,
   // Métronome MT-2 (docs/spec-metronome.md) : le panneau Métronome, fenêtre comme le menu Setlist (popover dès 768 px, feuille du bas au téléphone), et ses réglages.

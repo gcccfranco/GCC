@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import type { SetlistItem } from "../src/types/setList";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreCompteur, attendreMiseEnPage, lireCompteur, onStage, ouvrirMenu, ouvrirOptions, type Langue } from "./helpers/louange";
+import { attendreCompteur, attendreMiseEnPage, lireCompteur, onStage, ouvrirMenu, type Langue } from "./helpers/louange";
 
 // JV-5b (docs/spec-jianpu-deux-volets.md, point 2, « Reprise du 13/11 ») : dans le mode louange, le NOM d'une section ouvre
 // le volet Harmonie du chant (toutes les propositions du passage, une seule notation) posé par-dessus la page : dès 768 px une
@@ -62,7 +62,7 @@ for (const c of CHANTS) {
     await ouvrirMode(page, AVEC_ACCES, c, { allume: false });
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     await expect(noms(page)).toHaveCount(0);
-    const feuille = await ouvrirOptions(page, c.langue);
+    const feuille = await ouvrirMenu(page, "outils", c.langue);
     await feuille.getByRole("button", { name: reglage }).click();
     await page.keyboard.press("Escape"); // la feuille couvre la scène au téléphone
     await expect(feuille).toBeHidden();
@@ -74,7 +74,7 @@ for (const c of CHANTS) {
     await ouvrirMode(page, SANS_ACCES, c);
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     await expect(noms(page)).toHaveCount(0);
-    const feuille = await ouvrirOptions(page, c.langue);
+    const feuille = await ouvrirMenu(page, "outils", c.langue);
     await expect(feuille.getByRole("button", { name: reglage })).toHaveCount(0);
   });
 

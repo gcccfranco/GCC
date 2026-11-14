@@ -10,7 +10,7 @@ import { ECART_MOITIES, ECART_SYSTEMES, echelleFenetre, LARGEUR_FEUILLE_MAX, typ
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
-import { useIciDuChant, useOuvrirAccord } from "@/components/accords/AccordsProvider";
+import { useIciDesAccords, useIciDuChant, useOuvrirAccord } from "@/components/accords/AccordsProvider";
 import type { JianpuChords } from "@/types/setList";
 import { altSpellingKey, getTransposedKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 
@@ -320,20 +320,21 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   // Harmonie au bloc du passage, comme le nom de section (`NomSection`, SongView). Seulement avec l'accès Harmonie
   // (`ici`), hors retouche, pour un scan certifié dont les sections sont connues (`sections.json`, `systemes.json`).
   const ici = useIciDuChant();
+  const iciAccords = useIciDesAccords(); // AL-2 : les étiquettes se calculent aussi réglage éteint (« Ici » du panneau), sans rail
   const sectionsScan = useJianpuSections();
   const zh = (i18n.language ?? "").startsWith("zh");
   const etiquettes = useMemo(() => {
     const chant = slug ? systemes?.[slug] : undefined;
     const debuts = slug ? sectionsScan?.[slug]?.sections : undefined;
-    if (!ici || retouchable || !chant || !debuts) return [];
-    const uids = ici.sections.map((x) => x.uid);
+    if (!iciAccords || retouchable || !chant || !debuts) return [];
+    const uids = iciAccords.sections.map((x) => x.uid);
     return etiquettesDuScan(debuts, zh).flatMap((e) => {
       const l = chant.pages[e.page]?.lignes[e.ligne];
       const jouees = e.pastilles.flatMap((p) => { const uid = passageDeSection(p.id, uids); return uid ? [{ ...p, uid }] : []; });
       return l && jouees.length ? [{ page: e.page, ligne: e.ligne, y: l.y0, pastilles: jouees }] : [];
     });
-  }, [ici, retouchable, slug, systemes, sectionsScan, zh]);
-  const rail = etiquettes.length > 0;
+  }, [iciAccords, retouchable, slug, systemes, sectionsScan, zh]);
+  const rail = !!ici && etiquettes.length > 0;
   /** Les pastilles des lignes de la page `i` qui commencent entre `y0` et `y1` (px image), placées en % de la fenêtre. */
   const rendreEtiquettes = (i: number, y0: number, y1: number, lignes?: [number, number]) =>
     etiquettes

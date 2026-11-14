@@ -41,13 +41,27 @@ export async function ouvrirMenu(page: Page, menu: Menu, langue: Langue = "fr") 
     if (await dialogue.isVisible()) return;
     // Barre masquée = opacity 0 + aria-hidden : isVisible() la dit visible, le rôle (count) non.
     if ((await bouton.count()) === 0) {
-      const ecran = page.viewportSize()!;
-      await page.mouse.click(ecran.width / 2, ecran.height / 2);
+      await toucherCentre(page);
     }
     await bouton.click({ timeout: 2_000 });
     await expect(dialogue).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 20_000 });
   return dialogue;
+}
+
+/** Un toucher au centre de la page, qui bascule la barre. Depuis AL-2 un accord touché au centre ouvre son panneau :
+ *  on touche au centre en largeur, à la première hauteur proche du milieu qui n'est pas sur un accord. */
+export async function toucherCentre(page: Page) {
+  const ecran = page.viewportSize()!;
+  const y = await page.evaluate(({ w, h }) => {
+    for (let d = 0; d < h / 3; d += 8) {
+      for (const yy of [h / 2 + d, h / 2 - d]) {
+        if (!document.elementFromPoint(w / 2, yy)?.closest("[data-accord-touchable]")) return yy;
+      }
+    }
+    return h / 2;
+  }, { w: ecran.width, h: ecran.height });
+  await page.mouse.click(ecran.width / 2, y);
 }
 
 /** Ouvre le panneau Métronome (MT-2) : par la pastille ♩ de la barre à partir de 768 px, par la ligne « Métronome » d'Outils
@@ -67,8 +81,7 @@ export async function ouvrirMetronome(page: Page, langue: Langue = "fr") {
   await expect(async () => {
     if (await panneau.isVisible()) return;
     if ((await page.locator("[data-performance-mode] [data-barre-haut]").getByRole("button", { name: NOM_MENU[langue].tempo, exact: true }).count()) === 0) {
-      const ecran = page.viewportSize()!;
-      await page.mouse.click(ecran.width / 2, ecran.height / 2);
+      await toucherCentre(page);
     }
     await bouton.click({ timeout: 2_000 });
     await expect(panneau).toBeVisible({ timeout: 2_000 });
@@ -81,8 +94,7 @@ export async function ouvrirMetronome(page: Page, langue: Langue = "fr") {
 export async function fermerBarre(page: Page) {
   const chrome = page.locator("[data-performance-mode] [data-barre-haut]").locator("xpath=..");
   if ((await page.locator("[data-barre-ouverte]").count()) > 0) {
-    const ecran = page.viewportSize()!;
-    await page.mouse.click(ecran.width / 2, ecran.height / 2);
+    await toucherCentre(page);
     await expect(page.locator("[data-barre-ouverte]")).toHaveCount(0);
   }
   await expect(chrome).toHaveCSS("opacity", "0");
@@ -125,22 +137,22 @@ export async function attendreCompteur(page: Page, motif: string | RegExp, timeo
 /** Entre dans l'annotation ou en sort. Au téléphone (< 768 px) la barre de titre n'a plus « Crayon » (FS-A) :
  *  la fonction est une ligne d'Outils, en tête de la feuille Options d'affichage (FS-B), qu'on ouvre d'abord
  *  (elle la referme en s'exécutant). */
-export async function basculerAnnoter(page: Page) {
+export async function basculerAnnoter(page: Page, langue: Langue = "fr") {
   // En Crayon, la barre d'annotation (AN-3a) remplace la barre de titre : on en sort par « Terminé ».
-  const termine = page.locator("[data-performance-mode] [data-crayon-barre]").getByRole("button", { name: "Terminé", exact: true });
+  const termine = page.locator("[data-performance-mode] [data-crayon-barre]").getByRole("button", { name: langue === "zh" ? "完成" : "Terminé", exact: true });
   if (await termine.count()) {
     await termine.click();
     return;
   }
   if (page.viewportSize()!.width < 768) {
-    const outils = await ouvrirOutils(page);
-    await outils.getByRole("button", { name: "Crayon", exact: true }).click();
+    const outils = await ouvrirOutils(page, langue);
+    await outils.getByRole("button", { name: langue === "zh" ? "画笔" : "Crayon", exact: true }).click();
     await expect(outils).toBeHidden();
     return;
   }
   // Dans la barre de titre : l'outil « Crayon » (stylo) du panneau d'outils porte le même nom.
-  const bouton = page.locator("[data-performance-mode] [data-barre-haut]").getByRole("button", { name: "Crayon", exact: true });
+  const bouton = page.locator("[data-performance-mode] [data-barre-haut]").getByRole("button", { name: langue === "zh" ? "画笔" : "Crayon", exact: true });
   // Barre masquée (inert) après un rechargement : un toucher au centre la rappelle.
-  if ((await bouton.count()) === 0) await page.mouse.click(page.viewportSize()!.width / 2, page.viewportSize()!.height / 2);
+  if ((await bouton.count()) === 0) await toucherCentre(page);
   await bouton.click();
 }

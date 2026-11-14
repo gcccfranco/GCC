@@ -77,7 +77,8 @@ import { getMetronomePref, setMetronomePref } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
-import { ecrireReglageIdees, FournisseurIcis, groupeScan, lireReglageIdees, NomsTouchables, ScanTouchable, useIcisDuLouange, VoletHarmonieLouange, type VoletOuvert } from "./VoletHarmonie";
+import { AccordsProvider } from "@/components/accords/AccordsProvider";
+import { ecrireReglageIdees, FournisseurIcis, FournisseurNoms, groupeScan, lireReglageIdees, NomsTouchables, ScanTouchable, useIcisDuLouange, VoletHarmonieLouange, type VoletOuvert } from "./VoletHarmonie";
 import { railEtiquettes } from "@/lib/jianpu/etiquettesSections";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
@@ -926,7 +927,7 @@ export function PerformanceMode({
   const [reglageIdees, setReglageIdees] = useState(() => lireReglageIdees(uid));
   const ideesActives = reglageIdees && peutHarmonie;
   const [voletHarmonie, setVoletHarmonie] = useState<VoletOuvert | null>(null);
-  const icisDuLouange = useIcisDuLouange(blocks, contents, ideesActives && !annotateMode, setVoletHarmonie);
+  const icisDuLouange = useIcisDuLouange(blocks, contents, peutHarmonie && !annotateMode, setVoletHarmonie);
   // La fenêtre des idées d'harmonie se ferme comme un menu : un toucher dehors la ferme sans tourner la page (même drapeau).
   // La feuille du téléphone a son fond, que Radix écoute : rien à faire pour elle.
   const voletOuvert = voletHarmonie !== null;
@@ -942,6 +943,18 @@ export function PerformanceMode({
     document.addEventListener("pointerdown", hors, true);
     return () => document.removeEventListener("pointerdown", hors, true);
   }, [voletOuvert]);
+
+  // AL-2 : un toucher hors du panneau d'accord le ferme (la bulle écoute après nous) sans tourner la page ni basculer la barre.
+  useEffect(() => {
+    const hors = (e: PointerEvent) => {
+      const cible = e.target instanceof Element ? e.target : null;
+      if (e.pointerType === "pen" || !cible || !document.querySelector("[data-accord-panneau]")) return;
+      if (cible.closest("[data-accord-panneau], [data-vaul-overlay], [data-barre-haut], [data-barre-bas]")) return;
+      menuAuToucher.current = { t: e.timeStamp };
+    };
+    document.addEventListener("pointerdown", hors, true);
+    return () => document.removeEventListener("pointerdown", hors, true);
+  }, []);
 
   const { repeatCount, repeatHidden } = useMemo(
     () => replisStructure(blocks, structureMode, showTransitions, t),
@@ -1092,7 +1105,7 @@ export function PerformanceMode({
         const suivi = (enteteDe.get(i) ?? -1) < dernierEntete;
         const reserve = dernierDuChant && suivi ? 56 / fontScale : 0;
         // JV-5c : réglage « Idées d'harmonie » allumé, le rail des étiquettes de section prend sa place à gauche (de chaque colonne).
-        const rail = icisDuLouange.has(groupeScan(b)) && jianpuSections?.[b.songSlug]?.sections.length ? railEtiquettes(zoneL) : 0;
+        const rail = ideesActives && icisDuLouange.has(groupeScan(b)) && jianpuSections?.[b.songSlug]?.sections.length ? railEtiquettes(zoneL) : 0;
         // Lot JP-C : téléphone en portrait, chaque ligne se coupe en deux moitiés empilées ; sinon, lignes entières.
         if (telephonePortrait) return tranchesDemiLignes(sp.lignes, sp.h, x0, x1, largeurScan - rail, Math.max(1, hauteurScan), reserve);
         // Lot JV (JV-4) : « 2 colonnes » allumé, deux colonnes de demi-lignes à la taille des lignes entières ; sous le seuil, lignes entières.
@@ -1167,7 +1180,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, zoneL, zoneH, jianpuLabelH, metronome, icisDuLouange, jianpuSections]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, zoneL, zoneH, jianpuLabelH, metronome, ideesActives, icisDuLouange, jianpuSections]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -1797,7 +1810,7 @@ export function PerformanceMode({
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) return;
     // Hors barres, menus et feuilles (leurs évènements remontent jusqu'ici) : le stylet et l'appui long peuvent ouvrir le Crayon.
     const surPage = popoverRef.current === null && !annotateModeRef.current && !!entrerCrayonRef.current
-      && !(e.target as HTMLElement).closest("[data-barre-haut], [data-barre-bas], [data-menu-louange], [data-menu-declencheur], [role=dialog], button, a[href], input, select, textarea, [role=button], [role=switch], [role^=menuitem], [data-repere-pastille], [data-scene-bouton]");
+      && !(e.target as HTMLElement).closest("[data-barre-haut], [data-barre-bas], [data-menu-louange], [data-menu-declencheur], [data-accord-panneau], [role=dialog], button, a[href], input, select, textarea, [role=button]:not([data-accord-touchable]), [role=switch], [role^=menuitem], [data-repere-pastille], [data-scene-bouton]");
     if (e.pointerType === "pen") {
       // Le stylet ne tourne jamais la page ; sur la page, il ouvre le Crayon et son premier trait est repris par le canvas.
       if (!surPage) return;
@@ -1855,7 +1868,7 @@ export function PerformanceMode({
     if (e.pointerType === "pen") { setContactInitial(null); return; } // levé avant le montage du canvas : pas de trait figé
     annulerAppui();
     pointeursActifs.current.delete(e.pointerId);
-    if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) { tapStart.current = null; return; }
+    if ((e.target as HTMLElement).closest("[data-vaul-overlay], [data-accord-panneau]")) { tapStart.current = null; return; }
     if (menuAuToucher.current || popoverRef.current !== null) {
       menuAuToucher.current = null;
       tapStart.current = null;
@@ -1887,7 +1900,8 @@ export function PerformanceMode({
       tourner(-1);
     } else if (e.clientX > largeurMusique * (1 - zone)) {
       tourner(1);
-    } else if (!annotateModeRef.current) {
+    } else if (!annotateModeRef.current && !(e.target as HTMLElement).closest("[data-accord-touchable]")) {
+      // Au centre, un accord ouvre son panneau (son click) : ni page tournée ni barre basculée.
       setShowChrome(!showChrome);
     }
   }, [showChrome, tourner, annulerAppui]);
@@ -2124,6 +2138,8 @@ export function PerformanceMode({
 
   return (
     <FournisseurIcis value={icisDuLouange}>
+    <FournisseurNoms value={ideesActives && !annotateMode}>
+    <AccordsProvider actif={!annotateMode} louange>
     <div
       data-performance-mode
       data-disposition={disposition}
@@ -2771,7 +2787,7 @@ export function PerformanceMode({
         {contenuOutils}
       </MenuLouange>
 
-      <VoletHarmonieLouange volet={ideesActives && !annotateMode ? voletHarmonie : null} onClose={() => setVoletHarmonie(null)} />
+      <VoletHarmonieLouange volet={peutHarmonie && !annotateMode ? voletHarmonie : null} onClose={() => setVoletHarmonie(null)} />
     </div>
     {/* Marge « Affichage » (RU-5) : Je joue et Options fusionnés. Hors de la racine du mode, qui se raccourcit de sa place
         (320 px à droite dès 1 024 px, sinon 40 % en bas) : rien de la musique dessous. */}
@@ -3015,6 +3031,8 @@ export function PerformanceMode({
         }
       />
     </div>
+    </AccordsProvider>
+    </FournisseurNoms>
     </FournisseurIcis>
   );
 }
