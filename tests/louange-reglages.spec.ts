@@ -96,6 +96,22 @@ test("choriste : ni Accords, ni Lettres | Chiffres, ni Couleur des accords dans 
   await expect(marge(page).getByRole("switch", { name: "Paroles" })).toBeVisible();
 });
 
+// CL-3 : « Chiffres » dans la marge change les accords du texte (ChordLine, ZhLine) du mode louange ; « Lettres » les rend.
+for (const langue of ["fr", "zh"] as const) {
+  test(`marge Chiffres (${langue}) : les accords du mode louange passent en chiffres puis reviennent en lettres`, async ({ page }) => {
+    await ouvrirMode(page, { langue, init: { "perf-role-preset": "pianiste" } });
+    const accords = onStage(page, "[data-section] [data-accord-touchable]");
+    const textes = () => accords.evaluateAll((els) => els.map((e) => (e.textContent ?? "").trim()).filter(Boolean));
+    await expect(accords.first()).toBeVisible();
+    await expect.poll(async () => (await textes()).some((t) => /^[A-G]/.test(t))).toBe(true);
+    await ouvrirMenu(page, "affichage", langue);
+    await marge(page).locator('[data-notation="chiffres"]').click();
+    await expect.poll(async () => { const ts = await textes(); return ts.length > 0 && ts.every((t) => /^[b#]?[1-7]/.test(t)); }).toBe(true);
+    await marge(page).locator('[data-notation="lettres"]').click();
+    await expect.poll(async () => { const ts = await textes(); return ts.length > 0 && ts.every((t) => /^[A-G]/.test(t)); }).toBe(true);
+  });
+}
+
 for (const langue of ["fr", "zh"] as const) {
   test(`barre sur une ligne (${langue}) : le titre se tronque avant l'armure, l'armure n'est jamais coupée`, async ({ page }) => {
     await ouvrirMode(page, { langue, init: { "perf-role-preset": "pianiste" } });

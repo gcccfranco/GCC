@@ -79,6 +79,8 @@ import { useAuth } from "@/lib/firebase/auth";
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { AccordsProvider } from "@/components/accords/AccordsProvider";
 import { ecrireReglageIdees, FournisseurIcis, FournisseurNoms, groupeScan, lireReglageIdees, NomsTouchables, ScanTouchable, useIcisDuLouange, VoletHarmonieLouange, type VoletOuvert } from "./VoletHarmonie";
+import { NotationAccordsProvider } from "@/components/song/NotationAccordsProvider";
+import { tonaliteDesEtiquettes } from "@/lib/harmonie/suites";
 import { railEtiquettes } from "@/lib/jianpu/etiquettesSections";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
@@ -186,6 +188,7 @@ function BlockRenderer({
   }
   if (feuilleRoute) return <LigneFeuilleDeRoute block={block} repeat={repeat} couleurDe={couleurDe} disposition={disposition} transition={transitionApres} />;
   return (
+    <NotationAccordsProvider tonalite={tonaliteDesEtiquettes(block.keyChange ?? block.songKey, block.capo)}>
     <NomsTouchables block={block}>
     <SectionView
       section={block.section}
@@ -208,6 +211,7 @@ function BlockRenderer({
       marques={marques}
     />
     </NomsTouchables>
+    </NotationAccordsProvider>
   );
 }
 

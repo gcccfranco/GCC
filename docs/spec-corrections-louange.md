@@ -108,3 +108,10 @@ dépasse du bas de la fenêtre à l'ordinateur (« Voir tout le dictionnaire » 
 
 - 14/11/2026 : constats et spec (session « corrections du mode louange »). Réponses et **go de Timothée** le même
   jour (ci-dessus). CL-1 et CL-2 lancées dans une session orchestratrice (`session_01UMdfucmd8vZDo4rAt5qL3z`) ; elle lance CL-3 et CL-4.
+- 14/11/2026 : **CL-3 faite** (session `session_01UMdfuZaZ3tVKvdjP7Eiuy2`, validée par Timothée). Les blocs texte du mode
+  louange ont leur `NotationAccordsProvider` (tonalité des étiquettes, capo déduit, section modulée) ; le calque 简谱
+  lit la notation du compte et chiffre dans `chordKey`, touchable ou non, partout (page chant, Partitions, louange) ;
+  en Chiffres, le calque s'allume aussi en tonalité d'origine. PDF et retouche restent en lettres. Tests
+  `notation-accords`, `louange-reglages`, `louange-accords` : 174/175 sur cinq projets (une course au téléphone,
+  verte seule), 9,3 min ; vu à l'écran sur le compte invité (setlist de Noël, 恒久恒久以前). Limite connue : le calque
+  ne couvre que la page 1 d'un scan, les pages suivantes restent en lettres gravées.

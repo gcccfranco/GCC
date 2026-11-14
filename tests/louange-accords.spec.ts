@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import type { SetlistItem } from "../src/types/setList";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreCompteur, attendreMiseEnPage, basculerAnnoter, lireCompteur, onStage, type Langue } from "./helpers/louange";
+import { attendreCompteur, attendreMiseEnPage, basculerAnnoter, lireCompteur, onStage, ouvrirMenu, type Langue } from "./helpers/louange";
 
 // AL-2 (docs/spec-accords-louange.md) : en mode louange, un accord (paroles ou scan 简谱) ouvre le panneau d'accord au centre de
 // la page, sans tourner la page ni basculer la barre ; dans une bande latérale le toucher tourne la page ; un toucher hors du
@@ -161,4 +161,15 @@ test("scan 简谱, « Ici » (accès Harmonie, réglage éteint) : un accord du 
   await (await accordAuCentre(page, true)).click();
   await expect(panneau(page)).toBeVisible();
   await expect(panneau(page).locator("[data-ensuite]")).toHaveCount(0);
+});
+
+// CL-3 : le calque 简谱 du mode louange suit la bascule Lettres | Chiffres de la marge (tonalité d'origine comprise).
+test("scan 简谱 : Chiffres dans la marge chiffre le calque, Lettres le rend", async ({ page }) => {
+  await ouvrirMode(page, SANS_ACCES, SCAN, { scan: true });
+  const etiquettes = () => onStage(page, "[data-jianpu-label]").evaluateAll((els) => els.map((e) => (e.textContent ?? "").trim()).filter(Boolean));
+  const marge = await ouvrirMenu(page, "affichage");
+  await marge.locator('[data-notation="chiffres"]').click();
+  await expect.poll(async () => { const ts = await etiquettes(); return ts.some((t) => /^[b#]?[1-7]/.test(t)) && !ts.some((t) => /^[A-G]/.test(t)); }).toBe(true);
+  await marge.locator('[data-notation="lettres"]').click();
+  await expect.poll(async () => (await etiquettes()).some((t) => /^[A-G]/.test(t))).toBe(true);
 });
