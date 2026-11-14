@@ -91,3 +91,8 @@ tel qu'il est ; seul change l'endroit où il s'ouvre.
 ## 5. Avancement
 
 - 13/11/2026 : spec écrite (session lancée par la session des Finitions JV). Attend le go.
+- 14/11/2026 : **go de Timothée** (« go », en citant les cinq réponses recommandées) : Q1 (a) les bandes latérales
+  tournent la page même sur un accord ; Q2 (a) aucun réglage ; Q3 (a) « Ici » dès l'accès Harmonie ; Q4 (a) pas
+  d'« Ensuite » sur le scan ; Q5 (a) scan non certifié : panneau sans « Ici ». Le go vaut pour AL-1 et AL-2. AL-1
+  part quand la session des pastilles du rail a fini (`JianpuSheet.tsx`) ; AL-2 quand MT-3 a fini
+  (`PerformanceMode.tsx`), avant RU-5 ou après, jamais en même temps.

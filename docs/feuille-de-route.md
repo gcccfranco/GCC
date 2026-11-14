@@ -114,7 +114,7 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      **suite complète en quatre parts** (`--shard=k/4`, quatre sessions, résultats dans `docs/feuille-de-route.md`,
      aucune correction sans passer par le pilote). Rien ne part sur `main` : la mise en ligne reste à Timothée.
   8. **Accords touchables partout, 简谱 et mode louange (AL-1 → AL-2)** : `docs/spec-accords-louange.md` (13/11),
-     **go à recevoir** et cinq questions (recommandations en premier). AL-1 après la session des pastilles du rail
+     **go de Timothée le 14/11** (les cinq réponses recommandées, § Avancement de la spec). AL-1 après la session des pastilles du rail
      (`JianpuSheet.tsx`) ; AL-2 après MT-3 (`PerformanceMode.tsx`).
   **13/11, 3 h 45 UTC : tous les chantiers de code sont finis** (AN, MP-6, H8, TC, H7 ; tête `8b8b7ff3`). **Suite
   complète lancée en quatre parts** (Sonnet, aucune correction) : `session_01UMdfudPsUH2e4yP7D7LCDY` (1/4),
