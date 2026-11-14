@@ -56,14 +56,17 @@ export function ParagrapheFiche({
   demiTons,
   tonalite,
   className,
+  lang = "fr",
 }: {
   texte: string;
   demiTons: number;
   tonalite: string;
   className?: string;
+  /** Langue du texte : le français des fiches, ou rien quand il est dans la langue du site (docs/harmonie/fiches-zh.json). */
+  lang?: string;
 }) {
   return (
-    <p className={className} lang="fr">
+    <p className={className} lang={lang}>
       <TexteFiche texte={texte.replace(/\s*\n\s*/g, " ")} demiTons={demiTons} tonalite={tonalite} />
     </p>
   );

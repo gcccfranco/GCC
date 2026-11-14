@@ -541,6 +541,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                             <ParagrapheFiche
                               className="mt-1.5 text-base text-muted-foreground"
                               texte={texteFiche(s.fiche).avantApres!}
+                              lang={texteFiche(s.fiche).avantApres === s.fiche.avantApres ? "fr" : undefined}
                               demiTons={semitonesTo(TON_DES_FICHES, tonalite)}
                               tonalite={tonalite}
                             />

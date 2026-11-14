@@ -149,7 +149,13 @@ export function VoletHarmonieLouange({ volet, onClose }: { volet: VoletOuvert | 
   const grand = useAuMoinsMd();
   // Cinq corrections, point 3 : au téléphone, la feuille à mi-hauteur couvrait une pastille (ou un nom) touchée dans la
   // moitié basse de l'écran ; là, la fenêtre accrochée la remplace et se pose au-dessus. Moitié haute : la feuille, dessous.
-  const basse = !!volet?.ancre?.isConnected && (() => { const r = volet.ancre!.getBoundingClientRect(); return r.bottom + 8 > window.innerHeight / 2; })();
+  // Lu une fois par ouverture (`cle`) : un rendu de la page, volet ouvert, ne fait pas basculer feuille et fenêtre.
+  const ancre = volet?.ancre;
+  const cleVolet = volet?.cle;
+  const basse = useMemo(() => {
+    if (!ancre?.isConnected || cleVolet === undefined) return false;
+    return ancre.getBoundingClientRect().bottom + 8 > window.innerHeight / 2;
+  }, [ancre, cleVolet]);
   const fenetre = grand || basse;
   // Fenêtre : Échap la ferme, et elle seule (marqué avant l'écouteur du mode louange, qui quitterait).
   // La feuille est un dialogue : Radix marque son Échap lui-même.
