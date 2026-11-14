@@ -176,6 +176,33 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   la fenêtre des idées recouvre la pastille touchée ; (4) fenêtre de l'armure non ancrée au téléphone ; (5) blanc de
   pagination au téléphone marge ouverte : regarder d'abord, corriger si simple, sinon capture au pilote. Tests : un tour
   sur les specs touchées, puis les seuls échecs. Lot RU fini (`858e662c`), lot MT fini (`576a98f2`).
+  - 14/11, **cinq corrections faites, sauf la 5** (session `session_01UMdfubw1RKp8bmWMeEjAVV`) : (1) **fait**
+    (`9f4668c`), **défaut du site** : `useReglagesAffichage` ne lisait les réglages de l'appareil qu'après
+    l'authentification ; en attendant, le scan 简谱 par défaut remplaçait les paroles environ 0,5 s, puis les paroles
+    revenaient, avec de nouveaux accords touchables. Un toucher dans cet intervalle n'ouvrait rien. Lecture au montage
+    (ordre et rôle attendent le compte). Il reste un remontage de quelques accords quand les lignes se recoupent après le
+    chargement des polices : inhérent à la mise en ligne mesurée, non traité. Tests : 143/144, le rouge (« Voir tout le
+    dictionnaire », sous charge) est vert seul, 3,4 min.
+    (2) **fait** (`9a94bd4`, `7721662`) : table `docs/harmonie/fiches-zh.json` fusionnée au build (`nomZh`, `avantApresZh`),
+    affichée dans les idées du chant, la ligne « 这里 », les cartes et le formulaire d'idées. Le catalogue et les fiches
+    `/harmonie` restent en français (avis 中文 inchangé). Police refaite : 碍 壮 颈 倍. **À relire par Timothée** : les
+    91 titres et les 79 « avant → après » du fichier, par exemple « 用 2m7 代替 4 », « 阻碍终止 », « 终止四六和弦 »,
+    « 1 的持续低音 », « 经过减和弦 », « 以 b7 收尾（混合利底亚终止）», « 直接转调 », « 远关系调：共同音 », « 铺底延长的 1 »,
+    « 尾句重复：再唱最后一句 », « 桥段的半拍感 ». Vocabulaire : degrés → 级数, devient → 改为, tenu → 延长. Tests : 252
+    passés, 0 échec, 8,8 min.
+    (3) **fait** (`e962ba1`) : au téléphone, une pastille ou un nom touché dans la moitié basse ouvre la fenêtre, qui se
+    pose au-dessus ; dans la moitié haute, la feuille s'ouvre dessous. La tablette avait déjà la fenêtre (mesuré, aucun
+    recouvrement). (4) **fait** (`48dcf45`) : la fenêtre de 320 px ne peut pas tomber sous l'armure au téléphone ; une
+    flèche la rattache, ce qui vaut aussi sur la page chant et la vue Partitions. Tests 3 et 4 (`harmonie-jianpu`,
+    `louange-harmonie`, `armure`, `louange-reglages`) : 213/214, le rouge (JV-5c fr, page refaite sous charge) est vert
+    seul, 7,4 min ; puis un tour de rejeu après relecture, 29/30, le rouge (fr clair, ordinateur) est vert seul.
+    (5) **non corrigé** : marge ouverte au téléphone, la zone de lecture fait ≈ 330 px, et une section plus haute que la
+    place restante passe à la page suivante (Intro seule puis un grand blanc, 15 pages). Il faudrait couper les sections
+    entre deux pages quand la zone est basse, comme la demi-page : ce n'est pas une retouche. Capture :
+    `docs/captures/2026-11-14-louange-marge-ouverte-blanc-telephone.png` (`1283745`). Captures `regard` (29) : en 中文,
+    titres traduits partout, aucun caractère manquant. Hors périmètre : la fenêtre des idées couvre la pastille *voisine* ;
+    à 1 440 px elle couvre « Setlist » et « Repères » ; la bulle d'astuce des accords passe sous la fenêtre de la page
+    chant. **Non vérifié** : le mode sombre de la page chant en 中文, et l'armure à l'œil sur la page chant.
   **Deux demandes de Timothée du 13/11 au soir** (ses mots), à cadrer : (1) « on a du mal à différencier l'ancienne
   progression et la nouvelle progression d'accord dans les idées d'harmonie » : il choisit « ancienne grisée » (ancienne
   progression en gris discret, nouvelle en bleu, petits mots « avant » / « après » au-dessus) ; retouche, **go à
