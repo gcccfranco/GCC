@@ -66,38 +66,6 @@ export function BoutonRond({
   );
 }
 
-/** Bouton rond « Sur la page » : le rond, son libellé dessous ; le nom accessible est le libellé. */
-export function BoutonSurPage({
-  label,
-  allume,
-  onClick,
-  children,
-}: {
-  label: string;
-  allume: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={allume}
-      onClick={onClick}
-      className="flex w-full min-w-0 flex-col items-center gap-1 rounded-lg py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <span
-        aria-hidden="true"
-        className={`flex h-12 w-12 items-center justify-center rounded-full border text-base font-bold transition-colors ${
-          allume ? "border-transparent bg-[color:var(--couleur-icones)] text-background" : "border-border text-muted-foreground"
-        }`}
-      >
-        {children}
-      </span>
-      <span className="text-center text-[11px] font-medium leading-tight text-foreground md:text-[13px]">{label}</span>
-    </button>
-  );
-}
-
 /** Ligne d'un menu : libellé (et sous-libellé) à gauche, commande à droite. */
 export function LigneMenu({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
