@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Métronome mode louange</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Music&family=Noto+Sans+SC:wght@400;500;600;700&display=swap">
+<style>
+/* Planche « métronome 2 » : une bande, trois pistes (A · B · C), chacune à 390 / 820 / 1 180 / 1 440 px, clair et sombre.
+   Les écrans dessinés (.m) portent leurs propres jetons clair (.lt) et sombre (.dk) : la planche montre les deux en même temps.
+   Les couleurs gelées sont celles de src/app/globals.css : --chord-color #3f63cf / #8fb0ff, --sec-verse #2c8a7d / #59bdac,
+   --sec-chorus #e0560a / #fb923c, encre #1c1c1e / #f2f2f7, filet #e4e4e5 / #373739, surface sombre #1c1c1e. */
+:root{
+  --bg:#f2f2f7; --surface:#ffffff; --ink:#1c1c1e; --muted:#6c6c72; --line:#e4e4e5; --sec:#f2f2f4;
+  --reco:#1f7a4d; --reco-bg:#e5f3ea; --warn:#a15c00; --warn-bg:#fdf0dc;
+  --sys:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Music","PingFang SC","Noto Sans CJK SC","Noto Sans SC",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#000000; --surface:#1c1c1e; --ink:#f2f2f7; --muted:#98989f; --line:#373739; --sec:#2c2c2e;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#1c1c1e; --ink:#f2f2f7; --muted:#98989f; --line:#373739; --sec:#2c2c2e;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sys);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 72px}
+.wrap{max-width:1408px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-size:30px;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:22px;margin:0;text-wrap:balance}
+h3{font-size:17px;margin:0;text-wrap:balance}
+h4{font-size:14px;margin:0;color:var(--muted);font-weight:600}
+p{margin:0;max-width:72ch;text-wrap:pretty}
+.eyebrow{font-size:12px;color:var(--muted);font-weight:600}
+.intro,section{display:flex;flex-direction:column;gap:16px;min-width:0}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.box p{font-size:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.piste{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.piste.reco{border:2px solid var(--reco)}
+.piste-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--reco-bg);color:var(--reco)}
+.tag.n{background:var(--sec);color:var(--muted)}
+.devgrp{display:flex;flex-direction:column;gap:10px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;min-width:0}
+figure{margin:0;display:flex;flex-direction:column;gap:6px;width:min(var(--dw),100%);min-width:0}
+figcaption{font-size:13px;color:var(--muted);line-height:1.4}
+figcaption b{color:var(--ink);font-weight:600}
+.fitbox{width:100%;overflow-x:auto;overflow-y:hidden}
+.fit{position:relative}
+.m{position:absolute;left:0;top:0;transform-origin:0 0}
+.apps{display:flex;flex-direction:column}
+.ar{display:grid;grid-template-columns:200px 1fr 1fr;gap:4px 20px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.ar:first-child{border-top:0}
+.ar b{font-weight:600}
+.ar .rep{color:var(--reco);font-weight:600}.ar .non{color:var(--warn);font-weight:600}
+.ar small{display:block;color:var(--muted);font-size:12.5px;font-weight:400}
+.pc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;font-size:14px}
+.pc ul{margin:4px 0 0;padding-left:18px}
+.plus{color:var(--reco);font-weight:600}.moins{color:var(--warn);font-weight:600}
+.questions{counter-reset:q;display:flex;flex-direction:column;gap:12px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.q h3::before{counter-increment:q;content:"Q" counter(q) " · ";color:var(--muted)}
+.q .rec{font-size:14px;color:var(--reco);font-weight:600}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:var(--sec);padding:1px 5px;border-radius:5px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+@media (max-width:760px){.ar{grid-template-columns:1fr}}
+
+/* ============ écrans dessinés ============ */
+.m{--bg:#fff;--ink:#1c1c1e;--mut:#6c6c72;--line:#e4e4e5;--raised:#fff;--sec:#f2f2f4;--chord:#3f63cf;--acc:#3f63cf;--acc-t:#fff;
+  --verse:#2c8a7d;--chorus:#e0560a;--rest:rgba(28,28,30,.6);--arc:rgba(28,28,30,.55);--fill:#1c1c1e;--fill-t:#fff;
+  --shadow:0 14px 40px rgba(28,28,30,.2),0 2px 6px rgba(28,28,30,.08);--shadow-r:0 4px 14px rgba(28,28,30,.1),0 1px 2px rgba(28,28,30,.06);--rim:#e4e4e5;--lun:#fff;
+  background:var(--bg);color:var(--ink);font-family:var(--sys);overflow:hidden;outline:1px solid var(--line);outline-offset:-1px;
+  font-variant-numeric:tabular-nums;font-size:15px;line-height:1.3;letter-spacing:0}
+.m.dk{--bg:#000;--ink:#f2f2f7;--mut:#98989f;--line:#373739;--raised:#1c1c1e;--sec:#2c2c2e;--chord:#8fb0ff;--acc:#8fb0ff;--acc-t:#000;
+  --verse:#59bdac;--chorus:#fb923c;--rest:rgba(242,242,247,.6);--arc:rgba(242,242,247,.55);--fill:rgba(242,242,247,.85);--fill-t:#000;
+  --shadow:0 0 0 1px rgba(255,255,255,.1);--shadow-r:0 0 0 1px rgba(255,255,255,.1);--rim:#48484a;--lun:#2c2c2e}
+.m *{box-sizing:border-box}
+.m .nm{font-family:"Noto Music",var(--sys);font-weight:400}
+.m svg{display:block;flex:none}
+.m.zh{line-height:1.5}
+/* page */
+.m .pg{position:absolute;inset:0;display:grid;gap:0 48px;align-content:start}
+.m .blk{min-width:0}
+.m .sl{font-size:12px;font-weight:600;margin:6px 0 6px;line-height:1.3}
+.m .sl.verse{color:var(--verse)}.m .sl.chorus{color:var(--chorus)}
+.m .ln{line-height:2.6;white-space:normal}
+.m .zl{line-height:2.6}
+.m .py{font-size:.62em;color:var(--mut);line-height:1.2;margin:-.5em 0 .6em;letter-spacing:.01em}
+.m .sg{position:relative;display:inline-block;line-height:1.3}
+.m .wd{display:inline-block;white-space:nowrap}
+.m .sg i{position:absolute;left:0;bottom:100%;margin-bottom:.12em;font-style:normal;font-weight:600;font-size:.8em;line-height:1;color:var(--chord);white-space:nowrap}
+/* barre */
+.m .bar{position:absolute;left:0;top:0;display:flex;align-items:center;gap:4px;padding-inline:8px;background:var(--bg);box-shadow:0 1px 0 var(--line);z-index:5}
+.m.tab .bar,.m.land .bar,.m.desk .bar{padding-inline:16px}
+.m .bl,.m .br{flex:1 1 0;display:flex;align-items:center;gap:2px;min-width:0}.m .br{justify-content:flex-end}
+.m .bt{min-width:0;text-align:center;padding:0 4px;flex:0 1 auto}
+.m .bt b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
+.m .bt span{display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
+.m.tab .bt b,.m.land .bt b,.m.desk .bt b{font-size:16px}.m.tab .bt span,.m.land .bt span,.m.desk .bt span{font-size:13px}
+.m .ib{width:44px;height:44px;display:grid;place-items:center;flex:none;color:var(--ink)}
+.m .ib.aa{font:600 17px var(--sys)}
+.m .pb{height:44px;min-width:44px;padding:0 8px;display:flex;align-items:center;gap:6px;font:600 14px var(--sys);flex:none}
+.m .pb .nm{font-size:27px;margin-right:-5px;line-height:1}
+.m .pb svg{color:var(--acc)}
+/* ---- piste A : la bande des pastilles ---- */
+.m .sa{position:absolute;height:36px;display:flex;align-items:center;gap:8px;z-index:4}
+.m .sa .pads{flex:1 1 0;min-width:0;display:flex;gap:16px;align-items:center;justify-content:flex-start}
+.m .sa .grp{display:flex;gap:6px;align-items:center;min-width:0}
+.m .sa.gg .grp{gap:4px}
+.m .pa{flex:1 1 0;min-width:0;max-width:160px;display:grid;place-items:center;border:1.5px solid var(--rest);color:var(--rest);border-radius:999px;
+  font:600 15px/1 var(--sys);box-sizing:border-box;overflow:hidden}
+.m .pa.f{height:28px;border-width:2.5px;font-weight:700}.m .pa.md{height:24px}.m .pa.w{height:20px}
+.m .pa.x{height:20px;border-style:dashed}
+.m .pa.on{background:var(--fill);border-color:var(--fill);color:var(--fill-t)}
+.m .pa.x.on{background:transparent;border-style:solid;border-color:var(--ink);color:var(--ink)}
+.m .pa.dim{background:color-mix(in srgb,var(--fill) 40%,transparent);border-color:var(--rest);color:var(--ink)}
+.m .sa.stop .pads{opacity:.3}
+.m .sa.t12 .pa{font-size:11px;border-width:1.5px}.m .sa.t12 .pa.f{border-width:2px}
+.m .go{flex:none;width:56px;height:36px;border-radius:10px;background:var(--acc);color:var(--acc-t);display:flex;align-items:center;justify-content:center;gap:3px;font:600 13px var(--sys);white-space:nowrap}
+.m .go .nm{font-size:22px;margin-right:-3px;line-height:1}
+.m .go svg{width:13px;height:13px}
+/* ---- piste B : le cadran ---- */
+.m .dsm{position:relative;flex:none;display:grid;place-items:center}
+.m .dsm .c{position:absolute;inset:0;display:grid;place-items:center;font:600 15px var(--sys);letter-spacing:-.01em}
+.m .dsm.s56 .c{font-size:17px}.m .dsm.stp .c{color:var(--rest)}
+.m .flot{position:absolute;z-index:6;display:flex;gap:8px;align-items:center}
+.m .flot .pastille{width:52px;height:52px;border-radius:50%;background:var(--raised);box-shadow:var(--shadow);display:grid;place-items:center}
+.m .flot .arm{height:34px;padding:0 12px;border-radius:17px;background:var(--raised);box-shadow:var(--shadow-r);display:grid;place-items:center;font:600 14px var(--sys)}
+.m .dbig{position:relative;margin:0 auto;flex:none}
+.m .dbig .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.m .dbig .c b{font-weight:600;letter-spacing:-.03em;line-height:1;font-size:72px}
+.m .dbig .c b.t3{font-size:62px}
+.m .dbig .c span{font-size:15px;color:var(--mut);margin-top:4px}
+/* ---- piste C : la mesure écrite ---- */
+.m .sc{position:absolute;height:40px;display:flex;align-items:center;gap:10px;z-index:4}
+.m .sc .tp{display:flex;align-items:center;gap:3px;font:600 15px var(--sys);white-space:nowrap;flex:none}
+.m .sc .tp .nm{font-size:25px;line-height:1}
+.m .sc .sig{display:flex;flex-direction:column;align-items:center;font:700 13px/1 var(--sys);flex:none;gap:1px}
+.m .sc .sig.zz{border-left:1.5px solid var(--line);padding-left:10px;font-size:12px}
+.m .sc .nts{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:space-between;padding-right:2px}
+.m .sc .nts.g{gap:10px;justify-content:flex-start}
+.m .sc .bl2{width:2px;height:26px;background:var(--ink);flex:none}
+.m .nt{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:20px;color:var(--arc);transform-origin:50% 70%}
+.m .nt.f::before{content:">";position:absolute;top:-4px;left:50%;transform:translateX(-50%);font:700 12px/1 var(--sys);color:inherit}
+.m .nt .nm{font-size:40px;line-height:1}
+.m .nt.on{color:var(--ink);transform:scale(1.15)}
+.m .nt.dim{color:color-mix(in srgb,var(--ink) 78%,transparent);transform:scale(1.07)}
+.m .nt.flat.on,.m .nt.flat.dim{transform:none}
+.m .nt.w .pr{font:400 15px var(--sys);margin:0 -1px}
+.m .nt.x .nm{font-size:26px}
+.m .jx{font:500 20px/1 var(--sys);position:relative;padding-bottom:3px}
+.m .jx.u::after,.m .jx.u2::after{content:"";position:absolute;left:0;right:0;bottom:0;border-bottom:1.5px solid currentColor}
+.m .jgrp{display:inline-flex;gap:6px;position:relative;padding-bottom:4px}
+.m .jgrp::after{content:"";position:absolute;left:0;right:0;bottom:0;border-bottom:1.5px solid var(--arc)}
+.m .jgrp .nt{min-width:14px}
+.m .nt.j .jx{padding:0}
+/* ---- panneau ---- */
+.m .marge{position:absolute;right:0;top:0;bottom:0;width:320px;background:var(--raised);border-left:1px solid var(--line);z-index:7;display:flex;flex-direction:column}
+.m .sheet{position:absolute;bottom:0;background:var(--raised);border-radius:16px 16px 0 0;box-shadow:var(--shadow);z-index:7;display:flex;flex-direction:column;overflow:hidden}
+.m.dk .sheet{border:1px solid var(--line);border-bottom:0}
+.m .grab{width:36px;height:5px;border-radius:3px;background:var(--line);margin:8px auto 0;flex:none}
+.m .psc{overflow:auto;flex:1 1 auto;min-height:0;scrollbar-width:none}.m .psc::-webkit-scrollbar{display:none}
+.m .pn{display:flex;flex-direction:column;gap:18px;padding:0 16px 24px}
+.m .pn.mid{gap:12px;padding-bottom:20px}
+.m .ph{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0}
+.m .ph b{font-size:17px;font-weight:600}
+.m .lab{font-size:13px;font-weight:600;color:var(--mut);margin-bottom:8px;line-height:1.3}
+.m.zh .lab{font-size:14px;line-height:1.5}
+.m .seg{display:flex;background:var(--sec);border-radius:10px;padding:2px;gap:2px}
+.m .seg>span{flex:1 1 0;min-width:0;height:40px;display:grid;place-items:center;border-radius:8px;font-weight:600;font-size:15px;text-align:center;white-space:nowrap;padding:0 2px}
+.m .seg>span.on{background:var(--ink);color:var(--bg)}
+.m .seg.sm>span{font-size:14px}
+.m .tb{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.m .tu{text-align:center;font-size:14px;color:var(--mut);margin-top:-14px;margin-bottom:-2px}
+.m .tu .nm{font-size:18px}
+.m .tb b{font-size:64px;font-weight:600;letter-spacing:-.02em;line-height:1}
+.m .tb .u{font-size:15px;color:var(--mut)}
+.m .rr{display:flex;align-items:center;gap:8px}
+.m .rb{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;flex:none;background:var(--raised);box-shadow:var(--shadow-r)}
+.m .rule{flex:1;height:44px;position:relative;overflow:hidden;background:var(--sec);border-radius:10px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%)}
+.m .rule i{position:absolute;top:8px;width:1.5px;height:12px;background:var(--mut);opacity:.75}
+.m .rule i.t{top:8px;height:18px}
+.m .rule u{position:absolute;top:27px;font:600 11px var(--sys);text-decoration:none;color:var(--mut);transform:translateX(-50%)}
+.m .rule s{position:absolute;left:50%;top:3px;bottom:3px;width:2.5px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
+.m .act{display:flex;gap:10px}
+.m .tap{flex:1;height:56px;border-radius:12px;border:1.5px solid var(--ink);display:grid;place-items:center;font-size:17px;font-weight:600}
+.m .gob{flex:1;height:56px;border-radius:12px;background:var(--acc);color:var(--acc-t);display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;font-weight:600}
+.m .gob svg{width:16px;height:16px}
+.m .tbeats{display:flex;gap:6px;align-items:center;min-height:44px}
+.m .tbeats.g3{gap:4px}
+.m .tbeats .gg{display:flex;gap:4px;flex:1 1 0;min-width:0}
+.m .tbeats .gap{width:10px;flex:none}
+.m .tp2{flex:1 1 0;min-width:0;max-width:64px;display:grid;place-items:center;border:1.5px solid var(--rest);color:var(--rest);border-radius:999px;font:600 15px/1 var(--sys)}
+.m .tp2.f{height:44px;border-width:2.5px;font-weight:700}.m .tp2.md{height:38px}.m .tp2.w{height:32px}.m .tp2.x{height:32px;border-style:dashed}
+.m .tp2.on{background:var(--fill);border-color:var(--fill);color:var(--fill-t)}
+.m .tp2.x.on{background:transparent;border-style:solid;border-color:var(--ink);color:var(--ink)}
+.m .hint{font-size:13px;color:var(--mut);margin-top:6px;line-height:1.4}
+.m.zh .hint{line-height:1.5}
+.m .lvl{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:6px}
+.m .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.m .tile{min-height:64px;border-radius:10px;background:var(--sec);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 2px;font-size:12px;font-weight:600;text-align:center;line-height:1.2}
+.m .tile .nm{font-size:26px;line-height:1.1}
+.m .tile.on{background:var(--ink);color:var(--bg)}
+.m .tiles.t2{grid-template-columns:repeat(2,1fr)}
+.m .swr{display:flex;align-items:center;justify-content:space-between;min-height:44px}
+.m .swr b{font-size:15px;font-weight:600}.m .swr small{display:block;font-size:13px;color:var(--mut);font-weight:400}
+.m .sw{width:51px;height:31px;border-radius:16px;background:var(--line);position:relative;flex:none}
+.m .sw::after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.m .sw.on{background:var(--acc)}.m .sw.on::after{left:22px}
+.m.dk .sw.on::after{background:#000}
+.m .dis{opacity:.45}
+.m .vol{display:flex;align-items:center;gap:10px;min-height:44px}
+.m .vol .tr{flex:1;height:4px;border-radius:2px;background:var(--line);position:relative}
+.m .vol .tr i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--ink)}
+.m .vol .tr b{position:absolute;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--raised);box-shadow:var(--shadow-r);border:1px solid var(--line)}
+.m .ent{border-top:1px solid var(--line);padding-top:6px}
+.m .enth{display:flex;align-items:center;justify-content:space-between;min-height:44px;font-size:15px;font-weight:600}
+.m .enth svg{color:var(--mut)}
+.m .phr{display:flex;gap:12px;align-items:flex-start;padding:8px 0;font-size:15px;line-height:2.4}
+.m.zh .phr{line-height:2.4}
+.m .cb{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--mut);flex:none;margin-top:9px;display:grid;place-items:center;color:var(--bg)}
+.m .cb.on{background:var(--ink);border-color:var(--ink)}
+.m .cb svg{width:14px;height:14px}
+.m .bx{display:inline-grid;place-items:center;min-width:40px;height:34px;padding:0 6px;margin:0 3px;border:1.5px solid var(--ink);border-radius:8px;font-weight:600;line-height:1;vertical-align:middle}
+.m .lst .li{display:flex;align-items:center;gap:10px;min-height:56px;border-top:1px solid var(--line);font-size:15px}
+.m .lst .li:first-child{border-top:0}
+
+.m .lst .li b{font-weight:600;flex:1 1 auto}
+.m .lst .li .v{color:var(--mut);font-size:14px;text-align:right}
+.m .lst .li .st{display:flex;gap:6px}
+.m .lst .li .st span{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-weight:600;font-size:16px}
+.m .pied{font-size:13px;color:var(--mut);display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:12px}
+.m .pied u{color:var(--ink);font-weight:600;font-size:15px;text-decoration:underline;text-underline-offset:3px;min-height:36px;display:flex;align-items:center}
+.m .sec-t{border-top:1px solid var(--line);padding-top:14px}
+.m .tsg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.m .tsg.six{grid-template-columns:repeat(6,1fr)}
+.m.land .marge .tsg.six,.m.desk .marge .tsg.six{grid-template-columns:repeat(3,1fr)}
+.m .li.blk2{display:block;padding:12px 0}
+.m .tsg>span{height:56px;border-radius:10px;background:var(--sec);display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 19px/1 var(--sys);gap:1px}
+.m .tsg>span.on{background:var(--ink);color:var(--bg)}
+.m .tsg>span.a{font:600 14px var(--sys)}
+.m .bigmes{display:flex;align-items:center;justify-content:space-between;background:var(--sec);border-radius:12px;padding:20px 12px 12px;min-height:84px}
+.m .bigmes .nt{min-width:40px}.m .bigmes .nt .nm{font-size:44px}.m .bigmes .nt.f::before{top:-12px;font-size:15px}
+.m .bigmes .jx{font-size:26px}
+.m .ctempo{display:flex;align-items:center;justify-content:center;gap:6px;line-height:1}
+.m .ctempo .nm{font-size:48px}.m .ctempo b{font-size:64px;font-weight:600;letter-spacing:-.02em}
+/* pastille de bar active quand le panneau est ouvert */
+.m .zoomtag{position:absolute;right:8px;bottom:8px;font-size:11px;color:var(--mut)}
+
+/* Reprise après critique (13/11), faite par la conversation principale */
+.m .pa.x.on,.m .tp2.x.on{background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--ink) 38%,transparent) 0 3px,transparent 3px 7px);border-style:dashed;border-color:var(--ink);color:var(--ink)}
+.m .sa.stop .pads{opacity:1}
+.m .sa.t12 .pa{height:24px;font-size:12px}.m .sa.t12 .pa.f{height:28px}
+.m .sa.t12 .grp .pa:not(:first-child):not(.on){font-size:0}
+.m .tp2,.m .tp2.f,.m .tp2.md,.m .tp2.w,.m .tp2.x{height:44px}
+.m .tp2.md{border-width:1.5px}.m .tp2.w{border-width:1px;font-size:13px;font-weight:500}
+.phr{word-break:keep-all}
+.m .sc .nts{max-width:min(100%,560px)}
+.m .pb{border:1px solid var(--line);border-radius:22px;padding:0 12px}.m .pb svg{width:14px;height:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="intro">
+  <span class="eyebrow">Planche · 13/11/2026 · deuxième passe · à trancher avant spec</span>
+  <h1>Métronome du mode louange : un indicateur à jouer, un panneau à régler</h1>
+  <p>Timothée a trouvé « un simple trait qui bouge » trop peu : il veut un métronome qui sonne, plus visuel, binaire ou ternaire, avec des temps forts, « comme une vraie application de métronome ». Cette planche refait la première après avoir regardé ce que font Soundbrenner, Pro Metronome, Tempo, Planning Center Music Stand et forScore (<code>docs/recherche-metronomes.md</code>). Rien n'est codé.</p>
+  <p>Décidé : un métronome par appareil, réglé par chacun ; <b>silencieux par défaut</b> (visuel seul) ; le son s'allume à la demande, pour s'entraîner ; proposition : il se coupe au changement de chant et en quittant le mode louange. Les réglages vivent dans la marge « Affichage » / 显示 décidée (colonne de 320 px qui repousse la musique, feuille basse au téléphone et en tablette portrait) : le panneau Métronome prend la même forme.</p>
+  <div class="legend"><span>Écrans dessinés à l'échelle 1:1 (le 1 440 px est réduit à l'écran étroit, un ascenseur le rend sinon).</span><span>Chants réels : À jamais Tu es saint (♩ 72, 4/4, tonalité recommandée A), 一同齐声宣扬 (♩ 126, 4/4), 为我而来 (♩. 74, 6/8). Aucun nom de personne.</span></div>
+</header>
+
+<!-- ───────── Ce que font les apps ───────── -->
+<section id="apps">
+  <h2>Ce que font les apps → ce qu'on reprend</h2>
+  <div class="box apps" id="apps-list"></div>
+</section>
+
+<!-- ───────── Comparaison au liseré ───────── -->
+<section id="lisere">
+  <h2>Aujourd'hui un trait de 3 px ; demain, trois façons d'être visible, côte à côte</h2>
+  <p>Le liseré actuel (<code>LiseretTempo.tsx</code>) est un trait de 3 px sous la barre, qui se remplit en une pulsation. Les trois pistes, au même tempo (♩ 72), à la même taille réelle (390 px, fr, clair, 4/4, temps 2 allumé).</p>
+  <div class="row" id="cmp"></div>
+</section>
+
+<!-- ───────── Pistes ───────── -->
+<section id="pistes">
+  <h2>Les trois pistes</h2>
+  <div id="pA"></div>
+  <div id="pB"></div>
+  <div id="pC"></div>
+</section>
+
+<!-- ───────── Questions ───────── -->
+<section id="questions">
+  <h2>Questions à trancher</h2>
+  <div class="questions" id="qlist"></div>
+</section>
+
+</div>
+
+<script>
+/* =========================================================
+   Données réelles (content/songs, src/locales) et petits utilitaires
+   ========================================================= */
+const SONG = {
+  fr: {title:'À jamais Tu es saint', sub:'Chris Tomlin · A', tempo:72, m:'4/4', blocks:[
+    {n:'Couplet 1', k:'verse', l:[
+      "Tou[A]tes les générations, de[D]vant Lui prostern[A]ées",
+      "En[F#m]tonnent ensemble un c[E]antique à l'Agneau.",
+      "Ceux [A]qui nous ont précédés et [D]ceux qui nous suiv[A]ront",
+      "En[F#m]tonneront ce c[E]antique à l'Agneau."]},
+    {n:'Refrain 1', k:'chorus', l:[
+      "Et les anges acclam[D]ent : Tu [F#m]es [E]saint,",
+      "L'univers proclam[A/C#]e : Tu es [F#m]saint.",
+      "Tu es glorif[Bm7]ié, Dieu très [E]saint,",
+      "à jamais Tu e[A]s saint."]}]},
+  zh: {title:'一同齐声宣扬', sub:'游智婷词 / 陈麟安曲 · A', tempo:126, m:'4/4', blocks:[
+    {n:'主歌 1', k:'verse', l:[
+      "[A]耶稣降生，耶稣降生，   yē sū jiàng shēng yē sū jiàng shēng",
+      "[E]普天同庆，普天同庆，   pǔ tiān tóng qìng pǔ tiān tóng qìng",
+      "[D]两千年前，两千年前，   liǎng qiān nián qián liǎng qiān nián qián",
+      "[A]为你为我，为你为我。   wèi nǐ wèi wǒ wèi nǐ wèi wǒ"]},
+    {n:'\u00a0', k:'verse', l:[
+      "[A]小小君王，小小君王，   xiǎo xiǎo jūn wáng xiǎo xiǎo jūn wáng",
+      "[E]在马槽里，在马槽里，   zài mǎ cáo lǐ zài mǎ cáo lǐ",
+      "[D]天使天军，天使天军，   tiān shǐ tiān jūn tiān shǐ tiān jūn",
+      "[A]报好消息，报好消息。   bào hǎo xiāo xī bào hǎo xiāo xī"]}]},
+  z12: {title:'活出爱', sub:'盛晓玫 · C', tempo:63, m:'12/8', blocks:[
+    {n:'主歌', k:'verse', l:[
+      "测不[F]透，摸不[C/E]着，却看得[Dm]见[G]；   cè bù tòu mō bù zháo què kàn de jiàn",
+      "因为有[C]你，因为有[G]我，甘心[F]给，用心[C]爱，   yīn wèi yǒu nǐ yīn wèi yǒu wǒ gān xīn gěi yòng xīn ài"]},
+    {n:'副歌', k:'chorus', l:[
+      "耶稣的[F]爱激励[G]我，敞开[Em]我的生[Am]命，   yē sū de ài jī lì wǒ chǎng kāi wǒ de shēng mìng",
+      "让自[F]己成为[G]别人祝[C]福；   ràng zì jǐ chéng wéi bié rén zhù fú"]}]},
+  z68: {title:'为我而来', sub:'火把音乐 · C', tempo:74, m:'6/8', blocks:[
+    {n:'主歌 1', k:'verse', l:[
+      "[Fmaj7]一个[G]人走在[C]热闹拥挤的街，   yī gè rén zǒu zài rè nào yōng jǐ de jiē",
+      "[Fmaj7]圣诞[G]节没有[C]白雪纷飞满天，   shèng dàn jié méi yǒu bái xuě fēn fēi mǎn tiān"]},
+    {n:'主歌 2', k:'verse', l:[
+      "[Fmaj7]那一[G]天你降[C]生在马槽里，   nà yī tiān nǐ jiàng shēng zài mǎ cáo lǐ",
+      "[Fmaj7]牧羊[G]人和天[C]使一同来欢庆，   mù yáng rén hé tiān shǐ yī tóng lái huān qìng"]}]}
+};
+/* Libellés : ceux de src/locales quand ils existent (Tempo, Outils, Désactivé…), sinon proposés (à faire relire en chinois). */
+const L = {
+  fr:{metro:'Métronome',tempo:'Tempo',taper:'Taper',marche:'Marche',arret:'Arrêt',mesure:'Mesure',autre:'Autre',temps:'Temps',
+    lv:['Fort','Moyen','Faible','Muet'],touch:'Touchez un temps pour changer : fort, moyen, faible, muet.',bin:'Binaire',ter:'Ternaire',sub:'Subdivisions',
+    subs:['Aucune','Croches','Doubles','Croche pointée','Triolets'],son:'Son',on:'Activé',off:'Désactivé',sons:['Clic','Bois','Cloche'],vol:'Volume',
+    dec:'Décompte',decs:['Aucun','1 mesure','2 mesures'],ent:'S\'entraîner',retenu:'Retenu pour ce chant sur cet appareil',rev:'Revenir au tempo du chant',
+    arcHint:'Touchez un arc : fort, moyen, faible, muet.',ecr:'Écriture',ecrs:['Portée','简谱'],sil:'Silencieux par défaut : le visuel suffit.',
+    ph:['Jouer {4} mesures, puis {4} en silence.','Partir de {60}, monter de {2} toutes les {4} mesures, jusqu\'à {80}.','Arrêter après {10} min.'],
+    li:['Mesures muettes','Accélération','Minuteur'],liv:['4 jouées · 4 muettes','60 → 80 · +2 / 4 mes.','10 min'],aria:'Fermer'},
+  zh:{metro:'节拍器',tempo:'速度',taper:'打拍',marche:'开始',arret:'停止',mesure:'拍号',autre:'其他',temps:'拍',
+    lv:['重','中','弱','静音'],touch:'点按某一拍可切换：重、中、弱、静音。',bin:'二分',ter:'三分',sub:'细分',
+    subs:['无','八分','十六分','附点八分','三连音'],son:'声音',on:'开启',off:'关闭',sons:['滴答','木鱼','钟声'],vol:'音量',
+    dec:'预备拍',decs:['无','1 小节','2 小节'],ent:'练习',retenu:'已为此设备记住本曲设置',rev:'恢复本曲速度',
+    arcHint:'点按圆弧可切换：重、中、弱、静音。',ecr:'记谱',ecrs:['五线谱','简谱'],sil:'默认静音：看节拍即可。',
+    ph:['先奏 {4} 小节，<wbr>再静音 {4} 小节。','从 {60} 开始，每 {4} 小节加快 {2}，直到 {80}。','{10} 分钟后停止。'],
+    li:['静音小节','渐快','计时'],liv:['奏 4 · 静 4','60 → 80 · +2 / 4 小节','10 分钟'],aria:'关闭'}
+};
+const MET = {
+  '2/4':{n:2,g:[2],lv:['f','w'],cp:'♩',sig:['2','4']},
+  '3/4':{n:3,g:[3],lv:['f','w','w'],cp:'♩',sig:['3','4']},
+  '4/4':{n:4,g:[4],lv:['f','w','md','w'],cp:'♩',sig:['4','4']},
+  '6/8':{n:6,g:[3,3],lv:['f','w','w','md','w','w'],cp:'♩.',sig:['6','8']},
+  '12/8':{n:12,g:[3,3,3,3],lv:['f','w','w','md','w','w','md','w','w','md','w','w'],cp:'♩.',sig:['12','8']}
+};
+const IC = {
+  play:'<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg>',
+  stop:'<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+  minus:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12M12 6v12"/></svg>',
+  x:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  list:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h12M3 11h12M3 16h7"/><circle cx="16.5" cy="17" r="2.5"/><path d="M19 17V8l3 1"/></svg>',
+  note:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+  pencil:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5z"/></svg>',
+  wrench:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  chevd:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+};
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+/* ChordPro → segments : l'accord se pose sur le premier mot qui le suit */
+function cho(line,zh){
+  const seg=(parts)=>{let h=esc(parts[0]);
+    for(let i=1;i<parts.length;i+=2){const ch=parts[i],tx=parts[i+1]||'\u00a0';const mw=(ch.length*.62+.25).toFixed(2);
+      h+=`<span class="sg" style="min-width:${mw}em"><i>${esc(ch)}</i>${esc(tx)}</span>`}
+    return h};
+  if(zh) return seg(line.split(/\[([^\]]+)\]/));
+  /* mots entiers : un accord au milieu d'un mot ne coupe pas la ligne à cet endroit */
+  return line.split(' ').map(wd=>`<span class="wd">${seg(wd.split(/\[([^\]]+)\]/))}</span>`).join(' ');
+}
+function music(song,o){
+  const zh=o.lang!=='fr';
+  const fs={phone:17,tab:21,land:21,desk:21}[o.dev]*(zh?1.12:1);
+  const blocks=song.blocks.map(b=>`<div class="blk"><div class="sl ${b.k}">${b.n}</div>`+b.l.map(l=>{
+    if(!zh) return `<div class="ln">${cho(l)}</div>`;
+    const [c,p]=l.split(/\s{3,}/); return `<div class="zl">${cho(c,true)}</div><div class="py">${esc(p||'')}</div>`}).join('')+'</div>').join('');
+  return blocks;
+}
+/* ---- notes : têtes, hampes, ligatures dessinées (les croches liées et les triolets n'existent pas en Unicode simple) ---- */
+function beam(n,o={}){
+  const g=o.gap||12,h=o.h||30,w=n*g+6,trip=o.trip,top=trip?11:0,dbl=o.dbl,col='currentColor';
+  const ws=o.weak||[]; let s=`<svg width="${w}" height="${h+top}" viewBox="0 0 ${w} ${h+top}" fill="${col}">`;
+  const xs=[...Array(n)].map((_,i)=>4+g*i+3);
+  xs.forEach((x,i)=>{const y=h+top-6;
+    s+=`<ellipse cx="${x}" cy="${y}" rx="3.9" ry="3" transform="rotate(-20 ${x} ${y})"/><path d="M${x+3.6} ${y-.8}V${top+3}" stroke="${col}" stroke-width="1.3" fill="none"/>`;
+    if(ws.includes(i)) s+=`<text x="${x-6.6}" y="${y+4}" font-size="11" font-family="sans-serif" opacity=".8">(</text><text x="${x+5}" y="${y+4}" font-size="11" font-family="sans-serif" opacity=".8">)</text>`});
+  s+=`<path d="M${xs[0]+3.6} ${top+3.6}H${xs[n-1]+3.6}" stroke="${col}" stroke-width="3" fill="none"/>`;
+  if(dbl) s+=`<path d="M${xs[0]+3.6} ${top+8.4}H${xs[n-1]+3.6}" stroke="${col}" stroke-width="2.4" fill="none"/>`;
+  if(trip) s+=`<path d="M${xs[0]+3.6} ${top-1}V2H${xs[n-1]+3.6}V${top-1}" stroke="${col}" stroke-width="1" fill="none" opacity=".8"/><text x="${(xs[0]+xs[n-1])/2+3.6}" y="9" font-size="10" font-weight="700" text-anchor="middle" font-family="sans-serif">3</text>`;
+  return s+'</svg>';
+}
+/* ---- cadrans ---- */
+function arcPath(cx,cy,r,a0,a1){const p=a=>[cx+r*Math.cos(a*Math.PI/180),cy+r*Math.sin(a*Math.PI/180)];const [x0,y0]=p(a0),[x1,y1]=p(a1);
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${(a1-a0)>180?1:0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`}
+function dial(size,st,o){ // anneau des arcs-temps ; o:{r,sw:{f,m,w,x},gap,rim:bool}
+  const M=MET[st.m],lv=st.lv||M.lv,n=M.n,gap=o.gap,r=o.r,c=size/2; const seg=360/n; let s='';
+  lv.forEach((l,i)=>{const a0=-90+i*seg+gap/2,a1=-90+(i+1)*seg-gap/2; const on=st.on===i,dim=st.fade===i;
+    const sw=o.sw[l]; let col=st.run?(on?'var(--ink)':'var(--arc)'):'var(--arc)'; let op=st.run?1:.3;
+    if(dim){col='var(--ink)';op=.7}
+    if(l==='x'){ if(on){s+=`<path d="${arcPath(c,c,r,a0,a1)}" stroke="var(--ink)" stroke-width="${sw}" fill="none"/>`;return}
+      s+=`<path d="${arcPath(c,c,r,a0,a1)}" stroke="${col}" stroke-width="${sw}" fill="none" stroke-dasharray="${o.dash}" opacity="${op}"/>`;return}
+    s+=`<path d="${arcPath(c,c,r,a0,a1)}" stroke="${col}" stroke-width="${sw}" fill="none" opacity="${op}"/>`});
+  return s;
+}
+function dialSmall(size,st){
+  const M=MET[st.m]; const g=M.n>6?7:(M.n>4?11:16);
+  const svg=`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${dial(size,st,{r:size/2-4,sw:{f:4.4,md:3.4,w:2.6,x:2.6},gap:g,dash:'1.6 2.2'})}</svg>`;
+  return `<span class="dsm s${size}${st.run?'':' stp'}" style="width:${size}px;height:${size}px">${svg}<span class="c">${st.tempo}</span></span>`;
+}
+function dialBig(size,st){
+  const M=MET[st.m],R=size/2,lun=28,rr=R-lun-14; const ticks=[];
+  for(let a=0;a<360;a+=6){const r1=R-4,r2=R-10,rad=a*Math.PI/180;ticks.push(`<path d="M${R+r1*Math.cos(rad)} ${R+r1*Math.sin(rad)}L${R+r2*Math.cos(rad)} ${R+r2*Math.sin(rad)}" stroke="var(--mut)" stroke-width="1" opacity=".55"/>`)}
+  const knob=(ang)=>{const rad=ang*Math.PI/180,rk=R-lun/2;return `<circle cx="${R+rk*Math.cos(rad)}" cy="${R+rk*Math.sin(rad)}" r="4" fill="var(--ink)"/>`};
+  const n=M.n,sw=size>250?{f:13,md:10,w:7.5,x:7.5}:{f:12,md:9.5,w:7,x:7};
+  const s=`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <defs><filter id="sh" x="-25%" y="-25%" width="150%" height="160%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#1c1c1e" flood-opacity=".22"/></filter></defs>
+    <circle cx="${R}" cy="${R}" r="${R-lun/2-.5}" fill="none" stroke="var(--lun)" stroke-width="${lun}" filter="url(#sh)"/>
+    <circle cx="${R}" cy="${R}" r="${R-.5}" fill="none" stroke="var(--rim)" stroke-width="1"/><circle cx="${R}" cy="${R}" r="${R-lun+.5}" fill="none" stroke="var(--rim)" stroke-width="1"/>
+    ${ticks.join('')}${knob(-58)}
+    ${dial(size,st,{r:rr,sw,gap:n>6?3.6:7,dash:'2.5 4'})}</svg>`;
+  const t3=String(st.tempo).length>2?' t3':'';
+  return `<div class="dbig" style="width:${size}px;height:${size}px">${s}<div class="c"><b class="${t3}">${st.tempo}</b><span class="nm2">${st.m}</span></div></div>`;
+}
+/* ---- bande des pistes ---- */
+function tempoTxt(st){return `<span class="nm">${MET[st.m].cp.replace('.','')}</span>${MET[st.m].cp.includes('.')?'.':''} ${st.tempo}`}
+function stripA(c){
+  const st=c.st,M=MET[st.m],lv=st.lv||M.lv; let h='',i=0;
+  M.g.forEach(gn=>{h+=`<span class="grp" style="flex:${gn}">`;for(let k=0;k<gn;k++,i++)h+=`<span class="pa ${lv[i]}${st.on===i?' on':''}${st.fade===i?' dim':''}">${i+1}</span>`;h+='</span>'});
+  const btn=c.dev==='phone'?`<span class="go">${tempoTxt(st)}${st.run?IC.stop:IC.play}</span>`:'';
+  return `<div class="sa${st.run?'':' stop'}${M.g.length>1?' gg':''}${M.n>8?' t12':''}" style="top:${c.top}px;left:${c.mx}px;right:${c.rx}px"><div class="pads">${h}</div>${btn}</div>`;
+}
+function noteGlyph(l){ return l==='x'?'<span class="nm">𝄽</span>':'<span class="nm">♩</span>' }
+function stripC(c){
+  const st=c.st,M=MET[st.m],lv=st.lv||M.lv,zh=c.lang!=='fr'; const phone=c.dev==='phone';
+  let notes='';
+  const cls=(i,l)=>`nt ${l}${st.on===i?' on':''}${st.fade===i?' dim':''}${st.reduit?' flat':''}`;
+  if(M.n<=4){
+    lv.forEach((l,i)=>{ if(zh) notes+=`<span class="${cls(i,l)} j">${l==='w'?'<span class="pr">(</span>':''}<span class="jx">${l==='x'?'0':'X'}</span>${l==='w'?'<span class="pr">)</span>':''}</span>`;
+      else notes+=`<span class="${cls(i,l)}">${l==='w'?'<span class="pr">(</span>':''}${noteGlyph(l)}${l==='w'?'<span class="pr">)</span>':''}</span>`});
+  } else {
+    let i=0; M.g.forEach(gn=>{ const wk=[],idx=[]; for(let k=0;k<gn;k++,i++){ if(lv[i]==='w')wk.push(k); idx.push(i)}
+      const lit=idx.some(j=>st.on===j), dimm=idx.some(j=>st.fade===j);
+      if(zh){ let inner=''; idx.forEach(j=>{inner+=`<span class="${cls(j,lv[j])} j"><span class="jx">${lv[j]==='x'?'0':'X'}</span></span>`}); notes+=`<span class="jgrp">${inner}</span>`; }
+      else { const gap=M.n>8?16:(phone?15:20); notes+=`<span class="${'nt'+(lit?' on':'')+(dimm?' dim':'')+(st.reduit?' flat':'')+(lv[idx[0]]==='f'?' f':'')}">${beam(gn,{gap,weak:wk,h:28})}</span>`; }
+    });
+  }
+  const sig=`<span class="sig"><span>${M.sig[0]}</span><span>${M.sig[1]}</span></span>`;
+  const ndiv=`<div class="nts${M.n>4?' g':''}">${notes}</div>`;
+  const btn=phone&&M.n<=8?`<span class="go" style="width:36px;height:36px;border-radius:50%">${st.run?IC.stop:IC.play}</span>`:'';
+  const tp=M.n>8&&phone?`<span class="tp"><span class="nm">♩</span>.${st.tempo}</span>`:`<span class="tp"><span class="nm">${M.cp.replace('.','')}</span>${M.cp.includes('.')?'.':''}= ${st.tempo}</span>`;
+  return `<div class="sc${st.run?'':' stop'}" style="top:${c.top}px;left:${c.mx}px;right:${c.rx}px;${st.run?'':'--arc:var(--rest);'}">${tp}${sig}${ndiv}<span class="bl2"></span>${btn}</div>`;
+}
+/* ---- panneaux ---- */
+function pbeats(st){
+  const M=MET[st.m],lv=st.lv||M.lv; let h='',i=0;
+  M.g.forEach(gn=>{h+=`<span class="gg">`;for(let k=0;k<gn;k++,i++)h+=`<span class="tp2 ${lv[i]}${st.on===i?' on':''}">${i+1}</span>`;h+='</span>';if(i<M.n)h+='<span class="gap"></span>'});
+  return `<div class="tbeats">${h}</div>`;
+}
+function seg(items,on,sm){return `<div class="seg${sm?' sm':''}">${items.map((t,i)=>`<span class="${i===on?'on':''}">${t}</span>`).join('')}</div>`}
+function ruler(v){
+  let h='<s></s>';const px=4;for(let b=v-60;b<=v+60;b++){ if(b<20)continue; const x=50+(b-v)*px/ (4/ (4));
+    if(b%10===0) h+=`<i class="t" style="left:calc(50% + ${(b-v)*px}px)"></i><u style="left:calc(50% + ${(b-v)*px}px)">${b}</u>`; else if(b%5===0) h+=`<i style="left:calc(50% + ${(b-v)*px}px);height:9px;top:11px"></i>`}
+  return `<div class="rule">${h}</div>`;
+}
+function unit(st){const c=MET[st.m].cp;return `<span class="nm">♩</span>${c.includes('.')?'.':''} / min`}
+function tempoLabel(st){return MET[st.m].cp.includes('.')?'♩. ':'♩ '}
+function subtiles(t,tern,sel){
+  const g=['♩','♫','♬','♪.'];
+  const nm=(s)=>`<span class="nm">${s}</span>`;
+  if(!tern) return `<div class="tiles">${[0,1,2,3].map(i=>`<div class="tile${i===sel?' on':''}">${nm(g[i])}${t.subs[i]}</div>`).join('')}</div>`;
+  return `<div class="tiles t2"><div class="tile${sel===0?' on':''}">${nm('♩.')}${t.subs[0]}</div><div class="tile${sel===1?' on':''}">${beam(3,{gap:11,h:24,trip:1})}${t.subs[4]}</div></div>`;
+}
+function tiles_c(t,tern,sel){
+  if(!tern){const items=[[beam(1,{gap:10,h:26}),t.subs[0]],[beam(2,{gap:12,h:26}),t.subs[1]],[beam(4,{gap:10,h:26,dbl:1}),t.subs[2]],[beam(2,{gap:14,h:26,dbl:0}),t.subs[3]]];
+    return `<div class="tiles">${items.map((x,i)=>`<div class="tile${i===sel?' on':''}">${x[0]}${x[1]}</div>`).join('')}</div>`}
+  return `<div class="tiles t2"><div class="tile">${beam(1,{gap:10,h:26})}${t.subs[0]}</div><div class="tile${sel===1?' on':''}">${beam(3,{gap:11,h:26,trip:1})}${t.subs[4]}</div></div>`;
+}
+function phrases(t){
+  return t.ph.map((p,i)=>`<div class="phr"><span class="cb${i===0?' on':''}">${i===0?IC.ok:''}</span><span>${p.replace(/\{(\d+)\}/g,'<span class="bx">$1</span>')}</span></div>`).join('');
+}
+function head(t,mode){return `<div class="ph"><b>${t.metro}</b><span class="ib">${IC.x}</span></div>`}
+function panelA(o){
+  const t=L[o.lang],st=o.st,full=o.mode!=='mid',son=o.son;
+  let h=`${head(t)}
+  <div class="tb"><span class="rb">${IC.minus}</span><b>${st.tempo}</b><span class="rb">${IC.plus}</span></div>
+  <div class="tu">${unit(st)}</div>
+  <div class="rr">${ruler(st.tempo)}</div>
+  <div class="act"><span class="tap">${t.taper}</span><span class="gob">${st.run?IC.stop+t.arret:IC.play+t.marche}</span></div>
+  <div><div class="lab">${t.mesure}</div>${seg(['2/4','3/4','4/4','6/8','12/8',t.autre],['2/4','3/4','4/4','6/8','12/8'].indexOf(st.m),1)}</div>
+  <div><div class="lab">${t.temps}</div>${pbeats(st)}${full?`<div class="hint">${t.touch}</div>`:''}</div>`;
+  if(full) h+=`<div><div class="lab">${t.sub}</div>${seg([t.bin,t.ter],o.tern?1:0)}${subtiles(t,o.tern,o.sub||0)}</div>`;
+  h+=`<div><div class="swr"><b>${t.son}<small>${son?t.on:t.off}${son?'':' · '+t.sil}</small></b><span class="sw${son?' on':''}"></span></div>`;
+  if(full) h+=`<div class="${son?'':'dis'}" style="margin-top:6px">${seg(t.sons,o.snd||0)}<div class="vol"><span class="nm" style="font-size:0"></span><div class="tr"><i style="width:60%"></i><b style="left:60%"></b></div></div></div>`;
+  h+='</div>';
+  if(full){
+    h+=`<div><div class="lab">${t.dec}</div>${seg(t.decs,o.dec||0)}</div>
+    <div class="ent"><div class="enth"><span>${t.ent}</span>${IC.chevd}</div>${phrases(t)}</div>
+    <div class="pied"><span>${t.retenu}</span><u>${t.rev}</u></div>`;
+  }
+  return `<div class="pn${full?'':' mid'}">${h}</div>`;
+}
+function panelB(o){
+  const t=L[o.lang],st=o.st,full=o.mode!=='mid',son=o.son; const ds=o.dsize||260;
+  const row=(inner)=>`<div class="li blk2">${inner}</div>`;
+  let h=`${head(t)}
+  ${dialBig(ds,st)}
+  <div class="hint" style="text-align:center;margin:-8px 0 0">${t.arcHint}</div>
+  <div class="rr" style="gap:6px"><span class="rb">${IC.minus}</span><span class="tap" style="height:44px;font-size:15px;border-radius:22px">${t.taper}</span><span class="rb">${IC.plus}</span><span class="gob" style="flex:none;width:auto;height:44px;padding:0 14px;border-radius:22px;font-size:15px">${st.run?IC.stop+t.arret:IC.play+t.marche}</span></div>`;
+  if(full){
+    h+=`<div class="lst">
+    ${row(`<div class="lab">${t.mesure}</div>${seg(['2/4','3/4','4/4','6/8','12/8',t.autre],['2/4','3/4','4/4','6/8','12/8'].indexOf(st.m),1)}`)}
+    ${row(`<div class="lab">${t.sub}</div>${seg([t.bin,t.ter],o.tern?1:0)}${subtiles(t,o.tern,o.sub||0)}`)}
+    ${row(`<div class="swr"><b>${t.son}<small>${son?t.on:t.off}</small></b><span class="sw${son?' on':''}"></span></div><div class="${son?'':'dis'}" style="margin-top:6px">${seg(t.sons,o.snd||0)}<div class="vol"><div class="tr"><i style="width:60%"></i><b style="left:60%"></b></div></div></div>`)}
+    ${row(`<div class="lab">${t.dec}</div>${seg(t.decs,o.dec||0)}`)}
+    <div class="li"><b>${t.ent}</b>${IC.chevd}</div>
+    ${t.li.map((x,i)=>`<div class="li"><span class="cb${i===0?' on':''}" style="margin:0">${i===0?IC.ok:''}</span><b>${x}</b><span class="v">${t.liv[i]}</span>${IC.chev}</div>`).join('')}
+    <div class="li blk2" style="border-top:1px solid var(--line)"><div class="pied" style="border:0;padding:0"><span>${t.retenu}</span><u>${t.rev}</u></div></div></div>`;
+  }
+  return `<div class="pn${full?'':' mid'}">${h}</div>`;
+}
+function bigmes(st,lang){
+  const M=MET[st.m],lv=st.lv||M.lv,zh=lang!=='fr'; let notes='';
+  if(M.n<=4) lv.forEach((l,i)=>{ if(zh) notes+=`<span class="nt ${l}${st.on===i?' on':''} j"><span class="jx">${l==='x'?'0':'X'}</span></span>`;
+     else notes+=`<span class="nt ${l}${st.on===i?' on':''}">${l==='w'?'<span class="pr" style="font-size:22px">(</span>':''}${noteGlyph(l)}${l==='w'?'<span class="pr" style="font-size:22px">)</span>':''}</span>`});
+  else { let i=0; M.g.forEach(gn=>{const idx=[],wk=[];for(let k=0;k<gn;k++,i++){idx.push(i);if(lv[i]==='w')wk.push(k)}
+     if(zh){notes+=`<span class="jgrp">${idx.map(j=>`<span class="nt ${lv[j]}${st.on===j?' on':''} j"><span class="jx">${lv[j]==='x'?'0':'X'}</span></span>`).join('')}</span>`}
+     else notes+=`<span class="nt${lv[idx[0]]==='f'?' f':''}${idx.some(j=>st.on===j)?' on':''}">${beam(gn,{gap:26,weak:wk,h:40})}</span>`}); }
+  return `<div class="bigmes">${notes}</div>`;
+}
+function panelC(o){
+  const t=L[o.lang],st=o.st,full=o.mode!=='mid',son=o.son;
+  const M=MET[st.m];
+  let h=`${head(t)}
+  <div class="ctempo"><span class="nm">${M.cp.replace('.','')}</span>${M.cp.includes('.')?'<b style="font-size:40px;margin-left:-8px">.</b>':''}<b style="font-size:40px;font-weight:400;color:var(--mut)">=</b><b>${st.tempo}</b></div>
+  <div class="rr"><span class="rb">${IC.minus}</span>${ruler(st.tempo)}<span class="rb">${IC.plus}</span></div>
+  <div class="act"><span class="tap">${t.taper}</span><span class="gob">${st.run?IC.stop+t.arret:IC.play+t.marche}</span></div>
+  <div><div class="lab">${t.mesure}</div><div class="tsg six">${['2/4','3/4','4/4','6/8','12/8'].map(m=>`<span class="${m===st.m?'on':''}"><b>${m.split('/')[0]}</b><b>${m.split('/')[1]}</b></span>`).join('')}<span class="a">${t.autre}</span></div></div>
+  <div>${full?`<div class="lab">${t.temps}</div>`:''}${bigmes(st,o.lang)}
+    ${full?`<div class="lvl"><span><span class="nm" style="font-size:16px;color:var(--ink)">></span> ${t.lv[0]}</span><span><span class="nm" style="font-size:16px;color:var(--ink)">♩</span> ${t.lv[1]}</span><span>(<span class="nm" style="font-size:16px">♩</span>) ${t.lv[2]}</span><span><span class="nm" style="font-size:16px">𝄽</span> ${t.lv[3]}</span></div>`:''}</div>`;
+  if(full) h+=`<div><div class="lab">${t.sub}</div>${seg([t.bin,t.ter],o.tern?1:0)}${tiles_c(t,o.tern,o.sub||0)}</div>
+    <div><div class="lab">${t.ecr}</div>${seg(t.ecrs,o.lang==='fr'?0:1)}</div>`;
+  h+=`<div><div class="swr"><b>${t.son}<small>${son?t.on:t.off}</small></b><span class="sw${son?' on':''}"></span></div>`;
+  if(full) h+=`<div class="${son?'':'dis'}" style="margin-top:6px">${seg(t.sons,o.snd||0)}<div class="vol"><div class="tr"><i style="width:60%"></i><b style="left:60%"></b></div></div></div>`;
+  h+='</div>';
+  if(full) h+=`<div><div class="lab">${t.dec}</div>${seg(t.decs,o.dec||0)}</div>
+    <div class="ent"><div class="enth"><span>${t.ent}</span>${IC.chevd}</div>${phrases(t)}</div>
+    <div class="pied"><span>${t.retenu}</span><u>${t.rev}</u></div>`;
+  return `<div class="pn${full?'':' mid'}">${h}</div>`;
+}
+/* =========================================================
+   Un écran complet
+   o : {p:'A'|'B'|'C', dev, h, th:'lt'|'dk', lang:'fr'|'zh', song:'fr'|'zh'|'z68', st, hidden, panel:null|'mid'|'big'|'marge', scroll, son, tern, sub, snd, dec}
+   ========================================================= */
+let UID=0;
+function screen(o){
+  const dev=o.dev,W={phone:390,tab:820,land:1180,desk:1440}[dev],H=o.h;
+  const sat={phone:44,tab:24,land:0,desk:0}[dev],barC={phone:52,tab:56,land:56,desk:56}[dev],barH=sat+barC;
+  const P=o.p,stripH=P==='A'?36:P==='C'?40:0,st=o.st;
+  const marge=o.panel==='marge',readW=W-(marge?320:0),mx={phone:16,tab:56,land:40,desk:48}[dev];
+  const song=SONG[o.song],lang=o.lang,zh=lang!=='fr';
+  const ptop=(o.hidden?sat:barH)+(P==='B'?0:stripH)+(P==='B'?10:14);
+  const cols=readW>=1000?2:1; const fs={phone:17,tab:21,land:21,desk:21}[dev]*(zh?1.12:1);
+  const stripTop=o.hidden?sat+2:barH;
+  const cfg={dev,st,lang,top:o.only?2:stripTop,mx,rx:mx,th:o.th};
+  let strip='';
+  if(P==='A') strip=stripA(cfg); if(P==='C') strip=stripC(cfg);
+  if(o.only){
+    let inner=strip; if(P==='B') inner=(o.multi||[[st,'']]).map(([x,lab],i)=>`<div style="position:absolute;left:${i*97}px;top:6px;width:97px;text-align:center"><div style="display:inline-block">${dialSmall(56,x)}</div><div style="font-size:11px;color:var(--mut);margin-top:2px">${lab}</div></div>`).join('');
+    return `<div class="m ${o.th} ${zh?'zh':''} ${dev}" style="width:390px;height:${o.h}px">${inner}</div>`;
+  }
+  /* barre */
+  let bar='';
+  if(!o.hidden){
+    let right='';
+    if(dev==='phone'){ if(P==='B') right+=`<span class="ib" style="width:48px">${dialSmall(44,st)}</span>`; right+=`<span class="ib aa">Aa</span>`; }
+    else { if(P==='A'||P==='C') right+=`<span class="pb">${tempoTxt(st)}${P==='A'?(st.run?IC.stop:IC.play):''}</span>`; if(P==='B') right+=`<span class="ib" style="width:60px">${dialSmall(56,st)}</span>`; right+=`<span class="ib">${IC.pencil}</span><span class="ib">${IC.wrench}</span><span class="ib aa">Aa</span>`; }
+    bar=`<div class="bar" style="width:${readW}px;height:${barH}px;padding-top:${sat}px"><div class="bl"><span class="ib">${IC.list}</span><span class="ib">${IC.note}</span></div><div class="bt"><b>${song.title}</b><span>${song.sub}</span></div><div class="br">${right}</div></div>`;
+  } else if(P==='B'){
+    bar=`<div class="flot" style="top:${sat+8}px;right:12px"><span class="arm">${o.song==='z68'?'C':'A'}</span><span class="pastille">${dialSmall(44,st)}</span></div>`;
+  }
+  /* panneau */
+  let panel='';
+  if(o.panel){
+    const fn={A:panelA,B:panelB,C:panelC}[P];
+    const body=fn({lang,st,mode:o.panel==='mid'?'mid':'full',son:o.son,tern:o.tern,sub:o.sub,snd:o.snd,dec:o.dec,dsize:(dev==='phone'||dev==='tab')?240:260});
+    const id='ps'+(++UID);
+    if(marge) panel=`<div class="marge"><div class="psc" id="${id}" data-scroll="${o.scroll||'top'}">${body}</div></div>`;
+    else {
+      const sw=dev==='phone'?W:560,left=(W-sw)/2; const big=o.panel==='big';
+      const top=big?(barH+stripH):null;
+      panel=`<div class="sheet" style="width:${sw}px;left:${left}px;${big?`top:${top}px`:''}"><div class="grab"></div><div class="psc" id="${id}" data-scroll="${o.scroll||'top'}">${body}</div></div>`;
+    }
+  }
+  const gridCols=cols===2?`grid-template-columns:1fr 1fr;`:'grid-template-columns:1fr;';
+  const page=`<div class="pg" style="width:${readW}px;padding:${ptop}px ${mx}px 0;${gridCols}font-size:${fs}px">${music(song,{lang,dev})}</div>`;
+  return `<div class="m ${o.th} ${zh?'zh':''} ${dev}" style="width:${W}px;height:${H}px">${page}${bar}${strip}${panel}</div>`;
+}
+/* figure : écran + légende, avec mise à l'échelle si la fenêtre est plus étroite */
+function fig(o,cap){
+  const W={phone:390,tab:820,land:1180,desk:1440}[o.dev];
+  return `<figure style="--dw:${W}px"><div class="fitbox"><div class="fit" data-w="${W}" data-h="${o.h}">${screen(o)}</div></div><figcaption>${cap}</figcaption></figure>`;
+}
+/* image seule d'une bande (pour les séquences et la comparaison) */
+function stripOnly(P,o){
+  const W=390;
+  const m=screen(Object.assign({dev:'phone',h:o.h||150},o,{p:P}));
+  return m;
+}
+function fitAll(){
+  document.querySelectorAll('.fit').forEach(f=>{
+    const w=+f.dataset.w,h=+f.dataset.h,av=f.parentElement.clientWidth; let s=Math.min(1,av/w);
+    if(s<.62)s=.62;
+    const m=f.firstElementChild; m.style.transform=`scale(${s})`; f.style.width=(w*s)+'px'; f.style.height=(h*s)+'px';
+    f.title=s<.999?`échelle ${Math.round(s*100)} %`:'';
+  });
+  document.querySelectorAll('.psc[data-scroll="bottom"]').forEach(e=>{e.scrollTop=e.scrollHeight});
+  document.querySelectorAll('.psc[data-scroll="mid"]').forEach(e=>{e.scrollTop=(e.scrollHeight-e.clientHeight)/2});
+}
+window.addEventListener('resize',fitAll);
+
+/* =========================================================
+   Contenu de la planche
+   ========================================================= */
+const S4=(on,extra={})=>Object.assign({m:'4/4',tempo:72,on,run:true,lv:null},extra);
+const ST={
+  run:S4(1), stop:S4(-1,{run:false}), mute:S4(2,{lv:['f','w','x','w']}),
+  r68:{m:'6/8',tempo:74,on:3,run:true,lv:null}, r12:{m:'12/8',tempo:63,on:3,run:true,lv:null},
+  zh:{m:'4/4',tempo:126,on:1,run:true,lv:null}, zhstop:{m:'4/4',tempo:126,on:-1,run:false,lv:null}
+};
+/* — encadré apps — */
+const APPS=[
+ ['Planning Center','Un rond par temps qui pulse (« Visual Metronome »)','repris','Une pastille par temps, chiffrée (A) · un arc par temps (B) · une note par temps (C)'],
+ ['forScore','Un cadre qui pulse autour de la page','non repris','En sombre c\'est un grand aplat clair qui clignote vers la salle ; au-delà de 180 BPM il dépasse le seuil de flash de WCAG 2.3.1 ; il ne dit pas quel temps on joue'],
+ ['forScore · Planning Center','Tempo et mesure enregistrés par partition, qui changent seuls au chant suivant','repris','À partir de {tempo} et {time} du chant et des réglages de l\'appareil'],
+ ['Soundbrenner · forScore','Grand chiffre, roue, − / +, pavé numérique, Taper','repris','Réglette horizontale à la place de la roue en A et C ; la roue (lunette) seulement en B'],
+ ['Soundbrenner · Pro Metronome','Quatre niveaux par temps (f, mf, p, muet)','repris','Fort, moyen, faible, muet : on touche le temps pour les faire tourner'],
+ ['Tempo','Subdivisions (croches, triolets, doubles, croche pointée)','repris','Nommées Binaire | Ternaire, puis dessinées en notes'],
+ ['Soundbrenner','Plus de 20 sons','repris','Trois sons : clic, bois, cloche ; volume ; interrupteur Son bien distinct'],
+ ['Apps de pratique','Décompte d\'une ou deux mesures','repris','Aucun, 1 ou 2 mesures, sur le même indicateur'],
+ ['Tempo · Pro Metronome · Soundbrenner','Mesures muettes, accélération progressive, minuteur','repris','Sous « S\'entraîner », écrit en phrases'],
+ ['Vibration · Ableton Link · polyrythmes · journal','Studio, ou besoin d\'un serveur','non repris','Safari ne permet pas la vibration sur iPhone']
+];
+$('#apps-list').innerHTML=APPS.map(a=>`<div class="ar"><div><b>${a[0]}</b></div><div>${a[1]}</div><div><span class="${a[2]==='repris'?'rep':'non'}">${a[2]==='repris'?'Repris : ':'Non repris : '}</span>${a[3]}</div></div>`).join('');
+function $(s){return document.querySelector(s)}
+
+/* — comparaison au liseré — */
+const lis=`<div style="position:absolute;left:0;top:96px;height:3px;width:40%;background:var(--ink)"></div>`;
+function cmp(o,cap){return fig(Object.assign({dev:'phone',h:230,song:'fr',lang:'fr',th:'lt',st:ST.run},o),cap)}
+$('#cmp').innerHTML=
+  `<figure style="--dw:390px"><div class="fitbox"><div class="fit" data-w="390" data-h="230">${screen({p:'X',dev:'phone',h:230,th:'lt',lang:'fr',song:'fr',st:ST.run}).replace('</div></div>','</div></div>').replace(/(<div class="m [^>]*>)/,'$1'+lis)}</div></div><figcaption><b>Aujourd'hui</b> · liseré de 3 px, 0 px de page repoussée, aucun repère par temps, pas de mesure</figcaption></figure>`
+  +cmp({p:'A'},'<b>A</b> · bande de 36 px : la page descend de 36 px, un repère de 28 px par temps')
+  +cmp({p:'B'},'<b>B</b> · cadran de 44 px dans la barre : rien ne descend, mais 44 px de côté')
+  +cmp({p:'C'},'<b>C</b> · mesure écrite de 40 px : la page descend de 40 px');
+
+/* — une piste — */
+const PISTES={
+ A:{id:'pA',reco:true,nom:'A · « Un, deux, trois, quatre » (le décompte)',
+  idee:'L\'indicateur est le décompte que le batteur ou le leader lance avant chaque chant : une rangée de pastilles chiffrées, une par temps, sous la barre, où le chiffre du temps en cours s\'allume. On sait qu\'on est « sur 3 » d\'un coup d\'œil, et le même objet sert au décompte, à l\'indicateur et à l\'édition des accents.',
+  boxes:[
+   ['Palette et typo','Encre et fond seulement : clair #ffffff / #1c1c1e, sombre #000000 / #f2f2f7 ; gris #6c6c72 pour les libellés. Temps en cours : pastille pleine d\'encre (85 % en sombre, pas de blanc pur vers la salle). Au repos : contour de 1,5 px et chiffre à 60 % de l\'encre (≥ 3:1). L\'accent --couleur-icones ne sert qu\'à Marche/Arrêt et à l\'interrupteur Son. Police du système, chiffres tabulaires, pastilles 15 px graisse 600 (700 au temps fort), grand tempo 64 px.'],
+   ['Matières et mouvement','La bande est tracée à même le fond, sans ombre ni flou, et repousse la page de 36 px. Niveaux lus dans la forme : fort 28 px à contour de 2,5 px, moyen 24, faible 20, muet en tirets. Le battement est un évènement d\'horloge : la pastille s\'allume d\'un coup, puis revient au repos sur 60 % du temps. Une seule horloge (AudioContext) pour l\'image et le son, même son coupé. Mouvement réduit : paliers, pas de fondu.'],
+   ['Risque','Des chiffres au-dessus d\'une partition 简谱 peuvent se lire comme des degrés (1 = do) : ils restent dans la bande du chrome, en pastilles et à l\'encre, jamais en rouge. La bande coûte 33 px de plus que le liseré ; en tablette portrait l\'œil qui lit le bas de page est à 25° de la bande. C\'est la suite de la piste A de la première planche : Timothée la trouvera peut-être trop proche des traits.']]},
+ B:{id:'pB',nom:'B · « Le cadran »',
+  idee:'Le métronome est un cadran, comme le cercle que dessine la main du chef ou l\'anneau des métronomes de poche : au jeu, un petit cadran de 44 px dans le coin de la barre, autour du tempo, dont l\'arc du temps en cours s\'allume ; au réglage, le même cadran en grand, qu\'on tourne pour changer le tempo et dont on touche les arcs pour régler les accents.',
+  boxes:[
+   ['Palette et typo','Encre et fond ; piste du cadran au filet #e4e4e5 (sombre #2c2c2e), arcs au repos à 55 % de l\'encre, arc en cours à 100 %. Accent seulement pour Marche/Arrêt et l\'interrupteur Son. Police du système ; tempo 15 px au petit cadran, 72 px au grand (la mesure en dessous, 15 px). Ni orange ni rouge.'],
+   ['Matières et mouvement','Le petit cadran vit dans la barre sans fond propre ; barre cachée, il flotte dans le coin sur une pastille opaque, à côté de l\'armure flottante de RU. Le grand cadran : lunette de 28 px qui se tourne au doigt (seul élément en relief), anneau d\'arcs-temps, centre plat. Arc allumé d\'un coup, retour sur 60 % du temps. Lunette : suivi 1:1, élan projeté, arrêt sur un BPM entier, résistance à 30 et 240.'],
+   ['Risque','C\'est la plus faible pour jouer : un cadran de 44 à 56 px se voit mal du coin de l\'œil sur le bas d\'une page de tablette. Deux gestes concentriques (tourner la lunette, toucher un arc) se confondent au doigt ; tourner un cadran à la souris est pénible. Marche/Arrêt n\'est que dans le panneau : un geste de plus. Flottant, il peut couvrir le coin d\'un scan 简谱. Ressemble de près à Soundbrenner.']]},
+ C:{id:'pC',nom:'C · « La mesure écrite »',
+  idee:'L\'indicateur est une mesure écrite comme sur une partition : « ♩ = 72 », la signature, puis une note par temps, l\'accent « > » sur le temps fort et un soupir là où le temps est muet. Dans un chant chinois, la même mesure s\'écrit en rythme 简谱 (X, soulignés pour les croches, 0 pour le silence), à l\'encre. Le musicien lit le métronome comme le reste de la page.',
+  boxes:[
+   ['Palette et typo','Encre seule : note en cours à 100 %, les autres à 55 % ; gris #6c6c72 pour « ♩ = » et la signature. Le rythme 简谱 reste à l\'encre, jamais au rouge --jianpu-color. Noto Music pour les notes, soupirs, accents ; police du système pour le texte ; X et 0 en PingFang SC / Noto Sans CJK SC graisse 500. Grand « ♩ = 72 » : note 48 px, chiffre 64 px.'],
+   ['Matières et mouvement','Bande de 40 px sans fond, terminée par une barre de mesure. « S\'entraîner » est écrit en phrases à cases. Tête de note en cours : à 100 % et 1,15 à l\'attaque, retour sur 60 % du temps ; chaque croche s\'allume à son tour. Mouvement réduit : pas d\'agrandissement, opacité par paliers. Les croches liées et les triolets sont dessinés en SVG.'],
+   ['Risque','Une tête de note de 20 px se lit moins vite qu\'un chiffre dans une pastille de 70 px : moins bon du coin de l\'œil. Tous les membres ne lisent pas la portée, et le rythme 简谱 ajoute une seconde écriture à maintenir (fr, zh, clair, sombre à tester). Deux écritures du même réglage.']]}
+};
+function pisteShell(k){
+  const p=PISTES[k];
+  $('#'+p.id).innerHTML=`<div class="piste${p.reco?' reco':''}">
+   <div class="piste-head"><h3>${p.nom}</h3>${p.reco?'<span class="tag">Recommandée</span>':'<span class="tag n">Alternative</span>'}</div>
+   <p>${p.idee}</p>
+   <div class="grid3">${p.boxes.map(b=>`<div class="box"><h4>${b[0]}</h4><p>${b[1]}</p></div>`).join('')}</div>
+   <div class="devgrp"><h4>Téléphone · 390 px · à l'échelle 1:1</h4><div class="row" id="${p.id}-ph"></div></div>
+   <div class="devgrp"><h4>Tablette portrait · 820 px</h4><div class="row" id="${p.id}-tp"></div></div>
+   <div class="devgrp"><h4>Tablette paysage · 1 180 px</h4><div class="row" id="${p.id}-tl"></div></div>
+   <div class="devgrp"><h4>Ordinateur · 1 440 px</h4><div class="row" id="${p.id}-pc"></div></div>
+  </div>`;
+}
+/* séquences : le battement (normal / mouvement réduit) et le cas serré 12/8 */
+function frames(P,lang,song,run){
+  const base={p:P,dev:'phone',h:150,th:'lt',lang,song};
+  const mk=(st,red)=>screen(Object.assign({},base,{st:Object.assign({},st,{reduit:red})}));
+  const f=(a,b,c)=>[a,b,c].map(x=>`<div class="fitbox"><div class="fit" data-w="390" data-h="150">${x}</div></div>`).join('');
+  return f;
+}
+function seqFigure(P){
+  const hh={A:40,B:92,C:44}[P];
+  const base={p:P,dev:'phone',h:hh,th:'lt',lang:'fr',song:'fr',only:true};
+  const N=(on,fade)=>S4(on,{fade});
+  const normal=[N(1,null),N(-1,1),N(-1,null),N(2,null)], red=[N(1,null),N(1,null),N(1,null),N(2,null)];
+  const labs=['0 ms','+30 %','+60 %','suivant'];
+  const one=(st,red,i,seq)=>`<div class="fitbox"><div class="fit" data-w="390" data-h="${hh}">${screen(Object.assign({},base,{st:Object.assign({},st,{reduit:red})}))}</div></div>`;
+  const group=(seq,r)=>P==='B'
+    ?`<div class="fitbox"><div class="fit" data-w="390" data-h="${hh}">${screen(Object.assign({},base,{st:seq[0],multi:seq.map((x,i)=>[Object.assign({},x,{reduit:r}),labs[i]])}))}</div></div>`
+    :seq.map(x=>one(x,r)).join('');
+  return `<figure style="--dw:390px"><div style="display:flex;flex-direction:column;gap:6px">
+    <h4>Battement normal · 0 ms, +30 %, +60 % du temps, temps suivant</h4>
+    ${group(normal,false)}
+    <h4 style="margin-top:8px">Mouvement réduit · le temps reste allumé, puis passe d'un coup</h4>
+    ${group(red,true)}
+  </div><figcaption>${P==='B'?'De gauche à droite':'De haut en bas'} : l'attaque, 30 % et 60 % du temps, puis le temps suivant. Normal : un temps s'allume d'un coup (0 ms) et revient au repos sur 60 % du temps (le deuxième cliché le montre à moitié éteint). Mouvement réduit : il reste plein jusqu'au temps suivant, sans fondu${P==='C'?', sans agrandissement':''}.</figcaption></figure>`;
+}
+function build(k){
+  pisteShell(k); const p=PISTES[k], P=k, id=p.id;
+  const ph=(o,cap)=>fig(Object.assign({p:P,dev:'phone',h:340,th:'lt',lang:'fr',song:'fr',st:ST.run},o),cap);
+  let h='';
+  h+=ph({},'<b>En marche</b> · fr · clair · temps 2 · 4/4');
+  h+=ph({st:ST.stop},'<b>À l\'arrêt</b> · fr · clair · '+(P==='A'?'pastilles à leur contraste de repos, ▶ dans le bouton':P==='B'?'arcs à 30 %, le toucher ouvre le panneau':'notes à 60 %, ▶'));
+  h+=ph({st:ST.mute},'<b>Temps 3 muet</b> · en marche · '+(P==='A'?'pastille en tirets, allumée en trame (on voit où l’on est, on sait que rien ne sonne)':P==='B'?'arc en pointillés, allumé plein':'soupir, allumé'));
+  h+=ph({song:'z68',lang:'zh',st:ST.r68},'<b>6/8</b> · 为我而来 · zh · clair · temps 4 (moyen) · ♩. = 74');
+  h+=ph({th:'dk',song:'zh',lang:'zh',st:ST.zh,hidden:true},'<b>Sombre · zh · barre cachée</b> · '+(P==='B'?'cadran flottant sur pastille opaque, armure flottante':'la bande reste au ras de la zone sûre'));
+  h+=ph({song:'z12',lang:'zh',th:'dk',st:ST.r12,h:340},'<b>12/8</b> · cas serré · 活出爱 (♩. 63) · sombre · douze temps');
+  h+=seqFigure(P);
+  h+=ph({h:844,panel:'mid',son:false,st:ST.run},'<b>Panneau, cran moyen</b> · fr · clair · '+(P==='B'?'le grand cadran (240 px), Taper, −, +, Marche':'tempo, mesure, temps, Marche, Son (éteint par défaut)')+' · la page reste visible au-dessus');
+  h+=ph({h:844,panel:'big',th:'dk',lang:'zh',song:'zh',st:ST.zh,son:true,tern:false,sub:1,snd:1,dec:1,scroll:'top'},'<b>Panneau, cran grand</b> · zh · sombre · haut du panneau (défilé en haut), son allumé · 节拍器');
+  h+=ph({h:844,panel:'big',th:'lt',st:ST.run,son:true,sub:3,tern:false,dec:2,scroll:'bottom'},'<b>Panneau, cran grand, défilé en bas</b> · fr · clair · décompte, « S\'entraîner », pied');
+  $('#'+id+'-ph').innerHTML=h;
+  /* tablette portrait */
+  const tp=(o,cap)=>fig(Object.assign({p:P,dev:'tab',th:'lt',lang:'fr',song:'fr',st:ST.run},o),cap);
+  $('#'+id+'-tp').innerHTML=
+    tp({h:330},'<b>Panneau fermé</b> · fr · clair · en marche · la pastille ♩ 72 reste dans la barre'+(P==='A'?' et porte ▶ / ■':'')+' · '+(P==='A'?'pastilles de 160 px au plus (4/4 ≈ 660 px), alignées sur la marge de la musique':P==='B'?'cadran de 56 px':'notes espacées comme dans une vraie mesure'))
+   +tp({h:820,th:'dk',lang:'zh',song:'zh',st:ST.zh,panel:'mid',son:true},'<b>Feuille basse, cran moyen</b> · zh · sombre · feuille de 560 px centrée (la règle RU de la marge, en portrait)');
+  /* tablette paysage */
+  const tl=(o,cap)=>fig(Object.assign({p:P,dev:'land',th:'lt',lang:'fr',song:'fr',st:ST.run},o),cap);
+  $('#'+id+'-tl').innerHTML=tl({h:760,panel:'marge',son:true,sub:1,tern:false,dec:1,snd:0,scroll:'top'},'<b>Colonne de 320 px qui repousse</b> · fr · clair · en marche · les deux colonnes de musique se replient en une tant qu\'elle est ouverte');
+  /* ordinateur */
+  const pc=(o,cap)=>fig(Object.assign({p:P,dev:'desk',th:'dk',lang:'zh',song:'zh',st:ST.zh},o),cap);
+  $('#'+id+'-pc').innerHTML=pc({h:760,panel:'marge',son:true,tern:false,sub:2,snd:2,dec:0,scroll:'bottom',st:ST.zhstop},'<b>Colonne de 320 px, lecture de 1 120 px</b> · zh · sombre · à l\'arrêt · panneau défilé en bas ('+(P==='C'?'S\'entraîner en phrases':P==='B'?'S\'entraîner en liste à filets':'S\'entraîner en phrases, prises à C')+'). Raccourcis : Espace (Marche/Arrêt), T (Taper)');
+}
+/* — comparaison côte à côte, 390 px — */
+['A','B','C'].forEach(build);
+/* — questions — */
+const Q=[
+ ['Piste : A « le décompte », B « le cadran » ou C « la mesure écrite » ?','A, avec les phrases de « S\'entraîner » prises à C. Un chiffre répond à « où en suis-je dans la mesure ? » sans compter ; le même objet sert au décompte, à l\'indicateur et à l\'édition des accents.'],
+ ['6/8 et 12/8 : le tempo compte-t-il la noire pointée ou la croche ?','La noire pointée (♩. = 74), comme sur les grilles ; la bande montre quand même six (ou douze) pastilles groupées par trois, le 1 fort et le 4 moyen, ce qui rend le ternaire visible.'],
+ ['Téléphone : la pastille ♩ de la barre y est cachée. Où lance-t-on le métronome et où ouvre-t-on le panneau ?','Un bouton « ♩ 72 ▶ » de 56 × 36 px au bout de la bande (cible de 44 px de haut) pour Marche/Arrêt ; toucher la bande ouvre le panneau ; l\'entrée « Métronome » d\'Outils reste pour faire apparaître la bande. Un bouton carré de 56 px ferait une bande de 56 px au lieu de 36.'],
+ ['Mouvement réduit : la bande marque-t-elle encore les temps ?','Oui, par paliers, sans fondu ni glissement : un changement d\'état n\'est pas un mouvement qui gêne, et un métronome figé ne sert à rien (voir « Mouvement réduit » dans la séquence).'],
+ ['Son coupé au changement de chant, même pendant une répétition de toute la setlist ?','Oui, sauf si « S\'entraîner » est ouvert : en répétition on rallume d\'un toucher ; pendant le culte un clic ne doit jamais repartir tout seul sur le chant suivant.'],
+ ['Couleur d\'accent de Marche/Arrêt et de l\'interrupteur Son, alors que le chrome du mode louange passe à l\'encre (RU) ?','Garder --couleur-icones (bleu par défaut, ici #3f63cf / #8fb0ff) pour ces deux seuls contrôles. Si le compte choisit l\'encre, ils restent distincts par la forme (bouton plein, interrupteur) : aucune couleur ne porte le sens seule.'],
+ ['Noto Music : la police chargée dans globals.css n\'est qu\'un sous-ensemble (♯ ♭ ♮), sans ♩ ♪ ♫ ♬ ni soupir. Étendre ou dessiner ?','Étendre le sous-ensemble (un woff2 régénéré, quelques centaines d\'octets) pour ♩ ♪ ♫ ♬ 𝄽 ; les triolets et les croches liées en SVG. Valable pour les trois pistes (subdivisions du panneau) ; la piste C en dépend en plus pour l\'indicateur.']
+];
+$('#qlist').innerHTML=Q.map(q=>`<div class="q"><h3>${q[0]}</h3><p class="rec">Proposition : ${q[1]}</p></div>`).join('');
+
+document.fonts&&document.fonts.ready.then(fitAll);
+fitAll();
+</script>
+</body>
+</html>

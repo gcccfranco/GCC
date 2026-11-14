@@ -143,7 +143,7 @@ export function IdeesDuChant({
               // Chant affiché en scan 简谱 : la retouche va bien dans la
               // version texte, mais elle ne se verra pas sur l'image —
               // on le dit, avec le changement à reporter à la main.
-              if (jianpuManifest?.[item.songSlug] && sheetEnabled(jianpuPref, item.jianpuSheet)) {
+              if (jianpuManifest?.[item.songSlug] && sheetEnabled(jianpuPref)) {
                 flashFeedback(
                   t("harmonie.reporterJianpu", {
                     quoi: `${sectionNom} : ${changements[0].endroit.accords.join(" – ")} → ${changements[0].apres.join(" – ")}`,

@@ -4,22 +4,20 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { DISPOSITION_AVANT_LECTURE, getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
 import { TOUCHER_44, TOUCHER_RANGEE } from "@/lib/toucher44";
-import { ChoixNotation } from "@/components/song/ChoixNotation";
-import { PiluleTonalite } from "./_components/PiluleTonalite";
 import { ActionsChant } from "./_components/ActionsChant";
 import { MenuChant } from "./_components/MenuChant";
 import { useRecents } from "./_hooks/useRecents";
-import { useTailleTexte } from "./_hooks/useTailleTexte";
 import { useBarreRappelee } from "./_hooks/useBarreRappelee";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
-import { MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
+import { Music, SlidersHorizontal } from "lucide-react";
+import { MargeAffichage } from "@/components/song/MargeAffichage";
+import { useReglagesAffichage } from "@/hooks/useReglagesAffichage";
 import { SongView } from "@/components/song/SongView";
+import { Armure } from "@/components/song/Armure";
 import { StatistiquesDuChant } from "@/components/songs/StatistiquesDuChant";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { useJianpuScore } from "@/lib/jianpu/images";
-import { getJianpuPref, setJianpuPref, sheetEnabled, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { CustomizePanel, type CustomizeState } from "@/components/customPanel/CustomizePanel";
 import type { Song } from "@/types/song";
 import { useTranslation } from "react-i18next";
@@ -37,7 +35,7 @@ import type { SectionItem } from "@/types/song";
 import type { SectionNuance } from "@/types/setList";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
-import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
+import { HarmonieDuChant, defilerSousLaBarre } from "@/components/harmonie/HarmonieDuChant";
 import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
 import { AccordsProvider, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
@@ -136,9 +134,6 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
   return p.catch(() => false);
 }
 
-// Layout effect sans avertissement au rendu serveur.
-const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
   export function SongDetailClient({ song }: SongDetailClientProps) {
     const { t, i18n } = useTranslation();
     const searchParams = useSearchParams();
@@ -185,17 +180,13 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     const isZh = song.language === "zh";
     // Partition 简谱 en image (scan d'origine) — absente pour la plupart des chants
     const jianpuScore = useJianpuScore(song.slug);
-    // Affiché par défaut, selon la préférence de l'appareil (partagée avec la
-    // setlist et le mode louange) ; le choix du responsable ne vaut que dans
-    // la setlist, même ouverte d'ici (O3). Dérivé de la préférence, lue au
-    // montage : il ne peut pas s'en écarter.
-    const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
-    useEffect(() => setJianpuPrefState(getJianpuPref()), []);
-    const showScore = sheetEnabled(jianpuPref, undefined);
+    // Réglages retenus par appareil (marge « Affichage », spec-reglages-unifies.md, RU-3) : 简谱 | Paroles, pinyin, accords,
+    // taille, disposition et ordre ; avant la lecture (`pret`), les valeurs par défaut (pas d'écart d'hydratation).
+    // Le choix du responsable ne vaut que dans la setlist, même ouverte d'ici (O3).
+    const r = useReglagesAffichage(authEnCours ? undefined : compte?.uid ?? null);
+    const showScore = r.jianpu;
     const choisirScore = (on: boolean) => {
-      const next = prefDepuisInterrupteur(on);
-      setJianpuPrefState(next);
-      setJianpuPref(next);
+      r.setJianpu(on);
       if (on) compter("cmd.chant.jianpu");
     };
     const originalKey = ast.metadata.key;
@@ -242,6 +233,9 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     const { barPinned, setBarPinned } = useBarreRappelee();
     const [showVideo, setShowVideo] = useState(false);
     const [showPanel, setShowPanel] = useState(false);
+    // Marge « Affichage » : une seule colonne à droite à la fois, avec Harmonie (décision déléguée, session RU-3, 13/11).
+    const [showAffichage, setShowAffichage] = useState(false);
+    const boutonAffichageRef = useRef<HTMLButtonElement>(null);
     const [downloading, setDownloading] = useState(false);
     const [backPath, setBackPath] = useState("/songs");
     const [showReport, setShowReport] = useState(false);
@@ -249,11 +243,15 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     // Idées d'harmonie (lot 9) : pianistes, guitaristes et admins seulement.
     const [showIdees, setShowIdees] = useState(false);
     // H5-2 : le passage visé par « Ici » (la clé change à chaque appui, pour redéfiler).
-    const [passageIci, setPassageIci] = useState<{ uid: string; cle: number; idee?: string } | undefined>();
+    const [passageIci, setPassageIci] = useState<{ uid: string; cle: number; idee?: string; miHauteur?: boolean } | undefined>();
     // Grand écran (≥ 1 024 px) : une colonne à droite de la partition, mémorisée par appareil ; sinon la feuille.
     // La colonne tient si la zone de lecture (partition + colonne) fait 824 px ; sinon, la feuille.
-    const [zoneLecture, zoneAssezLarge] = useZoneAssezLarge();
-    const grandEcran = useGrandEcranHarmonie() && zoneAssezLarge;
+    // La marge « Affichage » n'est en colonne que si la musique garde 340 px (RU-3) ; mesurée sur l'enveloppe, qui ne change pas à l'ouverture.
+    const [enveloppeMarge, margeEnColonne] = useZoneAssezLarge(320 + 24 + 340);
+    const ecranLarge = useGrandEcranHarmonie();
+    const margeRetire = showAffichage && ecranLarge && margeEnColonne ? 320 + 24 : 0; // la marge en colonne retire sa place à la zone : sinon « Harmonie » ouvrirait la feuille au lieu de la colonne
+    const [zoneLecture, zoneAssezLarge] = useZoneAssezLarge(824 - margeRetire);
+    const grandEcran = ecranLarge && zoneAssezLarge;
     const [colonneOuverte, setColonneOuverte] = useColonneHarmonie();
     const boutonHarmonieRef = useRef<HTMLButtonElement>(null);
     const accesHarmonie = useAccesHarmonie();
@@ -269,7 +267,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     const [customize, setCustomize] = useState<CustomizeState>({
       semitones: 0,
       currentKey: originalKey,
-      showChords: true,
+      showChords: true, // non lu ici : les accords et le pinyin viennent de la marge (`r`)
       showPinyin: isZh,
       useJianpu: false,
       structure: buildDefaultStructure(ast.sections),
@@ -445,16 +443,10 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
       }
     }
 
-    const { fontScale, changeFontScale } = useTailleTexte();
-
-    // Disposition de la partition — préférence par appareil partagée avec le mode
-    // louange ; lue avant la peinture (layout effect isomorphe), à partir de la valeur avant lecture.
-    const [disposition, setDisposition] = useState<Disposition>(DISPOSITION_AVANT_LECTURE);
-    useEffetAvantPeinture(() => setDisposition(getDispositionPref()), []);
-    const changeDisposition = (d: Disposition) => {
-      setDisposition(d);
-      setDispositionPref(d);
-    };
+    const fontScale = r.taille;
+    const disposition = r.disposition;
+    const layout = r.ordre;
+    const showPinyin = isZh && r.pinyin;
 
     async function handleDownload(style: PdfStyle) {
       setDownloading(true);
@@ -468,8 +460,8 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
         const blob = await pdf(
           <SongPDF
             ast={displayedAST}
-            showChords={customize.showChords}
-            showPinyin={customize.showPinyin}
+            showChords={r.accords}
+            showPinyin={showPinyin}
             useJianpu={customize.useJianpu}
             structureOverride={structureOverride}
             sectionNotes={sectionsNote}
@@ -485,14 +477,9 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
       }
     }
 
-    // « (orig.) » / « (reco.) » après une tonalité, dans la liste et sur ordinateur.
-  const keySuffix = (k: string) =>
-    (k === originalKey ? " " + t("customize.panel.keyOriginal") : "") +
-    (k === recommendedKey ? " " + t("customize.panel.keyRecommended") : "");
-
   // Libellés par priorité (spec-barre-chant.md, Q4) : tous, puis ceux des actions seuls, puis
   // aucun — le premier niveau qui tient sur la ligne. Mesuré sur la rangée elle-même : ce qu'elle
-  // porte varie (Retour, ↺, suffixe de tonalité, Vidéo, Idées, Pinyin), un seuil fixe la ferait
+  // porte varie (Retour, Vidéo, Harmonie, Crayon), un seuil fixe la ferait
   // déborder ou cacherait des libellés qui tiennent (globals.css, `data-libelles`).
   const rangeeRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -508,9 +495,8 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     let apres = "";
     const ajuster = () => {
       // La bascule Lettres / Chiffres (H7-1) tient tant que les libellés ne perdent qu'un cran ; ensuite elle passe au menu ⋯.
-      for (const [niveau, bascule] of [["3", "1"], ["2", "1"], ["3", "0"], ["2", "0"], ["1", "0"], ["0", "0"]]) {
+      for (const niveau of ["3", "2", "1", "0"]) {
         el.dataset.libelles = niveau;
-        el.dataset.bascule = bascule;
         if (tient()) break;
       }
       apres = signature();
@@ -524,17 +510,18 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
     for (const c of el.children) ro.observe(c);
     document.fonts?.ready.then(ajuster);
     return () => ro.disconnect();
-  }, [isZh, youtubeId, accesHarmonie.peut, customize.currentKey, setlistDOrigine, deuxVolets]);
+  }, [isZh, youtubeId, accesHarmonie.peut, compte, setlistDOrigine, deuxVolets]);
 
-  // Menu ⋯ (spec-barre-chant.md, Q3, Q5) : Vidéo, PDF et Idées sont dans la barre partout ; plus
-  // de Spotify ni d'Apple Music (Timothée, 18/10/2026 : les chants n'ont que YouTube).
-  const menuChant = <MenuChant langue={song.language === "zh" ? "zh" : "fr"} disposition={disposition} changeDisposition={changeDisposition} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
+  // Menu ⋯ (spec-reglages-unifies.md, RU-3) : PDF, Personnaliser, Signaler ; Vidéo, Harmonie, Crayon et Affichage sont dans la barre.
+  const menuChant = <MenuChant pdf={pdf} downloading={downloading} setShowPdfChoice={setShowPdfChoice} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
 
   const ici = useMemo<IciDuChant | undefined>(
     () => accesHarmonie.peut ? {
       sections: displayedAST.sections, tonalite: customize.currentKey, tonaliteOrigine: originalKey,
-      ouvrir: (uid, idee) => {
-        setPassageIci({ uid, cle: Date.now(), idee });
+      ouvrir: (uid, idee, options) => {
+        if (options?.depuisNom && !grandEcran) defilerSousLaBarre(options.element);
+        setPassageIci({ uid, cle: Date.now(), idee, ...(options?.depuisNom ? { miHauteur: true } : null) });
+        setShowAffichage(false);
         if (grandEcran) setColonneOuverte(true); else setShowIdees(true);
       },
     } : undefined,
@@ -568,91 +555,71 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
                 <span className="libelle-chant">{t("songs.detail.backToAll")}</span>
               </Link>
             </Button>
-            {/* Transposition rapide */}
-            <PiluleTonalite currentKey={customize.currentKey} originalKey={originalKey} keySuffix={keySuffix} setCustomize={setCustomize} />
-            <ChoixNotation variante="barre" />
-            {accesHarmonie.peut && (
-              <Button
-                variant="secondary"
-                aria-label={t("harmonie.idees")}
-                title={t("harmonie.idees")}
-                ref={boutonHarmonieRef}
-                aria-expanded={grandEcran ? colonneOuverte : undefined}
-                aria-controls={grandEcran ? "harmonie-colonne" : undefined}
-                onClick={() => (grandEcran ? setColonneOuverte(!colonneOuverte) : setShowIdees(true))}
-                className={`${TOUCHER_44} h-10 lg:h-9 bouton-harmonie shrink-0 rounded-full px-2.5 text-xs font-semibold ${(grandEcran ? colonneOuverte : showIdees) ? "bg-foreground text-background hover:bg-foreground" : "raised bg-card text-foreground hover:bg-card"}`}
-              >
-                <span className="libelle-harmonie">{t("harmonie.idees")}</span>
-              </Button>
-            )}
-
-            <div className="groupe-chant raised ml-auto flex gap-0.5 items-center justify-end rounded-full p-0.5">
-              {/* Taille du texte */}
-              <div className="flex items-center">
-                <Button
-                  variant="ghost"
-                  size="icon-lg"
-                  className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-xs font-bold`}
-                  onClick={() => changeFontScale(-0.1)}
-                  disabled={fontScale <= MIN_FONT_SCALE}
-                  aria-label={t("performance.textSmaller")}
-                >
-                  A−
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-lg"
-                  className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold`}
-                  onClick={() => changeFontScale(0.1)}
-                  disabled={fontScale >= MAX_FONT_SCALE}
-                  aria-label={t("performance.textLarger")}
-                >
-                  A+
-                </Button>
-              </div>
-
-              {/* Accords */}
-              <button aria-label={t("songs.detail.chords") || "Accords"} aria-pressed={customize.showChords}
-                onClick={() => setCustomize((c) => ({ ...c, showChords: !c.showChords }))}
-                className={`${TOUCHER_44} h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-150 ease-out ${
-                      customize.showChords
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
-                    <span className="libelle-chant">{t("songs.detail.chords") || "Accords"}</span>
-              </button>
-
-              {/* Pinyin (chants zh) */}
-              {isZh && (
-                    <button aria-label={t("songs.detail.pinyin") || "Pinyin"} aria-pressed={customize.showPinyin}
-                      onClick={() => setCustomize((c) => ({ ...c, showPinyin: !c.showPinyin }))}
-                      className={`${TOUCHER_44} ml-0.5 h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-150 ease-out ${
-                        customize.showPinyin
-                          ? "bg-foreground text-background"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <span className="font-bold">拼</span>
-                      <span className="libelle-chant">{t("songs.detail.pinyin") || "Pinyin"}</span>
-                    </button>
-                  )}
-
-            </div>
-
-            {/* Dès la tablette debout (spec-barre-chant.md, Q2, Q3) : « faire » à droite d'un filet,
-                Vidéo · PDF · Idées d'harmonie · ⋯ ; le menu ne garde que les couleurs,
-                Personnaliser et Signaler (globals.css, `.actions-chant`). */}
+            {/* Harmonie · Vidéo · Crayon · Affichage · ⋯ : une seule ligne à toutes les tailles (RU-3) ;
+                les libellés suivent la place de la rangée (globals.css, `.actions-chant`). */}
             <div className="actions-chant ml-auto shrink-0 items-center gap-1">
-              <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-              <ActionsChant variante="rangee" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} pdf={pdf} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} menuChant={menuChant} />
+              {accesHarmonie.peut && (
+                <Button
+                  variant="secondary"
+                  aria-label={t("harmonie.idees")}
+                  title={t("harmonie.idees")}
+                  ref={boutonHarmonieRef}
+                  aria-expanded={grandEcran ? colonneOuverte : undefined}
+                  aria-controls={grandEcran ? "harmonie-colonne" : undefined}
+                  onClick={() => {
+                    setShowAffichage(false);
+                    if (grandEcran) setColonneOuverte(!colonneOuverte); else setShowIdees(true);
+                  }}
+                  className={`${TOUCHER_44} h-10 lg:h-9 bouton-harmonie shrink-0 rounded-full px-2.5 text-xs font-semibold ${(grandEcran ? colonneOuverte : showIdees) ? "bg-foreground text-background hover:bg-foreground" : "raised bg-card text-foreground hover:bg-card"}`}
+                >
+                  <span className="libelle-harmonie">{t("harmonie.idees")}</span>
+                </Button>
+              )}
+              <ActionsChant youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} crayon={compte ? crayon : undefined} setCrayon={setCrayon} menuChant={menuChant}>
+                {/* Accords et Pinyin à un toucher, synchronisés avec la marge par le crochet (RU-3, retour du 13/11) */}
+                <Button
+                  variant="secondary"
+                  aria-label={t("songs.detail.chords")}
+                  title={t("songs.detail.chords")}
+                  aria-pressed={r.accords}
+                  onClick={() => r.setAccords(!r.accords)}
+                  className={`${TOUCHER_44} h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold ${r.accords ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
+                >
+                  <Music className="h-4 w-4" />
+                  <span className="libelle-chant">{t("songs.detail.chords")}</span>
+                </Button>
+                {isZh && (
+                  <Button
+                    variant="secondary"
+                    aria-label={t("songs.detail.pinyin")}
+                    title={t("songs.detail.pinyin")}
+                    aria-pressed={r.pinyin}
+                    onClick={() => r.setPinyin(!r.pinyin)}
+                    className={`${TOUCHER_44} h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold ${r.pinyin ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
+                  >
+                    <span className="font-bold">拼</span>
+                    <span className="libelle-chant">{t("songs.detail.pinyin")}</span>
+                  </Button>
+                )}
+                <Button
+                  variant="secondary"
+                  ref={boutonAffichageRef}
+                  aria-label={t("margeAffichage.titre")}
+                  title={t("margeAffichage.titre")}
+                  aria-pressed={showAffichage}
+                  aria-expanded={showAffichage}
+                  aria-controls="marge-affichage"
+                  onClick={() => {
+                    if (!showAffichage) { setColonneOuverte(false); setShowIdees(false); }
+                    setShowAffichage(!showAffichage);
+                  }}
+                  className={`${TOUCHER_44} h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold ${showAffichage ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span className="libelle-action">{t("margeAffichage.titre")}</span>
+                </Button>
+              </ActionsChant>
             </div>
-          </div>
-          {/* Téléphone, couché compris (Q5) : les actions sur une seconde rangée, qui défile en
-              largeur, colle sous la première et s'escamote avec elle (globals.css, `.actions-tel`). */}
-          <div className="actions-tel max-w-2xl mx-auto w-full gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <ActionsChant variante="tel" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} pdf={pdf} downloading={downloading} setShowPdfChoice={setShowPdfChoice} crayon={compte ? crayon : undefined} setCrayon={setCrayon} menuChant={menuChant} />
           </div>
 
           {/* Embed YouTube */}
@@ -671,7 +638,20 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
             </div>
           </div>
         )}
-        {/* Contenu — un tap rappelle la barre d'outils (sans gêner la sélection de texte) */}
+        {/* Contenu — un tap rappelle la barre d'outils (sans gêner la sélection de texte) ; la marge « Affichage »
+            l'enveloppe : colonne qui pousse la musique dès 1 024 px, feuille dessous. */}
+        <div ref={enveloppeMarge}>
+        <MargeAffichage
+          mode="page"
+          sansColonne={!margeEnColonne}
+          ouvert={showAffichage}
+          onFermer={() => setShowAffichage(false)}
+          zh={isZh}
+          sansRole
+          aJianpu={!!jianpuScore}
+          uid={authEnCours ? undefined : compte?.uid ?? null}
+          retourFocus={boutonAffichageRef}
+        >
         <div ref={zoneLecture} className="corps-chant flex items-start gap-6">
         <main
           className="song-zoom min-w-0 flex-1 px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px] [--marge-bande:1rem] print:[--marge-bande:0px]"
@@ -701,6 +681,21 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
             <SongView
               pageChant
               slug={song.slug}
+              armure={
+                <Armure
+                  titre={song.title}
+                  langue={isZh ? "zh" : "fr"}
+                  tonaliteOrigine={originalKey}
+                  tonaliteReco={recommendedKey}
+                  tonaliteEquipe={setlistDOrigine ? setlistKey : null}
+                  tonalite={customize.currentKey}
+                  portee={setlistDOrigine ? "appareil" : "page"}
+                  onChange={(k) => {
+                    compter(k === originalKey ? "cmd.chant.toniqueOrigine" : "cmd.chant.transposer");
+                    setCustomize((prev) => ({ ...prev, currentKey: k, semitones: semitonesTo(originalKey, k) }));
+                  }}
+                />
+              }
               statistiques={<StatistiquesDuChant slug={song.slug} />}
               bascule={
                 jianpuScore ? (
@@ -730,7 +725,7 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
                 ) : undefined
               }
               corps={
-                showScore && jianpuScore ? (
+                showScore && jianpuScore && layout !== "structure" ? (
                   // Cale K2 (spec jianpu-integration, O14) : au téléphone, la fin de la feuille remonte au-dessus de la barre d'onglets.
                   <div data-testid="marge-barre" className="max-sm:[body:has([data-testid=barre-du-bas])_&]:pb-[calc(78px+var(--tabbar-bottom))]">
                     <JianpuSheet
@@ -745,14 +740,15 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
                 ) : undefined
               }
               ast={displayedAST}
-              showChords={customize.showChords}
-              showPinyin={customize.showPinyin}
+              showChords={r.accords}
+              showPinyin={showPinyin}
               useJianpu={customize.useJianpu}
               structureOverride={structureOverride}
               sectionNotes={sectionsNote}
               sectionNuances={sectionsNuance}
               sectionKeys={sectionsKeys}
               disposition={disposition}
+              layout={layout}
               marques={lecture?.marques}
               onLineSelect={crayon ? (line) => toucherLigne(line) : undefined}
               onConflit={lecture?.modifiable ? (index, choix) => { mp.enregistrer(resoudreConflit(lecture, index, choix)).catch(() => {}); } : undefined}
@@ -775,6 +771,8 @@ const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : 
           instrument={instrumentHarmonie}
           passage={passageIci}
         />
+        </div>
+        </MargeAffichage>
         </div>
 
         {crayon && (

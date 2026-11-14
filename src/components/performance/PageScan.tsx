@@ -58,7 +58,9 @@ export function PageScan({
     if (!zone || !tete) return;
     const mesurer = () => {
       // Demi-lignes (JP-C) : la feuille a la largeur de la plus large des fenêtres.
-      const w = Math.max(0, ...Array.from(zone.querySelectorAll<HTMLElement>("[data-jianpu-fenetre]"), (f) => f.offsetWidth));
+      // Deux colonnes (lot JV, JV-4) : la feuille a la largeur des deux colonnes et de leur gouttière.
+      const volets = zone.querySelector<HTMLElement>("[data-jianpu-volets]");
+      const w = volets ? volets.offsetWidth : Math.max(0, ...Array.from(zone.querySelectorAll<HTMLElement>("[data-jianpu-fenetre]"), (f) => f.offsetWidth));
       setLargeurFeuille(w > 0 && w < zone.clientWidth - 1 ? w : null);
     };
     mesurer();

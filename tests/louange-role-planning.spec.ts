@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, basculerAnnoter, lireCompteur, NOM_MENU, ouvrirJeJoue, ouvrirMenu, type Langue } from "./helpers/louange";
+import { attendreMiseEnPage, basculerAnnoter, lireCompteur, ouvrirJeJoue, ouvrirMenu, type Langue } from "./helpers/louange";
 import { basculerAccords, ouvrirPartitions } from "./helpers/setlist";
 
 // Lot RP, tranche 2 (docs/spec-mode-louange-forscore-2.md « RP — Rôle proposé d'après le planning ») : le mode louange
@@ -77,7 +77,8 @@ async function attendreSheet(page: Page, suivi: { n: number }) {
 const telephone = (page: Page) => page.viewportSize()!.width < 768;
 const lire = (page: Page, cle: string) => page.evaluate((c) => localStorage.getItem(c), cle);
 const pastille = (page: Page) => page.locator("[data-pastille-planning]");
-const dialogueJeJoue = (page: Page, langue: Langue = "fr") => page.getByRole("dialog", { name: NOM_MENU[langue].jejoue, exact: true });
+// RU-5 : « Je joue » est le premier groupe de la marge Affichage ; `data-ouvert` la distingue quand elle est fermée.
+const dialogueJeJoue = (page: Page) => page.locator('[data-testid="marge-affichage"][data-mode="louange"][data-ouvert="true"]');
 
 /** Réglages de départ posés une seule fois (le script d'initialisation rejoue à chaque chargement de page). */
 async function preparer(page: Page, opts: { langue?: Langue; theme?: "light" | "dark"; role?: string; aucun?: boolean; init?: Record<string, string> } = {}) {
@@ -178,7 +179,7 @@ test("première entrée en 中文 : la ligne et son bouton portent les mots chin
   const ligne = ligneEntree(page);
   await expect(ligne).toContainText("按排班已设为钢琴。");
   await ligne.locator("[data-premiere-entree-changer]").click();
-  await expect(dialogueJeJoue(page, "zh")).toBeVisible();
+  await expect(dialogueJeJoue(page)).toBeVisible();
   await expect(ligne).toHaveCount(0);
 });
 
@@ -197,7 +198,7 @@ test("planning muet, aucun rôle retenu : Je joue s'ouvre seul avec la phrase d'
   expect(await lire(page, `perf-role-preset-${UID}`)).toBeNull();
   await dialogue.getByRole("button", { name: /^Batteur/ }).click();
   await expect.poll(() => lire(page, `perf-role-preset-${UID}`)).toBe("batteur");
-  await expect(dialogue.getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
+  await expect(dialogue.getByRole("radio", { name: "Plan", exact: true })).toHaveAttribute("aria-checked", "true");
 });
 
 // ─── Pastille ──────────────────────────────────────────────────────────────────

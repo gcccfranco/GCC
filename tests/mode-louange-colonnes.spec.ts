@@ -156,14 +156,14 @@ async function quitter(page: Page) {
 const onStage = (page: Page, selector: string) =>
   page.locator(`[data-performance-mode] ${selector}:not([aria-hidden=true] *)`);
 
-/** FS-A : « 2 colonnes » a quitté la barre de titre pour le menu Options d'affichage. */
-const interrupteur = (page: Page) => page.getByRole("dialog", { name: "Options d'affichage" }).getByRole("button", { name: "2 colonnes" });
+/** FS-A : « 2 colonnes » a quitté la barre de titre pour les options ; RU-5 : c'est un interrupteur de la marge « Affichage ». */
+const interrupteur = (page: Page) => page.locator('[data-testid="marge-affichage"][data-mode="louange"]').getByRole("switch", { name: "2 colonnes" });
 
 /** Ouvre les options, vérifie l'état de l'interrupteur (« true » / « false », ou « absent »), les referme. */
 async function verifierInterrupteur(page: Page, etat: "true" | "false" | "absent") {
   const reglages = await ouvrirReglages(page);
   if (etat === "absent") await expect(interrupteur(page)).toHaveCount(0);
-  else await expect(interrupteur(page)).toHaveAttribute("aria-pressed", etat);
+  else await expect(interrupteur(page)).toHaveAttribute("aria-checked", etat);
   await page.keyboard.press("Escape");
   await expect(reglages).toBeHidden();
 }
@@ -212,7 +212,8 @@ function grandEcranTests(nom: string) {
   for (const { slug, structureOverride } of CHANTS) {
     test(`${nom} : deux colonnes d'office, en-tête au-dessus, aucune section coupée (${slug})`, async ({ page }) => {
       test.skip(!(await grandEcran(page)), "deux colonnes : tablette paysage et ordinateur seulement");
-      await ouvrirMode(page, [item({ songSlug: slug, position: 1, structureOverride, jianpuSheet: false })]);
+      await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+      await ouvrirMode(page, [item({ songSlug: slug, position: 1, structureOverride })]);
       await verifierInterrupteur(page, "true");
       expect(await colonnes(page)).toBe(2);
       const sections = await onStage(page, "[data-section]").evaluateAll((els) =>
@@ -340,7 +341,8 @@ grandEcranTests("grand écran");
 
 test("téléphone et tablette portrait : pas d'interrupteur, une colonne, même nombre de pages quel que soit le réglage", async ({ page }) => {
   test.skip(await grandEcran(page), "téléphone et tablette portrait seulement");
-  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2, jianpuSheet: false })]);
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2 })]);
   await expect(onStage(page, "[data-section]").first()).toBeVisible();
   await verifierInterrupteur(page, "absent");
   const total = await totalPages(page);

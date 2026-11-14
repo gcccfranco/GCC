@@ -24,9 +24,9 @@ const setlist = (items: unknown[]) => ({
 const NOTE = "Intro douce, enchaîner sans pause";
 const DOCS = {
   "setlists/sjp": setlist([item("hosanna", 1, {}, NOTE), item("一切歌颂赞美", 2)]),
-  "setlists/stxt": setlist([item("hosanna", 1, {}, NOTE), item("一切歌颂赞美", 2, { jianpuSheet: false })]),
+  "setlists/stxt": setlist([item("hosanna", 1, {}, NOTE), item("一切歌颂赞美", 2)]),
   // T2 : premier chant en texte chinois, même note
-  "setlists/szh": setlist([item("一切歌颂赞美", 1, { jianpuSheet: false }, NOTE), item("hosanna", 2)]),
+  "setlists/szh": setlist([item("一切歌颂赞美", 1, {}, NOTE), item("hosanna", 2)]),
 };
 
 // Valeurs de la base (avant T1), codées en dur : --lyric-size = 0.88rem × 1,1 (écran) ou × 1,2 (dès 768 px) ; couleur
@@ -45,6 +45,8 @@ const FENETRES: Record<string, { width: number; height: number }> = {
 
 async function ouvrir(page: Page, id: "sjp" | "stxt" | "szh", projet?: string, sombre = false, aideVue = true) {
   if (projet && FENETRES[projet]) await page.setViewportSize(FENETRES[projet]);
+  // « stxt » et « szh » : le chant à scan en paroles, par la préférence de l'appareil.
+  if (id !== "sjp") await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   await page.addInitScript(([dark, vue]) => {
     if (vue) localStorage.setItem("accords-aide-vue", "1");
     if (dark) localStorage.setItem("theme", "dark");
@@ -503,7 +505,7 @@ test("capture T5 : 1 440 px, panneau du sommaire en plein glissement (rien ne pa
   await page.screenshot({ path: "test-results/t5-pupitre/ordinateur-1440-panneau-glisse.png" });
 });
 
-// ─── T4 : deux colonnes en rangées dès 1 000 px de zone, 简谱 jamais en colonne ───────────────────────────────────────
+// ─── T4, JV-2 : lecture en colonnes dès 1 000 px de zone, 简谱 jamais en colonne ───────────────────────────────────────
 const sectionsDe = (page: Page, n: number) =>
   page.locator(`[data-outline-item="${n}"] [data-section]`).evaluateAll((els) =>
     els.map((el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, droite: r.right }; }));
@@ -511,24 +513,44 @@ const lignesCoupees = (page: Page, n: number) =>
   page.locator(`[data-outline-item="${n}"] [data-copy-line]`).evaluateAll((els) =>
     els.filter((el) => el.querySelectorAll("[data-rangee]").length > 1).map((el) => el.textContent?.slice(0, 40)));
 
-test("ordinateur-1440 : deux colonnes de 528 px en rangées, gouttière de 24 px, aucune ligne coupée (T4)", async ({ page }, info) => {
+test("ordinateur-1440 : deux colonnes de 528 px en lecture en colonnes, gouttière de 24 px, aucune section ni ligne coupée (T4, JV-2)", async ({ page }, info) => {
   test.skip(info.project.name !== "ordinateur-1440", "1 440 × 900");
   await ouvrir(page, "stxt", info.project.name);
-  const s = await sectionsDe(page, 1);
+  const s = await page.locator('[data-outline-item="1"] [data-section]').evaluateAll((els) =>
+    els.map((el, i) => { const r = el.getBoundingClientRect(); return { i, x: r.x, y: r.y, w: r.width, droite: r.right, rects: el.getClientRects().length }; }));
   expect(s.length).toBeGreaterThanOrEqual(3);
   expect(Math.abs(s[0].w - 528), "colonne de 528").toBeLessThanOrEqual(16);
-  expect(Math.abs(s[1].x - s[0].droite - 24), "gouttière de 24").toBeLessThanOrEqual(4);
-  expect(s[1].x, "2e section à droite de la 1re").toBeGreaterThan(s[0].x + s[0].w);
-  expect(Math.abs(s[1].y - s[0].y), "2e section sur la rangée de la 1re").toBeLessThan(4);
-  expect(s[2].y, "3e sous la 1re").toBeGreaterThan(s[0].y + 20);
-  expect(Math.abs(s[2].x - s[0].x), "3e dans la colonne de gauche").toBeLessThan(2);
-  expect(new Set(s.map((x) => Math.round(x.x))).size, "jamais de 3e colonne").toBeLessThanOrEqual(2);
+  const xs = [...new Set(s.map((x) => Math.round(x.x)))].sort((p, q) => p - q);
+  expect(xs.length, "au plus deux colonnes").toBeLessThanOrEqual(2);
+  expect(xs.length, "deux colonnes").toBe(2);
+  const gauche = s.filter((x) => Math.abs(x.x - xs[0]) < 4);
+  const droite = s.filter((x) => Math.abs(x.x - xs[1]) < 4);
+  expect(Math.abs(droite[0].x - gauche[0].droite - 24), "gouttière de 24").toBeLessThanOrEqual(4);
+  expect(gauche[0].i, "1re section en haut à gauche").toBe(0);
+  for (const col of [gauche, droite]) {
+    for (let k = 1; k < col.length; k++) expect(col[k].y, "de haut en bas dans la colonne").toBeGreaterThan(col[k - 1].y);
+  }
+  expect(droite[0].i, "gauche puis droite").toBeGreaterThan(Math.max(...gauche.map((x) => x.i)));
+  expect(Math.abs(droite[0].y - s[0].y), "haut de la colonne droite aligné sur la 1re section").toBeLessThanOrEqual(4);
+  expect(s.filter((x) => x.rects !== 1).length, "aucune section coupée entre deux colonnes").toBe(0);
   expect(Math.max(...s.map((x) => x.droite)), "rien au-delà de 1 440").toBeLessThanOrEqual(1440);
   expect(await lignesCoupees(page, 1), "Hosanna : lignes coupées").toEqual([]);
   expect(await lignesCoupees(page, 2), "一切歌颂赞美 en texte : lignes coupées").toEqual([]);
-  const couplet = page.locator('[data-outline-item="1"] [data-section]').nth(1);
-  expect((await couplet.boundingBox())!.y / 900, "couplet 1 à 27 % au plus").toBeLessThanOrEqual(0.27);
   await page.screenshot({ path: "test-results/t4-pupitre/ordinateur-1440-fr-clair.png" });
+});
+
+test("captures JV-2", async ({ page }, info) => {
+  const p = info.project.name;
+  await ouvrir(page, "stxt", p);
+  await page.screenshot({ path: `test-results/jv2/${p}-fr-clair.png` });
+  await page.locator('[data-outline-item="2"]').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `test-results/jv2/${p}-zh-clair.png` });
+  if (p === "ordinateur-1440") {
+    await ouvrir(page, "stxt", p, true);
+    await page.screenshot({ path: `test-results/jv2/${p}-fr-sombre.png` });
+    await page.locator('[data-outline-item="2"]').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `test-results/jv2/${p}-zh-sombre.png` });
+  }
 });
 
 test("ordinateur : à 1 280 px, toujours une colonne de 920 px (T4)", async ({ page }, info) => {
@@ -546,12 +568,13 @@ test("ordinateur-1440 sombre : captures FR et 简谱 (T4)", async ({ page }, inf
   await page.screenshot({ path: "test-results/t4-pupitre/ordinateur-1440-fr-sombre.png" });
 });
 
-test("简谱 : l'image et son calque ont la même largeur, au plus 920 px, sans section à côté (T4)", async ({ page }, info) => {
+test("简谱 : l'image et son calque ont la même largeur, au plus 920 px sous 1 000 px de zone, deux volets à 1 440, sans section à côté (T4)", async ({ page }, info) => {
   await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "always"));
   await ouvrir(page, "sjp", info.project.name);
   const zone = page.locator('[data-outline-item="2"] [data-jianpu-page]').first();
   await expect(zone).toBeVisible();
   await page.waitForFunction(() => Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every((i) => i.complete && i.naturalWidth > 0));
+  if (info.project.name === "ordinateur-1440") await expect(zone.locator("xpath=ancestor::*[@data-enveloppe-scan]")).toHaveAttribute("data-scan-volets", "2");
   const m = await zone.evaluate((p) => {
     const img = p.querySelector("img")!.getBoundingClientRect();
     const calque = (p.querySelector("[data-jianpu-calque]") ?? p).getBoundingClientRect();
@@ -563,7 +586,8 @@ test("简谱 : l'image et son calque ont la même largeur, au plus 920 px, sans 
       voisines: sections.filter((r) => r.bottom > img.top && r.top < img.bottom && r.width > 0).length };
   });
   expect(Math.abs(m.img - m.calque), "image = calque").toBeLessThan(2);
-  expect(m.colonne, "enveloppe du scan").toBeLessThanOrEqual(920.5);
+  // JV-3 : dès 1 000 px de zone (1 440) le scan passe en deux volets (tests/jianpu-deux-volets.spec.ts) ; la garde de 920 px vaut en dessous.
+  if (info.project.name !== "ordinateur-1440") expect(m.colonne, "enveloppe du scan").toBeLessThanOrEqual(920.5);
   expect(m.droite).toBeLessThanOrEqual(m.fenetre);
   expect(m.voisines, "aucune section à côté du scan").toBe(0);
   await zone.scrollIntoViewIfNeeded();

@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreCompteur, attendreMiseEnPage, curseurPage, lireCompteur, onStage, ouvrirMenu, type Langue } from "./helpers/louange";
 
-// TC-1 (docs/spec-louange-tous-les-chants.md) : le menu Setlist a deux onglets, « Cette setlist | Tous les chants ».
+// TC-1 (docs/spec-louange-tous-les-chants.md) : le menu Setlist a deux onglets, « Mes setlists | Tous les chants ».
 // Toucher un chant l'ajoute (local) après le chant en cours, ou y va s'il y est déjà. Comptes et setlists simulés, noms inventés.
 test.use({ serviceWorkers: "block", deviceScaleFactor: 1 });
 
@@ -52,16 +52,23 @@ const chercher = async (d: ReturnType<Page["getByRole"]>, q: string) => d.locato
 const ligne = (d: ReturnType<Page["getByRole"]>, slug: string) => d.locator(`[data-chant-slug="${slug}"]`);
 
 test.describe("« Tous les chants » dans le menu Setlist", () => {
-  test("onglets sous « Toutes mes setlists », liste, interrupteur, index ; rouvre sur le dernier onglet ; Échap ferme le menu, pas le mode", async ({ page }) => {
+  test("onglets en tête, liste, interrupteur, index ; autres setlists sous la liste numérotée, absentes de « Tous les chants » ; rouvre sur le dernier onglet ; Échap ferme le menu, pas le mode", async ({ page }) => {
     await ouvrir(page);
     const d = await ouvrirMenu(page, "setlist");
-    const tout = (await d.locator("[data-toutes-setlists]").boundingBox())!;
     const onglets = (await d.locator("[data-onglets-setlist]").boundingBox())!;
-    expect(onglets.y, "les onglets sont sous la ligne « Toutes mes setlists »").toBeGreaterThan(tout.y);
+    for (const sel of ["[data-toutes-setlists]", "[data-autre-setlist]"]) {
+      for (const y of await d.locator(sel).evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top))) {
+        expect(y, "aucune ligne de setlist au-dessus des onglets").toBeGreaterThan(onglets.y);
+      }
+    }
+    const liste = (await d.locator("ol").boundingBox())!;
+    await d.locator("[data-toutes-setlists]").scrollIntoViewIfNeeded();
+    expect((await d.locator("[data-toutes-setlists]").boundingBox())!.y, "« Mes autres setlists » sous la liste numérotée").toBeGreaterThan(liste.y);
     await expect(onglet(d, "setlist")).toHaveAttribute("aria-selected", "true");
     await onglet(d, "chants").click();
     await expect(onglet(d, "chants")).toHaveAttribute("aria-selected", "true");
     await expect(d.locator("input[data-recherche-chants]")).toBeVisible();
+    await expect(d.locator("[data-toutes-setlists], [data-autre-setlist]")).toHaveCount(0);
     await expect(d.locator("[data-jianpu-ajout=avec]")).toHaveAttribute("aria-pressed", "true");
     await expect(d.locator("[data-jianpu-ajout=sans]")).toHaveAttribute("aria-pressed", "false");
     await expect(ligne(d, "abba-pere")).toBeVisible();
@@ -71,6 +78,31 @@ test.describe("« Tous les chants » dans le menu Setlist", () => {
     await expect(page.locator("[data-performance-mode]")).toBeVisible();
     const d2 = await ouvrirMenu(page, "setlist");
     await expect(onglet(d2, "chants")).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("flèches Droite et Gauche changent d'onglet et déplacent le focus", async ({ page }) => {
+    await ouvrir(page);
+    const d = await ouvrirMenu(page, "setlist");
+    await onglet(d, "setlist").focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(onglet(d, "chants")).toHaveAttribute("aria-selected", "true");
+    await expect(onglet(d, "chants")).toBeFocused();
+    await expect(onglet(d, "chants")).toHaveAttribute("tabindex", "0");
+    await expect(onglet(d, "setlist")).toHaveAttribute("tabindex", "-1");
+    await page.keyboard.press("ArrowLeft");
+    await expect(onglet(d, "setlist")).toHaveAttribute("aria-selected", "true");
+    await expect(onglet(d, "setlist")).toBeFocused();
+  });
+
+  test("après un ajout depuis « Tous les chants », le menu rouvert est sur l'onglet setlist", async ({ page }) => {
+    await ouvrir(page);
+    const d = await ouvrirChants(page);
+    await chercher(d, "lum");
+    await ligne(d, "lumiere-du-monde").click();
+    await expect(d).toBeHidden();
+    await expect(barre(page)).toContainText("Lumière du monde", { timeout: 15_000 });
+    const d2 = await ouvrirMenu(page, "setlist");
+    await expect(onglet(d2, "setlist")).toHaveAttribute("aria-selected", "true");
   });
 
   test("recherche : « lum », « 你的 » et « ni de » ; « Dans la setlist » sur un chant déjà là", async ({ page }) => {
@@ -134,6 +166,7 @@ test.describe("« Tous les chants » dans le menu Setlist", () => {
     await expect(barre(page)).toContainText("你的同在", { timeout: 15_000 });
     await expect(onStage(page, "[data-jianpu-page]")).toHaveCount(0);
     const d2 = await ouvrirMenu(page, "setlist");
+    await onglet(d2, "chants").click(); // le menu rouvre sur l'onglet setlists après un ajout
     await expect(d2.locator("[data-jianpu-ajout=sans]")).toHaveAttribute("aria-pressed", "true");
   });
 
@@ -150,7 +183,7 @@ test.describe("« Tous les chants » dans le menu Setlist", () => {
   test("interface en chinois : onglets, interrupteur, champ", async ({ page }) => {
     await ouvrir(page, { langue: "zh", id: ZH });
     const d = await ouvrirChants(page, "zh");
-    await expect(onglet(d, "setlist")).toHaveText("本歌单");
+    await expect(onglet(d, "setlist")).toHaveText("我的歌单");
     await expect(onglet(d, "chants")).toHaveText("全部诗歌");
     await expect(d.locator("[data-jianpu-ajout=avec]")).toHaveText("用简谱");
     await expect(d.locator("[data-jianpu-ajout=sans]")).toHaveText("不用");

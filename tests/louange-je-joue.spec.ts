@@ -1,10 +1,11 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, lireCompteur, NOM_MENU, ouvrirJeJoue, ouvrirOptions, type Langue } from "./helpers/louange";
+import { attendreMiseEnPage, lireCompteur, ouvrirJeJoue, type Langue } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 
-// Lot FS-C (docs/spec-mode-louange-forscore-2.md) : « Je joue », le menu du rôle, retenu par compte sur l'appareil
-// (aucune écriture Firestore). Comptes simulés, noms fictifs.
+// Lot FS-C (docs/spec-mode-louange-forscore-2.md) : « Je joue », le rôle, retenu par compte sur l'appareil (aucune écriture
+// Firestore). RU-5 : c'est le premier groupe de la marge « Affichage » (colonne dès 1 024 px, sinon feuille basse), plus un menu.
+// Comptes simulés, noms fictifs.
 
 const SETLIST_ID = "setlist-je-joue";
 const ANOUK: FakeProfile = {
@@ -43,7 +44,8 @@ const ZH = ["谢谢你", "活着为要敬拜你", "耶和华所定的日子"];
 const telephone = (page: Page) => page.viewportSize()!.width < 768;
 const tactile = (page: Page) => page.evaluate(() => matchMedia("(pointer: coarse)").matches);
 const lire = (page: Page, cle: string) => page.evaluate((c) => localStorage.getItem(c), cle);
-const dialogueJeJoue = (page: Page, langue: Langue = "fr") => page.getByRole("dialog", { name: NOM_MENU[langue].jejoue, exact: true });
+// La marge ouverte (le groupe « Je joue » en fait partie) ; `data-ouvert` la distingue de la marge fermée, qui reste dans le DOM.
+const dialogueJeJoue = (page: Page) => page.locator('[data-testid="marge-affichage"][data-mode="louange"][data-ouvert="true"]');
 
 /** Réglages de départ posés une seule fois (le script d'initialisation rejoue à chaque chargement de page). */
 async function preparer(page: Page, opts: { langue?: Langue; theme?: "light" | "dark"; init?: Record<string, string> } = {}) {
@@ -82,7 +84,7 @@ async function quitterLeMode(page: Page) {
 /** Points d'une boîte où l'élément n'est ni bouton ni lien ni champ (titre, phrase, espace entre lignes). */
 async function pointsInertes(page: Page, boite: { x: number; y: number; width: number; height: number }, parts: number[]) {
   return page.evaluate(({ b, ps }) => {
-    const dialogue = document.querySelector("[data-menu-louange]");
+    const dialogue = document.querySelector('[data-testid="marge-affichage"][data-mode="louange"]');
     return ps.map((part) => {
       const x = b.x + b.width * part;
       for (let y = b.y + 2; y < b.y + b.height - 2; y += 3) {
@@ -97,33 +99,30 @@ async function pointsInertes(page: Page, boite: { x: number; y: number; width: n
 
 const ROLES = ["Pianiste", "Guitariste", "Présidence", "Choriste", "Batteur"];
 
-test("Je joue : s'ouvre sous son icône, cinq rôles et « Aucun », le rôle actif coché ; un toucher dedans ne tourne pas la page ; Échap ferme puis quitte", async ({ page }) => {
+test("Je joue : s'ouvre avec la marge Affichage, cinq rôles et « Aucun », le rôle actif coché ; un toucher dedans ne tourne pas la page ; Échap ferme puis quitte", async ({ page }) => {
   await preparer(page, { init: { "perf-role-preset": "guitariste", "perf-font-scale": "1.5" } });
   await ouvrirMode(page, ANOUK);
   await expect(dialogueJeJoue(page), "rôle déjà connu : pas d'ouverture automatique").toHaveCount(0);
   await page.keyboard.press("ArrowRight");
   await expect.poll(() => lireCompteur(page)).toMatch(/^2 \//);
-  const avant = await lireCompteur(page);
   const dialogue = await ouvrirJeJoue(page);
   await page.waitForTimeout(500);
+  // La marge ouverte refait la pagination (RU-5) : le compteur de référence se lit après.
+  const avant = await lireCompteur(page);
 
-  const declencheur = page.locator('[data-menu-declencheur="jejoue"]');
+  const declencheur = page.locator('[data-menu-declencheur="affichage"]');
   await expect(declencheur).toHaveAttribute("aria-haspopup", "dialog");
   await expect(declencheur).toHaveAttribute("aria-expanded", "true");
   const boite = (await dialogue.boundingBox())!;
   const ecran = page.viewportSize()!;
-  if (telephone(page)) {
-    expect(boite.y + boite.height, "feuille posée en bas").toBeGreaterThanOrEqual(ecran.height - 2);
+  if ((await dialogue.getAttribute("data-place")) === "colonne") {
+    expect(boite.x + boite.width, "colonne contre le bord droit").toBeGreaterThanOrEqual(ecran.width - 1);
+    expect(boite.width).toBe(320);
   } else {
-    const barre = (await page.locator("[data-barre-haut]").boundingBox())!;
-    const icone = (await declencheur.boundingBox())!;
-    const centre = icone.x + icone.width / 2;
-    expect(boite.y, "bord haut sous la barre").toBeGreaterThanOrEqual(barre.y + barre.height - 1);
-    expect(boite.x, "le popover couvre l'icône (à gauche)").toBeLessThanOrEqual(centre + 1);
-    expect(boite.x + boite.width, "le popover couvre l'icône (à droite)").toBeGreaterThanOrEqual(centre - 1);
+    expect(boite.y + boite.height, "feuille posée en bas").toBeGreaterThanOrEqual(ecran.height - 2);
   }
 
-  await expect(dialogue.getByText("Ce que la vue montre")).toBeVisible();
+  await expect(dialogue.getByRole("heading", { name: "Je joue" })).toBeVisible();
   for (const role of ROLES) {
     const bouton = dialogue.getByRole("button", { name: new RegExp(`^${role}`) });
     await expect(bouton).toBeVisible();
@@ -133,7 +132,7 @@ test("Je joue : s'ouvre sous son icône, cinq rôles et « Aucun », le rôle ac
   await expect(dialogue.getByText("Accords, paroles et capo")).toBeVisible();
   await expect(dialogue.getByRole("button", { name: /^Aucun/ })).toBeVisible();
   await expect(dialogue.getByRole("radiogroup", { name: "Ordre des sections" })).toBeVisible();
-  await expect(dialogue.getByRole("button", { name: "Paroles", exact: true }), "le rond Paroles est dans Options, plus dans Je joue").toHaveCount(0);
+  await expect(dialogue.getByRole("switch", { name: "Paroles", exact: true }), "Paroles est dans « Ce que je lis »").toBeVisible();
 
   const doigt = await tactile(page);
   const points = await pointsInertes(page, boite, [0.15, 0.5, 0.85]);
@@ -232,23 +231,17 @@ test("le rôle d'appareil n'est repris qu'à l'ouverture du mode louange : consu
   expect(await lire(page, "perf-role-preset-uid-anouk"), "Anouk n'a rien").toBeNull();
 });
 
-test("le popover Je joue porte son titre en gras dès md ; au téléphone, seul le titre de la feuille", async ({ page }) => {
+test("la marge porte son titre « Affichage » et, au-dessous, le groupe « Je joue » avant « Ce que je lis »", async ({ page }) => {
   await preparer(page, { init: { "perf-role-preset": "guitariste" } });
   await ouvrirMode(page, ANOUK);
   const dialogue = await ouvrirJeJoue(page);
-  await expect(dialogue).toBeVisible();
-  const titre = dialogue.locator("[data-titre-je-joue]");
-  if (telephone(page)) {
-    await expect(titre).toBeHidden();
-    return;
-  }
+  const titre = dialogue.getByRole("heading", { name: "Affichage", exact: true });
   await expect(titre).toBeVisible();
-  await expect(titre).toHaveText("Je joue");
-  expect(await titre.evaluate((e) => [parseFloat(getComputedStyle(e).fontSize), Number(getComputedStyle(e).fontWeight)])).toEqual([16, 700]);
-  const boiteTitre = (await titre.boundingBox())!;
-  const boiteSous = (await dialogue.getByText("Ce que la vue montre").boundingBox())!;
-  expect(boiteTitre.y + boiteTitre.height, "« Ce que la vue montre » sous le titre").toBeLessThanOrEqual(boiteSous.y + 0.5);
-  await expect(page.getByRole("dialog", { name: "Je joue", exact: true })).toBeVisible();
+  const jeJoue = dialogue.getByRole("heading", { name: "Je joue", exact: true });
+  const jeLis = dialogue.getByRole("heading", { name: "Ce que je lis", exact: true });
+  const y = async (l: typeof titre) => (await l.boundingBox())!.y;
+  expect(await y(titre), "titre de la marge au-dessus des groupes").toBeLessThan(await y(jeJoue));
+  expect(await y(jeJoue), "Je joue avant Ce que je lis").toBeLessThan(await y(jeLis));
 });
 
 test("vue partitions de la setlist : le rôle Batteur du compte donne « Structure seule » (clé par compte)", async ({ page }) => {
@@ -259,12 +252,12 @@ test("vue partitions de la setlist : le rôle Batteur du compte donne « Structu
   await expect(page.locator("[data-section]")).toHaveCount(0);
 });
 
-test("Je joue : rôles, ordre (Tout le chant, Chaque section une fois, Plan du chant), puis disposition ; Options garde les accords, plus la disposition (FR)", async ({ page }) => {
+test("Je joue : rôles, ordre (Tout le chant, Une fois chacune, Plan), puis disposition, dans la même marge (FR)", async ({ page }) => {
   await preparer(page, { init: { "perf-role-preset": "guitariste" } });
   await ouvrirMode(page, ANOUK);
   const dialogue = await ouvrirJeJoue(page);
   const ordre = dialogue.getByRole("radiogroup", { name: "Ordre des sections" });
-  await expect(ordre.getByRole("radio")).toHaveText(["Tout le chant", "Chaque section une fois", "Plan du chant"]);
+  await expect(ordre.getByRole("radio")).toHaveText(["Tout le chant", "Une fois chacune", "Plan"]);
   // Libellés longs : ils passent à la ligne dans leur segment, jamais sur le voisin.
   const debords = await ordre.getByRole("radio").evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length);
   expect(debords, "aucun libellé d'ordre ne déborde de son segment").toBe(0);
@@ -289,12 +282,7 @@ test("Je joue : rôles, ordre (Tout le chant, Chaque section une fois, Plan du c
   await page.waitForTimeout(250);
   await expect(dialogue).toBeVisible();
   expect((await lireCompteur(page)).split(" / ")[0], "un choix de disposition ne tourne pas la page").toBe(avant);
-
-  await page.keyboard.press("Escape");
-  await expect(dialogue).toBeHidden();
-  const options = await ouvrirOptions(page);
-  await expect(options.getByText("Couleur des accords", { exact: true })).toBeVisible();
-  await expect(options.locator('[aria-labelledby="perf-disposition"]')).toHaveCount(0);
+  await expect(dialogue.getByText("Couleur des accords", { exact: true })).toBeVisible();
 });
 
 test("Je joue : ordre 完整顺序 / 每段一次 / 只看结构 (ZH)", async ({ page }) => {
@@ -319,12 +307,12 @@ test("taille annotée : la clé d'un autre compte ne compte pas", async ({ page 
 });
 
 for (const largeur of [1024, 1440]) {
-  test(`capture FS-corr : le popover Je joue à ${largeur} px, titre en tête`, async ({ page }, testInfo) => {
+  test(`capture FS-corr : la marge Affichage (Je joue) à ${largeur} px, titre en tête`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: largeur, height: 900 });
     await preparer(page, { init: { "perf-role-preset": "guitariste" } });
     await ouvrirMode(page, ANOUK);
     const dialogue = await ouvrirJeJoue(page);
-    await expect(dialogue.locator("[data-titre-je-joue]")).toBeVisible();
+    await expect(dialogue.getByRole("heading", { name: "Affichage", exact: true })).toBeVisible();
     await page.waitForTimeout(500);
     await page.screenshot({ path: `test-results/fs-corr/je-joue-${largeur}-${testInfo.project.name}.png` });
   });
@@ -343,7 +331,7 @@ for (const langue of ["fr", "zh"] as const) {
     test(`captures FS-C : Je joue, phrase d'accueil puis rôle choisi, ${langue}, ${theme}`, async ({ page }, testInfo) => {
       await preparer(page, { langue, theme });
       await ouvrirMode(page, ANOUK, langue === "zh" ? ZH : FR);
-      const dialogue = dialogueJeJoue(page, langue);
+      const dialogue = dialogueJeJoue(page);
       await expect(dialogue).toBeVisible();
       await expect(dialogue.getByText(langue === "zh" ? "选择你演奏的角色，你的账号会记住。" : "Choisis ce que tu joues, ton compte s'en souviendra.")).toBeVisible();
       await capture(page, testInfo, `je-joue-accueil-${langue}-${theme}`);

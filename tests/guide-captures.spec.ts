@@ -188,7 +188,7 @@ test("captures du guide", async ({ page }, testInfo) => {
   const barre = page.getByRole("button", { name: tr("Plus d'actions", "更多操作") }).first();
   // Menu ouvert, Radix masque le reste de la page aux rôles : on mesure avant d'ouvrir.
   mesures.song = {
-    tonalite: await mesurer(page.getByTestId("pilule-tonalite")),
+    tonalite: await mesurer(page.getByTestId("armure")),
     menu: await mesurer(barre),
   };
   await barre.click();
@@ -202,7 +202,7 @@ test("captures du guide", async ({ page }, testInfo) => {
   await panneau.waitFor();
   await page.waitForTimeout(600);
   await figure(page, "customize", {
-    transpose: page.getByTestId("pilule-tonalite"),
+    transpose: page.getByTestId("armure"),
     sections: panneau.getByText(tr("Structure", "歌单结构"), { exact: true }),
     reinit: panneau.getByRole("button", { name: tr("Réinitialiser", "重置") }),
   });

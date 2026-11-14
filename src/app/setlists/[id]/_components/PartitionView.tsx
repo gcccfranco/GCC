@@ -1,20 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { songHref } from "@/lib/setlist/songHref";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { NotationAccordsProvider } from "@/components/song/NotationAccordsProvider";
-import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, chord_font } from "@/components/song/SongView";
+import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { AccordsProvider, AideAccordsEnLigne, ChantDesAccords, useOuvrirAccord, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { ordreJoue } from "@/lib/chordpro/structure";
-import { useJianpuScore } from "@/lib/jianpu/images";
+import { useJianpuScore, type JianpuEntry } from "@/lib/jianpu/images";
+import { useVoletsScan } from "@/components/jianpu/useVoletsScan";
+import type { Volets } from "@/lib/performance/tranchesScan";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { useTranslation } from "react-i18next";
 import { transposeSection, transposerVers } from "@/lib/transposeAST";
-import { semitonesTo } from "@/lib/transpose";
+import { semitonesTo, getTransposedKey } from "@/lib/transpose";
+import { Armure } from "@/components/song/Armure";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { lyricsText } from "@/components/song/copyLyrics";
 import { compter } from "@/lib/usage";
@@ -35,10 +38,10 @@ const PUCE = `${TOUCHER_44} inline-flex h-8 items-center gap-1.5 rounded-full bo
 /** Copie les paroles d'un chant, dans l'ordre joué, pour la régie (PPT). */
 /** H5-2 : de quoi ouvrir la porte 2 au passage d'un accord touché (`tonalite` : celle que la porte 2 joue). */
 function iciDe(
-  onIci: ((itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string) => void) | undefined,
+  onIci: ((itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string, options?: { depuisNom?: boolean; element?: HTMLElement | null }) => void) | undefined,
   itemIndex: number, slug: string | undefined, sections: ChordProSection[], tonalite: string, tonaliteOrigine?: string,
 ): IciDuChant | undefined {
-  return onIci && { sections, tonalite, tonaliteOrigine, ouvrir: (uid, idee) => onIci(itemIndex, slug, uid, idee) };
+  return onIci && { sections, tonalite, tonaliteOrigine, ouvrir: (uid, idee, options) => onIci(itemIndex, slug, uid, idee, options) };
 }
 
 function CopyLyricsButton({ sections, icone = false }: { sections: ChordProSection[]; icone?: boolean }) {
@@ -85,6 +88,31 @@ function DonnerFermeture({ onFermer }: { onFermer?: (fermer: () => void) => void
   return null;
 }
 
+/** Enveloppe du scan 简谱 (vue Partitions). Dès 1 000 px de zone (conteneur `partition`, même règle que les paroles),
+ *  le scan passe en deux volets (`useVoletsScan`) ; sinon il garde 920 px. Le témoin, visible seulement à ≥ 1 000 px,
+ *  donne la largeur de la zone par ResizeObserver. */
+function EnveloppeScan({ slug, entry, sansVolets, avecEtiquettes = false, children }: { slug: string; entry: JianpuEntry; sansVolets: boolean; avecEtiquettes?: boolean; children: (volets: Volets | undefined) => ReactNode }) {
+  const temoin = useRef<HTMLDivElement>(null);
+  const [largeur, setLargeur] = useState<number | null>(null);
+  useEffect(() => {
+    const el = temoin.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setLargeur(el.getBoundingClientRect().width || null));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const volets = useVoletsScan(slug, entry, sansVolets ? null : largeur, avecEtiquettes) ?? undefined;
+  return (
+    <>
+      {/* Hors de l'enveloppe : elle est bornée à 920 px tant qu'il n'y a pas de volets, le témoin mesurerait 920. */}
+      <div ref={temoin} data-temoin-volets aria-hidden className="hidden h-0 w-full [@container_partition_(min-width:1000px)]:block" />
+      <div data-enveloppe-scan data-scan-volets={volets ? "2" : "1"} className={"print:max-w-none " + (volets ? "max-w-[920px] [@container_partition_(min-width:1000px)]:max-w-none" : "max-w-[920px]")}>
+        {children(volets)}
+      </div>
+    </>
+  );
+}
+
 export function PartitionsView({
   setlistId,
   items,
@@ -113,7 +141,16 @@ export function PartitionsView({
   onGarderCopie,
   onConflit,
   enAttente = false,
+  personalKeys,
+  onTonalite,
+  onChangerEquipe,
 }: {
+  /** Tonalités choisies sur cet appareil pour cette setlist (slug → tonalité), les mêmes qu'au mode louange. */
+  personalKeys?: Record<string, string>;
+  /** L'armure d'un chant : `null` = retour à la tonalité de l'équipe. */
+  onTonalite?: (slug: string, tonalite: string | null) => void;
+  /** « Changer pour toute l'équipe » : seulement pour qui peut éditer la setlist. */
+  onChangerEquipe?: (itemIndex: number, tonalite: string) => void;
   /** Ma partition (docs/spec-ma-partition.md) : par chant, quelle partition se lit, le menu « Je lis » et les signes. */
   lectures?: Record<string, Lecture>;
   onChoisirLecture?: (itemIndex: number, valeur: string) => void;
@@ -157,7 +194,7 @@ export function PartitionsView({
    *  Fusion : `slug` dit lequel de ses chants. */
   onIdees?: (itemIndex: number, slug?: string) => void;
   /** H5-2 « Ici » : ouvre la porte 2 au passage de l'accord touché (sans basculer) — absent sans accès Harmonie. */
-  onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string) => void;
+  onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string, options?: { depuisNom?: boolean; element?: HTMLElement | null }) => void;
   /** Reçoit la fermeture de la bulle d'accord de la partition. */
   onFermerAccord?: (fermer: () => void) => void;
   /** « Chant non chargé — Réessayer » : relit le contenu de ce seul chant. */
@@ -268,7 +305,7 @@ export function PartitionsView({
                           <Link href={songHref(fs.songSlug, fs, setlistId, item.position)} className="hover:underline underline-offset-2">
                             {ast.metadata.title}
                           </Link>
-                          <span className="ml-1 font-mono text-xs font-normal text-muted-foreground">
+                          <span className="ml-1 font-mono text-xs font-normal text-foreground">
                             {fs.keyOverride ?? ast.metadata.key}
                           </span>
                         </span>
@@ -292,7 +329,7 @@ export function PartitionsView({
                   }))}
                 />
                 {item.position === positionPremierChant && <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none"><AideAccordsEnLigne /></div>}
-                <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none pt-2 [@container_partition_(min-width:1000px)]:grid [@container_partition_(min-width:1000px)]:grid-cols-2 [@container_partition_(min-width:1000px)]:gap-x-6 [@container_partition_(min-width:1000px)]:items-start [@container_partition_(min-width:1000px)]:[&>:last-child_[data-section]]:!mb-0 [@container_partition_(min-width:1000px)]:[&>:nth-last-child(2):nth-child(odd)_[data-section]]:!mb-0 print:block">
+                <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none pt-2 [@container_partition_(min-width:1000px)]:columns-2 [@container_partition_(min-width:1000px)]:gap-x-6 [@container_partition_(min-width:1000px)]:[&>*]:break-inside-avoid [@container_partition_(min-width:1000px)]:[&>:last-child_[data-section]]:!mb-0 print:block print:columns-auto">
                   {shownPassages.map(({ ms, ast, section, fusionSong, keyChange }, msIdx) => {
                     const sectionNote = ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId];
                     const sectionNuance = ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId];
@@ -414,6 +451,9 @@ export function PartitionsView({
             onGarderCopie={onGarderCopie}
             onConflit={onConflit}
             enAttente={enAttente}
+            personalKeys={personalKeys}
+            onTonalite={onTonalite}
+            onChangerEquipe={onChangerEquipe}
             premier={item.position === positionPremierChant}
           />
         );
@@ -450,8 +490,14 @@ function NormalSongItem({
   onGarderCopie,
   onConflit,
   enAttente,
+  personalKeys,
+  onTonalite,
+  onChangerEquipe,
   premier,
 }: {
+  personalKeys?: Record<string, string>;
+  onTonalite?: (slug: string, tonalite: string | null) => void;
+  onChangerEquipe?: (itemIndex: number, tonalite: string) => void;
   lecture?: Lecture;
   onChoisirLecture?: (itemIndex: number, valeur: string) => void;
   partage?: (itemIndex: number, slug: string) => PartageProps | undefined;
@@ -475,7 +521,7 @@ function NormalSongItem({
   onPasserAuCulte?: (itemIndex: number, srcLine: number) => void;
   onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
   onIdees?: (itemIndex: number) => void;
-  onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string) => void;
+  onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string, options?: { depuisNom?: boolean; element?: HTMLElement | null }) => void;
   onRetryChant?: (slug: string) => void | Promise<void>;
   titre?: string;
   /** Premier chant de la setlist : l'aide des accords s'y pose sous les pastilles. */
@@ -496,13 +542,24 @@ function NormalSongItem({
   // et le comparer à `keyOverride` répondait toujours « la même », ce qui
   // éteignait le calque de la partition 简谱 (accords laissés dans la
   // tonalité gravée pendant que le reste de la setlist est transposé).
-  const { ast, songKey } = useMemo(() => {
+  // La tonalité choisie sur cet appareil (`perf-personal-keys`, celle du mode louange) remplace celle de l'équipe ; les
+  // modulations (升调) suivent du même écart (comme `blocks.ts`).
+  const chosenKey = personalKeys?.[item.songSlug];
+  const { ast, songKey, recommendedKey, equipeKey, personalKey } = useMemo(() => {
     const base = itemAst(item, content);
-    if (!base) return { ast: undefined, songKey: undefined };
-    return { ast: transposerVers(base, item.keyOverride), songKey: base.metadata.key };
-  }, [item, content]);
+    if (!base) return { ast: undefined, songKey: undefined, recommendedKey: null, equipeKey: undefined, personalKey: undefined };
+    const equipe = item.keyOverride ?? base.metadata.key;
+    const perso = chosenKey && chosenKey !== equipe ? chosenKey : undefined;
+    return { ast: transposerVers(base, perso ?? item.keyOverride), songKey: base.metadata.key, recommendedKey: base.metadata.recommendedKey, equipeKey: equipe, personalKey: perso };
+  }, [item, content, chosenKey]);
+  const joueKey = personalKey ?? equipeKey;
+  const decalage = personalKey && equipeKey ? semitonesTo(equipeKey, personalKey) : 0;
+  const sectionKeys = useMemo(
+    () => (decalage ? Object.fromEntries(Object.entries(item.sectionKeys ?? {}).map(([k, v]) => [k, getTransposedKey(v, decalage)])) : item.sectionKeys ?? {}),
+    [item.sectionKeys, decalage],
+  );
   // Partition 简谱 choisie pour cet item : le scan remplace les paroles.
-  const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref, item.jianpuSheet) ? item.songSlug : null);
+  const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref) ? item.songSlug : null);
   if (!ast) {
     // Chant sans contenu (lecture ratée) : son titre et de quoi le relire, plutôt qu'un trou dans la setlist.
     return (
@@ -532,7 +589,8 @@ function NormalSongItem({
   const layout: PartitionLayout = editMode ? "played" : layoutPref;
   const playedSections = ordreJoue(ast.sections, item.structureOverride);
   // Partition 简谱 : les 升调 de la structure jouée, qu'un scan ne peut pas montrer.
-  const steps = jianpuScore ? resolveSectionOccurrences(playedSections, item) : [];
+  const steps = (jianpuScore ? resolveSectionOccurrences(playedSections, item) : []).map((st) =>
+    decalage && st.targetKey ? { ...st, targetKey: getTransposedKey(st.targetKey, decalage) } : st);
 
   // Badges d'état : ils ne sont pas dans le scan et suivent donc l'item, que
   // le chant s'affiche en paroles ou en partition.
@@ -567,6 +625,28 @@ function NormalSongItem({
       )}
     </>
   );
+  // L'armure (RU-1) remplace la lettre colorée : pleine = ma tonalité, au contour = celle de l'équipe ; « équipe G » à côté
+  // quand la mienne diffère. Sans droit d'éditer, la transposition reste personnelle (pas de « toute l'équipe »).
+  const armure = ast.metadata.key && equipeKey && songKey && joueKey && (
+    <span className="flex shrink-0 items-center gap-1.5">
+      <Armure
+        titre={ast.metadata.title}
+        langue={ast.metadata.language === "zh" ? "zh" : "fr"}
+        tonaliteOrigine={songKey}
+        tonaliteReco={recommendedKey}
+        tonaliteEquipe={equipeKey}
+        tonalite={joueKey}
+        portee="appareil"
+        onChange={(k) => onTonalite?.(item.songSlug, k === equipeKey ? null : k)}
+        onChangerEquipe={onChangerEquipe ? (k) => onChangerEquipe(origIndex, k) : undefined}
+      />
+      {personalKey && (
+        <span data-testid="tonalite-equipe" className="whitespace-nowrap text-xs text-muted-foreground">
+          {t("armure.equipeMention", { key: equipeKey })}
+        </span>
+      )}
+    </span>
+  );
   // Rangée compacte de la maquette (.shead, 48 px) : n°, titre et pinyin (puis la note, tronquée), tonalité, copie en icône.
   const sousLigne = [ast.metadata.titlePinyin, item.notes].filter(Boolean);
   const enTete = (
@@ -585,14 +665,7 @@ function NormalSongItem({
             </p>
           )}
         </div>
-        {ast.metadata.key && (
-          <span
-            className={`shrink-0 text-sm font-bold ${chord_font.className}`}
-            style={{ color: ast.metadata.language === "zh" ? "var(--jianpu-color)" : "var(--chord-color)" }}
-          >
-            {ast.metadata.key}
-          </span>
-        )}
+        {armure}
         {ast.metadata.tempo && (
           <span className="flex shrink-0 items-baseline gap-0.5 text-xs text-muted-foreground max-[359px]:hidden">
             <span className="text-base leading-none text-foreground/70">♩</span>
@@ -614,6 +687,7 @@ function NormalSongItem({
             {item.position}
           </span>
           {followsPresidency && <CopyLyricsButton sections={playedSections} />}
+          {armure}
           {item.notes && <span className="text-xs text-muted-foreground italic">{item.notes}</span>}
           {badges}
         </div>
@@ -627,7 +701,7 @@ function NormalSongItem({
         sectionNotes={item.sectionNotes ?? {}}
         sectionTransitions={item.sectionTransitions ?? {}}
         sectionNuances={item.sectionNuances ?? {}}
-        sectionKeys={item.sectionKeys ?? {}}
+        sectionKeys={sectionKeys}
         disposition={disposition}
         layout={layout}
         slug={item.songSlug}
@@ -643,7 +717,8 @@ function NormalSongItem({
           // Partition 简谱 : le scan prend la place des paroles, sous le même
           // en-tête (K3). Structure seule : ni l'un ni l'autre.
           jianpuScore && layout !== "structure" ? (
-            <div data-enveloppe-scan className="max-w-[920px] print:max-w-none">
+            <EnveloppeScan slug={item.songSlug} entry={jianpuScore} sansVolets={Boolean(editMode && onEditJianpu)} avecEtiquettes={Boolean(onIci)}>
+              {(volets) => (<>
               {/* Un 升调 ne se voit pas sur un scan : le dire au-dessus (lot 9). */}
               {steps
                 .filter((st) => st.targetKey)
@@ -661,17 +736,19 @@ function NormalSongItem({
                   </p>
                 ))}
               <JianpuSheet
+                volets={volets}
                 entry={jianpuScore}
                 title={ast.metadata.title}
                 slug={item.songSlug}
-                playedKey={item.keyOverride && item.keyOverride !== songKey ? item.keyOverride : null}
+                playedKey={joueKey && joueKey !== songKey ? joueKey : null}
                 originalKey={songKey}
                 chordEdits={item.jianpuChords}
                 onEditChords={
                   editMode && onEditJianpu ? (next) => onEditJianpu(origIndex, next) : undefined
                 }
               />
-            </div>
+              </>)}
+            </EnveloppeScan>
           ) : undefined
         }
       />

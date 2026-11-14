@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Popover, PopoverAnchor, PopoverArrow, PopoverContent } from "@/components/ui/popover";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /** Les menus du mode louange (FS-B) : un seul est ouvert à la fois (`popoverOuvert` de PerformanceMode). */
-export type MenuId = "setlist" | "reperes" | "jejoue" | "outils" | "options" | "tempo";
+export type MenuId = "setlist" | "reperes" | "outils" | "affichage" | "metronome";
 
 /** Largeur de la dernière disposition où les menus sont des feuilles du bas (md de Tailwind). */
 const MD = "(min-width: 768px)";
@@ -25,8 +27,12 @@ function useAuMoinsMd(): boolean {
   return md;
 }
 
-/** Zone qui défile dans la hauteur disponible ; un fondu léger en bas tant qu'il reste du contenu dessous. */
-function ZoneDefilante({ className, children }: { className?: string; children: ReactNode }) {
+/** Zone qui défile dans la hauteur disponible ; tant qu'il reste du contenu dessous, un fondu léger et une bande
+ *  « Suite » opaque de 48 px, toute la largeur, au bas de la zone (parcours du 13/11, constat 1 : le fondu seul ne se
+ *  voyait pas ; une flèche flottante cachait une pastille au téléphone) : un toucher descend d'une hauteur visible
+ *  moins une ligne. Elle disparaît en bas de la liste. `arrondi` : popover, coins du bas arrondis comme la zone. */
+function ZoneDefilante({ className, arrondi = false, children }: { className?: string; arrondi?: boolean; children: ReactNode }) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const [fondu, setFondu] = useState(false);
   const maj = useCallback(() => {
@@ -44,13 +50,31 @@ function ZoneDefilante({ className, children }: { className?: string; children: 
   }, [maj]);
   const masque = "linear-gradient(to bottom, black calc(100% - 2rem), transparent)";
   return (
-    <div
-      ref={ref}
-      onScroll={maj}
-      className={className}
-      style={fondu ? { maskImage: masque, WebkitMaskImage: masque } : undefined}
-    >
-      <div>{children}</div>
+    <div className="relative">
+      <div
+        ref={ref}
+        onScroll={maj}
+        className={className}
+        style={fondu ? { maskImage: masque, WebkitMaskImage: masque } : undefined}
+      >
+        <div>{children}</div>
+      </div>
+      {fondu && (
+        <button
+          type="button"
+          tabIndex={-1}
+          data-menu-suite
+          aria-label={t("performance.menuSuite")}
+          title={t("performance.menuSuite")}
+          onClick={() => {
+            const el = ref.current;
+            if (el) el.scrollBy({ top: Math.max(40, el.clientHeight - 88), behavior: "smooth" });
+          }}
+          className={`absolute inset-x-0 bottom-0 flex h-12 items-center justify-center border-t border-border bg-background text-foreground dark:bg-[hsl(var(--raised))] ${arrondi ? "rounded-b-xl" : ""}`}
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border shadow-sm"><ChevronDown className="h-5 w-5" aria-hidden /></span>
+        </button>
+      )}
     </div>
   );
 }
@@ -143,7 +167,7 @@ export function MenuLouange({
         onCloseAutoFocus={rendreLeFocus}
         {...arreter}
       >
-        <ZoneDefilante className="max-h-[calc(var(--radix-popover-content-available-height)-2px)] overflow-y-auto rounded-xl p-3">{children}</ZoneDefilante>
+        <ZoneDefilante arrondi className="max-h-[calc(var(--radix-popover-content-available-height)-2px)] overflow-y-auto rounded-xl p-3">{children}</ZoneDefilante>
         <PopoverArrow width={18} height={9} className="fill-background stroke-border dark:fill-[hsl(var(--raised))]" />
       </PopoverContent>
     </Popover>

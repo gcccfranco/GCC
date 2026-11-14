@@ -105,10 +105,23 @@ async function ouvrir(page: Page, slug: string, query = "") {
   const erreurs: string[] = [];
   page.on("pageerror", (e) => erreurs.push(e.message));
   await page.goto(`/songs/${encodeURIComponent(slug)}${query}`, { waitUntil: "domcontentloaded" });
-  const select = page.getByTestId("barre-outils").locator("select").first();
-  await select.waitFor();
-  return { select, erreurs };
+  const armure = page.getByTestId("armure");
+  await armure.waitFor();
+  return { armure, erreurs };
 }
+
+const NOM = (t: string) => t.replace(/♯/g, "#").replace(/♭/g, "b");
+const fenetre = (page: Page) => page.getByTestId("fenetre-armure");
+/** Ouvre la fenêtre de l'armure (un clic avant l'hydratation se perd : on recommence). */
+async function ouvrirFenetre(page: Page) {
+  await expect(async () => {
+    if (!(await fenetre(page).isVisible())) await page.getByTestId("armure").click({ timeout: 1000 });
+    await expect(fenetre(page)).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
+}
+/** Touche de la fenêtre portant ce nom (« Bbm » s'affiche « B♭m »). */
+const touche = (page: Page, nom: string) =>
+  fenetre(page).getByRole("radio").filter({ has: page.locator("span:first-child", { hasText: new RegExp(`^${nom.replace(/#/g, "[#♯]").replace(/b/g, "[b♭]")}$`) }) });
 
 const json = (v: unknown) => encodeURIComponent(JSON.stringify(v));
 
@@ -118,63 +131,65 @@ async function accords(page: Page, n: number): Promise<string[]> {
   return lus.map((t) => t.trim()).filter((t) => /^[A-G]/.test(t)).slice(0, n);
 }
 
-const pilule = (page: Page) => page.getByTestId("tonalite-lettre");
+/** La tonalité lue sur le bouton de l'armure. */
+const pilule = (page: Page) => page.getByTestId("armure");
+const lue = (page: Page) => pilule(page).textContent().then((t) => NOM(t ?? ""));
 
 test.describe("page du chant", () => {
-  test("À l'agneau : choisir Bm transpose les accords et la pilule", async ({ page }) => {
-    const { select } = await ouvrir(page, "a-l-agneau");
-    await expect(select).toHaveValue("Am");
-    expect(await select.locator("option").evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value))).toEqual(MINEURES);
+  test("À l'agneau : choisir Bm transpose les accords et l'armure", async ({ page }) => {
+    await ouvrir(page, "a-l-agneau");
+    await ouvrirFenetre(page);
+    expect(await fenetre(page).getByRole("radio").evaluateAll((os) => os.map((o) => o.querySelector("span")!.textContent!.replace(/♯/g, "#").replace(/♭/g, "b")))).toEqual(MINEURES);
     await expect(async () => {
-      await select.selectOption("Bm");
-      await expect(pilule(page)).toHaveText(/^Bm/, { timeout: 500 });
+      await touche(page, "Bm").click();
+      await expect.poll(() => lue(page), { timeout: 500 }).toBe("Bm");
     }).toPass({ timeout: 15_000 });
     await expect.poll(() => accords(page, 3)).toEqual(["Bm", "G", "A"]);
   });
 
-  test("À l'agneau : − et + gardent une pilule mineure", async ({ page }) => {
-    const { select } = await ouvrir(page, "a-l-agneau");
-    const plus = page.getByRole("button", { name: "+", exact: true });
-    const moins = page.getByRole("button", { name: "−", exact: true });
+  test("À l'agneau : les flèches gardent une armure mineure", async ({ page }) => {
+    await ouvrir(page, "a-l-agneau");
+    await ouvrirFenetre(page);
+    expect(await lue(page)).toBe("Am");
+    const courante = fenetre(page).locator('[role="radio"][aria-checked="true"]');
+    await courante.focus();
     await expect(async () => {
-      await plus.click();
-      await expect(pilule(page)).toHaveText(/^Bbm/, { timeout: 500 });
+      await page.keyboard.press("ArrowRight");
+      await expect.poll(() => lue(page), { timeout: 500 }).toBe("Bbm");
     }).toPass({ timeout: 15_000 });
     await expect.poll(() => accords(page, 3)).toEqual(["Bbm", "Gb", "Ab"]);
-    await plus.click();
-    await expect(pilule(page)).toHaveText(/^Bm/);
-    await expect(select).toHaveValue("Bm");
-    await moins.click();
-    await moins.click();
-    await expect(pilule(page)).toHaveText(/^Am/);
-    await expect(page.getByTestId("tonalite-courante")).toContainText("orig.");
-    await moins.click();
-    await expect(pilule(page)).toHaveText(/^G#m/);
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => lue(page)).toBe("Bm");
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowLeft");
+    await expect.poll(() => lue(page)).toBe("Am");
+    await expect(courante).toContainText("orig.");
+    await page.keyboard.press("ArrowLeft");
+    await expect.poll(() => lue(page)).toBe("G#m");
     await expect.poll(() => accords(page, 3)).toEqual(["G#m", "E", "F#"]);
   });
 
-  test("Dieu Sauveur (G#) : +1 puis −1 revient à G#, pilule et accords cohérents", async ({ page }) => {
-    const { select } = await ouvrir(page, "dieu-sauveur", `?key=${json("G#")}`);
-    await expect(select).toHaveValue("G#");
-    const plus = page.getByRole("button", { name: "+", exact: true });
-    const moins = page.getByRole("button", { name: "−", exact: true });
+  test("Dieu Sauveur (G#) : A puis G# revient à G#, armure et accords cohérents", async ({ page }) => {
+    await ouvrir(page, "dieu-sauveur", `?key=${json("G#")}`);
+    expect(await lue(page)).toBe("G#");
     await expect.poll(() => accords(page, 3)).toEqual(["G#", "Fm", "C#"]);
+    await ouvrirFenetre(page);
     await expect(async () => {
-      await plus.click();
-      await expect(pilule(page)).toHaveText(/^A/, { timeout: 500 });
+      await touche(page, "A").click();
+      await expect.poll(() => lue(page), { timeout: 500 }).toBe("A");
     }).toPass({ timeout: 15_000 });
-    await expect(pilule(page)).not.toHaveText(/^G#/);
-    await moins.click();
-    await expect(pilule(page)).toHaveText(/^G#/);
-    await expect(page.getByTestId("tonalite-courante")).toContainText("orig.");
+    await touche(page, "G#").click();
+    await expect.poll(() => lue(page)).toBe("G#");
+    await expect(fenetre(page).locator('[role="radio"][aria-checked="true"]')).toContainText("orig.");
     await expect.poll(() => accords(page, 3)).toEqual(["G#", "Fm", "C#"]);
   });
 
   test("Dieu Sauveur : choisir Ab ré-épelle les accords à hauteur égale", async ({ page }) => {
-    const { select } = await ouvrir(page, "dieu-sauveur", `?key=${json("G#")}`);
+    await ouvrir(page, "dieu-sauveur", `?key=${json("G#")}`);
+    await ouvrirFenetre(page);
     await expect(async () => {
-      await select.selectOption("Ab");
-      await expect(pilule(page)).toHaveText(/^Ab/, { timeout: 500 });
+      await touche(page, "Ab").click();
+      await expect.poll(() => lue(page), { timeout: 500 }).toBe("Ab");
     }).toPass({ timeout: 15_000 });
     await expect.poll(() => accords(page, 3)).toEqual(["Ab", "Fm", "Db"]);
   });
@@ -191,8 +206,8 @@ test.describe("page du chant", () => {
     ["一生爱你", "sectionNuances", null],
   ] as const) {
     test(`URL tordue ${parametre}=${JSON.stringify(valeur)} sur ${slug}`, async ({ page }) => {
-      const { select, erreurs } = await ouvrir(page, slug, `?${parametre}=${json(valeur)}`);
-      await expect(select).toBeVisible();
+      const { armure, erreurs } = await ouvrir(page, slug, `?${parametre}=${json(valeur)}`);
+      await expect(armure).toBeVisible();
       await expect(page.locator("span[data-copy-ignore]").first()).toBeAttached();
       expect(erreurs).toEqual([]);
     });

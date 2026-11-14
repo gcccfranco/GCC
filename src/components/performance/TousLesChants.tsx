@@ -16,22 +16,35 @@ const sansAccents = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").to
 // Même règle de tri que la page Chants (SongListClient, non exportée) : un chant chinois se range par son pinyin.
 const cleDeTri = (s: SongIndexEntry) => sansAccents(s.language === "zh" && s.titlePinyin ? s.titlePinyin : s.title);
 
-/** Commande segmentée « Cette setlist | Tous les chants ». */
+/** Onglets soulignés « Mes setlists | Tous les chants », collés en haut de la zone qui défile (marges négatives : ils
+ *  couvrent son padding, `-mx-4` feuille du téléphone, `md:-mx-3` popover ; `-top-3` : le collage se compte sous le padding haut de la zone) ; ← → Début Fin changent d'onglet et le focus suit. */
 export function OngletsSetlist({ onglet, onChange }: { onglet: "setlist" | "chants"; onChange: (o: "setlist" | "chants") => void }) {
   const { t } = useTranslation();
+  const ordre = ["setlist", "chants"] as const;
+  const clavier = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const i = ordre.indexOf(onglet);
+    const j = e.key === "ArrowRight" ? (i + 1) % 2 : e.key === "ArrowLeft" ? (i + 1) % 2 : e.key === "Home" ? 0 : e.key === "End" ? 1 : -1;
+    if (j < 0) return;
+    e.preventDefault();
+    onChange(ordre[j]);
+    e.currentTarget.querySelector<HTMLElement>(`[data-onglet="${ordre[j]}"]`)?.focus();
+  };
   return (
-    <div role="tablist" data-onglets-setlist className="mb-2 flex gap-1 rounded-lg bg-muted p-1">
-      {(["setlist", "chants"] as const).map((o) => (
+    <div role="tablist" data-onglets-setlist onKeyDown={clavier} className="sticky -top-3 z-10 -mx-4 -mt-3 mb-2 flex border-b border-border bg-background dark:bg-[hsl(var(--raised))] md:-mx-3">
+      {ordre.map((o) => (
         <button
           key={o}
           type="button"
           role="tab"
+          id={`onglet-${o}`}
+          aria-controls="panneau-setlist"
           data-onglet={o}
           aria-selected={onglet === o}
+          tabIndex={onglet === o ? 0 : -1}
           onClick={() => onChange(o)}
-          className={`min-h-11 flex-1 rounded-md px-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${onglet === o ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+          className={`relative min-h-11 flex-1 px-2 text-[15px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${onglet === o ? "text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground" : "text-muted-foreground"}`}
         >
-          {t(o === "setlist" ? "performance.thisSetlist" : "performance.allSongs")}
+          {t(o === "setlist" ? "performance.mySetlists" : "performance.allSongs")}
         </button>
       ))}
     </div>
@@ -133,21 +146,23 @@ export function ContenuTousLesChants({
           className="min-h-11 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </label>
-      <div role="group" aria-label={t("performance.jianpuChoice")} data-interrupteur-jianpu className="mb-2 flex items-center gap-1 rounded-lg bg-muted p-1">
+      <div role="group" aria-label={t("performance.jianpuChoice")} data-interrupteur-jianpu className="mb-2 flex min-h-11 items-center justify-between gap-3">
         {/* Le libellé dit que l'interrupteur règle l'ouverture du chant touché, pas un filtre de la liste. */}
-        <span className="shrink-0 pl-2 pr-1 text-[13px] text-muted-foreground">{t("performance.openWith")}</span>
-        {([true, false] as const).map((v) => (
-          <button
-            key={String(v)}
-            type="button"
-            data-jianpu-ajout={v ? "avec" : "sans"}
-            aria-pressed={avec === v}
-            onClick={() => choisir(v)}
-            className={`min-h-11 flex-1 rounded-md px-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${avec === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-          >
-            {t(v ? "performance.withJianpu" : "performance.withoutJianpu")}
-          </button>
-        ))}
+        <span className="text-sm font-medium text-foreground">{t("performance.openWith")}</span>
+        <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+          {([true, false] as const).map((v) => (
+            <button
+              key={String(v)}
+              type="button"
+              data-jianpu-ajout={v ? "avec" : "sans"}
+              aria-pressed={avec === v}
+              onClick={() => choisir(v)}
+              className={`relative min-h-9 flex-none rounded-md px-3.5 after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${avec === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+            >
+              {t(v ? "performance.withJianpu" : "performance.withoutJianpu")}
+            </button>
+          ))}
+        </div>
       </div>
       {!enLigne && <p data-hors-ligne className="mb-2 px-1 text-[13px] text-muted-foreground">{t("performance.horsLigneChants")}</p>}
       {!songs ? (

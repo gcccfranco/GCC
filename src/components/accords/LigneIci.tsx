@@ -16,6 +16,7 @@ import { idDeSection } from "@/lib/setlist/sectionOrigins";
 import { compter } from "@/lib/usage";
 import { semitonesTo, transposeChord } from "@/lib/transpose";
 import { useNotationDuCompte } from "@/components/song/NotationAccordsProvider";
+import { useTexteFiche } from "@/components/harmonie/AvisLangue";
 
 // Un appel par chant : le panneau se rouvre à chaque accord touché. Vidé si l'appel échoue.
 const cache = new Map<string, Promise<[Rejet[], Idee[]]>>();
@@ -46,6 +47,7 @@ export function LigneIci({ accord, harmonie, slug, bulle }: { accord: string; ha
   const { fiches } = useCatalogue();
   const { fermerSansFocus } = useOuvrirAccord();
   const [donnees, setDonnees] = useState<{ rejets: Rejet[]; idees: Idee[] } | null>(null);
+  const texteFiche = useTexteFiche();
   const { ici, sectionUids } = harmonie;
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export function LigneIci({ accord, harmonie, slug, bulle }: { accord: string; ha
     for (const s of passage.idees) {
       const endroit = s.endroits.find((e) => e.sectionUid === passage.uid && e.accords.some((a) => chiffre(a, ici.tonalite) === touche));
       const apercu = endroit && apercuDuChangement(s, ici.tonalite, endroit);
-      if (apercu) return { passage, avant: chiffres(endroit.accords, ici.tonalite), apres: chiffres(apercu.apresListe, ici.tonalite), avantL: lettres(endroit.accords, ici.tonalite, harmonie.tonalite), apresL: lettres(apercu.apresListe, ici.tonalite, harmonie.tonalite), nom: s.fiche.nom, fr: true, idee: s.id };
+      if (apercu) return { passage, avant: chiffres(endroit.accords, ici.tonalite), apres: chiffres(apercu.apresListe, ici.tonalite), avantL: lettres(endroit.accords, ici.tonalite, harmonie.tonalite), apresL: lettres(apercu.apresListe, ici.tonalite, harmonie.tonalite), nom: texteFiche(s.fiche).nom, fr: !!texteFiche(s.fiche).lang, idee: s.id };
     }
     for (const idee of passage.ideesEquipe) {
       if (!idee.avant || !idee.apres) continue;
@@ -78,11 +80,11 @@ export function LigneIci({ accord, harmonie, slug, bulle }: { accord: string; ha
       return {
         passage, avant: chiffres(avant, origine), apres: chiffres(apres, origine),
         avantL: lettres(avant, origine, harmonie.tonalite), apresL: lettres(apres, origine, harmonie.tonalite),
-        nom: fiche?.nom ?? idee.texte, fr: !!fiche, idee: idee.id,
+        nom: fiche ? texteFiche(fiche).nom : idee.texte, fr: !!fiche && !!texteFiche(fiche).lang, idee: idee.id,
       };
     }
     return null;
-  }, [peut, donnees, ici, sectionUids, fiches, accord, harmonie.tonalite]);
+  }, [peut, donnees, ici, sectionUids, fiches, accord, harmonie.tonalite, texteFiche]);
 
   if (!ligne || !ici) return null;
   // Comme la grille et les partitions : le chiffre de l'étiquette entière (« 2m7 », pas seulement « 2m »).

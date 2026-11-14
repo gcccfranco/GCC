@@ -2,8 +2,9 @@
 
 import type { ComponentType, ReactNode, RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Bookmark, Drum, Guitar, ListMusic, Mic, MicVocal, Music, Pencil, Piano, Type, Wrench, X } from "lucide-react";
+import { Bookmark, Drum, Guitar, ListMusic, Mic, MicVocal, Pencil, Piano, Play, SlidersHorizontal, Square, Wrench, X } from "lucide-react";
 import type { JianpuSheetBlock, SectionBlock } from "@/lib/performance/blocks";
+import { TEMPO_DEPART } from "@/lib/performance/tempo";
 import type { MenuId } from "./MenuLouange";
 
 export const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> = {
@@ -14,10 +15,11 @@ export const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> 
   batteur: Drum,
 };
 
-/** Barre de titre du mode louange (forScore, piste A « Pupitre », FS-A) : à gauche Setlist et Je joue,
- *  au centre le titre et « compositeur · tonalité », à droite ♩ tempo, Crayon, Outils, Options
- *  d'affichage, ✕. Au téléphone : Setlist, Repères, Je joue | titre | Options, ✕ (Crayon, ♩ et Outils passent en tête de la feuille Options). Setlist, Repères, ♩, Outils et
- *  Options ouvrent chacun leur menu (FS-B, `MenuLouange`) : `menuOuvert` dit lequel, `onMenu` le bascule.
+/** Barre de titre du mode louange (forScore, piste A « Pupitre », FS-A ; RU-5) : à gauche Setlist et Repères,
+ *  au centre le titre, l'armure (`armure`, la tonalité) et le compositeur, à droite ♩ tempo, Crayon, Outils, Affichage,
+ *  ✕. Au téléphone : Setlist, Repères | titre, armure | Outils, Affichage, ✕ (Crayon et ♩ passent en tête d'Outils).
+ *  Setlist, Repères, ♩ et Outils ouvrent chacun leur menu (FS-B, `MenuLouange`), Affichage la marge : `menuOuvert` dit
+ *  lequel, `onMenu` le bascule.
  *  `avecReperes` : le chant courant a des sections (un scan seul n'en a pas).
  *  `barreRef` est la ref de mesure lue par PerformanceMode (hauteur des barres).
  *  `onCrayon` absent = bouton « Crayon » masqué. Les icônes prennent `--couleur-icones`. */
@@ -27,34 +29,43 @@ export function BarreHaut({
   currentSong,
   setlistTitle,
   compositeur,
-  personalKey,
-  rolePreset,
+  armure,
   annotateMode,
   menuOuvert,
   avecReperes,
   onAnnoter,
+  annoterIndispo = false,
   onMenu,
-  onJeJoue,
   onQuitter,
+  bande,
+  marche,
+  onMarche,
+  tempoRegle,
 }: {
   barreRef: RefObject<HTMLDivElement | null>;
   showChrome: boolean;
   currentSong: SectionBlock | JianpuSheetBlock | undefined;
   setlistTitle: string;
   compositeur: string | undefined;
-  personalKey: string | undefined;
-  rolePreset: string | null;
+  /** L'armure (RU-5) : la tonalité, à côté du titre ; absente = pas de tonalité (fusion, aucun chant). */
+  armure?: ReactNode;
   annotateMode: boolean;
   menuOuvert: MenuId | null;
   avecReperes: boolean;
   onAnnoter: (() => void) | undefined;
+  /** Ma partition n'a pas pu être lue : Crayon visible mais désactivé (son toucher dit pourquoi). */
+  annoterIndispo?: boolean;
   onMenu: (id: MenuId) => void;
-  onJeJoue: () => void;
   onQuitter: () => void;
+  /** La bande des temps est allumée (métronome actif) : ♩ s'affiche même sans tempo, avec ▶ / ■ (grand écran). */
+  bande: boolean;
+  marche: boolean;
+  onMarche: () => void;
+  /** Tempo joué (réglage de l'appareil, sinon le fichier) : le même que la bande. */
+  tempoRegle?: number;
 }) {
   const { t } = useTranslation();
-  const IconeRole = (rolePreset && ICONES_ROLE[rolePreset]) || Music;
-  const tempo = currentSong?.tempo;
+  const tempo = tempoRegle ?? currentSong?.tempo ?? (bande ? TEMPO_DEPART : undefined);
   return (
     <div
       ref={barreRef}
@@ -77,52 +88,47 @@ export function BarreHaut({
             <Bookmark className="h-5 w-5" />
           </BtnBarre>
         )}
-        <BtnBarre label={t("performance.iPlay")} menu="jejoue" menuOuvert={menuOuvert} onClick={onJeJoue} texte>
-          <IconeRole className="h-5 w-5" />
-        </BtnBarre>
       </div>
 
       {/* Les deux groupes latéraux (flex-1, base 0, largeur minimale = leurs boutons) prennent la même largeur tant que
           la place suffit : le titre est alors centré sur l'écran. Si l'un des deux est plus large que sa moitié, le titre se
           décentre un peu plutôt que de se tronquer ; il ne se tronque que si la largeur totale manque vraiment. */}
-      <div className="min-w-0 shrink px-1 text-center">
-        <p className="truncate text-sm font-semibold leading-tight text-foreground md:text-base">
-          {currentSong?.songTitle ?? setlistTitle}
-        </p>
-        {(compositeur || currentSong?.songKey) && (
-          <p className="mt-0.5 truncate text-xs leading-tight text-muted-foreground md:text-[13px]">
-            {compositeur}
-            {compositeur && currentSong?.songKey ? " · " : null}
-            {currentSong?.songKey && <span className="font-mono">{currentSong.songKey}</span>}
-            {currentSong?.songKey && personalKey && (
-              <>
-                {" · "}
-                <span>{t("performance.personalKey", { key: personalKey })}</span>
-              </>
-            )}
+      <div data-bloc-titre className="flex min-w-0 shrink items-center justify-center gap-1.5 px-1">
+        <div className="min-w-0 text-center">
+          <p className="truncate text-sm font-semibold leading-tight text-foreground md:text-base">
+            {currentSong?.songTitle ?? setlistTitle}
           </p>
-        )}
+          {compositeur && (
+            <p className="mt-0.5 truncate text-xs leading-tight text-muted-foreground md:text-[13px]">{compositeur}</p>
+          )}
+        </div>
+        {armure && <span className="shrink-0">{armure}</span>}
       </div>
 
       <div className="flex flex-1 basis-0 items-center justify-end gap-0.5">
         {tempo ? (
-          <BtnBarre label={t("performance.tempo")} menu="tempo" menuOuvert={menuOuvert} onClick={() => onMenu("tempo")} cacheTel>
+          <BtnBarre label={t("performance.tempo")} menu="metronome" menuOuvert={menuOuvert} onClick={() => onMenu("metronome")} cacheTel>
             <span data-tempo-barre className="flex items-center gap-0.5 text-sm font-semibold tabular-nums">
               <span aria-hidden="true" className="-mr-2 text-xl leading-none">♩</span>
               {tempo}
             </span>
           </BtnBarre>
         ) : null}
+        {bande && (
+          <BtnBarre label={t(marche ? "performance.metronomeArreter" : "performance.metronomeLancer")} active={marche} onClick={onMarche} cacheTel bascule={marche}>
+            {marche ? <Square className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}
+          </BtnBarre>
+        )}
         {onAnnoter && (
-          <BtnBarre label={t("performance.crayon")} active={annotateMode} onClick={onAnnoter} cacheTel>
+          <BtnBarre label={t("performance.crayon")} active={annotateMode} onClick={onAnnoter} cacheTel indispo={annoterIndispo}>
             <Pencil className="h-5 w-5" />
           </BtnBarre>
         )}
-        <BtnBarre label={t("performance.toolsMenu")} menu="outils" menuOuvert={menuOuvert} onClick={() => onMenu("outils")} cacheTel>
+        <BtnBarre label={t("performance.toolsMenu")} menu="outils" menuOuvert={menuOuvert} onClick={() => onMenu("outils")}>
           <Wrench className="h-5 w-5" />
         </BtnBarre>
-        <BtnBarre label={t("performance.displayOptions")} menu="options" menuOuvert={menuOuvert} onClick={() => onMenu("options")}>
-          <Type className="h-5 w-5" />
+        <BtnBarre label={t("margeAffichage.titre")} menu="affichage" menuOuvert={menuOuvert} onClick={() => onMenu("affichage")}>
+          <SlidersHorizontal className="h-5 w-5" />
         </BtnBarre>
         <BtnBarre label={t("performance.exit")} onClick={onQuitter}>
           <X className="h-5 w-5" />
@@ -141,6 +147,8 @@ function BtnBarre({
   menuOuvert,
   texte = false,
   cacheTel = false,
+  bascule,
+  indispo = false,
   onClick,
   children,
 }: {
@@ -151,6 +159,10 @@ function BtnBarre({
   menuOuvert?: MenuId | null;
   texte?: boolean;
   cacheTel?: boolean;
+  /** Bouton ▶ / ■ du métronome : `aria-pressed` = cette valeur, repéré par `data-metronome-marche`. */
+  bascule?: boolean;
+  /** Désactivé mais touchable (aria-disabled) : le toucher explique pourquoi. */
+  indispo?: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
@@ -162,9 +174,12 @@ function BtnBarre({
       aria-label={label}
       title={label}
       data-menu-declencheur={menu}
+      data-metronome-marche={bascule === undefined ? undefined : ""}
+      aria-pressed={bascule}
+      aria-disabled={indispo || undefined}
       aria-haspopup={menu ? "dialog" : undefined}
       aria-expanded={menu ? ouvert : undefined}
-      className={`${cacheTel ? "hidden md:flex" : "flex"} h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg px-2.5 text-[color:var(--couleur-icones)] transition-colors active:bg-muted ${
+      className={`${cacheTel ? "hidden md:flex" : "flex"} h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg px-2.5 text-[color:var(--couleur-icones)] transition-colors ${indispo ? "opacity-40" : ""} active:bg-muted ${
         active || ouvert ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)] dark:bg-[color-mix(in_srgb,var(--couleur-icones)_28%,transparent)]" : "hover:bg-muted/60"
       }`}
     >

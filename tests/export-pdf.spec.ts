@@ -71,10 +71,10 @@ async function quelPdf(page: Page) {
   await pdfEntry(page).click();
 }
 
-/** « Quel PDF ? » d'un chant : le bouton PDF de la barre, au bout de la rangée dès la tablette
- *  debout, sur la seconde rangée du téléphone (docs/spec-barre-chant.md, Q2, Q5). */
+/** « Quel PDF ? » d'un chant : l'entrée PDF du menu ⋯ de la barre (RU-3, docs/spec-reglages-unifies.md). */
 async function pdfDuChant(page: Page) {
-  await page.getByTestId("barre-outils").getByRole("button", { name: "PDF", exact: true }).click();
+  await page.getByTestId("barre-outils").getByRole("button", { name: "Plus d'actions" }).click();
+  await pdfEntry(page).click();
 }
 
 // ── Préférence et nom de fichier (fonctions pures) ──────────────────────────

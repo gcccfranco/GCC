@@ -28,7 +28,7 @@ colonnes), **1** (简谱 sur deux volets), **2** (idées d'harmonie : notation, 
 | Q6 | Piste pour le 简谱 en deux volets | **B**, demi-lignes en deux colonnes (taille de lecture gardée) |
 | Q7 | Le mode louange aussi ? | **Oui**, sous l'interrupteur « 2 colonnes » existant |
 | Q4 | Notation de la bande d'idée d'harmonie | **Une seule**, celle choisie par la personne (Lettres par défaut) |
-| Q5 | Idées d'harmonie sur le scan | **Remplacée** : toucher une section montre toutes ses propositions (§ Point 2, « Reprise du 13/11 ») ; planche à faire |
+| Q5 | Idées d'harmonie sur le scan | **Remplacée** : toucher une section montre toutes ses propositions (§ Point 2, « Reprise du 13/11 ») ; **tranchée : le volet Harmonie** s'ouvre au toucher du nom de la section (Timothée, 13/11, « Ok ») |
 
 Tranchées par la session (décisions déléguées, 13/11, faciles à défaire) : seuil d'une colonne sous 11 px d'accords
 imprimés ; coupe entre colonnes au début de section si l'écart ne dépasse pas deux demi-lignes ; page chant inchangée.
@@ -259,8 +259,65 @@ Proposition, à dessiner sur planche avant le go (changement d'apparence, `CLAUD
   sans animation, sans tourner la page ; le réglage « Idées d'harmonie » reste (éteint par défaut).
 - Notation : une seule, celle que la personne a choisie (Q4 ci-dessus, recommandation gardée).
 
-Prochaine étape : planche « toutes les idées d'une section » (téléphone, tablette, ordinateur ; paroles et scan),
-puis go. JV-5a et JV-5b sont remplacées par cette reprise.
+JV-5a et JV-5b sont remplacées par cette reprise.
+
+**Planche** (13/11/2026) : `docs/planches/planche-harmonie-toutes-les-idees.html`, artefact privé
+https://claude.ai/artifact/QyuUMtnuQ6TVvKuPQis6Fp. Comptage sur 1 616 sections (idées calculées, tonalité
+recommandée) : médiane 6 idées, 29 % en ont 9 ou plus, jusqu'à 20 ; 49 n'en ont aucune.
+
+- A. L'ossia : chaque idée écrite en petit au-dessus de l'accord qu'elle change. Belle à deux idées, illisible à six ;
+  impossible sur le scan ; touche au rendu des accords (`ChordLine`).
+- **B. Le tableau d'échange (recommandée)** : sous le nom touché, une liste « ce qu'on joue → ce qu'on peut jouer »
+  alignée sur une colonne de flèches ; l'accord d'origine écrit une fois par groupe ; groupes rangés par sûreté (très
+  sûre, sûre, puis « à écouter » en graisse normale) ; idées de forme sur une ligne « Aussi : intro, tag » ; idées de
+  l'équipe ensuite ; deux colonnes au-delà de six rangées dès 768 px ; le trait de la section descend le long de la
+  liste. Hors mode louange : nom de la fiche en gris, Écouter, lien « Tout sur ce passage » vers la porte 2. Mode
+  louange : rangées seules, à la taille des accords, aucune animation, la page ne tourne pas. Scan : étiquette de section
+  dans la marge blanche (`marges.json`) à la hauteur de sa ligne (`sections.json`), liste insérée entre deux lignes.
+  Exemple : Refrain de Promesses, 8 idées en 5 groupes.
+- C. Le pupitre voisin : la colonne Harmonie s'ouvre à côté, au bloc du passage. La moins chère hors louange, mais elle
+  cache la partition au téléphone et fait recompter les pages en louange.
+
+Critique (« à retoucher ») à corriger en code, sans changer la recommandation : accord d'origine à 55 % trop pâle
+(3,8:1, viser ≥ 4,5:1 : `--muted-foreground`) et flèche invisible (1,27:1 : la tracer en `--muted-foreground`) ;
+compteur collé au nom qui se lit comme un numéro (« Couplet 1 6 » = « Couplet 16 ») ; Écouter à moins de 44 px l'un de
+l'autre dans un groupe ; la section à 9 idées ou plus et le passage en deux colonnes ne sont pas dessinés.
+
+**Décision de Timothée (13/11/2026)** : « C'est pas mieux de faire un volet comme quand on clique sur harmonie pour un
+chant ? », puis « Ok » à la proposition ci-dessous. **Le volet Harmonie (piste C, adaptée) remplace B** ; H-Q1 et H-Q2
+tombent (pas de liste dans la partition, pas de compteur sur le nom).
+
+- **Geste** : toucher le nom d'une section (« Refrain », « Pont ») ouvre le volet Harmonie du chant (porte 2,
+  `src/components/harmonie/HarmonieDuChant.tsx`) **au bloc de ce passage**, comme « Ici » le fait déjà
+  (`src/components/accords/LigneIci.tsx:3-4` ; branchement `SetlistDetailClient.tsx:1974`, `onIci`). Toutes les
+  propositions y sont, avec nom, « Pourquoi », Écouter et Essayer. Volet déjà ouvert : il défile au bloc. Le nom n'est
+  touchable que si l'accès Harmonie est ouvert (et, en louange, si le réglage « Idées d'harmonie » est allumé).
+- **Tablette paysage, ordinateur, 1 440** (page chant, vue Partitions) : le volet existant, à côté de la partition.
+- **Téléphone et tablette portrait** : une **feuille à mi-hauteur** qui monte du bas, la section touchée restant visible
+  au-dessus ; on la tire vers le haut pour tout voir. Décision déléguée (session de cadrage, 13/11) : mi-hauteur = 50 %
+  de l'écran, poignée et fermeture au glissé vers le bas ou par Échap.
+- **Mode louange** : le volet **se pose par-dessus** le bord droit de la page (feuille à mi-hauteur au téléphone), sans
+  la rétrécir ni recompter les pages ; aucune animation (R4) ; le toucher ne tourne pas la page. Le point et la bande
+  d'H8 (`IdeeHarmonieMarge.tsx`) sont retirés : le nom de section devient la seule cible. Une seule notation, celle de
+  la personne (`src/lib/notationAccords.ts`), dans le volet comme ailleurs (H7-2).
+- **Scan 简谱** : une étiquette de section dans la marge blanche (`public/jianpu/marges.json`), à la hauteur de la ligne
+  où la section commence (`public/jianpu/sections.json`), porte le même geste ; rien sur l'encre ni dans le calque.
+  Étiquette dans la langue de l'interface, forme courte (« Couplets 1–4 » si plusieurs sections commencent sur la même
+  ligne ; initiale seule sous 40 px de marge). Le lien `sections.json` ↔ passages (`sectionOrigins.ts`) est à établir.
+
+Tranches (une session chacune ; **go de Timothée le 13/11/2026 : « Go »**, enchaînées sans nouveau go) :
+- **JV-5a — Le nom de section ouvre le volet** (S à M) : `SongView.tsx` (nom en bouton, sans toucher aux accords),
+  `PartitionView.tsx`, `SongDetailClient.tsx`, `SetlistDetailClient.tsx` (même chemin que `onIci`), feuille à
+  mi-hauteur au téléphone. Après JV-2 (même `PartitionView.tsx`). Tests : `harmonie-montrer.spec.ts` (voisine),
+  nouvelle spec d'agencement `harmonie-volet-section.spec.ts` dans `SPECS_GRAND_ECRAN` (Promesses : toucher « Pont »
+  ouvre le volet au bloc du Pont, F → Fmaj7 visible ; téléphone : feuille à 50 %, le Pont reste visible).
+- **JV-5b — Mode louange** (M) : `PerformanceMode.tsx` (volet posé par-dessus, rendu de `HarmonieDuChant` ou de sa
+  partie « idées du passage »), retrait de `IdeeHarmonieMarge.tsx`. Après TC-4 et JV-4. Tests :
+  `louange-harmonie.spec.ts` réécrite (réglage éteint par défaut ; allumé, le nom ouvre le volet ; page non tournée,
+  pages non recomptées).
+- **JV-5c — Scan 简谱** (M) : étiquettes de marge dans `JianpuSheet.tsx` (couche sœur du calque) et `PageScan.tsx`,
+  lien sections ↔ passages. Après JV-3 et JV-4. Tests : `harmonie-jianpu.spec.ts` étendue, `npm run jianpu:audit` sur
+  deux scans.
 
 ## Tranches
 
@@ -343,3 +400,241 @@ chantier sur ce fichier.
   JV-3 ; planche « toutes les idées d'une section » lancée par la session de cadrage.
 - 13/11/2026 : go de Timothée pour les pistes des deux planches (B ici, A pour TC-4) : JV-3 lancée (session
   orchestratrice neuve), puis JV-4 après TC-4.
+- 13/11/2026 : **JV-1 codée** (session orchestratrice). `sheetEnabled(pref, role)` ; le `jianpuSheet` de l'item n'est plus
+  lu (sauf `choixScan`). La page setlist passe `prefPourRole(pref, getRoleSansMigrer(uid))` à la vue Partitions, à la
+  Liste, au Sommaire, aux idées, aux réglages d'affichage et au PDF ; l'aperçu de setlist et le Pupitre lisent le même
+  « Je joue » (le Pupitre ne lit plus le rôle du planning) ; le mode louange garde le sien (`PerformanceMode.tsx:720`
+  inchangé). « Jouer sur » et le badge 简谱 sont retirés de l'éditeur, avec leurs libellés ; l'aide « Partition 简谱 »
+  est réécrite (fr, zh). Décisions déléguées (session, 13/11) : `getRoleSansMigrer` plutôt que `getRole`, pour ne pas
+  migrer le rôle hors du mode louange (même résultat) ; `prefPourRole` gardé, pour que l'interrupteur montre ce que la
+  personne voit, comme dans le mode louange. Tests : huit specs (dont `jianpu-par-defaut`, `louange-roles-jianpu`,
+  `setlist-editeur-piste2`, et six specs passées de `jianpuSheet: false` à la préférence « never »), trois appareils
+  (plus les deux grands écrans pour les specs d'agencement) : 447 passés, 175 sautés (gardes d'appareil), 1 échec de
+  connexion simulée (`pupitre-partitions:716`, ordinateur), repassé seul ; **19,6 min**. tsc, lint : 0 erreur.
+  Relecteur : un appelant oublié (`ApercuSetlist.tsx`), corrigé.
+- 13/11/2026 : **go de Timothée pour JV-5a à JV-5c** (« Go »). Chaîne : **JV-2 lance JV-5a** à sa fin (même
+  `PartitionView.tsx`) ; **JV-4 lance JV-5b**, qui lance **JV-5c** (même `PerformanceMode.tsx`, puis `PageScan.tsx` et
+  `JianpuSheet.tsx`). JV-5a et JV-5b peuvent tourner en même temps (fichiers distincts ; ajouts courts dans
+  `SetlistDetailClient.tsx`). La dernière tranche du lot fait tourner les specs du lot et écrit au pilote.
+- 13/11/2026 : **JV-3 codée** (session orchestratrice, `/tranche`). `voletsDemiLignes` (`tranchesScan.ts`, pur ; fenêtres
+  d'une ligne mises en commun avec `tranchesDemiLignes`, inchangée) ; hook `useVoletsScan` ; `JianpuSheet` reçoit `volets`
+  (conteneur seulement : grille de deux colonnes, même corps de fenêtre que les demi-lignes du téléphone, calque intact,
+  une colonne à l'impression) ; `PartitionView` : `EnveloppeScan`, témoin CSS `@container partition (min-width:1000px)`
+  lu par ResizeObserver, `data-scan-volets`. Décisions déléguées (session, 13/11) : la **tablette paysage** (1 080 px,
+  zone < 1 000 px) et l'ordinateur 1 280 gardent une colonne, comme les paroles (la règle des 1 000 px l'emporte sur la
+  ligne « tablette paysage » des critères) ; en **édition des accords** (Adapter, Ma version) le scan garde la page
+  entière ; sans calque (pas de `chords`), une colonne. Limites connues de la piste B, vues à l'œil et acceptées
+  (`critique-design` : « à livrer ») : liaisons coupées à la coupe de demi-ligne, comme au téléphone ; à 1 440 l'échelle
+  plafonnée laisse ≈ 47 px entre les colonnes. Tests : nouvelle `jianpu-deux-volets.spec.ts` (dans `SPECS_GRAND_ECRAN`),
+  `pupitre-partitions` (garde des 920 px limitée sous 1 000 px de zone), voisines `jianpu-integration`,
+  `jianpu-tonalite-cho`, `harmonie-jianpu`, `louange-jianpu-tranches` : 563 passés au premier tour (17 min), quatre
+  échecs propres à la nouvelle spec corrigés en deux tours ; repasse après rebase sur JV-1 : 268 passés, 0 échec
+  (**8,9 min**). `jianpu:audit` 为我而来 et 全新的你 : calque calé, PNG regardés. tsc, lint : 0 erreur.
+- 13/11/2026 : **JV-2 codée** (session orchestratrice, `/tranche`). Dès 1 000 px de zone, `PartitionView.tsx` (chants
+  fusionnés) et `SongView.tsx` (corps) passent de `grid-cols-2` à `columns-2` (gouttière 24 px, mêmes seuil et largeur),
+  enfants en `break-inside-avoid` ; règle `nth-last-child(2)` des rangées retirée ; `print:columns-auto` ajouté
+  (`print:block` ne neutralisait plus les colonnes ; relecteur). `EnveloppeScan` (JV-3) et la règle « chinois avec
+  pinyin = une colonne » intacts. À 1 440, Hosanna se lit Intro, Couplet 1, Refrain à gauche puis Couplet 2, Pont à
+  droite ; ≈ 115 px de vide sous la colonne la plus courte (le prix de sections jamais coupées, risque dit à Q3).
+  Garde T4 de `pupitre-partitions` réécrite « lecture en colonnes » (ordre DOM gauche puis droite, hauts alignés,
+  `getClientRects() === 1`) ; « couplet 1 à 27 % » retirée (sans objet en colonnes) ; test « captures JV-2 » (cinq
+  projets, FR et ZH, sombre à 1 440). Tests : `pupitre-partitions`, `pages-en-grand-setlists`, `setlist-deux-volets`,
+  `jianpu-deux-volets`, `statistiques-chant`, cinq projets : 235 passés, 225 sautés (gardes d'appareil), 0 échec
+  (**7,7 min**). `regard` sur les douze captures : rien à corriger. tsc, lint : 0 erreur. Le chemin fusion de
+  `PartitionView` n'a pas d'assertion de colonnes propre (même classe que SongView). JV-5a lancée à la suite.
+- 13/11/2026 : **JV-5a codée** (session orchestratrice, `/tranche` calé sur des agents `general-purpose`). Le nom de
+  section (`NomSection`, `SongView.tsx` : disposition par défaut, Partition, Repères et Scène sans corps) est un bouton
+  quand l'accès Harmonie est ouvert, hors Crayon ; il appelle `IciDuChant.ouvrir(uid, undefined, { depuisNom })`
+  (`useIciDuChant`, `AccordsProvider.tsx`), page chant et vue Partitions (`iciDe`, `onIci`). Grand écran : la colonne.
+  Téléphone et tablette portrait : feuille à 50 % (crans 0,5 et 1, `HarmonieDuChant.tsx`), la page défile pour garder
+  le nom au-dessus. Décisions déléguées (session, 13/11) : marge basse de 50 dvh sur la page et dans la liste de la
+  feuille tant qu'elle est ouverte à mi-hauteur (sans elles, la dernière section d'un chant court, le Pont de
+  Promesses, ne peut ni monter au-dessus de la feuille ni en haut du volet) ; « Ici » et le bouton Harmonie gardent
+  leur feuille de 67 dvh ; Repères et Scène avec corps (nom en pastille) restent sans bouton. Limite connue : page
+  chant ouverte avec la liste à gauche, la zone de lecture fait moins de 824 px même à 1 440, et c'est la feuille
+  existante qui sort (règle antérieure, comme le bouton Harmonie). Au passage : guillemets de `jianpuSheetHint`
+  (fr.json), rouges dans `coherence.spec.ts` depuis JV-1. Tests : nouvelle `harmonie-volet-section.spec.ts`
+  (`SPECS_GRAND_ECRAN`) ; voisines `harmonie-montrer`, `harmonie-colonne`, `harmonie-setlist`, `harmonie-passages`,
+  `pupitre-partitions`, `jianpu-deux-volets`, `coherence`, `statistiques-chant`, `retouches-usage-t1`, cinq projets :
+  370 passés, 197 sautés, 1 course (`retouches-usage-t1:49`, téléphone, verte seule) (**9,0 min**) ; repasse de la
+  spec JV-5a après correctif : 39 passés (**1,2 min**). `regard` sur 17 captures (bloc du Pont en bas de la feuille à
+  la tablette : corrigé). tsc, lint : 0 erreur. `critique-design` (six captures) : « à retoucher », rien de bloquant ni de propre à la tranche ;
+  suites notées, toutes antérieures : feuille de la page chant centrée sur la page et non sur la lecture à 1 440 ;
+  double cadre du surlignage d'« Ici » (`.harmonie-surligne`, `globals.css`) ; poignée pâle de toutes les feuilles
+  (`drawer.tsx`) ; titres des fiches en français dans l'interface chinoise ; « Ne marche pas sur ce chant » seul sur
+  sa ligne en français. JV-5a ne lance rien après elle (JV-5b vient de JV-4).
+- 13/11/2026 : **JV-4 codée** (session orchestratrice). `tranchesDeuxColonnes` (`tranchesScan.ts`, pur) : sous « 2 colonnes »
+  allumé (ordinateur, tablette paysage, 1 440), chaque page d'écran d'un scan certifié montre deux colonnes de
+  demi-lignes (gauche, puis droite, puis page suivante ; dernière page équilibrée ; une page finit sur une ligne
+  complète), échelle = colonne / plus large fenêtre, **plafonnée à celle des lignes entières** ; sous 11 px
+  d'accords imprimés (`chords.json`, `labelH`) ou pour une ligne seule, les tranches d'avant. `Demi.colonne2` (indice de
+  la première fenêtre de droite) ; `JianpuSheet` pose les deux colonnes (`data-jianpu-volets`, gouttière 24 px, calque
+  intact) ; `PageScan` cale la tête de feuille sur leur largeur ; clé d'annotation **« j6-<y0> »** (composition
+  nouvelle, comme j4 / j5) ; `DemiPage` : les colonnes de scan comptent comme celles du texte (coupe verticale, filet
+  dans la gouttière). Éteint : lignes entières comme avant ; téléphone et tablette portrait inchangés. Levée de la
+  décision du 03/10 écrite datée dans `spec-deux-volets.md`. Décisions déléguées (session, 13/11) : coupe gloutonne
+  par page d'écran (la coupe « au début de section » de JV-3 ne s'applique pas : la page d'écran borne déjà les
+  colonnes) ; chaque page de scan se pagine seule (为我而来 : ses deux pages ne se mêlent pas, comme JP-B) ; demi-page en
+  coupe verticale (même règle que le texte en deux colonnes). Tests : nouvelle `louange-jianpu-deux-colonnes.spec.ts`
+  (`SPECS_GRAND_ECRAN` ; pur, toutes les lignes une fois, éteint, petits écrans, clé j6, 为我而来, demi-page, captures FR
+  et ZH clair et sombre) ; `louange-jianpu-tranches` et le test scan de `louange-demi-page` passent « 2 colonnes »
+  éteint (ils gardent le chemin des lignes entières). Premier tour (six specs, cinq projets) : 726 passés, 30 échecs
+  attendus (anciens tests en deux colonnes) (25 min) ; repasse : 434 passés, 3 échecs **antérieurs** (`jianpu-integration`
+  264, 661, 682 à 1 440, vue Partitions, rouges aussi sans la tranche) (**16 min**). tsc, lint : 0 erreur.
+  `regard` sur 23 captures, puis `critique-design` sur cinq : « à retoucher » (colonnes mal remplies : une ligne haute,
+  gardée entière dans sa colonne, laissait ≈ 240 px vides à 1 280 × 720). **Corrigé** : remplissage demi-ligne par
+  demi-ligne, la moitié droite d'une ligne peut ouvrir la colonne de droite (décision déléguée, session, 13/11 : la
+  lecture continue en haut de la colonne suivante ; jamais de tourne au milieu d'une ligne) ; repasse de la spec JV-4,
+  cinq projets : 57 passés (**2,1 min**), captures regardées à 1 280 et en tablette paysage. Laissés, hors tranche ou
+  antérieurs : trait de volta sur « Fmaj7 » de 为我而来 (scan et calque) ; marge blanche du scan au-dessus d'une ligne qui
+  ouvre la colonne de droite (hauts de colonnes décalés de ≈ 40 px parfois) ; bout de barre de part et d'autre de la
+  coupe et écart entre moitiés (comme au téléphone, JP-C). JV-5b lancée à la suite.
+- 13/11/2026 : **JV-5b codée** (session orchestratrice). Mode louange : réglage « Idées d'harmonie » allumé (accès
+  Harmonie requis, éteint par défaut, clé inchangée), le nom de section (`NomSection`, même bouton que JV-5a) ouvre
+  `HarmonieDuChant` au bloc du passage, **posé par-dessus** la page : colonne de 400 px au bord droit dès 1 024 px, entre
+  les deux barres (la croix du mode louange reste visible) ; feuille à mi-hauteur, pleine largeur, en dessous. Page ni
+  tournée, ni rétrécie, ni recomptée ; Échap ferme le volet seul ; une seule notation (celle de la personne). Nouveau
+  `src/components/performance/VoletHarmonie.tsx` (réglage, un `ici` par chant et tonalité de formes, `NomsTouchables` en
+  `display: contents` qui arrête le toucher, volet) ; `HarmonieDuChant` reçoit `louange` (z au-dessus du mode, sans
+  « Montrer », qui ferait défiler la page paginée). **Retirés** : `IdeeHarmonieMarge.tsx`, la prop `sousEntete` de
+  `SectionView`, le libellé `ideeHarmonieSection` ; la mesure des pages ne dépend plus d'aucune bande. Décisions
+  déléguées (session, 13/11) : le réglage reste (il garde le sens « noms touchables ») ; la feuille garde l'animation
+  de vaul, comme les menus du mode louange ; la section touchée n'est pas remontée au-dessus de la feuille (la page ne
+  défile pas en louange : on tire la feuille ou on la ferme) ; Repères et Scène avec corps restent sans bouton, comme
+  JV-5a. Tests : `louange-harmonie.spec.ts` réécrite (`SPECS_GRAND_ECRAN`), voisines `harmonie-volet-section`,
+  `performance-mode`, `louange-jianpu-deux-colonnes`, `harmonie-colonne`, cinq projets : 307 passés, 52 sautés, 1 course
+  (clic pendant la montée de la feuille, test corrigé : 20/20 en double) (9,1 min) ; repasses de la spec après
+  corrections (≈ 9 min) : **≈ 18 min** en tout. tsc, lint : 0 erreur. `regard` sur 20 captures (FR, ZH, clair, sombre,
+  cinq projets) ; `critique-design` sur quatre : « à retoucher » ; **corrigés** : colonne qui couvrait la barre du haut
+  (croix du mode louange), feuille centrée sur 672 px en tablette portrait. Laissés : croix du volet sous celle du mode
+  (70 px d'écart) ; feuille sur la barre du bas sous 1 024 px ; nom touché non marqué sur la page ; antérieurs au volet
+  (grille d'accords qui touche le cadre surligné, « · » seul en bout de ligne, double cadre, fiches en français en
+  chinois). JV-5c lancée à la suite.
+- 13/11/2026 : **JV-5c codée** (session orchestratrice). Sur un scan 简谱 certifié, une **étiquette de section** par ligne où
+  commence au moins une section (`sections.json`), dans la langue de l'interface (moitié 中文 ou française du libellé),
+  forme courte (« Couplets 1–2 », « 主歌 1–2 » ; noms différents : « Couplet · Refrain »), initiale seule sous 640 px ;
+  couleur de la section. Le toucher ouvre le volet Harmonie au bloc du passage : page chant et vue Partitions
+  (`useIciDuChant`, comme `NomSection`), mode louange avec « Idées d'harmonie » allumé (`ScanTouchable` et
+  `groupeScan`, `VoletHarmonie.tsx` ; le toucher ne tourne pas la page). Lien `sections.json` ↔ passages :
+  `passageDeSection` (`src/lib/jianpu/etiquettesSections.ts`, pur ; `verse-1` → uid `verse-1-0`). `JianpuSheet` : couche
+  sœur du calque (étiquettes hors de la fenêtre, un cadre intérieur rogne la page ; calque intact). **Décision déléguée
+  (session, 13/11)** : la marge blanche réelle des scans est presque nulle à l'écran (médiane 27 px image, dont 14
+  rognés : ≈ 4 px CSS), l'étiquette y serait sur l'encre ; elle va donc dans un **rail réservé à gauche** du scan (de
+  chaque colonne en volets), 28 px sous 640 px d'écran (moins de 40 : l'initiale), 56 px au-delà (forme courte, sur
+  deux lignes au besoin), seulement quand les étiquettes s'affichent (accès Harmonie, hors Crayon ; en louange, réglage
+  allumé). Le scan rétrécit d'autant ; les calculs de largeur le savent (`useVoletsScan`, `avecEtiquettes` ; mode louange,
+  `tranchesDe`, réglage allumé : les pages se recomptent au changement du réglage, pas au toucher). Sans accès, rien ne
+  change (fenêtre et largeurs d'avant, testé). **Retouche demandée par Timothée en cours de tranche** (13/11 : « sur les
+  écrans en paysage, ça ne peut pas prendre toute la largeur ? », puis « oui » au mode louange en 2 colonnes) : les deux
+  colonnes ne sont plus plafonnées à 1 040 px ni réglées sur une ligne sans coupe (elle se rapetisse seule dans sa
+  colonne, `echelleFenetre`, `Demi.largeurCol`) : à 1 280 × 720, colonnes de ≈ 545 px au lieu de ≈ 390 (为我而来 : 6
+  écrans au lieu de 4). Tests : `harmonie-jianpu.spec.ts` étendue (huit tests JV-5c : FR et ZH, page chant, Partitions,
+  louange, sans accès, réglage éteint) et ajoutée à `SPECS_GRAND_ECRAN` (ses tests Crayon restent sur trois appareils :
+  à 1 440 la vue Partitions est en volets) ; `louange-jianpu-deux-colonnes` (test d'échelle réécrit). Tour des specs de la
+  tranche et du lot (harmonie-jianpu, louange-harmonie, harmonie-volet-section, jianpu-deux-volets,
+  louange-jianpu-deux-colonnes, louange-jianpu-tranches, jianpu-par-defaut, louange-roles-jianpu, pupitre-partitions,
+  jianpu-integration), cinq projets : 805 passés, 210 sautés, 9 échecs : 3 antérieurs connus (`jianpu-integration` 264,
+  661, 682 à 1 440), 6 tests Crayon à 1 440 (nouveau projet pour la spec, gardés sur trois appareils) (**27,8 min**) ;
+  repasses `harmonie-jianpu` + `louange-jianpu-deux-colonnes` après corrections : 110 passés, 0 échec (**4,4 min**
+  chacune, deux fois). `jianpu:audit` 为我而来 et 一切歌颂赞美 : calque calé, PNG regardés (l'audit laisse un `next dev`
+  sur :3100 : le tuer avant de relancer Playwright, sinon tout échoue). tsc, lint : 0 erreur. `regard` sur 45 captures (cinq projets, FR et ZH, clair et sombre) :
+  rien de bloquant (aucune étiquette sur l'encre ni hors écran, volet au bon bloc). À retoucher, laissés : forme courte à
+  11 px serrée dans sa pastille sur deux lignes (« Couplets 1–2 ») ; marges inégales en louange 2 colonnes (le rail est à
+  gauche de chaque colonne) et ≈ un quart de hauteur vide sous les colonnes en paysage (le prix de la pleine largeur) ;
+  cadre du bloc touché parfois absent sur les captures 中文 du volet (capture prise avant la fin du défilement ?) ;
+  antérieurs : titres des fiches en français dans l'interface 中文. **`critique-design` non lancé** (plafond de contexte de
+  la session) : à faire sur les onze captures signalées par `regard` (regénérables : `PW_CAPTURES=<dossier> npx
+  playwright test tests/harmonie-jianpu.spec.ts -g "JV-5c"`). **Fin du lot JV** (JV-1 à JV-5c codées).
+- 13/11/2026 : **Finitions du lot JV** (go de Timothée du 13/11, « Go »). **Les 9 échecs à 1 440** ont une seule cause :
+  JV-3 (`aabb11c`, prouvé : `jianpu-integration` 661 et 682 passent sur `aabb11c~1`, échouent sur `aabb11c`). Dès
+  1 000 px de zone, la vue Partitions montre la page du scan dans plusieurs fenêtres (une par demi-ligne) : les
+  sélecteurs stricts des tests (`[data-jianpu-page="0"] img`, la zone de retouche, `[data-jianpu-retouche="0"]`) en
+  trouvaient 3, 6 ou 12. **Le test avait tort** (JV-3 veut ces volets) : attente de la première copie, nouveau helper
+  `toucherScan` (`tests/helpers/jianpu.ts`, touche la fenêtre qui montre le point), toutes les copies d'une retouche
+  doivent concorder (`22fd05f`). 264 (« 11 Adapter ») : même cause, en course (vert seul, rouge quand les volets se
+  calculaient avant l'attente). Les six tests Crayon : **JV-5c les avait sautés** sur tablette paysage et 1 440
+  (`test.skip` dans `openPartitions`, « gardés sur trois appareils »), ce qui cachait l'échec ; saut retiré, ils
+  tournent et passent sur les cinq projets (la retouche au Crayon marche en volets). **Défauts d'apparence** :
+  pastille de la forme courte sans marge intérieure (« Couplets » touchait ses bords) et, en 中文, coupée « 主歌 1– /
+  2 » : retrait de 4 px, largeur jusqu'au rail (56 px) sans en sortir, gluons U+2060 autour du tiret (`ffe83f7`) ;
+  marges du mode louange à deux colonnes (≈ 125 px de blanc à gauche de l'encre, 75 à droite à 1 280) : retrait à
+  droite égal au rail, borné par la place libre (`88f7a54`, ≈ 98 / 105 px). Cadre du bloc touché « parfois absent » :
+  **c'est la capture**, le cadre est le surlignage `harmonie-surligne`, retiré après 2,5 s par
+  `HarmonieDuChant.tsx` (≈ l. 310) ; présent sur toutes les captures régénérées. Quart vide sous les colonnes en
+  paysage : non touché. Tests : specs du lot (les dix de JV-5c), cinq projets : 814 passés, 210 sautés (antérieurs,
+  même nombre qu'avant), 0 échec (**26,7 min**) ; `harmonie-jianpu -g JV-5c` trois fois (≈ 1,7 min). tsc, lint :
+  0 erreur. Captures regardées : louange 1 280 (fr), tablette paysage (中文, sombre), page chant tablette portrait
+  (fr), téléphone (中文, volet). **`critique-design`** sur onze captures (louange 1 280, 1 440, téléphone, tablette
+  paysage ; volet 中文 1 280 et téléphone ; page chant tablette et téléphone ; volet fr 1 280 ; Partitions 1 440 et
+  tablette paysage) : « à retoucher », **aucun constat net** (tous des choix de design). **À décider par Timothée** :
+  (1) contraste des pastilles en clair, 3,3 à 4,3:1 pour un texte de 11 px (7,2:1 en sombre) : texte plus grand et
+  gras, ou ton `--sec-*` plus foncé (gelé) ; (2) initiale « C » (téléphone) lue comme un accord de do : « C1–2 »
+  comme les puces du haut, ou autre forme ; (3) étiquette ≈ 10 px en mode louange, illisible au pupitre : corps plus
+  grand en louange seulement ; (4) zone de toucher de ≈ 28 px de large au téléphone : l'élargir vers la gauche ;
+  (5) l'étiquette dit « 主歌 1–2 », le bloc ouvert « 主歌 1 » ; (6) en louange, le volet ouvert tranche la colonne de
+  droite au milieu d'un caractère : une colonne tant que le volet est ouvert, ou l'accepter ; (7) en 中文, puces
+  « C1 C2 R P » et rail « 主 / 副 » : deux nommages sur le même écran ; (8) le volet est une feuille centrée sur la
+  page chant à l'ordinateur, un panneau à droite en louange (sans doute antérieur).
+- 13/11/2026 : **Mode louange, les idées d'harmonie dans une fenêtre** (ordre de Timothée transmis par le pilote, ses
+  mots : « Fait une fenêtre comme pour les setlists dans le mode louange » ; il tranche le choix 6 des Finitions).
+  Dès 768 px, le nom ou l'étiquette de section touché ouvre une **fenêtre** accrochée à lui : même popover que le menu
+  Setlist (`MenuLouange` : largeur ≤ 26 rem, fond, bord, flèche), disposition `fenetre` de `HarmonieDuChant`, ancre
+  notée au pointerdown (`VoletHarmonie.tsx`, ou le focus au clavier). Elle ne pousse ni ne coupe la partition et ne
+  tourne pas la page ; toucher ailleurs la ferme sans tourner la page (même drapeau que les menus, `PerformanceMode`) ;
+  Échap la ferme sans quitter le mode. Sous 768 px : la feuille à mi-hauteur d'avant (la forme du menu Setlist au
+  téléphone est aussi une feuille du bas). La colonne de 1 024 px est retirée du mode louange. Contenu inchangé.
+  **Choix 8 assumé** (décision du pilote, 13/11) : la page chant et la vue Partitions gardent leur colonne ou leur
+  feuille ; seul le mode louange a la fenêtre. Tests : `louange-harmonie` (fenêtre à l'aplomb du nom, entière à
+  l'écran, sous la barre ; nouveau test « toucher hors du volet le ferme sans tourner la page », FR et ZH),
+  `harmonie-jianpu` (étiquette du scan → fenêtre dès 768 px) ; tour `harmonie-jianpu`, `louange-harmonie`,
+  `harmonie-volet-section`, `louange-jianpu-deux-colonnes`, `louange-jianpu-tranches`, `louange-roles-jianpu`, cinq
+  projets : 435 passés, 51 sautés, 0 échec (**15,7 min**). tsc, lint : 0 erreur. Captures regardées : paroles 1 440
+  (fr, clair), tablette paysage (中文, sombre), téléphone (中文, feuille) ; scan 1 280 (中文, sombre), tablette portrait (fr).
+- 13/11/2026 : **Go de Timothée pour six choix des Finitions** (transmis par le pilote ; « Go », en réponse à « go pour
+  les pastilles » / « go pour les six ») : **non codés**, la session des Finitions a passé la main (plafond de contexte).
+  À coder par une session neuve, un commit par point : (2 + 7) le rail du scan reprend **telles quelles les pastilles
+  de l'en-tête du chant** (C1, C2, R, P, Pr, Dp, I… ; couleurs `--sec-*`, forme ronde, les deux langues ; le nom complet
+  dans la fenêtre ou le volet ouvert ; réutiliser le composant ou les classes des pastilles existantes) ; (1) contraste
+  ≥ 4,5:1 en clair et en sombre ; (3) taille lisible au pupitre en mode louange (celle des pastilles de l'en-tête,
+  jamais sur l'encre : élargir le rail plutôt que rapetisser) ; (4) zone de toucher ≥ 44 px au téléphone sans agrandir
+  le dessin ; (5) étiquette et bloc ouvert disent la même chose (choisir ce qui est vrai pour le passage, écrire la
+  décision). Point de départ : `EtiquetteSection` et `RAIL_*` (`src/components/jianpu/JianpuSheet.tsx` ≈ l. 123-147),
+  `formeCourte` / `railEtiquettes` (`src/lib/jianpu/etiquettesSections.ts`), largeurs du rail dans `useVoletsScan` et
+  `tranchesDe` ; tests `harmonie-jianpu.spec.ts` (`ATTENDUES`, `verifierEtiquettes`). Vérifier : cinq projets,
+  `npm run jianpu:audit` sur un chant (aucune pastille sur l'encre), captures FR et 中文, clair et sombre.
+- 14/11/2026 : **Six choix des Finitions codés** (`fb1f64ec`, un commit : les points touchent le même composant).
+  (2 + 7) le rail du scan porte **une pastille ronde par section**, sigles de l'en-tête (`abbreviateSection` : C1, C2, R,
+  P, I, Pr, Tag…, les mêmes en fr et en 中文), empilées quand plusieurs sections commencent sur la ligne ; nom entier en
+  `title` et `aria-label`. (1) **Décision déléguée (session, 14/11)** : la pastille de l'en-tête (fond teinté, lettre de
+  la couleur) tombe à 3,3:1 en clair pour le refrain ; la pastille du rail est donc **pleine** à la couleur `--sec-*`
+  (tons inchangés), encre #0e0e10 ou `--rep-encre-claire` selon le ton, la règle des Repères (`PASTILLE_FONCEE`) :
+  ≥ 4,6:1 partout, mesuré par le test. (3) Taille de la pastille `petit` de l'en-tête (26 px et 13 px gras au
+  téléphone, 30 px et 14 px au-delà ; 10-11 px avant) ; rail élargi de 28 à 32 px au téléphone, 56 au-delà ; jamais sur
+  l'encre. (4) Zone de toucher 44 × 44 en `pointer:coarse` par un `::after`, dessin inchangé ; l'ellipse est sur le texte
+  (un `overflow` sur le bouton rognait la zone, vu par le relecteur) ; test de toucher réel (`elementFromPoint`), qui
+  échoue si l'on remet l'`overflow`. Deux pastilles empilées partagent leurs bords de zone (accepté). (5) **Décision
+  déléguée (session, 14/11)** : une pastille par section, chacune ouvre **son** bloc (C2 → Couplet 2 / 主歌 2) :
+  l'étiquette et le bloc ouvert disent la même chose. `formeCourte` est retirée. Tests : les cinq specs, cinq projets :
+  413 passés, 51 sautés, 1 échec instable (`harmonie-jianpu:142`, Crayon, hors rail, passé trois fois de suite à la
+  relance) (**16,3 min**) ; `-g JV-5c` deux fois (≈ 1,7 min). tsc, lint : 0 erreur. `jianpu:audit 为我而来` : encre et
+  calque intacts (l'audit tourne sans accès Harmonie : pas de pastille à y voir). Captures `regard` (45, page chant,
+  Partitions, louange ; fr clair, 中文 clair, 中文 sombre en louange) : aucune pastille sur l'encre, aucun sigle rogné,
+  contraste correct ; ouvertes : Partitions tablette, page chant 中文 ordinateur. **Non vérifié** : page chant en
+  sombre (non capturée ; contraste calculé). **Vu en passant, hors périmètre** : le volet ouvert en louange couvre la
+  pastille touchée au téléphone et à la tablette ; titres d'idées d'harmonie en français dans la version 中文
+  (« Le 2m7 à la place du 4 »…). Piège : `npm run jianpu:audit` laisse un `next dev` sur 3100, que Playwright
+  réutilise (tous les tests JV-5c tombent) : l'arrêter avant de relancer.
+- **14/11/2026 (nuit du 13), idées d'harmonie : ancienne / nouvelle progression** (go de Timothée du 13/11 : « Tu as mon
+  go pour la distinction entre ancienne et nouvelle » ; code `33417017`, testé ici). Défaut trouvé par le nouveau test :
+  `.font-chord` (`globals.css`, couche utilities) l'emportait sur `text-muted-foreground`, l'ancienne restait bleue ;
+  puis le gris sur sa pastille à 12 % ne faisait que 4,47:1 en clair. Correction : l'ancienne en
+  `!text-[hsl(var(--foreground)/0.7)]` (`HarmonieDuChant.tsx`), ≥ 4,5:1 en clair et en sombre. Attente ajoutée
+  (`harmonie-volet-section`, FR et 中文, clair et sombre : couleur ≠ nouvelle, nouvelle = `--chord-color`, « Avant » /
+  « Après », « 改前 » / « 改后 », contraste mesuré sur la carte et la pastille) ; captures Partitions en 中文 et en sombre
+  ajoutées. `harmonie-idees` réparé (la tonalité passe par l'URL : la liste est devenue l'armure, RU-4). Specs
+  rejouées : `harmonie-volet-section`, `louange-harmonie`, `harmonie-jianpu`, `harmonie-porte2`, `harmonie-idees`,
+  `harmonie-regroupees`, `harmonie-setlist`, `harmonie-montrer`, `accords-toucher(-agencement)`, `notation-accords`,
+  tous projets : 433 passés, 12 échecs (20,6 min) ; rejeu des quatre specs touchées : 162 passés (6,2 min), reste
+  **un échec étranger à ce changement** : `accords-toucher-agencement` « chant ZH : le panneau d'un accord » (téléphone,
+  1 440) : sur la page chant à deux volets, le toucher d'un accord ZH n'ouvre pas le panneau (signalé au pilote).
+  Captures regardées sur les cinq dispositions (page chant, Partitions, mode louange ; FR, 中文 ; clair, sombre).

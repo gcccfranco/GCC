@@ -772,45 +772,22 @@
   :where(:root:not(.dark) .chants-volets[data-sur-liste]) > .chants-entete { padding-right: calc(var(--index-hors) + 16px); }
 }
 
-/* Barre du chant, piste A (docs/spec-barre-chant.md, Q4) : libellés par priorité, jamais de
-   deuxième ligne — tous (2), ceux des actions Vidéo et PDF seuls (1), aucun (0) ; « Harmonie » (texte seul)
-   et ⋯ restent affichés à tous les niveaux. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`) : des seuils fixes, calés sur la
-   rangée la plus chargée (Retour, ↺, Pinyin), cachaient tout sur la tablette couchée. */
+/* Barre du chant (docs/spec-barre-chant.md, Q4 ; RU-3 : une seule ligne à toutes les tailles) : libellés par priorité,
+   jamais de deuxième ligne — tous (2), ceux des actions seuls (1), aucun (0) ; « Harmonie » (texte seul) et ⋯ restent
+   affichés à tous les niveaux. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`). */
 .rangee-chant { container-type: inline-size; }
 .libelle-chant, .libelle-action { display: none; }
 /* Un libellé de la barre ne se coupe jamais : la mesure `data-libelles` retombe au niveau inférieur. */
 .libelle-chant, .libelle-action, .libelle-harmonie { white-space: nowrap; }
 /* Rangée serrée (niveaux 0 et 1) : « Harmonie », qui ne tombe jamais, perd 4 px de rembourrage de chaque côté. */
 .rangee-chant:is([data-libelles="0"], [data-libelles="1"]) .bouton-harmonie { padding-inline: 0.375rem; }
-/* Niveau 3, le plus large : le suffixe de tonalité « (orig.) » / « (reco.) » en plus ; il tombe le premier
-   (H4-2, « Harmonie » ne tombant plus, décision déléguée du 12/11). */
-.rangee-chant:not([data-libelles="3"]) .suffixe-tonalite { display: none; }
-/* Bascule Lettres / Chiffres (H7-1) : dans la barre tant que les libellés ne perdent qu'un cran (`data-bascule`, mesuré avec
-   eux) ; plus serrée, elle reste dans le menu ⋯ (décision déléguée, session H7, 12/11 : la rangée d'Abba Père ne tenait
-   plus à 1 280 px, même sans libellés). */
-.rangee-chant[data-bascule="0"] .bascule-notation { display: none; }
-/* Téléphone : comme avant, pas de libellé sous 620 px de rangée (la pilule de tonalité, qui
-   rétrécit, ne ferait jamais déborder la ligne : la mesure ne suffit pas). */
+/* Pas de libellé sous 620 px de rangée. */
 @container (min-width: 620px) { .rangee-chant:is([data-libelles="2"], [data-libelles="3"]) .libelle-chant { display: inline; } }
-/* Téléphone, même couché (moins de 500 px de haut) : la rangée d'avant, sans ⋯ ; dessous, la
-   seconde rangée d'actions (Q5, `.actions-tel`) — 44 px de plus sous la barre, d'où les marges
-   hautes de la partition et de la vidéo (48 et 82 px sans elle). Dès la tablette debout : la
-   rangée s'aligne sur la partition (mêmes bords que `main`), les actions sortent à droite d'un
-   filet (Q1 à Q3). */
-.actions-chant { display: none; }
-.actions-tel { display: flex; }
-@media screen and (max-width: 767.98px), screen and (max-height: 499.98px) {
-  .song-zoom { margin-top: 92px; }
-  .video-chant { margin-top: 126px; }
-  .video-chant ~ .song-zoom, .video-chant ~ .corps-chant > .song-zoom { margin-top: 48px; }
-}
+.actions-chant { display: flex; }
 @media (min-width: 768px) and (min-height: 500px) {
   .rangee-chant { padding-inline: 1rem; }
   .rangee-chant:is([data-libelles="2"], [data-libelles="3"]) .libelle-chant,
   .rangee-chant:is([data-libelles="1"], [data-libelles="2"], [data-libelles="3"]) .libelle-action { display: inline; }
-  .actions-chant { display: flex; }
-  .actions-tel { display: none; }
-  .groupe-chant { margin-left: 0; }
 }
 
 /* Deux volets : mêmes conditions que `useDeuxVolets` (Q1), au moins 900 px utiles — tablette
@@ -903,16 +880,80 @@
    au lieu de glisser depuis le bas. `!important` : le glissé est posé par la feuille de style de
    vaul, et la règle générale du mouvement réduit ramène toute animation à 0,01 ms (ce sélecteur,
    plus précis, garde sa durée). */
-/* Liseré du métronome visuel (mode louange, L4) : se remplit en une pulsation (`--battement`).
-   Mouvement réduit : plus d'animation, la bande reste pleine, à opacité réduite. */
-@keyframes liseret-battement { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.liseret-tempo-barre {
-  transform-origin: left;
-  animation: liseret-battement var(--battement, 1s) linear infinite;
+/* Bande des temps du métronome (lot MT, MT-1) : 36 px sous la barre, une pastille par temps ; accents par la forme
+   au repos, le temps en cours s'allume d'un coup (`--plein`) et revient au repos sur 60 % du temps (`--duree-temps`).
+   Aucune teinte. Mouvement réduit : ni transition ni animation, le temps en cours reste allumé. */
+[data-bande-temps] {
+  --plein: hsl(var(--foreground));
+  --repos: color-mix(in srgb, hsl(var(--foreground)) 60%, transparent);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
+[data-bande-temps] { --repos: color-mix(in srgb, hsl(var(--foreground)) 65%, transparent); } /* clair : chiffres ≥ 4,5:1 */
+.dark [data-bande-temps] { --plein: color-mix(in srgb, hsl(var(--foreground)) 85%, transparent); --repos: color-mix(in srgb, hsl(var(--foreground)) 60%, transparent); }
+[data-bande-interieur] {
+  position: relative; display: flex; align-items: center; height: 100%;
+  padding-left: calc(1.5rem + env(safe-area-inset-left)); padding-right: calc(1.5rem + env(safe-area-inset-right));
+}
+[data-bande-ouvrir] { position: absolute; inset: 0; background: none; border: 0; }
+[data-bande-pastilles] { position: relative; flex: 1; display: flex; justify-content: center; gap: 16px; pointer-events: none; }
+[data-bande-groupe] { display: flex; flex-basis: 0; justify-content: center; align-items: center; gap: 6px; }
+[data-bande-groupe] > [data-temps] {
+  position: relative; flex: 1; max-width: 96px; /* MT-2 : 160 px se lisaient comme des onglets (critique) */ display: flex; align-items: center; justify-content: center;
+  box-sizing: border-box; border: 1.5px solid var(--repos); border-radius: 9999px; height: 20px;
+  color: var(--repos); font-size: 12px; line-height: 1;
+}
+[data-bande-groupe] > [data-accent="fort"] { height: 28px; border-width: 2px; font-weight: 700; font-size: 14px; } /* MT-2 : contour de 2 px comme le moyen, l'accent porté par la hauteur et le chiffre gras (au repos, le fort ne se lit plus comme un onglet choisi) */
+@media (min-width: 1024px) { /* MT-2 : chiffres un peu plus grands, hauteurs inchangées */
+  [data-bande-groupe] > [data-temps] { font-size: 15px; }
+  [data-bande-groupe] > [data-accent="fort"] { font-size: 17px; }
+}
+[data-bande-groupe] > [data-accent="moyen"] { height: 24px; border-width: 2px; }
+[data-bande-groupe] > [data-accent="muet"] { border-style: dashed; }
+[data-bande-groupe] > [data-compact] { max-height: 24px; font-size: 11px; letter-spacing: -0.04em; border-width: 1.5px; }
+[data-bande-groupe]:has(> [data-compact]) { gap: 3px; }
+[data-bande-groupe] > [data-actif] { animation: bande-battement calc(var(--duree-temps) * 0.6) ease-out; }
+[data-bande-groupe] > [data-actif][data-accent="muet"] { border-style: solid; border-color: var(--plein); animation: none; color: var(--repos); }
+[data-bande-groupe] > [data-actif][data-accent="muet"]::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0;
+  background: repeating-linear-gradient(45deg, var(--plein) 0 2px, transparent 2px 6px);
+  animation: bande-trame calc(var(--duree-temps) * 0.6) ease-out;
+}
+/* MT-4 : pendant le décompte le temps allumé est un contour épais (pas une pastille pleine), à la couleur des pastilles, sans transition. */
+[data-bande-temps][data-decompte] [data-bande-groupe] > [data-actif] { animation: none; background: transparent; border-style: solid; border-width: 4px; border-color: var(--plein); color: var(--plein); }
+[data-bande-temps][data-decompte] [data-bande-groupe] > [data-actif]::before { content: none; }
+@keyframes bande-battement { from { background: var(--plein); border-color: var(--plein); color: hsl(var(--background)); } 40% { color: hsl(var(--background)); } }
+@keyframes bande-trame { from { opacity: 1; } }
+[data-bande-interieur] > [data-metronome-marche] {
+  position: relative; flex: none; min-width: 44px; height: 36px; display: flex; align-items: center; justify-content: center; gap: 4px;
+  margin-left: 8px; background: none; border: 0; font-size: 13px; font-weight: 600; color: hsl(var(--foreground));
+}
+[data-bande-interieur] > [data-metronome-marche]::after { content: ""; position: absolute; inset: -4px 0; }
 @media (prefers-reduced-motion: reduce) {
-  .liseret-tempo-barre { animation: none !important; transform: none; opacity: 0.35; }
+  [data-bande-groupe] > [data-temps] { transition: none !important; animation: none !important; } /* !important : bat la règle globale à 0.01ms */
+  [data-bande-groupe] > [data-actif]:not([data-accent="muet"]) { background: var(--plein); border-color: var(--plein); color: hsl(var(--background)); }
+  [data-bande-groupe] > [data-actif][data-accent="muet"]::before { animation: none !important; opacity: 1; }
 }
+/* Panneau Métronome (lot MT, MT-2) : réglette graduée tous les 10 et pastilles des temps (cible fixe de 44 px, l'accent par le
+   contour et la graisse : mêmes `data-temps` / `data-accent` que la bande). Aucune teinte. */
+[data-panneau-metronome] { --repos: color-mix(in srgb, hsl(var(--foreground)) 65%, transparent); }
+.dark [data-panneau-metronome] { --repos: color-mix(in srgb, hsl(var(--foreground)) 60%, transparent); }
+[data-reglette] { position: relative; }
+[data-reglette]::before { /* 21 intervalles de 10 sur 30 à 240, entre les centres des extrémités du pouce (≈ 14 px de chaque côté) */
+  content: ""; position: absolute; left: 14px; right: 14px; top: 50%; height: 14px; transform: translateY(-50%); pointer-events: none;
+  background: repeating-linear-gradient(to right, var(--repos) 0 1px, transparent 1px calc(100% / 21));
+  border-right: 1px solid var(--repos);
+}
+[data-reglette] > input { position: relative; background: transparent; accent-color: hsl(var(--foreground)); }
+[data-panneau-temps] button { width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; padding: 0; color: var(--repos); }
+[data-panneau-temps] button > span {
+  box-sizing: border-box; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9999px;
+  border: 1.5px solid var(--repos); font-size: 15px; line-height: 1;
+}
+[data-panneau-temps] [data-accent="fort"] > span { border-width: 3px; font-weight: 700; color: hsl(var(--foreground)); border-color: hsl(var(--foreground)); }
+[data-panneau-temps] [data-accent="moyen"] > span { border-width: 2px; font-weight: 600; }
+[data-panneau-temps] [data-accent="muet"] > span { border-style: dashed; }
+[data-panneau-temps] button:focus-visible > span { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 @keyframes volet-fondu { from { opacity: 0; } }
 @keyframes volet-fondu-sortie { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
@@ -1134,3 +1175,15 @@
    posé sur la ligne, le trait descendait dans les blancs sous les accords et sous le pinyin. */
 [data-retouche="paroles"] :is([data-paroles]:not(:has(> [data-copy-ignore])), [data-car]) { text-decoration: underline; text-decoration-color: var(--graphite); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 @media print { [data-marque]::before { display: none; } }
+
+/* Marge « Affichage » (RU-2) : ressort sans rebond sur transform et width ; aucun mouvement au mode louange ;
+   mouvement réduit : fondu d'opacité de 150 ms seulement. */
+.marge-aff { visibility: hidden; }
+.marge-aff[data-ouvert="true"] { visibility: visible; }
+.marge-aff[data-mode="page"] { transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), width 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 300ms; }
+.marge-aff[data-mode="page"][data-ouvert="true"] { transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), width 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }
+.marge-aff[data-mode="louange"] { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .marge-aff[data-mode="page"] { opacity: 0; transition: opacity 150ms linear, visibility 0s linear 150ms !important; }
+  .marge-aff[data-mode="page"][data-ouvert="true"] { opacity: 1; transition: opacity 150ms linear, visibility 0s !important; }
+}

@@ -134,7 +134,17 @@ Les huit questions de la planche, tranchées : piste A, et les recommandations r
 | L7 | **Fait (26/10/2026), style forScore seulement.** `src/components/performance/CurseurPage.tsx` : curseur natif (`role=slider`) sur toute la setlist dans la barre basse, repères `data-repere-chant` au début de chaque chant (touchables), bulle du titre pendant le glissé, PageUp/PageDown/Espace tournent toujours d'une page. Suites `mode-louange-forscore` + `performance-mode` + `jianpu-integration` : 530 passés, 2 échecs sans lien (voir ci-dessous). |
 
 
-### Choix faits en codant
+13/11/2026 : **aperçu retiré le 13/11 sur demande de Timothée** (« Oui retire » : sur tablette portrait, la bande
+coupée sous un grand vide passait pour une panne). La page se termine sans bande et la pagination reprend ses 96 px ;
+la pastille « Ensuite » et la demi-page (FS-E) ne changent pas. Clés de page sans suffixe `ap` ; les traits posés avec
+la bande restent visibles : `PerformanceMode.tsx` refait la pagination « avec bande » là où elle s'affichait et relit,
+si rien n'est sous la clé courante, la clé `ap` de la page telle qu'elle est, puis celle de la page qui commençait au
+même bloc, puis la règle RS-C ; une page avec bande qui ne fait que recouvrir celle-ci donne le bandeau « ancienne mise
+en page ». Rien n'est effacé. `rogneBas` et les props d'aperçu de `PageTexte` retirés (code mort).
+Tests : specs réécrites (`mode-louange-forscore`, `louange-demi-page` : absence d'aperçu partout, traits `ap`
+visibles demi-page allumée ou coupée, sans bandeau ni écriture) ; mode louange voisin (10 specs) sur tablette,
+téléphone, ordinateur et tablette paysage : 1 022 passés, 0 échec après le retrait d'un critère fragile (≈ 47 min).
+Captures tablette portrait regardées (chant français, chant chinois avec scan).
 
 - L0 : le test « localStorage bloqué » ne fait lever que les clés `perf-*` (le formulaire de connexion simulé a besoin du reste du stockage).
 - L1 : ~~à l'ouverture du mode (et à la sortie de l'annotation), en style forScore la barre est visible et y reste jusqu'au premier toucher au centre ; option la plus prudente (découvrable).~~ *(remplacé le 27/10/2026 : barre masquée à l'ouverture sauf à la toute première ouverture sur l'appareil, drapeau `perf-barre-vue` ; en annotation et à la sortie de l'annotation elle reste visible.)* Les tests ignorent les « Failed to load resource » (404 sans rapport) dans les erreurs console.

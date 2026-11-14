@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { marge, ouvrirMarge } from "./marge";
 
 /** Passer d'une vue à l'autre sur la page d'une setlist (lot U5, T0,
  *  docs/spec-deux-volets.md).
@@ -48,20 +49,11 @@ export async function ouvrirListe(page: Page): Promise<void> {
   await vuePosee(page);
 }
 
-/** Ouvre les réglages d'affichage (ordre joué, sections uniques, structure seule,
- *  Pinyin, couleurs par section, 简谱) : le bouton « Affichage » de la barre sur G,
- *  le sous-menu « Affichage » du ⋯ de l'en-tête en deux volets (T4, Q7), le sous-menu
- *  « Affichage » du ⋯ de la barre au téléphone en vue Partitions (T2 du lot exemples d'usage). */
-export async function ouvrirAffichage(page: Page): Promise<void> {
-  const bouton = page.getByTestId("barre-outils").getByRole("button", { name: /^(Affichage|显示)$/ });
-  await bouton.or(page.locator("[data-en-tete]")).or(page.getByTestId("barre-outils")).first().waitFor();
-  if (await bouton.isVisible()) {
-    await bouton.click();
-    return;
-  }
-  const hote = (await page.locator("[data-en-tete]").count()) > 0 ? page.locator("[data-en-tete]") : page.getByTestId("barre-outils");
-  await hote.getByRole("button", { name: /Plus d'actions|更多操作/ }).click();
-  await page.getByRole("menuitem", { name: /^(Affichage|显示)$/ }).click();
+/** Ouvre la marge « Affichage » (RU-4 : ordre des sections, Pinyin, accords, disposition, 简谱 | Paroles, taille) : le bouton
+ *  « Affichage » de la barre sur G (téléphone compris) ou de l'en-tête en deux volets. Rend la marge. */
+export async function ouvrirAffichage(page: Page): Promise<Locator> {
+  await ouvrirMarge(page);
+  return marge(page);
 }
 
 /** Referme les menus ouverts (un réglage d'affichage laisse le sien ouvert). */
@@ -71,7 +63,7 @@ export async function fermerMenus(page: Page): Promise<void> {
 }
 
 /** Montre ou cache les accords : le bouton « Accords » de la barre sur G, la case
- *  « Accords » du ⋯ de l'en-tête en deux volets (T4, Q7) ou du ⋯ de la barre au téléphone en vue Partitions. */
+ *  « Accords » du ⋯ de l'en-tête en deux volets (T4, Q7). RU-4 : au téléphone aussi, le bouton est dans la barre. */
 export async function basculerAccords(page: Page): Promise<void> {
   const bouton = page.getByTestId("barre-outils").getByRole("button", { name: "Accords", exact: true });
   await bouton.or(page.locator("[data-en-tete]")).or(page.getByTestId("barre-outils")).first().waitFor();

@@ -1,6 +1,7 @@
 // Écoute des accords (lot H3, docs/spec-harmonie-accords.md) : plan pur (testable côté Node), puis lecture Web Audio.
 import { analyserAccord } from "@/lib/accords/analyse";
 import { voicingPiano } from "@/lib/accords/notes";
+import { contexteAudio } from "@/lib/audio/contexte";
 
 export interface PasDeLecture { debut: number; duree: number; frequences: number[] }
 
@@ -29,7 +30,6 @@ export function planAvantApres(avant: string[], apres: string[]): PasDeLecture[]
 
 // --- Navigateur ---
 type Contexte = AudioContext;
-let ctx: Contexte | null = null;
 let arret: (() => void) | null = null;
 
 export function ecouteDisponible(): boolean {
@@ -76,11 +76,7 @@ function chargerPiano(c: Contexte): Promise<Map<number, AudioBuffer>> {
 export function jouer(plan: PasDeLecture[], surFin?: () => void): () => void {
   arreterEcoute();
   if (!ecouteDisponible()) return () => {};
-  const w = window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext };
-  const Ctor = (w.AudioContext ?? w.webkitAudioContext)!;
-  ctx ??= new Ctor();
-  void ctx.resume();
-  const c = ctx;
+  const c = contexteAudio();
   const sources: { src: AudioScheduledSourceNode; gain: GainNode }[] = [];
   let annule = false;
   let minuteur: ReturnType<typeof setTimeout> | undefined;

@@ -11,7 +11,7 @@ from pathlib import Path
 RACINE = Path(__file__).resolve().parent.parent
 FONTS = RACINE / "public" / "fonts"
 CHO = sorted((RACINE / "content" / "songs").glob("*.cho"))
-LOCALES = [RACINE / "src" / "locales" / "zh-CN.json", RACINE / "src" / "locales" / "fr.json"]
+LOCALES = [RACINE / "src" / "locales" / "zh-CN.json", RACINE / "src" / "locales" / "fr.json", RACINE / "docs" / "harmonie" / "fiches-zh.json"]
 PLAGES = [(0x20, 0x7E), (0xA0, 0xFF), (0x2000, 0x206F), (0x3000, 0x303F), (0xFF00, 0xFFEF)]
 # Altérations du cours d'Harmonie (dièse, bémol, bécarre, double dièse, double bémol), puis les signes des tampons du Crayon
 # (AN-5) : piano, mezzo, forte, crescendo, decrescendo (U+1D18F-1D193), point d'orgue (U+1D110, U+1D112). Même liste dans

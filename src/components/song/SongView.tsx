@@ -14,7 +14,7 @@ import { motsDuTexte, type MotZh } from "@/lib/song/motsChinois";
 import { JianpuLine } from "@/components/song/JianpuLine";
 import { NotationAccordsContext } from "@/lib/notationAccords";
 import { NotationAccordsProvider } from "@/components/song/NotationAccordsProvider";
-import { AccordsInactifs } from "@/components/accords/AccordsProvider";
+import { AccordsInactifs, useIciDuChant } from "@/components/accords/AccordsProvider";
 import { AccordTouchable, etiquetteAffichee } from "@/components/accords/AccordTouchable";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { ChordProAST, ChordProLine, ChordProSection, Token } from "@/types/chordPro";
@@ -486,6 +486,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
                       {showPinyin && !hideLyrics && !aucuneParole && (
                         <span
                           data-copy-ignore
+                          data-ligne="pinyin"
                           className={pinyin_font.className}
                           style={{
                             fontSize: pinyinEm,
@@ -803,6 +804,25 @@ function useBulleNom() {
   return { ouvert, setOuvert, ref };
 }
 
+/** JV-5a : le nom d'une section ouvre le volet Harmonie au bloc de ce passage (même chemin que « Ici »). Bouton seulement
+ *  si l'accès Harmonie est ouvert (`ici`), que la section a des occurrences et que le Crayon n'est pas actif ; sinon le texte seul. */
+function NomSection({ occurrenceUids, nom, crayon, children }: { occurrenceUids?: string[]; nom: string; crayon: boolean; children: React.ReactNode }) {
+  const ici = useIciDuChant();
+  const { t } = useTranslation();
+  if (!ici || crayon || !occurrenceUids?.length) return <>{children}</>;
+  return (
+    <button
+      type="button"
+      data-section-nom-bouton
+      aria-label={t("harmonie.ideesDe", { nom })}
+      onClick={(e) => ici.ouvrir(occurrenceUids[0], undefined, { depuisNom: true, element: e.currentTarget.closest<HTMLElement>("[data-section]") ?? e.currentTarget })}
+      className={`${TOUCHER_44} relative z-10 cursor-pointer rounded-sm text-inherit outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+    >
+      {children}
+    </button>
+  );
+}
+
 function GouttiereReperes({ sigle, nom, epais, repeat, sansFilet, fontClass }: { sigle: string; nom: string; epais: boolean; repeat: number; sansFilet: boolean; fontClass: string }) {
   const { ouvert, setOuvert, ref } = useBulleNom();
   const long = sigle.length > 2;
@@ -928,11 +948,9 @@ interface SectionViewProps {
   onConflit?: (index: number, choix: "mienne" | "chant") => void;
   /** Crayon, pour qui règle le culte : « Passer au culte » sous chaque ligne que j'ai retouchée (`srcLine`). */
   onPasserAuCulte?: (srcLine: number) => void;
-  /** Mode louange (H8-1) : une ligne rendue juste sous le nom de la section, dans la carte. */
-  sousEntete?: React.ReactNode;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, marques, onConflit, onPasserAuCulte, sousEntete }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, marques, onConflit, onPasserAuCulte }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -1074,14 +1092,12 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           <div className="min-w-0">
           <div data-copy-ignore className="flex min-h-[var(--rep-p)] min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
             {/* Le nom sans la modulation : la ligne de suite la porte. */}
-            <span>{label + (repeat > 1 ? ` ×${repeat}` : "")}</span>
+            <span><NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{label}</NomSection>{repeat > 1 ? ` ×${repeat}` : ""}</span>
             {suite}
           </div>
-          {sousEntete}
           </div>
         ) : (
           <div className="min-w-0">
-            {sousEntete}
             {suite && <div data-copy-ignore className="mb-1 flex flex-wrap items-center gap-x-2 text-xs">{suite}</div>}
             {corps}
           </div>
@@ -1128,7 +1144,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
             <span className={`block max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-px ${sigle.length > 2 ? "text-[11px] md:text-xs" : ""}`}>{sigle}</span>
           </span>
           <span data-partition-nom className={`text-[13px] font-medium text-muted-foreground md:text-[15px] ${police}`}>
-            {label}
+            <NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{label}</NomSection>
             {repeat > 1 && <span className="ml-1">×{repeat}</span>}
           </span>
           {keyChange && (
@@ -1138,7 +1154,6 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           )}
           {suite && <span className="flex flex-wrap items-center gap-x-2 text-xs">{suite}</span>}
         </div>
-        {sousEntete}
         {corps}
       </div>
     );
@@ -1180,16 +1195,14 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           {bodyHidden ? (
             <div className="min-w-0">
             <div data-copy-ignore className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
-              <span data-scene-nom-ligne>{label}</span>
+              <span data-scene-nom-ligne><NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{label}</NomSection></span>
               {suite}
             </div>
-            {sousEntete}
             </div>
           ) : (
             // Retrait droit de la bande : 22 px au téléphone. La coupure laisse un vers déborder de 8 px au plus (DEBORD) ;
             // il garde donc 14 px d'air avant le bord de l'écran, sans toucher à la coupure.
             <div className="min-w-0">
-              {sousEntete}
               {suite && <div data-copy-ignore className="mb-1 flex flex-wrap items-center gap-x-2 text-xs">{suite}</div>}
               {corps}
             </div>
@@ -1215,7 +1228,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         />
         <span data-section-nom className={`text-xs font-semibold tracking-normal ${uiIsZh ? zh_lyric_font.className : chord_font.className}`}
               style={{ color: "var(--sec-c, #6b7080)" }}>
-          {label}
+          <NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{label}</NomSection>
           {repeat > 1 && <span className="ml-1 normal-case">×{repeat}</span>}
           {keyChange && (
             <span className="ml-2 normal-case tracking-normal text-xs font-bold" style={{ color: "var(--sec-c, currentColor)" }}>
@@ -1240,7 +1253,6 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         </span>
       </div>
 
-      {sousEntete}
       {/* Lignes — corps vide quand paroles ET accords masqués (ossature seule). */}
       {corps}
     </div>
@@ -1296,6 +1308,8 @@ interface SongViewProps {
   apresBandeau?: React.ReactNode;
   /** Remplace l'en-tête du chant à l'écran (setlist : rangée compacte, T2) ; l'impression garde l'en-tête complet. */
   enTete?: React.ReactNode;
+  /** Page chant : remplace la pastille de tonalité de l'en-tête (composant `Armure`). */
+  armure?: React.ReactNode;
 }
 
 export function SongView({
@@ -1323,6 +1337,7 @@ export function SongView({
   onPasserAuCulte,
   apresBandeau,
   enTete: enTeteFourni,
+  armure,
 }: SongViewProps) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
@@ -1345,10 +1360,9 @@ export function SongView({
         : layout === "unique"
           ? uniqueSections(steps, ast.metadata.key).map((u) => ({ ...u, withDetails: false }))
           : steps.map((step) => ({ step, uids: [step.section.uid], withDetails: true }));
-  // Ligne sous la pastille de la page chant : « 1=D · 4/4 · ♩ = 66 » sur le scan, « 4/4 · ♩ = 66 » en paroles.
+  // Ligne sous l'armure de la page chant : « 4/4 · ♩ = 66 » (le « 1=D » est dans l'armure, RU-3).
   const ligneTempo: React.ReactNode[] = [];
   if (pageChant) {
-    if (corps !== undefined && ast.metadata.key) ligneTempo.push(`1=${ast.metadata.key}`);
     if (ast.metadata.time) ligneTempo.push(ast.metadata.time);
     if (ast.metadata.tempo) {
       ligneTempo.push(
@@ -1430,14 +1444,14 @@ export function SongView({
           </div>
 
           <div className="flex flex-col items-end gap-2 shrink-0 pt-1">
-            {ast.metadata.key && (
+            {ast.metadata.key && (armure ?? (
               <span
                 className={`text-[14px] font-bold rounded-full px-3 py-[3px] border-[1.5px] leading-none ${chord_font.className}`}
                 style={{ color: langAccent, borderColor: langAccent }}
               >
                 {canUseJianpu ? ast.metadata.jianpuKey ?? `1=${ast.metadata.key}` : ast.metadata.key}
               </span>
-            )}
+            ))}
             {pageChant ? (
               ligneTempo.length > 0 && (
                 <span data-testid="ligne-tempo" className="text-foreground/70 text-xs md:text-sm font-medium flex flex-wrap items-baseline justify-end gap-x-1 whitespace-nowrap">
@@ -1493,7 +1507,7 @@ export function SongView({
 
       {/* Corps : ordre joué, ou chaque section une fois (les réglages
           d'occurrence restent dans le bandeau), ou rien du tout — ou le scan. */}
-      {corps ?? <div className={`${isZh && showPinyin ? "" : "[@container_partition_(min-width:1000px)]:grid [@container_partition_(min-width:1000px)]:grid-cols-2 [@container_partition_(min-width:1000px)]:gap-x-6 [@container_partition_(min-width:1000px)]:items-start [@container_partition_(min-width:1000px)]:[&>:last-child_[data-section]]:!mb-0 [@container_partition_(min-width:1000px)]:[&>:nth-last-child(2):nth-child(odd)_[data-section]]:!mb-0"} print:block`}>
+      {corps ?? <div className={`${isZh && showPinyin ? "" : "[@container_partition_(min-width:1000px)]:columns-2 [@container_partition_(min-width:1000px)]:gap-x-6 [@container_partition_(min-width:1000px)]:[&>*]:break-inside-avoid [@container_partition_(min-width:1000px)]:[&>:last-child_[data-section]]:!mb-0"} print:block print:columns-auto`}>
         {shown.map(({ step, uids, withDetails }, i) => {
           const { section } = step;
           // Modulation (升调) : la section s'affiche transposée dans sa tonalité cible.

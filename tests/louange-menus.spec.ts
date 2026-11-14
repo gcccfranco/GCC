@@ -2,11 +2,11 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, lireCompteur, NOM_MENU, onStage, ouvrirMenu, type Langue, type Menu } from "./helpers/louange";
 import { CONTRASTE_MIN, FOND_CLAIR, SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE, TEINTES, contraste, garderContraste, hslVersHex } from "../src/lib/performance/couleurIcones";
-import { getTransposedKey } from "../src/lib/transpose";
 
-// Lot FS-B (docs/spec-mode-louange-forscore-2.md) : les menus du mode louange (Setlist, Repères, Outils, Tempo, Options
-// d'affichage) : popover sous l'icône à partir de md, feuille du bas au téléphone. Setlist et compte simulés : aucun accès
-// au Firestore réel. Noms fictifs.
+// Lot FS-B (docs/spec-mode-louange-forscore-2.md) : les menus du mode louange (Setlist, Repères, Outils, Tempo) : popover sous
+// l'icône à partir de md, feuille du bas au téléphone. RU-5 : « Options d'affichage » et « Je joue » sont devenus la marge
+// « Affichage » (colonne ou feuille basse, pas un menu : voir louange-reglages.spec.ts), Outils a son bouton au téléphone aussi.
+// Setlist et compte simulés : aucun accès au Firestore réel. Noms fictifs.
 
 const SETLIST_ID = "setlist-menus";
 const MUSICIEN: FakeProfile = {
@@ -94,11 +94,12 @@ async function allerPage2(page: Page) {
 
 const attendreOuverture = (page: Page) => page.waitForTimeout(500);
 
-const MENUS: Menu[] = ["setlist", "reperes", "outils", "tempo", "options"];
+// Le tempo n'est plus un menu : c'est le panneau Métronome (tests/metronome-panneau.spec.ts).
+const MENUS: Menu[] = ["setlist", "reperes", "outils"];
+const marge = (page: Page) => page.locator('[data-testid="marge-affichage"][data-mode="louange"]');
 
 for (const menu of MENUS) {
   test(`${menu} : s'ouvre sous son icône (feuille du bas au téléphone) ; un toucher dedans ne tourne jamais la page`, async ({ page }) => {
-    test.skip((menu === "tempo" || menu === "outils") && telephone(page), "au téléphone le tempo et Outils sont en tête de la feuille Options d'affichage (testée sous « options »)");
     await ouvrir(page);
     await allerPage2(page);
     const avant = await lireCompteur(page);
@@ -140,7 +141,6 @@ for (const menu of MENUS) {
   });
 
   test(`${menu} : un toucher dehors le ferme sans tourner la page ni masquer la barre ; flèches sans effet ; Échap ferme puis quitte`, async ({ page }, testInfo) => {
-    test.skip((menu === "tempo" || menu === "outils") && telephone(page), "au téléphone le tempo et Outils sont en tête de la feuille Options d'affichage (testée sous « options »)");
     await ouvrir(page);
     await allerPage2(page);
     const avant = await lireCompteur(page);
@@ -187,15 +187,16 @@ test("un menu ouvert en ferme un autre ; le focus revient au bouton à la fermet
   if (!telephone(page)) {
     // Au téléphone la feuille et son fond couvrent la barre : on ne passe pas d'un menu à l'autre sans la fermer.
     await ouvrirMenu(page, "setlist");
-    await page.locator('[data-menu-declencheur="options"]').click();
-    await expect(page.getByRole("dialog", { name: NOM_MENU.fr.options, exact: true })).toBeVisible();
+    await page.locator('[data-menu-declencheur="affichage"]').click();
+    await expect(marge(page)).toHaveAttribute("data-ouvert", "true");
     await expect(page.getByRole("dialog", { name: NOM_MENU.fr.setlist, exact: true })).toHaveCount(0);
   } else {
-    await ouvrirMenu(page, "options");
+    await ouvrirMenu(page, "affichage");
   }
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.locator('[data-menu-declencheur="options"]')).toBeFocused();
+  await expect(marge(page)).toHaveAttribute("data-ouvert", "false");
+  await expect(page.locator('[data-menu-declencheur="affichage"]')).toBeFocused();
 });
 
 for (const langue of ["fr", "zh"] as const) {
@@ -243,103 +244,86 @@ test("Repères est absent quand le chant courant n'a pas de section (scan 简谱
   await expect(page.getByRole("button", { name: "Repères" })).toHaveCount(0);
 });
 
-test("Outils : + monte d'un demi-ton (barre), « Revenir à X » apparaît puis ramène ; plein écran ; raccourcis", async ({ page }, testInfo) => {
+test("Outils : plus de tonalité ni de capo (ils sont dans l'armure) ; plein écran ; raccourcis ; Annotations", async ({ page }, testInfo) => {
   await ouvrir(page);
-  const cleBarre = page.locator("[data-barre-haut] p span.font-mono").first();
-  const depart = (await cleBarre.innerText()).trim();
-  const attendue = getTransposedKey(depart, 1);
-  let outils = await ouvrirMenu(page, "outils");
-  await expect(outils.getByRole("button", { name: `Revenir à ${depart}` })).toHaveCount(0);
-  await expect(outils.locator("[data-cle-valeur]")).toHaveText(depart);
-  await outils.getByRole("button", { name: "Monter d'un demi-ton" }).click();
-  await expect(cleBarre).toHaveText(attendue);
-  await expect(outils.locator("[data-cle-valeur]")).toHaveText(attendue);
-  const revenir = outils.getByRole("button", { name: `Revenir à ${depart}` });
-  await expect(revenir).toBeVisible();
-  // Comme une tonalité choisie sur la page du chant : retenue pour cette setlist, sur l'appareil.
-  expect(await page.evaluate(() => localStorage.getItem("perf-personal-keys"))).toContain(attendue);
-  await revenir.click();
-  await expect(cleBarre).toHaveText(depart);
-  await expect(revenir).toHaveCount(0);
-  // − depuis la tonalité de la setlist : « Revenir » apparaît ; + la ramène, sans « Revenir ».
-  await outils.getByRole("button", { name: "Baisser d'un demi-ton" }).click();
-  await expect(revenir).toHaveCount(1);
-  await outils.getByRole("button", { name: "Monter d'un demi-ton" }).click();
-  await expect(cleBarre).toHaveText(depart);
-  await expect(revenir).toHaveCount(0);
-
+  const outils = await ouvrirMenu(page, "outils");
+  await expect(outils.locator("[data-cle-valeur]")).toHaveCount(0);
+  await expect(outils.getByRole("button", { name: "Monter d'un demi-ton" })).toHaveCount(0);
+  await expect(outils.getByText("Capo", { exact: true })).toHaveCount(0);
+  await expect(outils.getByRole("button", { name: "Annotations", exact: true })).toHaveCount(1);
   if (ordinateur(testInfo)) await expect(outils.getByRole("button", { name: "Plein écran" })).toHaveCount(1);
   // Raccourcis : sur ordinateur (pointeur précis) ; absents au téléphone tant qu'aucune touche n'a été frappée.
   if (ordinateur(testInfo)) await expect(outils.locator("[data-raccourcis]")).toBeVisible();
   if (telephone(page)) await expect(outils.locator("[data-raccourcis]")).toHaveCount(0);
-  // Au téléphone, Crayon et le tempo sont des lignes d'Outils ; ailleurs ils sont dans la barre.
+  // Au téléphone, Crayon et « Métronome » (qui ouvre le panneau) sont des lignes d'Outils ; ailleurs ils sont dans la barre.
   if (telephone(page)) {
     await expect(outils.getByRole("button", { name: "Crayon" })).toBeVisible();
-    await expect(outils.locator("[data-tempo-plus]")).toBeVisible();
+    await expect(outils.locator("[data-metronome-ouvrir]")).toBeVisible();
   } else {
     await expect(outils.getByRole("button", { name: "Crayon" })).toHaveCount(0);
-    await expect(outils.locator("[data-tempo-plus]")).toHaveCount(0);
+    await expect(outils.locator("[data-metronome-ouvrir]")).toHaveCount(0);
   }
-  // Au téléphone Outils est la tête de la feuille Options d'affichage : un titre de rubrique « Outils », pas de bouton dans la barre.
-  if (telephone(page)) {
-    await expect(page.locator('[data-menu-declencheur="outils"]')).toBeHidden();
-    await expect(outils.getByText("Outils", { exact: true })).toBeVisible();
-    await expect(outils.getByRole("radiogroup", { name: "Couleur des icônes" })).toBeVisible();
-  } else {
-    outils = page.getByRole("dialog", { name: "Outils" });
-    await expect(outils).toBeVisible();
-  }
+  // Outils a son bouton dans la barre à toutes les tailles (RU-5).
+  await expect(page.locator('[data-menu-declencheur="outils"]')).toBeVisible();
 });
 
-test("Tempo : − / +, « Tempo du fichier », métronome visuel (bouton rond on/off)", async ({ page }) => {
-  test.skip(telephone(page), "au téléphone le tempo est une ligne d'Outils, en tête d'Options");
+test("armure : une autre tonalité est retenue pour cette setlist, sur l'appareil (elle a quitté Outils)", async ({ page }) => {
+  await ouvrir(page);
+  const armure = page.locator("[data-barre-haut]").getByTestId("armure");
+  const depart = (await armure.textContent())!;
+  await armure.click();
+  await page.getByTestId("fenetre-armure").locator('[role="radio"][aria-checked="false"]').nth(3).click();
+  await expect(armure).not.toHaveText(depart);
+  expect(await page.evaluate(() => localStorage.getItem("perf-personal-keys"))).toBeTruthy();
+});
+
+test("Tempo : − / +, « Revenir au tempo du chant », métronome visuel (bouton on/off), dans le panneau Métronome", async ({ page }) => {
   await ouvrir(page);
   const tempo = await ouvrirMenu(page, "tempo");
-  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/♩\s*94/);
+  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/^94$/);
   await expect(tempo.locator("[data-tempo-fichier]")).toHaveCount(0);
   await tempo.locator("[data-tempo-plus]").click();
-  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/♩\s*95/);
+  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/^95$/);
   await expect(tempo.locator("[data-tempo-fichier]")).toHaveCount(1);
   await tempo.locator("[data-tempo-fichier]").click();
-  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/♩\s*94/);
+  await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/^94$/);
   const metronome = tempo.getByRole("button", { name: "Métronome visuel" });
   await expect(metronome).toHaveAttribute("aria-pressed", "false");
   await metronome.click();
   await expect(metronome).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("[data-liseret]")).toHaveCount(1);
+  await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
 });
 
-test("Métronome visuel : un bouton rond allumé / éteint dans Options aussi (plus de segmenté Activé / Désactivé)", async ({ page }) => {
+test("Métronome visuel : un bouton rond allumé / éteint dans Outils (plus de segmenté Activé / Désactivé)", async ({ page }) => {
   await ouvrir(page);
-  const options = await ouvrirMenu(page, "options");
-  await expect(options.getByText("Activé", { exact: true })).toHaveCount(0);
-  const metronome = options.getByRole("button", { name: "Métronome visuel" });
+  const outils = await ouvrirMenu(page, "outils");
+  await expect(outils.getByText("Activé", { exact: true })).toHaveCount(0);
+  const metronome = outils.getByRole("button", { name: "Métronome visuel" });
   await expect(metronome).toHaveCount(1);
   await expect(metronome).toHaveAttribute("aria-pressed", "false");
   await metronome.click();
   await expect(metronome).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("[data-liseret]")).toHaveCount(1);
+  await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
 });
 
-test("Options : bouton rond Accords (aria-pressed) bascule les accords ; ronds d'au moins 44 px", async ({ page }) => {
+test("Affichage : l'interrupteur Accords bascule les accords ; ses cibles tactiles font au moins 44 px", async ({ page }) => {
   await ouvrir(page);
   await expect(onStage(page, ".font-chord").first()).toBeVisible();
-  const options = await ouvrirMenu(page, "options");
-  const accords = options.getByRole("button", { name: "Accords", exact: true });
-  await expect(accords).toHaveAttribute("aria-pressed", "true");
-  for (const rond of await options.locator("[aria-pressed]").all()) {
-    const b = (await rond.boundingBox())!;
+  const m = await ouvrirMenu(page, "affichage");
+  const accords = m.getByRole("switch", { name: "Accords", exact: true });
+  await expect(accords).toHaveAttribute("aria-checked", "true");
+  for (const cible of await m.locator("[role=radio], [aria-pressed]").all()) {
+    const b = await cible.boundingBox();
     if (b) expect(b.height).toBeGreaterThanOrEqual(43.5);
   }
   await accords.click();
-  await expect(accords).toHaveAttribute("aria-pressed", "false");
-  // Menu fermé : au téléphone la feuille modale cache la page aux lecteurs d'écran (aria-hidden), `onStage` l'exclurait.
+  await expect(accords).toHaveAttribute("aria-checked", "false");
   await page.keyboard.press("Escape");
-  await expect(options).toBeHidden();
+  await expect(m).toBeHidden();
   await expect(onStage(page, ".font-chord")).toHaveCount(0);
-  const encore = await ouvrirMenu(page, "options");
-  await encore.getByRole("button", { name: "Accords", exact: true }).click();
-  await expect(encore.getByRole("button", { name: "Accords", exact: true })).toHaveAttribute("aria-pressed", "true");
+  const encore = await ouvrirMenu(page, "affichage");
+  await encore.getByRole("switch", { name: "Accords", exact: true }).click();
+  await expect(encore.getByRole("switch", { name: "Accords", exact: true })).toHaveAttribute("aria-checked", "true");
   await page.keyboard.press("Escape");
   await expect(encore).toBeHidden();
   await expect(onStage(page, ".font-chord").first()).toBeVisible({ timeout: 15_000 });
@@ -439,12 +423,12 @@ test("Setlist et Repères : la ligne en cours est teintée (couleur des icônes 
   expect(courant).toBe(pages.indexOf(pages[pages.length - 1]));
 });
 
-test("Options : aucune 2e ligne d'un seul élément (ronds « Sur la page » et pastilles de couleur)", async ({ page }) => {
+test("Affichage : aucune 2e ligne d'un seul élément (pastilles de couleur, miniatures de disposition)", async ({ page }) => {
   await ouvrir(page);
-  const options = await ouvrirMenu(page, "options");
+  const m = await ouvrirMenu(page, "affichage");
   await attendreOuverture(page);
   const lignes = async (selecteur: string) => {
-    const ys = await options.locator(selecteur).evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
+    const ys = await m.locator(selecteur).evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
     const parLigne = new Map<number, number>();
     for (const y of ys) {
       const cle = [...parLigne.keys()].find((k) => Math.abs(k - y) <= 4) ?? y;
@@ -452,32 +436,20 @@ test("Options : aucune 2e ligne d'un seul élément (ronds « Sur la page » et 
     }
     return [...parLigne.values()];
   };
-  const ronds = await lignes('[role=group][aria-labelledby="perf-sur-page"] > button');
-  expect(ronds.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(3); // l'interrupteur « Couleurs par section » est devenu le bloc Disposition (DP-A)
-  if (ronds.length > 1) for (const n of ronds) expect(n, `ronds par ligne : ${ronds}`).toBeGreaterThanOrEqual(2);
-  if (!telephone(page)) expect(ronds, "tous les ronds sur une ligne dans le popover").toHaveLength(1);
+  // Sept pastilles de 44 px ne tiennent pas sur les 288 px de la marge : quatre puis trois, jamais une seule sur sa ligne.
   const pastilles = await lignes('[role=radiogroup][aria-labelledby="perf-couleur-icones"] > button');
-  expect(pastilles, `pastilles : ${pastilles}`).toEqual([7]);
-  // Bloc Disposition (DP-A ; Repères en DP-B, Scène en DP-C, Partition en DP-D : cinq entrées) : jamais une miniature seule sur sa ligne.
-  await page.keyboard.press("Escape");
-  await expect(options).toBeHidden();
-  const jeJoue = await ouvrirMenu(page, "jejoue");
-  await attendreOuverture(page);
-  const dispositions = (await jeJoue.locator('[role=radiogroup][aria-labelledby="perf-disposition"] > button').evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)))).reduce((m, y) => { const k = [...m.keys()].find((c) => Math.abs(c - y) <= 4) ?? y; m.set(k, (m.get(k) ?? 0) + 1); return m; }, new Map<number, number>());
-  const parLigne = [...dispositions.values()];
+  expect(pastilles.reduce((a, b) => a + b, 0)).toBe(7);
+  for (const n of pastilles) expect(n, `pastilles par ligne : ${pastilles}`).toBeGreaterThanOrEqual(2);
+  // Bloc Disposition (DP-A ; cinq entrées) : jamais une miniature seule sur sa ligne.
+  const parLigne = await lignes('[role=radiogroup][aria-labelledby="perf-disposition"] > button');
   expect(parLigne.reduce((a, b) => a + b, 0)).toBe(5);
   if (parLigne.length > 1) for (const n of parLigne) expect(n, `miniatures par ligne : ${parLigne}`).toBeGreaterThanOrEqual(2);
-  // Le popover garde sa largeur d'environ 26 rem et n'est pas plafonné en hauteur à 34 rem.
-  if (!telephone(page)) {
-    const boite = (await jeJoue.boundingBox())!;
-    expect(boite.width).toBeGreaterThan(400);
-  }
 });
 
 test("palette : framboise retenue après rechargement, et les actions des menus prennent la couleur corrigée (décision 23)", async ({ page }) => {
   await ouvrir(page);
   const attendue = `rgb(${[1, 3, 5].map((i) => parseInt(garderContraste("#c2185b", FOND_CLAIR).slice(i, i + 2), 16)).join(", ")})`;
-  let options = await ouvrirMenu(page, "options");
+  let options = await ouvrirMenu(page, "affichage");
   await options.getByRole("radiogroup", { name: "Couleur des icônes" }).getByRole("radio", { name: "Framboise" }).click();
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
@@ -485,14 +457,17 @@ test("palette : framboise retenue après rechargement, et les actions des menus 
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
   await expect(page.locator("[data-barre-haut]")).toBeVisible();
-  options = await ouvrirMenu(page, "options");
+  options = await ouvrirMenu(page, "affichage");
   await expect(options.getByRole("radiogroup", { name: "Couleur des icônes" }).getByRole("radio", { name: "Framboise" })).toHaveAttribute("aria-checked", "true");
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
+  // Un rond allumé d'Outils (le métronome) est rempli de la couleur corrigée contre la surface du menu.
   const outils = await ouvrirMenu(page, "outils");
-  const plus = outils.locator("[data-cle-plus]");
-  await expect(plus).toBeVisible();
-  expect(await plus.evaluate((el) => getComputedStyle(el).color)).toBe(attendue);
+  const rond = outils.locator("[data-metronome]");
+  await rond.click();
+  await expect(rond).toHaveAttribute("aria-pressed", "true");
+  await page.waitForTimeout(500); // fin de la transition de couleur
+  expect(await rond.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(attendue);
 });
 
 // Correction 1 de la relecture FS-A/FS-B : dans les menus, la couleur est corrigée contre la SURFACE du menu (#ffffff en clair,
@@ -517,11 +492,13 @@ for (const theme of ["light", "dark"] as const) {
       await page.addInitScript(([k, h]) => { try { localStorage.setItem(k, h); } catch { /* ignore */ } }, [`perf-couleur-icones-${MUSICIEN.uid}`, hex]);
       await ouvrir(page, { theme });
       const outils = await ouvrirMenu(page, "outils");
-      const plus = outils.locator("[data-cle-plus]");
-      await expect(plus).toBeVisible();
+      // Le rond du métronome, allumé : son fond est la couleur des icônes corrigée contre la surface du menu.
+      const plus = outils.locator("[data-metronome]");
+      await plus.click();
+      await expect(plus).toHaveAttribute("aria-pressed", "true");
       await attendreOuverture(page);
       const [texte, surface] = await Promise.all([
-        plus.evaluate((el) => getComputedStyle(el).color),
+        plus.evaluate((el) => getComputedStyle(el).backgroundColor),
         outils.evaluate((el) => getComputedStyle(el).backgroundColor),
       ]);
       expect(contraste(versHex(rvb(texte)), versHex(rvb(surface))), `${texte} sur ${surface}`).toBeGreaterThanOrEqual(CONTRASTE_MIN);
@@ -536,8 +513,7 @@ for (const langue of ["fr", "zh"] as const) {
   for (const theme of ["light", "dark"] as const) {
     test(`captures FS-B : chaque menu ouvert, ${langue}, ${theme}`, async ({ page }, testInfo) => {
       await ouvrir(page, { langue, theme });
-      for (const menu of MENUS) {
-        if ((menu === "tempo" || menu === "outils") && telephone(page)) continue;
+      for (const menu of [...MENUS, "affichage" as const]) {
         const dialogue = await ouvrirMenu(page, menu, langue);
         await attendreOuverture(page);
         await page.screenshot({ path: `${SORTIE}/menu-${menu}-${langue}-${theme}-${testInfo.project.name}.png` });
@@ -613,25 +589,26 @@ test("Espace tourne la page quand le focus reste sur un bouton après un clic ou
 });
 
 for (const [largeur, hauteur] of [[1280, 720], [1280, 800]] as const) {
-  test(`Options à ${largeur}×${hauteur} : le bas du popover reste à 16 px au moins du bord de l'écran ; il défile`, async ({ page }) => {
+  test(`Affichage à ${largeur}×${hauteur} : la marge tient dans l'écran et son corps défile`, async ({ page }) => {
     test.skip(telephone(page), "au téléphone, feuille du bas");
     await page.setViewportSize({ width: largeur, height: hauteur });
     await ouvrir(page);
-    const options = await ouvrirMenu(page, "options");
+    const m = await ouvrirMenu(page, "affichage");
     await attendreOuverture(page);
-    const b = (await options.boundingBox())!;
-    expect(b.y + b.height).toBeLessThanOrEqual(hauteur - 16 + 0.5);
-    expect(b.y).toBeGreaterThanOrEqual(8);
+    const b = (await m.boundingBox())!;
+    expect(b.y + b.height).toBeLessThanOrEqual(hauteur + 0.5);
+    expect(b.y).toBeGreaterThanOrEqual(0);
+    expect(await m.getByTestId("marge-corps").evaluate((el) => getComputedStyle(el).overflowY)).toBe("auto");
   });
 }
 
-test("Options : le bas du popover est à 16 px au moins du bord de l'écran, à la taille de l'appareil", async ({ page }) => {
+test("Affichage : la marge tient dans l'écran, à la taille de l'appareil", async ({ page }) => {
   test.skip(telephone(page), "au téléphone, feuille du bas");
   await ouvrir(page);
-  const options = await ouvrirMenu(page, "options");
+  const m = await ouvrirMenu(page, "affichage");
   await attendreOuverture(page);
-  const b = (await options.boundingBox())!;
-  expect(b.y + b.height).toBeLessThanOrEqual(page.viewportSize()!.height - 16 + 0.5);
+  const b = (await m.boundingBox())!;
+  expect(b.y + b.height).toBeLessThanOrEqual(page.viewportSize()!.height + 0.5);
 });
 
 test("Crayon (téléphone) est une action : ligne entière, pas un rond d'interrupteur ; aucune autre action n'est un rond allumé / éteint", async ({ page }) => {
@@ -650,29 +627,16 @@ test("Crayon (téléphone) est une action : ligne entière, pas un rond d'interr
 });
 
 for (const theme of ["light", "dark"] as const) {
-  test(`« Paroles » (${theme}) : rond allumé / éteint comme les autres, plus de Switch`, async ({ page }) => {
+  test(`« Paroles » (${theme}) : interrupteur de la marge, coché par défaut, décochable et recochable`, async ({ page }) => {
     await ouvrir(page, { theme });
-    // « Paroles » (allumé = paroles affichées) et le métronome sont tous deux dans Options.
-    const options = await ouvrirMenu(page, "options");
+    const m = await ouvrirMenu(page, "affichage");
     await attendreOuverture(page);
-    await expect(options.getByRole("switch")).toHaveCount(0);
-    const paroles = options.getByRole("button", { name: "Paroles", exact: true });
-    await expect(paroles).toHaveAttribute("aria-pressed", "true");
+    const paroles = m.getByRole("switch", { name: "Paroles", exact: true });
+    await expect(paroles).toHaveAttribute("aria-checked", "true");
     await paroles.click();
-    await expect(paroles).toHaveAttribute("aria-pressed", "false");
+    await expect(paroles).toHaveAttribute("aria-checked", "false");
     await paroles.click();
-    await expect(paroles).toHaveAttribute("aria-pressed", "true");
-    await page.waitForTimeout(500); // fin des transitions de couleur
-    const fond = (el: Element) => getComputedStyle(el).backgroundColor;
-    const couleur = (el: Element) => getComputedStyle(el).color;
-    const metronome = options.getByRole("button", { name: "Métronome visuel" });
-    await metronome.click();
-    await expect(metronome).toHaveAttribute("aria-pressed", "true");
-    await page.waitForTimeout(500);
-    // Le rond de « Sur la page » est le span du bouton (le bouton porte le libellé dessous).
-    const rond = paroles.locator("span[aria-hidden]");
-    expect(await rond.evaluate(fond)).toBe(await metronome.evaluate(fond));
-    expect(await rond.evaluate(couleur)).toBe(await metronome.evaluate(couleur));
+    await expect(paroles).toHaveAttribute("aria-checked", "true");
   });
 }
 
@@ -689,7 +653,7 @@ test("Repères : la pointe du popover reste dans la zone de la barre ou juste de
   expect(pointe.y + pointe.height, "la pointe ne descend pas sur la page").toBeLessThanOrEqual(barre.y + barre.height + 8);
 });
 
-test("finitions : « p. n » des Repères sur la ligne de base du libellé, libellés « Sur la page » à 13 px dès md, écart ♩ / tempo de 2 px", async ({ page }) => {
+test("finitions : « p. n » des Repères sur la ligne de base du libellé, écart ♩ / tempo de 2 px", async ({ page }) => {
   await ouvrir(page);
   if (!telephone(page)) {
     const tempo = page.locator("[data-tempo-barre]");
@@ -710,10 +674,26 @@ test("finitions : « p. n » des Repères sur la ligne de base du libellé, libe
     return [repere(libelle), repere(pageN)];
   });
   expect(Math.abs(ys[0] - ys[1]), `lignes de base ${ys}`).toBeLessThanOrEqual(1);
-  await page.keyboard.press("Escape");
-  await expect(reperes).toBeHidden();
-  const options = await ouvrirMenu(page, "options");
-  await attendreOuverture(page);
-  const taille = await options.locator('[role=group][aria-labelledby="perf-sur-page"] > button span:last-child').first().evaluate((el) => getComputedStyle(el).fontSize);
-  expect(taille).toBe(telephone(page) ? "11px" : "13px");
 });
+
+// Parcours à l'œil du 13/11, constat 1 (Options et Je joue dépassaient sans signe qu'ils défilent) : la marge « Affichage » (RU-5)
+// tient dans l'écran et son corps défile jusqu'à une dernière ligne entière. La flèche « Suite » des menus n'existe plus ici.
+for (const langue of ["fr", "zh"] as const) {
+  test(`affichage (${langue}) : tient dans l'écran, défile jusqu'à la dernière ligne entière (parcours du 13/11, constat 1)`, async ({ page }) => {
+    await ouvrir(page, { langue });
+    const m = await ouvrirMenu(page, "affichage", langue);
+    await attendreOuverture(page);
+    const ecran = page.viewportSize()!;
+    const b = (await m.boundingBox())!;
+    expect(b.y, "le haut de la marge est dans l'écran").toBeGreaterThanOrEqual(0);
+    expect(b.y + b.height, "le bas de la marge est dans l'écran").toBeLessThanOrEqual(ecran.height + 0.5);
+    const corps = m.getByTestId("marge-corps");
+    await corps.evaluate((z) => { z.scrollTop = z.scrollHeight; });
+    const fin = await corps.evaluate((z) => {
+      const r = z.getBoundingClientRect();
+      const dernier = [...z.querySelectorAll("section")].pop()!.getBoundingClientRect();
+      return { bas: r.bottom, finContenu: dernier.bottom };
+    });
+    expect(fin.finContenu, "la dernière ligne est entière dans la zone").toBeLessThanOrEqual(fin.bas + 1);
+  });
+}

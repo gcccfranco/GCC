@@ -4,7 +4,7 @@
 // s'ouvre depuis la page d'un chant et depuis une setlist : un bloc par passage
 // (grille en chiffres, fonction, idées calculées puis idées de l'équipe), puis
 // les idées sans passage, les idées écartées, le formulaire d'ajout et — dans
-// une setlist — la transition vers le chant suivant. Jamais en mode louange.
+// une setlist — la transition vers le chant suivant. En mode louange (JV-5b) : posé par-dessus la page, ouvert depuis le nom d'une section.
 
 import { Fragment, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { TOUCHER_44 } from "@/lib/toucher44";
 import { ChevronDown, X } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Popover, PopoverAnchor, PopoverArrow, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ChampSelect } from "@/components/ui/champ-select";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
@@ -40,6 +41,7 @@ import { useOuvrirAccord } from "@/components/accords/AccordsProvider";
 import { useNotationDuCompte } from "@/components/song/NotationAccordsProvider";
 import { NotationAccordsContext } from "@/lib/notationAccords";
 import { BoutonEcouter } from "@/components/harmonie/BoutonEcouter";
+import { useTexteFiche } from "@/components/harmonie/AvisLangue";
 
 type Props = {
   open: boolean;
@@ -68,14 +70,19 @@ type Props = {
   /** Dans une setlist : sélecteur du chant lu. Les identifiants de section se
    *  répètent d'un chant à l'autre (« chorus-3-2 ») : « Montrer » cherche là. */
   portee?: string;
-  /** « colonne » : à droite de la partition, sans voile (grand écran) ; sinon la feuille du bas. */
-  disposition?: "feuille" | "colonne";
+  /** « colonne » : à droite de la partition, sans voile (grand écran) ; « fenetre » : mode louange dès 768 px, une
+   *  fenêtre ancrée au nom touché, comme le menu Setlist (`MenuLouange`) ; sinon la feuille du bas. */
+  disposition?: "feuille" | "colonne" | "fenetre";
+  /** Fenêtre : l'élément touché (nom ou étiquette de section) auquel elle s'accroche. */
+  ancre?: HTMLElement | null;
   /** Colonne : où elle colle (page de setlist : sous son en-tête collant) ; sinon sous l'en-tête du site. */
   styleColonne?: CSSProperties;
   /** Page chant en colonne : le titre du chant est déjà à l'écran. */
   sansTitre?: boolean;
   /** H5-2 « Ici » : le passage à montrer (la clé change à chaque appui, pour redéfiler). */
-  passage?: { uid: string; cle: number; /** L'idée nommée par « Ici » : sa carte est dépliée et visible. */ idee?: string };
+  passage?: { uid: string; cle: number; /** L'idée nommée par « Ici » : sa carte est dépliée et visible. */ idee?: string; /** JV-5a : ouvert depuis le nom de la section : feuille à mi-hauteur (téléphone, tablette portrait). */ miHauteur?: boolean };
+  /** JV-5b : posé par-dessus le mode louange (z au-dessus de lui ; sans « Montrer », la page paginée ne défile pas). */
+  louange?: boolean;
 };
 
 /** La section visée, dans le chant lu : d'abord son occurrence, sinon (structure
@@ -109,6 +116,17 @@ function montrerLEndroit(endroit: Endroit, fermer: (() => void) | undefined, por
   });
 }
 
+/** JV-5a : le nom de section touché monte en haut de la zone visible (sous la barre du haut), pour rester visible au-dessus de la feuille.
+ *  Une section en bas d'un chant court ne peut pas monter : la page reçoit 50 dvh de marge basse tant que la feuille est ouverte
+ *  (retirée par `HarmonieDuChant` à la fermeture). */
+export function defilerSousLaBarre(el: HTMLElement | null | undefined) {
+  if (!el) return;
+  document.body.style.paddingBottom = "50dvh";
+  el.style.scrollMarginTop = "calc(var(--nav-h, 0px) + 56px)";
+  el.scrollIntoView({ block: "start", behavior: "auto" });
+  el.style.scrollMarginTop = "";
+}
+
 function Croix({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   return (
@@ -125,15 +143,33 @@ function Croix({ onClose }: { onClose: () => void }) {
 
 export function HarmonieDuChant(props: Props) {
   const colonne = props.disposition === "colonne";
-  useStandaloneScrollLock(props.open && !colonne);
+  const fenetre = props.disposition === "fenetre";
+  useStandaloneScrollLock(props.open && !colonne && !fenetre);
   const { t } = useTranslation();
   const titreId = useId();
+  // JV-5a : depuis le nom d'une section, la feuille s'ouvre à 50 % de l'écran (deux crans : 50 % et tout).
+  const miHauteur = !!props.passage?.miHauteur;
+  const [cran, setCran] = useState<number | string | null>(0.5);
+  const cleOuverture = props.passage?.cle;
+  useEffect(() => { if (props.open) setCran(0.5); }, [props.open, cleOuverture]);
+  // La marge basse posée par `defilerSousLaBarre` part avec la feuille.
+  useEffect(() => { if (!props.open) document.body.style.paddingBottom = ""; }, [props.open]);
   if (colonne) {
     return props.open ? <Colonne {...props} titreId={titreId} /> : null;
   }
+  if (fenetre) return <Fenetre {...props} titreId={titreId} />;
   return (
-    <Drawer open={props.open} onOpenChange={(o) => !o && props.onClose()}>
-      <DrawerContent className="h-[67dvh] max-h-[67dvh] md:max-w-2xl md:mx-auto" data-idees-harmonie>
+    <Drawer
+      open={props.open}
+      onOpenChange={(o) => !o && props.onClose()}
+      {...(miHauteur ? { snapPoints: [0.5, 1], activeSnapPoint: cran, setActiveSnapPoint: setCran } : {})}
+    >
+      <DrawerContent
+        // Mode louange : toute la largeur (centrée sur 672 px, la tablette portrait laissait voir des bouts de paroles coupés de chaque côté).
+        className={`${miHauteur ? "h-dvh max-h-dvh" : "h-[67dvh] max-h-[67dvh]"}${props.louange ? " z-[10000]" : " md:max-w-2xl md:mx-auto"}`}
+        overlayClassName={props.louange ? "z-[10000]" : undefined}
+        data-idees-harmonie
+      >
         <DrawerHeader className="flex shrink-0 items-center justify-between pb-3">
           <DrawerTitle>{t("harmonie.titreChant")}</DrawerTitle>
           <Croix onClose={props.onClose} />
@@ -141,6 +177,46 @@ export function HarmonieDuChant(props: Props) {
         {props.open && <Contenu {...props} />}
       </DrawerContent>
     </Drawer>
+  );
+}
+
+/** Mode louange dès 768 px (Timothée, 13/11/2026 : « Fait une fenêtre comme pour les setlists dans le mode louange ») :
+ *  le même popover que le menu Setlist (`MenuLouange`), accroché au nom ou à l'étiquette touchée ; il ne pousse ni ne
+ *  coupe la partition. Toucher ailleurs ou Échap le ferme (`PerformanceMode`, `VoletHarmonieLouange`). */
+function Fenetre(props: Props & { titreId: string }) {
+  const { t } = useTranslation();
+  const dernier = useRef(new DOMRect());
+  const ancre = useRef({
+    getBoundingClientRect: () => {
+      const el = props.ancre;
+      if (el?.isConnected) dernier.current = el.getBoundingClientRect();
+      return dernier.current;
+    },
+  });
+  return (
+    <Popover open={props.open} onOpenChange={(o) => !o && props.onClose()}>
+      <PopoverAnchor virtualRef={ancre} />
+      <PopoverContent
+        aria-labelledby={props.titreId}
+        side="bottom"
+        align="start"
+        sideOffset={6}
+        collisionPadding={{ top: 8, left: 8, right: 8, bottom: 16 }}
+        data-idees-harmonie
+        data-harmonie-fenetre
+        data-chant={props.slug}
+        className="z-[10000] flex max-h-[calc(var(--radix-popover-content-available-height)-2px)] w-[min(26rem,calc(100vw-1rem))] flex-col border-border bg-background p-0 dark:bg-[hsl(var(--raised))] print:hidden"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => { e.preventDefault(); props.ancre?.focus({ preventScroll: true }); }}
+      >
+        <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-3">
+          <h2 id={props.titreId} className="text-base font-semibold">{t("harmonie.titreChant")}</h2>
+          <Croix onClose={props.onClose} />
+        </div>
+        {props.open && <Contenu {...props} />}
+        <PopoverArrow width={18} height={9} className="fill-background stroke-border dark:fill-[hsl(var(--raised))]" />
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -201,8 +277,9 @@ function grilleDuPassage(p: Passage) {
   return { lignes: uniques.map((l) => l.map((a) => a.texte)) };
 }
 
-function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage }: Props) {
+function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage, louange }: Props) {
   const { t } = useTranslation();
+  const texteFiche = useTexteFiche();
   const { user, profile } = useProfile();
   const { fiches, chargement } = useCatalogue();
   const notation = useNotationDuCompte();
@@ -319,8 +396,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
       const id = r.suggestion.split("__")[0];
       parFiche.set(id, [...(parFiche.get(id) ?? []), r]);
     }
-    return [...parFiche].map(([id, rs]) => ({ cle: id, nom: fiches.find((f) => f.id === id)?.nom ?? id, rejets: rs }));
-  }, [rejets, fiches]);
+    return [...parFiche].map(([id, rs]) => ({ cle: id, nom: ((f) => (f ? texteFiche(f).nom : id))(fiches.find((f) => f.id === id)), rejets: rs }));
+  }, [rejets, fiches, texteFiche]);
 
   const nom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user?.email ?? "";
 
@@ -353,8 +430,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
     : [];
   const carteModulation = ({ m, prop, fiche }: (typeof modulations)[number]) => (
     <li key={m.fiche} className="rounded-xl bg-card p-3" data-modulation={m.fiche}>
-      <Link href={`/harmonie/${fiche.id}`} lang="fr" className="font-semibold underline-offset-4 hover:underline">
-        {fiche.nom}
+      <Link href={`/harmonie/${fiche.id}`} lang={texteFiche(fiche).lang} className="font-semibold underline-offset-4 hover:underline">
+        {texteFiche(fiche).nom}
       </Link>
       <p className="mt-0.5 text-sm text-muted-foreground">
         {t("harmonie.modulation.ou", { section: prop.sectionNom, ton: prop.tonaliteCible })}
@@ -379,7 +456,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
 
   return (
     <NotationAccordsContext.Provider value={notationCtx}>
-    <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-8">
+    {/* JV-5a : feuille à mi-hauteur, pleine hauteur sous l'écran : 50 dvh de marge pour que le dernier bloc monte en haut. */}
+    <div className={`min-h-0 overflow-y-auto overscroll-contain px-4 ${passage?.miHauteur && disposition !== "colonne" ? "pb-[50dvh]" : "pb-8"}`}>
       {!sansTitre && <p className="mb-3 text-sm text-muted-foreground">{titre}</p>}
       {blocs.some((b) => b.idees.length > 0) && (
         <p className="-mt-1 mb-3">
@@ -438,32 +516,43 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                     return (
                       <li key={s.id} className="rounded-xl bg-card p-3" data-suggestion={s.id}>
                         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                          <Link href={`/harmonie/${s.fiche.id}`} lang="fr" className="text-sm font-semibold underline-offset-4 hover:underline">
-                            {s.fiche.nom}
+                          <Link href={`/harmonie/${s.fiche.id}`} lang={texteFiche(s.fiche).lang} className="text-sm font-semibold underline-offset-4 hover:underline">
+                            {texteFiche(s.fiche).nom}
                           </Link>
                         </div>
                         {apercu ? (
-                          <p className="mt-1.5 text-base">
-                            <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.avant} visible /></span>
-                            <span className="mx-1.5 text-muted-foreground">→</span>
-                            <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.apres} visible /></span>
+                          // Timothée (13/11/2026) : on distinguait mal l'ancienne progression de la nouvelle. L'ancienne en gris,
+                          // la nouvelle dans la couleur des accords, « avant » et « après » au-dessus.
+                          <p className="mt-1.5 flex flex-wrap items-end gap-x-1.5 gap-y-1 text-base" data-avant-apres>
+                            <span className="inline-flex flex-col items-start" data-avant>
+                              <span className="text-xs text-muted-foreground">{t("harmonie.avant")}</span>
+                              <span className="font-chord font-semibold !text-[hsl(var(--foreground)/0.7)]"><AccordTouchable etiquette={apercu.avant} visible /></span>
+                            </span>
+                            <span className="pb-0.5 text-muted-foreground" aria-hidden>→</span>
+                            <span className="inline-flex flex-col items-start" data-apres>
+                              <span className="text-xs text-muted-foreground">{t("harmonie.apres")}</span>
+                              <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.apres} visible /></span>
+                            </span>
                           </p>
                         ) : (
                           // Les idées sans remplacement d'accords (tag, intro absente)
                           // disent ce qu'elles proposent, avec les mots de la fiche.
-                          s.fiche.avantApres && (
+                          texteFiche(s.fiche).avantApres && (
                             <ParagrapheFiche
                               className="mt-1.5 text-base text-muted-foreground"
-                              texte={s.fiche.avantApres}
+                              texte={texteFiche(s.fiche).avantApres!}
+                              lang={texteFiche(s.fiche).avantApres === s.fiche.avantApres ? "fr" : undefined}
                               demiTons={semitonesTo(TON_DES_FICHES, tonalite)}
                               tonalite={tonalite}
                             />
                           )
                         )}
                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <Button variant="secondary" size="sm" onClick={() => montrerLEndroit(s.endroits[0], disposition === "colonne" ? undefined : onClose, portee)}>
-                            {t("harmonie.montrer")}
-                          </Button>
+                          {!louange && (
+                            <Button variant="secondary" size="sm" onClick={() => montrerLEndroit(s.endroits[0], disposition === "colonne" ? undefined : onClose, portee)}>
+                              {t("harmonie.montrer")}
+                            </Button>
+                          )}
                           {onEssayer && apercu && (
                             <Button size="sm" onClick={() => onEssayer(s, changements, b.nom)}>
                               {t("harmonie.essayer")}
@@ -567,8 +656,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
           <div className="rounded-xl bg-card p-3">
             <p className="text-base">
               {ficheTransition ? (
-                <Link href={`/harmonie/${ficheTransition.id}`} lang="fr" className="font-semibold underline-offset-4 hover:underline">
-                  {ficheTransition.nom}
+                <Link href={`/harmonie/${ficheTransition.id}`} lang={texteFiche(ficheTransition).lang} className="font-semibold underline-offset-4 hover:underline">
+                  {texteFiche(ficheTransition).nom}
                 </Link>
               ) : (
                 t("harmonie.transition.titre")
@@ -663,6 +752,7 @@ function useEquipe({
 /** Une idée écrite par l'équipe. */
 function CarteIdee({ i, fiches, eq }: { i: Idee; fiches: Fiche[]; eq: Equipe }) {
   const { t } = useTranslation();
+  const texteFiche = useTexteFiche();
   const { moi, lire } = eq;
   return (
     <li className="rounded-xl bg-card p-3" data-idee={i.id}>
@@ -675,8 +765,8 @@ function CarteIdee({ i, fiches, eq }: { i: Idee; fiches: Fiche[]; eq: Equipe }) 
         </p>
       )}
       {i.ficheId && fiches.some((f) => f.id === i.ficheId) && (
-        <Link href={`/harmonie/${i.ficheId}`} lang="fr" className="mt-0.5 block text-sm underline underline-offset-4">
-          {fiches.find((f) => f.id === i.ficheId)!.nom}
+        <Link href={`/harmonie/${i.ficheId}`} lang={texteFiche(fiches.find((f) => f.id === i.ficheId)!).lang} className="mt-0.5 block text-sm underline underline-offset-4">
+          {texteFiche(fiches.find((f) => f.id === i.ficheId)!).nom}
         </Link>
       )}
       <p className="mt-1 text-sm text-muted-foreground">
@@ -716,6 +806,7 @@ function CarteIdee({ i, fiches, eq }: { i: Idee; fiches: Fiche[]; eq: Equipe }) 
 /** Le formulaire d'ajout (ou de modification) d'une idée, avec son passage. */
 function FormulaireIdee({ eq, fiches, passages }: { eq: Equipe; fiches: Fiche[]; passages: { uid: string; nom: string }[] }) {
   const { t } = useTranslation();
+  const texteFiche = useTexteFiche();
   return eq.ouvert ? (
     <div className="mt-2 space-y-2 rounded-xl bg-card p-3">
       <textarea
@@ -759,7 +850,7 @@ function FormulaireIdee({ eq, fiches, passages }: { eq: Equipe; fiches: Fiche[];
       >
         <option value="">{t("harmonie.idee.fiche")}</option>
         {fiches.map((f) => (
-          <option key={f.id} value={f.id}>{f.nom}</option>
+          <option key={f.id} value={f.id}>{texteFiche(f).nom}</option>
         ))}
       </ChampSelect>
       <div className="flex gap-2">

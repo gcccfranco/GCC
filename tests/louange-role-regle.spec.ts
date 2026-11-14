@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, ouvrirJeJoue } from "./helpers/louange";
+import { attendreMiseEnPage, curseurPage, lireCompteur, onStage, ouvrirJeJoue } from "./helpers/louange";
 
 // Lot pupitre, tranche PU-5 : choisir un rôle pose aussi l'ordre et la disposition (Pianiste, Guitariste : Tout le chant
-// et Classique ; Batteur : Plan du chant ; Présidence, Choriste : rien d'imposé) ; changer l'ordre ensuite ne retire plus
+// et Classique ; Batteur : Plan ; Présidence, Choriste : rien d'imposé) ; changer l'ordre ensuite ne retire plus
 // le rôle ; l'ordre est retenu par compte, la disposition par appareil. Comptes simulés, noms fictifs.
 
 const SETLIST_ID = "setlist-role-regle";
@@ -53,7 +53,7 @@ async function ouvrirMode(page: Page, compte: FakeProfile) {
 }
 
 const ordre = (d: ReturnType<Page["locator"]>, nom: string) =>
-  d.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: nom });
+  d.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: nom, exact: true });
 const disposition = (d: ReturnType<Page["locator"]>, nom: RegExp) =>
   d.locator('[role=radiogroup][aria-labelledby="perf-disposition"]').getByRole("radio", { name: nom });
 const role = (d: ReturnType<Page["locator"]>, nom: string) => d.getByRole("button", { name: new RegExp(`^${nom}`) });
@@ -76,7 +76,7 @@ test("Batteur pose Plan du chant, sans toucher à la disposition", async ({ page
   await ouvrirMode(page, LISE);
   const d = await ouvrirJeJoue(page);
   await role(d, "Batteur").click();
-  await expect(ordre(d, "Plan du chant")).toHaveAttribute("aria-checked", "true");
+  await expect(ordre(d, "Plan")).toHaveAttribute("aria-checked", "true");
   expect(await lire(page, "disposition"), "disposition sans objet pour le Batteur").toBe("scene");
 });
 
@@ -86,7 +86,7 @@ test("Présidence garde l'ordre et la disposition choisis", async ({ page }) => 
   const d = await ouvrirJeJoue(page);
   await role(d, "Présidence").click();
   await expect(role(d, "Présidence")).toHaveAttribute("aria-pressed", "true");
-  await expect(ordre(d, "Chaque section une fois")).toHaveAttribute("aria-checked", "true");
+  await expect(ordre(d, "Une fois chacune")).toHaveAttribute("aria-checked", "true");
   await expect(disposition(d, /^Scène/)).toHaveAttribute("aria-checked", "true");
 });
 
@@ -95,8 +95,8 @@ test("choisir « Chaque section une fois » garde Pianiste coché, aussi après 
   await ouvrirMode(page, LISE);
   const d = await ouvrirJeJoue(page);
   await role(d, "Pianiste").click();
-  await ordre(d, "Chaque section une fois").click();
-  await expect(ordre(d, "Chaque section une fois")).toHaveAttribute("aria-checked", "true");
+  await ordre(d, "Une fois chacune").click();
+  await expect(ordre(d, "Une fois chacune")).toHaveAttribute("aria-checked", "true");
   await expect(role(d, "Pianiste")).toHaveAttribute("aria-pressed", "true");
 
   await page.reload();
@@ -104,7 +104,7 @@ test("choisir « Chaque section une fois » garde Pianiste coché, aussi après 
   await attendreMiseEnPage(page);
   const rouvert = await ouvrirJeJoue(page);
   await expect(role(rouvert, "Pianiste")).toHaveAttribute("aria-pressed", "true");
-  await expect(ordre(rouvert, "Chaque section une fois")).toHaveAttribute("aria-checked", "true");
+  await expect(ordre(rouvert, "Une fois chacune")).toHaveAttribute("aria-checked", "true");
 
   await role(rouvert, "Guitariste").click();
   await expect(ordre(rouvert, "Tout le chant"), "rechoisir un rôle réapplique son ordre").toHaveAttribute("aria-checked", "true");
@@ -116,7 +116,7 @@ test("deux comptes sur le même appareil : chacun garde son ordre, la dispositio
   await preparer(page);
   await ouvrirMode(page, LISE);
   const d1 = await ouvrirJeJoue(page);
-  await ordre(d1, "Chaque section une fois").click();
+  await ordre(d1, "Une fois chacune").click();
   await disposition(d1, /^Marge/).click();
   expect(await lire(page, `partition-layout-${LISE.uid}`)).toBe("unique");
 
@@ -133,8 +133,63 @@ test("deux comptes sur le même appareil : chacun garde son ordre, la dispositio
   const d2 = await ouvrirJeJoue(page2);
   await expect(ordre(d2, "Tout le chant"), "Noël n'hérite pas de l'ordre de Lise").toHaveAttribute("aria-checked", "true");
   await expect(disposition(d2, /^Marge/), "la disposition est celle de l'appareil").toHaveAttribute("aria-checked", "true");
-  await ordre(d2, "Plan du chant").click();
+  await ordre(d2, "Plan").click();
   expect(await lire(page2, `partition-layout-${NOEL.uid}`)).toBe("structure");
   expect(await lire(page2, `partition-layout-${LISE.uid}`), "l'ordre de Lise n'a pas bougé").toBe("unique");
   await contexte.close();
+});
+
+// Parcours à l'œil du 13/11, constat 4 : le choriste (paroles seules) voyait l'intro et l'interlude d'Abba Père en
+// cadres titrés vides. Une section sans paroles n'est plus rendue quand les accords ne sont pas montrés ; le pianiste
+// la garde. Toutes les pages du chant sont parcourues.
+test.describe("paroles seules : pas de cadre vide (parcours du 13/11, constat 4)", () => {
+  const SETLIST_SEULE = "setlist-cadres-vides";
+  const ouvrirAbba = async (page: Page) => {
+    await preparer(page, { [`partition-layout-${LISE.uid}`]: "played", disposition: "classique" });
+    await signInAs(page, LISE, { [`setlists/${SETLIST_SEULE}`]: { ...setlist, items: [item("abba-pere", 1)] } }, `/setlists/${SETLIST_SEULE}`);
+    await page.getByRole("button", { name: /Mode Louange/ }).click();
+    await attendreMiseEnPage(page);
+    await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
+  };
+  /** Sur chaque page : le texte de chaque section affichée (titre, puis lignes). */
+  const sectionsDeToutesLesPages = async (page: Page) => {
+    const vues: { titre: string; lignes: string }[] = [];
+    // Le compteur est relu à chaque page : la mise en page peut se refaire après le choix du rôle.
+    for (let tour = 0; tour < 20; tour++) {
+      for (const sec of await onStage(page, "[data-section]").all()) {
+        vues.push(await sec.evaluate((el) => ({
+          titre: (el.firstElementChild as HTMLElement | null)?.innerText.trim() ?? "",
+          lignes: [...el.querySelectorAll<HTMLElement>("[data-copy-line]")].map((l) => l.innerText.trim()).join(" ").trim(),
+        })));
+      }
+      const [cur, total] = (await lireCompteur(page)).split(" / ");
+      if (cur === total) break;
+      await curseurPage(page).press("ArrowRight");
+      await expect.poll(() => lireCompteur(page)).not.toBe(`${cur} / ${total}`);
+    }
+    return vues;
+  };
+
+  test("Choriste : ni Intro ni Interlude, chaque section affichée porte des paroles", async ({ page }) => {
+    await ouvrirAbba(page);
+    const d = await ouvrirJeJoue(page);
+    await role(d, "Choriste").click();
+    await page.keyboard.press("Escape");
+    await attendreMiseEnPage(page);
+    await expect(onStage(page, "[data-section]").first()).toBeVisible();
+    const vues = await sectionsDeToutesLesPages(page);
+    expect(vues.map((v) => v.titre).join(" | ")).toMatch(/Couplet 1/);
+    expect(vues.filter((v) => /^—?\s*(Intro|Interlude)/.test(v.titre)), "aucun cadre Intro ni Interlude").toEqual([]);
+    expect(vues.filter((v) => v.lignes === ""), "aucune section affichée sans paroles").toEqual([]);
+  });
+
+  test("Pianiste : l'intro reste, avec ses accords", async ({ page }) => {
+    await ouvrirAbba(page);
+    const d = await ouvrirJeJoue(page);
+    await role(d, "Pianiste").click();
+    await page.keyboard.press("Escape");
+    await attendreMiseEnPage(page);
+    await expect(onStage(page, "[data-section]").filter({ hasText: "Intro" }).first()).toBeVisible();
+    await expect(onStage(page, "[data-section]").filter({ hasText: "Intro" }).first()).toContainText("F#m");
+  });
 });

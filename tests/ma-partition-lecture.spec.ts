@@ -8,6 +8,12 @@ import { ouvrirPartitions } from "./helpers/setlist";
 // navigateur), puis le menu « Je lis », les signes et la tonalité dans la page, sur base simulée. Agencement : dans
 // SPECS_GRAND_ECRAN. Noms fictifs.
 
+/** Change de tonalité par l'armure (RU-1) : un toucher l'ouvre, un second choisit. */
+async function choisirTonalite(page: Page, nom: string) {
+  await page.getByTestId("armure").click();
+  await page.getByTestId("fenetre-armure").getByRole("radio").filter({ has: page.getByText(nom, { exact: true }) }).first().click();
+}
+
 test.describe("fusion à trois sources (sans page)", () => {
   const base = "a\nb\nc\nd\ne";
 
@@ -214,19 +220,19 @@ test.describe("Ma partition : lecture sur la page d'un chant", () => {
     const db = await ouvrirChant(page, { [chemin]: doc });
     await expect(page.getByRole("button", { name: "Je lis : Ma partition" })).toBeVisible();
     await expect(page.locator('[data-marque="moi"]', { hasText: "Rempli par" })).toHaveCount(1);
-    await expect(page.getByTestId("tonalite-lettre")).toHaveText("G");
+    await expect(page.getByTestId("armure")).toHaveText("G");
     await capture(page, info, "ma-partition-page-chant");
-    await page.getByTestId("pilule-tonalite").locator("select").selectOption("C");
+    await choisirTonalite(page, "C");
     await expect.poll(() => db.writes.filter((w) => w.path === `partitions/${ELODIE.uid}__abba-pere`).pop()?.data.key).toBe("C");
     expect(db.doc(`partitions/${ELODIE.uid}__abba-pere`)?.content).toBe(MA_LIGNE);
   });
 
   test("sans partition : pas de menu, et changer la tonalité ne crée pas de partition", async ({ page }) => {
     const db = await ouvrirChant(page, {});
-    await expect(page.getByTestId("tonalite-lettre")).toBeVisible();
+    await expect(page.getByTestId("armure")).toBeVisible();
     await expect(page.getByRole("button", { name: /^Je lis : / })).toHaveCount(0);
-    await page.getByTestId("pilule-tonalite").locator("select").selectOption("C");
-    await expect(page.getByTestId("tonalite-lettre")).toHaveText("C");
+    await choisirTonalite(page, "C");
+    await expect(page.getByTestId("armure")).toHaveText("C");
     expect(db.writes.filter((w) => w.path.startsWith("partitions/"))).toEqual([]);
   });
 });

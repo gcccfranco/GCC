@@ -1,5 +1,5 @@
 {
-  "genereLe": "2026-11-12T17:37:47.800Z",
+  "genereLe": "2026-11-14T13:51:06.161Z",
   "fiches": [
     {
       "id": "substitutions/2m7-pour-4",
@@ -521,7 +521,9 @@
           "section": "chorus-3-2",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "用 2m7 代替 4",
+      "avantApresZh": "`G → A` 改为 `Em7 → A` · 级数 `4 → 5` 改为 `2m7 → 5`。"
     },
     {
       "id": "substitutions/6m-pour-1-repete",
@@ -2204,7 +2206,9 @@
           "section": "chorus-2-1",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "用 6m 代替重复的 1",
+      "avantApresZh": "`D … D` 改为 `D … Bm` · 级数 `1 → 1` 改为 `1 → 6m`。"
     },
     {
       "id": "substitutions/4-pour-2m",
@@ -5438,7 +5442,9 @@
           "section": "chorus-4-3",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "用 4 代替 2m",
+      "avantApresZh": "`Em → A` 改为 `G → A` · 级数 `2m → 5` 改为 `4 → 5`。"
     },
     {
       "id": "substitutions/cadence-rompue",
@@ -5676,7 +5682,9 @@
           "section": "chorus-3-2",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "阻碍终止",
+      "avantApresZh": "`A → D` 改为 `A → Bm` · 级数 `5 → 1` 改为 `5 → 6m`。"
     },
     {
       "id": "substitutions/3m-pour-1",
@@ -6996,7 +7004,9 @@
           "section": "chorus-3-2",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "用 3m 代替 1",
+      "avantApresZh": "`D → Bm` 改为 `F#m → Bm`（或 `D → G` 改为 `F#m → G`）· 级数 `1 → 6m` 改为 `3m → 6m`（或 `1 → 4` 改为 `3m → 4`）。"
     },
     {
       "id": "substitutions/4-sur-5-pour-5",
@@ -7623,7 +7633,9 @@
           "section": "chorus-2-1",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "用 4/5 代替 5",
+      "avantApresZh": "`A → D` 改为 `G/A → D` · 级数 `5 → 1` 改为 `4/5 → 1`。"
     },
     {
       "id": "substitutions/3m-apres-le-4",
@@ -7664,7 +7676,9 @@
       "repertoire": "*Quand je contemple* (refrain, en C : Fmaj7 – G/F – Em7 – Am) · *Que tous\nsoient un* (couplets, en E : A – B/A – G#m – C#m) · *Seigneur, par la clarté*\n(couplet 1, en A : D – E/D – C#m – F#m) · 为我而来 (主歌, en C : Fmaj7 – G –\nEm7 – Am, sans la basse G).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "4 之后接 3m（4 – 5/4 – 3m – 6m）",
+      "avantApresZh": "`G → A → Bm` 改为 `G – A/G → F#m → Bm` · 级数 `4 → 5 → 6m` 改为 `4 – 5/4 → 3m → 6m`。"
     },
     {
       "id": "substitutions/quarte-sixte-de-cadence",
@@ -7705,7 +7719,9 @@
       "repertoire": "*Attaché\nà la croix* (refrain, en D : D/A – A – D) · *Noël est arrivé* (refrain 1, en\nF : Bb – F/C – C – F) · 你是我的一切 (主歌 1, en D : D/A – A – D) · 何等恩典\n(副歌, en G : G/D – Dsus4 – G).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "终止四六和弦（5 之前的 1/5）",
+      "avantApresZh": "`A → D` 改为 `D/A – A → D` · 级数 `5 → 1` 改为 `1/5 – 5 → 1`。"
     },
     {
       "id": "substitutions/6m-pour-4",
@@ -7746,7 +7762,9 @@
       "repertoire": "*En Toi je sais\nqui je suis* (couplets, en F : F – Dm – C – F) · *Il est temps* (refrain, en\nB : B – G#m – F#) · *Infiniment grand* (couplet 1, en C : C – Am7 – G) ·\n*Avec nous (Emmanuel)* (pont, en E : E – C#m – B).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "用 6m 代替 4（1 6m 5）",
+      "avantApresZh": "`D → G → A` 改为 `D → Bm → A` · 级数 `1 → 4 → 5` 改为 `1 → 6m → 5`。"
     },
     {
       "id": "couleurs/accord-2",
@@ -7993,7 +8011,9 @@
           "section": "intro-1-0",
           "nom": "前奏 Intro"
         }
-      ]
+      ],
+      "nomZh": "「2」和弦（add9）",
+      "avantApresZh": "`D` 改为 `D2`（Dadd9）· 级数 `1` 改为 `1 2`（`4` 同样改为 `4 2`：G2）。"
     },
     {
       "id": "couleurs/sus4-resolu",
@@ -8094,7 +8114,9 @@
           "section": "chorus-2-1",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "解决的 sus4",
+      "avantApresZh": "`A → D` 改为 `Asus4 – A → D` · 级数 `5 → 1` 改为 `5sus4 – 5 → 1`。"
     },
     {
       "id": "couleurs/sus2",
@@ -8136,7 +8158,9 @@
       "repertoire": "*Lumière du monde* (couplet : « Tu m'ouvres les\nyeux », Gsus2) · *Viens toucher ma vie* (couplet, en A : Dsus2).",
       "regle": "Portée : Intro, Pont · motif `1` tenu · remplacement `1sus2` ·\nsûreté : **sûre**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "sus2：开阔、漂浮",
+      "avantApresZh": "`D` 改为 `Dsus2` · 级数 `1` 改为 `1sus2`。"
     },
     {
       "id": "couleurs/maj7",
@@ -8422,7 +8446,9 @@
           "section": "verse-2-1",
           "nom": "主歌 2/Couplet 2"
         }
-      ]
+      ],
+      "nomZh": "1 和 4 上的 maj7",
+      "avantApresZh": "`G` 改为 `Gmaj7`，`D` 改为 `Dmaj7` · 级数 `4` 改为 `4maj7`，`1` 改为 `1maj7`。"
     },
     {
       "id": "couleurs/6-et-6-9",
@@ -8464,7 +8490,9 @@
       "repertoire": "*Jireh* (interlude : G6) · *Cherchez\nd'abord* (« Alléluia » : A6) · *De tout mon être* (intro, en E : B6) · 深深爱你\n(主歌, en E : A6) · 一生爱你 (前奏, en E : A6/E).",
       "regle": "Portée : dernière occurrence, toute fin du chant · motif `1` final ·\nremplacement `1 6/9` · sûreté : **sûre**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "6 与 6/9 和弦",
+      "avantApresZh": "`D` 改为 `D6` 或 `D6/9` · 级数 `1` 改为 `1 6` 或 `1 6/9`。"
     },
     {
       "id": "couleurs/m7",
@@ -10505,7 +10533,9 @@
           "section": "verse-4-3",
           "nom": "尾声/Final (多次反复)"
         }
-      ]
+      ],
+      "nomZh": "小和弦上的 m7",
+      "avantApresZh": "`Bm` 改为 `Bm7`，`Em` 改为 `Em7` · 级数 `6m` 改为 `6m7`，`2m` 改为 `2m7`。"
     },
     {
       "id": "couleurs/4-lydien",
@@ -10545,7 +10575,9 @@
       "repertoire": "même son que M3 (« Le 4 – 5/4 qui soulève »), dans 45\nchants, par exemple *Quand je contemple* (refrain, en C : FM7 – G/F).",
       "regle": "Aucune : c'est M3 qui propose ce son sur un chant, en mouvement.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "利底亚 4（4maj7#11）",
+      "avantApresZh": "`G`（延长）改为 `A/G` · 级数 `4` 改为 `5/4`（利底亚 4）。"
     },
     {
       "id": "couleurs/notes-du-haut-tenues",
@@ -10588,7 +10620,9 @@
       "repertoire": "*Infiniment grand* (refrain, en C : C – F2 – Am7 –\nGsus4 – G) · *Abrite-moi* (intro, en C : F2 – Am7 – C/G – G).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "保持最高的两个音（4 2 – 6m7 – 5sus4）",
+      "avantApresZh": "`D → G → Bm → A` 改为 `D → G2 → Bm7 → Asus4` · 级数 `1 → 4 → 6m → 5` 改为 `1 → 4 2 → 6m7 → 5sus4`。"
     },
     {
       "id": "couleurs/m9",
@@ -10629,7 +10663,9 @@
       "repertoire": "一颗谦卑的心 (主歌, en D : D – Bm9 – G) · *Infiniment\ngrand* (pont, en C : Am – Am9). Sur le 2m : *Oasis* (refrain, en E : F#m9).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "6m 上的 m9",
+      "avantApresZh": "`Bm` 改为 `Bm9` · 级数 `6m` 改为 `6m9`。"
     },
     {
       "id": "couleurs/sus4-vers-7",
@@ -10670,7 +10706,9 @@
       "repertoire": "我愿为你去 (副歌 1, en D : Asus4 – A7) · 我在这里敬拜 (主歌 2, en D : Em7 –\nAsus4 – A7) · 大手牵着小手 (主歌, en D : Asus4 – A7) · 唯独依靠你 (主歌 1, en\nE : Bsus4 – B7).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "sus4 解决到 7 和弦",
+      "avantApresZh": "`A → D` 改为 `Asus4 – A7 → D` · 级数 `5 → 1` 改为 `5sus4 – 5 7 → 1`。"
     },
     {
       "id": "couleurs/1-en-nappe",
@@ -10712,7 +10750,9 @@
       "repertoire": "*J'annoncerai* (intro, en\nA : A2 – E) · *Cet amour* (intro, en A : A5 – D2) · 十架的大能 (前奏, en A :\n… – D2).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "铺底延长的 1",
+      "avantApresZh": "`D`（每拍弹奏）改为延长的 `D2`，9 音放在右手最低处 · 级数 `1` 改为 `1 2`（延长）。"
     },
     {
       "id": "basses/descend",
@@ -11884,7 +11924,9 @@
           "section": "chorus-3-2",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "下行低音",
+      "avantApresZh": "`D → Bm → G` 改为 `D – A/C# – Bm – Bm/A – G` · 级数 `1 → 6m → 4` 改为 `1 – 5/7 – 6m – 6m/5 – 4`。"
     },
     {
       "id": "basses/monte",
@@ -12661,7 +12703,9 @@
           "section": "chorus-3-2",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "上行低音",
+      "avantApresZh": "`G → Bm` 改为 `G – A – Bm` · 级数 `4 → 6m` 改为 `4 – 5 – 6m`。"
     },
     {
       "id": "basses/1-sur-3",
@@ -13125,7 +13169,9 @@
           "section": "chorus-3-2",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "用 1/3 连接",
+      "avantApresZh": "`D → G` 改为 `D – D/F# → G` · 级数 `1 → 4` 改为 `1 – 1/3 → 4`。"
     },
     {
       "id": "basses/5-sur-7",
@@ -13523,7 +13569,9 @@
           "section": "chorus-2-1",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "5/7 走向 1",
+      "avantApresZh": "`A → D` 改为 `A/C# → D` · 级数 `5 → 1` 改为 `5/7 → 1`。"
     },
     {
       "id": "basses/pedale-de-1",
@@ -13621,7 +13669,9 @@
           "section": "intro-1-0",
           "nom": "前奏/Intro"
         }
-      ]
+      ],
+      "nomZh": "1 的持续低音",
+      "avantApresZh": "`D → G → D` 改为 `D – G/D – D` · 级数 `1 → 4 → 1` 改为 `1 – 4/1 – 1`（也可 `5/1`）。"
     },
     {
       "id": "basses/chromatique",
@@ -13661,7 +13711,9 @@
       "repertoire": "奔跑不放弃 (主歌, en E : E – B/D# – D) · 我渴望看见 (主歌, en F : F – C/E –\nCm/Eb) · 握住幸福 (前奏, en G : G – D/F# – Dm/F).",
       "regle": "Portée : Couplet, Pont · motif `1 → 1 → 4` · remplacement\n`1 – 1/7 – 1/b7 → 4/6` · sûreté : **à écouter**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "半音低音",
+      "avantApresZh": "`D → D → G` 改为 `D – D/C# – D/C – G/B` · 级数 `1 → 1 → 4` 改为 `1 – 1/7 – 1/b7 – 4/6`。"
     },
     {
       "id": "passage/5-du-6m",
@@ -13856,7 +13908,9 @@
           "section": "intro-1-0",
           "nom": "Intro"
         }
-      ]
+      ],
+      "nomZh": "6m 的属和弦",
+      "avantApresZh": "`D/F# → Bm` 改为 `F#7 → Bm`（或 `D → Bm` 改为 `D – F#7 → Bm`）· 级数 `1/3 → 6m` 改为 `3 7 → 6m`。"
     },
     {
       "id": "passage/5-du-4",
@@ -13971,7 +14025,9 @@
           "section": "chorus-5-4",
           "nom": "副歌 2/Refrain 2"
         }
-      ]
+      ],
+      "nomZh": "4 的属和弦",
+      "avantApresZh": "`D → G` 改为 `D – D7 → G` · 级数 `1 → 4` 改为 `1 – 1 7 → 4`。"
     },
     {
       "id": "passage/5-du-2m",
@@ -14047,7 +14103,9 @@
           "section": "intro-1-0",
           "nom": "前奏/Intro"
         }
-      ]
+      ],
+      "nomZh": "2m 的属和弦",
+      "avantApresZh": "`Bm → Em` 改为 `B7 → Em` · 级数 `6m → 2m` 改为 `6 7 → 2m`。"
     },
     {
       "id": "passage/5-du-5",
@@ -14159,7 +14217,9 @@
           "section": "chorus-2-1",
           "nom": "副歌 1/Refrain 1"
         }
-      ]
+      ],
+      "nomZh": "5 的属和弦",
+      "avantApresZh": "`Em → A` 改为 `E7 → A` · 级数 `2m → 5` 改为 `2 7 → 5`。"
     },
     {
       "id": "passage/diminue",
@@ -14200,7 +14260,9 @@
       "repertoire": "pas encore de `1 – #1dim – 2m` exact ; des accords\ndiminués apparaissent dans 19 chants chinois, par exemple 住在你里面 (副歌 :\nG#dim – Em), 何等恩典 (副歌, en G : G#dim), 吹起复兴的风 (桥段, en C : F#dim).",
       "regle": "Portée : dans une section · motif `1 → 2m` · remplacement\n`1 – #1dim → 2m` · sûreté : **à écouter**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "经过减和弦",
+      "avantApresZh": "`D → Em` 改为 `D – D#dim → Em` · 级数 `1 → 2m` 改为 `1 – #1dim → 2m`。"
     },
     {
       "id": "passage/2-5-mineur",
@@ -14250,7 +14312,9 @@
           "section": "verse-2-1",
           "nom": "主歌 1/Couplet 1"
         }
-      ]
+      ],
+      "nomZh": "7m7b5 – 3 7 走向 6m",
+      "avantApresZh": "`A → Bm` 改为 `C#m7b5 – F#7 → Bm` · 级数 `5 → 6m` 改为 `7m7b5 – 3 7 → 6m`。"
     },
     {
       "id": "passage/3-majeur",
@@ -14291,7 +14355,9 @@
       "repertoire": "*Je louerai\nl'Éternel* (couplets, en D : G – A – F# – Bm) · *Je loue Ton Nom, Éternel*\n(refrain, en G : C – D – B7 – Em, avec la 7 : voir P1) · 一同齐声宣扬 (副歌, en A : D – C# – F#m) ·\n十字架是我的荣耀 (副歌, en F : F – A7 – Bb, le `3 → 4`).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "3m 变为大三和弦",
+      "avantApresZh": "`G → A → F#m → Bm` 改为 `G → A → F# → Bm` · 级数 `4 → 5 → 3m → 6m` 改为 `4 → 5 → 3 → 6m`。"
     },
     {
       "id": "passage/2m7b5",
@@ -14332,7 +14398,9 @@
       "repertoire": "爱的约定 (副歌 2, en C : Dm7 – Dm7b5/G –\nCmaj9) ; plus loin du motif, la basse sur le b5 : 唯有耶稣 (副歌, en G :\nAm – Am7b5/Eb – G/D, basse Eb → D).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "1 之前的经过 2m7b5",
+      "avantApresZh": "`Em7 → A → D` 改为 `Em7 – Em7b5/A → D` · 级数 `2m7 → 5 → 1` 改为 `2m7 – 2m7b5/5 → 1`。"
     },
     {
       "id": "emprunts/4m-avant-1",
@@ -14381,7 +14449,9 @@
           "section": "chorus-3-2",
           "nom": "副歌/Refrain"
         }
-      ]
+      ],
+      "nomZh": "1 之前的小 4",
+      "avantApresZh": "`G → D` 改为 `G – Gm → D` · 级数 `4 → 1` 改为 `4 – 4m → 1`。"
     },
     {
       "id": "emprunts/b6-b7-1",
@@ -14424,7 +14494,9 @@
       "repertoire": "为我而来\n(桥段, en C : Ab – Bb – C) · 明亮晨星 (前奏, en F : Db – Eb – F).",
       "regle": "Portée : dernière occurrence, toute fin du chant · motif `5 → 1`\nfinal · remplacement `b6 – b7 → 1` · sûreté : **à écouter**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "壮阔的上行 b6 – b7 – 1",
+      "avantApresZh": "`A → D`（全曲结尾）改为 `Bb – C → D` · 级数 `5 → 1` 改为 `b6 – b7 → 1`。"
     },
     {
       "id": "emprunts/b7-4-1",
@@ -14485,7 +14557,9 @@
           "section": "bridge-5-4",
           "nom": "桥段/Pont"
         }
-      ]
+      ],
+      "nomZh": "开阔的 b7",
+      "avantApresZh": "`G → D` 改为 `C – G → D` · 级数 `4 → 1` 改为 `b7 – 4 → 1`。"
     },
     {
       "id": "emprunts/b3-de-passage",
@@ -14524,7 +14598,9 @@
       "repertoire": "aucun chant ne l'utilise encore.",
       "regle": "Portée : Intro, Interlude · motif `1 → 4` · remplacement\n`1 – b3 → 4` · sûreté : **à écouter**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "经过的 b3",
+      "avantApresZh": "`D → G` 改为 `D – F → G` · 级数 `1 → 4` 改为 `1 – b3 → 4`。"
     },
     {
       "id": "emprunts/b6-pour-4",
@@ -14564,7 +14640,9 @@
       "repertoire": "aucun chant ne l'utilise encore.",
       "regle": "Portée : dernière occurrence, toute fin du chant · motif `4 → 1`\nfinal · remplacement `b6 → 1` · sûreté : **à écouter**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "结尾用 b6 代替 4",
+      "avantApresZh": "`G → D`（全曲结尾）改为 `Bb → D` · 级数 `4 → 1` 改为 `b6 → 1`。"
     },
     {
       "id": "emprunts/4m6",
@@ -14603,7 +14681,9 @@
       "repertoire": "握住幸福 (副歌 2, en G : Cm6/D – G, sur\nla basse du 5) · 奔跑不放弃 (副歌, en E : A/B – (Am6) – E, entre parenthèses\ndans la grille).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "最后的 1 之前的 4m6",
+      "avantApresZh": "`G → D` 改为 `G – Gm6 → D` · 级数 `4 → 1` 改为 `4 – 4m6 → 1`。"
     },
     {
       "id": "emprunts/b7-1",
@@ -14645,7 +14725,9 @@
       "repertoire": "*Au nom de Jésus* (intro, en D : D – C – D – C – D) ·\n奔跑不放弃 (副歌, en E : … – D – E/G#, après des accords\nentre parenthèses).",
       "regle": "Aucune : catalogue seul (une règle de suggestion\nse proposera à part).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "以 b7 收尾（混合利底亚终止）",
+      "avantApresZh": "`A → D` 改为 `C → D` · 级数 `5 → 1` 改为 `b7 → 1`。"
     },
     {
       "id": "montees/2m7-4-sur-5",
@@ -14710,7 +14792,9 @@
           "section": "verse-2-1",
           "nom": "主歌/Couplet"
         }
-      ]
+      ],
+      "nomZh": "副歌之前的 2m7 – 4/5",
+      "avantApresZh": "`G → A`（导歌结尾）改为 `Em7 → G/A` · 级数 `4 → 5` 改为 `2m7 → 4/5`。"
     },
     {
       "id": "montees/5sus4-tenu",
@@ -14864,7 +14948,9 @@
           "section": "verse-2-1",
           "nom": "主歌/Couplet"
         }
-      ]
+      ],
+      "nomZh": "延长的 5sus4，再到 5",
+      "avantApresZh": "`A`（副歌前最后一个和弦）改为 `Asus4（延长）→ A` · 级数 `5` 改为 `5sus4 → 5`。"
     },
     {
       "id": "montees/4-5-sur-4",
@@ -14903,7 +14989,9 @@
       "repertoire": "*Quand je\ncontemple* (refrain, en C : FM7 – G/F « Oh ! Je T'adore ») · *Que tous soient\nun* (couplet, en E : A – B/A) · *Seigneur, par la clarté* (couplet, en A : D –\nE/D) · *Cherchez d'abord* (instrumental : G – A/G) · 为我而来 (副歌, en C :\nFmaj7 – G/F) · 一生敬拜你 (导歌, en C : F – G/F).",
       "regle": "Portée : fin de la section qui précède un refrain · motif `4 → 5` ·\nremplacement `4 → 5/4` · sûreté : **sûre**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "托起的 4 – 5/4",
+      "avantApresZh": "`G → A` 改为 `G → A/G` · 级数 `4 → 5` 改为 `4 → 5/4`。"
     },
     {
       "id": "montees/4-diminue-1-sur-5",
@@ -14952,7 +15040,9 @@
           "section": "verse-3-2",
           "nom": "主歌 2/Couplet 2"
         }
-      ]
+      ],
+      "nomZh": "经减和弦上行",
+      "avantApresZh": "`G → A → D` 改为 `G – G#dim → D/A – A → D` · 级数 `4 → 5 → 1` 改为 `4 – #4dim → 1/5 – 5 → 1`。"
     },
     {
       "id": "montees/break",
@@ -14993,7 +15083,9 @@
       "repertoire": "ne se voit pas dans les partitions ; il se décide en\nrépétition.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "在 5 上停顿",
+      "avantApresZh": "`A → （副歌）` 改为 `A（一下）– 静默 → （副歌）`。"
     },
     {
       "id": "intros-fins/intro-fin-du-refrain",
@@ -15031,7 +15123,9 @@
       "repertoire": "se choisit chant par chant.",
       "regle": "Portée : Intro · si le chant n'a pas d'intro écrite, proposer les\naccords de la dernière ligne du refrain · sûreté : **très sûre**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "用副歌结尾作前奏",
+      "avantApresZh": "没有前奏（或前奏与歌无关）改为 **副歌最后一行的和弦**，弹一到两遍。"
     },
     {
       "id": "intros-fins/intro-pedale",
@@ -15112,7 +15206,9 @@
           "section": "intro-1-0",
           "nom": "前奏/Intro"
         }
-      ]
+      ],
+      "nomZh": "1 持续低音上的前奏",
+      "avantApresZh": "前奏 `D – G – A – D` 改为 `D – G/D – A/D – D`，低音保持（见 B5）。"
     },
     {
       "id": "intros-fins/interlude-boucle",
@@ -15152,7 +15248,9 @@
       "repertoire": "*Bénis Dieu\n(10000 raisons)* (refrain : D – G/D – D) · *Je célèbrerai* (couplet, en C :\nC – F/C – C « Je me réjouis dans le Nom du Seigneur ») · *Je fléchis le\ngenou* (refrain, en G : G – C/G – G) · 哦十字架 (主歌, en F : F – Bb/F – F).",
       "regle": "Portée : Interlude (sections instrumentales) · motif `1` tenu ·\nremplacement boucle `1 – 4/1` · sûreté : **sûre**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "1 – 4/1 循环间奏",
+      "avantApresZh": "两段主歌之间，延长的 `D` 改为循环 `D – G/D – D – G/D`（2 或 4 遍）。"
     },
     {
       "id": "intros-fins/tag",
@@ -15193,7 +15291,9 @@
       "repertoire": "ne se voit pas dans les partitions ; il se décide en\nrépétition ou sur le moment.",
       "regle": "Portée : dernière occurrence du refrain · proposer « répéter la\ndernière ligne » · sûreté : **très sûre**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "尾句重复：再唱最后一句",
+      "avantApresZh": "最后一遍副歌后结束 改为 最后一遍副歌，**重复最后一行** 1 或 2 遍，更轻柔，然后结束。"
     },
     {
       "id": "intros-fins/fin-ouverte-6m7",
@@ -15233,7 +15333,9 @@
       "repertoire": "*Cherchez d'abord* (final : Bm « Alléluia ») · 使命 (副歌 3, en A : F#m).",
       "regle": "Portée : dernière occurrence, toute fin du chant · motif `1` final\n· remplacement `6m7` · sûreté : **très sûre**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "停在 6m7 的开放结尾",
+      "avantApresZh": "最后一个和弦 `D` 改为 `Bm7` · 级数 `1` 改为 `6m7`。"
     },
     {
       "id": "intros-fins/fin-suspendue",
@@ -15271,7 +15373,9 @@
       "repertoire": "*Que nos\nchants soient comme un signe* (pont, en F : F2 « Tu es le bienvenu ») ·\n奇异恩典 (主歌 4, en E : E2 « 我永远属于你 ») · 爱的约定 (副歌 2, en C : CMaj9\n« 到永远 ») · 真实的悔改 (副歌, en F : Fmaj7).",
       "regle": "Portée : dernière occurrence, toute fin du chant · motif `1` final\n· remplacement `1 2` · sûreté : **très sûre**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "停在 1 add9 的悬浮结尾",
+      "avantApresZh": "最后一个和弦 `D` 改为延长的 `D2`（或 `Dmaj7`）· 级数 `1` 改为 `1 2`（或 `1maj7`）。"
     },
     {
       "id": "intros-fins/fin-amen",
@@ -15310,7 +15414,9 @@
       "repertoire": "*Bénis Dieu (10000 raisons)* (refrain : « Je louerai Ton saint Nom », G/D – D)\n· *Je fléchis le genou* (refrain, en G : C/G – G) · *Bénis l'Éternel*\n(refrain, en E : A/E – E « Bénis l'Éternel, ô mon âme ») · 主我献上生命给你\n(结尾, en F : Bb/F – F) · 你是配的 (副歌 1, en F : Bb/F – F).",
       "regle": "Portée : dernière occurrence, toute fin du chant · motif `5 → 1`\nfinal · remplacement `5 → 1 – 4/1 – 1` · sûreté : **sûre**.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "「阿们」结尾 4/1 → 1",
+      "avantApresZh": "结尾 `A → D` 改为 `A → D – G/D – D` · 级数 `5 → 1` 改为 `5 → 1 – 4/1 – 1`。"
     },
     {
       "id": "modulations/ton-par-le-5",
@@ -15350,7 +15456,9 @@
       "guitare": "B7 `x21202`, puis le refrain en E (`022100`) ; ou mettre\nle capo 2 pendant l'interlude et garder les formes de D.",
       "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\n`B7` (5 de la nouvelle tonalité) ajouté à la fin de la section précédente.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "经新调的 5 升一个全音",
+      "avantApresZh": "`… A → D | 副歌在 D` 改为 `… A → B7 | 副歌在 E` · 最后一遍副歌升一个全音。"
     },
     {
       "id": "modulations/demi-ton-par-le-5",
@@ -15387,7 +15495,9 @@
       "guitare": "Bb7 `x13131`, puis capo 1 et les formes de D.",
       "regle": "« Appliquer à la setlist » : 升调 **+½ ton** sur le dernier refrain,\n`Bb7` ajouté à la fin de la section précédente.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "经新调的 5 升半音",
+      "avantApresZh": "`… A → D | 副歌在 D` 改为 `… A → Bb7 | 副歌在 Eb` · 最后一遍副歌升半音。"
     },
     {
       "id": "modulations/ton-par-b6-b7",
@@ -15425,7 +15535,9 @@
       "guitare": "C `x32010` – D `xx0232` – E `022100`.",
       "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\n`b6 – b7` de la nouvelle tonalité (C – D) à la fin de la section précédente.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "经 b6 – b7 升一个全音",
+      "avantApresZh": "`… A → D | 副歌在 D` 改为 `… C – D | 副歌在 E`。"
     },
     {
       "id": "modulations/ton-par-4-sur-5",
@@ -15464,7 +15576,9 @@
       "guitare": "A/B `x22220`.",
       "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\n`A/B` (4/5 de la nouvelle tonalité) à la fin de la section précédente.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "经新调的 4/5 升一个全音",
+      "avantApresZh": "`… A → D | 副歌在 D` 改为 `… A/B | 副歌在 E`。"
     },
     {
       "id": "modulations/directe",
@@ -15503,7 +15617,9 @@
       "guitare": "Capo 2 posé avant le chant, ou formes de E prêtes.",
       "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\nsans accord ajouté.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "直接转调",
+      "avantApresZh": "`… A → D | 副歌在 D` 改为 `… A → （停顿）| 副歌在 E`，不用预备和弦。"
     },
     {
       "id": "transitions/meme-tonalite",
@@ -15539,7 +15655,9 @@
       "guitare": "D `xx0232` ↔ G/D `xx0433`, en arpèges.",
       "regle": "Calculée dans la setlist : proposée quand le chant suivant est dans\nla même tonalité.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "同调：不中断地衔接",
+      "avantApresZh": "结束在 `D`、静默、下一首前奏 改为 结束在 `D`，过渡时 **循环 `D – G/D`**（F3），然后下一首开始。"
     },
     {
       "id": "transitions/vers-le-4",
@@ -15576,7 +15694,9 @@
       "guitare": "D7 `xx0212`, puis G `320033`.",
       "regle": "Calculée dans la setlist : proposée quand le chant suivant est une\nquarte plus haut (D → G).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "转到 4 的调",
+      "avantApresZh": "D 调的歌，接 G 调的歌：结束在 `D`（或 `D7`），G 调的歌自然接上。"
     },
     {
       "id": "transitions/vers-le-5",
@@ -15613,7 +15733,9 @@
       "guitare": "D `xx0232` – Esus4 `022200` – E `022100` – A `x02220`.",
       "regle": "Calculée dans la setlist : proposée quand le chant suivant est une\nquinte plus haut (D → A).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "转到 5 的调",
+      "avantApresZh": "D 调的歌，接 A 调的歌：`D → E（或 Esus4 – E）→ A`。"
     },
     {
       "id": "transitions/ton-plus-haut",
@@ -15650,7 +15772,9 @@
       "guitare": "B7 `x21202` ou A/B `x22220`, puis E `022100`.",
       "regle": "Calculée dans la setlist : proposée quand le chant suivant est un\nton plus haut (D → E).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "升高一个全音",
+      "avantApresZh": "D 调的歌，接 E 调的歌：`D → B7 → E`（或更柔和的 `D → A/B → E`）。"
     },
     {
       "id": "transitions/ton-plus-bas",
@@ -15686,7 +15810,9 @@
       "guitare": "Dm7 `xx0211` – G7 `320001` – C `x32010`.",
       "regle": "Calculée dans la setlist : proposée quand le chant suivant est un\nton plus bas (D → C).",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "降低一个全音",
+      "avantApresZh": "D 调的歌，接 C 调的歌：`D → Dm7 – G7 → C`。"
     },
     {
       "id": "transitions/note-commune",
@@ -15722,7 +15848,9 @@
       "guitare": "Laisse sonner la corde de ré à vide, puis F7 `131211`, puis\nBb `x13331`.",
       "regle": "Calculée dans la setlist : proposée quand aucune des fiches T1 à T5\nne correspond ; le site cherche la note commune et le 5 de la nouvelle\ntonalité.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "远关系调：共同音",
+      "avantApresZh": "D 调的歌，接 Bb 调的歌：结束在 `D`，**只延长一个音**（D），然后 `F7 → Bb`。"
     },
     {
       "id": "transitions/6-8-vers-4-4",
@@ -15762,7 +15890,9 @@
       "repertoire": "为我而来 (en C, 6/8) · 十字架 (en E, 6/8) · 活出爱 (en\nC, 12/8).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "从 6/8 拍的歌到 4/4 拍的歌",
+      "avantApresZh": "6/8 拍的歌结束在 `D`、静默、4/4 拍的歌数拍 改为 结束在延长的 `D`，然后 **6/8 的附点四分音符变成 4/4 的四分音符**：保持同样的律动（6/8 一小节里的两个大拍），数成「1 2 3 4」；下一首照这个拍子开始。"
     },
     {
       "id": "voicings/piano-ouvrir",
@@ -15799,7 +15929,9 @@
       "piano": "Couplet : main gauche D seule, main droite F#-A-D. Refrain : main\ngauche D-A-D, main droite F#-A-D une octave plus haut.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "钢琴：把和弦展开",
+      "avantApresZh": "左手 D-F#-A 挤在低音区，右手 D-F#-A 改为 左手 **D-A-D**（五度和八度），右手 **F#-A-D** 在键盘中间。"
     },
     {
       "id": "voicings/piano-notes-communes",
@@ -15836,7 +15968,9 @@
       "piano": "Choisis la position du premier accord en fonction de la\nmélodie (reste sous la voix), puis ne bouge que les doigts nécessaires.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "钢琴：保留共同音",
+      "avantApresZh": "`D – A – Bm – G` 全用原位弹（右手跳动）改为 右手：`F#-A-D → E-A-C# → F#-B-D → G-B-D`。"
     },
     {
       "id": "voicings/piano-3-et-7",
@@ -15874,7 +16008,9 @@
       "piano": "Ajoute la neuvième si tu veux plus de couleur : F# sur Em7\n(G-D-F#), B sur A7 (G-B-C#).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "钢琴：弹 3 音和 7 音",
+      "avantApresZh": "`Em7 – A7` 弹出所有音 改为 左手 **E**、右手 **G-D**；然后左手 **A**、右手 **G-C#**。"
     },
     {
       "id": "voicings/guitare-cordes-a-vide",
@@ -15914,7 +16050,9 @@
       "guitare": "Enchaîne G `320033` – Em7 `022033` – Asus4 `x02230` – D\n`xx0232` en gardant les doigts qui ne bougent pas.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "吉他：让空弦响起来",
+      "avantApresZh": "横按或「基本」指法 改为 让空弦响的开放指法。D 调：D `xx0232`，Dsus2 `xx0230`，G `320033`，Em7 `022033`，Asus4 `x02230`，Bm7 `x20202`。"
     },
     {
       "id": "voicings/guitare-triades-aigues",
@@ -15951,7 +16089,9 @@
       "guitare": "Rythmique légère ou arpèges ; les petites formes permettent\nde glisser d'un accord à l'autre le long du manche.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "吉他：琴颈高处的三和弦",
+      "avantApresZh": "六根弦的和弦 改为 **高音弦上的三个音**（3、2、1 弦）：D `xxx775`，G `xxx433`，A `xxx655`，Bm `xxx432`。"
     },
     {
       "id": "voicings/guitare-capo-couleur",
@@ -15991,7 +16131,9 @@
       "guitare": "Dans l'app, le réglage capo transforme les accords et les\ndiagrammes en formes : choisis le capo, lis les formes.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "吉他：用变调夹和指法换音色",
+      "avantApresZh": "D 调的歌不用变调夹、弹 D 指法 改为 **同一个调**：变调夹 2 弹 C 指法，变调夹 5 弹 A 指法，或变调夹 7 弹 G 指法。"
     },
     {
       "id": "voicings/piano-deux-mains",
@@ -16029,7 +16171,9 @@
       "piano": "Main gauche : petit doigt sur la fondamentale, pouce sur la\nquinte (D grave et le A au-dessus). Main droite : commence par F#-A-D au\nmilieu du clavier, puis cherche pour chaque accord la position où les doigts\nbougent le moins.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "钢琴：初学者的双手弹法",
+      "avantApresZh": "`D – A – Bm – G` 只用右手弹柱式和弦 改为 每个和弦 **左手弹 1 和 5**（D-A、A-E、B-F#、G-D），右手弹 **最近的三和弦**：`F#-A-D → E-A-C# → F#-B-D → G-B-D`。"
     },
     {
       "id": "voicings/guitare-quatre-cordes",
@@ -16067,7 +16211,9 @@
       "guitare": "Les formes à quatre cordes les plus utiles : Bm `xx4432` ·\nF#m `xx4222` · F# `xx4322` · F `xx3211` · Bb `xx3331` · Gm `xx0333` · C#m `xx2120`.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "吉他：用四弦和弦代替横按",
+      "avantApresZh": "横按 Bm `x24432` 改为四弦 Bm `xx4432`；F#m `244222` 改为 `xx4222`。"
     },
     {
       "id": "rythme/tenir",
@@ -16106,7 +16252,9 @@
       "guitare": "Arpèges ou coups larges, un par mesure.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "把一个和弦延长",
+      "avantApresZh": "`| D | G | D | A |` 改为 `| D | D | D | A |`（原本走 G 的地方保持 D）。"
     },
     {
       "id": "rythme/ajouter-3e-temps",
@@ -16145,7 +16293,9 @@
       "guitare": "Change d'accord pile sur le 3e temps, en gardant la même\nrythmique.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "在第 3 拍加一个和弦",
+      "avantApresZh": "`| D | Bm |` 改为 `| D  A/C# | Bm |`（D 在第 1-2 拍，A/C# 在第 3-4 拍）。"
     },
     {
       "id": "rythme/anticiper",
@@ -16185,7 +16335,9 @@
       "guitare": "Le coup vers le haut du « et » du 4 porte déjà l'accord\nsuivant.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "提前换和弦",
+      "avantApresZh": "在第 1 拍换和弦 改为 **提前半拍** 换（在第 4 拍的「后半拍」）。"
     },
     {
       "id": "rythme/doubler-dernier-refrain",
@@ -16221,7 +16373,9 @@
       "guitare": "Garder la même rythmique, changer d'accord à chaque demi-mesure.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "最后一遍副歌和弦加倍",
+      "avantApresZh": "最后一遍副歌 `| G | A | Bm | D |` 改为 `| G  A/G | A  A/C# | Bm  Bm/A | G  A |`：每小节多一个和弦。"
     },
     {
       "id": "rythme/stop-dernier-refrain",
@@ -16261,7 +16415,9 @@
       "guitare": "Un coup sur G, puis la paume étouffe les cordes. Reprends\navec la rythmique pleine.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "最后一遍副歌开头的停顿",
+      "avantApresZh": "最后一遍副歌 `| G | A | Bm | D |` 全体一起弹 改为 `| G（一下）| – | – | – |`：只在第一拍弹一个和弦，然后完全停下；会众独自唱第一句，下一句大家一起回到 `| G | A | Bm | D |`。"
     },
     {
       "id": "rythme/demi-temps-pont",
@@ -16300,7 +16456,9 @@
       "guitare": "Un coup large par demi-mesure, ou un arpège lent. Garder la\nrythmique serrée pour le refrain.",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "桥段的半拍感",
+      "avantApresZh": "桥段和弦不变（`| Bm | G | D | A |`），但律动减半：鼓的军鼓打在第 3 拍，而不是第 2、4 拍；吉他扫弦减半；钢琴每小节弹一次。歌声保持原速。"
     },
     {
       "id": "boucles/1-5-sur-7-6m-4",
@@ -16340,7 +16498,8 @@
       "repertoire": "*Bénis Dieu (10000\nraisons)* (refrain : D – A/C# – Bm – G) · *Entends mon cœur* (refrain : D –\nA/C# – Bm – G2) · *Dieu a tant aimé* (couplet, en G : G – D/F# – Em – C « Je\nregarde à la croix ») · *Combien Dieu est grand* (refrain, en G : G – D/F# –\nEm7 – C2) · 住在你里面 (主歌 : D – A/C# – Bm – G) · 从这代到那代 (副歌, en E :\nE – B/D# – C#m – A).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "1 – 5/7 – 6m – 4"
     },
     {
       "id": "boucles/1maj7-4-sur-1",
@@ -16378,7 +16537,8 @@
       "repertoire": "活着为要敬拜你 (前奏 : DMaj7 – G/D).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "1maj7 – 4/1"
     },
     {
       "id": "boucles/6m-4-1-5",
@@ -16417,7 +16577,8 @@
       "repertoire": "*Amour sans fin* (refrain :\nBm – G – D – A « Tel que je suis, je viens à Tes pieds ») · *Ta parole*\n(refrain, en Bb : Gm – Eb – Bb – F) · *Abba Père* (couplet, en A : F#m – D –\nA – E) · *Amour parfait* (refrain, en C : Am7 – F – C – G) · 你坐着为王 (主歌,\nen F : Dm – Bb – F – C) · 哦十字架 (桥段, en F : Dm – Bb – F – C).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "6m – 4 – 1 – 5"
     },
     {
       "id": "boucles/4-5-6m",
@@ -16456,7 +16617,8 @@
       "repertoire": "*Amour sans fin*\n(pré-refrain : G – A – Bm) · *Abrite-moi* (refrain, en C : F – G – Am « Je les\ntraverserai avec Toi ») · *Abba Père* (refrain, en A : D – E – F#m) · 使命\n(主歌, en A : D – E – F#m).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "4 – 5 – 6m，无尽的上行"
     },
     {
       "id": "boucles/1-2m7",
@@ -16495,7 +16657,8 @@
       "repertoire": "*Crier à Toi* (couplet, en A : A – Bm7 – A)\n· *Solo Christo* (couplet, en C : C – Dm7 – C).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "1 – 2m7，两个漂浮的和弦"
     },
     {
       "id": "boucles/faire-evoluer",
@@ -16532,7 +16695,8 @@
       "guitare": "Passe d'arpèges à une rythmique, ou de formes ouvertes (V4)\naux triades aiguës (V5).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "让循环有变化"
     },
     {
       "id": "boucles/1-4-5-1",
@@ -16572,7 +16736,8 @@
       "repertoire": "*Je célèbrerai* (refrain, en C : C – F – G – C) ·\n*Reçois l'adoration* (couplet 1, en C : C – F – G – C) · *Feu du fondeur*\n(refrain, en E : E – A – B – E – A – B) · 不停赞美 (主歌, en D : D – G – A – D)\n· 伯利恒的喜讯 (副歌, en Eb : Eb – Ab – Bb – Eb).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "1 – 4 – 5 – 1，回到原点的循环"
     },
     {
       "id": "boucles/1-6m-4-5",
@@ -16612,7 +16777,8 @@
       "repertoire": "*Éternel, Notre Seigneur* (refrain, en G : G – Em –\nC – D) · *Mon seul souhait* (couplet 1, en C : C – Am7 – F – G) · *Toi et\nmoi* (refrain, en G : G – Em7 – C – C/D – D) · 亲眼看见你 (副歌, en D : D –\nBm7 – G – A) · 全然向你 (主歌, en D : D – Bm – G – A7).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "1 – 6m – 4 – 5，温柔的循环"
     },
     {
       "id": "boucles/4-1-5-6m",
@@ -16652,7 +16818,8 @@
       "repertoire": "*Bénis Dieu (10000 raisons)* (refrain, en D : G – D\n– A/C# – Bm) · *De grâce en grâce* (refrain, en A : D – A – E – F#m) · *Avec\nnous (Emmanuel)* (intro, en E : A – E – B – C#m) · 住在你里面 (副歌, en D :\nG/A – D – A/C# – Bm) · 从这代到那代 (副歌, en E : A/B – E – B/D# – C#m).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "4 – 1 – 5 – 6m，从 4 开始的循环"
     },
     {
       "id": "boucles/1-5-4",
@@ -16691,7 +16858,8 @@
       "repertoire": "*Béni soit Ton Nom* (couplet 1, en A : A – E – D) ·\n*Que Ton règne vienne* (refrain, en E : E – B – A) · *La passion* (refrain,\nen D : D – A – G – D) · *Lumière du monde* (couplet 1, en D : D – Asus4 –\nGsus2) · 一切歌颂赞美 (主歌, en E : E – B – A – E).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "1 – 5 – 4，下行的三个和弦"
     },
     {
       "id": "mineur/6m-centre",
@@ -16731,7 +16899,9 @@
       "repertoire": "*Dieu a tant aimé* (couplet 1, en G : Em – C – G –\nD/F# – Em) · *Sauve avec puissance* (pont, en A : F#m – D – A – E – F#m) ·\n你坐着为王 (主歌, en F : Dm – Bb – F – C – Dm) · *À l'agneau* (refrain, noté\nen Am : F – G – Am).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "以 6m 为中心",
+      "avantApresZh": "`Bm – G – D – A – D`（段落结束在 1）改为 `Bm – G – D – A – Bm`（回到 6m）· 级数 `6m – 4 – 1 – 5 – 1` 改为 `6m – 4 – 1 – 5 – 6m`。"
     },
     {
       "id": "mineur/5-majeur",
@@ -16772,7 +16942,9 @@
       "repertoire": "*Reçois ma vie* (refrain, noté en Am : E7 – D/F# –\nE/G# – Am) · *Christ est la lumière* (couplet 1, en C : E7/G# – Am).",
       "regle": "Aucune : catalogue seul.",
       "exemples": [],
-      "ecoutes": []
+      "ecoutes": [],
+      "nomZh": "带回小调的大 5",
+      "avantApresZh": "`Em – F#m – Bm` 改为 `Em – F# – Bm` · 级数（从 Bm 看）`4m – 5m – 1m` 改为 `4m – 5 – 1m`（从 D 看：`2m – 3m – 6m` 改为 `2m – 3 – 6m`）。"
     }
   ],
   "parcours": [

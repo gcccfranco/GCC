@@ -3,19 +3,9 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenuCheckboxItem,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
-import { ChoixDisposition } from "@/components/song/ChoixDisposition";
-import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
-import { ChoixNotation } from "@/components/song/ChoixNotation";
-import type { Disposition } from "@/lib/dispositionPref";
-import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import type { FSSetlist } from "@/types/setList";
 
 /** Qui peut modifier — rend visible la logique de access.ts. */
@@ -56,80 +46,6 @@ export function DroitsDeModifier({
             })}
       </span>
     </div>
-  );
-}
-
-/** Réglages d'affichage : le bouton « Affichage » de G, le sous-menu « Affichage »
- *  du ⋯ en deux volets (Q3, Q7). */
-export function ReglagesAffichage({
-  layout,
-  changeLayout,
-  hasZhSong,
-  showPinyin,
-  togglePinyin,
-  disposition,
-  changeDisposition,
-  hasJianpuSheets,
-  jianpuPref,
-  changeJianpuPref,
-}: {
-  layout: PartitionLayout;
-  changeLayout: (v: PartitionLayout) => void;
-  hasZhSong: boolean;
-  showPinyin: boolean;
-  togglePinyin: () => void;
-  disposition: Disposition;
-  changeDisposition: (d: Disposition) => void;
-  hasJianpuSheets: boolean;
-  jianpuPref: JianpuPref;
-  changeJianpuPref: (v: JianpuPref) => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <>
-      <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-        {t("setlists.detail.layout.label")}
-      </DropdownMenuLabel>
-      <DropdownMenuRadioGroup value={layout} onValueChange={(v) => changeLayout(v as PartitionLayout)}>
-        {(["played", "unique", "structure"] as const).map((v) => (
-          <DropdownMenuRadioItem key={v} value={v} onSelect={(e) => e.preventDefault()}>
-            {t(`setlists.detail.layout.${v}`)}
-          </DropdownMenuRadioItem>
-        ))}
-      </DropdownMenuRadioGroup>
-      <DropdownMenuSeparator />
-      {/* Pinyin (chants zh) — préférence persistée */}
-      {hasZhSong && (
-        <DropdownMenuCheckboxItem
-          checked={showPinyin}
-          onCheckedChange={() => togglePinyin()}
-          onSelect={(e) => e.preventDefault()}
-        >
-          {t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}
-        </DropdownMenuCheckboxItem>
-      )}
-      <DropdownMenuSeparator />
-      <ChoixDisposition variante="menu" disposition={disposition} changeDisposition={changeDisposition} />
-      <DropdownMenuSeparator />
-      <ChoixCouleurAccords variante="menu" />
-      <DropdownMenuSeparator />
-      <ChoixNotation variante="menu" />
-      {hasJianpuSheets && (
-        <>
-          <DropdownMenuSeparator />
-          <DropdownMenuCheckboxItem
-            checked={interrupteurAllume(jianpuPref)}
-            onCheckedChange={(on) => changeJianpuPref(prefDepuisInterrupteur(on))}
-            onSelect={(e) => e.preventDefault()}
-          >
-            {t("performance.jianpuSheet")}
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-            {t("performance.jianpuSheetHint")}
-          </DropdownMenuLabel>
-        </>
-      )}
-    </>
   );
 }
 

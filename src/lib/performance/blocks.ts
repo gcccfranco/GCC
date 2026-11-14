@@ -24,6 +24,7 @@ export type SongHeaderBlock = {
   language?: "fr" | "zh";
   /** Tempo du chant (♩ = …) : l'en-tête de la disposition Partition l'affiche sous le titre. */
   tempo?: number;
+  time?: string;
   /** Slug du chant (absent pour les fusions) — cible du réglage capo */
   songSlug?: string;
   /** Capo appliqué (frets) : les accords des sections sont déjà transposés */
@@ -56,6 +57,7 @@ export type SectionBlock = {
   songSourceLabel?: string;
   /** Tempo du `.cho` (♩), repris par la barre haute. */
   tempo?: number;
+  time?: string;
   /** Occurrences de la structure jouée que ce bloc représente (une en ordre
    *  joué, toutes les reprises en sections uniques). */
   occurrenceUids?: string[];
@@ -102,6 +104,7 @@ export type JianpuSheetBlock = {
   position: number;
   /** Tempo du `.cho` (♩), repris par l'en-tête au-dessus du scan. */
   tempo?: number;
+  time?: string;
   /** Structure jouée : le scan ne la porte pas (il ignore l'ordre et les
    *  reprises décidés pour ce dimanche), le bandeau au-dessus l'affiche. */
   steps: SectionOccurrence[];
@@ -169,7 +172,7 @@ export function buildPerformanceBlocks(
   // Le responsable coche le 简谱 par chant ; la préférence de l'appareil peut
   // le suivre, l'imposer partout, ou ne jamais l'utiliser.
   // `choixScan` : choix fait à l'ajout d'un chant (mode louange), plus fort que la préférence.
-  const wantsSheet = (item: SetlistItem) => choixScan?.[item.songSlug] ?? sheetEnabled(jianpuPref, item.jianpuSheet);
+  const wantsSheet = (item: SetlistItem) => choixScan?.[item.songSlug] ?? sheetEnabled(jianpuPref);
   let c = 0;
   const uid = () => `pb-${c++}`;
 
@@ -285,6 +288,7 @@ export function buildPerformanceBlocks(
             position: item.position,
             language: ast.metadata.language,
             tempo: ast.metadata.tempo ?? undefined,
+            time: ast.metadata.time ?? undefined,
             steps: bandeau(occurrences, fusionKey),
           });
           const shown = unique
@@ -346,6 +350,7 @@ export function buildPerformanceBlocks(
       position: item.position,
       language: ast.metadata.language,
       tempo: ast.metadata.tempo ?? undefined,
+      time: ast.metadata.time ?? undefined,
       songSlug: item.songSlug,
       capo: capo || undefined,
       setlistKey: personalKey ? setlistKey : undefined,
@@ -376,6 +381,7 @@ export function buildPerformanceBlocks(
           setlistKey: personalKey ? setlistKey : undefined,
           position: item.position,
           tempo: ast.metadata.tempo ?? undefined,
+          time: ast.metadata.time ?? undefined,
           steps,
         });
       });
@@ -413,6 +419,7 @@ export function buildPerformanceBlocks(
         songTitle: ast.metadata.title,
         songKey: playedKey,
         tempo: ast.metadata.tempo ?? undefined,
+        time: ast.metadata.time ?? undefined,
         occurrenceUids: uids,
         capo: capo || undefined,
       });

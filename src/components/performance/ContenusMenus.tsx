@@ -2,13 +2,12 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronDown, ChevronLeft, ChevronUp, Maximize, Minus, Pencil, Plus, Timer, Undo2, Waves } from "lucide-react";
+import { Check, Lightbulb, Maximize, Pencil, PenLine, Timer, Undo2, Waves } from "lucide-react";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { isDp, paletteKeyOf } from "@/lib/setlist/dp";
 import { formatDate } from "@/lib/utils/formatDate";
-import { TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import type { SectionBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import type { FSSetlist } from "@/types/setList";
 import { compter } from "@/lib/usage";
@@ -67,38 +66,6 @@ export function BoutonRond({
   );
 }
 
-/** Bouton rond « Sur la page » : le rond, son libellé dessous ; le nom accessible est le libellé. */
-export function BoutonSurPage({
-  label,
-  allume,
-  onClick,
-  children,
-}: {
-  label: string;
-  allume: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={allume}
-      onClick={onClick}
-      className="flex w-full min-w-0 flex-col items-center gap-1 rounded-lg py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <span
-        aria-hidden="true"
-        className={`flex h-12 w-12 items-center justify-center rounded-full border text-base font-bold transition-colors ${
-          allume ? "border-transparent bg-[color:var(--couleur-icones)] text-background" : "border-border text-muted-foreground"
-        }`}
-      >
-        {children}
-      </span>
-      <span className="text-center text-[11px] font-medium leading-tight text-foreground md:text-[13px]">{label}</span>
-    </button>
-  );
-}
-
 /** Ligne d'un menu : libellé (et sous-libellé) à gauche, commande à droite. */
 export function LigneMenu({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
@@ -117,7 +84,7 @@ export function LigneMenu({ label, hint, children }: { label: string; hint?: str
 /** Les setlists à venir du menu : celles de mes services, les autres ; `horsLigne` = seulement les copies gardées. */
 export type ListeSetlistsMenu = { miens: FSSetlist[]; autres: FSSetlist[]; horsLigne: boolean };
 
-/** « ‹ Toutes mes setlists » : se déplie en ligne ; la liste est lue une fois, au montage du menu (le menu fermé démonte son contenu). */
+/** « Mes autres setlists » : toujours dépliée, sous la setlist en cours ; la liste est lue une fois, au montage du menu (le menu fermé démonte son contenu). */
 function ToutesMesSetlists({
   charger,
   onOuvrir,
@@ -128,7 +95,6 @@ function ToutesMesSetlists({
   onFermer: () => void;
 }) {
   const { t, i18n } = useTranslation();
-  const [ouvert, setOuvert] = useState(false);
   const [liste, setListe] = useState<ListeSetlistsMenu | null>(null);
   useEffect(() => {
     let annule = false;
@@ -160,45 +126,20 @@ function ToutesMesSetlists({
       </li>
     );
   };
-  const Chevron = ouvert ? ChevronUp : ChevronDown;
   return (
-    <div className="pb-3">
-      <button
-        type="button"
-        data-toutes-setlists
-        aria-expanded={ouvert}
-        onClick={() => setOuvert((o) => !o)}
-        className="-mx-1 flex min-h-11 w-[calc(100%+0.5rem)] items-center gap-2 rounded-lg px-2 text-left text-base font-medium text-foreground transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <ChevronLeft aria-hidden="true" className={`h-4 w-4 shrink-0 ${COULEUR}`} />
-        <span className="min-w-0 flex-1 truncate">{t("performance.allSetlists")}</span>
-        <Chevron aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
-      </button>
-      {ouvert && (
-        // Filet sous la liste dépliée : la setlist courante (en-tête et chants) ne se lit pas comme une setlist de plus.
-        <div className="mb-1 border-b border-border pb-3 pt-2">
-          {!liste ? (
-            <p className="px-1 text-[13px] text-muted-foreground">{t("performance.loadingSetlists")}</p>
-          ) : (
-            <>
-              {liste.miens.length > 0 && (
-                <>
-                  <TitreRubrique>{t("performance.myServices")}</TitreRubrique>
-                  <ul className="-mx-1 pb-2">{liste.miens.map(ligne)}</ul>
-                </>
-              )}
-              {liste.autres.length > 0 && (
-                <>
-                  <div className={liste.miens.length > 0 ? "mt-2" : undefined}><TitreRubrique>{t("performance.otherSetlists")}</TitreRubrique></div>
-                  <ul className="-mx-1">{liste.autres.map(ligne)}</ul>
-                </>
-              )}
-              {liste.autres.length === 0 && liste.miens.length === 0 && (
-                <p className="px-1 text-[13px] text-muted-foreground">{t(liste.horsLigne ? "performance.noOtherSetlistOffline" : "performance.noOtherSetlist")}</p>
-              )}
-            </>
+    <div className="mt-3 border-t border-border pb-3 pt-3">
+      <p data-toutes-setlists className="px-1 pb-1 text-[15px] font-semibold text-foreground">{t("performance.myOtherSetlists")}</p>
+      {!liste ? (
+        <p className="px-1 text-[13px] text-muted-foreground">{t("performance.loadingSetlists")}</p>
+      ) : (
+        <>
+          {liste.miens.length > 0 && <ul className="-mx-1">{liste.miens.map(ligne)}</ul>}
+          {liste.miens.length > 0 && liste.autres.length > 0 && <div className="my-2 border-t border-border" />}
+          {liste.autres.length > 0 && <ul className="-mx-1">{liste.autres.map(ligne)}</ul>}
+          {liste.autres.length === 0 && liste.miens.length === 0 && (
+            <p className="px-1 text-[13px] text-muted-foreground">{t(liste.horsLigne ? "performance.noOtherSetlistOffline" : "performance.noOtherSetlist")}</p>
           )}
-        </div>
+        </>
       )}
     </div>
   );
@@ -228,7 +169,7 @@ export function ContenuSetlist({
   onFermer: () => void;
   chargerToutesSetlists?: () => Promise<ListeSetlistsMenu>;
   onOuvrirSetlist?: (id: string) => void;
-  /** Onglets « Cette setlist | Tous les chants », sous « ‹ Toutes mes setlists ». */
+  /** Onglets « Mes setlists | Tous les chants », en tête du menu. */
   onglets?: ReactNode;
   /** Si fourni, remplace l'en-tête et la liste de la setlist. */
   tousLesChants?: ReactNode;
@@ -240,10 +181,9 @@ export function ContenuSetlist({
   const { t, i18n } = useTranslation();
   return (
     <div>
-      {chargerToutesSetlists && onOuvrirSetlist && (
-        <ToutesMesSetlists charger={chargerToutesSetlists} onOuvrir={onOuvrirSetlist} onFermer={onFermer} />
-      )}
       {onglets}
+      {/* Panneau relié aux onglets (aria-controls). */}
+      <div role={onglets ? "tabpanel" : undefined} id={onglets ? "panneau-setlist" : undefined} aria-labelledby={onglets ? (tousLesChants ? "onglet-chants" : "onglet-setlist") : undefined}>
       {tousLesChants ?? <>
       {retour && (
         <button
@@ -310,7 +250,11 @@ export function ContenuSetlist({
           );
         })}
       </ol>
+      {chargerToutesSetlists && onOuvrirSetlist && (
+        <ToutesMesSetlists charger={chargerToutesSetlists} onOuvrir={onOuvrirSetlist} onFermer={onFermer} />
+      )}
       </>}
+      </div>
     </div>
   );
 }
@@ -371,79 +315,6 @@ export function ContenuReperes({
   );
 }
 
-// ─── Tempo ────────────────────────────────────────────────────────────────────
-
-/** Les lignes du tempo : − / + autour de la valeur, « Tempo du fichier » quand l'appareil en a un autre.
- *  Même composant dans le menu Tempo (md et plus) et dans Outils (téléphone). */
-export function LignesTempo({
-  tempo,
-  tempoAppareil,
-  changerTempo,
-  effacerTempo,
-}: {
-  tempo: number | undefined;
-  tempoAppareil: number | null;
-  changerTempo: (delta: number) => void;
-  effacerTempo: () => void;
-}) {
-  const { t } = useTranslation();
-  const valeur = tempo ?? TEMPO_DEPART;
-  return (
-    <>
-      <LigneMenu label={t("performance.tempoSong")}>
-        <BoutonRond label={t("performance.tempoDown")} onClick={() => changerTempo(-1)} disabled={valeur <= TEMPO_MIN} data-tempo-moins="">
-          <Minus className="h-4 w-4" />
-        </BoutonRond>
-        <span data-tempo-valeur className={`${VALEUR} inline-flex items-baseline justify-center gap-1`}>
-          <span aria-hidden="true">♩</span>
-          {valeur}
-        </span>
-        <BoutonRond label={t("performance.tempoUp")} onClick={() => changerTempo(1)} disabled={valeur >= TEMPO_MAX} data-tempo-plus="">
-          <Plus className="h-4 w-4" />
-        </BoutonRond>
-      </LigneMenu>
-      {tempoAppareil !== null && (
-        <button
-          type="button"
-          data-tempo-fichier
-          onClick={effacerTempo}
-          className={`min-h-11 rounded-lg px-1 text-sm font-semibold ${COULEUR} hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
-        >
-          {t("performance.tempoFile")}
-        </button>
-      )}
-    </>
-  );
-}
-
-export function ContenuTempo({
-  tempo,
-  tempoAppareil,
-  changerTempo,
-  effacerTempo,
-  metronome,
-  setMetronome,
-}: {
-  tempo: number | undefined;
-  tempoAppareil: number | null;
-  changerTempo: (delta: number) => void;
-  effacerTempo: () => void;
-  metronome: boolean;
-  setMetronome: (v: boolean) => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="space-y-1">
-      <LignesTempo tempo={tempo} tempoAppareil={tempoAppareil} changerTempo={changerTempo} effacerTempo={effacerTempo} />
-      <LigneMenu label={t("performance.metronome")}>
-        <BoutonRond label={t("performance.metronome")} allume={metronome} onClick={() => setMetronome(!metronome)} taille={44} data-metronome="">
-          <Waves className="h-5 w-5" />
-        </BoutonRond>
-      </LigneMenu>
-    </div>
-  );
-}
-
 // ─── Outils ───────────────────────────────────────────────────────────────────
 
 /** Plein écran : l'état se lit sur `fullscreenchange` (la touche Échap du navigateur le quitte aussi). */
@@ -465,68 +336,36 @@ function usePleinEcran() {
 }
 
 export function ContenuOutils({
-  cle,
-  cleSetlist,
-  decalerCle,
-  revenirCle,
-  capo,
   showTransitions,
   setShowTransitions,
+  metronome,
+  annotations,
+  idees,
   onAnnoter,
-  tempoLignes,
+  annoterIndispo = false,
+  onMetronome,
   raccourcis,
 }: {
-  /** Tonalité affichée et celle de la setlist ; absentes = pas de ligne tonalité (fusion, aucun chant). */
-  cle: string | undefined;
-  cleSetlist: string | undefined;
-  decalerCle: (demiTons: number) => void;
-  revenirCle: () => void;
-  capo: { frets: number; set: (frets: number) => void; titre: string } | undefined;
   showTransitions: boolean;
   setShowTransitions: (v: boolean) => void;
-  /** Téléphone seulement : la barre n'a plus « Crayon ». Absent = pas de ligne. */
+  /** Bande des temps (réglage de l'appareil) : l'interrupteur « Métronome ». */
+  metronome: { allume: boolean; set: (v: boolean) => void };
+  /** Annotations des autres sur la page (réglage de l'appareil) ; absent hors connexion. */
+  annotations: { allume: boolean; set: (v: boolean) => void } | undefined;
+  /** Idées d'harmonie (réglage du compte) ; absent sans l'accès. */
+  idees: { allume: boolean; set: (v: boolean) => void } | undefined;
+  /** Crayon : la barre ne l'a plus au téléphone. Absent = pas de ligne. */
   onAnnoter: (() => void) | undefined;
-  /** Téléphone seulement : les lignes du tempo, sous le métronome. Absent = pas de ligne. */
-  tempoLignes: ReactNode;
+  /** Ma partition n'a pas pu être lue : la ligne reste, désactivée (son toucher dit pourquoi). */
+  annoterIndispo?: boolean;
+  /** Téléphone seulement : ouvre le panneau Métronome. Absent = pas de ligne. */
+  onMetronome: (() => void) | undefined;
   raccourcis: boolean;
 }) {
   const { t } = useTranslation();
   const pleinEcran = usePleinEcran();
   return (
     <div className="space-y-1">
-      {cle && (
-        <>
-          <LigneMenu label={t("performance.key")}>
-            <BoutonRond label={t("performance.keyDown")} onClick={() => decalerCle(-1)} data-cle-moins="">
-              <Minus className="h-4 w-4" />
-            </BoutonRond>
-            <span data-cle-valeur className={VALEUR}>{cle}</span>
-            <BoutonRond label={t("performance.keyUp")} onClick={() => decalerCle(1)} data-cle-plus="">
-              <Plus className="h-4 w-4" />
-            </BoutonRond>
-          </LigneMenu>
-          {cleSetlist && cleSetlist !== cle && (
-            <button
-              type="button"
-              onClick={revenirCle}
-              className={`min-h-11 rounded-lg px-1 text-sm font-semibold ${COULEUR} hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
-            >
-              {t("performance.personalKeyReset", { key: cleSetlist })}
-            </button>
-          )}
-        </>
-      )}
-      {capo && (
-        <LigneMenu label={t("performance.capo")} hint={capo.titre}>
-          <BoutonRond label={t("performance.capoLower")} onClick={() => capo.set(capo.frets - 1)} disabled={capo.frets <= 0}>
-            <Minus className="h-4 w-4" />
-          </BoutonRond>
-          <span className={VALEUR}>{capo.frets}</span>
-          <BoutonRond label={t("performance.capoRaise")} onClick={() => capo.set(capo.frets + 1)} disabled={capo.frets >= 11}>
-            <Plus className="h-4 w-4" />
-          </BoutonRond>
-        </LigneMenu>
-      )}
       <LigneMenu label={t("performance.transitions")}>
         <BoutonRond label={t("performance.transitions")} allume={showTransitions} onClick={() => { compter("cmd.chant.transitions"); setShowTransitions(!showTransitions); }}>
           <Timer className="h-5 w-5" />
@@ -539,19 +378,49 @@ export function ContenuOutils({
           </BoutonRond>
         </LigneMenu>
       )}
+      <LigneMenu label={t("performance.metronome")}>
+        <BoutonRond label={t("performance.metronome")} allume={metronome.allume} onClick={() => metronome.set(!metronome.allume)} data-metronome="">
+          <Waves className="h-5 w-5" />
+        </BoutonRond>
+      </LigneMenu>
+      {annotations && (
+        <LigneMenu label={t("performance.annotations")}>
+          <BoutonRond label={t("performance.annotations")} allume={annotations.allume} onClick={() => annotations.set(!annotations.allume)}>
+            <PenLine className="h-5 w-5" />
+          </BoutonRond>
+        </LigneMenu>
+      )}
+      {idees && (
+        <LigneMenu label={t("performance.ideesHarmonie")}>
+          <BoutonRond label={t("performance.ideesHarmonie")} allume={idees.allume} onClick={() => idees.set(!idees.allume)}>
+            <Lightbulb className="h-5 w-5" />
+          </BoutonRond>
+        </LigneMenu>
+      )}
       {onAnnoter && (
         // Le Crayon est une action, pas un interrupteur : une ligne entière cliquable, icône et libellé dans la couleur des actions.
         <button
           type="button"
           data-annoter
+          aria-disabled={annoterIndispo || undefined}
           onClick={onAnnoter}
-          className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+          className={`${annoterIndispo ? "opacity-40 " : ""}flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
         >
           <Pencil aria-hidden="true" className="h-5 w-5 shrink-0" />
           {t("performance.crayon")}
         </button>
       )}
-      {tempoLignes}
+      {onMetronome && (
+        <button
+          type="button"
+          data-metronome-ouvrir
+          onClick={onMetronome}
+          className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+        >
+          <Waves aria-hidden="true" className="h-5 w-5 shrink-0" />
+          {t("panneauMetronome.metronomeLigne")}
+        </button>
+      )}
       {raccourcis && (
         <div data-raccourcis className="mt-2 border-t border-border pt-3">
           <TitreRubrique>{t("performance.shortcuts")}</TitreRubrique>

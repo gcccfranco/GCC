@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { openSheet } from "./helpers/jianpu";
 
 // Lot JE, JE3 et JE4 (docs/spec-jianpu-entete-statistiques.md) : l'en-tête de la page chant
-// (sous-titre, référence biblique, ligne « 1= · mesure · ♩ ») et les deux colonnes sur 简谱
+// (sous-titre, référence biblique, ligne « mesure · ♩ » ; le « 1= » est dans l'armure depuis RU-3) et les deux colonnes sur 简谱
 // quand la colonne du chant a la place (décision de Timothée du 31/10/2026).
 
 const SLUG = "回家";
@@ -14,22 +14,24 @@ async function enParoles(page: Page) {
   await expect(page.locator("[data-jianpu-page]")).toHaveCount(0);
 }
 
-test("回家 en 简谱 : sous-titre, référence biblique et « 1=D · 4/4 · ♩ = 66 » ; en paroles sans « 1= »", async ({ page }) => {
+test("回家 en 简谱 : sous-titre, référence biblique, armure « 1=D » et « 4/4 · ♩ = 66 » sans « 1= » ; en paroles de même", async ({ page }) => {
   await openSheet(page, SLUG);
   await expect(page.getByTestId("sous-titre")).toHaveText("Coming Home");
   await expect(page.getByTestId("reference-biblique")).toHaveText("路15:11-32");
   await expect(page.getByTestId("ligne-tempo")).toBeVisible();
-  expect(normaliser(await page.getByTestId("ligne-tempo").textContent())).toBe("1=D · 4/4 · ♩ = 66");
+  expect(normaliser(await page.getByTestId("ligne-tempo").textContent())).toBe("4/4 · ♩ = 66");
+  await expect(page.getByTestId("armure")).toHaveText("1=D");
 
   await enParoles(page);
   await expect(page.getByTestId("sous-titre")).toHaveText("Coming Home");
   expect(normaliser(await page.getByTestId("ligne-tempo").textContent())).toBe("4/4 · ♩ = 66");
 });
 
-test("回家 transposé en E, vue 简谱 : la ligne commence par « 1=E »", async ({ page }) => {
+test("回家 transposé en E, vue 简谱 : l'armure dit « 1=E », la ligne de tempo n'a pas de « 1= »", async ({ page }) => {
   await openSheet(page, SLUG, { key: "E" });
   await expect(page.getByTestId("ligne-tempo")).toBeVisible();
-  expect(normaliser(await page.getByTestId("ligne-tempo").textContent())).toMatch(/^1=E · 4\/4 · ♩ = 66$/);
+  expect(normaliser(await page.getByTestId("ligne-tempo").textContent())).toBe("4/4 · ♩ = 66");
+  await expect(page.getByTestId("armure")).toHaveText("1=E");
 });
 
 test("un chant français sans {time} ni {subtitle} : ni sous-titre ni référence, la ligne se réduit au tempo", async ({ page }) => {

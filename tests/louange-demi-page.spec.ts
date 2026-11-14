@@ -207,21 +207,21 @@ for (const par of ["toucher", "fleche"] as const) {
   });
 }
 
-test("demi-page : l'interrupteur « Demi-page » est dans Options d'affichage, coupé par défaut, et retenu après rechargement", async ({ page }) => {
+test("demi-page : l'interrupteur « Demi-page » est dans la marge Affichage, coupé par défaut, et retenu après rechargement", async ({ page }) => {
   await ouvrir(page, { demi: false });
   const options = await ouvrirOptions(page);
-  const bouton = options.getByRole("button", { name: "Demi-page", exact: true });
-  await expect(bouton).toHaveAttribute("aria-pressed", "false");
+  const bouton = options.getByRole("switch", { name: "Demi-page", exact: true });
+  await expect(bouton).toHaveAttribute("aria-checked", "false");
   await bouton.click();
-  await expect(bouton).toHaveAttribute("aria-pressed", "true");
+  await expect(bouton).toHaveAttribute("aria-checked", "true");
   expect(await page.evaluate(() => localStorage.getItem("perf-demi-page"))).toBe("1");
 
   await page.reload();
   await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
   await attendreMiseEnPage(page);
   const options2 = await ouvrirOptions(page);
-  await expect(options2.getByRole("button", { name: "Demi-page", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await options2.getByRole("button", { name: "Demi-page", exact: true }).click();
+  await expect(options2.getByRole("switch", { name: "Demi-page", exact: true })).toHaveAttribute("aria-checked", "true");
+  await options2.getByRole("switch", { name: "Demi-page", exact: true }).click();
   expect(await page.evaluate(() => localStorage.getItem("perf-demi-page"))).toBe("0");
 });
 
@@ -353,7 +353,8 @@ async function mesurerScan(page: Page) {
 for (const slug of ["一生爱你", "为我而来"]) {
   test(`demi-page : un scan certifié (${slug}) se coupe entre deux lignes, jamais dans une portée`, async ({ page }, testInfo) => {
     test.setTimeout(90_000);
-    await ouvrir(page, { slugs: [slug] });
+    // Lignes entières (« 2 colonnes » éteint) : la coupe horizontale ; en deux colonnes, louange-jianpu-deux-colonnes (JV-4).
+    await ouvrir(page, { slugs: [slug], uneColonne: true });
     await expect(page.locator("[data-performance-mode] [data-jianpu-page] img").first()).toBeVisible();
     await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
     const total = Number((await lireCompteur(page)).split("/")[1]);
@@ -401,13 +402,14 @@ test("demi-page : « Crayon » remet la page entière", async ({ page }, testInf
   await expect(enDemi(page)).toHaveCount(0);
 });
 
-test("demi-page : tablette portrait, l'aperçu de la page suivante (L6) est présent demi-page coupée, absent allumée", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "tablette", "l'aperçu n'existe qu'en tablette portrait");
+// Aperçu de la page suivante (L6) retiré le 13/11/2026 (go de Timothée, « Oui retire ») : absent, demi-page coupée comme allumée.
+test("demi-page : tablette portrait, aucun aperçu de la page suivante, demi-page coupée comme allumée", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablette", "l'aperçu n'existait qu'en tablette portrait");
   await ouvrir(page, { demi: false });
   await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
-  await expect(onStage(page, "[data-apercu-suivant]")).toHaveCount(1);
+  await expect(onStage(page, "[data-apercu-suivant]")).toHaveCount(0);
   const options = await ouvrirOptions(page);
-  await options.getByRole("button", { name: "Demi-page", exact: true }).click();
+  await options.getByRole("switch", { name: "Demi-page", exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(onStage(page, "[data-apercu-suivant]")).toHaveCount(0);
 });
@@ -560,23 +562,23 @@ test("demi-page : les traits de la page 2 se voient au-dessus du filet, ceux de 
   await expect(enDemi(page)).toHaveCount(0);
 });
 
-test("demi-page : tablette portrait, des traits posés avec l'aperçu (clé « ap ») donnent le bandeau « ancienne mise en page »", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "tablette", "l'aperçu de la page suivante n'existe qu'en tablette portrait");
-  const db = await ouvrir(page);
+// Aperçu retiré le 13/11/2026 (go de Timothée) : les traits posés avec la bande (clé « ap ») s'affichent, demi-page
+// allumée ou coupée, sans bandeau ni écriture (avant, la demi-page ne les signalait que par le bandeau).
+for (const demi of [true, false]) test(`demi-page ${demi ? "allumée" : "coupée"} : tablette portrait, des traits posés avec l'aperçu (clé « ap ») restent visibles`, async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablette", "l'aperçu de la page suivante n'existait qu'en tablette portrait");
+  const db = await ouvrir(page, { demi });
   await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
   const cle = (await racine(page).getAttribute("data-cle-page"))!;
   expect(cle, "page 1 sans ligne coupée").not.toMatch(/v2$/);
-  expect(cle, "demi-page allumée : pas de suffixe ap").not.toMatch(/ap$/);
+  expect(cle, "plus de suffixe ap").not.toMatch(/ap$/);
   const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
   const cleAp = `${cle}${cle.includes("-") ? "" : "-"}ap`;
   db.set(`annotations/${MUSICIEN.uid}__${SETLIST_ID}__${cleAp}`, { strokes: TRAIT(w, h), updatedAt: new Date() });
   await page.reload();
   await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
   await attendreMiseEnPage(page);
-  const bandeau = page.locator("[data-alerte-composition]");
-  await expect(bandeau).toBeVisible();
-  await expect(bandeau).toHaveText("Des annotations existent avec l'ancienne mise en page");
-  await expect(page.locator("[data-performance-mode] > canvas")).toHaveCount(0);
+  await expect(page.locator("[data-performance-mode] > canvas")).toHaveCount(1);
+  await expect(page.locator("[data-alerte-composition]")).toHaveCount(0);
   expect(db.writes.filter((x) => x.path.startsWith("annotations/")), "aucune écriture").toEqual([]);
 });
 
@@ -797,6 +799,13 @@ for (const langue of ["fr", "zh"] as const) {
       // sinon la demi-page peut être calculée sur des mesures provisoires et le tour devient un tour entier.
       await page.evaluate(() => document.fonts.ready);
       await attendreMiseEnPage(page);
+      // Options zh avant le tour : la marge ouverte réduit la zone et, sur iPad couché, referme la demi-page (RU-5).
+      if (langue === "zh") {
+        const options = await ouvrirOptions(page, "zh");
+        await expect(options.getByRole("switch", { name: "半页翻页", exact: true })).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(options).toBeHidden();
+      }
       await tourner(page, testInfo, 1, "fleche");
       await expect(enDemi(page)).toHaveCount(1);
       await expect(filet(page)).toBeVisible();
@@ -817,10 +826,6 @@ for (const langue of ["fr", "zh"] as const) {
         expect(m.hauteurFilet).toBeCloseTo(1.5, 1);
       }
       if (langue === "zh") {
-        const options = await ouvrirOptions(page, "zh");
-        await expect(options.getByRole("button", { name: "半页翻页", exact: true })).toBeVisible();
-        await page.keyboard.press("Escape");
-        await expect(options).toBeHidden();
         if (!m.colonnes) await expect(poignee(page)).toHaveAttribute("aria-label", "半页");
       }
       // Menus fermés, barres fermées (toucher au centre, hors poignée), transition finie.

@@ -57,6 +57,7 @@ export function AccordTouchable({
   capo,
   visible = false,
   variante,
+  sectionUids,
 }: {
   /** L'accord ou l'étiquette tels qu'affichés (transposés). */
   etiquette: string;
@@ -66,15 +67,17 @@ export function AccordTouchable({
   visible?: boolean;
   /** `nu` (avec `visible`) : sans pastille. */
   variante?: "nu";
+  /** AL-1 : section de l'accord quand le DOM n'en porte pas (scan 简谱) ; le panneau offre alors « Ici ». */
+  sectionUids?: string[];
 }) {
   const { actif } = useOuvrirAccord();
   const { notation, tonalite } = useContext(NotationAccordsContext);
   const affichee = etiquetteAffichee(etiquette, notation, tonalite);
   if (!actif) return <>{affichee}</>;
-  return <Actifs etiquette={etiquette} capo={capo} visible={visible} nu={variante === "nu"} />;
+  return <Actifs etiquette={etiquette} capo={capo} visible={visible} nu={variante === "nu"} sectionUids={sectionUids} />;
 }
 
-function Actifs({ etiquette, capo, visible, nu }: { etiquette: string; capo?: number; visible: boolean; nu: boolean }) {
+function Actifs({ etiquette, capo, visible, nu, sectionUids }: { etiquette: string; capo?: number; visible: boolean; nu: boolean; sectionUids?: string[] }) {
   const { t } = useTranslation();
   const { notation, tonalite } = useContext(NotationAccordsContext);
   const { ouvrir, enregistrer } = useOuvrirAccord();
@@ -93,7 +96,7 @@ function Actifs({ etiquette, capo, visible, nu }: { etiquette: string; capo?: nu
       {morceaux.map((m, i) => {
         if (!m.accord) return m.texte;
         const ref = i === indexPremier ? premier : undefined;
-        const ouvrirCelui = (el: HTMLElement) => ouvrir({ accord: m.texte, ancre: el, capo });
+        const ouvrirCelui = (el: HTMLElement) => ouvrir({ accord: m.texte, ancre: el, capo, sectionUids });
         return (
           <span
             key={i}

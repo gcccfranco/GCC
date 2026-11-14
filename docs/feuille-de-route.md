@@ -113,6 +113,9 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
      pilote. Le pilote lance, quand plus aucun chantier ne code, la
      **suite complète en quatre parts** (`--shard=k/4`, quatre sessions, résultats dans `docs/feuille-de-route.md`,
      aucune correction sans passer par le pilote). Rien ne part sur `main` : la mise en ligne reste à Timothée.
+  8. **Accords touchables partout, 简谱 et mode louange (AL-1 → AL-2)** : `docs/spec-accords-louange.md` (13/11),
+     **go de Timothée le 14/11** (les cinq réponses recommandées, § Avancement de la spec). AL-1 après la session des pastilles du rail
+     (`JianpuSheet.tsx`) ; AL-2 après MT-3 (`PerformanceMode.tsx`). **14/11, 01 h 48 UTC : lot MT fini (MT-4, `576a98f2`) ; AL-1 faite (`da5ee45b`) ; AL-2 lancée (`session_01UMdfuanYPz84NtFxewuxaC`) et RU-5 lancée (`session_01UMdfuan5NXmHjZDeTwsySC`) en cohabitation dans `PerformanceMode.tsx`, par la session MT-4.**
   **13/11, 3 h 45 UTC : tous les chantiers de code sont finis** (AN, MP-6, H8, TC, H7 ; tête `8b8b7ff3`). **Suite
   complète lancée en quatre parts** (Sonnet, aucune correction) : `session_01UMdfudPsUH2e4yP7D7LCDY` (1/4),
   `session_01UMdfuZSZqGrTzmaRBGT5cV` (2/4), `session_01UMdfuZPpNqJhDNUHVxSo4G` (3/4), `session_01UMdfudbYvxf6yGMX1wGMc8`
@@ -138,6 +141,82 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   (a) corriger les constats 1 (menus du mode louange qui dépassent), 4 (cadres vides du choriste) et 5 (barre de la
   page chant au téléphone) ; (b) planche « réglages et tonalité au même endroit sur les trois écrans » (constats 2
   et 3), sans code avant son choix. Attendent encore son go : JV-1, JV-2, JV-5 (`docs/spec-jianpu-deux-volets.md`).
+  **(b) Planche des réglages faite (13/11)** : `docs/spec-reglages-unifies.md` (lot RU, cinq tranches), planche
+  https://claude.ai/artifact/A8JBDX9ktoBN6ToTKe4Hbk, piste B recommandée (armure au titre, marge « Affichage ») ;
+  **Go de Timothée (13/11, « Ok go »)** sur les recommandations (B, tonalité pour moi, rôle sur les trois écrans) :
+  RU-1 lancée par la session de la planche (`session_01UMdfuaDLszqyKqkCKMoaBn`, 13/11 17 h 18 UTC ; cinq tranches enchaînées) ; RU-1 faite (72d58836), RU-2 lancée (`session_01UMdfuZTZcJa2nUzXqXzDwf`, 17 h 56 UTC).
+  **Métronome : go de Timothée pour la piste A (13/11, 17 h 55 UTC, « go pour A »), lot MT lancé (MT-1, `session_01UMdfuagsb1qMDHdUwRsSdf`, 13/11 17 h 54 UTC ; MT-2 après RU-2)** : cadrage sans code d'un **vrai métronome
+  dans le mode louange** (« un métronome avec du son et un métronome plus visuel qu'un simple trait qui bouge, il
+  faudrait pouvoir choisir si c'est binaire ternaire, les temps fort et tout, en gros tout comme une vrai application
+  de métronome ») : seconde planche, refaite d'après les applications de métronome à la demande de Timothée
+  (`docs/recherche-metronomes.md`, `docs/planches/planche-metronome-2.html`, artefact privé
+  https://claude.ai/artifact/G1e9txeUQrtE8XW5i5yC83 ; piste A « un, deux, trois, quatre » recommandée : une pastille
+  chiffrée par temps sous la barre, panneau complet avec accents à quatre niveaux, binaire / ternaire, trois sons,
+  « S'entraîner ») et `docs/spec-metronome.md` (lot MT, quatre tranches, cinq questions avec recommandation).
+  Décisions de Timothée (13/11) : « chacun un métronome, pas de son pendant le culte, un son quand ils veulent
+  s'entrainer » : un métronome par appareil ; son coupé par défaut, allumé à la demande pour répéter.
+  **État au 13/11, 22 h UTC (pilote)** : faits et poussés aujourd'hui : son de piano (`ab1064b0`), constats 1, 4, 5 du
+  parcours, manifeste `scope: "/"` (`d336fdb5`, à essayer par Timothée sur l'iPad en réinstallant l'icône), aperçu de
+  page suivante retiré (`6c607fe9`), TC-4 (menu Setlist en deux onglets), lot JV entier (JV-1 à JV-5c).
+  **Go de Timothée (« Go », en réponse à « go pour les finitions »)** : finitions du lot JV : 9 échecs à 1 440 px
+  (`jianpu-integration` 264, 661, 682 ; six tests Crayon d'`harmonie-jianpu`), trois défauts d'apparence laissés par
+  JV-5c, `critique-design` sur les onze captures (§ Avancement de `docs/spec-jianpu-deux-volets.md`).
+  **Finitions JV faites le 13/11** : les 9 échecs venaient de JV-3 (tests à revoir, site juste ; Crayon de nouveau
+  testé sur les grands écrans), pastille et marges du mode louange retouchées ; huit choix de design de `critique-design`
+  « à décider par Timothée » (§ Avancement de la spec, entrée « Finitions »).
+  **Mode louange, idées d'harmonie en fenêtre** (ordre de Timothée, choix 6) : fait le 13/11 (`87fb92c`).
+  **État au 13/11, 23 h 30 UTC (pilote)** : RU-4 faite (`81348e32`) ; **RU-5 attend** que `PerformanceMode.tsx` soit
+  libre (lot MT et six points finis), consigne de RU-4 avec RU-5 à la place, à lancer par le pilote ou par la session
+  qui libère le fichier. Six points du rail (go de Timothée) : session `session_01UMdfucWej4KmZA3Be594iz`. MT-2
+  (`4787e9fb`, mise en fenêtre en cours) et MT-3 tournent. Trois chantiers de code.
+  **Cinq corrections, go de Timothée le 14/11 (« go pour les cinq »)**, une seule session, à lancer par le pilote quand
+  AL-2 (`session_01UMdfucpCAyFznSRiMfDdUc`) est poussée : (1) panneau d'accord qui ne s'ouvre pas sur un chant ZH en deux
+  volets (`accords-toucher-agencement`, téléphone et 1 440, 一切歌颂赞美 ; chercher la cause d'abord) ; (2) titres des
+  idées d'harmonie en français en 中文 (`harmonie-index.json` ; libellés à faire relire par Timothée) ; (3) en louange,
+  la fenêtre des idées recouvre la pastille touchée ; (4) fenêtre de l'armure non ancrée au téléphone ; (5) blanc de
+  pagination au téléphone marge ouverte : regarder d'abord, corriger si simple, sinon capture au pilote. Tests : un tour
+  sur les specs touchées, puis les seuls échecs. Lot RU fini (`858e662c`), lot MT fini (`576a98f2`).
+  - 14/11, **cinq corrections faites, sauf la 5** (session `session_01UMdfubw1RKp8bmWMeEjAVV`) : (1) **fait**
+    (`9f4668c`), **défaut du site** : `useReglagesAffichage` ne lisait les réglages de l'appareil qu'après
+    l'authentification ; en attendant, le scan 简谱 par défaut remplaçait les paroles environ 0,5 s, puis les paroles
+    revenaient, avec de nouveaux accords touchables. Un toucher dans cet intervalle n'ouvrait rien. Lecture au montage
+    (ordre et rôle attendent le compte). Il reste un remontage de quelques accords quand les lignes se recoupent après le
+    chargement des polices : inhérent à la mise en ligne mesurée, non traité. Tests : 143/144, le rouge (« Voir tout le
+    dictionnaire », sous charge) est vert seul, 3,4 min.
+    (2) **fait** (`9a94bd4`, `7721662`) : table `docs/harmonie/fiches-zh.json` fusionnée au build (`nomZh`, `avantApresZh`),
+    affichée dans les idées du chant, la ligne « 这里 », les cartes et le formulaire d'idées. Le catalogue et les fiches
+    `/harmonie` restent en français (avis 中文 inchangé). Police refaite : 碍 壮 颈 倍. **À relire par Timothée** : les
+    91 titres et les 79 « avant → après » du fichier, par exemple « 用 2m7 代替 4 », « 阻碍终止 », « 终止四六和弦 »,
+    « 1 的持续低音 », « 经过减和弦 », « 以 b7 收尾（混合利底亚终止）», « 直接转调 », « 远关系调：共同音 », « 铺底延长的 1 »,
+    « 尾句重复：再唱最后一句 », « 桥段的半拍感 ». Vocabulaire : degrés → 级数, devient → 改为, tenu → 延长. Tests : 252
+    passés, 0 échec, 8,8 min.
+    (3) **fait** (`e962ba1`) : au téléphone, une pastille ou un nom touché dans la moitié basse ouvre la fenêtre, qui se
+    pose au-dessus ; dans la moitié haute, la feuille s'ouvre dessous. La tablette avait déjà la fenêtre (mesuré, aucun
+    recouvrement). (4) **fait** (`48dcf45`) : la fenêtre de 320 px ne peut pas tomber sous l'armure au téléphone ; une
+    flèche la rattache, ce qui vaut aussi sur la page chant et la vue Partitions. Tests 3 et 4 (`harmonie-jianpu`,
+    `louange-harmonie`, `armure`, `louange-reglages`) : 213/214, le rouge (JV-5c fr, page refaite sous charge) est vert
+    seul, 7,4 min ; puis un tour de rejeu après relecture, 29/30, le rouge (fr clair, ordinateur) est vert seul.
+    (5) **non corrigé** : marge ouverte au téléphone, la zone de lecture fait ≈ 330 px, et une section plus haute que la
+    place restante passe à la page suivante (Intro seule puis un grand blanc, 15 pages). Il faudrait couper les sections
+    entre deux pages quand la zone est basse, comme la demi-page : ce n'est pas une retouche. Capture :
+    `docs/captures/2026-11-14-louange-marge-ouverte-blanc-telephone.png` (`1283745`). Captures `regard` (29) : en 中文,
+    titres traduits partout, aucun caractère manquant. Hors périmètre : la fenêtre des idées couvre la pastille *voisine* ;
+    à 1 440 px elle couvre « Setlist » et « Repères » ; la bulle d'astuce des accords passe sous la fenêtre de la page
+    chant. **Non vérifié** : le mode sombre de la page chant en 中文, et l'armure à l'œil sur la page chant.
+  **Deux demandes de Timothée du 13/11 au soir** (ses mots), à cadrer : (1) « on a du mal à différencier l'ancienne
+  progression et la nouvelle progression d'accord dans les idées d'harmonie » : il choisit « ancienne grisée » (ancienne
+  progression en gris discret, nouvelle en bleu, petits mots « avant » / « après » au-dessus) ; retouche, **go à
+  recevoir** ; (2) « Quand il y a le jianpu qui est affiché il faut aussi pouvoir cliquer et obtenir les idées
+  d'harmonie » : il demande ce qui est le plus optimal. Proposition de la session : toucher un **accord imprimé du scan**
+  (déjà touchable hors Crayon, `JianpuSheet.tsx` `rendreBoite`) mène aux idées de **sa section** (section retrouvée par
+  `sections.json`, `passageDeSection`) : sur la page chant et la vue Partitions par la ligne « Ici » du panneau
+  d'accord ; en mode louange (accords inertes), directement la fenêtre des idées de la section, réglage allumé. Petite
+  spec à écrire, puis go.
+  **Attendent Timothée** : publier `firestore.rules` (crayon et Apple Pencil absents sans cela : `crayonPret` faux
+  après le 403 de `partitions/`, diagnostic de `session_01UMdfuZTdptjjrzmrPMcQPN`) ; « go pour le crayon grisé »
+  (retouche de `useMesPartitions`) ; choix sur `docs/spec-reglages-unifies.md` (piste B recommandée) et sur
+  `docs/spec-metronome.md` (piste A recommandée) ; les 17 autres constats de `docs/parcours-oeil-2026-11-13.md`, à
+  lui présenter en liste après la planche des réglages ; écoute du piano ; mise en ligne ; « fumée Safari ».
   **Chaîne limitée à huit générations** (12/11, 19 h 50 UTC : AN-3a n'a pas pu lancer AN-2, « lineage depth 8 ») : une
   session dont `create_session` est refusé écrit au pilote la tranche à lancer et s'arrête ; le pilote (génération 2)
   la relance. AN-2 relancée ainsi (`session_01UMdfubupEWP4vQTjopBte9`) ; sa chaîne tient jusqu'à H8.
@@ -172,7 +251,12 @@ du journal est du 08/11/2026 : ce qui s'est passé depuis n'est pas écrit ici.*
   « Reprise du 13/11 », planche https://claude.ai/artifact/DMDRVF8pAy4L4qKBXrDcEe, tranche TC-4. **Go de Timothée
   (13/11, « go pour les pistes des 2 artefacts »)** : JV-3 puis JV-4 (piste B) et TC-4 (piste A), lancés ; JV-4 après
   TC-4. Q3 tranchée par Timothée (13/11 : lecture en colonnes, JV-2, après JV-3). Q1 et Q2 tranchées par Timothée (13/11 : « oui ») : go de Timothée pour JV-1 et JV-2 (13/11, « oui ») : JV-1 lancée, JV-2 après JV-3 ; idées d'harmonie
-  (toutes les propositions d'une section au toucher, reprise du 13/11) : planche en cours, puis go. Aucune règle Firestore touchée.
+  (toutes les propositions d'une section au toucher, reprise du 13/11) : Timothée choisit le volet Harmonie ouvert au toucher du nom de la section (13/11) ; **go pour JV-5a à JV-5c** :
+  JV-2 lance JV-5a, JV-4 lance JV-5b puis JV-5c (spec, § Avancement). Aucune règle Firestore touchée.
+  **Lot JV fini le 13/11** (JV-5c : étiquettes de section sur le scan 简谱, dans un rail à gauche, qui ouvrent le volet
+  Harmonie ; plus la retouche de Timothée « toute la largeur en paysage » pour le mode louange en 2 colonnes). Specs du
+  lot repassées, cinq projets : 0 échec propre au lot (3 rouges antérieurs de `jianpu-integration` à 1 440). Rien de la
+  file n'a de go en attente : aucun chantier lancé à la suite. Rien sur `main`.
 - **Lot FS** export FreeShow (`spec-export-freeshow.md`) : codé le 01/11/2026 sur `claude/export-freeshow`, **pas en
   ligne** ; exemple à essayer dans FreeShow (`docs/freeshow/011126.project`), seuils de découpe à régler ensuite.
 

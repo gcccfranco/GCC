@@ -37,6 +37,8 @@ async function ouvrirLouange(
   await page.addInitScript(
     ([role, sombre, zh]) => {
       localStorage.setItem("perf-role-preset", role as string);
+      // Lignes entières : « 2 colonnes » éteint (en deux colonnes de demi-lignes : louange-jianpu-deux-colonnes, JV-4).
+      localStorage.setItem("perf-two-columns", "0");
       if (sombre) localStorage.setItem("theme", "dark");
       if (zh) localStorage.setItem("i18nextLng", "zh-CN");
     },

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { lyricsText } from "../src/components/song/copyLyrics";
+import { marge, ouvrirMarge } from "./helpers/marge";
 
 // La régie copie les paroles vers PowerPoint ou Canva. Le texte doit arriver
 // ligne par ligne, sans accords, **quel que soit l'endroit où la sélection
@@ -24,6 +25,7 @@ async function copyFromPageTopToSongEnd(page: Page, slug: string) {
   });
   await page.evaluate(() => {
     const lines = document.querySelectorAll("[data-copy-line]");
+    if (!lines.length) return;
     const r = document.createRange();
     r.setStart(document.body, 0);
     r.setEndAfter(lines[lines.length - 1]);
@@ -68,10 +70,17 @@ test("un morceau d'une seule ligne se copie sans ses accords", async ({ page }) 
 });
 
 test("chant ZH : caractères puis pinyin, ligne par ligne, sans accords ni sections", async ({ page }) => {
-  const clip = await copyFromPageTopToSongEnd(page, "爱的约定");
-  const lines = clip["text/plain"].split("\n");
-  const at = lines.indexOf("两千年前的夜晚，耶稣降生在伯利恒。");
-  expect(at, "ligne de caractères copiée").toBeGreaterThanOrEqual(0);
+  // RU-3 : la page se re-rend une fois les réglages retenus lus (scan 简谱 ou paroles) ; sous charge, une copie peut tomber
+  // pendant ce re-rendu : on recopie jusqu'à trouver la ligne.
+  let lines: string[] = [];
+  let at = -1;
+  let clip: Record<string, string> = {};
+  await expect(async () => {
+    clip = await copyFromPageTopToSongEnd(page, "爱的约定");
+    lines = clip["text/plain"].split("\n");
+    at = lines.indexOf("两千年前的夜晚，耶稣降生在伯利恒。");
+    expect(at, "ligne de caractères copiée").toBeGreaterThanOrEqual(0);
+  }).toPass({ timeout: 20_000 });
   expect(lines[at + 1], "sa ligne de pinyin juste dessous").toBe(
     "liǎng qiān nián qián de yè wǎn yē sū jiàng shēng zài bó lì héng",
   );
@@ -91,7 +100,8 @@ test("chant ZH : le pinyin est copié même masqué à l'écran", async ({ page 
     return !!button && Object.keys(button).some((k) => k.startsWith("__reactProps"));
   });
   // Masque le pinyin à l'écran : la régie en a quand même besoin.
-  await page.getByRole("button", { name: "Pinyin" }).click();
+  await ouvrirMarge(page);
+  await marge(page).getByRole("switch", { name: "Pinyin" }).click();
   await expect(line).not.toContainText("liǎng");
   await line.evaluate((el) => {
     const r = document.createRange();

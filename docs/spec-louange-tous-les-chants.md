@@ -203,3 +203,17 @@ https://claude.ai/artifact/TJjUgVoEPRcPPa8FEgpTQU), section « Version retenue �
 - 13/11/2026 : **TC-3 faite, lot TC fini** (session de H8). Test « chant ajouté par Tous les chants » dans
   `tests/louange-harmonie.spec.ts` (FR et ZH, trois appareils) : point et bande s'y montrent, réglage allumé ; rien à
   coder, H8 lit les blocs par `songSlug`, ajouts compris.
+- 13/11/2026 : **TC-4 faite** (session `session_01UMdfucf3kHK3Cvgr9V6Vg5`, `/tranche`). Onglets soulignés « Mes setlists »
+  / 我的歌单 et « Tous les chants » collés en haut du panneau (`sticky -top-3` : Chrome compte le collage sous le padding
+  haut de la zone ; sans lui la bande recouvrait 12 px de contenu), ← → Début Fin, `tabpanel` relié ; « Toutes mes
+  setlists » quitte la tête du panneau : « Mes autres setlists » / 我的其他歌单 toujours dépliées sous la liste, absentes
+  de « Tous les chants » ; « Ouvrir » hors du fond gris, segments `Avec 简谱 | Sans` de 36 px avec une zone d'appui de
+  44 px ; le menu rouvre sur la setlist après un chant joué depuis la liste. `PerformanceMode.tsx` non touché.
+  **中文 à faire relire** : 我的歌单, 我的其他歌单. Tests : `louange-tous-les-chants`, `louange-toutes-setlists`,
+  `louange-menus`, `louange-barre-titre`, `mode-louange-forscore` et quatre specs qui lisent les locales : 1 143 passés,
+  0 échec, **47 min** ; après retouches, les deux specs touchées : 130 passés, 0 échec, trois appareils, **11 min**.
+  `regard` (60 captures, quatre dispositions + 1 440, FR/ZH, clair/sombre) et `critique-design` : « à retoucher »,
+  sans blocage. Reste pour plus tard : (a) le filet seul entre mes services et les autres setlists ne dit pas ce qui
+  les distingue (critique ; la décision déléguée du 13/11 est gardée, à rouvrir si Timothée le veut) ; (b) segment
+  choisi plus foncé que sa piste en sombre (antérieur) ; (c) hauteur du popover qui change d'un onglet à l'autre
+  (antérieur).

@@ -112,7 +112,8 @@ test.describe("page chant", () => {
     test(`${langue} : transposer (+) compte cmd.chant.transposer`, async ({ page }) => {
       const { recus } = await preparer(page, {}, url);
       await hydrate(page);
-      await page.getByTestId("pilule-tonalite").getByRole("button", { name: "+", exact: true }).click();
+      await page.getByTestId("armure").click();
+      await page.getByTestId("fenetre-armure").locator('[role="radio"][aria-checked="false"]').filter({ hasNotText: /orig|reco|原调|推荐/ }).nth(4).click();
       await verifier(page, recus, "cmd.chant.transposer");
     });
 
@@ -148,7 +149,9 @@ test.describe("page chant", () => {
       const date = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
       const { recus } = await preparer(page, { "setlists/usage-t2-pdf": { ...setlistLouange, date, editeurs: [MEMBRE.uid] } }, url);
       await hydrate(page);
-      await page.getByTestId("barre-outils").getByRole("button", { name: "PDF", exact: true }).click();
+      // RU-3 : le PDF est dans le menu ⋯ de la barre.
+      await page.getByTestId("barre-outils").getByRole("button", { name: /Plus d'actions|更多/ }).first().click();
+      await page.getByRole("menuitem", { name: "PDF" }).click();
       const feuille = page.getByRole("dialog", { name: "Quel PDF ?" });
       const [telechargement] = await Promise.all([
         page.waitForEvent("download", { timeout: 60_000 }),
@@ -226,8 +229,8 @@ test.describe("mode louange", () => {
   test("tempo + compte cmd.louange.tempo", async ({ page }) => {
     const { recus } = await setlistLouangeOuverte(page);
     await ouvrirLeMode(page);
-    // Au téléphone les lignes du tempo sont en tête d'Options (ouvrirMenu « outils » y renvoie).
-    const menu = page.viewportSize()!.width < 768 ? await ouvrirOutils(page) : await ouvrirMenu(page, "tempo");
+    // Le tempo est dans le panneau Métronome (au téléphone, par la ligne « Métronome » d'Outils : ouvrirMenu « tempo » s'en charge).
+    const menu = await ouvrirMenu(page, "tempo");
     await menu.locator("[data-tempo-plus]").click();
     await verifier(page, recus, "cmd.louange.tempo");
   });

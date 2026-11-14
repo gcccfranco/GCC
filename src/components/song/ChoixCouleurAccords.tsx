@@ -23,7 +23,7 @@ const ORIGINE_CLAIR = { bleu: "#3f63cf", rouge: "#b3261d", texte: "#1c1c1e" };
 const ORIGINE_SOMBRE = { bleu: "#8fb0ff", rouge: "#ff7d72", texte: "#f2f2f7" };
 const ARC_EN_CIEL = "conic-gradient(hsl(0 70% 50%), hsl(60 70% 50%), hsl(120 70% 50%), hsl(180 70% 50%), hsl(240 70% 50%), hsl(300 70% 50%), hsl(360 70% 50%))";
 
-export function ChoixCouleurAccords({ variante, theme }: { variante: "menu" | "panneau"; theme?: "light" | "dark" }) {
+export function ChoixCouleurAccords({ variante, theme, sansMention }: { variante: "menu" | "panneau"; theme?: "light" | "dark"; sansMention?: boolean }) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
   const { resolvedTheme } = useTheme();
@@ -129,7 +129,7 @@ export function ChoixCouleurAccords({ variante, theme }: { variante: "menu" | "p
       >
         {t("couleurAccords.lien")}
       </button>
-      <p className="-mt-2 px-2 text-xs text-muted-foreground">{t(user ? "couleurAccords.retenueCompte" : "dispositions.retenue")}</p>
+      {!sansMention && <p className="-mt-2 px-2 text-xs text-muted-foreground">{t(user ? "couleurAccords.retenueCompte" : "dispositions.retenue")}</p>}
     </div>
   );
 }

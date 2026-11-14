@@ -99,7 +99,7 @@ function main() {
 
   errors.push(...propositionsEnDouble(propositions));
   const zh = path.join(process.cwd(), "src", "locales", "zh-CN.json");
-  errors.push(...controleSousEnsembles(new Map([...sources, ["src/locales/zh-CN.json", fs.readFileSync(zh, "utf-8")]])));
+  errors.push(...controleSousEnsembles(new Map([...sources, ["src/locales/zh-CN.json", fs.readFileSync(zh, "utf-8")], ["docs/harmonie/fiches-zh.json", fs.readFileSync(path.join(process.cwd(), "docs/harmonie/fiches-zh.json"), "utf-8")]])));
 
   if (errors.length) {
     console.error(`✗ ${errors.length} problème(s) détecté(s) sur ${files.length} chant(s) :`);

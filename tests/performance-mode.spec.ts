@@ -1,7 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, lireCompteur, onStage, ouvrirJeJoue, ouvrirOutils, ouvrirReglages } from "./helpers/louange";
-import { basculerAccords, fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { attendreMiseEnPage, fermerBarre, lireCompteur, onStage, ouvrirJeJoue, ouvrirReglages } from "./helpers/louange";
+import { basculerAccords, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { fermerMarge, marge, ouvrirMarge } from "./helpers/marge";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
 // simulés : aucune lecture ni écriture du Firestore de production.
@@ -187,7 +188,8 @@ test.describe("vue structure (batteur)", () => {
 
 test.describe("choix du rôle à la première ouverture", () => {
   const ITEMS = [item({ songSlug: "abba-pere", position: 1, structureOverride: ["verse-2-0", "chorus-3-1"] })];
-  const roleSheet = (page: Page) => page.getByRole("dialog", { name: "Je joue", exact: true });
+  // RU-5 : le rôle (groupe « Je joue ») est dans la marge « Affichage », ouverte seulement quand `data-ouvert` est « true ».
+  const roleSheet = (page: Page) => page.locator('[data-testid="marge-affichage"][data-mode="louange"][data-ouvert="true"]');
   /** Lignes de paroles de la page affichée (hors copie de mesure). */
   const lyricLines = (page: Page) => onStage(page, "[data-copy-line]");
   const reopen = async (page: Page) => {
@@ -243,11 +245,10 @@ test.describe("reprise des réglages", () => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(ZH) }, `/setlists/${SETLIST_ID}`);
     await ouvrirPartitions(page);
-    // Pinyin : dans « Affichage » (bouton sur G, sous-menu du ⋯ en deux volets,
-    // docs/spec-deux-volets.md, Q3 et Q7).
-    await ouvrirAffichage(page);
-    await page.getByRole("menuitemcheckbox", { name: "Pinyin" }).click();
-    await fermerMenus(page);
+    // Pinyin : dans la marge « Affichage » (RU-4), bouton de la barre sur G ou de l'en-tête en deux volets.
+    const marge = await ouvrirAffichage(page);
+    await marge.getByRole("switch", { name: "Pinyin" }).click();
+    await fermerMarge(page);
     await launch(page);
     await expect(lyricLines(page).first()).toBeVisible();
     await expect(pinyin(page)).toHaveCount(0);
@@ -256,13 +257,9 @@ test.describe("reprise des réglages", () => {
   test("texte agrandi sur la page du chant → agrandi en mode louange, et inversement", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await page.goto("/songs/abba-pere");
-    const agrandir = page.getByRole("button", { name: "Agrandir le texte" });
-    // Avant l'hydratation le bouton existe mais reste inerte : un clic y est perdu sans rien dire.
-    await agrandir.waitFor();
-    await page.waitForFunction(() => {
-      const b = document.querySelector('button[aria-label="Agrandir le texte"]');
-      return !!b && Object.keys(b).some((k) => k.startsWith("__reactProps"));
-    });
+    // RU-3 : A− / A+ ont quitté la barre du chant pour la marge « Affichage ».
+    await ouvrirMarge(page);
+    const agrandir = marge(page).getByRole("button", { name: "Agrandir le texte" });
     const transform = () => page.locator("main.song-zoom").evaluate((el) => el.style.transform);
     await agrandir.click();
     await expect.poll(transform).toBe("scale(1.1)");
@@ -288,10 +285,10 @@ test.describe("reprise des réglages", () => {
     await ouvrirPartitions(page);
     // Le batteur lit la setlist en Structure seule, même réglage que le mode
     // louange (D15, docs/spec-jianpu-integration.md) : il revient à l'ordre joué.
-    await ouvrirAffichage(page);
-    await expect(page.getByRole("menuitemradio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
-    await page.getByRole("menuitemradio", { name: "Tout le chant" }).click();
-    await fermerMenus(page);
+    const marge = await ouvrirAffichage(page);
+    await expect(marge.getByRole("radio", { name: "Plan", exact: true })).toHaveAttribute("aria-checked", "true");
+    await marge.getByRole("radio", { name: "Tout le chant" }).click();
+    await fermerMarge(page);
     await basculerAccords(page); // masqués
     await basculerAccords(page); // de nouveau affichés
     await launch(page);
@@ -314,7 +311,7 @@ test.describe("reprise des réglages", () => {
     await expect(jejoue).toBeHidden();
     await page.keyboard.press("Escape"); // quitte le mode louange
     await launch(page);
-    await expect(page.getByRole("dialog", { name: "Je joue", exact: true })).toHaveCount(0);
+    await expect(page.locator('[data-testid="marge-affichage"][data-mode="louange"][data-ouvert="true"]')).toHaveCount(0);
   });
 });
 
@@ -342,23 +339,28 @@ test.describe("tonalité choisie sur la page du chant", () => {
       await ouvrirPartitions(page);
       await page.locator("[data-outline-item]").getByRole("link", { name: c.title }).click();
       await page.waitForURL(/\/songs\//);
-      // Le sélecteur de la barre du chant : en deux volets, la liste a son choix de thème (lot U5).
-      await page.getByTestId("barre-outils").locator("select").first().selectOption(c.chosen);
+      // RU-3 : l'armure, à côté du titre, a remplacé le sélecteur de la barre du chant.
+      await page.getByTestId("armure").first().click();
+      await page.getByTestId("fenetre-armure").getByRole("radio", { name: new RegExp(`^${c.chosen}(?![♭♯])`) }).click();
+      await expect(page.getByTestId("armure").first()).toHaveText(new RegExp(`(^|=)${c.chosen}$`));
+      await page.keyboard.press("Escape");
       await page.goBack();
       await page.getByRole("button", { name: /Mode Louange/ }).click();
       await attendreMiseEnPage(page);
 
-      // Repère dans l'en-tête du chant et dans la barre du haut : barre ouverte, l'en-tête est masqué sous elle
-      // (groupe 1) et c'est la barre qui le montre ; on attend donc un des repères visible, pas le premier du DOM.
+      // Repère dans l'en-tête du chant : la barre ne le porte plus (RU-5, l'armure l'a remplacé), on la cache pour voir l'en-tête.
+      await fermerBarre(page);
       const mark = onStage(page, "*").getByText(`setlist : ${c.setlistKey}`, { exact: true });
       await expect(mark.and(page.locator(":visible")).first()).toBeVisible();
       await expect(onStage(page, "*").getByText(c.after, { exact: true }).first()).toBeVisible();
 
-      // Retour à la tonalité de la setlist : dans le menu Outils, pour le chant en cours.
-      const settings = await ouvrirOutils(page);
-      await settings.getByRole("button", { name: `Revenir à ${c.setlistKey}` }).click();
+      // Retour à la tonalité de la setlist : dans la fenêtre de l'armure de la barre, pour le chant en cours.
+      const ecran = page.viewportSize()!;
+      await page.mouse.click(ecran.width / 2, ecran.height / 2);
+      await page.locator("[data-barre-haut]").getByTestId("armure").click();
+      await page.getByTestId("fenetre-armure").getByRole("radio", { name: new RegExp(`^${c.setlistKey}(?![♭♯])`) }).click();
       await page.keyboard.press("Escape");
-      await expect(settings).toBeHidden();
+      await expect(page.getByTestId("fenetre-armure")).toHaveCount(0);
       await expect(mark).toHaveCount(0);
       await expect(onStage(page, "*").getByText(c.before, { exact: true }).first()).toBeVisible();
 

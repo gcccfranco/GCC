@@ -34,6 +34,16 @@ function main() {
     fiches.push(...lireFamille(fs.readFileSync(path.join(DOSSIER, f), "utf-8"), f));
   }
 
+  // Titres et « avant → après » en 中文 (cinq corrections, point 2) : une table à part, relue par Timothée.
+  const zh = JSON.parse(fs.readFileSync(path.join(DOSSIER, "fiches-zh.json"), "utf-8")) as Record<string, { nom: string; avantApres?: string } | string>;
+  for (const [id, v] of Object.entries(zh)) {
+    if (id.startsWith("_") || typeof v === "string") continue;
+    const fiche = fiches.find((f) => f.id === id);
+    if (!fiche) throw new Error(`fiches-zh.json : fiche inconnue « ${id} »`);
+    fiche.nomZh = v.nom;
+    if (v.avantApres) fiche.avantApresZh = v.avantApres;
+  }
+
   const parcours = lireParcours(fs.readFileSync(path.join(DOSSIER, "00-par-ou-commencer.md"), "utf-8"), fiches);
 
   // Exemples du répertoire : les chants dont le `.cho` joue déjà le « après ».

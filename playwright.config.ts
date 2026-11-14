@@ -14,13 +14,31 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Lot AL, AL-2 (docs/spec-accords-louange.md) : accords touchables en mode louange, panneau au centre de la page, bandes latérales, Crayon, « Ici ».
+  /louange-accords\.spec\.ts/,
+  // Lot RU, RU-5 (docs/spec-reglages-unifies.md) : le mode louange, bouton « Affichage » (marge), armure dans la barre, rien de la musique sous la marge.
+  /louange-reglages\.spec\.ts/,
+  // Métronome MT-2 (docs/spec-metronome.md) : le panneau Métronome, fenêtre comme le menu Setlist (popover dès 768 px, feuille du bas au téléphone), et ses réglages.
+  /metronome-panneau\.spec\.ts/,
+  // Lot RU, RU-4 (docs/spec-reglages-unifies.md) : la setlist, armure et tonalité personnelle, marge « Affichage » (colonne ou feuille), Accords à un toucher.
+  /setlist-tonalite-perso\.spec\.ts/,
+  // Lot RU, RU-3 (docs/spec-reglages-unifies.md) : la page chant, barre sur une ligne, armure, marge « Affichage » montée (colonne ou feuille) et réglages retenus.
+  /page-chant-reglages\.spec\.ts/,
+  // Lot RU, RU-2 (docs/spec-reglages-unifies.md) : la marge « Affichage » : colonne de 320 px qui pousse la musique dès la tablette paysage, feuille basse de 60 % en dessous.
+  /marge-affichage\.spec\.ts/,
   // Harmonie H4-2 (docs/spec-harmonie-accords.md) : la colonne « Harmonie de ce chant » dès 1 024 px, la feuille en dessous.
   /harmonie-colonne\.spec\.ts/,
+  // JV-5a : le nom de section ouvre le volet Harmonie au bloc du passage (colonne en grand écran, feuille à mi-hauteur sinon).
+  /harmonie-volet-section\.spec\.ts/,
+  // JV-5b : dans le mode louange, le nom de section ouvre le volet Harmonie par-dessus la page (colonne dès 1 024 px, feuille à mi-hauteur sinon).
+  /louange-harmonie\.spec\.ts/,
+  // JV-5c : étiquettes de section dans le rail du scan 简谱 (page chant, Partitions, mode louange), qui ouvrent le volet Harmonie.
+  /harmonie-jianpu\.spec\.ts/,
   // Harmonie H6-1 : la bibliothèque (filtres Ressenti et Usage, liste ordonnée par niveau, fiche ≥ 640 px à l'ordinateur).
   /harmonie-bibliotheque\.spec\.ts/,
   // Harmonie H5-1 : le panneau d'un accord enrichi (chiffre, Écouter, Ensuite) en feuille et en bulle.
   /harmonie-porte1\.spec\.ts/,
-  // Harmonie H7-1 : la bascule Lettres / Chiffres dans la barre du chant (dès 640 px) et le menu ⋯.
+  // Harmonie H7-1 : la bascule Lettres / Chiffres des accords (dans la marge « Affichage » de la page chant depuis RU-3).
   /notation-accords\.spec\.ts/,
   // Lot Pupitre, PU-2 (docs/spec-entree-musiciens.md) : « Mon prochain service » en tête de l'onglet Setlists (rangées, vignettes, volet de droite en deux volets).
   /pupitre-onglet\.spec\.ts/,
@@ -44,6 +62,10 @@ const SPECS_GRAND_ECRAN = [
   /annotations-forscore\.spec\.ts/,
   // Lot pupitre, T1 (docs/spec-exemples-usage.md) : partitions pleine largeur en volet unique, vue Liste à 720 px, étiquettes de section, 简谱 ; deux volets inchangés.
   /pupitre-partitions\.spec\.ts/,
+  // Lot JV, JV-3 (docs/spec-jianpu-deux-volets.md) : le scan 简谱 en deux volets de demi-lignes dès 1 000 px de zone, une colonne en dessous.
+  /jianpu-deux-volets\.spec\.ts/,
+  // Lot JV, JV-4 : le scan 简谱 du mode louange en deux colonnes de demi-lignes sous « 2 colonnes » (ordinateur, tablette paysage).
+  /louange-jianpu-deux-colonnes\.spec\.ts/,
   // Exemples d'usage, T6 (docs/spec-exemples-usage.md) : feuille d'équipe (champ d'ajout en tête, barre collée) sur les quatre dispositions.
   /equipes-feuille\.spec\.ts/,
   // Lot 1 du rapport d'usage, T5 (docs/spec-retouches-usage.md) : textes coupés, cellule Date, barre de la setlist, sur les quatre dispositions.
@@ -184,6 +206,8 @@ const SPECS_GRAND_ECRAN = [
   /barre-chant\.spec\.ts/,
   // Tranche B4b de docs/spec-corrections-audit.md : la règle de largeur (colonne de 960 px, pleine largeur des grilles).
   /largeurs-b4\.spec\.ts/,
+  // Métronome MT-1 (docs/spec-metronome.md) : la bande des temps, sur les quatre dispositions et 1 440 px.
+  /metronome-bande\.spec\.ts/,
 ];
 
 // Lot AO : les tests sans page importent src/lib/access.ts, dont le mode par défaut suit

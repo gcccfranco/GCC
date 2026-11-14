@@ -246,8 +246,8 @@ test("« Structure seule » masque le corps même avec ma structure", async ({ p
   await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "abba-pere": { content: null, structure: MY_STRUCTURE, shared: false } }),
   });
-  await ouvrirAffichage(page);
-  await page.getByRole("menuitemradio", { name: "Plan du chant" }).click();
+  const marge = await ouvrirAffichage(page);
+  await marge.getByRole("radio", { name: "Plan", exact: true }).click();
   await expect(bodySections(page, 1)).toHaveCount(0);
   await expect(strip(page, 1)).toHaveText(["I", "C1", "R", "Int", "C2", "P"]);
 });

@@ -3,8 +3,9 @@ import vm from "node:vm";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
-import { fermerMenus, ouvrirAffichage, ouvrirPartitions as afficherPartitions } from "./helpers/setlist";
-import { attendreEditeur, choisirTonalite, fermerFeuille, reglerElement, volet } from "./helpers/editeurSetlist";
+import { ouvrirAffichage, ouvrirPartitions as afficherPartitions } from "./helpers/setlist";
+import { fermerMarge } from "./helpers/marge";
+import { attendreEditeur, choisirTonalite, reglerElement, volet } from "./helpers/editeurSetlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
 import { JianpuPDFPage, SongPDFPage } from "../src/components/pdf/SongPDF";
@@ -25,24 +26,15 @@ import {
 // choix de la personne prime sur le « Paroles » du responsable (D4, O1).
 // Setlists et comptes simulés, noms fictifs.
 
-test("règle : préférence × choix du responsable (9 cas)", () => {
-  const cas: [JianpuPref, boolean | undefined, boolean][] = [
-    // Non réglée (absente, ou l'ancien « Choix du responsable ») : le scan,
-    // sauf « Paroles » choisi par le responsable.
-    ["auto", undefined, true],
-    ["auto", true, true],
-    ["auto", false, false],
-    // Réglée sur 简谱 : le scan, même si le responsable a choisi « Paroles ».
-    ["always", undefined, true],
-    ["always", true, true],
-    ["always", false, true],
-    // Réglée sur Paroles : jamais le scan.
-    ["never", undefined, false],
-    ["never", true, false],
-    ["never", false, false],
-  ];
-  for (const [pref, item, attendu] of cas) {
-    expect(sheetEnabled(pref, item), `${pref} × ${item}`).toBe(attendu);
+test("règle : préférence × rôle « Je joue » (18 cas)", () => {
+  const roles = [null, "pianiste", "guitariste", "batteur", "choriste", "presidence"];
+  const paroles = ["choriste", "presidence"];
+  for (const role of roles) {
+    // Réglée : le choix de la personne prime sur son rôle (D4).
+    expect(sheetEnabled("always", role), `always × ${role}`).toBe(true);
+    expect(sheetEnabled("never", role), `never × ${role}`).toBe(false);
+    // Non réglée : le scan, sauf choriste et présidence (paroles + pinyin).
+    expect(sheetEnabled("auto", role), `auto × ${role}`).toBe(role === null || !paroles.includes(role));
   }
 });
 
@@ -170,7 +162,7 @@ const setlist = (items: Record<string, unknown>[]) => ({
   items,
 });
 
-/** Trois chants à scan : choix du responsable absent, « 简谱 », « Paroles ». */
+/** Trois chants à scan : choix du responsable absent, « 简谱 », « Paroles » (ancien champ, plus lu). */
 const TROIS = [
   item({ songSlug: "一生爱你", position: 1 }),
   item({ songSlug: "为我而来", position: 2, jianpuSheet: true }),
@@ -200,18 +192,33 @@ async function etat(page: Page, position: number): Promise<"scan" | "paroles" | 
 const rendus = (page: Page, positions: number[]) =>
   expect.poll(() => Promise.all(positions.map((n) => etat(page, n))), { timeout: 20_000 });
 
-/** Le menu des réglages d'affichage : le bouton « Affichage » de la barre sur G, le sous-menu
- *  « Affichage » du ⋯ de l'en-tête en deux volets (tests/helpers/setlist.ts). */
+/** La marge « Affichage » (RU-4) : la ligne 简谱 | Paroles ; « 简谱 » est coché quand le scan est montré. */
 const interrupteurMenu = async (page: Page) => {
-  await ouvrirAffichage(page);
-  return page.getByRole("menuitemcheckbox", { name: "Partition 简谱" });
+  const marge = await ouvrirAffichage(page);
+  return marge.getByRole("radio", { name: "简谱", exact: true });
 };
 
 test.describe("setlist, vue Partitions", () => {
-  test("préférence non réglée : le scan, sauf « Paroles » du responsable", async ({ page }) => {
+  test("préférence non réglée : le scan, quel que soit le choix du responsable", async ({ page }) => {
     await ouvrirPartitions(page, TROIS);
-    await rendus(page, [1, 2, 3]).toEqual(["scan", "scan", "paroles"]);
+    await rendus(page, [1, 2, 3]).toEqual(["scan", "scan", "scan"]);
   });
+
+  for (const role of ["choriste", "presidence"]) {
+    test(`préférence non réglée, rôle « ${role} » : paroles + pinyin ; réglée sur 简谱, le scan`, async ({ page }) => {
+      await page.addInitScript((r) => localStorage.setItem(`perf-role-preset-${r.uid}`, r.role), { uid: MUSICIEN.uid, role });
+      await ouvrirPartitions(page, TROIS);
+      await rendus(page, [1, 2, 3]).toEqual(["paroles", "paroles", "paroles"]);
+      await expect(page.locator('[data-outline-item="1"] [data-copy-pinyin]').first()).toBeAttached();
+      await expect(await interrupteurMenu(page)).toHaveAttribute("aria-checked", "false");
+    });
+
+    test(`rôle « ${role} » + préférence « 简谱 » : le scan (le choix de la personne prime)`, async ({ page }) => {
+      await page.addInitScript((r) => localStorage.setItem(`perf-role-preset-${r.uid}`, r.role), { uid: MUSICIEN.uid, role });
+      await ouvrirPartitions(page, TROIS, "always");
+      await rendus(page, [1, 2, 3]).toEqual(["scan", "scan", "scan"]);
+    });
+  }
 
   test("préférence réglée sur 简谱 : le choix de la personne prime (D4)", async ({ page }) => {
     await ouvrirPartitions(page, TROIS, "always");
@@ -223,28 +230,27 @@ test.describe("setlist, vue Partitions", () => {
     await rendus(page, [1, 2, 3]).toEqual(["paroles", "paroles", "paroles"]);
   });
 
-  test("menu : « Partition 简谱 » est un interrupteur coché, plus de choix à trois", async ({ page }) => {
+  test("marge : « 简谱 | Paroles » est coché sur 简谱, plus de choix à trois", async ({ page }) => {
     await ouvrirPartitions(page, TROIS);
     await rendus(page, [1]).toEqual(["scan"]);
     const interrupteur = await interrupteurMenu(page);
     await expect(interrupteur).toHaveAttribute("aria-checked", "true");
     for (const ancien of ["Choix du responsable", "Toujours", "Jamais"]) {
-      await expect(page.getByRole("menuitemradio", { name: ancien })).toHaveCount(0);
+      await expect(page.getByRole("radio", { name: ancien })).toHaveCount(0);
     }
-    await expect(page.getByText(/reste en paroles tant que tu n'as pas choisi toi-même/)).toBeVisible();
 
-    await interrupteur.click();
+    await page.getByTestId("marge-affichage").getByRole("radio", { name: "Paroles", exact: true }).click();
     await expect(interrupteur).toHaveAttribute("aria-checked", "false");
     expect(await lirePref(page)).toBe("never");
-    await fermerMenus(page);
+    await fermerMarge(page);
     await rendus(page, [1, 2]).toEqual(["paroles", "paroles"]);
   });
 
   for (const [stocke, coche] of [["auto", true], ["always", true], ["never", false]] as const) {
     test(`reprise : « ${stocke} » déjà stocké → interrupteur ${coche ? "coché" : "décoché"}`, async ({ page }) => {
       await ouvrirPartitions(page, TROIS, stocke);
-      // L'ancien « Choix du responsable » suit encore le « Paroles » de l'item (O2).
-      await rendus(page, [1, 3]).toEqual(stocke === "never" ? ["paroles", "paroles"] : stocke === "auto" ? ["scan", "paroles"] : ["scan", "scan"]);
+      // L'ancien « Choix du responsable » est la préférence non réglée : le scan.
+      await rendus(page, [1, 3]).toEqual(stocke === "never" ? ["paroles", "paroles"] : ["scan", "scan"]);
       await expect(await interrupteurMenu(page)).toHaveAttribute("aria-checked", String(coche));
       expect(await lirePref(page), "rien n'est réécrit au chargement").toBe(stocke);
     });
@@ -281,24 +287,27 @@ test("mode louange : le scan par défaut ; le bouton des Options d'affichage est
   await expect(await interrupteurMenu(page)).toHaveAttribute("aria-checked", "false");
 });
 
-test("PDF de setlist : le scan pour l'item sans choix, les paroles pour « Paroles »", () => {
+test("PDF de setlist : le scan pour tous les items (préférence non réglée), les paroles pour « never »", () => {
   const source = readFileSync("content/songs/一生爱你.cho", "utf8");
-  const doc = SetlistFullPDF({
-    setlist: setlist([
-      item({ songSlug: "一生爱你", position: 1 }),
-      item({ songSlug: "一生爱你", position: 2, jianpuSheet: false }),
-    ]) as never,
-    contents: { "一生爱你": { slug: "一生爱你", ast: parseChordPro(source) } },
-    showChords: true,
-    jianpuSheets: JSON.parse(readFileSync("public/jianpu/index.json", "utf8")),
-    // Sans image ré-encodée, le PDF retombe sur les paroles.
-    jianpuImages: { "一生爱你-p1.webp": "data:image/png;base64," },
-  });
-  const pages = (doc.props as { children: { type: unknown }[] }).children;
-  expect(pages.map((p) => (p.type === JianpuPDFPage ? "scan" : p.type === SongPDFPage ? "paroles" : "?"))).toEqual([
-    "scan",
-    "paroles",
-  ]);
+  const pdf = (jianpuPref?: JianpuPref) =>
+    SetlistFullPDF({
+      setlist: setlist([
+        item({ songSlug: "一生爱你", position: 1 }),
+        // Ancien « Paroles » du responsable : plus lu.
+        item({ songSlug: "一生爱你", position: 2, jianpuSheet: false }),
+      ]) as never,
+      contents: { "一生爱你": { slug: "一生爱你", ast: parseChordPro(source) } },
+      showChords: true,
+      ...(jianpuPref ? { jianpuPref } : {}),
+      jianpuSheets: JSON.parse(readFileSync("public/jianpu/index.json", "utf8")),
+      // Sans image ré-encodée, le PDF retombe sur les paroles.
+      jianpuImages: { "一生爱你-p1.webp": "data:image/png;base64," },
+    });
+  const types = (doc: ReturnType<typeof pdf>) =>
+    (doc.props as { children: { type: unknown }[] }).children.map((p) =>
+      p.type === JianpuPDFPage ? "scan" : p.type === SongPDFPage ? "paroles" : "?");
+  expect(types(pdf())).toEqual(["scan", "scan"]);
+  expect(types(pdf("never"))).toEqual(["paroles", "paroles"]);
 });
 
 test("service worker : les scans et leurs manifestes sont gardés pour le hors-ligne (O15)", async () => {
@@ -351,20 +360,21 @@ test("service worker : les scans et leurs manifestes sont gardés pour le hors-l
   ]);
 });
 
-// ─── Éditeur : le « Paroles » du responsable s'écrit false, sans en inventer ──
+// ─── Éditeur : plus de « Jouer sur » ; l'ancien champ est toléré en lecture ──
 
-test("éditeur, données : un item sans choix reste sans clé, « Paroles » reste false", () => {
+test("éditeur, données : un item sans choix reste sans clé, l'ancien champ est conservé en lecture", () => {
   const index = JSON.parse(readFileSync("public/songs-index.json", "utf8")).songs as SongIndexEntry[];
   const songsMap = Object.fromEntries(index.map((s) => [s.slug, s]));
   const allerRetour = (over: Record<string, unknown>) =>
     buildSetlistItems(buildFormItems([item({ songSlug: "一生爱你", position: 1, ...over }) as SetlistItem], songsMap))[0];
-  // Sinon le premier enregistrement automatique passerait toute la setlist en « Paroles ».
   expect("jianpuSheet" in allerRetour({}), "pas de clé inventée").toBe(false);
   expect(allerRetour({ jianpuSheet: false }).jianpuSheet).toBe(false);
   expect(allerRetour({ jianpuSheet: true }).jianpuSheet).toBe(true);
 });
 
-test("éditeur : « Partition 简谱 » coché d'office ; « Paroles » s'écrit false et l'historique le dit", async ({ page }) => {
+test("éditeur : plus de « Jouer sur », aucune clé jianpuSheet écrite ; une ancienne setlist « Paroles » s'ouvre sans erreur", async ({ page }) => {
+  const erreurs: string[] = [];
+  page.on("pageerror", (e) => erreurs.push(e.message));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
@@ -372,7 +382,7 @@ test("éditeur : « Partition 简谱 » coché d'office ; « Paroles » s'écrit
   const db = await signInAs(
     page,
     MUSICIEN,
-    { [doc]: setlist([item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2 })]) },
+    { [doc]: setlist([item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2, jianpuSheet: false })]) },
     `/setlists/${SETLIST_ID}/edit`,
   );
   await attendreEditeur(page, "Abba Père");
@@ -380,37 +390,13 @@ test("éditeur : « Partition 简谱 » coché d'office ; « Paroles » s'écrit
   const dernierEnregistrement = () =>
     (db.writes.filter((w) => w.path === doc).pop()?.data.items ?? []) as Record<string, unknown>[];
 
-  // Le chant à scan se joue sur son scan : « Partition 简谱 » est coché d'office (éditeur « piste 2 »,
-  // radiogroupe « Jouer sur »).
   await reglerElement(page, "一生爱你");
-  const choix = volet(page).getByRole("radiogroup", { name: "Jouer sur" });
-  await expect(choix.getByRole("radio", { name: "Partition 简谱" })).toHaveAttribute("aria-checked", "true");
-  await expect(choix.getByRole("radio", { name: "Paroles" })).toHaveAttribute("aria-checked", "false");
+  await expect(volet(page).getByRole("radiogroup", { name: "Jouer sur" })).toHaveCount(0);
+  await expect(volet(page).getByRole("radio", { name: "Paroles" })).toHaveCount(0);
 
-  // Une retouche ailleurs : l'enregistrement automatique n'écrit pas « Paroles ».
+  // Une retouche ailleurs : l'enregistrement automatique n'écrit aucune clé jianpuSheet neuve.
   await choisirTonalite(page, "Abba Père", "B");
   await expect.poll(() => dernierEnregistrement()[0]?.keyOverride, { timeout: 10_000 }).toBe("B");
-  expect(dernierEnregistrement().every((i) => !("jianpuSheet" in i)), "aucune clé jianpuSheet écrite").toBe(true);
-
-  const avant = db.writes.length;
-  await reglerElement(page, "一生爱你");
-  await choix.getByRole("radio", { name: "Paroles" }).click();
-  await expect(choix.getByRole("radio", { name: "Paroles" })).toHaveAttribute("aria-checked", "true");
-  await expect.poll(() => db.writes.slice(avant).some((w) => w.path === doc)).toBe(true);
-  await expect
-    .poll(() => dernierEnregistrement().find((i) => i.songSlug === "一生爱你")?.jianpuSheet, { timeout: 10_000 })
-    .toBe(false);
-  expect("jianpuSheet" in dernierEnregistrement().find((i) => i.songSlug === "abba-pere")!).toBe(false);
-
-  await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
-  await fermerFeuille(page);
-  await page.getByRole("button", { name: "Terminé" }).click();
-  await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/setlists/${SETLIST_ID}`);
-  // Deux volets : l'historique est dans le bloc que déplie le titre de l'en-tête (T3 du lot exemples d'usage).
-  const titreDv = page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ });
-  await expect(page.getByRole("heading", { level: 1 }).first()).toBeAttached(); // la page est chargée
-  if (await titreDv.count()) await titreDv.click();
-  await page.getByRole("button", { name: /Modifiée par Léa M\./ }).click();
-  const historique = page.getByRole("dialog", { name: "Historique des modifications" });
-  await expect(historique.getByText("一生爱你 joué sur les paroles")).toBeVisible();
+  expect("jianpuSheet" in dernierEnregistrement().find((i) => i.songSlug === "abba-pere")!, "aucune clé jianpuSheet écrite").toBe(false);
+  expect(erreurs).toEqual([]);
 });

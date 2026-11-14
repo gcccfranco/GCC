@@ -3,11 +3,12 @@
 // scan s'affiche sur son scan par défaut (docs/spec-jianpu-integration.md,
 // lot 1). Trois états :
 //  - non réglée (clé absente, ou « auto », l'ancien « Choix du responsable ») :
-//    le scan, sauf si le responsable a choisi « Paroles » pour cet item
-//    (`jianpuSheet: false`) ;
+//    le scan, sauf pour choriste et présidence (« Je joue », roleCompte.ts),
+//    qui ont paroles + pinyin (docs/spec-jianpu-deux-volets.md, JV-1) ;
 //  - « always » (interrupteur allumé par la personne) : toujours le scan ;
 //  - « never » (interrupteur éteint) : toujours les paroles.
-// Le choix de la personne prime sur celui du responsable (D4) : toucher
+// Le `jianpuSheet` d'un item (ancien « Paroles » du responsable) n'est plus
+// lu. Le choix de la personne prime sur son rôle (D4) : toucher
 // l'interrupteur ou le bouton 谱 de la page chant règle la préférence, et on
 // ne revient pas à « non réglée » depuis l'interface.
 export type JianpuPref = "auto" | "always" | "never";
@@ -27,13 +28,11 @@ export function setJianpuPref(v: JianpuPref) {
   try { localStorage.setItem(KEY, v); } catch { /* stockage indisponible */ }
 }
 
-/** Ce chant se joue-t-il sur son scan ? `itemChoice` = choix du responsable
- *  pour cet item (`false` = « Paroles », absent = non réglé). L'appelant
- *  vérifie séparément qu'une partition existe. */
-export function sheetEnabled(pref: JianpuPref, itemChoice: boolean | undefined): boolean {
-  if (pref === "always") return true;
-  if (pref === "never") return false;
-  return itemChoice !== false;
+/** Ce chant se joue-t-il sur son scan ? `role` = le « Je joue » de la personne
+ *  (inutile si `pref` vient déjà de `prefPourRole`). L'appelant vérifie
+ *  séparément qu'une partition existe. */
+export function sheetEnabled(pref: JianpuPref, role: string | null = null): boolean {
+  return prefPourRole(pref, role) !== "never";
 }
 
 /** L'interrupteur « Partition 简谱 » est allumé tant que la personne ne l'a
@@ -47,7 +46,7 @@ export function prefDepuisInterrupteur(on: boolean): JianpuPref {
   return on ? "always" : "never";
 }
 
-/** Mode louange : choriste et présidence voient par défaut paroles + pinyin ;
+/** Partout dans une setlist : choriste et présidence voient par défaut paroles + pinyin ;
  *  le choix réglé de la personne (« always » / « never ») l'emporte (D4). */
 export function prefPourRole(pref: JianpuPref, role: string | null): JianpuPref {
   return pref === "auto" && (role === "choriste" || role === "presidence") ? "never" : pref;

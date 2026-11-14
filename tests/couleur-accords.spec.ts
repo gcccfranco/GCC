@@ -1,7 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { marge, ouvrirMarge } from "./helpers/marge";
 import { attendreMiseEnPage, lireCompteur, onStage, ouvrirOptions } from "./helpers/louange";
-import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 import { contraste, garderContraste, FOND_CLAIR } from "../src/lib/performance/couleurIcones";
 
 // Lot CA, tranche CA-A (docs/spec-mode-louange-forscore-2.md) : la couleur des accords au choix de chacun, retenue par
@@ -263,9 +264,10 @@ test("hors partition : variables globales intactes, badge de tonalité et Harmon
     return { fr: s.getPropertyValue("--accord-fr"), zh: s.getPropertyValue("--accord-zh"), chord: s.getPropertyValue("--chord-color").trim(), jianpu: s.getPropertyValue("--jianpu-color").trim() };
   });
   expect(racine).toEqual({ fr: "", zh: "", chord: "#3f63cf", jianpu: "#b3261d" });
-  const badge = page.locator('main span[class*="border-[1.5px]"]').first();
+  // RU-3 : l'armure remplace la pastille bleue ; elle garde la couleur du texte, pas celle des accords choisie.
+  const badge = page.getByTestId("armure").first();
   await expect(badge).toBeVisible();
-  expect(await badge.evaluate((el) => getComputedStyle(el).color)).toBe(rgb("#3f63cf"));
+  expect(await badge.evaluate((el) => getComputedStyle(el).color)).not.toBe(rgb(garderContraste(VIOLET, FOND_CLAIR)));
   await page.goto("/harmonie");
   await page.waitForLoadState("networkidle");
   for (const c of await page.locator(".font-chord").evaluateAll((els) => els.map((e) => getComputedStyle(e).color))) {
@@ -276,7 +278,6 @@ test("hors partition : variables globales intactes, badge de tonalité et Harmon
 
 // ─── CA-B : le réglage (rubrique « Couleur des accords » des trois menus d'affichage) ───────────────────
 
-const NOM_MENU_CHANT = /Plus d'actions|更多操作/;
 const NOMS = {
   fr: { origine: /Couleur d'origine/, violet: "Violet", encre: "Encre", autre: /^Autre couleur/, lien: "Couleurs d'origine" },
   zh: { origine: /原色/, violet: "紫色", encre: "墨黑", autre: /^其他颜色/, lien: "恢复原色" },
@@ -285,12 +286,13 @@ const NOMS = {
 /** Ouvre le menu d'affichage de la surface et rend sa portée (menu Radix ou panneau d'options du mode louange). */
 async function ouvrirReglage(page: Page, surface: Surface, ui: Langue = "fr"): Promise<Locator> {
   if (surface === "chant") {
-    await page.getByRole("button", { name: NOM_MENU_CHANT }).filter({ visible: true }).first().click();
-    return page.getByRole("menu");
+    // RU-3 : la couleur des accords est dans la marge « Affichage » (plus dans le menu ⋯).
+    await ouvrirMarge(page);
+    return marge(page);
   }
   if (surface === "partitions") {
-    await ouvrirAffichage(page);
-    return page.getByRole("menu").last();
+    // RU-4 : la marge « Affichage » de la setlist (un volet comme deux volets).
+    return ouvrirAffichage(page);
   }
   return ouvrirOptions(page, ui);
 }
@@ -354,7 +356,7 @@ test("réglage : couleur venue du cercle, égale au bleu d'origine, reste un cho
   await expect(menu.getByRole("button", { name: "Couleurs d'origine" })).toBeEnabled();
 });
 
-test("réglage, clavier : flèches en boucle dans la rangée, le menu reste ouvert, Échap ferme d'abord le cercle", async ({ page }) => {
+test("réglage, clavier : flèches en boucle dans la rangée, la marge reste ouverte, Échap ferme d'abord le cercle", async ({ page }) => {
   await preparer(page);
   await ouvrir(page, "chant", CHANT.fr, ELODIE);
   const menu = await ouvrirReglage(page, "chant");
@@ -375,7 +377,7 @@ test("réglage, clavier : flèches en boucle dans la rangée, le menu reste ouve
   await expect(fr.locator("[data-cercle-chromatique]")).toHaveCount(0);
   await expect(menu).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(menu).toHaveCount(0);
+  await expect(menu).toHaveAttribute("data-ouvert", "false"); // la marge se ferme, elle reste dans la page
 });
 
 test("réglage, mode louange : les flèches dans une rangée ne tournent pas la page", async ({ page }) => {
@@ -460,30 +462,15 @@ test("captures CA-B : menus à 360 px, deux langues", async ({ page }, info) => 
 
 // ─── CA-B, compléments : sous-menu Affichage, retenue, Échap du mode louange, fonds Classique ─────────────
 
-test("réglage, vue partitions : sous-menu Affichage (là où Affichage est un sous-menu ; sinon sauté) reste ouvert au choix, Échap et clic dehors le ferment", async ({ page }) => {
+test("réglage, vue partitions : la marge « Affichage » reste ouverte au choix, Échap la ferme", async ({ page }) => {
   await preparer(page);
   await ouvrir(page, "partitions", CHANT.fr, ELODIE);
-  const barre = page.getByTestId("barre-outils").getByRole("button", { name: /^(Affichage|显示)$/ });
-  await barre.or(page.locator("[data-en-tete]")).or(page.getByTestId("barre-outils").getByRole("button", { name: "Plus d'actions" })).first().waitFor();
-  // Téléphone, vue Partitions (T2 du lot exemples d'usage) : « Affichage » du ⋯ ouvre un menu à part, pas un sous-menu.
-  test.skip(await barre.isVisible() || (await page.locator("[data-en-tete]").count()) === 0, "Affichage n'est pas un sous-menu ici");
-  const sousMenu = page.getByRole("menu", { name: /^(Affichage|显示)$/ });
-  const rouvrir = async () => { await fermerMenus(page); await ouvrirAffichage(page); await expect(sousMenu).toBeVisible(); };
-
-  await ouvrirAffichage(page);
-  await rangee(sousMenu, "fr").getByRole("radio", { name: "Violet" }).click();
-  await expect(sousMenu).toBeVisible();
+  const m = await ouvrirAffichage(page);
+  await rangee(m, "fr").getByRole("radio", { name: "Violet" }).click();
+  await expect(m).toHaveAttribute("data-ouvert", "true");
   await page.keyboard.press("Escape");
-  await expect(sousMenu).toHaveCount(0);
-
-  await rouvrir();
-  await page.mouse.click(2, 2);
-  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(m).toHaveAttribute("data-ouvert", "false");
 });
-
-// shortcut: ← depuis le lien « Couleurs d'origine » ferme le sous-menu à 1 280 px mais pas à 1 024 ni à 1 440 px (lien
-// bien focalisé, cause non trouvée le 11/11/2026) ; la spec ne demande pas ←, Échap et le clic dehors le ferment partout.
-test.fixme("réglage, vue partitions : ← ferme le sous-menu Affichage depuis le lien « Couleurs d'origine »", async () => {});
 
 // shortcut: pas d'authentification lente simulable simplement (signInAs répond tout de suite), à reprendre avec une option de délai dans fakeSession.
 test.fixme("réglage : grisé pendant le chargement de l'authentification, rien d'écrit", async () => {
@@ -494,11 +481,12 @@ test.fixme("réglage : grisé pendant le chargement de l'authentification, rien 
 test("réglage : ligne de rétention, « pour ce compte » connecté, « sur cet appareil » sans compte (page du chant)", async ({ page }) => {
   await preparer(page);
   await ouvrir(page, "chant", CHANT.fr, ELODIE);
-  await expect(await ouvrirReglage(page, "chant")).toContainText("Retenue pour ce compte sur cet appareil");
+  // RU-3 : la marge n'a qu'une mention, « Retenu sur cet appareil », connecté ou non.
+  await expect(await ouvrirReglage(page, "chant")).toContainText("Retenu sur cet appareil");
   await changerDeCompte(page);
   await ouvrir(page, "chant", CHANT.fr, null);
   const menu = await ouvrirReglage(page, "chant");
-  await expect(menu).toContainText("Retenue sur cet appareil");
+  await expect(menu).toContainText("Retenu sur cet appareil");
   await expect(menu).not.toContainText("pour ce compte");
 });
 

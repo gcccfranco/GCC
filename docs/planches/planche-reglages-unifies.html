@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Réglages unifiés</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Music&display=swap">
+<style>
+/* Planche : une bande (réglages d'affichage + tonalité), trois pistes, chacune en téléphone · tablette · ordinateur.
+   Les couleurs gelées de src/app/globals.css (accords, 简谱, sections) sont recopiées telles quelles. */
+:root{
+  --page:#f2f2f7; --card:#ffffff; --app-bg:#ffffff; --ink:#1c1c1e; --on-ink:#ffffff; --muted:#6c6c72; --line:#e4e4e5;
+  --track:#e5e5ea; --pose:#ffffff; --soft:#f2f2f4; --contour:#6c6c72; --pinyin:#8a8f98;
+  --chord:#3f63cf; --jianpu:#b3261d;
+  --sec-intro:#5b7fa6; --sec-verse:#2c8a7d; --sec-chorus:#e0560a; --sec-bridge:#7a5bcb;
+  --shadow-flottant:0 14px 40px rgba(28,28,30,.2),0 2px 6px rgba(28,28,30,.08),inset 0 1px 0 rgba(255,255,255,.8);
+  --shadow-raised:0 4px 14px rgba(28,28,30,.1),0 1px 2px rgba(28,28,30,.06);
+  --ressort-sans-rebond:linear(0,.075 6.25%,.227 12.5%,.39 18.75%,.536 25%,.656 31.25%,.75 37.5%,.821 43.75%,.873 50%,.911 56.25%,.938 62.5%,.957 68.75%,.971 75%,.98 81.25%,.986 87.5%,.991 93.75%,1);
+  /* matières propres à chaque piste */
+  --rebord:#e5e5ea; --rebord-hi:rgba(255,255,255,.85);
+  --marge:#f7f7f8;
+  --glass:rgba(255,255,255,.72); --glass-in:rgba(255,255,255,.6);
+  --f-ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei","WenQuanYi Zen Hei",sans-serif;
+  --f-alt:"Noto Music","Segoe UI Symbol",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --page:#000000; --card:#1c1c1e; --app-bg:#000000; --ink:#f2f2f7; --on-ink:#1c1c1e; --muted:#98989f; --line:#373739;
+  --track:#2c2c2e; --pose:#3a3a3c; --soft:#2c2c2e; --contour:#98989f; --pinyin:#888e98;
+  --chord:#8fb0ff; --jianpu:#ff7d72;
+  --sec-intro:#8fb2dc; --sec-verse:#59bdac; --sec-chorus:#fb923c; --sec-bridge:#b59ce9;
+  --shadow-flottant:0 0 0 1px rgba(255,255,255,.1); --shadow-raised:0 0 0 1px rgba(255,255,255,.1);
+  --rebord:#1c1c1e; --rebord-hi:rgba(255,255,255,.12); --marge:#1c1c1e;
+  --glass:rgba(28,28,30,.72); --glass-in:rgba(255,255,255,.06); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#000000; --card:#1c1c1e; --app-bg:#000000; --ink:#f2f2f7; --on-ink:#1c1c1e; --muted:#98989f; --line:#373739;
+  --track:#2c2c2e; --pose:#3a3a3c; --soft:#2c2c2e; --contour:#98989f; --pinyin:#888e98;
+  --chord:#8fb0ff; --jianpu:#ff7d72;
+  --sec-intro:#8fb2dc; --sec-verse:#59bdac; --sec-chorus:#fb923c; --sec-bridge:#b59ce9;
+  --shadow-flottant:0 0 0 1px rgba(255,255,255,.1); --shadow-raised:0 0 0 1px rgba(255,255,255,.1);
+  --rebord:#1c1c1e; --rebord-hi:rgba(255,255,255,.12); --marge:#1c1c1e;
+  --glass:rgba(28,28,30,.72); --glass-in:rgba(255,255,255,.06); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 72px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:48px}
+h1{font-size:30px;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:22px;margin:0;text-wrap:balance}
+h3{font-size:17px;margin:0;text-wrap:balance}
+p{margin:0;max-width:72ch;text-wrap:pretty}
+.eyebrow{font-size:13px;color:var(--muted);font-weight:600}
+.intro{display:flex;flex-direction:column;gap:12px}
+section{display:flex;flex-direction:column;gap:20px}
+.box{background:var(--card);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.piste{background:var(--card);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:20px;border:2px solid transparent;min-width:0}
+.piste.reco{border-color:var(--ink)}
+.piste-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline}
+.tag{font-size:12.5px;font-weight:700;padding:3px 11px;border-radius:999px;background:var(--ink);color:var(--on-ink)}
+.tag.neutre{background:var(--soft);color:var(--muted)}
+.devrow{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.dev{display:flex;flex-direction:column;gap:6px;min-width:0}
+.dev-label{font-size:13px;color:var(--muted);font-weight:600}
+.fitbox{position:relative;overflow:hidden}
+.fitin{transform-origin:0 0}
+.strip-title{font-size:14px;font-weight:600;margin-top:4px}
+.fiche{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:14px;margin:0}
+.fiche dt{font-weight:600;color:var(--muted)}
+.fiche dd{margin:0;min-width:0}
+.pro-con{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;font-size:14px}
+.pro-con>div{background:var(--soft);border-radius:12px;padding:12px 14px}
+.pro-con b{display:block;margin-bottom:2px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:bottom}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl{overflow-x:auto;background-color:var(--card);
+  background-image:linear-gradient(to right,var(--card) 30%,transparent),linear-gradient(to left,var(--card) 30%,transparent),radial-gradient(farthest-side at 0 50%,rgba(128,128,128,.45),transparent),radial-gradient(farthest-side at 100% 50%,rgba(128,128,128,.45),transparent);
+  background-position:0 0,100% 0,0 0,100% 0;background-repeat:no-repeat;background-size:40px 100%,40px 100%,14px 100%,14px 100%;
+  background-attachment:local,local,scroll,scroll}
+.tbl table{min-width:640px}
+.questions{display:flex;flex-direction:column;gap:12px;counter-reset:q}
+.q{background:var(--card);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.q h3::before{counter-increment:q;content:"Q" counter(q) " · ";color:var(--muted)}
+.q .rec{font-size:14px;font-weight:600}
+code{font-size:.9em;background:var(--soft);padding:1px 5px;border-radius:5px}
+.zh{font-family:var(--f-ui)}
+.alt{font-family:var(--f-alt);font-size:1.15em;line-height:1}
+
+/* ───── maquette d'application (tailles de conception : 390 · 820 · 1 280, réduites par script) ───── */
+.app{position:relative;display:flex;flex-direction:column;background:var(--app-bg);color:var(--ink);font-family:var(--f-ui);
+  font-size:15px;line-height:1.35;overflow:hidden;border:1px solid var(--line);text-align:left}
+.app *{box-sizing:border-box}
+.app.ph{border-radius:34px}.app.tb{border-radius:24px}.app.dk{border-radius:12px;flex-direction:row}
+.bar{display:flex;align-items:center;gap:6px;height:52px;padding:0 12px;flex:none}
+.sp{flex:1}
+.ib{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;flex:none}
+.pill{height:34px;padding:0 11px;border-radius:17px;background:var(--soft);font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex:none}
+.pill.on{background:var(--ink);color:var(--on-ink)}
+.head{padding:2px 16px 8px;display:flex;flex-direction:column;gap:1px;flex:none}
+.ttl{font-size:26px;font-weight:700;line-height:1.15;letter-spacing:-.015em;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sub{font-size:13.5px;color:var(--muted)}
+.music{flex:1;overflow:hidden;padding:4px 16px 0;min-height:0}
+.sl{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;margin:12px 0 5px;color:var(--c)}
+.sl::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.ln{margin:0 0 7px;font-size:15.5px;line-height:1.3}
+.p{display:inline-flex;flex-direction:column;vertical-align:top;white-space:pre}
+.p b{font-weight:700;color:var(--chord);font-size:13px;line-height:1.35;min-height:1.35em;padding-right:7px}
+.p span{line-height:1.4}
+.ln.z{font-size:16.5px}
+.pr{color:var(--pinyin);font-size:11.5px;line-height:1.3;margin:-3px 0 9px}
+.tabbar{display:flex;margin:0 12px 10px;height:54px;border-radius:27px;background:var(--app-bg);box-shadow:var(--shadow-raised);border:1px solid var(--line);align-items:center;padding:0 6px;flex:none}
+.tabbar span{flex:1;text-align:center;font-size:12.5px;font-weight:500;color:var(--muted);padding:9px 0;border-radius:21px}
+.tabbar .on{background:var(--soft);color:var(--ink);font-weight:700}
+.nav{display:flex;align-items:center;gap:20px;height:56px;padding:0 24px;border-bottom:1px solid var(--line);flex:none}
+.nav b{font-size:16px}
+.nav .nl{display:flex;gap:6px;margin-left:auto}
+.nav .nl span{padding:6px 12px;border-radius:16px;font-size:13.5px;font-weight:500;color:var(--muted)}
+.nav .nl .on{background:var(--soft);color:var(--ink);font-weight:700}
+.side{width:224px;flex:none;border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:4px}
+.side b{font-size:16px;padding:0 10px 14px}
+.side span{padding:9px 12px;border-radius:10px;font-size:14px;color:var(--muted);font-weight:500}
+.side .on{background:var(--soft);color:var(--ink);font-weight:700}
+.col{display:flex;flex-direction:column;min-height:0;min-width:0}
+.info{width:248px;flex:none;padding:20px 16px;display:flex;flex-direction:column;gap:12px;border-right:1px solid var(--line)}
+.info .ttl{font-size:24px}
+.acts{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+/* contrôles partagés */
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px;padding:5px 14px;border-top:1px solid var(--line);font-size:14.5px}
+.row:first-child{border-top:0}
+.row.col2{flex-direction:column;align-items:flex-start;gap:6px;padding-block:9px}
+.lb{font-weight:500;min-width:0}
+.grp{border-radius:14px;overflow:hidden;background:var(--grpbg,transparent)}
+.gt{font-size:13px;font-weight:700;color:var(--muted);padding:12px 4px 6px}
+.gn{font-size:12px;color:var(--muted);padding:5px 4px 0}
+.seg{display:inline-flex;background:var(--track);border-radius:9px;padding:2px;gap:2px;flex:none}
+.seg span{padding:5px 10px;border-radius:7px;font-size:13px;font-weight:500;white-space:nowrap}
+.seg .on{background:var(--pose);box-shadow:0 1px 2px rgba(0,0,0,.14);font-weight:700}
+.seg.sm span{font-size:12px;padding:5px 8px}
+.seg.fill{display:flex;align-self:stretch;width:100%}
+.seg.fill span{flex:1;text-align:center;font-size:12px;padding:5px 4px;white-space:normal;line-height:1.15;display:grid;place-items:center}
+.sw{width:42px;height:26px;border-radius:13px;background:var(--track);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.sw.on{background:var(--ink)}.sw.on::after{left:18px;background:var(--on-ink)}
+.step{display:inline-flex;align-items:center;gap:2px;background:var(--track);border-radius:9px;padding:2px;flex:none}
+.step span{width:34px;height:28px;display:grid;place-items:center;font-weight:700;font-size:16px;border-radius:7px;background:var(--pose)}
+.step b{min-width:38px;text-align:center;font-variant-numeric:tabular-nums;font-size:14px}
+.val{color:var(--muted);font-size:14px;display:inline-flex;gap:6px;align-items:center}
+.val i{font-style:normal;font-size:17px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{padding:6px 12px;border-radius:15px;background:var(--track);font-size:13px;font-weight:500}
+.chips .on{background:var(--ink);color:var(--on-ink);font-weight:700}
+.grab{width:38px;height:5px;border-radius:3px;background:var(--muted);opacity:.45;margin:8px auto 0;flex:none}
+.sht{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 0;font-size:16px;font-weight:700;flex:none}
+.sht i{font-style:normal;color:var(--muted);font-weight:500;font-size:20px}
+.sheet{overflow:hidden;flex:none;display:flex;flex-direction:column;position:relative}
+.sheet .body{padding:0 12px 8px;overflow:hidden;flex:1}
+/* clé de tonalité : lettre */
+.kl{font-size:22px;font-weight:600;letter-spacing:-.01em;min-width:36px;height:36px;padding:0 6px;display:inline-grid;place-items:center;border-radius:11px;font-variant-numeric:tabular-nums;flex:none}
+.kl.team{box-shadow:inset 0 0 0 1.5px var(--contour);color:var(--ink)}
+.kl.mine{background:var(--ink);color:var(--on-ink)}
+.kl.sm{font-size:17px;height:28px;min-width:28px;border-radius:9px}
+.pm{width:34px;height:34px;display:grid;place-items:center;font-size:20px;font-weight:600;border-radius:50%}
+
+/* ───── piste A : le rebord ───── */
+.rebord{background:var(--rebord);box-shadow:inset 0 1px 0 var(--rebord-hi);height:52px;display:flex;align-items:center;justify-content:space-between;gap:4px;padding:0 8px;flex:none}
+.rebord .kt{display:inline-flex;align-items:center;flex:none}
+.rebord .pm{width:30px}
+.rebord .rb{height:36px;padding:0 10px;border-radius:10px;font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex:none}
+.rebord .rb.on{background:var(--pose);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.rebord .seg{background:transparent;padding:0;gap:3px}
+.rebord .seg span{padding:0 10px;height:36px;display:inline-flex;align-items:center;font-weight:600}
+.rebord .seg .on{background:var(--pose);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.sheetA{background:var(--rebord);box-shadow:var(--shadow-flottant);border-radius:20px 20px 0 0;--grpbg:var(--pose)}
+.sheetA .gt{padding-top:8px}
+.sheetA .row{border-top-color:var(--track)}
+.tabA{--fadeto:var(--rebord)}
+
+/* ───── piste B : l'armure et la marge ───── */
+.arm{display:inline-grid;place-items:center;min-width:34px;height:32px;padding:0 7px;border-radius:9px;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;vertical-align:middle;flex:none;letter-spacing:0}
+.arm.team{box-shadow:inset 0 0 0 1.5px var(--ink);color:var(--ink)}
+.arm.mine{background:var(--ink);color:var(--on-ink)}
+.arm.sm{height:26px;min-width:28px;font-size:15px;border-radius:8px}
+.margeB{background:var(--marge);border-left:1px solid var(--ink);--grpbg:transparent}
+.sheetB{background:var(--marge);border-top:1px solid var(--line);border-radius:18px 18px 0 0}
+.margeB .gt,.sheetB .gt{font-size:13px}
+.margeB .grp,.sheetB .grp{border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0}
+.win{position:absolute;z-index:5;background:var(--app-bg);border-radius:16px;box-shadow:var(--shadow-flottant);border:1px solid var(--line);padding:12px;transform-origin:20px -6px}
+.win h4{margin:0 0 2px;font-size:15px}
+.win .hint{font-size:12px;color:var(--muted);margin-bottom:8px}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.keys div{height:52px;border-radius:12px;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:19px;font-weight:600;line-height:1.1}
+.keys div small{font-size:10.5px;font-weight:500;color:var(--muted);min-height:12px;line-height:12px}
+.keys .me{background:var(--ink);color:var(--on-ink)}.keys .me small{color:var(--on-ink);opacity:.8}
+.win .row{padding-inline:2px;border-top:1px solid var(--line)}
+
+/* ───── piste C : ma place dans l'équipe ───── */
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%)}
+.volet{background:var(--glass);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);box-shadow:0 18px 50px rgba(28,28,30,.24),0 2px 8px rgba(28,28,30,.1);border-radius:0 0 22px 22px;--grpbg:var(--glass-in);position:relative;z-index:3;flex:none;overflow:hidden}
+.poste{display:inline-flex;align-items:center;gap:7px;height:36px;min-width:36px;padding:0 10px;border-radius:18px;background:var(--ink);color:var(--on-ink);font-size:15px;font-weight:500;justify-content:center;flex:none}
+.postes{display:grid;grid-template-columns:repeat(6,auto);justify-content:space-between;gap:2px;padding:2px 0 4px}
+.postes div{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:500;padding:6px 5px;border-radius:12px;color:var(--muted);min-width:0;white-space:nowrap}
+.postes .on{background:var(--ink);color:var(--on-ink);font-weight:700}
+.regle{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:4px 4px 0}
+.cgrid{display:grid;gap:0 18px}
+.stick{color:var(--ink);display:inline-flex}
+
+.dots{display:flex;justify-content:center;gap:7px;padding:8px 0 12px;flex:none}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--track)}.dots i:first-child{background:var(--ink)}
+.chrome{display:flex;align-items:center;gap:2px;padding:0 8px;height:50px;flex:none}
+.cttl{text-align:center;font-size:15px;font-weight:700;padding:0 0 6px;display:flex;justify-content:center;align-items:center;gap:8px;flex:none}
+.lou .music{padding:4px 22px 0}
+.lou .ln{font-size:17.5px}.lou .p b{font-size:14.5px}
+.lou .sl{font-size:14px}
+.setl{padding:0 16px 6px;display:flex;flex-direction:column;gap:6px;flex:none}
+.setl .t{font-size:15px;font-weight:700}
+.setl .s{font-size:12.5px;color:var(--muted)}
+.item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:18px;font-weight:700;flex:none}
+.item .n{color:var(--muted);font-weight:600;font-size:15px;min-width:16px}
+.item .eq{margin-left:auto;font-size:12px;font-weight:500;color:var(--muted)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.toc>div{background:var(--card);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:2px;font-size:14px;border:2px solid transparent}
+.toc>div.reco{border-color:var(--ink)}
+.toc b{font-size:15px;margin-bottom:4px}
+.toc a{color:var(--ink);text-underline-offset:3px;text-decoration-color:var(--muted);padding:3px 0}
+.dev{scroll-margin-top:16px}
+/* ajouts de la reprise du 13/11 */
+.arm.ro{border:1.5px dashed var(--contour);color:var(--muted);background:var(--app-bg)}
+.arm.fl{position:absolute;top:10px;right:12px;z-index:4}
+.arm.fl.mine{box-shadow:var(--shadow-raised)}
+.tip{position:absolute;z-index:6;max-width:250px;background:var(--ink);color:var(--on-ink);border-radius:12px;padding:8px 12px;font-size:13.5px;font-weight:600;line-height:1.3}
+.tip::before{content:"";position:absolute;top:-12px;right:16px;border:6px solid transparent;border-bottom-color:var(--ink)}
+.seg.v{flex-direction:column;align-self:stretch;width:100%;gap:1px}
+.seg.v span{text-align:left;padding:6px 10px;font-size:13px}
+.lnk{font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.cue{position:absolute;left:0;right:0;bottom:0;height:56px;background:linear-gradient(to bottom,transparent,var(--sb) 88%);pointer-events:none}
+.sbar{position:absolute;right:3px;top:58px;height:150px;width:3px;border-radius:2px;background:var(--muted);opacity:.5}
+.sheetB{--sb:var(--marge)}.sheetA{--sb:var(--rebord)}
+.music.fd{-webkit-mask-image:linear-gradient(#000 calc(100% - 44px),transparent);mask-image:linear-gradient(#000 calc(100% - 44px),transparent)}
+.music.cols2{column-count:2;column-gap:32px}
+.music.cols2 .sl{break-after:avoid}.music.cols2 .ln{break-inside:avoid}
+.rebord.c{justify-content:center;gap:18px}
+.gt.h{display:flex;justify-content:space-between;gap:8px}.gt.h span+span{font-weight:500;font-size:12px}
+@media (max-width:600px){.fiche{grid-template-columns:1fr;gap:0}.fiche dd{margin-bottom:8px}.piste{padding:12px}.box{padding:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="intro">
+  <span class="eyebrow">Planche · 13/11/2026 · à trancher avant spec</span>
+  <h1>Un seul rangement, un seul nom, une seule forme pour les réglages et la tonalité</h1>
+  <p>Demande de Timothée, 13/11/2026&nbsp;: «&nbsp;il y a tellement d'incohérences et truc pas pratiques sur le site […] surtout sur les setlists et les chants, il faut que ce soit le plus pratique pour tout le monde à l'utilisation&nbsp;». Constats 6, 7 et 8 du parcours à l'œil du 13/11&nbsp;: le même réglage vit à trois endroits sous trois noms, et la tonalité a trois places et trois formes. Chaque piste règle les deux, et les reprend à l'identique sur la page chant, la vue d'une setlist et le mode louange. Rien n'est codé.</p>
+</header>
+
+<nav class="toc" aria-label="Sommaire">
+  <div><b>A · Le rebord du pupitre</b>
+    <a href="#a-tel">Téléphone 390</a><a href="#a-tab">Tablette 820</a><a href="#a-ordi">Ordinateur 1 280</a></div>
+  <div class="reco"><b>B · L'armure et la marge (recommandée)</b>
+    <a href="#b-tel">Téléphone 390&nbsp;: feuille «&nbsp;Affichage&nbsp;»</a><a href="#b-armure">Téléphone&nbsp;: fenêtre de l'armure, page chant</a><a href="#b-setlist">Téléphone&nbsp;: fenêtre de l'armure, setlist</a><a href="#b-cache">Téléphone&nbsp;: mode louange, barre cachée</a><a href="#b-choriste">Téléphone&nbsp;: état choriste</a><a href="#b-tab-p">Tablette portrait 820</a><a href="#b-tab-l">Tablette paysage 1 080&nbsp;: mode louange, marge ouverte</a><a href="#b-ordi">Ordinateur 1 280&nbsp;: marge fermée, puis ouverte</a></div>
+  <div><b>C · Ma place dans l'équipe</b>
+    <a href="#c-tel">Téléphone 390</a><a href="#c-tab">Tablette 820</a><a href="#c-ordi">Ordinateur 1 280</a>
+    <b style="margin-top:10px">Ensuite</b><a href="#portee">Les trois mentions de portée</a><a href="#questions">Questions à trancher</a></div>
+</nav>
+
+<section>
+  <span class="eyebrow">Ce qu'on voit aujourd'hui</span>
+  <h2>Trois rangements, trois noms, trois formes de tonalité</h2>
+  <div class="box tbl">
+    <table>
+      <thead><tr><th></th><th>Page chant</th><th>Vue d'une setlist</th><th>Mode louange</th></tr></thead>
+      <tbody>
+        <tr><td><b>Où sont les réglages</b></td><td>menu ⋯</td><td>bouton «&nbsp;Affichage&nbsp;»</td><td>«&nbsp;Je joue&nbsp;» + «&nbsp;Options&nbsp;» (icône T)</td></tr>
+        <tr><td><b>Pinyin</b></td><td>bouton «&nbsp;拼&nbsp;»</td><td>case «&nbsp;✓ Pinyin&nbsp;»</td><td>bouton rond</td></tr>
+        <tr><td><b>Accords</b></td><td>icône ♪</td><td>mot «&nbsp;Accords&nbsp;»</td><td>bouton</td></tr>
+        <tr><td><b>Mention de portée</b></td><td>«&nbsp;Retenue sur cet appareil&nbsp;»</td><td>«&nbsp;Retenue pour ce compte sur cet appareil&nbsp;»</td><td>«&nbsp;retenu sur cet appareil&nbsp;»</td></tr>
+        <tr><td><b>Tonalité</b></td><td>pilule «&nbsp;− Ton A +&nbsp;» et pastille «&nbsp;A&nbsp;» à droite du titre&nbsp;; en chinois aussi «&nbsp;1=C&nbsp;»</td><td>lettre bleue seule, sans − ni +</td><td>«&nbsp;· A&nbsp;» en sous-titre&nbsp;; le − / + est caché dans Outils (clé à molette)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Contenu des maquettes&nbsp;: Abba Père (Samuel Olivier, tonalité A) pour le français, 一切都更新 (tonalité C, avec pinyin) pour le chinois. Noms de personnes fictifs. En 390 px, les tablettes et l'ordinateur sont réduits à l'échelle&nbsp;: la lisibilité des grands formats se juge à 1 440 px, ou sur les captures recadrées à la taille réelle (téléphone, tablette portrait, tablette paysage, ordinateur).</p>
+</section>
+
+<section>
+  <span class="eyebrow">Sujet · réglages d'affichage et tonalité</span>
+  <h2>Trois pistes</h2>
+
+  <!-- ═════════ A ═════════ -->
+  <article class="piste" id="pisteA">
+    <div class="piste-head"><h3>A · Le rebord du pupitre <span class="zh">谱架托板</span></h3><span class="tag neutre">Piste</span></div>
+    <p>Ce qu'on touche pendant le culte est posé sur le rebord bas de la partition&nbsp;: une seule barre, identique sur les trois écrans, avec la tonalité au centre et une feuille «&nbsp;Réglages&nbsp;» qui monte du rebord et repousse la musique au lieu de la couvrir.</p>
+    <div class="devrow">
+      <div class="dev" id="a-tel" data-w="390" data-mock="A.phone" data-label="Téléphone 390 · page chant, feuille à 55 %"></div>
+      <div class="dev" id="a-tab" data-w="820" data-mock="A.tablet" data-label="Tablette 820 · page chant en 中文, feuille plafonnée à 560"></div>
+    </div>
+    <div class="devrow"><div class="dev" id="a-ordi" data-w="1280" data-mock="A.desk" data-label="Ordinateur 1 280 · le rebord, commandes groupées au centre, sous la colonne de lecture&nbsp;; feuille de 40 % au plus"></div></div>
+    <div class="strip-title">La même barre sur les trois écrans (téléphone, réglages fermés)</div>
+    <div class="devrow">
+      <div class="dev" data-w="390" data-mock="A.s1" data-label="Page chant"></div>
+      <div class="dev" data-w="390" data-mock="A.s2" data-label="Vue d'une setlist · le rebord suit le chant à l'écran"></div>
+      <div class="dev" data-w="390" data-mock="A.s3" data-label="Mode louange · le rebord apparaît avec le chrome"></div>
+    </div>
+    <dl class="fiche">
+      <dt>Palette</dt><dd>Encre · Relief&nbsp;: fond #ffffff, encre #1c1c1e. Rebord en gris de piste plein #e5e5ea (sombre #1c1c1e), segments allumés blancs posés dessus. Tonalité «&nbsp;à moi&nbsp;» en encre pleine, celle de l'équipe en lettre au contour #6c6c72. Aucune couleur nouvelle&nbsp;; le bleu du mode louange passe à l'encre, seul l'accord reste bleu.</dd>
+      <dt>Typo</dt><dd>Police système (SF Pro, Roboto, Segoe UI). Lettre de tonalité 22 px semi-gras, approche −0,01 em&nbsp;; ♯ et ♭ en Noto Music. Capo et taille en chiffres tabulaires. Chinois&nbsp;: PingFang SC / Noto Sans CJK SC du système.</dd>
+      <dt>Matières</dt><dd>Rebord opaque, sans flou ni ombre, filet clair en haut. Feuille de même matière avec <code>--shadow-flottant</code>. Pas de voile&nbsp;: la partition rétrécit au-dessus de la feuille.</dd>
+      <dt>Mouvement</dt><dd>Ressort sans rebond (1 / 0,35 s)&nbsp;; léger rebond (0,8 / 0,3) seulement si lancée du doigt. Au mode louange, rien n'est animé. Reduced-motion&nbsp;: fondu de 150 ms.</dd>
+    </dl>
+    <div class="pro-con">
+      <div><b>Ce qu'elle apporte</b>Tout ce qu'on touche au culte (tonalité, accords, ABC | 123, pinyin, 简谱 | 歌词) est à un toucher, au même endroit sur les trois écrans. Choriste et présidence&nbsp;: «&nbsp;en A&nbsp;» sans − ni +, puis Pinyin, <span style="white-space:nowrap">简谱 | 歌词</span>, Taille et Réglages.</div>
+      <div><b>Ce qu'elle coûte</b>52 px de plus en permanence au téléphone, avec la barre d'onglets et l'indicateur d'accueil (le constat 5 reprochait déjà 130 px). Au mode louange, conflit avec les points de page et le glissement vers le haut. Six commandes en chinois tiennent tout juste sur 412 px. Le − / + reste un demi-ton&nbsp;: de G à D, plusieurs touchers.</div>
+    </div>
+  </article>
+
+  <!-- ═════════ B ═════════ -->
+  <article class="piste reco" id="pisteB">
+    <div class="piste-head"><h3>B · L'armure et la marge <span class="zh">调号与页边</span></h3><span class="tag">Recommandée</span></div>
+    <p>On reprend la grammaire de la partition papier&nbsp;: la tonalité est une armure accrochée au titre, au même endroit sur les trois écrans, et les réglages vivent dans la marge, une colonne «&nbsp;Affichage&nbsp;» qui repousse la musique comme une marge annotée.</p>
+    <div class="devrow">
+      <div class="dev" id="b-tel" data-w="390" data-mock="B.sheet" data-label="Téléphone 390 · page chant, feuille «&nbsp;Affichage&nbsp;» à 60 %, la musique poussée au-dessus&nbsp;; la feuille défile"></div>
+      <div class="dev" id="b-tab-p" data-w="820" data-mock="B.tablet" data-label="Tablette portrait 820 · page chant en 中文, feuille Affichage plafonnée à 560, armure «&nbsp;1=C&nbsp;»"></div>
+    </div>
+    <div class="strip-title">Téléphone&nbsp;: la fenêtre de l'armure sur la page chant, dans une setlist, et le mode louange barre cachée</div>
+    <div class="devrow">
+      <div class="dev" id="b-armure" data-w="390" data-mock="B.phone" data-label="Page chant · toucher l'armure&nbsp;: portée «&nbsp;le temps de la page&nbsp;», la tonalité revient à la recommandée"></div>
+      <div class="dev" id="b-setlist" data-w="390" data-mock="B.setl" data-label="Vue d'une setlist · légendes équipe / reco. / orig., lien «&nbsp;Changer pour toute l'équipe&nbsp;» (la personne peut éditer)"></div>
+      <div class="dev" id="b-cache" data-w="390" data-mock="B.hidden" data-label="Mode louange, barre cachée · l'armure reste dans le coin haut (pleine&nbsp;: c'est la mienne&nbsp;; au contour&nbsp;: celle de l'équipe)"></div>
+    </div>
+    <div class="strip-title">Téléphone&nbsp;: l'état choriste</div>
+    <div class="devrow">
+      <div class="dev" id="b-choriste" data-w="390" data-mock="B.cho1" data-label="Mode louange, barre cachée · armure en lecture seule (pointillé), toucher&nbsp;: «&nbsp;L'équipe joue en G / 本队用 G 调&nbsp;», sans accords"></div>
+      <div class="dev" id="b-choriste-feuille" data-w="390" data-mock="B.cho2" data-label="Page chant en 中文 · feuille Affichage&nbsp;: plus d'Accords, de Lettres | Chiffres ni de Couleur des accords"></div>
+    </div>
+    <div class="strip-title">Tablette paysage 1 080 × 810 · mode louange · deux colonnes tant que chacune garde 340 px</div>
+    <div class="devrow">
+      <div class="dev" id="b-tab-l-ferme" data-w="1080" data-mock="B.tabLc" data-label="Marge fermée · 1 080 px de large&nbsp;: deux colonnes de 492 px"></div>
+      <div class="dev" id="b-tab-l" data-w="1080" data-mock="B.tabLo" data-label="Marge de 320 px ouverte · il reste 760 px&nbsp;: 332 px par colonne, sous 340, la musique passe à une colonne&nbsp;; rien n'est couvert"></div>
+    </div>
+    <div class="strip-title">Ordinateur 1 280 · le même chant, marge fermée puis ouverte</div>
+    <div class="devrow">
+      <div class="dev" id="b-ordi-ferme" data-w="1280" data-mock="B.deskC" data-label="Marge fermée · colonne de lecture de 808 px"></div>
+      <div class="dev" id="b-ordi" data-w="1280" data-mock="B.deskO" data-label="Marge de 320 px ouverte · la colonne de lecture se resserre à 488 px, les lignes longues passent à la ligne"></div>
+    </div>
+    <div class="strip-title">La même armure sur les trois écrans (téléphone, réglages fermés)</div>
+    <div class="devrow">
+      <div class="dev" data-w="390" data-mock="B.s1" data-label="Page chant · armure au contour&nbsp;: la recommandée (F)"></div>
+      <div class="dev" data-w="390" data-mock="B.s2" data-label="Vue d'une setlist · l'armure suit le titre"></div>
+      <div class="dev" data-w="390" data-mock="B.s3" data-label="Mode louange · titre et armure au centre"></div>
+    </div>
+    <dl class="fiche">
+      <dt>Palette</dt><dd>Encre · Relief, sans couleur ajoutée&nbsp;: papier #ffffff, encre #1c1c1e, gris #6c6c72, filet #e4e4e5. Marge à peine teintée #f7f7f8 (sombre #1c1c1e), séparée par un filet. Armure au contour encre = tonalité de l'équipe ou recommandée&nbsp;; pleine encre, lettre blanche = «&nbsp;ma tonalité&nbsp;». Le bleu ne veut plus dire que «&nbsp;accord&nbsp;».</dd>
+      <dt>Typo</dt><dd>Police système. Armure 17 px semi-gras, ♯ ♭ en Noto Music. Titres de groupe 13 px semi-gras en minuscules, libellés 15 px. Chants chinois&nbsp;: «&nbsp;1=C&nbsp;» comme sur le scan, ce qui supprime la ligne «&nbsp;1=C&nbsp;» sous le titre.</dd>
+      <dt>Matières</dt><dd>Deux plans seulement. La marge est du papier&nbsp;: filet, ni ombre ni flou, elle s'ouvre à côté de la musique. La fenêtre de l'armure est la seule surface qui flotte (opaque, <code>--shadow-flottant</code>, rayon 16). Téléphone et tablette portrait&nbsp;: feuille basse opaque, sans voile.</dd>
+      <dt>Mouvement</dt><dd>La marge s'ouvre depuis le bord droit&nbsp;; la musique se resserre au ressort sans rebond (1 / 0,35 s) et peut être refermée en cours de route. La fenêtre grandit depuis l'armure. Au mode louange, rien n'est animé. Reduced-motion&nbsp;: fondu de 150 ms.</dd>
+    </dl>
+    <div class="pro-con">
+      <div><b>Ce qu'elle apporte</b>Une seule forme de tonalité&nbsp;: armure au titre, douze touches de l'éditeur, deux touchers pour n'importe quelle tonalité ou pour Lettres | Chiffres. Un seul nom (Affichage 显示), trois groupes, une mention de portée par groupe. La barre du téléphone tient sur une ligne (constat 5). «&nbsp;Je joue&nbsp;» devient le premier groupe&nbsp;: choriste et présidence perdent Accords, Lettres | Chiffres et Couleur des accords, et l'armure devient en lecture seule («&nbsp;l'équipe joue en G&nbsp;»).</div>
+      <div><b>Ce qu'elle coûte</b>La marge de 320 px resserre la musique en tablette paysage au mode louange&nbsp;: deux colonnes et 简谱 sur deux volets doivent savoir se replier (340 px chacune, sinon repli). L'armure suit le titre qui défile&nbsp;: au mode louange, barre cachée, il faut une armure flottante en coin ou garder le titre. «&nbsp;1=C&nbsp;» d'un côté, la lettre de l'autre&nbsp;: deux écritures à valider. Lettres | Chiffres rangé avec la tonalité&nbsp;: un renvoi est dessiné dans «&nbsp;Ce que je lis&nbsp;».</div>
+    </div>
+  </article>
+
+  <!-- ═════════ C ═════════ -->
+  <article class="piste" id="pisteC">
+    <div class="piste-head"><h3>C · Ma place dans l'équipe <span class="zh">我的岗位</span></h3><span class="tag neutre">Piste</span></div>
+    <p>Le bouton des réglages, c'est ton poste au service (piano, guitare, chœur, présidence)&nbsp;: une pilule «&nbsp;Piano&nbsp;» au même coin des trois écrans. Elle ouvre un volet qui ne montre que ce que ce poste règle, avec la tonalité à côté d'elle pour ceux qui jouent des accords.</p>
+    <div class="devrow">
+      <div class="dev" id="c-tel" data-w="390" data-mock="C.phone" data-label="Téléphone 390 · volet à 45 % qui défile&nbsp;: six postes, «&nbsp;Ce que je vois&nbsp;», «&nbsp;La page&nbsp;»"></div>
+      <div class="dev" id="c-tab" data-w="820" data-mock="C.tablet" data-label="Tablette 820 · page chant en 中文, la pilule montre le nom, volet sur deux colonnes"></div>
+    </div>
+    <div class="devrow"><div class="dev" id="c-ordi" data-w="1280" data-mock="C.desk" data-label="Ordinateur 1 280 · volet horizontal d'environ 200 px sur trois colonnes, qui pousse la musique"></div></div>
+    <div class="strip-title">La même pilule sur les trois écrans (téléphone, volet fermé)</div>
+    <div class="devrow">
+      <div class="dev" data-w="390" data-mock="C.s1" data-label="Page chant · «&nbsp;− A +&nbsp;» puis la pilule"></div>
+      <div class="dev" data-w="390" data-mock="C.s2" data-label="Vue d'une setlist · même groupe à droite de la barre du chant"></div>
+      <div class="dev" data-w="390" data-mock="C.s3" data-label="Mode louange · la pilule remplace Je joue et Options"></div>
+    </div>
+    <dl class="fiche">
+      <dt>Palette</dt><dd>Encre · Relief, avec une matière translucide en plus pour le chrome&nbsp;: blanc à 72 % sur flou de 20 px, saturation 180 %. Pilule en encre pleine, icône blanche. Réglages en lecture seule (tonalité d'un choriste) en gris #6c6c72. Aucune couleur par rôle&nbsp;: les couleurs de services leur restent réservées.</dd>
+      <dt>Typo</dt><dd>Police système. Nom du poste 15 px moyen, tonalité 20 px semi-gras, ♯ ♭ en Noto Music. Un seul mot par poste&nbsp;: Pianiste 钢琴, Guitariste 吉他, Présidence 主领, Choriste 和声, Batteur 鼓手, Aucun 自定. Pas de capitales&nbsp;: le titre du volet est la phrase «&nbsp;Je joue du piano&nbsp;» / «&nbsp;我演奏：钢琴&nbsp;».</dd>
+      <dt>Matières</dt><dd>Pilule et volet translucides&nbsp;; le volet est plus épais (flou et ombre plus forts). Ouvert, il descend sous la barre et repousse la musique, sans voile. Avec prefers-reduced-transparency&nbsp;: fond blanc plein et filet.</dd>
+      <dt>Mouvement</dt><dd>Le volet se déroule depuis la pilule (origine sur la pilule), ressort sans rebond (1 / 0,35 s), interruptible. Changer de poste fait glisser en fondu les lignes qui apparaissent ou disparaissent. Au mode louange, rien n'est animé. Reduced-motion&nbsp;: fondus seuls.</dd>
+    </dl>
+    <div class="pro-con">
+      <div><b>Ce qu'elle apporte</b>Le poste masque tout ce qui ne te concerne pas&nbsp;: un choriste a quatre lignes (Paroles ou 简谱, Pinyin, Ordre, Taille), un batteur une feuille de route, la Taille et l'Ordre. La tonalité d'un choriste est en lecture seule, «&nbsp;en A&nbsp;».</div>
+      <div><b>Ce qu'elle coûte</b>Le poste devient le maître de tous les réglages&nbsp;: changer de poste écrase-t-il ce qu'on a réglé à la main&nbsp;? Un membre sans poste («&nbsp;Aucun&nbsp;») perd le fil conducteur. Un pianiste qui chante ce dimanche doit changer de poste pour voir le pinyin. La tonalité est à part de la pilule&nbsp;: deux objets côte à côte, moins «&nbsp;une seule forme&nbsp;» que A et B. La pilule en haut à droite est loin du pouce.</div>
+    </div>
+  </article>
+</section>
+
+<section>
+  <span class="eyebrow">Écrit, pas dessiné</span>
+  <h2>Les variantes qui tiennent en une ligne</h2>
+  <div class="box tbl">
+    <table>
+      <thead><tr><th>Cas</th><th>A · rebord</th><th>B · armure et marge</th><th>C · poste</th></tr></thead>
+      <tbody>
+        <tr><td><b>Choriste, présidence</b></td><td>«&nbsp;en A&nbsp;» sans − ni +, puis Pinyin, <span style="white-space:nowrap">简谱 | 歌词</span>, Taille, Réglages</td><td>armure en lecture seule («&nbsp;l'équipe joue en G&nbsp;»)&nbsp;; «&nbsp;Ce que je lis&nbsp;» perd Accords, Lettres | Chiffres et Couleur des accords</td><td>pilule «&nbsp;Chœur&nbsp;», «&nbsp;en A&nbsp;» en lecture seule, volet de quatre lignes</td></tr>
+        <tr><td><b>Batteur</b></td><td>rebord réduit à Taille et Réglages [à préciser]</td><td>groupes «&nbsp;Je joue&nbsp;» et «&nbsp;La page&nbsp;» seuls [à préciser]</td><td>feuille de route, Taille, Ordre</td></tr>
+        <tr><td><b>Chant chinois, nom de la tonalité</b></td><td>lettre «&nbsp;C&nbsp;», comme en français</td><td>«&nbsp;1=C&nbsp;» dans l'armure, la ligne sous le titre disparaît</td><td>lettre «&nbsp;C&nbsp;»</td></tr>
+        <tr><td><b>Changer de tonalité pour toute l'équipe</b></td><td>seulement dans l'éditeur</td><td>lien «&nbsp;Changer pour toute l'équipe&nbsp;» dans la fenêtre de l'armure, aux seuls éditeurs de la setlist (Q1)</td><td>seulement dans l'éditeur</td></tr>
+        <tr><td><b>Noms chinois déjà en place</b></td><td>reprend l'existant&nbsp;: 我演奏, 排版, 文字</td><td>propose 我演奏, 版式, 字号 (existants&nbsp;: 我演奏, 排版, 文字)</td><td>propose 钢琴, 吉他, 主领 (existants&nbsp;: 钢琴手, 吉他手, 领会)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="portee">
+  <span class="eyebrow">Écrit, pas dessiné</span>
+  <h2>Les trois mentions de portée, et aucune autre</h2>
+  <div class="box tbl">
+    <table>
+      <thead><tr><th>Où</th><th>Français</th><th>中文</th></tr></thead>
+      <tbody>
+        <tr><td><b>Fenêtre de l'armure, page chant</b></td><td>Pour moi, le temps de la page (la tonalité revient à la recommandée)</td><td>仅本页有效</td></tr>
+        <tr><td><b>Fenêtre de l'armure, setlist et mode louange</b></td><td>Pour moi, sur cet appareil</td><td>仅本设备</td></tr>
+        <tr><td><b>Chaque groupe de la marge ou de la feuille</b></td><td>Retenu sur cet appareil, une fois par groupe</td><td>保存在本设备</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Recommandation</span>
+  <h2>B · L'armure et la marge</h2>
+  <div class="box">
+    <p>Pendant le service, le musicien lit le titre et la première ligne&nbsp;: l'armure est là où il regarde déjà, et on la lit comme sur le papier. Elle supprime d'un coup les trois formes de la tonalité (pilule, pastille, «&nbsp;· A&nbsp;») et le «&nbsp;1=C&nbsp;» en double sur les chants chinois. Toucher l'armure ouvre la grille de douze touches de l'éditeur, que l'équipe trouve déjà simple (constat 13)&nbsp;: n'importe quelle tonalité, et Lettres | Chiffres, en deux touchers. Les légendes «&nbsp;équipe / reco. / orig.&nbsp;» et l'armure pleine ou au contour disent sans jargon si l'on joue la tonalité de l'équipe ou la sienne. La marge repousse la musique au lieu de la couvrir (constats 1 et 2) et porte un seul nom, trois groupes, une mention de portée par groupe. A coûte trop de hauteur au téléphone et garde un pas d'un demi-ton&nbsp;; C repose sur une règle de préréglage qu'on ne sait pas encore rendre lisible.</p>
+    <p><b>Coût&nbsp;:</b> gros lot, environ cinq tranches. (1) Composant partagé&nbsp;: armure et fenêtre de douze touches, reprises de l'éditeur de setlist, qui remplace <code>PiluleTonalite.tsx</code>, la pastille du titre de <code>SongDetailClient.tsx</code>, la lettre bleue de <code>PartitionView.tsx:272</code> et <code>ListView.tsx:217-260</code>, et la ligne Tonalité / Capo de <code>ContenusMenus.tsx:499-520</code>. (2) Composant partagé&nbsp;: la marge «&nbsp;Affichage&nbsp;» et un seul crochet de préférences sur les clés existantes. (3) Page chant. (4) Setlist. (5) Mode louange (fusion de Je joue et d'Options, chrome bleu passé à l'encre). Libellés fr et zh, specs Playwright sur les cinq projets. Aucune zone gelée. À coordonner avec les deux chantiers en cours (onglets du menu Setlist, 简谱 sur deux volets).</p>
+  </div>
+</section>
+
+<section id="questions">
+  <span class="eyebrow">À trancher</span>
+  <h2>Questions</h2>
+  <div class="questions">
+    <div class="q"><h3>La tonalité changée hors éditeur est-elle la tienne seulement&nbsp;?</h3><p>Sur la page chant et dans la vue d'une setlist, − / + ou la fenêtre de l'armure changent-ils la tonalité de l'équipe ou la tienne&nbsp;?</p><p class="rec">Proposition&nbsp;: la tienne, partout, par appareil (comme <code>perf-personal-keys</code> au mode louange, partagée entre la vue setlist et le mode louange d'une même setlist). La tonalité de l'équipe ne change que dans l'éditeur&nbsp;; la fenêtre de l'armure offre «&nbsp;Changer pour toute l'équipe&nbsp;» aux seules personnes qui peuvent éditer la setlist.</p></div>
+    <div class="q"><h3>Rend-on persistants les réglages que la page chant garde en mémoire&nbsp;?</h3><p>Pinyin, 简谱 | Paroles, ordre des sections, accords affichés&nbsp;: aujourd'hui perdus en quittant la page.</p><p class="rec">Proposition&nbsp;: oui, un seul comportement partout et une seule mention par groupe, «&nbsp;Retenu sur cet appareil / 保存在本设备&nbsp;». La tonalité de la page chant reste en mémoire de session et revient à la recommandée&nbsp;; sa fenêtre le dit&nbsp;: «&nbsp;Pour moi, le temps de la page / 仅本页有效&nbsp;». Dans une setlist et au mode louange&nbsp;: «&nbsp;Pour moi, sur cet appareil / 仅本设备&nbsp;».</p></div>
+    <div class="q"><h3>Le rôle «&nbsp;Je joue&nbsp;» vaut-il aussi pour la page chant et la vue d'une setlist&nbsp;?</h3><p>Aujourd'hui il ne vaut qu'au mode louange (constat 12&nbsp;: la choriste voit les accords dans la setlist, pas au mode louange).</p><p class="rec">Proposition&nbsp;: oui, un seul réglage&nbsp;; changer de rôle réapplique son préréglage, avec une ligne «&nbsp;Réglé pour Choriste, modifié à la main&nbsp;» quand on s'en est écarté.</p></div>
+    <div class="q"><h3>Les noms chinois nouveaux remplacent-ils les existants&nbsp;?</h3><p>B propose 我演奏 (existant&nbsp;: 我演奏), 版式 (排版), 字号 (文字)&nbsp;; C propose 钢琴, 吉他, 主领 (existants&nbsp;: 钢琴手, 吉他手, 领会). Les noms de groupes de la marge en 中文 («&nbsp;阅读内容&nbsp;», «&nbsp;页面&nbsp;» sur la maquette) et «&nbsp;为整个团队更改&nbsp;» (Changer pour toute l'équipe, proposé par moi) ne figurent dans aucune fiche.</p><p class="rec">Proposition&nbsp;: garder les mots déjà en place chez les utilisateurs, et ne valider que les nouveaux (noms de groupes, «&nbsp;保存在本设备&nbsp;») avec une personne qui lit le chinois, avant la spec.</p></div>
+    <div class="q"><h3>Au mode louange, l'armure flotte-t-elle en coin quand la barre est cachée&nbsp;?</h3><p>Dessiné&nbsp;: petite, dans le coin haut droit, pleine si c'est ma tonalité, au contour si c'est celle de l'équipe ou la recommandée, en pointillé pour un choriste (toucher&nbsp;: «&nbsp;L'équipe joue en G / 本队用 G 调&nbsp;»). Elle cache un bout de la première ligne quand on remonte.</p><p class="rec">Proposition&nbsp;: oui, elle n'apparaît que lorsque le titre est sorti de l'écran, avec une marge de sécurité de 44 px à droite pour la première ligne.</p></div>
+    <div class="q"><h3>La marge de 320 px passe la musique à une colonne en tablette paysage&nbsp;: acceptable&nbsp;?</h3><p>À 1 080 px, avec la marge ouverte, chaque colonne tomberait à 332 px (sous les 340 px de la règle)&nbsp;: la bascule se joue à 16 px près : dès 1 096 px de large, deux colonnes tiennent encore avec la marge ouverte.</p><p class="rec">Proposition&nbsp;: oui, une colonne tant que la marge est ouverte, deux colonnes à sa fermeture&nbsp;; la règle des 340 px ne change pas.</p></div>
+    <div class="q"><h3>«&nbsp;1=C&nbsp;» pour un chant chinois, la lettre pour un chant français&nbsp;?</h3><p>B écrit l'armure comme le scan&nbsp;: deux écritures, cohérentes chacune dans sa langue.</p><p class="rec">Proposition&nbsp;: oui, à valider à l'œil sur quelques chants chinois (troncature, «&nbsp;1=bB&nbsp;»), car je ne l'ai pas vérifié sur le vrai site.</p></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* ───── contenu de maquette ───── */
+const NOTE={C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11};
+const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const FLATN=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];let USEFLAT=false;
+function tr(ch,sh){const N=USEFLAT?FLATN:NAMES;return ch.replace(/^([A-G]#?)/,(m)=>N[(NOTE[m]+sh+12)%12]).replace(/\/([A-G]#?)/,(m,x)=>'/'+N[(NOTE[x]+sh+12)%12]);}
+const K=s=>s.replace(/[♯♭]/g,m=>`<span class="alt">${m}</span>`);
+function pairs(str,sh,chords){
+  const out=[];let c='',t='';
+  str.split(/(\[[^\]]+\])/).forEach(tok=>{
+    const m=tok.match(/^\[([^\]]+)\]$/);
+    if(m){ if(c||t) out.push([c,t]); c=m[1]; t=''; } else t+=tok;
+  });
+  out.push([c,t]);
+  return out.map(([c,t])=>`<span class="p">${chords?`<b>${c?tr(c,sh):'&nbsp;'}</b>`:''}<span>${t}</span></span>`).join('');
+}
+const FR=[
+ {s:'Intro (x2)',k:'intro',l:['[F#m]  [D]  [A]']},
+ {s:'Couplet 1',k:'verse',l:["Bien a[F#m]vant le chant qui [D]créa l'uni[A]vers,","Bien a[F#m]vant l'Esprit qui [D]planait sur la [A]terre,"]},
+ {s:'Refrain',k:'chorus',l:["Abba [D]Père, je suis à To[A]i,","Abba [D]Père, je [E]suis à To[F#m]i,"]},
+ {s:'Couplet 2',k:'verse',l:["Bien a[F#m]vant que Jésus [D]marche sur la [A]terre,","Bien a[F#m]vant le Fils qui [D]nous montre le [A]Père,"]},
+];
+const FRL=[
+ {s:'Intro (x2)',k:'intro',l:['[F#m]  [D]  [A]']},
+ {s:'Couplet 1',k:'verse',l:["Bien a[F#m]vant le chant qui [D]créa l'uni[A]vers,","Bien a[F#m]vant l'Esprit qui [D]planait sur la [A]terre,","Bien a[F#m]vant que Tu me [D]formes de la pou[A]ssière,[E]","Tu rê[F#m]vais du jour où [D]Tu pourrais m'aim[A]er."]},
+ {s:'Refrain',k:'chorus',l:["Abba [D]Père, je suis à To[A]i, Abba [D]Père, je suis à To[A]i,","Abba [D]Père, je [E]suis à To[F#m]i, Abba [Bm]Père, je [E]suis à Toi."]},
+ {s:'Couplet 2',k:'verse',l:["Bien a[F#m]vant que Jésus [D]marche sur la [A]terre,","Bien a[F#m]vant le Fils qui [D]nous montre le [A]Père,","Bien a[F#m]vant que les Cieux [D]sur moi soient ou[A]verts,[E]","Tu rê[F#m]vais du jour où [D]Tu pourrais m'aim[A]er."]},
+ {s:'Pont',k:'bridge',l:["Abba [Bm]Père, je suis émervei[F#m]llé,","Saisi par l'i[A]mmensité de Ton amour pour [E]moi.","Abba [Bm]Père, si grande est Ta ten[F#m]dresse,","Ton cœur est grand ou[A]vert, et je viens plonger dans Tes [E]bras."]},
+];
+const secList=()=>FRL.map((x,i)=>`<div class="sl" style="--c:var(--sec-${x.k});margin:${i?0:6}px 0 0">${x.s}</div>`).join('');
+const ZH=[
+ {s:'主歌 1',k:'verse',l:[["喔主，[C]你赐我新生命，[G/C]拥有全新盼望，","ō zhǔ nǐ cì wǒ xīn shēng mìng yōng yǒu quán xīn pàn wàng"],["[Am7]得着完全的自由，[F]你的自由在我心。","dé zháo wán quán de zì yóu nǐ de zì yóu zài wǒ xīn"]]},
+ {s:'导歌',k:'intro',l:[["[Dm7]有你万事[Am7]都可能，[Dm7]你荣耀掌[G]权。","yǒu nǐ wàn shì dōu kě néng nǐ róng yào zhǎng quán"]]},
+ {s:'副歌 1',k:'chorus',l:[["我们高声唱，[C]全地都宣扬，","wǒ men gāo shēng chàng quán dì dōu xuān yáng"],["[Fmaj7]同心高举全能，[Am7]君王，你荣耀掌权，","tóng xīn gāo jǔ quán néng jūn wáng nǐ róng yào zhǎng quán"]]},
+];
+function music(lang,o={}){
+  const sh=o.shift||0,ch=o.chords!==false;let n=o.n||99,h='';
+  USEFLAT=[1,3,5,8,10].includes(((lang==='zh'?0:9)+sh+12)%12);
+  const src=(lang==='zh'?ZH:(o.long?FRL:FR)).slice(o.skip||0);
+  for(const s of src){
+    if(n<=0)break;
+    h+=`<div class="sl" style="--c:var(--sec-${s.k})">${s.s}</div>`;
+    for(const l of s.l){
+      if(n--<=0)break;
+      if(lang==='zh'){h+=`<div class="ln z">${pairs(l[0],sh,ch)}</div>`+(o.pinyin!==false?`<div class="pr">${l[1]}</div>`:'');}
+      else h+=`<div class="ln">${pairs(l,sh,ch)}</div>`;
+    }
+  }
+  return h;
+}
+/* ───── libellés (fr.json / zh-CN.json ; les noms propres à une piste en tête) ───── */
+const BASE={
+ fr:{app:'GCC Louange',back:'Retour',harmonie:'Harmonie',video:'Vidéo',crayon:'Crayon',chords:'Accords',pinyin:'Pinyin',notation:'Lettres | Chiffres',n:'ABC | 123',score:'简谱 | Paroles',settings:'Réglages',display:'Affichage',key:'Tonalité',play:'Je joue',read:'Ce que je lis',see:'Ce que je vois',page:'La page',order:'Ordre des sections',o:['Tout le chant','Une fois chacune','Plan'],size:'Taille du texte',layout:'Disposition',lay:'Classique',cc:'Couleur des accords',ccv:'Bleu',keep:'Retenu sur cet appareil',capo:'Capo',roles:['Pianiste','Guitariste','Présidence','Choriste','Batteur'],tabs:['Chants','Setlists','Planning','Moi'],orig:'orig.',ref:'Dans la tonalité',setlist:'Setlist',reperes:'Repères',tools:'Outils',artist:'Samuel Olivier',title:'Abba Père',sub:'',ton:'Ton',lou:'Louange',sect:'Couplet 1',role:'Pianiste',team:'équipe',sl:'Culte du 15/11',pres:'Présidence : Léa Roux',tl:'Liste | Partitions',set:'Setlist',scPage:'Pour moi, le temps de la page',scDev:'Pour moi, sur cet appareil',teamKey:k=>`L'équipe joue en ${k}`,chg:"Changer pour toute l'équipe",reco:'reco.',mineL:'moi',twoCol:'2 colonnes',half:'Demi-page',theme:'Thème',light:'Clair',dark:'Sombre',ic:'Couleur des icônes',icv:'Encre',setl:r=>`Réglé pour ${r}`,reset:'Rétablir',lettres:'Lettres',chiffres:'Chiffres'},
+ zh:{app:'GCC 敬拜',back:'返回',harmonie:'和声',video:'视频',crayon:'画笔',chords:'和弦',pinyin:'拼音',notation:'字母 | 数字',n:'字母 | 数字',score:'简谱 | 歌词',settings:'设置',display:'显示',key:'调',play:'我演奏',read:'阅读内容',see:'我看到的',page:'页面',order:'段落顺序',o:['完整顺序','每段一次','只看结构'],size:'文字',layout:'排版',lay:'经典',cc:'和弦颜色',ccv:'蓝色',keep:'保存在本设备',capo:'变调夹',roles:['钢琴手','吉他手','领会','和声','鼓手'],tabs:['诗歌','歌单','排班表','我'],orig:'原调',ref:'在调中',setlist:'歌单',reperes:'标记',tools:'工具',artist:'Sidney Mohede / 潘都芸译',title:'一切都更新',sub:'Yī qiè dōu gēng xīn',ton:'调',lou:'敬拜',sect:'主歌 1',role:'钢琴手',team:'团队',sl:'11月15日崇拜',pres:'主领：林雅文',tl:'列表 | 乐谱',set:'歌单',scPage:'仅本页有效',scDev:'仅本设备',teamKey:k=>`本队用 ${k} 调`,chg:'为整个团队更改',reco:'推荐',mineL:'我',twoCol:'双栏',half:'半页翻页',theme:'主题',light:'浅色',dark:'深色',ic:'图标颜色',icv:'墨黑',setl:r=>`已按「${r}」设置`,reset:'恢复',lettres:'字母',chiffres:'数字'}
+};
+const OWN={
+ A:{fr:{}, zh:{}},
+ B:{fr:{}, zh:{play:'我演奏',size:'字号',layout:'版式',o:['完整','每段一次','结构'],read:'阅读内容'}},
+ C:{fr:{roles:['Pianiste','Guitariste','Présidence','Choriste','Batteur']},zh:{roles:['钢琴','吉他','主领','和声','鼓手'],play:'我演奏',o:['完整','每段一次','结构']}}
+};
+const T=(lang,p)=>Object.assign({},BASE[lang],OWN[p][lang]);
+/* ───── pictogrammes ───── */
+const PATH={
+ back:'M15 5l-7 7 7 7',list:'M4 7h16M4 12h16M4 17h10',flag:'M6 4v16M6 5h11l-2 4 2 4H6',pencil:'M4 20l1-4L16 5l3 3L8 19z',
+ wrench:'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z',
+ x:'M6 6l12 12M18 6L6 18',note:'M9 18V6l10-2v12M9 18a3 3 0 1 1-3-3 3 3 0 0 1 3 3zM19 16a3 3 0 1 1-3-3 3 3 0 0 1 3 3z',
+ play:'M8 5l11 7-11 7z',sliders:'M4 8h10M18 8h2M4 16h2M10 16h10M14 6v4M6 14v4',
+ piano:'M3 6h18v12H3zM9 6v12M15 6v12',guitar:'M16 4l4 4M18 6l-6 6M9.5 11.5a4 4 0 1 0 3 3',mic:'M9 3h6v9a3 3 0 0 1-6 0zM6 11a6 6 0 0 0 12 0M12 17v4',
+ layers:'M12 4l9 5-9 5-9-5zM3 14l9 5 9-5',
+ drum:'M4 10a8 3 0 0 0 16 0 8 3 0 0 0-16 0M4 10v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6M15 3l-3 5',pres:'M5 20h14M8 20V9h8v11M6 9h12',none:'M12 3a9 9 0 1 0 .01 0'
+};
+const ico=(n,s=20)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${PATH[n]}"${n==='none'?' stroke-dasharray="3 3"':''}/></svg>`;
+const ib=n=>`<span class="ib">${ico(n)}</span>`;
+const pill=(x,on)=>`<span class="pill${on?' on':''}">${x}</span>`;
+/* ───── éléments de réglage ───── */
+const row=(l,c,cl='')=>`<div class="row ${cl}"><span class="lb">${l}</span>${c}</div>`;
+const seg=(a,i,sm,fill)=>`<span class="seg${sm?' sm':''}${fill?' fill':''}">${a.map((x,j)=>`<span${j===i?' class="on"':''}>${x}</span>`).join('')}</span>`;
+const sw=on=>`<span class="sw${on?' on':''}"></span>`;
+const step=v=>`<span class="step"><span>−</span><b>${v}</b><span>+</span></span>`;
+const val=v=>`<span class="val">${v}<i>›</i></span>`;
+const chips=(a,i)=>`<div class="chips">${a.map((x,j)=>`<span${j===i?' class="on"':''}>${x}</span>`).join('')}</div>`;
+const grpH=(t,rows,note)=>`<div class="gt h"><span>${t}</span><span>${note}</span></div><div class="grp">${rows}</div>`;
+const grp=(t,rows,note)=>`<div class="gt">${t}</div><div class="grp">${rows}</div>${note?`<div class="gn">${note}</div>`:''}`;
+const tabbar=t=>`<div class="tabbar">${t.tabs.map((x,i)=>`<span${i===0?' class="on"':''}>${x}</span>`).join('')}</div>`;
+const head=(t,lang,extra='')=>`<div class="head"><div class="ttl">${t.title}${extra}</div><div class="sub">${lang==='zh'?t.sub+' · ':''}${t.artist}</div></div>`;
+const F=(cls,w,h,inner)=>`<div class="app ${cls}" style="width:${w}px;height:${h}px">${inner}</div>`;
+const keyl=(k,mine,sm)=>`<span class="kl ${mine?'mine':'team'}${sm?' sm':''}"><span>${K(k)}</span></span>`;
+const arm=(k,mine,sm)=>`<span class="arm ${mine?'mine':'team'}${sm?' sm':''}"><span>${K(k)}</span></span>`;
+const navbar=t=>`<div class="nav"><b>${t.app}</b><span class="nl">${t.tabs.map((x,i)=>`<span${i===0?' class="on"':''}>${x}</span>`).join('')}</span></div>`;
+const sidebar=t=>`<div class="side"><b>${t.app}</b>${t.tabs.map((x,i)=>`<span${i===0?' class="on"':''}>${x}</span>`).join('')}</div>`;
+const barPhone=(t,extra='')=>`<div class="bar">${ib('back')}<span class="sp"></span>${pill(t.harmonie)}${pill(t.video)}${pill(t.crayon)}${extra}</div>`;
+const dots=`<div class="dots"><i></i><i></i><i></i><i></i></div>`;
+const setlistTop=(t,right='')=>`<div class="bar">${ib('back')}<div class="col" style="flex:1;min-width:0"><span style="font-size:15px;font-weight:700;line-height:1.2">${t.sl}</span><span class="sub" style="font-size:12px;white-space:nowrap">${t.pres}</span></div>${right}</div><div class="setl"><span class="seg sm" style="align-self:flex-start"><span>${t.tl.split(' | ')[0]}</span><span class="on">${t.tl.split(' | ')[1]}</span></span></div>`;
+const louChrome=(t,right)=>`<div class="chrome">${ib('list')}${ib('flag')}<span class="sp"></span>${right}</div>`;
+
+/* ───── piste A : le rebord ───── */
+function rebordA(t,o,inner){ // o: k, mine, zh, open
+  const h=`<span class="kt"><span class="pm">−</span>${keyl(o.k,o.mine)}<span class="pm">+</span></span>
+   <span class="rb on">${t.chords}</span>
+   <span class="seg"><span class="on">${o.zh?'字母':'ABC'}</span><span class="">${o.zh?'数字':'123'}</span></span>
+   ${o.zh?`<span class="rb on">${t.pinyin}</span><span class="seg"><span class="on">简谱</span><span>歌词</span></span>`:''}
+   <span class="rb${o.open?' on':''}">${t.settings}</span>`;
+  return inner?h:`<div class="rebord${o.center?' c':''}">${h}</div>`;
+}
+function rebordRO(t,o){ // choriste : lecture seule
+  return `<div class="rebord"><span class="kt"><span class="val" style="padding:0 8px">${o.zh?'调':'en'} ${K(o.k)}</span></span><span class="rb">${t.pinyin}</span><span class="seg"><span class="on">简谱</span><span>${o.zh?'歌词':'Paroles'}</span></span><span class="rb">${t.size.split(' ')[0]}</span><span class="rb">${t.settings}</span></div>`;
+}
+function sheetA(t,o={}){
+  const rows1=`<div style="padding:10px 14px">${chips(t.roles,0)}</div>`+row(t.capo,step('0'));
+  const rows2=row(t.order,'','col2').replace('</div>',`${seg(t.o,0,true,true)}</div>`)+row(t.size,step(o.size||'100 %'))+row(t.layout,val(t.lay))+row(t.cc,val(t.ccv));
+  const body=o.cols?`<div class="cgrid" style="grid-template-columns:1fr 1fr"><div>${grpH(t.play,rows1,t.keep)}</div><div>${grpH(t.page,rows2,t.keep)}</div></div>`:grpH(t.play,rows1,t.keep)+grpH(t.page,rows2,t.keep);
+  return `<div class="sheetA sheet" style="${o.style||''}"><div class="grab"></div><div class="sht"><span>${t.settings}</span><i>×</i></div><div class="body" style="${o.w?`width:${o.w}px;margin:0 auto;`:''}">${body}</div></div>`;
+}
+/* ───── piste B : l'armure et la marge ───── */
+const segV=(a,i)=>`<span class="seg v">${a.map((x,j)=>`<span${j===i?' class="on"':''}>${x}</span>`).join('')}</span>`;
+function groupsB(t,o={}){ // o : zh, k, v (ordre en liste), lou (groupe « La page » du mode louange), choriste, role
+  const ord=row(t.order,'','col2').replace('</div>',`${o.v?segV(t.o,0):seg(t.o,0,true,true)}</div>`);
+  const g1=grp(t.play,row('',chips(t.roles,o.role||0),'col2').replace('<span class="lb"></span>',''),(o.choriste?`${t.setl(t.roles[o.role])} · ${t.reset}<br>`:'')+t.keep);
+  let r2='';
+  if(!o.choriste) r2+=row(t.chords,sw(true))+row(t.notation,`<span class="val">${t.ref} ${K(o.k||'A')}<i>›</i></span>`);
+  if(o.zh) r2+=row(t.pinyin,sw(true))+row(t.score,seg(['简谱','歌词'],0));
+  const g2=grp(t.read,r2+ord,t.keep);
+  const pg=o.lou?row(t.twoCol,sw(true))+row(t.half,sw(false))+row(t.theme,seg([t.light,t.dark],0,true))+row(t.ic,val(t.icv))
+    :row(t.layout,val(t.lay))+row(t.size,step('100 %'))+(o.choriste?'':row(t.cc,val(t.ccv)));
+  return g1+g2+grp(t.page,pg,t.keep);
+}
+function winB(t,o){ // fenêtre de l'armure : douze touches, légendes, Lettres | Chiffres, capo, lien « toute l'équipe »
+  const ks=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
+  const leg=o.leg||{};
+  const cells=ks.map(k=>`<div class="${k===o.me?'me':''}"><span>${K(k)}</span><small>${leg[k]||(k===o.me?t.mineL:'')}</small></div>`).join('');
+  return `<div class="win" style="${o.style}"><h4>${t.key}</h4><div class="hint">${o.hint}</div><div class="keys">${cells}</div>
+   <div class="row" style="margin-top:8px"><span class="lb">${t.notation}</span>${seg([t.lettres,t.chiffres],0,true)}</div>
+   <div class="row"><span class="lb">${t.capo}</span>${step('0')}</div>${o.link?`<div class="row" style="justify-content:center;min-height:44px"><span class="lnk">${t.chg}</span></div>`:''}</div>`;
+}
+const sheetBox=(t,h,inner,cue)=>`<div class="sheetB sheet" style="height:${h}px"><div class="grab"></div><div class="sht"><span>${t.display}</span><i>×</i></div><div class="body">${inner}</div>${cue?'<span class="sbar"></span><div class="cue"></div>':''}</div>`;
+const barB=(t,on)=>`<div class="bar">${ib('back')}<span class="sp"></span>${pill(t.harmonie)}${pill(t.video)}${pill(t.crayon)}${pill(t.display,on)}</div>`;
+
+/* ───── piste C : ma place ───── */
+function posteIcons(t,sel){const ic=['piano','guitar','pres','mic','drum','none'];const nm=[...t.roles.slice(0,2),t.roles[2],t.roles[3],t.roles[4],'自定'];
+  const names=t.lou==='Louange'?[t.roles[0],t.roles[1],t.roles[2],t.roles[3],t.roles[4],'Aucun']:[...t.roles,'自定'];
+  return `<div class="postes">${ic.map((n,i)=>`<div class="${i===sel?'on':''}">${ico(n,22)}<span>${names[i]}</span></div>`).join('')}</div>`;}
+function voletRows(t,o){
+  let r=row(t.chords,sw(true))+row(t.notation,seg([o.zh?'字母':'Lettres',o.zh?'数字':'Chiffres'],0,true));
+  if(o.zh) r+=row(t.pinyin,sw(true))+row(t.score,seg(['简谱',o.zh?'歌词':'Paroles'],0,true));
+  r+=row(t.order,'','col2').replace('</div>',`${seg(t.o,0,true,true)}</div>`);
+  return grp(t.see,r)+grp(t.page,row(t.size,step('100 %'))+row(t.layout,val(t.lay))+row(t.cc,val(t.ccv)),t.keep);
+}
+const tonC=(t,k,mine,zh)=>`<span style="display:inline-flex;align-items:center"><span class="pm">−</span><span style="font-size:20px;font-weight:600;min-width:28px;text-align:center">${K(k)}</span><span class="pm">+</span></span>`;
+const posteBtn=(t,zh,name)=>`<span class="poste">${ico('piano',18)}${name?`<span>${name}</span>`:''}</span>`;
+
+/* ───── les maquettes ───── */
+const M={};
+/* A */
+M['A.phone']=()=>{const t=T('fr','A');return F('ph tabA',390,844,
+  barPhone(t)+head(t,'fr')+
+  `<div class="music fd" style="flex:1">${music('fr',{n:3})}</div>`+
+  sheetA(t,{style:'height:480px'})+rebordA(t,{k:'A',mine:false,open:true})+tabbar(t));};
+M['A.tablet']=()=>{const t=T('zh','A');return F('tb',820,1180,navbar(t)+
+  `<div class="col" style="width:640px;margin:0 auto;flex:1;position:relative">`+
+   `<div class="bar" style="padding:0">${ib('back')}<span class="sp"></span>${pill(t.harmonie)}${pill(t.video)}${pill(t.crayon)}</div>${head(t,'zh')}`+
+   `<div class="music" style="padding:4px 0 0">${music('zh',{n:3})}</div>`+
+   sheetA(t,{style:'height:650px;width:560px;margin:0 auto;border-radius:20px 20px 0 0'})+
+   `<div class="rebord" style="width:100%;padding:0 6px">${rebordA(t,{k:'C',mine:false,zh:true,open:true},true)}</div></div>`);};
+M['A.desk']=()=>{const t=T('fr','A');return F('dk',1280,760,sidebar(t)+
+  `<div class="info"><span class="ib" style="margin:-6px 0 0 -8px">${ico('back')}</span><div><div class="ttl">${t.title}</div><div class="sub">${t.artist}</div></div><div class="acts">${pill(t.harmonie)}${pill(t.video)}${pill(t.crayon)}</div>${secList()}</div>`+
+  `<div class="col" style="flex:1"><div class="music fd" style="padding:20px 28px 0">${music('fr',{long:true,shift:-4})}</div>`+
+  `<div style="height:300px;display:flex;flex-direction:column">${sheetA(t,{style:'flex:1;border-radius:18px 18px 0 0',cols:true})}</div>`+rebordA(t,{k:'A',mine:false,open:true,center:true})+`</div>`);};
+const stripChant=(p,body)=>body;
+M['A.s1']=()=>{const t=T('fr','A');return F('ph',390,700,barPhone(t)+head(t,'fr')+`<div class="music">${music('fr',{shift:-2})}</div>`+rebordA(t,{k:'G',mine:true})+tabbar(t));};
+M['A.s2']=()=>{const t=T('fr','A');return F('ph',390,700,setlistTop(t,`${pill(t.lou+' ›')}`)+`<div class="item"><span class="n">1</span>${t.title}</div><div class="music">${music('fr',{shift:-2,n:3})}</div>`+rebordA(t,{k:'G',mine:true})+tabbar(t));};
+M['A.s3']=()=>{const t=T('fr','A');return F('ph lou',390,700,louChrome(t,ib('pencil')+ib('wrench')+ib('x'))+`<div class="cttl">${t.title}</div><div class="music">${music('fr',{shift:-2,n:3})}</div>`+rebordA(t,{k:'G',mine:true})+dots);};
+/* B */
+M['B.phone']=()=>{const t=T('fr','B');return F('ph',390,844,
+  barB(t)+head(t,'fr',arm('D',true))+`<div class="music">${music('fr',{shift:-7})}</div>`+tabbar(t)+
+  winB(t,{me:'D',leg:{A:t.orig,F:t.reco},hint:t.scPage,style:'left:12px;top:106px;width:366px'}));};
+M['B.sheet']=()=>{const t=T('fr','B');return F('ph',390,844,
+  barB(t,true)+head(t,'fr',arm('D',true))+`<div class="music fd">${music('fr',{shift:-7})}</div>`+sheetBox(t,506,groupsB(t,{k:'D'}),true));};
+M['B.setl']=()=>{const t=T('fr','B');return F('ph',390,844,
+  setlistTop(t,pill(t.display)+pill(t.lou+' ›'))+`<div class="item"><span class="n">1</span>${t.title}${arm('D',true)}<span class="eq">${t.team} G</span></div><div class="music fd">${music('fr',{shift:-7,long:true})}</div>`+tabbar(t)+
+  winB(t,{me:'D',leg:{A:t.orig,F:t.reco,G:t.team},hint:t.scDev,link:true,style:'left:12px;top:142px;width:366px'}));};
+M['B.hidden']=()=>{const t=T('fr','B');return F('ph lou',390,700,
+  `<span class="arm mine fl sm"><span>D</span></span><div class="music fd" style="padding-top:12px">${music('fr',{shift:-7,skip:2,long:true})}</div>`+dots);};
+M['B.cho1']=()=>{const t=T('fr','B');return F('ph lou',390,700,
+  `<span class="arm ro fl sm"><span>G</span></span><div class="tip" style="top:50px;right:12px">${t.teamKey('G')}</div><div class="music fd" style="padding-top:12px">${music('fr',{shift:-2,skip:2,long:true,chords:false})}</div>`+dots);};
+M['B.cho2']=()=>{const t=T('zh','B');return F('ph',390,844,
+  barB(t,true)+head(t,'zh',`<span class="arm ro"><span>1=C</span></span>`)+`<div class="music fd">${music('zh',{n:2,chords:false})}</div>`+sheetBox(t,560,groupsB(t,{zh:true,k:'C',choriste:true,role:3}),false));};
+M['B.tablet']=()=>{const t=T('zh','B');return F('tb',820,1180,navbar(t)+
+  `<div class="col" style="width:640px;margin:0 auto;flex:1">`+
+   `<div class="bar" style="padding:0">${ib('back')}<span class="sp"></span>${pill(t.harmonie)}${pill(t.video)}${pill(t.crayon)}${pill(t.display)}</div>`+
+   `<div class="head" style="padding-inline:0"><div class="ttl">${t.title}${arm('1=C',false)}</div><div class="sub">${t.sub} · ${t.artist}</div></div>`+
+   `<div class="music" style="padding:4px 0 0">${music('zh',{n:3})}</div>`+
+   `<div class="sheetB sheet" style="height:712px;width:560px;margin:0 auto"><div class="grab"></div><div class="sht"><span>${t.display}</span><i>×</i></div><div class="body">${groupsB(t,{zh:true,k:'C'})}</div></div></div>`);};
+function tabL(open){const t=T('fr','B');
+  const chrome=`<div class="chrome">${ib('list')}${ib('flag')}<span class="sp"></span>${ib('pencil')}${ib('wrench')}<span class="pill${open?' on':''}" style="margin:0 2px">${t.display}</span>${ib('x')}</div>`;
+  const marge=open?`<div class="margeB col" style="width:320px;flex:none;padding:6px 14px;overflow:hidden"><div class="sht" style="padding:8px 0 0"><span>${t.display}</span><i>×</i></div>${groupsB(t,{k:'D',v:true,lou:true})}</div>`:'';
+  return F('tb lou',1080,810,`<div style="display:flex;flex:1;min-height:0"><div class="col" style="flex:1">${chrome}<div class="cttl">${t.title}${arm('D',true,true)}</div><div class="music${open?'':' cols2'}" style="padding:8px 32px 0">${music('fr',{long:true,shift:-7})}</div></div>${marge}</div>`);}
+M['B.tabLc']=()=>tabL(false);
+M['B.tabLo']=()=>tabL(true);
+function deskB(open){const t=T('fr','B');return F('dk',1280,760,sidebar(t)+
+  `<div class="info"><span class="ib" style="margin:-6px 0 0 -8px">${ico('back')}</span><div><div class="ttl">${t.title}${arm('F',false)}</div><div class="sub">${t.artist}</div></div><div class="acts">${pill(t.harmonie)}${pill(t.video)}${pill(t.crayon)}${pill(t.display,open)}</div>${secList()}</div>`+
+  `<div class="col" style="flex:1"><div class="music fd" style="padding:20px 24px 0">${music('fr',{long:true,shift:-4})}</div></div>`+
+  (open?`<div class="margeB col" style="width:320px;flex:none;padding:6px 14px;overflow:hidden"><div class="sht" style="padding:8px 0 0"><span>${t.display}</span><i>×</i></div>${groupsB(t,{k:'F',v:true})}</div>`:''));}
+M['B.deskC']=()=>deskB(false);
+M['B.deskO']=()=>deskB(true);
+M['B.s1']=()=>{const t=T('fr','B');return F('ph',390,700,barB(t)+head(t,'fr',arm('F',false))+`<div class="music">${music('fr',{shift:-4})}</div>`+tabbar(t));};
+M['B.s2']=()=>{const t=T('fr','B');return F('ph',390,700,setlistTop(t,pill(t.display)+pill(t.lou+' ›'))+`<div class="item"><span class="n">1</span>${t.title}${arm('D',true)}<span class="eq">${t.team} G</span></div><div class="music">${music('fr',{shift:-7,n:3})}</div>`+tabbar(t));};
+M['B.s3']=()=>{const t=T('fr','B');return F('ph lou',390,700,louChrome(t,ib('pencil')+ib('wrench')+`<span class="pill" style="margin:0 2px">${t.display}</span>`+ib('x'))+`<div class="cttl">${t.title}${arm('D',true,true)}</div><div class="music">${music('fr',{shift:-7,n:3})}</div>`+dots);};
+/* C */
+M['C.phone']=()=>{const t=T('fr','C');return F('ph',390,844,
+  `<div class="bar glass" style="z-index:4"><span class="ib">${ico('back')}</span><span class="sp"></span><span class="ib">${ico('layers')}</span><span class="ib">${ico('play')}</span><span class="ib">${ico('pencil')}</span>${tonC(t,'A')}${posteBtn(t)}</div>`+
+  `<div class="volet" style="height:380px"><div class="sht" style="padding-top:2px"><span>Je joue du piano</span><i>×</i></div><div style="padding:6px 12px 0">${posteIcons(t,0)}${voletRows(t,{zh:false})}</div></div>`+
+  `<div class="music" style="padding-top:12px">${head(t,'fr').replace('class="head"','class="head" style="padding-inline:0"')}${music('fr',{n:3})}</div>`+tabbar(t));};
+M['C.tablet']=()=>{const t=T('zh','C');return F('tb',820,1180,navbar(t)+
+  `<div class="col" style="width:640px;margin:0 auto;flex:1">`+
+   `<div class="bar glass" style="padding:0 4px;border-radius:0 0 18px 18px;z-index:4"><span class="ib">${ico('back')}</span><span class="sp"></span>${pill(t.harmonie)}${pill(t.video)}${pill(t.crayon)}<span style="width:6px"></span>${tonC(t,'C')}${posteBtn(t,true,'钢琴')}</div>`+
+   `<div class="volet" style="border-radius:0 0 22px 22px"><div class="sht" style="padding-top:12px"><span>我演奏：钢琴</span><i>×</i></div><div style="padding:4px 14px 6px">${posteIcons(t,0)}<div class="cgrid" style="grid-template-columns:1fr 1fr">${voletRows(t,{zh:true}).replace(/(<div class="gt">页面)/,'__SPLIT__$1').split('__SPLIT__').map(x=>`<div>${x}</div>`).join('')}</div><div class="regle"><span>已按「钢琴」设置</span><span>恢复</span></div></div></div>`+
+   `<div class="head" style="padding-inline:0;margin-top:14px">${`<div class="ttl">${t.title}</div><div class="sub">${t.sub} · ${t.artist}</div>`}</div><div class="music" style="padding:4px 0 0">${music('zh')}</div></div>`);};
+M['C.desk']=()=>{const t=T('fr','C');return F('dk',1280,760,sidebar(t)+
+  `<div class="col" style="flex:1"><div class="bar glass" style="padding:0 16px;z-index:4"><span class="ib">${ico('back')}</span><span style="font-weight:700;font-size:17px;margin-left:4px">${t.title}</span><span class="sp"></span>${pill(t.harmonie)}${pill(t.video)}${pill(t.crayon)}<span style="width:8px"></span>${tonC(t,'A')}${posteBtn(t,false,t.roles[0])}</div>`+
+  `<div class="volet" style="height:292px;border-radius:0 0 22px 22px"><div style="display:grid;grid-template-columns:360px 1fr 1fr;gap:0 24px;padding:10px 20px"><div><div class="sht" style="padding:0 0 6px"><span>Je joue du piano</span></div>${posteIcons(t,0).replace('repeat(6,1fr)','repeat(6,1fr)')}<div class="regle"><span>Réglé pour Pianiste</span><span>Rétablir</span></div></div>`+
+   `<div>${grp(t.see,row(t.chords,sw(true))+row(t.notation,seg(['Lettres','Chiffres'],0,true))+row(t.order,'','col2').replace('</div>',`${segV(t.o,0)}</div>`))}</div><div>${grp(t.page,row(t.size,step('100 %'))+row(t.layout,val(t.lay))+row(t.cc,val(t.ccv)),t.keep)}</div></div></div>`+
+  `<div style="display:flex;flex:1;min-height:0"><div class="info" style="border-right:1px solid var(--line)"><div class="sub">${t.artist}</div>${secList()}</div><div class="music fd" style="padding:16px 28px 0">${music('fr',{long:true,shift:-4})}</div></div></div>`);};
+M['C.s1']=()=>{const t=T('fr','C');return F('ph',390,700,`<div class="bar glass" style="position:absolute;top:0;left:0;right:0;z-index:4"><span class="ib">${ico('back')}</span><span class="sp"></span><span class="ib">${ico('layers')}</span><span class="ib">${ico('play')}</span><span class="ib">${ico('pencil')}</span>${tonC(t,'G')}${posteBtn(t)}</div>`+`<div class="head" style="margin-top:66px">${`<div class="ttl">${t.title}</div><div class="sub">${t.artist}</div>`}</div><div class="music">${music('fr',{shift:-2})}</div>`+tabbar(t));};
+M['C.s2']=()=>{const t=T('fr','C');return F('ph',390,700,setlistTop(t,pill(t.lou+' ›'))+`<div class="item" style="padding-bottom:2px"><span class="n">1</span>${t.title}<span class="sp"></span>${tonC(t,'G')}${posteBtn(t)}</div><div class="music">${music('fr',{shift:-2,n:3})}</div>`+tabbar(t));};
+M['C.s3']=()=>{const t=T('fr','C');return F('ph lou',390,700,`<div class="chrome glass">${ib('list')}${ib('flag')}<span class="sp"></span>${tonC(t,'G')}${posteBtn(t)}${ib('x')}</div><div class="cttl" style="padding-top:8px">${t.title}</div><div class="music">${music('fr',{shift:-2,n:3})}</div>`+dots);};
+
+/* ───── assemblage et mise à l'échelle ───── */
+document.querySelectorAll('.dev[data-mock]').forEach(d=>{
+  const w=+d.dataset.w;
+  d.innerHTML=`<div class="dev-label">${d.dataset.label}</div><div class="fitbox"><div class="fitin" style="width:${w}px">${M[d.dataset.mock]()}</div></div>`;
+});
+function layout(){
+  document.querySelectorAll('.devrow').forEach(row=>{
+    const devs=[...row.children],ws=devs.map(d=>+d.dataset.w),gap=24;
+    const avail=row.clientWidth,total=ws.reduce((a,b)=>a+b,0)+gap*(devs.length-1);
+    const common=Math.min(1,avail/total);
+    devs.forEach((d,i)=>{
+      const s=(devs.length>1&&common>=.78)?common:Math.min(1,avail/ws[i]);
+      const box=d.querySelector('.fitbox'),inn=d.querySelector('.fitin');
+      inn.style.transform=`scale(${s})`;
+      box.style.width=ws[i]*s+'px';box.style.height=inn.offsetHeight*s+'px';
+      d.style.width=ws[i]*s+'px';
+    });
+  });
+}
+addEventListener('resize',layout);layout();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(layout);
+</script>
+</body>
+</html>

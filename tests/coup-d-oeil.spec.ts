@@ -2,7 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { basculerMode } from "./helpers/menuSetlist";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreEditeur, reglerElement } from "./helpers/editeurSetlist";
-import { fermerMenus, ouvrirAffichage, ouvrirPartitions, ouvrirSommaire } from "./helpers/setlist";
+import { ouvrirAffichage, ouvrirPartitions, ouvrirSommaire } from "./helpers/setlist";
+import { fermerMarge } from "./helpers/marge";
 import { ouvrirJeJoue } from "./helpers/louange";
 import { abbreviateSection } from "../src/lib/chordpro/abbreviations";
 import { uniqueSections } from "../src/lib/setlist/uniqueSections";
@@ -160,12 +161,10 @@ test("sections uniques : une fois par section et par tonalité, occurrences repr
 
 test.describe("modes d'affichage de la vue partitions", () => {
   async function choose(page: Page, name: string) {
-    // Bouton « Affichage » de la barre sur G, sous-menu du ⋯ en deux volets
-    // (docs/spec-deux-volets.md, Q3 et Q7).
-    await ouvrirAffichage(page);
-    await page.getByRole("menuitemradio", { name }).click();
-    // Le menu reste ouvert après un choix (Radix cache alors le reste de la page).
-    await fermerMenus(page);
+    // Bouton « Affichage » de la barre sur G ou de l'en-tête en deux volets : la marge (RU-4), qu'on referme après le choix.
+    const marge = await ouvrirAffichage(page);
+    await marge.getByRole("radio", { name, exact: true }).click();
+    await fermerMarge(page);
   }
   const song1Sections = (page: Page) => page.locator('[data-outline-item="1"] [data-section]');
 
@@ -183,7 +182,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
 
   test("« Sections uniques » : le refrain repris n'est imprimé qu'une fois, sa nuance dans le bandeau ; le choix est retenu sur l'appareil", async ({ page }) => {
     await openPartitions(page);
-    await choose(page, "Chaque section une fois");
+    await choose(page, "Une fois chacune");
     await expect(song1Sections(page)).toHaveCount(2);
     await expect(song1Sections(page).nth(1)).toHaveAttribute("data-section-uids", "chorus-3-1 chorus-3-2");
     await expect(page.locator('[data-outline-item="1"] [data-section] [data-nuance]')).toHaveCount(0);
@@ -200,7 +199,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
   test("« Structure seule » : bandeau sans paroles ; sur un scan 简谱, pas de scan", async ({ page }) => {
     await openPartitions(page);
     await expect(page.locator('[data-outline-item="2"] img')).toHaveCount(1);
-    await choose(page, "Plan du chant");
+    await choose(page, "Plan");
     await expect(page.locator("[data-section]")).toHaveCount(0);
     await expect(page.getByRole("list", { name: "Structure" })).toHaveCount(2);
     await expect(page.locator('[data-outline-item="2"] img')).toHaveCount(0);
@@ -213,7 +212,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await expect(page.locator("[data-section]")).toHaveCount(0);
   });
 
-  test("choix fait dans le mode louange : retrouvé dans le menu Affichage de la setlist, sans recharger", async ({ page }) => {
+  test("choix fait dans le mode louange : retrouvé dans la marge Affichage de la setlist, sans recharger", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("perf-role-asked", "1"));
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
     await page.getByRole("button", { name: /Mode Louange/ }).click();
@@ -237,9 +236,9 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
 
     await ouvrirPartitions(page);
-    await ouvrirAffichage(page);
-    await expect(page.getByRole("menuitemradio", { name: "Chaque section une fois" })).toHaveAttribute("aria-checked", "true");
-    await fermerMenus(page);
+    const marge = await ouvrirAffichage(page);
+    await expect(marge.getByRole("radio", { name: "Une fois chacune" })).toHaveAttribute("aria-checked", "true");
+    await fermerMarge(page);
     await expect(song1Sections(page)).toHaveCount(2);
   });
 

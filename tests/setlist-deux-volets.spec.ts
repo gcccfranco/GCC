@@ -139,7 +139,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await capture(page, "deux-volets");
   });
 
-  test("l'en-tête : catégorie et date, titre, présidence ; Présentation · Crayon · Modifier · PDF · ⋯ · Mode louange", async ({ page }) => {
+  test("l'en-tête : catégorie et date, titre, présidence ; Présentation · Crayon · Modifier · PDF · Affichage · ⋯ · Mode louange", async ({ page }) => {
     await ouvrir(page);
     const e = enTete(page);
     // Replié (une rangée) : le titre ; catégorie, date et présidence sont dans le bloc qu'il déplie.
@@ -157,7 +157,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
         .filter((el) => (el as HTMLElement).offsetParent !== null)
         .map((el) => el.getAttribute("aria-label") ?? el.textContent?.trim() ?? ""),
     );
-    expect(noms).toEqual(["Culte du 4 octobre, Afficher les détails de la setlist", "Présentation", "Crayon", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
+    expect(noms).toEqual(["Culte du 4 octobre, Afficher les détails de la setlist", "Présentation", "Crayon", "Modifier", "PDF", "Affichage", "Plus d'actions", "Mode Louange"]);
     // Libellés compris : ils se lisent, pas seulement à l'oreille.
     for (const nom of ["Crayon", "Modifier", "Mode Louange"]) {
       await expect(e.getByRole(nom === "Modifier" ? "link" : "button", { name: nom, exact: true })).toContainText(nom);
@@ -169,7 +169,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await expect(bloc.getByText("Thème : la grâce.")).toBeVisible();
   });
 
-  test("⋯ : Accords, Affichage, Prévenir l'équipe, Dupliquer, Partager, Supprimer", async ({ page }) => {
+  test("⋯ : Accords, Prévenir l'équipe, Dupliquer, Partager, Supprimer", async ({ page }) => {
     await ouvrir(page);
     await enTete(page).getByRole("button", { name: "Plus d'actions" }).click();
     const menu = page.getByRole("menu");
@@ -181,14 +181,15 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await expect(chant(page, 1).getByText("Em", { exact: true }).first()).toBeVisible();
     await menu.getByRole("menuitemcheckbox", { name: "Accords" }).click();
     await expect(chant(page, 1).getByText("Em", { exact: true })).toHaveCount(0);
-    // Affichage, dans un sous-menu : trois positions, couleurs par section, 简谱.
+    // Affichage : un bouton de l'en-tête (plus un sous-menu du ⋯, RU-4) ; sa marge porte l'ordre, le Pinyin, les couleurs.
     await page.keyboard.press("Escape");
-    await enTete(page).getByRole("button", { name: "Plus d'actions" }).click();
-    await page.getByRole("menuitem", { name: "Affichage" }).click();
-    await expect(page.getByRole("menuitemradio", { name: "Tout le chant" })).toHaveAttribute("aria-checked", "true");
-    await expect(page.getByRole("menuitemcheckbox", { name: "Pinyin" })).toBeVisible();
-    await expect(page.getByRole("menuitemradio", { name: "Couleurs par section" })).toBeVisible();
-    await page.getByRole("menuitemradio", { name: "Plan du chant" }).click();
+    await enTete(page).getByRole("button", { name: "Affichage", exact: true }).click();
+    const m = page.getByTestId("marge-affichage");
+    await expect(m).toHaveAttribute("data-ouvert", "true");
+    await expect(m.getByRole("radio", { name: "Tout le chant" })).toHaveAttribute("aria-checked", "true");
+    await expect(m.getByRole("switch", { name: "Pinyin" })).toBeVisible();
+    await expect(m.getByRole("radiogroup", { name: "Disposition" }).getByRole("radio").filter({ hasText: "Couleurs par section" })).toBeVisible();
+    await m.getByRole("radio", { name: "Plan", exact: true }).click();
     await expect(chant(page, 1).locator("[data-section]")).toHaveCount(0);
   });
 

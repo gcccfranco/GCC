@@ -66,14 +66,16 @@ export function DemiPage({
       // Demi-lignes (lot JP-C, téléphone en portrait) : les fenêtres empilées forment UN groupe, et les deux moitiés d'une ligne
       // ne comptent que pour une rangée (jamais de coupe entre elles).
       const fenetres = Array.from(couche.querySelectorAll("[data-jianpu-tranche]"));
-      if (fenetres.some((f) => f.hasAttribute("data-jianpu-moitie"))) {
+      // Deux colonnes de demi-lignes (lot JV, JV-4) : un groupe par colonne (`data-jianpu-volet`), comme les colonnes de texte.
+      if (fenetres.some((f) => f.hasAttribute("data-jianpu-moitie"))) for (const volet of new Set(fenetres.map((f) => f.closest("[data-jianpu-volet]")))) {
         const rects: Array<[number, number]> = [];
-        for (const f of fenetres) {
+        const fenetres_ = fenetres.filter((f) => f.closest("[data-jianpu-volet]") === volet);
+        for (const f of fenetres_) {
           const q = f.getBoundingClientRect();
           if (f.getAttribute("data-jianpu-moitie") === "d" && rects.length) rects[rects.length - 1][1] = q.bottom;
           else rects.push([q.top, q.bottom]);
         }
-        const qs = fenetres.map((f) => f.getBoundingClientRect());
+        const qs = fenetres_.map((f) => f.getBoundingClientRect());
         groupes.push({ x0: Math.min(...qs.map((q) => q.left)), x1: Math.max(...qs.map((q) => q.right)), top: Math.min(...qs.map((q) => q.top)), blocs: bordsLibres(rects, cote), lignes: [], sections: [], plages: cote === "haut" ? rects : undefined });
       } else for (const f of fenetres) {
         const q = f.getBoundingClientRect();
@@ -131,8 +133,9 @@ export function DemiPage({
     // Deux colonnes : coupe verticale dans la gouttière, sur toute la hauteur (à gauche la page suivante, à droite la page en
     // cours). Seul un en-tête de chant pleine largeur sur la page suivante (un nouveau chant) garde la coupe horizontale : la
     // gouttière le trancherait ; celui de la page en cours est en haut, déjà lu, et sa moitié droite reste en place.
-    const colsH = h.querySelectorAll("[data-col-page]");
-    const colsB = b.querySelectorAll("[data-col-page]");
+    // Scan 简谱 en deux colonnes de demi-lignes (lot JV, JV-4) : ses colonnes (`data-jianpu-volet`) comptent comme celles du texte.
+    const colsH = h.querySelectorAll("[data-col-page], [data-jianpu-volet]");
+    const colsB = b.querySelectorAll("[data-col-page], [data-jianpu-volet]");
     const pleineLargeur = (couche: HTMLElement) => Array.from(couche.querySelectorAll("[data-entete-chant]")).some((e) => !e.closest("[data-col-page]"));
     const hautDesColonnes = (cols: NodeListOf<Element>) => Math.min(...Array.from(cols, (c) => c.getBoundingClientRect().top));
     // La page suivante peut n'avoir qu'une colonne de contenu (page courte en deux colonnes) : elle compte si cette colonne

@@ -41,6 +41,8 @@ type DemandeAccord = {
   tonalite?: string;
   /** De quoi ouvrir la porte 2 au passage de l'accord (posé par le fournisseur, jamais par l'appelant). */
   ici?: IciDuChant;
+  /** AL-1 : section d'un accord du scan 简谱 (sans `data-section-uids` au DOM), posée par l'appelant. */
+  sectionUids?: string[];
 };
 
 /** H5-2 : ce qu'il faut pour calculer la ligne « Ici » et ouvrir la porte 2 au bloc d'un passage. */
@@ -49,7 +51,8 @@ export type IciDuChant = {
   /** Tonalité jouée (celle de la porte 2). */
   tonalite: string;
   tonaliteOrigine?: string;
-  ouvrir: (sectionUid: string, idee?: string) => void;
+  /** `depuisNom` : touché sur le nom de la section (JV-5a) ; la feuille s'ouvre à mi-hauteur au téléphone. */
+  ouvrir: (sectionUid: string, idee?: string, options?: { depuisNom?: boolean; /** Le nom touché : la page le remonte sous la barre avant d'ouvrir la feuille. */ element?: HTMLElement | null }) => void;
 };
 
 /** Ce que le panneau sait du chant lu : la tonalité affichée et l'accord qui suit vraiment dans la partition. */
@@ -78,18 +81,33 @@ type Contexte = {
   enregistrer: (el: HTMLElement) => () => void;
   /** Aide « dans le flux » (`aide="flux"`) : présent seulement tant qu'elle est à afficher ; ferme l'aide. */
   fermerAideLigne?: () => void;
+  /** JV-5a : de quoi ouvrir la porte 2 au passage d'une section (nom de section touchable) ; absent sans accès Harmonie. */
+  ici?: IciDuChant;
+  /** AL-2 : l'`ici` joint aux demandes d'accord ; absent de `ici` quand les noms de section restent inertes (mode louange, réglage éteint). */
+  iciAccords?: IciDuChant;
 };
 
 const Rien: Contexte = { ouvrir: () => {}, fermer: () => {}, fermerSansFocus: () => {}, actif: false, enregistrer: () => () => {} };
 const AccordsContext = createContext<Contexte>(Rien);
 
 /** Joint la tonalité affichée à chaque demande qui descend du fournisseur (H5-1 ; H5-2 y ajoutera les passages). */
-function avecTonalite(parent: Contexte, tonalite?: string, ici?: IciDuChant): Contexte {
-  return tonalite ? { ...parent, ouvrir: (d) => parent.ouvrir({ tonalite, ici, ...d }) } : parent;
+function avecTonalite(parent: Contexte, tonalite?: string, ici?: IciDuChant, chant?: Chant): Contexte {
+  return tonalite ? { ...parent, ouvrir: (d) => parent.ouvrir({ tonalite, ici, chant, ...d }) } : parent;
 }
 
 export function useOuvrirAccord(): Contexte {
   return useContext(AccordsContext);
+}
+
+/** JV-5a : l'`ici` du fournisseur le plus proche (le nom d'une section ouvre la porte 2 par le même chemin que « Ici »). */
+export function useIciDuChant(): IciDuChant | undefined {
+  return useContext(AccordsContext).ici;
+}
+
+/** AL-2 : de quoi situer un accord dans ses sections, même quand les noms de section ne sont pas touchables. */
+export function useIciDesAccords(): IciDuChant | undefined {
+  const c = useContext(AccordsContext);
+  return c.iciAccords ?? c.ici;
 }
 
 /** Coupe les accords touchables de tout ce qui est dessous (édition d'une ligne, mode louange). */
@@ -98,9 +116,9 @@ export function AccordsInactifs({ children }: { children: React.ReactNode }) {
 }
 
 /** Dit de quel chant sont les accords dessous (une setlist en porte plusieurs). */
-export function ChantDesAccords({ chant, tonalite, ici, children }: { chant: Chant; tonalite?: string; ici?: IciDuChant; children: React.ReactNode }) {
+export function ChantDesAccords({ chant, tonalite, ici, sansNoms, children }: { chant: Chant; tonalite?: string; ici?: IciDuChant; /** Les noms de section ne lisent pas `ici` (il ne sert qu'au panneau). */ sansNoms?: boolean; children: React.ReactNode }) {
   const parent = useContext(AccordsContext);
-  const valeur = useMemo(() => avecTonalite({ ...parent, chant }, tonalite, ici), [parent, chant, tonalite, ici]);
+  const valeur = useMemo(() => avecTonalite({ ...parent, chant, ici: sansNoms ? undefined : ici, iciAccords: ici }, tonalite, ici, chant), [parent, chant, tonalite, ici, sansNoms]);
   return <AccordsContext.Provider value={valeur}>{children}</AccordsContext.Provider>;
 }
 
@@ -137,6 +155,7 @@ export function AccordsProvider({
   tonalite,
   ici,
   aide = false,
+  louange = false,
 }: {
   children: React.ReactNode;
   /** Faux : le fournisseur reste monté mais les accords ne sont plus touchables (setlist en édition). */
@@ -149,6 +168,8 @@ export function AccordsProvider({
   /** Montre, une seule fois par appareil, la bulle « Touchez un accord… » sous le premier accord visible.
    *  `"flux"` : pas de bulle posée par-dessus, l'aide se dessine là où l'on pose `AideAccordsEnLigne`. */
   aide?: boolean | "flux";
+  /** AL-2 : posé par-dessus le mode louange (z-[9999]) : bulle et feuille passent au-dessus. */
+  louange?: boolean;
 }) {
   const [ouvert, setOuvert] = useState<Ouvert | null>(null);
   const [aideAncre, setAideAncre] = useState<HTMLElement | null>(null);
@@ -202,14 +223,14 @@ export function AccordsProvider({
     const tonaliteDuChant = dansPanneau ? courant.current?.harmonie?.tonalite : hors ? undefined : tonaliteDesEtiquettes(d.tonalite, d.capo);
     const section = !dansPanneau && d.ancre?.closest<HTMLElement>("[data-section-uids]");
     const suivant = tonaliteDuChant && section && d.ancre ? accordSuivant(section, d.ancre, accord.texte) : undefined;
-    const sectionUids = section ? section.dataset.sectionUids?.split(" ").filter(Boolean) : undefined;
+    const sectionUids = section ? section.dataset.sectionUids?.split(" ").filter(Boolean) : d.sectionUids;
     const enSection = dansPanneau ? !!courant.current?.harmonie?.enSection : !!section;
     courant.current = {
       accord, ancre, capo, chant: d.chant ?? chant,
       harmonie: tonaliteDuChant
         ? {
             tonalite: tonaliteDuChant, suivant, enSection,
-            ...(dansPanneau ? { sectionUids: courant.current?.harmonie?.sectionUids, ici: courant.current?.harmonie?.ici } : { sectionUids, ici: section ? d.ici : undefined }),
+            ...(dansPanneau ? { sectionUids: courant.current?.harmonie?.sectionUids, ici: courant.current?.harmonie?.ici } : { sectionUids, ici: section || d.sectionUids?.length ? d.ici : undefined }),
           }
         : undefined,
     };
@@ -276,7 +297,7 @@ export function AccordsProvider({
   }, [actif, aideLigne, fermerAide]);
 
   const valeur = useMemo<Contexte>(
-    () => (actif ? { ouvrir: tonalite ? (d: DemandeAccord) => ouvrir({ tonalite, ici, ...d }) : ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined } : Rien),
+    () => (actif ? { ouvrir: tonalite ? (d: DemandeAccord) => ouvrir({ tonalite, ici, ...d }) : ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined, ici } : Rien),
     [actif, ouvrir, fermer, fermerSansFocus, chant, tonalite, ici, enregistrer, aideLigne, fermerAide],
   );
 
@@ -287,6 +308,7 @@ export function AccordsProvider({
       {actif && ouvert && (
         <PanneauOuvert
           ouvert={ouvert}
+          louange={louange}
           fermer={fermer}
           signaler={() => {
             setSignalement({ accord: ouvert.accord.texte, chant: ouvert.chant });
@@ -322,21 +344,21 @@ function accordSuivant(section: Element, ancre: HTMLElement, accord: string): st
   return tous.slice(i + 1).map((el) => el.dataset.accordTouchable).find((a) => a && a !== accord);
 }
 
-function PanneauOuvert({ ouvert, fermer, signaler }: { ouvert: Ouvert; fermer: () => void; signaler: () => void }) {
+function PanneauOuvert({ ouvert, louange, fermer, signaler }: { ouvert: Ouvert; louange: boolean; fermer: () => void; signaler: () => void }) {
   const ordinateur = useOrdinateur();
   const acces = useAccesHarmonie();
   const [instrument, setInstrument] = useInstrument(acces, "guitare");
   const commun = { accord: ouvert.accord, instrument, onInstrument: setInstrument, capo: ouvert.capo, harmonie: ouvert.harmonie, chant: ouvert.chant, onFermer: fermer, onSignaler: signaler };
-  if (ordinateur && ouvert.ancre) return <Bulle ancre={ouvert.ancre} {...commun} />;
-  return <Feuille {...commun} />;
+  if (ordinateur && ouvert.ancre) return <Bulle ancre={ouvert.ancre} louange={louange} {...commun} />;
+  return <Feuille louange={louange} {...commun} />;
 }
 
-function Feuille(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante"> & { onFermer: () => void }) {
+function Feuille({ louange, ...props }: Omit<React.ComponentProps<typeof PanneauAccord>, "variante"> & { onFermer: () => void; louange?: boolean }) {
   const { t } = useTranslation();
   useStandaloneScrollLock(true);
   return (
     <Drawer open onOpenChange={(o) => !o && props.onFermer()}>
-      <DrawerContent className="max-h-[88vh] md:mx-auto md:max-w-xl" data-accord-panneau="feuille">
+      <DrawerContent className={`max-h-[88vh] md:mx-auto md:max-w-xl${louange ? " z-[10000]" : ""}`} overlayClassName={louange ? "z-[10000]" : undefined} data-accord-panneau="feuille">
         <DrawerTitle className="sr-only">{props.accord.texte}</DrawerTitle>
         <DrawerDescription className="sr-only">{decrire(props.accord, t)}</DrawerDescription>
         <div className="overflow-y-auto">
@@ -353,7 +375,7 @@ const ECART = 12;
 
 type Place = { left: number; top: number; fleche: number; dessus: boolean; sansFleche?: boolean; hauteurMax: number };
 
-function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante"> & { onFermer: () => void; ancre: HTMLElement }) {
+function Bulle({ louange, ...props }: Omit<React.ComponentProps<typeof PanneauAccord>, "variante"> & { onFermer: () => void; ancre: HTMLElement; louange?: boolean }) {
   const { ancre, onFermer } = props;
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
@@ -439,7 +461,7 @@ function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante
         top: place?.top ?? 0,
         visibility: place ? "visible" : "hidden",
       }}
-      className="pointer-events-auto z-50 rounded-2xl bg-card [box-shadow:var(--shadow-flottant)] text-foreground outline-none"
+      className={`pointer-events-auto ${louange ? "z-[10000]" : "z-50"} rounded-2xl bg-card [box-shadow:var(--shadow-flottant)] text-foreground outline-none`}
     >
       {place && !place.sansFleche && (
         <span

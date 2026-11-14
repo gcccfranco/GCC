@@ -325,13 +325,13 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
       : ["Retour", "Affichage", "Accords", "Mode Louange", "Plus d'actions"]);
     await boutonVue(page, "Partitions").click();
     await expect(chant(page, 1)).toBeVisible();
-    // Vue Partitions (T2 du lot exemples d'usage) : le bloc titre et la bascule dans la barre ; sous 640 px, Affichage,
-    // Accords et le Crayon passent dans le menu « ⋯ ».
+    // Vue Partitions (T2 du lot exemples d'usage) : le bloc titre et la bascule dans la barre ; sous 640 px, seul le Crayon
+    // passe dans le menu « ⋯ » (RU-4 : Accords et Affichage restent à un toucher).
     await expect(barre(page).getByTestId("bascule-vues")).toBeVisible();
     // Le bouton titre se lit « {titre}, Afficher les détails de la setlist » : le titre est ôté pour comparer.
     expect((await commandes(page)).map((n) => n.replace(/^.+, (Afficher les détails de la setlist)$/, "$1"))).toEqual(page.viewportSize()!.width >= 640
       ? ["Retour", "Afficher les détails de la setlist", "Affichage", "Crayon", "Accords", "Liste", "Partitions", "Mode Louange", "Plus d'actions"]
-      : ["Retour", "Afficher les détails de la setlist", "Liste", "Partitions", "Mode Louange", "Plus d'actions"]);
+      : ["Retour", "Afficher les détails de la setlist", "Affichage", "Accords", "Liste", "Partitions", "Mode Louange", "Plus d'actions"]);
   });
 
   test("Crayon depuis la Liste ouvre les partitions au chant lu, en Crayon", async ({ page }) => {
@@ -359,26 +359,26 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect(chant(page, 1).getByText("Bien avant le chant", { exact: false }).first()).toBeVisible();
     // Abba Père en G : F#m devient Em.
     await expect(chant(page, 1).getByText("Em", { exact: true })).toHaveCount(0);
-    // Vue Partitions au téléphone (T2 du lot exemples d'usage) : « Accords » est dans le menu « ⋯ ».
+    // RU-4 : « Accords » est dans la barre à toutes les tailles, vue Partitions comprise.
     await basculerAccords(page);
     await expect(chant(page, 1).getByText("Em", { exact: true }).first()).toBeVisible();
   });
 
-  test("Affichage : ordre joué, sections uniques, structure seule, pinyin, couleurs, 简谱", async ({ page }) => {
+  test("Affichage : la marge (ordre joué, sections uniques, structure seule, pinyin, couleurs, 简谱), sans « Je joue »", async ({ page }) => {
     await ouvrir(page);
     await barre(page).getByRole("button", { name: "Affichage" }).click();
-    const menu = page.getByRole("menu");
-    // « Partition 简谱 » est un interrupteur coché par défaut (lot 1 简谱 par défaut) : plus de
-    // « Choix du responsable · Toujours · Jamais ».
-    await expect(menu.getByRole("menuitemcheckbox", { name: "Partition 简谱" })).toHaveAttribute("aria-checked", "true");
-    await expect(menu.getByRole("menuitemradio")).toHaveText([
-      "Tout le chant", "Chaque section une fois", "Plan du chant", "Classique", "Couleurs par section", "Marge", "Scène", "Partition",
-    ].map((t) => new RegExp(t)));
-    await expect(menu.getByRole("menuitemcheckbox", { name: "Pinyin" })).toBeVisible();
-    await expect(menu.getByRole("menuitemradio", { name: "Couleurs par section" })).toBeVisible();
+    const m = page.getByTestId("marge-affichage");
+    await expect(m).toHaveAttribute("data-ouvert", "true");
+    await expect(m.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio")).toHaveText(["Tout le chant", "Une fois chacune", "Plan"]);
+    await expect(m.getByRole("radiogroup", { name: "Disposition" }).getByRole("radio")).toHaveText(
+      ["Classique", "Couleurs par section", "Marge", "Scène", "Partition"].map((t) => new RegExp(t)));
+    // « 简谱 | Paroles » est coché sur 简谱 par défaut (lot 1 简谱 par défaut) ; pas de groupe « Je joue » (retour de Timothée, RU-3).
+    await expect(m.getByRole("radio", { name: "简谱", exact: true })).toHaveAttribute("aria-checked", "true");
+    await expect(m.getByRole("switch", { name: "Pinyin" })).toBeVisible();
+    await expect(m.getByRole("radiogroup", { name: "Je joue" })).toHaveCount(0);
     // Le réglage choisi sur la Liste vaut pour les partitions.
-    await menu.getByRole("menuitemradio", { name: "Plan du chant" }).click();
-    await page.keyboard.press("Escape");
+    await m.getByRole("radio", { name: "Plan", exact: true }).click();
+    await m.getByRole("button", { name: "Fermer l'affichage" }).click();
     await boutonVue(page, "Partitions").click();
     await expect(chant(page, 1)).toBeVisible();
     await expect(chant(page, 1).locator("[data-section]")).toHaveCount(0);

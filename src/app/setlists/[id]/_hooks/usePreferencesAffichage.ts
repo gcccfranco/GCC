@@ -1,61 +1,33 @@
-import { useEffect, useLayoutEffect, useState } from "react";
-import { DISPOSITION_AVANT_LECTURE, getDispositionPref, setDispositionPref, type Disposition } from "@/lib/dispositionPref";
-import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } from "@/lib/partitionLayoutPref";
-import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
+import { useEffect, useState } from "react";
+import { EVENEMENT_REGLAGES, useReglagesAffichage } from "@/hooks/useReglagesAffichage";
 import { getJianpuPref, setJianpuPref, type JianpuPref } from "@/lib/jianpu/preference";
 
-const useEffetAvantPeinture = typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
-/** Réglages d'affichage de la setlist, relus du stockage de l'appareil au montage. */
+/** Réglages d'affichage de la setlist (RU-4) : ceux de la marge « Affichage » (`useReglagesAffichage`, mêmes clés que la page chant
+ *  et le mode louange). Seul 简谱 reste tri-état (le « Paroles » du responsable doit continuer à jouer) : relu à l'évènement de la marge. */
 export function usePreferencesAffichage(uid: string | null, authLoading: boolean) {
-  const [showChords, setShowChords] = useState(true);
+  const r = useReglagesAffichage(authLoading ? undefined : uid);
   // Accords changés sur cette page juste avant le mode louange : ils
   // l'emportent alors sur le rôle mémorisé (reprise des réglages).
   const [chordsTouched, setChordsTouched] = useState(false);
-  // Affichage du pinyin en vue partitions — préférence persistée (par appareil).
-  const [showPinyin, setShowPinyin] = useState(true);
-  // Disposition de la partition — préférence par appareil partagée (fiche chant, mode louange).
-  const [disposition, setDisposition] = useState<Disposition>(DISPOSITION_AVANT_LECTURE);
-  // Coup d'œil : ordre joué / sections uniques / structure seule — par appareil.
-  const [layout, setLayout] = useState<PartitionLayout>("played");
   // Partition 简谱 : affichée par défaut ; l'interrupteur règle l'appareil et
   // prime alors sur le « Paroles » du responsable. Un seul état, partagé avec
   // le mode louange.
   const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
-
-  // Restaure la préférence d'affichage du pinyin (masqué si "0").
-  // La disposition est lue avant la peinture : pas de premier rendu à la mauvaise disposition.
-  useEffetAvantPeinture(() => setDisposition(getDispositionPref()), []);
   useEffect(() => {
-    setShowPinyin(getPinyinPref());
-    setJianpuPrefState(getJianpuPref());
+    const relire = () => setJianpuPrefState(getJianpuPref());
+    // Lecture après montage (pas d'écart d'hydratation) : un setState dans l'effet est voulu.
+    relire();
+    window.addEventListener(EVENEMENT_REGLAGES, relire);
+    return () => window.removeEventListener(EVENEMENT_REGLAGES, relire);
   }, []);
-  // La disposition par défaut dépend du rôle du compte : relue une fois le compte connu, et à chaque changement d'uid.
-  useEffect(() => {
-    if (!authLoading) setLayout(getPartitionLayoutPref(uid));
-  }, [uid, authLoading]);
-  const changeDisposition = (d: Disposition) => {
-    setDisposition(d);
-    setDispositionPref(d);
-  };
-  const changeLayout = (v: PartitionLayout) => {
-    setLayout(v);
-    setPartitionLayoutPref(uid, v);
-  };
   const changeJianpuPref = (v: JianpuPref) => {
     setJianpuPrefState(v);
     setJianpuPref(v);
   };
-  function togglePinyin() {
-    setShowPinyin((v) => {
-      setPinyinPref(!v);
-      return !v;
-    });
-  }
 
   return {
-    showChords, setShowChords, chordsTouched, setChordsTouched,
-    showPinyin, disposition, layout, jianpuPref,
-    changeDisposition, changeLayout, changeJianpuPref, togglePinyin,
+    showChords: r.accords, setShowChords: r.setAccords, chordsTouched, setChordsTouched,
+    showPinyin: r.pinyin, disposition: r.disposition, layout: r.ordre, taille: r.taille, jianpuPref,
+    changeDisposition: r.setDisposition, changeLayout: r.setOrdre, changeJianpuPref,
   };
 }

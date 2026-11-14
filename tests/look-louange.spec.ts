@@ -76,7 +76,7 @@ test.describe("louange (T3) : page du chant", () => {
   test.use(phone);
 
   for (const [slug, nom] of [["abba-pere", "FR"], ["爱的约定", "ZH"]] as const) {
-    test(`barre d'outils sous la navbar, en pilule groupée (${nom})`, async ({ page }) => {
+    test(`barre d'outils sous la navbar, armure au contour (${nom})`, async ({ page }) => {
       await page.goto(`/songs/${encodeURIComponent(slug)}`);
       const barre = page.getByTestId("barre-outils");
       await barre.waitFor();
@@ -87,14 +87,11 @@ test.describe("louange (T3) : page du chant", () => {
       // monté sur la page d'un chant (masqué en un volet).
       const [b, h] = await Promise.all([barre.boundingBox(), page.locator("header.barre-haut").boundingBox()]);
       expect(Math.round(b!.y), "la barre reste collée sous la navbar").toBe(Math.round(h!.y + h!.height));
-      const pilule = page.getByTestId("pilule-tonalite");
-      // 5C1 : ce qui se touche est en relief — surface blanche et ombre, plus un aplat gris.
-      expect(await pilule.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(255, 255, 255)");
-      expect(await pilule.evaluate((el) => getComputedStyle(el).boxShadow), "la pilule porte une ombre").not.toBe("none");
-      expect(await pilule.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("9999px");
-      // Les boutons dans la pilule n'ont ni bordure ni fond propre.
-      const moins = pilule.getByRole("button").first();
-      expect(await moins.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe("0px");
+      // L'armure (RU-3) a remplacé la pilule : au contour (ombre intérieure), coins de 9 px.
+      const armure = page.getByTestId("armure");
+      await expect(armure).toBeVisible();
+      expect(await armure.evaluate((el) => getComputedStyle(el).boxShadow), "l'armure porte son contour").not.toBe("none");
+      expect(await armure.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("9px");
     });
   }
 });
@@ -170,7 +167,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
         }),
     );
     const nomTitre = "高班, Afficher les détails de la setlist";
-    expect(boites.map((b) => b.nom)).toEqual([nomTitre, "Crayon", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
+    expect(boites.map((b) => b.nom)).toEqual([nomTitre, "Crayon", "Modifier", "PDF", "Affichage", "Plus d'actions", "Mode Louange"]);
     const milieux = boites.map((b) => b.milieu);
     expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
     const titre = (await enTete.getByRole("button", { name: nomTitre }).boundingBox())!;
@@ -201,8 +198,8 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       const barre = page.getByTestId("barre-outils");
       // Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : « Affichage » remplace
       // Pinyin dans la barre ; la bascule Liste | Partitions est sous l'en-tête.
-      // Vue Partitions sous 640 px (T2 du lot exemples d'usage) : « Affichage » passe dans le menu « ⋯ ».
-      await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible({ visible: largeur >= 640 });
+      // Affichage reste dans la barre à toutes les largeurs (RU-4).
+      await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible();
       // La barre glisse (transition-transform) quand la page défile : la mesurer à l'arrêt, sinon un
       // décalage fractionnaire donne 31,999996 px au lieu de 32 sous charge.
       await expect.poll(() => barre.evaluate((el) => getComputedStyle(el).transform)).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
@@ -216,9 +213,9 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           }),
       );
       // Vue Partitions, un volet (T2 du lot exemples d'usage) : retour, bloc titre, bascule (Liste, Partitions), mode louange, ⋯ ;
-      // dès 640 px s'y ajoutent affichage, crayon (MP-3, à la place d'Adapter et de Ma version), accords, qui sous 640 px vivent dans le menu « ⋯ ».
+      // affichage et accords restent dans la barre à toutes les largeurs (RU-4) ; dès 640 px s'y ajoute le crayon (MP-3, à la place d'Adapter et de Ma version), qui sous 640 px vit dans le menu « ⋯ ».
       const pleine = largeur >= 640;
-      expect(boites.length, "retour, titre, (affichage, crayon, accords), Liste, Partitions, mode louange, ⋯").toBe(pleine ? 9 : 6);
+      expect(boites.length, "retour, titre, (affichage, crayon, accords), Liste, Partitions, mode louange, ⋯").toBe(pleine ? 9 : 8);
       const milieux = boites.map((b) => b.milieu);
       expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
       for (const b of boites) {
@@ -349,22 +346,20 @@ test.describe("louange (T3) : sélecteur de tonalité, téléphone et tablette",
     await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
     const barre = page.getByTestId("barre-outils");
     await barre.waitFor();
-    await expect(barre.getByRole("button", { name: "Pinyin" }), "chant 中文").toBeVisible();
     await expect(barre.getByRole("button", { name: "简谱" }), "chant à cinq commandes : 谱 a quitté la barre").toHaveCount(0);
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
-    const tonalite = page.getByTestId("tonalite-courante");
-    // innerText : le suffixe « (orig.) » existe dans le DOM mais n'est affiché que sur ordinateur.
-    await expect(page.getByTestId("tonalite-lettre")).toHaveText("E", { useInnerText: true });
-    expect(await tonalite.evaluate((el) => el.scrollWidth <= el.clientWidth), "la tonalité n'est pas rognée").toBe(true);
-    const [t, pilule] = await Promise.all([tonalite.boundingBox(), page.getByTestId("pilule-tonalite").boundingBox()]);
-    expect(t!.x).toBeGreaterThanOrEqual(pilule!.x);
-    expect(t!.x + t!.width).toBeLessThanOrEqual(pilule!.x + pilule!.width);
-    const select = page.getByTestId("pilule-tonalite").getByRole("combobox");
-    await expect(select).toHaveValue("E");
-    await expect(select.locator("option[value=E]")).toHaveText(/\(orig\.\)/);
-    await select.selectOption("F");
-    await expect(page.getByTestId("tonalite-lettre")).toHaveText("F", { useInnerText: true });
-    await expect(select).toHaveValue("F");
+    // Chant 中文 : « 1=E » entier dans le bouton de l'armure, sans rognage.
+    const armure = page.getByTestId("armure");
+    await expect(armure).toHaveText("1=E");
+    expect(await armure.evaluate((el) => el.scrollWidth <= el.clientWidth), "la tonalité n'est pas rognée").toBe(true);
+    await expect(async () => {
+      if (!(await page.getByTestId("fenetre-armure").isVisible())) await armure.click({ timeout: 1000 });
+      await expect(page.getByTestId("fenetre-armure")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 15_000 });
+    const radios = page.getByTestId("fenetre-armure").getByRole("radio");
+    await expect(radios.filter({ hasText: /^E(?![#♯♭b])/ })).toContainText("orig.");
+    await radios.filter({ hasText: /^F(?![#♯♭b])/ }).click();
+    await expect(armure).toHaveText("1=F");
   });
 });
 

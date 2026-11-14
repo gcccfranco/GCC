@@ -90,6 +90,9 @@ export interface Fiche {
   /** « Substitutions » */
   familleNom: string;
   nom: string;
+  /** Titre et « avant → après » en 中文 (`docs/harmonie/fiches-zh.json`), pour les idées d'harmonie d'un chant. */
+  nomZh?: string;
+  avantApresZh?: string;
   statut: Statut;
   /** Fiche propre à un instrument (voicings) ; absente = les deux. */
   instrument?: Instrument;

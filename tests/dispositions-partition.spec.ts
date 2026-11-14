@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { marge, ouvrirMarge } from "./helpers/marge";
 import { ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 import { attendreCompteur, attendreMiseEnPage, fermerBarre, lireCompteur, onStage, ouvrirMenu, ouvrirOptions, type Langue } from "./helpers/louange";
 
@@ -33,6 +34,8 @@ const CHANT_FR = "a-jamais-tu-es-saint";
 const CHANT_ZH = "一生爱你";
 const LOUANGE_FR = ["abba-pere", "avec-nous"];
 const LOUANGE_ZH = ["谢谢你", "活着为要敬拜你"];
+/** Les cinq miniatures de disposition de la marge « Affichage » de la page chant (RU-3 : elles ne sont plus dans le menu ⋯). */
+const choixDispo = (page: Page, titre: string | RegExp = "Disposition") => marge(page).getByRole("radiogroup", { name: titre }).getByRole("radio");
 const NOMS: Record<string, string> = { classique: "Classique", sections: "Couleurs par section", reperes: "Marge", scene: "Scène", partition: "Partition" };
 // Ordre du menu (les libellés changent avec la langue : la capture vise par rang).
 const ORDRE = ["classique", "sections", "reperes", "scene", "partition"];
@@ -110,7 +113,7 @@ test.describe("migration de la disposition (stockage simulé)", () => {
 // ─── (b) Page du chant → mode louange ────────────────────────────────────────
 
 for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
-  test(`${langue} : menu ⋯ du chant, choix retenu au rechargement, repris par le mode louange, rendu à la page du chant`, async ({ page }) => {
+  test(`${langue} : marge Affichage du chant, choix retenu au rechargement, repris par le mode louange, rendu à la page du chant`, async ({ page }) => {
     await page.addInitScript(() => {
       // Posé une fois seulement : le script se rejoue à chaque navigation, rechargement compris.
       if (!localStorage.getItem("disposition")) localStorage.setItem("disposition", "classique");
@@ -120,19 +123,19 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
     const racine = page.locator("main [data-disposition]").first();
     await expect(racine).toHaveAttribute("data-disposition", "classique");
 
-    await page.getByRole("button", { name: "Plus d'actions" }).click();
-    await expect(page.getByText("Disposition", { exact: true })).toBeVisible();
-    await expect(page.getByRole("menuitemradio")).toHaveText([/Classique/, /Couleurs par section/, /Marge/, /Scène/, /Partition/]);
-    await expect(page.getByRole("menuitemradio", { name: "Classique" })).toHaveAttribute("aria-checked", "true");
-    await expect(page.getByText("Retenue sur cet appareil")).toBeVisible();
-    // Le menu tient dans l'écran.
-    const menu = (await page.getByRole("menu").boundingBox())!;
-    expect(menu.x).toBeGreaterThanOrEqual(0);
-    expect(menu.x + menu.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+    await ouvrirMarge(page);
+    await expect(marge(page).getByText("Disposition", { exact: true })).toBeVisible();
+    await expect(choixDispo(page)).toHaveText([/Classique/, /Couleurs par section/, /Marge/, /Scène/, /Partition/]);
+    await expect(choixDispo(page).filter({ hasText: "Classique" })).toHaveAttribute("aria-checked", "true");
+    await expect(marge(page).getByText("Retenu sur cet appareil")).toHaveCount(2);
+    // La marge tient dans l'écran.
+    const boite = (await marge(page).boundingBox())!;
+    expect(boite.x).toBeGreaterThanOrEqual(0);
+    expect(boite.x + boite.width).toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
 
-    await page.getByRole("menuitemradio", { name: "Couleurs par section" }).click();
+    await choixDispo(page).filter({ hasText: "Couleurs par section" }).click();
     await expect(racine).toHaveAttribute("data-disposition", "sections");
-    await expect(page.getByRole("menu")).toBeVisible(); // le menu reste ouvert
+    await expect(marge(page)).toHaveAttribute("data-ouvert", "true"); // la marge reste ouverte
     await expect.poll(() => lire(page, "disposition")).toBe("sections");
 
     await page.reload();
@@ -165,9 +168,10 @@ test("vue partitions de la setlist : le même choix, à miniatures", async ({ pa
   await ouvrirPartitions(page);
   const partitions = page.locator("[data-disposition]");
   await expect(partitions.first()).toHaveAttribute("data-disposition", "classique");
-  await ouvrirAffichage(page);
-  await expect(page.getByRole("menuitemradio", { name: "Classique" })).toHaveAttribute("aria-checked", "true");
-  await page.getByRole("menuitemradio", { name: "Couleurs par section" }).click();
+  const marge = await ouvrirAffichage(page);
+  const disposition = marge.getByRole("radiogroup", { name: "Disposition" }).getByRole("radio");
+  await expect(disposition.filter({ hasText: "Classique" })).toHaveAttribute("aria-checked", "true");
+  await disposition.filter({ hasText: "Couleurs par section" }).click();
   await expect(partitions.first()).toHaveAttribute("data-disposition", "sections");
   await expect.poll(() => lire(page, "disposition")).toBe("sections");
   await page.reload();
@@ -233,16 +237,15 @@ for (const langue of ["fr", "zh"] as const) {
       await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(slugsLouange) }, `/songs/${encodeURIComponent(slug)}`);
       await expect(page.locator("main [data-disposition]").first()).toBeAttached();
       await masquerNext();
-      const nomMenu = langue === "zh" ? "更多操作" : "Plus d'actions";
       for (const d of ORDRE) {
-        await page.getByRole("button", { name: nomMenu }).click();
-        await page.getByRole("menuitemradio").nth(ORDRE.indexOf(d)).click();
+        await ouvrirMarge(page);
+        await choixDispo(page, langue === "zh" ? "排版" : "Disposition").nth(ORDRE.indexOf(d)).click();
         await expect(page.locator("main [data-disposition]").first()).toHaveAttribute("data-disposition", d);
-        // Menu ouvert, puis page seule.
+        // Marge ouverte, puis page seule.
         await page.screenshot({ path: `${dossier}/${info.project.name}-chant-menu-${d}-${langue}-${theme}.png` });
         await page.keyboard.press("Escape");
-        // Attendre la FIN de la fermeture du menu avant la capture de la page.
-        await expect(page.getByRole("menu")).toBeHidden();
+        // Attendre la FIN de la fermeture de la marge avant la capture de la page.
+        await expect(marge(page)).toBeHidden();
         await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
         await page.screenshot({ path: `${dossier}/${info.project.name}-chant-${d}-${langue}-${theme}.png` });
       }
@@ -746,46 +749,41 @@ test("Partition : le mode louange (data-disposition = partition), en-tête en se
 // ─── (h) DP-E : corrections de relecture et finitions ────────────────────────────────────────────────────────────
 
 
-test("A : menu ⋯ du chant, cinq colonnes égales, entrée choisie marquée (cadre 2 px, gras, bleu), pas de fond gris de focus", async ({ page }) => {
+test("A : marge Affichage du chant, cinq colonnes égales, entrée choisie marquée (cadre 2 px, gras, bleu)", async ({ page }) => {
   await page.addInitScript(() => { if (!localStorage.getItem("disposition")) localStorage.setItem("disposition", "classique"); });
   await page.goto(`/songs/${CHANT_FR}`);
-  await page.getByRole("button", { name: "Plus d'actions" }).click();
-  const entrees = page.getByRole("menuitemradio");
+  await ouvrirMarge(page);
+  const entrees = choixDispo(page);
   await expect(entrees).toHaveCount(5);
-  await page.waitForTimeout(400); // fin de l'animation d'ouverture du menu
   const m = await entrees.evaluateAll((els) => els.map((el) => {
     const r = el.getBoundingClientRect();
     const mini = el.querySelector("svg.block") as SVGElement;
     const nom = el.lastElementChild as HTMLElement;
-    return { x: r.left, y: Math.round(r.top), w: Math.round(r.width), svgW: Math.round(mini.getBoundingClientRect().width), svgH: Math.round(mini.getBoundingClientRect().height), nomH: Math.round(nom.getBoundingClientRect().height), poids: getComputedStyle(nom).fontWeight, couleur: getComputedStyle(nom).color, ombre: getComputedStyle(mini.parentElement!).boxShadow, coche: el.getAttribute("aria-checked") };
+    return { x: r.left, y: Math.round(r.top), w: Math.round(r.width), svgW: Math.round(mini.getBoundingClientRect().width), nomH: Math.round(nom.getBoundingClientRect().height), poids: getComputedStyle(nom).fontWeight, couleur: getComputedStyle(nom).color, ombre: getComputedStyle(mini.parentElement!).boxShadow, coche: el.getAttribute("aria-checked") };
   }));
   expect(new Set(m.map((e) => e.y)).size, "une seule rangée de cinq").toBe(1);
   expect(Math.max(...m.map((e) => e.w)) - Math.min(...m.map((e) => e.w)), "colonnes égales").toBeLessThanOrEqual(1);
   expect(new Set(m.map((e) => e.nomH)).size, "noms à hauteur égale " + JSON.stringify(m.map((e) => e.nomH))).toBe(1);
-  for (const e of m) { expect(e.svgW, "miniature de 64 px " + JSON.stringify(m.map((x) => [x.w, x.svgW]))).toBe(64); expect(e.svgH).toBe(82); }
-  const menu = (await page.getByRole("menu").boundingBox())!;
-  expect(menu.x).toBeGreaterThanOrEqual(0);
-  expect(menu.x + menu.width, "menu ≤ 100vw − 1 rem").toBeLessThanOrEqual(page.viewportSize()!.width - 8);
+  for (const e of m) expect(e.svgW, "miniature dans sa colonne " + JSON.stringify(m.map((x) => [x.w, x.svgW]))).toBeLessThanOrEqual(e.w);
+  const boite = (await marge(page).boundingBox())!;
+  expect(boite.x).toBeGreaterThanOrEqual(0);
+  expect(boite.x + boite.width, "marge ≤ 100vw").toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
   const choisie = m.find((e) => e.coche === "true")!;
   const autre = m.find((e) => e.coche === "false")!;
   expect(choisie.poids).toBe("700");
   expect(autre.poids, "nom non choisi en encre medium").toBe("500");
-  expect(choisie.ombre, "cadre de 2 px").toMatch(/0px 0px 0px 2px|2px/);
-  expect(autre.ombre).toBe("none");
   const accent = await page.evaluate(() => { const s = document.createElement("span"); s.style.color = "var(--chord-color)"; document.body.appendChild(s); const c = getComputedStyle(s).color; s.remove(); return c; });
   expect(choisie.couleur, "nom choisi dans l'accent bleu").toBe(accent);
-  expect(choisie.ombre).toContain(accent);
-  // Le survol et le focus ne posent aucun fond gris.
-  await entrees.nth(2).hover();
-  expect(await entrees.nth(2).evaluate((el) => getComputedStyle(el).backgroundColor), "pas de fond gris").toBe("rgba(0, 0, 0, 0)");
+  expect(choisie.ombre, "cadre de 2 px").toContain(accent);
+  expect(autre.ombre).not.toContain(accent);
 });
 
 for (const [langue, slug, variable] of [["FR", CHANT_FR, "--fr-accent"], ["ZH", CHANT_ZH, "--zh-accent"]] as const) {
-  test(`A : ${langue}, la miniature Classique prend l'accent de la langue du chant (${variable}), couplet sans cadre, refrain en boîte`, async ({ page }) => {
+  test(`A : ${langue}, dans la marge, la miniature Classique prend l'accent de la langue du chant (${variable}), couplet sans cadre, refrain en boîte`, async ({ page }) => {
     await page.addInitScript(() => { if (!localStorage.getItem("disposition")) localStorage.setItem("disposition", "classique"); });
     await page.goto(`/songs/${encodeURIComponent(slug)}`);
-    await page.getByRole("button", { name: /Plus d'actions|更多操作/ }).click();
-    const mini = page.getByRole("menuitemradio").first().locator("svg.block");
+    await ouvrirMarge(page);
+    const mini = choixDispo(page, /Disposition|排版/).first().locator("svg.block");
     await expect(mini).toBeVisible();
     const fills = await mini.locator("rect").evaluateAll((els) => els.map((e) => e.getAttribute("fill")));
     expect(fills.some((f) => f === `var(${variable})`), `accent ${variable}`).toBe(true);
@@ -1292,21 +1290,22 @@ test.describe("G1-9 G1-10a : sigle « autre » long, coupé par une ellipse dans
 
 // ─── (j) DP-G2 : seconde relecture (menu à flèches, chargement, Partition aux cotes de la planche, Marge) ─────────
 
-test("G2-11 : menu ⋯ du chant, ← et → passent à la miniature voisine sans changer le choix", async ({ page }) => {
+test("G2-11 : marge du chant, ← et → passent à la miniature voisine (qui est choisie, comme dans le panneau du mode louange)", async ({ page }) => {
   await page.addInitScript(() => { if (!localStorage.getItem("disposition")) localStorage.setItem("disposition", "classique"); });
   await page.goto(`/songs/${CHANT_FR}`);
   await expect(page.locator("main [data-disposition]").first()).toHaveAttribute("data-disposition", "classique");
-  await page.getByRole("button", { name: "Plus d'actions" }).click();
-  const classique = page.getByRole("menuitemradio", { name: "Classique" });
-  const sections = page.getByRole("menuitemradio", { name: "Couleurs par section" });
+  await ouvrirMarge(page);
+  const classique = choixDispo(page).filter({ hasText: "Classique" });
+  const sections = choixDispo(page).filter({ hasText: "Couleurs par section" });
   await classique.focus();
   await page.keyboard.press("ArrowRight");
   await expect(sections).toBeFocused();
+  await expect(sections).toHaveAttribute("aria-checked", "true");
   await page.keyboard.press("ArrowLeft");
   await expect(classique).toBeFocused();
   await expect(classique).toHaveAttribute("aria-checked", "true");
   await expect(sections).toHaveAttribute("aria-checked", "false");
-  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(marge(page)).toHaveAttribute("data-ouvert", "true");
 });
 
 test("G2-12 : un appareil en Couleurs par section ne voit jamais la page du chant en Classique", async ({ page }) => {
@@ -1326,7 +1325,7 @@ test("G2-12 : un appareil en Couleurs par section ne voit jamais la page du chan
   expect(vues, "dispositions vues pendant le chargement").toEqual(["sections"]);
 });
 
-test("G2-13 : au téléphone, le menu ⋯ garde au moins 8 px de chaque côté de l'écran", async ({ page }) => {
+test("G2-13 : au téléphone, le menu ⋯ (PDF, Personnaliser, Signalement) garde au moins 8 px de chaque côté de l'écran", async ({ page }) => {
   test.skip(!telephone(page), "téléphone seulement");
   await page.addInitScript(() => localStorage.setItem("disposition", "classique"));
   await page.goto(`/songs/${CHANT_FR}`);
@@ -1339,23 +1338,23 @@ test("G2-13 : au téléphone, le menu ⋯ garde au moins 8 px de chaque côté d
 test("G2-21 : miniatures, Partition a des cadres de section et des accords bleus, Marge les accords de la langue", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("disposition", "classique"));
   await page.goto(`/songs/${encodeURIComponent(CHANT_ZH)}`);
-  await page.getByRole("button", { name: "Plus d'actions" }).click();
-  const entrees = page.getByRole("menuitemradio");
+  await ouvrirMarge(page);
+  const entrees = choixDispo(page);
   const partition = entrees.nth(ORDRE.indexOf("partition")).locator("svg");
   await expect(partition.locator("text")).toHaveText(["C", "R"]);
   await expect(partition.locator('rect[stroke="var(--sec-verse)"]')).toHaveCount(1);
   await expect(partition.locator('rect[stroke="var(--sec-chorus)"]')).toHaveCount(1);
   await expect(partition.locator('rect[fill="var(--chord-color)"]').first()).toBeAttached();
-  const marge = entrees.nth(ORDRE.indexOf("reperes")).locator("svg");
-  await expect(marge.locator('rect[fill="var(--zh-accent)"]').first()).toBeAttached();
-  await expect(marge.locator('rect[fill="var(--chord-color)"]')).toHaveCount(0);
+  const reperes = entrees.nth(ORDRE.indexOf("reperes")).locator("svg");
+  await expect(reperes.locator('rect[fill="var(--zh-accent)"]').first()).toBeAttached();
+  await expect(reperes.locator('rect[fill="var(--chord-color)"]')).toHaveCount(0);
 });
 
-test("G2-23 : la disposition s'appelle Marge (fr) et 页边标记 (zh) dans le menu ; le bouton de la barre garde son nom", async ({ page }) => {
+test("G2-23 : la disposition s'appelle Marge (fr) et 页边标记 (zh) dans la marge Affichage ; le bouton de la barre garde son nom", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await page.goto(`/songs/${CHANT_FR}`);
-  await page.getByRole("button", { name: "更多操作" }).click();
-  await expect(page.getByRole("menuitemradio").nth(ORDRE.indexOf("reperes"))).toContainText("页边标记");
+  await ouvrirMarge(page);
+  await expect(choixDispo(page, "排版").nth(ORDRE.indexOf("reperes"))).toContainText("页边标记");
 });
 
 test("G2-23 : en mode louange, le panneau dit « Marge », le bouton de la barre garde « Repères »", async ({ page }) => {

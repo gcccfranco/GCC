@@ -386,7 +386,7 @@ export function PanneauAccord({
       )}
 
       {harmonie?.enSection && <Ensuite key={accord.texte} accord={accord.texte} harmonie={harmonie} capo={capo} bulle={bulle} />}
-      {harmonie?.enSection && harmonie.ici && harmonie.sectionUids && (
+      {harmonie?.ici && harmonie.sectionUids && (
         <LigneIci key={`ici-${accord.texte}`} accord={accord.texte} harmonie={harmonie} slug={chant?.slug} bulle={bulle} />
       )}
 

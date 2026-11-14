@@ -6,7 +6,7 @@ type Params = {
   user: { uid: string } | null;
   setlistId: string;
   currentPageKey: string | undefined;
-  cleAncienne: string | null;
+  clesAnciennes: string[];
   /** Lot CV : sur une page `v2`, les clés de composition d'avant (lecture seule, pour le seul bandeau). */
   anciennesCompositions: string[];
   rappelEcran: number;
@@ -19,13 +19,14 @@ type Params = {
 
 /** Anciennes annotations par page (avant MP-5) : chargement et recalage, en lecture seule — plus rien ne s'y écrit. */
 export function useAnnotationsPage({
-  user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, clePageSuivante, rappelSuivantEcran = 0,
+  user, setlistId, currentPageKey, clesAnciennes, anciennesCompositions, rappelEcran, affichageVu, fontScale, clePageSuivante, rappelSuivantEcran = 0,
 }: Params) {
   // Les traits de la page n'ont pas pu être lus (réseau, 5xx) : page non initialisée, rien n'est enregistré.
   const [annotationsIndispo, setAnnotationsIndispo] = useState(false);
   // Lot CV : des traits existent sous une ancienne composition de la page, aucun sous la nouvelle.
   const [ancienneCompositionTraits, setAncienneCompositionTraits] = useState(false);
   const anciennesStr = anciennesCompositions.join("\n");
+  const anciennesClesStr = clesAnciennes.join("\n");
   const [pageAnnotations, setPageAnnotations] = useState<AnnotationData | null>(null);
   // Clé du document ancien réellement lu pour la page (la sienne ou l'ancienne clé) : « Recopier » le supprime.
   const [cleLue, setCleLue] = useState<string | null>(null);
@@ -69,8 +70,12 @@ export function useAnnotationsPage({
       loadAnnotation(user.uid, setlistId, currentPageKey).then(async (lu) => {
         let raw = lu;
         let cle: string | null = lu === null ? null : currentPageKey;
-        // Rien sous la nouvelle clé : l'annotation de l'ancienne page (jamais effacée).
-        if (raw === null && cleAncienne) { raw = await loadAnnotation(user.uid, setlistId, cleAncienne); if (raw !== null) cle = cleAncienne; }
+        // Rien sous la nouvelle clé : l'annotation de l'ancienne page (jamais effacée), première clé trouvée.
+        for (const ancienne of anciennesClesStr ? anciennesClesStr.split("\n") : []) {
+          if (raw !== null) break;
+          raw = await loadAnnotation(user.uid, setlistId, ancienne);
+          if (raw !== null) cle = ancienne;
+        }
         return { raw, cle };
       }).then(({ raw, cle }) => {
         if (stale) return;
@@ -103,7 +108,7 @@ export function useAnnotationsPage({
       });
     }, 150);
     return () => { stale = true; clearTimeout(minuterie); };
-  }, [user, setlistId, currentPageKey, cleAncienne, anciennesStr]);
+  }, [user, setlistId, currentPageKey, anciennesClesStr, anciennesStr]);
 
   /** Après « Recopier dans ma partition » : l'ancien calque se vide (le document est supprimé par l'appelant). */
   const viderAnciennes = () => { setPageAnnotations((p) => p && { ...p, strokes: [] }); setCleLue(null); };

@@ -14,7 +14,8 @@ import { CloudCheck, Play } from "lucide-react"
 import type { FSSetlist } from "@/types/setList"
 import type { SongIndexEntry } from "@/types/song"
 import type { ServiceDuJour } from "@/lib/planning/accueil"
-import type { RolePreset } from "@/lib/performance/roleCompte"
+import { getRoleSansMigrer, type RolePreset } from "@/lib/performance/roleCompte"
+import { useAuth } from "@/lib/firebase/auth"
 import type { Disposition } from "@/hooks/useDisposition"
 import { serviceColor } from "@/lib/serviceColors"
 import { jianpuImageUrl, loadJianpuManifest, type JianpuManifest } from "@/lib/jianpu/images"
@@ -43,6 +44,8 @@ export function Pupitre({
   const { t, i18n } = useTranslation()
   const vignettes = disposition !== "telephone"
   const [manifeste, setManifeste] = useState<JianpuManifest>({})
+  const { user } = useAuth()
+  const uid = user?.uid ?? null
   const [pref, setPref] = useState<JianpuPref>("auto")
   useEffect(() => {
     if (!vignettes) return
@@ -51,6 +54,9 @@ export function Pupitre({
     loadJianpuManifest().then((m) => { if (vivant) setManifeste(m) })
     return () => { vivant = false }
   }, [vignettes])
+  // « Je joue » de la personne, pas le rôle du planning (spec-jianpu-deux-volets.md, JV-1).
+  const [roleJoue, setRoleJoue] = useState<RolePreset | null>(null)
+  useEffect(() => { setRoleJoue(getRoleSansMigrer(uid)) }, [uid])
 
   const jour = new Date(`${services[0].date}T12:00:00`)
   const dateLongue = majuscule(new Intl.DateTimeFormat(locale(i18n.language), { weekday: "long", day: "numeric", month: "long" }).format(jour))
@@ -103,7 +109,7 @@ export function Pupitre({
         <ol className="mt-3 grid grid-cols-3 gap-3">
           {chants.map(({ it, song, fusion, titre, n, tonalite }) => {
             const page = manifeste[it.songSlug]?.pages[0]
-            const scan = !!page && sheetEnabled(pref, it.jianpuSheet)
+            const scan = !!page && sheetEnabled(pref, roleJoue)
             const sections = song?.sections ?? []
             return (
               <li key={it.position}>

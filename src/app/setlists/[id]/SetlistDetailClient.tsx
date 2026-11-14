@@ -15,9 +15,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getSetlist, getSetlistOuCopie, lireCopieDuCompte, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader, getSetlistsFrom } from "@/lib/firebase/setlists";
@@ -55,7 +52,7 @@ import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
 import { setlistLyricsText } from "@/components/song/copyLyrics";
 import { SetlistHistory } from "./_components/SetlistHistory";
 import { EcranChargement, EcranConnexion, EcranErreur, EcranIntrouvable, EcranSansAcces } from "./_components/EcransSetlist";
-import { DroitsDeModifier, ReglagesAffichage, ActionsPartagees, MenuSupprimer, ReessayerCopie } from "./_components/MenusSetlist";
+import { DroitsDeModifier, ActionsPartagees, MenuSupprimer, ReessayerCopie } from "./_components/MenusSetlist";
 import { ConfirmerSuppression, ConfirmerRetablir } from "./_components/DialoguesSetlist";
 import { BasculeVues } from "./_components/BasculeVues";
 import { BandeauChantsManquants } from "./_components/BandeauChantsManquants";
@@ -82,7 +79,8 @@ import { ChoixDestination, type Destination } from "@/components/partition/Choix
 import { adresseVue, lireAdresse, poser, surLaSetlist } from "@/lib/setlist/adresseVue";
 import { demanderPrecache, urlsAGarder } from "@/lib/setlist/gardeServices";
 import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, scansAbsentsDuCache, useJianpuManifest } from "@/lib/jianpu/images";
-import { sheetEnabled } from "@/lib/jianpu/preference";
+import { interrupteurAllume, prefPourRole, sheetEnabled } from "@/lib/jianpu/preference";
+import { getRoleSansMigrer } from "@/lib/performance/roleCompte";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
@@ -92,8 +90,11 @@ import { PdfChoiceSheet, type PdfVersion } from "@/components/pdf/PdfChoiceSheet
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
+import { defilerSousLaBarre } from "@/components/harmonie/HarmonieDuChant";
 import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
-import { semitonesTo } from "@/lib/transpose";
+import { semitonesTo, getTransposedKey } from "@/lib/transpose";
+import { MargeAffichage } from "@/components/song/MargeAffichage";
+import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { telechargerBlob, demanderPleinEcran } from "@/lib/telecharger";
 import {
   replaceSourceLine,
@@ -239,9 +240,9 @@ export function SetlistDetailClient() {
   /** Vue Partitions en volet unique : barre compacte, en-tête replié (docs/spec-exemples-usage.md, T2). */
   const compacte = !deuxVolets && view === "partitions";
   const [enteteOuvert, setEnteteOuvert] = useState(false);
-  /** Téléphone, vue Partitions : « Affichage » ouvert depuis le ⋯ (un sous-menu sortirait de l'écran). */
-  const [affichageTel, setAffichageTel] = useState(false);
-  const plusRef = useRef<HTMLButtonElement>(null);
+  /** La marge « Affichage » (RU-4) : ouverte par le bouton « Affichage » de la barre (un volet) ou de l'en-tête (deux volets). */
+  const [showAffichage, setShowAffichage] = useState(false);
+  const boutonAffichageRef = useRef<HTMLButtonElement>(null);
   const masqueBarre = compacte ? "max-sm:hidden" : "max-[430px]:hidden";
   const masqueMenu = compacte ? "sm:hidden" : "min-[431px]:hidden";
   /** Occurrences de la section lue (`data-section-uids`) : la pastille marquée. */
@@ -501,9 +502,24 @@ export function SetlistDetailClient() {
   }, []);
   const {
     showChords, setShowChords, chordsTouched, setChordsTouched,
-    showPinyin, disposition, layout, jianpuPref,
-    changeDisposition, changeLayout, changeJianpuPref, togglePinyin,
+    showPinyin, disposition, layout, taille, jianpuPref,
+    changeLayout, changeJianpuPref,
   } = usePreferencesAffichage(user?.uid ?? null, authLoading);
+  // Tonalités choisies sur cet appareil pour cette setlist (`perf-personal-keys`, celles du mode louange) : lues après le montage.
+  const [personalKeys, setPersonalKeys] = useState<Record<string, string>>({});
+  useEffect(() => {
+    // Lecture après montage (pas d'écart d'hydratation) : un setState dans l'effet est voulu.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPersonalKeys(getPersonalKeys(id));
+  }, [id]);
+  /** L'armure d'un chant : pour moi seulement, aucune écriture de la setlist ; `null` rend la tonalité de l'équipe. */
+  const choisirTonalite = (slug: string, k: string | null) => {
+    setPersonalKey(id, slug, k);
+    setPersonalKeys(getPersonalKeys(id));
+  };
+  // « Je joue » de la personne (lu sans migrer, roleCompte.ts) : choriste et présidence ont paroles + pinyin tant que
+  // la préférence 简谱 n'est pas réglée (spec-jianpu-deux-volets.md, JV-1). Le mode louange applique son propre rôle.
+  const jianpuPrefVu = prefPourRole(jianpuPref, getRoleSansMigrer(user?.uid ?? null));
   // Crayon : le bouton de la barre d'outils et, sur téléphone étroit, l'entrée du menu « ⋯ ».
   // Depuis la Liste, il ouvre les partitions au chant lu (Q11) ; en deux volets, elles sont déjà là.
   const toggleCrayon = () => {
@@ -992,7 +1008,7 @@ export function SetlistDetailClient() {
         // « Ma version » : exactement les items de la vue affichée (stageItems).
         const mesItems = version === "mine" ? setlist.items.map(withChosen).map(withMineStructure) : setlist.items;
         const sheetFiles = mesItems.flatMap((it) =>
-          sheetEnabled(jianpuPref, it.jianpuSheet)
+          sheetEnabled(jianpuPrefVu)
             ? (sheets[it.songSlug]?.pages ?? []).map((p, i) => ({ file: p.file, top: cadrage[it.songSlug]?.[i] ?? 0 }))
             : [],
         );
@@ -1012,7 +1028,7 @@ export function SetlistDetailClient() {
             jianpuChords={sheetChords}
             jianpuCadrage={cadrage}
             jianpuImages={sheetImages}
-            jianpuPref={jianpuPref}
+            jianpuPref={jianpuPrefVu}
             sectionStyle={style === "classic" ? "classic" : "colors"}
             layout={style === "compact" ? "unique" : "played"}
             language={i18n.language}
@@ -1139,8 +1155,13 @@ export function SetlistDetailClient() {
   const accesHarmonie = useAccesHarmonie();
   // Grand écran : la porte 2 est une colonne à droite des partitions (un second appel du puce la referme).
   // La colonne tient si la zone de lecture (à droite du rail) fait 824 px ; sinon, la feuille.
-  const [zoneLecture, zoneAssezLarge] = useZoneAssezLarge();
-  const grandEcran = useGrandEcranHarmonie() && zoneAssezLarge;
+  const ecranLarge = useGrandEcranHarmonie();
+  // La marge « Affichage » n'est en colonne que si la musique garde 340 px (RU-4), mesuré sur son enveloppe ; en colonne,
+  // elle retire sa place à la zone : sinon « Harmonie » ouvrirait la feuille au lieu de la colonne.
+  const [enveloppeMarge, margeEnColonne] = useZoneAssezLarge(320 + 24 + 340);
+  const margeRetire = showAffichage && ecranLarge && margeEnColonne ? 320 + 24 : 0;
+  const [zoneLecture, zoneAssezLarge] = useZoneAssezLarge(824 - margeRetire);
+  const grandEcran = ecranLarge && zoneAssezLarge;
   const [colonnePref, setColonneHarmonie] = useColonneHarmonie();
   const fermerAccord = useRef<(() => void) | null>(null);
   const [instrumentHarmonie] = useInstrument(accesHarmonie);
@@ -1149,7 +1170,7 @@ export function SetlistDetailClient() {
   // Dans une fusion : celui de ses chants dont on lit les idées.
   const [ideesChant, setIdeesChant] = useState<string | null>(null);
   // H5-2 : le passage visé par « Ici » (la clé change à chaque appui, pour redéfiler).
-  const [passageIci, setPassageIci] = useState<{ uid: string; cle: number; idee?: string } | undefined>();
+  const [passageIci, setPassageIci] = useState<{ uid: string; cle: number; idee?: string; miHauteur?: boolean } | undefined>();
   // Préférence « 1 » en grand écran : la colonne s'ouvre sur le chant lu et le suit quand il change.
   const dernierLu = useRef<number | undefined>(undefined);
   useEffect(() => {
@@ -1238,12 +1259,17 @@ export function SetlistDetailClient() {
 
     // Section modulée (升调) : la sheet affiche et re-stocke les accords dans
     // la tonalité de la section, pas celle de l'item.
+    // Tonalité choisie sur cet appareil (RU-4) : la feuille suit la tonalité affichée, modulations comprises.
+    const equipeKey = item.keyOverride ?? origKey;
+    const choisie = personalKeys[item.songSlug];
+    const personalKey = choisie && choisie !== equipeKey ? choisie : undefined;
+    const sectionKey = sectionUid
+      ? item.sectionKeys?.[sectionUid] ?? item.sectionKeys?.[idDeSection(sectionUid)]
+      : undefined;
     const displayKey =
-      (sectionUid
-        ? item.sectionKeys?.[sectionUid] ?? item.sectionKeys?.[idDeSection(sectionUid)]
-        : undefined) ??
-      item.keyOverride ??
-      origKey;
+      (sectionKey && personalKey ? getTransposedKey(sectionKey, semitonesTo(equipeKey, personalKey)) : sectionKey) ??
+      personalKey ??
+      equipeKey;
 
     setRepeatScope("all");
     setEditTarget({
@@ -1324,6 +1350,15 @@ export function SetlistDetailClient() {
     } finally {
       setSavingLine(false);
     }
+  }
+
+  /** « Changer pour toute l'équipe » (armure, RU-4) : seule voie vers `keyOverride` depuis la lecture ; même motif que les
+   *  retouches (relecture fraîche, conflit, historique). La tonalité personnelle de ce chant est alors effacée. */
+  async function changerPourLEquipe(itemIndex: number, k: string) {
+    if (!setlist || !canEdit) return;
+    const item = setlist.items[itemIndex];
+    const origine = itemAst(item, contents[item.songSlug])?.metadata.key;
+    if (await persistOverride(itemIndex, item.contentOverride ?? undefined, { keyOverride: k === origine ? null : k })) choisirTonalite(item.songSlug, null);
   }
 
   /** Réécrit mon document de versions — jamais la setlist : ni relecture,
@@ -1820,7 +1855,7 @@ export function SetlistDetailClient() {
     // Hors ligne, un chant dont le scan 简谱 n'est pas dans le cache du navigateur est « non chargé » aussi
     // (image cassée sinon). On ne sait que ce que le cache dit : en ligne, rien n'est vérifié.
     if (setlist && jianpuManifest && (copieLueLe !== null || !navigator.onLine)) {
-      const aScan = setlist.items.filter((it) => it.songSlug && sheetEnabled(jianpuPref, it.jianpuSheet)).map((it) => it.songSlug);
+      const aScan = setlist.items.filter((it) => it.songSlug && sheetEnabled(jianpuPrefVu)).map((it) => it.songSlug);
       for (const slug of await scansAbsentsDuCache(jianpuManifest, aScan)) {
         if (!manquants.includes(slug)) manquants.push(slug);
       }
@@ -1868,22 +1903,30 @@ export function SetlistDetailClient() {
   const droitsDeModifier = (
     <DroitsDeModifier setlist={setlist} canEdit={canEdit} droitsDeplies={droitsDeplies} onBasculer={() => setDroitsDeplies((o) => !o)} className="" />
   );
-  // Réglages d'affichage : le bouton « Affichage » de G, le sous-menu « Affichage »
-  // du ⋯ en deux volets (Q3, Q7).
-  const reglagesAffichage = (
-    <ReglagesAffichage
-      layout={layout}
-      changeLayout={changeLayout}
-      hasZhSong={hasZhSong}
-      showPinyin={showPinyin}
-      togglePinyin={togglePinyin}
-      disposition={disposition}
-      changeDisposition={changeDisposition}
-      hasJianpuSheets={hasJianpuSheets}
-      jianpuPref={jianpuPref}
-      changeJianpuPref={changeJianpuPref}
-    />
+  // La marge « Affichage » (RU-4) : enveloppe la zone de lecture ; sans groupe « Je joue » (le rôle reste au mode louange).
+  const margeAffichage = (musique: React.ReactNode) => (
+    <div ref={enveloppeMarge}>
+      <MargeAffichage
+        mode="page"
+        sansColonne={!margeEnColonne}
+        sansRole
+        ouvert={showAffichage}
+        onFermer={() => setShowAffichage(false)}
+        zh={hasZhSong}
+        aJianpu={hasJianpuSheets}
+        jianpuVu={interrupteurAllume(jianpuPrefVu)}
+        uid={authLoading ? undefined : user?.uid ?? null}
+        retourFocus={boutonAffichageRef}
+      >
+        {musique}
+      </MargeAffichage>
+    </div>
   );
+  /** Le bouton « Affichage » : Harmonie et Affichage s'excluent, comme sur la page chant. */
+  const basculerAffichage = () => {
+    if (!showAffichage) { setColonneHarmonie(false); setIdeesTarget(null); setIdeesChant(null); setPassageIci(undefined); }
+    setShowAffichage(!showAffichage);
+  };
   // Actions du menu ⋯ communes à G et aux deux volets.
   const actionsPartagees = (
     <ActionsPartagees
@@ -1925,15 +1968,20 @@ export function SetlistDetailClient() {
           {t("maPartition.crayon.aide")}
         </p>
       )}
+      {/* Taille du texte (marge « Affichage », la même que la page chant et le mode louange) : zoom, sans effet à l'impression. */}
+      <div className="song-zoom" style={taille === 1 ? undefined : { zoom: taille }}>
       <PartitionsView
         setlistId={id}
+        personalKeys={personalKeys}
+        onTonalite={choisirTonalite}
+        onChangerEquipe={canEdit ? changerPourLEquipe : undefined}
         items={displayItems}
         contents={contents}
         loading={loadingContent}
         showChordsGlobal={showChords}
         showPinyinGlobal={showPinyin}
         disposition={disposition}
-        jianpuPref={jianpuPref}
+        jianpuPref={jianpuPrefVu}
         layout={layout}
         editMode={crayon}
         versions={versionViews}
@@ -1960,6 +2008,7 @@ export function SetlistDetailClient() {
         onFermerAccord={(f) => { fermerAccord.current = f; }}
         onIdees={accesHarmonie.peut ? (itemIndex, slug) => {
           compter("cmd.setlist.idees");
+          setShowAffichage(false);
           setPassageIci(undefined);
           const ferme = grandEcran && ideesTarget === itemIndex && ideesChant === (slug ?? null);
           if (grandEcran) setColonneHarmonie(!ferme);
@@ -1967,13 +2016,16 @@ export function SetlistDetailClient() {
           setIdeesChant(ferme ? null : slug ?? null);
         } : undefined}
         // « Ici » ouvre sans basculer : un second appui ne doit pas refermer la porte 2.
-        onIci={accesHarmonie.peut ? (itemIndex, slug, uid, idee) => {
+        onIci={accesHarmonie.peut ? (itemIndex, slug, uid, idee, options) => {
+          if (options?.depuisNom && !grandEcran) defilerSousLaBarre(options.element);
+          setShowAffichage(false);
           if (grandEcran) setColonneHarmonie(true);
           setIdeesTarget(itemIndex);
           setIdeesChant(slug ?? null);
-          setPassageIci({ uid, cle: Date.now(), idee });
+          setPassageIci({ uid, cle: Date.now(), idee, ...(options?.depuisNom ? { miHauteur: true } : null) });
         } : undefined}
       />
+      </div>
       {/* La barre basse du Crayon ne cache pas la fin du dernier chant. */}
       {crayon && <div aria-hidden className="h-16 print:hidden" />}
     </>
@@ -2043,7 +2095,7 @@ export function SetlistDetailClient() {
       canEdit={canEdit}
       instrument={instrumentHarmonie}
       jianpuManifest={jianpuManifest}
-      jianpuPref={jianpuPref}
+      jianpuPref={jianpuPrefVu}
       withMine={withChosen}
       sourceForItem={crayon ? sourceForItem : sourceDuCulte}
       applyNewSource={(i, next, extra) => applyNewSource(i, next, extra, undefined, crayon ? "moi" : "culte")}
@@ -2121,6 +2173,19 @@ export function SetlistDetailClient() {
                     <FileText className="h-4 w-4" aria-hidden />
                   </button>
                 )}
+                <button
+                  ref={boutonAffichageRef}
+                  type="button"
+                  aria-label={t("setlists.detail.layout.label")}
+                  aria-pressed={showAffichage}
+                  aria-expanded={showAffichage}
+                  aria-controls="marge-affichage"
+                  onClick={basculerAffichage}
+                  className={showAffichage ? PILULE_ACTIVE : PILULE}
+                >
+                  <SlidersHorizontal className="h-4 w-4" aria-hidden />
+                  {t("setlists.detail.layout.label")}
+                </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button type="button" aria-label={t("common.moreActions")} className={PILULE_ICONE}>
@@ -2138,15 +2203,6 @@ export function SetlistDetailClient() {
                     >
                       {t("songs.detail.chords")}
                     </DropdownMenuCheckboxItem>
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-                        {t("setlists.detail.layout.label")}
-                      </DropdownMenuSubTrigger>
-                      {/* Choisir une couleur des accords : Radix remet le focus sur le menu parent (FocusScope, après un rendu), ce qui
-                          refermait le sous-menu ; un focus parti vers un menu ne le ferme plus, un focus parti ailleurs si. */}
-                      <DropdownMenuSubContent collisionPadding={12} onFocusOutside={(e) => { if ((e.target as HTMLElement | null)?.closest?.("[data-radix-menu-content]")) e.preventDefault(); }} className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(374px,calc(100vw-16px))] overflow-y-auto overflow-x-hidden sm:w-[25.5rem]">{reglagesAffichage}</DropdownMenuSubContent>
-                    </DropdownMenuSub>
                     <DropdownMenuSeparator />
                     {actionsPartagees}
                     {supprimer}
@@ -2179,7 +2235,7 @@ export function SetlistDetailClient() {
                 items={stageItems}
                 contents={contents}
                 songsMap={songsMap}
-                jianpuPref={jianpuPref}
+                jianpuPref={jianpuPrefVu}
                 current={current ?? premierChant()}
                 uidsLus={uidsLus}
                 onGo={allerA}
@@ -2197,6 +2253,7 @@ export function SetlistDetailClient() {
                   T4 : deux colonnes de sections dès 1 000 px de zone (requête de conteneur `partition`).
                   Colonne Harmonie ouverte (H4-2) : la zone entière, partition à 920 px au plus et en une colonne
                   (pas de conteneur `partition` : la zone mesurée inclurait la colonne Harmonie). */}
+              {margeAffichage(
               <div className={colonneOuverte ? "w-full [--colonne-partition:920px]" : "w-full max-w-[920px] [--colonne-partition:920px] [@container_partition_(min-width:1000px)]:max-w-[1080px] [@container_partition_(min-width:1000px)]:[--colonne-partition:1080px]"}>
               {/* Ce que garde la question 4, sous le titre : historique, langue, qui peut
                   modifier ; la régie ajoute ou change ici le lien de la présentation. */}
@@ -2230,6 +2287,7 @@ export function SetlistDetailClient() {
               )}
               {passageFete && <CartesFete passage={passageFete} />}
               </div>
+              )}
             </div>
           </div>
         </div>
@@ -2267,20 +2325,20 @@ export function SetlistDetailClient() {
                 {/* Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : la même barre côté Liste
                     et côté Partitions — Affichage, Adapter, Accords, Ma version ; la bascule
                     « Liste | Partitions » est passée sous l'en-tête. */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button aria-label={t("setlists.detail.layout.label")}
-                      className={`${TOUCHER_44} ${PILULE_EMPILEE} ${compacte ? "max-sm:hidden" : ""} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] bg-secondary text-muted-foreground hover:text-foreground`}
-                    >
-                      <SlidersHorizontal className="h-3.5 w-3.5" />
-                      <span className="libelle-outil">{t("setlists.detail.layout.label")}</span>
-                      <span aria-hidden className={LIBELLE_COURT}>{t("setlists.detail.layout.label")}</span>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" collisionPadding={12} className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(374px,calc(100vw-16px))] overflow-y-auto overflow-x-hidden sm:w-[25.5rem]">
-                    {reglagesAffichage}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <button aria-label={t("setlists.detail.layout.label")}
+                  ref={boutonAffichageRef}
+                  aria-pressed={showAffichage}
+                  aria-expanded={showAffichage}
+                  aria-controls="marge-affichage"
+                  onClick={basculerAffichage}
+                  className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                    showAffichage ? "bg-foreground text-background" : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  <span className="libelle-outil">{t("setlists.detail.layout.label")}</span>
+                  <span aria-hidden className={LIBELLE_COURT}>{t("setlists.detail.layout.label")}</span>
+                </button>
 
                 {/* Crayon : retoucher le chant, pour moi ou pour tout le culte */}
                 {!horsLigne && (
@@ -2303,10 +2361,10 @@ export function SetlistDetailClient() {
                 <button aria-label={t("songs.detail.chords")}
                   aria-pressed={showChords}
                   onClick={() => {
-                    setShowChords((s) => !s);
+                    setShowChords(!showChords);
                     setChordsTouched(true);
                   }}
-                  className={`${TOUCHER_44} ${PILULE_EMPILEE} ${compacte ? "max-sm:hidden" : ""} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                  className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     showChords
                       ? "bg-foreground text-background"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -2338,23 +2396,10 @@ export function SetlistDetailClient() {
                     <span aria-hidden className={`${LIBELLE_COURT} max-sm:!hidden`}>{t("setlists.detail.performanceModeCourt")}</span>
                   </button>
 
-                  {/* Téléphone, vue Partitions : « Affichage » choisi dans le ⋯ s'ouvre ici, sous la barre, à droite. */}
-                  {compacte && (
-                    <DropdownMenu open={affichageTel} onOpenChange={setAffichageTel}>
-                      <DropdownMenuTrigger asChild>
-                        <span aria-hidden tabIndex={-1} className="pointer-events-none absolute bottom-0 right-[var(--marge-page)] h-0 w-0 sm:hidden" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" collisionPadding={8} onCloseAutoFocus={(e) => { e.preventDefault(); plusRef.current?.focus(); }} className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(374px,calc(100vw-16px))] overflow-y-auto overflow-x-hidden">
-                        {reglagesAffichage}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-
                   {/* Menu ⋯ : Modifier / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        ref={plusRef}
                         variant="outline"
                         size="icon-lg"
                         className={`${TOUCHER_44} h-8 w-8 rounded-md text-muted-foreground`}
@@ -2364,26 +2409,6 @@ export function SetlistDetailClient() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
-                      {/* Vue Partitions au téléphone : « Accords » et « Affichage », sortis de la barre. */}
-                      {compacte && (
-                        <>
-                          <DropdownMenuCheckboxItem
-                            className="sm:hidden"
-                            checked={showChords}
-                            onCheckedChange={(v) => {
-                              setShowChords(v);
-                              setChordsTouched(true);
-                            }}
-                          >
-                            {t("songs.detail.chords")}
-                          </DropdownMenuCheckboxItem>
-                          <DropdownMenuItem className="sm:hidden" onSelect={() => setTimeout(() => setAffichageTel(true), 0)}>
-                            <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-                            {t("setlists.detail.layout.label")}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator className="sm:hidden" />
-                        </>
-                      )}
                       {/* Téléphone étroit : le Crayon, sorti de la barre. */}
                       {!horsLigne && (
                         <DropdownMenuCheckboxItem className={masqueMenu} checked={crayon} onCheckedChange={toggleCrayon}>
@@ -2488,13 +2513,15 @@ export function SetlistDetailClient() {
                 {t("setlists.detail.emptyItems")}
               </p>
             ) : (
+              margeAffichage(
               <div ref={vueRef} data-vue={view}>
                 {view === "liste" ? (
-                  <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} current={current} onOpen={versPartitions} />
+                  <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPrefVu} current={current} onOpen={versPartitions} personalKeys={personalKeys} />
                 ) : (
                   partitionsEtColonne
                 )}
               </div>
+              )
             )}
             {passageFete && <CartesFete passage={passageFete} />}
           </div>
@@ -2629,9 +2656,14 @@ export function SetlistDetailClient() {
             const i = setlist.items.findIndex((it) => it.songSlug === slug);
             if (i >= 0) void choisirLecture(i, valeur);
           }}
+          onChangerEquipe={canEdit ? (slug, k) => {
+            const i = setlist.items.findIndex((it) => it.songSlug === slug);
+            if (i >= 0) void changerPourLEquipe(i, k);
+          } : undefined}
           traits={traitsParChant}
           onTraitsChange={traitsChanges}
           chantsCharges={Object.fromEntries([...slugsPartitions.map((s) => [s, !!mesPartitions.charges[s]]), ...ajoutsLocaux.map((a) => [a.slug, false])])}
+          partitionsEnEchec={mesPartitions.echecs}
           echecTraits={echecTraits}
           traitsEnAttente={mesPartitions.enAttente}
           chargerToutesSetlists={user ? chargerToutesSetlists : undefined}
