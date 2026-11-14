@@ -37,7 +37,7 @@ export type ReglagesAffichage = {
   setAccords: (v: boolean) => void;
 };
 
-/** `uid` : undefined = authentification en cours (rien n'est lu), null = hors connexion. */
+/** `uid` : undefined = authentification en cours (seuls les réglages de l'appareil sont lus), null = hors connexion. */
 export function useReglagesAffichage(uid: string | null | undefined): ReglagesAffichage {
   const [lu, setLu] = useState(false);
   const [disposition, setDispo] = useState<Disposition>("sections");
@@ -50,14 +50,17 @@ export function useReglagesAffichage(uid: string | null | undefined): ReglagesAf
   const notation = useNotationAccords(uid);
 
   const relire = useCallback(() => {
-    if (uid === undefined) return;
+    // Réglages de l'appareil : lus dès le montage, sans attendre l'authentification. Sinon la valeur par défaut
+    // (scan 简谱) s'affiche le temps de l'authentification puis cède aux paroles choisies : les accords touchables
+    // disparaissent puis reviennent, et un accord touché pendant ce temps n'ouvre rien (cinq corrections, point 1).
     setDispo(getDispositionPref());
-    setOrd(getPartitionLayoutPref(uid));
     setJp(interrupteurAllume(getJianpuPref()));
     setPy(getPinyinPref());
     setTl(getFontScalePref());
-    setRl(getRoleSansMigrer(uid)); // lecture seule : la migration du rôle d'appareil reste à l'ouverture du mode louange
     setAcc(accordsAffiches);
+    if (uid === undefined) return;
+    setOrd(getPartitionLayoutPref(uid));
+    setRl(getRoleSansMigrer(uid)); // lecture seule : la migration du rôle d'appareil reste à l'ouverture du mode louange
     setLu(true);
   }, [uid]);
 
