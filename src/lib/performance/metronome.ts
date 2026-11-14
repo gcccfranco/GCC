@@ -26,7 +26,7 @@ export function dureeTemps(tempo: number, m: Mesure): number {
   return m.compose ? 60000 / tempo / 3 : 60000 / tempo;
 }
 
-export type PositionHorloge = { temps: number; mesure: number; fraction: number };
+export type PositionHorloge = { temps: number; mesure: number; fraction: number; duree: number };
 
 /** Horloge de temps : tempo changé au temps suivant, mesure changée à la mesure suivante. */
 export function creerHorloge() {
@@ -68,12 +68,12 @@ export function creerHorloge() {
       if (!actif) return null;
       const i = appliquer(t);
       const rel = i - debutRegime;
-      return { temps: ((rel % nb) + nb) % nb, mesure: mesuresAvant + Math.floor(rel / nb), fraction: ((t - t0) / dur) - Math.floor((t - t0) / dur) };
+      return { temps: ((rel % nb) + nb) % nb, mesure: mesuresAvant + Math.floor(rel / nb), fraction: ((t - t0) / dur) - Math.floor((t - t0) / dur), duree: dur };
     },
     /** Débuts de temps dont l'instant est dans [de, jusqua[ (sans rien modifier), changements en attente compris :
      *  instant = t0 + k × durée (jamais une somme de pas), numéro du temps dans la mesure, durée de ce temps. */
-    debuts(de: number, jusqua: number): { instant: number; temps: number; duree: number }[] {
-      const sortie: { instant: number; temps: number; duree: number }[] = [];
+    debuts(de: number, jusqua: number): { instant: number; temps: number; mesure: number; duree: number }[] {
+      const sortie: { instant: number; temps: number; mesure: number; duree: number }[] = [];
       if (!actif) return sortie;
       const at = enAttenteTempo;
       const am = enAttenteMesure;
@@ -84,14 +84,24 @@ export function creerHorloge() {
         const instant = nouveau ? t0 + (at.a - i0) * dur + (i - at.a) * at.dur : t0 + (i - i0) * dur;
         if (instant >= jusqua) break;
         if (instant < de) continue;
-        const regime = am && i >= am.a ? { n: am.nb, d: am.a } : { n: nb, d: debutRegime };
-        sortie.push({ instant, temps: (((i - regime.d) % regime.n) + regime.n) % regime.n, duree: nouveau ? at.dur : dur });
+        const regime = am && i >= am.a ? { n: am.nb, d: am.a, avant: mesuresAvant + (am.a - debutRegime) / nb } : { n: nb, d: debutRegime, avant: mesuresAvant };
+        sortie.push({ instant, temps: (((i - regime.d) % regime.n) + regime.n) % regime.n, mesure: regime.avant + Math.floor((i - regime.d) / regime.n), duree: nouveau ? at.dur : dur });
       }
       return sortie;
     },
     changerTempo(dureeMs: number, t: number) {
       if (!actif) { dur = dureeMs; return; }
       enAttenteTempo = { dur: dureeMs, a: appliquer(t) + 1 };
+    },
+    /** Applique la durée exactement au premier temps de la mesure `k` (numéro depuis le départ, comme `position().mesure`) ;
+     *  remplace un changement de tempo en attente. Sans effet si cette mesure est déjà commencée. */
+    changerTempoAMesure(dureeMs: number, k: number, t: number) {
+      if (!actif) return;
+      const i = appliquer(t);
+      const am = enAttenteMesure;
+      const avantAm = am ? mesuresAvant + (am.a - debutRegime) / nb : 0;
+      const a = am && k >= avantAm ? am.a + (k - avantAm) * am.nb : debutRegime + (k - mesuresAvant) * nb;
+      if (a > i) enAttenteTempo = { dur: dureeMs, a };
     },
     changerMesure(nbTemps: number, t: number) {
       if (!actif) { nb = nbTemps; return; }

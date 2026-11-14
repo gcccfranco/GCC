@@ -919,6 +919,9 @@
   background: repeating-linear-gradient(45deg, var(--plein) 0 2px, transparent 2px 6px);
   animation: bande-trame calc(var(--duree-temps) * 0.6) ease-out;
 }
+/* MT-4 : pendant le décompte le temps allumé est un contour épais (pas une pastille pleine), à la couleur des pastilles, sans transition. */
+[data-bande-temps][data-decompte] [data-bande-groupe] > [data-actif] { animation: none; background: transparent; border-style: solid; border-width: 4px; border-color: var(--plein); color: var(--plein); }
+[data-bande-temps][data-decompte] [data-bande-groupe] > [data-actif]::before { content: none; }
 @keyframes bande-battement { from { background: var(--plein); border-color: var(--plein); color: hsl(var(--background)); } 40% { color: hsl(var(--background)); } }
 @keyframes bande-trame { from { opacity: 1; } }
 [data-bande-interieur] > [data-metronome-marche] {

@@ -39,6 +39,8 @@ export function BandeTemps({
   return (
     <div
       data-bande-temps
+      data-decompte={pos?.decompte ? "" : undefined}
+      data-muette={pos?.muette ? "" : undefined}
       className="absolute left-0 right-0 bg-background"
       style={{ top, height: "36px", zIndex: 15, "--duree-temps": `${duree}ms` } as React.CSSProperties}
       onPointerDown={(e) => e.stopPropagation()}
@@ -64,7 +66,7 @@ export function BandeTemps({
                     <span
                       key={actif ? `a${pos.n}` : `r${i}`}
                       data-temps={i + 1}
-                      data-accent={accents[i] ?? "faible"}
+                      data-accent={actif && pos.muette ? "muet" : accents[i] ?? "faible"}
                       data-actif={actif ? "" : undefined}
                       data-compact={douze ? "" : undefined}
                     >

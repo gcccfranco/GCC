@@ -61,6 +61,8 @@ import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui, classerGeste, largeurZo
 import { BandeTemps } from "@/components/performance/BandeTemps";
 import { PanneauMetronome } from "./PanneauMetronome";
 import { useMetronome } from "@/components/performance/hooks/useMetronome";
+import { useEntrainement } from "@/components/performance/hooks/useEntrainement";
+import { useTaper } from "@/components/performance/hooks/useTaper";
 import { TEMPO_DEPART } from "@/lib/performance/tempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { ROLE_IDS, getRole, roleDemande, setRole, type RolePreset } from "@/lib/performance/roleCompte";
@@ -1717,6 +1719,18 @@ export function PerformanceMode({
         defaireCrayon(e.key.toLowerCase() === "z" && !e.shiftKey ? "annuler" : "retablir");
         return;
       }
+      // Métronome (MT-4) : Espace = Marche / Arrêt, T = Taper, quand la bande est affichée ou la fenêtre Métronome ouverte
+      // (sinon Espace garde son rôle). Rien dans un champ ; un bouton qui a le focus au clavier garde Espace (natif).
+      if ((e.key === " " || e.key.toLowerCase() === "t") && !e.ctrlKey && !e.metaKey && !e.altKey && (metronome || popoverOuvert === "metronome")
+        && (!popoverOuvert || popoverOuvert === "metronome") && (popoverOuvert === "metronome" || !cible?.closest("[role=dialog]"))
+        && !cible?.closest("select, [contenteditable]")
+        && !(e.key === " " && !focusAuPointeur.current && cible?.closest("button, a[href], summary, [role=button], [role=link], [role=slider], [role=radio], [role=switch], [role=checkbox], [role=tab], [role^=menuitem], [role=option]"))) {
+        e.preventDefault();
+        if (e.repeat) return;
+        if (e.key === " ") setMetroMarche((m) => !m);
+        else taper();
+        return;
+      }
       if (e.key !== "Escape") {
         // Curseur de page, feuilles et sommaire ouverts : flèches, PageUp/Down et Espace leur appartiennent.
         if (cible instanceof HTMLInputElement) return;
@@ -1878,7 +1892,12 @@ export function PerformanceMode({
   const couperSon = () => { if (sonRef.current) { setSon(false); setAvisSon(true); } };
   const couperSonRef = useRef(couperSon);
   couperSonRef.current = couperSon;
-  useEffect(() => { setMetroMarche(false); couperSonRef.current(); }, [tempoChantId]); // arrêt au changement de chant
+  // S'entraîner (MT-4) : ouvert, changer de chant n'arrête ni la marche ni le son (Q5) ; replié, arrêt comme en MT-3.
+  const { valeurs: valeursEntr, changerValeurs: changerValeursEntr, cases: casesEntr, changerCase: changerCaseEntr, ouvert: entrOuvert, setOuvert: setEntrOuvert, ouvertRef: entrOuvertRef, entr } = useEntrainement();
+  const [tempoPasse, setTempoPasse] = useState<number | null>(null); // tempo joué par l'accélération, passager : jamais écrit
+  const taper = useTaper(fixerTempo);
+  const tempoAffiche = tempoPasse ?? tempoLiseret ?? TEMPO_DEPART;
+  useEffect(() => { if (entrOuvertRef.current) return; setMetroMarche(false); couperSonRef.current(); }, [tempoChantId, entrOuvertRef]); // arrêt au changement de chant
   useEffect(() => {
     const cache = () => { if (document.visibilityState === "hidden") couperSonRef.current(); };
     document.addEventListener("visibilitychange", cache);
@@ -1889,7 +1908,7 @@ export function PerformanceMode({
     const id = setTimeout(() => setAvisSon(false), 3000);
     return () => clearTimeout(id);
   }, [avisSon]);
-  const posMetro = useMetronome(metroMarche, son, { tempo: tempoLiseret ?? TEMPO_DEPART, mesure: mesureBande, accents, subdivision, type: sonType, volume });
+  const { pos: posMetro, appui: appuiMetro } = useMetronome(metroMarche, son, { tempo: tempoLiseret ?? TEMPO_DEPART, mesure: mesureBande, accents, subdivision, type: sonType, volume, decompte, entr, onTempoJoue: setTempoPasse, onFin: () => setMetroMarche(false) });
 
   // Progression dans le chant courant + chant suivant
   const songStartPage = currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : -1;
@@ -2548,7 +2567,7 @@ export function PerformanceMode({
       {/* ── Métronome visuel : liseré silencieux, sous le chrome ── */}
       {metronome ? (
         <BandeTemps
-          tempo={tempoLiseret ?? TEMPO_DEPART}
+          tempo={tempoAffiche}
           mesure={mesureBande}
           accents={accents}
           marche={metroMarche}
@@ -2621,7 +2640,7 @@ export function PerformanceMode({
           onJeJoue={() => basculerMenu("jejoue")}
           onQuitter={onClose}
           bande={metronome}
-          tempoRegle={tempoLiseret}
+          tempoRegle={tempoPasse ?? tempoLiseret}
           marche={metroMarche}
           onMarche={() => setMetroMarche((m) => !m)}
         />
@@ -2818,6 +2837,15 @@ export function PerformanceMode({
         changerSonType={changerSonType}
         volume={volume}
         changerVolume={changerVolume}
+        taper={taper}
+        clavier={clavierVu || pointeurFin}
+        entrOuvert={entrOuvert}
+        setEntrOuvert={setEntrOuvert}
+        cases={casesEntr}
+        changerCase={changerCaseEntr}
+        valeursEntr={valeursEntr}
+        changerValeursEntr={changerValeursEntr}
+        appui={appuiMetro}
       />
       <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurMenus}>
         {contenuOutils}

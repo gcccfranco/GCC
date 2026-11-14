@@ -122,3 +122,28 @@ export function getVolumeMetro(): number {
   return Number.isFinite(n) ? Math.min(100, Math.max(0, Math.round(n))) : 80;
 }
 export function setVolumeMetro(n: number) { ecrire(CLE_VOLUME, String(Math.min(100, Math.max(0, Math.round(n))))); }
+
+// ─── S'entraîner (MT-4) : les nombres des trois lignes, par appareil ; les cases ne sont jamais retenues ───
+
+export type Entrainement = { jouees: number; silence: number; de: number; pas: number; tous: number; jusqua: number; minutes: number };
+export const BORNES_ENTRAINEMENT: Record<keyof Entrainement, [number, number]> = {
+  jouees: [1, 16], silence: [1, 16], de: [TEMPO_MIN, TEMPO_MAX], pas: [1, 20], tous: [1, 16], jusqua: [TEMPO_MIN, TEMPO_MAX], minutes: [1, 120],
+};
+export const ENTRAINEMENT_DEPART: Entrainement = { jouees: 4, silence: 4, de: 60, pas: 2, tous: 4, jusqua: 80, minutes: 10 };
+const CLE_ENTRAINEMENT = "perf-metro-entrainement";
+
+export function getEntrainement(): Entrainement {
+  const sortie = { ...ENTRAINEMENT_DEPART };
+  try {
+    const brut = JSON.parse(localStorage.getItem(CLE_ENTRAINEMENT) ?? "null");
+    if (brut && typeof brut === "object") {
+      for (const cle of Object.keys(sortie) as (keyof Entrainement)[]) {
+        const n = brut[cle];
+        const [min, max] = BORNES_ENTRAINEMENT[cle];
+        if (typeof n === "number" && Number.isFinite(n)) sortie[cle] = Math.min(max, Math.max(min, Math.round(n)));
+      }
+    }
+  } catch { /* stockage indisponible ou JSON invalide : valeurs de départ */ }
+  return sortie;
+}
+export function setEntrainement(v: Entrainement) { ecrire(CLE_ENTRAINEMENT, JSON.stringify(v)); }

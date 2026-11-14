@@ -6,8 +6,10 @@ import { Minus, Plus } from "lucide-react";
 import { Groupe, Segment } from "@/components/song/MargeAffichage";
 import { MenuLouange } from "@/components/performance/MenuLouange";
 import { IconeNote, type TypeNote } from "@/components/performance/IconeNote";
+import { EntrainementMetronome } from "@/components/performance/EntrainementMetronome";
+import type { CasesEntrainement } from "@/components/performance/hooks/useEntrainement";
 import { contexteAudio } from "@/lib/audio/contexte";
-import { clampTempo, TEMPO_MAX, TEMPO_MIN, type Decompte, type SonMetro, type Subdivision } from "@/lib/performance/tempo";
+import { clampTempo, TEMPO_MAX, TEMPO_MIN, type Decompte, type Entrainement, type SonMetro, type Subdivision } from "@/lib/performance/tempo";
 import type { Accent, Mesure } from "@/lib/performance/metronome";
 
 // Le panneau Métronome (lot MT, MT-2) : une fenêtre comme le menu « Setlist » du mode louange (décision de Timothée, 13/11) :
@@ -15,7 +17,6 @@ import type { Accent, Mesure } from "@/lib/performance/metronome";
 const MESURES = ["2/4", "3/4", "4/4", "6/8", "12/8"];
 const APPUI_LONG_MS = 500;
 const REPETITION_MS = 250;
-const PAUSE_TAPER_MS = 2000;
 const BINAIRES: { id: Subdivision; note: TypeNote }[] = [
   { id: "aucune", note: "noire" },
   { id: "croches", note: "croches" },
@@ -92,6 +93,7 @@ function Pastilles({ label, valeurs, choisie, onChoix }: { label: string; valeur
 export function PanneauMetronome({
   ouvert, onFermer, tempo, tempoAppareil, tempoFichier, fixerTempo, effacerTempo, mesure, mesureTexte, changerMesure,
   accents, tournerAccent, subdivision, changerSubdivision, decompte, changerDecompte, marche, onMarche, bande, setBande, son, setSon, sonType, changerSonType, volume, changerVolume, couleur,
+  taper, clavier, entrOuvert, setEntrOuvert, cases, changerCase, valeursEntr, changerValeursEntr, appui,
 }: {
   ouvert: boolean;
   onFermer: () => void;
@@ -121,6 +123,17 @@ export function PanneauMetronome({
   changerSonType: (s: SonMetro) => void;
   volume: number;
   changerVolume: (n: number) => void;
+  /** Taper (série partagée avec la touche T). */
+  taper: () => void;
+  /** Un clavier a été vu : annonce les touches Espace et T. */
+  clavier: boolean;
+  entrOuvert: boolean;
+  setEntrOuvert: (v: boolean) => void;
+  cases: CasesEntrainement;
+  changerCase: (c: keyof CasesEntrainement, v: boolean) => void;
+  valeursEntr: Entrainement;
+  changerValeursEntr: (v: Partial<Entrainement>) => void;
+  appui: { current: number };
 }) {
   const { t } = useTranslation();
   const titre = useId();
@@ -128,7 +141,6 @@ export function PanneauMetronome({
   const [autre, setAutre] = useState(() => !MESURES.includes(mesureTexte));
   const tempoRef = useRef(tempo);
   tempoRef.current = tempo;
-  const appuis = useRef<number[]>([]);
 
   // « Autre » se replie à chaque ouverture (le focus et Échap : Radix, comme les autres menus).
   useEffect(() => { if (ouvert) setAutre(false); }, [ouvert]);
@@ -140,16 +152,6 @@ export function PanneauMetronome({
     setSaisie(null);
     if (Number.isFinite(n)) fixerTempo(n);
   };
-  // Taper : moyenne des 4 derniers intervalles (5 appuis au plus), remise à zéro après 2 s, appliqué dès 2 appuis.
-  const taper = () => {
-    const maintenant = performance.now();
-    const a = appuis.current;
-    if (a.length && maintenant - a[a.length - 1] > PAUSE_TAPER_MS) a.length = 0;
-    a.push(maintenant);
-    if (a.length > 5) a.shift();
-    if (a.length >= 2) fixerTempo(60000 / ((a[a.length - 1] - a[0]) / (a.length - 1)));
-  };
-
   const m = autre || !MESURES.includes(mesureTexte) ? "autre" : mesureTexte;
   const niveau = (a: Accent) => t(`panneauMetronome.niveau.${a}`);
   const noteTempo: TypeNote = mesure.compose ? "noirePointee" : "noire";
@@ -250,20 +252,24 @@ export function PanneauMetronome({
               <button
                 type="button"
                 data-panneau-taper
+                aria-keyshortcuts="T"
                 onPointerDown={taper}
                 onClick={(e) => { if (e.detail === 0) taper(); }}
                 className="h-14 touch-manipulation rounded-xl border border-foreground text-base font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-muted"
               >
-                {t("panneauMetronome.taper")}
+                <span>{t("panneauMetronome.taper")}</span>
+                {clavier && <kbd className="ml-2 rounded border border-border px-1.5 py-0.5 font-sans text-xs font-medium text-muted-foreground">T</kbd>}
               </button>
               <button
                 type="button"
                 data-panneau-marche
                 aria-pressed={marche}
+                aria-keyshortcuts="Space"
                 onClick={onMarche}
                 className="h-14 rounded-xl bg-[color:var(--couleur-icones)] text-base font-semibold text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {t(marche ? "panneauMetronome.arret" : "panneauMetronome.marche")}
+                <span>{t(marche ? "panneauMetronome.arret" : "panneauMetronome.marche")}</span>
+                {clavier && <kbd className="ml-2 rounded border border-background/60 px-1.5 py-0.5 font-sans text-xs font-medium">{t("panneauMetronome.espace")}</kbd>}
               </button>
             </div>
           </div>
@@ -397,6 +403,9 @@ export function PanneauMetronome({
           <Groupe titre={t("panneauMetronome.decompte")} mention="">
             <Pastilles label={t("panneauMetronome.decompte")} valeurs={decomptes} choisie={String(decompte)} onChoix={(id) => changerDecompte(Number(id) as Decompte)} />
           </Groupe>
+
+          {/* (g2) S'entraîner (replié) : mesures muettes, accélération, minuteur */}
+          <EntrainementMetronome ouvert={entrOuvert} setOuvert={setEntrOuvert} cases={cases} changerCase={changerCase} valeurs={valeursEntr} changerValeurs={changerValeursEntr} marche={marche} appui={appui} />
 
           {/* (h) pied */}
           <div className="space-y-1 border-t border-border px-4 py-3">
