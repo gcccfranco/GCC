@@ -112,6 +112,12 @@ for (const [l, stockee, avant, apres] of [["fr", "fr", "Avant", "Après"], ["zh"
       await expect(ligne).toBeVisible();
       await expect(ligne.locator("[data-avant]")).toContainText(avant);
       await expect(ligne.locator("[data-apres]")).toContainText(apres);
+      // Cinq corrections, point 2 : le titre de l'idée est dans la langue du site (en 中文, la table docs/harmonie/fiches-zh.json).
+      const titreIdee = blocPont(page).locator("[data-suggestion]").first().getByRole("link").first();
+      if (l === "zh") {
+        await expect(titreIdee).toHaveText(/\p{Script=Han}/u);
+        await expect(titreIdee).not.toHaveAttribute("lang", "fr");
+      } else await expect(titreIdee).not.toHaveText(/\p{Script=Han}/u);
       const mesure = await ligne.evaluate((p) => {
         const rgba = (c: string) => { const v = (c.match(/[\d.]+/g) ?? []).map(Number); return { c: v.slice(0, 3), a: v[3] ?? 1 }; };
         const rgb = (c: string) => rgba(c).c;

@@ -41,6 +41,7 @@ import { useOuvrirAccord } from "@/components/accords/AccordsProvider";
 import { useNotationDuCompte } from "@/components/song/NotationAccordsProvider";
 import { NotationAccordsContext } from "@/lib/notationAccords";
 import { BoutonEcouter } from "@/components/harmonie/BoutonEcouter";
+import { useTexteFiche } from "@/components/harmonie/AvisLangue";
 
 type Props = {
   open: boolean;
@@ -278,6 +279,7 @@ function grilleDuPassage(p: Passage) {
 
 function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage, louange }: Props) {
   const { t } = useTranslation();
+  const texteFiche = useTexteFiche();
   const { user, profile } = useProfile();
   const { fiches, chargement } = useCatalogue();
   const notation = useNotationDuCompte();
@@ -394,8 +396,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
       const id = r.suggestion.split("__")[0];
       parFiche.set(id, [...(parFiche.get(id) ?? []), r]);
     }
-    return [...parFiche].map(([id, rs]) => ({ cle: id, nom: fiches.find((f) => f.id === id)?.nom ?? id, rejets: rs }));
-  }, [rejets, fiches]);
+    return [...parFiche].map(([id, rs]) => ({ cle: id, nom: ((f) => (f ? texteFiche(f).nom : id))(fiches.find((f) => f.id === id)), rejets: rs }));
+  }, [rejets, fiches, texteFiche]);
 
   const nom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user?.email ?? "";
 
@@ -428,8 +430,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
     : [];
   const carteModulation = ({ m, prop, fiche }: (typeof modulations)[number]) => (
     <li key={m.fiche} className="rounded-xl bg-card p-3" data-modulation={m.fiche}>
-      <Link href={`/harmonie/${fiche.id}`} lang="fr" className="font-semibold underline-offset-4 hover:underline">
-        {fiche.nom}
+      <Link href={`/harmonie/${fiche.id}`} lang={texteFiche(fiche).lang} className="font-semibold underline-offset-4 hover:underline">
+        {texteFiche(fiche).nom}
       </Link>
       <p className="mt-0.5 text-sm text-muted-foreground">
         {t("harmonie.modulation.ou", { section: prop.sectionNom, ton: prop.tonaliteCible })}
@@ -514,8 +516,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                     return (
                       <li key={s.id} className="rounded-xl bg-card p-3" data-suggestion={s.id}>
                         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                          <Link href={`/harmonie/${s.fiche.id}`} lang="fr" className="text-sm font-semibold underline-offset-4 hover:underline">
-                            {s.fiche.nom}
+                          <Link href={`/harmonie/${s.fiche.id}`} lang={texteFiche(s.fiche).lang} className="text-sm font-semibold underline-offset-4 hover:underline">
+                            {texteFiche(s.fiche).nom}
                           </Link>
                         </div>
                         {apercu ? (
@@ -535,10 +537,10 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                         ) : (
                           // Les idées sans remplacement d'accords (tag, intro absente)
                           // disent ce qu'elles proposent, avec les mots de la fiche.
-                          s.fiche.avantApres && (
+                          texteFiche(s.fiche).avantApres && (
                             <ParagrapheFiche
                               className="mt-1.5 text-base text-muted-foreground"
-                              texte={s.fiche.avantApres}
+                              texte={texteFiche(s.fiche).avantApres!}
                               demiTons={semitonesTo(TON_DES_FICHES, tonalite)}
                               tonalite={tonalite}
                             />
@@ -653,8 +655,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
           <div className="rounded-xl bg-card p-3">
             <p className="text-base">
               {ficheTransition ? (
-                <Link href={`/harmonie/${ficheTransition.id}`} lang="fr" className="font-semibold underline-offset-4 hover:underline">
-                  {ficheTransition.nom}
+                <Link href={`/harmonie/${ficheTransition.id}`} lang={texteFiche(ficheTransition).lang} className="font-semibold underline-offset-4 hover:underline">
+                  {texteFiche(ficheTransition).nom}
                 </Link>
               ) : (
                 t("harmonie.transition.titre")
@@ -749,6 +751,7 @@ function useEquipe({
 /** Une idée écrite par l'équipe. */
 function CarteIdee({ i, fiches, eq }: { i: Idee; fiches: Fiche[]; eq: Equipe }) {
   const { t } = useTranslation();
+  const texteFiche = useTexteFiche();
   const { moi, lire } = eq;
   return (
     <li className="rounded-xl bg-card p-3" data-idee={i.id}>
@@ -761,8 +764,8 @@ function CarteIdee({ i, fiches, eq }: { i: Idee; fiches: Fiche[]; eq: Equipe }) 
         </p>
       )}
       {i.ficheId && fiches.some((f) => f.id === i.ficheId) && (
-        <Link href={`/harmonie/${i.ficheId}`} lang="fr" className="mt-0.5 block text-sm underline underline-offset-4">
-          {fiches.find((f) => f.id === i.ficheId)!.nom}
+        <Link href={`/harmonie/${i.ficheId}`} lang={texteFiche(fiches.find((f) => f.id === i.ficheId)!).lang} className="mt-0.5 block text-sm underline underline-offset-4">
+          {texteFiche(fiches.find((f) => f.id === i.ficheId)!).nom}
         </Link>
       )}
       <p className="mt-1 text-sm text-muted-foreground">
@@ -802,6 +805,7 @@ function CarteIdee({ i, fiches, eq }: { i: Idee; fiches: Fiche[]; eq: Equipe }) 
 /** Le formulaire d'ajout (ou de modification) d'une idée, avec son passage. */
 function FormulaireIdee({ eq, fiches, passages }: { eq: Equipe; fiches: Fiche[]; passages: { uid: string; nom: string }[] }) {
   const { t } = useTranslation();
+  const texteFiche = useTexteFiche();
   return eq.ouvert ? (
     <div className="mt-2 space-y-2 rounded-xl bg-card p-3">
       <textarea
@@ -845,7 +849,7 @@ function FormulaireIdee({ eq, fiches, passages }: { eq: Equipe; fiches: Fiche[];
       >
         <option value="">{t("harmonie.idee.fiche")}</option>
         {fiches.map((f) => (
-          <option key={f.id} value={f.id}>{f.nom}</option>
+          <option key={f.id} value={f.id}>{texteFiche(f).nom}</option>
         ))}
       </ChampSelect>
       <div className="flex gap-2">
