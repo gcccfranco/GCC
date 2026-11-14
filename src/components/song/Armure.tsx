@@ -2,7 +2,7 @@
 
 import { useRef, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChoixNotation } from "@/components/song/ChoixNotation";
 import { keyLike, keyOptions } from "@/lib/transpose";
 import { TOUCHER_44 } from "@/lib/toucher44";
@@ -73,6 +73,7 @@ export function Armure({
         role="dialog"
         aria-label={t("armure.titre")}
         align="end"
+        sideOffset={8}
         collisionPadding={12}
         className="z-[10000] w-[min(320px,calc(100vw-24px))] rounded-2xl border border-border bg-popover p-4"
       >
@@ -122,6 +123,9 @@ export function Armure({
             )}
           </>
         )}
+        {/* Cinq corrections, point 4 : au téléphone la fenêtre, repoussée par le bord de l'écran, ne tombe plus sous
+            l'armure ; la flèche, elle, reste sous l'armure et dit d'où vient la fenêtre. */}
+        <PopoverArrow width={18} height={9} className="fill-popover stroke-border" />
       </PopoverContent>
     </Popover>
   );
