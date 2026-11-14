@@ -662,16 +662,19 @@ export function StructureStrip({
   const colorOf = (section: ChordProSection) => `var(--sec-${paletteKeyOf(section)})`;
   const tintOf = (section: ChordProSection) => `var(--sec-${paletteKeyOf(section)}-tint)`;
   // Nuances d'un groupe (plusieurs pour un Dp ×n), dans l'ordre : « mp ↗ → mf ».
-  const nuancesOf = (g: { nuances: SectionNuance[] }) =>
-    g.nuances.map((n, k) => (
+  // `sansNote` (rangée) : les seuls signes, la note libre élargirait la colonne de sa pastille et casserait la rangée
+  // (parcours du 14/11, R1) ; elle passe dans la liste sous la rangée, ou reste au corps.
+  const nuancesOf = (g: { nuances: SectionNuance[] }, sansNote = false) =>
+    (sansNote ? g.nuances.flatMap((n) => (n.tags.length ? [{ ...n, note: undefined }] : [])) : g.nuances).map((n, k) => (
       <Fragment key={k}>
         {k > 0 && <span aria-hidden="true" className="text-sm font-semibold leading-none text-muted-foreground">→</span>}
         <NuanceBadge nuance={n} variant="text" />
       </Fragment>
     ));
-  // Notes et transitions : un numéro noir accroché à la pastille, repris
-  // dans la liste sous le bandeau (quand le corps ne les porte pas).
-  const notes = details ? groups.filter((g) => g.step.note || g.step.transition) : [];
+  // Notes, notes de nuance et transitions : un numéro noir accroché à la pastille,
+  // repris dans la liste sous le bandeau (quand le corps ne les porte pas).
+  const notesDe = (g: (typeof groups)[number]) => [g.step.note, ...g.nuances.map((n) => n.note), g.step.transition && `→ ${g.step.transition}`].filter(Boolean);
+  const notes = details ? groups.filter((g) => notesDe(g).length > 0) : [];
   const noteNumber = new Map(notes.map((g, i) => [g, i + 1]));
   // Partition : la feuille de route de tête a la cote unique des repères de section (carré de 32 px, 30 au téléphone, trait de 2 px)
   // et leur police ; la taille du rappel compact (26 / 30 px) ne vaut que pour lui.
@@ -745,9 +748,17 @@ export function StructureStrip({
                 ) : (
                   <>
                     {targetKey && !compacte && <span className="font-mono text-xs leading-none text-muted-foreground">→ {targetKey}</span>}
-                    {!compacte && g.nuances.length > 0 && <span className="inline-flex flex-wrap items-center justify-center gap-x-1.5">{nuancesOf(g)}</span>}
+                    {!compacte && g.nuances.length > 0 && <span className="inline-flex flex-wrap items-center justify-center gap-x-1.5">{nuancesOf(g, true)}</span>}
                     {compacte && pleine.has(i) && g.nuances.length > 0 && (
-                      <span className="inline-flex flex-wrap items-center justify-center gap-x-1 [&_span]:!text-[12px] [&_span]:!font-bold">{nuancesOf(g)}</span>
+                      <>
+                        <span className="inline-flex flex-wrap items-center justify-center gap-x-1 [&_span]:!text-[12px] [&_span]:!font-bold">{nuancesOf(g, true)}</span>
+                        {/* Rappel d'une page 2 en Sections uniques : le corps ne porte pas la note, elle reste ici, coupée sur une ligne. */}
+                        {rappel === "unique" && g.nuances.some((n) => n.note) && (
+                          <span data-rappel-note title={g.nuances.flatMap((n) => n.note ?? []).join(" · ")} className="block max-w-[6rem] truncate text-[12px] leading-tight text-stone-600 dark:text-stone-300">
+                            {g.nuances.flatMap((n) => n.note ?? []).join(" · ")}
+                          </span>
+                        )}
+                      </>
                     )}
                   </>
                 )}
@@ -762,7 +773,7 @@ export function StructureStrip({
           {notes.map((g, i) => (
             <li key={i} className="flex items-start gap-2">
               <span className={`${numberBadge} mt-px shrink-0`}>{i + 1}</span>
-              <span>{[g.step.note, g.step.transition && `→ ${g.step.transition}`].filter(Boolean).join(" ")}</span>
+              <span>{notesDe(g).join(" ")}</span>
             </li>
           ))}
         </ol>

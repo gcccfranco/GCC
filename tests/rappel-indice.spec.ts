@@ -91,14 +91,15 @@ for (const langue of ["fr", "zh"] as const) {
       expect(await cle(page, "perf-astuce-rappel-unique"), "écrite dès que la bulle paraît").toBe("1");
       expect(await cle(page, "perf-astuce-rappel-joue"), "l'autre mode n'est pas touché").toBeNull();
 
-      // Elle n'occupe aucune place : le rappel garde sa hauteur, la bulle est posée par-dessus.
+      // Elle n'occupe aucune place : posée par-dessus la page, en bas, hors du rappel (parcours du 14/11, F : sous la
+      // rangée, elle cachait le titre de la 1re section).
       const pos = await page.evaluate(() => {
         const bulle = [...document.querySelectorAll("[data-indice-rappel]")].find((e) => !e.closest("[aria-hidden=true]"))!;
-        const rappel = bulle.closest("[data-rappel]")!;
-        return { position: getComputedStyle(bulle).position, hauteurRappel: rappel.getBoundingClientRect().height, haut: bulle.getBoundingClientRect().top, basRappel: rappel.getBoundingClientRect().bottom };
+        return { position: getComputedStyle(bulle).position, dansRappel: !!bulle.closest("[data-rappel]"), haut: bulle.getBoundingClientRect().top };
       });
       expect(pos.position).toBe("absolute");
-      expect(pos.haut, "sous la rangée").toBeGreaterThanOrEqual(pos.basRappel - pos.hauteurRappel);
+      expect(pos.dansRappel).toBe(false);
+      expect(pos.haut, "en bas de l'écran").toBeGreaterThan(page.viewportSize()!.height * 0.6);
 
       // Page suivante : la bulle part.
       await page.keyboard.press("ArrowRight");
@@ -110,7 +111,15 @@ for (const langue of ["fr", "zh"] as const) {
       await expect(onStage(page, "[data-rappel]")).toBeVisible();
       await expect(indice(page)).toHaveCount(0);
 
-      // Rechargement : la clé tient, l'indice ne revient pas.
+      // Rechargement : deux apparitions au plus par appareil (Timothée, 14/11) ; la 2e part seule au bout de 6 s,
+      // la 3e n'a pas lieu.
+      await page.reload();
+      await lancer(page, langue);
+      await pageDeux(page);
+      await expect(indice(page)).toBeVisible();
+      expect(await cle(page, "perf-astuce-rappel-unique")).toBe("2");
+      await expect(indice(page)).toHaveCount(0, { timeout: 9000 });
+      await attendreCompteur(page, /^2 \//);
       await page.reload();
       await lancer(page, langue);
       await pageDeux(page);

@@ -203,8 +203,8 @@ test("(f) en Crayon, les repères de section passent au-dessus de l'encre et ne 
   // Les pastilles n'existent qu'en disposition « Repères » ; les indices de rappel (une fois par appareil) sont déjà vus.
   await page.addInitScript(() => {
     localStorage.setItem("disposition", "reperes");
-    localStorage.setItem("perf-astuce-rappel-joue", "1");
-    localStorage.setItem("perf-astuce-rappel-unique", "1");
+    localStorage.setItem("perf-astuce-rappel-joue", "2");
+    localStorage.setItem("perf-astuce-rappel-unique", "2");
   });
   await ouvrirLouange(page);
   const pastille = onStage(page, "[data-repere-pastille]").first();

@@ -2136,7 +2136,8 @@ export function PerformanceMode({
       idees={peutHarmonie ? { allume: reglageIdees, set: (v) => { ecrireReglageIdees(uid, v); setReglageIdees(v); } } : undefined}
       onAnnoter={telephone && user && !horsLigne && (crayonPret || crayonIndispo) ? (crayonIndispo ? signalerCrayonIndispo : basculerAnnotation) : undefined}
       annoterIndispo={crayonIndispo}
-      onMetronome={telephone && tempoChantId ? () => basculerMenu("metronome") : undefined}
+      onMetronome={tempoChantId ? () => basculerMenu("metronome") : undefined}
+      onReperes={telephone && reperes.length > 0 ? () => basculerMenu("reperes") : undefined}
       raccourcis={pointeurFin || clavierVu}
     />
   );

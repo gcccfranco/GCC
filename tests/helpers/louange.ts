@@ -32,6 +32,17 @@ export async function ouvrirMenu(page: Page, menu: Menu, langue: Langue = "fr") 
   // « tempo » : la feuille Tempo est devenue le panneau Métronome (MT-2).
   if (menu === "tempo") return ouvrirMetronome(page, langue);
   if (menu === "jejoue" || menu === "options") menu = "affichage";
+  // Au téléphone, Repères est une ligne d'Outils : ♩ a pris sa place dans la barre (Timothée, 14/11).
+  if (menu === "reperes" && page.viewportSize()!.width < 768) {
+    const reperes = page.getByRole("dialog", { name: NOM_MENU[langue].reperes, exact: true });
+    await expect(async () => {
+      if (await reperes.isVisible()) return;
+      const outils = await ouvrirMenu(page, "outils", langue);
+      await outils.locator("[data-reperes-ouvrir]").click({ timeout: 2_000 });
+      await expect(reperes).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+    return reperes;
+  }
   const nom = NOM_MENU[langue][menu];
   const bouton = page.locator("[data-performance-mode]").getByRole("button", { name: nom, exact: true });
   // La marge « Affichage » n'est pas un dialogue : un volet (colonne ou feuille basse) qui reste ouvert pendant la lecture.

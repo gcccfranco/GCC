@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Lightbulb, Maximize, Pencil, PenLine, Timer, Undo2, Waves } from "lucide-react";
+import { Bookmark, Check, Lightbulb, Maximize, Pencil, PenLine, Timer, Undo2, Waves } from "lucide-react";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
@@ -344,6 +344,7 @@ export function ContenuOutils({
   onAnnoter,
   annoterIndispo = false,
   onMetronome,
+  onReperes,
   raccourcis,
 }: {
   showTransitions: boolean;
@@ -358,8 +359,10 @@ export function ContenuOutils({
   onAnnoter: (() => void) | undefined;
   /** Ma partition n'a pas pu être lue : la ligne reste, désactivée (son toucher dit pourquoi). */
   annoterIndispo?: boolean;
-  /** Téléphone seulement : ouvre le panneau Métronome. Absent = pas de ligne. */
+  /** Ouvre le panneau Métronome, à toutes les tailles (sans tempo, la barre n'a pas de ♩). Absent = pas de ligne. */
   onMetronome: (() => void) | undefined;
+  /** Téléphone seulement : ouvre Repères, dont la place dans la barre est prise par ♩ (Timothée, 14/11). Absent = pas de ligne. */
+  onReperes?: (() => void) | undefined;
   raccourcis: boolean;
 }) {
   const { t } = useTranslation();
@@ -396,6 +399,17 @@ export function ContenuOutils({
             <Lightbulb className="h-5 w-5" />
           </BoutonRond>
         </LigneMenu>
+      )}
+      {onReperes && (
+        <button
+          type="button"
+          data-reperes-ouvrir
+          onClick={onReperes}
+          className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+        >
+          <Bookmark aria-hidden="true" className="h-5 w-5 shrink-0" />
+          {t("performance.reperes")}
+        </button>
       )}
       {onAnnoter && (
         // Le Crayon est une action, pas un interrupteur : une ligne entière cliquable, icône et libellé dans la couleur des actions.

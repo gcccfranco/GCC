@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Bookmark, Drum, Guitar, ListMusic, Mic, MicVocal, Pencil, Piano, Play, SlidersHorizontal, Square, Wrench, X } from "lucide-react";
 import type { JianpuSheetBlock, SectionBlock } from "@/lib/performance/blocks";
 import { TEMPO_DEPART } from "@/lib/performance/tempo";
-import type { MenuId } from "./MenuLouange";
+import { useAuMoinsMd, type MenuId } from "./MenuLouange";
 
 export const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> = {
   pianiste: Piano,
@@ -17,7 +17,8 @@ export const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> 
 
 /** Barre de titre du mode louange (forScore, piste A « Pupitre », FS-A ; RU-5) : à gauche Setlist et Repères,
  *  au centre le titre, l'armure (`armure`, la tonalité) et le compositeur, à droite ♩ tempo, Crayon, Outils, Affichage,
- *  ✕. Au téléphone : Setlist, Repères | titre, armure | Outils, Affichage, ✕ (Crayon et ♩ passent en tête d'Outils).
+ *  ✕. Au téléphone : Setlist, ♩ | titre, armure | Outils, Affichage, ✕ (Crayon et Repères passent dans Outils ; ♩ reste
+ *  dans la barre à toutes les tailles et prend la place de Repères, Timothée, 14/11).
  *  Setlist, Repères, ♩ et Outils ouvrent chacun leur menu (FS-B, `MenuLouange`), Affichage la marge : `menuOuvert` dit
  *  lequel, `onMenu` le bascule.
  *  `avecReperes` : le chant courant a des sections (un scan seul n'en a pas).
@@ -66,6 +67,19 @@ export function BarreHaut({
 }) {
   const { t } = useTranslation();
   const tempo = tempoRegle ?? currentSong?.tempo ?? (bande ? TEMPO_DEPART : undefined);
+  const md = useAuMoinsMd();
+  // ♩ à toutes les tailles, et pour un chant sans tempo (♩ seul) : le Métronome s'ouvre toujours d'ici (parcours du 14/11, G).
+  // Au téléphone il prend la place de Repères, à gauche (le titre reste centré) ; à partir de 768 px, à droite.
+  const note = tempo || currentSong ? (
+    tempo ? (
+      <span data-tempo-barre className="flex items-center gap-0.5 text-sm font-semibold tabular-nums">
+        <span aria-hidden="true" className="-mr-2 text-xl leading-none">♩</span>
+        {tempo}
+      </span>
+    ) : (
+      <span aria-hidden="true" data-tempo-sans className="text-[28px] font-semibold leading-none">♩</span>
+    )
+  ) : null;
   return (
     <div
       ref={barreRef}
@@ -83,8 +97,13 @@ export function BarreHaut({
         <BtnBarre label={t("performance.songList")} menu="setlist" menuOuvert={menuOuvert} onClick={() => onMenu("setlist")} texte>
           <ListMusic className="h-5 w-5" />
         </BtnBarre>
+        {note && !md && (
+          <BtnBarre label={t("performance.tempo")} menu="metronome" menuOuvert={menuOuvert} onClick={() => onMenu("metronome")}>
+            {note}
+          </BtnBarre>
+        )}
         {avecReperes && (
-          <BtnBarre label={t("performance.reperes")} menu="reperes" menuOuvert={menuOuvert} onClick={() => onMenu("reperes")} texte>
+          <BtnBarre label={t("performance.reperes")} menu="reperes" menuOuvert={menuOuvert} onClick={() => onMenu("reperes")} texte cacheTel>
             <Bookmark className="h-5 w-5" />
           </BtnBarre>
         )}
@@ -106,14 +125,11 @@ export function BarreHaut({
       </div>
 
       <div className="flex flex-1 basis-0 items-center justify-end gap-0.5">
-        {tempo ? (
-          <BtnBarre label={t("performance.tempo")} menu="metronome" menuOuvert={menuOuvert} onClick={() => onMenu("metronome")} cacheTel>
-            <span data-tempo-barre className="flex items-center gap-0.5 text-sm font-semibold tabular-nums">
-              <span aria-hidden="true" className="-mr-2 text-xl leading-none">♩</span>
-              {tempo}
-            </span>
+        {note && md && (
+          <BtnBarre label={t("performance.tempo")} menu="metronome" menuOuvert={menuOuvert} onClick={() => onMenu("metronome")}>
+            {note}
           </BtnBarre>
-        ) : null}
+        )}
         {bande && (
           <BtnBarre label={t(marche ? "performance.metronomeArreter" : "performance.metronomeLancer")} active={marche} onClick={onMarche} cacheTel bascule={marche}>
             {marche ? <Square className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}

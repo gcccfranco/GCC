@@ -101,12 +101,13 @@ const fondBarre = (page: Page) => page.locator("[data-barre-haut]").evaluate((el
 
 // ─── La barre de titre ────────────────────────────────────────────────────────
 
-test("barre de titre : Setlist et Repères à gauche, titre au centre, ♩ Crayon Outils Affichage ✕ à droite (téléphone : Setlist, Repères | titre | Outils, Affichage, ✕)", async ({ page }) => {
+test("barre de titre : Setlist et Repères à gauche, titre au centre, ♩ Crayon Outils Affichage ✕ à droite (téléphone : Setlist | titre | ♩, Outils, Affichage, ✕ ; Repères dans Outils)", async ({ page }) => {
   await ouvrir(page);
   const boutons = await boutonsHaut(page);
   const noms = boutons.map((b) => b.nom);
   if (telephone(page)) {
-    expect(noms).toEqual(["Setlist", "Repères", "Outils", "Affichage", "Quitter"]);
+    // ♩ à toutes les tailles ; au téléphone, Repères lui laisse sa place et passe dans Outils (Timothée, 14/11).
+    expect(noms).toEqual(["Setlist", "Tempo", "Outils", "Affichage", "Quitter"]);
   } else {
     expect(noms).toEqual(["Setlist", "Repères", "Tempo", "Crayon", "Outils", "Affichage", "Quitter"]);
   }
@@ -116,7 +117,7 @@ test("barre de titre : Setlist et Repères à gauche, titre au centre, ♩ Crayo
   }
   // Le titre est entre le groupe de gauche et celui de droite.
   const titre = (await page.locator("[data-barre-haut] p").first().boundingBox())!;
-  const reperes = boutons.find((b) => b.nom === "Repères")!;
+  const reperes = boutons.find((b) => b.nom === (telephone(page) ? "Tempo" : "Repères"))!;
   const affichage = boutons.find((b) => b.nom === "Affichage")!;
   expect(titre.x).toBeGreaterThanOrEqual(reperes.centre);
   expect(titre.x + titre.width).toBeLessThanOrEqual(affichage.centre);
@@ -146,7 +147,7 @@ test("barre de titre en 中文 : mêmes boutons, noms chinois", async ({ page })
   const noms = (await boutonsHaut(page)).map((b) => b.nom);
   // Ces deux chants sont des scans 简谱 : pas de section, donc pas de bouton Repères (段落).
   await expect(page.getByRole("button", { name: "段落" })).toHaveCount(0);
-  if (telephone(page)) expect(noms).toEqual(["歌单", "工具", "显示", "退出"]);
+  if (telephone(page)) expect(noms).toEqual(["歌单", "节拍", "工具", "显示", "退出"]);
   else expect(noms.filter((n) => n !== "节拍" && n !== "画笔")).toEqual(["歌单", "工具", "显示", "退出"]);
 });
 
@@ -289,7 +290,8 @@ test("barre de titre : le titre reste centré sur un chant sans Repères (scan �
   await expect(page.getByRole("button", { name: "段落" })).toHaveCount(0);
   const titre = (await page.locator("[data-barre-haut] [data-bloc-titre]").boundingBox())!;
   const ecran = page.viewportSize()!;
-  expect(Math.abs(titre.x + titre.width / 2 - ecran.width / 2)).toBeLessThanOrEqual(4);
+  // Au téléphone, ♩ est à gauche (Setlist, ♩ | Outils, Affichage, ✕) : même léger décentrage que le test précédent.
+  expect(Math.abs(titre.x + titre.width / 2 - ecran.width / 2)).toBeLessThanOrEqual(telephone(page) ? 28 : 4);
 });
 
 // ─── La couleur des icônes ────────────────────────────────────────────────────

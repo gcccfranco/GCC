@@ -43,6 +43,8 @@ async function ouvrir(page: Page, opts: { langue?: Langue; theme?: "light" | "da
       if (!localStorage.getItem("perf-role-preset")) localStorage.setItem("perf-role-preset", "pianiste");
       if (zh) localStorage.setItem("i18nextLng", "zh-CN");
       localStorage.setItem("perf-theme", th as string);
+      // Indice du rappel déjà vu deux fois (il ne revient plus) : posé en bas de la page 2, il prendrait les touchers « hors du menu ».
+      localStorage.setItem("perf-astuce-rappel-joue", "2");
       // Texte agrandi : plus de pages, donc plus de gestes qui pourraient (à tort) les tourner.
       if (!localStorage.getItem("perf-font-scale")) localStorage.setItem("perf-font-scale", "1.5");
     } catch { /* ignore */ }
@@ -255,14 +257,13 @@ test("Outils : plus de tonalité ni de capo (ils sont dans l'armure) ; plein éc
   // Raccourcis : sur ordinateur (pointeur précis) ; absents au téléphone tant qu'aucune touche n'a été frappée.
   if (ordinateur(testInfo)) await expect(outils.locator("[data-raccourcis]")).toBeVisible();
   if (telephone(page)) await expect(outils.locator("[data-raccourcis]")).toHaveCount(0);
-  // Au téléphone, Crayon et « Métronome » (qui ouvre le panneau) sont des lignes d'Outils ; ailleurs ils sont dans la barre.
-  if (telephone(page)) {
-    await expect(outils.getByRole("button", { name: "Crayon" })).toBeVisible();
-    await expect(outils.locator("[data-metronome-ouvrir]")).toBeVisible();
-  } else {
-    await expect(outils.getByRole("button", { name: "Crayon" })).toHaveCount(0);
-    await expect(outils.locator("[data-metronome-ouvrir]")).toHaveCount(0);
-  }
+  // Au téléphone, Crayon est une ligne d'Outils ; ailleurs il est dans la barre. « Métronome » (qui ouvre le panneau) est
+  // une ligne d'Outils à toutes les tailles, en plus de ♩ dans la barre (parcours du 14/11, G).
+  await expect(outils.locator("[data-metronome-ouvrir]")).toBeVisible();
+  if (telephone(page)) await expect(outils.getByRole("button", { name: "Crayon" })).toBeVisible();
+  else await expect(outils.getByRole("button", { name: "Crayon" })).toHaveCount(0);
+  // Repères : une ligne d'Outils au téléphone seulement (♩ a pris sa place dans la barre).
+  await expect(outils.locator("[data-reperes-ouvrir]")).toHaveCount(telephone(page) ? 1 : 0);
   // Outils a son bouton dans la barre à toutes les tailles (RU-5).
   await expect(page.locator('[data-menu-declencheur="outils"]')).toBeVisible();
 });

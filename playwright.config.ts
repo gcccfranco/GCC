@@ -26,6 +26,8 @@ const SPECS_GRAND_ECRAN = [
   /page-chant-reglages\.spec\.ts/,
   // Lot RU, RU-2 (docs/spec-reglages-unifies.md) : la marge « Affichage » : colonne de 320 px qui pousse la musique dès la tablette paysage, feuille basse de 60 % en dessous.
   /marge-affichage\.spec\.ts/,
+  // Parcours à l'œil du 14/11 (docs/parcours-oeil-2026-11-14.md) : rangée des ronds et note longue, Métronome sans tempo, légende du rappel.
+  /louange-trois-defauts\.spec\.ts/,
   // Harmonie H4-2 (docs/spec-harmonie-accords.md) : la colonne « Harmonie de ce chant » dès 1 024 px, la feuille en dessous.
   /harmonie-colonne\.spec\.ts/,
   // JV-5a : le nom de section ouvre le volet Harmonie au bloc du passage (colonne en grand écran, feuille à mi-hauteur sinon).

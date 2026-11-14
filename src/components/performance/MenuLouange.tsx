@@ -12,7 +12,7 @@ export type MenuId = "setlist" | "reperes" | "outils" | "affichage" | "metronome
 /** Largeur de la dernière disposition où les menus sont des feuilles du bas (md de Tailwind). */
 const MD = "(min-width: 768px)";
 
-function useAuMoinsMd(): boolean {
+export function useAuMoinsMd(): boolean {
   const [md, setMd] = useState(() => {
     try { return window.matchMedia(MD).matches; } catch { return true; }
   });
@@ -108,7 +108,8 @@ export function MenuLouange({
   // Ancre virtuelle : la largeur et la place de l'icône, la hauteur de la barre (le menu s'ouvre sous la barre).
   const ancre = useRef({
     getBoundingClientRect: () => {
-      const bouton = document.querySelector(`[data-menu-declencheur="${id}"]`);
+      // Métronome d'un chant sans tempo : pas de ♩ dans la barre, il s'ouvre par Outils et se pose sous son icône.
+      const bouton = document.querySelector(`[data-menu-declencheur="${id}"]`) ?? document.querySelector('[data-menu-declencheur="outils"]');
       const barre = document.querySelector("[data-barre-haut]");
       if (!bouton || !barre) return new DOMRect();
       const b = bouton.getBoundingClientRect();
@@ -118,7 +119,9 @@ export function MenuLouange({
   });
   const rendreLeFocus = (e: Event) => {
     e.preventDefault();
-    document.querySelector<HTMLElement>(`[data-menu-declencheur="${id}"]`)?.focus({ preventScroll: true });
+    // Outils → Métronome : rendre le focus à l'icône d'Outils le sortirait du menu qui s'ouvre, et le fermerait.
+    if (document.querySelector(`[data-menu-louange]:not([data-menu-louange="${id}"])[data-state="open"]`)) return;
+    (document.querySelector<HTMLElement>(`[data-menu-declencheur="${id}"]`) ?? document.querySelector<HTMLElement>('[data-menu-declencheur="outils"]'))?.focus({ preventScroll: true });
   };
   const style = { "--couleur-icones": couleur } as CSSProperties;
   const arreter = {
