@@ -2,7 +2,8 @@ import { expect, type Page } from "@playwright/test";
 
 // La marge « Affichage » de la page chant (docs/spec-reglages-unifies.md, RU-3) et de la setlist (RU-4) : ouverte par le bouton
 // de la barre (un volet) ou de l'en-tête (deux volets).
-export const marge = (page: Page) => page.getByTestId("marge-affichage");
+// `data-mode="page"` : le mode louange, monté sous la setlist après « Quitter », a sa propre marge (RU-5).
+export const marge = (page: Page) => page.locator('[data-testid="marge-affichage"][data-mode="page"]');
 
 export async function ouvrirMarge(page: Page) {
   const bouton = page.getByTestId("barre-outils").or(page.locator("[data-en-tete]")).getByRole("button", { name: /^(Affichage|显示)$/ });

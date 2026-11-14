@@ -207,21 +207,21 @@ for (const par of ["toucher", "fleche"] as const) {
   });
 }
 
-test("demi-page : l'interrupteur « Demi-page » est dans Options d'affichage, coupé par défaut, et retenu après rechargement", async ({ page }) => {
+test("demi-page : l'interrupteur « Demi-page » est dans la marge Affichage, coupé par défaut, et retenu après rechargement", async ({ page }) => {
   await ouvrir(page, { demi: false });
   const options = await ouvrirOptions(page);
-  const bouton = options.getByRole("button", { name: "Demi-page", exact: true });
-  await expect(bouton).toHaveAttribute("aria-pressed", "false");
+  const bouton = options.getByRole("switch", { name: "Demi-page", exact: true });
+  await expect(bouton).toHaveAttribute("aria-checked", "false");
   await bouton.click();
-  await expect(bouton).toHaveAttribute("aria-pressed", "true");
+  await expect(bouton).toHaveAttribute("aria-checked", "true");
   expect(await page.evaluate(() => localStorage.getItem("perf-demi-page"))).toBe("1");
 
   await page.reload();
   await page.getByRole("button", { name: /Mode Louange|敬拜模式/ }).click();
   await attendreMiseEnPage(page);
   const options2 = await ouvrirOptions(page);
-  await expect(options2.getByRole("button", { name: "Demi-page", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await options2.getByRole("button", { name: "Demi-page", exact: true }).click();
+  await expect(options2.getByRole("switch", { name: "Demi-page", exact: true })).toHaveAttribute("aria-checked", "true");
+  await options2.getByRole("switch", { name: "Demi-page", exact: true }).click();
   expect(await page.evaluate(() => localStorage.getItem("perf-demi-page"))).toBe("0");
 });
 
@@ -409,7 +409,7 @@ test("demi-page : tablette portrait, aucun aperçu de la page suivante, demi-pag
   await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
   await expect(onStage(page, "[data-apercu-suivant]")).toHaveCount(0);
   const options = await ouvrirOptions(page);
-  await options.getByRole("button", { name: "Demi-page", exact: true }).click();
+  await options.getByRole("switch", { name: "Demi-page", exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(onStage(page, "[data-apercu-suivant]")).toHaveCount(0);
 });
@@ -799,6 +799,13 @@ for (const langue of ["fr", "zh"] as const) {
       // sinon la demi-page peut être calculée sur des mesures provisoires et le tour devient un tour entier.
       await page.evaluate(() => document.fonts.ready);
       await attendreMiseEnPage(page);
+      // Options zh avant le tour : la marge ouverte réduit la zone et, sur iPad couché, referme la demi-page (RU-5).
+      if (langue === "zh") {
+        const options = await ouvrirOptions(page, "zh");
+        await expect(options.getByRole("switch", { name: "半页翻页", exact: true })).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(options).toBeHidden();
+      }
       await tourner(page, testInfo, 1, "fleche");
       await expect(enDemi(page)).toHaveCount(1);
       await expect(filet(page)).toBeVisible();
@@ -819,10 +826,6 @@ for (const langue of ["fr", "zh"] as const) {
         expect(m.hauteurFilet).toBeCloseTo(1.5, 1);
       }
       if (langue === "zh") {
-        const options = await ouvrirOptions(page, "zh");
-        await expect(options.getByRole("button", { name: "半页翻页", exact: true })).toBeVisible();
-        await page.keyboard.press("Escape");
-        await expect(options).toBeHidden();
         if (!m.colonnes) await expect(poignee(page)).toHaveAttribute("aria-label", "半页");
       }
       // Menus fermés, barres fermées (toucher au centre, hors poignée), transition finie.

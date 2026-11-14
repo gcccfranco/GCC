@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixNotation } from "@/components/song/ChoixNotation";
-import { useReglagesAffichage } from "@/hooks/useReglagesAffichage";
+import { useReglagesAffichage, type ReglagesAffichage } from "@/hooks/useReglagesAffichage";
 import { MAX_FONT_SCALE, MIN_FONT_SCALE } from "@/lib/fontScalePref";
 import { ROLE_IDS } from "@/lib/performance/roleCompte";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
@@ -45,6 +45,14 @@ type Props = {
   sansRole?: boolean;
   /** Pas de colonne même dès 1 024 px (la musique garderait moins de 340 px) : feuille de 560 px. */
   sansColonne?: boolean;
+  /** RU-5, mode louange : réglages tenus par le mode (accords, pinyin, 简谱, ordre, rôle, taille, disposition), fusionnés sur le crochet. */
+  reglages?: Partial<ReglagesAffichage>;
+  /** RU-5 : contenu du groupe « Je joue » (le rôle du mode louange), à la place des pilules. */
+  groupeRole?: ReactNode;
+  /** RU-5 : lignes ajoutées à la fin de « Ce que je lis » (Paroles, Partition). */
+  groupeLecture?: ReactNode;
+  /** RU-5 : la ligne Pinyin quand elle diffère de `zh` (mode louange : un chant de la setlist a du pinyin). */
+  avecPinyin?: boolean;
   /** La musique : placée à côté de la colonne, avec une réserve en bas sous la feuille. */
   children?: ReactNode;
 };
@@ -82,11 +90,12 @@ export function Groupe({ titre, mention, children }: { titre: string; mention: s
   );
 }
 
-export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, mode, groupePage, retourFocus, sansColonne, sansRole, children }: Props) {
+export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, mode, groupePage, retourFocus, sansColonne, sansRole, reglages, groupeRole, groupeLecture, avecPinyin, children }: Props) {
   const { t } = useTranslation();
-  const r = useReglagesAffichage(uid);
+  const r = { ...useReglagesAffichage(uid), ...reglages };
   const placeEcran = usePlace();
-  const lieu: Place = sansColonne && placeEcran === "colonne" ? "feuille-large" : placeEcran;
+  // Mode louange : la feuille prend toute la largeur (la page se raccourcit de sa hauteur, rien ne doit rester à côté).
+  const lieu: Place = sansColonne && placeEcran === "colonne" ? "feuille-large" : mode === "louange" && placeEcran === "feuille-large" ? "feuille" : placeEcran;
   const fermer = useRef<HTMLButtonElement>(null);
   const enveloppe = useRef<HTMLDivElement>(null);
   // Feuille large d'une page en deux volets : centrée sur le conteneur de la marge (le volet du chant), pas sur la fenêtre.
@@ -122,7 +131,8 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
     vuDejaOuvert.current = true;
     fermer.current?.focus();
     // Échap ferme, sauf s'il a déjà servi (un menu ouvert dans la marge se ferme seul).
-    const h = (e: KeyboardEvent) => { if (e.key === "Escape" && !e.defaultPrevented) fermerRef.current(); };
+    // preventDefault : l'hôte (mode louange) lit `defaultPrevented` et ne quitte pas sur le même Échap.
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape" && !e.defaultPrevented) { e.preventDefault(); fermerRef.current(); } };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [ouvert]);
@@ -133,10 +143,13 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
         position: "sticky", width: ouvert ? 320 : 0, flex: "none", ...(mode === "page" && ouvert ? { marginLeft: 24 } : {}), overflow: "hidden", alignSelf: "flex-start",
         // Page chant : sous la barre du haut et la barre du chant, comme la colonne Harmonie.
         ...(mode === "page" ? { top: "var(--nav-h)", marginTop: 48, height: "calc(100dvh - var(--nav-h) - 48px)" } : { top: 0, height: "100dvh" }),
+        // Mode louange (sans `children`) : à droite de l'écran, la page se raccourcit de sa largeur (PerformanceMode).
+        ...(mode === "louange" && children === undefined ? { position: "fixed" as const, right: 0, zIndex: 10000, ...(ouvert ? {} : { display: "none" as const }) } : {}),
       } as const
     : {
-        position: "fixed", bottom: 0, height: "40dvh", zIndex: 50, borderRadius: "18px 18px 0 0", boxShadow: "0 -1px 0 hsl(var(--border))",
+        position: "fixed", bottom: 0, height: "40dvh", zIndex: mode === "louange" ? 10000 : 50, borderRadius: "18px 18px 0 0", boxShadow: "0 -1px 0 hsl(var(--border))",
         ...(lieu === "feuille-large" ? { left: surVolet && volet ? volet.centre : "50%", width: surVolet && volet ? volet.largeur : 560, transform: `translateX(-50%) translateY(${ouvert ? 0 : 100}%)` } : { left: 0, right: 0, transform: `translateY(${ouvert ? 0 : 100}%)` }),
+        ...(mode === "louange" && !ouvert ? { display: "none" as const } : {}),
       } as const;
 
   const retenue = (
@@ -167,7 +180,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
         </div>
         <div data-testid="marge-corps" className="min-h-0 flex-1 overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
           {!sansRole && <Groupe titre={t("margeAffichage.jeJoue")} mention={mention}>
-            <div role="radiogroup" aria-label={t("margeAffichage.jeJoue")} className="flex flex-wrap gap-1.5 py-1">
+            {groupeRole ?? <div role="radiogroup" aria-label={t("margeAffichage.jeJoue")} className="flex flex-wrap gap-1.5 py-1">
               {ROLE_IDS.map((id) => (
                 <button
                   key={id}
@@ -180,7 +193,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
                   {t(`performance.roles.${id}`)}
                 </button>
               ))}
-            </div>
+            </div>}
           </Groupe>}
 
           <Groupe titre={t("margeAffichage.jeLis")} mention={mention}>
@@ -193,7 +206,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
                 <ChoixNotation variante="fenetre" />
               </>
             )}
-            {zh && (
+            {(avecPinyin ?? zh) && (
               <div className={LIGNE}>
                 <span className="text-sm">{t("performance.pinyin")}</span>
                 <Switch checked={r.pinyin} onCheckedChange={r.setPinyin} aria-label={t("performance.pinyin")} />
@@ -224,6 +237,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
                 onChoix={(id) => r.setOrdre(id as PartitionLayout)}
               />
             </div>
+            {groupeLecture}
           </Groupe>
 
           <Groupe titre={t("margeAffichage.laPage")} mention={mention}>

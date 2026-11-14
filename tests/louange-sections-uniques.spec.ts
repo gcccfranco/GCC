@@ -226,19 +226,14 @@ async function montrerChrome(page: Page) {
   await expect(page.getByRole("button", { name: "Quitter" })).toBeVisible();
 }
 
-/** Le menu « Je joue » : rôle, ordre des sections, paroles masquées (FS-C). */
+/** La marge « Affichage » (RU-5), dont le groupe « Je joue » : rôle, ordre des sections, paroles. */
 async function jejoue(page: Page) {
   await montrerChrome(page);
   return ouvrirJeJoue(page);
 }
 
-async function reglages(page: Page) {
-  await montrerChrome(page);
-  await page.getByRole("button", { name: "Options d'affichage" }).click();
-  const feuille = page.getByRole("dialog", { name: "Options d'affichage" });
-  await expect(feuille).toBeVisible();
-  return feuille;
-}
+// RU-5 : Options d'affichage et Je joue sont une seule marge.
+const reglages = jejoue;
 
 /** Quitte le mode louange en rendant la page setlist où elle était (voir performance-mode.spec.ts). */
 async function quitter(page: Page) {
@@ -270,7 +265,7 @@ async function allerAuChant(page: Page, titre: string) {
 
 /** Choisit un Affichage dans le menu Je joue ouvert, puis attend la nouvelle mise en page. */
 async function choisirAffichage(feuille: ReturnType<Page["getByRole"]>, page: Page, nom: string) {
-  await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: nom }).click();
+  await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: nom, exact: true }).click();
   await page.locator("[data-performance-mode]").waitFor();
   await expect(page.getByText("Mise en page…")).toHaveCount(0, { timeout: 20_000 });
   // La mise en page se refait après le rendu : laisser l'ancre jouer avant de lire.
@@ -281,14 +276,13 @@ test.describe("Je joue : rôle et Ordre des sections", () => {
   test("Je joue : les rôles, puis Ordre des sections à trois choix, partagé avec la setlist sans recharger (FR)", async ({ page }) => {
     await ouvrirMode(page, [ABBA]);
     const feuille = await jejoue(page);
-    await expect(feuille.getByText("Ce que la vue montre")).toBeVisible();
-    await expect(feuille.getByText("Le même réglage que le menu Affichage de la setlist.")).toBeVisible();
+    await expect(feuille.getByRole("heading", { name: "Je joue" })).toBeVisible();
     const affichage = feuille.getByRole("radiogroup", { name: "Ordre des sections" });
-    await expect(affichage.getByRole("radio")).toHaveText(["Tout le chant", "Chaque section une fois", "Plan du chant"]);
+    await expect(affichage.getByRole("radio")).toHaveText(["Tout le chant", "Une fois chacune", "Plan"]);
     await expect(affichage.getByRole("radio", { name: "Tout le chant" })).toHaveAttribute("aria-checked", "true");
 
-    await affichage.getByRole("radio", { name: "Chaque section une fois" }).click();
-    await expect(affichage.getByRole("radio", { name: "Chaque section une fois" })).toHaveAttribute("aria-checked", "true");
+    await affichage.getByRole("radio", { name: "Une fois chacune" }).click();
+    await expect(affichage.getByRole("radio", { name: "Une fois chacune" })).toHaveAttribute("aria-checked", "true");
     expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien"))).toBe("unique");
     // Toucher Affichage garde le rôle.
     await expect(feuille.getByRole("button", { name: "Pianiste" })).toHaveAttribute("aria-pressed", "true");
@@ -302,7 +296,7 @@ test.describe("Je joue : rôle et Ordre des sections", () => {
     await fermerMarge(page);
     await lancer(page);
     const retour = await jejoue(page);
-    await expect(retour.getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
+    await expect(retour.getByRole("radio", { name: "Plan", exact: true })).toHaveAttribute("aria-checked", "true");
   });
 
   test("Batteur → Structure seule écrite ; « Ordre joué » ensuite : le rôle reste, les paroles reviennent (FR)", async ({ page }) => {
@@ -311,7 +305,7 @@ test.describe("Je joue : rôle et Ordre des sections", () => {
     await feuille.getByRole("button", { name: "Batteur" }).click();
     await expect(feuille.getByRole("button", { name: "Batteur" })).toHaveAttribute("aria-pressed", "true");
     const affichage = feuille.getByRole("radiogroup", { name: "Ordre des sections" });
-    await expect(affichage.getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
+    await expect(affichage.getByRole("radio", { name: "Plan", exact: true })).toHaveAttribute("aria-checked", "true");
     expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien"))).toBe("structure");
     await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
 
@@ -329,7 +323,7 @@ test.describe("Je joue : rôle et Ordre des sections", () => {
   test("Structure seule choisie dans Affichage : la structure en grand, sans rôle (FR)", async ({ page }) => {
     await ouvrirMode(page, [ABBA], { role: null });
     const feuille = await jejoue(page);
-    await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan du chant" }).click();
+    await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan", exact: true }).click();
     await page.keyboard.press("Escape");
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
@@ -344,19 +338,19 @@ test.describe("Je joue : rôle et Ordre des sections", () => {
     await page.addInitScript(() => localStorage.setItem("perf-hide-lyrics", "1"));
     await ouvrirMode(page, [ABBA], { role: null });
     const options = await reglages(page);
-    await options.getByRole("button", { name: "Accords" }).click();
+    await options.getByRole("switch", { name: "Accords" }).click();
     await page.keyboard.press("Escape");
     await expect(options).toBeHidden();
     const feuille = await jejoue(page);
     const affichage = feuille.getByRole("radiogroup", { name: "Ordre des sections" });
-    await expect(affichage.getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
+    await expect(affichage.getByRole("radio", { name: "Plan", exact: true })).toHaveAttribute("aria-checked", "true");
     // Sections uniques depuis la vue structure : paroles et accords reviennent.
-    await affichage.getByRole("radio", { name: "Chaque section une fois" }).click();
+    await affichage.getByRole("radio", { name: "Une fois chacune" }).click();
     expect(await page.evaluate(() => localStorage.getItem("perf-hide-lyrics"))).toBe("0");
     await page.keyboard.press("Escape");
     await expect(feuille).toBeHidden();
-    await expect((await reglages(page)).getByRole("button", { name: "Paroles" })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("dialog", { name: "Options d'affichage" }).getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "true");
+    await expect((await reglages(page)).getByRole("switch", { name: "Paroles" })).toHaveAttribute("aria-checked", "true");
+    await expect((await reglages(page)).getByRole("switch", { name: "Accords" })).toHaveAttribute("aria-checked", "true");
   });
 });
 
@@ -370,7 +364,7 @@ test.describe("Réglages : corrections de la relecture", () => {
     await expect(titreBarre(page)).toHaveText("Béni soit Ton Nom");
 
     const feuille = await jejoue(page);
-    for (const nom of ["Tout le chant", "Chaque section une fois", "Plan du chant", "Tout le chant", "Chaque section une fois"]) {
+    for (const nom of ["Tout le chant", "Une fois chacune", "Plan", "Tout le chant", "Une fois chacune"]) {
       await choisirAffichage(feuille, page, nom);
       await expect(titreBarre(page), `Affichage « ${nom} » : toujours le 2e chant`).toHaveText("Béni soit Ton Nom");
     }
@@ -391,7 +385,7 @@ test.describe("Réglages : corrections de la relecture", () => {
     await ouvrirMode(page, [ABBA], { role: "batteur", affichage: "unique" });
     await expect(onStage(page, "[data-copy-line]").first()).toBeVisible();
     const feuille = await jejoue(page);
-    await expect(feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Chaque section une fois" })).toHaveAttribute("aria-checked", "true");
+    await expect(feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Une fois chacune" })).toHaveAttribute("aria-checked", "true");
     await expect(feuille.getByRole("button", { name: "Batteur" })).toHaveAttribute("aria-pressed", "true");
     // Rien n'est écrit à l'ouverture : le rôle mémorisé reste celui du compte.
     expect(await page.evaluate((u) => localStorage.getItem(`perf-role-preset-${u}`), MUSICIEN.uid)).toBe("batteur");
@@ -402,7 +396,7 @@ test.describe("Réglages : corrections de la relecture", () => {
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
     const feuille = await jejoue(page);
-    await expect(feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan du chant" })).toHaveAttribute("aria-checked", "true");
+    await expect(feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan", exact: true })).toHaveAttribute("aria-checked", "true");
     await expect(feuille.getByRole("button", { name: "Pianiste" }), "l'Affichage ne retire plus le rôle").toHaveAttribute("aria-pressed", "true");
     expect(await page.evaluate((u) => localStorage.getItem(`perf-role-preset-${u}`), MUSICIEN.uid)).toBe("pianiste");
   });
@@ -418,17 +412,17 @@ test.describe("Réglages : corrections de la relecture", () => {
   test("Structure seule venue d'Affichage : « Accords » et « Paroles » décochés, comme l'écran (C4) (FR)", async ({ page }) => {
     await ouvrirMode(page, [ABBA], { role: null });
     const options = await reglages(page);
-    await expect(options.getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "true");
-    await expect(options.getByRole("button", { name: "Paroles" })).toHaveAttribute("aria-pressed", "true");
+    await expect(options.getByRole("switch", { name: "Accords" })).toHaveAttribute("aria-checked", "true");
+    await expect(options.getByRole("switch", { name: "Paroles" })).toHaveAttribute("aria-checked", "true");
     await page.keyboard.press("Escape");
     await expect(options).toBeHidden();
     const feuille = await jejoue(page);
-    await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan du chant" }).click();
+    await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan", exact: true }).click();
     await page.keyboard.press("Escape");
     await expect(feuille).toBeHidden();
     const apres = await reglages(page);
-    await expect(apres.getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "false");
-    await expect(apres.getByRole("button", { name: "Paroles" })).toHaveAttribute("aria-pressed", "false");
+    await expect(apres.getByRole("switch", { name: "Accords" })).toHaveAttribute("aria-checked", "false");
+    await expect(apres.getByRole("switch", { name: "Paroles" })).toHaveAttribute("aria-checked", "false");
   });
 
   test("« Transitions » coupé retire aussi les transitions du bandeau, la note reste (C6) (FR)", async ({ page }) => {
@@ -445,13 +439,13 @@ test.describe("Réglages : corrections de la relecture", () => {
 
   test("« Partition 简谱 » n'est proposé qu'hors Structure seule (C8) (ZH)", async ({ page }) => {
     await ouvrirMode(page, [YISHENG], { role: null });
-    const interrupteur = (feuille: ReturnType<Page["getByRole"]>) => feuille.getByRole("button", { name: "Partition 简谱" });
+    const interrupteur = (feuille: ReturnType<Page["getByRole"]>) => feuille.getByRole("radiogroup", { name: "简谱 | Paroles" });
     const options = await reglages(page);
     await expect(interrupteur(options), "Ordre joué : le réglage est là").toBeVisible();
     await page.keyboard.press("Escape");
     await expect(options).toBeHidden();
     const feuille = await jejoue(page);
-    await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan du chant" }).click();
+    await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan", exact: true }).click();
     await page.keyboard.press("Escape");
     await expect(feuille).toBeHidden();
     const optionsStructure = await reglages(page);
@@ -540,7 +534,7 @@ test.describe("bandeau de pastilles en tête du chant", () => {
     await expect(onStage(page, "[data-tete-feuille] [data-note-tete]")).toHaveText("R : Ralentir la dernière ligne");
 
     const feuille = await jejoue(page);
-    await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan du chant" }).click();
+    await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan", exact: true }).click();
     await page.keyboard.press("Escape");
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     await expect(onStage(page, "[data-jianpu-page]")).toHaveCount(0);

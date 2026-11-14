@@ -167,7 +167,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
         }),
     );
     const nomTitre = "高班, Afficher les détails de la setlist";
-    expect(boites.map((b) => b.nom)).toEqual([nomTitre, "Crayon", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
+    expect(boites.map((b) => b.nom)).toEqual([nomTitre, "Crayon", "Modifier", "PDF", "Affichage", "Plus d'actions", "Mode Louange"]);
     const milieux = boites.map((b) => b.milieu);
     expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
     const titre = (await enTete.getByRole("button", { name: nomTitre }).boundingBox())!;
@@ -198,8 +198,8 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       const barre = page.getByTestId("barre-outils");
       // Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : « Affichage » remplace
       // Pinyin dans la barre ; la bascule Liste | Partitions est sous l'en-tête.
-      // Vue Partitions sous 640 px (T2 du lot exemples d'usage) : « Affichage » passe dans le menu « ⋯ ».
-      await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible({ visible: largeur >= 640 });
+      // Affichage reste dans la barre à toutes les largeurs (RU-4).
+      await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible();
       // La barre glisse (transition-transform) quand la page défile : la mesurer à l'arrêt, sinon un
       // décalage fractionnaire donne 31,999996 px au lieu de 32 sous charge.
       await expect.poll(() => barre.evaluate((el) => getComputedStyle(el).transform)).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
@@ -213,9 +213,9 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           }),
       );
       // Vue Partitions, un volet (T2 du lot exemples d'usage) : retour, bloc titre, bascule (Liste, Partitions), mode louange, ⋯ ;
-      // dès 640 px s'y ajoutent affichage, crayon (MP-3, à la place d'Adapter et de Ma version), accords, qui sous 640 px vivent dans le menu « ⋯ ».
+      // affichage et accords restent dans la barre à toutes les largeurs (RU-4) ; dès 640 px s'y ajoute le crayon (MP-3, à la place d'Adapter et de Ma version), qui sous 640 px vit dans le menu « ⋯ ».
       const pleine = largeur >= 640;
-      expect(boites.length, "retour, titre, (affichage, crayon, accords), Liste, Partitions, mode louange, ⋯").toBe(pleine ? 9 : 6);
+      expect(boites.length, "retour, titre, (affichage, crayon, accords), Liste, Partitions, mode louange, ⋯").toBe(pleine ? 9 : 8);
       const milieux = boites.map((b) => b.milieu);
       expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
       for (const b of boites) {

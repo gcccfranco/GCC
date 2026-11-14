@@ -2656,6 +2656,10 @@ export function SetlistDetailClient() {
             const i = setlist.items.findIndex((it) => it.songSlug === slug);
             if (i >= 0) void choisirLecture(i, valeur);
           }}
+          onChangerEquipe={canEdit ? (slug, k) => {
+            const i = setlist.items.findIndex((it) => it.songSlug === slug);
+            if (i >= 0) void changerPourLEquipe(i, k);
+          } : undefined}
           traits={traitsParChant}
           onTraitsChange={traitsChanges}
           chantsCharges={Object.fromEntries([...slugsPartitions.map((s) => [s, !!mesPartitions.charges[s]]), ...ajoutsLocaux.map((a) => [a.slug, false])])}

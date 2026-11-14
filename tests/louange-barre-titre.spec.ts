@@ -68,7 +68,8 @@ const telephone = (page: Page) => page.viewportSize()!.width < 768;
 async function boutonsHaut(page: Page) {
   return page.locator("[data-barre-haut] button").evaluateAll((els) =>
     els
-      .filter((e) => e.getClientRects().length > 0)
+      // L'armure (RU-5) est un bouton de la barre mais pas une commande de gauche ou de droite : testée à part (louange-reglages).
+      .filter((e) => e.getClientRects().length > 0 && e.getAttribute("data-testid") !== "armure")
       .map((e) => {
         const r = e.getBoundingClientRect();
         return { nom: e.getAttribute("aria-label")!, x: r.x, centre: r.x + r.width / 2, w: r.width, h: r.height };
@@ -100,14 +101,14 @@ const fondBarre = (page: Page) => page.locator("[data-barre-haut]").evaluate((el
 
 // ─── La barre de titre ────────────────────────────────────────────────────────
 
-test("barre de titre : Setlist, Repères et Je joue à gauche, titre au centre, ♩ Crayon Outils Options ✕ à droite (téléphone : Setlist, Repères, Je joue | titre | Options, ✕)", async ({ page }) => {
+test("barre de titre : Setlist et Repères à gauche, titre au centre, ♩ Crayon Outils Affichage ✕ à droite (téléphone : Setlist, Repères | titre | Outils, Affichage, ✕)", async ({ page }) => {
   await ouvrir(page);
   const boutons = await boutonsHaut(page);
   const noms = boutons.map((b) => b.nom);
   if (telephone(page)) {
-    expect(noms).toEqual(["Setlist", "Repères", "Je joue", "Options d'affichage", "Quitter"]);
+    expect(noms).toEqual(["Setlist", "Repères", "Outils", "Affichage", "Quitter"]);
   } else {
-    expect(noms).toEqual(["Setlist", "Repères", "Je joue", "Tempo", "Crayon", "Outils", "Options d'affichage", "Quitter"]);
+    expect(noms).toEqual(["Setlist", "Repères", "Tempo", "Crayon", "Outils", "Affichage", "Quitter"]);
   }
   for (const b of boutons) {
     expect(b.h, `${b.nom} : cible haute d'au moins 44 px`).toBeGreaterThanOrEqual(43.5);
@@ -115,10 +116,10 @@ test("barre de titre : Setlist, Repères et Je joue à gauche, titre au centre, 
   }
   // Le titre est entre le groupe de gauche et celui de droite.
   const titre = (await page.locator("[data-barre-haut] p").first().boundingBox())!;
-  const jeJoue = boutons.find((b) => b.nom === "Je joue")!;
-  const options = boutons.find((b) => b.nom === "Options d'affichage")!;
-  expect(titre.x).toBeGreaterThanOrEqual(jeJoue.centre);
-  expect(titre.x + titre.width).toBeLessThanOrEqual(options.centre);
+  const reperes = boutons.find((b) => b.nom === "Repères")!;
+  const affichage = boutons.find((b) => b.nom === "Affichage")!;
+  expect(titre.x).toBeGreaterThanOrEqual(reperes.centre);
+  expect(titre.x + titre.width).toBeLessThanOrEqual(affichage.centre);
   await expect(page.locator("[data-barre-haut] p").first()).toHaveText("Avec nous (Emmanuel)");
   // Le tempo (♩ 94) reste dans la barre, sur l'élément repéré.
   await expect(page.locator("[data-tempo-barre]")).toHaveText(/♩\s*94/);
@@ -145,11 +146,11 @@ test("barre de titre en 中文 : mêmes boutons, noms chinois", async ({ page })
   const noms = (await boutonsHaut(page)).map((b) => b.nom);
   // Ces deux chants sont des scans 简谱 : pas de section, donc pas de bouton Repères (段落).
   await expect(page.getByRole("button", { name: "段落" })).toHaveCount(0);
-  if (telephone(page)) expect(noms).toEqual(["歌单", "我演奏", "显示选项", "退出"]);
-  else expect(noms.filter((n) => n !== "节拍" && n !== "画笔")).toEqual(["歌单", "我演奏", "工具", "显示选项", "退出"]);
+  if (telephone(page)) expect(noms).toEqual(["歌单", "工具", "显示", "退出"]);
+  else expect(noms.filter((n) => n !== "节拍" && n !== "画笔")).toEqual(["歌单", "工具", "显示", "退出"]);
 });
 
-test("Setlist ouvre son menu, Je joue son menu (rôle), Options le menu « Options d'affichage »", async ({ page }) => {
+test("Setlist ouvre son menu, Outils le sien, Affichage la marge (dont le groupe « Je joue »)", async ({ page }) => {
   await ouvrir(page);
   const setlist = await ouvrirMenu(page, "setlist");
   await expect(setlist.getByText("Culte d'essai de la barre")).toBeVisible();
@@ -160,15 +161,15 @@ test("Setlist ouvre son menu, Je joue son menu (rôle), Options le menu « Optio
   await expect(options).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
-  // Au téléphone, Crayon est une ligne d'Outils, en tête de la feuille Options d'affichage, plus de la barre.
+  // Au téléphone, Crayon est une ligne d'Outils, plus de la barre (Outils a son bouton dans la barre depuis RU-5).
   if (telephone(page)) {
     const outils = await ouvrirMenu(page, "outils");
     await expect(outils.getByRole("button", { name: "Crayon", exact: true })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(outils).toBeHidden();
   }
-  await page.getByRole("button", { name: "Je joue" }).click();
-  await expect(page.getByRole("dialog", { name: "Je joue", exact: true })).toBeVisible();
+  await ouvrirMenu(page, "affichage");
+  await expect(page.locator('[data-testid="marge-affichage"][data-mode="louange"]').getByRole("heading", { name: "Je joue" })).toBeVisible();
 });
 
 // ─── La rangée de points ──────────────────────────────────────────────────────
@@ -269,9 +270,10 @@ test("rangée de points : un toucher dans la zone d'un repère mène à la page 
 
 test("barre de titre : le titre est centré sur l'écran, groupes alignés à leurs bords", async ({ page }) => {
   await ouvrir(page);
-  const titre = (await page.locator("[data-barre-haut] p").first().boundingBox())!;
+  // Le bloc du titre et de l'armure (RU-5) : c'est lui qui est centré, l'armure se met à côté du titre.
+  const titre = (await page.locator("[data-barre-haut] [data-bloc-titre]").boundingBox())!;
   const ecran = page.viewportSize()!;
-  // Au téléphone, le groupe de gauche (3 boutons) est plus large que celui de droite (2) : un léger décentrage vaut mieux qu'un titre tronqué.
+  // Au téléphone, le groupe de droite (3 boutons) est plus large que celui de gauche (2) : un léger décentrage vaut mieux qu'un titre tronqué.
   expect(Math.abs(titre.x + titre.width / 2 - ecran.width / 2)).toBeLessThanOrEqual(telephone(page) ? 28 : 4);
   const boutons = await boutonsHaut(page);
   expect(boutons[0].x).toBeLessThan(24);
@@ -285,14 +287,14 @@ test("barre de titre : le titre reste centré sur un chant sans Repères (scan �
     route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
   await ouvrir(page, { slugs: ZH, zh: true });
   await expect(page.getByRole("button", { name: "段落" })).toHaveCount(0);
-  const titre = (await page.locator("[data-barre-haut] p").first().boundingBox())!;
+  const titre = (await page.locator("[data-barre-haut] [data-bloc-titre]").boundingBox())!;
   const ecran = page.viewportSize()!;
   expect(Math.abs(titre.x + titre.width / 2 - ecran.width / 2)).toBeLessThanOrEqual(4);
 });
 
 // ─── La couleur des icônes ────────────────────────────────────────────────────
 
-test("couleur des icônes : bleu par défaut ; framboise choisie, retenue après rechargement (couleur corrigée mesurée)", async ({ page }) => {
+test("couleur des icônes : encre par défaut (RU-5) ; framboise choisie, retenue après rechargement (couleur corrigée mesurée)", async ({ page }) => {
   await ouvrir(page);
   expect(await couleurIcone(page)).toBe(rgb(garderContraste(COULEUR_DEFAUT, FOND_CLAIR)));
   let reglages = await ouvrirReglages(page);
@@ -304,7 +306,7 @@ test("couleur des icônes : bleu par défaut ; framboise choisie, retenue après
     expect(m.width).toBeGreaterThanOrEqual(43.5);
     expect(m.height).toBeGreaterThanOrEqual(43.5);
   }
-  await expect(palette.getByRole("radio", { name: "Bleu" })).toHaveAttribute("aria-checked", "true");
+  await expect(palette.getByRole("radio", { name: "Encre" })).toHaveAttribute("aria-checked", "true");
   await palette.getByRole("radio", { name: "Framboise" }).click();
   await expect(palette.getByRole("radio", { name: "Framboise" })).toHaveAttribute("aria-checked", "true");
   await page.keyboard.press("Escape");
@@ -331,19 +333,24 @@ test("palette : un seul arrêt de tabulation, les flèches passent d'une teinte 
   const reglages = await ouvrirReglages(page);
   const palette = reglages.getByRole("radiogroup", { name: "Couleur des icônes" });
   await expect(palette.locator('[role=radio][tabindex="0"]')).toHaveCount(1);
+  // Encre est la teinte par défaut (RU-5) : les flèches partent d'elle.
   const bleu = palette.getByRole("radio", { name: "Bleu" });
-  await bleu.focus();
-  await page.keyboard.press("ArrowRight");
   const encre = palette.getByRole("radio", { name: "Encre" });
-  await expect(encre).toBeFocused();
-  await expect(encre).toHaveAttribute("aria-checked", "true");
   await expect(encre).toHaveAttribute("tabindex", "0");
-  await expect(bleu).toHaveAttribute("aria-checked", "false");
-  await expect(bleu).toHaveAttribute("tabindex", "-1");
-  expect(await page.evaluate((k) => localStorage.getItem(k), `perf-couleur-icones-${MUSICIEN.uid}`)).toBe("#1c1c1e");
+  await encre.focus();
+  await page.keyboard.press("ArrowRight");
+  const vert = palette.getByRole("radio", { name: "Vert" });
+  await expect(vert).toBeFocused();
+  await expect(vert).toHaveAttribute("aria-checked", "true");
+  await expect(vert).toHaveAttribute("tabindex", "0");
+  await expect(encre).toHaveAttribute("aria-checked", "false");
+  await expect(encre).toHaveAttribute("tabindex", "-1");
+  expect(await page.evaluate((k) => localStorage.getItem(k), `perf-couleur-icones-${MUSICIEN.uid}`)).toBe("#1f7a5c");
   await page.keyboard.press("ArrowDown");
-  await expect(palette.getByRole("radio", { name: "Vert" })).toBeFocused();
+  await expect(palette.getByRole("radio", { name: "Violet" })).toBeFocused();
   await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowLeft");
+  await expect(encre).toBeFocused();
   await page.keyboard.press("ArrowLeft");
   await expect(bleu).toBeFocused();
   // Retour au bout : « Autre couleur » ouvre le cercle, puis on revient à la première teinte.
@@ -361,6 +368,8 @@ test("palette : un seul arrêt de tabulation, les flèches passent d'une teinte 
 test("cercle chromatique : flèche droite sur la teinte change la couleur, retenue après rechargement", async ({ page }) => {
   await ouvrir(page);
   const reglages = await ouvrirReglages(page);
+  // L'encre (défaut) est grise : sa teinte ne se lit pas. On part d'une teinte saturée.
+  await reglages.locator("[aria-labelledby=perf-couleur-icones]").getByRole("radio", { name: "Framboise" }).click();
   await reglages.locator("[aria-labelledby=perf-couleur-icones]").getByRole("radio", { name: "Autre couleur" }).click();
   const teinte = reglages.getByRole("slider", { name: "Teinte" });
   await expect(teinte).toBeVisible();
@@ -386,6 +395,7 @@ test("cercle chromatique : flèche droite sur la teinte change la couleur, reten
 test("cercle chromatique : un toucher sur l'anneau choisit la teinte (pointer events)", async ({ page }) => {
   await ouvrir(page);
   const reglages = await ouvrirReglages(page);
+  await reglages.locator("[aria-labelledby=perf-couleur-icones]").getByRole("radio", { name: "Framboise" }).click();
   await reglages.locator("[aria-labelledby=perf-couleur-icones]").getByRole("radio", { name: "Autre couleur" }).click();
   const anneau = reglages.getByRole("slider", { name: "Teinte" });
   await anneau.scrollIntoViewIfNeeded();
@@ -563,12 +573,13 @@ test("captures FS-A : pendant le glissé, la vignette du chant visé", async ({ 
 
 // ─── Corrections de relecture FS-A / FS-B, groupe 2 ───────────────────────────
 
-test("barre de titre (téléphone) : « Avec nous (Emmanuel) » n'est pas tronqué, centré dans les deux langues", async ({ page }) => {
+test("barre de titre (téléphone) : un titre court n'est pas tronqué, centré dans les deux langues", async ({ page }) => {
   test.skip(!telephone(page), "la place compte au téléphone");
   const lire = () => page.locator("[data-barre-haut] p").first().evaluate((el) => ({
     sw: el.scrollWidth, cw: el.clientWidth, align: getComputedStyle(el).textAlign,
   }));
-  await ouvrir(page);
+  // « Avec nous (Emmanuel) » se tronque désormais avant l'armure (RU-5, critère de la spec) : un titre court tient.
+  await ouvrir(page, { slugs: ["abba-pere", "avec-nous"] });
   const fr = await lire();
   expect(fr.sw, "titre FR non tronqué").toBeLessThanOrEqual(fr.cw);
   expect(fr.align).toBe("center");
@@ -576,7 +587,7 @@ test("barre de titre (téléphone) : « Avec nous (Emmanuel) » n'est pas tronqu
 
 test("barre de titre en 中文 (téléphone) : même alignement centré", async ({ page }) => {
   test.skip(!telephone(page), "la place compte au téléphone");
-  await ouvrir(page, { slugs: ["avec-nous", "abba-pere"], zh: true });
+  await ouvrir(page, { slugs: ["abba-pere", "avec-nous"], zh: true });
   const zh = await page.locator("[data-barre-haut] p").first().evaluate((el) => ({
     sw: el.scrollWidth, cw: el.clientWidth, align: getComputedStyle(el).textAlign,
   }));

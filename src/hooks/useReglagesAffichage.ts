@@ -7,7 +7,7 @@ import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } 
 import { getJianpuPref, interrupteurAllume, prefDepuisInterrupteur, setJianpuPref } from "@/lib/jianpu/preference";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { MAX_FONT_SCALE, MIN_FONT_SCALE, getFontScalePref, setFontScalePref } from "@/lib/fontScalePref";
-import { getRole, setRole as ecrireRole, type RolePreset } from "@/lib/performance/roleCompte";
+import { getRoleSansMigrer, setRole as ecrireRole, type RolePreset } from "@/lib/performance/roleCompte";
 
 // Les réglages de la marge « Affichage » (docs/spec-reglages-unifies.md, RU-2) : les clés EXISTANTES, lues et écrites par les
 // fonctions déjà en place, aucune nouvelle clé. La notation et la couleur des accords ont leurs propres abonnés. Les autres
@@ -56,7 +56,7 @@ export function useReglagesAffichage(uid: string | null | undefined): ReglagesAf
     setJp(interrupteurAllume(getJianpuPref()));
     setPy(getPinyinPref());
     setTl(getFontScalePref());
-    setRl(getRole(uid));
+    setRl(getRoleSansMigrer(uid)); // lecture seule : la migration du rôle d'appareil reste à l'ouverture du mode louange
     setAcc(accordsAffiches);
     setLu(true);
   }, [uid]);

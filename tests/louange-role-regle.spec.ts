@@ -3,7 +3,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, curseurPage, lireCompteur, onStage, ouvrirJeJoue } from "./helpers/louange";
 
 // Lot pupitre, tranche PU-5 : choisir un rôle pose aussi l'ordre et la disposition (Pianiste, Guitariste : Tout le chant
-// et Classique ; Batteur : Plan du chant ; Présidence, Choriste : rien d'imposé) ; changer l'ordre ensuite ne retire plus
+// et Classique ; Batteur : Plan ; Présidence, Choriste : rien d'imposé) ; changer l'ordre ensuite ne retire plus
 // le rôle ; l'ordre est retenu par compte, la disposition par appareil. Comptes simulés, noms fictifs.
 
 const SETLIST_ID = "setlist-role-regle";
@@ -53,7 +53,7 @@ async function ouvrirMode(page: Page, compte: FakeProfile) {
 }
 
 const ordre = (d: ReturnType<Page["locator"]>, nom: string) =>
-  d.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: nom });
+  d.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: nom, exact: true });
 const disposition = (d: ReturnType<Page["locator"]>, nom: RegExp) =>
   d.locator('[role=radiogroup][aria-labelledby="perf-disposition"]').getByRole("radio", { name: nom });
 const role = (d: ReturnType<Page["locator"]>, nom: string) => d.getByRole("button", { name: new RegExp(`^${nom}`) });
@@ -76,7 +76,7 @@ test("Batteur pose Plan du chant, sans toucher à la disposition", async ({ page
   await ouvrirMode(page, LISE);
   const d = await ouvrirJeJoue(page);
   await role(d, "Batteur").click();
-  await expect(ordre(d, "Plan du chant")).toHaveAttribute("aria-checked", "true");
+  await expect(ordre(d, "Plan")).toHaveAttribute("aria-checked", "true");
   expect(await lire(page, "disposition"), "disposition sans objet pour le Batteur").toBe("scene");
 });
 
@@ -86,7 +86,7 @@ test("Présidence garde l'ordre et la disposition choisis", async ({ page }) => 
   const d = await ouvrirJeJoue(page);
   await role(d, "Présidence").click();
   await expect(role(d, "Présidence")).toHaveAttribute("aria-pressed", "true");
-  await expect(ordre(d, "Chaque section une fois")).toHaveAttribute("aria-checked", "true");
+  await expect(ordre(d, "Une fois chacune")).toHaveAttribute("aria-checked", "true");
   await expect(disposition(d, /^Scène/)).toHaveAttribute("aria-checked", "true");
 });
 
@@ -95,8 +95,8 @@ test("choisir « Chaque section une fois » garde Pianiste coché, aussi après 
   await ouvrirMode(page, LISE);
   const d = await ouvrirJeJoue(page);
   await role(d, "Pianiste").click();
-  await ordre(d, "Chaque section une fois").click();
-  await expect(ordre(d, "Chaque section une fois")).toHaveAttribute("aria-checked", "true");
+  await ordre(d, "Une fois chacune").click();
+  await expect(ordre(d, "Une fois chacune")).toHaveAttribute("aria-checked", "true");
   await expect(role(d, "Pianiste")).toHaveAttribute("aria-pressed", "true");
 
   await page.reload();
@@ -104,7 +104,7 @@ test("choisir « Chaque section une fois » garde Pianiste coché, aussi après 
   await attendreMiseEnPage(page);
   const rouvert = await ouvrirJeJoue(page);
   await expect(role(rouvert, "Pianiste")).toHaveAttribute("aria-pressed", "true");
-  await expect(ordre(rouvert, "Chaque section une fois")).toHaveAttribute("aria-checked", "true");
+  await expect(ordre(rouvert, "Une fois chacune")).toHaveAttribute("aria-checked", "true");
 
   await role(rouvert, "Guitariste").click();
   await expect(ordre(rouvert, "Tout le chant"), "rechoisir un rôle réapplique son ordre").toHaveAttribute("aria-checked", "true");
@@ -116,7 +116,7 @@ test("deux comptes sur le même appareil : chacun garde son ordre, la dispositio
   await preparer(page);
   await ouvrirMode(page, LISE);
   const d1 = await ouvrirJeJoue(page);
-  await ordre(d1, "Chaque section une fois").click();
+  await ordre(d1, "Une fois chacune").click();
   await disposition(d1, /^Marge/).click();
   expect(await lire(page, `partition-layout-${LISE.uid}`)).toBe("unique");
 
@@ -133,7 +133,7 @@ test("deux comptes sur le même appareil : chacun garde son ordre, la dispositio
   const d2 = await ouvrirJeJoue(page2);
   await expect(ordre(d2, "Tout le chant"), "Noël n'hérite pas de l'ordre de Lise").toHaveAttribute("aria-checked", "true");
   await expect(disposition(d2, /^Marge/), "la disposition est celle de l'appareil").toHaveAttribute("aria-checked", "true");
-  await ordre(d2, "Plan du chant").click();
+  await ordre(d2, "Plan").click();
   expect(await lire(page2, `partition-layout-${NOEL.uid}`)).toBe("structure");
   expect(await lire(page2, `partition-layout-${LISE.uid}`), "l'ordre de Lise n'a pas bougé").toBe("unique");
   await contexte.close();

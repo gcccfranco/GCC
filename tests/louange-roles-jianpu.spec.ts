@@ -93,14 +93,15 @@ test.describe("mode louange, rôles et 简谱", () => {
     await verifierFr(page);
   });
 
-  test("choriste touche « Partition 简谱 » : le scan, préférence « always »", async ({ page }, info) => {
+  test("choriste touche « 简谱 » dans la marge : le scan, préférence « always »", async ({ page }, info) => {
     await ouvrir(page, { role: "choriste" });
     await verifierParoles(page);
     const options = await ouvrirOptions(page);
-    const bouton = options.getByRole("button", { name: "Partition 简谱" });
-    await expect(bouton).toHaveAttribute("aria-pressed", "false");
+    // RU-5 : le choix « 简谱 | Paroles » de la marge (« Ce que je lis »).
+    const bouton = options.getByRole("radio", { name: "简谱", exact: true });
+    await expect(bouton).toHaveAttribute("aria-checked", "false");
     await bouton.click();
-    await expect(bouton).toHaveAttribute("aria-pressed", "true");
+    await expect(bouton).toHaveAttribute("aria-checked", "true");
     expect(await lirePref(page)).toBe("always");
     await page.keyboard.press("Escape");
     await expect(onStage(page, "[data-jianpu-page]").first()).toBeVisible();

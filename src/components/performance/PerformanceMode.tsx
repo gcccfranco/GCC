@@ -10,7 +10,7 @@ import { MenuLouange, type MenuId } from "./MenuLouange";
 import { LigneFeuilleDeRoute } from "./FeuilleDeRoute";
 import { OngletsSetlist, ContenuTousLesChants } from "./TousLesChants";
 import { useJouerChant } from "./useJouerChant";
-import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, TitreRubrique, VALEUR, type ListeSetlistsMenu } from "./ContenusMenus";
+import { BoutonRond, ContenuOutils, ContenuReperes, ContenuSetlist, TitreRubrique, VALEUR, type ListeSetlistsMenu } from "./ContenusMenus";
 import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
 import { PageTexte } from "./PageTexte";
@@ -22,7 +22,7 @@ import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
 import { ancrerSurPremiereLigne, ancrerTrace, uniteProche, useTraitsAncres, type TraitsParChant } from "./hooks/useTraitsAncres";
 import { deleteAnnotation } from "@/lib/firebase/annotations";
-import { Check, Lightbulb, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, AlignLeft, FileMusic, Languages, Music, PanelTopBottomDashed, Waves, X } from "lucide-react";
+import { Check, SlidersHorizontal, Link2, MessageSquare, Sun, Moon, X } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import type { Tranche } from "@/lib/performance/tranchesScan";
 import type { TrancheFenetre } from "@/components/jianpu/JianpuSheet";
@@ -54,7 +54,11 @@ import { getDispositionPref, setDispositionPref, type Disposition } from "@/lib/
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
-import { getTransposedKey, noteToIndex } from "@/lib/transpose";
+import { noteToIndex } from "@/lib/transpose";
+import { Armure } from "@/components/song/Armure";
+import { MargeAffichage, usePlace } from "@/components/song/MargeAffichage";
+import { Switch } from "@/components/ui/switch";
+import { itemAst } from "@/lib/chordpro/itemContent";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui, classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
@@ -417,6 +421,8 @@ interface PerformanceModeProps {
   /** Ma partition (docs/spec-ma-partition.md) : quelle partition se lit, par chant ; sert aux signes et à la rubrique « Partition » de « Je joue ». */
   lectures?: Record<string, Lecture>;
   onChoisirLecture?: (slug: string, valeur: string) => void;
+  /** « Changer pour toute l'équipe » (armure) : la tonalité de la setlist change pour ce chant ; absent = pas de bouton (seuls les éditeurs l'ont). */
+  onChangerEquipe?: (slug: string, k: string) => void;
   /** Traits accrochés au texte, par chant : les miens, et ceux de la partition partagée que je lis (si son auteur les partage). */
   traits?: TraitsParChant;
   /** Mes traits d'un chant ont changé : à écrire dans ma partition (regroupé par le parent). */
@@ -442,6 +448,9 @@ interface PerformanceModeProps {
   onClose: () => void;
 }
 
+/** Le bouton Affichage de la barre : le focus lui revient à la fermeture de la marge. */
+const RETOUR_AFFICHAGE = { get current() { return document.querySelector<HTMLElement>('[data-menu-declencheur="affichage"]'); } };
+
 export function PerformanceMode({
   uid,
   items,
@@ -462,6 +471,7 @@ export function PerformanceMode({
   chantInitial,
   lectures,
   onChoisirLecture,
+  onChangerEquipe,
   traits,
   onTraitsChange,
   chantsCharges,
@@ -560,7 +570,9 @@ export function PerformanceMode({
     const hors = (e: PointerEvent) => {
       const cible = e.target instanceof Element ? e.target : null;
       if (e.pointerType === "pen") return;
-      if (!cible || cible.closest("[data-menu-louange], [data-menu-declencheur], [data-vaul-overlay], [data-panneau-metronome]")) return;
+      if (!cible || cible.closest("[data-menu-louange], [data-menu-declencheur], [data-vaul-overlay], [data-panneau-metronome], #marge-affichage")) return;
+      // Marge en colonne : la racine reprendrait 320 px avant le pointerup ; c'est le bouton de la barre qui décide.
+      if (popoverRef.current === "affichage" && cible.closest("[data-barre-haut]")) return;
       if (!cible.closest("[data-barre-haut], [data-barre-bas]")) menuAuToucher.current = { t: e.timeStamp };
       // La rangée de points (CurseurPage) change de page au pointerdown : menu ouvert, ce toucher ferme seulement le menu.
       if (cible.closest("[data-curseur-page]")) {
@@ -724,7 +736,7 @@ export function PerformanceMode({
     }
     if (!accueilRole) return;
     setShowChrome(true);
-    setPopoverOuvert("jejoue");
+    setPopoverOuvert("affichage");
     // Une seule fois, à l'ouverture du mode.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -782,9 +794,18 @@ export function PerformanceMode({
       return null;
     }
   });
-  // Panneau Métronome en colonne (≥ 1 024 px) : il repousse la musique, dont la largeur de mise en page perd 320 px.
+  // Marge « Affichage » (RU-5) : en colonne (≥ 1 024 px) elle repousse la musique de 320 px à droite ; en dessous, la feuille de 40 %
+  // réserve sa hauteur en bas. La zone de lecture (mesure, pagination, deux colonnes) est l'écran moins cette réserve.
+  const placeMarge = usePlace();
+  const margeOuverte = popoverOuvert === "affichage";
+  const reserveD = margeOuverte && placeMarge === "colonne" ? 320 : 0;
+  const reserveB = margeOuverte && placeMarge !== "colonne" ? Math.round(ecran.hauteur * 0.4) : 0;
+  const zoneL = ecran.largeur - reserveD;
+  const zoneH = ecran.hauteur - reserveB;
+  // shortcut: deux colonnes repliées sous 960 px de zone (le seuil d'avant), pas sous 340 px par colonne comme la spec ; à reprendre si le 1 080 px marge ouverte le demande.
+  // L'interrupteur de la marge se juge sur l'écran entier (il doit rester là marge ouverte) ; la mise en page, sur la zone qui reste.
   const twoColumnsAvailable = twoColumnsPossible(ecran.grand, ecran.largeur, fontScale) && !structureMode;
-  const twoColumns = twoColumnsAvailable && twoColumnsPref !== "0";
+  const twoColumns = twoColumnsAvailable && twoColumnsPref !== "0" && twoColumnsPossible(ecran.grand, zoneL, fontScale);
   const [demiOn, setDemiOn] = useState(getDemiPagePref);
   const [demiPart, setDemiPartEtat] = useState(getDemiPart);
   // Demi-page en cours : la page lue est `currentPage`, le haut de l'écran montre déjà le début de la suivante.
@@ -805,10 +826,10 @@ export function PerformanceMode({
     setDemi(false);
   };
   const toggleTwoColumns = useCallback(() => {
-    const next = twoColumns ? "0" : "1";
+    const next = twoColumnsPref === "0" ? "1" : "0";
     setTwoColumnsPref(next);
     try { localStorage.setItem("perf-two-columns", next); } catch { /* ignore */ }
-  }, [twoColumns]);
+  }, [twoColumnsPref]);
   // Indices à plat par page (navigation, sommaire, clé d'annotations).
   const pages = useMemo(
     () => layout.map((p) => (p.header != null ? [p.header, ...p.cols.flat()] : p.cols.flat())),
@@ -1015,7 +1036,7 @@ export function PerformanceMode({
       const mcs = measureInnerRef.current ? getComputedStyle(measureInnerRef.current) : null;
       const padTop = mcs ? parseFloat(mcs.paddingTop) || 0 : 16;
       const padBottom = mcs ? parseFloat(mcs.paddingBottom) || 0 : 16;
-      const viewportH = window.innerHeight / fontScale - padTop - padBottom - safety;
+      const viewportH = zoneH / fontScale - padTop - padBottom - safety;
       // Hauteur réellement occupée par chaque bloc, marges verticales comprises :
       // delta entre le haut du bloc et le haut du bloc suivant dans le flux.
       const flowHeights = (rects: (DOMRect | null)[]) =>
@@ -1057,9 +1078,9 @@ export function PerformanceMode({
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
       const insetG = mcs ? Math.max(0, (parseFloat(mcs.paddingLeft) || 0) - 1.5 * rem) : 0;
       const insetD = mcs ? Math.max(0, (parseFloat(mcs.paddingRight) || 0) - 1.5 * rem) : 0;
-      const largeurPleine = window.innerWidth / fontScale - 8 - insetG - insetD;
+      const largeurPleine = zoneL / fontScale - 8 - insetG - insetD;
       const largeurScan = Math.min(LARGEUR_FEUILLE_MAX, largeurPleine);
-      const hauteurScan = window.innerHeight / fontScale - 4 - (barres.haut + barres.bas) / fontScale - bandeH / fontScale;
+      const hauteurScan = zoneH / fontScale - 4 - (barres.haut + barres.bas) / fontScale - bandeH / fontScale;
       const telephonePortrait = ecran.largeur < 768 && ecran.hauteur > ecran.largeur;
       const tranchesDe = (i: number) => {
         const b = blocks[i];
@@ -1071,7 +1092,7 @@ export function PerformanceMode({
         const suivi = (enteteDe.get(i) ?? -1) < dernierEntete;
         const reserve = dernierDuChant && suivi ? 56 / fontScale : 0;
         // JV-5c : réglage « Idées d'harmonie » allumé, le rail des étiquettes de section prend sa place à gauche (de chaque colonne).
-        const rail = icisDuLouange.has(groupeScan(b)) && jianpuSections?.[b.songSlug]?.sections.length ? railEtiquettes(window.innerWidth) : 0;
+        const rail = icisDuLouange.has(groupeScan(b)) && jianpuSections?.[b.songSlug]?.sections.length ? railEtiquettes(zoneL) : 0;
         // Lot JP-C : téléphone en portrait, chaque ligne se coupe en deux moitiés empilées ; sinon, lignes entières.
         if (telephonePortrait) return tranchesDemiLignes(sp.lignes, sp.h, x0, x1, largeurScan - rail, Math.max(1, hauteurScan), reserve);
         // Lot JV (JV-4) : « 2 colonnes » allumé, deux colonnes de demi-lignes à la taille des lignes entières ; sous le seuil, lignes entières.
@@ -1146,7 +1167,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, jianpuLabelH, metronome, icisDuLouange, jianpuSections]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, zoneL, zoneH, jianpuLabelH, metronome, icisDuLouange, jianpuSections]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -1947,19 +1968,38 @@ export function PerformanceMode({
     });
   })();
   const reperes = reperesTexte.length > 0 ? reperesTexte : reperesScan;
-  // Tonalité (menu Outils) : d'un demi-ton, par la tonalité personnelle de l'appareil ; revenir à celle de la setlist l'oublie.
+  // Tonalité (armure de la barre) : la personnelle de l'appareil, par setlist ; revenir à celle de la setlist l'oublie.
   const entreeSlug = currentEntry?.block.songSlug;
   const cleJouee = currentEntry?.block.songKey;
   const cleBase = currentEntry?.block.setlistKey ?? cleJouee;
   const cleModifiable = !!entreeSlug && !!cleJouee && !!cleBase && noteToIndex(cleJouee) !== -1 && noteToIndex(cleBase) !== -1;
-  const decalerCle = (demiTons: number) => {
+  const poserCle = (k: string) => {
     if (!cleModifiable || !entreeSlug) return;
     compter("cmd.chant.transposer");
-    const nouvelle = getTransposedKey(cleJouee!, demiTons);
-    if (noteToIndex(nouvelle) === noteToIndex(cleBase!)) resetPersonalKey(entreeSlug);
-    else choisirCle(entreeSlug, nouvelle);
+    if (noteToIndex(k) === noteToIndex(cleBase!)) resetPersonalKey(entreeSlug);
+    else choisirCle(entreeSlug, k);
   };
-  // Sous md la barre n'a que Setlist, Repères, Je joue, Options : Annoter et le tempo passent dans Outils.
+  const astArmure = entreeSlug ? itemAst(items.find((it) => it.songSlug === entreeSlug) ?? {}, contents[entreeSlug]) : undefined;
+  const armure = cleModifiable && astArmure?.metadata.key && currentEntry ? (
+    <Armure
+      titre={currentEntry.block.title}
+      langue={currentEntry.block.language === "zh" ? "zh" : "fr"}
+      tonaliteOrigine={astArmure.metadata.key}
+      tonaliteReco={astArmure.metadata.recommendedKey}
+      tonaliteEquipe={cleBase}
+      tonalite={cleJouee!}
+      onChange={poserCle}
+      portee="appareil"
+      lectureSeule={rolePreset === "choriste" || rolePreset === "presidence"}
+      capo={capoActive ? currentCapo : undefined}
+      onCapo={capoActive ? (n) => setCapo(entreeSlug!, Math.min(11, n)) : undefined}
+      onChangerEquipe={onChangerEquipe ? (k) => onChangerEquipe(entreeSlug!, k) : undefined}
+    />
+  ) : undefined;
+  // Barre cachée : l'armure flotte dans le coin seulement quand l'en-tête du chant n'est pas sur la page affichée.
+  const armureFlottante = !showChrome && !!armure && !!currentEntry && !currentPageIndices.includes(currentEntry.index);
+  const aPinyin = blocks.some((b) => b.kind === "section" && b.showPinyin);
+  // Sous md la barre n'a que Setlist, Repères, Outils, Affichage : Annoter et le tempo passent dans Outils.
   const telephone = ecran.largeur < 768;
   // Préréglage pris, replié au 1er si l'écran est celui d'un téléphone et que le pris n'y est pas affiché.
   const prereglageActif = telephone && !INDICES_TELEPHONE.includes(prereglageBrut) ? 0 : prereglageBrut;
@@ -2040,9 +2080,9 @@ export function PerformanceMode({
   useLayoutEffect(() => {
     const el = refPastilleFlux.current;
     // Demi-page (FS-E) : la pastille du flux n'est pas rendue, la flottante la remplace (rien à recouvrir).
-    const couverte = !demiActif && !!el && showChrome && el.getBoundingClientRect().bottom > window.innerHeight - barres.bas;
+    const couverte = !demiActif && !!el && showChrome && el.getBoundingClientRect().bottom > zoneH - barres.bas;
     setPastilleCouverte(couverte);
-  }, [showChrome, currentPage, layout, barres.bas, coupureEcran, demiActif]);
+  }, [showChrome, currentPage, layout, barres.bas, coupureEcran, demiActif, zoneH]);
   // Crayon : l'encre ne passe pas sur les repères de section (pastilles, lettres de Scène). Leurs rectangles écran
   // se mesurent au rendu de page, à la loupe et au redimensionnement.
   const [troues, setTroues] = useState<{ rects: number[][] }>({ rects: [] });
@@ -2067,19 +2107,14 @@ export function PerformanceMode({
     ? `path(evenodd, "M0 0H${window.innerWidth}V${window.innerHeight}H0Z ${troues.rects.map(([a, b, c, d]) => `M${a} ${b}H${c}V${d}H${a}Z`).join(" ")}")`
     : undefined;
 
-  // Ronds « Sur la page » : tous sur une ligne dans le popover (jusqu'à 7) ; au téléphone, sur deux lignes équilibrées plutôt qu'un rond seul en dessous.
-  const nRonds = 1 + [blocks.some((b) => b.kind === "section" && b.showPinyin), hasJianpuSheets && !structureMode, !!user, twoColumnsAvailable, true, true].filter(Boolean).length;
-  const colonnesRonds = telephone && nRonds > 4 ? Math.ceil(nRonds / 2) : nRonds;
-  // Le contenu d'Outils : le même élément dans le menu Outils (md et plus) et en tête d'Options au téléphone.
+  // Le contenu d'Outils (transitions, plein écran, métronome, annotations, idées d'harmonie, raccourcis).
   const contenuOutils = (
     <ContenuOutils
-      cle={cleModifiable ? cleJouee : undefined}
-      cleSetlist={cleBase}
-      decalerCle={decalerCle}
-      revenirCle={() => entreeSlug && resetPersonalKey(entreeSlug)}
-      capo={capoActive && entreeSlug && currentEntry ? { frets: currentCapo, set: (f) => setCapo(entreeSlug, f), titre: currentEntry.block.title } : undefined}
       showTransitions={showTransitions}
       setShowTransitions={setShowTransitions}
+      metronome={{ allume: metronome, set: setMetronome }}
+      annotations={user ? { allume: showAnnotations, set: setShowAnnotations } : undefined}
+      idees={peutHarmonie ? { allume: reglageIdees, set: (v) => { ecrireReglageIdees(uid, v); setReglageIdees(v); } } : undefined}
       onAnnoter={telephone && user && !horsLigne && (crayonPret || crayonIndispo) ? (crayonIndispo ? signalerCrayonIndispo : basculerAnnotation) : undefined}
       annoterIndispo={crayonIndispo}
       onMetronome={telephone && tempoChantId ? () => basculerMenu("metronome") : undefined}
@@ -2108,6 +2143,8 @@ export function PerformanceMode({
         "--sar": "env(safe-area-inset-right, 0px)",
         "--couleur-icones": couleurIcones,
         ...couleursAccords,
+        ...(reserveD ? { right: reserveD } : {}),
+        ...(reserveB ? { bottom: "40dvh" } : {}),
       } as React.CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -2348,6 +2385,18 @@ export function PerformanceMode({
         })()}
       </div>
 
+      {armureFlottante && (
+        <div
+          data-armure-flottante
+          className="absolute"
+          style={{ zIndex: 25, top: "calc(var(--sat, 0px) + 4px)", right: "calc(var(--sar, 0px) + 8px)" }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+        >
+          {armure}
+        </div>
+      )}
+
       {ligneVisible && premiereEntree && (
         <div
           data-premiere-entree
@@ -2365,7 +2414,7 @@ export function PerformanceMode({
           <button
             type="button"
             data-premiere-entree-changer
-            onClick={() => { setLigneEntree(false); setShowChrome(true); setPopoverOuvert("jejoue"); }}
+            onClick={() => { setLigneEntree(false); setShowChrome(true); setPopoverOuvert("affichage"); }}
             className="min-h-11 shrink-0 rounded-lg px-3 text-[15px] font-semibold text-[color:var(--couleur-icones)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t("performance.planning.changer")}
@@ -2629,15 +2678,13 @@ export function PerformanceMode({
           currentSong={currentSong}
           setlistTitle={currentSong ? setlistTitle : currentEntry?.block.title ?? setlistTitle}
           compositeur={currentEntry?.block.artist || undefined}
-          personalKey={currentEntry?.block.setlistKey}
-          rolePreset={rolePreset}
+          armure={showChrome ? armure : undefined}
           annotateMode={annotateMode}
           menuOuvert={popoverOuvert}
           avecReperes={reperes.length > 0}
           onAnnoter={user && !horsLigne && (crayonPret || crayonIndispo) ? (crayonIndispo ? signalerCrayonIndispo : basculerAnnotation) : undefined}
           annoterIndispo={crayonIndispo}
           onMenu={basculerMenu}
-          onJeJoue={() => basculerMenu("jejoue")}
           onQuitter={onClose}
           bande={metronome}
           tempoRegle={tempoPasse ?? tempoLiseret}
@@ -2681,17 +2728,81 @@ export function PerformanceMode({
         <ContenuReperes reperes={reperes} currentPage={currentPage} goToPage={goToPage} pageCount={pages.length} onFermer={() => fermerMenu("reperes")} />
       </MenuLouange>
 
-      <MenuLouange id="jejoue" titre={t("performance.iPlay")} ouvert={popoverOuvert === "jejoue"} onOuvertChange={(o) => !o && fermerMenu("jejoue")} align="start" couleur={couleurMenus}>
-        <div className="space-y-4">
-          {/* Popover (dès md) : le titre est dans le contenu ; au téléphone, le titre de la feuille le donne déjà. */}
-          <p data-titre-je-joue className="hidden px-1 text-[16px] font-bold leading-snug text-foreground md:block">{t("performance.iPlay")}</p>
+      {/* Panneau Métronome : remplace la feuille Tempo ; il remplacera la marge « Affichage » quand elle sera montée en louange (RU-5). */}
+      <PanneauMetronome
+        ouvert={popoverOuvert === "metronome"}
+        onFermer={() => fermerMenu("metronome")}
+        tempo={tempoLiseret ?? TEMPO_DEPART}
+        tempoAppareil={tempoAppareil}
+        tempoFichier={tempoFichier}
+        fixerTempo={fixerTempo}
+        effacerTempo={effacerTempo}
+        mesure={mesureBande}
+        mesureTexte={mesureTexte}
+        changerMesure={changerMesure}
+        accents={accents}
+        tournerAccent={tournerAccent}
+        subdivision={subdivision}
+        changerSubdivision={changerSubdivision}
+        decompte={decompte}
+        changerDecompte={changerDecompte}
+        marche={metroMarche}
+        onMarche={() => setMetroMarche((m) => !m)}
+        bande={metronome}
+        setBande={setMetronome}
+        couleur={couleurMenus}
+        son={son}
+        setSon={setSon}
+        sonType={sonType}
+        changerSonType={changerSonType}
+        volume={volume}
+        changerVolume={changerVolume}
+        taper={taper}
+        clavier={clavierVu || pointeurFin}
+        entrOuvert={entrOuvert}
+        setEntrOuvert={setEntrOuvert}
+        cases={casesEntr}
+        changerCase={changerCaseEntr}
+        valeursEntr={valeursEntr}
+        changerValeursEntr={changerValeursEntr}
+        appui={appuiMetro}
+      />
+      <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurMenus}>
+        {contenuOutils}
+      </MenuLouange>
+
+      <VoletHarmonieLouange volet={ideesActives && !annotateMode ? voletHarmonie : null} onClose={() => setVoletHarmonie(null)} />
+    </div>
+    {/* Marge « Affichage » (RU-5) : Je joue et Options fusionnés. Hors de la racine du mode, qui se raccourcit de sa place
+        (320 px à droite dès 1 024 px, sinon 40 % en bas) : rien de la musique dessous. */}
+    <div style={{ display: "contents", "--couleur-icones": couleurMenus, ...couleursAccords } as React.CSSProperties}>
+      <MargeAffichage
+        ouvert={margeOuverte}
+        onFermer={() => fermerMenu("affichage")}
+        zh={aPinyin || hasJianpuSheets}
+        avecPinyin={aPinyin}
+        aJianpu={hasJianpuSheets && !structureMode}
+        uid={uid}
+        mode="louange"
+        retourFocus={RETOUR_AFFICHAGE}
+        reglages={{
+          accords: chordsShown,
+          setAccords: (v) => { clearRolePreset(); quitterStructureSeule(); setShowChords(v); },
+          pinyin: showPinyin,
+          setPinyin: toggleShowPinyin,
+          jianpu: interrupteurAllume(jianpuPrefVu),
+          setJianpu: (v) => onJianpuPrefChange(prefDepuisInterrupteur(v)),
+          ordre: affichageVu,
+          setOrdre: changeAffichage,
+          role: rolePreset,
+        }}
+        groupeRole={
           <div>
             {accueilRole && (
               <p className="mb-3 border-b border-border px-2 pb-3 text-base font-semibold text-foreground">
                 {t(uid ? "performance.rolePrompt.welcome" : "performance.rolePrompt.welcomeDevice")}
               </p>
             )}
-            <div className="px-1"><TitreRubrique>{t("performance.rolePrompt.subtitle")}</TitreRubrique></div>
             <div className="flex flex-col">
               {ROLE_IDS.map((id) => {
                 const Icone = ICONES_ROLE[id];
@@ -2740,35 +2851,20 @@ export function PerformanceMode({
               </button>
             </div>
           </div>
-          <div className="space-y-4 border-t border-border pt-4">
-            {/* Affichage (D15) : le même réglage que le menu Affichage de la setlist. */}
-            <div className="space-y-2">
-              <div className="px-1"><TitreRubrique id="perf-ordre-sections">{t("performance.sectionOrder")}</TitreRubrique></div>
-              <div role="radiogroup" aria-labelledby="perf-ordre-sections" className="flex rounded-lg bg-secondary p-1">
-                {(["played", "unique", "structure"] as const).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    role="radio"
-                    aria-checked={affichageVu === v}
-                    onClick={() => changeAffichage(v)}
-                    className={`min-h-11 min-w-0 flex-1 rounded-md px-2 py-1 text-[13px] font-semibold leading-tight text-balance transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                      affichageVu === v ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {t(`setlists.detail.layout.${v}`)}
-                  </button>
-                ))}
-              </div>
-              <p className="px-2 text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
-            </div>
-            <div className="space-y-2 border-t border-border pt-4">
-              <div className="px-1"><TitreRubrique id="perf-disposition">{t("dispositions.titre")}</TitreRubrique></div>
-              <ChoixDisposition variante="panneau" langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
+        }
+        groupeLecture={
+          <>
+            <div className="flex min-h-11 items-center justify-between gap-3">
+              <span className="text-sm">{t("performance.lyrics")}</span>
+              <Switch
+                checked={!lyricsHidden}
+                onCheckedChange={(v) => { clearRolePreset(); quitterStructureSeule(); toggleHideLyrics(!v); }}
+                aria-label={t("performance.lyrics")}
+              />
             </div>
             {/* Partition (MP-5) : les choix « Je lis » du chant affiché ; ni « Partager… » ni « Garder une copie » (page de setlist). */}
             {user && !horsLigne && slugAnnote && (peutChoisirLecture || peutRecopier) && (
-              <div className="space-y-2 border-t border-border pt-4">
+              <div className="space-y-2 border-t border-border pt-3">
                 <div className="px-1"><TitreRubrique id="perf-partition">{t("performance.partition")}</TitreRubrique></div>
                 {peutChoisirLecture && <div role="radiogroup" aria-labelledby="perf-partition" data-je-joue-partition className="flex flex-col">
                   {lectures![slugAnnote].options.map((o) => {
@@ -2804,127 +2900,14 @@ export function PerformanceMode({
                 )}
               </div>
             )}
-          </div>
-        </div>
-      </MenuLouange>
-
-      {/* Panneau Métronome : remplace la feuille Tempo ; il remplacera la marge « Affichage » quand elle sera montée en louange (RU-5). */}
-      <PanneauMetronome
-        ouvert={popoverOuvert === "metronome"}
-        onFermer={() => fermerMenu("metronome")}
-        tempo={tempoLiseret ?? TEMPO_DEPART}
-        tempoAppareil={tempoAppareil}
-        tempoFichier={tempoFichier}
-        fixerTempo={fixerTempo}
-        effacerTempo={effacerTempo}
-        mesure={mesureBande}
-        mesureTexte={mesureTexte}
-        changerMesure={changerMesure}
-        accents={accents}
-        tournerAccent={tournerAccent}
-        subdivision={subdivision}
-        changerSubdivision={changerSubdivision}
-        decompte={decompte}
-        changerDecompte={changerDecompte}
-        marche={metroMarche}
-        onMarche={() => setMetroMarche((m) => !m)}
-        bande={metronome}
-        setBande={setMetronome}
-        couleur={couleurMenus}
-        son={son}
-        setSon={setSon}
-        sonType={sonType}
-        changerSonType={changerSonType}
-        volume={volume}
-        changerVolume={changerVolume}
-        taper={taper}
-        clavier={clavierVu || pointeurFin}
-        entrOuvert={entrOuvert}
-        setEntrOuvert={setEntrOuvert}
-        cases={casesEntr}
-        changerCase={changerCaseEntr}
-        valeursEntr={valeursEntr}
-        changerValeursEntr={changerValeursEntr}
-        appui={appuiMetro}
-      />
-      <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurMenus}>
-        {contenuOutils}
-      </MenuLouange>
-
-      <MenuLouange id="options" titre={t("performance.displayOptions")} ouvert={popoverOuvert === "options"} onOuvertChange={(o) => !o && fermerMenu("options")} couleur={couleurMenus}>
-        <div className="space-y-4">
-          {telephone && (
-            <div className="space-y-1 border-b border-border pb-4">
-              <TitreRubrique>{t("performance.toolsMenu")}</TitreRubrique>
-              {contenuOutils}
+          </>
+        }
+        groupePage={
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <p id="perf-disposition" className="text-sm">{t("dispositions.titre")}</p>
+              <ChoixDisposition variante="panneau" langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
             </div>
-          )}
-          <div className="space-y-2">
-            <TitreRubrique id="perf-sur-page">{t("performance.onPage")}</TitreRubrique>
-            <div role="group" aria-labelledby="perf-sur-page" className="grid gap-y-2" style={{ gridTemplateColumns: `repeat(${colonnesRonds}, minmax(0, 1fr))` }}>
-              <BoutonSurPage
-                label={t("performance.chords")}
-                allume={chordsShown}
-                onClick={() => {
-                  clearRolePreset();
-                  quitterStructureSeule();
-                  setShowChords(!chordsShown);
-                }}
-              >
-                <Music className="h-5 w-5" />
-              </BoutonSurPage>
-              <BoutonSurPage
-                label={t("performance.lyrics")}
-                allume={!lyricsHidden}
-                onClick={() => {
-                  clearRolePreset();
-                  quitterStructureSeule();
-                  toggleHideLyrics(!lyricsHidden);
-                }}
-              >
-                <AlignLeft className="h-5 w-5" />
-              </BoutonSurPage>
-              {blocks.some((b) => b.kind === "section" && b.showPinyin) && (
-                <BoutonSurPage label={t("performance.pinyin")} allume={showPinyin} onClick={() => toggleShowPinyin(!showPinyin)}>
-                  <Languages className="h-5 w-5" />
-                </BoutonSurPage>
-              )}
-              {hasJianpuSheets && !structureMode && (
-                // Partition 简谱 : par appareil — le pianiste lit le scan pendant
-                // que le guitariste lit la grille, sur la même setlist.
-                <BoutonSurPage
-                  label={t("performance.jianpuSheet")}
-                  allume={interrupteurAllume(jianpuPrefVu)}
-                  onClick={() => onJianpuPrefChange(prefDepuisInterrupteur(!interrupteurAllume(jianpuPrefVu)))}
-                >
-                  <FileMusic className="h-5 w-5" />
-                </BoutonSurPage>
-              )}
-              {user && (
-                <BoutonSurPage label={t("performance.annotations")} allume={showAnnotations} onClick={() => setShowAnnotations(!showAnnotations)}>
-                  <PenLine className="h-5 w-5" />
-                </BoutonSurPage>
-              )}
-              {twoColumnsAvailable && (
-                <BoutonSurPage label={t("performance.twoColumns")} allume={twoColumns} onClick={toggleTwoColumns}>
-                  <Columns2 className="h-5 w-5" />
-                </BoutonSurPage>
-              )}
-              <BoutonSurPage label={t("performance.halfPage")} allume={demiOn} onClick={basculerDemi}>
-                <PanelTopBottomDashed className="h-5 w-5" />
-              </BoutonSurPage>
-              {peutHarmonie && (
-                <BoutonSurPage label={t("performance.ideesHarmonie")} allume={reglageIdees} onClick={() => { ecrireReglageIdees(uid, !reglageIdees); setReglageIdees(!reglageIdees); }}>
-                  <Lightbulb className="h-5 w-5" />
-                </BoutonSurPage>
-              )}
-            </div>
-            {hasJianpuSheets && !structureMode && <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>}
-          </div>
-          <div className="space-y-2">
-            <TitreRubrique id="perf-couleur-accords">{t("couleurAccords.titre")}</TitreRubrique>
-            <ChoixCouleurAccords variante="panneau" theme={stageTheme} />
-          </div>
             <SettingRow label={t("performance.text")}>
               <div className="flex items-center gap-1.5">
                 <BoutonRond label={t("performance.textSmaller")} onClick={() => changeFontScale(-0.1)} disabled={fontScale <= MIN_FONT_SCALE || annotateMode}>
@@ -2935,6 +2918,20 @@ export function PerformanceMode({
                   <span aria-hidden="true" className="text-sm font-bold">A+</span>
                 </BoutonRond>
               </div>
+            </SettingRow>
+            {rolePreset !== "choriste" && rolePreset !== "presidence" && (
+              <div className="space-y-1">
+                <p className="text-sm">{t("couleurAccords.titre")}</p>
+                <ChoixCouleurAccords variante="panneau" theme={stageTheme} sansMention />
+              </div>
+            )}
+            {twoColumnsAvailable && (
+              <SettingRow label={t("performance.twoColumns")}>
+                <Switch checked={twoColumnsPref !== "0"} onCheckedChange={toggleTwoColumns} aria-label={t("performance.twoColumns")} />
+              </SettingRow>
+            )}
+            <SettingRow label={t("performance.halfPage")}>
+              <Switch checked={demiOn} onCheckedChange={basculerDemi} aria-label={t("performance.halfPage")} />
             </SettingRow>
             <SettingRow label={t("performance.theme")}>
               <div className="flex rounded-lg border border-border overflow-hidden">
@@ -2958,17 +2955,13 @@ export function PerformanceMode({
                 </button>
               </div>
             </SettingRow>
-            <SettingRow label={t("performance.metronome")}>
-              <BoutonRond label={t("performance.metronome")} allume={metronome} onClick={() => setMetronome(!metronome)} data-metronome="">
-                <Waves className="h-5 w-5" />
-              </BoutonRond>
-            </SettingRow>
+
             <div className="space-y-2">
               <TitreRubrique id="perf-couleur-icones">{t("performance.iconColor")}</TitreRubrique>
               <div
                 role="radiogroup"
                 aria-labelledby="perf-couleur-icones"
-                className="flex justify-between gap-1"
+                className="grid grid-cols-4 justify-items-center gap-1"
                 onKeyDown={(e) => {
                   // Radiogroup standard : ← ↑ et → ↓ passent à la teinte voisine en la choisissant (« Autre couleur » en dernier).
                   const d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
@@ -3018,9 +3011,9 @@ export function PerformanceMode({
               </div>
               {cercleOuvert && <CercleChromatique valeur={couleurChoix} fond={stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR} onChange={choisirCouleur} />}
             </div>
-        </div>
-      </MenuLouange>
-      <VoletHarmonieLouange volet={ideesActives && !annotateMode ? voletHarmonie : null} onClose={() => setVoletHarmonie(null)} />
+          </div>
+        }
+      />
     </div>
     </FournisseurIcis>
   );

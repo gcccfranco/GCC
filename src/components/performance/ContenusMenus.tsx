@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Maximize, Minus, Pencil, Plus, Timer, Undo2, Waves } from "lucide-react";
+import { Check, Lightbulb, Maximize, Pencil, PenLine, Timer, Undo2, Waves } from "lucide-react";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
@@ -368,27 +368,25 @@ function usePleinEcran() {
 }
 
 export function ContenuOutils({
-  cle,
-  cleSetlist,
-  decalerCle,
-  revenirCle,
-  capo,
   showTransitions,
   setShowTransitions,
+  metronome,
+  annotations,
+  idees,
   onAnnoter,
   annoterIndispo = false,
   onMetronome,
   raccourcis,
 }: {
-  /** Tonalité affichée et celle de la setlist ; absentes = pas de ligne tonalité (fusion, aucun chant). */
-  cle: string | undefined;
-  cleSetlist: string | undefined;
-  decalerCle: (demiTons: number) => void;
-  revenirCle: () => void;
-  capo: { frets: number; set: (frets: number) => void; titre: string } | undefined;
   showTransitions: boolean;
   setShowTransitions: (v: boolean) => void;
-  /** Téléphone seulement : la barre n'a plus « Crayon ». Absent = pas de ligne. */
+  /** Bande des temps (réglage de l'appareil) : l'interrupteur « Métronome ». */
+  metronome: { allume: boolean; set: (v: boolean) => void };
+  /** Annotations des autres sur la page (réglage de l'appareil) ; absent hors connexion. */
+  annotations: { allume: boolean; set: (v: boolean) => void } | undefined;
+  /** Idées d'harmonie (réglage du compte) ; absent sans l'accès. */
+  idees: { allume: boolean; set: (v: boolean) => void } | undefined;
+  /** Crayon : la barre ne l'a plus au téléphone. Absent = pas de ligne. */
   onAnnoter: (() => void) | undefined;
   /** Ma partition n'a pas pu être lue : la ligne reste, désactivée (son toucher dit pourquoi). */
   annoterIndispo?: boolean;
@@ -400,39 +398,6 @@ export function ContenuOutils({
   const pleinEcran = usePleinEcran();
   return (
     <div className="space-y-1">
-      {cle && (
-        <>
-          <LigneMenu label={t("performance.key")}>
-            <BoutonRond label={t("performance.keyDown")} onClick={() => decalerCle(-1)} data-cle-moins="">
-              <Minus className="h-4 w-4" />
-            </BoutonRond>
-            <span data-cle-valeur className={VALEUR}>{cle}</span>
-            <BoutonRond label={t("performance.keyUp")} onClick={() => decalerCle(1)} data-cle-plus="">
-              <Plus className="h-4 w-4" />
-            </BoutonRond>
-          </LigneMenu>
-          {cleSetlist && cleSetlist !== cle && (
-            <button
-              type="button"
-              onClick={revenirCle}
-              className={`min-h-11 rounded-lg px-1 text-sm font-semibold ${COULEUR} hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
-            >
-              {t("performance.personalKeyReset", { key: cleSetlist })}
-            </button>
-          )}
-        </>
-      )}
-      {capo && (
-        <LigneMenu label={t("performance.capo")} hint={capo.titre}>
-          <BoutonRond label={t("performance.capoLower")} onClick={() => capo.set(capo.frets - 1)} disabled={capo.frets <= 0}>
-            <Minus className="h-4 w-4" />
-          </BoutonRond>
-          <span className={VALEUR}>{capo.frets}</span>
-          <BoutonRond label={t("performance.capoRaise")} onClick={() => capo.set(capo.frets + 1)} disabled={capo.frets >= 11}>
-            <Plus className="h-4 w-4" />
-          </BoutonRond>
-        </LigneMenu>
-      )}
       <LigneMenu label={t("performance.transitions")}>
         <BoutonRond label={t("performance.transitions")} allume={showTransitions} onClick={() => { compter("cmd.chant.transitions"); setShowTransitions(!showTransitions); }}>
           <Timer className="h-5 w-5" />
@@ -442,6 +407,25 @@ export function ContenuOutils({
         <LigneMenu label={t("performance.fullscreen")}>
           <BoutonRond label={t("performance.fullscreen")} allume={pleinEcran.actif} data-plein-ecran="" onClick={pleinEcran.basculer}>
             <Maximize className="h-5 w-5" />
+          </BoutonRond>
+        </LigneMenu>
+      )}
+      <LigneMenu label={t("performance.metronome")}>
+        <BoutonRond label={t("performance.metronome")} allume={metronome.allume} onClick={() => metronome.set(!metronome.allume)} data-metronome="">
+          <Waves className="h-5 w-5" />
+        </BoutonRond>
+      </LigneMenu>
+      {annotations && (
+        <LigneMenu label={t("performance.annotations")}>
+          <BoutonRond label={t("performance.annotations")} allume={annotations.allume} onClick={() => annotations.set(!annotations.allume)}>
+            <PenLine className="h-5 w-5" />
+          </BoutonRond>
+        </LigneMenu>
+      )}
+      {idees && (
+        <LigneMenu label={t("performance.ideesHarmonie")}>
+          <BoutonRond label={t("performance.ideesHarmonie")} allume={idees.allume} onClick={() => idees.set(!idees.allume)}>
+            <Lightbulb className="h-5 w-5" />
           </BoutonRond>
         </LigneMenu>
       )}

@@ -15,7 +15,7 @@ export const TEINTES = [
   { id: "gris", hex: "#636872" },
 ] as const;
 
-export const COULEUR_DEFAUT = TEINTES[0].hex;
+export const COULEUR_DEFAUT = TEINTES[1].hex; // encre (RU-5 : le chrome n'est plus bleu)
 export const FOND_CLAIR = "#ffffff";
 export const FOND_SOMBRE = "#000000";
 /** Surface des menus (popover et feuille du bas) : `--raised` / `--background` en clair, `--raised` en sombre

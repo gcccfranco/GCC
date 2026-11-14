@@ -7,7 +7,7 @@ import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 /** Les menus du mode louange (FS-B) : un seul est ouvert à la fois (`popoverOuvert` de PerformanceMode). */
-export type MenuId = "setlist" | "reperes" | "jejoue" | "outils" | "options" | "metronome";
+export type MenuId = "setlist" | "reperes" | "outils" | "affichage" | "metronome";
 
 /** Largeur de la dernière disposition où les menus sont des feuilles du bas (md de Tailwind). */
 const MD = "(min-width: 768px)";

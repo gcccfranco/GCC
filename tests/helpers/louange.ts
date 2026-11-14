@@ -17,11 +17,12 @@ export async function attendreMiseEnPage(page: Page) {
 }
 
 export type Langue = "fr" | "zh";
-export type Menu = "setlist" | "reperes" | "jejoue" | "outils" | "tempo" | "options";
+// RU-5 : « jejoue » et « options » n'existent plus, la marge « Affichage » les remplace (les deux noms ouvrent la marge).
+export type Menu = "setlist" | "reperes" | "affichage" | "jejoue" | "outils" | "tempo" | "options";
 /** Nom du bouton de la barre de titre, qui est aussi le nom du dialogue qu'il ouvre (FS-B). */
 export const NOM_MENU: Record<Langue, Record<Menu, string>> = {
-  fr: { setlist: "Setlist", reperes: "Repères", jejoue: "Je joue", outils: "Outils", tempo: "Tempo", options: "Options d'affichage" },
-  zh: { setlist: "歌单", reperes: "段落", jejoue: "我演奏", outils: "工具", tempo: "节拍", options: "显示选项" },
+  fr: { setlist: "Setlist", reperes: "Repères", affichage: "Affichage", jejoue: "Affichage", outils: "Outils", tempo: "Tempo", options: "Affichage" },
+  zh: { setlist: "歌单", reperes: "段落", affichage: "显示", jejoue: "显示", outils: "工具", tempo: "节拍", options: "显示" },
 };
 
 /** Ouvre un menu du mode louange (FS-B : Setlist, Repères, Outils, Tempo, Options d'affichage). La barre reste ouverte
@@ -30,11 +31,11 @@ export const NOM_MENU: Record<Langue, Record<Menu, string>> = {
 export async function ouvrirMenu(page: Page, menu: Menu, langue: Langue = "fr") {
   // « tempo » : la feuille Tempo est devenue le panneau Métronome (MT-2).
   if (menu === "tempo") return ouvrirMetronome(page, langue);
-  // Au téléphone (< 768 px) Outils n'a plus de bouton dans la barre : son contenu est en tête de la feuille Options d'affichage.
-  if (menu === "outils" && page.viewportSize()!.width < 768) menu = "options";
+  if (menu === "jejoue" || menu === "options") menu = "affichage";
   const nom = NOM_MENU[langue][menu];
   const bouton = page.locator("[data-performance-mode]").getByRole("button", { name: nom, exact: true });
-  const dialogue = page.getByRole("dialog", { name: nom, exact: true });
+  // La marge « Affichage » n'est pas un dialogue : un volet (colonne ou feuille basse) qui reste ouvert pendant la lecture.
+  const dialogue = menu === "affichage" ? page.locator('[data-testid="marge-affichage"][data-mode="louange"][data-ouvert="true"]') : page.getByRole("dialog", { name: nom, exact: true });
   await expect(async () => {
     // Une tentative précédente a pu ouvrir le menu (animation lente) : ne pas recommencer.
     if (await dialogue.isVisible()) return;
@@ -87,13 +88,13 @@ export async function fermerBarre(page: Page) {
   await expect(chrome).toHaveCSS("opacity", "0");
 }
 
-/** Ouvre le menu « Options d'affichage » du mode louange (c'était le tiroir « Réglages » avant FS-B). */
+/** Ouvre la marge « Affichage » du mode louange (c'était le menu « Options d'affichage », avant RU-5). */
 export const ouvrirOptions = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "options", langue);
 /** Ancien nom d'`ouvrirOptions`, gardé pour les specs qui le citent. */
 export const ouvrirReglages = ouvrirOptions;
-/** Ouvre le menu « Je joue » (rôle, ordre des sections, paroles masquées ; FS-C). */
+/** Ouvre la marge « Affichage » (le rôle « Je joue » en est le premier groupe, RU-5). */
 export const ouvrirJeJoue = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "jejoue", langue);
-/** Ouvre Outils : son menu à partir de 768 px, la feuille Options d'affichage (dont il est la tête) au téléphone. */
+/** Ouvre Outils (son bouton est dans la barre à toutes tailles depuis RU-5). */
 export const ouvrirOutils = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "outils", langue);
 
 /** Le curseur de page du mode louange (il n'y a plus d'étiquette « page n / N » : FS-A). */

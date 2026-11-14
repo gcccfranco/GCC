@@ -74,7 +74,7 @@ export function Armure({
         aria-label={t("armure.titre")}
         align="end"
         collisionPadding={12}
-        className="w-[min(320px,calc(100vw-24px))] rounded-2xl border border-border bg-popover p-4"
+        className="z-[10000] w-[min(320px,calc(100vw-24px))] rounded-2xl border border-border bg-popover p-4"
       >
         <p className="text-[15px] font-semibold">{t("armure.titre")}</p>
         <p className="mb-3 text-xs text-muted-foreground">{t(portee === "page" ? "armure.pourMoiPage" : "armure.pourMoiAppareil")}</p>
