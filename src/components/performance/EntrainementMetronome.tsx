@@ -74,11 +74,15 @@ function Ligne({ id, gabarit, cases, changerCase, valeurs, changerValeurs, resta
         </span>
       </button>
       <div className="flex min-h-11 min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
-        {gabarit.split(/(\{[a-z]+\})/).map((morceau, i) => {
+        {gabarit.split(/(\{[a-z]+\})/).map((morceau, i, tout) => {
           const m = /^\{([a-z]+)\}$/.exec(morceau);
-          if (!m) return morceau ? <span key={i}>{morceau}</span> : null;
+          // Ponctuation qui suit un champ (« , + », « ，直到 ») : collée au champ, jamais en tête de ligne.
+          const ponct = (x: string | undefined) => /^[,，、:：.。]+/.exec(x ?? "")?.[0] ?? "";
+          if (!m) { const reste = morceau.slice(i > 0 ? ponct(morceau).length : 0).trim(); return reste ? <span key={i}>{reste}</span> : null; }
           const cle = m[1] as keyof Entrainement;
-          return <Champ key={i} cle={cle} valeur={valeurs[cle]} nom={t(`panneauMetronome.champ.${cle}`)} onChange={(n) => changerValeurs({ [cle]: n })} />;
+          const champ = <Champ cle={cle} valeur={valeurs[cle]} nom={t(`panneauMetronome.champ.${cle}`)} onChange={(n) => changerValeurs({ [cle]: n })} />;
+          const p = ponct(tout[i + 1]);
+          return p ? <span key={i} className="inline-flex items-center whitespace-nowrap">{champ}<span>{p}</span></span> : <span key={i} className="contents">{champ}</span>;
         })}
         {coche && restant}
       </div>

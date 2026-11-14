@@ -263,6 +263,29 @@ touchent l'agencement s'ajoutent à `SPECS_GRAND_ECRAN` (cinq projets). Tests su
 
 ## Avancement
 
+- 14/11/2026 : **MT-4 faite, lot MT fini** (décompte, S'entraîner, clavier). Décompte de 1 ou 2 mesures fixé à l'appui sur
+  Marche, sur la même horloge (aucun saut) : la bande porte `data-decompte`, temps allumé en contour épais ; son allumé,
+  un clic par temps (un muet y sonne faible), sans subdivision. Bloc « S'entraîner » replié après Décompte
+  (`EntrainementMetronome.tsx`, `useEntrainement.ts`) : mesures muettes (aucun `start`, bande tramée `data-muette`),
+  accélération (`changerTempoAMesure` dans `metronome.ts` : 62 pile au premier temps de la mesure 5, plafond à « jusqu'à »),
+  minuteur (temps restant m:ss) ; valeurs retenues par appareil (`perf-metro-entrainement`), cases éteintes à chaque
+  ouverture. Q5 : S'entraîner ouvert, le changement de chant ne coupe ni la marche ni le son. Taper partagé
+  (`useTaper.ts`) entre le bouton et la touche T ; `<kbd>` Espace / T seulement avec un clavier, `aria-keyshortcuts`
+  toujours. **Décisions déléguées (session MT-4, 14/11)** : Espace lance et arrête le métronome **seulement quand la bande
+  est affichée ou la fenêtre ouverte** (sinon Espace tourne la page comme avant, pour les pédales) ; rien dans un champ ;
+  le tempo de l'accélération est passager (jamais écrit dans `perf-tempo-<id>`, retour au tempo du chant à l'arrêt ; le
+  grand chiffre du panneau garde le tempo du chant, la bande et ♩ montrent le tempo joué) ; « jusqu'à » plus bas que
+  « de » : pas de ralentissement ; cocher les muettes ou l'accélération en marche compte les mesures depuis l'appui sur
+  Marche (le tempo saute au palier atteint) ; la ponctuation qui suit un champ reste collée à lui (« ，直到 » ne commence
+  plus une ligne). Non fait, à noter : pas de singulier (« Jouer 1 mesures », « après 1 minutes ») ; le haut de la
+  fenêtre en popover rogne le contenu qui défile, sans fondu (existait depuis MT-2) ; les interrupteurs éteints en sombre
+  ont le bouton noir du style existant. Libellés zh neufs à faire relire : 练习, 演奏, 静音, 起始速度, 目标速度, 每次增加,
+  间隔小节数, 剩余, 空格. Tests : `metronome-entrainement` (nouvelle, 14 cas) ; fin de lot `metronome-son`,
+  `metronome-panneau`, `metronome-bande`, `harmonie-ecoute`, `louange-menus`, `mode-louange-forscore` : 745 verts en
+  37 min, deux rouges en passe chargée (`metronome-panneau:303` au téléphone, `mode-louange-forscore:889` à 1 440 px),
+  verts seuls (10/10 en 54 s) ; `metronome-entrainement` revue après la retouche de ponctuation : 42/42 en 3 min 24 s.
+  Captures `regard` (cinq dispositions, clair, sombre, FR, 为我而来).
+
 - 14/11/2026, nuit : **MT-3 faite** (le son). `src/lib/audio/contexte.ts` : un seul `AudioContext`, partagé avec l'écoute
   d'harmonie (`synthese.ts`), créé dans le geste qui allume le son (`audioSession.type = "playback"` essayé), jamais
   fermé ; rien n'est créé son coupé. `hooks/useMetronome.ts` (appelé dans PerformanceMode) : horloge `performance.now()`
