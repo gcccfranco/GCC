@@ -266,6 +266,7 @@ Mentions encore ouvertes à la dernière écriture de chaque section ; plusieurs
 et **n'ont pas été reconfirmées** : vérifier dans le § Avancement de la spec avant d'agir. Les points « à la main »
 (règles, scripts, 中文) sont **à faire confirmer par Timothée** : certains sont peut-être déjà faits.
 
+- **Incohérences d'interface, partout sur le site (parcours à l'œil du 14/11)** : `docs/parcours-oeil-2026-11-14.md`, dix choses à changer en premier, constats par gêne, état des constats du 13/11. Rien de codé : Timothée choisit.
 - **Bug signalé par Timothée (12/11, nuit) : espace vide en haut de la page chant.** **Corrigé sur la branche** (go de Timothée « Corrige directement », 12/11), pas encore sur `main`.
   Reproduit sous Chromium (iPhone 13 et Pixel 7, défilement de 8 px par pas) : 72 px plus bas, 90 px CSS de blanc au-dessus du
   titre (≈ 270 px de l'iPhone), comme sur la capture. Présent sur `main` (沙漠中的骆驼) **et** sur `claude/corrections-design`,
