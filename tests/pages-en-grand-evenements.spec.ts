@@ -401,3 +401,11 @@ test("bo-evenements-5 — fiche de gestion : une colonne de 720 px sous 1 024 px
   await expect(page.getByRole("heading", { name: "Foot au parc" }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Copier le lien" })).toHaveCount(0);
 });
+
+test("agenda vide : « Aucun évènement à venir » écrit une fois (volet de droite en deux volets, liste sinon)", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2027-01-02T10:00:00")); // après 2026 : le Sheet n'est plus lu
+  await fakeFirestore(page, {});
+  await page.goto("/evenements");
+  await expect(page.getByText(/Aucun évènement à venir/).first()).toBeVisible();
+  await expect(page.getByText(/Aucun évènement à venir/)).toHaveCount(1);
+});

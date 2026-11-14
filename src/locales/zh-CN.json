@@ -45,6 +45,10 @@
       "zh": "中文",
       "mixed": "法语 / 中文"
     },
+    "languagesShort": {
+      "fr": "法语",
+      "zh": "中文"
+    },
     "moreActions": "更多操作",
     "retry": "重试",
     "confirm": "确认",

@@ -210,3 +210,17 @@ test.describe("marge Affichage — mesures", () => {
     await expect(page.getByTestId("marge-taille")).toHaveText("110 %");
   });
 });
+
+test("les cinq libellés de disposition sont espacés de 8 px et tiennent sur deux lignes", async ({ page }) => {
+  await ouvrir(page, "abba-pere");
+  const noms = marge(page).locator('[role="radiogroup"].grid-cols-5 > [role="radio"] > span:last-child');
+  await expect(noms).toHaveCount(5);
+  const boites = await noms.evaluateAll((els) => els.map((e) => {
+    const r = e.getBoundingClientRect();
+    return { x: r.x, w: r.width, h: r.height, lh: parseFloat(getComputedStyle(e).lineHeight) };
+  }));
+  for (const [i, b] of boites.entries()) {
+    expect(b.h, `libellé ${i}`).toBeLessThanOrEqual(2 * b.lh + 1);
+    if (i > 0) expect(b.x - (boites[i - 1].x + boites[i - 1].w), `écart ${i - 1}-${i}`).toBeGreaterThanOrEqual(7.5);
+  }
+});

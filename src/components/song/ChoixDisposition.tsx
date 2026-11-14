@@ -78,7 +78,7 @@ function ChoixPanneau({ disposition, changeDisposition, langue, couleur = ACCENT
     <div
       role="radiogroup"
       aria-labelledby={labelledBy}
-      className="grid grid-cols-5 gap-1"
+      className="grid grid-cols-5 gap-2"
       onKeyDown={(e) => {
         // Radiogroup standard : ← ↑ et → ↓ passent à l'entrée voisine en la choisissant.
         const d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
@@ -107,7 +107,7 @@ function ChoixPanneau({ disposition, changeDisposition, langue, couleur = ACCENT
             <span className="block max-w-full rounded-md p-0.5" style={{ boxShadow: choisie ? `0 0 0 2px ${couleur}` : "0 0 0 1px transparent" }}>
               <MiniatureDisposition disposition={d} langue={langue} taille="panneau" />
             </span>
-            <span className={`${NOM} flex-1 ${choisie ? "font-bold" : "font-medium"}`} style={choisie ? { color: couleur } : undefined}>
+            <span className={`${NOM} line-clamp-2 flex-1 ${choisie ? "font-bold" : "font-medium"}`} style={choisie ? { color: couleur } : undefined}>
               {t(`dispositions.${d}`)}
             </span>
           </button>

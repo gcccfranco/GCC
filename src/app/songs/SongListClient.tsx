@@ -340,8 +340,8 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
           }}
           onglets={[
             { id: "all", label: t("songs.list.allLanguages") },
-            { id: "fr", label: "FR" },
-            { id: "zh", label: "中文" },
+            { id: "fr", label: t("common.languagesShort.fr") },
+            { id: "zh", label: t("common.languagesShort.zh") },
           ]}
         />
 
