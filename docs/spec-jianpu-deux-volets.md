@@ -602,6 +602,28 @@ chantier sur ce fichier.
   `formeCourte` / `railEtiquettes` (`src/lib/jianpu/etiquettesSections.ts`), largeurs du rail dans `useVoletsScan` et
   `tranchesDe` ; tests `harmonie-jianpu.spec.ts` (`ATTENDUES`, `verifierEtiquettes`). Vérifier : cinq projets,
   `npm run jianpu:audit` sur un chant (aucune pastille sur l'encre), captures FR et 中文, clair et sombre.
+- 14/11/2026 : **Six choix des Finitions codés** (`fb1f64ec`, un commit : les points touchent le même composant).
+  (2 + 7) le rail du scan porte **une pastille ronde par section**, sigles de l'en-tête (`abbreviateSection` : C1, C2, R,
+  P, I, Pr, Tag…, les mêmes en fr et en 中文), empilées quand plusieurs sections commencent sur la ligne ; nom entier en
+  `title` et `aria-label`. (1) **Décision déléguée (session, 14/11)** : la pastille de l'en-tête (fond teinté, lettre de
+  la couleur) tombe à 3,3:1 en clair pour le refrain ; la pastille du rail est donc **pleine** à la couleur `--sec-*`
+  (tons inchangés), encre #0e0e10 ou `--rep-encre-claire` selon le ton, la règle des Repères (`PASTILLE_FONCEE`) :
+  ≥ 4,6:1 partout, mesuré par le test. (3) Taille de la pastille `petit` de l'en-tête (26 px et 13 px gras au
+  téléphone, 30 px et 14 px au-delà ; 10-11 px avant) ; rail élargi de 28 à 32 px au téléphone, 56 au-delà ; jamais sur
+  l'encre. (4) Zone de toucher 44 × 44 en `pointer:coarse` par un `::after`, dessin inchangé ; l'ellipse est sur le texte
+  (un `overflow` sur le bouton rognait la zone, vu par le relecteur) ; test de toucher réel (`elementFromPoint`), qui
+  échoue si l'on remet l'`overflow`. Deux pastilles empilées partagent leurs bords de zone (accepté). (5) **Décision
+  déléguée (session, 14/11)** : une pastille par section, chacune ouvre **son** bloc (C2 → Couplet 2 / 主歌 2) :
+  l'étiquette et le bloc ouvert disent la même chose. `formeCourte` est retirée. Tests : les cinq specs, cinq projets :
+  413 passés, 51 sautés, 1 échec instable (`harmonie-jianpu:142`, Crayon, hors rail, passé trois fois de suite à la
+  relance) (**16,3 min**) ; `-g JV-5c` deux fois (≈ 1,7 min). tsc, lint : 0 erreur. `jianpu:audit 为我而来` : encre et
+  calque intacts (l'audit tourne sans accès Harmonie : pas de pastille à y voir). Captures `regard` (45, page chant,
+  Partitions, louange ; fr clair, 中文 clair, 中文 sombre en louange) : aucune pastille sur l'encre, aucun sigle rogné,
+  contraste correct ; ouvertes : Partitions tablette, page chant 中文 ordinateur. **Non vérifié** : page chant en
+  sombre (non capturée ; contraste calculé). **Vu en passant, hors périmètre** : le volet ouvert en louange couvre la
+  pastille touchée au téléphone et à la tablette ; titres d'idées d'harmonie en français dans la version 中文
+  (« Le 2m7 à la place du 4 »…). Piège : `npm run jianpu:audit` laisse un `next dev` sur 3100, que Playwright
+  réutilise (tous les tests JV-5c tombent) : l'arrêter avant de relancer.
 - **14/11/2026 (nuit du 13), idées d'harmonie : ancienne / nouvelle progression** (go de Timothée du 13/11 : « Tu as mon
   go pour la distinction entre ancienne et nouvelle » ; code `33417017`, testé ici). Défaut trouvé par le nouveau test :
   `.font-chord` (`globals.css`, couche utilities) l'emportait sur `text-muted-foreground`, l'ancienne restait bleue ;
