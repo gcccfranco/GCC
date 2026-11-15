@@ -104,6 +104,26 @@ for (const etat of ["reduite", "depliee"] as const) {
       });
     }
 
+    if (etat === "reduite") {
+      // B13 (CI-17) : le rail réduit (ordinateur replié, tablette couchée) : un nom sous chaque icône, un seul élément actif
+      // (l'entrée de page, pas l'espace), la langue et le thème d'un membre au pied.
+      test("rail réduit : noms sous les icônes, un seul actif, langue et thème au pied", async ({ page }, info) => {
+        test.skip(!aBarreLaterale(info), "rail réduit : ordinateur et tablette couchée");
+        await ouvrir(page, etat, "/planning");
+        const barre = page.locator(".barre-laterale").filter({ visible: true }).first();
+        const espaces = barre.getByTestId("selecteur-icones").getByRole("link");
+        await expect(espaces.first()).toBeVisible();
+        for (const lien of await espaces.all()) {
+          const b = (await lien.boundingBox())!;
+          expect(b.height, "entrée du sélecteur : 44 px au moins").toBeGreaterThanOrEqual(43);
+          await expect(lien.locator("span"), "un nom sous l'icône").toHaveText((await lien.getAttribute("aria-label"))!);
+        }
+        await expect(barre.getByTestId("selecteur-icones").locator("a[aria-current=true]"), "l'espace courant sans fond").toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+        await expect(barre.getByRole("button", { name: /^Mode (clair|sombre)$/ }).filter({ visible: true }), "le thème au pied").not.toHaveCount(0);
+        await expect(barre.getByRole("button", { name: /^(Changer en français|切换为中文)$/ }).filter({ visible: true }), "la langue au pied").not.toHaveCount(0);
+      });
+    }
+
     test("accueil du Planning : « Ce dimanche » part du bord de la zone de contenu et la remplit, trois appareils", async ({ page }, info) => {
       test.skip(etat === "depliee" && !info.project.name.startsWith("ordinateur"), "seul l'ordinateur a une barre à déplier");
       await ouvrir(page, etat, "/planning");

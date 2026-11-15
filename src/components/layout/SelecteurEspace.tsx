@@ -120,9 +120,8 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
 
   const icones: Record<Espace, typeof House> = { app: House, musiciens: Drum, "back-office": ShieldCheck };
 
-  // BO-G, 10 : barre latérale réduite (ordinateur replié, tablette en paysage) : deux icônes, le nom en `aria-label` et
-  // en infobulle. Le CSS ne la montre que dans la barre réduite (`barre-si-reduite`) ; le dessin tient dans 44 px de large,
-  // la cible de toucher à 44 px par un `::after`.
+  // BO-G, 10 : barre latérale réduite (ordinateur replié, tablette en paysage) : icônes avec leur nom en dessous (B13, CI-17 : le courant n'a plus de pastille, seule l'entrée de page garde le fond noir), le nom aussi en `aria-label` et
+  // en infobulle. Le CSS ne la montre que dans la barre réduite (`barre-si-reduite`) ; chaque entrée fait 44 px de haut au moins.
   if (compact) {
     const icone = (e: Espace, libelle: string, Icone: typeof House) => (
       <Link
@@ -131,11 +130,12 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
         aria-label={libelle}
         title={libelle}
         aria-current={e === espace ? "true" : undefined}
-        className={`relative flex h-9 w-9 items-center justify-center rounded-full after:absolute after:-inset-1 after:content-[''] transition-[background-color,color] duration-150 ${
-          e === espace ? "bg-pose text-foreground" : "text-muted-foreground hover:text-foreground"
+        className={`flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-150 ${
+          e === espace ? "text-foreground" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         <Icone className="h-[18px] w-[18px]" aria-hidden />
+        <span aria-hidden className="-mx-2 line-clamp-2 block w-[calc(100%+16px)] text-center text-[10px] font-semibold leading-[11px] tracking-[-0.01em]">{libelle}</span>
       </Link>
     );
     // Le filet de 1 px sépare les espaces des pages (dimanche-20) ; comme le groupe, le CSS ne le montre que réduit.
@@ -145,7 +145,7 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
           role="group"
           aria-label={t("backOffice.selecteur.aria")}
           data-testid="selecteur-icones"
-          className="barre-si-reduite w-11 shrink-0 flex-col items-center gap-2 rounded-full bg-secondary p-1"
+          className="barre-si-reduite w-full shrink-0 flex-col items-center gap-0.5"
         >
           {segments.map((e) => icone(e, libelles[e], icones[e]))}
         </div>
