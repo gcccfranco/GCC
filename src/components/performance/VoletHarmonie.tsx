@@ -14,7 +14,6 @@ import { ChantDesAccords, type IciDuChant } from "@/components/accords/AccordsPr
 import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { getTransposedKey } from "@/lib/transpose";
-import { largeurZoneLaterale } from "@/lib/performance/gestes";
 import { compter } from "@/lib/usage";
 
 const cle = (uid: string | null) => (uid ? `perf-idees-harmonie-${uid}` : "perf-idees-harmonie");
@@ -99,16 +98,6 @@ const noterAccord = (e: { target: EventTarget }) => {
   const accord = (e.target as HTMLElement).closest?.<HTMLElement>("[data-accord-touchable]");
   if (accord) dernierTouche = accord;
 };
-/** AL-2 : dans une bande latérale (même zone que `handlePointerUp`) l'accord ne s'ouvre pas : le toucher tourne la page. */
-const bloquerBande = (e: React.MouseEvent) => {
-  // Au clavier (Entrée, Espace), le click n'a pas de position (`detail` 0) : l'accord s'ouvre toujours.
-  if (e.detail === 0 || !(e.target as HTMLElement).closest?.("[data-accord-touchable]")) return;
-  let grossier = false;
-  try { grossier = window.matchMedia("(pointer: coarse)").matches; } catch { /* sans matchMedia : zones par défaut */ }
-  const zone = largeurZoneLaterale(window.innerWidth, window.innerHeight, grossier);
-  if (e.clientX < window.innerWidth * zone || e.clientX > window.innerWidth * (1 - zone)) { e.stopPropagation(); e.preventDefault(); }
-};
-
 /** Rend le nom de la section touchable (`NomSection`, SongView) ; le toucher ne remonte pas jusqu'à la page qui tourne.
  *  `contents` : aucune boîte ajoutée, la mesure des pages ne change pas. Les accords restent inertes (fournisseur inactif). */
 export function NomsTouchables({ block, children }: { block: SectionBlock; children: ReactNode }) {
@@ -121,7 +110,7 @@ export function NomsTouchables({ block, children }: { block: SectionBlock; child
   };
   return (
     <ChantDesAccords chant={{ slug: block.songSlug, titre: block.songTitle }} tonalite={getTransposedKey(block.keyChange ?? block.songKey, -(block.capo ?? 0))} ici={ici} sansNoms={!noms}>
-      <div className="contents" onPointerDown={(e) => { noterAccord(e); arret(e); }} onPointerUp={arret} onPointerCancel={arret} onClickCapture={bloquerBande}>{children}</div>
+      <div className="contents" onPointerDown={(e) => { noterAccord(e); arret(e); }} onPointerUp={arret} onPointerCancel={arret}>{children}</div>
     </ChantDesAccords>
   );
 }
@@ -137,7 +126,7 @@ export function ScanTouchable({ block, children }: { block: JianpuSheetBlock; ch
   };
   return (
     <ChantDesAccords chant={{ slug: block.songSlug, titre: block.songTitle }} tonalite={block.songKey} ici={ici} sansNoms={!noms}>
-      <div className="contents" onPointerDown={(e) => { noterAccord(e); arret(e); }} onPointerUp={arret} onPointerCancel={arret} onClickCapture={bloquerBande}>{children}</div>
+      <div className="contents" onPointerDown={(e) => { noterAccord(e); arret(e); }} onPointerUp={arret} onPointerCancel={arret}>{children}</div>
     </ChantDesAccords>
   );
 }

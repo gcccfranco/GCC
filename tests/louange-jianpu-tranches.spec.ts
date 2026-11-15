@@ -2,17 +2,17 @@ import { readFileSync } from "fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreCompteur, fermerBarre, lireCompteur, onStage, ouvrirMenu } from "./helpers/louange";
-import { bornesX, coupeMilieu, ECART_MOITIES, ECART_SYSTEMES, tranchesDemiLignes, tranchesScan } from "../src/lib/performance/tranchesScan";
 
-// Lot JP-B, tranche 1 (docs/spec-mode-louange-forscore-2.md) : un scan 简谱 certifié (`systemes.json`) se coupe
-// entre deux lignes, une page d'écran par tranche, en une seule feuille large ; un scan non certifié garde
-// l'affichage d'aujourd'hui. Aucun accès Firestore réel : tout est simulé (`signInAs`).
+// Lot CL, CL-1 (docs/spec-corrections-louange.md) : une page de partition 简谱 tient entière sur une page d'écran
+// (rendu `fit`, sans tranche), à toutes les tailles ; l'interrupteur « 2 colonnes » ne vaut que pour les chants en texte.
+// (Ex-lot JP-B : la découpe en tranches est retirée.) Aucun accès Firestore réel : tout est simulé (`signInAs`).
 
 type Ligne = { y0: number; y1: number; barres: number[]; masques?: number[][] };
 type Systemes = { version: number; chants: Record<string, { pages: { file: string; w: number; h: number; lignes: Ligne[] }[] }> };
 const SYSTEMES = JSON.parse(readFileSync("public/jianpu/systemes.json", "utf8")) as Systemes;
 
 const UN = "一生爱你"; // un scan d'une page, gravé en E
+const UNE = "恒久恒久以前"; // un scan d'une page
 const DEUX = "为我而来"; // un scan de deux pages
 const MASQUES = "大手牵着小手"; // lignes imbriquées : masques
 const FR = "abba-pere"; // chant sans scan
@@ -37,8 +37,6 @@ async function ouvrirLouange(
   await page.addInitScript(
     ([role, sombre, zh]) => {
       localStorage.setItem("perf-role-preset", role as string);
-      // Lignes entières : « 2 colonnes » éteint (en deux colonnes de demi-lignes : louange-jianpu-deux-colonnes, JV-4).
-      localStorage.setItem("perf-two-columns", "0");
       if (sombre) localStorage.setItem("theme", "dark");
       if (zh) localStorage.setItem("i18nextLng", "zh-CN");
     },
@@ -67,9 +65,9 @@ async function lancerLouange(page: Page) {
   await expect(page.getByText("Mise en page…")).toHaveCount(0, { timeout: 20_000 });
 }
 
-/** Attend que la pagination en tranches soit faite et stable (systemes.json arrivé, nombre de pages inchangé). */
-async function attendreTranches(page: Page) {
-  await expect(onStage(page, "[data-jianpu-tranche]").first()).toBeAttached({ timeout: 30_000 });
+/** Attend que la pagination soit faite et stable (systemes.json arrivé, nombre de pages inchangé). */
+async function attendrePages(page: Page) {
+  await expect(onStage(page, "[data-jianpu-fenetre]").first()).toBeAttached({ timeout: 30_000 });
   let dernier = "";
   await expect(async () => {
     const lu = (await lireCompteur(page)).split("/")[1];
@@ -81,7 +79,6 @@ async function attendreTranches(page: Page) {
 
 type Ecran = {
   titre: string;
-  tranche: string | null;
   masques: number;
   /** Masques dans le groupe filtré, en % de la hauteur de page (style top / height). */
   masquesFiltre: { top: number; height: number }[];
@@ -108,12 +105,11 @@ async function lireEcranUneFois(page: Page): Promise<Ecran> {
     const f = Array.from(document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-jianpu-fenetre]")).find(
       (e) => !e.closest("[aria-hidden=true]"),
     );
-    // Une tranche certifiée n'a plus d'en-tête d'une ligne (la tête de feuille ne répète pas le titre) : il est dans la barre de titre.
     const titre =
       document.querySelector("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *) h2")?.textContent ??
       document.querySelector("[data-performance-mode] [data-barre-haut] p")?.textContent ??
       "";
-    if (!f) return { titre, tranche: null, masques: 0, masquesFiltre: [], fenetre: null, pageW: 0, labels: [] };
+    if (!f) return { titre, masques: 0, masquesFiltre: [], fenetre: null, pageW: 0, labels: [] };
     const r = f.getBoundingClientRect();
     const labels = Array.from(f.querySelectorAll<HTMLElement>("[data-jianpu-label]"))
       .filter((l) => (l.textContent ?? "").trim() !== "" && l.getAttribute("data-jianpu-opt") !== "hidden")
@@ -123,7 +119,6 @@ async function lireEcranUneFois(page: Page): Promise<Ecran> {
       });
     return {
       titre,
-      tranche: f.getAttribute("data-jianpu-tranche"),
       masques: f.querySelectorAll("[data-jianpu-masque]").length,
       masquesFiltre: Array.from(f.querySelectorAll<HTMLElement>("[data-jianpu-filtre] [data-jianpu-masque]")).map((m) => ({
         top: parseFloat(m.style.top),
@@ -152,207 +147,124 @@ async function parcourir(page: Page, capture?: (n: number, e: Ecran) => Promise<
   return out;
 }
 
-const tranchesDe = (ecrans: Ecran[], titre: string) => ecrans.filter((e) => e.titre === titre && e.tranche).map((e) => e.tranche!);
-const bornes = (t: string) => t.split("-").map(Number) as [number, number];
 
-// ─── (a) tranchesScan, pur ──────────────────────────────────────────────────
+const SECTIONS = JSON.parse(readFileSync("public/jianpu/sections.json", "utf8")) as {
+  chants: Record<string, { sections: { id: string; page: number; ligne: number; anacrouse: boolean }[] }>;
+};
 
-test.describe("tranchesScan (pur)", () => {
-  // Cinq lignes de 100 px image, 20 px d'écart, page de 700 px.
-  const lignes = [0, 1, 2, 3, 4].map((k) => ({ y0: 20 + k * 120, y1: 119 + k * 120 }));
+// ─── Géométrie de la page entière ───────────────────────────────────────────
 
-  test("empile des lignes entières et coupe entre deux lignes, jamais au milieu", () => {
-    // Échelle 1 : 2 lignes + marges = 100 + 20 + 100 + 20 = 240 ; trois lignes = 360.
-    const t = tranchesScan(lignes, 700, 1000, 1000, 300);
-    expect(t.map((x) => [x.premiere, x.derniere])).toEqual([[0, 1], [2, 3], [4, 4]]);
-    for (const x of t) {
-      expect(x.y0).toBeLessThanOrEqual(lignes[x.premiere].y0);
-      expect(x.y1).toBeGreaterThanOrEqual(lignes[x.derniere].y1);
-      expect((x.y1 - x.y0) * 1).toBeLessThanOrEqual(300);
-    }
-    // Aucune ligne n'est coupée : une tranche ne recouvre aucune ligne voisine d'une autre tranche.
-    for (let k = 1; k < t.length; k++) expect(t[k].y0).toBeGreaterThanOrEqual(lignes[t[k - 1].derniere].y1);
+type R = { x: number; y: number; right: number; bottom: number };
+type Geo = {
+  page: number;
+  nbFenetres: number;
+  tranche: string | null;
+  cle: string;
+  fen: R;
+  pageR: R;
+  filtre: R;
+  calque: R | null;
+  barreBas: number;
+  suivants: R[];
+  innerH: number;
+  innerW: number;
+};
+
+/** Ce que mesure l'écran courant : fenêtre, page, groupe filtré, calque, barre du haut, pastilles « Ensuite ». `null` : pas de scan. */
+async function lireGeo(page: Page): Promise<Geo | null> {
+  return page.evaluate(() => {
+    const vu = (e: Element) => !e.closest("[aria-hidden=true]");
+    const rect = (e: Element) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, right: r.right, bottom: r.bottom }; };
+    const fs = Array.from(document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-jianpu-fenetre]")).filter(vu);
+    if (fs.length === 0) return null;
+    const f = fs[0];
+    const pg = f.querySelector<HTMLElement>("[data-jianpu-page]")!;
+    return {
+      page: Number(pg.getAttribute("data-jianpu-page")),
+      nbFenetres: fs.length,
+      tranche: f.getAttribute("data-jianpu-tranche"),
+      cle: document.querySelector("[data-performance-mode]")!.getAttribute("data-cle-page") ?? "",
+      fen: rect(f),
+      pageR: rect(pg),
+      filtre: rect(f.querySelector("[data-jianpu-filtre]")!),
+      calque: ((c) => (c ? rect(c) : null))(f.querySelector("[data-jianpu-calque]")),
+      barreBas: document.querySelector("[data-performance-mode] [data-barre-haut]")!.getBoundingClientRect().bottom,
+      suivants: Array.from(document.querySelectorAll("[data-performance-mode] [data-suivant]")).filter(vu).map(rect),
+      innerH: innerHeight,
+      innerW: innerWidth,
+    };
   });
+}
 
-  test("tout tient : une seule tranche ; l'échelle vient de la largeur, on ne rapetisse jamais", () => {
-    expect(tranchesScan(lignes, 700, 1000, 1000, 10_000)).toHaveLength(1);
-    // Feuille deux fois plus large que l'encre : l'échelle double, les tranches raccourcissent.
-    const t = tranchesScan(lignes, 700, 500, 1000, 300);
-    expect(t.map((x) => x.derniere - x.premiere + 1)).toEqual([1, 1, 1, 1, 1]);
-  });
-
-  test("une ligne plus haute que l'écran fait sa tranche seule", () => {
-    const t = tranchesScan(lignes, 700, 1000, 1000, 50);
-    expect(t).toHaveLength(5);
-    expect(t.every((x) => x.premiere === x.derniere)).toBe(true);
-  });
-
-  test("marges : au plus 12 px, la moitié de l'écart, 0 quand les lignes se chevauchent", () => {
-    const [seule] = tranchesScan([{ y0: 60, y1: 160 }], 700, 1000, 1000, 1000);
-    expect(seule.y0).toBe(48); // 60 px au-dessus (bord de page) : plafonné à 12
-    const proches = [{ y0: 100, y1: 200 }, { y0: 210, y1: 300 }]; // écart 10 : 5 px de chaque côté
-    const [a, b] = tranchesScan(proches, 400, 1000, 1000, 120);
-    expect(a.y1).toBe(205);
-    expect(b.y0).toBe(205);
-    const chevauchent = [{ y0: 100, y1: 200 }, { y0: 190, y1: 300 }];
-    const [c, d] = tranchesScan(chevauchent, 400, 1000, 1000, 120);
-    expect(c.y1).toBe(200);
-    expect(d.y0).toBe(190);
-  });
-
-  test("la dernière tranche garde la place de « Ensuite »", () => {
-    expect(tranchesScan(lignes, 700, 1000, 1000, 620)).toHaveLength(1);
-    expect(tranchesScan(lignes, 700, 1000, 1000, 620, 100)).toHaveLength(2);
-  });
-
-  test("coupeMilieu : la barre la plus proche du milieu, ni la barre finale ni une barre hors de ]x0, x1[", () => {
-    expect(coupeMilieu([100, 200, 310, 400], 0, 400)).toBe(200);
-    expect(coupeMilieu([100, 400], 0, 400)).toBe(100); // la dernière (400) est la barre finale
-    expect(coupeMilieu([400], 0, 400)).toBeNull();
-    expect(coupeMilieu([], 0, 400)).toBeNull();
-    expect(coupeMilieu([100, 260, 400], 150, 400)).toBe(260); // 100 est hors de ]150, 400[
-  });
-
-  test("tranchesDemiLignes : deux moitiés empilées par ligne coupée, ligne entière sinon, échelle commune, jamais de coupe dans un système", () => {
-    const cou = lignes.slice(0, 3).map((l) => ({ ...l, barres: [200, 400, 600, 800] }));
-    const [une] = tranchesDemiLignes(cou, 700, 0, 800, 400, 10_000);
-    expect(une.demi!.echelle).toBe(1); // 400 px de large pour des moitiés de 400
-    expect(une.demi!.fenetres.map((f) => f.moitie)).toEqual(["g", "d", "g", "d", "g", "d"]);
-    expect(une.demi!.fenetres.slice(0, 2).map((f) => [f.x0, f.x1, f.y0 === une.demi!.fenetres[0].y0])).toEqual([[0, 400, true], [400, 800, true]]);
-    // Une ligne sans barre intermédiaire reste entière, à la largeur de la feuille : l'échelle commune baisse.
-    const ent = lignes.slice(0, 3).map((l) => ({ ...l, barres: [800] }));
-    const [toutes] = tranchesDemiLignes(ent, 700, 0, 800, 400, 10_000);
-    expect(toutes.demi!.fenetres.every((f) => f.moitie === undefined)).toBe(true);
-    expect(toutes.demi!.echelle).toBe(0.5);
-    // Un système (2 × 130 + 2 px) par page : on ne coupe jamais au milieu.
-    const t = tranchesDemiLignes(cou, 700, 0, 800, 400, 264);
-    expect(t.map((x) => [x.premiere, x.derniere])).toEqual([[0, 0], [1, 1], [2, 2]]);
-    expect(t.every((x) => x.demi!.fenetres.length === 2)).toBe(true);
-    // Deux systèmes tiennent : 2 × (2 × h) + 2 + 2 + 24.
-    const h = (f: { y0: number; y1: number }) => f.y1 - f.y0;
-    const f = tranchesDemiLignes(cou.slice(0, 2), 700, 0, 800, 400, 10_000)[0].demi!.fenetres;
-    expect(tranchesDemiLignes(cou.slice(0, 2), 700, 0, 800, 400, 2 * h(f[0]) + ECART_MOITIES + ECART_SYSTEMES + 2 * h(f[2]) + ECART_MOITIES)).toHaveLength(1);
-    expect(tranchesDemiLignes(cou.slice(0, 2), 700, 0, 800, 400, 2 * h(f[0]) + ECART_MOITIES + ECART_SYSTEMES + 2 * h(f[2]) + ECART_MOITIES - 1)).toHaveLength(2);
-  });
-
-  test("tranchesDemiLignes : un système plus haut que l'écran fait sa page, à l'échelle qui le fait tenir en hauteur", () => {
-    const haut = [{ y0: 0, y1: 999, barres: [200, 400, 600, 800] }];
-    const [t] = tranchesDemiLignes(haut, 1000, 0, 800, 400, 300);
-    const fs = t.demi!.fenetres;
-    const rendue = fs.reduce((a, f, n) => a + (f.y1 - f.y0) * t.demi!.echelle + (n === 0 ? 0 : f.moitie === "d" ? ECART_MOITIES : ECART_SYSTEMES), 0);
-    expect(t.demi!.echelle).toBeLessThan(1);
-    expect(rendue).toBeLessThanOrEqual(300 + 1e-6);
-  });
-
-  test("bornesX : l'encre plus 16 px d'air, dans la page", () => {
-    expect(bornesX(1377, [30, 20])).toEqual({ x0: 14, x1: 1377 - 20 + 16 });
-    expect(bornesX(1377, [5, 5])).toEqual({ x0: 0, x1: 1377 });
-    expect(bornesX(1377, undefined)).toEqual({ x0: 0, x1: 1377 });
-  });
-});
-
-// ─── (b) le scan occupe plusieurs écrans ────────────────────────────────────
-
-test("un scan certifié se coupe entre deux lignes : un écran par tranche, contiguës, la suivante commence à la ligne suivante", async ({ page }, info) => {
-  test.setTimeout(120_000);
-  test.skip(page.viewportSize()!.width < 700, "téléphone en portrait : demi-lignes (JP-C), voir les tests « téléphone »");
-  await ouvrirLouange(page);
-  await attendreTranches(page);
-  await fermerBarre(page);
-  const ecrans = await parcourir(page);
-  const lignes = SYSTEMES.chants[UN].pages[0].lignes;
-  const t = tranchesDe(ecrans, UN).map(bornes);
-  if (page.viewportSize()!.width >= 700) expect(t.length, "ne tient pas sur un écran").toBeGreaterThan(1);
-  expect(t.length).toBeGreaterThanOrEqual(1);
-  // Lignes entières contenues dans chaque tranche : elles se suivent, sans trou ni doublon.
-  let prochaine = 0;
-  for (const [y0, y1] of t) {
-    const dedans = lignes.map((l, k) => [k, l] as const).filter(([, l]) => l.y0 >= y0 && l.y1 <= y1).map(([k]) => k);
-    expect(dedans.length, `tranche ${y0}-${y1} contient au moins une ligne`).toBeGreaterThan(0);
-    expect(dedans[0], "la page suivante commence à la ligne suivante").toBe(prochaine);
-    expect(dedans.at(-1)! - dedans[0] + 1, "lignes consécutives").toBe(dedans.length);
-    prochaine = dedans.at(-1)! + 1;
-    // Aucune ligne n'est coupée : celles qui touchent la tranche y sont entières.
-    for (const l of lignes) if (l.y1 > y0 && l.y0 < y1 && !(l.y0 >= y0 && l.y1 <= y1)) {
-      // Seule une ligne qui chevauche sa voisine (m = 0) peut dépasser, jamais de plus de son recouvrement.
-      const voisine = lignes.find((v) => v !== l && v.y0 >= y0 && v.y1 <= y1 && v.y0 < l.y1 && l.y0 < v.y1);
-      expect(voisine, `ligne ${l.y0}-${l.y1} coupée par ${y0}-${y1}`).toBeTruthy();
-    }
+/** Parcourt toutes les pages d'écran et rend la géométrie de chacune (`null` : sans scan). */
+async function parcourirGeo(page: Page): Promise<(Geo | null)[]> {
+  const total = Number((await lireCompteur(page)).split("/")[1]);
+  const out: (Geo | null)[] = [];
+  for (let n = 1; n <= total; n++) {
+    await attendreCompteur(page, `${n} / ${total}`);
+    await page.waitForTimeout(200);
+    out.push(await lireGeo(page));
+    if (n < total) await page.keyboard.press("ArrowRight");
   }
-  expect(prochaine, "toutes les lignes sont montrées").toBe(lignes.length);
-  expect(t.length).toBeGreaterThanOrEqual(1);
-  // Le scan de deux pages : chaque page se coupe aussi.
-  expect(tranchesDe(ecrans, DEUX).length).toBeGreaterThanOrEqual(2);
-  // Le chant sans scan n'a aucune tranche.
-  expect(ecrans.some((e) => e.titre !== UN && e.titre !== DEUX && e.titre !== MASQUES && e.tranche)).toBe(false);
-  info.annotations.push({ type: "tranches", description: `${UN} : ${t.length}` });
+  return out;
+}
+
+const chevauche = (a: R, b: R) => a.x < b.right - 1 && b.x < a.right - 1 && a.y < b.bottom - 1 && b.y < a.bottom - 1;
+
+// ─── La page entière ────────────────────────────────────────────────────────
+
+test("la page entière tient dans l'écran : 恒久恒久以前 (une page) et 为我而来 (deux pages), sans tranche, aucune ligne coupée, calque calé sur l'image", async ({ page }) => {
+  test.setTimeout(150_000);
+  await ouvrirLouange(page, { chants: [UNE, DEUX, FR] });
+  await attendrePages(page);
+  await fermerBarre(page);
+  const geos = (await parcourirGeo(page)).filter((g): g is Geo => !!g);
+  expect(geos.length, "une page d'écran par page de partition : 1 + 2").toBe(1 + SYSTEMES.chants[DEUX].pages.length);
+  const pages = [...SYSTEMES.chants[UNE].pages, ...SYSTEMES.chants[DEUX].pages];
+  geos.forEach((g, n) => {
+    expect(g.nbFenetres, `écran ${n + 1} : une seule fenêtre`).toBe(1);
+    expect(g.tranche, `écran ${n + 1} : sans tranche`).toBeNull();
+    expect(g.cle, `écran ${n + 1} : clé de la page entière`).toMatch(/j[23]$/);
+    // Entier dans le viewport.
+    expect(g.fen.x).toBeGreaterThanOrEqual(-0.5);
+    expect(g.fen.y).toBeGreaterThanOrEqual(-0.5);
+    expect(g.fen.right).toBeLessThanOrEqual(g.innerW + 0.5);
+    expect(g.fen.bottom, `écran ${n + 1} : au-dessus du bas de l'écran`).toBeLessThanOrEqual(g.innerH + 0.5);
+    // Sous la barre du haut, au-dessus de la pastille « Ensuite ».
+    expect(g.fen.y, `écran ${n + 1} : sous la barre du haut`).toBeGreaterThanOrEqual(Math.min(g.barreBas, g.fen.bottom) - 1);
+    for (const s of g.suivants) expect(chevauche(g.fen, s), `écran ${n + 1} : la pastille ne recouvre pas le scan`).toBe(false);
+    // Calque calé sur l'image (à 1,5 px près).
+    // Le calque n'est rendu que sur un chant transposé (première page) : ici, calé s'il est là ; le test « transposé (G) » le vérifie.
+    if (g.calque) for (const k of ["x", "y", "right", "bottom"] as const) expect(Math.abs(g.calque[k] - g.filtre[k]), `écran ${n + 1} : calque ${k}`).toBeLessThanOrEqual(1.5);
+    // Aucune ligne coupée : chaque ligne de systemes.json est dans la fenêtre.
+    const p = pages[n];
+    const echelle = (g.pageR.bottom - g.pageR.y) / p.h;
+    for (const [k, l] of p.lignes.entries()) {
+      expect(g.pageR.y + l.y0 * echelle, `écran ${n + 1}, ligne ${k + 1} : haut`).toBeGreaterThanOrEqual(g.fen.y - 1.5);
+      expect(g.pageR.y + l.y1 * echelle, `écran ${n + 1}, ligne ${k + 1} : bas`).toBeLessThanOrEqual(g.fen.bottom + 1.5);
+    }
+  });
 });
 
-// ─── (c) taille de lecture ──────────────────────────────────────────────────
+// ─── Clés d'annotation ──────────────────────────────────────────────────────
 
-test("taille de lecture (tablette portrait, tablette paysage, ordinateur) : un chiffre fait au moins 17 px à l'œil — au téléphone en portrait, pas d'exigence (JP-C)", async ({ page }) => {
+test("chaque page de scan a sa clé de page entière j2 / j3, jamais une clé de tranche", async ({ page }) => {
   test.setTimeout(90_000);
-  test.skip(page.viewportSize()!.width < 700, "téléphone en portrait : JP-C");
-  await ouvrirLouange(page, { chants: [UN, FR] });
-  await attendreTranches(page);
-  const { w } = SYSTEMES.chants[UN].pages[0];
-  const e = await lireEcran(page);
-  const chiffre = 36 * (e.pageW / w);
-  expect(chiffre, `chiffre de ${chiffre.toFixed(1)} px`).toBeGreaterThanOrEqual(17);
-  // Une seule feuille : pas de colonne de structure à gauche, même en paysage.
-  await expect(page.locator("[data-performance-mode] [data-colonne-scan]")).toHaveCount(0);
-  // Pleine largeur de la zone de page, bornée à 1 040 px.
-  const vw = page.viewportSize()!.width;
-  expect(e.fenetre!.width).toBeLessThanOrEqual(1040 + 0.5);
-  expect(e.fenetre!.width).toBeGreaterThanOrEqual(Math.min(1040, vw - 8) - 24);
-});
-
-// ─── (d) clés d'annotation ──────────────────────────────────────────────────
-
-test("deux tranches d'un même scan ont deux clés j4-<y0> distinctes", async ({ page }) => {
-  test.setTimeout(90_000);
-  test.skip(page.viewportSize()!.width < 700, "téléphone : le scan peut tenir en une tranche");
   const lues: string[] = [];
   page.on("request", (r) => {
     const m = r.url().match(/\/documents\/(annotations\/[^?]+)/);
-    // La clé de la page entière d'avant JP-B (j2 / j3) est lue aussi, pour le bandeau : on ne garde que les clés de tranche.
-    if (m && r.method() === "GET" && /j4-\d+$/.test(m[1])) lues.push(decodeURIComponent(m[1]));
+    if (m && r.method() === "GET") lues.push(decodeURIComponent(m[1]));
   });
-  await ouvrirLouange(page, { chants: [UN, FR] });
-  await attendreTranches(page);
-  await expect.poll(() => lues.at(-1) ?? "").toMatch(/j4-\d+$/);
-  const premiere = lues.at(-1)!;
-  const t0 = bornes((await lireEcran(page)).tranche!)[0];
-  expect(premiere).toMatch(new RegExp(`j4-${t0}$`));
-  await page.keyboard.press("ArrowRight");
-  await expect.poll(() => lues.at(-1)).not.toBe(premiere);
-  const seconde = lues.at(-1)!;
-  const t1 = bornes((await lireEcran(page)).tranche!)[0];
-  expect(t1).not.toBe(t0);
-  expect(seconde).toMatch(new RegExp(`j4-${t1}$`));
+  await ouvrirLouange(page, { chants: [UN, DEUX, FR] });
+  await attendrePages(page);
+  const geos = (await parcourirGeo(page)).filter((g): g is Geo => !!g);
+  expect(geos.length).toBeGreaterThanOrEqual(3);
+  for (const g of geos) expect(g.cle).toMatch(/j[23]$/);
+  expect(new Set(geos.map((g) => g.cle)).size, "deux pages de 为我而来 : deux clés distinctes").toBe(geos.length);
+  expect(lues.some((c) => /j[456]-\d+$/.test(c)), "aucune clé de tranche lue").toBe(false);
 });
 
-test("traits posés avant JP-B sous la clé de la page entière (j2 / j3) : bandeau sur l'écran de tranche, rien n'est écrit", async ({ page }) => {
-  test.setTimeout(90_000);
-  const db = await ouvrirLouange(page, { chants: [UN, FR] });
-  await attendreTranches(page);
-  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-cle-page", /j[45]-\d+$/);
-  const cle = (await page.locator("[data-performance-mode]").getAttribute("data-cle-page"))!;
-  const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
-  const trait = JSON.stringify({ w, h, strokes: [{ tool: "pen", size: 3.5, color: "#dc2626", points: [[w * 0.2, h * 0.5], [w * 0.5, h * 0.5]] }] });
-  // L'écran est tantôt « j2 » tantôt « j3 » selon l'appareil : on pose le trait sous les deux anciennes clés.
-  for (const ancien of ["j2", "j3"]) {
-    db.set(`annotations/${MUSICIEN.uid}__setlist-tranches__${cle.replace(/j[45]-\d+$/, ancien)}`, { strokes: trait, updatedAt: new Date() });
-  }
-  await page.reload();
-  await lancerLouange(page);
-  await attendreTranches(page);
-  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-cle-page", cle);
-  await expect(page.locator("[data-alerte-composition]")).toBeVisible();
-  expect(db.writes.filter((w) => w.path.startsWith("annotations/")), "aucune écriture").toEqual([]);
-});
-
-// ─── (e) scan non certifié : l'affichage d'aujourd'hui ──────────────────────
+// ─── Scan non certifié : l'affichage d'aujourd'hui ──────────────────────────
 
 for (const cas of [
   { nom: "systemes.json sans le chant", repondre: (route: import("@playwright/test").Route) => route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }) },
@@ -394,75 +306,61 @@ for (const cas of [
   });
 }
 
-// ─── (f) masques ────────────────────────────────────────────────────────────
+// ─── Masques ────────────────────────────────────────────────────────────────
 
 const ROYAUME = "荣耀至高神"; // masques entre lignes voisines
 
-/** Les masques d'une tranche, en y image : [y0, y1] (page de hauteur `h`). */
+/** Les masques d'une page, en y image : [y0, y1] (page de hauteur `h`). */
 const masquesY = (e: Ecran, h: number) => e.masquesFiltre.map((m) => [(m.top / 100) * h, ((m.top + m.height) / 100) * h] as const);
 
-test("masques (大手牵着小手, 荣耀至高神) : dans le groupe filtré, seulement pour une voisine hors tranche", async ({ page }) => {
+test("masques (大手牵着小手, 荣耀至高神) : dans le groupe filtré, aucun dans la bande de deux lignes voisines réunies sur la page entière", async ({ page }) => {
   test.setTimeout(120_000);
-  test.skip(page.viewportSize()!.width < 700, "téléphone en portrait : demi-lignes (JP-C), voir les tests « téléphone »");
   await ouvrirLouange(page, { chants: [MASQUES, ROYAUME, FR] });
-  await attendreTranches(page);
+  await attendrePages(page);
   await fermerBarre(page);
-  const page0 = (titre: string) => SYSTEMES.chants[titre].pages[0];
-  const lignes = page0(MASQUES).lignes;
-  expect(lignes[2].masques?.length).toBeGreaterThan(0);
+  expect(SYSTEMES.chants[MASQUES].pages[0].lignes[2].masques?.length).toBeGreaterThan(0);
   const ecrans = await parcourir(page);
   // Tous les masques rendus sont dans le groupe filtré (le filtre les rend transparents).
   for (const e of ecrans) expect(e.masquesFiltre.length, "masques dans [data-jianpu-filtre]").toBe(e.masques);
-  // Deux lignes voisines qui se chevauchent (bande y commune) : dans une tranche qui a les deux, aucun masque dans
-  // cette bande (il effacerait l'encre de l'une pour cacher celle de l'autre, qui est là) ; dans une tranche qui n'a
-  // que l'une des deux, le masque cache le débord de l'autre.
-  const verifierPaires = (titre: string, paires: number[][]) => {
-    const { lignes: ls, h } = page0(titre);
-    const ts = ecrans.filter((e) => e.titre === titre && e.tranche);
-    const a = (e: Ecran, k: number) => {
-      const [y0, y1] = bornes(e.tranche!);
-      return ls[k].y0 >= y0 && ls[k].y1 <= y1;
-    };
-    let separees = 0;
+  // Deux lignes voisines qui se chevauchent (bande y commune) sont toutes deux sur la page : aucun masque dans cette
+  // bande (il effacerait l'encre de l'une pour cacher celle de l'autre, qui est là).
+  const verifier = (titre: string, paires: number[][]) => {
+    const { lignes: ls, h } = SYSTEMES.chants[titre].pages[0];
+    const e = ecrans.find((x) => x.titre === titre && x.fenetre)!;
+    expect(e, `${titre} : un écran de scan`).toBeTruthy();
     for (const [p, q] of paires) {
       const bande = [Math.max(ls[p].y0, ls[q].y0), Math.min(ls[p].y1, ls[q].y1)];
-      for (const e of ts) {
-        if (a(e, p) && a(e, q)) {
-          for (const [b, d] of masquesY(e, h)) {
-            expect(b >= bande[0] - 1 && d <= bande[1] + 1, `${titre} : masque ${Math.round(b)}-${Math.round(d)} dans la bande ${bande.join("-")} des lignes ${p} et ${q} réunies`).toBe(false);
-          }
-        } else if (a(e, p) || a(e, q)) {
-          separees++;
-          expect(e.masques, `${titre} : tranche ${e.tranche}, ligne ${a(e, p) ? p : q} sans sa voisine : elle porte un masque`).toBeGreaterThan(0);
-        }
+      for (const [b, d] of masquesY(e, h)) {
+        expect(b >= bande[0] - 1 && d <= bande[1] + 1, `${titre} : masque ${Math.round(b)}-${Math.round(d)} dans la bande ${bande.join("-")} des lignes ${p} et ${q}`).toBe(false);
       }
     }
-    return separees;
   };
-  verifierPaires(MASQUES, [[1, 2], [3, 4], [4, 5]]);
-  // 荣耀至高神 : paires (0, 1) et (3, 4).
-  verifierPaires(ROYAUME, [[0, 1], [3, 4]]);
+  verifier(MASQUES, [[1, 2], [3, 4], [4, 5]]);
+  verifier(ROYAUME, [[0, 1], [3, 4]]);
   // Un scan sans masque n'en porte pas.
-  const sans = SYSTEMES.chants[UN].pages[0].lignes.every((l) => !l.masques);
-  expect(sans).toBe(true);
+  expect(SYSTEMES.chants[UN].pages[0].lignes.every((l) => !l.masques)).toBe(true);
 });
 
-// ─── (g) transposition : le calque reste dans la fenêtre ────────────────────
+// ─── Transposition : le calque reste dans la fenêtre ────────────────────────
 
-test("transposé (G) : les étiquettes visibles d'une tranche tiennent dans sa fenêtre", async ({ page }) => {
+test("transposé (G) : les étiquettes visibles de la page entière tiennent dans sa fenêtre", async ({ page }) => {
   test.setTimeout(120_000);
-  test.skip(page.viewportSize()!.width < 700, "téléphone : couvert par les autres appareils, le scan y est trop petit pour mesurer");
+  test.skip(page.viewportSize()!.width < 700, "téléphone : le scan y est trop petit pour mesurer");
   await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "G" } });
-  await attendreTranches(page);
+  await attendrePages(page);
   await fermerBarre(page);
+  // Calque calé sur l'image de la page entière (à 1,5 px près).
+  await expect.poll(async () => !!(await lireGeo(page))?.calque, { timeout: 15_000 }).toBe(true);
+  const g = (await lireGeo(page))!;
+  for (const k of ["x", "y", "right", "bottom"] as const) expect(Math.abs(g.calque![k] - g.filtre[k]), `calque ${k}`).toBeLessThanOrEqual(1.5);
   const ecrans = await parcourir(page);
   let vues = 0;
-  for (const e of ecrans.filter((x) => x.titre === UN && x.tranche)) {
+  for (const e of ecrans.filter((x) => x.titre === UN && x.fenetre)) {
     const f = e.fenetre!;
     for (const l of e.labels) {
       const cx = (l.x + l.right) / 2;
       const cy = (l.y + l.bottom) / 2;
-      if (cx < f.x || cx > f.x + f.width || cy < f.y || cy > f.y + f.height) continue; // hors tranche : coupé par la fenêtre
+      if (cx < f.x || cx > f.x + f.width || cy < f.y || cy > f.y + f.height) continue; // hors fenêtre : rogné
       vues++;
       expect(l.x, `${l.c} : bord gauche`).toBeGreaterThanOrEqual(f.x - 1.5);
       expect(l.right, `${l.c} : bord droit`).toBeLessThanOrEqual(f.x + f.width + 1.5);
@@ -473,42 +371,28 @@ test("transposé (G) : les étiquettes visibles d'une tranche tiennent dans sa f
   expect(vues, "des accords transposés sont visibles").toBeGreaterThan(0);
 });
 
-// ─── Captures : un écran de scan par projet, clair et sombre ────────────────
+// ─── Captures ───────────────────────────────────────────────────────────────
 
 for (const sombre of [false, true]) {
-  test(`capture d'un écran de scan, ${sombre ? "sombre" : "clair"}`, async ({ page }, info) => {
+  test(`capture de la page entière d'un scan, ${sombre ? "sombre" : "clair"}`, async ({ page }, info) => {
     test.setTimeout(90_000);
-    await ouvrirLouange(page, { sombre, chants: [UN, FR], cles: { [UN]: "G" } });
-    await attendreTranches(page);
+    await ouvrirLouange(page, { sombre, chants: [UNE, FR] });
+    await attendrePages(page);
     await fermerBarre(page);
     await page.waitForTimeout(400);
-    await page.screenshot({ path: `test-results/jp-b1-${info.project.name}-${sombre ? "sombre" : "clair"}.png` });
-    // Seconde tranche, quand il y en a une.
-    if ((await page.locator("[data-curseur-page] input[type=range]").count()) > 0) {
-      await page.keyboard.press("ArrowRight");
-      await page.waitForTimeout(400);
-      await page.screenshot({ path: `test-results/jp-b1-${info.project.name}-${sombre ? "sombre" : "clair"}-2.png` });
-    }
+    await page.screenshot({ path: `test-results/cl1-pleine-${info.project.name}-${sombre ? "sombre" : "clair"}.png` });
   });
 }
 
-// Masques de 大手牵着小手 et 荣耀至高神 : l'encre de la ligne voisine ne déborde pas (à regarder).
-test("capture des tranches à masques (大手牵着小手)", async ({ page }, info) => {
-  test.setTimeout(120_000);
-  await ouvrirLouange(page, { chants: [MASQUES, FR] });
-  await attendreTranches(page);
-  await fermerBarre(page);
-  await parcourir(page, async (n, e) => {
-    if (e.titre === MASQUES && e.masques > 0) await page.screenshot({ path: `test-results/jp-b1-${info.project.name}-masques-${n}.png` });
-  });
-});
+// ─── En-tête, repères, barre ────────────────────────────────────────────────
 
+/** Revient au premier écran (flèche gauche : « Home » ne tourne pas les pages). */
+async function premierEcran(page: Page) {
+  const [, total] = (await lireCompteur(page)).split(" / ").map(Number);
+  for (let k = Number((await lireCompteur(page)).split(" / ")[0]); k > 1; k--) await page.keyboard.press("ArrowLeft");
+  await attendreCompteur(page, `1 / ${total}`);
+}
 
-// ─── Tranche 2 : tête de feuille, feuille de route allumée, menu Repères ────
-
-const SECTIONS = JSON.parse(readFileSync("public/jianpu/sections.json", "utf8")) as {
-  chants: Record<string, { sections: { id: string; page: number; ligne: number; anacrouse: boolean }[] }>;
-};
 /** Une Dernière phrase et deux refrains de suite (« R ×2 ») ajoutés à 一生爱你 : de quoi voir « ×2 » et un Dp. */
 const UN_CHO = readFileSync(`content/songs/${UN}.cho`, "utf8");
 const UN_DP = {
@@ -540,13 +424,6 @@ async function lireTete(page: Page): Promise<Tete> {
   });
 }
 
-/** Revient au premier écran (flèche gauche : « Home » ne tourne pas les pages). */
-async function premierEcran(page: Page) {
-  const [, total] = (await lireCompteur(page)).split(" / ").map(Number);
-  for (let k = Number((await lireCompteur(page)).split(" / ")[0]); k > 1; k--) await page.keyboard.press("ArrowLeft");
-  await attendreCompteur(page, `1 / ${total}`);
-}
-
 /** Rouvre la barre de titre (un toucher au centre la montre ou la cache). */
 async function ouvrirBarre(page: Page) {
   if ((await page.locator("[data-barre-ouverte]").count()) === 0) {
@@ -556,21 +433,23 @@ async function ouvrirBarre(page: Page) {
   }
 }
 
-test("tête de feuille : sur chaque écran certifié, de la hauteur de la barre ; ouverte, la barre ne recouvre pas la première ligne", async ({ page }) => {
+test("tête de feuille : sur chaque page d'écran de scan, de la hauteur de la barre, au-dessus de la page entière ; la pastille « Ensuite » ne la recouvre pas ; ouverte, la barre ne recouvre pas la première ligne", async ({ page }) => {
   test.setTimeout(120_000);
   await ouvrirLouange(page, { chants: [UN, DEUX, FR] });
-  await attendreTranches(page);
+  await attendrePages(page);
   await fermerBarre(page);
   const total = Number((await lireCompteur(page)).split("/")[1]);
   for (let n = 1; n <= total; n++) {
     await attendreCompteur(page, `${n} / ${total}`);
     await page.waitForTimeout(150);
-    const e = await lireEcran(page);
+    const g = await lireGeo(page);
     const t = await lireTete(page);
-    if (e.tranche) {
+    if (g) {
       expect(t.present, `écran ${n} : tête de feuille`).toBe(true);
       expect(Math.abs(t.hauteur - t.barre), `écran ${n} : tête ${t.hauteur} px, barre ${t.barre} px`).toBeLessThanOrEqual(1);
       expect(t.fenetreHaut, `écran ${n} : le scan commence sous la tête`).toBeGreaterThanOrEqual(t.barre - 1);
+      expect(g.fen.bottom, `écran ${n} : la page entière, tête comprise, tient dans l'écran`).toBeLessThanOrEqual(g.innerH + 1);
+      for (const s of g.suivants) expect(chevauche(s, g.fen), `écran ${n} : « Ensuite » ne recouvre pas le scan`).toBe(false);
     } else {
       expect(t.present, `écran ${n} : pas de tête sur un chant sans scan`).toBe(false);
     }
@@ -591,7 +470,7 @@ test("tête de feuille : sur chaque écran certifié, de la hauteur de la barre 
 test("tête de feuille : « 1 = F » et « gravé en E » quand le scan est transposé, en français et en 中文", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" } });
-  await attendreTranches(page);
+  await attendrePages(page);
   const t = await lireTete(page);
   expect(t.cle).toBe("1 = F");
   expect(t.grave).toBe("gravé en E");
@@ -600,7 +479,7 @@ test("tête de feuille : « 1 = F » et « gravé en E » quand le scan est tran
 test("tête de feuille, interface en 中文 : « 原谱 E 调 »", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" }, zh: true });
-  await attendreTranches(page);
+  await attendrePages(page);
   const t = await lireTete(page);
   expect(t.cle).toBe("1 = F");
   expect(t.grave).toBe("原谱 E 调");
@@ -609,7 +488,7 @@ test("tête de feuille, interface en 中文 : « 原谱 E 调 »", async ({ page
 test("tête de feuille : pas de « gravé en » quand la tonalité est celle du scan ; « ×2 » dans le repère, Dp en tirets", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouange(page, { chants: [UN, FR], surcharge: { [UN]: UN_DP } });
-  await attendreTranches(page);
+  await attendrePages(page);
   const t = await lireTete(page);
   expect(t.cle).toBe("1 = E");
   expect(t.grave).toBe("");
@@ -628,71 +507,60 @@ test("tête de feuille : pas de « gravé en » quand la tonalité est celle du 
   expect(Math.abs(h.hauteur - h.barre)).toBeLessThanOrEqual(1);
 });
 
-/** Début (ligne 1-based) de chaque section de 一生爱你, anacrouse comprise : la règle de `sections.json`. */
-const debuts = () => SECTIONS.chants[UN].sections.map((s) => ({ ...s, debut: s.anacrouse && s.ligne > 1 ? s.ligne - 1 : s.ligne }));
+// ─── Menu Repères ───────────────────────────────────────────────────────────
 
-test("feuille de route allumée : les repères des sections présentes sur l'écran, d'après sections.json", async ({ page }) => {
+test("menu Repères d'un scan : un repère mène à la page d'écran du scan qui porte sa section (为我而来 : le pont à la page 2)", async ({ page }) => {
   test.setTimeout(120_000);
-  test.skip(page.viewportSize()!.width < 700, "téléphone en portrait : demi-lignes (JP-C), voir les tests « téléphone »");
-  await ouvrirLouange(page, { chants: [UN, FR] });
-  await attendreTranches(page);
+  await ouvrirLouange(page, { chants: [DEUX, FR] });
+  await attendrePages(page);
   await fermerBarre(page);
-  const lignes = SYSTEMES.chants[UN].pages[0].lignes;
-  const sections = debuts();
-  const ecrans: { tranche: [number, number]; allumes: string[] }[] = [];
   const total = Number((await lireCompteur(page)).split("/")[1]);
-  for (let n = 1; n <= total; n++) {
-    await attendreCompteur(page, `${n} / ${total}`);
-    await page.waitForTimeout(150);
-    const e = await lireEcran(page);
-    if (e.tranche) ecrans.push({ tranche: bornes(e.tranche), allumes: (await lireTete(page)).allumes });
-    if (n < total) await page.keyboard.press("ArrowRight");
-  }
-  expect(ecrans.length).toBeGreaterThanOrEqual(1);
-  const motif = { intro: /Intro|前奏/, verse: /Couplet|主歌/, chorus: /Refrain|副歌/ };
-  const allumeSur = (e: (typeof ecrans)[number], re: RegExp) => e.allumes.some((a) => re.test(a));
-  for (const e of ecrans) {
-    // Lignes (1-based) de la tranche, puis les sections dont l'intervalle [début, début suivant) les touche.
-    const dans = lignes.flatMap((l, k) => (l.y0 >= e.tranche[0] && l.y1 <= e.tranche[1] ? [k + 1] : []));
-    const [a, b] = [dans[0], dans.at(-1)!];
-    for (const [id, re] of [["intro-1", motif.intro], ["verse-2", motif.verse], ["chorus-3", motif.chorus]] as const) {
-      const k = sections.findIndex((s) => s.id === id);
-      const fin = sections[k + 1]?.debut ?? Infinity;
-      expect(allumeSur(e, re), `${id} sur la tranche des lignes ${a}-${b}`).toBe(sections[k].debut <= b && fin > a);
-    }
-  }
-  // L'écran de la dernière ligne allume le refrain ; celui des premières lignes, l'intro.
-  expect(allumeSur(ecrans.at(-1)!, motif.chorus)).toBe(true);
-  expect(allumeSur(ecrans[0], motif.intro)).toBe(true);
+  const pont = SECTIONS.chants[DEUX].sections.find((s) => s.id === "bridge-4")!;
+  expect(pont.page).toBe(2);
+  // Section de la page 1 : écran 1.
+  let menu = await ouvrirMenu(page, "reperes");
+  await menu.getByRole("button", { name: /Refrain|副歌/ }).click();
+  await expect(menu).toBeHidden();
+  await attendreCompteur(page, `1 / ${total}`);
+  // Section de la page 2 : écran 2.
+  menu = await ouvrirMenu(page, "reperes");
+  await menu.getByRole("button", { name: /Pont|桥段/ }).click();
+  await expect(menu).toBeHidden();
+  await attendreCompteur(page, `2 / ${total}`);
+  // Au téléphone, la feuille du menu masque la page (aria-hidden) le temps de se fermer : on attend la page visible.
+  await expect.poll(async () => (await lireGeo(page))?.page, { message: "la page 2 du scan", timeout: 10_000 }).toBe(1);
 });
 
-test("menu Repères d'un scan certifié : toucher une section saute à l'écran qui contient sa ligne de début", async ({ page }) => {
+/** Sections présentes sur la page `pg` (1-based, `nl` lignes) d'un chant : l'intervalle [début, début suivant) touche la page (règle de `sections.json`). */
+function presentesSurPage(chant: string, pg: number, nl: number): string[] {
+  const ss = SECTIONS.chants[chant].sections.map((x) => ({ id: x.id, d: [x.page, x.anacrouse && x.ligne > 1 ? x.ligne - 1 : x.ligne] as [number, number] }));
+  const av = (a: [number, number], b: [number, number]) => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
+  return ss.filter((x) => {
+    const suiv = ss.filter((y) => av(x.d, y.d)).reduce<[number, number] | null>((m, y) => (m === null || av(y.d, m) ? y.d : m), null);
+    return !av([pg, nl], x.d) && (suiv === null || av([pg, 1], suiv));
+  }).map((x) => x.id);
+}
+
+test("feuille de route allumée : les repères des sections présentes sur la page du scan, d'après sections.json (为我而来 : couplets et refrain page 1, refrain et pont page 2)", async ({ page }) => {
   test.setTimeout(120_000);
-  test.skip(page.viewportSize()!.width < 700, "téléphone en portrait : demi-lignes (JP-C), voir les tests « téléphone »");
-  await ouvrirLouange(page, { chants: [UN, FR] });
-  await attendreTranches(page);
+  await ouvrirLouange(page, { chants: [DEUX, FR] });
+  await attendrePages(page);
   await fermerBarre(page);
-  const lignes = SYSTEMES.chants[UN].pages[0].lignes;
+  const motif: Record<string, RegExp> = { "verse-1": /Couplet|主歌/, "verse-2": /Couplet|主歌/, "chorus-3": /Refrain|副歌/, "bridge-4": /Pont|桥段/ };
   const total = Number((await lireCompteur(page)).split("/")[1]);
-  const tranches: [number, number][] = [];
-  for (let n = 1; n <= total; n++) {
-    await attendreCompteur(page, `${n} / ${total}`);
-    await page.waitForTimeout(100);
-    const e = await lireEcran(page);
-    if (e.tranche) tranches.push(bornes(e.tranche));
-    if (n < total) await page.keyboard.press("ArrowRight");
+  for (const pg of [1, 2]) {
+    await premierEcran(page);
+    if (pg === 2) await page.keyboard.press("ArrowRight");
+    await attendreCompteur(page, `${pg} / ${total}`);
+    await page.waitForTimeout(200);
+    expect((await lireGeo(page))!.page, `écran ${pg} : la page ${pg} du scan`).toBe(pg - 1);
+    const allumes = (await lireTete(page)).allumes;
+    const attendues = presentesSurPage(DEUX, pg, SYSTEMES.chants[DEUX].pages[pg - 1].lignes.length);
+    for (const id of ["chorus-3", "bridge-4"]) {
+      expect(allumes.some((a) => motif[id].test(a)), `page ${pg} : ${id}`).toBe(attendues.includes(id));
+    }
+    expect(allumes.some((a) => motif["verse-1"].test(a)), `page ${pg} : couplets`).toBe(attendues.includes("verse-1"));
   }
-  const refrain = debuts().find((s) => s.id === "chorus-3")!;
-  const attendu = tranches.findIndex(([y0, y1]) => {
-    const dans = lignes.flatMap((l, k) => (l.y0 >= y0 && l.y1 <= y1 ? [k + 1] : []));
-    return dans[0] <= refrain.debut && refrain.debut <= dans.at(-1)!;
-  });
-  expect(attendu).toBeGreaterThanOrEqual(0);
-  await premierEcran(page);
-  const menu = await ouvrirMenu(page, "reperes");
-  await menu.getByRole("button", { name: /Refrain|副歌/ }).click();
-  await attendreCompteur(page, `${attendu + 1} / ${total}`);
-  await expect.poll(async () => (await lireEcran(page)).tranche, { timeout: 10_000 }).toBe(tranches[attendu].join("-"));
 });
 
 // Captures de la tranche 2 (à regarder) : tête de feuille, barre fermée puis ouverte.
@@ -703,10 +571,10 @@ const VUES = [
   { nom: "transpose", opts: { cles: { [UN]: "F" }, surcharge: { [UN]: UN_DP } } },
 ];
 for (const v of VUES) {
-  test(`capture JP-B3 de la tête de feuille, ${v.nom}`, async ({ page }, info) => {
+  test(`capture JP-B3 de la tête de feuille (page entière), ${v.nom}`, async ({ page }, info) => {
     test.setTimeout(90_000);
     await ouvrirLouange(page, { chants: [UN, FR], ...v.opts });
-    await attendreTranches(page);
+    await attendrePages(page);
     await fermerBarre(page);
     await page.waitForTimeout(400);
     await page.screenshot({ path: `test-results/jp-b3-${info.project.name}-${v.nom}.png` });
@@ -716,12 +584,10 @@ for (const v of VUES) {
   });
 }
 
-// ─── Tranche 3 : finitions de la tête ───────────────────────────────────────
-
 test("tête de feuille : posée sur la feuille (ordinateur, tablette paysage), repères et tonalité au bord de l'encre ; repères inertes au défilement", async ({ page }, info) => {
   test.setTimeout(90_000);
   await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" } });
-  await attendreTranches(page);
+  await attendrePages(page);
   await fermerBarre(page);
   await page.waitForTimeout(300);
   const m = await page.evaluate(() => {
@@ -774,7 +640,7 @@ test("tête de feuille : posée sur la feuille (ordinateur, tablette paysage), r
 test("tête de feuille : « gravé en E » en #6c6c72 en clair, 13 px ; repère allumé souligné de 3 px", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" } });
-  await attendreTranches(page);
+  await attendrePages(page);
   const r = await page.evaluate(() => {
     const t = Array.from(document.querySelectorAll("[data-performance-mode] [data-tete-feuille]")).find((e) => !e.closest("[aria-hidden=true]"))!;
     const g = getComputedStyle(t.querySelector("[data-grave-en]")!);
@@ -789,103 +655,8 @@ test("tête de feuille : « gravé en E » en #6c6c72 en clair, 13 px ; repère 
   expect(r.ombreOff).toBe("none");
 });
 
-// ─── JP-C : téléphone en portrait, chaque ligne coupée en deux moitiés empilées ─────────────────
 
-type Fen = { moitie: string | null; tranche: string; x: number; y: number; right: number; bottom: number; chiffre: number; labels: { x: number; id: string }[] };
-
-/** Les fenêtres du scan affichées (pas la copie de mesure), dans l'ordre du document. */
-async function lireFenetres(page: Page, w: number): Promise<Fen[]> {
-  return page.evaluate((pageW) => {
-    return Array.from(document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-jianpu-fenetre]"))
-      .filter((e) => !e.closest("[aria-hidden=true]"))
-      .map((f) => {
-        const r = f.getBoundingClientRect();
-        return {
-          moitie: f.getAttribute("data-jianpu-moitie"),
-          tranche: f.getAttribute("data-jianpu-tranche") ?? "",
-          x: r.x, y: r.y, right: r.right, bottom: r.bottom,
-          chiffre: 36 * (f.querySelector<HTMLElement>("[data-jianpu-page]")!.getBoundingClientRect().width / pageW),
-          labels: Array.from(f.querySelectorAll<HTMLElement>("[data-jianpu-label]"))
-            .filter((l) => (l.textContent ?? "").trim() !== "" && l.getAttribute("data-jianpu-opt") !== "hidden")
-            .map((l) => ({ x: l.getBoundingClientRect().x, id: `${f.getAttribute("data-jianpu-lignes")}|${l.textContent!.trim()}|${l.style.left}|${l.style.top}` })),
-        };
-      });
-  }, w);
-}
-
-test("téléphone : les fenêtres viennent par paires d'une même ligne, chiffre ≥ 17 px, 2 px entre moitiés, 24 px entre systèmes", async ({ page }, info) => {
-  test.setTimeout(120_000);
-  test.skip(info.project.name !== "telephone", "téléphone en portrait seulement");
-  await ouvrirLouange(page, { chants: [UN, FR] });
-  await attendreTranches(page);
-  await fermerBarre(page);
-  const fs = await lireFenetres(page, SYSTEMES.chants[UN].pages[0].w);
-  expect(fs.length).toBeGreaterThan(1);
-  fs.forEach((f, n) => {
-    expect(["g", "d", "entiere"]).toContain(f.moitie);
-    if (f.moitie === "g") {
-      const d = fs[n + 1];
-      expect(d?.moitie, "une moitié gauche est suivie de sa moitié droite").toBe("d");
-      expect(d.tranche, "même ligne, même hauteur").toBe(f.tranche);
-      expect(Math.abs(d.y - f.bottom - ECART_MOITIES), "2 px entre les deux moitiés").toBeLessThanOrEqual(1);
-      expect(Math.abs(d.x - f.x), "alignées à gauche").toBeLessThanOrEqual(1);
-    }
-    if (f.moitie === "d") expect(fs[n - 1].moitie).toBe("g");
-    if (n > 0 && f.moitie !== "d") expect(Math.abs(f.y - fs[n - 1].bottom - ECART_SYSTEMES), "24 px entre deux systèmes").toBeLessThanOrEqual(1);
-    expect(f.right, "dans la largeur de l'écran").toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
-  });
-  // Même méthode que pour 768 / 1 024 / 1 440 : chiffre = 36 px image × échelle de la page.
-  expect(Math.min(...fs.map((f) => f.chiffre)), "hauteur de chiffre").toBeGreaterThanOrEqual(17);
-  // Barre ouverte : elle ne recouvre aucune fenêtre.
-  await ouvrirBarre(page);
-  const t = await lireTete(page);
-  expect(t.barreBas, "bas de la barre ouverte ≤ haut de la première fenêtre + 1 px").toBeLessThanOrEqual(t.fenetreHaut + 1);
-});
-
-test("téléphone : transposé (G), une étiquette du calque reste dans sa moitié, sans doublon", async ({ page }, info) => {
-  test.setTimeout(120_000);
-  test.skip(info.project.name !== "telephone", "téléphone en portrait seulement");
-  await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "G" } });
-  await attendreTranches(page);
-  await fermerBarre(page);
-  const fs = await lireFenetres(page, SYSTEMES.chants[UN].pages[0].w);
-  let vues = 0;
-  for (const f of fs) for (const l of f.labels) {
-    vues++;
-    if (f.moitie === "g") expect(l.x, "étiquette de la moitié gauche").toBeLessThan(f.right);
-    if (f.moitie === "d") expect(l.x, "étiquette de la moitié droite").toBeGreaterThanOrEqual(f.x - 1.5);
-  }
-  expect(vues, "des accords transposés sont rendus").toBeGreaterThan(0);
-  // Sans doublon : une étiquette (ligne, texte, position dans la page) n'est rendue que dans une seule fenêtre.
-  const ids = fs.flatMap((f) => f.labels.map((l) => l.id));
-  expect(new Set(ids).size, "aucune étiquette rendue deux fois").toBe(ids.length);
-});
-
-test("téléphone : une page en demi-lignes a sa clé j5-<y0>, jamais j4-", async ({ page }, info) => {
-  test.setTimeout(90_000);
-  test.skip(info.project.name !== "telephone", "téléphone en portrait seulement");
-  await ouvrirLouange(page, { chants: [UN, FR] });
-  await attendreTranches(page);
-  const cle = page.locator("[data-performance-mode]");
-  await expect(cle).toHaveAttribute("data-cle-page", /j5-\d+$/);
-  const t0 = bornes((await lireEcran(page)).tranche!)[0];
-  await expect(cle).toHaveAttribute("data-cle-page", new RegExp(`j5-${t0}$`));
-  const premiere = (await cle.getAttribute("data-cle-page"))!;
-  await page.keyboard.press("ArrowRight");
-  await expect(cle).not.toHaveAttribute("data-cle-page", premiere);
-  await expect(cle).toHaveAttribute("data-cle-page", /j5-\d+$/);
-});
-
-test("téléphone en paysage : lignes entières comme en JP-B (clé j4-), sans moitié ni pastille", async ({ page }, info) => {
-  test.setTimeout(90_000);
-  test.skip(info.project.name !== "telephone", "téléphone seulement");
-  await page.setViewportSize({ width: 844, height: 390 });
-  await ouvrirLouange(page, { chants: [UN, FR] });
-  await attendreTranches(page);
-  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-cle-page", /j4-\d+$/);
-  await expect(onStage(page, "[data-jianpu-moitie]")).toHaveCount(0);
-  await expect(onStage(page, "[data-pastille-tourne]")).toHaveCount(0);
-});
+// ─── Pastille « Tourne le téléphone » (scan sans systemes.json) ─────────────
 
 test.describe("pastille « Tourne le téléphone » (scan sans systemes.json)", () => {
   test.use({ serviceWorkers: "block" });
@@ -917,6 +688,14 @@ test.describe("pastille « Tourne le téléphone » (scan sans systemes.json)", 
     await expect(onStage(page, "[data-jianpu-fenetre]")).toHaveCount(1, { timeout: 30_000 });
     await expect(onStage(page, "[data-pastille-tourne]")).toHaveCount(0);
   });
+});
+
+test("un scan certifié n'a pas de pastille « Tourne le téléphone » : la page entière tient à toutes les tailles", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouange(page, { chants: [UN, FR] });
+  await attendrePages(page);
+  await expect(onStage(page, "[data-pastille-tourne]")).toHaveCount(0);
+  await expect(onStage(page, "[data-jianpu-moitie]")).toHaveCount(0);
 });
 
 test("un chant français sans scan est inchangé : ni fenêtre, ni moitié, ni pastille", async ({ page }) => {

@@ -161,6 +161,27 @@ test.describe("armure et tonalité personnelle", () => {
 });
 
 test.describe("marge Affichage de la setlist", () => {
+  // B6 : dès 768 px, pastilles étiquetées (mot sur une ligne, 32 px, comme la page chant), en FR comme en ZH.
+  for (const langue of ["fr", "zh"] as const) {
+    test(`(B6) ${langue} : Affichage, Accords et Crayon sont des pastilles étiquetées dès 768 px, des ronds sans mot dessous`, async ({ page }) => {
+      await ouvrir(page, EDITEUR.uid, langue);
+      const large = page.viewportSize()!.width >= 768;
+      // Deux volets : l'en-tête (pilules de 40 px, sans Accords) n'est pas la barre ; sa forme attend la décision de CI-12.
+      if (await enDeuxVolets(page)) {
+        const b = page.locator("[data-en-tete]").getByRole("button", { name: langue === "zh" ? "显示" : "Affichage", exact: true });
+        await expect(b).toHaveAttribute("aria-label", langue === "zh" ? "显示" : "Affichage");
+        expect((await b.innerText()).trim()).toBe(langue === "zh" ? "显示" : "Affichage");
+        return;
+      }
+      for (const nom of langue === "zh" ? ["显示", "和弦"] : ["Affichage", "Accords"]) {
+        const b = barre(page).getByRole("button", { name: nom, exact: true });
+        await expect(b).toHaveAttribute("aria-label", nom);
+        expect((await b.innerText()).trim()).toBe(large ? nom : "");
+        expect((await b.boundingBox())!.height).toBeCloseTo(large ? 32 : 36, 0);
+      }
+    });
+  }
+
   test("(c) Affichage ouvre la marge sans « Je joue » ; colonne : rien de la musique dessous, sinon feuille d'au plus 40 % de la hauteur", async ({ page }) => {
     await ouvrir(page, EDITEUR.uid);
     await ouvrirMarge(page);
@@ -175,6 +196,11 @@ test.describe("marge Affichage de la setlist", () => {
       for (const droite of blocs) expect(droite, "la musique finit avant la marge").toBeLessThanOrEqual(boite.x + 0.5);
     } else {
       expect(boite.height).toBeLessThanOrEqual(page.viewportSize()!.height * 0.4 + 1);
+      // B5 : feuille pleine largeur de la zone de la musique (la fenêtre, ou le volet du chant en deux volets).
+      expect(await m.getAttribute("data-place")).toBe("feuille");
+      const zone = (await enDeuxVolets(page)) ? (await m.locator("xpath=..").boundingBox())! : { x: 0, width: page.viewportSize()!.width };
+      expect(boite.x).toBeCloseTo(zone.x, 0);
+      expect(boite.width).toBeCloseTo(zone.width, 0);
     }
     // Échap la ferme, le focus revient au bouton.
     await page.keyboard.press("Escape");
@@ -189,6 +215,24 @@ test.describe("marge Affichage de la setlist", () => {
     await expect.poll(async () => (await chant(page, 1).boundingBox())!.height).toBeGreaterThan(avant);
     expect(await page.evaluate(() => localStorage.getItem("perf-font-scale"))).toBe("1.1");
   });
+
+  test("(CI-5, M) marge ouverte en colonne : une colonne de sections si chaque colonne ferait moins de 420 px", async ({ page }) => {
+    await ouvrir(page, EDITEUR.uid);
+    const deuxColonnes = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll("*")]
+          .map((e) => ({ s: getComputedStyle(e), w: e.getBoundingClientRect().width }))
+          .filter(({ s }) => s.columnCount === "2")
+          .map(({ s, w }) => (w - (parseFloat(s.columnGap) || 0)) / 2),
+      );
+    const grand = test.info().project.name === "ordinateur-1440";
+    if (grand) expect((await deuxColonnes()).length, "marge fermée : deux colonnes").toBeGreaterThan(0);
+    await ouvrirMarge(page);
+    if ((await marge(page).getAttribute("data-place")) !== "colonne") return;
+    const largeurs = await deuxColonnes();
+    for (const l of largeurs) expect(l).toBeGreaterThanOrEqual(420);
+    if (grand) expect(largeurs).toHaveLength(0);
+  });
 });
 
 for (const largeur of [390, 412]) {
@@ -199,6 +243,13 @@ for (const largeur of [390, 412]) {
       const accords = barre(page).getByRole("button", { name: langue === "zh" ? "和弦" : "Accords", exact: true });
       await expect(accords).toBeVisible();
       await expect(barre(page).getByRole("button", { name: langue === "zh" ? "显示" : "Affichage", exact: true })).toBeVisible();
+      // B6 : sous 768 px, ronds à icône seule avec libellé accessible (36 px, comme la page chant).
+      for (const nom of langue === "zh" ? ["显示", "和弦"] : ["Affichage", "Accords"]) {
+        const b = barre(page).getByRole("button", { name: nom, exact: true });
+        await expect(b).toHaveAttribute("aria-label", nom);
+        expect((await b.innerText()).trim()).toBe("");
+        expect((await b.boundingBox())!.height).toBeCloseTo(36, 0);
+      }
       // La barre de la vue Partitions, puis celle de la Liste : une seule ligne, rien ne déborde.
       for (const vue of ["partitions", "liste"] as const) {
         if (vue === "liste") await page.getByRole("button", { name: /^(Liste|曲目列表)$/ }).first().click();

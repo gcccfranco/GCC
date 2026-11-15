@@ -14,6 +14,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // CI-2 (docs/spec-corrections-interface.md) : le parcours du culte au mode louange, de l'ouverture aux menus.
+  /louange-parcours-culte\.spec\.ts/,
   // Lot AL, AL-2 (docs/spec-accords-louange.md) : accords touchables en mode louange, panneau au centre de la page, bandes latérales, Crayon, « Ici ».
   /louange-accords\.spec\.ts/,
   // Lot RU, RU-5 (docs/spec-reglages-unifies.md) : le mode louange, bouton « Affichage » (marge), armure dans la barre, rien de la musique sous la marge.
@@ -26,6 +28,8 @@ const SPECS_GRAND_ECRAN = [
   /page-chant-reglages\.spec\.ts/,
   // Lot RU, RU-2 (docs/spec-reglages-unifies.md) : la marge « Affichage » : colonne de 320 px qui pousse la musique dès la tablette paysage, feuille basse de 60 % en dessous.
   /marge-affichage\.spec\.ts/,
+  // Parcours à l'œil du 14/11 (docs/parcours-oeil-2026-11-14.md) : rangée des ronds et note longue, Métronome sans tempo, légende du rappel.
+  /louange-trois-defauts\.spec\.ts/,
   // Harmonie H4-2 (docs/spec-harmonie-accords.md) : la colonne « Harmonie de ce chant » dès 1 024 px, la feuille en dessous.
   /harmonie-colonne\.spec\.ts/,
   // JV-5a : le nom de section ouvre le volet Harmonie au bloc du passage (colonne en grand écran, feuille à mi-hauteur sinon).
@@ -62,15 +66,15 @@ const SPECS_GRAND_ECRAN = [
   /annotations-forscore\.spec\.ts/,
   // Lot pupitre, T1 (docs/spec-exemples-usage.md) : partitions pleine largeur en volet unique, vue Liste à 720 px, étiquettes de section, 简谱 ; deux volets inchangés.
   /pupitre-partitions\.spec\.ts/,
-  // Lot JV, JV-3 (docs/spec-jianpu-deux-volets.md) : le scan 简谱 en deux volets de demi-lignes dès 1 000 px de zone, une colonne en dessous.
+  // Lot CL, CL-1 (docs/spec-corrections-louange.md) : la vue Partitions, scan 简谱 en une colonne à toutes les largeurs (1 440 compris), calque calé sur l'image (JV-3 retiré).
   /jianpu-deux-volets\.spec\.ts/,
-  // Lot JV, JV-4 : le scan 简谱 du mode louange en deux colonnes de demi-lignes sous « 2 colonnes » (ordinateur, tablette paysage).
+  // Lot CL, CL-1 : « 2 colonnes » ne découpe plus un scan 简谱 du mode louange (une page d'écran entière, 为我而来 en deux pages), un chant en texte garde ses deux colonnes ; captures cl1-*.
   /louange-jianpu-deux-colonnes\.spec\.ts/,
   // Exemples d'usage, T6 (docs/spec-exemples-usage.md) : feuille d'équipe (champ d'ajout en tête, barre collée) sur les quatre dispositions.
   /equipes-feuille\.spec\.ts/,
   // Lot 1 du rapport d'usage, T5 (docs/spec-retouches-usage.md) : textes coupés, cellule Date, barre de la setlist, sur les quatre dispositions.
   /retouches-usage-t5\.spec\.ts/,
-  // Lot JP-B (docs/spec-mode-louange-forscore-2.md) : un scan 简谱 certifié coupé en tranches, une seule feuille large, sur les quatre dispositions.
+  // Lot CL, CL-1 (docs/spec-corrections-louange.md) : un scan 简谱 entier sur une page d'écran (plus de tranches), tête de feuille, repères, pastille, sur les quatre dispositions.
   /louange-jianpu-tranches\.spec\.ts/,
   // Lot RP (tranche 2) : la pastille « d'après le planning » du mode louange (centrée sous la barre) sur les quatre dispositions.
   /louange-role-planning\.spec\.ts/,

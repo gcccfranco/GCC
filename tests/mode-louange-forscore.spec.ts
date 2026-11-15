@@ -1255,8 +1255,8 @@ test("forScore, Repères : toucher la pastille d'une section ouvre sa bulle, san
   // L'indice de rappel (première fois par appareil) se pose sur la pastille en paysage : déjà vu ici.
   await page.addInitScript(() => {
     localStorage.setItem("disposition", "reperes");
-    localStorage.setItem("perf-astuce-rappel-joue", "1");
-    localStorage.setItem("perf-astuce-rappel-unique", "1");
+    localStorage.setItem("perf-astuce-rappel-joue", "2");
+    localStorage.setItem("perf-astuce-rappel-unique", "2");
   });
   await ouvrir(page, { chants: 4 });
   await toucherCentre(page); // barre masquée

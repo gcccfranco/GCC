@@ -1,3 +1,4 @@
+import { readFileSync } from "fs";
 import { mkdirSync } from "node:fs";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
@@ -309,83 +310,34 @@ test.describe("demi-page : scan non certifié", () => {
   });
 });
 
-/** Ce que montrent les deux calques d'un scan en demi-page : pour chaque ligne du scan (bornes `data-jianpu-lignes`, échelle de
- *  la fenêtre), visible si elle rencontre la zone du calque, « tranchée » si elle n'y tient pas entière. */
-async function mesurerScan(page: Page) {
-  return page.evaluate(() => {
-    const f = document.querySelector<HTMLElement>("[data-performance-mode] [data-demi-filet]")!.getBoundingClientRect();
-    const yCoupe = f.top + f.height / 2;
-    const lire = (sel: string) => {
-      const calque = document.querySelector<HTMLElement>(`[data-performance-mode] ${sel}`)!;
-      const zs = JSON.parse(calque.dataset.demiZones ?? "[]") as Array<[number, number, number, number]>;
-      // Demi-lignes (téléphone en portrait, lot JP-C) : plusieurs fenêtres ; les deux moitiés d'une ligne n'en font qu'une.
-      let bas = -Infinity;
-      let fenetreHaut = Infinity;
-      const lignes: Array<{ top: number; bottom: number }> = [];
-      for (const fen of calque.querySelectorAll<HTMLElement>("[data-jianpu-tranche]")) {
-        const q = fen.getBoundingClientRect();
-        const [t0, t1] = fen.dataset.jianpuTranche!.split("-").map(Number);
-        const echelle = q.height / (t1 - t0);
-        bas = Math.max(bas, q.bottom);
-        fenetreHaut = Math.min(fenetreHaut, q.top);
-        const ls = fen.dataset.jianpuLignes!.split(",").map((l) => l.split("-").map(Number)).map(([a, b]) => ({ top: q.top + (a - t0) * echelle, bottom: q.top + (b - t0) * echelle }));
-        if (fen.dataset.jianpuMoitie === "d" && lignes.length) lignes[lignes.length - 1].bottom = ls[0].bottom;
-        else lignes.push(...ls);
-      }
-      const vues = lignes.flatMap((l) => {
-        const z = zs.find(([, y0, , y1]) => l.top < y1 - 1 && l.bottom > y0 + 1);
-        return z ? [{ ...l, entiere: l.top >= z[1] - 1 && l.bottom <= z[3] + 1 }] : [];
-      });
-      return { total: lignes.length, vues, bas, fenetreHaut };
-    };
-    const haut = lire("[data-demi-haut]");
-    const bas = lire("[data-demi-bas]");
-    return {
-      yCoupe,
-      haut: { visibles: haut.vues.length, tranchees: haut.vues.filter((l) => !l.entiere || l.bottom > yCoupe + 1).length, total: haut.total },
-      bas: { visibles: bas.vues.length, tranchees: bas.vues.filter((l) => !l.entiere || l.top < yCoupe - 1).length, total: bas.total },
-      // Le filet n'est dans aucune ligne visible.
-      dansUneLigne: [...haut.vues, ...bas.vues].filter((l) => l.top < yCoupe - 1 && l.bottom > yCoupe + 1).length,
-    };
-  });
-}
+// 为我而来 a deux pages de scan : la demi-page s'ouvre entre elles. 一生爱你 n'en a qu'une, suivie d'un chant en texte :
+// pas de demi-page entre un scan et un texte (règle d'avant CL-1), le tour passe au chant suivant.
+test("demi-page : 一生爱你 (une page de scan) est une page d'écran entière, sans tranche ; le tour passe au chant en texte, sans demi-page (CL-1)", async ({ page }, testInfo) => {
+  test.setTimeout(90_000);
+  await ouvrir(page, { slugs: ["一生爱你", "abba-pere"], uneColonne: true });
+  await expect(page.locator("[data-performance-mode] [data-jianpu-page] img").first()).toBeVisible();
+  await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
+  await expect(onStage(page, "[data-jianpu-tranche]")).toHaveCount(0);
+  await expect(onStage(page, "[data-jianpu-moitie]")).toHaveCount(0);
+  await tourner(page, testInfo, 1, "fleche");
+  await expect.poll(() => lireCompteur(page)).toMatch(/^2 \//);
+  await expect(enDemi(page)).toHaveCount(0);
+});
 
-for (const slug of ["一生爱你", "为我而来"]) {
-  test(`demi-page : un scan certifié (${slug}) se coupe entre deux lignes, jamais dans une portée`, async ({ page }, testInfo) => {
+for (const slug of ["为我而来"]) {
+  test(`demi-page : un scan de deux pages (${slug}), chaque page entière, sans tranche ; la demi-page s'ouvre entre ses deux pages (CL-1)`, async ({ page }, testInfo) => {
     test.setTimeout(90_000);
-    // Lignes entières (« 2 colonnes » éteint) : la coupe horizontale ; en deux colonnes, louange-jianpu-deux-colonnes (JV-4).
-    await ouvrir(page, { slugs: [slug], uneColonne: true });
+    await ouvrir(page, { slugs: [slug, "abba-pere"], uneColonne: true });
     await expect(page.locator("[data-performance-mode] [data-jianpu-page] img").first()).toBeVisible();
     await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
-    const total = Number((await lireCompteur(page)).split("/")[1]);
-    test.skip(total < 2, "ce scan tient en un seul écran dans cette disposition");
+    // Une page de scan, une page d'écran entière : aucune tranche, aucune demi-ligne.
+    await expect(onStage(page, "[data-jianpu-tranche]")).toHaveCount(0);
+    await expect(onStage(page, "[data-jianpu-moitie]")).toHaveCount(0);
     await tourner(page, testInfo, 1, "fleche");
+    // Le tour ouvre la demi-page sur la même page d'écran : le filet est là, la page ne tourne pas encore.
     await expect(enDemi(page)).toHaveCount(1);
     await expect(filet(page)).toHaveCount(1);
-    // La tête de feuille reste en haut.
-    await expect(page.locator("[data-performance-mode] [data-demi-haut] [data-tete-feuille]")).toHaveCount(1);
-    // Le demi-écran est (encore) la page 1 : le compteur n'a pas bougé.
-    expect(await lireCompteur(page)).toMatch(/^1 \//);
-    const m = await mesurerScan(page);
-    expect(m.haut.visibles, "des lignes de l'écran suivant au-dessus du filet").toBeGreaterThan(0);
-    expect(m.bas.visibles, "des lignes de l'écran courant sous le filet").toBeGreaterThan(0);
-    expect(m.haut.tranchees, "aucune portée coupée en haut").toBe(0);
-    expect(m.bas.tranchees, "aucune portée coupée en bas").toBe(0);
-    expect(m.dansUneLigne, "le filet tombe entre deux lignes").toBe(0);
-    // La poignée ne propose que des coupes entre lignes : à chaque cran, rien n'est tranché.
-    await poignee(page).focus();
-    for (const touche of ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowDown"]) {
-      await page.keyboard.press(touche);
-      await page.waitForTimeout(150);
-      const k = await mesurerScan(page);
-      expect(k.haut.tranchees + k.bas.tranchees + k.dansUneLigne, touche).toBe(0);
-    }
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: `test-results/jp-b3-${testInfo.project.name}-demi${slug === "一生爱你" ? "-1" : ""}.png` });
-    // Un second tour passe à l'écran suivant, entier.
-    await tourner(page, testInfo, 1, "fleche");
-    await expect.poll(() => lireCompteur(page)).toMatch(/^2 \//);
-    await expect(enDemi(page)).toHaveCount(0);
+    await expect.poll(() => lireCompteur(page)).toMatch(/^1 \//);
   });
 }
 

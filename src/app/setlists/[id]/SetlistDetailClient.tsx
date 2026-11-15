@@ -93,7 +93,7 @@ import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { defilerSousLaBarre } from "@/components/harmonie/HarmonieDuChant";
 import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
 import { semitonesTo, getTransposedKey } from "@/lib/transpose";
-import { MargeAffichage } from "@/components/song/MargeAffichage";
+import { MargeAffichage, BOUTON_LECTURE } from "@/components/song/MargeAffichage";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { telechargerBlob, demanderPleinEcran } from "@/lib/telecharger";
 import {
@@ -2331,13 +2331,12 @@ export function SetlistDetailClient() {
                   aria-expanded={showAffichage}
                   aria-controls="marge-affichage"
                   onClick={basculerAffichage}
-                  className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                  className={`${TOUCHER_44} ${BOUTON_LECTURE} transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     showAffichage ? "bg-foreground text-background" : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span className="libelle-outil">{t("setlists.detail.layout.label")}</span>
-                  <span aria-hidden className={LIBELLE_COURT}>{t("setlists.detail.layout.label")}</span>
+                  <span className="hidden md:inline">{t("setlists.detail.layout.label")}</span>
                 </button>
 
                 {/* Crayon : retoucher le chant, pour moi ou pour tout le culte */}
@@ -2345,15 +2344,14 @@ export function SetlistDetailClient() {
                   <button aria-label={t("maPartition.crayon.bouton")}
                     aria-pressed={crayon}
                     onClick={toggleCrayon}
-                    className={`${TOUCHER_44} ${PILULE_EMPILEE} ${masqueBarre} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                    className={`${TOUCHER_44} ${BOUTON_LECTURE} ${masqueBarre} transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                       crayon
                         ? "bg-foreground text-background"
                         : "bg-secondary text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <PenLine className="h-3.5 w-3.5" />
-                    <span className="libelle-outil">{t("maPartition.crayon.bouton")}</span>
-                    <span aria-hidden className={LIBELLE_COURT}>{t("maPartition.crayon.bouton")}</span>
+                    <span className="hidden md:inline">{t("maPartition.crayon.bouton")}</span>
                   </button>
                 )}
 
@@ -2364,15 +2362,14 @@ export function SetlistDetailClient() {
                     setShowChords(!showChords);
                     setChordsTouched(true);
                   }}
-                  className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                  className={`${TOUCHER_44} ${BOUTON_LECTURE} transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     showChords
                       ? "bg-foreground text-background"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
-                  <span className="libelle-outil">{t("songs.detail.chords")}</span>
-                  <span aria-hidden className={LIBELLE_COURT}>{t("songs.detail.chords")}</span>
+                  <span className="hidden md:inline">{t("songs.detail.chords")}</span>
                 </button>
 
                 {/* Mode louange et ⋯ — poussés à droite, sur la même ligne */}

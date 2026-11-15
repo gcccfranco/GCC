@@ -67,11 +67,11 @@ for (const [langue, sousTitre] of [
     await expect(enTete(page)).toContainText(sousTitre);
     await expect(enTete(page)).not.toContainText(/pôles|部门/);
     await expect(page.getByText(/Donne le pôle|归入.*部门/)).toHaveCount(0);
-    const bandeau = page.getByTestId("bandeau-equipes");
+    const bandeau = page.getByTestId("grille-equipes");
     await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 3, pilules: 0 } });
     // Lot CD, T3c : plus aucun <select> natif visible hors formulaire (l'index est un Menu).
     await expect(page.locator("select:visible"), "aucun select visible").toHaveCount(0);
-    // Rien ne déborde d'une carte (le bandeau défile en lui-même, pas la page : verifierAgencement).
+    // Rien ne déborde d'une carte (la page défile en hauteur, jamais en largeur : verifierAgencement).
     for (const carte of await page.getByTestId(/^equipe-/).all()) {
       expect(await carte.evaluate((el) => el.scrollWidth - el.clientWidth), "le contenu de la carte tient dedans").toBeLessThanOrEqual(1);
     }
@@ -79,8 +79,8 @@ for (const [langue, sousTitre] of [
   });
 }
 
-// BO-G, 6 : plus de mot coupé en pleine colonne, plus de flèche flottante sur une colonne, plus de puce au-delà de la marge.
-test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches ‹ › hors des colonnes, les puces dans la marge", async ({ page }, info) => {
+// BO-G, 6 : plus de mot coupé en pleine colonne, plus de flèche, plus de puce au-delà de la marge.
+test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, aucune flèche Équipes précédentes/suivantes, les puces dans la marge", async ({ page }, info) => {
   await ouvrir(page, ADMIN, "/back-office/equipes", {
     ...DOCS,
     "equipes/decoration": { pole: "decoration", membres: [M("Ilan P.", { referent: true }), M("Sacha T.")], updatedAt: "2026-09-18T10:00:00Z", parUid: "", parNom: "" },
@@ -90,8 +90,7 @@ test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches 
     },
   });
   await expect(page.getByTestId("equipe-decoration")).toBeVisible();
-  const bandeau = page.getByTestId("bandeau-equipes");
-  await expect(bandeau).toHaveAttribute("data-range", "1");
+  const bandeau = page.getByTestId("grille-equipes");
   // Un titre (h2) ou un nom de sous-groupe n'est jamais rogné : tout son texte tient dans sa boîte. On mesure le texte
   // (Range), pas `scrollWidth` : au toucher, la zone invisible de 44 px du lien (`TOUCHER_44`, spec-corrections-design
   // § 3) dépasse d'un nom court comme « Orga » sans rien rogner.
@@ -103,30 +102,8 @@ test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches 
     });
     expect(deborde, `« ${await titre.textContent()} » entier`).toBeLessThanOrEqual(1);
   }
-  // Les flèches ne flottent plus sur les colonnes : dans la ligne du menu, au-dessus du bandeau, hors flux absolu.
-  const suivantes = page.getByRole("button", { name: "Équipes suivantes" });
-  if (!estTelephone(info) && (await suivantes.count())) {
-    await expect(suivantes).toBeVisible();
-    expect(await suivantes.evaluate((el) => getComputedStyle(el).position), "plus de flèche flottante").not.toBe("absolute");
-    const f = (await suivantes.boundingBox())!;
-    const b = (await bandeau.boundingBox())!;
-    expect(f.y + f.height, "au-dessus des colonnes").toBeLessThanOrEqual(b.y + 1);
-    // back-office-5 : flèches de 36 px habillées comme les pilules (gris, ni ombre ni relief), centrées sur le menu « Aller à une équipe ».
-    expect(Math.round(f.width), "flèche de 36 px").toBe(36);
-    expect(Math.round(f.height), "flèche de 36 px").toBe(36);
-    expect(await suivantes.evaluate((el) => getComputedStyle(el).boxShadow), "ni ombre ni relief").toBe("none");
-    const m = (await declencheurIndex(page).boundingBox())!;
-    expect(Math.abs(f.y + f.height / 2 - (m.y + m.height / 2)), "flèches centrées sur le menu").toBeLessThanOrEqual(1);
-    expect(f.x, "flèches à droite du menu").toBeGreaterThanOrEqual(m.x + m.width - 1);
-    const precedentes = page.getByRole("button", { name: "Équipes précédentes" });
-    await suivantes.click();
-    await expect(precedentes).toBeVisible();
-    if (await suivantes.count()) {
-      const g = (await precedentes.boundingBox())!;
-      const g2 = (await suivantes.boundingBox())!;
-      expect(g2.x - (g.x + g.width), "huit pixels entre les deux flèches").toBeGreaterThanOrEqual(7);
-    }
-  }
+  // B12 : plus de bandeau, plus de flèches.
+  await expect(page.getByRole("button", { name: /Équipes (précédentes|suivantes)/ })).toHaveCount(0);
   // Le menu de l'index reste dans la marge de la zone.
   if (!estTelephone(info)) {
     const zone = await zoneDeContenu(page);
@@ -138,11 +115,10 @@ test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches 
 });
 
 // Lot CD, T3c (bo-equipes-5, arbitrage 17) : l'index des 13 équipes est un Menu « Aller à une équipe » (plus de pastilles) ;
-// le choisir amène la colonne de l'équipe, la coche marque l'équipe en vue, le déclencheur ne passe jamais en encre.
-test("index des équipes : un menu « Aller à une équipe », 13 lignes, choisir amène la colonne", async ({ page }, info) => {
+// le choisir amène la carte de l'équipe dans l'écran, la coche marque l'équipe choisie, le déclencheur ne passe jamais en encre.
+test("index des équipes : un menu « Aller à une équipe », 13 lignes, choisir amène la carte", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes", { ...DOCS, ...GROS });
-  const bandeau = page.getByTestId("bandeau-equipes");
-  await expect(bandeau).toHaveAttribute("data-range", "1");
+  await expect(page.getByTestId("equipe-orga")).toBeVisible();
   await expect(page.locator("[data-pilule]"), "plus de pastilles d'index").toHaveCount(0);
   const declencheur = declencheurIndex(page);
   await expect(declencheur).toHaveText("Aller à une équipe");
@@ -150,20 +126,18 @@ test("index des équipes : un menu « Aller à une équipe », 13 lignes, choisi
   await declencheur.click();
   const lignes = page.getByRole("menuitemradio");
   await expect(lignes).toHaveCount(13);
-  await expect(lignes.first(), "l'équipe en vue est cochée").toHaveAttribute("aria-checked", "true");
   await page.getByRole("menuitemradio", { name: "Louange", exact: true }).click();
   await expect(declencheur, "toujours le même texte, jamais en encre").toHaveText("Aller à une équipe");
   await expect(declencheur).not.toHaveAttribute("data-pose", /.*/);
   const carte = page.getByTestId("equipe-louange");
-  if (estTelephone(info)) {
-    await expect.poll(async () => (await carte.boundingBox())!.y, { timeout: 5_000 }).toBeLessThan(260);
-  } else {
-    await expect.poll(async () => {
-      const c = (await carte.boundingBox())!;
-      const b = (await bandeau.boundingBox())!;
-      return c.x >= b.x - 1 && c.x + c.width <= b.x + b.width + 1;
-    }, { timeout: 5_000 }).toBe(true);
-  }
+  // Le haut de la carte entre le bas de la barre du haut et le bas de la fenêtre.
+  await expect.poll(async () => {
+    const c = (await carte.boundingBox())!;
+    const haut = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 0);
+    return c.y >= haut - 1 && c.y < page.viewportSize()!.height;
+  }, { timeout: 5_000 }).toBe(true);
+  await declencheur.click();
+  await expect(page.getByRole("menuitemradio", { name: "Louange", exact: true }), "l'équipe choisie est cochée").toHaveAttribute("aria-checked", "true");
 });
 
 // Lot CD, T3c (back-office-7, arbitrage 3) : « Équipes · Musiciens » est un rail (role=tab), de 44 px de zone de toucher ;
@@ -187,11 +161,10 @@ test("« Équipes · Musiciens » : un rail, sur la ligne du sélecteur sauf au 
     expect(Math.max(b.height, zone), "cible d'au moins 44 px").toBeGreaterThanOrEqual(43.5);
   await onglets.nth(1).click();
   await expect(onglets.nth(1)).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByTestId("bandeau-equipes")).toHaveCount(0);
+  await expect(page.getByTestId("grille-equipes")).toHaveCount(0);
 });
 
-// back-office-4 : à chaque arrêt du bandeau (› au pointeur fin, glissement au toucher), une colonne large (Louange, EDD) est
-// entière avant la marge droite ou n'en montre que moins de la moitié ; jamais entre les deux, hors du bout.
+// B12 : les équipes sont des cartes d'une grille, gros jeu de membres.
 const GROS: Record<string, Record<string, unknown>> = Object.fromEntries(
   ["orga", "da", "medias", "developpement", "regie", "traduction", "theologie", "evenementiel", "decoration", "accueil-j1", "louange"].map((id) => [
     `equipes/${id}`,
@@ -199,91 +172,41 @@ const GROS: Record<string, Record<string, unknown>> = Object.fromEntries(
   ]),
 );
 
-for (const [jeu, docs] of [["peu de cartes", DOCS], ["beaucoup de membres", { ...DOCS, ...GROS }]] as const) {
-  test(`bandeau (${jeu}) : à chaque arrêt, aucune colonne large visible entre 50 % et 100 %, hors du bout`, async ({ page }, info) => {
-    test.skip(estTelephone(info), "au téléphone le bandeau est une colonne : la page défile");
-    await ouvrir(page, ADMIN, "/back-office/equipes", docs);
-    const bandeau = page.getByTestId("bandeau-equipes");
-    await expect(bandeau).toHaveAttribute("data-range", "1");
-    const marge = await margeAttendue(page);
-    const fin = await page.evaluate(() => matchMedia("(pointer: fine)").matches);
-    const lire = () => bandeau.evaluate((el, marge) => {
-      const b = el.getBoundingClientRect();
-      const bout = el.scrollLeft >= el.scrollWidth - el.clientWidth - 1;
-      const larges = [...el.querySelectorAll<HTMLElement>('[data-colonne][data-large="1"]')].map((c) => {
-        const r = c.getBoundingClientRect();
-        const visible = Math.max(0, Math.min(r.right, b.right) - Math.max(r.left, b.left));
-        return { id: c.getAttribute("data-colonne") ?? c.querySelector("[data-testid]")?.getAttribute("data-testid") ?? "?", entiere: r.right <= b.right - marge + 1 && r.left >= b.left - 1, part: visible / r.width };
-      });
-      return { x: Math.round(el.scrollLeft), bout, larges };
-    }, marge);
-    const verifier = (etat: Awaited<ReturnType<typeof lire>>, ou: string) => {
-      if (etat.bout) return;
-      for (const l of etat.larges) {
-        expect(l.entiere || l.part <= 0.51, `${ou} (x = ${etat.x}) : colonne large à ${Math.round(l.part * 100)} %`).toBe(true);
-      }
-    };
-    const stable = async () => {
-      let avant = -1;
-      await expect.poll(async () => { const x = (await lire()).x; const fini = x === avant; avant = x; return fini; }, { timeout: 5_000, intervals: [150] }).toBe(true);
-    };
-    await stable();
-    verifier(await lire(), "départ");
-    let arrets = 0;
-    if (fin) {
-      // Pointeur fin : › de arrêt en arrêt, jusqu'au bout.
-      const suivantes = page.getByRole("button", { name: "Équipes suivantes" });
-      while (await suivantes.count() && arrets < 25) {
-        await suivantes.click();
-        arrets++;
-        await stable();
-        verifier(await lire(), `› n° ${arrets}`);
-      }
-    } else {
-      // Toucher : des glissements de 400 px, l'accroche (snap) choisit l'arrêt.
-      let precedent = -1;
-      while (arrets < 25) {
-        await bandeau.evaluate((el) => el.scrollBy({ left: 400, behavior: "instant" }));
-        arrets++;
-        await stable();
-        const etat = await lire();
-        verifier(etat, `glissement n° ${arrets}`);
-        if (etat.bout || etat.x === precedent) break;
-        precedent = etat.x;
-      }
-    }
-    expect((await lire()).bout, "le parcours mène au bout du bandeau").toBe(true);
-    expect(arrets, "au plus une vingtaine d'arrêts").toBeLessThan(25);
-  });
-}
-
-// bo-equipes-4 : le bandeau recoupe ses cartes en colonnes de hauteurs voisines (pas d'escalier, pas de trou sous la dernière
-// petite colonne), dans l'ordre de l'organigramme ; Louange et EDD restent en dernier.
-test("bandeau : colonnes simples de hauteurs voisines, ordre gardé, Louange et EDD en dernier", async ({ page }, info) => {
-  test.skip(!["tablette-paysage", "ordinateur", "ordinateur-1440"].includes(info.project.name), "le bandeau en colonnes est celui des grands écrans");
+test("grille (beaucoup de membres) : colonnes de 280 px au moins, aucune largeur en trop, Louange et EDD sur toute la rangée", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes", { ...DOCS, ...GROS });
-  const bandeau = page.getByTestId("bandeau-equipes");
-  await expect(bandeau).toHaveAttribute("data-range", "1");
+  const grille = page.getByTestId("grille-equipes");
   await expect(page.getByTestId("equipe-orga")).toBeVisible();
-  const colonnes = await bandeau.evaluate((el) =>
-    [...el.querySelectorAll<HTMLElement>("[data-colonne]")].map((c) => {
-      const cartes = [...c.querySelectorAll<HTMLElement>('[data-testid^="equipe-"]')];
-      return {
-        large: c.dataset.large === "1",
-        ids: cartes.map((x) => x.dataset.testid!.slice("equipe-".length)),
-        hauteur: cartes.reduce((h, x) => h + x.getBoundingClientRect().height, 0) + 16 * Math.max(0, cartes.length - 1),
-        plusHaute: Math.max(...cartes.map((x) => x.getBoundingClientRect().height)),
-      };
-    }));
-  const simples = colonnes.filter((c) => !c.large);
-  const larges = colonnes.filter((c) => c.large);
-  expect(larges.map((c) => c.ids)).toEqual([["louange"], ["edd"]]);
-  expect(colonnes.slice(-2).every((c) => c.large), "Louange et EDD en dernier").toBe(true);
-  expect(simples.flatMap((c) => c.ids), "l'ordre de l'organigramme").toEqual(
-    ["orga", "comite-franco", "da", "medias", "developpement", "regie", "traduction", "theologie", "evenementiel", "decoration", "accueil-j1"]);
-  const hauteurs = simples.map((c) => c.hauteur);
-  const carte = Math.max(...simples.map((c) => c.plusHaute));
-  expect(Math.max(...hauteurs) - Math.min(...hauteurs), `colonnes ${hauteurs.map(Math.round).join(", ")} : au plus une carte d'écart`).toBeLessThanOrEqual(carte + 16);
+  const m = await grille.evaluate((el) => {
+    const g = el.getBoundingClientRect();
+    const pad = parseFloat(getComputedStyle(el).paddingLeft) + parseFloat(getComputedStyle(el).paddingRight);
+    const rect = (id: string) => el.querySelector(`[data-carte-equipe="${id}"]`)!.getBoundingClientRect();
+    return {
+      grille: g.width - pad,
+      simples: ["orga", "da", "medias", "accueil-j1"].map((id) => rect(id).width),
+      louange: rect("louange").width, edd: rect("edd").width,
+      page: document.documentElement.scrollWidth, fenetre: window.innerWidth,
+    };
+  });
+  for (const w of m.simples) expect(w, "carte simple d'au moins 280 px (sauf grille plus étroite)").toBeGreaterThanOrEqual(Math.min(280, m.grille) - 1);
+  expect(m.page, "aucune largeur en trop").toBeLessThanOrEqual(m.fenetre);
+  expect(m.louange, "Louange sur toute la rangée").toBeGreaterThanOrEqual(m.grille - 1);
+  expect(m.edd, "EDD sur toute la rangée").toBeGreaterThanOrEqual(m.grille - 1);
+});
+
+// A6 : l'ordre de lecture (haut puis gauche) est celui d'EQUIPES aux cinq tailles.
+test("même ordre de lecture des équipes aux cinq projets", async ({ page }) => {
+  await ouvrir(page, ADMIN, "/back-office/equipes", { ...DOCS, ...GROS });
+  await expect(page.getByTestId("equipe-orga")).toBeVisible();
+  const { ordre, grille, largeurs } = await page.getByTestId("grille-equipes").evaluate((el) => {
+    const cartes = [...el.querySelectorAll<HTMLElement>('[data-testid^="equipe-"]')].map((c) => {
+      const r = c.getBoundingClientRect();
+      return { id: c.dataset.testid!.slice("equipe-".length), top: Math.round(r.top), left: r.left, w: r.width };
+    });
+    cartes.sort((a, b) => a.top - b.top || a.left - b.left);
+    return { ordre: cartes.map((c) => c.id), grille: el.getBoundingClientRect().width, largeurs: cartes.filter((c) => c.id !== "louange" && c.id !== "edd").map((c) => c.w) };
+  });
+  expect(ordre).toEqual(["orga", "comite-franco", "da", "medias", "developpement", "regie", "traduction", "theologie", "evenementiel", "decoration", "accueil-j1", "louange", "edd"]);
+  for (const w of largeurs) expect(w, "carte simple d'au moins 280 px").toBeGreaterThanOrEqual(Math.min(280, grille) - 1);
 });
 
 // bo-equipes-15 : casse normale, sans « TEAM » répété ; le nom long reste en sous-titre.

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { TOUCHER_44 } from "@/lib/toucher44";
+import { BOUTON_LECTURE } from "@/components/song/MargeAffichage";
 
 /** Les actions de la barre du chant (RU-3) : Vidéo, Crayon, Affichage (`children`), ⋯ ; sur la même ligne que le Retour à toutes les tailles. */
 export function ActionsChant({ youtubeId, showVideo, setShowVideo, crayon, setCrayon, menuChant, children }: {
@@ -41,10 +42,11 @@ export function ActionsChant({ youtubeId, showVideo, setShowVideo, crayon, setCr
           title={t("maPartition.crayon.bouton")}
           aria-pressed={crayon}
           onClick={() => setCrayon((v) => !v)}
-          className={`${classe} ${crayon ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
+          className={`${TOUCHER_44} ${BOUTON_LECTURE} ${crayon ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
         >
           <PenLine className="h-4 w-4" />
-          {/* décision déléguée (session MP-3, 12/11) : le Crayon prend la place de l'étincelle dans la spec, en icône comme elle */}
+          {/* décision déléguée (session CI-11, 15/11, B6) : la même forme que le Crayon de la setlist, rond au téléphone, mot dès 768 px */}
+          <span className="hidden md:inline">{t("maPartition.crayon.bouton")}</span>
         </Button>
       )}
       {children}

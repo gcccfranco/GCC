@@ -19,6 +19,8 @@ import type { SongIndexEntry, Theme } from "@/types/song";
 import { TitreVolet, useFeuille } from "@/components/setlists/editeur/feuille";
 import { PastilleSection, dessinSection } from "@/components/setlists/editeur/Reglages";
 import { lienPartition } from "@/components/setlists/editeur/Volets";
+import { Segment } from "@/components/ui/segment";
+import { BASCULE_ACTIVE } from "@/components/ui/bascule";
 import themesJson from "../../../../content/themes.json";
 
 // Bibliothèque de l'éditeur (lot U5 bis, planche `creer-piste2-bibliotheque`) : elle
@@ -35,7 +37,7 @@ const CLE_TEMPO: Record<Tempo, string> = { lent: "tempoLent", modere: "tempoMode
 
 const pilule = (actif: boolean) =>
   `h-8 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-    actif ? "bg-foreground text-background" : "bg-secondary text-foreground hover:bg-secondary/80"
+    actif ? BASCULE_ACTIVE : "bg-secondary text-foreground hover:bg-secondary/80"
   }`;
 
 /** « Thèmes ▾ », « Tempo ▾ » : le `Menu` des contrôles (jeu B) ; le choix fait, sinon « Thèmes ». */
@@ -259,13 +261,19 @@ export function Bibliotheque({
       />
 
       {/* Pilules Tous · FR · 中文 · Thèmes ▾ · Tempo ▾ ; elles défilent si la place manque. */}
-      <div className="-mx-1 mt-3 flex shrink-0 gap-2 overflow-x-auto px-1 py-0.5" style={{ scrollbarWidth: "none" }}>
-        <div role="group" aria-label={t("setlists.editeur.langue")} className="flex shrink-0 gap-2">
-          {(["tous", "fr", "zh"] as const).map((l) => (
-            <button key={l} type="button" aria-pressed={filtres.langue === l} onClick={() => changer({ langue: l })} className={pilule(filtres.langue === l)}>
-              {l === "tous" ? t("setlists.editeur.tous") : l === "fr" ? "FR" : "中文"}
-            </button>
-          ))}
+      <div className="-mx-1 mt-3 flex shrink-0 items-center gap-2 overflow-x-auto px-1 py-0.5" style={{ scrollbarWidth: "none" }}>
+        {/* Le défilant du Segment rétrécirait dans cette rangée qui défile : il garde sa largeur. */}
+        <div className="shrink-0">
+        <Segment
+          etiquette={t("setlists.editeur.langue")}
+          actif={filtres.langue}
+          choisir={(l) => changer({ langue: l as typeof filtres.langue })}
+          onglets={[
+            { id: "tous", label: t("setlists.editeur.tous") },
+            { id: "fr", label: "FR" },
+            { id: "zh", label: "中文" },
+          ]}
+        />
         </div>
         <MenuPilule
           label={t("setlists.editeur.theme")}

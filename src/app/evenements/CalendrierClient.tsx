@@ -126,7 +126,7 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
         </section>
       )}
 
-      {upcoming.length === 0 && vide}
+      {!grand && upcoming.length === 0 && vide}
       {upcoming.map((g) => (
         <section key={g.key} className={grand ? "space-y-1" : "space-y-3"}>
           <h2 className="text-sm font-semibold text-muted-foreground px-1 first-letter:uppercase">{g.label}</h2>

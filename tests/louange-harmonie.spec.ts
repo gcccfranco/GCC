@@ -190,3 +190,31 @@ for (const c of CHANTS) {
     });
   }
 }
+
+// A9 (docs/spec-corrections-interface.md) : depuis la page 2 d'un scan 简谱 de deux pages, allumer ou éteindre « Idées
+// d'harmonie » ne ramène plus à la première page du chant (réglé par CL-1, une page du scan = une page d'écran).
+test("A9 : page 2 du scan de 为我而来, éteindre puis rallumer Idées d'harmonie garde la page", async ({ page }) => {
+  await page.addInitScript((u) => {
+    localStorage.setItem("perf-role-preset", "pianiste");
+    localStorage.setItem("accords-aide-vue", "1");
+    localStorage.setItem(`perf-idees-harmonie-${u}`, "1");
+  }, AVEC_ACCES.uid);
+  const base = setlist("为我而来", "C");
+  const s = { ...base, items: [{ ...base.items[0], jianpuSheet: true }] };
+  await signInAs(page, AVEC_ACCES, { [`setlists/${SETLIST_ID}`]: s }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).first().click();
+  await attendreMiseEnPage(page);
+  await attendreCompteur(page, /^1 \/ \d+$/);
+  const total = Number((await lireCompteur(page)).split(" / ")[1]);
+  expect(total).toBeGreaterThanOrEqual(2);
+  await page.keyboard.press("ArrowRight");
+  await attendreCompteur(page, `2 / ${total}`);
+  for (const etat of ["éteint", "allumé"]) {
+    const feuille = await ouvrirMenu(page, "outils");
+    await feuille.getByRole("button", { name: "Idées d'harmonie" }).click();
+    await page.keyboard.press("Escape"); // la feuille couvre la scène au téléphone
+    await expect(feuille).toBeHidden();
+    await page.waitForTimeout(1_000); // une repagination éventuelle
+    expect(await lireCompteur(page), `réglage ${etat}`).toBe(`2 / ${total}`);
+  }
+});

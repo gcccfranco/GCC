@@ -266,6 +266,7 @@ Mentions encore ouvertes à la dernière écriture de chaque section ; plusieurs
 et **n'ont pas été reconfirmées** : vérifier dans le § Avancement de la spec avant d'agir. Les points « à la main »
 (règles, scripts, 中文) sont **à faire confirmer par Timothée** : certains sont peut-être déjà faits.
 
+- **Incohérences d'interface, partout sur le site (parcours à l'œil du 14/11)** : `docs/parcours-oeil-2026-11-14.md`, dix choses à changer en premier, constats par gêne, état des constats du 13/11. Rien de codé : Timothée choisit.
 - **Bug signalé par Timothée (12/11, nuit) : espace vide en haut de la page chant.** **Corrigé sur la branche** (go de Timothée « Corrige directement », 12/11), pas encore sur `main`.
   Reproduit sous Chromium (iPhone 13 et Pixel 7, défilement de 8 px par pas) : 72 px plus bas, 90 px CSS de blanc au-dessus du
   titre (≈ 270 px de l'iPhone), comme sur la capture. Présent sur `main` (沙漠中的骆驼) **et** sur `claude/corrections-design`,
@@ -353,6 +354,8 @@ Specs dans `docs/` ; « archive § 3.X » = `grep -n '^### X\.' docs/archive/feu
 | AN | Pastilles « Int » et « Inst » | `spec-abreviation-interlude.md` (AB-I) | en ligne 07/11 |
 | AO | Mode louange façon forScore, apparence comprise | `spec-mode-louange-forscore-2.md` | vagues 1 et 2 et CA (11/11) codés, pas en ligne ; FS-F en cours (go du 11/11) ; vague 3 : JP-C et JP-D faites (12/11) ; AN fini le 13/11 (AN-3a à AN-5) ; reste une relecture complète avant mise en ligne |
 | AP | Le site devient le pupitre : « Ma partition » qui suit le chant, entrée des musiciens, écrans pratiques, Harmonie qui s'entend, accords en chiffres | `spec-pupitre-musicien.md` | cadrage du 11/11/2026 ; rapport d'usage rendu (`audit-usage-2026-11-11.md` : 149 constats, six lots proposés, révision incomplète) ; « go » de Timothée sur les cinq recommandations : lot 1 (retouches) : go, T1 à T3 codées sur la branche ; deux exemples : piste A et onze décisions (« Ok » de Timothée), spec à écrire (`spec-exemples-usage.md`) ; planches publiées, réponses attendues : « Ma partition », Harmonie et Accords ; comptage d'usage : go pour T1 ; planche du pupitre à lancer après « Ma partition » |
+| CL | Corrections du mode louange du 14/11 : page du scan 简谱 entière (deux volets et demi-lignes retirés), un trait = un tracé, « Chiffres » en louange et sur le calque, accord touché selon « Idées d'harmonie » | `spec-corrections-louange.md` (CL-1 à CL-4) | go de Timothée le 14/11/2026 ; CL-3 et CL-4 faites le 14/11, CL-1 et CL-2 faites le 15/11 (validées par Timothée) : lot fini |
+| CI | Corrections d'interface du 14/11 (relevé `parcours-oeil-2026-11-14.md`, « Il faut tout corriger ») : défauts A1 à A9, harmonisations B1 à B13 sans planche | `spec-corrections-interface.md` (CI-1 à CI-17) | spec validée par Timothée le 14/11/2026 ; go pour CI-1 ; tranches à « PerformanceMode » après CL-1 |
 
 **Chantiers sans lettre** (journal, archive § 6) : 简谱 par défaut puis piste A partout (`spec-jianpu-integration.md`,
 lot 1 en ligne, lot 3 codé 12–18/10) ; relevé des écarts et corrections (`spec-corrections-apres-releve.md`, 08–11/10) ;

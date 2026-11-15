@@ -230,18 +230,14 @@ test.describe("setlist", () => {
     });
   }
 
-  test("mode louange : les accords sont touchables (AL-2), un accord au centre ouvre le panneau, sans bulle d'aide", async ({ page }) => {
+  test("mode louange : sans accès Harmonie, les accords sont inertes même réglage « Idées d'harmonie » posé (CL-4), sans bulle d'aide", async ({ page }) => {
+    // Le panneau d'accord en louange (réglage allumé, accès Harmonie) est couvert par louange-accords.spec.ts.
+    await page.addInitScript((u) => localStorage.setItem(`perf-idees-harmonie-${u}`, "1"), MUSICIENNE.uid);
     await ouvrirLaSetlist(page);
     await page.getByRole("button", { name: /Mode Louange/ }).click();
     await attendreMiseEnPage(page);
-    await expect(onStage(page, "[data-copy-line]").first()).toBeVisible();
-    const l = page.locator("[data-performance-mode] [data-accord-touchable]");
-    expect(await l.count()).toBeGreaterThan(0);
-    const w = page.viewportSize()!.width;
-    const n = await l.evaluateAll((els, w) => els.findIndex((el) => { const r = el.getBoundingClientRect(); const x = r.left + r.width / 2; return r.width > 0 && r.top > 120 && r.bottom < innerHeight - 120 && x > w * 0.34 && x < w * 0.66 && document.elementFromPoint(x, r.top + r.height / 2)?.closest("[data-accord-touchable]") === el; }), w);
-    expect(n, "un accord au centre de la page").toBeGreaterThanOrEqual(0);
-    await l.nth(n).click();
-    await expect(panneau(page)).toBeVisible();
+    await expect(onStage(page, "[data-copy-line] .font-chord, [data-copy-line] [data-accord]").first()).toBeVisible();
+    await expect(page.locator("[data-performance-mode] [data-accord-touchable]")).toHaveCount(0);
     await expect(aide(page)).toHaveCount(0);
   });
 });

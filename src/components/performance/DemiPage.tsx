@@ -65,7 +65,8 @@ export function DemiPage({
       // en pixels image (`data-jianpu-lignes`) et l'échelle de la fenêtre ; on ne coupe qu'entre deux lignes, jamais dans une.
       // Demi-lignes (lot JP-C, téléphone en portrait) : les fenêtres empilées forment UN groupe, et les deux moitiés d'une ligne
       // ne comptent que pour une rangée (jamais de coupe entre elles).
-      const fenetres = Array.from(couche.querySelectorAll("[data-jianpu-tranche]"));
+      // shortcut: CL-1 (docs/spec-corrections-louange.md) — découpe sans appelant, gardée tant que Timothée n'a pas vu la page entière
+      const fenetres = Array.from(couche.querySelectorAll("[data-jianpu-lignes]"));
       // Deux colonnes de demi-lignes (lot JV, JV-4) : un groupe par colonne (`data-jianpu-volet`), comme les colonnes de texte.
       if (fenetres.some((f) => f.hasAttribute("data-jianpu-moitie"))) for (const volet of new Set(fenetres.map((f) => f.closest("[data-jianpu-volet]")))) {
         const rects: Array<[number, number]> = [];
@@ -79,7 +80,7 @@ export function DemiPage({
         groupes.push({ x0: Math.min(...qs.map((q) => q.left)), x1: Math.max(...qs.map((q) => q.right)), top: Math.min(...qs.map((q) => q.top)), blocs: bordsLibres(rects, cote), lignes: [], sections: [], plages: cote === "haut" ? rects : undefined });
       } else for (const f of fenetres) {
         const q = f.getBoundingClientRect();
-        const [t0, t1] = (f.getAttribute("data-jianpu-tranche") ?? "").split("-").map(Number);
+        const [t0, t1] = (f.getAttribute("data-jianpu-tranche") ?? f.getAttribute("data-jianpu-plage") ?? "").split("-").map(Number);
         const echelle = q.height / Math.max(1, t1 - t0);
         const rects = (f.getAttribute("data-jianpu-lignes") ?? "").split(",").filter(Boolean).map((l): [number, number] => {
           const [a, b] = l.split("-").map(Number);

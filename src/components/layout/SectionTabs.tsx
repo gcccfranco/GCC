@@ -18,6 +18,7 @@ import { useFonduLateral } from "@/hooks/useFonduLateral"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock"
 import { styleTexteService } from "@/lib/couleurSombre"
+import { segmentOption, segmentPiste } from "@/components/ui/segment"
 
 type SectionTab = { href: string; label: string; color?: string }
 
@@ -144,7 +145,7 @@ export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false, 
         <nav
           ref={rangee}
           data-testid="onglets-section"
-          className={`${menuLabel ? "hidden md:flex" : "flex"} gap-1.5 overflow-x-auto py-1 fondu-lateral`}
+          className={`${menuLabel ? "hidden md:flex" : "flex"} w-fit max-w-full overflow-x-auto fondu-lateral ${segmentPiste(true)}`}
           style={{ scrollbarWidth: "none" }}
         >
           {tabs.map((tab, i) => {
@@ -155,12 +156,8 @@ export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false, 
                 href={tab.href}
                 ref={(el) => { tabRefs.current[i] = el }}
                 aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-11 flex-shrink-0 items-center rounded-full px-3.5 text-sm font-semibold whitespace-nowrap transition-colors duration-150 ${
-                  active
-                    ? tab.color ? "texte-service" : "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                style={active ? teinte(tab.color) : undefined}
+                className={`${segmentOption(active, true)} ${active && tab.color ? "texte-service" : ""}`}
+                style={active && tab.color ? styleTexteService(tab.color) : undefined}
               >
                 {tab.label}
               </Link>

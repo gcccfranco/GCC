@@ -34,7 +34,9 @@ export function ChantsVolets({ themes, nombre, children }: { themes: Theme[]; no
   if (surStatistiques) return <>{children}</>;
 
   return (
-    <div className="chants-volets" data-sur-liste={surListe ? "" : undefined}>
+    // B13 (CI-17) : dès 768 px en un volet, l'index A–Z est dans la carte (`--index-hors` à 0, comme en sombre et en deux
+    // volets) et « Proposer un chant » finit au bord de la carte ; classes ici car globals.css est pris par d'autres lots.
+    <div className="chants-volets md:[--index-hors:0px] md:[&>.chants-entete]:!pr-0" data-sur-liste={surListe ? "" : undefined}>
       {/* Affiché par le CSS là où la liste l'est : dès le rendu du serveur, à sa place. */}
       <div className="chants-entete">
         <EnTetePage

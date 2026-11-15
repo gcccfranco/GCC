@@ -79,15 +79,11 @@ for (const chant of CHANTS) {
           expect(Math.min(s.x + s.width, main.x + main.width)).toBeLessThanOrEqual(m.x + 0.5);
         }
       } else {
-        // Feuille large : entièrement dans le volet du chant (ou la fenêtre), pas centrée sur la fenêtre au-dessus de la liste.
-        if ((await marge(page).getAttribute("data-place")) === "feuille-large") {
-          const volet = await page.evaluate(() => {
-            const v = document.querySelector(".chants-chant")?.getBoundingClientRect();
-            return v ? { x: v.left, d: v.right } : { x: 0, d: window.innerWidth };
-          });
-          expect(m.x).toBeGreaterThanOrEqual(volet.x - 1);
-          expect(m.x + m.width).toBeLessThanOrEqual(volet.d + 1);
-        }
+        // Feuille : pleine largeur du volet du chant (son enveloppe) ou de la fenêtre, jamais au-dessus de la liste voisine.
+        expect(await marge(page).getAttribute("data-place")).toBe("feuille");
+        const zoneMusique = (await page.locator(".chants-chant").count()) ? (await marge(page).locator("xpath=..").boundingBox())! : { x: 0, width: page.viewportSize()!.width };
+        expect(m.x).toBeCloseTo(zoneMusique.x, 0);
+        expect(m.width).toBeCloseTo(zoneMusique.width, 0);
         // Feuille : le bas de la musique remonte au-dessus d'elle.
         await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
         await page.waitForTimeout(200);
@@ -111,16 +107,16 @@ for (const chant of CHANTS) {
   });
 }
 
-test("FR : accords éteints dans la marge, ordre « Une fois chacune » et disposition retenus au rechargement", async ({ page }) => {
+test("FR : accords éteints par la barre, ordre « Une fois chacune » et disposition retenus au rechargement", async ({ page }) => {
   await ouvrir(page, "abba-pere", false);
   const accords = page.locator("main [data-accord-touchable]");
   await expect(accords.first()).toBeVisible();
   const avant = await page.locator("main [data-section]").count();
-  await ouvrirMarge(page);
-  await marge(page).getByRole("switch", { name: "Accords" }).click();
+  await barre(page).getByRole("button", { name: "Accords", exact: true }).click();
   await expect(accords).toHaveCount(0);
-  await marge(page).getByRole("switch", { name: "Accords" }).click();
+  await barre(page).getByRole("button", { name: "Accords", exact: true }).click();
   await expect(accords.first()).toBeVisible();
+  await ouvrirMarge(page);
   await marge(page).getByRole("radio", { name: "Une fois chacune" }).click();
   await expect.poll(() => page.locator("main [data-section]").count()).toBeLessThanOrEqual(avant);
   await marge(page).getByRole("radiogroup", { name: "Disposition" }).getByRole("radio").filter({ hasText: "Couleurs par section" }).click();

@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { marge, ouvrirMarge } from "./helpers/marge";
 
 // Accords masqués : le texte d'après un accord garde son espace. « à[F] Lui » s'affichait
 // « àLui » (31/10/2026). Un chant FR, et un chant ZH qui ne doit pas bouger.
@@ -13,9 +12,11 @@ test("sans accords, « à Lui » garde son espace", async ({ page }) => {
   await signInAs(page, MEMBRE, {}, "/songs/en-toi-je-sais-qui-je-suis");
   const main = page.locator("main.song-zoom");
   await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
-  await ouvrirMarge(page);
-  await marge(page).getByRole("switch", { name: "Accords" }).click();
-  await page.keyboard.press("Escape");
+  // B6 (CI-11) : l'interrupteur « Accords » a quitté la marge de la page ; le bouton de la barre le porte seul.
+  const accords = page.getByTestId("barre-outils").getByRole("button", { name: "Accords", exact: true });
+  await expect(accords).toHaveAttribute("aria-pressed", "true");
+  await accords.click();
+  await expect(accords).toHaveAttribute("aria-pressed", "false");
   await expect(main.getByText("à Lui.").first()).toBeVisible();
   const texte = (await lignes(page)).join("\n");
   expect(texte).toContain("Je suis enfant de Dieu, je suis à Lui.");
@@ -27,9 +28,11 @@ test("sans accords, un mot coupé par des accords se recolle (« digne »)", asy
   await signInAs(page, MEMBRE, {}, "/songs/toi-seul-es-digne");
   const main = page.locator("main.song-zoom");
   await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
-  await ouvrirMarge(page);
-  await marge(page).getByRole("switch", { name: "Accords" }).click();
-  await page.keyboard.press("Escape");
+  // B6 (CI-11) : l'interrupteur « Accords » a quitté la marge de la page ; le bouton de la barre le porte seul.
+  const accords = page.getByTestId("barre-outils").getByRole("button", { name: "Accords", exact: true });
+  await expect(accords).toHaveAttribute("aria-pressed", "true");
+  await accords.click();
+  await expect(accords).toHaveAttribute("aria-pressed", "false");
   await expect(main.getByText("digne").first()).toBeVisible();
   const texte = (await lignes(page)).join("\n");
   expect(texte).toMatch(/es digne/);

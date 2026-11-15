@@ -332,7 +332,7 @@ test("App › Équipes : un groupe en lecture, colonnes de rôles, sélecteur su
 
 test("App › Équipes : l'église garde son bandeau, le sélecteur à gauche et Équipes · Musiciens à droite en grand", async ({ page }) => {
   await signInAs(page, { ...ADMIN, uid: "yann", email: "yann@example.com" }, { "users/yann": { email: "yann@example.com", firstName: "Yann", lastName: "M.", planningName: "Yann M.", serviceRoles: {} } }, "/equipes");
-  await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
+  await expect(page.getByTestId("grille-equipes")).toBeVisible();
   const selecteur = page.getByRole("tablist", { name: "Organigrammes", exact: true });
   const vues = page.getByRole("tablist", { name: "Vue" });
   const a = (await selecteur.boundingBox())!;

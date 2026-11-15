@@ -179,10 +179,11 @@ test.describe("Moi (A12)", () => {
     const deconnexion = await boite(page.getByRole("button", { name: "Déconnexion" }));
     const reglages = await boite(page.getByRole("region", { name: "Réglages" }));
     if (info.project.name === "tablette") {
-      // Compte et réglages côte à côte ; « Déconnexion » en rangée pleine largeur dessous (R2, n° 1) : aucun vide gris sous l'une des deux cartes.
-      expect(Math.abs(reglages.y - compte.y), "compte et réglages côte à côte").toBeLessThan(2);
-      expect(deconnexion.y, "« Déconnexion » sous la paire").toBeGreaterThanOrEqual(Math.max(compte.y + compte.height, reglages.y + reglages.height) - 1);
-      expect(deconnexion.width, "pleine largeur").toBeGreaterThan(compte.width + reglages.width);
+      // B13 (CI-17) : la tablette prend l'agencement du grand écran : réglages puis déconnexion sous le compte, dans la colonne de gauche.
+      expect(reglages.y, "réglages sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
+      expect(deconnexion.y, "« Déconnexion » sous les réglages").toBeGreaterThan(reglages.y + reglages.height - 1);
+      expect(deconnexion.x, "même colonne que le compte").toBeGreaterThanOrEqual(compte.x - 1);
+      expect(deconnexion.x + deconnexion.width, "même colonne que le compte").toBeLessThanOrEqual(compte.x + compte.width + 1);
     }
     expect(compte.y + compte.height - (profil.y + profil.height), "« Mon profil » finit au bas de sa carte").toBeLessThanOrEqual(24);
     // Langue : libellé + valeur en texte secondaire dans une ligne ; plus de pilule de bouton.
@@ -275,9 +276,9 @@ test.describe("Moi (A12)", () => {
     const depart = page.viewportSize()!;
     const avant = await largeurCompte();
     if (avant === 340) {
-      // En grand : vers la tablette portrait, puis retour.
-      await page.setViewportSize({ width: 820, height: 1180 });
-      await expect.poll(largeurCompte, { message: "en tablette portrait" }).toBeGreaterThan(340);
+      // En grand : vers le téléphone (le compte y prend la largeur de la page ; dès la tablette il reste à 340 px, B13), puis retour.
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect.poll(largeurCompte, { message: "au téléphone" }).toBeGreaterThan(340);
     } else {
       // Téléphone, tablette portrait : vers un écran couché de 1 280 px (deux volets), puis retour.
       await page.setViewportSize({ width: 1280, height: 900 });
@@ -303,23 +304,17 @@ test.describe("Moi (A12)", () => {
       expect(reglages.y, "les réglages sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
       expect(services.x, "les aperçus à droite du compte").toBeGreaterThan(compte.x + compte.width - 1);
       expect(Math.abs(services.y - compte.y), "ils partent ensemble").toBeLessThan(2);
-      if (info.project.name === "ordinateur-1440") {
-        // quotidien-3, 4 : deux piles, côte à côte dès 720 px de conteneur (1 440 px).
-        expect(Math.abs(taches.y - services.y), "deux colonnes d'aperçus").toBeLessThan(2);
-        expect(taches.x).toBeGreaterThan(services.x + services.width - 1);
-      } else {
-        // 1 280 px : le conteneur des aperçus fait 592 px, sous les 720 px : une colonne (quotidien-4), pile de gauche puis pile de droite.
-        expect(services.width, "une colonne de moins de 720 px").toBeLessThan(720);
-        expect(Math.abs(taches.x - services.x), "une seule colonne d'aperçus").toBeLessThan(2);
-        expect(taches.y, "les tâches sous les services").toBeGreaterThan(services.y + services.height - 1);
-      }
+      // B13 (CI-17) : une seule colonne d'aperçus à toutes les tailles, sans trou : chaque carte à 16 px de la précédente.
+      expect(Math.abs(taches.x - services.x), "une seule colonne d'aperçus").toBeLessThan(2);
+      expect(taches.y, "les tâches sous les services").toBeGreaterThan(services.y + services.height - 1);
       const equipes = await boite(apercu(page, "Mes équipes"));
       expect(equipes.y, "Mes équipes sous les tâches").toBeGreaterThan(taches.y + taches.height - 1);
+      expect(Math.abs(equipes.y - (taches.y + taches.height) - 16), "16 px entre deux aperçus, pas de trou").toBeLessThan(2);
     } else if (info.project.name === "tablette") {
-      expect(Math.abs(reglages.y - compte.y), "compte et réglages côte à côte").toBeLessThan(2);
-      expect(reglages.x).toBeGreaterThan(compte.x + compte.width - 1);
-      expect(services.y, "les aperçus dessous").toBeGreaterThan(compte.y + compte.height - 1);
-      expect(Math.abs(taches.y - services.y), "en deux colonnes").toBeLessThan(2);
+      // B13 (CI-17) : comme en grand, compte et réglages à gauche, aperçus à droite (une colonne sous 720 px de conteneur).
+      expect(reglages.y, "les réglages sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
+      expect(services.x, "les aperçus à droite du compte").toBeGreaterThan(compte.x + compte.width - 1);
+      expect(Math.abs(services.y - compte.y), "ils partent ensemble").toBeLessThan(2);
     } else {
       expect(services.y, "une colonne : les services sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
       expect(taches.y).toBeGreaterThan(services.y + services.height - 1);

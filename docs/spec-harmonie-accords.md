@@ -278,7 +278,7 @@ Reprend les décisions de Timothée du 11/11 (point 3) et du 12/11 (point 6). De
   page chant et de la vue partitions de setlist : mêmes positions, `font-chord`, `--accord-fr` / `--chord-color` ; la
   largeur réservée suit le texte affiché. Le toucher ouvre toujours l'accord **en lettres** (le panneau dit déjà « 4 dans
   D »). Restent en lettres : le calque 简谱, le PDF, le mode louange (`PerformanceMode.tsx`, H8), les lignes d'édition, le
-  copier des paroles. **Bascule** : contrôle segmenté de deux boutons (`aria-pressed`) « Lettres | Chiffres » /
+  copier des paroles. (levé le 14/11/2026, lot CL-3 de `spec-corrections-louange.md` : le calque 简谱 et le mode louange suivent la bascule ; restent en lettres le PDF, les lignes d'édition, le copier) **Bascule** : contrôle segmenté de deux boutons (`aria-pressed`) « Lettres | Chiffres » /
   « 字母 | 数字 » ; dans la barre du chant, juste après `PiluleTonalite`, à partir de 640 px, en libellés courts
   « A » / « 1 » (titre et `aria-label` en mots) ; au téléphone la barre est déjà pleine (elle replie ses libellés) :
   la bascule y est dans le menu ⋯ du chant, en mots, sous la couleur des accords ; même rubrique dans les réglages de

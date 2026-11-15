@@ -747,11 +747,11 @@ async function ouvrirLouangeT5(page: Page, role = "pianiste", certifie = false) 
   }, "/setlists/setlist-t5");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
-  // Certifié au téléphone en portrait (lot JP-C) : des demi-lignes, donc plusieurs fenêtres.
-  await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 })[certifie ? "toBeGreaterThan" : "toBe"](certifie ? 0 : 1);
-  // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus. Certifié : la page est une tranche.
+  // CL-1 : une page de partition = une fenêtre, certifiée ou non (plus de demi-lignes ni de tranche).
+  await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);
+  // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus. Certifié : la page entière, sa tête de feuille au-dessus.
   if (certifie) {
-    await expect(page.locator("[data-performance-mode] [data-jianpu-tranche]:not([aria-hidden=true] *)").first()).toBeAttached({ timeout: 30_000 });
+    await expect(page.locator("[data-performance-mode] [data-tete-feuille]:not([aria-hidden=true] *)").first()).toBeAttached({ timeout: 30_000 });
     return db;
   }
   const { w, h } = INDEX[SLUG].pages[0];
@@ -837,11 +837,11 @@ test("L3-T5a en-tête d'une ligne (mode louange), A+ 150 %, capo et tonalité de
 
 test("L3-T5a annotations (MP-5) : un trait tracé sur un scan s'accroche à l'image (ancre « scan », coordonnées de l'image) dans ma partition, plus sous la clé de la page", async ({ page }) => {
   test.setTimeout(90_000);
-  // 一生爱你 est certifié (`systemes.json`, lot JP-B) : sa page est une tranche. Les anciennes annotations par page
+  // 一生爱你 est certifié (`systemes.json`, lot JP-B) : sa page tient entière à l'écran (CL-1). Les anciennes annotations par page
   // (clés « j2 », « j4-<y0> ») restent lues, plus rien ne s'y écrit : tests/louange-jianpu-tranches.spec.ts.
   const db = await ouvrirLouangeT5(page, "pianiste", true);
   await basculerAnnoter(page);
-  const fenetre = (await page.locator("[data-performance-mode] [data-jianpu-tranche]:not([aria-hidden=true] *)").first().boundingBox())!;
+  const fenetre = (await page.locator("[data-performance-mode] [data-jianpu-fenetre]:not([aria-hidden=true] *)").first().boundingBox())!;
   const x = fenetre.x + fenetre.width * 0.4;
   const y = Math.min(fenetre.y + fenetre.height * 0.5, page.viewportSize()!.height * 0.5);
   await page.mouse.move(x, y);

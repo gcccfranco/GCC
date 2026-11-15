@@ -12,6 +12,8 @@ import { compter } from "@/lib/usage";
 /** Page 简谱 : en-tête d'une ligne et bandeau de structure en haut, scan
  *  (`children`, déjà rendu par PerformanceMode) à l'échelle de la hauteur qui
  *  reste. Un scan non certifié ne se coupe pas : une page de scan par page d'écran.
+ * shortcut: CL-1 (docs/spec-corrections-louange.md) — découpe sans appelant, gardée tant que Timothée n'a pas vu la page entière
+ *
  *  Un scan certifié (`systemes.json`, lot JP-B) se coupe entre deux lignes : une page d'écran par tranche,
  *  en une seule feuille large (jamais de colonne de structure à gauche) ; « Ensuite » reste sur la dernière tranche
  *  du chant ; il n'a ni en-tête d'une ligne ni bandeau : la tête de feuille (`tete`, `TeteFeuille`) occupe la hauteur

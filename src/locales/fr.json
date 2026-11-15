@@ -45,6 +45,10 @@
       "zh": "中文",
       "mixed": "FR / 中文"
     },
+    "languagesShort": {
+      "fr": "FR",
+      "zh": "中文"
+    },
     "moreActions": "Plus d'actions",
     "retry": "Réessayer",
     "confirm": "Valider",

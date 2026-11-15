@@ -102,13 +102,12 @@ test("« Signaler » : une vraie fenêtre (rôle dialog), Échap la ferme, le fo
   await expect(declencheur).toBeFocused();
 });
 
-test("organigramme : région au clavier nommée ; sur téléphone, une colonne, aucune carte coupée par le bord", async ({ page }) => {
+test("organigramme : région nommée ; sur téléphone, une colonne, aucune carte coupée par le bord", async ({ page }) => {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await signInAs(page, { ...MEMBRE, email: ADMIN_EMAIL, uid: "u-admin-b3" }, {}, "/equipes");
-  const bandeau = page.getByTestId("bandeau-equipes");
+  const bandeau = page.getByTestId("grille-equipes");
   await expect(bandeau).toBeVisible();
   await expect(bandeau).toHaveAttribute("role", "region");
-  await expect(bandeau).toHaveAttribute("tabindex", "0");
   await expect(bandeau).toHaveAttribute("aria-label", "Organigramme");
   if (!estTelephone(page)) return;
   const largeur = page.viewportSize()!.width;

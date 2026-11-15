@@ -1111,8 +1111,8 @@ for (const [d, bouton, seulementTelephone] of [["reperes", "[data-repere-pastill
 test("G1-4 : un balayage parti d'une pastille de Repères tourne la page, un toucher sur elle ne la tourne pas", async ({ page }) => {
   // L'astuce du rappel (bulle de la première fois, posée par-dessus le haut de la page) déjà vue : elle couvrirait la pastille.
   await page.addInitScript(() => {
-    localStorage.setItem("perf-astuce-rappel-joue", "1");
-    localStorage.setItem("perf-astuce-rappel-unique", "1");
+    localStorage.setItem("perf-astuce-rappel-joue", "2");
+    localStorage.setItem("perf-astuce-rappel-unique", "2");
   });
   await louangeEn(page, "reperes");
   await page.keyboard.press("ArrowRight");

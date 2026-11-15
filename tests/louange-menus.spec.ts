@@ -43,6 +43,8 @@ async function ouvrir(page: Page, opts: { langue?: Langue; theme?: "light" | "da
       if (!localStorage.getItem("perf-role-preset")) localStorage.setItem("perf-role-preset", "pianiste");
       if (zh) localStorage.setItem("i18nextLng", "zh-CN");
       localStorage.setItem("perf-theme", th as string);
+      // Indice du rappel déjà vu deux fois (il ne revient plus) : posé en bas de la page 2, il prendrait les touchers « hors du menu ».
+      localStorage.setItem("perf-astuce-rappel-joue", "2");
       // Texte agrandi : plus de pages, donc plus de gestes qui pourraient (à tort) les tourner.
       if (!localStorage.getItem("perf-font-scale")) localStorage.setItem("perf-font-scale", "1.5");
     } catch { /* ignore */ }
@@ -140,7 +142,8 @@ for (const menu of MENUS) {
     }
   });
 
-  test(`${menu} : un toucher dehors le ferme sans tourner la page ni masquer la barre ; flèches sans effet ; Échap ferme puis quitte`, async ({ page }, testInfo) => {
+  test(`${menu} : un toucher dehors le ferme sans tourner la page ni masquer la barre ; une pédale ferme et tourne ; Échap ferme puis quitte`, async ({ page }, testInfo) => {
+    test.setTimeout(90_000); // A8 : quatre ouvertures de plus (Repères passe par Outils au téléphone)
     await ouvrir(page);
     await allerPage2(page);
     const avant = await lireCompteur(page);
@@ -166,11 +169,20 @@ for (const menu of MENUS) {
       expect(await lireCompteur(page), `dehors à ${part * 100} % : la page n'a pas tourné`).toBe(avant);
       await expect(quitter, `dehors à ${part * 100} % : la barre reste`).toBeVisible();
     }
-    // Les flèches, PageUp / PageDown et Espace, menu ouvert, ne tournent pas la page.
+    // A8 : menu ouvert, une pédale (→ / ←, PageDown / PageUp) ferme le menu et tourne la page ; Espace ne tourne rien.
+    const [n, total] = avant.split(" / ").map(Number);
+    for (const [touche, attendu] of [["ArrowRight", n + 1], ["ArrowLeft", n], ["PageDown", n + 1], ["PageUp", n]] as const) {
+      const ouvert = await ouvrirMenu(page, menu);
+      await attendreOuverture(page);
+      await page.keyboard.press(touche);
+      await expect(ouvert, `${touche} ferme le menu`).toBeHidden();
+      await expect.poll(() => lireCompteur(page), { message: `${touche} tourne la page` }).toBe(`${attendu} / ${total}`);
+    }
     const dialogue = await ouvrirMenu(page, menu);
     await attendreOuverture(page);
-    for (const touche of ["ArrowRight", "ArrowLeft", "PageDown", "PageUp", "Space"]) await page.keyboard.press(touche);
+    await page.keyboard.press("Space");
     await page.waitForTimeout(300);
+    await expect(dialogue).toBeVisible();
     expect(await lireCompteur(page)).toBe(avant);
     // Échap ferme le menu seulement ; le second quitte le mode.
     await page.keyboard.press("Escape");
@@ -179,6 +191,23 @@ for (const menu of MENUS) {
     expect(await lireCompteur(page)).toBe(avant);
     await page.keyboard.press("Escape");
     await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
+  });
+}
+
+// A8 : retoucher l'icône d'un menu ouvert le referme (avant, la perte du focus le fermait et le clic le rouvrait). Au
+// téléphone, la feuille et son fond couvrent la barre : le toucher à la place de l'icône tombe sur le fond, qui ferme.
+for (const menu of ["setlist", "outils"] as const) {
+  test(`${menu} : un second toucher sur son icône le referme`, async ({ page }, testInfo) => {
+    await ouvrir(page);
+    const avant = await lireCompteur(page);
+    const dialogue = await ouvrirMenu(page, menu);
+    await attendreOuverture(page);
+    const icone = (await page.locator(`[data-menu-declencheur="${menu}"]`).boundingBox())!;
+    await toucher(page, testInfo, icone.x + icone.width / 2, icone.y + icone.height / 2);
+    await expect(dialogue).toBeHidden();
+    await page.waitForTimeout(600);
+    await expect(dialogue, "il ne se rouvre pas").toBeHidden();
+    expect(await lireCompteur(page)).toBe(avant);
   });
 }
 
@@ -236,6 +265,9 @@ test("Repères est absent quand le chant courant n'a pas de section (scan 简谱
   // Scan non certifié : depuis JP-B2, un scan certifié (一生爱你) a des Repères (sections.json). On répond à systemes.json par « aucun chant certifié ».
   await page.route("**/jianpu/systemes.json", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
+  // Depuis CL-1, sections.json suffit à donner des pages (donc des Repères) : on le vide aussi.
+  await page.route("**/jianpu/sections.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(["一生爱你", "abba-pere"]) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
@@ -255,14 +287,13 @@ test("Outils : plus de tonalité ni de capo (ils sont dans l'armure) ; plein éc
   // Raccourcis : sur ordinateur (pointeur précis) ; absents au téléphone tant qu'aucune touche n'a été frappée.
   if (ordinateur(testInfo)) await expect(outils.locator("[data-raccourcis]")).toBeVisible();
   if (telephone(page)) await expect(outils.locator("[data-raccourcis]")).toHaveCount(0);
-  // Au téléphone, Crayon et « Métronome » (qui ouvre le panneau) sont des lignes d'Outils ; ailleurs ils sont dans la barre.
-  if (telephone(page)) {
-    await expect(outils.getByRole("button", { name: "Crayon" })).toBeVisible();
-    await expect(outils.locator("[data-metronome-ouvrir]")).toBeVisible();
-  } else {
-    await expect(outils.getByRole("button", { name: "Crayon" })).toHaveCount(0);
-    await expect(outils.locator("[data-metronome-ouvrir]")).toHaveCount(0);
-  }
+  // Au téléphone, Crayon est une ligne d'Outils ; ailleurs il est dans la barre. « Métronome » (qui ouvre le panneau) est
+  // une ligne d'Outils à toutes les tailles, en plus de ♩ dans la barre (parcours du 14/11, G).
+  await expect(outils.locator("[data-metronome-ouvrir]")).toBeVisible();
+  if (telephone(page)) await expect(outils.getByRole("button", { name: "Crayon" })).toBeVisible();
+  else await expect(outils.getByRole("button", { name: "Crayon" })).toHaveCount(0);
+  // Repères : une ligne d'Outils au téléphone seulement (♩ a pris sa place dans la barre).
+  await expect(outils.locator("[data-reperes-ouvrir]")).toHaveCount(telephone(page) ? 1 : 0);
   // Outils a son bouton dans la barre à toutes les tailles (RU-5).
   await expect(page.locator('[data-menu-declencheur="outils"]')).toBeVisible();
 });
@@ -447,6 +478,7 @@ test("Affichage : aucune 2e ligne d'un seul élément (pastilles de couleur, min
 });
 
 test("palette : framboise retenue après rechargement, et les actions des menus prennent la couleur corrigée (décision 23)", async ({ page }) => {
+  test.setTimeout(60_000);
   await ouvrir(page);
   const attendue = `rgb(${[1, 3, 5].map((i) => parseInt(garderContraste("#c2185b", FOND_CLAIR).slice(i, i + 2), 16)).join(", ")})`;
   let options = await ouvrirMenu(page, "affichage");

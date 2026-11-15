@@ -28,3 +28,11 @@ test("la modulation : « Modulation » en français, 升调 en chinois", () => {
   expect((fr.editeur as Arbre).keyChange).toBe("Modulation");
   expect((zh.editeur as Arbre).keyChange).toBe("升调");
 });
+
+test("filtre de langue de la liste des chants : 法语 en interface 中文, FR en français", async ({ page }) => {
+  await page.goto("/songs");
+  await expect(page.getByRole("tab", { name: "FR", exact: true }).first()).toBeVisible();
+  await page.evaluate(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await page.reload();
+  await expect(page.getByRole("tab", { name: "法语", exact: true }).first()).toBeVisible();
+});

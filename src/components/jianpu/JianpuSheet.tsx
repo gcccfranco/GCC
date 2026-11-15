@@ -6,10 +6,12 @@ import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords, useJianpuMarges, useJianpuSections, useJianpuSystemes } from "@/lib/jianpu/images";
 import { etiquettesDuScan, passageDeSection } from "@/lib/jianpu/etiquettesSections";
-import { ECART_MOITIES, ECART_SYSTEMES, echelleFenetre, LARGEUR_FEUILLE_MAX, type Demi, type FenetreDemi, type Volets } from "@/lib/performance/tranchesScan";
+import { ECART_MOITIES, ECART_SYSTEMES, echelleFenetre, LARGEUR_FEUILLE_MAX, MARGE_Y_MAX, type Demi, type FenetreDemi, type Volets } from "@/lib/performance/tranchesScan";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
-import { AccordTouchable } from "@/components/accords/AccordTouchable";
+import { AccordTouchable, etiquetteAffichee } from "@/components/accords/AccordTouchable";
+import { useNotationDuCompte } from "@/components/song/NotationAccordsProvider";
+import { NotationAccordsContext } from "@/lib/notationAccords";
 import { useIciDesAccords, useIciDuChant, useOuvrirAccord } from "@/components/accords/AccordsProvider";
 import type { JianpuChords } from "@/types/setList";
 import { altSpellingKey, getTransposedKey, semitonesTo, transposeLabel } from "@/lib/transpose";
@@ -232,6 +234,7 @@ type JianpuSheetProps = {
   /** Donné : toucher un accord le change ou l'efface, toucher une ligne
    *  d'accords en ajoute un (modes « Adapter » et « Ma version »). */
   onEditChords?: (next: JianpuChords) => void;
+  // shortcut: CL-1 (docs/spec-corrections-louange.md) — découpe sans appelant, gardée tant que Timothée n'a pas vu la page entière
   /** Mode `fit` d'un scan certifié : montrer cette tranche de la page, pleine largeur (bornée à 1 040 px), au lieu de
    *  la page entière. Image et calque se décalent ensemble ; aucune coordonnée du calque ne change. */
   tranche?: TrancheFenetre;
@@ -255,6 +258,9 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   const marges = useJianpuMarges(slug);
   const systemes = useJianpuSystemes();
   const playedKey = cleJouee(demandee, originalKey, chords?.printedKey);
+  // CL-3 : le calque suit la bascule Lettres | Chiffres du compte ; en retouche, les lettres (édition).
+  const notationCompte = useNotationDuCompte();
+  const notation = onEditChords ? "lettres" : notationCompte;
   // Retouches (lot 9) : l'accord retouché remplace le gravé partout où le
   // calque parle de lui, y compris dans l'ordre de peinture.
   const retouches = chordEdits?.changed ?? {};
@@ -275,6 +281,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   const chordSemitones = semitones - capo;
   const chordKey = getTransposedKey(playedKey ?? chords?.printedKey ?? "C", -capo);
   const chordFontPx = chords ? chords.labelH / CAP_HEIGHT : 0;
+  const contexteNotation = useMemo(() => ({ notation, tonalite: chordKey }), [notation, chordKey]);
   /** Corps des accords gravés à cette hauteur : une ligne d'intro est gravée
    *  plus petite que le corps de la page, un accord ajouté sur elle la suit. */
   const corpsALaHauteur = (y: number) => {
@@ -308,7 +315,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
     });
     return { boites: ordre.map(({ l }) => ({ x: l.x, y: l.y, h: l.h })), rangDe, rangCadre };
   }, [chords, chordEdits]);
-  const overlayOn = Boolean(chords && playedKey);
+  const overlayOn = Boolean(chords && (playedKey || notation === "chiffres"));
   // Sans transposition, le calque reste éteint : seules les retouches se
   // dessinent, pour ne pas redessiner par-dessus une gravure intacte.
   const retouchesOn = Boolean(chords && aDesRetouches(chordEdits));
@@ -531,9 +538,10 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         ? ""
         : transposeLabel(grave, chordSemitones, altSpellingKey(chordKey, l.alt ?? 0));
       const corps = l.fh ? l.fh / CAP_HEIGHT : chordFontPx;
+      const affiche = etiquetteAffichee(shown, notation, chordKey);
       const fontPx = Math.min(
-        fitFont(shown, corps, l.sp),
-        fitFont(shown, corps, voisinCalque(boites, rangDe[n]), CHORD_FONT, 0)
+        fitFont(affiche, corps, l.sp),
+        fitFont(affiche, corps, voisinCalque(boites, rangDe[n]), CHORD_FONT, 0)
       );
       out.push({
         key: `etiquette-${n}`,
@@ -625,7 +633,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         color: ecriture ? (b.bleu ? undefined : "hsl(var(--jianpu-encre))") : "transparent",
       }}
     >
-      {ecriture ? (touchable ? <AccordTouchable etiquette={b.texte} capo={capo || undefined} sectionUids={sectionDeLaBoite(etiquettes, slug ? systemes?.[slug]?.pages[page]?.lignes : undefined, page, b.y)} /> : b.texte) : null}
+      {ecriture ? (touchable ? <AccordTouchable etiquette={b.texte} capo={capo || undefined} sectionUids={sectionDeLaBoite(etiquettes, slug ? systemes?.[slug]?.pages[page]?.lignes : undefined, page, b.y)} /> : b.key.startsWith("etiquette-") || b.key.startsWith("ajout-") ? etiquetteAffichee(b.texte, notation, chordKey) : b.texte) : null}
     </span>
     );
   };
@@ -643,7 +651,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
 
       {partial && (
         <div className={MESSAGE} style={ENCRE}>
-          <span className="font-semibold">{t("jianpu.jouerEn", { key: playedKey })}</span>{" "}
+          <span className="font-semibold">{t("jianpu.jouerEn", { key: playedKey ?? chords?.printedKey })}</span>{" "}
           <Trans
             i18nKey={chords?.keyLabel ? "jianpu.partiel" : "jianpu.partielIndication"}
             values={{ key: chords?.printedKey ?? "" }}
@@ -737,7 +745,9 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         // disparaît. Aucune coordonnée du calque ne change. Tant que le
         // recadrage n'est pas chargé (premier scan de la visite), la page
         // s'affiche entière : un fichier lent ne doit jamais cacher le scan.
-        const top = cadrage?.[i] ?? 0;
+        const lignesPage = fit && !tr ? (systemes?.[slug ?? ""]?.pages[i]?.lignes ?? []) : [];
+        // Scan certifié en page entière : la fenêtre ne rogne pas les étiquettes qui débordent au-dessus de la première ligne.
+        const top = lignesPage.length > 0 ? Math.max(0, Math.min(cadrage?.[i] ?? 0, lignesPage[0].y0 - MARGE_Y_MAX)) : cadrage?.[i] ?? 0;
         const visible = page.h - top;
         const decalage = marges?.[i] ? (marges[i][1] - marges[i][0]) / 2 : 0;
         return (
@@ -748,7 +758,9 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           data-jianpu-tranche={tr ? `${tr.y0}-${tr.y1}` : undefined}
           data-jianpu-moitie={demi ? (demi.moitie ?? "entiere") : undefined}
           // Bornes (px image) des lignes de la tranche : la demi-page ne coupe qu'entre deux d'entre elles.
-          data-jianpu-lignes={tr ? lignesTranche.map((l) => `${l.y0}-${l.y1}`).join(",") : undefined}
+          data-jianpu-lignes={tr ? lignesTranche.map((l) => `${l.y0}-${l.y1}`).join(",") : lignesPage.length > 0 ? lignesPage.map((l) => `${l.y0}-${l.y1}`).join(",") : undefined}
+          // Page entière (sans tranche) : plage image montrée, d'où la demi-page tire son échelle.
+          data-jianpu-plage={!tr && lignesPage.length > 0 ? `${top}-${page.h}` : undefined}
           className={(demi && echelleDemi != null ? "relative shrink-0" : fit ? "relative mx-auto" : "relative") + (rail ? "" : " overflow-hidden")}
           style={{
             aspectRatio: tr ? `${tr.x1 - tr.x0} / ${tr.y1 - tr.y0}` : `${page.w} / ${visible}`,
@@ -831,9 +843,11 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
               échelle). */}
           {calque && (
             <>
+            <NotationAccordsContext.Provider value={contexteNotation}>
             <div data-jianpu-calque className="pointer-events-none absolute inset-0" aria-hidden={accordsTouchables ? undefined : true}>
               {cal.map((b) => rendreBoite(b, true, i))}
             </div>
+            </NotationAccordsContext.Provider>
 
             {/* Retouche : toute la page est tactile. Un accord touché s'ouvre
                 dans le pavé, une ligne d'accords touchée à côté de ses accords

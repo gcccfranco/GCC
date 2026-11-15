@@ -1,3 +1,4 @@
+// shortcut: CL-1 (docs/spec-corrections-louange.md) — hook sans appelant (JV-3 retiré de la vue Partitions), gardé tant que Timothée n'a pas vu la page entière
 import { useMemo } from "react";
 import { useJianpuChords, useJianpuMarges, useJianpuSections, useJianpuSystemes, type JianpuEntry } from "@/lib/jianpu/images";
 import { bornesX, voletsDemiLignes, type Volets } from "@/lib/performance/tranchesScan";

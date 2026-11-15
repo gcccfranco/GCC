@@ -178,15 +178,18 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
   });
 
   // chants-8 : tablette debout, liste sur une colonne — les actions de l'en-tête finissent où finissent la recherche et la liste.
-  test("tablette portrait : « Proposer un chant » finit au même x que la recherche (même fin que la liste en groupe)", async ({ page }, info) => {
+  // B13 (CI-17) : l'index A–Z est dans la carte ; « Proposer un chant » finit au bord de la carte, et l'index est dans la carte.
+  test("tablette portrait : « Proposer un chant » finit au même x que la carte, index A–Z dans la carte", async ({ page }, info) => {
     test.skip(info.project.name !== "tablette", "tablette debout seulement");
     await signInAs(page, MUSICIEN, PASSEES, "/songs");
     await listePrete(page);
-    const [action, recherche] = await Promise.all([
+    const [action, carteListe, index] = await Promise.all([
       enTete(page).getByRole("button", { name: "Proposer un chant" }).boundingBox(),
-      liste(page).getByRole("searchbox").boundingBox(),
+      liste(page).boundingBox(),
+      liste(page).locator(".index-az").first().boundingBox(),
     ]);
-    expect(Math.abs(action!.x + action!.width - (recherche!.x + recherche!.width)), "même bord droit").toBeLessThanOrEqual(2);
+    expect(Math.abs(action!.x + action!.width - (carteListe!.x + carteListe!.width)), "même bord droit").toBeLessThanOrEqual(1);
+    expect(index!.x + index!.width, "l'index A–Z dans la carte").toBeLessThanOrEqual(carteListe!.x + carteListe!.width + 1);
   });
 
   // chants-5 (T1c) : « Statistiques » et « Proposer un chant » sont deux boutons libellés de 44 px au

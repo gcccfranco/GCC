@@ -1,9 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { marge, ouvrirMarge } from "./helpers/marge";
+import { attendreMiseEnPage, ouvrirMenu } from "./helpers/louange";
 
 // La marge « Affichage » (docs/spec-reglages-unifies.md, RU-2), montée sur la page chant (RU-3) : colonne de
-// 320 px qui pousse la musique dès 1 024 px, feuille basse opaque de 40 % (560 px dès 768 px) sans voile en dessous,
+// 320 px qui pousse la musique dès 1 024 px, feuille basse opaque de 40 %, pleine largeur de la zone de la musique, sans voile en dessous (deux formes, B5),
 // deux groupes (plus de « Je joue » sur la page chant) et une mention de portée chacun, réglages retenus sous les clés existantes, mouvement.
 
 const MUSICIEN: FakeProfile = { uid: "uid-banc", email: "banc@example.com", firstName: "Camille", lastName: "B." };
@@ -31,7 +32,8 @@ for (const chant of CHANTS) {
       const zone = (await musique(page).boundingBox())!;
       // Colonne seulement si la musique garde 340 px (RU-3) : sinon feuille de 560 px, même dès 1 024 px.
       const place = await marge(page).getAttribute("data-place");
-      if (vp.width < 1024) expect(place).toBe(vp.width < 768 ? "feuille" : "feuille-large");
+      expect(["colonne", "feuille"]).toContain(place);
+      if (vp.width < 1024) expect(place).toBe("feuille");
       if (place === "colonne") {
         expect(m.width).toBeCloseTo(320, 0);
         expect(zone.width).toBeGreaterThanOrEqual(340);
@@ -44,10 +46,11 @@ for (const chant of CHANTS) {
         const bord = (await carte.count()) ? await carte.evaluate((el) => el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight)) : vp.width;
         expect(m.x + m.width).toBeCloseTo(bord, 0);
       } else {
-        // En deux volets, la feuille se centre sur le volet du chant : 560 px au plus, moins si le volet est plus étroit.
-        const volet = page.locator(".chants-chant");
-        if (vp.width >= 768 && (await volet.count())) expect(m.width).toBeLessThanOrEqual(560.5);
-        else expect(m.width).toBeCloseTo(vp.width >= 768 ? 560 : vp.width, 0);
+        // Pleine largeur de la zone de la musique : la fenêtre, ou le volet du chant (son enveloppe) en deux volets.
+        const deuxVolets = (await page.locator(".chants-chant").count()) > 0;
+        const zoneMusique = deuxVolets ? (await marge(page).locator("xpath=..").boundingBox())! : { x: 0, width: vp.width };
+        expect(m.x).toBeCloseTo(zoneMusique.x, 0);
+        expect(m.width).toBeCloseTo(zoneMusique.width, 0);
         expect(m.height).toBeCloseTo(0.4 * vp.height, 0);
         expect(m.y + m.height).toBeLessThanOrEqual(vp.height + 0.5);
         const fond = await marge(page).evaluate((el) => getComputedStyle(el).backgroundColor);
@@ -68,21 +71,37 @@ for (const chant of CHANTS) {
       await expect(marge(page).getByText(chant.zh ? "我演奏" : "Je joue")).toHaveCount(0);
       await expect(marge(page).getByRole("radiogroup", { name: chant.zh ? "我演奏" : "Je joue" })).toHaveCount(0);
       await expect(marge(page).getByText(chant.zh ? "和弦颜色" : "Couleur des accords")).toBeVisible();
-      await expect(marge(page).getByRole("switch", { name: chant.zh ? "和弦" : "Accords" })).toBeVisible();
+      // Page : le bouton « Accords » de la barre double l'interrupteur, qui quitte la marge (B6).
+      await expect(marge(page).getByRole("switch", { name: chant.zh ? "和弦" : "Accords" })).toHaveCount(0);
       await expect(marge(page).locator("[data-notation]").first()).toBeVisible();
     });
 
-    test("le bouton Accords de la barre et l'interrupteur de la marge restent synchronisés", async ({ page }) => {
+    test("le bouton Accords de la barre bascule le réglage", async ({ page }) => {
       await ouvrir(page, chant.slug, { zh: chant.zh });
       const bouton = page.getByTestId("barre-outils").getByRole("button", { name: chant.zh ? "和弦" : "Accords", exact: true });
-      const inter = marge(page).getByRole("switch", { name: chant.zh ? "和弦" : "Accords" });
       await expect(bouton).toHaveAttribute("aria-pressed", "true");
       await bouton.click();
-      await expect(inter).not.toBeChecked();
       await expect(bouton).toHaveAttribute("aria-pressed", "false");
-      await inter.click();
+      await bouton.click();
       await expect(bouton).toHaveAttribute("aria-pressed", "true");
     });
+  });
+}
+
+// B6 : une forme par disposition, quelle que soit la langue du chant : ronds à icône seule sous 768 px, pastilles étiquetées dès 768 px.
+for (const chant of [{ slug: "abba-pere", zh: false }, { slug: "谢谢你", zh: true }] as const) {
+  test(`boutons de lecture — ${chant.zh ? "ZH" : "FR"} ${chant.slug} : ronds sous 768 px, pastilles étiquetées dès 768 px`, async ({ page }) => {
+    await ouvrir(page, chant.slug, { zh: chant.zh });
+    const large = page.viewportSize()!.width >= 768;
+    const noms = chant.zh ? ["和弦", "拼音", "显示"] : ["Accords", "Affichage"];
+    for (const nom of noms) {
+      const b = page.getByTestId("barre-outils").getByRole("button", { name: nom, exact: true });
+      await expect(b).toHaveAttribute("aria-label", nom);
+      // Le 拼 du bouton Pinyin est son icône, pas un mot.
+      const texte = (await b.innerText()).trim();
+      expect(nom === "拼音" ? texte.replace(/^拼\s*/, "") : texte).toBe(large ? nom : "");
+      expect((await b.boundingBox())!.height).toBeCloseTo(large ? 32 : 36, 0);
+    }
   });
 }
 
@@ -150,12 +169,13 @@ test.describe("marge Affichage — mesures", () => {
     await expect(chiffres).toBeFocused();
   });
 
-  test("tablette portrait : feuille de 560 px centrée", async ({ page }) => {
+  test("tablette portrait : feuille du bas pleine largeur (B5)", async ({ page }) => {
     await page.setViewportSize({ width: 810, height: 1080 });
     await ouvrir(page, "abba-pere");
     const m = (await marge(page).boundingBox())!;
-    expect(m.width).toBeCloseTo(560, 0);
-    expect(m.x + m.width / 2).toBeCloseTo(405, 0);
+    expect(await marge(page).getAttribute("data-place")).toBe("feuille");
+    expect(m.x).toBeCloseTo(0, 0);
+    expect(m.width).toBeCloseTo(810, 0);
     expect(m.height).toBeCloseTo(432, 0);
   });
 
@@ -209,4 +229,90 @@ test.describe("marge Affichage — mesures", () => {
     await page.getByRole("button", { name: "Agrandir le texte" }).click();
     await expect(page.getByTestId("marge-taille")).toHaveText("110 %");
   });
+});
+
+const VIGNETTES = '[role="radiogroup"][aria-labelledby$="-disp"] > [role="radio"]';
+
+// A5 : un seul code (grille souple) pour la colonne de 320 px et la feuille ; les vignettes passent à la ligne.
+test("les cinq libellés de disposition sont espacés de 8 px (sur une même ligne) et tiennent sur deux lignes", async ({ page }) => {
+  await ouvrir(page, "abba-pere");
+  const noms = marge(page).locator(`${VIGNETTES} > span:last-child`);
+  await expect(noms).toHaveCount(5);
+  const boites = await noms.evaluateAll((els) => els.map((e) => {
+    const r = e.getBoundingClientRect();
+    return { x: r.x, y: r.y, w: r.width, h: r.height, lh: parseFloat(getComputedStyle(e).lineHeight) };
+  }));
+  for (const [i, b] of boites.entries()) {
+    expect(b.h, `libellé ${i}`).toBeLessThanOrEqual(2 * b.lh + 1);
+    if (i > 0 && Math.abs(b.y - boites[i - 1].y) < 2) expect(b.x - (boites[i - 1].x + boites[i - 1].w), `écart ${i - 1}-${i}`).toBeGreaterThanOrEqual(7.5);
+  }
+});
+
+// A5 (reste) : colonne de 320 px à 1 920 px (à 1 366 px la page chant en deux volets laisse moins de 340 px à la musique : feuille), feuille au téléphone ; libellés jamais coupés, en FR et en 中文.
+for (const chant of CHANTS) {
+  test(`disposition — ${chant.zh ? "ZH" : "FR"} : libellés entiers, deux lignes au plus, dans leur vignette (colonne de 320 px à 1 920 px, feuille à 1 366 px et au téléphone)`, async ({ page }, info) => {
+    const ordi = info.project.name === "ordinateur";
+    for (const largeur of ordi ? [1366, 1920] : [0]) {
+      if (largeur) await page.setViewportSize({ width: largeur, height: 800 });
+      await ouvrir(page, chant.slug, { zh: chant.zh });
+      const lieu = await marge(page).getAttribute("data-place");
+      if (largeur === 1920) expect(lieu).toBe("colonne");
+      if (largeur === 1366) expect(lieu).toBe("feuille");
+      const vignettes = marge(page).locator(VIGNETTES);
+      await expect(vignettes).toHaveCount(5);
+      const mesures = await vignettes.evaluateAll((els) => els.map((v) => {
+        const n = v.querySelector<HTMLElement>(":scope > span:last-child")!;
+        const rv = v.getBoundingClientRect(), rn = n.getBoundingClientRect();
+        return { texte: n.textContent, tronque: n.scrollWidth > n.clientWidth + 0.5, h: rn.height, lh: parseFloat(getComputedStyle(n).lineHeight), deborde: rn.left < rv.left - 0.5 || rn.right > rv.right + 0.5 || rn.bottom > rv.bottom + 0.5 };
+      }));
+      for (const m of mesures) {
+        expect(m.tronque, `« ${m.texte} » coupé (${largeur})`).toBe(false);
+        expect(m.h, `« ${m.texte} » sur deux lignes au plus`).toBeLessThanOrEqual(2 * m.lh + 1);
+        expect(m.deborde, `« ${m.texte} » dans sa vignette`).toBe(false);
+      }
+      if (lieu === "colonne") expect((await marge(page).boundingBox())!.width).toBeCloseTo(320, 0);
+    }
+  });
+}
+
+// B11 : un réglage a un seul état actif (`Bascule`, fond noir). « Je joue » est la même Bascule mais n'existe que dans le mode louange ;
+// ici : l'ordre des sections (Bascule) et Lettres/Chiffres (ChoixNotation) sur la page chant.
+test("réglages de la marge : Bascule et Lettres/Chiffres ont la même couleur active", async ({ page }) => {
+  await ouvrir(page, "abba-pere");
+  const fond = (l: Locator) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const bascule = marge(page).locator('[role="radiogroup"][aria-label] > [role="radio"][aria-checked="true"]').first();
+  const lettres = marge(page).locator('button[data-notation][aria-pressed="true"]').first();
+  await expect(bascule).toBeVisible();
+  await expect(lettres).toBeVisible();
+  expect(await fond(bascule)).toBe(await fond(lettres));
+});
+
+// Reste d'A5 (CI-4) : le panneau « Affichage » du mode louange. Dans la colonne de 320 px (dès 1 024 px), la grille souple
+// de la marge (3 + 2) ; ailleurs cinq de front. Libellés entiers, deux lignes au plus, 8 px d'écart sur une même ligne.
+test("disposition — mode louange : libellés entiers, deux lignes au plus, espacés de 8 px", async ({ page }) => {
+  await page.addInitScript(() => { try { localStorage.setItem("perf-role-preset", "pianiste"); } catch {} });
+  const setlist = {
+    title: "Culte des vignettes", leader: "Présidence", category: "Culte Francophone", date: "2026-11-15", language: "mixed", notes: "",
+    ownerId: MUSICIEN.uid, isPrivate: false,
+    items: [{ songSlug: "abba-pere", position: 1, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" }],
+  };
+  await signInAs(page, MUSICIEN, { "setlists/setlist-vignettes": setlist }, "/setlists/setlist-vignettes");
+  await page.getByRole("button", { name: /Mode Louange/ }).first().click();
+  await attendreMiseEnPage(page);
+  const panneau = await ouvrirMenu(page, "affichage");
+  const vignettes = panneau.locator('[role="radiogroup"][aria-labelledby="perf-disposition"] > [role="radio"]');
+  await expect(vignettes).toHaveCount(5);
+  await vignettes.first().scrollIntoViewIfNeeded();
+  const mesures = await vignettes.evaluateAll((els) => els.map((v) => {
+    const n = v.querySelector<HTMLElement>(":scope > span:last-child")!;
+    const rv = v.getBoundingClientRect(), rn = n.getBoundingClientRect();
+    return { texte: n.textContent, x: rn.x, y: rn.y, w: rn.width, h: rn.height, lh: parseFloat(getComputedStyle(n).lineHeight), tronque: n.scrollWidth > n.clientWidth + 0.5, deborde: rn.left < rv.left - 0.5 || rn.right > rv.right + 0.5 };
+  }));
+  for (const [i, m] of mesures.entries()) {
+    expect(m.tronque, `« ${m.texte} » coupé`).toBe(false);
+    expect(m.h, `« ${m.texte} » sur deux lignes au plus`).toBeLessThanOrEqual(2 * m.lh + 1);
+    expect(m.deborde, `« ${m.texte} » dans sa vignette`).toBe(false);
+    const p = mesures[i - 1];
+    if (p && Math.abs(m.y - p.y) < 2) expect(m.x - (p.x + p.w), `écart ${p.texte} / ${m.texte}`).toBeGreaterThanOrEqual(7.5);
+  }
 });

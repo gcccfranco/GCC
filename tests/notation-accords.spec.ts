@@ -98,12 +98,31 @@ for (const c of CHANTS) {
   });
 }
 
-test("calque 简谱 inchangé en chiffres", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("accords-notation", "chiffres"));
+// CL-3 : le calque 简谱 suit la bascule (page chant, vue partitions, mode louange).
+const etiquettesCalque = (page: Page) => page.locator("[data-jianpu-page] [data-jianpu-label]").evaluateAll((els) => els.map((e) => (e.textContent ?? "").trim()).filter(Boolean));
+const enChiffres = (ts: string[]) => ts.length > 0 && ts.some((t) => CHIFFRE.test(t)) && ts.every((t) => CHIFFRE.test(t) || !/^[A-G]/.test(t));
+const enLettres = (ts: string[]) => ts.length > 0 && ts.some((t) => /^[A-G]/.test(t)) && !ts.some((t) => CHIFFRE.test(t));
+
+async function recharger(page: Page, notation: "lettres" | "chiffres") {
+  await page.evaluate((n) => localStorage.setItem("accords-notation", n), notation);
+  await page.reload();
+  await page.locator("[data-jianpu-page]").first().waitFor();
+}
+
+test("le calque 简谱 passe en chiffres puis revient", async ({ page }) => {
+  await page.addInitScript(() => { if (!localStorage.getItem("accords-notation")) localStorage.setItem("accords-notation", "chiffres"); });
   await openSheet(page, "一生爱你", { key: "F" });
-  const calque = page.locator("[data-jianpu-page] [data-accord-touchable]");
-  await expect(calque.first()).toBeVisible();
-  expect(await calque.first().textContent()).toBe("F");
+  await expect.poll(async () => enChiffres(await etiquettesCalque(page))).toBe(true);
+  await recharger(page, "lettres");
+  await expect.poll(async () => enLettres(await etiquettesCalque(page))).toBe(true);
+});
+
+test("tonalité d'origine : calque éteint en lettres, allumé et chiffré en chiffres", async ({ page }) => {
+  await page.addInitScript(() => { if (!localStorage.getItem("accords-notation")) localStorage.setItem("accords-notation", "chiffres"); });
+  await openSheet(page, "一生爱你");
+  await expect.poll(async () => enChiffres(await etiquettesCalque(page))).toBe(true);
+  await recharger(page, "lettres");
+  await expect(page.locator("[data-jianpu-page] [data-jianpu-label]")).toHaveCount(0);
 });
 
 test("la bascule Lettres | Chiffres est dans la marge Affichage, ni dans la barre ni dans le menu ⋯", async ({ page }) => {

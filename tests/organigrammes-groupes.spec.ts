@@ -1443,7 +1443,7 @@ test.describe("OG-E · App › Équipes", () => {
 
   test("sans groupe : l'église, avec le sélecteur et Équipes · Musiciens ; choisir Bonté lit Bonté, sans bandeau « Toi »", async ({ page }) => {
     await ouvrir(page, YANN);
-    await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
+    await expect(page.getByTestId("grille-equipes")).toBeVisible();
     await expect(selecteur(page).getByRole("tab", { name: "Église" })).toHaveAttribute("aria-selected", "true");
     await selecteur(page).getByRole("tab", { name: "Bonté" }).click();
     await expect(page).toHaveURL(/\/equipes\/?\?groupe=bonte$/);
