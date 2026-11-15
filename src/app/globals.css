@@ -774,7 +774,8 @@
 
 /* Barre du chant (docs/spec-barre-chant.md, Q4 ; RU-3 : une seule ligne à toutes les tailles) : libellés par priorité,
    jamais de deuxième ligne — tous (2), ceux des actions seuls (1), aucun (0) ; « Harmonie » (texte seul) et ⋯ restent
-   affichés à tous les niveaux. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`). */
+   affichés à tous les niveaux. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`). Accords, Pinyin et
+   Affichage n'en dépendent plus (B6) : icône seule sous 768 px, mot dès 768 px (`BOUTON_LECTURE`) ; seuls Retour et Vidéo tombent. */
 .rangee-chant { container-type: inline-size; }
 .libelle-chant, .libelle-action { display: none; }
 /* Un libellé de la barre ne se coupe jamais : la mesure `data-libelles` retombe au niveau inférieur. */

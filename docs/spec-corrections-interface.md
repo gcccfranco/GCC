@@ -364,3 +364,19 @@ centre tombe sur un accord).
   commitées. Ajouts : A7 à A9, B4 bis, tests déjà rouges.
 - 14/11/2026, vers 22 h 20 UTC : réponses de Timothée (ci-dessus), spec validée et commitée ; tranches CI-1 à CI-17.
 - 14/11/2026, vers 23 h UTC : **CI-1 faite** (A3, A4, A5), validée par Timothée (« validé »). A3 corrigé en deux volets (tabL, ordi, 1 440) ; A4 corrigé partout (clés `common.languagesShort`) ; A5 : écart de 8 px et libellé borné à deux lignes dans la marge, visible au téléphone, à peine ailleurs (trois lignes non reproduites). Décision déléguée (session CI-1, 14/11) : `ChoixMenu` du mode louange non touché (test de taille de miniatures en cours chez CL-1). Tests : trois specs touchées et `evenements-2027`, cinq projets, 382 passés, 0 échec, ≈ 11 min. Regard : captures Playwright avant / après aux cinq tailles (artefact privé) ; **pas vu à l'écran réel**, l'installation d'agent-desktop ayant été refusée dans la session.
+
+- **CI-11 (B5, B6), 15/11/2026, validée par Timothée (« Validé »).** Marge « Affichage » : deux formes (colonne de
+  320 px dès 1 024 px ; sinon feuille du bas pleine largeur, ou largeur du volet du chant en deux volets, réglages
+  centrés sur 560 px). Boutons Accords, Pinyin, Affichage, Crayon (`BOUTON_LECTURE`) : ronds à icône seule sous
+  768 px, icône + mot dès 768 px, page chant et setlist, FR et 中文. Interrupteur Accords retiré de la marge en page
+  (gardé en louange). Décisions déléguées (session CI-11, 15/11) : le Crayon de la page chant prend son mot comme
+  celui de la setlist (B6) ; l'interrupteur Pinyin reste dans la marge (la setlist n'a pas de bouton Pinyin), question
+  posée à Timothée. Tests : marge-affichage, page-chant-reglages, barre-chant, ma-partition-crayon (188 verts, 6,5 min,
+  cinq projets) ; setlist-tonalite-perso, setlist-g, setlist-deux-volets, paroles-sans-accords verts ; rouges déjà sur
+  l'ancien code : `jianpu-par-defaut:260`, `louange-reglages:101` ×2 ; instables, verts seuls (3/3 et 6/6) :
+  `setlist-tonalite-perso:125` (ordinateur), `barre-chant:173` (ordinateur-1440). Regard : captures Playwright aux
+  cinq largeurs, **non vu à l'écran réel** (installation d'agent-desktop refusée). Verdict : page chant corrigée
+  partout ; setlist corrigée au téléphone, à 1 366 et 1 440 px, différente à 830 et 1 100 px (titre coupé par les
+  pastilles plus larges, à régler en CI-12 par le repli dans ⋯). Relevés hors tranche : en-tête de setlist à deux
+  volets, Accords dans ⋯ (CI-12) ; même noir pour « activé » et « ouvert » au téléphone ; barre pas recalée quand la
+  colonne est ouverte à 1 100 px.

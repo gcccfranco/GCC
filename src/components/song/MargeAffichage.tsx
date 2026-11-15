@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixNotation } from "@/components/song/ChoixNotation";
+import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useReglagesAffichage, type ReglagesAffichage } from "@/hooks/useReglagesAffichage";
 import { MAX_FONT_SCALE, MIN_FONT_SCALE } from "@/lib/fontScalePref";
 import { ROLE_IDS } from "@/lib/performance/roleCompte";
@@ -13,17 +14,17 @@ import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 
 // La marge « Affichage » (docs/spec-reglages-unifies.md, RU-2, piste B) : trois groupes (Je joue, Ce que je lis, La page),
 // une mention de portée sous chacun. Dès 1 024 px (tablette paysage) : colonne de 320 px qui POUSSE la musique (`children`,
-// rendus à côté d'elle, jamais dessous) ; en dessous : feuille basse opaque, sans voile, de 40 % de l'écran (560 px de large
-// dès 768 px) ; la musique garde alors une réserve en bas égale à la feuille. Les styles de mouvement : globals.css (.marge-aff).
-type Place = "colonne" | "feuille-large" | "feuille";
+// rendus à côté d'elle, jamais dessous) ; en dessous (ou sans place pour la colonne : `sansColonne`) : feuille basse opaque, sans voile, de 40 % de la hauteur,
+// pleine largeur de la zone de la musique (la fenêtre ; le volet du chant dans une page à deux volets, `useDeuxVolets`) ; la musique garde
+// alors une réserve en bas égale à la feuille. Deux formes seulement (B5). Les styles de mouvement : globals.css (.marge-aff).
+type Place = "colonne" | "feuille";
 const COLONNE = "(min-width: 1024px)";
-const LARGE = "(min-width: 768px)";
 const suivre = (f: () => void) => {
-  const ms = [COLONNE, LARGE].map((q) => window.matchMedia(q));
-  ms.forEach((m) => m.addEventListener("change", f));
-  return () => ms.forEach((m) => m.removeEventListener("change", f));
+  const m = window.matchMedia(COLONNE);
+  m.addEventListener("change", f);
+  return () => m.removeEventListener("change", f);
 };
-const place = (): Place => (window.matchMedia(COLONNE).matches ? "colonne" : window.matchMedia(LARGE).matches ? "feuille-large" : "feuille");
+const place = (): Place => (window.matchMedia(COLONNE).matches ? "colonne" : "feuille");
 export const usePlace = () => useSyncExternalStore(suivre, place, () => "colonne" as Place);
 
 type Props = {
@@ -43,7 +44,7 @@ type Props = {
   retourFocus?: RefObject<HTMLElement | null>;
   /** Page chant : pas de groupe « Je joue », tout est montré (le rôle reste propre au mode louange). */
   sansRole?: boolean;
-  /** Pas de colonne même dès 1 024 px (la musique garderait moins de 340 px) : feuille de 560 px. */
+  /** Pas de colonne même dès 1 024 px (la musique garderait moins de 340 px) : feuille du bas sur la zone de la musique. */
   sansColonne?: boolean;
   /** RU-5, mode louange : réglages tenus par le mode (accords, pinyin, 简谱, ordre, rôle, taille, disposition), fusionnés sur le crochet. */
   reglages?: Partial<ReglagesAffichage>;
@@ -58,6 +59,9 @@ type Props = {
 };
 
 const LIGNE = "flex min-h-11 items-center justify-between gap-3";
+
+/** Bouton de lecture (Accords, Pinyin, Affichage, Crayon) : rond à icône seule sous 768 px, pastille icône + mot dès 768 px ; le mot : `<span className="hidden md:inline">`. */
+export const BOUTON_LECTURE = "h-9 w-9 p-0 md:h-8 md:w-auto md:px-3 gap-1.5 rounded-full text-xs font-semibold flex items-center justify-center";
 
 export function Segment({ valeurs, choisie, onChoix, vertical, label, desactive }: { valeurs: { id: string; nom: string }[]; choisie: string; onChoix: (id: string) => void; vertical?: boolean; label: string; desactive?: boolean }) {
   return (
@@ -94,17 +98,17 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
   const { t } = useTranslation();
   const r = { ...useReglagesAffichage(uid), ...reglages };
   const placeEcran = usePlace();
-  // Mode louange : la feuille prend toute la largeur (la page se raccourcit de sa hauteur, rien ne doit rester à côté).
-  const lieu: Place = sansColonne && placeEcran === "colonne" ? "feuille-large" : mode === "louange" && placeEcran === "feuille-large" ? "feuille" : placeEcran;
+  const lieu: Place = sansColonne ? "feuille" : placeEcran;
   const fermer = useRef<HTMLButtonElement>(null);
   const enveloppe = useRef<HTMLDivElement>(null);
-  // Feuille large d'une page en deux volets : centrée sur le conteneur de la marge (le volet du chant), pas sur la fenêtre.
-  const [volet, setVolet] = useState<{ centre: number; largeur: number } | null>(null);
-  const surVolet = sansColonne && lieu === "feuille-large";
+  // Page en deux volets : la feuille couvre le conteneur de la marge (le volet du chant), pas la liste voisine.
+  const [volet, setVolet] = useState<{ gauche: number; largeur: number } | null>(null);
+  const deuxVolets = useDeuxVolets();
+  const surVolet = sansColonne && children !== undefined && deuxVolets;
   useEffect(() => {
     const el = enveloppe.current;
     if (!surVolet || !el) { setVolet(null); return; }
-    const mesure = () => { const r = el.getBoundingClientRect(); setVolet({ centre: r.left + r.width / 2, largeur: Math.min(560, r.width - 16) }); };
+    const mesure = () => { const r = el.getBoundingClientRect(); setVolet({ gauche: r.left, largeur: r.width }); };
     mesure();
     const ro = new ResizeObserver(mesure);
     ro.observe(el);
@@ -148,7 +152,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
       } as const
     : {
         position: "fixed", bottom: 0, height: "40dvh", zIndex: mode === "louange" ? 10000 : 50, borderRadius: "18px 18px 0 0", boxShadow: "0 -1px 0 hsl(var(--border))",
-        ...(lieu === "feuille-large" ? { left: surVolet && volet ? volet.centre : "50%", width: surVolet && volet ? volet.largeur : 560, transform: `translateX(-50%) translateY(${ouvert ? 0 : 100}%)` } : { left: 0, right: 0, transform: `translateY(${ouvert ? 0 : 100}%)` }),
+        ...(surVolet && volet ? { left: volet.gauche, width: volet.largeur } : { left: 0, right: 0 }), transform: `translateY(${ouvert ? 0 : 100}%)`,
         ...(mode === "louange" && !ouvert ? { display: "none" as const } : {}),
       } as const;
 
@@ -179,6 +183,8 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
           </button>
         </div>
         <div data-testid="marge-corps" className="min-h-0 flex-1 overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
+          {/* Feuille pleine largeur : les réglages gardent une colonne de 560 px au plus, centrée (critique CI-11). */}
+          <div className={colonne ? undefined : "mx-auto w-full max-w-[560px]"}>
           {!sansRole && <Groupe titre={t("margeAffichage.jeJoue")} mention={mention}>
             {groupeRole ?? <div role="radiogroup" aria-label={t("margeAffichage.jeJoue")} className="flex flex-wrap gap-1.5 py-1">
               {ROLE_IDS.map((id) => (
@@ -199,10 +205,13 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
           <Groupe titre={t("margeAffichage.jeLis")} mention={mention}>
             {!choriste && (
               <>
-                <div className={LIGNE}>
-                  <span className="text-sm">{t("performance.chords")}</span>
-                  <Switch checked={r.accords} onCheckedChange={r.setAccords} aria-label={t("performance.chords")} />
-                </div>
+                {/* Page : le bouton « Accords » de la barre double l'interrupteur (B6). */}
+                {mode === "louange" && (
+                  <div className={LIGNE}>
+                    <span className="text-sm">{t("performance.chords")}</span>
+                    <Switch checked={r.accords} onCheckedChange={r.setAccords} aria-label={t("performance.chords")} />
+                  </div>
+                )}
                 <ChoixNotation variante="fenetre" />
               </>
             )}
@@ -264,6 +273,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
               </>
             )}
           </Groupe>
+          </div>
         </div>
       </div>
     </aside>

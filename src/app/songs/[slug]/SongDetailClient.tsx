@@ -11,7 +11,7 @@ import { useRecents } from "./_hooks/useRecents";
 import { useBarreRappelee } from "./_hooks/useBarreRappelee";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { Music, SlidersHorizontal } from "lucide-react";
-import { MargeAffichage } from "@/components/song/MargeAffichage";
+import { MargeAffichage, BOUTON_LECTURE } from "@/components/song/MargeAffichage";
 import { useReglagesAffichage } from "@/hooks/useReglagesAffichage";
 import { SongView } from "@/components/song/SongView";
 import { Armure } from "@/components/song/Armure";
@@ -583,10 +583,10 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
                   title={t("songs.detail.chords")}
                   aria-pressed={r.accords}
                   onClick={() => r.setAccords(!r.accords)}
-                  className={`${TOUCHER_44} h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold ${r.accords ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
+                  className={`${TOUCHER_44} ${BOUTON_LECTURE} ${r.accords ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
                 >
                   <Music className="h-4 w-4" />
-                  <span className="libelle-chant">{t("songs.detail.chords")}</span>
+                  <span className="hidden md:inline">{t("songs.detail.chords")}</span>
                 </Button>
                 {isZh && (
                   <Button
@@ -595,10 +595,10 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
                     title={t("songs.detail.pinyin")}
                     aria-pressed={r.pinyin}
                     onClick={() => r.setPinyin(!r.pinyin)}
-                    className={`${TOUCHER_44} h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold ${r.pinyin ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
+                    className={`${TOUCHER_44} ${BOUTON_LECTURE} ${r.pinyin ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
                   >
                     <span className="font-bold">拼</span>
-                    <span className="libelle-chant">{t("songs.detail.pinyin")}</span>
+                    <span className="hidden md:inline">{t("songs.detail.pinyin")}</span>
                   </Button>
                 )}
                 <Button
@@ -613,10 +613,10 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
                     if (!showAffichage) { setColonneOuverte(false); setShowIdees(false); }
                     setShowAffichage(!showAffichage);
                   }}
-                  className={`${TOUCHER_44} h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold ${showAffichage ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
+                  className={`${TOUCHER_44} ${BOUTON_LECTURE} ${showAffichage ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
                 >
                   <SlidersHorizontal className="h-4 w-4" />
-                  <span className="libelle-action">{t("margeAffichage.titre")}</span>
+                  <span className="hidden md:inline">{t("margeAffichage.titre")}</span>
                 </Button>
               </ActionsChant>
             </div>
