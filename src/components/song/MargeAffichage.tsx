@@ -261,7 +261,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
   if (children === undefined) return retenue;
   return (
     <div ref={enveloppe} style={{ display: "flex", alignItems: "flex-start" }}>
-      <div style={{ flex: 1, minWidth: 0, paddingBottom: !colonne && ouvert ? "40dvh" : 0 }}>{children}</div>
+      <div data-marge-musique style={{ flex: 1, minWidth: 0, paddingBottom: !colonne && ouvert ? "40dvh" : 0 }}>{children}</div>
       {retenue}
     </div>
   );

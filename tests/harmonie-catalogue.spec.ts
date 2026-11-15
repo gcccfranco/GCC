@@ -227,3 +227,21 @@ test("en 中文 : le catalogue est traduit", async ({ page }) => {
   await expect(page.getByRole("button", { name: "温暖" })).toBeVisible();
   await expect(page.getByRole("group", { name: "用在" }).getByRole("button", { name: "主歌" })).toBeVisible();
 });
+
+test("(CI-5) tablette paysage, deux volets au toucher : les puces passent à la ligne, toutes entières dans le volet", async ({ page }) => {
+  test.skip(test.info().project.name !== "tablette", "propre à la tablette");
+  await page.setViewportSize({ width: 1080, height: 810 });
+  await ouvrir(page, JO, "/harmonie");
+  const rangees = page.locator("[data-onglets=pilules]:visible");
+  await expect(rangees.first()).toBeVisible();
+  for (const rangee of await rangees.all()) {
+    const { sw, cw } = await rangee.evaluate((e) => ({ sw: e.scrollWidth, cw: e.clientWidth }));
+    expect(sw).toBeLessThanOrEqual(cw + 1);
+    const r = (await rangee.boundingBox())!;
+    for (const b of await rangee.getByRole("button").all()) {
+      const c = (await b.boundingBox())!;
+      expect(c.x).toBeGreaterThanOrEqual(r.x - 0.5);
+      expect(c.x + c.width).toBeLessThanOrEqual(r.x + r.width + 0.5);
+    }
+  }
+});

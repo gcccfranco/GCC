@@ -215,6 +215,24 @@ test.describe("marge Affichage de la setlist", () => {
     await expect.poll(async () => (await chant(page, 1).boundingBox())!.height).toBeGreaterThan(avant);
     expect(await page.evaluate(() => localStorage.getItem("perf-font-scale"))).toBe("1.1");
   });
+
+  test("(CI-5, M) marge ouverte en colonne : une colonne de sections si chaque colonne ferait moins de 420 px", async ({ page }) => {
+    await ouvrir(page, EDITEUR.uid);
+    const deuxColonnes = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll("*")]
+          .map((e) => ({ s: getComputedStyle(e), w: e.getBoundingClientRect().width }))
+          .filter(({ s }) => s.columnCount === "2")
+          .map(({ s, w }) => (w - (parseFloat(s.columnGap) || 0)) / 2),
+      );
+    const grand = test.info().project.name === "ordinateur-1440";
+    if (grand) expect((await deuxColonnes()).length, "marge fermée : deux colonnes").toBeGreaterThan(0);
+    await ouvrirMarge(page);
+    if ((await marge(page).getAttribute("data-place")) !== "colonne") return;
+    const largeurs = await deuxColonnes();
+    for (const l of largeurs) expect(l).toBeGreaterThanOrEqual(420);
+    if (grand) expect(largeurs).toHaveLength(0);
+  });
 });
 
 for (const largeur of [390, 412]) {

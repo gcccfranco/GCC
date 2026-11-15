@@ -158,7 +158,7 @@ function ListeCatalogue({
     <div className={cn("flex flex-col gap-5", deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-[var(--marge-page)] pb-10 md:max-w-none")} data-harmonie>
       {/* Filtres, en rangées qui défilent (réponse 5 du 05/10), au-dessus du parcours. */}
       {/* Deux volets : les filtres sont posés sur le volet gris ; rail et pilules inactives en `--secondary-fond` (clair). */}
-      <div className={cn("space-y-2", deuxVolets && "[&_[data-onglets=pilules]>button[aria-pressed=false]]:bg-secondary-fond dark:[&_[data-onglets=pilules]>button[aria-pressed=false]]:bg-secondary")}>
+      <div className={cn(deuxVolets ? "space-y-4" : "space-y-2", deuxVolets && "[&_[data-onglets=pilules]>button[aria-pressed=false]]:bg-secondary-fond dark:[&_[data-onglets=pilules]>button[aria-pressed=false]]:bg-secondary")}>
         <div className="flex flex-wrap items-center gap-1.5">
           {acces.piano && acces.guitare && (
             <OngletsRail
@@ -175,12 +175,14 @@ function ListeCatalogue({
           options={RESSENTIS.map((x) => ({ cle: x, nom: t(`harmonie.ressenti.${x}`) }))}
           valeur={filtres.ressenti}
           choisir={(ressenti) => setFiltres({ ...filtres, ressenti })}
+          aLaLigne={deuxVolets}
         />
         <Pilules
           etiquette={t("harmonie.usage.titre")}
           options={USAGES.map((x) => ({ cle: x, nom: t(`harmonie.usage.${x}`) }))}
           valeur={filtres.usage}
           choisir={(usage) => setFiltres({ ...filtres, usage })}
+          aLaLigne={deuxVolets}
         />
       </div>
 

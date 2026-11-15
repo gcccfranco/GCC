@@ -1173,3 +1173,7 @@
   .marge-aff[data-mode="page"] { opacity: 0; transition: opacity 150ms linear, visibility 0s linear 150ms !important; }
   .marge-aff[data-mode="page"][data-ouvert="true"] { opacity: 1; transition: opacity 150ms linear, visibility 0s !important; }
 }
+
+/* CI-5, défaut M : en setlist, la musique à côté de la marge ouverte devient elle-même le conteneur « partition »
+   (sinon la zone, marge comprise, déclenche deux colonnes trop étroites). Page chant : sans conteneur partition, inchangée. */
+.\[container-name\:partition\] [data-marge-musique] { container: partition / inline-size; }
