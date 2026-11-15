@@ -171,6 +171,12 @@ export function MenuLouange({
           (e.currentTarget as HTMLElement).focus({ preventScroll: true });
         }}
         onCloseAutoFocus={rendreLeFocus}
+        // A8 : un toucher sur l'icône du menu ouvert le ferme par son clic (bascule) ; sans cela, la perte du focus le
+        // fermait d'abord, et le clic le rouvrait.
+        onInteractOutside={(e) => {
+          const cible = e.target instanceof Element ? e.target : null;
+          if (cible?.closest(`[data-menu-declencheur="${id}"]`)) e.preventDefault();
+        }}
         {...arreter}
       >
         <ZoneDefilante arrondi className="max-h-[calc(var(--radix-popover-content-available-height)-2px)] overflow-y-auto rounded-xl p-3">{children}</ZoneDefilante>

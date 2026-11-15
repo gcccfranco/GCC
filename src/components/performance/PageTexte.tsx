@@ -26,6 +26,7 @@ export function PageTexte({
   contentPadding,
   pastille,
   sansIndice = false,
+  reserveHaut = 0,
 }: {
   page: PerfPage;
   rappel: SectionOccurrence[] | undefined;
@@ -40,6 +41,8 @@ export function PageTexte({
   pastille?: ReactNode;
   /** Calques de la demi-page (FS-E) : pas d'indice du rappel (il appartient à la page lue). */
   sansIndice?: boolean;
+  /** A7 : hauteur (px à l'échelle 1) laissée vide en haut d'une page 2 et suivantes, sous la barre du haut. */
+  reserveHaut?: number;
 }) {
   const multiCol = page.cols.length > 1;
   // Vue structure : le contenu des lignes grossit avec la place libre (`--fdr-echelle` sur la colonne).
@@ -48,6 +51,7 @@ export function PageTexte({
   return (
     <>
     <div className={page.etire ? "flex h-full flex-col" : undefined} data-page-deux-colonnes={page.twoColumns || undefined}>
+      {reserveHaut > 0 && <div aria-hidden data-reserve-barre className="shrink-0" style={{ height: reserveHaut }} />}
       {rappel && (
         <div ref={rappelRef} data-rappel className="relative mb-2">
           {rappelTrame}

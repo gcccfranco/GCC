@@ -236,3 +236,31 @@ test("parcours du culte : ouvrir, tourner, scan annoté, Chiffres, accord au bor
   // 7. Aucune erreur dans la console sur tout le parcours.
   expect(erreurs).toEqual([]);
 });
+
+// A7 (docs/spec-corrections-interface.md) : la barre du haut, ouverte, ne cache rien de la page. Page 1 : la première section
+// (l'en-tête du chant porte sous la barre son titre, masqué barre ouverte) ; pages 2 et suivantes : le rappel ou la
+// première section, dont la bordure du cadre et le titre étaient coupés. Un chant FR, un chant 中文.
+test("A7 : barre ouverte, le haut des pages 1 et 2 commence sous la barre (abba-pere, 谢谢你)", async ({ page }) => {
+  await ouvrirMode(page);
+  const barreOuverte = page.locator("[data-barre-haut]").getByRole("button", { name: "Quitter" });
+  const premier = () => page.evaluate(() => {
+    const barre = document.querySelector("[data-barre-haut]")!.getBoundingClientRect().bottom;
+    const tops = [...document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-rappel], [data-performance-mode] [data-section]")]
+      .filter((e) => !e.closest("[aria-hidden=true]") && e.getBoundingClientRect().height > 0)
+      .map((e) => e.getBoundingClientRect().top);
+    return { barre, haut: Math.min(...tops) };
+  });
+  for (const rang of [0, 1]) {
+    if (rang > 0) await allerAuChant(page, rang);
+    const total = Number((await lireCompteur(page)).split(" / ")[1]);
+    const debut = Number((await lireCompteur(page)).split(" / ")[0]);
+    for (const p of [debut, debut + 1]) {
+      if (p > debut) {
+        await page.keyboard.press("ArrowRight");
+        await attendreCompteur(page, `${p} / ${total}`);
+      }
+      await expect(barreOuverte).toBeVisible();
+      await expect.poll(async () => { const m = await premier(); return m.haut - m.barre; }, { message: `${SLUGS[rang]}, page ${p}` }).toBeGreaterThanOrEqual(0);
+    }
+  }
+});

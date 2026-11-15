@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { marge, ouvrirMarge } from "./helpers/marge";
+import { attendreMiseEnPage, ouvrirMenu } from "./helpers/louange";
 
 // La marge « Affichage » (docs/spec-reglages-unifies.md, RU-2), montée sur la page chant (RU-3) : colonne de
 // 320 px qui pousse la musique dès 1 024 px, feuille basse opaque de 40 %, pleine largeur de la zone de la musique, sans voile en dessous (deux formes, B5),
@@ -284,4 +285,34 @@ test("réglages de la marge : Bascule et Lettres/Chiffres ont la même couleur a
   await expect(bascule).toBeVisible();
   await expect(lettres).toBeVisible();
   expect(await fond(bascule)).toBe(await fond(lettres));
+});
+
+// Reste d'A5 (CI-4) : le panneau « Affichage » du mode louange. Dans la colonne de 320 px (dès 1 024 px), la grille souple
+// de la marge (3 + 2) ; ailleurs cinq de front. Libellés entiers, deux lignes au plus, 8 px d'écart sur une même ligne.
+test("disposition — mode louange : libellés entiers, deux lignes au plus, espacés de 8 px", async ({ page }) => {
+  await page.addInitScript(() => { try { localStorage.setItem("perf-role-preset", "pianiste"); } catch {} });
+  const setlist = {
+    title: "Culte des vignettes", leader: "Présidence", category: "Culte Francophone", date: "2026-11-15", language: "mixed", notes: "",
+    ownerId: MUSICIEN.uid, isPrivate: false,
+    items: [{ songSlug: "abba-pere", position: 1, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" }],
+  };
+  await signInAs(page, MUSICIEN, { "setlists/setlist-vignettes": setlist }, "/setlists/setlist-vignettes");
+  await page.getByRole("button", { name: /Mode Louange/ }).first().click();
+  await attendreMiseEnPage(page);
+  const panneau = await ouvrirMenu(page, "affichage");
+  const vignettes = panneau.locator('[role="radiogroup"][aria-labelledby="perf-disposition"] > [role="radio"]');
+  await expect(vignettes).toHaveCount(5);
+  await vignettes.first().scrollIntoViewIfNeeded();
+  const mesures = await vignettes.evaluateAll((els) => els.map((v) => {
+    const n = v.querySelector<HTMLElement>(":scope > span:last-child")!;
+    const rv = v.getBoundingClientRect(), rn = n.getBoundingClientRect();
+    return { texte: n.textContent, x: rn.x, y: rn.y, w: rn.width, h: rn.height, lh: parseFloat(getComputedStyle(n).lineHeight), tronque: n.scrollWidth > n.clientWidth + 0.5, deborde: rn.left < rv.left - 0.5 || rn.right > rv.right + 0.5 };
+  }));
+  for (const [i, m] of mesures.entries()) {
+    expect(m.tronque, `« ${m.texte} » coupé`).toBe(false);
+    expect(m.h, `« ${m.texte} » sur deux lignes au plus`).toBeLessThanOrEqual(2 * m.lh + 1);
+    expect(m.deborde, `« ${m.texte} » dans sa vignette`).toBe(false);
+    const p = mesures[i - 1];
+    if (p && Math.abs(m.y - p.y) < 2) expect(m.x - (p.x + p.w), `écart ${p.texte} / ${m.texte}`).toBeGreaterThanOrEqual(7.5);
+  }
 });

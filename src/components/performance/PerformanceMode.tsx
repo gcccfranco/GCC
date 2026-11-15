@@ -618,6 +618,10 @@ export function PerformanceMode({
   const [passesPagination, setPassesPagination] = useState(0);
   // Pagination d'avant le rappel refait (lot RS-C) : retrouve les annotations sous leurs anciennes clés.
   const [layoutAncien, setLayoutAncien] = useState<PerfPage[]>([]);
+  // A7 (docs/spec-corrections-interface.md) : place gardée en haut des pages 2 et suivantes d'un chant (px à l'échelle 1)
+  // pour que la barre du haut, posée sur la page, ne cache ni le rappel ni la première section. La page 1 n'en a pas
+  // besoin : son en-tête porte sous la barre le titre, masqué barre ouverte.
+  const [reserveBarre, setReserveBarre] = useState(0);
   // Paginations qu'aurait eues la bande d'aperçu retirée (L6) : courante, puis d'avant le rappel (RS-C).
   const [layoutsBande, setLayoutsBande] = useState<{ courant: PerfPage[]; ancien: PerfPage[] } | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -1075,6 +1079,9 @@ export function PerformanceMode({
           reserves.set(i, Math.max(RAPPEL_RESERVE, Math.ceil(mesuree)));
         });
       }
+      // A7 : la barre ouverte descend jusqu'à `barres.haut` (encoche comprise) ; la page commence à `padTop` (échelle 1).
+      const barre = structureMode || !barres.haut ? 0 : Math.max(0, Math.ceil((barres.haut + bandeH + 8) / fontScale - padTop));
+      if (barre > 0) blocks.forEach((b, i) => { if (b.kind === "song-header") reserves.set(i, (reserves.get(i) ?? 0) + barre); });
       const enteteDe = new Map<number, number>();
       let courant = -1;
       blocks.forEach((b, i) => {
@@ -1131,6 +1138,7 @@ export function PerformanceMode({
       layoutBlocksRef.current = blocks;
       setLayout(computed);
       setLayoutAncien(ancienne);
+      setReserveBarre(barre);
       setLayoutsBande(bande);
       setPassesPagination((n) => n + 1);
       // La lecture reste à l'écran quand la mise en page change (« 2 colonnes »,
@@ -1742,8 +1750,13 @@ export function PerformanceMode({
       if (e.key !== "Escape") {
         // Curseur de page, feuilles et sommaire ouverts : flèches, PageUp/Down et Espace leur appartiennent.
         if (cible instanceof HTMLInputElement) return;
-        if (popoverOuvert) return;
-        if (cible?.closest("[role=dialog]")) return;
+        if (popoverOuvert) {
+          // A8 : une pédale (flèche gauche / droite, PageUp / PageDown) ferme le menu et tourne la page, sauf dans la marge
+          // Affichage et sur un contrôle qui se règle aux flèches. Espace et les autres touches restent au menu.
+          const pedale = ["ArrowLeft", "ArrowRight", "PageUp", "PageDown"].includes(e.key);
+          if (!pedale || popoverOuvert === "affichage" || cible?.closest("select, [role=slider], [role=radio], [role=tab], [role=option], [role=listbox], [role^=menuitem]")) return;
+          setPopoverOuvert(null);
+        } else if (cible?.closest("[role=dialog]")) return;
         // Espace active le bouton, le lien, le curseur ou l'élément de menu qui a le focus (comportement natif)
         // seulement si le focus y est venu au clavier (pas de pointerdown depuis le dernier Tab / Échap) ; un focus resté après un clic, un toucher ou
         // rendu par la fermeture d'un menu ouvert à la souris laisse Espace (pédale) tourner la page.
@@ -2340,6 +2353,7 @@ export function PerformanceMode({
                     scaledBodyRef={refDemiCorps}
                     renderBlock={renderBlock}
                     contentPadding={contentPadding}
+                    reserveHaut={entree && (idx[0] ?? -1) > entree.index ? reserveBarre : 0}
                     sansIndice
                   />
                 </ConteneurCoupure>
@@ -2374,6 +2388,7 @@ export function PerformanceMode({
               scaledBodyRef={scaledBodyRef}
               renderBlock={renderBlock}
               contentPadding={contentPadding}
+              reserveHaut={currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index ? reserveBarre : 0}
               pastille={isLastPageOfSong && nextEntry && !colonneScan ? pastilleSuivant(`pointer-events-auto max-w-full border-border/60 ${pastilleCouverte ? "invisible" : ""}`, refPastilleFlux, pastilleCouverte) : null}
             />
             </ConteneurCoupure>
@@ -2902,7 +2917,8 @@ export function PerformanceMode({
           <div className="space-y-3">
             <div className="space-y-1">
               <p id="perf-disposition" className="text-sm">{t("dispositions.titre")}</p>
-              <ChoixDisposition variante="panneau" langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
+              {/* Reste d'A5 (CI-4) : dans la colonne de 320 px (dès 1 024 px), la grille souple de la marge (3 + 2, libellés entiers) ; ailleurs cinq de front. */}
+              <ChoixDisposition variante="panneau" souple={ecran.largeur >= 1024} langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
             </div>
             <SettingRow label={t("performance.text")}>
               <div className="flex items-center gap-1.5">

@@ -425,3 +425,24 @@ centre tombe sur un accord).
   `sections.json` et sont certifiés (`systemes.json`), donc le cas « scan sans `sections.json` » n'existe plus. Preuve :
   `louange-jianpu-tranches` « menu Repères d'un scan … (为我而来 : le pont à la page 2) », vert sur les cinq projets, et
   l'étape 3 du parcours du culte (Refrain de 一生爱你 par Repères), verte.
+
+- **CI-4 (A7, A8, A9, reste d'A5), 15/11/2026, validée par Timothée (« Validé »).** **A7** : cause prouvée, une page
+  de texte commence à `1rem` (`contentPadding`, `PerformanceMode.tsx`) alors que la barre du haut, posée sur la page,
+  descend à 68 px : la rangée du rappel des pages 2 et suivantes (24 → 69 px) était entièrement cachée. Correction : la
+  pagination garde en haut des pages 2 et suivantes d'un chant la hauteur de la barre (réserve ajoutée à celle du
+  rappel, `reserveBarre`), rendue par une cale dans `PageTexte` ; la page 1 est inchangée (son titre est sous la
+  barre, masqué barre ouverte) ; gardée barre fermée, comme pour les scans (K1). Mesure : rappel à 77 px sous une
+  barre de 68 px, trois appareils ; « Abba Père » garde 7 pages. Les traits de « Ma partition » suivent le texte ;
+  les anciennes annotations par page (lecture seule) d'une page dont la composition change ne s'affichent plus là.
+  **A8** : retoucher la clé fermait le menu par la perte du focus, puis le clic le rouvrait ; `MenuLouange` ignore
+  désormais l'interaction sur sa propre icône. Décision déléguée (session CI-4, 15/11) : menu ouvert, une pédale
+  (← / →, PageUp / PageDown) ferme le menu et tourne la page, sauf dans Affichage et sur un contrôle réglé aux
+  flèches ; Espace reste au menu. **A9** : plus reproduit (page 2 de 为我而来, Idées éteint, rallumé, Affichage :
+  même page, trois appareils) ; rien codé, test neuf. **Reste d'A5** : CI-15 n'avait pas touché le mode louange ;
+  vignettes de disposition en grille souple (3 + 2) dans la colonne de 320 px (dès 1 024 px). Tests : louange-menus,
+  louange-parcours-culte, louange-harmonie, marge-affichage, louange-reglages, louange-barre-titre,
+  louange-sections-uniques, ma-partition-lecture : 1 035 tests, 40 min ; rouges déjà sur l'ancien code : « marge
+  Chiffres » fr et zh, `louange-barre-titre:142` et `:285` (Repères présent sur un scan 中文), `louange-sections-uniques:358`
+  à 1 440 px ; « Repères » de louange-menus au téléphone passé à 90 s (quatre ouvertures de plus), 15/15 verts (2 min).
+  Regard : captures Playwright avant / après aux cinq tailles (artefact privé), **non vu à l'écran réel**
+  (installation d'agent-desktop refusée). Relevé, non corrigé : Crayon avec Idées allumé décale le scan de ≈ 28 px.

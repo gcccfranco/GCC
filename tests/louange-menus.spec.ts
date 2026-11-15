@@ -142,7 +142,8 @@ for (const menu of MENUS) {
     }
   });
 
-  test(`${menu} : un toucher dehors le ferme sans tourner la page ni masquer la barre ; flèches sans effet ; Échap ferme puis quitte`, async ({ page }, testInfo) => {
+  test(`${menu} : un toucher dehors le ferme sans tourner la page ni masquer la barre ; une pédale ferme et tourne ; Échap ferme puis quitte`, async ({ page }, testInfo) => {
+    test.setTimeout(90_000); // A8 : quatre ouvertures de plus (Repères passe par Outils au téléphone)
     await ouvrir(page);
     await allerPage2(page);
     const avant = await lireCompteur(page);
@@ -168,11 +169,20 @@ for (const menu of MENUS) {
       expect(await lireCompteur(page), `dehors à ${part * 100} % : la page n'a pas tourné`).toBe(avant);
       await expect(quitter, `dehors à ${part * 100} % : la barre reste`).toBeVisible();
     }
-    // Les flèches, PageUp / PageDown et Espace, menu ouvert, ne tournent pas la page.
+    // A8 : menu ouvert, une pédale (→ / ←, PageDown / PageUp) ferme le menu et tourne la page ; Espace ne tourne rien.
+    const [n, total] = avant.split(" / ").map(Number);
+    for (const [touche, attendu] of [["ArrowRight", n + 1], ["ArrowLeft", n], ["PageDown", n + 1], ["PageUp", n]] as const) {
+      const ouvert = await ouvrirMenu(page, menu);
+      await attendreOuverture(page);
+      await page.keyboard.press(touche);
+      await expect(ouvert, `${touche} ferme le menu`).toBeHidden();
+      await expect.poll(() => lireCompteur(page), { message: `${touche} tourne la page` }).toBe(`${attendu} / ${total}`);
+    }
     const dialogue = await ouvrirMenu(page, menu);
     await attendreOuverture(page);
-    for (const touche of ["ArrowRight", "ArrowLeft", "PageDown", "PageUp", "Space"]) await page.keyboard.press(touche);
+    await page.keyboard.press("Space");
     await page.waitForTimeout(300);
+    await expect(dialogue).toBeVisible();
     expect(await lireCompteur(page)).toBe(avant);
     // Échap ferme le menu seulement ; le second quitte le mode.
     await page.keyboard.press("Escape");
@@ -181,6 +191,23 @@ for (const menu of MENUS) {
     expect(await lireCompteur(page)).toBe(avant);
     await page.keyboard.press("Escape");
     await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
+  });
+}
+
+// A8 : retoucher l'icône d'un menu ouvert le referme (avant, la perte du focus le fermait et le clic le rouvrait). Au
+// téléphone, la feuille et son fond couvrent la barre : le toucher à la place de l'icône tombe sur le fond, qui ferme.
+for (const menu of ["setlist", "outils"] as const) {
+  test(`${menu} : un second toucher sur son icône le referme`, async ({ page }, testInfo) => {
+    await ouvrir(page);
+    const avant = await lireCompteur(page);
+    const dialogue = await ouvrirMenu(page, menu);
+    await attendreOuverture(page);
+    const icone = (await page.locator(`[data-menu-declencheur="${menu}"]`).boundingBox())!;
+    await toucher(page, testInfo, icone.x + icone.width / 2, icone.y + icone.height / 2);
+    await expect(dialogue).toBeHidden();
+    await page.waitForTimeout(600);
+    await expect(dialogue, "il ne se rouvre pas").toBeHidden();
+    expect(await lireCompteur(page)).toBe(avant);
   });
 }
 
