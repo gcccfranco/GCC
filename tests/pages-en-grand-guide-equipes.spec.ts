@@ -7,14 +7,12 @@ import type { MembreEquipe } from "../src/types/equipe";
 // `guide-*` et `equipes-*`).
 // Guide : en grand, le sommaire collant à gauche (260 px depuis la v18) et la lecture à 720 px au plus ;
 // tablette portrait, le sommaire sur deux colonnes en tête ; téléphone, en une colonne.
-// Équipes : l'écran garde sa hauteur, l'organigramme défile de gauche à droite (bandeau) ; une
-// pilule par équipe sert d'index ; flèches sur ordinateur (pointeur fin) seulement.
+// Équipes (CI-16, B12) : une grille à ordre fixe, la page défile en hauteur ; un menu sert d'index ; ni flèches ni fondu.
 // Personnes fictives ; Sheets simulés, rien ne sort sur le réseau.
 
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", firstName: "Léa", lastName: "M." };
 
 const enGrand = (info: TestInfo) => !["telephone", "tablette"].includes(info.project.name);
-const pointeurFin = (info: TestInfo) => info.project.name.startsWith("ordinateur");
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, name: string) {
@@ -80,17 +78,10 @@ async function ouvrirEquipes(page: Page) {
   await sansSheets(page);
   await signInAs(page, MEMBRE, DOCS, "/equipes");
   await expect(page.getByTestId("equipe-edd")).toContainText("Cajon");
-  // Le bandeau est rangé une fois les cartes mesurées.
-  await expect(page.getByTestId("bandeau-equipes")).toHaveAttribute("data-range", "1");
+  await expect(page.getByTestId("equipe-orga")).toBeVisible();
 }
 
-const COURTS: Record<string, string> = {
-  orga: "Orga", "comite-franco": "Comité Franco", da: "DA", medias: "Médias", developpement: "Développement",
-  regie: "Régie", traduction: "Traduction", theologie: "Théologie", evenementiel: "Événementiel",
-  decoration: "Décoration", "accueil-j1": "Accueil J1", louange: "Louange", edd: "EDD",
-};
-
-const bandeau = (page: Page) => page.getByTestId("bandeau-equipes");
+const grille = (page: Page) => page.getByTestId("grille-equipes");
 // Lot CD, T3c : l'index est un menu « Aller à une équipe » ; la coche marque l'équipe en vue.
 const declencheur = (page: Page, nom = "Aller à une équipe") => page.getByRole("button", { name: nom });
 const ligne = (page: Page, nomCourt: string) => page.getByRole("menuitemradio", { name: nomCourt, exact: true });
@@ -108,9 +99,8 @@ async function verifierEnVue(page: Page, nomCourt: string, enVue: boolean) {
 
 // ── Équipes ─────────────────────────────────────────────────────────────────────────────────
 
-test.describe("Équipes en bandeau", () => {
-  test("la page tient dans la hauteur de la fenêtre ; seul le bandeau défile en largeur", async ({ page }, info) => {
-    test.skip(info.project.name === "telephone", "sous 640 px, une colonne : la page défile en hauteur (B3)");
+test.describe("Équipes en grille", () => {
+  test("la page défile en hauteur, jamais en largeur", async ({ page }) => {
     await ouvrirEquipes(page);
     const mesure = await page.evaluate(() => ({
       haut: document.documentElement.scrollHeight,
@@ -118,87 +108,58 @@ test.describe("Équipes en bandeau", () => {
       fenetreH: window.innerHeight,
       fenetreL: window.innerWidth,
     }));
-    expect(mesure.haut).toBeLessThanOrEqual(mesure.fenetreH + 1);
+    expect(mesure.haut, "la page défile en hauteur").toBeGreaterThan(mesure.fenetreH);
     expect(mesure.large).toBeLessThanOrEqual(mesure.fenetreL + 1);
-    const b = await bandeau(page).evaluate((el) => ({ scroll: el.scrollWidth, visible: el.clientWidth, overflow: getComputedStyle(el).overflowX }));
-    expect(b.overflow).toBe("auto");
-    expect(b.scroll).toBeGreaterThan(b.visible);
     await capture(page, "b6-equipes");
   });
 
-  test("les équipes gardent l'ordre d'aujourd'hui, en colonnes jamais plus hautes que le bandeau ; Louange et EDD en colonnes larges, en dernier", async ({ page }) => {
+  test("les équipes gardent l'ordre d'EQUIPES en lecture ligne à ligne ; Louange et EDD pleine rangée, en dernier", async ({ page }) => {
     await ouvrirEquipes(page);
-    const ordre = await bandeau(page).locator("[data-testid^='equipe-']").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")));
-    expect(ordre).toEqual(EQUIPES.map((d) => `equipe-${d.id}`));
-    const colonnes = await bandeau(page).locator("[data-colonne]").evaluateAll((els) =>
-      els.map((c) => ({
-        large: c.getAttribute("data-large") === "1",
-        cartes: c.querySelectorAll("[data-testid^='equipe-']").length,
-        haut: c.scrollHeight,
-        ids: [...c.querySelectorAll("[data-testid^='equipe-']")].map((e) => e.getAttribute("data-testid")),
-      })),
-    );
-    // Plusieurs équipes se partagent une colonne : la grille n'est pas une carte par colonne.
-    expect(colonnes.length).toBeLessThan(EQUIPES.length);
-    expect(colonnes.slice(-2).map((c) => [c.large, c.ids])).toEqual([[true, ["equipe-louange"]], [true, ["equipe-edd"]]]);
-    expect(colonnes.slice(0, -2).every((c) => !c.large)).toBe(true);
-    const hauteur = await bandeau(page).evaluate((el) => el.clientHeight);
-    for (const c of colonnes) {
-      if (c.cartes > 1) expect(c.haut).toBeLessThanOrEqual(hauteur);
-    }
+    const m = await grille(page).evaluate((el) => {
+      const cartes = [...el.querySelectorAll<HTMLElement>("[data-testid^='equipe-']")].map((c) => {
+        const r = c.getBoundingClientRect();
+        return { id: c.getAttribute("data-testid")!, top: Math.round(r.top), left: r.left, w: r.width };
+      });
+      cartes.sort((a, b) => a.top - b.top || a.left - b.left);
+      const g = el.getBoundingClientRect();
+      const pad = parseFloat(getComputedStyle(el).paddingLeft) + parseFloat(getComputedStyle(el).paddingRight);
+      return { ordre: cartes.map((c) => c.id), larges: cartes.slice(-2).map((c) => c.w), grille: g.width - pad };
+    });
+    expect(m.ordre).toEqual(EQUIPES.map((d) => `equipe-${d.id}`));
+    expect(m.ordre.slice(-2)).toEqual(["equipe-louange", "equipe-edd"]);
+    for (const w of m.larges) expect(w, "pleine rangée").toBeGreaterThanOrEqual(m.grille - 1);
   });
 
-  test("toucher « Louange » dans le menu d'index amène la carte Louange dans le bandeau et la coche", async ({ page }) => {
+  test("toucher « Louange » dans le menu d'index amène la carte Louange dans l'écran et la coche", async ({ page }) => {
     await ouvrirEquipes(page);
-    await verifierEnVue(page, "Orga", true);
     await choisirEquipe(page, "Louange");
-    await verifierEnVue(page, "Louange", true);
-    await verifierEnVue(page, "Orga", false);
     await expect
       .poll(async () => {
-        const b = (await bandeau(page).boundingBox())!;
         const l = (await page.getByTestId("equipe-louange").boundingBox())!;
-        return l.x >= b.x - 1 && l.x < b.x + b.width / 2;
+        return l.y >= 0 && l.y < page.viewportSize()!.height;
       })
       .toBe(true);
+    await verifierEnVue(page, "Louange", true);
+    await verifierEnVue(page, "Orga", false);
     await capture(page, "b6-equipes-louange");
   });
 
-  test("l'équipe cochée du menu suit le défilement du bandeau", async ({ page }, info) => {
-    test.skip(info.project.name === "telephone", "sous 640 px, le bandeau ne défile plus en largeur (B3)");
+  test("l'équipe cochée du menu est la dernière équipe choisie", async ({ page }) => {
     await ouvrirEquipes(page);
-    await verifierEnVue(page, "Orga", true);
-    // Défilement à la main jusqu'à la colonne de Régie.
-    await bandeau(page).evaluate((el) => {
-      const carte = el.querySelector("[data-testid='equipe-regie']")!;
-      const colonne = carte.closest("[data-colonne]") as HTMLElement;
-      el.scrollTo({ left: colonne.offsetLeft - parseFloat(getComputedStyle(el).paddingLeft), behavior: "instant" });
-    });
-    const premiere = await bandeau(page).evaluate((el) =>
-      el.querySelector("[data-testid='equipe-regie']")!.closest("[data-colonne]")!.querySelector("[data-testid^='equipe-']")!.getAttribute("data-testid")!.replace("equipe-", ""),
-    );
-    await verifierEnVue(page, COURTS[premiere], true);
+    await choisirEquipe(page, "Régie");
+    await verifierEnVue(page, "Régie", true);
     await verifierEnVue(page, "Orga", false);
-    await bandeau(page).evaluate((el) => el.scrollTo({ left: 0, behavior: "instant" }));
+    await choisirEquipe(page, "Orga");
     await verifierEnVue(page, "Orga", true);
+    await verifierEnVue(page, "Régie", false);
   });
 
-  test("flèches ‹ › sur ordinateur seulement ; accroche aux colonnes sur écran tactile", async ({ page }, info) => {
+  test("ni flèches ni fondu, à aucune taille", async ({ page }) => {
     await ouvrirEquipes(page);
-    const suivantes = page.getByRole("button", { name: "Équipes suivantes" });
-    const snap = await bandeau(page).evaluate((el) => getComputedStyle(el).scrollSnapType);
-    if (!pointeurFin(info)) {
-      await expect(suivantes).toBeHidden();
-      expect(snap).toContain("x");
-      expect(snap).toContain("mandatory");
-      return;
-    }
-    expect(snap).not.toContain("mandatory");
-    await expect(page.getByRole("button", { name: "Équipes précédentes" })).toBeHidden();
-    await suivantes.click();
-    await expect.poll(() => bandeau(page).evaluate((el) => el.scrollLeft)).toBeGreaterThan(100);
-    await expect(page.getByRole("button", { name: "Équipes précédentes" })).toBeVisible();
-    await verifierEnVue(page, "Orga", false);
+    await expect(page.getByRole("button", { name: /Équipes (précédentes|suivantes)/ })).toHaveCount(0);
+    const snap = await grille(page).evaluate((el) => getComputedStyle(el).scrollSnapType);
+    expect(snap).toBe("none");
+    await expect(page.locator("[class*='bg-gradient-to-l']")).toHaveCount(0);
   });
 
   test("中文 : l'index porte les noms d'équipe traduits", async ({ page }) => {

@@ -17,7 +17,7 @@ import { Pencil } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { OngletsRail } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
-import { BandeauEquipes } from "@/components/equipes/BandeauEquipes";
+import { GrilleEquipes } from "@/components/equipes/GrilleEquipes";
 import { Drawer, DrawerBarre, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,8 +88,8 @@ export function EquipesClient({
       : !BACK_OFFICE ? true
       : peutModifierEquipe(user, profile, id) || (id === "louange" && SOUS_EQUIPES.some((s) => peutPlacerSousEquipe(user, profile, s)));
   const onglets = [t("equipes.onglet.equipes"), t("equipes.onglet.musiciens")];
-  // Lot U4 bis, B6 (Q12) : l'organigramme est un bandeau qui défile de gauche à droite et la
-  // page tient dans la hauteur de l'écran. Au Back-Office aussi depuis la v18 (B8) : l'édition
+  // CI-16 (B12) : l'organigramme est une grille à ordre fixe, la page défile en hauteur.
+  // Au Back-Office aussi depuis la v18 (B8) : l'édition
   // n'est plus dans la carte mais dans un panneau.
   const bandeau = onglet === "equipes";
   const equipeDe = (id: string) => equipes.find((e) => e.id === id) ?? null;
@@ -135,7 +135,7 @@ export function EquipesClient({
 
   if (gestion) {
     // Back-Office (agencement v18, B8) : l'en-tête commun, Équipes · Musiciens en rail
-    // (une vue de la page) ; le bandeau sous l'en-tête, ou la matrice des musiciens.
+    // (une vue de la page) ; la grille sous l'en-tête, ou la matrice des musiciens.
     const defEditee = EQUIPES.find((d) => d.id === editee) ?? null;
     const entete = (
       <EnTetePage
@@ -157,9 +157,9 @@ export function EquipesClient({
     return (
       <>
         {bandeau ? (
-          <div className="equipes-ecran flex flex-col">
+          <div>
             {entete}
-            <BandeauEquipes
+            <GrilleEquipes
               cartes={EQUIPES.map((def) => ({ id: def.id, large: !!def.sousColonnes, carte: carte(def) }))}
             />
           </div>
@@ -203,9 +203,9 @@ export function EquipesClient({
   if (bandeau) {
     return (
       <div className="relative">
-        <div className="equipes-ecran relative flex flex-col">
+        <div className="relative">
           {enTeteApp}
-          <BandeauEquipes
+          <GrilleEquipes
             cartes={EQUIPES.map((def) => ({ id: def.id, large: !!def.sousColonnes, carte: carte(def) }))}
           />
         </div>
@@ -329,7 +329,7 @@ function CarteEquipe({
     const blocs = SOUS_EQUIPES_EDD.filter((s) => parSous[s].length > 0).map((s) => colonneEdd(`sous-${s}`, t(`equipes.sousEquipeEdd.${s}`), parSous[s]));
     // « Sans sous-équipe » en dernier, sans intertitre si personne n'a de sous-équipe.
     if (sans.length > 0) blocs.push(colonneEdd("sans", blocs.length > 0 ? t("equipes.sousEquipeEdd.sans") : null, sans));
-    return enColonnes ? <div className="columns-3 gap-4 [&>div]:pb-2">{blocs}</div> : <div className="space-y-2">{blocs}</div>;
+    return enColonnes ? <div className="columns-1 gap-4 sm:columns-3 [&>div]:pb-2">{blocs}</div> : <div className="space-y-2">{blocs}</div>;
   };
 
   return (

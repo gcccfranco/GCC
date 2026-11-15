@@ -61,19 +61,19 @@ async function capture(page: Page, nom: string) {
   if (dir) await page.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png`, fullPage: true });
 }
 
-/** Capture d'un ÉLÉMENT, en entier (le bandeau défile : on l'amène d'abord dans le champ). */
+/** Capture d'un ÉLÉMENT, en entier (la grille défile avec la page : on l'amène d'abord dans le champ). */
 async function captureElement(el: Locator, nom: string) {
   const dir = process.env.PW_CAPTURES;
   if (dir) await el.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png` });
 }
 
-/** Amène la carte Louange dans le champ par le menu « Aller à une équipe » du bandeau (lot CD, T3c). */
+/** Amène la carte Louange dans le champ par le menu « Aller à une équipe » de la grille (lot CD, T3c). */
 async function amenerLouange(page: Page, nom = "Louange", allerA = "Aller à une équipe") {
-  // Une carte plus haute que le bandeau défile dans sa colonne : pour la voir entière, la fenêtre s'agrandit le temps de la capture.
+  // Pour voir la carte entière, la fenêtre s'agrandit le temps de la capture.
   await page.setViewportSize({ width: page.viewportSize()!.width, height: 1800 });
   await page.getByRole("button", { name: allerA }).click();
   await page.getByRole("menuitemradio", { name: nom, exact: true }).click();
-  await page.waitForTimeout(900); // défilement doux du bandeau
+  await page.waitForTimeout(900); // défilement doux de la page
 }
 
 async function ouvrir(page: Page, qui: FakeProfile, to: string, docs = DOCS, langue = "fr"): Promise<FakeDb> {

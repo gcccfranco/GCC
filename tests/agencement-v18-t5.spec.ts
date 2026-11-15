@@ -7,7 +7,7 @@ import {
 import type { MembreEquipe } from "../src/types/equipe";
 
 // Agencement v18, tranche T5 (docs/spec-agencement-v18.md, B8 à B12) : Back-Office › Équipes
-// (Organigramme en bandeau, « Recalculer » dans l'en-tête, crayon → panneau d'édition ;
+// (Organigramme en grille, « Recalculer » dans l'en-tête, crayon → panneau d'édition ;
 // Personnes en deux volets, inscriptions en tête, `?uid=`) et Messages (un seul en-tête pour
 // les trois onglets ; Réception « ⋯ », chant signalé, du même membre ; Notifier avec l'aperçu et
 // les derniers envois ; Questionnaire en deux volets). Firestore et Sheets simulés ; personnes
@@ -62,15 +62,15 @@ const sousEnTete = (page: Page) => enTete(page).locator("xpath=following-sibling
 // ─── Équipes › Organigramme ──────────────────────────────────────────────────
 
 test.describe("T5 : Équipes › Organigramme", () => {
-  test("l'agencement commun ; le bandeau sans défilement de page en largeur ; « Recalculer » dans l'en-tête", async ({ page }) => {
+  test("l'agencement commun ; la grille sans défilement de page en largeur ; « Recalculer » dans l'en-tête", async ({ page }) => {
     interdireDialoguesNatifs(page);
     await ouvrir(page, "/back-office/equipes");
     await expect(page.getByTestId("equipe-da")).toBeVisible();
     await expect(titre(page)).toHaveText("Équipes");
     await expect(enTete(page)).toContainText("Organigramme GCC Franco");
     await expect(enTete(page)).not.toContainText("pôles");
-    await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
-    const bandeau = page.getByTestId("bandeau-equipes");
+    await expect(page.getByTestId("grille-equipes")).toBeVisible();
+    const bandeau = page.getByTestId("grille-equipes");
     // Trois rails depuis le lot CD, T3c : Organigramme · Personnes, le sélecteur Église · Paix · … et Équipes · Musiciens.
     await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 3, pilules: 0 } });
     // Rail : Organigramme · Personnes ; vues Équipes · Musiciens en rail aussi.
@@ -135,9 +135,9 @@ test.describe("T5 : Équipes › Organigramme", () => {
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 1 }) }));
     const db = await ouvrir(page, "/back-office/equipes");
     const carte = page.getByTestId("equipe-da");
-    // Les membres lus, le bandeau rangé : la carte a sa hauteur.
+    // Les membres lus, la grille posée : la carte a sa hauteur.
     await expect(carte).toContainText("Bérénice A.");
-    await expect(page.getByTestId("bandeau-equipes")).toHaveAttribute("data-range", "1");
+    await expect(page.getByTestId("grille-equipes")).toBeVisible();
     const hauteur = (await carte.boundingBox())!.height;
     await carte.getByRole("button", { name: "Modifier DA" }).click();
     const panneau = page.getByRole("dialog", { name: /^DA, \d+ membres?$/ });
@@ -182,7 +182,7 @@ test.describe("T5 : Équipes › Organigramme", () => {
     });
     await page.getByRole("tab", { name: "Musiciens" }).click();
     await expect(page.getByRole("tab", { name: "Musiciens" })).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByTestId("bandeau-equipes")).toHaveCount(0);
+    await expect(page.getByTestId("grille-equipes")).toHaveCount(0);
     await expect(titre(page)).toHaveText("Équipes");
     await expect(page.getByText("Bérénice A.").filter({ visible: true }).first()).toBeVisible();
   });
