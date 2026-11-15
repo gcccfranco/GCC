@@ -418,13 +418,17 @@ const ouvrirTempo = (page: Page) => ouvrirMenu(page, "tempo");
 test("tempo réglé par chant : gardé après rechargement, « Tempo du fichier » l'efface", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirChantL4(page, "avec-nous");
-  // Le rond « Métronome visuel » est dans Outils (RU-5).
+  // L'interrupteur « Métronome visuel » est dans le panneau Métronome (CI-8 : plus dans Outils).
   const options = await ouvrirOutils(page);
   if (page.viewportSize()!.width >= 768) await expect(options.locator("[data-tempo-valeur]")).toHaveCount(0);
-  await options.locator("[data-metronome]").click();
+  await expect(options.locator("[data-metronome]")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
   let reglages = await ouvrirTempo(page);
+  await reglages.locator("[data-metronome]").click();
+  await page.keyboard.press("Escape");
+  await expect(reglages).toBeHidden();
+  reglages = await ouvrirTempo(page);
   const valeur = reglages.locator("[data-tempo-valeur]");
   await expect(valeur).toHaveText(/^94$/);
   await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(0);
@@ -886,23 +890,27 @@ test("forScore, L7 : glisser le curseur montre le titre du chant visé en bulle"
 // Correctifs de l'audit du 27/10/2026 : clavier, barre masquée, taille annotée par setlist,
 // pastille et bannière sous la barre ouverte, liseré, feuilles, souris.
 
-test("forScore, clavier : Réglages ouverts, Espace et flèche droite ne tournent pas la page", async ({ page }) => {
+test("forScore, clavier : Réglages ouverts, Espace ne tourne pas la page ; une pédale ferme le menu et tourne (A8)", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrir(page, { chants: 4 });
   const avant = await numero(page);
-  const reglages = await ouvrirOutils(page);
+  const reglages = await ouvrirMenu(page, "tempo");
   await reglages.locator("[data-metronome]").focus();
   await page.keyboard.press("Space");
-  await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("PageDown");
   await page.waitForTimeout(300);
-  // Espace bascule le métronome : la bande fait descendre la page, le total de pages change ; le numéro, non.
+  // Panneau ouvert, Espace lance ou arrête le métronome : ni page tournée, ni panneau fermé.
   expect(await numero(page)).toBe(avant);
+  await expect(reglages).toBeVisible();
   // Échap referme la feuille, puis les flèches tournent de nouveau la page.
   await page.keyboard.press("Escape");
   await expect(reglages).toBeHidden();
   await page.keyboard.press("ArrowRight");
   await expect.poll(() => numero(page)).toBe(2);
+  // A8 : une pédale ferme le menu ouvert et tourne la page.
+  const reglages2 = await ouvrirMenu(page, "tempo");
+  await page.keyboard.press("ArrowRight");
+  await expect(reglages2).toBeHidden();
+  await expect.poll(() => numero(page)).toBe(3);
   expect(erreurs).toEqual([]);
 });
 

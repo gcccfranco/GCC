@@ -430,7 +430,7 @@ test.describe("Réglages : corrections de la relecture", () => {
     const entete = onStage(page, "[data-entete-chant]");
     await expect(entete.getByText("→ Montée de la batterie")).toBeVisible();
     const feuille = await ouvrirOutils(page);
-    await feuille.getByRole("button", { name: "Transitions" }).click();
+    await feuille.getByRole("switch", { name: "Transitions" }).click();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(entete.getByText("Piano seul, voix douces")).toBeVisible();

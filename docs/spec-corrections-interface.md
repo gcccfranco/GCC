@@ -531,3 +531,21 @@ centre tombe sur un accord).
   compte) ; téléphone en captures Playwright (320, 390) ; B4 bis mesuré et capturé par Playwright, **non vu à l'écran
   réel** ; un `regard`. Artefact privé avant / après envoyé à Timothée. Restes : en 中文, le panneau mord d'≈ 10 px sur le
   bord de la carte de section (sans toucher l'accord) ; à 320 px, le bandeau tient sur trois lignes.
+- **CI-8 (B2), 15/11/2026, validée par Timothée (« Validé »).** Outils en deux groupes titrés (`TitreRubrique`) :
+  « Réglages » / 设置 en interrupteurs `ui/switch` (Transitions, Plein écran, « Voir mes annotations » / 显示我的批注,
+  Idées d'harmonie ou Panneau de l'accord), puis « Actions » / 操作 en lignes icône + libellé + chevron (Métronome à
+  toutes les tailles, Repères et Crayon au téléphone ; titre absent sans action). « Métronome visuel » retiré
+  d'Outils : il reste dans la feuille Métronome (prop `metronome` de `ContenuOutils` retirée). Après le regard :
+  plus d'air au-dessus de « Actions », chevrons alignés sur le bord des interrupteurs ; le retrait de 4 px des
+  titres de groupe est celui de `TitreRubrique` (comme « Raccourcis clavier »), gardé. Tests adaptés (rôle `switch`,
+  `aria-checked`, métronome visuel par la feuille Métronome) : louange-menus, mode-louange-forscore (le test clavier
+  suit A8 : une pédale ferme le menu et tourne), louange-accords, louange-harmonie, louange-sections-uniques ; deux
+  tests neufs « B2 » (fr, 中文) dans louange-menus. Tests : 13 specs, 1 205 passés (≈ 75 min, puis relances et
+  preuves sur l'ancien code ≈ 10 min, passe finale louange-menus et parcours du culte : 299 passés, 22,8 min) ; rouges déjà sur l'ancien
+  code : `louange-reglages` « marge Chiffres » fr et zh, `usage-dimanche:221` et `:238`, `mode-louange-forscore:224`
+  (glissé, ordinateur) et `:270` (« Ensuite » 42,4 px au téléphone, pastille réduite par l'échelle de la page,
+  `PageTexte.tsx:88`) ; instables : `louange-sections-uniques:358` et `:764` à 1 440 px. **Hors tranche, à
+  reprendre** : A9 au téléphone (page 2 d'un scan de deux pages, rallumer Idées ramène parfois à la page 1 : 2 sur 6
+  sur l'ancien code, à chaque essai avec l'interrupteur ; la repagination ancre la page au premier bloc,
+  `pageAncree`, partagé par les deux pages du scan). Regard : captures Playwright avant / après aux cinq tailles
+  (artefact privé), un `regard`, une reprise ; **non vu à l'écran réel** (base Firestore fermée ce soir).

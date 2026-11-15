@@ -2119,7 +2119,6 @@ export function PerformanceMode({
     <ContenuOutils
       showTransitions={showTransitions}
       setShowTransitions={setShowTransitions}
-      metronome={{ allume: metronome, set: setMetronome }}
       annotations={user ? { allume: showAnnotations, set: setShowAnnotations } : undefined}
       idees={{ allume: reglageIdees, acces: peutHarmonie, set: (v) => { ecrireReglageIdees(uid, v); setReglageIdees(v); } }}
       onAnnoter={telephone && user && !horsLigne && (crayonPret || crayonIndispo) ? (crayonIndispo ? signalerCrayonIndispo : basculerAnnotation) : undefined}

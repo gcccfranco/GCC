@@ -216,7 +216,7 @@ for (const c of CHANTS) {
     await ouvrirMode(page, SANS_ACCES, c);
     await expect(onStage(page, "[data-accord-touchable]")).toHaveCount(0);
     const feuille = await ouvrirMenu(page, "outils", c.langue);
-    await feuille.getByRole("button", { name: c.langue === "zh" ? "和弦面板" : "Panneau de l'accord" }).click();
+    await feuille.getByRole("switch", { name: c.langue === "zh" ? "和弦面板" : "Panneau de l'accord" }).click();
     await page.keyboard.press("Escape"); // la feuille couvre la scène au téléphone
     await expect(feuille).toBeHidden();
     await expect(onStage(page, "[data-accord-touchable]").first()).toBeVisible({ timeout: 15_000 });
