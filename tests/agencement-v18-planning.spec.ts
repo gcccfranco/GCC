@@ -392,15 +392,17 @@ test.describe("T4b — Planning, accueil (A1)", () => {
     }
   });
 
-  // quotidien-10 : onglets de section de la tablette portrait, 44 px, actif noir.
-  test("tablette portrait : onglets du Planning de 44 px, l'actif en noir", async ({ page }, info) => {
+  // quotidien-10 puis B11 : onglets de section de la tablette portrait, option de Segment (34 px dessinés, zone de 44 px), actif en pastille blanche.
+  test("tablette portrait : onglets du Planning en Segment, l'actif en pastille blanche", async ({ page }, info) => {
     test.skip(info.project.name !== "tablette", "tablette portrait");
     await ouvrirAccueilOuTable(page, "/planning");
     const onglet = page.getByTestId("onglets-section").getByRole("link", { name: "Accueil" });
     await expect(onglet).toHaveAttribute("aria-current", "page");
-    expect((await boite(onglet)).height, "44 px").toBeGreaterThanOrEqual(43.5);
+    expect((await boite(onglet)).height, "34 px dessinés").toBeGreaterThanOrEqual(33.5);
+    const zone = await onglet.evaluate((el) => parseFloat(getComputedStyle(el, "::after").height));
+    expect(zone, "zone de toucher de 44 px").toBeGreaterThanOrEqual(43.5);
     const encre = await page.locator("body").evaluate((el) => getComputedStyle(el).color);
-    expect(await fond(onglet), "actif noir (bg-foreground)").toBe(encre);
+    expect(await fond(onglet), "actif en pastille (bg-pose), plus en noir").not.toBe(encre);
   });
 
   test("barre dépliée : la Table sous Groupes et EDD, sur une ligne", async ({ page }, info) => {

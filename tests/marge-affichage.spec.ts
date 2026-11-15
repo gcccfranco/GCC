@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { marge, ouvrirMarge } from "./helpers/marge";
 
@@ -230,16 +230,58 @@ test.describe("marge Affichage — mesures", () => {
   });
 });
 
-test("les cinq libellés de disposition sont espacés de 8 px et tiennent sur deux lignes", async ({ page }) => {
+const VIGNETTES = '[role="radiogroup"][aria-labelledby$="-disp"] > [role="radio"]';
+
+// A5 : un seul code (grille souple) pour la colonne de 320 px et la feuille ; les vignettes passent à la ligne.
+test("les cinq libellés de disposition sont espacés de 8 px (sur une même ligne) et tiennent sur deux lignes", async ({ page }) => {
   await ouvrir(page, "abba-pere");
-  const noms = marge(page).locator('[role="radiogroup"].grid-cols-5 > [role="radio"] > span:last-child');
+  const noms = marge(page).locator(`${VIGNETTES} > span:last-child`);
   await expect(noms).toHaveCount(5);
   const boites = await noms.evaluateAll((els) => els.map((e) => {
     const r = e.getBoundingClientRect();
-    return { x: r.x, w: r.width, h: r.height, lh: parseFloat(getComputedStyle(e).lineHeight) };
+    return { x: r.x, y: r.y, w: r.width, h: r.height, lh: parseFloat(getComputedStyle(e).lineHeight) };
   }));
   for (const [i, b] of boites.entries()) {
     expect(b.h, `libellé ${i}`).toBeLessThanOrEqual(2 * b.lh + 1);
-    if (i > 0) expect(b.x - (boites[i - 1].x + boites[i - 1].w), `écart ${i - 1}-${i}`).toBeGreaterThanOrEqual(7.5);
+    if (i > 0 && Math.abs(b.y - boites[i - 1].y) < 2) expect(b.x - (boites[i - 1].x + boites[i - 1].w), `écart ${i - 1}-${i}`).toBeGreaterThanOrEqual(7.5);
   }
+});
+
+// A5 (reste) : colonne de 320 px à 1 920 px (à 1 366 px la page chant en deux volets laisse moins de 340 px à la musique : feuille), feuille au téléphone ; libellés jamais coupés, en FR et en 中文.
+for (const chant of CHANTS) {
+  test(`disposition — ${chant.zh ? "ZH" : "FR"} : libellés entiers, deux lignes au plus, dans leur vignette (colonne de 320 px à 1 920 px, feuille à 1 366 px et au téléphone)`, async ({ page }, info) => {
+    const ordi = info.project.name === "ordinateur";
+    for (const largeur of ordi ? [1366, 1920] : [0]) {
+      if (largeur) await page.setViewportSize({ width: largeur, height: 800 });
+      await ouvrir(page, chant.slug, { zh: chant.zh });
+      const lieu = await marge(page).getAttribute("data-place");
+      if (largeur === 1920) expect(lieu).toBe("colonne");
+      if (largeur === 1366) expect(lieu).toBe("feuille");
+      const vignettes = marge(page).locator(VIGNETTES);
+      await expect(vignettes).toHaveCount(5);
+      const mesures = await vignettes.evaluateAll((els) => els.map((v) => {
+        const n = v.querySelector<HTMLElement>(":scope > span:last-child")!;
+        const rv = v.getBoundingClientRect(), rn = n.getBoundingClientRect();
+        return { texte: n.textContent, tronque: n.scrollWidth > n.clientWidth + 0.5, h: rn.height, lh: parseFloat(getComputedStyle(n).lineHeight), deborde: rn.left < rv.left - 0.5 || rn.right > rv.right + 0.5 || rn.bottom > rv.bottom + 0.5 };
+      }));
+      for (const m of mesures) {
+        expect(m.tronque, `« ${m.texte} » coupé (${largeur})`).toBe(false);
+        expect(m.h, `« ${m.texte} » sur deux lignes au plus`).toBeLessThanOrEqual(2 * m.lh + 1);
+        expect(m.deborde, `« ${m.texte} » dans sa vignette`).toBe(false);
+      }
+      if (lieu === "colonne") expect((await marge(page).boundingBox())!.width).toBeCloseTo(320, 0);
+    }
+  });
+}
+
+// B11 : un réglage a un seul état actif (`Bascule`, fond noir). « Je joue » est la même Bascule mais n'existe que dans le mode louange ;
+// ici : l'ordre des sections (Bascule) et Lettres/Chiffres (ChoixNotation) sur la page chant.
+test("réglages de la marge : Bascule et Lettres/Chiffres ont la même couleur active", async ({ page }) => {
+  await ouvrir(page, "abba-pere");
+  const fond = (l: Locator) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const bascule = marge(page).locator('[role="radiogroup"][aria-label] > [role="radio"][aria-checked="true"]').first();
+  const lettres = marge(page).locator('button[data-notation][aria-pressed="true"]').first();
+  await expect(bascule).toBeVisible();
+  await expect(lettres).toBeVisible();
+  expect(await fond(bascule)).toBe(await fond(lettres));
 });

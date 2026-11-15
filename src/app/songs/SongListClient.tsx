@@ -1,7 +1,7 @@
 "use client";
 
 import { GuideLien } from "@/components/guide/GuideLien";
-import { OngletsRail } from "@/components/layout/Onglets";
+import { Segment } from "@/components/ui/segment";
 import { LienHarmonie } from "@/components/harmonie/LienHarmonie";
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { useFonduLateral } from "@/hooks/useFonduLateral";
@@ -331,7 +331,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
       {/* Filtres */}
       <div className="flex flex-wrap gap-2 mb-4 items-center">
         {/* Langue : une vue de la liste, dans le rail gris (R4 de docs/spec-agencement-v18.md) */}
-        <OngletsRail
+        <Segment
           etiquette={t("songs.list.filterLanguage")}
           actif={langFilter}
           choisir={(lang) => {

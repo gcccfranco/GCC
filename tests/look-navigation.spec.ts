@@ -126,7 +126,8 @@ test.describe("navigation par sections (T2), onglets de section", () => {
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const box = await pilule.boundingBox();
     if (projet.startsWith("ordinateur")) expect(Math.abs(box!.height - 28)).toBeLessThanOrEqual(2);
-    else if (projet === "telephone" || projet === "tablette") expect(box!.height).toBeGreaterThanOrEqual(40);
+    // B11 : l'onglet est une option de Segment (34 px au toucher, 44 px de zone par `::after`)
+    else if (projet === "telephone" || projet === "tablette") expect(box!.height).toBeGreaterThanOrEqual(33.5);
     else {
       // Tablette en paysage (T3a) : la pilule de l'en-tête se dessine à 32 px (28 à la souris) ; c'est la zone `::after` de TOUCHER_PILULE qui est portée à 44 px au doigt.
       expect(box!.height, "dessin de la pilule : 32 px").toBeGreaterThanOrEqual(30);

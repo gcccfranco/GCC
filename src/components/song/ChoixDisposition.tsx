@@ -20,6 +20,8 @@ type Props = {
   disposition: Disposition;
   changeDisposition: (d: Disposition) => void;
   langue?: "fr" | "zh";
+  /** Panneau étroit (marge « Affichage » de 320 px) : vignettes d'au moins 5 rem qui passent à la ligne, libellé jamais coupé. */
+  souple?: boolean;
 };
 // Accent de l'entrée choisie dans les menus du site : le bleu des actions (le primaire du site est noir et blanc).
 const ACCENT_SITE = "var(--chord-color)";
@@ -71,14 +73,14 @@ function ChoixMenu({ disposition, changeDisposition, langue }: Props) {
   );
 }
 
-function ChoixPanneau({ disposition, changeDisposition, langue, couleur = ACCENT_SITE, labelledBy }: Props & { couleur?: string; labelledBy?: string }) {
+function ChoixPanneau({ disposition, changeDisposition, langue, couleur = ACCENT_SITE, labelledBy, souple }: Props & { couleur?: string; labelledBy?: string }) {
   const { t } = useTranslation();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   return (
     <div
       role="radiogroup"
       aria-labelledby={labelledBy}
-      className="grid grid-cols-5 gap-2"
+      className={souple ? "grid grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2" : "grid grid-cols-5 gap-2"}
       onKeyDown={(e) => {
         // Radiogroup standard : ← ↑ et → ↓ passent à l'entrée voisine en la choisissant.
         const d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
@@ -104,10 +106,10 @@ function ChoixPanneau({ disposition, changeDisposition, langue, couleur = ACCENT
             onClick={() => { if (!choisie) compter("cmd.chant.disposition"); changeDisposition(d); }}
             className="flex min-h-11 min-w-0 flex-col items-center gap-1 rounded-md px-0 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <span className="block max-w-full rounded-md p-0.5" style={{ boxShadow: choisie ? `0 0 0 2px ${couleur}` : "0 0 0 1px transparent" }}>
+            <span className={`block max-w-full rounded-md p-0.5 ${souple ? "mx-auto w-16" : ""}`} style={{ boxShadow: choisie ? `0 0 0 2px ${couleur}` : "0 0 0 1px transparent" }}>
               <MiniatureDisposition disposition={d} langue={langue} taille="panneau" />
             </span>
-            <span className={`${NOM} line-clamp-2 flex-1 ${choisie ? "font-bold" : "font-medium"}`} style={choisie ? { color: couleur } : undefined}>
+            <span className={`${NOM} ${souple ? "break-words" : "line-clamp-2"} flex-1 ${choisie ? "font-bold" : "font-medium"}`} style={choisie ? { color: couleur } : undefined}>
               {t(`dispositions.${d}`)}
             </span>
           </button>
