@@ -729,3 +729,25 @@ for (const langue of ["fr", "zh"] as const) {
     expect(fin.finContenu, "la dernière ligne est entière dans la zone").toBeLessThanOrEqual(fin.bas + 1);
   });
 }
+
+test("B1 : un × en haut à droite de chaque feuille (Setlist, Repères, Outils, Métronome, Affichage) ; le toucher ferme sans changer de page", async ({ page }) => {
+  await ouvrir(page);
+  await allerPage2(page);
+  for (const menu of ["setlist", "reperes", "outils", "tempo", "affichage"] as Menu[]) {
+    let dialogue = await ouvrirMenu(page, menu);
+    if (menu === "tempo") dialogue = page.locator('[data-menu-louange="metronome"]'); // ouvrirMenu rend le div intérieur
+    await attendreOuverture(page);
+    const croix = dialogue.getByRole("button", { name: /^Fermer/ }).first();
+    await expect(croix).toBeVisible();
+    const b = (await croix.boundingBox())!;
+    const d = (await dialogue.boundingBox())!;
+    // Affichage en feuille pleine largeur : l'en-tête suit la colonne centrée des réglages (560 px) ; on mesure à sa rangée.
+    const r = menu === "affichage" ? (await croix.locator("..").boundingBox())! : d;
+    expect(r.x + r.width - (b.x + b.width), `${menu} : bord droit`).toBeLessThan(24);
+    // Feuille du bas (< 768 px) : la poignée (24 px) précède l'en-tête.
+    expect(b.y - d.y, `${menu} : haut`).toBeLessThan(page.viewportSize()!.width < 768 ? 48 : 24);
+    await croix.click();
+    await expect(dialogue).toBeHidden();
+    expect(await lireCompteur(page), `${menu} : la page ne change pas`).toMatch(/^2 \//);
+  }
+});

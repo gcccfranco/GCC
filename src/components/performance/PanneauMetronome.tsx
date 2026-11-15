@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Minus, Plus } from "lucide-react";
 import { Groupe, Segment } from "@/components/song/MargeAffichage";
@@ -136,7 +136,6 @@ export function PanneauMetronome({
   appui: { current: number };
 }) {
   const { t } = useTranslation();
-  const titre = useId();
   const [saisie, setSaisie] = useState<string | null>(null);
   const [autre, setAutre] = useState(() => !MESURES.includes(mesureTexte));
   const tempoRef = useRef(tempo);
@@ -165,18 +164,13 @@ export function PanneauMetronome({
   ];
 
   return (
-    <MenuLouange id="metronome" titre={t("panneauMetronome.titre")} ouvert={ouvert} onOuvertChange={(o) => !o && onFermer()} couleur={couleur} titreCache>
+    <MenuLouange id="metronome" titre={t("panneauMetronome.titre")} ouvert={ouvert} onOuvertChange={(o) => !o && onFermer()} couleur={couleur} labelFermer={t("panneauMetronome.fermer")}>
     <div
       data-panneau-metronome
       data-testid="panneau-metronome"
-      aria-labelledby={titre}
       className="-mx-1 text-foreground"
       style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontVariantNumeric: "tabular-nums" }}
     >
-        <div className="flex items-center justify-between gap-2 px-4">
-          <h2 id={titre} className="min-w-0 truncate text-base font-semibold">{t("panneauMetronome.titre")}</h2>
-          <button type="button" aria-label={t("panneauMetronome.fermer")} onClick={onFermer} className="grid h-11 w-11 place-items-center rounded-full text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">×</button>
-        </div>
         <button
           type="button"
           data-metronome=""

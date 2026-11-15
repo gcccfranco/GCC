@@ -496,3 +496,19 @@ centre tombe sur un accord).
   (agent-desktop, 830 avant / après, 1 100, 1 366 en deux volets) ; setlist **non vue à l'écran réel** (connexion au
   compte invité refusée dans la session), captures Playwright avant / après. Clé `songs.detail.backToAll` orpheline,
   laissée dans les locales. Artefact privé avant / après envoyé à Timothée.
+
+- **CI-7 (B1), 15/11/2026, validée par Timothée (« Validé »).** Nouvel en-tête commun `EnTeteFeuille`
+  (`src/components/ui/en-tete-feuille.tsx`) : titre à gauche, × de 44 px en haut à droite, une seule sortie visible
+  (Échap et le toucher dehors restent). Porté par `MenuLouange` (Setlist, Repères, Outils, Métronome ; feuille du bas
+  et bulle), et utilisé par la marge Affichage et Idées d'harmonie (feuille, fenêtre, colonne ; `Croix` retirée).
+  Décisions déléguées (session CI-7, 15/11) : la Setlist montre le nom de la setlist en titre (le nom du dialogue
+  reste « Liste des chants »), la ligne date · nombre de chants reste dessous ; le Crayon garde « Terminé » comme
+  seule sortie (barre d'outils, pas une feuille), et le ✓ du bas devient le mot gris « Enregistré » (petit, sur deux
+  lignes au besoin en colonne et au téléphone). Après le regard : en-tête d'Affichage aligné sur la colonne de 560 px
+  (tablette portrait), moins de vide sous les en-têtes. Tests adaptés (le titre et le × du Métronome sont hors de
+  `[data-panneau-metronome]`) : metronome-panneau, louange-parcours-culte ; test neuf « B1 » dans louange-menus.
+  Tests : louange-menus, metronome-panneau, louange-parcours-culte, annotations-forscore, louange-crayon-scan,
+  louange-harmonie (≈ 65 min, deux passes et un conseil), puis marge-affichage, ma-partition-crayon, harmonie-idees
+  (172, 5,6 min), les reprises (≈ 15 min) et la passe finale (485 tests, 26,6 min, puis « B1 » 5/5) ; rouge déjà sur l'ancien code : `annotations-forscore` « (z) » au
+  téléphone ; instables : `louange-harmonie` A9 au téléphone. Regard : captures Playwright avant / après aux cinq
+  tailles (artefact privé), un `regard`, une reprise ; **non vu à l'écran réel**.

@@ -146,7 +146,6 @@ function ToutesMesSetlists({
 }
 
 export function ContenuSetlist({
-  setlistTitle,
   setlistDate,
   songEntries,
   pages,
@@ -160,7 +159,6 @@ export function ContenuSetlist({
   onRetirer,
   retour,
 }: {
-  setlistTitle: string;
   setlistDate?: string;
   songEntries: { block: SongHeaderBlock; index: number }[];
   pages: number[][];
@@ -197,7 +195,6 @@ export function ContenuSetlist({
         </button>
       )}
       <div className="px-1 pb-2">
-        <p className="truncate text-base font-semibold text-foreground">{setlistTitle}</p>
         <p className="truncate text-[13px] text-muted-foreground">
           {setlistDate ? `${formatDate(setlistDate, i18n.language)} · ` : null}
           {t("performance.songCount", { count: songEntries.length })}

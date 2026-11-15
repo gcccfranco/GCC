@@ -10,8 +10,9 @@ import { Fragment, useEffect, useId, useMemo, useRef, useState, type CSSProperti
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { TOUCHER_44 } from "@/lib/toucher44";
-import { ChevronDown, X } from "lucide-react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { ChevronDown } from "lucide-react";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { EnTeteFeuille } from "@/components/ui/en-tete-feuille";
 import { Popover, PopoverAnchor, PopoverArrow, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ChampSelect } from "@/components/ui/champ-select";
@@ -127,20 +128,6 @@ export function defilerSousLaBarre(el: HTMLElement | null | undefined) {
   el.style.scrollMarginTop = "";
 }
 
-function Croix({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation();
-  return (
-    <button
-      type="button"
-      aria-label={t("harmonie.fermer")}
-      onClick={onClose}
-      className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <X className="h-5 w-5" aria-hidden />
-    </button>
-  );
-}
-
 export function HarmonieDuChant(props: Props) {
   const colonne = props.disposition === "colonne";
   const fenetre = props.disposition === "fenetre";
@@ -170,10 +157,7 @@ export function HarmonieDuChant(props: Props) {
         overlayClassName={props.louange ? "z-[10000]" : undefined}
         data-idees-harmonie
       >
-        <DrawerHeader className="flex shrink-0 items-center justify-between pb-3">
-          <DrawerTitle>{t("harmonie.titreChant")}</DrawerTitle>
-          <Croix onClose={props.onClose} />
-        </DrawerHeader>
+        <EnTeteFeuille Titre={DrawerTitle} titre={t("harmonie.titreChant")} onFermer={props.onClose} labelFermer={t("harmonie.fermer")} className="px-4 pb-3 pt-4" />
         {props.open && <Contenu {...props} />}
       </DrawerContent>
     </Drawer>
@@ -209,10 +193,7 @@ function Fenetre(props: Props & { titreId: string }) {
         onOpenAutoFocus={(e) => e.preventDefault()}
         onCloseAutoFocus={(e) => { e.preventDefault(); props.ancre?.focus({ preventScroll: true }); }}
       >
-        <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-3">
-          <h2 id={props.titreId} className="text-base font-semibold">{t("harmonie.titreChant")}</h2>
-          <Croix onClose={props.onClose} />
-        </div>
+        <EnTeteFeuille titre={t("harmonie.titreChant")} titreId={props.titreId} onFermer={props.onClose} labelFermer={t("harmonie.fermer")} className="px-4 pb-2 pt-3" />
         {props.open && <Contenu {...props} />}
         <PopoverArrow width={18} height={9} className="fill-background stroke-border dark:fill-[hsl(var(--raised))]" />
       </PopoverContent>
@@ -247,10 +228,7 @@ function Colonne(props: Props & { titreId: string }) {
       style={props.styleColonne}
       className="colonne-harmonie sticky top-[var(--nav-h)] mt-[48px] flex h-[calc(100dvh-var(--nav-h)-48px)] w-[400px] shrink-0 flex-col border-l border-border bg-card print:hidden"
     >
-      <div className="flex shrink-0 items-center justify-between px-4 pb-3 pt-4">
-        <h2 id={props.titreId} className="text-lg font-semibold">{t("harmonie.titreChant")}</h2>
-        <Croix onClose={props.onClose} />
-      </div>
+      <EnTeteFeuille titre={t("harmonie.titreChant")} titreId={props.titreId} onFermer={props.onClose} labelFermer={t("harmonie.fermer")} className="px-4 pb-3 pt-4" />
       <Contenu {...props} />
     </aside>
   );

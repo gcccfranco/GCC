@@ -211,7 +211,7 @@ test("parcours du culte : ouvrir, tourner, scan annoté, Chiffres, accord au bor
     { nom: "Repères", ouvrir: dialogue("reperes"), dehors: true },
     { nom: "Outils", ouvrir: dialogue("outils"), dehors: true },
     { nom: "Affichage", ouvrir: dialogue("affichage"), sortie: (d) => d.getByRole("button", { name: "Fermer l'affichage" }).click() },
-    { nom: "Métronome", ouvrir: () => ouvrirMetronome(page), sortie: (d) => d.getByRole("button", { name: "Fermer le métronome" }).click() },
+    { nom: "Métronome", ouvrir: () => ouvrirMetronome(page), sortie: () => page.locator('[data-menu-louange="metronome"]').getByRole("button", { name: "Fermer le métronome" }).click() },
     {
       nom: "Idées",
       ouvrir: async () => { await onStage(page, "button[data-section-nom-bouton]").first().click(); const d = page.locator("[data-idees-harmonie]").first(); await expect(d).toBeVisible(); return d; },

@@ -2717,9 +2717,8 @@ export function PerformanceMode({
       </div>
 
       {/* ── Menus du mode (FS-B) : popover sous l'icône à partir de md, feuille du bas au téléphone ── */}
-      <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurMenus} titreCache>
+      <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurMenus} titreVisible={setlistTitle}>
         <ContenuSetlist
-          setlistTitle={setlistTitle}
           setlistDate={setlistDate}
           songEntries={songEntries}
           pages={pages}

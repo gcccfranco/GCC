@@ -59,8 +59,8 @@ const attendreTempo = (page: Page, n: number) => expect(bande(page).locator("[da
 test("s'ouvre par la bande, par ♩ de la barre (grand écran) ou par Outils (téléphone) ; × et Échap le ferment", async ({ page }) => {
   await ouvrir(page, ["avec-nous"]);
   const p = await ouvrirParLaBande(page);
-  await expect(p.getByRole("heading", { name: "Métronome" })).toBeVisible();
-  await p.getByRole("button", { name: "Fermer le métronome" }).click();
+  await expect(page.locator('[data-menu-louange="metronome"]').getByRole("heading", { name: "Métronome" })).toBeVisible();
+  await page.locator('[data-menu-louange="metronome"]').getByRole("button", { name: "Fermer le métronome" }).click();
   await expect(p).toBeHidden();
   // Barre (♩) ou Outils : le panneau remplace l'ancienne feuille Tempo.
   await ouvrirMetronome(page);
@@ -221,7 +221,7 @@ test("un autre chant garde les siens ; dans la setlist le chant suivant arrive a
   await p.getByRole("radio", { name: "3/4", exact: true }).click();
   await attendreTempo(page, 95);
   await expect(pastillesBande(page)).toHaveCount(3);
-  await p.getByRole("button", { name: "Fermer le métronome" }).click();
+  await page.locator('[data-menu-louange="metronome"]').getByRole("button", { name: "Fermer le métronome" }).click();
   const suivant = onStage(page, "[data-suivant]");
   for (let i = 0; i < 20 && (await suivant.count()) === 0; i++) {
     await page.keyboard.press("ArrowRight");
@@ -290,13 +290,14 @@ test("zh à 390 px : aucun libellé coupé", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await ouvrir(page, ["为我而来"], { zh: true });
   const p = await ouvrirParLaBande(page);
-  await expect(p.getByRole("heading", { name: "节拍器" })).toBeVisible();
+  await expect(page.locator('[data-menu-louange="metronome"]').getByRole("heading", { name: "节拍器" })).toBeVisible();
   await expect(p.getByRole("button", { name: "第 1 拍，重" })).toBeVisible();
-  const coupes = await p.locator("h2, h3, button, [role=radio], p:not(.sr-only)").evaluateAll((els) =>
+  const feuille = page.locator('[data-menu-louange="metronome"]'); // l'en-tête (titre, ×) est hors du panneau depuis CI-7
+  const coupes = await feuille.locator("h2, h3, button, [role=radio], p:not(.sr-only)").evaluateAll((els) =>
     els.filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => `${e.getAttribute("aria-label") ?? e.textContent?.trim()} ${e.scrollWidth}>${e.clientWidth}`));
   expect(coupes).toEqual([]);
   for (const nom of ["节拍器", "拍号", "拍", "细分", "二分", "三分", "预备拍", "打拍", "开始", "其他", "本设备为此歌保存"]) {
-    await expect(p.getByText(nom, { exact: true }).first()).toBeAttached();
+    await expect(feuille.getByText(nom, { exact: true }).first()).toBeAttached();
   }
 });
 
