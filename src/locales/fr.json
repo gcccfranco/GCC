@@ -964,7 +964,8 @@
       "fleche": "flèche",
       "cercle": "cercle",
       "trait": "trait"
-    }
+    },
+    "panneauAccord": "Panneau de l'accord"
   },
   "notifications": {
     "title": "Notifications",

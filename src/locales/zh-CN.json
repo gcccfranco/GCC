@@ -959,7 +959,8 @@
       "fleche": "箭头",
       "cercle": "圆圈",
       "trait": "直线"
-    }
+    },
+    "panneauAccord": "和弦面板"
   },
   "notifications": {
     "title": "通知",

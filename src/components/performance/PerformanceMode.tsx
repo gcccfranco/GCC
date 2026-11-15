@@ -926,6 +926,7 @@ export function PerformanceMode({
   );
 
   // JV-5b : le nom d'une section ouvre le volet Harmonie par-dessus la page (réglage par compte, éteint par défaut ; accès comme la porte 2).
+  // CI-6 : sans accès Harmonie, le réglage rend les accords touchables (panneau d'accord seul, sans idées).
   const { peut: peutHarmonie } = useAccesHarmonie();
   const [reglageIdees, setReglageIdees] = useState(() => lireReglageIdees(uid));
   const ideesActives = reglageIdees && peutHarmonie;
@@ -1155,7 +1156,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, zoneL, zoneH, metronome, ideesActives, icisDuLouange, jianpuSections]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, zoneL, zoneH, metronome, ideesActives, reglageIdees, icisDuLouange, jianpuSections]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -1879,6 +1880,7 @@ export function PerformanceMode({
       return;
     }
     // CL-4 : un accord (touchable seulement réglage « Idées d'harmonie » allumé) ouvre son panneau par son click, bandes latérales comprises : ni page tournée ni barre basculée.
+    // CI-6 : sans accès Harmonie, le réglage rend les accords touchables (panneau d'accord seul, sans idées).
     if ((e.target as HTMLElement).closest("[data-accord-touchable]")) return;
     let grossier = false;
     try { grossier = window.matchMedia("(pointer: coarse)").matches; } catch { /* sans matchMedia : zones par défaut */ }
@@ -2119,7 +2121,7 @@ export function PerformanceMode({
       setShowTransitions={setShowTransitions}
       metronome={{ allume: metronome, set: setMetronome }}
       annotations={user ? { allume: showAnnotations, set: setShowAnnotations } : undefined}
-      idees={peutHarmonie ? { allume: reglageIdees, set: (v) => { ecrireReglageIdees(uid, v); setReglageIdees(v); } } : undefined}
+      idees={{ allume: reglageIdees, acces: peutHarmonie, set: (v) => { ecrireReglageIdees(uid, v); setReglageIdees(v); } }}
       onAnnoter={telephone && user && !horsLigne && (crayonPret || crayonIndispo) ? (crayonIndispo ? signalerCrayonIndispo : basculerAnnotation) : undefined}
       annoterIndispo={crayonIndispo}
       onMetronome={tempoChantId ? () => basculerMenu("metronome") : undefined}
@@ -2131,7 +2133,7 @@ export function PerformanceMode({
   return (
     <FournisseurIcis value={icisDuLouange}>
     <FournisseurNoms value={ideesActives && !annotateMode}>
-    <AccordsProvider actif={ideesActives && !annotateMode} louange>
+    <AccordsProvider actif={reglageIdees && !annotateMode} louange>
     <div
       data-performance-mode
       data-disposition={disposition}

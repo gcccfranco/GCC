@@ -446,3 +446,18 @@ centre tombe sur un accord).
   à 1 440 px ; « Repères » de louange-menus au téléphone passé à 90 s (quatre ouvertures de plus), 15/15 verts (2 min).
   Regard : captures Playwright avant / après aux cinq tailles (artefact privé), **non vu à l'écran réel**
   (installation d'agent-desktop refusée). Relevé, non corrigé : Crayon avec Idées allumé décale le scan de ≈ 28 px.
+
+- **CI-6 (Réponses, 2), 15/11/2026, validée par Timothée (« Validé »).** En mode louange, la ligne du réglage d'Outils
+  apparaît pour tout le monde : « Idées d'harmonie » avec l'accès, « Panneau de l'accord » (和弦面板, clé
+  `performance.panneauAccord`) sans. Allumé, il rend les accords touchables (`AccordsProvider actif` suit le réglage
+  seul) ; sans accès, l'accord touché ouvre son panneau (doigtés guitare et piano), sans « Ici », sans noms de section
+  touchables ni volet Harmonie (ceux-ci suivent toujours réglage **et** accès). Décision déléguée (session CI-6, 15/11) :
+  le panneau d'un compte sans accès est celui qu'il voit sur la page chant (nom, chiffre, Écouter, Ensuite, doigtés).
+  `AccordsProvider.tsx` non touché. Tests : louange-accords (125 verts ; « sans accès » réécrit en FR, 中文 et scan,
+  réglage éteint puis allumé, test neuf du réglage dans Outils ; le test CL-3 Chiffres / Lettres du calque, rouge depuis
+  CL-4 car le calque inerte est `aria-hidden`, lit désormais les étiquettes sous `[data-jianpu-page]`), louange-harmonie
+  et louange-parcours-culte (89 / 90), louange-menus (274 verts) ; ≈ 26 min. Instable sur l'ancien code (1 fois sur 2) :
+  `louange-harmonie` A9 au téléphone. Regard : captures Playwright avant / après aux cinq tailles, compte simulé sans
+  accès (artefact privé) ; **non vu à l'écran réel** : agent-desktop était installé, mais la connexion au compte invité
+  a été refusée dans la session (ce compte a l'accès Harmonie, il n'aurait montré que la non-régression). Relevé hors
+  tranche, non corrigé : entrer ou sortir du Crayon avec Idées allumé décale le scan de ≈ 28 px.

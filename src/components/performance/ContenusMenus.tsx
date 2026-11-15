@@ -353,8 +353,8 @@ export function ContenuOutils({
   metronome: { allume: boolean; set: (v: boolean) => void };
   /** Annotations des autres sur la page (réglage de l'appareil) ; absent hors connexion. */
   annotations: { allume: boolean; set: (v: boolean) => void } | undefined;
-  /** Idées d'harmonie (réglage du compte) ; absent sans l'accès. */
-  idees: { allume: boolean; set: (v: boolean) => void } | undefined;
+  /** Réglage du compte : « Idées d'harmonie » avec l'accès, « Panneau de l'accord » sans (accords touchables, sans idées). */
+  idees: { allume: boolean; set: (v: boolean) => void; acces: boolean };
   /** Crayon : la barre ne l'a plus au téléphone. Absent = pas de ligne. */
   onAnnoter: (() => void) | undefined;
   /** Ma partition n'a pas pu être lue : la ligne reste, désactivée (son toucher dit pourquoi). */
@@ -367,6 +367,7 @@ export function ContenuOutils({
 }) {
   const { t } = useTranslation();
   const pleinEcran = usePleinEcran();
+  const libelleIdees = idees.acces ? t("performance.ideesHarmonie") : t("performance.panneauAccord");
   return (
     <div className="space-y-1">
       <LigneMenu label={t("performance.transitions")}>
@@ -393,13 +394,11 @@ export function ContenuOutils({
           </BoutonRond>
         </LigneMenu>
       )}
-      {idees && (
-        <LigneMenu label={t("performance.ideesHarmonie")}>
-          <BoutonRond label={t("performance.ideesHarmonie")} allume={idees.allume} onClick={() => idees.set(!idees.allume)}>
-            <Lightbulb className="h-5 w-5" />
-          </BoutonRond>
-        </LigneMenu>
-      )}
+      <LigneMenu label={libelleIdees}>
+        <BoutonRond label={libelleIdees} allume={idees.allume} onClick={() => idees.set(!idees.allume)}>
+          <Lightbulb className="h-5 w-5" />
+        </BoutonRond>
+      </LigneMenu>
       {onReperes && (
         <button
           type="button"
