@@ -242,9 +242,9 @@ test.describe("setlist", () => {
   });
 });
 
-test.describe("bulle d'aide", () => {
-  test("visible la première fois, OK la ferme, absente après rechargement", async ({ page }, info) => {
-    await page.goto("/songs/abba-pere");
+test.describe("bandeau d'aide", () => {
+  test("visible la première fois, × (« OK ») le ferme, absent après rechargement", async ({ page }, info) => {
+    await page.goto("/songs/aucun-autre-nom");
     await expect(touchables(page).first()).toBeVisible();
     await expect(aide(page)).toBeVisible();
     await expect(aide(page)).toHaveAttribute("role", "status");
@@ -258,22 +258,30 @@ test.describe("bulle d'aide", () => {
     await expect(aide(page)).toHaveCount(0);
   });
 
-  test("en bas de l'écran, centrée sur la colonne de lecture, sans recouvrir la première ligne de paroles (C9)", async ({ page }) => {
-    await page.goto("/songs/abba-pere");
-    await expect(aide(page)).toBeVisible();
-    const vue = page.viewportSize()!;
-    const bulle = (await aide(page).boundingBox())!;
-    expect(bulle.width).toBeLessThanOrEqual(280.5);
-    // Centrée sur la colonne des paroles (en deux volets, la fenêtre entière déborderait sur la liste).
-    const colonne = (await page.locator("[data-copy-line]").first().evaluate((el) => {
-      const r = el.parentElement!.getBoundingClientRect();
-      return r.left + r.width / 2;
-    }));
-    expect(Math.abs(bulle.x + bulle.width / 2 - colonne)).toBeLessThan(2);
-    expect(bulle.y + bulle.height).toBeGreaterThan(vue.height / 2);
-    expect(bulle.y + bulle.height).toBeLessThanOrEqual(vue.height);
-    const ligne = (await page.locator("[data-copy-line]").first().boundingBox())!;
-    expect(ligne.y + ligne.height).toBeLessThanOrEqual(bulle.y);
+  test("bandeau gris au-dessus du chant, dans la colonne de lecture, × à droite, sans recouvrir de ligne (C9)", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+    for (const slug of ["aucun-autre-nom", "一切歌颂赞美"]) {
+      await page.goto(`/songs/${encodeURIComponent(slug)}`);
+      await expect(aide(page)).toBeVisible();
+      const bandeau = (await aide(page).boundingBox())!;
+      await expect(page.locator("[data-copy-line]:visible").first()).toBeVisible();
+      const ligne = (await page.locator("[data-copy-line]:visible").first().boundingBox())!;
+      expect(bandeau.y + bandeau.height).toBeLessThanOrEqual(ligne.y);
+      // La colonne de lecture (`main`) ; le bandeau s'aligne sur les pastilles de structure, comme dans la setlist.
+      const colonne = await page.locator("main.song-zoom").evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return { x: r.x, droite: r.right };
+      });
+      expect(bandeau.x).toBeGreaterThanOrEqual(colonne.x - 1);
+      expect(bandeau.x + bandeau.width).toBeLessThanOrEqual(colonne.droite + 1);
+      const croix = (await aide(page).getByRole("button", { name: "OK" }).boundingBox())!;
+      expect(croix.x + croix.width).toBeLessThanOrEqual(bandeau.x + bandeau.width + 0.5);
+      expect(bandeau.x + bandeau.width - (croix.x + croix.width)).toBeLessThan(8);
+      for (const l of await page.locator("[data-copy-line]").all()) {
+        const b = await l.boundingBox();
+        if (b) expect(b.y >= bandeau.y + bandeau.height - 0.5 || b.y + b.height <= bandeau.y + 0.5).toBe(true);
+      }
+    }
   });
 
   test("toucher un accord la ferme et la mémorise ; Échap aussi", async ({ page }) => {
@@ -308,6 +316,37 @@ test.describe("bulle d'aide", () => {
     await page.waitForTimeout(1000);
     await expect(aide(page)).toHaveCount(0);
   });
+});
+
+test.describe("panneau à côté de l'accord (B4 bis)", () => {
+  for (const slug of ["aucun-autre-nom", "一切歌颂赞美"]) {
+    test(`ordinateur seulement : fenêtre basse, le panneau ne couvre pas l'accord et se pose à sa droite (${slug})`, async ({ page }, info) => {
+      test.skip(info.project.name !== "ordinateur", "ordinateur seulement");
+      await sansAide(page);
+      await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+      await page.setViewportSize({ width: 1366, height: 600 });
+      await page.goto(`/songs/${encodeURIComponent(slug)}`);
+      await expect(touchables(page).first()).toBeVisible();
+      // L'accord le plus à gauche du chant (moitié gauche de la fenêtre), ramené au milieu de l'écran : ni dessous ni dessus ne tient.
+      const n = await touchables(page).evaluateAll((els) => els.reduce((m, el, i) => {
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && (m < 0 || r.left < els[m].getBoundingClientRect().left) ? i : m;
+      }, -1));
+      const accord = touchables(page).nth(n);
+      await accord.evaluate((el) => el.scrollIntoView({ block: "center" }));
+      await accord.click();
+      await expect(panneau(page)).toHaveAttribute("data-accord-panneau", "bulle");
+      const ensuite = panneau(page).getByRole("button", { name: /Ensuite/ });
+      if (await ensuite.count()) await ensuite.first().click();
+      const a = (await accord.boundingBox())!;
+      const b = (await panneau(page).boundingBox())!;
+      const croise = a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+      expect(croise, "le panneau ne couvre pas l'accord").toBe(false);
+      // Règle B4 bis : côté opposé à la moitié de la fenêtre où se trouve l'accord (la colonne de lecture peut être dans la moitié droite).
+      if (a.x + a.width / 2 < 1366 / 2) expect(b.x, "à droite de l'accord").toBeGreaterThanOrEqual(a.x + a.width);
+      else expect(b.x + b.width, "à gauche de l'accord").toBeLessThanOrEqual(a.x);
+    });
+  }
 });
 
 test.describe("idées d'harmonie", () => {

@@ -80,8 +80,10 @@ for (const c of CHANTS) {
     await expect(panneau(page)).toBeVisible();
     const [page0, barre0] = [await lireCompteur(page), await barreOuverte(page)];
     const ecran = page.viewportSize()!;
+    const b = (await panneau(page).boundingBox())!;
+    const x = b.x >= ecran.width * 0.5 - 1 ? b.x - 24 : b.x + b.width + 24;
     await expect(async () => {
-      await page.mouse.click(ecran.width * 0.5, ecran.height * 0.12 + 4);
+      await page.mouse.click(x, ecran.height * 0.12 + 4);
       await expect(panneau(page)).toHaveCount(0, { timeout: 1_000 });
     }).toPass({ timeout: 8_000 });
     expect(await lireCompteur(page)).toBe(page0);

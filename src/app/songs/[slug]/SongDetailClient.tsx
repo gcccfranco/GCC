@@ -37,7 +37,7 @@ import { ReportDialog } from "@/components/report/ReportDialog";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
 import { HarmonieDuChant, defilerSousLaBarre } from "@/components/harmonie/HarmonieDuChant";
 import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
-import { AccordsProvider, type IciDuChant } from "@/components/accords/AccordsProvider";
+import { AccordsProvider, AideAccordsEnLigne, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { useAllerAuPassage } from "@/lib/harmonie/useAllerAuPassage";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
@@ -529,7 +529,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
   );
 
   return (
-    <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }} tonalite={customize.currentKey} ici={ici}>
+    <AccordsProvider aide="flux" chant={{ slug: song.slug, titre: song.title }} tonalite={customize.currentKey} ici={ici}>
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
         {/* Barre de contrôles */}
         <div ref={barreRef} data-testid="barre-outils" className={`barre-chant print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : barPinned ? "-translate-y-[calc(var(--nav-h)-var(--sat))]" : "-translate-y-[calc(100%+var(--nav-h)+var(--barre-decalage,0px)+var(--barre-ombre,0px))]"}`}>
@@ -671,6 +671,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
               à droite des pastilles règle la préférence de l'appareil (D5). */}
             <SongView
               pageChant
+              apresBandeau={<AideAccordsEnLigne />}
               slug={song.slug}
               armure={
                 <Armure

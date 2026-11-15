@@ -512,3 +512,22 @@ centre tombe sur un accord).
   (172, 5,6 min), les reprises (≈ 15 min) et la passe finale (485 tests, 26,6 min, puis « B1 » 5/5) ; rouge déjà sur l'ancien code : `annotations-forscore` « (z) » au
   téléphone ; instables : `louange-harmonie` A9 au téléphone. Regard : captures Playwright avant / après aux cinq
   tailles (artefact privé), un `regard`, une reprise ; **non vu à l'écran réel**.
+
+- **CI-13 (B9, B4 bis), 15/11/2026, validée par Timothée (« Validé »).** B9 (a) : la page chant prend le bandeau d'aide
+  de la setlist (`AccordsProvider aide="flux"`, `AideAccordsEnLigne` posé par `apresBandeau` de `SongView`), gris, sous les
+  pastilles de structure, × à droite, même clé `accords-aide-vue` ; la bulle noire « OK » et tout le mode bulle
+  (`AideBulle`, recherche du premier accord visible) sont retirés. B4 bis (a) : à l'ordinateur, quand le panneau d'un
+  accord ne tient ni dessous ni dessus, il se pose à côté de l'accord, du côté opposé à la moitié de la fenêtre où il
+  se trouve (l'autre côté si celui-ci manque de place, l'ancien calage si aucun ne tient), centré sur sa hauteur, sans
+  flèche ; mesure à 1 366 × 600 : avant, panneau x 590–890 sur l'accord à x 733 ; après, x 438–738, accord à 750.
+  `PartitionView.tsx` non touché. Tests : `accords-toucher` (bandeau FR et 中文, test neuf B4 bis FR et 中文,
+  ordinateur), `accords-toucher-agencement`, `louange-accords:76` (le clic « hors du panneau » vise maintenant un point
+  hors du panneau, posé à côté de l'accord) ; avec captures-a6, pupitre-partitions, barre-chant, page-chant-reglages,
+  setlist-tonalite-perso, statistiques-chant : quatre tours du workflow (≈ 59 min) puis reprise ciblée, 24 verts
+  (1,1 min). Rouges déjà sur l'ancien code (prouvé, src mis de côté) : `accords-toucher:233` (attend des accords inertes
+  en louange sans accès Harmonie, périmé depuis CI-6), `pupitre-partitions:278` (téléphone) et `:365` (rail, Tab),
+  `setlist-tonalite-perso` « toute l'équipe » ; leurs retouches proposées en cours de tranche ont été annulées (hors
+  tranche). Regard : bandeau **vu à l'écran réel** (agent-desktop, 830, 1 100, 1 366, 1 440 px, avant / après, sans
+  compte) ; téléphone en captures Playwright (320, 390) ; B4 bis mesuré et capturé par Playwright, **non vu à l'écran
+  réel** ; un `regard`. Artefact privé avant / après envoyé à Timothée. Restes : en 中文, le panneau mord d'≈ 10 px sur le
+  bord de la carte de section (sans toucher l'accord) ; à 320 px, le bandeau tient sur trois lignes.
