@@ -419,3 +419,9 @@ centre tombe sur un accord).
   Playwright avant / après aux cinq tailles (artefact privé), **non vu à l'écran réel** (agent-desktop refusé).
   Constat A9 (pour CI-4) : depuis la page 2 de 为我而来, ouvrir Affichage ou basculer Idées d'harmonie ne change pas de
   page, cinq tailles. Relevé hors tranche : entrer ou sortir du Crayon avec Idées allumé décale le scan de ≈ 28 px.
+
+- **CI-3 (A2), 15/11/2026, validée par Timothée (« Validé ») : rien à coder.** Depuis CL-1, `reperesScan` mène chaque
+  section à la page du scan qui la porte ; les 190 scans de `public/jianpu/index.json` ont tous leurs sections dans
+  `sections.json` et sont certifiés (`systemes.json`), donc le cas « scan sans `sections.json` » n'existe plus. Preuve :
+  `louange-jianpu-tranches` « menu Repères d'un scan … (为我而来 : le pont à la page 2) », vert sur les cinq projets, et
+  l'étape 3 du parcours du culte (Refrain de 一生爱你 par Repères), verte.
