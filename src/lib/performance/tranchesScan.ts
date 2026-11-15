@@ -1,3 +1,4 @@
+// shortcut: CL-1 (docs/spec-corrections-louange.md) — découpe sans appelant, gardée tant que Timothée n'a pas vu la page entière
 // Tranches d'un scan 简谱 certifié (lot JP-B) — pur, sans DOM.
 // Un scan se coupe entre deux lignes (`systemes.json`), jamais au milieu : chaque tranche est un écran.
 

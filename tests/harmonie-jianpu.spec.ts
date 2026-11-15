@@ -4,7 +4,7 @@ import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ligneHistorique, ouvrirPartitions } from "./helpers/setlist";
 import { loadChords, toucherScan } from "./helpers/jianpu";
 import { readFileSync } from "node:fs";
-import { attendreMiseEnPage, lireCompteur, onStage } from "./helpers/louange";
+import { attendreMiseEnPage, fermerBarre, lireCompteur, onStage } from "./helpers/louange";
 
 // Lot 9, tranche « 简谱 » (docs/spec-harmonie.md) : retoucher un accord sur le
 // scan. Toucher un accord imprimé le change ou l'efface, toucher la ligne
@@ -74,7 +74,7 @@ async function openPartitions(page: Page, docs: Record<string, Record<string, un
   await ouvrirPartitions(page);
   // Le scan pèse 1 à 2 Mo et le calque vient d'un fetch à part : sans ces
   // attentes, on touche une image absente ou une géométrie pas encore lue.
-  // En deux volets (JV-3 : tablette paysage, 1 440), la page se montre dans plusieurs fenêtres : la première suffit.
+  // Une seule colonne à toutes les largeurs (JV-3 retiré, CL-1) : une fenêtre par page de scan.
   await page.locator('[data-jianpu-page="0"] img').first().waitFor();
   await page.waitForFunction(() =>
     Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every(
@@ -198,7 +198,7 @@ test("hors Crayon : les retouches s'affichent, rien ne se touche", async ({ page
   await openPartitions(page, {
     [SETLIST_DOC]: setlist({ jianpuChords: { changed: { "0": "Em7" } } }),
   });
-  // En deux volets (JV-3), chaque fenêtre porte le calque de la page, rogné : toutes ses copies disent Em7.
+  // Une fenêtre par page de scan (CL-1) : toutes les copies du calque disent Em7.
   const retouche = page.locator('[data-jianpu-retouche="0"]');
   await expect(retouche.first()).toHaveText("Em7");
   expect(new Set((await retouche.allInnerTexts()).map((t) => t.trim()))).toEqual(new Set(["Em7"]));
@@ -390,7 +390,7 @@ test("JV-5c, vue Partitions : étiquettes du scan, le toucher ouvre le volet au 
   await signInAs(page, LECTRICE, { [SETLIST_DOC]: { ...setlist(), ownerId: "uid-owner", items: [item({ songSlug: SCAN, position: 1 })] } }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);
   await scanCharge(page);
-  // Deux volets dès 1 000 px de zone : les fenêtres sont des demi-lignes, seule la hauteur n'est pas recalculée ici.
+  // Une colonne à toutes les largeurs (CL-1) ; la hauteur de chaque étiquette n'est pas recalculée ici.
   await verifierEtiquettes(page, "fr", false);
   await capture(page, "jv5c-partitions-fr");
   await etiquettes(page).nth(2).click();
@@ -427,6 +427,48 @@ for (const langue of ["fr", "zh"] as const) {
     await capture(page, `jv5c-louange-volet-${langue}`);
   });
 }
+
+test("CL-1, mode louange : réglage « Idées d'harmonie » allumé, chaque étiquette de section du rail est à la hauteur de sa ligne sur la page entière", async ({ page }) => {
+  await prefs(page, { louange: true });
+  await signInAs(page, LECTRICE, { [SETLIST_DOC]: { ...setlist(), ownerId: "uid-owner", items: [item({ songSlug: SCAN, position: 1 })] } }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).first().click();
+  await attendreMiseEnPage(page);
+  await scanCharge(page);
+  await fermerBarre(page);
+  const stage = onStage(page, "[data-jianpu-etiquette]");
+  let verifiees = 0;
+  for (const numeroPage of [0, 1]) {
+    if (numeroPage > 0) await page.keyboard.press("ArrowRight");
+    await expect.poll(() => lireCompteur(page)).toMatch(new RegExp(`^${numeroPage + 1} /`));
+    await page.waitForTimeout(300);
+    const attendues = ATTENDUES.filter((a) => a.page === numeroPage);
+    await expect(stage).toHaveCount(attendues.length, { timeout: 15_000 });
+    // La page entière : une seule fenêtre, sans tranche.
+    await expect(onStage(page, "[data-jianpu-fenetre]")).toHaveCount(1);
+    await expect(onStage(page, "[data-jianpu-tranche]")).toHaveCount(0);
+    for (const [n, a] of attendues.entries()) {
+      const e = stage.nth(n);
+      await expect.poll(() => visible(e)).toBe(a.texte);
+      if (a.k > 0) continue; // empilée sous la précédente
+      const g = await e.evaluate((el) => {
+        const f = el.parentElement!.getBoundingClientRect(), b = el.getBoundingClientRect();
+        return { haut: b.top, bas: b.bottom, fH: f.top, fh: f.height, fen: Number(el.parentElement!.dataset.jianpuFenetre) };
+      });
+      const p = SYSTEMES[a.page];
+      const ligne = p.lignes[a.ligne] as { y0: number; y1: number };
+      const echelle = g.fh / (p.h - g.fen);
+      const attendu = g.fH + (ligne.y0 - g.fen) * echelle;
+      const hauteurLigne = (ligne.y1 - ligne.y0) * echelle;
+      expect(Math.abs(g.haut - attendu), `${a.texte} : à la hauteur de sa ligne (écart ≤ une hauteur de ligne, ${Math.round(hauteurLigne)} px)`).toBeLessThanOrEqual(hauteurLigne);
+      verifiees++;
+    }
+  }
+  expect(verifiees, "étiquettes vérifiées (C1, R, P)").toBe(3);
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(() => lireCompteur(page)).toMatch(/^1 \//);
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `test-results/cl1-${test.info().project.name}-rail.png` });
+});
 
 test("JV-5c, mode louange : réglage éteint, aucune étiquette", async ({ page }) => {
   await prefs(page);

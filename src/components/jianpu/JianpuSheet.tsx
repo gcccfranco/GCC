@@ -6,7 +6,7 @@ import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords, useJianpuMarges, useJianpuSections, useJianpuSystemes } from "@/lib/jianpu/images";
 import { etiquettesDuScan, passageDeSection } from "@/lib/jianpu/etiquettesSections";
-import { ECART_MOITIES, ECART_SYSTEMES, echelleFenetre, LARGEUR_FEUILLE_MAX, type Demi, type FenetreDemi, type Volets } from "@/lib/performance/tranchesScan";
+import { ECART_MOITIES, ECART_SYSTEMES, echelleFenetre, LARGEUR_FEUILLE_MAX, MARGE_Y_MAX, type Demi, type FenetreDemi, type Volets } from "@/lib/performance/tranchesScan";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
 import { AccordTouchable, etiquetteAffichee } from "@/components/accords/AccordTouchable";
@@ -234,6 +234,7 @@ type JianpuSheetProps = {
   /** Donné : toucher un accord le change ou l'efface, toucher une ligne
    *  d'accords en ajoute un (modes « Adapter » et « Ma version »). */
   onEditChords?: (next: JianpuChords) => void;
+  // shortcut: CL-1 (docs/spec-corrections-louange.md) — découpe sans appelant, gardée tant que Timothée n'a pas vu la page entière
   /** Mode `fit` d'un scan certifié : montrer cette tranche de la page, pleine largeur (bornée à 1 040 px), au lieu de
    *  la page entière. Image et calque se décalent ensemble ; aucune coordonnée du calque ne change. */
   tranche?: TrancheFenetre;
@@ -744,7 +745,9 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         // disparaît. Aucune coordonnée du calque ne change. Tant que le
         // recadrage n'est pas chargé (premier scan de la visite), la page
         // s'affiche entière : un fichier lent ne doit jamais cacher le scan.
-        const top = cadrage?.[i] ?? 0;
+        const lignesPage = fit && !tr ? (systemes?.[slug ?? ""]?.pages[i]?.lignes ?? []) : [];
+        // Scan certifié en page entière : la fenêtre ne rogne pas les étiquettes qui débordent au-dessus de la première ligne.
+        const top = lignesPage.length > 0 ? Math.max(0, Math.min(cadrage?.[i] ?? 0, lignesPage[0].y0 - MARGE_Y_MAX)) : cadrage?.[i] ?? 0;
         const visible = page.h - top;
         const decalage = marges?.[i] ? (marges[i][1] - marges[i][0]) / 2 : 0;
         return (
@@ -755,7 +758,9 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           data-jianpu-tranche={tr ? `${tr.y0}-${tr.y1}` : undefined}
           data-jianpu-moitie={demi ? (demi.moitie ?? "entiere") : undefined}
           // Bornes (px image) des lignes de la tranche : la demi-page ne coupe qu'entre deux d'entre elles.
-          data-jianpu-lignes={tr ? lignesTranche.map((l) => `${l.y0}-${l.y1}`).join(",") : undefined}
+          data-jianpu-lignes={tr ? lignesTranche.map((l) => `${l.y0}-${l.y1}`).join(",") : lignesPage.length > 0 ? lignesPage.map((l) => `${l.y0}-${l.y1}`).join(",") : undefined}
+          // Page entière (sans tranche) : plage image montrée, d'où la demi-page tire son échelle.
+          data-jianpu-plage={!tr && lignesPage.length > 0 ? `${top}-${page.h}` : undefined}
           className={(demi && echelleDemi != null ? "relative shrink-0" : fit ? "relative mx-auto" : "relative") + (rail ? "" : " overflow-hidden")}
           style={{
             aspectRatio: tr ? `${tr.x1 - tr.x0} / ${tr.y1 - tr.y0}` : `${page.w} / ${visible}`,

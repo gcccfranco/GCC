@@ -126,3 +126,28 @@ dépasse du bas de la fenêtre à l'ordinateur (« Voir tout le dictionnaire » 
   simulé, quatre dispositions et 1 440 px. **Non vu sur le site réel** (installation d'agent-desktop refusée par les
   permissions de la session). Non vérifié : bord droit en 中文 au téléphone, à la tablette et à 1 440 px (aucun accord
   au bord, tests sautés).
+- 14/11/2026 : **CL-1 faite** (validée par Timothée le 15/11, « Validé »).
+  Mode louange : `tranchesDe` n'est plus passé à la pagination, chaque page de scan est une page d'écran entière
+  (`fit`, clé j2/j3) à toutes les tailles ; la tête de feuille revient au-dessus de la page entière d'un scan certifié
+  (repères des sections de la page, « 1 = F / gravé en E », note) ; Repères : une section mène à la page d'écran de
+  sa page du scan ; demi-page entre deux pages d'un même scan (`data-jianpu-lignes` et `data-jianpu-plage` posés sur
+  la page entière) ; la fenêtre ne rogne plus les étiquettes au-dessus de la première ligne. Vue Partitions : scan en
+  une colonne. Tests réécrits sur la page entière (`louange-jianpu-tranches`, `louange-jianpu-deux-colonnes`,
+  `jianpu-deux-volets`, `louange-demi-page`, `harmonie-jianpu`, `jianpu-integration`, `pupitre-partitions`) ;
+  retirés : ceux qui ne décrivaient que la découpe (`tranchesScan`/`tranchesDeuxColonnes` purs, tranches contiguës,
+  demi-lignes et clés j4/j5/j6, traits posés avant JP-B). Tests : quatre tours `/tranche` (≈ 4 h, limite d'usage
+  comprise), puis 34 tests de la tranche verts aux cinq projets (1,7 min) et trois specs de captures et voisines,
+  166 passés (7,3 min). Rouges restants **déjà rouges sur 054a7188** (diagnostic Opus sur une copie de la base) :
+  `dispositions-partition:810` (miniature 50 px), `:271` (téléphone), `jianpu-integration:671` et `:770`,
+  `louange-demi-page:191` (texte), `louange-sections-uniques:369, :615, :813`, `pupitre-partitions:234`. Code laissé
+  en `shortcut:` : `tranchesScan.ts:1`, `useVoletsScan.ts:1`, `JianpuSheet.tsx` (prop `tranche`), `DemiPage.tsx`,
+  `PageScan.tsx`, `PerformanceMode.tsx` (`trancheCourante`/`cleScan`, clé j2/j3 héritée, `trancheDeSection`,
+  `renderBlock(…, tranche)`). Décision déléguée (session CL-1, 14/11) : les traits posés sous les clés j4-/j5-/j6-
+  restent stockés mais ne s'affichent plus sur la page entière, aucune migration. Vu à l'écran : oui, en compte simulé
+  (captures Playwright aux cinq dispositions, FR et 中文, clair et sombre, rail, Partitions), pas sur la vraie base
+  (le `CLAUDE.md` interdit sa lecture depuis le cloud). Non vérifié : basculer « Idées d'harmonie » ou « Affichage »
+  depuis la page 2 d'un scan sans changer de page.
+- 14/11/2026 : **CL-2 faite** (validée par Timothée le 15/11) : `tests/louange-crayon-scan.spec.ts` (compte fictif) : sur 恒久恒久以前,
+  一生爱你 et la page 2 de 为我而来, un trait au Crayon donne un seul tracé, sur la bonne image et le bon écran, sa boîte
+  contient le geste ; aller-retour de page : toujours un seul. 9 passés sur ordinateur, téléphone, tablette (36 s).
+  Pas de double après CL-1 : `useTraitsAncres.ts` inchangé. Après la fusion avec CL-3 et CL-4 (15/11) : 50 tests de CL-1 et CL-2 verts, deux échecs du cas 为我而来 sous charge (ordinateur, tablette), verts seuls (18/18, 1,1 min) : course.

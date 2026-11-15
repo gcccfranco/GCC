@@ -638,3 +638,8 @@ chantier sur ce fichier.
   **un échec étranger à ce changement** : `accords-toucher-agencement` « chant ZH : le panneau d'un accord » (téléphone,
   1 440) : sur la page chant à deux volets, le toucher d'un accord ZH n'ouvre pas le panneau (signalé au pilote).
   Captures regardées sur les cinq dispositions (page chant, Partitions, mode louange ; FR, 中文 ; clair, sombre).
+- 14/11/2026 : **JV-3 et JV-4 levés** par le lot CL (`docs/spec-corrections-louange.md`, CL-1 ; Timothée, 14/11 : « retire
+  les jianpu en 2 colonne c'est illisible », Q2 (a)). Vue Partitions : le scan revient en une colonne (920 px au plus) ;
+  mode louange : une page du scan entière par page d'écran, « 2 colonnes » ne vaut plus que pour les chants en texte.
+  `useVoletsScan.ts` et `tranchesDeuxColonnes` restent dans le code, marqués `shortcut:`, tant que Timothée n'a pas
+  validé la page entière. Validé par Timothée le 15/11.

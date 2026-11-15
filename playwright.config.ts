@@ -64,15 +64,15 @@ const SPECS_GRAND_ECRAN = [
   /annotations-forscore\.spec\.ts/,
   // Lot pupitre, T1 (docs/spec-exemples-usage.md) : partitions pleine largeur en volet unique, vue Liste à 720 px, étiquettes de section, 简谱 ; deux volets inchangés.
   /pupitre-partitions\.spec\.ts/,
-  // Lot JV, JV-3 (docs/spec-jianpu-deux-volets.md) : le scan 简谱 en deux volets de demi-lignes dès 1 000 px de zone, une colonne en dessous.
+  // Lot CL, CL-1 (docs/spec-corrections-louange.md) : la vue Partitions, scan 简谱 en une colonne à toutes les largeurs (1 440 compris), calque calé sur l'image (JV-3 retiré).
   /jianpu-deux-volets\.spec\.ts/,
-  // Lot JV, JV-4 : le scan 简谱 du mode louange en deux colonnes de demi-lignes sous « 2 colonnes » (ordinateur, tablette paysage).
+  // Lot CL, CL-1 : « 2 colonnes » ne découpe plus un scan 简谱 du mode louange (une page d'écran entière, 为我而来 en deux pages), un chant en texte garde ses deux colonnes ; captures cl1-*.
   /louange-jianpu-deux-colonnes\.spec\.ts/,
   // Exemples d'usage, T6 (docs/spec-exemples-usage.md) : feuille d'équipe (champ d'ajout en tête, barre collée) sur les quatre dispositions.
   /equipes-feuille\.spec\.ts/,
   // Lot 1 du rapport d'usage, T5 (docs/spec-retouches-usage.md) : textes coupés, cellule Date, barre de la setlist, sur les quatre dispositions.
   /retouches-usage-t5\.spec\.ts/,
-  // Lot JP-B (docs/spec-mode-louange-forscore-2.md) : un scan 简谱 certifié coupé en tranches, une seule feuille large, sur les quatre dispositions.
+  // Lot CL, CL-1 (docs/spec-corrections-louange.md) : un scan 简谱 entier sur une page d'écran (plus de tranches), tête de feuille, repères, pastille, sur les quatre dispositions.
   /louange-jianpu-tranches\.spec\.ts/,
   // Lot RP (tranche 2) : la pastille « d'après le planning » du mode louange (centrée sous la barre) sur les quatre dispositions.
   /louange-role-planning\.spec\.ts/,
