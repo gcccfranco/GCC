@@ -16,16 +16,22 @@
 //   />
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { ChevronLeft } from "lucide-react";
 import { TOUCHER_RETOUR } from "@/lib/toucher44";
 
 /** Le seul retour du site (R8) : « ‹ Section », 14 px gras gris, au-dessus du titre, à gauche. */
-export function Retour({ href, children }: { href: string; children: ReactNode }) {
+export function Retour({
+  href,
+  children,
+  className = "-ml-1 mb-1.5",
+  ...reste
+}: { href: string; children: ReactNode; className?: string } & Omit<ComponentProps<typeof Link>, "href" | "className" | "children">) {
   return (
     <Link
+      {...reste}
       href={href}
-      className={`${TOUCHER_RETOUR} -ml-1 mb-1.5 inline-flex items-center gap-0.5 rounded-md text-sm leading-5 font-semibold text-muted-foreground transition-colors hover:text-foreground`}
+      className={`${TOUCHER_RETOUR} ${className} inline-flex items-center gap-0.5 rounded-md text-sm leading-5 font-semibold text-muted-foreground transition-colors hover:text-foreground`}
     >
       <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={2.4} aria-hidden />
       {children}

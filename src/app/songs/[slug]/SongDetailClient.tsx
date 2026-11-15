@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Retour } from "@/components/layout/EnTetePage";
 import { TOUCHER_44, TOUCHER_RANGEE } from "@/lib/toucher44";
 import { ActionsChant } from "./_components/ActionsChant";
 import { MenuChant } from "./_components/MenuChant";
@@ -537,24 +537,15 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
           {/* `rangee-chant` : les libellés suivent la place de la rangée (`data-libelles`, plus haut),
               donc celle du volet en deux volets. */}
           <div ref={rangeeRef} className="rangee-chant max-w-2xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-4">
-            <Button
-              asChild
-              variant="secondary"
-              className={`retour-chant ${TOUCHER_44} h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground`}
+            {/* Deux volets : le Retour n'est montré que vers une setlist (`data-vers-setlist`,
+                globals.css) ; la liste des chants est déjà à gauche. */}
+            <Retour
+              href={setlistDOrigine ? `/setlists/${encodeURIComponent(setlistDOrigine)}` : backPath}
+              className="retour-chant shrink-0 self-center"
+              data-vers-setlist={setlistDOrigine ? "" : undefined}
             >
-              {/* Deux volets : le Retour n'est montré que vers une setlist (`data-vers-setlist`,
-                  globals.css) ; la liste des chants est déjà à gauche. */}
-              <Link
-                aria-label={t("songs.detail.backToAll")}
-                href={setlistDOrigine ? `/setlists/${encodeURIComponent(setlistDOrigine)}` : backPath}
-                data-vers-setlist={setlistDOrigine ? "" : undefined}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 12H5m6-7l-7 7 7 7" />
-                </svg>
-                <span className="libelle-chant">{t("songs.detail.backToAll")}</span>
-              </Link>
-            </Button>
+              {t(setlistDOrigine || backPath.startsWith("/setlists") ? "common.header.setlists" : "common.header.songs")}
+            </Retour>
             {/* Harmonie · Vidéo · Crayon · Affichage · ⋯ : une seule ligne à toutes les tailles (RU-3) ;
                 les libellés suivent la place de la rangée (globals.css, `.actions-chant`). */}
             <div className="actions-chant ml-auto shrink-0 items-center gap-1">

@@ -104,6 +104,7 @@ import {
 } from "@/lib/chordpro/editSource";
 import { structUidAt, revertSectionOrigins, idDeSection } from "@/lib/setlist/sectionOrigins";
 import { TOUCHER_44 } from "@/lib/toucher44";
+import { Retour } from "@/components/layout/EnTetePage";
 
 /** Cible d'édition de ligne + indices source nécessaires à la sauvegarde. */
 type LineEditState = EditLineTarget & {
@@ -2379,15 +2380,11 @@ export function SetlistDetailClient() {
               <div ref={rangeeRef} className={`rangee-outils flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 ${compacte ? "py-1 flex-nowrap" : "py-[9px] flex-wrap"}`}>
 
                 {/* ← Retour */}
-                <Link aria-label={t("songs.detail.backToAll")}
-                  href={backPath}
-                  className={`${TOUCHER_44} h-8 shrink-0 px-2.5 max-sm:w-8 max-sm:justify-center max-sm:px-0 sm:mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]`}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 12H5m6-7l-7 7 7 7" />
-                  </svg>
-                  <span className="libelle-outil">{t("songs.detail.backToAll")}</span>
-                </Link>
+                {/* Chevron seul, mot lu par les lecteurs d'écran (B10) : barre compacte sous 640 px (RU-4 n'y laisse pas les 29 px du
+                    mot), vue Liste sous 360 px (la barre passerait sur deux lignes) */}
+                <Retour href={backPath} className={`shrink-0 self-center ${compacte ? "max-sm:h-8 max-sm:w-8 max-sm:justify-center" : "max-[359px]:h-8 max-[359px]:w-8 max-[359px]:justify-center min-[360px]:mr-3"}`}>
+                  <span className={compacte ? "max-sm:sr-only" : "max-[359px]:sr-only"}>{t("common.header.setlists")}</span>
+                </Retour>
 
                 {/* Vue Partitions : le bloc titre, un bouton qui déplie l'en-tête complet (T2). Le <h1> reste
                     pour les lecteurs d'écran : celui de l'en-tête déplié, sinon celui-ci. */}

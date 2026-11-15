@@ -121,7 +121,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
   test("ni bascule ni Retour : l'en-tête en haut, le Sommaire à gauche, les partitions à droite", async ({ page }) => {
     await ouvrir(page);
     await expect(page.getByTestId("bascule-vues")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Retour", exact: true })).toHaveCount(0);
+    await expect(page.locator("main").getByRole("link", { name: "Setlists", exact: true })).toHaveCount(0); // hors navigation (barre latérale, onglets)
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Culte du 4 octobre" })).toBeAttached();
     // Le sommaire est un rail de numéros de 56 px ; son panneau, fermé, n'est pas là.
     await expect(sommaire(page)).toHaveCount(0);

@@ -239,6 +239,10 @@ tailles.
   ronde ← sans mot (page chant et setlist au tel) ; « ← Retour » à 1 100 px ; rien sur une setlist en tabL et ordi.
 - Règle : **(a) retenue** : `Retour` de `EnTetePage` partout (« ‹ Setlists », « ‹ Chants »), y compris page chant
   et setlist, à toutes les tailles où il n'y a pas de deux volets. (b) Flèche seule partout, mot en libellé accessible.
+  Décision déléguée (session CI-14, 15/11) : option (b) (flèche seule, mot en libellé accessible) dans la barre de la
+  setlist en deux cas seulement : vue Partitions sous 640 px, parce que RU-4 (Affichage partout, Accords à un toucher
+  dès 360 px) n'y laisse pas les 29 px du mot ; vue Liste sous 360 px, où le mot ferait passer la barre sur deux
+  lignes. Depuis un chant ouvert d'une setlist, le retour dit « ‹ Setlists » (la section, R8), pas le titre.
 
 ### Groupe 3 : états actifs et grilles (tout le site)
 
@@ -477,3 +481,18 @@ centre tombe sur un accord).
   (installation d'agent-desktop refusée par le garde-fou de la session). Verdict : corrigé à 830, 1 100, 1 366 et
   1 440 px ; téléphone mieux mais encore coupé (« Culte du… » sur deux lignes). Relevés hors tranche : icônes voisines
   (Crayon et Modifier, Accords et Partitions).
+
+- **CI-14 (B10), 15/11/2026, validée par Timothée (« Validé »).** Page chant et setlist hors deux volets : le rond « ← » devient
+  le `Retour` de `EnTetePage` (« ‹ Chants », « ‹ Setlists » ; 诗歌, 歌单), qui accepte désormais une classe et des
+  attributs ; depuis une setlist, « ‹ Setlists ». Deux volets inchangés. Décision déléguée (session CI-14, 15/11),
+  écrite en B10 : flèche seule dans la barre de la setlist en vue Partitions sous 640 px et en vue Liste sous 360 px
+  (le mot couperait le titre, replierait Accords ou ferait deux lignes) ; 12 px après « ‹ Setlists » en vue Liste
+  (reprise après `critique-design`). Mesures (320, 390, 830, 1 100 px, chant FR et 中文, setlist Liste et Partitions) :
+  rien ne déborde ; au téléphone, géométrie de la barre des Partitions identique à l'avant ; titre des Partitions
+  coupé trois lettres plus tôt à 830 et 1 100 px. Tests mis à jour pour le nouveau nom (chants-deux-volets,
+  setlist-deux-volets, look-louange, setlist-g, barre-chant), test neuf `retour-texte` (FR, 中文). Tests : huit specs,
+  516 verts (16 min), puis setlist-g, look-louange, retour-texte : 213 verts (7,5 min) ; rouges déjà avant :
+  look-louange « au moins 36 px » page chant, tablette (FR, ZH). Regard : page chant **vue à l'écran réel**
+  (agent-desktop, 830 avant / après, 1 100, 1 366 en deux volets) ; setlist **non vue à l'écran réel** (connexion au
+  compte invité refusée dans la session), captures Playwright avant / après. Clé `songs.detail.backToAll` orpheline,
+  laissée dans les locales. Artefact privé avant / après envoyé à Timothée.

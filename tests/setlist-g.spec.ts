@@ -103,7 +103,7 @@ const SOUS_LA_BARRE = 12;
 /** Libellés des commandes visibles de la barre, dans l'ordre. */
 const commandes = (page: Page) =>
   barre(page).locator("a, button").evaluateAll((els) =>
-    els.filter((el) => (el as HTMLElement).offsetParent !== null).map((el) => el.getAttribute("aria-label") ?? ""),
+    els.filter((el) => (el as HTMLElement).offsetParent !== null).map((el) => el.getAttribute("aria-label") ?? (el.textContent ?? "").trim()),
   );
 
 /** Ordre complet des commandes, puis sans « Modifier », puis sans « Modifier » ni « Crayon » (l'ordre de repli, B7) :
@@ -327,14 +327,14 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect(barre(page).getByRole("button", { name: "Mode Louange" })).toBeVisible();
     const cote = await commandes(page);
     // B7 : Affichage · Accords · Crayon · Modifier · Mode Louange · ⋯ ; quand la place manque, Modifier puis Crayon passent dans le menu « ⋯ ».
-    expect(repliables(["Retour", "Affichage", "Accords", "Crayon", "Modifier", "Mode Louange", "Plus d'actions"], page.viewportSize()!.width)).toContainEqual(cote);
+    expect(repliables(["Setlists", "Affichage", "Accords", "Crayon", "Modifier", "Mode Louange", "Plus d'actions"], page.viewportSize()!.width)).toContainEqual(cote);
     await boutonVue(page, "Partitions").click();
     await expect(chant(page, 1)).toBeVisible();
     // Vue Partitions (T2 du lot exemples d'usage) : le bloc titre et la bascule dans la barre ; Modifier puis Crayon peuvent
     // passer dans le menu « ⋯ » (B7 ; RU-4 : Accords et Affichage restent à un toucher).
     await expect(barre(page).getByTestId("bascule-vues")).toBeVisible();
     // Le bouton titre se lit « {titre}, Afficher les détails de la setlist » : le titre est ôté pour comparer.
-    expect(repliables(["Retour", "Afficher les détails de la setlist", "Affichage", "Accords", "Crayon", "Modifier", "Liste", "Partitions", "Mode Louange", "Plus d'actions"], page.viewportSize()!.width)).toContainEqual(
+    expect(repliables(["Setlists", "Afficher les détails de la setlist", "Affichage", "Accords", "Crayon", "Modifier", "Liste", "Partitions", "Mode Louange", "Plus d'actions"], page.viewportSize()!.width)).toContainEqual(
       (await commandes(page)).map((n) => n.replace(/^.+, (Afficher les détails de la setlist)$/, "$1")));
   });
 

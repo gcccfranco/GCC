@@ -182,7 +182,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
   }
 
   /** Commandes de la barre G (B7) : l'ordre complet, puis sans « Modifier », puis sans « Modifier » ni « Crayon » (ordre de repli). */
-  const COMPLETE_G = ["Retour", "Afficher les détails de la setlist", "Affichage", "Accords", "Crayon", "Modifier", "Liste", "Partitions", "Mode Louange", "Plus d'actions"];
+  const COMPLETE_G = ["Setlists", "Afficher les détails de la setlist", "Affichage", "Accords", "Crayon", "Modifier", "Liste", "Partitions", "Mode Louange", "Plus d'actions"];
   // Accords suit quand le titre serait coupé : dès 640 px, ou au téléphone de 320 px (bloc titre plus étroit qu'un toucher) ;
   // entre 360 et 639 px il reste à un toucher (titre sur deux lignes, RU-4).
   const repliees = (complet: string[], largeur: number) => [complet, complet.filter((n) => n !== "Modifier"), complet.filter((n) => n !== "Modifier" && n !== "Crayon"),
@@ -215,7 +215,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           .filter((el) => (el as HTMLElement).offsetParent !== null)
           .map((el) => {
             const r = el.getBoundingClientRect();
-            return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width };
+            return { nom: el.getAttribute("aria-label") ?? (el.textContent ?? "").trim(), milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width, zone: parseFloat(getComputedStyle(el, "::after").height) };
           }),
       );
       // Vue Partitions, un volet (T2 du lot exemples d'usage) : retour, bloc titre, affichage, accords, crayon, modifier, bascule (Liste, Partitions), mode louange, ⋯ ;
@@ -230,7 +230,9 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
         expect.soft(b.gauche, `${b.nom} ne sort pas à gauche`).toBeGreaterThanOrEqual(sens === "iPad paysage" ? 68 : 0);
         expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
         // Les segments de la bascule (h-7 dans une bascule de 32 px) ont leur zone de toucher de 44 px au doigt.
-        if (!/^(Liste|Partitions)$/.test(b.nom)) expect.soft(Math.min(b.h, b.l), `${b.nom} : pas plus petit qu'avant (32 px)`).toBeGreaterThanOrEqual(32);
+        // Le retour « ‹ Setlists » (B10) est du texte de 20 px de haut : sa zone de toucher (::after, 44 px) remplace les 32 px de dessin, mesurée au doigt seulement.
+        if (b.nom === "Setlists") { if (!Number.isNaN(b.zone)) expect.soft(b.zone, "Retour : zone de toucher de 44 px").toBeGreaterThanOrEqual(44); expect.soft(b.h, "Retour : une ligne de texte").toBeGreaterThanOrEqual(20); }
+        else if (!/^(Liste|Partitions)$/.test(b.nom)) expect.soft(Math.min(b.h, b.l), `${b.nom} : pas plus petit qu'avant (32 px)`).toBeGreaterThanOrEqual(32);
       }
       // Icônes seules sous 768 px (téléphone dans les deux sens) ; « Louange » dessous dès 768 px (B8).
       await expect(barre.getByText("Louange", { exact: true })).toBeVisible({ visible: largeur >= 768 });
@@ -276,7 +278,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
             .filter((el) => (el as HTMLElement).offsetParent !== null)
             .map((el) => {
               const r = el.getBoundingClientRect();
-              return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
+              return { nom: el.getAttribute("aria-label") ?? (el.textContent ?? "").trim(), milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
             }),
         );
         expect(repliees(COMPLETE_G, largeur), "retour, titre, affichage, accords, (crayon, modifier), Liste, Partitions, mode louange, ⋯").toContainEqual(
