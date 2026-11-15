@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, onStage, ouvrirMenu, ouvrirMetronome, type Langue } from "./helpers/louange";
+import { attendreMiseEnPage, lireCompteur, onStage, ouvrirMenu, ouvrirMetronome, type Langue } from "./helpers/louange";
 
 // Lot RU, RU-5 (docs/spec-reglages-unifies.md) : au mode louange, un seul bouton « Affichage » (la marge : Je joue, Ce que je lis,
 // La page), l'armure dans la barre. Comptes simulés, noms fictifs ; quatre dispositions plus 1 440 px (projets de SPECS_GRAND_ECRAN).
@@ -15,7 +15,7 @@ const CLARA: FakeProfile = {
 };
 const item = (songSlug: string, position: number) => ({
   songSlug, position, keyOverride: null, showChords: true, showPinyin: true,
-  useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "",
+  useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "", jianpuSheet: songSlug === "一生爱你",
 });
 const setlist = (slugs: string[]) => ({
   title: "Culte d'essai des réglages", leader: "Présidence", category: "Culte Francophone", date: "2026-11-09",
@@ -59,7 +59,8 @@ test("deux touchers, barre montrée : armure puis une tonalité ; armure puis Ch
   await expect(page.getByTestId("fenetre-armure").locator('[data-notation="chiffres"]')).toHaveAttribute("aria-pressed", "true");
 });
 
-test("marge ouverte : la musique ne passe pas dessous (colonne à droite ou feuille en bas)", async ({ page }) => {
+// A1 : sous 1 024 px la feuille en bas recouvre la page (elle ne la rétrécit plus) ; seule la colonne à droite réserve sa place.
+test("marge ouverte : la musique ne passe pas sous la colonne (la feuille en bas recouvre la page, sans la repaginer)", async ({ page }) => {
   await ouvrirMode(page, { init: { "perf-role-preset": "pianiste" } });
   await ouvrirMenu(page, "affichage");
   await expect(marge(page)).toHaveAttribute("data-ouvert", "true");
@@ -70,9 +71,30 @@ test("marge ouverte : la musique ne passe pas dessous (colonne à droite ou feui
   expect(boites.length).toBeGreaterThan(0);
   for (const b of boites) {
     if (colonne) expect(b.x + b.w, "la musique s'arrête à gauche de la colonne").toBeLessThanOrEqual(m.x + 1);
-    else expect(b.y + b.h, "la musique s'arrête au-dessus de la feuille").toBeLessThanOrEqual(m.y + 1);
   }
 });
+
+// A1 (docs/spec-corrections-interface.md) : la feuille « Affichage » recouvre la page, elle ne la repagine pas.
+for (const slug of ["avec-nous", "一生爱你"]) {
+  test(`Affichage ouvert ne repagine pas (${slug === "avec-nous" ? "chant FR" : "scan 中文"})`, async ({ page }) => {
+    await ouvrirMode(page, { slugs: [slug, "abba-pere"], init: { "perf-role-preset": "pianiste" } });
+    if (slug === "一生爱你") await expect(onStage(page, "[data-jianpu-fenetre]").first()).toBeAttached({ timeout: 30_000 });
+    const etat = async () => {
+      const premier = onStage(page, "[data-section], [data-jianpu-page]").first();
+      return { compteur: await lireCompteur(page), texte: await premier.innerText(), hauteur: Math.round((await premier.boundingBox())!.height) };
+    };
+    const avant = await etat();
+    await ouvrirMenu(page, "affichage");
+    await expect(marge(page)).toHaveAttribute("data-ouvert", "true");
+    await page.waitForTimeout(500); // une repagination éventuelle aurait eu le temps de se faire
+    // En colonne (≥ 1 024 px) la musique se range à gauche des 320 px réservés : elle se repagine, c'est voulu.
+    if ((await marge(page).getAttribute("data-place")) !== "colonne") expect(await etat(), "feuille ouverte : même pagination").toEqual(avant);
+    await marge(page).getByRole("button", { name: "Fermer l'affichage" }).click();
+    await expect(marge(page)).toHaveAttribute("data-ouvert", "false");
+    await page.waitForTimeout(500);
+    expect(await etat(), "feuille fermée : même pagination").toEqual(avant);
+  });
+}
 
 test("marge et panneau Métronome ne s'ouvrent jamais ensemble", async ({ page }) => {
   await ouvrirMode(page, { init: { "perf-role-preset": "pianiste" } });

@@ -798,14 +798,13 @@ export function PerformanceMode({
       return null;
     }
   });
-  // Marge « Affichage » (RU-5) : en colonne (≥ 1 024 px) elle repousse la musique de 320 px à droite ; en dessous, la feuille de 40 %
-  // réserve sa hauteur en bas. La zone de lecture (mesure, pagination, deux colonnes) est l'écran moins cette réserve.
+  // Marge « Affichage » (RU-5) : en colonne (≥ 1 024 px) elle repousse la musique de 320 px à droite ; en dessous, la feuille recouvre
+  // la page sans repaginer. La zone de lecture (mesure, pagination, deux colonnes) est l'écran moins la réserve de droite.
   const placeMarge = usePlace();
   const margeOuverte = popoverOuvert === "affichage";
   const reserveD = margeOuverte && placeMarge === "colonne" ? 320 : 0;
-  const reserveB = margeOuverte && placeMarge !== "colonne" ? Math.round(ecran.hauteur * 0.4) : 0;
   const zoneL = ecran.largeur - reserveD;
-  const zoneH = ecran.hauteur - reserveB;
+  const zoneH = ecran.hauteur;
   // shortcut: deux colonnes repliées sous 960 px de zone (le seuil d'avant), pas sous 340 px par colonne comme la spec ; à reprendre si le 1 080 px marge ouverte le demande.
   // L'interrupteur de la marge se juge sur l'écran entier (il doit rester là marge ouverte) ; la mise en page, sur la zone qui reste.
   const twoColumnsAvailable = twoColumnsPossible(ecran.grand, ecran.largeur, fontScale) && !structureMode;
@@ -2140,7 +2139,6 @@ export function PerformanceMode({
         "--couleur-icones": couleurIcones,
         ...couleursAccords,
         ...(reserveD ? { right: reserveD } : {}),
-        ...(reserveB ? { bottom: "40dvh" } : {}),
       } as React.CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}

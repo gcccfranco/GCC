@@ -119,6 +119,9 @@ export function MenuLouange({
   });
   const rendreLeFocus = (e: Event) => {
     e.preventDefault();
+    // Focus déjà placé ailleurs (marge Affichage, autre bouton) : ne pas le voler.
+    const actif = document.activeElement;
+    if (actif && actif !== document.body && !actif.closest(`[data-menu-louange="${id}"]`)) return;
     // Outils → Métronome : rendre le focus à l'icône d'Outils le sortirait du menu qui s'ouvre, et le fermerait.
     if (document.querySelector(`[data-menu-louange]:not([data-menu-louange="${id}"])[data-state="open"]`)) return;
     (document.querySelector<HTMLElement>(`[data-menu-declencheur="${id}"]`) ?? document.querySelector<HTMLElement>('[data-menu-declencheur="outils"]'))?.focus({ preventScroll: true });

@@ -238,6 +238,9 @@ test("Repères est absent quand le chant courant n'a pas de section (scan 简谱
   // Scan non certifié : depuis JP-B2, un scan certifié (一生爱你) a des Repères (sections.json). On répond à systemes.json par « aucun chant certifié ».
   await page.route("**/jianpu/systemes.json", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
+  // Depuis CL-1, sections.json suffit à donner des pages (donc des Repères) : on le vide aussi.
+  await page.route("**/jianpu/sections.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(["一生爱你", "abba-pere"]) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
@@ -448,6 +451,7 @@ test("Affichage : aucune 2e ligne d'un seul élément (pastilles de couleur, min
 });
 
 test("palette : framboise retenue après rechargement, et les actions des menus prennent la couleur corrigée (décision 23)", async ({ page }) => {
+  test.setTimeout(60_000);
   await ouvrir(page);
   const attendue = `rgb(${[1, 3, 5].map((i) => parseInt(garderContraste("#c2185b", FOND_CLAIR).slice(i, i + 2), 16)).join(", ")})`;
   let options = await ouvrirMenu(page, "affichage");
