@@ -86,6 +86,12 @@ pas seulement en mémoire.
   pour chaque nouveau test (les lignes de `src/lib/planning/data.ts`, recopiées dans d'anciens tests, sont de vrais noms).
 - **Tests** : `npx playwright install --with-deps chromium` au début de la session ; trois appareils toujours, les
   cinq projets pour les specs d'agencement.
+- **agent-desktop** (Timothée, 15/11/2026 : « J'autorise toutes les sessions à installer agent-desktop ») : le regard
+  sur l'écran réel se fait avec agent-desktop, sur `next dev` de la branche. Toute session peut l'installer
+  (`npm install -g agent-desktop`, `apt-get install -y at-spi2-core openbox`) : c'est fait d'avance par le script de
+  l'environnement et permis dans `.claude/settings.json`. Recette : `docs/spec-corrections-interface.md`, § « Tranches
+  et ordre », et `docs/parcours-oeil-2026-11-14.md`, § Vérification. Compte invité donné par Timothée le 14/11/2026
+  pour naviguer : lecture seule (la vraie base est partagée), identifiants hors dépôt, à demander au pilote.
 - **Go** : un lot se code sur un mot explicite de Timothée, donné **après** la spec (« go », « feu vert », « vas-y pour
   le lot N ») ; une phrase au futur ou au conditionnel (« tu peux le coder », « je le montrerai ») décrit un plan. Un go
   vaut pour un lot, pas pour le suivant, ni pour une mise en ligne. Dans le doute, demander « go pour le lot N ? ».
