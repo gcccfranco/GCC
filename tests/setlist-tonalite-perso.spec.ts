@@ -166,13 +166,15 @@ test.describe("marge Affichage de la setlist", () => {
     test(`(B6) ${langue} : Affichage, Accords et Crayon sont des pastilles étiquetées dès 768 px, des ronds sans mot dessous`, async ({ page }) => {
       await ouvrir(page, EDITEUR.uid, langue);
       const large = page.viewportSize()!.width >= 768;
-      // Deux volets : l'en-tête (pilules de 40 px, sans Accords) n'est pas la barre ; sa forme attend la décision de CI-12.
+      // Deux volets : l'en-tête porte la même forme (B7, CI-12), libellé visible à cette largeur.
       if (await enDeuxVolets(page)) {
         const b = page.locator("[data-en-tete]").getByRole("button", { name: langue === "zh" ? "显示" : "Affichage", exact: true });
         await expect(b).toHaveAttribute("aria-label", langue === "zh" ? "显示" : "Affichage");
         expect((await b.innerText()).trim()).toBe(langue === "zh" ? "显示" : "Affichage");
         return;
       }
+      // Vue Liste : pas de bloc titre dans la barre, donc rien de replié dans ⋯ (B7) ; la forme se lit sur les deux.
+      await page.getByRole("button", { name: /^(Liste|曲目列表)$/ }).first().click();
       for (const nom of langue === "zh" ? ["显示", "和弦"] : ["Affichage", "Accords"]) {
         const b = barre(page).getByRole("button", { name: nom, exact: true });
         await expect(b).toHaveAttribute("aria-label", nom);
@@ -244,6 +246,8 @@ for (const largeur of [390, 412]) {
       await expect(accords).toBeVisible();
       await expect(barre(page).getByRole("button", { name: langue === "zh" ? "显示" : "Affichage", exact: true })).toBeVisible();
       // B6 : sous 768 px, ronds à icône seule avec libellé accessible (36 px, comme la page chant).
+      // Vue Liste : pas de bloc titre dans la barre, donc rien de replié dans ⋯ (B7) ; la forme se lit sur les deux.
+      await page.getByRole("button", { name: /^(Liste|曲目列表)$/ }).first().click();
       for (const nom of langue === "zh" ? ["显示", "和弦"] : ["Affichage", "Accords"]) {
         const b = barre(page).getByRole("button", { name: nom, exact: true });
         await expect(b).toHaveAttribute("aria-label", nom);

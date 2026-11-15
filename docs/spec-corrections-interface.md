@@ -461,3 +461,19 @@ centre tombe sur un accord).
   accès (artefact privé) ; **non vu à l'écran réel** : agent-desktop était installé, mais la connexion au compte invité
   a été refusée dans la session (ce compte a l'accès Harmonie, il n'aurait montré que la non-régression). Relevé hors
   tranche, non corrigé : entrer ou sortir du Crayon avec Idées allumé décale le scan de ≈ 28 px.
+
+- **CI-12 (B7, B8), 15/11/2026, validée par Timothée (« Validé »).** Barre G et en-tête à deux volets dans le même
+  ordre : Affichage · Accords · Crayon · [Modifier ou Dupliquer pour mes notes] · Louange · ⋯, forme `BOUTON_LECTURE`
+  partout ; « Louange » avec ▶ dès 768 px, rond ▶ dessous, couleur du service inchangée ; en deux volets, PDF et
+  Présentation dans ⋯, Accords en bouton. Repli mesuré en tête du ⋯ quand le titre serait coupé : Modifier, Crayon, puis
+  Accords. Décisions déléguées (session CI-12, 15/11) : Présentation va dans ⋯ (« le reste toujours dans ⋯ ») ; Accords
+  se replie dès 640 px quand le titre serait coupé (830 et 1 100 px en français), et au téléphone seulement quand le bloc
+  titre tombe sous 44 px (320 px), sinon il reste à un toucher (RU-4) et le titre passe sur deux lignes. Tests mis à jour
+  pour la nouvelle barre (setlist-g, setlist-deux-volets, look-louange, setlist-partage, export-pdf, pdf-droits,
+  pdf-ma-version, jianpu-integration, pages-en-grand-setlists, helpers `setlist` et `menuSetlist`). Dernier tour :
+  505 verts, 17 min, cinq projets ; rouges déjà sur l'ancien code : `setlist-tonalite-perso:125` (3/6 sur la base),
+  `look-louange:325` (page chant, tablette), `pdf-droits:123` (page chant), `deux-volets-finitions:107` ; instable,
+  vert seul 4/4 : `setlist-g:306` (tablette). Regard : captures Playwright aux cinq largeurs, **non vu à l'écran réel**
+  (installation d'agent-desktop refusée par le garde-fou de la session). Verdict : corrigé à 830, 1 100, 1 366 et
+  1 440 px ; téléphone mieux mais encore coupé (« Culte du… » sur deux lignes). Relevés hors tranche : icônes voisines
+  (Crayon et Modifier, Accords et Partitions).

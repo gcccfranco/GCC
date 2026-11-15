@@ -6,7 +6,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { loadChords, openSheet, toucherScan } from "./helpers/jianpu";
 import { attendreCompteur, basculerAnnoter, fermerBarre } from "./helpers/louange";
-import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
+import { ouvrirPartitions } from "./helpers/setlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
 import { JianpuPDFPage } from "../src/components/pdf/SongPDF";
@@ -1082,12 +1082,9 @@ test("10 PDF téléchargé : 一生爱你 en D — le scan ré-encodé fait w ×
     },
   }, "/setlists/setlist-t6");
   await ouvrirPartitions(page);
-  if (await enDeuxVolets(page)) {
-    await page.locator("[data-en-tete]").getByRole("button", { name: "PDF", exact: true }).click();
-  } else {
-    await page.getByRole("button", { name: "Plus d'actions" }).click();
-    await page.getByRole("menuitem", { name: "PDF" }).click();
-  }
+  // CI-12 (B7) : le PDF est une entrée du ⋯ dans les deux mises en page.
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("menuitem", { name: "PDF" }).click();
   const [download] = await Promise.all([
     page.waitForEvent("download", { timeout: 90_000 }),
     page.getByRole("dialog", { name: "Quel PDF ?" }).getByRole("button", { name: "Télécharger" }).click(),

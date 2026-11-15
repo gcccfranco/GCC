@@ -106,6 +106,13 @@ const commandes = (page: Page) =>
     els.filter((el) => (el as HTMLElement).offsetParent !== null).map((el) => el.getAttribute("aria-label") ?? ""),
   );
 
+/** Ordre complet des commandes, puis sans « Modifier », puis sans « Modifier » ni « Crayon » (l'ordre de repli, B7) :
+ *  seul un téléphone (sous 640 px) peut manquer de place. */
+const repliables = (complet: string[], largeur: number) =>
+  // B7 : Modifier, puis Crayon, puis Accords (dès 640 px, ou à 320 px) se replient dans ⋯ quand le titre manquerait de place.
+  largeur >= 1024 ? [complet] : [complet, complet.filter((n) => n !== "Modifier"), complet.filter((n) => n !== "Modifier" && n !== "Crayon"),
+    ...(largeur < 360 || largeur >= 640 ? [complet.filter((n) => n !== "Modifier" && n !== "Crayon" && n !== "Accords")] : [])];
+
 test.describe("setlist G, téléphone et tablette portrait", () => {
   test("le premier chant commence avant 45 % de la hauteur de l'écran (dimanche-16)", async ({ page }, info) => {
     await ouvrir(page);
@@ -319,19 +326,16 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await ouvrir(page);
     await expect(barre(page).getByRole("button", { name: "Mode Louange" })).toBeVisible();
     const cote = await commandes(page);
-    // Sous 431 px (lot CD, T4a, dimanche-15), « Crayon » vit dans le menu « ⋯ » (MP-3 : il remplace Adapter et Ma version).
-    expect(cote).toEqual(page.viewportSize()!.width >= 431
-      ? ["Retour", "Affichage", "Crayon", "Accords", "Mode Louange", "Plus d'actions"]
-      : ["Retour", "Affichage", "Accords", "Mode Louange", "Plus d'actions"]);
+    // B7 : Affichage · Accords · Crayon · Modifier · Mode Louange · ⋯ ; quand la place manque, Modifier puis Crayon passent dans le menu « ⋯ ».
+    expect(repliables(["Retour", "Affichage", "Accords", "Crayon", "Modifier", "Mode Louange", "Plus d'actions"], page.viewportSize()!.width)).toContainEqual(cote);
     await boutonVue(page, "Partitions").click();
     await expect(chant(page, 1)).toBeVisible();
-    // Vue Partitions (T2 du lot exemples d'usage) : le bloc titre et la bascule dans la barre ; sous 640 px, seul le Crayon
-    // passe dans le menu « ⋯ » (RU-4 : Accords et Affichage restent à un toucher).
+    // Vue Partitions (T2 du lot exemples d'usage) : le bloc titre et la bascule dans la barre ; Modifier puis Crayon peuvent
+    // passer dans le menu « ⋯ » (B7 ; RU-4 : Accords et Affichage restent à un toucher).
     await expect(barre(page).getByTestId("bascule-vues")).toBeVisible();
     // Le bouton titre se lit « {titre}, Afficher les détails de la setlist » : le titre est ôté pour comparer.
-    expect((await commandes(page)).map((n) => n.replace(/^.+, (Afficher les détails de la setlist)$/, "$1"))).toEqual(page.viewportSize()!.width >= 640
-      ? ["Retour", "Afficher les détails de la setlist", "Affichage", "Crayon", "Accords", "Liste", "Partitions", "Mode Louange", "Plus d'actions"]
-      : ["Retour", "Afficher les détails de la setlist", "Affichage", "Accords", "Liste", "Partitions", "Mode Louange", "Plus d'actions"]);
+    expect(repliables(["Retour", "Afficher les détails de la setlist", "Affichage", "Accords", "Crayon", "Modifier", "Liste", "Partitions", "Mode Louange", "Plus d'actions"], page.viewportSize()!.width)).toContainEqual(
+      (await commandes(page)).map((n) => n.replace(/^.+, (Afficher les détails de la setlist)$/, "$1")));
   });
 
   test("Crayon depuis la Liste ouvre les partitions au chant lu, en Crayon", async ({ page }) => {
@@ -404,9 +408,13 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect(zh).toContainText("Yī shēng ài nǐ");
     await expect(zh).toContainText("谱 简谱");
     await expect(ligne(page, 4)).toContainText("Abba Père / 一生爱你");
+    // Modifier : dans la barre, ou en tête du menu quand la place manque (B7). Regardé avant d'ouvrir le menu,
+    // qui rend le reste de la page inerte pour l'arbre d'accessibilité.
+    const modifierDansBarre = await barre(page).getByRole("link", { name: "Modifier", exact: true }).isVisible();
     await barre(page).getByRole("button", { name: "Plus d'actions" }).click();
     const menu = page.getByRole("menu");
-    for (const nom of ["Modifier", "Prévenir l'équipe", "Dupliquer", "Partager", "PDF"]) {
+    await expect(menu.getByRole("menuitem", { name: "Modifier", exact: true })).toHaveCount(modifierDansBarre ? 0 : 1);
+    for (const nom of ["Prévenir l'équipe", "Dupliquer", "Partager", "PDF"]) {
       await expect(menu.getByRole("menuitem", { name: new RegExp(nom) })).toBeVisible();
     }
   });

@@ -234,7 +234,7 @@ test.describe("Setlists : les dispositions", () => {
   });
 
   // T3 du lot « exemples d'usage » (remplace dimanche-7 / V5) : la colonne de lecture va jusqu'à 920 px, alignée à gauche contre le rail ;
-  // l'en-tête est une rangée pleine largeur, « Mode Louange » à son bord droit, à 1 440 px comme à 1 940 px de fenêtre.
+  // l'en-tête est une rangée pleine largeur, ⋯ à son bord droit, « Mode Louange » juste avant (B7), à 1 440 px comme à 1 940 px de fenêtre.
   for (const largeur of [1440, 1940]) {
     test(`ordinateur-1440 : à ${largeur} px, la colonne de lecture est plafonnée à 920 px (1 080 px dès 1 000 px de zone, T4), alignée à gauche ; « Mode Louange » reste dans l'en-tête`, async ({ page }, info) => {
       test.skip(info.project.name !== "ordinateur-1440", "ordinateur large : la partition est plafonnée à 920 px");
@@ -245,8 +245,12 @@ test.describe("Setlists : les dispositions", () => {
       const lecture = (await partition.boundingBox())!;
       const bouton = page.locator("[data-en-tete]").getByRole("button", { name: "Mode Louange" });
       const louange = (await bouton.boundingBox())!;
-      expect(louange.x + louange.width, "« Mode Louange » ne sort pas de la fenêtre").toBeLessThanOrEqual(largeur);
-      expect(louange.x + louange.width, "« Mode Louange » au bord droit de l'en-tête").toBeGreaterThan(largeur - 48);
+      // B7 : ⋯ est le dernier ; « Mode Louange » le précède, collé à lui.
+      const plus = (await page.locator("[data-en-tete]").getByRole("button", { name: "Plus d'actions" }).boundingBox())!;
+      expect(plus.x + plus.width, "⋯ ne sort pas de la fenêtre").toBeLessThanOrEqual(largeur);
+      expect(plus.x + plus.width, "⋯ au bord droit de l'en-tête").toBeGreaterThan(largeur - 48);
+      expect(louange.x + louange.width, "« Mode Louange » juste avant ⋯").toBeLessThanOrEqual(plus.x);
+      expect(plus.x - (louange.x + louange.width), "« Mode Louange » collé à ⋯").toBeLessThan(16);
       // Une seule rangée : « Mode Louange » est à droite du bouton titre, à sa hauteur.
       const titre = (await page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ }).boundingBox())!;
       expect(louange.x, "à droite du titre").toBeGreaterThan(titre.x + titre.width - 1);

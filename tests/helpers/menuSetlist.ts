@@ -6,26 +6,31 @@ export async function cliquerMenuSetlist(page: Page, nom: string | RegExp) {
   await page.getByRole("menuitem", { name: nom }).click();
 }
 
-/** Le « Crayon » de la page d'une setlist (MP-3 : il remplace « Adapter » et « Ma version »), dans la barre ou, sous 431 px
- *  de fenêtre, dans le menu « ⋯ » (lot CD, T4a, dimanche-15 : la barre ne tient plus sur un téléphone en portrait). Le
- *  seuil suit le CSS (`max-[430px]:hidden` / `min-[431px]:hidden`). Les anciens noms sont acceptés : ils visent le Crayon. */
+/** Le « Crayon » de la page d'une setlist (MP-3 : il remplace « Adapter » et « Ma version »), dans la barre ou, quand la
+ *  place manque (B7 : il se replie après Modifier), dans le menu « ⋯ ». Les anciens noms sont acceptés : ils visent le Crayon. */
 export type NomMode = "Crayon" | "Adapter" | "Ma version";
+/** Où est le Crayon : le bouton de la barre, ou l'entrée du ⋯ (replié). Attend que la barre soit posée. */
+async function crayonDansLaBarre(page: Page) {
+  const bouton = page.getByRole("button", { name: "Crayon", exact: true });
+  await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).first().waitFor();
+  return { bouton, dansLaBarre: await bouton.isVisible() };
+}
 export async function basculerMode(page: Page, _nom: NomMode = "Crayon") {
   void _nom;
-  if (page.viewportSize()!.width >= 431) {
-    await page.getByRole("button", { name: "Crayon", exact: true }).click();
+  const { bouton, dansLaBarre } = await crayonDansLaBarre(page);
+  if (dansLaBarre) {
+    await bouton.click();
     return;
   }
   await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).first().click();
   await page.getByRole("menuitemcheckbox", { name: "Crayon" }).click();
 }
 
-/** Le Crayon est offert (et, avec `actif`, dans cet état) : le bouton de la barre dès 431 px, sinon l'entrée du menu « ⋯ »,
- *  refermé ensuite. */
+/** Le Crayon est offert (et, avec `actif`, dans cet état) : le bouton de la barre, sinon l'entrée du menu « ⋯ », refermé ensuite. */
 export async function verifierMode(page: Page, _nom: NomMode = "Crayon", actif?: boolean) {
   void _nom;
-  if (page.viewportSize()!.width >= 431) {
-    const bouton = page.getByRole("button", { name: "Crayon", exact: true });
+  const { bouton, dansLaBarre } = await crayonDansLaBarre(page);
+  if (dansLaBarre) {
     await expect(bouton).toBeVisible();
     if (actif !== undefined) await expect(bouton).toHaveAttribute("aria-pressed", String(actif));
     return;

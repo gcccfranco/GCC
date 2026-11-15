@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronDown, Pencil, SlidersHorizontal, PenLine, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
+import { ChevronDown, Pencil, SlidersHorizontal, PenLine, Play, MoreHorizontal, Download, Copy, Presentation } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
@@ -105,11 +105,6 @@ import {
 import { structUidAt, revertSectionOrigins, idDeSection } from "@/lib/setlist/sectionOrigins";
 import { TOUCHER_44 } from "@/lib/toucher44";
 
-// Quand `.libelle-outil` est masqué (sous 1 024 px de fenêtre, ou rangée sous 880 px de conteneur : dimanche-9) :
-// l'icône et un libellé court dessous (G15, audit 24/10/2026), jamais l'icône seule.
-const PILULE_EMPILEE = "max-lg:h-auto max-lg:min-h-8 max-lg:flex-col max-lg:justify-center max-lg:gap-0.5 max-lg:px-2 max-lg:py-1 max-lg:rounded-2xl [@container(max-width:879px)]:h-auto [@container(max-width:879px)]:min-h-8 [@container(max-width:879px)]:flex-col [@container(max-width:879px)]:justify-center [@container(max-width:879px)]:gap-0.5 [@container(max-width:879px)]:px-2 [@container(max-width:879px)]:py-1 [@container(max-width:879px)]:rounded-2xl";
-const LIBELLE_COURT = "hidden max-lg:block [@container(max-width:879px)]:block max-w-[64px] truncate text-xs font-medium leading-tight";
-
 /** Cible d'édition de ligne + indices source nécessaires à la sauvegarde. */
 type LineEditState = EditLineTarget & {
   srcLine: number;
@@ -137,16 +132,6 @@ const SOUS_LA_BASCULE = 12;
 
 /** Réseau qui traîne : la copie hors ligne du même compte s'affiche après ce délai si la lecture n'a pas abouti. */
 const COPIE_APRES_MS = 3000;
-
-/** Boutons de l'en-tête des deux volets (planche `setlist-deux-volets`) : pilules
- *  libellées, l'état actif en encre comme la barre de G. */
-const PILULE =
-  "flex h-10 items-center gap-2 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-[background-color,color,transform] duration-150 hover:bg-muted active:scale-[.97] disabled:opacity-60";
-/** Bouton rond sans libellé (PDF, ⋯) : l'icône seule, nom en `aria-label`. */
-const PILULE_ICONE =
-  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground transition-[background-color,color,transform] duration-150 hover:bg-muted active:scale-[.97] disabled:opacity-60";
-const PILULE_ACTIVE =
-  "flex h-10 items-center gap-2 rounded-full bg-foreground px-4 text-sm font-semibold text-background transition-[background-color,color,transform] duration-150 active:scale-[.97]";
 
 type EditBase = {
   source: string;
@@ -243,8 +228,11 @@ export function SetlistDetailClient() {
   /** La marge « Affichage » (RU-4) : ouverte par le bouton « Affichage » de la barre (un volet) ou de l'en-tête (deux volets). */
   const [showAffichage, setShowAffichage] = useState(false);
   const boutonAffichageRef = useRef<HTMLButtonElement>(null);
-  const masqueBarre = compacte ? "max-sm:hidden" : "max-[430px]:hidden";
-  const masqueMenu = compacte ? "sm:hidden" : "min-[431px]:hidden";
+  // Repli mesuré (B7) : nombre de boutons passés dans ⋯, dans l'ordre action de droits, Crayon (Accords reste dans la barre : B6, RU-4).
+  const [replies, setReplies] = useState(0);
+  const [largeurBarre, setLargeurBarre] = useState(0);
+  const rangeeRef = useRef<HTMLDivElement>(null);
+  const titreTexteRef = useRef<HTMLSpanElement>(null);
   /** Occurrences de la section lue (`data-section-uids`) : la pastille marquée. */
   const [uidsLus, setUidsLus] = useState<string[]>([]);
   // ── Setlist G : Liste et Partitions reliées (docs/spec-deux-volets.md, T2) ──
@@ -1748,6 +1736,37 @@ export function SetlistDetailClient() {
     }
   }
 
+  // Repli (B7) : on repart de 0 quand la barre ou son contenu change, puis on replie un bouton de plus tant que ça déborde ou que le titre est coupé.
+  const cleBarre = [i18n.language, crayon, showChords, user?.uid, !!profile, copieLueLe === null, setlist?.id, setlist?.title, view, enteteOuvert, deuxVolets, largeurBarre].join("|");
+  const cleBarreVue = useRef(cleBarre);
+  useLayoutEffect(() => {
+    if (cleBarreVue.current !== cleBarre) {
+      cleBarreVue.current = cleBarre;
+      if (replies !== 0) { setReplies(0); return; }
+    }
+    const r = rangeeRef.current;
+    const tt = titreTexteRef.current;
+    if (!r || replies >= 3) return;
+    // Droits, Crayon, puis Accords se replient tant que le titre est coupé (B7). Au téléphone (titre sur deux lignes),
+    // Accords reste à un toucher (B6, RU-4) tant que le bloc titre garde la largeur d'un toucher (44 px).
+    const tronque = !!tt && (tt.scrollWidth > tt.clientWidth + 1 || tt.scrollHeight > tt.clientHeight + 1);
+    const coupe = replies < 2 || window.innerWidth >= 640
+      ? tronque
+      : !!tt && (tt.closest("button")?.getBoundingClientRect().width ?? 44) < 44;
+    // Boîtes des enfants, pas scrollWidth : il compte le ::after de 44 px de TOUCHER_44.
+    const droite = r.getBoundingClientRect().right - parseFloat(getComputedStyle(r).paddingRight);
+    const deborde = [...r.querySelectorAll(":scope > *, :scope > * > *")].some((e) => e.getBoundingClientRect().right > droite + 1);
+    if (deborde || coupe) setReplies(replies + 1);
+  });
+  useEffect(() => {
+    const r = rangeeRef.current;
+    if (!r) return;
+    // shortcut: seule la largeur de la rangée est observée (le titre bougerait à chaque repli, d'où une boucle), reprendre si un titre change sans que la rangée change de largeur.
+    const ro = new ResizeObserver(([e]) => setLargeurBarre(Math.round(e.contentRect.width)));
+    ro.observe(r);
+    return () => ro.disconnect();
+  }, [setlist, deuxVolets, compacte]);
+
   if (loadingSetlist) {
     return <EcranChargement />;
   }
@@ -1806,6 +1825,13 @@ export function SetlistDetailClient() {
     setlist,
     estRegieDeLaSetlist(profile, setlist),
   );
+  // Boutons repliés dans ⋯ (B7), pris dans l'ordre : droits, Crayon, puis Accords (au téléphone, en dernier recours : B6, RU-4).
+  const aDroits = canEdit || canDuplicate;
+  let reste = replies;
+  const prendre = (present: boolean) => present && reste > 0 && (reste--, true);
+  const droitsReplie = prendre(aDroits);
+  const crayonReplie = prendre(!horsLigne);
+  const accordsReplie = prendre(true);
   const presentationHref = setlist.presentationUrl ? parsePresentationUrl(setlist.presentationUrl) : null;
   // « Copier toutes les paroles » (question 6) : seulement si chaque chant suit la
   // présidence — ni ma version, ni ma structure, ni celle d'un autre (comme
@@ -1935,7 +1961,8 @@ export function SetlistDetailClient() {
       realSongCount={realSongCount}
       flashFeedback={flashFeedback}
       handleNotifyTeam={handleNotifyTeam}
-      canDuplicate={canDuplicate}
+      // « Dupliquer pour mes notes » est le bouton de droits (barre ou ⋯ replié) : ici seulement « Dupliquer » de qui modifie.
+      canDuplicate={canDuplicate && canEdit}
       duplicating={duplicating}
       canEdit={canEdit}
       handleDuplicate={handleDuplicate}
@@ -2054,9 +2081,9 @@ export function SetlistDetailClient() {
         onClick={() => setEnteteOuvert((o) => !o)}
         className={`${TOUCHER_44} flex min-h-8 min-w-0 flex-1 items-center gap-1.5 rounded-lg px-1.5 py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring`}
       >
-        <span className="min-w-0 flex-1">
+        <span className="min-w-0">
           <span className="flex min-w-0 items-baseline gap-2">
-            <span className="truncate text-[15px] font-semibold leading-tight tracking-[-0.01em] text-foreground sm:text-[17px]">{titreAffiche(setlist, langueCourte(i18n.language))}</span>
+            <span ref={titreTexteRef} className={`${compacte ? "line-clamp-2 sm:line-clamp-none sm:truncate" : "truncate"} text-[15px] font-semibold leading-5 sm:leading-tight tracking-[-0.01em] text-foreground sm:text-[17px]`}>{titreAffiche(setlist, langueCourte(i18n.language))}</span>
             {setlist.date && <span className="hidden shrink-0 text-xs text-muted-foreground min-[480px]:inline">{formatJourMois(setlist.date, i18n.language)}</span>}
           </span>
           {setlist.notes && <span className="block truncate text-xs italic leading-tight text-muted-foreground">{setlist.notes}</span>}
@@ -2111,6 +2138,105 @@ export function SetlistDetailClient() {
       {idees}
     </div>
   ) : partitions;
+  // Boutons de lecture communs à G et aux deux volets (B7, B8) : Affichage · Accords · Crayon · droits · Louange · ⋯.
+  const formeLecture = (actif: boolean) =>
+    `${TOUCHER_44} ${BOUTON_LECTURE} shrink-0 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+      actif ? "bg-foreground text-background" : "bg-secondary text-muted-foreground hover:text-foreground"
+    }`;
+  const basculerAccords = () => {
+    setShowChords(!showChords);
+    setChordsTouched(true);
+  };
+  const boutonAffichage = (
+    <button aria-label={t("setlists.detail.layout.label")}
+      ref={boutonAffichageRef}
+      aria-pressed={showAffichage}
+      aria-expanded={showAffichage}
+      aria-controls="marge-affichage"
+      onClick={basculerAffichage}
+      className={formeLecture(showAffichage)}
+    >
+      <SlidersHorizontal className="h-3.5 w-3.5" />
+      <span className="hidden md:inline">{t("setlists.detail.layout.label")}</span>
+    </button>
+  );
+  // Accords — le réglage vaut pour les partitions et le mode louange
+  const boutonAccords = !accordsReplie && (
+    <button aria-label={t("songs.detail.chords")} aria-pressed={showChords} onClick={basculerAccords} className={formeLecture(showChords)}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
+      <span className="hidden md:inline">{t("songs.detail.chords")}</span>
+    </button>
+  );
+  // Crayon : retoucher le chant, pour moi ou pour tout le culte
+  const boutonCrayon = !horsLigne && !crayonReplie && (
+    <button aria-label={t("maPartition.crayon.bouton")} aria-pressed={crayon} onClick={toggleCrayon} className={formeLecture(crayon)}>
+      <PenLine className="h-3.5 w-3.5" />
+      <span className="hidden md:inline">{t("maPartition.crayon.bouton")}</span>
+    </button>
+  );
+  // Action de droits : Modifier pour qui peut, sinon (SC1.5) dupliquer en copie privée pour ses notes.
+  const boutonDroits = !droitsReplie && (canEdit ? (
+    <Link aria-label={t("setlists.detail.editButton")} href={`/setlists/${id}/edit`} className={formeLecture(false)}>
+      <Pencil className="h-3.5 w-3.5" />
+      <span className="hidden md:inline">{t("setlists.detail.editButton")}</span>
+    </Link>
+  ) : canDuplicate ? (
+    <button aria-label={t("setlists.detail.duplicateForNotes")} disabled={duplicating} onClick={() => handleDuplicate()} className={`${formeLecture(false)} disabled:opacity-60`}>
+      <Copy className="h-3.5 w-3.5" />
+      <span className="hidden md:inline">{duplicating ? "…" : t("setlists.detail.duplicateForNotes")}</span>
+    </button>
+  ) : null);
+  // Mode Louange — action principale en live
+  const boutonModeLouange = (
+    <button
+      onClick={ouvrirModeLouange}
+      aria-label={t("setlists.detail.performanceMode")}
+      // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
+      style={{ backgroundColor: serviceButtonFill(categoryColor(setlist.category ?? "")) }}
+      className={`${TOUCHER_44} ${BOUTON_LECTURE} shrink-0 text-white hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150 active:scale-[.96]`}
+    >
+      <Play className="h-3.5 w-3.5" />
+      <span className="hidden md:inline">{t("setlists.detail.performanceModeCourt")}</span>
+    </button>
+  );
+  const declencheurPlus = (
+    <DropdownMenuTrigger asChild>
+      <Button variant="outline" size="icon-lg" className={`${TOUCHER_44} h-8 w-8 shrink-0 rounded-md text-muted-foreground`} aria-label={t("common.moreActions")}>
+        <MoreHorizontal className="h-4 w-4" />
+      </Button>
+    </DropdownMenuTrigger>
+  );
+  // Boutons repliés par manque de place : en tête du ⋯.
+  const entreesReplies = (droitsReplie || crayonReplie || accordsReplie) && (
+    <>
+      {accordsReplie && (
+        <DropdownMenuCheckboxItem className="gap-2" checked={showChords} onCheckedChange={basculerAccords}>
+          <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
+          {t("songs.detail.chords")}
+        </DropdownMenuCheckboxItem>
+      )}
+      {crayonReplie && (
+        <DropdownMenuCheckboxItem className="gap-2" checked={crayon} onCheckedChange={toggleCrayon}>
+          <PenLine aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
+          {t("maPartition.crayon.bouton")}
+        </DropdownMenuCheckboxItem>
+      )}
+      {droitsReplie && (canEdit ? (
+        <DropdownMenuItem asChild>
+          <Link href={`/setlists/${id}/edit`}>
+            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+            {t("setlists.detail.editButton")}
+          </Link>
+        </DropdownMenuItem>
+      ) : (
+        <DropdownMenuItem disabled={duplicating} onClick={() => handleDuplicate()}>
+          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+          {duplicating ? "…" : t("setlists.detail.duplicateForNotes")}
+        </DropdownMenuItem>
+      ))}
+      <DropdownMenuSeparator />
+    </>
+  );
   return (
     <div className="relative min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist.category ?? "")} />
@@ -2133,91 +2259,36 @@ export function SetlistDetailClient() {
           >
             <FondDeBarre />
             {/* Une rangée (T3) : le bloc titre déplie `#entete-setlist-dv`, en tête de la colonne de partition ; à droite les outils. */}
-            <div className="flex items-center gap-x-4 px-7 py-1.5">
+            <div ref={rangeeRef} className="flex items-center gap-x-4 px-7 py-1.5">
               {titreCompact}
-              <div className="flex shrink-0 items-center gap-2">
-                {presentationHref && (
-                  <a href={presentationHref} target="_blank" rel="noopener noreferrer" className={PILULE}>
-                    <Presentation className="h-4 w-4" aria-hidden />
-                    {t("setlists.detail.presentation")}
-                  </a>
-                )}
-                {!horsLigne && (
-                  <button type="button" aria-pressed={crayon} onClick={toggleCrayon} className={crayon ? PILULE_ACTIVE : PILULE}>
-                    <PenLine className="h-4 w-4" aria-hidden />
-                    {t("maPartition.crayon.bouton")}
-                  </button>
-                )}
-                {canEdit && (
-                  <Link href={`/setlists/${id}/edit`} className={PILULE}>
-                    <Pencil className="h-4 w-4" aria-hidden />
-                    {t("setlists.detail.editButton")}
-                  </Link>
-                )}
-                {/* SC1.5 : qui ne peut pas modifier duplique en copie privée pour ses notes. */}
-                {!canEdit && canDuplicate && (
-                  <button type="button" disabled={duplicating} onClick={() => handleDuplicate()} className={PILULE}>
-                    <Copy className="h-4 w-4" aria-hidden />
-                    {duplicating ? "…" : t("setlists.detail.duplicateForNotes")}
-                  </button>
-                )}
-                {peutPdf && (
-                  <button
-                    type="button"
-                    aria-label={t("setlists.detail.pdf")}
-                    title={t("setlists.detail.pdf")}
-                    disabled={downloading}
-                    onClick={() => setShowPdfChoice(true)}
-                    className={PILULE_ICONE}
-                  >
-                    <FileText className="h-4 w-4" aria-hidden />
-                  </button>
-                )}
-                <button
-                  ref={boutonAffichageRef}
-                  type="button"
-                  aria-label={t("setlists.detail.layout.label")}
-                  aria-pressed={showAffichage}
-                  aria-expanded={showAffichage}
-                  aria-controls="marge-affichage"
-                  onClick={basculerAffichage}
-                  className={showAffichage ? PILULE_ACTIVE : PILULE}
-                >
-                  <SlidersHorizontal className="h-4 w-4" aria-hidden />
-                  {t("setlists.detail.layout.label")}
-                </button>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {boutonAffichage}
+                {boutonAccords}
+                {boutonCrayon}
+                {boutonDroits}
+                {boutonModeLouange}
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button type="button" aria-label={t("common.moreActions")} className={PILULE_ICONE}>
-                      <MoreHorizontal className="h-4 w-4" aria-hidden />
-                    </button>
-                  </DropdownMenuTrigger>
+                  {declencheurPlus}
                   <DropdownMenuContent align="end" className="w-56">
-                    {/* Accords : le réglage vaut pour les partitions et le mode louange. */}
-                    <DropdownMenuCheckboxItem
-                      checked={showChords}
-                      onCheckedChange={(v) => {
-                        setShowChords(v);
-                        setChordsTouched(true);
-                      }}
-                    >
-                      {t("songs.detail.chords")}
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuSeparator />
+                    {entreesReplies}
+                    {presentationHref && (
+                      <DropdownMenuItem asChild>
+                        <a href={presentationHref} target="_blank" rel="noopener noreferrer">
+                          <Presentation className="h-3.5 w-3.5 text-muted-foreground" />
+                          {t("setlists.detail.presentation")}
+                        </a>
+                      </DropdownMenuItem>
+                    )}
                     {actionsPartagees}
+                    {peutPdf && (
+                      <DropdownMenuItem disabled={downloading} onClick={() => setShowPdfChoice(true)}>
+                        <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                        {downloading ? "…" : t("songs.detail.downloadPdf")}
+                      </DropdownMenuItem>
+                    )}
                     {supprimer}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <button
-                  type="button"
-                  onClick={ouvrirModeLouange}
-                  // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
-                  style={{ backgroundColor: serviceButtonFill(categoryColor(setlist.category)) }}
-                  className="flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white transition-all duration-150 hover:brightness-95 active:scale-[.97] dark:ring-1 dark:ring-white/15"
-                >
-                  <Play className="h-4 w-4" aria-hidden />
-                  {t("setlists.detail.performanceMode")}
-                </button>
               </div>
             </div>
             {copieLueLe !== null && (
@@ -2305,12 +2376,12 @@ export function SetlistDetailClient() {
                   de tenir à côté de la barre latérale (lot U4 : `.libelle-outil`, requête de
                   conteneur sur `.rangee-outils`, globals.css). `flex-wrap` reste le filet de
                   sécurité. */}
-              <div className={`rangee-outils flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 ${compacte ? "py-1 flex-nowrap" : "py-[9px] flex-wrap"}`}>
+              <div ref={rangeeRef} className={`rangee-outils flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 ${compacte ? "py-1 flex-nowrap" : "py-[9px] flex-wrap"}`}>
 
                 {/* ← Retour */}
                 <Link aria-label={t("songs.detail.backToAll")}
                   href={backPath}
-                  className={`${TOUCHER_44} h-8 px-2.5 max-sm:w-8 max-sm:justify-center max-sm:px-0 sm:mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]`}
+                  className={`${TOUCHER_44} h-8 shrink-0 px-2.5 max-sm:w-8 max-sm:justify-center max-sm:px-0 sm:mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]`}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 12H5m6-7l-7 7 7 7" />
@@ -2323,54 +2394,12 @@ export function SetlistDetailClient() {
                 {compacte && titreCompact}
 
                 {/* Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : la même barre côté Liste
-                    et côté Partitions — Affichage, Adapter, Accords, Ma version ; la bascule
+                    et côté Partitions, dans le même ordre que les deux volets (B7) ; la bascule
                     « Liste | Partitions » est passée sous l'en-tête. */}
-                <button aria-label={t("setlists.detail.layout.label")}
-                  ref={boutonAffichageRef}
-                  aria-pressed={showAffichage}
-                  aria-expanded={showAffichage}
-                  aria-controls="marge-affichage"
-                  onClick={basculerAffichage}
-                  className={`${TOUCHER_44} ${BOUTON_LECTURE} transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                    showAffichage ? "bg-foreground text-background" : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline">{t("setlists.detail.layout.label")}</span>
-                </button>
-
-                {/* Crayon : retoucher le chant, pour moi ou pour tout le culte */}
-                {!horsLigne && (
-                  <button aria-label={t("maPartition.crayon.bouton")}
-                    aria-pressed={crayon}
-                    onClick={toggleCrayon}
-                    className={`${TOUCHER_44} ${BOUTON_LECTURE} ${masqueBarre} transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                      crayon
-                        ? "bg-foreground text-background"
-                        : "bg-secondary text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <PenLine className="h-3.5 w-3.5" />
-                    <span className="hidden md:inline">{t("maPartition.crayon.bouton")}</span>
-                  </button>
-                )}
-
-                {/* Accords — le réglage vaut pour les partitions et le mode louange */}
-                <button aria-label={t("songs.detail.chords")}
-                  aria-pressed={showChords}
-                  onClick={() => {
-                    setShowChords(!showChords);
-                    setChordsTouched(true);
-                  }}
-                  className={`${TOUCHER_44} ${BOUTON_LECTURE} transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                    showChords
-                      ? "bg-foreground text-background"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
-                  <span className="hidden md:inline">{t("songs.detail.chords")}</span>
-                </button>
+                {boutonAffichage}
+                {boutonAccords}
+                {boutonCrayon}
+                {boutonDroits}
 
                 {/* Mode louange et ⋯ — poussés à droite, sur la même ligne */}
                 <div className="ml-auto flex items-center gap-1.5">
@@ -2380,47 +2409,13 @@ export function SetlistDetailClient() {
                     <BasculeVues dansBarre view={view} versListe={basculerListe} versPartitions={basculerPartitions} />
                   )}
 
-                  {/* Mode Louange — action principale en live */}
-                  <button
-                    onClick={ouvrirModeLouange}
-                    aria-label={t("setlists.detail.performanceMode")}
-                    // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
-                    style={{ backgroundColor: serviceButtonFill(categoryColor(setlist.category ?? "")) }}
-                    className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 sm:px-3 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150 max-sm:!h-11 max-sm:!min-h-11 max-sm:!w-11 max-sm:!flex-row max-sm:!justify-center max-sm:!rounded-full max-sm:!p-0`}
-                  >
-                    <Play className="h-3.5 w-3.5 max-sm:h-4 max-sm:w-4" />
-                    <span className="libelle-outil">{t("setlists.detail.performanceMode")}</span>
-                    <span aria-hidden className={`${LIBELLE_COURT} max-sm:!hidden`}>{t("setlists.detail.performanceModeCourt")}</span>
-                  </button>
+                  {boutonModeLouange}
 
-                  {/* Menu ⋯ : Modifier / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}
+                  {/* Menu ⋯ : boutons repliés / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon-lg"
-                        className={`${TOUCHER_44} h-8 w-8 rounded-md text-muted-foreground`}
-                        aria-label={t("common.moreActions")}
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
+                    {declencheurPlus}
                     <DropdownMenuContent align="end" className="w-56">
-                      {/* Téléphone étroit : le Crayon, sorti de la barre. */}
-                      {!horsLigne && (
-                        <DropdownMenuCheckboxItem className={masqueMenu} checked={crayon} onCheckedChange={toggleCrayon}>
-                          {t("maPartition.crayon.bouton")}
-                        </DropdownMenuCheckboxItem>
-                      )}
-                      {!horsLigne && <DropdownMenuSeparator className={masqueMenu} />}
-                      {canEdit && (
-                        <DropdownMenuItem asChild>
-                          <Link href={`/setlists/${id}/edit`}>
-                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                            {t("setlists.detail.editButton")}
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
+                      {entreesReplies}
                       {actionsPartagees}
                       {peutPdf && (
                         <DropdownMenuItem

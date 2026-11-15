@@ -62,19 +62,16 @@ export async function fermerMenus(page: Page): Promise<void> {
   await expect(page.getByRole("menu")).toHaveCount(0);
 }
 
-/** Montre ou cache les accords : le bouton « Accords » de la barre sur G, la case
- *  « Accords » du ⋯ de l'en-tête en deux volets (T4, Q7). RU-4 : au téléphone aussi, le bouton est dans la barre. */
+/** Montre ou cache les accords : le bouton « Accords » (aria-pressed) de la barre sur G, de l'en-tête en deux volets ;
+ *  quand le titre manque de place (B7, dès 640 px), il est replié en tête du ⋯. */
 export async function basculerAccords(page: Page): Promise<void> {
-  const bouton = page.getByTestId("barre-outils").getByRole("button", { name: "Accords", exact: true });
-  await bouton.or(page.locator("[data-en-tete]")).or(page.getByTestId("barre-outils")).first().waitFor();
-  if (await bouton.isVisible()) {
-    await bouton.click();
-    return;
-  }
-  const hote = (await page.locator("[data-en-tete]").count()) > 0 ? page.locator("[data-en-tete]") : page.getByTestId("barre-outils");
-  await hote.getByRole("button", { name: "Plus d'actions" }).click();
-  await page.getByRole("menuitemcheckbox", { name: "Accords" }).click();
-  await fermerMenus(page);
+  const barre = page.locator("[data-en-tete], [data-testid=barre-outils]").first();
+  const plus = barre.getByRole("button", { name: "Plus d'actions" });
+  await plus.waitFor();
+  const bouton = barre.getByRole("button", { name: "Accords", exact: true });
+  if (await bouton.isVisible()) return bouton.click();
+  await plus.click();
+  await page.getByRole("menuitemcheckbox", { name: "Accords", exact: true }).click();
 }
 
 /** La setlist est-elle posée en deux volets (en-tête collant, sommaire) ? Attend la

@@ -60,13 +60,8 @@ function setlist(over: Record<string, unknown> = {}) {
 
 const openMenu = (page: Page) => page.getByRole("button", { name: "Plus d'actions" }).click();
 const pdfEntry = (page: Page) => page.getByRole("menuitem", { name: "PDF" });
-/** « Quel PDF ? » d'une setlist : l'entrée PDF du ⋯ sur G, le bouton PDF de l'en-tête
- *  en deux volets (docs/spec-deux-volets.md, Q7). */
+/** « Quel PDF ? » d'une setlist : l'entrée PDF du ⋯, sur G comme en deux volets (B7 : elle a quitté l'en-tête). */
 async function quelPdf(page: Page) {
-  if (await enDeuxVolets(page)) {
-    await page.locator("[data-en-tete]").getByRole("button", { name: "PDF", exact: true }).click();
-    return;
-  }
   await openMenu(page);
   await pdfEntry(page).click();
 }

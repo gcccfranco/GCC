@@ -48,7 +48,7 @@ async function ouvrir(page: Page, profil: FakeProfile | null, docs: Record<strin
   else await page.goto(to);
 }
 
-/** Les deux entrées PDF d'une setlist : le bouton de la barre, l'entrée du ⋯ (compte cumulé). */
+/** Les entrées PDF d'une setlist : un bouton de la barre (il n'y en a plus, B7) et l'entrée du ⋯, en un volet comme en deux (compte cumulé). */
 async function entreesPdfSetlist(page: Page) {
   await page.getByRole("button", { name: "Plus d'actions" }).waitFor();
   const barre = await page.getByRole("button", { name: "PDF", exact: true }).count();
