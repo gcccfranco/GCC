@@ -668,7 +668,7 @@ test("L3-T4 vue Partitions : un chant sur scan a le même en-tête qu'un chant e
   // Depuis l'en-tête compact (exemples d'usage, T2), l'auteur ne paraît plus à l'écran, seulement à l'impression.
   await expect(bloc.getByText("曾祥怡词 / 游智婷曲")).toBeAttached();
   await expect(bloc.getByText("♩").locator("visible=true")).toHaveCount(1); // l’en-tête complet reste dans la page pour l’impression
-  await expect(bloc.getByText("D", { exact: true }).first()).toBeVisible();
+  await expect(bloc.getByRole("button", { name: "Tonalité : D" })).toHaveText("1=D");
   await expect(bloc.getByText("Plus calme")).toBeVisible();
   // Titre, puis bandeau, puis le scan.
   const fenetre = (await bloc.locator("[data-jianpu-fenetre]").first().boundingBox())!;

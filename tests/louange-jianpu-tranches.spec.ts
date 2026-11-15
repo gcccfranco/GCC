@@ -500,11 +500,10 @@ test("tête de feuille : pas de « gravé en » quand la tonalité est celle du 
   expect(await repeat.evaluate((r) => getComputedStyle(r.querySelector("[data-repeat]")!).color === getComputedStyle(r).color)).toBe(true);
   const dp = tete.locator("[data-repere-tete][data-dp]");
   await expect(dp).toHaveCount(1);
-  await expect(dp).toHaveCSS("border-top-style", "dashed");
   await expect(dp).toHaveText("Dp");
-  // La rangée ne passe jamais à la ligne : la tête garde la hauteur de la barre.
+  // La tête grandit si besoin (ronds de 32 / 44 px) : jamais moins haute que la barre.
   const h = await lireTete(page);
-  expect(Math.abs(h.hauteur - h.barre)).toBeLessThanOrEqual(1);
+  expect(h.hauteur).toBeGreaterThanOrEqual(h.barre - 1);
 });
 
 // ─── Menu Repères ───────────────────────────────────────────────────────────
@@ -637,7 +636,7 @@ test("tête de feuille : posée sur la feuille (ordinateur, tablette paysage), r
   info.annotations.push({ type: "surFeuille", description: String(surFeuille) });
 });
 
-test("tête de feuille : « gravé en E » en #6c6c72 en clair, 13 px ; repère allumé souligné de 3 px", async ({ page }) => {
+test("tête de feuille : « gravé en E » en #6c6c72 en clair, 13 px ; repère allumé plein, éteint teinté, ronds", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" } });
   await attendrePages(page);
@@ -646,13 +645,46 @@ test("tête de feuille : « gravé en E » en #6c6c72 en clair, 13 px ; repère 
     const g = getComputedStyle(t.querySelector("[data-grave-en]")!);
     const on = t.querySelector<HTMLElement>("[data-repere-tete][data-allume]");
     const off = t.querySelector<HTMLElement>("[data-repere-tete]:not([data-allume])");
-    return { couleur: g.color, taille: g.fontSize, ombreOn: on ? getComputedStyle(on).boxShadow : null, ombreOff: off ? getComputedStyle(off).boxShadow : "none" };
+    // Couleur « fond de page » résolue, pour le texte d'un rond plein.
+    const sonde = document.createElement("span");
+    sonde.style.color = "hsl(var(--background))";
+    t.appendChild(sonde);
+    const fondPage = getComputedStyle(sonde).color;
+    sonde.remove();
+    return { couleur: g.color, taille: g.fontSize, fondPage, fondOn: on ? getComputedStyle(on).backgroundColor : null, texteOn: on ? getComputedStyle(on).color : null, fondOff: off ? getComputedStyle(off).backgroundColor : null, texteOff: off ? getComputedStyle(off).color : null,
+      rayon: on ? parseFloat(getComputedStyle(on).borderTopLeftRadius) >= on.getBoundingClientRect().height / 2 : null, ombre: on ? getComputedStyle(on).boxShadow : "none" };
   });
   expect(r.couleur).toBe("rgb(108, 108, 114)");
   expect(r.taille).toBe("13px");
-  expect(r.ombreOn, "un repère allumé").not.toBeNull();
-  expect(r.ombreOn).toMatch(/0px 3px 0px -1px/);
-  expect(r.ombreOff).toBe("none");
+  expect(r.fondOn, "un repère allumé").not.toBeNull();
+  // Allumé = plein : texte à la couleur du fond de page, sur la couleur de section. Éteint = teinté : texte à la
+  // couleur de section, sur sa teinte (jamais le texte du rond plein).
+  expect(r.texteOn).toBe(r.fondPage);
+  expect(r.fondOn).not.toBe(r.fondPage);
+  // Un scan d'une page porte souvent toutes ses sections (aucun éteint) : la vérification ne vaut que s'il y en a un.
+  if (r.fondOff !== null) {
+    expect(r.texteOff).not.toBe(r.fondPage);
+    expect(r.fondOff).not.toBe(r.texteOff);
+  }
+  expect(r.rayon, "rond").toBe(true);
+  expect(r.ombre).toBe("none");
+});
+
+test("tête de feuille : mêmes ronds que la page chant, 32 px au téléphone, 44 px sinon (FR page chant, 中文 scan)", async ({ page }) => {
+  test.setTimeout(90_000);
+  const attendu = page.viewportSize()!.width < 640 ? 32 : 44;
+  await page.goto("/songs/abba-pere");
+  const rondFr = page.locator("ol[aria-label=Structure] li > span").first();
+  await expect(rondFr).toBeVisible();
+  expect(await rondFr.evaluate((e) => (e as HTMLElement).offsetHeight), "rond du bandeau de la page chant").toBe(attendu);
+  await ouvrirLouange(page, { chants: [UN, FR] });
+  await attendrePages(page);
+  await fermerBarre(page);
+  const tete = await page.evaluate(() => {
+    const t = Array.from(document.querySelectorAll("[data-performance-mode] [data-tete-feuille]")).find((e) => !e.closest("[aria-hidden=true]"))!;
+    return (t.querySelector("[data-repere-tete]") as HTMLElement).offsetHeight;
+  });
+  expect(tete, "rond de la tête de feuille").toBe(attendu);
 });
 
 

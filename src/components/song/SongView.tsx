@@ -602,6 +602,11 @@ export function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance
   );
 }
 
+/** Rond de repère (page chant, tête de feuille d'un scan) : forme, texte du signe, « ×N ». */
+export const REPERE_ROND = "inline-flex items-center justify-center rounded-full h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5";
+export const REPERE_TEXTE = "text-sm sm:text-lg font-bold leading-none tracking-[0.02em]";
+export const REPERE_FOIS = "ml-px text-xs sm:text-sm font-semibold leading-none";
+
 /** Bandeau de structure (« coup d'œil ») : la structure jouée en abrégé, la
  *  nuance sous chaque étape, les reprises identiques repliées en « ×2 » (même
  *  règle que la vue structure du mode louange). Remplace la ligne ORDRE.
@@ -709,10 +714,10 @@ export function StructureStrip({
                 <span
                   data-pleine={pleine.has(i) || undefined}
                   data-repere-encadre={disposition === "partition" || undefined}
-                  className={`relative inline-flex items-center justify-center ${enPartition ? `rounded-[5px] border-2 ${policePartition}` : "rounded-full"} ${
+                  className={`relative ${
                     enPartition
-                      ? "h-[30px] w-[30px] md:h-8 md:w-8"
-                      : petit ? "h-[26px] min-w-[26px] px-1.5 sm:h-[30px] sm:min-w-[30px]" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
+                      ? `inline-flex items-center justify-center rounded-[5px] border-2 ${policePartition} h-[30px] w-[30px] md:h-8 md:w-8`
+                      : petit ? "inline-flex items-center justify-center rounded-full h-[26px] min-w-[26px] px-1.5 sm:h-[30px] sm:min-w-[30px]" : REPERE_ROND
                   }`}
                   style={
                     disposition === "partition"
@@ -728,9 +733,9 @@ export function StructureStrip({
                       <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
                     </span>
                   ) : (
-                    <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${petit ? "text-[13px] sm:text-[14px]" : "text-sm sm:text-lg"}`}>
+                    <span className={`inline-flex items-baseline ${petit ? "font-bold leading-none tracking-[0.02em] text-[13px] sm:text-[14px]" : REPERE_TEXTE}`}>
                       <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
-                      {g.repeat > 1 && <span className={`ml-px font-semibold leading-none ${petit ? "text-[10px]" : "text-xs sm:text-sm"}`}>×{g.repeat}</span>}
+                      {g.repeat > 1 && <span className={petit ? "ml-px font-semibold leading-none text-[10px]" : REPERE_FOIS}>×{g.repeat}</span>}
                     </span>
                   )}
                   {n !== undefined && (

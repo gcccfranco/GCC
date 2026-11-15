@@ -9,7 +9,7 @@ import type { SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 import { fermerMarge } from "./helpers/marge";
-import { attendreCompteur, basculerAnnoter, lireCompteur, ouvrirJeJoue, ouvrirOutils } from "./helpers/louange";
+import { attendreCompteur, basculerAnnoter, fermerBarre, lireCompteur, ouvrirJeJoue, ouvrirOutils } from "./helpers/louange";
 
 // Lot 2 du chantier 简谱 (docs/spec-jianpu-integration.md) : « Sections uniques » et
 // structure dans le mode louange. Setlist « Culte du 11 octobre » (fictive) :
@@ -532,6 +532,8 @@ test.describe("bandeau de pastilles en tête du chant", () => {
     const bandeauScan = onStage(page, "ol[aria-label=Structure]");
     await expect(bandeauScan).toHaveCount(1);
     await expect(onStage(page, "[data-tete-feuille] [data-note-tete]")).toHaveText("R : Ralentir la dernière ligne");
+    await fermerBarre(page); // la barre ouverte recouvre la tête de feuille (invisible)
+    await expect(onStage(page, "[data-tete-feuille] [data-note-tete]")).toBeVisible();
 
     const feuille = await jejoue(page);
     await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan", exact: true }).click();

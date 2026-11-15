@@ -549,3 +549,22 @@ centre tombe sur un accord).
   sur l'ancien code, à chaque essai avec l'interrupteur ; la repagination ancre la page au premier bloc,
   `pageAncree`, partagé par les deux pages du scan). Regard : captures Playwright avant / après aux cinq tailles
   (artefact privé), un `regard`, une reprise ; **non vu à l'écran réel** (base Firestore fermée ce soir).
+
+
+- **CI-10 (B4), 15/11/2026, validée par Timothée (« Validé »).** Tête de feuille d'un scan certifié : les repères
+  prennent les ronds de la page chant (`REPERE_ROND`, `REPERE_TEXTE`, `REPERE_FOIS` exportés de `SongView.tsx`) :
+  32 px au téléphone, 44 px dès 640 px ; section à l'écran = rond plein, sinon teinté ; couleurs inchangées. La tête
+  grandit si besoin (hauteur au moins celle de la barre, 6 px en haut et en bas) et garde toujours la ligne de note de
+  la setlist : 82 px au lieu de 68 dès la tablette, 70 au téléphone ; le scan prend le reste. Page chant identique
+  (comparaison pixel à pixel du bandeau). Décisions déléguées (session CI-10, 15/11) : rond plein = section à l'écran,
+  à la place du soulignement de 3 px (même code que « Pleines : sur cette page » des pages de texte) ; le rond de
+  20 px numéroté de `PageScan.tsx` est le numéro du chant, pas un repère : laissé à B3 (CI-9), `PageScan.tsx` non
+  touché ; le Dp n'a plus de pointillé (il se lit « Dp »). Tests mis à jour : louange-jianpu-tranches (allumé plein,
+  éteint teinté, rond ; test neuf « mêmes ronds » FR page chant et 中文 scan), rappel-dp, louange-sections-uniques
+  (note visible), jianpu-integration:671 (rouge d'amont : la tonalité est le bouton `Armure` « 1=D »). Tours :
+  735 tests (19,6 min), puis jianpu-integration (5 min), puis louange-jianpu-tranches, louange-sections-uniques,
+  rappel-dp : 356 verts, 10,8 min ; rouge déjà sur la base : `louange-sections-uniques:358` (ordinateur-1440).
+  Regard : captures Playwright avant / après à 412, 830, 1 100, 1 366 et 1 440 px, avec et sans métronome (artefact
+  privé) ; **non vu à l'écran réel** (le mode louange demande une setlist, donc un compte ; aucune connexion).
+  Relevé, non corrigé (il faut `PerformanceMode.tsx`) : métronome visuel allumé, la bande des temps recouvre le bas
+  de la note de tête (11 px avant, 8 px après) ; les ronds ne sont pas recouverts.
