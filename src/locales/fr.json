@@ -4655,6 +4655,7 @@
     "aujourdhui": "Aujourd'hui",
     "echec": "Le planning, la scène ou les réservations n'ont pas pu être lus : l'état peut être incomplet.",
     "reserver": "Réserver une salle",
+    "case": "Réserver {{salle}} à {{heure}}",
     "refus": "{{salle}} est prise : {{qui}}, {{debut}} – {{fin}}.",
     "libresMemeMoment": "Libres au même moment",
     "decaler": "Décaler à {{debut}} – {{fin}}",

@@ -26,8 +26,9 @@ type Langue = "fr" | "zh"
 /** Ce que la feuille écrit. */
 export type Saisie = Pick<Reservation, "salle" | "date" | "debut" | "fin" | "pour" | "quoi">
 
-/** La feuille ouverte : une nouvelle réservation (moment pré-rempli) ou celle à modifier. */
-export type Ouverture = { date: string; debut: string; fin: string; reservation?: undefined } | { reservation: Reservation }
+/** La feuille ouverte : une nouvelle réservation (moment pré-rempli, et la salle d'une case de la Grille, T3c) ou celle
+ *  à modifier. */
+export type Ouverture = { date: string; debut: string; fin: string; salle?: SalleId; reservation?: undefined } | { reservation: Reservation; salle?: undefined }
 
 const AUTRE = "autre"
 const estDeLaListe = (pour: string) => pour === "" || (QUI as readonly string[]).includes(pour) || pour.startsWith("equipe:")
@@ -77,7 +78,7 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistr
   const [date, setDate] = useState(depart.date)
   const [debut, setDebut] = useState(depart.debut)
   const [fin, setFin] = useState(depart.fin)
-  const [salle, setSalle] = useState<SalleId | null>(r?.salle ?? null)
+  const [salle, setSalle] = useState<SalleId | null>(r?.salle ?? ouverture.salle ?? null)
   const [choixPour, setChoixPour] = useState(r ? (estDeLaListe(r.pour) ? r.pour : AUTRE) : "")
   const [autre, setAutre] = useState(r && !estDeLaListe(r.pour) ? r.pour : "")
   const [quoi, setQuoi] = useState(r?.quoi ?? "")

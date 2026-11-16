@@ -20,6 +20,8 @@ const SPECS_GRAND_ECRAN = [
   /salles-grille\.spec\.ts/,
   // Salles AR, T3a : la feuille « Réserver » (feuille du bas ou panneau à droite), les réservations dans la Liste et la Grille.
   /salles-reserver\.spec\.ts/,
+  // Salles AR, T3c : les gestes de la Grille (glisser, appui, Entrée) ouvrent la feuille « Réserver ».
+  /salles-gestes\.spec\.ts/,
   // CI-2 (docs/spec-corrections-interface.md) : le parcours du culte au mode louange, de l'ouverture aux menus.
   /louange-parcours-culte\.spec\.ts/,
   // Lot AL, AL-2 (docs/spec-accords-louange.md) : accords touchables en mode louange, panneau au centre de la page, bandes latérales, Crayon, « Ici ».

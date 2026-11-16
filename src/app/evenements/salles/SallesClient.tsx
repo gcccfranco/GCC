@@ -39,7 +39,7 @@ import { signalerConflit } from "@/lib/salles/signalerConflit"
 import { varianteDu } from "@/lib/salles/emploi"
 import { couleurDe, etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
 import { SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
-import { GrilleSalles } from "./GrilleSalles"
+import { GrilleSalles, type MomentCase } from "./GrilleSalles"
 import { FeuilleReserver, type Ouverture, type Saisie } from "./FeuilleReserver"
 
 export const RACINE_SALLES = "/evenements/salles"
@@ -181,6 +181,8 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
 
   const heureDuRepere = repere === "maintenant" ? heureDeParis() : repere
   const reserver = () => setOuverture({ date: date < today ? today : date, ...momentDuRepere(heureDuRepere) })
+  // SA11 (T3c) : une case de la Grille (glisser, appui, Entrée) ouvre la feuille sur son moment et sa salle.
+  const reserverCase = (m: MomentCase) => setOuverture({ date, ...m })
   // « Réserver une salle » de l'en-tête (dès 768 px).
   useEffect(() => {
     window.addEventListener(RESERVER_SALLE, reserver)
@@ -210,7 +212,7 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
   }
 
   const liste = !etat ? <Squelette enTete={false} className="p-0" /> : (
-    <Liste etat={etat} vue={vue} surGris={!grand || vue === "grille"} choisirVue={surLaListe ? retenirVue : null} repere={repere} setRepere={setRepere} choisirJour={choisirJour} reserver={canReserverSalle(user) ? reserver : null} echec={lecture!.echec} actif={surLaListe ? null : pathname.split("/")[3] ?? null} />
+    <Liste etat={etat} vue={vue} surGris={!grand || vue === "grille"} choisirVue={surLaListe ? retenirVue : null} repere={repere} setRepere={setRepere} choisirJour={choisirJour} reserver={canReserverSalle(user) ? reserver : null} reserverCase={canReserverSalle(user) && date >= today ? reserverCase : null} echec={lecture!.echec} actif={surLaListe ? null : pathname.split("/")[3] ?? null} />
   )
 
   return (
@@ -242,7 +244,7 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
 
 const GROUPES: GroupeSalle[] = ["grande", "groupe", "bureaux"]
 
-function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour, reserver, echec, actif }: {
+function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour, reserver, reserverCase, echec, actif }: {
   etat: EtatSalles
   vue: Vue
   /** La page est grise autour (un volet, ou la Grille) : le sélecteur prend la piste du fond de groupe. */
@@ -254,6 +256,8 @@ function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour,
   choisirJour: (d: string) => void
   /** « Réserver une salle », au téléphone en bas de la liste ; null sans droit. */
   reserver: (() => void) | null
+  /** Une case de la Grille ouvre la feuille (SA11) ; null sans droit ou un jour passé. */
+  reserverCase: ((m: MomentCase) => void) | null
   echec: boolean
   actif: string | null
 }) {
@@ -325,7 +329,7 @@ function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour,
       {echec && <p role="status" className="px-1 text-xs text-muted-foreground">{t("salles.echec")}</p>}
 
       {vue === "grille" ? (
-        <GrilleSalles occupations={occupations} heure={heure} langue={langue} dateLongue={dateLongue(date, langue)} />
+        <GrilleSalles occupations={occupations} heure={heure} ouvrir={reserverCase} langue={langue} dateLongue={dateLongue(date, langue)} />
       ) : (
       <ul aria-label={t("salles.liste")} className="carte-groupe overflow-hidden">
         {GROUPES.map((g) => [

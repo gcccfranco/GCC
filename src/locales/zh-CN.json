@@ -4603,6 +4603,7 @@
     "aujourdhui": "今天",
     "echec": "未能读取排班、舞台或预订：状态可能不完整。",
     "reserver": "预订场地",
+    "case": "预订 {{salle}} {{heure}}",
     "refus": "{{salle}}已被占用：{{qui}}，{{debut}}–{{fin}}。",
     "libresMemeMoment": "同一时段空闲",
     "decaler": "改到 {{debut}}–{{fin}}",

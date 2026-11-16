@@ -8,14 +8,18 @@
 // d'écran seulement : la salle est prise, le bloc se lit dans sa colonne. Toucher un bloc ouvre son détail ; celui d'un créneau de scène ou d'un jour J
 // mène à la page de la fête. Le repère d'heure (AR12) est une ligne en travers, sous les blocs.
 // T3a : le détail d'une réservation offre « Modifier » et « Supprimer » à son auteur et à la coordination (SA10).
+// T3c (SA11, SA6) : sous les blocs, une case par heure et par salle ouvre la feuille « Réserver » sur sa salle. Glisser
+// (souris, trackpad, stylet) dessine la plage au quart d'heure ; un clic ou un appui ouvre l'heure de la case, pour une
+// heure ; au clavier, une seule case est dans l'ordre de tabulation, les flèches changent de case et Entrée l'ouvre. Le
+// toucher n'est pas capté : le défilement horizontal du téléphone (SA3) et le toucher d'un bloc (SA4) restent.
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import { ChevronRight, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { couleurDe, nomOccupant, occupationsDe, type Occupation } from "@/lib/salles/occupations"
-import { SALLES } from "@/lib/salles/salles"
+import { SALLES, type SalleId } from "@/lib/salles/salles"
 import { useSalles } from "./SallesClient"
 
 type Langue = "fr" | "zh"
@@ -31,9 +35,23 @@ const minutes = (h: string) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5)
 const place = (h: string) => (Math.min(FIN, Math.max(DEBUT, minutes(h))) - DEBUT) / (FIN - DEBUT)
 const pct = (x: number) => `${(x * 100).toFixed(3)}%`
 const journee = (o: Occupation) => o.debut === "00:00" && o.fin === "24:00"
+const enHeure = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`
 
-export function GrilleSalles({ occupations, heure, langue, dateLongue }: {
+/** Ce qu'une case de la Grille donne à la feuille « Réserver » (SA11). */
+export type MomentCase = { salle: SalleId; debut: string; fin: string }
+
+/** La plage d'un glisser, de `y0` à `y1` (px depuis 8:00) : les quarts d'heure touchés, 15 min au moins, 8:00 – 22:00. */
+function plageGlissee(y0: number, y1: number): { debut: number; fin: number } {
+  const m = (y: number) => Math.min(FIN - DEBUT, Math.max(0, (y / H) * 60))
+  const debut = Math.floor(Math.min(m(y0), m(y1)) / 15) * 15
+  const fin = Math.max(debut + 15, Math.ceil(Math.max(m(y0), m(y1)) / 15) * 15)
+  return { debut: DEBUT + Math.min(debut, FIN - DEBUT - 15), fin: DEBUT + Math.min(fin, FIN - DEBUT) }
+}
+
+export function GrilleSalles({ occupations, heure, ouvrir, langue, dateLongue }: {
   occupations: Occupation[]
+  /** Une case ouvre la feuille « Réserver » (SA11) ; null sans droit ou un jour passé. */
+  ouvrir: ((m: MomentCase) => void) | null
   /** Le repère (« HH:MM ») : une ligne en travers de la grille. */
   heure: string
   langue: Langue
@@ -43,9 +61,25 @@ export function GrilleSalles({ occupations, heure, langue, dateLongue }: {
   const [detail, setDetail] = useState<Occupation | null>(null)
   const repere = minutes(heure) >= DEBUT && minutes(heure) <= FIN ? place(heure) : null
   const hauteur = (FIN - DEBUT) / 60 * H
+  const grille = useRef<HTMLElement>(null)
+  // Le glisser en cours (souris, trackpad, stylet) et la plage qu'il dessine.
+  const geste = useRef<{ salle: SalleId; haut: number; y0: number; glisse: boolean } | null>(null)
+  const finDuGlisser = useRef(0)
+  const [plage, setPlage] = useState<{ salle: SalleId; debut: number; fin: number } | null>(null)
+  // La case dans l'ordre de tabulation : d'abord celle du repère, dans la première colonne.
+  const [focus, setFocus] = useState(() => ({ col: 0, h: repere === null ? 0 : Math.min(HEURES.length - 2, Math.floor(minutes(heure) / 60) - 8) }))
+
+  const fleches = (e: React.KeyboardEvent, col: number, h: number) => {
+    const pas = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key]
+    if (!pas) return
+    e.preventDefault()
+    const c = Math.min(SALLES.length - 1, Math.max(0, col + pas[0]))
+    const i = Math.min(HEURES.length - 2, Math.max(0, h + pas[1]))
+    grille.current?.querySelector<HTMLElement>(`[data-colonne="${SALLES[c].id}"] [data-case="${HEURES[i]}"]`)?.focus()
+  }
 
   return (
-    <section data-grille-salles aria-label={t("salles.grille")} className="carte-groupe overflow-hidden">
+    <section ref={grille} data-grille-salles aria-label={t("salles.grille")} className="carte-groupe overflow-hidden">
       <div data-defile className="overflow-x-auto overscroll-x-contain">
         <div className="flex w-full min-w-max lg:min-w-0">
           {/* Colonne des heures, figée au défilement horizontal. */}
@@ -65,7 +99,7 @@ export function GrilleSalles({ occupations, heure, langue, dateLongue }: {
             </div>
           </div>
 
-          {SALLES.map((s) => {
+          {SALLES.map((s, c) => {
             const ici = occupationsDe(occupations, s.id)
             return (
               <div key={s.id} data-colonne={s.id} className="min-w-[6.5rem] flex-1 border-r border-border/60 last:border-r-0 lg:min-w-0">
@@ -76,9 +110,55 @@ export function GrilleSalles({ occupations, heure, langue, dateLongue }: {
                 <div className="py-3">
                   <div
                     data-corps
-                    className="relative"
+                    className="relative select-none"
                     style={{ height: hauteur, backgroundImage: `repeating-linear-gradient(to bottom, hsl(var(--border) / .6) 0 1px, transparent 1px ${H}px)` }}
+                    // SA11 : glisser sur les cases (pas au toucher, qui défile) ; la plage suit le pointeur.
+                    onPointerDown={(e) => {
+                      if (!ouvrir || e.pointerType === "touch" || e.button !== 0 || !(e.target as HTMLElement).closest("[data-case]")) return
+                      geste.current = { salle: s.id, haut: e.currentTarget.getBoundingClientRect().top, y0: e.clientY, glisse: false }
+                    }}
+                    onPointerMove={(e) => {
+                      const g = geste.current
+                      if (!g || g.salle !== s.id || (!g.glisse && Math.abs(e.clientY - g.y0) < 6)) return
+                      if (!g.glisse) {
+                        g.glisse = true
+                        e.currentTarget.setPointerCapture(e.pointerId)
+                      }
+                      setPlage({ salle: s.id, ...plageGlissee(g.y0 - g.haut, e.clientY - g.haut) })
+                    }}
+                    onPointerUp={(e) => {
+                      const g = geste.current
+                      geste.current = null
+                      if (!g?.glisse || !ouvrir) return
+                      const p = plageGlissee(g.y0 - g.haut, e.clientY - g.haut)
+                      finDuGlisser.current = Date.now()
+                      setPlage(null)
+                      ouvrir({ salle: s.id, debut: enHeure(p.debut), fin: enHeure(p.fin) })
+                    }}
+                    onPointerCancel={() => {
+                      geste.current = null
+                      setPlage(null)
+                    }}
                   >
+                    {ouvrir && HEURES.slice(0, -1).map((h, i) => (
+                      <button
+                        key={h}
+                        type="button"
+                        data-case={h}
+                        data-salle={s.id}
+                        tabIndex={focus.col === c && focus.h === i ? 0 : -1}
+                        aria-label={t("salles.case", { salle: s.nom, heure: h })}
+                        onFocus={() => setFocus({ col: c, h: i })}
+                        onKeyDown={(e) => fleches(e, c, i)}
+                        onClick={() => {
+                          // Le clic qui suit un glisser n'ouvre pas une seconde fois.
+                          if (Date.now() - finDuGlisser.current < 400) return
+                          ouvrir({ salle: s.id, debut: h, fin: HEURES[i + 1] })
+                        }}
+                        className="absolute inset-x-0 cursor-pointer transition-colors hover:bg-foreground/[.04] active:bg-foreground/[.07] focus-visible:z-[6] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                        style={{ top: i * H, height: H }}
+                      />
+                    ))}
                     {ici.map((o, i) => {
                       const haut = place(journee(o) ? "08:00" : o.debut)
                       const bas = place(journee(o) ? "22:00" : o.fin)
@@ -115,6 +195,16 @@ export function GrilleSalles({ occupations, heure, langue, dateLongue }: {
                         </button>
                       )
                     })}
+                    {plage?.salle === s.id && (
+                      <div
+                        aria-hidden
+                        data-plage
+                        className="pointer-events-none absolute inset-x-0.5 z-20 rounded-md border-2 border-dashed border-primary bg-primary/10 px-1.5 py-0.5 text-[11px] font-semibold leading-tight tabular-nums text-foreground"
+                        style={{ top: pct((plage.debut - DEBUT) / (FIN - DEBUT)), height: pct((plage.fin - plage.debut) / (FIN - DEBUT)) }}
+                      >
+                        {enHeure(plage.debut)} – {enHeure(plage.fin)}
+                      </div>
+                    )}
                     {repere !== null && <div aria-hidden data-repere-ligne className="pointer-events-none absolute inset-x-0 z-[5] h-px bg-foreground/70" style={{ top: pct(repere) }} />}
                   </div>
                 </div>
