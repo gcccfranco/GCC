@@ -156,7 +156,10 @@ export function pageAncree(
   prev: number,
   lecture: { page: number; block: number | undefined; blocks?: PerformanceBlock[]; ancre?: AncreLecture | null },
 ): number {
-  const pageDe = (i: number) => computed.findIndex((p) => p.header === i || p.cols.some((c) => c.includes(i)));
+  // A11 : un scan certifié en tranches met le même bloc sur plusieurs pages d'écran ; la page d'avant, si elle le
+  // porte encore, l'emporte sur la première.
+  const porte = (p: PerfPage | undefined, i: number) => !!p && (p.header === i || p.cols.some((c) => c.includes(i)));
+  const pageDe = (i: number) => (porte(computed[prev], i) ? prev : computed.findIndex((p) => porte(p, i)));
   const { page, block, blocks: lus, ancre } = lecture;
   let anchored = -1;
   if (page === prev && block !== undefined) {

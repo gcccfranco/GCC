@@ -156,6 +156,16 @@ indisponible). » et « Réessayer » ; l'état vide reste pour une lecture réu
 
 R2 (repères d'un scan) est A2 ; R5 (barre selon les droits) et R6 (couleur du bouton) sont en partie B.
 
+### A11. Mode louange au téléphone : page de scan et pastille « Ensuite » (réponse de Timothée du 15/11/2026, relayée par le pilote : « Les deux »)
+
+- **(a) Rallumer « Idées d'harmonie » ramène à la page d'avant d'un scan.** Cause prouvée : un scan certifié découpé
+  en tranches donne plusieurs pages d'écran au même bloc (`splitSheetPages`, `pagination.ts`) ; `pageAncree`
+  ancrait la lecture sur la première page qui porte le bloc. Règle : si la page lue porte encore le bloc après la
+  repagination, on y reste. Test : `nettoyage-louange-pures.spec.ts`, « A11 » (rouge sur l'ancien code).
+- **(b) « Ensuite » à 42,4 px au téléphone** (page réduite par `transform: scale`, `PageTexte.tsx`). Règle : une page
+  réduite donne à la pastille la hauteur qui fait 44 px à l'écran ; aucune autre taille ne change ; le petit carré
+  de tonalité (CI-9) reste. Tests : `mode-louange-forscore:270`, `mode-louange-colonnes:363` au téléphone.
+
 ## Partie B : les harmonisations (sans planche)
 
 Timothée, 14/11 : « fait le sans la planche ». La règle marquée **retenue** est une décision déléguée (pilote, 14/11),
@@ -348,6 +358,7 @@ commitée le 14/11 au soir), une seule à la fois dans ce fichier. Les tranches 
 | CI-18 | B4 ter, panneau d'accord du côté libre | `AccordsProvider.tsx` | non | B4 ter |
 | CI-19 | A10, profil illisible ≠ profil absent | `users.ts`, `EcransAccesListe.tsx`, `setlists/page.tsx`, `CreateSetlistClient.tsx`, `profil/page.tsx`, `login/page.tsx`, `SectionMesServices.tsx`, locales | non | A10 |
 | CI-21 | A10 bis, liste illisible ≠ liste vide | `firebase/setlists.ts` (`strict`), `setlists/page.tsx`, locales | non | A10 bis |
+| CI-20 | A11, page de scan gardée et « Ensuite » à 44 px (téléphone) | `pagination.ts` (`pageAncree`), `PageTexte.tsx` | non | A11 |
 
 Tests : ceux de la section de chaque défaut ou harmonisation ; agencement dans `SPECS_GRAND_ECRAN` (cinq projets) ;
 parcours du culte pour toute tranche à « oui ». CI-1, CI-5 et CI-10 à CI-17 ne touchent pas le mode louange
@@ -654,3 +665,20 @@ centre tombe sur un accord).
   `louange-sections-uniques:358` à 1 440 px. Regard : captures Playwright avant / après aux cinq tailles (artefact
   privé), un `regard`, une reprise ; **non vu à l'écran réel** (base Firestore fermée). Relevé hors tranche : le rappel
   de `DemiPage.tsx` garde ses capitales.
+
+- **CI-20 (A11), 16/11/2026, validée par Timothée (« Validé, et go CI-22 »).** (a) `pageAncree` garde la page lue si elle porte encore le
+  bloc ancré (scan certifié en tranches : même bloc sur plusieurs pages d'écran) ; test unitaire « A11 » rouge sur
+  l'ancien code, vert après. (b) Page réduite (`page.scale < 1`) : la pastille « Ensuite » reçoit une hauteur
+  minimale de 44,5 px / échelle (`PageTexte.tsx`), 44,5 px au téléphone, inchangée ailleurs (44,0 px aux quatre
+  autres tailles), carré de tonalité gardé. Le workflow `tranche` n'a pas pu tourner (agents du dépôt introuvables :
+  session ouverte hors du dossier) : code et tests faits par l'orchestratrice. Tests : `nettoyage-louange-pures`,
+  `louange-harmonie`, `mode-louange-forscore`, `mode-louange-colonnes`, `louange-demi-page`, parcours du culte, cinq
+  projets : 625 passés en 28,3 min, puis reprise de 1,4 min (4 tests, 10 passages) ; rouges déjà connus :
+  `louange-demi-page:157` (cinq projets), `mode-louange-forscore:224` (ordinateur) ; instables sous charge, verts
+  2 fois sur 2 en reprise : `mode-louange-forscore:224` (tablette paysage) et `:1218` (1 440 px) ;
+  `louange-harmonie` A9 vert au téléphone. Regard : captures Playwright avant / après aux cinq tailles (artefact
+  privé), regardées par l'orchestratrice (`regard` indisponible pour la même raison) ; le retour à la page 1 ne
+  s'est pas reproduit sur la capture « avant » (défaut intermittent, prouvé par le test unitaire) ; **non vu à
+  l'écran réel** (base Firestore fermée). Relevé hors tranche : au téléphone, l'aide « Points : déjà joué… » de
+  la première ouverture recouvre la pastille « Ensuite ».
+
