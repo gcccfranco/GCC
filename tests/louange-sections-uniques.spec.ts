@@ -796,6 +796,10 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await basculerAnnoter(page);
     await expect.poll(boite, { message: "le trait est lu sur la page 2" }).not.toBeNull();
     const avant = (await boite())!;
+    // A12, CI-22 : la page remonte quand la barre est cachée (titre, structure et tonalité sur une ligne) : le trait se
+    // compare à sa section, pas à l'écran.
+    const hautSection = () => onStage(page, "[data-section]").first().evaluate((e) => e.getBoundingClientRect().top);
+    const sectionAvant = await hautSection();
     // Le trait est sous le rappel, dans la page : il est sur les sections, pas sur la rangée.
     const basRappel = await onStage(page, "[data-rappel]").evaluate((el) => el.getBoundingClientRect().bottom);
     expect(avant[1]).toBeGreaterThan(basRappel);
@@ -809,7 +813,8 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await attendreCompteur(page, /^2 \//);
     await expect.poll(boite, { message: "le trait revient sur la page 2" }).not.toBeNull();
     const apres = (await boite())!;
-    avant.forEach((v, i) => expect(Math.abs(v - apres[i]), `bord ${i} du trait`).toBeLessThanOrEqual(2));
+    const dy = (await hautSection()) - sectionAvant;
+    avant.forEach((v, i) => expect(Math.abs(v + (i % 2 ? dy : 0) - apres[i]), `bord ${i} du trait`).toBeLessThanOrEqual(2));
     // Pas sur la page 1.
     await page.keyboard.press("ArrowLeft");
     await attendreCompteur(page, /^1 \//);

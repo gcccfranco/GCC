@@ -178,6 +178,16 @@ Réponses de Timothée du 16/11/2026 (boîte de questions de la session CI-20) :
 - **(b) Scan 简谱 certifié** : la tête de feuille montre la structure (ronds) et le tempo, pas le titre. Règle : le
   titre du chant (chinois pour un chant chinois) en une ligne **au-dessus** des ronds de structure, casse normale
   (CI-9) ; la partition descend d'autant (repagination des tranches acceptée).
+- **Révision de (a) par Timothée (16/11/2026, sur les captures de CI-22)** : « C'est pas bien aligné », puis « pour les
+  chants français c'est pas bien aligné sur tous les responsives, la gamme et le titre et la structure sont pas
+  alignés », et à la question posée, « Une ligne en haut ». Règle retenue : page 2 et suivantes avec rappel, barre
+  escamotée, **titre, structure et carré de tonalité sur une seule ligne, tout en haut** (le rappel porte le titre à
+  toutes les tailles et le carré à droite, centrés sur la première ligne des ronds) ; la bande gardée se replie : la
+  page remonte barre escamotée et redescend sous la barre revenue (la pagination ne change pas ; les traits accrochés
+  suivent le texte). Page sans rappel : titre courant et carré sur une même rangée dans la bande.
+- **Complément de (b) par Timothée (16/11/2026)** : « Pour les jianpu mets le carré avec la gamme sur la partition
+  aussi » : le carré de tonalité est dans la tête de feuille de tout scan certifié, transposé ou non (« gravé en E »
+  dessous seulement quand il est transposé) ; revient sur la règle B3 (CI-9) qui ne le mettait qu'au scan transposé.
 - Tests : téléphone et quatre autres projets ; page 2 barre escamotée, titre visible dans la bande et haut de la
   page inchangé (même `top` du premier bloc barre affichée et escamotée) ; scan certifié (`恒久恒久以前`), titre
   visible au-dessus du premier rond ; parcours du culte.
@@ -699,3 +709,21 @@ centre tombe sur un accord).
   l'écran réel** (base Firestore fermée). Relevé hors tranche : au téléphone, l'aide « Points : déjà joué… » de
   la première ouverture recouvre la pastille « Ensuite ».
 
+- **CI-22 (A12), 16/11/2026, validée par Timothée (« validé »).** (a) Page 2 et suivantes d'un chant en texte, barre
+  escamotée : titre, structure (rappel) et carré de tonalité sur une seule ligne, tout en haut, centrés sur la
+  première ligne des ronds (26 px, 30 dès 640 px) ; le titre, tronqué au besoin, est visible à toutes les tailles ; la
+  bande gardée (A7) se replie, la page redescend sous la barre revenue (décision de Timothée « Une ligne en haut ») ;
+  page sans rappel : titre courant et carré sur une rangée dans la bande (`RappelRangee`, `rangeeUnique`,
+  `PerformanceMode.tsx`). (b) Scan certifié : titre du chant en une ligne au-dessus des ronds, carré de tonalité sur
+  toute partition (`TeteFeuille.tsx`, `PageScan.tsx`). Tests : `louange-parcours-culte` « A12 » et
+  `louange-jianpu-tranches` « A12 » (rouges sur l'ancien code, 5 projets) ; adaptés à la règle : `louange-jianpu-tranches`
+  :436 (la tête grandit) et le test « pas de « gravé en » », `louange-barre-titre` B3 (carré sur la ligne du rappel,
+  carré de tête sur un scan non transposé), `louange-sections-uniques:766` (trait comparé à sa section),
+  `mode-louange-forscore:1051` (la pastille bouge avec la page). Specs voisines (parcours, barre-titre,
+  sections-uniques, forscore, colonnes, jianpu-tranches ; `jianpu-integration` à part, 233 verts) : trois passes
+  de 45, 16 et 46 min, plus des reprises ciblées ; restent les déjà rouges (`louange-barre-titre:142` et `:285` hors
+  téléphone, `mode-louange-forscore:224` ordinateur et tablette paysage, `louange-sections-uniques:358` à 1 440 px) ;
+  instables, verts seuls : `mode-louange-forscore:198`, `:224` au téléphone et à 1 440 px, `:239`, `:557`, `:893`, `louange-sections-uniques:276`,
+  `louange-barre-titre:299` à 1 440 px, le parcours du culte au téléphone. Regard : captures Playwright aux cinq
+  tailles, **non vu à l'écran réel** (base Firestore fermée). Relevé hors tranche : demande de Timothée (16/11) de
+  revoir la taille des encadrés de sections pour afficher plus de sections par page (planche puis spec).

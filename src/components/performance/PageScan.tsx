@@ -111,6 +111,7 @@ export function PageScan({
     return (
       <div className="flex h-full flex-col">
         <TeteFeuille
+          titre={enTete.songTitle}
           hauteur={tete.hauteur}
           encoche={tete.encoche}
           steps={sansTransitions(enTete.steps, showTransitions)}

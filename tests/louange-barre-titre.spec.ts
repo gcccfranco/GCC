@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, ouvrirMenu, ouvrirReglages } from "./helpers/louange";
+import { attendreMiseEnPage, onStage, ouvrirMenu, ouvrirReglages } from "./helpers/louange";
 import {
   COULEUR_DEFAUT, FOND_CLAIR, FOND_SOMBRE, TEINTES, contraste, garderContraste, hexVersHsl, hslVersHex,
 } from "../src/lib/performance/couleurIcones";
@@ -615,7 +615,7 @@ test("scan 简谱, dernière page : la pastille « Ensuite » ne recouvre pas le
 
 // ─── B3 (CI-9) : tonalité et titre d'une seule forme ─────────────────────────
 
-test("B3 : titre en casse normale, tonalité en carré ; armure flottante à 24 px ; pas de clé sur un scan non transposé ; « Ensuite » avec le carré", async ({ page }) => {
+test("B3 : titre en casse normale, tonalité en carré ; armure flottante à 24 px ; « Ensuite » avec le carré", async ({ page }) => {
   test.setTimeout(90_000);
   await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5")); // A+ 150 % : le chant tient sur plusieurs pages à 1 440 px aussi
   await ouvrir(page);
@@ -633,8 +633,21 @@ test("B3 : titre en casse normale, tonalité en carré ; armure flottante à 24 
   }
   await expect(flottante).toBeVisible();
   const [b, v] = [await flottante.boundingBox(), page.viewportSize()!];
-  expect(Math.abs(b!.y - 24), "24 px du haut").toBeLessThanOrEqual(2);
-  expect(Math.abs(v.width - (b!.x + b!.width) - 24), "24 px de la droite").toBeLessThanOrEqual(2);
+  const rangee = onStage(page, "[data-rappel]");
+  if (await rangee.count()) {
+    // A12, CI-22 (Timothée, 16/11) : page avec rappel, le carré est au bout de la ligne du rappel (titre, structure),
+    // centré sur elle, tout en haut, aligné sur le bord droit de la page.
+    const r = (await rangee.boundingBox())!;
+    const bord = await page.evaluate(() => Math.max(...[...document.querySelectorAll("[data-performance-mode] [data-section]")]
+      .filter((e) => !e.closest("[aria-hidden=true]") && e.getBoundingClientRect().height > 0).map((e) => e.getBoundingClientRect().right)));
+    const titre = (await rangee.locator("[data-rappel-titre]").boundingBox())!;
+    expect(Math.abs(b!.y + b!.height / 2 - (titre.y + titre.height / 2)), "centré sur la ligne du rappel").toBeLessThanOrEqual(2);
+    expect(Math.abs(b!.x + b!.width - bord), "aligné sur le bord droit de la page").toBeLessThanOrEqual(2);
+    expect(r.y, "tout en haut").toBeLessThan(60);
+  } else {
+    expect(Math.abs(b!.y - 24), "24 px du haut").toBeLessThanOrEqual(2);
+    expect(Math.abs(v.width - (b!.x + b!.width) - 24), "24 px de la droite").toBeLessThanOrEqual(2);
+  }
   // (4) Dernière page du chant : « Ensuite » porte le carré, sans « · ».
   const suivant = page.locator("[data-performance-mode] [data-suivant]");
   for (let i = 0; i < 6 && !(await suivant.count()); i++) {
@@ -646,7 +659,7 @@ test("B3 : titre en casse normale, tonalité en carré ; armure flottante à 24 
   expect(await suivant.first().innerText()).not.toContain("·");
 });
 
-test("B3 : page de scan 简谱 non transposé, barre cachée : ni armure flottante ni clé de tête", async ({ page }) => {
+test("B3 : page de scan 简谱 non transposé, barre cachée : pas d'armure flottante, la tonalité une fois, dans la tête (A12)", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrir(page, { slugs: ["一生爱你", "abba-pere"], zh: true });
   await page.waitForTimeout(400);
@@ -656,5 +669,6 @@ test("B3 : page de scan 简谱 non transposé, barre cachée : ni armure flottan
   // On est bien sur une page de scan (sinon le test ne prouverait rien).
   await expect(page.locator("[data-performance-mode] [data-jianpu-fenetre]:not([aria-hidden=true] *)").first()).toBeVisible();
   await expect(page.locator("[data-armure-flottante]")).toHaveCount(0);
-  await expect(page.locator("[data-performance-mode] [data-cle-tete]")).toHaveCount(0);
+  // A12, CI-22 (Timothée, 16/11) : le carré de tonalité sur la partition aussi, non transposée comprise.
+  await expect(page.locator("[data-performance-mode] [data-tete-feuille]:not([aria-hidden=true] *) [data-cle-tete]")).toHaveCount(1);
 });

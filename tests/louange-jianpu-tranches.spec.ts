@@ -446,8 +446,9 @@ test("tête de feuille : sur chaque page d'écran de scan, de la hauteur de la b
     const t = await lireTete(page);
     if (g) {
       expect(t.present, `écran ${n} : tête de feuille`).toBe(true);
-      expect(Math.abs(t.hauteur - t.barre), `écran ${n} : tête ${t.hauteur} px, barre ${t.barre} px`).toBeLessThanOrEqual(1);
-      expect(t.fenetreHaut, `écran ${n} : le scan commence sous la tête`).toBeGreaterThanOrEqual(t.barre - 1);
+      // A12, CI-22 : le titre au-dessus des ronds fait grandir la tête au-delà de la barre ; la partition descend d'autant.
+      expect(t.hauteur, `écran ${n} : tête ${t.hauteur} px, barre ${t.barre} px`).toBeGreaterThanOrEqual(t.barre - 1);
+      expect(t.fenetreHaut, `écran ${n} : le scan commence sous la tête`).toBeGreaterThanOrEqual(t.hauteur - 1);
       expect(g.fen.bottom, `écran ${n} : la page entière, tête comprise, tient dans l'écran`).toBeLessThanOrEqual(g.innerH + 1);
       for (const s of g.suivants) expect(chevauche(s, g.fen), `écran ${n} : « Ensuite » ne recouvre pas le scan`).toBe(false);
     } else {
@@ -485,13 +486,14 @@ test("tête de feuille, interface en 中文 : « 原谱 E 调 »", async ({ page
   expect(t.grave).toBe("原谱 E 调");
 });
 
-test("tête de feuille : pas de « gravé en » quand la tonalité est celle du scan ; « ×2 » dans le repère, Dp en tirets", async ({ page }) => {
+test("tête de feuille : le carré de tonalité mais pas de « gravé en » quand la tonalité est celle du scan ; « ×2 » dans le repère, Dp en tirets", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouange(page, { chants: [UN, FR], surcharge: { [UN]: UN_DP } });
   await attendrePages(page);
   const t = await lireTete(page);
-  expect(t.cle, "scan non transposé : pas de clé").toBe("");
-  expect(await onStage(page, "[data-tete-feuille] [data-cle-tete]").count()).toBe(0);
+  // A12, CI-22 (Timothée, 16/11 : « mets le carré avec la gamme sur la partition aussi ») : le carré sur toute partition.
+  expect(t.cle, "scan non transposé : le carré de sa tonalité").toContain("E");
+  expect(await onStage(page, "[data-tete-feuille] [data-cle-tete]").count()).toBe(1);
   expect(t.grave).toBe("");
   const tete = onStage(page, "[data-tete-feuille]");
   await expect(tete.locator("[data-repeat]")).toHaveText("×2");
@@ -736,4 +738,28 @@ test("un chant français sans scan est inchangé : ni fenêtre, ni moitié, ni p
   await expect(onStage(page, "[data-jianpu-fenetre]")).toHaveCount(0);
   await expect(onStage(page, "[data-jianpu-moitie]")).toHaveCount(0);
   await expect(onStage(page, "[data-pastille-tourne]")).toHaveCount(0);
+});
+
+// A12, CI-22 (docs/spec-corrections-interface.md) : barre escamotée, la tête de feuille d'un scan certifié porte le titre
+// du chant (chinois, casse normale) en une ligne au-dessus des ronds de structure ; la partition commence dessous.
+test("A12 : tête de feuille, titre du chant en une ligne au-dessus des ronds (恒久恒久以前)", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouange(page, { chants: [UNE, FR] });
+  await attendrePages(page);
+  await fermerBarre(page);
+  const tete = onStage(page, "[data-tete-feuille]");
+  const titre = tete.locator("[data-titre-tete]");
+  await expect(titre).toBeVisible();
+  await expect(titre).toHaveText(UNE);
+  const m = await titre.evaluate((e) => {
+    const r = e.getBoundingClientRect();
+    const tete = e.closest("[data-tete-feuille]")!;
+    const rond = tete.querySelector("[data-repere-tete]")!.getBoundingClientRect();
+    const f = Array.from(document.querySelectorAll("[data-performance-mode] [data-jianpu-fenetre]")).find((x) => !x.closest("[aria-hidden=true]"))!;
+    return { bas: r.bottom, lignes: r.height / parseFloat(getComputedStyle(e).lineHeight), rond: rond.top, scan: f.getBoundingClientRect().top, transforme: getComputedStyle(e).textTransform };
+  });
+  expect(m.lignes, "une ligne").toBeLessThan(1.5);
+  expect(m.bas, "au-dessus des ronds").toBeLessThanOrEqual(m.rond + 0.5);
+  expect(m.scan, "la partition sous le titre").toBeGreaterThanOrEqual(m.bas);
+  expect(m.transforme).toBe("none");
 });

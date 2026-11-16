@@ -354,15 +354,21 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
 const RAPPEL_RESERVE = 50;
 /** Rappel de structure d'une page 2 ou suivante (Sections uniques) : titre du chant
  *  en tête dès 640 px, puis les pastilles ; sous 640 px, les seules pleines. */
-function RappelRangee({ titre, steps, pleines, rappel }: { titre?: string; steps: SectionOccurrence[]; pleines: ReadonlySet<string>; rappel: "joue" | "unique" }) {
+function RappelRangee({ titre, steps, pleines, rappel, cle }: { titre?: string; steps: SectionOccurrence[]; pleines: ReadonlySet<string>; rappel: "joue" | "unique"; cle?: React.ReactNode }) {
+  // A12, CI-22 : barre escamotée, la rangée porte aussi le carré de tonalité (`cle`) à droite ; titre, structure et
+  // carré sur une seule ligne, centrés, le titre visible à toutes les tailles.
   return (
     <div className="flex items-start gap-3">
       {titre && (
-        <span data-rappel-titre className="hidden max-w-[16rem] shrink-0 truncate text-[13px] font-semibold leading-[30px] text-muted-foreground sm:block">
+        // Sur une ligne, c'est le titre qui cède la place (tronqué, au moins 5 em), puis la structure passe à la ligne.
+        <span data-rappel-titre className={`${cle ? "block min-w-[5em] shrink-[8] leading-[26px] sm:leading-[30px]" : "hidden shrink-0 leading-[30px] sm:block"} max-w-[16rem] truncate text-[13px] font-semibold text-muted-foreground`}>
           {titre}
         </span>
       )}
-      <StructureStrip className="min-w-0 flex-1" steps={steps} compacte pleines={pleines} rappel={rappel} />
+      <StructureStrip className={cle ? "min-w-0 shrink" : "min-w-0 flex-1"} steps={steps} compacte pleines={pleines} rappel={rappel} />
+      {/* Centré sur la première ligne de la rangée (la hauteur des ronds : 26 px, 30 dès 640 px), même si la structure
+          passe à la ligne ; le titre a la même hauteur de ligne. */}
+      {cle && <div className="ml-auto flex h-[26px] shrink-0 items-center sm:h-[30px]">{cle}</div>}
     </div>
   );
 }
@@ -1995,6 +2001,11 @@ export function PerformanceMode({
   ) : undefined;
   // Barre cachée : l'armure flotte dans le coin seulement quand l'en-tête du chant n'est pas sur la page affichée.
   const armureFlottante = !showChrome && !!armure && !!currentEntry && !currentPageIndices.includes(currentEntry.index) && !currentPageIndices.some((i) => blocks[i]?.kind === "jianpu-sheet");
+  // A12, CI-22 : barre escamotée, page 2 et suivantes d'un chant en texte, la bande gardée en haut (A7) montre le titre
+  // du chant en titre courant, sur la rangée du carré de tonalité flottant et centré sur lui (la tonalité une seule fois).
+  // Page avec rappel de structure (Timothée, 16/11) : titre, structure et carré sur une seule ligne, le rappel, tout en
+  // haut ; la bande gardée se replie (la page remonte, et redescend sous la barre revenue). Voir `rangeeUnique`.
+  const titreCourant = !showChrome && reserveBarre > 0 && !!currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index && !currentPageIndices.some((i) => blocks[i]?.kind === "jianpu-sheet") ? currentEntry.block : null;
   const aPinyin = blocks.some((b) => b.kind === "section" && b.showPinyin);
   // Sous md la barre n'a que Setlist, Repères, Outils, Affichage : Annoter et le tempo passent dans Outils.
   const telephone = ecran.largeur < 768;
@@ -2032,6 +2043,8 @@ export function PerformanceMode({
     (affichageVu === "unique" || affichageVu === "played") && !fitPage && currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index
       ? currentEntry.block.steps
       : undefined;
+  // A12, CI-22 : barre escamotée, page avec rappel, hors demi-page : une seule ligne (voir `titreCourant`).
+  const rangeeUnique = !!titreCourant && !!rappel && !demiActif;
   const sectionsDeLaPage = new Set(
     currentPageIndices.flatMap((i) => {
       const b = blocks[i];
@@ -2373,13 +2386,23 @@ export function PerformanceMode({
               page={page}
               rappel={rappel}
               rappelRef={rappelRef}
-              rappelTrame={rappel ? <RappelRangee titre={currentEntry?.block.title} steps={rappel} pleines={sectionsDeLaPage} rappel={affichageVu === "played" ? "joue" : "unique"} /> : null}
+              rappelTrame={rappel ? (
+                <RappelRangee
+                  titre={currentEntry?.block.title}
+                  steps={rappel}
+                  pleines={sectionsDeLaPage}
+                  rappel={affichageVu === "played" ? "joue" : "unique"}
+                  cle={!rangeeUnique ? undefined : armure ? (
+                    <div data-armure-flottante className="shrink-0" onPointerDown={(e) => e.stopPropagation()} onPointerUp={(e) => e.stopPropagation()}>{armure}</div>
+                  ) : <span aria-hidden />}
+                />
+              ) : null}
               affichageVu={affichageVu}
               currentPage={currentPage}
               scaledBodyRef={scaledBodyRef}
               renderBlock={renderBlock}
               contentPadding={contentPadding}
-              reserveHaut={currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index ? reserveBarre : 0}
+              reserveHaut={currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index && !rangeeUnique ? reserveBarre : 0}
               pastille={isLastPageOfSong && nextEntry && !colonneScan ? pastilleSuivant(`pointer-events-auto max-w-full border-border/60 ${pastilleCouverte ? "invisible" : ""}`, refPastilleFlux, pastilleCouverte) : null}
             />
             </ConteneurCoupure>
@@ -2387,15 +2410,29 @@ export function PerformanceMode({
         })()}
       </div>
 
-      {armureFlottante && (
+      {(armureFlottante || titreCourant) && !rangeeUnique && (
         <div
-          data-armure-flottante
-          className="absolute"
-          style={{ zIndex: 25, top: "calc(var(--sat, 0px) + 24px)", right: "calc(var(--sar, 0px) + 24px)" }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
+          className="pointer-events-none absolute flex items-center justify-end gap-3"
+          style={{ zIndex: 25, top: "calc(var(--sat, 0px) + 24px)", left: "calc(var(--sal, 0px) + 24px)", right: "calc(var(--sar, 0px) + 24px)" }}
         >
-          {armure}
+          {titreCourant && (
+            <p
+              data-titre-courant
+              className={`min-w-0 flex-1 truncate text-[15px] font-semibold leading-tight text-muted-foreground ${titreCourant.language === "zh" ? KaiTiFont.className : gelasio_font.className}`}
+            >
+              {titreCourant.title}
+            </p>
+          )}
+          {armureFlottante && (
+            <div
+              data-armure-flottante
+              className="pointer-events-auto"
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+            >
+              {armure}
+            </div>
+          )}
         </div>
       )}
 

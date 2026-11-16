@@ -1061,6 +1061,11 @@ test("barre masquée à l'ouverture : la pastille « Ensuite » est dans le flux
   }).toPass({ timeout: 20_000 });
   const hauteurEcran = page.viewportSize()!.height;
   const bas = (await suivant.boundingBox())!;
+  // A12, CI-22 : page avec rappel, la page remonte barre cachée et redescend sous la barre revenue ; la pastille du flux
+  // bouge avec elle. On compare donc sa place à celle de la page (première section).
+  const hautPage = () => page.evaluate(() => Math.min(...[...document.querySelectorAll("[data-performance-mode] [data-section]")]
+    .filter((e) => !e.closest("[aria-hidden=true]") && e.getBoundingClientRect().height > 0).map((e) => e.getBoundingClientRect().top)));
+  const pageAvant = await hautPage();
   expect(bas.y + bas.height).toBeLessThanOrEqual(hauteurEcran + 0.5);
   // Dans le flux (dimanche-11) : aucun bloc de la page ne passe sous la pastille.
   const intersections = await page.evaluate(() => {
@@ -1078,7 +1083,8 @@ test("barre masquée à l'ouverture : la pastille « Ensuite » est dans le flux
   // couvre pas (elle ne bouge pas), sinon posée au-dessus de la barre, comme avant dimanche-11.
   await expect(suivant).toHaveCount(1);
   const apres = (await suivant.boundingBox())!;
-  if (bas.y + bas.height <= barreBasse.y + 0.5) expect(Math.abs(apres.y - bas.y)).toBeLessThan(1);
+  const glissement = (await hautPage()) - pageAvant;
+  if (bas.y + glissement + bas.height <= barreBasse.y + 0.5) expect(Math.abs(apres.y - bas.y - glissement)).toBeLessThan(1);
   expect(apres.y + apres.height).toBeLessThanOrEqual(barreBasse.y + 0.5);
   expect(erreurs).toEqual([]);
 });
