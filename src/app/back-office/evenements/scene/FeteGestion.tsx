@@ -244,13 +244,13 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     <PastilleEtat etat={etat} testId={testId}>{t(`planning.gestion.etats.${etat}`)}</PastilleEtat>
   )
 
-  /** « sam. 10–12, dim. 14–19 · 1 h · 4 familles ». */
+  /** « sam. 10–12, dim. 14–19 · 4 familles ». */
   function resumeSaison(): string {
     const plages = saison.plages.map((p: Plage) => `${t(`planning.saison.jourCourt.${p.jour}`)} ${heureCourte(p.debut)}–${heureCourte(p.fin)}`).join(", ")
     const qui = saison.quiAutorises.length === 0
       ? t("planning.gestion.toutMembre")
       : t("planning.gestion.familles", { count: famillesDe(saison.quiAutorises).length })
-    return [plages, t(`planning.saison.dureeCourte.${saison.duree}`), qui].join(" · ")
+    return [plages, qui].join(" · ")
   }
 
   // ─── La colonne de la fête ───────────────────────────────────────────────

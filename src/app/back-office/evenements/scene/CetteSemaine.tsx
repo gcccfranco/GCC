@@ -4,7 +4,7 @@
 // planche `v18-scene-a-coord-pendant-telephone`) : pendant la saison, les réservations de la
 // semaine à venir (la première qui a un jour réservable à partir d'aujourd'hui, Q12), en cartes
 // par jour ; chaque ligne dit le créneau, « Quoi · Qui · Réservé par », et porte le « ⋯ » des
-// membres (Déplacer, Modifier, Retirer). Une réservation hors grille de la semaine y est aussi,
+// membres (Déplacer, Modifier, Retirer). Une réservation hors des plages (AR22) y est aussi,
 // avec sa pastille. Le tableau de toute la saison reste « Toutes les réservations ».
 
 import { langueCourte } from "@/lib/utils/formatDate";

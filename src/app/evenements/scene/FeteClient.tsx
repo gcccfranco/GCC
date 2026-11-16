@@ -110,7 +110,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
   const vueOrdre = params.get("vue") === "ordre" && !!programme && etat !== "brouillon"
   const lance = !!programme && etat !== "brouillon"
   const avantOuverture = etat === "aucune" || etat === "brouillon" || etat === "bientot"
-  // La saison telle qu'elle est, ou telle qu'elle naîtra (Q7) : la durée de « Comment réserver ? ».
+  // La saison telle qu'elle est, ou telle qu'elle naîtra (Q7) : ses jours réservables.
   const saison = saisonDe(programme ?? reglagesRepris(passees[0] ?? null, fete, edition.annee))
   const jours = programme ? joursReservables(saison, jourJ) : []
   const creneaux = programme && charge?.pour === programme.id ? charge.creneaux : null
@@ -256,7 +256,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
       <div>
         <p className="text-base font-semibold">{t("planning.fete.commentReserver")}</p>
         <p className="text-sm text-muted-foreground">
-          {t("planning.fete.commentReserverTexte", { duree: t(`planning.saison.dureeCourte.${saison.duree}`) })}
+          {t("planning.fete.commentReserverTexte")}
         </p>
       </div>
     </div>
@@ -326,7 +326,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
         programme={programme} creneaux={creneaux} user={user} profile={profile} onChanged={reload}
         onConflict={(a, b) => reportConflict(programme.id, [a.id, b.id])}
       >
-        {(m) => disposer(<>{m.mes}{m.semaines}{m.autre}</>, vueOrdre ? ordreCourant : m.semaine)}
+        {(m) => disposer(<>{m.mes}{m.semaines}</>, vueOrdre ? ordreCourant : m.semaine)}
       </Entrainements>
     )
   }

@@ -13,20 +13,20 @@ import { useEffect, useId, useImperativeHandle, useRef, useState, type ReactNode
 import { useTranslation } from "react-i18next"
 import { Plus } from "lucide-react"
 import {
-  compteCreneaux, DATE, DUREES, erreursSaison, FAMILLES, famillesDe, joursDes, joursReservables, ORDRE_JOURS, PLAGES_DEFAUT,
+  DATE, erreursSaison, FAMILLES, famillesDe, joursDes, joursReservables, ORDRE_JOURS, PLAGES_DEFAUT,
   quiDesFamilles, saisonDe, triPlages, type Famille, type Saison,
 } from "@/lib/scene/saison"
 import type { Plage, Programme } from "@/types/programme"
 import { Button } from "@/components/ui/button"
 import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
-import { jourEnLettres, nomDuJour } from "./libelles"
+import { jourEnLettres } from "./libelles"
 
-type Champ = "jourJ" | "dates" | "jours" | "plages" | "duree" | "qui"
-export type SaisonPatch = Partial<Pick<Programme, "jourJ" | "debut" | "fin" | "plages" | "duree" | "quiAutorises">>
+type Champ = "jourJ" | "dates" | "jours" | "plages" | "qui"
+export type SaisonPatch = Partial<Pick<Programme, "jourJ" | "debut" | "fin" | "plages" | "quiAutorises">>
 
 /** Un réglage seul (P9, une feuille du téléphone) ; les jours et les plages vont ensemble. */
-export type ReglageSeul = "jourJ" | "dates" | "joursPlages" | "duree" | "qui"
+export type ReglageSeul = "jourJ" | "dates" | "joursPlages" | "qui"
 
 /** « Terminé » de la feuille du téléphone : enregistre la plage en cours d'édition, sauf une nouvelle plage laissée intacte ; faux si elle est refusée. */
 export type SaisonFormHandle = { terminer: () => boolean }
@@ -40,7 +40,6 @@ function difference(avant: Saison, apres: Saison): SaisonPatch {
   if (apres.debut !== avant.debut) patch.debut = apres.debut
   if (apres.fin !== avant.fin) patch.fin = apres.fin
   if (JSON.stringify(apres.plages) !== JSON.stringify(avant.plages)) patch.plages = apres.plages
-  if (apres.duree !== avant.duree) patch.duree = apres.duree
   if (JSON.stringify(apres.quiAutorises) !== JSON.stringify(avant.quiAutorises)) patch.quiAutorises = apres.quiAutorises
   return patch
 }
@@ -217,16 +216,13 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
     appliquer({ ...s, quiAutorises: quiDesFamilles(next) }, "qui")
   }
 
-  // Les aides (Q19) : premier jour réservable et fin ; créneaux par jour de la semaine.
+  // Les aides (Q19) : premier jour réservable et fin. La durée d'un créneau est sortie (docs/spec-salles.md, AR22).
   const jours = joursReservables(s, jourJ)
   const finParDefaut = programme.fin === undefined && s.fin === saisonDe(programme).fin
   const aideDates = jours.length === 0 ? undefined : [
     t("planning.gestion.premierJour", { date: jourEnLettres(jours[0], lang) }),
     finParDefaut ? t("planning.gestion.finParDefaut") : t("planning.gestion.dernierJour", { date: jourEnLettres(jours.at(-1)!, lang) }),
   ].join(" ")
-  const aideDuree = compteCreneaux(s, jourJ).parJour
-    .map(({ jour, creneaux }) => t("planning.gestion.creneauxDuJour", { jour: nomDuJour(jour, lang), count: creneaux }))
-    .join(" ") || undefined
 
   return (
     <section aria-label={t("planning.saison.carte")} className={seul ? "space-y-4" : "carte-groupe p-5 space-y-4"}>
@@ -292,12 +288,6 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
             </div>
           </div>
         )}
-      </Reglage>}
-
-      {montrer("duree") && <Reglage titre={t("planning.saison.duree")} aide={aideDuree} erreurs={erreursDe("duree")}>
-        {DUREES.map((d) => (
-          <Pilule key={d} actif={s.duree === d} onClick={() => appliquer({ ...s, duree: d }, "duree")}>{t(`planning.saison.dureeCourte.${d}`)}</Pilule>
-        ))}
       </Reglage>}
 
       {montrer("qui") && <Reglage titre={t("planning.saison.qui")} erreurs={erreursDe("qui")}>

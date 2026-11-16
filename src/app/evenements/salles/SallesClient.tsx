@@ -37,7 +37,8 @@ import { chargerReservations, chargerSalles } from "@/lib/salles/charger"
 import { autreQuiCroise, chevauchement } from "@/lib/salles/conflit"
 import { signalerConflit } from "@/lib/salles/signalerConflit"
 import { varianteDu } from "@/lib/salles/emploi"
-import { couleurDe, etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
+import { couleurDe, etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, saisonSceneDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
+import { libelleEdition } from "@/lib/scene/fetes"
 import { SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
 import { GrilleSalles, type MomentCase } from "./GrilleSalles"
 import { FeuilleReserver, type Ouverture, type Saisie } from "./FeuilleReserver"
@@ -237,7 +238,8 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
         </>
       )}
       {etat && (
-        <FeuilleReserver ouverture={ouverture} fermer={() => setOuverture(null)} today={today} langue={langue} occupationsDu={etat.occupations} enregistrer={enregistrer} />
+        <FeuilleReserver ouverture={ouverture} fermer={() => setOuverture(null)} today={today} langue={langue} occupationsDu={etat.occupations} enregistrer={enregistrer}
+          saisonScene={(d) => { const s = saisonSceneDu(d, etat.sources.scene); return s && { nom: libelleEdition(s.fete, s.annee, langue), lien: s.lien } }} />
       )}
     </Contexte.Provider>
   )

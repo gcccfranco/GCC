@@ -120,3 +120,28 @@ test.describe("AR, T5a : les créneaux de la Scène sont des réservations", () 
     expect(plat(rules)).toContain("reservable(id, request.resource.data.qui)");
   });
 });
+
+test.describe("AR, T5b : dans Salles, la Scène d'une fête ouverte se réserve depuis sa page (AR22)", () => {
+  test("choisir la Scène pendant la saison de Noël : le message, le lien vers la page, rien à valider ; après la saison, la Scène se réserve", async ({ page }) => {
+    await ouvrir(page, MARIUS, {}, "/evenements/salles");
+    await page.getByRole("button", { name: "Réserver une salle" }).click();
+    const f = page.getByRole("dialog", { name: "Réserver une salle" });
+    await f.getByLabel("Date").fill("2026-10-07");
+    await f.getByLabel("De").fill("18:00");
+    await f.getByLabel("À").fill("19:00");
+    await f.locator('[data-salle="scene"]').click();
+    await f.getByLabel("Pour quoi").fill("Répétition du chœur");
+    const message = f.locator("[data-scene-fete]");
+    await expect(message).toContainText("Pendant la saison de Noël 2026, la Scène se réserve depuis sa page.");
+    await expect(message.getByRole("link", { name: "Page de Noël 2026" })).toHaveAttribute("href", "/evenements/scene/noel");
+    await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeDisabled();
+    // La Grande salle, elle, se réserve depuis Salles ; la Scène aussi, hors de la saison.
+    await f.locator('[data-salle="grande"]').click();
+    await expect(message).toHaveCount(0);
+    await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeEnabled();
+    await f.locator('[data-salle="scene"]').click();
+    await f.getByLabel("Date").fill("2026-12-28");
+    await expect(f.locator("[data-scene-fete]")).toHaveCount(0);
+    await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeEnabled();
+  });
+});

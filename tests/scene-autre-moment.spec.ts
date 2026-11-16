@@ -3,15 +3,19 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { interdireDialoguesNatifs } from "./helpers/agencement";
 import { versToutesLesReservations } from "./helpers/saisonScene";
-import { horsGrille, saisonDe, semainesDe, lignesDuJour } from "../src/lib/scene/saison";
+import { fenetresLibres, horsGrille, saisonDe, semainesDe, lignesDuJour } from "../src/lib/scene/saison";
+import { occupationsFixes } from "../src/lib/salles/emploi";
 import { creneauxEnReservations } from "./helpers/creneauxScene";
 
-// Lot AQ, tranche SQ-B (docs/spec-scene-qui-autre-moment.md) : « Réserver un autre moment ».
-// Captures : test-results-captures/sq-b/<projet>-<fr|zh>-<volet|feuille>.png (hors de test-results/, que Playwright vide).
+// Lot AQ, tranche SQ-B (docs/spec-scene-qui-autre-moment.md) : « Réserver un autre moment ». Réécrite au lot 5 de
+// Salles, T5b (docs/spec-salles.md, AR22) : plus de créneaux fixes ni de bouton « Un autre moment » ; chaque jour dit
+// quand la scène est libre (plages moins l'emploi du temps fixe, Salles, évènements), « Réserver » ouvre la seule
+// feuille « de / à », la fenêtre touchée pré-remplie ; un chevauchement est refusé avec le message de Salles (SA8).
+// Captures : test-results-captures/t5b/<projet>-<fr|zh>-<volet|feuille>.png (hors de test-results/, que Playwright vide).
 
 const NOEL = {
   nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, ouvert: true,
-  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }], duree: 60,
+  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }],
   passages: [{ quoi: "Chant", qui: ["Gp Paix"], titre: "Ouverture" }],
   createdBy: "uid-ines", updatedAt: "2026-09-14T20:00:00Z",
 };
@@ -26,11 +30,13 @@ const COORD: FakeProfile = {
 };
 const SEMAINE = "/evenements/scene/noel?semaine=2026-10-12";
 const AUTRE = /^(Réserver un autre moment|预约其他时间)$/;
+const dimanche = (page: Page) => page.getByRole("region", { name: "Dimanche 18 octobre", exact: true });
 
 async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<string, unknown>> = {}, chemin = "/evenements/scene/noel", zh = false) {
   interdireDialoguesNatifs(page);
   if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   return signInAs(page, who, creneauxEnReservations({ "programmes/x7Kq2": NOEL, ...docs }), chemin);
 }
 const mercredi = (page: Page) => page.getByRole("region", { name: "Mercredi 14 octobre", exact: true });
@@ -49,82 +55,94 @@ async function remplir(f: ReturnType<Page["getByRole"]>, date: string, de: strin
 
 const SAISON = saisonDe(NOEL as Parameters<typeof saisonDe>[0]);
 const c = (dimanche: string, debut: string, fin: string, libre?: boolean) => ({ id: `${dimanche}${debut}`, dimanche, debut, fin, ...(libre && { libre }) });
+const FIXES_18 = occupationsFixes("2026-10-18", "ordinaire").filter((o) => o.salle === "grande");
 
-test("horsGrille ignore un créneau libre ; une réservation hors grille sans libre reste signalée", () => {
-  const libre = c("2026-10-14", "18:30", "20:00", true);
-  const decale = c("2026-10-11", "14:30", "15:30");
-  expect(horsGrille(SAISON, [libre, decale]).map((x) => x.id)).toEqual([decale.id]);
-  expect(horsGrille(SAISON, [c("2026-10-11", "14:30", "15:30", true)])).toEqual([]);
+test("fenetresLibres : un dimanche ordinaire, 14:00–19:00 moins le groupe Joie et le culte sinophone", () => {
+  expect(fenetresLibres(SAISON, "2026-10-18", FIXES_18)).toEqual([{ debut: "14:30", fin: "15:00" }, { debut: "17:00", fin: "19:00" }]);
+  // une réservation de la fête coupe la fenêtre ; deux bornes qui se touchent ne se croisent pas
+  expect(fenetresLibres(SAISON, "2026-10-18", [...FIXES_18, c("2026-10-18", "17:30", "18:00")]))
+    .toEqual([{ debut: "14:30", fin: "15:00" }, { debut: "17:00", fin: "17:30" }, { debut: "18:00", fin: "19:00" }]);
+  // aujourd'hui : le temps passé s'en va, au quart d'heure suivant ; hors période ou jour passé : rien
+  expect(fenetresLibres(SAISON, "2026-10-17", [], { today: "2026-10-17", maintenant: "10:20" })).toEqual([{ debut: "10:30", fin: "12:00" }]);
+  expect(fenetresLibres(SAISON, "2026-10-17", [], { today: "2026-10-18", maintenant: "08:00" })).toEqual([]);
+  expect(fenetresLibres(SAISON, "2026-10-14", [])).toEqual([]);
 });
 
-test("lignesDuJour : un autre moment n'est pas « hors grille »", () => {
-  const l = lignesDuJour(SAISON, "2026-10-14", [c("2026-10-14", "18:30", "20:00", true)]);
-  expect(l).toMatchObject([{ type: "reserve", horsGrille: false, couvre: 0 }]);
+test("lignesDuJour : fenêtres libres, réservations et autres occupations, par heure", () => {
+  const autres = FIXES_18.map((o) => ({ debut: o.debut, fin: o.fin, libelle: "x" }));
+  const l = lignesDuJour(SAISON, "2026-10-18", [c("2026-10-18", "17:00", "18:00")], autres);
+  expect(l.map((x) => `${x.type} ${x.debut}-${x.fin}`)).toEqual([
+    "occupe 13:00-14:30", "libre 14:30-15:00", "occupe 15:00-17:00", "reserve 17:00-18:00", "libre 18:00-19:00",
+  ]);
 });
 
-test("semainesDe : un mercredi réservé rejoint sa semaine, sans case ; la semaine de la saison est inchangée", () => {
-  const s = semainesDe(SAISON, "2026-12-24", [c("2026-10-14", "18:30", "20:00", true)]);
+test("horsGrille : un autre moment (`libre`) ou une réservation dans une plage ne l'est pas ; une réservation sortie des plages l'est", () => {
+  expect(horsGrille(SAISON, [c("2026-10-14", "18:30", "20:00", true), c("2026-10-18", "17:15", "18:45")])).toEqual([]);
+  const decale = c("2026-10-11", "13:30", "15:30");
+  expect(horsGrille(SAISON, [decale]).map((x) => x.id)).toEqual([decale.id]);
+});
+
+test("semainesDe : une case par jour réservable (pleine = plus rien de libre) ; un mercredi réservé rejoint sa semaine", () => {
+  const s = semainesDe(SAISON, "2026-12-24", [c("2026-10-14", "18:30", "20:00", true), c("2026-10-17", "10:00", "12:00")]);
   const sem = s.find((x) => x.lundi === "2026-10-12")!;
   expect(sem.jours).toEqual(["2026-10-14", "2026-10-17", "2026-10-18"]);
-  expect(sem.cases).toHaveLength(7);
+  expect(sem.cases).toEqual([true, false]);
+  expect(sem.libres).toBe(1);
   expect(s).toHaveLength(12);
-  // une semaine sans jour de la saison naît de la réservation
-  const hors = semainesDe(SAISON, "2026-12-24", [c("2026-12-22", "18:00", "19:00", true)]);
-  expect(hors.at(-1)).toEqual({ lundi: "2026-12-21", jours: ["2026-12-22"], cases: [], libres: 0 });
 });
 
-// ─── Le bouton ──────────────────────────────────────────────────────────────
+// ─── La page ────────────────────────────────────────────────────────────────
 
-test("bouton : visible pour un membre quand les réservations sont ouvertes", async ({ page }) => {
-  await ouvrir(page, MEMBRE);
-  await expect(page.getByRole("button", { name: AUTRE })).toBeVisible();
-});
-
-test("bouton : absent quand les réservations sont fermées à la main", async ({ page }) => {
-  await ouvrir(page, MEMBRE, { "programmes/x7Kq2": { ...NOEL, fermees: true } });
-  await expect(page.getByText("Les réservations sont fermées.")).toBeVisible();
-  await expect(page.getByRole("button", { name: AUTRE })).toHaveCount(0);
-});
-
-test("bouton : absent pour un membre que « Qui peut réserver » exclut (canReserverPour faux)", async ({ page }) => {
-  await ouvrir(page, MEMBRE, { "programmes/x7Kq2": { ...NOEL, ouvert: false } });
-  await expect(page.getByRole("button", { name: AUTRE })).toHaveCount(0);
-});
-
-test("bouton : posé en bas du volet Entraînements, dans la marge de page", async ({ page }) => {
+test("plus de bouton « Réserver un autre moment » ; chaque jour dit quand la scène est libre, l'emploi du temps fixe en gris", async ({ page }) => {
   await ouvrir(page, MEMBRE, {}, SEMAINE);
-  const bouton = page.getByRole("button", { name: AUTRE })
-  await expect(bouton).toBeVisible();
-  const liste = page.locator("section[aria-labelledby='scene-entrainements']");
-  const l = (await liste.boundingBox())!, b = (await bouton.boundingBox())!;
-  expect(b.x).toBeGreaterThanOrEqual(l.x - 0.5);
-  expect(b.y).toBeGreaterThanOrEqual(l.y + l.height - 0.5);
-  const deuxVolets = await page.evaluate(() => matchMedia("(pointer: fine) and (min-width: 1148px)").matches);
-  if (deuxVolets) expect(b.x + b.width).toBeLessThanOrEqual(l.x + l.width + 0.5);
+  await expect(dimanche(page).getByTestId("libre-du-jour")).toHaveText("Libre 14:30 – 15:00 · 17:00 – 19:00");
+  await expect(page.getByRole("button", { name: AUTRE })).toHaveCount(0);
+  await expect(dimanche(page).locator('[data-ligne="occupe"]').filter({ hasText: "Groupe Joie" })).toBeVisible();
+  await expect(dimanche(page).getByRole("button", { name: "Réserver 17:00 – 19:00" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Samedi 17 octobre", exact: true }).getByTestId("libre-du-jour")).toHaveText("Libre 10:00 – 12:00");
+});
+
+test("une réservation de Salles sur la Grande salle prend la scène : la fenêtre se coupe", async ({ page }) => {
+  await ouvrir(page, MEMBRE, {
+    "reservations/s1": { salle: "grande", date: "2026-10-18", debut: "17:30", fin: "18:30", pour: "", quoi: "Répétition chorale", auteurUid: "uid-x", auteurNom: "Léonie R.", createdAt: "", updatedAt: "" },
+  }, SEMAINE);
+  await expect(dimanche(page).getByTestId("libre-du-jour")).toHaveText("Libre 14:30 – 15:00 · 17:00 – 17:30 · 18:30 – 19:00");
+  await expect(dimanche(page).locator('[data-ligne="occupe"]').filter({ hasText: "Répétition chorale" })).toBeVisible();
 });
 
 // ─── La feuille ─────────────────────────────────────────────────────────────
 
-test("un mercredi 18:30–20:00 : la ligne apparaît dans sa semaine sans « Hors grille », `libre: true` est écrit", async ({ page }) => {
+test("« Réserver » sur une fenêtre : la feuille « de / à » pré-remplie ; l'heure se change ; rien de `libre` dans une plage", async ({ page }) => {
   const db = await ouvrir(page, COORD, {}, SEMAINE);
-  await page.getByRole("button", { name: AUTRE }).click();
+  await dimanche(page).getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
   const f = page.getByRole("dialog");
-  await expect(f.getByRole("heading", { name: "Un autre moment" })).toBeVisible();
+  await expect(f.getByRole("heading", { name: "Réserver" })).toBeVisible();
+  await expect(f.getByLabel("Date")).toHaveValue("2026-10-18");
+  await expect(f.getByLabel("de", { exact: true })).toHaveValue("17:00");
+  await expect(f.getByLabel("à", { exact: true })).toHaveValue("19:00");
   await expect(f.getByRole("button", { name: "Choisis quoi et qui" })).toBeDisabled();
-  await remplir(f, "2026-10-14", "18:30", "20:00");
+  await f.getByLabel("à", { exact: true }).selectOption("18:15");
+  await f.getByRole("radio", { name: "Sketch" }).check();
+  await f.getByRole("checkbox", { name: "Gp Paix" }).check();
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect.poll(() => ecritures(db, "POST")).toMatchObject({
-    date: "2026-10-14", debut: "18:30", fin: "20:00", quoi: "Sketch", qui: ["Gp Paix"], libre: true,
-  });
-  const ligne = mercredi(page).getByRole("listitem").filter({ hasText: "18:30" });
-  await expect(ligne).toBeVisible();
-  await expect(ligne).not.toContainText("Hors grille");
+  await expect.poll(() => ecritures(db, "POST")).toMatchObject({ salle: "scene", date: "2026-10-18", debut: "17:00", fin: "18:15", quoi: "Sketch", qui: ["Gp Paix"] });
+  expect(ecritures(db, "POST")).not.toHaveProperty("libre");
+  await expect(dimanche(page).getByTestId("libre-du-jour")).toHaveText("Libre 14:30 – 15:00 · 18:15 – 19:00");
+});
+
+test("hors des plages (un mercredi soir) : permis, `libre: true` est écrit", async ({ page }) => {
+  const db = await ouvrir(page, COORD, {}, SEMAINE);
+  await dimanche(page).getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
+  await remplir(page.getByRole("dialog"), "2026-10-14", "18:30", "20:00");
+  await page.getByRole("dialog").getByRole("button", { name: "Réserver", exact: true }).click();
+  await expect.poll(() => ecritures(db, "POST")).toMatchObject({ date: "2026-10-14", debut: "18:30", fin: "20:00", libre: true });
+  await expect(mercredi(page).getByRole("listitem").filter({ hasText: "18:30" })).not.toContainText("Hors des plages");
 });
 
 test("« à » ne propose que des heures après « de », au pas de 15 minutes", async ({ page }) => {
-  await ouvrir(page, MEMBRE);
-  await page.getByRole("button", { name: AUTRE }).click();
+  await ouvrir(page, MEMBRE, {}, SEMAINE);
+  await dimanche(page).getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
   const f = page.getByRole("dialog");
   await f.getByLabel("de", { exact: true }).selectOption("18:30");
   const fins = await f.getByLabel("à", { exact: true }).locator("option").allTextContents();
@@ -135,20 +153,33 @@ test("« à » ne propose que des heures après « de », au pas de 15 minutes",
   await expect(f.getByLabel("à", { exact: true })).toHaveValue("23:45");
 });
 
-test("chevauchement : refusé dans la feuille, avec l'heure prise", async ({ page }) => {
+test("chevauchement avec l'emploi du temps fixe : le message de Salles (SA8) et « Décaler », rien d'écrit", async ({ page }) => {
+  const db = await ouvrir(page, COORD, {}, SEMAINE);
+  await dimanche(page).getByRole("button", { name: "Réserver 14:30 – 15:00" }).click();
+  const f = page.getByRole("dialog");
+  await remplir(f, "2026-10-18", "14:00", "15:00");
+  await f.getByRole("button", { name: "Réserver", exact: true }).click();
+  await expect(f.locator("[data-refus]")).toContainText("Scène est prise : Groupe Joie, 13:00 – 14:30.");
+  await expect(f.getByRole("button", { name: /^Décaler à/ })).toBeVisible();
+  expect(ecritures(db, "POST")).toBeUndefined();
+  await f.getByRole("button", { name: /^Décaler à/ }).click();
+  await expect(f.locator("[data-refus]")).toHaveCount(0);
+});
+
+test("chevauchement avec une autre réservation de la fête : refusé, avec son heure", async ({ page }) => {
   const db = await ouvrir(page, COORD, { "programmes/x7Kq2/creneaux/a": resa("a") }, SEMAINE);
-  await page.getByRole("button", { name: AUTRE }).click();
+  await dimanche(page).getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
   const f = page.getByRole("dialog");
   await remplir(f, "2026-10-14", "18:30", "20:00");
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
-  await expect(f.getByRole("alert")).toContainText("19:00 – 20:00");
+  await expect(f.locator("[data-refus]")).toContainText("19:00 – 20:00");
   await expect(page.getByRole("dialog")).toBeVisible();
   expect(ecritures(db, "POST")).toBeUndefined();
 });
 
 test("date hors période : message, bouton inactif, rien d'écrit", async ({ page }) => {
-  const db = await ouvrir(page, MEMBRE);
-  await page.getByRole("button", { name: AUTRE }).click();
+  const db = await ouvrir(page, MEMBRE, {}, SEMAINE);
+  await dimanche(page).getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
   const f = page.getByRole("dialog");
   await remplir(f, "2026-12-25", "18:30", "20:00");
   await expect(f.getByRole("alert")).toContainText("Choisis une date entre le");
@@ -158,12 +189,11 @@ test("date hors période : message, bouton inactif, rien d'écrit", async ({ pag
   await expect(f.getByRole("alert")).toContainText("Choisis une date entre le");
 });
 
-test("Modifier un autre moment : la feuille se rouvre date et heures comprises, l'heure change, `libre` reste", async ({ page }) => {
+test("Modifier : la même feuille, date et heures comprises ; l'heure change, `libre` reste hors des plages", async ({ page }) => {
   const db = await ouvrir(page, COORD, { "programmes/x7Kq2/creneaux/a": resa("a", { debut: "18:30", fin: "20:00" }) }, SEMAINE);
   await mercredi(page).getByRole("listitem").filter({ hasText: "18:30" }).getByRole("button", { name: /^Plus d'actions/ }).first().click();
   await page.getByRole("menuitem", { name: "Modifier" }).click();
   const f = page.getByRole("dialog");
-  await expect(f.getByRole("heading", { name: "Un autre moment" })).toBeVisible();
   await expect(f.getByLabel("Date")).toHaveValue("2026-10-14");
   await expect(f.getByLabel("de", { exact: true })).toHaveValue("18:30");
   await expect(f.getByLabel("à", { exact: true })).toHaveValue("20:00");
@@ -173,17 +203,21 @@ test("Modifier un autre moment : la feuille se rouvre date et heures comprises, 
   await expect.poll(() => ecritures(db, "PATCH")).toMatchObject({ debut: "18:30", fin: "19:45", libre: true });
 });
 
-test("Déplacer un autre moment vers la grille retire `libre`", async ({ page }) => {
+test("Déplacer : la même feuille ; vers une plage, `libre` s'en va", async ({ page }) => {
   const db = await ouvrir(page, COORD, { "programmes/x7Kq2/creneaux/a": resa("a", { debut: "18:30", fin: "20:00" }) }, SEMAINE);
   await mercredi(page).getByRole("listitem").filter({ hasText: "18:30" }).getByRole("button", { name: /^Plus d'actions/ }).first().click();
   await page.getByRole("menuitem", { name: "Déplacer" }).click();
-  await page.getByRole("dialog").getByRole("group", { name: "Samedi 17 octobre" }).getByRole("radio", { name: "10:00 – 11:00" }).check();
-  await page.getByRole("dialog").getByRole("button", { name: "Déplacer" }).click();
+  const f = page.getByRole("dialog");
+  await expect(f.getByRole("heading", { name: "Déplacer la réservation" })).toBeVisible();
+  await f.getByLabel("Date").fill("2026-10-17");
+  await f.getByLabel("de", { exact: true }).selectOption("10:00");
+  await f.getByLabel("à", { exact: true }).selectOption("11:00");
+  await f.getByRole("button", { name: "Déplacer" }).click();
   await expect.poll(() => ecritures(db, "PATCH")).toMatchObject({ date: "2026-10-17", debut: "10:00", fin: "11:00" });
   expect(ecritures(db, "PATCH")?.libre).toBeFalsy();
 });
 
-test("Modifier un autre moment déjà passé : la note s'enregistre, la date d'origine est gardée", async ({ page }) => {
+test("Modifier une réservation déjà passée : la note s'enregistre, la date d'origine est gardée", async ({ page }) => {
   const db = await ouvrir(page, COORD, { "programmes/x7Kq2/creneaux/a": resa("a", { dimanche: "2026-10-07", debut: "18:30", fin: "20:00" }) }, "/evenements/scene/noel?semaine=2026-10-05");
   await page.getByRole("region", { name: "Mercredi 7 octobre", exact: true }).getByRole("listitem").filter({ hasText: "18:30" }).getByRole("button", { name: /^Plus d'actions/ }).first().click();
   await page.getByRole("menuitem", { name: "Modifier" }).click();
@@ -198,46 +232,45 @@ test("Modifier un autre moment déjà passé : la note s'enregistre, la date d'o
 
 // ─── Back-Office ────────────────────────────────────────────────────────────
 
-test("Back-Office : l'autre moment est dans « À venir », pas dans « Hors grille » ; une réservation laissée hors grille l'est", async ({ page }) => {
+test("Back-Office : l'autre moment est dans « À venir », pas dans « Hors des plages » ; une réservation sortie des plages l'est", async ({ page }) => {
   await ouvrir(page, COORD, {
     "programmes/x7Kq2/creneaux/a": resa("a", { debut: "18:30", fin: "20:00" }),
-    "programmes/x7Kq2/creneaux/b": resa("b", { dimanche: "2026-10-11", debut: "14:30", fin: "15:30", libre: undefined, quoi: "Chant" }),
+    "programmes/x7Kq2/creneaux/b": resa("b", { dimanche: "2026-10-11", debut: "13:30", fin: "15:30", libre: undefined, quoi: "Chant" }),
   }, "/back-office/evenements/scene/noel");
   await versToutesLesReservations(page);
   const filtres = page.getByRole("group", { name: "Filtrer les réservations" });
   await expect(filtres.getByRole("button", { name: "À venir 2" })).toBeVisible();
-  await expect(filtres.getByRole("button", { name: "Hors grille 1" })).toBeVisible();
-  await filtres.getByRole("button", { name: "Hors grille 1" }).click();
+  await expect(filtres.getByRole("button", { name: "Hors des plages 1" })).toBeVisible();
+  await filtres.getByRole("button", { name: "Hors des plages 1" }).click();
   const lignes = page.locator('[data-testid="reservations-tableau"] tbody tr, [data-testid="reservations-liste"] li').filter({ visible: true });
   await expect(lignes).toHaveCount(1);
-  await expect(lignes).toContainText("14:30");
+  await expect(lignes).toContainText("13:30");
 });
 
 // ─── 中文 et captures ───────────────────────────────────────────────────────
 
-test("中文 : le bouton et la feuille", async ({ page }) => {
+test("中文 : le jour et la feuille", async ({ page }) => {
   await ouvrir(page, MEMBRE, {}, SEMAINE, true);
-  await page.getByRole("button", { name: AUTRE }).click();
+  await expect(page.getByTestId("libre-du-jour").first()).toContainText("空闲");
+  await page.getByRole("button", { name: /^预约 17:00/ }).first().click();
   const f = page.getByRole("dialog");
-  await expect(f.getByRole("heading", { name: "其他时间" })).toBeVisible();
   await expect(f.getByLabel("日期")).toBeVisible();
   await expect(f.getByLabel("从", { exact: true })).toBeVisible();
   await expect(f.getByLabel("到", { exact: true })).toBeVisible();
   await f.getByLabel("日期").fill("2026-12-25");
   await expect(f.getByRole("alert")).toContainText("请选择");
-  await expect(f.getByRole("alert")).toContainText("之间的日期");
 });
 
 for (const [langue, zh] of [["fr", false], ["zh", true]] as const) {
-  test(`captures SQ-B, ${langue} (à regarder) : le volet avec le bouton, la feuille « Un autre moment »`, async ({ page }, info) => {
-    await ouvrir(page, MEMBRE, {}, "/evenements/scene/noel", zh);
-    const bouton = page.getByRole("button", { name: AUTRE });
-    await expect(bouton).toBeVisible();
-    await bouton.scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `test-results-captures/sq-b/${info.project.name}-${langue}-volet.png`, animations: "disabled" });
-    await bouton.click();
+  test(`captures T5b, ${langue} (à regarder) : la semaine avec ses fenêtres libres, la feuille « de / à »`, async ({ page }, info) => {
+    await ouvrir(page, MEMBRE, { "programmes/x7Kq2/creneaux/a": resa("a", { dimanche: "2026-10-18", debut: "17:30", fin: "18:30" }) }, SEMAINE, zh);
+    const jour = page.locator("#scene-jour-2026-10-18");
+    await expect(jour.getByTestId("libre-du-jour")).toBeVisible();
+    await jour.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `test-results-captures/t5b/${info.project.name}-${langue}-volet.png`, animations: "disabled" });
+    await jour.locator('[data-ligne="libre"]').last().getByRole("button").click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.waitForTimeout(500);
-    await page.screenshot({ path: `test-results-captures/sq-b/${info.project.name}-${langue}-feuille.png`, animations: "disabled" });
+    await page.screenshot({ path: `test-results-captures/t5b/${info.project.name}-${langue}-feuille.png`, animations: "disabled" });
   });
 }

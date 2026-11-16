@@ -648,3 +648,23 @@ T2b, T2c et T3a (apparence).
   route, lenteurs de `salles-evenement`) ; rejoués : 63 verts en 1 min 18 s ; `salles-liste` et `salles-grille` en
   tablette paysage et 1 440 px : 30 verts en 34 s (≈ 16 min de tests). tsc et lint propres (0 erreur). Aucun
   changement d'apparence : pas de regard ni de `critique-design`. T5b lancée.
+- **T5b, première partie (session T5b, 16/11/2026)** : codée par la session elle-même (agents du dépôt non chargés, même
+  méthode que `/tranche`). Fait : `saison.ts` sans grille ni `duree` (`fenetresLibres`, `plagesDuJour`, `dansUnePlage`,
+  `lignesDuJour` avec lignes `libre` / `reserve` / `occupe`, `semainesDe` à une case par jour réservable, `compteJours`,
+  `creneauxLibres` du Calendrier sur les fenêtres) ; page de la fête : « Libre 14:30 – 15:00 · 17:00 – 19:00 » par jour,
+  l'emploi du temps fixe, Salles et les évènements en gris (`chargerAutresScene`, `charger.ts`), « Réserver » sur une
+  fenêtre ouvre la seule feuille « de / à » pré-remplie, plus de bouton « Un autre moment » ; refus SA8 contre toutes
+  les occupations du jour (`occupationsPourEvenement`, `RefusSalle`, « Décaler ») ; `duree` sortie de `SaisonForm`,
+  du résumé et de `fetes.ts` ; « Hors grille » devient « Hors des plages » ; Salles : « Pendant la saison de <fête>, la
+  Scène se réserve depuis sa page » et le lien (`saisonSceneDu`, `FeuilleReserver`). Décisions déléguées (session T5b,
+  16/11) : la fenêtre touchée pré-remplit « de » et « à » en entier ; `libre: true` s'écrit quand la réservation sort
+  des plages (un « autre moment », permis comme avant) ; « Déplacer » et « Modifier » ouvrent la même feuille ;
+  l'aperçu de la saison au Back-Office ne lit que les réservations de la fête ; le Calendrier (« Déplacer » d'une
+  réservation de scène) propose les fenêtres de la fête sans l'emploi du temps fixe (le refus à l'enregistrement de la
+  page de la fête reste complet). Tests : `scene-autre-moment` réécrite (19 verts sur ordinateur) ; test du message
+  dans `salles-scene` (vert). **Reste à T5b (session suivante)** : réécrire là où elles lisent la grille
+  `scene-paques-noel` (37 échecs sur ordinateur), `scene-saison` (33), `programme-scene` (6), `scene-qui` (4),
+  `salles-scene` (2 tests de T5a : « Réserver 10:00 – 11:00 » devient « Réserver 10:00 – 12:00 », etc.), voir
+  `scene-des-fetes` ; **tsc rouge sur ces deux specs** (`compteCreneaux`, `grilleDuJour`, `duree`) jusqu'à leur
+  réécriture ; puis trois appareils, regard sur les quatre dispositions et 1 440 px, `critique-design`. Tour sur
+  ordinateur de huit specs : 195 verts, 82 échecs, 27 sautés en 8 min 30 s. Aucune règle changée.

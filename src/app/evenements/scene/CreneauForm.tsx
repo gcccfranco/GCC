@@ -1,29 +1,28 @@
 "use client"
 
-// Feuille d'un créneau sur scène. Lot U1 (docs/spec-scene-saison.md, planche
-// scene-reserver-feuille-telephone) : plus d'heure à taper. « Réserver » et
-// « Modifier » rappellent le jour et le créneau (« Dimanche 11 octobre ·
-// 15:00 – 16:00 »), puis quoi (un), qui (un ou plusieurs, limité aux groupes
-// permis), note. Pâques · Noël, P6 (docs/spec-scene-paques-noel.md, Q14, Q15 ;
-// planche v18-scene-a-feuille-telephone) : rien n'est coché d'avance, le bouton
-// plein dit « Choisis quoi et qui » tant qu'il manque l'un ou l'autre. La liste
-// « Qui » tient en dix valeurs (docs/spec-chants-fetes.md, CF3) : plus de « + N ». « Déplacer » ne propose que les
-// créneaux libres, en pastilles jour par jour (le créneau actuel compris), sans
-// liste déroulante, et ne touche ni quoi ni qui.
+// Feuille d'une réservation de la scène. Lot U1 (docs/spec-scene-saison.md), Pâques · Noël P6
+// (docs/spec-scene-paques-noel.md, Q14, Q15) : quoi (un), qui (un ou plusieurs, limité aux groupes
+// permis), note ; rien n'est coché d'avance, le bouton plein dit « Choisis quoi et qui » tant qu'il
+// manque l'un ou l'autre. La liste « Qui » tient en dix valeurs (docs/spec-chants-fetes.md, CF3).
+// Lot 5 de Salles (docs/spec-salles.md, AR22) : plus de créneaux fixes ; une seule feuille, celle
+// de l'ancien « Un autre moment » : date, « de » et « à » au pas de 15 minutes, pré-remplis par la
+// fenêtre libre touchée. Un chevauchement refusé s'affiche avec le message de Salles (SA8,
+// `RefusSalle`) et « Décaler ».
 
 import { langueCourte } from "@/lib/utils/formatDate";
 import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
-import { CalendarClock, Check } from "lucide-react"
+import { Check } from "lucide-react"
 import { QUI, QUOI } from "@/types/programme"
-import type { Place } from "@/lib/scene/saison"
+import { RefusSalle } from "@/components/salles/RefusSalle"
+import type { Occupation } from "@/lib/salles/occupations"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
 import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
-import { jourEnLettres, titreDuJour } from "./libelles"
+import { jourEnLettres } from "./libelles"
 import { estQuiLibre, libelleQui, normaliserQui } from "@/lib/fetes/qui"
 import { styleTexteService } from "@/lib/couleurSombre"
 
@@ -36,9 +35,10 @@ export type CreneauValues = {
   quoi: string
   qui: string[]
   note: string
-  /** Un autre moment (SQ-B) : date et heures libres, hors de la grille. */
-  libre?: boolean
 }
+
+/** Un chevauchement refusé (SA8) : ce qui prend la scène, et la première fenêtre de même durée après. */
+export type RefusScene = { bloque: Occupation; decale: { debut: string; fin: string } | null }
 
 /** Heures au pas de 15 minutes (SQ10) : « 00:00 » … « 23:45 ». */
 const HEURES = Array.from({ length: 96 }, (_, i) => `${String(Math.floor(i / 4)).padStart(2, "0")}:${String((i % 4) * 15).padStart(2, "0")}`)
@@ -124,27 +124,21 @@ function Groupe({ legende, children }: { legende: ReactNode; children: ReactNode
   )
 }
 
-const cle = (p: { debut: string; fin: string }) => `${p.debut}-${p.fin}`
-
 type Props = {
   open: boolean
   title: string
   /** Libellé du bouton plein : « Réserver », ou « Enregistrer » pour modifier. */
   submitLabel: string
-  /** Réserver ou modifier : le créneau, rappelé en tête. */
-  place?: Place
-  /** Déplacer : les créneaux proposés, jour par jour (seul choix de la feuille). */
-  places?: Place[]
   initial: CreneauValues
   quiOptions: readonly string[]
   /** « Qui » limité par la saison : la légende le dit. */
   quiLimite?: boolean
   /** « Autre… » (SQ5) : montrée à tous sans limite, sinon à qui passe outre « Qui peut réserver ». */
   quiAutre?: boolean
-  /** « Un autre moment » (SQ-B) : la feuille choisit la date (entre `min` et `max`) et les heures. */
-  autreMoment?: { min: string; max: string }
-  /** Renvoie un message d'erreur, ou null si le créneau est enregistré. */
-  onSubmit: (values: CreneauValues) => Promise<string | null>
+  /** La période de la saison : la date se choisit entre `min` et `max`. */
+  periode: { min: string; max: string }
+  /** Renvoie un message d'erreur, un refus de chevauchement, ou null si la réservation est enregistrée. */
+  onSubmit: (values: CreneauValues) => Promise<string | RefusScene | null>
   onCancel: () => void
 }
 
@@ -163,7 +157,7 @@ export function CreneauForm({ open, title, onCancel, ...champs }: Props) {
   )
 }
 
-function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, quiAutre, autreMoment, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
+function Champs({ submitLabel, initial, quiOptions, quiLimite, quiAutre, periode, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
   const { t, i18n } = useTranslation()
   const langue = langueCourte(i18n.language)
   const libreInitial = initial.qui.find(estQuiLibre)
@@ -173,71 +167,59 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, qu
   const libre = autre ? normaliserQui(texte) : ""
   const quiFinal = libre && !v.qui.includes(libre) ? [...v.qui, libre] : v.qui
   const [error, setError] = useState("")
+  // Le refus se montre tant que le moment n'a pas changé.
+  const [refus, setRefus] = useState<(RefusScene & { cle: string }) | null>(null)
+  const cleMoment = `${v.dimanche}|${v.debut}|${v.fin}`
   const [busy, setBusy] = useState(false)
-  const jours = places ? [...new Set(places.map((p) => p.jour))] : []
-  const choisie = (p: Place) => p.jour === v.dimanche && cle(p) === cle(v)
   // La date d'origine d'une modification n'est pas bornée (saison raccourcie, jour passé) : ni le message, ni la validation native.
   const dateGardee = v.dimanche === initial.dimanche
-  const horsPeriode = autreMoment !== undefined && v.dimanche !== "" && !dateGardee && (v.dimanche < autreMoment.min || v.dimanche > autreMoment.max)
-  const pret = places ? places.some(choisie) : (!autreMoment || (v.dimanche !== "" && !horsPeriode)) && v.quoi !== "" && quiFinal.length > 0 && (!autre || libre !== "")
+  const horsPeriode = v.dimanche !== "" && !dateGardee && (v.dimanche < periode.min || v.dimanche > periode.max)
+  const pret = v.dimanche !== "" && !horsPeriode && v.quoi !== "" && quiFinal.length > 0 && (!autre || libre !== "")
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     if (!pret) return
-    setBusy(true); setError("")
+    setBusy(true); setError(""); setRefus(null)
     const err = await onSubmit({ ...v, qui: quiFinal, note: v.note.trim() })
     setBusy(false)
-    if (err) setError(err)
+    if (typeof err === "string") setError(err)
+    else if (err) setRefus({ ...err, cle: cleMoment })
   }
 
   return (
     <form onSubmit={submit} className="px-4 pb-6 space-y-4 overflow-y-auto">
-      {place && (
-        <p className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-base font-semibold svc-ink"
-          style={{ "--svc": COLOR, background: `${COLOR}1a` } as CSSProperties}>
-          <CalendarClock className="h-5 w-5 shrink-0" aria-hidden />
-          {t("planning.saison.place", { jour: titreDuJour(place.jour, i18n.language), debut: place.debut, fin: place.fin })}
-        </p>
-      )}
-      {places ? jours.map((d) => (
-        <Groupe key={d} legende={titreDuJour(d, i18n.language)}>
-          {places.filter((p) => p.jour === d).map((p) => (
-            <Pastille key={cle(p)} type="radio" name="creneau-place" label={`${p.debut} – ${p.fin}`} checked={choisie(p)}
-              onChange={() => setV({ ...v, dimanche: p.jour, debut: p.debut, fin: p.fin })} />
-          ))}
-        </Groupe>
-      )) : (
-        <>
-          {autreMoment && (
-            <div className="space-y-2 pt-2">
-              <div className="grid grid-cols-[1fr_auto_auto] items-end gap-2">
-                <label className="space-y-1 text-sm font-semibold text-muted-foreground">
-                  {t("planning.saison.autreDate")}
-                  <Input type="date" aria-label={t("planning.saison.autreDate")} className="h-11 rounded-xl" value={v.dimanche} min={dateGardee ? undefined : autreMoment.min} max={dateGardee ? undefined : autreMoment.max}
-                    onChange={(e) => setV({ ...v, dimanche: e.target.value })} />
-                </label>
-                <label className="space-y-1 text-sm font-semibold text-muted-foreground">
-                  {t("planning.saison.autreDe")}
-                  <ChampSelect classeConteneur="w-28" aria-label={t("planning.saison.autreDe")} value={v.debut}
-                    onChange={(e) => setV({ ...v, debut: e.target.value, fin: v.fin > e.target.value ? v.fin : plus15(e.target.value) })}>
-                    {HEURES.slice(0, 95).map((h) => <option key={h} value={h}>{h}</option>)}
-                  </ChampSelect>
-                </label>
-                <label className="space-y-1 text-sm font-semibold text-muted-foreground">
-                  {t("planning.saison.autreA")}
-                  <ChampSelect classeConteneur="w-28" aria-label={t("planning.saison.autreA")} value={v.fin}
-                    onChange={(e) => setV({ ...v, fin: e.target.value })}>
-                    {HEURES.filter((h) => h > v.debut).map((h) => <option key={h} value={h}>{h}</option>)}
-                  </ChampSelect>
-                </label>
-              </div>
-              {horsPeriode && (
-                <p role="alert" className="text-sm text-destructive">
-                  {t("planning.saison.autreHorsPeriode", { debut: jourEnLettres(autreMoment.min, i18n.language), fin: jourEnLettres(autreMoment.max, i18n.language) })}
-                </p>
-              )}
+          <div className="space-y-2 pt-2">
+            <div className="grid grid-cols-[1fr_auto_auto] items-end gap-2">
+              <label className="space-y-1 text-sm font-semibold text-muted-foreground">
+                {t("planning.saison.autreDate")}
+                <Input type="date" aria-label={t("planning.saison.autreDate")} className="h-11 rounded-xl" value={v.dimanche} min={dateGardee ? undefined : periode.min} max={dateGardee ? undefined : periode.max}
+                  onChange={(e) => setV({ ...v, dimanche: e.target.value })} />
+              </label>
+              <label className="space-y-1 text-sm font-semibold text-muted-foreground">
+                {t("planning.saison.autreDe")}
+                <ChampSelect classeConteneur="w-28" aria-label={t("planning.saison.autreDe")} value={v.debut}
+                  onChange={(e) => setV({ ...v, debut: e.target.value, fin: v.fin > e.target.value ? v.fin : plus15(e.target.value) })}>
+                  {HEURES.slice(0, 95).map((h) => <option key={h} value={h}>{h}</option>)}
+                </ChampSelect>
+              </label>
+              <label className="space-y-1 text-sm font-semibold text-muted-foreground">
+                {t("planning.saison.autreA")}
+                <ChampSelect classeConteneur="w-28" aria-label={t("planning.saison.autreA")} value={v.fin}
+                  onChange={(e) => setV({ ...v, fin: e.target.value })}>
+                  {HEURES.filter((h) => h > v.debut).map((h) => <option key={h} value={h}>{h}</option>)}
+                </ChampSelect>
+              </label>
             </div>
-          )}
+            {horsPeriode && (
+              <p role="alert" className="text-sm text-destructive">
+                {t("planning.saison.autreHorsPeriode", { debut: jourEnLettres(periode.min, i18n.language), fin: jourEnLettres(periode.max, i18n.language) })}
+              </p>
+            )}
+            {refus && refus.cle === cleMoment && (
+              <RefusSalle salle="scene" bloque={refus.bloque} libres={[]} decale={refus.decale} langue={langue === "zh" ? "zh" : "fr"}
+                decaler={(p) => setV({ ...v, debut: p.debut, fin: p.fin })} choisir={() => undefined} />
+            )}
+          </div>
           <Groupe legende={t("planning.programme.quoi")}>
             {QUOI.map((q) => (
               <Pastille key={q} type="radio" name="creneau-quoi" label={q} checked={v.quoi === q} onChange={() => setV({ ...v, quoi: q })} />
@@ -270,8 +252,6 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, qu
             </label>
             <Input id="creneau-note" className="h-11 rounded-xl" value={v.note} maxLength={120} placeholder={t("planning.programme.noteHint")} onChange={(e) => setV({ ...v, note: e.target.value })} />
           </div>
-        </>
-      )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="flex gap-2 pt-1">
         <Button type="button" variant="secondary" className="h-11" onClick={onCancel}>{t("planning.programme.cancel")}</Button>
@@ -279,7 +259,7 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, qu
         <Button type="submit" disabled={busy || !pret}
           className={`h-11 flex-1 ${pret ? "text-white hover:opacity-90" : "bg-secondary text-muted-foreground disabled:opacity-100"}`}
           style={pret ? { background: COLOR } : undefined}>
-          {pret || places ? submitLabel : t("planning.saison.choisisQuoiQui")}
+          {pret ? submitLabel : t("planning.saison.choisisQuoiQui")}
         </Button>
       </div>
     </form>

@@ -8,6 +8,7 @@
 // relue à l'envoi) est refusée en mots : l'occupant et son heure, les salles libres au même moment, « Décaler ».
 
 import { useId, useState } from "react"
+import Link from "next/link"
 import { useTranslation } from "react-i18next"
 import { FeuilleOuPanneau } from "@/components/stats/FeuilleOuPanneau"
 import { RefusSalle } from "@/components/salles/RefusSalle"
@@ -43,12 +44,16 @@ export function erreurDuMoment(date: string, debut: string, fin: string, today: 
   return null
 }
 
-export function FeuilleReserver({ ouverture, fermer, today, langue, occupationsDu, enregistrer }: {
+/** Lot 5 (AR22) : la fête dont la saison couvre une date (son nom à l'écran, sa page), ou null. */
+type SaisonScene = (date: string) => { nom: string; lien: string } | null
+
+export function FeuilleReserver({ ouverture, fermer, today, langue, occupationsDu, saisonScene, enregistrer }: {
   ouverture: Ouverture | null
   fermer: () => void
   today: string
   langue: Langue
   occupationsDu: (date: string) => Occupation[]
+  saisonScene?: SaisonScene
   /** Écrit la réservation (création, ou modification de `id`) ; « refus » si, relue, la salle est prise (SA8) ;
    *  rejette en cas d'échec. */
   enregistrer: (saisie: Saisie, id?: string) => Promise<"ok" | "refus">
@@ -58,17 +63,18 @@ export function FeuilleReserver({ ouverture, fermer, today, langue, occupationsD
   return (
     <FeuilleOuPanneau ouvert={Boolean(ouverture)} onOpenChange={(o) => { if (!o) fermer() }} titre={titre} testidPanneau="salles-reserver-panneau" testidFeuille="salles-reserver-feuille">
       {/* Une clé par ouverture : le formulaire repart de ce qui l'a ouvert. */}
-      {ouverture && <Formulaire key={JSON.stringify(ouverture)} ouverture={ouverture} fermer={fermer} today={today} langue={langue} occupationsDu={occupationsDu} enregistrer={enregistrer} />}
+      {ouverture && <Formulaire key={JSON.stringify(ouverture)} ouverture={ouverture} fermer={fermer} today={today} langue={langue} occupationsDu={occupationsDu} saisonScene={saisonScene} enregistrer={enregistrer} />}
     </FeuilleOuPanneau>
   )
 }
 
-function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistrer }: {
+function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonScene, enregistrer }: {
   ouverture: Ouverture
   fermer: () => void
   today: string
   langue: Langue
   occupationsDu: (date: string) => Occupation[]
+  saisonScene?: SaisonScene
   enregistrer: (saisie: Saisie, id?: string) => Promise<"ok" | "refus">
 }) {
   const { t } = useTranslation()
@@ -103,7 +109,9 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistr
   const libres = bloque ? sallesLibres(occupations, { debut, fin }) : []
   const decale = bloque && salle ? decalage(occupations, salle, { debut, fin }) : null
   const pour = (choixPour === AUTRE ? autre : choixPour).trim().slice(0, 60)
-  const pret = !erreur && salleLibre && quoi.trim().length > 0 && !envoi
+  // AR22 : pendant la saison d'une fête, la Scène se réserve depuis la page de la fête, pas d'ici.
+  const fete = salle === "scene" && !erreur ? saisonScene?.(date) ?? null : null
+  const pret = !erreur && salleLibre && !fete && quoi.trim().length > 0 && !envoi
 
   async function envoyer(ev: React.FormEvent) {
     ev.preventDefault()
@@ -142,6 +150,13 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistr
       {bloque && salle && (
         <RefusSalle salle={salle} bloque={bloque} libres={libres} decale={decale} langue={langue}
           decaler={(p) => { setDebut(p.debut); setFin(p.fin) }} choisir={setSalle} />
+      )}
+
+      {fete && (
+        <p role="status" data-scene-fete className="rounded-xl border border-border bg-secondary/60 px-4 py-3 text-sm text-foreground">
+          {t("salles.sceneSaison", { fete: fete.nom })}{" "}
+          <Link href={fete.lien} className="font-semibold underline underline-offset-2">{t("salles.sceneSaisonLien", { fete: fete.nom })}</Link>
+        </p>
       )}
 
       {/* Les salles : libres en tête, occupées grisées avec leur raison (SA6). */}

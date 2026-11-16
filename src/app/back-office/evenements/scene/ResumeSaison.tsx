@@ -45,7 +45,6 @@ export function ResumeSaison({ programme, onSave, jourJCalcule, autre, onErreur 
       cle: "joursPlages", titre: t("planning.gestion.joursEtPlages"),
       valeur: s.plages.map((p) => `${t(`planning.saison.jourCourt.${p.jour}`)} ${heureCourte(p.debut)}–${heureCourte(p.fin)}`).join(" · "),
     },
-    { cle: "duree", titre: t("planning.saison.duree"), valeur: t(`planning.saison.dureeCourte.${s.duree}`) },
     {
       cle: "qui", titre: t("planning.saison.qui"),
       valeur: s.quiAutorises.length === 0

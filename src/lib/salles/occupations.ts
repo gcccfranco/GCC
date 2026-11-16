@@ -7,6 +7,7 @@ import { libelleQui } from "@/lib/fetes/qui";
 import type { Reservation } from "@/lib/firebase/reservations";
 import { nomEquipe } from "@/lib/taches/messages";
 import { feteDe, type Fete } from "@/lib/scene/fetes";
+import { saisonDe } from "@/lib/scene/saison";
 import { CATEGORY_COLORS, PLANNING_COLORS } from "@/lib/serviceColors";
 import type { ServiceEntry } from "@/lib/planning/names";
 import type { Evenement } from "@/types/evenement";
@@ -48,7 +49,7 @@ export interface Occupation {
 export interface SourcesSalles {
   services: Pick<ServiceEntry, "date" | "service">[];
   /** Les éditions affichées des fêtes : le jour J (AR14) et la page d'un créneau de scène. */
-  scene: { programme: Pick<Programme, "id" | "jourJ" | "fete" | "ouvert"> }[];
+  scene: { programme: Pick<Programme, "id" | "jourJ" | "fete" | "ouvert"> & Partial<Pick<Programme, "debut" | "fin" | "fermees" | "annee">> }[];
   /** Lot 3 : les réservations lues (toutes dates ; seules celles du jour comptent). Lot 5 (AR20) : un créneau de fête
    *  en est une (`fete`), lu comme créneau de scène. */
   reservations?: Reservation[];
@@ -74,6 +75,18 @@ function occupationsEvenements(date: string, evenements: EvenementSalle[]): Occu
 export function jourJDu(date: string, scene: SourcesSalles["scene"]): Fete | null {
   const p = scene.find(({ programme }) => programme.ouvert !== false && programme.jourJ === date)?.programme;
   return p ? feteDe(p) : null;
+}
+
+/** Lot 5 (AR22) : la fête dont la saison de réservation couvre cette date (ouverte, ni brouillon ni fermée à la main),
+ *  avec l'adresse de sa page ; sinon null. Pendant ce temps, la Scène se réserve depuis la page de la fête. */
+export function saisonSceneDu(date: string, scene: SourcesSalles["scene"]): { fete: Fete; annee: number; lien: string } | null {
+  for (const { programme: p } of scene) {
+    if (!p.debut || p.ouvert === false || p.fermees === true) continue;
+    const s = saisonDe({ ...p, debut: p.debut });
+    const fete = feteDe(p);
+    if (fete && date >= s.debut && date <= s.fin && date < p.jourJ) return { fete, annee: p.annee ?? Number(p.jourJ.slice(0, 4)), lien: `/evenements/scene/${fete}` };
+  }
+  return null;
 }
 
 /** Toutes les occupations d'un jour, triées par heure de début. Le jour J d'une fête remplace l'emploi fixe de la

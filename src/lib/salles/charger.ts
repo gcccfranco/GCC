@@ -66,3 +66,17 @@ export async function occupationsPourEvenement(date: string, today: string, voir
   ]);
   return occupationsDu(date, { services, scene, reservations, evenements });
 }
+
+/** Lot 5 (AR22) : ce que la page d'une fête lit pour dire quand la Scène est libre pendant sa saison, `du` à `au` :
+ *  l'emploi du temps fixe (variante du dimanche), les réservations de Salles et des autres fêtes, les évènements. Les
+ *  réservations de la fête elle-même (`fete`) se lisent à part (`listCreneaux`). Une source en panne compte pour
+ *  rien : l'écran montre alors trop de place, et le refus à l'enregistrement relit le jour (`occupationsPourEvenement`). */
+export async function chargerAutresScene(du: string, au: string, today: string, fete: string, voir: (e: Evenement) => boolean): Promise<SourcesSalles> {
+  const [services, scene, reservations, evenements] = await Promise.all([
+    loadPlanningData().then(servicesDeVariante).catch(() => []),
+    chargerScene(today).catch(() => []),
+    listReservations(du, au).catch(() => []),
+    chargerEvenements(voir).catch(() => []),
+  ]);
+  return { services, scene, reservations: reservations.filter((r) => r.fete !== fete), evenements };
+}
