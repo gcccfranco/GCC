@@ -131,6 +131,18 @@ Relayés par le pilote ; numérotés A7 à A9 ici (A6 est déjà le tableau ci-d
   **revérifier après CL-1**, corriger seulement s'il reste. Test : `louange-harmonie.spec.ts`, page 2 d'un scan de
   deux pages, bascule du réglage, même page.
 
+### A10. « Complète ton profil » quand la base ne répond pas (constat du pilote, 15/11 au soir)
+
+La vraie base répondait 429 (quota du jour épuisé) : `getProfile` rendait null comme pour un profil absent, mis en
+cache, et la page Setlists disait « Complète ton profil pour voir les setlists de tes services », ce qui est faux.
+Règle (réponse de Timothée du 15/11/2026, relayée par le pilote : « Oui, corriger ») : un profil absent (404) garde
+« Complète ton profil » ; une lecture en échec (réseau, 429, 5xx) affiche « Ton profil ne peut pas être lu pour le
+moment (réseau ou base indisponible). » et « Réessayer », qui relit le profil (Setlists, Nouvelle setlist, Mes
+services). **Décision déléguée (pilote, 15/11/2026)** : la page du profil prend le même écran au lieu d'un formulaire
+vide enregistrable. Constat vérifié dans `firestore.rules` (`match /users/{uid}` : `allow update: if isAdmin()`) :
+pour un membre dont le profil existe, l'enregistrement aurait été refusé par le serveur (formulaire vide trompeur,
+pas d'écrasement) ; l'écrasement réel ne menaçait que les admins. `firestore.rules` et `access.ts` non touchés.
+
 R2 (repères d'un scan) est A2 ; R5 (barre selon les droits) et R6 (couleur du bouton) sont en partie B.
 
 ## Partie B : les harmonisations (sans planche)
@@ -187,6 +199,14 @@ Chaque tranche finit par le regard sur l'écran réel et la validation de Timoth
 accord du bord gauche recouvre l'accord touché et toute la colonne de gauche. Règle : **(a) retenue** : le
 panneau s'ouvre du côté opposé à l'accord et ne couvre jamais l'accord touché. (b) Feuille du bas à toutes les
 tailles.
+
+**B4 ter. Panneau d'un accord, côté libre** (constat du pilote à l'écran réel, 15/11, 1 366 px, branche à
+`c0d70b10` ; réponse de Timothée du 15/11/2026, relayée par le pilote : « Oui, à droite »). B4 bis mesurait le côté
+sur l'écran entier : le chant étant dans le volet de droite, le panneau s'ouvrait toujours à gauche et cachait le
+titre et le début des paroles. Règle, quand ni dessous ni dessus ne tient : (1) premier accord de sa ligne (aucun
+autre accord de la même rangée à plus de 8 px à sa gauche) et place à gauche : à gauche ; (2) sinon à droite s'il y
+tient ; (3) sinon à gauche ; (4) sinon calé dans l'écran. Jamais sur l'accord ; dessous d'abord, dessus ensuite,
+`fige` et feuille du bas au toucher inchangés.
 
 ### Groupe 2 : les commandes de lecture partagées (page chant, setlist, louange ; cinq dispositions)
 
@@ -314,6 +334,8 @@ commitée le 14/11 au soir), une seule à la fois dans ce fichier. Les tranches 
 | CI-15 | B11, deux composants d'état actif | `ui/` (`Segment`, `Bascule`), `Onglets.tsx`, `SectionTabs.tsx`, `Bibliotheque.tsx`, `SongListClient.tsx`, `MargeAffichage.tsx` | non | B11 |
 | CI-16 | B12, équipes en grille à ordre fixe | `EquipesClient.tsx`, `BandeauEquipes.tsx` | non | B12, A6 (ordre) |
 | CI-17 | B13, finitions de mise en page | `moi/page.tsx`, liste des setlists, `SongListClient.tsx`, `BarreLaterale.tsx`, `SelecteurEspace.tsx` | non | B13 |
+| CI-18 | B4 ter, panneau d'accord du côté libre | `AccordsProvider.tsx` | non | B4 ter |
+| CI-19 | A10, profil illisible ≠ profil absent | `users.ts`, `EcransAccesListe.tsx`, `setlists/page.tsx`, `CreateSetlistClient.tsx`, `profil/page.tsx`, `login/page.tsx`, `SectionMesServices.tsx`, locales | non | A10 |
 
 Tests : ceux de la section de chaque défaut ou harmonisation ; agencement dans `SPECS_GRAND_ECRAN` (cinq projets) ;
 parcours du culte pour toute tranche à « oui ». CI-1, CI-5 et CI-10 à CI-17 ne touchent pas le mode louange
@@ -568,3 +590,21 @@ centre tombe sur un accord).
   privé) ; **non vu à l'écran réel** (le mode louange demande une setlist, donc un compte ; aucune connexion).
   Relevé, non corrigé (il faut `PerformanceMode.tsx`) : métronome visuel allumé, la bande des temps recouvre le bas
   de la note de tête (11 px avant, 8 px après) ; les ronds ne sont pas recouverts.
+- **16/11/2026, CI-18 (B4 ter)** : fait. `premierDeLigne` et nouveau choix du côté dans `AccordsProvider.tsx` ; test
+  B4 ter (accords-toucher : milieu de ligne → droite, premier d'une ligne → gauche, FR `aucun-autre-nom` et 中文
+  `一切歌颂赞美`, aucun sauté). Tests : accords-toucher, louange-accords, accords-toucher-agencement, trois appareils
+  (cinq projets pour l'agencement), ≈ 26 min avec deux tours ; rouge laissé : `accords-toucher:233` (périmé depuis
+  CI-6, déjà noté à CI-13). Captures Playwright avant / après à 1 366 et 1 100 px (artefact privé, validé par
+  Timothée) : avant, gauche dans les quatre cas ; après, droite au milieu d'une ligne, gauche au premier accord ; à
+  1 100 px le panneau tient dessous ou dessus. **Non vu à l'écran réel** (agent-desktop ne trouvait pas les accords
+  dans Chromium, qui plantait). Reste : un accord près du bord gauche de la colonne ouvre le panneau sur les paroles
+  qui suivent (montré à Timothée, accepté).
+- **16/11/2026, CI-19 (A10)** : fait. `getProfile` : 404 → null, autre échec → exception (rien en cache) ;
+  `useProfile` rend `echec` et `relire` ; écran `EcranProfilIllisible` (`setlists.list.profileUnreadable`, FR et
+  中文, bouton `common.retry`) sur Setlists, Nouvelle setlist, Mes services et la page du profil (sans formulaire ni
+  bandeau d'accueil) ; connexion : un échec de lecture renvoie vers la page d'origine au lieu de « identifiants
+  invalides ». Test neuf `profil-lecture-echec` (429, 503, 404 ; Réessayer relit ; FR et 中文) : 24/24 ; voisines
+  (setlist-hors-ligne, acces-moi, coherence, equipes-nettoyage, nouveau-chant, reunions) : 421 verts, 6,7 min.
+  Captures Playwright avant / après, ordinateur et téléphone (artefact privé, validé par Timothée) ; **non vu à
+  l'écran réel** (demande la vraie base). Autres écrans relevés : le bandeau `profile.welcome` est masqué en échec ;
+  `moi/page.tsx:79` masque les notifications sans message (laissé).

@@ -215,6 +215,7 @@
       "songCounter_other": "{{count}} 首诗歌",
       "loginRequired": "歌单仅向教会成员开放——请登录查看你服事的歌单。",
       "profileRequired": "请完善个人资料以查看你服事的歌单。",
+      "profileUnreadable": "暂时无法读取你的资料（网络或数据库不可用）。",
       "upcoming": "即将到来",
       "archived": "历史",
       "emptySearch": "没有找到相关结果。",

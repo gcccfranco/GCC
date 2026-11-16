@@ -49,7 +49,7 @@ import { EtatVide } from "@/components/layout/EtatVide";
 import { Squelette } from "@/components/layout/Squelette";
 import { useMessageTemporaire } from "@/hooks/useMessageTemporaire";
 import { clesDeMesServices, estDeMesServices, trierSetlists } from "@/lib/setlist/liste";
-import { EcranConnexionRequise, EcranProfilRequis } from "./_components/EcransAccesListe";
+import { EcranConnexionRequise, EcranProfilIllisible, EcranProfilRequis } from "./_components/EcransAccesListe";
 import { SectionCorbeille } from "./_components/SectionCorbeille";
 import { ConfirmationSuppressionGroupee, ConfirmationSuppressionDefinitive } from "./_components/ConfirmationsSuppression";
 import { compter } from "@/lib/usage";
@@ -66,7 +66,7 @@ function aujourdhuiLocal(): string {
 // Q3) ; tablette portrait, cartes sur deux colonnes qui listent leurs chants ; téléphone inchangé.
 export default function SetlistsPage() {
   const { t, i18n } = useTranslation();
-  const { user, profile, loading: authLoading } = useProfile();
+  const { user, profile, loading: authLoading, echec, relire } = useProfile();
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
   const [mySetlists, setMySetlists] = useState<FSSetlist[]>([]);
   // Celles dont on est de l'équipe (PS10) : lues à part, fusionnées par id avec la liste commune.
@@ -449,6 +449,10 @@ export default function SetlistsPage() {
   // Non connecté : les setlists sont réservées aux membres
   if (!user) {
     return <EcranConnexionRequise />;
+  }
+
+  if (echec && !profile && !admin) {
+    return <EcranProfilIllisible onReessayer={relire} />;
   }
 
   // Connecté mais profil incomplet (les admins passent quand même)
