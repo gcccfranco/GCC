@@ -258,6 +258,30 @@ export function canEditCreneau(
   return creneau.auteurUid === user.uid || isCoordination(user, profile);
 }
 
+// ─── Salles : réservations (chantier AR, lot 3, docs/spec-salles.md, § Permissions) — miroir : ──────────────
+// firestore.rules, match /reservations/{id}. Le chevauchement ne se vérifie pas dans les rules (SA8, T3b).
+
+/** Lire Salles et les réservations : tout membre connecté (SA14). */
+export function canVoirSalles(user: AuthUser | null): boolean {
+  return !!user;
+}
+
+/** Réserver une salle : tout membre connecté (AR4). */
+export function canReserverSalle(user: AuthUser | null): boolean {
+  return !!user;
+}
+
+/** Modifier ou supprimer une réservation : son auteur ou la coordination (SA10). */
+export function canEditReservation(
+  user: AuthUser | null,
+  profile: ProfilCoordination | null,
+  r: { auteurUid: string },
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  if (!user) return false;
+  return r.auteurUid === user.uid || isCoordination(user, profile, backOffice);
+}
+
 // ─── Scène : saison de réservation (lot U1, docs/spec-scene-saison.md) ───────
 
 /** Réserver pour ces groupes : la coordination toujours ; un membre si la saison

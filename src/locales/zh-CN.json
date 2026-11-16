@@ -4600,7 +4600,32 @@
     "retour": "场地",
     "rien": "没有安排",
     "aujourdhui": "今天",
-    "echec": "未能读取排班或舞台：状态可能不完整。",
+    "echec": "未能读取排班、舞台或预订：状态可能不完整。",
+    "reserver": "预订场地",
+    "feuille": {
+      "date": "日期",
+      "de": "从",
+      "a": "到",
+      "salle": "场地",
+      "pourQui": "为谁",
+      "pourQuoi": "做什么",
+      "autre": "其他…",
+      "personne": "不指定",
+      "groupes": "团契与崇拜",
+      "equipes": "团队",
+      "valider": "预订",
+      "modifierTitre": "修改预订",
+      "echec": "预订未能保存，请重试。",
+      "erreurs": {
+        "finAvantDebut": "结束时间须晚于开始时间。",
+        "horsHeures": "须在 6:00 至 23:59 之间。",
+        "datePassee": "日期须为今天或之后。"
+      }
+    },
+    "supprimer": {
+      "titre": "删除此预订？",
+      "texte": "“{{quoi}}”将从场地中删除，所有人都看不到。"
+    },
     "vue": {
       "etiquette": "视图",
       "liste": "列表",

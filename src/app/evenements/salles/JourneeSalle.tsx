@@ -3,15 +3,18 @@
 // La journée d'une salle (docs/spec-salles.md, SA4) : en un volet (téléphone, tablette portrait), une page avec son
 // retour « ‹ Salles », les occupations du jour choisi dans la liste ; en grand, le volet de droite montre la semaine de
 // la salle (sept jours à partir du jour choisi, marqué en tête). Les occupations comptent les lieux liés (AR6) :
-// la journée de la Grande salle montre les créneaux de la Scène.
+// la journée de la Grande salle montre les créneaux de la Scène. T3a : une réservation s'ouvre en détail (`Detail` de
+// la Grille), où son auteur et la coordination la modifient ou la suppriment (SA10).
 
+import { useState } from "react"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Squelette } from "@/components/layout/Squelette"
 import { useDisposition } from "@/hooks/useDisposition"
 import { addDays } from "@/lib/taches/echeances"
-import { couleurDe } from "@/lib/salles/occupations"
+import { couleurDe, type Occupation } from "@/lib/salles/occupations"
+import { Detail } from "./GrilleSalles"
 import { SALLES, type SalleId } from "@/lib/salles/salles"
 import { dateLongue, ligneOccupation, occupationsDeLaSalle, RACINE_SALLES, useSalles } from "./SallesClient"
 
@@ -19,6 +22,7 @@ export function JourneeSalle({ salle }: { salle: SalleId }) {
   const { t } = useTranslation()
   const etat = useSalles()
   const grand = useDisposition() === "grand"
+  const [detail, setDetail] = useState<{ o: Occupation; jour: string } | null>(null)
   const s = SALLES.find((x) => x.id === salle)!
   if (!etat) return <Squelette enTete={false} />
   const { date, langue } = etat
@@ -54,7 +58,9 @@ export function JourneeSalle({ salle }: { salle: SalleId }) {
                   {occupations.map((o, i) => (
                     <li key={o.id ?? i} className="flex items-start gap-2.5 text-sm tabular-nums">
                       <span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: couleurDe(o) }} />
-                      {o.lien ? <Link href={o.lien} className="underline-offset-4 hover:underline">{ligneOccupation(o, langue)}</Link> : <span>{ligneOccupation(o, langue)}</span>}
+                      {o.source === "reservation" ? (
+                        <button type="button" onClick={() => setDetail({ o, jour: j })} className="-my-1 min-h-7 text-left underline-offset-4 hover:underline">{ligneOccupation(o, langue)}</button>
+                      ) : o.lien ? <Link href={o.lien} className="underline-offset-4 hover:underline">{ligneOccupation(o, langue)}</Link> : <span>{ligneOccupation(o, langue)}</span>}
                     </li>
                   ))}
                 </ul>
@@ -63,6 +69,7 @@ export function JourneeSalle({ salle }: { salle: SalleId }) {
           )
         })}
       </div>
+      <Detail occupation={detail?.o ?? null} langue={langue} dateLongue={detail ? dateLongue(detail.jour, langue) : ""} fermer={() => setDetail(null)} />
     </section>
   )
 }

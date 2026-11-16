@@ -4652,7 +4652,32 @@
     "retour": "Salles",
     "rien": "Rien de prévu",
     "aujourdhui": "Aujourd'hui",
-    "echec": "Le planning ou la scène n'a pas pu être lu : l'état peut être incomplet.",
+    "echec": "Le planning, la scène ou les réservations n'ont pas pu être lus : l'état peut être incomplet.",
+    "reserver": "Réserver une salle",
+    "feuille": {
+      "date": "Date",
+      "de": "De",
+      "a": "À",
+      "salle": "Salle",
+      "pourQui": "Pour qui",
+      "pourQuoi": "Pour quoi",
+      "autre": "Autre…",
+      "personne": "Non précisé",
+      "groupes": "Groupes et cultes",
+      "equipes": "Équipes",
+      "valider": "Réserver",
+      "modifierTitre": "Modifier la réservation",
+      "echec": "La réservation n'a pas pu être enregistrée. Réessayez.",
+      "erreurs": {
+        "finAvantDebut": "La fin doit venir après le début.",
+        "horsHeures": "Entre 6:00 et 23:59.",
+        "datePassee": "Une date d'aujourd'hui ou après."
+      }
+    },
+    "supprimer": {
+      "titre": "Supprimer la réservation ?",
+      "texte": "« {{quoi}} » disparaît de Salles pour tout le monde."
+    },
     "vue": {
       "etiquette": "Vue",
       "liste": "Liste",

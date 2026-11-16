@@ -307,7 +307,10 @@ export async function fakeFirestore(
           from: { collectionId: string; allDescendants?: boolean }[];
           orderBy?: { field: { fieldPath: string }; direction?: string }[];
           limit?: number;
-          where?: { fieldFilter?: { field: { fieldPath: string }; op: string; value: unknown } };
+          where?: {
+            fieldFilter?: { field: { fieldPath: string }; op: string; value: unknown };
+            compositeFilter?: { op: string; filters: { fieldFilter: { field: { fieldPath: string }; op: string; value: unknown } }[] };
+          };
         };
       }).structuredQuery;
       const order = q.orderBy?.[0];
@@ -330,6 +333,15 @@ export async function fakeFirestore(
           if (filtre.op === "EQUAL") return v === attendu;
           return true;
         });
+      }
+      // Salles AR, lot 3 : les réservations se lisent par plage de dates (`compositeFilter` AND sur `date`).
+      if (q.from[0].collectionId === "reservations" && q.where) {
+        const filtres = q.where.compositeFilter?.filters.map((f) => f.fieldFilter) ?? (q.where.fieldFilter ? [q.where.fieldFilter] : []);
+        paths = paths.filter((p) => filtres.every((f) => {
+          const v = String(jsValue(store.get(p)?.[f.field.fieldPath]));
+          const x = String(jsValue(f.value));
+          return f.op === "EQUAL" ? v === x : f.op === "GREATER_THAN_OR_EQUAL" ? v >= x : f.op === "LESS_THAN_OR_EQUAL" ? v <= x : true;
+        }));
       }
       if (order) {
         paths.sort((a, b) => sortKey(a).localeCompare(sortKey(b)));

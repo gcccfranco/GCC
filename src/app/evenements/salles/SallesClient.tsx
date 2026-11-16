@@ -10,6 +10,10 @@
 // tablette portrait, Grille en grand ; le choix est retenu sur l'appareil, `gcc-salles-vue`). La bande de jours, la
 // ligne de contexte et le repère d'heure servent aux deux vues. La Grille prend toute la largeur de la page ; sur la
 // journée d'une salle, le volet de gauche reste la Liste.
+// T3a (lot 3) : la feuille « Réserver » (`FeuilleReserver`, SA6, SA7), ouverte par « Réserver une salle » (dans l'en-tête
+// dès 768 px, par l'évènement `RESERVER_SALLE` ; en bas de la liste au téléphone, comme « Nouvel évènement ») ; les
+// réservations lues avec les autres sources ; modifier et supprimer la sienne (SA10) depuis le détail d'un bloc ou la
+// journée d'une salle : les actions passent par le contexte.
 
 import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
@@ -22,15 +26,23 @@ import { Segment } from "@/components/ui/segment"
 import { useDisposition } from "@/hooks/useDisposition"
 import { jourDeParis } from "@/lib/evenements/bascule"
 import { useAuth } from "@/lib/firebase/auth"
+import { useProfile } from "@/lib/firebase/users"
+import { createReservation, deleteReservation, updateReservation, type Reservation } from "@/lib/firebase/reservations"
+import { canEditReservation, canReserverSalle } from "@/lib/access"
+import { BoutonNouveau } from "@/components/layout/BoutonNouveau"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { estSurLaListe } from "@/lib/deuxVolets"
 import { addDays } from "@/lib/taches/echeances"
-import { chargerSalles } from "@/lib/salles/charger"
+import { chargerReservations, chargerSalles } from "@/lib/salles/charger"
 import { varianteDu } from "@/lib/salles/emploi"
 import { couleurDe, etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
 import { SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
 import { GrilleSalles } from "./GrilleSalles"
+import { FeuilleReserver, type Ouverture, type Saisie } from "./FeuilleReserver"
 
 export const RACINE_SALLES = "/evenements/salles"
+/** Évènement de la fenêtre : « Réserver une salle » de l'en-tête (`SectionEvenements`) ouvre la feuille. */
+export const RESERVER_SALLE = "gcc-salles-reserver"
 const JOURS_DE_LA_BANDE = 14
 
 type Langue = "fr" | "zh"
@@ -66,6 +78,10 @@ interface EtatSalles {
   langue: Langue
   sources: SourcesSalles
   occupations: (date: string) => Occupation[]
+  /** SA10 : la réservation d'une occupation, si la personne peut la modifier ; sinon null. */
+  modifiable: (o: Occupation) => Reservation | null
+  modifier: (r: Reservation) => void
+  supprimer: (r: Reservation) => Promise<void>
 }
 
 const Contexte = createContext<EtatSalles | null>(null)
@@ -93,6 +109,16 @@ export function ligneOccupation(o: Occupation, langue: Langue): string {
   return [...heures, nom, o.auteurNom].filter(Boolean).join(" · ")
 }
 
+const enMinutes = (h: string) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5))
+const enHeure = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`
+
+/** Le moment pré-rempli de la feuille : l'heure du repère au quart d'heure suivant, entre 6:00 et 22:00, pour une
+ *  heure (SA6). */
+function momentDuRepere(heure: string): { debut: string; fin: string } {
+  const m = Math.min(22 * 60, Math.max(6 * 60, Math.ceil(enMinutes(heure) / 15) * 15))
+  return { debut: enHeure(m), fin: enHeure(m + 60) }
+}
+
 /** Les heures du repère : de 6:00 à 22:00, au quart d'heure (AR12). */
 const HEURES = Array.from({ length: (22 - 6) * 4 + 1 }, (_, i) => {
   const m = 6 * 60 + i * 15
@@ -108,9 +134,11 @@ export function SallesClient({ enTete, children }: { enTete: React.ReactNode; ch
 }
 
 function Salles({ enTete, children }: { enTete: React.ReactNode; children: React.ReactNode }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const langue: Langue = i18n.language?.startsWith("zh") ? "zh" : "fr"
   const { user } = useAuth()
+  const { profile } = useProfile()
+  const confirmer = useConfirmer()
   const pathname = usePathname() || RACINE_SALLES
   const grand = useDisposition() === "grand"
   const surLaListe = estSurLaListe(pathname, RACINE_SALLES)
@@ -119,6 +147,7 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
   // « maintenant » (aujourd'hui seulement) ou « HH:MM » ; un autre jour se lit à 08:00 (AR12).
   const [repere, setRepere] = useState("maintenant")
   const [lecture, setLecture] = useState<{ sources: SourcesSalles; echec: boolean } | null>(null)
+  const [ouverture, setOuverture] = useState<Ouverture | null>(null)
   const retenue = useSyncExternalStore(suivreVue, vueRetenue, () => null)
   // Sur la journée d'une salle, le volet de gauche reste la Liste (la Grille ne tient pas dans un volet).
   const vue: Vue = !surLaListe ? "liste" : retenue ?? (grand ? "grille" : "liste")
@@ -128,10 +157,39 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
     chargerSalles(today).then(setLecture)
   }, [user, today])
 
+  // Après une écriture, les réservations se relisent (les autres sources ne changent pas).
+  const relireReservations = async () => {
+    const reservations = await chargerReservations(today)
+    setLecture((l) => l && { ...l, sources: { ...l.sources, reservations } })
+  }
+
   const etat = useMemo<EtatSalles | null>(() => lecture && ({
     today, date, langue, sources: lecture.sources,
     occupations: (d: string) => occupationsDu(d, lecture.sources),
-  }), [lecture, today, date, langue])
+    modifiable: (o) => (o.reservation && canEditReservation(user, profile, o.reservation) ? o.reservation : null),
+    modifier: (r) => setOuverture({ reservation: r }),
+    supprimer: async (r) => {
+      const oui = await confirmer({ titre: t("salles.supprimer.titre"), texte: t("salles.supprimer.texte", { quoi: r.quoi }), action: t("common.buttons.delete"), destructif: true })
+      if (!oui) return
+      await deleteReservation(r.id)
+      await relireReservations()
+    },
+  }), [lecture, today, date, langue, user, profile, confirmer, t]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const heureDuRepere = repere === "maintenant" ? heureDeParis() : repere
+  const reserver = () => setOuverture({ date: date < today ? today : date, ...momentDuRepere(heureDuRepere) })
+  // « Réserver une salle » de l'en-tête (dès 768 px).
+  useEffect(() => {
+    window.addEventListener(RESERVER_SALLE, reserver)
+    return () => window.removeEventListener(RESERVER_SALLE, reserver)
+  })
+
+  const enregistrer = async (saisie: Saisie, id?: string) => {
+    if (!user) return
+    if (id) await updateReservation(id, saisie)
+    else await createReservation({ ...saisie, auteurUid: user.uid, auteurNom: profile?.firstName?.trim() || user.email || "" })
+    await relireReservations()
+  }
 
   const choisirJour = (d: string) => {
     setDate(d)
@@ -139,7 +197,7 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
   }
 
   const liste = !etat ? <Squelette enTete={false} className="p-0" /> : (
-    <Liste etat={etat} vue={vue} surGris={!grand || vue === "grille"} choisirVue={surLaListe ? retenirVue : null} repere={repere} setRepere={setRepere} choisirJour={choisirJour} echec={lecture!.echec} actif={surLaListe ? null : pathname.split("/")[3] ?? null} />
+    <Liste etat={etat} vue={vue} surGris={!grand || vue === "grille"} choisirVue={surLaListe ? retenirVue : null} repere={repere} setRepere={setRepere} choisirJour={choisirJour} reserver={canReserverSalle(user) ? reserver : null} echec={lecture!.echec} actif={surLaListe ? null : pathname.split("/")[3] ?? null} />
   )
 
   return (
@@ -162,13 +220,16 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
           </main>
         </>
       )}
+      {etat && (
+        <FeuilleReserver ouverture={ouverture} fermer={() => setOuverture(null)} today={today} langue={langue} occupationsDu={etat.occupations} enregistrer={enregistrer} />
+      )}
     </Contexte.Provider>
   )
 }
 
 const GROUPES: GroupeSalle[] = ["grande", "groupe", "bureaux"]
 
-function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour, echec, actif }: {
+function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour, reserver, echec, actif }: {
   etat: EtatSalles
   vue: Vue
   /** La page est grise autour (un volet, ou la Grille) : le sélecteur prend la piste du fond de groupe. */
@@ -178,6 +239,8 @@ function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour,
   repere: string
   setRepere: (r: string) => void
   choisirJour: (d: string) => void
+  /** « Réserver une salle », au téléphone en bas de la liste ; null sans droit. */
+  reserver: (() => void) | null
   echec: boolean
   actif: string | null
 }) {
@@ -292,6 +355,9 @@ function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour,
         ])}
       </ul>
       )}
+
+      {/* Sous 768 px, « Réserver une salle » est une pilule en bas de la liste (dès 768 px : dans l'en-tête). */}
+      {reserver && <div className="md:hidden"><BoutonNouveau dansLeFlux label={t("salles.reserver")} onClick={reserver} /></div>}
     </div>
   )
 }

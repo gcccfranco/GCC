@@ -460,3 +460,29 @@ T2b, T2c et T3a (apparence).
   `salles-liste` en grand (Grille par défaut), corrigés et repassés avec `salles-grille` (79 verts, 1 min 17 s) ;
   `agencement-v18-t7` : 201 instable (ordinateur cette fois), vert seul. Environ 12 min de tests en tout. tsc et lint
   propres. Regard sur les cinq projets (grille, détail, liste). Suite : lot 3, T3a lancée.
+- 16/11/2026 : **T3a faite** (orchestratrice T3a, codée par elle-même : `/tranche` et les agents du dépôt n'étaient pas
+  chargés ; `critique-design` lancé comme agent général avec sa consigne, six captures signalées).
+  `src/lib/firebase/reservations.ts` (REST : `listReservations` sur une plage de `date`, `createReservation`,
+  `updateReservation`, `deleteReservation`) ; `reservations/{id}` dans `firestore.rules` (`reservationValide()` : salle
+  parmi les neuf, formats, `debut < fin`, `pour` ≤ 60, `quoi` 1 à 80 ; auteur inchangé à la modification) ;
+  `canVoirSalles`, `canReserverSalle`, `canEditReservation` dans `access.ts`. **`firestore.rules` est à publier à la
+  main par Timothée avant la mise en ligne du lot 3.** Source `reservation` dans `occupationsDu` (encre neutre, AR17 ;
+  `libellePour`) ; `chargerSalles` lit les réservations d'aujourd'hui à J+19 (bande et semaine du volet), relues après
+  chaque écriture. Feuille « Réserver » (`salles/FeuilleReserver.tsx`, `FeuilleOuPanneau` : feuille du bas, panneau à
+  droite en deux volets) : date, de, à pré-remplis (jour choisi, repère au quart d'heure suivant, une heure), salles
+  libres en tête avec « Libre jusqu'à… », occupées grisées et non choisissables avec leur raison, pour qui, pour quoi ;
+  SA7 en messages sous les heures ; bouton d'envoi en pied collant. Bouton « Réserver une salle » dans l'en-tête dès
+  768 px (évènement `RESERVER_SALLE`), pilule en bas de la liste au téléphone. Modifier et supprimer (SA10) : depuis le
+  détail d'un bloc de la Grille et la journée d'une salle (une réservation y ouvre le même détail), confirmation par
+  la fenêtre du site. Décisions déléguées (session T3a, 16/11) : (1) « Pour qui » enregistre une valeur de `QUI`,
+  `equipe:<id>` pour une équipe de l'organigramme (nom court à l'écran, dans la langue) ou le texte d'« Autre… » ; il
+  est facultatif (« Non précisé ») ; (2) `auteurNom` = le prénom ; (3) une salle choisie qui devient occupée bloque
+  l'envoi sans message (le refus nommé et « Décaler » sont T3b) ; (4) une seule requête par plage de dates plutôt
+  qu'une par jour. Firestore simulé : `fakeSession` applique les filtres de `date` sur `reservations`. Retouches de
+  `critique-design` faites : pied collant, état libre des salles, « Supprimer » à gauche. Laissés pour plus tard :
+  blocs courts de la Grille tronqués (heure perdue, déjà là en T2c), apostrophe courbe dans tous les `salles.*`,
+  croix de fermeture de la feuille au téléphone (motif commun de `FeuilleOuPanneau`), largeur de la feuille en
+  tablette portrait. Spec `tests/salles-reserver.spec.ts` (12 tests × 5 projets, dans `SPECS_GRAND_ECRAN`) ; avec
+  `salles-liste`, `salles-grille`, `salles-modele` : 172 verts, 10 sautés (propres à un appareil), 2 min 33 s (≈ 9 min
+  de tests en tout dans la tranche). tsc et lint propres ; police chinoise refaite. Regard sur les cinq projets
+  (feuille, page, détail). Suite : T3b lancée.

@@ -53,6 +53,8 @@ rules_version = '2';
 //   (programmes/{id}/creneaux) : tout connecté en pose un à son nom — depuis le
 //   lot U1, dans une saison ouverte et pour les groupes permis (reservable()) ;
 //   auteur + coordination le modifient ou le retirent.
+// - Réservations de salles (reservations/{id}, chantier AR, lot 3) : lues par les connectés ; tout connecté
+//   réserve à son nom ; auteur + coordination les modifient ou les retirent.
 // - Organigramme (equipes/{id}, lot 16) : lu par les connectés ; écrit par les
 //   admins et par les comptes portant le droit `equipes` (lot AO : aussi les membres d'Orga, le référent de l'équipe,
 //   et, pour Louange, un référent de sous-équipe). Le rattachement qui en
@@ -363,6 +365,30 @@ service cloud.firestore {
               && (gereUnPlanning() || reservable(id, request.resource.data.qui))));
         allow delete: if signedIn() && (isCoordination() || resource.data.auteurUid == request.auth.uid);
       }
+    }
+
+    // Réservations de salles (chantier AR, lot 3, docs/spec-salles.md, § Permissions, SA7, SA10) : lues par les
+    // connectés ; tout connecté réserve à son nom ; l'auteur et la coordination modifient (sans changer l'auteur) ou
+    // suppriment. Le chevauchement se vérifie côté client (SA8) puis par message (SA9) : pas de requête ici.
+    // Miroir : canVoirSalles, canReserverSalle, canEditReservation (src/lib/access.ts).
+    function reservationValide() {
+      let r = request.resource.data;
+      return r.salle in ['grande', 'scene', 'fidelite', 'paix', 'amour', 'bonte', 'zhongban', 'imprimante', 'reunion']
+        && r.date is string && r.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && r.debut is string && r.debut.matches('^[0-9]{2}:[0-9]{2}$')
+        && r.fin is string && r.fin.matches('^[0-9]{2}:[0-9]{2}$')
+        && r.debut < r.fin
+        && r.pour is string && r.pour.size() <= 60
+        && r.quoi is string && r.quoi.size() >= 1 && r.quoi.size() <= 80
+        && r.auteurUid is string && r.auteurNom is string;
+    }
+
+    match /reservations/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.auteurUid == request.auth.uid && reservationValide();
+      allow update: if signedIn() && (isCoordination() || resource.data.auteurUid == request.auth.uid)
+        && reservationValide() && request.resource.data.auteurUid == resource.data.auteurUid;
+      allow delete: if signedIn() && (isCoordination() || resource.data.auteurUid == request.auth.uid);
     }
 
     // Réunions d'équipe (lot U6, docs/spec-back-office.md ; lot 1 du chantier

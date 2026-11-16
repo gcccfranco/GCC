@@ -1,8 +1,10 @@
 // Occupations d'un jour, salle par salle (docs/spec-salles.md, § Modèle, SA2, SA13, AR6, AR14, AR17) : fonctions
-// pures. Lot 2 : emploi du temps fixe, jour J d'une fête, créneaux de la Scène en lecture seule ; les réservations
-// (lot 3) et les évènements portant une salle (lot 4) viendront s'ajouter aux sources.
+// pures. Lot 2 : emploi du temps fixe, jour J d'une fête, créneaux de la Scène en lecture seule ; lot 3 : les
+// réservations (`reservations/{id}`) ; les évènements portant une salle (lot 4) viendront s'ajouter aux sources.
 
 import { libelleQui } from "@/lib/fetes/qui";
+import type { Reservation } from "@/lib/firebase/reservations";
+import { nomEquipe } from "@/lib/taches/messages";
 import { feteDe, type Fete } from "@/lib/scene/fetes";
 import { CATEGORY_COLORS, PLANNING_COLORS } from "@/lib/serviceColors";
 import type { ServiceEntry } from "@/lib/planning/names";
@@ -19,7 +21,8 @@ export type Occupant =
   | { cle: "entrainementLouange" | "culteSinophone" | "louangeFranco" }
   | { classe: string }
   | { fete: Fete }
-  | { creneau: Pick<Creneau, "quoi" | "qui"> };
+  | { creneau: Pick<Creneau, "quoi" | "qui"> }
+  | { reservation: Pick<Reservation, "quoi" | "pour"> };
 
 export interface Occupation {
   salle: SalleId;
@@ -27,18 +30,22 @@ export interface Occupation {
   debut: string;
   fin: string;
   occupant: Occupant;
-  source: "fixe" | "fete" | "scene";
-  /** Créneau de scène : son id, son auteur et la page de sa fête ; jour J : la page de la fête. */
+  source: "fixe" | "fete" | "scene" | "reservation";
+  /** Créneau de scène : son id, son auteur et la page de sa fête ; jour J : la page de la fête ; réservation : son id
+   *  et son auteur (`reservation` : le document, pour la modifier, SA10). */
   id?: string;
   auteurUid?: string;
   auteurNom?: string;
   lien?: string;
+  reservation?: Reservation;
 }
 
 /** Ce que la page a lu : services du planning (`ServiceEntry`) et éditions de la scène, comme le Calendrier. */
 export interface SourcesSalles {
   services: Pick<ServiceEntry, "date" | "service">[];
   scene: { programme: Pick<Programme, "jourJ" | "fete" | "ouvert">; creneaux: Creneau[] }[];
+  /** Lot 3 : les réservations lues (toutes dates ; seules celles du jour comptent). */
+  reservations?: Reservation[];
 }
 
 /** Fête dont c'est le jour J (programme ouvert), sinon null. */
@@ -62,7 +69,13 @@ export function occupationsDu(date: string, sources: SourcesSalles): Occupation[
         salle: "scene", debut: c.debut, fin: c.fin, occupant: { creneau: { quoi: c.quoi, qui: c.qui } }, source: "scene",
         id: c.id, auteurUid: c.auteurUid, auteurNom: c.auteurNom, lien: `/evenements/scene/${feteDe(programme) ?? ""}`,
       })));
-  return [...jourJ, ...fixes, ...scene].sort((a, b) => a.debut.localeCompare(b.debut));
+  const reservations: Occupation[] = (sources.reservations ?? [])
+    .filter((r) => r.date === date)
+    .map((r): Occupation => ({
+      salle: r.salle, debut: r.debut, fin: r.fin, occupant: { reservation: { quoi: r.quoi, pour: r.pour } }, source: "reservation",
+      id: r.id, auteurUid: r.auteurUid, auteurNom: r.auteurNom, reservation: r,
+    }));
+  return [...jourJ, ...fixes, ...scene, ...reservations].sort((a, b) => a.debut.localeCompare(b.debut));
 }
 
 /** Les occupations qui valent pour une salle : la sienne et celles des lieux liés (Grande salle ↔ Scène, AR6). */
@@ -132,7 +145,15 @@ export function nomOccupant(o: Occupation, langue: Langue): string {
   if ("cle" in x) return m[x.cle];
   if ("classe" in x) return x.classe;
   if ("fete" in x) return m.jourJ(m.fete[x.fete]);
+  if ("reservation" in x) return [x.reservation.quoi, libellePour(x.reservation.pour, langue)].filter(Boolean).join(" · ");
   return [x.creneau.quoi, x.creneau.qui.map((q) => libelleQui(q, langue)).join(", ")].filter(Boolean).join(" · ");
+}
+
+/** « Pour qui » d'une réservation à l'écran (AR16) : une valeur de QUI (`libelleQui`), une équipe (`equipe:<id>`, son
+ *  nom court) ou le texte d'« Autre… » tel quel. */
+export function libellePour(pour: string, langue: Langue): string {
+  if (pour.startsWith("equipe:")) return nomEquipe(pour.slice("equipe:".length), langue === "zh" ? "zh-CN" : "fr", true);
+  return libelleQui(pour, langue);
 }
 
 /** L'état en mots (SA2). Une occupation qui court jusqu'à la fin du jour (jour J) se dit sans heure. */
@@ -145,6 +166,9 @@ export function etatEnMots(e: Etat, langue: Langue): string {
   return e.avecGrande ? m.avecGrande(mots) : mots;
 }
 
+/** Réservations libres : encre neutre (AR17), l'encre du texte (`--foreground`). */
+const ENCRE_RESERVATION = "#1c1c1e";
+
 /** Couleur d'un bloc (AR17) : groupes et cultes d'après `CATEGORY_COLORS`, culte sinophone gris de repli, classes vert
  *  des classes d'EDD, fête sa couleur de setlist, créneau de scène celle de la Scène. */
 export function couleurDe(o: Occupation): string {
@@ -153,5 +177,6 @@ export function couleurDe(o: Occupation): string {
   if ("cle" in x) return x.cle === "culteSinophone" ? "#64748b" : CATEGORY_COLORS["Culte Francophone"];
   if ("classe" in x) return PLANNING_COLORS.edd;
   if ("fete" in x) return CATEGORY_COLORS[x.fete === "noel" ? "Noël" : "Pâques"];
+  if ("reservation" in x) return ENCRE_RESERVATION;
   return PLANNING_COLORS.scene;
 }

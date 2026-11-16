@@ -7,6 +7,7 @@
 // lié (la Grande salle dans la colonne de la Scène, et l'inverse, AR6) se voit en hachures, nommée pour les lecteurs
 // d'écran seulement : la salle est prise, le bloc se lit dans sa colonne. Toucher un bloc ouvre son détail ; celui d'un créneau de scène ou d'un jour J
 // mène à la page de la fête. Le repère d'heure (AR12) est une ligne en travers, sous les blocs.
+// T3a : le détail d'une réservation offre « Modifier » et « Supprimer » à son auteur et à la coordination (SA10).
 
 import { useState } from "react"
 import Link from "next/link"
@@ -15,6 +16,7 @@ import { useTranslation } from "react-i18next"
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { couleurDe, nomOccupant, occupationsDe, type Occupation } from "@/lib/salles/occupations"
 import { SALLES } from "@/lib/salles/salles"
+import { useSalles } from "./SallesClient"
 
 type Langue = "fr" | "zh"
 
@@ -127,10 +129,13 @@ export function GrilleSalles({ occupations, heure, langue, dateLongue }: {
   )
 }
 
-/** Le détail d'un bloc (SA4) : qui, où, quand, qui l'a inscrit ; la page de la fête pour un créneau de scène. */
-function Detail({ occupation: o, langue, dateLongue, fermer }: { occupation: Occupation | null; langue: Langue; dateLongue: string; fermer: () => void }) {
+/** Le détail d'un bloc (SA4) : qui, où, quand, qui l'a inscrit ; la page de la fête pour un créneau de scène ; pour
+ *  sa réservation, « Modifier » et « Supprimer » (SA10). Partagé avec la journée d'une salle. */
+export function Detail({ occupation: o, langue, dateLongue, fermer }: { occupation: Occupation | null; langue: Langue; dateLongue: string; fermer: () => void }) {
   const { t } = useTranslation()
+  const etat = useSalles()
   const salle = o && SALLES.find((s) => s.id === o.salle)
+  const reservation = o && etat?.modifiable(o)
   const fete = o?.lien?.split("/").pop()
   return (
     <Dialog open={Boolean(o)} onOpenChange={(ouvert) => { if (!ouvert) fermer() }}>
@@ -166,6 +171,25 @@ function Detail({ occupation: o, langue, dateLongue, fermer }: { occupation: Occ
               </div>
             )}
           </dl>
+          {/* « Supprimer » à gauche, l'action sûre sous le pouce (critique-design T3a). */}
+          {reservation && (
+            <div className="flex gap-2 border-t border-border/60 px-4 py-3">
+              <button
+                type="button"
+                onClick={() => { fermer(); void etat!.supprimer(reservation) }}
+                className="flex h-11 flex-1 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-destructive transition-colors hover:bg-secondary/70"
+              >
+                {t("common.buttons.delete")}
+              </button>
+              <button
+                type="button"
+                onClick={() => { fermer(); etat!.modifier(reservation) }}
+                className="flex h-11 flex-1 items-center justify-center rounded-full bg-secondary text-sm font-semibold transition-colors hover:bg-secondary/70"
+              >
+                {t("common.buttons.edit")}
+              </button>
+            </div>
+          )}
           {o.lien && (fete === "noel" || fete === "paques") && (
             <div className="border-t border-border/60 px-4 py-1">
               <Link href={o.lien} onClick={fermer} className="flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline">

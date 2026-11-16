@@ -4,6 +4,8 @@
 // en REST seulement.
 
 import { listCreneaux, listProgrammes } from "@/lib/firebase/programmes";
+import { listReservations, type Reservation } from "@/lib/firebase/reservations";
+import { addDays } from "@/lib/taches/echeances";
 import { loadPlanningData, type PlanningData } from "@/lib/planning/names";
 import { editionsAffichees } from "@/lib/scene/fetes";
 import type { SourcesSalles } from "./occupations";
@@ -16,15 +18,24 @@ export function servicesDeVariante(planning: Pick<PlanningData, "intergroupe" | 
   ];
 }
 
+/** Jours lus après aujourd'hui : treize de la bande, six de plus pour la semaine du volet. */
+const JOURS_LUS = 13 + 6;
+
+/** Les réservations que la page peut montrer. */
+export function chargerReservations(today: string): Promise<Reservation[]> {
+  return listReservations(today, addDays(today, JOURS_LUS));
+}
+
 export async function chargerSalles(today: string): Promise<{ sources: SourcesSalles; echec: boolean }> {
   let echec = false;
-  const [services, scene] = await Promise.all([
+  const [services, scene, reservations] = await Promise.all([
     loadPlanningData().then(servicesDeVariante).catch(() => { echec = true; return []; }),
     listProgrammes()
       .then((programmes) => Promise.all(editionsAffichees(programmes, today).map(async ({ programme }) => ({
         programme: programme!, creneaux: await listCreneaux(programme!.id),
       }))))
       .catch(() => { echec = true; return []; }),
+    chargerReservations(today).catch(() => { echec = true; return []; }),
   ]);
-  return { sources: { services, scene }, echec };
+  return { sources: { services, scene, reservations }, echec };
 }
