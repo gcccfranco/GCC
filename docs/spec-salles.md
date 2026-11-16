@@ -11,8 +11,12 @@
   Quand c'est un dimanche avec interfranco la salle bonté et salle paix sont disponibles de 13h à 14h30 sauf la salle
   fidélité qui sera occupé par le groupe joie. » Puis : « la grande salle est occupé pour intergroupe par les 5
   groupes, et pour interfranco la grande salle est occupé par les 3 groupes francophones ».
-- **Statut** : **cadrage**. Change l'organisation des écrans : planche d'abord (`CLAUDE.md`, « Design »), puis les
-  décisions et les tranches ici, puis le code sur go. **Ni planche lancée ni go.**
+- **Portée élargie (Timothée, 16/11/2026, en accordant la planche)** : « Oui, il faudrait peut être la fusionner avec
+  la réservation de la scène. En fait il faudrait revoir tout le système de réservation ainsi que sa page. L'onglet
+  évènement est à changer ? » La planche porte donc sur **tout le système de réservation, Scène comprise, et sa page**,
+  et sur la place de l'onglet Évènements.
+- **Statut** : **cadrage**, faits S-Q1 à S-Q4 répondus. **Planche lancée le 16/11/2026** (accord de Timothée : « Oui »),
+  sujet `salles-reservation` ; ensuite les décisions et les tranches ici, puis le code sur go. **Pas de go.**
 - **Base de code** : `claude/corrections-design` à `4f1134e`.
 
 ## Ce que le code montre
@@ -41,10 +45,14 @@ Une salle a parfois deux noms, selon qui l'occupe. Occupations fixes : **tous le
 | Salle Paix | Salle 高班 | 13:00–14:30 ; 15:30–17:00 (高班) |
 | Salle Amour | Salle 大班 | 13:00–14:30 ; 15:30–17:00 (大班) |
 | Salle Bonté | | 13:00–14:30 |
-| Salle 中班 | à préciser (S-Q1) | 15:30–17:00 |
-| Salle imprimante | | 12:20–12:40 (par qui : S-Q3) |
-| Salle de réunion | | aucune donnée |
-| Scène | | réservations des fêtes (aujourd'hui) |
+| Salle 中班 | aucun : une salle à part | 15:30–17:00 |
+| Salle imprimante | | 12:20–12:40, l'équipe de louange du culte francophone du jour |
+| Salle de réunion | | aucune ; c'est une autre salle que la Salle imprimante |
+| Scène | **dans la Grande salle** | réservations des fêtes (aujourd'hui) ; aucun entraînement sur scène pendant le culte sinophone ni pendant le groupe Joie |
+
+**Conséquence pour la Scène d'aujourd'hui** : la grille par défaut d'une saison (dimanche 14:00–19:00, créneaux d'une
+heure) propose des créneaux qui croisent le groupe Joie (jusqu'à 14:30) et le culte sinophone (15:00–17:00). Le
+dimanche, la scène n'est vraiment libre qu'entre 14:30 et 15:00, puis après 17:00 : d'où le besoin d'autres jours.
 
 ### Le temps de groupe (13:00–14:30) selon le dimanche (Timothée, 16/11/2026)
 
@@ -56,7 +64,7 @@ changer tout seul ces jours-là, sans exception à saisir.
 | Salle Fidélité | occupée | libre | groupe Joie |
 | Salle Bonté | occupée | libre | libre |
 | Salle Paix | occupée | libre | libre |
-| Salle Amour | occupée | libre | occupée (déduit : le groupe Amour n'est pas des trois groupes francophones) |
+| Salle Amour | occupée | libre | occupée par le groupe Amour (confirmé) |
 | Grande salle | groupe Joie | Intergroupe : les cinq groupes | Interfranco : les trois groupes francophones |
 
 ## Principes proposés (à valider après la planche)
@@ -67,7 +75,7 @@ changer tout seul ces jours-là, sans exception à saisir.
 | S2 | L'**emploi du temps fixe** du dimanche se saisit une fois (coordination), par semaine ; il s'affiche occupé et ne se réserve pas par-dessus. Il a trois variantes, choisies d'après la feuille du planning : dimanche ordinaire, Intergroupe, Interfranco (tableau ci-dessus). Une autre exception (fête) se règle à part : à dessiner. |
 | S3 | **Réserver** : tout membre connecté (Timothée) choisit une salle, une date, « de » et « à » librement (Timothée), dit pour qui et pour quoi. Un chevauchement est refusé, comme sur la Scène. |
 | S4 | **Réunion, évènement** : choisir une salle dans leur formulaire la réserve (Timothée) ; la réservation suit la date et l'heure, et part avec la réunion. Le lieu en texte libre reste pour l'extérieur. |
-| S5 | **La Scène** entre dans la liste **après Noël** : la saison en cours n'est pas touchée. La fête garde ce qui lui est propre (ordre de passage, chants, « Qui peut réserver »). La feuille « un autre moment » du lot AQ est la même que celle des salles. |
+| S5 | **La Scène** est réservée par le même système (Timothée, 16/11 : « la fusionner », « revoir tout le système de réservation ainsi que sa page »). Elle est dans la Grande salle : ce qui occupe l'une occupe l'autre. La fête garde ce qui lui est propre (ordre de passage, chants, « Qui peut réserver »). **Date de bascule de la Scène** : à trancher (S-Q10), la saison de Noël est en cours. |
 | S6 | Permissions en double (`src/lib/access.ts` et `firestore.rules`) : règles à publier par Timothée. Occupations lisibles par tout connecté, comme les setlists et les profils. |
 | S7 | Back-office : derrière `BACK_OFFICE` pour la saisie de l'emploi du temps ; la réservation est dans l'App. |
 
@@ -75,17 +83,15 @@ changer tout seul ces jours-là, sans exception à saisir.
 
 **Faits, à Timothée**
 
-- S-Q1. La Salle 中班 est-elle une salle à part, ou la même qu'une autre (Bonté ?) ?
-- S-Q2. La Scène est-elle dans la Grande salle ? Si oui, un entraînement sur scène et une occupation de la Grande
-  salle (culte sinophone, groupe Joie) s'excluent-ils ?
-- S-Q3. Salle imprimante, 12:20–12:40 : par qui ? « Salle imprimante » et « Salle de réunion » sont-elles deux salles,
-  et la « salle à côté de réunion » du premier retour en est-elle une troisième ?
-- S-Q4. **Répondu le 16/11** (tableau du temps de groupe). Seule la Salle Amour un dimanche d'Interfranco est
-  déduite, pas dite : à corriger par Timothée si elle est libre.
+- S-Q1 à S-Q4 : **répondues le 16/11/2026** (tableaux ci-dessus). Non demandé : la « salle à côté de réunion » du
+  premier retour est-elle la Salle imprimante ?
+- S-Q10. La Scène bascule-t-elle dans le nouveau système avant Noël (réservations en cours à reprendre) ou après ?
 
 **Dessin, pour la planche**
 
-- S-Q5. Où vit la section (onglet de l'App, Évènements, Calendrier) et son nom (« Salles ») ?
+- S-Q5. Où vit la section (onglet de l'App, Évènements, Calendrier) et son nom (« Salles ») ? Timothée, 16/11 :
+  « L'onglet évènement est à changer ? » : aujourd'hui cinq entrées (Chants, Setlists, Planning, Évènements, Moi) et,
+  dans Évènements, un rail Agenda · Pâques · Noël.
 - S-Q6. La vue d'un jour : salles en colonnes et heures en lignes, ou liste par salle ; ce qu'on voit au téléphone.
 - S-Q7. La feuille de réservation, et ce qu'un refus propose (salles libres à cette heure).
 - S-Q8. Le champ « salle » des formulaires de réunion et d'évènement.
@@ -96,7 +102,7 @@ changer tout seul ces jours-là, sans exception à saisir.
 1. Les salles, l'emploi du temps fixe, la vue d'un jour (lecture).
 2. Réserver librement, refus des chevauchements.
 3. Réunions et évènements réservent leur salle.
-4. La Scène devient une salle (après Noël).
+4. La Scène passe dans le même système (date : S-Q10).
 
 ## Avancement
 
@@ -105,3 +111,6 @@ changer tout seul ces jours-là, sans exception à saisir.
   de S-Q4, l'accord pour la planche.
 - 16/11/2026 : Grande salle des dimanches d'Intergroupe (cinq groupes) et d'Interfranco (trois groupes francophones) ;
   S-Q4 répondue. Reste : S-Q1 à S-Q3, l'accord pour la planche.
+- 16/11/2026 : S-Q1 à S-Q3 répondues (Salle 中班 à part ; Scène dans la Grande salle ; Salle imprimante : louange du
+  culte francophone ; Salle de réunion à part). Portée élargie à tout le système de réservation, Scène comprise.
+  Planche `salles-reservation` lancée (accord de Timothée).

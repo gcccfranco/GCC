@@ -8,7 +8,11 @@
 - **Réponses de Timothée (16/11/2026)** : « Intergroupe et Interfranco c'est pour les séances de Louange de ces
   cultes » ; « Jour isolé et la personne n'a pas trouvé le réglage, ce qui signifie que c'est pas pratique » ; « Peut
   à la place de mettre des plages, laisser les personnes mettre le temps qu'ils veulent réserver ».
-- **Statut** : spec écrite le 16/11/2026 ; propositions SQ3, SQ5, SQ6, SQ9 à SQ13 **à valider** ; **attend le go**.
+- **Statut** : spec écrite le 16/11/2026 ; SQ5, SQ9 et SQ10 **validées par Timothée le 16/11** (« Ok ») ; SQ3, SQ6,
+  SQ11 à SQ13 restent des propositions ; **attend le go** (le « Ok » portait sur les trois choix, pas sur le lot).
+- **À relire avant le go** : Timothée veut « revoir tout le système de réservation ainsi que sa page » (AR,
+  `docs/spec-salles.md`). SQ-A (« Qui ») sert dans les deux cas ; SQ-B (autre moment sur la page actuelle) n'a de sens
+  que comme solution d'attente pour Noël 2026.
 - **Base de code** : `claude/corrections-design` à `4f1134e`.
 - **Suite** : l'occupation des salles (`docs/spec-salles.md`, AR) reprendra la feuille « un autre moment » (date, de, à).
   Ce lot ne change ni la grille des dimanches ni les réglages de la saison.
@@ -41,12 +45,12 @@
 | SQ2 | Leurs noms en 中文, leurs rappels | **Du code** : libellés des catégories existantes (联合聚会, 法语联合聚会) ; rappel aux membres de la catégorie du même nom. |
 | SQ3 | Qui saisit leurs chants de fête | **Proposé** : comme Culte Francophone, les membres de l'équipe Louange de l'organigramme. |
 | SQ4 | Écrire soi-même | **Timothée, 16/11**. Une pastille « Autre… » ouvre un champ court (40 caractères) ; une seule valeur libre par réservation ou par passage ; elle est stockée telle quelle dans `qui`. |
-| SQ5 | Qui voit « Autre… » | **Proposé** : tout le monde quand la saison ne limite pas « Qui peut réserver » ; sinon la coordination et qui gère un planning (les règles refuseraient un simple membre). Aucune règle à publier. |
+| SQ5 | Qui voit « Autre… » | **Validé par Timothée, 16/11** : tout le monde quand la saison ne limite pas « Qui peut réserver » ; sinon la coordination et qui gère un planning (les règles refuseraient un simple membre). Aucune règle à publier. |
 | SQ6 | Ce qu'une valeur libre n'a pas | **Proposé** : pas de rappel de groupe (l'auteur seul), pas d'ayant droit pour les chants (la coordination seule). Un texte égal à une valeur de la liste ou à son libellé devient cette valeur. Elle s'affiche normalement ; « retiré » reste aux trois anciennes valeurs. |
 | SQ7 | Ordre de passage | **Décision 45 inchangée** : une seule liste ; « Autre… » y est aussi. |
 | SQ8 | Autres créneaux, autres dates | **Timothée, 16/11** (jour isolé ; réglage introuvable ; durée libre). Un bouton « Réserver un autre moment » dans le volet Entraînements : une date, « de », « à », puis quoi, qui, note. La grille reste proposée par défaut. |
-| SQ9 | Qui peut le faire | **Proposé** : toute personne qui peut réserver un créneau (même règle, même « Qui peut réserver »). |
-| SQ10 | Bornes | **Proposé** : dans la période des réservations, à partir d'aujourd'hui ; pas de 15 minutes ; fin après le début, le même jour ; refus d'un chevauchement, comme aujourd'hui. Au-delà de la fermeture, la coordination déplace la date de fermeture. |
+| SQ9 | Qui peut le faire | **Validé par Timothée, 16/11** : toute personne qui peut réserver un créneau (même règle, même « Qui peut réserver »). |
+| SQ10 | Bornes | **Validé par Timothée, 16/11** (la période) : dans la période des réservations, à partir d'aujourd'hui ; pas de 15 minutes ; fin après le début, le même jour ; refus d'un chevauchement, comme aujourd'hui. Au-delà de la fermeture, la coordination déplace la date de fermeture. |
 | SQ11 | « Hors grille » | **Proposé** : un autre moment porte `libre: true` ; il n'est ni marqué ni compté « Hors grille ». La pastille reste pour une réservation laissée hors grille par un changement de saison. |
 | SQ12 | Affichage | **Proposé** : un jour hors des jours de la saison qui porte une réservation apparaît dans sa semaine (App et Back-Office), avec ses seules réservations. |
 | SQ13 | Modifier, déplacer | **Proposé** : « Modifier » d'un autre moment rouvre la même feuille, date et heures comprises. « Déplacer » vers un créneau de la grille retire `libre`. |
@@ -148,3 +152,5 @@ Trois appareils ; l'agencement du volet Entraînements est déjà sur les cinq p
 ## Avancement
 
 - 16/11/2026 : spec écrite d'après les retours et les réponses de Timothée ; propositions à valider ; attend le go.
+- 16/11/2026 : SQ5, SQ9, SQ10 validées (« Ok »). Fait nouveau : la Scène est dans la Grande salle, prise le dimanche
+  par le groupe Joie (13:00–14:30) et le culte sinophone (15:00–17:00). Go à redemander, SQ-B à confirmer (refonte AR).
