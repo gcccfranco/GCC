@@ -399,3 +399,17 @@ T2b, T2c et T3a (apparence).
   est donné, mais il attend la fin de la saison de Noël (AR9) et sa spec détaillée, écrite après le 25/12/2026 ; il se
   code sans nouveau go si cette spec ne change aucune décision de Timothée. Rappel : avant la mise en ligne du lot 3,
   Timothée publie `firestore.rules` (`reservations/{id}`).
+- 16/11/2026 : **T2a faite** (orchestratrice T2a, codée par elle-même : `/tranche` et ses agents n'étaient pas
+  chargés). `src/lib/salles/salles.ts` (neuf salles, `lieuxLies`), `emploi.ts` (`varianteDu` d'après les
+  `ServiceEntry` du jour, `occupationsFixes` : dimanche seulement, temps de groupe en trois variantes),
+  `occupations.ts` (`occupationsDu` : emploi fixe, jour J 00:00–24:00 sur la Grande salle à la place de son emploi
+  fixe, créneaux de scène en lecture seule, brouillons écartés ; `occupationsDe` avec les lieux liés ; `croise` ;
+  `etatA` et `etatEnMots` fr / 中文 ; `nomOccupant` ; `couleurDe` selon AR17). Décisions déléguées (session T2a,
+  16/11) : (1) au temps de groupe d'un dimanche ordinaire, les salles « occupées » portent le nom de leur groupe
+  (Fidélité, Paix, Amour, Bonté) ; (2) l'imprimante de 12:20 se nomme « Louange du culte francophone » (法语崇拜敬拜团),
+  l'entraînement de 8:30 « Entraînement louange » (敬拜排练), le culte de 15:00 « Culte sinophone » (中文崇拜) ;
+  (3) un état libre avant 12:00 se dit « Libre toute la journée » (全天空闲 : clé `salles.etat.libreJournee` à
+  ajouter en T2b), sinon on lirait « tout l'après-midi » à 8:00 ; (4) le jour J se dit sans heure de fin
+  (« Noël, jour J »). Libellés fr / 中文 dans `occupations.ts` (comme `MOTS` du Calendrier) : T2b peut les passer
+  par `salles.*` s'il préfère. Spec `tests/salles-modele.spec.ts` : 14 tests × 3 appareils, 42 verts, 33 s ;
+  tsc et lint propres. Aucun écran : pas de regard. Suite : T2b lancée.
