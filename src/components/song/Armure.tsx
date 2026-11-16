@@ -14,6 +14,22 @@ function Tonalite({ k }: { k: string }) {
   return <>{m[1]}<span className="alteration">{m[2] === "#" ? "♯" : m[2] === "b" ? "♭" : m[2]}</span>{m[3]}</>;
 }
 
+// Forme commune au bouton Armure et au carré statique (CarreTonalite).
+const FORME_CARRE = "h-8 min-w-[34px] whitespace-nowrap rounded-[9px] px-[7px] text-[17px] font-semibold tabular-nums";
+
+/** Carré de tonalité statique, même aspect que l'Armure au repos (plein = ma tonalité) ; `petit` pour « Ensuite ». */
+export function CarreTonalite({ k, langue, petit, plein, className = "", ...reste }: { k: string; langue: "fr" | "zh"; petit?: boolean; plein?: boolean; className?: string } & Record<`data-${string}`, unknown>) {
+  return (
+    <span
+      {...reste}
+      data-carre-tonalite
+      className={`inline-flex items-center justify-center ${FORME_CARRE} ${petit ? "!h-6 !min-w-[26px] !rounded-[7px] !px-[5px] !text-[13px]" : ""} ${plein ? "bg-foreground text-background" : "text-foreground shadow-[inset_0_0_0_1.5px_hsl(var(--foreground))]"} ${className}`}
+    >
+      <Tonalite k={langue === "zh" ? `1=${k}` : k} />
+    </span>
+  );
+}
+
 /** L'armure : la tonalité lue, en bouton ; sa fenêtre offre les douze tonalités, la notation, le capo (lot RU, RU-1).
  *  Pleine = ma tonalité, au contour = celle de l'équipe (ou la recommandée) ; aucune couleur ajoutée. */
 export function Armure({
@@ -61,7 +77,7 @@ export function Armure({
           aria-label={t("armure.aria", { key: tonalite })}
           aria-haspopup="dialog"
           aria-expanded={ouvert}
-          className={`${TOUCHER_44} h-8 min-w-[34px] whitespace-nowrap rounded-[9px] px-[7px] text-[17px] font-semibold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          className={`${TOUCHER_44} ${FORME_CARRE} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
             etat === "moi" ? "bg-foreground text-background" : `text-foreground ${etat === "lecture" ? "border-[1.5px] border-dashed border-foreground" : "shadow-[inset_0_0_0_1.5px_hsl(var(--foreground))]"}`
           }`}
         >

@@ -801,7 +801,7 @@ test("L3-T5a en-tête d'une ligne (mode louange) : n°, titre, ♩, pastille de 
     entete.getByText("1", { exact: true }).boundingBox(),
     entete.getByRole("heading", { name: SLUG }).boundingBox(),
     entete.getByText(/♩\s*65/).boundingBox(),
-    entete.getByText("D", { exact: true }).boundingBox(),
+    entete.locator("[data-carre-tonalite]").boundingBox(),
   ]);
   const milieu = (r: { y: number; height: number }) => r.y + r.height / 2;
   for (const r of [rond!, tempo!, pastille!]) expect(Math.abs(milieu(r) - milieu(titre!)), "sur la ligne du titre").toBeLessThan(6);

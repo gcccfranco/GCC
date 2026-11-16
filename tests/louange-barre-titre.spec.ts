@@ -612,3 +612,49 @@ test("scan 简谱, dernière page : la pastille « Ensuite » ne recouvre pas le
   if (p!.x + p!.width <= s!.x || s!.x + s!.width <= p!.x) return;
   expect(s!.y + s!.height, `scan ${JSON.stringify(s)} / pastille ${JSON.stringify(p)}`).toBeLessThanOrEqual(p!.y + 0.5);
 });
+
+// ─── B3 (CI-9) : tonalité et titre d'une seule forme ─────────────────────────
+
+test("B3 : titre en casse normale, tonalité en carré ; armure flottante à 24 px ; pas de clé sur un scan non transposé ; « Ensuite » avec le carré", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5")); // A+ 150 % : le chant tient sur plusieurs pages à 1 440 px aussi
+  await ouvrir(page);
+  // (1) En-tête du chant FR : pas de capitales d'office, tonalité dans le carré.
+  const entete = page.locator("[data-performance-mode] [data-entete-chant]:not([aria-hidden=true] *)").first();
+  await expect(entete.locator("h2").first()).not.toHaveCSS("text-transform", "uppercase");
+  await expect(entete.locator("[data-carre-tonalite]")).toHaveCount(1);
+  // (2) Barre cachée, page suivante : l'armure flotte à 24 px du haut et de la droite.
+  await toucherCentre(page);
+  await expect(page.locator("[data-performance-mode]")).not.toHaveAttribute("data-barre-ouverte", /.*/);
+  const flottante = page.locator("[data-armure-flottante]");
+  for (let i = 0; i < 6 && !(await flottante.count()); i++) {
+    await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(300);
+  }
+  await expect(flottante).toBeVisible();
+  const [b, v] = [await flottante.boundingBox(), page.viewportSize()!];
+  expect(Math.abs(b!.y - 24), "24 px du haut").toBeLessThanOrEqual(2);
+  expect(Math.abs(v.width - (b!.x + b!.width) - 24), "24 px de la droite").toBeLessThanOrEqual(2);
+  // (4) Dernière page du chant : « Ensuite » porte le carré, sans « · ».
+  const suivant = page.locator("[data-performance-mode] [data-suivant]");
+  for (let i = 0; i < 6 && !(await suivant.count()); i++) {
+    await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(300);
+  }
+  await expect(suivant.first()).toBeVisible();
+  await expect(suivant.first().locator("[data-carre-tonalite]")).toHaveCount(1);
+  expect(await suivant.first().innerText()).not.toContain("·");
+});
+
+test("B3 : page de scan 简谱 non transposé, barre cachée : ni armure flottante ni clé de tête", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrir(page, { slugs: ["一生爱你", "abba-pere"], zh: true });
+  await page.waitForTimeout(400);
+  await toucherCentre(page);
+  await expect(page.locator("[data-performance-mode]")).not.toHaveAttribute("data-barre-ouverte", /.*/);
+  await page.waitForTimeout(400);
+  // On est bien sur une page de scan (sinon le test ne prouverait rien).
+  await expect(page.locator("[data-performance-mode] [data-jianpu-fenetre]:not([aria-hidden=true] *)").first()).toBeVisible();
+  await expect(page.locator("[data-armure-flottante]")).toHaveCount(0);
+  await expect(page.locator("[data-performance-mode] [data-cle-tete]")).toHaveCount(0);
+});

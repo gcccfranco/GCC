@@ -651,7 +651,7 @@ test.describe("rappel de structure (Sections uniques)", () => {
     expect(pastilles.some((p) => p.pleine && p.nuances > 0)).toBe(true);
 
     // Téléphone : seulement les pleines. Sinon toutes les pastilles et le titre du chant.
-    const titre = rappel.locator("span.uppercase");
+    const titre = rappel.locator("[data-rappel-titre]");
     if (telephone(page)) {
       expect(pastilles.filter((p) => p.visible).every((p) => p.pleine)).toBe(true);
       await expect(titre).toBeHidden();
@@ -703,7 +703,7 @@ test.describe("rappel de structure (Sections uniques)", () => {
     expect(pastilles.filter((p) => p.pleine && p.nuances > 0).length).toBeGreaterThan(0);
     for (const p of pastilles.filter((q) => q.visible)) expect(Math.abs(p.hauteur - (telephone(page) ? 26 : 30))).toBeLessThanOrEqual(1);
     await expect(onStage(page, "[data-rappel] [data-cerclee]")).toHaveCount(0);
-    const titre = rappel.locator("span.uppercase");
+    const titre = rappel.locator("[data-rappel-titre]");
     if (telephone(page)) await expect(titre).toBeHidden();
     else await expect(titre).toHaveText("圣诞节耶稣为你而来");
   });

@@ -467,12 +467,12 @@ test("tête de feuille : sur chaque page d'écran de scan, de la hauteur de la b
   }
 });
 
-test("tête de feuille : « 1 = F » et « gravé en E » quand le scan est transposé, en français et en 中文", async ({ page }) => {
+test("tête de feuille : « 1=F » et « gravé en E » quand le scan est transposé, en français et en 中文", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" } });
   await attendrePages(page);
   const t = await lireTete(page);
-  expect(t.cle).toBe("1 = F");
+  expect(t.cle).toBe("1=F");
   expect(t.grave).toBe("gravé en E");
 });
 
@@ -481,7 +481,7 @@ test("tête de feuille, interface en 中文 : « 原谱 E 调 »", async ({ page
   await ouvrirLouange(page, { chants: [UN, FR], cles: { [UN]: "F" }, zh: true });
   await attendrePages(page);
   const t = await lireTete(page);
-  expect(t.cle).toBe("1 = F");
+  expect(t.cle).toBe("1=F");
   expect(t.grave).toBe("原谱 E 调");
 });
 
@@ -490,7 +490,8 @@ test("tête de feuille : pas de « gravé en » quand la tonalité est celle du 
   await ouvrirLouange(page, { chants: [UN, FR], surcharge: { [UN]: UN_DP } });
   await attendrePages(page);
   const t = await lireTete(page);
-  expect(t.cle).toBe("1 = E");
+  expect(t.cle, "scan non transposé : pas de clé").toBe("");
+  expect(await onStage(page, "[data-tete-feuille] [data-cle-tete]").count()).toBe(0);
   expect(t.grave).toBe("");
   const tete = onStage(page, "[data-tete-feuille]");
   await expect(tete.locator("[data-repeat]")).toHaveText("×2");
@@ -628,8 +629,7 @@ test("tête de feuille : posée sur la feuille (ordinateur, tablette paysage), r
   expect(m.aria, "nom complet de la section").toBeTruthy();
   expect(m.title, "plus de title").toBeNull();
   expect(m.largeurMin).toBeGreaterThanOrEqual(26);
-  expect(m.cleTaille).toBe("20px");
-  expect(m.cleNums).toContain("lining-nums");
+  expect(m.cleTaille, "clé en petit carré de tonalité (24 px, comme les repères)").toBe("13px");
   expect(m.cleNums).toContain("tabular-nums");
   expect(m.noteH, "note noire à 15 px").toBe(15);
   expect(m.hauteurContenu, "le tout tient dans la hauteur de la tête").toBeLessThanOrEqual(m.hauteurTete + 0.5);

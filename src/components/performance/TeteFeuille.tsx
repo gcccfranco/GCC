@@ -2,7 +2,8 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { gelasio_font, REPERE_FOIS, REPERE_ROND, REPERE_TEXTE } from "@/components/song/SongView";
+import { REPERE_FOIS, REPERE_ROND, REPERE_TEXTE } from "@/components/song/SongView";
+import { CarreTonalite } from "@/components/song/Armure";
 import { NoteNoire } from "@/components/song/NoteNoire";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { groupSteps, isDp, paletteKeyOf } from "@/lib/setlist/dp";
@@ -115,7 +116,8 @@ export function TeteFeuille({
                 </span>
               ) : null}
               {capo ? <span className="font-mono text-[14px] font-bold leading-none text-foreground">{t("performance.capoBadge", { n: capo })}</span> : null}
-              <span data-cle-tete className={`${gelasio_font.className} text-[20px] font-bold leading-[22px] text-foreground [font-variant-numeric:lining-nums_tabular-nums]`}>1 = {songKey}</span>
+              {/* B3 : scan transposé, le carré en petit (24 px, comme les repères) : avec « gravé en E » dessous, il tient dans la tête. */}
+              {gravure && <CarreTonalite petit data-cle-tete k={songKey} langue="zh" />}
             </span>
             {gravure && (
               <span data-grave-en className="text-[13px] leading-4 text-[#6c6c72] dark:text-[color:var(--pinyin-color)]">

@@ -291,7 +291,7 @@ test.describe("rappel en Ordre joué", () => {
     expect(etapes.some((e) => e.etat === "pleine" && e.nuances > 0)).toBe(true);
     await expect(onStage(page, "[data-rappel] [data-cerclee]")).toHaveCount(0);
 
-    const titre = rappel.locator("span.uppercase");
+    const titre = rappel.locator("[data-rappel-titre]");
     if (telephone(page)) await expect(titre).toBeHidden();
     else {
       await expect(titre).toHaveText("Abba Père");
@@ -316,7 +316,7 @@ test.describe("rappel en Ordre joué", () => {
     expect(etapes.some((e) => e.etat === "point")).toBe(true);
     expect(etapes.some((e) => e.etat === "pleine")).toBe(true);
     expect(etapes.every((e) => e.visible)).toBe(true);
-    const titre = rappel.locator("span.uppercase");
+    const titre = rappel.locator("[data-rappel-titre]");
     if (telephone(page)) await expect(titre).toBeHidden();
     else await expect(titre).toHaveText("圣诞节耶稣为你而来");
   });

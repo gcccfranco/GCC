@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, useEffectEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { langAccent } from "./langAccent";
 import { BarreHaut, ICONES_ROLE } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
 import { BarreAnnotation } from "./BarreAnnotation";
@@ -55,7 +54,7 @@ import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { noteToIndex } from "@/lib/transpose";
-import { Armure } from "@/components/song/Armure";
+import { Armure, CarreTonalite } from "@/components/song/Armure";
 import { MargeAffichage, usePlace } from "@/components/song/MargeAffichage";
 import { Switch } from "@/components/ui/switch";
 import { itemAst } from "@/lib/chordpro/itemContent";
@@ -231,7 +230,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
       <div data-entete-chant className="mx-auto mb-3 w-full max-w-[880px] pb-3 border-b border-border">
         {/* Titre du chant : la barre est fermée à l'ouverture, le batteur doit voir quel chant il joue. Masqué barre ouverte (qu'elle le répète), sans changer de place. */}
         <div data-entete-titre className="mb-0.5 flex flex-wrap items-baseline gap-x-3 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
-          <h2 className="text-lg font-bold text-foreground leading-tight uppercase tracking-tight">{titres}</h2>
+          <h2 className="text-lg font-bold text-foreground leading-tight tracking-tight">{titres}</h2>
           {!block.fusionSongs?.length && block.artist ? <p className="text-xs text-muted-foreground">{block.artist}</p> : null}
         </div>
         <p data-entete-tempo-tonalite className="text-[22px] font-bold leading-tight text-foreground">
@@ -275,15 +274,10 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
             {block.fusionSongs.map((s, i) => (
               <span
                 key={i}
-                className="text-[17px] font-bold text-foreground leading-tight uppercase tracking-tight"
+                className="text-[17px] font-bold text-foreground leading-tight tracking-tight"
               >
                 {s.title}
-                <span
-                  className="ml-1.5 font-mono text-xs font-normal normal-case"
-                  style={{ color: langAccent(s.language) }}
-                >
-                  {s.key}
-                </span>
+                <CarreTonalite petit k={s.key} langue={s.language === "zh" ? "zh" : "fr"} className="ml-1.5 align-middle" />
               </span>
             ))}
           </div>
@@ -324,7 +318,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
             <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
               {Number.isInteger(block.position) ? block.position : "+"}
             </span>
-            <h2 className="text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight truncate">
+            <h2 className="text-[22px] font-bold text-foreground leading-tight tracking-tight truncate">
               {block.title}
             </h2>
           </div>
@@ -339,10 +333,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
               {t("performance.capoBadge", { n: block.capo })}
             </span>
           ) : null}
-          <span className="text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
-            style={{ color: langAccent(block.language), borderColor: langAccent(block.language) }}>
-            {block.songKey}
-          </span>
+          <CarreTonalite k={block.songKey} langue={block.language === "zh" ? "zh" : "fr"} plein={!!block.setlistKey} />
           {block.setlistKey && (
             <span className="text-xs font-semibold text-muted-foreground">
               {t("performance.personalKey", { key: block.setlistKey })}
@@ -367,7 +358,7 @@ function RappelRangee({ titre, steps, pleines, rappel }: { titre?: string; steps
   return (
     <div className="flex items-start gap-3">
       {titre && (
-        <span className="hidden max-w-[16rem] shrink-0 truncate text-[13px] font-semibold uppercase leading-[30px] tracking-wide text-muted-foreground sm:block">
+        <span data-rappel-titre className="hidden max-w-[16rem] shrink-0 truncate text-[13px] font-semibold leading-[30px] text-muted-foreground sm:block">
           {titre}
         </span>
       )}
@@ -2003,7 +1994,7 @@ export function PerformanceMode({
     />
   ) : undefined;
   // Barre cachée : l'armure flotte dans le coin seulement quand l'en-tête du chant n'est pas sur la page affichée.
-  const armureFlottante = !showChrome && !!armure && !!currentEntry && !currentPageIndices.includes(currentEntry.index);
+  const armureFlottante = !showChrome && !!armure && !!currentEntry && !currentPageIndices.includes(currentEntry.index) && !currentPageIndices.some((i) => blocks[i]?.kind === "jianpu-sheet");
   const aPinyin = blocks.some((b) => b.kind === "section" && b.showPinyin);
   // Sous md la barre n'a que Setlist, Repères, Outils, Affichage : Annoter et le tempo passent dans Outils.
   const telephone = ecran.largeur < 768;
@@ -2079,8 +2070,7 @@ export function PerformanceMode({
       >
         <span>{t("performance.next")}</span>{" "}
         <span className="min-w-0 truncate font-semibold text-foreground">{nextEntry.block.title}</span>{" "}
-        <span>·</span>{" "}
-        <span className="font-mono">{nextEntry.block.songKey}</span>
+        <CarreTonalite petit k={nextEntry.block.songKey} langue={nextEntry.block.language === "zh" ? "zh" : "fr"} />
       </button>
     ) : null;
 
@@ -2401,7 +2391,7 @@ export function PerformanceMode({
         <div
           data-armure-flottante
           className="absolute"
-          style={{ zIndex: 25, top: "calc(var(--sat, 0px) + 4px)", right: "calc(var(--sar, 0px) + 8px)" }}
+          style={{ zIndex: 25, top: "calc(var(--sat, 0px) + 24px)", right: "calc(var(--sar, 0px) + 24px)" }}
           onPointerDown={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >

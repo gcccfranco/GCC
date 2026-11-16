@@ -635,3 +635,22 @@ centre tombe sur un accord).
   `PageEquipe.tsx:235`, 266) ; absences du tableau de bord (`absences.ts:57-58` → `tableauDeBord/lecture.ts:122`) ;
   probables, rendu non relu : résultats du sondage (`survey.ts:42` → `SurveyResults.tsx:196`), liste des équipes
   (`equipes.ts:37` → `EquipesClient.tsx:77`). Non établis : Mes services, annonces, détail d'une setlist.
+- **CI-9 (B3), 16/11/2026, validée par Timothée (« Validé »).** Mode louange : titres en casse normale (en-têtes,
+  chants fusionnés, rappel des pages 2 et suivantes, scans) ; la tonalité seule prend partout le carré de l'armure
+  (`CarreTonalite`, `Armure.tsx`, forme partagée avec le bouton) : en-tête du chant (plein si tonalité personnelle),
+  coin barre cachée à 24 px des bords, et en petit après « Ensuite : <titre> » (sans « · »), en mode louange et dans
+  la colonne d'un scan. Scan 简谱 : plus de clé quand il n'est pas transposé (le scan imprime « 1 = X »), ni armure au
+  coin sur une page de scan ; transposé, petit carré « 1=F » dans la tête de feuille, « gravé en E » dessous, ou carré
+  à côté du titre dans l'en-tête d'une ligne. Décisions déléguées (session CI-9, 15-16/11) : les dispositions
+  « partition » et feuille de route gardent « Tonalité D » dans leur ligne de texte (la tonalité n'y est pas seule) ;
+  carré **petit** (24 px, comme les repères) dans la tête de feuille : le grand coupait « gravé en E », et posé sur la
+  ligne il écrasait les repères au téléphone. Tests adaptés : louange-jianpu-tranches (« 1=F », pas de clé non
+  transposé, taille 13 px), jianpu-integration (vue Partitions : bouton armure), look-louange (casse normale sur la
+  scène), louange-sections-uniques et rappel-ordre-joue (`data-rappel-titre`) ; deux tests neufs « B3 » dans
+  louange-barre-titre. Tests : 14 specs, 2 010 tests (≈ 1 h 30), puis reprises ciblées (louange-jianpu-tranches et
+  louange-barre-titre, 375 tests, 18 min ; louange-jianpu-tranches, 6 min), vertes ; rouges déjà sur l'ancien code :
+  `louange-barre-titre:142` et `:285`, `louange-demi-page:157` (cinq projets), `mode-louange-forscore:224` et `:270`,
+  `mode-louange-colonnes:363` (« Ensuite » 42,4 px au téléphone), `look-louange:327` (tablette) ; instable :
+  `louange-sections-uniques:358` à 1 440 px. Regard : captures Playwright avant / après aux cinq tailles (artefact
+  privé), un `regard`, une reprise ; **non vu à l'écran réel** (base Firestore fermée). Relevé hors tranche : le rappel
+  de `DemiPage.tsx` garde ses capitales.

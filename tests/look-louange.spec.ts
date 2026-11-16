@@ -96,9 +96,9 @@ test.describe("louange (T3) : page du chant", () => {
   }
 });
 
-// partout-q1 : casse normale sur la page chant, capitales gardées sur la scène du mode louange.
+// partout-q1 : casse normale sur la page chant.
 test.describe("louange : casse des titres de chants (partout-q1)", () => {
-  test("le titre est en casse normale sur la page chant, en capitales sur la scène", async ({ page }) => {
+  test("le titre est en casse normale sur la page chant", async ({ page }) => {
     await page.goto("/songs/abba-pere");
     const titre = page.getByRole("heading", { level: 1, name: /abba/i }).last();
     await expect(titre).toBeVisible();
@@ -120,7 +120,7 @@ test.describe("louange : casse des titres de chants (partout-q1)", () => {
     await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
     const titreScene = onStage(page, "[data-entete-chant] h2").first();
     await expect(titreScene).toBeVisible();
-    expect(await titreScene.evaluate((el) => getComputedStyle(el).textTransform)).toBe("uppercase");
+    expect(await titreScene.evaluate((el) => getComputedStyle(el).textTransform)).not.toBe("uppercase");
   });
 });
 
