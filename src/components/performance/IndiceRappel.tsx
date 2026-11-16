@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
  * par-dessus la page (aucune place dans la pagination), en bas au centre, au-dessus du curseur de pages :
  * sous la rangée, elle cachait le titre de la 1re section (parcours du 14/11, F).
  * Elle part d'elle-même au bout de 6 s, à la page suivante ou d'un toucher sur elle, et ne retient aucun geste de page.
+ * A13 : si elle recouvre la pastille « Ensuite » (téléphone), elle remonte au-dessus d'elle.
  */
 const APPARITIONS = 2;
 const DUREE_MS = 6000;
@@ -49,9 +50,25 @@ export function IndiceRappel({ mode, page }: { mode: "played" | "unique"; page: 
   if (pageVue !== null && pageVue !== page) setPageVue(null);
   // Jamais au premier rendu (pageVue est posée par l'effet) : `document` existe.
   const scene = pageVue === page ? document.querySelector("[data-performance-mode]") : null;
+  const bulle = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const b = bulle.current;
+    if (!b || !scene) return;
+    b.style.bottom = "";
+    const r = b.getBoundingClientRect();
+    const s = scene.getBoundingClientRect();
+    let haut = Infinity;
+    scene.querySelectorAll("[data-suivant]").forEach((el) => {
+      if (el.closest("[aria-hidden=true]") || getComputedStyle(el).visibility === "hidden") return;
+      const p = el.getBoundingClientRect();
+      if (p.width && p.left < r.right && p.right > r.left && p.top < r.bottom && p.bottom > r.top) haut = Math.min(haut, p.top);
+    });
+    if (haut < Infinity) b.style.bottom = `${s.bottom - haut + 8}px`;
+  }, [scene, pageVue]);
   if (!scene) return null;
   return createPortal(
     <div
+      ref={bulle}
       data-indice-rappel
       role="note"
       onPointerDown={(e) => e.stopPropagation()}

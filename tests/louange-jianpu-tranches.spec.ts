@@ -763,3 +763,27 @@ test("A12 : tête de feuille, titre du chant en une ligne au-dessus des ronds (�
   expect(m.scan, "la partition sous le titre").toBeGreaterThanOrEqual(m.bas);
   expect(m.transforme).toBe("none");
 });
+
+test("A13 : métronome allumé, la bande des temps ne recouvre pas la tête de feuille (note de la setlist comprise) ni le scan", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.addInitScript(() => localStorage.setItem("perf-metronome", "1"));
+  await ouvrirLouange(page, { chants: [UN, FR], surcharge: { [UN]: { sectionNotes: { "chorus-3": "Ralentir la dernière ligne" } } } });
+  await attendrePages(page);
+  await fermerBarre(page);
+  await expect(onStage(page, "[data-tete-feuille] [data-note-tete]")).toBeVisible();
+  await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
+  await page.waitForTimeout(300);
+  const m = await page.evaluate(() => {
+    const bande = document.querySelector("[data-bande-temps]")!.getBoundingClientRect();
+    const tete = Array.from(document.querySelectorAll("[data-performance-mode] [data-tete-feuille]")).find((x) => !x.closest("[aria-hidden=true]"))!;
+    const morceaux = Array.from(tete.querySelectorAll("[data-titre-tete], [data-repere-tete], [data-note-tete], [data-cle-tete], [data-tempo-tete]"))
+      .map((e) => ({ nom: e.getAttribute("data-note-tete") !== null ? "note" : e.getAttribute("data-titre-tete") !== null ? "titre" : "repère", r: e.getBoundingClientRect() }));
+    const f = Array.from(document.querySelectorAll("[data-performance-mode] [data-jianpu-fenetre]")).find((x) => !x.closest("[aria-hidden=true]"))!;
+    return { bande: { haut: bande.top, bas: bande.bottom }, morceaux: morceaux.map((x) => ({ nom: x.nom, haut: x.r.top, bas: x.r.bottom })), scan: f.getBoundingClientRect().top };
+  });
+  for (const x of m.morceaux) {
+    const recouvre = Math.min(x.bas, m.bande.bas) - Math.max(x.haut, m.bande.haut);
+    expect(recouvre, `${x.nom} (${x.haut.toFixed(1)}–${x.bas.toFixed(1)}) sous la bande (${m.bande.haut.toFixed(1)}–${m.bande.bas.toFixed(1)})`).toBeLessThanOrEqual(0.5);
+  }
+  expect(m.scan, "le scan commence sous la bande").toBeGreaterThanOrEqual(m.bande.bas - 0.5);
+});

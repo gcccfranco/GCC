@@ -192,6 +192,18 @@ Réponses de Timothée du 16/11/2026 (boîte de questions de la session CI-20) :
   page inchangé (même `top` du premier bloc barre affichée et escamotée) ; scan certifié (`恒久恒久以前`), titre
   visible au-dessus du premier rond ; parcours du culte.
 
+### A13. Mode louange : la bande du métronome sur la tête de scan, l'aide sur « Ensuite » (réponse de Timothée du 16/11/2026, relayée par le pilote : « Go »)
+
+- **(a) Métronome allumé, scan 简谱 certifié, barre escamotée** : la bande des temps se posait sous la barre absente, au
+  milieu de la tête de feuille (titre, ronds, note de la setlist, A12) ; au téléphone elle cachait la note (21 px),
+  ailleurs elle mordait sur les ronds (7 px). Règle : barre escamotée, la bande se pose en haut, sous l'encoche, comme
+  sur une page de texte, et le contenu de la tête commence dessous ; barre affichée, rien ne change
+  (`PerformanceMode.tsx`, `top` de `BandeTemps` et `encoche` de la tête). Test : `louange-jianpu-tranches`, « A13 ».
+- **(b) Téléphone, première apparition du rappel** : l'aide « Points : déjà joué… » recouvrait la pastille « Ensuite »
+  quand la page porte les deux. Règle : l'aide, mesurée à l'affichage, remonte à 8 px au-dessus de la pastille qu'elle
+  recouvrirait ; sinon elle reste à sa place ; la pastille garde 44 px (CI-20) (`IndiceRappel.tsx`). Test :
+  `rappel-indice`, « A13 » (FR et 中文).
+
 ## Partie B : les harmonisations (sans planche)
 
 Timothée, 14/11 : « fait le sans la planche ». La règle marquée **retenue** est une décision déléguée (pilote, 14/11),
@@ -386,6 +398,7 @@ commitée le 14/11 au soir), une seule à la fois dans ce fichier. Les tranches 
 | CI-21 | A10 bis, liste illisible ≠ liste vide | `firebase/setlists.ts` (`strict`), `setlists/page.tsx`, locales | non | A10 bis |
 | CI-20 | A11, page de scan gardée et « Ensuite » à 44 px (téléphone) | `pagination.ts` (`pageAncree`), `PageTexte.tsx` | non | A11 |
 | CI-22 | A12, titre courant dans la bande du haut, titre en tête de scan | `PerformanceMode.tsx` (ou `PageTexte.tsx`), `TeteFeuille.tsx`, `PageScan.tsx` selon la mesure | oui | A12 |
+| CI-23 | A13, bande du métronome sous la tête de scan, aide au-dessus d'« Ensuite » | `PerformanceMode.tsx`, `IndiceRappel.tsx` | oui | A13 |
 
 Tests : ceux de la section de chaque défaut ou harmonisation ; agencement dans `SPECS_GRAND_ECRAN` (cinq projets) ;
 parcours du culte pour toute tranche à « oui ». CI-1, CI-5 et CI-10 à CI-17 ne touchent pas le mode louange
@@ -727,3 +740,14 @@ centre tombe sur un accord).
   `louange-barre-titre:299` à 1 440 px, le parcours du culte au téléphone. Regard : captures Playwright aux cinq
   tailles, **non vu à l'écran réel** (base Firestore fermée). Relevé hors tranche : demande de Timothée (16/11) de
   revoir la taille des encadrés de sections pour afficher plus de sections par page (planche puis spec).
+
+- **CI-23 (A13), 16/11/2026, validée par Timothée (« validé »).** (a) Métronome allumé sur un scan certifié, barre
+  escamotée : la bande des temps se pose en haut, sous l'encoche, et la tête de feuille passe dessous (avant : la
+  bande cachait la note de la setlist au téléphone et mordait de 7 px sur les ronds ailleurs). (b) Téléphone : l'aide
+  du rappel remonte au-dessus de la pastille « Ensuite » quand elle la recouvrirait ; pastille à 44 px. Tests neufs,
+  rouges sur l'ancien code : `louange-jianpu-tranches` « A13 » (cinq projets) et `rappel-indice` « A13 » (FR et 中文,
+  rouge au téléphone seulement). Specs voisines (`louange-jianpu-tranches`, `metronome-bande`, parcours du culte) :
+  196 verts, 9 sautés par leur spec, 0 rouge, 13,6 min ; `rappel-indice` : 60 verts, 3,6 min. Rouge laissé, déjà
+  là avant la tranche : `rappel-indice:82` à 1 440 px dépasse parfois 30 s (ouverture du mode louange de 4 à 7 s à
+  cette taille, mesures de `ChordLine.tsx` ; chantier de performance à part). Regard : captures Playwright avant /
+  après aux cinq tailles (artefact privé), **non vu à l'écran réel** (aucune connexion avec un compte).

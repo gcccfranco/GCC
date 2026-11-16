@@ -2304,9 +2304,9 @@ export function PerformanceMode({
           };
           // Tête de feuille d'un scan certifié : hauteur exacte de la barre de titre, repères des sections de la page allumés.
           const teteFeuille = (b: PerformanceBlock | undefined, tr: Pick<Tranche, "premiere" | "derniere">) => ({
-            // La bande des temps (MT-1) se pose sur les derniers px de la tête : le scan commence dessous.
+            // La bande des temps (MT-1) se pose en haut de la tête, sous l'encoche (A13) : le contenu de la tête commence dessous.
             hauteur: barres.haut ? `${(barres.haut + bandeH) / fontScale}px` : `calc(var(--sat, 0px) / ${fontScale} + ${bandeH / fontScale}px)`,
-            encoche: `calc(var(--sat, 0px) / ${fontScale})`,
+            encoche: `calc(var(--sat, 0px) / ${fontScale} + ${bandeH / fontScale}px)`,
             allumes: b?.kind === "jianpu-sheet" ? sectionsDeTranche(jianpuSections?.[b.songSlug]?.sections ?? [], b.pageIndex + 1, tr) : new Set<string>(),
           });
           const lignesDePage = (b: PerformanceBlock | undefined) => (b?.kind === "jianpu-sheet" ? jianpuSystemes?.[b.songSlug]?.pages[b.pageIndex]?.lignes.length ?? 0 : 0);
@@ -2662,7 +2662,7 @@ export function PerformanceMode({
           pos={posMetro}
           onMarche={() => setMetroMarche((m) => !m)}
           onOuvrir={() => basculerMenu("metronome")}
-          top={showChrome || pageCertifiee ? `${barres.haut}px` : "var(--sat, 0px)"}
+          top={showChrome ? `${barres.haut}px` : "var(--sat, 0px)"}
           telephone={telephone}
         />
       ) : null}
