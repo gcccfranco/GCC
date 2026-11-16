@@ -149,7 +149,7 @@ test("mémoire : 40 allers-retours liste → chant (ordinateur)", async ({ page 
 // 6. API : appels sans droits, corps tordus, chemins tordus. Aucune clé n'est présente (Resend, VAPID,
 // firebase-admin) : rien ne peut partir. On regarde seulement les codes et la forme des réponses.
 const POSTS = ["/api/report/", "/api/push/broadcast/", "/api/push/notify-setlist/", "/api/push/notify-evenement/", "/api/push/notify-audience/",
-  "/api/setlist/presentation/", "/api/evenements/inscription/", "/api/evenements/desinscription/", "/api/scene/conflit/", "/api/taches/assigne/",
+  "/api/setlist/presentation/", "/api/evenements/inscription/", "/api/evenements/desinscription/", "/api/taches/assigne/",
   "/api/taches/fait/", "/api/equipes/rattachement/", "/api/equipes/groupes/", "/api/planning/release/", "/api/planning/changements/",
   "/api/fetes/droits/", "/api/fetes/saisir/", "/api/fetes/musiques/"];
 test("API : sans droits, corps tordus, chemins tordus", async ({}, info) => {

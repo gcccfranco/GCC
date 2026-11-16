@@ -4,6 +4,7 @@
 import type { ReminderService } from "@/types/rappels";
 import type { Creneau } from "@/types/programme";
 import { libelleQui } from "@/lib/fetes/qui";
+import type { Reservation } from "@/lib/firebase/reservations";
 
 const SCENE_SERVICE = "Entraînement sur scène";
 
@@ -33,4 +34,21 @@ export function quiCategories(qui: string[]): string[] {
 /** Ligne de rappel d'un créneau : « Entraînement sur scène (Chant · EDD 中班) à 17:00–18:30 ». */
 export function sceneReminder(c: Pick<Creneau, "debut" | "fin" | "quoi" | "qui">): ReminderService {
   return { service: SCENE_SERVICE, roles: [`${c.quoi} · ${c.qui.map((q) => libelleQui(q)).join(", ")}`], time: `${c.debut}–${c.fin}` };
+}
+
+/** Lot 5 du chantier AR (docs/spec-salles.md, AR20) : un créneau de fête est une réservation de la Scène ; `date`
+ *  redevient `dimanche`. Partagé par `listCreneaux` (programmes.ts) et le cron des rappels (T5c). */
+export function creneauDeReservation(r: Reservation): Creneau {
+  return {
+    id: r.id, dimanche: r.date, debut: r.debut, fin: r.fin, ...(r.libre && { libre: true }), quoi: r.quoi, qui: r.qui ?? [],
+    note: r.note ?? "", auteurUid: r.auteurUid, auteurNom: r.auteurNom, createdAt: r.createdAt, updatedAt: r.updatedAt,
+  };
+}
+
+/** Les créneaux à rappeler (T5c) : parmi les réservations lues pour ces dates, celles de la Scène qui portent une
+ *  des éditions affichées (`fete`) ; une réservation de la Scène sans fête n'est pas un entraînement. */
+export function creneauxDuRappel(reservations: Reservation[], editions: string[], dates: string[]): Creneau[] {
+  return reservations
+    .filter((r) => r.salle === "scene" && r.fete !== undefined && editions.includes(r.fete) && dates.includes(r.date))
+    .map(creneauDeReservation);
 }

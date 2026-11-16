@@ -10,7 +10,8 @@ import {
 import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import { idEdition, type Fete } from "@/lib/scene/fetes";
 import { libelleQui } from "@/lib/fetes/qui";
-import { listReservationsDeFete, type Reservation } from "./reservations";
+import { creneauDeReservation } from "@/lib/scene/rappels";
+import { listReservationsDeFete } from "./reservations";
 import type { Creneau, Duree, Passage, Plage, Programme } from "@/types/programme";
 
 // Programmes de scène (lot 3 bis) : programmes/{id} ; leurs créneaux sont des réservations de la Scène depuis le lot 5
@@ -173,15 +174,8 @@ export async function updateProgramme(
 // Lot 5 du chantier AR, T5a (docs/spec-salles.md, AR19, AR20) : un créneau de fête est une réservation de la Scène,
 // `reservations/{id}` avec `salle: "scene"` et `fete` = l'id du programme ; `dimanche` s'y écrit `date`, et `pour`
 // reçoit le libellé des `qui` pour Salles. Mêmes noms et même type `Creneau` qu'avant : les écrans suivent. Les anciens
-// `programmes/{id}/creneaux` ne sont plus lus ici (« À reporter », AR23, les lira à part). Droits : firestore.rules
+// `programmes/{id}/creneaux` ne sont plus lus (AR19) ; le cron des rappels lit aussi `reservations` (T5c). Droits : firestore.rules
 // (match /reservations/{id}, feteReservable) et src/lib/access.ts (canReserverPour, canEditReservation).
-
-function versCreneau(r: Reservation): Creneau {
-  return {
-    id: r.id, dimanche: r.date, debut: r.debut, fin: r.fin, ...(r.libre && { libre: true }), quoi: r.quoi, qui: r.qui ?? [],
-    note: r.note ?? "", auteurUid: r.auteurUid, auteurNom: r.auteurNom, createdAt: r.createdAt, updatedAt: r.updatedAt,
-  };
-}
 
 /** Le libellé des `qui` (en français, comme un texte d'« Autre… »), 60 caractères au plus (SA7). */
 function pourDe(qui: string[]): string {
@@ -196,7 +190,7 @@ function versReservation(data: Partial<Omit<Creneau, "id">>): Record<string, unk
 
 /** Créneaux d'un programme, par dimanche puis heure. Lecture en échec : aucun créneau, comme avant. */
 export async function listCreneaux(programmeId: string): Promise<Creneau[]> {
-  return (await listReservationsDeFete(programmeId).catch(() => [])).map(versCreneau);
+  return (await listReservationsDeFete(programmeId).catch(() => [])).map(creneauDeReservation);
 }
 
 export async function createCreneau(programmeId: string, data: Omit<Creneau, "id">): Promise<string> {

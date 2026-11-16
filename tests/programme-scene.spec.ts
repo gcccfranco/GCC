@@ -5,8 +5,10 @@ import { fermerFeuille, reglageSaison } from "./helpers/saisonScene";
 import {
   archiveDate, programmeState, reservationsClosed, sundaysBetween,
 } from "../src/lib/scene/dimanches";
-import { conflictKey, conflictMessage } from "../src/lib/scene/conflit";
-import { quiCategory, sceneReminder } from "../src/lib/scene/rappels";
+import { conflictKey, conflictMessage } from "../src/lib/salles/conflit";
+import { creneauxDuRappel, quiCategory, sceneReminder } from "../src/lib/scene/rappels";
+import type { Reservation } from "../src/lib/firebase/reservations";
+import { readFileSync } from "node:fs";
 import { reminderBody } from "../src/lib/push/reminderMessage";
 import { creneauEnReservation, creneauxEnReservations } from "./helpers/creneauxScene";
 
@@ -316,19 +318,50 @@ test("rappels : l'entraînement rejoint la ligne des services du même dimanche,
   expect(reminderBody("2026-12-13", "J1", services, "zh-CN")).toContain("舞台排练（Chant · EDD 中班） 17:00–18:30");
 });
 
-test("conflit : une clé par paire de créneaux, quel que soit l'ordre ; message aux deux auteurs", () => {
-  expect(conflictKey("noel", ["b", "a"])).toBe(conflictKey("noel", ["a", "b"]));
-  const other = { ...C_ALICE, id: "c2", debut: "18:00", fin: "19:00", quoi: "Danse", qui: ["Gp Joie"], auteurNom: "Jo L." };
-  const fr = conflictMessage({ ...C_ALICE, id: "c1" }, other, "fr");
-  expect(fr.title).toBe("Scène : chevauchement");
-  expect(fr.body).toBe("Dimanche 4 octobre : 17:00–18:30 (Chant · EDD 中班, Alice Q.) et 18:00–19:00 (Danse · Gp Joie, Jo L.) se chevauchent sur scène. Mettez-vous d'accord.");
-  expect(conflictMessage({ ...C_ALICE, id: "c1" }, other, "zh-CN").body).toContain("重叠");
+// Lot 5 du chantier AR, T5c (docs/spec-salles.md, AR19, AR20, SA9) : le serveur lit les créneaux dans
+// `reservations/{id}` et la Scène passe par /api/salles/conflit.
+
+/** Une réservation de la Scène pour l'édition `fete` (noms fictifs). */
+const resa = (id: string, r: Partial<Reservation>): Reservation => ({
+  id, salle: "scene", date: "2026-12-13", debut: "17:00", fin: "18:30", pour: "EDD 中班", quoi: "Chant",
+  auteurUid: "uid-alice", auteurNom: "Alice Q.", createdAt: "", updatedAt: "", fete: "noel-2026", qui: ["EDD 中班"], note: "", ...r,
 });
 
-test("course perdue : un créneau enregistré au même moment chevauche le mien → le serveur prévient les deux auteurs", async ({ page }) => {
+test("rappels (T5c) : les créneaux du jour sont les réservations de la Scène des éditions affichées", () => {
+  const lues = [
+    resa("r1", {}),
+    resa("r2", { fete: "paques-2027" }),
+    resa("r3", { date: "2026-12-20" }),
+    resa("r4", { fete: undefined, qui: undefined, quoi: "Réunion" }),
+    resa("r5", { salle: "grande" as Reservation["salle"] }),
+    resa("r6", { libre: true, debut: "19:00", fin: "19:45", note: "micro" }),
+  ];
+  const creneaux = creneauxDuRappel(lues, ["noel-2026"], ["2026-12-13", "2026-12-17"]);
+  expect(creneaux.map((c) => c.id)).toEqual(["r1", "r6"]);
+  expect(creneaux[0]).toMatchObject({ dimanche: "2026-12-13", debut: "17:00", fin: "18:30", quoi: "Chant", qui: ["EDD 中班"], auteurUid: "uid-alice" });
+  expect(creneaux[1]).toMatchObject({ libre: true, note: "micro" });
+  expect(sceneReminder(creneaux[0]).service).toBe("Entraînement sur scène");
+});
+
+test("rappels (T5c) : le cron lit `reservations`, plus `programmes/{id}/creneaux` (AR19)", () => {
+  const src = readFileSync("src/app/api/cron/reminders/route.ts", "utf8");
+  expect(src).toContain("creneauxDuRappel(");
+  expect(src).not.toContain('collection("creneaux")');
+});
+
+test("conflit (T5c) : deux réservations de la Scène, une clé par paire ; message aux deux auteurs", () => {
+  expect(conflictKey(["b", "a"])).toBe(conflictKey(["a", "b"]));
+  const autre = resa("c2", { debut: "18:00", fin: "19:00", quoi: "Danse", qui: ["Gp Joie"], pour: "Gp Joie", auteurNom: "Jo L." });
+  const fr = conflictMessage(resa("c1", { date: "2026-10-04" }), { ...autre, date: "2026-10-04" }, "fr");
+  expect(fr.title).toBe("Salles : chevauchement");
+  expect(fr.body).toBe("Dimanche 4 octobre : Scène 17:00–18:30 (Chant · EDD 中班, Alice Q.) et Scène 18:00–19:00 (Danse · Gp Joie, Jo L.) se chevauchent. Mettez-vous d'accord.");
+  expect(conflictMessage(resa("c1", {}), autre, "zh-CN").body).toContain("重叠");
+});
+
+test("course perdue : un créneau enregistré au même moment chevauche le mien → /api/salles/conflit prévient les deux auteurs", async ({ page }) => {
   const db = await openNoel(page, JO, "2026-10-01");
-  let sent: { body: { programmeId: string; creneauIds: string[] }; auth?: string } | null = null;
-  await page.route("**/api/scene/conflit", (route) => {
+  let sent: { body: { reservationIds: string[] }; auth?: string } | null = null;
+  await page.route("**/api/salles/conflit", (route) => {
     sent = { body: route.request().postDataJSON(), auth: route.request().headers()["authorization"] };
     return route.fulfill({ json: { ok: true, notified: 2 } });
   });
@@ -349,14 +382,13 @@ test("course perdue : un créneau enregistré au même moment chevauche le mien 
   await expect(bloc.getByText("Chevauchement")).toHaveCount(2);
   await expect.poll(() => sent).not.toBeNull();
   expect(sent!.auth).toMatch(/^Bearer /);
-  expect(sent!.body.programmeId).toBe("noel");
-  expect(sent!.body.creneauIds).toHaveLength(2);
-  expect(sent!.body.creneauIds).toContain("race");
+  expect(sent!.body.reservationIds).toHaveLength(2);
+  expect(sent!.body.reservationIds).toContain("race");
 });
 
-test("route de conflit : refusée sans jeton", async ({ request }) => {
-  const res = await request.post("/api/scene/conflit", { data: { programmeId: "noel", creneauIds: ["a", "b"] } });
-  expect(res.status()).toBe(401);
+test("route de conflit : /api/scene/conflit n'existe plus (T5c), /api/salles/conflit refusée sans jeton", async ({ request }) => {
+  expect((await request.post("/api/scene/conflit", { data: { programmeId: "noel", creneauIds: ["a", "b"] } })).status()).toBe(404);
+  expect((await request.post("/api/salles/conflit", { data: { reservationIds: ["a", "b"] } })).status()).toBe(401);
 });
 
 // ─── Lot 12 : archivage et bascule automatiques (docs/spec-programme-bascule.md) ──

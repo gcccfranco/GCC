@@ -12,8 +12,8 @@ import { BACK_OFFICE } from "@/lib/backOffice"
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Chevauchement de deux réservations de salle passé malgré le refus côté client (SA9, docs/spec-salles.md, lot 3) :
-// comme /api/scene/conflit, le serveur relit les deux réservations, vérifie qu'elles se chevauchent vraiment (même
+// Chevauchement de deux réservations de salle passé malgré le refus côté client (SA9, docs/spec-salles.md, lot 3 ;
+// la Scène des fêtes aussi depuis le lot 5, T5c, qui a retiré /api/scene/conflit) : le serveur relit les deux réservations, vérifie qu'elles se chevauchent vraiment (même
 // jour, même salle ou lieux liés), puis prévient leurs auteurs (push + cloche), une seule fois par paire (notifLog).
 
 const ID = /^[\w-]+$/;

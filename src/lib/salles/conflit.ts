@@ -1,7 +1,7 @@
 // Chevauchement d'une réservation (docs/spec-salles.md, SA8, SA9, AR6) : fonctions pures. SA8 : avant d'écrire, la
 // feuille cherche l'occupation qui bloque, les salles libres au même moment et la fenêtre « Décaler ». SA9 : deux
-// enregistrements simultanés qui passent quand même ; message aux deux auteurs et clé anti-doublon, comme la Scène
-// (`src/lib/scene/conflit.ts`), partagés par la route /api/salles/conflit et les tests.
+// enregistrements simultanés qui passent quand même ; message aux deux auteurs et clé anti-doublon, partagés par la
+// route /api/salles/conflit et les tests ; la Scène des fêtes y passe aussi (lot 5, T5c).
 
 import { formatReminderDate } from "@/lib/push/reminderMessage";
 import type { Reservation } from "@/lib/firebase/reservations";
