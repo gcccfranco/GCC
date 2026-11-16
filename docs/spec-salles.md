@@ -567,4 +567,5 @@ T2b, T2c et T3a (apparence).
   (formulaire avec refus). Retouches de `critique-design` faites : « Heure de fin » dans la colonne de l'horaire,
   « Décaler » en contour dans un formulaire (`discret`), pilules avec l'autre nom (« Salle Fidélité · 小班 »). Laissés :
   « Horaire » → « Heure de début » quand une salle est choisie ; captures en `fr-FR` (le navigateur de capture affiche
-  « 07:00 PM ») ; thème sombre, formulaire de réunion et chinois non regardés. Suite : T4b lancée.
+  « 07:00 PM ») ; thème sombre, formulaire de réunion et chinois non regardés. Suite : T4b **non lancée** par T4a
+  (limite de profondeur des sessions atteinte, 8) ; demandée au pilote, consigne dans le message.
