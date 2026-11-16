@@ -509,4 +509,6 @@ T2b, T2c et T3a (apparence).
   elle-même, SA9 route simulée, 401 sans jeton, 中文) ; avec `salles-liste`, `salles-grille`, `salles-modele` : 227
   verts, 10 sautés, 2 min 38 s ; `routes-bornes` et `back-office-coupe` filtrés : 216 verts, 12 s (≈ 5 min de tests en
   tout dans la tranche). tsc et lint propres (0 erreur) ; police chinoise refaite (inchangée). Regard sur les cinq
-  projets (feuille avec refus). Suite : T3c lancée.
+  projets (feuille avec refus). Retouches de `critique-design` faites (commit de suite) : « Décaler » en bouton plein,
+  survol, appui et focus sur les pilules, plages et deux-points insécables, message en encre (bord et fond rouges) ;
+  `salles-reserver` repassée : 111 verts, 4 sautés, 1 min 36 s. Non regardés : thème sombre. Suite : T3c lancée.

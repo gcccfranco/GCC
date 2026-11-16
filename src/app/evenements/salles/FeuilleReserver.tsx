@@ -139,11 +139,11 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistr
       {/* Le refus (SA8), sous le moment : ce qui prend la salle, les salles libres au même moment, « Décaler ». */}
       {bloque && salle && (
         <div role="alert" data-refus className="space-y-3 rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3">
-          <p className="text-sm font-medium text-destructive">
+          <p className="text-sm font-medium text-foreground">
             {t("salles.refus", { salle: SALLES.find((s) => s.id === salle)!.nom, qui: nomOccupant(bloque, langue), debut: bloque.debut, fin: bloque.fin === "24:00" ? "23:59" : bloque.fin }).replace(/ – /g, "\u00a0–\u00a0")}
           </p>
           {decale && (
-            <button type="button" onClick={() => { setDebut(decale.debut); setFin(decale.fin) }} className="flex h-11 items-center rounded-full border border-border bg-background px-4 text-sm font-semibold">
+            <button type="button" onClick={() => { setDebut(decale.debut); setFin(decale.fin) }} className="flex h-11 items-center whitespace-nowrap rounded-full bg-foreground px-4 text-sm font-semibold text-background hover:bg-foreground/90 active:bg-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
               {t("salles.decaler", decale)}
             </button>
           )}
@@ -152,7 +152,7 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistr
               <p className="text-sm text-muted-foreground">{t("salles.libresMemeMoment")}</p>
               <div className="flex flex-wrap gap-2" data-libres>
                 {libres.map((l) => (
-                  <button key={l} type="button" data-salle={l} onClick={() => setSalle(l)} className="flex h-11 items-center rounded-full border border-border bg-background px-4 text-sm">
+                  <button key={l} type="button" data-salle={l} onClick={() => setSalle(l)} className="flex h-11 items-center rounded-full border border-border bg-background px-4 text-sm hover:bg-secondary active:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                     {SALLES.find((s) => s.id === l)!.nom}
                   </button>
                 ))}
