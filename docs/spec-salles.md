@@ -486,3 +486,27 @@ T2b, T2c et T3a (apparence).
   `salles-liste`, `salles-grille`, `salles-modele` : 172 verts, 10 sautés (propres à un appareil), 2 min 33 s (≈ 9 min
   de tests en tout dans la tranche). tsc et lint propres ; police chinoise refaite. Regard sur les cinq projets
   (feuille, page, détail). Suite : T3b lancée.
+- 16/11/2026 : **T3b faite** (orchestratrice T3b, codée par elle-même : `/tranche` et les agents du dépôt n'étaient pas
+  chargés ; `critique-design` lancé comme agent général avec sa consigne, trois captures signalées).
+  `src/lib/salles/conflit.ts` (fonctions pures : `chevauchement` — même salle ou lieu lié, bornes qui se touchent
+  permises, hors la réservation modifiée —, `sallesLibres`, `decalage` — même salle, même durée, après l'occupation et
+  celles qui la suivent, null après 22:00 ou devant un jour J —, `reservationsSeChevauchent`, `autreQuiCroise`,
+  `conflictKey`, `conflictMessage`). Feuille : la salle choisie que le moment fait croiser une occupation montre un
+  encadré (`salles.refus` : la salle, l'occupant, ses heures), « Décaler à … » et « Libres au même moment » (une pilule
+  par salle libre, qui la choisit) ; l'envoi reste bloqué. À l'envoi, `enregistrer` relit les réservations du jour
+  avant d'écrire : prise entre-temps, il rend « refus », n'écrit rien et la feuille, relue, nomme l'occupant. Après
+  l'écriture, une relecture cherche une réservation enregistrée au même moment qui croise la sienne : elle est signalée
+  à la nouvelle route **`/api/salles/conflit`** (SA9, comme la Scène : relit les deux documents, vérifie le
+  chevauchement, push et cloche aux deux auteurs, clé `salles-conflit-<ids>` dans `notifLog`, 404 back-office coupé).
+  **21 routes API** : `CLAUDE.md` et la référence (§ Routes API) mis à jour ; route ajoutée à `routes-bornes` et
+  `back-office-coupe`. Décisions déléguées (session T3b, 16/11) : (1) la cloche a une sorte `salles` (« Salles » /
+  « 场地 ») plutôt que `scene` ; (2) le titre du message de conflit est écrit dans `conflit.ts` comme celui de la
+  Scène (pas de clé `salles.conflit.titre` dans les JSON : le serveur n'utilise pas i18next) ; (3) seules les
+  réservations se relisent à l'envoi (emploi du temps fixe et créneaux de scène changent peu, déjà lus). **Aucune
+  règle de `firestore.rules` changée en T3b** ; celle de T3a (`reservations/{id}`) reste à publier à la main par
+  Timothée avant la mise en ligne du lot 3. Spec `tests/salles-reserver.spec.ts` : 11 tests T3b de plus (fonctions,
+  refus nommé, « Décaler », salle libre d'un geste, Scène ↔ Grande salle, relecture à l'envoi, modification hors
+  elle-même, SA9 route simulée, 401 sans jeton, 中文) ; avec `salles-liste`, `salles-grille`, `salles-modele` : 227
+  verts, 10 sautés, 2 min 38 s ; `routes-bornes` et `back-office-coupe` filtrés : 216 verts, 12 s (≈ 5 min de tests en
+  tout dans la tranche). tsc et lint propres (0 erreur) ; police chinoise refaite (inchangée). Regard sur les cinq
+  projets (feuille avec refus). Suite : T3c lancée.

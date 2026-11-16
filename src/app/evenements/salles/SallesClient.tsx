@@ -34,6 +34,8 @@ import { useConfirmer } from "@/components/layout/Confirmer"
 import { estSurLaListe } from "@/lib/deuxVolets"
 import { addDays } from "@/lib/taches/echeances"
 import { chargerReservations, chargerSalles } from "@/lib/salles/charger"
+import { autreQuiCroise, chevauchement } from "@/lib/salles/conflit"
+import { signalerConflit } from "@/lib/salles/signalerConflit"
 import { varianteDu } from "@/lib/salles/emploi"
 import { couleurDe, etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
 import { SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
@@ -161,6 +163,7 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
   const relireReservations = async () => {
     const reservations = await chargerReservations(today)
     setLecture((l) => l && { ...l, sources: { ...l.sources, reservations } })
+    return reservations
   }
 
   const etat = useMemo<EtatSalles | null>(() => lecture && ({
@@ -184,11 +187,21 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
     return () => window.removeEventListener(RESERVER_SALLE, reserver)
   })
 
-  const enregistrer = async (saisie: Saisie, id?: string) => {
-    if (!user) return
+  // SA8 : avant d'écrire, les réservations se relisent ; une occupation qui croise désormais le moment (hors la
+  // réservation qu'on modifie) refuse l'envoi, et la feuille, relue, nomme l'occupant. SA9 : après l'écriture, une
+  // réservation enregistrée au même moment qui croise la sienne est signalée au serveur (message aux deux auteurs).
+  const enregistrer = async (saisie: Saisie, id?: string): Promise<"ok" | "refus"> => {
+    if (!user || !lecture) return "refus"
+    const avant = await relireReservations()
+    if (chevauchement(occupationsDu(saisie.date, { ...lecture.sources, reservations: avant }), saisie.salle, saisie, id)) return "refus"
+    let ecrite = id
     if (id) await updateReservation(id, saisie)
-    else await createReservation({ ...saisie, auteurUid: user.uid, auteurNom: profile?.firstName?.trim() || user.email || "" })
-    await relireReservations()
+    else ecrite = await createReservation({ ...saisie, auteurUid: user.uid, auteurNom: profile?.firstName?.trim() || user.email || "" })
+    const apres = await relireReservations()
+    const moi = apres.find((r) => r.id === ecrite)
+    const autre = moi && autreQuiCroise(moi, apres)
+    if (autre) void signalerConflit([moi.id, autre.id])
+    return "ok"
   }
 
   const choisirJour = (d: string) => {

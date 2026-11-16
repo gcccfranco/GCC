@@ -638,6 +638,7 @@ test.describe("décisions de routes (A2 bis)", () => {
     ["src/app/api/equipes/groupes/route.ts", ["appelantPeut(", "recalculerRattachement("]],
     ["src/app/api/push/notify-audience/route.ts", ["envoyerReserve("]],
     ["src/app/api/scene/conflit/route.ts", ["reserverPuisEnvoyer("]],
+    ["src/app/api/salles/conflit/route.ts", ["reserverPuisEnvoyer("]],
     ["src/app/api/taches/fait/route.ts", ["reserverPuisEnvoyer("]],
     ["src/app/api/setlist/presentation/route.ts", ["reserverPuisEnvoyer("]],
     ["src/app/api/planning/release/route.ts", ["notifierPublication(", "apresEnvoi("]],

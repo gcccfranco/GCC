@@ -4,7 +4,8 @@
 // à), puis les salles, libres en tête, occupées grisées et non choisissables avec leur raison (« Groupe Bonté jusqu'à
 // 14:30 »), puis pour qui et pour quoi. La même feuille modifie une réservation : elle-même ne compte pas dans les
 // occupations (SA10). Feuille du bas au téléphone, panneau à droite dès les deux volets (`FeuilleOuPanneau`).
-// Le refus d'un chevauchement nommé, les salles libres au même moment et « Décaler » viennent en T3b (SA8).
+// T3b (SA8) : une salle choisie que le moment fait croiser une occupation (le moment changé, ou une réservation
+// relue à l'envoi) est refusée en mots : l'occupant et son heure, les salles libres au même moment, « Décaler ».
 
 import { useId, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -15,7 +16,8 @@ import { Input } from "@/components/ui/input"
 import { cleNomEquipe, EQUIPES } from "@/lib/equipes/table"
 import { libelleQui } from "@/lib/fetes/qui"
 import type { Reservation } from "@/lib/firebase/reservations"
-import { croise, etatA, etatEnMots, occupationsDe, type Occupation } from "@/lib/salles/occupations"
+import { chevauchement, decalage, sallesLibres } from "@/lib/salles/conflit"
+import { etatA, etatEnMots, nomOccupant, type Occupation } from "@/lib/salles/occupations"
 import { SALLES, type SalleId } from "@/lib/salles/salles"
 import { QUI } from "@/types/programme"
 
@@ -45,8 +47,9 @@ export function FeuilleReserver({ ouverture, fermer, today, langue, occupationsD
   today: string
   langue: Langue
   occupationsDu: (date: string) => Occupation[]
-  /** Écrit la réservation (création, ou modification de `id`) ; rejette en cas d'échec. */
-  enregistrer: (saisie: Saisie, id?: string) => Promise<void>
+  /** Écrit la réservation (création, ou modification de `id`) ; « refus » si, relue, la salle est prise (SA8) ;
+   *  rejette en cas d'échec. */
+  enregistrer: (saisie: Saisie, id?: string) => Promise<"ok" | "refus">
 }) {
   const { t } = useTranslation()
   const titre = ouverture?.reservation ? t("salles.feuille.modifierTitre") : t("salles.reserver")
@@ -64,7 +67,7 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistr
   today: string
   langue: Langue
   occupationsDu: (date: string) => Occupation[]
-  enregistrer: (saisie: Saisie, id?: string) => Promise<void>
+  enregistrer: (saisie: Saisie, id?: string) => Promise<"ok" | "refus">
 }) {
   const { t } = useTranslation()
   const id = useId()
@@ -85,7 +88,7 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistr
   // Les occupations du jour, sans la réservation qu'on modifie (SA10).
   const occupations = erreur ? [] : occupationsDu(date).filter((o) => !r || o.id !== r.id)
   const raisonDe = (s: SalleId): string | null => {
-    const o = occupationsDe(occupations, s).find((x) => croise(x, { debut, fin }))
+    const o = chevauchement(occupations, s, { debut, fin })
     return o ? etatEnMots({ type: "occupe", occupation: o, jusqua: o.fin, avecGrande: s === "scene" && o.salle === "grande" }, langue) : null
   }
   // Une salle libre dit jusqu'à quand, comme la Liste (critique-design T3a : lignes de même hauteur).
@@ -93,6 +96,10 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistr
   const lignes = SALLES.map((s) => ({ s, raison: raisonDe(s.id) }))
   const triees = [...lignes.filter((l) => !l.raison), ...lignes.filter((l) => l.raison)]
   const salleLibre = salle !== null && !lignes.find((l) => l.s.id === salle)?.raison
+  // SA8 : la salle choisie est prise sur ce moment ; ce qui l'occupe, les salles libres et la fenêtre « Décaler ».
+  const bloque = salle && !erreur ? chevauchement(occupations, salle, { debut, fin }) : null
+  const libres = bloque ? sallesLibres(occupations, { debut, fin }) : []
+  const decale = bloque && salle ? decalage(occupations, salle, { debut, fin }) : null
   const pour = (choixPour === AUTRE ? autre : choixPour).trim().slice(0, 60)
   const pret = !erreur && salleLibre && quoi.trim().length > 0 && !envoi
 
@@ -102,8 +109,9 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistr
     setEnvoi(true)
     setEchec(false)
     try {
-      await enregistrer({ salle, date, debut, fin, pour, quoi: quoi.trim().slice(0, 80) }, r?.id)
-      fermer()
+      // « refus » : la feuille, relue, montre ce qui a pris la salle entre-temps (SA8) et reste ouverte.
+      if ((await enregistrer({ salle, date, debut, fin, pour, quoi: quoi.trim().slice(0, 80) }, r?.id)) === "ok") return fermer()
+      setEnvoi(false)
     } catch {
       setEchec(true)
       setEnvoi(false)
@@ -127,6 +135,32 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, enregistr
         </div>
         {erreur && erreur !== "incomplet" && <p role="status" className="text-sm text-destructive">{t(`salles.feuille.erreurs.${erreur}`)}</p>}
       </div>
+
+      {/* Le refus (SA8), sous le moment : ce qui prend la salle, les salles libres au même moment, « Décaler ». */}
+      {bloque && salle && (
+        <div role="alert" data-refus className="space-y-3 rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3">
+          <p className="text-sm font-medium text-destructive">
+            {t("salles.refus", { salle: SALLES.find((s) => s.id === salle)!.nom, qui: nomOccupant(bloque, langue), debut: bloque.debut, fin: bloque.fin === "24:00" ? "23:59" : bloque.fin }).replace(/ – /g, "\u00a0–\u00a0")}
+          </p>
+          {decale && (
+            <button type="button" onClick={() => { setDebut(decale.debut); setFin(decale.fin) }} className="flex h-11 items-center rounded-full border border-border bg-background px-4 text-sm font-semibold">
+              {t("salles.decaler", decale)}
+            </button>
+          )}
+          {libres.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-sm text-muted-foreground">{t("salles.libresMemeMoment")}</p>
+              <div className="flex flex-wrap gap-2" data-libres>
+                {libres.map((l) => (
+                  <button key={l} type="button" data-salle={l} onClick={() => setSalle(l)} className="flex h-11 items-center rounded-full border border-border bg-background px-4 text-sm">
+                    {SALLES.find((s) => s.id === l)!.nom}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Les salles : libres en tête, occupées grisées avec leur raison (SA6). */}
       <div data-champ="salle" className="space-y-1.5">

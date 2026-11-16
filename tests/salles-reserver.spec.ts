@@ -1,11 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
+import { autreQuiCroise, chevauchement, conflictKey, conflictMessage, decalage, sallesLibres } from "../src/lib/salles/conflit";
+import { occupationsDu } from "../src/lib/salles/occupations";
+import type { Reservation } from "../src/lib/firebase/reservations";
 import { orga, signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { estTelephone, interdireDialoguesNatifs, repondreDansLeSite, verifierSansDebordement } from "./helpers/agencement";
 
 // Chantier AR (docs/spec-salles.md), lot 3, tranche T3a : réserver une salle (SA6, SA7) depuis le bouton « Réserver une
 // salle » ; la feuille commence par la date, « de » et « à », puis les salles (libres en tête, occupées grisées avec
 // leur raison), pour qui (AR16), pour quoi ; les réservations lues dans la Liste et la Grille ; modifier et supprimer
-// la sienne, pas celle d'un autre, sauf la coordination (SA10). Le refus d'un chevauchement et « Décaler » : T3b.
+// la sienne, pas celle d'un autre, sauf la coordination (SA10). T3b : le refus d'un chevauchement nommé, les salles
+// libres au même moment, « Décaler » (SA8) ; le message de conflit aux deux auteurs (SA9, route simulée).
 // Firestore, planning et date simulés ; personnes fictives.
 
 const MAINTENANT = "2026-11-01T10:00:00Z";
@@ -231,6 +235,187 @@ test.describe("AR, T3a : réserver une salle", () => {
     for (const l of ["日期", "从", "到", "为谁", "做什么"]) await expect(f.getByLabel(l, { exact: true })).toBeVisible();
     await expect(salles(page)).toBeVisible();
     await expect(salles(page).locator('[data-salle="bonte"]')).toContainText("恩慈团契，至 14:30");
+    await verifierSansDebordement(page);
+  });
+});
+
+// ─── T3b : refus du chevauchement (SA8), message de conflit (SA9) ───────────────────────────────────────────────────
+
+const R = (r: Partial<Reservation> & Pick<Reservation, "id" | "salle" | "debut" | "fin">): Reservation => ({
+  date: "2026-11-15", pour: "", quoi: "Essai", auteurUid: "uid-x", auteurNom: "Ysaline", createdAt: "", updatedAt: "", ...r,
+});
+const SOURCES = { services: [], scene: [] };
+
+test.describe("AR, T3b : fonctions du chevauchement", () => {
+  test("même salle ou lieu lié ; bornes qui se touchent permises ; hors elle-même", () => {
+    const occ = occupationsDu("2026-11-15", { ...SOURCES, reservations: [R({ id: "a", salle: "scene", debut: "18:30", fin: "19:30" })] });
+    // Bonté : groupe 13:00 – 14:30 ; 14:30 – 15:30 la touche sans la croiser.
+    expect(chevauchement(occ, "bonte", { debut: "14:00", fin: "15:00" })?.debut).toBe("13:00");
+    expect(chevauchement(occ, "bonte", { debut: "14:30", fin: "15:30" })).toBeNull();
+    // Scène réservée : la Grande salle aussi est prise (AR6) ; pas la réservation qu'on modifie.
+    expect(chevauchement(occ, "grande", { debut: "19:00", fin: "20:00" })?.id).toBe("a");
+    expect(chevauchement(occ, "grande", { debut: "19:00", fin: "20:00" }, "a")).toBeNull();
+    expect(sallesLibres(occ, { debut: "19:00", fin: "20:00" })).not.toContain("scene");
+    expect(sallesLibres(occ, { debut: "19:00", fin: "20:00" })).toContain("bonte");
+  });
+
+  test("Décaler : même salle, même durée, après l'occupation (et celles qui suivent), avant 22:00", () => {
+    const occ = occupationsDu("2026-11-15", { ...SOURCES, reservations: [
+      R({ id: "a", salle: "reunion", debut: "18:00", fin: "19:00" }),
+      R({ id: "b", salle: "reunion", debut: "19:30", fin: "20:00" }),
+    ] });
+    expect(decalage(occ, "bonte", { debut: "14:00", fin: "15:00" })).toEqual({ debut: "14:30", fin: "15:30" });
+    // 18:30 – 19:30 : après 19:00, une heure ne tient pas avant 19:30 ; 20:00 – 21:00.
+    expect(decalage(occ, "reunion", { debut: "18:30", fin: "19:30" })).toEqual({ debut: "20:00", fin: "21:00" });
+    // Trois heures après 20:00 dépassent 22:00 : pas de « Décaler ».
+    expect(decalage(occ, "reunion", { debut: "19:00", fin: "22:00" })).toBeNull();
+    // Libre : rien à décaler.
+    expect(decalage(occ, "imprimante", { debut: "18:00", fin: "19:00" })).toBeNull();
+  });
+
+  test("SA9 : une autre réservation qui croise ; clé stable ; message aux deux auteurs", () => {
+    const moi = R({ id: "m", salle: "grande", debut: "18:00", fin: "19:00", quoi: "Chorale", auteurNom: "Ysaline" });
+    const autre = R({ id: "o", salle: "scene", debut: "18:30", fin: "19:30", quoi: "Danse", pour: "Gp Joie", auteurNom: "Corentin" });
+    expect(autreQuiCroise(moi, [moi, autre])?.id).toBe("o");
+    expect(autreQuiCroise(moi, [moi, { ...autre, date: "2026-11-16" }])).toBeNull();
+    expect(autreQuiCroise(moi, [moi, { ...autre, debut: "19:00" }])).toBeNull();
+    expect(conflictKey(["o", "m"])).toBe(conflictKey(["m", "o"]));
+    const fr = conflictMessage(moi, autre, "fr");
+    expect(fr.title).toBe("Salles : chevauchement");
+    expect(fr.body).toBe("Dimanche 15 novembre : Grande salle 18:00–19:00 (Chorale, Ysaline) et Scène 18:30–19:30 (Danse · Gp Joie, Corentin) se chevauchent. Mettez-vous d'accord.");
+    expect(conflictMessage(moi, autre, "zh-CN").title).toBe("场地：时段重叠");
+  });
+});
+
+const refus = (page: Page) => feuille(page).locator("[data-refus]");
+
+test.describe("AR, T3b : refus du chevauchement dans la feuille", () => {
+  test("le moment changé fait croiser la salle choisie : l'occupant et l'heure, « Décaler », salles libres", async ({ page }) => {
+    const db = await ouvrir(page);
+    await ouvrirLaFeuille(page);
+    const f = feuille(page);
+    await f.getByLabel("De", { exact: true }).fill("16:00");
+    await f.getByLabel("À", { exact: true }).fill("17:00");
+    await salles(page).getByRole("radio", { name: /Salle Bonté/ }).check();
+    await f.getByLabel("Pour quoi").fill("Atelier");
+    await f.getByLabel("De", { exact: true }).fill("14:00");
+    await f.getByLabel("À", { exact: true }).fill("15:00");
+    await expect(refus(page)).toContainText("Salle Bonté est prise : Groupe Bonté, 13:00 – 14:30.");
+    await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeDisabled();
+    await expect(refus(page).getByText("Libres au même moment")).toBeVisible();
+    await expect(refus(page).locator('[data-libres] [data-salle="reunion"]')).toBeVisible();
+    await expect(refus(page).locator('[data-libres] [data-salle="bonte"]')).toHaveCount(0);
+    await refus(page).getByRole("button", { name: "Décaler à 14:30 – 15:30" }).click();
+    await expect(f.getByLabel("De", { exact: true })).toHaveValue("14:30");
+    await expect(f.getByLabel("À", { exact: true })).toHaveValue("15:30");
+    await expect(refus(page)).toHaveCount(0);
+    await f.getByRole("button", { name: "Réserver", exact: true }).click();
+    await expect(f).toBeHidden();
+    expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"))?.data).toMatchObject({ salle: "bonte", debut: "14:30", fin: "15:30" });
+    await verifierSansDebordement(page);
+  });
+
+  test("une salle libre au même moment se choisit d'un geste", async ({ page }) => {
+    await ouvrir(page);
+    await ouvrirLaFeuille(page);
+    const f = feuille(page);
+    await f.getByLabel("De", { exact: true }).fill("16:00");
+    await salles(page).getByRole("radio", { name: /Salle Bonté/ }).check();
+    await f.getByLabel("De", { exact: true }).fill("14:00");
+    await refus(page).locator('[data-libres] [data-salle="reunion"]').click();
+    await expect(salles(page).getByRole("radio", { name: /Salle de réunion/ })).toBeChecked();
+    await expect(refus(page)).toHaveCount(0);
+  });
+
+  test("Scène contre Grande salle : la Scène est prise par le culte de la Grande salle", async ({ page }) => {
+    await ouvrir(page);
+    await ouvrirLaFeuille(page);
+    const f = feuille(page);
+    await f.getByLabel("De", { exact: true }).fill("18:00");
+    await f.getByLabel("À", { exact: true }).fill("19:00");
+    await salles(page).getByRole("radio", { name: /Scène/ }).check();
+    await f.getByLabel("De", { exact: true }).fill("16:00");
+    await f.getByLabel("À", { exact: true }).fill("17:30");
+    await expect(refus(page)).toContainText("Scène est prise : Culte sinophone, 15:00 – 17:00.");
+    await expect(refus(page).getByRole("button", { name: "Décaler à 17:00 – 18:30" })).toBeVisible();
+    await expect(refus(page).locator('[data-libres] [data-salle="grande"]')).toHaveCount(0);
+  });
+
+  test("à l'envoi, les réservations se relisent : une réservation faite entre-temps refuse l'écriture et se nomme", async ({ page }) => {
+    const db = await ouvrir(page);
+    await ouvrirLaFeuille(page);
+    const f = feuille(page);
+    await f.getByLabel("De", { exact: true }).fill("18:00");
+    await f.getByLabel("À", { exact: true }).fill("19:00");
+    await salles(page).getByRole("radio", { name: /Grande salle/ }).check();
+    await f.getByLabel("Pour quoi").fill("Chorale");
+    // Pendant ce temps, une autre réserve la Scène (lieu lié) de 18:30 à 19:30.
+    db.set("reservations/r-ysaline", reservation({ salle: "scene", date: "2026-11-15", debut: "18:30", fin: "19:30", pour: "Gp Joie", quoi: "Danse", auteurUid: "uid-ysaline", auteurNom: "Ysaline" }));
+    await f.getByRole("button", { name: "Réserver", exact: true }).click();
+    await expect(refus(page)).toContainText("Grande salle est prise : Danse · Gp Joie, 18:30 – 19:30.");
+    await expect(f).toBeVisible();
+    expect(db.writes.filter((w) => w.method === "POST" && w.path.startsWith("reservations"))).toHaveLength(0);
+    await refus(page).getByRole("button", { name: "Décaler à 19:30 – 20:30" }).click();
+    await f.getByRole("button", { name: "Réserver", exact: true }).click();
+    await expect(f).toBeHidden();
+    expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"))?.data).toMatchObject({ salle: "grande", debut: "19:30", fin: "20:30" });
+  });
+
+  test("modifier la sienne vers un moment pris : refusé, hors elle-même", async ({ page }) => {
+    const db = await ouvrir(page, { vue: "grille" });
+    await bloc(page, "reunion", "19:00").click();
+    await detail(page).getByRole("button", { name: "Modifier" }).click();
+    const f = feuille(page);
+    // Elle-même ne bloque pas : la fin repoussée passe.
+    await expect(refus(page)).toHaveCount(0);
+    db.set("reservations/r-autre", reservation({ salle: "reunion", date: "2026-11-15", debut: "20:30", fin: "21:30", quoi: "Comptes", auteurUid: "uid-corentin", auteurNom: "Corentin" }));
+    await f.getByLabel("À", { exact: true }).fill("21:00");
+    await f.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(refus(page)).toContainText("Salle de réunion est prise : Comptes, 20:30 – 21:30.");
+    expect(db.writes.filter((w) => w.method === "PATCH" && w.path.startsWith("reservations"))).toHaveLength(0);
+  });
+
+  test("SA9 : une réservation écrite au même moment qui croise la sienne est signalée au serveur", async ({ page }) => {
+    const db = await ouvrir(page);
+    let envoye: { body: { reservationIds: string[] }; auth?: string } | null = null;
+    await page.route("**/api/salles/conflit", (route) => {
+      envoye = { body: route.request().postDataJSON(), auth: route.request().headers()["authorization"] };
+      return route.fulfill({ json: { ok: true, notified: 2 } });
+    });
+    // Une autre écrit juste avant l'écriture de Léandre, après sa relecture.
+    await page.route(/firestore\.googleapis\.com.*\/reservations(\?|$)/, async (route) => {
+      if (route.request().method() === "POST") db.set("reservations/course", reservation({ salle: "imprimante", date: "2026-11-15", debut: "16:30", fin: "17:30", quoi: "Tri", auteurUid: "uid-ysaline", auteurNom: "Ysaline" }));
+      await route.fallback();
+    });
+    await ouvrirLaFeuille(page);
+    const f = feuille(page);
+    await f.getByLabel("De", { exact: true }).fill("16:00");
+    await f.getByLabel("À", { exact: true }).fill("17:00");
+    await salles(page).getByRole("radio", { name: /Salle imprimante/ }).check();
+    await f.getByLabel("Pour quoi").fill("Partitions");
+    await f.getByRole("button", { name: "Réserver", exact: true }).click();
+    await expect(f).toBeHidden();
+    await expect.poll(() => envoye).not.toBeNull();
+    expect(envoye!.auth).toMatch(/^Bearer /);
+    expect(envoye!.body.reservationIds).toHaveLength(2);
+    expect(envoye!.body.reservationIds).toContain("course");
+  });
+
+  test("route de conflit : refusée sans jeton", async ({ request }) => {
+    const res = await request.post("/api/salles/conflit", { data: { reservationIds: ["a", "b"] } });
+    expect(res.status()).toBe(401);
+  });
+
+  test("en 中文 : le refus et « Décaler »", async ({ page }) => {
+    await ouvrir(page, { zh: true });
+    await page.getByRole("button", { name: "预订场地" }).click();
+    const f = feuille(page);
+    await f.getByLabel("从", { exact: true }).fill("16:00");
+    await salles(page).getByRole("radio", { name: /Salle Bonté/ }).check();
+    await f.getByLabel("从", { exact: true }).fill("14:00");
+    await expect(refus(page)).toContainText("Salle Bonté已被占用：恩慈团契，13:00–14:30。");
+    await expect(refus(page).getByRole("button", { name: "改到 14:30–15:30" })).toBeVisible();
+    await expect(refus(page).getByText("同一时段空闲")).toBeVisible();
     await verifierSansDebordement(page);
   });
 });

@@ -29,6 +29,7 @@ const NOTIF_KIND_KEYS: Record<NotificationItem["kind"], string> = {
   "scene": "notifications.scene",
   "evenement": "notifications.evenement",
   "tache": "notifications.tache",
+  "salles": "notifications.salles",
 };
 
 export function Cloche({

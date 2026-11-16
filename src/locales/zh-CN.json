@@ -978,7 +978,8 @@
     "presentation": "幻灯片已就绪",
     "scene": "舞台",
     "evenement": "活动",
-    "tache": "任务"
+    "tache": "任务",
+    "salles": "场地"
   },
   "absences": {
     "titre": "我的请假",
@@ -4602,6 +4603,9 @@
     "aujourdhui": "今天",
     "echec": "未能读取排班、舞台或预订：状态可能不完整。",
     "reserver": "预订场地",
+    "refus": "{{salle}}已被占用：{{qui}}，{{debut}}–{{fin}}。",
+    "libresMemeMoment": "同一时段空闲",
+    "decaler": "改到 {{debut}}–{{fin}}",
     "feuille": {
       "date": "日期",
       "de": "从",

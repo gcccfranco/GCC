@@ -17,7 +17,7 @@ export function avecBarreFinale(url: string): string {
   return `${chemin}/${reste}`;
 }
 
-type BellKind = "manual" | "reminder" | "broadcast" | "presentation" | "scene" | "evenement" | "tache";
+type BellKind = "manual" | "reminder" | "broadcast" | "presentation" | "scene" | "evenement" | "tache" | "salles";
 
 interface RecordNotificationInput {
   title: string;
