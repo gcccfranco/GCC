@@ -1063,7 +1063,8 @@ for (const [qui, nom] of [[NOE, "une autre équipe"], [COORD, "la coordination"]
     await expect(page.getByText("Évènement introuvable")).toBeVisible();
     await expect(carte(page)).toHaveCount(0);
     await page.goto("/evenements");
-    await expect(page.getByRole("heading", { name: "Évènements" }).first()).toBeVisible();
+    // Chantier AR, lot 1 : la section s'appelle « Église ».
+    await expect(page.getByRole("heading", { name: "Église" }).first()).toBeVisible();
     await expect(page.getByText("Réunion Régie")).toHaveCount(0);
   });
 }

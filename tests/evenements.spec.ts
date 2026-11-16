@@ -661,7 +661,8 @@ test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable p
   await member(page, ALICE, "/back-office/evenements/nouveau");
   await page.getByLabel("Nom de l'évènement").waitFor();
   const labels = await page.locator("form label[for]").evaluateAll((els) => els.map((el) => el.textContent?.trim()));
-  expect(labels.slice(0, 8)).toEqual(["Nom de l'évènement", "Catégorie", "Public", "Date", "Horaire", "Lieu", "Responsable", "Description"]);
+  // Chantier AR, lot 4 (SA12) : « Salle de l'église » avant le lieu (« Ailleurs » par défaut).
+  expect(labels.slice(0, 9)).toEqual(["Nom de l'évènement", "Catégorie", "Public", "Date", "Horaire", "Salle de l'église", "Lieu", "Responsable", "Description"]);
   await expect(page.getByLabel("Responsable")).toHaveValue("Alice Q.");
   await expect(page.getByText("Ajouter une bannière")).toBeVisible();
   await expect(page.getByRole("radio", { name: "Automatique" })).toBeChecked();
