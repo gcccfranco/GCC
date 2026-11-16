@@ -28,7 +28,7 @@ export interface Occupation {
   fin: string;
   occupant: Occupant;
   source: "fixe" | "fete" | "scene";
-  /** Créneau de scène : son id, son auteur et la page de sa fête. */
+  /** Créneau de scène : son id, son auteur et la page de sa fête ; jour J : la page de la fête. */
   id?: string;
   auteurUid?: string;
   auteurNom?: string;
@@ -53,7 +53,7 @@ export function jourJDu(date: string, scene: SourcesSalles["scene"]): Fete | nul
 export function occupationsDu(date: string, sources: SourcesSalles): Occupation[] {
   const fete = jourJDu(date, sources.scene);
   const fixes = occupationsFixes(date, varianteDu(date, sources.services)).filter((o) => !fete || o.salle !== "grande");
-  const jourJ: Occupation[] = fete ? [{ salle: "grande", debut: "00:00", fin: "24:00", occupant: { fete }, source: "fete" }] : [];
+  const jourJ: Occupation[] = fete ? [{ salle: "grande", debut: "00:00", fin: "24:00", occupant: { fete }, source: "fete", lien: `/evenements/scene/${fete}` }] : [];
   const scene: Occupation[] = sources.scene
     .filter(({ programme }) => programme.ouvert !== false)
     .flatMap(({ programme, creneaux }) => creneaux

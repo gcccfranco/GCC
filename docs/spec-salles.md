@@ -436,3 +436,27 @@ T2b, T2c et T3a (apparence).
   (`salles-modele`, `eglise-entree`, `agencement-v18-t7`, `scene-paques-noel` filtrée) 237 verts, 1 instable
   (`agencement-v18-t7` : 201, tablette paysage, vert seul), 3 min 46 s. tsc et lint propres. Regard sur les cinq
   projets (liste et journée). Suite : T2c lancée.
+- 16/11/2026 : **T2c faite, lot 2 fini** (orchestratrice T2c, codée par elle-même : `/tranche` et les agents du dépôt
+  n'étaient pas chargés ; `critique-design` lancé comme agent général avec sa consigne, six captures signalées). Vue
+  Grille (`salles/GrilleSalles.tsx`, SA3) : neuf colonnes, 8:00 à 22:00 à 44 px l'heure, un bloc par occupation à sa
+  hauteur (22 px au moins), liseré et fond de la couleur AR17 ; une occupation d'un lieu lié (Grande salle ↔ Scène, AR6)
+  en hachures, nommée pour les lecteurs d'écran ; repère d'heure en ligne sous les blocs et en pastille dans la colonne
+  des heures ; la grille défile à l'horizontale sous 1 024 px (téléphone **et tablette portrait**), colonne des heures
+  figée, et tient en largeur au-delà. Détail d'un bloc (SA4) : dialogue (qui, salle, jour et heures, « Inscrit par »),
+  lien « Page de Noël » pour un créneau de scène ou un jour J (`lien` ajouté au jour J dans `occupations.ts`).
+  Sélecteur « Liste · Grille » (`Segment`, à droite de la ligne de contexte) ; vue par défaut Grille en deux volets
+  (`useDisposition() === "grand"`), Liste sinon ; choix retenu dans `localStorage` `gcc-salles-vue` (SA5). En Grille, la
+  page prend toute sa largeur ; sur la journée d'une salle, le volet de gauche reste la Liste. Libellés `salles.vue.*`,
+  `salles.grille`, `salles.detail.*` fr / 中文 ; police chinoise refaite (`build-fonts.py`). Décisions déléguées
+  (session T2c, 16/11) : (1) la Grille défile aussi en tablette portrait (colonnes de 6,5 rem), sinon les noms et les
+  heures étaient rognés (constat de `critique-design`) ; (2) le sélecteur se pose à droite de la ligne de contexte, pas
+  sous le rail des onglets, pour ne pas se lire comme un onglet de plus. Retouches de `critique-design` faites : hauteur
+  minimale des blocs, heures en encre à 75 % (contraste), noms sur deux lignes, hachures nommées. Laissés pour plus
+  tard : en-tête des colonnes collant au téléphone (il faudrait le défilement vertical dans la grille), légende des
+  hachures. `salles-liste` pose désormais « liste » (la Grille est le défaut en grand). Spec
+  `tests/salles-grille.spec.ts` (8 tests × 5 projets, dans `SPECS_GRAND_ECRAN`) : 34 verts, 6 propres à un appareil
+  sautés. **Fin de lot** : `salles-modele`, `salles-liste`, `salles-grille`, `eglise-entree`, `calendrier`,
+  `agencement-v18-t7` (8 min) puis `scene-paques-noel` filtrée sur P4 (58 verts, 1 min 12 s) ; 19 échecs de
+  `salles-liste` en grand (Grille par défaut), corrigés et repassés avec `salles-grille` (79 verts, 1 min 17 s) ;
+  `agencement-v18-t7` : 201 instable (ordinateur cette fois), vert seul. Environ 12 min de tests en tout. tsc et lint
+  propres. Regard sur les cinq projets (grille, détail, liste). Suite : lot 3, T3a lancée.

@@ -28,6 +28,8 @@ async function ouvrir(page: Page, qui: FakeProfile | null, to: string, { heure =
   await page.clock.setFixedTime(new Date(heure));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   if (zh) await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+  // T2c : la Grille est la vue par défaut en grand (SA5) ; cette spec regarde la Liste.
+  await page.addInitScript(() => { try { localStorage.setItem("gcc-salles-vue", "liste"); } catch {} });
   if (qui) return signInAs(page, qui, DOCS, to);
   await page.goto(to);
 }

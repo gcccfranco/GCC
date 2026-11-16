@@ -4646,6 +4646,22 @@
     "retour": "Salles",
     "rien": "Rien de prévu",
     "aujourdhui": "Aujourd'hui",
-    "echec": "Le planning ou la scène n'a pas pu être lu : l'état peut être incomplet."
+    "echec": "Le planning ou la scène n'a pas pu être lu : l'état peut être incomplet.",
+    "vue": {
+      "etiquette": "Vue",
+      "liste": "Liste",
+      "grille": "Grille"
+    },
+    "grille": "Grille des salles",
+    "detail": {
+      "fermer": "Fermer",
+      "avec": "Avec {{salle}} : {{quoi}}, {{debut}} – {{fin}}",
+      "salle": "Salle",
+      "quand": "Quand",
+      "auteur": "Inscrit par",
+      "par": "Inscrit par {{nom}}",
+      "journee": "toute la journée",
+      "fete": "Page de {{fete}}"
+    }
   }
 }

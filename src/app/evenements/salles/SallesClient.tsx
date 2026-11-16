@@ -6,14 +6,19 @@
 // `JourneeSalle`). En grand, deux volets : la liste seule dans la colonne tant qu'aucune salle n'est choisie, puis la
 // semaine de la salle à droite ; en un volet, la liste, puis la journée en page. Le jour et l'heure choisis sont
 // partagés avec la journée par un contexte. Connectés seulement (SA14).
+// T2c : la vue Grille (`GrilleSalles`, SA3) et le sélecteur « Liste · Grille » (SA5 : Liste au téléphone et en
+// tablette portrait, Grille en grand ; le choix est retenu sur l'appareil, `gcc-salles-vue`). La bande de jours, la
+// ligne de contexte et le repère d'heure servent aux deux vues. La Grille prend toute la largeur de la page ; sur la
+// journée d'une salle, le volet de gauche reste la Liste.
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { RequireAuth } from "@/components/auth/RequireAuth"
 import { DeuxVolets } from "@/components/layout/DeuxVolets"
 import { Squelette } from "@/components/layout/Squelette"
+import { Segment } from "@/components/ui/segment"
 import { useDisposition } from "@/hooks/useDisposition"
 import { jourDeParis } from "@/lib/evenements/bascule"
 import { useAuth } from "@/lib/firebase/auth"
@@ -23,11 +28,37 @@ import { chargerSalles } from "@/lib/salles/charger"
 import { varianteDu } from "@/lib/salles/emploi"
 import { couleurDe, etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
 import { SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
+import { GrilleSalles } from "./GrilleSalles"
 
 export const RACINE_SALLES = "/evenements/salles"
 const JOURS_DE_LA_BANDE = 14
 
 type Langue = "fr" | "zh"
+type Vue = "liste" | "grille"
+
+/** Le choix « Liste · Grille » retenu sur l'appareil (SA5) ; null tant qu'aucun n'est fait. */
+const CLE_VUE = "gcc-salles-vue"
+const CHANGEMENT_VUE = "gcc-salles-vue"
+function suivreVue(changement: () => void) {
+  window.addEventListener(CHANGEMENT_VUE, changement)
+  window.addEventListener("storage", changement)
+  return () => {
+    window.removeEventListener(CHANGEMENT_VUE, changement)
+    window.removeEventListener("storage", changement)
+  }
+}
+function vueRetenue(): Vue | null {
+  try {
+    const v = localStorage.getItem(CLE_VUE)
+    return v === "liste" || v === "grille" ? v : null
+  } catch {
+    return null
+  }
+}
+function retenirVue(v: Vue) {
+  try { localStorage.setItem(CLE_VUE, v) } catch {}
+  window.dispatchEvent(new Event(CHANGEMENT_VUE))
+}
 
 interface EtatSalles {
   today: string
@@ -88,6 +119,9 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
   // « maintenant » (aujourd'hui seulement) ou « HH:MM » ; un autre jour se lit à 08:00 (AR12).
   const [repere, setRepere] = useState("maintenant")
   const [lecture, setLecture] = useState<{ sources: SourcesSalles; echec: boolean } | null>(null)
+  const retenue = useSyncExternalStore(suivreVue, vueRetenue, () => null)
+  // Sur la journée d'une salle, le volet de gauche reste la Liste (la Grille ne tient pas dans un volet).
+  const vue: Vue = !surLaListe ? "liste" : retenue ?? (grand ? "grille" : "liste")
 
   useEffect(() => {
     if (!user) return
@@ -105,12 +139,17 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
   }
 
   const liste = !etat ? <Squelette enTete={false} className="p-0" /> : (
-    <Liste etat={etat} repere={repere} setRepere={setRepere} choisirJour={choisirJour} echec={lecture!.echec} actif={surLaListe ? null : pathname.split("/")[3] ?? null} />
+    <Liste etat={etat} vue={vue} surGris={!grand || vue === "grille"} choisirVue={surLaListe ? retenirVue : null} repere={repere} setRepere={setRepere} choisirJour={choisirJour} echec={lecture!.echec} actif={surLaListe ? null : pathname.split("/")[3] ?? null} />
   )
 
   return (
     <Contexte.Provider value={etat}>
-      {grand ? (
+      {grand && vue === "grille" ? (
+        <div>
+          {enTete}
+          <div data-fond-groupe className="px-[var(--marge-page)] pb-6">{liste}</div>
+        </div>
+      ) : grand ? (
         <div>
           {enTete}
           <DeuxVolets racine={RACINE_SALLES} colonneSeule liste={<div className="px-3 py-4">{liste}</div>}>{children}</DeuxVolets>
@@ -129,8 +168,13 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
 
 const GROUPES: GroupeSalle[] = ["grande", "groupe", "bureaux"]
 
-function Liste({ etat, repere, setRepere, choisirJour, echec, actif }: {
+function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour, echec, actif }: {
   etat: EtatSalles
+  vue: Vue
+  /** La page est grise autour (un volet, ou la Grille) : le sélecteur prend la piste du fond de groupe. */
+  surGris: boolean
+  /** Le sélecteur « Liste · Grille » ; null sur la journée d'une salle. */
+  choisirVue: ((v: Vue) => void) | null
   repere: string
   setRepere: (r: string) => void
   choisirJour: (d: string) => void
@@ -174,10 +218,22 @@ function Liste({ etat, repere, setRepere, choisirJour, echec, actif }: {
 
       {/* Ligne de contexte (SA1) : le jour, sa variante ou son jour J, le repère d'heure (AR12). */}
       <div data-contexte-salles className="space-y-0.5 px-1 text-sm text-muted-foreground">
-        <p className="flex flex-wrap items-center gap-x-1.5">
-        <span className="font-semibold text-foreground first-letter:uppercase">{dateLongue(date, langue)}</span>
-        {nomDuJour && <><span aria-hidden>·</span><span>{nomDuJour}</span></>}
-        </p>
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
+          <span className="font-semibold text-foreground first-letter:uppercase">{dateLongue(date, langue)}</span>
+          {nomDuJour && <><span aria-hidden>·</span><span>{nomDuJour}</span></>}
+          {/* Le sélecteur de vue, à droite de la ligne de contexte : un réglage, pas un onglet (critique-design T2c). */}
+          {choisirVue && (
+            <span className="ml-auto">
+              <Segment
+                etiquette={t("salles.vue.etiquette")}
+                actif={vue}
+                choisir={(v) => choisirVue(v as Vue)}
+                surGris={surGris}
+                onglets={[{ id: "liste", label: t("salles.vue.liste") }, { id: "grille", label: t("salles.vue.grille") }]}
+              />
+            </span>
+          )}
+        </div>
         {/* Le repère d'heure, sur sa ligne (critique-design T2b) : il se touche pour changer l'heure (AR12). */}
         <select
           aria-label={t("salles.heure")}
@@ -192,6 +248,9 @@ function Liste({ etat, repere, setRepere, choisirJour, echec, actif }: {
 
       {echec && <p role="status" className="px-1 text-xs text-muted-foreground">{t("salles.echec")}</p>}
 
+      {vue === "grille" ? (
+        <GrilleSalles occupations={occupations} heure={heure} langue={langue} dateLongue={dateLongue(date, langue)} />
+      ) : (
       <ul aria-label={t("salles.liste")} className="carte-groupe overflow-hidden">
         {GROUPES.map((g) => [
           <li key={`groupe-${g}`} role="none" className="border-t border-border/60 px-4 pb-1 pt-3 first:border-t-0">
@@ -232,6 +291,7 @@ function Liste({ etat, repere, setRepere, choisirJour, echec, actif }: {
           }),
         ])}
       </ul>
+      )}
     </div>
   )
 }

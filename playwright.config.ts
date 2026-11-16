@@ -16,6 +16,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 const SPECS_GRAND_ECRAN = [
   // Salles AR, T2b (docs/spec-salles.md) : la Liste, la bande de jours, le repère d'heure, la journée d'une salle (page ou volet).
   /salles-liste\.spec\.ts/,
+  // Salles AR, T2c : la Grille (neuf colonnes, défilement au téléphone), le sélecteur « Liste · Grille » et la vue par appareil.
+  /salles-grille\.spec\.ts/,
   // CI-2 (docs/spec-corrections-interface.md) : le parcours du culte au mode louange, de l'ouverture aux menus.
   /louange-parcours-culte\.spec\.ts/,
   // Lot AL, AL-2 (docs/spec-accords-louange.md) : accords touchables en mode louange, panneau au centre de la page, bandes latérales, Crayon, « Ici ».

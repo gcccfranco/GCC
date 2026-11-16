@@ -4594,6 +4594,22 @@
     "retour": "场地",
     "rien": "没有安排",
     "aujourdhui": "今天",
-    "echec": "未能读取排班或舞台：状态可能不完整。"
+    "echec": "未能读取排班或舞台：状态可能不完整。",
+    "vue": {
+      "etiquette": "视图",
+      "liste": "列表",
+      "grille": "网格"
+    },
+    "grille": "场地网格",
+    "detail": {
+      "fermer": "关闭",
+      "avec": "与{{salle}}同用：{{quoi}}，{{debut}}–{{fin}}",
+      "salle": "场地",
+      "quand": "时间",
+      "auteur": "登记人",
+      "par": "由 {{nom}} 登记",
+      "journee": "全天",
+      "fete": "{{fete}}页面"
+    }
   }
 }
