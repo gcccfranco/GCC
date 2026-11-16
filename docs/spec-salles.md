@@ -512,3 +512,29 @@ T2b, T2c et T3a (apparence).
   projets (feuille avec refus). Retouches de `critique-design` faites (commit de suite) : « Décaler » en bouton plein,
   survol, appui et focus sur les pilules, plages et deux-points insécables, message en encre (bord et fond rouges) ;
   `salles-reserver` repassée : 111 verts, 4 sautés, 1 min 36 s. Non regardés : thème sombre. Suite : T3c lancée.
+- 16/11/2026 : **T3c faite, lot 3 fini** (orchestratrice T3c, codée par elle-même : `/tranche` et les agents du dépôt
+  n'étaient pas chargés ; `critique-design` lancé comme agent général avec sa consigne, trois captures signalées).
+  Gestes de la Grille (SA11, SA6) dans `GrilleSalles.tsx` : sous les blocs, une case par heure et par salle
+  (`data-case`, nommée « Réserver Salle de réunion à 16:00 » / « 预订 … 16:00 », clé `salles.case`). Glisser à la
+  souris, au trackpad ou au stylet (ordinateur, tablette) dessine la plage au quart d'heure (`data-plage`, pointillés,
+  heures écrites ; les quarts touchés, 15 min au moins, 8:00 – 22:00) et ouvre la feuille ; un clic ou un appui ouvre
+  l'heure de la case pour une heure ; au clavier, une seule case dans l'ordre de tabulation, les flèches changent de
+  case (heure, salle), Entrée l'ouvre et la case focalisée dit « 11:00 + ». Le toucher n'est pas capté : défilement
+  horizontal du téléphone (SA3) et détail d'un bloc (SA4) inchangés. La feuille reçoit la date du jour affiché et la
+  **salle de la colonne** (`Ouverture.salle`). Décisions déléguées (session T3c, 16/11) : (1) la salle de la case est
+  pré-choisie (la case touchée la nomme) ; (2) un appui ou un clic ouvre l'heure entière de la case, pas le quart sous
+  le doigt (plus sûr au toucher) ; seul le glisser donne le quart d'heure ; (3) pas de cases un jour passé ni sans
+  droit de réserver ; (4) au toucher, pas de glisser (il défilerait la page) : l'appui suffit, comme le veut SA11.
+  Retouches de `critique-design` faites : plage d'un seul ton (survol coupé pendant le glisser) sur fond clair, heure
+  dans la case focalisée, coins arrondis du contour. Laissé : le bouton « Réserver » reste grisé tant que « Pour quoi »
+  est vide, sans le dire (T3a, SA7 ; à reprendre avec la croix de la feuille). **Aucune règle de `firestore.rules`
+  changée en T3c** ; celle de T3a (`reservations/{id}`) reste **à publier à la main par Timothée avant la mise en
+  ligne du lot 3**. Spec `tests/salles-gestes.spec.ts` (8 tests × 5 projets, dans `SPECS_GRAND_ECRAN`) : 35 verts,
+  5 propres à un appareil sautés, 1 min 29 s (2 min 18 s après les retouches). **Fin de lot** : `salles-gestes`,
+  `salles-reserver`, `salles-liste`, `salles-grille`, `salles-modele` : 262 verts, 15 sautés, 4 min 14 s. Section
+  Évènements : la série entière (`git grep -l "/evenements" tests/` hors les deux grosses specs) compte 6 933 tests,
+  ≈ 8 h à trois ouvriers ; arrêtée après 208 tests (3 échecs sous la charge, verts seuls avec `eglise-entree` : 26
+  verts, 49 s) ; puis `calendrier`, `evenements`, `pages-en-grand-evenements` : 764 verts, 144 sautés, 13 min (T3c ne
+  touche que les fichiers de Salles). Environ 35 min de tests en tout dans la tranche. tsc et lint propres (0 erreur) ;
+  police chinoise refaite (inchangée). Regard sur les cinq projets (glisser, feuille ouverte d'un appui, contour au
+  clavier). Non regardés : thème sombre. Suite : T4a lancée.
