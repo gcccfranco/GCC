@@ -392,3 +392,5 @@ T2b, T2c et T3a (apparence).
   (« Ruth K. » en double) ; les captures `PW_CAPTURES` (941, P8 1507) n'ont pas été suivies. Regard à l'œil sur les
   quatre dispositions (fr et 中文) : rien à reprendre. `regard` et les agents de `/tranche` n'étaient pas chargés dans
   la session : tranche codée et regardée par l'orchestratrice. **Lots 2 à 5 : attendent chacun leur go.**
+- 16/11/2026 : **go de Timothée pour le lot 2** (« go », en réponse à « Lot 2 … : go ? »). Vaut pour T2a, T2b, T2c,
+  une session par tranche, chacune lance la suivante. Les lots 3 à 5 attendent leur go.
