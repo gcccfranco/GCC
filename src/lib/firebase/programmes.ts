@@ -65,6 +65,7 @@ function fromFsCreneau(raw: RawDoc): Creneau {
     dimanche: (data.dimanche as string) ?? "",
     debut: (data.debut as string) ?? "",
     fin: (data.fin as string) ?? "",
+    ...(data.libre === true && { libre: true }),
     quoi: (data.quoi as string) ?? "",
     qui: (data.qui as string[]) ?? [],
     note: (data.note as string) ?? "",

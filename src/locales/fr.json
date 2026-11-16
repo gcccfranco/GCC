@@ -1231,7 +1231,7 @@
         "for": "Membres connectés · ordre de passage tenu par la coordination",
         "body": "Avant une grande fête (Noël), un onglet du programme apparaît dans **Évènements** pour réserver la scène le dimanche et préparer l'ordre de passage.",
         "points": [
-          "**Entraînements** : choisis un dimanche, l'heure, quoi et qui ; un créneau qui en chevauche un autre est refusé.",
+          "**Entraînements** : choisis un dimanche, l'heure, quoi et qui ; un créneau qui en chevauche un autre est refusé. « Réserver un autre moment » prend un autre jour ou d'autres heures, dans la période des réservations.",
           "Tu modifies ou retires tes créneaux ; la coordination peut tous les déplacer.",
           "**Programme** : l'ordre de passage du jour J, tenu par la coordination.",
           "Tes entraînements sont rappelés avec tes services."
@@ -1958,6 +1958,12 @@
       "quiPermisTitre": "les groupes permis pour cette saison",
       "quiRefuse": "Ce groupe ne peut pas réserver : {{qui}}.",
       "dejaCommence": "Ce créneau a déjà commencé : il ne se réserve plus.",
+      "autreMoment": "Réserver un autre moment",
+      "autreMomentTitre": "Un autre moment",
+      "autreDate": "Date",
+      "autreDe": "de",
+      "autreA": "à",
+      "autreHorsPeriode": "Choisis une date entre le {{debut}} et le {{fin}}.",
       "jourCourt": {
         "0": "dim.",
         "1": "lun.",

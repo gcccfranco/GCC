@@ -109,7 +109,7 @@ export function joursReservables(saison: Pick<Saison, "debut" | "fin" | "plages"
   return out;
 }
 
-type CreneauLike = { dimanche: string; debut: string; fin: string };
+type CreneauLike = { dimanche: string; debut: string; fin: string; libre?: boolean };
 
 /** Une ligne de la journée : créneau libre, ou réservation à son heure.
  *  `couvre` = nombre de créneaux de la grille qu'elle absorbe (Q13) ; `aussi` =
@@ -143,7 +143,7 @@ export function lignesDuJour<C extends CreneauLike>(
   for (const c of resas) {
     const pris = grille.filter((g) => chevauche(g, c));
     lignes.push({
-      type: "reserve", debut: c.debut, fin: c.fin, creneau: c, horsGrille: !grille.some((g) => pile(g, c)),
+      type: "reserve", debut: c.debut, fin: c.fin, creneau: c, horsGrille: !c.libre && !grille.some((g) => pile(g, c)),
       couvre: pris.length, aussi: pris.filter((g) => g.debut !== c.debut).map((g) => g.debut),
     });
   }
@@ -180,6 +180,15 @@ export function semainesDe(
     const resas = creneaux.filter((c) => c.dimanche === jour);
     for (const g of grilleDuJour(saison, jour)) s.cases.push(resas.some((c) => chevauche(g, c)));
   }
+  // SQ-R11 : un jour hors de la saison qui porte une réservation entre dans sa semaine, sans case.
+  for (const d of new Set(creneaux.map((c) => c.dimanche))) {
+    if (semaines.some((s) => s.jours.includes(d))) continue;
+    const lundi = lundiDe(d);
+    const s = semaines.find((x) => x.lundi === lundi);
+    if (s) s.jours = [...s.jours, d].sort();
+    else semaines.push({ lundi, jours: [d], cases: [], libres: 0 });
+  }
+  semaines.sort((a, b) => a.lundi.localeCompare(b.lundi));
   for (const s of semaines) s.libres = s.cases.filter((pris) => !pris).length;
   return semaines;
 }
@@ -203,7 +212,7 @@ export function horsGrille<C extends CreneauLike>(
   saison: Pick<Saison, "debut" | "fin" | "plages" | "duree">,
   creneaux: C[],
 ): C[] {
-  return creneaux.filter((c) => !grilleDans(saison, c.dimanche).some((g) => pile(g, c)));
+  return creneaux.filter((c) => !c.libre && !grilleDans(saison, c.dimanche).some((g) => pile(g, c)));
 }
 
 /** Ce qui empêche d'enregistrer une saison. */

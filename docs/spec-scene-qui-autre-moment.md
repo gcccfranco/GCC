@@ -172,3 +172,20 @@ Trois appareils ; l'agencement du volet Entraînements est déjà sur les cinq p
   `chants-fetes`, `programme-scene`, `scene-des-fetes` sur trois appareils : 273 verts, 18 sautés, 0 échec (≈ 2 min 40
   pour le second tour). Captures FR et 中文 regardées sur téléphone, tablette, tablette paysage et ordinateur : rien à
   reprendre. SQ-B lancée dans une session neuve.
+- 16/11/2026 : **SQ-B codée, lot AQ fini** (session orchestratrice SQ-B). `Creneau.libre` lu dans `programmes.ts`
+  (présent seulement s'il vaut `true`) ; `horsGrille()` et `lignesDuJour` ignorent un créneau `libre` ; `semainesDe`
+  ajoute à sa semaine tout jour qui porte une réservation, sans créneau libre (remplace `semainesAvecHorsGrille`).
+  Bouton « Réserver un autre moment » (`variant="outline"`, 44 px) en bas de la colonne des semaines (morceau `autre`
+  de `MorceauxEntrainements`), aussi dans le Back-Office par le même composant ; feuille « Un autre moment » : date
+  bornée (période, à partir d'aujourd'hui ; `autreHorsPeriode`), « de »/« à » en `ChampSelect` au pas de 15 min,
+  puis quoi, qui, note ; même écriture et même signalement de conflit que « Réserver », avec `libre: true`.
+  « Modifier » rouvre la feuille ; « Déplacer » vers la grille écrit `libre: null` (lu comme absent : écart mineur au
+  « absent »). Décisions déléguées (session SQ-B, 16/11) : « Modifier » d'un autre moment garde sa date d'origine même
+  hors période (sinon note et qui deviennent intouchables) ; `CetteSemaine` et `ToutesReservations` inchangés, ils
+  passent par `horsGrille` et `semainesDe`. Hors tranche relevé par `critique-design` : les puces « Quoi » restent en
+  français en 中文, dans les deux feuilles (`QUOI` figé). `regard` puis `critique-design` (8 captures) : bouton
+  invisible sur fond gris au téléphone, listes d'heures au style natif, titre collé : corrigés. Tests : nouvelle spec
+  `tests/scene-autre-moment.spec.ts` (inscrite à `SPECS_GRAND_ECRAN`) ; les sept specs (`scene-autre-moment`,
+  `scene-qui`, `scene-paques-noel`, `scene-saison`, `programme-scene`, `planning-gestes`, `scene-des-fetes`) :
+  1 125 verts, 119 sautés, 0 échec (15 min) ; après retouches, `scene-autre-moment`, `scene-qui`, `scene-paques-noel` :
+  699 verts, 0 échec (10 min). Aucune modification de `firestore.rules`. Libellés 中文 à relire par Timothée.

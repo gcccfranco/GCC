@@ -326,7 +326,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
         programme={programme} creneaux={creneaux} user={user} profile={profile} onChanged={reload}
         onConflict={(a, b) => reportConflict(programme.id, [a.id, b.id])}
       >
-        {(m) => disposer(<>{m.mes}{m.semaines}</>, vueOrdre ? ordreCourant : m.semaine)}
+        {(m) => disposer(<>{m.mes}{m.semaines}{m.autre}</>, vueOrdre ? ordreCourant : m.semaine)}
       </Entrainements>
     )
   }

@@ -107,6 +107,8 @@ export interface Creneau {
   /** « HH:MM » : un créneau de la grille (lot U1), ou une heure d'avant U1. */
   debut: string;
   fin: string;
+  /** Un autre moment (SQ-B) : date et heures choisies hors de la grille ; absent sinon. */
+  libre?: boolean;
   quoi: string;
   qui: string[];
   note: string;

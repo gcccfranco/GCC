@@ -21,8 +21,9 @@ import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
+import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
-import { titreDuJour } from "./libelles"
+import { jourEnLettres, titreDuJour } from "./libelles"
 import { estQuiLibre, libelleQui, normaliserQui } from "@/lib/fetes/qui"
 import { styleTexteService } from "@/lib/couleurSombre"
 
@@ -35,7 +36,13 @@ export type CreneauValues = {
   quoi: string
   qui: string[]
   note: string
+  /** Un autre moment (SQ-B) : date et heures libres, hors de la grille. */
+  libre?: boolean
 }
+
+/** Heures au pas de 15 minutes (SQ10) : « 00:00 » … « 23:45 ». */
+const HEURES = Array.from({ length: 96 }, (_, i) => `${String(Math.floor(i / 4)).padStart(2, "0")}:${String((i % 4) * 15).padStart(2, "0")}`)
+const plus15 = (h: string) => HEURES[Math.min(95, HEURES.indexOf(h) + 1)]
 
 /** Cases « Qui » (un ou plusieurs) de l'ordre de passage. Une valeur retirée de la liste (敬拜团,
  *  Jeunes, Chorale) encore présente dans le passage reste affichée, cochée et grisée « retiré », pour
@@ -134,6 +141,8 @@ type Props = {
   quiLimite?: boolean
   /** « Autre… » (SQ5) : montrée à tous sans limite, sinon à qui passe outre « Qui peut réserver ». */
   quiAutre?: boolean
+  /** « Un autre moment » (SQ-B) : la feuille choisit la date (entre `min` et `max`) et les heures. */
+  autreMoment?: { min: string; max: string }
   /** Renvoie un message d'erreur, ou null si le créneau est enregistré. */
   onSubmit: (values: CreneauValues) => Promise<string | null>
   onCancel: () => void
@@ -154,7 +163,7 @@ export function CreneauForm({ open, title, onCancel, ...champs }: Props) {
   )
 }
 
-function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, quiAutre, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
+function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, quiAutre, autreMoment, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
   const { t, i18n } = useTranslation()
   const langue = langueCourte(i18n.language)
   const libreInitial = initial.qui.find(estQuiLibre)
@@ -167,7 +176,10 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, qu
   const [busy, setBusy] = useState(false)
   const jours = places ? [...new Set(places.map((p) => p.jour))] : []
   const choisie = (p: Place) => p.jour === v.dimanche && cle(p) === cle(v)
-  const pret = places ? places.some(choisie) : v.quoi !== "" && quiFinal.length > 0 && (!autre || libre !== "")
+  // La date d'origine d'une modification n'est pas bornée (saison raccourcie, jour passé) : ni le message, ni la validation native.
+  const dateGardee = v.dimanche === initial.dimanche
+  const horsPeriode = autreMoment !== undefined && v.dimanche !== "" && !dateGardee && (v.dimanche < autreMoment.min || v.dimanche > autreMoment.max)
+  const pret = places ? places.some(choisie) : (!autreMoment || (v.dimanche !== "" && !horsPeriode)) && v.quoi !== "" && quiFinal.length > 0 && (!autre || libre !== "")
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -196,6 +208,36 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, qu
         </Groupe>
       )) : (
         <>
+          {autreMoment && (
+            <div className="space-y-2 pt-2">
+              <div className="grid grid-cols-[1fr_auto_auto] items-end gap-2">
+                <label className="space-y-1 text-sm font-semibold text-muted-foreground">
+                  {t("planning.saison.autreDate")}
+                  <Input type="date" aria-label={t("planning.saison.autreDate")} className="h-11 rounded-xl" value={v.dimanche} min={dateGardee ? undefined : autreMoment.min} max={dateGardee ? undefined : autreMoment.max}
+                    onChange={(e) => setV({ ...v, dimanche: e.target.value })} />
+                </label>
+                <label className="space-y-1 text-sm font-semibold text-muted-foreground">
+                  {t("planning.saison.autreDe")}
+                  <ChampSelect classeConteneur="w-28" aria-label={t("planning.saison.autreDe")} value={v.debut}
+                    onChange={(e) => setV({ ...v, debut: e.target.value, fin: v.fin > e.target.value ? v.fin : plus15(e.target.value) })}>
+                    {HEURES.slice(0, 95).map((h) => <option key={h} value={h}>{h}</option>)}
+                  </ChampSelect>
+                </label>
+                <label className="space-y-1 text-sm font-semibold text-muted-foreground">
+                  {t("planning.saison.autreA")}
+                  <ChampSelect classeConteneur="w-28" aria-label={t("planning.saison.autreA")} value={v.fin}
+                    onChange={(e) => setV({ ...v, fin: e.target.value })}>
+                    {HEURES.filter((h) => h > v.debut).map((h) => <option key={h} value={h}>{h}</option>)}
+                  </ChampSelect>
+                </label>
+              </div>
+              {horsPeriode && (
+                <p role="alert" className="text-sm text-destructive">
+                  {t("planning.saison.autreHorsPeriode", { debut: jourEnLettres(autreMoment.min, i18n.language), fin: jourEnLettres(autreMoment.max, i18n.language) })}
+                </p>
+              )}
+            </div>
+          )}
           <Groupe legende={t("planning.programme.quoi")}>
             {QUOI.map((q) => (
               <Pastille key={q} type="radio" name="creneau-quoi" label={q} checked={v.quoi === q} onChange={() => setV({ ...v, quoi: q })} />

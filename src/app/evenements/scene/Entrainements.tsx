@@ -44,7 +44,7 @@ import { libelleQui } from "@/lib/fetes/qui"
 
 const COLOR = PLANNING_COLORS.scene
 
-type Action = { type: "nouveau"; place: Place } | { type: "modifier" | "deplacer"; creneau: Creneau }
+type Action = { type: "nouveau"; place: Place } | { type: "autre" } | { type: "modifier" | "deplacer"; creneau: Creneau }
 
 /** Les trois morceaux que l'appelant pose (P5) : « Mes réservations » (rien sans réservation à
  *  moi), la liste des semaines, la semaine choisie. Pour le tableau du Back-Office (P8) : le
@@ -53,6 +53,8 @@ export type MorceauxEntrainements = {
   mes: ReactNode
   semaines: ReactNode
   semaine: ReactNode
+  /** Le bouton « Réserver un autre moment » (SQ-R8), ou rien. */
+  autre: ReactNode
   menu: (c: Creneau) => ReactNode
   deplacer: (c: Creneau) => void
   erreur: ReactNode
@@ -63,20 +65,6 @@ function lundiDe(iso: string): string {
   const d = new Date(`${iso}T00:00:00Z`)
   d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7))
   return d.toISOString().slice(0, 10)
-}
-
-/** Les semaines de la saison, plus les jours d'une réservation hors des jours réservables
- *  (U1, Q8 : rien ne disparaît), rangés dans leur semaine — qui naît sans case s'il le faut. */
-function semainesAvecHorsGrille(semaines: Semaine[], jours: string[]): Semaine[] {
-  const out = semaines.map((s) => ({ ...s, jours: [...s.jours] }))
-  for (const d of jours) {
-    if (out.some((s) => s.jours.includes(d))) continue
-    const lundi = lundiDe(d)
-    const s = out.find((x) => x.lundi === lundi)
-    if (s) s.jours = [...s.jours, d].sort()
-    else out.push({ lundi, jours: [d], cases: [], libres: 0 })
-  }
-  return out.sort((a, b) => a.lundi.localeCompare(b.lundi))
 }
 
 export function Entrainements({ programme, creneaux, user, profile, onChanged, onConflict, semaineActive = true, children }: {
@@ -103,7 +91,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   const today = todayIso()
   const maintenant = heureLocale()
   const coordination = isCoordination(user, profile)
-  const semaines = semainesAvecHorsGrille(semainesDe(saison, programme.jourJ, creneaux), creneaux.map((c) => c.dimanche))
+  const semaines = semainesDe(saison, programme.jourJ, creneaux)
   const passees = semaines.filter((s) => s.jours.at(-1)! < today)
   // La semaine demandée gagne tant que l'adresse ne l'a pas rattrapée (`router.replace` est
   // asynchrone) : deux ‹ touchés vite reculent bien de deux semaines.
@@ -140,10 +128,10 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   }
 
   async function save(values: CreneauValues): Promise<string | null> {
-    const editingId = action && action.type !== "nouveau" ? action.creneau.id : null
+    const editingId = action && action.type !== "nouveau" && action.type !== "autre" ? action.creneau.id : null
     // Q11, revu à l'enregistrement : la feuille a pu rester ouverte pendant que le
     // créneau commençait. Garder son créneau (changer la note, le qui) reste permis.
-    const autreCreneau = !action || action.type === "nouveau"
+    const autreCreneau = !action || action.type === "nouveau" || action.type === "autre"
       || values.dimanche !== action.creneau.dimanche || values.debut !== action.creneau.debut
     if (autreCreneau && commence(values.dimanche, values.debut, todayIso(), heureLocale())) return t("planning.saison.dejaCommence")
     if (!canReserverPour(user, profile, programme, values.qui)) {
@@ -156,8 +144,11 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       if (clash) return t("planning.programme.overlap", { slot: slotLabel(clash) })
       const now = new Date().toISOString()
       let id = editingId
-      if (id) await updateCreneau(programme.id, id, values)
-      else id = await createCreneau(programme.id, { ...values, auteurUid: user.uid, auteurNom, createdAt: now, updatedAt: now })
+      // SQ13 : « Déplacer » vers la grille retire `libre` ; sinon `libre` suit la feuille.
+      const { libre, ...reste } = values
+      const avant = action && action.type !== "nouveau" && action.type !== "autre" && action.creneau.libre
+      if (id) await updateCreneau(programme.id, id, libre ? { ...reste, libre: true } : avant ? { ...reste, libre: undefined } : reste)
+      else id = await createCreneau(programme.id, { ...reste, ...(libre && { libre: true }), auteurUid: user.uid, auteurNom, createdAt: now, updatedAt: now })
       // Course perdue (deux enregistrements à la même seconde) : on prévient.
       const after = await listCreneaux(programme.id)
       const mine = after.find((c) => c.id === id)
@@ -412,13 +403,21 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
 
   // Réserver : rien de coché (Q15). Modifier : quoi, qui, note sur le même créneau. Déplacer :
   // les créneaux libres de la saison (le sien compris s'il est dans la grille), seul choix.
+  const premierJour = today > saison.debut ? today : saison.debut
+  const feuilleAutre = { title: t("planning.saison.autreMomentTitre"), submitLabel: t("planning.saison.reserver"), quiOptions,
+    autreMoment: { min: premierJour, max: saison.fin },
+    initial: { dimanche: premierJour <= saison.fin ? premierJour : "", debut: "18:00", fin: "19:00", quoi: "", qui: [], note: "", libre: true } }
   const feuille = action && (() => {
+    if (action.type === "autre") return feuilleAutre
     if (action.type === "nouveau") {
       const { jour, debut, fin } = action.place
       return { title: t("planning.saison.reserver"), submitLabel: t("planning.saison.reserver"), place: action.place, quiOptions,
         initial: { dimanche: jour, debut, fin, quoi: "", qui: [], note: "" } }
     }
     const c = action.creneau
+    if (action.type === "modifier" && c.libre) return { ...feuilleAutre, submitLabel: t("planning.programme.save"),
+      initial: { dimanche: c.dimanche, debut: c.debut, fin: c.fin, quoi: c.quoi, qui: c.qui, note: c.note, libre: true },
+      quiOptions: [...new Set([...quiOptions, ...c.qui])] }
     const initial = { dimanche: c.dimanche, debut: c.debut, fin: c.fin, quoi: c.quoi, qui: c.qui, note: c.note }
     if (action.type === "modifier") {
       return { title: t("planning.programme.editTitle"), submitLabel: t("planning.programme.save"), initial,
@@ -440,13 +439,18 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     />
   )
 
+  const autre = saison.ouvert && programme.fermees !== true && canReserverPour(user, profile, programme, []) ? (
+    <Button type="button" variant="outline" className={TOUCHER_44} onClick={() => ouvrir({ type: "autre" })}>
+      {t("planning.saison.autreMoment")}
+    </Button>
+  ) : null
   const morceaux: MorceauxEntrainements = {
-    mes, semaines: listeSemaines, semaine, menu, erreur,
+    mes, semaines: listeSemaines, semaine, autre, menu, erreur,
     deplacer: (c) => ouvrir({ type: "deplacer", creneau: c }),
   }
   return (
     <>
-      {children ? children(morceaux) : <div className="space-y-5">{mes}{listeSemaines}{semaine}</div>}
+      {children ? children(morceaux) : <div className="space-y-5">{mes}{listeSemaines}{autre}{semaine}</div>}
       {sheet}
     </>
   )
