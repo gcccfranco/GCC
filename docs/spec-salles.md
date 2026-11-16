@@ -9,7 +9,8 @@
   la place de mettre des plages, laisser les personnes mettre le temps qu'ils veulent réserver ». Puis : « quand c'est
   un dimanche avec intergroupe toutes les salles sont disponibles de sur le temps de groupe qui est de 13h à 14h30.
   Quand c'est un dimanche avec interfranco la salle bonté et salle paix sont disponibles de 13h à 14h30 sauf la salle
-  fidélité qui sera occupé par le groupe joie. »
+  fidélité qui sera occupé par le groupe joie. » Puis : « la grande salle est occupé pour intergroupe par les 5
+  groupes, et pour interfranco la grande salle est occupé par les 3 groupes francophones ».
 - **Statut** : **cadrage**. Change l'organisation des écrans : planche d'abord (`CLAUDE.md`, « Design »), puis les
   décisions et les tranches ici, puis le code sur go. **Ni planche lancée ni go.**
 - **Base de code** : `claude/corrections-design` à `4f1134e`.
@@ -55,8 +56,8 @@ changer tout seul ces jours-là, sans exception à saisir.
 | Salle Fidélité | occupée | libre | groupe Joie |
 | Salle Bonté | occupée | libre | libre |
 | Salle Paix | occupée | libre | libre |
-| Salle Amour | occupée | libre | non dit (S-Q4) |
-| Grande salle | groupe Joie | non dit (S-Q4) | non dit (S-Q4) |
+| Salle Amour | occupée | libre | occupée (déduit : le groupe Amour n'est pas des trois groupes francophones) |
+| Grande salle | groupe Joie | Intergroupe : les cinq groupes | Interfranco : les trois groupes francophones |
 
 ## Principes proposés (à valider après la planche)
 
@@ -79,9 +80,8 @@ changer tout seul ces jours-là, sans exception à saisir.
   salle (culte sinophone, groupe Joie) s'excluent-ils ?
 - S-Q3. Salle imprimante, 12:20–12:40 : par qui ? « Salle imprimante » et « Salle de réunion » sont-elles deux salles,
   et la « salle à côté de réunion » du premier retour en est-elle une troisième ?
-- S-Q4. **Répondu en partie le 16/11** (tableau du temps de groupe). Reste : où se tiennent l'Intergroupe et
-  l'Interfranco de 13:00 à 14:30 (la Grande salle ? le groupe Joie la quitte-t-il seulement pour l'Interfranco ?), et
-  la Salle Amour un dimanche d'Interfranco.
+- S-Q4. **Répondu le 16/11** (tableau du temps de groupe). Seule la Salle Amour un dimanche d'Interfranco est
+  déduite, pas dite : à corriger par Timothée si elle est libre.
 
 **Dessin, pour la planche**
 
@@ -103,3 +103,5 @@ changer tout seul ces jours-là, sans exception à saisir.
 - 16/11/2026 : cadrage écrit d'après les réponses de Timothée. Reste : S-Q1 à S-Q4, l'accord pour la planche.
 - 16/11/2026 : dimanches d'Intergroupe et d'Interfranco ajoutés (S2 à trois variantes). Reste : S-Q1 à S-Q3, la fin
   de S-Q4, l'accord pour la planche.
+- 16/11/2026 : Grande salle des dimanches d'Intergroupe (cinq groupes) et d'Interfranco (trois groupes francophones) ;
+  S-Q4 répondue. Reste : S-Q1 à S-Q3, l'accord pour la planche.
