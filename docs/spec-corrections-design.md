@@ -537,6 +537,7 @@ le lot a été réglé. Chaque test d'agencement ajouté mesure aussi à **1 700
   l'aperçu en recette « outline » (aplat `--secondary` sur le gris, agencement-groupes) ; test V2 qui suit l'élément
   porteur de l'anneau (au téléphone en édition, la case de la carte). 56 scans ont |droite − gauche| > 30 (critère
   sous le recadrage). Vu à l'œil à 1 280 × 720, 1 440 × 900, 1 940 × 1 300 et au téléphone.
+- **V1 remplacée le 16/11/2026** (Timothée : « La barre latérale qui zoom et qui dezoom c'est pas bon aussi », puis « Ok go ») : l'index A–Z garde une taille et une place fixes, centré à l'écran dès le haut de la page (à côté du titre et de la recherche en haut de page, contrepartie acceptée) ; jamais sous la barre d'onglets ni l'en-tête, toujours dans la carte en deux volets.
 
 ### Les trois rouges antérieurs — réglés (07/11/2026, go de Timothée « corrige ça » et « revois juste le test pour la cloche »)
 Après enquête, aucun n'était un défaut du site ; aucun fichier de `src/` ne change.
