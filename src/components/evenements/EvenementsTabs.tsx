@@ -13,12 +13,14 @@ import { useAuth } from "@/lib/firebase/auth"
 import { FETES } from "@/lib/scene/fetes"
 import type { OngletRail } from "@/components/layout/Onglets"
 
-/** Les onglets de la section, pour `OngletsRail` : « Calendrier », puis Pâques et Noël pour un connecté. */
+/** Les onglets de la section, pour `OngletsRail` : « Évènements », puis Salles, Pâques et Noël pour un connecté. */
 export function useOngletsEvenements(): OngletRail[] {
   const { t } = useTranslation()
   const { user } = useAuth()
   const onglets: OngletRail[] = [{ id: "calendrier", href: "/evenements", label: t("evenements.tabs.calendrier") }]
   if (user) {
+    // Salles (docs/spec-salles.md, AR10, SA14) : deuxième place, connectés seulement.
+    onglets.push({ id: "salles", href: "/evenements/salles", label: t("evenements.tabs.salles") })
     for (const fete of FETES) {
       onglets.push({ id: fete, href: `/evenements/scene/${fete}`, label: t(`evenements.tabs.${fete}`) })
     }

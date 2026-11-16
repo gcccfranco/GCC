@@ -61,7 +61,7 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     const titre = enTete(page).getByRole("heading", { level: 1, name: "Église" });
     await expect(titre).toBeVisible();
     await expect(enTete(page)).toContainText("Évènements, salles et fêtes");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles", "Pâques", "Noël"]);
     await expect(ongletsRail(page).getByRole("link", { name: "Évènements" })).toHaveAttribute("aria-current", "page");
     const [h1, rail] = [(await titre.boundingBox())!, (await ongletsRail(page).boundingBox())!];
     expect(rail.y, "le rail sous le titre").toBeGreaterThan(h1.y + h1.height - 1);

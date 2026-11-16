@@ -2452,6 +2452,7 @@
     "onglets": "活动选项卡",
     "tabs": {
       "calendrier": "活动",
+      "salles": "场地",
       "paques": "复活节",
       "noel": "圣诞节"
     },
@@ -4573,5 +4574,26 @@
       "note": "以「{{nom}}」计算 · 已发布且已过去的歌单",
       "aucune": "此期间没有主领"
     }
+  },
+  "salles": {
+    "liste": "场地",
+    "groupes": {
+      "grande": "大厅",
+      "groupe": "小组教室",
+      "bureaux": "办公室"
+    },
+    "variante": {
+      "ordinaire": "普通主日",
+      "intergroupe": "Intergroupe",
+      "interfranco": "Interfranco"
+    },
+    "jours": "日期",
+    "heure": "时间",
+    "maintenant": "现在",
+    "repere": "{{heure}}",
+    "retour": "场地",
+    "rien": "没有安排",
+    "aujourdhui": "今天",
+    "echec": "未能读取排班或舞台：状态可能不完整。"
   }
 }

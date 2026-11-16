@@ -413,3 +413,26 @@ T2b, T2c et T3a (apparence).
   (« Noël, jour J »). Libellés fr / 中文 dans `occupations.ts` (comme `MOTS` du Calendrier) : T2b peut les passer
   par `salles.*` s'il préfère. Spec `tests/salles-modele.spec.ts` : 14 tests × 3 appareils, 42 verts, 33 s ;
   tsc et lint propres. Aucun écran : pas de regard. Suite : T2b lancée.
+- 16/11/2026 : **T2b faite** (orchestratrice T2b, codée par elle-même : `/tranche` et les agents du dépôt n'étaient
+  pas chargés ; `critique-design` lancé comme agent général avec sa consigne). Onglet « Salles » / « 场地 » en deuxième
+  place du rail pour un connecté (`EvenementsTabs`) ; `/evenements/salles` posé par `SectionEvenements` comme l'agenda
+  (`salles/SallesClient.tsx`, `RequireAuth` : sans compte, renvoi vers la connexion, SA14 ; pas de « + Nouvel
+  évènement ») ; `/evenements/salles` dans `SECTIONS_EN_DEUX_VOLETS`. Liste : bande de quatorze jours depuis
+  aujourd'hui, ligne de contexte (date, variante ou jour J) et repère d'heure en `<select>` sur sa propre ligne
+  (« maintenant » aujourd'hui, 08:00 un autre jour, 6:00 → 22:00 au quart d'heure), neuf lignes groupées dans une
+  carte, pastille de la couleur de l'occupant (AR17), créneaux de scène en une ligne sous la Scène. Journée d'une
+  salle : `/evenements/salles/[salle]` (`JourneeSalle.tsx`) ; page avec « ‹ Salles » en un volet, en grand la
+  semaine dans le volet de droite. Sources : `src/lib/salles/charger.ts` (dates d'Intergroupe et d'Interfranco du
+  planning, éditions affichées et leurs créneaux, comme le Calendrier). Libellés `salles.*` fr / 中文. Décisions
+  déléguées (session T2b, 16/11) : (1) **la semaine du volet part du jour choisi** (sept jours, pas du lundi : un
+  dimanche, partir du lundi ne montrait que des jours passés vides, constat de `critique-design`) ; (2) l'état en mots
+  reste dans `MOTS` d'`occupations.ts` (« Libre toute la journée » y est déjà) : pas de clé `salles.etat.*` ; (3) les
+  noms de variante en 中文 suivent le tableau des libellés (Intergroupe, Interfranco). Retouches de `critique-design`
+  faites : semaine, repère sur sa ligne et à 44 px, heure insécable après « jusqu'à », état libre en encre pleine
+  et occupé en gris. Laissés pour plus tard : titres de groupe en capitales (motif d'Équipes, à reprendre partout
+  ensemble) ; jours de la bande peu marqués sur le fond gris au téléphone. Rail : `eglise-entree`,
+  `agencement-v18-t7`, `scene-paques-noel` (P4) lisent désormais « Évènements · Salles · Pâques · Noël ». Spec
+  `tests/salles-liste.spec.ts` (8 tests × 5 projets, dans `SPECS_GRAND_ECRAN`) : 40 verts ; avec les voisines
+  (`salles-modele`, `eglise-entree`, `agencement-v18-t7`, `scene-paques-noel` filtrée) 237 verts, 1 instable
+  (`agencement-v18-t7` : 201, tablette paysage, vert seul), 3 min 46 s. tsc et lint propres. Regard sur les cinq
+  projets (liste et journée). Suite : T2c lancée.

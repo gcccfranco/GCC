@@ -2486,6 +2486,7 @@
     "onglets": "Onglets des évènements",
     "tabs": {
       "calendrier": "Évènements",
+      "salles": "Salles",
       "paques": "Pâques",
       "noel": "Noël"
     },
@@ -4625,5 +4626,26 @@
       "note": "Présidences comptées sous le nom « {{nom}} » · setlists publiées et passées",
       "aucune": "Aucune présidence sur cette période"
     }
+  },
+  "salles": {
+    "liste": "Salles",
+    "groupes": {
+      "grande": "Grande salle",
+      "groupe": "Salles de groupe",
+      "bureaux": "Bureaux"
+    },
+    "variante": {
+      "ordinaire": "Dimanche ordinaire",
+      "intergroupe": "Intergroupe",
+      "interfranco": "Interfranco"
+    },
+    "jours": "Jours",
+    "heure": "Heure",
+    "maintenant": "maintenant",
+    "repere": "à {{heure}}",
+    "retour": "Salles",
+    "rien": "Rien de prévu",
+    "aujourdhui": "Aujourd'hui",
+    "echec": "Le planning ou la scène n'a pas pu être lu : l'état peut être incomplet."
   }
 }

@@ -13,6 +13,7 @@ import { Halo } from "@/components/layout/Halo"
 import { OngletsRail } from "@/components/layout/Onglets"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { CalendrierClient } from "./CalendrierClient"
+import { SallesClient } from "./salles/SallesClient"
 
 // La section Évènements (lot U4 bis, B2) : l'agenda et ses fiches passent par le calendrier
 // (deux volets en grand, `CalendrierClient`). Les onglets Pâques et Noël de la scène
@@ -30,6 +31,8 @@ export function SectionEvenements({ children }: { children: React.ReactNode }) {
   const { profile } = useProfile()
   const onglets = useOngletsEvenements()
   const scene = pathname.startsWith("/evenements/scene")
+  // Salles (docs/spec-salles.md, lot 2) : sa liste et ses journées, au même en-tête ; pas de « + Nouvel évènement ».
+  const salles = pathname.startsWith("/evenements/salles")
   const peutCreer = estResponsable(user, profile) && creatableEvenementPours(user, profile, ANNONCE_SECTIONS).length > 0
 
   const enTete = (
@@ -37,7 +40,7 @@ export function SectionEvenements({ children }: { children: React.ReactNode }) {
       titre={t("evenements.title")}
       sousTitre={t("evenements.sousTitre")}
       // Sous 768 px la création est une pilule en bas de la liste (`CalendrierClient`), pas un rond fixe.
-      action={!scene && peutCreer && <span className="max-md:hidden"><BoutonNouveau label={t("evenements.nouveau")} href="/back-office/evenements/nouveau" /></span>}
+      action={!scene && !salles && peutCreer && <span className="max-md:hidden"><BoutonNouveau label={t("evenements.nouveau")} href="/back-office/evenements/nouveau" /></span>}
       onglets={onglets.length > 1 && <OngletsRail etiquette={t("evenements.onglets")} onglets={onglets} />}
     />
   )
@@ -53,5 +56,6 @@ export function SectionEvenements({ children }: { children: React.ReactNode }) {
       </>
     )
   }
+  if (salles) return <SallesClient enTete={enTete}>{children}</SallesClient>
   return <CalendrierClient enTete={enTete} peutCreer={peutCreer}>{children}</CalendrierClient>
 }
