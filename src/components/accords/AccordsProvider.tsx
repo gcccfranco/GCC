@@ -304,6 +304,17 @@ function accordSuivant(section: Element, ancre: HTMLElement, accord: string): st
   return tous.slice(i + 1).map((el) => el.dataset.accordTouchable).find((a) => a && a !== accord);
 }
 
+// B4 ter : aucun autre accord visible du même conteneur, sur la même rangée, n'a son bord gauche à plus de 8 px à gauche du sien.
+function premierDeLigne(ancre: HTMLElement): boolean {
+  const section = ancre.closest("[data-section-uids]") ?? document;
+  const r = ancre.getBoundingClientRect();
+  return ![...section.querySelectorAll<HTMLElement>("[data-accord-touchable]")].some((el) => {
+    if (el === ancre) return false;
+    const o = el.getBoundingClientRect();
+    return o.width > 0 && Math.abs(o.top + o.height / 2 - (r.top + r.height / 2)) < r.height / 2 && o.left < r.left - 8;
+  });
+}
+
 function PanneauOuvert({ ouvert, louange, fermer, signaler }: { ouvert: Ouvert; louange: boolean; fermer: () => void; signaler: () => void }) {
   const ordinateur = useOrdinateur();
   const acces = useAccesHarmonie();
@@ -357,15 +368,15 @@ function Bulle({ louange, ...props }: Omit<React.ComponentProps<typeof PanneauAc
     const dessus = !tientDessous && r.top - ECART - h > MARGE;
     // Ni dessous ni dessus (écran bas, accord en haut de page) : la bulle se cale dans l'écran, sur l'accord, sans flèche.
     const cale = !tientDessous && !dessus;
-    // B4 bis : à côté de l'accord (jamais par-dessus) quand ni dessous ni dessus ne tient ; `cale` si aucun côté ne tient.
+    // B4 ter : côté libre, jamais par-dessus l'accord : à gauche pour le premier accord d'une ligne, sinon à droite ; `cale` si aucun côté ne tient.
     const tientDroite = r.right + ECART + w <= window.innerWidth - MARGE;
     const tientGauche = r.left - ECART - w >= MARGE;
     const avant = placeCourante.current;
     const fige = garder === true && avant && !avant.dessus;
     const cote: Place["cote"] = fige && avant.cote ? avant.cote
       : !cale ? undefined
-      : centre < window.innerWidth / 2 ? (tientDroite ? "droite" : tientGauche ? "gauche" : undefined)
-      : tientGauche ? "gauche" : tientDroite ? "droite" : undefined;
+      : tientGauche && premierDeLigne(ancre) ? "gauche"
+      : tientDroite ? "droite" : tientGauche ? "gauche" : undefined;
     const top = cote ? clamp(r.top + r.height / 2 - h / 2, MARGE, Math.max(MARGE, window.innerHeight - h - MARGE))
       : dessus ? r.top - ECART - h : cale ? clamp(r.bottom + ECART, MARGE, Math.max(MARGE, window.innerHeight - h - MARGE)) : r.bottom + ECART;
     const haut = fige ? avant.top : top;

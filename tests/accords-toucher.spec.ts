@@ -318,34 +318,37 @@ test.describe("bandeau d'aide", () => {
   });
 });
 
-test.describe("panneau à côté de l'accord (B4 bis)", () => {
+test.describe("panneau à côté de l'accord (B4 ter)", () => {
   for (const slug of ["aucun-autre-nom", "一切歌颂赞美"]) {
-    test(`ordinateur seulement : fenêtre basse, le panneau ne couvre pas l'accord et se pose à sa droite (${slug})`, async ({ page }, info) => {
-      test.skip(info.project.name !== "ordinateur", "ordinateur seulement");
-      await sansAide(page);
-      await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
-      await page.setViewportSize({ width: 1366, height: 600 });
-      await page.goto(`/songs/${encodeURIComponent(slug)}`);
-      await expect(touchables(page).first()).toBeVisible();
-      // L'accord le plus à gauche du chant (moitié gauche de la fenêtre), ramené au milieu de l'écran : ni dessous ni dessus ne tient.
-      const n = await touchables(page).evaluateAll((els) => els.reduce((m, el, i) => {
-        const r = el.getBoundingClientRect();
-        return r.width > 0 && (m < 0 || r.left < els[m].getBoundingClientRect().left) ? i : m;
-      }, -1));
-      const accord = touchables(page).nth(n);
-      await accord.evaluate((el) => el.scrollIntoView({ block: "center" }));
-      await accord.click();
-      await expect(panneau(page)).toHaveAttribute("data-accord-panneau", "bulle");
-      const ensuite = panneau(page).getByRole("button", { name: /Ensuite/ });
-      if (await ensuite.count()) await ensuite.first().click();
-      const a = (await accord.boundingBox())!;
-      const b = (await panneau(page).boundingBox())!;
-      const croise = a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-      expect(croise, "le panneau ne couvre pas l'accord").toBe(false);
-      // Règle B4 bis : côté opposé à la moitié de la fenêtre où se trouve l'accord (la colonne de lecture peut être dans la moitié droite).
-      if (a.x + a.width / 2 < 1366 / 2) expect(b.x, "à droite de l'accord").toBeGreaterThanOrEqual(a.x + a.width);
-      else expect(b.x + b.width, "à gauche de l'accord").toBeLessThanOrEqual(a.x);
-    });
+    for (const premier of [false, true]) {
+      test(`ordinateur seulement : fenêtre basse, le panneau ne couvre pas l'accord et s'ouvre du côté libre, ${premier ? "à gauche du premier accord d'une ligne" : "à droite d'un accord en milieu de ligne"} (${slug})`, async ({ page }, info) => {
+        test.skip(info.project.name !== "ordinateur", "ordinateur seulement");
+        await sansAide(page);
+        await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+        await page.setViewportSize({ width: 1366, height: 600 });
+        await page.goto(`/songs/${encodeURIComponent(slug)}`);
+        await expect(touchables(page).first()).toBeVisible();
+        // Premier de sa ligne : aucun autre accord de la même rangée n'a son bord gauche à plus de 8 px à gauche du sien.
+        const n = await touchables(page).evaluateAll((els, premier) => {
+          const rs = els.map((el) => el.getBoundingClientRect());
+          return rs.findIndex((r, i) => r.width > 0 && r.left > 300 && r.left < 1000
+            && rs.some((o, j) => j !== i && o.width > 0 && Math.abs(o.top + o.height / 2 - (r.top + r.height / 2)) < r.height / 2 && o.left < r.left - 8) === !premier);
+        }, premier);
+        test.skip(n < 0, "pas de cas exploitable dans ce chant");
+        const accord = touchables(page).nth(n);
+        await accord.evaluate((el) => el.scrollIntoView({ block: "center" }));
+        await accord.click();
+        await expect(panneau(page)).toHaveAttribute("data-accord-panneau", "bulle");
+        const ensuite = panneau(page).getByRole("button", { name: /Ensuite/ });
+        if (await ensuite.count()) await ensuite.first().click();
+        const a = (await accord.boundingBox())!;
+        const b = (await panneau(page).boundingBox())!;
+        const croise = a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+        expect(croise, "le panneau ne couvre pas l'accord").toBe(false);
+        if (premier) expect(b.x + b.width, "à gauche de l'accord").toBeLessThanOrEqual(a.x);
+        else expect(b.x, "à droite de l'accord").toBeGreaterThanOrEqual(a.x + a.width);
+      });
+    }
   }
 });
 
