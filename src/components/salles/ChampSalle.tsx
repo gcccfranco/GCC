@@ -78,7 +78,8 @@ export function ChampSalle({ v, set, refus }: {
       </Champ>
       {v.salle ? (
         <div className="grid grid-cols-2 gap-3">
-          <Champ id="ev-heure-fin" label={t("evenements.form.heureFin")}>
+          {/* Sous l'heure de début (colonne de droite), comme « De | À » (critique-design T4a). */}
+          <Champ id="ev-heure-fin" label={t("evenements.form.heureFin")} className="col-start-2">
             <Input id="ev-heure-fin" className="h-11" type="time" value={v.heureFin} onChange={(e) => set({ heureFin: e.target.value })} />
           </Champ>
         </div>
@@ -88,7 +89,7 @@ export function ChampSalle({ v, set, refus }: {
         </Champ>
       )}
       {refus && refus.cle === cleDe(v) && (
-        <RefusSalle salle={refus.salle} bloque={refus.bloque} libres={refus.libres} decale={refus.decale} langue={langue}
+        <RefusSalle discret salle={refus.salle} bloque={refus.bloque} libres={refus.libres} decale={refus.decale} langue={langue}
           decaler={(p) => set({ heure: p.debut, heureFin: p.fin })} choisir={(id) => choisir(id)} />
       )}
     </>

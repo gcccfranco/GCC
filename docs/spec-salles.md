@@ -538,3 +538,33 @@ T2b, T2c et T3a (apparence).
   touche que les fichiers de Salles). Environ 35 min de tests en tout dans la tranche. tsc et lint propres (0 erreur) ;
   police chinoise refaite (inchangée). Regard sur les cinq projets (glisser, feuille ouverte d'un appui, contour au
   clavier). Non regardés : thème sombre. Suite : T4a lancée.
+- 16/11/2026 : **T4a faite** (orchestratrice T4a, codée par elle-même : `/tranche` et les agents du dépôt n'étaient pas
+  chargés ; `critique-design` lancé comme agent général avec sa consigne, trois captures signalées). Type
+  `salle?: SalleId | null` sur `Evenement` (lu par `estSalleId`) ; champ « Salle de l'église » (`src/components/salles/
+  ChampSalle.tsx`) dans `EvenementForm` et `ReunionForm` à la place du lieu : « Ailleurs » (par défaut) puis les neuf
+  salles en groupes ; « Ailleurs » montre le lieu en texte libre ; une salle montre « Heure de fin » sous l'horaire et
+  l'exige (`salles.formulaire.heures`, fin après début). À l'enregistrement, `verifierSalle` relit les occupations du
+  jour (`occupationsPourEvenement` dans `charger.ts` : réservations et évènements de ce jour, planning et scène) ; un
+  chevauchement bloque l'écriture et montre le refus de SA8 sous le champ (`RefusSalle`, encadré extrait de la feuille
+  « Réserver » et partagé : l'occupant, « Décaler », salles libres). Le `lieu` écrit devient le nom de la salle ;
+  « Ailleurs » écrit `salle: null`. À la modification, l'évènement ne se gêne pas lui-même (`evenementId` passé par
+  `ModifierClient`). Salles : source `evenement` dans `occupationsDu` (AR15) ; `chargerSalles` lit les évènements
+  (`listEvenements`) ; détail d'un bloc avec « Voir l'évènement » vers sa fiche. Décisions déléguées (session T4a,
+  16/11) : (1) une salle vaut pour le jour de début seulement (`date`, `heure` – `heureFin`), même avec une date de fin ;
+  (2) une réunion ou un évènement que la personne ne peut pas voir (`canSeeEvenement`) occupe sa salle sous le nom
+  « Réunion d'équipe » / « 团队会议 », sans lien ; (3) évènements à l'encre neutre, comme les réservations (AR17) ;
+  (4) planning ou scène illisibles comptent pour rien dans la vérification ; réservations ou évènements illisibles
+  bloquent l'enregistrement (`salles.formulaire.echec`) ; (5) la salle ne s'écrit que si l'évènement en a ou en avait
+  une (pas de `salle: null` sur tous les évènements). **Aucune règle de `firestore.rules` changée** : `evenements/{id}`
+  n'a pas de liste de champs permis (à relire en T4b) ; celle de T3a (`reservations/{id}`) reste **à publier à la main
+  par Timothée avant la mise en ligne du lot 3**. Spec `tests/salles-evenement.spec.ts` (11 tests × 3 appareils, pas
+  d'agencement : hors `SPECS_GRAND_ECRAN`) : 33 verts, 56 s. Voisines : `salles-reserver`, `-liste`, `-grille`,
+  `-modele`, `-gestes` : 262 verts, 15 sautés, 3 min 48 s ; `evenements`, `reunions`, `equipes-reunions` : 520 verts,
+  11 sautés, 9 échecs, 7 min 27 s (ordre des libellés du formulaire, attendu ; titre « Évènements » devenu « Église »
+  au lot 1, échec d'avant T4a) corrigés puis 9 verts, 20 s ; `calendrier` filtré (`-g` évènement, réunion) : 129 verts,
+  1 min 30 s ; après les retouches, `salles-evenement` et `salles-reserver` : 144 verts, 4 sautés, 3 min 2 s (≈ 17 min
+  de tests en tout). tsc et lint propres (0 erreur) ; police chinoise refaite (inchangée). Regard sur les cinq tailles
+  (formulaire avec refus). Retouches de `critique-design` faites : « Heure de fin » dans la colonne de l'horaire,
+  « Décaler » en contour dans un formulaire (`discret`), pilules avec l'autre nom (« Salle Fidélité · 小班 »). Laissés :
+  « Horaire » → « Heure de début » quand une salle est choisie ; captures en `fr-FR` (le navigateur de capture affiche
+  « 07:00 PM ») ; thème sombre, formulaire de réunion et chinois non regardés. Suite : T4b lancée.
