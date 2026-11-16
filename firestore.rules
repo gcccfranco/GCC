@@ -419,6 +419,15 @@ service cloud.firestore {
         || (!pour.matches('(pole|equipe):.*') && isCoordination());
     }
 
+    // Salle d'un évènement ou d'une réunion (chantier AR, lot 4, SA12 ; relu en T4b) : absente, null ou une des
+    // neuf (la liste de reservationValide). Le chevauchement ne se vérifie pas ici (SA8, client). Miroir : estSalleId
+    // (src/lib/salles/salles.ts), cité par canEditEvenement (src/lib/access.ts).
+    function salleEvenementValide() {
+      let salle = request.resource.data.get('salle', null);
+      return salle == null
+        || salle in ['grande', 'scene', 'fidelite', 'paix', 'amour', 'bonte', 'zhongban', 'imprimante', 'reunion'];
+    }
+
     match /evenements/{id} {
       allow read: if resource.data.pour == 'eglise' || signedIn();
       // Réunion ou évènement d'équipe (lot U6, R4 ; décisions 3 et 43) :
@@ -430,7 +439,8 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.organisateurUid == request.auth.uid
         && request.resource.data.inscrits == 0
-        && pourCreable(request.resource.data.pour);
+        && pourCreable(request.resource.data.pour)
+        && salleEvenementValide();
       // Compte rendu d'une réunion (lot U6, R3) : toute personne de la réunion
       // colle (à son nom, un lien https://) ou retire le lien, et ne change que
       // lui. Miroir : estDeLaReunion et lienCompteRendu (src/lib/access.ts,
@@ -439,7 +449,8 @@ service cloud.firestore {
         && ((request.resource.data.inscrits == resource.data.inscrits
              && request.resource.data.organisateurUid == resource.data.organisateurUid
              && (request.resource.data.pour == resource.data.pour || pourCreable(request.resource.data.pour))
-             && (isCoordination() || resource.data.organisateurUid == request.auth.uid))
+             && (isCoordination() || resource.data.organisateurUid == request.auth.uid)
+             && salleEvenementValide())
           || (estDeLaReunion(resource.data) && changeSeulement(['compteRendu'])
              && (request.resource.data.compteRendu == null
                  || (request.resource.data.compteRendu.parUid == request.auth.uid

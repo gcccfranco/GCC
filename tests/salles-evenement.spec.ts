@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { chevauchement } from "../src/lib/salles/conflit";
 import { occupationsDu } from "../src/lib/salles/occupations";
 import type { Evenement } from "../src/types/evenement";
@@ -34,6 +34,18 @@ const DOCS: Record<string, Record<string, unknown>> = {
     salle: "bonte", date: JOUR, debut: "18:00", fin: "20:00", pour: "", quoi: "Répétition chorale",
     auteurUid: "uid-clervie", auteurNom: "Clervie", createdAt: T, updatedAt: T,
   },
+  // T4b : le samedi 21, un atelier de la Salle Amour dont le lieu écrit est resté ancien : la fiche dit la salle.
+  "evenements/atelier": { ...base, titre: "Atelier calligraphie", date: "2026-11-21", heure: "10:00", heureFin: "12:00", lieu: "Ancienne salle 3", salle: "amour" },
+  // T4b : une réunion de l'équipe Orga, Salle Fidélité (小班), organisée par Perrine ; elle se déplace au calendrier.
+  "evenements/reunion-orga": {
+    ...base, titre: "Point Orga", pour: "equipe:orga", reunion: true, heure: "18:30", heureFin: "19:30",
+    lieu: "Salle Fidélité", salle: "fidelite", organisateurUid: "uid-perrine", organisateurNom: "Perrine",
+  },
+  // T4b : le lundi 16, la Salle Fidélité est réservée 18:00 – 19:00 ; le mardi 17 est libre.
+  "reservations/r-sixtine": {
+    salle: "fidelite", date: "2026-11-16", debut: "18:00", fin: "19:00", pour: "", quoi: "Cours de chinois",
+    auteurUid: "uid-sixtine", auteurNom: "Sixtine", createdAt: T, updatedAt: T,
+  },
 };
 
 const COORDINATION: FakeProfile = { uid: "uid-anatole", email: "anatole@example.com", firstName: "Anatole", lastName: "Vernier", ...orga() };
@@ -65,7 +77,7 @@ async function nouvelEvenement(page: Page, titre: string) {
 
 test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () => {
   test("fonctions : un évènement qui porte une salle est une occupation ; ailleurs, non", () => {
-    const evenements = Object.entries(DOCS).filter(([k]) => k.startsWith("evenements/")).map(([k, d]) => ({ ...(d as unknown as Evenement), id: k.split("/")[1] }));
+    const evenements = Object.entries(DOCS).filter(([k]) => ["evenements/concert", "evenements/reunion-da", "evenements/pique-nique"].includes(k)).map(([k, d]) => ({ ...(d as unknown as Evenement), id: k.split("/")[1] }));
     const o = occupationsDu(JOUR, { services: [], scene: [], evenements });
     expect(o.filter((x) => x.source === "evenement").map((x) => [x.salle, x.debut, x.fin, x.id])).toEqual([
       ["paix", "10:00", "11:00", "reunion-da"],
@@ -90,7 +102,9 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     await expect(page.getByLabel("Heure de fin", { exact: true })).toBeVisible();
 
     await nouvelEvenement(page, "Atelier vitrail");
-    await page.getByLabel("Horaire", { exact: true }).fill("14:00");
+    // T4b : une salle choisie, « Horaire » devient « Heure de début ».
+    await expect(page.getByLabel("Horaire", { exact: true })).toHaveCount(0);
+    await page.getByLabel("Heure de début", { exact: true }).fill("14:00");
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
     await expect(page.getByText("Une salle de l'église demande une heure de début et de fin.")).toBeVisible();
     expect(posts(db)).toHaveLength(0);
@@ -105,7 +119,7 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     const db = await ouvrir(page, COORDINATION, "/back-office/evenements/nouveau");
     await nouvelEvenement(page, "Soirée louange");
     await salle(page).selectOption("bonte");
-    await page.getByLabel("Horaire", { exact: true }).fill("19:00");
+    await page.getByLabel("Heure de début", { exact: true }).fill("19:00");
     await page.getByLabel("Heure de fin", { exact: true }).fill("20:30");
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
     await expect(refus(page)).toContainText("Salle Bonté est prise : Répétition chorale, 18:00 – 20:00.");
@@ -113,7 +127,7 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     // Libres au même moment : une pilule choisit la salle.
     await expect(refus(page).locator('[data-libres] [data-salle="paix"]')).toBeVisible();
     await refus(page).getByRole("button", { name: "Décaler à 20:00 – 21:30" }).click();
-    await expect(page.getByLabel("Horaire", { exact: true })).toHaveValue("20:00");
+    await expect(page.getByLabel("Heure de début", { exact: true })).toHaveValue("20:00");
     await expect(page.getByLabel("Heure de fin", { exact: true })).toHaveValue("21:30");
     await expect(refus(page)).toHaveCount(0);
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
@@ -125,7 +139,7 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     const db = await ouvrir(page, COORDINATION, "/back-office/evenements/nouveau");
     await nouvelEvenement(page, "Répétition théâtre");
     await salle(page).selectOption("scene");
-    await page.getByLabel("Horaire", { exact: true }).fill("16:00");
+    await page.getByLabel("Heure de début", { exact: true }).fill("16:00");
     await page.getByLabel("Heure de fin", { exact: true }).fill("18:00");
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
     await expect(refus(page)).toContainText("Scène est prise : Concert d'automne");
@@ -139,7 +153,7 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
   test("modifier un évènement qui a sa salle : il ne se gêne pas lui-même ; « Ailleurs » retire la salle", async ({ page }) => {
     const db = await ouvrir(page, COORDINATION, "/back-office/evenements/concert/modifier");
     await expect(salle(page)).toHaveValue("grande");
-    await page.getByLabel("Horaire", { exact: true }).fill("15:30");
+    await page.getByLabel("Heure de début", { exact: true }).fill("15:30");
     await page.getByRole("button", { name: "Enregistrer" }).click();
     await expect.poll(() => db.writes.filter((w) => w.method === "PATCH" && w.path === "evenements/concert").length).toBe(1);
     expect(db.doc("evenements/concert")).toMatchObject({ salle: "grande", heure: "15:30" });
@@ -171,7 +185,7 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     await page.getByLabel("Nom de la réunion").fill("Point rapide");
     await page.getByLabel("Date", { exact: true }).fill(JOUR);
     await salle(page).selectOption("paix");
-    await page.getByLabel("Horaire", { exact: true }).fill("10:30");
+    await page.getByLabel("Heure de début", { exact: true }).fill("10:30");
     await page.getByLabel("Heure de fin", { exact: true }).fill("11:30");
     await page.getByRole("button", { name: "Créer la réunion" }).click();
     // Une réunion d'une autre équipe : nommée sans son titre.
@@ -217,5 +231,58 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     await expect(champ.locator("option:checked")).toHaveText("其他地点");
     await champ.selectOption("fidelite");
     await expect(champ.locator("option:checked")).toHaveText("Salle Fidélité · 小班");
+  });
+});
+
+const estTelephone = (info: TestInfo) => info.project.name === "telephone";
+
+/** « Déplacer… » de la réunion « Point Orga » (C6) : panneau du jour en grand, feuille de l'entrée au téléphone. */
+async function deplacerPointOrga(page: Page, info: TestInfo, vers: string) {
+  await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+  if (estTelephone(info)) {
+    await page.getByTestId("agenda").getByRole("button", { name: /Point Orga/ }).first().click();
+    await page.getByRole("dialog", { name: "Point Orga" }).getByRole("button", { name: "Déplacer…" }).click();
+  } else {
+    await page.getByTestId("grille-mois").locator(`[data-jour="${JOUR}"]`).click();
+    // Le panneau suit l'heure : pique-nique (12:00), concert (15:00), puis « Point Orga » (18:30), le dernier.
+    await page.getByRole("button", { name: "Déplacer…" }).filter({ visible: true }).last().click();
+  }
+  const dlg = page.getByRole("alertdialog", { name: "Déplacer « Point Orga »" });
+  await dlg.getByLabel("Nouvelle date").fill(vers);
+  return dlg;
+}
+
+test.describe("AR, T4b : la fiche dit la salle ; déplacer relance SA8", () => {
+  test("fiche d'un évènement : la salle à la place du lieu écrit", async ({ page }) => {
+    await ouvrir(page, COORDINATION, "/evenements/atelier");
+    await expect(page.getByRole("heading", { name: "Atelier calligraphie" })).toBeVisible();
+    await expect(page.getByText("Salle Amour · 大班").first()).toBeVisible();
+    await expect(page.getByText("Ancienne salle 3")).toHaveCount(0);
+  });
+
+  test("fiche d'une réunion : « Salle Fidélité · 小班 » dans la ligne d'en-tête", async ({ page }) => {
+    await ouvrir(page, REFERENTE, "/evenements/reunion-orga");
+    await expect(page.getByText(/Salle Fidélité · 小班/).first()).toBeVisible();
+  });
+
+  test("calendrier : déplacer une réunion sur un jour où sa salle est prise est refusé ; un jour libre passe", async ({ page }, info) => {
+    const db = await ouvrir(page, REFERENTE, "/back-office/calendrier");
+    const dlg = await deplacerPointOrga(page, info, "2026-11-16");
+    await dlg.getByRole("button", { name: "Déplacer", exact: true }).click();
+    await expect(dlg.locator("[data-refus-salle]")).toHaveText("Salle Fidélité est prise : Cours de chinois, 18:00 – 19:00.");
+    await expect(dlg.getByRole("button", { name: "Déplacer", exact: true })).toBeDisabled();
+    expect(db.writes.filter((w) => w.path === "evenements/reunion-orga")).toEqual([]);
+    // Une autre date efface le refus ; le mardi 17, la salle est libre.
+    await dlg.getByLabel("Nouvelle date").fill("2026-11-17");
+    await expect(dlg.locator("[data-refus-salle]")).toHaveCount(0);
+    await dlg.getByRole("button", { name: "Déplacer", exact: true }).click();
+    await expect(dlg).toHaveCount(0);
+    await expect.poll(() => db.doc("evenements/reunion-orga")?.date).toBe("2026-11-17");
+    expect(db.doc("evenements/reunion-orga")).toMatchObject({ salle: "fidelite", heure: "18:30" });
+  });
+
+  test("中文 : la fiche garde le nom de la salle en français (AR9)", async ({ page }) => {
+    await ouvrir(page, COORDINATION, "/evenements/atelier", { zh: true });
+    await expect(page.getByText("Salle Amour · 大班").first()).toBeVisible();
   });
 });

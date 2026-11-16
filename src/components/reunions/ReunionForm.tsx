@@ -132,7 +132,8 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, even
             <Champ id="ev-date" label={t("evenements.form.date")}>
               <Input id="ev-date" className="h-11" type="date" max={DATE_MAX} value={v.date} onChange={(e) => set({ date: e.target.value })} required />
             </Champ>
-            <Champ id="ev-heure" label={t("evenements.form.heure")}>
+            {/* Une salle choisie : « Heure de début » au-dessus de « Heure de fin » (T4b). */}
+            <Champ id="ev-heure" label={t(v.salle ? "evenements.form.heureDebut" : "evenements.form.heure")}>
               <Input id="ev-heure" className="h-11" type="time" value={v.heure} onChange={(e) => set({ heure: e.target.value })} />
             </Champ>
           </div>

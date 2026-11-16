@@ -6,8 +6,17 @@
 // les inscrits (4) » ou « … les membres de la réunion », les tâches liées qui ne bougent
 // pas, pour un créneau les créneaux libres du jour visé ; « Annuler » · « Déplacer ». Un
 // refus se dit en une phrase. Rien ne s'écrit sans « Déplacer ».
+// Salles (chantier AR, T4b, SA8 et SA12) : à « Déplacer », un évènement ou une réunion qui porte une salle relit les
+// occupations du jour visé (mêmes heures, même salle) ; prise, le dépôt est refusé en une phrase qui nomme l'occupant,
+// sans « Décaler » ni autre salle (le déplacement ne change que la date) : décision déléguée (session T4b, 16/11).
 
 import { useMemo, useState } from "react";
+import { verifierSalle } from "@/components/salles/ChampSalle";
+import { canSeeEvenement } from "@/lib/access";
+import { useAuth } from "@/lib/firebase/auth";
+import { useProfile } from "@/lib/firebase/users";
+import { nomOccupant } from "@/lib/salles/occupations";
+import { estSalleId, SALLES } from "@/lib/salles/salles";
 import { useTranslation } from "react-i18next";
 import type { DonneesCalendrier, EntreeCalendrier } from "@/lib/calendrier/entrees";
 import { planDeplacement, questionDeplacement, type PlanDeplacement } from "@/lib/calendrier/deplacer";
@@ -87,17 +96,42 @@ export function DialogueDeplacer({
   const place = plan?.type === "creneau" ? (placeChoisie && placeChoisie.jour === vers ? placeChoisie : plan.parDefaut) : null;
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState(false);
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  // Le refus de la salle (SA8), pour le jour où il a été vu : une autre date l'efface.
+  const [sallePrise, setSallePrise] = useState<{ vers: string; phrase: string } | null>(null);
+  const refusSalle = sallePrise && sallePrise.vers === vers ? sallePrise.phrase : null;
 
   const refus = plan?.type === "refus" ? t(`calendrier.deplacer.refus.${plan.refus}`, { jour: dernierJourDuSheet() }) : null;
   const question = vers && vers !== entree.date ? questionDeplacement(entree.titre, entree.date, vers, lang) : null;
   const titre = avecChamp ? t("calendrier.deplacer.titre", { titre: entree.titre }) : (refus ?? question ?? "");
-  const pret = !!plan && plan.type !== "refus" && (plan.type !== "creneau" || !!place);
+  const pret = !!plan && plan.type !== "refus" && (plan.type !== "creneau" || !!place) && !refusSalle;
 
   async function confirmer() {
     if (!plan || !pret) return;
     setEnCours(true);
     setErreur(false);
     try {
+      if (plan.type === "evenement" && estSalleId(plan.evenement.salle) && plan.evenement.heure && plan.evenement.heureFin) {
+        const e = plan.evenement;
+        let phrase: string | null = null;
+        try {
+          const r = await verifierSalle({ ...e, date: plan.champs.date }, e.id, aujourdhui, (x) => canSeeEvenement(user, profile, x));
+          if (r) {
+            phrase = t("salles.refus", {
+              salle: SALLES.find((s) => s.id === r.salle)!.nom, qui: nomOccupant(r.bloque, lang === "zh-CN" ? "zh" : "fr"),
+              debut: r.bloque.debut, fin: r.bloque.fin === "24:00" ? "23:59" : r.bloque.fin,
+            });
+          }
+        } catch {
+          phrase = t("salles.formulaire.echec");
+        }
+        if (phrase) {
+          setSallePrise({ vers: plan.champs.date, phrase });
+          setEnCours(false);
+          return;
+        }
+      }
       await ecrire(plan, { prevenir, place }, uid);
       onDeplace();
     } catch {
@@ -181,6 +215,7 @@ export function DialogueDeplacer({
                   </div>
                 </div>
               )}
+              {refusSalle && <p role="alert" data-refus-salle className="font-semibold text-destructive">{refusSalle}</p>}
               {erreur && <p role="alert" className="font-semibold text-destructive">{t("calendrier.deplacer.erreur")}</p>}
             </div>
           </AlertDialogDescription>

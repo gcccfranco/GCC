@@ -335,7 +335,8 @@ T2b, T2c et T3a (apparence).
 - **Lot 3** : publier `firestore.rules` (`reservations/{id}`) dans la console Firebase **avant** de pousser le code ;
   aucun index composite à créer.
 - Aucun changement de stratégie dans `public/sw.js` : pas de nouvelle version du cache.
-- Lot 4 : relire les rules d'`evenements/{id}` si le champ `salle` les touche, et republier le cas échéant.
+- **Lot 4** : publier `firestore.rules` (`salleEvenementValide` dans `evenements/{id}`, T4b) dans la console Firebase,
+  avec celles du lot 3, **avant** de pousser le code.
 
 ## Hors périmètre
 
@@ -569,3 +570,26 @@ T2b, T2c et T3a (apparence).
   « Horaire » → « Heure de début » quand une salle est choisie ; captures en `fr-FR` (le navigateur de capture affiche
   « 07:00 PM ») ; thème sombre, formulaire de réunion et chinois non regardés. Suite : T4b **non lancée** par T4a
   (limite de profondeur des sessions atteinte, 8) ; demandée au pilote, consigne dans le message.
+- 16/11/2026 : **T4b faite, lot 4 fini** (orchestratrice T4b, codée par elle-même). Fiche : `lieuAffiche(e)`
+  (`src/lib/salles/salles.ts`, avec `nomAvecAutre`) montre la salle avec son autre nom (« Salle Amour · 大班 ») à la
+  place du lieu écrit, dans la carte de la fiche, la ligne compacte de la liste et l'en-tête d'une réunion
+  (`EnTeteReunion`). Formulaires : « Horaire » devient « Heure de début » quand une salle est choisie
+  (`evenements.form.heureDebut`, 开始时间). **Déplacer au calendrier (U8)** : à « Déplacer », un évènement ou une réunion
+  qui porte une salle relit les occupations du jour visé (`verifierSalle`, mêmes heures, hors lui-même) ; prise, une
+  phrase rouge nomme l'occupant (« Salle Fidélité est prise : Cours de chinois, 18:00 – 19:00. »), « Déplacer » se
+  grise, rien ne s'écrit ; une autre date l'efface. Décision déléguée (session T4b, 16/11) : refus seul, sans
+  « Décaler » ni autre salle, le déplacement ne changeant que la date ; lecture impossible = refus
+  (`salles.formulaire.echec`), comme au formulaire. **Règle changée** : `salleEvenementValide()` dans
+  `firestore.rules` (`salle` absente, null ou une des neuf) à la création et à la modification d'un évènement ;
+  miroir écrit au-dessus de `canEditEvenement` (`src/lib/access.ts`) ; le client n'offre que `SALLES` (`estSalleId`).
+  **Timothée doit publier `firestore.rules` à la main** (avec celles du lot 3) avant de pousser le lot 4 sur `main`.
+  Tests : `salles-evenement` +4 tests (fiche d'un évènement, d'une réunion, déplacement refusé puis accepté, 中文) et
+  « Heure de début » dans les T4a ; `equipes-reunions` : la regex de `allow create` suit `salleEvenementValide`.
+  Fin de lot : `salles-*`, `evenements`, `reunions`, `equipes-reunions`, `pages-en-grand-evenements`,
+  `calendrier-deplacer` : 1 067 verts, 128 sautés, 7 échecs (regex des rules, et trois lenteurs sous charge) en
+  16 min 10 s ; `calendrier` filtré (évènement, réunion) : 129 verts, 1 sauté, 1 min 35 s ; les 7 rejoués : 51 verts
+  (spec `salles-evenement` entière), 1 min 19 s (≈ 19 min de tests). tsc et lint propres (0 erreur) ; police
+  chinoise refaite (inchangée). Regard aux quatre dispositions et à 1 440 px (`fr-FR`) : fiche, en-tête de réunion,
+  formulaire, refus du déplacement ; rien à reprendre (les champs d'heure restent en « 03:00 PM » dans le navigateur
+  de capture). Pas de `critique-design` : seuls des textes changent. Non regardés : thème sombre. **Lot 5** : après
+  Noël 2026, spec à écrire ; aucune session lancée.

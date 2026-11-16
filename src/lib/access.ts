@@ -415,7 +415,10 @@ export function canSeeInscrits(user: AuthUser | null): boolean {
 }
 
 /** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination
- *  (lot RS : le Comité Orga) + admins. */
+ *  (lot RS : le Comité Orga) + admins.
+ *  Salles (AR, T4b) : à la création comme à la modification, `salle` est absente, null ou une des neuf
+ *  (`salleEvenementValide` de firestore.rules) ; côté client, le champ « Salle de l'église » n'offre que `SALLES`
+ *  et la lecture passe par `estSalleId` (src/lib/salles/salles.ts). */
 export function canEditEvenement(
   user: AuthUser | null,
   profile: ProfilCoordination | null,

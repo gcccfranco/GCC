@@ -17,6 +17,7 @@ import { categoryColor, categoryLabel, PLANNING_COLORS } from "@/lib/serviceColo
 import { equipeDuPour, estReunion, publicDeReunion } from "@/lib/access"
 import { cleNomEquipe } from "@/lib/equipes/table"
 import type { Evenement } from "@/types/evenement"
+import { lieuAffiche } from "@/lib/salles/salles"
 import { buttonVariants } from "@/components/ui/button"
 import { Tile } from "@/components/ui/tile"
 import { styleTexteService } from "@/lib/couleurSombre"
@@ -99,7 +100,8 @@ export function InfosEvenement({ e, titrees = false }: { e: Evenement; titrees?:
       classe: "inline-block first-letter:uppercase",
     },
     e.heure && { Icone: Clock, libelle: t("evenements.libelleHeure"), valeur: `${e.heure}${e.heureFin ? ` – ${e.heureFin}` : ""}`, classe: "" },
-    e.lieu && { Icone: MapPin, libelle: t("evenements.libelleLieu"), valeur: e.lieu, classe: "" },
+    // Salles (AR, T4b) : la salle de l'église, avec son autre nom, à la place du lieu écrit.
+    lieuAffiche(e) && { Icone: MapPin, libelle: t("evenements.libelleLieu"), valeur: lieuAffiche(e), classe: "" },
   ].filter((x) => !!x)
   const liste = (
     <ul className={`text-sm text-foreground ${titrees ? "infos-fiche-liste" : "space-y-1.5"}`}>
@@ -242,7 +244,7 @@ export function EvenementCard({ evenement: e, past, href, actif = false, inscrit
           <p className="text-sm text-muted-foreground truncate">
             {/* Évènement réservé à une équipe (retouches v18, E4) : son badge, comme sur la carte. */}
             {reserve && <PastillePublic pour={e.pour} className={`mr-1.5 px-1.5 py-px text-xs ${actif ? "!bg-background" : ""}`} />}
-            {[e.heure, e.lieu].filter(Boolean).join(" · ")}
+            {[e.heure, lieuAffiche(e)].filter(Boolean).join(" · ")}
           </p>
         </div>
         {badge}

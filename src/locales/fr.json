@@ -2537,6 +2537,7 @@
       "pourReunion": "Équipe",
       "date": "Date",
       "heure": "Horaire",
+      "heureDebut": "Heure de début",
       "heureFin": "Heure de fin",
       "dateFin": "Date de fin",
       "lieu": "Lieu",

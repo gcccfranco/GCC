@@ -2503,6 +2503,7 @@
       "pourReunion": "团队",
       "date": "日期",
       "heure": "时间",
+      "heureDebut": "开始时间",
       "heureFin": "结束时间",
       "dateFin": "结束日期",
       "lieu": "地点",

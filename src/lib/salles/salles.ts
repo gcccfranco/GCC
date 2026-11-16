@@ -37,3 +37,14 @@ export function lieuxLies(id: SalleId): SalleId[] {
 export function estSalleId(x: unknown): x is SalleId {
   return typeof x === "string" && SALLES.some((s) => s.id === x);
 }
+
+/** « Salle Fidélité · 小班 » : le nom et l'autre nom, comme dans le champ « Salle de l'église ». */
+export function nomAvecAutre(id: SalleId): string {
+  const s = SALLES.find((x) => x.id === id)!;
+  return s.autreNom ? `${s.nom} · ${s.autreNom}` : s.nom;
+}
+
+/** Le lieu à afficher d'un évènement ou d'une réunion (SA12, T4b) : sa salle si elle en porte une, sinon le lieu écrit. */
+export function lieuAffiche(e: { lieu: string; salle?: unknown }): string {
+  return estSalleId(e.salle) ? nomAvecAutre(e.salle) : e.lieu;
+}

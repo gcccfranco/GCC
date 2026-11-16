@@ -16,6 +16,7 @@ import { cleNomEquipe } from "@/lib/equipes/table"
 import { categoryColor } from "@/lib/serviceColors"
 import { titreDuJour } from "@/app/evenements/scene/libelles"
 import type { Evenement } from "@/types/evenement"
+import { lieuAffiche } from "@/lib/salles/salles"
 import { EnTetePage } from "@/components/layout/EnTetePage"
 import { MenuActions } from "@/components/layout/MenuActions"
 import { Button } from "@/components/ui/button"
@@ -30,7 +31,7 @@ export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gesti
   const ligne = [
     e.date ? titreDuJour(e.date, i18n.language) : "",
     e.heure,
-    e.lieu,
+    lieuAffiche(e),
     t("backOffice.organiseePar", { nom: e.organisateurNom }),
   ].filter(Boolean).join(" · ")
 
