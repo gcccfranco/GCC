@@ -394,3 +394,8 @@ T2b, T2c et T3a (apparence).
   la session : tranche codée et regardée par l'orchestratrice. **Lots 2 à 5 : attendent chacun leur go.**
 - 16/11/2026 : **go de Timothée pour le lot 2** (« go », en réponse à « Lot 2 … : go ? »). Vaut pour T2a, T2b, T2c,
   une session par tranche, chacune lance la suivante. Les lots 3 à 5 attendent leur go.
+- 16/11/2026 : **go de Timothée pour les lots 3, 4 et 5** (« Go pour les 3 qui restent aussi »). Ordre : lot 3 (T3a →
+  T3c) dès la fin du lot 2, puis lot 4 (T4a, T4b), une session par tranche, chacune lance la suivante. **Lot 5** : le go
+  est donné, mais il attend la fin de la saison de Noël (AR9) et sa spec détaillée, écrite après le 25/12/2026 ; il se
+  code sans nouveau go si cette spec ne change aucune décision de Timothée. Rappel : avant la mise en ligne du lot 3,
+  Timothée publie `firestore.rules` (`reservations/{id}`).
