@@ -216,6 +216,7 @@
       "loginRequired": "Les setlists sont réservées aux membres — connecte-toi pour voir celles de tes services.",
       "profileRequired": "Complète ton profil pour voir les setlists de tes services.",
       "profileUnreadable": "Ton profil ne peut pas être lu pour le moment (réseau ou base indisponible).",
+      "listUnreadable": "Les setlists ne peuvent pas être lues pour le moment (réseau ou base indisponible).",
       "upcoming": "À venir",
       "archived": "Archives",
       "emptySearch": "Aucun résultat pour cette recherche.",

@@ -76,6 +76,10 @@ export default function SetlistsPage() {
   const [programmesLus, setProgrammesLus] = useState(!BACK_OFFICE);
   const [loading, setLoading] = useState(true);
   const [loadingMine, setLoadingMine] = useState(true);
+  // Lecture refusée ou sans réseau ≠ liste vide : « Réessayer » relit (`essai`).
+  const [echecListe, setEchecListe] = useState(false);
+  const [echecMine, setEchecMine] = useState(false);
+  const [essai, setEssai] = useState(0);
   const [planning, setPlanning] = useState<PlanningData | null>(null);
   // Onglet, recherche, catégorie : dans l'URL (retour navigateur fidèle).
   // « Mes services » : mémorisé sur l'appareil (coché par défaut).
@@ -125,13 +129,15 @@ export default function SetlistsPage() {
     if (authLoading) return;
     if (!user) { setSetlists([]); setLoading(false); return; }
     setLoading(true);
-    Promise.all([getSetlists(), getSetlistsPartagees(user.uid).catch(() => [] as FSSetlist[])])
+    setEchecListe(false);
+    Promise.all([getSetlists(true), getSetlistsPartagees(user.uid).catch(() => [] as FSSetlist[])])
       .then(([toutes, miennes]) => {
         setSetlists(toutes);
         setPartagees(miennes);
       })
+      .catch(() => setEchecListe(true))
       .finally(() => setLoading(false));
-  }, [user, authLoading]);
+  }, [user, authLoading, essai]);
 
   // Liste commune + setlists de l'équipe, sans doublon (la requête n'est pas crue sur parole).
   const toutes = useMemo(() => {
@@ -162,8 +168,9 @@ export default function SetlistsPage() {
   useEffect(() => {
     if (!user) { setMySetlists([]); setLoadingMine(false); return; }
     setLoadingMine(true);
-    getMySetlists(user.uid).then(setMySetlists).finally(() => setLoadingMine(false));
-  }, [user]);
+    setEchecMine(false);
+    getMySetlists(user.uid, true).then(setMySetlists).catch(() => setEchecMine(true)).finally(() => setLoadingMine(false));
+  }, [user, essai]);
 
   // ── Corbeille (SC2, docs/spec-createur-corbeille-absences.md) ──
   // Les ids du bandeau « Annuler » (la suppression qui vient d'avoir lieu), la section repliée en bas
@@ -638,6 +645,21 @@ export default function SetlistsPage() {
         {/* ── Contenu ── */}
         {(tab === "mine" ? loadingMine : loading || !programmesLus) ? (
           <Squelette enTete={false} className="px-0" />
+        ) : (tab === "mine" ? echecMine : echecListe) ? (
+          <EtatVide
+            surGris={!grand}
+            action={
+              <button
+                type="button"
+                onClick={() => setEssai((n) => n + 1)}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+              >
+                {t("common.retry")}
+              </button>
+            }
+          >
+            {t("setlists.list.listUnreadable")}
+          </EtatVide>
         ) : displayed.length === 0 ? (
           <EtatVide
             surGris={!grand}
@@ -686,7 +708,7 @@ export default function SetlistsPage() {
           </ul>
           )
         )}
-        {feteFiltree && tab !== "mine" && piedFete}
+        {feteFiltree && tab !== "mine" && !echecListe && piedFete}
         {tab === "archived" && corbeilleVisible.length > 0 && (
           <SectionCorbeille
             setlists={corbeilleVisible}

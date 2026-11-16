@@ -233,11 +233,12 @@ async function lireSetlists(uid: string | null): Promise<FSSetlist[] | null> {
   return liste;
 }
 
-export async function getSetlists(): Promise<FSSetlist[]> {
+export async function getSetlists(strict = false): Promise<FSSetlist[]> {
   const uid = auth.currentUser?.uid ?? null;
   const c = cacheSetlists;
   if (c && c.uid === uid && Date.now() - c.at < CACHE_SETLISTS_MS) {
     const memoire = await c.promesse;
+    if (!memoire && strict) throw new Error("lecture des setlists impossible");
     return memoire ? [...memoire] : [];
   }
   const entree = { uid, at: Date.now(), promesse: lireSetlists(uid) };
@@ -245,7 +246,7 @@ export async function getSetlists(): Promise<FSSetlist[]> {
   const clear = () => { if (cacheSetlists === entree) cacheSetlists = null; };
   try {
     const liste = await entree.promesse;
-    if (!liste) { clear(); return []; }
+    if (!liste) { clear(); if (strict) throw new Error("lecture des setlists impossible"); return []; }
     return [...liste]; // une copie par appelant : un tri sur place ne touche pas les autres
   } catch (e) {
     clear();
@@ -378,7 +379,7 @@ export async function getSetlistsDeFete(programme: string): Promise<FSSetlist[]>
     .filter((s) => !s.isDraft && s.fete?.programme === programme && horsCorbeille(s));
 }
 
-export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
+export async function getMySetlists(uid: string, strict = false): Promise<FSSetlist[]> {
   // No orderBy to avoid requiring a composite index on (ownerId, createdAt).
   // Sorting is done client-side instead.
   const docs = await lireRequete("", {
@@ -391,6 +392,7 @@ export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
       },
     },
   });
+  if (!docs && strict) throw new Error("lecture des setlists impossible");
   return (docs ?? [])
     .map(fromFsDoc)
     .filter((s) => s.isPrivate === true && !s.isDraft && sansFetes(s) && horsCorbeille(s))

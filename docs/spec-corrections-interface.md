@@ -143,6 +143,17 @@ vide enregistrable. Constat vérifié dans `firestore.rules` (`match /users/{uid
 pour un membre dont le profil existe, l'enregistrement aurait été refusé par le serveur (formulaire vide trompeur,
 pas d'écrasement) ; l'écrasement réel ne menaçait que les admins. `firestore.rules` et `access.ts` non touchés.
 
+### A10 bis. « Aucune archive » quand la base ne répond pas (constat du pilote, 16/11, 6 h 40 UTC)
+
+Agent-desktop, compte invité, branche à `1d583f5e` : la vraie base répondait 200 au profil mais 429 « Quota exceeded »
+aux requêtes de listes (`:runQuery`) ; la page Setlists disait « Aucun culte à venir » et « Aucune archive » (un
+membre croit que tout a disparu). Cause : `getSetlists` et `getMySetlists` rendaient `[]` sur une lecture refusée.
+Réponse de Timothée du 15/11/2026 (relayée par le pilote, à la question « Quand la base de données ne répond pas, je
+fais dire à la page Setlists que la base est indisponible et qu'il faut réessayer plus tard ? ») : « Oui, corriger ».
+**Décision déléguée (pilote, 16/11/2026)** : même page, même cause, même réponse, donc la liste suit aussi : sur les
+trois onglets, une lecture en échec affiche « Les setlists ne peuvent pas être lues pour le moment (réseau ou base
+indisponible). » et « Réessayer » ; l'état vide reste pour une lecture réussie sans résultat.
+
 R2 (repères d'un scan) est A2 ; R5 (barre selon les droits) et R6 (couleur du bouton) sont en partie B.
 
 ## Partie B : les harmonisations (sans planche)
@@ -336,6 +347,7 @@ commitée le 14/11 au soir), une seule à la fois dans ce fichier. Les tranches 
 | CI-17 | B13, finitions de mise en page | `moi/page.tsx`, liste des setlists, `SongListClient.tsx`, `BarreLaterale.tsx`, `SelecteurEspace.tsx` | non | B13 |
 | CI-18 | B4 ter, panneau d'accord du côté libre | `AccordsProvider.tsx` | non | B4 ter |
 | CI-19 | A10, profil illisible ≠ profil absent | `users.ts`, `EcransAccesListe.tsx`, `setlists/page.tsx`, `CreateSetlistClient.tsx`, `profil/page.tsx`, `login/page.tsx`, `SectionMesServices.tsx`, locales | non | A10 |
+| CI-21 | A10 bis, liste illisible ≠ liste vide | `firebase/setlists.ts` (`strict`), `setlists/page.tsx`, locales | non | A10 bis |
 
 Tests : ceux de la section de chaque défaut ou harmonisation ; agencement dans `SPECS_GRAND_ECRAN` (cinq projets) ;
 parcours du culte pour toute tranche à « oui ». CI-1, CI-5 et CI-10 à CI-17 ne touchent pas le mode louange
@@ -608,3 +620,18 @@ centre tombe sur un accord).
   Captures Playwright avant / après, ordinateur et téléphone (artefact privé, validé par Timothée) ; **non vu à
   l'écran réel** (demande la vraie base). Autres écrans relevés : le bandeau `profile.welcome` est masqué en échec ;
   `moi/page.tsx:79` masque les notifications sans message (laissé).
+- **16/11/2026, CI-21 (A10 bis)** : fait. `getSetlists(strict)` et `getMySetlists(uid, strict)` lèvent sur une
+  lecture refusée (les autres appelants inchangés) ; `setlists/page.tsx` : `echecListe`, `echecMine`, « Réessayer »
+  (`essai`), message `setlists.list.listUnreadable` (FR et 中文) sur À venir, Archives et Mes setlists ; pied de fête
+  masqué en échec. Test neuf `setlists-lecture-echec` (429 puis la base répond, rechargement ou Réessayer, FR et 中文) ;
+  avec profil-lecture-echec, agencement-v18-setlists, setlist-corbeille, setlist-hors-ligne, setlist-partage : 268
+  verts, 23 sautés, 0 rouge, trois appareils, 7 min 56. Captures Playwright avant / après, trois appareils (artefact
+  privé, validé par Timothée) ; **non vu à l'écran réel**. Relevé des autres écrans où une lecture en échec s'affiche
+  vide (pour décision de Timothée, rien corrigé) : statistiques d'un chant (`setlists.ts:338` →
+  `setlistsPourStats.ts:9` → `StatistiquesDuChant.tsx:169`) ; Mes présidences (même chaîne → `MesPresidences.tsx:169`) ;
+  setlists passées à la création (`SetlistsPassees.tsx:34-40`, 116-118) ; Réception, signalements (`reports.ts:41` →
+  `Reception.tsx:33`, 145) et propositions (`songProposals.ts:38` → `Reception.tsx:288`) ; agenda des évènements
+  (`evenements.ts:79-81` → `CalendrierClient.tsx:58`) ; réunions d'une équipe (`evenements.ts:100-105` →
+  `PageEquipe.tsx:235`, 266) ; absences du tableau de bord (`absences.ts:57-58` → `tableauDeBord/lecture.ts:122`) ;
+  probables, rendu non relu : résultats du sondage (`survey.ts:42` → `SurveyResults.tsx:196`), liste des équipes
+  (`equipes.ts:37` → `EquipesClient.tsx:77`). Non établis : Mes services, annonces, détail d'une setlist.
