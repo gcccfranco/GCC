@@ -378,3 +378,5 @@ T2b, T2c et T3a (apparence).
 - 16/11/2026 : **spec écrite** (session `session_01UMdfudSTkDY8UL8HEyTfJb`) : décisions déléguées AR10 à AR18, modèle,
   règles SA1 à SA14, permissions, libellés, cinq lots (1 « Église », 2 Salles en lecture, 3 Réserver, 4 réunions et
   évènements, 5 la Scène après Noël), tests, mise en ligne. **Attend le go de Timothée pour le lot 1.**
+- 16/11/2026 : **go de Timothée pour le lot 1** (« Oui », en réponse à « Go pour le lot 1 ? »). Tranche T1 confiée à
+  une session orchestratrice neuve (même branche). Les lots 2 à 5 attendent chacun leur go.
