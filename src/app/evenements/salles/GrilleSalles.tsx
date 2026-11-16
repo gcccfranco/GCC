@@ -110,7 +110,8 @@ export function GrilleSalles({ occupations, heure, ouvrir, langue, dateLongue }:
                 <div className="py-3">
                   <div
                     data-corps
-                    className="relative select-none"
+                    data-glisse={plage?.salle === s.id ? "" : undefined}
+                    className="group/corps relative select-none"
                     style={{ height: hauteur, backgroundImage: `repeating-linear-gradient(to bottom, hsl(var(--border) / .6) 0 1px, transparent 1px ${H}px)` }}
                     // SA11 : glisser sur les cases (pas au toucher, qui défile) ; la plage suit le pointeur.
                     onPointerDown={(e) => {
@@ -155,9 +156,13 @@ export function GrilleSalles({ occupations, heure, ouvrir, langue, dateLongue }:
                           if (Date.now() - finDuGlisser.current < 400) return
                           ouvrir({ salle: s.id, debut: h, fin: HEURES[i + 1] })
                         }}
-                        className="absolute inset-x-0 cursor-pointer transition-colors hover:bg-foreground/[.04] active:bg-foreground/[.07] focus-visible:z-[6] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                        // Survol coupé pendant un glisser (la plage reste d'un seul ton) ; au clavier, la case dit son heure
+                        // (critique-design T3c).
+                        className="group/case absolute inset-x-0 cursor-pointer px-1.5 py-0.5 text-left transition-colors hover:bg-foreground/[.04] active:bg-foreground/[.07] group-data-[glisse]/corps:hover:bg-transparent focus-visible:z-[6] focus-visible:rounded-md focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
                         style={{ top: i * H, height: H }}
-                      />
+                      >
+                        <span aria-hidden className="hidden text-[11px] tabular-nums text-muted-foreground group-focus-visible/case:block">{h} +</span>
+                      </button>
                     ))}
                     {ici.map((o, i) => {
                       const haut = place(journee(o) ? "08:00" : o.debut)
@@ -199,7 +204,7 @@ export function GrilleSalles({ occupations, heure, ouvrir, langue, dateLongue }:
                       <div
                         aria-hidden
                         data-plage
-                        className="pointer-events-none absolute inset-x-0.5 z-20 rounded-md border-2 border-dashed border-primary bg-primary/10 px-1.5 py-0.5 text-[11px] font-semibold leading-tight tabular-nums text-foreground"
+                        className="pointer-events-none absolute inset-x-0.5 z-20 rounded-md border-2 border-dashed border-primary bg-background/80 px-1.5 py-0.5 text-[11px] font-semibold leading-tight tabular-nums text-foreground"
                         style={{ top: pct((plage.debut - DEBUT) / (FIN - DEBUT)), height: pct((plage.fin - plage.debut) / (FIN - DEBUT)) }}
                       >
                         {enHeure(plage.debut)} – {enHeure(plage.fin)}
