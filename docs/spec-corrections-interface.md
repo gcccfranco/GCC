@@ -166,6 +166,22 @@ R2 (repères d'un scan) est A2 ; R5 (barre selon les droits) et R6 (couleur du b
   réduite donne à la pastille la hauteur qui fait 44 px à l'écran ; aucune autre taille ne change ; le petit carré
   de tonalité (CI-9) reste. Tests : `mode-louange-forscore:270`, `mode-louange-colonnes:363` au téléphone.
 
+### A12. Mode louange au téléphone : bande vide en haut et scan sans titre (photos de Timothée du 16/11/2026, site en ligne, revues sur la branche à `fe13379c`)
+
+Réponses de Timothée du 16/11/2026 (boîte de questions de la session CI-20) : « Titre dans la bande », « Oui, au-dessus »,
+« Validé, et go CI-22 ».
+- **(a) Page 2 et suivantes d'un chant en texte, barre du haut escamotée** : une bande vide d'environ 80 px reste
+  en haut (gardée pour que la barre, en revenant, ne recouvre pas le haut de la page : A7, CI-4) ; seul le carré de
+  tonalité flottant y est. Règle : barre escamotée, la bande montre le **titre du chant et sa tonalité**, en petit,
+  comme un titre courant (une ligne, tronquée) ; la pagination ne bouge pas ; barre affichée, rien ne change.
+  Le carré flottant ne fait pas double emploi : la tonalité n'apparaît qu'une fois dans la bande.
+- **(b) Scan 简谱 certifié** : la tête de feuille montre la structure (ronds) et le tempo, pas le titre. Règle : le
+  titre du chant (chinois pour un chant chinois) en une ligne **au-dessus** des ronds de structure, casse normale
+  (CI-9) ; la partition descend d'autant (repagination des tranches acceptée).
+- Tests : téléphone et quatre autres projets ; page 2 barre escamotée, titre visible dans la bande et haut de la
+  page inchangé (même `top` du premier bloc barre affichée et escamotée) ; scan certifié (`恒久恒久以前`), titre
+  visible au-dessus du premier rond ; parcours du culte.
+
 ## Partie B : les harmonisations (sans planche)
 
 Timothée, 14/11 : « fait le sans la planche ». La règle marquée **retenue** est une décision déléguée (pilote, 14/11),
@@ -359,6 +375,7 @@ commitée le 14/11 au soir), une seule à la fois dans ce fichier. Les tranches 
 | CI-19 | A10, profil illisible ≠ profil absent | `users.ts`, `EcransAccesListe.tsx`, `setlists/page.tsx`, `CreateSetlistClient.tsx`, `profil/page.tsx`, `login/page.tsx`, `SectionMesServices.tsx`, locales | non | A10 |
 | CI-21 | A10 bis, liste illisible ≠ liste vide | `firebase/setlists.ts` (`strict`), `setlists/page.tsx`, locales | non | A10 bis |
 | CI-20 | A11, page de scan gardée et « Ensuite » à 44 px (téléphone) | `pagination.ts` (`pageAncree`), `PageTexte.tsx` | non | A11 |
+| CI-22 | A12, titre courant dans la bande du haut, titre en tête de scan | `PerformanceMode.tsx` (ou `PageTexte.tsx`), `TeteFeuille.tsx`, `PageScan.tsx` selon la mesure | oui | A12 |
 
 Tests : ceux de la section de chaque défaut ou harmonisation ; agencement dans `SPECS_GRAND_ECRAN` (cinq projets) ;
 parcours du culte pour toute tranche à « oui ». CI-1, CI-5 et CI-10 à CI-17 ne touchent pas le mode louange
