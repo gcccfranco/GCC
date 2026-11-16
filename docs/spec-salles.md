@@ -6,7 +6,10 @@
   différentes salles à l'église afin de ne pas créer de doublon ou ne pas avoir d'endroit pour se réunir (à réfléchir) ».
 - **Réponses de Timothée (16/11/2026)** : la liste des salles et leurs occupations du dimanche (ci-dessous) ; qui
   réserve : « Tout le monde je pense » ; « oui pour une réunion, un évènement, il faut réserver la salle » ; « Peut à
-  la place de mettre des plages, laisser les personnes mettre le temps qu'ils veulent réserver ».
+  la place de mettre des plages, laisser les personnes mettre le temps qu'ils veulent réserver ». Puis : « quand c'est
+  un dimanche avec intergroupe toutes les salles sont disponibles de sur le temps de groupe qui est de 13h à 14h30.
+  Quand c'est un dimanche avec interfranco la salle bonté et salle paix sont disponibles de 13h à 14h30 sauf la salle
+  fidélité qui sera occupé par le groupe joie. »
 - **Statut** : **cadrage**. Change l'organisation des écrans : planche d'abord (`CLAUDE.md`, « Design »), puis les
   décisions et les tranches ici, puis le code sur go. **Ni planche lancée ni go.**
 - **Base de code** : `claude/corrections-design` à `4f1134e`.
@@ -42,12 +45,25 @@ Une salle a parfois deux noms, selon qui l'occupe. Occupations fixes : **tous le
 | Salle de réunion | | aucune donnée |
 | Scène | | réservations des fêtes (aujourd'hui) |
 
+### Le temps de groupe (13:00–14:30) selon le dimanche (Timothée, 16/11/2026)
+
+L'app connaît déjà les dimanches d'Intergroupe et d'Interfranco (feuille du planning) : l'emploi du temps peut donc
+changer tout seul ces jours-là, sans exception à saisir.
+
+| Salle | Dimanche ordinaire | Intergroupe | Interfranco |
+|---|---|---|---|
+| Salle Fidélité | occupée | libre | groupe Joie |
+| Salle Bonté | occupée | libre | libre |
+| Salle Paix | occupée | libre | libre |
+| Salle Amour | occupée | libre | non dit (S-Q4) |
+| Grande salle | groupe Joie | non dit (S-Q4) | non dit (S-Q4) |
+
 ## Principes proposés (à valider après la planche)
 
 | # | Principe |
 |---|---|
 | S1 | Une salle est un lieu physique ; ses deux noms mènent à la même occupation (réserver « Salle 小班 » prend « Salle Fidélité »). |
-| S2 | L'**emploi du temps fixe** du dimanche se saisit une fois (coordination), par semaine ; il s'affiche occupé et ne se réserve pas par-dessus. Une exception d'un dimanche (Intergroupe, Interfranco, fête) se règle à part : à dessiner. |
+| S2 | L'**emploi du temps fixe** du dimanche se saisit une fois (coordination), par semaine ; il s'affiche occupé et ne se réserve pas par-dessus. Il a trois variantes, choisies d'après la feuille du planning : dimanche ordinaire, Intergroupe, Interfranco (tableau ci-dessus). Une autre exception (fête) se règle à part : à dessiner. |
 | S3 | **Réserver** : tout membre connecté (Timothée) choisit une salle, une date, « de » et « à » librement (Timothée), dit pour qui et pour quoi. Un chevauchement est refusé, comme sur la Scène. |
 | S4 | **Réunion, évènement** : choisir une salle dans leur formulaire la réserve (Timothée) ; la réservation suit la date et l'heure, et part avec la réunion. Le lieu en texte libre reste pour l'extérieur. |
 | S5 | **La Scène** entre dans la liste **après Noël** : la saison en cours n'est pas touchée. La fête garde ce qui lui est propre (ordre de passage, chants, « Qui peut réserver »). La feuille « un autre moment » du lot AQ est la même que celle des salles. |
@@ -63,7 +79,9 @@ Une salle a parfois deux noms, selon qui l'occupe. Occupations fixes : **tous le
   salle (culte sinophone, groupe Joie) s'excluent-ils ?
 - S-Q3. Salle imprimante, 12:20–12:40 : par qui ? « Salle imprimante » et « Salle de réunion » sont-elles deux salles,
   et la « salle à côté de réunion » du premier retour en est-elle une troisième ?
-- S-Q4. Les dimanches d'Intergroupe et d'Interfranco, quelles salles sont libérées, lesquelles sont prises ?
+- S-Q4. **Répondu en partie le 16/11** (tableau du temps de groupe). Reste : où se tiennent l'Intergroupe et
+  l'Interfranco de 13:00 à 14:30 (la Grande salle ? le groupe Joie la quitte-t-il seulement pour l'Interfranco ?), et
+  la Salle Amour un dimanche d'Interfranco.
 
 **Dessin, pour la planche**
 
@@ -83,3 +101,5 @@ Une salle a parfois deux noms, selon qui l'occupe. Occupations fixes : **tous le
 ## Avancement
 
 - 16/11/2026 : cadrage écrit d'après les réponses de Timothée. Reste : S-Q1 à S-Q4, l'accord pour la planche.
+- 16/11/2026 : dimanches d'Intergroupe et d'Interfranco ajoutés (S2 à trois variantes). Reste : S-Q1 à S-Q3, la fin
+  de S-Q4, l'accord pour la planche.
