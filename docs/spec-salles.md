@@ -668,3 +668,20 @@ T2b, T2c et T3a (apparence).
   `scene-des-fetes` ; **tsc rouge sur ces deux specs** (`compteCreneaux`, `grilleDuJour`, `duree`) jusqu'à leur
   réécriture ; puis trois appareils, regard sur les quatre dispositions et 1 440 px, `critique-design`. Tour sur
   ordinateur de huit specs : 195 verts, 82 échecs, 27 sautés en 8 min 30 s. Aucune règle changée.
+- **16/11/2026, T5b, seconde partie (faite)** : specs de la Scène réécrites là où elles lisaient la grille, sans
+  changement de `src/` hors d'un commentaire (`ResumeSaison.tsx`). Supprimés (grille seule) : les trois tests
+  « grille : » et « une réservation pile sur un créneau prend sa place », « changer la durée met l'aperçu à jour »
+  (`scene-saison`) ; « couvre 1 créneau, sans « aussi » », « à cheval sur deux créneaux », « la feuille « Un créneau
+  dure » » (`scene-paques-noel`, ce dernier remplacé par la feuille « Jour J »). Adaptés : `compteJours`, fenêtres
+  libres (« Libre 14:30 – 15:00 · 17:00 – 19:00 »), feuille « de / à » pour réserver, déplacer et modifier, « Hors des
+  plages », résumé de saison sans « Un créneau dure » ; `programme-scene`, `scene-qui`, `salles-scene` (fenêtre
+  10:00 – 12:00, puis « à » 11:00) ; `scene-des-fetes` inchangée. Fixtures : planning Google Sheets simulé vide
+  partout (dimanches « ordinaires ») ; dans `scene-paques-noel`, le sketch 16:00 – 17:00 passe à 17:00 – 18:00 (il
+  croisait le culte sinophone) et le chant EDD sort des plages (18:30 – 20:00). Décision déléguée (session T5b, 16/11) :
+  les clés de langue devenues inutiles (`creneauxDuJour_*`, `saison.duree`) restent, à retirer avec `i18n-sync` au
+  prochain passage sur les libellés. Tests : sept specs de la Scène sur les cinq projets, 1 026 verts, 4 échecs,
+  119 sautés en 17 min 12 s ; les quatre (deux attentes téléphone, un planning non simulé sur tablette, un menu
+  « Retirer » lent à 1 440 px) rejoués : verts (2 min 06 s). Regard à l'œil : téléphone, tablette paysage,
+  1 440 px de la page de Noël, feuille « Réserver » de Salles avec le message de saison (capture
+  `*-salles-feuille.png` ajoutée) : rien à reprendre. `critique-design` non lancé : l'agent du dépôt n'est pas chargé
+  dans cette session. tsc vert, lint sans erreur. Aucune règle changée. Suite : T5c.

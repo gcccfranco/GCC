@@ -13,7 +13,7 @@ import { canEditReservation, canReserverPour } from "../src/lib/access";
 
 const NOEL = {
   nom: "Noël 2026", jourJ: "2026-12-24", debut: "2026-10-01", fin: "2026-12-20", visible: true, ouvert: true, passages: [],
-  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }], duree: 60,
+  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }],
   quiAutorises: ["Gp Paix", "Gp Amour"],
   createdBy: "uid-ondine", updatedAt: "2026-09-14T20:00:00Z",
 };
@@ -43,8 +43,9 @@ const etat = (page: Page, nom: string) => ligne(page, nom).locator("[data-etat]"
 test.describe("AR, T5a : les créneaux de la Scène sont des réservations", () => {
   test("réserver depuis la page de Noël écrit reservations/{id} (Scène, fête, date, qui, pour) ; Salles le montre sur la Scène et la Grande salle", async ({ page }) => {
     const db = await ouvrir(page, MARIUS, {});
-    await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 11:00" }).click();
+    await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 12:00" }).click();
     const f = feuille(page);
+    await f.getByLabel("à", { exact: true }).selectOption("11:00");
     await f.getByRole("radio", { name: "Sketch" }).check();
     await f.getByRole("checkbox", { name: "Gp Amour" }).check();
     await f.getByLabel("Note").fill("Avec la sono");
@@ -81,7 +82,7 @@ test.describe("AR, T5a : les créneaux de la Scène sont des réservations", () 
     await expect(dimanche.getByRole("listitem").filter({ hasText: "Danse · Gp Paix" })).toContainText("16:00");
     await expect(dimanche.getByRole("listitem").filter({ hasText: "Sketch" })).toHaveCount(0);
     await expect(dimanche.getByRole("listitem").filter({ hasText: "Chant" })).toHaveCount(0);
-    await expect(dimanche.getByRole("listitem").filter({ hasText: /17:00\s*Libre/ })).toHaveCount(1);
+    await expect(dimanche.getByRole("button", { name: "Réserver 17:00 – 18:00" })).toHaveCount(1);
 
     await dimanche.getByRole("listitem").filter({ hasText: "Danse · Gp Paix" }).getByRole("button", { name: /^Plus d'actions/ }).click();
     await page.getByRole("menuitem", { name: "Retirer" }).click();
@@ -127,14 +128,16 @@ test.describe("AR, T5b : dans Salles, la Scène d'une fête ouverte se réserve 
     await page.getByRole("button", { name: "Réserver une salle" }).click();
     const f = page.getByRole("dialog", { name: "Réserver une salle" });
     await f.getByLabel("Date").fill("2026-10-07");
-    await f.getByLabel("De").fill("18:00");
-    await f.getByLabel("À").fill("19:00");
+    await f.getByLabel("De", { exact: true }).fill("18:00");
+    await f.getByLabel("À", { exact: true }).fill("19:00");
     await f.locator('[data-salle="scene"]').click();
     await f.getByLabel("Pour quoi").fill("Répétition du chœur");
     const message = f.locator("[data-scene-fete]");
     await expect(message).toContainText("Pendant la saison de Noël 2026, la Scène se réserve depuis sa page.");
-    await expect(message.getByRole("link", { name: "Page de Noël 2026" })).toHaveAttribute("href", "/evenements/scene/noel");
+    await expect(message.getByRole("link", { name: "Page de Noël 2026" })).toHaveAttribute("href", /^\/evenements\/scene\/noel\/?$/);
     await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeDisabled();
+    await message.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `test-results-captures/t5b/${test.info().project.name}-salles-feuille.png`, animations: "disabled" });
     // La Grande salle, elle, se réserve depuis Salles ; la Scène aussi, hors de la saison.
     await f.locator('[data-salle="grande"]').click();
     await expect(message).toHaveCount(0);

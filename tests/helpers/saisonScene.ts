@@ -5,7 +5,7 @@ import { estGrandEcran, estTelephone } from "./agencement";
 // entière sur tablette et grands écrans ; sur téléphone, un résumé dont chaque ligne ouvre une
 // feuille avec ce réglage seul.
 
-export type ReglageSaison = "Jour J" | "Réservations" | "Jours et plages" | "Un créneau dure" | "Qui peut réserver";
+export type ReglageSaison = "Jour J" | "Réservations" | "Jours et plages" | "Qui peut réserver";
 
 /** Le résumé de la saison (téléphone). */
 export const resumeSaison = (page: Page) => page.getByRole("list", { name: "Réglages de la saison" });

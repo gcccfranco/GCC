@@ -2,7 +2,7 @@
 
 // La saison en résumé, sur téléphone (docs/spec-scene-paques-noel.md, P9, Q22 ; planche
 // `v18-scene-a-coord-avant-telephone`) : une ligne par réglage — Jour J, Réservations, Jours et
-// plages, Un créneau dure, Qui peut réserver — qui ouvre une feuille avec ce réglage seul. La
+// plages, Qui peut réserver — qui ouvre une feuille avec ce réglage seul. La
 // feuille est la carte de la saison réduite à ce réglage (`SaisonForm seul`) : même écriture à
 // chaque changement, même erreur sous le champ, rien d'écrit tant qu'elle s'affiche. Refermer la
 // feuille oublie un réglage refusé : le résumé dit ce qui est en base. « Terminé » enregistre d'abord la

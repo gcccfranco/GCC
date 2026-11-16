@@ -67,7 +67,7 @@ test("texte libre : rogné, 40 caractères, et égal à une valeur de la liste o
 const GROUPES_EDD = ["Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班"];
 const NOEL = {
   nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, ouvert: true,
-  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }], duree: 60,
+  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }],
   passages: [{ quoi: "Chant", qui: ["Gp Paix"], titre: "Ouverture" }],
   createdBy: "uid-ines", updatedAt: "2026-09-14T20:00:00Z",
 };
@@ -87,7 +87,7 @@ async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<
   await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
   return signInAs(page, who, creneauxEnReservations({ "programmes/x7Kq2": NOEL, ...docs }), chemin);
 }
-const ouvrirFeuille = async (page: Page, nom = "Réserver 14:00 – 15:00") => {
+const ouvrirFeuille = async (page: Page, nom = "Réserver 17:00 – 19:00") => {
   await page.getByRole("region", { name: "Dimanche 11 octobre", exact: true }).getByRole("button", { name: nom }).click();
   return page.getByRole("dialog");
 };
