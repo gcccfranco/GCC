@@ -306,10 +306,35 @@ Un go par lot ; le go d'un lot vaut pour toutes ses tranches ; une session orche
 - **T4b** : fiche d'un évènement (« Salle Bonté » à la place du lieu), modifier l'heure ou la salle relance SA8 ; les
   rules de `evenements/{id}` relues (champ `salle`).
 
-**Lot 5 — La Scène dans Salles** (après Noël 2026, pour Pâques 2027 ; AR9) : les créneaux d'une fête deviennent des
-réservations de la `scene` faites dans sa période et selon « Qui peut réserver » ; la grille de créneaux de la saison
-disparaît au profit des heures libres ; la page de la fête montre quand la scène est libre (AR8) ; le jour J peut
-recevoir des heures. **Spec détaillée à écrire après le 25/12/2026**, d'après ce que Noël aura montré ; go à part.
+**Lot 5 — La Scène dans Salles** (Timothée, 16/11/2026 au soir : « tu peux modifier et je reporterai tout à la main » ;
+AR19 à AR23 ci-dessous). Une session par tranche, chacune lance la suivante.
+
+| # | Décision | D'où |
+|---|---|---|
+| AR19 | **La Scène bascule maintenant, Noël 2026 compris** (remplace la date d'AR9). Aucune reprise automatique : Timothée reporte à la main les réservations de Noël déjà faites. Les anciens documents `programmes/{id}/creneaux` ne sont ni modifiés ni supprimés ; plus rien ne les lit, sauf la liste « À reporter » (AR23). | Timothée, 16/11/2026. |
+| AR20 | **Un créneau de fête est une réservation** de `reservations/{id}` avec `salle: "scene"` et quatre champs de plus : `fete` (id de l'édition, `noel-2026`), `qui` (valeurs de `QUI`, comme aujourd'hui), `note`, `libre` (SQ-B). `pour` reçoit le libellé des `qui` pour Salles. Les quatre fonctions `listCreneaux`, `createCreneau`, `updateCreneau`, `deleteCreneau` (`src/lib/firebase/programmes.ts`) gardent leur nom et leur type `Creneau` et lisent ou écrivent ces réservations (`runQuery` sur `fete ==` : index automatique) : la page de la fête, le Back-Office, le Calendrier et le tableau de bord suivent sans autre changement. | Décision déléguée (session de spec, 16/11) : le plus petit changement qui fait de la Scène une salle. |
+| AR21 | **La fête garde ses règles** : période, plages, « Qui peut réserver », fermeture à la main. Les rules les vérifient pour une réservation qui porte `fete` (`reservable(fete, qui)`, la coordination et les gestionnaires de planning sans limite, comme aujourd'hui). Une réservation de la `scene` **sans** `fete` suit les règles de toute salle. | S5, planche (« Scène ne sert qu'aux règles de la fête ») ; décision déléguée (session de spec, 16/11). |
+| AR22 | **Quand la scène est libre** (AR8) : la grille de créneaux de la saison reste, mais un créneau qui croise une autre occupation de la Grande salle ou de la Scène (emploi du temps fixe, réservation de Salles, évènement) s'affiche « Pris · <occupant> » au lieu de « Libre · Réserver ». Le refus d'un chevauchement (« Réserver », « Un autre moment », « Déplacer ») compare à toutes ces occupations, avec le message de SA8. Dans Salles, choisir la Scène pendant la période d'une fête ouverte affiche « Pendant la saison de <fête>, la Scène se réserve depuis sa page » avec le lien, au lieu des champs « Pour qui ». | AR6, AR8 ; décision déléguée (session de spec, 16/11). |
+| AR23 | **« À reporter »** : dans la gestion d'une fête au Back-Office (derrière `BACK_OFFICE`), une liste en lecture seule des anciens créneaux de l'édition (`programmes/{id}/creneaux`), chacun avec « Reporter », qui ouvre la feuille « Réserver » remplie (date, heures, quoi, qui, note) ; un créneau reporté (`depuisCreneau` = son id, écrit dans la réservation) disparaît de la liste. Rien n'est écrit sans que Timothée enregistre. | Pour qu'il reporte « à la main » sans recopier ; décision déléguée (session de spec, 16/11). |
+
+- **T5a — Les créneaux deviennent des réservations** : champs `fete`, `qui`, `note`, `libre`, `depuisCreneau`
+  (`Reservation`, `reservations.ts`) ; les quatre fonctions de `programmes.ts` (AR20) ; rules de `reservations/{id}`
+  (champs permis, `reservable(fete, qui)` repris de `programmes/{id}/creneaux`), miroir dans `access.ts`
+  (`canReserverSalle`, `canEditReservation` pour une réservation de fête : auteur, coordination ; `canReserverPour`
+  inchangé) ; Salles ne lit plus `listCreneaux` à part (les réservations de la Scène suffisent, `occupations.ts`). Tests
+  d'abord : `tests/salles-scene.spec.ts` (une réservation faite depuis la page de Noël apparaît dans Salles sur la
+  Scène et la Grande salle ; « Qui peut réserver » respecté) ; specs de la Scène existantes à faire passer
+  (`scene-paques-noel`, `scene-saison`, `scene-qui`, `scene-autre-moment`, `programme-scene`, `scene-des-fetes`) : leurs
+  routes simulées changent de collection.
+- **T5b — Quand la scène est libre** (AR22) : « Pris · <occupant> » dans la grille de la fête, refus contre toutes les
+  occupations, message de Salles quand on choisit la Scène pendant une saison. `critique-design` après (apparence).
+- **T5c — Le serveur et « À reporter »** : rappels (`src/app/api/cron/reminders/route.ts`, `sceneCreneaux`) et route
+  de conflit : la Scène passe par `/api/salles/conflit` ; `/api/scene/conflit` retirée (routes API : 20, `CLAUDE.md` et
+  la référence à jour) ; liste « À reporter » (AR23). Fin de lot : specs du lot, de la Scène et de la section Église.
+
+**Mise en ligne du lot 5** : publier `firestore.rules` (champs de fête dans `reservations/{id}`) avant de pousser ;
+puis Timothée reporte les réservations de Noël avec « À reporter ». Tant qu'il n'a pas reporté, la page de Noël
+n'affiche plus les anciennes réservations : pousser de préférence quand il a le temps de les reporter aussitôt.
 
 ## Tests Playwright (écrits d'abord)
 
@@ -593,3 +618,6 @@ T2b, T2c et T3a (apparence).
   formulaire, refus du déplacement ; rien à reprendre (les champs d'heure restent en « 03:00 PM » dans le navigateur
   de capture). Pas de `critique-design` : seuls des textes changent. Non regardés : thème sombre. **Lot 5** : après
   Noël 2026, spec à écrire ; aucune session lancée.
+- 16/11/2026 (soir) : **lot 5 avancé, sur décision de Timothée** (« tu peux modifier et je reporterai tout à la main ») :
+  la Scène bascule maintenant, Noël compris, sans reprise automatique. Spec du lot écrite (AR19 à AR23, T5a à T5c) ;
+  le lot AQ est fini, `src/app/evenements/scene/` est libre. T5a lancée dans une session neuve.
