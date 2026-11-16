@@ -650,13 +650,12 @@ test.describe("rappel de structure (Sections uniques)", () => {
     pastilles.forEach((p, i) => expect(p.nuances, `pastille ${i}`).toBe(p.pleine ? avecNuance[i] : 0));
     expect(pastilles.some((p) => p.pleine && p.nuances > 0)).toBe(true);
 
-    // Téléphone : seulement les pleines. Sinon toutes les pastilles et le titre du chant.
+    // Toutes les pastilles, à toutes les tailles ; le titre du chant seulement dès 640 px.
     const titre = rappel.locator("[data-rappel-titre]");
+    expect(pastilles.every((p) => p.visible)).toBe(true);
     if (telephone(page)) {
-      expect(pastilles.filter((p) => p.visible).every((p) => p.pleine)).toBe(true);
       await expect(titre).toBeHidden();
     } else {
-      expect(pastilles.every((p) => p.visible)).toBe(true);
       await expect(titre).toBeVisible();
       await expect(titre).toHaveText("Abba Père");
       expect(await titre.evaluate((el) => getComputedStyle(el).fontSize)).toBe("13px");
@@ -671,6 +670,18 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await page.mouse.click(ecran.width / 2, ecran.height / 2);
     await expect(page.getByRole("button", { name: "Quitter" })).toBeHidden({ timeout: 6000 });
     await expect(rappel).toBeVisible();
+  });
+
+  test("téléphone : le rappel montre toute la structure, les pleines sont les sections de la page (FR)", async ({ page }) => {
+    test.skip(!telephone(page), "propre au téléphone");
+    await ouvrirMode(page, [ABBA_NUANCES], { affichage: "unique" });
+    await pageSuivante(page);
+    const pastilles = await lirePastilles(page);
+    expect(pastilles, "les huit étapes, claires comprises").toHaveLength(ETAPES.length);
+    expect(pastilles.every((p) => p.visible), "aucune pastille cachée").toBe(true);
+    expect(pastilles.some((p) => !p.pleine), "des claires sont là").toBe(true);
+    const imprimees = await onStage(page, "[data-section]").evaluateAll((els) => els.flatMap((e) => e.getAttribute("data-section-uids")!.split(" ")));
+    expect(pastilles.flatMap((p, i) => (p.pleine ? [i] : []))).toEqual(ETAPES.flatMap((uid, i) => (imprimees.includes(uid) ? [i] : [])));
   });
 
   test("chant chinois : page 2, pleines = passages des sections de la page, titre chinois sur tablette et ordinateur (ZH)", async ({ page }) => {

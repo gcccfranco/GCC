@@ -638,10 +638,10 @@ export function StructureStrip({
   colonne?: boolean;
   /** Rappel (compacte) : uids des occurrences imprimées sur la page. Chaque passage
    *  qui en contient un est plein (fond de la section, nuance dessous) ; les autres
-   *  sont claires, et disparaissent sous 640 px. */
+   *  sont claires. */
   pleines?: ReadonlySet<string>;
-  /** Rappel (compacte) : « unique » = Sections uniques (pleines et claires, claires cachées
-   *  au téléphone) ; « joue » = Ordre joué : points (déjà joué), pleines (sur la page),
+  /** Rappel (compacte) : « unique » = Sections uniques (pleines et claires, toutes
+   *  gardées au téléphone) ; « joue » = Ordre joué : points (déjà joué), pleines (sur la page),
    *  claires (à venir), tout gardé au téléphone. */
   rappel?: "joue" | "unique";
   /** Partition (lot DP-D) : repères encadrés (lettre à l'encre, cadre de la couleur de section) à la place des pastilles rondes. */
@@ -710,7 +710,7 @@ export function StructureStrip({
               );
             }
             return (
-              <li key={i} className={colonne ? "flex items-center gap-3" : `flex flex-col items-center ${compacte ? `gap-1 ${pleines && rappel === "unique" && !pleine.has(i) ? "max-sm:hidden" : ""}` : "gap-1.5"}`}>
+              <li key={i} className={colonne ? "flex items-center gap-3" : `flex flex-col items-center ${compacte ? "gap-1" : "gap-1.5"}`}>
                 <span
                   data-pleine={pleine.has(i) || undefined}
                   data-repere-encadre={disposition === "partition" || undefined}

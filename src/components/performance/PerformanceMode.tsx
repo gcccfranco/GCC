@@ -353,7 +353,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
 // 12 px dessous, 8 px de marge) en haut des pages 2 et suivantes d'un chant (D11, RS-B).
 const RAPPEL_RESERVE = 50;
 /** Rappel de structure d'une page 2 ou suivante (Sections uniques) : titre du chant
- *  en tête dès 640 px, puis les pastilles ; sous 640 px, les seules pleines. */
+ *  en tête dès 640 px, puis les pastilles (toute la structure, à toutes les tailles). */
 function RappelRangee({ titre, steps, pleines, rappel, cle }: { titre?: string; steps: SectionOccurrence[]; pleines: ReadonlySet<string>; rappel: "joue" | "unique"; cle?: React.ReactNode }) {
   // A12, CI-22 : barre escamotée, la rangée porte aussi le carré de tonalité (`cle`) à droite ; titre, structure et
   // carré sur une seule ligne, centrés, le titre visible à toutes les tailles.
