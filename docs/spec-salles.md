@@ -15,8 +15,10 @@
   la réservation de la scène. En fait il faudrait revoir tout le système de réservation ainsi que sa page. L'onglet
   évènement est à changer ? » La planche porte donc sur **tout le système de réservation, Scène comprise, et sa page**,
   et sur la place de l'onglet Évènements.
-- **Statut** : **cadrage**, faits S-Q1 à S-Q4 répondus. **Planche lancée le 16/11/2026** (accord de Timothée : « Oui »),
-  sujet `salles-reservation` ; ensuite les décisions et les tranches ici, puis le code sur go. **Pas de go.**
+- **Statut** : **planche validée par Timothée le 16/11/2026** (« Église, je valide ») : la piste retenue est en tête de
+  `docs/planches/planche-salles-reservation.html`. **Reste à écrire ici : les règles, le modèle, les tranches et les
+  tests** (§ « Reprise »), puis demander le go. **Pas de go pour AR** : le « go pour coder » du 16/11 répondait à la
+  question sur le lot Scène de Noël (AQ) et précède cette spec (`CLAUDE.md`, « Go » : après la spec).
 - **Base de code** : `claude/corrections-design` à `4f1134e`.
 
 ## Ce que le code montre
@@ -67,7 +69,38 @@ changer tout seul ces jours-là, sans exception à saisir.
 | Salle Amour | occupée | libre | occupée par le groupe Amour (confirmé) |
 | Grande salle | groupe Joie | Intergroupe : les cinq groupes | Interfranco : les trois groupes francophones |
 
-## Principes proposés (à valider après la planche)
+## Décisions (16/11/2026)
+
+| # | Décision | D'où |
+|---|---|---|
+| AR1 | **Piste retenue : A, avec la grille de B en deuxième vue.** Salles a deux vues, « Liste · Grille » : la liste des salles avec l'état en mots et un ruban (A), la grille salles × heures (B). | Timothée : « J'aime beaucoup la piste A, j'aime beaucoup le calendrier de la piste B pour avoir un aperçu global des réservations » ; « je valide » (planche, section « Piste retenue »). |
+| AR2 | L'entrée de la barre s'appelle **« Église »** (icône d'église), sous-titre « Évènements, salles et fêtes » ; rail **« Évènements · Salles · Pâques · Noël »** (« Évènements » remplace « Calendrier »). Les adresses ne changent pas (`/evenements/…`). | Timothée : « il y a plusieurs choses de mélange dedans » ; « Église, je valide ». |
+| AR3 | Liste par défaut au téléphone, Grille par défaut à la tablette en paysage et à l'ordinateur ; le choix est retenu sur l'appareil. | Validé avec la planche. |
+| AR4 | Tout membre connecté réserve ; date, « de », « à » libres, pas de créneaux imposés ; un chevauchement est refusé. | Timothée. |
+| AR5 | Une réunion ou un évènement réserve sa salle. | Timothée. |
+| AR6 | La Scène est dans la Grande salle : ce qui occupe l'une occupe l'autre. | Timothée. |
+| AR7 | Les salles, leurs deux noms, l'emploi du temps du dimanche et ses trois variantes : tableaux ci-dessus. | Timothée. |
+| AR8 | De la piste C : la feuille « Réserver » commence par le moment puis propose les salles libres en tête, les occupées non choisissables avec leur raison et « Décaler » ; la page d'une fête montre quand la scène est libre. | Recommandation annoncée à Timothée avec la planche, validée avec elle. |
+| AR9 | **Propositions retenues sans objection** (annoncées à Timothée le 16/11 : « je garde les propositions suivantes ») : la Scène bascule dans Salles **après Noël 2026**, et d'ici là Salles lit ses créneaux en lecture seule ; neuf lignes (huit salles et la Scène), la « salle à côté de réunion » tenue pour la Salle imprimante ; noms de salles en français dans les deux langues, sauf 小班, 中班, 大班, 高班 ; Salles invisible sans compte ; « Pour qui » en liste avec « Autre… » ; champ « Salle de l'église » (et « Ailleurs ») dans les formulaires ; réservations répétées par un membre : plus tard. | Planche, « Questions à trancher » et « Reste à trancher ». Décision déléguée, à corriger par Timothée. |
+
+Les autres propositions de la section « Questions à trancher » de la planche (jour J d'une fête, saisie de l'emploi
+du temps en un modèle à trois variantes avec exceptions datées, repère « à 14:00 », couleurs) se tranchent en écrivant
+les règles, selon la proposition écrite (« décision déléguée »), sauf si le choix est difficile à défaire.
+
+## Reprise (pour la session qui écrit la suite)
+
+1. Lire ce fichier, la section « Piste retenue » de la planche (ouvrir ses quatre cadres par capture d'élément, pas la
+   pleine page) et, par extraits, `src/lib/scene/saison.ts`, `src/types/programme.ts`, `firestore.rules` (`programmes`),
+   `src/lib/calendrier/entrees.ts`, `src/lib/navigation.ts`, `src/components/evenements/EvenementsTabs.tsx`.
+2. Écrire ici : modèle (salles et emploi du temps dans le code ou en base ; collection des réservations en REST),
+   règles numérotées, permissions en double (`access.ts`, `firestore.rules`), libellés FR et 中文, tranches et tests
+   Playwright (cinq projets pour l'agencement), ce qui se fait à la mise en ligne.
+3. Découper selon « Lots pressentis » ; le renommage de l'entrée (« Église », rail) peut être une première petite
+   tranche. Le lot de la Scène attend la fin de la saison de Noël (AR9).
+4. Demander le go à Timothée, lot par lot. Le lot AQ (`docs/spec-scene-qui-autre-moment.md`) se code en parallèle
+   dans `src/app/evenements/scene/` : ne pas y toucher avant sa fin.
+
+## Principes proposés (repris par les décisions ci-dessus)
 
 | # | Principe |
 |---|---|
@@ -129,3 +162,6 @@ changer tout seul ces jours-là, sans exception à saisir.
   nom possible : « Agenda »), rail « Évènements · Salles · Pâques · Noël », adresse `/evenements` inchangée ; Liste par
   défaut au téléphone, Grille par défaut en grand. Une section « Piste retenue » est ajoutée à la planche. Restent sans
   réponse : la bascule de la Scène (proposé : après Noël), le nombre de salles (neuf ou dix), les noms en 中文.
+- 16/11/2026 : **planche validée** (« Église, je valide et tu peux go pour coder ») : décisions AR1 à AR9 ci-dessus.
+  Le go porte sur le lot AQ (question posée : « Go pour le lot Scène de Noël ? ») ; AR attend sa spec. La session de
+  cadrage a atteint son plafond de contexte : une session neuve écrit la suite (§ « Reprise ») et demande le go.
