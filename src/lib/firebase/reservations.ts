@@ -23,6 +23,14 @@ export interface Reservation {
   auteurNom: string;
   createdAt: string;
   updatedAt: string;
+  // Lot 5, T5a (AR20) : un créneau de fête est une réservation de la Scène. Ces champs n'existent que sur elle.
+  /** Id du programme (l'édition de la fête, `noel-2026`) ; présent = les règles de la fête s'appliquent (AR21). */
+  fete?: string;
+  /** Valeurs de QUI (ou « Autre… » en texte) ; `pour` en reçoit le libellé, pour Salles. */
+  qui?: string[];
+  note?: string;
+  /** Un autre moment (SQ-B), hors de la grille de la saison. */
+  libre?: boolean;
 }
 
 function fromFsReservation(raw: RawDoc): Reservation {
@@ -32,7 +40,20 @@ function fromFsReservation(raw: RawDoc): Reservation {
     id: raw.name.split("/").pop()!,
     salle: s("salle") as SalleId, date: s("date"), debut: s("debut"), fin: s("fin"), pour: s("pour"), quoi: s("quoi"),
     auteurUid: s("auteurUid"), auteurNom: s("auteurNom"), createdAt: s("createdAt"), updatedAt: s("updatedAt"),
+    ...(typeof d.fete === "string" && { fete: d.fete, qui: (d.qui as string[]) ?? [], note: s("note") }),
+    ...(d.libre === true && { libre: true }),
   };
+}
+
+/** Les réservations d'une fête (ses créneaux de scène, AR20), par date puis heure. Un filtre d'égalité seul, sans
+ *  `orderBy` : index automatique. Lecture en échec : une erreur. */
+export async function listReservationsDeFete(fete: string): Promise<Reservation[]> {
+  const rows = await lireRequete("", {
+    from: [{ collectionId: "reservations" }],
+    where: { fieldFilter: { field: { fieldPath: "fete" }, op: "EQUAL", value: { stringValue: fete } } },
+  });
+  if (!rows) throw new Error("Réservations illisibles");
+  return rows.map(fromFsReservation).sort((a, b) => (a.date + a.debut).localeCompare(b.date + b.debut));
 }
 
 /** Les réservations de `du` à `au` compris (« AAAA-MM-JJ »), par date. Lecture en échec : une erreur. */

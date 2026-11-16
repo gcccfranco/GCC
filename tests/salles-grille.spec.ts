@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, estTelephone, interdireDialoguesNatifs, verifierSansDebordement } from "./helpers/agencement";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Chantier AR (docs/spec-salles.md), lot 2, tranche T2c : la vue Grille (SA3 : neuf colonnes, 8:00 à 22:00, un bloc
 // par occupation à sa hauteur ; au téléphone, défilement horizontal, colonne des heures figée), le sélecteur
@@ -33,7 +34,7 @@ async function ouvrir(page: Page, { vue, zh = false }: { vue?: "liste" | "grille
       if (v && !sessionStorage.getItem("vue-posee")) { localStorage.setItem("gcc-salles-vue", v); sessionStorage.setItem("vue-posee", "1"); }
     } catch {}
   }, { v: vue, z: zh });
-  await signInAs(page, MEMBRE, DOCS, "/evenements/salles");
+  await signInAs(page, MEMBRE, creneauxEnReservations(DOCS), "/evenements/salles");
 }
 
 const selecteur = (page: Page) => page.getByRole("tablist", { name: /^(Vue|视图)$/ });

@@ -249,7 +249,8 @@ export function tientUnGroupe(user: AuthUser | null, profile: { referentDe?: str
 
 export { audiencesNotifiables };
 
-/** Créneau sur scène : son auteur + la coordination. Miroir : programmes/{id}/creneaux dans firestore.rules. */
+/** Créneau sur scène : son auteur + la coordination. Lot 5 (AR20) : un créneau est une réservation de la Scène, même
+ *  règle que canEditReservation. Miroir : match /reservations/{id} dans firestore.rules. */
 export function canEditCreneau(
   user: AuthUser,
   profile: ProfilCoordination | null,
@@ -266,12 +267,14 @@ export function canVoirSalles(user: AuthUser | null): boolean {
   return !!user;
 }
 
-/** Réserver une salle : tout membre connecté (AR4). */
+/** Réserver une salle : tout membre connecté (AR4). Une réservation de fête (la Scène, `fete`, lot 5, AR21) passe en
+ *  plus par canReserverPour, comme `feteReservable()` dans firestore.rules. */
 export function canReserverSalle(user: AuthUser | null): boolean {
   return !!user;
 }
 
-/** Modifier ou supprimer une réservation : son auteur ou la coordination (SA10). */
+/** Modifier ou supprimer une réservation : son auteur ou la coordination (SA10). Une réservation de fête (lot 5) de
+ *  même ; l'auteur qui la modifie passe aussi par canReserverPour (rules : `feteReservable()`, `fete` inchangée). */
 export function canEditReservation(
   user: AuthUser | null,
   profile: ProfilCoordination | null,
@@ -288,7 +291,7 @@ export function canEditReservation(
  *  est ouverte et que chaque groupe est permis (liste vide = tous).
  *  Lot RS (`backOffice`, Q12) : la scène est réservée au Comité Orga et aux gestionnaires de planning, qui réservent
  *  toujours (`gereUnPlanning`).
- *  Miroir serveur : reservable() sous programmes/{id}/creneaux, firestore.rules. */
+ *  Miroir serveur : reservable() (anciens créneaux) et feteReservable() (réservations de fête, lot 5), firestore.rules. */
 export function canReserverPour(
   user: AuthUser | null,
   profile: ProfilCoordination | null,

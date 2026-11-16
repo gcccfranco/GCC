@@ -9,10 +9,12 @@ import {
 } from "./setlists";
 import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import { idEdition, type Fete } from "@/lib/scene/fetes";
+import { libelleQui } from "@/lib/fetes/qui";
+import { listReservationsDeFete, type Reservation } from "./reservations";
 import type { Creneau, Duree, Passage, Plage, Programme } from "@/types/programme";
 
-// Programmes de scène (lot 3 bis) : programmes/{id} et programmes/{id}/creneaux/{cid},
-// en REST comme le reste. Droits : firestore.rules (isCoordination) et
+// Programmes de scène (lot 3 bis) : programmes/{id} ; leurs créneaux sont des réservations de la Scène depuis le lot 5
+// du chantier AR (§ Créneaux ci-dessous). En REST comme le reste. Droits : firestore.rules (isCoordination) et
 // src/lib/access.ts (isCoordination, canEditCreneau).
 
 /** Événement `window` émis après toute écriture : la barre d'onglets se recharge. */
@@ -58,24 +60,6 @@ function fromFsProgramme(raw: RawDoc & { updateTime?: string }): Programme {
   };
 }
 
-function fromFsCreneau(raw: RawDoc): Creneau {
-  const { id, data } = docData(raw);
-  return {
-    id,
-    dimanche: (data.dimanche as string) ?? "",
-    debut: (data.debut as string) ?? "",
-    fin: (data.fin as string) ?? "",
-    ...(data.libre === true && { libre: true }),
-    quoi: (data.quoi as string) ?? "",
-    qui: (data.qui as string[]) ?? [],
-    note: (data.note as string) ?? "",
-    auteurUid: (data.auteurUid as string) ?? "",
-    auteurNom: (data.auteurNom as string) ?? "",
-    createdAt: (data.createdAt as string) ?? "",
-    updatedAt: (data.updatedAt as string) ?? "",
-  };
-}
-
 async function runQuery(parent: string, collectionId: string, orderBy: string): Promise<RawDoc[]> {
   return (await lireRequete(parent, {
     from: [{ collectionId }],
@@ -105,7 +89,8 @@ async function patch(path: string, data: Record<string, unknown>, version?: stri
   const res = await fetch(`${FS_BASE}/${path}?${mask}${precondition}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({ fields: toFsFields(data) }),
+    // Un champ `undefined` est dans le masque mais pas dans le corps : Firestore le retire (pas de `null` écrit).
+    body: JSON.stringify({ fields: toFsFields(Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined))) }),
   });
   viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   if (version && res.status === 400) {
@@ -185,15 +170,37 @@ export async function updateProgramme(
 }
 
 // ─── Créneaux ────────────────────────────────────────────────────────────────
+// Lot 5 du chantier AR, T5a (docs/spec-salles.md, AR19, AR20) : un créneau de fête est une réservation de la Scène,
+// `reservations/{id}` avec `salle: "scene"` et `fete` = l'id du programme ; `dimanche` s'y écrit `date`, et `pour`
+// reçoit le libellé des `qui` pour Salles. Mêmes noms et même type `Creneau` qu'avant : les écrans suivent. Les anciens
+// `programmes/{id}/creneaux` ne sont plus lus ici (« À reporter », AR23, les lira à part). Droits : firestore.rules
+// (match /reservations/{id}, feteReservable) et src/lib/access.ts (canReserverPour, canEditReservation).
 
-/** Créneaux d'un programme, par dimanche croissant (puis heure, côté client). */
+function versCreneau(r: Reservation): Creneau {
+  return {
+    id: r.id, dimanche: r.date, debut: r.debut, fin: r.fin, ...(r.libre && { libre: true }), quoi: r.quoi, qui: r.qui ?? [],
+    note: r.note ?? "", auteurUid: r.auteurUid, auteurNom: r.auteurNom, createdAt: r.createdAt, updatedAt: r.updatedAt,
+  };
+}
+
+/** Le libellé des `qui` (en français, comme un texte d'« Autre… »), 60 caractères au plus (SA7). */
+function pourDe(qui: string[]): string {
+  return qui.map((q) => libelleQui(q)).join(", ").slice(0, 60);
+}
+
+/** Les champs d'un créneau, écrits dans une réservation : `dimanche` devient `date`, `qui` donne `pour`. */
+function versReservation(data: Partial<Omit<Creneau, "id">>): Record<string, unknown> {
+  const { dimanche, ...reste } = data;
+  return { ...reste, ...(dimanche !== undefined && { date: dimanche }), ...(data.qui && { pour: pourDe(data.qui) }) };
+}
+
+/** Créneaux d'un programme, par dimanche puis heure. Lecture en échec : aucun créneau, comme avant. */
 export async function listCreneaux(programmeId: string): Promise<Creneau[]> {
-  const rows = (await runQuery(`programmes/${programmeId}`, "creneaux", "dimanche")).map(fromFsCreneau);
-  return rows.sort((a, b) => (a.dimanche + a.debut).localeCompare(b.dimanche + b.debut));
+  return (await listReservationsDeFete(programmeId).catch(() => [])).map(versCreneau);
 }
 
 export async function createCreneau(programmeId: string, data: Omit<Creneau, "id">): Promise<string> {
-  return post(`programmes/${programmeId}/creneaux`, data as unknown as Record<string, unknown>);
+  return post("reservations", { salle: "scene", fete: programmeId, ...versReservation(data) });
 }
 
 export async function updateCreneau(
@@ -201,9 +208,9 @@ export async function updateCreneau(
   id: string,
   data: Partial<Omit<Creneau, "id">>,
 ): Promise<void> {
-  await patch(`programmes/${programmeId}/creneaux/${id}`, { ...data, updatedAt: new Date().toISOString() });
+  await patch(`reservations/${id}`, { ...versReservation(data), updatedAt: new Date().toISOString() });
 }
 
 export async function deleteCreneau(programmeId: string, id: string): Promise<void> {
-  await remove(`programmes/${programmeId}/creneaux/${id}`);
+  await remove(`reservations/${id}`);
 }

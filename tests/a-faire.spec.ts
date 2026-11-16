@@ -8,6 +8,7 @@ import { GRILLES } from "../src/lib/planning/grilles";
 import { aFaire, filtrer, type EntreesAFaire, type LigneAFaire } from "../src/lib/tableauDeBord/aFaire";
 import type { Evenement } from "../src/types/evenement";
 import type { Creneau } from "../src/types/programme";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Piste A, BO-B (docs/spec-back-office-piste-a.md, BO6) : l'écran « À faire » de /back-office, qui remplace le
 // tableau de bord. D'abord la fonction pure (`aFaire`, `filtrer`), puis les écrans sur les cinq dispositions
@@ -278,7 +279,7 @@ const sansSheet = (page: Page) =>
 async function ouvrir(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>> = JEU) {
   await page.clock.setFixedTime(new Date("2026-10-24T10:00:00"));
   await sansSheet(page);
-  return signInAs(page, qui, docs, "/back-office");
+  return signInAs(page, qui, creneauxEnReservations(docs), "/back-office");
 }
 
 const lignes = (page: Page) => page.getByTestId("ligne-a-faire");

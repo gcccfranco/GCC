@@ -1,11 +1,11 @@
 // Lecture des sources de Salles (docs/spec-salles.md, § Modèle, lot 2) : les services du planning (pour la variante du
-// dimanche, AR13) et les éditions affichées des fêtes avec leurs créneaux de scène (SA13, lecture seule), comme le
+// dimanche, AR13) et les éditions affichées des fêtes (jour J ; leurs créneaux de scène sont des réservations depuis le lot 5), comme le
 // Calendrier (`src/lib/calendrier/charger.ts`). Une source en panne n'empêche pas l'autre : `echec` le dit. Firestore
 // en REST seulement. Lot 4 : les évènements et réunions qui portent une salle (AR15), lus comme le Calendrier ; la
 // vérification d'un formulaire d'évènement (SA12) lit les occupations d'un seul jour (`occupationsPourEvenement`).
 
 import { listEvenements } from "@/lib/firebase/evenements";
-import { listCreneaux, listProgrammes } from "@/lib/firebase/programmes";
+import { listProgrammes } from "@/lib/firebase/programmes";
 import { listReservations, type Reservation } from "@/lib/firebase/reservations";
 import { addDays } from "@/lib/taches/echeances";
 import { loadPlanningData, type PlanningData } from "@/lib/planning/names";
@@ -37,12 +37,10 @@ async function chargerEvenements(voir: (e: Evenement) => boolean): Promise<Evene
   }));
 }
 
-/** Les éditions affichées des fêtes et leurs créneaux de scène. */
+/** Les éditions affichées des fêtes (jour J, page d'un créneau). Lot 5 (AR20) : leurs créneaux de scène sont des
+ *  réservations, lues avec les autres ; plus de lecture à part. */
 async function chargerScene(today: string): Promise<SourcesSalles["scene"]> {
-  const programmes = await listProgrammes();
-  return Promise.all(editionsAffichees(programmes, today).map(async ({ programme }) => ({
-    programme: programme!, creneaux: await listCreneaux(programme!.id),
-  })));
+  return editionsAffichees(await listProgrammes(), today).map(({ programme }) => ({ programme: programme! }));
 }
 
 export async function chargerSalles(today: string, voir: (e: Evenement) => boolean = () => true): Promise<{ sources: SourcesSalles; echec: boolean }> {

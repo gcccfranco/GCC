@@ -2,7 +2,8 @@ import { expect, test } from "@playwright/test";
 import { SALLES, lieuxLies } from "../src/lib/salles/salles";
 import { occupationsFixes, varianteDu } from "../src/lib/salles/emploi";
 import { croise, etatA, etatEnMots, jourJDu, nomOccupant, occupationsDe, occupationsDu, type Occupation, type SourcesSalles } from "../src/lib/salles/occupations";
-import type { Creneau, Programme } from "../src/types/programme";
+import type { Reservation } from "../src/lib/firebase/reservations";
+import type { Programme } from "../src/types/programme";
 
 // Salles, lot 2, tranche T2a (docs/spec-salles.md, § Modèle, SA1, SA2, SA13, AR6, AR7, AR13, AR14) : le modèle et les
 // fonctions pures, sans écran. Aucun nom réel : auteurs inventés pour ces tests.
@@ -20,8 +21,9 @@ const tempsDeGroupe = (date: string, variante: Parameters<typeof occupationsFixe
 const programme = (x: Partial<Programme> = {}): Programme => ({
   id: "noel-2026", nom: "Noël", jourJ: NOEL, debut: "2026-11-01", passages: [], createdBy: "u", updatedAt: "", fete: "noel", annee: 2026, ...x,
 });
-const creneau = (x: Partial<Creneau>): Creneau => ({
-  id: "c1", dimanche: DIMANCHE, debut: "17:00", fin: "18:00", quoi: "Danse", qui: ["Gp Paix"], note: "",
+/** Un créneau de scène : depuis le lot 5 (AR20), une réservation de la Scène qui porte `fete`. */
+const creneau = (x: Partial<Reservation>): Reservation => ({
+  id: "c1", salle: "scene", fete: "noel-2026", date: DIMANCHE, debut: "17:00", fin: "18:00", pour: "Gp Paix", quoi: "Danse", qui: ["Gp Paix"], note: "",
   auteurUid: "u-ysolde", auteurNom: "Ysolde", createdAt: "", updatedAt: "", ...x,
 });
 const sources = (x: Partial<SourcesSalles> = {}): SourcesSalles => ({ services: [], scene: [], ...x });
@@ -103,7 +105,7 @@ test.describe("Salles (T2a) : le modèle", () => {
   test("jour J d'une fête : Grande salle et Scène occupées toute la journée, l'emploi fixe de la Grande salle remplacé (AR14)", () => {
     const dimancheNoel = "2026-12-27";
     const p = programme({ jourJ: dimancheNoel });
-    const o = occupationsDu(dimancheNoel, sources({ scene: [{ programme: p, creneaux: [] }] }));
+    const o = occupationsDu(dimancheNoel, sources({ scene: [{ programme: p }] }));
     const grande = occupationsDe(o, "grande");
     expect(grande).toHaveLength(1);
     expect(grande[0]).toMatchObject({ source: "fete", debut: "00:00", fin: "24:00" });
@@ -112,16 +114,16 @@ test.describe("Salles (T2a) : le modèle", () => {
     expect(occupationsDe(o, "scene")).toEqual(grande);
     // Les autres salles gardent leur emploi du temps.
     expect(plages(occupationsDe(o, "fidelite"))).toEqual(["13:00-14:30", "15:30-17:00"]);
-    expect(jourJDu(dimancheNoel, [{ programme: p, creneaux: [] }])).toBe("noel");
-    expect(jourJDu(DIMANCHE, [{ programme: p, creneaux: [] }])).toBeNull();
+    expect(jourJDu(dimancheNoel, [{ programme: p }])).toBe("noel");
+    expect(jourJDu(DIMANCHE, [{ programme: p }])).toBeNull();
     // Un brouillon n'est jamais affiché.
-    const brouillon = occupationsDu(dimancheNoel, sources({ scene: [{ programme: { ...p, ouvert: false }, creneaux: [] }] }));
+    const brouillon = occupationsDu(dimancheNoel, sources({ scene: [{ programme: { ...p, ouvert: false } }] }));
     expect(occupationsDe(brouillon, "grande").map((x) => x.source)).toEqual(["fixe", "fixe", "fixe", "fixe"]);
   });
 
   test("un créneau de scène occupe la Scène et la Grande salle, en lecture seule (SA13)", () => {
     const c = creneau({ debut: "14:00", fin: "15:00" });
-    const o = occupationsDu(DIMANCHE, sources({ scene: [{ programme: programme(), creneaux: [c, creneau({ id: "c2", dimanche: "2026-11-29" })] }] }));
+    const o = occupationsDu(DIMANCHE, sources({ scene: [{ programme: programme() }], reservations: [c, creneau({ id: "c2", date: "2026-11-29" })] }));
     const scene = o.filter((x) => x.source === "scene");
     expect(scene).toHaveLength(1);
     expect(scene[0]).toMatchObject({ salle: "scene", debut: "14:00", fin: "15:00", id: "c1", auteurNom: "Ysolde", lien: "/evenements/scene/noel" });
@@ -132,7 +134,7 @@ test.describe("Salles (T2a) : le modèle", () => {
     expect(occupationsDe(o, "grande").filter((x) => croise(x, scene[0])).map((x) => nomOccupant(x, "fr")))
       .toEqual(["Groupe Joie", "Danse · Gp Paix"]);
     // Les créneaux d'un brouillon ne comptent pas.
-    const b = occupationsDu(DIMANCHE, sources({ scene: [{ programme: programme({ ouvert: false }), creneaux: [c] }] }));
+    const b = occupationsDu(DIMANCHE, sources({ scene: [{ programme: programme({ ouvert: false }) }], reservations: [c] }));
     expect(b.filter((x) => x.source === "scene")).toEqual([]);
   });
 
@@ -177,14 +179,14 @@ test.describe("Salles (T2a) : le modèle", () => {
     expect(etatEnMots(e, "zh")).toBe("与大厅同用：中文崇拜，至 17:00");
     expect(etatA(o, "grande", "15:30")).toMatchObject({ avecGrande: false });
     // Un créneau de scène vu depuis la Scène elle-même : pas « Avec la Grande salle ».
-    const s = occupationsDu(DIMANCHE, sources({ scene: [{ programme: programme(), creneaux: [creneau({})] }] }));
+    const s = occupationsDu(DIMANCHE, sources({ scene: [{ programme: programme() }], reservations: [creneau({})] }));
     expect(etatEnMots(etatA(s, "scene", "17:30"), "fr")).toBe("Danse · Gp Paix jusqu'à 18:00");
     expect(etatEnMots(etatA(s, "grande", "17:30"), "fr")).toBe("Danse · Gp Paix jusqu'à 18:00");
   });
 
   test("jour J : l'état dit la fête sans heure de fin", () => {
     const p = programme({ jourJ: NOEL });
-    const o = occupationsDu(NOEL, sources({ scene: [{ programme: p, creneaux: [] }] }));
+    const o = occupationsDu(NOEL, sources({ scene: [{ programme: p }] }));
     expect(etatEnMots(etatA(o, "grande", "08:00"), "fr")).toBe("Noël, jour J");
     expect(etatEnMots(etatA(o, "scene", "20:00"), "fr")).toBe("Avec la Grande salle : Noël, jour J");
     expect(etatEnMots(etatA(o, "bonte", "08:00"), "fr")).toBe("Libre toute la journée");

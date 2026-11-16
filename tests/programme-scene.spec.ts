@@ -8,6 +8,7 @@ import {
 import { conflictKey, conflictMessage } from "../src/lib/scene/conflit";
 import { quiCategory, sceneReminder } from "../src/lib/scene/rappels";
 import { reminderBody } from "../src/lib/push/reminderMessage";
+import { creneauEnReservation, creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Lot 3 bis (docs/spec-programme-scene.md) : section Évènements, onglet
 // unique « Scène » nommé comme le programme affiché (un seul à la fois), géré en haut
@@ -126,7 +127,7 @@ const choisirSemaine = (page: import("@playwright/test").Page, debut: RegExp) =>
 
 async function openNoel(page: import("@playwright/test").Page, who: FakeProfile, today: string, docs: Record<string, Record<string, unknown>> = {}) {
   await page.clock.setFixedTime(new Date(`${today}T10:00:00`));
-  return signInAs(page, who, { "programmes/noel": NOEL, ...docs }, sceneDe(who));
+  return signInAs(page, who, creneauxEnReservations({ "programmes/noel": NOEL, ...docs }), sceneDe(who));
 }
 
 test("entraînements : une semaine par dimanche réservable (saison par défaut, lot U1), en créneaux d'1 h libres, jamais le jour J", async ({ page }) => {
@@ -167,9 +168,9 @@ test("réserver : la feuille reprend le créneau choisi dans la grille (lot U1),
   // Pâques · Noël, P6 : sur sa propre réservation, « à moi » remplace son nom.
   await expect(ligne).toContainText("à moi");
   await expect(dimanche.getByRole("button", { name: "Réserver 17:00 – 18:00" })).toHaveCount(0);
-  const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/noel/creneaux/"));
+  const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"));
   expect(created?.data).toMatchObject({
-    dimanche: "2026-10-11", debut: "17:00", fin: "18:00", quoi: "Danse", qui: ["Gp Joie"], note: "Avec la sono",
+    date: "2026-10-11", debut: "17:00", fin: "18:00", quoi: "Danse", qui: ["Gp Joie"], note: "Avec la sono",
     auteurUid: "uid-jo", auteurNom: "Jo L.",
   });
 });
@@ -178,14 +179,14 @@ test("réserver : un chevauchement est refusé à la relecture, rien n'est écri
   const db = await openNoel(page, JO, "2026-10-01");
   await page.getByRole("region", { name: "Dimanche 4 octobre" }).getByRole("button", { name: "Réserver 18:00 – 19:00" }).click();
   // Alice réserve 17:00–18:30 pendant que la feuille de Jo est ouverte : la relecture le voit.
-  db.set("programmes/noel/creneaux/c1", C_ALICE);
+  db.set("reservations/c1", creneauEnReservation("noel", C_ALICE));
   const feuille = page.getByRole("dialog");
   await feuille.getByRole("radio", { name: "Sketch" }).check();
   await feuille.getByRole("checkbox", { name: "Gp Paix" }).check();
   await feuille.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(feuille.getByText(/chevauche/)).toContainText("17:00 – 18:30");
   // Seules les écritures du programme comptent : `:commit` est l'envoi quotidien du comptage d'usage (docs/spec-comptage-usage.md).
-  expect(db.writes.filter((w) => w.method === "POST" && w.path.startsWith("programmes/"))).toHaveLength(0);
+  expect(db.writes.filter((w) => w.method === "POST" && /^(programmes|reservations)\//.test(w.path))).toHaveLength(0);
 });
 
 test("droits : l'auteur et la coordination modifient ou retirent un créneau, pas un autre membre", async ({ page }) => {
@@ -207,7 +208,7 @@ test("droits : la coordination retire le créneau d'un autre membre", async ({ p
   await page.getByRole("alertdialog").getByRole("button", { name: "Retirer", exact: true }).click();
   await expect(bloc.getByText("Chant · EDD 中班")).toHaveCount(0);
   await expect(bloc.getByRole("button", { name: "Réserver 17:00 – 18:00" })).toBeVisible();
-  expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("programmes/noel/creneaux/c1");
+  expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("reservations/c1");
 });
 
 test("deux créneaux qui se chevauchent sont marqués pour tout le monde", async ({ page }) => {
@@ -329,8 +330,8 @@ test("course perdue : un créneau enregistré au même moment chevauche le mien 
   });
   // Alice enregistre un créneau qui chevauche pendant que Jo valide : il apparaît
   // juste avant l'écriture de Jo, après sa relecture.
-  await page.route(/firestore\.googleapis\.com.*\/creneaux(\?|$)/, async (route) => {
-    if (route.request().method() === "POST") db.set("programmes/noel/creneaux/race", { ...C_ALICE, dimanche: "2026-10-11" });
+  await page.route(/firestore\.googleapis\.com.*\/reservations(\?|$)/, async (route) => {
+    if (route.request().method() === "POST") db.set("reservations/race", creneauEnReservation("noel", { ...C_ALICE, dimanche: "2026-10-11" }));
     await route.fallback();
   });
   await choisirSemaine(page, /^11 oct\./);
@@ -376,7 +377,7 @@ const DEUX = {
 /** Écritures de la scène. La connexion écrit aussi `notifPrefs/{uid}` (la
  *  langue), qui ne regarde pas les programmes : on ne compte que ceux-ci. */
 function ecritures(db: FakeDb, method?: string) {
-  return db.writes.filter((w) => w.path.startsWith("programmes") && (!method || w.method === method));
+  return db.writes.filter((w) => /^(programmes|reservations)/.test(w.path) && (!method || w.method === method));
 }
 
 async function ouvrirScene(
@@ -387,7 +388,7 @@ async function ouvrirScene(
   chemin = sceneDe(who),
 ) {
   await page.clock.setFixedTime(new Date(`${today}T10:00:00`));
-  return signInAs(page, who, docs, chemin);
+  return signInAs(page, who, creneauxEnReservations(docs), chemin);
 }
 
 test("état d'un programme : à venir, ouvert, passé, archivé", () => {

@@ -4,6 +4,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { interdireDialoguesNatifs } from "./helpers/agencement";
 import { versToutesLesReservations } from "./helpers/saisonScene";
 import { horsGrille, saisonDe, semainesDe, lignesDuJour } from "../src/lib/scene/saison";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Lot AQ, tranche SQ-B (docs/spec-scene-qui-autre-moment.md) : « Réserver un autre moment ».
 // Captures : test-results-captures/sq-b/<projet>-<fr|zh>-<volet|feuille>.png (hors de test-results/, que Playwright vide).
@@ -30,11 +31,11 @@ async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<
   interdireDialoguesNatifs(page);
   if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
-  return signInAs(page, who, { "programmes/x7Kq2": NOEL, ...docs }, chemin);
+  return signInAs(page, who, creneauxEnReservations({ "programmes/x7Kq2": NOEL, ...docs }), chemin);
 }
 const mercredi = (page: Page) => page.getByRole("region", { name: "Mercredi 14 octobre", exact: true });
 const ecritures = (db: Awaited<ReturnType<typeof ouvrir>>, methode: string) =>
-  db.writes.find((w) => w.method === methode && w.path.startsWith("programmes/x7Kq2/creneaux/"))?.data;
+  db.writes.find((w) => w.method === methode && w.path.startsWith("reservations/"))?.data;
 
 async function remplir(f: ReturnType<Page["getByRole"]>, date: string, de: string, a: string) {
   await f.getByLabel("Date").fill(date);
@@ -114,7 +115,7 @@ test("un mercredi 18:30–20:00 : la ligne apparaît dans sa semaine sans « Hor
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect.poll(() => ecritures(db, "POST")).toMatchObject({
-    dimanche: "2026-10-14", debut: "18:30", fin: "20:00", quoi: "Sketch", qui: ["Gp Paix"], libre: true,
+    date: "2026-10-14", debut: "18:30", fin: "20:00", quoi: "Sketch", qui: ["Gp Paix"], libre: true,
   });
   const ligne = mercredi(page).getByRole("listitem").filter({ hasText: "18:30" });
   await expect(ligne).toBeVisible();
@@ -178,7 +179,7 @@ test("Déplacer un autre moment vers la grille retire `libre`", async ({ page })
   await page.getByRole("menuitem", { name: "Déplacer" }).click();
   await page.getByRole("dialog").getByRole("group", { name: "Samedi 17 octobre" }).getByRole("radio", { name: "10:00 – 11:00" }).check();
   await page.getByRole("dialog").getByRole("button", { name: "Déplacer" }).click();
-  await expect.poll(() => ecritures(db, "PATCH")).toMatchObject({ dimanche: "2026-10-17", debut: "10:00", fin: "11:00" });
+  await expect.poll(() => ecritures(db, "PATCH")).toMatchObject({ date: "2026-10-17", debut: "10:00", fin: "11:00" });
   expect(ecritures(db, "PATCH")?.libre).toBeFalsy();
 });
 
@@ -192,7 +193,7 @@ test("Modifier un autre moment déjà passé : la note s'enregistre, la date d'o
   await expect(f.getByRole("alert")).toHaveCount(0);
   await f.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect.poll(() => ecritures(db, "PATCH")).toMatchObject({ dimanche: "2026-10-07", note: "Apporter le décor", libre: true });
+  await expect.poll(() => ecritures(db, "PATCH")).toMatchObject({ date: "2026-10-07", note: "Apporter le décor", libre: true });
 });
 
 // ─── Back-Office ────────────────────────────────────────────────────────────

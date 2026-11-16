@@ -1,5 +1,5 @@
 // Occupations d'un jour, salle par salle (docs/spec-salles.md, § Modèle, SA2, SA13, AR6, AR14, AR17) : fonctions
-// pures. Lot 2 : emploi du temps fixe, jour J d'une fête, créneaux de la Scène en lecture seule ; lot 3 : les
+// pures. Lot 2 : emploi du temps fixe, jour J d'une fête, créneaux de la Scène en lecture seule (lot 5 : des réservations) ; lot 3 : les
 // réservations (`reservations/{id}`) ; lot 4 : les évènements et réunions qui portent une salle (AR15, pas de document
 // de réservation : l'évènement porte `salle`).
 
@@ -47,8 +47,10 @@ export interface Occupation {
 /** Ce que la page a lu : services du planning (`ServiceEntry`) et éditions de la scène, comme le Calendrier. */
 export interface SourcesSalles {
   services: Pick<ServiceEntry, "date" | "service">[];
-  scene: { programme: Pick<Programme, "jourJ" | "fete" | "ouvert">; creneaux: Creneau[] }[];
-  /** Lot 3 : les réservations lues (toutes dates ; seules celles du jour comptent). */
+  /** Les éditions affichées des fêtes : le jour J (AR14) et la page d'un créneau de scène. */
+  scene: { programme: Pick<Programme, "id" | "jourJ" | "fete" | "ouvert"> }[];
+  /** Lot 3 : les réservations lues (toutes dates ; seules celles du jour comptent). Lot 5 (AR20) : un créneau de fête
+   *  en est une (`fete`), lu comme créneau de scène. */
   reservations?: Reservation[];
   /** Lot 4 : les évènements lus (toutes dates) ; seuls ceux du jour qui portent une salle et deux heures comptent.
    *  `prive` : la personne ne peut pas le voir (réunion d'une autre équipe) ; il occupe sans être nommé. */
@@ -81,16 +83,20 @@ export function occupationsDu(date: string, sources: SourcesSalles): Occupation[
   const fete = jourJDu(date, sources.scene);
   const fixes = occupationsFixes(date, varianteDu(date, sources.services)).filter((o) => !fete || o.salle !== "grande");
   const jourJ: Occupation[] = fete ? [{ salle: "grande", debut: "00:00", fin: "24:00", occupant: { fete }, source: "fete", lien: `/evenements/scene/${fete}` }] : [];
-  const scene: Occupation[] = sources.scene
-    .filter(({ programme }) => programme.ouvert !== false)
-    .flatMap(({ programme, creneaux }) => creneaux
-      .filter((c) => c.dimanche === date)
-      .map((c): Occupation => ({
-        salle: "scene", debut: c.debut, fin: c.fin, occupant: { creneau: { quoi: c.quoi, qui: c.qui } }, source: "scene",
-        id: c.id, auteurUid: c.auteurUid, auteurNom: c.auteurNom, lien: `/evenements/scene/${feteDe(programme) ?? ""}`,
-      })));
+  // Lot 5 (AR20) : un créneau de fête est une réservation de la Scène qui porte `fete` ; il garde son allure de créneau
+  // (quoi · qui, la page de sa fête) et ne se modifie pas depuis Salles (SA10). Celui d'un brouillon ne compte pas.
+  const programmeDe = (id: string) => sources.scene.find(({ programme }) => programme.id === id)?.programme;
+  const scene: Occupation[] = (sources.reservations ?? [])
+    .filter((r) => r.fete && r.date === date && programmeDe(r.fete)?.ouvert !== false)
+    .map((r): Occupation => {
+      const p = programmeDe(r.fete!);
+      return {
+        salle: "scene", debut: r.debut, fin: r.fin, occupant: { creneau: { quoi: r.quoi, qui: r.qui ?? [] } }, source: "scene",
+        id: r.id, auteurUid: r.auteurUid, auteurNom: r.auteurNom, lien: `/evenements/scene/${(p && feteDe(p)) ?? r.fete!.replace(/-\d+$/, "")}`,
+      };
+    });
   const reservations: Occupation[] = (sources.reservations ?? [])
-    .filter((r) => r.date === date)
+    .filter((r) => !r.fete && r.date === date)
     .map((r): Occupation => ({
       salle: r.salle, debut: r.debut, fin: r.fin, occupant: { reservation: { quoi: r.quoi, pour: r.pour } }, source: "reservation",
       id: r.id, auteurUid: r.auteurUid, auteurNom: r.auteurNom, reservation: r,

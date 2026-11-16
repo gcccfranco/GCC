@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { enTete, estGrandEcran, interdireDialoguesNatifs, ongletsRail, verifierSansDebordement } from "./helpers/agencement";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Chantier AR (docs/spec-salles.md), lot 2, tranche T2b : l'onglet « Salles » (connectés seulement, SA14), la page
 // `/evenements/salles` en vue Liste (SA2 : neuf lignes groupées, l'état en mots), la bande de jours, la ligne de contexte
@@ -30,7 +31,7 @@ async function ouvrir(page: Page, qui: FakeProfile | null, to: string, { heure =
   if (zh) await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
   // T2c : la Grille est la vue par défaut en grand (SA5) ; cette spec regarde la Liste.
   await page.addInitScript(() => { try { localStorage.setItem("gcc-salles-vue", "liste"); } catch {} });
-  if (qui) return signInAs(page, qui, DOCS, to);
+  if (qui) return signInAs(page, qui, creneauxEnReservations(DOCS), to);
   await page.goto(to);
 }
 

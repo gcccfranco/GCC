@@ -11,6 +11,7 @@ import {
 } from "../src/lib/scene/saison";
 import { reservationsClosed } from "../src/lib/scene/dimanches";
 import { QUI } from "../src/types/programme";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Lot U1 (docs/spec-scene-saison.md) : la coordination définit la saison de
 // réservation de la scène — dates, jours, plages, durée d'un créneau, qui
@@ -240,7 +241,7 @@ const NOEL26 = {
 async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<string, unknown>>, jour = "2026-10-05T10:00:00", chemin?: string) {
   interdireDialoguesNatifs(page);
   await page.clock.setFixedTime(new Date(jour));
-  return signInAs(page, who, docs, chemin ?? (who.coordination ? "/back-office/evenements/scene" : "/evenements/scene"));
+  return signInAs(page, who, creneauxEnReservations(docs), chemin ?? (who.coordination ? "/back-office/evenements/scene" : "/evenements/scene"));
 }
 /** L'onglet de la section Évènements, dans l'App. */
 async function ongletApp(page: Page, nom: string) {
@@ -373,7 +374,7 @@ test("hors grille : passer à 1 h 30 avec une réservation à 15:00 la signale, 
   const hors = await horsGrilleDuTableau(page, 1);
   await expect(hors).toHaveCount(1);
   await expect(hors).toContainText("Sketch");
-  expect(db.doc("programmes/noel/creneaux/c1")).toMatchObject({ debut: "15:00", fin: "16:00" });
+  expect(db.doc("reservations/c1")).toMatchObject({ debut: "15:00", fin: "16:00" });
   await hors.getByRole("button", { name: "Déplacer" }).click();
   // Pâques · Noël, P6 : les créneaux libres en pastilles, jour par jour, plus de liste déroulante.
   await expect(page.getByRole("dialog").locator("select")).toHaveCount(0);
@@ -382,7 +383,7 @@ test("hors grille : passer à 1 h 30 avec une réservation à 15:00 la signale, 
   // La feuille ouverte cache le reste de la page aux lecteurs d'écran : on attend qu'elle se ferme.
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Hors grille 0" })).toBeVisible();
-  expect(db.doc("programmes/noel/creneaux/c1")).toMatchObject({ dimanche: "2026-10-11", debut: "15:30", fin: "17:00", quoi: "Sketch" });
+  expect(db.doc("reservations/c1")).toMatchObject({ date: "2026-10-11", debut: "15:30", fin: "17:00", quoi: "Sketch" });
 });
 
 test("l'ordre de passage s'ouvre depuis la colonne de la fête, modifiable par la coordination", async ({ page }) => {
@@ -501,7 +502,7 @@ test("hors grille : « Retirer » supprime la réservation après la confirmatio
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   await repondreDansLeSite(page, "Retirer");
   await expect(bloc(page, "Dimanche 11 octobre").getByText("Hors grille")).toHaveCount(0);
-  expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("programmes/noel/creneaux/c1");
+  expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("reservations/c1");
 });
 
 test("中文 : la saison est traduite, dates comprises", async ({ page }) => {
@@ -613,9 +614,9 @@ test("membres : « Réserver » ouvre la feuille sur ce créneau, sans heure à 
   // P6 : sur sa propre réservation, « à moi » remplace son nom.
   await expect(ligne).toContainText("à moi");
   await expect(ligne).toContainText("Avec la sono");
-  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/noel/creneaux/"));
+  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"));
   expect(cree?.data).toMatchObject({
-    dimanche: "2026-10-11", debut: "15:00", fin: "16:00", quoi: "Sketch", qui: ["Gp Amour"], note: "Avec la sono",
+    date: "2026-10-11", debut: "15:00", fin: "16:00", quoi: "Sketch", qui: ["Gp Amour"], note: "Avec la sono",
     auteurUid: "uid-noe", auteurNom: "Noé L.",
   });
 });
@@ -632,7 +633,7 @@ test("membres : la feuille ne propose que les groupes permis (pas « Franco ») 
   await f.getByRole("radio", { name: "Séance louange" }).check();
   await expect(f.getByRole("button", { name: "Choisis quoi et qui" })).toBeDisabled();
   // Seules les écritures du programme comptent : `:commit` est l'envoi quotidien du comptage d'usage (docs/spec-comptage-usage.md).
-  expect(db.writes.filter((w) => w.method === "POST" && w.path.startsWith("programmes/"))).toHaveLength(0);
+  expect(db.writes.filter((w) => w.method === "POST" && /^(programmes|reservations)\//.test(w.path))).toHaveLength(0);
 });
 
 test("membres : sans limite, la feuille propose tous les groupes ; la coordination n'est jamais limitée", async ({ page }) => {
@@ -684,7 +685,7 @@ test("membres : « ⋯ » › Déplacer pose sa réservation sur un créneau lib
   await expect(bloc(page, "Dimanche 11 octobre").getByText("Sketch · Gp Amour")).toHaveCount(0);
   await choisirSemaine(page, /^17 – 18 oct\./);
   await expect(bloc(page, "Samedi 17 octobre").getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" })).toContainText("11:00");
-  expect(db.doc("programmes/noel/creneaux/s")).toMatchObject({ dimanche: "2026-10-17", debut: "11:00", fin: "12:00", quoi: "Sketch", qui: ["Gp Amour"] });
+  expect(db.doc("reservations/s")).toMatchObject({ date: "2026-10-17", debut: "11:00", fin: "12:00", quoi: "Sketch", qui: ["Gp Amour"] });
 });
 
 test("membres : « ⋯ » › Retirer sa réservation après la confirmation du site rend le créneau libre", async ({ page }) => {
@@ -694,7 +695,7 @@ test("membres : « ⋯ » › Retirer sa réservation après la confirmation du 
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Retirer", exact: true }).click();
   await expect(dimanche.getByRole("button", { name: "Réserver 15:00 – 16:00" })).toBeVisible();
-  expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("programmes/noel/creneaux/s");
+  expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("reservations/s");
 });
 
 test("membres : la coordination modifie ou retire toute réservation et la voit « hors grille »", async ({ page }) => {
@@ -860,7 +861,7 @@ test("membres : un créneau qui commence pendant que la feuille est ouverte est 
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(f.getByRole("alert")).toHaveText("Ce créneau a déjà commencé : il ne se réserve plus.");
   // Seules les écritures du programme comptent : `:commit` est l'envoi quotidien du comptage d'usage (docs/spec-comptage-usage.md).
-  expect(db.writes.filter((w) => w.method === "POST" && w.path.startsWith("programmes/"))).toHaveLength(0);
+  expect(db.writes.filter((w) => w.method === "POST" && /^(programmes|reservations)\//.test(w.path))).toHaveLength(0);
 });
 
 test("hors grille : « Déplacer » vers un créneau qui a commencé entre-temps est refusé (horloge simulée)", async ({ page }) => {

@@ -7,6 +7,7 @@ import { libelleQui, normaliserQui } from "../src/lib/fetes/qui";
 import { quiCategory } from "../src/lib/scene/rappels";
 import { FAMILLES, famillesDe } from "../src/lib/scene/saison";
 import { QUI, QUI_RETIRES } from "../src/types/programme";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Lot AQ, tranche SQ-A (docs/spec-scene-qui-autre-moment.md) : « Qui » élargi — Intergroupe, Interfranco, « Autre… ».
 
@@ -84,7 +85,7 @@ async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<
   interdireDialoguesNatifs(page);
   if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
-  return signInAs(page, who, { "programmes/x7Kq2": NOEL, ...docs }, chemin);
+  return signInAs(page, who, creneauxEnReservations({ "programmes/x7Kq2": NOEL, ...docs }), chemin);
 }
 const ouvrirFeuille = async (page: Page, nom = "Réserver 14:00 – 15:00") => {
   await page.getByRole("region", { name: "Dimanche 11 octobre", exact: true }).getByRole("button", { name: nom }).click();
@@ -106,7 +107,7 @@ test("Réserver : Intergroupe et Interfranco proposés ; « Autre… » ouvre un
   await champ.fill("  Répétition des jeunes  ");
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect.poll(() => db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/x7Kq2/creneaux/"))?.data)
+  await expect.poll(() => db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"))?.data)
     .toMatchObject({ quoi: "Séance louange", qui: ["Répétition des jeunes"] });
 });
 
@@ -117,7 +118,7 @@ test("Réserver : un texte égal à « Culte Francophone » s'écrit « Franco �
   await f.getByRole("checkbox", { name: "Autre…" }).check();
   await f.getByLabel("Qui ?").fill("culte francophone");
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
-  await expect.poll(() => db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/x7Kq2/creneaux/"))?.data)
+  await expect.poll(() => db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"))?.data)
     .toMatchObject({ qui: ["Franco"] });
 });
 
