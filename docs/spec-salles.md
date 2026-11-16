@@ -1,4 +1,4 @@
-# Spec — Occupation des salles (AR) : cadrage
+# Spec — Occupation des salles (AR)
 
 - **Origine** : retour rapporté par Timothée le 16/11/2026 : « Scène : Réfléchir à modifier (fusionner) cette
   fonctionnalité "scène" à une fonctionnalité plus globale "occupation des salles" (salle bonté, salle
@@ -15,10 +15,9 @@
   la réservation de la scène. En fait il faudrait revoir tout le système de réservation ainsi que sa page. L'onglet
   évènement est à changer ? » La planche porte donc sur **tout le système de réservation, Scène comprise, et sa page**,
   et sur la place de l'onglet Évènements.
-- **Statut** : **planche validée par Timothée le 16/11/2026** (« Église, je valide ») : la piste retenue est en tête de
-  `docs/planches/planche-salles-reservation.html`. **Reste à écrire ici : les règles, le modèle, les tranches et les
-  tests** (§ « Reprise »), puis demander le go. **Pas de go pour AR** : le « go pour coder » du 16/11 répondait à la
-  question sur le lot Scène de Noël (AQ) et précède cette spec (`CLAUDE.md`, « Go » : après la spec).
+- **Statut** : **spec écrite le 16/11/2026** (§ « Décisions déléguées » à « Hors périmètre ») ; planche validée par
+  Timothée le 16/11/2026 (« Église, je valide »), piste retenue en tête de `docs/planches/planche-salles-reservation.html`.
+  **Attend le go de Timothée, lot par lot** (le « go pour coder » du 16/11 portait sur le lot AQ).
 - **Base de code** : `claude/corrections-design` à `4f1134e`.
 
 ## Ce que le code montre
@@ -87,7 +86,7 @@ Les autres propositions de la section « Questions à trancher » de la planche 
 du temps en un modèle à trois variantes avec exceptions datées, repère « à 14:00 », couleurs) se tranchent en écrivant
 les règles, selon la proposition écrite (« décision déléguée »), sauf si le choix est difficile à défaire.
 
-## Reprise (pour la session qui écrit la suite)
+## Reprise (faite le 16/11/2026 : la suite est écrite plus bas)
 
 1. Lire ce fichier, la section « Piste retenue » de la planche (ouvrir ses quatre cadres par capture d'élément, pas la
    pleine page) et, par extraits, `src/lib/scene/saison.ts`, `src/types/programme.ts`, `firestore.rules` (`programmes`),
@@ -114,6 +113,9 @@ les règles, selon la proposition écrite (« décision déléguée »), sauf si
 
 ## Questions ouvertes
 
+Toutes tranchées le 16/11/2026 : S-Q1 à S-Q4 et S-Q10 par Timothée (AR7, AR9), S-Q5 à S-Q9 par la planche (AR1 à
+AR9, AR10 à AR18).
+
 **Faits, à Timothée**
 
 - S-Q1 à S-Q4 : **répondues le 16/11/2026** (tableaux ci-dessus). Non demandé : la « salle à côté de réunion » du
@@ -130,12 +132,220 @@ les règles, selon la proposition écrite (« décision déléguée »), sauf si
 - S-Q8. Le champ « salle » des formulaires de réunion et d'évènement.
 - S-Q9. Une réservation répétée par un membre (« tous les mardis ») : dès le premier lot, ou plus tard ?
 
-## Lots pressentis (à découper après la planche)
+## Lots pressentis (découpés dans § « Lots et tranches »)
 
 1. Les salles, l'emploi du temps fixe, la vue d'un jour (lecture).
 2. Réserver librement, refus des chevauchements.
 3. Réunions et évènements réservent leur salle.
 4. La Scène passe dans le même système (date : S-Q10).
+
+## Décisions déléguées (session de spec, 16/11)
+
+Propositions de la planche (« Questions à trancher », « Finitions »), retenues selon leur recommandation ; aucune n'est
+difficile à défaire. Timothée les corrige d'un mot.
+
+| # | Décision | Motif |
+|---|---|---|
+| AR10 | Rail **« Évènements · Salles · Pâques · Noël »** : « Évènements » est l'ancien « Calendrier » (même page, `/evenements`). Salles est la deuxième place, à `/evenements/salles`. | AR2 ; décision déléguée (session, 16/11). |
+| AR11 | En 中文 : entrée **教会**, sous-titre **活动、场地和节日**, onglet **活动** (ex-日历), onglet Salles **场地** ; « Liste · Grille » = **列表 · 网格**. | Libellés courts, tiennent dans le rail à 375 px ; décision déléguée (session, 16/11), à corriger par Timothée. |
+| AR12 | **Repère d'heure** : l'état en mots se lit « maintenant » aujourd'hui, « à 8:00 » un autre jour ; le repère « à HH:MM » de la ligne de contexte se touche pour changer l'heure (pas de 15 min). | Planche (« Vue d'un jour ») ; décision déléguée (session, 16/11). |
+| AR13 | **L'emploi du temps fixe vit dans le code** (`src/lib/salles/emploi.ts`) : trois variantes, choisies d'après les services du planning du jour (Intergroupe, Interfranco), comme le Calendrier les lit. Une saisie au Back-Office (exceptions datées) vient plus tard (§ Hors périmètre). | Timothée l'a donné une fois (AR7) ; le changer est un commit. Une saisie en base coûterait un lot entier avant de servir. Décision déléguée (session, 16/11). |
+| AR14 | **Le jour J d'une fête** (programme `jourJ`), la Grande salle et la Scène sont occupées **toute la journée** par « Noël, jour J » (ou « Pâques, jour J ») ; l'emploi du temps fixe de la Grande salle est remplacé ce jour-là. | La fête n'a pas d'heures saisies ; le lot Scène (5) pourra en ajouter. Décision déléguée (session, 16/11). |
+| AR15 | **Réunions et évènements ne créent pas de document de réservation** : l'évènement porte un champ `salle` ; Salles le lit comme une occupation. Il part, bouge et disparaît avec l'évènement, sans synchronisation. | Plus simple que la proposition « la réservation se crée avec la réunion », même effet à l'écran. Décision déléguée (session, 16/11). |
+| AR16 | **Pour qui** : liste fermée (les valeurs de `QUI`, puis les équipes de l'organigramme) et « Autre… » en texte (60 caractères). Le prénom de l'auteur s'affiche toujours. | AR9 ; décision déléguée (session, 16/11). |
+| AR17 | **Couleurs** de la planche gardées : culte sinophone `#64748b` (gris de repli), groupes d'après `CATEGORY_COLORS`, classes 小班 / 中班 / 大班 / 高班 vert des classes d'EDD (`#3b6d11`), réservations libres en encre neutre. Fond des listes : la fiche de la planche (groupes gris sur blanc). | Planche ; décision déléguée (session, 16/11). |
+| AR18 | La page Salles est **dans l'App** (pas de Back-Office) et visible des connectés seuls ; elle suit l'interrupteur de la section (`navigation.ts` : `/evenements` n'existe qu'avec `BACK_OFFICE`). | S7, AR9. |
+
+## Modèle
+
+**Salles** (`src/lib/salles/salles.ts`, dans le code) : neuf entrées, dans l'ordre de l'écran.
+
+| id | Nom (fr et 中文) | Autre nom | Groupe d'affichage |
+|---|---|---|---|
+| `grande` | Grande salle | | Grande salle |
+| `scene` | Scène | dans la Grande salle | Grande salle (en retrait) |
+| `fidelite` | Salle Fidélité | 小班 | Salles de groupe |
+| `paix` | Salle Paix | 高班 | Salles de groupe |
+| `amour` | Salle Amour | 大班 | Salles de groupe |
+| `bonte` | Salle Bonté | | Salles de groupe |
+| `zhongban` | Salle 中班 | | Salles de groupe |
+| `imprimante` | Salle imprimante | | Bureaux |
+| `reunion` | Salle de réunion | | Bureaux |
+
+`lieuxLies(id)` : `grande` ↔ `scene` (AR6) ; toute autre salle n'est liée qu'à elle-même.
+
+**Emploi du temps fixe** (`src/lib/salles/emploi.ts`) : `occupationsFixes(date, variante)` rend, pour un dimanche, les
+occupations des tableaux « Les salles » et « Le temps de groupe » ; aucun autre jour n'en a. `varianteDu(date,
+services)` : `intergroupe` si un service du planning de cette date a la catégorie Intergroupe, `interfranco` pour
+Interfranco, sinon `ordinaire`. Les services viennent de la même lecture que le Calendrier (`ServiceEntry`).
+
+**Réservations** (Firestore, REST seulement) : collection `reservations/{id}`.
+
+```ts
+interface Reservation {
+  id: string
+  salle: SalleId          // une des neuf
+  date: string            // « AAAA-MM-JJ »
+  debut: string           // « HH:MM »
+  fin: string             // « HH:MM », > debut, même jour
+  pour: string            // valeur de la liste ou texte d'« Autre… », 60 caractères au plus
+  quoi: string            // 80 caractères au plus
+  auteurUid: string
+  auteurNom: string
+  createdAt: string
+  updatedAt: string
+}
+```
+
+Lecture d'un jour : `runQuery` sur `date ==` ; d'une semaine (journée d'une salle en volet) : `date >=` et `date <=`.
+Un seul champ : index automatiques, **aucun index composite à créer**.
+
+**Évènements et réunions** (lot 4) : champ facultatif `salle?: SalleId` dans `evenements/{id}` (`src/types/evenement.ts`).
+Absent = « Ailleurs » (le `lieu` en texte libre reste).
+
+**Occupations d'un jour** (`src/lib/salles/occupations.ts`, fonctions pures) : `occupationsDu(date, sources)` réunit
+l'emploi du temps fixe, le jour J d'une fête, les créneaux de la Scène (lecture seule jusqu'au lot 5), les
+réservations et les évènements portant une salle ; chaque occupation porte `salle`, `debut`, `fin`, `libelle`,
+`source` (`fixe`, `fete`, `scene`, `reservation`, `evenement`) et, au besoin, l'id et l'auteur. Une occupation de
+`grande` ou de `scene` vaut pour les deux (`lieuxLies`).
+
+## Règles
+
+| # | Règle |
+|---|---|
+| SA1 | Salles montre un jour (aujourd'hui par défaut) ; une bande de jours au-dessus change de jour ; la ligne de contexte dit la variante (« Dimanche ordinaire », « Intergroupe », « Interfranco », « Noël, jour J ») et le repère d'heure (AR12). |
+| SA2 | **Liste** : une ligne par salle, groupée (Grande salle avec la Scène en retrait, Salles de groupe, Bureaux), l'autre nom à côté du nom ; l'état en mots à l'heure du repère : « Libre jusqu'à HH:MM », « Libre tout l'après-midi / toute la soirée » (rien jusqu'à 22:00), « <occupant> jusqu'à HH:MM » ; sous l'état, les réservations et évènements du jour en une ligne chacun (« 18:30 – 19:30 · Sketch · Fidélité · Gaëlle »). La Scène dit « Avec la Grande salle : … » quand c'est la Grande salle qui l'occupe. |
+| SA3 | **Grille** : salles en colonnes (neuf), heures de 8:00 à 22:00 en lignes ; chaque occupation est un bloc à sa hauteur, coloré selon AR17. Au téléphone, la grille défile à l'horizontale, colonne des heures figée. |
+| SA4 | Toucher une ligne de la Liste ouvre la journée de la salle : une page au téléphone, un volet de droite (la semaine de la salle) en tablette paysage et à l'ordinateur. Toucher un bloc de la Grille ouvre son détail ; celui d'un évènement mène à sa fiche, celui d'un créneau de scène à la fête. |
+| SA5 | Vue par défaut : Liste au téléphone et en tablette portrait, Grille en tablette paysage et à l'ordinateur ; le choix de la personne est retenu sur l'appareil (`localStorage`, clé `gcc-salles-vue`) (AR3). |
+| SA6 | **Réserver** (bouton « Réserver une salle », et une case vide de la Grille) ouvre une feuille : date, de, à d'abord (pré-remplis par la case touchée), puis les salles, libres en tête, occupées grisées et non choisissables avec leur raison (« Groupe Joie jusqu'à 14:30 »), puis pour qui (AR16), pour quoi. Tout membre connecté réserve (AR4). |
+| SA7 | Une réservation : `fin > debut`, le même jour, entre 6:00 et 23:59, date d'aujourd'hui ou après ; `quoi` obligatoire. |
+| SA8 | **Chevauchement refusé** (AR4, AR6) : avant d'écrire, la feuille relit les occupations du jour ; une occupation de la même salle ou d'un lieu lié qui croise `[debut, fin[` bloque l'enregistrement. Le refus nomme l'occupant et l'heure, propose les salles libres sur le même moment et « Décaler » (même salle, première fenêtre de même durée après l'occupation, si elle tient avant 22:00). Deux bornes qui se touchent (14:30 / 14:30) ne se croisent pas. |
+| SA9 | Deux enregistrements simultanés qui passent quand même : comme la Scène, un message aux deux auteurs (`/api/salles/conflit`, clé anti-doublon), fonctions pures dans `src/lib/salles/conflit.ts`. |
+| SA10 | Sa réservation se modifie (même feuille, même contrôle SA8 hors elle-même) et se supprime par son auteur ; la coordination modifie ou supprime toute réservation. L'emploi du temps fixe, le jour J et les créneaux de la Scène ne se modifient pas depuis Salles. |
+| SA11 | **Glisser** sur une case vide de la Grille (ordinateur, tablette) crée la plage au quart d'heure et ouvre la feuille ; au clavier, Entrée sur une case ouvre la feuille à cette heure. Au toucher, un appui sur une case suffit (pas de glisser imposé). |
+| SA12 | **Évènement ou réunion** (lot 4) : un champ « Salle de l'église » (les neuf, plus « Ailleurs ») ; « Ailleurs » fait paraître le lieu en texte libre. Une salle choisie exige une heure de début et de fin ; un chevauchement bloque l'enregistrement avec le message de SA8. Le `lieu` affiché devient le nom de la salle. |
+| SA13 | Les créneaux de la Scène des fêtes en cours restent réservés **dans la page de la fête** jusqu'au lot 5 ; Salles les montre comme occupations de la Scène et de la Grande salle, et SA8 en tient compte. Un créneau de fête qui croise l'emploi du temps fixe (groupe Joie, culte sinophone) s'affiche tel quel : Salles le rend visible, la fête ne change pas avant le lot 5. |
+| SA14 | Sans compte : ni onglet Salles ni page (`/evenements/salles` renvoie vers la connexion, comme les fêtes). |
+
+## Permissions (en double : `src/lib/access.ts` et `firestore.rules`)
+
+| Action | Client (`access.ts`) | Serveur (`firestore.rules`) |
+|---|---|---|
+| Lire Salles et les réservations | `canVoirSalles(user)` : connecté | `match /reservations/{id}` : `allow read: if signedIn()` |
+| Réserver | `canReserverSalle(user)` : connecté | `allow create: if signedIn() && auteurUid == request.auth.uid && reservationValide()` (salle parmi les neuf, `date`, `debut`, `fin` au bon format, `debut < fin`, `pour` ≤ 60, `quoi` 1 à 80 caractères) |
+| Modifier, supprimer | `canEditReservation(user, profile, r)` : auteur ou `isCoordination` | `allow update: if signedIn() && (isCoordination() \|\| resource.data.auteurUid == request.auth.uid) && reservationValide() && auteurUid inchangé` ; `allow delete` : auteur ou coordination |
+| Salle d'un évènement (lot 4) | rien de nouveau : `canEditEvenement` | rien de nouveau ; `salle` ajouté à la liste des champs permis s'il en existe une (à vérifier au lot 4) |
+
+Le chevauchement ne se vérifie pas dans les rules (pas de requête possible) : client (SA8) puis message (SA9), comme
+la Scène. **Les rules se publient à la main par Timothée** (lot 3).
+
+## Libellés (FR · 中文)
+
+| Clé (proposée) | FR | 中文 |
+|---|---|---|
+| `common.header.evenements` | Église | 教会 |
+| `evenements.sousTitre` | Évènements, salles et fêtes | 活动、场地和节日 |
+| `evenements.tabs.calendrier` | Évènements | 活动 |
+| `evenements.tabs.salles` | Salles | 场地 |
+| `salles.vue.liste` · `salles.vue.grille` | Liste · Grille | 列表 · 网格 |
+| `salles.groupes.grande` · `.groupe` · `.bureaux` | Grande salle · Salles de groupe · Bureaux | 大厅 · 小组教室 · 办公室 |
+| `salles.variante.ordinaire` · `.intergroupe` · `.interfranco` | Dimanche ordinaire · Intergroupe · Interfranco | 普通主日 · Intergroupe · Interfranco |
+| `salles.jourJ` | {{fete}}, jour J | {{fete}}当天 |
+| `salles.repere` | à {{heure}} | {{heure}} |
+| `salles.etat.libreJusqua` | Libre jusqu'à {{heure}} | 空闲至 {{heure}} |
+| `salles.etat.libreApresMidi` · `.libreSoiree` | Libre tout l'après-midi · Libre toute la soirée | 下午空闲 · 晚上空闲 |
+| `salles.etat.occupeJusqua` | {{qui}} jusqu'à {{heure}} | {{qui}}，至 {{heure}} |
+| `salles.avecGrande` | Avec la Grande salle : {{etat}} | 与大厅同用：{{etat}} |
+| `salles.reserver` | Réserver une salle | 预订场地 |
+| `salles.feuille.date` · `.de` · `.a` · `.salle` · `.pourQui` · `.pourQuoi` · `.autre` | Date · De · À · Salle · Pour qui · Pour quoi · Autre… | 日期 · 从 · 到 · 场地 · 为谁 · 做什么 · 其他… |
+| `salles.refus` | {{salle}} est prise : {{qui}}, {{debut}} – {{fin}}. | {{salle}}已被占用：{{qui}}，{{debut}}–{{fin}}。 |
+| `salles.libresMemeMoment` | Libres au même moment | 同一时段空闲 |
+| `salles.decaler` | Décaler à {{debut}} – {{fin}} | 改到 {{debut}}–{{fin}} |
+| `salles.formulaire.salle` · `.ailleurs` | Salle de l'église · Ailleurs | 教会场地 · 其他地点 |
+| `salles.conflit.titre` | Salles : chevauchement | 场地：时段重叠 |
+
+Noms de salles : en français dans les deux langues (AR9), sauf 小班, 中班, 大班, 高班. Les noms de groupe en 中文
+(大厅, 小组教室, 办公室) ne sont pas des noms de salle et suivent `i18n-sync`. Les noms d'occupant de l'emploi du temps
+(« Groupe Joie », « Culte sinophone », « Entraînement louange ») passent par les clés existantes des catégories
+quand il y en a, sinon des clés `salles.occupant.*`.
+
+## Lots et tranches
+
+Un go par lot ; le go d'un lot vaut pour toutes ses tranches ; une session orchestratrice par tranche
+(`CLAUDE.md`, « Coder »), `source_revision` et `outcome_branch` = `claude/corrections-design`. Tests écrits d'abord
+(rouges), puis le code.
+
+**Lot 1 — L'entrée « Église »** (petit, une tranche, aucune règle à publier)
+- **T1** : libellés AR10, AR11 (entrée, sous-titre, onglet « Évènements »), icône `Church` (lucide) à la place de
+  `Ticket` dans les deux listes de `src/lib/navigation.ts` ; `labelDeSection` suit la clé (« GCC Église »). Les
+  autres usages de `common.header.evenements` (`git grep`) sont relus un à un : ceux qui désignent la liste des
+  évènements prennent une clé à eux. Specs touchées : celles qui lisent « Évènements » / « Calendrier » dans la barre
+  ou le rail (`git grep -l "Calendrier\|Évènements" tests/`). Ne touche pas `src/app/evenements/scene/` (AQ).
+
+**Lot 2 — Salles en lecture**
+- **T2a** : modèle et fonctions pures (`salles.ts`, `emploi.ts`, `occupations.ts`), sans écran ; tests des fonctions
+  (variantes, jour J, Scène ↔ Grande salle, état en mots, bornes qui se touchent).
+- **T2b** : onglet « Salles » dans le rail (connectés), page `/evenements/salles`, vue Liste, bande de jours, ligne de
+  contexte et repère d'heure, journée d'une salle (page au téléphone, volet en grand). Sources lues : services du
+  planning, programmes et créneaux de scène. Spec d'agencement dans `SPECS_GRAND_ECRAN`.
+- **T2c** : vue Grille, sélecteur « Liste · Grille », défaut par appareil et choix retenu (SA5), détail d'un bloc.
+  Fin de lot : specs du lot et de la section Évènements.
+
+**Lot 3 — Réserver** (rules à publier par Timothée avant la mise en ligne)
+- **T3a** : `src/lib/firebase/reservations.ts` (REST), `reservations/{id}` dans `firestore.rules`, `canVoirSalles`,
+  `canReserverSalle`, `canEditReservation` ; feuille « Réserver » (SA6, SA7), lecture des réservations dans
+  Salles ; modifier et supprimer la sienne (SA10).
+- **T3b** : refus du chevauchement, salles libres au même moment, « Décaler » (SA8) ; route `/api/salles/conflit`
+  et `src/lib/salles/conflit.ts` (SA9). Les routes API passent à 21 : mettre à jour `CLAUDE.md` et la référence.
+- **T3c** : gestes de la Grille (SA11 : appui, glisser au quart d'heure, Entrée au clavier).
+
+**Lot 4 — Réunions et évènements réservent leur salle**
+- **T4a** : champ « Salle de l'église » / « Ailleurs » dans `EvenementForm` et `ReunionForm`, type `salle?`,
+  contrôle SA12 ; Salles lit les évènements qui portent une salle.
+- **T4b** : fiche d'un évènement (« Salle Bonté » à la place du lieu), modifier l'heure ou la salle relance SA8 ; les
+  rules de `evenements/{id}` relues (champ `salle`).
+
+**Lot 5 — La Scène dans Salles** (après Noël 2026, pour Pâques 2027 ; AR9) : les créneaux d'une fête deviennent des
+réservations de la `scene` faites dans sa période et selon « Qui peut réserver » ; la grille de créneaux de la saison
+disparaît au profit des heures libres ; la page de la fête montre quand la scène est libre (AR8) ; le jour J peut
+recevoir des heures. **Spec détaillée à écrire après le 25/12/2026**, d'après ce que Noël aura montré ; go à part.
+
+## Tests Playwright (écrits d'abord)
+
+Trois appareils toujours ; les specs d'agencement (T2b, T2c, T3c) s'ajoutent à `SPECS_GRAND_ECRAN` (cinq projets).
+Données simulées (`tests/helpers/fakeSession.ts`, Firestore intercepté), noms fictifs inventés pour ces specs.
+
+| Spec | Tranche | Ce qu'elle vérifie |
+|---|---|---|
+| `tests/eglise-entree.spec.ts` | T1 | la barre dit « Église » / « 教会 », le rail « Évènements · Pâques · Noël », les adresses `/evenements…` inchangées, « GCC Église » ; sans compte, pas de rail |
+| `tests/salles-modele.spec.ts` | T2a | dimanche ordinaire, Intergroupe, Interfranco (tableau du temps de groupe) ; jour J ; Scène ↔ Grande salle ; « Libre jusqu'à », « Libre tout l'après-midi » ; 14:30 / 14:30 ne se croisent pas |
+| `tests/salles-liste.spec.ts` | T2b | onglet Salles pour un connecté seulement ; neuf lignes groupées ; état à 14:00 un dimanche ordinaire ; repère d'heure ; journée d'une salle (page / volet) ; créneau de scène lu comme occupation de la Grande salle |
+| `tests/salles-grille.spec.ts` | T2c | neuf colonnes, blocs à leur heure ; défaut Liste au téléphone, Grille en grand ; le choix survit au rechargement ; défilement horizontal au téléphone |
+| `tests/salles-reserver.spec.ts` | T3a, T3b | réserver une salle libre ; salles occupées grisées avec leur raison ; refus d'un chevauchement (même salle, Scène contre Grande salle) ; « Décaler » ; modifier et supprimer la sienne ; pas celle d'un autre (sauf coordination) ; message de conflit (route simulée) |
+| `tests/salles-gestes.spec.ts` | T3c | glisser au quart d'heure (ordinateur, tablette), appui (téléphone), Entrée au clavier |
+| `tests/salles-evenement.spec.ts` | T4a, T4b | champ Salle / Ailleurs ; chevauchement bloqué à l'enregistrement ; l'évènement apparaît dans Salles et la fiche dit la salle |
+
+Chaque tranche se regarde à l'œil sur les quatre dispositions (et 1 440 px pour Salles), puis `critique-design` après
+T2b, T2c et T3a (apparence).
+
+## À la mise en ligne (Timothée seul)
+
+- Pousser sur `main`, sur son ordre du moment ; le lot 1 peut partir seul.
+- **Lot 3** : publier `firestore.rules` (`reservations/{id}`) dans la console Firebase **avant** de pousser le code ;
+  aucun index composite à créer.
+- Aucun changement de stratégie dans `public/sw.js` : pas de nouvelle version du cache.
+- Lot 4 : relire les rules d'`evenements/{id}` si le champ `salle` les touche, et republier le cas échéant.
+
+## Hors périmètre
+
+- Saisie de l'emploi du temps au Back-Office, exceptions datées (un groupe qui ne se réunit pas) : plus tard, sur
+  demande (AR13).
+- Réservations répétées par un membre (« tous les mardis ») : plus tard (AR9).
+- Réservations dans le Calendrier du Back-Office et dans le widget : plus tard.
+- Notifications de rappel d'une réservation : non.
+- Une dixième salle : non (AR9).
+- Tout changement de la Scène avant le lot 5 ; tout fichier de `src/app/evenements/scene/` tant que AQ code.
 
 ## Avancement
 
@@ -165,3 +375,6 @@ les règles, selon la proposition écrite (« décision déléguée »), sauf si
 - 16/11/2026 : **planche validée** (« Église, je valide et tu peux go pour coder ») : décisions AR1 à AR9 ci-dessus.
   Le go porte sur le lot AQ (question posée : « Go pour le lot Scène de Noël ? ») ; AR attend sa spec. La session de
   cadrage a atteint son plafond de contexte : une session neuve écrit la suite (§ « Reprise ») et demande le go.
+- 16/11/2026 : **spec écrite** (session `session_01UMdfudSTkDY8UL8HEyTfJb`) : décisions déléguées AR10 à AR18, modèle,
+  règles SA1 à SA14, permissions, libellés, cinq lots (1 « Église », 2 Salles en lecture, 3 Réserver, 4 réunions et
+  évènements, 5 la Scène après Noël), tests, mise en ligne. **Attend le go de Timothée pour le lot 1.**
