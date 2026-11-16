@@ -23,7 +23,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { titreDuJour } from "./libelles"
-import { libelleQui } from "@/lib/fetes/qui"
+import { estQuiLibre, libelleQui, normaliserQui } from "@/lib/fetes/qui"
 import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
@@ -43,7 +43,15 @@ export type CreneauValues = {
 export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (qui: string[]) => void }) {
   const { t, i18n } = useTranslation()
   const langue = langueCourte(i18n.language)
-  const retires = value.filter((q) => !(QUI as readonly string[]).includes(q))
+  const retires = value.filter((q) => !(QUI as readonly string[]).includes(q) && !estQuiLibre(q))
+  const libre = value.find(estQuiLibre)
+  const [autre, setAutre] = useState(libre !== undefined)
+  const [texte, setTexte] = useState(libre ?? "")
+  const emet = (base: string[], a: boolean, tx: string) => {
+    const n = a ? normaliserQui(tx) : ""
+    onChange(n && !base.includes(n) ? [...base, n] : base)
+  }
+  const sansLibre = value.filter((q) => !estQuiLibre(q))
   return (
     <fieldset className="space-y-1">
       <legend className="text-xs font-semibold">{t("planning.programme.qui")}</legend>
@@ -61,7 +69,18 @@ export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (
             </label>
           )
         })}
+        <label className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${autre ? "texte-service" : "bg-background border-border text-muted-foreground"}`}
+          style={autre ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, ...styleTexteService(PLANNING_COLORS.scene) } : undefined}>
+          <input type="checkbox" className="h-3.5 w-3.5" checked={autre}
+            onChange={() => { setAutre(!autre); emet(sansLibre, !autre, texte) }} />
+          {t("planning.programme.quiAutre")}
+        </label>
       </div>
+      {autre && (
+        <Input className="h-11 rounded-xl" value={texte} maxLength={40} aria-label={t("planning.programme.quiAutreChamp")}
+          placeholder={t("planning.programme.quiAutreChamp")}
+          onChange={(e) => { setTexte(e.target.value); emet(sansLibre, true, e.target.value) }} />
+      )}
     </fieldset>
   )
 }
@@ -113,6 +132,8 @@ type Props = {
   quiOptions: readonly string[]
   /** « Qui » limité par la saison : la légende le dit. */
   quiLimite?: boolean
+  /** « Autre… » (SQ5) : montrée à tous sans limite, sinon à qui passe outre « Qui peut réserver ». */
+  quiAutre?: boolean
   /** Renvoie un message d'erreur, ou null si le créneau est enregistré. */
   onSubmit: (values: CreneauValues) => Promise<string | null>
   onCancel: () => void
@@ -133,21 +154,26 @@ export function CreneauForm({ open, title, onCancel, ...champs }: Props) {
   )
 }
 
-function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
+function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, quiAutre, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
   const { t, i18n } = useTranslation()
   const langue = langueCourte(i18n.language)
-  const [v, setV] = useState<CreneauValues>(initial)
+  const libreInitial = initial.qui.find(estQuiLibre)
+  const [v, setV] = useState<CreneauValues>({ ...initial, qui: initial.qui.filter((q) => !estQuiLibre(q)) })
+  const [autre, setAutre] = useState(libreInitial !== undefined)
+  const [texte, setTexte] = useState(libreInitial ?? "")
+  const libre = autre ? normaliserQui(texte) : ""
+  const quiFinal = libre && !v.qui.includes(libre) ? [...v.qui, libre] : v.qui
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
   const jours = places ? [...new Set(places.map((p) => p.jour))] : []
   const choisie = (p: Place) => p.jour === v.dimanche && cle(p) === cle(v)
-  const pret = places ? places.some(choisie) : v.quoi !== "" && v.qui.length > 0
+  const pret = places ? places.some(choisie) : v.quoi !== "" && quiFinal.length > 0 && (!autre || libre !== "")
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     if (!pret) return
     setBusy(true); setError("")
-    const err = await onSubmit({ ...v, note: v.note.trim() })
+    const err = await onSubmit({ ...v, qui: quiFinal, note: v.note.trim() })
     setBusy(false)
     if (err) setError(err)
   }
@@ -181,7 +207,7 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, on
               {quiLimite && <span className="font-normal"> · {t("planning.saison.quiPermisTitre")}</span>}
             </>
           }>
-            {quiOptions.map((q) => {
+            {quiOptions.filter((q) => !estQuiLibre(q)).map((q) => {
               const checked = v.qui.includes(q)
               const retire = !(QUI as readonly string[]).includes(q)
               return (
@@ -190,7 +216,12 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, on
                   onChange={() => setV({ ...v, qui: checked ? v.qui.filter((x) => x !== q) : [...v.qui, q] })} />
               )
             })}
+            {quiAutre && <Pastille type="checkbox" name="creneau-qui" label={t("planning.programme.quiAutre")} checked={autre} onChange={() => setAutre(!autre)} />}
           </Groupe>
+          {quiAutre && autre && (
+            <Input className="h-11 rounded-xl" value={texte} maxLength={40} aria-label={t("planning.programme.quiAutreChamp")}
+              placeholder={t("planning.programme.quiAutreChamp")} onChange={(e) => setTexte(e.target.value)} />
+          )}
           <div className="space-y-2">
             <label htmlFor="creneau-note" className="text-sm font-semibold text-muted-foreground">
               {t("planning.programme.note")}<span className="font-normal"> · {t("planning.saison.facultatif")}</span>

@@ -160,3 +160,15 @@ Trois appareils ; l'agencement du volet Entraînements est déjà sur les cinq p
   par le groupe Joie (13:00–14:30) et le culte sinophone (15:00–17:00). Go à redemander, SQ-B à confirmer (refonte AR).
 - 16/11/2026 : **go de Timothée** pour le lot (SQ-A puis SQ-B) ; propositions restantes retenues (décision déléguée).
   SQ-A lancée dans une session neuve par la session de cadrage ; elle lance SQ-B à sa fin.
+- 16/11/2026 : **SQ-A codée** (session orchestratrice SQ-A). `QUI` gagne Intergroupe et Interfranco après Franco
+  (联合聚会, 法语联合聚会), `QUI_RETIRES` ajouté ; rappels et ayants droit comme Franco ; `FAMILLES.louange` à trois
+  valeurs, `famillesDe` coche une famille dès qu'une valeur est permise (SQ-R4, l'enregistrement écrivait déjà la
+  famille entière) ; pastille « Autre… » et champ de 40 caractères dans la feuille « Réserver » et dans `QuiChecklist`,
+  texte normalisé (`normaliserQui`, `src/lib/fetes/qui.ts`), réouverture avec « Autre… » cochée. Écarts relevés par le
+  relecteur, laissés tels quels : la visibilité de « Autre… » passe par `canReserverPour(…, ["Autre…"])`
+  (`Entrainements.tsx`), juste mais détournée ; un texte libre égal à « Jeunes », « Chorale » ou « 敬拜团 » se
+  rouvre en pastille « retiré » ; les pastilles de `QuiChecklist` gardent leurs 36 px d'avant. Tests : nouvelle spec
+  `tests/scene-qui.spec.ts` ; `scene-paques-noel`, `scene-saison`, `scene-qui` (tous projets) puis `scene-qui`,
+  `chants-fetes`, `programme-scene`, `scene-des-fetes` sur trois appareils : 273 verts, 18 sautés, 0 échec (≈ 2 min 40
+  pour le second tour). Captures FR et 中文 regardées sur téléphone, tablette, tablette paysage et ordinateur : rien à
+  reprendre. SQ-B lancée dans une session neuve.

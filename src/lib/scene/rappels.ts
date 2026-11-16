@@ -12,6 +12,8 @@ const SCENE_SERVICE = "Entraînement sur scène";
 // et les anciens 敬拜团, Jeunes, Chorale), seul l'auteur est prévenu.
 const QUI_CATEGORY: Record<string, string> = {
   Franco: "Culte Francophone",
+  Intergroupe: "Intergroupe",
+  Interfranco: "Interfranco",
   "EDD 中班": "中班",
   "EDD 大班": "大班",
   "EDD 高班": "高班",

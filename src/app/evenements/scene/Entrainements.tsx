@@ -434,6 +434,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       open={ouverte}
       {...feuille}
       quiLimite={quiLimite}
+      quiAutre={canReserverPour(user, profile, programme, ["Autre…"])}
       onSubmit={save}
       onCancel={() => setOuverte(false)}
     />

@@ -154,7 +154,7 @@ test("fermeture : le volet se ferme le lendemain de `fin`, sinon du dernier dima
 
 test("familles : Groupes, EDD, Louange (lot « chants des fêtes », décision 34) ; chaque groupe d'une famille est dans le « Qui »", () => {
   expect(FAMILLES.map((f) => f.cle)).toEqual(["groupes", "edd", "louange"]);
-  expect(FAMILLES[2].qui).toEqual(["Franco"]);
+  expect(FAMILLES[2].qui).toEqual(["Franco", "Intergroupe", "Interfranco"]);
   expect(QUI).not.toContain("Jeunes");
   expect(QUI).not.toContain("Chorale");
   expect(QUI).not.toContain("敬拜团");
@@ -164,7 +164,7 @@ test("familles : Groupes, EDD, Louange (lot « chants des fêtes », décision 3
 test("groupes proposés : tous sans limite, sinon ceux des familles permises, rangés par famille comme la planche", () => {
   const parFamille = [
     "Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
-    "Franco",
+    "Franco", "Intergroupe", "Interfranco",
   ];
   expect(quiPermis({})).toEqual(parFamille);
   expect(quiPermis({ quiAutorises: [] })).toEqual(parFamille);
@@ -486,7 +486,7 @@ test("qui peut réserver : « Tout membre connecté » vide la liste ; une famil
   await expect.poll(() => patches(db).at(-1)?.data.quiAutorises).toEqual([]);
   await c.getByRole("button", { name: "Louange" }).click();
   await expect(c.getByRole("button", { name: "Tout membre connecté", pressed: false })).toBeVisible();
-  await expect.poll(() => patches(db).at(-1)?.data.quiAutorises).toEqual(["Franco"]);
+  await expect.poll(() => patches(db).at(-1)?.data.quiAutorises).toEqual(["Franco", "Intergroupe", "Interfranco"]);
 });
 
 test("hors grille : « Retirer » supprime la réservation après la confirmation du site", async ({ page }) => {
@@ -560,7 +560,7 @@ test("créneaux libres : la grille à venir moins les créneaux pris ou commenc�
 test("familles d'une liste « qui » : celles dont tous les groupes sont permis ; et l'inverse", () => {
   expect(famillesDe(SAISON.quiAutorises)).toEqual(["groupes", "edd"]);
   expect(famillesDe([])).toEqual([]);
-  expect(quiDesFamilles(["edd", "louange"])).toEqual(["Franco", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班"]);
+  expect(quiDesFamilles(["edd", "louange"])).toEqual(["Franco", "Intergroupe", "Interfranco", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班"]);
 });
 
 // ─── S4 : l'écran des membres ───────────────────────────────────────────────
@@ -638,7 +638,7 @@ test("membres : la feuille ne propose que les groupes permis (pas « Franco ») 
 test("membres : sans limite, la feuille propose tous les groupes ; la coordination n'est jamais limitée", async ({ page }) => {
   await ouvrir(page, ALICE, { "programmes/noel": OUVERT }, undefined, "/evenements/scene");
   await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 11:00" }).click();
-  await expect(feuille(page).getByRole("checkbox", { name: "Franco" })).toBeVisible();
+  await expect(feuille(page).getByRole("checkbox", { name: "Culte Francophone", exact: true })).toBeVisible();
   await expect(feuille(page).getByText("Qui", { exact: true })).toBeVisible();
 });
 

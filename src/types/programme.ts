@@ -13,9 +13,12 @@ export const QUOI = ["Séance louange", "Chant", "Danse", "Sketch", "Spectacle"]
  *  est lue telle quelle. */
 export const QUI = [
   "Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie",
-  "Franco",
+  "Franco", "Intergroupe", "Interfranco",
   "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
 ] as const;
+
+/** Anciennes valeurs, lues telles quelles mais plus proposées. */
+export const QUI_RETIRES = ["敬拜团", "Jeunes", "Chorale"] as const;
 
 /** Lot U1 : une plage horaire réservable, par jour de la semaine (0 = dimanche). */
 export interface Plage {

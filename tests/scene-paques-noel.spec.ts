@@ -846,11 +846,11 @@ test("P6 — Réserver : rien de coché, « Choisis quoi et qui » inactif ; Cha
   await expect(semaineChoisie(page).locator('[data-case="pris"]')).toHaveCount(5);
 });
 
-test("P6 — Réserver : les dix groupes d'emblée, sans « + N » (décision 34, CF3) ; 敬拜团, Jeunes et Chorale ne sont plus proposés", async ({ page }) => {
+test("P6 — Réserver : les douze valeurs et « Autre… » d'emblée, sans « + N » (décision 34, CF3) ; 敬拜团, Jeunes et Chorale ne sont plus proposés", async ({ page }) => {
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
   await jour(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 14:00 – 15:00" }).click();
   const f = page.getByRole("dialog");
-  await expect(f.getByRole("checkbox")).toHaveCount(10);
+  await expect(f.getByRole("checkbox")).toHaveCount(13);
   await expect(f.getByRole("button", { name: /^\+ \d/ })).toHaveCount(0);
   for (const retire of ["Jeunes", "Chorale", "敬拜团"]) await expect(f.getByRole("checkbox", { name: retire })).toHaveCount(0);
   await f.getByRole("checkbox", { name: "Gp Amour" }).check();
@@ -874,7 +874,7 @@ test("Retiré — ordre de passage : « Jeunes » reste coché et grisé « reti
   await page.getByRole("button", { name: "Annuler" }).click();
   await page.getByRole("button", { name: "Ajouter un passage" }).click();
   await expect(page.getByRole("checkbox", { name: /Jeunes/ })).toHaveCount(0);
-  await expect(page.getByRole("checkbox")).toHaveCount(10);
+  await expect(page.getByRole("checkbox")).toHaveCount(13);
 });
 
 test("Retiré — « Modifier » une réservation qui porte « Jeunes » : coché, grisé, « retiré »", async ({ page }) => {
@@ -886,7 +886,7 @@ test("Retiré — « Modifier » une réservation qui porte « Jeunes » : coch�
   const jeunes = f.getByRole("checkbox", { name: "Jeunes · retiré" });
   await expect(jeunes).toBeChecked();
   await expect(jeunes.locator("xpath=ancestor::label")).toHaveClass(/opacity-60/);
-  await expect(f.getByRole("checkbox")).toHaveCount(11);
+  await expect(f.getByRole("checkbox")).toHaveCount(14);
   await expect(f.getByRole("checkbox", { name: /retiré/ })).toHaveCount(1);
 });
 
@@ -1263,7 +1263,7 @@ test("P7 — l'ordre de passage d'une fête sans document : ajouter un numéro c
   const db = await ouvrirFete(page, `${BO}/paques?vue=ordre`, {}, "2026-10-09", ALICE_EVT);
   await page.getByRole("button", { name: "Ajouter un passage" }).click();
   await page.getByLabel("Titre").fill("Il est vivant");
-  await page.getByLabel("Franco").check();
+  await page.getByLabel("Culte Francophone", { exact: true }).check();
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(1);
   const cree = ecrituresProgrammes(db)[0];

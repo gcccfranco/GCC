@@ -251,7 +251,7 @@ type Qui = (typeof QUI)[number];
 export const FAMILLES = [
   { cle: "groupes", qui: ["Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie"] },
   { cle: "edd", qui: ["EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班"] },
-  { cle: "louange", qui: ["Franco"] },
+  { cle: "louange", qui: ["Franco", "Intergroupe", "Interfranco"] },
 ] as const satisfies readonly { cle: string; qui: readonly Qui[] }[];
 
 export type Famille = (typeof FAMILLES)[number]["cle"];
@@ -268,9 +268,9 @@ export function quiPermis(p: { quiAutorises?: string[] }): string[] {
   return retenus.length === 0 ? parFamille : retenus;
 }
 
-/** Familles dont tous les groupes sont permis, dans l'ordre de l'écran. */
+/** Familles dont au moins un groupe est permis (SQ-R4 : une saison d'avant « Intergroupe » garde louange), dans l'ordre de l'écran. */
 export function famillesDe(quiAutorises: string[]): Famille[] {
-  return FAMILLES.filter((f) => f.qui.every((q) => quiAutorises.includes(q))).map((f) => f.cle);
+  return FAMILLES.filter((f) => f.qui.some((q) => quiAutorises.includes(q))).map((f) => f.cle);
 }
 
 /** Groupes permis par ces familles, dans l'ordre de QUI. */

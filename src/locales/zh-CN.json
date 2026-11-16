@@ -1710,6 +1710,8 @@
       "quoi": "内容",
       "qui": "参与者",
       "quiRetire": "已移除",
+      "quiAutre": "其他…",
+      "quiAutreChamp": "谁？",
       "note": "备注",
       "noteHint": "音响、器材、说明…",
       "save": "保存",
