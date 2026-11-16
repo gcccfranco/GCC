@@ -18,7 +18,7 @@
       "guide": "Guide d'utilisation",
       "notify": "Notifier",
       "admin": "Admin",
-      "evenements": "Évènements",
+      "evenements": "Église",
       "moi": "Moi",
       "musiciens": "Musiciens",
       "account": "Compte",
@@ -2481,11 +2481,11 @@
     }
   },
   "evenements": {
-    "title": "Évènements",
-    "sousTitre": "Les rendez-vous de l'église et les inscriptions",
+    "title": "Église",
+    "sousTitre": "Évènements, salles et fêtes",
     "onglets": "Onglets des évènements",
     "tabs": {
-      "calendrier": "Calendrier",
+      "calendrier": "Évènements",
       "paques": "Pâques",
       "noel": "Noël"
     },

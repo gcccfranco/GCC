@@ -108,12 +108,12 @@ test.describe("Barre du bas (BO2) : la barre", () => {
     await expect(barre(page).getByRole("link", { name: "Revenir à l'app" })).toHaveAttribute("href", /^\/planning\/?$/);
     await barre(page).getByRole("link", { name: "Revenir à l'app" }).click();
     await expect(page).toHaveURL(/\/planning\/?$/);
-    await expect(onglets(page)).toHaveText(["Chants", "Setlists", "Planning", "Évènements", "Moi"]);
+    await expect(onglets(page)).toHaveText(["Chants", "Setlists", "Planning", "Église", "Moi"]);
   });
 
   test("la barre de l'App ne change pas, pour un responsable comme pour les autres", async ({ page }) => {
     await ouvrir(page, ADMIN, {}, "/songs");
-    await expect(onglets(page)).toHaveText(["Chants", "Setlists", "Planning", "Évènements", "Moi"]);
+    await expect(onglets(page)).toHaveText(["Chants", "Setlists", "Planning", "Église", "Moi"]);
     await expect(barre(page).getByRole("link", { name: "App", exact: true })).toHaveCount(0);
   });
 

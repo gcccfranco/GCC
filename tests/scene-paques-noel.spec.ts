@@ -504,19 +504,19 @@ async function ouvrirFete(page: Page, chemin: string, docs: Record<string, Recor
 const enTeteFete = (page: Page) => page.getByRole("heading", { level: 2 }).first();
 const historique = (page: Page) => page.evaluate(() => history.length);
 
-test("P4 — rail « Calendrier · Pâques · Noël » pour un membre sans aucun programme", async ({ page }) => {
+test("P4 — rail « Évènements · Pâques · Noël » pour un membre sans aucun programme", async ({ page }) => {
   await ouvrirFete(page, "/evenements/scene/paques");
-  await expect(ongletsRail(page).getByRole("link")).toHaveText(["Calendrier", "Pâques", "Noël"]);
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
   await expect(ongletsRail(page).getByRole("link", { name: "Pâques" })).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Évènements");
-  await expect(enTete(page)).toContainText("Les rendez-vous de l'église et les inscriptions");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Église");
+  await expect(enTete(page)).toContainText("Évènements, salles et fêtes");
   await verifierAgencement(page);
 });
 
 test("P4 — en chinois : 复活节 et 圣诞节 dans le rail, le titre de l'édition aussi", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN });
-  await expect(ongletsRail(page).getByRole("link")).toHaveText(["日历", "复活节", "圣诞节"]);
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["活动", "复活节", "圣诞节"]);
   await expect(enTeteFete(page)).toHaveText("圣诞节 2026");
 });
 

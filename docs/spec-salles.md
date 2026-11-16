@@ -380,3 +380,15 @@ T2b, T2c et T3a (apparence).
   évènements, 5 la Scène après Noël), tests, mise en ligne. **Attend le go de Timothée pour le lot 1.**
 - 16/11/2026 : **go de Timothée pour le lot 1** (« Oui », en réponse à « Go pour le lot 1 ? »). Tranche T1 confiée à
   une session orchestratrice neuve (même branche). Les lots 2 à 5 attendent chacun leur go.
+- 16/11/2026 : **T1 faite, lot 1 fini** (orchestratrice T1). Barre « Église » / « 教会 », icône `Church` (les deux
+  listes de `navigation.ts` et la carte de l'accueil), label « GCC Église », titre de la section « Église » / « 教会 »
+  (`evenements.title`, d'après la planche validée : décision déléguée, session T1, 16/11), sous-titre « Évènements,
+  salles et fêtes », rail « Évènements · Pâques · Noël » (中文 活动 · 复活节 · 圣诞节) ; adresses inchangées. Le retour
+  de la fiche (`EvenementClient`) désigne la liste : il lit `evenements.tabs.calendrier` (« ‹ Évènements »).
+  Navbar et accueil gardent la clé de l'entrée. Spec `tests/eglise-entree.spec.ts` (15 tests, trois appareils) ;
+  douze specs voisines remises aux nouveaux libellés. Tests : 2 363 lancés (16 specs, cinq projets), 38 min, puis
+  32 relances vertes (1,5 min) ; tsc et lint propres. Échecs déjà là sur la base `fecf3170`, hors tranche :
+  `navigation-grand-ecran` 480, 702, 924 (barre réduite « ChantsChants », libellé doublé), `back-office-coupe` 276
+  (« Ruth K. » en double) ; les captures `PW_CAPTURES` (941, P8 1507) n'ont pas été suivies. Regard à l'œil sur les
+  quatre dispositions (fr et 中文) : rien à reprendre. `regard` et les agents de `/tranche` n'étaient pas chargés dans
+  la session : tranche codée et regardée par l'orchestratrice. **Lots 2 à 5 : attendent chacun leur go.**

@@ -7,7 +7,7 @@ import type { Evenement } from "../src/types/evenement";
 // droite (sur l'adresse de l'agenda, le prochain évènement, Q3) ; « Nouvel évènement » en encre.
 // Tablette portrait : cartes sur deux colonnes. Téléphone : l'agenda garde ses cartes à bannière,
 // la fiche fait remonter l'inscription sous les infos. Firestore et date simulés ; personnes fictives.
-// Agencement v18 (A10, T7) : le titre « Évènements » (h1), les onglets et « + Nouvel évènement » sont
+// Agencement v18 (A10, T7) : le titre « Église » (h1, lot AR 1), les onglets et « + Nouvel évènement » sont
 // dans l'en-tête de la section, au-dessus des deux volets ; la fiche se titre en h2 ; une colonne sous
 // 760 px de volet, deux au-delà (agencement-v18-t7.spec.ts).
 
@@ -59,8 +59,8 @@ test.describe("Évènements en grand", () => {
     // Avec un programme de scène affiché : deux onglets, donc le rail (un seul onglet n'en a pas).
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await signInAs(page, SACHA, { ...DOCS, "programmes/noel": { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: true, passages: [], createdBy: "uid-alice", updatedAt: "2026-09-14T20:00:00Z" } }, "/evenements");
-    await expect(page.locator("header[data-entete-page]").getByRole("heading", { name: "Évènements", level: 1 })).toBeVisible();
-    await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Calendrier", exact: true }), "les onglets sont dans l'en-tête").toBeVisible();
+    await expect(page.locator("header[data-entete-page]").getByRole("heading", { name: "Église", level: 1 })).toBeVisible();
+    await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Évènements", exact: true }), "les onglets sont dans l'en-tête").toBeVisible();
     await expect(liste(page).getByRole("link", { name: /Repas Groupe Paix/ })).toBeVisible();
     await expect(liste(page).getByRole("region", { name: "À la une" }).getByRole("link", { name: /Nouveau parking/ })).toBeVisible();
     await expect(detail(page).getByRole("heading", { name: "Soirée louange", level: 2 })).toBeVisible();

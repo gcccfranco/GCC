@@ -122,7 +122,7 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
     await page.getByRole("searchbox").waitFor();
     const sections = page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" });
     await expect(sections.getByRole("link", { name: "Planning" })).toBeVisible();
-    await expect(sections.getByRole("link", { name: "Évènements" })).toHaveCount(0);
+    await expect(sections.getByRole("link", { name: "Église" })).toHaveCount(0);
     await expect(sections.getByRole("link", { name: "Tâches" })).toHaveCount(0);
   });
 });

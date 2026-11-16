@@ -127,7 +127,7 @@ test("fiche d'une section sans compte : introuvable", async ({ page }) => {
 test("onglets : un connecté voit le programme de scène à côté du calendrier", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await signInAs(page, JO, { ...DOCS, "programmes/noel": NOEL }, "/evenements");
-  await expect(page.getByRole("link", { name: "Calendrier", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Évènements", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Noël", exact: true }).click();
   await expect(page).toHaveURL(/\/evenements\/scene/);
   await expect(page.getByRole("heading", { name: "Noël" })).toBeVisible();
@@ -565,7 +565,7 @@ test("QR code : l'organisateur voit le QR de sa fiche à côté du lien", async 
 test("QR code : aucun bouton sur le calendrier, même pour la coordination", async ({ page }) => {
   await member(page, ALICE, "/evenements");
   // En grand, le titre de l'agenda est un h2 (celui de la fiche est à droite).
-  await expect(page.getByRole("heading", { name: "Évènements", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Église", exact: true })).toBeVisible();
   // En grand (U4 bis, B2, Q5), la fiche du prochain évènement est à droite et garde son QR
   // (« gardé sur la fiche ») : c'est l'agenda, le volet de la liste, qui n'en a pas.
   const agenda = page.locator('[data-volet="liste"]');

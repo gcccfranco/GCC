@@ -59,7 +59,7 @@ test("section Évènements : entrée dans le menu principal, onglet nommé comme
   await expect(page.getByRole("link", { name: "Noël", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Noël" })).toBeVisible();
   // Sur téléphone et tablette, l'entrée est dans le menu ☰ ; sur ordinateur, dans la barre.
-  const entree = page.getByRole("link", { name: "Évènements", exact: true });
+  const entree = page.getByRole("link", { name: "Église", exact: true });
   if ((await entree.count()) === 0) await page.getByRole("button", { name: /menu/i }).first().click();
   await expect(entree.first()).toBeVisible();
 });

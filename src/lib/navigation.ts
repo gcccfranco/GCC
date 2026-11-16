@@ -4,7 +4,7 @@
 // U6 ajoute l'espace « back-office » (sélecteur App ↔ Back-Office, menu à 5 entrées depuis la piste A, BO1).
 import {
   ArrowLeftRight, BookOpen, CalendarDays, CalendarRange, Drama, Guitar, Inbox, KeyboardMusic, ListChecks, ListMusic, Music,
-  Network, Sparkles, Ticket, UserRound,
+  Church, Network, Sparkles, UserRound,
   type LucideIcon,
 } from "lucide-react";
 import type { Entree } from "@/types/backOffice";
@@ -37,14 +37,14 @@ const ENTREES_MEMBRE: EntreeBarre[] = [
   { href: "/songs", cle: "common.header.songs", Icone: Music, actifSur: ["/songs"] },
   { href: "/setlists", cle: "common.header.setlists", Icone: ListMusic, actifSur: ["/setlists"] },
   { href: "/planning", cle: "common.header.planning", Icone: CalendarDays, actifSur: ["/planning"] },
-  { href: "/evenements", cle: "common.header.evenements", Icone: Ticket, actifSur: ["/evenements"] },
+  { href: "/evenements", cle: "common.header.evenements", Icone: Church, actifSur: ["/evenements"] },
   { href: "/moi", cle: "common.header.moi", Icone: UserRound, actifSur: ["/moi", "/mes-services", "/taches", "/equipes", "/profil", "/guide", "/questionnaire", "/notifier", "/admin"] },
 ];
 
 // Sans compte : les chants et le calendrier public (décision Q10 du lot 6).
 const ENTREES_VISITEUR: EntreeBarre[] = [
   { href: "/songs", cle: "common.header.songs", Icone: Music, actifSur: ["/songs"] },
-  { href: "/evenements", cle: "common.header.evenements", Icone: Ticket, actifSur: ["/evenements"] },
+  { href: "/evenements", cle: "common.header.evenements", Icone: Church, actifSur: ["/evenements"] },
 ];
 
 // Back-Office (U6, spec-back-office.md Q2-Q4) : le menu, aux adresses `/back-office/…` ; cinq

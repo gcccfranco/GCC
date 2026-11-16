@@ -18,7 +18,7 @@
       "guide": "使用指南",
       "notify": "通知",
       "admin": "管理",
-      "evenements": "活动",
+      "evenements": "教会",
       "moi": "我",
       "musiciens": "乐手",
       "account": "账户",
@@ -2447,11 +2447,11 @@
     }
   },
   "evenements": {
-    "title": "活动",
-    "sousTitre": "教会的活动与报名",
+    "title": "教会",
+    "sousTitre": "活动、场地和节日",
     "onglets": "活动选项卡",
     "tabs": {
-      "calendrier": "日历",
+      "calendrier": "活动",
       "paques": "复活节",
       "noel": "圣诞节"
     },
