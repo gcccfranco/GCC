@@ -114,3 +114,11 @@ changer tout seul ces jours-là, sans exception à saisir.
 - 16/11/2026 : S-Q1 à S-Q3 répondues (Salle 中班 à part ; Scène dans la Grande salle ; Salle imprimante : louange du
   culte francophone ; Salle de réunion à part). Portée élargie à tout le système de réservation, Scène comprise.
   Planche `salles-reservation` lancée (accord de Timothée).
+- 16/11/2026 : **planche rendue** (`docs/planches/planche-salles-reservation.html`, retouchée après la critique,
+  publiée en artefact pour Timothée). Trois pistes : **A. Le tableau des salles (recommandée)** : onglet « Salles » dans
+  Évènements (Calendrier · Salles · Pâques · Noël), une ligne par salle avec son état en mots, la Scène en retrait
+  sous la Grande salle ; B. La journée de l'église (grille salles × heures, entrée renommée « Agenda ») ; C. Où se
+  réunir ? (pas de section, un bouton « Trouver une salle »). Proposé : A, avec de C la feuille qui commence par le
+  moment et les fenêtres libres de la scène sur la page de Noël ; bascule de la Scène après Noël 2026. Questions et
+  propositions : section « Questions à trancher » de la planche. **Attend le choix de Timothée**, puis les décisions
+  et les tranches ici.
