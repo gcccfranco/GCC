@@ -4697,7 +4697,14 @@
       "auteur": "Inscrit par",
       "par": "Inscrit par {{nom}}",
       "journee": "toute la journée",
-      "fete": "Page de {{fete}}"
+      "fete": "Page de {{fete}}",
+      "evenement": "Voir l'évènement"
+    },
+    "formulaire": {
+      "salle": "Salle de l'église",
+      "ailleurs": "Ailleurs",
+      "heures": "Une salle de l'église demande une heure de début et de fin.",
+      "echec": "Les salles n'ont pas pu être vérifiées. Réessayez."
     }
   }
 }

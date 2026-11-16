@@ -1,14 +1,17 @@
 // Lecture des sources de Salles (docs/spec-salles.md, § Modèle, lot 2) : les services du planning (pour la variante du
 // dimanche, AR13) et les éditions affichées des fêtes avec leurs créneaux de scène (SA13, lecture seule), comme le
 // Calendrier (`src/lib/calendrier/charger.ts`). Une source en panne n'empêche pas l'autre : `echec` le dit. Firestore
-// en REST seulement.
+// en REST seulement. Lot 4 : les évènements et réunions qui portent une salle (AR15), lus comme le Calendrier ; la
+// vérification d'un formulaire d'évènement (SA12) lit les occupations d'un seul jour (`occupationsPourEvenement`).
 
+import { listEvenements } from "@/lib/firebase/evenements";
 import { listCreneaux, listProgrammes } from "@/lib/firebase/programmes";
 import { listReservations, type Reservation } from "@/lib/firebase/reservations";
 import { addDays } from "@/lib/taches/echeances";
 import { loadPlanningData, type PlanningData } from "@/lib/planning/names";
 import { editionsAffichees } from "@/lib/scene/fetes";
-import type { SourcesSalles } from "./occupations";
+import type { Evenement } from "@/types/evenement";
+import { occupationsDu, type EvenementSalle, type Occupation, type SourcesSalles } from "./occupations";
 
 /** Les services qui changent la variante d'un dimanche : les dates d'Intergroupe et d'Interfranco du planning. */
 export function servicesDeVariante(planning: Pick<PlanningData, "intergroupe" | "interfranco">): SourcesSalles["services"] {
@@ -26,16 +29,42 @@ export function chargerReservations(today: string): Promise<Reservation[]> {
   return listReservations(today, addDays(today, JOURS_LUS));
 }
 
-export async function chargerSalles(today: string): Promise<{ sources: SourcesSalles; echec: boolean }> {
+/** Les évènements qui portent une salle ; `voir` : la personne peut-elle le voir (sinon il occupe sans être nommé). */
+async function chargerEvenements(voir: (e: Evenement) => boolean): Promise<EvenementSalle[]> {
+  return (await listEvenements(false)).filter((e) => e.salle).map((e) => ({
+    id: e.id, titre: e.titre, date: e.date, heure: e.heure, heureFin: e.heureFin, salle: e.salle, organisateurNom: e.organisateurNom,
+    ...(voir(e) ? {} : { prive: true }),
+  }));
+}
+
+/** Les éditions affichées des fêtes et leurs créneaux de scène. */
+async function chargerScene(today: string): Promise<SourcesSalles["scene"]> {
+  const programmes = await listProgrammes();
+  return Promise.all(editionsAffichees(programmes, today).map(async ({ programme }) => ({
+    programme: programme!, creneaux: await listCreneaux(programme!.id),
+  })));
+}
+
+export async function chargerSalles(today: string, voir: (e: Evenement) => boolean = () => true): Promise<{ sources: SourcesSalles; echec: boolean }> {
   let echec = false;
-  const [services, scene, reservations] = await Promise.all([
+  const [services, scene, reservations, evenements] = await Promise.all([
     loadPlanningData().then(servicesDeVariante).catch(() => { echec = true; return []; }),
-    listProgrammes()
-      .then((programmes) => Promise.all(editionsAffichees(programmes, today).map(async ({ programme }) => ({
-        programme: programme!, creneaux: await listCreneaux(programme!.id),
-      }))))
-      .catch(() => { echec = true; return []; }),
+    chargerScene(today).catch(() => { echec = true; return []; }),
     chargerReservations(today).catch(() => { echec = true; return []; }),
+    chargerEvenements(voir).catch(() => { echec = true; return []; }),
   ]);
-  return { sources: { services, scene, reservations }, echec };
+  return { sources: { services, scene, reservations, evenements }, echec };
+}
+
+/** SA12 : les occupations du jour d'un évènement, relues avant de l'écrire (réservations et évènements de ce jour-là).
+ *  Le planning (variante du dimanche) et la scène en panne comptent pour rien ; réservations ou évènements illisibles
+ *  font échouer la vérification (rejet) : l'évènement ne s'écrit pas sans elle. */
+export async function occupationsPourEvenement(date: string, today: string, voir: (e: Evenement) => boolean): Promise<Occupation[]> {
+  const [services, scene, reservations, evenements] = await Promise.all([
+    loadPlanningData().then(servicesDeVariante).catch(() => []),
+    chargerScene(today).catch(() => []),
+    listReservations(date, date),
+    chargerEvenements(voir),
+  ]);
+  return occupationsDu(date, { services, scene, reservations, evenements });
 }

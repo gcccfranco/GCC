@@ -4645,7 +4645,14 @@
       "auteur": "登记人",
       "par": "由 {{nom}} 登记",
       "journee": "全天",
-      "fete": "{{fete}}页面"
+      "fete": "{{fete}}页面",
+      "evenement": "查看活动"
+    },
+    "formulaire": {
+      "salle": "教会场地",
+      "ailleurs": "其他地点",
+      "heures": "选择教会场地时，须填写开始和结束时间。",
+      "echec": "未能核对场地，请重试。"
     }
   }
 }

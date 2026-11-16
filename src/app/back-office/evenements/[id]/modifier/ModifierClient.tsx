@@ -74,6 +74,7 @@ export function ModifierClient() {
   if (reunion) return page(
     <ReunionForm
       initial={initial}
+      evenementId={evenement.id}
       pours={pours}
       creation={false}
       titreCache={!deuxVolets}
@@ -88,6 +89,7 @@ export function ModifierClient() {
   return page(
     <EvenementForm
       initial={initial}
+      evenementId={evenement.id}
       pours={pours}
       creation={false}
       titreCache={!deuxVolets}

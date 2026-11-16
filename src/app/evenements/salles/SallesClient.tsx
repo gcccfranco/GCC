@@ -28,7 +28,7 @@ import { jourDeParis } from "@/lib/evenements/bascule"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { createReservation, deleteReservation, updateReservation, type Reservation } from "@/lib/firebase/reservations"
-import { canEditReservation, canReserverSalle } from "@/lib/access"
+import { canEditReservation, canReserverSalle, canSeeEvenement } from "@/lib/access"
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { estSurLaListe } from "@/lib/deuxVolets"
@@ -156,8 +156,9 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
 
   useEffect(() => {
     if (!user) return
-    chargerSalles(today).then(setLecture)
-  }, [user, today])
+    // Lot 4 : la réunion d'une équipe dont on n'est pas occupe sa salle sans être nommée.
+    chargerSalles(today, (e) => canSeeEvenement(user, profile, e)).then(setLecture)
+  }, [user, profile, today])
 
   // Après une écriture, les réservations se relisent (les autres sources ne changent pas).
   const relireReservations = async () => {

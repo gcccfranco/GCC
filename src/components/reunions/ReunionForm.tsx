@@ -5,6 +5,8 @@
 // une description et des liens (ordre du jour, document partagé), visibles d'emblée ; ni bannière, ni fin, ni
 // inscriptions, ni « Plus d'options ». Sujets à aborder, compte rendu et réunions précédentes vivent sur sa fiche.
 // Stockée comme un évènement (`reunion: true`) : bannière ou fin d'une réunion plus ancienne restent telles quelles.
+// Salles (chantier AR, lot 4, SA12) : « Salle de l'église » à la place du lieu (`ChampSalle`), « Ailleurs » le rend ;
+// une salle choisie montre l'heure de fin et se vérifie à l'enregistrement (chevauchement refusé, SA8).
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
@@ -20,6 +22,11 @@ import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { ChampSalle, erreurSalle, valeursSalle, verifierSalle, type RefusEvenement } from "@/components/salles/ChampSalle"
+import { canSeeEvenement } from "@/lib/access"
+import { jourDeParis } from "@/lib/evenements/bascule"
+import { useAuth } from "@/lib/firebase/auth"
+import { useProfile } from "@/lib/firebase/users"
 
 // Une réunion a toujours une date (sujets jusqu'au début, rappel de la veille) : jamais « Info » (lot U6).
 const TYPE_REUNION: EvenementValues["type"] = "eglise"
@@ -28,8 +35,10 @@ const DATE_MAX = "9999-12-31"
 // Une réunion n'a pas d'inscriptions (lot U6, R4).
 const SANS_INSCRIPTION = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null, lienExterne: "" }
 
-export function ReunionForm({ initial, pours, creation, titreCache = false, onSubmit, onCancel }: {
+export function ReunionForm({ initial, pours, creation, titreCache = false, evenementId, onSubmit, onCancel }: {
   initial: EvenementValues
+  /** À la modification : la réunion elle-même ne gêne pas sa salle (SA8, SA10). */
+  evenementId?: string
   /** Équipes que la personne peut viser. */
   pours: string[]
   /** À la création : « Créer la réunion » et « Prévenir les membres ». */
@@ -52,6 +61,9 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, onSu
   const [prevenir, setPrevenir] = useState(true)
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
+  const [refus, setRefus] = useState<RefusEvenement | null>(null)
+  const { user } = useAuth()
+  const { profile } = useProfile()
   const set = (patch: Partial<EvenementValues>) => setV((x) => ({ ...x, ...patch }))
   const Titre = titreCache ? "h2" : "h1"
 
@@ -62,15 +74,28 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, onSu
     for (const l of v.liens) {
       if (l.url.trim() && !/^https?:\/\//i.test(l.url.trim())) { setError(t("annonces.form.errorLink", { url: l.url })); return }
     }
+    const erreur = erreurSalle(v)
+    if (erreur) { setError(t(erreur)); return }
     setBusy(true); setError("")
+    // SA12 : la salle se vérifie sur les occupations relues du jour ; un chevauchement montre le refus sous le champ.
+    try {
+      const r = await verifierSalle(v, evenementId, jourDeParis(), (e) => canSeeEvenement(user, profile, e))
+      setRefus(r)
+      if (r) { setBusy(false); document.getElementById("ev-salle")?.focus(); return }
+    } catch {
+      setError(t("salles.formulaire.echec")); setBusy(false); return
+    }
     // La fin d'une ancienne réunion n'a pas de champ ici : reportée après elle, la réunion la perd (sinon elle passerait
     // dans « passé » dès l'enregistrement).
     const finPerdue = !!v.dateFin && v.dateFin < v.date
     try {
       await onSubmit({
         ...v,
-        ...(finPerdue ? { dateFin: "", heureFin: "" } : {}),
+        // Avec une salle, l'heure de fin est la sienne (SA12) : elle reste.
+        ...(finPerdue ? { dateFin: "", ...(v.salle ? {} : { heureFin: "" }) } : {}),
         titre: v.titre.trim(), lieu: v.lieu.trim(), description: v.description.trim(), contact: v.contact.trim(),
+        // La salle ne s'écrit que si la réunion en a une ou en avait une (« Ailleurs » la retire).
+        ...(v.salle || initial.salle ? valeursSalle(v) : {}),
         liens: v.liens.map((l) => ({ label: l.label.trim(), url: l.url.trim() })).filter((l) => l.url),
         expiresAt: null, epingle: false,
         ...SANS_INSCRIPTION,
@@ -112,9 +137,7 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, onSu
             </Champ>
           </div>
 
-          <Champ id="ev-lieu" label={t("evenements.form.lieu")}>
-            <Input id="ev-lieu" className="h-11" value={v.lieu} maxLength={120} onChange={(e) => set({ lieu: e.target.value })} />
-          </Champ>
+          <ChampSalle v={v} set={set} refus={refus} />
 
           <Champ id="ev-contact" label={t("evenements.form.contact")}>
             <Input id="ev-contact" className="h-11" value={v.contact} maxLength={80} placeholder={t("evenements.form.contactHint")} onChange={(e) => set({ contact: e.target.value })} />

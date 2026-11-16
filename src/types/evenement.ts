@@ -2,6 +2,7 @@
 // fiches, inscriptions. Les annonces y sont fusionnées (type « info »).
 
 import type { AnnonceLink, AnnonceSection } from "./annonce";
+import type { SalleId } from "@/lib/salles/salles";
 
 export const EVENEMENT_TYPES = ["sport", "loisir", "musique", "eglise", "info"] as const;
 export type EvenementType = (typeof EVENEMENT_TYPES)[number];
@@ -47,6 +48,9 @@ export interface Evenement {
   /** ISO, facultatif (camp, retraite sur plusieurs jours). */
   dateFin: string;
   lieu: string;
+  /** Salle de l'église (chantier AR, lot 4, SA12, AR15) : l'évènement l'occupe de `heure` à `heureFin` le jour `date`,
+   *  et `lieu` en porte le nom. Absent (ou null, écrit par « Ailleurs ») = ailleurs, `lieu` en texte libre. */
+  salle?: SalleId | null;
   /** Texte libre, URLs cliquables à l'affichage. */
   description: string;
   liens: AnnonceLink[];

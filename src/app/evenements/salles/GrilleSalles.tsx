@@ -285,6 +285,15 @@ export function Detail({ occupation: o, langue, dateLongue, fermer }: { occupati
               </button>
             </div>
           )}
+          {/* Lot 4 (SA4) : le détail d'un évènement mène à sa fiche ; une réunion privée n'a pas de lien. */}
+          {o.source === "evenement" && o.lien && (
+            <div className="border-t border-border/60 px-4 py-1">
+              <Link href={o.lien} onClick={fermer} className="flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline">
+                {t("salles.detail.evenement")}
+                <ChevronRight aria-hidden className="ml-auto h-4 w-4 text-muted-foreground" />
+              </Link>
+            </div>
+          )}
           {o.lien && (fete === "noel" || fete === "paques") && (
             <div className="border-t border-border/60 px-4 py-1">
               <Link href={o.lien} onClick={fermer} className="flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline">

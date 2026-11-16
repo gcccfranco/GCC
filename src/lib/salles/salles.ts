@@ -32,3 +32,8 @@ export const SALLES: readonly Salle[] = [
 export function lieuxLies(id: SalleId): SalleId[] {
   return id === "grande" || id === "scene" ? ["grande", "scene"] : [id];
 }
+
+/** Une valeur lue (Firestore) est-elle une des neuf salles ? */
+export function estSalleId(x: unknown): x is SalleId {
+  return typeof x === "string" && SALLES.some((s) => s.id === x);
+}
