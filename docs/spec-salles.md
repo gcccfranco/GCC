@@ -627,3 +627,24 @@ T2b, T2c et T3a (apparence).
   plus de créneaux fixes, la Scène se réserve à l'heure qu'on veut, la page de la fête montre ses fenêtres libres.
 - 16/11/2026 (soir) : AR23 retirée sur demande de Timothée (« tu peux enlever les trucs à reporter ») : pas de liste
   « À reporter », pas de `depuisCreneau` ; il reporte d'après ses captures.
+- 16/11/2026 (nuit) : **T5a faite** (session orchestratrice, codée par elle-même : les agents du dépôt n'étaient pas
+  chargés). `Reservation` gagne `fete`, `qui`, `note`, `libre` (pas de `depuisCreneau`, AR23) ;
+  `listReservationsDeFete` (`fete ==`, sans `orderBy` : index automatique, tri côté client). `listCreneaux`,
+  `createCreneau`, `updateCreneau`, `deleteCreneau` lisent et écrivent `reservations/{id}` (`salle: "scene"`,
+  `fete` = id du programme, `dimanche` ↔ `date`, `pour` = libellé français des `qui`, 60 caractères), même signature ;
+  le PATCH de `programmes.ts` n'écrit plus `null` pour un champ `undefined` (il le retire, ex. `libre`). Salles :
+  `SourcesSalles.scene` ne porte plus que les programmes (`id` en plus) ; une réservation avec `fete` y reste un
+  créneau de scène (quoi · qui, lien vers la fête, non modifiable depuis Salles, ignorée si l'édition est un
+  brouillon). **Règle changée** : `reservable()` sortie de `match /programmes` (partagée, les anciens créneaux s'en
+  servent toujours) ; `reservationValide()` : champs permis (`keys().hasOnly`), `fete` ⇒ `salle == 'scene'`, `qui`
+  liste ; `feteReservable()` (coordination et gestionnaires de planning sans limite) à la création et à la
+  modification, `fete` inchangée à la modification. Miroir : commentaires de `canReserverSalle`, `canEditReservation`,
+  `canEditCreneau`, `canReserverPour` (logique inchangée). **Timothée publie `firestore.rules`** avant de pousser le
+  lot 5 sur `main`. Encore sur les anciens créneaux jusqu'à T5c : rappels (`cron/reminders`) et `/api/scene/conflit`.
+  Tests : `tests/salles-scene.spec.ts` (4 × 3 appareils) ; fixtures des specs voisines converties par
+  `tests/helpers/creneauxScene.ts` (`creneauxEnReservations`) : `scene-*`, `programme-scene`, `salles-*`, `calendrier`,
+  `calendrier-deplacer`, `tableau-de-bord`, `a-faire`, `audit-design-captures-2`. Specs de la Scène et `salles-*` sur
+  trois appareils : 968 verts, 83 sautés, 17 échecs en 14 min 19 s (fixtures oubliées, règle modifiée en cours de
+  route, lenteurs de `salles-evenement`) ; rejoués : 63 verts en 1 min 18 s ; `salles-liste` et `salles-grille` en
+  tablette paysage et 1 440 px : 30 verts en 34 s (≈ 16 min de tests). tsc et lint propres (0 erreur). Aucun
+  changement d'apparence : pas de regard ni de `critique-design`. T5b lancée.

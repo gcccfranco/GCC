@@ -320,23 +320,27 @@ test("calendrier : les créneaux de Noël 2026 et de Pâques 2027 dans la même 
 });
 
 test("calendrier : une seule lecture rend les éditions affichées des deux fêtes avec leurs créneaux, sans brouillon", async () => {
-  const docs: Record<string, Record<string, unknown>> = {
+  const docs: Record<string, Record<string, unknown>> = creneauxEnReservations({
     "programmes/x7Kq2": { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, passages: [], createdBy: "", updatedAt: "" },
     "programmes/paques-2027": { nom: "Pâques 2027", fete: "paques", annee: 2027, jourJ: "2027-03-28", debut: "2027-02-01", ouvert: true, passages: [], createdBy: "", updatedAt: "" },
     "programmes/noel-2027": { nom: "Noël 2027", fete: "noel", annee: 2027, jourJ: "2027-12-24", debut: "2027-10-01", ouvert: false, passages: [], createdBy: "", updatedAt: "" },
     "programmes/x7Kq2/creneaux/n1": { ...resaDe("n1", "2026-10-11", "14:00", "15:00") },
     "programmes/paques-2027/creneaux/p1": { ...resaDe("p1", "2027-02-07", "15:00", "16:00") },
     "programmes/noel-2027/creneaux/b1": { ...resaDe("b1", "2027-10-03", "14:00", "15:00") },
-  };
+  });
   const avant = globalThis.fetch;
   globalThis.fetch = (async (url: string, init?: RequestInit) => {
     const u = String(url);
     if (!u.endsWith(":runQuery")) return new Response("{}", { status: 404 });
     const parent = decodeURIComponent(u.split("/documents")[1] ?? "").replace(/^\//, "").replace(/:runQuery$/, "");
-    const from = (JSON.parse(String(init?.body)) as { structuredQuery: { from: { collectionId: string }[] } }).structuredQuery.from[0].collectionId;
+    const q = (JSON.parse(String(init?.body)) as { structuredQuery: { from: { collectionId: string }[]; where?: { fieldFilter?: { field: { fieldPath: string }; value: { stringValue?: string } } } } }).structuredQuery;
+    const from = q.from[0].collectionId;
     const collection = parent ? `${parent}/${from}` : from;
+    // Lot 5 (AR20) : les créneaux d'une fête se lisent par `fete ==` dans reservations.
+    const egal = q.where?.fieldFilter;
     const rows = Object.entries(docs)
       .filter(([p]) => p.startsWith(`${collection}/`) && !p.slice(collection.length + 1).includes("/"))
+      .filter(([p]) => !egal || docs[p][egal.field.fieldPath] === egal.value.stringValue)
       .sort(([a], [b]) => String(docs[a].jourJ ?? "").localeCompare(String(docs[b].jourJ ?? "")))
       .map(([p, data]) => ({ document: fsDoc(p, data) }));
     return new Response(JSON.stringify(rows), { status: 200, headers: { "Content-Type": "application/json" } });

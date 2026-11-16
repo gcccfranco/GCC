@@ -873,13 +873,13 @@ test("hors grille : « Déplacer » vers un créneau qui a commencé entre-temps
   await page.clock.setFixedTime(new Date("2026-10-11T15:05:00"));
   await f.getByRole("button", { name: "Déplacer", exact: true }).click();
   await expect(f.getByRole("alert")).toHaveText("Ce créneau a déjà commencé : il ne se réserve plus.");
-  expect(db.writes.filter((w) => w.method === "PATCH" && w.path.includes("creneaux"))).toHaveLength(0);
+  expect(db.writes.filter((w) => w.method === "PATCH" && w.path.startsWith("reservations/"))).toHaveLength(0);
 });
 
 test("« Retirer » qui échoue le dit au-dessus du tableau de toutes les réservations", async ({ page }) => {
   const c1 = { ...resa("2026-10-11", "15:00", "16:00", "c1"), auteurUid: "uid-noe", auteurNom: "Noé L." };
   await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/c1": c1 });
-  await page.route(/creneaux\/c1/, (route) => route.request().method() === "DELETE"
+  await page.route(/reservations\/c1/, (route) => route.request().method() === "DELETE"
     ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "denied" } }) })
     : route.fallback());
   await versToutesLesReservations(page);
