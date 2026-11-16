@@ -311,13 +311,13 @@ AR19 à AR23 ci-dessous). Une session par tranche, chacune lance la suivante.
 
 | # | Décision | D'où |
 |---|---|---|
-| AR19 | **La Scène bascule maintenant, Noël 2026 compris** (remplace la date d'AR9). Aucune reprise automatique : Timothée reporte à la main les réservations de Noël déjà faites. Les anciens documents `programmes/{id}/creneaux` ne sont ni modifiés ni supprimés ; plus rien ne les lit, sauf la liste « À reporter » (AR23). | Timothée, 16/11/2026. |
+| AR19 | **La Scène bascule maintenant, Noël 2026 compris** (remplace la date d'AR9). Aucune reprise automatique : Timothée reporte à la main les réservations de Noël déjà faites. Les anciens documents `programmes/{id}/creneaux` ne sont ni modifiés ni supprimés ; plus rien ne les lit (AR23). | Timothée, 16/11/2026. |
 | AR20 | **Un créneau de fête est une réservation** de `reservations/{id}` avec `salle: "scene"` et quatre champs de plus : `fete` (id de l'édition, `noel-2026`), `qui` (valeurs de `QUI`, comme aujourd'hui), `note`, `libre` (SQ-B). `pour` reçoit le libellé des `qui` pour Salles. Les quatre fonctions `listCreneaux`, `createCreneau`, `updateCreneau`, `deleteCreneau` (`src/lib/firebase/programmes.ts`) gardent leur nom et leur type `Creneau` et lisent ou écrivent ces réservations (`runQuery` sur `fete ==` : index automatique) : la page de la fête, le Back-Office, le Calendrier et le tableau de bord suivent sans autre changement. | Décision déléguée (session de spec, 16/11) : le plus petit changement qui fait de la Scène une salle. |
 | AR21 | **La fête garde ses règles** : période, plages, « Qui peut réserver », fermeture à la main. Les rules les vérifient pour une réservation qui porte `fete` (`reservable(fete, qui)`, la coordination et les gestionnaires de planning sans limite, comme aujourd'hui). Une réservation de la `scene` **sans** `fete` suit les règles de toute salle. | S5, planche (« Scène ne sert qu'aux règles de la fête ») ; décision déléguée (session de spec, 16/11). |
 | AR22 | **Plus de créneaux fixes : la Scène se réserve à l'heure qu'on veut**, comme toute salle (Timothée, 16/11 au soir : « tu peux tout modifier vu que je vais reporter à la main » ; déjà : « laisser les personnes mettre le temps qu'ils veulent réserver »). La page de la fête montre, pour chaque jour réservable de la période, **quand la scène est libre** (« Libre 14:30 – 15:00 · 17:00 – 19:00 », dans les plages de la saison) et les réservations du jour ; « Réserver » ouvre une seule feuille, « de » et « à » au pas de 15 min (celle d'« Un autre moment », qui disparaît en tant que bouton à part), fenêtre libre touchée pré-remplie. Le refus d'un chevauchement compare à toutes les occupations de la Grande salle et de la Scène (emploi du temps fixe, Salles, évènements), avec le message de SA8. La durée d'un créneau (`duree`) sort de la saison ; les plages restent (jours et heures où la fête propose la scène). Dans Salles, choisir la Scène pendant la période d'une fête ouverte affiche « Pendant la saison de <fête>, la Scène se réserve depuis sa page » avec le lien. | Timothée ; AR6, AR8. |
-| AR23 | **« À reporter »** : dans la gestion d'une fête au Back-Office (derrière `BACK_OFFICE`), une liste en lecture seule des anciens créneaux de l'édition (`programmes/{id}/creneaux`), chacun avec « Reporter », qui ouvre la feuille « Réserver » remplie (date, heures, quoi, qui, note) ; un créneau reporté (`depuisCreneau` = son id, écrit dans la réservation) disparaît de la liste. Rien n'est écrit sans que Timothée enregistre. | Pour qu'il reporte « à la main » sans recopier ; décision déléguée (session de spec, 16/11). |
+| AR23 | **Pas de liste « À reporter »** : Timothée a pris des captures des réservations de Noël et les reporte lui-même (16/11 au soir : « tu peux enlever les trucs à reporter »). Pas de champ `depuisCreneau`. | Timothée. |
 
-- **T5a — Les créneaux deviennent des réservations** : champs `fete`, `qui`, `note`, `libre`, `depuisCreneau`
+- **T5a — Les créneaux deviennent des réservations** : champs `fete`, `qui`, `note`, `libre`
   (`Reservation`, `reservations.ts`) ; les quatre fonctions de `programmes.ts` (AR20) ; rules de `reservations/{id}`
   (champs permis, `reservable(fete, qui)` repris de `programmes/{id}/creneaux`), miroir dans `access.ts`
   (`canReserverSalle`, `canEditReservation` pour une réservation de fête : auteur, coordination ; `canReserverPour`
@@ -330,12 +330,12 @@ AR19 à AR23 ci-dessous). Une session par tranche, chacune lance la suivante.
   créneaux (page de la fête et vues du Back-Office), une seule feuille « de / à », `duree` retirée de `SaisonForm`,
   refus contre toutes les occupations, message de Salles pendant une saison. Specs de la Scène réécrites là où elles
   lisaient la grille. `critique-design` après (apparence).
-- **T5c — Le serveur et « À reporter »** : rappels (`src/app/api/cron/reminders/route.ts`, `sceneCreneaux`) et route
+- **T5c — Le serveur** : rappels (`src/app/api/cron/reminders/route.ts`, `sceneCreneaux`) et route
   de conflit : la Scène passe par `/api/salles/conflit` ; `/api/scene/conflit` retirée (routes API : 20, `CLAUDE.md` et
-  la référence à jour) ; liste « À reporter » (AR23). Fin de lot : specs du lot, de la Scène et de la section Église.
+  la référence à jour). Fin de lot : specs du lot, de la Scène et de la section Église.
 
 **Mise en ligne du lot 5** : publier `firestore.rules` (champs de fête dans `reservations/{id}`) avant de pousser ;
-puis Timothée reporte les réservations de Noël avec « À reporter ». Tant qu'il n'a pas reporté, la page de Noël
+puis Timothée reporte à la main les réservations de Noël (ses captures). Tant qu'il n'a pas reporté, la page de Noël
 n'affiche plus les anciennes réservations : pousser de préférence quand il a le temps de les reporter aussitôt.
 
 ## Tests Playwright (écrits d'abord)
@@ -625,3 +625,5 @@ T2b, T2c et T3a (apparence).
   le lot AQ est fini, `src/app/evenements/scene/` est libre. T5a lancée dans une session neuve.
 - 16/11/2026 (soir) : Timothée précise : « tu peux tout modifier vu que je vais reporter à la main ». AR22 réécrite :
   plus de créneaux fixes, la Scène se réserve à l'heure qu'on veut, la page de la fête montre ses fenêtres libres.
+- 16/11/2026 (soir) : AR23 retirée sur demande de Timothée (« tu peux enlever les trucs à reporter ») : pas de liste
+  « À reporter », pas de `depuisCreneau` ; il reporte d'après ses captures.
