@@ -122,3 +122,10 @@ changer tout seul ces jours-là, sans exception à saisir.
   moment et les fenêtres libres de la scène sur la page de Noël ; bascule de la Scène après Noël 2026. Questions et
   propositions : section « Questions à trancher » de la planche. **Attend le choix de Timothée**, puis les décisions
   et les tranches ici.
+- 16/11/2026 : **choix de Timothée** : « J'aime beaucoup la piste A, j'aime beaucoup le calendrier de la piste B pour
+  avoir un aperçu global des réservations. Peut être qu'il faut changer le nom de l'onglet événement, parce qu'il y a
+  plusieurs choses de mélange dedans ». Retenu : **la piste A, avec la grille de B comme deuxième vue de Salles**
+  (« Liste · Grille »). Proposé à Timothée, sans réponse encore : l'entrée de la barre renommée **« Église »** (autre
+  nom possible : « Agenda »), rail « Évènements · Salles · Pâques · Noël », adresse `/evenements` inchangée ; Liste par
+  défaut au téléphone, Grille par défaut en grand. Une section « Piste retenue » est ajoutée à la planche. Restent sans
+  réponse : la bascule de la Scène (proposé : après Noël), le nombre de salles (neuf ou dix), les noms en 中文.
