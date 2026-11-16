@@ -17,7 +17,7 @@ toute l'assemblée a un compte ; sans compte on voit les chants et le calendrier
 
 ## Comment ce document évolue (Timothée, 10/11/2026)
 
-- Une demande nouvelle reçoit la lettre suivante (**AQ**) : **une ligne** dans l'index ci-dessous, le détail (mots de la
+- Une demande nouvelle reçoit la lettre suivante (**AS**) : **une ligne** dans l'index ci-dessous, le détail (mots de la
   personne, décisions, tranches, avancement) dans sa
   spec `docs/spec-<sujet>.md`, les décisions aussi dans `intent/vision-site.md`.
 - Le journal vit dans le § Avancement de chaque spec ; ici, seul « État » est réécrit (daté), jamais allongé.
@@ -266,6 +266,7 @@ Mentions encore ouvertes à la dernière écriture de chaque section ; plusieurs
 et **n'ont pas été reconfirmées** : vérifier dans le § Avancement de la spec avant d'agir. Les points « à la main »
 (règles, scripts, 中文) sont **à faire confirmer par Timothée** : certains sont peut-être déjà faits.
 
+- **Bug rapporté le 16/11 : « Tâches à faire : ne renvoie à aucune page ».** Écran et geste à préciser par Timothée. Lecture du code le 16/11 : aucune adresse manquante parmi les entrées vers une tâche (Moi, `/taches`, notifications, « À faire » du Back-Office, calendrier, page d'équipe) ; deux liens n'ouvrent pas la tâche elle-même : le calendrier (`src/lib/calendrier/entrees.ts`, `/taches/<équipe>` puis deux redirections vers la page de l'équipe) et les notifications de tâche (la liste `/taches`). Pas reproduit dans le navigateur.
 - **Incohérences d'interface, partout sur le site (parcours à l'œil du 14/11)** : `docs/parcours-oeil-2026-11-14.md`, dix choses à changer en premier, constats par gêne, état des constats du 13/11. Rien de codé : Timothée choisit.
 - **Bug signalé par Timothée (12/11, nuit) : espace vide en haut de la page chant.** **Corrigé sur la branche** (go de Timothée « Corrige directement », 12/11), pas encore sur `main`.
   Reproduit sous Chromium (iPhone 13 et Pixel 7, défilement de 8 px par pas) : 72 px plus bas, 90 px CSS de blanc au-dessus du
@@ -356,6 +357,8 @@ Specs dans `docs/` ; « archive § 3.X » = `grep -n '^### X\.' docs/archive/feu
 | AP | Le site devient le pupitre : « Ma partition » qui suit le chant, entrée des musiciens, écrans pratiques, Harmonie qui s'entend, accords en chiffres | `spec-pupitre-musicien.md` | cadrage du 11/11/2026 ; rapport d'usage rendu (`audit-usage-2026-11-11.md` : 149 constats, six lots proposés, révision incomplète) ; « go » de Timothée sur les cinq recommandations : lot 1 (retouches) : go, T1 à T3 codées sur la branche ; deux exemples : piste A et onze décisions (« Ok » de Timothée), spec à écrire (`spec-exemples-usage.md`) ; planches publiées, réponses attendues : « Ma partition », Harmonie et Accords ; comptage d'usage : go pour T1 ; planche du pupitre à lancer après « Ma partition » |
 | CL | Corrections du mode louange du 14/11 : page du scan 简谱 entière (deux volets et demi-lignes retirés), un trait = un tracé, « Chiffres » en louange et sur le calque, accord touché selon « Idées d'harmonie » | `spec-corrections-louange.md` (CL-1 à CL-4) | go de Timothée le 14/11/2026 ; CL-3 et CL-4 faites le 14/11, CL-1 et CL-2 faites le 15/11 (validées par Timothée) : lot fini |
 | CI | Corrections d'interface du 14/11 (relevé `parcours-oeil-2026-11-14.md`, « Il faut tout corriger ») : défauts A1 à A9, harmonisations B1 à B13 sans planche | `spec-corrections-interface.md` (CI-1 à CI-17) | spec validée par Timothée le 14/11/2026 ; go pour CI-1 ; tranches à « PerformanceMode » après CL-1 |
+| AQ | Scène, retours du 16/11 : « Qui » élargi (Intergroupe, Interfranco, « Autre… ») et « Réserver un autre moment » (date et heures libres) | `spec-scene-qui-autre-moment.md` (SQ-A, SQ-B) | spec écrite le 16/11/2026, propositions à valider ; attend le go |
+| AR | Occupation des salles (emploi du temps du dimanche, réservation libre, réunions et évènements ; la Scène y entre après Noël) | `spec-salles.md` | cadrage du 16/11/2026 ; quatre faits à préciser par Timothée, planche à faire, pas de go |
 
 **Chantiers sans lettre** (journal, archive § 6) : 简谱 par défaut puis piste A partout (`spec-jianpu-integration.md`,
 lot 1 en ligne, lot 3 codé 12–18/10) ; relevé des écarts et corrections (`spec-corrections-apres-releve.md`, 08–11/10) ;
