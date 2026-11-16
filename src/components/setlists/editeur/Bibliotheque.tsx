@@ -257,7 +257,8 @@ export function Bibliotheque({
         onChange={(v) => changer({ recherche: v })}
         placeholder={t("setlists.form.searchSongsPlaceholder")}
         label={t("setlists.form.searchSongsPlaceholder")}
-        inputProps={{ autoFocus: true }}
+        // En feuille (téléphone, tablette portrait), le clavier ne s'ouvre pas tout seul : on touche le champ.
+        inputProps={{ autoFocus: !feuille }}
       />
 
       {/* Pilules Tous · FR · 中文 · Thèmes ▾ · Tempo ▾ ; elles défilent si la place manque. */}
@@ -421,7 +422,7 @@ export function Bibliotheque({
       )}
 
       {feuille ? (
-        <div className="sticky bottom-0 mt-auto flex items-center justify-between gap-3 border-t border-border bg-background py-3">
+        <div data-barre-bibliotheque className="sticky bottom-0 mt-auto flex items-center justify-between gap-3 border-t border-border bg-background pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <p className="text-sm font-semibold text-foreground">{t("setlists.editeur.nDansLaSetlist", { count: pris.size })}</p>
           <button
             type="button"

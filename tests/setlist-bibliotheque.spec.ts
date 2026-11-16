@@ -178,9 +178,11 @@ const recherche = (page: Page) => volet(page).getByPlaceholder("Chercher un chan
 const resultats = (page: Page) => volet(page).locator("[data-resultat]");
 const items = (db: FakeDb) => (db.doc(SETLIST_DOC)?.items ?? []) as { songSlug: string; keyOverride: string | null }[];
 
-test("la recherche trouve par titre, pinyin et artiste ; le compteur suit", async ({ page }) => {
+test("la recherche trouve par titre, pinyin et artiste ; le compteur suit", async ({ page }, testInfo) => {
   await ouvrirLaBibliotheque(page);
-  await expect(recherche(page)).toBeFocused();
+  // Grand écran : le champ a le focus. En feuille, non (le clavier d'un téléphone ne s'ouvre pas tout seul).
+  if (deuxColonnesAttendues(testInfo)) await expect(recherche(page)).toBeFocused();
+  else await expect(recherche(page)).not.toBeFocused();
   await expect(volet(page).getByText(`${INDEX.length} chants`)).toBeVisible();
   await recherche(page).fill("Je reviens au cœur");
   await expect(resultats(page).first()).toContainText("Je reviens au cœur");
@@ -232,7 +234,8 @@ test("petits écrans : la bibliothèque en feuille — « N chants dans la setli
   await ouvrirLaBibliotheque(page);
   const feuille = page.getByRole("dialog", { name: "Ajouter des chants" });
   await expect(feuille).toBeVisible();
-  await expect(recherche(page)).toBeFocused();
+  await expect(feuille).toBeFocused();
+  await expect(recherche(page)).not.toBeFocused();
   await expect(feuille.getByText("1 chant dans la setlist", { exact: true })).toBeVisible();
   await recherche(page).fill("Je reviens au cœur");
   await feuille.getByRole("button", { name: "Ajouter Je reviens au cœur", exact: true }).click();
@@ -240,6 +243,10 @@ test("petits écrans : la bibliothèque en feuille — « N chants dans la setli
   // Presque toute la hauteur de l'écran.
   const h = (await feuille.boundingBox())!.height;
   expect(h).toBeGreaterThan(page.viewportSize()!.height * 0.85);
+  // La barre « N chants dans la setlist » va jusqu'au bas de la feuille : aucun chant ne passe dessous.
+  const barre = (await feuille.locator("[data-barre-bibliotheque]").boundingBox())!;
+  const cadre = (await feuille.boundingBox())!;
+  expect(Math.abs(barre.y + barre.height - (cadre.y + cadre.height))).toBeLessThanOrEqual(1);
   await page.waitForTimeout(500);
   await page.screenshot({ path: testInfo.outputPath(`bibliotheque-feuille-${testInfo.project.name}.png`) });
 
@@ -250,7 +257,7 @@ test("petits écrans : la bibliothèque en feuille — « N chants dans la setli
   await expect(listeCourte(page).locator("[data-element]").last()).toContainText("Je reviens au cœur");
 
   await ajouter.click();
-  await expect(recherche(page)).toBeFocused();
+  await expect(page.getByRole("dialog", { name: "Ajouter des chants" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(volet(page)).toHaveCount(0);
 });
