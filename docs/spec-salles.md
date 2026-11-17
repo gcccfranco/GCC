@@ -701,3 +701,13 @@ T2b, T2c et T3a (apparence).
   **Reste à Timothée** : publier `firestore.rules` (champs de fête dans `reservations/{id}`, T5a) avant de pousser
   sur `main` ; reporter à la main les réservations de Noël ; clés `creneauxDuJour_*`, `saison.duree` à retirer avec
   `i18n-sync`.
+- 17/11/2026 — **Demande de Timothée, pas encore codée** (capture de Salles, feuille « Réserver une salle », Scène
+  choisie un mardi de la saison de Noël, bouton « Réserver » grisé) : « La scène doit être réservable hors noel et
+  paques aussi ». Aujourd'hui la fin d'AR22 bloque la Scène dans Salles pendant la période d'une fête ouverte
+  (`FeuilleReserver.tsx:113-114`, `pret` exige `!fete`) ; hors période elle se réserve déjà comme toute salle (AR21).
+  **Proposition (session « Scène : créneaux et occupation des salles », attend le go)** : dans Salles, la Scène se
+  réserve toujours ; pendant une saison, le message devient un conseil (« Pour une répétition de <fête>, réserve
+  depuis sa page » et le lien) et ne grise plus « Réserver ». Une réservation faite depuis Salles n'a pas de champ
+  `fete` : elle suit les règles de toute salle (AR21), ne passe donc ni par « Qui peut réserver » ni par la fermeture
+  de la fête, et la coordination peut la supprimer (SA10). Fichiers : `FeuilleReserver.tsx`, `fr.json`, `zh-CN.json`,
+  `tests/salles-scene.spec.ts` (bloc T5b, lignes ≈ 125-147). Aucune règle Firestore à changer.
