@@ -74,7 +74,7 @@ export function MobileTabBar() {
         data-testid="barre-du-bas"
         aria-label={t("common.aria.navigationPrincipale")}
         // 5C1 : la barre flotte, en verre ; l'onglet courant est une pastille d'encre.
-        className={`hide-on-desktop print:hidden fixed inset-x-2 bottom-[var(--tabbar-bottom)] z-40 rounded-[32px] material-bar transition-transform duration-300 min-[360px]:inset-x-3.5 sm:left-1/2 sm:right-auto sm:w-[560px] sm:max-w-[calc(100%-28px)] sm:-translate-x-1/2 ${
+        className={`barre-onglets hide-on-desktop print:hidden fixed inset-x-2 bottom-[var(--tabbar-bottom)] z-40 rounded-[32px] material-bar transition-transform duration-300 min-[360px]:inset-x-3.5 sm:left-1/2 sm:right-auto sm:w-[560px] sm:max-w-[calc(100%-28px)] sm:-translate-x-1/2 ${
           scrollVisible ? "translate-y-0" : "translate-y-[calc(100%+28px+env(safe-area-inset-bottom))]"
         }`}
       >

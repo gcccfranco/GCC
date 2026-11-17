@@ -346,6 +346,7 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     // La vue glisse (T5) : on attend la Liste posée avant de toucher le Crayon.
     await expect(page.locator("[data-outline-item]")).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => (document.querySelector("[data-vue]") as HTMLElement | null)?.style.transform ?? "")).toBe("");
+    await expect.poll(() => page.evaluate(() => document.documentElement.dataset.glisseVues ?? "")).toBe("");
     await basculerMode(page);
     await expect(page.getByText("Crayon : touche un accord ou un mot pour le retoucher.")).toBeVisible();
     expect(params(page)).toEqual({ vue: "partitions", chant: "2" });
@@ -550,6 +551,8 @@ test.describe("glissement entre Liste et Partitions (setlist G)", () => {
   test("vers la droite sur les Partitions : la Liste revient, ligne du chant lu marquée", async ({ page }) => {
     await ouvrir(page);
     await lienLigne(page, 2).click();
+    // Pendant une View Transition les pointeurs vont à <html> : attendre la vue posée.
+    await expect.poll(() => page.evaluate(() => document.documentElement.dataset.glisseVues ?? "")).toBe("");
     await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
     const w = page.viewportSize()!.width;
     const y = page.viewportSize()!.height * 0.6;
@@ -739,5 +742,88 @@ test.describe("relecture : défilement, toucher après un glissement (setlist G)
     await touch("touchEnd");
     await expect(boutonVue(page, "Partitions")).toHaveAttribute("aria-pressed", "true");
     await expect(chant(page, 1)).toBeVisible();
+  });
+});
+
+// ─── Lot AT, T1 : glissement en un seul mouvement (View Transitions) ──────────
+
+/** Relève à chaque image les transforms des deux images de la transition (old et new de la racine). */
+async function suivreTransition(page: Page) {
+  await page.evaluate(() => {
+    const w = window as unknown as { __vt: { old: number; nouveau: number; durees: number[] }[]; __vtFin: boolean };
+    w.__vt = [];
+    const m41 = (pseudo: string) => {
+      const t = getComputedStyle(document.documentElement, pseudo).transform;
+      return t === "none" ? 0 : new DOMMatrixReadOnly(t).m41;
+    };
+    const image = () => {
+      if (document.documentElement.dataset.glisseVues) {
+        const anims = document.getAnimations().filter((a) => /^::view-transition-(old|new)\(root\)$/.test((a.effect as KeyframeEffect | null)?.pseudoElement ?? ""));
+        if (anims.length)
+          w.__vt.push({
+            old: m41("::view-transition-old(root)"),
+            nouveau: m41("::view-transition-new(root)"),
+            durees: anims.map((a) => Number(a.effect!.getComputedTiming().duration)),
+          });
+      } else if (w.__vt.length) w.__vtFin = true;
+      requestAnimationFrame(image);
+    };
+    requestAnimationFrame(image);
+  });
+}
+
+/** Attend la fin du glissement, puis vérifie : bord à bord, une image au moins à mi-course, 350 ms. */
+async function verifierGlissement(page: Page, sens: -1 | 1) {
+  await page.waitForFunction(() => (window as unknown as { __vtFin?: boolean }).__vtFin === true);
+  const w = page.viewportSize()!.width;
+  const rel = await page.evaluate(() => (window as unknown as { __vt: { old: number; nouveau: number; durees: number[] }[] }).__vt);
+  expect(rel.length).toBeGreaterThan(0);
+  for (const r of rel) expect(Math.abs(Math.abs(r.nouveau - r.old) - w), JSON.stringify(r)).toBeLessThanOrEqual(2);
+  expect(rel.some((r) => (sens < 0 ? r.old < -5 && r.old > -w + 5 : r.old > 5 && r.old < w - 5)), "une image à mi-course").toBe(true);
+  for (const r of rel) for (const d of r.durees) expect(d).toBe(350);
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.glisseVues ?? "")).toBe("");
+}
+
+test.describe("glissement en un seul mouvement (lot AT, T1)", () => {
+  test("toucher d'un chant de la Liste : l'ancienne et la nouvelle vue glissent bord à bord en 350 ms", async ({ page }) => {
+    await ouvrir(page);
+    await expect(ligne(page, 2)).toBeVisible();
+    await suivreTransition(page);
+    await lienLigne(page, 2).click();
+    await verifierGlissement(page, -1);
+    await expect(boutonVue(page, "Partitions")).toHaveAttribute("aria-pressed", "true");
+    expect(params(page)).toEqual({ vue: "partitions", chant: "2" });
+    await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
+  });
+
+  test("bascule Liste | Partitions, puis retour : sens inverse au retour", async ({ page }) => {
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    await suivreTransition(page);
+    await boutonVue(page, "Partitions").click();
+    await verifierGlissement(page, -1);
+    await expect(chant(page, 1)).toBeVisible();
+    await page.evaluate(() => {
+      (window as unknown as { __vtFin: boolean }).__vtFin = false;
+      (window as unknown as { __vt: unknown[] }).__vt = [];
+    });
+    await boutonVue(page, "Liste").click();
+    await verifierGlissement(page, 1);
+    await expect(ligne(page, 1)).toBeVisible();
+    await expect(page.locator("[data-outline-item]")).toHaveCount(0);
+  });
+
+  test("mouvement réduit : aucune transition, la vue change", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    await page.evaluate(() => {
+      const w = window as unknown as { __pose: boolean };
+      new MutationObserver(() => { if (document.documentElement.dataset.glisseVues) w.__pose = true; })
+        .observe(document.documentElement, { attributes: true, attributeFilter: ["data-glisse-vues"] });
+    });
+    await boutonVue(page, "Partitions").click();
+    await expect(chant(page, 1)).toBeVisible();
+    expect(await page.evaluate(() => (window as unknown as { __pose?: boolean }).__pose ?? false)).toBe(false);
   });
 });

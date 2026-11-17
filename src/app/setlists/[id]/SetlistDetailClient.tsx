@@ -184,15 +184,6 @@ export function SetlistDetailClient() {
   // réelle est mesurée pour que le contenu ne finisse jamais dessous.
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [toolbarH, setToolbarH] = useState(54);
-  useEffect(() => {
-    const el = toolbarRef.current;
-    if (!el) return;
-    const update = () => setToolbarH(el.offsetHeight);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [setlist, deuxVolets]); // la barre n'existe qu'une fois la setlist chargée, et pas en deux volets
   // L'en-tête des deux volets peut passer sur deux lignes : sa hauteur est mesurée. Il
   // glisse (transformé, il devient le repère des éléments fixes) : la copie du halo de
   // son fond se recale de sa place à gauche, `--barre-left`, comme la barre de G.
@@ -222,6 +213,15 @@ export function SetlistDetailClient() {
   const { contents, setContents, loadingContent, loadContents } = useContenusChants();
   const [loadingSetlist, setLoadingSetlist] = useState(true);
   const [view, setView] = useState<"liste" | "partitions">("liste");
+  useLayoutEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const update = () => setToolbarH(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [setlist, deuxVolets, view]); // la barre n'existe qu'une fois la setlist chargée, et pas en deux volets
   const affichePartitions = deuxVolets || view === "partitions";
   /** Vue Partitions en volet unique : barre compacte, en-tête replié (docs/spec-exemples-usage.md, T2). */
   const compacte = !deuxVolets && view === "partitions";
@@ -265,6 +265,11 @@ export function SetlistDetailClient() {
   const retour = useRef<{ n: number; decalage: number } | null>(null);
   /** Lâche le chant amené (voir l'effet qui amène la vue à sa cible). */
   const lacherRef = useRef<(() => void) | null>(null);
+  /** Le placement du chant amené, rejoué quand `toolbarH` change avant la capture d'une transition. */
+  const amenerRef = useRef<(() => void) | null>(null);
+  useLayoutEffect(() => {
+    amenerRef.current?.();
+  }, [toolbarH]);
   /** Hauteur où la page a été amenée : tant qu'on n'a pas défilé, le chant
    *  amené reste le chant lu, même s'il ne peut pas monter jusqu'en haut. */
   const posee = useRef<number | null>(null);
@@ -850,6 +855,7 @@ export function SetlistDetailClient() {
       if (surLaSetlist(id) && lireAdresse()?.chant !== n) window.history.replaceState(window.history.state, "", adresseVue(n));
     };
     amener();
+    amenerRef.current = amener;
     // Ce qui se met en page après (scans 简谱, polices) : le chant reste en place
     // jusqu'au premier geste. L'ancrage du navigateur, qui choisirait un autre
     // repère, est suspendu le temps de tenir.
@@ -862,6 +868,7 @@ export function SetlistDetailClient() {
     ro.observe(basculeRef.current?.parentElement ?? zoneRef.current ?? el);
     const GESTES = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
     const lacher = () => {
+      amenerRef.current = null;
       ro.disconnect();
       root.style.overflowAnchor = "";
       for (const ev of GESTES) window.removeEventListener(ev, lacher);
@@ -2505,7 +2512,7 @@ export function SetlistDetailClient() {
               margeAffichage(
               <div ref={vueRef} data-vue={view}>
                 {view === "liste" ? (
-                  <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPrefVu} current={current} onOpen={versPartitions} personalKeys={personalKeys} />
+                  <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPrefVu} current={current} onOpen={(n) => glisser(-1, () => versPartitions(n))} personalKeys={personalKeys} />
                 ) : (
                   partitionsEtColonne
                 )}

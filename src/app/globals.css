@@ -1181,3 +1181,11 @@
 /* CI-5, défaut M : en setlist, la musique à côté de la marge ouverte devient elle-même le conteneur « partition »
    (sinon la zone, marge comprise, déclenche deux colonnes trop étroites). Page chant : sans conteneur partition, inchangée. */
 .\[container-name\:partition\] [data-marge-musique] { container: partition / inline-size; }
+
+/* Glissement Liste ↔ Partitions (lot AT) : l'ancienne image et la nouvelle page glissent ensemble ; les animations
+   sont posées en JS (useSwipeViews). Barres nommées le temps du glissement seulement : elles restent en place. */
+:root[data-glisse-vues]::view-transition-old(root),
+:root[data-glisse-vues]::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+:root[data-glisse-vues] .barre-laterale { view-transition-name: barre-laterale; }
+:root[data-glisse-vues] .barre-onglets { view-transition-name: barre-onglets; }
+:root[data-glisse-vues] .barre-haut { view-transition-name: barre-haut; }

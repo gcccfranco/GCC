@@ -102,3 +102,11 @@ dit l'essentiel : aucun mouvement écrit en JavaScript ne peut tourner pendant c
   `requestAnimationFrame`, arrive donc à la première image du glissement, quand la Liste est encore hors écran) ;
   les transforms des pseudo-éléments se lisent par `getComputedStyle` ; une animation en pause garde la transition
   ouverte.
+- 17/11 — **T1 faite** (toucher d'un chant, bascule dans les deux sens, bouton « Liste ») : View Transitions, 350 ms,
+  deux images bord à bord ; le doigt validé passe déjà par la même transition (T2 le fera suivre en continu). Corrections
+  en chemin : la hauteur de la barre (`toolbarH`) est mesurée en `useLayoutEffect` et le chant amené est replacé
+  quand elle change, avant que la nouvelle image soit prise (sinon saut de 13 px pendant le glissement) ; animations
+  des pseudo-éléments annulées à la fin. `tests/deux-volets-finitions.spec.ts:173`, rouge sur la base (bouton
+  « Options d'affichage » remplacé par la marge « Affichage », RU-5), adapté au passage. Tests : `setlist-g` et
+  `deux-volets-finitions`, trois appareils, 92 passés, 0 échec (5 min). Captures à mi-course (téléphone, tablette
+  portrait) regardées : les deux vues à l'écran ensemble, l'en-tête glisse avec, barre d'onglets fixe.

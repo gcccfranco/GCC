@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { flushSync } from "react-dom";
 
 // Glissement entre deux vues voisines, au doigt (setlist G : Liste à gauche,
 // Partitions à droite ; docs/spec-deux-volets.md, question 13, tranche T3).
@@ -85,6 +86,9 @@ export function useSwipeViews(options: Options) {
   /** Geste validé : la vue est sortie, on attend la nouvelle (`cle`). */
   const entree = useRef<{ sens: -1 | 1; vitesse: number; fondu: boolean } | null>(null);
   const attente = useRef(0);
+  /** Une View Transition est en cours ; `vueRendue` dit qu'elle peut aller de l'avant (`cle` a changé). */
+  const enTransition = useRef(false);
+  const vueRendue = useRef<(() => void) | null>(null);
 
   const poser = (v: number) => {
     x.current = v;
@@ -132,32 +136,79 @@ export function useSwipeViews(options: Options) {
     if (x.current !== 0) ressort(0, 0);
   };
 
-  const valider = (sens: -1 | 1, vitesse: number, reduit: boolean) => {
-    const o = opts.current;
-    const aller = sens < 0 ? o.versGauche : o.versDroite;
-    if (!aller) return retour();
-    entree.current = { sens, vitesse, fondu: reduit };
-    // Si la vue ne change pas (rien à ouvrir), elle revient.
+  /** Geste ou toucher validé : on attend la nouvelle vue (`cle`) ; si elle ne vient pas, la vue revient. */
+  const armer = (sens: -1 | 1, vitesse: number, fondu: boolean) => {
+    entree.current = { sens, vitesse, fondu };
     window.clearTimeout(attente.current);
     attente.current = window.setTimeout(() => {
       if (!entree.current) return;
       entree.current = null;
       retour();
     }, 1000);
+  };
+
+  /** Changement de vue par View Transitions (AT1) : l'image de l'ancienne vue et la nouvelle glissent ensemble. */
+  const transition = (sens: -1 | 1, aller: () => void) => {
+    const html = document.documentElement;
+    html.dataset.glisseVues = String(sens);
+    enTransition.current = true;
+    const vt = document.startViewTransition(async () => {
+      // Pas de requestAnimationFrame ici : le rendu est suspendu pendant ce rappel.
+      const rendue = new Promise<boolean>((fin) => {
+        vueRendue.current = () => fin(true);
+        window.setTimeout(() => fin(false), 1000);
+      });
+      flushSync(aller);
+      poser(0);
+      if (!(await rendue)) vt.skipTransition();
+      vueRendue.current = null;
+    });
+    const glisse = (pseudoElement: string, de: number, a: number) =>
+      html.animate(
+        [{ transform: `translateX(${de}vw)` }, { transform: `translateX(${a}vw)` }],
+        { duration: 350, easing: "cubic-bezier(0.32, 0.72, 0, 1)", fill: "both", pseudoElement },
+      );
+    let anims: Animation[] = [];
+    vt.ready.then(() => {
+      anims = [glisse("::view-transition-old(root)", 0, sens * 100), glisse("::view-transition-new(root)", -sens * 100, 0)];
+    }, () => {});
+    const fin = () => {
+      anims.forEach((a) => a.cancel());
+      delete html.dataset.glisseVues;
+      enTransition.current = false;
+    };
+    vt.finished.then(fin, fin);
+  };
+
+  const valider = (sens: -1 | 1, vitesse: number, reduit: boolean) => {
+    const o = opts.current;
+    const aller = sens < 0 ? o.versGauche : o.versDroite;
+    if (!aller) return retour();
+    if (enTransition.current) return;
+    if (!reduit && "startViewTransition" in document) return transition(sens, aller);
+    armer(sens, vitesse, reduit);
     if (reduit) return aller();
     const largeur = window.innerWidth;
     ressort(sens * largeur, vitesse, aller, (pos) => Math.abs(pos) >= largeur * 0.98);
   };
 
-  /** Bascule au toucher d'un bouton : même chemin que le geste validé (la vue part, la nouvelle arrive). */
-  const glisser = (sens: -1 | 1) => {
-    const o = opts.current;
-    if (!o.actif || entree.current) return (sens < 0 ? o.versGauche : o.versDroite)?.();
-    valider(sens, 0, window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  /** Bascule au toucher (bouton, ligne de la Liste) : même chemin que le geste validé. `aller` remplace le rappel du sens. */
+  const glisser = (sens: -1 | 1, aller = sens < 0 ? opts.current.versGauche : opts.current.versDroite) => {
+    if (!opts.current.actif || entree.current || enTransition.current) return aller?.();
+    if (!aller) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      armer(sens, 0, true);
+      return aller();
+    }
+    if ("startViewTransition" in document) return transition(sens, aller);
+    // AT7 : la vue change tout de suite et la nouvelle entre du bord (effet d'entrée), sans sortie de l'ancienne.
+    armer(sens, 0, false);
+    aller();
   };
 
   // La nouvelle vue est là : elle arrive du bord opposé au geste (ou en fondu).
   useLayoutEffect(() => {
+    vueRendue.current?.();
     const e = entree.current;
     const el = opts.current.vue.current;
     if (!e || !el) return;

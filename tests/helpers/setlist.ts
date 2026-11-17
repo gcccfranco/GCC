@@ -22,7 +22,8 @@ const partitions = (page: Page) => page.locator("[data-outline-item]");
  *  compile la page sous `next dev`). */
 /** Le toucher glisse la vue (T5) : on rend la main une fois posée, sans transform. */
 const vuePosee = (page: Page) =>
-  expect.poll(() => page.evaluate(() => (document.querySelector("[data-vue]") as HTMLElement | null)?.style.transform ?? "")).toBe("");
+  expect.poll(() => page.evaluate(() => (document.querySelector("[data-vue]") as HTMLElement | null)?.style.transform ?? "")).toBe("")
+    .then(() => expect.poll(() => page.evaluate(() => document.documentElement.dataset.glisseVues ?? "")).toBe(""));
 
 async function setlistAffichee(page: Page, bouton: Locator) {
   await bouton.or(partitions(page)).first().waitFor();
