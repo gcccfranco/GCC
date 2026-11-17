@@ -711,3 +711,4 @@ T2b, T2c et T3a (apparence).
   `fete` : elle suit les règles de toute salle (AR21), ne passe donc ni par « Qui peut réserver » ni par la fermeture
   de la fête, et la coordination peut la supprimer (SA10). Fichiers : `FeuilleReserver.tsx`, `fr.json`, `zh-CN.json`,
   `tests/salles-scene.spec.ts` (bloc T5b, lignes ≈ 125-147). Aucune règle Firestore à changer.
+- 17/11/2026 — La demande ci-dessus (Scène réservable pendant une saison) est **reprise par le lot AS** (`docs/spec-reserver-unique-fetes.md`, à écrire) : une seule feuille « Réserver » et Noël, Pâques dans l'onglet Évènements (Timothée, 17/11). La proposition ci-dessus n'est pas codée telle quelle. Planche : `docs/planches/planche-reserver-unique-fetes.html`.
