@@ -685,3 +685,19 @@ T2b, T2c et T3a (apparence).
   1 440 px de la page de Noël, feuille « Réserver » de Salles avec le message de saison (capture
   `*-salles-feuille.png` ajoutée) : rien à reprendre. `critique-design` non lancé : l'agent du dépôt n'est pas chargé
   dans cette session. tsc vert, lint sans erreur. Aucune règle changée. Suite : T5c.
+- **16-17/11/2026, T5c (faite, fin du lot 5)** : le cron des rappels (`sceneCreneaux`) lit les créneaux de la Scène
+  dans `reservations/{id}` (filtre `in` sur `date` seul, puis `creneauxDuRappel` : salle `scene`, `fete` d'une édition
+  affichée) ; plus rien ne lit `programmes/{id}/creneaux` (AR19, documents laissés tels quels). `creneauDeReservation`
+  (`src/lib/scene/rappels.ts`) sert à `listCreneaux` et au cron. Conflit : la page de la fête et le Back-Office
+  signalent par `signalerConflit` → `/api/salles/conflit` ; `/api/scene/conflit`, `src/lib/scene/conflit.ts` et
+  `reportConflict.ts` retirés ; routes API : 20 (`CLAUDE.md`, référence). Décision déléguée (session T5c, 16/11) : un
+  conflit sur la Scène garde le message et le lien de Salles (« Salles : chevauchement », `/evenements/salles`), où
+  les deux réservations se voient. Tests d'abord : quatre nouveaux tests de `programme-scene` rouges, puis verts ;
+  `evenements.spec` lisait encore un créneau de grille (« Réserver 14:00 – 15:00 ») : il lit une fenêtre libre.
+  Fin de lot : 19 specs (Salles, Scène, Évènements, `eglise-entree`, `routes-bornes`, `back-office-coupe`) sur les
+  cinq projets, ≈ 2 510 verts, 4 échecs, ≈ 37 min (en deux fois : le conteneur a redémarré en cours) ; rejeu (11 s) :
+  vert sauf `back-office-coupe` « onglet Culte » sur ordinateur (« Ruth K. » aussi dans `pied-barre`, venu du mode
+  louange, hors du lot : à reprendre par ce chantier). tsc vert, lint sans erreur. Aucune règle changée par T5c.
+  **Reste à Timothée** : publier `firestore.rules` (champs de fête dans `reservations/{id}`, T5a) avant de pousser
+  sur `main` ; reporter à la main les réservations de Noël ; clés `creneauxDuJour_*`, `saison.duree` à retirer avec
+  `i18n-sync`.
