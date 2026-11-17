@@ -13,9 +13,12 @@ export const QUOI = ["Séance louange", "Chant", "Danse", "Sketch", "Spectacle"]
  *  est lue telle quelle. */
 export const QUI = [
   "Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie",
-  "Franco",
+  "Franco", "Intergroupe", "Interfranco",
   "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
 ] as const;
+
+/** Anciennes valeurs, lues telles quelles mais plus proposées. */
+export const QUI_RETIRES = ["敬拜团", "Jeunes", "Chorale"] as const;
 
 /** Lot U1 : une plage horaire réservable, par jour de la semaine (0 = dimanche). */
 export interface Plage {
@@ -104,6 +107,8 @@ export interface Creneau {
   /** « HH:MM » : un créneau de la grille (lot U1), ou une heure d'avant U1. */
   debut: string;
   fin: string;
+  /** Un autre moment (SQ-B) : date et heures choisies hors de la grille ; absent sinon. */
+  libre?: boolean;
   quoi: string;
   qui: string[];
   note: string;

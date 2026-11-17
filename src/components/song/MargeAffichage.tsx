@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNod
 import { useTranslation } from "react-i18next";
 import { Switch } from "@/components/ui/switch";
 import { Bascule } from "@/components/ui/bascule";
+import { EnTeteFeuille } from "@/components/ui/en-tete-feuille";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
 import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixNotation } from "@/components/song/ChoixNotation";
@@ -154,18 +155,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
     >
       <div className="flex h-full flex-col" style={colonne ? { width: 320 } : undefined}>
         {!colonne && <div aria-hidden className="mx-auto mt-2 h-1 w-9 rounded-full bg-border" />}
-        <div className="flex items-center justify-between px-4 pt-2">
-          <h2 id={titre} className="text-base font-semibold">{t("margeAffichage.titre")}</h2>
-          <button
-            ref={fermer}
-            type="button"
-            aria-label={t("margeAffichage.fermer")}
-            onClick={onFermer}
-            className="grid h-11 w-11 place-items-center rounded-full text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            ×
-          </button>
-        </div>
+        <EnTeteFeuille titre={t("margeAffichage.titre")} titreId={titre} onFermer={onFermer} labelFermer={t("margeAffichage.fermer")} refFermer={fermer} className={`px-4 pt-2${colonne ? "" : " mx-auto w-full max-w-[560px]"}`} />
         <div data-testid="marge-corps" className="min-h-0 flex-1 overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
           {/* Feuille pleine largeur : les réglages gardent une colonne de 560 px au plus, centrée (critique CI-11). */}
           <div className={colonne ? undefined : "mx-auto w-full max-w-[560px]"}>

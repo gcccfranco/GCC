@@ -211,7 +211,7 @@ test("E5 : la notification d'un évènement d'équipe part aux seuls membres de 
 test("E4 : dans l'App, un non-membre ne voit ni la carte ni la fiche de l'évènement d'équipe", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await signInAs(page, CLARA, { "evenements/soiree": SOIREE }, "/evenements");
-  await expect(page.getByRole("heading", { name: "Évènements" }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Église" }).first()).toBeVisible();
   await expect(page.getByText("Soirée DA")).toHaveCount(0);
   await page.goto("/evenements/soiree");
   await expect(page.getByText("Évènement introuvable.")).toBeVisible();

@@ -2,7 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Bookmark, Check, Lightbulb, Maximize, Pencil, PenLine, Timer, Undo2, Waves } from "lucide-react";
+import { Bookmark, Check, ChevronRight, Pencil, Undo2, Waves } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
@@ -146,7 +147,6 @@ function ToutesMesSetlists({
 }
 
 export function ContenuSetlist({
-  setlistTitle,
   setlistDate,
   songEntries,
   pages,
@@ -160,7 +160,6 @@ export function ContenuSetlist({
   onRetirer,
   retour,
 }: {
-  setlistTitle: string;
   setlistDate?: string;
   songEntries: { block: SongHeaderBlock; index: number }[];
   pages: number[][];
@@ -197,7 +196,6 @@ export function ContenuSetlist({
         </button>
       )}
       <div className="px-1 pb-2">
-        <p className="truncate text-base font-semibold text-foreground">{setlistTitle}</p>
         <p className="truncate text-[13px] text-muted-foreground">
           {setlistDate ? `${formatDate(setlistDate, i18n.language)} · ` : null}
           {t("performance.songCount", { count: songEntries.length })}
@@ -338,7 +336,6 @@ function usePleinEcran() {
 export function ContenuOutils({
   showTransitions,
   setShowTransitions,
-  metronome,
   annotations,
   idees,
   onAnnoter,
@@ -349,12 +346,10 @@ export function ContenuOutils({
 }: {
   showTransitions: boolean;
   setShowTransitions: (v: boolean) => void;
-  /** Bande des temps (réglage de l'appareil) : l'interrupteur « Métronome ». */
-  metronome: { allume: boolean; set: (v: boolean) => void };
   /** Annotations des autres sur la page (réglage de l'appareil) ; absent hors connexion. */
   annotations: { allume: boolean; set: (v: boolean) => void } | undefined;
-  /** Idées d'harmonie (réglage du compte) ; absent sans l'accès. */
-  idees: { allume: boolean; set: (v: boolean) => void } | undefined;
+  /** Réglage du compte : « Idées d'harmonie » avec l'accès, « Panneau de l'accord » sans (accords touchables, sans idées). */
+  idees: { allume: boolean; set: (v: boolean) => void; acces: boolean };
   /** Crayon : la barre ne l'a plus au téléphone. Absent = pas de ligne. */
   onAnnoter: (() => void) | undefined;
   /** Ma partition n'a pas pu être lue : la ligne reste, désactivée (son toucher dit pourquoi). */
@@ -367,48 +362,37 @@ export function ContenuOutils({
 }) {
   const { t } = useTranslation();
   const pleinEcran = usePleinEcran();
+  const libelleIdees = idees.acces ? t("performance.ideesHarmonie") : t("performance.panneauAccord");
   return (
     <div className="space-y-1">
+      <TitreRubrique>{t("performance.outilsReglages")}</TitreRubrique>
       <LigneMenu label={t("performance.transitions")}>
-        <BoutonRond label={t("performance.transitions")} allume={showTransitions} onClick={() => { compter("cmd.chant.transitions"); setShowTransitions(!showTransitions); }}>
-          <Timer className="h-5 w-5" />
-        </BoutonRond>
+        <Switch checked={showTransitions} onCheckedChange={(v) => { compter("cmd.chant.transitions"); setShowTransitions(v); }} aria-label={t("performance.transitions")} />
       </LigneMenu>
       {pleinEcran.disponible && (
         <LigneMenu label={t("performance.fullscreen")}>
-          <BoutonRond label={t("performance.fullscreen")} allume={pleinEcran.actif} data-plein-ecran="" onClick={pleinEcran.basculer}>
-            <Maximize className="h-5 w-5" />
-          </BoutonRond>
+          <Switch checked={pleinEcran.actif} onCheckedChange={pleinEcran.basculer} aria-label={t("performance.fullscreen")} data-plein-ecran="" />
         </LigneMenu>
       )}
-      <LigneMenu label={t("performance.metronome")}>
-        <BoutonRond label={t("performance.metronome")} allume={metronome.allume} onClick={() => metronome.set(!metronome.allume)} data-metronome="">
-          <Waves className="h-5 w-5" />
-        </BoutonRond>
-      </LigneMenu>
       {annotations && (
         <LigneMenu label={t("performance.annotations")}>
-          <BoutonRond label={t("performance.annotations")} allume={annotations.allume} onClick={() => annotations.set(!annotations.allume)}>
-            <PenLine className="h-5 w-5" />
-          </BoutonRond>
+          <Switch checked={annotations.allume} onCheckedChange={annotations.set} aria-label={t("performance.annotations")} />
         </LigneMenu>
       )}
-      {idees && (
-        <LigneMenu label={t("performance.ideesHarmonie")}>
-          <BoutonRond label={t("performance.ideesHarmonie")} allume={idees.allume} onClick={() => idees.set(!idees.allume)}>
-            <Lightbulb className="h-5 w-5" />
-          </BoutonRond>
-        </LigneMenu>
-      )}
+      <LigneMenu label={libelleIdees}>
+        <Switch checked={idees.allume} onCheckedChange={idees.set} aria-label={libelleIdees} />
+      </LigneMenu>
+      {(onReperes || onAnnoter || onMetronome) && <div className="pt-4"><TitreRubrique>{t("performance.outilsActions")}</TitreRubrique></div>}
       {onReperes && (
         <button
           type="button"
           data-reperes-ouvrir
           onClick={onReperes}
-          className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+          className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-medium text-foreground hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
         >
-          <Bookmark aria-hidden="true" className="h-5 w-5 shrink-0" />
+          <Bookmark aria-hidden="true" className={`h-5 w-5 shrink-0 ${COULEUR}`} />
           {t("performance.reperes")}
+          <ChevronRight aria-hidden="true" className="-mr-1.5 ml-auto h-4 w-4 text-muted-foreground" />
         </button>
       )}
       {onAnnoter && (
@@ -418,10 +402,11 @@ export function ContenuOutils({
           data-annoter
           aria-disabled={annoterIndispo || undefined}
           onClick={onAnnoter}
-          className={`${annoterIndispo ? "opacity-40 " : ""}flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+          className={`${annoterIndispo ? "opacity-40 " : ""}flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-medium text-foreground hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
         >
-          <Pencil aria-hidden="true" className="h-5 w-5 shrink-0" />
+          <Pencil aria-hidden="true" className={`h-5 w-5 shrink-0 ${COULEUR}`} />
           {t("performance.crayon")}
+          <ChevronRight aria-hidden="true" className="-mr-1.5 ml-auto h-4 w-4 text-muted-foreground" />
         </button>
       )}
       {onMetronome && (
@@ -429,10 +414,11 @@ export function ContenuOutils({
           type="button"
           data-metronome-ouvrir
           onClick={onMetronome}
-          className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+          className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-medium text-foreground hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
         >
-          <Waves aria-hidden="true" className="h-5 w-5 shrink-0" />
+          <Waves aria-hidden="true" className={`h-5 w-5 shrink-0 ${COULEUR}`} />
           {t("panneauMetronome.metronomeLigne")}
+          <ChevronRight aria-hidden="true" className="-mr-1.5 ml-auto h-4 w-4 text-muted-foreground" />
         </button>
       )}
       {raccourcis && (

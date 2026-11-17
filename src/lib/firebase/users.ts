@@ -62,7 +62,8 @@ function fromFsProfile(raw: RawDoc): UserProfile {
 export async function getProfile(uid: string): Promise<UserProfile | null> {
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}/users/${uid}`, { headers });
-  if (!res.ok) return null;
+  if (res.status === 404) return null; // profil absent
+  if (!res.ok) throw new Error(`profil illisible (${res.status})`); // quota, 5xx : lecture en échec, pas une absence
   const raw = (await res.json()) as RawDoc;
   return fromFsProfile(raw);
 }
@@ -201,6 +202,8 @@ export function useProfile() {
   // Profil introuvable faute de réseau (A3 bis) : on le relit au retour du réseau, sinon une page rouverte
   // sur sa copie hors ligne jugerait ensuite la vraie setlist avec un profil vide.
   const [tentative, setTentative] = useState(0);
+  // Lecture en échec (réseau, quota, 5xx) : ≠ profil absent (404), qui reste `profile = null` sans `echec`.
+  const [echec, setEchec] = useState(false);
   const manque = !!user && !profile && !profileLoading;
   useEffect(() => {
     if (!manque) return;
@@ -218,6 +221,7 @@ export function useProfile() {
 
   useEffect(() => {
     if (authLoading) return;
+    setEchec(false);
     if (!user) {
       setProfile(null);
       setProfileLoading(false);
@@ -232,9 +236,10 @@ export function useProfile() {
     lireProfil(user.uid)
       .then(setProfile)
       // Hors ligne (A3) : pas de profil, rien en cache ; la prochaine lecture réessaie.
-      .catch(() => setProfile(null))
+      .catch(() => { setProfile(null); setEchec(true); })
       .finally(() => setProfileLoading(false));
   }, [user, authLoading, tentative]);
 
-  return { user, profile, loading: authLoading || profileLoading };
+  const relire = () => setTentative((n) => n + 1);
+  return { user, profile, loading: authLoading || profileLoading, echec, relire };
 }

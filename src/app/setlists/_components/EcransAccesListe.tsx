@@ -30,6 +30,26 @@ export function EcranConnexionRequise() {
   );
 }
 
+/** Connecté mais profil illisible (réseau, quota ou base indisponible) : ≠ profil absent. */
+export function EcranProfilIllisible({ onReessayer }: { onReessayer: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="text-center space-y-4 max-w-sm">
+        <UserPen className="h-8 w-8 mx-auto text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">{t("setlists.list.profileUnreadable")}</p>
+        <button
+          type="button"
+          onClick={onReessayer}
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+        >
+          {t("common.retry")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /** Connecté mais profil incomplet (les admins passent quand même). */
 export function EcranProfilRequis() {
   const { t } = useTranslation();

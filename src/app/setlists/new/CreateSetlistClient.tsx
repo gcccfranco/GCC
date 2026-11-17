@@ -14,6 +14,7 @@ import { lirePreremplissage } from "@/lib/setlist/prochainsServices";
 import { PourQuelService } from "./PourQuelService";
 import { SetlistsPassees } from "./SetlistsPassees";
 import { Squelette } from "@/components/layout/Squelette";
+import { EcranProfilIllisible } from "../_components/EcransAccesListe";
 
 // `/setlists/new` (lot U5 bis, docs/spec-editeur-setlist.md, « Modèle ») :
 // sans paramètre, « Pour quel service ? » ; `?cat=…&date=…(&moment=…)`,
@@ -22,7 +23,7 @@ import { Squelette } from "@/components/layout/Squelette";
 export function CreateSetlistClient() {
   const { t } = useTranslation();
   const params = useSearchParams();
-  const { user, profile, loading } = useProfile();
+  const { user, profile, loading, echec, relire } = useProfile();
   const [songs, setSongs] = useState<SongIndexEntry[]>([]);
   const admin = isAdminUser(user);
   // Catégories que l'éditeur accepte (admins : toutes), et celles du profil,
@@ -50,6 +51,10 @@ export function CreateSetlistClient() {
         </Link>
       </div>
     );
+  }
+
+  if (echec && !profile && !isAdminUser(user)) {
+    return <EcranProfilIllisible onReessayer={relire} />;
   }
 
   if (!profile && !isAdminUser(user)) {

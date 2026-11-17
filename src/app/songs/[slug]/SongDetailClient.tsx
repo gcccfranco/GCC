@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Retour } from "@/components/layout/EnTetePage";
 import { TOUCHER_44, TOUCHER_RANGEE } from "@/lib/toucher44";
 import { ActionsChant } from "./_components/ActionsChant";
 import { MenuChant } from "./_components/MenuChant";
@@ -37,7 +37,7 @@ import { ReportDialog } from "@/components/report/ReportDialog";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
 import { HarmonieDuChant, defilerSousLaBarre } from "@/components/harmonie/HarmonieDuChant";
 import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
-import { AccordsProvider, type IciDuChant } from "@/components/accords/AccordsProvider";
+import { AccordsProvider, AideAccordsEnLigne, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { useAllerAuPassage } from "@/lib/harmonie/useAllerAuPassage";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
@@ -529,7 +529,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
   );
 
   return (
-    <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }} tonalite={customize.currentKey} ici={ici}>
+    <AccordsProvider aide="flux" chant={{ slug: song.slug, titre: song.title }} tonalite={customize.currentKey} ici={ici}>
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
         {/* Barre de contrôles */}
         <div ref={barreRef} data-testid="barre-outils" className={`barre-chant print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : barPinned ? "-translate-y-[calc(var(--nav-h)-var(--sat))]" : "-translate-y-[calc(100%+var(--nav-h)+var(--barre-decalage,0px)+var(--barre-ombre,0px))]"}`}>
@@ -537,24 +537,15 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
           {/* `rangee-chant` : les libellés suivent la place de la rangée (`data-libelles`, plus haut),
               donc celle du volet en deux volets. */}
           <div ref={rangeeRef} className="rangee-chant max-w-2xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-4">
-            <Button
-              asChild
-              variant="secondary"
-              className={`retour-chant ${TOUCHER_44} h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground`}
+            {/* Deux volets : le Retour n'est montré que vers une setlist (`data-vers-setlist`,
+                globals.css) ; la liste des chants est déjà à gauche. */}
+            <Retour
+              href={setlistDOrigine ? `/setlists/${encodeURIComponent(setlistDOrigine)}` : backPath}
+              className="retour-chant shrink-0 self-center"
+              data-vers-setlist={setlistDOrigine ? "" : undefined}
             >
-              {/* Deux volets : le Retour n'est montré que vers une setlist (`data-vers-setlist`,
-                  globals.css) ; la liste des chants est déjà à gauche. */}
-              <Link
-                aria-label={t("songs.detail.backToAll")}
-                href={setlistDOrigine ? `/setlists/${encodeURIComponent(setlistDOrigine)}` : backPath}
-                data-vers-setlist={setlistDOrigine ? "" : undefined}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 12H5m6-7l-7 7 7 7" />
-                </svg>
-                <span className="libelle-chant">{t("songs.detail.backToAll")}</span>
-              </Link>
-            </Button>
+              {t(setlistDOrigine || backPath.startsWith("/setlists") ? "common.header.setlists" : "common.header.songs")}
+            </Retour>
             {/* Harmonie · Vidéo · Crayon · Affichage · ⋯ : une seule ligne à toutes les tailles (RU-3) ;
                 les libellés suivent la place de la rangée (globals.css, `.actions-chant`). */}
             <div className="actions-chant ml-auto shrink-0 items-center gap-1">
@@ -680,6 +671,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
               à droite des pastilles règle la préférence de l'appareil (D5). */}
             <SongView
               pageChant
+              apresBandeau={<AideAccordsEnLigne />}
               slug={song.slug}
               armure={
                 <Armure

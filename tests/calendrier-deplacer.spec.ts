@@ -10,6 +10,7 @@ import { notificationsDuMatin } from "../src/lib/reunions/rappels";
 import type { Evenement } from "../src/types/evenement";
 import type { Creneau, Programme } from "../src/types/programme";
 import type { Fois, Tache } from "../src/types/tache";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Lot U8, tranches C6 et C7 (docs/spec-calendrier.md, Q5 à Q8) : déplacer une entrée,
 // puis prévenir par une ligne du rappel du lendemain matin (C7, tests purs).
@@ -408,7 +409,7 @@ async function sheets(page: Page) {
 async function ouvrir(page: Page, profil: FakeProfile = P_ADMIN) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await sheets(page);
-  const db = await signInAs(page, profil, DOCS, "/back-office/calendrier");
+  const db = await signInAs(page, profil, creneauxEnReservations(DOCS), "/back-office/calendrier");
   await expect(page.getByTestId("mois-affiche")).toHaveText(/^Octobre( 2026)?$/);
   await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
   return db;
@@ -510,7 +511,7 @@ test.describe("C6 : glisser en vue Mois", () => {
     await sheets(page);
     // lot RS : un gestionnaire de planning réserve toujours (Q12), la saison ne le limite pas ; ce test regarde un
     // auteur sans responsabilité (référent d'équipe, qui a le Back-Office), que la saison limite.
-    await signInAs(page, { ...P_MEMBRE, uid: "u-auteur", firstName: "Ines", lastName: "R." }, {
+    await signInAs(page, { ...P_MEMBRE, uid: "u-auteur", firstName: "Ines", lastName: "R." }, creneauxEnReservations({
       ...DOCS,
       "programmes/noel": { ...DOCS["programmes/noel"], quiAutorises: ["Jeunes"] },
       "programmes/noel/creneaux/chorale": {
@@ -521,7 +522,7 @@ test.describe("C6 : glisser en vue Mois", () => {
         dimanche: "2026-10-11", debut: "16:00", fin: "17:00", quoi: "Danse", qui: ["Jeunes"], note: "",
         auteurUid: "u-auteur", auteurNom: "Auteur", createdAt: MAINTENANT, updatedAt: MAINTENANT,
       },
-    }, "/back-office/calendrier");
+    }), "/back-office/calendrier");
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
     const chorale = jour(page, "2026-10-25").locator('[data-source="scene"]').filter({ hasText: "Chorale" });
     await expect(chorale).toBeVisible();
@@ -624,7 +625,7 @@ test.describe("C6 : glisser en vue Mois", () => {
     await dlg.getByRole("button", { name: "Déplacer", exact: true }).click();
     await expect(dlg).toHaveCount(0);
     expect(ecritures(db)).toMatchObject([
-      { method: "PATCH", path: "programmes/noel/creneaux/c25", data: { dimanche: "2026-10-11", debut: "18:00", fin: "19:00" } },
+      { method: "PATCH", path: "reservations/c25", data: { date: "2026-10-11", debut: "18:00", fin: "19:00" } },
     ]);
   });
 
@@ -717,7 +718,7 @@ test.describe("C6 : « Déplacer… »", () => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
-    await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+    await signInAs(page, P_ADMIN, creneauxEnReservations(DOCS), "/back-office/calendrier");
     await expect(page.getByTestId("mois-affiche")).toHaveText("2026年10月");
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
     await jour(page, "2026-10-15").click();

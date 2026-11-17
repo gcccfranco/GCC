@@ -87,14 +87,14 @@ test("chant ZH : le panneau d'un accord (capture)", async ({ page }) => {
   await photo(page, "panneau-zh-piano-renversement");
 });
 
-test("la bulle d'aide se pose sous le premier accord visible (capture)", async ({ page }) => {
+test("le bandeau d'aide au-dessus du chant (capture)", async ({ page }) => {
   await page.goto("/songs/abba-pere");
   const premier = touchables(page).first();
   await expect(premier).toBeVisible();
   await expect(aide(page)).toBeVisible();
   const a = await boite(premier);
   const b = await boite(aide(page));
-  expect(b.y, "sous l'accord").toBeGreaterThanOrEqual(a.y + a.height - 1);
+  expect(b.y + b.height, "au-dessus du premier accord").toBeLessThanOrEqual(a.y + 1);
   const vue = page.viewportSize()!;
   expect(b.x).toBeGreaterThanOrEqual(0);
   expect(b.x + b.width).toBeLessThanOrEqual(vue.width);

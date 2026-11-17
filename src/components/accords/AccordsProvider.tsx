@@ -154,7 +154,7 @@ export function AccordsProvider({
   chant,
   tonalite,
   ici,
-  aide = false,
+  aide,
   louange = false,
 }: {
   children: React.ReactNode;
@@ -165,20 +165,15 @@ export function AccordsProvider({
   tonalite?: string;
   /** H5-2 : de quoi ouvrir la porte 2 au passage de l'accord touché (page chant). */
   ici?: IciDuChant;
-  /** Montre, une seule fois par appareil, la bulle « Touchez un accord… » sous le premier accord visible.
-   *  `"flux"` : pas de bulle posée par-dessus, l'aide se dessine là où l'on pose `AideAccordsEnLigne`. */
-  aide?: boolean | "flux";
+  /** `"flux"` : l'aide de la première fois (une seule par appareil) se dessine là où l'on pose `AideAccordsEnLigne`. */
+  aide?: "flux";
   /** AL-2 : posé par-dessus le mode louange (z-[9999]) : bulle et feuille passent au-dessus. */
   louange?: boolean;
 }) {
   const [ouvert, setOuvert] = useState<Ouvert | null>(null);
-  const [aideAncre, setAideAncre] = useState<HTMLElement | null>(null);
   const enLigne = aide === "flux";
-  const bulle = aide === true;
   const [aideLigne, setAideLigne] = useState(false);
   const aideLigneFermee = useRef(false);
-  const touchables = useRef(new Set<HTMLElement>());
-  const minuteur = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [signalement, setSignalement] = useState<{ accord: string; chant?: { slug: string; titre: string } } | null>(null);
   const derniereAncre = useRef<HTMLElement | null>(null);
   const courant = useRef<Ouvert | null>(null);
@@ -200,7 +195,6 @@ export function AccordsProvider({
   }, []);
 
   const fermerAide = useCallback(() => {
-    setAideAncre(null);
     setAideLigne(false);
     aideLigneFermee.current = true;
     noterAideVue();
@@ -215,7 +209,7 @@ export function AccordsProvider({
     const ancre = dansPanneau ? derniereAncre.current : d.ancre ?? null;
     derniereAncre.current = ancre;
     // Toucher un accord vaut lecture de l'aide.
-    if (aideAncre || aideLigne) fermerAide();
+    if (aideLigne) fermerAide();
     // Porte 2 (`data-idees-harmonie`) : pas de situation dans le chant.
     const capo = dansPanneau ? courant.current?.capo : d.capo;
     const hors = d.ancre?.closest("[data-idees-harmonie]");
@@ -235,45 +229,13 @@ export function AccordsProvider({
         : undefined,
     };
     setOuvert(courant.current);
-  }, [chant, aideAncre, aideLigne, fermerAide]);
+  }, [chant, aideLigne, fermerAide]);
 
-  // La bulle d'aide : sous le premier accord visible, une fois les accords posés (les chants arrivent
-  // par le réseau) ; si aucun n'est à l'écran, on réessaie au défilement.
-  const chercherPremier = useCallback(() => {
-    if (!bulle || !actif || aideDejaVue()) return;
-    const visibles = [...touchables.current].filter((el) => {
-      if (!el.isConnected) return false;
-      const r = el.getBoundingClientRect();
-      return r.width > 0 && r.height > 0 && r.top >= 96 && r.bottom <= window.innerHeight - 140;
-    });
-    visibles.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
-    if (visibles[0]) setAideAncre((courante) => courante ?? visibles[0]);
-  }, [bulle, actif]);
-
-  const programmer = useCallback(() => {
-    if (minuteur.current) clearTimeout(minuteur.current);
-    minuteur.current = setTimeout(chercherPremier, 500);
-  }, [chercherPremier]);
-
-  const enregistrer = useCallback((el: HTMLElement) => {
-    touchables.current.add(el);
+  const enregistrer = useCallback(() => {
     // Aide dans le flux : dès qu'un accord touchable est posé (accords masqués, rien à toucher : pas d'aide).
     if (enLigne && !aideLigneFermee.current && !aideDejaVue()) setAideLigne(true);
-    programmer();
-    return () => {
-      touchables.current.delete(el);
-    };
-  }, [programmer, enLigne]);
-
-  useEffect(() => {
-    if (!bulle || !actif || aideAncre || aideDejaVue()) return;
-    programmer();
-    window.addEventListener("scroll", programmer, { passive: true, capture: true });
-    return () => {
-      window.removeEventListener("scroll", programmer, true);
-      if (minuteur.current) clearTimeout(minuteur.current);
-    };
-  }, [bulle, actif, aideAncre, programmer]);
+    return () => {};
+  }, [enLigne]);
 
   // Passage en édition : tout se referme (ajustement pendant le rendu, pas dans un effet).
   const [etaitActif, setEtaitActif] = useState(actif);
@@ -281,7 +243,6 @@ export function AccordsProvider({
     setEtaitActif(actif);
     if (!actif) {
       setOuvert(null);
-      setAideAncre(null);
       setAideLigne(false);
     }
   }
@@ -304,7 +265,6 @@ export function AccordsProvider({
   return (
     <AccordsContext.Provider value={valeur}>
       {children}
-      {actif && aideAncre && <AideBulle ancre={aideAncre} onOk={fermerAide} />}
       {actif && ouvert && (
         <PanneauOuvert
           ouvert={ouvert}
@@ -344,6 +304,17 @@ function accordSuivant(section: Element, ancre: HTMLElement, accord: string): st
   return tous.slice(i + 1).map((el) => el.dataset.accordTouchable).find((a) => a && a !== accord);
 }
 
+// B4 ter : aucun autre accord visible du même conteneur, sur la même rangée, n'a son bord gauche à plus de 8 px à gauche du sien.
+function premierDeLigne(ancre: HTMLElement): boolean {
+  const section = ancre.closest("[data-section-uids]") ?? document;
+  const r = ancre.getBoundingClientRect();
+  return ![...section.querySelectorAll<HTMLElement>("[data-accord-touchable]")].some((el) => {
+    if (el === ancre) return false;
+    const o = el.getBoundingClientRect();
+    return o.width > 0 && Math.abs(o.top + o.height / 2 - (r.top + r.height / 2)) < r.height / 2 && o.left < r.left - 8;
+  });
+}
+
 function PanneauOuvert({ ouvert, louange, fermer, signaler }: { ouvert: Ouvert; louange: boolean; fermer: () => void; signaler: () => void }) {
   const ordinateur = useOrdinateur();
   const acces = useAccesHarmonie();
@@ -373,7 +344,7 @@ const LARGEUR_BULLE = 300;
 const MARGE = 8;
 const ECART = 12;
 
-type Place = { left: number; top: number; fleche: number; dessus: boolean; sansFleche?: boolean; hauteurMax: number };
+type Place = { left: number; top: number; fleche: number; dessus: boolean; sansFleche?: boolean; hauteurMax: number; cote?: "gauche" | "droite" };
 
 function Bulle({ louange, ...props }: Omit<React.ComponentProps<typeof PanneauAccord>, "variante"> & { onFermer: () => void; ancre: HTMLElement; louange?: boolean }) {
   const { ancre, onFermer } = props;
@@ -397,12 +368,21 @@ function Bulle({ louange, ...props }: Omit<React.ComponentProps<typeof PanneauAc
     const dessus = !tientDessous && r.top - ECART - h > MARGE;
     // Ni dessous ni dessus (écran bas, accord en haut de page) : la bulle se cale dans l'écran, sur l'accord, sans flèche.
     const cale = !tientDessous && !dessus;
-    const top = dessus ? r.top - ECART - h : cale ? clamp(r.bottom + ECART, MARGE, Math.max(MARGE, window.innerHeight - h - MARGE)) : r.bottom + ECART;
+    // B4 ter : côté libre, jamais par-dessus l'accord : à gauche pour le premier accord d'une ligne, sinon à droite ; `cale` si aucun côté ne tient.
+    const tientDroite = r.right + ECART + w <= window.innerWidth - MARGE;
+    const tientGauche = r.left - ECART - w >= MARGE;
     const avant = placeCourante.current;
     const fige = garder === true && avant && !avant.dessus;
+    const cote: Place["cote"] = fige && avant.cote ? avant.cote
+      : !cale ? undefined
+      : tientGauche && premierDeLigne(ancre) ? "gauche"
+      : tientDroite ? "droite" : tientGauche ? "gauche" : undefined;
+    const top = cote ? clamp(r.top + r.height / 2 - h / 2, MARGE, Math.max(MARGE, window.innerHeight - h - MARGE))
+      : dessus ? r.top - ECART - h : cale ? clamp(r.bottom + ECART, MARGE, Math.max(MARGE, window.innerHeight - h - MARGE)) : r.bottom + ECART;
     const haut = fige ? avant.top : top;
-    const suivante = {
-      left, top: haut, fleche: clamp(centre - left, 24, w - 24), dessus: fige ? false : dessus, sansFleche: fige ? avant.sansFleche : cale,
+    const suivante: Place = {
+      left: cote === "droite" ? r.right + ECART : cote === "gauche" ? r.left - ECART - w : left,
+      top: haut, fleche: clamp(centre - left, 24, w - 24), dessus: fige ? false : dessus, sansFleche: fige ? avant.sansFleche : cale, cote,
       hauteurMax: fige ? window.innerHeight - haut - MARGE : window.innerHeight - 2 * MARGE,
     };
     placeCourante.current = suivante;
@@ -478,75 +458,6 @@ function Bulle({ louange, ...props }: Omit<React.ComponentProps<typeof PanneauAc
     document.body,
   );
 }
-
-/** La bulle d'aide de la première fois (Q16) : encre, en bas de l'écran, centrée, au-dessus de la barre du bas
- *  quand elle est rendue (C9, audit 24/10/2026). L'accord annoncé ne sert que de déclencheur, plus à placer. */
-function AideBulle({ ancre, onOk }: { ancre: HTMLElement; onOk: () => void }) {
-  const { t } = useTranslation();
-  const ordinateur = useOrdinateur();
-  const [surBarre, setSurBarre] = useState(false);
-  // Centre de la colonne de lecture (en deux volets, la fenêtre entière déborderait sur la liste).
-  const [centre, setCentre] = useState<number | null>(null);
-
-  useLayoutEffect(() => {
-    if (!ancre.isConnected) return onOk();
-    const mesurer = () => {
-      const barre = document.querySelector<HTMLElement>("[data-testid=barre-du-bas]");
-      setSurBarre(!!barre && barre.offsetHeight > 0);
-      const colonne = (ancre.closest("[data-copy-line]")?.parentElement ?? null)?.getBoundingClientRect();
-      setCentre(colonne && colonne.width > 0 ? colonne.left + colonne.width / 2 : null);
-    };
-    mesurer();
-    // La barre peut se rendre après la bulle (session qui arrive) : on la guette tant que la bulle est là.
-    const obs = new MutationObserver(mesurer);
-    obs.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener("resize", mesurer);
-    return () => {
-      obs.disconnect();
-      window.removeEventListener("resize", mesurer);
-    };
-  }, [ancre, onOk]);
-
-  useEffect(() => {
-    const surTouche = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOk();
-    };
-    document.addEventListener("keydown", surTouche);
-    return () => document.removeEventListener("keydown", surTouche);
-  }, [onOk]);
-
-  return createPortal(
-    <div
-      role="status"
-      data-accords-aide
-      style={{
-        position: "fixed",
-        width: `min(280px, 100vw - ${2 * MARGE}px)`,
-        left: centre === null ? "50%" : `clamp(min(140px, 50vw), ${centre}px, max(100vw - 140px, 50vw))`,
-        transform: "translateX(-50%)",
-        bottom: surBarre
-          ? "calc(var(--tabbar-bottom) + 78px + 8px)"
-          : `calc(${3 * MARGE}px + env(safe-area-inset-bottom))`,
-      }}
-      // z-40, sous le voile des fenêtres et feuilles (z-50, src/components/ui/dialog.tsx) : en bas de l'écran
-      // depuis C9, elle couvrait « Télécharger » de « Quel PDF ? », ouvert par-dessus.
-      className="pointer-events-auto z-40 rounded-[12px] bg-foreground px-4 py-3 text-sm leading-snug text-background shadow-xl"
-    >
-      <p className="relative">{t(ordinateur ? "accords.aideCliquer" : "accords.aideToucher")}</p>
-      <div className="relative mt-2 flex justify-end">
-        <button
-          type="button"
-          onClick={onOk}
-          className="h-8 rounded-full bg-background/20 px-4 text-sm font-semibold outline-none hover:bg-background/30 focus-visible:ring-2 focus-visible:ring-background"
-        >
-          {t("accords.aideOk")}
-        </button>
-      </div>
-    </div>,
-    document.body,
-  );
-}
-
 
 /** L'aide de la première fois, dans le flux (`<AccordsProvider aide="flux">`) : un bloc pleine largeur de colonne,
  *  que l'appelant pose entre les pastilles de structure du premier chant et sa première section. */

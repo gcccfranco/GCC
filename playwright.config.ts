@@ -14,6 +14,14 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Salles AR, T2b (docs/spec-salles.md) : la Liste, la bande de jours, le repère d'heure, la journée d'une salle (page ou volet).
+  /salles-liste\.spec\.ts/,
+  // Salles AR, T2c : la Grille (neuf colonnes, défilement au téléphone), le sélecteur « Liste · Grille » et la vue par appareil.
+  /salles-grille\.spec\.ts/,
+  // Salles AR, T3a : la feuille « Réserver » (feuille du bas ou panneau à droite), les réservations dans la Liste et la Grille.
+  /salles-reserver\.spec\.ts/,
+  // Salles AR, T3c : les gestes de la Grille (glisser, appui, Entrée) ouvrent la feuille « Réserver ».
+  /salles-gestes\.spec\.ts/,
   // CI-2 (docs/spec-corrections-interface.md) : le parcours du culte au mode louange, de l'ouverture aux menus.
   /louange-parcours-culte\.spec\.ts/,
   // Lot AL, AL-2 (docs/spec-accords-louange.md) : accords touchables en mode louange, panneau au centre de la page, bandes latérales, Crayon, « Ici ».
@@ -193,6 +201,8 @@ const SPECS_GRAND_ECRAN = [
   /agencement-barre-reduite\.spec\.ts/,
   // Scène Pâques · Noël (docs/spec-scene-paques-noel.md) : onglets de fête, une semaine à la fois.
   /scene-paques-noel\.spec\.ts/,
+  // Lot AQ, SQ-B (docs/spec-scene-qui-autre-moment.md) : « Réserver un autre moment » (bouton du volet, feuille) et ses captures sur quatre dispositions.
+  /scene-autre-moment\.spec\.ts/,
   // … et fermer les réservations avant la date de fin (docs/spec-fermer-reservations.md, FR-A) : la vue Saison.
   /fermer-reservations\.spec\.ts/,
   // Agencement v18 (docs/spec-agencement-v18.md) : chaque tranche, F1 comprise, sur les cinq projets.

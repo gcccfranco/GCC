@@ -5,9 +5,12 @@ import { fermerFeuille, reglageSaison } from "./helpers/saisonScene";
 import {
   archiveDate, programmeState, reservationsClosed, sundaysBetween,
 } from "../src/lib/scene/dimanches";
-import { conflictKey, conflictMessage } from "../src/lib/scene/conflit";
-import { quiCategory, sceneReminder } from "../src/lib/scene/rappels";
+import { conflictKey, conflictMessage } from "../src/lib/salles/conflit";
+import { creneauxDuRappel, quiCategory, sceneReminder } from "../src/lib/scene/rappels";
+import type { Reservation } from "../src/lib/firebase/reservations";
+import { readFileSync } from "node:fs";
 import { reminderBody } from "../src/lib/push/reminderMessage";
+import { creneauEnReservation, creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Lot 3 bis (docs/spec-programme-scene.md) : section Évènements, onglet
 // unique « Scène » nommé comme le programme affiché (un seul à la fois), géré en haut
@@ -59,7 +62,7 @@ test("section Évènements : entrée dans le menu principal, onglet nommé comme
   await expect(page.getByRole("link", { name: "Noël", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Noël" })).toBeVisible();
   // Sur téléphone et tablette, l'entrée est dans le menu ☰ ; sur ordinateur, dans la barre.
-  const entree = page.getByRole("link", { name: "Évènements", exact: true });
+  const entree = page.getByRole("link", { name: "Église", exact: true });
   if ((await entree.count()) === 0) await page.getByRole("button", { name: /menu/i }).first().click();
   await expect(entree.first()).toBeVisible();
 });
@@ -84,11 +87,11 @@ test("coordination : sans aucun programme, l'onglet Noël du Back-Office crée l
   await expect(page).toHaveURL(/\/back-office\/evenements\/scene\/noel\/?$/);
   await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
   expect(ecritures(db)).toHaveLength(0);
-  await (await reglageSaison(page, "Un créneau dure")).getByRole("button", { name: "1 h 30", exact: true }).click();
+  await (await reglageSaison(page, "Qui peut réserver")).getByRole("button", { name: "Louange", exact: true }).click();
   await expect.poll(() => ecritures(db).length).toBe(1);
   await fermerFeuille(page);
   expect(ecritures(db)[0]).toMatchObject({ method: "POST", path: "programmes/noel-2026" });
-  expect(ecritures(db)[0].data).toMatchObject({ fete: "noel", annee: 2026, jourJ: "2026-12-24", ouvert: false, duree: 90, createdBy: "uid-alice" });
+  expect(ecritures(db)[0].data).toMatchObject({ fete: "noel", annee: 2026, jourJ: "2026-12-24", ouvert: false, quiAutorises: ["Franco", "Intergroupe", "Interfranco"], createdBy: "uid-alice" });
   await page.getByRole("button", { name: "Lancer les réservations", exact: true }).click();
   await expect(page.getByRole("button", { name: "Fermer les réservations", exact: true })).toBeVisible();
   expect(ecritures(db, "PATCH").at(-1)?.data).toMatchObject({ ouvert: true });
@@ -126,17 +129,17 @@ const choisirSemaine = (page: import("@playwright/test").Page, debut: RegExp) =>
 
 async function openNoel(page: import("@playwright/test").Page, who: FakeProfile, today: string, docs: Record<string, Record<string, unknown>> = {}) {
   await page.clock.setFixedTime(new Date(`${today}T10:00:00`));
-  return signInAs(page, who, { "programmes/noel": NOEL, ...docs }, sceneDe(who));
+  // Planning simulé vide : tous les dimanches sont « ordinaires » (groupe Joie, culte sinophone), comme scene-autre-moment.
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  return signInAs(page, who, creneauxEnReservations({ "programmes/noel": NOEL, ...docs }), sceneDe(who));
 }
 
-test("entraînements : une semaine par dimanche réservable (saison par défaut, lot U1), en créneaux d'1 h libres, jamais le jour J", async ({ page }) => {
+test("entraînements : une semaine par dimanche réservable (saison par défaut, lot U1), avec ses fenêtres libres, jamais le jour J", async ({ page }) => {
   await openNoel(page, JO, "2026-10-01");
   await expect(page.getByRole("list", { name: "Semaines" }).getByRole("button")).toHaveCount(12);
   await expect(page.getByRole("region", { name: "Dimanche 4 octobre" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Dimanche 4 octobre" }).getByRole("listitem")).toHaveText([
-    /14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Libre/, /17:00\s*Libre/, /18:00\s*Libre/,
-  ]);
-  await expect(page.getByRole("button", { name: /^Réserver \d/ })).toHaveCount(5);
+  await expect(page.getByRole("region", { name: "Dimanche 4 octobre" }).getByTestId("libre-du-jour")).toHaveText("Libre 14:30 – 15:00 · 17:00 – 19:00");
+  await expect(page.getByRole("button", { name: /^Réserver \d/ })).toHaveCount(2);
   await choisirSemaine(page, /^20 déc\./);
   await expect(page.getByRole("region", { name: "Dimanche 20 décembre" })).toBeVisible();
   await expect(page.getByRole("region", { name: /24 décembre/ })).toHaveCount(0);
@@ -151,13 +154,16 @@ test("entraînements : les semaines passées sont masquées, un lien les montre"
   await expect(page.getByRole("region", { name: "Dimanche 4 octobre" })).toBeVisible();
 });
 
-test("réserver : la feuille reprend le créneau choisi dans la grille (lot U1), écrit au nom de l'auteur puis affiché", async ({ page }) => {
+test("réserver : la feuille reprend la fenêtre libre touchée en entier, l'heure de fin se change, écrit au nom de l'auteur puis affiché", async ({ page }) => {
   const db = await openNoel(page, JO, "2026-10-01");
   await choisirSemaine(page, /^11 oct\./);
   const dimanche = page.getByRole("region", { name: "Dimanche 11 octobre" });
-  await dimanche.getByRole("button", { name: "Réserver 17:00 – 18:00" }).click();
+  await dimanche.getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
   const feuille = page.getByRole("dialog");
-  await expect(feuille).toContainText("Dimanche 11 octobre · 17:00 – 18:00");
+  await expect(feuille.getByLabel("Date")).toHaveValue("2026-10-11");
+  await expect(feuille.getByLabel("de", { exact: true })).toHaveValue("17:00");
+  await expect(feuille.getByLabel("à", { exact: true })).toHaveValue("19:00");
+  await feuille.getByLabel("à", { exact: true }).selectOption("18:00");
   await feuille.getByRole("radio", { name: "Danse" }).check();
   await feuille.getByRole("checkbox", { name: "Gp Joie" }).check();
   await feuille.getByLabel("Note").fill("Avec la sono");
@@ -166,26 +172,27 @@ test("réserver : la feuille reprend le créneau choisi dans la grille (lot U1),
   await expect(ligne).toContainText("17:00");
   // Pâques · Noël, P6 : sur sa propre réservation, « à moi » remplace son nom.
   await expect(ligne).toContainText("à moi");
-  await expect(dimanche.getByRole("button", { name: "Réserver 17:00 – 18:00" })).toHaveCount(0);
-  const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/noel/creneaux/"));
+  await expect(dimanche.getByRole("button", { name: "Réserver 17:00 – 19:00" })).toHaveCount(0);
+  await expect(dimanche.getByRole("button", { name: "Réserver 18:00 – 19:00" })).toBeVisible();
+  const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"));
   expect(created?.data).toMatchObject({
-    dimanche: "2026-10-11", debut: "17:00", fin: "18:00", quoi: "Danse", qui: ["Gp Joie"], note: "Avec la sono",
+    date: "2026-10-11", debut: "17:00", fin: "18:00", quoi: "Danse", qui: ["Gp Joie"], note: "Avec la sono",
     auteurUid: "uid-jo", auteurNom: "Jo L.",
   });
 });
 
 test("réserver : un chevauchement est refusé à la relecture, rien n'est écrit", async ({ page }) => {
   const db = await openNoel(page, JO, "2026-10-01");
-  await page.getByRole("region", { name: "Dimanche 4 octobre" }).getByRole("button", { name: "Réserver 18:00 – 19:00" }).click();
+  await page.getByRole("region", { name: "Dimanche 4 octobre" }).getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
   // Alice réserve 17:00–18:30 pendant que la feuille de Jo est ouverte : la relecture le voit.
-  db.set("programmes/noel/creneaux/c1", C_ALICE);
+  db.set("reservations/c1", creneauEnReservation("noel", C_ALICE));
   const feuille = page.getByRole("dialog");
   await feuille.getByRole("radio", { name: "Sketch" }).check();
   await feuille.getByRole("checkbox", { name: "Gp Paix" }).check();
   await feuille.getByRole("button", { name: "Réserver", exact: true }).click();
-  await expect(feuille.getByText(/chevauche/)).toContainText("17:00 – 18:30");
+  await expect(feuille.locator("[data-refus]")).toContainText("17:00 – 18:30");
   // Seules les écritures du programme comptent : `:commit` est l'envoi quotidien du comptage d'usage (docs/spec-comptage-usage.md).
-  expect(db.writes.filter((w) => w.method === "POST" && w.path.startsWith("programmes/"))).toHaveLength(0);
+  expect(db.writes.filter((w) => w.method === "POST" && /^(programmes|reservations)\//.test(w.path))).toHaveLength(0);
 });
 
 test("droits : l'auteur et la coordination modifient ou retirent un créneau, pas un autre membre", async ({ page }) => {
@@ -206,8 +213,8 @@ test("droits : la coordination retire le créneau d'un autre membre", async ({ p
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Retirer", exact: true }).click();
   await expect(bloc.getByText("Chant · EDD 中班")).toHaveCount(0);
-  await expect(bloc.getByRole("button", { name: "Réserver 17:00 – 18:00" })).toBeVisible();
-  expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("programmes/noel/creneaux/c1");
+  await expect(bloc.getByRole("button", { name: "Réserver 17:00 – 19:00" })).toBeVisible();
+  expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("reservations/c1");
 });
 
 test("deux créneaux qui se chevauchent sont marqués pour tout le monde", async ({ page }) => {
@@ -311,46 +318,77 @@ test("rappels : l'entraînement rejoint la ligne des services du même dimanche,
   expect(reminderBody("2026-12-13", "J1", services, "zh-CN")).toContain("舞台排练（Chant · EDD 中班） 17:00–18:30");
 });
 
-test("conflit : une clé par paire de créneaux, quel que soit l'ordre ; message aux deux auteurs", () => {
-  expect(conflictKey("noel", ["b", "a"])).toBe(conflictKey("noel", ["a", "b"]));
-  const other = { ...C_ALICE, id: "c2", debut: "18:00", fin: "19:00", quoi: "Danse", qui: ["Gp Joie"], auteurNom: "Jo L." };
-  const fr = conflictMessage({ ...C_ALICE, id: "c1" }, other, "fr");
-  expect(fr.title).toBe("Scène : chevauchement");
-  expect(fr.body).toBe("Dimanche 4 octobre : 17:00–18:30 (Chant · EDD 中班, Alice Q.) et 18:00–19:00 (Danse · Gp Joie, Jo L.) se chevauchent sur scène. Mettez-vous d'accord.");
-  expect(conflictMessage({ ...C_ALICE, id: "c1" }, other, "zh-CN").body).toContain("重叠");
+// Lot 5 du chantier AR, T5c (docs/spec-salles.md, AR19, AR20, SA9) : le serveur lit les créneaux dans
+// `reservations/{id}` et la Scène passe par /api/salles/conflit.
+
+/** Une réservation de la Scène pour l'édition `fete` (noms fictifs). */
+const resa = (id: string, r: Partial<Reservation>): Reservation => ({
+  id, salle: "scene", date: "2026-12-13", debut: "17:00", fin: "18:30", pour: "EDD 中班", quoi: "Chant",
+  auteurUid: "uid-alice", auteurNom: "Alice Q.", createdAt: "", updatedAt: "", fete: "noel-2026", qui: ["EDD 中班"], note: "", ...r,
 });
 
-test("course perdue : un créneau enregistré au même moment chevauche le mien → le serveur prévient les deux auteurs", async ({ page }) => {
+test("rappels (T5c) : les créneaux du jour sont les réservations de la Scène des éditions affichées", () => {
+  const lues = [
+    resa("r1", {}),
+    resa("r2", { fete: "paques-2027" }),
+    resa("r3", { date: "2026-12-20" }),
+    resa("r4", { fete: undefined, qui: undefined, quoi: "Réunion" }),
+    resa("r5", { salle: "grande" as Reservation["salle"] }),
+    resa("r6", { libre: true, debut: "19:00", fin: "19:45", note: "micro" }),
+  ];
+  const creneaux = creneauxDuRappel(lues, ["noel-2026"], ["2026-12-13", "2026-12-17"]);
+  expect(creneaux.map((c) => c.id)).toEqual(["r1", "r6"]);
+  expect(creneaux[0]).toMatchObject({ dimanche: "2026-12-13", debut: "17:00", fin: "18:30", quoi: "Chant", qui: ["EDD 中班"], auteurUid: "uid-alice" });
+  expect(creneaux[1]).toMatchObject({ libre: true, note: "micro" });
+  expect(sceneReminder(creneaux[0]).service).toBe("Entraînement sur scène");
+});
+
+test("rappels (T5c) : le cron lit `reservations`, plus `programmes/{id}/creneaux` (AR19)", () => {
+  const src = readFileSync("src/app/api/cron/reminders/route.ts", "utf8");
+  expect(src).toContain("creneauxDuRappel(");
+  expect(src).not.toContain('collection("creneaux")');
+});
+
+test("conflit (T5c) : deux réservations de la Scène, une clé par paire ; message aux deux auteurs", () => {
+  expect(conflictKey(["b", "a"])).toBe(conflictKey(["a", "b"]));
+  const autre = resa("c2", { debut: "18:00", fin: "19:00", quoi: "Danse", qui: ["Gp Joie"], pour: "Gp Joie", auteurNom: "Jo L." });
+  const fr = conflictMessage(resa("c1", { date: "2026-10-04" }), { ...autre, date: "2026-10-04" }, "fr");
+  expect(fr.title).toBe("Salles : chevauchement");
+  expect(fr.body).toBe("Dimanche 4 octobre : Scène 17:00–18:30 (Chant · EDD 中班, Alice Q.) et Scène 18:00–19:00 (Danse · Gp Joie, Jo L.) se chevauchent. Mettez-vous d'accord.");
+  expect(conflictMessage(resa("c1", {}), autre, "zh-CN").body).toContain("重叠");
+});
+
+test("course perdue : un créneau enregistré au même moment chevauche le mien → /api/salles/conflit prévient les deux auteurs", async ({ page }) => {
   const db = await openNoel(page, JO, "2026-10-01");
-  let sent: { body: { programmeId: string; creneauIds: string[] }; auth?: string } | null = null;
-  await page.route("**/api/scene/conflit", (route) => {
+  let sent: { body: { reservationIds: string[] }; auth?: string } | null = null;
+  await page.route("**/api/salles/conflit", (route) => {
     sent = { body: route.request().postDataJSON(), auth: route.request().headers()["authorization"] };
     return route.fulfill({ json: { ok: true, notified: 2 } });
   });
   // Alice enregistre un créneau qui chevauche pendant que Jo valide : il apparaît
   // juste avant l'écriture de Jo, après sa relecture.
-  await page.route(/firestore\.googleapis\.com.*\/creneaux(\?|$)/, async (route) => {
-    if (route.request().method() === "POST") db.set("programmes/noel/creneaux/race", { ...C_ALICE, dimanche: "2026-10-11" });
+  await page.route(/firestore\.googleapis\.com.*\/reservations(\?|$)/, async (route) => {
+    if (route.request().method() === "POST") db.set("reservations/race", creneauEnReservation("noel", { ...C_ALICE, dimanche: "2026-10-11" }));
     await route.fallback();
   });
   await choisirSemaine(page, /^11 oct\./);
   const bloc = page.getByRole("region", { name: "Dimanche 11 octobre" });
-  await bloc.getByRole("button", { name: "Réserver 17:00 – 18:00" }).click();
+  await bloc.getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
   const feuille = page.getByRole("dialog");
+  await feuille.getByLabel("à", { exact: true }).selectOption("18:00");
   await feuille.getByRole("radio", { name: "Danse" }).check();
   await feuille.getByRole("checkbox", { name: "Gp Joie" }).check();
   await feuille.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(bloc.getByText("Chevauchement")).toHaveCount(2);
   await expect.poll(() => sent).not.toBeNull();
   expect(sent!.auth).toMatch(/^Bearer /);
-  expect(sent!.body.programmeId).toBe("noel");
-  expect(sent!.body.creneauIds).toHaveLength(2);
-  expect(sent!.body.creneauIds).toContain("race");
+  expect(sent!.body.reservationIds).toHaveLength(2);
+  expect(sent!.body.reservationIds).toContain("race");
 });
 
-test("route de conflit : refusée sans jeton", async ({ request }) => {
-  const res = await request.post("/api/scene/conflit", { data: { programmeId: "noel", creneauIds: ["a", "b"] } });
-  expect(res.status()).toBe(401);
+test("route de conflit : /api/scene/conflit n'existe plus (T5c), /api/salles/conflit refusée sans jeton", async ({ request }) => {
+  expect((await request.post("/api/scene/conflit", { data: { programmeId: "noel", creneauIds: ["a", "b"] } })).status()).toBe(404);
+  expect((await request.post("/api/salles/conflit", { data: { reservationIds: ["a", "b"] } })).status()).toBe(401);
 });
 
 // ─── Lot 12 : archivage et bascule automatiques (docs/spec-programme-bascule.md) ──
@@ -376,7 +414,7 @@ const DEUX = {
 /** Écritures de la scène. La connexion écrit aussi `notifPrefs/{uid}` (la
  *  langue), qui ne regarde pas les programmes : on ne compte que ceux-ci. */
 function ecritures(db: FakeDb, method?: string) {
-  return db.writes.filter((w) => w.path.startsWith("programmes") && (!method || w.method === method));
+  return db.writes.filter((w) => /^(programmes|reservations)/.test(w.path) && (!method || w.method === method));
 }
 
 async function ouvrirScene(
@@ -387,7 +425,7 @@ async function ouvrirScene(
   chemin = sceneDe(who),
 ) {
   await page.clock.setFixedTime(new Date(`${today}T10:00:00`));
-  return signInAs(page, who, docs, chemin);
+  return signInAs(page, who, creneauxEnReservations(docs), chemin);
 }
 
 test("état d'un programme : à venir, ouvert, passé, archivé", () => {

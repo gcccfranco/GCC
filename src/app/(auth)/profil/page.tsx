@@ -28,13 +28,14 @@ import { MesAbsences } from "@/components/profil/MesAbsences";
 import { CarteMesEquipes } from "@/components/moi/CartesAcces";
 import { cn } from "@/lib/utils";
 import { Squelette } from "@/components/layout/Squelette";
+import { EcranProfilIllisible } from "@/app/setlists/_components/EcransAccesListe";
 
 const FORMULAIRE = "formulaire-profil";
 
 export default function ProfilPage() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { user, profile, loading } = useProfile();
+  const { user, profile, loading, echec, relire } = useProfile();
 
   const [form, setForm] = useState<ProfileFormValue | null>(null);
   const [planningNames, setPlanningNames] = useState<string[]>([]);
@@ -71,6 +72,11 @@ export default function ProfilPage() {
 
   if (loading || !user || !form) {
     return <Squelette />;
+  }
+
+  // Lecture en échec : pas de formulaire vide enregistrable (il écraserait le vrai profil).
+  if (echec && !profile) {
+    return <EcranProfilIllisible onReessayer={relire} />;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -130,7 +136,7 @@ export default function ProfilPage() {
       />
 
       <div className="space-y-4 px-[var(--marge-page)]">
-        {!profile && (
+        {!profile && !echec && (
           <Alert className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
             <AlertDescription className="text-inherit">
               {t("profile.welcome")}

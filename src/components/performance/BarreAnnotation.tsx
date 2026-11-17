@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as PointerReact, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, CloudOff, Eraser, GripVertical, Highlighter, Pencil, ChevronLeft, ChevronRight, Loader2, MoreHorizontal, Redo2, Shapes, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
+import { Eraser, GripVertical, Highlighter, Pencil, ChevronLeft, ChevronRight, MoreHorizontal, Redo2, Shapes, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
 import { styleTrait } from "@/lib/annotations/strokes";
 import { SIGNES, glyphesTampon, polylignes, texteTampon } from "@/lib/annotations/tampons";
 import { BORNES, INDICES_TELEPHONE, TEINTES_PRETES, type Prereglage } from "@/lib/annotations/prereglages";
@@ -211,15 +211,10 @@ export function BarreAnnotation(p: {
     </button>
   );
   const texteEtat = t(`performance.tools.${p.etat === "chargement" ? "loading" : p.etat === "en-attente" ? "pending" : "saved"}`);
-  const IconeEtat = p.etat === "chargement" ? Loader2 : p.etat === "en-attente" ? CloudOff : Check;
-  // Icône seule en colonne et au téléphone : le texte ne tient pas (52 px de large, ou une rangée de 396 px avec le bouton des signes).
-  const etat = colonne || tel ? (
-    <span data-etat-traits={p.etat} title={texteEtat} className="flex h-5 w-5 items-center justify-center text-muted-foreground">
-      <IconeEtat aria-hidden="true" className="h-5 w-5" />
-      <span className="sr-only">{texteEtat}</span>
-    </span>
-  ) : (
-    <span data-etat-traits={p.etat} className="whitespace-nowrap px-1 text-xs text-muted-foreground">{texteEtat}</span>
+  // Un mot, pas une icône : une icône seule se lisait comme une seconde sortie. Colonne de 52 px et téléphone (rangée de
+  // 396 px avec le bouton des signes) : petit mot, sur deux lignes au besoin, coupé n'importe où plutôt que de déborder.
+  const etat = (
+    <span data-etat-traits={p.etat} className={colonne || tel ? `${tel && !colonne ? "w-12" : ""} px-0.5 text-center text-[10px] leading-tight text-muted-foreground [overflow-wrap:anywhere]` : "whitespace-nowrap px-1 text-xs text-muted-foreground"}>{texteEtat}</span>
   );
 
   const rangs = tel ? INDICES_TELEPHONE : p.prereglages.map((_, i) => i);

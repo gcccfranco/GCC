@@ -18,7 +18,7 @@
       "guide": "Guide d'utilisation",
       "notify": "Notifier",
       "admin": "Admin",
-      "evenements": "Évènements",
+      "evenements": "Église",
       "moi": "Moi",
       "musiciens": "Musiciens",
       "account": "Compte",
@@ -215,6 +215,8 @@
       "songCounter_other": "{{count}} chants",
       "loginRequired": "Les setlists sont réservées aux membres — connecte-toi pour voir celles de tes services.",
       "profileRequired": "Complète ton profil pour voir les setlists de tes services.",
+      "profileUnreadable": "Ton profil ne peut pas être lu pour le moment (réseau ou base indisponible).",
+      "listUnreadable": "Les setlists ne peuvent pas être lues pour le moment (réseau ou base indisponible).",
       "upcoming": "À venir",
       "archived": "Archives",
       "emptySearch": "Aucun résultat pour cette recherche.",
@@ -850,7 +852,7 @@
     "affichageHint": "Le même réglage que le menu Affichage de la setlist.",
     "jianpuSheet": "Partition 简谱",
     "jianpuSheetHint": "Retenu sur cet appareil. Tant que tu n'as pas choisi toi-même entre 简谱 et Paroles (ici ou sur la page d'un chant) : la partition pour les musiciens, les paroles pour choriste et présidence (« Je joue » du mode louange).",
-    "annotations": "Annotations",
+    "annotations": "Voir mes annotations",
     "text": "Texte",
     "textSmaller": "Réduire le texte",
     "textLarger": "Agrandir le texte",
@@ -865,6 +867,8 @@
     "tempoDown": "Ralentir de 1",
     "tempoUp": "Accélérer de 1",
     "crayon": "Crayon",
+    "outilsReglages": "Réglages",
+    "outilsActions": "Actions",
     "crayonIndispo": "Partition indisponible pour le moment",
     "partition": "Partition",
     "recopier": "Recopier mes anciennes annotations dans ma partition",
@@ -964,7 +968,8 @@
       "fleche": "flèche",
       "cercle": "cercle",
       "trait": "trait"
-    }
+    },
+    "panneauAccord": "Panneau de l'accord"
   },
   "notifications": {
     "title": "Notifications",
@@ -978,7 +983,8 @@
     "presentation": "Présentation prête",
     "scene": "Scène",
     "evenement": "Évènement",
-    "tache": "Tâche"
+    "tache": "Tâche",
+    "salles": "Salles"
   },
   "absences": {
     "titre": "Mes absences",
@@ -1226,7 +1232,7 @@
         "for": "Membres connectés · ordre de passage tenu par la coordination",
         "body": "Avant une grande fête (Noël), un onglet du programme apparaît dans **Évènements** pour réserver la scène le dimanche et préparer l'ordre de passage.",
         "points": [
-          "**Entraînements** : choisis un dimanche, l'heure, quoi et qui ; un créneau qui en chevauche un autre est refusé.",
+          "**Entraînements** : choisis un dimanche, l'heure, quoi et qui ; un créneau qui en chevauche un autre est refusé. « Réserver un autre moment » prend un autre jour ou d'autres heures, dans la période des réservations.",
           "Tu modifies ou retires tes créneaux ; la coordination peut tous les déplacer.",
           "**Programme** : l'ordre de passage du jour J, tenu par la coordination.",
           "Tes entraînements sont rappelés avec tes services."
@@ -1739,6 +1745,8 @@
       "quoi": "Quoi",
       "qui": "Qui",
       "quiRetire": "retiré",
+      "quiAutre": "Autre…",
+      "quiAutreChamp": "Qui ?",
       "note": "Note",
       "noteHint": "Sono, matériel, précision…",
       "save": "Enregistrer",
@@ -1774,7 +1782,7 @@
       "ordreTitre": "{{edition}} · ordre de passage",
       "anDernier": "le programme d'une année passée, pour se donner des idées",
       "commentReserver": "Comment réserver ?",
-      "commentReserverTexte": "Un créneau = {{duree}} de scène. On choisit quoi (chant, danse, sketch…) et pour quel groupe.",
+      "commentReserverTexte": "On prend la scène à l'heure qu'on veut, dans un moment libre. On choisit quoi (chant, danse, sketch…) et pour quel groupe.",
       "et": " et ",
       "erreurChargement": "Impossible de charger la scène. Vérifie ta connexion.",
       "passagesEtChants_one": "{{count}} passage et ses chants",
@@ -1825,14 +1833,15 @@
       "masquerPassees": "Masquer les semaines passées",
       "libresCourt_one": "{{count}} libre",
       "libresCourt_other": "{{count}} libres",
-      "placesLibres_one": "{{count}} place libre",
-      "placesLibres_other": "{{count}} places libres",
+      "placesLibres_one": "{{count}} jour avec de la place",
+      "placesLibres_other": "{{count}} jours avec de la place",
       "aMoi": "à moi",
-      "retirerTexte": "{{resa}}, {{jour}} · {{debut}} – {{fin}} : le créneau redevient libre.",
-      "aideDeplacer": "Choisir un autre créneau libre",
-      "aideModifier": "Quoi, qui, note",
-      "aideRetirer": "Libère le créneau",
+      "retirerTexte": "{{resa}}, {{jour}} · {{debut}} – {{fin}} : la scène redevient libre.",
+      "aideDeplacer": "Choisir un autre moment",
+      "aideModifier": "Date, heures, quoi, qui, note",
+      "aideRetirer": "Libère la scène",
       "complet": "complet",
+      "libreA": "Libre {{heures}}",
       "unCreneau": "un créneau = {{duree}}",
       "titre": "Semaine du {{du}} au {{au}}",
       "titreJour": "Semaine du {{du}}",
@@ -1925,7 +1934,7 @@
       "duree": "Un créneau dure",
       "qui": "Qui peut réserver",
       "tous": "Tout membre connecté",
-      "regle": "Deux créneaux qui se chevauchent restent refusés ; la coordination et les admins peuvent tout déplacer.",
+      "regle": "On réserve la scène à l'heure qu'on veut ; un chevauchement avec la Grande salle ou la Scène reste refusé. La coordination et les admins peuvent tout déplacer.",
       "apercu": "Aperçu de ce que verront les groupes",
       "precedent": "Jour précédent",
       "suivant": "Jour suivant",
@@ -1935,9 +1944,9 @@
       "prendAussi_other": "prend aussi les créneaux de {{heures}}",
       "reserver": "Réserver",
       "reserverA": "Réserver {{debut}} – {{fin}}",
-      "horsGrille": "Hors grille",
-      "horsGrilleN_one": "{{count}} réservation hors grille",
-      "horsGrilleN_other": "{{count}} réservations hors grille",
+      "horsGrille": "Hors des plages",
+      "horsGrilleN_one": "{{count}} réservation hors des plages",
+      "horsGrilleN_other": "{{count}} réservations hors des plages",
       "deplacer": "Déplacer",
       "deplacerTitre": "Déplacer la réservation",
       "choisisQuoiQui": "Choisis quoi et qui",
@@ -1950,7 +1959,13 @@
       "place": "{{jour}} · {{debut}} – {{fin}}",
       "quiPermisTitre": "les groupes permis pour cette saison",
       "quiRefuse": "Ce groupe ne peut pas réserver : {{qui}}.",
-      "dejaCommence": "Ce créneau a déjà commencé : il ne se réserve plus.",
+      "dejaCommence": "Ce moment a déjà commencé : il ne se réserve plus.",
+      "autreMoment": "Réserver un autre moment",
+      "autreMomentTitre": "Un autre moment",
+      "autreDate": "Date",
+      "autreDe": "de",
+      "autreA": "à",
+      "autreHorsPeriode": "Choisis une date entre le {{debut}} et le {{fin}}.",
       "jourCourt": {
         "0": "dim.",
         "1": "lun.",
@@ -2000,20 +2015,20 @@
       "filtres": {
         "avenir": "À venir {{n}}",
         "passees": "Passées {{n}}",
-        "hors": "Hors grille {{n}}"
+        "hors": "Hors des plages {{n}}"
       },
       "colonnes": {
         "jour": "Jour",
-        "creneau": "Créneau",
+        "creneau": "Heures",
         "quoi": "Quoi",
         "qui": "Qui",
         "par": "Réservé par"
       },
       "aucuneReservation": "Aucune réservation ici.",
-      "resume": "{{aVenir}} à venir · {{hors}} hors grille",
+      "resume": "{{aVenir}} à venir · {{hors}} hors des plages",
       "nReservations_one": "{{count}} réservation",
       "nReservations_other": "{{count}} réservations",
-      "bilan": "{{reservations}}, {{hors}} hors grille",
+      "bilan": "{{reservations}}, {{hors}} hors des plages",
       "passeeTitre": "{{edition}} est passé",
       "passeeTexte": "Les membres voient le remerciement jusqu'au {{date}}, puis l'onglet annonce {{suivante}}. L'ordre de passage reste ici, en lecture.",
       "preparer": "Préparer {{edition}}",
@@ -2045,13 +2060,13 @@
       "apercu": "Aperçu des membres",
       "libres_one": "{{count}} libre",
       "libres_other": "{{count}} libres",
-      "apercuJour_one": "{{jour}} : {{count}} créneau, {{plages}}.",
-      "apercuJour_other": "{{jour}} : {{count}} créneaux, {{plages}}.",
+      "apercuJour_one": "{{jour}} : {{plages}}.",
+      "apercuJour_other": "{{jour}} : {{plages}}.",
       "plage": "de {{debut}} à {{fin}}",
       "totalSemaines_one": "{{count}} semaine",
       "totalSemaines_other": "{{count}} semaines",
-      "totalCreneaux_one": "{{count}} créneau en tout",
-      "totalCreneaux_other": "{{count}} créneaux en tout",
+      "totalCreneaux_one": "{{count}} jour réservable en tout",
+      "totalCreneaux_other": "{{count}} jours réservables en tout",
       "reglagesSaison": "Réglages de la saison",
       "joursEtPlages": "Jours et plages",
       "termine": "Terminé",
@@ -2474,11 +2489,12 @@
     }
   },
   "evenements": {
-    "title": "Évènements",
-    "sousTitre": "Les rendez-vous de l'église et les inscriptions",
+    "title": "Église",
+    "sousTitre": "Évènements, salles et fêtes",
     "onglets": "Onglets des évènements",
     "tabs": {
-      "calendrier": "Calendrier",
+      "calendrier": "Évènements",
+      "salles": "Salles",
       "paques": "Pâques",
       "noel": "Noël"
     },
@@ -2522,6 +2538,7 @@
       "pourReunion": "Équipe",
       "date": "Date",
       "heure": "Horaire",
+      "heureDebut": "Heure de début",
       "heureFin": "Heure de fin",
       "dateFin": "Date de fin",
       "lieu": "Lieu",
@@ -4617,6 +4634,81 @@
       "jamais_other": "Jamais choisis : {{count}} chants",
       "note": "Présidences comptées sous le nom « {{nom}} » · setlists publiées et passées",
       "aucune": "Aucune présidence sur cette période"
+    }
+  },
+  "salles": {
+    "liste": "Salles",
+    "groupes": {
+      "grande": "Grande salle",
+      "groupe": "Salles de groupe",
+      "bureaux": "Bureaux"
+    },
+    "variante": {
+      "ordinaire": "Dimanche ordinaire",
+      "intergroupe": "Intergroupe",
+      "interfranco": "Interfranco"
+    },
+    "jours": "Jours",
+    "heure": "Heure",
+    "maintenant": "maintenant",
+    "repere": "à {{heure}}",
+    "retour": "Salles",
+    "rien": "Rien de prévu",
+    "aujourdhui": "Aujourd'hui",
+    "echec": "Le planning, la scène ou les réservations n'ont pas pu être lus : l'état peut être incomplet.",
+    "reserver": "Réserver une salle",
+    "case": "Réserver {{salle}} à {{heure}}",
+    "refus": "{{salle}} est prise : {{qui}}, {{debut}} – {{fin}}.",
+    "libresMemeMoment": "Libres au même moment",
+    "decaler": "Décaler à {{debut}} – {{fin}}",
+    "sceneSaison": "Pendant la saison de {{fete}}, la Scène se réserve depuis sa page.",
+    "sceneSaisonLien": "Page de {{fete}}",
+    "feuille": {
+      "date": "Date",
+      "de": "De",
+      "a": "À",
+      "salle": "Salle",
+      "pourQui": "Pour qui",
+      "pourQuoi": "Pour quoi",
+      "autre": "Autre…",
+      "personne": "Non précisé",
+      "groupes": "Groupes et cultes",
+      "equipes": "Équipes",
+      "valider": "Réserver",
+      "modifierTitre": "Modifier la réservation",
+      "echec": "La réservation n'a pas pu être enregistrée. Réessayez.",
+      "erreurs": {
+        "finAvantDebut": "La fin doit venir après le début.",
+        "horsHeures": "Entre 6:00 et 23:59.",
+        "datePassee": "Une date d'aujourd'hui ou après."
+      }
+    },
+    "supprimer": {
+      "titre": "Supprimer la réservation ?",
+      "texte": "« {{quoi}} » disparaît de Salles pour tout le monde."
+    },
+    "vue": {
+      "etiquette": "Vue",
+      "liste": "Liste",
+      "grille": "Grille"
+    },
+    "grille": "Grille des salles",
+    "detail": {
+      "fermer": "Fermer",
+      "avec": "Avec {{salle}} : {{quoi}}, {{debut}} – {{fin}}",
+      "salle": "Salle",
+      "quand": "Quand",
+      "auteur": "Inscrit par",
+      "par": "Inscrit par {{nom}}",
+      "journee": "toute la journée",
+      "fete": "Page de {{fete}}",
+      "evenement": "Voir l'évènement"
+    },
+    "formulaire": {
+      "salle": "Salle de l'église",
+      "ailleurs": "Ailleurs",
+      "heures": "Une salle de l'église demande une heure de début et de fin.",
+      "echec": "Les salles n'ont pas pu être vérifiées. Réessayez."
     }
   }
 }

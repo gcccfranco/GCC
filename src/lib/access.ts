@@ -249,7 +249,8 @@ export function tientUnGroupe(user: AuthUser | null, profile: { referentDe?: str
 
 export { audiencesNotifiables };
 
-/** Créneau sur scène : son auteur + la coordination. Miroir : programmes/{id}/creneaux dans firestore.rules. */
+/** Créneau sur scène : son auteur + la coordination. Lot 5 (AR20) : un créneau est une réservation de la Scène, même
+ *  règle que canEditReservation. Miroir : match /reservations/{id} dans firestore.rules. */
 export function canEditCreneau(
   user: AuthUser,
   profile: ProfilCoordination | null,
@@ -258,13 +259,39 @@ export function canEditCreneau(
   return creneau.auteurUid === user.uid || isCoordination(user, profile);
 }
 
+// ─── Salles : réservations (chantier AR, lot 3, docs/spec-salles.md, § Permissions) — miroir : ──────────────
+// firestore.rules, match /reservations/{id}. Le chevauchement ne se vérifie pas dans les rules (SA8, T3b).
+
+/** Lire Salles et les réservations : tout membre connecté (SA14). */
+export function canVoirSalles(user: AuthUser | null): boolean {
+  return !!user;
+}
+
+/** Réserver une salle : tout membre connecté (AR4). Une réservation de fête (la Scène, `fete`, lot 5, AR21) passe en
+ *  plus par canReserverPour, comme `feteReservable()` dans firestore.rules. */
+export function canReserverSalle(user: AuthUser | null): boolean {
+  return !!user;
+}
+
+/** Modifier ou supprimer une réservation : son auteur ou la coordination (SA10). Une réservation de fête (lot 5) de
+ *  même ; l'auteur qui la modifie passe aussi par canReserverPour (rules : `feteReservable()`, `fete` inchangée). */
+export function canEditReservation(
+  user: AuthUser | null,
+  profile: ProfilCoordination | null,
+  r: { auteurUid: string },
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  if (!user) return false;
+  return r.auteurUid === user.uid || isCoordination(user, profile, backOffice);
+}
+
 // ─── Scène : saison de réservation (lot U1, docs/spec-scene-saison.md) ───────
 
 /** Réserver pour ces groupes : la coordination toujours ; un membre si la saison
  *  est ouverte et que chaque groupe est permis (liste vide = tous).
  *  Lot RS (`backOffice`, Q12) : la scène est réservée au Comité Orga et aux gestionnaires de planning, qui réservent
  *  toujours (`gereUnPlanning`).
- *  Miroir serveur : reservable() sous programmes/{id}/creneaux, firestore.rules. */
+ *  Miroir serveur : reservable() (anciens créneaux) et feteReservable() (réservations de fête, lot 5), firestore.rules. */
 export function canReserverPour(
   user: AuthUser | null,
   profile: ProfilCoordination | null,
@@ -391,7 +418,10 @@ export function canSeeInscrits(user: AuthUser | null): boolean {
 }
 
 /** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination
- *  (lot RS : le Comité Orga) + admins. */
+ *  (lot RS : le Comité Orga) + admins.
+ *  Salles (AR, T4b) : à la création comme à la modification, `salle` est absente, null ou une des neuf
+ *  (`salleEvenementValide` de firestore.rules) ; côté client, le champ « Salle de l'église » n'offre que `SALLES`
+ *  et la lecture passe par `estSalleId` (src/lib/salles/salles.ts). */
 export function canEditEvenement(
   user: AuthUser | null,
   profile: ProfilCoordination | null,

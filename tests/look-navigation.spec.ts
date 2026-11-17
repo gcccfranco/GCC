@@ -13,10 +13,10 @@ const header = (page: Page) => page.locator("header.barre-haut");
 test.describe("navigation par sections (T2), téléphone", () => {
   test.use(phone);
 
-  test("sans compte : barre du bas Chants · Évènements, Connexion dans la navbar, plus de menu burger", async ({ page }) => {
+  test("sans compte : barre du bas Chants · Église, Connexion dans la navbar, plus de menu burger", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Chants", "Évènements"]);
+    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Chants", "Église"]);
     await expect(header(page).getByRole("link", { name: "Connexion" })).toBeVisible();
     await expect(page.getByRole("button", { name: /menu/i })).toHaveCount(0);
   });
@@ -24,10 +24,10 @@ test.describe("navigation par sections (T2), téléphone", () => {
   // Cinq onglets depuis le 16/09/2026 : « Louange » cachait les setlists, qui
   // n'étaient plus joignables sur tactile (audit avant/après du lot 4).
   // 5C1 : la barre flotte, en verre ; l'onglet courant est une pastille d'encre, libellé blanc.
-  test("connecté : barre du bas Chants · Setlists · Planning · Évènements · Moi, flottante, l'onglet courant en pastille d'encre", async ({ page }) => {
+  test("connecté : barre du bas Chants · Setlists · Planning · Église · Moi, flottante, l'onglet courant en pastille d'encre", async ({ page }) => {
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Évènements", "Moi"]);
+    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Église", "Moi"]);
     const chants = barreDuBas(page).getByRole("link", { name: "Chants" });
     await expect(chants).toHaveAttribute("aria-current", "page");
     // Couleurs lues une fois la transition finie : pastille d'encre, libellé blanc.
@@ -144,7 +144,7 @@ test.describe("navigation par sections (T2), onglets de section", () => {
 test.describe("navigation par sections (T2), 320 px", () => {
   test.use({ viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
 
-  // « Évènements » est le libellé le plus long : dans une barre flottante, plus étroite, il doit encore tenir.
+  // « Setlists » est le libellé le plus long : dans une barre flottante, plus étroite, il doit encore tenir.
   test("les cinq libellés de la barre du bas tiennent sans être rognés", async ({ page }) => {
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
@@ -196,7 +196,7 @@ test.describe("navigation par sections (T2), ordinateur : la barre latérale (lo
   test("connecté : les entrées dans la barre latérale, le reste dans un menu compte", async ({ page }) => {
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(barreLaterale(page).getByRole("navigation", { name: "Navigation principale" }).getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Évènements", "Moi"]);
+    await expect(barreLaterale(page).getByRole("navigation", { name: "Navigation principale" }).getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Église", "Moi"]);
     await expect(header(page), "plus de barre du haut").toBeHidden();
     await expect(page.getByRole("button", { name: "Déconnexion" })).toHaveCount(0);
     // L'indicateur de Next (développement seulement) est posé en bas à gauche, sur l'initiale.
@@ -209,11 +209,11 @@ test.describe("navigation par sections (T2), ordinateur : la barre latérale (lo
     await expect(menu.getByRole("menuitem", { name: "Admin" })).toHaveCount(0);
   });
 
-  test("sans compte : Chants · Évènements et Connexion, pas de barre du bas", async ({ page }) => {
+  test("sans compte : Chants · Église et Connexion, pas de barre du bas", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     await expect(barreLaterale(page).getByRole("link", { name: "Chants" })).toBeVisible();
-    await expect(barreLaterale(page).getByRole("link", { name: "Évènements" })).toBeVisible();
+    await expect(barreLaterale(page).getByRole("link", { name: "Église" })).toBeVisible();
     await expect(barreLaterale(page).getByRole("link", { name: "Connexion" })).toBeVisible();
     await expect(page.getByTestId("barre-du-bas")).toBeHidden();
   });

@@ -170,7 +170,7 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
     await page.getByRole("searchbox").waitFor();
     const nav = navigation(page);
     await expect(nav).toHaveCount(1);
-    await expect(nav.getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Évènements", "Moi"]);
+    await expect(nav.getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Église", "Moi"]);
     const chants = nav.getByRole("link", { name: "Chants" });
     await expect(chants).toHaveAttribute("aria-current", "page");
     await expect.poll(() => chants.evaluate((a) => getComputedStyle(a).backgroundColor)).toBe(ENCRE);
@@ -207,10 +207,10 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
     expect((await menu.boundingBox())!.x).toBeGreaterThanOrEqual(240);
   });
 
-  test("visiteur : Chants · Évènements ; en bas « Connexion », la langue et le thème", async ({ page }) => {
+  test("visiteur : Chants · Église ; en bas « Connexion », la langue et le thème", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Évènements"]);
+    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Église"]);
     const pied = barreLaterale(page).getByTestId("pied-barre");
     await expect(pied.getByRole("link", { name: "Connexion" })).toBeVisible();
     await expect(pied.getByRole("button", { name: "切换为中文" })).toBeVisible();
@@ -237,7 +237,7 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
       await page.keyboard.press("Tab");
     }
     expect(ordre[0]).toMatch(/GCC/);
-    expect(ordre.slice(1, 4)).toEqual(["Réduire la barre latérale", "Chants", "Évènements"]);
+    expect(ordre.slice(1, 4)).toEqual(["Réduire la barre latérale", "Chants", "Église"]);
     // Focus à l'encre, visible même sur l'entrée courante (pastille d'encre) : décalé de 2 px.
     const focus = await page.evaluate(() => {
       const st = getComputedStyle(document.activeElement!);
@@ -444,7 +444,7 @@ test.describe("navigation sur grand écran (U4) : impression, zone sûre, couleu
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     const nav = page.getByRole("navigation", { name: "主导航" });
-    await expect(nav.getByRole("link")).toHaveText(["诗歌", "歌单", "排班表", "活动", "我"]);
+    await expect(nav.getByRole("link")).toHaveText(["诗歌", "歌单", "排班表", "教会", "我"]);
     await expect(barreLaterale(page).getByTestId("label-section")).toHaveText("敬拜");
     const pied = barreLaterale(page).getByTestId("pied-barre");
     await expect(pied.getByRole("button", { name: "账户" })).toBeVisible();
@@ -463,7 +463,7 @@ test.describe("navigation sur grand écran (U4) : impression, zone sûre, couleu
 // est retenu par appareil (`localStorage` « barre-laterale »), reflété sur
 // `<html data-barre="reduite">` par une ligne de script dans l'en-tête, avant le premier affichage.
 
-const ENTREES_MEMBRE = ["Chants", "Setlists", "Planning", "Évènements", "Moi"];
+const ENTREES_MEMBRE = ["Chants", "Setlists", "Planning", "Église", "Moi"];
 const reduire = (page: Page) => barreLaterale(page).getByRole("button", { name: "Réduire la barre latérale" });
 const deplier = (page: Page) => barreLaterale(page).getByRole("button", { name: "Déplier la barre latérale" });
 const largeurBarre = async (page: Page) => Math.round((await barreLaterale(page).boundingBox())!.width);
@@ -730,10 +730,10 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     await expect(pied.getByText("Ruth K.")).toBeHidden();
   });
 
-  test("tablette en paysage, visiteur : Chants · Évènements, « Connexion », langue et thème en icônes", async ({ page }) => {
+  test("tablette en paysage, visiteur : Chants · Église, « Connexion », langue et thème en icônes", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Évènements"]);
+    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Église"]);
     expect(await largeurBarre(page)).toBe(68);
     const pied = barreLaterale(page).getByTestId("pied-barre");
     for (const bouton of [pied.getByRole("link", { name: "Connexion" }), pied.getByRole("button", { name: "切换为中文" }), pied.getByRole("button", { name: /Mode (clair|sombre)/ })]) {
@@ -888,7 +888,7 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     await barreLaterale(page).getByRole("button", { name: "展开侧边栏" }).tap();
     await barreArrivee(page);
     const dessus = barreParDessus(page);
-    await expect(dessus.getByRole("navigation", { name: "主导航" }).getByRole("link")).toHaveText(["诗歌", "歌单", "排班表", "活动", "我"]);
+    await expect(dessus.getByRole("navigation", { name: "主导航" }).getByRole("link")).toHaveText(["诗歌", "歌单", "排班表", "教会", "我"]);
     await expect(dessus.getByTestId("label-section")).toHaveText("敬拜");
     await expect(dessus.getByRole("button", { name: "收起侧边栏" })).toBeVisible();
   });
@@ -932,7 +932,7 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     await page.getByRole("menuitem", { name: "Déconnexion" }).tap();
     await expect(barreParDessus(page)).toHaveCount(0);
     await expect(voile(page)).toHaveCount(0);
-    await expect(navigation(page).getByRole("link"), "la barre réduite du visiteur").toHaveText(["Chants", "Évènements"]);
+    await expect(navigation(page).getByRole("link"), "la barre réduite du visiteur").toHaveText(["Chants", "Église"]);
     expect(await largeurBarre(page)).toBe(68);
   });
 });
@@ -943,7 +943,7 @@ test("captures de la barre (PW_CAPTURES)", async ({ page }, info) => {
   test.skip(!dir, "seulement avec PW_CAPTURES");
   await sansSheet(page);
   // Les entrées arrivent une fois la session connue : chaque capture les attend.
-  const entreesArrivees = () => page.getByRole("link", { name: "Évènements" }).filter({ visible: true }).first().waitFor();
+  const entreesArrivees = () => page.getByRole("link", { name: "Église" }).filter({ visible: true }).first().waitFor();
   for (const theme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: theme });
     await page.goto("/songs");

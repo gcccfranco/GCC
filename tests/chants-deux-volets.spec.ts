@@ -255,7 +255,7 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
     await listePrete(page);
     const barre = page.getByTestId("barre-outils");
     await expect(barre).toBeVisible();
-    await expect(barre.getByRole("link", { name: "Retour" })).toHaveCount(0);
+    await expect(barre.getByRole("link", { name: "Chants" })).toHaveCount(0);
     await expect(barre.getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await expect(barre.getByRole("button", { name: "Affichage", exact: true })).toBeVisible();
     await expect(barre.getByRole("button", { name: "PDF" })).toHaveCount(0);
@@ -423,7 +423,7 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
     await page.goto("/songs/abba-pere");
     await expect(page.getByRole("heading", { level: 1, name: /Abba Père/i })).toBeVisible();
     await expect(page.getByRole("searchbox")).toBeHidden();
-    await expect(page.getByTestId("barre-outils").getByRole("link", { name: "Retour" })).toBeVisible();
+    await expect(page.getByTestId("barre-outils").getByRole("link", { name: "Chants" })).toBeVisible();
   });
 });
 
@@ -452,7 +452,7 @@ test.describe("Chants en un volet (téléphone, tablette debout)", () => {
     test.skip(info.project.name !== "tablette", "tablette debout seulement");
     await signInAs(page, ADMIN, {}, "/songs/abba-pere");
     const barre = page.getByTestId("barre-outils");
-    await expect(barre.getByRole("link", { name: "Retour" })).toBeVisible();
+    await expect(barre.getByRole("link", { name: "Chants" })).toBeVisible();
     await expect(barre.getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await expect(barre.getByRole("button", { name: "Affichage", exact: true })).toBeVisible();
     expect(await barre.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
@@ -463,7 +463,7 @@ test.describe("Chants en un volet (téléphone, tablette debout)", () => {
     test.skip(info.project.name !== "telephone", "téléphone seulement");
     await signInAs(page, ADMIN, {}, "/songs/abba-pere");
     const barre = page.getByTestId("barre-outils");
-    await expect(barre.getByRole("link", { name: "Retour" })).toBeVisible();
+    await expect(barre.getByRole("link", { name: "Chants" })).toBeVisible();
     await expect(barre.getByRole("button", { name: "PDF" })).toHaveCount(0);
     await expect(barre.getByRole("button", { name: "Harmonie", exact: true })).toBeVisible();
     await expect(barre.getByRole("button", { name: "Affichage", exact: true })).toBeVisible();
@@ -517,7 +517,7 @@ test.describe("relecture : Chants en deux volets", () => {
     await cartes(page).first().locator("[data-carte-chant]").first().getByRole("link").click();
     await expect(titreChant(page)).toHaveText(/Abba Père/i);
     const barre = page.getByTestId("barre-outils");
-    const retour = barre.getByRole("link", { name: "Retour" });
+    const retour = barre.getByRole("link", { name: "Setlists" });
     await expect(retour).toBeVisible();
     // La barre tient toujours sur sa ligne, Retour compris.
     expect(await barre.evaluate((el) => el.scrollWidth - el.clientWidth), "pas de ligne qui déborde (hors zone de toucher de 44 px)").toBeLessThanOrEqual(await debordementDeToucher(page));
@@ -528,7 +528,7 @@ test.describe("relecture : Chants en deux volets", () => {
     await page.goto("/songs/abba-pere");
     await listePrete(page);
     await expect(page.getByTestId("barre-outils")).toBeVisible();
-    await expect(page.getByTestId("barre-outils").getByRole("link", { name: "Retour" })).toHaveCount(0);
+    await expect(page.getByTestId("barre-outils").getByRole("link", { name: "Chants" })).toHaveCount(0);
   });
 });
 
@@ -547,7 +547,7 @@ test.describe("relecture : Chants en un volet", () => {
     await expect(page.getByRole("heading", { level: 1, name: /Abba Père/i })).toBeVisible();
     await page.waitForTimeout(800);
     expect(lectures, "rien ne sert l'index sur la page du chant").toBe(0);
-    await page.getByTestId("barre-outils").getByRole("link", { name: "Retour" }).click();
+    await page.getByTestId("barre-outils").getByRole("link", { name: "Chants" }).click();
     await expect(page.locator('li[id="song-li-abba-pere"]')).toBeVisible();
     expect(lectures).toBe(1);
   });

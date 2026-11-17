@@ -193,6 +193,17 @@ test.describe("pageAncree", () => {
   test("aucune page : 0", () => {
     expect(pageAncree([], blocks, 3, { page: 3, block: 1, blocks })).toBe(0);
   });
+  // A11 (docs/spec-corrections-interface.md) : un scan certifié en tranches donne plusieurs pages d'écran au même bloc.
+  test("A11 : deux pages d'écran du même bloc (scan en tranches), la 2e reste la 2e", () => {
+    const tranches: PerfPage[] = [
+      { header: 0, cols: [[1]], scale: 1, fit: true },
+      { header: null, cols: [[1]], scale: 1, fit: true },
+    ];
+    expect(pageAncree(tranches, blocks, 1, { page: 1, block: 1, blocks })).toBe(1);
+    expect(pageAncree(tranches, blocks, 0, { page: 0, block: 0, blocks })).toBe(0);
+    const lus: PerformanceBlock[] = [];
+    expect(pageAncree(tranches, blocks, 1, { page: 1, block: 1, blocks: lus, ancre: { position: 1, rang: 0, uids: ["u0"] } })).toBe(1);
+  });
 });
 
 test.describe("replisStructure", () => {

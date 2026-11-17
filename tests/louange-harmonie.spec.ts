@@ -8,7 +8,7 @@ import { attendreCompteur, attendreMiseEnPage, lireCompteur, onStage, ouvrirMenu
 // fenêtre comme le menu Setlist, accrochée au nom touché (Timothée, 13/11/2026 : « Fait une fenêtre comme pour les setlists
 // dans le mode louange » ; elle remplace la colonne de 1 024 px), feuille à mi-hauteur en dessous ; la page n'est ni
 // tournée, ni rétrécie, ni recomptée. Le point
-// et la bande d'H8 sont retirés. Réglage « Idées d'harmonie » éteint par défaut, par compte, absent sans accès harmonie.
+// et la bande d'H8 sont retirés. Réglage « Idées d'harmonie » éteint par défaut, par compte ; sans accès harmonie, il s'appelle « Panneau de l'accord » (CI-6) et ne rend pas les noms touchables.
 // Spec d'agencement : cinq projets (SPECS_GRAND_ECRAN). Captures : test-results/jv5b-*.png. Noms fictifs.
 
 const SETLIST_ID = "setlist-louange-harmonie";
@@ -63,19 +63,20 @@ for (const c of CHANTS) {
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     await expect(noms(page)).toHaveCount(0);
     const feuille = await ouvrirMenu(page, "outils", c.langue);
-    await feuille.getByRole("button", { name: reglage }).click();
+    await feuille.getByRole("switch", { name: reglage }).click();
     await page.keyboard.press("Escape"); // la feuille couvre la scène au téléphone
     await expect(feuille).toBeHidden();
     await expect(noms(page).first()).toBeVisible({ timeout: 15_000 });
     expect(await page.evaluate((u) => localStorage.getItem(`perf-idees-harmonie-${u}`), AVEC_ACCES.uid)).toBe("1");
   });
 
-  test(`chant ${c.langue.toUpperCase()} : sans accès harmonie, ni réglage ni nom touchable, même si la clé dit oui`, async ({ page }) => {
+  test(`chant ${c.langue.toUpperCase()} : sans accès harmonie, le réglage s'appelle « Panneau de l'accord » (和弦面板) et aucun nom n'est touchable, même réglage allumé`, async ({ page }) => {
     await ouvrirMode(page, SANS_ACCES, c);
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     await expect(noms(page)).toHaveCount(0);
     const feuille = await ouvrirMenu(page, "outils", c.langue);
-    await expect(feuille.getByRole("button", { name: reglage })).toHaveCount(0);
+    await expect(feuille.getByRole("switch", { name: reglage })).toHaveCount(0);
+    await expect(feuille.getByRole("switch", { name: c.langue === "zh" ? "和弦面板" : "Panneau de l'accord" })).toBeVisible();
   });
 
   test(`chant ${c.langue.toUpperCase()} : le nom ouvre le volet au bloc du passage, par-dessus la page, sans la tourner ni la recompter`, async ({ page }) => {
@@ -211,7 +212,7 @@ test("A9 : page 2 du scan de 为我而来, éteindre puis rallumer Idées d'harm
   await attendreCompteur(page, `2 / ${total}`);
   for (const etat of ["éteint", "allumé"]) {
     const feuille = await ouvrirMenu(page, "outils");
-    await feuille.getByRole("button", { name: "Idées d'harmonie" }).click();
+    await feuille.getByRole("switch", { name: "Idées d'harmonie" }).click();
     await page.keyboard.press("Escape"); // la feuille couvre la scène au téléphone
     await expect(feuille).toBeHidden();
     await page.waitForTimeout(1_000); // une repagination éventuelle

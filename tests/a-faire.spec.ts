@@ -3,9 +3,12 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { margeAttendue, zoneDeContenu } from "./helpers/agencement";
+import { ongletDeLaGrille, ONGLETS_PLANNING } from "../src/lib/access";
+import { GRILLES } from "../src/lib/planning/grilles";
 import { aFaire, filtrer, type EntreesAFaire, type LigneAFaire } from "../src/lib/tableauDeBord/aFaire";
 import type { Evenement } from "../src/types/evenement";
 import type { Creneau } from "../src/types/programme";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Piste A, BO-B (docs/spec-back-office-piste-a.md, BO6) : l'écran « À faire » de /back-office, qui remplace le
 // tableau de bord. D'abord la fonction pure (`aFaire`, `filtrer`), puis les écrans sur les cinq dispositions
@@ -57,6 +60,17 @@ test.describe("À faire (BO-B) : la fonction pure", () => {
     expect(plus).toMatchObject({ id: "cases:culte:plusTard", verbe: "remplir", href: "/back-office/planning/culte", date: "2026-11-22" });
     expect(plus.colonnes).toMatchObject([{ cle: "batterie", n: 1 }, { cle: "ppt", n: 1 }]);
     expect([...plus.equipes].sort()).toEqual(["louange"]); // lot RS, RS-D : plus de colonnes Régie, PPT suit Louange
+  });
+
+  test("cases vides d'un planning de groupe : le lien mène à l'onglet « groupes », pas à la clé de la grille", () => {
+    const paix = (date: string) => [date, "", "Pers. A", "Pers. B", "Pers. C"]; // présidence vide
+    const r = aFaire(entrees({ planning: { rows: { paix: [paix("2026-10-25"), paix("2026-11-08")] }, plannings: ["paix"], profils: [] } }));
+    expect(lignesDe(r, "semaine")[0]).toMatchObject({ id: "cases:paix:semaine", planning: "paix", href: "/back-office/planning/groupes" });
+    expect(lignesDe(r, "plusTard")[0]).toMatchObject({ id: "cases:paix:plusTard", planning: "paix", href: "/back-office/planning/groupes" });
+  });
+
+  test("chaque grille a un onglet de planning", () => {
+    for (const g of GRILLES) expect(ONGLETS_PLANNING as readonly string[], g.key).toContain(ongletDeLaGrille(g.key));
   });
 
   test("cases vides : plusieurs référents ou aucun, les prénoms sont distincts", () => {
@@ -265,7 +279,7 @@ const sansSheet = (page: Page) =>
 async function ouvrir(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>> = JEU) {
   await page.clock.setFixedTime(new Date("2026-10-24T10:00:00"));
   await sansSheet(page);
-  return signInAs(page, qui, docs, "/back-office");
+  return signInAs(page, qui, creneauxEnReservations(docs), "/back-office");
 }
 
 const lignes = (page: Page) => page.getByTestId("ligne-a-faire");

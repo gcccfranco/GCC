@@ -33,7 +33,7 @@ import { getSetlistsDeFete, mettreALaCorbeilleGroupe, updateSetlist } from "@/li
 import { ecartsSetlistsFete } from "@/lib/fetes/suiviSetlists"
 import { creerEdition, listCreneaux, listProgrammes, ModifieEntreTemps, PROGRAMMES_CHANGED, updateProgramme } from "@/lib/firebase/programmes"
 import { archiveDate, todayIso } from "@/lib/scene/dimanches"
-import { reportConflict } from "@/lib/scene/reportConflict"
+import { signalerConflit } from "@/lib/salles/signalerConflit"
 import {
   anneeDe, editionCourante, editionsDe, etatEdition, FETES, idEdition, jourJParDefaut, libelleEdition, reglagesRepris,
   type Edition, type Fete,
@@ -244,13 +244,13 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     <PastilleEtat etat={etat} testId={testId}>{t(`planning.gestion.etats.${etat}`)}</PastilleEtat>
   )
 
-  /** « sam. 10–12, dim. 14–19 · 1 h · 4 familles ». */
+  /** « sam. 10–12, dim. 14–19 · 4 familles ». */
   function resumeSaison(): string {
     const plages = saison.plages.map((p: Plage) => `${t(`planning.saison.jourCourt.${p.jour}`)} ${heureCourte(p.debut)}–${heureCourte(p.fin)}`).join(", ")
     const qui = saison.quiAutorises.length === 0
       ? t("planning.gestion.toutMembre")
       : t("planning.gestion.familles", { count: famillesDe(saison.quiAutorises).length })
-    return [plages, t(`planning.saison.dureeCourte.${saison.duree}`), qui].join(" · ")
+    return [plages, qui].join(" · ")
   }
 
   // ─── La colonne de la fête ───────────────────────────────────────────────
@@ -552,7 +552,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     return (
       <Entrainements
         programme={p} creneaux={creneaux} user={user} profile={profile} onChanged={reload}
-        onConflict={(a, b) => reportConflict(p.id, [a.id, b.id])}
+        onConflict={(a, b) => signalerConflit([a.id, b.id])}
         semaineActive={vue === "semaine"}
       >
         {(m) => disposer(avecSemaines ? m : { ...m, semaines: null })}

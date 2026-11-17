@@ -70,7 +70,7 @@ for (const chant of CHANTS) {
       for (const [i, boite] of boites.entries()) {
         expect(boite, `${noms[i]} visible`).not.toBeNull();
         expect(boite!.x, `${noms[i]} après le précédent`).toBeGreaterThan(x);
-        expect(Math.abs(boite!.y - retour.y) <= 6, `${noms[i]} sur la ligne du retour`).toBe(true);
+        expect(Math.abs(boite!.y + boite!.height / 2 - (retour.y + retour.height / 2)) <= 6, `${noms[i]} sur la ligne du retour`).toBe(true);
         x = boite!.x;
       }
       if (actionsDansLaBarre(page)) {

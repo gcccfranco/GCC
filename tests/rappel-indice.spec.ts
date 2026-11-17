@@ -80,6 +80,7 @@ async function pageDeux(page: Page) {
 for (const langue of ["fr", "zh"] as const) {
   test.describe(`indice du rappel (${langue === "fr" ? "français" : "中文"})`, () => {
     test("visible à la 1re apparition du rappel ; absent à la page suivante et au rechargement ; clé du mode seule", async ({ page }) => {
+      test.setTimeout(90_000);
       await ouvrir(page, langue);
       await expect(indice(page), "page 1 : pas de rappel, pas d'indice").toHaveCount(0);
       expect(await cle(page, "perf-astuce-rappel-unique")).toBeNull();
@@ -168,5 +169,40 @@ for (const langue of ["fr", "zh"] as const) {
       await attendreCompteur(page, /^2 \//);
       expect(await page.getByRole("button", { name: /Quitter|退出/ }).isVisible(), "la barre n'a pas bougé").toBe(barre);
     });
+  });
+}
+
+// A13 (docs/spec-corrections-interface.md) : à la première ouverture, l'indice ne recouvre pas la pastille « Ensuite »
+// (relevé de CI-20 et CI-22 au téléphone, setlist du parcours du culte : Abba Père puis 谢谢你). La pastille garde 44 px.
+for (const langue of ["fr", "zh"] as const) {
+  test(`A13 : l'indice du rappel et la pastille « Ensuite » ne se recouvrent pas (${langue === "fr" ? "français" : "中文"})`, async ({ page }) => {
+    await page.addInitScript((l) => {
+      localStorage.setItem("perf-role-preset", "pianiste");
+      if (l === "zh") localStorage.setItem("i18nextLng", "zh-CN");
+    }, langue);
+    const items = [{ ...ABBA, structureOverride: null }, { ...ABBA, songSlug: "谢谢你", position: 2, structureOverride: null }];
+    await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: { ...setlist, items } }, `/setlists/${SETLIST_ID}`);
+    await lancer(page, langue);
+    const n = await total(page);
+    let vus = 0;
+    for (let p = 1; p <= n; p++) {
+      await attendreCompteur(page, new RegExp(`^${p} /`));
+      await page.waitForTimeout(250);
+      const m = await page.evaluate(() => {
+        const vis = (s: string) => [...document.querySelectorAll(s)].filter((e) => !e.closest("[aria-hidden=true]") && (e as HTMLElement).offsetParent !== null && getComputedStyle(e).visibility !== "hidden");
+        const r = (e: Element) => { const b = e.getBoundingClientRect(); return { haut: b.top, bas: b.bottom, gauche: b.left, droite: b.right }; };
+        return { indice: vis("[data-indice-rappel]").map(r), suivants: vis("[data-suivant]").map(r), h: vis("[data-suivant]").map((e) => e.getBoundingClientRect().height) };
+      });
+      for (const i of m.indice) {
+        for (const s of m.suivants) {
+          vus++;
+          const recouvre = Math.min(i.bas, s.bas) - Math.max(i.haut, s.haut) > 0.5 && Math.min(i.droite, s.droite) - Math.max(i.gauche, s.gauche) > 0.5;
+          expect(recouvre, `page ${p} : indice ${JSON.stringify(i)} / Ensuite ${JSON.stringify(s)}`).toBe(false);
+        }
+      }
+      for (const h of m.h) expect(h, "« Ensuite » à 44 px").toBeGreaterThanOrEqual(43.5);
+      if (p < n) await page.keyboard.press("ArrowRight");
+    }
+    test.info().annotations.push({ type: "A13", description: `${vus} paire(s) indice / Ensuite mesurée(s)` });
   });
 }

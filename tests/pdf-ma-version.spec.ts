@@ -83,12 +83,9 @@ async function ouvrir(page: Page, who: FakeProfile, extra: Record<string, Record
 }
 
 async function quelPdf(page: Page) {
-  if (await enDeuxVolets(page)) {
-    await page.locator("[data-en-tete]").getByRole("button", { name: "PDF", exact: true }).click();
-  } else {
-    await page.getByRole("button", { name: "Plus d'actions" }).click();
-    await page.getByRole("menuitem", { name: "PDF" }).click();
-  }
+  // CI-12 (B7) : le PDF est une entrée du ⋯ dans les deux mises en page.
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("menuitem", { name: "PDF" }).click();
   const sheet = page.getByRole("dialog", { name: "Quel PDF ?" });
   await expect(sheet).toBeVisible();
   return sheet;

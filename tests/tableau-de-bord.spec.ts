@@ -21,6 +21,7 @@ import type { Evenement } from "../src/types/evenement";
 import type { Creneau } from "../src/types/programme";
 import type { Tache } from "../src/types/tache";
 import type { UserProfile } from "../src/types/user";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Lot U6 (docs/spec-back-office.md), tranche B4 — le tableau de bord : les widgets
 // 1-6 et 8-10 (Chants les plus joués est de U7 S5 ; le Calendrier, widget 11, de U8 C8), la
@@ -106,7 +107,7 @@ const sansSheet = (page: Page) =>
 async function ouvrir(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>> = {}) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await sansSheet(page);
-  return signInAs(page, qui, { ...DOCS, ...docs }, "/back-office");
+  return signInAs(page, qui, creneauxEnReservations({ ...DOCS, ...docs }), "/back-office");
 }
 
 // ─── Règles pures ─────────────────────────────────────────────────────────────

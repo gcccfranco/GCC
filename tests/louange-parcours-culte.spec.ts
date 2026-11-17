@@ -211,7 +211,7 @@ test("parcours du culte : ouvrir, tourner, scan annoté, Chiffres, accord au bor
     { nom: "Repères", ouvrir: dialogue("reperes"), dehors: true },
     { nom: "Outils", ouvrir: dialogue("outils"), dehors: true },
     { nom: "Affichage", ouvrir: dialogue("affichage"), sortie: (d) => d.getByRole("button", { name: "Fermer l'affichage" }).click() },
-    { nom: "Métronome", ouvrir: () => ouvrirMetronome(page), sortie: (d) => d.getByRole("button", { name: "Fermer le métronome" }).click() },
+    { nom: "Métronome", ouvrir: () => ouvrirMetronome(page), sortie: () => page.locator('[data-menu-louange="metronome"]').getByRole("button", { name: "Fermer le métronome" }).click() },
     {
       nom: "Idées",
       ouvrir: async () => { await onStage(page, "button[data-section-nom-bouton]").first().click(); const d = page.locator("[data-idees-harmonie]").first(); await expect(d).toBeVisible(); return d; },
@@ -263,4 +263,39 @@ test("A7 : barre ouverte, le haut des pages 1 et 2 commence sous la barre (abba-
       await expect.poll(async () => { const m = await premier(); return m.haut - m.barre; }, { message: `${SLUGS[rang]}, page ${p}` }).toBeGreaterThanOrEqual(0);
     }
   }
+});
+
+// A12, CI-22 (docs/spec-corrections-interface.md) : page 2 d'un chant en texte, barre escamotée. Choix de Timothée du
+// 16/11 (« Une ligne en haut ») : titre, structure (rappel) et carré de tonalité sur une seule ligne, tout en haut, centrés
+// les uns sur les autres ; la bande gardée sous la barre (A7) se replie. Barre affichée : rien ne change.
+test("A12 : page 2 barre escamotée, titre, structure et tonalité sur une ligne en haut (abba-pere)", async ({ page }) => {
+  await ouvrirMode(page);
+  const total = Number((await lireCompteur(page)).split(" / ")[1]);
+  await page.keyboard.press("ArrowRight");
+  await attendreCompteur(page, `2 / ${total}`);
+  await expect(page.locator("[data-barre-haut]").getByRole("button", { name: "Quitter" })).toBeVisible();
+  await expect(page.locator("[data-performance-mode] [data-titre-courant]")).toHaveCount(0);
+  await fermerBarre(page);
+  const rangee = onStage(page, "[data-rappel]");
+  const titre = rangee.locator("[data-rappel-titre]");
+  const cle = rangee.locator("[data-armure-flottante]");
+  await expect(titre).toBeVisible();
+  await expect(titre).toHaveText("Abba Père");
+  await expect(cle).toBeVisible();
+  // La tonalité une seule fois.
+  await expect(page.locator("[data-performance-mode] [data-armure-flottante]")).toHaveCount(1);
+  const m = await rangee.evaluate((r) => {
+    const milieu = (e: Element) => { const b = e.getBoundingClientRect(); return b.top + b.height / 2; };
+    const strip = r.querySelector("[data-rappel-titre] ~ *")!;
+    // Le premier rond de la structure (le plus haut des éléments de la première ligne, pas un point).
+    const feuilles = [...strip.querySelectorAll<HTMLElement>("*")].filter((e) => e.children.length === 0 && e.getBoundingClientRect().height > 0);
+    const haut = Math.min(...feuilles.map((e) => e.getBoundingClientRect().top));
+    const premier = feuilles.filter((e) => e.getBoundingClientRect().top < haut + 20).sort((a, b) => b.getBoundingClientRect().height - a.getBoundingClientRect().height)[0] ?? strip;
+    const bande = [...document.querySelectorAll("[data-performance-mode] [data-reserve-barre]")].some((e) => e.getBoundingClientRect().height > 0);
+    return { titre: milieu(r.querySelector("[data-rappel-titre]")!), structure: milieu(premier), cle: milieu(r.querySelector("[data-armure-flottante]")!), haut: r.getBoundingClientRect().top, bande };
+  });
+  expect(Math.abs(m.titre - m.cle), `titre centré sur le carré ${JSON.stringify(m)}`).toBeLessThanOrEqual(1);
+  expect(Math.abs(m.structure - m.cle), `structure centrée sur le carré ${JSON.stringify(m)}`).toBeLessThanOrEqual(1);
+  expect(m.bande, "la bande gardée se replie").toBe(false);
+  expect(m.haut, "la ligne est tout en haut").toBeLessThan(60);
 });

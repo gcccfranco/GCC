@@ -1,5 +1,11 @@
 {
   "autoCompactWindow": 500000,
+  "permissions": {
+    "allow": [
+      "Bash(npm install -g agent-desktop)",
+      "Bash(apt-get install -y at-spi2-core openbox)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {

@@ -7,7 +7,8 @@ import { apresEnvoi, suivreReservations } from "@/lib/push/reserver";
 import { adminUids, loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs, uidsForCategories } from "@/lib/push/recipients";
 import { ajouterAuxRappels, reminderServicesFor } from "@/lib/push/reminderMessage";
 import type { ReminderService } from "@/types/rappels";
-import { quiCategories, sceneReminder } from "@/lib/scene/rappels";
+import { creneauxDuRappel, quiCategories, sceneReminder } from "@/lib/scene/rappels";
+import type { Reservation } from "@/lib/firebase/reservations";
 import { avecLignes, ouvertureDuJour } from "@/lib/evenements/rappel";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
 import { cleDeplacement, cleVeille, deplacementsAPrevenir, destinatairesDeplacement } from "@/lib/calendrier/prevenir";
@@ -71,17 +72,18 @@ type Reservations = ReturnType<typeof suivreReservations>
 
 /** Créneaux sur scène des éditions affichées aujourd'hui (Pâques et Noël, Q10 de
  *  docs/spec-scene-paques-noel.md), pour ces dates (ISO) : la même règle que l'onglet, le
- *  calendrier et le widget ; un brouillon n'envoie aucun rappel. */
+ *  calendrier et le widget ; un brouillon n'envoie aucun rappel. Lot 5 du chantier AR, T5c
+ *  (docs/spec-salles.md, AR19, AR20) : un créneau est une réservation `reservations/{id}` de la Scène
+ *  qui porte `fete` ; les anciens `programmes/{id}/creneaux` ne sont plus lus. Un filtre `in` sur
+ *  `date` seul (index automatique), le reste trié ici. */
 async function sceneCreneaux(db: FirebaseFirestore.Firestore, dates: string[], today: string): Promise<Creneau[]> {
   // Trié par jour J croissant, comme `listProgrammes` (deux documents pour une édition : le premier lu).
   const snap = await db.collection("programmes").orderBy("jourJ").get();
   const programmes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Programme, "id">) }));
-  const parEdition = await Promise.all(editionsAffichees(programmes, today).map(async ({ programme }) => {
-    const creneaux = await db.collection("programmes").doc(programme!.id).collection("creneaux")
-      .where("dimanche", "in", dates).get();
-    return creneaux.docs.map((c) => ({ id: c.id, ...c.data() } as Creneau));
-  }));
-  return parEdition.flat();
+  const editions = editionsAffichees(programmes, today).flatMap(({ programme }) => (programme ? [programme.id] : []));
+  if (!editions.length) return [];
+  const lues = await db.collection("reservations").where("date", "in", dates).get();
+  return creneauxDuRappel(lues.docs.map((d) => ({ id: d.id, ...d.data() }) as Reservation), editions, dates);
 }
 
 /** Rappels de tâches du jour (lot 7, docs/spec-taches.md) : J-3, J-1 et le

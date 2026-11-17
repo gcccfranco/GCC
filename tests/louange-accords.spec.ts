@@ -6,8 +6,9 @@ import { attendreCompteur, attendreMiseEnPage, basculerAnnoter, lireCompteur, on
 // AL-2 + CL-4 (docs/spec-accords-louange.md, docs/spec-corrections-louange.md) : en mode louange, un accord (paroles ou scan 简谱)
 // n'est touchable que réglage « Idées d'harmonie » allumé (accès Harmonie) ; il ouvre alors le panneau d'accord, au centre comme dans
 // une bande latérale, sans tourner la page ni basculer la barre ; un toucher hors du panneau le ferme sans rien tourner ; en Crayon
-// les accords sont inertes ; l'appui long ouvre le Crayon ; « Ici » ouvre la fenêtre des idées. Réglage éteint ou sans accès :
-// aucun accord touchable, un toucher sur un accord tourne la page comme sur le texte. Spec d'agencement : cinq projets.
+// les accords sont inertes ; l'appui long ouvre le Crayon ; « Ici » ouvre la fenêtre des idées. Réglage éteint : aucun accord
+// touchable, un toucher sur un accord tourne la page comme sur le texte. Sans accès, réglage allumé (CI-6) : le panneau s'ouvre sans « Ici ».
+// Spec d'agencement : cinq projets.
 // Captures : test-results/al2-*.png, cl4-*.png. Noms fictifs.
 
 const SETLIST_ID = "setlist-louange-accords";
@@ -79,8 +80,10 @@ for (const c of CHANTS) {
     await expect(panneau(page)).toBeVisible();
     const [page0, barre0] = [await lireCompteur(page), await barreOuverte(page)];
     const ecran = page.viewportSize()!;
+    const b = (await panneau(page).boundingBox())!;
+    const x = b.x >= ecran.width * 0.5 - 1 ? b.x - 24 : b.x + b.width + 24;
     await expect(async () => {
-      await page.mouse.click(ecran.width * 0.5, ecran.height * 0.12 + 4);
+      await page.mouse.click(x, ecran.height * 0.12 + 4);
       await expect(panneau(page)).toHaveCount(0, { timeout: 1_000 });
     }).toPass({ timeout: 8_000 });
     expect(await lireCompteur(page)).toBe(page0);
@@ -179,13 +182,47 @@ for (const c of CHANTS) {
   });
 }
 
-test("sans accès Harmonie, aucun accord touchable en louange", async ({ page }) => {
-  await ouvrirMode(page, SANS_ACCES, CHANTS[0], { allume: true });
-  // Accord inerte : `.font-chord` (ChordLine, FR) ou `[data-accord]` (ZhLine, 中文 ; cases vides en `visibility: hidden`).
-    const inertes = onStage(page, "[data-copy-line] .font-chord, [data-copy-line] [data-accord]");
-    await expect(inertes.first()).toBeVisible({ timeout: 15_000 });
-  await expect(onStage(page, "[data-accord-touchable]")).toHaveCount(0);
-});
+// CI-6 : sans accès Harmonie, le réglage (« Panneau de l'accord ») rend les accords touchables ; le panneau n'a ni « Ici » ni noms de section.
+for (const c of [...CHANTS, SCAN]) {
+  const scan = c === SCAN;
+  const zh = c.langue === "zh";
+  const nom = scan ? "scan 简谱" : c.langue.toUpperCase();
+  test(`${nom}, sans accès Harmonie : réglage éteint, aucun accord touchable`, async ({ page }) => {
+    await ouvrirMode(page, SANS_ACCES, c, { scan });
+    if (!scan) {
+      // Accord inerte : `.font-chord` (ChordLine, FR) ou `[data-accord]` (ZhLine, 中文 ; cases vides en `visibility: hidden`).
+      await expect(onStage(page, "[data-copy-line] .font-chord, [data-copy-line] [data-accord]").first()).toBeVisible({ timeout: 15_000 });
+    }
+    await expect(onStage(page, "[data-accord-touchable]")).toHaveCount(0);
+  });
+
+  test(`${nom}, sans accès Harmonie : réglage allumé, le panneau d'accord s'ouvre sans « Ici » ni idées`, async ({ page }) => {
+    await ouvrirMode(page, SANS_ACCES, c, { scan, allume: true });
+    const accord = await accordAuCentre(page, scan);
+    const page0 = await lireCompteur(page);
+    await accord.click();
+    await expect(panneau(page)).toBeVisible();
+    await expect(panneau(page).getByRole("radio", { name: zh ? "吉他" : "Guitare" })).toBeVisible();
+    await expect(panneau(page).getByRole("radio", { name: zh ? "钢琴" : "Piano" })).toBeVisible();
+    await expect(panneau(page).locator("[data-ici]")).toHaveCount(0);
+    expect(await lireCompteur(page), "page inchangée").toBe(page0);
+    await expect(onStage(page, "button[data-section-nom-bouton]")).toHaveCount(0);
+    await expect(page.locator("[data-idees-harmonie]")).toHaveCount(0);
+  });
+}
+
+for (const c of CHANTS) {
+  test(`chant ${c.langue.toUpperCase()}, sans accès Harmonie : « Panneau de l'accord » dans Outils rend les accords touchables`, async ({ page }) => {
+    await ouvrirMode(page, SANS_ACCES, c);
+    await expect(onStage(page, "[data-accord-touchable]")).toHaveCount(0);
+    const feuille = await ouvrirMenu(page, "outils", c.langue);
+    await feuille.getByRole("switch", { name: c.langue === "zh" ? "和弦面板" : "Panneau de l'accord" }).click();
+    await page.keyboard.press("Escape"); // la feuille couvre la scène au téléphone
+    await expect(feuille).toBeHidden();
+    await expect(onStage(page, "[data-accord-touchable]").first()).toBeVisible({ timeout: 15_000 });
+    expect(await page.evaluate((u) => localStorage.getItem(`perf-idees-harmonie-${u}`), SANS_ACCES.uid)).toBe("1");
+  });
+}
 
 test("scan 简谱, « Ici » (accès Harmonie, réglage allumé) : un accord du scan ouvre le panneau avec « Ici »", async ({ page }) => {
   await ouvrirMode(page, AVEC_ACCES, SCAN, { scan: true, allume: true });
@@ -196,7 +233,7 @@ test("scan 简谱, « Ici » (accès Harmonie, réglage allumé) : un accord du 
 // CL-3 : le calque 简谱 du mode louange suit la bascule Lettres | Chiffres de la marge (tonalité d'origine comprise).
 test("scan 简谱 : Chiffres dans la marge chiffre le calque, Lettres le rend", async ({ page }) => {
   await ouvrirMode(page, SANS_ACCES, SCAN, { scan: true });
-  const etiquettes = () => onStage(page, "[data-jianpu-label]").evaluateAll((els) => els.map((e) => (e.textContent ?? "").trim()).filter(Boolean));
+  const etiquettes = () => onStage(page, "[data-jianpu-page]").locator("[data-jianpu-label]").evaluateAll((els) => els.map((e) => (e.textContent ?? "").trim()).filter(Boolean));
   const marge = await ouvrirMenu(page, "affichage");
   await marge.locator('[data-notation="chiffres"]').click();
   await expect.poll(async () => { const ts = await etiquettes(); return ts.some((t) => /^[b#]?[1-7]/.test(t)) && !ts.some((t) => /^[A-G]/.test(t)); }).toBe(true);

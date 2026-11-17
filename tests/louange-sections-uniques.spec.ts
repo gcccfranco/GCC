@@ -9,7 +9,7 @@ import type { SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 import { fermerMarge } from "./helpers/marge";
-import { attendreCompteur, basculerAnnoter, lireCompteur, ouvrirJeJoue, ouvrirOutils } from "./helpers/louange";
+import { attendreCompteur, basculerAnnoter, fermerBarre, lireCompteur, ouvrirJeJoue, ouvrirOutils } from "./helpers/louange";
 
 // Lot 2 du chantier 简谱 (docs/spec-jianpu-integration.md) : « Sections uniques » et
 // structure dans le mode louange. Setlist « Culte du 11 octobre » (fictive) :
@@ -430,7 +430,7 @@ test.describe("Réglages : corrections de la relecture", () => {
     const entete = onStage(page, "[data-entete-chant]");
     await expect(entete.getByText("→ Montée de la batterie")).toBeVisible();
     const feuille = await ouvrirOutils(page);
-    await feuille.getByRole("button", { name: "Transitions" }).click();
+    await feuille.getByRole("switch", { name: "Transitions" }).click();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(entete.getByText("Piano seul, voix douces")).toBeVisible();
@@ -532,6 +532,8 @@ test.describe("bandeau de pastilles en tête du chant", () => {
     const bandeauScan = onStage(page, "ol[aria-label=Structure]");
     await expect(bandeauScan).toHaveCount(1);
     await expect(onStage(page, "[data-tete-feuille] [data-note-tete]")).toHaveText("R : Ralentir la dernière ligne");
+    await fermerBarre(page); // la barre ouverte recouvre la tête de feuille (invisible)
+    await expect(onStage(page, "[data-tete-feuille] [data-note-tete]")).toBeVisible();
 
     const feuille = await jejoue(page);
     await feuille.getByRole("radiogroup", { name: "Ordre des sections" }).getByRole("radio", { name: "Plan", exact: true }).click();
@@ -648,13 +650,12 @@ test.describe("rappel de structure (Sections uniques)", () => {
     pastilles.forEach((p, i) => expect(p.nuances, `pastille ${i}`).toBe(p.pleine ? avecNuance[i] : 0));
     expect(pastilles.some((p) => p.pleine && p.nuances > 0)).toBe(true);
 
-    // Téléphone : seulement les pleines. Sinon toutes les pastilles et le titre du chant.
-    const titre = rappel.locator("span.uppercase");
+    // Toutes les pastilles, à toutes les tailles ; le titre du chant seulement dès 640 px.
+    const titre = rappel.locator("[data-rappel-titre]");
+    expect(pastilles.every((p) => p.visible)).toBe(true);
     if (telephone(page)) {
-      expect(pastilles.filter((p) => p.visible).every((p) => p.pleine)).toBe(true);
       await expect(titre).toBeHidden();
     } else {
-      expect(pastilles.every((p) => p.visible)).toBe(true);
       await expect(titre).toBeVisible();
       await expect(titre).toHaveText("Abba Père");
       expect(await titre.evaluate((el) => getComputedStyle(el).fontSize)).toBe("13px");
@@ -669,6 +670,18 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await page.mouse.click(ecran.width / 2, ecran.height / 2);
     await expect(page.getByRole("button", { name: "Quitter" })).toBeHidden({ timeout: 6000 });
     await expect(rappel).toBeVisible();
+  });
+
+  test("téléphone : le rappel montre toute la structure, les pleines sont les sections de la page (FR)", async ({ page }) => {
+    test.skip(!telephone(page), "propre au téléphone");
+    await ouvrirMode(page, [ABBA_NUANCES], { affichage: "unique" });
+    await pageSuivante(page);
+    const pastilles = await lirePastilles(page);
+    expect(pastilles, "les huit étapes, claires comprises").toHaveLength(ETAPES.length);
+    expect(pastilles.every((p) => p.visible), "aucune pastille cachée").toBe(true);
+    expect(pastilles.some((p) => !p.pleine), "des claires sont là").toBe(true);
+    const imprimees = await onStage(page, "[data-section]").evaluateAll((els) => els.flatMap((e) => e.getAttribute("data-section-uids")!.split(" ")));
+    expect(pastilles.flatMap((p, i) => (p.pleine ? [i] : []))).toEqual(ETAPES.flatMap((uid, i) => (imprimees.includes(uid) ? [i] : [])));
   });
 
   test("chant chinois : page 2, pleines = passages des sections de la page, titre chinois sur tablette et ordinateur (ZH)", async ({ page }) => {
@@ -701,7 +714,7 @@ test.describe("rappel de structure (Sections uniques)", () => {
     expect(pastilles.filter((p) => p.pleine && p.nuances > 0).length).toBeGreaterThan(0);
     for (const p of pastilles.filter((q) => q.visible)) expect(Math.abs(p.hauteur - (telephone(page) ? 26 : 30))).toBeLessThanOrEqual(1);
     await expect(onStage(page, "[data-rappel] [data-cerclee]")).toHaveCount(0);
-    const titre = rappel.locator("span.uppercase");
+    const titre = rappel.locator("[data-rappel-titre]");
     if (telephone(page)) await expect(titre).toBeHidden();
     else await expect(titre).toHaveText("圣诞节耶稣为你而来");
   });
@@ -794,6 +807,10 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await basculerAnnoter(page);
     await expect.poll(boite, { message: "le trait est lu sur la page 2" }).not.toBeNull();
     const avant = (await boite())!;
+    // A12, CI-22 : la page remonte quand la barre est cachée (titre, structure et tonalité sur une ligne) : le trait se
+    // compare à sa section, pas à l'écran.
+    const hautSection = () => onStage(page, "[data-section]").first().evaluate((e) => e.getBoundingClientRect().top);
+    const sectionAvant = await hautSection();
     // Le trait est sous le rappel, dans la page : il est sur les sections, pas sur la rangée.
     const basRappel = await onStage(page, "[data-rappel]").evaluate((el) => el.getBoundingClientRect().bottom);
     expect(avant[1]).toBeGreaterThan(basRappel);
@@ -807,7 +824,8 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await attendreCompteur(page, /^2 \//);
     await expect.poll(boite, { message: "le trait revient sur la page 2" }).not.toBeNull();
     const apres = (await boite())!;
-    avant.forEach((v, i) => expect(Math.abs(v - apres[i]), `bord ${i} du trait`).toBeLessThanOrEqual(2));
+    const dy = (await hautSection()) - sectionAvant;
+    avant.forEach((v, i) => expect(Math.abs(v + (i % 2 ? dy : 0) - apres[i]), `bord ${i} du trait`).toBeLessThanOrEqual(2));
     // Pas sur la page 1.
     await page.keyboard.press("ArrowLeft");
     await attendreCompteur(page, /^1 \//);

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, useEffectEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { langAccent } from "./langAccent";
 import { BarreHaut, ICONES_ROLE } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
 import { BarreAnnotation } from "./BarreAnnotation";
@@ -55,7 +54,7 @@ import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import { ChoixCouleurAccords } from "@/components/song/ChoixCouleurAccords";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { noteToIndex } from "@/lib/transpose";
-import { Armure } from "@/components/song/Armure";
+import { Armure, CarreTonalite } from "@/components/song/Armure";
 import { MargeAffichage, usePlace } from "@/components/song/MargeAffichage";
 import { Switch } from "@/components/ui/switch";
 import { itemAst } from "@/lib/chordpro/itemContent";
@@ -231,7 +230,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
       <div data-entete-chant className="mx-auto mb-3 w-full max-w-[880px] pb-3 border-b border-border">
         {/* Titre du chant : la barre est fermée à l'ouverture, le batteur doit voir quel chant il joue. Masqué barre ouverte (qu'elle le répète), sans changer de place. */}
         <div data-entete-titre className="mb-0.5 flex flex-wrap items-baseline gap-x-3 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
-          <h2 className="text-lg font-bold text-foreground leading-tight uppercase tracking-tight">{titres}</h2>
+          <h2 className="text-lg font-bold text-foreground leading-tight tracking-tight">{titres}</h2>
           {!block.fusionSongs?.length && block.artist ? <p className="text-xs text-muted-foreground">{block.artist}</p> : null}
         </div>
         <p data-entete-tempo-tonalite className="text-[22px] font-bold leading-tight text-foreground">
@@ -275,15 +274,10 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
             {block.fusionSongs.map((s, i) => (
               <span
                 key={i}
-                className="text-[17px] font-bold text-foreground leading-tight uppercase tracking-tight"
+                className="text-[17px] font-bold text-foreground leading-tight tracking-tight"
               >
                 {s.title}
-                <span
-                  className="ml-1.5 font-mono text-xs font-normal normal-case"
-                  style={{ color: langAccent(s.language) }}
-                >
-                  {s.key}
-                </span>
+                <CarreTonalite petit k={s.key} langue={s.language === "zh" ? "zh" : "fr"} className="ml-1.5 align-middle" />
               </span>
             ))}
           </div>
@@ -324,7 +318,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
             <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
               {Number.isInteger(block.position) ? block.position : "+"}
             </span>
-            <h2 className="text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight truncate">
+            <h2 className="text-[22px] font-bold text-foreground leading-tight tracking-tight truncate">
               {block.title}
             </h2>
           </div>
@@ -339,10 +333,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
               {t("performance.capoBadge", { n: block.capo })}
             </span>
           ) : null}
-          <span className="text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
-            style={{ color: langAccent(block.language), borderColor: langAccent(block.language) }}>
-            {block.songKey}
-          </span>
+          <CarreTonalite k={block.songKey} langue={block.language === "zh" ? "zh" : "fr"} plein={!!block.setlistKey} />
           {block.setlistKey && (
             <span className="text-xs font-semibold text-muted-foreground">
               {t("performance.personalKey", { key: block.setlistKey })}
@@ -362,16 +353,22 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
 // 12 px dessous, 8 px de marge) en haut des pages 2 et suivantes d'un chant (D11, RS-B).
 const RAPPEL_RESERVE = 50;
 /** Rappel de structure d'une page 2 ou suivante (Sections uniques) : titre du chant
- *  en tête dès 640 px, puis les pastilles ; sous 640 px, les seules pleines. */
-function RappelRangee({ titre, steps, pleines, rappel }: { titre?: string; steps: SectionOccurrence[]; pleines: ReadonlySet<string>; rappel: "joue" | "unique" }) {
+ *  en tête dès 640 px, puis les pastilles (toute la structure, à toutes les tailles). */
+function RappelRangee({ titre, steps, pleines, rappel, cle }: { titre?: string; steps: SectionOccurrence[]; pleines: ReadonlySet<string>; rappel: "joue" | "unique"; cle?: React.ReactNode }) {
+  // A12, CI-22 : barre escamotée, la rangée porte aussi le carré de tonalité (`cle`) à droite ; titre, structure et
+  // carré sur une seule ligne, centrés, le titre visible à toutes les tailles.
   return (
     <div className="flex items-start gap-3">
       {titre && (
-        <span className="hidden max-w-[16rem] shrink-0 truncate text-[13px] font-semibold uppercase leading-[30px] tracking-wide text-muted-foreground sm:block">
+        // Sur une ligne, c'est le titre qui cède la place (tronqué, au moins 5 em), puis la structure passe à la ligne.
+        <span data-rappel-titre className={`${cle ? "block min-w-[5em] shrink-[8] leading-[26px] sm:leading-[30px]" : "hidden shrink-0 leading-[30px] sm:block"} max-w-[16rem] truncate text-[13px] font-semibold text-muted-foreground`}>
           {titre}
         </span>
       )}
-      <StructureStrip className="min-w-0 flex-1" steps={steps} compacte pleines={pleines} rappel={rappel} />
+      <StructureStrip className={cle ? "min-w-0 shrink" : "min-w-0 flex-1"} steps={steps} compacte pleines={pleines} rappel={rappel} />
+      {/* Centré sur la première ligne de la rangée (la hauteur des ronds : 26 px, 30 dès 640 px), même si la structure
+          passe à la ligne ; le titre a la même hauteur de ligne. */}
+      {cle && <div className="ml-auto flex h-[26px] shrink-0 items-center sm:h-[30px]">{cle}</div>}
     </div>
   );
 }
@@ -926,6 +923,7 @@ export function PerformanceMode({
   );
 
   // JV-5b : le nom d'une section ouvre le volet Harmonie par-dessus la page (réglage par compte, éteint par défaut ; accès comme la porte 2).
+  // CI-6 : sans accès Harmonie, le réglage rend les accords touchables (panneau d'accord seul, sans idées).
   const { peut: peutHarmonie } = useAccesHarmonie();
   const [reglageIdees, setReglageIdees] = useState(() => lireReglageIdees(uid));
   const ideesActives = reglageIdees && peutHarmonie;
@@ -1155,7 +1153,7 @@ export function PerformanceMode({
     return () => {
       annule = true;
     };
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, zoneL, zoneH, metronome, ideesActives, icisDuLouange, jianpuSections]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuPlace, jianpuSystemes, jianpuMarges, barres.haut, barres.bas, ecran.largeur, ecran.hauteur, zoneL, zoneH, metronome, ideesActives, reglageIdees, icisDuLouange, jianpuSections]);
 
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const scaledBodyRef = useRef<HTMLDivElement>(null);
@@ -1879,6 +1877,7 @@ export function PerformanceMode({
       return;
     }
     // CL-4 : un accord (touchable seulement réglage « Idées d'harmonie » allumé) ouvre son panneau par son click, bandes latérales comprises : ni page tournée ni barre basculée.
+    // CI-6 : sans accès Harmonie, le réglage rend les accords touchables (panneau d'accord seul, sans idées).
     if ((e.target as HTMLElement).closest("[data-accord-touchable]")) return;
     let grossier = false;
     try { grossier = window.matchMedia("(pointer: coarse)").matches; } catch { /* sans matchMedia : zones par défaut */ }
@@ -2001,7 +2000,12 @@ export function PerformanceMode({
     />
   ) : undefined;
   // Barre cachée : l'armure flotte dans le coin seulement quand l'en-tête du chant n'est pas sur la page affichée.
-  const armureFlottante = !showChrome && !!armure && !!currentEntry && !currentPageIndices.includes(currentEntry.index);
+  const armureFlottante = !showChrome && !!armure && !!currentEntry && !currentPageIndices.includes(currentEntry.index) && !currentPageIndices.some((i) => blocks[i]?.kind === "jianpu-sheet");
+  // A12, CI-22 : barre escamotée, page 2 et suivantes d'un chant en texte, la bande gardée en haut (A7) montre le titre
+  // du chant en titre courant, sur la rangée du carré de tonalité flottant et centré sur lui (la tonalité une seule fois).
+  // Page avec rappel de structure (Timothée, 16/11) : titre, structure et carré sur une seule ligne, le rappel, tout en
+  // haut ; la bande gardée se replie (la page remonte, et redescend sous la barre revenue). Voir `rangeeUnique`.
+  const titreCourant = !showChrome && reserveBarre > 0 && !!currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index && !currentPageIndices.some((i) => blocks[i]?.kind === "jianpu-sheet") ? currentEntry.block : null;
   const aPinyin = blocks.some((b) => b.kind === "section" && b.showPinyin);
   // Sous md la barre n'a que Setlist, Repères, Outils, Affichage : Annoter et le tempo passent dans Outils.
   const telephone = ecran.largeur < 768;
@@ -2039,6 +2043,8 @@ export function PerformanceMode({
     (affichageVu === "unique" || affichageVu === "played") && !fitPage && currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index
       ? currentEntry.block.steps
       : undefined;
+  // A12, CI-22 : barre escamotée, page avec rappel, hors demi-page : une seule ligne (voir `titreCourant`).
+  const rangeeUnique = !!titreCourant && !!rappel && !demiActif;
   const sectionsDeLaPage = new Set(
     currentPageIndices.flatMap((i) => {
       const b = blocks[i];
@@ -2077,8 +2083,7 @@ export function PerformanceMode({
       >
         <span>{t("performance.next")}</span>{" "}
         <span className="min-w-0 truncate font-semibold text-foreground">{nextEntry.block.title}</span>{" "}
-        <span>·</span>{" "}
-        <span className="font-mono">{nextEntry.block.songKey}</span>
+        <CarreTonalite petit k={nextEntry.block.songKey} langue={nextEntry.block.language === "zh" ? "zh" : "fr"} />
       </button>
     ) : null;
 
@@ -2117,9 +2122,8 @@ export function PerformanceMode({
     <ContenuOutils
       showTransitions={showTransitions}
       setShowTransitions={setShowTransitions}
-      metronome={{ allume: metronome, set: setMetronome }}
       annotations={user ? { allume: showAnnotations, set: setShowAnnotations } : undefined}
-      idees={peutHarmonie ? { allume: reglageIdees, set: (v) => { ecrireReglageIdees(uid, v); setReglageIdees(v); } } : undefined}
+      idees={{ allume: reglageIdees, acces: peutHarmonie, set: (v) => { ecrireReglageIdees(uid, v); setReglageIdees(v); } }}
       onAnnoter={telephone && user && !horsLigne && (crayonPret || crayonIndispo) ? (crayonIndispo ? signalerCrayonIndispo : basculerAnnotation) : undefined}
       annoterIndispo={crayonIndispo}
       onMetronome={tempoChantId ? () => basculerMenu("metronome") : undefined}
@@ -2131,7 +2135,7 @@ export function PerformanceMode({
   return (
     <FournisseurIcis value={icisDuLouange}>
     <FournisseurNoms value={ideesActives && !annotateMode}>
-    <AccordsProvider actif={ideesActives && !annotateMode} louange>
+    <AccordsProvider actif={reglageIdees && !annotateMode} louange>
     <div
       data-performance-mode
       data-disposition={disposition}
@@ -2300,9 +2304,9 @@ export function PerformanceMode({
           };
           // Tête de feuille d'un scan certifié : hauteur exacte de la barre de titre, repères des sections de la page allumés.
           const teteFeuille = (b: PerformanceBlock | undefined, tr: Pick<Tranche, "premiere" | "derniere">) => ({
-            // La bande des temps (MT-1) se pose sur les derniers px de la tête : le scan commence dessous.
+            // La bande des temps (MT-1) se pose en haut de la tête, sous l'encoche (A13) : le contenu de la tête commence dessous.
             hauteur: barres.haut ? `${(barres.haut + bandeH) / fontScale}px` : `calc(var(--sat, 0px) / ${fontScale} + ${bandeH / fontScale}px)`,
-            encoche: `calc(var(--sat, 0px) / ${fontScale})`,
+            encoche: `calc(var(--sat, 0px) / ${fontScale} + ${bandeH / fontScale}px)`,
             allumes: b?.kind === "jianpu-sheet" ? sectionsDeTranche(jianpuSections?.[b.songSlug]?.sections ?? [], b.pageIndex + 1, tr) : new Set<string>(),
           });
           const lignesDePage = (b: PerformanceBlock | undefined) => (b?.kind === "jianpu-sheet" ? jianpuSystemes?.[b.songSlug]?.pages[b.pageIndex]?.lignes.length ?? 0 : 0);
@@ -2382,13 +2386,23 @@ export function PerformanceMode({
               page={page}
               rappel={rappel}
               rappelRef={rappelRef}
-              rappelTrame={rappel ? <RappelRangee titre={currentEntry?.block.title} steps={rappel} pleines={sectionsDeLaPage} rappel={affichageVu === "played" ? "joue" : "unique"} /> : null}
+              rappelTrame={rappel ? (
+                <RappelRangee
+                  titre={currentEntry?.block.title}
+                  steps={rappel}
+                  pleines={sectionsDeLaPage}
+                  rappel={affichageVu === "played" ? "joue" : "unique"}
+                  cle={!rangeeUnique ? undefined : armure ? (
+                    <div data-armure-flottante className="shrink-0" onPointerDown={(e) => e.stopPropagation()} onPointerUp={(e) => e.stopPropagation()}>{armure}</div>
+                  ) : <span aria-hidden />}
+                />
+              ) : null}
               affichageVu={affichageVu}
               currentPage={currentPage}
               scaledBodyRef={scaledBodyRef}
               renderBlock={renderBlock}
               contentPadding={contentPadding}
-              reserveHaut={currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index ? reserveBarre : 0}
+              reserveHaut={currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index && !rangeeUnique ? reserveBarre : 0}
               pastille={isLastPageOfSong && nextEntry && !colonneScan ? pastilleSuivant(`pointer-events-auto max-w-full border-border/60 ${pastilleCouverte ? "invisible" : ""}`, refPastilleFlux, pastilleCouverte) : null}
             />
             </ConteneurCoupure>
@@ -2396,15 +2410,29 @@ export function PerformanceMode({
         })()}
       </div>
 
-      {armureFlottante && (
+      {(armureFlottante || titreCourant) && !rangeeUnique && (
         <div
-          data-armure-flottante
-          className="absolute"
-          style={{ zIndex: 25, top: "calc(var(--sat, 0px) + 4px)", right: "calc(var(--sar, 0px) + 8px)" }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
+          className="pointer-events-none absolute flex items-center justify-end gap-3"
+          style={{ zIndex: 25, top: "calc(var(--sat, 0px) + 24px)", left: "calc(var(--sal, 0px) + 24px)", right: "calc(var(--sar, 0px) + 24px)" }}
         >
-          {armure}
+          {titreCourant && (
+            <p
+              data-titre-courant
+              className={`min-w-0 flex-1 truncate text-[15px] font-semibold leading-tight text-muted-foreground ${titreCourant.language === "zh" ? KaiTiFont.className : gelasio_font.className}`}
+            >
+              {titreCourant.title}
+            </p>
+          )}
+          {armureFlottante && (
+            <div
+              data-armure-flottante
+              className="pointer-events-auto"
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+            >
+              {armure}
+            </div>
+          )}
         </div>
       )}
 
@@ -2634,7 +2662,7 @@ export function PerformanceMode({
           pos={posMetro}
           onMarche={() => setMetroMarche((m) => !m)}
           onOuvrir={() => basculerMenu("metronome")}
-          top={showChrome || pageCertifiee ? `${barres.haut}px` : "var(--sat, 0px)"}
+          top={showChrome ? `${barres.haut}px` : "var(--sat, 0px)"}
           telephone={telephone}
         />
       ) : null}
@@ -2715,9 +2743,8 @@ export function PerformanceMode({
       </div>
 
       {/* ── Menus du mode (FS-B) : popover sous l'icône à partir de md, feuille du bas au téléphone ── */}
-      <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurMenus} titreCache>
+      <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurMenus} titreVisible={setlistTitle}>
         <ContenuSetlist
-          setlistTitle={setlistTitle}
           setlistDate={setlistDate}
           songEntries={songEntries}
           pages={pages}

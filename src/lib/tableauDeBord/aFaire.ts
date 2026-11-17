@@ -2,7 +2,7 @@
 // `./donnees` réuni en une seule liste, en groupes (en retard, cette semaine, plus tard, à lire ou à relier).
 // Module pur, sans React ni Firestore : `./lecture` (`lireAFaire`) lit les sources permises, celles qu'il n'a pas
 // pu lire ou pas le droit de lire restent absentes. Les lignes portent des données, jamais du texte traduit.
-import { estReunion } from "@/lib/access";
+import { estReunion, ongletDeLaGrille } from "@/lib/access";
 import { isExpired, isInfo, isPast } from "@/lib/evenements/agenda";
 import { nomsSansCompte } from "@/lib/groupes/personnes";
 import { baseBackOffice, ficheEvenement } from "@/lib/navigation";
@@ -99,6 +99,12 @@ function reunir(parGroupe: Record<GroupeAFaire, LigneAFaire[]>): ResultatAFaire 
   return { groupes, total: groupes.reduce((n, g) => n + g.lignes.length, 0) };
 }
 
+/** L'adresse du planning d'une grille : la page existe par onglet (`paix` → `groupes`), pas par grille. */
+function lienPlanning(grille: string): string {
+  const onglet = ongletDeLaGrille(grille);
+  return onglet ? `/back-office/planning/${onglet}` : "/back-office/planning";
+}
+
 export function aFaire({ sources, today, nowIso, uid, mesEquipes }: EntreesAFaire): ResultatAFaire {
   const g: Record<GroupeAFaire, LigneAFaire[]> = { enRetard: [], semaine: [], plusTard: [], aLire: [] };
   const semaineFin = addDays(today, 7);
@@ -112,7 +118,7 @@ export function aFaire({ sources, today, nowIso, uid, mesEquipes }: EntreesAFair
     for (const planning of distincts(p.vides.map((v) => v.planning))) {
       const vides = p.vides.filter((v) => v.planning === planning);
       g.semaine.push({
-        id: `cases:${planning}:semaine`, sorte: "cases", verbe: "remplir", href: `/back-office/planning/${planning}`, date: dimanche,
+        id: `cases:${planning}:semaine`, sorte: "cases", verbe: "remplir", href: lienPlanning(planning), date: dimanche,
         equipes: distincts(vides.flatMap((v) => equipeDeLaColonne(planning, v.colonne.cle)?.equipe ?? [])), aMoi: false,
         planning, colonnes: vides.map((v) => v.colonne), nombre: vides.length,
         relancer: distincts(vides.flatMap((v) => v.relancer?.prenom ?? [])),
@@ -123,14 +129,14 @@ export function aFaire({ sources, today, nowIso, uid, mesEquipes }: EntreesAFair
       const equipe = equipeDeLaColonne(c.planning, c.colonne.cle)?.equipe;
       g[c.date <= semaineFin ? "semaine" : "plusTard"].push({
         id: `absence:${c.planning}:${c.date}:${c.colonne.cle}:${c.nom}`, sorte: "absence", verbe: "remplacer",
-        href: `/back-office/planning/${c.planning}`, date: c.date,
+        href: lienPlanning(c.planning), date: c.date,
         equipes: equipe ? [equipe] : [], aMoi: false,
         planning: c.planning, colonnes: [c.colonne], nom: c.nom,
       });
     }
     for (const pp of p.plusTard.parPlanning) {
       g.plusTard.push({
-        id: `cases:${pp.planning}:plusTard`, sorte: "cases", verbe: "remplir", href: `/back-office/planning/${pp.planning}`,
+        id: `cases:${pp.planning}:plusTard`, sorte: "cases", verbe: "remplir", href: lienPlanning(pp.planning),
         date: p.plusTard.jusquau,
         equipes: distincts(pp.colonnes.flatMap((c) => equipeDeLaColonne(pp.planning, c.cle)?.equipe ?? [])), aMoi: false,
         planning: pp.planning, colonnes: pp.colonnes, nombre: pp.colonnes.reduce((s, c) => s + c.n, 0),

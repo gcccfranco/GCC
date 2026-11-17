@@ -276,14 +276,14 @@ test("Repères est absent quand le chant courant n'a pas de section (scan 简谱
   await expect(page.getByRole("button", { name: "Repères" })).toHaveCount(0);
 });
 
-test("Outils : plus de tonalité ni de capo (ils sont dans l'armure) ; plein écran ; raccourcis ; Annotations", async ({ page }, testInfo) => {
+test("Outils : plus de tonalité ni de capo (ils sont dans l'armure) ; plein écran ; raccourcis ; Voir mes annotations", async ({ page }, testInfo) => {
   await ouvrir(page);
   const outils = await ouvrirMenu(page, "outils");
   await expect(outils.locator("[data-cle-valeur]")).toHaveCount(0);
   await expect(outils.getByRole("button", { name: "Monter d'un demi-ton" })).toHaveCount(0);
   await expect(outils.getByText("Capo", { exact: true })).toHaveCount(0);
-  await expect(outils.getByRole("button", { name: "Annotations", exact: true })).toHaveCount(1);
-  if (ordinateur(testInfo)) await expect(outils.getByRole("button", { name: "Plein écran" })).toHaveCount(1);
+  await expect(outils.getByRole("switch", { name: "Voir mes annotations", exact: true })).toHaveCount(1);
+  if (ordinateur(testInfo)) await expect(outils.getByRole("switch", { name: "Plein écran" })).toHaveCount(1);
   // Raccourcis : sur ordinateur (pointeur précis) ; absents au téléphone tant qu'aucune touche n'a été frappée.
   if (ordinateur(testInfo)) await expect(outils.locator("[data-raccourcis]")).toBeVisible();
   if (telephone(page)) await expect(outils.locator("[data-raccourcis]")).toHaveCount(0);
@@ -325,16 +325,44 @@ test("Tempo : − / +, « Revenir au tempo du chant », métronome visuel (bouto
   await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
 });
 
-test("Métronome visuel : un bouton rond allumé / éteint dans Outils (plus de segmenté Activé / Désactivé)", async ({ page }) => {
+test("Métronome visuel : plus dans Outils (la ligne « Métronome » ouvre le panneau), l'interrupteur y est allumé / éteint", async ({ page }) => {
   await ouvrir(page);
   const outils = await ouvrirMenu(page, "outils");
   await expect(outils.getByText("Activé", { exact: true })).toHaveCount(0);
-  const metronome = outils.getByRole("button", { name: "Métronome visuel" });
-  await expect(metronome).toHaveCount(1);
+  await expect(outils.locator("[data-metronome]")).toHaveCount(0);
+  await expect(outils.getByRole("switch", { name: "Métronome visuel" })).toHaveCount(0);
+  await expect(outils.getByRole("button", { name: "Métronome visuel" })).toHaveCount(0);
+  await outils.locator("[data-metronome-ouvrir]").click();
+  const metronome = page.locator("[data-testid=panneau-metronome] [data-metronome]");
   await expect(metronome).toHaveAttribute("aria-pressed", "false");
   await metronome.click();
   await expect(metronome).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
+});
+
+test("B2 : Outils en deux groupes, « Réglages » (interrupteurs) puis « Actions » (lignes à chevron)", async ({ page }) => {
+  await ouvrir(page);
+  const outils = await ouvrirMenu(page, "outils");
+  await expect(outils.getByText("Réglages", { exact: true })).toBeVisible();
+  await expect(outils.getByText("Actions", { exact: true })).toBeVisible();
+  await expect(outils.getByRole("switch", { name: "Transitions" })).toBeVisible();
+  await expect(outils.getByRole("switch", { name: "Voir mes annotations" })).toBeVisible();
+  expect(await outils.getByRole("switch").count()).toBeGreaterThanOrEqual(3);
+  await expect(outils.locator("[aria-pressed]")).toHaveCount(0);
+  const metronome = outils.locator("[data-metronome-ouvrir]");
+  await expect(metronome).toContainText("Métronome");
+  await expect(metronome.locator("svg.lucide-chevron-right")).toBeVisible();
+  if (telephone(page)) {
+    await expect(outils.locator("[data-reperes-ouvrir]")).toBeVisible();
+    await expect(outils.locator("[data-annoter]")).toBeVisible();
+  }
+});
+
+test("B2 : en interface 中文, les deux groupes d'Outils sont « 设置 » et « 操作 »", async ({ page }) => {
+  await ouvrir(page, { langue: "zh" });
+  const outils = await ouvrirMenu(page, "outils", "zh");
+  await expect(outils.getByText("设置", { exact: true })).toBeVisible();
+  await expect(outils.getByText("操作", { exact: true })).toBeVisible();
 });
 
 test("Affichage : l'interrupteur Accords bascule les accords ; ses cibles tactiles font au moins 44 px", async ({ page }) => {
@@ -390,15 +418,15 @@ test("plein écran : le bouton suit document.fullscreenElement (allumé en plein
   await expect(plein).toHaveCount(1);
   // Ouvrir le mode louange demande le plein écran : l'état affiché est celui du document, jamais l'inverse.
   const enPleinEcran = await page.evaluate(() => document.fullscreenElement !== null);
-  await expect(plein).toHaveAttribute("aria-pressed", String(enPleinEcran));
+  await expect(plein).toHaveAttribute("aria-checked", String(enPleinEcran));
   await page.evaluate(() => document.fullscreenElement && document.exitFullscreen());
   await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true);
-  await expect(plein).toHaveAttribute("aria-pressed", "false");
+  await expect(plein).toHaveAttribute("aria-checked", "false");
   // Menu fermé puis rouvert : toujours éteint, le document n'est plus en plein écran.
   await page.keyboard.press("Escape");
   await expect(outils).toBeHidden();
   const encore = await ouvrirMenu(page, "outils");
-  await expect(encore.locator("[data-plein-ecran]")).toHaveAttribute("aria-pressed", "false");
+  await expect(encore.locator("[data-plein-ecran]")).toHaveAttribute("aria-checked", "false");
 });
 
 test("raccourcis clavier : absents au téléphone et sur tablette sans frappe (Échap n'y change rien), visibles après une frappe", async ({ page }, testInfo) => {
@@ -493,11 +521,12 @@ test("palette : framboise retenue après rechargement, et les actions des menus 
   await expect(options.getByRole("radiogroup", { name: "Couleur des icônes" }).getByRole("radio", { name: "Framboise" })).toHaveAttribute("aria-checked", "true");
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
-  // Un rond allumé d'Outils (le métronome) est rempli de la couleur corrigée contre la surface du menu.
-  const outils = await ouvrirMenu(page, "outils");
-  const rond = outils.locator("[data-metronome]");
-  await rond.click();
-  await expect(rond).toHaveAttribute("aria-pressed", "true");
+  // L'interrupteur « Métronome visuel » allumé (panneau Métronome) est rempli de la couleur corrigée contre la surface du menu.
+  const panneau = await ouvrirMenu(page, "tempo");
+  const bouton = panneau.locator("[data-metronome]");
+  await bouton.click();
+  await expect(bouton).toHaveAttribute("aria-pressed", "true");
+  const rond = bouton.locator("> span").last();
   await page.waitForTimeout(500); // fin de la transition de couleur
   expect(await rond.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(attendue);
 });
@@ -523,15 +552,16 @@ for (const theme of ["light", "dark"] as const) {
     test(`menus (${theme}) : l'action « ${nom} » contraste au moins 4,5:1 avec la surface du menu, mesuré à l'écran`, async ({ page }) => {
       await page.addInitScript(([k, h]) => { try { localStorage.setItem(k, h); } catch { /* ignore */ } }, [`perf-couleur-icones-${MUSICIEN.uid}`, hex]);
       await ouvrir(page, { theme });
-      const outils = await ouvrirMenu(page, "outils");
-      // Le rond du métronome, allumé : son fond est la couleur des icônes corrigée contre la surface du menu.
-      const plus = outils.locator("[data-metronome]");
-      await plus.click();
-      await expect(plus).toHaveAttribute("aria-pressed", "true");
+      const outils = await ouvrirMenu(page, "tempo");
+      // L'interrupteur du métronome, allumé : son fond est la couleur des icônes corrigée contre la surface du menu.
+      const bouton = outils.locator("[data-metronome]");
+      await bouton.click();
+      await expect(bouton).toHaveAttribute("aria-pressed", "true");
       await attendreOuverture(page);
+      const plus = bouton.locator("> span").last();
       const [texte, surface] = await Promise.all([
         plus.evaluate((el) => getComputedStyle(el).backgroundColor),
-        outils.evaluate((el) => getComputedStyle(el).backgroundColor),
+        outils.evaluate((el) => getComputedStyle((el.closest("[role=dialog]") ?? el) as Element).backgroundColor),
       ]);
       expect(contraste(versHex(rvb(texte)), versHex(rvb(surface))), `${texte} sur ${surface}`).toBeGreaterThanOrEqual(CONTRASTE_MIN);
     });
@@ -729,3 +759,25 @@ for (const langue of ["fr", "zh"] as const) {
     expect(fin.finContenu, "la dernière ligne est entière dans la zone").toBeLessThanOrEqual(fin.bas + 1);
   });
 }
+
+test("B1 : un × en haut à droite de chaque feuille (Setlist, Repères, Outils, Métronome, Affichage) ; le toucher ferme sans changer de page", async ({ page }) => {
+  await ouvrir(page);
+  await allerPage2(page);
+  for (const menu of ["setlist", "reperes", "outils", "tempo", "affichage"] as Menu[]) {
+    let dialogue = await ouvrirMenu(page, menu);
+    if (menu === "tempo") dialogue = page.locator('[data-menu-louange="metronome"]'); // ouvrirMenu rend le div intérieur
+    await attendreOuverture(page);
+    const croix = dialogue.getByRole("button", { name: /^Fermer/ }).first();
+    await expect(croix).toBeVisible();
+    const b = (await croix.boundingBox())!;
+    const d = (await dialogue.boundingBox())!;
+    // Affichage en feuille pleine largeur : l'en-tête suit la colonne centrée des réglages (560 px) ; on mesure à sa rangée.
+    const r = menu === "affichage" ? (await croix.locator("..").boundingBox())! : d;
+    expect(r.x + r.width - (b.x + b.width), `${menu} : bord droit`).toBeLessThan(24);
+    // Feuille du bas (< 768 px) : la poignée (24 px) précède l'en-tête.
+    expect(b.y - d.y, `${menu} : haut`).toBeLessThan(page.viewportSize()!.width < 768 ? 48 : 24);
+    await croix.click();
+    await expect(dialogue).toBeHidden();
+    expect(await lireCompteur(page), `${menu} : la page ne change pas`).toMatch(/^2 \//);
+  }
+});

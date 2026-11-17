@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { appendFileSync } from "node:fs";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { mesurerPage, ouvrirFeuilles, photographierPage } from "./helpers/mesuresUsage";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Audit du design, second lot (03/11/2026) : les pages que audit-design-captures.spec.ts ne couvre pas.
 // Rien n'est vérifié ici, on photographie. Comptes et données fictifs. PW_CAPTURES=<dossier> obligatoire.
@@ -241,7 +242,7 @@ for (const v of VARIANTES) {
       if (p.anonyme) {
         await page.goto(p.chemin);
       } else {
-        await signInAs(page, ADMIN, DOCS, "/setlists");
+        await signInAs(page, ADMIN, creneauxEnReservations(DOCS), "/setlists");
         await page.goto(p.chemin);
         await expect(page.locator("main, [data-performance-mode], body").first()).toBeVisible();
       }

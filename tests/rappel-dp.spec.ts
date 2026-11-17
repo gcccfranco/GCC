@@ -249,14 +249,16 @@ test.describe("bandeau du mode louange : règles des Dp", () => {
     await expect(liste.locator("li")).toHaveCount(3);
     const pastilleZh = liste.locator("li > span:first-child");
     await expect(pastilleZh.nth(2)).toContainText("Dp");
+    // Tête de feuille (B4, CI-10) : mêmes ronds que la page chant ; la couleur de section est le fond d'un repère
+    // allumé (plein), le texte d'un repère éteint (teinté). Bandeau de la page chant : le texte est toujours à la couleur.
     const [r, dp] = await pastilleZh.evaluateAll((els) =>
-      els.slice(1).map((e) => ({ couleur: getComputedStyle(e).color, fond: getComputedStyle(e).backgroundColor, contour: getComputedStyle(e).borderTopColor, tete: e.hasAttribute("data-repere-tete") })),
+      els.slice(1).map((e) => {
+        const s = getComputedStyle(e);
+        return { section: e.hasAttribute("data-repere-tete") && e.hasAttribute("data-allume") ? s.backgroundColor : s.color, fond: s.backgroundColor, tete: e.hasAttribute("data-repere-tete") };
+      }),
     );
-    expect(dp.couleur).toBe(r.couleur);
-    // Tête de feuille (JP-B2, docs/spec-mode-louange-forscore-2.md) : la couleur de section est le contour ; le fond
-    // ne teinte que les repères des sections à l'écran (« allumés »), il ne dit pas la section.
-    if (r.tete) expect(dp.contour).toBe(r.contour);
-    else expect(dp.fond).toBe(r.fond);
+    expect(dp.section).toBe(r.section);
+    if (!r.tete) expect(dp.fond).toBe(r.fond);
     // En colonne, le nom écrit l'origine en entier.
     if ((await liste.evaluate((el) => el.className)).includes("flex-col")) {
       await expect(liste.locator("li").nth(2)).toContainText("最后一句 – Refrain");

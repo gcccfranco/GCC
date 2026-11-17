@@ -121,7 +121,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
   test("ni bascule ni Retour : l'en-tête en haut, le Sommaire à gauche, les partitions à droite", async ({ page }) => {
     await ouvrir(page);
     await expect(page.getByTestId("bascule-vues")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Retour", exact: true })).toHaveCount(0);
+    await expect(page.locator("main").getByRole("link", { name: "Setlists", exact: true })).toHaveCount(0); // hors navigation (barre latérale, onglets)
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Culte du 4 octobre" })).toBeAttached();
     // Le sommaire est un rail de numéros de 56 px ; son panneau, fermé, n'est pas là.
     await expect(sommaire(page)).toHaveCount(0);
@@ -139,7 +139,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await capture(page, "deux-volets");
   });
 
-  test("l'en-tête : catégorie et date, titre, présidence ; Présentation · Crayon · Modifier · PDF · Affichage · ⋯ · Mode louange", async ({ page }) => {
+  test("l'en-tête : catégorie et date, titre, présidence ; Affichage · Accords · Crayon · Modifier · Mode Louange · ⋯", async ({ page }) => {
     await ouvrir(page);
     const e = enTete(page);
     // Replié (une rangée) : le titre ; catégorie, date et présidence sont dans le bloc qu'il déplie.
@@ -157,32 +157,39 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
         .filter((el) => (el as HTMLElement).offsetParent !== null)
         .map((el) => el.getAttribute("aria-label") ?? el.textContent?.trim() ?? ""),
     );
-    expect(noms).toEqual(["Culte du 4 octobre, Afficher les détails de la setlist", "Présentation", "Crayon", "Modifier", "PDF", "Affichage", "Plus d'actions", "Mode Louange"]);
-    // Libellés compris : ils se lisent, pas seulement à l'oreille.
-    for (const nom of ["Crayon", "Modifier", "Mode Louange"]) {
-      await expect(e.getByRole(nom === "Modifier" ? "link" : "button", { name: nom, exact: true })).toContainText(nom);
+    expect(noms).toEqual(["Culte du 4 octobre, Afficher les détails de la setlist", "Affichage", "Accords", "Crayon", "Modifier", "Mode Louange", "Plus d'actions"]);
+    // Libellés compris : ils se lisent, pas seulement à l'oreille (B8 : « Louange » dès 768 px, le nom accessible reste « Mode Louange »).
+    for (const [nom, texte] of [["Crayon", "Crayon"], ["Modifier", "Modifier"], ["Mode Louange", "Louange"]]) {
+      await expect(e.getByRole(nom === "Modifier" ? "link" : "button", { name: nom, exact: true })).toContainText(texte);
     }
-    await expect(e.getByRole("link", { name: "Présentation" })).toHaveAttribute("href", CANVA);
+    // Présentation passe dans le ⋯ (en premier) : le lien y porte l'adresse Canva.
+    await e.getByRole("button", { name: "Plus d'actions" }).click();
+    await expect(page.getByRole("menu").getByRole("menuitem").first()).toHaveText("Présentation");
+    await expect(page.getByRole("menu").getByRole("menuitem", { name: "Présentation" })).toHaveAttribute("href", CANVA);
+    await page.keyboard.press("Escape");
     await expect(e.getByRole("link", { name: "Modifier", exact: true })).toHaveAttribute("href", new RegExp(`/setlists/${SETLIST_ID}/edit/?$`));
     // Ce que garde la question 4 : sous le titre, pas dans le menu.
     await expect(bloc.getByText("Tu peux modifier")).toBeVisible();
     await expect(bloc.getByText("Thème : la grâce.")).toBeVisible();
   });
 
-  test("⋯ : Accords, Prévenir l'équipe, Dupliquer, Partager, Supprimer", async ({ page }) => {
+  test("Accords dans l'en-tête ; ⋯ : Présentation, Prévenir l'équipe, Dupliquer, Partager, PDF, Supprimer", async ({ page }) => {
     await ouvrir(page);
+    // Accords : un bouton de l'en-tête (B7, plus une case du ⋯), jamais replié.
+    const accords = enTete(page).getByRole("button", { name: "Accords", exact: true });
+    await expect(accords).toHaveAttribute("aria-pressed", "true");
     await enTete(page).getByRole("button", { name: "Plus d'actions" }).click();
     const menu = page.getByRole("menu");
-    await expect(menu.getByRole("menuitemcheckbox", { name: "Accords" })).toHaveAttribute("aria-checked", "true");
-    for (const nom of ["Prévenir l'équipe", "Dupliquer", "Partager", "Supprimer"]) {
+    for (const nom of ["Présentation", "Prévenir l'équipe", "Dupliquer", "Partager", "PDF", "Supprimer"]) {
       await expect(menu.getByRole("menuitem", { name: nom })).toBeVisible();
     }
+    await page.keyboard.press("Escape");
     // Accords : le réglage vaut pour les partitions (Abba Père en G : F#m devient Em).
     await expect(chant(page, 1).getByText("Em", { exact: true }).first()).toBeVisible();
-    await menu.getByRole("menuitemcheckbox", { name: "Accords" }).click();
+    await accords.click();
+    await expect(accords).toHaveAttribute("aria-pressed", "false");
     await expect(chant(page, 1).getByText("Em", { exact: true })).toHaveCount(0);
     // Affichage : un bouton de l'en-tête (plus un sous-menu du ⋯, RU-4) ; sa marge porte l'ordre, le Pinyin, les couleurs.
-    await page.keyboard.press("Escape");
     await enTete(page).getByRole("button", { name: "Affichage", exact: true }).click();
     const m = page.getByTestId("marge-affichage");
     await expect(m).toHaveAttribute("data-ouvert", "true");
@@ -317,7 +324,8 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
 
   test("« Quel PDF ? » propose aussi « Liste », qui télécharge le PDF liste", async ({ page }) => {
     await ouvrir(page);
-    await enTete(page).getByRole("button", { name: "PDF", exact: true }).click();
+    await enTete(page).getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "PDF", exact: true }).click();
     const sheet = page.getByRole("dialog", { name: "Quel PDF ?" });
     await expect(sheet.getByRole("radio")).toHaveCount(4);
     await sheet.getByRole("radio", { name: /^Liste/ }).click();

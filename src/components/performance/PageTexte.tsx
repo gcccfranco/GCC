@@ -85,7 +85,15 @@ export function PageTexte({
           {page.cols.map((colIdxs, ci) => (
             <div key={ci} data-col-page ref={page.etire ? lignesRef : undefined} className={multiCol ? "flex-1 min-w-0" : page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}>
               {colIdxs.map((i) => renderBlock(i))}
-              {pastille && page.suivant === ci && <div className="mt-4 flex">{pastille}</div>}
+              {/* A11 : page réduite (téléphone), la pastille garde 44 px à l'écran (demi-pixel contre les arrondis). */}
+              {pastille && page.suivant === ci && (
+                <div
+                  className={!page.etire && page.scale < 1 ? "mt-4 flex [&>*]:min-h-[var(--cible-suivant)]" : "mt-4 flex"}
+                  style={!page.etire && page.scale < 1 ? ({ "--cible-suivant": `${44.5 / page.scale}px` } as CSSProperties) : undefined}
+                >
+                  {pastille}
+                </div>
+              )}
             </div>
           ))}
         </div>

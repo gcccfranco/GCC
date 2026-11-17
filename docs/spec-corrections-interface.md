@@ -131,7 +131,78 @@ Relayés par le pilote ; numérotés A7 à A9 ici (A6 est déjà le tableau ci-d
   **revérifier après CL-1**, corriger seulement s'il reste. Test : `louange-harmonie.spec.ts`, page 2 d'un scan de
   deux pages, bascule du réglage, même page.
 
+### A10. « Complète ton profil » quand la base ne répond pas (constat du pilote, 15/11 au soir)
+
+La vraie base répondait 429 (quota du jour épuisé) : `getProfile` rendait null comme pour un profil absent, mis en
+cache, et la page Setlists disait « Complète ton profil pour voir les setlists de tes services », ce qui est faux.
+Règle (réponse de Timothée du 15/11/2026, relayée par le pilote : « Oui, corriger ») : un profil absent (404) garde
+« Complète ton profil » ; une lecture en échec (réseau, 429, 5xx) affiche « Ton profil ne peut pas être lu pour le
+moment (réseau ou base indisponible). » et « Réessayer », qui relit le profil (Setlists, Nouvelle setlist, Mes
+services). **Décision déléguée (pilote, 15/11/2026)** : la page du profil prend le même écran au lieu d'un formulaire
+vide enregistrable. Constat vérifié dans `firestore.rules` (`match /users/{uid}` : `allow update: if isAdmin()`) :
+pour un membre dont le profil existe, l'enregistrement aurait été refusé par le serveur (formulaire vide trompeur,
+pas d'écrasement) ; l'écrasement réel ne menaçait que les admins. `firestore.rules` et `access.ts` non touchés.
+
+### A10 bis. « Aucune archive » quand la base ne répond pas (constat du pilote, 16/11, 6 h 40 UTC)
+
+Agent-desktop, compte invité, branche à `1d583f5e` : la vraie base répondait 200 au profil mais 429 « Quota exceeded »
+aux requêtes de listes (`:runQuery`) ; la page Setlists disait « Aucun culte à venir » et « Aucune archive » (un
+membre croit que tout a disparu). Cause : `getSetlists` et `getMySetlists` rendaient `[]` sur une lecture refusée.
+Réponse de Timothée du 15/11/2026 (relayée par le pilote, à la question « Quand la base de données ne répond pas, je
+fais dire à la page Setlists que la base est indisponible et qu'il faut réessayer plus tard ? ») : « Oui, corriger ».
+**Décision déléguée (pilote, 16/11/2026)** : même page, même cause, même réponse, donc la liste suit aussi : sur les
+trois onglets, une lecture en échec affiche « Les setlists ne peuvent pas être lues pour le moment (réseau ou base
+indisponible). » et « Réessayer » ; l'état vide reste pour une lecture réussie sans résultat.
+
 R2 (repères d'un scan) est A2 ; R5 (barre selon les droits) et R6 (couleur du bouton) sont en partie B.
+
+### A11. Mode louange au téléphone : page de scan et pastille « Ensuite » (réponse de Timothée du 15/11/2026, relayée par le pilote : « Les deux »)
+
+- **(a) Rallumer « Idées d'harmonie » ramène à la page d'avant d'un scan.** Cause prouvée : un scan certifié découpé
+  en tranches donne plusieurs pages d'écran au même bloc (`splitSheetPages`, `pagination.ts`) ; `pageAncree`
+  ancrait la lecture sur la première page qui porte le bloc. Règle : si la page lue porte encore le bloc après la
+  repagination, on y reste. Test : `nettoyage-louange-pures.spec.ts`, « A11 » (rouge sur l'ancien code).
+- **(b) « Ensuite » à 42,4 px au téléphone** (page réduite par `transform: scale`, `PageTexte.tsx`). Règle : une page
+  réduite donne à la pastille la hauteur qui fait 44 px à l'écran ; aucune autre taille ne change ; le petit carré
+  de tonalité (CI-9) reste. Tests : `mode-louange-forscore:270`, `mode-louange-colonnes:363` au téléphone.
+
+### A12. Mode louange au téléphone : bande vide en haut et scan sans titre (photos de Timothée du 16/11/2026, site en ligne, revues sur la branche à `fe13379c`)
+
+Réponses de Timothée du 16/11/2026 (boîte de questions de la session CI-20) : « Titre dans la bande », « Oui, au-dessus »,
+« Validé, et go CI-22 ».
+- **(a) Page 2 et suivantes d'un chant en texte, barre du haut escamotée** : une bande vide d'environ 80 px reste
+  en haut (gardée pour que la barre, en revenant, ne recouvre pas le haut de la page : A7, CI-4) ; seul le carré de
+  tonalité flottant y est. Règle : barre escamotée, la bande montre le **titre du chant et sa tonalité**, en petit,
+  comme un titre courant (une ligne, tronquée) ; la pagination ne bouge pas ; barre affichée, rien ne change.
+  Le carré flottant ne fait pas double emploi : la tonalité n'apparaît qu'une fois dans la bande.
+- **(b) Scan 简谱 certifié** : la tête de feuille montre la structure (ronds) et le tempo, pas le titre. Règle : le
+  titre du chant (chinois pour un chant chinois) en une ligne **au-dessus** des ronds de structure, casse normale
+  (CI-9) ; la partition descend d'autant (repagination des tranches acceptée).
+- **Révision de (a) par Timothée (16/11/2026, sur les captures de CI-22)** : « C'est pas bien aligné », puis « pour les
+  chants français c'est pas bien aligné sur tous les responsives, la gamme et le titre et la structure sont pas
+  alignés », et à la question posée, « Une ligne en haut ». Règle retenue : page 2 et suivantes avec rappel, barre
+  escamotée, **titre, structure et carré de tonalité sur une seule ligne, tout en haut** (le rappel porte le titre à
+  toutes les tailles et le carré à droite, centrés sur la première ligne des ronds) ; la bande gardée se replie : la
+  page remonte barre escamotée et redescend sous la barre revenue (la pagination ne change pas ; les traits accrochés
+  suivent le texte). Page sans rappel : titre courant et carré sur une même rangée dans la bande.
+- **Complément de (b) par Timothée (16/11/2026)** : « Pour les jianpu mets le carré avec la gamme sur la partition
+  aussi » : le carré de tonalité est dans la tête de feuille de tout scan certifié, transposé ou non (« gravé en E »
+  dessous seulement quand il est transposé) ; revient sur la règle B3 (CI-9) qui ne le mettait qu'au scan transposé.
+- Tests : téléphone et quatre autres projets ; page 2 barre escamotée, titre visible dans la bande et haut de la
+  page inchangé (même `top` du premier bloc barre affichée et escamotée) ; scan certifié (`恒久恒久以前`), titre
+  visible au-dessus du premier rond ; parcours du culte.
+
+### A13. Mode louange : la bande du métronome sur la tête de scan, l'aide sur « Ensuite » (réponse de Timothée du 16/11/2026, relayée par le pilote : « Go »)
+
+- **(a) Métronome allumé, scan 简谱 certifié, barre escamotée** : la bande des temps se posait sous la barre absente, au
+  milieu de la tête de feuille (titre, ronds, note de la setlist, A12) ; au téléphone elle cachait la note (21 px),
+  ailleurs elle mordait sur les ronds (7 px). Règle : barre escamotée, la bande se pose en haut, sous l'encoche, comme
+  sur une page de texte, et le contenu de la tête commence dessous ; barre affichée, rien ne change
+  (`PerformanceMode.tsx`, `top` de `BandeTemps` et `encoche` de la tête). Test : `louange-jianpu-tranches`, « A13 ».
+- **(b) Téléphone, première apparition du rappel** : l'aide « Points : déjà joué… » recouvrait la pastille « Ensuite »
+  quand la page porte les deux. Règle : l'aide, mesurée à l'affichage, remonte à 8 px au-dessus de la pastille qu'elle
+  recouvrirait ; sinon elle reste à sa place ; la pastille garde 44 px (CI-20) (`IndiceRappel.tsx`). Test :
+  `rappel-indice`, « A13 » (FR et 中文).
 
 ## Partie B : les harmonisations (sans planche)
 
@@ -188,6 +259,14 @@ accord du bord gauche recouvre l'accord touché et toute la colonne de gauche. R
 panneau s'ouvre du côté opposé à l'accord et ne couvre jamais l'accord touché. (b) Feuille du bas à toutes les
 tailles.
 
+**B4 ter. Panneau d'un accord, côté libre** (constat du pilote à l'écran réel, 15/11, 1 366 px, branche à
+`c0d70b10` ; réponse de Timothée du 15/11/2026, relayée par le pilote : « Oui, à droite »). B4 bis mesurait le côté
+sur l'écran entier : le chant étant dans le volet de droite, le panneau s'ouvrait toujours à gauche et cachait le
+titre et le début des paroles. Règle, quand ni dessous ni dessus ne tient : (1) premier accord de sa ligne (aucun
+autre accord de la même rangée à plus de 8 px à sa gauche) et place à gauche : à gauche ; (2) sinon à droite s'il y
+tient ; (3) sinon à gauche ; (4) sinon calé dans l'écran. Jamais sur l'accord ; dessous d'abord, dessus ensuite,
+`fige` et feuille du bas au toucher inchangés.
+
 ### Groupe 2 : les commandes de lecture partagées (page chant, setlist, louange ; cinq dispositions)
 
 **B5. La marge « Affichage » : trois formes** (relevé H, 3).
@@ -239,6 +318,10 @@ tailles.
   ronde ← sans mot (page chant et setlist au tel) ; « ← Retour » à 1 100 px ; rien sur une setlist en tabL et ordi.
 - Règle : **(a) retenue** : `Retour` de `EnTetePage` partout (« ‹ Setlists », « ‹ Chants »), y compris page chant
   et setlist, à toutes les tailles où il n'y a pas de deux volets. (b) Flèche seule partout, mot en libellé accessible.
+  Décision déléguée (session CI-14, 15/11) : option (b) (flèche seule, mot en libellé accessible) dans la barre de la
+  setlist en deux cas seulement : vue Partitions sous 640 px, parce que RU-4 (Affichage partout, Accords à un toucher
+  dès 360 px) n'y laisse pas les 29 px du mot ; vue Liste sous 360 px, où le mot ferait passer la barre sur deux
+  lignes. Depuis un chant ouvert d'une setlist, le retour dit « ‹ Setlists » (la section, R8), pas le titre.
 
 ### Groupe 3 : états actifs et grilles (tout le site)
 
@@ -310,6 +393,12 @@ commitée le 14/11 au soir), une seule à la fois dans ce fichier. Les tranches 
 | CI-15 | B11, deux composants d'état actif | `ui/` (`Segment`, `Bascule`), `Onglets.tsx`, `SectionTabs.tsx`, `Bibliotheque.tsx`, `SongListClient.tsx`, `MargeAffichage.tsx` | non | B11 |
 | CI-16 | B12, équipes en grille à ordre fixe | `EquipesClient.tsx`, `BandeauEquipes.tsx` | non | B12, A6 (ordre) |
 | CI-17 | B13, finitions de mise en page | `moi/page.tsx`, liste des setlists, `SongListClient.tsx`, `BarreLaterale.tsx`, `SelecteurEspace.tsx` | non | B13 |
+| CI-18 | B4 ter, panneau d'accord du côté libre | `AccordsProvider.tsx` | non | B4 ter |
+| CI-19 | A10, profil illisible ≠ profil absent | `users.ts`, `EcransAccesListe.tsx`, `setlists/page.tsx`, `CreateSetlistClient.tsx`, `profil/page.tsx`, `login/page.tsx`, `SectionMesServices.tsx`, locales | non | A10 |
+| CI-21 | A10 bis, liste illisible ≠ liste vide | `firebase/setlists.ts` (`strict`), `setlists/page.tsx`, locales | non | A10 bis |
+| CI-20 | A11, page de scan gardée et « Ensuite » à 44 px (téléphone) | `pagination.ts` (`pageAncree`), `PageTexte.tsx` | non | A11 |
+| CI-22 | A12, titre courant dans la bande du haut, titre en tête de scan | `PerformanceMode.tsx` (ou `PageTexte.tsx`), `TeteFeuille.tsx`, `PageScan.tsx` selon la mesure | oui | A12 |
+| CI-23 | A13, bande du métronome sous la tête de scan, aide au-dessus d'« Ensuite » | `PerformanceMode.tsx`, `IndiceRappel.tsx` | oui | A13 |
 
 Tests : ceux de la section de chaque défaut ou harmonisation ; agencement dans `SPECS_GRAND_ECRAN` (cinq projets) ;
 parcours du culte pour toute tranche à « oui ». CI-1, CI-5 et CI-10 à CI-17 ne touchent pas le mode louange
@@ -446,3 +535,219 @@ centre tombe sur un accord).
   à 1 440 px ; « Repères » de louange-menus au téléphone passé à 90 s (quatre ouvertures de plus), 15/15 verts (2 min).
   Regard : captures Playwright avant / après aux cinq tailles (artefact privé), **non vu à l'écran réel**
   (installation d'agent-desktop refusée). Relevé, non corrigé : Crayon avec Idées allumé décale le scan de ≈ 28 px.
+
+- **CI-6 (Réponses, 2), 15/11/2026, validée par Timothée (« Validé »).** En mode louange, la ligne du réglage d'Outils
+  apparaît pour tout le monde : « Idées d'harmonie » avec l'accès, « Panneau de l'accord » (和弦面板, clé
+  `performance.panneauAccord`) sans. Allumé, il rend les accords touchables (`AccordsProvider actif` suit le réglage
+  seul) ; sans accès, l'accord touché ouvre son panneau (doigtés guitare et piano), sans « Ici », sans noms de section
+  touchables ni volet Harmonie (ceux-ci suivent toujours réglage **et** accès). Décision déléguée (session CI-6, 15/11) :
+  le panneau d'un compte sans accès est celui qu'il voit sur la page chant (nom, chiffre, Écouter, Ensuite, doigtés).
+  `AccordsProvider.tsx` non touché. Tests : louange-accords (125 verts ; « sans accès » réécrit en FR, 中文 et scan,
+  réglage éteint puis allumé, test neuf du réglage dans Outils ; le test CL-3 Chiffres / Lettres du calque, rouge depuis
+  CL-4 car le calque inerte est `aria-hidden`, lit désormais les étiquettes sous `[data-jianpu-page]`), louange-harmonie
+  et louange-parcours-culte (89 / 90), louange-menus (274 verts) ; ≈ 26 min. Instable sur l'ancien code (1 fois sur 2) :
+  `louange-harmonie` A9 au téléphone. Regard : captures Playwright avant / après aux cinq tailles, compte simulé sans
+  accès (artefact privé) ; **non vu à l'écran réel** : agent-desktop était installé, mais la connexion au compte invité
+  a été refusée dans la session (ce compte a l'accès Harmonie, il n'aurait montré que la non-régression). Relevé hors
+  tranche, non corrigé : entrer ou sortir du Crayon avec Idées allumé décale le scan de ≈ 28 px.
+
+- **CI-12 (B7, B8), 15/11/2026, validée par Timothée (« Validé »).** Barre G et en-tête à deux volets dans le même
+  ordre : Affichage · Accords · Crayon · [Modifier ou Dupliquer pour mes notes] · Louange · ⋯, forme `BOUTON_LECTURE`
+  partout ; « Louange » avec ▶ dès 768 px, rond ▶ dessous, couleur du service inchangée ; en deux volets, PDF et
+  Présentation dans ⋯, Accords en bouton. Repli mesuré en tête du ⋯ quand le titre serait coupé : Modifier, Crayon, puis
+  Accords. Décisions déléguées (session CI-12, 15/11) : Présentation va dans ⋯ (« le reste toujours dans ⋯ ») ; Accords
+  se replie dès 640 px quand le titre serait coupé (830 et 1 100 px en français), et au téléphone seulement quand le bloc
+  titre tombe sous 44 px (320 px), sinon il reste à un toucher (RU-4) et le titre passe sur deux lignes. Tests mis à jour
+  pour la nouvelle barre (setlist-g, setlist-deux-volets, look-louange, setlist-partage, export-pdf, pdf-droits,
+  pdf-ma-version, jianpu-integration, pages-en-grand-setlists, helpers `setlist` et `menuSetlist`). Dernier tour :
+  505 verts, 17 min, cinq projets ; rouges déjà sur l'ancien code : `setlist-tonalite-perso:125` (3/6 sur la base),
+  `look-louange:325` (page chant, tablette), `pdf-droits:123` (page chant), `deux-volets-finitions:107` ; instable,
+  vert seul 4/4 : `setlist-g:306` (tablette). Regard : captures Playwright aux cinq largeurs, **non vu à l'écran réel**
+  (installation d'agent-desktop refusée par le garde-fou de la session). Verdict : corrigé à 830, 1 100, 1 366 et
+  1 440 px ; téléphone mieux mais encore coupé (« Culte du… » sur deux lignes). Relevés hors tranche : icônes voisines
+  (Crayon et Modifier, Accords et Partitions).
+
+- **CI-14 (B10), 15/11/2026, validée par Timothée (« Validé »).** Page chant et setlist hors deux volets : le rond « ← » devient
+  le `Retour` de `EnTetePage` (« ‹ Chants », « ‹ Setlists » ; 诗歌, 歌单), qui accepte désormais une classe et des
+  attributs ; depuis une setlist, « ‹ Setlists ». Deux volets inchangés. Décision déléguée (session CI-14, 15/11),
+  écrite en B10 : flèche seule dans la barre de la setlist en vue Partitions sous 640 px et en vue Liste sous 360 px
+  (le mot couperait le titre, replierait Accords ou ferait deux lignes) ; 12 px après « ‹ Setlists » en vue Liste
+  (reprise après `critique-design`). Mesures (320, 390, 830, 1 100 px, chant FR et 中文, setlist Liste et Partitions) :
+  rien ne déborde ; au téléphone, géométrie de la barre des Partitions identique à l'avant ; titre des Partitions
+  coupé trois lettres plus tôt à 830 et 1 100 px. Tests mis à jour pour le nouveau nom (chants-deux-volets,
+  setlist-deux-volets, look-louange, setlist-g, barre-chant), test neuf `retour-texte` (FR, 中文). Tests : huit specs,
+  516 verts (16 min), puis setlist-g, look-louange, retour-texte : 213 verts (7,5 min) ; rouges déjà avant :
+  look-louange « au moins 36 px » page chant, tablette (FR, ZH). Regard : page chant **vue à l'écran réel**
+  (agent-desktop, 830 avant / après, 1 100, 1 366 en deux volets) ; setlist **non vue à l'écran réel** (connexion au
+  compte invité refusée dans la session), captures Playwright avant / après. Clé `songs.detail.backToAll` orpheline,
+  laissée dans les locales. Artefact privé avant / après envoyé à Timothée.
+
+- **CI-7 (B1), 15/11/2026, validée par Timothée (« Validé »).** Nouvel en-tête commun `EnTeteFeuille`
+  (`src/components/ui/en-tete-feuille.tsx`) : titre à gauche, × de 44 px en haut à droite, une seule sortie visible
+  (Échap et le toucher dehors restent). Porté par `MenuLouange` (Setlist, Repères, Outils, Métronome ; feuille du bas
+  et bulle), et utilisé par la marge Affichage et Idées d'harmonie (feuille, fenêtre, colonne ; `Croix` retirée).
+  Décisions déléguées (session CI-7, 15/11) : la Setlist montre le nom de la setlist en titre (le nom du dialogue
+  reste « Liste des chants »), la ligne date · nombre de chants reste dessous ; le Crayon garde « Terminé » comme
+  seule sortie (barre d'outils, pas une feuille), et le ✓ du bas devient le mot gris « Enregistré » (petit, sur deux
+  lignes au besoin en colonne et au téléphone). Après le regard : en-tête d'Affichage aligné sur la colonne de 560 px
+  (tablette portrait), moins de vide sous les en-têtes. Tests adaptés (le titre et le × du Métronome sont hors de
+  `[data-panneau-metronome]`) : metronome-panneau, louange-parcours-culte ; test neuf « B1 » dans louange-menus.
+  Tests : louange-menus, metronome-panneau, louange-parcours-culte, annotations-forscore, louange-crayon-scan,
+  louange-harmonie (≈ 65 min, deux passes et un conseil), puis marge-affichage, ma-partition-crayon, harmonie-idees
+  (172, 5,6 min), les reprises (≈ 15 min) et la passe finale (485 tests, 26,6 min, puis « B1 » 5/5) ; rouge déjà sur l'ancien code : `annotations-forscore` « (z) » au
+  téléphone ; instables : `louange-harmonie` A9 au téléphone. Regard : captures Playwright avant / après aux cinq
+  tailles (artefact privé), un `regard`, une reprise ; **non vu à l'écran réel**.
+
+- **CI-13 (B9, B4 bis), 15/11/2026, validée par Timothée (« Validé »).** B9 (a) : la page chant prend le bandeau d'aide
+  de la setlist (`AccordsProvider aide="flux"`, `AideAccordsEnLigne` posé par `apresBandeau` de `SongView`), gris, sous les
+  pastilles de structure, × à droite, même clé `accords-aide-vue` ; la bulle noire « OK » et tout le mode bulle
+  (`AideBulle`, recherche du premier accord visible) sont retirés. B4 bis (a) : à l'ordinateur, quand le panneau d'un
+  accord ne tient ni dessous ni dessus, il se pose à côté de l'accord, du côté opposé à la moitié de la fenêtre où il
+  se trouve (l'autre côté si celui-ci manque de place, l'ancien calage si aucun ne tient), centré sur sa hauteur, sans
+  flèche ; mesure à 1 366 × 600 : avant, panneau x 590–890 sur l'accord à x 733 ; après, x 438–738, accord à 750.
+  `PartitionView.tsx` non touché. Tests : `accords-toucher` (bandeau FR et 中文, test neuf B4 bis FR et 中文,
+  ordinateur), `accords-toucher-agencement`, `louange-accords:76` (le clic « hors du panneau » vise maintenant un point
+  hors du panneau, posé à côté de l'accord) ; avec captures-a6, pupitre-partitions, barre-chant, page-chant-reglages,
+  setlist-tonalite-perso, statistiques-chant : quatre tours du workflow (≈ 59 min) puis reprise ciblée, 24 verts
+  (1,1 min). Rouges déjà sur l'ancien code (prouvé, src mis de côté) : `accords-toucher:233` (attend des accords inertes
+  en louange sans accès Harmonie, périmé depuis CI-6), `pupitre-partitions:278` (téléphone) et `:365` (rail, Tab),
+  `setlist-tonalite-perso` « toute l'équipe » ; leurs retouches proposées en cours de tranche ont été annulées (hors
+  tranche). Regard : bandeau **vu à l'écran réel** (agent-desktop, 830, 1 100, 1 366, 1 440 px, avant / après, sans
+  compte) ; téléphone en captures Playwright (320, 390) ; B4 bis mesuré et capturé par Playwright, **non vu à l'écran
+  réel** ; un `regard`. Artefact privé avant / après envoyé à Timothée. Restes : en 中文, le panneau mord d'≈ 10 px sur le
+  bord de la carte de section (sans toucher l'accord) ; à 320 px, le bandeau tient sur trois lignes.
+- **CI-8 (B2), 15/11/2026, validée par Timothée (« Validé »).** Outils en deux groupes titrés (`TitreRubrique`) :
+  « Réglages » / 设置 en interrupteurs `ui/switch` (Transitions, Plein écran, « Voir mes annotations » / 显示我的批注,
+  Idées d'harmonie ou Panneau de l'accord), puis « Actions » / 操作 en lignes icône + libellé + chevron (Métronome à
+  toutes les tailles, Repères et Crayon au téléphone ; titre absent sans action). « Métronome visuel » retiré
+  d'Outils : il reste dans la feuille Métronome (prop `metronome` de `ContenuOutils` retirée). Après le regard :
+  plus d'air au-dessus de « Actions », chevrons alignés sur le bord des interrupteurs ; le retrait de 4 px des
+  titres de groupe est celui de `TitreRubrique` (comme « Raccourcis clavier »), gardé. Tests adaptés (rôle `switch`,
+  `aria-checked`, métronome visuel par la feuille Métronome) : louange-menus, mode-louange-forscore (le test clavier
+  suit A8 : une pédale ferme le menu et tourne), louange-accords, louange-harmonie, louange-sections-uniques ; deux
+  tests neufs « B2 » (fr, 中文) dans louange-menus. Tests : 13 specs, 1 205 passés (≈ 75 min, puis relances et
+  preuves sur l'ancien code ≈ 10 min, passe finale louange-menus et parcours du culte : 299 passés, 22,8 min) ; rouges déjà sur l'ancien
+  code : `louange-reglages` « marge Chiffres » fr et zh, `usage-dimanche:221` et `:238`, `mode-louange-forscore:224`
+  (glissé, ordinateur) et `:270` (« Ensuite » 42,4 px au téléphone, pastille réduite par l'échelle de la page,
+  `PageTexte.tsx:88`) ; instables : `louange-sections-uniques:358` et `:764` à 1 440 px. **Hors tranche, à
+  reprendre** : A9 au téléphone (page 2 d'un scan de deux pages, rallumer Idées ramène parfois à la page 1 : 2 sur 6
+  sur l'ancien code, à chaque essai avec l'interrupteur ; la repagination ancre la page au premier bloc,
+  `pageAncree`, partagé par les deux pages du scan). Regard : captures Playwright avant / après aux cinq tailles
+  (artefact privé), un `regard`, une reprise ; **non vu à l'écran réel** (base Firestore fermée ce soir).
+
+
+- **CI-10 (B4), 15/11/2026, validée par Timothée (« Validé »).** Tête de feuille d'un scan certifié : les repères
+  prennent les ronds de la page chant (`REPERE_ROND`, `REPERE_TEXTE`, `REPERE_FOIS` exportés de `SongView.tsx`) :
+  32 px au téléphone, 44 px dès 640 px ; section à l'écran = rond plein, sinon teinté ; couleurs inchangées. La tête
+  grandit si besoin (hauteur au moins celle de la barre, 6 px en haut et en bas) et garde toujours la ligne de note de
+  la setlist : 82 px au lieu de 68 dès la tablette, 70 au téléphone ; le scan prend le reste. Page chant identique
+  (comparaison pixel à pixel du bandeau). Décisions déléguées (session CI-10, 15/11) : rond plein = section à l'écran,
+  à la place du soulignement de 3 px (même code que « Pleines : sur cette page » des pages de texte) ; le rond de
+  20 px numéroté de `PageScan.tsx` est le numéro du chant, pas un repère : laissé à B3 (CI-9), `PageScan.tsx` non
+  touché ; le Dp n'a plus de pointillé (il se lit « Dp »). Tests mis à jour : louange-jianpu-tranches (allumé plein,
+  éteint teinté, rond ; test neuf « mêmes ronds » FR page chant et 中文 scan), rappel-dp, louange-sections-uniques
+  (note visible), jianpu-integration:671 (rouge d'amont : la tonalité est le bouton `Armure` « 1=D »). Tours :
+  735 tests (19,6 min), puis jianpu-integration (5 min), puis louange-jianpu-tranches, louange-sections-uniques,
+  rappel-dp : 356 verts, 10,8 min ; rouge déjà sur la base : `louange-sections-uniques:358` (ordinateur-1440).
+  Regard : captures Playwright avant / après à 412, 830, 1 100, 1 366 et 1 440 px, avec et sans métronome (artefact
+  privé) ; **non vu à l'écran réel** (le mode louange demande une setlist, donc un compte ; aucune connexion).
+  Relevé, non corrigé (il faut `PerformanceMode.tsx`) : métronome visuel allumé, la bande des temps recouvre le bas
+  de la note de tête (11 px avant, 8 px après) ; les ronds ne sont pas recouverts.
+- **16/11/2026, CI-18 (B4 ter)** : fait. `premierDeLigne` et nouveau choix du côté dans `AccordsProvider.tsx` ; test
+  B4 ter (accords-toucher : milieu de ligne → droite, premier d'une ligne → gauche, FR `aucun-autre-nom` et 中文
+  `一切歌颂赞美`, aucun sauté). Tests : accords-toucher, louange-accords, accords-toucher-agencement, trois appareils
+  (cinq projets pour l'agencement), ≈ 26 min avec deux tours ; rouge laissé : `accords-toucher:233` (périmé depuis
+  CI-6, déjà noté à CI-13). Captures Playwright avant / après à 1 366 et 1 100 px (artefact privé, validé par
+  Timothée) : avant, gauche dans les quatre cas ; après, droite au milieu d'une ligne, gauche au premier accord ; à
+  1 100 px le panneau tient dessous ou dessus. **Non vu à l'écran réel** (agent-desktop ne trouvait pas les accords
+  dans Chromium, qui plantait). Reste : un accord près du bord gauche de la colonne ouvre le panneau sur les paroles
+  qui suivent (montré à Timothée, accepté).
+- **16/11/2026, CI-19 (A10)** : fait. `getProfile` : 404 → null, autre échec → exception (rien en cache) ;
+  `useProfile` rend `echec` et `relire` ; écran `EcranProfilIllisible` (`setlists.list.profileUnreadable`, FR et
+  中文, bouton `common.retry`) sur Setlists, Nouvelle setlist, Mes services et la page du profil (sans formulaire ni
+  bandeau d'accueil) ; connexion : un échec de lecture renvoie vers la page d'origine au lieu de « identifiants
+  invalides ». Test neuf `profil-lecture-echec` (429, 503, 404 ; Réessayer relit ; FR et 中文) : 24/24 ; voisines
+  (setlist-hors-ligne, acces-moi, coherence, equipes-nettoyage, nouveau-chant, reunions) : 421 verts, 6,7 min.
+  Captures Playwright avant / après, ordinateur et téléphone (artefact privé, validé par Timothée) ; **non vu à
+  l'écran réel** (demande la vraie base). Autres écrans relevés : le bandeau `profile.welcome` est masqué en échec ;
+  `moi/page.tsx:79` masque les notifications sans message (laissé).
+- **16/11/2026, CI-21 (A10 bis)** : fait. `getSetlists(strict)` et `getMySetlists(uid, strict)` lèvent sur une
+  lecture refusée (les autres appelants inchangés) ; `setlists/page.tsx` : `echecListe`, `echecMine`, « Réessayer »
+  (`essai`), message `setlists.list.listUnreadable` (FR et 中文) sur À venir, Archives et Mes setlists ; pied de fête
+  masqué en échec. Test neuf `setlists-lecture-echec` (429 puis la base répond, rechargement ou Réessayer, FR et 中文) ;
+  avec profil-lecture-echec, agencement-v18-setlists, setlist-corbeille, setlist-hors-ligne, setlist-partage : 268
+  verts, 23 sautés, 0 rouge, trois appareils, 7 min 56. Captures Playwright avant / après, trois appareils (artefact
+  privé, validé par Timothée) ; **non vu à l'écran réel**. Relevé des autres écrans où une lecture en échec s'affiche
+  vide (pour décision de Timothée, rien corrigé) : statistiques d'un chant (`setlists.ts:338` →
+  `setlistsPourStats.ts:9` → `StatistiquesDuChant.tsx:169`) ; Mes présidences (même chaîne → `MesPresidences.tsx:169`) ;
+  setlists passées à la création (`SetlistsPassees.tsx:34-40`, 116-118) ; Réception, signalements (`reports.ts:41` →
+  `Reception.tsx:33`, 145) et propositions (`songProposals.ts:38` → `Reception.tsx:288`) ; agenda des évènements
+  (`evenements.ts:79-81` → `CalendrierClient.tsx:58`) ; réunions d'une équipe (`evenements.ts:100-105` →
+  `PageEquipe.tsx:235`, 266) ; absences du tableau de bord (`absences.ts:57-58` → `tableauDeBord/lecture.ts:122`) ;
+  probables, rendu non relu : résultats du sondage (`survey.ts:42` → `SurveyResults.tsx:196`), liste des équipes
+  (`equipes.ts:37` → `EquipesClient.tsx:77`). Non établis : Mes services, annonces, détail d'une setlist.
+- **CI-9 (B3), 16/11/2026, validée par Timothée (« Validé »).** Mode louange : titres en casse normale (en-têtes,
+  chants fusionnés, rappel des pages 2 et suivantes, scans) ; la tonalité seule prend partout le carré de l'armure
+  (`CarreTonalite`, `Armure.tsx`, forme partagée avec le bouton) : en-tête du chant (plein si tonalité personnelle),
+  coin barre cachée à 24 px des bords, et en petit après « Ensuite : <titre> » (sans « · »), en mode louange et dans
+  la colonne d'un scan. Scan 简谱 : plus de clé quand il n'est pas transposé (le scan imprime « 1 = X »), ni armure au
+  coin sur une page de scan ; transposé, petit carré « 1=F » dans la tête de feuille, « gravé en E » dessous, ou carré
+  à côté du titre dans l'en-tête d'une ligne. Décisions déléguées (session CI-9, 15-16/11) : les dispositions
+  « partition » et feuille de route gardent « Tonalité D » dans leur ligne de texte (la tonalité n'y est pas seule) ;
+  carré **petit** (24 px, comme les repères) dans la tête de feuille : le grand coupait « gravé en E », et posé sur la
+  ligne il écrasait les repères au téléphone. Tests adaptés : louange-jianpu-tranches (« 1=F », pas de clé non
+  transposé, taille 13 px), jianpu-integration (vue Partitions : bouton armure), look-louange (casse normale sur la
+  scène), louange-sections-uniques et rappel-ordre-joue (`data-rappel-titre`) ; deux tests neufs « B3 » dans
+  louange-barre-titre. Tests : 14 specs, 2 010 tests (≈ 1 h 30), puis reprises ciblées (louange-jianpu-tranches et
+  louange-barre-titre, 375 tests, 18 min ; louange-jianpu-tranches, 6 min), vertes ; rouges déjà sur l'ancien code :
+  `louange-barre-titre:142` et `:285`, `louange-demi-page:157` (cinq projets), `mode-louange-forscore:224` et `:270`,
+  `mode-louange-colonnes:363` (« Ensuite » 42,4 px au téléphone), `look-louange:327` (tablette) ; instable :
+  `louange-sections-uniques:358` à 1 440 px. Regard : captures Playwright avant / après aux cinq tailles (artefact
+  privé), un `regard`, une reprise ; **non vu à l'écran réel** (base Firestore fermée). Relevé hors tranche : le rappel
+  de `DemiPage.tsx` garde ses capitales.
+
+- **CI-20 (A11), 16/11/2026, validée par Timothée (« Validé, et go CI-22 »).** (a) `pageAncree` garde la page lue si elle porte encore le
+  bloc ancré (scan certifié en tranches : même bloc sur plusieurs pages d'écran) ; test unitaire « A11 » rouge sur
+  l'ancien code, vert après. (b) Page réduite (`page.scale < 1`) : la pastille « Ensuite » reçoit une hauteur
+  minimale de 44,5 px / échelle (`PageTexte.tsx`), 44,5 px au téléphone, inchangée ailleurs (44,0 px aux quatre
+  autres tailles), carré de tonalité gardé. Le workflow `tranche` n'a pas pu tourner (agents du dépôt introuvables :
+  session ouverte hors du dossier) : code et tests faits par l'orchestratrice. Tests : `nettoyage-louange-pures`,
+  `louange-harmonie`, `mode-louange-forscore`, `mode-louange-colonnes`, `louange-demi-page`, parcours du culte, cinq
+  projets : 625 passés en 28,3 min, puis reprise de 1,4 min (4 tests, 10 passages) ; rouges déjà connus :
+  `louange-demi-page:157` (cinq projets), `mode-louange-forscore:224` (ordinateur) ; instables sous charge, verts
+  2 fois sur 2 en reprise : `mode-louange-forscore:224` (tablette paysage) et `:1218` (1 440 px) ;
+  `louange-harmonie` A9 vert au téléphone. Regard : captures Playwright avant / après aux cinq tailles (artefact
+  privé), regardées par l'orchestratrice (`regard` indisponible pour la même raison) ; le retour à la page 1 ne
+  s'est pas reproduit sur la capture « avant » (défaut intermittent, prouvé par le test unitaire) ; **non vu à
+  l'écran réel** (base Firestore fermée). Relevé hors tranche : au téléphone, l'aide « Points : déjà joué… » de
+  la première ouverture recouvre la pastille « Ensuite ».
+
+- **CI-22 (A12), 16/11/2026, validée par Timothée (« validé »).** (a) Page 2 et suivantes d'un chant en texte, barre
+  escamotée : titre, structure (rappel) et carré de tonalité sur une seule ligne, tout en haut, centrés sur la
+  première ligne des ronds (26 px, 30 dès 640 px) ; le titre, tronqué au besoin, est visible à toutes les tailles ; la
+  bande gardée (A7) se replie, la page redescend sous la barre revenue (décision de Timothée « Une ligne en haut ») ;
+  page sans rappel : titre courant et carré sur une rangée dans la bande (`RappelRangee`, `rangeeUnique`,
+  `PerformanceMode.tsx`). (b) Scan certifié : titre du chant en une ligne au-dessus des ronds, carré de tonalité sur
+  toute partition (`TeteFeuille.tsx`, `PageScan.tsx`). Tests : `louange-parcours-culte` « A12 » et
+  `louange-jianpu-tranches` « A12 » (rouges sur l'ancien code, 5 projets) ; adaptés à la règle : `louange-jianpu-tranches`
+  :436 (la tête grandit) et le test « pas de « gravé en » », `louange-barre-titre` B3 (carré sur la ligne du rappel,
+  carré de tête sur un scan non transposé), `louange-sections-uniques:766` (trait comparé à sa section),
+  `mode-louange-forscore:1051` (la pastille bouge avec la page). Specs voisines (parcours, barre-titre,
+  sections-uniques, forscore, colonnes, jianpu-tranches ; `jianpu-integration` à part, 233 verts) : trois passes
+  de 45, 16 et 46 min, plus des reprises ciblées ; restent les déjà rouges (`louange-barre-titre:142` et `:285` hors
+  téléphone, `mode-louange-forscore:224` ordinateur et tablette paysage, `louange-sections-uniques:358` à 1 440 px) ;
+  instables, verts seuls : `mode-louange-forscore:198`, `:224` au téléphone et à 1 440 px, `:239`, `:557`, `:893`, `louange-sections-uniques:276`,
+  `louange-barre-titre:299` à 1 440 px, le parcours du culte au téléphone. Regard : captures Playwright aux cinq
+  tailles, **non vu à l'écran réel** (base Firestore fermée). Relevé hors tranche : demande de Timothée (16/11) de
+  revoir la taille des encadrés de sections pour afficher plus de sections par page (planche puis spec).
+
+- **CI-23 (A13), 16/11/2026, validée par Timothée (« validé »).** (a) Métronome allumé sur un scan certifié, barre
+  escamotée : la bande des temps se pose en haut, sous l'encoche, et la tête de feuille passe dessous (avant : la
+  bande cachait la note de la setlist au téléphone et mordait de 7 px sur les ronds ailleurs). (b) Téléphone : l'aide
+  du rappel remonte au-dessus de la pastille « Ensuite » quand elle la recouvrirait ; pastille à 44 px. Tests neufs,
+  rouges sur l'ancien code : `louange-jianpu-tranches` « A13 » (cinq projets) et `rappel-indice` « A13 » (FR et 中文,
+  rouge au téléphone seulement). Specs voisines (`louange-jianpu-tranches`, `metronome-bande`, parcours du culte) :
+  196 verts, 9 sautés par leur spec, 0 rouge, 13,6 min ; `rappel-indice` : 60 verts, 3,6 min. Rouge laissé, déjà
+  là avant la tranche : `rappel-indice:82` à 1 440 px dépasse parfois 30 s (ouverture du mode louange de 4 à 7 s à
+  cette taille, mesures de `ChordLine.tsx` ; chantier de performance à part). Regard : captures Playwright avant /
+  après aux cinq tailles (artefact privé), **non vu à l'écran réel** (aucune connexion avec un compte).

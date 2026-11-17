@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Popover, PopoverAnchor, PopoverArrow, PopoverContent } from "@/components/ui/popover";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { EnTeteFeuille } from "@/components/ui/en-tete-feuille";
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -90,7 +91,8 @@ export function MenuLouange({
   onOuvertChange,
   align = "end",
   couleur,
-  titreCache = false,
+  titreVisible,
+  labelFermer,
   children,
 }: {
   id: MenuId;
@@ -100,11 +102,14 @@ export function MenuLouange({
   /** Côté de l'icône où le menu s'aligne : « start » pour les boutons de gauche, « end » pour ceux de droite. */
   align?: "start" | "end";
   couleur: string;
-  /** Téléphone : le titre de la feuille reste pour les lecteurs d'écran, le contenu porte déjà son en-tête. */
-  titreCache?: boolean;
+  /** Affiché dans l'en-tête à la place de `titre` (le nom accessible du dialogue reste `titre`). */
+  titreVisible?: ReactNode;
+  /** Nom du bouton ×, `common.buttons.close` par défaut. */
+  labelFermer?: string;
   children: ReactNode;
 }) {
   const md = useAuMoinsMd();
+  const { t } = useTranslation();
   // Ancre virtuelle : la largeur et la place de l'icône, la hauteur de la barre (le menu s'ouvre sous la barre).
   const ancre = useRef({
     getBoundingClientRect: () => {
@@ -144,8 +149,9 @@ export function MenuLouange({
           onCloseAutoFocus={rendreLeFocus}
           {...arreter}
         >
-          <DrawerTitle className={titreCache ? "sr-only" : "px-4 pt-3 text-center text-base"}>{titre}</DrawerTitle>
-          <ZoneDefilante className="mx-auto w-full max-w-md overflow-y-auto px-4 pt-3 max-h-[calc(85dvh-4rem)]">
+          {titreVisible != null && <DrawerTitle className="sr-only">{titre}</DrawerTitle>}
+          <EnTeteFeuille Titre={titreVisible != null ? "h2" : DrawerTitle} titre={titreVisible ?? titre} onFermer={() => onOuvertChange(false)} labelFermer={labelFermer ?? t("common.buttons.close")} className="px-4 pt-3" />
+          <ZoneDefilante className="mx-auto w-full max-w-md overflow-y-auto px-4 pt-1 max-h-[calc(85dvh-4rem)]">
             <div style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}>{children}</div>
           </ZoneDefilante>
         </DrawerContent>
@@ -179,7 +185,8 @@ export function MenuLouange({
         }}
         {...arreter}
       >
-        <ZoneDefilante arrondi className="max-h-[calc(var(--radix-popover-content-available-height)-2px)] overflow-y-auto rounded-xl p-3">{children}</ZoneDefilante>
+        <EnTeteFeuille titre={titreVisible ?? titre} onFermer={() => onOuvertChange(false)} labelFermer={labelFermer ?? t("common.buttons.close")} className="px-3 pt-2" />
+        <ZoneDefilante arrondi className="max-h-[calc(var(--radix-popover-content-available-height)-2px)] overflow-y-auto rounded-xl px-3 pb-3 pt-1">{children}</ZoneDefilante>
         <PopoverArrow width={18} height={9} className="fill-background stroke-border dark:fill-[hsl(var(--raised))]" />
       </PopoverContent>
     </Popover>

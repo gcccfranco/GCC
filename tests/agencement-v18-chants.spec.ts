@@ -144,6 +144,53 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     }
   });
 
+  test("l'index A–Z garde sa taille et sa place, page en haut, défilée et en fin de liste", async ({ page }) => {
+    await page.goto("/songs");
+    await listePrete(page);
+    const boite = () => liste(page).evaluate((carte) => {
+      const r = carte.querySelector('nav[aria-label="Index alphabétique"]')!.getBoundingClientRect();
+      return { top: r.top, height: r.height, bottom: r.bottom };
+    });
+    const carteDefile = await liste(page).evaluate((el) => /auto|scroll/.test(getComputedStyle(el).overflowY));
+    const defiler = async (y: number | "fin") => {
+      await liste(page).evaluate((el, cible) => {
+        const defile = /auto|scroll/.test(getComputedStyle(el).overflowY);
+        const haut = defile ? el.scrollHeight : document.documentElement.scrollHeight;
+        const v = cible === "fin" ? haut : cible;
+        if (defile) el.scrollTop = v; else window.scrollTo(0, v);
+        return new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok)));
+      }, y);
+    };
+    const enHaut = await boite();
+    await defiler(300);
+    const defilee = await boite();
+    await defiler("fin");
+    const enFin = await boite();
+    for (const [moment, b] of [["défilée", defilee], ["fin de liste", enFin]] as const) {
+      expect(Math.abs(b.top - enHaut.top), `${moment} : même haut`).toBeLessThanOrEqual(1);
+      expect(Math.abs(b.height - enHaut.height), `${moment} : même hauteur`).toBeLessThanOrEqual(1);
+    }
+    if (carteDefile) {
+      const carte = await liste(page).evaluate((el) => { const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; });
+      expect(enFin.top, "dans la carte, en haut").toBeGreaterThanOrEqual(carte.top - 0.5);
+      expect(enFin.bottom, "dans la carte, en bas").toBeLessThanOrEqual(Math.min(carte.bottom, page.viewportSize()!.height) + 0.5);
+    } else {
+      // Un volet : sous la barre du haut et au-dessus de la barre d'onglets (la barre se range au défilement : calcul par sonde).
+      const sonde = (h: string) => page.evaluate((hauteur) => {
+        const d = document.createElement("div");
+        d.style.height = hauteur;
+        document.body.appendChild(d);
+        const v = d.offsetHeight;
+        d.remove();
+        return v;
+      }, h);
+      const navH = await sonde("var(--nav-h)");
+      const bas = await sonde("calc(var(--tabbar-bottom) + 64px)");
+      expect(enFin.top, "sous la barre du haut").toBeGreaterThanOrEqual(navH - 0.5);
+      expect(enFin.bottom, "au-dessus de la barre d'onglets").toBeLessThanOrEqual(page.viewportSize()!.height - bas + 0.5);
+    }
+  });
+
   test("Tous · FR · 中文 : une vue de la liste, dans le rail gris (R4)", async ({ page }) => {
     await page.goto("/songs");
     await listePrete(page);

@@ -32,6 +32,7 @@ import type { SongIndexEntry } from "@/types/song";
 import { ListeMesServices, type Onglet } from "./ListeMesServices";
 import { DetailService } from "./DetailService";
 import { FournirMesServices, type Valeur } from "./contexteMesServices";
+import { EcranProfilIllisible } from "@/app/setlists/_components/EcransAccesListe";
 
 /** Date du jour en heure LOCALE (pas UTC) — sinon le partage à venir / passés est décalé
  *  d'un jour quelques heures autour de minuit. */
@@ -48,7 +49,7 @@ function dateDeLAdresse(chemin: string): string | undefined {
 
 export function SectionMesServices({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
-  const { user, profile, loading: authLoading } = useProfile();
+  const { user, profile, loading: authLoading, echec, relire } = useProfile();
   const chemin = usePathname() ?? "/mes-services";
   const requete = useSearchParams();
   const deuxVolets = useDeuxVolets();
@@ -126,6 +127,8 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
       </div>
     );
   }
+
+  if (echec && !profile) return <EcranProfilIllisible onReessayer={relire} />;
 
   if (!profile || (!profile.planningName && !aDesPetitsDej)) {
     return (

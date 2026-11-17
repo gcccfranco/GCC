@@ -96,9 +96,9 @@ test.describe("louange (T3) : page du chant", () => {
   }
 });
 
-// partout-q1 : casse normale sur la page chant, capitales gardées sur la scène du mode louange.
+// partout-q1 : casse normale sur la page chant.
 test.describe("louange : casse des titres de chants (partout-q1)", () => {
-  test("le titre est en casse normale sur la page chant, en capitales sur la scène", async ({ page }) => {
+  test("le titre est en casse normale sur la page chant", async ({ page }) => {
     await page.goto("/songs/abba-pere");
     const titre = page.getByRole("heading", { level: 1, name: /abba/i }).last();
     await expect(titre).toBeVisible();
@@ -120,7 +120,7 @@ test.describe("louange : casse des titres de chants (partout-q1)", () => {
     await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
     const titreScene = onStage(page, "[data-entete-chant] h2").first();
     await expect(titreScene).toBeVisible();
-    expect(await titreScene.evaluate((el) => getComputedStyle(el).textTransform)).toBe("uppercase");
+    expect(await titreScene.evaluate((el) => getComputedStyle(el).textTransform)).not.toBe("uppercase");
   });
 });
 
@@ -151,8 +151,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
   const AIDE_CRAYON = "Crayon : touche un accord ou un mot pour le retoucher.";
 
   /** Deux volets (docs/spec-deux-volets.md, T4, Q7) : plus de barre d'outils, l'en-tête
-   *  pleine largeur porte Crayon · Modifier · PDF · ⋯ · Mode louange (pas de
-   *  Présentation sans lien), libellés compris ; la rangée tient sur une ligne, à droite du
+   *  pleine largeur porte Affichage · Accords · Crayon · Modifier · Mode Louange · ⋯ (B7 : PDF et Présentation sont dans le ⋯), libellés compris ; la rangée tient sur une ligne, à droite du
    *  titre ou dessous, jamais par-dessus, ni sous la barre latérale (`bord`), ni hors de l'écran. */
   async function enTeteSurUneLigne(page: Page, largeur: number, bord: number) {
     const enTete = page.locator("[data-en-tete]");
@@ -167,7 +166,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
         }),
     );
     const nomTitre = "高班, Afficher les détails de la setlist";
-    expect(boites.map((b) => b.nom)).toEqual([nomTitre, "Crayon", "Modifier", "PDF", "Affichage", "Plus d'actions", "Mode Louange"]);
+    expect(boites.map((b) => b.nom)).toEqual([nomTitre, "Affichage", "Accords", "Crayon", "Modifier", "Mode Louange", "Plus d'actions"]);
     const milieux = boites.map((b) => b.milieu);
     expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
     const titre = (await enTete.getByRole("button", { name: nomTitre }).boundingBox())!;
@@ -177,10 +176,17 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       expect.soft(b.gauche >= titre.x + titre.width || b.haut >= titre.y + titre.height, `${b.nom} ne passe pas sur le titre`).toBe(true);
     }
     expect(await enTete.evaluate((el) => el.scrollWidth <= el.clientWidth), "l'en-tête ne déborde pas").toBe(true);
-    await expect(enTete.getByText("Mode Louange", { exact: true }), "libellés compris").toBeVisible();
+    await expect(enTete.getByText("Louange", { exact: true }), "libellés compris (B8 : « Louange » dès 768 px)").toBeVisible();
     await enTete.getByRole("button", { name: "Crayon" }).click();
     await expect(page.getByText(AIDE_CRAYON)).toBeVisible();
   }
+
+  /** Commandes de la barre G (B7) : l'ordre complet, puis sans « Modifier », puis sans « Modifier » ni « Crayon » (ordre de repli). */
+  const COMPLETE_G = ["Setlists", "Afficher les détails de la setlist", "Affichage", "Accords", "Crayon", "Modifier", "Liste", "Partitions", "Mode Louange", "Plus d'actions"];
+  // Accords suit quand le titre serait coupé : dès 640 px, ou au téléphone de 320 px (bloc titre plus étroit qu'un toucher) ;
+  // entre 360 et 639 px il reste à un toucher (titre sur deux lignes, RU-4).
+  const repliees = (complet: string[], largeur: number) => [complet, complet.filter((n) => n !== "Modifier"), complet.filter((n) => n !== "Modifier" && n !== "Crayon"),
+    ...(largeur < 360 || largeur >= 640 ? [complet.filter((n) => n !== "Modifier" && n !== "Crayon" && n !== "Accords")] : [])];
 
   const ECRANS: [number, number, string][] = [
     [320, 568, "portrait"], [360, 740, "portrait"], [375, 667, "portrait"], [390, 844, "portrait"], [402, 874, "portrait"], [430, 932, "portrait"],
@@ -209,13 +215,14 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           .filter((el) => (el as HTMLElement).offsetParent !== null)
           .map((el) => {
             const r = el.getBoundingClientRect();
-            return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width };
+            return { nom: el.getAttribute("aria-label") ?? (el.textContent ?? "").trim(), milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width, zone: parseFloat(getComputedStyle(el, "::after").height) };
           }),
       );
-      // Vue Partitions, un volet (T2 du lot exemples d'usage) : retour, bloc titre, bascule (Liste, Partitions), mode louange, ⋯ ;
-      // affichage et accords restent dans la barre à toutes les largeurs (RU-4) ; dès 640 px s'y ajoute le crayon (MP-3, à la place d'Adapter et de Ma version), qui sous 640 px vit dans le menu « ⋯ ».
-      const pleine = largeur >= 640;
-      expect(boites.length, "retour, titre, (affichage, crayon, accords), Liste, Partitions, mode louange, ⋯").toBe(pleine ? 9 : 8);
+      // Vue Partitions, un volet (T2 du lot exemples d'usage) : retour, bloc titre, affichage, accords, crayon, modifier, bascule (Liste, Partitions), mode louange, ⋯ ;
+      // affichage et accords restent dans la barre à toutes les largeurs (RU-4) ; Modifier puis Crayon se replient dans le menu « ⋯ » quand la place manque (B7).
+      const noms = boites.map((b) => b.nom.replace(/^.+, (Afficher les détails de la setlist)$/, "$1"));
+      expect(repliees(COMPLETE_G, largeur), "retour, titre, affichage, accords, (crayon, modifier), Liste, Partitions, mode louange, ⋯").toContainEqual(noms);
+      const pleine = noms.includes("Crayon");
       const milieux = boites.map((b) => b.milieu);
       expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
       for (const b of boites) {
@@ -223,10 +230,12 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
         expect.soft(b.gauche, `${b.nom} ne sort pas à gauche`).toBeGreaterThanOrEqual(sens === "iPad paysage" ? 68 : 0);
         expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
         // Les segments de la bascule (h-7 dans une bascule de 32 px) ont leur zone de toucher de 44 px au doigt.
-        if (!/^(Liste|Partitions)$/.test(b.nom)) expect.soft(Math.min(b.h, b.l), `${b.nom} : pas plus petit qu'avant (32 px)`).toBeGreaterThanOrEqual(32);
+        // Le retour « ‹ Setlists » (B10) est du texte de 20 px de haut : sa zone de toucher (::after, 44 px) remplace les 32 px de dessin, mesurée au doigt seulement.
+        if (b.nom === "Setlists") { if (!Number.isNaN(b.zone)) expect.soft(b.zone, "Retour : zone de toucher de 44 px").toBeGreaterThanOrEqual(44); expect.soft(b.h, "Retour : une ligne de texte").toBeGreaterThanOrEqual(20); }
+        else if (!/^(Liste|Partitions)$/.test(b.nom)) expect.soft(Math.min(b.h, b.l), `${b.nom} : pas plus petit qu'avant (32 px)`).toBeGreaterThanOrEqual(32);
       }
-      // Icônes seules sur téléphone (dans les deux sens) et iPad en portrait ; libellés à partir de 1024 px.
-      await expect(barre.getByText("Mode Louange", { exact: true })).toBeVisible({ visible: largeur >= 1024 });
+      // Icônes seules sous 768 px (téléphone dans les deux sens) ; « Louange » dessous dès 768 px (B8).
+      await expect(barre.getByText("Louange", { exact: true })).toBeVisible({ visible: largeur >= 768 });
       // La barre seule : à 320 px une longue ligne d'accords du corps (« Dm7(b5)/G ») dépasse de 4 px, c'est une autre histoire.
       expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
 
@@ -235,7 +244,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
         await barre.getByRole("button", { name: "Crayon" }).click();
         await expect(page.getByText(AIDE_CRAYON)).toBeVisible();
       } else {
-        // Sous 640 px en vue Partitions : il passe dans le menu « ⋯ », et y marche pareil.
+        // Place manquante : il passe dans le menu « ⋯ », et y marche pareil.
         await expect(barre.getByRole("button", { name: "Crayon" })).toBeHidden();
         await barre.getByRole("button", { name: "Plus d'actions" }).click();
         await page.getByRole("menuitemcheckbox", { name: "Crayon" }).click();
@@ -269,10 +278,11 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
             .filter((el) => (el as HTMLElement).offsetParent !== null)
             .map((el) => {
               const r = el.getBoundingClientRect();
-              return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
+              return { nom: el.getAttribute("aria-label") ?? (el.textContent ?? "").trim(), milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
             }),
         );
-        expect(boites.length, "retour, titre, affichage, crayon, accords, Liste, Partitions, mode louange, ⋯").toBe(9);
+        expect(repliees(COMPLETE_G, largeur), "retour, titre, affichage, accords, (crayon, modifier), Liste, Partitions, mode louange, ⋯").toContainEqual(
+          boites.map((b) => b.nom.replace(/^.+, (Afficher les détails de la setlist)$/, "$1")));
         const milieux = boites.map((b) => b.milieu);
         expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
         for (const b of boites) {
@@ -280,8 +290,8 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
         }
         expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
-        // 1 024 px : 776 px à côté de la barre, les libellés ne tiennent pas.
-        await expect(barre.getByText("Mode Louange", { exact: true })).toBeHidden();
+        // 1 024 px : « Louange » s'affiche dès 768 px de fenêtre (B8), même à côté de la barre dépliée.
+        await expect(barre.getByText("Louange", { exact: true })).toBeVisible();
       });
     }
   });

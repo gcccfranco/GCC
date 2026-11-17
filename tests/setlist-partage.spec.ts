@@ -388,8 +388,11 @@ test.describe("partage : l'éditeur", () => {
     // Les droits sont repliés derrière le bouton « i » (G15 ; toutes tailles depuis dimanche-16).
     await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
     await expect(page.getByText("Modifiable par son créateur seulement (et les admins)")).toBeVisible();
+    // B7 : « Dupliquer pour mes notes » est un bouton de la barre, ou (téléphone, place manquante) l'entrée du ⋯ : jamais les deux.
+    const enBarre = (await page.getByRole("button", { name: "Dupliquer pour mes notes" }).filter({ visible: true }).count()) > 0;
+    if ((page.viewportSize()?.width ?? 0) >= 640) expect(enBarre, "dans la barre quand la place le permet").toBe(true);
     await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).first().click();
-    await expect(page.getByRole("menuitem", { name: "Dupliquer pour mes notes" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Dupliquer pour mes notes" })).toHaveCount(enBarre ? 0 : 1);
     await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveCount(0);
     await page.keyboard.press("Escape");
     await page.goto("/setlists/sl-privee/edit");

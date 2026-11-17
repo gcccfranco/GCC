@@ -122,7 +122,7 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
     await page.getByRole("searchbox").waitFor();
     const sections = page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" });
     await expect(sections.getByRole("link", { name: "Planning" })).toBeVisible();
-    await expect(sections.getByRole("link", { name: "Évènements" })).toHaveCount(0);
+    await expect(sections.getByRole("link", { name: "Église" })).toHaveCount(0);
     await expect(sections.getByRole("link", { name: "Tâches" })).toHaveCount(0);
   });
 });
@@ -135,7 +135,7 @@ test.describe("back-office coupé : une adresse tapée à la main tombe dans le 
     });
   }
 
-  for (const route of ["/api/taches/assigne", "/api/taches/fait", "/api/equipes/rattachement", "/api/scene/conflit", "/api/evenements/inscription", "/api/evenements/desinscription", "/api/push/notify-evenement", "/api/planning/changements", "/api/equipes/groupes", "/api/fetes/droits", "/api/fetes/saisir", "/api/fetes/musiques"]) {
+  for (const route of ["/api/taches/assigne", "/api/taches/fait", "/api/equipes/rattachement", "/api/salles/conflit", "/api/evenements/inscription", "/api/evenements/desinscription", "/api/push/notify-evenement", "/api/planning/changements", "/api/equipes/groupes", "/api/fetes/droits", "/api/fetes/saisir", "/api/fetes/musiques"]) {
     test(`${route} répond 404`, async ({ request }) => {
       const reponse = await request.post(`${BASE_URL_COUPE}${route}/`, { data: {} });
       expect(reponse.status()).toBe(404);

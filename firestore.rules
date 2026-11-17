@@ -53,6 +53,9 @@ rules_version = '2';
 //   (programmes/{id}/creneaux) : tout connecté en pose un à son nom — depuis le
 //   lot U1, dans une saison ouverte et pour les groupes permis (reservable()) ;
 //   auteur + coordination le modifient ou le retirent.
+// - Réservations de salles (reservations/{id}, chantier AR, lot 3) : lues par les connectés ; tout connecté
+//   réserve à son nom ; auteur + coordination les modifient ou les retirent. Lot 5 : un créneau de fête en est une
+//   (`fete`), soumise à reservable() comme les anciens créneaux, qui restent tels quels (plus rien ne les écrit).
 // - Organigramme (equipes/{id}, lot 16) : lu par les connectés ; écrit par les
 //   admins et par les comptes portant le droit `equipes` (lot AO : aussi les membres d'Orga, le référent de l'équipe,
 //   et, pour Louange, un référent de sous-équipe). Le rattachement qui en
@@ -336,23 +339,24 @@ service cloud.firestore {
       }
     }
 
+    // U1 (docs/spec-scene-saison.md) : un membre réserve dans une saison ouverte,
+    // pour des groupes permis par « Qui peut réserver » (liste vide = tout membre
+    // connecté) ; la coordination n'est pas limitée. Un get() par écriture.
+    // Miroir : canReserverPour (src/lib/access.ts). Lot 5 du chantier AR (AR21) : sert aussi aux réservations de la
+    // Scène qui portent `fete` (feteReservable, plus bas) ; hors de match /programmes pour être partagée.
+    // Lot RS : ancien ∪ nouveau — les gestionnaires de planning réservent toujours, sans les limites de saison ni
+    // de groupes, comme la coordination (Q12) ; la modification de l'auteur suit la même règle.
+    // Une édition fermée à la main (`fermees`, docs/spec-fermer-reservations.md, FR10) refuse création et modification ; la suppression reste permise.
+    function reservable(programmeId, qui) {
+      let p = get(/databases/$(database)/documents/programmes/$(programmeId)).data;
+      return p.get('ouvert', true) == true
+        && p.get('fermees', false) != true
+        && (p.get('quiAutorises', []).size() == 0 || qui.hasOnly(p.quiAutorises));
+    }
+
     match /programmes/{id} {
       allow read: if signedIn();
       allow create, update, delete: if isCoordination();
-
-      // U1 (docs/spec-scene-saison.md) : un membre réserve dans une saison ouverte,
-      // pour des groupes permis par « Qui peut réserver » (liste vide = tout membre
-      // connecté) ; la coordination n'est pas limitée. Un get() par écriture.
-      // Miroir : canReserverPour (src/lib/access.ts).
-      // Lot RS : ancien ∪ nouveau — les gestionnaires de planning réservent toujours, sans les limites de saison ni
-      // de groupes, comme la coordination (Q12) ; la modification de l'auteur suit la même règle.
-      // Une édition fermée à la main (`fermees`, docs/spec-fermer-reservations.md, FR10) refuse création et modification ; la suppression reste permise.
-      function reservable(programmeId, qui) {
-        let p = get(/databases/$(database)/documents/programmes/$(programmeId)).data;
-        return p.get('ouvert', true) == true
-          && p.get('fermees', false) != true
-          && (p.get('quiAutorises', []).size() == 0 || qui.hasOnly(p.quiAutorises));
-      }
 
       match /creneaux/{cid} {
         allow read: if signedIn();
@@ -363,6 +367,44 @@ service cloud.firestore {
               && (gereUnPlanning() || reservable(id, request.resource.data.qui))));
         allow delete: if signedIn() && (isCoordination() || resource.data.auteurUid == request.auth.uid);
       }
+    }
+
+    // Réservations de salles (chantier AR, lot 3, docs/spec-salles.md, § Permissions, SA7, SA10) : lues par les
+    // connectés ; tout connecté réserve à son nom ; l'auteur et la coordination modifient (sans changer l'auteur) ou
+    // suppriment. Le chevauchement se vérifie côté client (SA8) puis par message (SA9) : pas de requête ici.
+    // Miroir : canVoirSalles, canReserverSalle, canEditReservation (src/lib/access.ts).
+    // Lot 5 (AR20, AR21) : un créneau de fête est une réservation de la Scène qui porte `fete` (l'id du programme),
+    // `qui` (liste), `note`, `libre` (AR23 : pas de `depuisCreneau`). Champs permis : ceux-là seuls.
+    function reservationValide() {
+      let r = request.resource.data;
+      return r.keys().hasOnly(['salle', 'date', 'debut', 'fin', 'pour', 'quoi', 'auteurUid', 'auteurNom', 'createdAt', 'updatedAt', 'fete', 'qui', 'note', 'libre'])
+        && (!('fete' in r) || (r.salle == 'scene' && r.fete is string && r.qui is list && r.get('note', '') is string))
+        && (!('libre' in r) || r.libre is bool)
+        && r.salle in ['grande', 'scene', 'fidelite', 'paix', 'amour', 'bonte', 'zhongban', 'imprimante', 'reunion']
+        && r.date is string && r.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && r.debut is string && r.debut.matches('^[0-9]{2}:[0-9]{2}$')
+        && r.fin is string && r.fin.matches('^[0-9]{2}:[0-9]{2}$')
+        && r.debut < r.fin
+        && r.pour is string && r.pour.size() <= 60
+        && r.quoi is string && r.quoi.size() >= 1 && r.quoi.size() <= 80
+        && r.auteurUid is string && r.auteurNom is string;
+    }
+
+    // AR21 : une réservation de fête garde les règles de la fête (saison ouverte, pas fermée à la main, « Qui peut
+    // réserver ») ; la coordination et les gestionnaires de planning ne sont pas limités, comme pour les anciens
+    // créneaux. Sans `fete`, les règles de toute salle. Miroir : canReserverPour (src/lib/access.ts).
+    function feteReservable() {
+      return !('fete' in request.resource.data) || isCoordination() || gereUnPlanning() || reservable(request.resource.data.fete, request.resource.data.qui);
+    }
+
+    match /reservations/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.auteurUid == request.auth.uid && reservationValide()
+        && feteReservable();
+      allow update: if signedIn() && (isCoordination() || resource.data.auteurUid == request.auth.uid)
+        && reservationValide() && request.resource.data.auteurUid == resource.data.auteurUid
+        && request.resource.data.get('fete', null) == resource.data.get('fete', null) && feteReservable();
+      allow delete: if signedIn() && (isCoordination() || resource.data.auteurUid == request.auth.uid);
     }
 
     // Réunions d'équipe (lot U6, docs/spec-back-office.md ; lot 1 du chantier
@@ -393,6 +435,15 @@ service cloud.firestore {
         || (!pour.matches('(pole|equipe):.*') && isCoordination());
     }
 
+    // Salle d'un évènement ou d'une réunion (chantier AR, lot 4, SA12 ; relu en T4b) : absente, null ou une des
+    // neuf (la liste de reservationValide). Le chevauchement ne se vérifie pas ici (SA8, client). Miroir : estSalleId
+    // (src/lib/salles/salles.ts), cité par canEditEvenement (src/lib/access.ts).
+    function salleEvenementValide() {
+      let salle = request.resource.data.get('salle', null);
+      return salle == null
+        || salle in ['grande', 'scene', 'fidelite', 'paix', 'amour', 'bonte', 'zhongban', 'imprimante', 'reunion'];
+    }
+
     match /evenements/{id} {
       allow read: if resource.data.pour == 'eglise' || signedIn();
       // Réunion ou évènement d'équipe (lot U6, R4 ; décisions 3 et 43) :
@@ -404,7 +455,8 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.organisateurUid == request.auth.uid
         && request.resource.data.inscrits == 0
-        && pourCreable(request.resource.data.pour);
+        && pourCreable(request.resource.data.pour)
+        && salleEvenementValide();
       // Compte rendu d'une réunion (lot U6, R3) : toute personne de la réunion
       // colle (à son nom, un lien https://) ou retire le lien, et ne change que
       // lui. Miroir : estDeLaReunion et lienCompteRendu (src/lib/access.ts,
@@ -413,7 +465,8 @@ service cloud.firestore {
         && ((request.resource.data.inscrits == resource.data.inscrits
              && request.resource.data.organisateurUid == resource.data.organisateurUid
              && (request.resource.data.pour == resource.data.pour || pourCreable(request.resource.data.pour))
-             && (isCoordination() || resource.data.organisateurUid == request.auth.uid))
+             && (isCoordination() || resource.data.organisateurUid == request.auth.uid)
+             && salleEvenementValide())
           || (estDeLaReunion(resource.data) && changeSeulement(['compteRendu'])
              && (request.resource.data.compteRendu == null
                  || (request.resource.data.compteRendu.parUid == request.auth.uid

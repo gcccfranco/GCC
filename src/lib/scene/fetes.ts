@@ -123,12 +123,12 @@ export function editionProche(editions: Edition[], today: string): Edition | nul
 
 /** Le document d'une édition nouvelle, sans `createdBy` ni `updatedAt`. */
 type ReglagesEdition = Required<
-  Pick<Programme, "nom" | "fete" | "annee" | "jourJ" | "debut" | "plages" | "duree" | "quiAutorises" | "passages" | "ouvert">
+  Pick<Programme, "nom" | "fete" | "annee" | "jourJ" | "debut" | "plages" | "quiAutorises" | "passages" | "ouvert">
 >;
 
 /** Réglages d'une édition nouvelle (Q7) : ceux de l'édition précédente de la
- *  même fête (plages, durée, « Qui peut réserver », ouverture au même nombre de
- *  jours avant le jour J) ; sans elle, dimanche 14:00–19:00, 1 h, tout membre,
+ *  même fête (plages, « Qui peut réserver », ouverture au même nombre de
+ *  jours avant le jour J) ; sans elle, dimanche 14:00–19:00, tout membre,
  *  ouverture le lundi sept semaines avant la semaine du jour J. Fermeture
  *  absente (dernier dimanche avant le jour J), ordre de passage vide, brouillon. */
 export function reglagesRepris(precedent: Programme | null, fete: Fete, annee: number): ReglagesEdition {
@@ -136,11 +136,11 @@ export function reglagesRepris(precedent: Programme | null, fete: Fete, annee: n
   const base = { nom: libelleEdition(fete, annee, "fr"), fete, annee, jourJ, passages: [], ouvert: false };
   if (!precedent) {
     const lundi = utc(jourJ) - ((new Date(utc(jourJ)).getUTCDay() + 6) % 7) * DAY;
-    return { ...base, debut: iso(lundi - 49 * DAY), plages: [...PLAGES_DEFAUT], duree: 60, quiAutorises: [] };
+    return { ...base, debut: iso(lundi - 49 * DAY), plages: [...PLAGES_DEFAUT], quiAutorises: [] };
   }
   const s = saisonDe(precedent);
   const ecart = utc(precedent.jourJ) - utc(precedent.debut);
-  return { ...base, debut: iso(utc(jourJ) - ecart), plages: s.plages, duree: s.duree, quiAutorises: s.quiAutorises };
+  return { ...base, debut: iso(utc(jourJ) - ecart), plages: s.plages, quiAutorises: s.quiAutorises };
 }
 
 const NOMS: Record<Fete, Record<Language, string>> = {

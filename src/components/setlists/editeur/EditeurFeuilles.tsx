@@ -120,10 +120,18 @@ export function EditeurFeuilles({
             e.preventDefault();
             cible.focus();
           }}
-          className={`${bibliotheque ? "h-[92svh]" : "max-h-[92svh]"} md:mx-auto md:max-w-3xl`}
+          onOpenAutoFocus={(e) => {
+            // Bibliothèque : le focus va à la feuille, pas au champ de recherche. Sur iPhone, le clavier
+            // s'ouvrirait pendant que la feuille monte et pousserait son haut (titre, recherche) hors de l'écran.
+            if (!bibliotheque) return;
+            e.preventDefault();
+            (e.currentTarget as HTMLElement).focus();
+          }}
+          className={`${bibliotheque ? "h-[92svh]" : "max-h-[92svh]"} outline-none md:mx-auto md:max-w-3xl`}
         >
           <FeuilleContexte.Provider value={feuille}>
-            <div key={v.cle} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-6 pt-3 sm:px-7">
+            {/* Bibliothèque : la barre du bas va jusqu'au bas de la feuille, sans marge où la liste passerait. */}
+            <div key={v.cle} className={`flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 ${bibliotheque ? "pb-0" : "pb-6"} pt-3 sm:px-7`}>
               {v.contenu(feuille.fermer)}
             </div>
           </FeuilleContexte.Provider>

@@ -8,11 +8,14 @@
 // Réserver », ou la réservation et son auteur. La semaine choisie est dans l'adresse
 // (`?semaine=` le lundi, remplacée sans entrée d'historique) ; par défaut, la première qui a un
 // jour réservable à partir d'aujourd'hui ; les passées attendent derrière « Semaines passées ».
-// « Réserver » ouvre la feuille sur ce créneau, rien de coché (P6, Q15). Sur sa réservation
-// (toutes pour la coordination), « ⋯ » (`MenuActions`, Q14) : « Déplacer » propose les créneaux
-// libres en pastilles, « Modifier » quoi, qui et note, « Retirer » la supprime après la
-// confirmation du site ; « à moi » remplace mon nom. Les chevauchements restent refusés à
-// l'enregistrement et marqués en rouge s'ils existent malgré tout. L'appelant pose les trois
+// Lot 5 de Salles (docs/spec-salles.md, AR22) : plus de créneaux fixes. Chaque jour dit quand la
+// scène est libre (« Libre 14:30 – 15:00 · 17:00 – 19:00 », dans les plages de la saison, moins
+// l'emploi du temps fixe, Salles et les évènements, montrés en gris) ; « Réserver » sur une fenêtre
+// ouvre la seule feuille « de / à », la fenêtre pré-remplie, rien de coché (Q15). Sur sa
+// réservation (toutes pour la coordination), « ⋯ » (`MenuActions`, Q14) : « Déplacer » et
+// « Modifier » rouvrent la même feuille, « Retirer » la supprime après la confirmation du site ;
+// « à moi » remplace mon nom. Un chevauchement avec toute occupation de la Scène ou de la Grande
+// salle est refusé à l'enregistrement (SA8) et marqué en rouge s'il existe malgré tout. L'appelant pose les trois
 // morceaux où il veut (`children`). Le Back-Office (P8) pose aussi « ⋯ » et « Déplacer » dans son
 // tableau de toutes les réservations : la même feuille, le même menu.
 
@@ -22,13 +25,16 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { ArrowLeftRight, ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react"
 import type { User } from "firebase/auth"
-import { canEditCreneau, canReserverPour, isCoordination } from "@/lib/access"
+import { canEditCreneau, canReserverPour, canSeeEvenement, isCoordination } from "@/lib/access"
 import { createCreneau, deleteCreneau, listCreneaux, updateCreneau } from "@/lib/firebase/programmes"
 import { overlaps, todayIso } from "@/lib/scene/dimanches"
 import { TOUCHER_44 } from "@/lib/toucher44"
 import {
-  commence, creneauxLibres, heureLocale, lignesDuJour, quiPermis, saisonDe, semainesDe, type Place, type Semaine,
+  commence, dansUnePlage, fenetresLibres, heureLocale, lignesDuJour, quiPermis, saisonDe, semainesDe, type Autre, type Place, type Semaine,
 } from "@/lib/scene/saison"
+import { chargerAutresScene, occupationsPourEvenement } from "@/lib/salles/charger"
+import { nomOccupant, occupationsDe, occupationsDu, type SourcesSalles } from "@/lib/salles/occupations"
+import { chevauchement, decalage } from "@/lib/salles/conflit"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { styleTexteService } from "@/lib/couleurSombre"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
@@ -37,7 +43,7 @@ import type { UserProfile } from "@/types/user"
 import { Button } from "@/components/ui/button"
 import { MenuActions, type ActionDuMenu } from "@/components/layout/MenuActions"
 import { BadgeHorsGrille, Fleche, TuileDate } from "./pieces"
-import { CreneauForm, type CreneauValues } from "./CreneauForm"
+import { CreneauForm, type CreneauValues, type RefusScene } from "./CreneauForm"
 import { LigneJour } from "./LigneJour"
 import { bornesSemaine, jourCourt, jourEnLettres, joursCourts, semaineCourte, titreDuJour } from "./libelles"
 import { libelleQui } from "@/lib/fetes/qui"
@@ -65,20 +71,6 @@ function lundiDe(iso: string): string {
   return d.toISOString().slice(0, 10)
 }
 
-/** Les semaines de la saison, plus les jours d'une réservation hors des jours réservables
- *  (U1, Q8 : rien ne disparaît), rangés dans leur semaine — qui naît sans case s'il le faut. */
-function semainesAvecHorsGrille(semaines: Semaine[], jours: string[]): Semaine[] {
-  const out = semaines.map((s) => ({ ...s, jours: [...s.jours] }))
-  for (const d of jours) {
-    if (out.some((s) => s.jours.includes(d))) continue
-    const lundi = lundiDe(d)
-    const s = out.find((x) => x.lundi === lundi)
-    if (s) s.jours = [...s.jours, d].sort()
-    else out.push({ lundi, jours: [d], cases: [], libres: 0 })
-  }
-  return out.sort((a, b) => a.lundi.localeCompare(b.lundi))
-}
-
 export function Entrainements({ programme, creneaux, user, profile, onChanged, onConflict, semaineActive = true, children }: {
   programme: Programme
   creneaux: Creneau[]
@@ -103,7 +95,23 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   const today = todayIso()
   const maintenant = heureLocale()
   const coordination = isCoordination(user, profile)
-  const semaines = semainesAvecHorsGrille(semainesDe(saison, programme.jourJ, creneaux), creneaux.map((c) => c.dimanche))
+  const langue = langueCourte(lang) === "zh" ? "zh" : "fr"
+  // AR22 : ce qui prend la scène d'autre part pendant la saison (emploi du temps fixe, Salles, évènements).
+  const [sources, setSources] = useState<SourcesSalles | null>(null)
+  useEffect(() => {
+    let vivant = true
+    chargerAutresScene(saison.debut, saison.fin, today, programme.id, (e) => canSeeEvenement(user, profile, e))
+      .then((s) => { if (vivant) setSources(s) })
+    return () => { vivant = false }
+    // Relu quand la période change ; le reste ne bouge pas depuis cette page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [programme.id, saison.debut, saison.fin])
+  const idsFete = new Set(creneaux.map((c) => c.id))
+  const autresDu = (d: string): Autre[] => !sources ? [] : occupationsDe(occupationsDu(d, sources), "scene")
+    .filter((o) => !(o.id && idsFete.has(o.id)))
+    .map((o) => ({ debut: o.debut, fin: o.fin, libelle: nomOccupant(o, langue) }))
+  const horloge = { today, maintenant }
+  const semaines = semainesDe(saison, programme.jourJ, creneaux, autresDu)
   const passees = semaines.filter((s) => s.jours.at(-1)! < today)
   // La semaine demandée gagne tant que l'adresse ne l'a pas rattrapée (`router.replace` est
   // asynchrone) : deux ‹ touchés vite reculent bien de deux semaines.
@@ -127,11 +135,12 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
 
   const conflicts = new Set(creneaux.filter((c) => creneaux.some((o) => o.id !== c.id && overlaps(c, o))).map((c) => c.id))
   const quiDe = (c: Creneau) => c.qui.map((q) => libelleQui(q, langueCourte(lang))).join(", ")
-  const slotLabel = (c: Creneau) => `${c.debut} – ${c.fin} · ${c.quoi} · ${quiDe(c)} (${c.auteurNom})`
   const auteurNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
   // Q4 : la coordination n'est pas limitée ; un membre choisit parmi les groupes permis.
   const quiLimite = !coordination && saison.quiAutorises.length > 0
   const quiOptions = quiPermis(coordination ? {} : programme)
+  // « Réserver » sur une fenêtre libre : réservations ouvertes et « Qui peut réserver » le permet (SQ-R8).
+  const peutReserver = saison.ouvert && programme.fermees !== true && canReserverPour(user, profile, programme, [])
 
   function ouvrir(a: Action) {
     setAction(a)
@@ -139,7 +148,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     setFois((n) => n + 1)
   }
 
-  async function save(values: CreneauValues): Promise<string | null> {
+  async function save(values: CreneauValues): Promise<string | RefusScene | null> {
     const editingId = action && action.type !== "nouveau" ? action.creneau.id : null
     // Q11, revu à l'enregistrement : la feuille a pu rester ouverte pendant que le
     // créneau commençait. Garder son créneau (changer la note, le qui) reste permis.
@@ -150,14 +159,20 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       return t("planning.saison.quiRefuse", { qui: values.qui.filter((q) => !quiPermis(programme).includes(q)).join(", ") })
     }
     try {
-      // Relecture juste avant d'écrire : la scène est unique, un chevauchement est refusé.
-      const fresh = await listCreneaux(programme.id)
-      const clash = fresh.find((c) => c.id !== editingId && overlaps(c, values))
-      if (clash) return t("planning.programme.overlap", { slot: slotLabel(clash) })
+      // Relecture juste avant d'écrire (AR22, SA8) : toutes les occupations du jour de la Scène et de la Grande
+      // salle (emploi du temps fixe, Salles, évènements, réservations de la fête), hors celle qu'on modifie.
+      const plage = { debut: values.debut, fin: values.fin }
+      const jour = (await occupationsPourEvenement(values.dimanche, todayIso(), (e) => canSeeEvenement(user, profile, e)))
+        .filter((o) => !editingId || o.id !== editingId)
+      const bloque = chevauchement(jour, "scene", plage)
+      if (bloque) return { bloque, decale: decalage(jour, "scene", plage) }
       const now = new Date().toISOString()
       let id = editingId
-      if (id) await updateCreneau(programme.id, id, values)
-      else id = await createCreneau(programme.id, { ...values, auteurUid: user.uid, auteurNom, createdAt: now, updatedAt: now })
+      // `libre` (SQ-B) : la réservation sort des plages de la saison ; sinon le champ s'en va.
+      const libre = !dansUnePlage(saison, values)
+      const avant = action && action.type !== "nouveau" && action.creneau.libre
+      if (id) await updateCreneau(programme.id, id, libre ? { ...values, libre: true } : avant ? { ...values, libre: undefined } : values)
+      else id = await createCreneau(programme.id, { ...values, ...(libre && { libre: true }), auteurUid: user.uid, auteurNom, createdAt: now, updatedAt: now })
       // Course perdue (deux enregistrements à la même seconde) : on prévient.
       const after = await listCreneaux(programme.id)
       const mine = after.find((c) => c.id === id)
@@ -334,7 +349,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
               {bornes!.au ? t("planning.semaines.titre", bornes!) : t("planning.semaines.titreJour", { du: bornes!.du })}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {[places(choisie.libres, choisie.cases.length), t("planning.semaines.unCreneau", { duree: t(`planning.saison.dureeCourte.${saison.duree}`) })].filter(Boolean).join(" · ")}
+              {places(choisie.libres, choisie.cases.length)}
             </p>
           </div>
           <div className="flex shrink-0 gap-2">
@@ -349,23 +364,27 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       )}
       {choisie.jours.map((d) => {
         const label = titreDuJour(d, lang)
-        const lignes = lignesDuJour(saison, d, creneaux)
-        const libres = lignes.filter((l) => l.type === "libre" && !commence(d, l.debut, today, maintenant)).length
-        const grille = lignes.filter((l) => l.type === "libre" || l.couvre > 0).length
+        const autres = autresDu(d)
+        const lignes = lignesDuJour(saison, d, creneaux, autres, horloge)
+        const fenetres = lignes.filter((l) => l.type === "libre")
+        // « Libre 14:30 – 15:00 · 17:00 – 19:00 », « complet » quand les plages sont prises.
+        const resume = d < today ? null
+          : fenetres.length > 0 ? t("planning.semaines.libreA", { heures: fenetres.map((f) => `${f.debut} – ${f.fin}`).join(" · ") })
+            : fenetresLibres(saison, d, []).length > 0 ? t("planning.semaines.complet") : null
         return (
           <section key={d} id={`scene-jour-${d}`} aria-label={label} className="carte-groupe rounded-2xl scroll-mt-[calc(var(--nav-h)+12px)]">
             <div className="flex items-center gap-3 px-4 pt-3.5 pb-2">
               <TuileDate iso={d} lang={lang} />
               <h3 className="min-w-0 flex-1 text-lg font-bold text-foreground">{label}</h3>
-              {d >= today && <span className="shrink-0 text-sm text-muted-foreground">{places(libres, grille)}</span>}
             </div>
+            {resume && <p data-testid="libre-du-jour" className="px-4 pb-2 -mt-1 text-sm text-muted-foreground tabular-nums">{resume}</p>}
             <ul className="px-3 pb-3 space-y-1.5">
               {lignes.map((l) => {
                 if (l.type !== "reserve") {
-                  const libre = l.type === "libre" && !commence(d, l.debut, today, maintenant)
+                  const libre = l.type === "libre" && peutReserver
                   return (
                     <LigneJour
-                      key={`${l.type}-${l.debut}`}
+                      key={`${l.type}-${l.debut}-${l.fin}`}
                       ligne={l}
                       droite={libre ? (
                         <Button size="sm" className={`h-8 px-4 svc-ink hover:opacity-80 ${TOUCHER_44}`}
@@ -410,22 +429,21 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     </div>
   )
 
-  // Réserver : rien de coché (Q15). Modifier : quoi, qui, note sur le même créneau. Déplacer :
-  // les créneaux libres de la saison (le sien compris s'il est dans la grille), seul choix.
+  // Réserver : rien de coché (Q15), la fenêtre touchée pré-remplie. Modifier et Déplacer : la même feuille, sur la
+  // réservation (une valeur de « Qui » sortie de la liste reste proposée).
+  const premierJour = today > saison.debut ? today : saison.debut
+  const periode = { min: premierJour, max: saison.fin }
   const feuille = action && (() => {
     if (action.type === "nouveau") {
       const { jour, debut, fin } = action.place
-      return { title: t("planning.saison.reserver"), submitLabel: t("planning.saison.reserver"), place: action.place, quiOptions,
+      return { title: t("planning.saison.reserver"), submitLabel: t("planning.saison.reserver"), quiOptions,
         initial: { dimanche: jour, debut, fin, quoi: "", qui: [], note: "" } }
     }
     const c = action.creneau
     const initial = { dimanche: c.dimanche, debut: c.debut, fin: c.fin, quoi: c.quoi, qui: c.qui, note: c.note }
-    if (action.type === "modifier") {
-      return { title: t("planning.programme.editTitle"), submitLabel: t("planning.programme.save"), initial,
-        place: { jour: c.dimanche, debut: c.debut, fin: c.fin }, quiOptions: [...new Set([...quiOptions, ...c.qui])] }
-    }
-    return { title: t("planning.saison.deplacerTitre"), submitLabel: t("planning.saison.deplacer"), initial, quiOptions,
-      places: creneauxLibres(saison, programme.jourJ, creneaux, { sauf: c.id, today, maintenant }) }
+    const options = [...new Set([...quiOptions, ...c.qui])]
+    if (action.type === "modifier") return { title: t("planning.programme.editTitle"), submitLabel: t("planning.programme.save"), initial, quiOptions: options }
+    return { title: t("planning.saison.deplacerTitre"), submitLabel: t("planning.saison.deplacer"), initial, quiOptions: options }
   })()
 
   const sheet = feuille && (
@@ -433,7 +451,9 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       key={fois}
       open={ouverte}
       {...feuille}
+      periode={periode}
       quiLimite={quiLimite}
+      quiAutre={canReserverPour(user, profile, programme, ["Autre…"])}
       onSubmit={save}
       onCancel={() => setOuverte(false)}
     />

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { StructureStrip } from "@/components/song/SongView";
 import type { JianpuSheetBlock, PerformanceBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { sansTransitions } from "@/lib/performance/pagination";
-import { langAccent } from "./langAccent";
+import { CarreTonalite } from "@/components/song/Armure";
 import { TeteFeuille } from "./TeteFeuille";
 import { compter } from "@/lib/usage";
 
@@ -91,10 +91,7 @@ export function PageScan({
           {t("performance.capoBadge", { n: enTete.capo })}
         </span>
       ) : null}
-      <span className="shrink-0 text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
-        style={{ color: langAccent("zh"), borderColor: langAccent("zh") }}>
-        {enTete.songKey}
-      </span>
+      {enTete.songKey !== enTete.originalKey && <CarreTonalite k={enTete.songKey} langue="zh" plein={!!enTete.setlistKey} />}
       {enTete.setlistKey && (
         <span className="min-w-0 truncate text-xs font-semibold text-muted-foreground">
           {t("performance.personalKey", { key: enTete.setlistKey })}
@@ -114,6 +111,7 @@ export function PageScan({
     return (
       <div className="flex h-full flex-col">
         <TeteFeuille
+          titre={enTete.songTitle}
           hauteur={tete.hauteur}
           encoche={tete.encoche}
           steps={sansTransitions(enTete.steps, showTransitions)}
@@ -140,7 +138,7 @@ export function PageScan({
               <div data-entete-scan className="mb-4">
                 <div className="flex items-start gap-2">
                   <span className="mt-1">{rond}</span>
-                  <h2 className="min-w-0 break-words text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight">
+                  <h2 className="min-w-0 break-words text-[22px] font-bold text-foreground leading-tight tracking-tight">
                     {enTete.songTitle}
                   </h2>
                 </div>
@@ -165,8 +163,8 @@ export function PageScan({
               >
                 {t("performance.next")}{" "}
                 <span className="font-semibold text-foreground">{nextEntry.block.title}</span>
-                {" · "}
-                <span className="font-mono">{nextEntry.block.songKey}</span>
+                {" "}
+                <CarreTonalite petit k={nextEntry.block.songKey} langue={nextEntry.block.language === "zh" ? "zh" : "fr"} />
               </button>
             </div>
           )}
@@ -183,7 +181,7 @@ export function PageScan({
           {/* En-tête du chant sur une ligne (K3) : le titre gravé est coupé. */}
           <div data-entete-scan className="mb-2 flex items-center gap-2 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
             {rond}
-            <h2 className="min-w-[3em] truncate text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight">
+            <h2 className="min-w-[3em] truncate text-[22px] font-bold text-foreground leading-tight tracking-tight">
               {enTete.songTitle}
             </h2>
             {tempo}
