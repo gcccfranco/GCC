@@ -174,7 +174,7 @@ export default function SetlistsPage() {
 
   // ── Corbeille (SC2, docs/spec-createur-corbeille-absences.md) ──
   // Les ids du bandeau « Annuler » (la suppression qui vient d'avoir lieu), la section repliée en bas
-  // d'« Archives », et la setlist dont la suppression définitive attend confirmation.
+  // de la page (tous les onglets), et la setlist dont la suppression définitive attend confirmation.
   const [enCorbeille, setEnCorbeille] = useState<string[]>([]);
   const fermerBandeau = useCallback(() => setEnCorbeille([]), []);
   const [corbeille, setCorbeille] = useState<FSSetlist[]>([]);
@@ -190,9 +190,16 @@ export default function SetlistsPage() {
   }, []);
 
   useEffect(() => {
-    if (!user || tab !== "archived") return;
+    if (!user) return;
     getCorbeille().then(setCorbeille).catch(() => {});
-  }, [user, tab, versionCorbeille]);
+  }, [user, versionCorbeille]);
+
+  /** « Voir la corbeille » du bandeau : ouvre la section, puis y descend après le rendu. */
+  function voirCorbeille() {
+    setCorbeilleOuverte(true);
+    const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.setTimeout(() => document.getElementById("corbeille")?.scrollIntoView({ behavior: reduit ? "auto" : "smooth", block: "start" }), 0);
+  }
 
   /** Relit les listes de la page sans l'écran « Chargement » : après une restauration. */
   async function rafraichir() {
@@ -610,7 +617,7 @@ export default function SetlistsPage() {
         )}
 
         {enCorbeille.length > 0 && (
-          <BandeauCorbeille count={enCorbeille.length} onAnnuler={annulerCorbeille} onFermer={fermerBandeau} />
+          <BandeauCorbeille count={enCorbeille.length} onAnnuler={annulerCorbeille} onFermer={fermerBandeau} onVoir={voirCorbeille} />
         )}
 
         {/* ── Barre d'action de la sélection ──
@@ -709,7 +716,7 @@ export default function SetlistsPage() {
           )
         )}
         {feteFiltree && tab !== "mine" && !echecListe && piedFete}
-        {tab === "archived" && corbeilleVisible.length > 0 && (
+        {user && (canCreate || corbeilleVisible.length > 0) && (
           <SectionCorbeille
             setlists={corbeilleVisible}
             ouverte={corbeilleOuverte}

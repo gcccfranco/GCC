@@ -136,6 +136,21 @@ avis contraire.
 - **Tests** : `tests/setlist-corbeille.spec.ts` (nouveau), `tests/setlist-suppression-groupee.spec.ts` (PATCH au
   lieu de DELETE).
 
+### SC2 bis — corbeille toujours visible, codé le 17/11/2026
+
+Demande de Timothée (16/11 : « je ne la vois nul part sur le site ») ; go le 17/11 sur la proposition « une ligne
+« Corbeille » toujours visible en bas de la page Setlists, sur tous les onglets, même vide, plus un lien « Voir la
+corbeille » dans le bandeau ». Décisions déléguées (session_01UMdfuadBap5UNB5eVPW7xi, 17/11) :
+- La ligne se montre à toute personne connectée qui peut créer une setlist, ou qui a quelque chose dans sa corbeille ;
+  jamais sans compte. (Un musicien, qui peut créer, voit donc sa corbeille vide.)
+- Vide : titre « Corbeille » sans « (0) », la phrase d'aide et « Elle est vide pour l'instant. », sans rien à déplier.
+- La corbeille se charge sur tous les onglets (avant : seulement dans « Archives »).
+- « Voir la corbeille » ouvre la section et y descend (défilement sans animation si l'animation est réduite) ; il
+  marche aussi en arrivant de la fiche (`?corbeille=…`), où le même bandeau s'affiche. Le bandeau reste.
+- 中文 proposés, **à relire par Timothée** : 回收站 (titre vide), 回收站目前是空的。, 查看回收站.
+- Vérifié : tsc, lint, `setlist-corbeille` (nouveaux tests : chaque onglet vide et plein, lien du bandeau, 中文 vide)
+  et sept specs voisines de la page Setlists sur tous les projets ; captures téléphone et ordinateur regardées.
+
 ### SC3 — codé le 18/10/2026
 
 - **Modèle** : `users/{uid}/absences/{id}` = `{ du, au, motif? }` (`src/lib/firebase/absences.ts`, type
