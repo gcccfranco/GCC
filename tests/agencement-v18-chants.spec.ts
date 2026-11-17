@@ -309,7 +309,9 @@ test.describe("le volet de droite avant d'avoir choisi (A5 à A8, grands écrans
     expect(titres).toEqual(rangee.slice(0, 5));
     // Une ligne ouvre le chant à droite ; le chant ouvert passe en tête, ici comme dans la rangée.
     await lignes.nth(2).getByRole("link").click();
-    await expect(droite(page).getByRole("heading", { level: 1 })).toHaveText(/Abrite-moi/i);
+    // Sous `next dev`, la page du chant se rend à la demande : 4 à 10 s mesurées (17/11/2026) quand les
+    // projets tournent ensemble ; en ligne elle est pré-rendue (generateStaticParams). D'où 15 s, comme listePrete.
+    await expect(droite(page).getByRole("heading", { level: 1 })).toHaveText(/Abrite-moi/i, { timeout: 15_000 });
     await page.goBack();
     await expect(lignesDe(page, "Récemment ouverts").first().locator("[data-titre]")).toHaveText(/Abrite-moi/i);
     await expect(liste(page).getByTestId("recents").getByRole("link").first()).toHaveText(/Abrite-moi/i);
