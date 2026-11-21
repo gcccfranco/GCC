@@ -25,6 +25,7 @@ import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist
 import { SECTION_PALETTE_KEY, sectionColorKind } from "@/lib/sectionPalette";
 import { dpFullName, groupSteps, paletteKeyOf } from "@/lib/setlist/dp";
 import { uniqueSections } from "@/lib/setlist/uniqueSections";
+import { copiesSousOrigine, passagesRetouches } from "@/lib/setlist/passages";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { ordreJoue, resolveStructureOverride } from "@/lib/chordpro/structure";
 import { toSegments } from "@/lib/chordpro/segments";
@@ -602,6 +603,11 @@ export function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance
   );
 }
 
+/** « 1ʳᵉ fois », « 2ᵉ fois »… : le rang d'un passage dans la structure. */
+export function rangLibelle(rang: number, t: (key: string, options?: Record<string, unknown>) => string): string {
+  return rang === 1 ? t("maPartition.passage.premier") : t("maPartition.passage.rang", { n: rang });
+}
+
 /** Rond de repère (page chant, tête de feuille d'un scan) : forme, texte du signe, « ×N ». */
 export const REPERE_ROND = "inline-flex items-center justify-center rounded-full h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5";
 export const REPERE_TEXTE = "text-sm sm:text-lg font-bold leading-none tracking-[0.02em]";
@@ -621,10 +627,13 @@ export function StructureStrip({
   pleines,
   rappel = "unique",
   disposition = "classique",
+  retouches,
   className = "",
   children,
 }: {
   steps: SectionOccurrence[];
+  /** UP-4 : passages retouchés seuls (uid de l'étape → section d'origine et rang) ; leur pastille garde l'abréviation de l'origine et porte un repère. */
+  retouches?: Map<string, { origine: ChordProSection; rang: number }>;
   /** Tonalité jouée : une « modulation » vers elle n'en est pas une. */
   songKey?: string;
   details?: boolean;
@@ -651,7 +660,13 @@ export function StructureStrip({
   children?: React.ReactNode;
 }) {
   const { t, i18n } = useTranslation();
-  const groups = groupSteps(steps, (section) => formatSectionName(section, t));
+  // Un passage retouché seul ne se replie pas avec les autres (le repère se perdrait) : son libellé porte un marqueur.
+  const groups = groupSteps(steps, (section) => (retouches?.has(section.uid) ? `${formatSectionName(section, t)}\u0000${section.uid}` : formatSectionName(section, t))).map((g) => {
+    const r = retouches?.get(g.step.section.uid);
+    if (!r) return g;
+    const nom = formatSectionName(r.origine, t);
+    return { ...g, abbr: abbreviateSection(r.origine), full: t("maPartition.passage.retouche", { nom, rang: rangLibelle(r.rang, t) }), retouche: true };
+  });
   const pleine = new Set(groups.flatMap((g, i) => (g.uids.some((uid) => pleines?.has(uid)) ? [i] : [])));
   // Ordre joué : les groupes tout entiers avant la 1re étape de la page sont des points.
   const rangDe = new Map(steps.map((st, k) => [st.section.uid, k]));
@@ -737,6 +752,9 @@ export function StructureStrip({
                       <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
                       {g.repeat > 1 && <span className={petit ? "ml-px font-semibold leading-none text-[10px]" : REPERE_FOIS}>×{g.repeat}</span>}
                     </span>
+                  )}
+                  {"retouche" in g && (
+                    <span role="img" data-passage-retouche aria-label={g.full} className="absolute -right-1 -top-1 h-2 w-2 rounded-full ring-2 ring-background" style={{ background: colorOf(retouches?.get(g.step.section.uid)?.origine ?? g.step.section) }} />
                   )}
                   {n !== undefined && (
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
@@ -965,14 +983,16 @@ interface SectionViewProps {
   onConflit?: (index: number, choix: "mienne" | "chant") => void;
   /** Crayon, pour qui règle le culte : « Passer au culte » sous chaque ligne que j'ai retouchée (`srcLine`). */
   onPasserAuCulte?: (srcLine: number) => void;
+  /** Passage retouché seul (UP-4) : « Refrain · 2ᵉ fois » prend la place du nom de la section. */
+  libelle?: string;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, marques, onConflit, onPasserAuCulte }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, marques, onConflit, onPasserAuCulte, libelle }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
   const uiIsZh = i18n.language === "zh-CN";
-  const label = formatSectionName(section, t);
+  const label = libelle ?? formatSectionName(section, t);
   // Ossature seule (paroles ET accords masqués) : pas de corps, donc ni marge
   // sous le libellé ni padding bas plus grand que le haut — le libellé reste
   // centré dans son cadre, même agrandi en vue structure.
@@ -1109,7 +1129,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           <div className="min-w-0">
           <div data-copy-ignore className="flex min-h-[var(--rep-p)] min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
             {/* Le nom sans la modulation : la ligne de suite la porte. */}
-            <span><NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{label}</NomSection>{repeat > 1 ? ` ×${repeat}` : ""}</span>
+            <span><NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{libelle ? <span data-passage-note>{label}</span> : label}</NomSection>{repeat > 1 ? ` ×${repeat}` : ""}</span>
             {suite}
           </div>
           </div>
@@ -1161,7 +1181,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
             <span className={`block max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-px ${sigle.length > 2 ? "text-[11px] md:text-xs" : ""}`}>{sigle}</span>
           </span>
           <span data-partition-nom className={`text-[13px] font-medium text-muted-foreground md:text-[15px] ${police}`}>
-            <NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{label}</NomSection>
+            <NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{libelle ? <span data-passage-note>{label}</span> : label}</NomSection>
             {repeat > 1 && <span className="ml-1">×{repeat}</span>}
           </span>
           {keyChange && (
@@ -1212,7 +1232,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           {bodyHidden ? (
             <div className="min-w-0">
             <div data-copy-ignore className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
-              <span data-scene-nom-ligne><NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{label}</NomSection></span>
+              <span data-scene-nom-ligne><NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{libelle ? <span data-passage-note>{label}</span> : label}</NomSection></span>
               {suite}
             </div>
             </div>
@@ -1245,7 +1265,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         />
         <span data-section-nom className={`text-xs font-semibold tracking-normal ${uiIsZh ? zh_lyric_font.className : chord_font.className}`}
               style={{ color: "var(--sec-c, #6b7080)" }}>
-          <NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{label}</NomSection>
+          <NomSection occurrenceUids={occurrenceUids} nom={label} crayon={!!onLineSelect}>{libelle ? <span data-passage-note>{label}</span> : label}</NomSection>
           {repeat > 1 && <span className="ml-1 normal-case">×{repeat}</span>}
           {keyChange && (
             <span className="ml-2 normal-case tracking-normal text-xs font-bold" style={{ color: "var(--sec-c, currentColor)" }}>
@@ -1327,6 +1347,9 @@ interface SongViewProps {
   enTete?: React.ReactNode;
   /** Page chant : remplace la pastille de tonalité de l'en-tête (composant `Armure`). */
   armure?: React.ReactNode;
+  /** Passages retouchés seuls (copie de section → section d'origine, `sectionOrigins`) : en « Une fois chacune » la
+   *  copie se place sous son origine avec sa note, et la rangée de structure la marque (UP-4). */
+  sectionOrigins?: Record<string, string>;
 }
 
 export function SongView({
@@ -1355,6 +1378,7 @@ export function SongView({
   apresBandeau,
   enTete: enTeteFourni,
   armure,
+  sectionOrigins,
 }: SongViewProps) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
@@ -1369,13 +1393,23 @@ export function SongView({
     bodyStructure && bodyStructure.length > 0 && !canUseJianpu
       ? resolveSectionOccurrences(resolveStructureOverride(ast.sections, bodyStructure), { sectionNotes: {}, sectionKeys })
       : null;
+  // UP-4 : en « Une fois chacune » et « Plan », le corps et la rangée suivent ma structure (setlist) quand elle existe, copie
+  // retouchée seule ou non (la feuille du Crayon demande le passage sur la même base) ; en ordre joué, le corps la suit déjà.
+  // shortcut: en ordre « Tout le chant » la rangée garde la structure de la présidence (ses notes), sans repère sur ma copie ; à reprendre si on s'en plaint.
+  const stepsLus = personalSteps && layout !== "played" ? personalSteps : steps;
+  const retouches = new Map(
+    [...passagesRetouches(stepsLus, sectionOrigins)].flatMap(([uid, r]) => {
+      const origine = ast.sections.find((s) => s.id === r.origine);
+      return origine ? [[uid, { origine, rang: r.rang }] as const] : [];
+    }),
+  );
   const shown: { step: SectionOccurrence; uids: string[]; withDetails: boolean }[] =
     layout === "structure"
       ? []
-      : personalSteps
-        ? personalSteps.map((step) => ({ step, uids: [step.section.uid], withDetails: false }))
-        : layout === "unique"
-          ? uniqueSections(steps, ast.metadata.key).map((u) => ({ ...u, withDetails: false }))
+      : layout === "unique"
+        ? copiesSousOrigine(uniqueSections(stepsLus, ast.metadata.key).map((u) => ({ ...u, withDetails: false })), sectionOrigins)
+        : personalSteps
+          ? personalSteps.map((step) => ({ step, uids: [step.section.uid], withDetails: false }))
           : steps.map((step) => ({ step, uids: [step.section.uid], withDetails: true }));
   // Ligne sous l'armure de la page chant : « 4/4 · ♩ = 66 » (le « 1=D » est dans l'armure, RU-3).
   const ligneTempo: React.ReactNode[] = [];
@@ -1506,7 +1540,7 @@ export function SongView({
           dès que le corps ne les porte plus (sections uniques, structure seule,
           structure perso — même en ordre joué, défaut depuis le 20/09/2026). */}
       {/* Sur le scan (`corps`), le bandeau porte seul notes, transitions et nuances. */}
-      <StructureStrip steps={steps} songKey={ast.metadata.key} disposition={disposition} details={corps !== undefined || layout !== "played" || personalSteps !== null} className="pt-2 pb-3">
+      <StructureStrip steps={stepsLus} retouches={retouches} songKey={ast.metadata.key} disposition={disposition} details={corps !== undefined || layout !== "played" || personalSteps !== null} className="pt-2 pb-3">
         {bascule}
       </StructureStrip>
       </>
@@ -1532,11 +1566,13 @@ export function SongView({
           const shownSection = keyChange && ast.metadata.key
             ? transposeSection(section, semitonesTo(ast.metadata.key, keyChange), keyChange)
             : section;
+          const retouche = layout === "unique" ? retouches.get(section.uid) : undefined;
           return (
             <div key={`${section.uid ?? section.id}-${i}`}>
               <NotationAccordsProvider tonalite={keyChange ?? ast.metadata.key}>
               <SectionView
                 section={shownSection}
+                libelle={retouche ? t("maPartition.passage.note", { nom: formatSectionName(retouche.origine, t), rang: rangLibelle(retouche.rang, t) }) : undefined}
                 language={ast.metadata.language}
                 showChords={showChords}
                 showPinyin={isZh ? showPinyin : false}

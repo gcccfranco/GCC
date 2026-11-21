@@ -19,7 +19,7 @@ export function structUidAt(ov: string, index: number): string {
 
 /** Remonte la chaîne des copies (copie d'une copie) jusqu'à une section du
  *  chant d'origine. Renvoie null si `sectionId` n'est pas une copie. */
-function originOf(origins: Record<string, string>, sectionId: string): string | null {
+export function originOf(origins: Record<string, string>, sectionId: string): string | null {
   let current = origins[sectionId];
   if (current === undefined) return null;
   const seen = new Set([sectionId]);

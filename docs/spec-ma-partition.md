@@ -419,3 +419,34 @@ Format : `passage` est facultatif, une version ancienne du site l'ignore et mont
   Vérification : tsc propre ; `ma-partition-traits`, `ma-partition-crayon`, `annotations-forscore` sur les cinq
   projets : 353 passés, 2 échecs, 5 sautés en 14 min. Les deux échecs étaient déjà là avant : (z) au téléphone (rouge
   sur la base) et (v) sur ordinateur-1440 (instable sous charge), tous deux dans R5b. Reste : UP-4, Crayon seulement.
+- 21/11/2026, soir : **UP-4 faite** (Crayon seulement, accords et paroles ; aucun dessin ni annotation touché, pas de
+  `firestore.rules`). Avec l'ordre « Une fois chacune », la feuille d'une ligne d'une section que la structure répète
+  demande « Pour quel passage ? » : les pastilles du plan (seules celles de la section touchée actives, cible de 44 px)
+  et « Toutes les répétitions » ; une pastille copie la section comme en UP-3, « Toutes » retouche partout. Le passage
+  retouché seul s'affiche juste sous sa section d'origine, son libellé devient « Refrain · 2ᵉ fois » (dans l'en-tête de
+  sa carte, couleur de la section) ; dans la rangée de structure, sa pastille garde l'abréviation de l'origine et porte
+  un badge de la couleur de la section (« retouché seul »), aussi en « Plan ». Pages chant (ma partition, hors
+  `?structure=`) et setlist (pour moi et pour le culte). Code : `src/lib/setlist/passages.ts` (nouveau), `EditLineSheet`,
+  `SongView` (corps et `StructureStrip`), `SetlistDetailClient`, `SongDetailClient`, `PartitionView`, locales fr et zh-CN.
+  Le passage est gardé par l'identité de la copie dans la structure (comme UP-3), le rang « 2ᵉ fois » n'est que calculé
+  à l'affichage. **Décisions déléguées (session, 21/11)** : (1) dans ces ordres, rien n'est choisi d'avance (« on demande
+  c'est pour quelle ») et l'enregistrement reste désactivé jusqu'au choix ; une pastille choisie montre son nom ;
+  (2) ordre « Plan » : sur la page chant aucune ligne n'est montrée, donc rien à toucher, seul le badge de la structure
+  s'applique ; sur la page setlist le Crayon garde l'ordre joué forcé en « Plan » (lignes et dessins comme avant) ;
+  (3) page setlist : le Crayon ne force plus l'ordre joué en « Une fois chacune » (sans quoi UP-4 n'y existait pas) —
+  renverse en partie le choix du coup d'œil « Crayon = ordre joué », test `coup-d-oeil` adapté ; (4) avec ma propre
+  structure, le corps suit aussi « Une fois chacune » (avant : ordre joué), pour que corps et feuille s'accordent.
+  `critique-design` : note dans l'en-tête de la carte (elle se détachait en deux colonnes à 1 440 px), badge coloré
+  au lieu d'un point noir, nom du passage dans la feuille ; faits. Tests : nouvelle spec `ma-partition-passage-unique`
+  (12 tests : FR page chant et setlist, accord et paroles, « Toutes », culte, ZH 一生爱你 en paroles, « Tout le chant »
+  inchangé, badge dans les trois ordres) ; avec `coup-d-oeil`, `ma-partition-crayon`, `ma-partition-lecture`,
+  `harmonie-ma-version` sur les trois appareils : 167 passés, 14 échecs en 6,0 min au premier tour (attentes de test
+  fausses, `sectionOrigins` perdu par `viewOf` en lecture « mienne », écriture culte lue trop tôt : corrigés) ; second
+  tour `ma-partition-passage-unique` + `ma-partition-lecture` : 87 passés, 0 échec en 2,4 min ; après la retouche
+  design, `ma-partition-passage-unique` + `ma-partition-crayon` : 63 passés, 0 échec en 2,5 min. Reste rouge `coup-d-oeil:215` (libellé « Chaque section une fois » dans le mode louange, rouge
+  avant la tranche, mode louange : R5b). tsc propre, eslint 0 erreur. **Reste / finitions** : en « Tout le chant » sur
+  la page setlist, la rangée garde la structure de la présidence, sans badge sur ma copie (`shortcut:`) ; badge et
+  numéro de position peuvent se superposer au coin d'une pastille ; libellés zh-CN (« 改哪一次？ », « 第2次 »,
+  « 单独修改 ») à faire relire ; interface en 中文 et mode sombre non capturés ; soulignement des lignes retouchées
+  entre caractères et pinyin (antérieur). Captures aux cinq largeurs regardées par `regard`. Lot « Un passage ou tous »
+  fini ; R5b lancée ensuite (`docs/spec-retouches-2026-11-21.md`).

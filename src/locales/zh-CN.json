@@ -2710,6 +2710,14 @@
     "copierTachesOui": "复制任务"
   },
   "maPartition": {
+    "passage": {
+      "question": "改哪一次？",
+      "aide": "请选择一次再保存。",
+      "premier": "第1次",
+      "rang": "第{{n}}次",
+      "note": "{{nom}} · {{rang}}",
+      "retouche": "{{nom}} · {{rang}}，单独修改"
+    },
     "jeLis": "我在看",
     "mienne": "我的乐谱",
     "culte": "聚会的乐谱",

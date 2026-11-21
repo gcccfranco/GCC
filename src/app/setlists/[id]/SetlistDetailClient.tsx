@@ -103,6 +103,7 @@ import {
   materializeSectionCopy,
 } from "@/lib/chordpro/editSource";
 import { structUidAt, revertSectionOrigins, idDeSection } from "@/lib/setlist/sectionOrigins";
+import { pastillesDuPlan, type PastillePassage } from "@/lib/setlist/passages";
 import { TOUCHER_44 } from "@/lib/toucher44";
 import { Retour } from "@/components/layout/EnTetePage";
 
@@ -116,6 +117,8 @@ type LineEditState = EditLineTarget & {
    *  pour cette occurrence (sinon toutes les répétitions changeraient). */
   repeatedSectionId?: string;
   structIndex?: number;
+  /** « Une fois chacune » (UP-4) : le plan en pastilles, le passage se choisit dans la feuille (`structIndex`). */
+  plan?: PastillePassage[];
 };
 
 /** Sur quoi appliquer l'édition d'une ligne : le source (et les index de
@@ -442,7 +445,9 @@ export function SetlistDetailClient() {
     const bodyStructure = l.valeur === "mienne" ? (l.mienne?.structure?.length ? l.mienne.structure : culte)
       : l.valeur === "culte" ? culte
       : l.valeur === "origine" ? ordre : null;
-    return { ...v, shown: "presidence", content: null, value: "presidence", bodyStructure };
+    // Les copies de section (UP-4) sont celles de ma partition quand je la lis.
+    const sectionOrigins = l.valeur === "mienne" ? l.mienne?.sectionOrigins : undefined;
+    return { ...v, shown: "presidence", content: null, value: "presidence", bodyStructure, ...(sectionOrigins ? { sectionOrigins } : {}) };
   }
   /** Mes éléments de la lecture : l'ancienne « Ma version » seule quand je la lis (la fusion `myItems` donne la partition neuve). */
   const itemsDe = (item: SetlistItem) => (lectures[item.songSlug]?.valeur.startsWith("v:") ? (user ? versions[user.uid]?.items : undefined) : myItems);
@@ -1238,6 +1243,7 @@ export function SetlistDetailClient() {
     // matérialisée ; pour moi, le choix se propose dans la feuille.
     let repeatedSectionId: string | undefined;
     let structIndex: number | undefined;
+    let plan: PastillePassage[] | undefined;
     const struct = structureLue(item);
     if (struct && sectionUid) {
       const sec = baseAst.sections.find((s) => s.lines.some((l) => l.srcLine === line.srcLine));
@@ -1248,6 +1254,11 @@ export function SetlistDetailClient() {
           if (j !== -1) {
             repeatedSectionId = sec.id;
             structIndex = j;
+            // Chaque section n'étant montrée qu'une fois, on ne voit pas quel passage on touche : la feuille le demande.
+            if (layout === "unique") {
+              plan = pastillesDuPlan(struct, baseAst.sections, { ...item.sectionOrigins, ...viewOf(item)?.sectionOrigins }, sec.id, t);
+              structIndex = undefined;
+            }
           }
         }
       }
@@ -1281,6 +1292,7 @@ export function SetlistDetailClient() {
       jianpuSrcLine: line.jianpuSrcLine,
       repeatedSectionId,
       structIndex,
+      plan,
       cible: viseeCrayon,
     });
   }
@@ -2556,8 +2568,14 @@ export function SetlistDetailClient() {
       <EditLineSheet
         target={editTarget}
         saving={savingLine}
-        repeatScope={editTarget?.repeatedSectionId !== undefined ? repeatScope : undefined}
+        repeatScope={editTarget?.repeatedSectionId !== undefined && !editTarget.plan ? repeatScope : undefined}
         onRepeatScope={setRepeatScope}
+        passages={editTarget?.plan}
+        passage={editTarget?.plan ? (repeatScope === "all" ? "all" : editTarget.structIndex ?? null) : undefined}
+        onPassage={(p) => {
+          setRepeatScope(p === "all" ? "all" : "one");
+          if (p !== "all") setEditTarget((cur) => (cur ? { ...cur, structIndex: p } : cur));
+        }}
         onClose={() => setEditTarget(null)}
         onSaveLine={handleSaveLine}
         onInsertAfter={handleInsertAfter}

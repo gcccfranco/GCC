@@ -242,11 +242,20 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await expect(song1Sections(page)).toHaveCount(2);
   });
 
-  test("Crayon : ordre joué forcé, le bandeau reste", async ({ page }) => {
+  test("Crayon : « Une fois chacune » reste en sections uniques, « Plan » force l'ordre joué ; le bandeau reste", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
     // Depuis SC1 (18/10/2026), seul le créateur adapte et modifie une setlist : la musicienne est la créatrice de la sienne.
     await openPartitions(page, setlist({ ownerId: MUSICIEN.uid }));
     await expect(song1Sections(page)).toHaveCount(2);
+    await basculerMode(page);
+    await expect(song1Sections(page), "« Une fois chacune » : les deux sections, pas l'ordre joué").toHaveCount(2);
+    await expect(page.getByRole("list", { name: "Structure" }).first()).toBeVisible();
+  });
+
+  test("Crayon : « Plan » force l'ordre joué (les lignes restent), le bandeau reste", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("partition-layout", "structure"));
+    await openPartitions(page, setlist({ ownerId: MUSICIEN.uid }));
+    await expect(song1Sections(page)).toHaveCount(0);
     await basculerMode(page);
     await expect(song1Sections(page)).toHaveCount(3);
     await expect(page.getByRole("list", { name: "Structure" }).first()).toBeVisible();

@@ -558,8 +558,10 @@ function NormalSongItem({
   }
   const titleHref = songHref(item.songSlug, item, setlistId, item.position);
 
-  // Mode Adapter : on tape une occurrence précise → ordre joué forcé.
-  const layout: PartitionLayout = editMode ? "played" : layoutPref;
+  // Crayon (UP-4) : l'ordre « Une fois chacune » vaut aussi pendant la retouche (la feuille montre le plan et demande
+  // le passage) ; « Plan » n'affiche aucune ligne, on force l'ordre joué pour qu'il y ait quelque chose à toucher.
+  const layout: PartitionLayout = editMode && layoutPref === "structure" ? "played" : layoutPref;
+  const sectionOrigins = { ...item.sectionOrigins, ...version?.sectionOrigins };
   const playedSections = ordreJoue(ast.sections, item.structureOverride);
   // Partition 简谱 : les 升调 de la structure jouée, qu'un scan ne peut pas montrer.
   const steps = (jianpuScore ? resolveSectionOccurrences(playedSections, item) : []).map((st) =>
@@ -679,6 +681,7 @@ function NormalSongItem({
         layout={layout}
         slug={item.songSlug}
         bodyStructure={version?.bodyStructure}
+        sectionOrigins={sectionOrigins}
         titleHref={titleHref}
         enTete={disposition !== "partition" ? enTete : undefined}
         apresBandeau={premier ? <AideAccordsEnLigne /> : undefined}
