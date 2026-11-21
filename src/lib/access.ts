@@ -310,6 +310,14 @@ export function canReserverPour(
   return permis.length === 0 || qui.every((q) => permis.includes(q));
 }
 
+/** AS15 : `personnes` d'une réservation (« Des personnes… ») : 20 au plus, chacune { uid non vide, nom de 1 à 60 caractères }.
+ *  Miroir de reservationValide() dans firestore.rules, qui ne vérifie que la taille de la liste (les rules ne la parcourent pas) :
+ *  le détail uid/nom se vérifie ici, avant l'écriture. */
+export function personnesEcrivables(p: unknown): boolean {
+  return Array.isArray(p) && p.length <= 20 && p.every((x) =>
+    typeof x?.uid === "string" && x.uid !== "" && typeof x.nom === "string" && x.nom.length >= 1 && x.nom.length <= 60);
+}
+
 // ─── Évènements (lot 6, docs/spec-evenements.md) — miroir : firestore.rules ───
 
 type EvenementDroits = { pour: string; organisateurUid: string; reunion?: boolean | null };

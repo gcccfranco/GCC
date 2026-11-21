@@ -111,6 +111,8 @@ export interface Creneau {
   libre?: boolean;
   quoi: string;
   qui: string[];
+  /** AS15 : « Des personnes… » (leurs noms sont aussi dans `qui`). */
+  personnes?: { uid: string; nom: string }[];
   note: string;
   auteurUid: string;
   auteurNom: string;

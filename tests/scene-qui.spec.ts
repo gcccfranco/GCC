@@ -92,68 +92,76 @@ const ouvrirFeuille = async (page: Page, nom = "Réserver 17:00 – 19:00") => {
   return page.getByRole("dialog");
 };
 
-test("Réserver : Intergroupe et Interfranco proposés ; « Autre… » ouvre un champ, la valeur s'écrit telle quelle", async ({ page }) => {
-  const db = await ouvrir(page, MEMBRE);
+const COMPTES = {
+  "users/uid-maelys": { email: "maelys@example.com", firstName: "Maëlys", lastName: "Brun", planningName: "" },
+  "users/uid-gaspard": { email: "gaspard@example.com", firstName: "Gaspard", lastName: "Vidal", planningName: "" },
+};
+
+test("Réserver : Intergroupe et Interfranco proposés ; « Des personnes… » ouvre la recherche, `qui` = groupes + noms, `personnes` écrit (AS15)", async ({ page }) => {
+  const db = await ouvrir(page, MEMBRE, COMPTES);
   const f = await ouvrirFeuille(page);
   await expect(f.getByRole("checkbox", { name: "Intergroupe" })).toBeVisible();
   await expect(f.getByRole("checkbox", { name: "Interfranco" })).toBeVisible();
-  await expect(f.getByLabel("Qui ?")).toHaveCount(0);
+  await expect(f.getByRole("checkbox", { name: "Autre…" })).toHaveCount(0);
+  await expect(f.getByRole("searchbox", { name: "Chercher un nom" })).toHaveCount(0);
   await f.getByRole("radio", { name: "Séance louange" }).check();
-  await f.getByRole("checkbox", { name: "Autre…" }).check();
-  const champ = f.getByLabel("Qui ?");
-  await expect(champ).toBeVisible();
-  await expect(champ).toHaveAttribute("maxlength", "40");
-  await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeDisabled();
-  await champ.fill("  Répétition des jeunes  ");
+  await f.getByRole("checkbox", { name: "Gp Joie" }).check();
+  await f.getByRole("checkbox", { name: "Des personnes…" }).check();
+  await expect(f.getByLabel("Qui ?")).toHaveCount(0);
+  await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeDisabled(); // « Des personnes… » sans personne
+  await f.getByRole("searchbox", { name: "Chercher un nom" }).fill("mae");
+  await f.getByRole("checkbox", { name: "Maëlys B." }).click();
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect.poll(() => db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"))?.data)
-    .toMatchObject({ quoi: "Séance louange", qui: ["Répétition des jeunes"] });
+    .toMatchObject({ quoi: "Séance louange", qui: ["Gp Joie", "Maëlys B."], pour: "Gp Joie, Maëlys B.", personnes: [{ uid: "uid-maelys", nom: "Maëlys B." }] });
 });
 
-test("Réserver : un texte égal à « Culte Francophone » s'écrit « Franco »", async ({ page }) => {
-  const db = await ouvrir(page, MEMBRE);
-  const f = await ouvrirFeuille(page);
-  await f.getByRole("radio", { name: "Chant" }).check();
-  await f.getByRole("checkbox", { name: "Autre…" }).check();
-  await f.getByLabel("Qui ?").fill("culte francophone");
-  await f.getByRole("button", { name: "Réserver", exact: true }).click();
-  await expect.poll(() => db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"))?.data)
-    .toMatchObject({ qui: ["Franco"] });
-});
-
-test("Réserver : saison limitée — pas d'« Autre… » pour un membre, présent pour la coordination", async ({ page }) => {
+test("Réserver : saison limitée — pas de « Des personnes… » pour un membre", async ({ page }) => {
   const limitee = { "programmes/x7Kq2": { ...NOEL, quiAutorises: GROUPES_EDD } };
   await ouvrir(page, MEMBRE, limitee);
   const f = await ouvrirFeuille(page);
   await expect(f.getByRole("checkbox")).toHaveCount(9);
-  await expect(f.getByRole("checkbox", { name: "Autre…" })).toHaveCount(0);
+  await expect(f.getByRole("checkbox", { name: "Des personnes…" })).toHaveCount(0);
 });
 
-test("Réserver : saison limitée — « Autre… » présent pour la coordination", async ({ page }) => {
+test("Réserver : saison limitée — « Des personnes… » présent pour la coordination", async ({ page }) => {
   await ouvrir(page, COORD, { "programmes/x7Kq2": { ...NOEL, quiAutorises: GROUPES_EDD } });
   const f = await ouvrirFeuille(page);
-  await expect(f.getByRole("checkbox", { name: "Autre…" })).toBeVisible();
+  await expect(f.getByRole("checkbox", { name: "Des personnes…" })).toBeVisible();
 });
 
-test("Réouverture : une valeur libre → « Autre… » cochée, champ rempli ; une ancienne valeur reste « retiré »", async ({ page }) => {
+test("Réouverture : une valeur libre ancienne → pastille cochée à son texte, qui disparaît décochée ; « Des personnes… » rouverte avec ses pastilles ; une ancienne valeur reste « retiré »", async ({ page }) => {
   await ouvrir(page, COORD, {
     "programmes/x7Kq2/creneaux/l": resa("l", ["Répétition des jeunes"]),
     "programmes/x7Kq2/creneaux/r": { ...resa("r", ["Jeunes"]), debut: "17:00", fin: "18:00" },
+    "programmes/x7Kq2/creneaux/p": { ...resa("p", ["Gp Joie", "Maëlys B."]), debut: "18:00", fin: "19:00", personnes: [{ uid: "uid-maelys", nom: "Maëlys B." }] },
+    ...COMPTES,
   });
   const ligne = (texte: string) => page.getByRole("region", { name: "Dimanche 11 octobre", exact: true }).getByRole("listitem").filter({ hasText: texte });
   await ligne("Sketch · Répétition des jeunes").getByRole("button", { name: /^Plus d'actions/ }).first().click();
   await page.getByRole("menuitem", { name: "Modifier" }).click();
   const f = page.getByRole("dialog");
-  await expect(f.getByRole("checkbox", { name: "Autre…" })).toBeChecked();
-  await expect(f.getByLabel("Qui ?")).toHaveValue("Répétition des jeunes");
+  await expect(f.getByRole("checkbox", { name: "Répétition des jeunes" })).toBeChecked();
+  await expect(f.getByRole("checkbox", { name: "Des personnes…" })).not.toBeChecked();
   await expect(f.getByRole("checkbox", { name: /retiré/ })).toHaveCount(0);
+  // Décochée, elle disparaît (jamais ajoutable), comme une valeur retirée.
+  await f.getByRole("checkbox", { name: "Répétition des jeunes" }).click();
+  await expect(f.getByRole("checkbox", { name: "Répétition des jeunes" })).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await ligne("Sketch · Jeunes").getByRole("button", { name: /^Plus d'actions/ }).first().click();
   await page.getByRole("menuitem", { name: "Modifier" }).click();
   await expect(page.getByRole("dialog").getByRole("checkbox", { name: "Jeunes · retiré" })).toBeChecked();
-  await expect(page.getByRole("dialog").getByRole("checkbox", { name: "Autre…" })).not.toBeChecked();
+  await expect(page.getByRole("dialog").getByRole("checkbox", { name: "Des personnes…" })).not.toBeChecked();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await ligne("Sketch · Gp Joie, Maëlys B.").getByRole("button", { name: /^Plus d'actions/ }).first().click();
+  await page.getByRole("menuitem", { name: "Modifier" }).click();
+  const d = page.getByRole("dialog");
+  await expect(d.getByRole("checkbox", { name: "Des personnes…" })).toBeChecked();
+  await expect(d.getByRole("checkbox", { name: "Maëlys B." })).toBeChecked(); // une seule pastille, pas de doublon libre
+  await expect(d.getByRole("checkbox", { name: "Maëlys B." })).toHaveCount(1);
 });
 
 test("Ordre de passage : la liste « Qui » propose « Autre… » et son champ", async ({ page }) => {
@@ -164,12 +172,12 @@ test("Ordre de passage : la liste « Qui » propose « Autre… » et son champ"
   await expect(page.getByLabel("Qui ?")).toBeVisible();
 });
 
-test("中文 : la feuille Réserver propose 其他… et le champ 谁？", async ({ page }) => {
+test("中文 : la feuille Réserver propose 指定人员… et le champ 搜索姓名", async ({ page }) => {
   await ouvrir(page, MEMBRE, {}, "/evenements/scene/noel", true);
   await page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("button").first().click();
   const f = page.getByRole("dialog");
   await expect(f.getByRole("checkbox", { name: "联合聚会", exact: true })).toBeVisible();
   await expect(f.getByRole("checkbox", { name: "法语联合聚会" })).toBeVisible();
-  await f.getByRole("checkbox", { name: "其他…" }).check();
-  await expect(f.getByLabel("谁？")).toBeVisible();
+  await f.getByRole("checkbox", { name: "指定人员…" }).check();
+  await expect(f.getByRole("searchbox", { name: "搜索姓名" })).toBeVisible();
 });

@@ -177,16 +177,16 @@ export async function updateProgramme(
 // `programmes/{id}/creneaux` ne sont plus lus (AR19) ; le cron des rappels lit aussi `reservations` (T5c). Droits : firestore.rules
 // (match /reservations/{id}, feteReservable) et src/lib/access.ts (canReserverPour, canEditReservation).
 
-/** Le libellé des `qui` (en français, comme un texte d'« Autre… »), 60 caractères au plus (SA7). */
-export function pourDe(qui: string[]): string {
-  return qui.map((q) => libelleQui(q)).join(", ").slice(0, 60);
+/** Le libellé des `qui` (en français), 60 caractères au plus (SA7) ; 200 quand des personnes sont choisies (AS15, rules : `pour` <= 200). */
+export function pourDe(qui: string[], max = 60): string {
+  return qui.map((q) => libelleQui(q)).join(", ").slice(0, max);
 }
 
 /** Un créneau de fête lu comme la réservation qu'il est (inverse de `creneauDeReservation`) : la feuille « Réserver » la modifie. */
 export function reservationDeCreneau(programmeId: string, c: Creneau): Reservation {
   return {
     id: c.id, salle: "grande", date: c.dimanche, debut: c.debut, fin: c.fin, ...(c.libre && { libre: true }), pour: pourDe(c.qui), quoi: c.quoi,
-    fete: programmeId, qui: c.qui, note: c.note, auteurUid: c.auteurUid, auteurNom: c.auteurNom, createdAt: c.createdAt, updatedAt: c.updatedAt,
+    fete: programmeId, qui: c.qui, ...(c.personnes && { personnes: c.personnes }), note: c.note, auteurUid: c.auteurUid, auteurNom: c.auteurNom, createdAt: c.createdAt, updatedAt: c.updatedAt,
   };
 }
 

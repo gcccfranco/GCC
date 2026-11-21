@@ -2555,6 +2555,7 @@
       "pasBesoinSalle": "Pas besoin de salle",
       "dateFin": "Date de fin",
       "lieu": "Lieu",
+      "lieuAilleurs": "Lieu",
       "description": "Description",
       "places": "Places",
       "placesHint": "Sans limite si vide",
@@ -4681,7 +4682,9 @@
       "salle": "Salle",
       "pourQui": "Pour qui",
       "pourQuoi": "Pour quoi",
-      "autre": "Autre…",
+      "personnes": "Des personnes…",
+      "chercherPersonne": "Chercher un nom",
+      "personnesEchec": "La liste des personnes n'a pas pu être chargée.",
       "personne": "Non précisé",
       "groupes": "Groupes et cultes",
       "equipes": "Équipes",
@@ -4724,8 +4727,6 @@
       "evenement": "Voir l'évènement"
     },
     "formulaire": {
-      "salle": "Salle de l'église",
-      "ailleurs": "Ailleurs",
       "heures": "Une salle de l'église demande une heure de début et de fin.",
       "echec": "Les salles n'ont pas pu être vérifiées. Réessayez."
     }

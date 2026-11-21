@@ -1,5 +1,6 @@
 import { FS_BASE, authHeader, checkRest, fromFsValue, lireRequete, toFsFields, type RawDoc } from "./setlists";
 import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
+import { personnesEcrivables } from "@/lib/access";
 import { salleLue, type SalleId } from "@/lib/salles/salles";
 
 // Réservations de salles (docs/spec-salles.md, § Modèle, lot 3) : reservations/{id}, en REST comme le reste (jamais le
@@ -14,7 +15,7 @@ export interface Reservation {
   /** « HH:MM » ; `fin` > `debut`, le même jour (SA7). */
   debut: string;
   fin: string;
-  /** Valeur de QUI, `equipe:<id>` (une équipe de l'organigramme) ou texte d'« Autre… », 60 caractères au plus (AR16). */
+  /** Valeur de QUI, `equipe:<id>` (une équipe de l'organigramme) ou texte libre ancien ; avec `personnes` (AS15), les noms joints par « , » ; 200 caractères au plus (AR16). */
   pour: string;
   /** 1 à 80 caractères. */
   quoi: string;
@@ -29,6 +30,8 @@ export interface Reservation {
   /** Valeurs de QUI (ou « Autre… » en texte) ; `pour` en reçoit le libellé, pour Salles. */
   qui?: string[];
   note?: string;
+  /** AS15 : « Des personnes… » (20 au plus) ; `pour` en porte les noms. Contrôle : `personnesEcrivables` (access.ts). */
+  personnes?: { uid: string; nom: string }[];
   /** Un autre moment (SQ-B), hors de la grille de la saison. */
   libre?: boolean;
 }
@@ -41,6 +44,7 @@ function fromFsReservation(raw: RawDoc): Reservation {
     salle: salleLue(s("salle") as SalleId), date: s("date"), debut: s("debut"), fin: s("fin"), pour: s("pour"), quoi: s("quoi"),
     auteurUid: s("auteurUid"), auteurNom: s("auteurNom"), createdAt: s("createdAt"), updatedAt: s("updatedAt"),
     ...(typeof d.fete === "string" && { fete: d.fete, qui: (d.qui as string[]) ?? [], note: s("note") }),
+    ...(Array.isArray(d.personnes) && { personnes: d.personnes as { uid: string; nom: string }[] }),
     ...(d.libre === true && { libre: true }),
   };
 }
@@ -69,6 +73,7 @@ export async function listReservations(du: string, au: string): Promise<Reservat
 }
 
 export async function createReservation(data: Omit<Reservation, "id" | "createdAt" | "updatedAt">): Promise<string> {
+  if (data.personnes !== undefined && !personnesEcrivables(data.personnes)) throw new Error("personnes");
   const maintenant = new Date().toISOString();
   const res = await fetch(`${FS_BASE}/reservations`, {
     method: "POST",
@@ -82,6 +87,7 @@ export async function createReservation(data: Omit<Reservation, "id" | "createdA
 
 /** Modifie les champs donnés ; l'auteur ne change pas (les rules le refusent). */
 export async function updateReservation(id: string, data: Partial<Omit<Reservation, "id" | "auteurUid" | "auteurNom" | "createdAt">>): Promise<void> {
+  if (data.personnes !== undefined && !personnesEcrivables(data.personnes)) throw new Error("personnes");
   const champs = { ...data, updatedAt: new Date().toISOString() };
   const mask = Object.keys(champs).map((k) => `updateMask.fieldPaths=${k}`).join("&");
   const res = await fetch(`${FS_BASE}/reservations/${id}?${mask}&currentDocument.exists=true`, {

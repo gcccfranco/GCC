@@ -839,7 +839,7 @@ test("P6 — Réserver : Grande salle et « Oui, pour Noël » d'avance, « Rés
   await expect(jour(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 14:30 – 15:00" })).toHaveCount(0);
 });
 
-test("P6 — Réserver : les douze valeurs et « Autre… » d'emblée, sans « + N » (décision 34, CF3) ; 敬拜团, Jeunes et Chorale ne sont plus proposés", async ({ page }) => {
+test("P6 — Réserver : les douze valeurs et « Des personnes… » d'emblée, sans « + N » (décision 34, CF3) ; 敬拜团, Jeunes et Chorale ne sont plus proposés", async ({ page }) => {
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
   await jour(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 14:30 – 15:00" }).click();
   const f = page.getByRole("dialog");

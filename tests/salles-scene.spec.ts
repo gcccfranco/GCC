@@ -127,7 +127,7 @@ test.describe("AR, T5a, AS14 : les créneaux de fête sont des réservations de 
     const fn = plat(rules.slice(rules.indexOf("function feteReservable()"), rules.indexOf("match /reservations/{id}")));
     expect(fn).toContain("!('fete' in request.resource.data) || isCoordination() || gereUnPlanning() || reservable(request.resource.data.fete, request.resource.data.qui)");
     const valide = plat(rules.slice(rules.indexOf("function reservationValide()"), rules.indexOf("function feteReservable()")));
-    expect(valide).toContain("r.keys().hasOnly(['salle', 'date', 'debut', 'fin', 'pour', 'quoi', 'auteurUid', 'auteurNom', 'createdAt', 'updatedAt', 'fete', 'qui', 'note', 'libre'])");
+    expect(valide).toContain("r.keys().hasOnly(['salle', 'date', 'debut', 'fin', 'pour', 'quoi', 'auteurUid', 'auteurNom', 'createdAt', 'updatedAt', 'fete', 'qui', 'note', 'libre', 'personnes'])");
     expect(valide).not.toContain("r.salle == 'scene' && r.fete");
     expect(valide).toContain("(request.method == 'update' && r.salle == 'scene' && resource.data.salle == 'scene')");
     expect(valide).toContain("(!('fete' in r) || (r.fete is string && r.qui is list && r.get('note', '') is string))");

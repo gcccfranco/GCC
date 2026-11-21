@@ -40,7 +40,7 @@ export function sceneReminder(c: Pick<Creneau, "debut" | "fin" | "quoi" | "qui">
  *  redevient `dimanche`. Partagé par `listCreneaux` (programmes.ts) et le cron des rappels (T5c). */
 export function creneauDeReservation(r: Reservation): Creneau {
   return {
-    id: r.id, dimanche: r.date, debut: r.debut, fin: r.fin, ...(r.libre && { libre: true }), quoi: r.quoi, qui: r.qui ?? [],
+    id: r.id, dimanche: r.date, debut: r.debut, fin: r.fin, ...(r.libre && { libre: true }), quoi: r.quoi, qui: r.qui ?? [], ...(r.personnes && { personnes: r.personnes }),
     note: r.note ?? "", auteurUid: r.auteurUid, auteurNom: r.auteurNom, createdAt: r.createdAt, updatedAt: r.updatedAt,
   };
 }

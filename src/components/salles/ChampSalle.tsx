@@ -110,7 +110,7 @@ export function ChampSalle({ v, set, refus, eglise, setEglise }: {
       )}
       </>}
       {!eglise && (
-        <Champ id="ev-lieu" label={t("evenements.form.lieu")}>
+        <Champ id="ev-lieu" label={t("evenements.form.lieuAilleurs")}>
           <Input id="ev-lieu" className="h-11" value={v.lieu} maxLength={120} onChange={(e) => set({ lieu: e.target.value })} />
         </Champ>
       )}

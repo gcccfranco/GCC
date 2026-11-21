@@ -268,6 +268,13 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     await champ.selectOption("fidelite");
     await expect(champ.locator("option:checked")).toHaveText("Salle Fidélité · 小班");
   });
+
+  test("中文 : le champ du mode « Ailleurs » s'appelle 具体地址 (et non 地点, déjà dans la question)", async ({ page }) => {
+    await ouvrir(page, COORDINATION, "/back-office/evenements/nouveau", { zh: true });
+    await page.getByRole("radio", { name: "其他地点" }).check({ force: true });
+    await expect(page.getByLabel("具体地址", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("地点", { exact: true })).toHaveCount(0);
+  });
 });
 
 const estTelephone = (info: TestInfo) => info.project.name === "telephone";

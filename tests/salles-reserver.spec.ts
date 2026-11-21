@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { autreQuiCroise, chevauchement, conflictKey, conflictMessage, decalage, sallesLibres } from "../src/lib/salles/conflit";
 import { occupationsDu } from "../src/lib/salles/occupations";
 import type { Reservation } from "../src/lib/firebase/reservations";
+import { personnesEcrivables } from "../src/lib/access";
 import { orga, signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { estTelephone, interdireDialoguesNatifs, repondreDansLeSite, verifierSansDebordement } from "./helpers/agencement";
 
@@ -23,6 +24,16 @@ const DOCS: Record<string, Record<string, unknown>> = {
   "reservations/r-leandre": reservation({
     salle: "reunion", date: "2026-11-15", debut: "19:00", fin: "20:30", pour: "", quoi: "Préparation",
     auteurUid: "uid-leandre", auteurNom: "Léandre",
+  }),
+  // AS15 : un compte par personne (noms inventés), une ancienne valeur libre, une réservation « Des personnes… ».
+  "users/uid-maelys": { email: "maelys@example.com", firstName: "Maëlys", lastName: "Brun", planningName: "" },
+  "users/uid-gaspard": { email: "gaspard@example.com", firstName: "Gaspard", lastName: "Vidal", planningName: "" },
+  "reservations/r-vieux": reservation({
+    salle: "paix", date: "2026-11-15", debut: "20:00", fin: "21:00", pour: "Chorale des jeunes", quoi: "Partitions", auteurUid: "uid-leandre", auteurNom: "Léandre",
+  }),
+  "reservations/r-duo": reservation({
+    salle: "amour", date: "2026-11-15", debut: "20:00", fin: "21:00", pour: "Maëlys B.", quoi: "Duo", auteurUid: "uid-leandre", auteurNom: "Léandre",
+    personnes: [{ uid: "uid-maelys", nom: "Maëlys B." }],
   }),
   // Un autre jour : ne paraît pas le 15.
   "reservations/r-lundi": reservation({
@@ -123,21 +134,79 @@ test.describe("AR, T3a : réserver une salle", () => {
     await expect(bloc(page, "bonte", "16:00")).toContainText("Répétition du sketch");
   });
 
-  test("« Autre… » pour qui : un texte libre, 60 caractères au plus", async ({ page }) => {
+  test("« Des personnes… » pour qui : chercher, cocher deux comptes, décocher une pastille, plus de texte libre (AS15)", async ({ page }) => {
     const db = await ouvrir(page);
     await ouvrirLaFeuille(page);
     const f = feuille(page);
     await f.getByLabel("De", { exact: true }).fill("16:00");
     await f.getByLabel("À", { exact: true }).fill("17:00");
     await salles(page).getByRole("radio", { name: /Salle imprimante/ }).check();
-    await f.getByLabel("Pour qui").selectOption({ label: "Autre…" });
-    const autre = f.getByRole("textbox", { name: "Autre…" });
-    await expect(autre).toHaveAttribute("maxlength", "60");
-    await autre.fill("Chorale des jeunes");
     await f.getByLabel("Pour quoi").fill("Partitions");
-    await f.getByRole("button", { name: "Réserver", exact: true }).click();
+    await expect(f.getByLabel("Pour qui").locator("option", { hasText: "Autre…" })).toHaveCount(0);
+    await f.getByLabel("Pour qui").selectOption({ label: "Des personnes…" });
+    await expect(f.getByRole("textbox", { name: "Autre…" })).toHaveCount(0);
+    const reserver = f.getByRole("button", { name: "Réserver", exact: true });
+    await expect(reserver).toBeDisabled(); // au moins une personne
+    const chercher = f.getByRole("searchbox", { name: "Chercher un nom" });
+    await chercher.fill("mae");
+    await f.getByRole("checkbox", { name: "Maëlys B." }).click();
+    await chercher.fill("gas");
+    await f.getByRole("checkbox", { name: "Gaspard V." }).click();
+    await expect(reserver).toBeEnabled();
+    // Les choisies sont des pastilles cochées ; un clic décoche et retire.
+    await f.getByRole("checkbox", { name: "Gaspard V." }).click();
+    await chercher.fill("");
+    await expect(f.getByRole("checkbox", { name: "Gaspard V." })).toHaveCount(0);
+    await chercher.fill("gas");
+    // Entrée dans la recherche n'envoie pas la feuille (le bouton est pourtant actif).
+    await chercher.press("Enter");
+    await expect(f).toBeVisible();
+    expect(db.writes.filter((w) => w.path.startsWith("reservations/"))).toHaveLength(0);
+    await f.getByRole("checkbox", { name: "Gaspard V." }).click();
+    await reserver.click();
     await expect(f).toBeHidden();
-    expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"))?.data).toMatchObject({ salle: "imprimante", pour: "Chorale des jeunes", quoi: "Partitions" });
+    expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"))?.data).toMatchObject({
+      salle: "imprimante", pour: "Maëlys B., Gaspard V.", quoi: "Partitions",
+      personnes: [{ uid: "uid-maelys", nom: "Maëlys B." }, { uid: "uid-gaspard", nom: "Gaspard V." }],
+    });
+  });
+
+  test("une ancienne valeur libre se rouvre telle quelle, choisie, et se réécrit sans changement", async ({ page }) => {
+    const db = await ouvrir(page, { vue: "grille" });
+    await bloc(page, "paix", "20:00").click();
+    await detail(page).getByRole("button", { name: "Modifier" }).click();
+    const f = feuille(page);
+    await expect(f.getByLabel("Pour qui")).toHaveValue("Chorale des jeunes");
+    await expect(f.getByLabel("Pour qui").locator("option:checked")).toHaveText("Chorale des jeunes");
+    await expect(f.getByRole("textbox", { name: "Autre…" })).toHaveCount(0);
+    await f.getByLabel("Pour quoi").fill("Partitions du soir");
+    await f.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(f).toBeHidden();
+    const ecrit = db.writes.find((w) => w.method === "PATCH" && w.path === "reservations/r-vieux")?.data;
+    expect(ecrit).toMatchObject({ pour: "Chorale des jeunes", quoi: "Partitions du soir" });
+    expect(ecrit).not.toHaveProperty("personnes");
+  });
+
+  test("« Des personnes… » rouverte : pastilles, puis une autre valeur retire `personnes`", async ({ page }) => {
+    const db = await ouvrir(page, { vue: "grille" });
+    await bloc(page, "amour", "20:00").click();
+    await detail(page).getByRole("button", { name: "Modifier" }).click();
+    const f = feuille(page);
+    await expect(f.getByLabel("Pour qui").locator("option:checked")).toHaveText("Des personnes…");
+    await expect(f.getByRole("checkbox", { name: "Maëlys B." })).toBeChecked();
+    await f.getByLabel("Pour qui").selectOption("Gp Joie");
+    await f.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(f).toBeHidden();
+    expect(db.doc("reservations/r-duo")).toMatchObject({ pour: "Gp Joie" });
+    expect(db.doc("reservations/r-duo")).not.toHaveProperty("personnes");
+  });
+
+  test("en 中文 : « Des personnes… » devient 指定人员… et le champ 搜索姓名", async ({ page }) => {
+    await ouvrir(page, { zh: true });
+    await page.getByRole("button", { name: "预订场地" }).click();
+    const f = feuille(page);
+    await f.getByLabel("为谁", { exact: true }).selectOption({ label: "指定人员…" });
+    await expect(f.getByRole("searchbox", { name: "搜索姓名" })).toBeVisible();
   });
 
   test("SA7 : la fin suit le début, pour quoi est obligatoire, pas de date passée", async ({ page }) => {
@@ -245,6 +314,16 @@ const R = (r: Partial<Reservation> & Pick<Reservation, "id" | "salle" | "debut" 
   date: "2026-11-15", pour: "", quoi: "Essai", auteurUid: "uid-x", auteurNom: "Ysaline", createdAt: "", updatedAt: "", ...r,
 });
 const SOURCES = { services: [], scene: [] };
+
+test("AS15 : personnesEcrivables, miroir des rules (2) : 20 au plus, uid non vide, nom de 1 à 60", () => {
+  const p = (n: number) => Array.from({ length: n }, (_, i) => ({ uid: `uid-${i}`, nom: `Nom ${i}` }));
+  expect(personnesEcrivables(p(20))).toBe(true);
+  expect(personnesEcrivables(p(21))).toBe(false);
+  expect(personnesEcrivables([{ uid: "", nom: "Lina" }])).toBe(false);
+  expect(personnesEcrivables([{ uid: "uid-lina", nom: "" }])).toBe(false);
+  expect(personnesEcrivables([{ uid: "uid-lina", nom: "x".repeat(61) }])).toBe(false);
+  expect(personnesEcrivables("Lina")).toBe(false);
+});
 
 test.describe("AR, T3b : fonctions du chevauchement", () => {
   test("même salle (une ancienne « scene » est la Grande salle) ; bornes qui se touchent permises ; hors elle-même", () => {

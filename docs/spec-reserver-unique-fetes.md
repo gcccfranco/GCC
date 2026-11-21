@@ -311,3 +311,30 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   `salles-modele`, `salles-scene` (trois) : 297 passés, 5 rouges (nouveau test de la Grille, corrigé : 5 verts), en
   4 min ; après les retouches, `salles-grille` et `salles-liste` : 99 passés en 1 min 45. Écran regardé aux quatre
   dispositions et à 1 440 px, en clair, en sombre et en 中文.
+- 21/11/2026 — **T8 faite** (session T8, file A) : « Des personnes… » remplace « Autre… » dans « Pour qui » (AS15, RS10).
+  Composant neuf `ChoixPersonnes.tsx` (`src/components/salles/`) : profils par `listProfiles()`, nom = `nomCourt`,
+  recherche locale (`normalizeName`), huit résultats à cocher, les choisies en pastilles (un clic retire), 20 au plus ;
+  Entrée ne soumet pas la feuille ; « Chargement… », et en cas d'échec « La liste des personnes n'a pas pu être
+  chargée » avec « Réessayer ». `Pastille` déplacée dans `src/components/salles/Pastille.tsx`. Salles : option « Des
+  personnes… » du select, au moins une personne, écrit `personnes` et `pour` = noms joints (200 au plus) ; une
+  réservation qui quitte « Des personnes… » perd `personnes`. Fête : pastille « Des personnes… » (si « Autre… » était
+  permis), `personnes` écrit. Ancienne valeur libre : lue telle quelle (option à son texte dans Salles, pastille cochée
+  dans la fête, qui disparaît une fois décochée) ; on ne peut plus en écrire. `pourDe(qui, max = 60)` : 200 seulement
+  avec des personnes. **Rules (2)** : `personnes` permis (liste de 20 au plus), `pour` ≤ 200 ; miroir
+  `personnesEcrivables` (`access.ts`, uid non vide, nom de 1 à 60), vérifié avant chaque écriture (`reservations.ts`).
+  **⚠ `firestore.rules` à publier à la main par Timothée** (avec T5a et T1) : d'ici là, la vraie base refuse toute
+  réservation « Des personnes… ». Décisions déléguées (session T8, 21/11) : (1) aucun sélecteur de personnes
+  réutilisable dans le code (Notifier et PartagerMaPartition ont chacun le leur) : composant neuf sur le modèle de
+  PartagerMaPartition ; (2) dans la fête, les noms des personnes choisies s'écrivent **aussi** dans `qui` (valeurs
+  libres, comme l'ancien « Autre… ») : la page de la fête, le Back-Office, les rappels et le Calendrier les affichent
+  sans changement ; (3) le test « un texte égal à Culte Francophone s'écrit Franco » est retiré (plus de texte libre).
+  Retouches de Timothée (même jour) : en 中文, le champ du mode « Ailleurs » s'appelle 具体地址
+  (`evenements.form.lieuAilleurs`, « Lieu » en français) ; `salles.formulaire.salle`, `salles.formulaire.ailleurs`
+  et `salles.feuille.autre` retirées des deux locales. `critique-design` : à retoucher, aucun bloquant ; faites :
+  résultats amenés au-dessus du pied de la feuille, croix bleue du champ de recherche masquée, contour des résultats ;
+  laissées : la pastille ne montre pas de croix de retrait (le ✓ coché se décoche), focus du champ = celui de `Input`.
+  Polices chinoises régénérées (nouveaux caractères). Tests : tsc et lint verts ; `salles-reserver` (cinq projets),
+  `scene-qui`, `salles-evenement`, `salles-scene`, `scene-paques-noel`, `libelles-langues`, `coherence` (trois
+  appareils) : 651 passés, 3 rouges (un test de `scene-qui`, réel, corrigé), en 15 min ; après les retouches,
+  `salles-reserver` et `scene-qui` : 172 passés en 4 min. Écran regardé aux quatre dispositions et à 1 440 px, en
+  clair, en sombre et en 中文. Suite : T9 (dernière de la file A, fin de lot).

@@ -2521,6 +2521,7 @@
       "pasBesoinSalle": "不需要场地",
       "dateFin": "结束日期",
       "lieu": "地点",
+      "lieuAilleurs": "具体地址",
       "description": "说明",
       "places": "名额",
       "placesHint": "留空表示不限",
@@ -4629,7 +4630,9 @@
       "salle": "场地",
       "pourQui": "为谁",
       "pourQuoi": "做什么",
-      "autre": "其他…",
+      "personnes": "指定人员…",
+      "chercherPersonne": "搜索姓名",
+      "personnesEchec": "未能加载人员名单。",
       "personne": "不指定",
       "groupes": "团契与崇拜",
       "equipes": "团队",
@@ -4672,8 +4675,6 @@
       "evenement": "查看活动"
     },
     "formulaire": {
-      "salle": "教会场地",
-      "ailleurs": "其他地点",
       "heures": "选择教会场地时，须填写开始和结束时间。",
       "echec": "未能核对场地，请重试。"
     }
