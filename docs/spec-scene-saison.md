@@ -468,3 +468,20 @@ Tests : Playwright, session simulée (`tests/helpers/fakeSession.ts`), noms fict
   `evenements-fete`, `coherence`) sur trois appareils : 720 passés, 0 échec (10 min) ; après les corrections du
   relecteur, `fete-image`, `chants-fetes-setlist`, `fete-setlists-suivent`, `coherence` : 105 passés (1 min 30).
   Polices : aucun caractère chinois nouveau. Non vérifié : la projection sur le vrai Firestore (seul le double).
+- **IF-2 fait (21/11/2026, même session)** : `CarteFete` lit l'image de l'édition par `lireImageEdition` ; avec
+  image, gabarit de `CarteEpingle` avec image (image 16/9 en tête, carte claire `bg-card ring-1 ring-border`,
+  titre, date · « dans N jours », ligne d'état, « Réserver la Grande salle » pleine et « Voir la fête » bordée,
+  `data-image="1"`) ; sans image ou pendant la lecture, bandeau bleu inchangé ; aucun accent bleu ajouté.
+  `CarteEpingle`, la page « Voir la fête » et `LigneFetePassee` non touchés. Décision déléguée (session, 21/11), sur
+  `critique-design` : quand les réservations ne sont pas ouvertes, « Voir la fête » passe en pilule pleine (la carte
+  garde toujours une action pleine, comme l'épinglé). Tests : `evenements-fete-image.spec.ts` (nouveau, dans
+  `SPECS_GRAND_ECRAN`, cinq cas avec captures) + `evenements-fete`, `evenements-epingle`, `fete-image`, cinq
+  projets : 162 passés, 0 échec (2 min). Captures aux cinq dispositions, sombre et 中文, triées par `regard` (rien
+  de bloquant), 8 relues par `critique-design` (rien de bloquant).
+  Restes (non faits, à décider) : (1) pendant la lecture de l'image la carte est bleue puis devient claire et
+  grandit (≈ 200 px au téléphone) — piste : un booléen `aImage` écrit avec l'image et lu avec la liste, pour
+  rendre d'emblée le gabarit clair avec un emplacement `bg-muted` ; (2) existait avant : carte dans le panneau
+  de la liste en grand écran (gris sur gris en sombre), contour des pilules bordées à ≈ 1,3:1 sur tout le site,
+  apostrophe droite de « jusqu'au » (`fr.json`) ; (3) l'enveloppe de la carte en rangée qui défile (fête + deux
+  épinglés, tablette) n'a pas `h-full` (déjà vrai pour le bandeau bleu). Non vérifié : une vraie photo et le vrai
+  Firestore (projection, masque).

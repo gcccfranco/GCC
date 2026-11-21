@@ -19,6 +19,8 @@ const SPECS_GRAND_ECRAN = [
   /evenements-fete\.spec\.ts/,
   // Lot AS, T6 : l'évènement épinglé en grand (une ou plusieurs cartes, rangée qui défile, avec ou sans image).
   /evenements-epingle\.spec\.ts/,
+  // Lot « Image de fête », IF-2 (docs/spec-scene-saison.md) : la carte de la fête avec image, au gabarit de l'épinglé avec image.
+  /evenements-fete-image\.spec\.ts/,
   // Lot AS, T4 (docs/spec-reserver-unique-fetes.md) : le rail à deux onglets et l'en-tête compact de la page de la fête (h1 « Noël 2026 », halo fondu).
   /fete-en-tete\.spec\.ts/,
   // Salles AR, T2b (docs/spec-salles.md) : la Liste, la bande de jours, le repère d'heure, la journée d'une salle (page ou volet).
