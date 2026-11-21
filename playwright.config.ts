@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { readdirSync, readFileSync } from "node:fs";
 
 /** Port dédié aux tests : le `next dev` de travail (3000) reste libre. */
 export const PORT = Number(process.env.PW_PORT ?? 3100);
@@ -231,6 +232,41 @@ const SPECS_GRAND_ECRAN = [
 // non) : chaque test passe le mode lui-même, les serveurs reçoivent la leur plus bas.
 delete process.env.NEXT_PUBLIC_BACK_OFFICE;
 
+/** Le second serveur (back-office coupé) ne démarre que si la commande vise une spec qui s'en sert
+ *  (celles qui importent `BASE_URL_COUPE`), ou si elle ne nomme aucun fichier (suite complète,
+ *  `--last-failed`, filtre par mot) : un démarrage de `next dev` de moins par passe (Timothée, 21/11/2026).
+ *  `PW_COUPE=1` le force, `PW_COUPE=0` l'interdit. */
+function besoinServeurCoupe(): boolean {
+  if (process.env.PW_COUPE) return process.env.PW_COUPE === "1";
+  const i = process.argv.indexOf("test");
+  if (i < 0) return true;
+  const avecValeur = new Set(["--project", "--grep", "-g", "--grep-invert", "--workers", "-j", "--reporter",
+    "--shard", "--max-failures", "-x", "--config", "-c", "--timeout", "--repeat-each", "--retries", "--output", "--trace"]);
+  const fichiers: string[] = [];
+  for (let k = i + 1; k < process.argv.length; k++) {
+    const a = process.argv[k];
+    if (a.startsWith("-")) { if (!a.includes("=") && avecValeur.has(a)) k++; continue; }
+    fichiers.push(a);
+  }
+  if (!fichiers.length) return true;
+  if (!fichiers.every((f) => /\.spec\.ts(:\d+)*$/.test(f))) return true;
+  const avecCoupe = new Set(readdirSync("tests").filter((f) => f.endsWith(".spec.ts")
+    && readFileSync(`tests/${f}`, "utf8").includes("BASE_URL_COUPE")));
+  return fichiers.some((f) => avecCoupe.has(f.replace(/(:\d+)+$/, "").split("/").pop()!));
+}
+
+const serveurCoupe = {
+  // Interrupteur coupé. Next 16 verrouille `.next/dev` : un second `next dev`
+  // dans le même dossier a besoin de son propre dossier de build.
+  command: `npm run dev -- -p ${PORT + 1}`,
+  url: BASE_URL_COUPE,
+  reuseExistingServer: true,
+  timeout: 180_000,
+  stdout: "ignore",
+  stderr: "pipe",
+  env: { NEXT_PUBLIC_BACK_OFFICE: "0", NEXT_DIST_DIR: ".next-coupe" },
+} as const;
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -276,16 +312,6 @@ export default defineConfig({
       // La suite existante teste le back-office : interrupteur ouvert, quoi que dise `.env.local`.
       env: { NEXT_PUBLIC_BACK_OFFICE: "1" },
     },
-    {
-      // Interrupteur coupé. Next 16 verrouille `.next/dev` : un second `next dev`
-      // dans le même dossier a besoin de son propre dossier de build.
-      command: `npm run dev -- -p ${PORT + 1}`,
-      url: BASE_URL_COUPE,
-      reuseExistingServer: true,
-      timeout: 180_000,
-      stdout: "ignore",
-      stderr: "pipe",
-      env: { NEXT_PUBLIC_BACK_OFFICE: "0", NEXT_DIST_DIR: ".next-coupe" },
-    },
+    ...(besoinServeurCoupe() ? [serveurCoupe] : []),
   ],
 });

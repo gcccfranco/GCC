@@ -54,7 +54,10 @@ passe ; une retouche ne se relance que pour un défaut visible.
 - **`/tranche`** — `executant` code et se vérifie par `npx tsc --noEmit` → `testeur` lance tsc, lint, les specs
   nommées et les voisines → `executant` corrige (deux tours au plus) → si ça résiste, Fable diagnostique et `executant`
   applique → `relecteur` relit le diff. Ne commite pas.
-  `args : { spec, tranche, consigne, tests: [...], base, echecsConnus?, preuve? }` ; `preuve` (essai réel sur build de
+  Tests plus courts (Timothée, 21/11/2026) : première passe arrêtée à 15 échecs (`--max-failures=15`) ; aux tours de
+  correction, seuls les tests rouges, sur leur appareil ; `next dev` gardé chaud d'une passe à l'autre, pages de
+  `pages` préchargées ; le serveur « coupé » (3101) ne démarre que pour les specs qui importent `BASE_URL_COUPE`.
+  `args : { spec, tranche, consigne, tests: [...], base, echecsConnus?, preuve?, pages? }` ; `preuve` (essai réel sur build de
   production) est obligatoire pour le service worker, le hors ligne, les notifications et les droits.
 - **`/verifier-constats`** — un `relecteur` par constat, ou par lot de cinq au plus pour les constats qui citent le
   même fichier ; un constat déjà corrigé sur `origin` sort en `deja_corrige`. À passer sur tout constat avant qu'il
