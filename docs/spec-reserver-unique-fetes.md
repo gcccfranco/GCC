@@ -241,3 +241,19 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   `evenements-epingle` neuve (dans `SPECS_GRAND_ECRAN`) avec `evenements`, `evenements-fete`, `evenements-2027`,
   `pages-en-grand-evenements` : 669 passés en 11 min 30 ; après la critique, `evenements-epingle`, `evenements-fete`,
   `pages-en-grand-evenements:405` : 130 passés en 1 min 50. Polices : aucun caractère chinois nouveau.
+- 21/11/2026 — **T4 faite** (file C) : rail de la section Église à deux onglets « Évènements · Salles »
+  (`EvenementsTabs.tsx`), « Évènements » allumé sur `/evenements/scene*` (AS8) ; page de la fête : en-tête compact
+  (`EnTetePage`, prop `surTitre` : « ‹ Évènements » au téléphone, petit libellé dès la tablette, puis le rail, sans
+  sous-titre), un seul h1 « Noël 2026 » à la taille des titres de page (au-dessus des deux volets en grand, à la marge
+  de la page ; l'ordre de passage ouvert en page `?vue=ordre` porte le h1 en une colonne), halo fondu par un masque en
+  dégradé (`.halo`, commun au site) (AS9). Décisions déléguées (session T4, 21/11) : le libellé est
+  `evenements.tabs.calendrier` (« Évènements » / « 活动 » ; `evenements.title` vaut « Église ») ; le petit libellé
+  reste dès la tablette, comme sur la planche (la critique proposait de le retirer, doublon avec l'onglet) ; rail
+  resserré (`mt-2`) sous le surtitre. Nouvelle `tests/fete-en-tete.spec.ts` (SPECS_GRAND_ECRAN) ; specs mises à jour :
+  `eglise-entree`, `agencement-v18-t7`, `evenements`, `programme-scene`, `scene-saison`, `scene-paques-noel` (P4, et
+  P6 « Retirer » : ligne centrée avant le menu, le titre déplaçant le contenu de 70 px sur 720 px de haut),
+  `salles-liste`, `chants-fetes-agencement`, `agencement-v18-regles`, helper `verifierEnTete`. Tests : tsc et lint
+  verts ; onze specs (fête, Évènements, Scène, Salles, chants des fêtes) sur trois appareils, cinq projets pour
+  l'agencement : 1 377 passés, 5 rouges en 29 min, corrigés puis relancés seuls (49 verts, 2 min) ; règles communes
+  des pages de fête : 14 passés en 41 s. `critique-design` : à retoucher, aucun bloquant (espacements du téléphone
+  repris) ; à voir : léger cerclage du flou du halo, antérieur. File C finie : aucune tranche lancée après.

@@ -109,6 +109,9 @@
     height: 320px;
     overflow: hidden;
     pointer-events: none;
+    /* Fondu jusqu'au transparent en bas : le flou ne s'arrête pas net au bord de la boîte (AS9). */
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
   }
   .halo::before {
     content: "";

@@ -124,13 +124,11 @@ test("fiche d'une section sans compte : introuvable", async ({ page }) => {
   await expect(page.getByText("Repas Groupe Paix")).toHaveCount(0);
 });
 
-test("onglets : un connecté voit le programme de scène à côté du calendrier", async ({ page }) => {
+test("onglets : un connecté voit Évènements et Salles, la page de la fête allume Évènements", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  await signInAs(page, JO, { ...DOCS, "programmes/noel": NOEL }, "/evenements");
-  await expect(page.getByRole("link", { name: "Évènements", exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "Noël", exact: true }).click();
-  await expect(page).toHaveURL(/\/evenements\/scene/);
-  await expect(page.getByRole("heading", { name: "Noël" })).toBeVisible();
+  await signInAs(page, JO, { ...DOCS, "programmes/noel": NOEL }, "/evenements/scene/noel");
+  await expect(page.getByRole("link", { name: "Évènements", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^Noël/ })).toBeVisible();
   // Lot 5 du chantier AR, T5b (docs/spec-salles.md, AR22) : on réserve une fenêtre libre, plus un créneau de grille.
   await expect(page.getByRole("button", { name: /^Réserver \d\d:\d\d – \d\d:\d\d$/ }).first()).toBeVisible();
 });

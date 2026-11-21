@@ -42,9 +42,9 @@ const contexte = (page: Page) => page.locator("[data-contexte-salles]");
 const repere = (page: Page) => page.getByRole("combobox", { name: /Heure|时间/ });
 
 test.describe("AR, T2b : Salles en Liste", () => {
-  test("connecté : le rail dit « Évènements · Salles · Pâques · Noël », Salles mène à /evenements/salles", async ({ page }) => {
+  test("connecté : le rail dit « Évènements · Salles », Salles mène à /evenements/salles", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/evenements");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles", "Pâques", "Noël"]);
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles"]);
     await ongletsRail(page).getByRole("link", { name: "Salles" }).click();
     await expect(page).toHaveURL(/\/evenements\/salles\/?$/);
     await expect(ongletsRail(page).getByRole("link", { name: "Salles" })).toHaveAttribute("aria-current", "page");

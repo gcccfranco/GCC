@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
-import { estGrandEcran, estTelephone, interdireDialoguesNatifs, repondreDansLeSite } from "./helpers/agencement";
+import { estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsRail, repondreDansLeSite } from "./helpers/agencement";
 import { fermerFeuille, reglageSaison, resumeSaison, versToutesLesReservations } from "./helpers/saisonScene";
 import { canReserverPour } from "../src/lib/access";
 import {
@@ -217,11 +217,6 @@ async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   return signInAs(page, who, creneauxEnReservations(docs), chemin ?? (who.coordination ? "/back-office/evenements/scene" : "/evenements/scene"));
 }
-/** L'onglet de la section Évènements, dans l'App. */
-async function ongletApp(page: Page, nom: string) {
-  await page.goto("/evenements");
-  return page.getByRole("link", { name: nom, exact: true });
-}
 
 const patches = (db: FakeDb, path = "programmes/noel") => db.writes.filter((w) => w.method === "PATCH" && w.path === path);
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
@@ -290,14 +285,16 @@ test("« Lancer les réservations » écrit `ouvert: true` en un seul PATCH, et 
   expect(patches(db)).toHaveLength(1);
   expect(patches(db)[0].data).toMatchObject({ ouvert: true });
   expect(Object.keys(patches(db)[0].data).sort()).toEqual(["modifiePar", "ouvert", "updatedAt"]);
-  await (await ongletApp(page, "Noël")).click();
+  // Lot AS, AS8 : plus d'onglet Noël dans le rail de l'App ; la page de la fête s'ouvre par son adresse.
+  await page.goto("/evenements/scene/noel");
   await expect(page.getByRole("heading", { name: "Noël 2026", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Réserver \d/ }).first()).toBeVisible();
 });
 
 test("une fois ouvert, un membre voit l'onglet, le samedi et le dimanche", async ({ page }) => {
   await ouvrir(page, NOE, { "programmes/noel": { ...NOEL26, ouvert: true } });
-  await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(ongletsRail(page).getByRole("link", { name: "Évènements" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { level: 1, name: "Noël 2026" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Samedi 10 octobre" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Dimanche 11 octobre" })).toBeVisible();
 });

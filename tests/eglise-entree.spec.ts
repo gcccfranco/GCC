@@ -41,11 +41,11 @@ test.describe("AR, T1 : l'entrée « Église »", () => {
     await expect(nav.getByRole("link", { name: "Évènements" })).toHaveCount(0);
   });
 
-  test("connecté : titre « Église », sous-titre, rail « Évènements · Salles · Pâques · Noël » (Salles depuis AR T2b), label « GCC Église »", async ({ page }) => {
+  test("connecté : titre « Église », sous-titre, rail « Évènements · Salles » (lot AS, AS8), label « GCC Église »", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/evenements");
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Église" })).toBeVisible();
     await expect(enTete(page)).toContainText("Évènements, salles et fêtes");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles", "Pâques", "Noël"]);
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles"]);
     const evenements = ongletsRail(page).getByRole("link", { name: "Évènements" });
     await expect(evenements).toHaveAttribute("href", /^\/evenements\/?$/);
     await expect(evenements).toHaveAttribute("aria-current", "page");
@@ -53,10 +53,9 @@ test.describe("AR, T1 : l'entrée « Église »", () => {
     await expect(labelVisible(page)).toHaveText(/(^|GCC\s*)Église$/);
   });
 
-  test("les adresses ne changent pas : l'onglet Noël mène à /evenements/scene/noel, sous l'entrée « Église »", async ({ page }) => {
-    await ouvrir(page, MEMBRE, "/evenements");
-    await ongletsRail(page).getByRole("link", { name: "Noël" }).click();
-    await expect(page).toHaveURL(/\/evenements\/scene\/noel\/?$/);
+  test("les adresses ne changent pas : /evenements/scene/noel reste sous l'entrée « Église »", async ({ page }) => {
+    await ouvrir(page, MEMBRE, "/evenements/scene/noel");
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles"]);
     await expect(navigation(page).getByRole("link", { name: "Église" })).toHaveAttribute("aria-current", "page");
     await expect(labelVisible(page)).toHaveText(/(^|GCC\s*)Église$/);
   });
@@ -69,13 +68,13 @@ test.describe("AR, T1 : l'entrée « Église »", () => {
     await expect(ongletsRail(page)).toHaveCount(0);
   });
 
-  test("中文 : 教会, 活动、场地和节日, rail 活动 · 场地 · 复活节 · 圣诞节", async ({ page }) => {
+  test("中文 : 教会, 活动、场地和节日, rail 活动 · 场地", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/evenements", true);
     const nav = navigation(page);
     await expect(nav.getByRole("link", { name: "教会" })).toHaveAttribute("href", /^\/evenements\/?$/);
     await expect(enTete(page).getByRole("heading", { level: 1, name: "教会" })).toBeVisible();
     await expect(enTete(page)).toContainText("活动、场地和节日");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["活动", "场地", "复活节", "圣诞节"]);
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["活动", "场地"]);
     await expect(labelVisible(page)).toHaveText(/(^|GCC\s*)教会$/);
   });
 });

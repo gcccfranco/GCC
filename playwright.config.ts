@@ -19,6 +19,8 @@ const SPECS_GRAND_ECRAN = [
   /evenements-fete\.spec\.ts/,
   // Lot AS, T6 : l'évènement épinglé en grand (une ou plusieurs cartes, rangée qui défile, avec ou sans image).
   /evenements-epingle\.spec\.ts/,
+  // Lot AS, T4 (docs/spec-reserver-unique-fetes.md) : le rail à deux onglets et l'en-tête compact de la page de la fête (h1 « Noël 2026 », halo fondu).
+  /fete-en-tete\.spec\.ts/,
   // Salles AR, T2b (docs/spec-salles.md) : la Liste, la bande de jours, le repère d'heure, la journée d'une salle (page ou volet).
   /salles-liste\.spec\.ts/,
   // Salles AR, T2c : la Grille (neuf colonnes, défilement au téléphone), le sélecteur « Liste · Grille » et la vue par appareil.

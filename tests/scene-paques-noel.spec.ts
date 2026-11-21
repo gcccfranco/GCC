@@ -492,22 +492,22 @@ async function ouvrirFete(page: Page, chemin: string, docs: Record<string, Recor
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   return signInAs(page, qui, creneauxEnReservations(docs), chemin);
 }
-const enTeteFete = (page: Page) => page.getByRole("heading", { level: 2 }).first();
+const enTeteFete = (page: Page) => page.getByRole("heading", { level: 1 });
 const historique = (page: Page) => page.evaluate(() => history.length);
 
-test("P4 — rail « Évènements · Salles · Pâques · Noël » pour un membre sans aucun programme", async ({ page }) => {
+test("P4 — rail « Évènements · Salles » (AS8) pour un membre sans aucun programme", async ({ page }) => {
   await ouvrirFete(page, "/evenements/scene/paques");
-  await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles", "Pâques", "Noël"]);
-  await expect(ongletsRail(page).getByRole("link", { name: "Pâques" })).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Église");
-  await expect(enTete(page)).toContainText("Évènements, salles et fêtes");
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles"]);
+  await expect(ongletsRail(page).getByRole("link", { name: "Évènements" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Pâques/);
+  await expect(enTete(page)).not.toContainText("Évènements, salles et fêtes");
   await verifierAgencement(page);
 });
 
 test("P4 — en chinois : 复活节 et 圣诞节 dans le rail, le titre de l'édition aussi", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN });
-  await expect(ongletsRail(page).getByRole("link")).toHaveText(["活动", "场地", "复活节", "圣诞节"]);
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["活动", "场地"]);
   await expect(enTeteFete(page)).toHaveText("圣诞节 2026");
 });
 
@@ -968,6 +968,8 @@ test("P6 — « ⋯ » › Modifier : Quoi, Qui, Note ; les heures restent", asy
 test("P6 — « ⋯ » › Retirer : la confirmation de l'app, aucune fenêtre du navigateur ; « Annuler » ne retire rien, « Retirer » envoie le DELETE", async ({ page }) => {
   const db = await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
   const sketch = ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour");
+  // Lot AS, AS9 : le titre de l'édition passe au-dessus des volets ; sur 720 px de haut, la ligne est centrée pour que le menu tienne.
+  await sketch.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await plus(sketch).click();
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   const confirmation = page.getByRole("alertdialog");
