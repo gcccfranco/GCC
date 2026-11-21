@@ -302,6 +302,16 @@ Ordre d'origine : UP-1 puis UP-2, UP-3 à part, UP-4 après. Depuis la correctio
 rouges du mode louange et des annotations : `docs/spec-retouches-2026-11-21.md`, § R5 ; même branche, Opus, consigne :
 lire `CLAUDE.md` puis ce § R5, une tranche, ligne d'Avancement dans ce fichier-là), puis s'arrête.
 
+**UP-5 — Finitions d'UP-4** (go de Timothée du 21/11 soir, sur la liste des restes : « Go pour corriger tout ça ») :
+Crayon seulement, aucun dessin touché. (1) Le badge « retouché seul » et le numéro de position ne se chevauchent
+plus au coin d'une pastille de la structure (les trois ordres, les cinq largeurs). (2) En « Tout le chant » sur la
+page setlist, la pastille de ma copie porte aussi le badge dans la rangée de structure (`SongView.tsx`, le
+`shortcut:` de la rangée) ; si c'est impossible sans décision nouvelle, le dire ici et s'arrêter sur ce point.
+(3) Thème sombre et interface en 中文 : capturer la feuille « Pour quel passage ? », la section « Refrain · 2ᵉ fois »
+et la rangée de structure, les regarder, corriger ce qui cloche (contraste du badge, libellé coupé). (4) Libellés
+zh-CN (`改哪一次？`, `第{{n}}次`, `单独修改`) : vérifier qu'ils s'accordent avec les mots déjà employés dans
+`zh-CN.json` (`所有重复`, `nthTime`) ; la relecture par un sinophone reste à Timothée.
+
 Format : `passage` est facultatif, une version ancienne du site l'ignore et montre le dessin partout
 (§ « Compatibilité du format », AN-4). `firestore.rules` : à relire, le champ est dans `traits` (liste libre).
 
