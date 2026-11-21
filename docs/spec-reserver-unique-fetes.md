@@ -146,6 +146,17 @@ propres à `CreneauForm` devenues orphelines, et (reste du lot 5) `creneauxDuJou
 | T9 | **La coordination annule avec un motif** : AS16, RS11 ; nouvelle route ; notification simulée dans les tests. | `src/app/api/salles/annulation/route.ts`, Salles (détail, Grille), page de la fête, Back-Office des fêtes, `access.ts`, `CLAUDE.md`, référence | nouvelle `tests/salles-annulation.spec.ts` (coordination : motif obligatoire, route appelée, réservation retirée ; auteur : suppression sans motif ; membre : pas de bouton) |
 | T10 | **« Où ? » dans le formulaire d'évènement et de réunion** : AS17. `critique-design` après. **Fin de lot** : specs du lot et des pages touchées (Salles, Scène, Évènements, réunions, `eglise-entree`, `back-office-coupe`) sur les cinq projets. | `EvenementForm.tsx`, `ReunionForm.tsx`, `ChampSalle.tsx`, locales | `salles-evenement` (À l'église → salle proposée, « Pas besoin de salle » → lieu « Église » ; Ailleurs → lieu libre, aucune salle) ; `evenements.spec`, `evenements-equipe` |
 
+**Deux files en parallèle** (Timothée, 21/11/2026, « Go ») : la chaîne n'est plus T1 → T10 dans l'ordre.
+- **File A — Salles et fête** : T2 → T3 → T4 → T7 → T8 → T9 (T4 lance **T7**, pas T5). T9 finie : la file A s'arrête
+  et écrit sa ligne ; si la file B est finie aussi, T9 fait la fin de lot (voir T10) au lieu de T10.
+- **File B — Évènements** : T5 → T6 → T10, lancée le 21/11/2026 en même temps que T2. T10 ne fait la **fin de lot**
+  que si T9 est déjà poussée (sinon elle écrit sa ligne et s'arrête ; T9 fera la fin de lot).
+- Fichiers partagés par les deux files : les locales (`fr.json`, `zh-CN.json`) seulement. Ajouts courts, aucun
+  reformatage, `git pull --rebase` avant de coder, avant les tests finaux et avant de pousser.
+- **Tests d'une tranche** (Timothée, même jour, « Go ») : les specs touchées et leurs voisines sur les **trois
+  appareils** ; les cinq projets **seulement** pour les specs de `SPECS_GRAND_ECRAN` (agencement). Pas cinq projets
+  pour tout.
+
 Tests : Playwright, trois appareils toujours, cinq projets pour l'agencement ; données simulées
 (`tests/helpers/fakeSession.ts`), noms inventés. Tester un chant FR et un ZH n'a pas lieu d'être ici (aucune page de
 chant touchée) ; vérifier l'écran en 中文 à chaque tranche qui ajoute des libellés.
@@ -178,3 +189,5 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   `fr.json` l. 1238 et 4691, fichier non touché par T1 : antérieur). Après la relecture, `fromFsReservation` passe par
   `salleLue` ; relance de `salles-modele`, `salles-scene`, `salles-reserver` sur trois appareils : 130 passés, 2 ignorés, en 2 min. À
   revoir en T2 : libellés `fr.json` l. 1940 (« la Grande salle ou la Scène ») et `salles.sceneSaison`.
+- 21/11/2026 — **Deux files** (Timothée, « Go ») : file A (T2 → T3 → T4 → T7 → T8 → T9) et file B (T5 → T6 → T10),
+  voir § Tranches ; tests sur trois appareils, cinq projets pour les seules specs d'agencement. Orchestratrice de T5 lancée.
