@@ -110,3 +110,12 @@ sur tablette portrait, tablette paysage, ordinateur et 1 440 px.
   OK ; à toutes ces largeurs la barre fait 248 px, le nom du membre n'a plus qu'environ 40 px (« Rut… », ellipse
   nette). Signalés sans correction : forme d'attente en barre réduite à une seule pastille fantôme contre trois boutons
   (antérieur) ; visiteur sans compte sur téléphone sans bouton de thème (`Navbar.tsx:258`, hors périmètre, à Timothée).
+- 21/11/2026 : `couleur-accords.spec.ts:184` **corrigé** (Timothée, « corrige ») : le test attendait l'ancien bleu
+  `#3f63cf` pour un compte sans clé ; le défaut est l'encre depuis RU-5 (`COULEUR_DEFAUT`). Le code était juste, le test
+  en retard. Vert sur les cinq projets (55 s avec `i18n-hydration`).
+- 21/11/2026 : **thème du visiteur sur téléphone** (Timothée, « Go ») : le bouton rendu visible dans la barre du haut
+  fait déborder la rangée (captures à 360 px : « Connexion » coupé à droite, « 登录 » sur deux lignes ; à 412 px le
+  bouton touche le bord). Non commité : choix demandé à Timothée (« Connexion » en icône seule sous 430 px, nom du site
+  masqué, ou pas de bouton de thème sur téléphone). Le test ajouté mesurait `scrollWidth` de `header > div`, qui ne voit
+  pas ce débordement : à refaire sur la boîte du bouton « Connexion » (bord droit ≤ largeur de la fenêtre).
+
