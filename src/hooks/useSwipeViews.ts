@@ -20,6 +20,28 @@ const FENETRE_VITESSE = 100;
 /** Ressort critique (sans rebond), réponse de 0,35 s. */
 const REPONSE = 0.35;
 
+const OLD = "::view-transition-old(root)";
+const NEW = "::view-transition-new(root)";
+/** Courbe de la fin du glissement (AT3). */
+const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+
+/** La transition en cours et ce qui la mène (AT5). */
+type Pilote = {
+  vt: ReturnType<Document["startViewTransition"]>;
+  sens: -1 | 1;
+  largeur: number;
+  anims: Animation[] | null;
+  maintien: Animation | null;
+  phase: "menee" | "fin" | "retour" | "inverse";
+  /** Position voulue de l'image d'origine (px signé, entre 0 et sens × largeur). */
+  pos: number;
+  scrollY0: number;
+  /** `ready` est passé : les animations peuvent être posées. */
+  pret: boolean;
+  /** Doigt levé avant `ready` : sa vitesse, la décision suit `ready`. */
+  vitesse: number | null;
+};
+
 /** Ce que dit le début d'un geste : pas encore assez loin, glisser ou défiler. */
 export function lireIntention(dx: number, dy: number): "attente" | "glisser" | "defiler" {
   if (Math.hypot(dx, dy) < ENGAGEMENT) return "attente";
@@ -86,9 +108,10 @@ export function useSwipeViews(options: Options) {
   /** Geste validé : la vue est sortie, on attend la nouvelle (`cle`). */
   const entree = useRef<{ sens: -1 | 1; vitesse: number; fondu: boolean } | null>(null);
   const attente = useRef(0);
-  /** Une View Transition est en cours ; `vueRendue` dit qu'elle peut aller de l'avant (`cle` a changé). */
-  const enTransition = useRef(false);
+  /** `vueRendue` dit qu'une attente peut aller de l'avant (`cle` a changé). */
   const vueRendue = useRef<(() => void) | null>(null);
+  /** Le pilote de la View Transition en cours (une seule mécanique : toucher, bascule, doigt). */
+  const pil = useRef<Pilote | null>(null);
 
   const poser = (v: number) => {
     x.current = v;
@@ -147,11 +170,99 @@ export function useSwipeViews(options: Options) {
     }, 1000);
   };
 
-  /** Changement de vue par View Transitions (AT1) : l'image de l'ancienne vue et la nouvelle glissent ensemble. */
-  const transition = (sens: -1 | 1, aller: () => void) => {
+  /** Deux animations des images (old : `de` → `a`, new : décalées d'une largeur), en px. */
+  const images = (p: Pilote, de: number, a: number, duree: number, easing: string) => {
+    const html = document.documentElement;
+    const glisse = (pseudoElement: string, d: number, v: number) =>
+      html.animate([{ transform: `translateX(${d}px)` }, { transform: `translateX(${v}px)` }], { duration: duree, easing, fill: "both", pseudoElement });
+    p.anims?.forEach((an) => an.cancel());
+    p.anims = [glisse(OLD, de, a), glisse(NEW, de - p.sens * p.largeur, a - p.sens * p.largeur)];
+    return p.anims;
+  };
+
+  /** Phase « menée » : animations linéaires en pause, `currentTime` tenu par la position `pos`. */
+  const mener = (p: Pilote, pos: number) => {
+    const as = images(p, 0, p.sens * p.largeur, 1000, "linear");
+    as.forEach((an) => {
+      an.pause();
+      an.currentTime = (1000 * Math.abs(pos)) / p.largeur;
+    });
+    p.phase = "menee";
+  };
+
+  /** La transition se termine : on libère le maintien, `finished` fait le reste. */
+  const terminer = (p: Pilote) => p.maintien?.cancel();
+
+  /** Fin (vers le bout) ou retour (vers 0) depuis la position courante, 350 ms × la part restante (120 ms au moins). */
+  const course = (p: Pilote, versLeBout: boolean) => {
+    const arrivee = versLeBout ? p.sens * p.largeur : 0;
+    const duree = Math.max(120, (350 * Math.abs(arrivee - p.pos)) / p.largeur);
+    const as = images(p, p.pos, arrivee, duree, EASE);
+    p.phase = versLeBout ? "fin" : "retour";
+    Promise.all(as.map((an) => an.finished)).then(() => {
+      if (p.anims !== as) return;
+      if (versLeBout) terminer(p);
+      else inverse(p);
+    }, () => {});
+  };
+
+  /** Retour fini : la vue d'origine est rendue (côté opposé) pendant que l'image couvre l'écran, défilement remis. */
+  const inverse = (p: Pilote) => {
+    p.phase = "inverse";
+    const o = opts.current;
+    const aller = p.sens < 0 ? o.versDroite : o.versGauche;
+    let fait = false;
+    const minuteur = window.setTimeout(() => suite(), 1000);
+    const suite = () => {
+      if (fait) return;
+      fait = true;
+      window.clearTimeout(minuteur);
+      vueRendue.current = null;
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (pil.current !== p) return;
+          window.scrollTo({ top: p.scrollY0, behavior: "instant" });
+          terminer(p);
+        }),
+      );
+    };
+    if (!aller) return suite();
+    vueRendue.current = suite;
+    aller();
+  };
+
+  /** Issue au lâcher : la suite part au bout, sinon tout revient puis la vue d'origine est rendue. */
+  const decider = (p: Pilote, vitesse: number) => course(p, issueDuGeste(p.pos, vitesse, p.largeur) === p.sens);
+
+  const lacher = (p: Pilote, vitesse: number) => {
+    if (p.pret) decider(p, vitesse);
+    else p.vitesse = vitesse;
+  };
+
+  /** Le pilote est vidé et la page nettoyée (`saut` : la transition est abandonnée). */
+  const nettoyer = (p: Pilote, saut = false) => {
+    if (pil.current !== p) return;
+    pil.current = null;
+    p.anims?.forEach((an) => an.cancel());
+    p.maintien?.cancel();
+    const html = document.documentElement;
+    delete html.dataset.glisseVues;
+    html.style.touchAction = "";
+    if (saut) {
+      try {
+        p.vt.skipTransition();
+      } catch {
+        /* déjà finie */
+      }
+    }
+  };
+
+  /** Changement de vue par View Transitions (AT1). `menee` : le doigt tient les images ; sinon elles vont au bout (350 ms). */
+  const transition = (sens: -1 | 1, aller: () => void, menee = false) => {
     const html = document.documentElement;
     html.dataset.glisseVues = String(sens);
-    enTransition.current = true;
+    // Pendant la transition les pointeurs vont à <html> : le navigateur ne doit pas prendre le doigt pour un défilement.
+    html.style.touchAction = "none";
     const vt = document.startViewTransition(async () => {
       // Pas de requestAnimationFrame ici : le rendu est suspendu pendant ce rappel.
       const rendue = new Promise<boolean>((fin) => {
@@ -163,39 +274,32 @@ export function useSwipeViews(options: Options) {
       if (!(await rendue)) vt.skipTransition();
       vueRendue.current = null;
     });
-    const glisse = (pseudoElement: string, de: number, a: number) =>
-      html.animate(
-        [{ transform: `translateX(${de}vw)` }, { transform: `translateX(${a}vw)` }],
-        { duration: 350, easing: "cubic-bezier(0.32, 0.72, 0, 1)", fill: "both", pseudoElement },
-      );
-    let anims: Animation[] = [];
-    vt.ready.then(() => {
-      anims = [glisse("::view-transition-old(root)", 0, sens * 100), glisse("::view-transition-new(root)", -sens * 100, 0)];
-    }, () => {});
-    const fin = () => {
-      anims.forEach((a) => a.cancel());
-      delete html.dataset.glisseVues;
-      enTransition.current = false;
+    const p: Pilote = {
+      vt, sens, largeur: window.innerWidth, anims: null, maintien: null, phase: menee ? "menee" : "fin",
+      pos: 0, scrollY0: window.scrollY, pret: false, vitesse: null,
     };
+    pil.current = p;
+    vt.ready.then(() => {
+      if (pil.current !== p) return;
+      // Garde la transition ouverte tant que le doigt ou l'animation de fin n'ont pas fini.
+      p.maintien = html.animate([{ opacity: 1 }, { opacity: 1 }], { duration: 3600000, pseudoElement: "::view-transition-group(root)" });
+      p.pret = true;
+      if (menee) {
+        mener(p, p.pos);
+        if (p.vitesse !== null) decider(p, p.vitesse);
+      } else course(p, true);
+    }, () => {});
+    const fin = () => nettoyer(p);
     vt.finished.then(fin, fin);
-  };
-
-  const valider = (sens: -1 | 1, vitesse: number, reduit: boolean) => {
-    const o = opts.current;
-    const aller = sens < 0 ? o.versGauche : o.versDroite;
-    if (!aller) return retour();
-    if (enTransition.current) return;
-    if (!reduit && "startViewTransition" in document) return transition(sens, aller);
-    armer(sens, vitesse, reduit);
-    if (reduit) return aller();
-    const largeur = window.innerWidth;
-    ressort(sens * largeur, vitesse, aller, (pos) => Math.abs(pos) >= largeur * 0.98);
   };
 
   /** Bascule au toucher (bouton, ligne de la Liste) : même chemin que le geste validé. `aller` remplace le rappel du sens. */
   const glisser = (sens: -1 | 1, aller = sens < 0 ? opts.current.versGauche : opts.current.versDroite) => {
-    if (!opts.current.actif || entree.current || enTransition.current) return aller?.();
+    if (!opts.current.actif || entree.current) return aller?.();
     if (!aller) return;
+    // Un glissement finit encore (toucher, bascule) : la vue change sans nouveau mouvement, comme en T1.
+    // Mené par le doigt ou en retour : le doigt décide, le toucher est ignoré.
+    if (pil.current) return pil.current.phase === "fin" ? aller() : undefined;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       armer(sens, 0, true);
       return aller();
@@ -204,6 +308,17 @@ export function useSwipeViews(options: Options) {
     // AT7 : la vue change tout de suite et la nouvelle entre du bord (effet d'entrée), sans sortie de l'ancienne.
     armer(sens, 0, false);
     aller();
+  };
+
+  /** Geste validé sans View Transitions (AT7) ou en mouvement réduit. */
+  const valider = (sens: -1 | 1, vitesse: number, reduit: boolean) => {
+    const o = opts.current;
+    const aller = sens < 0 ? o.versGauche : o.versDroite;
+    if (!aller) return retour();
+    armer(sens, vitesse, reduit);
+    if (reduit) return aller();
+    const largeur = window.innerWidth;
+    ressort(sens * largeur, vitesse, aller, (pos) => Math.abs(pos) >= largeur * 0.98);
   };
 
   // La nouvelle vue est là : elle arrive du bord opposé au geste (ou en fondu).
@@ -239,6 +354,8 @@ export function useSwipeViews(options: Options) {
       base: number;
       engage: boolean;
       reduit: boolean;
+      /** Le doigt mène les images de la View Transition (pilote). */
+      suit: boolean;
       hist: { x: number; t: number }[];
     } | null = null;
 
@@ -262,7 +379,7 @@ export function useSwipeViews(options: Options) {
     };
 
     const down = (e: PointerEvent) => {
-      if (e.pointerType !== "touch" || !e.isPrimary || entree.current) return;
+      if (e.pointerType !== "touch" || !e.isPrimary || entree.current || pil.current) return;
       if (e.clientX < BORD || e.clientX > window.innerWidth - BORD) return;
       if (selectionEnCours() || defileEnLargeur(e.target, zone)) return;
       arreter();
@@ -273,6 +390,24 @@ export function useSwipeViews(options: Options) {
         base: x.current,
         engage: false,
         reduit: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        suit: false,
+        hist: [{ x: e.clientX, t: e.timeStamp }],
+      };
+    };
+
+    /** Un doigt se pose pendant la fin ou le retour du glissement : il reprend les images où elles en sont.
+     *  Pendant une View Transition les pointeurs vont à <html> : écouté sur `document`, hors de la zone. */
+    const reprise = (e: PointerEvent) => {
+      const p = pil.current;
+      if (!p || !p.pret || (p.phase !== "fin" && p.phase !== "retour")) return;
+      if (e.pointerType !== "touch" || !e.isPrimary) return;
+      e.stopPropagation();
+      const t = getComputedStyle(document.documentElement, OLD).transform;
+      const lu = t === "none" ? 0 : new DOMMatrixReadOnly(t).m41;
+      p.pos = Math.max(Math.min(0, p.sens * p.largeur), Math.min(Math.max(0, p.sens * p.largeur), lu));
+      mener(p, p.pos);
+      geste = {
+        id: e.pointerId, x0: e.clientX, y0: e.clientY, base: p.pos, engage: true, reduit: false, suit: true,
         hist: [{ x: e.clientX, t: e.timeStamp }],
       };
     };
@@ -289,6 +424,15 @@ export function useSwipeViews(options: Options) {
           return retour();
         }
         g.engage = true;
+        const sens = dx < 0 ? -1 : 1;
+        const aller = sens < 0 ? opts.current.versGauche : opts.current.versDroite;
+        if (aller && !g.reduit && "startViewTransition" in document) {
+          arreter();
+          poser(0);
+          g.base = 0;
+          g.suit = true;
+          transition(sens, aller, true);
+        }
         try {
           zone.setPointerCapture(e.pointerId);
         } catch {
@@ -296,6 +440,14 @@ export function useSwipeViews(options: Options) {
         }
       }
       g.hist.push({ x: e.clientX, t: e.timeStamp });
+      if (g.suit) {
+        const p = pil.current;
+        if (!p) return;
+        const brut = g.base + dx;
+        p.pos = Math.max(Math.min(0, p.sens * p.largeur), Math.min(Math.max(0, p.sens * p.largeur), brut));
+        if (p.pret && p.phase === "menee") p.anims?.forEach((an) => (an.currentTime = (1000 * Math.abs(p.pos)) / p.largeur));
+        return;
+      }
       if (g.reduit) return;
       const brut = g.base + dx;
       const o = opts.current;
@@ -314,6 +466,11 @@ export function useSwipeViews(options: Options) {
       const dernier = recents[recents.length - 1];
       const duree = recents.length > 1 ? (dernier.t - premier.t) / 1000 : 0;
       const vitesse = duree > 0 ? (dernier.x - premier.x) / duree : 0;
+      if (g.suit) {
+        const p = pil.current;
+        if (p) lacher(p, vitesse);
+        return;
+      }
       const sens = issueDuGeste(g.base + (e.clientX - g.x0), vitesse, window.innerWidth);
       if (sens === 0) return retour();
       valider(sens, vitesse, g.reduit);
@@ -321,27 +478,44 @@ export function useSwipeViews(options: Options) {
 
     const cancel = (e: PointerEvent) => {
       if (!geste || e.pointerId !== geste.id) return;
+      const g = geste;
       geste = null;
-      retour();
+      const p = pil.current;
+      if (g.suit && p) lacher(p, 0);
+      else retour();
     };
 
+    // move/up/cancel sur `document` (capture) : pendant une View Transition les pointeurs vont à <html>.
+    const ecoute = { capture: true, passive: true } as const;
     zone.addEventListener("pointerdown", down, { passive: true });
-    zone.addEventListener("pointermove", move, { passive: true });
-    zone.addEventListener("pointerup", up, { passive: true });
-    zone.addEventListener("pointercancel", cancel, { passive: true });
+    document.addEventListener("pointerdown", reprise, { capture: true });
+    document.addEventListener("pointermove", move, ecoute);
+    document.addEventListener("pointerup", up, ecoute);
+    document.addEventListener("pointercancel", cancel, ecoute);
     return () => {
       zone.removeEventListener("pointerdown", down);
-      zone.removeEventListener("pointermove", move);
-      zone.removeEventListener("pointerup", up);
-      zone.removeEventListener("pointercancel", cancel);
+      document.removeEventListener("pointerdown", reprise, { capture: true });
+      document.removeEventListener("pointermove", move, { capture: true });
+      document.removeEventListener("pointerup", up, { capture: true });
+      document.removeEventListener("pointercancel", cancel, { capture: true });
       zone.style.touchAction = "";
       arreter();
       window.clearTimeout(attente.current);
       entree.current = null;
+      // Plus d'écoute (mode louange, deux volets) : une transition en cours n'aurait plus de doigt pour la mener.
+      if (pil.current) nettoyer(pil.current, true);
       poser(0);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- les rappels sont lus dans `opts`
   }, [options.actif]);
+
+  // Démontage : la transition en cours est abandonnée, la page nettoyée.
+  useEffect(
+    () => () => {
+      if (pil.current) nettoyer(pil.current, true);
+    },
+    [],
+  );
 
   return { glisser };
 }

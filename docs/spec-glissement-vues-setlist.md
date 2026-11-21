@@ -110,3 +110,19 @@ dit l'essentiel : aucun mouvement écrit en JavaScript ne peut tourner pendant c
   « Options d'affichage » remplacé par la marge « Affichage », RU-5), adapté au passage. Tests : `setlist-g` et
   `deux-volets-finitions`, trois appareils, 92 passés, 0 échec (5 min). Captures à mi-course (téléphone, tablette
   portrait) regardées : les deux vues à l'écran ensemble, l'en-tête glisse avec, barre d'onglets fixe.
+- 21/11 — **T2 faite** (au doigt, AT5) : dès que le geste s'engage vers une vue voisine, la View Transition démarre et
+  la vue change ; les deux images suivent le doigt (animations linéaires en pause, `currentTime` tenu par le doigt,
+  position gardée pendant le montage et posée à `ready`), une animation de maintien sur `::view-transition-group(root)`
+  garde la transition ouverte. Lâcher : `issueDuGeste` ; suite au bout en 350 ms × part restante (120 ms au moins),
+  ou retour puis vue d'origine rendue par l'inverse, défilement d'origine remis, sous l'image. Un doigt reposé
+  pendant la fin ou le retour reprend les images où elles sont (pointeurs écoutés sur `document`). Toucher et
+  bascule : même mécanique (350 ms depuis 0). Corrections en chemin : une bascule touchée pendant la fin d'un
+  glissement change la vue sans mouvement, comme en T1 (sinon ignorée : « après défilement jusqu'au chant 1 »
+  rouge 1 fois sur 4) ; transition abandonnée si le glissement est coupé (mode louange, deux volets). Tests :
+  `suivreTransition` relève aussi le milieu exact de chaque jeu d'animations (« une image à mi-course » était
+  instable sous charge dès la base, 6 échecs sur 24 en répétition) ; nouveau describe « glissement au doigt (lot
+  AT, T2) » (six tests : deux sens, deux annulations avec `scrollY`, deux reprises). `setlist-g` et
+  `deux-volets-finitions`, trois appareils : 150 tests, 0 échec après correction (6 min 20 s la passe complète,
+  ≈ 15 min avec les répétitions de contrôle, 80/80 sur le glissement en ×4). Captures à mi-geste regardées
+  (téléphone, tablette portrait) : deux vues bord à bord, barres fixes. iOS non testé ici : à vérifier par Timothée
+  sur son iPhone.
