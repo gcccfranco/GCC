@@ -216,7 +216,7 @@ function Champs({ submitLabel, initial, quiOptions, quiLimite, quiAutre, periode
               </p>
             )}
             {refus && refus.cle === cleMoment && (
-              <RefusSalle salle="scene" bloque={refus.bloque} libres={[]} decale={refus.decale} langue={langue === "zh" ? "zh" : "fr"}
+              <RefusSalle salle="grande" bloque={refus.bloque} libres={[]} decale={refus.decale} langue={langue === "zh" ? "zh" : "fr"}
                 decaler={(p) => setV({ ...v, debut: p.debut, fin: p.fin })} choisir={() => undefined} />
             )}
           </div>

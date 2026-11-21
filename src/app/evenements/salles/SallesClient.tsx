@@ -344,7 +344,7 @@ function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour,
             const lignes = occupations.filter((o) => o.salle === s.id && o.source !== "fixe" && o.source !== "fete")
             const choisi = actif === s.id
             return (
-              <li key={s.id} data-salle={s.id} className={s.dans ? "pl-5" : ""}>
+              <li key={s.id} data-salle={s.id}>
                 <Link
                   href={`${RACINE_SALLES}/${s.id}`}
                   aria-current={choisi ? "page" : undefined}

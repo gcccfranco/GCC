@@ -1,6 +1,6 @@
 import { FS_BASE, authHeader, checkRest, fromFsValue, lireRequete, toFsFields, type RawDoc } from "./setlists";
 import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
-import type { SalleId } from "@/lib/salles/salles";
+import { salleLue, type SalleId } from "@/lib/salles/salles";
 
 // Réservations de salles (docs/spec-salles.md, § Modèle, lot 3) : reservations/{id}, en REST comme le reste (jamais le
 // SDK WebChannel). Droits : firestore.rules (match /reservations/{id}) et src/lib/access.ts (canVoirSalles,
@@ -23,7 +23,7 @@ export interface Reservation {
   auteurNom: string;
   createdAt: string;
   updatedAt: string;
-  // Lot 5, T5a (AR20) : un créneau de fête est une réservation de la Scène. Ces champs n'existent que sur elle.
+  // Lot 5, T5a (AR20) : un créneau de fête est une réservation de la Grande salle (AS14). Ces champs n'existent que sur elle.
   /** Id du programme (l'édition de la fête, `noel-2026`) ; présent = les règles de la fête s'appliquent (AR21). */
   fete?: string;
   /** Valeurs de QUI (ou « Autre… » en texte) ; `pour` en reçoit le libellé, pour Salles. */
@@ -38,7 +38,7 @@ function fromFsReservation(raw: RawDoc): Reservation {
   const s = (k: string) => (d[k] as string) ?? "";
   return {
     id: raw.name.split("/").pop()!,
-    salle: s("salle") as SalleId, date: s("date"), debut: s("debut"), fin: s("fin"), pour: s("pour"), quoi: s("quoi"),
+    salle: salleLue(s("salle") as SalleId), date: s("date"), debut: s("debut"), fin: s("fin"), pour: s("pour"), quoi: s("quoi"),
     auteurUid: s("auteurUid"), auteurNom: s("auteurNom"), createdAt: s("createdAt"), updatedAt: s("updatedAt"),
     ...(typeof d.fete === "string" && { fete: d.fete, qui: (d.qui as string[]) ?? [], note: s("note") }),
     ...(d.libre === true && { libre: true }),

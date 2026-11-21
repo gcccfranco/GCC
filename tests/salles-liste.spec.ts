@@ -4,7 +4,7 @@ import { enTete, estGrandEcran, interdireDialoguesNatifs, ongletsRail, verifierS
 import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Chantier AR (docs/spec-salles.md), lot 2, tranche T2b : l'onglet « Salles » (connectés seulement, SA14), la page
-// `/evenements/salles` en vue Liste (SA2 : neuf lignes groupées, l'état en mots), la bande de jours, la ligne de contexte
+// `/evenements/salles` en vue Liste (SA2 : huit lignes groupées, l'état en mots), la bande de jours, la ligne de contexte
 // et le repère d'heure (SA1, AR12), la journée d'une salle (page au téléphone et en tablette portrait, volet de la
 // semaine en tablette paysage et à l'ordinateur, SA4), un créneau de scène lu comme occupation de la Grande salle
 // (SA13). Firestore, planning et date simulés ; personnes fictives.
@@ -58,12 +58,14 @@ test.describe("AR, T2b : Salles en Liste", () => {
     await expect(page).toHaveURL(/\/login\/?\?from=%2Fevenements%2Fsalles/);
   });
 
-  test("neuf lignes groupées : Grande salle avec la Scène, Salles de groupe, Bureaux ; l'autre nom à côté", async ({ page }) => {
+  test("huit lignes groupées : Grande salle, Salles de groupe, Bureaux ; plus de Scène (AS14) ni de ligne en retrait ; l'autre nom à côté", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/evenements/salles");
-    await expect(liste(page).locator("[data-salle]")).toHaveCount(9);
+    await expect(liste(page).locator("[data-salle]")).toHaveCount(8);
     const ordre = await liste(page).locator("[data-salle]").evaluateAll((els) => els.map((e) => e.getAttribute("data-salle")));
-    expect(ordre).toEqual(["grande", "scene", "fidelite", "paix", "amour", "bonte", "zhongban", "imprimante", "reunion"]);
+    expect(ordre).toEqual(["grande", "fidelite", "paix", "amour", "bonte", "zhongban", "imprimante", "reunion"]);
     await expect(liste(page).getByRole("heading")).toHaveText(["Grande salle", "Salles de groupe", "Bureaux"]);
+    await expect(liste(page).getByText("Scène")).toHaveCount(0);
+    await expect(liste(page).locator("[data-salle].pl-5")).toHaveCount(0);
     await expect(ligne(page, "Salle Fidélité")).toContainText("小班");
     await expect(ligne(page, "Salle Amour")).toContainText("大班");
     await verifierSansDebordement(page);
@@ -74,7 +76,6 @@ test.describe("AR, T2b : Salles en Liste", () => {
     await expect(contexte(page)).toContainText("Dimanche ordinaire");
     await expect(repere(page)).toHaveValue("maintenant");
     await expect(etat(page, "Grande salle")).toHaveText("Groupe Joie jusqu'à 14:30");
-    await expect(etat(page, "Scène")).toHaveText("Avec la Grande salle : Groupe Joie jusqu'à 14:30");
     await expect(etat(page, "Salle Bonté")).toHaveText("Groupe Bonté jusqu'à 14:30");
     await expect(etat(page, "Salle 中班")).toHaveText("Libre jusqu'à 15:30");
     await expect(etat(page, "Salle de réunion")).toHaveText("Libre tout l'après-midi");
@@ -93,11 +94,10 @@ test.describe("AR, T2b : Salles en Liste", () => {
     await expect(etat(page, "Grande salle")).toHaveText("Libre toute la journée");
   });
 
-  test("un créneau de scène est une occupation de la Grande salle ; il s'écrit sous la Scène", async ({ page }) => {
+  test("un ancien créneau « scene » se lit comme une occupation de la Grande salle ; il s'écrit sur sa ligne", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/evenements/salles", { heure: "2026-11-15T17:30:00+01:00" });
     await expect(etat(page, "Grande salle")).toHaveText("Sketch · Jeunes jusqu'à 18:00");
-    await expect(etat(page, "Scène")).toHaveText("Sketch · Jeunes jusqu'à 18:00");
-    await expect(ligne(page, "Scène")).toContainText("17:00 – 18:00 · Sketch · Jeunes · Ysolde");
+    await expect(ligne(page, "Grande salle")).toContainText("17:00 – 18:00 · Sketch · Jeunes · Ysolde");
   });
 
   test("toucher une salle ouvre sa journée : une page en un volet, la semaine dans le volet de droite en grand", async ({ page }, info) => {

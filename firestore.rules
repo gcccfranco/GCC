@@ -373,14 +373,16 @@ service cloud.firestore {
     // connectés ; tout connecté réserve à son nom ; l'auteur et la coordination modifient (sans changer l'auteur) ou
     // suppriment. Le chevauchement se vérifie côté client (SA8) puis par message (SA9) : pas de requête ici.
     // Miroir : canVoirSalles, canReserverSalle, canEditReservation (src/lib/access.ts).
-    // Lot 5 (AR20, AR21) : un créneau de fête est une réservation de la Scène qui porte `fete` (l'id du programme),
+    // Lot 5 (AR20, AR21) : un créneau de fête est une réservation qui porte `fete` (l'id du programme),
     // `qui` (liste), `note`, `libre` (AR23 : pas de `depuisCreneau`). Champs permis : ceux-là seuls.
+    // AS14 : huit salles ; « scene » (ancien nom de la Grande salle) n'est permise qu'en modification d'un document qui l'avait déjà.
     function reservationValide() {
       let r = request.resource.data;
       return r.keys().hasOnly(['salle', 'date', 'debut', 'fin', 'pour', 'quoi', 'auteurUid', 'auteurNom', 'createdAt', 'updatedAt', 'fete', 'qui', 'note', 'libre'])
-        && (!('fete' in r) || (r.salle == 'scene' && r.fete is string && r.qui is list && r.get('note', '') is string))
+        && (!('fete' in r) || (r.fete is string && r.qui is list && r.get('note', '') is string))
         && (!('libre' in r) || r.libre is bool)
-        && r.salle in ['grande', 'scene', 'fidelite', 'paix', 'amour', 'bonte', 'zhongban', 'imprimante', 'reunion']
+        && (r.salle in ['grande', 'fidelite', 'paix', 'amour', 'bonte', 'zhongban', 'imprimante', 'reunion']
+          || (request.method == 'update' && r.salle == 'scene' && resource.data.salle == 'scene'))
         && r.date is string && r.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && r.debut is string && r.debut.matches('^[0-9]{2}:[0-9]{2}$')
         && r.fin is string && r.fin.matches('^[0-9]{2}:[0-9]{2}$')
@@ -436,12 +438,13 @@ service cloud.firestore {
     }
 
     // Salle d'un évènement ou d'une réunion (chantier AR, lot 4, SA12 ; relu en T4b) : absente, null ou une des
-    // neuf (la liste de reservationValide). Le chevauchement ne se vérifie pas ici (SA8, client). Miroir : estSalleId
+    // huit (la liste de reservationValide ; « scene » seulement inchangée en modification, AS14). Le chevauchement ne se vérifie pas ici (SA8, client). Miroir : estSalleId
     // (src/lib/salles/salles.ts), cité par canEditEvenement (src/lib/access.ts).
     function salleEvenementValide() {
       let salle = request.resource.data.get('salle', null);
       return salle == null
-        || salle in ['grande', 'scene', 'fidelite', 'paix', 'amour', 'bonte', 'zhongban', 'imprimante', 'reunion'];
+        || salle in ['grande', 'fidelite', 'paix', 'amour', 'bonte', 'zhongban', 'imprimante', 'reunion']
+        || (request.method == 'update' && salle == 'scene' && resource.data.get('salle', null) == 'scene');
     }
 
     match /evenements/{id} {

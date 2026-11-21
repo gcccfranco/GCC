@@ -1,6 +1,7 @@
-// Les salles de l'église (docs/spec-salles.md, § Modèle, AR6, AR7, AR9) : neuf entrées, dans l'ordre de l'écran.
+// Les salles de l'église (docs/spec-salles.md, § Modèle, AR6, AR7, AR9) : huit entrées, dans l'ordre de l'écran (AS14 : la Grande salle est la Scène ; AS14 remplace AR6).
 // Noms en français dans les deux langues, sauf 小班, 中班, 大班, 高班 (AR9).
 
+// "scene" ne se lit que dans les anciens documents (AS14) : `salleLue` la rend "grande", on n'en écrit plus.
 export type SalleId = "grande" | "scene" | "fidelite" | "paix" | "amour" | "bonte" | "zhongban" | "imprimante" | "reunion";
 
 /** Groupe d'affichage de la Liste (SA2) ; libellés `salles.groupes.*`. */
@@ -12,13 +13,10 @@ export interface Salle {
   /** Autre nom, selon qui l'occupe (« 小班 » pour la Salle Fidélité). */
   autreNom?: string;
   groupe: GroupeSalle;
-  /** La Scène est dans la Grande salle (AR6) : affichée en retrait sous elle. */
-  dans?: SalleId;
 }
 
 export const SALLES: readonly Salle[] = [
   { id: "grande", nom: "Grande salle", groupe: "grande" },
-  { id: "scene", nom: "Scène", groupe: "grande", dans: "grande" },
   { id: "fidelite", nom: "Salle Fidélité", autreNom: "小班", groupe: "groupe" },
   { id: "paix", nom: "Salle Paix", autreNom: "高班", groupe: "groupe" },
   { id: "amour", nom: "Salle Amour", autreNom: "大班", groupe: "groupe" },
@@ -28,19 +26,19 @@ export const SALLES: readonly Salle[] = [
   { id: "reunion", nom: "Salle de réunion", groupe: "bureaux" },
 ];
 
-/** Ce qui occupe l'une occupe l'autre : Grande salle ↔ Scène (AR6) ; toute autre salle n'est liée qu'à elle-même. */
-export function lieuxLies(id: SalleId): SalleId[] {
-  return id === "grande" || id === "scene" ? ["grande", "scene"] : [id];
+/** Une salle lue (RS9) : l'ancienne Scène est la Grande salle (AS14) ; toute autre salle est elle-même. */
+export function salleLue(id: SalleId): SalleId {
+  return id === "scene" ? "grande" : id;
 }
 
-/** Une valeur lue (Firestore) est-elle une des neuf salles ? */
+/** Une valeur lue (Firestore) est-elle une des huit salles, ou l'ancienne « scene » (lecture seule) ? */
 export function estSalleId(x: unknown): x is SalleId {
-  return typeof x === "string" && SALLES.some((s) => s.id === x);
+  return typeof x === "string" && (x === "scene" || SALLES.some((s) => s.id === x));
 }
 
 /** « Salle Fidélité · 小班 » : le nom et l'autre nom, comme dans le champ « Salle de l'église ». */
 export function nomAvecAutre(id: SalleId): string {
-  const s = SALLES.find((x) => x.id === id)!;
+  const s = SALLES.find((x) => x.id === salleLue(id))!;
   return s.autreNom ? `${s.nom} · ${s.autreNom}` : s.nom;
 }
 

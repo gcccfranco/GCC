@@ -3,7 +3,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, estTelephone, interdireDialoguesNatifs, verifierSansDebordement } from "./helpers/agencement";
 import { creneauxEnReservations } from "./helpers/creneauxScene";
 
-// Chantier AR (docs/spec-salles.md), lot 2, tranche T2c : la vue Grille (SA3 : neuf colonnes, 8:00 à 22:00, un bloc
+// Chantier AR (docs/spec-salles.md), lot 2, tranche T2c : la vue Grille (SA3 : huit colonnes, 8:00 à 22:00, un bloc
 // par occupation à sa hauteur ; au téléphone, défilement horizontal, colonne des heures figée), le sélecteur
 // « Liste · Grille », la vue par défaut selon l'appareil et le choix retenu (SA5, `gcc-salles-vue`), le détail d'un
 // bloc (SA4 : celui d'un créneau de scène mène à la fête). Firestore, planning et date simulés ; personnes fictives.
@@ -66,11 +66,11 @@ test.describe("AR, T2c : Salles en Grille", () => {
     }
   });
 
-  test("neuf colonnes dans l'ordre ; heures de 8:00 à 22:00 ; les blocs à leur heure", async ({ page }) => {
+  test("huit colonnes dans l'ordre ; heures de 8:00 à 22:00 ; les blocs à leur heure", async ({ page }) => {
     await ouvrir(page, { vue: "grille" });
-    await expect(grille(page).locator("[data-colonne]")).toHaveCount(9);
+    await expect(grille(page).locator("[data-colonne]")).toHaveCount(8);
     const ordre = await grille(page).locator("[data-colonne]").evaluateAll((els) => els.map((e) => e.getAttribute("data-colonne")));
-    expect(ordre).toEqual(["grande", "scene", "fidelite", "paix", "amour", "bonte", "zhongban", "imprimante", "reunion"]);
+    expect(ordre).toEqual(["grande", "fidelite", "paix", "amour", "bonte", "zhongban", "imprimante", "reunion"]);
     await expect(colonne(page, "fidelite").locator("[data-entete]")).toContainText("小班");
     await expect(grille(page).locator("[data-heure]").first()).toHaveText("08:00");
     await expect(grille(page).locator("[data-heure]").last()).toHaveText("22:00");
@@ -87,8 +87,8 @@ test.describe("AR, T2c : Salles en Grille", () => {
     await expect(colonne(page, "reunion").locator("[data-bloc]")).toHaveCount(0);
     // Couleur AR17 : le culte sinophone en gris de repli.
     await expect(bloc(page, "grande", "15:00")).toHaveAttribute("data-couleur", "#64748b");
-    // Le créneau de scène : dans la colonne Scène.
-    await expect(bloc(page, "scene", "17:30")).toContainText("Chorale");
+    // Le créneau de fête (ancien « scene ») : dans la colonne Grande salle.
+    await expect(bloc(page, "grande", "17:30")).toContainText("Chorale");
   });
 
   test("le choix « Liste · Grille » survit au rechargement", async ({ page }, info) => {
@@ -120,8 +120,8 @@ test.describe("AR, T2c : Salles en Grille", () => {
     await expect(detail).toContainText("13:00 – 14:30");
     await page.keyboard.press("Escape");
     await expect(detail).toHaveCount(0);
-    await bloc(page, "scene", "17:30").scrollIntoViewIfNeeded();
-    await bloc(page, "scene", "17:30").click();
+    await bloc(page, "grande", "17:30").scrollIntoViewIfNeeded();
+    await bloc(page, "grande", "17:30").click();
     await expect(detail.getByRole("heading")).toHaveText("Chorale · Jeunes");
     await expect(detail).toContainText("Oriane");
     await detail.getByRole("link", { name: /Noël/ }).click();

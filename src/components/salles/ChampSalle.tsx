@@ -14,7 +14,7 @@ import { RefusSalle } from "@/components/salles/RefusSalle"
 import { occupationsPourEvenement } from "@/lib/salles/charger"
 import { chevauchement, decalage, sallesLibres } from "@/lib/salles/conflit"
 import type { Occupation } from "@/lib/salles/occupations"
-import { SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
+import { salleLue, SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
 import type { Evenement } from "@/types/evenement"
 
 type Valeurs = Pick<Evenement, "date" | "heure" | "heureFin" | "lieu" | "salle">
@@ -23,7 +23,7 @@ type Valeurs = Pick<Evenement, "date" | "heure" | "heureFin" | "lieu" | "salle">
 export type RefusEvenement = { cle: string; salle: SalleId; bloque: Occupation; libres: SalleId[]; decale: { debut: string; fin: string } | null }
 
 const cleDe = (v: Valeurs) => `${v.date}|${v.salle ?? ""}|${v.heure}|${v.heureFin}`
-const nomDe = (id: SalleId) => SALLES.find((s) => s.id === id)!.nom
+const nomDe = (id: SalleId) => SALLES.find((s) => s.id === salleLue(id))!.nom
 const GROUPES: GroupeSalle[] = ["grande", "groupe", "bureaux"]
 
 /** SA12 avant la relecture : la clé du message si la salle choisie n'a pas ses deux heures ou les a à l'envers. */

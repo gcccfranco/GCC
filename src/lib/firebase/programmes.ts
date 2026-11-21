@@ -171,8 +171,8 @@ export async function updateProgramme(
 }
 
 // ─── Créneaux ────────────────────────────────────────────────────────────────
-// Lot 5 du chantier AR, T5a (docs/spec-salles.md, AR19, AR20) : un créneau de fête est une réservation de la Scène,
-// `reservations/{id}` avec `salle: "scene"` et `fete` = l'id du programme ; `dimanche` s'y écrit `date`, et `pour`
+// Lot 5 du chantier AR, T5a (docs/spec-salles.md, AR19, AR20) : un créneau de fête est une réservation de la Grande salle (AS14),
+// `reservations/{id}` avec `salle: "grande"` (anciens : "scene") et `fete` = l'id du programme ; `dimanche` s'y écrit `date`, et `pour`
 // reçoit le libellé des `qui` pour Salles. Mêmes noms et même type `Creneau` qu'avant : les écrans suivent. Les anciens
 // `programmes/{id}/creneaux` ne sont plus lus (AR19) ; le cron des rappels lit aussi `reservations` (T5c). Droits : firestore.rules
 // (match /reservations/{id}, feteReservable) et src/lib/access.ts (canReserverPour, canEditReservation).
@@ -194,7 +194,7 @@ export async function listCreneaux(programmeId: string): Promise<Creneau[]> {
 }
 
 export async function createCreneau(programmeId: string, data: Omit<Creneau, "id">): Promise<string> {
-  return post("reservations", { salle: "scene", fete: programmeId, ...versReservation(data) });
+  return post("reservations", { salle: "grande", fete: programmeId, ...versReservation(data) });
 }
 
 export async function updateCreneau(

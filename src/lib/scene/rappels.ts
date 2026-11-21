@@ -45,10 +45,10 @@ export function creneauDeReservation(r: Reservation): Creneau {
   };
 }
 
-/** Les créneaux à rappeler (T5c) : parmi les réservations lues pour ces dates, celles de la Scène qui portent une
- *  des éditions affichées (`fete`) ; une réservation de la Scène sans fête n'est pas un entraînement. */
+/** Les créneaux à rappeler (T5c) : parmi les réservations lues pour ces dates, celles qui portent une
+ *  des éditions affichées (`fete`) ; une réservation sans fête n'est pas un entraînement. */
 export function creneauxDuRappel(reservations: Reservation[], editions: string[], dates: string[]): Creneau[] {
   return reservations
-    .filter((r) => r.salle === "scene" && r.fete !== undefined && editions.includes(r.fete) && dates.includes(r.date))
+    .filter((r) => r.fete !== undefined && editions.includes(r.fete) && dates.includes(r.date))
     .map(creneauDeReservation);
 }

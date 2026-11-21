@@ -126,7 +126,7 @@ test("« Réserver » sur une fenêtre : la feuille « de / à » pré-remplie ;
   await f.getByRole("checkbox", { name: "Gp Paix" }).check();
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect.poll(() => ecritures(db, "POST")).toMatchObject({ salle: "scene", date: "2026-10-18", debut: "17:00", fin: "18:15", quoi: "Sketch", qui: ["Gp Paix"] });
+  await expect.poll(() => ecritures(db, "POST")).toMatchObject({ salle: "grande", date: "2026-10-18", debut: "17:00", fin: "18:15", quoi: "Sketch", qui: ["Gp Paix"] });
   expect(ecritures(db, "POST")).not.toHaveProperty("libre");
   await expect(dimanche(page).getByTestId("libre-du-jour")).toHaveText("Libre 14:30 – 15:00 · 18:15 – 19:00");
 });
@@ -159,7 +159,7 @@ test("chevauchement avec l'emploi du temps fixe : le message de Salles (SA8) et 
   const f = page.getByRole("dialog");
   await remplir(f, "2026-10-18", "14:00", "15:00");
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
-  await expect(f.locator("[data-refus]")).toContainText("Scène est prise : Groupe Joie, 13:00 – 14:30.");
+  await expect(f.locator("[data-refus]")).toContainText("Grande salle est prise : Groupe Joie, 13:00 – 14:30.");
   await expect(f.getByRole("button", { name: /^Décaler à/ })).toBeVisible();
   expect(ecritures(db, "POST")).toBeUndefined();
   await f.getByRole("button", { name: /^Décaler à/ }).click();

@@ -6,7 +6,7 @@ import { orga, signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSes
 import { interdireDialoguesNatifs } from "./helpers/agencement";
 
 // Chantier AR (docs/spec-salles.md), lot 4, tranche T4a : une réunion ou un évènement réserve sa salle (AR5, AR15,
-// SA12). Champ « Salle de l'église » (les neuf, plus « Ailleurs » qui fait paraître le lieu en texte libre) dans le
+// SA12). Champ « Salle de l'église » (les huit, plus « Ailleurs » qui fait paraître le lieu en texte libre) dans le
 // formulaire d'un évènement et celui d'une réunion ; une salle choisie exige une heure de début et de fin ; un
 // chevauchement bloque l'enregistrement avec le refus de SA8 ; le lieu écrit devient le nom de la salle ; Salles lit
 // l'évènement comme une occupation. Firestore, planning et date simulés ; personnes fictives.
@@ -23,7 +23,7 @@ const base: Omit<Evenement, "id" | "titre"> = {
   createdAt: T, updatedAt: T,
 };
 const DOCS: Record<string, Record<string, unknown>> = {
-  // Un concert dans la Grande salle (donc aussi sur la Scène, AR6), 15:00 – 17:00.
+  // Un concert dans la Grande salle (la Scène en est la même salle, AS14), 15:00 – 17:00.
   "evenements/concert": { ...base, titre: "Concert d'automne", salle: "grande" },
   // Une réunion d'une équipe dont la personne n'est pas : son nom ne se lit pas dans Salles.
   "evenements/reunion-da": { ...base, titre: "Réunion secrète DA", pour: "equipe:da", reunion: true, heure: "10:00", heureFin: "11:00", lieu: "Salle Paix", salle: "paix", organisateurUid: "uid-tancrede", organisateurNom: "Tancrède" },
@@ -83,7 +83,7 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
       ["paix", "10:00", "11:00", "reunion-da"],
       ["grande", "15:00", "17:00", "concert"],
     ]);
-    // La Scène est dans la Grande salle (AR6) ; deux bornes qui se touchent ne se croisent pas.
+    // Une ancienne « scene » se lit Grande salle (AS14) ; deux bornes qui se touchent ne se croisent pas.
     expect(chevauchement(o, "scene", { debut: "16:00", fin: "18:00" })?.id).toBe("concert");
     expect(chevauchement(o, "grande", { debut: "17:00", fin: "18:00" })).toBeNull();
     // Hors elle-même (modification, SA10).
@@ -95,8 +95,8 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     await expect(salle(page)).toHaveValue("");
     await expect(salle(page).locator("option:checked")).toHaveText("Ailleurs");
     await expect(page.getByLabel("Lieu", { exact: true })).toBeVisible();
-    // Les neuf salles, dans l'ordre de l'écran.
-    await expect(salle(page).locator("option")).toHaveCount(10);
+    // Les huit salles, dans l'ordre de l'écran.
+    await expect(salle(page).locator("option")).toHaveCount(9);
     await salle(page).selectOption("paix");
     await expect(page.getByLabel("Lieu", { exact: true })).toHaveCount(0);
     await expect(page.getByLabel("Heure de fin", { exact: true })).toBeVisible();
@@ -135,14 +135,14 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     expect(posts(db)[0]?.data).toMatchObject({ salle: "bonte", lieu: "Salle Bonté", heure: "20:00", heureFin: "21:30" });
   });
 
-  test("un autre évènement occupe aussi : la Scène est prise par le concert de la Grande salle ; une pilule libre s'enregistre", async ({ page }) => {
+  test("un autre évènement occupe aussi : la Grande salle est prise par le concert ; une pilule libre s'enregistre", async ({ page }) => {
     const db = await ouvrir(page, COORDINATION, "/back-office/evenements/nouveau");
     await nouvelEvenement(page, "Répétition théâtre");
-    await salle(page).selectOption("scene");
+    await salle(page).selectOption("grande");
     await page.getByLabel("Heure de début", { exact: true }).fill("16:00");
     await page.getByLabel("Heure de fin", { exact: true }).fill("18:00");
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
-    await expect(refus(page)).toContainText("Scène est prise : Concert d'automne");
+    await expect(refus(page)).toContainText("Grande salle est prise : Concert d'automne");
     await refus(page).locator('[data-libres] [data-salle="amour"]').click();
     await expect(salle(page)).toHaveValue("amour");
     await page.getByRole("button", { name: "Créer l'évènement" }).click();

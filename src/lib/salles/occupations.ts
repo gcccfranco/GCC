@@ -13,7 +13,7 @@ import type { ServiceEntry } from "@/lib/planning/names";
 import type { Evenement } from "@/types/evenement";
 import type { Creneau, Programme } from "@/types/programme";
 import { occupationsFixes, varianteDu } from "./emploi";
-import { lieuxLies, type SalleId } from "./salles";
+import { salleLue, type SalleId } from "./salles";
 
 type Langue = "fr" | "zh";
 
@@ -66,7 +66,7 @@ function occupationsEvenements(date: string, evenements: EvenementSalle[]): Occu
   return evenements
     .filter((e) => e.salle && e.date === date && e.heure && e.heureFin && e.heure < e.heureFin)
     .map((e): Occupation => ({
-      salle: e.salle!, debut: e.heure, fin: e.heureFin, occupant: { evenement: { titre: e.titre, ...(e.prive ? { prive: true } : {}) } },
+      salle: salleLue(e.salle!), debut: e.heure, fin: e.heureFin, occupant: { evenement: { titre: e.titre, ...(e.prive ? { prive: true } : {}) } },
       source: "evenement", id: e.id, auteurNom: e.organisateurNom || undefined, ...(e.prive ? {} : { lien: `/evenements/${e.id}` }),
     }));
 }
@@ -104,24 +104,23 @@ export function occupationsDu(date: string, sources: SourcesSalles): Occupation[
     .map((r): Occupation => {
       const p = programmeDe(r.fete!);
       return {
-        salle: "scene", debut: r.debut, fin: r.fin, occupant: { creneau: { quoi: r.quoi, qui: r.qui ?? [] } }, source: "scene",
+        salle: "grande", debut: r.debut, fin: r.fin, occupant: { creneau: { quoi: r.quoi, qui: r.qui ?? [] } }, source: "scene",
         id: r.id, auteurUid: r.auteurUid, auteurNom: r.auteurNom, lien: `/evenements/scene/${(p && feteDe(p)) ?? r.fete!.replace(/-\d+$/, "")}`,
       };
     });
   const reservations: Occupation[] = (sources.reservations ?? [])
     .filter((r) => !r.fete && r.date === date)
     .map((r): Occupation => ({
-      salle: r.salle, debut: r.debut, fin: r.fin, occupant: { reservation: { quoi: r.quoi, pour: r.pour } }, source: "reservation",
+      salle: salleLue(r.salle), debut: r.debut, fin: r.fin, occupant: { reservation: { quoi: r.quoi, pour: r.pour } }, source: "reservation",
       id: r.id, auteurUid: r.auteurUid, auteurNom: r.auteurNom, reservation: r,
     }));
   const evenements = occupationsEvenements(date, sources.evenements ?? []);
   return [...jourJ, ...fixes, ...scene, ...reservations, ...evenements].sort((a, b) => a.debut.localeCompare(b.debut));
 }
 
-/** Les occupations qui valent pour une salle : la sienne et celles des lieux liés (Grande salle ↔ Scène, AR6). */
+/** Les occupations qui valent pour une salle (une ancienne « scene » se lit « grande », RS9). */
 export function occupationsDe(occupations: Occupation[], salle: SalleId): Occupation[] {
-  const lies = lieuxLies(salle);
-  return occupations.filter((o) => lies.includes(o.salle));
+  return occupations.filter((o) => o.salle === salleLue(salle));
 }
 
 /** Deux plages [debut, fin[ se croisent ; deux bornes qui se touchent (14:30 / 14:30) ne se croisent pas. */
@@ -132,7 +131,7 @@ export function croise(a: { debut: string; fin: string }, b: { debut: string; fi
 const FIN_DE_JOURNEE = "22:00";
 
 export type Etat =
-  | { type: "occupe"; occupation: Occupation; jusqua: string; avecGrande: boolean }
+  | { type: "occupe"; occupation: Occupation; jusqua: string }
   | { type: "libreJusqua"; jusqua: string }
   | { type: "libreJournee" | "libreApresMidi" | "libreSoiree" };
 
@@ -143,7 +142,7 @@ export type Etat =
 export function etatA(occupations: Occupation[], salle: SalleId, heure: string): Etat {
   const ici = occupationsDe(occupations, salle);
   const enCours = ici.find((o) => o.debut <= heure && heure < o.fin);
-  if (enCours) return { type: "occupe", occupation: enCours, jusqua: enCours.fin, avecGrande: salle === "scene" && enCours.salle === "grande" };
+  if (enCours) return { type: "occupe", occupation: enCours, jusqua: enCours.fin };
   const suivante = ici.find((o) => o.debut > heure && o.debut < FIN_DE_JOURNEE);
   if (suivante) return { type: "libreJusqua", jusqua: suivante.debut };
   return { type: heure < "12:00" ? "libreJournee" : heure < "18:00" ? "libreApresMidi" : "libreSoiree" };
@@ -166,14 +165,14 @@ const MOTS = {
     fete: { noel: "Noël", paques: "Pâques" }, jourJ: (f: string) => `${f}, jour J`,
     occupe: (q: string, h: string) => `${q} jusqu'à ${h}`, libreJusqua: (h: string) => `Libre jusqu'à ${h}`,
     libreJournee: "Libre toute la journée", libreApresMidi: "Libre tout l'après-midi", libreSoiree: "Libre toute la soirée",
-    avecGrande: (e: string) => `Avec la Grande salle : ${e}`, evenementPrive: "Réunion d'équipe",
+    evenementPrive: "Réunion d'équipe",
   },
   zh: {
     entrainementLouange: "敬拜排练", culteSinophone: "中文崇拜", louangeFranco: "法语崇拜敬拜团",
     fete: { noel: "圣诞节", paques: "复活节" }, jourJ: (f: string) => `${f}当天`,
     occupe: (q: string, h: string) => `${q}，至 ${h}`, libreJusqua: (h: string) => `空闲至 ${h}`,
     libreJournee: "全天空闲", libreApresMidi: "下午空闲", libreSoiree: "晚上空闲",
-    avecGrande: (e: string) => `与大厅同用：${e}`, evenementPrive: "团队会议",
+    evenementPrive: "团队会议",
   },
 };
 
@@ -203,8 +202,7 @@ export function etatEnMots(e: Etat, langue: Langue): string {
   if (e.type === "libreJusqua") return m.libreJusqua(e.jusqua);
   if (e.type !== "occupe") return m[e.type];
   const qui = nomOccupant(e.occupation, langue);
-  const mots = e.jusqua === "24:00" ? qui : m.occupe(qui, e.jusqua);
-  return e.avecGrande ? m.avecGrande(mots) : mots;
+  return e.jusqua === "24:00" ? qui : m.occupe(qui, e.jusqua);
 }
 
 /** Réservations libres : encre neutre (AR17), l'encre du texte (`--foreground`). */

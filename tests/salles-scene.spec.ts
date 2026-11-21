@@ -6,9 +6,9 @@ import { interdireDialoguesNatifs } from "./helpers/agencement";
 import { creneauEnReservation } from "./helpers/creneauxScene";
 import { canEditReservation, canReserverPour } from "../src/lib/access";
 
-// Chantier AR (docs/spec-salles.md), lot 5, tranche T5a (AR19 à AR21) : un créneau de fête est une réservation de la
-// Scène (`reservations/{id}`, `salle: "scene"`, `fete`). Réservé depuis la page de Noël, il paraît dans Salles sur la
-// Scène et la Grande salle ; « Qui peut réserver » tient (client et rules) ; les anciens `programmes/{id}/creneaux` ne
+// Chantier AR (docs/spec-salles.md), lot 5, tranche T5a (AR19 à AR21) : un créneau de fête est une réservation
+// (`reservations/{id}`, `fete`) ; AS14 : de la Grande salle (`salle: "grande"`), les anciens documents `salle: "scene"`
+// se lisent comme elle. Réservé depuis la page de Noël, il paraît dans Salles sur la Grande salle ; « Qui peut réserver » tient (client et rules) ; les anciens `programmes/{id}/creneaux` ne
 // sont plus lus ni touchés. Firestore et date simulés ; personnes fictives.
 
 const NOEL = {
@@ -40,8 +40,8 @@ const liste = (page: Page) => page.getByRole("list", { name: /^(Salles|场地)$/
 const ligne = (page: Page, nom: string) => liste(page).getByRole("listitem").filter({ has: page.getByText(nom, { exact: true }) });
 const etat = (page: Page, nom: string) => ligne(page, nom).locator("[data-etat]");
 
-test.describe("AR, T5a : les créneaux de la Scène sont des réservations", () => {
-  test("réserver depuis la page de Noël écrit reservations/{id} (Scène, fête, date, qui, pour) ; Salles le montre sur la Scène et la Grande salle", async ({ page }) => {
+test.describe("AR, T5a, AS14 : les créneaux de fête sont des réservations de la Grande salle", () => {
+  test("réserver depuis la page de Noël écrit reservations/{id} (Grande salle, fête, date, qui, pour) ; Salles le montre sur la Grande salle", async ({ page }) => {
     const db = await ouvrir(page, MARIUS, {});
     await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 12:00" }).click();
     const f = feuille(page);
@@ -55,24 +55,35 @@ test.describe("AR, T5a : les créneaux de la Scène sont des réservations", () 
 
     const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"));
     expect(cree?.data).toMatchObject({
-      salle: "scene", fete: "noel", date: "2026-10-10", debut: "10:00", fin: "11:00", quoi: "Sketch", qui: ["Gp Amour"],
+      salle: "grande", fete: "noel", date: "2026-10-10", debut: "10:00", fin: "11:00", quoi: "Sketch", qui: ["Gp Amour"],
       pour: "Gp Amour", note: "Avec la sono", auteurUid: "uid-marius", auteurNom: "Marius Vellard",
     });
     expect(cree?.data).not.toHaveProperty("dimanche");
     expect(db.writes.filter((w) => w.path.startsWith("programmes/"))).toHaveLength(0);
 
-    // Le samedi 10 à 10:30 (aucun emploi fixe le samedi), dans Salles : la Scène et la Grande salle sont prises par la réservation.
+    // Le samedi 10 à 10:30 (aucun emploi fixe le samedi), dans Salles : la Grande salle est prise par la réservation.
     await page.clock.setFixedTime(new Date("2026-10-10T10:30:00+02:00"));
     await page.goto("/evenements/salles");
-    await expect(etat(page, "Scène")).toHaveText("Sketch · Gp Amour jusqu'à 11:00");
     await expect(etat(page, "Grande salle")).toHaveText("Sketch · Gp Amour jusqu'à 11:00");
-    await expect(ligne(page, "Scène")).toContainText("10:00 – 11:00 · Sketch · Gp Amour · Marius Vellard");
+    await expect(ligne(page, "Grande salle")).toContainText("10:00 – 11:00 · Sketch · Gp Amour · Marius Vellard");
+  });
+
+  test("une ancienne réservation « scene », avec ou sans fête, se lit sur la ligne Grande salle (AS14, RS9)", async ({ page }) => {
+    await ouvrir(page, MARIUS, {
+      "reservations/r1": creneauEnReservation("noel", creneau({ dimanche: "2026-10-10", debut: "10:00", fin: "11:00", quoi: "Sketch", qui: ["Gp Amour"] })),
+      "reservations/r2": { salle: "scene", date: "2026-10-10", debut: "14:00", fin: "15:00", pour: "", quoi: "Répétition sono", auteurUid: "uid-ondine", auteurNom: "Ondine C.", createdAt: "", updatedAt: "" },
+    }, "/evenements/salles");
+    await page.clock.setFixedTime(new Date("2026-10-10T10:30:00+02:00"));
+    await page.reload();
+    await expect(ligne(page, "Scène")).toHaveCount(0);
+    await expect(etat(page, "Grande salle")).toHaveText("Sketch · Gp Amour jusqu'à 11:00");
+    await expect(ligne(page, "Grande salle")).toContainText("14:00 – 15:00 · Répétition sono");
   });
 
   test("la page de Noël lit les réservations de sa fête, pas les anciens créneaux (AR19) ; retirer supprime la réservation seule", async ({ page }) => {
     const db = await ouvrir(page, MARIUS, {
       "reservations/r1": creneauEnReservation("noel", creneau({ auteurUid: "uid-marius", auteurNom: "Marius V." })),
-      // Une réservation de la Scène sans fête (Salles) et une d'une autre édition : pas des créneaux de Noël.
+      // Une ancienne réservation « scene » sans fête (Salles) et une d'une autre édition : pas des créneaux de Noël.
       "reservations/r2": { salle: "scene", date: "2026-10-11", debut: "18:00", fin: "19:00", pour: "", quoi: "Répétition sono", auteurUid: "uid-ondine", auteurNom: "Ondine C.", createdAt: "", updatedAt: "" },
       "reservations/r3": creneauEnReservation("paques-2027", creneau({ debut: "14:00", fin: "15:00", quoi: "Chant" })),
       // Un ancien créneau, jamais relu ni retiré.
@@ -116,34 +127,25 @@ test.describe("AR, T5a : les créneaux de la Scène sont des réservations", () 
     expect(fn).toContain("!('fete' in request.resource.data) || isCoordination() || gereUnPlanning() || reservable(request.resource.data.fete, request.resource.data.qui)");
     const valide = plat(rules.slice(rules.indexOf("function reservationValide()"), rules.indexOf("function feteReservable()")));
     expect(valide).toContain("r.keys().hasOnly(['salle', 'date', 'debut', 'fin', 'pour', 'quoi', 'auteurUid', 'auteurNom', 'createdAt', 'updatedAt', 'fete', 'qui', 'note', 'libre'])");
-    expect(valide).toContain("r.salle == 'scene'");
+    expect(valide).not.toContain("r.salle == 'scene' && r.fete");
+    expect(valide).toContain("(request.method == 'update' && r.salle == 'scene' && resource.data.salle == 'scene')");
+    expect(valide).toContain("(!('fete' in r) || (r.fete is string && r.qui is list && r.get('note', '') is string))");
     // reservable() sert aussi aux anciens créneaux, qui restent tels quels (AR19).
     expect(plat(rules)).toContain("reservable(id, request.resource.data.qui)");
   });
 });
 
-test.describe("AR, T5b : dans Salles, la Scène d'une fête ouverte se réserve depuis sa page (AR22)", () => {
-  test("choisir la Scène pendant la saison de Noël : le message, le lien vers la page, rien à valider ; après la saison, la Scène se réserve", async ({ page }) => {
+test.describe("AR, T5b, AS14 : dans Salles, la Grande salle se réserve en saison de fête (la feuille unique vient en T2)", () => {
+  test("choisir la Grande salle pendant la saison de Noël : aucune Scène à choisir, aucun message, rien qui bloque", async ({ page }) => {
     await ouvrir(page, MARIUS, {}, "/evenements/salles");
     await page.getByRole("button", { name: "Réserver une salle" }).click();
     const f = page.getByRole("dialog", { name: "Réserver une salle" });
     await f.getByLabel("Date").fill("2026-10-07");
     await f.getByLabel("De", { exact: true }).fill("18:00");
     await f.getByLabel("À", { exact: true }).fill("19:00");
-    await f.locator('[data-salle="scene"]').click();
-    await f.getByLabel("Pour quoi").fill("Répétition du chœur");
-    const message = f.locator("[data-scene-fete]");
-    await expect(message).toContainText("Pendant la saison de Noël 2026, la Scène se réserve depuis sa page.");
-    await expect(message.getByRole("link", { name: "Page de Noël 2026" })).toHaveAttribute("href", /^\/evenements\/scene\/noel\/?$/);
-    await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeDisabled();
-    await message.scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `test-results-captures/t5b/${test.info().project.name}-salles-feuille.png`, animations: "disabled" });
-    // La Grande salle, elle, se réserve depuis Salles ; la Scène aussi, hors de la saison.
+    await expect(f.locator('[data-salle="scene"]')).toHaveCount(0);
     await f.locator('[data-salle="grande"]').click();
-    await expect(message).toHaveCount(0);
-    await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeEnabled();
-    await f.locator('[data-salle="scene"]').click();
-    await f.getByLabel("Date").fill("2026-12-28");
+    await f.getByLabel("Pour quoi").fill("Répétition du chœur");
     await expect(f.locator("[data-scene-fete]")).toHaveCount(0);
     await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeEnabled();
   });

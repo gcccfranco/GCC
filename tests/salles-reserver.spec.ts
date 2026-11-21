@@ -92,7 +92,7 @@ test.describe("AR, T3a : réserver une salle", () => {
     await expect(salles(page).getByRole("radio", { name: /Salle de réunion/ })).toBeEnabled();
     // Toutes les libres avant toutes les occupées.
     const etats = await salles(page).getByRole("radio").evaluateAll((els) => els.map((e) => (e as HTMLInputElement).disabled));
-    expect(etats.length).toBe(9);
+    expect(etats.length).toBe(8);
     expect(etats.indexOf(true)).toBeGreaterThan(0);
     expect(etats.slice(etats.indexOf(true)).every(Boolean)).toBe(true);
     // Un autre moment change la liste : 16:00 – 17:00, la Salle Bonté est libre.
@@ -247,15 +247,15 @@ const R = (r: Partial<Reservation> & Pick<Reservation, "id" | "salle" | "debut" 
 const SOURCES = { services: [], scene: [] };
 
 test.describe("AR, T3b : fonctions du chevauchement", () => {
-  test("même salle ou lieu lié ; bornes qui se touchent permises ; hors elle-même", () => {
+  test("même salle (une ancienne « scene » est la Grande salle) ; bornes qui se touchent permises ; hors elle-même", () => {
     const occ = occupationsDu("2026-11-15", { ...SOURCES, reservations: [R({ id: "a", salle: "scene", debut: "18:30", fin: "19:30" })] });
     // Bonté : groupe 13:00 – 14:30 ; 14:30 – 15:30 la touche sans la croiser.
     expect(chevauchement(occ, "bonte", { debut: "14:00", fin: "15:00" })?.debut).toBe("13:00");
     expect(chevauchement(occ, "bonte", { debut: "14:30", fin: "15:30" })).toBeNull();
-    // Scène réservée : la Grande salle aussi est prise (AR6) ; pas la réservation qu'on modifie.
+    // Ancienne « scene » réservée : la Grande salle est prise (AS14) ; pas la réservation qu'on modifie.
     expect(chevauchement(occ, "grande", { debut: "19:00", fin: "20:00" })?.id).toBe("a");
     expect(chevauchement(occ, "grande", { debut: "19:00", fin: "20:00" }, "a")).toBeNull();
-    expect(sallesLibres(occ, { debut: "19:00", fin: "20:00" })).not.toContain("scene");
+    expect(sallesLibres(occ, { debut: "19:00", fin: "20:00" })).not.toContain("grande");
     expect(sallesLibres(occ, { debut: "19:00", fin: "20:00" })).toContain("bonte");
   });
 
@@ -282,7 +282,7 @@ test.describe("AR, T3b : fonctions du chevauchement", () => {
     expect(conflictKey(["o", "m"])).toBe(conflictKey(["m", "o"]));
     const fr = conflictMessage(moi, autre, "fr");
     expect(fr.title).toBe("Salles : chevauchement");
-    expect(fr.body).toBe("Dimanche 15 novembre : Grande salle 18:00–19:00 (Chorale, Ysaline) et Scène 18:30–19:30 (Danse · Gp Joie, Corentin) se chevauchent. Mettez-vous d'accord.");
+    expect(fr.body).toBe("Dimanche 15 novembre : Grande salle 18:00–19:00 (Chorale, Ysaline) et Grande salle 18:30–19:30 (Danse · Gp Joie, Corentin) se chevauchent. Mettez-vous d'accord.");
     expect(conflictMessage(moi, autre, "zh-CN").title).toBe("场地：时段重叠");
   });
 });
@@ -327,16 +327,16 @@ test.describe("AR, T3b : refus du chevauchement dans la feuille", () => {
     await expect(refus(page)).toHaveCount(0);
   });
 
-  test("Scène contre Grande salle : la Scène est prise par le culte de la Grande salle", async ({ page }) => {
+  test("la Grande salle est prise par le culte sinophone (plus de Scène, AS14)", async ({ page }) => {
     await ouvrir(page);
     await ouvrirLaFeuille(page);
     const f = feuille(page);
     await f.getByLabel("De", { exact: true }).fill("18:00");
     await f.getByLabel("À", { exact: true }).fill("19:00");
-    await salles(page).getByRole("radio", { name: /Scène/ }).check();
+    await salles(page).getByRole("radio", { name: /Grande salle/ }).check();
     await f.getByLabel("De", { exact: true }).fill("16:00");
     await f.getByLabel("À", { exact: true }).fill("17:30");
-    await expect(refus(page)).toContainText("Scène est prise : Culte sinophone, 15:00 – 17:00.");
+    await expect(refus(page)).toContainText("Grande salle est prise : Culte sinophone, 15:00 – 17:00.");
     await expect(refus(page).getByRole("button", { name: "Décaler à 17:00 – 18:30" })).toBeVisible();
     await expect(refus(page).locator('[data-libres] [data-salle="grande"]')).toHaveCount(0);
   });
@@ -349,7 +349,7 @@ test.describe("AR, T3b : refus du chevauchement dans la feuille", () => {
     await f.getByLabel("À", { exact: true }).fill("19:00");
     await salles(page).getByRole("radio", { name: /Grande salle/ }).check();
     await f.getByLabel("Pour quoi").fill("Chorale");
-    // Pendant ce temps, une autre réserve la Scène (lieu lié) de 18:30 à 19:30.
+    // Pendant ce temps, une autre réserve (ancien document « scene », lu Grande salle) de 18:30 à 19:30.
     db.set("reservations/r-ysaline", reservation({ salle: "scene", date: "2026-11-15", debut: "18:30", fin: "19:30", pour: "Gp Joie", quoi: "Danse", auteurUid: "uid-ysaline", auteurNom: "Ysaline" }));
     await f.getByRole("button", { name: "Réserver", exact: true }).click();
     await expect(refus(page)).toContainText("Grande salle est prise : Danse · Gp Joie, 18:30 – 19:30.");

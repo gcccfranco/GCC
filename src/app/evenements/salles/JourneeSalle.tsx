@@ -15,7 +15,7 @@ import { useDisposition } from "@/hooks/useDisposition"
 import { addDays } from "@/lib/taches/echeances"
 import { couleurDe, type Occupation } from "@/lib/salles/occupations"
 import { Detail } from "./GrilleSalles"
-import { SALLES, type SalleId } from "@/lib/salles/salles"
+import { salleLue, SALLES, type SalleId } from "@/lib/salles/salles"
 import { dateLongue, ligneOccupation, occupationsDeLaSalle, RACINE_SALLES, useSalles } from "./SallesClient"
 
 export function JourneeSalle({ salle }: { salle: SalleId }) {
@@ -23,7 +23,7 @@ export function JourneeSalle({ salle }: { salle: SalleId }) {
   const etat = useSalles()
   const grand = useDisposition() === "grand"
   const [detail, setDetail] = useState<{ o: Occupation; jour: string } | null>(null)
-  const s = SALLES.find((x) => x.id === salle)!
+  const s = SALLES.find((x) => x.id === salleLue(salle))!
   if (!etat) return <Squelette enTete={false} />
   const { date, langue } = etat
   // La semaine part du jour choisi (critique-design T2b : partir du lundi montrait surtout des jours passés).

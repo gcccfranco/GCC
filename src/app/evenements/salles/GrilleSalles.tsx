@@ -19,7 +19,7 @@ import { ChevronRight, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { couleurDe, nomOccupant, occupationsDe, type Occupation } from "@/lib/salles/occupations"
-import { SALLES, type SalleId } from "@/lib/salles/salles"
+import { salleLue, SALLES, type SalleId } from "@/lib/salles/salles"
 import { useSalles } from "./SallesClient"
 
 type Langue = "fr" | "zh"
@@ -178,7 +178,7 @@ export function GrilleSalles({ occupations, heure, ouvrir, langue, dateLongue }:
                             className="absolute inset-x-0.5 rounded-md"
                             style={{ ...style, backgroundImage: "repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 13%, transparent) 0 4px, transparent 4px 8px)" }}
                           >
-                            <span className="sr-only">{t("salles.detail.avec", { salle: SALLES.find((x) => x.id === o.salle)?.nom, quoi: nomOccupant(o, langue), debut: o.debut, fin: o.fin })}</span>
+                            <span className="sr-only">{t("salles.detail.avec", { salle: SALLES.find((x) => x.id === salleLue(o.salle))?.nom, quoi: nomOccupant(o, langue), debut: o.debut, fin: o.fin })}</span>
                           </div>
                         )
                       }
@@ -229,7 +229,7 @@ export function GrilleSalles({ occupations, heure, ouvrir, langue, dateLongue }:
 export function Detail({ occupation: o, langue, dateLongue, fermer }: { occupation: Occupation | null; langue: Langue; dateLongue: string; fermer: () => void }) {
   const { t } = useTranslation()
   const etat = useSalles()
-  const salle = o && SALLES.find((s) => s.id === o.salle)
+  const salle = o && SALLES.find((s) => s.id === salleLue(o.salle))
   const reservation = o && etat?.modifiable(o)
   const fete = o?.lien?.split("/").pop()
   return (

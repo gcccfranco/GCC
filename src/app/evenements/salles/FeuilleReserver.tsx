@@ -97,7 +97,7 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonSce
   const occupations = erreur ? [] : occupationsDu(date).filter((o) => !r || o.id !== r.id)
   const raisonDe = (s: SalleId): string | null => {
     const o = chevauchement(occupations, s, { debut, fin })
-    return o ? etatEnMots({ type: "occupe", occupation: o, jusqua: o.fin, avecGrande: s === "scene" && o.salle === "grande" }, langue) : null
+    return o ? etatEnMots({ type: "occupe", occupation: o, jusqua: o.fin }, langue) : null
   }
   // Une salle libre dit jusqu'à quand, comme la Liste (critique-design T3a : lignes de même hauteur).
   const libreDe = (s: SalleId): string | null => (erreur ? null : etatEnMots(etatA(occupations, s, debut), langue))
@@ -109,7 +109,7 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonSce
   const libres = bloque ? sallesLibres(occupations, { debut, fin }) : []
   const decale = bloque && salle ? decalage(occupations, salle, { debut, fin }) : null
   const pour = (choixPour === AUTRE ? autre : choixPour).trim().slice(0, 60)
-  // AR22 : pendant la saison d'une fête, la Scène se réserve depuis la page de la fête, pas d'ici.
+  // T2 : la Scène est la Grande salle (AS14), cette condition ne peut plus être vraie ; la feuille sera réécrite en T2.
   const fete = salle === "scene" && !erreur ? saisonScene?.(date) ?? null : null
   const pret = !erreur && salleLibre && !fete && quoi.trim().length > 0 && !envoi
 

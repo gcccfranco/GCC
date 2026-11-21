@@ -10,6 +10,7 @@ import { COMITES, groupeDef } from "@/lib/groupes/table";
 import { PUBLISHABLE_PLANNINGS, droitsDePrevenir, peutPrevenir } from "@/lib/planning/releases";
 import { audiencesNotifiables } from "@/lib/push/audiences";
 import { BACK_OFFICE } from "@/lib/backOffice";
+import { SALLES } from "@/lib/salles/salles";
 import * as org from "@/lib/acces/organigramme";
 import { categoriesDesPlannings, gereUnPlanning, responsabilitesDe } from "@/lib/acces/responsabilites";
 import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
@@ -267,7 +268,7 @@ export function canVoirSalles(user: AuthUser | null): boolean {
   return !!user;
 }
 
-/** Réserver une salle : tout membre connecté (AR4). Une réservation de fête (la Scène, `fete`, lot 5, AR21) passe en
+/** Réserver une salle : tout membre connecté (AR4). Une réservation de fête (`fete`, lot 5, AR21 ; la Grande salle depuis AS14) passe en
  *  plus par canReserverPour, comme `feteReservable()` dans firestore.rules. */
 export function canReserverSalle(user: AuthUser | null): boolean {
   return !!user;
@@ -417,10 +418,16 @@ export function canSeeInscrits(user: AuthUser | null): boolean {
   return user !== null;
 }
 
+/** Une salle qu'on peut écrire : une des huit, ou « scene » si le document l'avait déjà (AS14). Miroir de
+ *  reservationValide / salleEvenementValide (firestore.rules). */
+export function salleEcrivable(salle: unknown, avant?: unknown): boolean {
+  return SALLES.some((s) => s.id === salle) || (salle === "scene" && avant === "scene");
+}
+
 /** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination
  *  (lot RS : le Comité Orga) + admins.
- *  Salles (AR, T4b) : à la création comme à la modification, `salle` est absente, null ou une des neuf
- *  (`salleEvenementValide` de firestore.rules) ; côté client, le champ « Salle de l'église » n'offre que `SALLES`
+ *  Salles (AR, T4b) : à la création comme à la modification, `salle` est absente, null ou une des huit
+ *  (`salleEvenementValide` de firestore.rules ; AS14 : « scene » seulement inchangée) ; côté client, le champ « Salle de l'église » n'offre que `SALLES`
  *  et la lecture passe par `estSalleId` (src/lib/salles/salles.ts). */
 export function canEditEvenement(
   user: AuthUser | null,

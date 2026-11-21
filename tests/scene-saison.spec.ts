@@ -584,7 +584,7 @@ test("membres : « Réserver » ouvre la feuille « de / à » sur la fenêtre t
   await expect(bloc(page, "Dimanche 11 octobre").getByTestId("libre-du-jour")).toHaveText("Libre 14:30 – 15:00 · 18:00 – 19:00");
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"));
   expect(cree?.data).toMatchObject({
-    salle: "scene", date: "2026-10-11", debut: "17:00", fin: "18:00", quoi: "Sketch", qui: ["Gp Amour"], note: "Avec la sono",
+    salle: "grande", date: "2026-10-11", debut: "17:00", fin: "18:00", quoi: "Sketch", qui: ["Gp Amour"], note: "Avec la sono",
     auteurUid: "uid-noe", auteurNom: "Noé L.",
   });
 });

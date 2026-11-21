@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { SALLES, lieuxLies } from "../src/lib/salles/salles";
+import { SALLES, estSalleId, lieuAffiche, salleLue } from "../src/lib/salles/salles";
+import { salleEcrivable } from "../src/lib/access";
 import { occupationsFixes, varianteDu } from "../src/lib/salles/emploi";
 import { croise, etatA, etatEnMots, jourJDu, nomOccupant, occupationsDe, occupationsDu, type Occupation, type SourcesSalles } from "../src/lib/salles/occupations";
 import type { Reservation } from "../src/lib/firebase/reservations";
 import type { Programme } from "../src/types/programme";
 
-// Salles, lot 2, tranche T2a (docs/spec-salles.md, § Modèle, SA1, SA2, SA13, AR6, AR7, AR13, AR14) : le modèle et les
+// Salles, lot 2, tranche T2a (docs/spec-salles.md, § Modèle, SA1, SA2, SA13, AR7, AR13, AR14, AS14, RS9) : le modèle et les
 // fonctions pures, sans écran. Aucun nom réel : auteurs inventés pour ces tests.
 
 const DIMANCHE = "2026-11-22";
@@ -21,28 +22,37 @@ const tempsDeGroupe = (date: string, variante: Parameters<typeof occupationsFixe
 const programme = (x: Partial<Programme> = {}): Programme => ({
   id: "noel-2026", nom: "Noël", jourJ: NOEL, debut: "2026-11-01", passages: [], createdBy: "u", updatedAt: "", fete: "noel", annee: 2026, ...x,
 });
-/** Un créneau de scène : depuis le lot 5 (AR20), une réservation de la Scène qui porte `fete`. */
+/** Un créneau de scène : depuis le lot 5 (AR20), une réservation de la Grande salle (AS14) qui porte `fete`. */
 const creneau = (x: Partial<Reservation>): Reservation => ({
-  id: "c1", salle: "scene", fete: "noel-2026", date: DIMANCHE, debut: "17:00", fin: "18:00", pour: "Gp Paix", quoi: "Danse", qui: ["Gp Paix"], note: "",
+  id: "c1", salle: "grande", fete: "noel-2026", date: DIMANCHE, debut: "17:00", fin: "18:00", pour: "Gp Paix", quoi: "Danse", qui: ["Gp Paix"], note: "",
   auteurUid: "u-ysolde", auteurNom: "Ysolde", createdAt: "", updatedAt: "", ...x,
 });
 const sources = (x: Partial<SourcesSalles> = {}): SourcesSalles => ({ services: [], scene: [], ...x });
 
 test.describe("Salles (T2a) : le modèle", () => {
-  test("neuf salles dans l'ordre de l'écran, groupées, avec leur autre nom", () => {
-    expect(SALLES.map((s) => s.id)).toEqual(["grande", "scene", "fidelite", "paix", "amour", "bonte", "zhongban", "imprimante", "reunion"]);
-    expect(SALLES.map((s) => s.groupe)).toEqual(["grande", "grande", "groupe", "groupe", "groupe", "groupe", "groupe", "bureaux", "bureaux"]);
+  test("huit salles dans l'ordre de l'écran, groupées, avec leur autre nom ; plus de Scène (AS14)", () => {
+    expect(SALLES.map((s) => s.id)).toEqual(["grande", "fidelite", "paix", "amour", "bonte", "zhongban", "imprimante", "reunion"]);
+    expect(SALLES.map((s) => s.groupe)).toEqual(["grande", "groupe", "groupe", "groupe", "groupe", "groupe", "bureaux", "bureaux"]);
     const autre = Object.fromEntries(SALLES.map((s) => [s.id, s.autreNom ?? ""]));
     expect(autre).toMatchObject({ fidelite: "小班", paix: "高班", amour: "大班", bonte: "", zhongban: "", imprimante: "", reunion: "" });
-    expect(SALLES.find((s) => s.id === "scene")).toMatchObject({ nom: "Scène", dans: "grande" });
+    expect(SALLES.some((s) => s.id === ("scene" as string))).toBe(false);
     expect(SALLES.find((s) => s.id === "zhongban")?.nom).toBe("Salle 中班");
   });
 
-  test("Scène et Grande salle sont liées ; toute autre salle n'est liée qu'à elle-même (AR6)", () => {
-    expect(lieuxLies("grande").sort()).toEqual(["grande", "scene"]);
-    expect(lieuxLies("scene").sort()).toEqual(["grande", "scene"]);
-    expect(lieuxLies("bonte")).toEqual(["bonte"]);
-    expect(lieuxLies("imprimante")).toEqual(["imprimante"]);
+  test("salleLue : « scene » se lit « grande », identité ailleurs (RS9)", () => {
+    expect(salleLue("scene")).toBe("grande");
+    for (const x of SALLES) expect(salleLue(x.id)).toBe(x.id);
+  });
+
+  test("une ancienne « scene » se lit et s'affiche comme la Grande salle ; elle ne s'écrit plus (AS14)", () => {
+    expect(estSalleId("scene")).toBe(true);
+    expect(estSalleId("cuisine")).toBe(false);
+    expect(lieuAffiche({ lieu: "", salle: "scene" })).toBe("Grande salle");
+    for (const x of SALLES) expect(salleEcrivable(x.id)).toBe(true);
+    expect(salleEcrivable("scene")).toBe(false);
+    expect(salleEcrivable("scene", "grande")).toBe(false);
+    expect(salleEcrivable("scene", "scene")).toBe(true);
+    expect(salleEcrivable("cuisine", "scene")).toBe(false);
   });
 
   test("variante d'après les services du planning du jour", () => {
@@ -102,7 +112,7 @@ test.describe("Salles (T2a) : le modèle", () => {
     expect(o.filter((x) => x.salle === "grande" && x.debut === "13:00").map((x) => nomOccupant(x, "fr"))).toEqual(["Intergroupe"]);
   });
 
-  test("jour J d'une fête : Grande salle et Scène occupées toute la journée, l'emploi fixe de la Grande salle remplacé (AR14)", () => {
+  test("jour J d'une fête : Grande salle occupée toute la journée, l'emploi fixe de la Grande salle remplacé (AR14)", () => {
     const dimancheNoel = "2026-12-27";
     const p = programme({ jourJ: dimancheNoel });
     const o = occupationsDu(dimancheNoel, sources({ scene: [{ programme: p }] }));
@@ -111,7 +121,7 @@ test.describe("Salles (T2a) : le modèle", () => {
     expect(grande[0]).toMatchObject({ source: "fete", debut: "00:00", fin: "24:00" });
     expect(nomOccupant(grande[0], "fr")).toBe("Noël, jour J");
     expect(nomOccupant(grande[0], "zh")).toBe("圣诞节当天");
-    expect(occupationsDe(o, "scene")).toEqual(grande);
+    expect(occupationsDe(o, "scene")).toEqual(grande); // lecture d'une ancienne « scene »
     // Les autres salles gardent leur emploi du temps.
     expect(plages(occupationsDe(o, "fidelite"))).toEqual(["13:00-14:30", "15:30-17:00"]);
     expect(jourJDu(dimancheNoel, [{ programme: p }])).toBe("noel");
@@ -121,12 +131,12 @@ test.describe("Salles (T2a) : le modèle", () => {
     expect(occupationsDe(brouillon, "grande").map((x) => x.source)).toEqual(["fixe", "fixe", "fixe", "fixe"]);
   });
 
-  test("un créneau de scène occupe la Scène et la Grande salle, en lecture seule (SA13)", () => {
+  test("un créneau de fête occupe la Grande salle, en lecture seule (SA13, AS14) ; une ancienne réservation « scene » aussi", () => {
     const c = creneau({ debut: "14:00", fin: "15:00" });
     const o = occupationsDu(DIMANCHE, sources({ scene: [{ programme: programme() }], reservations: [c, creneau({ id: "c2", date: "2026-11-29" })] }));
     const scene = o.filter((x) => x.source === "scene");
     expect(scene).toHaveLength(1);
-    expect(scene[0]).toMatchObject({ salle: "scene", debut: "14:00", fin: "15:00", id: "c1", auteurNom: "Ysolde", lien: "/evenements/scene/noel" });
+    expect(scene[0]).toMatchObject({ salle: "grande", debut: "14:00", fin: "15:00", id: "c1", auteurNom: "Ysolde", lien: "/evenements/scene/noel" });
     expect(nomOccupant(scene[0], "fr")).toBe("Danse · Gp Paix");
     expect(nomOccupant(scene[0], "zh")).toBe("Danse · 和平团契");
     expect(occupationsDe(o, "grande")).toContainEqual(scene[0]);
@@ -136,6 +146,11 @@ test.describe("Salles (T2a) : le modèle", () => {
     // Les créneaux d'un brouillon ne comptent pas.
     const b = occupationsDu(DIMANCHE, sources({ scene: [{ programme: programme({ ouvert: false }) }], reservations: [c] }));
     expect(b.filter((x) => x.source === "scene")).toEqual([]);
+    // Une ancienne réservation ordinaire `salle: "scene"` occupe la Grande salle.
+    const vieille = creneau({ id: "v1", fete: undefined, debut: "10:00", fin: "11:00" });
+    const v = occupationsDu(DIMANCHE, sources({ reservations: [{ ...vieille, salle: "scene" }] }));
+    expect(occupationsDe(v, "grande").filter((x) => x.source === "reservation")).toHaveLength(1);
+    expect(v.find((x) => x.source === "reservation")?.salle).toBe("grande");
   });
 
   test("occupations triées par heure de début", () => {
@@ -171,14 +186,7 @@ test.describe("Salles (T2a) : le modèle", () => {
     expect(etatEnMots(etatA(tard, "bonte", "19:00"), "fr")).toBe("Libre toute la soirée");
   });
 
-  test("état de la Scène quand la Grande salle l'occupe (« Avec la Grande salle »)", () => {
-    const o = occupationsDu(DIMANCHE, sources());
-    const e = etatA(o, "scene", "15:30");
-    expect(e).toMatchObject({ type: "occupe", jusqua: "17:00", avecGrande: true });
-    expect(etatEnMots(e, "fr")).toBe("Avec la Grande salle : Culte sinophone jusqu'à 17:00");
-    expect(etatEnMots(e, "zh")).toBe("与大厅同用：中文崇拜，至 17:00");
-    expect(etatA(o, "grande", "15:30")).toMatchObject({ avecGrande: false });
-    // Un créneau de scène vu depuis la Scène elle-même : pas « Avec la Grande salle ».
+  test("un créneau de fête vu depuis la Grande salle (ou l'ancienne « scene »)", () => {
     const s = occupationsDu(DIMANCHE, sources({ scene: [{ programme: programme() }], reservations: [creneau({})] }));
     expect(etatEnMots(etatA(s, "scene", "17:30"), "fr")).toBe("Danse · Gp Paix jusqu'à 18:00");
     expect(etatEnMots(etatA(s, "grande", "17:30"), "fr")).toBe("Danse · Gp Paix jusqu'à 18:00");
@@ -188,7 +196,7 @@ test.describe("Salles (T2a) : le modèle", () => {
     const p = programme({ jourJ: NOEL });
     const o = occupationsDu(NOEL, sources({ scene: [{ programme: p }] }));
     expect(etatEnMots(etatA(o, "grande", "08:00"), "fr")).toBe("Noël, jour J");
-    expect(etatEnMots(etatA(o, "scene", "20:00"), "fr")).toBe("Avec la Grande salle : Noël, jour J");
+    expect(etatEnMots(etatA(o, "scene", "20:00"), "fr")).toBe("Noël, jour J");
     expect(etatEnMots(etatA(o, "bonte", "08:00"), "fr")).toBe("Libre toute la journée");
   });
 });

@@ -321,25 +321,25 @@ test("rappels : l'entraînement rejoint la ligne des services du même dimanche,
 // Lot 5 du chantier AR, T5c (docs/spec-salles.md, AR19, AR20, SA9) : le serveur lit les créneaux dans
 // `reservations/{id}` et la Scène passe par /api/salles/conflit.
 
-/** Une réservation de la Scène pour l'édition `fete` (noms fictifs). */
+/** Une réservation de la Grande salle (AS14) pour l'édition `fete` (noms fictifs). */
 const resa = (id: string, r: Partial<Reservation>): Reservation => ({
-  id, salle: "scene", date: "2026-12-13", debut: "17:00", fin: "18:30", pour: "EDD 中班", quoi: "Chant",
+  id, salle: "grande", date: "2026-12-13", debut: "17:00", fin: "18:30", pour: "EDD 中班", quoi: "Chant",
   auteurUid: "uid-alice", auteurNom: "Alice Q.", createdAt: "", updatedAt: "", fete: "noel-2026", qui: ["EDD 中班"], note: "", ...r,
 });
 
-test("rappels (T5c) : les créneaux du jour sont les réservations de la Scène des éditions affichées", () => {
+test("rappels (T5c) : les créneaux du jour sont les réservations de fête (`fete`) des éditions affichées, quelle que soit leur salle", () => {
   const lues = [
     resa("r1", {}),
     resa("r2", { fete: "paques-2027" }),
     resa("r3", { date: "2026-12-20" }),
     resa("r4", { fete: undefined, qui: undefined, quoi: "Réunion" }),
-    resa("r5", { salle: "grande" as Reservation["salle"] }),
+    resa("r5", { salle: "scene" }), // ancien document
     resa("r6", { libre: true, debut: "19:00", fin: "19:45", note: "micro" }),
   ];
   const creneaux = creneauxDuRappel(lues, ["noel-2026"], ["2026-12-13", "2026-12-17"]);
-  expect(creneaux.map((c) => c.id)).toEqual(["r1", "r6"]);
+  expect(creneaux.map((c) => c.id)).toEqual(["r1", "r5", "r6"]);
   expect(creneaux[0]).toMatchObject({ dimanche: "2026-12-13", debut: "17:00", fin: "18:30", quoi: "Chant", qui: ["EDD 中班"], auteurUid: "uid-alice" });
-  expect(creneaux[1]).toMatchObject({ libre: true, note: "micro" });
+  expect(creneaux[2]).toMatchObject({ libre: true, note: "micro" });
   expect(sceneReminder(creneaux[0]).service).toBe("Entraînement sur scène");
 });
 
@@ -349,12 +349,12 @@ test("rappels (T5c) : le cron lit `reservations`, plus `programmes/{id}/creneaux
   expect(src).not.toContain('collection("creneaux")');
 });
 
-test("conflit (T5c) : deux réservations de la Scène, une clé par paire ; message aux deux auteurs", () => {
+test("conflit (T5c) : deux réservations de la Grande salle, une clé par paire ; message aux deux auteurs", () => {
   expect(conflictKey(["b", "a"])).toBe(conflictKey(["a", "b"]));
   const autre = resa("c2", { debut: "18:00", fin: "19:00", quoi: "Danse", qui: ["Gp Joie"], pour: "Gp Joie", auteurNom: "Jo L." });
   const fr = conflictMessage(resa("c1", { date: "2026-10-04" }), { ...autre, date: "2026-10-04" }, "fr");
   expect(fr.title).toBe("Salles : chevauchement");
-  expect(fr.body).toBe("Dimanche 4 octobre : Scène 17:00–18:30 (Chant · EDD 中班, Alice Q.) et Scène 18:00–19:00 (Danse · Gp Joie, Jo L.) se chevauchent. Mettez-vous d'accord.");
+  expect(fr.body).toBe("Dimanche 4 octobre : Grande salle 17:00–18:30 (Chant · EDD 中班, Alice Q.) et Grande salle 18:00–19:00 (Danse · Gp Joie, Jo L.) se chevauchent. Mettez-vous d'accord.");
   expect(conflictMessage(resa("c1", {}), autre, "zh-CN").body).toContain("重叠");
 });
 

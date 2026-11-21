@@ -107,7 +107,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [programme.id, saison.debut, saison.fin])
   const idsFete = new Set(creneaux.map((c) => c.id))
-  const autresDu = (d: string): Autre[] => !sources ? [] : occupationsDe(occupationsDu(d, sources), "scene")
+  const autresDu = (d: string): Autre[] => !sources ? [] : occupationsDe(occupationsDu(d, sources), "grande")
     .filter((o) => !(o.id && idsFete.has(o.id)))
     .map((o) => ({ debut: o.debut, fin: o.fin, libelle: nomOccupant(o, langue) }))
   const horloge = { today, maintenant }
@@ -164,8 +164,8 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       const plage = { debut: values.debut, fin: values.fin }
       const jour = (await occupationsPourEvenement(values.dimanche, todayIso(), (e) => canSeeEvenement(user, profile, e)))
         .filter((o) => !editingId || o.id !== editingId)
-      const bloque = chevauchement(jour, "scene", plage)
-      if (bloque) return { bloque, decale: decalage(jour, "scene", plage) }
+      const bloque = chevauchement(jour, "grande", plage)
+      if (bloque) return { bloque, decale: decalage(jour, "grande", plage) }
       const now = new Date().toISOString()
       let id = editingId
       // `libre` (SQ-B) : la réservation sort des plages de la saison ; sinon le champ s'en va.

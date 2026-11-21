@@ -164,3 +164,17 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
 - 17/11/2026 — Retours de Timothée après une discussion avec une responsable (mots 7) : AS14 à AS17 ajoutées, tranches
   portées à dix (fusion Grande salle = Scène en premier), rules à republier. Lancement inchangé.
 - 21/11/2026, 12:01 — Codage lancé : orchestratrice de T1 `session_01UMdfuavwRF2qebrbLzJW5B` (un autre chantier de code en cours, lot AT : place libre).
+- 21/11/2026 — **T1 faite** (session T1, `session_01UMdfuavwRF2qebrbLzJW5B`) : huit salles, la Scène retirée ;
+  `salleLue` (`"scene"` → `"grande"`) sur toutes les lectures (occupations, chevauchement, Grille, Liste, feuille,
+  rappels, lecteurs de réservations et d'évènements) ; `lieuxLies`, `avecGrande` et `Salle.dans` retirés ; créneaux de
+  fête écrits et lus sur la Grande salle, fenêtres libres de la page de la fête calculées sur elle. Rules (1) et miroir
+  `salleEcrivable` (`access.ts`) : `"scene"` refusée à la création, acceptée en modification seulement si le document
+  l'avait déjà (réservations et évènements) ; champs de fête sans condition de salle. **⚠ `firestore.rules` à publier
+  à la main par Timothée** (avec celles de T5a, avant toute mise en ligne). Décision déléguée (session T1, 21/11) :
+  `/evenements/salles/scene` redirige vers `/evenements/salles/grande` (liens déjà envoyés). En attendant T2, la Grande
+  salle se réserve en ordinaire pendant une saison de fête (la condition `salle === "scene"` de la feuille ne peut plus
+  être vraie). Tests : tsc et lint verts ; douze specs Salles et Scène et quatre voisines sur les cinq projets, 2 118
+  passés, 3 rouges en 27 min : deux en course (verts à la relance), et `coherence.spec.ts:225` (guillemets de
+  `fr.json` l. 1238 et 4691, fichier non touché par T1 : antérieur). Après la relecture, `fromFsReservation` passe par
+  `salleLue` ; relance de `salles-modele`, `salles-scene`, `salles-reserver` sur trois appareils : 130 passés, 2 ignorés, en 2 min. À
+  revoir en T2 : libellés `fr.json` l. 1940 (« la Grande salle ou la Scène ») et `salles.sceneSaison`.
