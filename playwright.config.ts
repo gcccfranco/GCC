@@ -51,6 +51,8 @@ const SPECS_GRAND_ECRAN = [
   /harmonie-volet-section\.spec\.ts/,
   // JV-5b : dans le mode louange, le nom de section ouvre le volet Harmonie par-dessus la page (colonne dès 1 024 px, feuille à mi-hauteur sinon).
   /louange-harmonie\.spec\.ts/,
+  // R4 (docs/spec-retouches-2026-11-21.md) : la fenêtre Harmonie du mode louange à côté du texte de la section, déplaçable par son en-tête (≥ 768 px) ; feuille du bas inchangée au téléphone.
+  /harmonie-fenetre-placement\.spec\.ts/,
   // JV-5c : étiquettes de section dans le rail du scan 简谱 (page chant, Partitions, mode louange), qui ouvrent le volet Harmonie.
   /harmonie-jianpu\.spec\.ts/,
   // Harmonie H6-1 : la bibliothèque (filtres Ressenti et Usage, liste ordonnée par niveau, fiche ≥ 640 px à l'ordinateur).

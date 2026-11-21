@@ -94,7 +94,8 @@ for (const c of CHANTS) {
     await nom.click();
     await expect(volet(page)).toBeVisible();
     if (grandEcran(page)) {
-      // Une fenêtre comme le menu Setlist, accrochée au nom touché : au-dessus ou au-dessous de lui, à sa hauteur de colonne.
+      // Une fenêtre comme le menu Setlist, accrochée au nom touché : à côté de lui (R4, docs/spec-retouches-2026-11-21.md : à droite du texte
+      // de la section, à gauche ou calée au bord sinon), plus au-dessus ni au-dessous.
       await expect(volet(page)).toHaveAttribute("data-harmonie-fenetre");
       const ecran = page.viewportSize()!;
       const [b, n] = [(await volet(page).boundingBox())!, (await nom.boundingBox())!];
@@ -102,8 +103,8 @@ for (const c of CHANTS) {
       expect(b.x + b.width).toBeLessThanOrEqual(ecran.width);
       expect(b.y + b.height).toBeLessThanOrEqual(ecran.height);
       expect(b.width, "fenêtre, pas une colonne pleine hauteur").toBeLessThanOrEqual(26 * 16 + 1);
-      expect(b.y >= n.y + n.height - 1 || b.y + b.height <= n.y + 1, "au-dessus ou au-dessous du nom touché").toBe(true);
-      expect(b.x < n.x + n.width && b.x + b.width > n.x, "à l'aplomb du nom touché").toBe(true);
+      expect(b.x >= n.x + n.width - 1 || b.x + b.width <= n.x + 1, "à côté du nom touché").toBe(true);
+      expect(b.y < n.y + n.height && b.y + b.height > n.y, "à la hauteur du nom touché").toBe(true);
       // Sous la barre du haut : la croix du mode louange reste visible.
       const haut = await page.locator("[data-performance-mode] [data-barre-haut]").boundingBox();
       expect(b.y).toBeGreaterThanOrEqual(haut!.y + haut!.height - 1);
@@ -154,9 +155,11 @@ for (const c of CHANTS) {
     await expect(volet(page)).toBeVisible();
     const avant = await lireCompteur(page);
     const ecran = page.viewportSize()!;
-    // Bord droit, au tiers de la hauteur : la page (fenêtre accrochée au premier nom, à gauche) ou le fond de la feuille.
+    // Le bord de l'écran que la fenêtre ne couvre pas (R4 : à droite du texte, ou calée au bord droit), au tiers de la hauteur : la page ou le fond de la feuille.
+    const fen = await volet(page).boundingBox();
+    const x = fen!.x + fen!.width / 2 > ecran.width / 2 && fen!.width < ecran.width - 24 ? 12 : ecran.width - 12;
     await expect(async () => {
-      await page.mouse.click(ecran.width - 12, Math.round(ecran.height * 0.3));
+      await page.mouse.click(x, Math.round(ecran.height * 0.3));
       await expect(volet(page)).toHaveCount(0, { timeout: 1_000 });
     }).toPass({ timeout: 8_000 });
     await expect(page.locator("[data-performance-mode]")).toBeVisible();

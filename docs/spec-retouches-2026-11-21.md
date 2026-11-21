@@ -124,3 +124,19 @@ sur tablette portrait, tablette paysage, ordinateur et 1 440 px.
   les boîtes des boutons à 360, 412 et 430 px (`i18n-hydration.spec.ts`, projet téléphone) : vert, 22 s. Captures
   regardées à 360, 412 et 430 px, FR et 中文 : tout tient, marge droite gardée.
 
+- 21/11/2026 : **R4 faite** (`session_01UMdfuZzn5R3Lgirrn7Mgo7` ; `/tranche` puis deux reprises). `Fenetre`
+  (`HarmonieDuChant.tsx`) : dès 768 px et dans une section, ancre = boîte du texte de la section (TreeWalker + Range),
+  `side="right"`, bascule à gauche par Radix, sinon calée au bord droit ; hauteur bornée à l'espace sous le nom
+  (plancher 50 % de l'écran) pour que le haut reste sur le nom ; en-tête déplaçable (`translate`, écouteurs sur
+  `window`, bornes, flèche ôtée une fois déplacée, remise à zéro à chaque ouverture). Téléphone et étiquette de scan
+  简谱 : placement d'avant, sans déplacement au téléphone. Tests : `harmonie-fenetre-placement.spec.ts` (nouveau, dans
+  `SPECS_GRAND_ECRAN` : cas droite/gauche/calée annotés, déplacement, ×, réouverture, téléphone moitié basse, étiquette
+  简谱) ; `louange-harmonie.spec.ts` adapté (à côté du nom au lieu de dessous). Passe des trois specs, cinq projets :
+  182 passés, 37 sautés, 1 échec, 10,2 min ; après la borne de hauteur, deux specs, cinq projets : 117 passés, 1 rouge
+  corrigé (condition du test alignée sur le plancher), 7,4 min ; revert vert. Échec connu hors tranche : A9 de
+  `louange-harmonie.spec.ts:200` au téléphone (page 2 d'un scan retombe à 1 ~8 s après l'ouverture, sans geste : la fin
+  du chargement du planning reconstruit `blocks` et l'ancre d'un scan ne garde pas sa page, `blocks.ts:496-513`) ;
+  rouge 3 fois sur 4, vert au dernier tour ; à reprendre à part. Captures (ordinateur, 1 440, tablette portrait et
+  paysage, FR et 中文) triées par `regard`, `critique-design` : « bon ». Finitions laissées : marge du cas calé
+  (≈ 17 px au bord ; aligner sur le bord des cadres, ≈ 24 px), flèche presque invisible sur fond blanc, ombre légère
+  sur tablette. Non vu à l'écran : déplacement au doigt ou au stylet sur un vrai appareil, thème sombre.
