@@ -256,7 +256,15 @@ peux l'étendre à toutes les répétitions.*
 proposition ; ses mots : « quand c'est une fois chacune ou plan mettre une petite note et ajouter la section je sais pas
 si tu vois ce que je veux dire ». Lecture à lui faire confirmer avant tout go : dans ces deux ordres, un passage
 retouché seul s'ajoute comme une section à part, avec une petite note qui dit de quel passage il s'agit.
-Questions 5 et 6 : sans réponse, la proposition tient. Pas encore de go pour le lot.
+Questions 5 et 6 : sans réponse, la proposition tient.
+**Question 4 tranchée (Timothée, 21/11, « oui » deux fois)** : avec l'ordre « Une fois chacune » ou « Plan »,
+- un passage retouché seul s'ajoute à l'écran comme une section à part, sous la section normale, avec une petite note
+  qui dit de quel passage il s'agit (« Refrain · 2ᵉ fois ») ; la section normale reste montrée une fois pour les autres ;
+- dans la structure (la rangée des pastilles C R P…), une note marque le passage concerné (« on ajoute une note pour
+  dire que c'est pour ce refrain là ») ;
+- comme on ne voit pas quel passage on touche, le Crayon montre la structure et demande pour lequel (« on affiche la
+  structure et on demande c'est pour quelle Refrain, Couplet, Pont ») : on touche la pastille du passage, ou « Toutes ».
+Pas encore de go pour le lot.
 
 Format : `passage` est facultatif, une version ancienne du site l'ignore et montre le dessin partout
 (§ « Compatibilité du format », AN-4). `firestore.rules` : à relire, le champ est dans `traits` (liste libre).
