@@ -113,7 +113,7 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, feteDu, n
   const [autre, setAutre] = useState(r && !estDeLaListe(r.pour) ? r.pour : "")
   const [quoi, setQuoi] = useState(r?.quoi ?? "")
   // AS3, AS4 : la réponse à « C'est pour <fête> ? » (aucune d'avance) et les champs de la fête.
-  const [reponse, setReponse] = useState<"oui" | "non" | null>(!r && ouverture.pourFete ? "oui" : null)
+  const [choisie, setReponse] = useState<"oui" | "non" | null>(!r && ouverture.pourFete ? "oui" : null)
   const [quiFete, setQuiFete] = useState<string[]>(r?.qui?.filter((q) => !estQuiLibre(q)) ?? [])
   const [autreCoche, setAutreCoche] = useState(Boolean(r?.qui?.some(estQuiLibre)))
   const [autreTexte, setAutreTexte] = useState(r?.qui?.find(estQuiLibre) ?? "")
@@ -142,7 +142,9 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, feteDu, n
   const fete = salle === "grande" && !erreur ? feteDu?.(date) ?? null : null
   // La question : fête ouverte et permise, sur une nouvelle réservation seulement (AS7 : « pour la fête » ne se change pas en modification).
   const question = !r && fete !== null && fete.ouverte && fete.permis
-  if (!question && reponse !== null) setReponse(null)
+  // La réponse ne vaut que tant que la question est posée ; gardée si elle revient (date changée puis remise, sources
+  // arrivées après l'ouverture).
+  const reponse = question ? choisie : null
   const modeFete = Boolean(r?.fete) || reponse === "oui"
   const quiFinal = [...new Set([...quiFete, ...(autreCoche ? [normaliserQui(autreTexte)] : [])].filter(Boolean))]
   const detailPret = modeFete

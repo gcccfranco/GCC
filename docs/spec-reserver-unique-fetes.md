@@ -257,3 +257,26 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   l'agencement : 1 377 passés, 5 rouges en 29 min, corrigés puis relancés seuls (49 verts, 2 min) ; règles communes
   des pages de fête : 14 passés en 41 s. `critique-design` : à retoucher, aucun bloquant (espacements du téléphone
   repris) ; à voir : léger cerclage du flou du halo, antérieur. File C finie : aucune tranche lancée après.
+- 21/11/2026 — **T3 faite** (session T3, file A) : la page de la fête ouvre la feuille unique de Salles. Hook partagé
+  `useReserver` (`src/app/evenements/salles/useReserver.ts`) : la logique de réservation sort de `SallesClient` (`feteDu`,
+  `nomFete`, `enregistrer`) et sert aussi à `Entrainements` ; une fenêtre libre ouvre `FeuilleReserver` sur la Grande
+  salle avec « Oui, pour Noël » d'avance (`Ouverture.pourFete`, RS4) ; « Modifier » et « Déplacer » (page et Back-Office)
+  ouvrent la même feuille (`reservationDeCreneau`, `programmes.ts`) ; `?reserver=1` (carte de T5) ouvre la feuille sur la
+  première fenêtre libre à partir d'aujourd'hui, puis quitte l'adresse (aussi quand on ne peut pas réserver).
+  `CreneauForm.tsx` retiré (`QuiChecklist` dans `OrdrePassage.tsx`, `Pastille` dans `FeuilleReserver.tsx`), onze clés
+  orphelines retirées des deux locales. Points de la relecture de T2 : une réservation de fête modifiée revenue dans une
+  plage perd `libre` (`updateReservation` n'écrit plus de `null` pour un champ `undefined` : le masque le retire) ; un
+  `qui` non permis donne « Ce groupe ne peut pas réserver : … » dans la feuille ; la règle « déjà commencé » (Q11) est
+  gardée pour les réservations de fête. Après la relecture : l'écriture faite, une relecture ou un rechargement manqués
+  rendent quand même « ok » (pas de doublon au réessai) ; la feuille se monte sans attendre les sources ; la réponse
+  « Oui » ne vaut que tant que la question est posée, mais elle est gardée si la question revient. Aucune rule changée.
+  Décisions déléguées (session T3, 21/11) : (1) la feuille unique refuse une date passée (SA7) : modifier une
+  réservation d'un jour passé n'est plus possible depuis la page de la fête (un moment commencé aujourd'hui, si : date et
+  début gardés) ; (2) la marque « · retiré » d'un groupe sorti de la liste est gardée dans les pastilles de la feuille ;
+  (3) la légende « Qui · les groupes permis pour cette saison » disparaît avec l'ancienne feuille. Non couvert par un
+  test : le changement de date vers la saison d'une autre fête en création (le message passe par la même branche que le
+  cas testé). Tests : tsc, lint (0 erreur) ; `programme-scene`, `salles-scene`, `scene-autre-moment`, `scene-paques-noel`,
+  `scene-saison` : 993 passés, 4 rouges en course (verts seuls), en 17 min 25 ; `scene-autre-moment`, `scene-qui`,
+  `scene-des-fetes`, `salles-reserver` (cinq projets), `salles-scene` : 338 passés et 6 rouges en 7 min ; après correction,
+  les 6 rouges passent, et `salles-scene` avec `scene-autre-moment` aussi (152 passés en 3 min 15). Écran regardé au
+  téléphone en 中文 et à l'ordinateur. Suite : T7 (file A).
