@@ -520,9 +520,14 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     for (const nom of ENTREES_MEMBRE) {
       const lien = nav.getByRole("link", { name: nom, exact: true });
       await expect(lien).toHaveAttribute("title", nom);
-      await expect(lien.getByText(nom, { exact: true })).toBeHidden();
+      // CI-17 (B13, validée par Timothée le 15/11/2026) : barre réduite, le nom passe sous l'icône ;
+      // le libellé de la barre dépliée (`.barre-texte`) reste caché.
+      await expect(lien.locator(".barre-texte")).toBeHidden();
+      await expect(lien.getByText(nom, { exact: true }).filter({ visible: true }), `${nom} : nom sous l'icône`).toHaveCount(1);
       const b = (await lien.boundingBox())!;
-      expect([Math.round(b.width), Math.round(b.height)], `${nom} : 44 × 44`).toEqual([44, 44]);
+      // CI-17 : l'entrée prend la largeur du rail (`!w-full`, BarreLaterale.tsx:310) pour le nom sous l'icône ; 44 px de haut.
+      expect(Math.round(b.height), `${nom} : 44 px de haut`).toBe(44);
+      expect(Math.round(b.width), `${nom} : 44 px de large au moins`).toBeGreaterThanOrEqual(44);
       expect(b.x + b.width, `${nom} dans la barre`).toBeLessThanOrEqual(68);
     }
     await expect(nav.getByRole("link", { name: "Chants", exact: true })).toHaveAttribute("aria-current", "page");
@@ -538,11 +543,13 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     expect([Math.round(d.width), Math.round(d.height)]).toEqual([44, 44]);
     const pied = barre.getByTestId("pied-barre");
     await expect(pied.getByText("Ruth K.")).toBeHidden();
-    await expect(pied.getByRole("button", { name: "切换为中文" })).toBeHidden();
+    // CI-17 (Q5 révisé, 15/11/2026) : langue et thème d'un membre restent au pied du rail réduit.
+    const langue = pied.getByRole("button", { name: "切换为中文" });
+    await expect(langue).toBeVisible();
     const cloche = (await pied.getByRole("button", { name: "Notifications" }).boundingBox())!;
     const initiale = (await pied.getByRole("button", { name: "Compte" }).boundingBox())!;
     expect(cloche.y + cloche.height, "cloche au-dessus de l'initiale").toBeLessThanOrEqual(initiale.y);
-    for (const b of [cloche, initiale]) expect(b.x + b.width).toBeLessThanOrEqual(68);
+    for (const b of [cloche, initiale, (await langue.boundingBox())!]) expect(b.x + b.width).toBeLessThanOrEqual(68);
 
     // partout-q2 : /songs n'a plus de halo ; Planning, qui porte la couleur d'un service, garde le sien.
     await expect(page.getByTestId("halo"), "/songs : plus de halo").toHaveCount(0);
@@ -728,8 +735,15 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     await expect(nav.getByRole("link")).toHaveCount(5);
     for (const nom of ENTREES_MEMBRE) {
       const lien = nav.getByRole("link", { name: nom, exact: true });
-      await expect(lien.getByText(nom, { exact: true })).toBeHidden();
-      expect((await boite(lien)).slice(2), `${nom} : 44 × 44`).toEqual([44, 44]);
+      // CI-17 (B13, validée par Timothée le 15/11/2026) : barre réduite, le nom passe sous l'icône ;
+      // le libellé de la barre dépliée (`.barre-texte`) reste caché.
+      await expect(lien.locator(".barre-texte")).toBeHidden();
+      await expect(lien.getByText(nom, { exact: true }).filter({ visible: true }), `${nom} : nom sous l'icône`).toHaveCount(1);
+      // CI-17 : l'entrée prend la largeur du rail (`!w-full`, BarreLaterale.tsx:310) pour le nom sous l'icône ; 44 px de haut.
+      const [x, , l, h] = await boite(lien);
+      expect(h, `${nom} : 44 px de haut`).toBe(44);
+      expect(l, `${nom} : 44 px de large au moins`).toBeGreaterThanOrEqual(44);
+      expect(x + l, `${nom} dans la barre`).toBeLessThanOrEqual(68);
     }
     await expect(nav.getByRole("link", { name: "Chants", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(reduire(page), "jamais « Réduire » : elle l'est toujours").toBeHidden();
@@ -744,7 +758,8 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
   test("tablette en paysage, visiteur : Chants · Église, « Connexion », langue et thème en icônes", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Église"]);
+    // CI-17 : le lien du rail porte son libellé caché et le nom sous l'icône ; on lit le texte affiché.
+    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Église"], { useInnerText: true });
     expect(await largeurBarre(page)).toBe(68);
     const pied = barreLaterale(page).getByTestId("pied-barre");
     for (const bouton of [pied.getByRole("link", { name: "Connexion" }), pied.getByRole("button", { name: "切换为中文" }), pied.getByRole("button", { name: /Mode (clair|sombre)/ })]) {
@@ -943,7 +958,7 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     await page.getByRole("menuitem", { name: "Déconnexion" }).tap();
     await expect(barreParDessus(page)).toHaveCount(0);
     await expect(voile(page)).toHaveCount(0);
-    await expect(navigation(page).getByRole("link"), "la barre réduite du visiteur").toHaveText(["Chants", "Église"]);
+    await expect(navigation(page).getByRole("link"), "la barre réduite du visiteur").toHaveText(["Chants", "Église"], { useInnerText: true });
     expect(await largeurBarre(page)).toBe(68);
   });
 });

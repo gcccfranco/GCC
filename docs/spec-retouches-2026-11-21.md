@@ -182,4 +182,17 @@ préexistants dans `coherence.spec.ts` » signalés par la session du lot AS, T2
   L'autre rouge de B1 (ordinateur-1440, le × change de page une fois sur huit) existait sans R1 ni R3 : à reprendre à part.
 - 21/11/2026 : **R5 ajoutée** (Timothée, « Oui »). R5a lancée tout de suite ; R5b à lancer par la session qui finit
   le lot « Un passage ou tous » (écrit dans ses Tranches, `docs/spec-ma-partition.md`).
-
+- 21/11/2026 : **R5a faite** (session R5a). Rejoués : `navigation-grand-ecran`, `back-office-admin`,
+  `agencement-barre-reduite`, `coherence`, cinq projets : 8 échecs, tous des **tests en retard**, aucun défaut du site ;
+  `coherence` et `agencement-barre-reduite` déjà verts (les « 3 rouges » du lot AS ne reviennent pas). (1) Rail réduit,
+  `navigation-grand-ecran:491` (ordinateur, ordinateur-1440), `:716`, `:750`, `:942` (tablette-paysage) et
+  `back-office-admin:624` (tablette-paysage) : CI-17 (B13, validée par Timothée le 15/11, `spec-corrections-interface.md`
+  § Avancement) met le nom sous chaque icône (`BarreLaterale.tsx:315`), d'où « Chants » deux fois dans le lien
+  (libellé caché + nom affiché), entrée en pleine largeur du rail (`!w-full`, `:310`, 47 × 44 au lieu de 44 × 44) et
+  langue au pied du rail (Q5 révisé, `:383`). Tests alignés : `.barre-texte` caché et nom sous l'icône visible ; texte
+  lu par `innerText` ; 44 px de haut, 44 px de large au moins, dans la barre ; langue visible au pied. (2)
+  `back-office-admin:525` et `:581` (ordinateur-1440) : BO-C (`eaeb6b2`) redirige `/back-office/reunions` et
+  `/evenements` vers le Calendrier filtré ; à 1 280 px le test attrapait l'adresse intermédiaire (course) : il attend
+  maintenant l'adresse finale. Tests : premier passage 9,6 min (417 passés, 8 échecs) ; reprise des 7 tests 56 s ; tour
+  final des quatre specs 9,3 min (423 passés, 189 ignorés, 1 test rouge sur deux projets : la langue, cachée derrière
+  l'échec précédent), puis ce test seul vert (12 s). Reste : rien pour R5a ; R5b non touchée.
