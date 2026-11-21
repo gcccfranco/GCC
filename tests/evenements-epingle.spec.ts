@@ -86,7 +86,7 @@ test("(d) quatre épinglés : trois en grand dans une rangée qui défile, le qu
   });
   await expect(cartes(page)).toHaveCount(3);
   const rangee = page.getByTestId("rangee-epingles");
-  await expect(rangee).toHaveAttribute("aria-label", "À la une");
+  await expect(rangee).toHaveAttribute("aria-label", "Évènements épinglés");
   const m = await rangee.evaluate((el) => ({ sw: el.scrollWidth, cw: el.clientWidth, contents: getComputedStyle(el).display === "contents", pw: el.parentElement!.scrollWidth, pc: el.parentElement!.clientWidth }));
   expect(m.contents ? m.pw > m.pc : m.sw > m.cw).toBe(true);
   const ligne = page.getByRole("region", { name: "À la une" }).getByText("Quatrième");

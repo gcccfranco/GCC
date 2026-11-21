@@ -227,3 +227,17 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   `libelles-langues`, `chants-fetes`, `back-office-coupe` sur trois appareils : 820 passés, 3 rouges connus
   (`coherence.spec.ts:225`, antérieur), en 9 min 20 ; après correction, cas a et i : 6 passés en 23 s. Écran regardé
   au téléphone, à la tablette et à l'ordinateur.
+- 21/11/2026 — **T6 faite** (file B, session T6) : `epinglesEnGrand` (`agenda.ts`, RS7) ; `CarteEpingle.tsx` neuf (aplat
+  encre sans image, I1 avec image : 16:9 en tête, filet `ring-border` ; date ou « du … au … », heure, lieu, « dans N
+  jours » ; « Je m'inscris » si lien externe ou inscriptions ouvertes et pas déjà inscrit, sinon « Voir » ; anneau sur la
+  carte dont la fiche est ouverte en grand). Trois épinglés en grand sous la fête, les suivants en petites lignes « À la
+  une », aucun répété dans son mois. AS12 : empilées au téléphone et dans le volet ; côte à côte en tablette portrait
+  (grille si deux cartes, rangée qui défile à 44 % au-delà) ; deux épinglés ou plus en rangée qui défile jusqu'au bord
+  (`role="region"`, « Évènements épinglés » / « 置顶活动 »). Case « Épinglée » pour tout évènement (pas les réunions).
+  **Rules : rien à publier pour T6** (`epingle` n'est filtré par aucun `hasOnly`). Décision déléguée (session T6, 21/11) :
+  « Visible jusqu'au » reste réservé aux infos (pour un daté il le retirerait de tout l'agenda) ; un `expiresAt` présent
+  est respecté. Hors périmètre, corrigé : espaces fines des guillemets de deux libellés de `fr.json` (`coherence.spec`
+  rouge depuis le 16/11). Laissé : l'émoji 📌 des petites lignes (`EvenementCard.tsx:243`, antérieur). Tests :
+  `evenements-epingle` neuve (dans `SPECS_GRAND_ECRAN`) avec `evenements`, `evenements-fete`, `evenements-2027`,
+  `pages-en-grand-evenements` : 669 passés en 11 min 30 ; après la critique, `evenements-epingle`, `evenements-fete`,
+  `pages-en-grand-evenements:405` : 130 passés en 1 min 50. Polices : aucun caractère chinois nouveau.

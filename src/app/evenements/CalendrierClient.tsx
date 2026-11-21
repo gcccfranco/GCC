@@ -123,6 +123,9 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
   const total = grandes.length + (enVue ? 1 : 0)
   const defile = !grand && total >= 3
   const masque = grand ? "" : "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+  // La rangée déborde jusqu'au bord (de l'écran, ou du volet en grand) : la suivante dépasse au lieu d'être tranchée.
+  // En grand, `py-1` laisse voir l'anneau de la carte active (le défilement coupe ce qui dépasse).
+  const deborde = grand ? "-mx-3 px-3 py-1 scroll-px-3" : "-mx-[var(--marge-page)] px-[var(--marge-page)] scroll-px-[var(--marge-page)]"
   const surLaListe = estSurLaListe(pathname, "/evenements")
   const idActif = surLaListe ? premier?.id : decodeURIComponent(pathname.replace(/\/+$/, "").split("/")[2] ?? "")
 
@@ -145,15 +148,15 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
     <div className={grand ? "space-y-5" : "max-w-2xl mx-auto space-y-6 md:max-w-none"}>
       {total > 0 && (
         // `gap` plutôt que `space-y` : un enfant en `contents` n'a pas de boîte où poser la marge.
-        <div className={`flex flex-col ${grand ? "gap-5" : `gap-6 ${total <= 2 ? "md:grid md:grid-cols-2 md:items-stretch md:gap-4" : `${masque} md:flex-row md:snap-x md:snap-mandatory md:gap-4 md:overflow-x-auto`}`}`}>
+        <div className={`flex flex-col ${grand ? "gap-5" : `gap-6 ${total <= 2 ? "md:grid md:grid-cols-2 md:items-stretch md:gap-4" : `${masque} md:flex-row md:snap-x md:snap-mandatory md:gap-4 md:overflow-x-auto md:-mx-[var(--marge-page)] md:px-[var(--marge-page)] md:scroll-px-[var(--marge-page)]`}`}`}>
           {enVue && <div className={defile ? "md:w-[44%] md:shrink-0 md:snap-start" : "md:h-full md:[&>section]:h-full"}><CarteFete edition={enVue} today={today} /></div>}
           {grandes.length > 0 && (
             <div
-              {...(grandes.length > 1 && { "data-testid": "rangee-epingles", "aria-label": t("evenements.infos") })}
-              className={grandes.length > 1 ? `flex snap-x snap-mandatory gap-3 overflow-x-auto ${masque} ${grand ? "" : "md:contents"}` : "contents"}
+              {...(grandes.length > 1 && { "data-testid": "rangee-epingles", role: "region", "aria-label": t("evenements.epingle.rangee") })}
+              className={grandes.length > 1 ? `flex snap-x snap-mandatory gap-3 overflow-x-auto ${masque} ${deborde} ${grand ? "" : "md:contents"}` : "contents"}
             >
               {grandes.map((e) => (
-                <CarteEpingle key={e.id} evenement={e} today={today} inscrit={!!user && inscrits.has(e.id)}
+                <CarteEpingle key={e.id} evenement={e} today={today} inscrit={!!user && inscrits.has(e.id)} actif={grand && e.id === idActif}
                   className={grandes.length > 1 ? `w-[85%] shrink-0 snap-start ${grand ? "" : defile ? "md:w-[44%]" : "md:w-auto"}` : ""} />
               ))}
             </div>

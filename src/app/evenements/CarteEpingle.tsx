@@ -12,7 +12,7 @@ import { lieuAffiche } from "@/lib/salles/salles"
 import type { Evenement } from "@/types/evenement"
 import { dateEnLettres, PILULE } from "./CarteFete"
 
-export function CarteEpingle({ evenement: e, today, inscrit = false, className = "" }: { evenement: Evenement; today: string; inscrit?: boolean; className?: string }) {
+export function CarteEpingle({ evenement: e, today, inscrit = false, actif = false, className = "" }: { evenement: Evenement; today: string; inscrit?: boolean; actif?: boolean; className?: string }) {
   const { t, i18n } = useTranslation()
   const image = e.images[0]
   const jours = Math.round((versUtc(e.date) - versUtc(today)) / JOUR_MS)
@@ -29,14 +29,14 @@ export function CarteEpingle({ evenement: e, today, inscrit = false, className =
     <section
       data-testid="carte-epingle"
       aria-label={e.titre}
-      className={`flex flex-col overflow-hidden rounded-2xl ${image ? "bg-card text-foreground" : "bg-[#1c1c1e] text-white dark:bg-[#2c2c2e]"} ${className}`}
+      className={`flex flex-col overflow-hidden rounded-2xl ${image ? "bg-card text-foreground ring-1 ring-border" : "bg-[#1c1c1e] text-white dark:bg-[#2c2c2e]"} ${actif ? "ring-2 ring-foreground ring-offset-2 ring-offset-card" : ""} ${className}`}
     >
       {image && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={image} alt="" className="aspect-[16/9] w-full object-cover object-center" />
       )}
       <div className="flex flex-1 flex-col p-5">
-        <h2 className="text-xl font-bold leading-tight"><Link href={fiche}>{e.titre}</Link></h2>
+        <h2 className="text-xl font-bold leading-tight">{/* Un seul arrêt de tabulation par carte : la pilule. */}<Link href={fiche} tabIndex={-1}>{e.titre}</Link></h2>
         <p className="mt-1 text-sm">
           {e.dateFin && e.dateFin !== e.date
             ? t("evenements.du", { from: dateEnLettres(e.date, i18n.language, true), to: dateEnLettres(e.dateFin, i18n.language, true) })

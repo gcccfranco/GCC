@@ -2490,7 +2490,8 @@
       "fermees": "大厅预约已关闭"
     },
     "epingle": {
-      "voir": "查看"
+      "voir": "查看",
+      "rangee": "置顶活动"
     },
     "places_one": "剩余 {{count}} 个名额",
     "places_other": "剩余 {{count}} 个名额",

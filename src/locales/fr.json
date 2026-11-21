@@ -2524,7 +2524,8 @@
       "fermees": "Réservations de la Grande salle fermées"
     },
     "epingle": {
-      "voir": "Voir"
+      "voir": "Voir",
+      "rangee": "Évènements épinglés"
     },
     "places_one": "{{count}} place restante",
     "places_other": "{{count}} places restantes",
