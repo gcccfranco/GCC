@@ -312,6 +312,11 @@ et la rangée de structure, les regarder, corriger ce qui cloche (contraste du b
 zh-CN (`改哪一次？`, `第{{n}}次`, `单独修改`) : vérifier qu'ils s'accordent avec les mots déjà employés dans
 `zh-CN.json` (`所有重复`, `nthTime`) ; la relecture par un sinophone reste à Timothée.
 
+**UP-6 — Souligné d'une parole retouchée, lignes chinoises** (go de Timothée du 21/11, nuit : « Go fait tout en même
+temps ») : sur une ligne chinoise, le trait fin graphite d'une parole retouchée (`globals.css`,
+`[data-retouche="paroles"]`) tombe entre les caractères et le pinyin. Quand le pinyin est affiché, le trait passe sous
+le pinyin (sous la ligne entière) ; sans pinyin, et sur une ligne française, rien ne change. Retouche (CSS et un test).
+
 Format : `passage` est facultatif, une version ancienne du site l'ignore et montre le dessin partout
 (§ « Compatibilité du format », AN-4). `firestore.rules` : à relire, le champ est dans `traits` (liste libre).
 

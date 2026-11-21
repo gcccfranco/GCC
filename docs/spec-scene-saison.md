@@ -343,6 +343,43 @@ npx tsc --noEmit
 npm run lint
 ```
 
+## Image de fête (Timothée, 21/11/2026) — go du 21/11/2026
+
+Mots de Timothée : « Il faudrait que pour les événements comme Pâques et Noël on puisse mettre une image pour que ça
+s'affiche comme les événements épinglées. » Go : « Go fait tout en même temps » (21/11, nuit), après la proposition
+ci-dessous, dont il a laissé les deux choix à la proposition (« si tu réponds juste go, je pars sur une image par
+année, montrée sur la carte de la page Église seulement »).
+
+Ce que le code montre : la fête est un document `programmes/{id}` (une édition par année, `src/types/programme.ts`),
+sans image ; la carte est `src/app/evenements/CarteFete.tsx` (bandeau bleu), posée par `CalendrierClient.tsx`. Un
+évènement épinglé (`CarteEpingle.tsx`) montre `images[0]` en 16/9 au-dessus du texte ; ses images sont des data-URL
+JPEG compressées (`src/lib/utils/compressImage.ts`, formulaire `src/components/evenements/EvenementForm.tsx`), gardées
+dans le document Firestore, sans Storage ni route API.
+
+Décisions :
+- **Une image par édition** (Noël 2026 a la sienne) : champ facultatif `image` (data-URL JPEG) dans `Programme`.
+- **Où on la met** : back-office, écran de la fête (`src/app/back-office/evenements/scene/[fete]/`, `FeteGestion.tsx`),
+  derrière `BACK_OFFICE` : choisir, aperçu 16/9, remplacer, retirer. Compression par `compressImage`, comme les
+  évènements ; plafond de taille à fixer par la session pour que le document reste loin du mégaoctet de Firestore
+  (décision déléguée, à écrire ici).
+- **Qui** : ceux qui modifient déjà la fête (`isCoordination()`, `firestore.rules`, `programmes/{id}`). La règle ne
+  filtre pas les champs : rien à publier. Si la session trouve le contraire, elle s'arrête sur ce point et l'écrit
+  (publier `firestore.rules` revient à Timothée).
+- **Affichage** : avec une image, `CarteFete` prend le gabarit de `CarteEpingle` avec image (image 16/9 en haut, carte
+  claire, titre, date · « dans N jours », ligne d'état des réservations, puis « Réserver la Grande salle » et « Voir la
+  fête ») ; sans image, le bandeau bleu reste tel quel. Image décorative (`alt=""`), le titre suit.
+- **Pas de planche** : le gabarit existe déjà et Timothée l'a nommé ; captures aux quatre dispositions, thème sombre et
+  中文, puis `critique-design`.
+- **Hors périmètre** : la page « Voir la fête », la ligne des fêtes passées, une image commune à toutes les années.
+- **À surveiller** : les lectures qui listent tous les `programmes` portent désormais l'image ; la session dit où ils
+  sont lus et, si le poids gêne (liste de toutes les éditions), écarte le champ de ces lectures.
+
+Tranches (petites et voisines : une seule session, un commit et une ligne d'Avancement par tranche) :
+- **IF-1** — modèle (`image?`), lecture et écriture, champ dans l'écran de la fête, libellés fr et zh-CN.
+- **IF-2** — `CarteFete` avec image, tests d'agencement (cinq projets, `SPECS_GRAND_ECRAN`), captures.
+Tests : Playwright, session simulée (`tests/helpers/fakeSession.ts`), noms fictifs ; les specs des fêtes et de la page
+Église voisines ; pas de suite complète.
+
 ## Avancement
 
 - 04/10/2026 : go (« Lance plusieurs agents si besoin pour coder les autres specs en même temps » ; questions sans
