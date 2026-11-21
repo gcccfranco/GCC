@@ -262,3 +262,24 @@ déplacement ; si ce n'est pas tenable, s'arrêter et l'écrire.
   là avant R5b. Tests : les cinq specs de R5b + `nettoyage-louange-pures`, cinq projets, `--workers=2` : 987 passés,
   3 échecs (C1, (v), `louange-harmonie:133`, tous expliqués ci-dessus), 42 ignorés, 42 min ; tsc propre. Reste : C1
   (lenteur de `ChordLine` à 1 440 px), (v) et `louange-harmonie:133` (instables sous charge, course non trouvée).
+- **R6 fait (21/11/2026, nuit)** — `ChordLine` : la mesure de toutes les lignes d'un rendu passe par une file commune
+  vidée en microtâche (lectures de largeur et de corps pour toutes les lignes, puis remise à zéro du resserrage, puis
+  lecture des boîtes, puis écritures et coupures en un seul `flushSync`) ; un seul `document.fonts.ready` partagé par
+  les lignes montées pendant l'attente. Cause confirmée avant de coder (profil CPU de « Plan » → « Tout le chant » à
+  1 440 px : 7,3 s sur 9,7 s dans l'effet de mesure, dont 2,65 s de `getBoundingClientRect` ; 0,8 s après). **Rendu
+  identique** : boîtes de tous les accords (page chant `abba-pere` et `为我而来`, page setlist en Partitions, mode
+  louange page par page ; 26 + 16 + 32 + 32 lignes, 343 accords) aux cinq projets, relevées avant et après : 0 écart
+  (deux relevés « avant » identiques entre eux). **Temps** (`next dev`, même machine, mode louange de C1 à 150 %) :
+  1 440 px, ouverture 11,0 / 9,2 s → 4,4 / 2,1 s ; « Plan » → « Tout le chant » 7,1 / 9,0 / 7,8 s → 1,0 / 1,0 / 1,5 s ;
+  1 280 px, ouverture 2,7 / 1,5 s → 3,4 / 1,5 s, « Tout le chant » 0,8–1,2 s → 0,8–1,1 s (inchangé). Demande du
+  pilote (Timothée, ~1 500 px, setlist de quatre chants) : lancer le mode louange 10,5 / 12,4 / 12,8 s → 6,1 / 5,1 /
+  5,5 s ; activer le Crayon 0,6–0,7 s → 0,5–0,8 s, **non reproduit lent ici** et sans lien avec `ChordLine` (aucune
+  autre cause vue dans ce chemin). Reste du lancement après R6 (profil) : surtout le rendu React de développement
+  (`jsxDEV` 1,5 s, rendu des lignes 1,1 s), la mesure groupée 0,9 s ; une build de production n'a pas été mesurée.
+  Tests : `louange-sections-uniques`, `coupure-vers`, `louange-coupure`, `lignes-accords`, `louange-accords`,
+  `dispositions-partition`, `louange-demi-page`, `mode-louange-colonnes`, `agencement-v18-chants`, cinq projets,
+  `--workers=2 --trace off` : 1 037 passés, 23 échecs, 177 ignorés, 55 min ; `louange-sections-uniques:358` (C1) vert
+  aux cinq projets, délai inchangé. Les 23 échecs tombent dans quatre tests **rouges aussi sur la base** (repassés
+  sur une copie de `1d4bb50`, mêmes erreurs) : `dispositions-partition:752` et `:795` (rangée des miniatures sur deux
+  lignes), `louange-demi-page:157` (moitié basse vide sous le filet), `louange-coupure:172` (rotation au téléphone :
+  aucune copie de même largeur) ; non corrigés, hors R6. tsc et lint propres.

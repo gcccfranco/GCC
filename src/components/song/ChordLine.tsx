@@ -5,6 +5,7 @@ import { AccordTouchable, etiquetteAffichee } from "@/components/accords/AccordT
 import localFont from "next/font/local";
 import { NotationAccordsContext } from "@/lib/notationAccords";
 import { useContext, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { LargeurCoupureContext, CoupureMesureContext, bordCoupure } from "@/components/song/LargeurCoupure";
 import { signalerCoupure } from "@/lib/song/coupureSignal";
 import { choisirCoupure, DEBORD, type Unite } from "@/lib/song/coupure";
@@ -153,6 +154,51 @@ function espaceFinDe(mot: HTMLElement, echelle: number): number {
   return plage.getBoundingClientRect().width / echelle;
 }
 
+/** R6 : la mesure d'une ligne en trois temps, pour que toutes les lignes d'un rendu se mesurent ensemble : l'appel lit
+ *  la largeur et le corps (null : rien à refaire), `remettre` retire le resserrage, `mesurer` lit les boîtes et rend
+ *  l'écriture (styles et coupure). */
+type MesureLigne = () => { remettre: () => void; mesurer: () => () => void } | null;
+
+const aMesurer = new Set<{ current: MesureLigne }>();
+
+/** Mesure groupée (R6) : une mise en page par étape pour toutes les lignes au lieu d'une par ligne. La file se vide en
+ *  microtâche, après les effets de toutes les lignes du rendu et avant l'affichage ; la coupure se pose aussitôt
+ *  (flushSync), comme quand chaque ligne la posait dans son propre effet. */
+function viderMesures() {
+  const lignes = [...aMesurer];
+  aMesurer.clear();
+  const prets = lignes.map((m) => m.current()).filter((t) => t !== null);
+  prets.forEach((t) => t.remettre());
+  const ecritures = prets.map((t) => t.mesurer());
+  flushSync(() => ecritures.forEach((e) => e()));
+}
+
+function planifierMesure(m: { current: MesureLigne }) {
+  if (!aMesurer.size) queueMicrotask(viderMesures);
+  aMesurer.add(m);
+}
+
+/** Un seul abonnement aux polices pour toutes les lignes (R6) : celles montées pendant l'attente reçoivent le même
+ *  signal. `document.fonts.ready`, appelé au montage de chaque ligne, forçait un recalcul des styles par ligne. */
+const attentePolices = new Set<() => void>();
+let policesEnAttente = false;
+function apresPolices(f: () => void) {
+  if (!document.fonts) return () => {};
+  attentePolices.add(f);
+  if (!policesEnAttente) {
+    policesEnAttente = true;
+    document.fonts.ready.then(() => {
+      policesEnAttente = false;
+      const abonnes = [...attentePolices];
+      attentePolices.clear();
+      abonnes.forEach((g) => g());
+    });
+  }
+  return () => {
+    attentePolices.delete(f);
+  };
+}
+
 export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontSize, chordEm = 0.9, chord_font, fr_lyric_font, ecartApres = false }: ChordLineProps) {
   const { notation, tonalite } = useContext(NotationAccordsContext);
   const segments = toSegments(tokens, !showChords);
@@ -198,75 +244,81 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
   }, [version]);
 
   // Les largeurs de mots changent quand la police arrive.
-  useLayoutEffect(() => {
-    let vivant = true;
-    document.fonts?.ready.then(() => vivant && setPolices((v) => v + 1));
-    return () => {
-      vivant = false;
-    };
-  }, []);
+  useLayoutEffect(() => apresPolices(() => setPolices((v) => v + 1)), []);
 
   // Après chaque rendu : on ne mesure que si la largeur, le corps ou le contenu ont changé (aucune boucle).
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- sans liste volontairement : l'empreinte ci-dessous évite toute boucle
+  // R6 : la mesure passe par la file commune (viderMesures), qui lit puis écrit pour toutes les lignes à la fois.
+  const mesure = useRef<MesureLigne>(() => null);
+  // Sans liste volontairement : l'empreinte évite toute boucle.
   useLayoutEffect(() => {
-    const el = ligne.current;
-    if (!el) return;
-    // La réserve de droite (ci-dessous) est comptée dans clientWidth : on la retire pour retrouver la largeur de la colonne.
-    const largeur = el.clientWidth - (parseFloat(el.style.paddingRight) || 0);
-    if (!largeur) return;
-    const em = parseFloat(getComputedStyle(el).fontSize);
-    const empreinte = [largeur, em, cle, nTexte, showChords, hideLyrics, version, propre, polices].join("/");
-    if (empreinte === derniere.current) return;
-    derniere.current = empreinte;
-    // R4 retiré avant de mesurer : les largeurs sont celles du texte non resserré.
-    el.style.letterSpacing = "";
-    el.style.paddingRight = "";
-    el.style.marginRight = "";
-    const rect = el.getBoundingClientRect();
-    const echelle = rect.width / (el.offsetWidth || 1) || 1;
-    // Jusqu'au bord du cadre de zoom (ou de la fenêtre) : rien ne doit élargir ni la page ni ce cadre.
-    const bord = bordCoupure(el);
-    const place = (bord - rect.right) / echelle - 4;
-    const unites: Unite[] = words.map((mot, w) => {
-      const noeud = motRefs.current[w];
-      return {
-        largeur: noeud ? noeud.getBoundingClientRect().width / echelle : 0,
-        espaceFin: noeud ? espaceFinDe(noeud, echelle) : 0,
-        texte: mot.map(({ seg }) => (showChords ? seg.lyric : nettoie(seg.lyric))).join(""),
-        queue: w >= nTexte,
+    mesure.current = () => {
+      const el = ligne.current;
+      if (!el || !el.isConnected) return null;
+      // La réserve de droite (ci-dessous) est comptée dans clientWidth : on la retire pour retrouver la largeur de la colonne.
+      const largeur = el.clientWidth - (parseFloat(el.style.paddingRight) || 0);
+      if (!largeur) return null;
+      const em = parseFloat(getComputedStyle(el).fontSize);
+      const empreinte = [largeur, em, cle, nTexte, showChords, hideLyrics, version, propre, polices].join("/");
+      if (empreinte === derniere.current) return null;
+      derniere.current = empreinte;
+      // R4 retiré avant de mesurer : les largeurs sont celles du texte non resserré.
+      const remettre = () => {
+        el.style.letterSpacing = "";
+        el.style.paddingRight = "";
+        el.style.marginRight = "";
       };
-    });
-    // R5 : retrait de 1 em par rapport au début des paroles de la première rangée (qui n'a pas de retrait).
-    const debut = debutParoles(el.querySelector<HTMLElement>("[data-rangee]"), echelle);
-    let retrait = em + (debut && debut > 0 ? Math.round(debut * 100) / 100 : 0);
-    const choisir = () =>
-      choisirCoupure(unites, {
-        largeur,
-        em,
-        retrait,
-        debord: Math.max(0, Math.min(DEBORD, place)),
-        debordQueue: Math.max(0, Math.min(20, place)),
-        resserrer: true,
-      });
-    let r = choisir();
-    // Colonne très étroite : plutôt que déborder, on retombe sur le retrait d'un em.
-    if (r.etat === "deborde" && retrait > em) {
-      retrait = em;
-      r = choisir();
-    }
-    // Ce qui dépasse dans la marge reste dans le cadre de la ligne (padding compensé par une marge négative) :
-    // la ligne ne défile pas, la page ne s'élargit pas.
-    const reserve = Math.max(0, Math.min(20, place));
-    if (reserve > 0) {
-      el.style.paddingRight = `${reserve}px`;
-      el.style.marginRight = `-${reserve}px`;
-    }
-    el.style.letterSpacing = r.interlettrage > 0 ? `-${r.interlettrage.toFixed(3)}px` : "";
-    setCoupe((avant) =>
-      avant.etat === r.etat && avant.coupures.join() === r.coupures.join() && avant.relache.join() === r.relache.join() && avant.retrait === retrait
-        ? avant
-        : { coupures: r.coupures, etat: r.etat, relache: r.relache, retrait },
-    );
+      const mesurer = () => {
+        const rect = el.getBoundingClientRect();
+        const echelle = rect.width / (el.offsetWidth || 1) || 1;
+        // Jusqu'au bord du cadre de zoom (ou de la fenêtre) : rien ne doit élargir ni la page ni ce cadre.
+        const bord = bordCoupure(el);
+        const place = (bord - rect.right) / echelle - 4;
+        const unites: Unite[] = words.map((mot, w) => {
+          const noeud = motRefs.current[w];
+          return {
+            largeur: noeud ? noeud.getBoundingClientRect().width / echelle : 0,
+            espaceFin: noeud ? espaceFinDe(noeud, echelle) : 0,
+            texte: mot.map(({ seg }) => (showChords ? seg.lyric : nettoie(seg.lyric))).join(""),
+            queue: w >= nTexte,
+          };
+        });
+        // R5 : retrait de 1 em par rapport au début des paroles de la première rangée (qui n'a pas de retrait).
+        const debut = debutParoles(el.querySelector<HTMLElement>("[data-rangee]"), echelle);
+        let retrait = em + (debut && debut > 0 ? Math.round(debut * 100) / 100 : 0);
+        const choisir = () =>
+          choisirCoupure(unites, {
+            largeur,
+            em,
+            retrait,
+            debord: Math.max(0, Math.min(DEBORD, place)),
+            debordQueue: Math.max(0, Math.min(20, place)),
+            resserrer: true,
+          });
+        let r = choisir();
+        // Colonne très étroite : plutôt que déborder, on retombe sur le retrait d'un em.
+        if (r.etat === "deborde" && retrait > em) {
+          retrait = em;
+          r = choisir();
+        }
+        // Ce qui dépasse dans la marge reste dans le cadre de la ligne (padding compensé par une marge négative) :
+        // la ligne ne défile pas, la page ne s'élargit pas.
+        const reserve = Math.max(0, Math.min(20, place));
+        return () => {
+          if (reserve > 0) {
+            el.style.paddingRight = `${reserve}px`;
+            el.style.marginRight = `-${reserve}px`;
+          }
+          el.style.letterSpacing = r.interlettrage > 0 ? `-${r.interlettrage.toFixed(3)}px` : "";
+          setCoupe((avant) =>
+            avant.etat === r.etat && avant.coupures.join() === r.coupures.join() && avant.relache.join() === r.relache.join() && avant.retrait === retrait
+              ? avant
+              : { coupures: r.coupures, etat: r.etat, relache: r.relache, retrait },
+          );
+        };
+      };
+      return { remettre, mesurer };
+    };
+    planifierMesure(mesure);
   });
 
   const rangees: { mots: typeof words; depart: number }[] = [];
