@@ -379,6 +379,10 @@ Tranches (petites et voisines : une seule session, un commit et une ligne d'Avan
 - **IF-2** — `CarteFete` avec image, tests d'agencement (cinq projets, `SPECS_GRAND_ECRAN`), captures.
 Tests : Playwright, session simulée (`tests/helpers/fakeSession.ts`), noms fictifs ; les specs des fêtes et de la page
 Église voisines ; pas de suite complète.
+- **IF-3** (go de Timothée du 21/11, nuit : « Go pour les deux ») — la carte ne passe plus par le bleu : l'édition
+  garde un drapeau `aImage` (posé et retiré avec l'image, lu avec la liste) ; quand il est vrai, `CarteFete` prend
+  tout de suite le gabarit avec image, avec un emplacement 16/9 neutre le temps que l'image arrive, sans saut de
+  mise en page. Une édition sans drapeau se comporte comme aujourd'hui. `firestore.rules` : rien à changer attendu.
 
 ## Avancement
 

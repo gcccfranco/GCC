@@ -109,6 +109,25 @@ préexistants dans `coherence.spec.ts` » signalés par la session du lot AS, T2
 - `louange-sections-uniques.spec.ts:358` (C1), ordinateur-1440.
 - `louange-menus.spec.ts:763` (B1), ordinateur-1440 : le × change de page une fois sur huit.
 
+## R6 — Mode louange lent à 1 440 px : la mesure des lignes d'accords (go : « Go pour les deux », 21/11/2026, nuit)
+
+Constat de R5b (§ Avancement, point C1) : à 1 440 px, ouvrir le mode louange prend 10 s (3,4 s à 1 280 px) et passer
+de « Plan » à « Tout le chant » 5,8 s (0,5 s). Profil : 3,2 s dans l'effet de mesure de `ChordLine`
+(`src/components/song/ChordLine.tsx:211-268`, une mise en page forcée par ligne) et 2,1 s dans `document.fonts.ready`
+appelé au montage de chaque ligne (`:201-206`).
+
+À faire : regrouper les lectures et les écritures de la mesure (toutes les lectures, puis toutes les écritures, pour
+l'ensemble des lignes ou au moins sans mise en page forcée par ligne) et n'avoir qu'un seul abonnement aux polices
+pour toutes les lignes. **Le rendu ne change pas** : mêmes positions d'accords au pixel près, sur toutes les pages qui
+montrent des lignes d'accords (page chant, setlist, mode louange), FR et ZH.
+
+Réussite : (1) à 1 440 px, « Plan » → « Tout le chant » sous 1,5 s et l'ouverture nettement plus rapide (mesures
+avant et après écrites dans l'Avancement, même machine) ; (2) `louange-sections-uniques:358` (C1) vert sur
+ordinateur-1440 sans allonger son délai ; (3) positions des accords identiques avant et après, prouvé par une
+comparaison mesurée (boîtes des accords d'un chant FR et d'un chant ZH, aux cinq largeurs) ; (4) les specs des
+accords et du mode louange voisines restent vertes. Si la cause s'avère ailleurs que dans `ChordLine`, ou si le gain
+demande de changer le rendu, s'arrêter et l'écrire.
+
 ## Avancement
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,
