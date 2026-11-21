@@ -1,5 +1,5 @@
 // Occupations d'un jour, salle par salle (docs/spec-salles.md, § Modèle, SA2, SA13, AR6, AR14, AR17) : fonctions
-// pures. Lot 2 : emploi du temps fixe, jour J d'une fête, créneaux de la Scène en lecture seule (lot 5 : des réservations) ; lot 3 : les
+// pures. Lot 2 : emploi du temps fixe, jour J d'une fête, créneaux de la Scène en lecture seule (lot 5 : des réservations) ; AS2 : `saisonFeteDu`, la fête d'une date pour la question de la feuille ; lot 3 : les
 // réservations (`reservations/{id}`) ; lot 4 : les évènements et réunions qui portent une salle (AR15, pas de document
 // de réservation : l'évènement porte `salle`).
 
@@ -49,7 +49,7 @@ export interface Occupation {
 export interface SourcesSalles {
   services: Pick<ServiceEntry, "date" | "service">[];
   /** Les éditions affichées des fêtes : le jour J (AR14) et la page d'un créneau de scène. */
-  scene: { programme: Pick<Programme, "id" | "jourJ" | "fete" | "ouvert"> & Partial<Pick<Programme, "debut" | "fin" | "fermees" | "annee">> }[];
+  scene: { programme: Pick<Programme, "id" | "jourJ" | "fete" | "ouvert"> & Partial<Pick<Programme, "debut" | "fin" | "fermees" | "annee" | "quiAutorises" | "plages" | "nom">> }[];
   /** Lot 3 : les réservations lues (toutes dates ; seules celles du jour comptent). Lot 5 (AR20) : un créneau de fête
    *  en est une (`fete`), lu comme créneau de scène. */
   reservations?: Reservation[];
@@ -77,14 +77,14 @@ export function jourJDu(date: string, scene: SourcesSalles["scene"]): Fete | nul
   return p ? feteDe(p) : null;
 }
 
-/** Lot 5 (AR22) : la fête dont la saison de réservation couvre cette date (ouverte, ni brouillon ni fermée à la main),
- *  avec l'adresse de sa page ; sinon null. Pendant ce temps, la Scène se réserve depuis la page de la fête. */
-export function saisonSceneDu(date: string, scene: SourcesSalles["scene"]): { fete: Fete; annee: number; lien: string } | null {
+/** AS2, RS1 : la fête dont la saison de réservation couvre cette date (programme ouvert, avant le jour J), avec l'adresse
+ *  de sa page ; `ouverte: false` si elle est fermée à la main (la feuille le dit, la Grande salle se réserve quand même) ; sinon null. */
+export function saisonFeteDu(date: string, scene: SourcesSalles["scene"]): { programme: SourcesSalles["scene"][number]["programme"]; fete: Fete; annee: number; lien: string; ouverte: boolean } | null {
   for (const { programme: p } of scene) {
-    if (!p.debut || p.ouvert === false || p.fermees === true) continue;
+    if (!p.debut || p.ouvert === false) continue;
     const s = saisonDe({ ...p, debut: p.debut });
     const fete = feteDe(p);
-    if (fete && date >= s.debut && date <= s.fin && date < p.jourJ) return { fete, annee: p.annee ?? Number(p.jourJ.slice(0, 4)), lien: `/evenements/scene/${fete}` };
+    if (fete && date >= s.debut && date <= s.fin && date < p.jourJ) return { programme: p, fete, annee: p.annee ?? Number(p.jourJ.slice(0, 4)), lien: `/evenements/scene/${fete}`, ouverte: p.fermees !== true };
   }
   return null;
 }

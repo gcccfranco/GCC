@@ -210,3 +210,20 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   `pages-en-grand-evenements:405` sur leurs projets : 75 passés en 1 min. À laisser jusqu'à T6 : à la tablette portrait la
   carte seule prend toute la largeur (AS12 la mettra côte à côte avec l'épinglé ; sinon `md:max-w-xl`). Polices
   chinoises régénérées : inchangées (caractères déjà présents).
+- 21/11/2026 — **T2 faite** (session T2, file A) : la Grande salle se réserve toujours depuis la feuille de Salles
+  (`salles.sceneSaison` et la condition `!fete` de `pret` retirés) ; `saisonFeteDu` (`occupations.ts`, RS1) remplace
+  `saisonSceneDu` et rend aussi une fête fermée (`ouverte: false`) ; question « C'est pour Noël 2026 ? » sous la
+  Grande salle (Oui / Non, aucune réponse d'avance, bouton « Dis si c'est pour Noël » en attendant) ; Oui : pastilles
+  des groupes permis (+ « Autre… » si permis), cinq « Pour quoi », note, écrit `salle: "grande"`, `fete`, `qui`,
+  `pour`, `note`, `libre` hors plages, après `canReserverPour` ; Non : réservation ordinaire ; fête fermée : ligne AS5.
+  `Pastille` (CreneauForm) et `pourDe` (programmes) exportés pour T3 ; `nomFete` dans `scene/fetes.ts`. Aucune rule
+  changée. Décisions déléguées (session T2, 21/11) : (1) la ligne « réservé à … » (AS5, `feteNonPermis`) est codée
+  mais ne paraît jamais : `canReserverPour(…, [])` ne refuse qu'une fête fermée ou en brouillon (« Qui peut réserver »
+  restreint les groupes, pas les personnes) ; (2) modifier une réservation (ordinaire ou de fête) ne pose pas la
+  question (AS7 : « pour la fête » ne se change pas) ; une réservation de fête modifiée garde `fete` et ses champs.
+  Pour T3 (relecture) : modifier une réservation de fête ramenée dans une plage ne remet pas `libre` à faux ; des `qui`
+  cochés puis une date dans la saison d'une autre fête font échouer l'envoi sans message propre. Tests : tsc, lint ;
+  `salles-scene` (bloc T2 réécrit, cas a à i, 中文), `salles-reserver`, `salles-modele`, `scene-saison`, `coherence`,
+  `libelles-langues`, `chants-fetes`, `back-office-coupe` sur trois appareils : 820 passés, 3 rouges connus
+  (`coherence.spec.ts:225`, antérieur), en 9 min 20 ; après correction, cas a et i : 6 passés en 23 s. Écran regardé
+  au téléphone, à la tablette et à l'ordinateur.

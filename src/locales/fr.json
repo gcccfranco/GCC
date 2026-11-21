@@ -4674,8 +4674,6 @@
     "refus": "{{salle}} est prise : {{qui}}, {{debut}} – {{fin}}.",
     "libresMemeMoment": "Libres au même moment",
     "decaler": "Décaler à {{debut}} – {{fin}}",
-    "sceneSaison": "Pendant la saison de {{fete}}, la Scène se réserve depuis sa page.",
-    "sceneSaisonLien": "Page de {{fete}}",
     "feuille": {
       "date": "Date",
       "de": "De",
@@ -4689,6 +4687,14 @@
       "equipes": "Équipes",
       "valider": "Réserver",
       "modifierTitre": "Modifier la réservation",
+      "pourFete": "C'est pour {{fete}} ?",
+      "pourFeteOui": "Oui, pour {{court}}",
+      "pourFeteNon": "Non",
+      "pourFeteRepondre": "Dis si c'est pour {{court}}",
+      "pourFeteLecture": "Pour {{fete}}",
+      "feteNonPermis": "{{fete}} : réservé à {{qui}}. Ta réservation sera ordinaire.",
+      "feteFermee": "Réservations de {{fete}} fermées. Ta réservation sera ordinaire.",
+      "note": "Note · facultatif",
       "echec": "La réservation n'a pas pu être enregistrée. Réessayez.",
       "erreurs": {
         "finAvantDebut": "La fin doit venir après le début.",

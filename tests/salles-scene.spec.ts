@@ -5,6 +5,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { interdireDialoguesNatifs } from "./helpers/agencement";
 import { creneauEnReservation } from "./helpers/creneauxScene";
 import { canEditReservation, canReserverPour } from "../src/lib/access";
+import { saisonFeteDu } from "../src/lib/salles/occupations";
 
 // Chantier AR (docs/spec-salles.md), lot 5, tranche T5a (AR19 à AR21) : un créneau de fête est une réservation
 // (`reservations/{id}`, `fete`) ; AS14 : de la Grande salle (`salle: "grande"`), les anciens documents `salle: "scene"`
@@ -135,18 +136,132 @@ test.describe("AR, T5a, AS14 : les créneaux de fête sont des réservations de 
   });
 });
 
-test.describe("AR, T5b, AS14 : dans Salles, la Grande salle se réserve en saison de fête (la feuille unique vient en T2)", () => {
-  test("choisir la Grande salle pendant la saison de Noël : aucune Scène à choisir, aucun message, rien qui bloque", async ({ page }) => {
-    await ouvrir(page, MARIUS, {}, "/evenements/salles");
-    await page.getByRole("button", { name: "Réserver une salle" }).click();
-    const f = page.getByRole("dialog", { name: "Réserver une salle" });
-    await f.getByLabel("Date").fill("2026-10-07");
-    await f.getByLabel("De", { exact: true }).fill("18:00");
-    await f.getByLabel("À", { exact: true }).fill("19:00");
-    await expect(f.locator('[data-salle="scene"]')).toHaveCount(0);
+test.describe("AS, T2 : la Grande salle en saison de fête, la question dans Salles", () => {
+  /** Mercredi 7 octobre 2026 (saison de Noël, hors plages), la feuille ouverte, Grande salle choisie. */
+  async function feuilleGrande(page: Page, docs: Record<string, Record<string, unknown>> = {}, { zh = false, debut = "18:00", fin = "19:00" } = {}) {
+    if (zh) await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+    const db = await ouvrir(page, MARIUS, docs, "/evenements/salles");
+    await page.getByRole("button", { name: zh ? "预订场地" : "Réserver une salle" }).click();
+    const f = page.getByRole("dialog", { name: zh ? "预订场地" : "Réserver une salle" });
+    await f.getByLabel(zh ? "日期" : "Date").fill("2026-10-07");
+    await f.getByLabel(zh ? "从" : "De", { exact: true }).fill(debut);
+    await f.getByLabel(zh ? "到" : "À", { exact: true }).fill(fin);
     await f.locator('[data-salle="grande"]').click();
-    await f.getByLabel("Pour quoi").fill("Répétition du chœur");
-    await expect(f.locator("[data-scene-fete]")).toHaveCount(0);
+    return { db, f, reserver: f.getByRole("button", { name: /^(Réserver|Dis si c'est pour Noël|请先选择是否为圣诞节|预订)$/ }) };
+  }
+
+  test("a. la question « C'est pour Noël 2026 ? », aucune réponse d'avance ; le bouton attend ; une autre salle la retire", async ({ page }) => {
+    const { f, reserver } = await feuilleGrande(page);
+    await expect(f.locator('[data-salle="scene"]')).toHaveCount(0);
+    const q = f.getByRole("radiogroup", { name: "C'est pour Noël 2026 ?" });
+    await expect(q.getByRole("radio", { name: "Oui, pour Noël" })).not.toBeChecked();
+    await expect(q.getByRole("radio", { name: "Non" })).not.toBeChecked();
+    await expect(reserver).toHaveText("Dis si c'est pour Noël");
+    await expect(reserver).toBeDisabled();
+    await f.locator('[data-salle="paix"]').click();
+    await expect(f.getByRole("radiogroup", { name: /C'est pour/ })).toHaveCount(0);
+    await f.getByLabel("Pour quoi").fill("Atelier");
     await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeEnabled();
+  });
+
+  test("b. Oui : pastilles des familles permises, plusieurs choix, Pour quoi, note ; écrit la réservation de fête", async ({ page }) => {
+    const { db, f } = await feuilleGrande(page);
+    await f.getByRole("radio", { name: "Oui, pour Noël" }).check();
+    await expect(f.getByRole("checkbox", { name: "Gp Paix" })).toBeVisible();
+    await expect(f.getByRole("checkbox", { name: "Gp Amour" })).toBeVisible();
+    await expect(f.getByRole("checkbox", { name: "Franco" })).toHaveCount(0);
+    await expect(f.getByRole("checkbox", { name: "Culte Francophone" })).toHaveCount(0);
+    await f.getByRole("checkbox", { name: "Gp Amour" }).check();
+    await f.getByRole("checkbox", { name: "Gp Paix" }).check();
+    await f.getByRole("radio", { name: "Danse" }).check();
+    await f.getByLabel("Note · facultatif").fill("Avec la sono");
+    await f.getByRole("button", { name: "Réserver", exact: true }).click();
+    await expect(f).toBeHidden();
+    const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"));
+    expect(cree?.data).toMatchObject({
+      salle: "grande", fete: "noel", date: "2026-10-07", debut: "18:00", fin: "19:00", quoi: "Danse", qui: ["Gp Amour", "Gp Paix"],
+      pour: "Gp Amour, Gp Paix", note: "Avec la sono", libre: true, auteurUid: "uid-marius",
+    });
+  });
+
+  test("c. Non : la réservation ordinaire, sans fete, qui ni note", async ({ page }) => {
+    const { db, f } = await feuilleGrande(page);
+    await f.getByRole("radio", { name: "Non", exact: true }).check();
+    await f.getByLabel("Pour quoi").fill("Répétition du chœur");
+    await f.getByRole("button", { name: "Réserver", exact: true }).click();
+    await expect(f).toBeHidden();
+    const data = db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"))?.data;
+    expect(data).toMatchObject({ salle: "grande", quoi: "Répétition du chœur" });
+    for (const k of ["fete", "qui", "note"]) expect(data).not.toHaveProperty(k);
+  });
+
+  test("d. fête fermée à la main : pas de question, une ligne, réservation ordinaire", async ({ page }) => {
+    const { db, f } = await feuilleGrande(page, { "programmes/noel": { ...NOEL, fermees: true } });
+    await expect(f.getByRole("radiogroup", { name: /C'est pour/ })).toHaveCount(0);
+    await expect(f.locator("[data-fete-ligne]")).toHaveText("Réservations de Noël 2026 fermées. Ta réservation sera ordinaire.");
+    await f.getByLabel("Pour quoi").fill("Répétition du chœur");
+    await f.getByRole("button", { name: "Réserver", exact: true }).click();
+    await expect(f).toBeHidden();
+    expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"))?.data).not.toHaveProperty("fete");
+  });
+
+  test("e. saisonFeteDu : brouillon, fermée, hors saison, jour J (unité) ; « non permis » n'existe pas pour une fête ouverte", () => {
+    const scene = (x: Record<string, unknown> = {}) => [{ programme: { id: "noel", jourJ: "2026-12-24", fete: "noel" as const, debut: "2026-10-01", fin: "2026-12-20", ouvert: true, ...x } }];
+    expect(saisonFeteDu("2026-10-07", scene())).toMatchObject({ fete: "noel", annee: 2026, ouverte: true });
+    expect(saisonFeteDu("2026-10-07", scene({ ouvert: false }))).toBeNull();
+    expect(saisonFeteDu("2026-10-07", scene({ fermees: true }))).toMatchObject({ ouverte: false });
+    expect(saisonFeteDu("2026-09-30", scene())).toBeNull();
+    expect(saisonFeteDu("2026-12-28", scene())).toBeNull();
+    expect(saisonFeteDu("2026-12-24", scene())).toBeNull();
+    // Avec `qui` vide, canReserverPour ne refuse qu'une fête fermée ou en brouillon (déjà traitées ci-dessus) : aucun
+    // membre n'a donc « fête ouverte mais non permise » (décision déléguée : la ligne feteNonPermis reste, sans test UI).
+    const membre = { uid: "uid-marius", email: "marius@example.com" } as never;
+    expect(canReserverPour(membre, null, { ...NOEL, quiAutorises: ["Gp Paix"] }, [])).toBe(true);
+  });
+
+  test("f. chevauchement : la Grande salle prise est grisée ; le refus SA8 s'affiche aussi avec Oui", async ({ page }) => {
+    const rx = { salle: "grande", date: "2026-10-07", debut: "18:30", fin: "19:30", pour: "", quoi: "Atelier", auteurUid: "uid-lucile", auteurNom: "Lucile", createdAt: "", updatedAt: "" };
+    const { f } = await feuilleGrande(page, { "reservations/rx": rx }, { debut: "17:00", fin: "18:00" });
+    await f.getByRole("radio", { name: "Oui, pour Noël" }).check();
+    await f.getByLabel("À", { exact: true }).fill("19:00");
+    await expect(f.locator("[data-refus]")).toContainText("Grande salle est prise");
+    await expect(f.locator("[data-refus]").getByRole("button", { name: /^Décaler/ })).toBeVisible();
+    await expect(f.locator('[data-salle="grande"] input')).toBeDisabled();
+    await expect(f.locator('[data-salle="grande"]')).toContainText("Atelier");
+    await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeDisabled();
+  });
+
+  test("g. hors saison : la Grande salle sans aucune question", async ({ page }) => {
+    const { f } = await feuilleGrande(page);
+    await f.getByLabel("Date").fill("2026-12-28");
+    await expect(f.getByRole("radiogroup", { name: /C'est pour/ })).toHaveCount(0);
+    await expect(f.locator("[data-fete-ligne]")).toHaveCount(0);
+    await f.getByLabel("Pour quoi").fill("Répétition du chœur");
+    await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeEnabled();
+  });
+
+  test("h. 中文 : la question et ses deux choix", async ({ page }) => {
+    const { f, reserver } = await feuilleGrande(page, {}, { zh: true });
+    const q = f.getByRole("radiogroup", { name: "这是为圣诞节 2026预订吗？" });
+    await expect(q.getByRole("radio", { name: "是，为圣诞节" })).toBeVisible();
+    await expect(q.getByRole("radio", { name: "不是" })).toBeVisible();
+    await expect(reserver).toHaveText("请先选择是否为圣诞节");
+  });
+
+  test("i. modifier sa réservation ordinaire de la Grande salle en saison : pas de question, « Enregistrer » actif (AS7)", async ({ page }) => {
+    const db = await ouvrir(page, MARIUS, {
+      "reservations/r-iris": { salle: "grande", date: "2026-10-05", debut: "19:00", fin: "20:00", pour: "", quoi: "Répétition sono", auteurUid: "uid-marius", auteurNom: "Marius", createdAt: "", updatedAt: "" },
+    }, "/evenements/salles");
+    await page.getByRole("tab", { name: "Grille" }).click();
+    await page.locator('[data-grille-salles] [data-colonne="grande"] [data-bloc][data-debut="19:00"]').click();
+    await page.getByRole("dialog").getByRole("button", { name: "Modifier" }).click();
+    const f = page.getByRole("dialog", { name: "Modifier la réservation" });
+    await f.getByLabel("À", { exact: true }).fill("20:30");
+    await expect(f.getByRole("radiogroup", { name: /C'est pour/ })).toHaveCount(0);
+    await f.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(f).toBeHidden();
+    const ecrite = db.writes.find((w) => w.method === "PATCH" && w.path === "reservations/r-iris")?.data;
+    expect(ecrite).toMatchObject({ fin: "20:30", quoi: "Répétition sono" });
+    expect(ecrite).not.toHaveProperty("fete");
   });
 });

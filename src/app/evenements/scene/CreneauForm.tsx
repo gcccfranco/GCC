@@ -94,7 +94,7 @@ export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (
 
 /** Une pastille de la feuille : case ou bouton radio posé sur toute la
  *  pastille (invisible), coche dessinée quand elle est choisie. */
-function Pastille({ type, name, label, checked, onChange, retire }: {
+export function Pastille({ type, name, label, checked, onChange, retire }: {
   type: "radio" | "checkbox"
   name: string
   label: string

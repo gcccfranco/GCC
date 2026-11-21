@@ -4622,8 +4622,6 @@
     "refus": "{{salle}}已被占用：{{qui}}，{{debut}}–{{fin}}。",
     "libresMemeMoment": "同一时段空闲",
     "decaler": "改到 {{debut}}–{{fin}}",
-    "sceneSaison": "{{fete}}预约期间，舞台请在其页面预约。",
-    "sceneSaisonLien": "{{fete}}页面",
     "feuille": {
       "date": "日期",
       "de": "从",
@@ -4637,6 +4635,14 @@
       "equipes": "团队",
       "valider": "预订",
       "modifierTitre": "修改预订",
+      "pourFete": "这是为{{fete}}预订吗？",
+      "pourFeteOui": "是，为{{court}}",
+      "pourFeteNon": "不是",
+      "pourFeteRepondre": "请先选择是否为{{court}}",
+      "pourFeteLecture": "为{{fete}}",
+      "feteNonPermis": "{{fete}}：仅限{{qui}}预约。你的预约将是普通预约。",
+      "feteFermee": "{{fete}}预约已关闭。你的预约将是普通预约。",
+      "note": "备注 · 选填",
       "echec": "预订未能保存，请重试。",
       "erreurs": {
         "finAvantDebut": "结束时间须晚于开始时间。",

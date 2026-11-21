@@ -178,7 +178,7 @@ export async function updateProgramme(
 // (match /reservations/{id}, feteReservable) et src/lib/access.ts (canReserverPour, canEditReservation).
 
 /** Le libellé des `qui` (en français, comme un texte d'« Autre… »), 60 caractères au plus (SA7). */
-function pourDe(qui: string[]): string {
+export function pourDe(qui: string[]): string {
   return qui.map((q) => libelleQui(q)).join(", ").slice(0, 60);
 }
 

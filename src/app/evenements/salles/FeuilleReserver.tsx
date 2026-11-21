@@ -4,29 +4,35 @@
 // à), puis les salles, libres en tête, occupées grisées et non choisissables avec leur raison (« Groupe Bonté jusqu'à
 // 14:30 »), puis pour qui et pour quoi. La même feuille modifie une réservation : elle-même ne compte pas dans les
 // occupations (SA10). Feuille du bas au téléphone, panneau à droite dès les deux volets (`FeuilleOuPanneau`).
+// AS2 à AS7 (lot AS, T2) : la Grande salle se réserve toujours ; en saison d'une fête, la question « C'est pour <fête> ? »
+// (Oui : pour qui, pour quoi, note de la fête ; Non : réservation ordinaire).
 // T3b (SA8) : une salle choisie que le moment fait croiser une occupation (le moment changé, ou une réservation
 // relue à l'envoi) est refusée en mots : l'occupant et son heure, les salles libres au même moment, « Décaler ».
 
-import { useId, useState } from "react"
-import Link from "next/link"
+import { Fragment, useId, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FeuilleOuPanneau } from "@/components/stats/FeuilleOuPanneau"
 import { RefusSalle } from "@/components/salles/RefusSalle"
 import { Champ } from "@/components/ui/champ"
 import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
+import { segmentOption, segmentPiste } from "@/components/ui/segment"
+import { Pastille } from "../scene/CreneauForm"
 import { cleNomEquipe, EQUIPES } from "@/lib/equipes/table"
-import { libelleQui } from "@/lib/fetes/qui"
+import { estQuiLibre, libelleQui, normaliserQui } from "@/lib/fetes/qui"
+import { pourDe } from "@/lib/firebase/programmes"
 import type { Reservation } from "@/lib/firebase/reservations"
 import { chevauchement, decalage, sallesLibres } from "@/lib/salles/conflit"
 import { etatA, etatEnMots, type Occupation } from "@/lib/salles/occupations"
 import { SALLES, type SalleId } from "@/lib/salles/salles"
-import { QUI } from "@/types/programme"
+import type { Saison } from "@/lib/scene/saison"
+import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { QUI, QUOI } from "@/types/programme"
 
 type Langue = "fr" | "zh"
 
-/** Ce que la feuille écrit. */
-export type Saisie = Pick<Reservation, "salle" | "date" | "debut" | "fin" | "pour" | "quoi">
+/** Ce que la feuille écrit ; `fete`, `qui`, `note` : une réservation de fête (AS4), `libre` est posé par l'écriture. */
+export type Saisie = Pick<Reservation, "salle" | "date" | "debut" | "fin" | "pour" | "quoi"> & Partial<Pick<Reservation, "fete" | "qui" | "note" | "libre">>
 
 /** La feuille ouverte : une nouvelle réservation (moment pré-rempli, et la salle d'une case de la Grille, T3c) ou celle
  *  à modifier. */
@@ -44,16 +50,31 @@ export function erreurDuMoment(date: string, debut: string, fin: string, today: 
   return null
 }
 
-/** Lot 5 (AR22) : la fête dont la saison couvre une date (son nom à l'écran, sa page), ou null. */
-type SaisonScene = (date: string) => { nom: string; lien: string } | null
+/** AS3 : la fête dont la saison couvre une date, pour la question « C'est pour <fête> ? » ; null hors saison. */
+export type FeteDeLaFeuille = {
+  id: string
+  /** « Noël 2026 ». */
+  nom: string
+  /** « Noël », sans l'année. */
+  court: string
+  ouverte: boolean
+  permis: boolean
+  quiOptions: string[]
+  quiAutre: boolean
+  /** Les familles permises, jointes (« Groupes et EDD »). */
+  familles: string
+  saison: Saison
+}
 
-export function FeuilleReserver({ ouverture, fermer, today, langue, occupationsDu, saisonScene, enregistrer }: {
+export function FeuilleReserver({ ouverture, fermer, today, langue, occupationsDu, feteDu, nomFete, enregistrer }: {
   ouverture: Ouverture | null
   fermer: () => void
   today: string
   langue: Langue
   occupationsDu: (date: string) => Occupation[]
-  saisonScene?: SaisonScene
+  feteDu?: (date: string) => FeteDeLaFeuille | null
+  /** AS7 : le nom d'une fête (« Noël 2026 ») pour la ligne en lecture d'une réservation qui la porte. */
+  nomFete?: (id: string) => string | null
   /** Écrit la réservation (création, ou modification de `id`) ; « refus » si, relue, la salle est prise (SA8) ;
    *  rejette en cas d'échec. */
   enregistrer: (saisie: Saisie, id?: string) => Promise<"ok" | "refus">
@@ -63,18 +84,20 @@ export function FeuilleReserver({ ouverture, fermer, today, langue, occupationsD
   return (
     <FeuilleOuPanneau ouvert={Boolean(ouverture)} onOpenChange={(o) => { if (!o) fermer() }} titre={titre} testidPanneau="salles-reserver-panneau" testidFeuille="salles-reserver-feuille">
       {/* Une clé par ouverture : le formulaire repart de ce qui l'a ouvert. */}
-      {ouverture && <Formulaire key={JSON.stringify(ouverture)} ouverture={ouverture} fermer={fermer} today={today} langue={langue} occupationsDu={occupationsDu} saisonScene={saisonScene} enregistrer={enregistrer} />}
+      {ouverture && <Formulaire key={JSON.stringify(ouverture)} ouverture={ouverture} fermer={fermer} today={today} langue={langue} occupationsDu={occupationsDu} feteDu={feteDu} nomFete={nomFete} enregistrer={enregistrer} />}
     </FeuilleOuPanneau>
   )
 }
 
-function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonScene, enregistrer }: {
+function Formulaire({ ouverture, fermer, today, langue, occupationsDu, feteDu, nomFete, enregistrer }: {
   ouverture: Ouverture
   fermer: () => void
   today: string
   langue: Langue
   occupationsDu: (date: string) => Occupation[]
-  saisonScene?: SaisonScene
+  feteDu?: (date: string) => FeteDeLaFeuille | null
+  /** AS7 : le nom d'une fête (« Noël 2026 ») pour la ligne en lecture d'une réservation qui la porte. */
+  nomFete?: (id: string) => string | null
   enregistrer: (saisie: Saisie, id?: string) => Promise<"ok" | "refus">
 }) {
   const { t } = useTranslation()
@@ -89,6 +112,13 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonSce
   const [choixPour, setChoixPour] = useState(r ? (estDeLaListe(r.pour) ? r.pour : AUTRE) : "")
   const [autre, setAutre] = useState(r && !estDeLaListe(r.pour) ? r.pour : "")
   const [quoi, setQuoi] = useState(r?.quoi ?? "")
+  // AS3, AS4 : la réponse à « C'est pour <fête> ? » (aucune d'avance) et les champs de la fête.
+  const [reponse, setReponse] = useState<"oui" | "non" | null>(null)
+  const [quiFete, setQuiFete] = useState<string[]>(r?.qui?.filter((q) => !estQuiLibre(q)) ?? [])
+  const [autreCoche, setAutreCoche] = useState(Boolean(r?.qui?.some(estQuiLibre)))
+  const [autreTexte, setAutreTexte] = useState(r?.qui?.find(estQuiLibre) ?? "")
+  const [quoiFete, setQuoiFete] = useState(r?.fete ? r.quoi : "")
+  const [note, setNote] = useState(r?.note ?? "")
   const [envoi, setEnvoi] = useState(false)
   const [echec, setEchec] = useState(false)
 
@@ -109,9 +139,17 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonSce
   const libres = bloque ? sallesLibres(occupations, { debut, fin }) : []
   const decale = bloque && salle ? decalage(occupations, salle, { debut, fin }) : null
   const pour = (choixPour === AUTRE ? autre : choixPour).trim().slice(0, 60)
-  // T2 : la Scène est la Grande salle (AS14), cette condition ne peut plus être vraie ; la feuille sera réécrite en T2.
-  const fete = salle === "scene" && !erreur ? saisonScene?.(date) ?? null : null
-  const pret = !erreur && salleLibre && !fete && quoi.trim().length > 0 && !envoi
+  const fete = salle === "grande" && !erreur ? feteDu?.(date) ?? null : null
+  // La question : fête ouverte et permise, sur une nouvelle réservation seulement (AS7 : « pour la fête » ne se change pas en modification).
+  const question = !r && fete !== null && fete.ouverte && fete.permis
+  if (!question && reponse !== null) setReponse(null)
+  const modeFete = Boolean(r?.fete) || reponse === "oui"
+  const quiFinal = [...new Set([...quiFete, ...(autreCoche ? [normaliserQui(autreTexte)] : [])].filter(Boolean))]
+  const detailPret = modeFete
+    ? quiFinal.length > 0 && (!autreCoche || normaliserQui(autreTexte) !== "") && (QUOI as readonly string[]).includes(quoiFete)
+    : quoi.trim().length > 0
+  const pret = !erreur && salleLibre && (!question || reponse !== null) && detailPret && !envoi
+  const reponduA = fete?.court ?? ""
 
   async function envoyer(ev: React.FormEvent) {
     ev.preventDefault()
@@ -120,7 +158,10 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonSce
     setEchec(false)
     try {
       // « refus » : la feuille, relue, montre ce qui a pris la salle entre-temps (SA8) et reste ouverte.
-      if ((await enregistrer({ salle, date, debut, fin, pour, quoi: quoi.trim().slice(0, 80) }, r?.id)) === "ok") return fermer()
+      const saisie: Saisie = modeFete
+        ? { salle, date, debut, fin, pour: pourDe(quiFinal), quoi: quoiFete, fete: r?.fete ?? fete!.id, qui: quiFinal, note: note.trim().slice(0, 120) }
+        : { salle, date, debut, fin, pour, quoi: quoi.trim().slice(0, 80) }
+      if ((await enregistrer(saisie, r?.id)) === "ok") return fermer()
       setEnvoi(false)
     } catch {
       setEchec(true)
@@ -152,21 +193,15 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonSce
           decaler={(p) => { setDebut(p.debut); setFin(p.fin) }} choisir={setSalle} />
       )}
 
-      {fete && (
-        <p role="status" data-scene-fete className="rounded-xl border border-border bg-secondary/60 px-4 py-3 text-sm text-foreground">
-          {t("salles.sceneSaison", { fete: fete.nom })}{" "}
-          <Link href={fete.lien} className="font-semibold underline underline-offset-2">{t("salles.sceneSaisonLien", { fete: fete.nom })}</Link>
-        </p>
-      )}
-
       {/* Les salles : libres en tête, occupées grisées avec leur raison (SA6). */}
       <div data-champ="salle" className="space-y-1.5">
         <p id={`${id}-salle`} className="text-sm font-semibold text-muted-foreground">{t("salles.feuille.salle")}</p>
         <div role="radiogroup" aria-labelledby={`${id}-salle`} className="carte-groupe divide-y divide-border/60 overflow-hidden">
           {triees.map(({ s, raison }) => (
+            <Fragment key={s.id}>
             <label
-              key={s.id}
               data-salle={s.id}
+              style={s.id === "grande" && modeFete ? { background: `${PLANNING_COLORS.scene}14` } : undefined}
               className={`flex min-h-12 items-start gap-3 px-4 py-2.5 ${raison ? "cursor-not-allowed" : "cursor-pointer hover:bg-secondary/60"} ${salle === s.id && !raison ? "bg-secondary" : ""}`}
             >
               <input
@@ -186,10 +221,56 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonSce
                 {(raison ?? libreDe(s.id)) && <span className="block text-sm text-muted-foreground">{(raison ?? libreDe(s.id))!.replace(/ (\d\d:\d\d)/g, "\u00a0$1")}</span>}
               </span>
             </label>
+            {s.id === "grande" && fete && (
+              question ? (
+                <div role="radiogroup" aria-labelledby={`${id}-fete`} data-fete-question className="space-y-1.5 pb-3 pl-11 pr-4 pt-2.5">
+                  <p id={`${id}-fete`} className="text-sm font-semibold">{t("salles.feuille.pourFete", { fete: fete.nom })}</p>
+                  <div className={`inline-flex ${segmentPiste()}`}>
+                    {(["oui", "non"] as const).map((v) => (
+                      <label key={v} className={`relative cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${segmentOption(reponse === v)}`}>
+                        <input type="radio" name={`${id}-fete`} checked={reponse === v} onChange={() => setReponse(v)} className="absolute inset-0 z-10 cursor-pointer opacity-0" />
+                        {v === "oui" ? t("salles.feuille.pourFeteOui", { court: fete.court }) : t("salles.feuille.pourFeteNon")}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : !r?.fete && (
+                <p data-fete-ligne className="pb-2.5 pl-11 pr-4 text-sm text-muted-foreground">
+                  {fete.ouverte ? t("salles.feuille.feteNonPermis", { fete: fete.nom, qui: fete.familles }) : t("salles.feuille.feteFermee", { fete: fete.nom })}
+                </p>
+              )
+            )}
+            </Fragment>
           ))}
         </div>
       </div>
 
+      {modeFete ? (
+        <>
+          {r?.fete && <p data-fete-lecture className="text-sm font-semibold">{t("salles.feuille.pourFeteLecture", { fete: nomFete?.(r.fete) ?? r.fete })}</p>}
+          <fieldset data-champ="pour" className="space-y-2">
+            <legend className="mb-2 text-sm font-semibold text-muted-foreground">{t("salles.feuille.pourQui")}</legend>
+            <div className="flex flex-wrap gap-2">
+              {[...(fete?.quiOptions ?? []), ...quiFete.filter((q) => !fete?.quiOptions.includes(q))].map((q) => (
+                <Pastille key={q} type="checkbox" name={`${id}-qui`} label={libelleQui(q, langue)} checked={quiFete.includes(q)}
+                  onChange={() => setQuiFete(quiFete.includes(q) ? quiFete.filter((x) => x !== q) : [...quiFete, q])} />
+              ))}
+              {(fete?.quiAutre || autreCoche) && <Pastille type="checkbox" name={`${id}-qui`} label={t("salles.feuille.autre")} checked={autreCoche} onChange={() => setAutreCoche(!autreCoche)} />}
+            </div>
+            {autreCoche && <Input className="h-11 rounded-xl" maxLength={40} aria-label={t("planning.programme.quiAutreChamp")} placeholder={t("planning.programme.quiAutreChamp")} value={autreTexte} onChange={(e) => setAutreTexte(e.target.value)} />}
+          </fieldset>
+          <fieldset data-champ="quoi">
+            <legend className="mb-2 text-sm font-semibold text-muted-foreground">{t("salles.feuille.pourQuoi")}</legend>
+            <div className="flex flex-wrap gap-2">
+              {QUOI.map((q) => <Pastille key={q} type="radio" name={`${id}-quoi`} label={q} checked={quoiFete === q} onChange={() => setQuoiFete(q)} />)}
+            </div>
+          </fieldset>
+          <Champ id={`${id}-note`} label={t("salles.feuille.note")}>
+            <Input id={`${id}-note`} className="h-11" maxLength={120} value={note} onChange={(e) => setNote(e.target.value)} />
+          </Champ>
+        </>
+      ) : (
+        <>
       {/* Pour qui (AR16) : les valeurs de QUI, les équipes, « Autre… » en texte. */}
       <div data-champ="pour" className="space-y-2">
         <Champ id={`${id}-pour`} label={t("salles.feuille.pourQui")}>
@@ -214,6 +295,8 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonSce
           <Input id={`${id}-quoi`} className="h-11" maxLength={80} value={quoi} onChange={(e) => setQuoi(e.target.value)} />
         </Champ>
       </div>
+        </>
+      )}
 
       {echec && <p role="alert" className="text-sm text-destructive">{t("salles.feuille.echec")}</p>}
 
@@ -225,7 +308,7 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, saisonSce
           disabled={!pret}
           className="flex h-11 w-full items-center justify-center rounded-full bg-foreground px-5 text-base font-semibold text-background transition-opacity disabled:opacity-40"
         >
-          {r ? t("common.buttons.save") : t("salles.feuille.valider")}
+          {r ? t("common.buttons.save") : question && reponse === null ? t("salles.feuille.pourFeteRepondre", { court: reponduA }) : t("salles.feuille.valider")}
         </button>
       </div>
     </form>

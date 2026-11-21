@@ -149,6 +149,9 @@ const NOMS: Record<Fete, Record<Language, string>> = {
   noel: { fr: "Noël", zh: "圣诞节" },
 };
 
+/** Le nom d'une fête sans l'année : « Noël », « 圣诞节 ». */
+export const nomFete = (fete: Fete, langue: Language): string => NOMS[fete][langue];
+
 /** Le titre d'une édition (Q11) : « Noël 2026 », « 复活节 2027 ». */
 export function libelleEdition(fete: Fete, annee: number, langue: Language): string {
   return `${NOMS[fete][langue]} ${annee}`;

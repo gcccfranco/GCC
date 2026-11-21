@@ -28,7 +28,7 @@ import { jourDeParis } from "@/lib/evenements/bascule"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { createReservation, deleteReservation, updateReservation, type Reservation } from "@/lib/firebase/reservations"
-import { canEditReservation, canReserverSalle, canSeeEvenement } from "@/lib/access"
+import { canEditReservation, canReserverPour, canReserverSalle, canSeeEvenement, isCoordination } from "@/lib/access"
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { estSurLaListe } from "@/lib/deuxVolets"
@@ -37,11 +37,12 @@ import { chargerReservations, chargerSalles } from "@/lib/salles/charger"
 import { autreQuiCroise, chevauchement } from "@/lib/salles/conflit"
 import { signalerConflit } from "@/lib/salles/signalerConflit"
 import { varianteDu } from "@/lib/salles/emploi"
-import { couleurDe, etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, saisonSceneDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
-import { libelleEdition } from "@/lib/scene/fetes"
+import { couleurDe, etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, saisonFeteDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
+import { feteDe, libelleEdition, nomFete } from "@/lib/scene/fetes"
+import { dansUnePlage, famillesDe, quiPermis, saisonDe } from "@/lib/scene/saison"
 import { SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
 import { GrilleSalles, type MomentCase } from "./GrilleSalles"
-import { FeuilleReserver, type Ouverture, type Saisie } from "./FeuilleReserver"
+import { FeuilleReserver, type FeteDeLaFeuille, type Ouverture, type Saisie } from "./FeuilleReserver"
 
 export const RACINE_SALLES = "/evenements/salles"
 /** Évènement de la fenêtre : « Réserver une salle » de l'en-tête (`SectionEvenements`) ouvre la feuille. */
@@ -199,8 +200,15 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
     const avant = await relireReservations()
     if (chevauchement(occupationsDu(saisie.date, { ...lecture.sources, reservations: avant }), saisie.salle, saisie, id)) return "refus"
     let ecrite = id
-    if (id) await updateReservation(id, saisie)
-    else ecrite = await createReservation({ ...saisie, auteurUid: user.uid, auteurNom: profile?.firstName?.trim() || user.email || "" })
+    // AS3, AS4 : une réservation de fête suit les règles de la fête ; hors des plages de la saison, c'est « un autre moment ».
+    let champs: Saisie = saisie
+    if (saisie.fete) {
+      const p = lecture.sources.scene.find(({ programme }) => programme.id === saisie.fete)?.programme
+      if (!p?.debut || !canReserverPour(user, profile, p, saisie.qui ?? [])) throw new Error("fete")
+      if (!dansUnePlage(saisonDe({ ...p, debut: p.debut }), { dimanche: saisie.date, debut: saisie.debut, fin: saisie.fin })) champs = { ...saisie, libre: true }
+    }
+    if (id) await updateReservation(id, champs)
+    else ecrite = await createReservation({ ...champs, auteurUid: user.uid, auteurNom: profile?.firstName?.trim() || user.email || "" })
     const apres = await relireReservations()
     const moi = apres.find((r) => r.id === ecrite)
     const autre = moi && autreQuiCroise(moi, apres)
@@ -239,7 +247,21 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
       )}
       {etat && (
         <FeuilleReserver ouverture={ouverture} fermer={() => setOuverture(null)} today={today} langue={langue} occupationsDu={etat.occupations} enregistrer={enregistrer}
-          saisonScene={(d) => { const s = saisonSceneDu(d, etat.sources.scene); return s && { nom: libelleEdition(s.fete, s.annee, langue), lien: s.lien } }} />
+          feteDu={(d) => {
+            const s = saisonFeteDu(d, etat.sources.scene)
+            if (!s) return null
+            const p = s.programme
+            const coordination = isCoordination(user, profile)
+            const familles = famillesDe(p.quiAutorises ?? []).map((f) => t(`planning.saison.familles.${f}`))
+            return {
+              id: p.id, nom: libelleEdition(s.fete, s.annee, langue), court: nomFete(s.fete, langue), ouverte: s.ouverte,
+              permis: canReserverPour(user, profile, p, []), quiOptions: quiPermis(coordination ? {} : p),
+              quiAutre: canReserverPour(user, profile, p, ["Autre…"]),
+              familles: new Intl.ListFormat(langue === "zh" ? "zh-CN" : "fr", { style: "long", type: "conjunction" }).format(familles),
+              saison: saisonDe({ ...p, debut: p.debut! }),
+            } satisfies FeteDeLaFeuille
+          }}
+          nomFete={(id) => { const s = etat.sources.scene.find(({ programme }) => programme.id === id)?.programme; const f = s && feteDe(s); return s && f ? libelleEdition(f, s.annee ?? Number(s.jourJ.slice(0, 4)), langue) : null }} />
       )}
     </Contexte.Provider>
   )
