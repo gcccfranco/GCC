@@ -484,3 +484,10 @@ Format : `passage` est facultatif, une version ancienne du site l'ignore et mont
   R5b), 10 sautés, 9,2 min ; après la correction du relecteur (badges existants gardés en « Tout le chant »),
   `ma-partition-passage-unique` : 39 passés, 0 échec en 1,6 min. tsc propre, eslint 0 erreur. **Restes** : relecture
   zh-CN par Timothée ; soulignement des lignes retouchées entre caractères et pinyin (antérieur) ; R5b (`coup-d-oeil:215`).
+- 21/11/2026, nuit : **UP-6 faite** (session d'origine ; `executant`, puis tests et captures par la session). CSS seul
+  (`globals.css`, règle `[data-retouche="paroles"]`) : un caractère suivi de son pinyin ne porte plus le trait, c'est
+  le pinyin (`[data-ligne="pinyin"]`) qui le porte ; sans pinyin et en français, inchangé. Deux tests ajoutés dans
+  `ma-partition-lecture` (pinyin affiché, pinyin masqué) ; les tests « chant ZH » sur les cinq projets : 15 passés en
+  39 s ; captures regardées au téléphone et à l'ordinateur. Limites : le trait suit la largeur de chaque syllabe de
+  pinyin (trait en morceaux, comme avant sous les caractères) ; le mode louange n'a pas été regardé (aucun
+  `data-retouche` sous `src/components/performance`).

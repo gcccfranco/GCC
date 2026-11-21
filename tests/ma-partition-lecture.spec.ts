@@ -155,6 +155,23 @@ test.describe("Ma partition : lecture dans la setlist", () => {
     await expect(song(page, 1).locator('[data-marque="moi"][data-retouche="accords"]')).toHaveCount(1);
   });
 
+  test("chant ZH : parole retouchée, le trait passe sous le pinyin affiché, sous les caractères sans pinyin", async ({ page }) => {
+    const [chemin, doc] = docPartition("一生爱你", ZH, MON_ZH);
+    await ouvrir(page, { [chemin]: doc });
+    const ligne = song(page, 2).locator('[data-marque="moi"][data-retouche="paroles"]').first();
+    const trait = (sel: string) => ligne.locator(sel).first().evaluate((e) => getComputedStyle(e).textDecorationLine);
+    await expect.poll(() => trait("[data-car]")).toBe("none");
+    expect(await trait('[data-ligne="pinyin"]')).toBe("underline");
+  });
+
+  test("chant ZH : pinyin masqué, le trait reste sous les caractères retouchés", async ({ page }) => {
+    const [chemin, doc] = docPartition("一生爱你", ZH, MON_ZH);
+    await ouvrir(page, { [chemin]: doc }, setlist([item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2, showPinyin: false })]));
+    const ligne = song(page, 2).locator('[data-marque="moi"][data-retouche="paroles"]').first();
+    await expect(ligne.locator('[data-ligne="pinyin"]')).toHaveCount(0);
+    await expect.poll(() => ligne.locator("[data-car]").first().evaluate((e) => getComputedStyle(e).textDecorationLine)).toBe("underline");
+  });
+
   test("chant ZH : ma partition, ligne retouchée marquée", async ({ page }, info) => {
     const [chemin, doc] = docPartition("一生爱你", ZH, MON_ZH);
     await ouvrir(page, { [chemin]: doc });
