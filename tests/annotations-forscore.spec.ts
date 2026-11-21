@@ -987,6 +987,11 @@ test("(y) un « ff » et un texte posés à l'écran s'écrivent dans ma partiti
 });
 
 test("(z) un « ff » posé loin du texte (à plus de 2 em sous la dernière ligne) s'accroche quand même à la ligne la plus proche", async ({ page }) => {
+  // L'indice du rappel (IndiceRappel.tsx, 17/11) se pose en bas au centre et garde le toucher qui le ferme : déjà vu ici.
+  await page.addInitScript(() => {
+    localStorage.setItem("perf-astuce-rappel-joue", "2");
+    localStorage.setItem("perf-astuce-rappel-unique", "2");
+  });
   const db = await ouvrirLouange(page, undefined, "1.6"); // texte grand : la dernière page est entamée à peine, même à 1 440 px
   await basculerAnnoter(page);
   while (await bouton(page, "Page suivante").isEnabled()) await bouton(page, "Page suivante").click();

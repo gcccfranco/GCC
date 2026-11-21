@@ -472,7 +472,7 @@ export function signatureAffichage({
  *  sont pas (changer d'affichage reconstruit les blocs). Le chant par la
  *  position de l'item et le rang de son en-tête (une fusion hors structure
  *  mixte en a un par chant) ; une section par les occurrences qu'elle joue. */
-export type AncreLecture = { position: number; rang: number; uids: string[] | null };
+export type AncreLecture = { position: number; rang: number; uids: string[] | null; pageScan?: number };
 
 /** Chant de chaque bloc : position de l'item et rang de l'en-tête parmi ceux de
  *  même position. */
@@ -493,12 +493,16 @@ export function ancreDeLecture(blocks: PerformanceBlock[], index: number): Ancre
   const b = blocks[index];
   const chant = chantsDesBlocs(blocks)[index];
   if (!b || !chant) return null;
-  return { ...chant, uids: b.kind === "section" && b.occurrenceUids?.length ? b.occurrenceUids : null };
+  return {
+    ...chant,
+    uids: b.kind === "section" && b.occurrenceUids?.length ? b.occurrenceUids : null,
+    pageScan: b.kind === "jianpu-sheet" ? b.pageIndex : undefined, // la page d'un scan n'a ni section ni uid
+  };
 }
 
 /** Blocs de la nouvelle mise en page où reprendre la lecture, du plus précis au
  *  plus large : la section du même chant qui joue l'une des occurrences lues,
- *  puis l'en-tête de ce chant. Vide quand le chant n'existe plus. */
+ *  ou la même page de son scan, puis l'en-tête de ce chant. Vide quand le chant n'existe plus. */
 export function retrouverAncre(blocks: PerformanceBlock[], ancre: AncreLecture): number[] {
   const chants = chantsDesBlocs(blocks);
   const memeChant = (i: number) => chants[i]?.position === ancre.position && chants[i]?.rang === ancre.rang;
@@ -507,6 +511,8 @@ export function retrouverAncre(blocks: PerformanceBlock[], ancre: AncreLecture):
     ? blocks.findIndex((b, i) => b.kind === "section" && memeChant(i) && !!b.occurrenceUids?.some((u) => ancre.uids!.includes(u)))
     : -1;
   if (section >= 0) trouves.push(section);
+  const scan = ancre.pageScan == null ? -1 : blocks.findIndex((b, i) => b.kind === "jianpu-sheet" && memeChant(i) && b.pageIndex === ancre.pageScan);
+  if (scan >= 0) trouves.push(scan);
   const entete = blocks.findIndex((b, i) => b.kind === "song-header" && memeChant(i));
   if (entete >= 0) trouves.push(entete);
   return trouves;

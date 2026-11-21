@@ -205,3 +205,28 @@ préexistants dans `coherence.spec.ts` » signalés par la session du lot AS, T2
   `select-none` sur la zone de prise. Test ajouté dans `marge-affichage.spec.ts` (rouge sans le correctif : 1 044 px
   au lieu de 713). Spec entière sur les cinq projets : 128 passés, 7 ignorés, 3,2 min. Au doigt sur un vrai
   téléphone : à revoir par Timothée.
+- 21/11/2026 : **R5b faite en partie** (session R5b). (1) **A9** (`louange-harmonie:200`, téléphone) : **défaut du site**,
+  corrigé. `ancreDeLecture` ne gardait d'une page de scan ni section ni uid : à la reconstruction des blocs (fin du
+  chargement du planning), `retrouverAncre` ne retrouvait que l'en-tête, d'où la page 2 qui retombait à 1. L'ancre
+  garde maintenant la page du scan (`src/lib/performance/blocks.ts:496-516`) ; cas pur ajouté dans
+  `nettoyage-louange-pures` (rouge sans le correctif). A9 vert 4 fois sur 4 au téléphone. (5) **`coup-d-oeil:215`** :
+  **test en retard**. « Une fois chacune » (`margeAffichage.ordreUnique`, `fr.json:696`, zh « 每段一次 ») vient du lot
+  AT (`a025b4d6`, 17/11), pas d'UP-4 ; libellé du test aligné. (2) **(z)** (`annotations-forscore`, téléphone) :
+  **test en retard**. L'indice du rappel (`IndiceRappel.tsx`, 17/11) se pose en bas au centre et garde le toucher qui
+  le ferme (`:73-77`) : le « ff » tombait dessus. Le test le marque déjà vu, comme le test (f). **(v)**
+  (ordinateur-1440) : 6 fois sur 6 vert seul, rouge une fois sous charge (`[data-performance-mode]` absent après
+  rechargement du compte B, `:756`) ; course non trouvée, rien changé. (4) **B1** (`louange-menus:763`,
+  ordinateur-1440) : 8 fois sur 8 vert (1,3 min), plus 4 sur 4 par la relecture : le « une fois sur huit » ne se
+  reproduit pas ; rien changé. (3) **C1** (`louange-sections-uniques:358`, ordinateur-1440) : **défaut du site,
+  non corrigé** (arrêt sur ce point, comme le veut la méthode). Ce n'est pas une course : le test dépasse ses 30 s
+  parce que le site est lent à 1 440 px. Ouverture 10 s (3,4 s à 1 280 px), changement Plan → Tout le chant 5,8 s
+  (0,5 s). Le nombre de passes de pagination est le même aux deux largeurs. Profil CPU du changement : 7,3 s, dont
+  3,2 s dans l'effet de mesure de `ChordLine` (`src/components/song/ChordLine.tsx:211-268` : lit `clientWidth` et
+  `getBoundingClientRect` après avoir remis les styles à zéro, une mise en page forcée par ligne) et 2,1 s dans
+  `document.fonts.ready`, appelé au montage de chaque ligne (`:201-206`), qui force aussi un recalcul. Corriger
+  touche la mesure de toutes les lignes d'accords (regrouper lectures et écritures, un seul abonnement aux polices) :
+  plus que quelques lignes, à décider en retouche à part ; le délai du test n'a pas été allongé. Voisin :
+  `louange-harmonie:133` (toucher dans le volet, téléphone) rouge une fois sur huit **aussi sur la base** (ZH), déjà
+  là avant R5b. Tests : les cinq specs de R5b + `nettoyage-louange-pures`, cinq projets, `--workers=2` : 987 passés,
+  3 échecs (C1, (v), `louange-harmonie:133`, tous expliqués ci-dessus), 42 ignorés, 42 min ; tsc propre. Reste : C1
+  (lenteur de `ChordLine` à 1 440 px), (v) et `louange-harmonie:133` (instables sous charge, course non trouvée).

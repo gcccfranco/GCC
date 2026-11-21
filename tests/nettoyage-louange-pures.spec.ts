@@ -204,6 +204,17 @@ test.describe("pageAncree", () => {
     const lus: PerformanceBlock[] = [];
     expect(pageAncree(tranches, blocks, 1, { page: 1, block: 1, blocks: lus, ancre: { position: 1, rang: 0, uids: ["u0"] } })).toBe(1);
   });
+  // R5b (docs/spec-retouches-2026-11-21.md) : la page 2 d'un scan, blocs reconstruits, reste la page 2 (et non l'en-tête).
+  test("R5b : blocs reconstruits, l'ancre d'une page de scan garde sa page", () => {
+    const scans = [entete(1), bloc("jianpu-sheet", { pageIndex: 0 }), bloc("jianpu-sheet", { pageIndex: 1 })];
+    const pagesScan: PerfPage[] = [
+      { header: 0, cols: [[1]], scale: 1, fit: true },
+      { header: null, cols: [[2]], scale: 1, fit: true },
+    ];
+    const lus: PerformanceBlock[] = [];
+    expect(pageAncree(pagesScan, scans, 1, { page: 1, block: 0, blocks: lus, ancre: { position: 1, rang: 0, uids: null, pageScan: 1 } })).toBe(1);
+    expect(pageAncree(pagesScan, scans, 1, { page: 1, block: 0, blocks: lus, ancre: { position: 1, rang: 0, uids: null, pageScan: 0 } })).toBe(0);
+  });
 });
 
 test.describe("replisStructure", () => {

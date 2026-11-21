@@ -219,7 +219,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
     const jejoue = await ouvrirJeJoue(page);
     const affichage = jejoue.getByRole("radiogroup", { name: "Ordre des sections" });
     await expect(affichage.getByRole("radio", { name: "Tout le chant" })).toHaveAttribute("aria-checked", "true");
-    await affichage.getByRole("radio", { name: "Chaque section une fois" }).click();
+    await affichage.getByRole("radio", { name: "Une fois chacune" }).click();
     expect(await page.evaluate(() => localStorage.getItem("partition-layout-uid-musicien"))).toBe("unique");
 
     // Quitter le mode louange (Échap referme d'abord la feuille).
