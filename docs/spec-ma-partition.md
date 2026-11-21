@@ -280,6 +280,9 @@ sessions en parallèle, avec opus en orchestrateur »).
   passage ; le passage retouché s'ajoute comme section à part avec sa note ; note sur la pastille de la structure.
   Change l'apparence : captures aux quatre dispositions, `critique-design` après la tranche.
 UP-1 puis UP-2 s'enchaînent ; UP-3 est indépendante (peut partir en même temps qu'UP-1) ; UP-4 après UP-1 et UP-3.
+**Fin du lot** (Timothée, 21/11, « Oui ») : la session qui pousse UP-4 lance ensuite la session **R5b** (tests déjà
+rouges du mode louange et des annotations : `docs/spec-retouches-2026-11-21.md`, § R5 ; même branche, Opus, consigne :
+lire `CLAUDE.md` puis ce § R5, une tranche, ligne d'Avancement dans ce fichier-là), puis s'arrête.
 
 Format : `passage` est facultatif, une version ancienne du site l'ignore et montre le dessin partout
 (§ « Compatibilité du format », AN-4). `firestore.rules` : à relire, le champ est dans `traits` (liste libre).

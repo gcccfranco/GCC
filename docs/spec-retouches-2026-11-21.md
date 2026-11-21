@@ -84,6 +84,31 @@ souris : défaut trouvé sur la poignée de R1), `touch-action: none` sur l'en-t
 l'en-tête la déplace, le × ferme, la réouverture la replace ; cinq projets (spec d'agencement). Captures à regarder
 sur tablette portrait, tablette paysage, ordinateur et 1 440 px.
 
+## R5 — Tests déjà rouges sur la branche (go : « Oui », 21/11/2026)
+
+Timothée a dit oui à « je m'occupe de ces tests déjà rouges ». Aucun ne vient des retouches R1 à R4 ni du lot « Un
+passage ou tous » : chacun a été vu rouge sur la tête de branche sans le diff de la session qui le signale.
+
+Méthode, pour chaque test : le rejouer seul sur le projet cité ; lire l'erreur ; dire si le **test** est en retard
+(une décision plus récente a changé le comportement : citer la spec ou le commit, puis aligner le test) ou si le
+**site** a un défaut (le corriger s'il tient en quelques lignes sans décision nouvelle ; sinon l'écrire ici, avec la
+cause prouvée par `chemin:ligne`, et s'arrêter sur ce point). Jamais de test sauté, désactivé ou assoupli pour passer
+au vert sans cause établie. Un test instable : trouver la course, pas allonger un délai.
+
+**R5a — Navigation et back-office** (indépendant du Crayon, peut partir tout de suite) : 7 échecs vus par la session
+de R2 dans `navigation-grand-ecran`, `back-office-admin` et `agencement-barre-reduite` (cinq projets) : le libellé
+« Chants » doublé dans le rail réduit ; deux renvois du back-office vers le Calendrier. Plus les « 3 rouges
+préexistants dans `coherence.spec.ts` » signalés par la session du lot AS, T2 : à rejouer, peut-être déjà verts.
+
+**R5b — Mode louange et annotations** (après la fin du lot « Un passage ou tous » : mêmes fichiers) :
+- `louange-harmonie.spec.ts:200` (A9), téléphone : la page 2 d'un scan retombe à 1 environ 8 s après l'ouverture, sans
+  geste ; piste de la session de R4 : la fin du chargement du planning reconstruit `blocks` et l'ancre d'un scan ne
+  garde pas sa page (`src/lib/performance/blocks.ts:496-513`). Rouge 3 fois sur 4 : sans doute un vrai défaut.
+- `annotations-forscore.spec.ts`, test (z), téléphone ; test (v) préréglages, ordinateur-1440 (passe seul, instable
+  sous charge).
+- `louange-sections-uniques.spec.ts:358` (C1), ordinateur-1440.
+- `louange-menus.spec.ts:763` (B1), ordinateur-1440 : le × change de page une fois sur huit.
+
 ## Avancement
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,
@@ -155,4 +180,6 @@ sur tablette portrait, tablette paysage, ordinateur et 1 440 px.
   au lieu de 20, et le test n'accordait 48 px qu'aux feuilles sous 768 px. Test aligné : « Affichage » en feuille est
   une feuille à poignée jusqu'à 1 024 px. Vert sur téléphone, tablette, tablette paysage et ordinateur (1,6 min).
   L'autre rouge de B1 (ordinateur-1440, le × change de page une fois sur huit) existait sans R1 ni R3 : à reprendre à part.
+- 21/11/2026 : **R5 ajoutée** (Timothée, « Oui »). R5a lancée tout de suite ; R5b à lancer par la session qui finit
+  le lot « Un passage ou tous » (écrit dans ses Tranches, `docs/spec-ma-partition.md`).
 
