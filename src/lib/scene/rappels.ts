@@ -40,15 +40,15 @@ export function sceneReminder(c: Pick<Creneau, "debut" | "fin" | "quoi" | "qui">
  *  redevient `dimanche`. Partagé par `listCreneaux` (programmes.ts) et le cron des rappels (T5c). */
 export function creneauDeReservation(r: Reservation): Creneau {
   return {
-    id: r.id, dimanche: r.date, debut: r.debut, fin: r.fin, ...(r.libre && { libre: true }), quoi: r.quoi, qui: r.qui ?? [],
+    id: r.id, dimanche: r.date, debut: r.debut, fin: r.fin, ...(r.libre && { libre: true }), quoi: r.quoi, qui: r.qui ?? [], ...(r.personnes && { personnes: r.personnes }),
     note: r.note ?? "", auteurUid: r.auteurUid, auteurNom: r.auteurNom, createdAt: r.createdAt, updatedAt: r.updatedAt,
   };
 }
 
-/** Les créneaux à rappeler (T5c) : parmi les réservations lues pour ces dates, celles de la Scène qui portent une
- *  des éditions affichées (`fete`) ; une réservation de la Scène sans fête n'est pas un entraînement. */
+/** Les créneaux à rappeler (T5c) : parmi les réservations lues pour ces dates, celles qui portent une
+ *  des éditions affichées (`fete`) ; une réservation sans fête n'est pas un entraînement. */
 export function creneauxDuRappel(reservations: Reservation[], editions: string[], dates: string[]): Creneau[] {
   return reservations
-    .filter((r) => r.salle === "scene" && r.fete !== undefined && editions.includes(r.fete) && dates.includes(r.date))
+    .filter((r) => r.fete !== undefined && editions.includes(r.fete) && dates.includes(r.date))
     .map(creneauDeReservation);
 }

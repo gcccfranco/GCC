@@ -5,7 +5,8 @@
 import type { Language } from "@/types/common";
 import type { Programme } from "@/types/programme";
 import { JOUR_MS as DAY, versUtc as utc, versIso as iso } from "@/lib/dates/iso";
-import { archiveDate, reservationsClosed } from "./dimanches";
+import { daysAgo } from "@/lib/evenements/agenda";
+import { archiveDate, lastSundayBefore, reservationsClosed } from "./dimanches";
 import { PLAGES_DEFAUT, saisonDe } from "./saison";
 
 export type Fete = NonNullable<Programme["fete"]>;
@@ -148,7 +149,38 @@ const NOMS: Record<Fete, Record<Language, string>> = {
   noel: { fr: "Noël", zh: "圣诞节" },
 };
 
+/** Le nom d'une fête sans l'année : « Noël », « 圣诞节 ». */
+export const nomFete = (fete: Fete, langue: Language): string => NOMS[fete][langue];
+
 /** Le titre d'une édition (Q11) : « Noël 2026 », « 复活节 2027 ». */
 export function libelleEdition(fete: Fete, annee: number, langue: Language): string {
   return `${NOMS[fete][langue]} ${annee}`;
+}
+
+/** Dernier jour des réservations : `fin`, sinon le dernier dimanche avant le jour J. */
+export const dateFermeture = (p: Pick<Programme, "fin" | "jourJ">): string => p.fin ?? lastSundayBefore(p.jourJ);
+
+/** `jourJ` moins deux mois calendaires (24/12 → 24/10), le jour ramené au dernier du mois s'il manque. */
+function deuxMoisAvant(jourJ: string): string {
+  const [y, m, d] = jourJ.split("-").map(Number);
+  const dernier = new Date(Date.UTC(y, m - 2, 0)).getUTCDate();
+  return iso(Date.UTC(y, m - 3, Math.min(d, dernier)));
+}
+
+/** L'édition à montrer en carte en haut d'Évènements (AS10, RS5) : `jourJ` − 2 mois ≤ `today` ≤ `jourJ`,
+ *  brouillon exclu ; plusieurs : le jour J le plus proche. */
+export function feteEnVue(editions: Edition[], today: string): Edition | null {
+  const enVue = editions.filter((e) => {
+    const p = e.programme;
+    return !!p && p.ouvert !== false && deuxMoisAvant(p.jourJ) <= today && today <= p.jourJ;
+  });
+  return enVue.sort((a, b) => a.programme!.jourJ.localeCompare(b.programme!.jourJ))[0] ?? null;
+}
+
+/** Les éditions passées depuis moins de 92 jours (RS6), brouillons exclus. */
+export function fetesPassees(programmes: Programme[], today: string): Edition[] {
+  const depuis = daysAgo(today, 92);
+  return FETES.flatMap((fete) => editionsDe(fete, programmes)
+    .filter((p) => p.ouvert !== false && p.jourJ < today && p.jourJ >= depuis)
+    .map((programme) => ({ fete, annee: anneeDe(programme)!, programme })));
 }

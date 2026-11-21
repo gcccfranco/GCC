@@ -251,6 +251,9 @@
       "bandeau_other": "{{count}} setlists mises à la corbeille",
       "annuler": "Annuler",
       "titre": "Corbeille ({{count}})",
+      "titreVide": "Corbeille",
+      "vide": "Elle est vide pour l'instant.",
+      "voir": "Voir la corbeille",
       "aide": "Les setlists supprimées restent ici 30 jours.",
       "supprimeeLe": "Supprimée le {{date}}",
       "restaurer": "Restaurer",
@@ -682,6 +685,8 @@
   "margeAffichage": {
     "titre": "Affichage",
     "fermer": "Fermer l'affichage",
+    "agrandir": "Agrandir la fenêtre",
+    "reduire": "Réduire la fenêtre",
     "retenu": "Retenu sur cet appareil",
     "jeJoue": "Je joue",
     "jeLis": "Ce que je lis",
@@ -1232,7 +1237,7 @@
         "for": "Membres connectés · ordre de passage tenu par la coordination",
         "body": "Avant une grande fête (Noël), un onglet du programme apparaît dans **Évènements** pour réserver la scène le dimanche et préparer l'ordre de passage.",
         "points": [
-          "**Entraînements** : choisis un dimanche, l'heure, quoi et qui ; un créneau qui en chevauche un autre est refusé. « Réserver un autre moment » prend un autre jour ou d'autres heures, dans la période des réservations.",
+          "**Entraînements** : choisis un dimanche, l'heure, quoi et qui ; un créneau qui en chevauche un autre est refusé. « Réserver un autre moment » prend un autre jour ou d'autres heures, dans la période des réservations.",
           "Tu modifies ou retires tes créneaux ; la coordination peut tous les déplacer.",
           "**Programme** : l'ordre de passage du jour J, tenu par la coordination.",
           "Tes entraînements sont rappelés avec tes services."
@@ -1739,7 +1744,6 @@
       "modifieEntreTempsSansNom": "Modifié entre-temps : recharge",
       "showPast": "Voir les jours passés ({{n}})",
       "hidePast": "Masquer les jours passés",
-      "editTitle": "Modifier le créneau",
       "debut": "Début",
       "fin": "Fin",
       "quoi": "Quoi",
@@ -1747,8 +1751,6 @@
       "quiRetire": "retiré",
       "quiAutre": "Autre…",
       "quiAutreChamp": "Qui ?",
-      "note": "Note",
-      "noteHint": "Sono, matériel, précision…",
       "save": "Enregistrer",
       "cancel": "Annuler",
       "edit": "Modifier",
@@ -1948,24 +1950,16 @@
       "horsGrilleN_one": "{{count}} réservation hors des plages",
       "horsGrilleN_other": "{{count}} réservations hors des plages",
       "deplacer": "Déplacer",
-      "deplacerTitre": "Déplacer la réservation",
-      "choisisQuoiQui": "Choisis quoi et qui",
-      "facultatif": "facultatif",
       "resume": "Saison : {{from}} → {{to}} · {{jours}} · {{duree}} · {{qui}}",
       "modifierSaison": "Modifier la saison",
       "preparerSaison": "Préparer la saison",
       "brouillon": "Brouillon",
       "jour": "Jour",
       "place": "{{jour}} · {{debut}} – {{fin}}",
-      "quiPermisTitre": "les groupes permis pour cette saison",
       "quiRefuse": "Ce groupe ne peut pas réserver : {{qui}}.",
       "dejaCommence": "Ce moment a déjà commencé : il ne se réserve plus.",
       "autreMoment": "Réserver un autre moment",
       "autreMomentTitre": "Un autre moment",
-      "autreDate": "Date",
-      "autreDe": "de",
-      "autreA": "à",
-      "autreHorsPeriode": "Choisis une date entre le {{debut}} et le {{fin}}.",
       "jourCourt": {
         "0": "dim.",
         "1": "lun.",
@@ -2510,6 +2504,20 @@
     "none": "Aucun évènement à venir.",
     "past": "Évènements passés",
     "hidePast": "Masquer les passés",
+    "fete": {
+      "dansJours_one": "dans {{count}} jour",
+      "dansJours_other": "dans {{count}} jours",
+      "aujourdhui": "Aujourd'hui",
+      "reserver": "Réserver la Grande salle",
+      "voir": "Voir la fête",
+      "ouvertesJusqua": "Grande salle ouverte aux réservations jusqu'au {{date}}",
+      "desLe": "Réservations de la Grande salle dès le {{date}}",
+      "fermees": "Réservations de la Grande salle fermées"
+    },
+    "epingle": {
+      "voir": "Voir",
+      "rangee": "Évènements épinglés"
+    },
     "places_one": "{{count}} place restante",
     "places_other": "{{count}} places restantes",
     "complet": "Complet",
@@ -2540,8 +2548,14 @@
       "heure": "Horaire",
       "heureDebut": "Heure de début",
       "heureFin": "Heure de fin",
+      "ou": "Où ?",
+      "aLEglise": "À l'église",
+      "ailleurs": "Ailleurs",
+      "reserverSalle": "Réserver une salle ?",
+      "pasBesoinSalle": "Pas besoin de salle",
       "dateFin": "Date de fin",
       "lieu": "Lieu",
+      "lieuAilleurs": "Lieu",
       "description": "Description",
       "places": "Places",
       "placesHint": "Sans limite si vide",
@@ -4661,8 +4675,6 @@
     "refus": "{{salle}} est prise : {{qui}}, {{debut}} – {{fin}}.",
     "libresMemeMoment": "Libres au même moment",
     "decaler": "Décaler à {{debut}} – {{fin}}",
-    "sceneSaison": "Pendant la saison de {{fete}}, la Scène se réserve depuis sa page.",
-    "sceneSaisonLien": "Page de {{fete}}",
     "feuille": {
       "date": "Date",
       "de": "De",
@@ -4670,12 +4682,22 @@
       "salle": "Salle",
       "pourQui": "Pour qui",
       "pourQuoi": "Pour quoi",
-      "autre": "Autre…",
+      "personnes": "Des personnes…",
+      "chercherPersonne": "Chercher un nom",
+      "personnesEchec": "La liste des personnes n'a pas pu être chargée.",
       "personne": "Non précisé",
       "groupes": "Groupes et cultes",
       "equipes": "Équipes",
       "valider": "Réserver",
       "modifierTitre": "Modifier la réservation",
+      "pourFete": "C'est pour {{fete}} ?",
+      "pourFeteOui": "Oui, pour {{court}}",
+      "pourFeteNon": "Non",
+      "pourFeteRepondre": "Dis si c'est pour {{court}}",
+      "pourFeteLecture": "Pour {{fete}}",
+      "feteNonPermis": "{{fete}} : réservé à {{qui}}. Ta réservation sera ordinaire.",
+      "feteFermee": "Réservations de {{fete}} fermées. Ta réservation sera ordinaire.",
+      "note": "Note · facultatif",
       "echec": "La réservation n'a pas pu être enregistrée. Réessayez.",
       "erreurs": {
         "finAvantDebut": "La fin doit venir après le début.",
@@ -4685,7 +4707,14 @@
     },
     "supprimer": {
       "titre": "Supprimer la réservation ?",
-      "texte": "« {{quoi}} » disparaît de Salles pour tout le monde."
+      "texte": "« {{quoi}} » disparaît de Salles pour tout le monde."
+    },
+    "annuler": {
+      "titre": "Annuler la réservation…",
+      "action": "Annuler la réservation",
+      "motif": "Motif (envoyé à l'auteur)",
+      "notif": "Ta réservation de {{salle}} du {{date}}, {{de}} – {{a}}, a été annulée : {{motif}}",
+      "echec": "La réservation n'a pas pu être annulée. Réessayez."
     },
     "vue": {
       "etiquette": "Vue",
@@ -4705,8 +4734,6 @@
       "evenement": "Voir l'évènement"
     },
     "formulaire": {
-      "salle": "Salle de l'église",
-      "ailleurs": "Ailleurs",
       "heures": "Une salle de l'église demande une heure de début et de fin.",
       "echec": "Les salles n'ont pas pu être vérifiées. Réessayez."
     }

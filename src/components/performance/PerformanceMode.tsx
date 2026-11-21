@@ -564,6 +564,12 @@ export function PerformanceMode({
   const menuAuToucher = useRef<{ t: number } | null>(null);
   const basculerMenu = useCallback((id: MenuId) => setPopoverOuvert((cur) => (cur === id ? null : id)), []);
   const fermerMenu = useCallback((id: MenuId) => setPopoverOuvert((cur) => (cur === id ? null : cur)), []);
+  // R3 (21/11/2026) : la page derrière ne défile pas tant que le mode louange est monté.
+  useEffect(() => {
+    const avant = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    return () => { document.documentElement.style.overflow = avant; };
+  }, []);
   // Un toucher hors du menu le ferme, y compris sur les barres (qui arrêtent la propagation et cachent le toucher à Radix,
   // écouté plus haut dans le document) : écoute en capture. Sur la page, il est marqué pour que son pointerup ne tourne rien.
   useEffect(() => {

@@ -127,7 +127,8 @@ test.describe("formulaires du Back-Office et bouton désactivé (CD, T1h)", () =
       expect(zone.fond).toBe(j.secondary);
       expect(zone.bordure === "rgba(0, 0, 0, 0)" || zone.largeurBordure === "0px", "aucun filet visible").toBe(true);
       expect(zone.hauteur).toBeGreaterThanOrEqual(96);
-      // Les libellés : 13 px semi-gras gris, champs de 44 px (nom, date, lieu).
+      // Les libellés : 13 px semi-gras gris, champs de 44 px (nom, date, lieu). Le lieu libre paraît avec « Ailleurs » (AS17).
+      await page.getByRole("radio", { name: "Ailleurs" }).check({ force: true });
       for (const nom of ["Nom de la réunion", "Date", "Lieu"]) {
         const libelle = page.locator("label", { hasText: new RegExp(`^${nom}$`) }).first();
         const s = await libelle.evaluate((e) => { const c = getComputedStyle(e); return { taille: c.fontSize, graisse: c.fontWeight, couleur: c.color }; });
@@ -229,7 +230,9 @@ test.describe("fond de page : le gris des listes, le blanc de la lecture (recett
     await expect(index).toBeVisible();
     const liste = (await page.locator(".chants-liste").boundingBox())!;
     const indexBox = (await index.boundingBox())!;
-    expect(liste.x + liste.width).toBeLessThanOrEqual(indexBox.x);
+    // B13 (CI-17) : dès 768 px en un volet (tablette debout), l'index A–Z est dans la carte ; avant la carte au téléphone.
+    if (page.viewportSize()!.width >= 768) expect(indexBox.x + indexBox.width, "index dans la carte").toBeLessThanOrEqual(liste.x + liste.width + 1);
+    else expect(liste.x + liste.width).toBeLessThanOrEqual(indexBox.x);
     const recherche = page.locator('.chants-liste input[type="search"]');
     expect(await recherche.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(242, 242, 244)");
     expect(await recherche.evaluate((e) => getComputedStyle(e).boxShadow)).toBe("none");

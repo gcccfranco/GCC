@@ -109,6 +109,9 @@
     height: 320px;
     overflow: hidden;
     pointer-events: none;
+    /* Fondu jusqu'au transparent en bas : le flou ne s'arrête pas net au bord de la boîte (AS9). */
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
   }
   .halo::before {
     content: "";
@@ -427,6 +430,9 @@
      --svc-sombre est la couleur éclaircie jusqu'à 4,5:1 sur #2c2c2e. */
   .texte-service { color: var(--svc-clair); }
   .dark .texte-service { color: var(--svc-sombre); }
+  /* Couleur d'une salle (T7, AS13) : `styleTexteService(COULEUR_SALLE[id])` + cette classe, `--salle` sert de fond ou de filet. */
+  .couleur-salle { --salle: var(--svc-clair); }
+  .dark .couleur-salle { --salle: var(--svc-sombre); }
   .svc-line { border-left-color: var(--svc); }
   .dark .svc-line { border-left-color: color-mix(in srgb, var(--svc) 55%, white); }
   /* Tuile d'un service (V7 ter) : le fond porte la couleur, le libellé la reprend
@@ -1170,8 +1176,8 @@
    mouvement réduit : fondu d'opacité de 150 ms seulement. */
 .marge-aff { visibility: hidden; }
 .marge-aff[data-ouvert="true"] { visibility: visible; }
-.marge-aff[data-mode="page"] { transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), width 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 300ms; }
-.marge-aff[data-mode="page"][data-ouvert="true"] { transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), width 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }
+.marge-aff[data-mode="page"] { transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), width 300ms cubic-bezier(0.32, 0.72, 0, 1), height 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 300ms; }
+.marge-aff[data-mode="page"][data-ouvert="true"] { transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), width 300ms cubic-bezier(0.32, 0.72, 0, 1), height 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }
 .marge-aff[data-mode="louange"] { transition: none; }
 @media (prefers-reduced-motion: reduce) {
   .marge-aff[data-mode="page"] { opacity: 0; transition: opacity 150ms linear, visibility 0s linear 150ms !important; }
@@ -1181,3 +1187,11 @@
 /* CI-5, défaut M : en setlist, la musique à côté de la marge ouverte devient elle-même le conteneur « partition »
    (sinon la zone, marge comprise, déclenche deux colonnes trop étroites). Page chant : sans conteneur partition, inchangée. */
 .\[container-name\:partition\] [data-marge-musique] { container: partition / inline-size; }
+
+/* Glissement Liste ↔ Partitions (lot AT) : l'ancienne image et la nouvelle page glissent ensemble ; les animations
+   sont posées en JS (useSwipeViews). Barres nommées le temps du glissement seulement : elles restent en place. */
+:root[data-glisse-vues]::view-transition-old(root),
+:root[data-glisse-vues]::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+:root[data-glisse-vues] .barre-laterale { view-transition-name: barre-laterale; }
+:root[data-glisse-vues] .barre-onglets { view-transition-name: barre-onglets; }
+:root[data-glisse-vues] .barre-haut { view-transition-name: barre-haut; }

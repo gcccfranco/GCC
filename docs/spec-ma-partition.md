@@ -170,8 +170,8 @@ scan 简谱, l'ancre est le scan (coordonnées de l'image). Le format garde les 
 - **Ancre** : `slug` implicite (le document), `section` = id de la section du chant (`ChordProSection.id`), `ligne` =
   rang de la ligne dans la section, `car` = rang du caractère des paroles (accords et pinyin non comptés) le plus
   proche du début du trait ; points et épaisseur en em de la ligne. Une section jouée plusieurs fois montre ses traits
-  à chaque passage ; gommer un passage gomme le trait. Scan 简谱 : `{ scan: true, image }`, points en fraction de la
-  largeur de l'image.
+  à chaque passage ; gommer un passage gomme le trait (le champ `passage` d'UP-1 a été retiré le 21/11/2026). Scan
+  简谱 : `{ scan: true, image }`, points en fraction de la largeur de l'image.
 - **Quels traits** : les miens, toujours (c'est moi qui joue), plus ceux de la partition partagée que je lis si son
   auteur a coché « Inclure mes traits » (lecture seule : ma gomme ne les touche pas). Tracer écrit toujours ma
   partition (créée au besoin, texte inchangé).
@@ -217,6 +217,93 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
 2. « Ok » : proposition retenue (lecture seule dans la setlist, « Les recopier dans ma partition », retrait après un mois).
 3. « Oui » : l'interrupteur « Partager ma version » disparaît sans remplaçant.
 **Go de Timothée pour MP-6 (12/11/2026, « Oui go pour MP6 »)** : inscrit dans la file, après AN.
+
+## Un passage ou tous (Timothée, 21/11/2026) — go du 21/11/2026
+
+> **CORRECTION du 21/11/2026, 17 h 50 UTC — elle l'emporte sur tout ce qui suit dans cette section.**
+> Timothée : « Alors on a un problème de compréhension entre nous, les sections c'est seulement pour le mode crayon
+> pas le dessin les annotations ». La session d'origine avait confondu le **Crayon** (Accord · Paroles · Ordre,
+> `BarreCrayon.tsx`) avec le stylo des annotations. La règle « un passage ou tous » ne vaut **que pour les accords et
+> les paroles retouchés au Crayon**. Les dessins et annotations (traits, surligneur, texte, tampons) **ne changent
+> pas** : accrochés à la section, montrés à chaque passage, comme décidé le 11/11.
+> Confirmé par Timothée (« Oui ») : **UP-1 annulée** (code retiré par un commit d'annulation), **UP-2 abandonnée**
+> (arrêtée avant tout commit), **UP-3 gardée**, **UP-4 gardée, limitée au Crayon**. Les questions 2, 3 et 6
+> (dessins) n'ont plus d'objet ; aucun champ `passage` dans l'ancre d'un trait.
+
+
+**Demande (ses mots)** : « quand j'utilise la fonction "crayon" et que je modifie une section, ça modifie pour toutes
+les sections or ce n'est pas ce que je veux » ; « pour les paroles aussi il faut que ce soit comme ça si je veux
+modifier les paroles d'une seule section ou bien l'appliquer à toutes les sections ».
+
+**Ce que le code fait (vérifié le 21/11)** :
+- *Dessins* (trait, surligneur, texte, tampon) : l'ancre est `{ section, ligne, car }`, `section` = id de la section
+  du chant ; le dessin se montre donc à chaque passage de la section (§ « Traits accrochés au texte », décision du
+  11/11). Aucun choix n'est proposé.
+- *Accords et paroles* : la feuille d'une ligne propose « Toutes les répétitions | Seulement ce passage »
+  (`EditLineSheet`, `repeatScope`), « Toutes » choisi d'avance, et seulement sur la page setlist
+  (`SetlistDetailClient.tsx:2559`) quand le plan répète la section (`repeatedSectionId`). « Seulement ce passage »
+  copie la section (`materializeMine`, `sectionOrigins`). La page chant ne passe pas ce choix à la feuille.
+
+**Proposition** (une règle, les deux gestes) : *ce que je fais au Crayon vaut pour le passage que je touche ; je
+peux l'étendre à toutes les répétitions.*
+- Dessins : l'ancre gagne un champ facultatif `passage` (rang du passage de la section dans l'ordre lu, 0 = le
+  premier). Présent : le dessin ne se montre qu'à ce passage. Absent : à tous (c'est le format d'aujourd'hui).
+- Accords et paroles : le choix de la feuille s'affiche partout où la section revient ; il ne change pas de forme.
+
+**Questions (la proposition en premier)** :
+1. *Choix d'avance* : « Seulement ce passage », pour les dessins comme pour le texte (c'est « Toutes » qui a
+   surpris). Autre voie : garder « Toutes » d'avance pour le texte.
+2. *Étendre un dessin à tous les passages* : un bouton « Ce passage | Toutes les répétitions » dans la barre du
+   Crayon, lu au moment de tracer. Autre voie : pas de bouton, un dessin vaut toujours pour son passage.
+3. *Dessins déjà faits* : ils n'ont pas de `passage`, donc restent sur tous les passages ; rien n'est converti.
+   Autre voie : les ramener au premier passage (perd des dessins voulus partout).
+4. *Ordre « Une fois chacune » ou « Plan »* (chaque section montrée une seule fois) : ce qu'on y fait vaut pour
+   tous les passages, sans choix (on ne voit pas de passage). Autre voie : le premier passage.
+5. *Page chant, hors setlist* : même choix pour le texte si le chant répète la section ; à vérifier par
+   l'orchestratrice (la copie de section existe pour la setlist, pas encore pour « Ma partition » seule).
+6. *Gommer* : la gomme enlève le dessin là où il vaut (son passage, ou tous).
+
+**Réponses de Timothée (21/11/2026)** : questions 1, 2 et 3 : « ok » (la proposition). Question 4 : pas la
+proposition ; ses mots : « quand c'est une fois chacune ou plan mettre une petite note et ajouter la section je sais pas
+si tu vois ce que je veux dire ». Lecture à lui faire confirmer avant tout go : dans ces deux ordres, un passage
+retouché seul s'ajoute comme une section à part, avec une petite note qui dit de quel passage il s'agit.
+Questions 5 et 6 : sans réponse, la proposition tient.
+**Question 4 tranchée (Timothée, 21/11, « oui » deux fois)** : avec l'ordre « Une fois chacune » ou « Plan »,
+- un passage retouché seul s'ajoute à l'écran comme une section à part, sous la section normale, avec une petite note
+  qui dit de quel passage il s'agit (« Refrain · 2ᵉ fois ») ; la section normale reste montrée une fois pour les autres ;
+- dans la structure (la rangée des pastilles C R P…), une note marque le passage concerné (« on ajoute une note pour
+  dire que c'est pour ce refrain là ») ;
+- comme on ne voit pas quel passage on touche, le Crayon montre la structure et demande pour lequel (« on affiche la
+  structure et on demande c'est pour quelle Refrain, Couplet, Pont ») : on touche la pastille du passage, ou « Toutes ».
+**Go de Timothée pour le lot (21/11/2026, « go pour les deux »)**, sessions Opus en parallèle (« tu lances des
+sessions en parallèle, avec opus en orchestrateur »).
+
+**Tranches** (une session par tranche, `CLAUDE.md` § Coder ; chacune écrit sa ligne dans § Avancement) :
+- **UP-1 — Dessins par passage** : champ facultatif `passage` dans l'ancre (`src/types/partition.ts`, calculs
+  `src/lib/annotations/ancres.ts`), écrit au tracé d'après le passage touché, lu au rendu (absent = tous les
+  passages), gomme (question 6). Page setlist, page chant, mode louange, ordre « Tout le chant ». Scans 简谱 : inchangés.
+- **UP-2 — Le choix dans la barre du Crayon** : « Ce passage | Toutes les répétitions » (`BarreCrayon.tsx`, barre
+  d'annotation du mode louange), « Ce passage » d'avance (questions 1 et 2), montré seulement si la section revient.
+- **UP-3 — Accords et paroles** : « Seulement ce passage » d'avance (question 1) ; le choix de la feuille montré
+  aussi sur la page chant quand le chant répète la section (question 5 : dire dans § Avancement si la copie de
+  section pour « Ma partition » seule demande plus qu'une tranche, et s'arrêter là dans ce cas).
+- **UP-4 (telle que corrigée le 21/11, Crayon seulement)** : avec l'ordre « Une fois chacune » ou « Plan », quand on
+  retouche un accord ou une parole au Crayon dans une section qui revient, la feuille montre la structure (les
+  pastilles du plan) et demande pour quel passage (on touche la pastille, ou « Toutes les répétitions ») ; le passage
+  retouché seul s'ajoute à l'écran comme une section à part, sous la section normale, avec une petite note qui dit
+  lequel (« Refrain · 2ᵉ fois ») ; dans la structure, une note marque ce passage. Pages setlist et chant (là où UP-3
+  a mis le choix). Change l'apparence : captures aux quatre dispositions, `critique-design` après la tranche.
+  *Texte d'origine, remplacé par ce qui précède :*
+- **UP-4 — Ordres « Une fois chacune » et « Plan »** (question 4) : le Crayon montre la structure et demande le
+  passage ; le passage retouché s'ajoute comme section à part avec sa note ; note sur la pastille de la structure.
+  Change l'apparence : captures aux quatre dispositions, `critique-design` après la tranche.
+Ordre d'origine : UP-1 puis UP-2, UP-3 à part, UP-4 après. Depuis la correction : il ne reste qu'UP-4, après UP-3.
+**Fin du lot** (Timothée, 21/11, « Oui ») : la session qui pousse UP-4 lance ensuite la session **R5b** (tests déjà
+rouges du mode louange et des annotations : `docs/spec-retouches-2026-11-21.md`, § R5 ; même branche, Opus, consigne :
+lire `CLAUDE.md` puis ce § R5, une tranche, ligne d'Avancement dans ce fichier-là), puis s'arrête.
+
+Format : `passage` est facultatif, une version ancienne du site l'ignore et montre le dessin partout
+(§ « Compatibilité du format », AN-4). `firestore.rules` : à relire, le champ est dans `traits` (liste libre).
 
 ## Avancement
 
@@ -292,3 +379,43 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
   comportement inchangé (Crayon absent, quelques secondes au plus). Non connecté, hors ligne, chant ajouté depuis
   « Tous les chants » : inchangés. Spec `louange-crayon-indispo` (403 simulé puis lecture acceptée) sur les trois
   appareils ; voisines (Ma partition ×6, `annotations-forscore`, `louange-barre-titre`) : 464 passés, 0 échec (≈ 21 min). **La vraie correction reste à Timothée : publier `firestore.rules`.**
+- 21/11/2026 : **UP-3 faite** (accords et paroles, un passage ou tous). Page setlist : la feuille d'une ligne d'une
+  section répétée s'ouvre sur « Seulement ce passage » (`repeatScope` à `"one"`, `SetlistDetailClient.tsx`), pour moi
+  comme pour le culte ; rien d'autre ne change. Page chant (question 5, décision déléguée (session, 21/11) : la
+  proposition) : la copie de section tient dans la tranche. Le Crayon propose le même choix quand la structure affichée
+  répète la section (« Seulement ce passage » d'avance) ; ce passage copie la section dans ma partition
+  (`materializeSectionCopy`, `structure` et `sectionOrigins` écrits comme en setlist), et la page lit la structure de
+  ma partition quand je lis la mienne (`SongDetailClient.tsx`). Une ligne inchangée ne copie rien. **Reste** (`shortcut:`) :
+  page chant ouverte avec `?structure=` (lien d'une setlist), aucun choix, la retouche vaut pour toutes les répétitions
+  (sinon la copie serait invisible, l'URL gagne) ; pas de test ZH sur la page chant. Relecteur « à corriger » (clic
+  de test faux, copie invisible avec `?structure=`, structure ancienne sans rang, copie sans retouche), corrigé.
+  Tests adaptés : `harmonie-ma-version` (« Seulement » pressé d'avance, « Toutes » cliqué) ; deux tests page chant dans
+  `ma-partition-crayon`. Tests : `ma-partition-crayon`, `harmonie-ma-version`, `adapter-sections`, `setlist-history`,
+  `ma-partition-lecture` sur les trois appareils, 198 passés, 0 échec en 9,6 min ; tsc propre, lint 0 erreur.
+  UP-4 non lancée ici : la ligne d'UP-2 n'existe pas encore (UP-2 la lancera).
+- 21/11/2026 : **UP-1 — Dessins par passage** (go de Timothée du 21/11). L'ancre texte d'un dessin (trait, surligneur,
+  texte, tampon) gagne `passage` facultatif (`src/types/partition.ts`) : rang du passage de la section dans l'ordre lu,
+  0 = le premier. Il est posé au rendu en `data-trait-passage`, au mode louange (`numeroterPassages`,
+  `src/lib/performance/blocks.ts`, rang par chant en ordre joué) et dans `SongView` (boucle des passages), seulement si
+  la section revient. Au tracé, il s'écrit d'après la ligne touchée (`useTraitsAncres.ts`, option `tousLesPassages`
+  prête pour UP-2). Au rendu, un dessin sans `passage` va partout, comme avant ; les dessins déjà faits ne sont pas
+  convertis (question 3). Un dessin avec `passage` ne va qu'à ce passage ; un `passage` invalide est ignoré, et le
+  trait se dessine partout. Gomme (question 6) : elle passait déjà par le trait d'origine, sans changement. **Décision
+  déléguée (session, 21/11)** : en ordre « Une fois chacune » ou « Plan », un dessin à `passage` ne se montre pas sur
+  la section normale ; UP-4 l'ajoutera comme section à part avec sa note. Le rang suit l'ordre de la setlist ouverte :
+  un trait `passage: 1` se montre au 2ᵉ refrain d'une autre setlist du même chant (même partition). Scans 简谱 :
+  inchangés. `firestore.rules` : rien à changer (le champ vit dans `traits`). Spec nouvelle
+  `ma-partition-passage` (FR, sans cas ZH : aucun chant chinois n'a de section répétée simple à prendre). Avec les
+  voisines (`ma-partition-traits`, `ma-partition-crayon`, `annotations-forscore`, `louange-sections-uniques`) :
+  526 passés, 3 échecs (≈ 23 min, plus 6 min de relances). Deux échecs sont déjà rouges sur la base :
+  `annotations-forscore` (z) au téléphone, `louange-sections-uniques:358` (C1) sur ordinateur-1440. Le troisième,
+  (v) préréglages sur ordinateur-1440, est instable sous charge : il passe seul. Reste : UP-2 (le choix dans la barre),
+  puis UP-4 (UP-3 est faite).
+- 21/11/2026, soir : **UP-1 annulée, UP-2 abandonnée** (correction de Timothée : la règle « un passage ou tous » ne
+  vaut que pour les accords et les paroles du Crayon, pas pour les dessins). Le commit d'UP-1 (`cdf9ebb`) est annulé
+  par un commit d'annulation : le champ `passage`, `numeroterPassages`, `data-trait-passage`, `tousLesPassages` et la
+  spec `ma-partition-passage` sont retirés ; un dessin se montre de nouveau à chaque passage de sa section. Aucun
+  dessin n'a pu garder ce champ en ligne (rien n'est allé sur `main`). UP-2 a été arrêtée avant tout commit.
+  Vérification : tsc propre ; `ma-partition-traits`, `ma-partition-crayon`, `annotations-forscore` sur les cinq
+  projets : 353 passés, 2 échecs, 5 sautés en 14 min. Les deux échecs étaient déjà là avant : (z) au téléphone (rouge
+  sur la base) et (v) sur ordinateur-1440 (instable sous charge), tous deux dans R5b. Reste : UP-4, Crayon seulement.

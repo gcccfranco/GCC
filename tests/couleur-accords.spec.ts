@@ -3,7 +3,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { marge, ouvrirMarge } from "./helpers/marge";
 import { attendreMiseEnPage, lireCompteur, onStage, ouvrirOptions } from "./helpers/louange";
 import { ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
-import { contraste, garderContraste, FOND_CLAIR } from "../src/lib/performance/couleurIcones";
+import { contraste, garderContraste, COULEUR_DEFAUT, FOND_CLAIR } from "../src/lib/performance/couleurIcones";
 
 // Lot CA, tranche CA-A (docs/spec-mode-louange-forscore-2.md) : la couleur des accords au choix de chacun, retenue par
 // compte sur l'appareil (`accords-couleurs-<uid>`), appliquée sur la page du chant, la vue partitions et le mode louange.
@@ -189,7 +189,7 @@ test("couleur des icônes par compte : la clé d'appareil n'est reprise que par 
   await expect.poll(() => page.evaluate((k) => localStorage.getItem(k), `perf-couleur-icones-${ELODIE.uid}`)).toBe("#c2185b");
   await changerDeCompte(page);
   await ouvrir(page, "louange", CHANT.fr, GASPARD);
-  await expect.poll(icones).toBe(garderContraste("#3f63cf", FOND_CLAIR));
+  await expect.poll(icones).toBe(garderContraste(COULEUR_DEFAUT, FOND_CLAIR));
   expect(await page.evaluate((k) => localStorage.getItem(k), `perf-couleur-icones-${GASPARD.uid}`)).toBeNull();
 });
 

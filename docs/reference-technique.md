@@ -40,7 +40,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
 
 ## Routes API
 
-- **Routes API** (20, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement : écrit dans Firestore `reports` puis push aux admins ; aucun e-mail), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/salles/conflit` (chevauchement de deux réservations de salle, Scène des fêtes comprise, SA9), `/api/taches/{assigne,fait}`, `/api/equipes/{rattachement,groupes}`, `/api/planning/{release,changements}`, `/api/fetes/{droits,saisir,musiques}`
+- **Routes API** (21, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement : écrit dans Firestore `reports` puis push aux admins ; aucun e-mail), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/salles/conflit` (chevauchement de deux réservations de salle, Scène des fêtes comprise, SA9), `/api/salles/annulation` (annulation motivée d'une réservation par la coordination, AS16), `/api/taches/{assigne,fait}`, `/api/equipes/{rattachement,groupes}`, `/api/planning/{release,changements}`, `/api/fetes/{droits,saisir,musiques}`
 
 ## PWA et service worker
 
@@ -80,7 +80,7 @@ diff ni toutes les captures : règle « Captures et diff » du `CLAUDE.md`.
   `maquettiste` (Sonnet) pour les rendre en planche, `critique-design` (Opus, 03/11/2026) pour les critiquer. La conversation principale garde le jugement : specs, planches,
   débogage, relecture du diff, regard sur les captures et les 简谱.
 - **Workflows** de `.claude/workflows/` (24/10/2026, `docs/orchestration.md`) : `/tranche` code une tranche décidée
-  (executant → testeur → corrections → conseil Opus si ça résiste → relecteur, sans commit) ; `/verifier-constats`
+  (executant → testeur → corrections → conseil Fable si ça résiste → relecteur Fable, sans commit) ; `/verifier-constats`
   contre-vérifie des constats avant un rapport ; `/planche` fait une planche de design (sans commit ni publication) ; `/audit-code` refait l'audit en 11 dimensions (≈ 60 agents, sur
   demande seulement). Un fichier ajouté sous `.claude/` s'indexe avec `git add -f` (le dossier est ignoré).
 

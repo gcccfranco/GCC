@@ -25,12 +25,17 @@ import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { canSeeEvenement, estReunion } from "@/lib/access"
 import { EVENEMENTS_CHANGED, getInscription, listEvenements } from "@/lib/firebase/evenements"
-import { agendaPublic, daysAgo, isExpired, isInfo } from "@/lib/evenements/agenda"
+import { agendaPublic, daysAgo, epinglesEnGrand, isExpired, isInfo } from "@/lib/evenements/agenda"
 import { avantBascule, BASCULE_EVENEMENTS, jourDeParis } from "@/lib/evenements/bascule"
 import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet"
 import { estSurLaListe } from "@/lib/deuxVolets"
 import { useDisposition } from "@/hooks/useDisposition"
+import { listProgrammes } from "@/lib/firebase/programmes"
+import { editionsAffichees, feteEnVue, fetesPassees } from "@/lib/scene/fetes"
+import type { Programme } from "@/types/programme"
 import type { Evenement } from "@/types/evenement"
+import { CarteFete, LigneFetePassee } from "./CarteFete"
+import { CarteEpingle } from "./CarteEpingle"
 import { EntreeSheetCarte, EvenementCard, EvenementCarte } from "./EvenementCard"
 import { EvenementClient } from "./[id]/EvenementClient"
 import { Squelette } from "@/components/layout/Squelette";
@@ -84,6 +89,14 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
   }, [today, avecAgenda])
   const sheetEnLecture = avantBascule(today) && sheet === null
 
+  // Lot AS, T5 : les fêtes (connecté seulement) ; échec de lecture = aucune fête.
+  const [programmes, setProgrammes] = useState<Programme[]>([])
+  useEffect(() => {
+    if (!user || !avecAgenda) return
+    listProgrammes().then(setProgrammes).catch(() => setProgrammes([]))
+  }, [user, avecAgenda])
+  const enVue = user ? feteEnVue(editionsAffichees(programmes, today), today) : null
+
   // Retouches v18, lot G (G1, D28) : aucune réunion ici, elles sont à Back-Office › Réunions.
   const visible = useMemo(
     () => (evenements ?? []).filter((e) => canSeeEvenement(user, profile, e) && !estReunion(e) && !isExpired(e, today)),
@@ -92,14 +105,27 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
 
   const chargement = authLoading || (user && profileLoading) || evenements === null
   const infos = visible.filter(isInfo).sort((a, b) => Number(b.epingle) - Number(a.epingle) || b.createdAt.localeCompare(a.createdAt))
-  const { aVenir: upcoming, passes: past } = agendaPublic(visible, sheet?.entrees ?? [], !!user, today, i18n.language)
+  // Lot AS, T6 : trois épinglés datés en grand, les suivants en petites lignes « À la une » ; aucun n'est répété dans son mois.
+  const epingles = epinglesEnGrand(visible, today)
+  const grandes = epingles.slice(0, 3)
+  const reste = epingles.slice(3)
+  const retires = new Set(epingles.map((e) => e.id))
+  const { aVenir: upcoming, passes: past } = agendaPublic(visible.filter((e) => !retires.has(e.id)), sheet?.entrees ?? [], !!user, today, i18n.language, user ? fetesPassees(programmes, today) : [])
 
   // En grand, sans fiche choisie : le prochain évènement de l'agenda, sinon la première info (Q3).
   // Une entrée du Sheet (U9) n'a pas de fiche : le prochain évènement de l'app.
   const prochain = upcoming.flatMap((g) => g.elements).find((x) => x.source === "app")
-  const premier = (prochain?.source === "app" ? prochain.evenement : null) ?? infos[0] ?? null
+  const premier = grandes[0] ?? (prochain?.source === "app" ? prochain.evenement : null) ?? infos[0] ?? null
   // Ni évènement de l'app ni info : la première entrée du Sheet (sa carte, faute de fiche).
   const premiereEntree = premier ? undefined : upcoming.flatMap((g) => g.elements).find((x) => x.source === "sheet")
+  // Agencement AS12 : tablette portrait (un volet, md) à trois cartes ou plus = une seule rangée qui défile ;
+  // cartes à 44 % pour que la troisième dépasse. Barre de défilement masquée au toucher seulement (pas en grand).
+  const total = grandes.length + (enVue ? 1 : 0)
+  const defile = !grand && total >= 3
+  const masque = grand ? "" : "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+  // La rangée déborde jusqu'au bord (de l'écran, ou du volet en grand) : la suivante dépasse au lieu d'être tranchée.
+  // En grand, `py-1` laisse voir l'anneau de la carte active (le défilement coupe ce qui dépasse).
+  const deborde = grand ? "-mx-3 px-3 py-1 scroll-px-3" : "-mx-[var(--marge-page)] px-[var(--marge-page)] scroll-px-[var(--marge-page)]"
   const surLaListe = estSurLaListe(pathname, "/evenements")
   const idActif = surLaListe ? premier?.id : decodeURIComponent(pathname.replace(/\/+$/, "").split("/")[2] ?? "")
 
@@ -120,13 +146,34 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
     <Squelette enTete={false} className="p-0" />
   ) : (
     <div className={grand ? "space-y-5" : "max-w-2xl mx-auto space-y-6 md:max-w-none"}>
-      {infos.length > 0 && (
+      {total > 0 && (
+        // `gap` plutôt que `space-y` : un enfant en `contents` n'a pas de boîte où poser la marge.
+        <div className={`flex flex-col ${grand ? "gap-5" : `gap-6 ${total <= 2 ? "md:grid md:grid-cols-2 md:items-stretch md:gap-4" : `${masque} md:flex-row md:snap-x md:snap-mandatory md:gap-4 md:overflow-x-auto md:-mx-[var(--marge-page)] md:px-[var(--marge-page)] md:scroll-px-[var(--marge-page)]`}`}`}>
+          {enVue && <div className={defile ? "md:w-[44%] md:shrink-0 md:snap-start" : "md:h-full md:[&>section]:h-full"}><CarteFete edition={enVue} today={today} /></div>}
+          {grandes.length > 0 && (
+            <div
+              {...(grandes.length > 1 && { "data-testid": "rangee-epingles", role: "region", "aria-label": t("evenements.epingle.rangee") })}
+              className={grandes.length > 1 ? `flex snap-x snap-mandatory gap-3 overflow-x-auto ${masque} ${deborde} ${grand ? "" : "md:contents"}` : "contents"}
+            >
+              {grandes.map((e) => (
+                <CarteEpingle key={e.id} evenement={e} today={today} inscrit={!!user && inscrits.has(e.id)} actif={grand && e.id === idActif}
+                  className={grandes.length > 1 ? `w-[85%] shrink-0 snap-start ${grand ? "" : defile ? "md:w-[44%]" : "md:w-auto"}` : ""} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {(infos.length > 0 || reste.length > 0) && (
         <section className="space-y-2" aria-label={t("evenements.infos")}>
+          {reste.map((e) => <EvenementCard key={e.id} evenement={e} actif={grand && e.id === idActif} />)}
           {infos.map((e) => <EvenementCard key={e.id} evenement={e} actif={grand && e.id === idActif} />)}
         </section>
       )}
 
-      {!grand && upcoming.length === 0 && vide}
+      {/* En grand, avec la carte de la fête : le message vide reste sous elle, le volet de droite est vide (T5). */}
+      {/* Les seuls à venir sont épinglés (en grand ou « À la une ») : pas de « Aucun évènement à venir ». */}
+      {(!grand || enVue) && upcoming.length === 0 && epingles.length === 0 && vide}
       {upcoming.map((g) => (
         <section key={g.key} className={grand ? "space-y-1" : "space-y-3"}>
           <h2 className="text-sm font-semibold text-muted-foreground px-1 first-letter:uppercase">{g.label}</h2>
@@ -152,7 +199,9 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
           </button>
           {showPast && past.map((x, i) => x.source === "app"
             ? <EvenementCard key={x.evenement.id} evenement={x.evenement} past actif={grand && x.evenement.id === idActif} />
-            : <EntreeSheetCarte key={`sheet-${i}`} entree={x.entree} past />)}
+            : x.source === "fete"
+              ? <LigneFetePassee key={`fete-${x.fete}-${x.annee}`} fete={x.fete} annee={x.annee} jourJ={x.date} lien={x.lien} />
+              : <EntreeSheetCarte key={`sheet-${i}`} entree={x.entree} past />)}
         </section>
       )}
 
@@ -179,7 +228,7 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
             chargement ? null
               : premier ? <EvenementClient id={premier.id} />
               : premiereEntree?.source === "sheet" ? <EntreeSheetCarte entree={premiereEntree.entree} />
-              : vide
+              : enVue ? null : vide
           }
         >
           {children}

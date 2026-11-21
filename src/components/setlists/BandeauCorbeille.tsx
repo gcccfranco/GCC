@@ -10,11 +10,13 @@ import { Bandeau } from "@/components/layout/Bandeau"
 
 const DUREE_MS = 8000
 
-export function BandeauCorbeille({ count, onAnnuler, onFermer }: {
+export function BandeauCorbeille({ count, onAnnuler, onFermer, onVoir }: {
   count: number
   /** Restaure les setlists mises à la corbeille ; le bandeau est fermé par la page ensuite. */
   onAnnuler: () => Promise<void>
   onFermer: () => void
+  /** Ouvre la section Corbeille et y descend ; le bandeau reste. */
+  onVoir: () => void
 }) {
   const { t } = useTranslation()
   const [enCours, setEnCours] = useState(false)
@@ -28,6 +30,13 @@ export function BandeauCorbeille({ count, onAnnuler, onFermer }: {
     <Bandeau ton="info" testId="bandeau-corbeille" className="mb-4">
       <div className="flex items-center gap-3">
       <p className="min-w-0 flex-1">{t("setlists.corbeille.bandeau", { count })}</p>
+      <button
+        type="button"
+        onClick={onVoir}
+        className="inline-flex min-h-11 shrink-0 items-center px-2 font-semibold underline underline-offset-2"
+      >
+        {t("setlists.corbeille.voir")}
+      </button>
       <button
         type="button"
         disabled={enCours}

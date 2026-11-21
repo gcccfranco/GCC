@@ -44,7 +44,7 @@ Commandes de test rares (80 简谱 certifiées, lignes chinoises, site sans back
 - **Comptes & rôles** : profils dans `users/{uid}`. Permissions client dans `src/lib/access.ts`, miroir serveur dans `firestore.rules`.
 - **`firestore.rules`** : versionné ici mais **publié manuellement dans la console Firebase** pour prendre effet. La liste des admins reste synchronisée avec `ADMIN_EMAILS` (`src/lib/access.ts`).
 - **Confidentialité (choix assumé)** : les rules autorisent `read: if signedIn()` sur toutes les setlists et tous les profils ; le filtrage (`isPrivate`, `canSeeSetlist`) est côté client uniquement. Ne pas re-signaler comme faille sans nouvelle demande de durcissement.
-- **Routes API** : 20, toutes sous `src/app/api/` ; liste dans la référence § Routes API.
+- **Routes API** : 21, toutes sous `src/app/api/` ; liste dans la référence § Routes API.
 - **Planning** : Google Sheet public lu en CSV (`src/lib/planning/sheets.ts`) + données statiques (`data.ts`)
 - **PWA** : service worker `public/sw.js` (push + cache hors-ligne). Cache versionné (`gcc-louange-v6`) : **le changer à la main quand les stratégies changent**. Avant de toucher `sw.js` : référence § PWA.
 - **Hébergement** : Vercel ; la CI GitHub fait typecheck + validate. **Seul `main` se déploie** (Timothée, 31/10/2026) : `vercel.json` coupe tous les Previews. Ne pas les réactiver ni retirer cette règle sans demande de Timothée ; une branche se vérifie en local (`npm run dev`, Playwright). Détail : référence § Hébergement.
@@ -183,7 +183,7 @@ pas seulement en mémoire.
     à la suivante.
 - **Agents en parallèle** : quelques-uns à la fois (neuf d'un coup ont épuisé la limite de dépense du mois, le
   04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
-- **Déléguer** aux agents de `.claude/agents/` : `chercheur`, `testeur` (Haiku) ; `executant`, `relecteur`, `regard`,
+- **Déléguer** aux agents de `.claude/agents/` : `chercheur`, `testeur` (Haiku, effort low) ; `relecteur` (Fable, high ; Sonnet dans `/verifier-constats`) ; `executant`, `regard`,
   `maquettiste` (Sonnet) ; `directeur-artistique`, `critique-design` (Opus). Workflows (`docs/orchestration.md`) :
   `/tranche`, `/verifier-constats`, `/planche` (aucun ne commite) ; `/audit-code` (≈ 60 agents) sur demande seulement.
   Rôles : référence § Délégation. La conversation principale garde le jugement : specs, planches, débogage,

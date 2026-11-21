@@ -52,3 +52,31 @@ test("le bouton de langue bascule en 中文, est retenu au rechargement, et revi
   await expect(page.getByText("GCC Louange", { exact: true }).filter({ visible: true }).first()).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
 });
+
+// Visiteur sans compte sur téléphone : pas de page « Moi », le thème reste dans la barre du haut (Timothée, 21/11/2026).
+test("téléphone : le visiteur a le thème dans la barre, qui bascule `dark` ; la barre tient à 360 et 412 px", async ({ page }, info) => {
+  test.skip(info.project.name !== "telephone", "propre au téléphone : ailleurs, la barre latérale ou le bouton existent déjà");
+  await page.goto("/songs");
+  const barre = page.locator("header");
+  const theme = barre.getByRole("button", { name: /^(Mode sombre|Mode clair)$/ });
+  const langue = barre.getByRole("button", { name: /^(Changer en français|切换为中文)$/ });
+  const connexion = barre.getByRole("link", { name: "Connexion", exact: true });
+  const mot = connexion.getByText("Connexion", { exact: true });
+  for (const largeur of [360, 412, 430]) {
+    await page.setViewportSize({ width: largeur, height: 740 });
+    await expect(theme).toBeVisible();
+    const cc = (await connexion.boundingBox())!;
+    expect(cc.x + cc.width, `connexion à ${largeur} px`).toBeLessThanOrEqual(largeur - 8);
+    expect(cc.height, "une seule ligne").toBeLessThanOrEqual(44);
+    for (const b of [theme, langue]) {
+      const r = (await b.boundingBox())!;
+      expect(r.x).toBeGreaterThanOrEqual(0);
+      expect(r.x + r.width).toBeLessThanOrEqual(largeur);
+    }
+    if (largeur < 430) await expect(mot).toBeHidden();
+    else await expect(mot).toBeVisible();
+  }
+  const dark = await page.locator("html").evaluate((el) => el.classList.contains("dark"));
+  await theme.click();
+  await expect(page.locator("html")).toHaveClass(dark ? /^(?!.*\bdark\b)/ : /\bdark\b/);
+});

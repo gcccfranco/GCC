@@ -774,8 +774,10 @@ test("B1 : un × en haut à droite de chaque feuille (Setlist, Repères, Outils,
     // Affichage en feuille pleine largeur : l'en-tête suit la colonne centrée des réglages (560 px) ; on mesure à sa rangée.
     const r = menu === "affichage" ? (await croix.locator("..").boundingBox())! : d;
     expect(r.x + r.width - (b.x + b.width), `${menu} : bord droit`).toBeLessThan(24);
-    // Feuille du bas (< 768 px) : la poignée (24 px) précède l'en-tête.
-    expect(b.y - d.y, `${menu} : haut`).toBeLessThan(page.viewportSize()!.width < 768 ? 48 : 24);
+    // Feuille du bas (< 768 px) : la poignée (24 px) précède l'en-tête. « Affichage » reste une feuille à poignée jusqu'à
+    // 1 024 px (R1 du 21/11/2026 : la poignée est un vrai bouton de 24 px).
+    const aPoignee = page.viewportSize()!.width < 768 || (menu === "affichage" && (await dialogue.getAttribute("data-place")) === "feuille");
+    expect(b.y - d.y, `${menu} : haut`).toBeLessThan(aPoignee ? 48 : 24);
     await croix.click();
     await expect(dialogue).toBeHidden();
     expect(await lireCompteur(page), `${menu} : la page ne change pas`).toMatch(/^2 \//);

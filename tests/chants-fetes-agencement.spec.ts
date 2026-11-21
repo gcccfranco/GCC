@@ -49,7 +49,8 @@ for (const langue of ["fr", "zh-CN"] as const) {
     await page.waitForTimeout(1500);
     expect(appelsDroits.n).toBeLessThanOrEqual(2);
 
-    const titre = page.getByRole("heading", { level: 2, name: /ordre de passage|上场顺序/ });
+    // Lot AS, AS9 : en une colonne (`?vue=ordre` en page), l'ordre de passage porte le h1 ; en deux volets, un h2.
+    const titre = page.getByRole("heading", { level: estGrandEcran(info) ? 2 : 1, name: /ordre de passage|上场顺序/ });
     const filtre = page.getByRole("group", { name: langue === "fr" ? "Passages à afficher" : "显示的节目" });
     const [bt, bf] = [await titre.boundingBox(), await filtre.boundingBox()];
     if (estGrandEcran(info)) {

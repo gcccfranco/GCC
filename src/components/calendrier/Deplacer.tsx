@@ -16,7 +16,7 @@ import { canSeeEvenement } from "@/lib/access";
 import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { nomOccupant } from "@/lib/salles/occupations";
-import { estSalleId, SALLES } from "@/lib/salles/salles";
+import { estSalleId, salleLue, SALLES } from "@/lib/salles/salles";
 import { useTranslation } from "react-i18next";
 import type { DonneesCalendrier, EntreeCalendrier } from "@/lib/calendrier/entrees";
 import { planDeplacement, questionDeplacement, type PlanDeplacement } from "@/lib/calendrier/deplacer";
@@ -119,7 +119,7 @@ export function DialogueDeplacer({
           const r = await verifierSalle({ ...e, date: plan.champs.date }, e.id, aujourdhui, (x) => canSeeEvenement(user, profile, x));
           if (r) {
             phrase = t("salles.refus", {
-              salle: SALLES.find((s) => s.id === r.salle)!.nom, qui: nomOccupant(r.bloque, lang === "zh-CN" ? "zh" : "fr"),
+              salle: SALLES.find((s) => s.id === salleLue(r.salle))!.nom, qui: nomOccupant(r.bloque, lang === "zh-CN" ? "zh" : "fr"),
               debut: r.bloque.debut, fin: r.bloque.fin === "24:00" ? "23:59" : r.bloque.fin,
             });
           }

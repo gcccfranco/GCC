@@ -61,7 +61,7 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     const titre = enTete(page).getByRole("heading", { level: 1, name: "Église" });
     await expect(titre).toBeVisible();
     await expect(enTete(page)).toContainText("Évènements, salles et fêtes");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles", "Pâques", "Noël"]);
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles"]);
     await expect(ongletsRail(page).getByRole("link", { name: "Évènements" })).toHaveAttribute("aria-current", "page");
     const [h1, rail] = [(await titre.boundingBox())!, (await ongletsRail(page).boundingBox())!];
     expect(rail.y, "le rail sous le titre").toBeGreaterThan(h1.y + h1.height - 1);
@@ -117,21 +117,13 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     await expect(nouvel(page)).toHaveCount(0);
   });
 
-  test("onglet de la scène : le même en-tête, sans action principale, le titre ne bouge pas", async ({ page }) => {
-    await ouvrir(page, COORDINATION, "/evenements");
-    const h1 = enTete(page).getByRole("heading", { level: 1, name: "Église" });
-    await expect(h1).toBeVisible();
-    await expect(nouvel(page)).toHaveCount(1);
-    const avant = (await h1.boundingBox())!;
-    await ongletsRail(page).getByRole("link", { name: "Noël" }).click();
-    await expect(page).toHaveURL(/\/evenements\/scene\/noel\/?$/);
-    await expect(ongletsRail(page).getByRole("link", { name: "Noël" })).toHaveAttribute("aria-current", "page");
+  test("page de la fête : en-tête compact, sans action principale, le titre est « Noël 2026 »", async ({ page }) => {
+    await ouvrir(page, COORDINATION, "/evenements/scene/noel");
+    await expect(page.getByRole("heading", { level: 1, name: /^Noël/ })).toBeVisible();
+    await expect(ongletsRail(page).getByRole("link", { name: "Évènements" })).toHaveAttribute("aria-current", "page");
     await expect(enTete(page)).toHaveCount(1);
-    await expect(enTete(page)).toContainText("Évènements, salles et fêtes");
+    await expect(enTete(page)).not.toContainText("Évènements, salles et fêtes");
     await expect(nouvel(page), "pas d'action principale sur la scène").toHaveCount(0);
-    const apres = (await h1.boundingBox())!;
-    expect(Math.round(apres.x)).toBe(Math.round(avant.x));
-    expect(Math.round(apres.y)).toBe(Math.round(avant.y));
     await expect(page.getByTestId("barre-section"), "plus de barre d'onglets collante").toHaveCount(0);
     // Le contenu de la scène part du même bord que le titre : plus de borne de 1 080 px centrée (R2, R10).
     await verifierAgencement(page);

@@ -10,6 +10,7 @@ import { COMITES, groupeDef } from "@/lib/groupes/table";
 import { PUBLISHABLE_PLANNINGS, droitsDePrevenir, peutPrevenir } from "@/lib/planning/releases";
 import { audiencesNotifiables } from "@/lib/push/audiences";
 import { BACK_OFFICE } from "@/lib/backOffice";
+import { SALLES } from "@/lib/salles/salles";
 import * as org from "@/lib/acces/organigramme";
 import { categoriesDesPlannings, gereUnPlanning, responsabilitesDe } from "@/lib/acces/responsabilites";
 import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
@@ -267,7 +268,7 @@ export function canVoirSalles(user: AuthUser | null): boolean {
   return !!user;
 }
 
-/** Réserver une salle : tout membre connecté (AR4). Une réservation de fête (la Scène, `fete`, lot 5, AR21) passe en
+/** Réserver une salle : tout membre connecté (AR4). Une réservation de fête (`fete`, lot 5, AR21 ; la Grande salle depuis AS14) passe en
  *  plus par canReserverPour, comme `feteReservable()` dans firestore.rules. */
 export function canReserverSalle(user: AuthUser | null): boolean {
   return !!user;
@@ -283,6 +284,17 @@ export function canEditReservation(
 ): boolean {
   if (!user) return false;
   return r.auteurUid === user.uid || isCoordination(user, profile, backOffice);
+}
+
+/** AS16 : la coordination qui supprime la réservation d'un autre l'annule avec un motif (route /api/salles/annulation).
+ *  Miroir : rien à changer dans firestore.rules (la coordination supprime déjà ; la route passe par l'Admin SDK), AS16. */
+export function canAnnulerReservation(
+  user: AuthUser | null,
+  profile: ProfilCoordination | null,
+  r: { auteurUid: string },
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  return !!user && r.auteurUid !== user.uid && isCoordination(user, profile, backOffice);
 }
 
 // ─── Scène : saison de réservation (lot U1, docs/spec-scene-saison.md) ───────
@@ -307,6 +319,14 @@ export function canReserverPour(
   if (programme.fermees === true) return false;
   const permis = programme.quiAutorises ?? [];
   return permis.length === 0 || qui.every((q) => permis.includes(q));
+}
+
+/** AS15 : `personnes` d'une réservation (« Des personnes… ») : 20 au plus, chacune { uid non vide, nom de 1 à 60 caractères }.
+ *  Miroir de reservationValide() dans firestore.rules, qui ne vérifie que la taille de la liste (les rules ne la parcourent pas) :
+ *  le détail uid/nom se vérifie ici, avant l'écriture. */
+export function personnesEcrivables(p: unknown): boolean {
+  return Array.isArray(p) && p.length <= 20 && p.every((x) =>
+    typeof x?.uid === "string" && x.uid !== "" && typeof x.nom === "string" && x.nom.length >= 1 && x.nom.length <= 60);
 }
 
 // ─── Évènements (lot 6, docs/spec-evenements.md) — miroir : firestore.rules ───
@@ -417,10 +437,16 @@ export function canSeeInscrits(user: AuthUser | null): boolean {
   return user !== null;
 }
 
+/** Une salle qu'on peut écrire : une des huit, ou « scene » si le document l'avait déjà (AS14). Miroir de
+ *  reservationValide / salleEvenementValide (firestore.rules). */
+export function salleEcrivable(salle: unknown, avant?: unknown): boolean {
+  return SALLES.some((s) => s.id === salle) || (salle === "scene" && avant === "scene");
+}
+
 /** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination
  *  (lot RS : le Comité Orga) + admins.
- *  Salles (AR, T4b) : à la création comme à la modification, `salle` est absente, null ou une des neuf
- *  (`salleEvenementValide` de firestore.rules) ; côté client, le champ « Salle de l'église » n'offre que `SALLES`
+ *  Salles (AR, T4b) : à la création comme à la modification, `salle` est absente, null ou une des huit
+ *  (`salleEvenementValide` de firestore.rules ; AS14 : « scene » seulement inchangée) ; côté client, le champ « Salle de l'église » n'offre que `SALLES`
  *  et la lecture passe par `estSalleId` (src/lib/salles/salles.ts). */
 export function canEditEvenement(
   user: AuthUser | null,

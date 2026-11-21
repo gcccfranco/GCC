@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { attendreCompteur } from "./helpers/louange";
+import { attendreCompteur, ouvrirOptions } from "./helpers/louange";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { enDeuxVolets, ouvrirSommaire } from "./helpers/setlist";
 
@@ -53,8 +53,8 @@ const SETLIST = {
 
 /** Libellés du lot dans chaque langue (src/locales/*.json). */
 const LIBELLES = {
-  fr: { choisis: "Choisis un chant", sommaire: "Sommaire", liste: "Liste", louange: "Mode Louange", colonnes: "2 colonnes", options: "Options d'affichage" },
-  zh: { choisis: "选择一首诗歌", sommaire: "目录", liste: "曲目列表", louange: "敬拜模式", colonnes: "双栏", options: "显示选项" },
+  fr: { choisis: "Choisis un chant", sommaire: "Sommaire", liste: "Liste", louange: "Mode Louange", colonnes: "2 colonnes" },
+  zh: { choisis: "选择一首诗歌", sommaire: "目录", liste: "曲目列表", louange: "敬拜模式", colonnes: "双栏" },
 } as const;
 
 type Langue = keyof typeof LIBELLES;
@@ -170,12 +170,12 @@ for (const langue of ["fr", "zh"] as const) {
       await page.getByRole("button", { name: L.louange }).filter({ visible: true }).first().click();
       await attendreCompteur(page, /^\d+ \/ \d+$/);
       // FS-A : « 2 colonnes » a quitté la barre pour le tiroir des options.
-      await page.getByRole("button", { name: L.options }).click();
-      const interrupteur = page.getByRole("dialog").getByRole("button", { name: L.colonnes });
-      if (grand) await expect(interrupteur).toHaveAttribute("aria-pressed", "true");
+      const marge = await ouvrirOptions(page, langue);
+      const interrupteur = marge.getByRole("switch", { name: L.colonnes });
+      if (grand) await expect(interrupteur).toHaveAttribute("aria-checked", "true");
       else await expect(interrupteur).toHaveCount(0);
-      await page.keyboard.press("Escape");
-      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await marge.getByRole("button", { name: langue === "zh" ? "关闭显示" : "Fermer l'affichage", exact: true }).click();
+      await expect(marge).toBeHidden();
       // Le mode louange a son propre fond (réglage par appareil) : seul le débordement compte.
       await ecran(page, "louange", langue, theme, { fond: false });
     });

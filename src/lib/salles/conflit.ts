@@ -7,7 +7,7 @@ import { formatReminderDate } from "@/lib/push/reminderMessage";
 import type { Reservation } from "@/lib/firebase/reservations";
 import type { NotifLang } from "@/types/user";
 import { croise, libellePour, occupationsDe, type Occupation } from "./occupations";
-import { lieuxLies, SALLES, type SalleId } from "./salles";
+import { salleLue, SALLES, type SalleId } from "./salles";
 
 type Plage = { debut: string; fin: string };
 
@@ -48,7 +48,7 @@ export function decalage(occupations: Occupation[], salle: SalleId, plage: Plage
 
 /** SA9 : deux réservations du même jour qui se chevauchent dans la même salle ou dans des lieux liés. */
 export function reservationsSeChevauchent(a: Pick<Reservation, "salle" | "date" | "debut" | "fin">, b: Pick<Reservation, "salle" | "date" | "debut" | "fin">): boolean {
-  return a.date === b.date && lieuxLies(a.salle).includes(b.salle) && croise(a, b);
+  return a.date === b.date && salleLue(a.salle) === salleLue(b.salle) && croise(a, b);
 }
 
 /** SA9 : la réservation qu'on vient d'écrire et une autre qui la croise (enregistrée au même moment), d'après une
@@ -62,7 +62,7 @@ export function conflictKey(reservationIds: string[]): string {
   return `salles-conflit-${[...reservationIds].sort().join("-")}`;
 }
 
-const nomSalle = (id: SalleId) => SALLES.find((s) => s.id === id)?.nom ?? id;
+const nomSalle = (id: SalleId) => SALLES.find((s) => s.id === salleLue(id))?.nom ?? id;
 
 function plage(r: Reservation, lang: NotifLang): string {
   const langue = lang === "fr" ? "fr" : "zh";

@@ -42,6 +42,7 @@ export function Retour({
 export function EnTetePage({
   titre,
   sousTitre,
+  surTitre,
   retour,
   outils,
   action,
@@ -55,6 +56,9 @@ export function EnTetePage({
   titre?: ReactNode;
   /** Deux lignes au plus : il passe à la ligne, coupé par « … » seulement au-delà (compte-2). */
   sousTitre?: ReactNode;
+  /** En-tête compact (page de la fête, AS9) : sans titre, `surTitre` dit la section : retour « ‹ Section » sous 768 px,
+   *  petit libellé sans chevron dès la tablette, au-dessus du rail. */
+  surTitre?: { href: string; label: ReactNode };
   /** « ‹ Section » : une page qui dépend d'une autre (Mon profil › Moi, une fiche sur téléphone). */
   retour?: { href: string; label: ReactNode };
   /** Boutons secondaires (contour) et « ⋯ » (`MenuActions`), avant l'action principale. */
@@ -73,13 +77,17 @@ export function EnTetePage({
 }) {
   return (
     <header data-entete-page="" data-fond-groupe={fond === "groupe" ? "" : undefined} className="relative px-[var(--marge-page)] pb-5 pt-6">
+      {surTitre && (<>
+        <Retour href={surTitre.href} className="-ml-1 md:hidden">{surTitre.label}</Retour>
+        <p className="max-md:hidden text-sm leading-5 font-semibold text-muted-foreground">{surTitre.label}</p>
+      </>)}
       {/* Sans titre (fiche en deux volets) : l'action monte sur la ligne du retour. */}
-      {!titre && !sousTitre ? (
+      {!titre && !sousTitre ? (surTitre ? null : (
         <div className="flex items-center gap-3">
           {retour && <Retour href={retour.href}>{retour.label}</Retour>}
           {(outils || action) && <div className="ml-auto flex shrink-0 items-center gap-2">{outils}{action}</div>}
         </div>
-      ) : (<>
+      )) : (<>
       {retour && <Retour href={retour.href}>{retour.label}</Retour>}
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
@@ -95,7 +103,7 @@ export function EnTetePage({
       </div>
       </>)}
       {milieu && <div className="mt-4">{milieu}</div>}
-      {onglets && <div className="mt-4">{onglets}</div>}
+      {onglets && <div className={surTitre && !titre ? "mt-2" : "mt-4"}>{onglets}</div>}
       {apres && <div className="mt-3">{apres}</div>}
     </header>
   );

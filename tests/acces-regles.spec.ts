@@ -392,7 +392,7 @@ test.describe("les règles : création de profil, évènements", () => {
     const premiere = update.slice(0, update.indexOf("estDeLaReunion"));
     expect(premiere).toContain("request.resource.data.organisateurUid == resource.data.organisateurUid");
     expect(premiere).toContain("request.resource.data.pour == resource.data.pour || pourCreable(request.resource.data.pour)");
-    expect(sansEspaces(bloc("match /evenements/{id}"))).toContain("&& pourCreable(request.resource.data.pour);");
+    expect(sansEspaces(bloc("match /evenements/{id}"))).toContain("&& pourCreable(request.resource.data.pour) && salleEvenementValide();");
     expect(sansEspaces(fonction("pourCreable"))).toContain("estReferentDe(pour.split(':')[1])");
   });
 });

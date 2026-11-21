@@ -24,7 +24,6 @@ import {
   anneeDe, editionCourante, editionsDe, etatEdition, jourJParDefaut, libelleEdition, reglagesRepris, type Fete,
 } from "@/lib/scene/fetes"
 import { joursReservables, saisonDe } from "@/lib/scene/saison"
-import { signalerConflit } from "@/lib/salles/signalerConflit"
 import { fdFullL } from "@/lib/planning/utils"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
@@ -139,7 +138,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
 
   const enTeteEdition = (
     <div>
-      <h2 className="text-xl leading-tight font-bold tracking-tight text-foreground">{titre}</h2>
+      <h1 className="titre-page text-foreground">{titre}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         {t("planning.programmes.jourJLabel", { date: dateDuJour(jourJ) })}
         {(etat === "bientot" || etat === "ouvertes") && jours.length > 0 && <> · {t("planning.fete.jusquau", { date: jourEnLettres(jours.at(-1)!, lang) })}</>}
@@ -229,12 +228,14 @@ export function FeteClient({ fete }: { fete: Fete }) {
 
   // ─── Ce qui se lit à droite (ou dessous, sur téléphone) ──────────────────
 
-  const ordreDe = (p: Programme, sousTitre: string, courante = false) => {
+  // `titrePage` : l'ordre de passage ouvert en page (`?vue=ordre`, une colonne) porte le h1 de la page (AS9).
+  const ordreDe = (p: Programme, sousTitre: string, courante = false, titrePage = false) => {
+    const Titre = titrePage ? "h1" : "h2"
     const entete = (
       <div>
-        <h2 id={`ordre-${p.id}`} className="text-xl leading-tight font-bold tracking-tight text-foreground">
+        <Titre id={`ordre-${p.id}`} className={titrePage ? "titre-page text-foreground" : "text-xl leading-tight font-bold tracking-tight text-foreground"}>
           {t("planning.fete.ordreTitre", { edition: libelleEdition(fete, anneeDe(p)!, langue) })}
-        </h2>
+        </Titre>
         <p className="mt-1 text-sm text-muted-foreground">{sousTitre}</p>
       </div>
     )
@@ -277,7 +278,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
   const disposer = (enPlus: ReactNode, aDroite: ReactNode) => {
     const colonne = (
       <div className={deuxVolets ? "space-y-5 p-5" : "space-y-5"}>
-        {enTeteEdition}
+        {!deuxVolets && enTeteEdition}
         {gerer}
         {carteEtat}
         {enPlus}
@@ -291,11 +292,13 @@ export function FeteClient({ fete }: { fete: Fete }) {
     const pied = entreeOrdre && <div className="sticky bottom-0 z-[2] border-t border-border bg-card px-5 py-0.5 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-[linear-gradient(to_top,hsl(var(--raised)),hsl(var(--raised)/0))] before:content-['']">{entreeOrdre}</div>
 
     if (deuxVolets) {
-      return (
+      // AS9 : en deux volets, le titre de l'édition (le h1) passe au-dessus des volets, à la marge de la page.
+      return (<>
+        <div className="px-[var(--marge-page)] pb-5">{enTeteEdition}</div>
         <DeuxVolets racine={pathname} liste={<>{colonne}{pied}</>} premier={aDroite} largeurListe={400}>
           {null}
         </DeuxVolets>
-      )
+      </>)
     }
 
     // Une colonne, plafonnée à `--colonne-liste` (720 px) et alignée à gauche (evenements-app-3, L1) : l'ordre de passage en page, ou la colonne puis ce qui se lit dessous (l'ordre
@@ -305,7 +308,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
       return (
         <div data-colonne-plafonnee="" className="space-y-3 px-[var(--marge-page)] max-w-[calc(var(--colonne-liste)+2*var(--marge-page))]">
           <Retour href={pathname}>{titre}</Retour>
-          {ordreCourant}
+          {ordreDe(programme!, majuscule(fdFullL(jourJ, lang)), true, true)}
         </div>
       )
     }
@@ -324,7 +327,6 @@ export function FeteClient({ fete }: { fete: Fete }) {
     return (
       <Entrainements
         programme={programme} creneaux={creneaux} user={user} profile={profile} onChanged={reload}
-        onConflict={(a, b) => signalerConflit([a.id, b.id])}
       >
         {(m) => disposer(<>{m.mes}{m.semaines}</>, vueOrdre ? ordreCourant : m.semaine)}
       </Entrainements>

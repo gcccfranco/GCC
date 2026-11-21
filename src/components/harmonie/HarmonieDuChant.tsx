@@ -6,7 +6,7 @@
 // les idées sans passage, les idées écartées, le formulaire d'ajout et — dans
 // une setlist — la transition vers le chant suivant. En mode louange (JV-5b) : posé par-dessus la page, ouvert depuis le nom d'une section.
 
-import { Fragment, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type PointerEvent as PointeReact } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { TOUCHER_44 } from "@/lib/toucher44";
@@ -170,35 +170,106 @@ export function HarmonieDuChant(props: Props) {
 function Fenetre(props: Props & { titreId: string }) {
   const { t } = useTranslation();
   const dernier = useRef(new DOMRect());
+  // R4 : lus une fois par ouverture. `grand` : déplaçable ; `aCote` : à côté du texte de la section (sinon placement d'avant : sous le nom ou l'étiquette).
+  const cleOuverture = props.passage?.cle;
+  const { grand, aCote, hauteurMax } = useMemo(() => {
+    const g = typeof window !== "undefined" && window.innerWidth >= 768;
+    const cote = g && !!props.ancre?.closest("[data-section]");
+    // À côté : hauteur bornée au bas de l'écran depuis le haut du nom (sinon Radix remonte la fenêtre pour qu'elle tienne) ; plancher 50 % de l'écran.
+    const max = cote ? Math.max(window.innerHeight / 2, window.innerHeight - (props.ancre?.getBoundingClientRect().top ?? 0) - 16) : undefined;
+    return { grand: g, aCote: cote, hauteurMax: max };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- une fois par ouverture, comme `basse` dans VoletHarmonie
+  }, [props.open, cleOuverture]);
   const ancre = useRef({
     getBoundingClientRect: () => {
       const el = props.ancre;
-      if (el?.isConnected) dernier.current = el.getBoundingClientRect();
+      if (el?.isConnected) dernier.current = aCote ? boiteAncre(el) : el.getBoundingClientRect();
       return dernier.current;
     },
   });
+  // R4 : décalage posé en tirant l'en-tête (≥ 768 px) ; remis à zéro à chaque ouverture.
+  const [decale, setDecale] = useState<{ x: number; y: number } | null>(null);
+  const contenu = useRef<HTMLDivElement>(null);
+  const enDeplacement = useRef(false);
+  const cleVue = `${props.open}|${cleOuverture}`;
+  const [cleDecale, setCleDecale] = useState(cleVue);
+  if (cleDecale !== cleVue) { setCleDecale(cleVue); setDecale(null); }
+  const tirer = (e: PointeReact<HTMLDivElement>) => {
+    const el = contenu.current;
+    if (!el || (e.button !== undefined && e.button > 0) || (e.target as HTMLElement).closest("button")) return;
+    const r = el.getBoundingClientRect();
+    const hautEntete = e.currentTarget.getBoundingClientRect().height;
+    const [px, py] = [e.clientX, e.clientY];
+    const [ox, oy] = [decale?.x ?? 0, decale?.y ?? 0];
+    enDeplacement.current = true;
+    const bouge = (m: PointerEvent) => {
+      const dx = Math.min(Math.max(m.clientX - px, -r.left), window.innerWidth - r.right);
+      const dy = Math.min(Math.max(m.clientY - py, -r.top), window.innerHeight - r.top - hautEntete);
+      setDecale({ x: ox + dx, y: oy + dy });
+    };
+    const fin = () => {
+      window.removeEventListener("pointermove", bouge);
+      window.removeEventListener("pointerup", fin);
+      window.removeEventListener("pointercancel", fin);
+      setTimeout(() => { enDeplacement.current = false; }, 0);
+    };
+    window.addEventListener("pointermove", bouge);
+    window.addEventListener("pointerup", fin);
+    window.addEventListener("pointercancel", fin);
+    e.preventDefault();
+  };
   return (
     <Popover open={props.open} onOpenChange={(o) => !o && props.onClose()}>
       <PopoverAnchor virtualRef={ancre} />
       <PopoverContent
+        ref={contenu}
         aria-labelledby={props.titreId}
-        side="bottom"
+        side={aCote ? "right" : "bottom"}
         align="start"
-        sideOffset={6}
-        collisionPadding={{ top: 8, left: 8, right: 8, bottom: 16 }}
+        sideOffset={decale ? 15 : 6} // la flèche ôtée, Radix retire ses 9 px d'écart : on les rend pour que la fenêtre ne saute pas
+        collisionPadding={{ top: aCote ? Math.max(8, (typeof document === "undefined" ? 0 : document.querySelector("[data-performance-mode] [data-barre-haut]")?.getBoundingClientRect().bottom ?? 0) + 8) : 8, left: 8, right: 8, bottom: 16 }}
         data-idees-harmonie
         data-harmonie-fenetre
         data-chant={props.slug}
+        style={{ ...(decale ? { translate: `${decale.x}px ${decale.y}px` } : null), ...(hauteurMax ? { maxHeight: hauteurMax } : null) }}
         className="z-[10000] flex max-h-[calc(var(--radix-popover-content-available-height)-2px)] w-[min(26rem,calc(100vw-1rem))] flex-col border-border bg-background p-0 dark:bg-[hsl(var(--raised))] print:hidden"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onCloseAutoFocus={(e) => { e.preventDefault(); props.ancre?.focus({ preventScroll: true }); }}
+        onInteractOutside={(e) => { if (enDeplacement.current) e.preventDefault(); }}
       >
-        <EnTeteFeuille titre={t("harmonie.titreChant")} titreId={props.titreId} onFermer={props.onClose} labelFermer={t("harmonie.fermer")} className="px-4 pb-2 pt-3" />
+        <div data-harmonie-entete onPointerDown={grand ? tirer : undefined} style={grand ? { touchAction: "none" } : undefined} className={grand ? "cursor-grab active:cursor-grabbing" : undefined}>
+          <EnTeteFeuille titre={t("harmonie.titreChant")} titreId={props.titreId} onFermer={props.onClose} labelFermer={t("harmonie.fermer")} className="px-4 pb-2 pt-3" />
+        </div>
         {props.open && <Contenu {...props} />}
-        <PopoverArrow width={18} height={9} className="fill-background stroke-border dark:fill-[hsl(var(--raised))]" />
+        {!decale && <PopoverArrow width={18} height={9} className="fill-background stroke-border dark:fill-[hsl(var(--raised))]" />}
       </PopoverContent>
     </Popover>
   );
+}
+
+/** R4 : l'ancre de la fenêtre. Dans une section : la boîte de son TEXTE (bord droit = le plus à droite des nœuds de texte,
+ *  pas la pleine largeur du bloc), haut aligné sur le nom touché, bord droit borné pour que la fenêtre se cale contre le
+ *  bord de l'écran quand ni la droite ni la gauche ne suffisent. Étiquette d'un scan 简谱 (sans section) : le nom touché. */
+function boiteAncre(el: HTMLElement): DOMRect {
+  const nom = el.getBoundingClientRect();
+  const section = el.closest("[data-section]");
+  if (!section) return nom;
+  let [gauche, droite] = [Infinity, -Infinity];
+  const marche = document.createTreeWalker(section, NodeFilter.SHOW_TEXT);
+  const r = document.createRange();
+  for (let n = marche.nextNode(); n; n = marche.nextNode()) {
+    if (!n.textContent?.trim()) continue;
+    r.selectNodeContents(n);
+    const b = r.getBoundingClientRect();
+    if (!b.width) continue;
+    gauche = Math.min(gauche, b.left);
+    droite = Math.max(droite, b.right);
+  }
+  if (gauche > droite) return nom;
+  const [vw, largeur, marge] = [window.innerWidth, Math.min(416, window.innerWidth - 16), 15]; // marge = sideOffset 6 + flèche 9 (Radix les additionne)
+  if (vw - 8 - droite - marge < largeur && gauche - 8 - marge < largeur) droite = vw - 8 - largeur - marge;
+  gauche = Math.min(gauche, droite);
+  return new DOMRect(gauche, nom.top, droite - gauche, nom.height);
 }
 
 /** La colonne de grand écran : collée sous l'en-tête, sans voile ni verrou de défilement. */

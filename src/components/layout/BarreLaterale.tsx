@@ -236,7 +236,7 @@ function ContenuBarre({
   const listeSetlists = useSyncExternalStore(rienASuivre, listeSetlistsRetenue, () => "/setlists");
 
   // Barre réduite (B13, décision déléguée CI-17) : la langue et le thème d'un membre y figurent aussi, en colonne ;
-  // en barre dépliée, la langue reste dans la rangée du pied et le thème dans le menu « Compte ».
+  // en barre dépliée, la langue et le thème sont dans la rangée du pied (R2, 21/11/2026).
   const langue = (classe = "") => (
     <button
       onClick={() => setLanguage(isZh ? "fr" : "zh-CN")}
@@ -352,6 +352,7 @@ function ContenuBarre({
             <div aria-hidden className="flex shrink-0 gap-1.5">
               <span className={`${PASTILLE} pointer-events-none`} />
               <span className={`${PASTILLE} barre-si-depliee pointer-events-none`} />
+              <span className={`${PASTILLE} barre-si-depliee pointer-events-none`} />
             </div>
           </>
         )}
@@ -380,7 +381,7 @@ function ContenuBarre({
                   <Cloche boutonClassName={PASTILLE} side="right" align="end" sideOffset={cloche.sideOffset} />
                 </span>
                 {langue(enIcones ? "" : "barre-si-depliee")}
-                {enIcones && theme}
+                {theme}
               </div>
             </>
           ) : (

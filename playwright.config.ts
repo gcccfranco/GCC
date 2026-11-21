@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { readdirSync, readFileSync } from "node:fs";
 
 /** Port dédié aux tests : le `next dev` de travail (3000) reste libre. */
 export const PORT = Number(process.env.PW_PORT ?? 3100);
@@ -14,6 +15,12 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Lot AS, T5 (docs/spec-reserver-unique-fetes.md) : la carte de la fête dans Évènements et la fête passée dans « Passés ».
+  /evenements-fete\.spec\.ts/,
+  // Lot AS, T6 : l'évènement épinglé en grand (une ou plusieurs cartes, rangée qui défile, avec ou sans image).
+  /evenements-epingle\.spec\.ts/,
+  // Lot AS, T4 (docs/spec-reserver-unique-fetes.md) : le rail à deux onglets et l'en-tête compact de la page de la fête (h1 « Noël 2026 », halo fondu).
+  /fete-en-tete\.spec\.ts/,
   // Salles AR, T2b (docs/spec-salles.md) : la Liste, la bande de jours, le repère d'heure, la journée d'une salle (page ou volet).
   /salles-liste\.spec\.ts/,
   // Salles AR, T2c : la Grille (neuf colonnes, défilement au téléphone), le sélecteur « Liste · Grille » et la vue par appareil.
@@ -44,6 +51,8 @@ const SPECS_GRAND_ECRAN = [
   /harmonie-volet-section\.spec\.ts/,
   // JV-5b : dans le mode louange, le nom de section ouvre le volet Harmonie par-dessus la page (colonne dès 1 024 px, feuille à mi-hauteur sinon).
   /louange-harmonie\.spec\.ts/,
+  // R4 (docs/spec-retouches-2026-11-21.md) : la fenêtre Harmonie du mode louange à côté du texte de la section, déplaçable par son en-tête (≥ 768 px) ; feuille du bas inchangée au téléphone.
+  /harmonie-fenetre-placement\.spec\.ts/,
   // JV-5c : étiquettes de section dans le rail du scan 简谱 (page chant, Partitions, mode louange), qui ouvrent le volet Harmonie.
   /harmonie-jianpu\.spec\.ts/,
   // Harmonie H6-1 : la bibliothèque (filtres Ressenti et Usage, liste ordonnée par niveau, fiche ≥ 640 px à l'ordinateur).
@@ -229,6 +238,41 @@ const SPECS_GRAND_ECRAN = [
 // non) : chaque test passe le mode lui-même, les serveurs reçoivent la leur plus bas.
 delete process.env.NEXT_PUBLIC_BACK_OFFICE;
 
+/** Le second serveur (back-office coupé) ne démarre que si la commande vise une spec qui s'en sert
+ *  (celles qui importent `BASE_URL_COUPE`), ou si elle ne nomme aucun fichier (suite complète,
+ *  `--last-failed`, filtre par mot) : un démarrage de `next dev` de moins par passe (Timothée, 21/11/2026).
+ *  `PW_COUPE=1` le force, `PW_COUPE=0` l'interdit. */
+function besoinServeurCoupe(): boolean {
+  if (process.env.PW_COUPE) return process.env.PW_COUPE === "1";
+  const i = process.argv.indexOf("test");
+  if (i < 0) return true;
+  const avecValeur = new Set(["--project", "--grep", "-g", "--grep-invert", "--workers", "-j", "--reporter",
+    "--shard", "--max-failures", "-x", "--config", "-c", "--timeout", "--repeat-each", "--retries", "--output", "--trace"]);
+  const fichiers: string[] = [];
+  for (let k = i + 1; k < process.argv.length; k++) {
+    const a = process.argv[k];
+    if (a.startsWith("-")) { if (!a.includes("=") && avecValeur.has(a)) k++; continue; }
+    fichiers.push(a);
+  }
+  if (!fichiers.length) return true;
+  if (!fichiers.every((f) => /\.spec\.ts(:\d+)*$/.test(f))) return true;
+  const avecCoupe = new Set(readdirSync("tests").filter((f) => f.endsWith(".spec.ts")
+    && readFileSync(`tests/${f}`, "utf8").includes("BASE_URL_COUPE")));
+  return fichiers.some((f) => avecCoupe.has(f.replace(/(:\d+)+$/, "").split("/").pop()!));
+}
+
+const serveurCoupe = {
+  // Interrupteur coupé. Next 16 verrouille `.next/dev` : un second `next dev`
+  // dans le même dossier a besoin de son propre dossier de build.
+  command: `npm run dev -- -p ${PORT + 1}`,
+  url: BASE_URL_COUPE,
+  reuseExistingServer: true,
+  timeout: 180_000,
+  stdout: "ignore",
+  stderr: "pipe",
+  env: { NEXT_PUBLIC_BACK_OFFICE: "0", NEXT_DIST_DIR: ".next-coupe" },
+} as const;
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -274,16 +318,6 @@ export default defineConfig({
       // La suite existante teste le back-office : interrupteur ouvert, quoi que dise `.env.local`.
       env: { NEXT_PUBLIC_BACK_OFFICE: "1" },
     },
-    {
-      // Interrupteur coupé. Next 16 verrouille `.next/dev` : un second `next dev`
-      // dans le même dossier a besoin de son propre dossier de build.
-      command: `npm run dev -- -p ${PORT + 1}`,
-      url: BASE_URL_COUPE,
-      reuseExistingServer: true,
-      timeout: 180_000,
-      stdout: "ignore",
-      stderr: "pipe",
-      env: { NEXT_PUBLIC_BACK_OFFICE: "0", NEXT_DIST_DIR: ".next-coupe" },
-    },
+    ...(besoinServeurCoupe() ? [serveurCoupe] : []),
   ],
 });

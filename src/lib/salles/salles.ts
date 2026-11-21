@@ -1,6 +1,10 @@
-// Les salles de l'église (docs/spec-salles.md, § Modèle, AR6, AR7, AR9) : neuf entrées, dans l'ordre de l'écran.
+// Les salles de l'église (docs/spec-salles.md, § Modèle, AR6, AR7, AR9) : huit entrées, dans l'ordre de l'écran (AS14 : la Grande salle est la Scène ; AS14 remplace AR6).
 // Noms en français dans les deux langues, sauf 小班, 中班, 大班, 高班 (AR9).
+// T7 (AS13, RS8) : `COULEUR_SALLE`, la couleur attitrée de chaque salle, prise par référence à `serviceColors`.
 
+import { categoryColor, CATEGORY_COLORS, PLANNING_COLORS } from "@/lib/serviceColors";
+
+// "scene" ne se lit que dans les anciens documents (AS14) : `salleLue` la rend "grande", on n'en écrit plus.
 export type SalleId = "grande" | "scene" | "fidelite" | "paix" | "amour" | "bonte" | "zhongban" | "imprimante" | "reunion";
 
 /** Groupe d'affichage de la Liste (SA2) ; libellés `salles.groupes.*`. */
@@ -12,13 +16,10 @@ export interface Salle {
   /** Autre nom, selon qui l'occupe (« 小班 » pour la Salle Fidélité). */
   autreNom?: string;
   groupe: GroupeSalle;
-  /** La Scène est dans la Grande salle (AR6) : affichée en retrait sous elle. */
-  dans?: SalleId;
 }
 
 export const SALLES: readonly Salle[] = [
   { id: "grande", nom: "Grande salle", groupe: "grande" },
-  { id: "scene", nom: "Scène", groupe: "grande", dans: "grande" },
   { id: "fidelite", nom: "Salle Fidélité", autreNom: "小班", groupe: "groupe" },
   { id: "paix", nom: "Salle Paix", autreNom: "高班", groupe: "groupe" },
   { id: "amour", nom: "Salle Amour", autreNom: "大班", groupe: "groupe" },
@@ -28,19 +29,32 @@ export const SALLES: readonly Salle[] = [
   { id: "reunion", nom: "Salle de réunion", groupe: "bureaux" },
 ];
 
-/** Ce qui occupe l'une occupe l'autre : Grande salle ↔ Scène (AR6) ; toute autre salle n'est liée qu'à elle-même. */
-export function lieuxLies(id: SalleId): SalleId[] {
-  return id === "grande" || id === "scene" ? ["grande", "scene"] : [id];
+/** Couleur attitrée de chaque salle (AS13, RS8) ; "scene" (lecture seule, AS14) a celle de la Grande salle. */
+export const COULEUR_SALLE: Record<SalleId, string> = {
+  grande: PLANNING_COLORS.culte,
+  scene: PLANNING_COLORS.culte,
+  fidelite: PLANNING_COLORS.fidelite,
+  paix: PLANNING_COLORS.paix,
+  amour: CATEGORY_COLORS["Groupe Amour"],
+  bonte: PLANNING_COLORS.bonte,
+  zhongban: PLANNING_COLORS.edd,
+  imprimante: categoryColor(""),
+  reunion: categoryColor(""),
+};
+
+/** Une salle lue (RS9) : l'ancienne Scène est la Grande salle (AS14) ; toute autre salle est elle-même. */
+export function salleLue(id: SalleId): SalleId {
+  return id === "scene" ? "grande" : id;
 }
 
-/** Une valeur lue (Firestore) est-elle une des neuf salles ? */
+/** Une valeur lue (Firestore) est-elle une des huit salles, ou l'ancienne « scene » (lecture seule) ? */
 export function estSalleId(x: unknown): x is SalleId {
-  return typeof x === "string" && SALLES.some((s) => s.id === x);
+  return typeof x === "string" && (x === "scene" || SALLES.some((s) => s.id === x));
 }
 
 /** « Salle Fidélité · 小班 » : le nom et l'autre nom, comme dans le champ « Salle de l'église ». */
 export function nomAvecAutre(id: SalleId): string {
-  const s = SALLES.find((x) => x.id === id)!;
+  const s = SALLES.find((x) => x.id === salleLue(id))!;
   return s.autreNom ? `${s.nom} · ${s.autreNom}` : s.nom;
 }
 

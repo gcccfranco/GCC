@@ -33,7 +33,6 @@ import { getSetlistsDeFete, mettreALaCorbeilleGroupe, updateSetlist } from "@/li
 import { ecartsSetlistsFete } from "@/lib/fetes/suiviSetlists"
 import { creerEdition, listCreneaux, listProgrammes, ModifieEntreTemps, PROGRAMMES_CHANGED, updateProgramme } from "@/lib/firebase/programmes"
 import { archiveDate, todayIso } from "@/lib/scene/dimanches"
-import { signalerConflit } from "@/lib/salles/signalerConflit"
 import {
   anneeDe, editionCourante, editionsDe, etatEdition, FETES, idEdition, jourJParDefaut, libelleEdition, reglagesRepris,
   type Edition, type Fete,
@@ -552,7 +551,6 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     return (
       <Entrainements
         programme={p} creneaux={creneaux} user={user} profile={profile} onChanged={reload}
-        onConflict={(a, b) => signalerConflit([a.id, b.id])}
         semaineActive={vue === "semaine"}
       >
         {(m) => disposer(avecSemaines ? m : { ...m, semaines: null })}

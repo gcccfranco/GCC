@@ -16,11 +16,12 @@ import { CalendrierClient } from "./CalendrierClient"
 import { RESERVER_SALLE, SallesClient } from "./salles/SallesClient"
 
 // La section Évènements (lot U4 bis, B2) : l'agenda et ses fiches passent par le calendrier
-// (deux volets en grand, `CalendrierClient`). Les onglets Pâques et Noël de la scène
-// (docs/spec-scene-paques-noel.md, P4) prennent toute la zone, au halo de la scène.
-// Agencement v18 (A10, docs/spec-agencement-v18.md ; planches `v18-app-evenements*`) : l'en-tête est
-// celui de toute la section, agenda et scène — « Évènements », son sous-titre, le rail des onglets sous
-// le titre ; « + Nouvel évènement » (U6, B3 : le formulaire est au Back-Office, ouvert aux responsables)
+// (deux volets en grand, `CalendrierClient`). Les pages des fêtes (docs/spec-scene-paques-noel.md, P4)
+// prennent toute la zone, au halo de la scène ; elles n'ont plus d'onglet (lot AS, AS8 : rail « Évènements ·
+// Salles », « Évènements » allumé sur une fête) et leur en-tête est compact (AS9 : « ‹ Évènements » au
+// téléphone, petit libellé dès la tablette, puis le rail ; le h1 est le titre de l'édition, dans `FeteClient`).
+// Agencement v18 (A10, docs/spec-agencement-v18.md ; planches `v18-app-evenements*`) : ailleurs, l'en-tête
+// est « Église », son sous-titre, le rail des onglets sous le titre ; « + Nouvel évènement » (U6, B3 : le formulaire est au Back-Office, ouvert aux responsables)
 // sauf sur une fête, pour que le rail ne bouge pas d'un onglet à l'autre. Le contenu d'une fête pose
 // lui-même la marge de la zone (`FeteClient`, `DeuxVolets`) : rien n'est centré dans une borne (R2).
 // `peutCreer` est calculé ici seulement et passé à l'agenda (son indice « rien de prévu »).
@@ -37,8 +38,10 @@ export function SectionEvenements({ children }: { children: React.ReactNode }) {
 
   const enTete = (
     <EnTetePage
-      titre={t("evenements.title")}
-      sousTitre={t("evenements.sousTitre")}
+      titre={scene ? undefined : t("evenements.title")}
+      sousTitre={scene ? undefined : t("evenements.sousTitre")}
+      // Page de la fête (AS9) : en-tête compact, le h1 est le titre de l'édition (`FeteClient`).
+      surTitre={scene ? { href: "/evenements", label: t("evenements.tabs.calendrier") } : undefined}
       // Sous 768 px la création est une pilule en bas de la liste (`CalendrierClient`), pas un rond fixe.
       action={salles ? (
         // Salles, T3a : « Réserver une salle » (SA6) ; la feuille vit dans `SallesClient`. Sous 768 px : en bas de la liste.

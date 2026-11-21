@@ -143,15 +143,15 @@ test("le choix de portée n'apparaît que dans une section répétée", async ({
   await page.getByRole("button", { name: "Annuler" }).first().click();
 
   await tapLine(page, 1, "chorus-3-3", "Abba");
-  await expect(page.getByRole("button", { name: "Toutes les répétitions" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("button", { name: "Seulement ce passage" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Seulement ce passage" }), "choisi d'avance").toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Toutes les répétitions" })).toHaveAttribute("aria-pressed", "false");
   await capture(page, "mv-choix-de-portee");
 });
 
-test("« Toutes les répétitions » (par défaut) retouche les deux refrains", async ({ page }) => {
+test("« Toutes les répétitions », choisi explicitement, retouche les deux refrains", async ({ page }) => {
   const db = await openPartitions(page);
   await basculerMode(page, "Ma version");
-  await editLyrics(page, "chorus-3-3", "Abba", LIGNE_PAPA);
+  await editLyrics(page, "chorus-3-3", "Abba", LIGNE_PAPA, "Toutes les répétitions");
 
   await expect(lyricLine(page, "Papa"), "les deux refrains changent").toHaveCount(2);
   const items = myItems(db);

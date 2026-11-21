@@ -534,7 +534,8 @@ test.describe("B3 : Évènements", () => {
     await page.getByRole("button", { name: "Plus d'actions" }).click();
     await page.getByRole("menuitem", { name: "Supprimer" }).click();
     await repondreDansLeSite(page, "Supprimer");
-    await expect(page).toHaveURL(/\/back-office\/reunions\/?$/);
+    // BO-C (`eaeb6b2`) : l'ancienne liste des réunions redirige vers le Calendrier filtré.
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
     expect(db.writes.filter((w) => w.method === "DELETE").map((w) => w.path).sort())
       .toEqual(["evenements/reu-da", "evenements/reu-da/sujets/s1", "evenements/reu-da/sujets/s2"]);
   });
@@ -586,7 +587,8 @@ test.describe("B3 : Évènements", () => {
     await expect(page.getByRole("menuitem", { name: "Dupliquer" })).toBeVisible();
     await page.getByRole("menuitem", { name: "Supprimer" }).click();
     await repondreDansLeSite(page, "Supprimer");
-    await expect(page).toHaveURL(/\/back-office\/evenements\/?$/);
+    // BO-C (`eaeb6b2`) : l'ancienne liste des évènements redirige vers le Calendrier filtré.
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=evenements$/);
     expect(db.writes.some((w) => w.method === "DELETE" && w.path === "evenements/fete")).toBe(true);
   });
 
@@ -621,7 +623,7 @@ test.describe("B3 : Évènements", () => {
 
   test("navigation : Calendrier est la seule entrée allumée sur Nouveau, Modifier et la fiche ; sur la scène, seule Scène (evenements-app-1)", async ({ page }, info) => {
     test.setTimeout(90_000); // cinq chargements de page dans un seul test
-    const allumees = () => page.locator("nav a[aria-current='page']").filter({ visible: true }).evaluateAll((l) => l.map((a) => a.textContent?.trim()));
+    const allumees = () => page.locator("nav a[aria-current='page']").filter({ visible: true }).evaluateAll((l) => l.map((a) => (a as HTMLElement).innerText.trim())); // CI-17 : texte affiché, pas le libellé caché du rail
     for (const adresse of ["/back-office/evenements/nouveau", "/back-office/evenements/fete/modifier", "/back-office/evenements/fete", "/back-office/reunions/reu-da"]) {
       await ouvrirB3(page, COORD, adresse);
       await expect.poll(allumees, adresse).toEqual(["Calendrier"]);

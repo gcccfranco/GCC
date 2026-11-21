@@ -276,3 +276,6 @@ Aucune règle Firestore touchée (tonalité personnelle en `localStorage`).
   À suivre : au téléphone, marge ouverte, la page refaite laisse un grand blanc sous une section qui ne tient plus (4 → 10
   pages) ; la fenêtre de l'armure, au téléphone, n'est pas ancrée sous l'armure ; scan 简谱 en deux colonnes collé aux bords
   à l'ordinateur (antérieur à RU-5, JV-4) ; `Sommaire.tsx` garde son `KeyPill` (reste de RU-4).
+- 21/11/2026 : **la feuille n'est plus fixe à 40 %** (Timothée, « go avec la poignée qui marche ») : 40 % à l'ouverture,
+  85 % en tirant ou en touchant la poignée, tirer vers le bas ramène à 40 % puis ferme. Détail et tests :
+  `docs/spec-retouches-2026-11-21.md`, R1.

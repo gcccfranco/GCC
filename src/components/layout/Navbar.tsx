@@ -251,11 +251,11 @@ export function Navbar() {
               <span className={membre ? "" : "hidden min-[400px]:inline"}>{isZh ? "中文" : "FR"}</span>
             </button>
 
-            {/* Thème : sur ordinateur ; sur tactile, un membre le trouve dans « Moi » */}
+            {/* Thème : le visiteur l'a partout (Timothée, 21/11/2026) ; un membre, sur ordinateur, et sur tactile dans « Moi » */}
             <button
               onClick={toggleTheme}
               aria-label={dark ? t("common.aria.modeClair") : t("common.aria.modeSombre")}
-              className={`${ICON_BUTTON} ${membre ? "hidden lg:flex" : "hidden sm:flex"}`}
+              className={`${ICON_BUTTON} ${membre ? "hidden lg:flex" : "flex"}`}
             >
               {dark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
             </button>
@@ -274,13 +274,14 @@ export function Navbar() {
                   </button>
                 </MenuCompte>
               ) : pathname.startsWith("/login") || pathname.startsWith("/signup") ? null : (
+                // Timothée, 21/11/2026 : icône seule sous 430 px, le bouton de thème du visiteur a pris la place.
                 <Link
                   aria-label={t("common.header.login")}
                   href="/login"
-                  className="connexion-visiteur flex h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-sm font-semibold"
+                  className="connexion-visiteur flex h-10 w-10 shrink-0 min-[430px]:w-auto min-[430px]:px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-sm font-semibold"
                 >
                   <LogIn className="h-4 w-4" aria-hidden />
-                  <span className="max-[359px]:hidden">{t("common.header.login")}</span>
+                  <span className="hidden min-[430px]:inline whitespace-nowrap">{t("common.header.login")}</span>
                 </Link>
               )
             )}

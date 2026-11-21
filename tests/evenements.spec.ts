@@ -124,13 +124,11 @@ test("fiche d'une section sans compte : introuvable", async ({ page }) => {
   await expect(page.getByText("Repas Groupe Paix")).toHaveCount(0);
 });
 
-test("onglets : un connecté voit le programme de scène à côté du calendrier", async ({ page }) => {
+test("onglets : un connecté voit Évènements et Salles, la page de la fête allume Évènements", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  await signInAs(page, JO, { ...DOCS, "programmes/noel": NOEL }, "/evenements");
-  await expect(page.getByRole("link", { name: "Évènements", exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "Noël", exact: true }).click();
-  await expect(page).toHaveURL(/\/evenements\/scene/);
-  await expect(page.getByRole("heading", { name: "Noël" })).toBeVisible();
+  await signInAs(page, JO, { ...DOCS, "programmes/noel": NOEL }, "/evenements/scene/noel");
+  await expect(page.getByRole("link", { name: "Évènements", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^Noël/ })).toBeVisible();
   // Lot 5 du chantier AR, T5b (docs/spec-salles.md, AR22) : on réserve une fenêtre libre, plus un créneau de grille.
   await expect(page.getByRole("button", { name: /^Réserver \d\d:\d\d – \d\d:\d\d$/ }).first()).toBeVisible();
 });
@@ -168,6 +166,7 @@ test("créer : la coordination remplit la fiche ; écriture à son nom, compteur
   // U9 (B1) : « Toute l'église » avant 2027 s'écrit dans le Sheet ; l'app crée à partir de janvier.
   await page.getByLabel("Date", { exact: true }).fill("2027-01-09");
   await page.getByLabel("Horaire", { exact: true }).fill("19:30");
+  await page.getByRole("radio", { name: "Ailleurs" }).check({ force: true });
   await page.getByLabel("Lieu").fill("Salle du bas");
   await page.getByLabel("Description").fill("Apportez vos jeux.");
   await page.getByText("Plus d'options").click();
@@ -661,8 +660,8 @@ test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable p
   await member(page, ALICE, "/back-office/evenements/nouveau");
   await page.getByLabel("Nom de l'évènement").waitFor();
   const labels = await page.locator("form label[for]").evaluateAll((els) => els.map((el) => el.textContent?.trim()));
-  // Chantier AR, lot 4 (SA12) : « Salle de l'église » avant le lieu (« Ailleurs » par défaut).
-  expect(labels.slice(0, 9)).toEqual(["Nom de l'évènement", "Catégorie", "Public", "Date", "Horaire", "Salle de l'église", "Lieu", "Responsable", "Description"]);
+  // AS17 : « Où ? » (à l'église par défaut) : « Réserver une salle ? », aucun Lieu.
+  expect(labels.slice(0, 8)).toEqual(["Nom de l'évènement", "Catégorie", "Public", "Date", "Horaire", "Réserver une salle ?", "Responsable", "Description"]);
   await expect(page.getByLabel("Responsable")).toHaveValue("Alice Q.");
   await expect(page.getByText("Ajouter une bannière")).toBeVisible();
   await expect(page.getByRole("radio", { name: "Automatique" })).toBeChecked();
@@ -809,6 +808,7 @@ test("formulaire : libellés de 13 px semi-gras gris (corrections du design, -13
   await expect(bouton).toBeVisible();
   const [c, b] = [(await carte.boundingBox())!, (await bouton.boundingBox())!];
   expect(b.width, "pleine largeur").toBeGreaterThan(c.width * 0.8);
+  await carte.getByRole("radio", { name: "Ailleurs" }).check({ force: true });
   const [lieu, type] = [carte.locator("#ev-lieu"), carte.locator("#ev-type")];
   const fond = (l: typeof lieu) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(await fond(type), "listes et champs au même style").toBe(await fond(lieu));

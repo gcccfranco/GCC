@@ -821,7 +821,8 @@ function useBulleNom() {
 }
 
 /** JV-5a : le nom d'une section ouvre le volet Harmonie au bloc de ce passage (même chemin que « Ici »). Bouton seulement
- *  si l'accès Harmonie est ouvert (`ici`), que la section a des occurrences et que le Crayon n'est pas actif ; sinon le texte seul. */
+ *  si l'accès Harmonie est ouvert (`ici`), que la section a des occurrences et que le Crayon n'est pas actif ; sinon le texte seul.
+ *  z-[1] : au-dessus de ses voisines, mais sous les barres fixes (z-10). */
 function NomSection({ occurrenceUids, nom, crayon, children }: { occurrenceUids?: string[]; nom: string; crayon: boolean; children: React.ReactNode }) {
   const ici = useIciDuChant();
   const { t } = useTranslation();
@@ -832,7 +833,7 @@ function NomSection({ occurrenceUids, nom, crayon, children }: { occurrenceUids?
       data-section-nom-bouton
       aria-label={t("harmonie.ideesDe", { nom })}
       onClick={(e) => ici.ouvrir(occurrenceUids[0], undefined, { depuisNom: true, element: e.currentTarget.closest<HTMLElement>("[data-section]") ?? e.currentTarget })}
-      className={`${TOUCHER_44} relative z-10 cursor-pointer rounded-sm text-inherit outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+      className={`${TOUCHER_44} relative z-[1] cursor-pointer rounded-sm text-inherit outline-none focus-visible:ring-2 focus-visible:ring-ring`}
     >
       {children}
     </button>

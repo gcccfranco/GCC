@@ -14,6 +14,7 @@
 // dès 768 px, par l'évènement `RESERVER_SALLE` ; en bas de la liste au téléphone, comme « Nouvel évènement ») ; les
 // réservations lues avec les autres sources ; modifier et supprimer la sienne (SA10) depuis le détail d'un bloc ou la
 // journée d'une salle : les actions passent par le contexte.
+// T7 (AS13, RS8) : la pastille de la salle, de sa couleur, ouvre chaque ligne ; l'état reste en mots, « Libre » en graisse 600.
 
 import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
@@ -27,21 +28,22 @@ import { useDisposition } from "@/hooks/useDisposition"
 import { jourDeParis } from "@/lib/evenements/bascule"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { createReservation, deleteReservation, updateReservation, type Reservation } from "@/lib/firebase/reservations"
-import { canEditReservation, canReserverSalle, canSeeEvenement } from "@/lib/access"
+import { deleteReservation, type Reservation } from "@/lib/firebase/reservations"
+import { FeuilleAnnuler } from "@/components/salles/FeuilleAnnuler"
+import { canAnnulerReservation, canEditReservation, canReserverSalle, canSeeEvenement } from "@/lib/access"
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { estSurLaListe } from "@/lib/deuxVolets"
 import { addDays } from "@/lib/taches/echeances"
 import { chargerReservations, chargerSalles } from "@/lib/salles/charger"
-import { autreQuiCroise, chevauchement } from "@/lib/salles/conflit"
-import { signalerConflit } from "@/lib/salles/signalerConflit"
 import { varianteDu } from "@/lib/salles/emploi"
-import { couleurDe, etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, saisonSceneDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
-import { libelleEdition } from "@/lib/scene/fetes"
-import { SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
+import { MotLibre } from "@/components/salles/MotLibre"
+import { styleTexteService } from "@/lib/couleurSombre"
+import { etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
+import { COULEUR_SALLE, SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
+import { useReserver } from "./useReserver"
 import { GrilleSalles, type MomentCase } from "./GrilleSalles"
-import { FeuilleReserver, type Ouverture, type Saisie } from "./FeuilleReserver"
+import { FeuilleReserver, type Ouverture } from "./FeuilleReserver"
 
 export const RACINE_SALLES = "/evenements/salles"
 /** Évènement de la fenêtre : « Réserver une salle » de l'en-tête (`SectionEvenements`) ouvre la feuille. */
@@ -85,6 +87,8 @@ interface EtatSalles {
   modifiable: (o: Occupation) => Reservation | null
   modifier: (r: Reservation) => void
   supprimer: (r: Reservation) => Promise<void>
+  /** AS16 : la coordination sur la réservation d'un autre : « Annuler la réservation… » avec un motif. */
+  annule: (r: Reservation) => boolean
 }
 
 const Contexte = createContext<EtatSalles | null>(null)
@@ -151,6 +155,7 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
   const [repere, setRepere] = useState("maintenant")
   const [lecture, setLecture] = useState<{ sources: SourcesSalles; echec: boolean } | null>(null)
   const [ouverture, setOuverture] = useState<Ouverture | null>(null)
+  const [aAnnuler, setAAnnuler] = useState<Reservation | null>(null)
   const retenue = useSyncExternalStore(suivreVue, vueRetenue, () => null)
   // Sur la journée d'une salle, le volet de gauche reste la Liste (la Grille ne tient pas dans un volet).
   const vue: Vue = !surLaListe ? "liste" : retenue ?? (grand ? "grille" : "liste")
@@ -173,7 +178,9 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
     occupations: (d: string) => occupationsDu(d, lecture.sources),
     modifiable: (o) => (o.reservation && canEditReservation(user, profile, o.reservation) ? o.reservation : null),
     modifier: (r) => setOuverture({ reservation: r }),
+    annule: (r) => canAnnulerReservation(user, profile, r),
     supprimer: async (r) => {
+      if (canAnnulerReservation(user, profile, r)) { setAAnnuler(r); return }
       const oui = await confirmer({ titre: t("salles.supprimer.titre"), texte: t("salles.supprimer.texte", { quoi: r.quoi }), action: t("common.buttons.delete"), destructif: true })
       if (!oui) return
       await deleteReservation(r.id)
@@ -191,22 +198,7 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
     return () => window.removeEventListener(RESERVER_SALLE, reserver)
   })
 
-  // SA8 : avant d'écrire, les réservations se relisent ; une occupation qui croise désormais le moment (hors la
-  // réservation qu'on modifie) refuse l'envoi, et la feuille, relue, nomme l'occupant. SA9 : après l'écriture, une
-  // réservation enregistrée au même moment qui croise la sienne est signalée au serveur (message aux deux auteurs).
-  const enregistrer = async (saisie: Saisie, id?: string): Promise<"ok" | "refus"> => {
-    if (!user || !lecture) return "refus"
-    const avant = await relireReservations()
-    if (chevauchement(occupationsDu(saisie.date, { ...lecture.sources, reservations: avant }), saisie.salle, saisie, id)) return "refus"
-    let ecrite = id
-    if (id) await updateReservation(id, saisie)
-    else ecrite = await createReservation({ ...saisie, auteurUid: user.uid, auteurNom: profile?.firstName?.trim() || user.email || "" })
-    const apres = await relireReservations()
-    const moi = apres.find((r) => r.id === ecrite)
-    const autre = moi && autreQuiCroise(moi, apres)
-    if (autre) void signalerConflit([moi.id, autre.id])
-    return "ok"
-  }
+  const { feteDu, nomFete, enregistrer } = useReserver({ sources: lecture?.sources ?? null, relire: () => relireReservations() })
 
   const choisirJour = (d: string) => {
     setDate(d)
@@ -237,9 +229,10 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
           </main>
         </>
       )}
+      <FeuilleAnnuler reservation={aAnnuler} fermer={() => setAAnnuler(null)} apres={relireReservations} />
       {etat && (
         <FeuilleReserver ouverture={ouverture} fermer={() => setOuverture(null)} today={today} langue={langue} occupationsDu={etat.occupations} enregistrer={enregistrer}
-          saisonScene={(d) => { const s = saisonSceneDu(d, etat.sources.scene); return s && { nom: libelleEdition(s.fete, s.annee, langue), lien: s.lien } }} />
+          feteDu={feteDu} nomFete={nomFete} />
       )}
     </Contexte.Provider>
   )
@@ -344,7 +337,7 @@ function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour,
             const lignes = occupations.filter((o) => o.salle === s.id && o.source !== "fixe" && o.source !== "fete")
             const choisi = actif === s.id
             return (
-              <li key={s.id} data-salle={s.id} className={s.dans ? "pl-5" : ""}>
+              <li key={s.id} data-salle={s.id}>
                 <Link
                   href={`${RACINE_SALLES}/${s.id}`}
                   aria-current={choisi ? "page" : undefined}
@@ -352,17 +345,18 @@ function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour,
                 >
                   <span
                     aria-hidden
-                    className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
-                    style={{ background: e.type === "occupe" ? couleurDe(e.occupation) : "transparent", boxShadow: e.type === "occupe" ? undefined : "inset 0 0 0 1.5px var(--muted-foreground)" }}
+                    data-couleur-salle
+                    className="couleur-salle mt-[0.45em] h-[9px] w-[9px] shrink-0 rounded-full bg-[var(--salle)]"
+                    style={styleTexteService(COULEUR_SALLE[s.id])}
                   />
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-baseline gap-x-2">
                       <span className="font-semibold">{s.nom}</span>
                       {s.autreNom && <span className="text-sm text-muted-foreground">{s.autreNom}</span>}
                     </span>
-                    <span data-etat className={`block text-sm ${e.type === "occupe" ? "text-muted-foreground" : "text-foreground"}`}>
+                    <span data-etat className="block text-sm text-muted-foreground">
                       {/* L'heure ne se sépare pas de « jusqu'à » / « 至 » en fin de ligne. */}
-                      {etatEnMots(e, langue).replace(/ (\d\d:\d\d)/g, "\u00a0$1")}
+                      {e.type === "occupe" ? etatEnMots(e, langue).replace(/ (\d\d:\d\d)/g, "\u00a0$1") : <MotLibre texte={etatEnMots(e, langue).replace(/ (\d\d:\d\d)/g, "\u00a0$1")} />}
                     </span>
                     {lignes.map((o, i) => (
                       <span key={o.id ?? i} className="block text-xs text-muted-foreground tabular-nums">{ligneOccupation(o, langue)}</span>

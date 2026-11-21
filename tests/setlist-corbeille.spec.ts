@@ -102,7 +102,7 @@ test("fiche : le créateur met à la corbeille, le bandeau propose d'annuler", a
   await expect(page.getByText("Culte des familles").first()).toBeVisible();
 });
 
-test("une setlist à la corbeille n'est ni dans « À venir » ni dans « Archives » ; la section est repliée, Restaurer la ramène", async ({ page }) => {
+test("une setlist à la corbeille n'est ni dans « À venir » ni dans « Archives » ; la section est repliée, Restaurer la ramène et la laisse vide", async ({ page }) => {
   const db = await ouvrir(page, NINA, {
     "setlists/c2": setlist({ title: "Veillée de printemps", ...A_LA_CORBEILLE }),
     // Celle d'une autre personne, à venir, à la corbeille : ni listée, ni dans la corbeille de Nina.
@@ -112,7 +112,7 @@ test("une setlist à la corbeille n'est ni dans « À venir » ni dans « Archiv
   await expect(page.getByText("Culte de référence").first()).toBeVisible();
   await expect(page.getByText("Culte d'un autre")).toHaveCount(0);
   await expect(page.getByText("Veillée de printemps")).toHaveCount(0);
-  await expect(entreeCorbeille(page)).toHaveCount(0);
+  await expect(entreeCorbeille(page)).toHaveText(/Corbeille \(1\)/);
 
   await archives(page);
   await expect(entreeCorbeille(page)).toHaveText(/Corbeille \(1\)/);
@@ -129,10 +129,54 @@ test("une setlist à la corbeille n'est ni dans « À venir » ni dans « Archiv
   await expect(corbeille.getByRole("button", { name: "Supprimer définitivement" })).toBeVisible();
 
   await corbeille.getByRole("button", { name: "Restaurer" }).click();
-  await expect(page.getByTestId("corbeille")).toHaveCount(0);
+  await expect(page.getByTestId("corbeille")).toHaveAttribute("data-vide", "");
+  await expect(page.getByTestId("corbeille").getByText("Elle est vide pour l'instant.")).toBeVisible();
   await expect(page.getByRole("main").getByRole("listitem").filter({ hasText: "Veillée de printemps" })).toBeVisible();
   expect(db.doc("setlists/c2")).not.toHaveProperty("supprimeeLe");
   expect(ecrituresSetlists(db)).toEqual(["PATCH setlists/c2"]);
+});
+
+test("la corbeille est visible sur chaque onglet, vide comme pleine", async ({ page, browser }) => {
+  const onglets = [/^À venir/, /^Archives/, /^Mes setlists/];
+  await ouvrir(page, NINA, {
+    "setlists/v1": setlist({ title: "Veillée en corbeille", ...A_LA_CORBEILLE }),
+    "setlists/v2": setlist({ title: "Culte ordinaire", date: "2099-02-07" }),
+  });
+  for (const nom of onglets) {
+    await page.getByRole("tab", { name: nom }).click();
+    await expect(entreeCorbeille(page)).toHaveText(/Corbeille \(1\)/);
+  }
+
+  const contexte = await browser.newContext();
+  const pageVide = await contexte.newPage();
+  try {
+    await ouvrir(pageVide, NINA, { "setlists/v3": setlist({ title: "Culte ordinaire", date: "2099-02-07" }) });
+    for (const nom of onglets) {
+      await pageVide.getByRole("tab", { name: nom }).click();
+      const section = pageVide.getByTestId("corbeille");
+      await expect(section).toBeVisible();
+      await expect(section).toHaveAttribute("data-vide", "");
+      await expect(section).toContainText("Corbeille");
+      await expect(section).toContainText("Elle est vide pour l'instant.");
+      await expect(section.getByRole("button")).toHaveCount(0);
+    }
+  } finally {
+    await contexte.close();
+  }
+});
+
+test("« Voir la corbeille » du bandeau ouvre la section et y descend", async ({ page }) => {
+  await ouvrir(page, NINA, { "setlists/c1": setlist({ title: "Culte des familles", date: "2099-01-10" }) }, "/setlists/c1");
+  await expect(page.getByRole("heading", { name: "Culte des familles" })).toBeVisible();
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("menuitem", { name: "Supprimer" }).click();
+  await page.getByRole("button", { name: "Mettre à la corbeille" }).click();
+
+  const bandeau = page.getByTestId("bandeau-corbeille");
+  await bandeau.getByRole("button", { name: "Voir la corbeille" }).click();
+  await expect(entreeCorbeille(page)).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByTestId("corbeille")).toContainText("Culte des familles");
+  await expect(page.getByTestId("corbeille")).toBeInViewport();
 });
 
 test("« Mes setlists » ne montre pas une setlist privée mise à la corbeille", async ({ page }) => {
@@ -157,7 +201,8 @@ test("« Supprimer définitivement » demande confirmation, puis supprime pour d
   expect(ecrituresSetlists(db)).toEqual([]);
   await dialogue.getByRole("button", { name: "Supprimer définitivement" }).click();
 
-  await expect(page.getByTestId("corbeille")).toHaveCount(0);
+  await expect(page.getByTestId("corbeille")).toHaveAttribute("data-vide", "");
+  await expect(page.getByTestId("corbeille").getByText("Elle est vide pour l'instant.")).toBeVisible();
   expect(ecrituresSetlists(db)).toEqual(["DELETE setlists/c5"]);
   expect(db.doc("setlists/c5")).toBeUndefined();
 });
@@ -170,6 +215,8 @@ test("la corbeille d'un autre n'est pas visible d'un musicien ; un admin la voit
   await ouvrir(page, OSCAR, docs);
   await archives(page);
   await expect(page.getByText("Culte de référence").first()).toBeVisible();
+  // Musicien : crée une setlist (niveau « edit »), donc la section est là, mais vide.
+  await expect(page.getByTestId("corbeille")).toHaveAttribute("data-vide", "");
   await expect(entreeCorbeille(page)).toHaveCount(0);
 
   const contexte = await browser.newContext();
@@ -201,6 +248,12 @@ test("en 中文, la corbeille et le bandeau sont traduits", async ({ page }) => 
   await expect(page.getByTestId("corbeille").getByText(/删除于 10月10日/)).toBeVisible();
   await expect(page.getByRole("button", { name: "恢复" })).toBeVisible();
   await expect(page.getByRole("button", { name: "永久删除" })).toBeVisible();
+});
+
+test("en 中文, la corbeille vide le dit", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrir(page, NINA, {});
+  await expect(page.getByText("回收站目前是空的。")).toBeVisible();
 });
 
 test.describe("corbeille : pur et textes", () => {

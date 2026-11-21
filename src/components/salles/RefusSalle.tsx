@@ -6,7 +6,7 @@
 
 import { useTranslation } from "react-i18next"
 import { nomOccupant, type Occupation } from "@/lib/salles/occupations"
-import { SALLES, type SalleId } from "@/lib/salles/salles"
+import { salleLue, SALLES, type SalleId } from "@/lib/salles/salles"
 
 export function RefusSalle({ salle, bloque, libres, decale, langue, decaler, choisir, discret = false }: {
   salle: SalleId
@@ -23,7 +23,7 @@ export function RefusSalle({ salle, bloque, libres, decale, langue, decaler, cho
   return (
     <div role="alert" data-refus className="space-y-3 rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3">
       <p className="text-sm font-medium text-foreground">
-        {t("salles.refus", { salle: SALLES.find((s) => s.id === salle)!.nom, qui: nomOccupant(bloque, langue), debut: bloque.debut, fin: bloque.fin === "24:00" ? "23:59" : bloque.fin }).replace(/ – /g, " – ")}
+        {t("salles.refus", { salle: SALLES.find((s) => s.id === salleLue(salle))!.nom, qui: nomOccupant(bloque, langue), debut: bloque.debut, fin: bloque.fin === "24:00" ? "23:59" : bloque.fin }).replace(/ – /g, " – ")}
       </p>
       {decale && (
         <button type="button" onClick={() => decaler(decale)} className={`flex h-11 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold ${discret ? "border border-foreground bg-background text-foreground hover:bg-secondary active:bg-secondary/80" : "bg-foreground text-background hover:bg-foreground/90 active:bg-foreground/80"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}>
