@@ -57,13 +57,22 @@ function fromFsProgramme(raw: RawDoc & { updateTime?: string }): Programme {
     ...(data.fete != null && { fete: data.fete as Programme["fete"] }),
     ...(data.annee != null && { annee: data.annee as number }),
     ...(data.modifiePar != null && { modifiePar: data.modifiePar as string }),
+    ...(data.image != null && { image: data.image as string }),
     ...(raw.updateTime && { version: raw.updateTime }),
   };
 }
 
-async function runQuery(parent: string, collectionId: string, orderBy: string): Promise<RawDoc[]> {
+/** Les champs lus par `listProgrammes` : tous sauf `image` (deux images de ~250 Ko par année, lues par 8 écrans).
+ *  TypeScript force à ajouter ici tout futur champ de `Programme`. `updateTime` (→ `version`) vient du document. */
+const CHAMPS_LISTE = {
+  nom: 1, jourJ: 1, debut: 1, passages: 1, createdBy: 1, updatedAt: 1, fin: 1, plages: 1, duree: 1,
+  quiAutorises: 1, ouvert: 1, fermees: 1, fete: 1, annee: 1, modifiePar: 1,
+} satisfies Record<Exclude<keyof Programme, "id" | "version" | "image">, 1>
+
+async function runQuery(parent: string, collectionId: string, orderBy: string, champs?: string[]): Promise<RawDoc[]> {
   return (await lireRequete(parent, {
     from: [{ collectionId }],
+    ...(champs && { select: { fields: champs.map((fieldPath) => ({ fieldPath })) } }),
     orderBy: [{ field: { fieldPath: orderBy }, direction: "ASCENDING" }],
   })) ?? [];
 }
@@ -117,12 +126,24 @@ function changed(): void {
 
 /** Tous les programmes, masqués compris, par jour J croissant. */
 export async function listProgrammes(): Promise<Programme[]> {
-  return (await runQuery("", "programmes", "jourJ")).map(fromFsProgramme);
+  return (await runQuery("", "programmes", "jourJ", Object.keys(CHAMPS_LISTE))).map(fromFsProgramme);
 }
+
+/** L'image d'une édition (data-URL), lue seule ; `null` si le document (404) ou le champ manque ; autre erreur : rejet. */
+export async function lireImageEdition(id: string): Promise<string | null> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}/programmes/${id}?mask.fieldPaths=image`, { headers });
+  if (res.status === 404) return null;
+  await checkRest(res);
+  return (fromFsProgramme((await res.json()) as RawDoc).image) ?? null;
+}
+
+/** Sans `image` (lue par les setlists de fête) : `lireImageEdition` la lit seule. */
+const MASQUE_SANS_IMAGE = Object.keys(CHAMPS_LISTE).map((k) => `mask.fieldPaths=${k}`).join("&");
 
 export async function getProgramme(id: string): Promise<Programme | null> {
   const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}/programmes/${id}`, { headers });
+  const res = await fetch(`${FS_BASE}/programmes/${id}?${MASQUE_SANS_IMAGE}`, { headers });
   if (!res.ok) return null;
   return fromFsProgramme((await res.json()) as RawDoc);
 }

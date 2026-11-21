@@ -450,3 +450,21 @@ Tests : Playwright, session simulée (`tests/helpers/fakeSession.ts`), noms fict
   saison de Noël 2026 puis l'ouvre. Téléphone des membres : planches `scene-reserver-telephone` et
   `scene-reserver-feuille-telephone` (version 17). Timothée relit le 中文 (dont « 本季允许的团体 », les groupes
   permis pour cette saison).
+- **IF-1 fait (21/11/2026, session orchestratrice « Image de fête »)** : champ `image?` (data-URL JPEG) dans
+  `Programme` ; bloc « Image » (图片) dans l'écran de la fête du back-office (`FeteGestion.tsx`, derrière
+  `BACK_OFFICE`) : choisir, aperçu 16/9, « Remplacer l'image », « Retirer l'image » ; message distinct pour une
+  image illisible (HEIC sous Chrome). `firestore.rules` relue : `programmes/{id}` ne filtre pas les champs, rien à
+  publier. Décisions déléguées (session, 21/11) : **plafond** `compressImage(fichier, 1280, 250_000)` (plus grand
+  côté 1 280 px, 250 000 caractères au plus, ≈ 190 Ko : document loin du mégaoctet) ; **poids** : `listProgrammes`
+  lit par projection `select` tous les champs sauf `image` (liste typée `CHAMPS_LISTE` : TypeScript force à y
+  ajouter tout futur champ), `getProgramme` par masque sans `image`, et l'image se lit seule par
+  `lireImageEdition(id)`. Lectures en liste des `programmes` : page Église (`CalendrierClient`), page de la fête
+  (`FeteClient`), `VersLaFete`, setlists (`setlists/page.tsx`), salles (`lib/salles/charger.ts`), tableau de bord
+  (`lib/tableauDeBord/lecture.ts`), calendrier (`lib/calendrier/charger.ts`), back-office (`FeteGestion`) : aucune
+  ne porte plus l'image. Restent côté serveur, non changés (Admin SDK, peu de documents) : le cron
+  (`api/cron/reminders/route.ts:81`, toute la collection) et `lib/fetes/serveur.ts` (une édition à la fois ;
+  écritures par `update`, l'image n'est jamais écrasée). Double de test : `select` et `mask.fieldPaths` simulés.
+  Tests : `fete-image.spec.ts` (nouveau, 4 cas) et voisines (`scene-des-fetes`, `scene-paques-noel`,
+  `evenements-fete`, `coherence`) sur trois appareils : 720 passés, 0 échec (10 min) ; après les corrections du
+  relecteur, `fete-image`, `chants-fetes-setlist`, `fete-setlists-suivent`, `coherence` : 105 passés (1 min 30).
+  Polices : aucun caractère chinois nouveau. Non vérifié : la projection sur le vrai Firestore (seul le double).
