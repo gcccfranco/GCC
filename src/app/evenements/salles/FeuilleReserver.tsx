@@ -9,15 +9,15 @@
 // T3b (SA8) : une salle choisie que le moment fait croiser une occupation (le moment changé, ou une réservation
 // relue à l'envoi) est refusée en mots : l'occupant et son heure, les salles libres au même moment, « Décaler ».
 
-import { Fragment, useId, useState } from "react"
+import { Fragment, useId, useState, type CSSProperties } from "react"
 import { useTranslation } from "react-i18next"
 import { FeuilleOuPanneau } from "@/components/stats/FeuilleOuPanneau"
+import { Check } from "lucide-react"
 import { RefusSalle } from "@/components/salles/RefusSalle"
 import { Champ } from "@/components/ui/champ"
 import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { segmentOption, segmentPiste } from "@/components/ui/segment"
-import { Pastille } from "../scene/CreneauForm"
 import { cleNomEquipe, EQUIPES } from "@/lib/equipes/table"
 import { estQuiLibre, libelleQui, normaliserQui } from "@/lib/fetes/qui"
 import { pourDe } from "@/lib/firebase/programmes"
@@ -36,7 +36,7 @@ export type Saisie = Pick<Reservation, "salle" | "date" | "debut" | "fin" | "pou
 
 /** La feuille ouverte : une nouvelle réservation (moment pré-rempli, et la salle d'une case de la Grille, T3c) ou celle
  *  à modifier. */
-export type Ouverture = { date: string; debut: string; fin: string; salle?: SalleId; reservation?: undefined } | { reservation: Reservation; salle?: undefined }
+export type Ouverture = { date: string; debut: string; fin: string; salle?: SalleId; /** RS4 : on vient de la page de la fête, « Oui, pour <fête> » d'avance. */ pourFete?: boolean; reservation?: undefined } | { reservation: Reservation; salle?: undefined }
 
 const AUTRE = "autre"
 const estDeLaListe = (pour: string) => pour === "" || (QUI as readonly string[]).includes(pour) || pour.startsWith("equipe:")
@@ -76,8 +76,8 @@ export function FeuilleReserver({ ouverture, fermer, today, langue, occupationsD
   /** AS7 : le nom d'une fête (« Noël 2026 ») pour la ligne en lecture d'une réservation qui la porte. */
   nomFete?: (id: string) => string | null
   /** Écrit la réservation (création, ou modification de `id`) ; « refus » si, relue, la salle est prise (SA8) ;
-   *  rejette en cas d'échec. */
-  enregistrer: (saisie: Saisie, id?: string) => Promise<"ok" | "refus">
+   *  rejette en cas d'échec ; une autre chaîne est un message à afficher. */
+  enregistrer: (saisie: Saisie, id?: string) => Promise<"ok" | "refus" | string>
 }) {
   const { t } = useTranslation()
   const titre = ouverture?.reservation ? t("salles.feuille.modifierTitre") : t("salles.reserver")
@@ -98,7 +98,7 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, feteDu, n
   feteDu?: (date: string) => FeteDeLaFeuille | null
   /** AS7 : le nom d'une fête (« Noël 2026 ») pour la ligne en lecture d'une réservation qui la porte. */
   nomFete?: (id: string) => string | null
-  enregistrer: (saisie: Saisie, id?: string) => Promise<"ok" | "refus">
+  enregistrer: (saisie: Saisie, id?: string) => Promise<"ok" | "refus" | string>
 }) {
   const { t } = useTranslation()
   const id = useId()
@@ -113,14 +113,14 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, feteDu, n
   const [autre, setAutre] = useState(r && !estDeLaListe(r.pour) ? r.pour : "")
   const [quoi, setQuoi] = useState(r?.quoi ?? "")
   // AS3, AS4 : la réponse à « C'est pour <fête> ? » (aucune d'avance) et les champs de la fête.
-  const [reponse, setReponse] = useState<"oui" | "non" | null>(null)
+  const [reponse, setReponse] = useState<"oui" | "non" | null>(!r && ouverture.pourFete ? "oui" : null)
   const [quiFete, setQuiFete] = useState<string[]>(r?.qui?.filter((q) => !estQuiLibre(q)) ?? [])
   const [autreCoche, setAutreCoche] = useState(Boolean(r?.qui?.some(estQuiLibre)))
   const [autreTexte, setAutreTexte] = useState(r?.qui?.find(estQuiLibre) ?? "")
   const [quoiFete, setQuoiFete] = useState(r?.fete ? r.quoi : "")
   const [note, setNote] = useState(r?.note ?? "")
   const [envoi, setEnvoi] = useState(false)
-  const [echec, setEchec] = useState(false)
+  const [echec, setEchec] = useState<string | boolean>(false)
 
   const erreur = erreurDuMoment(date, debut, fin, today)
   // Les occupations du jour, sans la réservation qu'on modifie (SA10).
@@ -161,7 +161,9 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, feteDu, n
       const saisie: Saisie = modeFete
         ? { salle, date, debut, fin, pour: pourDe(quiFinal), quoi: quoiFete, fete: r?.fete ?? fete!.id, qui: quiFinal, note: note.trim().slice(0, 120) }
         : { salle, date, debut, fin, pour, quoi: quoi.trim().slice(0, 80) }
-      if ((await enregistrer(saisie, r?.id)) === "ok") return fermer()
+      const res = await enregistrer(saisie, r?.id)
+      if (res === "ok") return fermer()
+      if (res !== "refus") setEchec(res)
       setEnvoi(false)
     } catch {
       setEchec(true)
@@ -252,7 +254,8 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, feteDu, n
             <legend className="mb-2 text-sm font-semibold text-muted-foreground">{t("salles.feuille.pourQui")}</legend>
             <div className="flex flex-wrap gap-2">
               {[...(fete?.quiOptions ?? []), ...quiFete.filter((q) => !fete?.quiOptions.includes(q))].map((q) => (
-                <Pastille key={q} type="checkbox" name={`${id}-qui`} label={libelleQui(q, langue)} checked={quiFete.includes(q)}
+                <Pastille key={q} type="checkbox" name={`${id}-qui`} retire={!(QUI as readonly string[]).includes(q)}
+                  label={(QUI as readonly string[]).includes(q) ? libelleQui(q, langue) : `${libelleQui(q, langue)} · ${t("planning.programme.quiRetire")}`} checked={quiFete.includes(q)}
                   onChange={() => setQuiFete(quiFete.includes(q) ? quiFete.filter((x) => x !== q) : [...quiFete, q])} />
               ))}
               {(fete?.quiAutre || autreCoche) && <Pastille type="checkbox" name={`${id}-qui`} label={t("salles.feuille.autre")} checked={autreCoche} onChange={() => setAutreCoche(!autreCoche)} />}
@@ -298,7 +301,7 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, feteDu, n
         </>
       )}
 
-      {echec && <p role="alert" className="text-sm text-destructive">{t("salles.feuille.echec")}</p>}
+      {echec && <p role="alert" className="text-sm text-destructive">{typeof echec === "string" ? echec : t("salles.feuille.echec")}</p>}
 
       {/* Pied collant : l’action reste à portée sans faire défiler les neuf salles (critique-design T3a) ; collé au bord
           de la feuille, par-dessus le pb-6 de `FeuilleOuPanneau`. */}
@@ -312,5 +315,28 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, feteDu, n
         </button>
       </div>
     </form>
+  )
+}
+
+/** Une pastille de la feuille : case ou bouton radio posé sur toute la pastille (invisible), coche dessinée quand elle
+ *  est choisie. */
+function Pastille({ type, name, label, checked, onChange, retire }: {
+  type: "radio" | "checkbox"
+  name: string
+  label: string
+  checked: boolean
+  onChange: () => void
+  /** Valeur sortie de la liste : grisée (la marque « retiré » est dans `label`). */
+  retire?: boolean
+}) {
+  return (
+    <label
+      className={`relative inline-flex h-11 items-center gap-1.5 rounded-xl px-3.5 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${retire ? "opacity-60" : ""} ${checked ? "svc-ink" : "bg-card text-foreground/80 shadow-[inset_0_0_0_1px_hsl(var(--border))]"}`}
+      style={checked ? { "--svc": PLANNING_COLORS.scene, background: `${PLANNING_COLORS.scene}1a`, boxShadow: `inset 0 0 0 1.5px ${PLANNING_COLORS.scene}` } as CSSProperties : undefined}
+    >
+      <input type={type} name={name} checked={checked} onChange={onChange} className="absolute inset-0 cursor-pointer opacity-0" />
+      {checked && <Check className="h-4 w-4" aria-hidden />}
+      {label}
+    </label>
   )
 }

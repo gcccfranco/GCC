@@ -103,7 +103,7 @@ test("Réserver : Intergroupe et Interfranco proposés ; « Autre… » ouvre un
   const champ = f.getByLabel("Qui ?");
   await expect(champ).toBeVisible();
   await expect(champ).toHaveAttribute("maxlength", "40");
-  await expect(f.getByRole("button", { name: "Choisis quoi et qui" })).toBeDisabled();
+  await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeDisabled();
   await champ.fill("  Répétition des jeunes  ");
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -148,7 +148,8 @@ test("Réouverture : une valeur libre → « Autre… » cochée, champ rempli ;
   await expect(f.getByRole("checkbox", { name: "Autre…" })).toBeChecked();
   await expect(f.getByLabel("Qui ?")).toHaveValue("Répétition des jeunes");
   await expect(f.getByRole("checkbox", { name: /retiré/ })).toHaveCount(0);
-  await f.getByRole("button", { name: "Annuler" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await ligne("Sketch · Jeunes").getByRole("button", { name: /^Plus d'actions/ }).first().click();
   await page.getByRole("menuitem", { name: "Modifier" }).click();
   await expect(page.getByRole("dialog").getByRole("checkbox", { name: "Jeunes · retiré" })).toBeChecked();

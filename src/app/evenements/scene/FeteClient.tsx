@@ -24,7 +24,6 @@ import {
   anneeDe, editionCourante, editionsDe, etatEdition, jourJParDefaut, libelleEdition, reglagesRepris, type Fete,
 } from "@/lib/scene/fetes"
 import { joursReservables, saisonDe } from "@/lib/scene/saison"
-import { signalerConflit } from "@/lib/salles/signalerConflit"
 import { fdFullL } from "@/lib/planning/utils"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
@@ -328,7 +327,6 @@ export function FeteClient({ fete }: { fete: Fete }) {
     return (
       <Entrainements
         programme={programme} creneaux={creneaux} user={user} profile={profile} onChanged={reload}
-        onConflict={(a, b) => signalerConflit([a.id, b.id])}
       >
         {(m) => disposer(<>{m.mes}{m.semaines}</>, vueOrdre ? ordreCourant : m.semaine)}
       </Entrainements>

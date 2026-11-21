@@ -333,13 +333,13 @@ test("hors des plages : la réservation est signalée, elle reste en base, « D�
   await expect(hors).toContainText("Sketch");
   expect(db.doc("reservations/c1")).toMatchObject({ debut: "13:00", fin: "14:00" });
   await hors.getByRole("button", { name: "Déplacer" }).click();
-  // AR22 : la même feuille « de / à » que partout, plus de pastilles ni de liste.
+  // AS1 : la feuille unique de Salles (de / à en heures libres), plus celle de la fête.
   const f = page.getByRole("dialog");
-  await expect(f.getByRole("heading", { name: "Déplacer la réservation" })).toBeVisible();
+  await expect(f.getByRole("heading", { name: "Modifier la réservation" })).toBeVisible();
   await f.getByLabel("Date").fill("2026-10-17");
-  await f.getByLabel("de", { exact: true }).selectOption("10:00");
-  await f.getByLabel("à", { exact: true }).selectOption("11:00");
-  await f.getByRole("button", { name: "Déplacer", exact: true }).click();
+  await f.getByLabel("De", { exact: true }).fill("10:00");
+  await f.getByLabel("À", { exact: true }).fill("11:00");
+  await f.getByRole("button", { name: "Enregistrer", exact: true }).click();
   // La feuille ouverte cache le reste de la page aux lecteurs d'écran : on attend qu'elle se ferme.
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Hors des plages 0" })).toBeVisible();
@@ -563,11 +563,11 @@ test("membres : « Réserver » ouvre la feuille « de / à » sur la fenêtre t
   const db = await ouvrir(page, NOE, { "programmes/noel": OUVERT });
   await bloc(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
   const f = feuille(page);
-  await expect(f.getByRole("heading", { name: "Réserver" })).toBeVisible();
+  await expect(f.getByRole("heading", { name: "Réserver une salle" })).toBeVisible();
   await expect(f.getByLabel("Date")).toHaveValue("2026-10-11");
-  await expect(f.getByLabel("de", { exact: true })).toHaveValue("17:00");
-  await expect(f.getByLabel("à", { exact: true })).toHaveValue("19:00");
-  await f.getByLabel("à", { exact: true }).selectOption("18:00");
+  await expect(f.getByLabel("De", { exact: true })).toHaveValue("17:00");
+  await expect(f.getByLabel("À", { exact: true })).toHaveValue("19:00");
+  await f.getByLabel("À", { exact: true }).fill("18:00");
   await f.getByRole("radio", { name: "Sketch" }).check();
   await f.getByRole("checkbox", { name: "Gp Amour" }).check();
   await f.getByLabel("Note").fill("Avec la sono");
@@ -586,17 +586,17 @@ test("membres : « Réserver » ouvre la feuille « de / à » sur la fenêtre t
   });
 });
 
-test("membres : la feuille ne propose que les groupes permis (pas « Franco ») ; rien de coché, rien ne s'écrit", async ({ page }) => {
+test("membres : la feuille ne propose que les groupes permis (pas « Franco ») ; Oui d'avance, rien d'autre de coché, rien ne s'écrit", async ({ page }) => {
   const db = await ouvrir(page, NOE, { "programmes/noel": OUVERT });
   await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 12:00" }).click();
   const f = feuille(page);
-  await expect(f.getByText("Qui · les groupes permis pour cette saison")).toBeVisible();
   await expect(f.getByRole("checkbox")).toHaveCount(9);
   await expect(f.getByRole("checkbox", { name: "Franco" })).toHaveCount(0);
-  // Pâques · Noël, P6 (Q15) : rien de coché d'avance, le bouton attend quoi et qui.
-  await expect(f.getByRole("radio", { checked: true })).toHaveCount(0);
+  // Rien de coché d'avance pour qui et pour quoi : la Grande salle et « Oui, pour Noël » seulement.
+  await expect(f.getByRole("radio", { checked: true })).toHaveCount(2);
+  await expect(f.getByRole("checkbox", { checked: true })).toHaveCount(0);
   await f.getByRole("radio", { name: "Séance louange" }).check();
-  await expect(f.getByRole("button", { name: "Choisis quoi et qui" })).toBeDisabled();
+  await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeDisabled();
   // Seules les écritures du programme comptent : `:commit` est l'envoi quotidien du comptage d'usage (docs/spec-comptage-usage.md).
   expect(db.writes.filter((w) => w.method === "POST" && /^(programmes|reservations)\//.test(w.path))).toHaveLength(0);
 });
@@ -605,7 +605,7 @@ test("membres : sans limite, la feuille propose tous les groupes ; la coordinati
   await ouvrir(page, ALICE, { "programmes/noel": OUVERT }, undefined, "/evenements/scene");
   await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 12:00" }).click();
   await expect(feuille(page).getByRole("checkbox", { name: "Culte Francophone", exact: true })).toBeVisible();
-  await expect(feuille(page).getByText("Qui", { exact: true })).toBeVisible();
+  await expect(feuille(page).getByText("Pour qui", { exact: true })).toBeVisible();
 });
 
 test("membres : la réservation d'un autre montre son auteur, sans bouton ; l'emploi du temps fixe est en gris, sans action", async ({ page }) => {
@@ -636,14 +636,14 @@ test("membres : « ⋯ » › Déplacer rouvre la feuille « de / à » sur sa r
   await ligne.getByRole("button", { name: /^Plus d'actions/ }).click();
   await page.getByRole("menuitem", { name: "Déplacer" }).click();
   const f = feuille(page);
-  await expect(f.getByRole("heading", { name: "Déplacer la réservation" })).toBeVisible();
+  await expect(f.getByRole("heading", { name: "Modifier la réservation" })).toBeVisible();
   await expect(f.getByLabel("Date")).toHaveValue("2026-10-11");
-  await expect(f.getByLabel("de", { exact: true })).toHaveValue("17:00");
-  await expect(f.getByLabel("à", { exact: true })).toHaveValue("18:00");
+  await expect(f.getByLabel("De", { exact: true })).toHaveValue("17:00");
+  await expect(f.getByLabel("À", { exact: true })).toHaveValue("18:00");
   await f.getByLabel("Date").fill("2026-10-17");
-  await f.getByLabel("de", { exact: true }).selectOption("11:00");
-  await f.getByLabel("à", { exact: true }).selectOption("12:00");
-  await f.getByRole("button", { name: "Déplacer", exact: true }).click();
+  await f.getByLabel("De", { exact: true }).fill("11:00");
+  await f.getByLabel("À", { exact: true }).fill("12:00");
+  await f.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(feuille(page)).toHaveCount(0);
   await expect(bloc(page, "Dimanche 11 octobre").getByText("Sketch · Gp Amour")).toHaveCount(0);
   await choisirSemaine(page, /^17 – 18 oct\./);
@@ -695,12 +695,13 @@ test("membres en 中文 : jours, lignes et feuille traduits", async ({ page }) =
   await expect(page.getByRole("region", { name: "10月11日星期日" }).getByRole("button", { name: /^更多操作/ })).toBeVisible();
   await samedi.getByRole("button", { name: "预约 10:00 – 12:00" }).click();
   const f = feuille(page);
-  await expect(f.getByRole("heading", { name: "预约" })).toBeVisible();
+  await expect(f.getByRole("heading", { name: "预订场地" })).toBeVisible();
   await expect(f.getByLabel("日期")).toHaveValue("2026-10-10");
   await expect(f.getByLabel("从", { exact: true })).toHaveValue("10:00");
   await expect(f.getByLabel("到", { exact: true })).toHaveValue("12:00");
-  await expect(f.getByText("参与者 · 本季允许的团体")).toBeVisible();
-  await expect(f.getByRole("button", { name: "取消" })).toBeVisible();
+  await expect(f.getByRole("radio", { name: "是，为圣诞节" })).toBeChecked();
+  await expect(f.getByText("为谁")).toBeVisible();
+  await expect(f.getByRole("button", { name: "预订", exact: true })).toBeDisabled();
 });
 
 test("captures : l'écran des membres et la feuille « Réserver » (à regarder, planches scene-reserver-*)", async ({ page }) => {
@@ -834,10 +835,10 @@ test("hors des plages : « Déplacer » vers un moment qui a commencé entre-tem
   const db = await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/c1": c1 }, "2026-10-11T16:50:00");
   await (await horsGrilleDuTableau(page, 1)).getByRole("button", { name: "Déplacer" }).click();
   const f = feuille(page);
-  await f.getByLabel("de", { exact: true }).selectOption("17:00");
-  await f.getByLabel("à", { exact: true }).selectOption("18:00");
+  await f.getByLabel("De", { exact: true }).fill("17:00");
+  await f.getByLabel("À", { exact: true }).fill("18:00");
   await page.clock.setFixedTime(new Date("2026-10-11T17:05:00"));
-  await f.getByRole("button", { name: "Déplacer", exact: true }).click();
+  await f.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(f.getByRole("alert")).toHaveText("Ce moment a déjà commencé : il ne se réserve plus.");
   expect(db.writes.filter((w) => w.method === "PATCH" && w.path.startsWith("reservations/"))).toHaveLength(0);
 });
@@ -860,7 +861,7 @@ test("« Retirer » qui échoue le dit au-dessus du tableau de toutes les réser
 test("membres : la feuille range les groupes permis par famille, comme la planche (Groupes, EDD)", async ({ page }) => {
   await ouvrir(page, NOE, { "programmes/noel": OUVERT });
   await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 12:00" }).click();
-  await expect(feuille(page).getByRole("group", { name: /^Qui/ }).locator("label")).toHaveText([
+  await expect(feuille(page).getByRole("group", { name: /^Pour qui/ }).locator("label")).toHaveText([
     "Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
   ]);
 });

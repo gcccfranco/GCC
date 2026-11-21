@@ -46,7 +46,7 @@ test.describe("AR, T5a, AS14 : les créneaux de fête sont des réservations de 
     const db = await ouvrir(page, MARIUS, {});
     await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 12:00" }).click();
     const f = feuille(page);
-    await f.getByLabel("à", { exact: true }).selectOption("11:00");
+    await f.getByLabel("À", { exact: true }).fill("11:00");
     await f.getByRole("radio", { name: "Sketch" }).check();
     await f.getByRole("checkbox", { name: "Gp Amour" }).check();
     await f.getByLabel("Note").fill("Avec la sono");

@@ -87,7 +87,8 @@ export async function updateReservation(id: string, data: Partial<Omit<Reservati
   const res = await fetch(`${FS_BASE}/reservations/${id}?${mask}&currentDocument.exists=true`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
-    body: JSON.stringify({ fields: toFsFields(champs) }),
+    // Un champ `undefined` est dans le masque mais pas dans le corps : Firestore le retire (pas de `null` écrit).
+    body: JSON.stringify({ fields: toFsFields(Object.fromEntries(Object.entries(champs).filter(([, v]) => v !== undefined))) }),
   });
   viderGardesTableau();
   await checkRest(res);

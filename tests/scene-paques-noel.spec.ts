@@ -813,27 +813,28 @@ test("P5 — captures à regarder (planche v18-scene-a-membres-*), PW_CAPTURES=<
 const ligneDe = (page: Page, nom: string, texte: string) => jour(page, nom).getByRole("listitem").filter({ hasText: texte });
 const plus = (zone: Locator) => zone.getByRole("button", { name: /^Plus d'actions/ });
 
-test("P6 — Réserver : rien de coché, « Choisis quoi et qui » inactif ; Chant et Gp Paix → le POST porte le jour, les heures et l'auteur ; la fenêtre se ferme", async ({ page }) => {
+test("P6 — Réserver : Grande salle et « Oui, pour Noël » d'avance, « Réserver » inactif ; Chant et Gp Paix → le POST porte le jour, les heures et l'auteur ; la fenêtre se ferme", async ({ page }) => {
   const db = await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
   await jour(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 14:30 – 15:00" }).click();
   const f = page.getByRole("dialog");
   await expect(f.getByLabel("Date")).toHaveValue("2026-10-11");
-  await expect(f.getByLabel("de", { exact: true })).toHaveValue("14:30");
-  await expect(f.getByLabel("à", { exact: true })).toHaveValue("15:00");
-  await expect(f.getByRole("radio")).toHaveCount(5);
-  await expect(f.getByRole("radio", { checked: true })).toHaveCount(0);
+  await expect(f.getByLabel("De", { exact: true })).toHaveValue("14:30");
+  await expect(f.getByLabel("À", { exact: true })).toHaveValue("15:00");
+  // La feuille unique : la Grande salle et « Oui, pour Noël » d'avance, aucun « Pour quoi » coché.
+  await expect(f.getByRole("radio", { checked: true })).toHaveCount(2);
+  await expect(f.getByRole("radio", { name: "Oui, pour Noël" })).toBeChecked();
   await expect(f.getByRole("checkbox", { checked: true })).toHaveCount(0);
   await expect(f.getByLabel("Note · facultatif")).toBeVisible();
-  const attente = f.getByRole("button", { name: "Choisis quoi et qui" });
+  const attente = f.getByRole("button", { name: "Réserver", exact: true });
   await expect(attente).toBeDisabled();
   await f.getByRole("radio", { name: "Chant" }).check();
   await expect(attente).toBeDisabled();
   await f.getByRole("checkbox", { name: "Gp Paix" }).check();
-  await expect(attente).toHaveCount(0);
-  await f.getByRole("button", { name: "Réserver", exact: true }).click();
+  await expect(attente).toBeEnabled();
+  await attente.click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("reservations/"));
-  expect(cree?.data).toMatchObject({ date: "2026-10-11", debut: "14:30", fin: "15:00", quoi: "Chant", qui: ["Gp Paix"], auteurUid: "uid-jo", auteurNom: "Jo L." });
+  expect(cree?.data).toMatchObject({ date: "2026-10-11", debut: "14:30", fin: "15:00", quoi: "Chant", qui: ["Gp Paix"], salle: "grande", fete: "x7Kq2", auteurUid: "uid-jo", auteurNom: "Jo L." });
   await expect(ligneDe(page, "Dimanche 11 octobre", "Chant · Gp Paix")).toContainText("à moi");
   await expect(jour(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 14:30 – 15:00" })).toHaveCount(0);
 });
@@ -931,14 +932,14 @@ test("P6 — « ⋯ » › Déplacer : la même feuille « de / à », date et h
   await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour")).click();
   await page.getByRole("menuitem", { name: "Déplacer" }).click();
   const f = page.getByRole("dialog");
-  await expect(f.getByRole("heading", { name: "Déplacer la réservation" })).toBeVisible();
+  await expect(f.getByRole("heading", { name: "Modifier la réservation" })).toBeVisible();
   await expect(f.getByLabel("Date")).toHaveValue("2026-10-11");
-  await expect(f.getByLabel("de", { exact: true })).toHaveValue("17:00");
-  await expect(f.getByLabel("à", { exact: true })).toHaveValue("18:00");
+  await expect(f.getByLabel("De", { exact: true })).toHaveValue("17:00");
+  await expect(f.getByLabel("À", { exact: true })).toHaveValue("18:00");
   await f.getByLabel("Date").fill("2026-10-17");
-  await f.getByLabel("de", { exact: true }).selectOption("10:00");
-  await f.getByLabel("à", { exact: true }).selectOption("11:00");
-  await f.getByRole("button", { name: "Déplacer", exact: true }).click();
+  await f.getByLabel("De", { exact: true }).fill("10:00");
+  await f.getByLabel("À", { exact: true }).fill("11:00");
+  await f.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(db.doc("reservations/s")).toMatchObject({ date: "2026-10-17", debut: "10:00", fin: "11:00", quoi: "Sketch", qui: ["Gp Amour"] });
   await expect(ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour")).toHaveCount(0);
@@ -950,10 +951,9 @@ test("P6 — « ⋯ » › Modifier : Quoi, Qui, Note ; les heures restent", asy
   await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour")).click();
   await page.getByRole("menuitem", { name: "Modifier" }).click();
   const f = page.getByRole("dialog");
-  await expect(f.getByRole("heading", { name: "Modifier le créneau" })).toBeVisible();
+  await expect(f.getByRole("heading", { name: "Modifier la réservation" })).toBeVisible();
   await expect(f.getByLabel("Date")).toHaveValue("2026-10-11");
-  await expect(f.getByLabel("de", { exact: true })).toHaveValue("17:00");
-  await expect(f.getByRole("radio")).toHaveCount(5);
+  await expect(f.getByLabel("De", { exact: true })).toHaveValue("17:00");
   await expect(f.getByRole("radio", { name: "Sketch" })).toBeChecked();
   // « Gp Amour », au-delà des neuf premiers, est choisi : la liste est dépliée.
   await expect(f.getByRole("checkbox", { name: "Gp Amour" })).toBeChecked();
@@ -997,7 +997,7 @@ test("P6 — en chinois : « 我的 », le menu et la feuille", async ({ page })
   await expect(page.getByRole("menuitem")).toHaveText([/^调整/, /^修改/, /^删除/]);
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "预约 14:30 – 15:00" }).click();
-  await expect(page.getByRole("dialog").getByRole("button", { name: "请选择内容和参与者" })).toBeDisabled();
+  await expect(page.getByRole("dialog").getByRole("button", { name: "预订", exact: true })).toBeDisabled();
 });
 
 test("P6 — captures à regarder (planches v18-scene-a-membres-* et v18-scene-a-feuille-telephone), PW_CAPTURES=<dossier>", async ({ page }) => {
@@ -1367,12 +1367,12 @@ test("P8 — « Déplacer » une ligne hors des plages : la feuille « de / à �
   await versToutesLesReservations(page);
   await lignesTableau(page).filter({ hasText: "18:30 – 20:00" }).getByRole("button", { name: "Déplacer" }).click();
   const f = page.getByRole("dialog");
-  await expect(f.getByRole("heading", { name: "Déplacer la réservation" })).toBeVisible();
-  await expect(f.getByLabel("de", { exact: true })).toHaveValue("18:30");
+  await expect(f.getByRole("heading", { name: "Modifier la réservation" })).toBeVisible();
+  await expect(f.getByLabel("De", { exact: true })).toHaveValue("18:30");
   await f.getByLabel("Date").fill("2026-10-18");
-  await f.getByLabel("de", { exact: true }).selectOption("17:00");
-  await f.getByLabel("à", { exact: true }).selectOption("18:30");
-  await f.getByRole("button", { name: "Déplacer", exact: true }).click();
+  await f.getByLabel("De", { exact: true }).fill("17:00");
+  await f.getByLabel("À", { exact: true }).fill("18:30");
+  await f.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(db.doc("reservations/l")).toMatchObject({ date: "2026-10-18", debut: "17:00", fin: "18:30", quoi: "Chant" });
   await expect(filtres(page).getByRole("button", { name: "Hors des plages 0" })).toBeVisible();

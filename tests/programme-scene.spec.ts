@@ -156,9 +156,9 @@ test("réserver : la feuille reprend la fenêtre libre touchée en entier, l'heu
   await dimanche.getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
   const feuille = page.getByRole("dialog");
   await expect(feuille.getByLabel("Date")).toHaveValue("2026-10-11");
-  await expect(feuille.getByLabel("de", { exact: true })).toHaveValue("17:00");
-  await expect(feuille.getByLabel("à", { exact: true })).toHaveValue("19:00");
-  await feuille.getByLabel("à", { exact: true }).selectOption("18:00");
+  await expect(feuille.getByLabel("De", { exact: true })).toHaveValue("17:00");
+  await expect(feuille.getByLabel("À", { exact: true })).toHaveValue("19:00");
+  await feuille.getByLabel("À", { exact: true }).fill("18:00");
   await feuille.getByRole("radio", { name: "Danse" }).check();
   await feuille.getByRole("checkbox", { name: "Gp Joie" }).check();
   await feuille.getByLabel("Note").fill("Avec la sono");
@@ -370,7 +370,7 @@ test("course perdue : un créneau enregistré au même moment chevauche le mien 
   const bloc = page.getByRole("region", { name: "Dimanche 11 octobre" });
   await bloc.getByRole("button", { name: "Réserver 17:00 – 19:00" }).click();
   const feuille = page.getByRole("dialog");
-  await feuille.getByLabel("à", { exact: true }).selectOption("18:00");
+  await feuille.getByLabel("À", { exact: true }).fill("18:00");
   await feuille.getByRole("radio", { name: "Danse" }).check();
   await feuille.getByRole("checkbox", { name: "Gp Joie" }).check();
   await feuille.getByRole("button", { name: "Réserver", exact: true }).click();

@@ -11,7 +11,7 @@ import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import { idEdition, type Fete } from "@/lib/scene/fetes";
 import { libelleQui } from "@/lib/fetes/qui";
 import { creneauDeReservation } from "@/lib/scene/rappels";
-import { listReservationsDeFete } from "./reservations";
+import { listReservationsDeFete, type Reservation } from "./reservations";
 import type { Creneau, Duree, Passage, Plage, Programme } from "@/types/programme";
 
 // Programmes de scène (lot 3 bis) : programmes/{id} ; leurs créneaux sont des réservations de la Scène depuis le lot 5
@@ -180,6 +180,14 @@ export async function updateProgramme(
 /** Le libellé des `qui` (en français, comme un texte d'« Autre… »), 60 caractères au plus (SA7). */
 export function pourDe(qui: string[]): string {
   return qui.map((q) => libelleQui(q)).join(", ").slice(0, 60);
+}
+
+/** Un créneau de fête lu comme la réservation qu'il est (inverse de `creneauDeReservation`) : la feuille « Réserver » la modifie. */
+export function reservationDeCreneau(programmeId: string, c: Creneau): Reservation {
+  return {
+    id: c.id, salle: "grande", date: c.dimanche, debut: c.debut, fin: c.fin, ...(c.libre && { libre: true }), pour: pourDe(c.qui), quoi: c.quoi,
+    fete: programmeId, qui: c.qui, note: c.note, auteurUid: c.auteurUid, auteurNom: c.auteurNom, createdAt: c.createdAt, updatedAt: c.updatedAt,
+  };
 }
 
 /** Les champs d'un créneau, écrits dans une réservation : `dimanche` devient `date`, `qui` donne `pour`. */
