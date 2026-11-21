@@ -7,12 +7,14 @@ Complète les règles « Sessions cloud » du `CLAUDE.md`. **Règles en vigueur 
 ## 1. Principe
 
 Un modèle fort décide, découpe et juge ; des modèles moins chers exécutent, chacun dans son contexte, et ne rendent
-qu'un résumé. Opus n'est rappelé en conseiller que quand ça résiste (étape « Conseil » de `/tranche`).
+qu'un résumé. Fable relit chaque tranche, et donne conseil quand ça résiste (étape « Conseil » de
+`/tranche`, Timothée, 21/11/2026).
 
 ## 2. Prix (par million de jetons, 24/10/2026)
 
 | Modèle | Entrée | Sortie | Lecture du cache |
 | --- | --- | --- | --- |
+| Fable 5.2 | 8 $ | 40 $ | 0,20 $ |
 | Opus 5.5 | 4 $ | 20 $ | 0,20 $ |
 | Sonnet 5.5 | 2 $ | 10 $ | 0,10 $ |
 | Haiku 5.5, contexte ≤ 100 000 jetons | 0,10 $ | 0,50 $ | 0,01 $ |
@@ -31,9 +33,9 @@ qu'Opus sous 100 000 jetons de contexte, cinq fois plus cher au-delà.
 | Lancer une suite (Playwright, tsc, lint, validate, check.py) et rendre les échecs | `testeur` | Haiku |
 | Appliquer une modification décidée et décrite | `executant` | Sonnet |
 | Correction mécanique déjà rédigée (une ligne de doc, un libellé, un `git rm`) | `executant` avec `model: haiku` | Haiku |
-| Contre-vérifier un constat ou un diff (lecture seule, verdict prouvé par `chemin:ligne`) | `relecteur` | Sonnet |
+| Contre-vérifier un constat ou un diff (lecture seule, verdict prouvé par `chemin:ligne`) | `relecteur` | Fable (high) dans `/tranche`, Sonnet dans `/verifier-constats` |
 | Ouvrir toutes les captures et signaler ce qui se voit ; ne décide rien du design | `regard` | Sonnet |
-| Trouver la cause quand deux tours de correction échouent | étape « Conseil » de `/tranche` | Opus |
+| Trouver la cause quand deux tours de correction échouent | étape « Conseil » de `/tranche` | Fable (high) |
 
 ## 4. Ce qui est installé
 
@@ -50,7 +52,7 @@ passe ; une retouche ne se relance que pour un défaut visible.
 **Workflows** (`.claude/workflows/`, chargés au démarrage d'une session ou par `/reload-skills`) :
 
 - **`/tranche`** — `executant` code et se vérifie par `npx tsc --noEmit` → `testeur` lance tsc, lint, les specs
-  nommées et les voisines → `executant` corrige (deux tours au plus) → si ça résiste, Opus diagnostique et `executant`
+  nommées et les voisines → `executant` corrige (deux tours au plus) → si ça résiste, Fable diagnostique et `executant`
   applique → `relecteur` relit le diff. Ne commite pas.
   `args : { spec, tranche, consigne, tests: [...], base, echecsConnus?, preuve? }` ; `preuve` (essai réel sur build de
   production) est obligatoire pour le service worker, le hors ligne, les notifications et les droits.

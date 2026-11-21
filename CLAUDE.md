@@ -183,7 +183,7 @@ pas seulement en mémoire.
     à la suivante.
 - **Agents en parallèle** : quelques-uns à la fois (neuf d'un coup ont épuisé la limite de dépense du mois, le
   04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
-- **Déléguer** aux agents de `.claude/agents/` : `chercheur`, `testeur` (Haiku) ; `executant`, `relecteur`, `regard`,
+- **Déléguer** aux agents de `.claude/agents/` : `chercheur`, `testeur` (Haiku, effort low) ; `relecteur` (Fable, high ; Sonnet dans `/verifier-constats`) ; `executant`, `regard`,
   `maquettiste` (Sonnet) ; `directeur-artistique`, `critique-design` (Opus). Workflows (`docs/orchestration.md`) :
   `/tranche`, `/verifier-constats`, `/planche` (aucun ne commite) ; `/audit-code` (≈ 60 agents) sur demande seulement.
   Rôles : référence § Délégation. La conversation principale garde le jugement : specs, planches, débogage,
