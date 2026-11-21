@@ -29,7 +29,8 @@ import { jourDeParis } from "@/lib/evenements/bascule"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { deleteReservation, type Reservation } from "@/lib/firebase/reservations"
-import { canEditReservation, canReserverSalle, canSeeEvenement } from "@/lib/access"
+import { FeuilleAnnuler } from "@/components/salles/FeuilleAnnuler"
+import { canAnnulerReservation, canEditReservation, canReserverSalle, canSeeEvenement } from "@/lib/access"
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { estSurLaListe } from "@/lib/deuxVolets"
@@ -86,6 +87,8 @@ interface EtatSalles {
   modifiable: (o: Occupation) => Reservation | null
   modifier: (r: Reservation) => void
   supprimer: (r: Reservation) => Promise<void>
+  /** AS16 : la coordination sur la réservation d'un autre : « Annuler la réservation… » avec un motif. */
+  annule: (r: Reservation) => boolean
 }
 
 const Contexte = createContext<EtatSalles | null>(null)
@@ -152,6 +155,7 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
   const [repere, setRepere] = useState("maintenant")
   const [lecture, setLecture] = useState<{ sources: SourcesSalles; echec: boolean } | null>(null)
   const [ouverture, setOuverture] = useState<Ouverture | null>(null)
+  const [aAnnuler, setAAnnuler] = useState<Reservation | null>(null)
   const retenue = useSyncExternalStore(suivreVue, vueRetenue, () => null)
   // Sur la journée d'une salle, le volet de gauche reste la Liste (la Grille ne tient pas dans un volet).
   const vue: Vue = !surLaListe ? "liste" : retenue ?? (grand ? "grille" : "liste")
@@ -174,7 +178,9 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
     occupations: (d: string) => occupationsDu(d, lecture.sources),
     modifiable: (o) => (o.reservation && canEditReservation(user, profile, o.reservation) ? o.reservation : null),
     modifier: (r) => setOuverture({ reservation: r }),
+    annule: (r) => canAnnulerReservation(user, profile, r),
     supprimer: async (r) => {
+      if (canAnnulerReservation(user, profile, r)) { setAAnnuler(r); return }
       const oui = await confirmer({ titre: t("salles.supprimer.titre"), texte: t("salles.supprimer.texte", { quoi: r.quoi }), action: t("common.buttons.delete"), destructif: true })
       if (!oui) return
       await deleteReservation(r.id)
@@ -223,6 +229,7 @@ function Salles({ enTete, children }: { enTete: React.ReactNode; children: React
           </main>
         </>
       )}
+      <FeuilleAnnuler reservation={aAnnuler} fermer={() => setAAnnuler(null)} apres={relireReservations} />
       {etat && (
         <FeuilleReserver ouverture={ouverture} fermer={() => setOuverture(null)} today={today} langue={langue} occupationsDu={etat.occupations} enregistrer={enregistrer}
           feteDu={feteDu} nomFete={nomFete} />

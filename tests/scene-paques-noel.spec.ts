@@ -19,6 +19,7 @@ import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsR
 import { fermerFeuille, reglageSaison, resumeSaison, versToutesLesReservations } from "./helpers/saisonScene";
 import type { Creneau, Programme } from "../src/types/programme";
 import { creneauxEnReservations } from "./helpers/creneauxScene";
+import { simulerAnnulation, annulerAvecMotif } from "./helpers/annulation";
 
 // Réservation de la scène — Pâques · Noël (docs/spec-scene-paques-noel.md).
 // Deux onglets fixes ; une édition par fête et par année, `programmes/{fete}-{annee}`.
@@ -1349,15 +1350,17 @@ test("P8 — filtres en pilules : « À venir 4 · Passées 1 · Hors des plages
   await expect(lignesTableau(page)).toContainText("Chant");
 });
 
-test("P8 — « ⋯ » d'une ligne : Déplacer, Modifier, Retirer ; Retirer passe par la confirmation du site et envoie le DELETE", async ({ page }) => {
+test("P8 — « ⋯ » d'une ligne : Déplacer, Modifier, Annuler la réservation… (AS16 : la coordination, la réservation d'un autre) ; le motif, la route, la ligne retirée", async ({ page }) => {
   const db = await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  const envois = await simulerAnnulation(page);
   await versToutesLesReservations(page);
   const sketch = lignesTableau(page).filter({ hasText: "Sketch" });
   await plus(sketch).click();
-  await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Retirer/]);
-  await page.getByRole("menuitem", { name: "Retirer" }).click();
-  await repondreDansLeSite(page, "Retirer");
+  await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Annuler la réservation…/]);
+  await page.getByRole("menuitem", { name: "Annuler la réservation…" }).click();
+  await annulerAvecMotif(page, "Scène prise par la répétition générale");
   await expect(lignesTableau(page)).toHaveCount(3);
+  expect(envois.map((e) => e.body)).toEqual([{ reservationId: "s", motif: "Scène prise par la répétition générale" }]);
   expect(db.writes.filter((w) => w.method === "DELETE").map((w) => w.path)).toEqual(["reservations/s"]);
   await expect(filtres(page).getByRole("button", { name: "À venir 3" })).toBeVisible();
 });
@@ -1635,14 +1638,16 @@ test("P9 — une colonne (téléphone, tablette portrait) : « Toutes les réser
   await expect(cetteSemaine(page)).toBeVisible();
 });
 
-test("P9 — une colonne (téléphone, tablette portrait) : « ⋯ » › Retirer dans « Cette semaine » passe par la confirmation du site et envoie le DELETE", async ({ page }) => {
+test("P9 — une colonne (téléphone, tablette portrait) : « ⋯ » › Annuler la réservation… dans « Cette semaine » (AS16 : la coordination, la réservation d'un autre) ; le motif, la route, la ligne retirée", async ({ page }) => {
   test.skip(estGrandEcran(test.info()), "propre au téléphone et à la tablette debout");
   const db = await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  const envois = await simulerAnnulation(page);
   const samedi = cetteSemaine(page).getByRole("region", { name: "Samedi 10 octobre", exact: true });
   await plus(samedi).click();
-  await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Retirer/]);
-  await page.getByRole("menuitem", { name: "Retirer" }).click();
-  await repondreDansLeSite(page, "Retirer");
+  await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Annuler la réservation…/]);
+  await page.getByRole("menuitem", { name: "Annuler la réservation…" }).click();
+  await annulerAvecMotif(page, "Scène prise par la répétition générale");
+  expect(envois.map((e) => e.body)).toEqual([{ reservationId: "f", motif: "Scène prise par la répétition générale" }]);
   await expect(samedi.getByRole("listitem")).toHaveText(["Aucune réservation ici."]);
   expect(db.writes.filter((w) => w.method === "DELETE").map((w) => w.path)).toEqual(["reservations/f"]);
 });

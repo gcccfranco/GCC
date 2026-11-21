@@ -4657,6 +4657,13 @@
       "titre": "删除此预订？",
       "texte": "“{{quoi}}”将从场地中删除，所有人都看不到。"
     },
+    "annuler": {
+      "titre": "取消预约…",
+      "action": "取消预约",
+      "motif": "原因（将发送给预约人）",
+      "notif": "你在{{date}} {{de}}–{{a}}的{{salle}}预约已被取消：{{motif}}",
+      "echec": "预约取消失败，请重试。"
+    },
     "vue": {
       "etiquette": "视图",
       "liste": "列表",

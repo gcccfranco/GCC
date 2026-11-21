@@ -281,11 +281,12 @@ test.describe("AR, T3a : réserver une salle", () => {
     await expect(detail(page).getByRole("button", { name: "Supprimer" })).toHaveCount(0);
   });
 
-  test("la coordination modifie ou supprime toute réservation", async ({ page }) => {
+  test("la coordination modifie toute réservation et annule celle d'un autre (AS16)", async ({ page }) => {
     await ouvrir(page, { vue: "grille", qui: COORDINATION });
     await bloc(page, "fidelite", "18:30").click();
     await expect(detail(page).getByRole("button", { name: "Modifier" })).toBeVisible();
-    await expect(detail(page).getByRole("button", { name: "Supprimer" })).toBeVisible();
+    await expect(detail(page).getByRole("button", { name: "Annuler la réservation…", exact: true })).toBeVisible();
+    await expect(detail(page).getByRole("button", { name: "Supprimer" })).toHaveCount(0);
   });
 
   test("téléphone : la journée d'une salle ouvre le détail de sa réservation", async ({ page }, info) => {

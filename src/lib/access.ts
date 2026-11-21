@@ -286,6 +286,17 @@ export function canEditReservation(
   return r.auteurUid === user.uid || isCoordination(user, profile, backOffice);
 }
 
+/** AS16 : la coordination qui supprime la réservation d'un autre l'annule avec un motif (route /api/salles/annulation).
+ *  Miroir : rien à changer dans firestore.rules (la coordination supprime déjà ; la route passe par l'Admin SDK), AS16. */
+export function canAnnulerReservation(
+  user: AuthUser | null,
+  profile: ProfilCoordination | null,
+  r: { auteurUid: string },
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  return !!user && r.auteurUid !== user.uid && isCoordination(user, profile, backOffice);
+}
+
 // ─── Scène : saison de réservation (lot U1, docs/spec-scene-saison.md) ───────
 
 /** Réserver pour ces groupes : la coordination toujours ; un membre si la saison

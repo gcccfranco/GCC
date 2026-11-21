@@ -11,6 +11,7 @@ import type { Reservation } from "../src/lib/firebase/reservations";
 import { readFileSync } from "node:fs";
 import { reminderBody } from "../src/lib/push/reminderMessage";
 import { creneauEnReservation, creneauxEnReservations } from "./helpers/creneauxScene";
+import { simulerAnnulation, annulerAvecMotif } from "./helpers/annulation";
 
 // Lot 3 bis (docs/spec-programme-scene.md) : section Évènements, onglet
 // unique « Scène » nommé comme le programme affiché (un seul à la fois), géré en haut
@@ -198,15 +199,17 @@ test("droits : l'auteur et la coordination modifient ou retirent un créneau, pa
   await expect(bloc.getByRole("button", { name: /^Plus d'actions/ })).toHaveCount(0);
 });
 
-test("droits : la coordination retire le créneau d'un autre membre", async ({ page }) => {
+test("droits : la coordination annule, avec un motif, le créneau d'un autre membre (AS16)", async ({ page }) => {
   const db = await openNoel(page, ALICE, "2026-10-01", {
     "programmes/noel/creneaux/c1": { ...C_ALICE, auteurUid: "uid-jo", auteurNom: "Jo L." },
   });
+  const envois = await simulerAnnulation(page);
   const bloc = page.getByRole("region", { name: "Dimanche 4 octobre" });
-  // Pâques · Noël, P6 : « ⋯ » › Retirer, puis la confirmation du site (plus de fenêtre du navigateur).
+  // AS16 : « ⋯ » › Annuler la réservation… (la réservation d'un autre), puis la feuille du motif.
   await bloc.getByRole("button", { name: /^Plus d'actions/ }).click();
-  await page.getByRole("menuitem", { name: "Retirer" }).click();
-  await page.getByRole("alertdialog").getByRole("button", { name: "Retirer", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Annuler la réservation…" }).click();
+  await annulerAvecMotif(page, "Répétition déplacée");
+  expect(envois.map((e) => e.body)).toEqual([{ reservationId: "c1", motif: "Répétition déplacée" }]);
   await expect(bloc.getByText("Chant · EDD 中班")).toHaveCount(0);
   await expect(bloc.getByRole("button", { name: "Réserver 17:00 – 19:00" })).toBeVisible();
   expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("reservations/c1");

@@ -25,7 +25,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { ArrowLeftRight, ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react"
 import type { User } from "firebase/auth"
-import { canEditCreneau, canReserverPour, canSeeEvenement, isCoordination } from "@/lib/access"
+import { canAnnulerReservation, canEditCreneau, canReserverPour, canSeeEvenement, isCoordination } from "@/lib/access"
 import { deleteCreneau, reservationDeCreneau } from "@/lib/firebase/programmes"
 import { listReservations, type Reservation } from "@/lib/firebase/reservations"
 import { overlaps, todayIso } from "@/lib/scene/dimanches"
@@ -44,6 +44,7 @@ import { Button } from "@/components/ui/button"
 import { MenuActions, type ActionDuMenu } from "@/components/layout/MenuActions"
 import { BadgeHorsGrille, Fleche, TuileDate } from "./pieces"
 import { FeuilleReserver, type Ouverture } from "../salles/FeuilleReserver"
+import { FeuilleAnnuler } from "@/components/salles/FeuilleAnnuler"
 import { useReserver } from "../salles/useReserver"
 import { LigneJour } from "./LigneJour"
 import { bornesSemaine, jourCourt, jourEnLettres, joursCourts, semaineCourte, titreDuJour } from "./libelles"
@@ -126,6 +127,8 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, s
   // La feuille unique « Réserver » (AS1) : ouverte sur une fenêtre libre, ou sur la réservation à modifier.
   const [ouverture, setOuverture] = useState<Ouverture | null>(null)
   const [erreurRetrait, setErreurRetrait] = useState("")
+  // AS16 : la réservation d'un autre, annulée par la coordination avec un motif.
+  const [aAnnuler, setAAnnuler] = useState<Reservation | null>(null)
 
   const conflicts = new Set(creneaux.filter((c) => creneaux.some((o) => o.id !== c.id && overlaps(c, o))).map((c) => c.id))
   const quiDe = (c: Creneau) => c.qui.map((q) => libelleQui(q, langueCourte(lang))).join(", ")
@@ -183,7 +186,9 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, s
   const actionsDe = (c: Creneau): ActionDuMenu[] => [
     { label: t("planning.saison.deplacer"), aide: t("planning.semaines.aideDeplacer"), icone: ArrowLeftRight, onSelect: () => ouvrirReservation(c) },
     { label: t("planning.programme.edit"), aide: t("planning.semaines.aideModifier"), icone: Pencil, onSelect: () => ouvrirReservation(c) },
-    {
+    canAnnulerReservation(user, profile, c) ? {
+      label: t("salles.annuler.titre"), icone: Trash2, destructif: true, onSelect: () => setAAnnuler(reservationDeCreneau(programme.id, c)),
+    } : {
       label: t("planning.programme.remove"), aide: t("planning.semaines.aideRetirer"), icone: Trash2, destructif: true, onSelect: () => remove(c),
       confirmer: {
         titre: t("planning.programme.confirmRemove"),
@@ -417,6 +422,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, s
     <FeuilleReserver ouverture={ouverture} fermer={() => setOuverture(null)} today={today} langue={langue}
       occupationsDu={(d) => (sourcesFeuille ? occupationsDu(d, sourcesFeuille) : [])} feteDu={feteDu} nomFete={nomFete} enregistrer={enregistrer} />
   )
+  const feuilleAnnuler = <FeuilleAnnuler reservation={aAnnuler} fermer={() => setAAnnuler(null)} apres={async () => { setRelues([]); await onChanged() }} />
 
   const morceaux: MorceauxEntrainements = {
     mes, semaines: listeSemaines, semaine, menu, erreur,
@@ -426,6 +432,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, s
     <>
       {children ? children(morceaux) : <div className="space-y-5">{mes}{listeSemaines}{semaine}</div>}
       {sheet}
+      {feuilleAnnuler}
     </>
   )
 }

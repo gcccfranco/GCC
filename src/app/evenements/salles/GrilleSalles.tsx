@@ -284,7 +284,7 @@ export function Detail({ occupation: o, langue, dateLongue, fermer }: { occupati
                 onClick={() => { fermer(); void etat!.supprimer(reservation) }}
                 className="flex h-11 flex-1 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-destructive transition-colors hover:bg-secondary/70"
               >
-                {t("common.buttons.delete")}
+                {etat!.annule(reservation) ? t("salles.annuler.titre") : t("common.buttons.delete")}
               </button>
               <button
                 type="button"

@@ -338,3 +338,24 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   appareils) : 651 passés, 3 rouges (un test de `scene-qui`, réel, corrigé), en 15 min ; après les retouches,
   `salles-reserver` et `scene-qui` : 172 passés en 4 min. Écran regardé aux quatre dispositions et à 1 440 px, en
   clair, en sombre et en 中文. Suite : T9 (dernière de la file A, fin de lot).
+- 21/11/2026 — **T9 faite** (session T9, file A) : la coordination annule la réservation d'un autre avec un motif
+  (AS16, RS11). `canAnnulerReservation` (`access.ts`, coordination et pas l'auteur ; aucune rule changée, point (3)).
+  Route neuve `/api/salles/annulation` (derrière `BACK_OFFICE`, jeton, profil relu par l'Admin SDK et
+  `isCoordination` côté serveur, motif de 1 à 200, refus si l'appelant est l'auteur ; supprime, puis notifie l'auteur
+  et les personnes cochées d'AS15 par `reserverPuisEnvoyer`, clé `annulation-<id>`). Fonctions pures
+  `src/lib/salles/annulation.ts` (message tiré de `salles.annuler.notif`, destinataires) ; feuille de motif
+  `FeuilleAnnuler.tsx` (compteur, envoi éteint tant que le motif est vide) ; « Annuler la réservation… » dans le détail
+  de la Grille de Salles et dans le « ⋯ » d'`Entrainements` (page de la fête et Back-Office des fêtes, « Cette
+  semaine » et « Toutes les réservations » compris). L'auteur qui supprime la sienne : inchangé. Clés
+  `salles.annuler.{titre,motif,notif,action,echec}`. Routes API : 21 (`CLAUDE.md`, référence). Décisions déléguées
+  (session T9, 21/11) : (1) la réservation supprimée, la notification part en meilleur effort (un échec d'envoi est
+  journalisé et la route répond quand même ok : sinon le client croirait l'annulation ratée et un réessai tomberait
+  sur 404) ; (2) en 中文, le nom de la salle reste celui du site (« Grande salle », comme partout) ; (3) espace
+  ordinaire avant « : » dans `salles.annuler.notif`, comme le texte de la spec et les clés voisines. Specs mises au
+  nouveau parcours : `salles-reserver`, `programme-scene`, `scene-paques-noel` (P8, P9 ; helper
+  `tests/helpers/annulation.ts`), `back-office-coupe` (route ajoutée). Tests : `salles-annulation` neuve (8 tests :
+  Grille, page de la fête, auteur, membre, 中文, 401, message, destinataires) sur trois appareils, 24 passés, puis le
+  cas de la fête rendu stable (la feuille fermée avant la fin du test) : 12 passés en répétition, en 1 min en tout ;
+  specs voisines relancées par le testeur : vertes. tsc et lint verts. Écran regardé au téléphone, à la tablette et à
+  l'ordinateur, en clair, en sombre et en 中文. Polices : inchangées (caractères déjà présents). **⚠ Rules de T5a,
+  T1 et T8 toujours à publier à la main par Timothée** avant toute mise en ligne (T9 n'en ajoute aucune).

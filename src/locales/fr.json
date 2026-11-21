@@ -4709,6 +4709,13 @@
       "titre": "Supprimer la réservation ?",
       "texte": "« {{quoi}} » disparaît de Salles pour tout le monde."
     },
+    "annuler": {
+      "titre": "Annuler la réservation…",
+      "action": "Annuler la réservation",
+      "motif": "Motif (envoyé à l'auteur)",
+      "notif": "Ta réservation de {{salle}} du {{date}}, {{de}} – {{a}}, a été annulée : {{motif}}",
+      "echec": "La réservation n'a pas pu être annulée. Réessayez."
+    },
     "vue": {
       "etiquette": "Vue",
       "liste": "Liste",

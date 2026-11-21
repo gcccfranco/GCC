@@ -40,7 +40,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
 
 ## Routes API
 
-- **Routes API** (20, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement : écrit dans Firestore `reports` puis push aux admins ; aucun e-mail), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/salles/conflit` (chevauchement de deux réservations de salle, Scène des fêtes comprise, SA9), `/api/taches/{assigne,fait}`, `/api/equipes/{rattachement,groupes}`, `/api/planning/{release,changements}`, `/api/fetes/{droits,saisir,musiques}`
+- **Routes API** (21, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement : écrit dans Firestore `reports` puis push aux admins ; aucun e-mail), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/salles/conflit` (chevauchement de deux réservations de salle, Scène des fêtes comprise, SA9), `/api/salles/annulation` (annulation motivée d'une réservation par la coordination, AS16), `/api/taches/{assigne,fait}`, `/api/equipes/{rattachement,groupes}`, `/api/planning/{release,changements}`, `/api/fetes/{droits,saisir,musiques}`
 
 ## PWA et service worker
 
