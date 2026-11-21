@@ -80,7 +80,7 @@ diff ni toutes les captures : règle « Captures et diff » du `CLAUDE.md`.
   `maquettiste` (Sonnet) pour les rendre en planche, `critique-design` (Opus, 03/11/2026) pour les critiquer. La conversation principale garde le jugement : specs, planches,
   débogage, relecture du diff, regard sur les captures et les 简谱.
 - **Workflows** de `.claude/workflows/` (24/10/2026, `docs/orchestration.md`) : `/tranche` code une tranche décidée
-  (executant → testeur → corrections → conseil Opus si ça résiste → relecteur, sans commit) ; `/verifier-constats`
+  (executant → testeur → corrections → conseil Fable si ça résiste → relecteur Fable, sans commit) ; `/verifier-constats`
   contre-vérifie des constats avant un rapport ; `/planche` fait une planche de design (sans commit ni publication) ; `/audit-code` refait l'audit en 11 dimensions (≈ 60 agents, sur
   demande seulement). Un fichier ajouté sous `.claude/` s'indexe avec `git add -f` (le dossier est ignoré).
 

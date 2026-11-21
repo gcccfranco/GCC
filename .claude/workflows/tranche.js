@@ -1,6 +1,6 @@
 export const meta = {
   name: 'tranche',
-  description: "Code une tranche déjà décidée : executant (Sonnet) → testeur (Haiku) → corrections (≤ 2) → conseil Opus si ça résiste → relecteur (Sonnet). Ne commite pas.",
+  description: "Code une tranche déjà décidée : executant (Sonnet) → testeur (Haiku) → corrections (≤ 2) → conseil Fable si ça résiste → relecteur (Fable). Ne commite pas.",
   whenToUse: "Après un go de Timothée sur un lot dont la spec découpe les tranches. Une tranche par appel : la conversation principale lit le verdict, ouvre les passages et captures signalés et commite entre deux.",
   phases: [
     { title: 'Coder', detail: 'executant applique la consigne, se vérifie par tsc', model: 'sonnet' },
