@@ -218,7 +218,7 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
 3. « Oui » : l'interrupteur « Partager ma version » disparaît sans remplaçant.
 **Go de Timothée pour MP-6 (12/11/2026, « Oui go pour MP6 »)** : inscrit dans la file, après AN.
 
-## Un passage ou tous (Timothée, 21/11/2026) — à trancher, pas de go
+## Un passage ou tous (Timothée, 21/11/2026) — go du 21/11/2026
 
 **Demande (ses mots)** : « quand j'utilise la fonction "crayon" et que je modifie une section, ça modifie pour toutes
 les sections or ce n'est pas ce que je veux » ; « pour les paroles aussi il faut que ce soit comme ça si je veux
@@ -264,7 +264,22 @@ Questions 5 et 6 : sans réponse, la proposition tient.
   dire que c'est pour ce refrain là ») ;
 - comme on ne voit pas quel passage on touche, le Crayon montre la structure et demande pour lequel (« on affiche la
   structure et on demande c'est pour quelle Refrain, Couplet, Pont ») : on touche la pastille du passage, ou « Toutes ».
-Pas encore de go pour le lot.
+**Go de Timothée pour le lot (21/11/2026, « go pour les deux »)**, sessions Opus en parallèle (« tu lances des
+sessions en parallèle, avec opus en orchestrateur »).
+
+**Tranches** (une session par tranche, `CLAUDE.md` § Coder ; chacune écrit sa ligne dans § Avancement) :
+- **UP-1 — Dessins par passage** : champ facultatif `passage` dans l'ancre (`src/types/partition.ts`, calculs
+  `src/lib/annotations/ancres.ts`), écrit au tracé d'après le passage touché, lu au rendu (absent = tous les
+  passages), gomme (question 6). Page setlist, page chant, mode louange, ordre « Tout le chant ». Scans 简谱 : inchangés.
+- **UP-2 — Le choix dans la barre du Crayon** : « Ce passage | Toutes les répétitions » (`BarreCrayon.tsx`, barre
+  d'annotation du mode louange), « Ce passage » d'avance (questions 1 et 2), montré seulement si la section revient.
+- **UP-3 — Accords et paroles** : « Seulement ce passage » d'avance (question 1) ; le choix de la feuille montré
+  aussi sur la page chant quand le chant répète la section (question 5 : dire dans § Avancement si la copie de
+  section pour « Ma partition » seule demande plus qu'une tranche, et s'arrêter là dans ce cas).
+- **UP-4 — Ordres « Une fois chacune » et « Plan »** (question 4) : le Crayon montre la structure et demande le
+  passage ; le passage retouché s'ajoute comme section à part avec sa note ; note sur la pastille de la structure.
+  Change l'apparence : captures aux quatre dispositions, `critique-design` après la tranche.
+UP-1 puis UP-2 s'enchaînent ; UP-3 est indépendante (peut partir en même temps qu'UP-1) ; UP-4 après UP-1 et UP-3.
 
 Format : `passage` est facultatif, une version ancienne du site l'ignore et montre le dessin partout
 (§ « Compatibilité du format », AN-4). `firestore.rules` : à relire, le champ est dans `traits` (liste libre).
