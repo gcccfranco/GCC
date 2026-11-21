@@ -128,6 +128,19 @@ comparaison mesurée (boîtes des accords d'un chant FR et d'un chant ZH, aux ci
 accords et du mode louange voisines restent vertes. Si la cause s'avère ailleurs que dans `ChordLine`, ou si le gain
 demande de changer le rendu, s'arrêter et l'écrire.
 
+## R7 — Mode louange : « Ensuite : … » après la dernière section (go : « go », 21/11/2026, nuit)
+
+Mots de Timothée (capture du mode louange sur écran large, deux colonnes) : « peut être que c'est mieux de mettre le
+ensuite à droite à la toute fin des sections ». Sur la capture, la pastille « Ensuite : Je veux proclamer… » est en
+bas de la colonne de gauche, alors que la lecture continue dans la colonne de droite.
+
+À faire : quand la dernière page d'un chant s'affiche sur plusieurs colonnes, la pastille du flux
+(`PerformanceMode.tsx`, `pastilleSuivant`, `layout[…].suivant` ; `src/lib/performance/pagination.ts`) se place après
+la dernière section, donc au bas de la dernière colonne qui porte du texte. Sur une colonne : inchangé. Les replis
+existants (pastille posée en absolu quand la pagination ne lui a pas gardé de place, quand la barre du bas la couvre,
+en demi-page, à côté d'un scan) ne changent pas. Aucune section ne change de page ni de colonne à cause du
+déplacement ; si ce n'est pas tenable, s'arrêter et l'écrire.
+
 ## Avancement
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,
