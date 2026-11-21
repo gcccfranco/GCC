@@ -276,3 +276,24 @@ test("page setlist, « Une fois chacune », « Pour tout le culte » : le passag
   expect(items()[0].structureOverride![3], "le 2e passage pointe vers la copie").not.toBe("chorus-3-3");
   expect(db.doc(`partitions/${SOLENE.uid}__abba-pere`), "ma partition ne bouge pas").toBeUndefined();
 });
+
+test("page setlist (pour moi), ordre « Tout le chant » : la rangée garde la structure de la présidence, la 4e pastille (ma copie) porte le repère", async ({ page }) => {
+  await ordre(page, "played");
+  await sansGoogle(page);
+  await signInAs(
+    page,
+    SOLENE,
+    {
+      [SETLIST_DOC]: setlist(),
+      ...maPartition("abba-pere", ABBA, ["verse-2-0", "chorus-3-1", "verse-5-2", "chorus-7-3"], { content: ABBA_COPIE, sectionOrigins: { "chorus-7": "chorus-3" } }),
+    },
+    `/setlists/${SETLIST_ID}`,
+  );
+  await ouvrirPartitions(page);
+  await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
+  await basculerMode(page, "Crayon");
+  const rangee = page.locator('[data-outline-item="1"]').getByRole("list", { name: "Structure" }).first();
+  await expect(rangee.locator("li")).toHaveCount(4);
+  await expect(rangee.locator("[data-passage-retouche]")).toHaveCount(1);
+  await expect(rangee.locator("li").nth(3).locator("[data-passage-retouche]")).toHaveCount(1);
+});

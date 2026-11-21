@@ -460,3 +460,22 @@ Format : `passage` est facultatif, une version ancienne du site l'ignore et mont
   « 单独修改 ») à faire relire ; interface en 中文 et mode sombre non capturés ; soulignement des lignes retouchées
   entre caractères et pinyin (antérieur). Captures aux cinq largeurs regardées par `regard`. Lot « Un passage ou tous »
   fini ; R5b lancée ensuite (`docs/spec-retouches-2026-11-21.md`).
+- 21/11/2026, nuit : **UP-5 faite** (finitions d'UP-4, Crayon seulement ; aucun dessin, annotation, mode louange ni
+  `firestore.rules` touché). (1) Dans la rangée de structure, le badge « retouché seul » passe au coin **haut gauche**
+  de la pastille, le numéro de position reste en haut à droite : plus de chevauchement (toutes dispositions de pastille,
+  trois ordres). (2) « Tout le chant », page setlist : la rangée garde la structure de la présidence ; **décision
+  déléguée (session, 21/11)** : le badge de ma copie s'y pose aux positions alignées (ma structure de même longueur, ma
+  copie à la place d'une étape de son origine), en plus des badges déjà calculés sur la structure lue (copie « pour tout
+  le culte ») ; structures non alignées : pas de badge, comme avant. Le `shortcut:` de `SongView` est levé. Test ajouté
+  (`ma-partition-passage-unique`, présidence [V, R, V, R], badge sur la 4ᵉ pastille seule). (3) Sombre + 中文 et clair
+  + FR, aux quatre dispositions (390, 810, 1080, 1440), 24 captures regardées par `regard` : feuille « 改哪一次？ »,
+  rangée (badge et numéro ensemble) et copie « 副歌 · 第2次 » lisibles, rien de coupé, contraste du badge suffisant en
+  sombre : **aucune correction nécessaire**. Les pastilles C1/C2 pâles de la feuille sont les passages désactivés voulus
+  par UP-4. `critique-design` non lancé (seul changement visible : le badge change de coin). (4) Libellés zh-CN
+  cohérents avec l'existant (`第{{n}}次`/`第1次` = `view.nthTime`/`firstTime`, « 所有重复 » = clé partagée
+  `harmonie.toutesRepetitions`, « 单独修改 » s'accorde avec « 仅此处 ») : rien changé ; **relecture par un sinophone
+  laissée à Timothée**. Tests : `ma-partition-passage-unique`, `ma-partition-crayon`, `ma-partition-lecture`,
+  `coup-d-oeil` (+ voisine `statistiques-chant`), cinq projets : 294 passés, 5 échecs (tous `coup-d-oeil:215`, connu,
+  R5b), 10 sautés, 9,2 min ; après la correction du relecteur (badges existants gardés en « Tout le chant »),
+  `ma-partition-passage-unique` : 39 passés, 0 échec en 1,6 min. tsc propre, eslint 0 erreur. **Restes** : relecture
+  zh-CN par Timothée ; soulignement des lignes retouchées entre caractères et pinyin (antérieur) ; R5b (`coup-d-oeil:215`).

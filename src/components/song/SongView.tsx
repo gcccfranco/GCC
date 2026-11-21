@@ -754,7 +754,7 @@ export function StructureStrip({
                     </span>
                   )}
                   {"retouche" in g && (
-                    <span role="img" data-passage-retouche aria-label={g.full} className="absolute -right-1 -top-1 h-2 w-2 rounded-full ring-2 ring-background" style={{ background: colorOf(retouches?.get(g.step.section.uid)?.origine ?? g.step.section) }} />
+                    <span role="img" data-passage-retouche aria-label={g.full} className="absolute -left-1 -top-1 h-2 w-2 rounded-full ring-2 ring-background" style={{ background: colorOf(retouches?.get(g.step.section.uid)?.origine ?? g.step.section) }} />
                   )}
                   {n !== undefined && (
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
@@ -1395,10 +1395,23 @@ export function SongView({
       : null;
   // UP-4 : en « Une fois chacune » et « Plan », le corps et la rangée suivent ma structure (setlist) quand elle existe, copie
   // retouchée seule ou non (la feuille du Crayon demande le passage sur la même base) ; en ordre joué, le corps la suit déjà.
-  // shortcut: en ordre « Tout le chant » la rangée garde la structure de la présidence (ses notes), sans repère sur ma copie ; à reprendre si on s'en plaint.
+  // En « Tout le chant » la rangée garde la structure de la présidence (ses notes) ; le repère d'une copie n'y figure qu'aux
+  // positions alignées (mêmes longueurs, copie dont l'origine est l'étape de la présidence), en plus des copies de la structure lue.
   const stepsLus = personalSteps && layout !== "played" ? personalSteps : steps;
+  const retouchesLues = passagesRetouches(stepsLus, sectionOrigins);
+  const retouchesBrut =
+    layout === "played" && personalSteps && personalSteps.length === steps.length
+      ? new Map([
+          ...retouchesLues,
+          ...[...passagesRetouches(personalSteps, sectionOrigins)].flatMap(([uid, r]) => {
+            const pres = steps[personalSteps.findIndex((p) => p.section.uid === uid)];
+            const seule = pres && steps.filter((x) => x.section.uid === pres.section.uid).length === 1;
+            return seule && pres.section.id === r.origine ? [[pres.section.uid, r] as const] : [];
+          }),
+        ])
+      : retouchesLues;
   const retouches = new Map(
-    [...passagesRetouches(stepsLus, sectionOrigins)].flatMap(([uid, r]) => {
+    [...retouchesBrut].flatMap(([uid, r]) => {
       const origine = ast.sections.find((s) => s.id === r.origine);
       return origine ? [[uid, { origine, rang: r.rang }] as const] : [];
     }),
