@@ -118,4 +118,9 @@ sur tablette portrait, tablette paysage, ordinateur et 1 440 px.
   bouton touche le bord). Non commité : choix demandé à Timothée (« Connexion » en icône seule sous 430 px, nom du site
   masqué, ou pas de bouton de thème sur téléphone). Le test ajouté mesurait `scrollWidth` de `header > div`, qui ne voit
   pas ce débordement : à refaire sur la boîte du bouton « Connexion » (bord droit ≤ largeur de la fenêtre).
+- 21/11/2026 : **thème du visiteur sur téléphone, fait** (Timothée, « go » sur « Connexion » en icône seule sous
+  430 px) : le bouton de thème du visiteur est visible à toutes les largeurs (`Navbar.tsx`), « Connexion » n'affiche
+  son mot qu'à partir de 430 px (icône seule en dessous, nom accessible gardé, « 登录 » sur une ligne). Test refait sur
+  les boîtes des boutons à 360, 412 et 430 px (`i18n-hydration.spec.ts`, projet téléphone) : vert, 22 s. Captures
+  regardées à 360, 412 et 430 px, FR et 中文 : tout tient, marge droite gardée.
 
