@@ -162,7 +162,9 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
       if (!engage) return;
       aGlisse.current = true;
       const h = el.getBoundingClientRect().height;
-      el.style.height = "";
+      // Remettre la hauteur de l'état : la vider laisserait la feuille sans hauteur quand l'état ne change pas
+      // (tirée alors qu'elle est déjà haute), et elle déborderait par le haut de l'écran.
+      el.style.height = haute ? "85dvh" : "40dvh";
       el.style.transition = "";
       if (u.type === "pointercancel") return;
       const vh = window.innerHeight;
@@ -210,7 +212,7 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
       style={{ ...geometrie, borderLeft: colonne ? "1px solid hsl(var(--foreground))" : undefined, borderTop: colonne ? undefined : "1px solid hsl(var(--border))" }}
     >
       <div className="flex h-full flex-col" style={colonne ? { width: 320 } : undefined}>
-        <div data-testid="marge-prise" style={colonne ? undefined : { touchAction: "none" }} onPointerDown={colonne ? undefined : descend}>
+        <div data-testid="marge-prise" className={colonne ? undefined : "select-none"} style={colonne ? undefined : { touchAction: "none" }} onPointerDown={colonne ? undefined : descend}>
           {!colonne && (
             <button
               type="button"

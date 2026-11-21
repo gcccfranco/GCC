@@ -352,6 +352,12 @@ test.describe("marge Affichage — poignée de la feuille", () => {
     const haut = (await page.getByTestId("marge-prise").boundingBox())!.y + 4;
     await tirer(haut, haut - 300);
     await expect.poll(() => hauteurMarge(page)).toBeCloseTo(0.85 * vh(page), -1);
+    // Déjà haute, tirée encore un peu : elle garde 85 % (elle perdait sa hauteur et débordait par le haut de l'écran).
+    const haut85 = (await page.getByTestId("marge-prise").boundingBox())!.y + 4;
+    await tirer(haut85, haut85 - 40);
+    await page.waitForTimeout(400);
+    expect(await hauteurMarge(page)).toBeCloseTo(0.85 * vh(page), -1);
+    expect((await marge(page).boundingBox())!.y).toBeGreaterThan(0);
     // Revenue à 40 % par la poignée, puis tirée jusqu'en bas.
     await page.getByTestId("marge-poignee").click();
     await expect.poll(() => hauteurMarge(page)).toBeCloseTo(0.4 * vh(page), -1);

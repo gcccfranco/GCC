@@ -196,3 +196,12 @@ préexistants dans `coherence.spec.ts` » signalés par la session du lot AS, T2
   maintenant l'adresse finale. Tests : premier passage 9,6 min (417 passés, 8 échecs) ; reprise des 7 tests 56 s ; tour
   final des quatre specs 9,3 min (423 passés, 189 ignorés, 1 test rouge sur deux projets : la langue, cachée derrière
   l'échec précédent), puis ce test seul vert (12 s). Reste : rien pour R5a ; R5b non touchée.
+- 21/11/2026, soir : **R1, défaut corrigé** (vidéo de Timothée, iPhone : la fenêtre « Affichage » déjà à 85 % part
+  par le haut de l'écran, le titre et la croix disparaissent). Cause : au lâcher, le geste vidait la hauteur posée à la
+  main (`height = ""`), ce qui effaçait aussi celle de React ; quand l'état ne changeait pas (fenêtre déjà haute tirée
+  encore, ou geste annulé), rien ne la remettait et la feuille prenait la hauteur de son contenu. Le geste remet
+  maintenant la hauteur de l'état (`MargeAffichage.tsx`, `lache`). Trouvé en écrivant le test : à la souris, tirer la
+  zone de prise sélectionnait le texte de la page, et le geste suivant était annulé (glisser-déposer du texte) :
+  `select-none` sur la zone de prise. Test ajouté dans `marge-affichage.spec.ts` (rouge sans le correctif : 1 044 px
+  au lieu de 713). Spec entière sur les cinq projets : 128 passés, 7 ignorés, 3,2 min. Au doigt sur un vrai
+  téléphone : à revoir par Timothée.
