@@ -252,6 +252,12 @@ peux l'étendre à toutes les répétitions.*
    l'orchestratrice (la copie de section existe pour la setlist, pas encore pour « Ma partition » seule).
 6. *Gommer* : la gomme enlève le dessin là où il vaut (son passage, ou tous).
 
+**Réponses de Timothée (21/11/2026)** : questions 1, 2 et 3 : « ok » (la proposition). Question 4 : pas la
+proposition ; ses mots : « quand c'est une fois chacune ou plan mettre une petite note et ajouter la section je sais pas
+si tu vois ce que je veux dire ». Lecture à lui faire confirmer avant tout go : dans ces deux ordres, un passage
+retouché seul s'ajoute comme une section à part, avec une petite note qui dit de quel passage il s'agit.
+Questions 5 et 6 : sans réponse, la proposition tient. Pas encore de go pour le lot.
+
 Format : `passage` est facultatif, une version ancienne du site l'ignore et montre le dessin partout
 (§ « Compatibilité du format », AN-4). `firestore.rules` : à relire, le champ est dans `traits` (liste libre).
 
