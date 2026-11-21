@@ -5,8 +5,8 @@
 // une description et des liens (ordre du jour, document partagé), visibles d'emblée ; ni bannière, ni fin, ni
 // inscriptions, ni « Plus d'options ». Sujets à aborder, compte rendu et réunions précédentes vivent sur sa fiche.
 // Stockée comme un évènement (`reunion: true`) : bannière ou fin d'une réunion plus ancienne restent telles quelles.
-// Salles (chantier AR, lot 4, SA12) : « Salle de l'église » à la place du lieu (`ChampSalle`), « Ailleurs » le rend ;
-// une salle choisie montre l'heure de fin et se vérifie à l'enregistrement (chevauchement refusé, SA8).
+// Salles (chantier AR, lot 4, SA12 ; AS17) : « Où ? » à la place du lieu (`ChampSalle`) : « À l'église » propose une
+// salle (ou aucune, lieu « Église »), « Ailleurs » rend le lieu libre ; une salle choisie montre l'heure de fin et se vérifie à l'enregistrement (chevauchement refusé, SA8).
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
@@ -22,7 +22,7 @@ import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { ChampSalle, erreurSalle, valeursSalle, verifierSalle, type RefusEvenement } from "@/components/salles/ChampSalle"
+import { ChampSalle, egliseInitiale, erreurSalle, valeursSalle, verifierSalle, type RefusEvenement } from "@/components/salles/ChampSalle"
 import { canSeeEvenement } from "@/lib/access"
 import { jourDeParis } from "@/lib/evenements/bascule"
 import { useAuth } from "@/lib/firebase/auth"
@@ -58,6 +58,7 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, even
     ...(initial.type === "info" ? { type: TYPE_REUNION } : {}),
   }))
   // Une nouvelle réunion prévient ses membres par défaut, dupliquée comme créée de rien.
+  const [eglise, setEglise] = useState(() => egliseInitiale(initial, creation))
   const [prevenir, setPrevenir] = useState(true)
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
@@ -95,7 +96,8 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, even
         ...(finPerdue ? { dateFin: "", ...(v.salle ? {} : { heureFin: "" }) } : {}),
         titre: v.titre.trim(), lieu: v.lieu.trim(), description: v.description.trim(), contact: v.contact.trim(),
         // La salle ne s'écrit que si la réunion en a une ou en avait une (« Ailleurs » la retire).
-        ...(v.salle || initial.salle ? valeursSalle(v) : {}),
+        // « À l'église » sans salle écrit le lieu « Église » (AS17).
+        ...(v.salle || initial.salle || eglise ? valeursSalle(v, eglise) : {}),
         liens: v.liens.map((l) => ({ label: l.label.trim(), url: l.url.trim() })).filter((l) => l.url),
         expiresAt: null, epingle: false,
         ...SANS_INSCRIPTION,
@@ -138,7 +140,7 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, even
             </Champ>
           </div>
 
-          <ChampSalle v={v} set={set} refus={refus} />
+          <ChampSalle v={v} set={set} refus={refus} eglise={eglise} setEglise={setEglise} />
 
           <Champ id="ev-contact" label={t("evenements.form.contact")}>
             <Input id="ev-contact" className="h-11" value={v.contact} maxLength={80} placeholder={t("evenements.form.contactHint")} onChange={(e) => set({ contact: e.target.value })} />

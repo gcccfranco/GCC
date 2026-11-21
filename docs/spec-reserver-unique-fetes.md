@@ -280,3 +280,19 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   `scene-des-fetes`, `salles-reserver` (cinq projets), `salles-scene` : 338 passés et 6 rouges en 7 min ; après correction,
   les 6 rouges passent, et `salles-scene` avec `scene-autre-moment` aussi (152 passés en 3 min 15). Écran regardé au
   téléphone en 中文 et à l'ordinateur. Suite : T7 (file A).
+- 21/11/2026 — **T10 faite** (file B, session T10) : « Où ? » (AS17) dans `ChampSalle` : choix segmenté « À l'église » /
+  « Ailleurs » (pleine largeur au téléphone, à la taille des mots dès 640 px) ; « À l'église » : « Réserver une salle ? »
+  (huit salles, « Pas besoin de salle » → lieu « Église », salle nulle ; refus de chevauchement inchangé) ; « Ailleurs » :
+  lieu libre, aucune salle. Ouverture : salle ou lieu « Église » → à l'église ; autre lieu (même vide) → ailleurs.
+  Formulaire d'évènement (sauf « info », qui garde son lieu simple ; case « Épinglée » de T6 intacte) et de réunion.
+  Décisions déléguées (session T10, 21/11) : (1) un **nouvel** évènement ou une nouvelle réunion s'ouvre sur « À
+  l'église », « Pas besoin de salle » (la plupart ont lieu à l'église) ; (2) le lieu sans salle s'écrit « Église » en
+  français, dans les deux langues (le lieu est un texte libre). Laissés : `salles.formulaire.salle` et
+  `salles.formulaire.ailleurs` ne servent plus (à retirer en fin de lot avec les autres orphelines) ; en 中文, mode
+  « Ailleurs », 地点 revient trois fois (地点？ / 其他地点 / champ 地点, critique-design) : libellé du champ à revoir.
+  Hors périmètre, corrigés car rouges sur la base : `a-faire.spec.ts:598` (créneaux passés en `reservations`) et
+  `look-fondations.spec.ts:233` (index A–Z dans la carte dès 768 px, B13). Tests : `salles-evenement`, `evenements`,
+  `evenements-equipe`, `agencement-v18-t2a`, `look-fondations`, `libelles-langues`, `coherence`, `a-faire` (cinq
+  projets pour les specs d'agencement) : 913 passés, 0 rouge, en 15 min ; après la retouche de la critique,
+  `salles-evenement` sur trois appareils : 54 passés en 1 min 30. Écran regardé aux quatre dispositions et en 中文.
+  Polices : inchangées (caractères déjà présents). Fin de lot : T9 pas encore poussée, elle la fera.

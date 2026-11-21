@@ -1,14 +1,16 @@
 "use client"
 
-// Le champ « Salle de l'église » d'un évènement ou d'une réunion (docs/spec-salles.md, lot 4, SA12, AR5, AR15) : les
-// neuf salles, groupées comme Salles, plus « Ailleurs » qui fait paraître le lieu en texte libre. Une salle choisie
-// fait paraître l'heure de fin (exigée avec l'heure de début) ; à l'enregistrement, `verifierSalle` relit les
-// occupations du jour et un chevauchement bloque l'écriture avec le refus de SA8 (`RefusSalle`). Le lieu écrit devient
-// le nom de la salle (`valeursSalle`).
+// Le « Où ? » d'un évènement ou d'une réunion (docs/spec-salles.md, lot 4, SA12, AR5, AR15 ; AS17) : « À l'église » /
+// « Ailleurs » d'abord. « À l'église » : « Réserver une salle ? » (les huit salles, groupées comme Salles, ou « Pas besoin
+// de salle » : lieu « Église ») ; « Ailleurs » : le lieu en texte libre, aucune salle. Une salle choisie fait paraître
+// l'heure de fin (exigée avec l'heure de début) ; à l'enregistrement, `verifierSalle` relit les occupations du jour et
+// un chevauchement bloque l'écriture avec le refus de SA8 (`RefusSalle`). Le lieu écrit devient le nom de la salle
+// (`valeursSalle`). Le mode (`eglise`) n'est pas un champ de l'évènement : l'état est dans le formulaire.
 
 import { useTranslation } from "react-i18next"
 import { Champ } from "@/components/ui/champ"
 import { ChampSelect } from "@/components/ui/champ-select"
+import { segmentOption, segmentPiste } from "@/components/ui/segment"
 import { Input } from "@/components/ui/input"
 import { RefusSalle } from "@/components/salles/RefusSalle"
 import { occupationsPourEvenement } from "@/lib/salles/charger"
@@ -46,13 +48,21 @@ export async function verifierSalle(v: Valeurs, sauf: string | undefined, today:
   return { cle: cleDe(v), salle: v.salle, bloque, libres: sallesLibres(occupations, plage), decale: decalage(occupations, v.salle, plage) }
 }
 
-/** Ce qui s'écrit : avec une salle, le lieu est son nom ; « Ailleurs » écrit `salle: null` (le champ retiré). */
-export function valeursSalle(v: Valeurs): Pick<Evenement, "lieu" | "salle"> {
-  return v.salle ? { salle: v.salle, lieu: nomDe(v.salle) } : { salle: null, lieu: v.lieu.trim() }
+/** Le mode d'ouverture (AS17) : une salle ou le lieu « Église » → à l'église ; un autre lieu (même vide) → ailleurs ;
+ *  une création sans lieu → à l'église. */
+export const egliseInitiale = (i: Pick<Evenement, "lieu" | "salle">, creation: boolean) => !!i.salle || i.lieu === "Église" || (creation && !i.lieu)
+
+/** Ce qui s'écrit : avec une salle, le lieu est son nom ; à l'église sans salle, « Église » ; « Ailleurs » écrit
+ *  `salle: null` (le champ retiré) et le lieu libre. */
+export function valeursSalle(v: Valeurs, eglise: boolean): Pick<Evenement, "lieu" | "salle"> {
+  if (v.salle) return { salle: v.salle, lieu: nomDe(v.salle) }
+  return { salle: null, lieu: eglise ? "Église" : v.lieu.trim() }
 }
 
-export function ChampSalle({ v, set, refus }: {
+export function ChampSalle({ v, set, refus, eglise, setEglise }: {
   v: Valeurs
+  eglise: boolean
+  setEglise: (eglise: boolean) => void
   set: (patch: Partial<Valeurs>) => void
   /** Le dernier refus ; montré tant que le moment et la salle n'ont pas changé. */
   refus: RefusEvenement | null
@@ -62,11 +72,25 @@ export function ChampSalle({ v, set, refus }: {
   const choisir = (id: SalleId | null) =>
     // Revenir à « Ailleurs » : le nom d'une salle laissé dans le lieu n'a plus de sens.
     set({ salle: id, ...(!id && SALLES.some((s) => s.nom === v.lieu) ? { lieu: "" } : {}) })
+  // Ailleurs retire la salle ; à l'église vide un lieu libre (le lieu sera le nom de la salle ou « Église »).
+  const mode = (e: boolean) => { setEglise(e); set(e ? { lieu: "" } : { salle: null, lieu: SALLES.some((s) => s.nom === v.lieu) || v.lieu === "Église" ? "" : v.lieu }) }
   return (
     <>
-      <Champ id="ev-salle" label={t("salles.formulaire.salle")}>
+      <div role="radiogroup" aria-labelledby="ev-ou" className="space-y-1.5">
+        <p id="ev-ou" className="text-sm font-semibold text-muted-foreground">{t("evenements.form.ou")}</p>
+        <div className={`flex w-full sm:inline-flex sm:w-auto ${segmentPiste()}`}>
+          {([true, false] as const).map((e) => (
+            <label key={String(e)} className={`relative flex-1 cursor-pointer justify-center text-center sm:flex-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${segmentOption(eglise === e)}`}>
+              <input type="radio" name="ev-ou" checked={eglise === e} onChange={() => mode(e)} className="absolute inset-0 z-10 cursor-pointer opacity-0" />
+              {t(e ? "evenements.form.aLEglise" : "evenements.form.ailleurs")}
+            </label>
+          ))}
+        </div>
+      </div>
+      {eglise && <>
+      <Champ id="ev-salle" label={t("evenements.form.reserverSalle")}>
         <ChampSelect id="ev-salle" value={v.salle ?? ""} onChange={(e) => choisir((e.target.value || null) as SalleId | null)}>
-          <option value="">{t("salles.formulaire.ailleurs")}</option>
+          <option value="">{t("evenements.form.pasBesoinSalle")}</option>
           {GROUPES.map((g) => (
             <optgroup key={g} label={t(`salles.groupes.${g}`)}>
               {SALLES.filter((s) => s.groupe === g).map((s) => (
@@ -76,14 +100,16 @@ export function ChampSalle({ v, set, refus }: {
           ))}
         </ChampSelect>
       </Champ>
-      {v.salle ? (
+      {v.salle && (
         <div className="grid grid-cols-2 gap-3">
           {/* Sous l'heure de début (colonne de droite), comme « De | À » (critique-design T4a). */}
           <Champ id="ev-heure-fin" label={t("evenements.form.heureFin")} className="col-start-2">
             <Input id="ev-heure-fin" className="h-11" type="time" value={v.heureFin} onChange={(e) => set({ heureFin: e.target.value })} />
           </Champ>
         </div>
-      ) : (
+      )}
+      </>}
+      {!eglise && (
         <Champ id="ev-lieu" label={t("evenements.form.lieu")}>
           <Input id="ev-lieu" className="h-11" value={v.lieu} maxLength={120} onChange={(e) => set({ lieu: e.target.value })} />
         </Champ>

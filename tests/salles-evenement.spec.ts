@@ -6,7 +6,7 @@ import { orga, signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSes
 import { interdireDialoguesNatifs } from "./helpers/agencement";
 
 // Chantier AR (docs/spec-salles.md), lot 4, tranche T4a : une réunion ou un évènement réserve sa salle (AR5, AR15,
-// SA12). Champ « Salle de l'église » (les huit, plus « Ailleurs » qui fait paraître le lieu en texte libre) dans le
+// SA12 ; AS17). « Où ? » : « À l'église » (« Réserver une salle ? », les huit salles ou « Pas besoin de salle ») ou « Ailleurs » (lieu libre) dans le
 // formulaire d'un évènement et celui d'une réunion ; une salle choisie exige une heure de début et de fin ; un
 // chevauchement bloque l'enregistrement avec le refus de SA8 ; le lieu écrit devient le nom de la salle ; Salles lit
 // l'évènement comme une occupation. Firestore, planning et date simulés ; personnes fictives.
@@ -64,7 +64,8 @@ async function ouvrir(page: Page, qui: FakeProfile, to: string, { zh = false, vu
   return signInAs(page, qui, DOCS, to);
 }
 
-const salle = (page: Page) => page.getByLabel("Salle de l'église");
+const salle = (page: Page) => page.getByLabel("Réserver une salle ?");
+const ailleurs = (page: Page) => page.getByRole("radio", { name: "Ailleurs" });
 const refus = (page: Page) => page.locator("[data-refus]");
 const posts = (db: FakeDb) => db.writes.filter((w) => w.method === "POST" && /^evenements\/[^/]+$/.test(w.path));
 
@@ -90,11 +91,12 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     expect(chevauchement(o, "grande", { debut: "15:30", fin: "16:30" }, "concert")).toBeNull();
   });
 
-  test("champ « Salle de l'église » : « Ailleurs » montre le lieu ; une salle montre l'heure de fin et l'exige", async ({ page }) => {
+  test("« Où ? » : par défaut à l'église sans salle, aucun Lieu ; une salle montre l'heure de fin et l'exige", async ({ page }) => {
     const db = await ouvrir(page, COORDINATION, "/back-office/evenements/nouveau");
+    await expect(page.getByRole("radio", { name: "À l'église" })).toBeChecked();
     await expect(salle(page)).toHaveValue("");
-    await expect(salle(page).locator("option:checked")).toHaveText("Ailleurs");
-    await expect(page.getByLabel("Lieu", { exact: true })).toBeVisible();
+    await expect(salle(page).locator("option:checked")).toHaveText("Pas besoin de salle");
+    await expect(page.getByLabel("Lieu", { exact: true })).toHaveCount(0);
     // Les huit salles, dans l'ordre de l'écran.
     await expect(salle(page).locator("option")).toHaveCount(9);
     await salle(page).selectOption("paix");
@@ -113,6 +115,34 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
     await expect(page.getByRole("heading", { name: "Atelier vitrail" })).toBeVisible();
     expect(posts(db)[0]?.data).toMatchObject({ salle: "paix", lieu: "Salle Paix", heure: "14:00", heureFin: "16:00" });
+  });
+
+  test("à l'église sans salle : le lieu écrit est « Église », pas de salle", async ({ page }) => {
+    const db = await ouvrir(page, COORDINATION, "/back-office/evenements/nouveau");
+    await nouvelEvenement(page, "Veillée des lanternes");
+    await page.getByRole("button", { name: "Créer l'évènement" }).click();
+    await expect(page.getByRole("heading", { name: "Veillée des lanternes" })).toBeVisible();
+    expect(posts(db)[0]?.data).toMatchObject({ lieu: "Église" });
+    expect(posts(db)[0]?.data.salle ?? null).toBeNull();
+  });
+
+  test("« Ailleurs » : Lieu libre, aucun select de salle ; le lieu s'écrit sans salle", async ({ page }) => {
+    const db = await ouvrir(page, COORDINATION, "/back-office/evenements/nouveau");
+    await nouvelEvenement(page, "Sortie au verger");
+    await ailleurs(page).check({ force: true });
+    await expect(salle(page)).toHaveCount(0);
+    await page.getByLabel("Lieu", { exact: true }).fill("Verger des Lilas");
+    await page.getByRole("button", { name: "Créer l'évènement" }).click();
+    await expect(page.getByRole("heading", { name: "Sortie au verger" })).toBeVisible();
+    expect(posts(db)[0]?.data).toMatchObject({ lieu: "Verger des Lilas" });
+    expect(posts(db)[0]?.data.salle ?? null).toBeNull();
+  });
+
+  test("un évènement existant avec un lieu libre s'ouvre sur « Ailleurs »", async ({ page }) => {
+    await ouvrir(page, COORDINATION, "/back-office/evenements/pique-nique/modifier");
+    await expect(ailleurs(page)).toBeChecked();
+    await expect(page.getByLabel("Lieu", { exact: true })).toHaveValue("Parc de Sceaux");
+    await expect(salle(page)).toHaveCount(0);
   });
 
   test("chevauchement bloqué : le refus de SA8 nomme l'occupant ; « Décaler » puis l'enregistrement passe", async ({ page }) => {
@@ -159,7 +189,7 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     expect(db.doc("evenements/concert")).toMatchObject({ salle: "grande", heure: "15:30" });
 
     await page.goto("/back-office/evenements/concert/modifier");
-    await salle(page).selectOption("");
+    await ailleurs(page).check({ force: true });
     await page.getByLabel("Lieu", { exact: true }).fill("Théâtre municipal");
     await page.getByRole("button", { name: "Enregistrer" }).click();
     await expect.poll(() => db.doc("evenements/concert")?.lieu).toBe("Théâtre municipal");
@@ -171,7 +201,10 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     await page.getByLabel("Nom de la réunion").fill("Bilan du trimestre");
     await page.getByLabel("Date", { exact: true }).fill(JOUR);
     await page.getByLabel("Horaire", { exact: true }).fill("10:30");
+    await expect(page.getByLabel("Lieu", { exact: true })).toHaveCount(0);
+    await ailleurs(page).check({ force: true });
     await expect(page.getByLabel("Lieu", { exact: true })).toBeVisible();
+    await page.getByRole("radio", { name: "À l'église" }).check({ force: true });
     await salle(page).selectOption("reunion");
     await expect(page.getByLabel("Lieu", { exact: true })).toHaveCount(0);
     await page.getByLabel("Heure de fin", { exact: true }).fill("12:00");
@@ -225,10 +258,13 @@ test.describe("AR, T4a : un évènement ou une réunion réserve sa salle", () =
     await expect(grande).toHaveAccessibleName(/Concert d'automne/);
   });
 
-  test("中文 : 教会场地 et 其他地点", async ({ page }) => {
+  test("中文 : 地点？ 在教会 / 其他地点, 预约场地？ et 不需要场地", async ({ page }) => {
     await ouvrir(page, COORDINATION, "/back-office/evenements/nouveau", { zh: true });
-    const champ = page.getByLabel("教会场地");
-    await expect(champ.locator("option:checked")).toHaveText("其他地点");
+    await expect(page.getByRole("radiogroup", { name: "地点？" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "在教会" })).toBeChecked();
+    await expect(page.getByRole("radio", { name: "其他地点" })).toBeVisible();
+    const champ = page.getByLabel("预约场地？");
+    await expect(champ.locator("option:checked")).toHaveText("不需要场地");
     await champ.selectOption("fidelite");
     await expect(champ.locator("option:checked")).toHaveText("Salle Fidélité · 小班");
   });

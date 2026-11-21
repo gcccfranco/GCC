@@ -595,7 +595,7 @@ test.describe("À faire (BO-B) : l'écran", () => {
   test("le Google Sheet qui ne répond pas ne bloque pas À faire", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-24T10:00:00"));
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.abort());
-    await signInAs(page, ADMIN, JEU, "/back-office");
+    await signInAs(page, ADMIN, creneauxEnReservations(JEU), "/back-office");
     await expect(lignes(page)).toHaveCount(10);
     await expect(alerte(page)).toHaveCount(0);
   });
