@@ -6,9 +6,10 @@ import type { JianpuChords } from "@/types/setList";
 /** Trait du Crayon accroché au texte (docs/spec-ma-partition.md, § Traits). `ancre` : un caractère du texte (section,
  *  ligne dans la section, rang du caractère des paroles) ou une image de scan 简谱. Texte : `points` et `epaisseur`
  *  en em de la ligne, relatifs au coin haut-gauche du caractère. Scan : en fraction de la largeur de l'image,
- *  relatifs à son coin haut-gauche. Calculs dans `src/lib/annotations/ancres.ts`. */
+ *  relatifs à son coin haut-gauche. `passage` (texte) : rang du passage de la section dans l'ordre lu (0 = le premier) ;
+ *  absent, le dessin vaut pour tous les passages. Calculs dans `src/lib/annotations/ancres.ts`. */
 export type Trait = {
-  ancre: { section: string; ligne: number; car: number } | { scan: true; image: number };
+  ancre: { section: string; ligne: number; car: number; passage?: number } | { scan: true; image: number };
   outil: "pen" | "highlighter";
   couleur: string;
   epaisseur: number;

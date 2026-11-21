@@ -77,11 +77,19 @@ function caracterePlusProche(ligne: HTMLElement, x: number, y: number, mesure: M
   return meilleur;
 }
 
+/** Rang du passage porté par la ligne (`data-trait-passage`), sinon rien : le dessin vaut pour tous. */
+const passageDe = (el: HTMLElement, tous: boolean): { passage?: number } => {
+  const p = el.dataset.traitPassage;
+  return !tous && p !== undefined && Number.isInteger(Number(p)) ? { passage: Number(p) } : {};
+};
+/** Un `passage` d'ancre qui n'est pas un entier >= 0 est ignoré (le dessin vaut pour tous). */
+const passageValide = (p: unknown): number | undefined => (typeof p === "number" && Number.isInteger(p) && p >= 0 ? p : undefined);
+
 const horsApercu = (el: Element) => !el.closest("[data-apercu-suivant]");
 
 /** Anciens → nouveau : un tracé écran (espace sans loupe) devient un ou plusieurs traits ancrés, un par ligne touchée.
- *  Un tracé qui commence sur l'image d'un scan s'ancre au scan ; sans ligne ni scan sous la page : rien (rendu vide). */
-export function ancrerTrace(s: Stroke, racine: HTMLElement, loupe: Loupe): { slug: string; trait: Trait | Signe }[] {
+ *  Une ligne qui porte `data-trait-passage` donne une ancre à ce passage, sauf `tousLesPassages` (UP-2). Un tracé qui commence sur l'image d'un scan s'ancre au scan ; sans ligne ni scan sous la page : rien (rendu vide). */
+export function ancrerTrace(s: Stroke, racine: HTMLElement, loupe: Loupe, tousLesPassages = false): { slug: string; trait: Trait | Signe }[] {
   const signe = s.tool === "text" || s.tool === "stamp";
   const mesure = mesureDe(loupe);
   const [x0, y0] = s.points[0];
@@ -103,7 +111,7 @@ export function ancrerTrace(s: Stroke, racine: HTMLElement, loupe: Loupe): { slu
     const loin = Math.min(...points.map(([, y]) => (y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0)));
     // Un texte ou un tampon s'accroche à la ligne la plus proche, sans cette limite (AN-5).
     if (!signe && loin > 2 * repere.unite) continue;
-    const ancre = { section: el.dataset.traitSection ?? "", ligne: Number(el.dataset.traitLigne), car };
+    const ancre = { section: el.dataset.traitSection ?? "", ligne: Number(el.dataset.traitLigne), car, ...passageDe(el, tousLesPassages) };
     out.push({ slug: el.dataset.traitSlug ?? "", trait: signe ? ancrerSigne({ ...s, points }, ancre, repere) : ancrer({ ...s, points } as Parameters<typeof ancrer>[0], ancre, repere) });
   }
   return out;
@@ -112,7 +120,7 @@ export function ancrerTrace(s: Stroke, racine: HTMLElement, loupe: Loupe): { slu
 /** Reprise des anciennes annotations (MP-6) : chaque tracé de `data` (px du viewport d'origine) va au chant dont le bloc à
  *  l'écran contient son point de départ (à défaut, le premier chant de la page) et s'ancre à la première ligne de texte de
  *  ce chant sur la page, ou à son scan 简谱 sans ligne, de sorte qu'il reste là où il est à l'écran. */
-export function ancrerSurPremiereLigne(data: AnnotationData, racine: HTMLElement, loupe: Loupe): { slug: string; trait: Trait | Signe }[] {
+export function ancrerSurPremiereLigne(data: AnnotationData, racine: HTMLElement, loupe: Loupe, tousLesPassages = false): { slug: string; trait: Trait | Signe }[] {
   const mesure = mesureDe(loupe);
   const lignes = Array.from(racine.querySelectorAll<HTMLElement>("[data-trait-section]")).filter(horsApercu);
   const scans = Array.from(racine.querySelectorAll<HTMLElement>("[data-trait-scan]")).filter(horsApercu);
@@ -139,7 +147,7 @@ export function ancrerSurPremiereLigne(data: AnnotationData, racine: HTMLElement
     let ancre: Trait["ancre"];
     let repere: Repere;
     if (!c.scan) {
-      ancre = { section: c.cible.dataset.traitSection ?? "", ligne: Number(c.cible.dataset.traitLigne), car: 0 };
+      ancre = { section: c.cible.dataset.traitSection ?? "", ligne: Number(c.cible.dataset.traitLigne), car: 0, ...passageDe(c.cible, tousLesPassages) };
       repere = repereTexte(c.cible, 0, mesure, loupe.zoom);
     } else {
       const r = mesure(c.cible.getBoundingClientRect());
@@ -165,8 +173,8 @@ const idDe = (t: Trait | Signe) => ids.get(t) ?? (ids.set(t, ++suivant), suivant
 
 /** Projette les traits `traits` sur les lignes (et scans) de `racine()` visibles à l'écran. Refait après chaque rendu
  *  (pagination, taille du texte, disposition), au redimensionnement, à l'arrivée des polices et à toute mutation de la
- *  page (coupure de ligne mesurée) ; l'état ne change que si le dessin change. Une section jouée plusieurs fois donne
- *  un tracé par passage. `actif` faux : la dernière projection reste. */
+ *  page (coupure de ligne mesurée) ; l'état ne change que si le dessin change. Un trait sans `passage` se montre à chaque
+ *  passage de sa section ; avec `passage`, seulement à ce passage (et jamais là où les passages ne se distinguent pas). `actif` faux : la dernière projection reste. */
 export function useTraitsAncres({ racine, traits, actif, loupe }: { racine: () => HTMLElement | null; traits: TraitsParChant; actif: boolean; loupe: Loupe }): Projection {
   const [projection, setProjection] = useState<Projection>(VIDE);
   const signature = useRef("");
@@ -186,6 +194,10 @@ export function useTraitsAncres({ racine, traits, actif, loupe }: { racine: () =
         if (!horsApercu(l)) continue;
         const k = `${l.dataset.traitSlug}\n${l.dataset.traitSection}\n${l.dataset.traitLigne}`;
         lignes.set(k, [...(lignes.get(k) ?? []), l]);
+        if (l.dataset.traitPassage !== undefined) {
+          const kp = `${k}\n${l.dataset.traitPassage}`;
+          lignes.set(kp, [...(lignes.get(kp) ?? []), l]);
+        }
       }
       const scans = new Map<string, HTMLElement[]>();
       for (const l of el.querySelectorAll<HTMLElement>("[data-trait-scan]")) {
@@ -197,7 +209,8 @@ export function useTraitsAncres({ racine, traits, actif, loupe }: { racine: () =
         for (const [mien, liste] of [[true, miens], [false, autres]] as const) {
           for (const trait of liste.filter((e): e is Trait | Signe => estTrait(e) || estSigne(e))) {
             const a = trait.ancre;
-            const cibles = "scan" in a ? scans.get(`${slug}\n${a.image}`) : lignes.get(`${slug}\n${a.section}\n${a.ligne}`);
+            const passage = "scan" in a ? undefined : passageValide(a.passage);
+            const cibles = "scan" in a ? scans.get(`${slug}\n${a.image}`) : lignes.get(`${slug}\n${a.section}\n${a.ligne}${passage === undefined ? "" : `\n${passage}`}`);
             for (const cible of cibles ?? []) {
               let repere: Repere;
               if ("scan" in a) {

@@ -206,6 +206,7 @@ function BlockRenderer({
       couleurDe={couleurDe}
       // Lot CV : les exceptions de mots chinois du chant (motsChinois.ts) s'appliquent au pupitre comme sur la page du chant.
       slug={block.songSlug}
+      passage={block.passage}
       marques={marques}
     />
     </NomsTouchables>
@@ -1454,7 +1455,7 @@ export function PerformanceMode({
   const surTracesCrayon = (nouveau: AnnotationData) => {
     const racine = contentAreaRef.current;
     if (!racine) return;
-    // Une section jouée plusieurs fois montre le même trait à chaque passage : il est retiré dès qu'un de ses passages
+    // Un trait sans `passage` se montre à chaque passage de sa section (avec `passage`, à ce passage seul) : il est retiré dès qu'un de ses passages
     // manque (gomme), pas quand l'annulation d'AO rend des tracés d'avant (autres objets, mêmes traits).
     const voulus: { slug: string; trait: Trait | Signe }[] = [];
     let neufs = 0;

@@ -959,6 +959,9 @@ interface SectionViewProps {
   couleurDe?: string;
   /** Slug du chant (exceptions de mots chinois, motsChinois.ts) ; absent : segmentation seule. */
   slug?: string;
+  /** Rang de ce passage de la section dans l'ordre lu (0 = le premier), seulement si chaque passage est montré
+   *  séparément et que la section revient : `data-trait-passage` sur les lignes (traits par passage, UP-1). */
+  passage?: number;
   /** Ma partition : signes des lignes, par `srcLine` (`data-marque` sur la ligne). */
   marques?: Marques;
   /** Conflit « Le chant a changé ici » : sans elle, les deux versions se montrent sans boutons. */
@@ -967,7 +970,7 @@ interface SectionViewProps {
   onPasserAuCulte?: (srcLine: number) => void;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, marques, onConflit, onPasserAuCulte }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", disposition = "classique", onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug, passage, marques, onConflit, onPasserAuCulte }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -1065,7 +1068,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           );
         }
         // Crayon (MP-5) : repères où s'accrochent les traits (section, rang de la ligne, chant).
-        const repere = { "data-trait-slug": slug, "data-trait-section": section.id, "data-trait-ligne": i };
+        const repere = { "data-trait-slug": slug, "data-trait-section": section.id, "data-trait-ligne": i, "data-trait-passage": passage };
         if (!m) return <div key={i} {...repere}>{rendered}</div>;
         const bouton = `${TOUCHER_44} h-8 rounded-full border border-border bg-background px-3 text-xs font-semibold hover:bg-secondary`;
         return (
@@ -1377,6 +1380,14 @@ export function SongView({
         : layout === "unique"
           ? uniqueSections(steps, ast.metadata.key).map((u) => ({ ...u, withDetails: false }))
           : steps.map((step) => ({ step, uids: [step.section.uid], withDetails: true }));
+  // Rang du passage de chaque étape dans l'ordre lu, seulement quand chaque passage se montre séparément et que la section revient (UP-1) ;
+  // « une fois chacune » / « plan » : aucun rang.
+  const passageDe = personalSteps || layout !== "unique"
+    ? shown.map(({ step: { section } }, i) => {
+        if (shown.filter((e) => e.step.section.id === section.id).length < 2) return undefined;
+        return shown.slice(0, i).filter((e) => e.step.section.id === section.id).length;
+      })
+    : [];
   // Ligne sous l'armure de la page chant : « 4/4 · ♩ = 66 » (le « 1=D » est dans l'armure, RU-3).
   const ligneTempo: React.ReactNode[] = [];
   if (pageChant) {
@@ -1548,6 +1559,7 @@ export function SongView({
                 onLineSelect={onLineSelect}
                 occurrenceUids={uids}
                 slug={slug}
+                passage={passageDe[i]}
                 marques={marques}
                 onConflit={onConflit}
                 onPasserAuCulte={onPasserAuCulte}

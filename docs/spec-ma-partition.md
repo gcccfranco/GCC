@@ -169,9 +169,9 @@ scan 简谱, l'ancre est le scan (coordonnées de l'image). Le format garde les 
   s'ajouter à la barre plus tard.
 - **Ancre** : `slug` implicite (le document), `section` = id de la section du chant (`ChordProSection.id`), `ligne` =
   rang de la ligne dans la section, `car` = rang du caractère des paroles (accords et pinyin non comptés) le plus
-  proche du début du trait ; points et épaisseur en em de la ligne. Une section jouée plusieurs fois montre ses traits
-  à chaque passage ; gommer un passage gomme le trait. Scan 简谱 : `{ scan: true, image }`, points en fraction de la
-  largeur de l'image.
+  proche du début du trait ; points et épaisseur en em de la ligne. Un trait sans `passage` se montre à chaque passage
+  de sa section ; avec `passage` (rang, 0 = le premier, UP-1), seulement à ce passage ; la gomme l'enlève là où il
+  vaut. Scan 简谱 : `{ scan: true, image }`, points en fraction de la largeur de l'image.
 - **Quels traits** : les miens, toujours (c'est moi qui joue), plus ceux de la partition partagée que je lis si son
   auteur a coché « Inclure mes traits » (lecture seule : ma gomme ne les touche pas). Tracer écrit toujours ma
   partition (créée au besoin, texte inchangé).
@@ -372,3 +372,21 @@ Format : `passage` est facultatif, une version ancienne du site l'ignore et mont
   `ma-partition-crayon`. Tests : `ma-partition-crayon`, `harmonie-ma-version`, `adapter-sections`, `setlist-history`,
   `ma-partition-lecture` sur les trois appareils, 198 passés, 0 échec en 9,6 min ; tsc propre, lint 0 erreur.
   UP-4 non lancée ici : la ligne d'UP-2 n'existe pas encore (UP-2 la lancera).
+- 21/11/2026 : **UP-1 — Dessins par passage** (go de Timothée du 21/11). L'ancre texte d'un dessin (trait, surligneur,
+  texte, tampon) gagne `passage` facultatif (`src/types/partition.ts`) : rang du passage de la section dans l'ordre lu,
+  0 = le premier. Il est posé au rendu en `data-trait-passage`, au mode louange (`numeroterPassages`,
+  `src/lib/performance/blocks.ts`, rang par chant en ordre joué) et dans `SongView` (boucle des passages), seulement si
+  la section revient. Au tracé, il s'écrit d'après la ligne touchée (`useTraitsAncres.ts`, option `tousLesPassages`
+  prête pour UP-2). Au rendu, un dessin sans `passage` va partout, comme avant ; les dessins déjà faits ne sont pas
+  convertis (question 3). Un dessin avec `passage` ne va qu'à ce passage ; un `passage` invalide est ignoré, et le
+  trait se dessine partout. Gomme (question 6) : elle passait déjà par le trait d'origine, sans changement. **Décision
+  déléguée (session, 21/11)** : en ordre « Une fois chacune » ou « Plan », un dessin à `passage` ne se montre pas sur
+  la section normale ; UP-4 l'ajoutera comme section à part avec sa note. Le rang suit l'ordre de la setlist ouverte :
+  un trait `passage: 1` se montre au 2ᵉ refrain d'une autre setlist du même chant (même partition). Scans 简谱 :
+  inchangés. `firestore.rules` : rien à changer (le champ vit dans `traits`). Spec nouvelle
+  `ma-partition-passage` (FR, sans cas ZH : aucun chant chinois n'a de section répétée simple à prendre). Avec les
+  voisines (`ma-partition-traits`, `ma-partition-crayon`, `annotations-forscore`, `louange-sections-uniques`) :
+  526 passés, 3 échecs (≈ 23 min, plus 6 min de relances). Deux échecs sont déjà rouges sur la base :
+  `annotations-forscore` (z) au téléphone, `louange-sections-uniques:358` (C1) sur ordinateur-1440. Le troisième,
+  (v) préréglages sur ordinateur-1440, est instable sous charge : il passe seul. Reste : UP-2 (le choix dans la barre),
+  puis UP-4 (UP-3 est faite).

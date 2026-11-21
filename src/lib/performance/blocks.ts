@@ -66,6 +66,9 @@ export type SectionBlock = {
   repeat?: number;
   /** Capo du chant (frets) : `songKey` et `keyChange` sont sonores, les accords de `section` sont déjà transposés de −capo. */
   capo?: number;
+  /** Rang de ce passage de la section dans l'ordre lu (0 = le premier), seulement quand chaque passage est imprimé seul et
+   *  que la section revient (`data-trait-passage`, traits par passage, UP-1). Absent : sections uniques, passages repliés (×n). */
+  passage?: number;
 };
 
 export type TransitionIntraBlock = {
@@ -427,7 +430,29 @@ export function buildPerformanceBlocks(
     }
   }
 
-  return affichage === "played" ? fusionnerDp(blocks) : blocks;
+  return affichage === "played" ? numeroterPassages(fusionnerDp(blocks)) : blocks;
+}
+
+/** Rang de chaque passage d'une section qui revient, par chant, dans l'ordre lu (les passages repliés en « ×n » comptent
+ *  pour leurs uids mais ne portent pas de rang : on n'y distingue pas de passage). */
+function numeroterPassages(blocks: PerformanceBlock[]): PerformanceBlock[] {
+  const cle = (b: SectionBlock, chant: number) => `${chant}\n${b.songSlug ?? b.songTitle}\n${b.section.id}`;
+  const parcourir = (f: (b: SectionBlock, k: string) => void) => {
+    let chant = 0;
+    for (const b of blocks) {
+      if (b.kind === "song-header") chant++;
+      else if (b.kind === "section") f(b, cle(b, chant));
+    }
+  };
+  const total = new Map<string, number>();
+  parcourir((b, k) => total.set(k, (total.get(k) ?? 0) + (b.occurrenceUids?.length ?? 1)));
+  const vus = new Map<string, number>();
+  parcourir((b, k) => {
+    const rang = vus.get(k) ?? 0;
+    if (!b.repeat && (total.get(k) ?? 0) > 1) b.passage = rang;
+    vus.set(k, rang + (b.occurrenceUids?.length ?? 1));
+  });
+  return blocks;
 }
 
 /** Signature de mise en page d'une page du mode louange, partie de la clé de
