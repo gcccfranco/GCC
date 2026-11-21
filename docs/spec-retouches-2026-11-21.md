@@ -140,3 +140,13 @@ sur tablette portrait, tablette paysage, ordinateur et 1 440 px.
   paysage, FR et 中文) triées par `regard`, `critique-design` : « bon ». Finitions laissées : marge du cas calé
   (≈ 17 px au bord ; aligner sur le bord des cadres, ≈ 24 px), flèche presque invisible sur fond blanc, ombre légère
   sur tablette. Non vu à l'écran : déplacement au doigt ou au stylet sur un vrai appareil, thème sombre.
+- 21/11/2026 : **R3 faite.** Un effet dans `PerformanceMode.tsx` (six lignes, aucun reformatage) : `overflow: hidden` sur
+  `<html>` tant que le mode louange est monté, valeur d'avant rendue au démontage ; la sortie démonte seulement le mode
+  et laisse la page de la setlist à sa place. Test ajouté à `performance-mode.spec.ts` : en mode louange la molette ne
+  change pas `scrollY` et le document n'a plus de barre ; à la sortie, même position, `overflow` rendu, la molette
+  défile de nouveau (ordinateur, tablette, téléphone). Le clic sur « Mode Louange » ramène lui-même la page en haut :
+  le test défile donc dans le mode avant la sortie. Tests (`performance-mode`, `louange-menus`,
+  `louange-parcours-culte`, `mode-louange-forscore`, cinq projets, 41 min) : 680 passés, 2 échoués, les deux déjà là
+  sans R3, au test B1 de `louange-menus` (feuille « Affichage », zone de R1) : tablette, « haut » 29 px au lieu de
+  moins de 24, constant ; ordinateur-1440, le × change de page, une fois sur huit sans R3 (instable). À reprendre
+  avec R1.

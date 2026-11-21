@@ -487,3 +487,50 @@ test.describe("nuancier", () => {
     expect(onStage).toBeGreaterThanOrEqual(onSong * 1.25);
   });
 });
+
+// R3 (21/11/2026) : la page de la setlist, restée montée sous le mode louange, ne défile plus.
+test("mode louange : la molette ne fait plus défiler la page derrière ; à la sortie le défilement revient", async ({ page }) => {
+  await signInAs(page, MUSICIEN, {
+    [`setlists/${SETLIST_ID}`]: setlist([
+      item({ songSlug: "abba-pere", position: 1 }),
+      item({ songSlug: "abba-pere", position: 2 }),
+      item({ songSlug: "abba-pere", position: 3 }),
+      item({ songSlug: "abba-pere", position: 4 }),
+      item({ songSlug: "abba-pere", position: 5 }),
+    ]),
+  }, `/setlists/${SETLIST_ID}`);
+  const overflow = () => page.evaluate(() => getComputedStyle(document.documentElement).overflow);
+  const scrollY = () => page.evaluate(() => window.scrollY);
+  await expect(page.getByRole("button", { name: /Mode Louange/ })).toBeVisible();
+  await expect(page.getByText("Abba").first()).toBeVisible();
+  const hauteur = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+  expect(hauteur, "la page de la setlist doit défiler").toBeGreaterThan(100);
+  expect(await overflow()).not.toBe("hidden");
+
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  expect(await overflow()).toBe("hidden");
+  // Défiler la page avant d'ouvrir ne tient pas (le clic sur le bouton la ramène en haut, ou n'aboutit pas au téléphone) :
+  // on la défile par programme dans le mode (permis malgré overflow:hidden), pour prouver que la sortie ne la remet pas à zéro.
+  await page.evaluate(() => window.scrollTo(0, 100));
+  const avant = await scrollY();
+  expect(avant, "la page doit être défilée pour que la sortie prouve quelque chose").toBeGreaterThan(0);
+  // Seule la molette est testée : window.scrollBy, programmatique, passerait outre overflow:hidden.
+  await page.mouse.move(100, 300);
+  await page.mouse.wheel(0, 400);
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  expect(await scrollY()).toBe(avant);
+
+  // Clic direct, sans `quitter` : il rétablirait lui-même le défilement et masquerait une remise à zéro à la sortie.
+  // La sortie ne déplace pas la page (elle ne fait que démonter le mode) : on retrouve la position d'avant.
+  await page.getByRole("button", { name: "Quitter" }).click();
+  await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
+  expect(await overflow()).not.toBe("hidden");
+  await expect(page).toHaveURL(new RegExp(`/setlists/${SETLIST_ID}`));
+  await expect.poll(scrollY).toBeGreaterThanOrEqual(avant - 3);
+  expect(await scrollY()).toBeLessThanOrEqual(avant + 3);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.mouse.move(100, 300);
+  await page.mouse.wheel(0, 400);
+  await expect.poll(scrollY).toBeGreaterThan(0);
+});
