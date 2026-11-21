@@ -13,7 +13,7 @@ const BLEU = PLANNING_COLORS.scene
 const ZH = "zh-CN"
 
 /** « jeudi 24 décembre » / « 12月24日 星期四 » ; `court` : sans le jour de la semaine. */
-function dateEnLettres(iso: string, lang: string, court = false): string {
+export function dateEnLettres(iso: string, lang: string, court = false): string {
   const d = new Date(versUtc(iso))
   const opts = { timeZone: "UTC" } as const
   if (lang === ZH) {
@@ -24,7 +24,7 @@ function dateEnLettres(iso: string, lang: string, court = false): string {
   return d.toLocaleDateString("fr-FR", { ...opts, weekday: court ? undefined : "long", day: "numeric", month: "long" }).replace(/(\d) /, "$1\u00a0")
 }
 
-const PILULE = "inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold"
+export const PILULE = "inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold"
 
 export function CarteFete({ edition, today }: { edition: Edition; today: string }) {
   const { t, i18n } = useTranslation()

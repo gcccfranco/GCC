@@ -35,6 +35,10 @@ export function placesRestantes(e: Pick<Evenement, "placesMax" | "inscrits">): n
 export const byDate = (a: Pick<Evenement, "date" | "heure">, b: Pick<Evenement, "date" | "heure">) =>
   `${a.date} ${a.heure}`.localeCompare(`${b.date} ${b.heure}`);
 
+/** Lot AS, T6 (RS7) : les évènements épinglés, datés, non finis, non expirés, triés par date ; l'appelant en prend trois. */
+export const epinglesEnGrand = (evenements: Evenement[], today: string): Evenement[] =>
+  evenements.filter((e) => e.epingle && !isInfo(e) && !isPast(e, today) && !isExpired(e, today)).sort(byDate);
+
 function monthLabel(yyyyMm: string, lang: string): string {
   const [y, m] = yyyyMm.split("-").map(Number);
   if (lang === "zh-CN") return `${y}年${m}月`;

@@ -17,6 +17,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 const SPECS_GRAND_ECRAN = [
   // Lot AS, T5 (docs/spec-reserver-unique-fetes.md) : la carte de la fête dans Évènements et la fête passée dans « Passés ».
   /evenements-fete\.spec\.ts/,
+  // Lot AS, T6 : l'évènement épinglé en grand (une ou plusieurs cartes, rangée qui défile, avec ou sans image).
+  /evenements-epingle\.spec\.ts/,
   // Salles AR, T2b (docs/spec-salles.md) : la Liste, la bande de jours, le repère d'heure, la journée d'une salle (page ou volet).
   /salles-liste\.spec\.ts/,
   // Salles AR, T2c : la Grille (neuf colonnes, défilement au téléphone), le sélecteur « Liste · Grille » et la vue par appareil.

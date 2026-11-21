@@ -186,7 +186,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
         inscriptions: mode,
         inscriptionDebut: mode === "auto" ? v.inscriptionDebut ?? "" : "",
         inscriptionFin: mode === "auto" ? v.inscriptionFin ?? "" : "",
-        epingle: info ? v.epingle : false,
+        epingle: reunion ? false : v.epingle,
         sansCompte: !reserve && v.sansCompte,
         ...(reunion ? sansInscription : {}),
       }, creation && prevenir)
@@ -333,15 +333,18 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
         </label>
       )}
 
-      {info && (
+      {!reunion && (
         <div className="space-y-3 p-4">
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" className="h-4 w-4" checked={v.epingle} onChange={(e) => set({ epingle: e.target.checked })} />
             {t("evenements.form.epingle")}
           </label>
-          <Champ id="ev-expires" label={t("evenements.form.expiresAt")}>
-            <Input id="ev-expires" className="h-11" type="date" value={v.expiresAt ?? ""} onChange={(e) => set({ expiresAt: e.target.value || null })} />
-          </Champ>
+          {/* Lot AS, T6 : « Visible jusqu'au » reste aux infos (sur un daté, il le ferait disparaître de tout l'agenda). */}
+          {info && (
+            <Champ id="ev-expires" label={t("evenements.form.expiresAt")}>
+              <Input id="ev-expires" className="h-11" type="date" value={v.expiresAt ?? ""} onChange={(e) => set({ expiresAt: e.target.value || null })} />
+            </Champ>
+          )}
         </div>
       )}
 

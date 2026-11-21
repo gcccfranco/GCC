@@ -2489,6 +2489,9 @@
       "desLe": "大厅预约将于{{date}}开放",
       "fermees": "大厅预约已关闭"
     },
+    "epingle": {
+      "voir": "查看"
+    },
     "places_one": "剩余 {{count}} 个名额",
     "places_other": "剩余 {{count}} 个名额",
     "complet": "已满",

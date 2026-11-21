@@ -1235,7 +1235,7 @@
         "for": "Membres connectés · ordre de passage tenu par la coordination",
         "body": "Avant une grande fête (Noël), un onglet du programme apparaît dans **Évènements** pour réserver la scène le dimanche et préparer l'ordre de passage.",
         "points": [
-          "**Entraînements** : choisis un dimanche, l'heure, quoi et qui ; un créneau qui en chevauche un autre est refusé. « Réserver un autre moment » prend un autre jour ou d'autres heures, dans la période des réservations.",
+          "**Entraînements** : choisis un dimanche, l'heure, quoi et qui ; un créneau qui en chevauche un autre est refusé. « Réserver un autre moment » prend un autre jour ou d'autres heures, dans la période des réservations.",
           "Tu modifies ou retires tes créneaux ; la coordination peut tous les déplacer.",
           "**Programme** : l'ordre de passage du jour J, tenu par la coordination.",
           "Tes entraînements sont rappelés avec tes services."
@@ -2522,6 +2522,9 @@
       "ouvertesJusqua": "Grande salle ouverte aux réservations jusqu'au {{date}}",
       "desLe": "Réservations de la Grande salle dès le {{date}}",
       "fermees": "Réservations de la Grande salle fermées"
+    },
+    "epingle": {
+      "voir": "Voir"
     },
     "places_one": "{{count}} place restante",
     "places_other": "{{count}} places restantes",
@@ -4704,7 +4707,7 @@
     },
     "supprimer": {
       "titre": "Supprimer la réservation ?",
-      "texte": "« {{quoi}} » disparaît de Salles pour tout le monde."
+      "texte": "« {{quoi}} » disparaît de Salles pour tout le monde."
     },
     "vue": {
       "etiquette": "Vue",
