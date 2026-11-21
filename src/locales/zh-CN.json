@@ -2479,6 +2479,16 @@
     "none": "暂无即将举行的活动。",
     "past": "过去的活动",
     "hidePast": "隐藏过去的活动",
+    "fete": {
+      "dansJours_one": "{{count}} 天后",
+      "dansJours_other": "{{count}} 天后",
+      "aujourdhui": "今天",
+      "reserver": "预约大厅",
+      "voir": "查看节日",
+      "ouvertesJusqua": "大厅开放预约至{{date}}",
+      "desLe": "大厅预约将于{{date}}开放",
+      "fermees": "大厅预约已关闭"
+    },
     "places_one": "剩余 {{count}} 个名额",
     "places_other": "剩余 {{count}} 个名额",
     "complet": "已满",

@@ -2513,6 +2513,16 @@
     "none": "Aucun évènement à venir.",
     "past": "Évènements passés",
     "hidePast": "Masquer les passés",
+    "fete": {
+      "dansJours_one": "dans {{count}} jour",
+      "dansJours_other": "dans {{count}} jours",
+      "aujourdhui": "Aujourd'hui",
+      "reserver": "Réserver la Grande salle",
+      "voir": "Voir la fête",
+      "ouvertesJusqua": "Grande salle ouverte aux réservations jusqu'au {{date}}",
+      "desLe": "Réservations de la Grande salle dès le {{date}}",
+      "fermees": "Réservations de la Grande salle fermées"
+    },
     "places_one": "{{count}} place restante",
     "places_other": "{{count}} places restantes",
     "complet": "Complet",

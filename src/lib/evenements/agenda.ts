@@ -3,6 +3,7 @@
 
 import type { Evenement, ModeInscriptions } from "@/types/evenement";
 import { avantBascule } from "@/lib/evenements/bascule";
+import type { Edition, Fete } from "@/lib/scene/fetes";
 import { lienOngletSheet, type EntreeSheet } from "@/lib/evenements/sheet";
 
 export const isInfo = (e: Pick<Evenement, "type" | "date">) => e.type === "info" || !e.date;
@@ -74,16 +75,19 @@ type ElementAgenda =
   | { source: "app"; date: string; heure: string; fin: string; evenement: Evenement }
   | { source: "sheet"; date: string; heure: string; fin: string; entree: EntreeSheetPublique };
 
+/** Une fête passée (AS10, RS6) : seulement dans « Passés ». */
+type ElementFete = { source: "fete"; date: string; heure: ""; fin: string; fete: Fete; annee: number; lien: string };
+
 interface AgendaPublic {
   aVenir: { key: string; label: string; elements: ElementAgenda[] }[];
   /** Les trois derniers mois, plus récents d'abord. */
-  passes: ElementAgenda[];
+  passes: (ElementAgenda | ElementFete)[];
 }
 
 /** L'agenda public (lot U9, B2, docs/spec-evenements-2027.md Q2) : les évènements datés de l'app
  *  (déjà filtrés par ce que le lecteur peut voir) et, avant la bascule, les entrées du Sheet ;
  *  à venir par mois, passés derrière le lien. Rien de nominatif sans compte. */
-export function agendaPublic(app: Evenement[], sheet: EntreeSheet[], connecte: boolean, today: string, lang: string): AgendaPublic {
+export function agendaPublic(app: Evenement[], sheet: EntreeSheet[], connecte: boolean, today: string, lang: string, fetes: Edition[] = []): AgendaPublic {
   const elements: ElementAgenda[] = [
     ...app.filter((e) => !isInfo(e)).map((e) => ({ source: "app" as const, date: e.date, heure: e.heure, fin: finDe(e), evenement: e })),
     ...sheet.filter((s) => avantBascule(s.date)).map((s) => {
@@ -102,7 +106,10 @@ export function agendaPublic(app: Evenement[], sheet: EntreeSheet[], connecte: b
     g.elements.push(x);
   }
   const since = daysAgo(today, 92);
-  const passes = elements.filter((x) => x.fin < today && x.fin >= since).sort((a, b) => b.date.localeCompare(a.date));
+  const deFete: ElementFete[] = fetes.map((e) => ({
+    source: "fete", date: e.programme!.jourJ, heure: "", fin: e.programme!.jourJ, fete: e.fete, annee: e.annee, lien: `/evenements/scene/${e.fete}`,
+  }));
+  const passes = [...elements, ...deFete].filter((x) => x.fin < today && x.fin >= since).sort((a, b) => b.date.localeCompare(a.date));
   return { aVenir, passes };
 }
 

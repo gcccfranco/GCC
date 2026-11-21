@@ -195,3 +195,18 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
 - 21/11/2026 — **Deux files** (Timothée, « Go ») : file A (T2 → T3 → T4 → T7 → T8 → T9) et file B (T5 → T6 → T10),
   voir § Tranches ; tests sur trois appareils, cinq projets pour les seules specs d'agencement. Orchestratrice de T5 lancée.
 - 21/11/2026 — **File C** (Timothée, « go ») : T4 lancée seule en parallèle ; la file A devient T2 → T3 → T7 → T8 → T9.
+- 21/11/2026 — **T5 faite** (file B, session T5) : `feteEnVue` (J − 2 mois calendaires → soir du jour J, brouillon
+  exclu), `fetesPassees` (moins de 92 jours) et `dateFermeture` (`src/lib/scene/fetes.ts`) ; `agendaPublic` mêle les
+  fêtes passées aux Passés (source `fete`) ; `CarteFete.tsx` neuf (carte en aplat `PLANNING_COLORS.scene` en tête de
+  l'agenda, dans les trois dispositions ; `LigneFetePassee`, pavé bleu plein) ; connecté seulement (aucune lecture des
+  programmes sans compte). En grand, avec la carte, « Aucun évènement à venir » reste dans la liste sous elle et le
+  volet de droite est vide (critique-design). Décisions déléguées (session T5, 21/11) : (1) libellés de la carte en
+  « Grande salle » (AS14 : « Réserver la Grande salle » / « 预约大厅 », états idem) ; (2) « Réserver la Grande salle »
+  mène à `/evenements/scene/<fete>?reserver=1` : **à faire en file A (T3 ou fin de lot)** : la page de la fête ouvre la
+  feuille unique, « Oui » d'avance, quand elle lit `?reserver=1` (aujourd'hui ce lien ouvre la page seule) ; (3) la fête
+  passée n'est montrée qu'aux connectés, comme la carte. Tests : `tests/evenements-fete.spec.ts` neuve (14 tests, dans
+  `SPECS_GRAND_ECRAN`) ; avec `evenements`, `evenements-2027`, `pages-en-grand-evenements` : 613 passés, 1 rouge en
+  course (`evenements.spec.ts:1032`, tablette, vert seul), en 10 min 40 ; après la critique, `evenements-fete` et
+  `pages-en-grand-evenements:405` sur leurs projets : 75 passés en 1 min. À laisser jusqu'à T6 : à la tablette portrait la
+  carte seule prend toute la largeur (AS12 la mettra côte à côte avec l'épinglé ; sinon `md:max-w-xl`). Polices
+  chinoises régénérées : inchangées (caractères déjà présents).

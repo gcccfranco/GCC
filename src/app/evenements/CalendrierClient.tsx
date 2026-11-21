@@ -30,7 +30,11 @@ import { avantBascule, BASCULE_EVENEMENTS, jourDeParis } from "@/lib/evenements/
 import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet"
 import { estSurLaListe } from "@/lib/deuxVolets"
 import { useDisposition } from "@/hooks/useDisposition"
+import { listProgrammes } from "@/lib/firebase/programmes"
+import { editionsAffichees, feteEnVue, fetesPassees } from "@/lib/scene/fetes"
+import type { Programme } from "@/types/programme"
 import type { Evenement } from "@/types/evenement"
+import { CarteFete, LigneFetePassee } from "./CarteFete"
 import { EntreeSheetCarte, EvenementCard, EvenementCarte } from "./EvenementCard"
 import { EvenementClient } from "./[id]/EvenementClient"
 import { Squelette } from "@/components/layout/Squelette";
@@ -84,6 +88,14 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
   }, [today, avecAgenda])
   const sheetEnLecture = avantBascule(today) && sheet === null
 
+  // Lot AS, T5 : les fêtes (connecté seulement) ; échec de lecture = aucune fête.
+  const [programmes, setProgrammes] = useState<Programme[]>([])
+  useEffect(() => {
+    if (!user || !avecAgenda) return
+    listProgrammes().then(setProgrammes).catch(() => setProgrammes([]))
+  }, [user, avecAgenda])
+  const enVue = user ? feteEnVue(editionsAffichees(programmes, today), today) : null
+
   // Retouches v18, lot G (G1, D28) : aucune réunion ici, elles sont à Back-Office › Réunions.
   const visible = useMemo(
     () => (evenements ?? []).filter((e) => canSeeEvenement(user, profile, e) && !estReunion(e) && !isExpired(e, today)),
@@ -92,7 +104,7 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
 
   const chargement = authLoading || (user && profileLoading) || evenements === null
   const infos = visible.filter(isInfo).sort((a, b) => Number(b.epingle) - Number(a.epingle) || b.createdAt.localeCompare(a.createdAt))
-  const { aVenir: upcoming, passes: past } = agendaPublic(visible, sheet?.entrees ?? [], !!user, today, i18n.language)
+  const { aVenir: upcoming, passes: past } = agendaPublic(visible, sheet?.entrees ?? [], !!user, today, i18n.language, user ? fetesPassees(programmes, today) : [])
 
   // En grand, sans fiche choisie : le prochain évènement de l'agenda, sinon la première info (Q3).
   // Une entrée du Sheet (U9) n'a pas de fiche : le prochain évènement de l'app.
@@ -120,13 +132,16 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
     <Squelette enTete={false} className="p-0" />
   ) : (
     <div className={grand ? "space-y-5" : "max-w-2xl mx-auto space-y-6 md:max-w-none"}>
+      {enVue && <CarteFete edition={enVue} today={today} />}
+
       {infos.length > 0 && (
         <section className="space-y-2" aria-label={t("evenements.infos")}>
           {infos.map((e) => <EvenementCard key={e.id} evenement={e} actif={grand && e.id === idActif} />)}
         </section>
       )}
 
-      {!grand && upcoming.length === 0 && vide}
+      {/* En grand, avec la carte de la fête : le message vide reste sous elle, le volet de droite est vide (T5). */}
+      {(!grand || enVue) && upcoming.length === 0 && vide}
       {upcoming.map((g) => (
         <section key={g.key} className={grand ? "space-y-1" : "space-y-3"}>
           <h2 className="text-sm font-semibold text-muted-foreground px-1 first-letter:uppercase">{g.label}</h2>
@@ -152,7 +167,9 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
           </button>
           {showPast && past.map((x, i) => x.source === "app"
             ? <EvenementCard key={x.evenement.id} evenement={x.evenement} past actif={grand && x.evenement.id === idActif} />
-            : <EntreeSheetCarte key={`sheet-${i}`} entree={x.entree} past />)}
+            : x.source === "fete"
+              ? <LigneFetePassee key={`fete-${x.fete}-${x.annee}`} fete={x.fete} annee={x.annee} jourJ={x.date} lien={x.lien} />
+              : <EntreeSheetCarte key={`sheet-${i}`} entree={x.entree} past />)}
         </section>
       )}
 
@@ -179,7 +196,7 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
             chargement ? null
               : premier ? <EvenementClient id={premier.id} />
               : premiereEntree?.source === "sheet" ? <EntreeSheetCarte entree={premiereEntree.entree} />
-              : vide
+              : enVue ? null : vide
           }
         >
           {children}
