@@ -317,6 +317,14 @@ temps ») : sur une ligne chinoise, le trait fin graphite d'une parole retouché
 `[data-retouche="paroles"]`) tombe entre les caractères et le pinyin. Quand le pinyin est affiché, le trait passe sous
 le pinyin (sous la ligne entière) ; sans pinyin, et sur une ligne française, rien ne change. Retouche (CSS et un test).
 
+**UP-7 — La note et le badge aussi en mode louange** (constat de Timothée du 21/11, 23 h 51, capture du mode louange
+en « Une fois chacune » : « J'ai modifié des sections mais la petite note dans la structure en haut n'apparait pas
+pour dire c'est pour quel refrain » ; même lot, UP-4 s'était arrêtée aux pages chant et setlist) : en mode louange,
+un passage retouché seul (accords ou paroles du Crayon) porte le même libellé qu'en UP-4 (« Refrain · 2ᵉ fois ») à la
+place de « Refrain (x2) », et sa pastille dans la rangée de structure du haut porte le même badge « retouché seul »
+(mêmes règles qu'UP-4 et UP-5, `src/lib/setlist/passages.ts`). Aucun dessin ni annotation touché ; lecture seule
+(rien ne s'écrit depuis le mode louange).
+
 Format : `passage` est facultatif, une version ancienne du site l'ignore et montre le dessin partout
 (§ « Compatibilité du format », AN-4). `firestore.rules` : à relire, le champ est dans `traits` (liste libre).
 
