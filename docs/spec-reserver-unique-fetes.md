@@ -163,3 +163,4 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   lancement programmé le 21/11/2026 à 12:01.
 - 17/11/2026 — Retours de Timothée après une discussion avec une responsable (mots 7) : AS14 à AS17 ajoutées, tranches
   portées à dix (fusion Grande salle = Scène en premier), rules à republier. Lancement inchangé.
+- 21/11/2026, 12:01 — Codage lancé : orchestratrice de T1 `session_01UMdfuavwRF2qebrbLzJW5B` (un autre chantier de code en cours, lot AT : place libre).
