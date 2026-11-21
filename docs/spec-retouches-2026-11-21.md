@@ -150,3 +150,9 @@ sur tablette portrait, tablette paysage, ordinateur et 1 440 px.
   sans R3, au test B1 de `louange-menus` (feuille « Affichage », zone de R1) : tablette, « haut » 29 px au lieu de
   moins de 24, constant ; ordinateur-1440, le × change de page, une fois sur huit sans R3 (instable). À reprendre
   avec R1.
+- 21/11/2026 : **suite de R1** (session d'origine). Le rouge constant de `louange-menus.spec.ts:763` (B1) sur tablette
+  venait bien de R1 : la poignée de la feuille « Affichage » est devenue un bouton de 24 px, le × est à 29 px du haut
+  au lieu de 20, et le test n'accordait 48 px qu'aux feuilles sous 768 px. Test aligné : « Affichage » en feuille est
+  une feuille à poignée jusqu'à 1 024 px. Vert sur téléphone, tablette, tablette paysage et ordinateur (1,6 min).
+  L'autre rouge de B1 (ordinateur-1440, le × change de page une fois sur huit) existait sans R1 ni R3 : à reprendre à part.
+
