@@ -17,10 +17,10 @@ const EPINGLE = {
 const LEA: FakeProfile = { uid: "uid-lea", email: "lea@example.com", firstName: "Léa", lastName: "M.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
 
 /** Le 01/12 : Noël dans 23 jours, réservations ouvertes ; `image` null : la fête sans image. */
-async function ouvrir(page: Page, image: string | null, plus: Record<string, Record<string, unknown>> = {}) {
+async function ouvrir(page: Page, image: string | null, plus: Record<string, Record<string, unknown>> = {}, aImage = false) {
   await page.clock.setFixedTime(new Date("2026-12-01T10:00:00"));
   const programmesLus = page.waitForResponse((r) => r.url().includes(":runQuery") && (r.request().postData() ?? "").includes('"programmes"'));
-  await signInAs(page, LEA, { "programmes/noel-2026": image ? { ...NOEL, image } : NOEL, ...plus }, "/evenements");
+  await signInAs(page, LEA, { "programmes/noel-2026": image ? { ...NOEL, image, ...(aImage && { aImage: true }) } : NOEL, ...plus }, "/evenements");
   await programmesLus;
 }
 const carte = (page: Page) => page.getByTestId("carte-fete");
@@ -29,6 +29,8 @@ async function capture(page: Page, nom: string) {
   await page.waitForTimeout(300);
   await page.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png`, fullPage: true });
 }
+/** IF-3 : une photo en portrait (plus haute que 16:9) ; l'emplacement 16:9 ne doit pas grandir à son arrivée. */
+const IMAGE_PORTRAIT = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="800"><rect width="300" height="800" fill="#a73"/></svg>')}`;
 const tablettePortrait = () => test.info().project.name.includes("tablette") && !test.info().project.name.includes("paysage");
 
 test("(a) sans image : bandeau bleu, ni data-image ni img", async ({ page }) => {
@@ -99,4 +101,55 @@ test("(e) 中文 avec image : « 圣诞节 2026 » et « 预约大厅 »", async
   await expect(carte(page).getByRole("heading", { name: "圣诞节 2026" })).toBeVisible();
   await expect(carte(page).getByRole("link", { name: "预约大厅" })).toBeVisible();
   await capture(page, "e-zh");
+});
+
+test("(f) drapeau + image retardée : gabarit clair tout de suite, emplacement neutre, même hauteur à l'arrivée", async ({ page }) => {
+  let liberer!: () => void
+  const retenue = new Promise<void>((r) => { liberer = r })
+  await page.clock.setFixedTime(new Date("2026-12-01T10:00:00"));
+  await signInAs(page, LEA, { "programmes/noel-2026": { ...NOEL, image: IMAGE_PORTRAIT, aImage: true } }, "/annonces");
+  await page.route((u) => u.pathname.endsWith("/programmes/noel-2026") && u.searchParams.getAll("mask.fieldPaths").join() === "image", async (route) => {
+    await retenue
+    await route.fallback()
+  });
+  // Guet posé avant le premier rendu : toute carte de fête vue sans `data-image` (le bandeau bleu) est notée.
+  await page.addInitScript(() => {
+    const w = window as unknown as { __carteBleue: boolean };
+    w.__carteBleue = false;
+    new MutationObserver(() => {
+      if (document.querySelector('[data-testid="carte-fete"]:not([data-image])')) w.__carteBleue = true;
+    }).observe(document, { childList: true, subtree: true, attributes: true });
+  });
+  await page.goto("/evenements");
+  const c = carte(page);
+  await expect(c).toHaveAttribute("data-image", "1");
+  await expect(c.getByTestId("carte-fete-visuel")).toBeVisible();
+  await expect(c).not.toHaveAttribute("data-image-pret", /.*/);
+  await expect(c.locator("img")).toHaveCount(0);
+  expect(await page.evaluate(() => (window as unknown as { __carteBleue: boolean }).__carteBleue)).toBe(false);
+  const bleu = await page.evaluate((col) => { const d = document.createElement("div"); d.style.background = col; document.body.appendChild(d); const r = getComputedStyle(d).backgroundColor; d.remove(); return r; }, PLANNING_COLORS.scene);
+  await expect(c).not.toHaveCSS("background-color", bleu);
+  const avant = (await c.boundingBox())!.height;
+  await capture(page, "if3-attente");
+  liberer();
+  await expect(c).toHaveAttribute("data-image-pret", "1");
+  await expect(c.locator('img[alt=""]')).toBeVisible();
+  expect(Math.abs((await c.boundingBox())!.height - avant)).toBeLessThanOrEqual(1);
+  expect(await page.evaluate(() => (window as unknown as { __carteBleue: boolean }).__carteBleue)).toBe(false);
+});
+
+test("(g) drapeau + lecture de l'image en erreur : gabarit clair, emplacement neutre, texte et actions utilisables", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-12-01T10:00:00"));
+  await signInAs(page, LEA, { "programmes/noel-2026": { ...NOEL, image: IMAGE, aImage: true } }, "/annonces");
+  await page.route((u) => u.pathname.endsWith("/programmes/noel-2026") && u.searchParams.getAll("mask.fieldPaths").join() === "image", (route) => route.fulfill({ status: 500, body: "{}" }));
+  await page.goto("/evenements");
+  const c = carte(page);
+  await expect(c).toHaveAttribute("data-image", "1");
+  await expect(c.getByTestId("carte-fete-visuel")).toBeVisible();
+  await expect(c.getByRole("heading", { name: "Noël 2026" })).toBeVisible();
+  await expect(c.getByRole("link", { name: "Voir la fête" })).toBeVisible();
+  await expect(c.locator("img")).toHaveCount(0);
+  await expect(c).not.toHaveAttribute("data-image-pret", /.*/);
+  const bleu = await page.evaluate((col) => { const d = document.createElement("div"); d.style.background = col; document.body.appendChild(d); const r = getComputedStyle(d).backgroundColor; d.remove(); return r; }, PLANNING_COLORS.scene);
+  await expect(c).not.toHaveCSS("background-color", bleu);
 });

@@ -1,7 +1,8 @@
 "use client"
 
 // Carte de la fête en haut d'Évènements (Lot AS, T5, AS10, RS5) : deux mois avant le jour J jusqu'au
-// soir du jour J, puis la fête passe dans « Passés » (`LigneFetePassee`). Aplat bleu scène.
+// soir du jour J, puis la fête passe dans « Passés » (`LigneFetePassee`). Aplat bleu scène ; avec
+// une image, gabarit clair de l'épinglé (IF-2), pris d'emblée quand l'édition porte `aImage` (IF-3).
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -36,7 +37,8 @@ export function CarteFete({ edition, today }: { edition: Edition; today: string 
   const jours = Math.round((versUtc(p.jourJ) - versUtc(today)) / JOUR_MS)
   const etat = etatEdition(edition, today)
   const page = `/evenements/scene/${edition.fete}`
-  // Image de l'édition (lue seule, hors de `listProgrammes`) : bandeau bleu pendant la lecture, sans image ou en erreur.
+  // Image de l'édition (lue seule, hors de `listProgrammes`). Sans drapeau `aImage` : bandeau bleu pendant la lecture,
+  // sans image ou en erreur ; avec : gabarit clair d'emblée (plus bas).
   const [image, setImage] = useState<{ id: string; src: string } | null>(null)
   useEffect(() => {
     let vivant = true
@@ -48,11 +50,15 @@ export function CarteFete({ edition, today }: { edition: Edition; today: string 
     : etat === "bientot" ? t("evenements.fete.desLe", { date: dateEnLettres(p.debut, i18n.language, true) })
     : t("evenements.fete.fermees")
   const dateJours = `${dateEnLettres(p.jourJ, i18n.language)} · ${jours === 0 ? t("evenements.fete.aujourdhui") : t("evenements.fete.dansJours", { count: jours })}`
-  if (src) {
+  // Drapeau vrai : gabarit clair tout de suite, emplacement 16/9 neutre jusqu'à l'image. Si la lecture échoue ou
+  // ne rend rien, on reste sur l'emplacement neutre (aucun changement d'état, aucun saut ; texte et actions utilisables).
+  if (src || p.aImage === true) {
     return (
-      <section data-testid="carte-fete" data-image="1" aria-label={titre} className="flex flex-col overflow-hidden rounded-2xl bg-card text-foreground ring-1 ring-border">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt="" className="aspect-[16/9] w-full object-cover object-center" />
+      <section data-testid="carte-fete" data-image="1" data-image-pret={src ? "1" : undefined} aria-label={titre} className="flex flex-col overflow-hidden rounded-2xl bg-card text-foreground ring-1 ring-border">
+        <div className="relative aspect-[16/9] w-full bg-muted" data-testid="carte-fete-visuel" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {src && <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />}
+        </div>
         <div className="flex flex-1 flex-col p-5">
           <h2 className="text-xl font-bold leading-tight">{titre}</h2>
           <p className="mt-1 text-sm">{dateJours}</p>

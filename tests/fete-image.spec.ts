@@ -48,13 +48,14 @@ test("choisir une image : aperçu, puis une écriture JPEG de 250 000 caractère
   const image = ecriture!.data.image as string;
   expect(image.startsWith("data:image/jpeg")).toBe(true);
   expect(image.length).toBeLessThanOrEqual(250_000);
+  expect(ecriture!.data.aImage).toBe(true);
 });
 
 test("retirer l'image : le masque porte `image`, le corps non, et « Choisir » revient", async ({ page }) => {
   const masques: string[][] = [];
   page.on("request", (r) => { if (r.method() === "PATCH") masques.push(new URL(r.url()).searchParams.getAll("updateMask.fieldPaths")); });
   const donnee = `data:image/png;base64,${png32x18().toString("base64")}`;
-  const db = await ouvrir(page, { "programmes/noel-2026": { ...DOC_NOEL, image: donnee } });
+  const db = await ouvrir(page, { "programmes/noel-2026": { ...DOC_NOEL, image: donnee, aImage: true } });
   await expect(page.getByTestId("fete-image-apercu")).toBeVisible();
   await page.getByTestId("fete-image-retirer").click();
   await expect(page.getByTestId("fete-image-apercu")).toHaveCount(0);
@@ -62,7 +63,8 @@ test("retirer l'image : le masque porte `image`, le corps non, et « Choisir » 
   const ecriture = db.writes.find((w) => w.method === "PATCH" && w.path === "programmes/noel-2026");
   expect(ecriture).toBeTruthy();
   expect("image" in ecriture!.data).toBe(false);
-  expect(masques.some((m) => m.includes("image"))).toBe(true);
+  expect("aImage" in ecriture!.data).toBe(false);
+  expect(masques.some((m) => m.includes("image") && m.includes("aImage"))).toBe(true);
 });
 
 test("la liste des programmes n'envoie pas `image` : la requête porte un `select` sans elle", async ({ page }) => {

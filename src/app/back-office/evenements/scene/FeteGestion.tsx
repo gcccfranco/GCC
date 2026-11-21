@@ -228,7 +228,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     if (!fichier) return
     setErreur(""); setImageEnCours(true)
     try {
-      await ecrire({ image: await compressImage(fichier, IMAGE_LARGEUR_MAX, IMAGE_CARACTERES_MAX) })
+      await ecrire({ image: await compressImage(fichier, IMAGE_LARGEUR_MAX, IMAGE_CARACTERES_MAX), aImage: true })
     } catch (e) {
       // `compressImage` : « Image trop lourde… » ou « Image illisible » (HEIC sous Chrome, fichier abîmé).
       setErreur(t(e instanceof Error && e.message.startsWith("Image trop lourde") ? "planning.gestion.imageErreur" : "planning.gestion.imageIllisible"))
@@ -329,7 +329,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
           </label>
           {image && (
             <button type="button" data-testid="fete-image-retirer" disabled={imageEnCours}
-              onClick={() => { void ecrire({ image: undefined }) }}
+              onClick={() => { void ecrire({ image: undefined, aImage: undefined }) }}
               className="inline-flex h-10 items-center rounded-full px-4 text-base font-semibold text-destructive transition-colors hover:bg-secondary disabled:opacity-45">
               {t("planning.gestion.imageRetirer")}
             </button>

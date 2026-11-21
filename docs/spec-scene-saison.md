@@ -489,3 +489,21 @@ Tests : Playwright, session simulée (`tests/helpers/fakeSession.ts`), noms fict
   apostrophe droite de « jusqu'au » (`fr.json`) ; (3) l'enveloppe de la carte en rangée qui défile (fête + deux
   épinglés, tablette) n'a pas `h-full` (déjà vrai pour le bandeau bleu). Non vérifié : une vraie photo et le vrai
   Firestore (projection, masque).
+- **IF-3 fait (21/11/2026, nuit, session orchestratrice IF-3)** : drapeau `aImage?: boolean` dans `Programme`, lu
+  avec la liste (`CHAMPS_LISTE`, donc aussi `getProgramme`) ; `FeteGestion` l'écrit avec l'image (`{ image, aImage:
+  true }`) et le retire avec elle (les deux dans le masque du PATCH). `CarteFete` : drapeau vrai → gabarit clair
+  d'emblée, emplacement 16/9 fixe (`relative aspect-[16/9] bg-muted`, `data-testid="carte-fete-visuel"`) où l'image
+  se pose en `absolute inset-0` (une photo en portrait n'agrandit pas la boîte : défaut vu par le relecteur, corrigé) ;
+  `data-image-pret="1"` à l'arrivée. Sans drapeau : comme avant (une édition qui a déjà une image sans drapeau passe
+  encore par le bleu jusqu'à un nouvel envoi ; pas de migration). **Décision déléguée (session, 21/11)** : lecture de
+  l'image en erreur ou vide alors que le drapeau est vrai → l'emplacement neutre reste (aucun changement d'état ni
+  saut ; texte et actions utilisables). `firestore.rules` relue : `programmes/{id}` sans filtre de champs, rien à
+  publier. Tests : `evenements-fete-image` (f) image en portrait retardée par `page.route` — gabarit clair au premier
+  rendu, aucun bandeau bleu vu par un `MutationObserver` posé avant le rendu, hauteur égale à 1 px près à l'arrivée ;
+  (g) lecture en erreur ; `fete-image` : drapeau posé et retiré. `evenements-fete-image`, `evenements-fete`,
+  `fete-image`, `eglise-entree`, cinq projets : 132 passés (2 min 20) ; après correction, `evenements-fete-image` et
+  `evenements-epingle` : 90 passés (1 min 50). Captures de l'attente aux cinq dispositions triées par `regard` : rien
+  de bloquant ; vu en passant, hors périmètre : « Eglise » sans accent dans la barre latérale réduite (tablette
+  paysage). Méthode : les agents de `.claude/agents/` ne se sont pas chargés dans cette session (lancée hors du
+  dépôt) ; `/tranche` a tourné avec des agents généraux qui lisaient chacun la fiche de leur rôle ; le second testeur
+  n'a pas rendu son bilan, les specs ont été relancées par l'orchestratrice. Non vérifié : vraie photo, vrai Firestore.

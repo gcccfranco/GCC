@@ -58,6 +58,7 @@ function fromFsProgramme(raw: RawDoc & { updateTime?: string }): Programme {
     ...(data.annee != null && { annee: data.annee as number }),
     ...(data.modifiePar != null && { modifiePar: data.modifiePar as string }),
     ...(data.image != null && { image: data.image as string }),
+    ...(data.aImage != null && { aImage: data.aImage as boolean }),
     ...(raw.updateTime && { version: raw.updateTime }),
   };
 }
@@ -66,7 +67,7 @@ function fromFsProgramme(raw: RawDoc & { updateTime?: string }): Programme {
  *  TypeScript force à ajouter ici tout futur champ de `Programme`. `updateTime` (→ `version`) vient du document. */
 const CHAMPS_LISTE = {
   nom: 1, jourJ: 1, debut: 1, passages: 1, createdBy: 1, updatedAt: 1, fin: 1, plages: 1, duree: 1,
-  quiAutorises: 1, ouvert: 1, fermees: 1, fete: 1, annee: 1, modifiePar: 1,
+  quiAutorises: 1, ouvert: 1, fermees: 1, fete: 1, annee: 1, modifiePar: 1, aImage: 1,
 } satisfies Record<Exclude<keyof Programme, "id" | "version" | "image">, 1>
 
 async function runQuery(parent: string, collectionId: string, orderBy: string, champs?: string[]): Promise<RawDoc[]> {
