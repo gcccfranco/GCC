@@ -88,3 +88,16 @@ sur tablette portrait, tablette paysage, ordinateur et 1 440 px.
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,
   premier tour de tests en cours.
+- 21/11/2026 : **R1 faite** (session d'origine ; `executant`, `testeur`, relecture du diff et captures par la session).
+  Premier tour (marge-affichage, page-chant-reglages, harmonie-volet-section, couleur-accords, cinq projets) : 675 tests,
+  624 passés, 34 ignorés, 17 échecs en 19,6 min, ramenés à : un défaut réel (la poignée ne suivait pas la souris : la
+  capture du pointeur arrivait après les premiers mouvements ; corrigé par des écouteurs sur `window` posés au
+  `pointerdown`), deux tests neufs mal montés (corrigés) et **`couleur-accords.spec.ts:184` rouge sur les cinq projets,
+  rouge aussi sur la tête de branche sans la retouche** (couleur des icônes par compte en mode louange, `#1c1c1e` au
+  lieu de `#3f63cf`) : à reprendre à part. Tour final de `marge-affichage.spec.ts` : 128 passés, 7 ignorés, 0 échec,
+  3,4 min. Captures regardées : téléphone et tablette portrait, FR et 中文, à 40 % et 85 %. Le geste au doigt n'est
+  couvert que pour le glissement Liste ↔ Partitions (CDP) ; tirer la poignée au doigt reste à voir sur un vrai iPhone.
+  Reste de R1 : voir à l'écran la poignée du menu du mode louange (`MenuLouange.tsx:143`).
+- 21/11/2026 : R2 et R3 lancées ensemble (`session_01UMdfudBb2wu91QRj7iKtL9`), R4 lancée
+  (`session_01UMdfuZzn5R3Lgirrn7Mgo7`) ; lot « Un passage ou tous » : UP-1 (`session_01UMdfud4YdWDfdt7w7qhm9R`) et
+  UP-3 (`session_01UMdfudKDfdFHnco4rsCnMm`), suivi dans `docs/spec-ma-partition.md`.

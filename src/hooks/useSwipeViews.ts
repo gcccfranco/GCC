@@ -381,6 +381,8 @@ export function useSwipeViews(options: Options) {
     const down = (e: PointerEvent) => {
       if (e.pointerType !== "touch" || !e.isPrimary || entree.current || pil.current) return;
       if (e.clientX < BORD || e.clientX > window.innerWidth - BORD) return;
+      // Une fenêtre qui porte ses propres gestes (feuille « Affichage ») n'emmène pas la vue.
+      if (e.target instanceof Element && e.target.closest("[data-sans-glissement]")) return;
       if (selectionEnCours() || defileEnLargeur(e.target, zone)) return;
       arreter();
       geste = {

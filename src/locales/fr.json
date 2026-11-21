@@ -685,6 +685,8 @@
   "margeAffichage": {
     "titre": "Affichage",
     "fermer": "Fermer l'affichage",
+    "agrandir": "Agrandir la fenêtre",
+    "reduire": "Réduire la fenêtre",
     "retenu": "Retenu sur cet appareil",
     "jeJoue": "Je joue",
     "jeLis": "Ce que je lis",

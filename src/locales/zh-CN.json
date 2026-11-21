@@ -681,6 +681,8 @@
   "margeAffichage": {
     "titre": "显示",
     "fermer": "关闭显示",
+    "agrandir": "放大窗口",
+    "reduire": "缩小窗口",
     "retenu": "保存在本设备",
     "jeJoue": "我演奏",
     "jeLis": "阅读内容",

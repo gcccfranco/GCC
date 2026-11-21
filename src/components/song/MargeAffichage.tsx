@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type PointerEvent as PointeurEvent, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { Switch } from "@/components/ui/switch";
 import { Bascule } from "@/components/ui/bascule";
@@ -16,7 +16,7 @@ import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 
 // La marge « Affichage » (docs/spec-reglages-unifies.md, RU-2, piste B) : trois groupes (Je joue, Ce que je lis, La page),
 // une mention de portée sous chacun. Dès 1 024 px (tablette paysage) : colonne de 320 px qui POUSSE la musique (`children`,
-// rendus à côté d'elle, jamais dessous) ; en dessous (ou sans place pour la colonne : `sansColonne`) : feuille basse opaque, sans voile, de 40 % de la hauteur,
+// rendus à côté d'elle, jamais dessous) ; en dessous (ou sans place pour la colonne : `sansColonne`) : feuille basse opaque, sans voile, de 40 % de la hauteur à l'ouverture (85 % en tirant la poignée : Timothée, 21/11/2026),
 // pleine largeur de la zone de la musique (la fenêtre ; le volet du chant dans une page à deux volets, `useDeuxVolets`) ; la musique garde
 // alors une réserve en bas égale à la feuille. Deux formes seulement (B5). Les styles de mouvement : globals.css (.marge-aff).
 type Place = "colonne" | "feuille";
@@ -127,6 +127,60 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
   }, [ouvert]);
 
   const colonne = lieu === "colonne";
+  // Poignée : 40 % à l'ouverture, 85 % en la tirant ou en la touchant ; revient à 40 % à la fermeture.
+  const [haute, setHaute] = useState(false);
+  const [vuOuvert, setVuOuvert] = useState(ouvert);
+  if (vuOuvert !== ouvert) { setVuOuvert(ouvert); if (!ouvert) setHaute(false); }
+  const aside = useRef<HTMLElement>(null);
+  const aGlisse = useRef(false);
+  // Écouteurs sur `window` : la souris quitte aussitôt la zone de prise (tout en haut de la feuille).
+  const descend = (e: PointeurEvent<HTMLDivElement>) => {
+    aGlisse.current = false;
+    const bt = (e.target as Element).closest("button");
+    const el = aside.current;
+    if (!el || (bt && bt.getAttribute("data-testid") !== "marge-poignee")) return;
+    const { pointerId, clientY: y0 } = e;
+    const h0 = el.getBoundingClientRect().height;
+    const pts = [{ y: y0, t: e.timeStamp }];
+    let engage = false;
+    const bouge = (m: globalThis.PointerEvent) => {
+      if (m.pointerId !== pointerId) return;
+      const dy = m.clientY - y0;
+      if (!engage) {
+        if (Math.abs(dy) < 6) return;
+        engage = true;
+      }
+      pts.push({ y: m.clientY, t: m.timeStamp });
+      el.style.transition = "none";
+      el.style.height = `${Math.min(Math.max(h0 - dy, 80), 0.85 * window.innerHeight)}px`;
+    };
+    const lache = (u: globalThis.PointerEvent) => {
+      if (u.pointerId !== pointerId) return;
+      window.removeEventListener("pointermove", bouge);
+      window.removeEventListener("pointerup", lache);
+      window.removeEventListener("pointercancel", lache);
+      if (!engage) return;
+      aGlisse.current = true;
+      const h = el.getBoundingClientRect().height;
+      el.style.height = "";
+      el.style.transition = "";
+      if (u.type === "pointercancel") return;
+      const vh = window.innerHeight;
+      const ref = pts.find((p) => u.timeStamp - p.t <= 100) ?? pts[pts.length - 1];
+      const v = u.timeStamp > ref.t ? (u.clientY - ref.y) / (u.timeStamp - ref.t) : 0;
+      if (Math.abs(v) > 0.5) {
+        if (v < 0) setHaute(true);
+        else if (haute) setHaute(false);
+        else onFermer();
+      } else if (h > 0.625 * vh) setHaute(true);
+      else if (h < 0.27 * vh) onFermer();
+      else setHaute(false);
+    };
+    window.addEventListener("pointermove", bouge);
+    window.addEventListener("pointerup", lache);
+    window.addEventListener("pointercancel", lache);
+  };
+
   const geometrie = colonne
     ? {
         position: "sticky", width: ouvert ? 320 : 0, flex: "none", ...(mode === "page" && ouvert ? { marginLeft: 24 } : {}), overflow: "hidden", alignSelf: "flex-start",
@@ -136,13 +190,15 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
         ...(mode === "louange" && children === undefined ? { position: "fixed" as const, right: 0, zIndex: 10000, ...(ouvert ? {} : { display: "none" as const }) } : {}),
       } as const
     : {
-        position: "fixed", bottom: 0, height: "40dvh", zIndex: mode === "louange" ? 10000 : 50, borderRadius: "18px 18px 0 0", boxShadow: "0 -1px 0 hsl(var(--border))",
+        position: "fixed", bottom: 0, height: haute ? "85dvh" : "40dvh", zIndex: mode === "louange" ? 10000 : 50, borderRadius: "18px 18px 0 0", boxShadow: "0 -1px 0 hsl(var(--border))",
         ...(surVolet && volet ? { left: volet.gauche, width: volet.largeur } : { left: 0, right: 0 }), transform: `translateY(${ouvert ? 0 : 100}%)`,
         ...(mode === "louange" && !ouvert ? { display: "none" as const } : {}),
       } as const;
 
   const retenue = (
     <aside
+      ref={aside}
+      data-sans-glissement
       className="marge-aff bg-card text-foreground"
       id="marge-affichage"
       data-testid="marge-affichage"
@@ -154,9 +210,22 @@ export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, m
       style={{ ...geometrie, borderLeft: colonne ? "1px solid hsl(var(--foreground))" : undefined, borderTop: colonne ? undefined : "1px solid hsl(var(--border))" }}
     >
       <div className="flex h-full flex-col" style={colonne ? { width: 320 } : undefined}>
-        {!colonne && <div aria-hidden className="mx-auto mt-2 h-1 w-9 rounded-full bg-border" />}
-        <EnTeteFeuille titre={t("margeAffichage.titre")} titreId={titre} onFermer={onFermer} labelFermer={t("margeAffichage.fermer")} refFermer={fermer} className={`px-4 pt-2${colonne ? "" : " mx-auto w-full max-w-[560px]"}`} />
-        <div data-testid="marge-corps" className="min-h-0 flex-1 overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
+        <div data-testid="marge-prise" style={colonne ? undefined : { touchAction: "none" }} onPointerDown={colonne ? undefined : descend}>
+          {!colonne && (
+            <button
+              type="button"
+              data-testid="marge-poignee"
+              aria-expanded={haute}
+              aria-label={t(haute ? "margeAffichage.reduire" : "margeAffichage.agrandir")}
+              onClick={() => { if (!aGlisse.current) setHaute(!haute); }}
+              className="mx-auto -mb-1 mt-0 flex h-6 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="h-1 w-9 rounded-full bg-border" />
+            </button>
+          )}
+          <EnTeteFeuille titre={t("margeAffichage.titre")} titreId={titre} onFermer={onFermer} labelFermer={t("margeAffichage.fermer")} refFermer={fermer} className={`px-4 pt-2${colonne ? "" : " mx-auto w-full max-w-[560px]"}`} />
+        </div>
+        <div data-testid="marge-corps" className="min-h-0 flex-1 overflow-y-auto overscroll-contain" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
           {/* Feuille pleine largeur : les réglages gardent une colonne de 560 px au plus, centrée (critique CI-11). */}
           <div className={colonne ? undefined : "mx-auto w-full max-w-[560px]"}>
           {!sansRole && <Groupe titre={t("margeAffichage.jeJoue")} mention={mention}>
