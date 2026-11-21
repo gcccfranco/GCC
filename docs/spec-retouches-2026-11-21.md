@@ -133,7 +133,7 @@ sur tablette portrait, tablette paysage, ordinateur et 1 440 px.
   `SPECS_GRAND_ECRAN` : cas droite/gauche/calée annotés, déplacement, ×, réouverture, téléphone moitié basse, étiquette
   简谱) ; `louange-harmonie.spec.ts` adapté (à côté du nom au lieu de dessous). Passe des trois specs, cinq projets :
   182 passés, 37 sautés, 1 échec, 10,2 min ; après la borne de hauteur, deux specs, cinq projets : 117 passés, 1 rouge
-  corrigé (condition du test alignée sur le plancher), 7,4 min ; revert vert. Échec connu hors tranche : A9 de
+  corrigé (condition du test alignée sur le plancher), 7,4 min ; relance du test corrigé : verte. Échec connu hors tranche : A9 de
   `louange-harmonie.spec.ts:200` au téléphone (page 2 d'un scan retombe à 1 ~8 s après l'ouverture, sans geste : la fin
   du chargement du planning reconstruit `blocks` et l'ancre d'un scan ne garde pas sa page, `blocks.ts:496-513`) ;
   rouge 3 fois sur 4, vert au dernier tour ; à reprendre à part. Captures (ordinateur, 1 440, tablette portrait et
