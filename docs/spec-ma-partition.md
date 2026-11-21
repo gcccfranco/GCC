@@ -358,3 +358,17 @@ Format : `passage` est facultatif, une version ancienne du site l'ignore et mont
   comportement inchangé (Crayon absent, quelques secondes au plus). Non connecté, hors ligne, chant ajouté depuis
   « Tous les chants » : inchangés. Spec `louange-crayon-indispo` (403 simulé puis lecture acceptée) sur les trois
   appareils ; voisines (Ma partition ×6, `annotations-forscore`, `louange-barre-titre`) : 464 passés, 0 échec (≈ 21 min). **La vraie correction reste à Timothée : publier `firestore.rules`.**
+- 21/11/2026 : **UP-3 faite** (accords et paroles, un passage ou tous). Page setlist : la feuille d'une ligne d'une
+  section répétée s'ouvre sur « Seulement ce passage » (`repeatScope` à `"one"`, `SetlistDetailClient.tsx`), pour moi
+  comme pour le culte ; rien d'autre ne change. Page chant (question 5, décision déléguée (session, 21/11) : la
+  proposition) : la copie de section tient dans la tranche. Le Crayon propose le même choix quand la structure affichée
+  répète la section (« Seulement ce passage » d'avance) ; ce passage copie la section dans ma partition
+  (`materializeSectionCopy`, `structure` et `sectionOrigins` écrits comme en setlist), et la page lit la structure de
+  ma partition quand je lis la mienne (`SongDetailClient.tsx`). Une ligne inchangée ne copie rien. **Reste** (`shortcut:`) :
+  page chant ouverte avec `?structure=` (lien d'une setlist), aucun choix, la retouche vaut pour toutes les répétitions
+  (sinon la copie serait invisible, l'URL gagne) ; pas de test ZH sur la page chant. Relecteur « à corriger » (clic
+  de test faux, copie invisible avec `?structure=`, structure ancienne sans rang, copie sans retouche), corrigé.
+  Tests adaptés : `harmonie-ma-version` (« Seulement » pressé d'avance, « Toutes » cliqué) ; deux tests page chant dans
+  `ma-partition-crayon`. Tests : `ma-partition-crayon`, `harmonie-ma-version`, `adapter-sections`, `setlist-history`,
+  `ma-partition-lecture` sur les trois appareils, 198 passés, 0 échec en 9,6 min ; tsc propre, lint 0 erreur.
+  UP-4 non lancée ici : la ligne d'UP-2 n'existe pas encore (UP-2 la lancera).

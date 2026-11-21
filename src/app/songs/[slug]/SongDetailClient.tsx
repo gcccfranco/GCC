@@ -29,7 +29,7 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { keyLike, semitonesTo } from "@/lib/transpose";
-import { idDeSection } from "@/lib/setlist/sectionOrigins";
+import { idDeSection, structUidAt } from "@/lib/setlist/sectionOrigins";
 import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
 import type { SectionNuance } from "@/types/setList";
@@ -55,7 +55,7 @@ import { lire, resoudreConflit } from "@/lib/partition/lecture";
 import { MenuJeLis, LigneMaPartition, LignePartagee } from "@/components/partition/MenuJeLis";
 import { BarreCrayon, type CibleCrayon } from "@/components/partition/BarreCrayon";
 import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
-import { replaceSourceLine, insertSourceLineAfter, deleteSourceLines } from "@/lib/chordpro/editSource";
+import { replaceSourceLine, insertSourceLineAfter, deleteSourceLines, materializeSectionCopy } from "@/lib/chordpro/editSource";
 import { historyAuthor } from "@/lib/firebase/setlistHistory";
 import type { ChordProLine } from "@/types/chordPro";
 import type { JianpuChords } from "@/types/setList";
@@ -304,8 +304,13 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
       () => safeParseParam<Record<string, string>>(searchParams.get('sectionKeys'), {}, estObjet),
       [searchParams]
     )
+    // Je lis ma partition, qui a sa propre structure (copie « Seulement ce passage ») : elle s'affiche, sauf `?structure=`.
+    const structureMienne = !searchParams.get("structure") && lecture?.valeur === "mienne" && mienne?.structure?.length ? mienne.structure : null;
+    const avaitStructureMienne = useRef(false);
     useEffect(() => {
-      const structure: SectionItem[] = structureOverride.map((uid: string, index: number) => {
+      const base = structureMienne ?? (avaitStructureMienne.current && !searchParams.get("structure") ? buildDefaultStructure(ast.sections).map((s) => s.uid) : structureOverride);
+      avaitStructureMienne.current = !!structureMienne;
+      const structure: SectionItem[] = base.map((uid: string, index: number) => {
         const sectionId = idDeSection(uid);
         const cleanUid = uid.match(/-\d+$/) ? uid : `${sectionId}-${index}`;
         return {
@@ -319,7 +324,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
       // Rejoué quand la version adaptée arrive de la setlist : sa Dernière
       // phrase prend alors son nom dans le panneau.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[ast]);
+    },[ast, structureMienne]);
 
     // Ouverte depuis une setlist : la tonalité choisie ici est retenue pour ce
     // chant dans cette setlist, sur cet appareil (reprise en mode louange).
@@ -386,12 +391,26 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
     // d'écriture de la setlist (`persistOverride`) vit dans SetlistDetailClient ; à extraire avant de l'offrir.
     const [crayon, setCrayon] = useState(false);
     const [viseeCrayon, setViseeCrayon] = useState<CibleCrayon>("accord");
-    const [editTarget, setEditTarget] = useState<(EditLineTarget & { srcLine: number; pinyinSrcLine?: number; jianpuSrcLine?: number }) | null>(null);
+    const [editTarget, setEditTarget] = useState<(EditLineTarget & { srcLine: number; pinyinSrcLine?: number; jianpuSrcLine?: number; repeatedSectionId?: string; structIndex?: number }) | null>(null);
+    const [repeatScope, setRepeatScope] = useState<"all" | "one">("one");
     const [enregistrement, setEnregistrement] = useState(false);
     const [erreurCrayon, setErreurCrayon] = useState(false);
     const sourceCrayon = sourceLue ?? song.chordProSource;
-    function toucherLigne(line: ChordProLine) {
+    function toucherLigne(line: ChordProLine, sectionUid?: string) {
       if (line.srcLine === undefined) return;
+      // Section répétée par la structure affichée : le choix « Seulement ce passage | Toutes les répétitions » se propose.
+      let repeatedSectionId: string | undefined;
+      let structIndex: number | undefined;
+      const sec = sectionUid ? ast.sections.find((s) => s.lines.some((l) => l.srcLine === line.srcLine)) : undefined;
+      // shortcut: page ouverte avec ?structure= (depuis une setlist) → retouche pour toutes les répétitions, sans choix.
+      if (sec && !searchParams.get("structure") && structureOverride.filter((ov) => ov === sec.id || idDeSection(ov) === sec.id).length > 1) {
+        const j = structureOverride.findIndex((ov, k) => structUidAt(ov, k) === sectionUid);
+        if (j !== -1) {
+          repeatedSectionId = sec.id;
+          structIndex = j;
+        }
+      }
+      setRepeatScope("one");
       const displayKey = customize.currentKey;
       setEditTarget({
         itemIndex: 0,
@@ -404,13 +423,24 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
         srcLine: line.srcLine,
         pinyinSrcLine: line.pinyinSrcLine,
         jianpuSrcLine: line.jianpuSrcLine,
+        repeatedSectionId,
+        structIndex,
         cible: viseeCrayon,
       });
     }
     /** Ma partition réécrite : `base` = la couche du dessous (celle du culte si la page s'ouvre d'une setlist, sinon le .cho). */
     async function retoucher(fabriquer: (source: string, t: NonNullable<typeof editTarget>) => string) {
       if (!compte || !editTarget) return;
-      const prochain = fabriquer(sourceCrayon, editTarget);
+      // « Seulement ce passage » : la section répétée est copiée dans ma source, cette occurrence pointe vers la copie.
+      const mat = repeatScope === "one" && editTarget.repeatedSectionId !== undefined && editTarget.structIndex !== undefined
+        ? materializeSectionCopy(sourceCrayon, editTarget.repeatedSectionId) : null;
+      const cible = mat ? {
+        ...editTarget,
+        srcLine: editTarget.srcLine + mat.lineOffset,
+        pinyinSrcLine: editTarget.pinyinSrcLine !== undefined ? editTarget.pinyinSrcLine + mat.lineOffset : undefined,
+        jianpuSrcLine: editTarget.jianpuSrcLine !== undefined ? editTarget.jianpuSrcLine + mat.lineOffset : undefined,
+      } : editTarget;
+      const prochain = fabriquer(mat?.source ?? sourceCrayon, cible);
       if (prochain === sourceCrayon) {
         setEditTarget(null);
         return;
@@ -424,8 +454,8 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
           ownerName: historyAuthor(profile)?.name ?? "",
           base: courante,
           content: prochain === courante ? null : prochain,
-          structure: mienne?.structure ?? null,
-          sectionOrigins: mienne?.sectionOrigins,
+          structure: mat ? structureOverride.map((ov, k) => (k === editTarget.structIndex ? `${mat.newSectionId}-${k}` : ov)) : mienne?.structure ?? null,
+          sectionOrigins: mat ? { ...mienne?.sectionOrigins, [mat.newSectionId]: editTarget.repeatedSectionId! } : mienne?.sectionOrigins,
           jianpuChords: mienne?.jianpuChords,
           key: mienne?.key ?? null,
           traits: mienne?.traits ?? [],
@@ -742,7 +772,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
               disposition={disposition}
               layout={layout}
               marques={lecture?.marques}
-              onLineSelect={crayon ? (line) => toucherLigne(line) : undefined}
+              onLineSelect={crayon ? toucherLigne : undefined}
               onConflit={lecture?.modifiable ? (index, choix) => { mp.enregistrer(resoudreConflit(lecture, index, choix)).catch(() => {}); } : undefined}
             />
         </main>
@@ -780,13 +810,18 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
             <EditLineSheet
               target={editTarget}
               saving={enregistrement}
+              repeatScope={editTarget?.repeatedSectionId !== undefined ? repeatScope : undefined}
+              onRepeatScope={setRepeatScope}
               onClose={() => { setEditTarget(null); setErreurCrayon(false); }}
-              onSaveLine={(newRaw) => retoucher((source, c) => {
-                if (newRaw === source.split("\n")[c.srcLine]) return source;
+              onSaveLine={(newRaw) => {
+                // Ligne inchangée : rien à copier ni enregistrer.
+                if (editTarget && newRaw === sourceCrayon.split("\n")[editTarget.srcLine]) { setEditTarget(null); return; }
+                return retoucher((source, c) => {
                 const next = replaceSourceLine(source, c.srcLine, newRaw);
                 // Le pinyin est désormais inline dans la ligne → la ligne séparée disparaît.
                 return c.pinyinSrcLine !== undefined ? deleteSourceLines(next, [c.pinyinSrcLine]) : next;
-              })}
+                });
+              }}
               onInsertAfter={(newRaw) => retoucher((source, c) => insertSourceLineAfter(source, Math.max(c.srcLine, c.pinyinSrcLine ?? -1), newRaw))}
               onDeleteLine={() => retoucher((source, c) => deleteSourceLines(source, [c.srcLine, ...(c.pinyinSrcLine !== undefined ? [c.pinyinSrcLine] : []), ...(c.jianpuSrcLine !== undefined ? [c.jianpuSrcLine] : [])]))}
             />

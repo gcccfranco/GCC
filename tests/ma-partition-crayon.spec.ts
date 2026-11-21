@@ -239,3 +239,48 @@ test("page d'un chant (ZH) : une retouche des paroles garde le pinyin et se lit 
   await capture(page, "crayon-page-chant-zh");
   expect(String(db.doc(`partitions/${MUSICIEN.uid}__一生爱你`)!.content)).toContain("珍");
 });
+
+// Un passage ou tous (UP-3) : la page d'un chant dont ma structure répète le refrain propose le choix de la feuille.
+const STRUCT_ABBA = ["intro-1-0", "verse-2-1", "chorus-3-2", "verse-5-3", "chorus-3-4"];
+const maPartitionRepetee = (slug: string, structure: string[]) => ({
+  [`partitions/${MUSICIEN.uid}__${slug}`]: {
+    slug, ownerUid: MUSICIEN.uid, ownerName: "Nadège T.", base: ABBA, content: null, structure, key: null,
+    traits: [], sharedWith: [], sharedTraits: false, updatedAt: new Date("2026-11-02T10:00:00Z"),
+  },
+});
+const refrain = (page: Page, uid: string) => page.locator(`[data-section-uids~="${uid}"]`).first();
+
+async function toucherSecondRefrain(page: Page) {
+  await sansAide(page);
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  const db = await signInAs(page, MUSICIEN, { ...DOCS, ...maPartitionRepetee("abba-pere", STRUCT_ABBA) }, "/songs/abba-pere");
+  await page.getByRole("button", { name: "Crayon", exact: true }).filter({ visible: true }).first().click();
+  await page.getByRole("button", { name: "Paroles", exact: true }).click();
+  await refrain(page, "chorus-3-4").getByRole("button").filter({ hasText: "Abba" }).first().click();
+  return db;
+}
+const remplacerPapa = async (page: Page) => {
+  const champ = feuille(page).locator("textarea");
+  await champ.fill((await champ.inputValue()).replace("Abba", "Papa"));
+  await feuille(page).getByRole("button", { name: "Valider", exact: true }).click();
+  await feuille(page).getByRole("button", { name: "Valider", exact: true }).click();
+};
+
+test("page d'un chant (FR) : « Seulement ce passage » d'avance, seul le 2e refrain change", async ({ page }) => {
+  const db = await toucherSecondRefrain(page);
+  await expect(feuille(page).getByRole("button", { name: "Seulement ce passage" })).toHaveAttribute("aria-pressed", "true");
+  await remplacerPapa(page);
+  await expect(page.locator("[data-copy-line]", { hasText: "Papa" })).toHaveCount(1);
+  await expect(refrain(page, "chorus-3-2")).not.toContainText("Papa");
+  const ecrit = db.doc(MA_PARTITION);
+  expect(ecrit!.structure).toEqual(["intro-1-0", "verse-2-1", "chorus-3-2", "verse-5-3", expect.stringMatching(/^chorus-\d+-4$/)]);
+  expect(Object.values(ecrit!.sectionOrigins as Record<string, string>)).toEqual(["chorus-3"]);
+});
+
+test("page d'un chant (FR) : « Toutes les répétitions » change les deux refrains", async ({ page }) => {
+  const db = await toucherSecondRefrain(page);
+  await feuille(page).getByRole("button", { name: "Toutes les répétitions" }).click();
+  await remplacerPapa(page);
+  await expect(page.locator("[data-copy-line]", { hasText: "Papa" })).toHaveCount(2);
+  expect(db.doc(`partitions/${MUSICIEN.uid}__abba-pere`)!.structure).toEqual(STRUCT_ABBA);
+});

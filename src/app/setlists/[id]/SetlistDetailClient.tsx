@@ -351,7 +351,7 @@ export function SetlistDetailClient() {
   const [editionLien, setEditionLien] = useState(false);
   // Retouche d'une section répétée pour moi : toutes les répétitions
   // (défaut, comme avant le lot 9) ou ce seul passage (docs/spec-harmonie.md).
-  const [repeatScope, setRepeatScope] = useState<"all" | "one">("all");
+  const [repeatScope, setRepeatScope] = useState<"all" | "one">("one");
   // Ma partition (docs/spec-ma-partition.md) : mes partitions, celles qu'on m'a partagées, mon choix « Je lis ».
   const slugsPartitions = useMemo(
     () => (setlist?.items ?? []).filter((i) => i.songSlug && i.type !== "fusion").map((i) => i.songSlug),
@@ -1267,7 +1267,7 @@ export function SetlistDetailClient() {
       personalKey ??
       equipeKey;
 
-    setRepeatScope("all");
+    setRepeatScope("one");
     setEditTarget({
       itemIndex,
       raw: source.split("\n")[line.srcLine] ?? "",
