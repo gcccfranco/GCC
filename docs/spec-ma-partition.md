@@ -218,6 +218,43 @@ Taille : L (six tranches). Comme le veut le CLAUDE.md, le go de code se donne à
 3. « Oui » : l'interrupteur « Partager ma version » disparaît sans remplaçant.
 **Go de Timothée pour MP-6 (12/11/2026, « Oui go pour MP6 »)** : inscrit dans la file, après AN.
 
+## Un passage ou tous (Timothée, 21/11/2026) — à trancher, pas de go
+
+**Demande (ses mots)** : « quand j'utilise la fonction "crayon" et que je modifie une section, ça modifie pour toutes
+les sections or ce n'est pas ce que je veux » ; « pour les paroles aussi il faut que ce soit comme ça si je veux
+modifier les paroles d'une seule section ou bien l'appliquer à toutes les sections ».
+
+**Ce que le code fait (vérifié le 21/11)** :
+- *Dessins* (trait, surligneur, texte, tampon) : l'ancre est `{ section, ligne, car }`, `section` = id de la section
+  du chant ; le dessin se montre donc à chaque passage de la section (§ « Traits accrochés au texte », décision du
+  11/11). Aucun choix n'est proposé.
+- *Accords et paroles* : la feuille d'une ligne propose « Toutes les répétitions | Seulement ce passage »
+  (`EditLineSheet`, `repeatScope`), « Toutes » choisi d'avance, et seulement sur la page setlist
+  (`SetlistDetailClient.tsx:2559`) quand le plan répète la section (`repeatedSectionId`). « Seulement ce passage »
+  copie la section (`materializeMine`, `sectionOrigins`). La page chant ne passe pas ce choix à la feuille.
+
+**Proposition** (une règle, les deux gestes) : *ce que je fais au Crayon vaut pour le passage que je touche ; je
+peux l'étendre à toutes les répétitions.*
+- Dessins : l'ancre gagne un champ facultatif `passage` (rang du passage de la section dans l'ordre lu, 0 = le
+  premier). Présent : le dessin ne se montre qu'à ce passage. Absent : à tous (c'est le format d'aujourd'hui).
+- Accords et paroles : le choix de la feuille s'affiche partout où la section revient ; il ne change pas de forme.
+
+**Questions (la proposition en premier)** :
+1. *Choix d'avance* : « Seulement ce passage », pour les dessins comme pour le texte (c'est « Toutes » qui a
+   surpris). Autre voie : garder « Toutes » d'avance pour le texte.
+2. *Étendre un dessin à tous les passages* : un bouton « Ce passage | Toutes les répétitions » dans la barre du
+   Crayon, lu au moment de tracer. Autre voie : pas de bouton, un dessin vaut toujours pour son passage.
+3. *Dessins déjà faits* : ils n'ont pas de `passage`, donc restent sur tous les passages ; rien n'est converti.
+   Autre voie : les ramener au premier passage (perd des dessins voulus partout).
+4. *Ordre « Une fois chacune » ou « Plan »* (chaque section montrée une seule fois) : ce qu'on y fait vaut pour
+   tous les passages, sans choix (on ne voit pas de passage). Autre voie : le premier passage.
+5. *Page chant, hors setlist* : même choix pour le texte si le chant répète la section ; à vérifier par
+   l'orchestratrice (la copie de section existe pour la setlist, pas encore pour « Ma partition » seule).
+6. *Gommer* : la gomme enlève le dessin là où il vaut (son passage, ou tous).
+
+Format : `passage` est facultatif, une version ancienne du site l'ignore et montre le dessin partout
+(§ « Compatibilité du format », AN-4). `firestore.rules` : à relire, le champ est dans `traits` (liste libre).
+
 ## Avancement
 
 - 11/11/2026 : code relu, six captures de l'existant (setlist sur trois appareils, chant au téléphone, mode louange
