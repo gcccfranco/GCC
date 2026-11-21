@@ -359,3 +359,14 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   specs voisines relancées par le testeur : vertes. tsc et lint verts. Écran regardé au téléphone, à la tablette et à
   l'ordinateur, en clair, en sombre et en 中文. Polices : inchangées (caractères déjà présents). **⚠ Rules de T5a,
   T1 et T8 toujours à publier à la main par Timothée** avant toute mise en ligne (T9 n'en ajoute aucune).
+- 21/11/2026 — **Fin de lot AS** (session T9, la file B étant finie) : specs du lot et des pages touchées (Salles,
+  Scène et fêtes, Évènements, réunions, `eglise-entree`, `back-office-coupe`, `libelles-langues`, `coherence`,
+  `chants-fetes`, `taches-evenements`), cinq projets pour celles de `SPECS_GRAND_ECRAN`, en trois groupes : 3 118
+  passés, 12 rouges, en 60 min (13, 25 et 21 min). Dix rouges dans `scene-saison` : trois anciens tests où la
+  coordination retirait la réservation d'un autre, passés au parcours d'AS16 (motif, route simulée ; l'échec se dit
+  dans la feuille), et un rouge en course (« Déplacer », tablette) : 12 passés à la relance en 33 s. Hors lot :
+  `taches-evenements.spec.ts:290` (téléphone et tablette : après la suppression d'un évènement au Back-Office, l'adresse
+  finit sur `/back-office/calendrier` au lieu de `/evenements`) ; aucun fichier du lot n'y touche, laissé. **Lot AS
+  fini, pas en ligne. ⚠ Avant toute mise en ligne, Timothée publie `firestore.rules` à la main (T5a, T1, T8 ; T9
+  n'ajoute rien)** : d'ici là la vraie base refuse les réservations « Des personnes… » et les nouvelles réservations
+  de la Grande salle pour une fête.

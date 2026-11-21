@@ -12,6 +12,7 @@ import {
 import { reservationsClosed } from "../src/lib/scene/dimanches";
 import { QUI } from "../src/types/programme";
 import { creneauxEnReservations } from "./helpers/creneauxScene";
+import { annulerAvecMotif, simulerAnnulation } from "./helpers/annulation";
 
 // Lot U1 (docs/spec-scene-saison.md) : la coordination définit la saison de
 // réservation de la scène — dates, jours, plages, qui réserve — et les groupes
@@ -450,18 +451,20 @@ test("qui peut réserver : « Tout membre connecté » vide la liste ; une famil
   await expect.poll(() => patches(db).at(-1)?.data.quiAutorises).toEqual(["Franco", "Intergroupe", "Interfranco"]);
 });
 
-test("hors des plages : « Retirer » supprime la réservation après la confirmation du site", async ({ page }) => {
+test("hors des plages : la coordination annule la réservation d'un autre avec un motif (AS16)", async ({ page }) => {
   const c1 = { ...resa("2026-10-11", "12:00", "13:00"), auteurUid: "uid-noe", auteurNom: "Noé L." };
   const db = await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, ouvert: true }, "programmes/noel/creneaux/c1": c1 });
+  const envois = await simulerAnnulation(page);
   // P8 : dans la semaine, « ⋯ » sur toute réservation (le tableau propose « Déplacer » seul).
   // Sur une colonne (P9), « Cette semaine » la montre d'emblée.
   if (estGrandEcran(test.info())) await page.getByRole("list", { name: "Semaines" }).getByRole("button", { name: /^10 – 11 oct\./ }).click();
   const ligne = bloc(page, "Dimanche 11 octobre").getByRole("listitem").filter({ hasText: "Hors des plages" });
   await expect(ligne).toContainText("12:00");
   await ligne.getByRole("button", { name: /^Plus d'actions/ }).click();
-  await page.getByRole("menuitem", { name: "Retirer" }).click();
-  await repondreDansLeSite(page, "Retirer");
+  await page.getByRole("menuitem", { name: "Annuler la réservation…" }).click();
+  await annulerAvecMotif(page, "Scène prise ce dimanche");
   await expect(bloc(page, "Dimanche 11 octobre").getByText("Hors des plages")).toHaveCount(0);
+  expect(envois.map((e) => e.body)).toEqual([{ reservationId: "c1", motif: "Scène prise ce dimanche" }]);
   expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("reservations/c1");
 });
 
@@ -661,13 +664,13 @@ test("membres : « ⋯ » › Retirer sa réservation après la confirmation du 
   expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("reservations/s");
 });
 
-test("membres : la coordination modifie ou retire toute réservation et voit celles hors des plages", async ({ page }) => {
+test("membres : la coordination modifie toute réservation, annule celle d'un autre (AS16) et voit celles hors des plages", async ({ page }) => {
   const hors = { ...resa("2026-10-11", "12:00", "13:00", "l"), auteurUid: "uid-noe", auteurNom: "Noé L." };
   await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": SKETCH, "programmes/noel/creneaux/l": hors }, undefined, "/evenements/scene");
   const dimanche = bloc(page, "Dimanche 11 octobre");
   const sketch = dimanche.getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" });
   await sketch.getByRole("button", { name: /^Plus d'actions/ }).click();
-  await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Retirer/]);
+  await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Annuler la réservation…/]);
   await page.keyboard.press("Escape");
   await expect(dimanche.getByRole("listitem").filter({ hasText: "Chant · EDD 中班" })).toContainText("Hors des plages");
 });
@@ -843,18 +846,19 @@ test("hors des plages : « Déplacer » vers un moment qui a commencé entre-tem
   expect(db.writes.filter((w) => w.method === "PATCH" && w.path.startsWith("reservations/"))).toHaveLength(0);
 });
 
-test("« Retirer » qui échoue le dit au-dessus du tableau de toutes les réservations", async ({ page }) => {
+test("une annulation qui échoue le dit dans la feuille ; la réservation reste dans le tableau (AS16)", async ({ page }) => {
   const c1 = { ...resa("2026-10-11", "15:00", "16:00", "c1"), auteurUid: "uid-noe", auteurNom: "Noé L." };
   await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/c1": c1 });
-  await page.route(/reservations\/c1/, (route) => route.request().method() === "DELETE"
-    ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "denied" } }) })
-    : route.fallback());
+  await page.route("**/api/salles/annulation", (route) => route.fulfill({ status: 500, json: { error: "x" } }));
   await versToutesLesReservations(page);
   const toutes = page.getByRole("region", { name: "Toutes les réservations" });
   await toutes.getByRole("button", { name: /^Plus d'actions/ }).click();
-  await page.getByRole("menuitem", { name: "Retirer" }).click();
-  await repondreDansLeSite(page, "Retirer");
-  await expect(toutes.getByRole("alert")).toHaveText("Enregistrement impossible. Vérifie ta connexion et réessaie.");
+  await page.getByRole("menuitem", { name: "Annuler la réservation…" }).click();
+  const f = page.getByRole("alertdialog");
+  await f.getByLabel("Motif (envoyé à l'auteur)").fill("Scène prise");
+  await f.getByRole("button", { name: "Annuler la réservation", exact: true }).click();
+  await expect(f.getByRole("alert")).toHaveText("La réservation n'a pas pu être annulée. Réessayez.");
+  await f.getByRole("button", { name: "Annuler", exact: true }).click();
   await expect(toutes.locator('[data-testid="reservations-tableau"], [data-testid="reservations-liste"]').filter({ visible: true })).toContainText("15:00 – 16:00");
 });
 
