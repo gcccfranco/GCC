@@ -101,3 +101,12 @@ sur tablette portrait, tablette paysage, ordinateur et 1 440 px.
 - 21/11/2026 : R2 et R3 lancées ensemble (`session_01UMdfudBb2wu91QRj7iKtL9`), R4 lancée
   (`session_01UMdfuZzn5R3Lgirrn7Mgo7`) ; lot « Un passage ou tous » : UP-1 (`session_01UMdfud4YdWDfdt7w7qhm9R`) et
   UP-3 (`session_01UMdfudKDfdFHnco4rsCnMm`), suivi dans `docs/spec-ma-partition.md`.
+- 21/11/2026 : **R2 faite.** Bouton de thème au pied de la barre dépliée d'un membre (`BarreLaterale.tsx`, après la
+  langue, même pastille ; forme d'attente à trois pastilles) ; note Q4 levée dans `spec-navigation-grand-ecran.md` ;
+  test ajouté (ordinateur, membre, barre dépliée, le bouton bascule le thème), absence → présence dans le test du pied.
+  Tests (`navigation-grand-ecran`, `back-office-admin`, `agencement-barre-reduite`, cinq projets, 10,7 min) : 382
+  passés, 7 échoués, tous déjà sur HEAD sans le diff (libellé « Chants » doublé dans le rail réduit ; deux renvois du
+  back-office vers le Calendrier), hors R2, à reprendre ailleurs. Captures 1 024/1 280/1 440, clair/sombre, FR/中文 :
+  OK ; à toutes ces largeurs la barre fait 248 px, le nom du membre n'a plus qu'environ 40 px (« Rut… », ellipse
+  nette). Signalés sans correction : forme d'attente en barre réduite à une seule pastille fantôme contre trois boutons
+  (antérieur) ; visiteur sans compte sur téléphone sans bouton de thème (`Navbar.tsx:258`, hors périmètre, à Timothée).

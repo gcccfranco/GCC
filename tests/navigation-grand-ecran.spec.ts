@@ -189,14 +189,14 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
     await expect(nav.getByRole("link", { name: "Planning" })).toHaveAttribute("aria-current", "page");
   });
 
-  test("membre : le pied porte l'initiale, le nom, la cloche et la langue ; l'initiale ouvre le menu « Compte »", async ({ page }) => {
+  test("membre : le pied porte l'initiale, le nom, la cloche, la langue et le thème ; l'initiale ouvre le menu « Compte »", async ({ page }) => {
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     const pied = barreLaterale(page).getByTestId("pied-barre");
     await expect(pied).toContainText("Ruth K.");
     await expect(pied.getByRole("button", { name: "Notifications" })).toBeVisible();
     await expect(pied.getByRole("button", { name: "切换为中文" })).toBeVisible();
-    await expect(barreLaterale(page).getByRole("button", { name: /mode (clair|sombre)/i }), "le thème d'un membre est dans Moi").toHaveCount(0);
+    await expect(pied.getByRole("button", { name: /^Mode (clair|sombre)$/ }), "le thème d'un membre est au pied, barre dépliée").toBeVisible();
     await sansIndicateurDeNext(page);
     await pied.getByRole("button", { name: "Compte" }).click();
     const menu = page.getByRole("menu");
@@ -205,6 +205,17 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
     }
     // Le menu s'ouvre à côté de la barre, pas dessous.
     expect((await menu.boundingBox())!.x).toBeGreaterThanOrEqual(240);
+  });
+
+  test("ordinateur, membre, barre dépliée : le bouton de thème du pied bascule le thème", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    const pied = barreLaterale(page).getByTestId("pied-barre");
+    const html = page.locator("html");
+    const etaitSombre = await html.evaluate((el) => el.classList.contains("dark"));
+    await pied.getByRole("button", { name: /^Mode (clair|sombre)$/ }).click();
+    if (etaitSombre) await expect(html).not.toHaveClass(/dark/);
+    else await expect(html).toHaveClass(/dark/);
   });
 
   test("visiteur : Chants · Église ; en bas « Connexion », la langue et le thème", async ({ page }) => {
