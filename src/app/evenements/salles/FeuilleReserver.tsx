@@ -8,11 +8,13 @@
 // (Oui : pour qui, pour quoi, note de la fête ; Non : réservation ordinaire).
 // T3b (SA8) : une salle choisie que le moment fait croiser une occupation (le moment changé, ou une réservation
 // relue à l'envoi) est refusée en mots : l'occupant et son heure, les salles libres au même moment, « Décaler ».
+// T7 (AS13, RS8) : la pastille de la salle devant son nom ; dans la phrase d'une salle libre, « Libre » en graisse 600.
 
 import { Fragment, useId, useState, type CSSProperties } from "react"
 import { useTranslation } from "react-i18next"
 import { FeuilleOuPanneau } from "@/components/stats/FeuilleOuPanneau"
 import { Check } from "lucide-react"
+import { MotLibre } from "@/components/salles/MotLibre"
 import { RefusSalle } from "@/components/salles/RefusSalle"
 import { Champ } from "@/components/ui/champ"
 import { ChampSelect } from "@/components/ui/champ-select"
@@ -24,7 +26,8 @@ import { pourDe } from "@/lib/firebase/programmes"
 import type { Reservation } from "@/lib/firebase/reservations"
 import { chevauchement, decalage, sallesLibres } from "@/lib/salles/conflit"
 import { etatA, etatEnMots, type Occupation } from "@/lib/salles/occupations"
-import { SALLES, type SalleId } from "@/lib/salles/salles"
+import { styleTexteService } from "@/lib/couleurSombre"
+import { COULEUR_SALLE, SALLES, type SalleId } from "@/lib/salles/salles"
 import type { Saison } from "@/lib/scene/saison"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { QUI, QUOI } from "@/types/programme"
@@ -219,10 +222,20 @@ function Formulaire({ ouverture, fermer, today, langue, occupationsDu, feteDu, n
               />
               <span className="min-w-0 flex-1">
                 <span className={`flex flex-wrap items-baseline gap-x-2 ${raison ? "text-muted-foreground" : ""}`}>
+                  <span
+                    aria-hidden
+                    data-couleur-salle
+                    className={`couleur-salle h-[9px] w-[9px] shrink-0 self-center rounded-full bg-[var(--salle)] ${raison ? "opacity-40" : ""}`}
+                    style={styleTexteService(COULEUR_SALLE[s.id])}
+                  />
                   <span className="font-semibold">{s.nom}</span>
                   {s.autreNom && <span className="text-sm text-muted-foreground">{s.autreNom}</span>}
                 </span>
-                {(raison ?? libreDe(s.id)) && <span className="block text-sm text-muted-foreground">{(raison ?? libreDe(s.id))!.replace(/ (\d\d:\d\d)/g, "\u00a0$1")}</span>}
+                {(raison ?? libreDe(s.id)) && (
+                  <span className="block text-sm text-muted-foreground">
+                    {raison ? raison.replace(/ (\d\d:\d\d)/g, "\u00a0$1") : <MotLibre texte={libreDe(s.id)!.replace(/ (\d\d:\d\d)/g, "\u00a0$1")} />}
+                  </span>
+                )}
               </span>
             </label>
             {s.id === "grande" && fete && (

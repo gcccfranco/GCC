@@ -430,6 +430,9 @@
      --svc-sombre est la couleur éclaircie jusqu'à 4,5:1 sur #2c2c2e. */
   .texte-service { color: var(--svc-clair); }
   .dark .texte-service { color: var(--svc-sombre); }
+  /* Couleur d'une salle (T7, AS13) : `styleTexteService(COULEUR_SALLE[id])` + cette classe, `--salle` sert de fond ou de filet. */
+  .couleur-salle { --salle: var(--svc-clair); }
+  .dark .couleur-salle { --salle: var(--svc-sombre); }
   .svc-line { border-left-color: var(--svc); }
   .dark .svc-line { border-left-color: color-mix(in srgb, var(--svc) 55%, white); }
   /* Tuile d'un service (V7 ter) : le fond porte la couleur, le libellé la reprend

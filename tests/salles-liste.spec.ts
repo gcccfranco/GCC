@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { enTete, estGrandEcran, interdireDialoguesNatifs, ongletsRail, verifierSansDebordement } from "./helpers/agencement";
 import { creneauxEnReservations } from "./helpers/creneauxScene";
+import { couleurSombre } from "../src/lib/couleurSombre";
 
 // Chantier AR (docs/spec-salles.md), lot 2, tranche T2b : l'onglet « Salles » (connectés seulement, SA14), la page
 // `/evenements/salles` en vue Liste (SA2 : huit lignes groupées, l'état en mots), la bande de jours, la ligne de contexte
@@ -132,4 +133,36 @@ test.describe("AR, T2b : Salles en Liste", () => {
     await expect(contexte(page)).toContainText("普通主日");
     await expect(etat(page, "Grande salle")).toHaveText("喜乐团契，至 14:30");
   });
+});
+
+// T7 (AS13, RS8) : une pastille de 9 px de la couleur de la salle devant chaque nom ; « Libre » en graisse 600, encre normale.
+const rgbDe = (hex: string) => { const n = parseInt(hex.slice(1), 16); return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`; };
+const COULEURS_T7: Record<string, string> = { grande: "#2d5a65", fidelite: "#a03030", zhongban: "#3b6d11", reunion: "#64748b" };
+
+test.describe("AS, T7 : couleurs des salles en Liste", () => {
+  for (const sombre of [false, true]) {
+    test(`pastille de 9 px de la couleur de la salle (${sombre ? "sombre" : "clair"})`, async ({ page }) => {
+      if (sombre) await page.emulateMedia({ colorScheme: "dark" });
+      await ouvrir(page, MEMBRE, "/evenements/salles");
+      for (const [id, hex] of Object.entries(COULEURS_T7)) {
+        const pastille = liste(page).locator(`li[data-salle="${id}"] [data-couleur-salle]`);
+        await expect(pastille).toHaveCSS("width", "9px");
+        await expect(pastille).toHaveCSS("height", "9px");
+        await expect(pastille).toHaveCSS("background-color", rgbDe(sombre ? couleurSombre(hex) : hex));
+      }
+    });
+  }
+
+  for (const zh of [false, true]) {
+    test(`« ${zh ? "空闲" : "Libre"} » en graisse 600 et encre du texte ; titres de groupe gris`, async ({ page }) => {
+      await ouvrir(page, MEMBRE, "/evenements/salles", { zh });
+      const mot = liste(page).locator('li[data-salle="reunion"] [data-etat] [data-libre]');
+      await expect(mot).toHaveText(zh ? "空闲" : "Libre");
+      await expect(mot).toHaveCSS("font-weight", "600");
+      const encre = await page.evaluate(() => getComputedStyle(document.body).color);
+      await expect(mot).toHaveCSS("color", encre);
+      const titre = liste(page).locator("h2").first();
+      expect(await titre.evaluate((el) => getComputedStyle(el).color)).not.toBe(encre);
+    });
+  }
 });

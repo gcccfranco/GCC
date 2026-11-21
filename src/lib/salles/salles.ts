@@ -1,5 +1,8 @@
 // Les salles de l'église (docs/spec-salles.md, § Modèle, AR6, AR7, AR9) : huit entrées, dans l'ordre de l'écran (AS14 : la Grande salle est la Scène ; AS14 remplace AR6).
 // Noms en français dans les deux langues, sauf 小班, 中班, 大班, 高班 (AR9).
+// T7 (AS13, RS8) : `COULEUR_SALLE`, la couleur attitrée de chaque salle, prise par référence à `serviceColors`.
+
+import { categoryColor, CATEGORY_COLORS, PLANNING_COLORS } from "@/lib/serviceColors";
 
 // "scene" ne se lit que dans les anciens documents (AS14) : `salleLue` la rend "grande", on n'en écrit plus.
 export type SalleId = "grande" | "scene" | "fidelite" | "paix" | "amour" | "bonte" | "zhongban" | "imprimante" | "reunion";
@@ -25,6 +28,19 @@ export const SALLES: readonly Salle[] = [
   { id: "imprimante", nom: "Salle imprimante", groupe: "bureaux" },
   { id: "reunion", nom: "Salle de réunion", groupe: "bureaux" },
 ];
+
+/** Couleur attitrée de chaque salle (AS13, RS8) ; "scene" (lecture seule, AS14) a celle de la Grande salle. */
+export const COULEUR_SALLE: Record<SalleId, string> = {
+  grande: PLANNING_COLORS.culte,
+  scene: PLANNING_COLORS.culte,
+  fidelite: PLANNING_COLORS.fidelite,
+  paix: PLANNING_COLORS.paix,
+  amour: CATEGORY_COLORS["Groupe Amour"],
+  bonte: PLANNING_COLORS.bonte,
+  zhongban: PLANNING_COLORS.edd,
+  imprimante: categoryColor(""),
+  reunion: categoryColor(""),
+};
 
 /** Une salle lue (RS9) : l'ancienne Scène est la Grande salle (AS14) ; toute autre salle est elle-même. */
 export function salleLue(id: SalleId): SalleId {

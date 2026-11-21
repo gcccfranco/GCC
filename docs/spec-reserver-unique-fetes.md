@@ -296,3 +296,18 @@ consigne d'économie). Chaque tranche lance la suivante (dix tranches) ; la mise
   projets pour les specs d'agencement) : 913 passés, 0 rouge, en 15 min ; après la retouche de la critique,
   `salles-evenement` sur trois appareils : 54 passés en 1 min 30. Écran regardé aux quatre dispositions et en 中文.
   Polices : inchangées (caractères déjà présents). Fin de lot : T9 pas encore poussée, elle la fera.
+- 21/11/2026 — **T7 faite** (session T7, file A) : `COULEUR_SALLE` (`salles.ts`, RS8), par référence à
+  `serviceColors` seulement (Grande salle = culte, Fidélité, Paix, Amour, Bonté, 中班 = EDD, imprimante et réunion =
+  neutre de `categoryColor`) ; classe `.couleur-salle` (`globals.css`, variante sombre par `couleurSombre`). Liste : la
+  pastille d'état devient la pastille de 9 px de la salle ; feuille : pastille devant chaque nom (estompée si occupée) ;
+  Grille : en-tête teinté à 13 %, filet de 2 px, pastille dans le flux du nom. « Libre » / « 空闲 » en graisse 600 et en
+  encre (`MotLibre.tsx`, partagé). Aucune rule, aucune locale. Décisions déléguées (session T7, 21/11) : (1) le
+  « ruban » d'AS13 n'existe pas dans le code (la Liste montre des lignes d'occupation) : rien d'ajouté ; (2) le texte
+  « occupé » reste gris ; (3) effets acceptés d'AS13 relevés par `critique-design` : dans la Grille, les blocs 小班,
+  高班, 大班 (vert EDD, `couleurDe` inchangé) sous des en-têtes rouge, violet, magenta ; en sombre, Fidélité et Bonté
+  voisines ; Grande salle et les deux salles neutres voisines (le nom porte l'identité, aucune couleur nouvelle).
+  Retouches de la critique : pastille de la Grille collée au premier mot quand le nom passe sur deux lignes, calage
+  de la Liste en `em`. Tests : tsc et lint verts ; `salles-liste`, `salles-grille`, `salles-reserver` (cinq projets),
+  `salles-modele`, `salles-scene` (trois) : 297 passés, 5 rouges (nouveau test de la Grille, corrigé : 5 verts), en
+  4 min ; après les retouches, `salles-grille` et `salles-liste` : 99 passés en 1 min 45. Écran regardé aux quatre
+  dispositions et à 1 440 px, en clair, en sombre et en 中文.

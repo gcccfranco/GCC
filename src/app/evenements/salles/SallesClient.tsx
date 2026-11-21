@@ -14,6 +14,7 @@
 // dès 768 px, par l'évènement `RESERVER_SALLE` ; en bas de la liste au téléphone, comme « Nouvel évènement ») ; les
 // réservations lues avec les autres sources ; modifier et supprimer la sienne (SA10) depuis le détail d'un bloc ou la
 // journée d'une salle : les actions passent par le contexte.
+// T7 (AS13, RS8) : la pastille de la salle, de sa couleur, ouvre chaque ligne ; l'état reste en mots, « Libre » en graisse 600.
 
 import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
@@ -35,8 +36,10 @@ import { estSurLaListe } from "@/lib/deuxVolets"
 import { addDays } from "@/lib/taches/echeances"
 import { chargerReservations, chargerSalles } from "@/lib/salles/charger"
 import { varianteDu } from "@/lib/salles/emploi"
-import { couleurDe, etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
-import { SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
+import { MotLibre } from "@/components/salles/MotLibre"
+import { styleTexteService } from "@/lib/couleurSombre"
+import { etatA, etatEnMots, nomOccupant, occupationsDe, occupationsDu, type Occupation, type SourcesSalles } from "@/lib/salles/occupations"
+import { COULEUR_SALLE, SALLES, type GroupeSalle, type SalleId } from "@/lib/salles/salles"
 import { useReserver } from "./useReserver"
 import { GrilleSalles, type MomentCase } from "./GrilleSalles"
 import { FeuilleReserver, type Ouverture } from "./FeuilleReserver"
@@ -335,17 +338,18 @@ function Liste({ etat, vue, surGris, choisirVue, repere, setRepere, choisirJour,
                 >
                   <span
                     aria-hidden
-                    className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
-                    style={{ background: e.type === "occupe" ? couleurDe(e.occupation) : "transparent", boxShadow: e.type === "occupe" ? undefined : "inset 0 0 0 1.5px var(--muted-foreground)" }}
+                    data-couleur-salle
+                    className="couleur-salle mt-[0.45em] h-[9px] w-[9px] shrink-0 rounded-full bg-[var(--salle)]"
+                    style={styleTexteService(COULEUR_SALLE[s.id])}
                   />
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-baseline gap-x-2">
                       <span className="font-semibold">{s.nom}</span>
                       {s.autreNom && <span className="text-sm text-muted-foreground">{s.autreNom}</span>}
                     </span>
-                    <span data-etat className={`block text-sm ${e.type === "occupe" ? "text-muted-foreground" : "text-foreground"}`}>
+                    <span data-etat className="block text-sm text-muted-foreground">
                       {/* L'heure ne se sépare pas de « jusqu'à » / « 至 » en fin de ligne. */}
-                      {etatEnMots(e, langue).replace(/ (\d\d:\d\d)/g, "\u00a0$1")}
+                      {e.type === "occupe" ? etatEnMots(e, langue).replace(/ (\d\d:\d\d)/g, "\u00a0$1") : <MotLibre texte={etatEnMots(e, langue).replace(/ (\d\d:\d\d)/g, "\u00a0$1")} />}
                     </span>
                     {lignes.map((o, i) => (
                       <span key={o.id ?? i} className="block text-xs text-muted-foreground tabular-nums">{ligneOccupation(o, langue)}</span>

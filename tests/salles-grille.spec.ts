@@ -158,3 +158,28 @@ test.describe("AR, T2c : Salles en Grille", () => {
     await expect(bloc(page, "grande", "13:00")).toContainText("喜乐团契");
   });
 });
+
+// T7 (AS13, RS8) : l'en-tête de colonne a un fond teinté (13 %) et un filet de 2 px de la couleur de la salle, et sa pastille.
+test.describe("AS, T7 : couleurs des salles en Grille", () => {
+  test("en-tête teinté à 13 %, filet de 2 px de la couleur de la salle, pastille devant le nom", async ({ page }) => {
+    await ouvrir(page, { vue: "grille" });
+    const attendues: Record<string, [number, number, number]> = { grande: [0x2d, 0x5a, 0x65], fidelite: [0xa0, 0x30, 0x30], zhongban: [0x3b, 0x6d, 0x11], reunion: [0x64, 0x74, 0x8b] };
+    for (const [id, [r, g, b]] of Object.entries(attendues)) {
+      const entete = colonne(page, id).locator("[data-entete]");
+      await expect(entete).toHaveCSS("border-bottom-width", "2px");
+      await expect(entete).toHaveCSS("border-bottom-color", `rgb(${r}, ${g}, ${b})`);
+      const fond = await entete.evaluate((el) => getComputedStyle(el).backgroundColor);
+      const m = fond.match(/[\d.]+/g)!.map(Number);
+      // Chrome rend un color-mix() en `color(srgb 0.18 0.35 0.4 / 0.13)` (canaux de 0 à 1).
+      if (fond.startsWith("color(")) for (let i = 0; i < 3; i++) m[i] *= 255;
+      expect(m.length).toBeGreaterThanOrEqual(3);
+      expect(m[3] ?? 1).toBeGreaterThan(0);
+      expect(m[3] ?? 1).toBeLessThan(0.2);
+      // La teinte vient de la couleur de la salle (le canal dominant reste le sien).
+      expect([m[0], m[1], m[2]].map((v) => Math.round(v))).toEqual([r, g, b].map((v) => Math.round(v)));
+      const pastille = entete.locator("[data-couleur-salle]");
+      await expect(pastille).toHaveCSS("width", "9px");
+      await expect(pastille).toHaveCSS("background-color", `rgb(${r}, ${g}, ${b})`);
+    }
+  });
+});

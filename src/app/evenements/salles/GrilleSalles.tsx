@@ -12,6 +12,7 @@
 // (souris, trackpad, stylet) dessine la plage au quart d'heure ; un clic ou un appui ouvre l'heure de la case, pour une
 // heure ; au clavier, une seule case est dans l'ordre de tabulation, les flèches changent de case et Entrée l'ouvre. Le
 // toucher n'est pas capté : le défilement horizontal du téléphone (SA3) et le toucher d'un bloc (SA4) restent.
+// T7 (AS13, RS8) : l'en-tête de colonne prend la couleur de la salle (fond à 13 %, filet de 2 px) avec sa pastille.
 
 import { useRef, useState } from "react"
 import Link from "next/link"
@@ -19,7 +20,8 @@ import { ChevronRight, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { couleurDe, nomOccupant, occupationsDe, type Occupation } from "@/lib/salles/occupations"
-import { salleLue, SALLES, type SalleId } from "@/lib/salles/salles"
+import { styleTexteService } from "@/lib/couleurSombre"
+import { COULEUR_SALLE, salleLue, SALLES, type SalleId } from "@/lib/salles/salles"
 import { useSalles } from "./SallesClient"
 
 type Langue = "fr" | "zh"
@@ -103,8 +105,16 @@ export function GrilleSalles({ occupations, heure, ouvrir, langue, dateLongue }:
             const ici = occupationsDe(occupations, s.id)
             return (
               <div key={s.id} data-colonne={s.id} className="min-w-[6.5rem] flex-1 border-r border-border/60 last:border-r-0 lg:min-w-0">
-                <div data-entete className="flex h-14 flex-col items-center justify-center border-b border-border/60 px-1 text-center leading-tight">
-                  <span className="text-xs font-semibold">{s.nom}</span>
+                <div
+                  data-entete
+                  className="couleur-salle flex h-14 flex-col items-center justify-center border-b-2 border-[color:var(--salle)] bg-[color-mix(in_srgb,var(--salle)_13%,transparent)] px-1 text-center leading-tight"
+                  style={styleTexteService(COULEUR_SALLE[s.id])}
+                >
+                  <span className="text-xs font-semibold">
+                    {/* Dans le flux du texte : la pastille reste collée au premier mot quand le nom passe sur deux lignes. */}
+                    <span aria-hidden data-couleur-salle className="mr-1.5 inline-block h-[9px] w-[9px] rounded-full bg-[var(--salle)] align-[0.05em]" />
+                    {s.nom}
+                  </span>
                   {s.autreNom && <span className="text-[11px] text-muted-foreground">{s.autreNom}</span>}
                 </div>
                 <div className="py-3">

@@ -419,3 +419,31 @@ test.describe("AR, T3b : refus du chevauchement dans la feuille", () => {
     await verifierSansDebordement(page);
   });
 });
+
+// T7 (AS13, RS8) : la pastille de la salle (9 px) devant son nom, après le radio ; « Libre » en graisse 600, encre normale.
+test.describe("AS, T7 : couleurs des salles dans la feuille Réserver", () => {
+  test("pastille de 9 px de la couleur de la salle, après le radio ; « Libre » en 600", async ({ page }) => {
+    await ouvrir(page);
+    await ouvrirLaFeuille(page);
+    const attendues: Record<string, string> = { grande: "rgb(45, 90, 101)", fidelite: "rgb(160, 48, 48)", zhongban: "rgb(59, 109, 17)", reunion: "rgb(100, 116, 139)" };
+    for (const [id, couleur] of Object.entries(attendues)) {
+      const rangee = salles(page).locator(`label[data-salle="${id}"]`);
+      const pastille = rangee.locator("[data-couleur-salle]");
+      await expect(pastille).toHaveCSS("width", "9px");
+      await expect(pastille).toHaveCSS("height", "9px");
+      await expect(pastille).toHaveCSS("background-color", couleur);
+      // Après le radio, avant le nom.
+      const [xr, xp, xn] = await Promise.all([
+        rangee.locator("input[type=radio]").evaluate((e) => e.getBoundingClientRect().right),
+        pastille.evaluate((e) => e.getBoundingClientRect().left),
+        rangee.getByText(/^(Grande salle|Salle Fidélité|Salle 中班|Salle de réunion)$/).evaluate((e) => e.getBoundingClientRect().left),
+      ]);
+      expect(xp).toBeGreaterThanOrEqual(xr);
+      expect(xp).toBeLessThan(xn);
+    }
+    const mot = salles(page).locator('label[data-salle="reunion"] [data-libre]');
+    await expect(mot).toHaveText("Libre");
+    await expect(mot).toHaveCSS("font-weight", "600");
+    await expect(mot).toHaveCSS("color", await page.evaluate(() => getComputedStyle(document.body).color));
+  });
+});
