@@ -4,9 +4,9 @@ import type { Token } from "@/types/chordPro";
 import { AccordTouchable, etiquetteAffichee } from "@/components/accords/AccordTouchable";
 import localFont from "next/font/local";
 import { NotationAccordsContext } from "@/lib/notationAccords";
-import { useContext, useLayoutEffect, useRef, useState } from "react";
+import { memo, useContext, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { LargeurCoupureContext, CoupureMesureContext, bordCoupure } from "@/components/song/LargeurCoupure";
+import { LargeurCoupureContext, CoupureMesureContext, bordCoupure, observerLargeurLigne } from "@/components/song/LargeurCoupure";
 import { signalerCoupure } from "@/lib/song/coupureSignal";
 import { choisirCoupure, DEBORD, type Unite } from "@/lib/song/coupure";
 type Segment = { chord: string | null; lyric: string };
@@ -199,7 +199,9 @@ function apresPolices(f: () => void) {
   };
 }
 
-export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontSize, chordEm = 0.9, chord_font, fr_lyric_font, ecartApres = false }: ChordLineProps) {
+// P1 (audit de performance du 21/11/2026) : mémoïsée. Ses props sont des primitives, les jetons de l'AST et des
+// polices de module ; notation, tonalité et largeur arrivent par contexte, qui passe à travers `memo`.
+export const ChordLine = memo(function ChordLine({ tokens, showChords = true, hideLyrics = false, fontSize, chordEm = 0.9, chord_font, fr_lyric_font, ecartApres = false }: ChordLineProps) {
   const { notation, tonalite } = useContext(NotationAccordsContext);
   const segments = toSegments(tokens, !showChords);
   const hasAnyChord = showChords && segments.some((s) => s.chord !== null);
@@ -215,6 +217,9 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
 
   const ligne = useRef<HTMLDivElement>(null);
   const motRefs = useRef<(HTMLElement | null)[]>([]);
+  // Un rappel par rang de mot, gardé d'un rendu à l'autre : React ne détache ni ne rattache les mots à chaque rendu.
+  const rappelsMots = useRef<((n: HTMLElement | null) => void)[]>([]);
+  const refMot = (w: number) => (rappelsMots.current[w] ??= (n) => { motRefs.current[w] = n; });
   const derniere = useRef("");
   const [coupe, setCoupe] = useState<Coupe>(UNE_RANGEE);
   // Une coupure qui change déplace les hauteurs : le mode louange refait sa pagination (rien au premier rendu).
@@ -249,6 +254,15 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
   // Après chaque rendu : on ne mesure que si la largeur, le corps ou le contenu ont changé (aucune boucle).
   // R6 : la mesure passe par la file commune (viderMesures), qui lit puis écrit pour toutes les lignes à la fois.
   const mesure = useRef<MesureLigne>(() => null);
+  const largeurMesuree = useRef(0);
+  // P1 : dans un conteneur, la ligne suit aussi sa propre largeur (Crayon, disposition) : mesure relancée sans rendu.
+  const dansConteneur = version !== null;
+  useLayoutEffect(() => {
+    const el = ligne.current;
+    if (!dansConteneur || !el) return;
+    return observerLargeurLigne(el, (l) => Math.abs(l - largeurMesuree.current) >= 1 && planifierMesure(mesure));
+  }, [dansConteneur]);
+
   // Sans liste volontairement : l'empreinte évite toute boucle.
   useLayoutEffect(() => {
     mesure.current = () => {
@@ -261,6 +275,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
       const empreinte = [largeur, em, cle, nTexte, showChords, hideLyrics, version, propre, polices].join("/");
       if (empreinte === derniere.current) return null;
       derniere.current = empreinte;
+      largeurMesuree.current = largeur;
       // R4 retiré avant de mesurer : les largeurs sont celles du texte non resserré.
       const remettre = () => {
         el.style.letterSpacing = "";
@@ -358,7 +373,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
         style={r > 0 ? { paddingLeft: coupe.retrait === null ? "1em" : `${coupe.retrait}px` } : undefined}
       >
       {mots.map((word, m) => (
-      <span key={word[0].i} ref={(n) => { motRefs.current[depart + m] = n; }} className="inline-flex items-end">
+      <span key={word[0].i} ref={refMot(depart + m)} className="inline-flex items-end">
       {word.map(({ seg, i }, k) => {
         const chordLen = seg.chord ? etiquetteAffichee(seg.chord, notation, tonalite).length : 0;
         const lyricLen = [...(seg.lyric)].length;
@@ -432,4 +447,4 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
       })}
     </div>
   );
-}
+});

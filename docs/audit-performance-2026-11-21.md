@@ -297,6 +297,60 @@ Le go porte sur les corrections n° 1, 2, 3 et 4 du § 5 (et sur les tests rouge
 
 ### Avancement
 
+- **P1, 22/11/2026 — n° 1 faite, gain en temps bien plus faible qu'estimé** (commit « Audit perf P1 »). `ChordLine` et
+  `ZhLine` en `memo` (props déjà stables : jetons de l'AST, primitives, polices de module ; notation, tonalité et
+  largeur passent par contexte), rappels de `ref` des mots gardés d'un rendu à l'autre. `SectionView` **n'est pas**
+  mémoïsée : ses props (`occurrenceUids`, `marques`, rappels) changent à chaque rendu dans quatre appelants, et ses
+  lignes ne se redessinent déjà plus. Deux ajouts nécessaires : (1) même arbre de ligne avec ou sans Crayon (même
+  `div`, `AccordsInactifs` toujours là, inactif hors Crayon) : sans lui, chaque entrée ou sortie du Crayon démontait
+  et remesurait toutes les lignes ; (2) un `ResizeObserver` partagé (`observerLargeurLigne`, `LargeurCoupure.tsx`)
+  qui remesure une ligne dont **seule sa largeur** change (cadre du Crayon, disposition) : sans lui, la disposition
+  Partition au téléphone laissait des lignes à leur coupure d'avant (trouvé par le nouveau test). Rappels groupés en
+  une image et ignorés si la ligne a déjà été mesurée à cette largeur (sinon une mise en page forcée par ligne : quitter
+  le Crayon montait à 1,2 s à 1 512 px).
+  - **Rendu identique** : boîtes de chaque morceau de texte des lignes (accords, paroles, pinyin), page chant
+    `abba-pere` et `为我而来` (paroles), setlist de quatre chants en Partitions, mode louange page par page, cinq
+    projets : 18 535 boîtes, **0 écart** avant/après (deux relevés « avant » identiques entre eux).
+  - **Rendus des lignes** (crochet des outils React, version construite ; téléphone / 1 512 px) : lancer le mode
+    louange 2 774 → 528 / 4 062 → 717 (il ne reste que le montage) ; page suivante 954 → 6 / 1 497 → 26 ; activer le
+    Crayon 552 → 7 / 138 → 12 ; ouvrir Affichage 92 → 0 / 524 → 342 ; accord touché 0 → 0. Chiffres/Lettres et A+
+    redessinent toujours les lignes : c'est voulu (notation, largeur).
+  - **Temps** (banc `scripts/perf/banc/`, version construite, même setlist que l'audit, 2 à 3 passages ; téléphone =
+    390 px, processeur ×4) :
+
+    | Geste | téléphone avant → après | 1 512 px avant → après |
+    |---|---|---|
+    | Mode louange : lancer | 2,8–3,5 s → 2,2–3,2 s (médiane 3,0 → 2,8) | 0,78–1,11 → 0,86–1,06 s |
+    | Setlist : activer le Crayon | 0,96–1,22 → 0,76–1,15 s | 0,08–0,11 → 0,07–0,13 s |
+    | Setlist : quitter le Crayon | 0,64–1,12 → 0,75–0,98 s | 0,15–0,31 → 0,15–0,17 s |
+    | Setlist : Liste → Partitions | 2,4–2,6 → 1,9–2,5 s | — |
+    | Affichage › A+ | 0,63 → 0,32–0,52 s | 0,08–0,10 → 0,09 s |
+    | Affichage › Chiffres | 0,35–0,57 → 0,29–0,33 s | 0,06–0,08 → 0,07 s |
+    | Fermer Affichage | 0,11–0,14 → 0,10–0,16 s | 0,21–0,37 → **0,39–0,49 s** |
+    | Accord touché | 0,50–0,95 → 0,61–0,69 s | 0,09 → 0,08 s |
+
+    Lecture : les lignes ne se redessinent plus, mais **le temps des gestes bouge peu** en version construite
+    (lancement au téléphone ≈ −7 %, l'audit estimait −30 à 50 % ; Crayon au téléphone dans le bruit). Le profil de
+    l'audit (§ 4.1, B) était pris en `next dev`, où le rendu React coûte deux fois plus (`jsxDEV`) ; en version
+    construite, le coût restant du lancement est le **montage** des deux copies du chant (écran et mesure) et leur
+    mise en page (n° 7 du § 5), et celui du Crayon au téléphone n'est pas dans les lignes (barre du Crayon, styles :
+    230 à 360 ms de recalcul de style). « Fermer Affichage » à 1 512 px est un peu plus lent (mise en page
+    multicolonne, cause C) ; déjà visible avec `memo` seul, non expliqué ici.
+  - Tests : nouveau `tests/lignes-a-jour.spec.ts` (taille, notation, pinyin, dispositions Scène et Partition, Crayon,
+    thème, langue : chaque changement fait sur place donne les mêmes lignes qu'un rechargement ou qu'une remesure
+    complète) ; tonalité, couleur, retouches du Crayon, passage retouché seul et dessins : specs existantes. Specs de
+    R6 et voisines (`lignes-a-jour`, `louange-sections-uniques`, `coupure-vers`, `louange-coupure`, `lignes-accords`,
+    `lignes-chinoises`, `louange-accords`, `dispositions-partition`, `louange-demi-page`, `mode-louange-colonnes`,
+    `agencement-v18-chants`, `notation-accords`, `couleur-accords`, `ma-partition-crayon`, `-passage-unique`,
+    `-traits`, `setlist-tonalite-perso`, `transposition-mineure`, `marge-affichage`, `louange-reglages`), cinq projets,
+    `--workers=2 --trace off` : 2 092 passés, 21 échecs, 193 ignorés, 1 h 23. Échecs : `louange-coupure:172` (connu,
+    10) ; `louange-reglages:123` (Chiffres du mode louange, 10, **rouge aussi sans P1**, aucun accord touchable trouvé
+    dans le mode louange : à signaler à R8) ; `setlist-tonalite-perso:125` (2) : course dans le test, la clé
+    personnelle s'efface juste après l'armure, désormais plus rapide ; le test attend maintenant (`expect.poll`). Après
+    les derniers réglages de l'observateur : `lignes-a-jour`, `lignes-accords`, `coupure-vers`, `lignes-chinoises`,
+    `setlist-tonalite-perso`, `ma-partition-crayon`, trois appareils : 216 passés, 0 échec (7 min).
+  - Mesures « après » prises après `git pull` (P2 et R8 inclus : ils ne touchent ni les lignes ni ces gestes).
+
 
 - **P2, 22/11/2026 — n° 2, 3 et 4 faites** (commits f5339990a n° 3, 2fb6a2cc0 n° 4, 15791e2b8 n° 2). Mesure : version
   construite (`NEXT_PUBLIC_BACK_OFFICE=1`), base simulée, compte musicien fictif, chargement complet de chaque page

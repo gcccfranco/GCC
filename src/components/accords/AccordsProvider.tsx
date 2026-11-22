@@ -110,9 +110,11 @@ export function useIciDesAccords(): IciDuChant | undefined {
   return c.iciAccords ?? c.ici;
 }
 
-/** Coupe les accords touchables de tout ce qui est dessous (édition d'une ligne, mode louange). */
-export function AccordsInactifs({ children }: { children: React.ReactNode }) {
-  return <AccordsContext.Provider value={Rien}>{children}</AccordsContext.Provider>;
+/** Coupe les accords touchables de tout ce qui est dessous (édition d'une ligne, mode louange). `actif` à faux : laisse
+ *  passer le fournisseur du dessus sans changer l'arbre (P1 : une ligne garde sa place en entrant dans le Crayon). */
+export function AccordsInactifs({ children, actif = true }: { children: React.ReactNode; actif?: boolean }) {
+  const parent = useContext(AccordsContext);
+  return <AccordsContext.Provider value={actif ? Rien : parent}>{children}</AccordsContext.Provider>;
 }
 
 /** Dit de quel chant sont les accords dessous (une setlist en porte plusieurs). */
