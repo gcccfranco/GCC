@@ -253,3 +253,41 @@ for (const c of CHANTS) {
     await page.screenshot({ path: `test-results/r4-captures/${info.project.name}-${c.langue}.png` });
   });
 }
+
+// Constat de Timothée (22/11/2026, iPad) : la fenêtre déplacée au doigt restait accrochée, et suivait ensuite le doigt
+// posé dans son contenu pour le faire défiler (le relâchement n'arrivait pas à l'écouteur du déplacement).
+test("chant FR, au doigt : après un déplacement, faire défiler le contenu ne déplace plus la fenêtre", async ({ page }) => {
+  test.skip(!grandEcran(page), "feuille du bas au téléphone");
+  await ouvrirMode(page, CHANTS[0]);
+  await expect(noms(page).first()).toBeVisible({ timeout: 15_000 });
+  await ouvrir(page, 0);
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
+  const touche = (type: "touchStart" | "touchMove" | "touchEnd", x = 0, y = 0) =>
+    cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y }] });
+  const glisser = async (x0: number, y0: number, x1: number, y1: number) => {
+    await touche("touchStart", x0, y0);
+    for (let i = 1; i <= 10; i++) { await touche("touchMove", x0 + ((x1 - x0) * i) / 10, y0 + ((y1 - y0) * i) / 10); await page.waitForTimeout(20); }
+    await touche("touchEnd");
+    await page.waitForTimeout(200);
+  };
+  const entete = (await fenetre(page).locator("[data-harmonie-entete]").boundingBox())!;
+  const avant = (await fenetre(page).boundingBox())!;
+  await glisser(entete.x + 24, entete.y + entete.height / 2, entete.x + 24 - 60, entete.y + entete.height / 2 + 50);
+  const deplacee = (await fenetre(page).boundingBox())!;
+  expect(deplacee.x - avant.x, "le doigt déplace la fenêtre (x)").toBeCloseTo(-60, 0);
+  expect(deplacee.y - avant.y, "le doigt déplace la fenêtre (y)").toBeCloseTo(50, 0);
+  // Défilement du contenu : doigt au milieu de la fenêtre, vers le haut, vers le bas, puis encore vers le haut.
+  const [cx, cy] = [deplacee.x + deplacee.width / 2, deplacee.y + deplacee.height * 0.6];
+  for (const dy of [-150, 150, -150]) {
+    await glisser(cx, cy, cx + 10, cy + dy);
+    const apres = (await fenetre(page).boundingBox())!;
+    expect(Math.abs(apres.x - deplacee.x) + Math.abs(apres.y - deplacee.y), `défilement ${dy} : la fenêtre reste en place`).toBeLessThanOrEqual(1);
+  }
+  // Et elle se déplace encore, depuis sa nouvelle place.
+  const e2 = (await fenetre(page).locator("[data-harmonie-entete]").boundingBox())!;
+  await glisser(e2.x + 24, e2.y + e2.height / 2, e2.x + 24 + 30, e2.y + e2.height / 2 + 20);
+  const fin = (await fenetre(page).boundingBox())!;
+  expect(fin.x - deplacee.x, "second déplacement (x)").toBeCloseTo(30, 0);
+  expect(fin.y - deplacee.y, "second déplacement (y)").toBeCloseTo(20, 0);
+});
