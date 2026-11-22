@@ -71,6 +71,9 @@ for (const [slug, zh] of [["amour-sans-fin", false], ["是耶稣的名", true]] 
     expect(await liste.locator("li").count()).toBeGreaterThanOrEqual(3);
     // Le chant ouvert n'est pas dans sa propre liste ; chaque autre est un lien vers sa page.
     await expect(liste.locator(`a[href="/songs/${encodeURIComponent(slug)}"]`)).toHaveCount(0);
+    // Cinq d'abord, puis « Voir les N autres » montre le reste ; chaque ligne de chant est un lien.
+    expect(await liste.locator('a[href^="/songs/"]').count()).toBe(5);
+    await liste.getByRole("button", { name: zh ? /^查看其余 \d+ 首$/ : /^Voir les \d+ autres$/ }).click();
     expect(await liste.locator('a[href^="/songs/"]').count()).toBe(await liste.locator("li").count());
     await expect(liste.locator("li").first()).toContainText(/ · [A-G][#b]?m?$/);
   });

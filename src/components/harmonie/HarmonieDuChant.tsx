@@ -752,8 +752,11 @@ function BoucleChezNous({ section, tonalite, slug, louange }: { section?: ChordP
   const { t } = useTranslation();
   const index = useChezNous();
   const [ouvert, setOuvert] = useState(false);
+  const [tout, setTout] = useState(false);
   const r = section ? boucleChezNous(index, section, tonalite, slug) : null;
   if (!r) return null;
+  // Cinq d'abord (critique du 22/11 : dix-huit lignes remplissaient la feuille au téléphone).
+  const montres = tout ? r.autres : r.autres.slice(0, 5);
   return (
     <div data-boucle-chez-nous="" className="mt-0.5">
       <button
@@ -767,7 +770,7 @@ function BoucleChezNous({ section, tonalite, slug, louange }: { section?: ChordP
       </button>
       {ouvert && (
         <ul aria-label={t("harmonie.boucleChezNousListe")} className="mt-1 divide-y divide-border text-sm">
-          {r.autres.map((c) => {
+          {montres.map((c) => {
             const texte = (
               <>
                 <span className="font-medium">{c.titre}</span>
@@ -782,6 +785,13 @@ function BoucleChezNous({ section, tonalite, slug, louange }: { section?: ChordP
               </li>
             );
           })}
+          {montres.length < r.autres.length && (
+            <li>
+              <button type="button" onClick={() => setTout(true)} className="min-h-11 w-full py-2.5 text-left text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                {t("harmonie.boucleChezNousTout", { count: r.autres.length - montres.length })}
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </div>

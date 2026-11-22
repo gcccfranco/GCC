@@ -3351,6 +3351,7 @@
     "boucle": "循环",
     "boucleChezNous": "循环 {{boucle}}——另有 {{count}} 首歌也这样弹",
     "boucleChezNousListe": "弹这个循环的歌",
+    "boucleChezNousTout": "查看其余 {{count}} 首",
     "fonction": {
       "repos": "落在1级：这一段稳稳收住。",
       "versRefrain": "落在{{x}}级：引向副歌。",

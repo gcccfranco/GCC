@@ -122,6 +122,8 @@ function Ensuite({ accord, harmonie, capo, bulle }: { accord: string; harmonie: 
     comptees?.map((c) => c.chiffre),
   );
   const part = (c: string) => comptees?.find((x) => x.chiffre === c.split("/")[0])?.part;
+  // Classées par part (critique du 22/11) : l'accord qui suit dans ce chant garde la tête seulement s'il n'est pas compté.
+  if (comptees) lignes.sort((a, b) => (part(b.chiffre) ?? 101) - (part(a.chiffre) ?? 101));
   if (!lignes.length) return null;
   const sonore = (a: string) => (capo ? transposeChord(a, capo, tonalite) : a);
   const Fleche = ouvert ? ChevronUp : ChevronDown;

@@ -627,6 +627,19 @@ s'écrivent dans l'Avancement, pour que Timothée voie s'ils ont du sens avant l
   sans liens) ; trois appareils, avec le tour d'H9-1 (256 / 6), puis 9 / 0 après correction (le test ZH visait la
   première boucle du chant, 1 · 6m · 4 · 5). `louange-harmonie:133` (instable connu) passé dans ce tour.
   `npm run validate` 383 chants valides, `tsc` propre, eslint sans nouvel avertissement.
+- 22/11/2026 : **critique de design d'H9** (demandée par Timothée avec `/critique-design` ; faite dans la session avec
+  la grille `.claude/references/critique-gcc.md`, sans l'agent, consigne de dépense). Verdict **à retoucher → bon**
+  après deux retouches. Points : (1) *vu*, premier coup d'œil, `telephone-panneau` : « Bm 15 % · A 29 % · G 28 % »,
+  l'accord du chant en tête avec la plus petite part, se lisait comme un classement faux → les suites comptées se
+  classent par part ; l'accord du chant ne garde la tête que s'il n'est pas compté (il garde « dans ce chant » dans la
+  liste ouverte) ; (2) *vu*, à regarder de près, `telephone-boucle` : ouverte, la liste de 18 chants remplissait la
+  feuille → cinq chants, puis « Voir les 13 autres » (zh « 查看其余 13 首 ») ; (3) *vu*, finition, ordinateur : la
+  part se séparait de son accord en fin de ligne → corrigé avant H9-1. Retenus sans changement : la boucle s'écrit en
+  chiffres même en notation lettres (texte de la spec) ; « titre · section · tonalité » reprend le gabarit des listes
+  du site. Qualités : ligne muette tant qu'on ne la touche pas, mêmes jetons que le volet (gris atténué, filets de
+  liste, cibles de 44 px), 中文 sans trou ni coupure, sombre lisible. Non vérifié : mode louange à l'œil (couvert par
+  le test), 1 440 px. Tests : `harmonie-chez-nous`, `harmonie-boucles`, H9 de `louange-harmonie`, H7-2 de
+  `notation-accords`, trois appareils, 48 / 0 (1,6 min).
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 

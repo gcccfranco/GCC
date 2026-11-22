@@ -84,8 +84,10 @@ for (const [slug, zh] of [["a-jamais-tu-es-saint", false], ["一切歌颂赞美"
     await expect(bouton).toBeVisible();
     // L'accord qui suit dans ce chant peut passer devant : au moins deux des trois parts restent.
     await expect(bouton.locator("[data-ensuite-ligne]")).toContainText(zh ? /(60|30|10)%/ : /(60|30|10) %/);
-    const parts = await bouton.locator("[data-ensuite-ligne] .text-xs").count();
-    expect(parts).toBeGreaterThanOrEqual(2);
+    const parts = (await bouton.locator("[data-ensuite-ligne] .text-xs").allTextContents()).map((x) => parseInt(x, 10));
+    expect(parts.length).toBeGreaterThanOrEqual(2);
+    // Classées : de la plus grande part à la plus petite.
+    expect(parts).toEqual([...parts].sort((a, b) => b - a));
   });
 }
 
