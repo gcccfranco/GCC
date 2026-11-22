@@ -1,0 +1,41 @@
+import { test, type Page } from "@playwright/test";
+import type { SetlistItem } from "../../src/types/setList";
+import { signInAs, musicien, type FakeProfile } from "../helpers/fakeSession";
+import { attendreCompteur, ouvrirMenu, basculerAnnoter, toucherCentre } from "../helpers/louange";
+import { prepare, mesure, visible, LARGEUR, ouvrir } from "./outil";
+
+test.use({ viewport: { width: LARGEUR, height: LARGEUR <= 400 ? 844 : LARGEUR <= 820 ? 1080 : 900 }, ...(LARGEUR <= 400 ? { isMobile: true, hasTouch: true } : {}) });
+const ID = "setlist-mesure";
+const PROFIL: FakeProfile = { uid: "uid-sacha", email: "sacha@example.com", firstName: "Sacha", lastName: "Quérel", planningName: "Sacha Q.", serviceRoles: { "Culte Francophone": ["musicien"] }, ...musicien("piano") };
+const item = (songSlug: string, position: number): SetlistItem => ({ songSlug, position, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" } as SetlistItem);
+const SETLIST = { title: "Culte de mesure", leader: "Présidence", category: "Culte Francophone", date: "2026-11-29", language: "mixed", notes: "", ownerId: "uid-sacha", isPrivate: false,
+  items: [item("abba-pere", 1), item("beni-soit-ton-nom", 2), item("一生爱你", 3), item("为我而来", 4)] };
+const S = "Setlist";
+const L = "Mode louange";
+const pret = (page: Page) => attendreCompteur(page, /^\d+ \/ \d+$/, 120_000);
+
+test("seuil de largeur", async ({ page }) => {
+  const cdp = await prepare(page);
+  await signInAs(page, PROFIL, { [`setlists/${ID}`]: SETLIST }, `/setlists/${ID}`);
+  const louange = page.getByRole("button", { name: /Mode Louange/ }).filter({ visible: true }).first();
+  await louange.waitFor({ timeout: 60_000 });
+  await page.waitForTimeout(2500);
+  const etat = await page.evaluate(() => ({
+    lignes: document.querySelectorAll("[data-rangee]").length,
+    noeuds: document.getElementsByTagName("*").length,
+    barre: Math.round(document.querySelector("aside, nav[aria-label]")?.getBoundingClientRect().width ?? 0),
+    vue: Math.round((document.querySelector("[data-vue]") as HTMLElement | null)?.getBoundingClientRect().width ?? 0),
+    item: Math.round(document.querySelector("[data-outline-item]")?.getBoundingClientRect().width ?? 0),
+    colonnes: [...document.querySelectorAll("[data-outline-item] *")].filter((e) => { const c = getComputedStyle(e).columnCount; return c !== "auto" && c !== "1"; }).length,
+  }));
+  console.log("ETAT " + LARGEUR + " " + JSON.stringify(etat));
+  const lc = async () => (await cdp.send("Performance.getMetrics")).metrics.find((m) => m.name === "LayoutCount")!.value;
+  const crayon = page.getByRole("button", { name: "Crayon", exact: true }).filter({ visible: true }).first();
+  let a = await lc();
+  await mesure(page, cdp, "Seuil", "activer le Crayon", () => crayon.click(), () => page.locator("[data-barre-crayon]").waitFor());
+  let b = await lc(); console.log("LAYOUTS crayon-on " + (b - a)); a = b;
+  await mesure(page, cdp, "Seuil", "quitter le Crayon", () => page.locator("[data-barre-crayon]").getByRole("button", { name: "Terminé" }).click(), () => page.locator("[data-barre-crayon]").waitFor({ state: "detached" }));
+  b = await lc(); console.log("LAYOUTS crayon-off " + (b - a)); a = b;
+  await mesure(page, cdp, "Seuil", "lancer le mode louange", () => louange.click(), () => pret(page));
+  b = await lc(); console.log("LAYOUTS louange " + (b - a));
+});
