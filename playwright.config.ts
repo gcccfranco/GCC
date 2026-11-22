@@ -15,6 +15,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // UP-7 : la note « 2ᵉ fois » et le badge « retouché seul » en mode louange.
+  /louange-passage-unique\.spec\.ts/,
   // Lot AS, T5 (docs/spec-reserver-unique-fetes.md) : la carte de la fête dans Évènements et la fête passée dans « Passés ».
   /evenements-fete\.spec\.ts/,
   // Lot AS, T6 : l'évènement épinglé en grand (une ou plusieurs cartes, rangée qui défile, avec ou sans image).

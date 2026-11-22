@@ -12,6 +12,10 @@ import { uniqueSections } from "@/lib/setlist/uniqueSections";
 import type { Disposition } from "@/lib/dispositionPref";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { isDp } from "@/lib/setlist/dp";
+import { copiesSousOrigine, passagesRetouches } from "@/lib/setlist/passages";
+
+/** UP-7 : un passage retouché seul (section copiée) : sa section d'origine et son rang dans la structure. */
+export type PassageRetouche = { origine: ChordProSection; rang: number };
 
 export type SongHeaderBlock = {
   kind: "song-header";
@@ -37,6 +41,8 @@ export type SongHeaderBlock = {
   /** Déroulé joué, pour le bandeau de structure en tête du chant ; une
    *  modulation vers la tonalité jouée n'en est pas une. */
   steps?: SectionOccurrence[];
+  /** UP-7 : passages retouchés seuls de `steps` (uid de l'étape → origine et rang), pour le badge des pastilles. */
+  retouches?: Map<string, PassageRetouche>;
 };
 
 export type SectionBlock = {
@@ -66,6 +72,8 @@ export type SectionBlock = {
   repeat?: number;
   /** Capo du chant (frets) : `songKey` et `keyChange` sont sonores, les accords de `section` sont déjà transposés de −capo. */
   capo?: number;
+  /** UP-7 : passage retouché seul (section copiée) : libellé « Refrain · 2ᵉ fois » en Sections uniques. */
+  retouche?: PassageRetouche;
 };
 
 export type TransitionIntraBlock = {
@@ -340,6 +348,12 @@ export function buildPerformanceBlocks(
       personalShift && o.targetKey ? { ...o, targetKey: getTransposedKey(o.targetKey, personalShift) } : o,
     );
     const steps = bandeau(occurrences, playedKey);
+    const retouches = new Map(
+      [...passagesRetouches(steps, item.sectionOrigins)].flatMap(([u, r]) => {
+        const origine = ast.sections.find((s) => s.id === r.origine);
+        return origine ? [[u, { origine, rang: r.rang }] as const] : [];
+      }),
+    );
     blocks.push({
       kind: "song-header",
       uid: uid(),
@@ -355,6 +369,7 @@ export function buildPerformanceBlocks(
       capo: capo || undefined,
       setlistKey: personalKey ? setlistKey : undefined,
       steps,
+      retouches: retouches.size ? retouches : undefined,
     });
     // ── Partition 简谱 : la page entière remplace les sections ──
     // La structure de l'item reste décrite (elle sert à la liste de la
@@ -391,7 +406,7 @@ export function buildPerformanceBlocks(
     // Sections uniques : une impression par section (et par tonalité de
     // 升调) ; notes, nuances et transitions passent au bandeau.
     const shown = unique
-      ? uniqueSections(occurrences, playedKey).map(({ step, uids }) => ({ ...step, note: "", transition: "", nuance: undefined, uids }))
+      ? copiesSousOrigine(uniqueSections(occurrences, playedKey), item.sectionOrigins).map(({ step, uids }) => ({ ...step, note: "", transition: "", nuance: undefined, uids }))
       : occurrences.map((step) => ({ ...step, uids: [step.section.uid] }));
     for (const { section: sec, note, transition, nuance, targetKey, uids } of shown) {
       // Modulation (升调) : section transposée dans sa tonalité cible. Avec un
@@ -422,6 +437,7 @@ export function buildPerformanceBlocks(
         time: ast.metadata.time ?? undefined,
         occurrenceUids: uids,
         capo: capo || undefined,
+        retouche: unique ? retouches.get(sec.uid) : undefined,
       });
       if (transition) blocks.push({ kind: "transition-intra", uid: uid(), text: transition });
     }

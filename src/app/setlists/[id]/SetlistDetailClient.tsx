@@ -2637,7 +2637,10 @@ export function SetlistDetailClient() {
       {performanceMode && (
         <PerformanceMode
           uid={user?.uid ?? null}
-          items={itemsAvecAjouts(stageItems, ajoutsLocaux)}
+          items={itemsAvecAjouts(stageItems, ajoutsLocaux).map((it) => {
+            const origines = { ...it.sectionOrigins, ...viewOf(it)?.sectionOrigins };
+            return Object.keys(origines).length ? { ...it, sectionOrigins: origines } : it;
+          })}
           choixScan={choixScanDesAjouts(ajoutsLocaux)}
           onJouerChant={async (slug, avecJianpu, positionCourante) => {
             if (stageItems.some((it) => it.songSlug === slug)) return true;

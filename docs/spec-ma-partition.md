@@ -499,3 +499,29 @@ Format : `passage` est facultatif, une version ancienne du site l'ignore et mont
   39 s ; captures regardées au téléphone et à l'ordinateur. Limites : le trait suit la largeur de chaque syllabe de
   pinyin (trait en morceaux, comme avant sous les caractères) ; le mode louange n'a pas été regardé (aucun
   `data-retouche` sous `src/components/performance`).
+- 21/11/2026, nuit : **UP-7 faite** (constat de Timothée du 21/11 ; Crayon seulement, aucun dessin ni annotation,
+  `ChordLine.tsx` et `firestore.rules` intacts, rien ne s'écrit depuis le mode louange). En mode louange, ordre « Une
+  fois chacune » : la copie retouchée seule se place sous sa section d'origine et sa carte s'intitule « Refrain · 2ᵉ
+  fois » (prop `libelle` de `SectionView`, mêmes clés qu'UP-4) ; dans les ordres « Une fois chacune » et joué, sa
+  pastille porte le badge « retouché seul », dans le bandeau d'en-tête du chant **et** dans le rappel de structure des
+  pages 2 et suivantes. « Structure seule » (feuille de route) n'a pas de rangée de pastilles : rien à marquer. Code :
+  `blocks.ts` (`retouches` sur l'en-tête, `retouche` sur la section, par `passagesRetouches` et `copiesSousOrigine` de
+  `passages.ts`), `PerformanceMode.tsx` (ajouts courts : `libelle`, `retouches` passés à `StructureStrip` et
+  `RappelRangee`), `SetlistDetailClient.tsx` (l'item passé au mode louange porte `{ ...item.sectionOrigins,
+  ...viewOf(item)?.sectionOrigins }`, `withMineStructureItem` intact). **Décision déléguée (session, 21/11)** : en deux
+  colonnes (1 080 et 1 440 px), la copie suit son refrain dans l'ordre de lecture des colonnes ; un saut de colonne
+  peut la porter en haut de la colonne de droite, comme toute section (pas de forçage de mise en page). Méthode :
+  `/tranche`, mais **les agents de `.claude/agents/` ne se sont pas chargés** (session lancée hors du dépôt) : chaque
+  rôle a tourné en agent général au même modèle (executant Sonnet, testeur Haiku, relecteur Fable, `regard` Sonnet),
+  après lecture de sa fiche. Relecteur : code bon ; test renforcé ensuite par la session (« ×2 » au lieu de « (x2) »,
+  « Structure seule » affirmé, rappel de la page 2 couvert, cas ZH sur le nom et la pastille). Tests : nouvelle spec
+  `louange-passage-unique` (9 tests : FR « Une fois chacune », ordre joué, Structure seule, rappel page 2 dans deux
+  ordres, sans copie dans deux ordres, ZH 一生爱你), ajoutée à `SPECS_GRAND_ECRAN` ; avec `ma-partition-passage-unique`,
+  `louange-sections-uniques`, `coup-d-oeil` sur les cinq projets (`--workers=2 --trace off`) : 327 passés, 1 échec
+  (une affirmation ZH de la session, lue après le parcours des pages : remise avant), 26 sautés, 11,5 min ; second
+  tour, le test ZH sur les cinq projets : 5 passés en 14 s. `louange-sections-uniques:358` passe à 1 440 px depuis R6.
+  tsc propre, eslint 0 erreur. Captures « Une fois chacune » aux quatre dispositions et à 1 440 px (8), triées par
+  `regard` : libellé et badge justes partout, rien de coupé ; `critique-design` non lancé (seuls le libellé et le badge
+  déjà validés en UP-4/UP-5 apparaissent). Hors diff, vu par le relecteur : `rappel-ordre-joue:423` (trait de la
+  page 2 après rechargement) rouge sur ordinateur et tablette, déjà rouge sur la base 415151e6. **Restes** : interface
+  en 中文 du mode louange non capturée (« 副歌 · 第2次 ») ; badge de l'en-tête d'un scan 简谱 (`PageScan.tsx`) non posé.
