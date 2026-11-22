@@ -407,3 +407,45 @@ Le go porte sur les corrections n° 1, 2, 3 et 4 du § 5 (et sur les tests rouge
   du dernier changement, plus celle du dernier appareil utilisé). La marque devient « langue|jour » : au plus une
   écriture par jour et par appareil (`Navbar.tsx`). Test étendu (`rappels-regroupes`, marque d'un autre jour) : les
   trois tests de langue sur trois appareils, 9 passés en 1,6 min ; tsc propre.
+
+- **P3, 22/11/2026 — arrêt : −15 % au téléphone, sous le seuil de 20 % ; aucun code poussé** (n° 7, go « Fait le
+  2-3-4 »). Mesures en version construite (`NEXT_DIST_DIR=.next-prod`), banc `scripts/perf/banc/` réduit au geste
+  « lancer » répété (8 lancements par passage, quitter entre deux), même setlist que l'audit (deux chants FR, deux ZH).
+  - **Où part le temps** (profil CPU, version construite avec cartes de source, téléphone ×4, lancement à chaud,
+    ≈ 2 s de processeur) : mesure des coupures de lignes (`viderMesures`, `ChordLine.tsx:167`) 0,56 s, dont la moitié
+    est une **seconde mesure de toutes les lignes** à l'arrivée des polices, même déjà chargées (`apresPolices`, et
+    dans `ZhLine` une lecture de `document.fonts.ready` par ligne, `SongView.tsx:347`) ; premier style et première
+    mise en page du chant caché entier ≈ 0,2 s ; React 0,37 s ; corps de `PerformanceMode` 0,17 s sur ≈ 11 rendus
+    pendant le lancement (barres mesurées, coupures signalées, `blocks` reconstruits, données des 简谱 : relevé des
+    dépendances de l'effet de pagination), chacun refaisant toute la copie de mesure ; i18next 0,12 s. Deux
+    paginations publiées (`data-passes-pagination` = 2) : la seconde remonte la page affichée (`clePage`), ≈ 0,28 s.
+  - **Essayé** (3 fichiers, ≈ 90 lignes) : (1) la copie de mesure (`CoupureMesureContext`) ne se remesure à l'arrivée
+    des polices que si `document.fonts.status` valait « loading » juste après la lecture des boîtes (crochet commun à
+    `ChordLine` et `ZhLine` ; hors copie de mesure, rien ne change) ; (2) `useMemo` sur les deux listes de blocs de
+    la copie de mesure (pleine largeur et colonne) : les rendus du lancement ne refont plus le chant caché.
+    `viderMesures` passe de 0,56 à 0,27 s.
+  - **Pagination identique** : relevé de la pagination publiée (sections par page et par colonne, échelle, deux
+    colonnes, `fit`, `coupe`), de l'ancienne (RS-C) et de la bande d'aperçu ; chants FR (4) et ZH (4), trois ordres
+    (joué, une fois chacune, structure), cinq projets : 30 relevés, deux « avant » identiques entre eux, **écart nul**
+    après chacun des deux changements.
+  - **Temps** (A/B : avant = `ead0044`, après = les deux changements, deux versions construites servies côte à côte
+    et mesurées en alternance ; médiane des lancements à chaud, premier lancement à part) :
+
+    | Lancer le mode louange | avant | après | écart |
+    |---|---|---|---|
+    | téléphone ×4, à chaud (3 × 7) | 1 312 ms (1 103–1 824) | 1 111 ms (887–1 475) | **−15 %** |
+    | téléphone ×4, premier lancement (3) | 2 113, 2 110, 1 945 ms | 1 915, 1 822, 2 041 ms | ≈ −6 % |
+    | 1 512 px, à chaud (2 × 7) | 838 ms (762–1 049) | 831 ms (691–936) | −1 % |
+    | 1 512 px, premier lancement (2) | 951, 955 ms | 880, 912 ms | ≈ −6 % |
+
+    Au téléphone, script 717 → 534 ms, mise en page 146 → 135, style 272 → 241 (médianes).
+  - **Lecture** : la copie de mesure allégée ne donne pas les 20 % (l'audit estimait −20 à −40 %) ; arrêt, code retiré
+    (dans le dépôt : rien que ces lignes). Ce qui reste n'est pas dans la copie seule : style et mise en page du chant
+    caché entier (inévitables tant qu'on pagine tout le culte au lancement), seconde pagination qui remonte la page à
+    l'écran, rendus de `PerformanceMode`. Pistes, sur un nouveau go, avec les deux changements ci-dessus : publier une
+    seule pagination au lancement (attendre barres et 简谱 avant la première passe) ou ne pas remonter la page affichée
+    quand sa pagination n'a pas changé ; elles touchent la publication de la pagination (zone de R9).
+  - **Banc**, à savoir : `npm test` dans ce conteneur demande `executablePath: "/opt/pw-browsers/chromium"` (le
+    Playwright du projet attend un autre navigateur) ; Turbopack nomme ses cartes de source autrement que `<js>.map` :
+    les lire par le `sourceMappingURL` du fichier (`inclus.cjs`, `agrege.cjs` à adapter), avec
+    `productionBrowserSourceMaps: true` le temps du profil. Aucun test lancé (aucun code). ≈ 1 h 30 de mesures.
