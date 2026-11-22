@@ -367,6 +367,22 @@ purs du compte sur de petits chants écrits dans le test (majeur, mineur, basse,
 l'écran FR et un ZH, noms fictifs. Les chiffres réels (les cinq boucles les plus jouées, les suites de chaque degré)
 s'écrivent dans l'Avancement, pour que Timothée voie s'ils ont du sens avant la mise en ligne.
 
+## Idées du 22/11/2026 (Timothée : « ça ça peut être utile pour nous je pense ») — en attente d'un go
+
+Deux idées reprises d'un site de théorie musicale, refaites avec nos mots et nos fiches (rien n'est copié).
+- **« Garde Do ; Mi → Fa » en une ligne.** Déjà là pour l'essentiel : la liste dépliée d'« Ensuite » écrit, pour chaque
+  suite, « garde D F# · A → B » (`notesGardeesEtMouvantes`, `PanneauAccord.tsx`). Ce qui pourrait changer, au choix :
+  (a) l'écrire sans avoir à déplier « Ensuite », sous chaque accord proposé ; (b) noms de notes en Do Ré Mi en
+  français (le site écrit partout les lettres : à décider pour tout le site, pas pour cette ligne seule) ;
+  (c) « ; » au lieu de « · » entre ce qui reste et ce qui bouge. Recommandation : (a) + (c), une petite retouche.
+- **Étiquettes d'usage et d'ambiance sur les idées.** Usage (« pour finir », « pour relancer », « pour entrer au
+  refrain ») : déjà en partie dans la fonction d'un passage (« se pose », « vers le refrain », « suspens ») et dans
+  les familles de fiches ; à afficher comme une petite étiquette sur la carte d'une idée. Ambiance (« chaleureux »,
+  « triste », « surprise ») : à écrire **à la main dans chaque fiche** (`docs/harmonie/*.md`, une ligne `ambiance:`),
+  relue par Timothée comme les fiches, puis montrée sur la carte. Recommandation : deux ou trois étiquettes au plus
+  par fiche, prises dans une liste courte et fixe (fr et zh), pas de filtre au début.
+Les deux changent l'apparence : planche courte puis spec, ou go direct pour (a)+(c) qui tient dans un gabarit existant.
+
 ## Avancement
 
 - 11/11/2026 : captures de l'existant (téléphone, tablette, ordinateur), un `/planche` (3 agents), retouches à la
