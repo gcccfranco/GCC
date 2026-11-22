@@ -297,3 +297,46 @@ Le go porte sur les corrections n° 1, 2, 3 et 4 du § 5 (et sur les tests rouge
 
 ### Avancement
 
+
+- **P2, 22/11/2026 — n° 2, 3 et 4 faites** (commits f5339990a n° 3, 2fb6a2cc0 n° 4, 15791e2b8 n° 2). Mesure : version
+  construite (`NEXT_PUBLIC_BACK_OFFICE=1`), base simulée, compte musicien fictif, chargement complet de chaque page
+  après connexion, compteur du banc (`d-requetes`) adapté, qui compte aussi les feuilles Google. « Avant » = la même
+  branche avec les trois fichiers d'avant (`Navbar.tsx`, `useNotifications.ts`, `names.ts`).
+
+  | Page | Firestore avant → après | Feuilles Google du planning avant → après |
+  |---|---|---|
+  | Accueil `/` | 34 → 29 | 194 → 42 |
+  | Chants `/songs/` | 35 → 30 | 194 → 21 |
+  | Une setlist | 42 → 37 | 220 → 21 |
+  | Planning | 34 → 29 | 194 → 42 |
+  | Église `/evenements/` | 35 → 30 | 173 → 26 |
+  | Moi | 36 → 31 | 191 → 21 |
+
+  - **n° 3** : −1 écriture (`PATCH notifPrefs`) par chargement. Garde `localStorage` `notifLang:{uid}`, posée après
+    une écriture réussie : un vrai changement de langue, un nouveau compte ou un nouvel appareil écrivent toujours.
+    Si deux appareils d'un même compte ont deux langues, les rappels suivent le dernier où la langue a changé (avant :
+    le dernier appareil chargé).
+  - **n° 4** : −4 requêtes par chargement (1 `notifications`, 2 `setlists`, 1 `evenements`). La passe attend le
+    profil et ne se relance que si son contenu change. **Pas de cache de `getSetlistsSince`** : un seul appelant,
+    monté une fois ; avec une passe, un cache n'enlève rien.
+  - **n° 2** : **correction de l'audit**. Les 22 lectures Firestore du planning (§ 3.1) partaient déjà **une** fois par
+    page (caches de `grille.ts` et `trimestresPublies`) ; elles restent nécessaires (accès Harmonie, forme de
+    l'espace). Le vrai doublon était sur les **feuilles Google** (`sheets.ts` n'a pas de partage de la lecture en
+    cours) : une lecture de chaque feuille par instance de `useAccesHarmonie`. Une promesse partagée, navigateur
+    seulement et oubliée dès qu'elle est réglée, ramène chaque feuille à une lecture par `loadPlanningData`. Les
+    21 ou 42 restantes : la feuille EDD lue trois fois au sein d'une même lecture et, sur l'accueil et le Planning,
+    une seconde lecture qui part après la première. Réserve : la base simulée rend les feuilles vides, donc jamais
+    mises en cache ; sur le vrai site, une feuille lue avec succès sert les lectures suivantes, et le gain réel est
+    surtout sur les lectures simultanées du premier chargement (≈ 5 à 6 par feuille → 1, estimé).
+  - Garde-fous : `access.ts` et `firestore.rules` intacts ; aucun cache ne survit à un changement de compte.
+  - Tests (trois appareils, `--workers=2 --trace off`) : nouveaux `notifications-une-passe` (6) et
+    `planning-une-lecture` (9), et les deux ajouts de `rappels-regroupes` (18 avec les anciens) : verts, et rouges
+    sur l'ancien code pour les décomptes. Voisins : `i18n-hydration`, `libelles-langues`, `chargement` (74) ;
+    cloche de `coherence`, `chants-fetes-liste`, `barre-back-office`, `evenements` (24) ; `harmonie-porte1`,
+    `-porte2`, `-catalogue`, `-colonne`, `agencement-v18-harmonie`, `navigation-grand-ecran`, `chargement` (369 sur
+    370 ; le rouge `harmonie-colonne:129`, en-tête collant pris pendant qu'il s'escamote, passe deux fois sur deux
+    seul). ≈ 15 min de tests en tout.
+  - Méthode : `/tranche` lancée pour la n° 3 ; les agents de `.claude/agents/` ne se chargeaient pas, leurs fiches
+    ont été jouées par des agents généraux au même modèle. Le relecteur n'a pas tourné (limite de dépense mensuelle
+    atteinte) ; la n° 3 a été finie, et les n° 4 et 2 codées, testées et relues par l'orchestratrice elle-même.
+    **Relecture indépendante à faire** : `git show 2fb6a2cc0 15791e2b8 f5339990a`.
