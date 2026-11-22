@@ -198,3 +198,59 @@ test("setlist : la fenêtre se rétrécit colonne ouverte, la colonne se ferme (
   await expect(feuille(page)).toHaveCount(0);
   expect(await pref(page)).toBe("1");
 });
+
+// Réglage « Idées d'harmonie » de la marge Affichage (Timothée, 22/11/2026) : éteint, plus rien n'ouvre Harmonie sur la page.
+const marge = (page: Page) => page.getByTestId("marge-affichage");
+const reglage = (page: Page) => marge(page).getByRole("switch", { name: /^(Idées d'harmonie|和声提示)$/ });
+const ouvrirAffichage = async (page: Page) => {
+  await page.getByTestId("barre-outils").getByRole("button", { name: /^(Affichage|显示)$/ }).click();
+  await expect(marge(page)).toBeVisible();
+};
+
+test("page chant : « Idées d'harmonie » éteint dans Affichage retire le bouton Harmonie et le toucher des noms de section, et ça se garde", async ({ page }) => {
+  await ouvrirChant(page);
+  await expect(bouton(page)).toBeVisible();
+  await expect(page.locator("[data-section-nom-bouton]").first()).toBeVisible();
+  await ouvrirAffichage(page);
+  await expect(reglage(page)).toBeChecked();
+  await reglage(page).click();
+  await expect(bouton(page)).toHaveCount(0);
+  await expect(page.locator("[data-section-nom-bouton]")).toHaveCount(0);
+  await expect(page.locator("main.song-zoom [data-section]").first()).toBeVisible();
+  await page.reload();
+  await expect(page.locator("main.song-zoom [data-copy-line]").first()).toBeVisible();
+  await expect(bouton(page)).toHaveCount(0);
+  await expect(colonne(page)).toHaveCount(0);
+  await ouvrirAffichage(page);
+  await expect(reglage(page)).not.toBeChecked();
+  await reglage(page).click();
+  await expect(bouton(page)).toBeVisible();
+  await expect(page.locator("[data-section-nom-bouton]").first()).toBeVisible();
+});
+
+test("page chant, scan 简谱 : réglage éteint, les pastilles de section restent à leur place mais n'ouvrent plus rien", async ({ page }) => {
+  await ouvrirChant(page, "为我而来", true);
+  const touchables = page.locator("[data-jianpu-etiquette]");
+  await expect(touchables.first()).toBeVisible();
+  const avant = await touchables.evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return [e.textContent, Math.round(r.x), Math.round(r.width)].join("|"); }));
+  await ouvrirAffichage(page);
+  await reglage(page).click();
+  await page.keyboard.press("Escape");
+  await expect(marge(page)).toBeHidden();
+  await expect(touchables).toHaveCount(0);
+  const reperes = page.locator("[data-jianpu-repere]");
+  await expect(reperes).toHaveCount(avant.length);
+  const apres = await reperes.evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return [e.textContent, Math.round(r.x), Math.round(r.width)].join("|"); }));
+  expect(apres).toEqual(avant);
+  await reperes.first().click({ force: true });
+  await expect(colonne(page)).toHaveCount(0);
+  await expect(feuille(page)).toHaveCount(0);
+  await expect(bouton(page)).toHaveCount(0);
+});
+
+test("page chant : sans accès Harmonie, la marge Affichage n'a pas la ligne « Idées d'harmonie »", async ({ page }) => {
+  await signInAs(page, { uid: "uid-odile", email: "odile@example.com", firstName: "Odile", lastName: "V.", planningName: "Odile V." }, {}, "/songs/a-jamais-tu-es-saint");
+  await expect(page.locator("main.song-zoom [data-copy-line]").first()).toBeVisible();
+  await ouvrirAffichage(page);
+  await expect(reglage(page)).toHaveCount(0);
+});

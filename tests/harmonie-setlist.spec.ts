@@ -190,3 +190,22 @@ test("un chanteur ne voit pas le bouton", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Harmonie", exact: true })).toHaveCount(0);
 });
+
+// Réglage « Idées d'harmonie » de la marge Affichage (Timothée, 22/11/2026) : le même que sur la page d'un chant.
+test("setlist : « Idées d'harmonie » éteint dans Affichage retire la puce Harmonie et le toucher des noms de section", async ({ page }) => {
+  await openPartitions(page);
+  const puces = page.locator("[data-puce-harmonie]");
+  await expect(puces.first()).toBeVisible();
+  await expect(page.locator("[data-section-nom-bouton]").first()).toBeVisible();
+  await page.getByRole("button", { name: "Affichage", exact: true }).first().click();
+  const reglage = page.getByTestId("marge-affichage").getByRole("switch", { name: "Idées d'harmonie" });
+  await expect(reglage).toBeChecked();
+  await reglage.click();
+  await expect(puces).toHaveCount(0);
+  await expect(page.locator("[data-section-nom-bouton]")).toHaveCount(0);
+  await expect(page.locator("[data-idees-harmonie]")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
+  await capture(page, "setlist-idees-eteintes");
+  await reglage.click();
+  await expect(puces.first()).toBeVisible();
+});

@@ -79,6 +79,17 @@ export function Groupe({ titre, mention, children }: { titre: string; mention: s
   );
 }
 
+/** Ligne « Idées d'harmonie » de « Ce que je lis » (pages chant et setlist, pour qui a l'accès Harmonie). */
+export function LigneIdeesHarmonie({ allume, set }: { allume: boolean; set: (v: boolean) => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className={LIGNE}>
+      <span className="text-sm">{t("performance.ideesHarmonie")}</span>
+      <Switch checked={allume} onCheckedChange={set} aria-label={t("performance.ideesHarmonie")} />
+    </div>
+  );
+}
+
 export function MargeAffichage({ ouvert, onFermer, zh, aJianpu, jianpuVu, uid, mode, groupePage, retourFocus, sansColonne, sansRole, reglages, groupeRole, groupeLecture, avecPinyin, children }: Props) {
   const { t } = useTranslation();
   const r = { ...useReglagesAffichage(uid), ...reglages };

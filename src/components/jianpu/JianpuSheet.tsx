@@ -12,7 +12,7 @@ import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
 import { AccordTouchable, etiquetteAffichee } from "@/components/accords/AccordTouchable";
 import { useNotationDuCompte } from "@/components/song/NotationAccordsProvider";
 import { NotationAccordsContext } from "@/lib/notationAccords";
-import { useIciDesAccords, useIciDuChant, useOuvrirAccord } from "@/components/accords/AccordsProvider";
+import { useIciDesAccords, useIciDuChant, useOuvrirAccord, useReperesDuScan } from "@/components/accords/AccordsProvider";
 import type { JianpuChords } from "@/types/setList";
 import { altSpellingKey, getTransposedKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 
@@ -136,16 +136,23 @@ const PASTILLE_CLAIRE = new Set(["intro", "verse", "prechorus", "chorus"]);
 
 /** Une pastille de section dans le rail, à la hauteur de la ligne où la section commence (`top`, % de la fenêtre),
  *  la k-ième d'une ligne empilée sous la précédente. Jamais sur l'encre. */
-function EtiquetteSection({ id, abbr, nom, cle, k, top, onOuvrir }: { id: string; abbr: string; nom: string; cle: string; k: number; top: number; onOuvrir: (el: HTMLElement) => void }) {
+const PASTILLE = "absolute right-full z-10 mr-1 inline-flex h-[var(--pastille-h)] min-w-[var(--pastille-h)] max-w-[calc(var(--rail-etiquettes)-6px)] items-center justify-center whitespace-nowrap rounded-full px-[3px] text-[13px] font-bold leading-none tracking-[0.02em] print:hidden sm:px-1.5 sm:text-[14px]";
+function EtiquetteSection({ id, abbr, nom, cle, k, top, onOuvrir }: { id: string; abbr: string; nom: string; cle: string; k: number; top: number; /** Absent : simple repère (« Idées d'harmonie » éteint). */ onOuvrir?: (el: HTMLElement) => void }) {
   const { t } = useTranslation();
+  const style = { top: `calc(${top}% + ${k} * (var(--pastille-h) + 4px))`, color: PASTILLE_CLAIRE.has(cle) ? "#0e0e10" : "var(--rep-encre-claire)", background: `var(--sec-${cle}, var(--sec-other))` };
+  if (!onOuvrir) return (
+    <span data-jianpu-repere={id} className={`${PASTILLE} select-none`} style={style}>
+      <abbr title={nom} className="block min-w-0 overflow-hidden text-ellipsis no-underline">{abbr}</abbr>
+    </span>
+  );
   return (
     <button
       type="button"
       data-jianpu-etiquette={id}
       aria-label={t("harmonie.ideesDe", { nom })}
       onClick={(ev) => onOuvrir(ev.currentTarget)}
-      className={`${TOUCHER_ETIQUETTE} absolute right-full z-10 mr-1 inline-flex h-[var(--pastille-h)] min-w-[var(--pastille-h)] max-w-[calc(var(--rail-etiquettes)-6px)] cursor-pointer select-none items-center justify-center whitespace-nowrap rounded-full px-[3px] text-[13px] font-bold leading-none tracking-[0.02em] outline-none focus-visible:ring-2 focus-visible:ring-ring print:hidden sm:px-1.5 sm:text-[14px]`}
-      style={{ top: `calc(${top}% + ${k} * (var(--pastille-h) + 4px))`, color: PASTILLE_CLAIRE.has(cle) ? "#0e0e10" : "var(--rep-encre-claire)", background: `var(--sec-${cle}, var(--sec-other))` }}
+      className={`${TOUCHER_ETIQUETTE} ${PASTILLE} cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+      style={style}
     >
       {/* Ellipse sur le texte, pas sur le bouton : son `::after` (zone de toucher) déborde. */}
       <abbr title={nom} className="block min-w-0 overflow-hidden text-ellipsis no-underline">{abbr}</abbr>
@@ -328,25 +335,27 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   // (`ici`), hors retouche, pour un scan certifié dont les sections sont connues (`sections.json`, `systemes.json`).
   const ici = useIciDuChant();
   const iciAccords = useIciDesAccords(); // AL-2 : les étiquettes se calculent aussi réglage éteint (« Ici » du panneau), sans rail
+  const reperes = useReperesDuScan(); // « Idées d'harmonie » éteint : les pastilles restent des repères, sans rien ouvrir
+  const sectionsLues = iciAccords?.sections ?? reperes;
   const sectionsScan = useJianpuSections();
   const zh = (i18n.language ?? "").startsWith("zh");
   const etiquettes = useMemo(() => {
     const chant = slug ? systemes?.[slug] : undefined;
     const debuts = slug ? sectionsScan?.[slug]?.sections : undefined;
-    if (!iciAccords || retouchable || !chant || !debuts) return [];
-    const uids = iciAccords.sections.map((x) => x.uid);
+    if (!sectionsLues || retouchable || !chant || !debuts) return [];
+    const uids = sectionsLues.map((x) => x.uid);
     return etiquettesDuScan(debuts, zh).flatMap((e) => {
       const l = chant.pages[e.page]?.lignes[e.ligne];
       const jouees = e.pastilles.flatMap((p) => { const uid = passageDeSection(p.id, uids); return uid ? [{ ...p, uid }] : []; });
       return l && jouees.length ? [{ page: e.page, ligne: e.ligne, y: l.y0, pastilles: jouees }] : [];
     });
-  }, [iciAccords, retouchable, slug, systemes, sectionsScan, zh]);
-  const rail = !!ici && etiquettes.length > 0;
+  }, [sectionsLues, retouchable, slug, systemes, sectionsScan, zh]);
+  const rail = (!!ici || !!reperes) && etiquettes.length > 0;
   /** Les pastilles des lignes de la page `i` qui commencent entre `y0` et `y1` (px image), placées en % de la fenêtre. */
   const rendreEtiquettes = (i: number, y0: number, y1: number, lignes?: [number, number]) =>
     etiquettes
       .filter((e) => e.page === i && (lignes ? e.ligne >= lignes[0] && e.ligne <= lignes[1] : e.y >= y0 && e.y < y1))
-      .flatMap((e) => e.pastilles.map((p, k) => <EtiquetteSection key={p.id} {...p} k={k} top={((Math.max(e.y, y0) - y0) / (y1 - y0)) * 100} onOuvrir={(el) => ici?.ouvrir(p.uid, undefined, { depuisNom: true, element: el })} />));
+      .flatMap((e) => e.pastilles.map((p, k) => <EtiquetteSection key={p.id} {...p} k={k} top={((Math.max(e.y, y0) - y0) / (y1 - y0)) * 100} onOuvrir={ici ? (el) => ici.ouvrir(p.uid, undefined, { depuisNom: true, element: el }) : undefined} />));
   const staleChords = Boolean(playedKey && !chords);
   // Calque partiel : une partie des accords n'a pas été relevée et reste
   // donc dans la tonalité imprimée. On le dit, et on met en évidence ceux

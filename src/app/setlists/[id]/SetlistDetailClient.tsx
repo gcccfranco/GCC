@@ -91,9 +91,9 @@ import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { defilerSousLaBarre } from "@/components/harmonie/HarmonieDuChant";
-import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
+import { useColonneHarmonie, useGrandEcranHarmonie, useIdeesHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
 import { semitonesTo, getTransposedKey } from "@/lib/transpose";
-import { MargeAffichage, BOUTON_LECTURE } from "@/components/song/MargeAffichage";
+import { LigneIdeesHarmonie, MargeAffichage, BOUTON_LECTURE } from "@/components/song/MargeAffichage";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { telechargerBlob, demanderPleinEcran } from "@/lib/telecharger";
 import {
@@ -1154,6 +1154,9 @@ export function SetlistDetailClient() {
   // version » n'apparaît que dans le mode « Ma version », seul endroit où une
   // retouche ne touche personne d'autre.
   const accesHarmonie = useAccesHarmonie();
+  // Réglage « Idées d'harmonie » (marge Affichage) : éteint, ni puce « Idées », ni nom de section touchable, ni colonne.
+  const [ideesAllumees, setIdeesAllumees] = useIdeesHarmonie();
+  const harmonieVue = accesHarmonie.peut && ideesAllumees;
   // Grand écran : la porte 2 est une colonne à droite des partitions (un second appel du puce la referme).
   // La colonne tient si la zone de lecture (à droite du rail) fait 824 px ; sinon, la feuille.
   const ecranLarge = useGrandEcranHarmonie();
@@ -1180,12 +1183,12 @@ export function SetlistDetailClient() {
     // Un chant choisi à la puce reste : seul un changement du chant lu déplace la colonne.
     const change = dernierLu.current !== undefined && dernierLu.current !== lu;
     dernierLu.current = lu;
-    if (!grandEcran || !colonnePref || !accesHarmonie.peut || !affichePartitions) return;
+    if (!grandEcran || !colonnePref || !harmonieVue || !affichePartitions) return;
     if (ideesTarget !== null && !change) return;
     const i = setlist.items.findIndex((it) => !!it.songSlug && it.type !== "fusion" && it.position === lu);
     if (i !== -1) { setIdeesTarget(i); setIdeesChant(null); setPassageIci(undefined); }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- seul un changement de chant lu ou de préférence rouvre la colonne
-  }, [grandEcran, colonnePref, accesHarmonie.peut, affichePartitions, current, setlist?.items.length]);
+  }, [grandEcran, colonnePref, harmonieVue, affichePartitions, current, setlist?.items.length]);
   // La fenêtre passe sous le seuil colonne ouverte (rotation) : on la ferme, la préférence reste.
   const etaitColonne = useRef(false);
   useEffect(() => {
@@ -1963,6 +1966,7 @@ export function SetlistDetailClient() {
         jianpuVu={interrupteurAllume(jianpuPrefVu)}
         uid={authLoading ? undefined : user?.uid ?? null}
         retourFocus={boutonAffichageRef}
+        groupeLecture={accesHarmonie.peut && <LigneIdeesHarmonie allume={ideesAllumees} set={(v) => { if (!v) setIdeesTarget(null); setIdeesAllumees(v); }} />}
       >
         {musique}
       </MargeAffichage>
@@ -2053,7 +2057,8 @@ export function SetlistDetailClient() {
         onRetryChant={rechargerUnChant}
         titres={Object.fromEntries(Object.entries(songsMap).map(([slug, e]) => [slug, e.title]))}
         onFermerAccord={(f) => { fermerAccord.current = f; }}
-        onIdees={accesHarmonie.peut ? (itemIndex, slug) => {
+        ideesEteintes={!ideesAllumees}
+        onIdees={harmonieVue ? (itemIndex, slug) => {
           compter("cmd.setlist.idees");
           setShowAffichage(false);
           setPassageIci(undefined);
