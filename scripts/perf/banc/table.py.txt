@@ -1,0 +1,18 @@
+import json,sys,collections
+f='/tmp/claude-0/-home-user/d2681d54-ea1e-5437-a805-4ba46328d8b8/scratchpad/mesures.jsonl'
+rows=[json.loads(l) for l in open(f)]
+mode=sys.argv[1] if len(sys.argv)>1 else 'construit'
+d=collections.OrderedDict()
+for r in rows:
+  if r['mode']!=mode: continue
+  k=(r['ecran'],r['action'])
+  d.setdefault(k,{})[r['largeur']]=r
+W=[390,810,1280,1512]
+def c(r):
+  if not r: return ''
+  if r['ms'] is None: return 'échec'
+  return f"{r['ms']/1000:.2f} s ({r['long']})"
+for (e,a),v in d.items():
+  if e.startswith('Profil'): continue
+  fs=max((x['fs'] for x in v.values()),default=0)
+  print(f"| {e} | {a[:60]} | "+" | ".join(c(v.get(w)) for w in W)+f" | {fs} |")

@@ -302,6 +302,29 @@ Ordre d'origine : UP-1 puis UP-2, UP-3 à part, UP-4 après. Depuis la correctio
 rouges du mode louange et des annotations : `docs/spec-retouches-2026-11-21.md`, § R5 ; même branche, Opus, consigne :
 lire `CLAUDE.md` puis ce § R5, une tranche, ligne d'Avancement dans ce fichier-là), puis s'arrête.
 
+**UP-5 — Finitions d'UP-4** (go de Timothée du 21/11 soir, sur la liste des restes : « Go pour corriger tout ça ») :
+Crayon seulement, aucun dessin touché. (1) Le badge « retouché seul » et le numéro de position ne se chevauchent
+plus au coin d'une pastille de la structure (les trois ordres, les cinq largeurs). (2) En « Tout le chant » sur la
+page setlist, la pastille de ma copie porte aussi le badge dans la rangée de structure (`SongView.tsx`, le
+`shortcut:` de la rangée) ; si c'est impossible sans décision nouvelle, le dire ici et s'arrêter sur ce point.
+(3) Thème sombre et interface en 中文 : capturer la feuille « Pour quel passage ? », la section « Refrain · 2ᵉ fois »
+et la rangée de structure, les regarder, corriger ce qui cloche (contraste du badge, libellé coupé). (4) Libellés
+zh-CN (`改哪一次？`, `第{{n}}次`, `单独修改`) : vérifier qu'ils s'accordent avec les mots déjà employés dans
+`zh-CN.json` (`所有重复`, `nthTime`) ; la relecture par un sinophone reste à Timothée.
+
+**UP-6 — Souligné d'une parole retouchée, lignes chinoises** (go de Timothée du 21/11, nuit : « Go fait tout en même
+temps ») : sur une ligne chinoise, le trait fin graphite d'une parole retouchée (`globals.css`,
+`[data-retouche="paroles"]`) tombe entre les caractères et le pinyin. Quand le pinyin est affiché, le trait passe sous
+le pinyin (sous la ligne entière) ; sans pinyin, et sur une ligne française, rien ne change. Retouche (CSS et un test).
+
+**UP-7 — La note et le badge aussi en mode louange** (constat de Timothée du 21/11, 23 h 51, capture du mode louange
+en « Une fois chacune » : « J'ai modifié des sections mais la petite note dans la structure en haut n'apparait pas
+pour dire c'est pour quel refrain » ; même lot, UP-4 s'était arrêtée aux pages chant et setlist) : en mode louange,
+un passage retouché seul (accords ou paroles du Crayon) porte le même libellé qu'en UP-4 (« Refrain · 2ᵉ fois ») à la
+place de « Refrain (x2) », et sa pastille dans la rangée de structure du haut porte le même badge « retouché seul »
+(mêmes règles qu'UP-4 et UP-5, `src/lib/setlist/passages.ts`). Aucun dessin ni annotation touché ; lecture seule
+(rien ne s'écrit depuis le mode louange).
+
 Format : `passage` est facultatif, une version ancienne du site l'ignore et montre le dessin partout
 (§ « Compatibilité du format », AN-4). `firestore.rules` : à relire, le champ est dans `traits` (liste libre).
 
@@ -419,3 +442,86 @@ Format : `passage` est facultatif, une version ancienne du site l'ignore et mont
   Vérification : tsc propre ; `ma-partition-traits`, `ma-partition-crayon`, `annotations-forscore` sur les cinq
   projets : 353 passés, 2 échecs, 5 sautés en 14 min. Les deux échecs étaient déjà là avant : (z) au téléphone (rouge
   sur la base) et (v) sur ordinateur-1440 (instable sous charge), tous deux dans R5b. Reste : UP-4, Crayon seulement.
+- 21/11/2026, soir : **UP-4 faite** (Crayon seulement, accords et paroles ; aucun dessin ni annotation touché, pas de
+  `firestore.rules`). Avec l'ordre « Une fois chacune », la feuille d'une ligne d'une section que la structure répète
+  demande « Pour quel passage ? » : les pastilles du plan (seules celles de la section touchée actives, cible de 44 px)
+  et « Toutes les répétitions » ; une pastille copie la section comme en UP-3, « Toutes » retouche partout. Le passage
+  retouché seul s'affiche juste sous sa section d'origine, son libellé devient « Refrain · 2ᵉ fois » (dans l'en-tête de
+  sa carte, couleur de la section) ; dans la rangée de structure, sa pastille garde l'abréviation de l'origine et porte
+  un badge de la couleur de la section (« retouché seul »), aussi en « Plan ». Pages chant (ma partition, hors
+  `?structure=`) et setlist (pour moi et pour le culte). Code : `src/lib/setlist/passages.ts` (nouveau), `EditLineSheet`,
+  `SongView` (corps et `StructureStrip`), `SetlistDetailClient`, `SongDetailClient`, `PartitionView`, locales fr et zh-CN.
+  Le passage est gardé par l'identité de la copie dans la structure (comme UP-3), le rang « 2ᵉ fois » n'est que calculé
+  à l'affichage. **Décisions déléguées (session, 21/11)** : (1) dans ces ordres, rien n'est choisi d'avance (« on demande
+  c'est pour quelle ») et l'enregistrement reste désactivé jusqu'au choix ; une pastille choisie montre son nom ;
+  (2) ordre « Plan » : sur la page chant aucune ligne n'est montrée, donc rien à toucher, seul le badge de la structure
+  s'applique ; sur la page setlist le Crayon garde l'ordre joué forcé en « Plan » (lignes et dessins comme avant) ;
+  (3) page setlist : le Crayon ne force plus l'ordre joué en « Une fois chacune » (sans quoi UP-4 n'y existait pas) —
+  renverse en partie le choix du coup d'œil « Crayon = ordre joué », test `coup-d-oeil` adapté ; (4) avec ma propre
+  structure, le corps suit aussi « Une fois chacune » (avant : ordre joué), pour que corps et feuille s'accordent.
+  `critique-design` : note dans l'en-tête de la carte (elle se détachait en deux colonnes à 1 440 px), badge coloré
+  au lieu d'un point noir, nom du passage dans la feuille ; faits. Tests : nouvelle spec `ma-partition-passage-unique`
+  (12 tests : FR page chant et setlist, accord et paroles, « Toutes », culte, ZH 一生爱你 en paroles, « Tout le chant »
+  inchangé, badge dans les trois ordres) ; avec `coup-d-oeil`, `ma-partition-crayon`, `ma-partition-lecture`,
+  `harmonie-ma-version` sur les trois appareils : 167 passés, 14 échecs en 6,0 min au premier tour (attentes de test
+  fausses, `sectionOrigins` perdu par `viewOf` en lecture « mienne », écriture culte lue trop tôt : corrigés) ; second
+  tour `ma-partition-passage-unique` + `ma-partition-lecture` : 87 passés, 0 échec en 2,4 min ; après la retouche
+  design, `ma-partition-passage-unique` + `ma-partition-crayon` : 63 passés, 0 échec en 2,5 min. Reste rouge `coup-d-oeil:215` (libellé « Chaque section une fois » dans le mode louange, rouge
+  avant la tranche, mode louange : R5b). tsc propre, eslint 0 erreur. **Reste / finitions** : en « Tout le chant » sur
+  la page setlist, la rangée garde la structure de la présidence, sans badge sur ma copie (`shortcut:`) ; badge et
+  numéro de position peuvent se superposer au coin d'une pastille ; libellés zh-CN (« 改哪一次？ », « 第2次 »,
+  « 单独修改 ») à faire relire ; interface en 中文 et mode sombre non capturés ; soulignement des lignes retouchées
+  entre caractères et pinyin (antérieur). Captures aux cinq largeurs regardées par `regard`. Lot « Un passage ou tous »
+  fini ; R5b lancée ensuite (`docs/spec-retouches-2026-11-21.md`).
+- 21/11/2026, nuit : **UP-5 faite** (finitions d'UP-4, Crayon seulement ; aucun dessin, annotation, mode louange ni
+  `firestore.rules` touché). (1) Dans la rangée de structure, le badge « retouché seul » passe au coin **haut gauche**
+  de la pastille, le numéro de position reste en haut à droite : plus de chevauchement (toutes dispositions de pastille,
+  trois ordres). (2) « Tout le chant », page setlist : la rangée garde la structure de la présidence ; **décision
+  déléguée (session, 21/11)** : le badge de ma copie s'y pose aux positions alignées (ma structure de même longueur, ma
+  copie à la place d'une étape de son origine), en plus des badges déjà calculés sur la structure lue (copie « pour tout
+  le culte ») ; structures non alignées : pas de badge, comme avant. Le `shortcut:` de `SongView` est levé. Test ajouté
+  (`ma-partition-passage-unique`, présidence [V, R, V, R], badge sur la 4ᵉ pastille seule). (3) Sombre + 中文 et clair
+  + FR, aux quatre dispositions (390, 810, 1080, 1440), 24 captures regardées par `regard` : feuille « 改哪一次？ »,
+  rangée (badge et numéro ensemble) et copie « 副歌 · 第2次 » lisibles, rien de coupé, contraste du badge suffisant en
+  sombre : **aucune correction nécessaire**. Les pastilles C1/C2 pâles de la feuille sont les passages désactivés voulus
+  par UP-4. `critique-design` non lancé (seul changement visible : le badge change de coin). (4) Libellés zh-CN
+  cohérents avec l'existant (`第{{n}}次`/`第1次` = `view.nthTime`/`firstTime`, « 所有重复 » = clé partagée
+  `harmonie.toutesRepetitions`, « 单独修改 » s'accorde avec « 仅此处 ») : rien changé ; **relecture par un sinophone
+  laissée à Timothée**. Tests : `ma-partition-passage-unique`, `ma-partition-crayon`, `ma-partition-lecture`,
+  `coup-d-oeil` (+ voisine `statistiques-chant`), cinq projets : 294 passés, 5 échecs (tous `coup-d-oeil:215`, connu,
+  R5b), 10 sautés, 9,2 min ; après la correction du relecteur (badges existants gardés en « Tout le chant »),
+  `ma-partition-passage-unique` : 39 passés, 0 échec en 1,6 min. tsc propre, eslint 0 erreur. **Restes** : relecture
+  zh-CN par Timothée ; soulignement des lignes retouchées entre caractères et pinyin (antérieur) ; R5b (`coup-d-oeil:215`).
+- 21/11/2026, nuit : **UP-6 faite** (session d'origine ; `executant`, puis tests et captures par la session). CSS seul
+  (`globals.css`, règle `[data-retouche="paroles"]`) : un caractère suivi de son pinyin ne porte plus le trait, c'est
+  le pinyin (`[data-ligne="pinyin"]`) qui le porte ; sans pinyin et en français, inchangé. Deux tests ajoutés dans
+  `ma-partition-lecture` (pinyin affiché, pinyin masqué) ; les tests « chant ZH » sur les cinq projets : 15 passés en
+  39 s ; captures regardées au téléphone et à l'ordinateur. Limites : le trait suit la largeur de chaque syllabe de
+  pinyin (trait en morceaux, comme avant sous les caractères) ; le mode louange n'a pas été regardé (aucun
+  `data-retouche` sous `src/components/performance`).
+- 21/11/2026, nuit : **UP-7 faite** (constat de Timothée du 21/11 ; Crayon seulement, aucun dessin ni annotation,
+  `ChordLine.tsx` et `firestore.rules` intacts, rien ne s'écrit depuis le mode louange). En mode louange, ordre « Une
+  fois chacune » : la copie retouchée seule se place sous sa section d'origine et sa carte s'intitule « Refrain · 2ᵉ
+  fois » (prop `libelle` de `SectionView`, mêmes clés qu'UP-4) ; dans les ordres « Une fois chacune » et joué, sa
+  pastille porte le badge « retouché seul », dans le bandeau d'en-tête du chant **et** dans le rappel de structure des
+  pages 2 et suivantes. « Structure seule » (feuille de route) n'a pas de rangée de pastilles : rien à marquer. Code :
+  `blocks.ts` (`retouches` sur l'en-tête, `retouche` sur la section, par `passagesRetouches` et `copiesSousOrigine` de
+  `passages.ts`), `PerformanceMode.tsx` (ajouts courts : `libelle`, `retouches` passés à `StructureStrip` et
+  `RappelRangee`), `SetlistDetailClient.tsx` (l'item passé au mode louange porte `{ ...item.sectionOrigins,
+  ...viewOf(item)?.sectionOrigins }`, `withMineStructureItem` intact). **Décision déléguée (session, 21/11)** : en deux
+  colonnes (1 080 et 1 440 px), la copie suit son refrain dans l'ordre de lecture des colonnes ; un saut de colonne
+  peut la porter en haut de la colonne de droite, comme toute section (pas de forçage de mise en page). Méthode :
+  `/tranche`, mais **les agents de `.claude/agents/` ne se sont pas chargés** (session lancée hors du dépôt) : chaque
+  rôle a tourné en agent général au même modèle (executant Sonnet, testeur Haiku, relecteur Fable, `regard` Sonnet),
+  après lecture de sa fiche. Relecteur : code bon ; test renforcé ensuite par la session (« ×2 » au lieu de « (x2) »,
+  « Structure seule » affirmé, rappel de la page 2 couvert, cas ZH sur le nom et la pastille). Tests : nouvelle spec
+  `louange-passage-unique` (9 tests : FR « Une fois chacune », ordre joué, Structure seule, rappel page 2 dans deux
+  ordres, sans copie dans deux ordres, ZH 一生爱你), ajoutée à `SPECS_GRAND_ECRAN` ; avec `ma-partition-passage-unique`,
+  `louange-sections-uniques`, `coup-d-oeil` sur les cinq projets (`--workers=2 --trace off`) : 327 passés, 1 échec
+  (une affirmation ZH de la session, lue après le parcours des pages : remise avant), 26 sautés, 11,5 min ; second
+  tour, le test ZH sur les cinq projets : 5 passés en 14 s. `louange-sections-uniques:358` passe à 1 440 px depuis R6.
+  tsc propre, eslint 0 erreur. Captures « Une fois chacune » aux quatre dispositions et à 1 440 px (8), triées par
+  `regard` : libellé et badge justes partout, rien de coupé ; `critique-design` non lancé (seuls le libellé et le badge
+  déjà validés en UP-4/UP-5 apparaissent). Hors diff, vu par le relecteur : `rappel-ordre-joue:423` (trait de la
+  page 2 après rechargement) rouge sur ordinateur et tablette, déjà rouge sur la base 415151e6. **Restes** : interface
+  en 中文 du mode louange non capturée (« 副歌 · 第2次 ») ; badge de l'en-tête d'un scan 简谱 (`PageScan.tsx`) non posé.

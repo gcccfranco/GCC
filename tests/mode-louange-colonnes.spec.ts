@@ -82,6 +82,24 @@ test.describe("paginateColumns (pur)", () => {
     expect(pages[0].cols).toEqual([[1], [2]]);
     expect(pages[0].scale).toBeCloseTo(350 / 900, 5);
   });
+
+  test("R7 : la pastille « Ensuite » est dans la dernière colonne qui porte du texte, sans rien déplacer", () => {
+    // Colonne de droite plus haute que celle de gauche (50 | 200) : la pastille y va quand même.
+    const heightsFull = [0, 300, 300];
+    const heightsColumn = [0, 50, 200];
+    const sans = paginateColumns({ flow: [1, 2], header: null, heightsFull, heightsColumn, pageHeight: 400 });
+    const avec = paginateColumns({ flow: [1, 2], header: null, heightsFull, heightsColumn, pageHeight: 400, pastille: 64 });
+    expect(avec[0].suivant).toBe(1);
+    expect(avec.map((p) => p.cols)).toEqual(sans.map((p) => p.cols));
+    // Colonne de droite vide sur la dernière page : la pastille reste à gauche.
+    const full5 = [0, 150, 150, 150, 150, 150];
+    const vide = paginateColumns({ flow: [1, 2, 3, 4, 5], header: null, heightsFull: full5, heightsColumn: full5, pageHeight: 400, pastille: 64 });
+    expect(vide[vide.length - 1].cols[1]).toEqual([]);
+    expect(vide[vide.length - 1].suivant).toBe(0);
+    // Un chant d'une colonne : inchangé.
+    const une = paginateColumns({ flow: [1, 2, 3], header: 0, heightsFull: [60, 100, 100, 100], heightsColumn: [60, 130, 130, 130], pageHeight: 400, pastille: 64 });
+    expect(une[0].suivant).toBe(0);
+  });
 });
 
 test.describe("twoColumnsPossible (pur)", () => {
@@ -360,8 +378,8 @@ test("téléphone et tablette portrait : pas d'interrupteur, une colonne, même 
 });
 
 // dimanche-11 : la pastille « Ensuite » est dans le flux, sous la colonne qui a la place ; jamais sur un bloc.
-test("dernière page d'un chant suivi d'un autre : la pastille « Ensuite » ne recouvre aucun bloc, le nombre de pages ne change pas", async ({ page }) => {
-  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "a-l-agneau", position: 2 })]);
+// R7 : sur deux colonnes, elle est au bas de la dernière colonne qui porte du texte, sous sa dernière section.
+async function verifierPastilleSuivant(page: Page, captureNom: string) {
   const suivant = onStage(page, "[data-suivant]");
   const total = await totalPages(page);
   for (let p = 1; p < total; p++) {
@@ -390,5 +408,34 @@ test("dernière page d'un chant suivi d'un autre : la pastille « Ensuite » ne 
   const boite = (await suivant.boundingBox())!;
   expect(boite.height).toBeGreaterThanOrEqual(44);
   expect(boite.y + boite.height).toBeLessThanOrEqual((await page.evaluate(() => innerHeight)) + 0.5);
-  await capture(page, "louange-pastille-suivant");
+  {
+    const cols = await onStage(page, "[data-col-page]").evaluateAll((els) =>
+      els.filter((el) => el.querySelector("[data-section]")).map((el) => el.getBoundingClientRect().toJSON() as DOMRect),
+    );
+    if (cols.length === 2) {
+      const dernier = cols[1];
+      expect(boite.x, "pastille dans la dernière colonne").toBeGreaterThanOrEqual(dernier.left - 0.5);
+      const bas = await onStage(page, "[data-section]").evaluateAll(
+        (els, g) => Math.max(...els.map((e) => e.getBoundingClientRect()).filter((r) => r.left >= g - 0.5).map((r) => r.bottom)),
+        dernier.left,
+      );
+      expect(boite.y, "pastille sous la dernière section").toBeGreaterThanOrEqual(bas - 0.5);
+    }
+  }
+  await capture(page, captureNom);
+}
+
+
+test("dernière page d'un chant suivi d'un autre : la pastille « Ensuite » ne recouvre aucun bloc, le nombre de pages ne change pas", async ({ page }) => {
+  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "a-l-agneau", position: 2 })]);
+  await verifierPastilleSuivant(page, "r7-ensuite-fr");
+});
+
+test("R7 : 中文, la pastille « Ensuite » à la fin de la dernière colonne", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+  await ouvrirMode(page, [
+    item({ songSlug: "一生爱你", position: 1, structureOverride: ["intro-1-0", "verse-2-1", "chorus-3-2", "verse-2-3", "chorus-3-4", "chorus-3-5"] }),
+    item({ songSlug: "abba-pere", position: 2 }),
+  ]);
+  await verifierPastilleSuivant(page, "r7-ensuite-zh");
 });

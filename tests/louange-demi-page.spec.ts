@@ -65,7 +65,9 @@ const racine = (page: Page) => page.locator("[data-performance-mode]");
 const enDemi = (page: Page) => page.locator("[data-performance-mode][data-demi-page]");
 const filet = (page: Page) => page.locator("[data-performance-mode] [data-demi-filet]");
 const poignee = (page: Page) => page.locator("[data-performance-mode] [data-demi-poignee]");
-const PREMIER_BLOC = ":is([data-entete-chant], [data-col-page] > *)";
+// Une section du texte est enveloppée par `NomsTouchables` (« Idées d'harmonie », docs/spec-accords-louange.md) dans un
+// `div.contents` sans boîte (getBoundingClientRect nul) : le bloc mesuré est l'enfant de cette enveloppe.
+const PREMIER_BLOC = ":is([data-entete-chant], [data-col-page] > :not(.contents), [data-col-page] > .contents > *)";
 const normaliser = (t: string | null) => (t ?? "").replace(/\s+/g, " ").trim();
 
 async function toucher(page: Page, testInfo: TestInfo, x: number, y: number) {

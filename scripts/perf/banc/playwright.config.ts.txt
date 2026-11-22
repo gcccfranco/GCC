@@ -1,0 +1,9 @@
+import { defineConfig } from "@playwright/test";
+export default defineConfig({
+  testDir: ".",
+  timeout: 600_000,
+  workers: 1,
+  reporter: [["line"]],
+  use: { baseURL: process.env.MESURE_BASE ?? "http://localhost:3300", trace: "off", actionTimeout: 10_000, navigationTimeout: 60_000, screenshot: "off", video: "off" },
+  projects: [{ name: "mesure", use: { browserName: "chromium", launchOptions: { executablePath: "/opt/pw-browsers/chromium" } } }],
+});

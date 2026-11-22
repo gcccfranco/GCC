@@ -1169,7 +1169,7 @@
 [data-marque="conflit"][data-conflit="chant"]::before { border-left: 3px double currentColor; }
 /* Sur le texte des paroles seul (caractère chinois sans son pinyin, mot français sans l'espace qui tient un accord) :
    posé sur la ligne, le trait descendait dans les blancs sous les accords et sous le pinyin. */
-[data-retouche="paroles"] :is([data-paroles]:not(:has(> [data-copy-ignore])), [data-car]) { text-decoration: underline; text-decoration-color: var(--graphite); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+[data-retouche="paroles"] :is([data-paroles]:not(:has(> [data-copy-ignore])), [data-car]:not(:has(+ [data-ligne="pinyin"])), [data-car] + [data-ligne="pinyin"]) { text-decoration: underline; text-decoration-color: var(--graphite); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 @media print { [data-marque]::before { display: none; } }
 
 /* Marge « Affichage » (RU-2) : ressort sans rebond sur transform et width ; aucun mouvement au mode louange ;

@@ -34,7 +34,7 @@ import { useJianpuManifest, useJianpuMargesToutes, useJianpuSections, useJianpuS
 import { bornesX, sectionsDeTranche, trancheDeSection } from "@/lib/performance/tranchesScan";
 import { interrupteurAllume, prefDepuisInterrupteur, prefPourRole, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
-import { SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, zh_lyric_font } from "@/components/song/SongView";
+import { SectionView, StructureStrip, rangLibelle, TransitionNote, KaiTiFont, gelasio_font, zh_lyric_font } from "@/components/song/SongView";
 import { TempoPartition } from "@/components/song/NoteNoire";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
@@ -58,6 +58,7 @@ import { Armure, CarreTonalite } from "@/components/song/Armure";
 import { MargeAffichage, usePlace } from "@/components/song/MargeAffichage";
 import { Switch } from "@/components/ui/switch";
 import { itemAst } from "@/lib/chordpro/itemContent";
+import { formatSectionName } from "@/lib/chordpro/parser";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { APPUI_ANNEAU_MS, APPUI_CRAYON_MS, classerAppui, classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
@@ -156,6 +157,7 @@ function BlockRenderer({
   /** Ma partition : signes des lignes du chant (MP-2), comme sur la page de setlist. */
   marques?: Marques;
 }) {
+  const { t } = useTranslation();
   if (block.kind === "song-header") {
     return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} feuilleRoute={feuilleRoute} tempo={tempoChant} disposition={disposition} />;
   }
@@ -207,6 +209,7 @@ function BlockRenderer({
       // Lot CV : les exceptions de mots chinois du chant (motsChinois.ts) s'appliquent au pupitre comme sur la page du chant.
       slug={block.songSlug}
       marques={marques}
+      libelle={block.retouche ? t("maPartition.passage.note", { nom: formatSectionName(block.retouche.origine, t), rang: rangLibelle(block.retouche.rang, t) }) : undefined}
     />
     </NomsTouchables>
     </NotationAccordsProvider>
@@ -243,7 +246,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
   }
   // Mesuré avec l'en-tête : en deux colonnes, il reste en pleine largeur au-dessus.
   const strip = bandeau !== "aucun" && block.steps?.length ? (
-    <StructureStrip steps={sansTransitions(block.steps, showTransitions)} details={bandeau === "details"} disposition={disposition} className="mt-3" />
+    <StructureStrip steps={sansTransitions(block.steps, showTransitions)} retouches={block.retouches} details={bandeau === "details"} disposition={disposition} className="mt-3" />
   ) : null;
   if (block.fusionSongs?.length) {
     // Partition : l'en-tête d'un chant fusionné prend l'apparence de l'autre (titres en serif centrés, structure dessous).
@@ -354,7 +357,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
 const RAPPEL_RESERVE = 50;
 /** Rappel de structure d'une page 2 ou suivante (Sections uniques) : titre du chant
  *  en tête dès 640 px, puis les pastilles (toute la structure, à toutes les tailles). */
-function RappelRangee({ titre, steps, pleines, rappel, cle }: { titre?: string; steps: SectionOccurrence[]; pleines: ReadonlySet<string>; rappel: "joue" | "unique"; cle?: React.ReactNode }) {
+function RappelRangee({ titre, steps, retouches, pleines, rappel, cle }: { titre?: string; steps: SectionOccurrence[]; retouches?: SongHeaderBlock["retouches"]; pleines: ReadonlySet<string>; rappel: "joue" | "unique"; cle?: React.ReactNode }) {
   // A12, CI-22 : barre escamotée, la rangée porte aussi le carré de tonalité (`cle`) à droite ; titre, structure et
   // carré sur une seule ligne, centrés, le titre visible à toutes les tailles.
   return (
@@ -365,7 +368,7 @@ function RappelRangee({ titre, steps, pleines, rappel, cle }: { titre?: string; 
           {titre}
         </span>
       )}
-      <StructureStrip className={cle ? "min-w-0 shrink" : "min-w-0 flex-1"} steps={steps} compacte pleines={pleines} rappel={rappel} />
+      <StructureStrip className={cle ? "min-w-0 shrink" : "min-w-0 flex-1"} steps={steps} retouches={retouches} compacte pleines={pleines} rappel={rappel} />
       {/* Centré sur la première ligne de la rangée (la hauteur des ronds : 26 px, 30 dès 640 px), même si la structure
           passe à la ligne ; le titre a la même hauteur de ligne. */}
       {cle && <div className="ml-auto flex h-[26px] shrink-0 items-center sm:h-[30px]">{cle}</div>}
@@ -2214,7 +2217,7 @@ export function PerformanceMode({
                 <div key={block.uid} ref={(el) => { rappelRefs.current[i] = el; }} className="flow-root">
                   {/* Pire cas : tous les passages pleins, avec leur nuance. */}
                   <div className="mb-2">
-                    <RappelRangee titre={block.title} steps={block.steps} pleines={new Set(block.steps.map((st) => st.section.uid))} rappel={affichageVu === "played" ? "joue" : "unique"} />
+                    <RappelRangee titre={block.title} steps={block.steps} retouches={block.retouches} pleines={new Set(block.steps.map((st) => st.section.uid))} rappel={affichageVu === "played" ? "joue" : "unique"} />
                   </div>
                 </div>
               ) : null,
@@ -2357,7 +2360,7 @@ export function PerformanceMode({
                     page={layout[p]}
                     rappel={r}
                     rappelRef={p === currentPage ? refDemiRappel : refDemiRappelHaut}
-                    rappelTrame={r ? <RappelRangee titre={entree?.block.title} steps={r} pleines={pleines} rappel={affichageVu === "played" ? "joue" : "unique"} /> : null}
+                    rappelTrame={r ? <RappelRangee titre={entree?.block.title} steps={r} retouches={entree?.block.retouches} pleines={pleines} rappel={affichageVu === "played" ? "joue" : "unique"} /> : null}
                     affichageVu={affichageVu}
                     currentPage={p}
                     scaledBodyRef={refDemiCorps}
@@ -2396,6 +2399,7 @@ export function PerformanceMode({
                 <RappelRangee
                   titre={currentEntry?.block.title}
                   steps={rappel}
+                  retouches={currentEntry?.block.retouches}
                   pleines={sectionsDeLaPage}
                   rappel={affichageVu === "played" ? "joue" : "unique"}
                   cle={!rangeeUnique ? undefined : armure ? (

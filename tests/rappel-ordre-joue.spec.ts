@@ -433,6 +433,9 @@ test.describe("annotations avec le rappel", () => {
     await lancer(page);
     await page.keyboard.press("ArrowRight");
     await attendreCompteur(page, /^2 \//);
+    // Le trait a été tracé barre montrée (`tracer`). Barre cachée, la page 2 passe en rangée unique (A12, CI-22, Timothée
+    // le 16/11 : titre, rappel et carré sur une ligne, la page remonte avec ses traits) : on la remontre pour comparer.
+    await montrerChrome(page);
     await expect.poll(() => boite(page)).not.toBeNull();
     const apres = (await boite(page))!;
     avant.forEach((v, i) => expect(Math.abs(v - apres[i]), `bord ${i}`).toBeLessThanOrEqual(2));

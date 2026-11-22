@@ -307,6 +307,7 @@ export async function fakeFirestore(
           from: { collectionId: string; allDescendants?: boolean }[];
           orderBy?: { field: { fieldPath: string }; direction?: string }[];
           limit?: number;
+          select?: { fields: { fieldPath: string }[] };
           where?: {
             fieldFilter?: { field: { fieldPath: string }; op: string; value: unknown };
             compositeFilter?: { op: string; filters: { fieldFilter: { field: { fieldPath: string }; op: string; value: unknown } }[] };
@@ -348,10 +349,19 @@ export async function fakeFirestore(
         if (order.direction === "DESCENDING") paths.reverse();
       }
       if (q.limit) paths = paths.slice(0, q.limit);
-      return json(route, paths.map((p) => ({ document: docJson(p) })));
+      const champs = q.select?.fields.map((f) => f.fieldPath);
+      const docSelect = (p: string) => {
+        const d = docJson(p) as { fields?: Record<string, unknown> };
+        return champs && d.fields ? { ...d, fields: Object.fromEntries(Object.entries(d.fields).filter(([k]) => champs.includes(k))) } : d;
+      };
+      return json(route, paths.map((p) => ({ document: docSelect(p) })));
     }
     if (method === "GET") {
-      if (store.has(tail)) return json(route, docJson(tail));
+      if (store.has(tail)) {
+        const d = docJson(tail) as { fields?: Record<string, unknown> };
+        const masque = url.searchParams.getAll("mask.fieldPaths");
+        return json(route, masque.length && d.fields ? { ...d, fields: Object.fromEntries(Object.entries(d.fields).filter(([k]) => masque.includes(k))) } : d);
+      }
       return json(route, { error: { code: 404, message: "not found" } }, 404);
     }
     if (method === "DELETE") {

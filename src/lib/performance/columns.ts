@@ -176,10 +176,10 @@ export function paginateColumns({
 
   return pages.map((c, p) => {
     const hauteurs = c.map((col) => sum(col, heightsColumn));
-    // Pastille « Ensuite » : à la fin de la colonne la plus courte (la gauche à égalité). Sans place
-    // dans aucune des deux, la page est réduite d'autant (repli A).
+    // Pastille « Ensuite » : à la fin de la dernière colonne qui porte du texte, après la dernière section
+    // (R7). Sans place dans cette colonne, la page est réduite d'autant (repli A).
     const dernier = p === pages.length - 1 && pastille > 0;
-    const colPastille = dernier ? (hauteurs.length > 1 && hauteurs[1] < hauteurs[0] ? 1 : 0) : -1;
+    const colPastille = dernier ? (c[1]?.length > 0 ? 1 : 0) : -1;
     if (dernier) hauteurs[colPastille] += pastille;
     const tallest = Math.max(...hauteurs);
     return {

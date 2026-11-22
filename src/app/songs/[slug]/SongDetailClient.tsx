@@ -55,6 +55,8 @@ import { lire, resoudreConflit } from "@/lib/partition/lecture";
 import { MenuJeLis, LigneMaPartition, LignePartagee } from "@/components/partition/MenuJeLis";
 import { BarreCrayon, type CibleCrayon } from "@/components/partition/BarreCrayon";
 import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
+import type { PastillePassage } from "@/lib/setlist/passages";
+import { pastillesDuPlan } from "@/lib/setlist/passages";
 import { replaceSourceLine, insertSourceLineAfter, deleteSourceLines, materializeSectionCopy } from "@/lib/chordpro/editSource";
 import { historyAuthor } from "@/lib/firebase/setlistHistory";
 import type { ChordProLine } from "@/types/chordPro";
@@ -391,7 +393,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
     // d'écriture de la setlist (`persistOverride`) vit dans SetlistDetailClient ; à extraire avant de l'offrir.
     const [crayon, setCrayon] = useState(false);
     const [viseeCrayon, setViseeCrayon] = useState<CibleCrayon>("accord");
-    const [editTarget, setEditTarget] = useState<(EditLineTarget & { srcLine: number; pinyinSrcLine?: number; jianpuSrcLine?: number; repeatedSectionId?: string; structIndex?: number }) | null>(null);
+    const [editTarget, setEditTarget] = useState<(EditLineTarget & { srcLine: number; pinyinSrcLine?: number; jianpuSrcLine?: number; repeatedSectionId?: string; structIndex?: number; plan?: PastillePassage[] }) | null>(null);
     const [repeatScope, setRepeatScope] = useState<"all" | "one">("one");
     const [enregistrement, setEnregistrement] = useState(false);
     const [erreurCrayon, setErreurCrayon] = useState(false);
@@ -401,6 +403,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
       // Section répétée par la structure affichée : le choix « Seulement ce passage | Toutes les répétitions » se propose.
       let repeatedSectionId: string | undefined;
       let structIndex: number | undefined;
+      let plan: PastillePassage[] | undefined;
       const sec = sectionUid ? ast.sections.find((s) => s.lines.some((l) => l.srcLine === line.srcLine)) : undefined;
       // shortcut: page ouverte avec ?structure= (depuis une setlist) → retouche pour toutes les répétitions, sans choix.
       if (sec && !searchParams.get("structure") && structureOverride.filter((ov) => ov === sec.id || idDeSection(ov) === sec.id).length > 1) {
@@ -408,6 +411,11 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
         if (j !== -1) {
           repeatedSectionId = sec.id;
           structIndex = j;
+          // « Une fois chacune » : on ne voit pas quel passage on touche, la feuille montre le plan et le demande.
+          if (layout === "unique") {
+            plan = pastillesDuPlan(structureOverride, ast.sections, mienne?.sectionOrigins, sec.id, t);
+            structIndex = undefined;
+          }
         }
       }
       setRepeatScope("one");
@@ -425,6 +433,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
         jianpuSrcLine: line.jianpuSrcLine,
         repeatedSectionId,
         structIndex,
+        plan,
         cible: viseeCrayon,
       });
     }
@@ -771,6 +780,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
               sectionKeys={sectionsKeys}
               disposition={disposition}
               layout={layout}
+              sectionOrigins={lecture?.valeur === "mienne" ? mienne?.sectionOrigins : undefined}
               marques={lecture?.marques}
               onLineSelect={crayon ? toucherLigne : undefined}
               onConflit={lecture?.modifiable ? (index, choix) => { mp.enregistrer(resoudreConflit(lecture, index, choix)).catch(() => {}); } : undefined}
@@ -810,8 +820,14 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
             <EditLineSheet
               target={editTarget}
               saving={enregistrement}
-              repeatScope={editTarget?.repeatedSectionId !== undefined ? repeatScope : undefined}
+              repeatScope={editTarget?.repeatedSectionId !== undefined && !editTarget.plan ? repeatScope : undefined}
               onRepeatScope={setRepeatScope}
+              passages={editTarget?.plan}
+              passage={editTarget?.plan ? (repeatScope === "all" ? "all" : editTarget.structIndex ?? null) : undefined}
+              onPassage={(p) => {
+                setRepeatScope(p === "all" ? "all" : "one");
+                if (p !== "all") setEditTarget((cur) => (cur ? { ...cur, structIndex: p } : cur));
+              }}
               onClose={() => { setEditTarget(null); setErreurCrayon(false); }}
               onSaveLine={(newRaw) => {
                 // Ligne inchangée : rien à copier ni enregistrer.

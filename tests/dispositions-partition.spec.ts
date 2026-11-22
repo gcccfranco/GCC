@@ -749,6 +749,11 @@ test("Partition : le mode louange (data-disposition = partition), en-tête en se
 // ─── (h) DP-E : corrections de relecture et finitions ────────────────────────────────────────────────────────────
 
 
+/** Nombre de vignettes par rangée (même haut, à l'arrondi), dans l'ordre de lecture. */
+const parRangee = (m: { y: number }[]) => [...new Set(m.map((e) => e.y))].map((y) => m.filter((e) => e.y === y).length);
+/** Grille qui passe à la ligne : toutes les rangées pleines, la dernière au plus aussi pleine. */
+const rangees = (m: { y: number }[]) => { const n = parRangee(m); return n.slice(0, -1).every((k) => k === n[0]) && n[n.length - 1] <= n[0]; };
+
 test("A : marge Affichage du chant, cinq colonnes égales, entrée choisie marquée (cadre 2 px, gras, bleu)", async ({ page }) => {
   await page.addInitScript(() => { if (!localStorage.getItem("disposition")) localStorage.setItem("disposition", "classique"); });
   await page.goto(`/songs/${CHANT_FR}`);
@@ -759,11 +764,17 @@ test("A : marge Affichage du chant, cinq colonnes égales, entrée choisie marqu
     const r = el.getBoundingClientRect();
     const mini = el.querySelector("svg.block") as SVGElement;
     const nom = el.lastElementChild as HTMLElement;
-    return { x: r.left, y: Math.round(r.top), w: Math.round(r.width), svgW: Math.round(mini.getBoundingClientRect().width), nomH: Math.round(nom.getBoundingClientRect().height), poids: getComputedStyle(nom).fontWeight, couleur: getComputedStyle(nom).color, ombre: getComputedStyle(mini.parentElement!).boxShadow, coche: el.getAttribute("aria-checked") };
+    return { x: r.left, y: Math.round(r.top), w: Math.round(r.width), svgW: Math.round(mini.getBoundingClientRect().width), nomH: nom.getBoundingClientRect().height, lh: parseFloat(getComputedStyle(nom).lineHeight), tronque: nom.scrollWidth > nom.clientWidth + 0.5, poids: getComputedStyle(nom).fontWeight, couleur: getComputedStyle(nom).color, ombre: getComputedStyle(mini.parentElement!).boxShadow, coche: el.getAttribute("aria-checked") };
   }));
-  expect(new Set(m.map((e) => e.y)).size, "une seule rangée de cinq").toBe(1);
+  // CI-15 (A5, 15/11/2026, validée par Timothée, docs/spec-corrections-interface.md § Avancement) : la marge range ses
+  // vignettes en grille souple (3 + 2 dans la colonne de 320 px), libellés entiers sur deux lignes au plus.
+  expect(rangees(m), "rangées pleines, sauf la dernière").toBe(true);
+  if ((await marge(page).getAttribute("data-place")) === "colonne") expect(parRangee(m), "3 + 2 dans la colonne de 320 px").toEqual([3, 2]);
   expect(Math.max(...m.map((e) => e.w)) - Math.min(...m.map((e) => e.w)), "colonnes égales").toBeLessThanOrEqual(1);
-  expect(new Set(m.map((e) => e.nomH)).size, "noms à hauteur égale " + JSON.stringify(m.map((e) => e.nomH))).toBe(1);
+  for (const e of m) {
+    expect(e.tronque, "libellé entier").toBe(false);
+    expect(e.nomH, "libellé sur deux lignes au plus").toBeLessThanOrEqual(2 * e.lh + 1);
+  }
   for (const e of m) expect(e.svgW, "miniature dans sa colonne " + JSON.stringify(m.map((x) => [x.w, x.svgW]))).toBeLessThanOrEqual(e.w);
   const boite = (await marge(page).boundingBox())!;
   expect(boite.x).toBeGreaterThanOrEqual(0);
@@ -801,9 +812,14 @@ test("A : Options du mode louange, cinq colonnes égales sur une rangée, miniat
   const radios = options.locator('[role=radiogroup][aria-labelledby="perf-disposition"]').getByRole("radio");
   await expect(radios).toHaveCount(5);
   const m = await radios.evaluateAll((els) => els.map((el) => ({ y: Math.round(el.getBoundingClientRect().top), w: Math.round(el.getBoundingClientRect().width), svg: Math.round(el.querySelector("svg.block")!.getBoundingClientRect().width), nomH: Math.round((el.lastElementChild as HTMLElement).getBoundingClientRect().height) })));
-  expect(new Set(m.map((e) => e.y)).size, "une seule rangée").toBe(1);
+  // Reste d'A5 (CI-4, 15/11/2026, validée par Timothée, docs/spec-corrections-interface.md § Avancement) : dans la colonne
+  // de 320 px (dès 1 024 px), la grille souple de la marge, 3 + 2 ; ailleurs cinq de front, noms à hauteur égale.
+  if (page.viewportSize()!.width >= 1024) expect(parRangee(m), "3 + 2 dans la colonne de 320 px").toEqual([3, 2]);
+  else {
+    expect(new Set(m.map((e) => e.y)).size, "une seule rangée").toBe(1);
+    expect(new Set(m.map((e) => e.nomH)).size, JSON.stringify(m)).toBe(1);
+  }
   expect(Math.max(...m.map((e) => e.w)) - Math.min(...m.map((e) => e.w)), "colonnes égales").toBeLessThanOrEqual(1);
-  expect(new Set(m.map((e) => e.nomH)).size, JSON.stringify(m)).toBe(1);
   // Miniature de 80 px au plus, réduite à la largeur de sa colonne (≈ 71 px dans le panneau d'environ 26 rem) : jamais de débordement sur la voisine.
   for (const e of m) {
     expect(e.svg, "miniature dans sa colonne").toBeLessThanOrEqual(e.w);

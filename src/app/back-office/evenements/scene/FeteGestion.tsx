@@ -24,14 +24,15 @@ import { langueCourte } from "@/lib/utils/formatDate";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import { CircleCheck, ChevronDown, ChevronRight, History, List, ListOrdered, Lock, LockOpen, Plus, Printer, Send, SlidersHorizontal, type LucideIcon } from "lucide-react"
+import { CircleCheck, ChevronDown, ChevronRight, History, ImagePlus, List, ListOrdered, Lock, LockOpen, Plus, Printer, Send, SlidersHorizontal, type LucideIcon } from "lucide-react"
 import styles from "./FeteGestion.module.css"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { isCoordination } from "@/lib/access"
 import { getSetlistsDeFete, mettreALaCorbeilleGroupe, updateSetlist } from "@/lib/firebase/setlists"
 import { ecartsSetlistsFete } from "@/lib/fetes/suiviSetlists"
-import { creerEdition, listCreneaux, listProgrammes, ModifieEntreTemps, PROGRAMMES_CHANGED, updateProgramme } from "@/lib/firebase/programmes"
+import { creerEdition, lireImageEdition, listCreneaux, listProgrammes, ModifieEntreTemps, PROGRAMMES_CHANGED, updateProgramme } from "@/lib/firebase/programmes"
+import { compressImage } from "@/lib/utils/compressImage"
 import { archiveDate, todayIso } from "@/lib/scene/dimanches"
 import {
   anneeDe, editionCourante, editionsDe, etatEdition, FETES, idEdition, jourJParDefaut, libelleEdition, reglagesRepris,
@@ -56,6 +57,11 @@ import { rangerReservations, ToutesReservations } from "./ToutesReservations"
 import { CetteSemaine } from "./CetteSemaine"
 import { ResumeSaison } from "./ResumeSaison"
 import { Squelette } from "@/components/layout/Squelette";
+
+/** Image de la fête (spec « Image de fête ») : plus grand côté à 1280 px (16/9 → 1280×720, assez pour la carte en 2×),
+ *  250 000 caractères au plus, loin du mégaoctet d'un document Firestore. */
+const IMAGE_LARGEUR_MAX = 1280
+const IMAGE_CARACTERES_MAX = 250_000
 
 /** « cetteSemaine » : la vue par défaut d'une saison ouverte, sur une colonne (P9). */
 type Vue = "saison" | "reservations" | "ordre" | "semaine" | "cetteSemaine"
@@ -95,6 +101,17 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   // Seule la dernière demande pose l'état : une réponse plus lente, partie avant, mettrait
   // sinon les créneaux d'une autre édition sous l'écran.
   const demandes = useRef(0)
+
+  // L'image de l'édition montrée, lue seule (`listProgrammes` ne la ramène pas) et relue à chaque rechargement des programmes.
+  const [imageDe, setImageDe] = useState<{ pour: string; image: string | null } | null>(null)
+  const [imageEnCours, setImageEnCours] = useState(false)
+  useEffect(() => {
+    const id = programmes && editionMontree(fete, programmes, todayIso(), anneeVoulue).programme?.id
+    if (!id) return
+    let actuel = true
+    lireImageEdition(id).then((image) => { if (actuel) setImageDe({ pour: id, image }) }, () => {})
+    return () => { actuel = false }
+  }, [programmes, fete, anneeVoulue])
 
   const reload = useCallback(async () => {
     const n = ++demandes.current
@@ -205,6 +222,21 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     return true
   }
 
+  const imageId = edition.programme?.id
+  const image = imageId && imageDe?.pour === imageId ? imageDe.image : null
+  async function choisirImage(fichier: File | undefined) {
+    if (!fichier) return
+    setErreur(""); setImageEnCours(true)
+    try {
+      await ecrire({ image: await compressImage(fichier, IMAGE_LARGEUR_MAX, IMAGE_CARACTERES_MAX), aImage: true })
+    } catch (e) {
+      // `compressImage` : « Image trop lourde… » ou « Image illisible » (HEIC sous Chrome, fichier abîmé).
+      setErreur(t(e instanceof Error && e.message.startsWith("Image trop lourde") ? "planning.gestion.imageErreur" : "planning.gestion.imageIllisible"))
+    } finally {
+      setImageEnCours(false)
+    }
+  }
+
   /** Recale la date des setlists de l'édition sur le jour J et met à la corbeille celles des passages retirés. */
   async function suivreSetlists(apres: { jourJ: string; passages: Passage[] }) {
     const { recaler, corbeille } = ecartsSetlistsFete(apres, await getSetlistsDeFete(programme.id))
@@ -279,6 +311,31 @@ export function FeteGestion({ fete }: { fete: Fete }) {
         {t("planning.programmes.jourJLabel", { date: dateDuJour(programme.jourJ) })}
         {(etat === "bientot" || etat === "ouvertes") && jours.length > 0 && <> · {t("planning.fete.jusquau", { date: jourEnLettres(jours.at(-1)!, lang) })}</>}
       </p>
+      <section data-testid="fete-image" aria-labelledby="scene-gestion-image" className="carte-groupe mt-4 space-y-3 rounded-2xl p-4">
+        <div>
+          <h3 id="scene-gestion-image" className="text-sm font-semibold text-muted-foreground">{t("planning.gestion.imageTitre")}</h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t("planning.gestion.imageAide")}</p>
+        </div>
+        {image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img data-testid="fete-image-apercu" src={image} alt="" className="aspect-video w-full rounded-xl object-cover" />
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-secondary px-4 text-base font-semibold text-foreground transition-colors hover:bg-secondary/70 focus-within:ring-2 focus-within:ring-ring">
+            <ImagePlus className="h-4 w-4" aria-hidden />
+            {imageEnCours ? t("common.loading") : t(image ? "planning.gestion.imageRemplacer" : "planning.gestion.imageChoisir")}
+            <input data-testid="fete-image-choisir" type="file" accept="image/*" className="sr-only" disabled={imageEnCours}
+              onChange={(e) => { void choisirImage(e.target.files?.[0]); e.target.value = "" }} />
+          </label>
+          {image && (
+            <button type="button" data-testid="fete-image-retirer" disabled={imageEnCours}
+              onClick={() => { void ecrire({ image: undefined, aImage: undefined }) }}
+              className="inline-flex h-10 items-center rounded-full px-4 text-base font-semibold text-destructive transition-colors hover:bg-secondary disabled:opacity-45">
+              {t("planning.gestion.imageRetirer")}
+            </button>
+          )}
+        </div>
+      </section>
     </div>
   )
 

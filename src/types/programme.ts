@@ -95,6 +95,10 @@ export interface Programme {
   annee?: number;
   /** Prénom de qui a écrit en dernier (retouches v18, D20) : le refus d'un ordre de passage le nomme. */
   modifiePar?: string;
+  /** Image de l'édition (docs/spec-scene-saison.md, « Image de fête ») : data-URL JPEG ; absente = sans image. */
+  image?: string;
+  /** Drapeau posé et retiré avec `image`, lu avec la liste (la carte choisit son gabarit sans attendre l'image) ; absent = comportement d'avant IF-3. */
+  aImage?: boolean;
   /** `updateTime` du document lu (métadonnée REST, jamais écrite) : précondition de l'ordre de passage (D20). */
   version?: string;
 }

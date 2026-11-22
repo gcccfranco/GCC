@@ -26,6 +26,8 @@ export type SongVersionView = {
    *  de la version affichée (« Seulement ce passage ») à leur place ;
    *  `null` = la structure jouée par la présidence suffit. */
   bodyStructure: string[] | null;
+  /** Copies de section de la version affichée (copie → origine) : situent les passages retouchés seuls (UP-4). */
+  sectionOrigins?: Record<string, string>;
 };
 
 export function songVersionView(
@@ -61,7 +63,7 @@ export function songVersionView(
       ? structureWithCopies(reader, chosenItem.structure, origins)
       : mine?.structure ?? null;
 
-  return { mine, shown: chosen.kind, shownName: chosen.name, content, value: chosen.value, options, bodyStructure };
+  return { mine, shown: chosen.kind, shownName: chosen.name, content, value: chosen.value, options, bodyStructure, ...(origins ? { sectionOrigins: origins } : {}) };
 }
 
 // Items tels qu'affichés (lot N, N4b : sortis de SetlistDetailClient). `myItems` = mes items de

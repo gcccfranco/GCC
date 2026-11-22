@@ -109,6 +109,49 @@ préexistants dans `coherence.spec.ts` » signalés par la session du lot AS, T2
 - `louange-sections-uniques.spec.ts:358` (C1), ordinateur-1440.
 - `louange-menus.spec.ts:763` (B1), ordinateur-1440 : le × change de page une fois sur huit.
 
+## R6 — Mode louange lent à 1 440 px : la mesure des lignes d'accords (go : « Go pour les deux », 21/11/2026, nuit)
+
+Constat de R5b (§ Avancement, point C1) : à 1 440 px, ouvrir le mode louange prend 10 s (3,4 s à 1 280 px) et passer
+de « Plan » à « Tout le chant » 5,8 s (0,5 s). Profil : 3,2 s dans l'effet de mesure de `ChordLine`
+(`src/components/song/ChordLine.tsx:211-268`, une mise en page forcée par ligne) et 2,1 s dans `document.fonts.ready`
+appelé au montage de chaque ligne (`:201-206`).
+
+À faire : regrouper les lectures et les écritures de la mesure (toutes les lectures, puis toutes les écritures, pour
+l'ensemble des lignes ou au moins sans mise en page forcée par ligne) et n'avoir qu'un seul abonnement aux polices
+pour toutes les lignes. **Le rendu ne change pas** : mêmes positions d'accords au pixel près, sur toutes les pages qui
+montrent des lignes d'accords (page chant, setlist, mode louange), FR et ZH.
+
+Réussite : (1) à 1 440 px, « Plan » → « Tout le chant » sous 1,5 s et l'ouverture nettement plus rapide (mesures
+avant et après écrites dans l'Avancement, même machine) ; (2) `louange-sections-uniques:358` (C1) vert sur
+ordinateur-1440 sans allonger son délai ; (3) positions des accords identiques avant et après, prouvé par une
+comparaison mesurée (boîtes des accords d'un chant FR et d'un chant ZH, aux cinq largeurs) ; (4) les specs des
+accords et du mode louange voisines restent vertes. Si la cause s'avère ailleurs que dans `ChordLine`, ou si le gain
+demande de changer le rendu, s'arrêter et l'écrire.
+
+## R7 — Mode louange : « Ensuite : … » après la dernière section (go : « go », 21/11/2026, nuit)
+
+Mots de Timothée (capture du mode louange sur écran large, deux colonnes) : « peut être que c'est mieux de mettre le
+ensuite à droite à la toute fin des sections ». Sur la capture, la pastille « Ensuite : Je veux proclamer… » est en
+bas de la colonne de gauche, alors que la lecture continue dans la colonne de droite.
+
+À faire : quand la dernière page d'un chant s'affiche sur plusieurs colonnes, la pastille du flux
+(`PerformanceMode.tsx`, `pastilleSuivant`, `layout[…].suivant` ; `src/lib/performance/pagination.ts`) se place après
+la dernière section, donc au bas de la dernière colonne qui porte du texte. Sur une colonne : inchangé. Les replis
+existants (pastille posée en absolu quand la pagination ne lui a pas gardé de place, quand la barre du bas la couvre,
+en demi-page, à côté d'un scan) ne changent pas. Aucune section ne change de page ni de colonne à cause du
+déplacement ; si ce n'est pas tenable, s'arrêter et l'écrire.
+
+## R8 — Tests rouges du mode louange relevés la nuit du 21 au 22/11 (go : « Go corrige », 22/11/2026)
+
+Relevés par R6, UP-7 et R7, tous rouges aussi sans ces retouches : `dispositions-partition:752` et `:795`,
+`louange-demi-page:157`, `louange-coupure:172` (rotation au téléphone), `rappel-ordre-joue:423`, `barre-titre:142` et
+`:285`, `usage-dimanche:221`, `:238`, `:330`, `:339`, `rappel-indice:178` (中文, téléphone). Causes déjà notées dans
+la ligne d'Avancement de R7 pour sept d'entre eux (corrections écrites, non commitées, dans le conteneur de R7).
+
+Règle, comme en R5 : un test en retard sur une décision du site s'aligne, avec la décision citée (spec, commit) ; un
+défaut du site ne se maquille pas : s'il tient en quelques lignes sûres, on le corrige et on le dit, sinon on
+s'arrête sur ce point et on l'écrit. Aucun test sauté, désactivé ou assoupli (délai allongé, attente retirée).
+
 ## Avancement
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,
@@ -196,3 +239,73 @@ préexistants dans `coherence.spec.ts` » signalés par la session du lot AS, T2
   maintenant l'adresse finale. Tests : premier passage 9,6 min (417 passés, 8 échecs) ; reprise des 7 tests 56 s ; tour
   final des quatre specs 9,3 min (423 passés, 189 ignorés, 1 test rouge sur deux projets : la langue, cachée derrière
   l'échec précédent), puis ce test seul vert (12 s). Reste : rien pour R5a ; R5b non touchée.
+- 21/11/2026, soir : **R1, défaut corrigé** (vidéo de Timothée, iPhone : la fenêtre « Affichage » déjà à 85 % part
+  par le haut de l'écran, le titre et la croix disparaissent). Cause : au lâcher, le geste vidait la hauteur posée à la
+  main (`height = ""`), ce qui effaçait aussi celle de React ; quand l'état ne changeait pas (fenêtre déjà haute tirée
+  encore, ou geste annulé), rien ne la remettait et la feuille prenait la hauteur de son contenu. Le geste remet
+  maintenant la hauteur de l'état (`MargeAffichage.tsx`, `lache`). Trouvé en écrivant le test : à la souris, tirer la
+  zone de prise sélectionnait le texte de la page, et le geste suivant était annulé (glisser-déposer du texte) :
+  `select-none` sur la zone de prise. Test ajouté dans `marge-affichage.spec.ts` (rouge sans le correctif : 1 044 px
+  au lieu de 713). Spec entière sur les cinq projets : 128 passés, 7 ignorés, 3,2 min. Au doigt sur un vrai
+  téléphone : à revoir par Timothée.
+- 21/11/2026 : **R5b faite en partie** (session R5b). (1) **A9** (`louange-harmonie:200`, téléphone) : **défaut du site**,
+  corrigé. `ancreDeLecture` ne gardait d'une page de scan ni section ni uid : à la reconstruction des blocs (fin du
+  chargement du planning), `retrouverAncre` ne retrouvait que l'en-tête, d'où la page 2 qui retombait à 1. L'ancre
+  garde maintenant la page du scan (`src/lib/performance/blocks.ts:496-516`) ; cas pur ajouté dans
+  `nettoyage-louange-pures` (rouge sans le correctif). A9 vert 4 fois sur 4 au téléphone. (5) **`coup-d-oeil:215`** :
+  **test en retard**. « Une fois chacune » (`margeAffichage.ordreUnique`, `fr.json:696`, zh « 每段一次 ») vient du lot
+  AT (`a025b4d6`, 17/11), pas d'UP-4 ; libellé du test aligné. (2) **(z)** (`annotations-forscore`, téléphone) :
+  **test en retard**. L'indice du rappel (`IndiceRappel.tsx`, 17/11) se pose en bas au centre et garde le toucher qui
+  le ferme (`:73-77`) : le « ff » tombait dessus. Le test le marque déjà vu, comme le test (f). **(v)**
+  (ordinateur-1440) : 6 fois sur 6 vert seul, rouge une fois sous charge (`[data-performance-mode]` absent après
+  rechargement du compte B, `:756`) ; course non trouvée, rien changé. (4) **B1** (`louange-menus:763`,
+  ordinateur-1440) : 8 fois sur 8 vert (1,3 min), plus 4 sur 4 par la relecture : le « une fois sur huit » ne se
+  reproduit pas ; rien changé. (3) **C1** (`louange-sections-uniques:358`, ordinateur-1440) : **défaut du site,
+  non corrigé** (arrêt sur ce point, comme le veut la méthode). Ce n'est pas une course : le test dépasse ses 30 s
+  parce que le site est lent à 1 440 px. Ouverture 10 s (3,4 s à 1 280 px), changement Plan → Tout le chant 5,8 s
+  (0,5 s). Le nombre de passes de pagination est le même aux deux largeurs. Profil CPU du changement : 7,3 s, dont
+  3,2 s dans l'effet de mesure de `ChordLine` (`src/components/song/ChordLine.tsx:211-268` : lit `clientWidth` et
+  `getBoundingClientRect` après avoir remis les styles à zéro, une mise en page forcée par ligne) et 2,1 s dans
+  `document.fonts.ready`, appelé au montage de chaque ligne (`:201-206`), qui force aussi un recalcul. Corriger
+  touche la mesure de toutes les lignes d'accords (regrouper lectures et écritures, un seul abonnement aux polices) :
+  plus que quelques lignes, à décider en retouche à part ; le délai du test n'a pas été allongé. Voisin :
+  `louange-harmonie:133` (toucher dans le volet, téléphone) rouge une fois sur huit **aussi sur la base** (ZH), déjà
+  là avant R5b. Tests : les cinq specs de R5b + `nettoyage-louange-pures`, cinq projets, `--workers=2` : 987 passés,
+  3 échecs (C1, (v), `louange-harmonie:133`, tous expliqués ci-dessus), 42 ignorés, 42 min ; tsc propre. Reste : C1
+  (lenteur de `ChordLine` à 1 440 px), (v) et `louange-harmonie:133` (instables sous charge, course non trouvée).
+- **R6 fait (21/11/2026, nuit)** — `ChordLine` : la mesure de toutes les lignes d'un rendu passe par une file commune
+  vidée en microtâche (lectures de largeur et de corps pour toutes les lignes, puis remise à zéro du resserrage, puis
+  lecture des boîtes, puis écritures et coupures en un seul `flushSync`) ; un seul `document.fonts.ready` partagé par
+  les lignes montées pendant l'attente. Cause confirmée avant de coder (profil CPU de « Plan » → « Tout le chant » à
+  1 440 px : 7,3 s sur 9,7 s dans l'effet de mesure, dont 2,65 s de `getBoundingClientRect` ; 0,8 s après). **Rendu
+  identique** : boîtes de tous les accords (page chant `abba-pere` et `为我而来`, page setlist en Partitions, mode
+  louange page par page ; 26 + 16 + 32 + 32 lignes, 343 accords) aux cinq projets, relevées avant et après : 0 écart
+  (deux relevés « avant » identiques entre eux). **Temps** (`next dev`, même machine, mode louange de C1 à 150 %) :
+  1 440 px, ouverture 11,0 / 9,2 s → 4,4 / 2,1 s ; « Plan » → « Tout le chant » 7,1 / 9,0 / 7,8 s → 1,0 / 1,0 / 1,5 s ;
+  1 280 px, ouverture 2,7 / 1,5 s → 3,4 / 1,5 s, « Tout le chant » 0,8–1,2 s → 0,8–1,1 s (inchangé). Demande du
+  pilote (Timothée, ~1 500 px, setlist de quatre chants) : lancer le mode louange 10,5 / 12,4 / 12,8 s → 6,1 / 5,1 /
+  5,5 s ; activer le Crayon 0,6–0,7 s → 0,5–0,8 s, **non reproduit lent ici** et sans lien avec `ChordLine` (aucune
+  autre cause vue dans ce chemin). Reste du lancement après R6 (profil) : surtout le rendu React de développement
+  (`jsxDEV` 1,5 s, rendu des lignes 1,1 s), la mesure groupée 0,9 s ; une build de production n'a pas été mesurée.
+  Tests : `louange-sections-uniques`, `coupure-vers`, `louange-coupure`, `lignes-accords`, `louange-accords`,
+  `dispositions-partition`, `louange-demi-page`, `mode-louange-colonnes`, `agencement-v18-chants`, cinq projets,
+  `--workers=2 --trace off` : 1 037 passés, 23 échecs, 177 ignorés, 55 min ; `louange-sections-uniques:358` (C1) vert
+  aux cinq projets, délai inchangé. Les 23 échecs tombent dans quatre tests **rouges aussi sur la base** (repassés
+  sur une copie de `1d4bb50`, mêmes erreurs) : `dispositions-partition:752` et `:795` (rangée des miniatures sur deux
+  lignes), `louange-demi-page:157` (moitié basse vide sous le filet), `louange-coupure:172` (rotation au téléphone :
+  aucune copie de même largeur) ; non corrigés, hors R6. tsc et lint propres.
+- **R7 faite (22/11/2026, nuit)** : `paginateColumns` (`src/lib/performance/columns.ts`) pose la pastille « Ensuite »
+  au bas de la **dernière colonne qui porte du texte** (`c[1]?.length > 0 ? 1 : 0`), choisie après l'équilibrage :
+  aucune section ne change de page ni de colonne ; repli A (page réduite si la colonne n'a pas la place), une colonne,
+  pastille en absolu, barre du bas, demi-page et scan inchangés. Tests (`mode-louange-colonnes`) : un test pur (droite
+  plus haute → `suivant` 1, `cols` identiques sans pastille ; droite vide → 0 ; une colonne → 0) et le test
+  navigateur de la pastille étendu (deux colonnes : pastille dans la dernière, sous sa dernière section), plus un cas
+  ZH (`一生爱你` puis `abba-pere`). Sept specs (colonnes, forscore, sections-uniques, demi-page, barre-titre,
+  rappel-indice, usage-dimanche), cinq projets, `--workers=2 --trace off` : 928 passés, 31 échecs, 93 ignorés, 48 min.
+  Les 31 échecs sont **rouges aussi sans R7** : `louange-barre-titre:142`, `:285` (« 段落 » présent depuis CL-1),
+  `louange-demi-page:157` (enveloppe `display: contents` de `NomsTouchables`), `usage-dimanche:221`, `:238`, `:330`,
+  `:339` (métronome passé au panneau MT-2, capo, corbeille) : diagnostic du conseil Fable, corrections de tests
+  écrites mais **non commitées** (hors R7) ; `rappel-indice:178` (中文, téléphone : indice et pastille se recouvrent,
+  rouge aussi sans le diff de R7). Captures triées par `regard` (FR et ZH, cinq projets) : placement juste partout.
+  Les agents de `.claude/agents/` ne se sont pas chargés (session ouverte hors du dépôt) : `/tranche` et `regard`
+  ont tourné en `general-purpose` au même modèle, chacun lisant sa fiche.

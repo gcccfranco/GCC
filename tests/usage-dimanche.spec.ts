@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, ouvrirMenu, ouvrirOptions, ouvrirOutils, onStage } from "./helpers/louange";
+import { attendreMiseEnPage, ouvrirMenu, onStage } from "./helpers/louange";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { ajouterChant, attendreEditeur } from "./helpers/editeurSetlist";
 import { CLES_USAGE } from "../src/lib/usageCles";
@@ -221,8 +221,9 @@ test.describe("mode louange", () => {
   test("métronome compte cmd.louange.metronome", async ({ page }) => {
     const { recus } = await setlistLouangeOuverte(page);
     await ouvrirLeMode(page);
-    const options = await ouvrirOptions(page);
-    await options.locator("[data-metronome]").click();
+    // L'interrupteur du métronome visuel est dans le panneau Métronome depuis MT-2 (docs/spec-metronome.md), plus dans Affichage.
+    const panneau = await ouvrirMenu(page, "tempo");
+    await panneau.locator("[data-metronome]").click();
     await verifier(page, recus, "cmd.louange.metronome");
   });
 
@@ -238,8 +239,9 @@ test.describe("mode louange", () => {
   test("capo + compte cmd.chant.capo", async ({ page }) => {
     const { recus } = await setlistLouangeOuverte(page, { "perf-role-preset": "guitariste" });
     await ouvrirLeMode(page);
-    const outils = await ouvrirOutils(page);
-    await outils.getByRole("button", { name: "Monter le capo" }).click();
+    // Le capo est dans la fenêtre de l'armure depuis RU-5 (docs/spec-reglages-unifies.md : « Outils perd Tonalité et Capo »).
+    await page.locator("[data-performance-mode] [data-barre-haut]").getByTestId("armure").click();
+    await page.getByTestId("fenetre-armure").getByRole("button", { name: "Monter le capo" }).click();
     await verifier(page, recus, "cmd.chant.capo");
   });
 });
@@ -332,7 +334,8 @@ test.describe("setlists", () => {
     await page.getByRole("tab", { name: "Archives" }).click();
     await page.getByRole("button", { name: /^Corbeille \(\d+\)/ }).click();
     await page.getByTestId("corbeille").getByRole("button", { name: "Restaurer" }).click();
-    await expect(page.getByTestId("corbeille")).toHaveCount(0);
+    // La corbeille reste affichée, vide, en bas de la page (décision du 17/11/2026, commit d60e7bf5, SectionCorbeille.tsx).
+    await expect(page.getByTestId("corbeille")).toHaveAttribute("data-vide", "");
     await verifier(page, recus, "cmd.setlist.corbeille.restaurer");
   });
 
@@ -342,7 +345,8 @@ test.describe("setlists", () => {
     await page.getByRole("button", { name: /^Corbeille \(\d+\)/ }).click();
     await page.getByTestId("corbeille").getByRole("button", { name: "Supprimer définitivement" }).click();
     await page.getByRole("alertdialog").getByRole("button", { name: "Supprimer définitivement" }).click();
-    await expect(page.getByTestId("corbeille")).toHaveCount(0);
+    // La corbeille reste affichée, vide, en bas de la page (décision du 17/11/2026, commit d60e7bf5, SectionCorbeille.tsx).
+    await expect(page.getByTestId("corbeille")).toHaveAttribute("data-vide", "");
     await verifier(page, recus, "cmd.setlist.corbeille.supprimer");
   });
 });
