@@ -79,3 +79,53 @@ louange, à partir d'une certaine largeur d'écran, et sur le chargement de chaq
 Les gestes qui recomposent toutes les lignes d'accords d'une setlist (ouvrir, fermer Affichage, Crayon, lancer le
 mode louange, changer l'ordre des sections) coûtent 4 à 30 fois plus à 1 512 px qu'à 1 280 px.
 
+## 3. Poids et requêtes
+
+### 3.1 Requêtes à la base (Firestore) : la piste de Timothée
+
+Comptées dans la base simulée, compte musicien ou admin, chargement complet de la page (`scripts/perf/`, § 2).
+**La durée réelle de ces requêtes n'est pas mesurable ici** (base simulée, réponse instantanée) ; ce qui suit dit
+combien de requêtes partent, pas combien de temps elles prennent chez Timothée. Chaque requête de collection
+(`runQuery`) est facturée au nombre de documents rendus : sur la vraie base, une requête peut coûter des dizaines de
+lectures.
+
+| Page (chargement complet) | Requêtes Firestore |
+|---|---|
+| N'importe quelle page, même sans données (`/accords/`, `/harmonie/`) | **25 à 33** |
+| Chants, page d'un chant | 15 à 18 (+ 1 à 2 si le compte est connu depuis peu) |
+| Planning, accueil, Mes services | 34 à 35 |
+| Setlists, une setlist | 39 à 44 |
+| Moi (admin) | **70** |
+| Back-office : À faire, Équipes, Planning, Messages, Usage | 66 à 70 |
+| Back-office : Calendrier | **107** |
+| Gestes sans changement de page | 0 à 3 (mode louange : 1 à 3 par réglage ; onglet Setlists : 32 ; onglet Moi : 36 ; passer en chinois : 17 à 25) |
+
+D'où viennent les ≈ 30 requêtes communes (recherche dans le code, chaîne vérifiée par `git grep`) :
+- **13 `plannings/{clé}/dimanches` + 8 `planningReleases/{clé}_{année}` + 1 `petitDej`** : `loadPlanningData`
+  (`src/lib/planning/names.ts:33-60`), appelé par `useAccesHarmonie` (`src/lib/harmonie/useHarmonie.ts:44-62`), lui-même
+  monté **5 ou 6 fois** dans le cadre commun : `MobileTabBar.tsx:34`, `useFormeAffichee`
+  (`SelecteurEspace.tsx:62-65`) appelé par `Navbar.tsx:113`, `BarreLaterale.tsx:218`, `MobileTabBar.tsx:32`, et
+  `useRetenirForme` (`SelecteurEspace.tsx:82-84`, `Navbar.tsx:118`). Seuls les caches de bas niveau (`grille.ts`,
+  `sheets.ts`, 5 min) évitent que chaque instance relise tout ; `loadPlanningData` n'a pas de promesse partagée, et
+  ces caches repartent à zéro à chaque chargement complet. Tout ça pour savoir si le membre a accès à Harmonie et
+  quelle « forme » (espace) afficher.
+- **2 `evenements`, 2 `notifications`, 4 à 8 `setlists`** : `NotificationsProvider` (`src/app/layout.tsx`) →
+  `useNotifications` (`src/hooks/useNotifications.ts:60`, effet `:162-180`). La passe part deux fois : `refresh` dépend
+  de `[user, profile]`, et l'arrivée du profil relance une passe sans passer par la garde de 60 s (`ECART_MIN_MS`).
+  `getSetlistsSince` (`setlists.ts:317`) fait deux requêtes par passe et n'a pas de cache.
+- **1 écriture `PATCH notifPrefs/{uid}` à chaque chargement** : `Navbar.tsx:89-99` (`saveNotifLang`) ; la garde est
+  un `useRef`, vide à chaque chargement, sans comparaison avec la langue déjà enregistrée.
+- `users/{uid}` (`users.ts:62`, seul cache partagé) et `onboarding/{uid}` (`Accueil.tsx:120-130`) : une fois chacun.
+- **Admin, `/moi/` et back-office** : une requête `taches` et une `fois` **par équipe** (18 équipes) : `Apercus.tsx:143`
+  → `useTaches` (`src/lib/taches/useTaches.ts:13`, sans cache) → `listTaches`/`listFoisEquipe`
+  (`src/lib/firebase/taches.ts:78`, ≈ `:107`). Sur `/back-office/calendrier/`, les `taches` partent **trois fois** :
+  `chargerCalendrier` (`lib/calendrier/charger.ts:70`, effet `CalendrierClient.tsx:194-199`, relancé quand le profil
+  arrive) et la pastille « À faire » (`BarreLaterale.tsx:92` → `usePastilles.ts:29-45` → `lecture.ts:109-132`).
+
+Ce que ça pèse dans le « lag » : sur la version construite, les gestes lents du § 2.1 envoient 0 à 3 requêtes ; leur
+temps est du calcul local (tâches longues). Les requêtes pèsent sur **l'ouverture des pages et les changements
+d'onglet** (Setlists : 32 requêtes au toucher de l'onglet, Moi : 36), et sur un téléphone en 4G ou un réseau d'église
+chargé, où chaque aller-retour coûte 50 à 300 ms (ordre de grandeur, non mesuré ici). Firebase ne les envoie pas
+toutes en série, mais le navigateur n'en mène que six à la fois par serveur en HTTP/1.1 (beaucoup plus en HTTP/2, le
+cas de Firestore) : le coût est surtout la facture de lectures et le travail du téléphone, pas un mur de latence.
+
