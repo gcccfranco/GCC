@@ -30,7 +30,25 @@ export interface PlanningData {
   interfranco: string[][]
 }
 
-export async function loadPlanningData(): Promise<PlanningData> {
+/** Audit perf P2 (n° 2) : dans le navigateur, les appels simultanés (le cadre commun monte `useAccesHarmonie`
+ *  cinq ou six fois) partagent la même lecture en cours. La promesse s'oublie dès qu'elle est réglée : rien ne
+ *  survit à la lecture (une page qui vient d'écrire relit, un changement de compte aussi), et les caches de
+ *  `sheets.ts`, `grille.ts` et `trimestresPublies` gardent leur durée. Côté serveur (cron, routes), chaque
+ *  appel lit comme avant. Les lectures du planning sont publiques : la promesse ne dépend d'aucun compte. */
+let lectureEnCours: Promise<PlanningData> | null = null
+
+export function loadPlanningData(): Promise<PlanningData> {
+  if (typeof window === "undefined") return lirePlanningData()
+  if (!lectureEnCours) {
+    const lecture = lirePlanningData()
+    lectureEnCours = lecture
+    const oublier = () => { if (lectureEnCours === lecture) lectureEnCours = null }
+    lecture.then(oublier, oublier)
+  }
+  return lectureEnCours
+}
+
+async function lirePlanningData(): Promise<PlanningData> {
   const [culte, dejeuner, petitDej, paix, fidelite, bonte, edd, campus, intergroupe, interfranco] =
     await Promise.all([
       fetchCulte(), fetchDejeuner(), fetchPetitDej(), fetchPaix(), fetchFidelite(),
