@@ -88,8 +88,10 @@ export function Navbar() {
 
   // Langue mémorisée côté serveur (notifPrefs/{uid}.lang) : les rappels du
   // cron partent dans la langue de l'interface. Écrite seulement si elle diffère
-  // de la dernière écrite avec succès pour ce compte sur cet appareil
-  // (localStorage `notifLang:${uid}`) ; le useRef évite les doubles appels.
+  // de la dernière écrite avec succès pour ce compte sur cet appareil, ou si
+  // cette écriture date d'un autre jour (localStorage `notifLang:${uid}` =
+  // « langue|jour ») : avec deux appareils en deux langues, les rappels suivent
+  // l'appareil utilisé ce jour-là. Le useRef évite les doubles appels.
   const sentLangRef = useRef("");
   useEffect(() => {
     if (!user) return;
@@ -98,13 +100,14 @@ export function Navbar() {
     sentLangRef.current = key;
     const lang = currentLang === "zh-CN" ? "zh-CN" : "fr";
     const storageKey = `notifLang:${user.uid}`;
+    const marque = `${lang}|${new Date().toDateString()}`;
     try {
-      if (localStorage.getItem(storageKey) === lang) return;
+      if (localStorage.getItem(storageKey) === marque) return;
     } catch {}
     saveNotifLang(user.uid, lang)
       .then(() => {
         try {
-          localStorage.setItem(storageKey, lang);
+          localStorage.setItem(storageKey, marque);
         } catch {}
       })
       .catch(() => {});

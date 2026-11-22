@@ -294,6 +294,14 @@ Le go porte sur les corrections n° 1, 2, 3 et 4 du § 5 (et sur les tests rouge
 - **P2 — n° 2, 3 et 4, lectures de la base** (une session, un commit par retouche) : planning lu une fois par page,
   plus d'écriture de langue à chaque chargement, notifications en une passe. Nombre de requêtes par page avant/après
   (base simulée), écrit ici. Aucune permission ne change (`access.ts`, `firestore.rules` intacts).
+- **P3 — n° 7, lancement du mode louange allégé** (go de Timothée du 22/11, après-midi : « Fait le 2-3-4 ») : en
+  version construite, ce qui reste au lancement est le montage de deux copies du chant (mesure et affichage) et leur
+  mise en page (§ 7, Avancement de P1). À faire : alléger la copie de mesure (ne rendre en mesure que ce qui change la
+  hauteur, ou réutiliser les mesures d'un chant déjà vu), au plus petit changement qui donne le gain. **La pagination
+  ne change pas** : mêmes sections sur les mêmes pages et les mêmes colonnes, avant et après, chants FR et ZH, cinq
+  projets, les trois ordres (relevé avant tout changement, écart nul). Réussite : lancement au téléphone (processeur
+  ×4, version construite) réduit d'au moins 20 % en médiane ; sous ce seuil, ou si la pagination doit bouger :
+  s'arrêter et l'écrire, sans pousser de code. Après R9 (même zone : `columns.ts`, `PageTexte.tsx`).
 
 ### Avancement
 
@@ -394,3 +402,8 @@ Le go porte sur les corrections n° 1, 2, 3 et 4 du § 5 (et sur les tests rouge
     ont été jouées par des agents généraux au même modèle. Le relecteur n'a pas tourné (limite de dépense mensuelle
     atteinte) ; la n° 3 a été finie, et les n° 4 et 2 codées, testées et relues par l'orchestratrice elle-même.
     **Relecture indépendante à faire** : `git show 2fb6a2cc0 15791e2b8 f5339990a`.
+- 22/11/2026, après-midi : **n° 3, suite** (session d'origine, relecture des commits de P2 ; go « Fait le 2-3-4 »).
+  La garde par appareil figeait la langue des rappels pour qui a deux appareils en deux langues (elle restait celle
+  du dernier changement, plus celle du dernier appareil utilisé). La marque devient « langue|jour » : au plus une
+  écriture par jour et par appareil (`Navbar.tsx`). Test étendu (`rappels-regroupes`, marque d'un autre jour) : les
+  trois tests de langue sur trois appareils, 9 passés en 1,6 min ; tsc propre.

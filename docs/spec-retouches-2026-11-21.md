@@ -152,6 +152,19 @@ Règle, comme en R5 : un test en retard sur une décision du site s'aligne, avec
 défaut du site ne se maquille pas : s'il tient en quelques lignes sûres, on le corrige et on le dit, sinon on
 s'arrête sur ce point et on l'écrit. Aucun test sauté, désactivé ou assoupli (délai allongé, attente retirée).
 
+## R9 — Mode louange au téléphone : la rotation remet le texte à la bonne largeur (go : « Fait le 2-3-4 », 22/11/2026)
+
+Défaut trouvé par R8 (`louange-coupure:172`, rotation au téléphone, § Avancement de R8) : la page réduite
+(`src/lib/performance/columns.ts:99`) compense la largeur (`PageTexte.tsx:78`), si bien que le texte se pose sur
+870 px alors qu'il a été mesuré à 715 px : après une rotation, des lignes se coupent ou débordent.
+
+À faire : le texte s'affiche à la largeur où il a été mesuré (ou se mesure à la largeur où il s'affiche), au plus
+petit changement. Réussite : `louange-coupure:172` vert au téléphone sans toucher au test ; aucune ligne coupée après
+une rotation dans les deux sens, chant FR et chant ZH (capture regardée) ; la pagination sans rotation ne change pas
+(mêmes sections par page, cinq projets). Voisins à dire sans les réparer s'ils ne tombent pas avec : 
+`rappel-ordre-joue:449` et `:482` (téléphone), `louange-reglages:123` (Chiffres en mode louange).
+Ensuite : la session lance P3 (`docs/audit-performance-2026-11-21.md`, § 7).
+
 ## Avancement
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,

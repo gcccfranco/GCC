@@ -68,13 +68,17 @@ test("recharger puis naviguer ne réécrit pas la langue déjà mémorisée", as
   const db = await signInAs(page, lise, {}, "/songs");
   const langs = () => db.writes.filter((w) => w.path === "notifPrefs/uid-lise").map((w) => w.data.lang);
   await expect.poll(langs, "première connexion : une écriture").toEqual(["fr"]);
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("notifLang:uid-lise"))).toBe("fr");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("notifLang:uid-lise"))).toMatch(/^fr\|/);
   await page.reload();
   await expect(page.getByRole("button", { name: "切换为中文" }).first()).toBeVisible();
   await page.goto("/setlists");
   await expect(page.getByRole("button", { name: "切换为中文" }).first()).toBeVisible();
   await page.waitForTimeout(1000);
   expect(langs(), "aucune nouvelle écriture après rechargement et navigation").toEqual(["fr"]);
+  // Deux appareils en deux langues : une marque d'un autre jour ne retient plus l'écriture (une par jour et par appareil).
+  await page.evaluate(() => localStorage.setItem("notifLang:uid-lise", "fr|Mon Jan 01 2024"));
+  await page.reload();
+  await expect.poll(langs, "marque d'un autre jour : la langue est réécrite").toEqual(["fr", "fr"]);
 });
 
 test("après rechargement, un vrai changement de langue est écrit, et la garde est propre au compte", async ({ page, context }) => {
@@ -82,7 +86,7 @@ test("après rechargement, un vrai changement de langue est écrit, et la garde 
   const db = await signInAs(page, marc, {}, "/songs");
   const langs = () => db.writes.filter((w) => w.path === "notifPrefs/uid-marc").map((w) => w.data.lang);
   await expect.poll(langs).toEqual(["fr"]);
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("notifLang:uid-marc"))).toBe("fr");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("notifLang:uid-marc"))).toMatch(/^fr\|/);
   await page.reload();
   await page.getByRole("button", { name: "切换为中文" }).first().click();
   await expect.poll(langs, "la bascule vers le chinois est écrite").toEqual(["fr", "zh-CN"]);
