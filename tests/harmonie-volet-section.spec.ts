@@ -55,6 +55,8 @@ test("page chant : « Pont » est un bouton ; le toucher ouvre le volet au bloc 
   await expect(volet(page)).toBeVisible();
   await expect(blocPont(page)).toBeVisible();
   await expect(blocPont(page).getByText("Fmaj7").first()).toBeVisible();
+  // Une idée porte le ressenti et l'usage de sa fiche (22/11/2026).
+  await expect(volet(page).locator("[data-suggestion] [data-etiquette-idee]").first()).toHaveText(/^(Chaleureux|Mélancolique|Élan|Couleur|Couplet|Pré-refrain|Refrain|Fin|Transition)$/);
 });
 
 test("téléphone et tablette portrait : la feuille fait 50 % de l'écran et le nom « Pont » reste visible au-dessus", async ({ page }, info) => {
@@ -82,12 +84,14 @@ test("vue Partitions d'une setlist : même geste, même résultat", async ({ pag
 });
 
 test("chant ZH : le nom de section est un bouton et ouvre le volet", async ({ page }) => {
+  await langue(page, "zh-CN");
   await ouvrirChant(page, "一切歌颂赞美");
   const nom = page.locator("main.song-zoom [data-section-nom-bouton]").first();
   await expect(nom).toBeVisible();
   await nom.click();
   await expect(volet(page)).toBeVisible();
   await expect(volet(page).locator("[data-passage-uids]").first()).toBeVisible();
+  await expect(volet(page).locator("[data-suggestion] [data-etiquette-idee]").first()).toHaveText(/^(温暖|忧伤|推进|色彩|主歌|副歌前奏|副歌|结尾|过渡)$/);
 });
 
 test("sans accès Harmonie : aucun bouton sur le nom de section", async ({ page }) => {
