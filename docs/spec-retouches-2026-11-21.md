@@ -283,3 +283,18 @@ déplacement ; si ce n'est pas tenable, s'arrêter et l'écrire.
   sur une copie de `1d4bb50`, mêmes erreurs) : `dispositions-partition:752` et `:795` (rangée des miniatures sur deux
   lignes), `louange-demi-page:157` (moitié basse vide sous le filet), `louange-coupure:172` (rotation au téléphone :
   aucune copie de même largeur) ; non corrigés, hors R6. tsc et lint propres.
+- **R7 faite (22/11/2026, nuit)** : `paginateColumns` (`src/lib/performance/columns.ts`) pose la pastille « Ensuite »
+  au bas de la **dernière colonne qui porte du texte** (`c[1]?.length > 0 ? 1 : 0`), choisie après l'équilibrage :
+  aucune section ne change de page ni de colonne ; repli A (page réduite si la colonne n'a pas la place), une colonne,
+  pastille en absolu, barre du bas, demi-page et scan inchangés. Tests (`mode-louange-colonnes`) : un test pur (droite
+  plus haute → `suivant` 1, `cols` identiques sans pastille ; droite vide → 0 ; une colonne → 0) et le test
+  navigateur de la pastille étendu (deux colonnes : pastille dans la dernière, sous sa dernière section), plus un cas
+  ZH (`一生爱你` puis `abba-pere`). Sept specs (colonnes, forscore, sections-uniques, demi-page, barre-titre,
+  rappel-indice, usage-dimanche), cinq projets, `--workers=2 --trace off` : 928 passés, 31 échecs, 93 ignorés, 48 min.
+  Les 31 échecs sont **rouges aussi sans R7** : `louange-barre-titre:142`, `:285` (« 段落 » présent depuis CL-1),
+  `louange-demi-page:157` (enveloppe `display: contents` de `NomsTouchables`), `usage-dimanche:221`, `:238`, `:330`,
+  `:339` (métronome passé au panneau MT-2, capo, corbeille) : diagnostic du conseil Fable, corrections de tests
+  écrites mais **non commitées** (hors R7) ; `rappel-indice:178` (中文, téléphone : indice et pastille se recouvrent,
+  rouge aussi sans le diff de R7). Captures triées par `regard` (FR et ZH, cinq projets) : placement juste partout.
+  Les agents de `.claude/agents/` ne se sont pas chargés (session ouverte hors du dépôt) : `/tranche` et `regard`
+  ont tourné en `general-purpose` au même modèle, chacun lisant sa fiche.
