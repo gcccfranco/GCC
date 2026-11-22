@@ -141,6 +141,17 @@ existants (pastille posée en absolu quand la pagination ne lui a pas gardé de 
 en demi-page, à côté d'un scan) ne changent pas. Aucune section ne change de page ni de colonne à cause du
 déplacement ; si ce n'est pas tenable, s'arrêter et l'écrire.
 
+## R8 — Tests rouges du mode louange relevés la nuit du 21 au 22/11 (go : « Go corrige », 22/11/2026)
+
+Relevés par R6, UP-7 et R7, tous rouges aussi sans ces retouches : `dispositions-partition:752` et `:795`,
+`louange-demi-page:157`, `louange-coupure:172` (rotation au téléphone), `rappel-ordre-joue:423`, `barre-titre:142` et
+`:285`, `usage-dimanche:221`, `:238`, `:330`, `:339`, `rappel-indice:178` (中文, téléphone). Causes déjà notées dans
+la ligne d'Avancement de R7 pour sept d'entre eux (corrections écrites, non commitées, dans le conteneur de R7).
+
+Règle, comme en R5 : un test en retard sur une décision du site s'aligne, avec la décision citée (spec, commit) ; un
+défaut du site ne se maquille pas : s'il tient en quelques lignes sûres, on le corrige et on le dit, sinon on
+s'arrête sur ce point et on l'écrit. Aucun test sauté, désactivé ou assoupli (délai allongé, attente retirée).
+
 ## Avancement
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,

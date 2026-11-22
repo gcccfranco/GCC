@@ -282,3 +282,18 @@ git pull && npm ci && npm run build && npm run start -- -p 3000
 (à relancer après chaque mise à jour du code ; `npm run build` refait l'index des chants puis le site). Sur l'iPhone,
 c'est le téléphone qui calcule : seule la correction du code l'accélérera.
 
+## 7. Corrections lancées (go de Timothée du 22/11/2026 : « Go corrige »)
+
+Le go porte sur les corrections n° 1, 2, 3 et 4 du § 5 (et sur les tests rouges du mode louange, R8 de
+`docs/spec-retouches-2026-11-21.md`). Les n° 5 à 9 n'ont pas de go.
+
+- **P1 — n° 1, mémoïser les lignes** (une session) : `memo` sur `ChordLine`, `ZhLine`, `SectionView`, props stables.
+  Le rendu ne change pas (boîtes des accords identiques avant/après, FR et ZH, cinq largeurs, comme en R6) ; une ligne
+  doit toujours se mettre à jour quand sa notation, sa tonalité, sa couleur, sa taille, son pinyin, une retouche du
+  Crayon ou un dessin changent. Mesures avant/après avec `scripts/perf/banc/` (téléphone ×4 et 1 512 px), écrites ici.
+- **P2 — n° 2, 3 et 4, lectures de la base** (une session, un commit par retouche) : planning lu une fois par page,
+  plus d'écriture de langue à chaque chargement, notifications en une passe. Nombre de requêtes par page avant/après
+  (base simulée), écrit ici. Aucune permission ne change (`access.ts`, `firestore.rules` intacts).
+
+### Avancement
+
