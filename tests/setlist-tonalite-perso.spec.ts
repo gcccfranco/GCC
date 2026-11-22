@@ -133,7 +133,8 @@ test.describe("armure et tonalité personnelle", () => {
     await page.keyboard.press("Escape");
     await expect(armure(page, 1)).toHaveAttribute("data-armure", "equipe");
     await expect(armure(page, 1)).toHaveText("E");
-    expect((await cles(page))[SETLIST_ID] ?? {}).toEqual({});
+    // La clé personnelle s'efface après l'écriture de la setlist (changerPourLEquipe) : l'armure peut se montrer avant (P1).
+    await expect.poll(async () => (await cles(page))[SETLIST_ID] ?? {}).toEqual({});
   });
 
   test("(b) sans droit d'éditer : pas de « Changer pour toute l'équipe », la transposition reste personnelle", async ({ page }) => {

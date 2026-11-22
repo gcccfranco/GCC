@@ -152,6 +152,19 @@ Règle, comme en R5 : un test en retard sur une décision du site s'aligne, avec
 défaut du site ne se maquille pas : s'il tient en quelques lignes sûres, on le corrige et on le dit, sinon on
 s'arrête sur ce point et on l'écrit. Aucun test sauté, désactivé ou assoupli (délai allongé, attente retirée).
 
+## R9 — Mode louange au téléphone : la rotation remet le texte à la bonne largeur (go : « Fait le 2-3-4 », 22/11/2026)
+
+Défaut trouvé par R8 (`louange-coupure:172`, rotation au téléphone, § Avancement de R8) : la page réduite
+(`src/lib/performance/columns.ts:99`) compense la largeur (`PageTexte.tsx:78`), si bien que le texte se pose sur
+870 px alors qu'il a été mesuré à 715 px : après une rotation, des lignes se coupent ou débordent.
+
+À faire : le texte s'affiche à la largeur où il a été mesuré (ou se mesure à la largeur où il s'affiche), au plus
+petit changement. Réussite : `louange-coupure:172` vert au téléphone sans toucher au test ; aucune ligne coupée après
+une rotation dans les deux sens, chant FR et chant ZH (capture regardée) ; la pagination sans rotation ne change pas
+(mêmes sections par page, cinq projets). Voisins à dire sans les réparer s'ils ne tombent pas avec : 
+`rappel-ordre-joue:449` et `:482` (téléphone), `louange-reglages:123` (Chiffres en mode louange).
+Ensuite : la session lance P3 (`docs/audit-performance-2026-11-21.md`, § 7).
+
 ## Avancement
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,
@@ -309,3 +322,45 @@ s'arrête sur ce point et on l'écrit. Aucun test sauté, désactivé ou assoupl
   rouge aussi sans le diff de R7). Captures triées par `regard` (FR et ZH, cinq projets) : placement juste partout.
   Les agents de `.claude/agents/` ne se sont pas chargés (session ouverte hors du dépôt) : `/tranche` et `regard`
   ont tourné en `general-purpose` au même modèle, chacun lisant sa fiche.
+- **R8 faite en partie (22/11/2026)** (commit `d4298462`). Les douze tests reproduits d'abord (cinq projets,
+  `--workers=2 --trace off`) : 48 cas rouges, `rappel-indice:178` vert. Dix **tests en retard**, alignés : (1)
+  `dispositions-partition:752` (téléphone) et `:795` (ordinateur, tablette paysage, 1 440) : la marge range ses vignettes
+  en grille souple, 3 + 2 dans la colonne de 320 px (CI-15, 15/11), le panneau du mode louange aussi dès 1 024 px (reste
+  d'A5, CI-4) ; le test vérifie rangées pleines sauf la dernière, 3 + 2 en colonne, colonnes égales, libellés entiers
+  sur deux lignes au plus ; cinq de front sous 1 024 px comme avant. (2) `louange-barre-titre:142` et `:285` : depuis
+  CL-1 les Repères d'un scan viennent de `sections.json` seul (CI-3, « le cas scan sans `sections.json` n'existe plus »)
+  ; le test simule le scan sans Repères en répondant aussi à `sections.json`. (3) `louange-demi-page:157` : le sélecteur
+  `[data-col-page] > *` tombait sur l'enveloppe `display: contents` de `NomsTouchables` (boîte nulle,
+  `spec-accords-louange.md`) ; il vise l'enfant de l'enveloppe. (4) `rappel-ordre-joue:423` : trait tracé barre montrée,
+  relu barre cachée ; la page 2 passe alors en rangée unique (A12, CI-22, Timothée le 16/11) et remonte de 52 px avec
+  son texte et son trait (le trait suit bien le texte) : le test remontre la barre avant de comparer. (5)
+  `usage-dimanche:221` métronome dans le panneau (MT-2), `:238` capo dans la fenêtre de l'armure (RU-5, « Outils perd
+  Tonalité et Capo »), `:330` et `:339` corbeille toujours affichée, vide (`data-vide`, décision du 17/11, `d60e7bf5`).
+  Un **défaut du site, non corrigé** (arrêt sur ce point) : (6) `louange-coupure:172`, rotation au téléphone (9 cas) :
+  couché (412 px de haut), « Couplet 1 » est plus haut que la page, `pagesUneColonne` réduit la page
+  (`src/lib/performance/columns.ts:99`, échelle 0,82) et `PageTexte.tsx:78` compense la largeur (`100 / scale` %) :
+  le texte se repose sur 870 px alors que la copie de mesure l'a mesuré à 715 px, écran et copie ne coupent plus les
+  vers pareil. Corriger touche la mise à l'échelle des pages réduites (choix visuel) : retouche à part. (7)
+  `rappel-indice:178` : **non reproduit** (vert au premier tour, au tour final, puis 6 sur 6 au téléphone, FR et 中文) ;
+  rien changé. Vus en passant, **hors liste, non touchés** : `rappel-ordre-joue:449` et `:482` (annotations d'avant le
+  lot, téléphone) rouges aussi seuls, trait 32 à 96 px sous le haut de sa section, probablement la même rangée unique
+  (CI-22) ; `louange-barre-titre:142` au téléphone a perdu une fois sur deux tours chargés le bouton ♩ (节拍), 3 sur 3
+  et 8 sur 8 verts seul. Tests : tour final des sept specs, cinq projets, 985 passés, 15 rouges (les 9 rotations, les 5
+  voisins ci-dessus, le ♩ sous charge), 82 ignorés, 48 min ; puis chaque test corrigé trois fois de suite sur les cinq
+  projets : 141 sur 141 (7 min). tsc propre (hors `.next/`). Pendant ce temps, deux commits de P2 (`f5339990`,
+  `2fb6a2cc`), aucun de P1 : aucun rouge n'est apparu ni disparu avec eux. Note : le Playwright du dépôt (1.62.1)
+  attend Chromium 1234, le conteneur a 1243 : lancé avec `PLAYWRIGHT_BROWSERS_PATH` vers un dossier de liens (rien
+  installé). Agents non utilisés : diagnostic, alignements et passages faits dans la session (alignements courts).
+- **R9 faite (22/11/2026)**. Rouge reproduit d'abord : `louange-coupure:172` (« … puis après A+ et après une
+  rotation »), téléphone, 10 sur 10 rouges (écart −1). Cause confirmée : `PageTexte.tsx` élargissait le corps d'une
+  page réduite (`width: 100 / scale %`), le texte se reposait plus large que la copie de mesure. Correction (une ligne
+  retirée) : la page réduite garde sa largeur, seul le `transform: scale()` reste ; le texte se pose à la largeur où
+  il a été mesuré (une page réduite laisse donc une bande vide à droite, au lieu d'un texte élargi qui se coupe
+  ailleurs). La pagination ne dépend pas de cette largeur : relevé avant/après (sections par colonne et par page, FR
+  et ZH, « Tout le chant » sans disposition, Repères, Scène, et « Chaque section une fois », échelles 0,8, 1 et 1,2,
+  cinq projets, 120 relevés) : écart nul. Résultats : `louange-coupure:172` téléphone 30 sur 30 (`--repeat-each=3`) ;
+  rotation couché puis debout, FR et ZH, cinq projets, copie et écran égaux (captures du téléphone regardées : aucune
+  ligne coupée) ; `louange-coupure`, `mode-louange-colonnes`, `louange-demi-page`, `louange-sections-uniques`,
+  `nettoyage-louange-pures`, cinq projets : 574 verts, 0 rouge, 58 ignorés par la spec (20 min). Voisins, **non
+  tombés, non touchés** : `rappel-ordre-joue:449` et `:482` (téléphone) 5 rouges, 1 vert ; `louange-reglages:123`
+  (Chiffres) 10 sur 10 rouges (bouton introuvable). tsc propre. Aucun agent.

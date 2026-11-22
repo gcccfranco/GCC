@@ -1,12 +1,12 @@
 "use client";
-import { Fragment, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, memo, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import localFont from "next/font/local";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/firebase/auth";
 import { useCouleursAccords } from "@/lib/couleurAccords";
 import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
-import { ConteneurCoupure, LargeurCoupureContext, CoupureMesureContext, bordCoupure } from "@/components/song/LargeurCoupure";
+import { ConteneurCoupure, LargeurCoupureContext, CoupureMesureContext, bordCoupure, observerLargeurLigne } from "@/components/song/LargeurCoupure";
 import type { Disposition } from "@/lib/dispositionPref";
 import { signalerCoupure } from "@/lib/song/coupureSignal";
 import { choisirCoupureZh, DEBORD, type UniteZh } from "@/lib/song/coupure";
@@ -223,7 +223,8 @@ type ZhCol = { char: string; chord: string | null; py: string; seul: boolean };
 type ZhCoupe = { coupures: number[]; etat: string; relache: string[]; retrait: number | null };
 const UNE_RANGEE_ZH: ZhCoupe = { coupures: [], etat: "une", relache: [], retrait: null };
 
-function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, chord_font, zh_lyric_font, typography = "web", slug }: ZhLineProps) {
+// P1 (audit de performance du 21/11/2026) : mémoïsée comme ChordLine (props primitives, jetons de l'AST, polices de module).
+const ZhLine = memo(function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, chord_font, zh_lyric_font, typography = "web", slug }: ZhLineProps) {
   // Typographie « pdf » : tailles des PDF exportés (accords 17px, chars 15px, pinyin 10.5px)
   const isPdfTypo = typography === "pdf";
   const baseSize = isPdfTypo ? "0.9375rem" : "var(--lyric-size)";
@@ -300,6 +301,9 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
 
   const ligne = useRef<HTMLDivElement>(null);
   const uniteRefs = useRef<(HTMLElement | null)[]>([]);
+  // Un rappel par rang d'unité, gardé d'un rendu à l'autre (comme les mots de ChordLine).
+  const rappelsUnites = useRef<((n: HTMLElement | null) => void)[]>([]);
+  const refUnite = (u: number) => (rappelsUnites.current[u] ??= (n) => { uniteRefs.current[u] = n; });
   const derniere = useRef("");
   const [coupe, setCoupe] = useState<ZhCoupe>(UNE_RANGEE_ZH);
   // Une coupure qui change déplace les hauteurs : le mode louange refait sa pagination (rien au premier rendu).
@@ -328,6 +332,17 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
     return () => obs.disconnect();
   }, [version]);
 
+  // P1 : dans un conteneur, la ligne suit aussi sa propre largeur (Crayon, disposition) : un rendu de cette ligne seule,
+  // hors empreinte (la mesure ne se refait que si la largeur n'est pas déjà celle de la dernière mesure).
+  const [, setRelance] = useState(0);
+  const largeurMesuree = useRef(0);
+  const dansConteneur = version !== null;
+  useLayoutEffect(() => {
+    const el = ligne.current;
+    if (!dansConteneur || !el) return;
+    return observerLargeurLigne(el, (l) => Math.abs(l - largeurMesuree.current) >= 1 && setRelance((v) => v + 1));
+  }, [dansConteneur]);
+
   // Les largeurs changent quand la police arrive.
   useLayoutEffect(() => {
     let vivant = true;
@@ -349,6 +364,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
     const empreinte = [largeur, em, cle, showChords, showPinyin, hideLyrics, isPdfTypo, version, propre, polices].join("/");
     if (empreinte === derniere.current) return;
     derniere.current = empreinte;
+    largeurMesuree.current = largeur;
     el.style.paddingRight = "";
     el.style.marginRight = "";
     const rect = el.getBoundingClientRect();
@@ -439,7 +455,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
             style={{ display: "flex", flexWrap: "nowrap", alignItems: "flex-start", whiteSpace: "nowrap", paddingLeft: r > 0 ? (coupe.retrait === null ? "1em" : `${coupe.retrait}px`) : undefined }}
           >
             {rangee.map((unite, ui) => (
-              <span key={depart + ui} ref={(n) => { uniteRefs.current[depart + ui] = n; }} style={{ display: "inline-flex", alignItems: "flex-start" }}>
+              <span key={depart + ui} ref={refUnite(depart + ui)} style={{ display: "inline-flex", alignItems: "flex-start" }}>
                 {unite.cols.map((col, i) => {
                   if (!showChords && col.char === " " && col.chord !== null) return null;
                   return (
@@ -512,7 +528,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
       })}
     </div>
   );
-}
+});
 
 // ---------------------------------------------------------------------------
 // TransitionNote — bloc affiché entre deux sections
@@ -1054,44 +1070,16 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
 
         const m = marques && (marques[line.srcLine ?? -1] ?? marques[line.pinyinSrcLine ?? -1]);
         // Mode édition : la ligne devient une cible tactile qui ouvre la sheet.
-        if (onLineSelect && line.srcLine !== undefined) {
-          return (
-            <Fragment key={i}>
-              <div
-                role="button"
-                tabIndex={0}
-                data-marque={m?.marque}
-                data-retouche={m?.retouche}
-                onClick={() => onLineSelect(line, section.uid)}
-                onKeyDown={(e) => e.key === "Enter" && onLineSelect(line, section.uid)}
-                className="cursor-pointer rounded-md -mx-1.5 px-1.5 border border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 transition-colors my-0.5 print:border-transparent print:bg-transparent print:mx-0 print:px-0 print:my-0"
-              >
-                {/* Édition : toucher la ligne ouvre la feuille d'édition, jamais le panneau d'un accord. */}
-                <AccordsInactifs>{rendered}</AccordsInactifs>
-              </div>
-              {m?.marque === "moi" && onPasserAuCulte && (
-                <button
-                  type="button"
-                  data-copy-ignore
-                  className="mb-1 inline-flex h-11 items-center gap-1 text-xs font-semibold no-underline print:hidden"
-                  style={{ color: "var(--graphite)" }}
-                  onClick={() => onPasserAuCulte(line.srcLine!)}
-                >
-                  <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
-                  {t("maPartition.crayon.passerAuCulte")}
-                </button>
-              )}
-            </Fragment>
-          );
-        }
+        const enCrayon = !!onLineSelect && line.srcLine !== undefined;
         // Crayon (MP-5) : repères où s'accrochent les traits (section, rang de la ligne, chant).
         const repere = { "data-trait-slug": slug, "data-trait-section": section.id, "data-trait-ligne": i };
-        if (!m) return <div key={i} {...repere}>{rendered}</div>;
         const bouton = `${TOUCHER_44} h-8 rounded-full border border-border bg-background px-3 text-xs font-semibold hover:bg-secondary`;
+        // P1 : même arbre avec ou sans Crayon (Fragment, div de la ligne, AccordsInactifs), seuls les attributs
+        // changent : la ligne mémoïsée n'est ni démontée ni remesurée en entrant dans le Crayon ou en en sortant.
         return (
           <Fragment key={i}>
-            {m.conflit?.debut && (
-              <div data-conflit-mention data-copy-ignore className="my-1 flex flex-wrap items-center gap-2 text-xs print:hidden">
+            {!enCrayon && m?.conflit?.debut && (
+              <div key="conflit" data-conflit-mention data-copy-ignore className="my-1 flex flex-wrap items-center gap-2 text-xs print:hidden">
                 <span className="font-semibold">{t("maPartition.conflit")}</span>
                 {onConflit && (
                   <>
@@ -1101,7 +1089,38 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
                 )}
               </div>
             )}
-            <div data-marque={m.marque} data-conflit={m.conflit?.cote} data-retouche={m.retouche} {...repere}>{rendered}</div>
+            {enCrayon ? (
+              <div
+                key="ligne"
+                role="button"
+                tabIndex={0}
+                data-marque={m?.marque}
+                data-retouche={m?.retouche}
+                onClick={() => onLineSelect!(line, section.uid)}
+                onKeyDown={(e) => e.key === "Enter" && onLineSelect!(line, section.uid)}
+                className="cursor-pointer rounded-md -mx-1.5 px-1.5 border border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 transition-colors my-0.5 print:border-transparent print:bg-transparent print:mx-0 print:px-0 print:my-0"
+              >
+                {/* Édition : toucher la ligne ouvre la feuille d'édition, jamais le panneau d'un accord. */}
+                <AccordsInactifs>{rendered}</AccordsInactifs>
+              </div>
+            ) : (
+              <div key="ligne" data-marque={m?.marque} data-conflit={m?.conflit?.cote} data-retouche={m?.retouche} {...repere}>
+                <AccordsInactifs actif={false}>{rendered}</AccordsInactifs>
+              </div>
+            )}
+            {enCrayon && m?.marque === "moi" && onPasserAuCulte && (
+              <button
+                key="passer"
+                type="button"
+                data-copy-ignore
+                className="mb-1 inline-flex h-11 items-center gap-1 text-xs font-semibold no-underline print:hidden"
+                style={{ color: "var(--graphite)" }}
+                onClick={() => onPasserAuCulte(line.srcLine!)}
+              >
+                <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
+                {t("maPartition.crayon.passerAuCulte")}
+              </button>
+            )}
           </Fragment>
         );
       })}

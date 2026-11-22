@@ -294,6 +294,158 @@ Le go porte sur les corrections n° 1, 2, 3 et 4 du § 5 (et sur les tests rouge
 - **P2 — n° 2, 3 et 4, lectures de la base** (une session, un commit par retouche) : planning lu une fois par page,
   plus d'écriture de langue à chaque chargement, notifications en une passe. Nombre de requêtes par page avant/après
   (base simulée), écrit ici. Aucune permission ne change (`access.ts`, `firestore.rules` intacts).
+- **P3 — n° 7, lancement du mode louange allégé** (go de Timothée du 22/11, après-midi : « Fait le 2-3-4 ») : en
+  version construite, ce qui reste au lancement est le montage de deux copies du chant (mesure et affichage) et leur
+  mise en page (§ 7, Avancement de P1). À faire : alléger la copie de mesure (ne rendre en mesure que ce qui change la
+  hauteur, ou réutiliser les mesures d'un chant déjà vu), au plus petit changement qui donne le gain. **La pagination
+  ne change pas** : mêmes sections sur les mêmes pages et les mêmes colonnes, avant et après, chants FR et ZH, cinq
+  projets, les trois ordres (relevé avant tout changement, écart nul). Réussite : lancement au téléphone (processeur
+  ×4, version construite) réduit d'au moins 20 % en médiane ; sous ce seuil, ou si la pagination doit bouger :
+  s'arrêter et l'écrire, sans pousser de code. Après R9 (même zone : `columns.ts`, `PageTexte.tsx`).
 
 ### Avancement
 
+- **P1, 22/11/2026 — n° 1 faite, gain en temps bien plus faible qu'estimé** (commit « Audit perf P1 »). `ChordLine` et
+  `ZhLine` en `memo` (props déjà stables : jetons de l'AST, primitives, polices de module ; notation, tonalité et
+  largeur passent par contexte), rappels de `ref` des mots gardés d'un rendu à l'autre. `SectionView` **n'est pas**
+  mémoïsée : ses props (`occurrenceUids`, `marques`, rappels) changent à chaque rendu dans quatre appelants, et ses
+  lignes ne se redessinent déjà plus. Deux ajouts nécessaires : (1) même arbre de ligne avec ou sans Crayon (même
+  `div`, `AccordsInactifs` toujours là, inactif hors Crayon) : sans lui, chaque entrée ou sortie du Crayon démontait
+  et remesurait toutes les lignes ; (2) un `ResizeObserver` partagé (`observerLargeurLigne`, `LargeurCoupure.tsx`)
+  qui remesure une ligne dont **seule sa largeur** change (cadre du Crayon, disposition) : sans lui, la disposition
+  Partition au téléphone laissait des lignes à leur coupure d'avant (trouvé par le nouveau test). Rappels groupés en
+  une image et ignorés si la ligne a déjà été mesurée à cette largeur (sinon une mise en page forcée par ligne : quitter
+  le Crayon montait à 1,2 s à 1 512 px).
+  - **Rendu identique** : boîtes de chaque morceau de texte des lignes (accords, paroles, pinyin), page chant
+    `abba-pere` et `为我而来` (paroles), setlist de quatre chants en Partitions, mode louange page par page, cinq
+    projets : 18 535 boîtes, **0 écart** avant/après (deux relevés « avant » identiques entre eux).
+  - **Rendus des lignes** (crochet des outils React, version construite ; téléphone / 1 512 px) : lancer le mode
+    louange 2 774 → 528 / 4 062 → 717 (il ne reste que le montage) ; page suivante 954 → 6 / 1 497 → 26 ; activer le
+    Crayon 552 → 7 / 138 → 12 ; ouvrir Affichage 92 → 0 / 524 → 342 ; accord touché 0 → 0. Chiffres/Lettres et A+
+    redessinent toujours les lignes : c'est voulu (notation, largeur).
+  - **Temps** (banc `scripts/perf/banc/`, version construite, même setlist que l'audit, 2 à 3 passages ; téléphone =
+    390 px, processeur ×4) :
+
+    | Geste | téléphone avant → après | 1 512 px avant → après |
+    |---|---|---|
+    | Mode louange : lancer | 2,8–3,5 s → 2,2–3,2 s (médiane 3,0 → 2,8) | 0,78–1,11 → 0,86–1,06 s |
+    | Setlist : activer le Crayon | 0,96–1,22 → 0,76–1,15 s | 0,08–0,11 → 0,07–0,13 s |
+    | Setlist : quitter le Crayon | 0,64–1,12 → 0,75–0,98 s | 0,15–0,31 → 0,15–0,17 s |
+    | Setlist : Liste → Partitions | 2,4–2,6 → 1,9–2,5 s | — |
+    | Affichage › A+ | 0,63 → 0,32–0,52 s | 0,08–0,10 → 0,09 s |
+    | Affichage › Chiffres | 0,35–0,57 → 0,29–0,33 s | 0,06–0,08 → 0,07 s |
+    | Fermer Affichage | 0,11–0,14 → 0,10–0,16 s | 0,21–0,37 → **0,39–0,49 s** |
+    | Accord touché | 0,50–0,95 → 0,61–0,69 s | 0,09 → 0,08 s |
+
+    Lecture : les lignes ne se redessinent plus, mais **le temps des gestes bouge peu** en version construite
+    (lancement au téléphone ≈ −7 %, l'audit estimait −30 à 50 % ; Crayon au téléphone dans le bruit). Le profil de
+    l'audit (§ 4.1, B) était pris en `next dev`, où le rendu React coûte deux fois plus (`jsxDEV`) ; en version
+    construite, le coût restant du lancement est le **montage** des deux copies du chant (écran et mesure) et leur
+    mise en page (n° 7 du § 5), et celui du Crayon au téléphone n'est pas dans les lignes (barre du Crayon, styles :
+    230 à 360 ms de recalcul de style). « Fermer Affichage » à 1 512 px est un peu plus lent (mise en page
+    multicolonne, cause C) ; déjà visible avec `memo` seul, non expliqué ici.
+  - Tests : nouveau `tests/lignes-a-jour.spec.ts` (taille, notation, pinyin, dispositions Scène et Partition, Crayon,
+    thème, langue : chaque changement fait sur place donne les mêmes lignes qu'un rechargement ou qu'une remesure
+    complète) ; tonalité, couleur, retouches du Crayon, passage retouché seul et dessins : specs existantes. Specs de
+    R6 et voisines (`lignes-a-jour`, `louange-sections-uniques`, `coupure-vers`, `louange-coupure`, `lignes-accords`,
+    `lignes-chinoises`, `louange-accords`, `dispositions-partition`, `louange-demi-page`, `mode-louange-colonnes`,
+    `agencement-v18-chants`, `notation-accords`, `couleur-accords`, `ma-partition-crayon`, `-passage-unique`,
+    `-traits`, `setlist-tonalite-perso`, `transposition-mineure`, `marge-affichage`, `louange-reglages`), cinq projets,
+    `--workers=2 --trace off` : 2 092 passés, 21 échecs, 193 ignorés, 1 h 23. Échecs : `louange-coupure:172` (connu,
+    10) ; `louange-reglages:123` (Chiffres du mode louange, 10, **rouge aussi sans P1**, aucun accord touchable trouvé
+    dans le mode louange : à signaler à R8) ; `setlist-tonalite-perso:125` (2) : course dans le test, la clé
+    personnelle s'efface juste après l'armure, désormais plus rapide ; le test attend maintenant (`expect.poll`). Après
+    les derniers réglages de l'observateur : `lignes-a-jour`, `lignes-accords`, `coupure-vers`, `lignes-chinoises`,
+    `setlist-tonalite-perso`, `ma-partition-crayon`, trois appareils : 216 passés, 0 échec (7 min).
+  - Mesures « après » prises après `git pull` (P2 et R8 inclus : ils ne touchent ni les lignes ni ces gestes).
+
+
+- **P2, 22/11/2026 — n° 2, 3 et 4 faites** (commits f5339990a n° 3, 2fb6a2cc0 n° 4, 15791e2b8 n° 2). Mesure : version
+  construite (`NEXT_PUBLIC_BACK_OFFICE=1`), base simulée, compte musicien fictif, chargement complet de chaque page
+  après connexion, compteur du banc (`d-requetes`) adapté, qui compte aussi les feuilles Google. « Avant » = la même
+  branche avec les trois fichiers d'avant (`Navbar.tsx`, `useNotifications.ts`, `names.ts`).
+
+  | Page | Firestore avant → après | Feuilles Google du planning avant → après |
+  |---|---|---|
+  | Accueil `/` | 34 → 29 | 194 → 42 |
+  | Chants `/songs/` | 35 → 30 | 194 → 21 |
+  | Une setlist | 42 → 37 | 220 → 21 |
+  | Planning | 34 → 29 | 194 → 42 |
+  | Église `/evenements/` | 35 → 30 | 173 → 26 |
+  | Moi | 36 → 31 | 191 → 21 |
+
+  - **n° 3** : −1 écriture (`PATCH notifPrefs`) par chargement. Garde `localStorage` `notifLang:{uid}`, posée après
+    une écriture réussie : un vrai changement de langue, un nouveau compte ou un nouvel appareil écrivent toujours.
+    Si deux appareils d'un même compte ont deux langues, les rappels suivent le dernier où la langue a changé (avant :
+    le dernier appareil chargé).
+  - **n° 4** : −4 requêtes par chargement (1 `notifications`, 2 `setlists`, 1 `evenements`). La passe attend le
+    profil et ne se relance que si son contenu change. **Pas de cache de `getSetlistsSince`** : un seul appelant,
+    monté une fois ; avec une passe, un cache n'enlève rien.
+  - **n° 2** : **correction de l'audit**. Les 22 lectures Firestore du planning (§ 3.1) partaient déjà **une** fois par
+    page (caches de `grille.ts` et `trimestresPublies`) ; elles restent nécessaires (accès Harmonie, forme de
+    l'espace). Le vrai doublon était sur les **feuilles Google** (`sheets.ts` n'a pas de partage de la lecture en
+    cours) : une lecture de chaque feuille par instance de `useAccesHarmonie`. Une promesse partagée, navigateur
+    seulement et oubliée dès qu'elle est réglée, ramène chaque feuille à une lecture par `loadPlanningData`. Les
+    21 ou 42 restantes : la feuille EDD lue trois fois au sein d'une même lecture et, sur l'accueil et le Planning,
+    une seconde lecture qui part après la première. Réserve : la base simulée rend les feuilles vides, donc jamais
+    mises en cache ; sur le vrai site, une feuille lue avec succès sert les lectures suivantes, et le gain réel est
+    surtout sur les lectures simultanées du premier chargement (≈ 5 à 6 par feuille → 1, estimé).
+  - Garde-fous : `access.ts` et `firestore.rules` intacts ; aucun cache ne survit à un changement de compte.
+  - Tests (trois appareils, `--workers=2 --trace off`) : nouveaux `notifications-une-passe` (6) et
+    `planning-une-lecture` (9), et les deux ajouts de `rappels-regroupes` (18 avec les anciens) : verts, et rouges
+    sur l'ancien code pour les décomptes. Voisins : `i18n-hydration`, `libelles-langues`, `chargement` (74) ;
+    cloche de `coherence`, `chants-fetes-liste`, `barre-back-office`, `evenements` (24) ; `harmonie-porte1`,
+    `-porte2`, `-catalogue`, `-colonne`, `agencement-v18-harmonie`, `navigation-grand-ecran`, `chargement` (369 sur
+    370 ; le rouge `harmonie-colonne:129`, en-tête collant pris pendant qu'il s'escamote, passe deux fois sur deux
+    seul). ≈ 15 min de tests en tout.
+  - Méthode : `/tranche` lancée pour la n° 3 ; les agents de `.claude/agents/` ne se chargeaient pas, leurs fiches
+    ont été jouées par des agents généraux au même modèle. Le relecteur n'a pas tourné (limite de dépense mensuelle
+    atteinte) ; la n° 3 a été finie, et les n° 4 et 2 codées, testées et relues par l'orchestratrice elle-même.
+    **Relecture indépendante à faire** : `git show 2fb6a2cc0 15791e2b8 f5339990a`.
+- 22/11/2026, après-midi : **n° 3, suite** (session d'origine, relecture des commits de P2 ; go « Fait le 2-3-4 »).
+  La garde par appareil figeait la langue des rappels pour qui a deux appareils en deux langues (elle restait celle
+  du dernier changement, plus celle du dernier appareil utilisé). La marque devient « langue|jour » : au plus une
+  écriture par jour et par appareil (`Navbar.tsx`). Test étendu (`rappels-regroupes`, marque d'un autre jour) : les
+  trois tests de langue sur trois appareils, 9 passés en 1,6 min ; tsc propre.
+
+- **P3, 22/11/2026 — arrêt : −15 % au téléphone, sous le seuil de 20 % ; aucun code poussé** (n° 7, go « Fait le
+  2-3-4 »). Mesures en version construite (`NEXT_DIST_DIR=.next-prod`), banc `scripts/perf/banc/` réduit au geste
+  « lancer » répété (8 lancements par passage, quitter entre deux), même setlist que l'audit (deux chants FR, deux ZH).
+  - **Où part le temps** (profil CPU, version construite avec cartes de source, téléphone ×4, lancement à chaud,
+    ≈ 2 s de processeur) : mesure des coupures de lignes (`viderMesures`, `ChordLine.tsx:167`) 0,56 s, dont la moitié
+    est une **seconde mesure de toutes les lignes** à l'arrivée des polices, même déjà chargées (`apresPolices`, et
+    dans `ZhLine` une lecture de `document.fonts.ready` par ligne, `SongView.tsx:347`) ; premier style et première
+    mise en page du chant caché entier ≈ 0,2 s ; React 0,37 s ; corps de `PerformanceMode` 0,17 s sur ≈ 11 rendus
+    pendant le lancement (barres mesurées, coupures signalées, `blocks` reconstruits, données des 简谱 : relevé des
+    dépendances de l'effet de pagination), chacun refaisant toute la copie de mesure ; i18next 0,12 s. Deux
+    paginations publiées (`data-passes-pagination` = 2) : la seconde remonte la page affichée (`clePage`), ≈ 0,28 s.
+  - **Essayé** (3 fichiers, ≈ 90 lignes) : (1) la copie de mesure (`CoupureMesureContext`) ne se remesure à l'arrivée
+    des polices que si `document.fonts.status` valait « loading » juste après la lecture des boîtes (crochet commun à
+    `ChordLine` et `ZhLine` ; hors copie de mesure, rien ne change) ; (2) `useMemo` sur les deux listes de blocs de
+    la copie de mesure (pleine largeur et colonne) : les rendus du lancement ne refont plus le chant caché.
+    `viderMesures` passe de 0,56 à 0,27 s.
+  - **Pagination identique** : relevé de la pagination publiée (sections par page et par colonne, échelle, deux
+    colonnes, `fit`, `coupe`), de l'ancienne (RS-C) et de la bande d'aperçu ; chants FR (4) et ZH (4), trois ordres
+    (joué, une fois chacune, structure), cinq projets : 30 relevés, deux « avant » identiques entre eux, **écart nul**
+    après chacun des deux changements.
+  - **Temps** (A/B : avant = `ead0044`, après = les deux changements, deux versions construites servies côte à côte
+    et mesurées en alternance ; médiane des lancements à chaud, premier lancement à part) :
+
+    | Lancer le mode louange | avant | après | écart |
+    |---|---|---|---|
+    | téléphone ×4, à chaud (3 × 7) | 1 312 ms (1 103–1 824) | 1 111 ms (887–1 475) | **−15 %** |
+    | téléphone ×4, premier lancement (3) | 2 113, 2 110, 1 945 ms | 1 915, 1 822, 2 041 ms | ≈ −6 % |
+    | 1 512 px, à chaud (2 × 7) | 838 ms (762–1 049) | 831 ms (691–936) | −1 % |
+    | 1 512 px, premier lancement (2) | 951, 955 ms | 880, 912 ms | ≈ −6 % |
+
+    Au téléphone, script 717 → 534 ms, mise en page 146 → 135, style 272 → 241 (médianes).
+  - **Lecture** : la copie de mesure allégée ne donne pas les 20 % (l'audit estimait −20 à −40 %) ; arrêt, code retiré
+    (dans le dépôt : rien que ces lignes). Ce qui reste n'est pas dans la copie seule : style et mise en page du chant
+    caché entier (inévitables tant qu'on pagine tout le culte au lancement), seconde pagination qui remonte la page à
+    l'écran, rendus de `PerformanceMode`. Pistes, sur un nouveau go, avec les deux changements ci-dessus : publier une
+    seule pagination au lancement (attendre barres et 简谱 avant la première passe) ou ne pas remonter la page affichée
+    quand sa pagination n'a pas changé ; elles touchent la publication de la pagination (zone de R9).
+  - **Banc**, à savoir : `npm test` dans ce conteneur demande `executablePath: "/opt/pw-browsers/chromium"` (le
+    Playwright du projet attend un autre navigateur) ; Turbopack nomme ses cartes de source autrement que `<js>.map` :
+    les lire par le `sourceMappingURL` du fichier (`inclus.cjs`, `agrege.cjs` à adapter), avec
+    `productionBrowserSourceMaps: true` le temps du profil. Aucun test lancé (aucun code). ≈ 1 h 30 de mesures.
