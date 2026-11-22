@@ -364,3 +364,12 @@ Ensuite : la session lance P3 (`docs/audit-performance-2026-11-21.md`, § 7).
   `nettoyage-louange-pures`, cinq projets : 574 verts, 0 rouge, 58 ignorés par la spec (20 min). Voisins, **non
   tombés, non touchés** : `rappel-ordre-joue:449` et `:482` (téléphone) 5 rouges, 1 vert ; `louange-reglages:123`
   (Chiffres) 10 sur 10 rouges (bouton introuvable). tsc propre. Aucun agent.
+- 22/11/2026, soir : **R4, défaut corrigé** (vidéo de Timothée, iPad, mode louange : « après avoir déplacé la fenêtre
+  et qu'après je veux glisser pour voir les possibilités d'harmonie la fenêtre bouge là où mon doigt appuie »).
+  Reproduit au toucher (CDP) : après un déplacement au doigt, les écouteurs du déplacement restaient posés, parce que
+  le relâchement (`pointerup`, `pointercancel`) d'un doigt n'arrive pas jusqu'à `window` en remontée dans le mode
+  louange (il y arrive à la souris, d'où les tests verts) ; le doigt suivant, posé dans le contenu, déplaçait donc la
+  fenêtre. Correction (`HarmonieDuChant.tsx`, `tirer`) : écoute en capture, filtrée sur le pointeur du geste. Test
+  ajouté dans `harmonie-fenetre-placement` (rouge avant : saut de 573 px) ; la spec entière sur cinq projets :
+  42 passés, 18 ignorés, 1,8 min. Vérifié aussi, au doigt, la poignée de la feuille « Affichage » du mode louange :
+  pas de défaut (test ajouté dans `louange-menus`, vert sans correction). Sur un vrai iPad : à revoir par Timothée.

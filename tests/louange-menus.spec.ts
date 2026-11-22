@@ -783,3 +783,33 @@ test("B1 : un × en haut à droite de chaque feuille (Setlist, Repères, Outils,
     expect(await lireCompteur(page), `${menu} : la page ne change pas`).toMatch(/^2 \//);
   }
 });
+
+// Constat du 22/11/2026 (même cause que la fenêtre Harmonie) : en mode louange, la poignée de la feuille « Affichage » tirée
+// au doigt ne doit pas rester accrochée et suivre ensuite le doigt qui fait défiler le corps.
+test("affichage en feuille, au doigt : tirer la poignée agrandit, puis faire défiler le corps ne change plus la hauteur", async ({ page }) => {
+  await ouvrir(page);
+  const m = await ouvrirMenu(page, "affichage");
+  await attendreOuverture(page);
+  test.skip((await m.getAttribute("data-place")) !== "feuille", "colonne à droite sur grand écran");
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
+  const touche = (type: "touchStart" | "touchMove" | "touchEnd", x = 0, y = 0) =>
+    cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y }] });
+  const glisser = async (x0: number, y0: number, x1: number, y1: number) => {
+    await touche("touchStart", x0, y0);
+    for (let i = 1; i <= 10; i++) { await touche("touchMove", x0 + ((x1 - x0) * i) / 10, y0 + ((y1 - y0) * i) / 10); await page.waitForTimeout(40); }
+    await page.waitForTimeout(200);
+    await touche("touchEnd");
+    await page.waitForTimeout(500);
+  };
+  const vh = page.viewportSize()!.height;
+  const prise = (await m.getByTestId("marge-prise").boundingBox())!;
+  await glisser(prise.x + prise.width / 3, prise.y + 6, prise.x + prise.width / 3, prise.y + 6 - 0.4 * vh);
+  await expect.poll(async () => (await m.boundingBox())!.height).toBeCloseTo(0.85 * vh, -1);
+  const b = (await m.boundingBox())!;
+  for (const dy of [-120, 120]) {
+    await glisser(b.x + b.width / 2, b.y + b.height * 0.6, b.x + b.width / 2 + 8, b.y + b.height * 0.6 + dy);
+    expect((await m.boundingBox())!.height, `défilement ${dy} : la hauteur reste à 85 %`).toBeCloseTo(0.85 * vh, -1);
+    await expect(m).toHaveAttribute("data-ouvert", "true");
+  }
+});

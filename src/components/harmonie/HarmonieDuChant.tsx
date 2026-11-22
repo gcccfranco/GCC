@@ -199,23 +199,27 @@ function Fenetre(props: Props & { titreId: string }) {
     if (!el || (e.button !== undefined && e.button > 0) || (e.target as HTMLElement).closest("button")) return;
     const r = el.getBoundingClientRect();
     const hautEntete = e.currentTarget.getBoundingClientRect().height;
-    const [px, py] = [e.clientX, e.clientY];
+    const { pointerId, clientX: px, clientY: py } = e;
     const [ox, oy] = [decale?.x ?? 0, decale?.y ?? 0];
     enDeplacement.current = true;
+    // Écoute en capture : en mode louange, le relâchement d'un doigt n'arrive pas jusqu'à `window` en remontée
+    // (sans elle, la fenêtre restait accrochée et suivait le doigt suivant, même posé dans son contenu).
     const bouge = (m: PointerEvent) => {
+      if (m.pointerId !== pointerId) return;
       const dx = Math.min(Math.max(m.clientX - px, -r.left), window.innerWidth - r.right);
       const dy = Math.min(Math.max(m.clientY - py, -r.top), window.innerHeight - r.top - hautEntete);
       setDecale({ x: ox + dx, y: oy + dy });
     };
-    const fin = () => {
-      window.removeEventListener("pointermove", bouge);
-      window.removeEventListener("pointerup", fin);
-      window.removeEventListener("pointercancel", fin);
+    const fin = (u: PointerEvent) => {
+      if (u.pointerId !== pointerId) return;
+      window.removeEventListener("pointermove", bouge, true);
+      window.removeEventListener("pointerup", fin, true);
+      window.removeEventListener("pointercancel", fin, true);
       setTimeout(() => { enDeplacement.current = false; }, 0);
     };
-    window.addEventListener("pointermove", bouge);
-    window.addEventListener("pointerup", fin);
-    window.addEventListener("pointercancel", fin);
+    window.addEventListener("pointermove", bouge, true);
+    window.addEventListener("pointerup", fin, true);
+    window.addEventListener("pointercancel", fin, true);
     e.preventDefault();
   };
   return (
