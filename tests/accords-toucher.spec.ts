@@ -339,7 +339,7 @@ test.describe("panneau à côté de l'accord (B4 ter)", () => {
         await accord.evaluate((el) => el.scrollIntoView({ block: "center" }));
         await accord.click();
         await expect(panneau(page)).toHaveAttribute("data-accord-panneau", "bulle");
-        const ensuite = panneau(page).getByRole("button", { name: /Ensuite/ });
+        const ensuite = panneau(page).getByRole("button", { name: /Ensuite|Après cet accord/ });
         if (await ensuite.count()) await ensuite.first().click();
         const a = (await accord.boundingBox())!;
         const b = (await panneau(page).boundingBox())!;

@@ -582,6 +582,35 @@ s'écrivent dans l'Avancement, pour que Timothée voie s'ils ont du sens avant l
   premier appui, 12 requêtes, sources de piano ; repli si `/audio/piano/` est coupé), 10 / 0 (1 min) ; avec
   `harmonie-ecoute`, `harmonie-porte1`, `harmonie-porte2` 168 / 0, 4 ignorés (4 min). Son **pas jugé à l'oreille** :
   à écouter par Timothée (niveau 1,5 / nombre de notes, choisi sans écoute).
+- 22/11/2026 : **H9-1 faite** (« Après cet accord, chez nous » ; session seule, sans agent, go du 22/11). Compte à la
+  construction : `scripts/build-chez-nous.ts` (dans `npm run build:index`, après `build-harmonie`) →
+  `public/harmonie-chez-nous.json` (17 Ko, sans date : il ne change que si les chants changent ; commité comme
+  `harmonie-index.json`). Fonctions pures dans `src/lib/harmonie/chezNous.ts` (compte des suites et des boucles),
+  lecture à la demande par `useChezNous` (une fois par visite). Le panneau d'un accord lit les trois suites comptées
+  quand le degré a au moins 8 chants (sinon, ou fichier absent : « Ensuite : » et le tableau de `suites.ts`). Gabarit
+  inchangé : l'accord qui suit vraiment dans ce chant passe toujours en premier (H5-1), puis les suites comptées.
+  **Décisions déléguées (session, 22/11)** : la part d'une suite = son nombre de chants sur la somme des chants de
+  toutes les suites de ce degré (les parts d'un degré font 100 %) ; « les chants d'un degré » = ceux où il est suivi
+  d'un autre degré ; une suite se compte dans une section (pas d'une section à la suivante) ; une répétition immédiate
+  du même degré (`D D/F#`) n'est pas une suite ; la part s'écrit en petit gris après l'accord (« A 29 % ») plutôt
+  que « 5 · 41 % » (en chiffres, « 5 · 41 % » se lisait comme deux degrés) ; zh « 我们的歌里，这个和弦之后： ».
+  `sw.js` **inchangé** : comme `harmonie-index.json`, le fichier n'est pas gardé hors ligne ; hors ligne, la ligne
+  reprend le tableau (repli prévu par la spec).
+  **Chiffres réels** (381 chants en majeur, 2 en mineur ; entre parenthèses, les chants du degré) — majeur :
+  1 (378) → 5 29 % · 4 28 % · 6m 15 % ; 4 (373) → 1 39 % · 5 34 % · 6m 11 % ; 5 (371) → 1 33 % · 6m 27 % · 4 21 % ;
+  6m (352) → 4 31 % · 2m 19 % · 1 17 % ; 2m (257) → 5 41 % · 4 24 % · 1 15 % ; 3m (156) → 6m 48 % · 4 29 % · 2m 8 % ;
+  3 (68) → 6m 92 % · 4 6 % · 2 1 % ; 2 (66) → 5 57 % · 4 10 % · 1 8 % ; b7 (40) → 5 27 % · 4 25 % · 1 23 % ;
+  6 (29) → 2m 47 % · 2 13 % · 4 11 % ; 5m (25) → 1 63 % · 6 15 % · 4 7 % ; 4m (19) → 1 56 % · 5 19 % · 2m 7 % ;
+  7m (10) → 3 33 % · 5 25 % · 3m 17 % ; #4dim (9) → 5 36 % · 1 27 % · 2m 27 % ; les autres (#4m, b6, 7dim, 1m, b3…,
+  5 chants au plus) gardent le tableau. **Mineur : 2 chants seulement**, aucun degré n'atteint 8 : le tableau partout.
+  À juger par Timothée : « 7m » (10 chants) vient de chants qui écrivent un accord mineur sur le 7.
+  Tests : `harmonie-chez-nous` (nouvelle : majeur, mineur, basse et couleur, section répétée, seuil 8 et repli null ;
+  écran FR et ZH avec un fichier fictif, fichier absent → « Ensuite ») ; libellé élargi dans `harmonie-porte1`,
+  `notation-accords`, `accords-toucher`. Trois appareils, avec `harmonie-volet-section`, `louange-harmonie` et H9-2 :
+  256 / 6 (7,9 min), puis 9 / 0 et 27 / 0 après corrections. Reste rouge : `accords-toucher:233` (mode louange sans
+  accès, 288 accords touchables), **rouge aussi sans mes changements** (vérifié par `git stash`) : hors lot.
+  Captures regardées : téléphone, tablette portrait 中文, tablette paysage 中文, ordinateur sombre ; corrigé après
+  elles : la part ne se sépare plus de son accord en fin de ligne.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 

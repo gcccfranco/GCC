@@ -74,7 +74,7 @@ for (const [slug, zh] of [["a-jamais-tu-es-saint", false], ["一切歌颂赞美"
     await toucher(page, slug, zh);
     await expect(panneau(page).locator("[data-accord-chiffre]")).toHaveText(zh ? /^[A-G][#b]?m? 调的 \S+$/ : /^\S+ dans [A-G][#b]?m?$/);
     await expect(panneau(page).getByRole("button", { name: zh ? "试听" : "Écouter" })).toBeVisible();
-    const ensuiteBtn = panneau(page).getByRole("button", { name: zh ? /^接下来/ : /^Ensuite/ });
+    const ensuiteBtn = panneau(page).getByRole("button", { name: zh ? /^(接下来|我们的歌里)/ : /^(Ensuite|Après cet accord)/ });
     await expect(ensuiteBtn).toHaveAttribute("aria-expanded", "false");
     await ensuiteBtn.click();
     await expect(ensuiteBtn).toHaveAttribute("aria-expanded", "true");
@@ -88,7 +88,7 @@ test("page /accords : pas de chiffre, pas d'Ensuite", async ({ page }) => {
   await page.goto("/accords?accord=D");
   await expect(page.locator("[data-accord-nom]").first()).toBeVisible();
   await expect(page.locator("[data-accord-chiffre]")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /^Ensuite/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^(Ensuite|Après cet accord)/ })).toHaveCount(0);
 });
 
 // H5-2 « Ici » : l'idée du passage de l'accord touché, une ligne sous Ensuite ; un appui ouvre la porte 2 au bloc du passage.
@@ -141,7 +141,7 @@ for (const c of ICI) {
 
   test(`chant ${c.zh ? "ZH" : "FR"} : sans accès Harmonie, pas de ligne « Ici »`, async ({ page }) => {
     await toucherIci(page, LEA, c);
-    await expect(panneau(page).getByRole("button", { name: c.zh ? /^接下来/ : /^Ensuite/ })).toBeVisible();
+    await expect(panneau(page).getByRole("button", { name: c.zh ? /^(接下来|我们的歌里)/ : /^(Ensuite|Après cet accord)/ })).toBeVisible();
     await expect(panneau(page).locator("[data-ici]")).toHaveCount(0);
   });
 }

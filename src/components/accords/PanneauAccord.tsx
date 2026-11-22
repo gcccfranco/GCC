@@ -4,7 +4,7 @@
 // positions. Un seul composant pour la feuille du bas, la bulle de l'ordinateur et la carte de la page /accords.
 // Les décisions sont dans docs/spec-dictionnaire-accords.md (Q5, Q10, Q11, Q17, Q18).
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, Fragment } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -15,6 +15,8 @@ import type { HarmonieDuPanneau } from "./AccordsProvider";
 import { BoutonEcouter } from "@/components/harmonie/BoutonEcouter";
 import { chiffreDuDegre, chiffrerEtiquette, degreDeLAccord } from "@/lib/harmonie/degres";
 import { ensuite, notesGardeesEtMouvantes } from "@/lib/harmonie/suites";
+import { suitesChezNous } from "@/lib/harmonie/chezNous";
+import { useChezNous } from "@/lib/harmonie/useChezNous";
 import { transposeChord } from "@/lib/transpose";
 import { useNotationDuCompte } from "@/components/song/NotationAccordsProvider";
 import { NotationAccordsContext } from "@/lib/notationAccords";
@@ -106,15 +108,20 @@ function Ensuite({ accord, harmonie, capo, bulle }: { accord: string; harmonie: 
   const { t } = useTranslation();
   const [ouvert, setOuvert] = useState(false);
   const notation = useNotationDuCompte();
+  const chezNous = useChezNous();
   const { tonalite } = harmonie;
   const degre = degreDeLAccord(accord, tonalite);
   if (!degre) return null;
   const suivant = harmonie.suivant ? degreDeLAccord(harmonie.suivant, tonalite) : null;
+  // H9-1 : les suites comptées dans nos chants (au moins 8 pour ce degré), sinon le tableau écrit à la main.
+  const comptees = suitesChezNous(chezNous, tonalite, chiffreDuDegre({ ...degre, basse: null }));
   const lignes = ensuite(
     chiffreDuDegre({ ...degre, basse: null }),
     tonalite,
     harmonie.suivant && suivant ? { accord: harmonie.suivant, chiffre: chiffreDuDegre(suivant) } : undefined,
+    comptees?.map((c) => c.chiffre),
   );
+  const part = (c: string) => comptees?.find((x) => x.chiffre === c.split("/")[0])?.part;
   if (!lignes.length) return null;
   const sonore = (a: string) => (capo ? transposeChord(a, capo, tonalite) : a);
   const Fleche = ouvert ? ChevronUp : ChevronDown;
@@ -127,8 +134,21 @@ function Ensuite({ accord, harmonie, capo, bulle }: { accord: string; harmonie: 
         className={`flex w-full items-center gap-1 rounded-lg text-left text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${bulle ? "min-h-8" : "min-h-11"}`}
       >
         <span className="min-w-0 flex-1">
-          {t("accords.ensuite")}{" "}
-          <span className="font-chord font-semibold text-[color:var(--chord-color)]">{lignes.map((l) => (notation === "chiffres" ? chiffrerEtiquette(l.accord, tonalite) : l.accord)).join(" · ")}</span>
+          {t(comptees ? "accords.apresChezNous" : "accords.ensuite")}{" "}
+          <span data-ensuite-ligne="" className="font-chord font-semibold text-[color:var(--chord-color)]">
+            {lignes.map((l, i) => {
+              const p = part(l.chiffre);
+              return (
+                <Fragment key={l.chiffre}>
+                  {i > 0 && " · "}
+                  <span className="whitespace-nowrap">
+                    {notation === "chiffres" ? chiffrerEtiquette(l.accord, tonalite) : l.accord}
+                    {p !== undefined && <span className="ml-1 font-sans text-xs font-normal text-muted-foreground">{t("accords.part", { n: p })}</span>}
+                  </span>
+                </Fragment>
+              );
+            })}
+          </span>
         </span>
         <Fleche className="h-4 w-4 shrink-0" aria-hidden />
       </button>

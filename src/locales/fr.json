@@ -3223,6 +3223,8 @@
     "voirTout": "Voir tout le dictionnaire",
     "chiffreDans": "{{chiffre}} dans {{tonalite}}",
     "ensuite": "Ensuite :",
+    "apresChezNous": "Après cet accord, chez nous :",
+    "part": "{{n}} %",
     "ici": "Ici :",
     "dansCeChant": "dans ce chant",
     "garde": "garde {{notes}}",

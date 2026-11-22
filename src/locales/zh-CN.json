@@ -3187,6 +3187,8 @@
     "voirTout": "查看全部和弦",
     "chiffreDans": "{{tonalite}} 调的 {{chiffre}}",
     "ensuite": "接下来：",
+    "apresChezNous": "我们的歌里，这个和弦之后：",
+    "part": "{{n}}%",
     "ici": "这里：",
     "dansCeChant": "本歌中",
     "garde": "保留 {{notes}}",

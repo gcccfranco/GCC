@@ -175,10 +175,10 @@ for (const n of ["lettres", "chiffres"] as const) {
     }).toPass({ timeout: 15000 });
     const panneau = page.locator("[data-accord-panneau]");
     await expect(panneau.locator("[data-accord-chiffre]")).toHaveText(/^\S+ dans [A-G][#b]?m?$/);
-    const ensuite = panneau.getByRole("button", { name: /^Ensuite/ });
+    const ensuite = panneau.getByRole("button", { name: /^(Ensuite|Après cet accord)/ });
     await expect(ensuite).toBeVisible();
     const replie = (await ensuite.textContent()) ?? "";
-    expect(n === "chiffres" ? CHIFFRE.test(replie.replace(/^Ensuite\s*:?\s*/, "")) : /^Ensuite\s*:?\s*[A-G]/.test(replie), replie).toBe(true);
+    expect(n === "chiffres" ? CHIFFRE.test(replie.replace(/^(Ensuite|Après cet accord, chez nous)\s*:?\s*/, "")) : /^(Ensuite|Après cet accord, chez nous)\s*:?\s*[A-G]/.test(replie), replie).toBe(true);
     await ensuite.click();
     const ligne = panneau.locator("[data-ensuite] li").first();
     await expect(ligne.locator("> span").first().locator("[data-accord-touchable]")).toHaveCount(1);
