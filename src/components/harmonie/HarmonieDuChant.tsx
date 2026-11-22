@@ -32,8 +32,6 @@ import { ficheDeLaTransition, transitionEntre } from "@/lib/harmonie/transitions
 import { modulationProposee, type ModulationProposee } from "@/lib/harmonie/modulation";
 import { MODULATIONS, type Modulation } from "@/lib/harmonie/regles";
 import { useCatalogue } from "@/lib/harmonie/useHarmonie";
-import { boucleChezNous } from "@/lib/harmonie/chezNous";
-import { useChezNous } from "@/lib/harmonie/useChezNous";
 import type { Endroit } from "@/lib/harmonie/motifs";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import type { ChordProSection } from "@/types/chordPro";
@@ -545,7 +543,6 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                 {b.nom}
                 {b.n > 1 && ` ×${b.n}`}
               </h3>
-              <BoucleChezNous section={sections.find((x) => x.uid === p.uid)} tonalite={tonalite} slug={slug} louange={louange} />
               {lignes.length > 0 && (
                 <p className="mt-1 text-base">
                   <span className="font-chord font-semibold text-[var(--chord-color)]">
@@ -745,59 +742,6 @@ type Equipe = ReturnType<typeof useEquipe>;
 
 /** L'état des idées de l'équipe (H3) : la liste vit dans les passages, le
  *  formulaire en bas ; les deux partagent cet état. */
-/** H9-2 « Cette boucle, on la joue déjà » : sous le nom d'une section qui tourne sur quatre degrés joués dans au moins
- *  trois autres de nos chants ; au toucher, ces chants (titre, section, tonalité). En mode louange, sans liens : on ne
- *  quitte pas le mode. */
-function BoucleChezNous({ section, tonalite, slug, louange }: { section?: ChordProSection; tonalite: string; slug: string; louange?: boolean }) {
-  const { t } = useTranslation();
-  const index = useChezNous();
-  const [ouvert, setOuvert] = useState(false);
-  const [tout, setTout] = useState(false);
-  const r = section ? boucleChezNous(index, section, tonalite, slug) : null;
-  if (!r) return null;
-  // Cinq d'abord (critique du 22/11 : dix-huit lignes remplissaient la feuille au téléphone).
-  const montres = tout ? r.autres : r.autres.slice(0, 5);
-  return (
-    <div data-boucle-chez-nous="" className="mt-0.5">
-      <button
-        type="button"
-        aria-expanded={ouvert}
-        onClick={() => setOuvert(!ouvert)}
-        className={`flex items-center gap-1 rounded-lg text-left text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${TOUCHER_44}`}
-      >
-        <span>{t("harmonie.boucleChezNous", { boucle: r.boucle, count: r.autres.length })}</span>
-        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${ouvert ? "rotate-180" : ""}`} aria-hidden />
-      </button>
-      {ouvert && (
-        <ul aria-label={t("harmonie.boucleChezNousListe")} className="mt-1 divide-y divide-border text-sm">
-          {montres.map((c) => {
-            const texte = (
-              <>
-                <span className="font-medium">{c.titre}</span>
-                <span className="text-muted-foreground"> · {formatSectionName(c.section, t)} · {c.tonalite}</span>
-              </>
-            );
-            return (
-              <li key={c.slug} className="py-1">
-                {louange ? <span className="block py-1">{texte}</span> : (
-                  <Link href={`/songs/${encodeURIComponent(c.slug)}`} className="block min-h-11 py-2.5 underline-offset-4 hover:underline">{texte}</Link>
-                )}
-              </li>
-            );
-          })}
-          {montres.length < r.autres.length && (
-            <li>
-              <button type="button" onClick={() => setTout(true)} className="min-h-11 w-full py-2.5 text-left text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                {t("harmonie.boucleChezNousTout", { count: r.autres.length - montres.length })}
-              </button>
-            </li>
-          )}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 function useEquipe({
   slug, idees, instrument, tonalite, tonaliteOrigine, moi, admin, recharger,
 }: {

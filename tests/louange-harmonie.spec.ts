@@ -222,19 +222,3 @@ test("A9 : page 2 du scan de 为我而来, éteindre puis rallumer Idées d'harm
     expect(await lireCompteur(page), `réglage ${etat}`).toBe(`2 / ${total}`);
   }
 });
-
-// H9-2 (docs/spec-harmonie-accords.md, « Lot H9 ») : en mode louange, la boucle et sa liste, sans liens (on ne quitte pas le mode).
-test("H9-2 : « Boucle … comme N autres chants » dans le volet, la liste sans liens", async ({ page }) => {
-  await ouvrirMode(page, AVEC_ACCES, { slug: "amour-sans-fin", langue: "fr", cle: "D" });
-  const nom = noms(page).first();
-  await expect(nom).toBeVisible({ timeout: 15_000 });
-  await nom.click();
-  await expect(volet(page)).toBeVisible();
-  const nomDuBouton = /^Boucle 1 · 5 · 6m · 4 — comme \d+ autres chants$/;
-  const ligne = volet(page).locator("[data-boucle-chez-nous]").filter({ has: page.getByRole("button", { name: nomDuBouton }) }).first();
-  const bouton = ligne.getByRole("button", { name: nomDuBouton });
-  await bouton.scrollIntoViewIfNeeded();
-  await bouton.click();
-  expect(await ligne.locator("li").count()).toBeGreaterThanOrEqual(3);
-  await expect(ligne.locator("a")).toHaveCount(0);
-});

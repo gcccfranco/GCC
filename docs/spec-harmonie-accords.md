@@ -332,6 +332,10 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
 
 ## Lot H9 — « Chez nous » : ce qui se joue dans nos chants (Timothée, 22/11/2026 ; go : « go lance une session pour coder »)
 
+**Retiré le 22/11/2026 par Timothée** (« je pense que tu peux supprimer le « Cette boucle, on la joue déjà » et
+« Après cet accord, chez nous » ça sert pas à grand chose en réalité je trouve ») : code enlevé, « Ensuite » revient au
+tableau écrit à la main. Spec et Avancement gardés pour mémoire ; le code est dans `8ab9b251`, `6aaa7325`, `a09783b5`.
+
 Origine : Timothée a montré le site wangshubianqu.com/chord-map (« ça peut nous aider pour les idées d'harmonie »).
 On en garde deux idées, refaites à partir de **nos** chants (384 `.cho`, tous avec `{key}`), sans rien copier du
 site (ni textes, ni classement, ni fichier de statistiques) et sans chansons extérieures pour l'instant.
@@ -640,6 +644,11 @@ s'écrivent dans l'Avancement, pour que Timothée voie s'ils ont du sens avant l
   liste, cibles de 44 px), 中文 sans trou ni coupure, sombre lisible. Non vérifié : mode louange à l'œil (couvert par
   le test), 1 440 px. Tests : `harmonie-chez-nous`, `harmonie-boucles`, H9 de `louange-harmonie`, H7-2 de
   `notation-accords`, trois appareils, 48 / 0 (1,6 min).
+- 22/11/2026 : **lot H9 (« chez nous ») retiré** à la demande de Timothée (citation en tête du lot H9). Le code revient
+  à l'état d'avant le lot (`54e26291`) : plus de script de compte dans `build:index`, plus de
+  `public/harmonie-chez-nous.json`, plus de `chezNous.ts` ni `useChezNous.ts`, plus de lignes dans le panneau d'un
+  accord ni dans la fenêtre Harmonie ; les deux specs nouvelles sont supprimées, les libellés de test rendus. Pour le
+  remettre : `git revert` de ce commit. Tests : `harmonie-porte1`, trois appareils (voir le commit).
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 

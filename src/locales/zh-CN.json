@@ -3187,8 +3187,6 @@
     "voirTout": "查看全部和弦",
     "chiffreDans": "{{tonalite}} 调的 {{chiffre}}",
     "ensuite": "接下来：",
-    "apresChezNous": "我们的歌里，这个和弦之后：",
-    "part": "{{n}}%",
     "ici": "这里：",
     "dansCeChant": "本歌中",
     "garde": "保留 {{notes}}",
@@ -3349,9 +3347,6 @@
     "titreChant": "这首歌的和声",
     "fermer": "关闭",
     "boucle": "循环",
-    "boucleChezNous": "循环 {{boucle}}——另有 {{count}} 首歌也这样弹",
-    "boucleChezNousListe": "弹这个循环的歌",
-    "boucleChezNousTout": "查看其余 {{count}} 首",
     "fonction": {
       "repos": "落在1级：这一段稳稳收住。",
       "versRefrain": "落在{{x}}级：引向副歌。",

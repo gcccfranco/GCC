@@ -64,12 +64,12 @@ const sansBasse = (c: string) => c.split("/")[0];
 
 export interface LigneEnsuite { chiffre: string; accord: string; dansCeChant: boolean }
 
-/** Au plus trois suites : d'abord l'accord qui suit vraiment dans la partition (s'il diffère), puis les usuelles
- *  (`comptees` : celles de nos chants, H9-1 ; sinon le tableau écrit à la main), sans doublon de chiffre. `chiffre` est celui de l'accord touché, sans basse. */
-export function ensuite(chiffre: string, tonalite: string, reel?: { accord: string; chiffre: string }, comptees?: string[]): LigneEnsuite[] {
+/** Au plus trois suites : d'abord l'accord qui suit vraiment dans la partition (s'il diffère), puis les usuelles,
+ *  sans doublon de chiffre. `chiffre` est celui de l'accord touché, sans basse. */
+export function ensuite(chiffre: string, tonalite: string, reel?: { accord: string; chiffre: string }): LigneEnsuite[] {
   // Le suivant réel qui ne change que la basse ou la couleur du même degré (D → D/F#) n'est pas une suite.
   const lignes: LigneEnsuite[] = reel && sansBasse(reel.chiffre) !== chiffre ? [{ chiffre: reel.chiffre, accord: reel.accord, dansCeChant: true }] : [];
-  for (const c of comptees ?? suitesUsuelles(chiffre)) {
+  for (const c of suitesUsuelles(chiffre)) {
     const accord = accordDuChiffre(c, tonalite);
     if (accord && !lignes.some((l) => sansBasse(l.chiffre) === c)) lignes.push({ chiffre: c, accord, dansCeChant: false });
   }
