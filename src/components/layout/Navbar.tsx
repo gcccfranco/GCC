@@ -87,15 +87,27 @@ export function Navbar() {
   };
 
   // Langue mémorisée côté serveur (notifPrefs/{uid}.lang) : les rappels du
-  // cron partent dans la langue de l'interface. Écrite à la connexion puis à
-  // chaque changement, une fois par valeur et par compte.
+  // cron partent dans la langue de l'interface. Écrite seulement si elle diffère
+  // de la dernière écrite avec succès pour ce compte sur cet appareil
+  // (localStorage `notifLang:${uid}`) ; le useRef évite les doubles appels.
   const sentLangRef = useRef("");
   useEffect(() => {
     if (!user) return;
     const key = `${user.uid}|${currentLang}`;
     if (sentLangRef.current === key) return;
     sentLangRef.current = key;
-    saveNotifLang(user.uid, currentLang === "zh-CN" ? "zh-CN" : "fr").catch(() => {});
+    const lang = currentLang === "zh-CN" ? "zh-CN" : "fr";
+    const storageKey = `notifLang:${user.uid}`;
+    try {
+      if (localStorage.getItem(storageKey) === lang) return;
+    } catch {}
+    saveNotifLang(user.uid, lang)
+      .then(() => {
+        try {
+          localStorage.setItem(storageKey, lang);
+        } catch {}
+      })
+      .catch(() => {});
   }, [user, currentLang]);
 
   const isActiveSongs = pathname.startsWith("/songs");

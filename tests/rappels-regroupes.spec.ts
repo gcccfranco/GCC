@@ -62,3 +62,36 @@ test("la langue choisie est mémorisée côté serveur pour les rappels", async 
   await page.getByRole("button", { name: "切换为中文" }).first().click();
   await expect.poll(langs).toEqual(["fr", "zh-CN"]);
 });
+
+test("recharger puis naviguer ne réécrit pas la langue déjà mémorisée", async ({ page }) => {
+  const lise: FakeProfile = { uid: "uid-lise", email: "lise@example.com", planningName: "Lise T." };
+  const db = await signInAs(page, lise, {}, "/songs");
+  const langs = () => db.writes.filter((w) => w.path === "notifPrefs/uid-lise").map((w) => w.data.lang);
+  await expect.poll(langs, "première connexion : une écriture").toEqual(["fr"]);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("notifLang:uid-lise"))).toBe("fr");
+  await page.reload();
+  await expect(page.getByRole("button", { name: "切换为中文" }).first()).toBeVisible();
+  await page.goto("/setlists");
+  await expect(page.getByRole("button", { name: "切换为中文" }).first()).toBeVisible();
+  await page.waitForTimeout(1000);
+  expect(langs(), "aucune nouvelle écriture après rechargement et navigation").toEqual(["fr"]);
+});
+
+test("après rechargement, un vrai changement de langue est écrit, et la garde est propre au compte", async ({ page, context }) => {
+  const marc: FakeProfile = { uid: "uid-marc", email: "marc@example.com", planningName: "Marc D." };
+  const db = await signInAs(page, marc, {}, "/songs");
+  const langs = () => db.writes.filter((w) => w.path === "notifPrefs/uid-marc").map((w) => w.data.lang);
+  await expect.poll(langs).toEqual(["fr"]);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("notifLang:uid-marc"))).toBe("fr");
+  await page.reload();
+  await page.getByRole("button", { name: "切换为中文" }).first().click();
+  await expect.poll(langs, "la bascule vers le chinois est écrite").toEqual(["fr", "zh-CN"]);
+
+  // Même appareil, autre compte : la clé de Marc ne doit pas empêcher son écriture.
+  const page2 = await context.newPage();
+  const noemie: FakeProfile = { uid: "uid-noemie", email: "noemie@example.com", planningName: "Noémie P." };
+  const db2 = await signInAs(page2, noemie, {}, "/songs");
+  await expect
+    .poll(() => db2.writes.filter((w) => w.path === "notifPrefs/uid-noemie").length, "l'autre compte reçoit sa propre écriture")
+    .toBe(1);
+});
