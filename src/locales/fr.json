@@ -3389,6 +3389,8 @@
     "titreChant": "Harmonie de ce chant",
     "fermer": "Fermer",
     "boucle": "en boucle",
+    "boucleChezNous": "Boucle {{boucle}} — comme {{count}} autres chants",
+    "boucleChezNousListe": "Les chants qui jouent cette boucle",
     "fonction": {
       "repos": "Finit sur le 1 : le passage se pose.",
       "versRefrain": "Finit sur le {{x}} : il appelle le refrain.",

@@ -3349,6 +3349,8 @@
     "titreChant": "这首歌的和声",
     "fermer": "关闭",
     "boucle": "循环",
+    "boucleChezNous": "循环 {{boucle}}——另有 {{count}} 首歌也这样弹",
+    "boucleChezNousListe": "弹这个循环的歌",
     "fonction": {
       "repos": "落在1级：这一段稳稳收住。",
       "versRefrain": "落在{{x}}级：引向副歌。",

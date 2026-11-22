@@ -611,6 +611,22 @@ s'écrivent dans l'Avancement, pour que Timothée voie s'ils ont du sens avant l
   accès, 288 accords touchables), **rouge aussi sans mes changements** (vérifié par `git stash`) : hors lot.
   Captures regardées : téléphone, tablette portrait 中文, tablette paysage 中文, ordinateur sombre ; corrigé après
   elles : la part ne se sépare plus de son accord en fin de ligne.
+- 22/11/2026 : **H9-2 faite, lot H9 (« chez nous ») fini** (même session, sans agent). Dans la fenêtre Harmonie
+  d'un chant, sous le nom d'une section qui tourne sur quatre degrés : « Boucle 1 · 5 · 6m · 4 — comme N autres
+  chants » (zh « 循环 1 · 5 · 6m · 4——另有 N 首歌也这样弹 »), affichée si N ≥ 3 ; au toucher, la liste (titre ·
+  section dans la langue de l'écran · tonalité), chaque titre ouvrant sa page ; en mode louange, la liste sans liens.
+  Même composant pour la page d'un chant, la partition d'une setlist et le mode louange ; `sansFormes` intact. Le
+  fichier ne garde que les boucles d'au moins 4 chants. **Décisions déléguées (session, 22/11)** : une boucle = les
+  quatre premiers degrés distincts de la section (répétitions immédiates fondues), rejoués aussitôt une fois de plus ;
+  une boucle qui commence ailleurs (6m · 4 · 1 · 5) est **une autre boucle** (pas de rotation : à rediscuter si
+  Timothée veut les réunir) ; un chant compte une fois par boucle, avec sa première section qui la joue.
+  **Chiffres réels**, majeur : 1 · 5 · 6m · 4 (**19 chants**) ; 6m · 4 · 1 · 5 (17) ; 1 · 6m · 4 · 5 (16) ;
+  4 · 1 · 5 · 6m (11) ; 1 · 4 · 6m · 5 (9) ; puis 4 · 1 · 6m · 5 (8) et huit autres de 4 à 6 chants. Mineur : aucune.
+  Tests : `harmonie-boucles` (nouvelle : boucle trouvée ou non, seuil 3 autres chants, le chant exclu de sa liste ;
+  écran FR « amour-sans-fin » et ZH « 是耶稣的名 », liens vers les pages) et un test dans `louange-harmonie` (liste
+  sans liens) ; trois appareils, avec le tour d'H9-1 (256 / 6), puis 9 / 0 après correction (le test ZH visait la
+  première boucle du chant, 1 · 6m · 4 · 5). `louange-harmonie:133` (instable connu) passé dans ce tour.
+  `npm run validate` 383 chants valides, `tsc` propre, eslint sans nouvel avertissement.
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
