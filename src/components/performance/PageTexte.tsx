@@ -61,10 +61,10 @@ export function PageTexte({
       {/* En-tête hors échelle, en pleine largeur : vue structure et
           première page d'un chant en deux colonnes. */}
       {page.header != null && renderBlock(page.header)}
-      {/* Mise à l'échelle d'une page (réduction si elle déborde, agrandissement
-          en vue structure) : transform + largeur compensée, comme le
-          conteneur parent (jamais `zoom` — arrondis de mise en page non
-          déterministes, cf. commentaire du conteneur). */}
+      {/* Réduction d'une page qui déborde : transform seul (jamais `zoom` —
+          arrondis de mise en page non déterministes, cf. commentaire du
+          conteneur). Largeur gardée à 100 % (R9) : le texte se pose à la
+          largeur où la copie l'a mesuré, sinon ses vers se coupent ailleurs. */}
       <div
         ref={scaledBodyRef}
         className={page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}
@@ -75,7 +75,6 @@ export function PageTexte({
             ? {
                 transform: `scale(${page.scale})`,
                 transformOrigin: "top left",
-                width: `${100 / page.scale}%`,
               }
             : undefined
         }

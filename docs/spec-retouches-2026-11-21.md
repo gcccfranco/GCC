@@ -351,3 +351,16 @@ Ensuite : la session lance P3 (`docs/audit-performance-2026-11-21.md`, § 7).
   `2fb6a2cc`), aucun de P1 : aucun rouge n'est apparu ni disparu avec eux. Note : le Playwright du dépôt (1.62.1)
   attend Chromium 1234, le conteneur a 1243 : lancé avec `PLAYWRIGHT_BROWSERS_PATH` vers un dossier de liens (rien
   installé). Agents non utilisés : diagnostic, alignements et passages faits dans la session (alignements courts).
+- **R9 faite (22/11/2026)**. Rouge reproduit d'abord : `louange-coupure:172` (« … puis après A+ et après une
+  rotation »), téléphone, 10 sur 10 rouges (écart −1). Cause confirmée : `PageTexte.tsx` élargissait le corps d'une
+  page réduite (`width: 100 / scale %`), le texte se reposait plus large que la copie de mesure. Correction (une ligne
+  retirée) : la page réduite garde sa largeur, seul le `transform: scale()` reste ; le texte se pose à la largeur où
+  il a été mesuré (une page réduite laisse donc une bande vide à droite, au lieu d'un texte élargi qui se coupe
+  ailleurs). La pagination ne dépend pas de cette largeur : relevé avant/après (sections par colonne et par page, FR
+  et ZH, « Tout le chant » sans disposition, Repères, Scène, et « Chaque section une fois », échelles 0,8, 1 et 1,2,
+  cinq projets, 120 relevés) : écart nul. Résultats : `louange-coupure:172` téléphone 30 sur 30 (`--repeat-each=3`) ;
+  rotation couché puis debout, FR et ZH, cinq projets, copie et écran égaux (captures du téléphone regardées : aucune
+  ligne coupée) ; `louange-coupure`, `mode-louange-colonnes`, `louange-demi-page`, `louange-sections-uniques`,
+  `nettoyage-louange-pures`, cinq projets : 574 verts, 0 rouge, 58 ignorés par la spec (20 min). Voisins, **non
+  tombés, non touchés** : `rappel-ordre-joue:449` et `:482` (téléphone) 5 rouges, 1 vert ; `louange-reglages:123`
+  (Chiffres) 10 sur 10 rouges (bouton introuvable). tsc propre. Aucun agent.
