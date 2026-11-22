@@ -177,6 +177,7 @@ for (const n of ["lettres", "chiffres"] as const) {
     await expect(panneau.locator("[data-accord-chiffre]")).toHaveText(/^\S+ dans [A-G][#b]?m?$/);
     const ensuite = panneau.getByRole("button", { name: /^Ensuite/ });
     await expect(ensuite).toBeVisible();
+    await ensuite.click(); // dépliée d'office depuis le 22/11/2026 : on la replie pour lire la ligne courte
     const replie = (await ensuite.textContent()) ?? "";
     expect(n === "chiffres" ? CHIFFRE.test(replie.replace(/^Ensuite\s*:?\s*/, "")) : /^Ensuite\s*:?\s*[A-G]/.test(replie), replie).toBe(true);
     await ensuite.click();

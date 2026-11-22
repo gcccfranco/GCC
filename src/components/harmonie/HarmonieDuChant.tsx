@@ -576,6 +576,12 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                             {texteFiche(s.fiche).nom}
                           </Link>
                         </div>
+                        {/* Ressenti et usage de la fiche (Timothée, 22/11/2026 : des étiquettes pour choisir une idée), sous le nom. */}
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {[...s.fiche.ressentis.map((x) => t(`harmonie.ressenti.${x}`)), ...s.fiche.usages.map((x) => t(`harmonie.usage.${x}`))].map((e) => (
+                            <span key={e} data-etiquette-idee="" className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{e}</span>
+                          ))}
+                        </div>
                         {apercu ? (
                           // Timothée (13/11/2026) : on distinguait mal l'ancienne progression de la nouvelle. L'ancienne en gris,
                           // la nouvelle dans la couleur des accords, « avant » et « après » au-dessus.

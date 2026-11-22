@@ -3227,6 +3227,8 @@
     "dansCeChant": "dans ce chant",
     "garde": "garde {{notes}}",
     "toutBouge": "tout bouge",
+    "separateurNotes": " ; ",
+    "separateurMouvements": ", ",
     "fermer": "Fermer",
     "labelGuitare": "Doigté de {{accord}} à la guitare : {{cases}}",
     "labelPiano": "{{accord}} au piano : main gauche {{gauche}}, main droite {{droite}}",

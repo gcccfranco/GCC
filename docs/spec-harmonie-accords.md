@@ -367,7 +367,7 @@ purs du compte sur de petits chants écrits dans le test (majeur, mineur, basse,
 l'écran FR et un ZH, noms fictifs. Les chiffres réels (les cinq boucles les plus jouées, les suites de chaque degré)
 s'écrivent dans l'Avancement, pour que Timothée voie s'ils ont du sens avant la mise en ligne.
 
-## Idées du 22/11/2026 (Timothée : « ça ça peut être utile pour nous je pense ») — en attente d'un go
+## Idées du 22/11/2026 (Timothée : « ça ça peut être utile pour nous je pense ») — go le 22/11 (« go pour les deux »), faites
 
 Deux idées reprises d'un site de théorie musicale, refaites avec nos mots et nos fiches (rien n'est copié).
 - **« Garde Do ; Mi → Fa » en une ligne.** Déjà là pour l'essentiel : la liste dépliée d'« Ensuite » écrit, pour chaque
@@ -665,6 +665,19 @@ Les deux changent l'apparence : planche courte puis spec, ou go direct pour (a)+
   `public/harmonie-chez-nous.json`, plus de `chezNous.ts` ni `useChezNous.ts`, plus de lignes dans le panneau d'un
   accord ni dans la fenêtre Harmonie ; les deux specs nouvelles sont supprimées, les libellés de test rendus. Pour le
   remettre : `git revert` de ce commit. Tests : `harmonie-porte1`, trois appareils (voir le commit).
+- 22/11/2026 : **idées du 22/11 faites** (go de Timothée : « go pour les deux » ; même session, sans agent).
+  (1) Panneau d'un accord : « Ensuite » est **dépliée d'office** (on la replie d'un appui ; repliée, la ligne courte
+  revient) et chaque suite dit en une ligne « garde C ; E → F, G → F » (zh « 保留 C；E → F，G → F »). (2) Fenêtre
+  Harmonie d'un chant : chaque carte d'idée porte, sous son nom, le **ressenti** (chaleureux, mélancolique, élan,
+  couleur) et l'**usage** (couplet, pré-refrain, refrain, fin, transition) de sa fiche. **Décisions déléguées
+  (session, 22/11)** : pas de nouveau vocabulaire, on reprend les étiquettes que les 91 fiches portent déjà (H2) au
+  lieu d'écrire des ambiances à la main ; elles restent « proposées » (non validées par Timothée), mention gardée sur
+  la page de la fiche mais pas sur la carte ; les notes restent en lettres comme partout sur le site.
+  Tests : `harmonie-porte1` (dépliée d'office, ligne « garde … ; … → … » FR et ZH, repli), `harmonie-volet-section`
+  (étiquettes FR et ZH), `notation-accords` et `accords-toucher` ajustés ; avec `harmonie-suggestions`,
+  `harmonie-setlist`, `louange-harmonie`, trois appareils : 280 / 9 (7,7 min), puis 6 / 0 et 74 / 0 après corrections.
+  Reste rouge `accords-toucher:233`, déjà rouge avant (hors lot). Captures regardées au téléphone : panneau, carte
+  d'idée (étiquettes passées sur leur ligne après la capture).
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 
