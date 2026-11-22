@@ -309,3 +309,32 @@ s'arrête sur ce point et on l'écrit. Aucun test sauté, désactivé ou assoupl
   rouge aussi sans le diff de R7). Captures triées par `regard` (FR et ZH, cinq projets) : placement juste partout.
   Les agents de `.claude/agents/` ne se sont pas chargés (session ouverte hors du dépôt) : `/tranche` et `regard`
   ont tourné en `general-purpose` au même modèle, chacun lisant sa fiche.
+- **R8 faite en partie (22/11/2026)** (commit `d4298462`). Les douze tests reproduits d'abord (cinq projets,
+  `--workers=2 --trace off`) : 48 cas rouges, `rappel-indice:178` vert. Dix **tests en retard**, alignés : (1)
+  `dispositions-partition:752` (téléphone) et `:795` (ordinateur, tablette paysage, 1 440) : la marge range ses vignettes
+  en grille souple, 3 + 2 dans la colonne de 320 px (CI-15, 15/11), le panneau du mode louange aussi dès 1 024 px (reste
+  d'A5, CI-4) ; le test vérifie rangées pleines sauf la dernière, 3 + 2 en colonne, colonnes égales, libellés entiers
+  sur deux lignes au plus ; cinq de front sous 1 024 px comme avant. (2) `louange-barre-titre:142` et `:285` : depuis
+  CL-1 les Repères d'un scan viennent de `sections.json` seul (CI-3, « le cas scan sans `sections.json` n'existe plus »)
+  ; le test simule le scan sans Repères en répondant aussi à `sections.json`. (3) `louange-demi-page:157` : le sélecteur
+  `[data-col-page] > *` tombait sur l'enveloppe `display: contents` de `NomsTouchables` (boîte nulle,
+  `spec-accords-louange.md`) ; il vise l'enfant de l'enveloppe. (4) `rappel-ordre-joue:423` : trait tracé barre montrée,
+  relu barre cachée ; la page 2 passe alors en rangée unique (A12, CI-22, Timothée le 16/11) et remonte de 52 px avec
+  son texte et son trait (le trait suit bien le texte) : le test remontre la barre avant de comparer. (5)
+  `usage-dimanche:221` métronome dans le panneau (MT-2), `:238` capo dans la fenêtre de l'armure (RU-5, « Outils perd
+  Tonalité et Capo »), `:330` et `:339` corbeille toujours affichée, vide (`data-vide`, décision du 17/11, `d60e7bf5`).
+  Un **défaut du site, non corrigé** (arrêt sur ce point) : (6) `louange-coupure:172`, rotation au téléphone (9 cas) :
+  couché (412 px de haut), « Couplet 1 » est plus haut que la page, `pagesUneColonne` réduit la page
+  (`src/lib/performance/columns.ts:99`, échelle 0,82) et `PageTexte.tsx:78` compense la largeur (`100 / scale` %) :
+  le texte se repose sur 870 px alors que la copie de mesure l'a mesuré à 715 px, écran et copie ne coupent plus les
+  vers pareil. Corriger touche la mise à l'échelle des pages réduites (choix visuel) : retouche à part. (7)
+  `rappel-indice:178` : **non reproduit** (vert au premier tour, au tour final, puis 6 sur 6 au téléphone, FR et 中文) ;
+  rien changé. Vus en passant, **hors liste, non touchés** : `rappel-ordre-joue:449` et `:482` (annotations d'avant le
+  lot, téléphone) rouges aussi seuls, trait 32 à 96 px sous le haut de sa section, probablement la même rangée unique
+  (CI-22) ; `louange-barre-titre:142` au téléphone a perdu une fois sur deux tours chargés le bouton ♩ (节拍), 3 sur 3
+  et 8 sur 8 verts seul. Tests : tour final des sept specs, cinq projets, 985 passés, 15 rouges (les 9 rotations, les 5
+  voisins ci-dessus, le ♩ sous charge), 82 ignorés, 48 min ; puis chaque test corrigé trois fois de suite sur les cinq
+  projets : 141 sur 141 (7 min). tsc propre (hors `.next/`). Pendant ce temps, deux commits de P2 (`f5339990`,
+  `2fb6a2cc`), aucun de P1 : aucun rouge n'est apparu ni disparu avec eux. Note : le Playwright du dépôt (1.62.1)
+  attend Chromium 1234, le conteneur a 1243 : lancé avec `PLAYWRIGHT_BROWSERS_PATH` vers un dossier de liens (rien
+  installé). Agents non utilisés : diagnostic, alignements et passages faits dans la session (alignements courts).
