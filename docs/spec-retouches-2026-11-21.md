@@ -165,6 +165,19 @@ une rotation dans les deux sens, chant FR et chant ZH (capture regardée) ; la p
 `rappel-ordre-joue:449` et `:482` (téléphone), `louange-reglages:123` (Chiffres en mode louange).
 Ensuite : la session lance P3 (`docs/audit-performance-2026-11-21.md`, § 7).
 
+## R10 — Harmonie en setlist et en mode louange : sans idées de forme ni montée de ton (22/11/2026)
+
+Mots de Timothée : « dans les idées d'harmonie qui s'affichent dans le mode louange et dans la partition des setlists
+enlève les sections "intro après la fin du refrains", "le tag : répéter la dernière phrase" et même les propositions
+pour monter de gamme généralement on le fait pas ».
+
+Fait : dans la partition d'une setlist (`IdeesDuChant.tsx`) et en mode louange (`VoletHarmonie.tsx`), la fenêtre
+Harmonie ne montre plus les idées « Intro avec la fin du refrain » et « Tag », ni les cartes de montée de ton
+(option `sansFormes` de `HarmonieDuChant`, `harmonieDuChant`, `suggestionsPour`). La page d'un chant les garde (il
+n'en a pas parlé : à lui de dire s'il veut les retirer aussi). Le sélecteur 升调 de la setlist ne change pas : on peut
+toujours poser une montée de ton à la main. Code laissé en place, plus appelé depuis une setlist : le `onModuler` de
+`IdeesDuChant.tsx` et les cartes de modulation de `HarmonieDuChant.tsx` (à retirer si la décision se confirme).
+
 ## Avancement
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,
@@ -373,3 +386,9 @@ Ensuite : la session lance P3 (`docs/audit-performance-2026-11-21.md`, § 7).
   ajouté dans `harmonie-fenetre-placement` (rouge avant : saut de 573 px) ; la spec entière sur cinq projets :
   42 passés, 18 ignorés, 1,8 min. Vérifié aussi, au doigt, la poignée de la feuille « Affichage » du mode louange :
   pas de défaut (test ajouté dans `louange-menus`, vert sans correction). Sur un vrai iPad : à revoir par Timothée.
+- 22/11/2026, soir : **R10 faite** (session d'origine). Option `sansFormes` passée par la partition d'une setlist et
+  par le mode louange : plus d'« Intro avec la fin du refrain », de « Tag » ni de carte de montée de ton dans la
+  fenêtre Harmonie ; la page d'un chant inchangée. Tests : test pur ajouté (`harmonie-suggestions`), deux tests de
+  `harmonie-setlist` remplacés par un test d'absence (la montée de ton ne s'applique plus depuis Harmonie) ; ces deux
+  specs sur trois appareils : 63 passés ; `louange-harmonie`, `harmonie-volet-section`, `harmonie-appliquer` :
+  168 passés, 1 échec (`louange-harmonie:133` ZH au téléphone, instable connu : 8 sur 8 seul). tsc propre.

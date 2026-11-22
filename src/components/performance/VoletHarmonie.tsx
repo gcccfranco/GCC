@@ -174,6 +174,7 @@ export function VoletHarmonieLouange({ volet, onClose }: { volet: VoletOuvert | 
       ancre={volet.ancre}
       passage={{ uid: volet.uid, cle: volet.cle, miHauteur: !fenetre }}
       louange
+      sansFormes
     />
   );
   return (

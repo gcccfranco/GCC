@@ -84,6 +84,9 @@ type Props = {
   passage?: { uid: string; cle: number; /** L'idée nommée par « Ici » : sa carte est dépliée et visible. */ idee?: string; /** JV-5a : ouvert depuis le nom de la section : feuille à mi-hauteur (téléphone, tablette portrait). */ miHauteur?: boolean };
   /** JV-5b : posé par-dessus le mode louange (z au-dessus de lui ; sans « Montrer », la page paginée ne défile pas). */
   louange?: boolean;
+  /** Setlist et mode louange (Timothée, 22/11/2026) : sans les idées de forme (intro reprise de la fin du refrain,
+   *  tag) ni les montées de ton ; la page d'un chant les garde. */
+  sansFormes?: boolean;
 };
 
 /** La section visée, dans le chant lu : d'abord son occurrence, sinon (structure
@@ -330,7 +333,7 @@ function grilleDuPassage(p: Passage) {
   return { lignes: uniques.map((l) => l.map((a) => a.texte)) };
 }
 
-function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage, louange }: Props) {
+function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage, louange, sansFormes }: Props) {
   const { t } = useTranslation();
   const texteFiche = useTexteFiche();
   const { user, profile } = useProfile();
@@ -352,8 +355,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
   }, [slug]);
 
   const { passages, sansPassage } = useMemo(
-    () => harmonieDuChant(sections, tonalite, fiches, suggestionsEcartees(rejets), idees),
-    [sections, tonalite, fiches, rejets, idees],
+    () => harmonieDuChant(sections, tonalite, fiches, suggestionsEcartees(rejets), idees, sansFormes),
+    [sections, tonalite, fiches, rejets, idees, sansFormes],
   );
   // Un bloc par passage ; les reprises d'une même section se replient dans le premier.
   const blocs = useMemo(() => {
@@ -474,7 +477,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
     recharger: async () => setIdees(await getIdees(slug)),
   });
 
-  const modulations = onModuler
+  const modulations = onModuler && !sansFormes
     ? MODULATIONS.flatMap((m) => {
         const prop = modulationProposee(sections, tonalite, m);
         const fiche = fiches.find((f) => f.id === m.fiche);

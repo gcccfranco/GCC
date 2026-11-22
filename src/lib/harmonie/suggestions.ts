@@ -92,6 +92,7 @@ export function suggestionsPour(
   tonalite: string,
   fiches: Fiche[],
   refuses: string[] = [],
+  sansFormes = false,
 ): Suggestion[] {
   const parId = new Map(fiches.map((f) => [f.id, f]));
   const ecartes = new Set(refuses);
@@ -102,6 +103,8 @@ export function suggestionsPour(
     if (!fiche) continue;
 
     if (regle.genre) {
+      // Setlist et mode louange (Timothée, 22/11/2026) : ni « intro reprise de la fin du refrain » ni « tag ».
+      if (sansFormes) continue;
       out.push(...suggestionsParticulieres(sections, regle, fiche));
       continue;
     }

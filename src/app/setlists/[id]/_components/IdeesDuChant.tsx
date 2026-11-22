@@ -99,6 +99,7 @@ export function IdeesDuChant({
       tonaliteOrigine={ast.metadata.key}
       instrument={instrument}
       passage={passage}
+      sansFormes
       // « Montrer » cherche dans ce chant : les identifiants de section
       // se répètent d'un chant à l'autre, et d'un chant à l'autre d'une fusion.
       portee={`[data-outline-item="${item.position}"]${chantFusion ? ` [data-chant-slug="${CSS.escape(slug)}"]` : ""}`}
