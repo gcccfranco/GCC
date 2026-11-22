@@ -330,6 +330,39 @@ fixé par les décisions 4 (11/11) et 7 (12/11) : pas de planche.
 Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
 nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
 
+## Lot H9 — « Chez nous » : ce qui se joue dans nos chants (Timothée, 22/11/2026 ; go : « go lance une session pour coder »)
+
+Origine : Timothée a montré le site wangshubianqu.com/chord-map (« ça peut nous aider pour les idées d'harmonie »).
+On en garde deux idées, refaites à partir de **nos** chants (384 `.cho`, tous avec `{key}`), sans rien copier du
+site (ni textes, ni classement, ni fichier de statistiques) et sans chansons extérieures pour l'instant.
+
+Décisions (proposition acceptée par le go) :
+- **Les comptes se font à la construction** (`npm run build:index`, à côté de `scripts/build-harmonie.ts`) et sortent
+  dans un fichier de `public/` chargé à la demande par Harmonie ; rien ne se calcule à l'écran.
+- **Comment on compte** : chaque chant dans sa tonalité (`{key}`), accords ramenés en degrés avec
+  `src/lib/harmonie/degres.ts` (basse et enrichissements ôtés : `D/F#` et `Dsus4` comptent comme le degré de `D`),
+  majeur et mineur séparés ; une section répétée dans la structure compte une fois ; un chant compte une fois par
+  suite ou par boucle (on compte des chants, pas des occurrences) ; les chants `needs_review` sont comptés quand même.
+- **H9-1 — « Après cet accord, chez nous »** : là où Harmonie montre « Ensuite : 5 · 6m · 1 »
+  (`src/lib/harmonie/suites.ts`, `suitesUsuelles`, panneau d'un accord), les trois suites viennent du compte de nos
+  chants, classées, avec leur part (« 5 · 41 % »). En dessous de **8 chants** pour un degré, on garde le tableau
+  écrit à la main (c'est aussi le repli si le fichier ne se charge pas). Le gabarit de la ligne ne change pas.
+- **H9-2 — « Cette boucle, on la joue déjà »** : dans la fenêtre Harmonie d'un chant, sous le nom d'une section dont
+  les accords forment une boucle de quatre degrés (les quatre premiers accords distincts consécutifs, répétés au moins
+  une fois dans la section), une ligne « Boucle 1 · 5 · 6m · 4 — comme N autres chants » ; au toucher, la liste de ces
+  chants (titre, section, tonalité), chacun ouvrant sa page. Affichée seulement si N ≥ 3. Lecture seule, page d'un
+  chant, partition d'une setlist et mode louange (en mode louange : la ligne sans les liens, on ne quitte pas le mode).
+  Les deux langues (libellés fr et zh-CN).
+- **Hors périmètre** : chansons extérieures (POP909, Billboard), accords empruntés et dominantes secondaires,
+  étiquettes d'ambiance, noms de boucles (« 王道进行 »), toute écriture en base, `firestore.rules`.
+- **Pas de planche** : deux lignes dans des gabarits qui existent ; Timothée a demandé de coder directement. Captures
+  aux quatre dispositions, thème sombre et 中文, puis `critique-design`.
+
+Tranches : **H9-1** (script de compte, fichier, « Après cet accord ») puis **H9-2** (boucles). Chaque tranche : tests
+purs du compte sur de petits chants écrits dans le test (majeur, mineur, basse, section répétée, seuil), un test à
+l'écran FR et un ZH, noms fictifs. Les chiffres réels (les cinq boucles les plus jouées, les suites de chaque degré)
+s'écrivent dans l'Avancement, pour que Timothée voie s'ils ont du sens avant la mise en ligne.
+
 ## Avancement
 
 - 11/11/2026 : captures de l'existant (téléphone, tablette, ordinateur), un `/planche` (3 agents), retouches à la
