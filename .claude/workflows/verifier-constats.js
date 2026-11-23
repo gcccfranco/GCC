@@ -52,13 +52,13 @@ const lots = [...groupes.values()].flatMap((g) => {
 
 const verifierUn = ({ c, i }) => agent(
   `Constat d'audit (relevé au commit ${A.base}) à réfuter si possible :\n${JSON.stringify(c, null, 1)}\n\n${DEJA}`,
-  { agentType: 'relecteur', schema: VERDICT, label: `refuter:${i + 1}:${String(c.titre).slice(0, 30)}` })
+  { agentType: 'relecteur', model: 'sonnet', effort: 'medium', schema: VERDICT, label: `refuter:${i + 1}:${String(c.titre).slice(0, 30)}` })
   .then((v) => [{ i, r: { ...c, verif: v } }])
 
 const verifierLot = (lot) => agent(
   `${lot.length} constats d'audit (relevés au commit ${A.base}) qui citent le même fichier. Réfute CHACUN si possible, indépendamment des autres : un verdict par constat, avec son \`index\`.\n\n` +
   lot.map(({ c }, k) => `index ${k} :\n${JSON.stringify(c, null, 1)}`).join('\n\n') + `\n\n${DEJA}`,
-  { agentType: 'relecteur', schema: VERDICTS_LOT, label: `refuter-lot:${lot.map(({ i }) => i + 1).join(',')}` })
+  { agentType: 'relecteur', model: 'sonnet', effort: 'medium', schema: VERDICTS_LOT, label: `refuter-lot:${lot.map(({ i }) => i + 1).join(',')}` })
   .then((res) => lot.map(({ c, i }, k) => {
     const v = ((res && res.verdicts) || []).find((x) => x.index === k)
     if (!v) return { i, r: { ...c, verif: { verdict: 'incertain', severite: c.severite, raison: 'pas de verdict rendu', preuve: '' } } }

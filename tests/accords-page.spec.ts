@@ -150,6 +150,18 @@ test("aucun lien vers /accords dans la navigation", async ({ page }) => {
   }
 });
 
+test("Piano : le clavier a la même largeur rendue pour C et F#m7b5", async ({ page }) => {
+  const largeurs: number[] = [];
+  for (const accord of ["C", "F#m7b5"]) {
+    await ouvrir(page, accord);
+    await page.getByRole("radio", { name: "Piano" }).click();
+    const dessin = carte(page).locator("[data-renversement] svg").first();
+    await expect(dessin).toBeVisible();
+    largeurs.push((await dessin.boundingBox())!.width);
+  }
+  expect(Math.abs(largeurs[0] - largeurs[1])).toBeLessThanOrEqual(1);
+});
+
 for (const [langue, stockee] of [["fr", "fr"], ["zh", "zh-CN"]] as const) {
   test(`captures de la page (${langue})`, async ({ page }, testInfo) => {
     await page.addInitScript((l) => localStorage.setItem("i18nextLng", l), stockee);

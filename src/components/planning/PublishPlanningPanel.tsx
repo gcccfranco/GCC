@@ -1,5 +1,6 @@
 "use client";
 
+import { compter } from "@/lib/usage";
 import { useEffect, useMemo, useState } from "react";
 import { Send, Check, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -70,6 +71,7 @@ export function PublishPlanningPanel({
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
+        if (publish) compter("cmd.planning.publier");
         setPublished(data.published ?? []);
         setFeedback(
           publish

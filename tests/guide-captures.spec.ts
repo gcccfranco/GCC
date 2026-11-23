@@ -188,7 +188,7 @@ test("captures du guide", async ({ page }, testInfo) => {
   const barre = page.getByRole("button", { name: tr("Plus d'actions", "更多操作") }).first();
   // Menu ouvert, Radix masque le reste de la page aux rôles : on mesure avant d'ouvrir.
   mesures.song = {
-    tonalite: await mesurer(page.getByTestId("pilule-tonalite")),
+    tonalite: await mesurer(page.getByTestId("armure")),
     menu: await mesurer(barre),
   };
   await barre.click();
@@ -202,7 +202,7 @@ test("captures du guide", async ({ page }, testInfo) => {
   await panneau.waitFor();
   await page.waitForTimeout(600);
   await figure(page, "customize", {
-    transpose: page.getByTestId("pilule-tonalite"),
+    transpose: page.getByTestId("armure"),
     sections: panneau.getByText(tr("Structure", "歌单结构"), { exact: true }),
     reinit: panneau.getByRole("button", { name: tr("Réinitialiser", "重置") }),
   });
@@ -214,15 +214,15 @@ test("captures du guide", async ({ page }, testInfo) => {
   await attendreMiseEnPage(page);
   await page.waitForTimeout(1500); // fin de la transition d'ouverture
   // La barre s'escamote après 3 s : un toucher au centre la rappelle.
-  const reglages = page.getByRole("button", { name: tr("Réglages", "设置") });
+  const reglages = page.getByRole("button", { name: tr("Options d'affichage", "显示选项") });
   await expect(async () => {
     if (!(await reglages.isVisible())) await page.mouse.click(L / 2, H / 2);
     await expect(reglages).toBeVisible({ timeout: 1_500 });
   }).toPass({ timeout: 20_000 });
   await figure(page, "performance", {
-    annoter: page.getByRole("button", { name: tr("Annoter", "批注") }),
+    annoter: page.locator("[data-performance-mode]").getByRole("button", { name: tr("Crayon", "画笔") }),
     reglages,
-    page: page.getByRole("button", { name: tr("Page suivante", "下一页") }),
+    page: page.getByRole("slider", { name: tr("Aller à la page", "跳转到页面") }),
     quitter: page.getByRole("button", { name: tr("Quitter", "退出") }),
   });
 

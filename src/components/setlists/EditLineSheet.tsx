@@ -29,6 +29,9 @@ import {
   instrumentalParts,
   makeInstrumentalLine,
 } from "@/lib/chordpro/editSource";
+import { REPERE_ROND, REPERE_TEXTE, rangLibelle } from "@/components/song/SongView";
+import type { PastillePassage } from "@/lib/setlist/passages";
+import { TOUCHER_44 } from "@/lib/toucher44";
 
 // Bottom sheet d'édition d'une ligne de chant dans une setlist (mobile-first).
 // La ligne y est affichée agrandie : accords = chips tactiles (remplacer /
@@ -52,6 +55,8 @@ export type EditLineTarget = {
   originalKey: string;
   /** Index de la ligne dans le source — sert aussi de clé d'identité de la sheet. */
   srcLine?: number;
+  /** Crayon : « Paroles » ouvre la feuille sur les paroles, « Accord » (défaut) sur la ligne et ses accords. */
+  cible?: "accord" | "paroles";
 };
 
 type PadTarget = { kind: "add"; offset: number } | { kind: "edit"; index: number } | null;
@@ -255,9 +260,14 @@ type SheetProps = {
    *  pour toutes les répétitions ou pour ce seul passage. Absent = pas de choix. */
   repeatScope?: "all" | "one";
   onRepeatScope?: (scope: "all" | "one") => void;
+  /** Ordres « Une fois chacune » et « Plan » : le plan en pastilles, on touche le passage visé (rang dans la
+   *  structure) ou « Toutes les répétitions ». Remplace `repeatScope` ; rien n'est choisi d'avance. */
+  passages?: PastillePassage[];
+  passage?: number | "all" | null;
+  onPassage?: (passage: number | "all") => void;
 };
 
-export function EditLineSheet({ target, saving, onClose, onSaveLine, onInsertAfter, onDeleteLine, repeatScope, onRepeatScope }: SheetProps) {
+export function EditLineSheet({ target, saving, onClose, onSaveLine, onInsertAfter, onDeleteLine, repeatScope, onRepeatScope, passages, passage, onPassage }: SheetProps) {
   useStandaloneScrollLock(!!target);
   return (
     <Drawer open={!!target} onOpenChange={(o) => !o && onClose()}>
@@ -274,6 +284,9 @@ export function EditLineSheet({ target, saving, onClose, onSaveLine, onInsertAft
             onDeleteLine={onDeleteLine}
             repeatScope={repeatScope}
             onRepeatScope={onRepeatScope}
+            passages={passages}
+            passage={passage}
+            onPassage={onPassage}
           />
         )}
       </DrawerContent>
@@ -290,8 +303,19 @@ function SheetBody({
   onDeleteLine,
   repeatScope,
   onRepeatScope,
+  passages,
+  passage,
+  onPassage,
 }: SheetProps & { target: EditLineTarget }) {
   const { t } = useTranslation();
+  // Plan montré : tant que le passage n'est pas choisi, rien ne s'enregistre.
+  const sansPassage = passages !== undefined && (passage === undefined || passage === null);
+  // Nom d'un passage (« Refrain · 2ᵉ fois ») : son rang parmi les pastilles de même section, comme la note de la carte.
+  const nomPassage = (i: number) => {
+    const p = passages![i];
+    const rang = passages!.slice(0, i + 1).filter((q) => q.full === p.full).length;
+    return t("maPartition.passage.note", { nom: p.full, rang: rangLibelle(rang, t) });
+  };
 
   // Ligne affichée (tonalité de la setlist), calculée une fois au montage —
   // le composant est re-monté (key) à chaque changement de ligne cible.
@@ -310,10 +334,11 @@ function SheetBody({
   );
 
   const [draft, setDraft] = useState<EditableLine>(initial);
-  const [mode, setMode] = useState<Mode>(initialInstr ? "instr" : "line");
+  const surLesParoles = target.cible === "paroles" && !initialInstr;
+  const [mode, setMode] = useState<Mode>(initialInstr ? "instr" : surLesParoles ? "lyrics" : "line");
   const [padTarget, setPadTarget] = useState<PadTarget>(null);
-  const [lyricsDraft, setLyricsDraft] = useState("");
-  const [pinyinDraft, setPinyinDraft] = useState("");
+  const [lyricsDraft, setLyricsDraft] = useState(surLesParoles ? initial.text : "");
+  const [pinyinDraft, setPinyinDraft] = useState(surLesParoles ? initial.pinyin ?? "" : "");
   const [instrNew, setInstrNew] = useState(false);
   const [instrAnnotation, setInstrAnnotation] = useState(initialParts.annotation);
   const [instrChords, setInstrChords] = useState<string[]>(initialParts.chords);
@@ -412,6 +437,45 @@ function SheetBody({
           </div>
         )}
 
+        {passages && (
+          <div data-passage-choix className="mb-3">
+            <p className="mb-1.5 text-sm font-semibold text-foreground">{t("maPartition.passage.question")}</p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {passages.map((p, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  disabled={!p.actif}
+                  aria-pressed={passage === i}
+                  aria-label={p.actif ? nomPassage(i) : p.full}
+                  data-passage-pastille={i}
+                  onClick={() => onPassage?.(i)}
+                  className={`${REPERE_ROND} ${TOUCHER_44} transition-shadow disabled:cursor-default disabled:opacity-35 ${passage === i ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : ""}`}
+                  style={{ background: `var(--sec-${p.cle}-tint)`, color: `var(--sec-${p.cle})` }}
+                >
+                  <span className={REPERE_TEXTE}>{p.abbr}</span>
+                </button>
+              ))}
+              <button
+                type="button"
+                aria-pressed={passage === "all"}
+                data-passage-toutes
+                onClick={() => onPassage?.("all")}
+                className={`h-8 px-3 rounded-full text-sm font-semibold transition-colors sm:h-11 ${TOUCHER_44} ${
+                  passage === "all" ? "bg-foreground text-background" : "bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t("harmonie.toutesRepetitions")}
+              </button>
+            </div>
+            {sansPassage ? (
+              <p data-passage-aide className="mt-1.5 text-xs text-muted-foreground">{t("maPartition.passage.aide")}</p>
+            ) : typeof passage === "number" ? (
+              <p data-passage-nom className="mt-1.5 text-xs font-semibold text-foreground">{nomPassage(passage)}</p>
+            ) : null}
+          </div>
+        )}
+
         {/* ── Mode paroles ── */}
         {mode === "lyrics" && (
           <div className="space-y-3">
@@ -423,10 +487,10 @@ function SheetBody({
               autoFocus
             />
             {target.language === "zh" && (
-              <div>
-                <label className="text-xs text-muted-foreground">Pinyin</label>
+              <label className="block">
+                <span className="text-xs text-muted-foreground">Pinyin</span>
                 <Input value={pinyinDraft} onChange={(e) => setPinyinDraft(e.target.value)} className="mt-1" />
-              </div>
+              </label>
             )}
             {!lyricsDraft.trim() && (
               <p className="text-xs text-destructive">
@@ -552,7 +616,7 @@ function SheetBody({
               >
                 {t("common.cancel", { defaultValue: "Annuler" })}
               </Button>
-              <Button className="flex-1 h-11" disabled={instrChords.length === 0 || saving} onClick={handleValidate}>
+              <Button className="flex-1 h-11" disabled={instrChords.length === 0 || saving || sansPassage} onClick={handleValidate}>
                 {saving ? "…" : t("common.confirm", { defaultValue: "Valider" })}
               </Button>
             </div>
@@ -674,7 +738,7 @@ function SheetBody({
                   <Button variant="outline" className="flex-1 h-11" onClick={onClose}>
                     {t("common.cancel", { defaultValue: "Annuler" })}
                   </Button>
-                  <Button className="flex-1 h-11" disabled={saving} onClick={handleValidate}>
+                  <Button className="flex-1 h-11" disabled={saving || sansPassage} onClick={handleValidate}>
                     {saving ? "…" : t("common.confirm", { defaultValue: "Valider" })}
                   </Button>
                 </div>
@@ -697,7 +761,7 @@ function SheetBody({
               </Button>
               <Button
                 className="flex-1 h-10 bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                disabled={saving}
+                disabled={saving || sansPassage}
                 onClick={onDeleteLine}
               >
                 {saving ? "…" : t("setlists.contentEdit.deleteLineYes", { defaultValue: "Supprimer" })}

@@ -230,8 +230,8 @@ export function Clavier({ notes, label }: { notes: string[]; label?: string }) {
 const BLANCHE_DE: Record<number, number> = { 0: 0, 2: 1, 4: 2, 5: 3, 7: 4, 9: 5, 11: 6 };
 const NOIRE_DE: Record<number, number> = { 1: 0, 3: 1, 6: 3, 8: 4, 10: 5 };
 
-/** Piano à deux mains (dictionnaire d'accords) : deux octaves depuis do (trois si une note dépasse 23), notes en
- *  demi-tons depuis le do grave. Main gauche en encre, main droite en couleur d'accord, chaque point porte le nom
+/** Piano à deux mains (dictionnaire d'accords) : toujours trois octaves depuis do (échelle fixe d'un accord à
+ *  l'autre ; octave de la main gauche en gris), notes en demi-tons depuis le do grave (0 à 34). Main gauche en encre, main droite en couleur d'accord, chaque point porte le nom
  *  de la note. */
 export function ClavierMains({
   gauche,
@@ -247,7 +247,7 @@ export function ClavierMains({
   label?: string;
 }) {
   const W = 24;
-  const octaves = Math.max(...gauche, ...droite) > 23 ? 3 : 2;
+  const octaves = 3;
   const largeur = octaves * 7 * W;
   const hauteur = 96;
   const blanches = Array.from({ length: octaves * 7 }, (_, k) => k);
@@ -278,7 +278,7 @@ export function ClavierMains({
         <path
           key={`b${k}`}
           d={`M${k * W + 0.5} 0.5 H${(k + 1) * W - 0.5} V${hauteur - 6} Q${(k + 1) * W - 0.5} ${hauteur - 0.5} ${(k + 1) * W - 6} ${hauteur - 0.5} H${k * W + 6.5} Q${k * W + 0.5} ${hauteur - 0.5} ${k * W + 0.5} ${hauteur - 6} Z`}
-          className="fill-card" stroke="currentColor" strokeWidth={1} opacity={0.85}
+          className={k < 7 ? "fill-muted" : "fill-card"} stroke="currentColor" strokeWidth={1} opacity={0.85}
         />
       ))}
       {noires.map((k) => (

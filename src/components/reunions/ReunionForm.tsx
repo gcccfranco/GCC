@@ -5,6 +5,8 @@
 // une description et des liens (ordre du jour, document partagé), visibles d'emblée ; ni bannière, ni fin, ni
 // inscriptions, ni « Plus d'options ». Sujets à aborder, compte rendu et réunions précédentes vivent sur sa fiche.
 // Stockée comme un évènement (`reunion: true`) : bannière ou fin d'une réunion plus ancienne restent telles quelles.
+// Salles (chantier AR, lot 4, SA12 ; AS17) : « Où ? » à la place du lieu (`ChampSalle`) : « À l'église » propose une
+// salle (ou aucune, lieu « Église »), « Ailleurs » rend le lieu libre ; une salle choisie montre l'heure de fin et se vérifie à l'enregistrement (chevauchement refusé, SA8).
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
@@ -14,11 +16,17 @@ import { equipeDuPour, publicDeReunion } from "@/lib/access"
 import { cleNomEquipe } from "@/lib/equipes/table"
 import type { EvenementValues } from "@/components/evenements/EvenementForm"
 import { Button } from "@/components/ui/button"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { Champ } from "@/components/ui/champ"
 import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { ChampSalle, egliseInitiale, erreurSalle, valeursSalle, verifierSalle, type RefusEvenement } from "@/components/salles/ChampSalle"
+import { canSeeEvenement } from "@/lib/access"
+import { jourDeParis } from "@/lib/evenements/bascule"
+import { useAuth } from "@/lib/firebase/auth"
+import { useProfile } from "@/lib/firebase/users"
 
 // Une réunion a toujours une date (sujets jusqu'au début, rappel de la veille) : jamais « Info » (lot U6).
 const TYPE_REUNION: EvenementValues["type"] = "eglise"
@@ -27,8 +35,10 @@ const DATE_MAX = "9999-12-31"
 // Une réunion n'a pas d'inscriptions (lot U6, R4).
 const SANS_INSCRIPTION = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null, lienExterne: "" }
 
-export function ReunionForm({ initial, pours, creation, titreCache = false, onSubmit, onCancel }: {
+export function ReunionForm({ initial, pours, creation, titreCache = false, evenementId, onSubmit, onCancel }: {
   initial: EvenementValues
+  /** À la modification : la réunion elle-même ne gêne pas sa salle (SA8, SA10). */
+  evenementId?: string
   /** Équipes que la personne peut viser. */
   pours: string[]
   /** À la création : « Créer la réunion » et « Prévenir les membres ». */
@@ -48,9 +58,13 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, onSu
     ...(initial.type === "info" ? { type: TYPE_REUNION } : {}),
   }))
   // Une nouvelle réunion prévient ses membres par défaut, dupliquée comme créée de rien.
+  const [eglise, setEglise] = useState(() => egliseInitiale(initial, creation))
   const [prevenir, setPrevenir] = useState(true)
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
+  const [refus, setRefus] = useState<RefusEvenement | null>(null)
+  const { user } = useAuth()
+  const { profile } = useProfile()
   const set = (patch: Partial<EvenementValues>) => setV((x) => ({ ...x, ...patch }))
   const Titre = titreCache ? "h2" : "h1"
 
@@ -61,15 +75,29 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, onSu
     for (const l of v.liens) {
       if (l.url.trim() && !/^https?:\/\//i.test(l.url.trim())) { setError(t("annonces.form.errorLink", { url: l.url })); return }
     }
+    const erreur = erreurSalle(v)
+    if (erreur) { setError(t(erreur)); return }
     setBusy(true); setError("")
+    // SA12 : la salle se vérifie sur les occupations relues du jour ; un chevauchement montre le refus sous le champ.
+    try {
+      const r = await verifierSalle(v, evenementId, jourDeParis(), (e) => canSeeEvenement(user, profile, e))
+      setRefus(r)
+      if (r) { setBusy(false); document.getElementById("ev-salle")?.focus(); return }
+    } catch {
+      setError(t("salles.formulaire.echec")); setBusy(false); return
+    }
     // La fin d'une ancienne réunion n'a pas de champ ici : reportée après elle, la réunion la perd (sinon elle passerait
     // dans « passé » dès l'enregistrement).
     const finPerdue = !!v.dateFin && v.dateFin < v.date
     try {
       await onSubmit({
         ...v,
-        ...(finPerdue ? { dateFin: "", heureFin: "" } : {}),
+        // Avec une salle, l'heure de fin est la sienne (SA12) : elle reste.
+        ...(finPerdue ? { dateFin: "", ...(v.salle ? {} : { heureFin: "" }) } : {}),
         titre: v.titre.trim(), lieu: v.lieu.trim(), description: v.description.trim(), contact: v.contact.trim(),
+        // La salle ne s'écrit que si la réunion en a une ou en avait une (« Ailleurs » la retire).
+        // « À l'église » sans salle écrit le lieu « Église » (AS17).
+        ...(v.salle || initial.salle || eglise ? valeursSalle(v, eglise) : {}),
         liens: v.liens.map((l) => ({ label: l.label.trim(), url: l.url.trim() })).filter((l) => l.url),
         expiresAt: null, epingle: false,
         ...SANS_INSCRIPTION,
@@ -106,14 +134,13 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, onSu
             <Champ id="ev-date" label={t("evenements.form.date")}>
               <Input id="ev-date" className="h-11" type="date" max={DATE_MAX} value={v.date} onChange={(e) => set({ date: e.target.value })} required />
             </Champ>
-            <Champ id="ev-heure" label={t("evenements.form.heure")}>
+            {/* Une salle choisie : « Heure de début » au-dessus de « Heure de fin » (T4b). */}
+            <Champ id="ev-heure" label={t(v.salle ? "evenements.form.heureDebut" : "evenements.form.heure")}>
               <Input id="ev-heure" className="h-11" type="time" value={v.heure} onChange={(e) => set({ heure: e.target.value })} />
             </Champ>
           </div>
 
-          <Champ id="ev-lieu" label={t("evenements.form.lieu")}>
-            <Input id="ev-lieu" className="h-11" value={v.lieu} maxLength={120} onChange={(e) => set({ lieu: e.target.value })} />
-          </Champ>
+          <ChampSalle v={v} set={set} refus={refus} eglise={eglise} setEglise={setEglise} />
 
           <Champ id="ev-contact" label={t("evenements.form.contact")}>
             <Input id="ev-contact" className="h-11" value={v.contact} maxLength={80} placeholder={t("evenements.form.contactHint")} onChange={(e) => set({ contact: e.target.value })} />
@@ -134,10 +161,10 @@ export function ReunionForm({ initial, pours, creation, titreCache = false, onSu
                     onChange={(e) => { const liens = [...v.liens]; liens[i] = { ...liens[i], label: e.target.value }; set({ liens }) }} />
                   <Input aria-label={t("evenements.form.lienUrl")} value={l.url} placeholder="https://…"
                     onChange={(e) => { const liens = [...v.liens]; liens[i] = { ...liens[i], url: e.target.value }; set({ liens }) }} />
-                  <Button type="button" variant="ghost" size="sm" aria-label={t("evenements.form.removeLink")} onClick={() => set({ liens: v.liens.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></Button>
+                  <Button type="button" variant="ghost" size="sm" className={TOUCHER_44} aria-label={t("evenements.form.removeLink")} onClick={() => set({ liens: v.liens.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => set({ liens: [...v.liens, { label: "", url: "" }] })}>{t("evenements.form.addLink")}</Button>
+              <Button type="button" variant="outline" size="sm" className={TOUCHER_44} onClick={() => set({ liens: [...v.liens, { label: "", url: "" }] })}>{t("evenements.form.addLink")}</Button>
             </div>
           </Champ>
         </div>

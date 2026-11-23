@@ -96,7 +96,7 @@ const uids = (q: string, ctx = CTX) => ayantsDroitDuQui(q, ctx).map((a) => a.uid
 test.describe("liste « Qui » et familles (décision 34, CF3-CF5)", () => {
   test("QUI dans l'ordre de la décision 34, sans 敬拜团, Jeunes ni Chorale", () => {
     expect([...QUI]).toEqual([
-      "Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "Franco",
+      "Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "Franco", "Intergroupe", "Interfranco",
       "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
     ]);
   });
@@ -119,13 +119,13 @@ test.describe("liste « Qui » et familles (décision 34, CF3-CF5)", () => {
 
   test("FAMILLES à trois : groupes, edd, louange", () => {
     expect(FAMILLES.map((f) => f.cle)).toEqual(["groupes", "edd", "louange"]);
-    expect(FAMILLES[2].qui).toEqual(["Franco"]);
-    // « Qui peut réserver » se range par famille (groupes, EDD, louange) ; les mêmes dix valeurs que QUI.
-    expect(quiPermis({})).toEqual(["Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班", "Franco"]);
+    expect(FAMILLES[2].qui).toEqual(["Franco", "Intergroupe", "Interfranco"]);
+    // « Qui peut réserver » se range par famille (groupes, EDD, louange) ; les mêmes douze valeurs que QUI.
+    expect(quiPermis({})).toEqual(["Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班", "Franco", "Intergroupe", "Interfranco"]);
     expect([...quiPermis({})].sort()).toEqual([...QUI].sort());
   });
 
-  test("quiPermis : une saison qui ne garde que des valeurs retirées retombe sur les dix Qui actuels (choix faute de réponse)", () => {
+  test("quiPermis : une saison qui ne garde que des valeurs retirées retombe sur les douze Qui actuels (choix faute de réponse)", () => {
     expect(quiPermis({ quiAutorises: ["Jeunes", "Chorale", "敬拜团"] })).toEqual(quiPermis({}));
     expect(quiPermis({ quiAutorises: ["Jeunes", "Gp Paix"] })).toEqual(["Gp Paix"]);
   });

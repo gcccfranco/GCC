@@ -110,7 +110,7 @@ const filtreDeLAdresse = (v: string | null): Filtre => FILTRES.find((f) => f ===
 const vueDeLAdresse = (v: string | null): Vue | null => (v === "agenda" || v === "mois" ? v : null);
 
 const BOUTON_ROND =
-  "sur-gris inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-sm font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  `sur-gris inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-sm font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground ${TOUCHER_44}`;
 /** La hauteur de `Pilules` (28 px, 13 px ; 32 px et 14 px au toucher, zone de 44 px) : « Seulement moi » et « Sources » en sont les sœurs. */
 const PASTILLE = cn(
   "inline-flex h-7 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-full px-3 text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground [@media(pointer:coarse)]:h-8",

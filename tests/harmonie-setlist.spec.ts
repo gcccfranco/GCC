@@ -27,7 +27,8 @@ const MUSICIEN: FakeProfile = {
 
 const SETLIST_ID = "setlist-harmonie";
 const SETLIST_DOC = `setlists/${SETLIST_ID}`;
-const VERSION_DOC = `setlists/${SETLIST_ID}/versions/${MUSICIEN.uid}`;
+// MP-3 : « Essayer dans Ma version » écrit ma partition de ce chant (`versions/{uid}` n'est plus écrit).
+const VERSION_DOC = `partitions/${MUSICIEN.uid}__abba-pere`;
 
 const item = (over: Record<string, unknown>) => ({
   keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
@@ -66,13 +67,12 @@ async function openPartitions(page: Page, extra: Record<string, Record<string, u
 }
 
 const ouvrirLesIdees = async (page: Page) => {
-  await page.getByRole("button", { name: "Idées d'harmonie" }).first().click();
+  await page.getByRole("button", { name: "Harmonie", exact: true }).first().click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 };
 
-/** Une idée qui ne touche qu'une section : « Essayer dans Ma version » s'applique
- *  d'un clic (une carte regroupée sur plusieurs sections demande d'abord « où ? »,
- *  lot IR — voir harmonie-regroupees.spec.ts). */
+/** Une carte d'un passage : « Essayer dans Ma version » s'applique d'un clic, à ce passage
+ *  (H4-1 : plus de « Essayer où ? »). */
 const uneSection = (page: Page) =>
   page.locator("[data-suggestion]").filter({ has: page.getByRole("button", { name: "Essayer dans Ma version", exact: true }) }).first();
 
@@ -86,9 +86,22 @@ test("un pianiste ouvre les idées d'un chant de la setlist, avec la transition 
   await capture(page, "idees-setlist");
 });
 
-test("« Idées d'harmonie » est une puce de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
+// Timothée, 22/11/2026 : dans une setlist, plus d'idées de forme (intro reprise de la fin du refrain, tag) ni de montée de ton.
+test("setlist : ni montée de ton, ni tag, ni intro reprise du refrain ; la transition vers le chant suivant vient en dernier", async ({ page }) => {
   await openPartitions(page);
-  await verifierPuce(page.locator('[data-outline-item="1"]').getByRole("button", { name: "Idées d'harmonie" }), info);
+  await ouvrirLesIdees(page);
+  const idees = page.locator("[data-idees-harmonie]");
+  await expect(idees.locator("[data-suggestion]").first()).toBeVisible();
+  await expect(idees.locator("[data-modulation]")).toHaveCount(0);
+  await expect(idees.locator('[data-suggestion^="intros-fins/tag"], [data-suggestion^="intros-fins/intro-fin-du-refrain"]')).toHaveCount(0);
+  await expect(idees.getByText(/tag|Intro avec la fin du refrain/i)).toHaveCount(0);
+  await expect(page.locator("[data-idees-harmonie] .overflow-y-auto > :last-child")).toContainText("Vers le chant suivant");
+  await expect(page.locator("[data-idees-harmonie] .overflow-y-auto > :last-child").getByRole("button", { name: "Écouter" })).toBeVisible();
+});
+
+test("« Harmonie » est une puce de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
+  await openPartitions(page);
+  await verifierPuce(page.locator('[data-outline-item="1"]').getByRole("button", { name: "Harmonie", exact: true }), info);
 });
 
 test("hors « Ma version », l'idée se lit mais ne s'applique pas", async ({ page }) => {
@@ -97,7 +110,7 @@ test("hors « Ma version », l'idée se lit mais ne s'applique pas", async ({ pa
   await expect(page.getByRole("button", { name: "Essayer dans Ma version" })).toHaveCount(0);
 });
 
-test("« Essayer dans Ma version » écrit dans mon document, jamais dans la setlist", async ({ page }) => {
+test("« Essayer dans Ma version » écrit dans ma partition, jamais dans la setlist", async ({ page }) => {
   const db = await openPartitions(page);
   await basculerMode(page, "Ma version");
   await ouvrirLesIdees(page);
@@ -108,28 +121,12 @@ test("« Essayer dans Ma version » écrit dans mon document, jamais dans la set
 
   await expect.poll(() => db.writes.filter((w) => w.path === VERSION_DOC).length).toBeGreaterThan(0);
   const dernier = db.writes.filter((w) => w.path === VERSION_DOC).pop()!;
-  const items = dernier.data.items as Record<string, { content: string }>;
   const premierAccord = apres.split(" – ")[0];
-  expect(items["abba-pere"].content, `le nouvel accord ${premierAccord} est écrit`).toContain(`[${premierAccord}]`);
+  expect(String(dernier.data.content), `le nouvel accord ${premierAccord} est écrit`).toContain(`[${premierAccord}]`);
   expect(
     db.writes.filter((w) => w.path === SETLIST_DOC || w.path.startsWith(`${SETLIST_DOC}/history`)),
     "la setlist de la présidence ne bouge pas",
   ).toHaveLength(0);
-});
-
-test("« Appliquer à la setlist » fait monter le dernier refrain", async ({ page }) => {
-  const db = await openPartitions(page);
-  await ouvrirLesIdees(page);
-  const modulation = page.locator("[data-modulation='modulations/ton-par-le-5']");
-  await expect(modulation, "un ton plus haut, amené par le 5").toContainText("en B");
-  await modulation.getByRole("button", { name: "Appliquer à la setlist" }).click();
-
-  await expect.poll(() => db.writes.filter((w) => w.path === SETLIST_DOC).length).toBeGreaterThan(0);
-  const ecrit = db.writes.filter((w) => w.path === SETLIST_DOC).pop()!;
-  const items = ecrit.data.items as Array<{ songSlug: string; sectionKeys?: Record<string, string>; contentOverride?: string }>;
-  const abba = items.find((i) => i.songSlug === "abba-pere")!;
-  expect(Object.values(abba.sectionKeys ?? {}), "le dernier refrain monte en B").toContain("B");
-  expect(abba.contentOverride, "l'accord d'approche est posé avant").toContain("F#7");
 });
 
 test("chant lu sur son scan 简谱 : l'app rappelle de reporter le changement", async ({ page }) => {
@@ -139,7 +136,7 @@ test("chant lu sur son scan 简谱 : l'app rappelle de reporter le changement", 
   await openPartitions(page);
   await basculerMode(page, "Ma version");
   // Le chant à scan est le second (Abba Père, en premier, n'en a pas).
-  await page.locator('[data-outline-item="2"]').getByRole("button", { name: "Idées d'harmonie" }).click();
+  await page.locator('[data-outline-item="2"]').getByRole("button", { name: "Harmonie", exact: true }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
   const premiere = page.locator("[data-suggestion]").first();
   await premiere.getByRole("button", { name: "Essayer dans Ma version" }).click();
@@ -151,11 +148,14 @@ test("chant sans scan 简谱 : pas de rappel « À reporter sur la partition 简
   // la retouche se voit directement dans la version texte.
   const db = await openPartitions(page);
   await basculerMode(page, "Ma version");
-  await page.locator('[data-outline-item="1"]').getByRole("button", { name: "Idées d'harmonie" }).click();
+  await page.locator('[data-outline-item="1"]').getByRole("button", { name: "Harmonie", exact: true }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
   const premiere = uneSection(page);
+  const enColonne = (await page.locator("[data-harmonie-colonne]").count()) > 0;
   await premiere.getByRole("button", { name: "Essayer dans Ma version" }).click();
-  await expect(page.locator("[data-idees-harmonie]")).toBeHidden();
+  // En colonne (grand écran, H4-2), « Essayer » la laisse ouverte ; la feuille, elle, se ferme.
+  if (enColonne) await expect(page.locator("[data-harmonie-colonne]")).toBeVisible();
+  else await expect(page.locator("[data-idees-harmonie]")).toBeHidden();
   await expect.poll(() => db.writes.some((w) => w.path === VERSION_DOC), "la retouche est bien écrite").toBe(true);
   // Compte immédiat (sans attente) : le message dure 3 s, un `toHaveCount(0)`
   // attendrait sa disparition et passerait à tort.
@@ -188,5 +188,24 @@ test("un chanteur ne voit pas le bouton", async ({ page }) => {
   await signInAs(page, { ...MUSICIEN, ...musicien("batterie") }, { [SETLIST_DOC]: SETLIST }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Idées d'harmonie" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Harmonie", exact: true })).toHaveCount(0);
+});
+
+// Réglage « Idées d'harmonie » de la marge Affichage (Timothée, 22/11/2026) : le même que sur la page d'un chant.
+test("setlist : « Idées d'harmonie » éteint dans Affichage retire la puce Harmonie et le toucher des noms de section", async ({ page }) => {
+  await openPartitions(page);
+  const puces = page.locator("[data-puce-harmonie]");
+  await expect(puces.first()).toBeVisible();
+  await expect(page.locator("[data-section-nom-bouton]").first()).toBeVisible();
+  await page.getByRole("button", { name: "Affichage", exact: true }).first().click();
+  const reglage = page.getByTestId("marge-affichage").getByRole("switch", { name: "Idées d'harmonie" });
+  await expect(reglage).toBeChecked();
+  await reglage.click();
+  await expect(puces).toHaveCount(0);
+  await expect(page.locator("[data-section-nom-bouton]")).toHaveCount(0);
+  await expect(page.locator("[data-idees-harmonie]")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
+  await capture(page, "setlist-idees-eteintes");
+  await reglage.click();
+  await expect(puces.first()).toBeVisible();
 });

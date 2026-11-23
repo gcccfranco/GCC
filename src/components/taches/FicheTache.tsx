@@ -20,7 +20,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Bell, CalendarDays, Check, Link2, ListChecks, Minus, Pencil, Repeat, Ticket, Trash2, UserRound } from "lucide-react";
-import { EnTetePage } from "@/components/layout/EnTetePage";
+import { EnTetePage, Retour } from "@/components/layout/EnTetePage";
 import { MenuActions } from "@/components/layout/MenuActions";
 import { TacheForm } from "@/components/taches/TacheForm";
 import { useMembres } from "@/components/taches/creerTache";
@@ -37,6 +37,7 @@ import { prevenirFait, prevenirResponsable } from "@/lib/taches/prevenir";
 import { cn } from "@/lib/utils";
 import type { EtatFois, Fois, Tache } from "@/types/tache";
 import { Impasse } from "@/components/layout/Impasse";
+import { TOUCHER_RANGEE } from "@/lib/toucher44";
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -54,7 +55,7 @@ function laLigne(tache: Tache, lignes: Ligne[], date: string | null): Ligne {
     ?? { tache, date: date ?? tache.echeance, fois: null };
 }
 
-export function FicheTache({ equipe, id, date }: { equipe: string; id: string; date: string | null }) {
+export function FicheTache({ equipe, id, date, depuis }: { equipe: string; id: string; date: string | null; depuis?: string | null }) {
   const { t } = useTranslation();
   const deuxVolets = useDeuxVolets();
   const { equipes, items, chargement, aujourdhui } = useMesTaches();
@@ -64,7 +65,7 @@ export function FicheTache({ equipe, id, date }: { equipe: string; id: string; d
   let contenu: React.ReactNode;
   if (!equipes.includes(equipe)) contenu = <p className="text-sm text-muted-foreground">{t("taches.pasMembre")}</p>;
   else if (!item) contenu = chargement ? null : <Impasse icone={ListChecks} titre={t("taches.introuvable")} sortie={{ href: `${enBackOffice ? "/back-office" : ""}/taches/${equipe}`, label: t("taches.title") }} />;
-  else contenu = <Fiche key={`${equipe}/${id}/${date ?? ""}`} ligne={laLigne(item.tache, lignesDeTache(item.tache, item.fois, aujourdhui), date)} toutesLesFois={item.fois} />;
+  else contenu = <Fiche key={`${equipe}/${id}/${date ?? ""}`} ligne={laLigne(item.tache, lignesDeTache(item.tache, item.fois, aujourdhui), date)} toutesLesFois={item.fois} depuis={depuis} />;
 
   return (
     // R10 : la fiche ne pose plus de marge en grand ; en un volet, son en-tête la porte (App et
@@ -75,7 +76,7 @@ export function FicheTache({ equipe, id, date }: { equipe: string; id: string; d
   );
 }
 
-function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }) {
+function Fiche({ ligne, toutesLesFois, depuis }: { ligne: Ligne; toutesLesFois: Fois[]; depuis?: string | null }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const titreId = useId();
@@ -176,7 +177,6 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
 
   // Historique (B1), le plus récent d'abord : où en est la fois, puis la création.
   const historique: string[] = [];
-  if (fois?.etat === "encours") historique.push(`${t("taches.commenceePar", { nom: fois.parNom })} · ${jourCourt(fois.debutLe || fois.le, i18n.language)}`);
   if (fois?.etat === "terminee") historique.push(`${t("taches.faitePar", { nom: fois.parNom })} · ${jourCourt(fois.le, i18n.language)}`);
   if (auteur !== undefined) historique.push(t("taches.fiche.creeeLe", { nom: auteur ?? t("taches.fiche.unMembre"), date: jourCourt(tache.createdAt, i18n.language) }));
   const SousTitre = deuxVolets ? "h3" : "h2";
@@ -212,12 +212,17 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
       {!deuxVolets ? (
         // Un volet : la fiche est une page, avec le seul retour (R8) et son titre en h1.
         <EnTetePage
-          retour={{
-            href: backOffice ? `${racine}/${tache.equipe}` : racine,
-            label: backOffice ? t("taches.retourEquipe", { equipe: nomEquipe }) : t("taches.title"),
-          }}
+          retour={
+            // Ouverte depuis la page de son équipe (`?depuis=equipe`, valeur fermée) : retour à l'équipe.
+            !backOffice && depuis === "equipe"
+              ? { href: `/equipes/${tache.equipe}`, label: nomEquipe }
+              : {
+                  href: backOffice ? `${racine}/${tache.equipe}` : racine,
+                  label: backOffice ? t("taches.retourEquipe", { equipe: nomEquipe }) : t("taches.title"),
+                }
+          }
           titre={<span id={titreId}>{tache.titre}</span>}
-          sousTitre={backOffice ? undefined : nomEquipe}
+          sousTitre={backOffice || depuis === "equipe" ? undefined : nomEquipe}
           outils={<>{boutonModifier}{menu}</>}
         />
       ) : (
@@ -228,8 +233,10 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
             {backOffice
               ? <h1 id={titreId} className="text-2xl font-bold leading-tight tracking-[-0.02em] text-balance">{tache.titre}</h1>
               : <>
+                  {/* Ouverte depuis la page de son équipe : le retour habituel au-dessus du titre, en deux volets aussi. */}
+                  {depuis === "equipe" && <Retour href={`/equipes/${tache.equipe}`}>{nomEquipe}</Retour>}
                   <h2 id={titreId} className="text-2xl font-bold leading-tight tracking-tight text-balance">{tache.titre}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{nomEquipe}</p>
+                  {depuis !== "equipe" && <p className="mt-1 text-sm text-muted-foreground">{nomEquipe}</p>}
                 </>}
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -255,6 +262,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
               disabled={!cochable}
               className={cn(
                 "min-h-9 flex-1 whitespace-nowrap rounded-full px-4 font-semibold transition-colors duration-150 disabled:cursor-default",
+                TOUCHER_RANGEE,
                 backOffice && "inline-flex items-center justify-center gap-1.5",
                 !cochable && etat !== e && "opacity-50",
                 etat === e ? "bg-pose text-foreground shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,.08)]" : "text-muted-foreground hover:text-foreground",

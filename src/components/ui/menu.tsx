@@ -88,12 +88,12 @@ export function Menu<T extends string = string>({
       <DropdownMenuContent
         align="start"
         sideOffset={6}
-        className="material-panel max-h-[min(320px,var(--radix-dropdown-menu-content-available-height))] min-w-[var(--radix-dropdown-menu-trigger-width)] rounded-[12px] p-1 [box-shadow:var(--shadow-flottant)] [@media(pointer:coarse)]:max-h-[min(294px,var(--radix-dropdown-menu-content-available-height))]"
+        className="material-panel max-h-[calc(var(--radix-dropdown-menu-content-available-height)-8px)] min-w-[var(--radix-dropdown-menu-trigger-width)] rounded-[12px] p-1 [box-shadow:var(--shadow-flottant)]"
       >
         <DropdownMenuRadioGroup value={value} onValueChange={(v) => onChange(v as T)}>
           {options.map((e, i) =>
             estGroupe(e) ? (
-              <React.Fragment key={`g-${e.groupe}`}>
+              <React.Fragment key={`g-${i}`}>
                 {i > 0 && <DropdownMenuSeparator className="mx-1" />}
                 {e.groupe && <DropdownMenuLabel className="px-3 pb-1 pt-2 text-xs font-semibold text-muted-foreground">{e.groupe}</DropdownMenuLabel>}
                 {e.options.map((o) => <LigneMenu key={o.valeur} option={o} />)}

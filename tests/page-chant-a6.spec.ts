@@ -113,7 +113,9 @@ test.describe("barre de la setlist sur téléphone (G15)", () => {
     await signInAs(page, MUSICIENNE, { "setlists/setlist-a6": setlist }, "/setlists/setlist-a6");
     const barre = page.getByTestId("barre-outils");
     await expect(barre.getByRole("button", { name: "Accords" })).toBeVisible();
-    for (const libelle of ["Affichage", "Accords", "Louange"]) await expect(barre.locator("span[aria-hidden=true]", { hasText: libelle }).first()).toBeVisible();
+    for (const libelle of ["Affichage", "Accords"]) await expect(barre.locator("span[aria-hidden=true]", { hasText: libelle }).first()).toBeVisible();
+    // Mode Louange : rond à icône seule au téléphone (T2 de docs/spec-exemples-usage.md), nommé pour les lecteurs d'écran.
+    await expect(barre.getByRole("button", { name: "Mode Louange" })).toBeVisible();
     // Une seule rangée : les contrôles se suivent de gauche à droite, sans retour à la ligne.
     // Les contrôles affichés seulement : sous 431 px, « Adapter » et « Ma version » sont rangés dans « ⋯ » (lot CD, T4a).
     const gauches = await barre.locator(".rangee-outils > *").evaluateAll((els) =>

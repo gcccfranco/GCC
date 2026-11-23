@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Couleur des accords</title>
+<style>
+/* Police du système comme le site (tailwind.config.ts : -apple-system, Roboto, PingFang SC, Noto Sans CJK SC) ; repli local pour le chinois, aucun réseau. */
+@font-face{font-family:"Han repli";src:url("../../public/fonts/SourceHanSansCN-Medium-sub.woff2") format("woff2");font-weight:400 700}
+/* Planche : une bande par sujet. Direction fixée (le geste de la couleur des icônes du mode louange) : une seule piste recommandée + une variante. */
+:root{
+  --bg:#f6f5f2; --surface:#ffffff; --ink:#1c1b19; --muted:#6d6a63; --line:#e3e0d9;
+  --chord:#3f63cf; --jianpu:#b3261d;
+  --reco:#1f7a4d; --reco-bg:#e5f3ea; --warn:#a15c00; --warn-bg:#fdf0dc;
+  --f-ui:-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,"PingFang SC","Noto Sans CJK SC","WenQuanYi Zen Hei","Han repli",sans-serif;
+  --f-mono:ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141413; --surface:#1e1d1b; --ink:#f0eee9; --muted:#a29e95; --line:#34322e;
+  --chord:#8fb0ff; --jianpu:#ff7d72; --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141413; --surface:#1e1d1b; --ink:#f0eee9; --muted:#a29e95; --line:#34322e;
+  --chord:#8fb0ff; --jianpu:#ff7d72; --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-size:30px;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:22px;margin:0;text-wrap:balance}
+h3{font-size:17px;margin:0;text-wrap:balance}
+h4{font-size:14px;margin:0 0 4px}
+p{margin:0;max-width:72ch;text-wrap:pretty}
+p.small{font-size:12.5px;color:var(--muted)}
+.eyebrow{font-size:12px;color:var(--muted);font-weight:600}
+.intro{display:flex;flex-direction:column;gap:12px}
+section{display:flex;flex-direction:column;gap:20px;min-width:0}
+code{font-family:var(--f-mono);font-size:.88em;background:var(--bg);padding:1px 5px;border-radius:5px}
+.box code{background:var(--surface)}
+.cite{border-left:3px solid var(--line);padding:2px 0 2px 14px;color:var(--muted);font-size:14.5px;max-width:72ch}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.box ul{margin:0;padding-left:18px;font-size:14px}.box li{margin:3px 0}
+.boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.piste{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:22px;min-width:0}
+.piste.reco{border:2px solid var(--reco)}
+.piste-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--reco-bg);color:var(--reco);white-space:nowrap}
+.tag.neutre{background:var(--bg);color:var(--muted)}
+.place{display:flex;flex-direction:column;gap:12px;padding-top:18px;border-top:1px solid var(--line)}
+.place:first-of-type{border-top:0;padding-top:0}
+.row{display:flex;gap:18px;align-items:flex-start}
+.fig{margin:0;display:flex;flex-direction:column;gap:6px;min-width:0;flex:var(--w) 1 0;max-width:calc(var(--w)*1px)}
+.cap{font-size:12.5px;line-height:1.4;color:var(--muted)}.cap b{color:var(--ink);font-weight:600}
+.grid4{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px 14px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px}
+.grid2 .fig,.grid4 .fig{max-width:none;flex:none}
+.questions{counter-reset:q;display:flex;flex-direction:column;gap:12px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.q h3::before{counter-increment:q;content:"Q" counter(q) " · ";color:var(--muted)}
+.q .rec{font-size:14px;color:var(--reco);font-weight:600}
+.q .alt{font-size:14px;color:var(--muted)}
+@media (min-width:900px){.q{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 28px}.q h3{grid-column:1/-1}.q p{max-width:none}}
+.leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted)}
+.leg i{display:inline-block;width:16px;height:10px;border:2px dashed var(--reco);border-radius:3px;vertical-align:-1px;margin-right:6px}
+.garde{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.gcell{border-radius:12px;border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.gcell .gh{padding:8px 12px;font-size:12.5px;background:var(--surface);color:var(--muted);border-bottom:1px solid var(--line)}.gcell .gh b{color:inherit}
+.gcell .gb{padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-family:var(--f-ui)}
+.gl{display:flex;align-items:center;gap:10px;font-size:12px}
+.gl em{font-style:normal;opacity:.75;min-width:56px}
+.gl b{font-size:17px;font-weight:700;letter-spacing:.01em}
+.gl small{margin-left:auto;font-size:11.5px;opacity:.8;white-space:nowrap}
+.gl .sw{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(128,128,128,.5);flex:none}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;padding:6px 10px 6px 0}
+.tbl td{padding:9px 12px 9px 0;border-top:1px solid var(--line);vertical-align:top}
+@media (max-width:1000px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.garde{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){.row{flex-direction:column;align-items:stretch}.fig{flex:none;width:100%}}
+@media (max-width:640px){.grid2,.grid4,.garde{grid-template-columns:1fr}.piste{padding:14px}.tbl thead{display:none}.tbl,.tbl tbody,.tbl tr,.tbl td{display:block}.tbl td{padding:6px 0;border:0}.tbl tr{border-top:1px solid var(--line);padding:6px 0}h1{font-size:26px}}
+
+/* maquettes : tailles réelles en px, mises à l'échelle par le script ; un toucher ouvre la loupe à l'échelle 1 */
+.mk{position:relative;overflow:hidden;width:100%;aspect-ratio:var(--w)/var(--h);border-radius:10px;box-shadow:0 0 0 1px var(--line);background:#777;cursor:zoom-in;-webkit-tap-highlight-color:transparent}
+.zm{color:var(--chord);font-weight:600}
+.mk.s1{aspect-ratio:auto;height:calc(var(--h)*1px);overflow-x:auto}.mk.s1 .mk-in{transform:none!important}
+.stack{display:flex;flex-direction:column;gap:18px}.stack .fig{max-width:none;flex:none;width:100%}
+.mk:focus-visible{outline:3px solid var(--chord);outline-offset:3px}
+.mk-in{position:absolute;left:0;top:0;width:calc(var(--w)*1px);height:calc(var(--h)*1px);transform-origin:0 0}
+#loupe{position:fixed;inset:0;z-index:1000;background:#0b0b0c;display:flex;flex-direction:column;color:#fff}
+#loupe[hidden]{display:none}
+.lp-bar{flex:none;display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 8px 8px 16px;background:#1c1c1e;border-bottom:1px solid #3a3a3c}
+.lp-bar div{flex:1;min-width:0;font-size:14px}
+#lp-x{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:#3a3a3c;color:#fff;cursor:pointer;font-size:22px;line-height:1}
+#lp-x:focus-visible{outline:3px solid #8fb0ff;outline-offset:2px}
+.lp-sc{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:12px 0 24px}
+#lp-in{position:relative;margin:0 auto;overflow:hidden;border-radius:6px}
+html.lp-open{overflow:hidden}
+
+/* ───── écrans maquettés (jetons du site, src/app/globals.css) ───── */
+.scr{position:relative;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
+  font-family:var(--f-ui);font-size:14px;line-height:1.35;-webkit-font-smoothing:antialiased}
+.scr *{box-sizing:border-box}
+.scr svg{display:block;flex:none;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.scr .zh{font-family:"PingFang SC","Noto Sans CJK SC","WenQuanYi Zen Hei","Han repli",var(--f-ui)}
+/* page */
+.pg{position:absolute;inset:0;padding:0 var(--pad);overflow:hidden}
+.ttl{font-size:26px;font-weight:700;line-height:1.15;letter-spacing:-.01em;margin:16px 0 2px}
+.ttl-py{font-size:14px;color:var(--mu)}.art{font-size:14px;color:var(--mu)}
+.pills{display:flex;gap:8px;margin:14px 0 8px}
+.pills b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}
+.lab{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin:0 0 4px;display:flex;align-items:center}
+.lab.zhl{font-size:13px;letter-spacing:.04em;text-transform:none}
+.lab s{display:inline-block;width:16px;height:2px;margin-right:8px;flex:none}
+.fl{line-height:1.3;margin-bottom:6px;text-wrap:pretty}
+.w{white-space:nowrap}
+.sg{display:inline-flex;flex-direction:column;vertical-align:top}
+.sg i{font-style:normal;font-weight:700;font-size:.9em;line-height:1.5;padding-right:.45em;white-space:nowrap}
+.sg i:empty::before{content:"\200b"}
+.sg span{white-space:pre}
+.ci{display:flex;flex-wrap:wrap;gap:4px 16px;font-weight:700;margin-bottom:4px}
+.zl{display:flex;flex-wrap:wrap;margin-bottom:2px}
+.zc{display:flex;flex-direction:column;align-items:center;padding:0 2px;min-width:20px}
+.zk{align-self:flex-start;width:0;height:20px;font-style:normal;font-weight:700;font-size:14.5px;white-space:nowrap;line-height:20px;font-family:var(--f-ui)}
+.zc b{font-family:"PingFang SC","Noto Sans CJK SC","WenQuanYi Zen Hei","Han repli",sans-serif;font-weight:500;line-height:1.25;white-space:nowrap}
+.zc u{text-decoration:none;font-size:11.5px;line-height:1.2;color:var(--py);margin-top:1px}
+.sec{margin-bottom:10px}
+.sc{display:grid;grid-template-columns:var(--sl) minmax(0,1fr);gap:0 var(--sg);padding:var(--spt) var(--spr) 6px var(--spl);margin:0 calc(var(--pad)*-1);border-left:6px solid;border-bottom:1px solid var(--bd)}
+.sc .sl{display:flex;flex-direction:column;min-width:0}.sc .sl b{font-size:21px;line-height:1.1;font-weight:700}.sc .sl small{font-size:10.5px;color:var(--mu);margin-top:2px}
+.rp{display:grid;grid-template-columns:22px minmax(0,1fr);margin-bottom:6px}
+.rl{display:flex;flex-direction:column;align-items:center}.rl b{width:12px;height:12px;border-radius:50%;margin-top:3px;flex:none}.rl i{flex:1;width:3px;border-radius:2px;margin-top:3px}
+.bx{border:1.5px solid;border-radius:10px;padding:8px 12px 4px;margin-bottom:10px}
+/* barres */
+.bar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--rs);border-bottom:1px solid var(--bd);color:var(--ic)}
+.bar .t{flex:1;min-width:0;text-align:center;color:var(--fg);line-height:1.2;white-space:nowrap}.bar .t b,.bar .t span{display:block;overflow:hidden;text-overflow:ellipsis}.bar .t b{font-size:15px}.bar .t span{font-size:12.5px;color:var(--mu)}.bar .tp{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:500;color:var(--ic);padding:0 8px;white-space:nowrap}
+.bar .bt{display:flex;align-items:center;gap:6px;padding:0 8px;height:40px;border-radius:10px;font-size:13px;font-weight:500;white-space:nowrap}
+.bar .bt.on{background:color-mix(in srgb,var(--ic) 16%,transparent)}
+.hdr{position:absolute;left:0;right:0;top:0;padding:10px var(--pad) 0;display:flex;flex-direction:column;gap:10px}
+.hdr .l1,.hdr .l2{display:flex;align-items:center;gap:8px}
+.pill{height:40px;border-radius:999px;background:var(--pl);display:flex;align-items:center;padding:0 14px;gap:8px;font-weight:600;font-size:14px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.pill.dk{background:var(--fg);color:var(--bg)}.pill.ci{width:40px;padding:0;justify-content:center}
+.logo{width:34px;height:34px;border-radius:50%;background:#d8332a;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 5px #2563eb;flex:none}
+/* panneaux */
+.pan{background:var(--rs);color:var(--fg)}
+.sheet{position:absolute;left:0;right:0;bottom:0;border-radius:20px 20px 0 0;padding:10px 20px 18px;box-shadow:0 -6px 30px rgba(0,0,0,.22);overflow:hidden}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--bd);margin:0 auto 10px}
+.pop{position:absolute;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,.22),0 0 0 1px var(--bd);overflow:hidden}
+.dd{position:absolute;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.2),0 0 0 1px var(--bd);overflow:hidden;padding:6px}
+.fade{position:absolute;left:0;right:0;height:30px;pointer-events:none}
+.pt{font-size:14px;font-weight:500;color:var(--mu);margin:12px 0 6px}
+.sr{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font-size:15px;font-weight:500}
+.btn3{display:grid;grid-template-columns:repeat(var(--n,3),1fr);text-align:center;font-size:13.5px;padding:2px 0 6px}
+.btn3 div{display:flex;flex-direction:column;align-items:center;gap:6px}
+.rnd{width:52px;height:52px;border-radius:50%;background:var(--ic);color:var(--bg);display:grid;place-items:center}
+.rnd svg{stroke:#fff}.scr.dk .rnd svg{stroke:#000}
+.seg{display:flex;border:1px solid var(--bd);border-radius:10px;overflow:hidden;height:40px;font-size:13px;font-weight:600}
+.seg span{display:flex;align-items:center;gap:5px;padding:0 14px}.seg span.on{background:var(--ic);color:var(--bg)}
+.stp{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700}
+.stp i{width:44px;height:44px;border-radius:50%;border:1px solid var(--bd);display:grid;place-items:center;font-style:normal;font-size:14px;color:var(--ic);font-weight:700}
+.mgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.mgrid div{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;line-height:1.2;text-align:center;font-weight:500;min-height:44px}
+.mgrid div.on{font-weight:700;color:var(--sel)}
+.mn{width:62px;height:62px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);padding:6px 5px;display:flex;flex-direction:column;gap:3px;position:relative;overflow:hidden}
+.mgrid div.on .mn{box-shadow:0 0 0 2px var(--sel);border-color:transparent}
+.mn .t{height:3px;width:38%;background:var(--fg);border-radius:2px}
+.mn .b{display:flex;flex-direction:column;gap:2px;padding:3px 4px;border-radius:3px;flex:1}
+.mn .b i,.mn .ln{display:block;height:2px;border-radius:1px;background:#9a9aa2;width:80%}
+.mn .b i:first-child{width:45%}.mn .b .cd{display:flex;gap:4px;height:2px;background:none;width:auto}.mn .b .cd u{display:block;width:9px;height:2px;border-radius:1px;background:var(--cc)}
+.mn .dot{position:absolute;left:6px;width:7px;height:7px;border-radius:50%}
+.mn .rail{position:absolute;left:8.5px;width:2px}
+.mn .band{display:flex;align-items:center;gap:3px;flex:1;margin:0 -5px;padding:0 5px;font-size:8px;font-weight:700}
+.rb{margin-top:10px;position:relative}
+.rb .rt{font-size:14px;font-weight:600;color:var(--mu);margin:0 0 4px}
+.rb .rs{font-size:12.5px;color:var(--mu);margin:8px 0 3px}
+.pst{display:flex;justify-content:space-between;gap:6px}
+.pst i{flex:none;border-radius:50%;box-shadow:inset 0 0 0 1px var(--bd);display:block}
+.pst i.on{box-shadow:0 0 0 2px var(--rs),0 0 0 4px var(--fg)}
+.pst i.cc{background:conic-gradient(hsl(0 70% 50%),hsl(60 70% 50%),hsl(120 70% 50%),hsl(180 70% 50%),hsl(240 70% 50%),hsl(300 70% 50%),hsl(360 70% 50%))}
+.lnk{display:inline-flex;align-items:center;min-height:44px;margin-top:2px;font-size:13.5px;font-weight:600;color:var(--ch)}.rn{font-size:11.5px;color:var(--mu);margin-top:-4px}.lnk.off{color:var(--mu);font-weight:500}
+.nv{outline:2px dashed #1f7a4d;outline-offset:5px;border-radius:6px}
+.scr.dk .nv{outline-color:#7fd4a4}
+.cerc{display:flex;flex-direction:column;align-items:center;gap:10px;margin:12px 0 4px}
+.cerc .ring{position:relative;width:176px;height:176px}
+.cerc .ring>span.cg{position:absolute;inset:0;border-radius:50%;background:conic-gradient(hsl(0 70% 50%),hsl(60 70% 50%),hsl(120 70% 50%),hsl(180 70% 50%),hsl(240 70% 50%),hsl(300 70% 50%),hsl(360 70% 50%));-webkit-mask:radial-gradient(circle,transparent 59px,#000 60px);mask:radial-gradient(circle,transparent 59px,#000 60px)}
+.cerc .hd{position:absolute;width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.cerc .ct{position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;border:1px solid var(--bd);background:var(--bg);display:grid;place-items:center}
+.cerc .ct i{width:64px;height:64px;border-radius:50%;display:block}
+.cerc .lum{display:flex;align-items:center;gap:12px;width:100%;font-size:12.5px;color:var(--mu);margin-top:14px}
+.cerc .tr{flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#000,var(--cc),#fff);position:relative}
+.cerc .tr i{position:absolute;top:-8px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.4);margin-left:-11px}
+.cerc .ap{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mu);margin-top:6px}.cerc .ap em{font-style:normal;margin-right:8px}
+.cerc .ap b{width:36px;height:36px;border-radius:50%;border:1px solid var(--bd);display:grid;place-items:center}.cerc .ap b i{width:20px;height:20px;border-radius:50%;display:block}
+</style>
+<body>
+<div class="wrap">
+
+<header class="intro">
+  <div class="eyebrow">Planche · 09/11/2026 · couleur des accords</div>
+  <h1>Chacun choisit la couleur de ses accords</h1>
+  <p class="cite">« peut être qu'il serait bien de pouvoir personnaliser les couleurs des accords pour que chacun ait une couleur qui lui plaise. Faire comme pour les autres personnalisation de couleur, mettre un cercle chromatique pour qu'ils mettent la couleur d'accords qu'ils souhaitent » — Timothée</p>
+  <p>On reprend le geste déjà codé pour la couleur des icônes du mode louange : une rangée de pastilles prêtes et un bouton arc-en-ciel qui ouvre le cercle chromatique. Il y a deux rangées, une pour les chants en français (bleu au départ) et une pour les chants en chinois (rouge au départ, bleu en Scène et en Partition), sous la rubrique « Couleur des accords ».</p>
+  <p>Le réglage se pose aux trois endroits où l'on règle déjà l'affichage : options du mode louange, menu ⋯ de la page du chant, réglages de la vue partitions. Une garde de lisibilité (4,5:1 contre le vrai fond) corrige la couleur à l'écran seulement : le choix enregistré ne bouge jamais.</p>
+  <div class="leg"><span><span class="tag">Recommandée</span> piste A, une couleur par langue</span><span><i></i>cadre vert pointillé : ce que la planche ajoute à l'écran existant</span><span>Toucher une maquette l'ouvre à l'échelle 1.</span></div>
+</header>
+
+<section id="A">
+  <div class="piste reco">
+    <div class="piste-head"><h2>Piste A · Une couleur par langue</h2><span class="tag">Recommandée</span></div>
+    <p>Rubrique « Couleur des accords » / « 和弦颜色 » : deux rangées, « Chants en français » et « Chants en chinois » / « 中文歌曲 ». La première pastille de chaque rangée est la <b>couleur d'origine</b>, qui dépend de la disposition : en français, bleu (couleur du texte en Couleurs par section) ; en chinois, rouge en Classique et Repères, bleu en Scène et Partition, couleur du texte en Couleurs par section. Elle est dessinée avec les couleurs qu'elle prend (français : bleu / texte ; chinois : rouge / bleu / texte). Viennent ensuite cinq teintes prêtes (les teintes des icônes sans le bleu, déjà celui du français), puis le bouton du cercle : les deux rangées ont donc les mêmes sept pastilles de 44 px. « Couleurs d'origine » remet les deux rangées sur la première pastille (grisé tant que rien n'a changé). Sous la rubrique, sa propre ligne de rétention suit la recommandation de Q3.</p>
+    <div class="place"><h3>1 · Options d'affichage du mode louange</h3><p class="small">Au téléphone, la feuille du bas ; dès 768 px, le popover sous l'icône T. La rubrique suit « Disposition ». Les écrans de 768, 1024 et 1440 px montrent le même popover : ce qui change est la page derrière lui.</p><div class="row" id="p1a"></div><div class="row" id="p1b"></div></div>
+    <div class="place"><h3>2 · Menu ⋯ de la page du chant</h3><p class="small">Sous la rubrique « Disposition », avant « Personnaliser ».</p><div class="row" id="p2a"></div><div class="row" id="p2b"></div></div>
+    <div class="place"><h3>3 · Réglages d'affichage de la vue partitions de la setlist</h3><p class="small">Le menu « Affichage » : même bloc, sous les miniatures de disposition.</p><div class="row" id="p3a"></div><div class="row" id="p3b"></div></div>
+  </div>
+</section>
+
+<section id="B">
+  <div class="piste">
+    <div class="piste-head"><h2>Variante B · Une seule couleur pour tous les accords</h2><span class="tag neutre">Alternative</span></div>
+    <p>Une seule rangée sous « Couleur des accords ». La première pastille, bicolore, est « selon la langue » : bleu en français, rouge en chinois, comme aujourd'hui. Choisir une autre pastille colore tous les chants pareil.</p>
+    <div class="row" id="pB"></div>
+  </div>
+</section>
+
+<section id="R">
+  <h2>Le résultat sur la page</h2>
+  <p>Avec une couleur personnelle : vert #1f7a5c pour le français, violet #6d4bc3 pour le chinois. Chants du dépôt : « À jamais Tu es saint » et « 谢谢你 ». En Classique, l'étiquette de section, le filet et le fond des refrains prennent la couleur des accords, comme aujourd'hui avec le bleu et le rouge (voir Q4).</p>
+  <h3>Page du chant, 390 px, clair et sombre</h3>
+  <div class="grid4" id="r1"></div>
+  <h3>Mode louange, 390 px et 1 440 px</h3>
+  <div class="row" id="r2"></div>
+  <div class="stack" id="r3"></div>
+  <h3>Une couleur proche de celle de la section</h3>
+  <p class="small">Le vert choisi sur la bande verte du couplet, le violet sur la bande violette du pont : la lettre de section, le rail et la bande gardent la couleur de la section, seuls les accords changent. Voir Q2.</p>
+  <div class="grid4" id="r4"></div>
+</section>
+
+<section id="G">
+  <h2>La garde de lisibilité</h2>
+  <p>Un jaune #ffd60a choisi. Sur page claire, il serait illisible : il s'affiche assombri jusqu'à 4,5:1 contre le vrai fond (corrigé en HSL, même algorithme que <code>garderContraste</code>). Sur page sombre il passe tel quel. Dans Scène, le vrai fond est la bande teintée de la section. Le choix enregistré reste #ffd60a dans tous les cas.</p>
+  <p class="small">Lecture des cartes : « Choisi » est la couleur enregistrée ; « Affiché » est celle que l'écran montre après la garde ; le rapport à droite est le contraste contre le fond de la carte (4,5:1 au moins pour passer).</p>
+  <div class="garde" id="gar"></div>
+</section>
+
+<section id="F">
+  <h2>Finitions (une ligne chacune, sans dessin)</h2>
+  <div class="box"><table class="tbl"><thead><tr><th>Constat</th><th>Correction recommandée</th><th>Autre</th></tr></thead><tbody>
+    <tr><td>Sept pastilles de 44 px ne tiennent pas dans le menu ⋯ de 355 px au téléphone</td><td>Menu ⋯ et menu « Affichage » portés à 374 px (marge de 8 px) au téléphone</td><td>Deux lignes de pastilles à 355 px</td></tr>
+    <tr><td>Le bleu manque à la rangée chinoise (retiré pour garder sept pastilles)</td><td>Le choisir au cercle, ou en Scène il est déjà la couleur d'origine</td><td>Huit pastilles, sur deux lignes au téléphone</td></tr>
+    <tr><td>Anneau de la pastille choisie : noir en clair, blanc en sombre</td><td>Garder : c'est le jeton <code>foreground</code> du site (PASTILLE_CHOISIE)</td><td>—</td></tr>
+    <tr><td>Menu ⋯ qui recouvre le titre au téléphone</td><td>Garder : le site fait pareil aujourd'hui (captures de référence)</td><td>Voile sur la page</td></tr>
+  </tbody></table></div>
+</section>
+
+<section id="N">
+  <h2>Ce qui ne change pas</h2>
+  <div class="box"><ul>
+    <li>Les scans 简谱 gardent leurs étiquettes d'accords à l'encre du scan ; la couleur personnelle ne les touche pas.</li>
+    <li>Les pastilles de langue de la liste des chants et les autres accents d'interface (bouton « Accords », miniature choisie, liens, focus) gardent <code>--chord-color</code> : la couleur personnelle se pose sur la partition seulement, jamais sur <code>:root</code>.</li>
+    <li>L'export PDF garde ses couleurs.</li>
+    <li>La couleur des icônes de la barre du mode louange reste un réglage à part.</li>
+    <li>Les couleurs gelées <code>--chord-color</code> #3f63cf / #8fb0ff et <code>--jianpu-color</code> #b3261d / #ff7d72 restent les défauts, exactement.</li>
+  </ul></div>
+</section>
+
+<section id="Q">
+  <h2>Questions à trancher</h2>
+  <div class="questions">
+    <div class="q"><h3>Une couleur par langue, ou une seule pour tous les accords ?</h3>
+      <p class="rec">Recommandé : une couleur par langue (piste A). Le rouge du chinois et le bleu du français sont deux défauts différents ; une seule couleur obligerait à les écraser tous les deux pour changer l'un.</p>
+      <p class="alt">Autre : une seule couleur (variante B), une rangée de moins dans chaque réglage.</p></div>
+    <div class="q"><h3>La couleur choisie s'applique-t-elle dans les cinq dispositions ?</h3>
+      <p class="rec">Recommandé : oui, Scène et Couleurs par section compris. Tant que rien n'est choisi, la couleur d'origine dépend de la disposition : en chinois, rouge en Classique et Repères, bleu en Scène et Partition, couleur du texte en Couleurs par section ; en français, bleu partout sauf Couleurs par section (couleur du texte). Dès qu'on choisit une couleur, elle s'applique dans les cinq. Cas limite : une couleur proche de celle de la section (vert sur la bande verte du couplet, violet sur le pont) est acceptée telle quelle, la lettre, le rail et la bande gardent la couleur de la section (voir les quatre maquettes).</p>
+      <p class="alt">Autre : seulement là où les accords ont aujourd'hui la couleur de la langue (Classique et Repères, et Scène et Partition en bleu) ; ou décaler la teinte quand elle est trop proche de celle de la section (écart de teinte sous 25 degrés), ce qui change la couleur sans le dire.</p></div>
+    <div class="q"><h3>Où la couleur est-elle retenue ?</h3>
+      <p class="rec">Recommandé : par compte, sur l'appareil (comme le rôle et les stylos). « Chacun » prend son sens sur un iPad partagé : chaque compte retrouve sa couleur. Dans ce cas, passer aussi la couleur des icônes par compte, pour que les deux réglages de couleur se comportent pareil.</p>
+      <p class="alt">Autre : par appareil, comme la couleur des icônes aujourd'hui (le réglage de l'un efface celui de l'autre sur un appareil partagé).</p></div>
+    <div class="q"><h3>En Classique, l'étiquette de section, le filet et le fond des refrains suivent-ils la couleur ?</h3>
+      <p class="rec">Recommandé : oui. Aujourd'hui ils prennent déjà la couleur des accords (bleu en français, rouge en chinois) ; garder l'ancienne couleur à côté d'accords verts ou violets ferait un faux accord à l'œil.</p>
+      <p class="alt">Autre : seules les lettres des accords changent (pas dessiné).</p></div>
+  </div>
+</section>
+</div>
+
+<div id="loupe" hidden><div class="lp-bar"><div id="lp-t"></div><button id="lp-x" type="button" aria-label="Fermer">×</button></div><div class="lp-sc"><div id="lp-in"></div></div></div>
+
+<script>
+(()=>{
+/* ───────── couleurs : mêmes formules que src/lib/performance/couleurIcones.ts ───────── */
+const TE=['#3f63cf','#1c1c1e','#1f7a5c','#6d4bc3','#c2185b','#636872'];
+const rgb=h=>{const n=parseInt(h.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255]};
+const lum=h=>{const[r,g,b]=rgb(h).map(c=>{const s=c/255;return s<=.03928?s/12.92:((s+.055)/1.055)**2.4});return .2126*r+.7152*g+.0722*b};
+const ctr=(a,b)=>{const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+function h2hsl(h){const[r,g,b]=rgb(h).map(c=>c/255);const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;if(!d)return[0,0,l*100];const s=d/(1-Math.abs(2*l-1));let H;if(mx===r)H=((g-b)/d)%6;else if(mx===g)H=(b-r)/d+2;else H=(r-g)/d+4;return[(Math.round(H*60)+360)%360,s*100,l*100]}
+function hsl2h(h,s,l){const S=s/100,L=l/100,a=S*Math.min(L,1-L);const f=n=>{const k=(n+h/30)%12;const c=L-a*Math.max(-1,Math.min(k-3,9-k,1));return Math.round(c*255).toString(16).padStart(2,'0')};return'#'+f(0)+f(8)+f(4)}
+function garder(hex,fond){if(hex==='#1c1c1e'&&lum(fond)<.5)return'#f2f2f7';if(ctr(hex,fond)>=4.5)return hex;const[h,s,l]=h2hsl(hex);const p=lum(fond)<.5?1:-1;for(let x=l+p;x>=0&&x<=100;x+=p){const c=hsl2h(h,s,x);if(ctr(c,fond)>=4.5)return c}return p>0?'#ffffff':'#000000'}
+
+/* ───────── jetons du site ───────── */
+const T={
+ light:{bg:'#ffffff',fg:'#1c1c1e',mu:'#6c6c72',bd:'#e4e4e5',rs:'#ffffff',ch:'#3f63cf',jn:'#b3261d',py:'#636872',pl:'#f2f2f7',
+  sec:{intro:['#5b7fa6','#eef3f9'],verse:['#2c8a7d','#e8f3f0'],chorus:['#e0560a','#fcece1'],bridge:['#7a5bcb','#f0ecf9']}},
+ dark:{bg:'#000000',fg:'#f2f2f7',mu:'#98989f',bd:'#373739',rs:'#1c1c1e',ch:'#8fb0ff',jn:'#ff7d72',py:'#9ba0a9',pl:'#1c1c1e',
+  sec:{intro:['#8fb2dc','#161f2a'],verse:['#59bdac','#112320'],chorus:['#fb923c','#2a1810'],bridge:['#b59ce9','#1d1730']}}};
+const PERSO={fr:'#1f7a5c',zh:'#6d4bc3'};
+const DEF={fr:null,zh:null};
+
+/* couleur affichée d'un accord : choix corrigé contre le vrai fond ; sans choix, la couleur gelée du site */
+function accord(lang,mode,th,pal,fond){const t=T[th],p=pal[lang];
+  if(p)return garder(p,fond||t.bg);
+  if(mode==='sections')return t.fg;
+  if(lang==='zh'&&mode!=='scene')return t.jn;
+  return t.ch}
+
+/* ───────── contenu : vrais chants du dépôt (tonalité affichée) ───────── */
+const SONGS={
+ fr:{title:'À jamais Tu es saint',art:'Chris Tomlin',lab:{intro:'Intro',verse:'Couplet 1',chorus:'Refrain 1'},short:{intro:'I',verse:'C1',chorus:'R1'},
+  secs:[{k:'intro',ch:['D','F#m','Esus4','A/C#','F#m','Esus4']},
+   {k:'verse',lines:['Tou[A]tes les générations, de[D]vant Lui prostern[A]ées','En[F#m]tonnent ensemble un c[E]antique à l\'Agneau.']},
+   {k:'chorus',lines:['Et les anges acclam[D]ent : Tu [F#m]es   [E]saint,','L\'univers proclam[A/C#]e : Tu es [F#m]saint.']}]},
+ zh:{title:'谢谢你',py:'Xiè xiè nǐ',art:'曾祥怡词 / 游智婷曲',lab:{intro:'前奏',verse:'主歌 1',chorus:'副歌 1'},short:{intro:'I',verse:'C1',chorus:'R1'},
+  secs:[{k:'intro',ch:['D','F#m','Bm','F#m','Em','A','D']},
+   {k:'verse',zh:[['我能[D]用什[A/C#]么报答[Bm]你恩[D/A]典，','wǒ néng yòng shén me bào dá nǐ ēn diǎn']]},
+   {k:'chorus',zh:[['[G/A]谢谢[D]你洗净我的[F#m]罪，','xiè xiè nǐ xǐ jìng wǒ de zuì'],['谢谢[Bm]你医治我伤[F#m]悲，','xiè xiè nǐ yī zhì wǒ shāng bēi']]}]}};
+
+function frLine(src,col,fs){ /* comme le site : chaque accord pousse le texte (colonne au moins aussi large que l'accord), jamais de superposition ; un mot ne se coupe pas */
+  const words=src.trim().split(/\s+/).map(w=>{const parts=w.split(/\[([^\]]+)\]/);let h='';
+    if(parts[0])h+=`<span class="sg"><i></i><span>${parts[0]}</span></span>`;
+    for(let k=1;k<parts.length;k+=2)h+=`<span class="sg"><i style="color:${col}">${parts[k]}</i><span>${parts[k+1]||''}</span></span>`;
+    return`<span class="w">${h}</span>`});
+  return`<div class="fl" style="font-size:${fs}px">${words.join(' ')}</div>`}
+function zhLine(src,py,col,fs){const syl=py.split(' ');let k=0,pend='';const cols=[];
+  for(const m of src.matchAll(/\[([^\]]+)\]|(.)/gu)){if(m[1]){pend=m[1];continue}const c=m[2];if(/[，。、]/.test(c)){cols[cols.length-1].p+=c;continue}cols.push({k:pend,h:c,p:'',y:syl[k++]});pend=''}
+  return`<div class="zl">${cols.map(c=>`<span class="zc"><i class="zk" style="color:${col}">${c.k}</i><b style="font-size:${Math.round(fs*1.2)}px">${c.h}${c.p}</b><u>${c.y}</u></span>`).join('')}</div>`}
+function body(s,lang,col,fs){if(s.ch)return`<div class="ci" style="color:${col};font-size:${fs-1}px">${s.ch.map(c=>`<span>${c}</span>`).join('')}</div>`;
+  return lang==='zh'?s.zh.map(l=>zhLine(l[0],l[1],col,fs)).join(''):s.lines.map(l=>frLine(l,col,fs)).join('')}
+
+/* ───────── page (cinq dispositions) ───────── */
+function pageBody(o){const{lang,mode,th,pal,fs=17,w=390}=o,t=T[th],S=SONGS[lang],zhc=lang==='zh'?' zhl':'',md=w>=768;let h='';
+  S.secs.forEach(s=>{const[sc,tint]=t.sec[s.k],lab=S.lab[s.k];
+    if(mode==='classique'){const a=accord(lang,'classique',th,pal,t.bg),band=s.k==='chorus';
+      h+=`<div class="sec" style="${band?`background:color-mix(in srgb,${a} 11%,${t.bg});border-left:3px solid ${a};padding:8px 10px 2px;`:''}"><div class="lab${zhc}" style="color:${a}"><s style="background:${a}"></s>${lab}</div>${body(s,lang,a,fs)}</div>`}
+    else if(mode==='sections'){const a=accord(lang,'sections',th,pal,t.bg);
+      h+=`<div class="bx" style="border-color:${sc}"><div class="lab${zhc}" style="color:${sc}">${lab}</div>${body(s,lang,a,fs)}</div>`}
+    else if(mode==='reperes'){const a=accord(lang,'reperes',th,pal,t.bg);
+      h+=`<div class="rp"><div class="rl"><b style="background:${sc}"></b><i style="background:${sc}"></i></div><div><div class="lab${zhc}" style="color:${sc}">${lab}</div>${body(s,lang,a,fs)}</div></div>`}
+    else{const a=accord(lang,'scene',th,pal,tint),lc=th==='light'?`color-mix(in srgb,${sc} 70%,black)`:sc;
+      h+=`<div class="sc" style="background:${tint};border-left-color:${sc};--sl:${md?64:40}px;--sg:${md?18:12}px;--spt:${md?16:12}px;--spr:${md?28:14}px;--spl:${md?18:10}px"><div class="sl"><b style="color:${lc}">${S.short[s.k]}</b><small style="${md?'':'display:none'}" class="${lang==='zh'?'zh':''}">${lab}</small></div><div style="min-width:0">${body(s,lang,a,fs)}</div></div>`}});
+  return h}
+function titleBlock(lang,th,tint){const S=SONGS[lang];return`<div class="ttl${lang==='zh'?' zh':''}">${S.title}</div>${lang==='zh'?`<div class="ttl-py">${S.py}</div>`:''}<div class="art">${S.art}</div>`}
+function pills(lang,th){const t=T[th],S=SONGS[lang];return`<div class="pills">${S.secs.map(s=>{const[c,ti]=t.sec[s.k];return`<b style="background:${ti};color:${c}">${S.short[s.k]}</b>`}).join('')}</div>`}
+function vars(th,w,extra){const t=T[th];return`--bg:${t.bg};--fg:${t.fg};--mu:${t.mu};--bd:${t.bd};--rs:${t.rs};--ch:${t.ch};--py:${t.py};--pl:${t.pl};--ic:${t.ch};--sel:${t.ch};--pad:${w<500?16:w<900?28:40}px;${extra||''}`}
+/* ───────── icônes (traits simples) ───────── */
+const IC={list:'<path d="M4 6h10M4 12h10M4 18h6"/><circle cx="18" cy="17" r="2.5"/><path d="M20.5 17V8"/>',bm:'<path d="M7 4h10v16l-5-3.5L7 20z"/>',piano:'<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 19v-5M12 19v-5M16 19v-5"/>',pen:'<path d="M4 20l1-4L16 5l3 3L8 19z"/>',wr:'<path d="M14.7 6.3a4 4 0 00-5.4 5.2L3.6 17.2a1.6 1.6 0 002.2 2.2l5.7-5.7a4 4 0 005.2-5.4l-2.5 2.5-2.1-.6-.6-2.1z"/>',cols:'<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M12 5v14"/>',T:'<path d="M5 6h14M12 6v13"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',note:'<path d="M9 17V6l10-2v11"/><circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="15" r="2.5"/>',tr:'<path d="M4 6h8M8 4v2M6 6c1 4 4 6 6 7M10 6c-1 4-4 7-7 8M13 20l4-9 4 9M14.5 17h5"/>',back:'<path d="M19 12H5M12 5l-7 7 7 7"/>',dots:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>',moon:'<path d="M20 14A8 8 0 1110 4a6 6 0 0010 10z"/>',bell:'<path d="M6 17V11a6 6 0 0112 0v6l2 2H4zM10 21h4"/>',play:'<path d="M7 5l12 7-12 7z"/>',doc:'<path d="M7 3h7l4 4v14H7zM14 3v4h4"/>',waves:'<path d="M3 8c3-3 6 3 9 0s6 3 9 0M3 14c3-3 6 3 9 0s6 3 9 0"/>'};
+const ic=(n,s)=>`<svg viewBox="0 0 24 24"${s?` style="width:${s}px;height:${s}px"`:''}>${IC[n]}</svg>`;
+
+/* ───────── pièces des panneaux ───────── */
+const L={
+ fr:{opt:"Options d'affichage",page:'Sur la page',acc:'Accords',pin:'Pinyin',ann:'Annotations',disp:'Disposition',cls:['Classique','Couleurs par section','Repères','Scène'],txt:'Texte',theme:'Thème',lt:'Clair',dk:'Sombre',met:'Métronome visuel',icol:'Couleur des icônes',
+   ca:'Couleur des accords',rfr:'Chants en français',rzh:'Chants en chinois',orig:"Couleurs d'origine",ret:'Retenue sur cet appareil',retc:'Retenue pour ce compte sur cet appareil',cols:'2 colonnes',pers:'Personnaliser',sig:'Signalement',aff:'Affichage',pl:'Ordre joué',un:'Sections uniques',st:'Structure seule',teinte:'Teinte',lum:'Luminosité',ap:'Aperçu',set:'Setlist',rep:'Repères',joue:'Je joue',ton:'Ton'},
+ zh:{opt:'显示选项',page:'页面显示',acc:'和弦',pin:'拼音',ann:'批注',disp:'排版',cls:['经典','段落配色','段落标记','舞台'],txt:'文字',theme:'主题',lt:'浅色',dk:'深色',met:'视觉节拍器',icol:'图标颜色',
+   ca:'和弦颜色',rfr:'法语歌曲',rzh:'中文歌曲',orig:'恢复原色',ret:'仅在本设备上保存',retc:'仅用于此账号，保存在本设备上',cols:'双栏',pers:'个性化设置',sig:'报告',aff:'显示',pl:'演奏顺序',un:'每段只显示一次',st:'仅显示结构',teinte:'色相',lum:'亮度',ap:'预览',set:'歌单',rep:'段落',joue:'我演奏',ton:'调'}};
+const SURF={light:'#ffffff',dark:'#1c1c1e'};
+const ORIGINE={fr:"Couleur d'origine (selon la disposition)",zh:'Couleur d\'origine (selon la disposition)',un:"Couleur d'origine (selon la langue)"};
+function pastilles(o,lang,sz){ /* lang: 'fr'|'zh'|'un' (variante B) ; mêmes teintes dans les deux rangées : l'origine, cinq teintes, le cercle */
+  const{th,pal,circle}=o,t=T[th];
+  const origBg=lang==='fr'?`linear-gradient(135deg,${t.ch} 50%,${t.fg} 50%)`:lang==='zh'?`conic-gradient(${t.jn} 0 33.4%,${t.ch} 0 66.7%,${t.fg} 0)`:`linear-gradient(90deg,${t.ch} 50%,${t.jn} 50%)`;
+  const teintes=lang==='un'?TE.slice(0,5):TE.slice(1);
+  const key=lang==='un'?(pal.fr||null):(pal[lang]||null),circ=circle===lang,known=key===null||teintes.includes(key);
+  let h=`<i title="${ORIGINE[lang]}" class="${!circ&&key===null?'on':''}" style="width:${sz}px;height:${sz}px;background:${origBg}"></i>`;
+  teintes.forEach(c=>{h+=`<i class="${!circ&&c===key?'on':''}" style="width:${sz}px;height:${sz}px;background:${garder(c,SURF[th])}"></i>`});
+  h+=`<i class="cc ${circ||!known?'on':''}" style="width:${sz}px;height:${sz}px"></i>`;
+  return`<div class="pst">${h}</div>`}
+function pastillesIc(th){ /* couleur des icônes (réglage existant) : six teintes puis le cercle, la première choisie */
+  return`<div class="pst">${TE.map((c,i)=>`<i class="${i?'':'on'}" style="width:44px;height:44px;background:${garder(c,SURF[th])}"></i>`).join('')}<i class="cc" style="width:44px;height:44px"></i></div>`}
+function cercle(o,lang){const{th,pal}=o,t=T[th],c=pal[lang]||(lang==='zh'?t.jn:t.ch),[hh,ss,ll]=h2hsl(c);
+  const R=88-14,a=hh*Math.PI/180,px=88+R*Math.sin(a),py=88-R*Math.cos(a),L_=Math.min(85,Math.max(15,ll));
+  const s=L[o.ui],ap=(f,n)=>`<em>${n}</em><b style="background:${f}"><i style="background:${garder(c,f)}"></i></b>`;
+  return`<div class="cerc" style="--cc:${hsl2h(hh,70,50)}"><div class="ring"><span class="cg"></span><span class="hd" style="left:${px-11}px;top:${py-11}px;background:${c}"></span><span class="ct"><i style="background:${garder(c,t.bg)}"></i></span></div>
+   <div class="lum"><span>${s.lum}</span><div class="tr"><i style="left:${(L_-15)/70*100}%"></i></div></div><div class="ap"><span>${s.ap}</span>${ap('#ffffff',s.lt)}${ap('#000000',s.dk)}</div></div>`}
+function rubrique(o){const s=L[o.ui],sz=44,single=o.single;
+  const orig=Object.values(o.pal).some(Boolean);
+  const row=(lang,lbl)=>`${lbl?`<div class="rs">${lbl}</div>`:''}${pastilles(o,lang,sz)}${o.circle===lang?cercle(o,lang):''}`;
+  return`<div class="rb nv"><div class="rt">${s.ca}</div>${single?row('un',''):row('fr',s.rfr)+row('zh',s.rzh)}<span class="lnk${orig?'':' off'}">${s.orig}</span><div class="rn">${s.retc}</div></div>`}
+function minis(o){const{th,ui}=o,t=T[th],s=L[ui],sel=t.ch,p=o.pal,
+  a1=accord('fr','classique',th,p,t.bg),ci=['classique','sections','reperes','scene'].indexOf(o.mode||'classique'),cn=accord('fr','sections',th,p,t.bg),cd=c=>`<i class="cd" style="--cc:${c}"><u></u><u></u></i>`;
+  const blk=(c,bd,bg,cc)=>`<div class="b" style="${bg?`background:${bg};`:''}${bd}"><i style="background:${c}"></i>${cd(cc)}<i></i></div>`;
+  const m=[
+  `<div class="mn"><span class="t"></span>${blk(a1,`border-left:2px solid ${a1}`,`color-mix(in srgb,${a1} 12%,${t.bg})`,a1)}${blk(a1,`border-left:2px solid ${a1}`,`color-mix(in srgb,${a1} 12%,${t.bg})`,a1)}</div>`,
+  `<div class="mn"><span class="t"></span>${blk(t.sec.verse[0],`border:1px solid ${t.sec.verse[0]}`,'',cn)}${blk(t.sec.chorus[0],`border:1px solid ${t.sec.chorus[0]}`,'',cn)}</div>`,
+  `<div class="mn"><span class="t" style="margin-left:14px"></span><span class="rail" style="top:15px;height:42px;background:${t.sec.verse[0]}"></span><span class="dot" style="top:13px;background:${t.sec.verse[0]}"></span><span class="dot" style="top:36px;background:${t.sec.chorus[0]}"></span><div style="margin-left:14px;display:flex;flex-direction:column;gap:3px"><i class="ln" style="width:40%;background:${t.sec.verse[0]}"></i>${cd(a1)}<i class="ln"></i><i class="ln" style="width:40%;margin-top:6px;background:${t.sec.chorus[0]}"></i>${cd(a1)}<i class="ln"></i></div></div>`,
+  `<div class="mn"><span class="t"></span><div class="band" style="background:${t.sec.verse[1]};color:${t.sec.verse[0]}">C<span style="display:flex;flex-direction:column;gap:2px">${cd(a1)}<i class="ln" style="width:30px"></i></span></div><div class="band" style="background:${t.sec.chorus[1]};color:${t.sec.chorus[0]}">R<span style="display:flex;flex-direction:column;gap:2px">${cd(a1)}<i class="ln" style="width:30px"></i></span></div></div>`];
+  return`<div class="mgrid" style="--sel:${sel}">${m.map((x,i)=>`<div class="${i===ci?'on':''}">${x}<span>${s.cls[i]}</span></div>`).join('')}<div></div></div>`}
+
+/* options d'affichage du mode louange */
+function opts(o){const s=L[o.ui],t=T[o.th],rub=rubrique(o);
+  const wide=o.w>=1200,blk1=`<div class="pt">${s.page}</div><div class="btn3" style="--n:${wide?4:3}"><div><span class="rnd">${ic('note')}</span>${s.acc}</div><div><span class="rnd">${ic('tr')}</span>${s.pin}</div><div><span class="rnd">${ic('pen')}</span>${s.ann}</div>${wide?`<div><span class="rnd">${ic('cols')}</span>${s.cols}</div>`:''}</div>`;
+  const blk2=`<div class="pt">${s.disp}</div>${minis(o)}${rub}`;
+  const blk3=`<div class="sr" style="margin-top:8px"><span>${s.txt}</span><span class="stp"><i>A−</i>100%<i>A+</i></span></div>
+   <div class="sr"><span>${s.theme}</span><span class="seg"><span class="${o.th==='light'?'on':''}">${ic('sun',15)}${s.lt}</span><span class="${o.th==='dark'?'on':''}">${ic('moon',15)}${s.dk}</span></span></div>
+   <div class="sr"><span>${s.met}</span><span class="stp"><i style="width:44px;height:44px">${ic('waves',20)}</i></span></div>
+   <div class="rb" style="margin-top:6px"><div class="rt">${s.icol}</div>${pastillesIc(o.th)}</div>`;
+  return(o.scrolled?'':blk1)+blk2+blk3}
+
+/* ───────── écrans ───────── */
+function louangeBar(w,th,lang,sub){const t=T[th],s=L[lang],ph=w<500,hh=ph?52:56;
+  const bt=(i,l='',on)=>`<span class="bt${on?' on':''}">${ic(i)}${ph?'':l}</span>`;
+  return`<div class="bar" style="height:${hh}px">${ph?`${bt('list')}${bt('bm')}${bt('piano')}`:`${bt('list',s.set)}${bt('bm',s.rep)}${bt('piano',s.joue)}`}<div class="t"><b class="${lang==='zh'?'zh':''}">${SONGS[lang].title}</b><span class="${lang==='zh'?'zh':''}">${lang==='zh'?'曾祥怡词 / 游智婷曲 · D':'Chris Tomlin · A'}</span></div>${ph?'':'<span class="tp">♩ 64</span>'}${bt('pen')}${ph?'':bt('wr')}${bt('T','',1)}${bt('x')}</div>`}
+function louangePage(o,w,h,extra){const{lang,th}=o,t=T[th],ph=w<500,hh=ph?52:56,pad=ph?16:w<900?28:40;
+  return`<div class="scr${th==='dark'?' dk':''}" style="${vars(th,w)}">${louangeBar(w,th,lang)}<div class="pg" style="top:${hh}px;--pad:${pad}px">${pills(lang,th)}${pageBody({...o,w,fs:ph?17:w>1200?19:18})}</div>${extra||''}</div>`}
+function chantChrome(w,th,lang){const s=L[lang],ph=w<500;
+  const tl=`<div class="hdr" style="--pad:${ph?16:40}px"><div class="l1"><span class="logo"></span>${ph?'':`<span style="font-weight:700;font-size:17px;white-space:nowrap">GCC <span style="color:#d8332a">Louange</span></span>`}<span class="pill" style="margin-left:6px;padding:0 4px"><span class="pill dk" style="box-shadow:none;height:32px">App</span><span style="padding:0 10px;color:var(--mu);font-weight:500">${lang==='zh'?'乐手':'Musiciens'}</span></span><span style="flex:1"></span><span class="pill ci">${ic('bell')}</span></div>
+   <div class="l2"><span class="pill ci">${ic('back')}</span><span class="pill" style="gap:14px;padding:0 16px;font-weight:500">−<span>${s.ton} <b>A</b></span>+</span><span class="pill" style="gap:12px;font-weight:700">A− A+</span><span class="pill dk" style="padding:0 14px">${ic('note',18)}${ph?'':(lang==='zh'?'和弦':'Accords')}</span>${ph?'':`<span style="flex:1"></span><span class="pill">${ic('play',18)}${lang==='zh'?'视频':'Vidéo'}</span><span class="pill">${ic('doc',18)}PDF</span>`}<span class="pill ci" style="outline:2px solid var(--fg);outline-offset:1px">${ic('dots')}</span></div></div>`;return tl}
+function chantPage(o,w,h,menu){const{lang,th}=o,ph=w<500,top=ph?112:116,pad=ph?16:40;
+  return`<div class="scr${th==='dark'?' dk':''}" style="${vars(th,w)}">${chantChrome(w,th,lang)}<div class="pg" style="top:${top}px;--pad:${pad}px">${titleBlock(lang,th)}${pills(lang,th)}${pageBody({...o,w,fs:ph?17:18})}</div>${menu}</div>`}
+function menuChant(o,w){const s=L[o.ui],ph=w<500,wd=ph?374:400;
+  return`<div class="dd pan" style="top:${ph?150:166}px;${ph?'left:8px;':'right:40px;'}width:${wd}px"><div class="pt" style="margin:6px 6px 4px">${s.disp}</div>${minis(o)}<div style="font-size:11.5px;color:var(--mu);padding:2px 6px 0">${s.ret}</div><div style="padding:4px 8px 6px">${rubrique(o)}</div><div style="height:1px;background:var(--bd);margin:4px -6px"></div><div class="sr" style="gap:10px;justify-content:flex-start;padding:0 8px;font-weight:400;color:var(--fg);min-height:40px">${ic('wr',16)}${s.pers}</div><div class="sr" style="gap:10px;justify-content:flex-start;padding:0 8px;font-weight:400;min-height:40px">${ic('doc',16)}${s.sig}</div></div>`}
+function setlistPage(o,w,h,menu){const{lang,th}=o,s=L[lang],ph=w<500,pad=ph?16:40;
+  return`<div class="scr${th==='dark'?' dk':''}" style="${vars(th,w)}"><div class="hdr" style="--pad:${pad}px"><div class="l2"><span class="pill ci">${ic('back')}</span><span style="flex:1;min-width:0;font-weight:700;font-size:${ph?16:19}px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" class="${lang==='zh'?'zh':''}">${lang==='zh'?'主日崇拜 · 11月15日':'Culte du 15 novembre'}</span><span class="pill" style="outline:2px solid var(--fg);outline-offset:1px">${ph?ic('dots'):s.aff}</span>${ph?'':`<span class="pill ci">${ic('dots')}</span>`}</div></div><div class="pg" style="top:${ph?66:72}px;--pad:${pad}px">${titleBlock(lang,th)}${pageBody({...o,w,fs:ph?17:18})}</div>${menu}</div>`}
+function menuSetlist(o,w){const s=L[o.ui],ph=w<500,wd=ph?374:400;
+  const ra=(t,on)=>`<div class="sr" style="font-weight:400;min-height:38px;gap:8px;justify-content:flex-start;padding:0 8px"><i style="width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--mu);display:grid;place-items:center;flex:none">${on?`<i style="width:7px;height:7px;border-radius:50%;background:var(--fg);display:block"></i>`:''}</i>${t}</div>`;
+  const ck=`<div class="sr" style="font-weight:400;min-height:38px;gap:8px;justify-content:flex-start;padding:0 8px"><i style="width:14px;height:14px;border-radius:3px;box-shadow:inset 0 0 0 1.5px var(--mu);display:block;flex:none"></i>${s.pin}</div>`;
+  const sep='<div style="height:1px;background:var(--bd);margin:4px -6px"></div>';
+  return`<div class="dd pan" style="top:${ph?66:76}px;${ph?'right:8px;':'right:92px;'}width:${wd}px"><div class="pt" style="margin:6px 8px 2px;font-weight:400;font-size:12.5px">${s.aff}</div>${ra(s.pl,1)}${ra(s.un)}${ra(s.st)}${sep}${ck}${sep}${minis(o)}<div style="padding:2px 8px 6px">${rubrique(o)}</div></div>`}
+
+/* ───────── assemblage ───────── */
+const mocks=[];
+function fig(host,w,h,html,cap,s1){const f=document.createElement('figure');f.className='fig';f.style.setProperty('--w',w);f.style.setProperty('--h',h);
+  f.innerHTML=`<div class="mk${s1?' s1':''}" tabindex="0" role="button" aria-label="Ouvrir à l'échelle 1" style="--w:${w};--h:${h}"><div class="mk-in" style="--w:${w};--h:${h}">${html}</div></div><figcaption class="cap">${cap}<span class="zm"> ${s1?'· défile à l\'horizontale ; toucher : plein écran':'· toucher pour agrandir'}</span></figcaption>`;
+  document.getElementById(host).appendChild(f);if(!s1)mocks.push(f.querySelector('.mk'));else f.querySelector('.mk').addEventListener('click',()=>open(f.querySelector('.mk')))}
+const base=(lang,mode='classique',th='light',pal=DEF)=>({lang,ui:lang,mode,th,pal});
+const cap=(a,b)=>`<b>${a}</b> — ${b}`;
+
+/* 1 · mode louange */
+{const sheet=(o,w,h)=>louangePage(o,w,h,`<div style="position:absolute;inset:0;background:rgba(0,0,0,.28)"></div><div class="sheet pan" style="top:${h-640}px;--sel:${T[o.th].ch}"><div class="grab"></div><div style="text-align:center;font-weight:700;font-size:17px;margin-bottom:2px" class="${o.lang==='zh'?'zh':''}">${L[o.ui].opt}</div><div class="fade" style="top:52px;height:14px;background:linear-gradient(var(--rs),transparent)"></div>${opts({...o,w,scrolled:1})}</div>`);
+ const pop=(o,w,h,left,top,H)=>louangePage(o,w,h,`<div class="pop pan" style="left:${left}px;top:${top}px;width:416px;height:${H}px;padding:6px 16px 10px;--sel:${T[o.th].ch}">${opts({...o,w})}${o.scrolled?'<div class="fade" style="top:0;background:linear-gradient(var(--rs),transparent)"></div>':''}<div class="fade" style="bottom:0;background:linear-gradient(transparent,var(--rs))"></div></div>`);
+ const zh={...base('zh'),pal:{fr:null,zh:null}};
+ fig('p1a',390,760,sheet(base('fr'),390,760),cap('Téléphone 390 px · clair · français','la feuille du bas, vraiment défilée : « Outils » et « Sur la page » sont au-dessus (titre et filet restent en haut) ; réglage d\'origine'));
+ fig('p1a',768,880,pop({...zh,circle:'zh',scrolled:1,pal:{fr:null,zh:'#00796b'}},768,880,336,66,820),cap('Tablette portrait 768 px · clair · 中文','popover défilé jusqu\'au cercle chromatique ouvert sur « 中文歌曲 » ; un turquoise #00796b, absent des pastilles, choisi au cercle ; les deux aperçus disent clair et sombre'));
+ fig('p1b',1024,768,pop({...base('fr'),scrolled:0},1024,768,592,66,692),cap('Tablette paysage 1024 px · clair · français','le même popover ; il défile (le bas est rogné) car la fenêtre est basse'));
+ fig('p1b',1440,900,pop({...zh,mode:'scene',th:'dark',ui:'zh'},1440,900,980,66,820),cap('Ordinateur 1440 px · sombre · 中文','popover sous l\'icône T ; la page derrière est en Scène (bleue), « 2 colonnes » s\'ajoute à 1 440 px ; la première pastille « d\'origine » reste cochée'));}
+
+/* 2 · menu ⋯ du chant */
+{const mk=(o,w,h)=>chantPage(o,w,h,menuChant(o,w));
+ fig('p2a',390,700,mk({...base('fr'),pal:DEF},390,700),cap('Téléphone 390 px · clair · français','menu ⋯, réglage d\'origine'));
+ fig('p2a',768,720,mk({...base('zh'),pal:{fr:null,zh:'#6d4bc3'}},768,720),cap('Tablette portrait 768 px · clair · 中文','menu ⋯ ; le violet est choisi, « 恢复原色 » devient actif'));
+ fig('p2b',1024,740,mk({...base('fr','scene'),pal:{fr:'#1f7a5c',zh:null}},1024,740),cap('Tablette paysage 1024 px · clair · français','menu ⋯ avec le vert choisi ; la page derrière est en Scène'));
+ fig('p2b',1440,820,mk({...base('zh','classique','dark'),pal:DEF},1440,820),cap('Ordinateur 1440 px · sombre · 中文','menu ⋯, réglage d\'origine'));}
+
+/* 3 · vue partitions */
+{const mk=(o,w,h)=>setlistPage(o,w,h,menuSetlist(o,w));
+ fig('p3a',390,660,mk({...base('zh'),pal:DEF},390,660),cap('Téléphone 390 px · clair · 中文','menu « 显示 » de la vue partitions'));
+ fig('p3a',768,640,mk({...base('fr'),pal:DEF},768,640),cap('Tablette portrait 768 px · clair · français','menu « Affichage »'));
+ fig('p3b',1024,700,mk({...base('zh','classique','dark'),pal:{fr:null,zh:'#6d4bc3'}},1024,700),cap('Tablette paysage 1024 px · sombre · 中文','le violet choisi s\'affiche tel quel sur page sombre'));
+ fig('p3b',1440,780,mk({...base('fr'),pal:DEF},1440,780),cap('Ordinateur 1440 px · clair · français','menu « Affichage »'));}
+
+/* variante B */
+{const sheetB=(o,w,h)=>louangePage(o,w,h,`<div style="position:absolute;inset:0;background:rgba(0,0,0,.28)"></div><div class="sheet pan" style="top:${h-420}px;--sel:${T[o.th].ch}"><div class="grab"></div><div class="pt" style="margin-top:2px">${L[o.ui].disp}</div>${minis(o)}${rubrique({...o,single:1})}</div>`);
+ const popB=(o,w,h)=>louangePage(o,w,h,`<div class="pop pan" style="left:${w-416-28}px;top:66px;width:416px;padding:6px 16px 14px;--sel:${T[o.th].ch}"><div class="pt">${L[o.ui].disp}</div>${minis(o)}${rubrique({...o,single:1})}</div>`);
+ fig('pB',390,560,sheetB({...base('fr'),pal:DEF},390,560),cap('Téléphone 390 px · clair · français','une seule rangée ; la pastille bicolore (moitié bleue, moitié rouge) est « d\'origine, selon la langue »'));
+ fig('pB',768,520,popB({...base('zh'),pal:{fr:'#1f7a5c',zh:'#1f7a5c'}},768,520),cap('Tablette portrait 768 px · clair · 中文','le vert choisi vaut pour tous les chants'));}
+
+/* résultat */
+{const P={fr:PERSO.fr,zh:PERSO.zh};
+ const pg=(lang,mode,th,fs)=>{const o={lang,mode,th,pal:P},t=T[th];return`<div class="scr${th==='dark'?' dk':''}" style="${vars(th,390)}"><div class="pg" style="--pad:16px">${titleBlock(lang,th)}${pills(lang,th)}${pageBody({...o,fs:17})}</div></div>`};
+ const items=[['fr','classique','Classique · français'],['zh','classique','Classique · 中文, avec pinyin'],['zh','scene','Scène · 中文'],['fr','sections','Couleurs par section · français'],['fr','reperes','Repères · français']];
+ ['light','dark'].forEach(th=>items.forEach(([l,m,n])=>fig('r1',390,600,pg(l,m,th),cap(`${th==='light'?'Clair':'Sombre'} · 390 px`,`${n}`))));
+ const louange=(lang,mode,th,w,h)=>louangePage({lang,ui:lang,mode,th,pal:P,w},w,h);
+ fig('r2',390,520,louange('zh','classique','light',390,520),cap('Mode louange · 390 px · clair','Classique · 中文'));
+ fig('r2',390,620,louange('fr','scene','dark',390,620),cap('Mode louange · 390 px · sombre','Scène · français (le vert est éclairci seulement si besoin)'));
+ fig('r3',1440,430,louange('zh','scene','light',1440,430),cap('Mode louange · 1 440 px · clair, extrait à l\'échelle 1','Scène · 中文 : les accords étaient bleus, ils sont violets (défile sur petit écran)'),1);
+ fig('r3',1440,430,louange('zh','scene','dark',1440,430),cap('Mode louange · 1 440 px · sombre, extrait à l\'échelle 1','Scène · 中文'),1);
+ /* une couleur personnelle proche de celle de la section */
+ const bandFig=(lang,k,th,lab)=>{const t=T[th],[sc,tint]=t.sec[k],S=SONGS[lang],a=accord(lang,'scene',th,P,tint),lc=th==='light'?`color-mix(in srgb,${sc} 70%,black)`:sc,src=lang==='fr'?S.secs[1]:S.secs[2];
+  return`<div class="scr${th==='dark'?' dk':''}" style="${vars(th,390)}"><div class="pg" style="--pad:16px;padding-top:14px"><div class="sc" style="background:${tint};border-left-color:${sc};--sl:40px;--sg:12px;--spt:12px;--spr:14px;--spl:10px"><div class="sl"><b style="color:${lc}">${lab}</b></div><div style="min-width:0">${body(src,lang,a,17)}</div></div></div></div>`};
+ ['light','dark'].forEach(th=>{fig('r4',390,250,bandFig('fr','verse',th,'C1'),cap(`${th==='light'?'Clair':'Sombre'} · 390 px`,'vert #1f7a5c sur la bande du couplet (#2c8a7d)'));fig('r4',390,250,bandFig('zh','bridge',th,'P'),cap(`${th==='light'?'Clair':'Sombre'} · 390 px`,'violet #6d4bc3 sur la bande du pont (#7a5bcb)'))});}
+
+/* garde de lisibilité */
+{const Y='#ffd60a',cases=[['Page claire','#ffffff','#1c1c1e'],['Page sombre','#000000','#f2f2f7'],['Scène, bande claire','#fcece1','#1c1c1e'],['Scène, bande sombre','#2a1810','#f2f2f7']];
+ document.getElementById('gar').innerHTML=cases.map(([n,bg,fg])=>{const a=garder(Y,bg),ch=ctr(Y,bg),ca=ctr(a,bg);
+  return`<div class="gcell" style="background:${bg};color:${fg}"><div class="gh" style="background:${bg};border-color:${fg}33;color:${fg}"><b>${n}</b> <code style="background:transparent;border:1px solid ${fg}44;color:${fg}">${bg}</code></div><div class="gb">
+   <div class="gl"><em>Choisi</em><span class="sw" style="background:${Y}"></span><b style="color:${Y}">A  D  F#m</b><small>${ch.toFixed(1)}:1</small></div>
+   <div class="gl"><em>Affiché</em><span class="sw" style="background:${a}"></span><b style="color:${a}">A  D  F#m</b><small>${ca.toFixed(1)}:1</small></div>
+   <div class="gl" style="font-size:13px;opacity:.85">${a===Y?'tel quel, déjà lisible':'corrigé : '+a}</div></div></div>`}).join('')}
+
+/* échelle + loupe */
+function fit(){mocks.forEach(m=>{const w=+m.style.getPropertyValue('--w'),s=m.clientWidth/w;m.firstElementChild.style.transform=`scale(${s})`})}
+const lp=document.getElementById('loupe'),lpIn=document.getElementById('lp-in');
+function open(m){const w=+m.style.getPropertyValue('--w'),h=+m.style.getPropertyValue('--h');lpIn.style.width=w+'px';lpIn.style.height=h+'px';lpIn.innerHTML=m.firstElementChild.outerHTML;const c=lpIn.firstElementChild;c.style.transform='none';c.style.position='absolute';document.getElementById('lp-t').textContent=m.parentElement.querySelector('figcaption').textContent;lp.hidden=false;document.documentElement.classList.add('lp-open')}
+function close(){lp.hidden=true;lpIn.innerHTML='';document.documentElement.classList.remove('lp-open')}
+mocks.forEach(m=>{m.addEventListener('click',()=>open(m));m.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(m)}})});
+document.getElementById('lp-x').addEventListener('click',close);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!lp.hidden)close()});
+fit();addEventListener('resize',fit);new ResizeObserver(fit).observe(document.body);
+if(document.fonts)document.fonts.ready.then(fit);
+})();
+</script>
+</html>

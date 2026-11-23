@@ -1,6 +1,7 @@
 // Liste « Qui » des fêtes (docs/spec-chants-fetes.md, décision 34, CF5, CF16). Fonctions pures.
 
 import type { Language } from "@/types/common";
+import { QUI, QUI_RETIRES } from "@/types/programme";
 
 /** Les groupes en chinois : les mêmes caractères que `categories.Groupe …` de `zh-CN.json` (un test les compare). */
 export const GROUPES_ZH: Record<string, string> = {
@@ -16,8 +17,22 @@ export const GROUPES_ZH: Record<string, string> = {
  *  décision 45 : libellé seulement, aucune donnée réécrite. */
 export function libelleQui(qui: string, langue: Language = "fr"): string {
   if (qui === "Franco") return langue === "zh" ? "法语崇拜" : "Culte Francophone";
+  if (qui === "Intergroupe" && langue === "zh") return "联合聚会";
+  if (qui === "Interfranco" && langue === "zh") return "法语联合聚会";
   if (langue === "zh" && GROUPES_ZH[qui]) return GROUPES_ZH[qui];
   return qui;
+}
+
+/** Une valeur ni de la liste ni retirée : texte libre (« Autre… », SQ-R7). */
+export const estQuiLibre = (q: string): boolean =>
+  !(QUI as readonly string[]).includes(q) && !(QUI_RETIRES as readonly string[]).includes(q);
+
+/** Texte libre d'« Autre… » : rogné, 40 caractères ; égal (casse ignorée) à une valeur de QUI ou à son libellé
+ *  FR ou 中文 → cette valeur. */
+export function normaliserQui(texte: string): string {
+  const t = texte.trim().slice(0, 40).trim();
+  const bas = t.toLowerCase();
+  return QUI.find((q) => [q, libelleQui(q, "fr"), libelleQui(q, "zh")].some((x) => x.toLowerCase() === bas)) ?? t;
 }
 
 const GROUPES: Record<string, string> = {

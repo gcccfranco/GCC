@@ -7,9 +7,11 @@
 // ligne, sans rien de visible au repos (Q16) : souligné au survol de la souris, léger fond à l'appui.
 // L'étiquette « G (G/B) » donne deux boutons ; ce qui n'est pas un accord (parenthèses, séparateurs) reste texte.
 
-import { useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { accordsDeLEtiquette } from "@/lib/accords/analyse";
+import { chiffrerEtiquette } from "@/lib/harmonie/degres";
+import { NotationAccordsContext } from "@/lib/notationAccords";
 import { useOuvrirAccord } from "./AccordsProvider";
 
 type Morceau = { texte: string; accord: boolean };
@@ -29,6 +31,11 @@ function decouper(etiquette: string): Morceau[] {
   return sortie;
 }
 
+/** L'étiquette telle que la partition l'affiche : en chiffres, chaque accord devient son degré (largeur réservée comprise). */
+export function etiquetteAffichee(etiquette: string, notation: string, tonalite?: string): string {
+  return notation === "chiffres" ? decouper(etiquette).map((m) => (m.accord ? chiffrerEtiquette(m.texte, tonalite) : m.texte)).join("") : etiquette;
+}
+
 const REPOS =
   "relative cursor-pointer rounded-[3px] px-[2px] -mx-[2px] outline-none [-webkit-tap-highlight-color:transparent] " +
   "before:absolute before:left-1/2 before:top-1/2 before:h-10 before:min-h-full before:w-full before:min-w-8 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] " +
@@ -41,10 +48,16 @@ const VISIBLE =
   "[-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-ring " +
   "[@media(hover:hover)]:hover:underline active:bg-[color-mix(in_srgb,currentColor_20%,transparent)]";
 
+// « nu » : sans fond ni gras propres, de la couleur de son parent (H7-2 : grille d'un passage, « Ensuite »),
+// mais toujours touchable (cible de 44 px).
+const NU = REPOS.replace("before:h-10", "before:h-11").replace("before:min-w-8", "before:min-w-11");
+
 export function AccordTouchable({
   etiquette,
   capo,
   visible = false,
+  variante,
+  sectionUids,
 }: {
   /** L'accord ou l'étiquette tels qu'affichés (transposés). */
   etiquette: string;
@@ -52,14 +65,21 @@ export function AccordTouchable({
   capo?: number;
   /** Bouton visible au repos (feuille d'idées) ; la bulle d'aide l'ignore alors. */
   visible?: boolean;
+  /** `nu` (avec `visible`) : sans pastille. */
+  variante?: "nu";
+  /** AL-1 : section de l'accord quand le DOM n'en porte pas (scan 简谱) ; le panneau offre alors « Ici ». */
+  sectionUids?: string[];
 }) {
   const { actif } = useOuvrirAccord();
-  if (!actif) return <>{etiquette}</>;
-  return <Actifs etiquette={etiquette} capo={capo} visible={visible} />;
+  const { notation, tonalite } = useContext(NotationAccordsContext);
+  const affichee = etiquetteAffichee(etiquette, notation, tonalite);
+  if (!actif) return <>{affichee}</>;
+  return <Actifs etiquette={etiquette} capo={capo} visible={visible} nu={variante === "nu"} sectionUids={sectionUids} />;
 }
 
-function Actifs({ etiquette, capo, visible }: { etiquette: string; capo?: number; visible: boolean }) {
+function Actifs({ etiquette, capo, visible, nu, sectionUids }: { etiquette: string; capo?: number; visible: boolean; nu: boolean; sectionUids?: string[] }) {
   const { t } = useTranslation();
+  const { notation, tonalite } = useContext(NotationAccordsContext);
   const { ouvrir, enregistrer } = useOuvrirAccord();
   const premier = useRef<HTMLSpanElement>(null);
 
@@ -76,7 +96,7 @@ function Actifs({ etiquette, capo, visible }: { etiquette: string; capo?: number
       {morceaux.map((m, i) => {
         if (!m.accord) return m.texte;
         const ref = i === indexPremier ? premier : undefined;
-        const ouvrirCelui = (el: HTMLElement) => ouvrir({ accord: m.texte, ancre: el, capo });
+        const ouvrirCelui = (el: HTMLElement) => ouvrir({ accord: m.texte, ancre: el, capo, sectionUids });
         return (
           <span
             key={i}
@@ -85,7 +105,7 @@ function Actifs({ etiquette, capo, visible }: { etiquette: string; capo?: number
             tabIndex={0}
             data-accord-touchable={m.texte}
             aria-label={t("accords.voirComment", { accord: m.texte })}
-            className={visible ? VISIBLE : REPOS}
+            className={nu ? NU : visible ? VISIBLE : REPOS}
             onClick={(e) => ouvrirCelui(e.currentTarget)}
             onKeyDown={(e) => {
               if (e.key !== "Enter" && e.key !== " ") return;
@@ -93,7 +113,7 @@ function Actifs({ etiquette, capo, visible }: { etiquette: string; capo?: number
               ouvrirCelui(e.currentTarget);
             }}
           >
-            {m.texte}
+            {notation === "chiffres" ? chiffrerEtiquette(m.texte, tonalite) : m.texte}
           </span>
         );
       })}

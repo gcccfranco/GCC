@@ -144,6 +144,53 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     }
   });
 
+  test("l'index A–Z garde sa taille et sa place, page en haut, défilée et en fin de liste", async ({ page }) => {
+    await page.goto("/songs");
+    await listePrete(page);
+    const boite = () => liste(page).evaluate((carte) => {
+      const r = carte.querySelector('nav[aria-label="Index alphabétique"]')!.getBoundingClientRect();
+      return { top: r.top, height: r.height, bottom: r.bottom };
+    });
+    const carteDefile = await liste(page).evaluate((el) => /auto|scroll/.test(getComputedStyle(el).overflowY));
+    const defiler = async (y: number | "fin") => {
+      await liste(page).evaluate((el, cible) => {
+        const defile = /auto|scroll/.test(getComputedStyle(el).overflowY);
+        const haut = defile ? el.scrollHeight : document.documentElement.scrollHeight;
+        const v = cible === "fin" ? haut : cible;
+        if (defile) el.scrollTop = v; else window.scrollTo(0, v);
+        return new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok)));
+      }, y);
+    };
+    const enHaut = await boite();
+    await defiler(300);
+    const defilee = await boite();
+    await defiler("fin");
+    const enFin = await boite();
+    for (const [moment, b] of [["défilée", defilee], ["fin de liste", enFin]] as const) {
+      expect(Math.abs(b.top - enHaut.top), `${moment} : même haut`).toBeLessThanOrEqual(1);
+      expect(Math.abs(b.height - enHaut.height), `${moment} : même hauteur`).toBeLessThanOrEqual(1);
+    }
+    if (carteDefile) {
+      const carte = await liste(page).evaluate((el) => { const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; });
+      expect(enFin.top, "dans la carte, en haut").toBeGreaterThanOrEqual(carte.top - 0.5);
+      expect(enFin.bottom, "dans la carte, en bas").toBeLessThanOrEqual(Math.min(carte.bottom, page.viewportSize()!.height) + 0.5);
+    } else {
+      // Un volet : sous la barre du haut et au-dessus de la barre d'onglets (la barre se range au défilement : calcul par sonde).
+      const sonde = (h: string) => page.evaluate((hauteur) => {
+        const d = document.createElement("div");
+        d.style.height = hauteur;
+        document.body.appendChild(d);
+        const v = d.offsetHeight;
+        d.remove();
+        return v;
+      }, h);
+      const navH = await sonde("var(--nav-h)");
+      const bas = await sonde("calc(var(--tabbar-bottom) + 64px)");
+      expect(enFin.top, "sous la barre du haut").toBeGreaterThanOrEqual(navH - 0.5);
+      expect(enFin.bottom, "au-dessus de la barre d'onglets").toBeLessThanOrEqual(page.viewportSize()!.height - bas + 0.5);
+    }
+  });
+
   test("Tous · FR · 中文 : une vue de la liste, dans le rail gris (R4)", async ({ page }) => {
     await page.goto("/songs");
     await listePrete(page);
@@ -178,15 +225,18 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
   });
 
   // chants-8 : tablette debout, liste sur une colonne — les actions de l'en-tête finissent où finissent la recherche et la liste.
-  test("tablette portrait : « Proposer un chant » finit au même x que la recherche (même fin que la liste en groupe)", async ({ page }, info) => {
+  // B13 (CI-17) : l'index A–Z est dans la carte ; « Proposer un chant » finit au bord de la carte, et l'index est dans la carte.
+  test("tablette portrait : « Proposer un chant » finit au même x que la carte, index A–Z dans la carte", async ({ page }, info) => {
     test.skip(info.project.name !== "tablette", "tablette debout seulement");
     await signInAs(page, MUSICIEN, PASSEES, "/songs");
     await listePrete(page);
-    const [action, recherche] = await Promise.all([
+    const [action, carteListe, index] = await Promise.all([
       enTete(page).getByRole("button", { name: "Proposer un chant" }).boundingBox(),
-      liste(page).getByRole("searchbox").boundingBox(),
+      liste(page).boundingBox(),
+      liste(page).locator(".index-az").first().boundingBox(),
     ]);
-    expect(Math.abs(action!.x + action!.width - (recherche!.x + recherche!.width)), "même bord droit").toBeLessThanOrEqual(2);
+    expect(Math.abs(action!.x + action!.width - (carteListe!.x + carteListe!.width)), "même bord droit").toBeLessThanOrEqual(1);
+    expect(index!.x + index!.width, "l'index A–Z dans la carte").toBeLessThanOrEqual(carteListe!.x + carteListe!.width + 1);
   });
 
   // chants-5 (T1c) : « Statistiques » et « Proposer un chant » sont deux boutons libellés de 44 px au
@@ -259,7 +309,9 @@ test.describe("le volet de droite avant d'avoir choisi (A5 à A8, grands écrans
     expect(titres).toEqual(rangee.slice(0, 5));
     // Une ligne ouvre le chant à droite ; le chant ouvert passe en tête, ici comme dans la rangée.
     await lignes.nth(2).getByRole("link").click();
-    await expect(droite(page).getByRole("heading", { level: 1 })).toHaveText(/Abrite-moi/i);
+    // Sous `next dev`, la page du chant se rend à la demande : 4 à 10 s mesurées (17/11/2026) quand les
+    // projets tournent ensemble ; en ligne elle est pré-rendue (generateStaticParams). D'où 15 s, comme listePrete.
+    await expect(droite(page).getByRole("heading", { level: 1 })).toHaveText(/Abrite-moi/i, { timeout: 15_000 });
     await page.goBack();
     await expect(lignesDe(page, "Récemment ouverts").first().locator("[data-titre]")).toHaveText(/Abrite-moi/i);
     await expect(liste(page).getByTestId("recents").getByRole("link").first()).toHaveText(/Abrite-moi/i);

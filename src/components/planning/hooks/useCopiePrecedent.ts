@@ -3,6 +3,7 @@ import type { TFunction } from "i18next"
 import type { DefinitionGrille } from "@/lib/planning/grilles"
 import { fdShort } from "@/lib/planning/utils"
 import { colonnesACopier, lignePrecedente, planCopie, type CaseGeste } from "@/lib/planning/gestes"
+import { compter } from "@/lib/usage"
 import type { DemandeCopie } from "../FenetreCopie"
 
 interface Entree {
@@ -59,6 +60,7 @@ export function useCopiePrecedent({ definition, mode, datesDuPlanning, lireCase,
   }
 
   function faireCopie(source: string, cible: string, cases: CaseGeste[], verrouillees: number) {
+    compter("cmd.planning.grille.copie")
     void appliquer(
       cases,
       t("planning.gestes.copie", { cible: fdShort(cible), source: fdShort(source), count: cases.length }),

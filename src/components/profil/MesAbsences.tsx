@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ChampSelect } from "@/components/ui/champ-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { compter } from "@/lib/usage";
 
 // « Mes absences » (SC3.2, docs/spec-createur-corbeille-absences.md) : congés, vacances ou absence d'un
 // jour, vus par ceux qui font les plannings. En ligne (pas derrière BACK_OFFICE, Q11). Qui fait les
@@ -97,6 +98,7 @@ export function MesAbsences() {
     setErreur("");
     try {
       await ajouterAbsence(uidCible, { du, au, motif: voirMotif ? motif : undefined });
+      compter("cmd.compte.absence.ajouter");
       await recharger(uidCible);
       setOuvert(false);
     } catch {
@@ -110,6 +112,7 @@ export function MesAbsences() {
     setErreur("");
     try {
       await supprimerAbsence(uidCible, a.id);
+      compter("cmd.compte.absence.supprimer");
       await recharger(uidCible);
     } catch {
       setErreur(t("absences.erreur"));

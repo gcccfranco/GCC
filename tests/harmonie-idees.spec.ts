@@ -20,36 +20,42 @@ async function capture(page: Page, name: string) {
   if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 
-async function ouvrirChant(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>> = {}) {
+async function ouvrirChant(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>> = {}, chemin = "/songs/hosanna") {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const sheet = new URL(route.request().url()).searchParams.get("sheet");
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
   });
-  return signInAs(page, qui, docs, "/songs/hosanna");
+  return signInAs(page, qui, docs, chemin);
 }
 
 /** « Idées d'harmonie » est un bouton de la barre : au bout de la rangée dès la tablette debout,
  *  sur la seconde rangée du téléphone (docs/spec-barre-chant.md, Q2, Q5). */
 async function ouvrirLaFeuille(page: Page) {
   // Le bouton arrive avec le profil (accès à l'Harmonie) : `click` l'attend.
-  await page.getByTestId("barre-outils").getByRole("button", { name: "Idées d'harmonie" }).click();
+  await page.getByTestId("barre-outils").getByRole("button", { name: "Harmonie", exact: true }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 }
 
-test("un pianiste ouvre les idées d'un chant : cinq au plus, à vérifier en jouant", async ({ page }) => {
+test("un pianiste ouvre les idées d'un chant : trois au plus par passage, à vérifier en jouant", async ({ page }) => {
   await ouvrirChant(page, JO);
   await ouvrirLaFeuille(page);
-  const idees = page.locator("[data-suggestion]");
-  await expect(idees).toHaveCount(5);
+  await expect(page.locator("[data-suggestion]").first()).toBeVisible();
+  for (const bloc of await page.locator("[data-idees-harmonie] [data-passage]").all()) {
+    expect(await bloc.locator("[data-suggestion]").count(), "trois idées au plus par passage").toBeLessThanOrEqual(3);
+  }
   await expect(page.getByText("À vérifier en jouant").first()).toBeVisible();
   await capture(page, "idees-harmonie");
 });
 
-test("« Voir plus » donne la suite", async ({ page }) => {
+test("« Voir plus » d'un passage donne la suite de ce passage", async ({ page }) => {
   await ouvrirChant(page, JO);
   await ouvrirLaFeuille(page);
-  await page.getByRole("button", { name: "Voir plus" }).click();
-  await expect.poll(async () => page.locator("[data-suggestion]").count()).toBeGreaterThan(5);
+  // Le bloc se retrouve par son uid : une fois « Voir plus » cliqué, le bouton disparaît.
+  const uid = await page.locator("[data-idees-harmonie] [data-passage]").filter({ has: page.getByRole("button", { name: "Voir plus" }) }).first().getAttribute("data-passage");
+  const bloc = page.locator(`[data-idees-harmonie] [data-passage="${uid}"]`);
+  await expect(bloc.locator("[data-suggestion]")).toHaveCount(3);
+  await bloc.getByRole("button", { name: "Voir plus" }).click();
+  await expect.poll(async () => bloc.locator("[data-suggestion]").count()).toBeGreaterThan(3);
 });
 
 test("« Ne marche pas sur ce chant » retire l'idée et garde qui l'a dit", async ({ page }) => {
@@ -90,10 +96,11 @@ test("une idée de l'équipe s'ajoute, avec l'instrument de son auteur", async (
 });
 
 test("une idée écrite dans une autre tonalité se range dans celle du chant", async ({ page }) => {
-  const db = await ouvrirChant(page, JO);
   // Hosanna est écrit en D. Jo le lit en F : ce qu'il écrit « Bb » (le 4 en F)
   // doit se ranger « G » (le 4 en D), pour rester juste chez les autres.
-  await page.getByLabel("Tonalité").selectOption("F");
+  // La tonalité se choisit par l'armure (RU-4, plus de liste) : on la donne par l'URL, même état.
+  const db = await ouvrirChant(page, JO, {}, `/songs/hosanna?key=${encodeURIComponent('"F"')}`);
+  await expect(page.getByLabel("Tonalité : F")).toBeVisible();
   await ouvrirLaFeuille(page);
   await page.getByRole("button", { name: "Ajouter une idée" }).click();
   await page.getByLabel("L'idée").fill("Refrain : ouvrir l'accord");
@@ -133,19 +140,23 @@ test("« Montrer » ferme la feuille et entoure la section visée", async ({ pag
   await ouvrirChant(page, JO);
   await ouvrirLaFeuille(page);
   const premiere = page.locator("[data-suggestion]").first();
-  const section = await premiere.locator("p").first().innerText();
+  // Le nom du passage est le titre de son bloc (« Couplet 1 », « Refrain ×2 »).
+  const section = (await premiere.locator("xpath=ancestor::*[@data-passage]").locator("h3").first().innerText()).replace(/ ×\d+$/, "");
+  const enColonne = (await page.locator("[data-harmonie-colonne]").count()) > 0;
   await premiere.getByRole("button", { name: "Montrer" }).click();
-  await expect(page.locator("[data-idees-harmonie]"), "la feuille s'efface pour laisser voir").toBeHidden();
+  // En colonne : elle reste ouverte à côté de la partition ; la feuille, elle, s'efface pour laisser voir.
+  if (enColonne) await expect(page.locator("[data-harmonie-colonne]")).toBeVisible();
+  else await expect(page.locator("[data-idees-harmonie]"), "la feuille s'efface pour laisser voir").toBeHidden();
   const entouree = page.locator(".harmonie-surligne");
   await expect(entouree).toHaveCount(1);
-  await expect(entouree).toContainText(section.split(" · ")[0], { ignoreCase: true });
+  await expect(entouree).toContainText(section, { ignoreCase: true });
 });
 
 test("un batteur n'a pas l'entrée « Idées d'harmonie »", async ({ page }) => {
   await ouvrirChant(page, YIYI);
   await page.getByRole("button", { name: /Plus d'actions|More actions|更多操作/ }).click();
-  await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Idées d'harmonie" })).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: "Harmonie", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Harmonie", exact: true })).toHaveCount(0);
 });
 
 // Retour du 01/10/2026 : une idée sans remplacement d'accords (« Le tag : répéter
@@ -157,8 +168,10 @@ test("une idée qui cite sa fiche la rend comme la fiche : du gras, pas de ** br
   });
   await signInAs(page, JO, {}, `/songs/${encodeURIComponent("一生爱你")}`);
   await ouvrirLaFeuille(page);
-  const voirPlus = page.getByRole("button", { name: "Voir plus" });
-  if (await voirPlus.isVisible()) await voirPlus.click();
+  // Les cartes arrivent avec le catalogue des fiches : les attendre avant de chercher « Voir plus ».
+  await expect(page.locator("[data-suggestion]").first()).toBeVisible();
+  // Chaque clic fait disparaître son bouton : toujours le premier.
+  while (await page.getByRole("button", { name: "Voir plus" }).count()) await page.getByRole("button", { name: "Voir plus" }).first().click();
   const tag = page.locator("[data-suggestion]", { hasText: "Le tag" });
   await expect(tag).toBeVisible();
   await expect(tag).not.toContainText("**");

@@ -1,0 +1,16 @@
+import { test } from "@playwright/test";
+import { signInAs, ADMIN_EMAIL, musicien, type FakeProfile } from "../helpers/fakeSession";
+import { appendFileSync } from "node:fs";
+const ADMIN: FakeProfile = { uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Odile", lastName: "Fermat", planningName: "Odile F.", serviceRoles: { "Culte Francophone": ["musicien"] }, ...musicien("piano") };
+test("requêtes Firestore par page", async ({ page }) => {
+  await signInAs(page, ADMIN, {}, "/moi");
+  let liste: string[] = [];
+  page.on("request", (r) => { const u = r.url(); if (/firestore\.googleapis\.com/.test(u)) { const m = decodeURIComponent(u).match(/documents(\/[^?:]*)?(:\w+)?/); let corps = ""; try { corps = r.postData() ?? ""; } catch {} const c = corps.match(/"collectionId":"([^"]+)"/g)?.join(",") ?? ""; liste.push(`${r.method()} ${(m?.[1] ?? "").replace(/\/[A-Za-z0-9_-]{15,}/g, "/{id}")}${m?.[2] ?? ""} ${c}`); } });
+  for (const u of ["/accords/", "/moi/", "/back-office/calendrier/", "/setlists/", "/songs/abba-pere/"]) {
+    liste = [];
+    await page.goto(u); await page.waitForTimeout(6000);
+    const compte: Record<string, number> = {};
+    for (const l of liste) compte[l] = (compte[l] ?? 0) + 1;
+    appendFileSync("/tmp/claude-0/-home-user/d2681d54-ea1e-5437-a805-4ba46328d8b8/scratchpad/requetes.txt", `\n== ${u} : ${liste.length}\n` + Object.entries(compte).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${v}× ${k}`).join("\n") + "\n");
+  }
+});

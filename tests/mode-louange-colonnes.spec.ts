@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { attendreCompteur, fermerBarre, lireCompteur, ouvrirReglages } from "./helpers/louange";
 import { paginateColumns, pagesUneColonne, twoColumnsPossible, type PerfPage } from "../src/lib/performance/columns";
 
 // Lot U5, tranche T1 (docs/spec-deux-volets.md, Q2 à Q5) : le mode louange en deux
@@ -81,6 +82,24 @@ test.describe("paginateColumns (pur)", () => {
     expect(pages[0].cols).toEqual([[1], [2]]);
     expect(pages[0].scale).toBeCloseTo(350 / 900, 5);
   });
+
+  test("R7 : la pastille « Ensuite » est dans la dernière colonne qui porte du texte, sans rien déplacer", () => {
+    // Colonne de droite plus haute que celle de gauche (50 | 200) : la pastille y va quand même.
+    const heightsFull = [0, 300, 300];
+    const heightsColumn = [0, 50, 200];
+    const sans = paginateColumns({ flow: [1, 2], header: null, heightsFull, heightsColumn, pageHeight: 400 });
+    const avec = paginateColumns({ flow: [1, 2], header: null, heightsFull, heightsColumn, pageHeight: 400, pastille: 64 });
+    expect(avec[0].suivant).toBe(1);
+    expect(avec.map((p) => p.cols)).toEqual(sans.map((p) => p.cols));
+    // Colonne de droite vide sur la dernière page : la pastille reste à gauche.
+    const full5 = [0, 150, 150, 150, 150, 150];
+    const vide = paginateColumns({ flow: [1, 2, 3, 4, 5], header: null, heightsFull: full5, heightsColumn: full5, pageHeight: 400, pastille: 64 });
+    expect(vide[vide.length - 1].cols[1]).toEqual([]);
+    expect(vide[vide.length - 1].suivant).toBe(0);
+    // Un chant d'une colonne : inchangé.
+    const une = paginateColumns({ flow: [1, 2, 3], header: 0, heightsFull: [60, 100, 100, 100], heightsColumn: [60, 130, 130, 130], pageHeight: 400, pastille: 64 });
+    expect(une[0].suivant).toBe(0);
+  });
 });
 
 test.describe("twoColumnsPossible (pur)", () => {
@@ -136,12 +155,11 @@ async function ouvrirMode(page: Page, items: Record<string, unknown>[], role = "
   return db;
 }
 
-const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums").last();
 
 async function lancer(page: Page) {
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   // Les pages sont comptées : la mise en page est faite.
-  await expect(compteur(page)).toHaveText(/^\d+ \/ \d+$/);
+  await attendreCompteur(page, /^\d+ \/ \d+$/);
 }
 
 /** Quitte le mode louange en rendant la page setlist où elle était (voir performance-mode.spec.ts). */
@@ -156,8 +174,17 @@ async function quitter(page: Page) {
 const onStage = (page: Page, selector: string) =>
   page.locator(`[data-performance-mode] ${selector}:not([aria-hidden=true] *)`);
 
-/** L'interrupteur, même quand les barres se sont effacées (aria-hidden). */
-const interrupteur = (page: Page) => page.locator("[data-performance-mode] button", { hasText: "2 colonnes" });
+/** FS-A : « 2 colonnes » a quitté la barre de titre pour les options ; RU-5 : c'est un interrupteur de la marge « Affichage ». */
+const interrupteur = (page: Page) => page.locator('[data-testid="marge-affichage"][data-mode="louange"]').getByRole("switch", { name: "2 colonnes" });
+
+/** Ouvre les options, vérifie l'état de l'interrupteur (« true » / « false », ou « absent »), les referme. */
+async function verifierInterrupteur(page: Page, etat: "true" | "false" | "absent") {
+  const reglages = await ouvrirReglages(page);
+  if (etat === "absent") await expect(interrupteur(page)).toHaveCount(0);
+  else await expect(interrupteur(page)).toHaveAttribute("aria-checked", etat);
+  await page.keyboard.press("Escape");
+  await expect(reglages).toBeHidden();
+}
 
 /** Les barres s'effacent après 3 s : un toucher au centre les rappelle. */
 async function montrerChrome(page: Page) {
@@ -168,8 +195,10 @@ async function montrerChrome(page: Page) {
 }
 
 async function toucherInterrupteur(page: Page) {
-  await montrerChrome(page);
-  await page.getByRole("button", { name: "2 colonnes" }).click();
+  const reglages = await ouvrirReglages(page);
+  await interrupteur(page).click();
+  await page.keyboard.press("Escape");
+  await expect(reglages).toBeHidden();
 }
 
 /** Bords gauches distincts des sections de la page affichée : 1 = une colonne, 2 = deux. */
@@ -181,7 +210,7 @@ async function colonnes(page: Page): Promise<number> {
   return new Set(lefts).size;
 }
 
-const totalPages = async (page: Page) => Number((await compteur(page).innerText()).split("/")[1]);
+const totalPages = async (page: Page) => Number((await lireCompteur(page)).split("/")[1]);
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>). */
 async function capture(page: Page, nom: string) {
@@ -201,8 +230,9 @@ function grandEcranTests(nom: string) {
   for (const { slug, structureOverride } of CHANTS) {
     test(`${nom} : deux colonnes d'office, en-tête au-dessus, aucune section coupée (${slug})`, async ({ page }) => {
       test.skip(!(await grandEcran(page)), "deux colonnes : tablette paysage et ordinateur seulement");
-      await ouvrirMode(page, [item({ songSlug: slug, position: 1, structureOverride, jianpuSheet: false })]);
-      await expect(interrupteur(page)).toHaveAttribute("aria-pressed", "true");
+      await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+      await ouvrirMode(page, [item({ songSlug: slug, position: 1, structureOverride })]);
+      await verifierInterrupteur(page, "true");
       expect(await colonnes(page)).toBe(2);
       const sections = await onStage(page, "[data-section]").evaluateAll((els) =>
         els.map((e) => e.getBoundingClientRect().toJSON() as DOMRect),
@@ -222,18 +252,18 @@ function grandEcranTests(nom: string) {
     const enDeux = await totalPages(page);
 
     await toucherInterrupteur(page);
-    await expect(interrupteur(page)).toHaveAttribute("aria-pressed", "false");
+    await verifierInterrupteur(page, "false");
     await expect.poll(() => colonnes(page)).toBe(1);
     expect(await totalPages(page), "une colonne : au moins autant de pages").toBeGreaterThanOrEqual(enDeux);
     expect(await page.evaluate(() => localStorage.getItem("perf-two-columns"))).toBe("0");
 
     await quitter(page);
     await lancer(page);
-    await expect(interrupteur(page)).toHaveAttribute("aria-pressed", "false");
+    await verifierInterrupteur(page, "false");
     expect(await colonnes(page)).toBe(1);
 
     await toucherInterrupteur(page);
-    await expect(interrupteur(page)).toHaveAttribute("aria-pressed", "true");
+    await verifierInterrupteur(page, "true");
     await expect.poll(() => colonnes(page)).toBe(2);
   });
 
@@ -243,13 +273,14 @@ function grandEcranTests(nom: string) {
       item({ songSlug: "abba-pere", position: 1, structureOverride: ["verse-2-0"] }),
       item({ songSlug: "一生爱你", position: 2, jianpuSheet: true }),
     ]);
-    await expect(interrupteur(page)).toHaveAttribute("aria-pressed", "true");
+    await verifierInterrupteur(page, "true");
+    await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
     const scan = onStage(page, "[data-jianpu-page] img");
     // Le scan arrive avec le manifeste 简谱 : le chant 2 passe alors sur sa partition.
     await expect(onStage(page, "h2").first()).toBeVisible();
     for (let p = 2; p <= 3 && !(await scan.first().isVisible()); p++) {
       await page.keyboard.press("ArrowRight");
-      await expect(compteur(page)).toHaveText(new RegExp(`^${p} /`));
+      await attendreCompteur(page, new RegExp(`^${p} /`));
     }
     await expect(scan.first()).toBeVisible();
     await expect(onStage(page, "[data-section]")).toHaveCount(0);
@@ -257,8 +288,8 @@ function grandEcranTests(nom: string) {
     const boite = (await onStage(page, "[data-jianpu-fenetre]").first().boundingBox())!;
     const w = await page.evaluate(() => innerWidth);
     // Entre les deux barres, affichées ou escamotées (K1, L3-T5a).
-    const haut = (await page.locator("[data-performance-mode] .material-chrome:has(span.tabular-nums)").boundingBox())!;
-    const bas = (await page.locator("[data-performance-mode] .material-chrome:has(button[aria-label='Quitter'])").boundingBox())!;
+    const haut = (await page.locator("[data-performance-mode] [data-barre-haut]").boundingBox())!;
+    const bas = (await page.locator("[data-performance-mode] [data-barre-bas]").boundingBox())!;
     expect(boite.y, "scan sous la barre du haut").toBeGreaterThanOrEqual(haut.y + haut.height - 0.5);
     expect(boite.y + boite.height, "scan au-dessus de la barre du bas").toBeLessThanOrEqual(bas.y + 0.5);
     expect(boite.x + boite.width, "scan entier en largeur").toBeLessThanOrEqual(w + 0.5);
@@ -269,7 +300,7 @@ function grandEcranTests(nom: string) {
     test.skip(!(await grandEcran(page)), "deux colonnes : tablette paysage et ordinateur seulement");
     await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 })], "batteur");
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
-    await expect(interrupteur(page)).toHaveCount(0);
+    await verifierInterrupteur(page, "absent");
     const boites = () => onStage(page, "[data-section]").evaluateAll((els) =>
       els.map((e) => { const r = e.getBoundingClientRect(); return [r.left, r.top, r.width, r.height].map(Math.round); }),
     );
@@ -289,7 +320,7 @@ function grandEcranTests(nom: string) {
     await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 })]);
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
-    await expect(interrupteur(page)).toHaveCount(0);
+    await verifierInterrupteur(page, "absent");
   });
 
   test(`${nom} : un trait posé en une colonne ne se charge pas en deux colonnes et revient en une (FR)`, async ({ page }) => {
@@ -309,7 +340,7 @@ function grandEcranTests(nom: string) {
     const enUne = lues.at(-1)!;
     expect(enUne, "une page en une colonne garde sa clé").not.toContain("x2");
 
-    // Un trait sur la page en une colonne (enregistré comme le ferait « Annoter »).
+    // Une ancienne annotation par page (d'avant MP-5, lecture seule) sur la page en une colonne.
     db.set(enUne, {
       strokes: JSON.stringify({ w: 1000, h: 700, strokes: [{ tool: "pen", size: 3, color: "#dc2626", points: [[100, 100], [300, 300]] }] }),
     });
@@ -328,12 +359,13 @@ grandEcranTests("grand écran");
 
 test("téléphone et tablette portrait : pas d'interrupteur, une colonne, même nombre de pages quel que soit le réglage", async ({ page }) => {
   test.skip(await grandEcran(page), "téléphone et tablette portrait seulement");
-  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2, jianpuSheet: false })]);
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2 })]);
   await expect(onStage(page, "[data-section]").first()).toBeVisible();
-  await expect(interrupteur(page)).toHaveCount(0);
+  await verifierInterrupteur(page, "absent");
   const total = await totalPages(page);
   for (let p = 0; p < total; p++) {
-    await expect(compteur(page)).toHaveText(`${p + 1} / ${total}`);
+    await attendreCompteur(page, `${p + 1} / ${total}`);
     expect(await colonnes(page), `page ${p + 1} en une colonne`).toBe(1);
     await page.keyboard.press("ArrowRight");
   }
@@ -341,19 +373,19 @@ test("téléphone et tablette portrait : pas d'interrupteur, une colonne, même 
   await page.evaluate(() => localStorage.setItem("perf-two-columns", "1"));
   await quitter(page);
   await lancer(page);
-  await expect(interrupteur(page)).toHaveCount(0);
+  await verifierInterrupteur(page, "absent");
   expect(await totalPages(page)).toBe(total);
 });
 
 // dimanche-11 : la pastille « Ensuite » est dans le flux, sous la colonne qui a la place ; jamais sur un bloc.
-test("dernière page d'un chant suivi d'un autre : la pastille « Ensuite » ne recouvre aucun bloc, le nombre de pages ne change pas", async ({ page }) => {
-  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "a-l-agneau", position: 2 })]);
+// R7 : sur deux colonnes, elle est au bas de la dernière colonne qui porte du texte, sous sa dernière section.
+async function verifierPastilleSuivant(page: Page, captureNom: string) {
   const suivant = onStage(page, "[data-suivant]");
   const total = await totalPages(page);
   for (let p = 1; p < total; p++) {
     if (await suivant.count()) break;
     await page.keyboard.press("ArrowRight");
-    await expect(compteur(page)).toHaveText(`${p + 1} / ${total}`);
+    await attendreCompteur(page, `${p + 1} / ${total}`);
   }
   await expect(suivant).toBeVisible();
   // En service, la barre est escamotée : la pastille est alors dans le flux (barre affichée, si elle la couvre,
@@ -376,5 +408,34 @@ test("dernière page d'un chant suivi d'un autre : la pastille « Ensuite » ne 
   const boite = (await suivant.boundingBox())!;
   expect(boite.height).toBeGreaterThanOrEqual(44);
   expect(boite.y + boite.height).toBeLessThanOrEqual((await page.evaluate(() => innerHeight)) + 0.5);
-  await capture(page, "louange-pastille-suivant");
+  {
+    const cols = await onStage(page, "[data-col-page]").evaluateAll((els) =>
+      els.filter((el) => el.querySelector("[data-section]")).map((el) => el.getBoundingClientRect().toJSON() as DOMRect),
+    );
+    if (cols.length === 2) {
+      const dernier = cols[1];
+      expect(boite.x, "pastille dans la dernière colonne").toBeGreaterThanOrEqual(dernier.left - 0.5);
+      const bas = await onStage(page, "[data-section]").evaluateAll(
+        (els, g) => Math.max(...els.map((e) => e.getBoundingClientRect()).filter((r) => r.left >= g - 0.5).map((r) => r.bottom)),
+        dernier.left,
+      );
+      expect(boite.y, "pastille sous la dernière section").toBeGreaterThanOrEqual(bas - 0.5);
+    }
+  }
+  await capture(page, captureNom);
+}
+
+
+test("dernière page d'un chant suivi d'un autre : la pastille « Ensuite » ne recouvre aucun bloc, le nombre de pages ne change pas", async ({ page }) => {
+  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "a-l-agneau", position: 2 })]);
+  await verifierPastilleSuivant(page, "r7-ensuite-fr");
+});
+
+test("R7 : 中文, la pastille « Ensuite » à la fin de la dernière colonne", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+  await ouvrirMode(page, [
+    item({ songSlug: "一生爱你", position: 1, structureOverride: ["intro-1-0", "verse-2-1", "chorus-3-2", "verse-2-3", "chorus-3-4", "chorus-3-5"] }),
+    item({ songSlug: "abba-pere", position: 2 }),
+  ]);
+  await verifierPastilleSuivant(page, "r7-ensuite-zh");
 });

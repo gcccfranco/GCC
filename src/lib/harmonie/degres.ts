@@ -76,3 +76,24 @@ export function chiffreDuDegre(d: AccordDegre): string {
   const tete = chiffre(d.st, d.qualite);
   return d.basse == null ? tete : `${tete}/${chiffre(d.basse)}`;
 }
+
+const EXPOSANTS = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+
+/** « Em7 » en D → « 2m7 », « A/C# » → « 5/7 » : racine et basse en degrés, le reste de l'étiquette gardé.
+ *  Un reste qui commence par des chiffres passe en exposant (« A7 » → « 5⁷ », « D2 » → « 1² ») : collé au degré,
+ *  il se lirait « 57 » ou « 12 ». Illisible (N.C., coquille, tonalité inconnue) : inchangé. */
+export function chiffrerEtiquette(accord: string, tonalite: string | undefined): string {
+  const tonique = tonalite ? noteToIndex(tonalite.replace(/m$/, "")) : -1;
+  const [corps, basse, ...autres] = accord.split("/");
+  const m = corps.match(RACINE);
+  if (tonique < 0 || !m || noteToIndex(m[1]) < 0 || autres.length) return accord;
+  const degre = (note: string) => CHIFFRES[(noteToIndex(note) - tonique + 12) % 12];
+  const reste = (r: string) => r.replace(/^\d+/, (n) => [...n].map((c) => EXPOSANTS[+c]).join(""));
+  let suite = "";
+  if (basse !== undefined) {
+    const b = basse.match(RACINE);
+    if (!b || noteToIndex(b[1]) < 0) return accord;
+    suite = `/${degre(b[1])}${reste(b[2])}`;
+  }
+  return `${degre(m[1])}${reste(m[2])}${suite}`;
+}

@@ -208,7 +208,7 @@ test("G2 : sans compte, l'adresse d'une réunion au Back-Office propose de se co
 
 test("G3 : un membre d'équipe sans autre rôle n'a plus de Back-Office (BO-A) : sa réunion est dans l'App, via sa page d'équipe", async ({ page }, info) => {
   await ouvrir(page, HUGO, "/evenements", { "evenements/reunion-regie": REUNION_REGIE });
-  await expect(page.getByRole("heading", { name: "Évènements" }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Église" }).first()).toBeVisible();
   await expect(page.getByText("Réunion Régie")).toHaveCount(0);
   // Plus de sélecteur App · Back-Office (en paysage, dans la barre latérale dépliée).
   if (estTablettePaysage(info)) await page.getByTestId("barre-laterale").getByRole("button", { name: /Déplier la barre latérale/ }).tap();

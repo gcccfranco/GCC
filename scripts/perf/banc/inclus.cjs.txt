@@ -1,0 +1,24 @@
+const fs = require("fs");
+const { SourceMapConsumer } = require("/home/user/gcc/node_modules/source-map-js");
+const p = JSON.parse(fs.readFileSync(process.argv[2])); const base = "http://localhost:3400";
+const byId = new Map(p.nodes.map((n) => [n.id, n])); const parent = new Map();
+for (const n of p.nodes) for (const c of n.children || []) parent.set(c, n.id);
+const maps = new Map();
+async function carte(url) { if (maps.has(url)) return maps.get(url); let c = null; try { const r = await fetch(url + ".map"); if (r.ok) c = new SourceMapConsumer(await r.json()); } catch {} maps.set(url, c); return c; }
+const nomCache = new Map();
+async function nom(id) {
+  if (nomCache.has(id)) return nomCache.get(id);
+  const f = byId.get(id).callFrame; let k = null;
+  if (f.url.includes("/_next/")) { const c = await carte(f.url); const o = c && c.originalPositionFor({ line: f.lineNumber + 1, column: f.columnNumber });
+    if (o && o.source && /\/src\//.test(o.source)) k = `${f.functionName || "(anonyme)"} ${o.source.replace(/^.*?\/src\//, "src/")}:${o.line}`; }
+  nomCache.set(id, k); return k;
+}
+(async () => {
+  const tot = new Map(); let total = 0;
+  for (let i = 0; i < p.samples.length; i++) {
+    const us = p.timeDeltas[i] || 0; total += us; const vus = new Set();
+    for (let id = p.samples[i]; id !== undefined; id = parent.get(id)) { const k = await nom(id); if (k && !vus.has(k)) { vus.add(k); tot.set(k, (tot.get(k) || 0) + us); } }
+  }
+  console.log("total", Math.round(total / 1000), "ms");
+  for (const [k, v] of [...tot].sort((a, b) => b[1] - a[1]).slice(0, +(process.argv[3] || 18))) console.log(String(Math.round(v / 1000)).padStart(6), k.slice(0, 140));
+})();

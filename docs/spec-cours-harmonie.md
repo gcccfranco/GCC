@@ -68,7 +68,7 @@ travailler », étape 5 : « Coche ta progression dans le programme de l'annexe 
 | | 14 | La modulation | 7 | 3 | 4 |
 | 3 La pratique à l'église | 15 | Le Nashville Number System et la transposition | 8 | 3 | 2 |
 | | 16 | Les patterns d'accompagnement | 6 | 3 | 2 |
-| | 17 | Jouer en groupe | 9 | 3 | 3 |
+| | 17 | Jouer ensemble (H9, 12/11/2026) | 12 | 5 | 3 |
 | | 18 | La structure des chants et l'arrangement (schéma : arc d'intensité, 18.3) | 8 | 3 | 3 |
 | | 19 | Les voix, les tessitures et le choix de la tonalité | 6 | 3 | 3 |
 | | 20 | La réharmonisation | 6 | 3 | 4 |

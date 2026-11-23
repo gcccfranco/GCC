@@ -15,7 +15,7 @@ import Link from "next/link";
 import { Trans, useTranslation } from "react-i18next";
 import {
   BellRing, BookOpen, Bookmark, CalendarDays, GraduationCap, KeyRound, Languages, LayoutDashboard, ListChecks, ListMusic,
-  MessageSquare, MonitorPlay, Music, Network, Presentation, Search, ShieldCheck, SlidersHorizontal, Ticket, UserRound, Users,
+  Church, MessageSquare, MonitorPlay, Music, Network, Presentation, Search, ShieldCheck, SlidersHorizontal, Ticket, UserRound, Users,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { cleNomEquipe } from "@/lib/equipes/table";
 import { getAccueilVu, setAccueilVu, VERSION_VISITE } from "@/lib/firebase/onboarding";
 import { useProfile } from "@/lib/firebase/users";
 import { cartesDeLaVisite, type Carte, type Ligne } from "@/lib/onboarding/visite";
+import { compter } from "@/lib/usage";
 import { isIOS, isPushSupported, isStandalone, isSubscribed, subscribeToPush } from "@/lib/push/client";
 import { categoryLabel } from "@/lib/serviceColors";
 import type { ServiceRole } from "@/types/user";
@@ -38,7 +39,7 @@ const ONGLETS: { key: string; texte: string; Icon: LucideIcon }[] = [
   { key: "common.header.songs", texte: "accueil.ou.chants", Icon: Music },
   { key: "common.header.setlists", texte: "accueil.ou.setlists", Icon: ListMusic },
   { key: "common.header.planning", texte: "accueil.ou.planning", Icon: CalendarDays },
-  { key: "common.header.evenements", texte: "accueil.ou.evenements", Icon: Ticket },
+  { key: "common.header.evenements", texte: "accueil.ou.evenements", Icon: Church },
   { key: "common.header.moi", texte: "accueil.ou.moi", Icon: UserRound },
 ].filter((o) => BACK_OFFICE || o.key !== "common.header.evenements");
 
@@ -98,6 +99,7 @@ const EVENEMENT_VISITE = "gcc:visite";
 
 /** Rouvre la visite à la demande (Moi, Guide) : le mode « revoir », qui n'écrit rien. */
 export function ouvrirVisite() {
+  compter("cmd.compte.onboarding");
   window.dispatchEvent(new Event(EVENEMENT_VISITE));
 }
 

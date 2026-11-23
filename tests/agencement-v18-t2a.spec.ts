@@ -248,7 +248,7 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await ouvrir(page, DA, "/back-office/reunions/nouvelle");
     await expect(page.getByLabel("Nom de la réunion")).toBeVisible();
     const labels = await page.locator("form label[for]").evaluateAll((els) => els.map((el) => el.textContent?.trim()));
-    expect(labels.slice(0, 7)).toEqual(["Nom de la réunion", "Équipe", "Date", "Horaire", "Lieu", "Responsable", "Description"]);
+    expect(labels.slice(0, 7)).toEqual(["Nom de la réunion", "Équipe", "Date", "Horaire", "Réserver une salle ?", "Responsable", "Description"]);
     await expect(page.getByLabel("Catégorie")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Créer la réunion" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Annuler" })).toBeVisible();

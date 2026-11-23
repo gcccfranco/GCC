@@ -307,6 +307,11 @@ export async function fakeFirestore(
           from: { collectionId: string; allDescendants?: boolean }[];
           orderBy?: { field: { fieldPath: string }; direction?: string }[];
           limit?: number;
+          select?: { fields: { fieldPath: string }[] };
+          where?: {
+            fieldFilter?: { field: { fieldPath: string }; op: string; value: unknown };
+            compositeFilter?: { op: string; filters: { fieldFilter: { field: { fieldPath: string }; op: string; value: unknown } }[] };
+          };
         };
       }).structuredQuery;
       const order = q.orderBy?.[0];
@@ -318,15 +323,45 @@ export async function fakeFirestore(
       let paths = q.from[0].allDescendants
         ? [...store.keys()].filter((p) => p.split("/").slice(-2, -1)[0] === q.from[0].collectionId)
         : children(parent ? `${parent}/${q.from[0].collectionId}` : q.from[0].collectionId);
+      // Ma partition (MP-1) : `where` EQUAL / ARRAY_CONTAINS appliqué sur `partitions` seulement. // shortcut: les autres collections
+      // ignorent toujours `where` (des specs en dépendent), à étendre quand elles auront leurs fixtures filtrées.
+      const filtre = q.where?.fieldFilter;
+      if (filtre && q.from[0].collectionId === "partitions") {
+        const attendu = jsValue(filtre.value);
+        paths = paths.filter((p) => {
+          const v = jsValue(store.get(p)?.[filtre.field.fieldPath]);
+          if (filtre.op === "ARRAY_CONTAINS") return Array.isArray(v) && v.includes(attendu);
+          if (filtre.op === "EQUAL") return v === attendu;
+          return true;
+        });
+      }
+      // Salles AR, lot 3 : les réservations se lisent par plage de dates (`compositeFilter` AND sur `date`).
+      if (q.from[0].collectionId === "reservations" && q.where) {
+        const filtres = q.where.compositeFilter?.filters.map((f) => f.fieldFilter) ?? (q.where.fieldFilter ? [q.where.fieldFilter] : []);
+        paths = paths.filter((p) => filtres.every((f) => {
+          const v = String(jsValue(store.get(p)?.[f.field.fieldPath]));
+          const x = String(jsValue(f.value));
+          return f.op === "EQUAL" ? v === x : f.op === "GREATER_THAN_OR_EQUAL" ? v >= x : f.op === "LESS_THAN_OR_EQUAL" ? v <= x : true;
+        }));
+      }
       if (order) {
         paths.sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
         if (order.direction === "DESCENDING") paths.reverse();
       }
       if (q.limit) paths = paths.slice(0, q.limit);
-      return json(route, paths.map((p) => ({ document: docJson(p) })));
+      const champs = q.select?.fields.map((f) => f.fieldPath);
+      const docSelect = (p: string) => {
+        const d = docJson(p) as { fields?: Record<string, unknown> };
+        return champs && d.fields ? { ...d, fields: Object.fromEntries(Object.entries(d.fields).filter(([k]) => champs.includes(k))) } : d;
+      };
+      return json(route, paths.map((p) => ({ document: docSelect(p) })));
     }
     if (method === "GET") {
-      if (store.has(tail)) return json(route, docJson(tail));
+      if (store.has(tail)) {
+        const d = docJson(tail) as { fields?: Record<string, unknown> };
+        const masque = url.searchParams.getAll("mask.fieldPaths");
+        return json(route, masque.length && d.fields ? { ...d, fields: Object.fromEntries(Object.entries(d.fields).filter(([k]) => masque.includes(k))) } : d);
+      }
       return json(route, { error: { code: 404, message: "not found" } }, 404);
     }
     if (method === "DELETE") {

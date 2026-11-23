@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, MessageSquareHeart, Star } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import { getMySurveyResponse, saveSurveyResponse } from "@/lib/firebase/survey";
@@ -21,6 +22,7 @@ import { useDisposition } from "@/hooks/useDisposition";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { Impasse } from "@/components/layout/Impasse";
 import { Squelette } from "@/components/layout/Squelette";
+import { compter } from "@/lib/usage";
 
 function isAnswered(a: SurveyAnswer | undefined): boolean {
   if (a === undefined) return false;
@@ -33,15 +35,18 @@ function QuestionField({
   q,
   value,
   onChange,
+  manquante,
 }: {
   q: SurveyQuestion;
   value: SurveyAnswer | undefined;
   onChange: (value: SurveyAnswer) => void;
+  /** « Suivant » a été refusé et cette question obligatoire attend sa réponse. */
+  manquante?: boolean;
 }) {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-2.5 py-3.5">
+    <div id={`question-${q.id}`} className="scroll-mt-32 space-y-2.5 py-3.5">
       <p className="text-base font-semibold text-foreground leading-snug">
         {t(`survey.q.${q.id}.label`)}
         {q.required ? (
@@ -55,6 +60,7 @@ function QuestionField({
             {t("survey.multiHint")}
           </span>
         )}
+        {manquante && <span className="block text-sm font-semibold text-destructive">{t("survey.attendue")}</span>}
       </p>
 
       {q.type === "rating" && (
@@ -68,7 +74,7 @@ function QuestionField({
                   type="button"
                   onClick={() => onChange(n)}
                   aria-label={`${n}/${RATING_MAX}`}
-                  className="h-10 w-10 rounded-lg border border-transparent bg-secondary flex items-center justify-center transition-colors hover:border-muted-foreground/50"
+                  className={`${TOUCHER_44} h-10 w-10 rounded-lg border border-transparent bg-secondary flex items-center justify-center transition-colors hover:border-muted-foreground/50`}
                 >
                   <Star
                     className={`h-[18px] w-[18px] ${
@@ -110,7 +116,7 @@ function QuestionField({
                   );
                 }}
                 aria-pressed={checked}
-                className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors duration-150 ${
+                className={`${TOUCHER_PILULE} inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors duration-150 ${
                   checked
                     ? "bg-foreground text-background"
                     : "bg-card text-foreground/80 ring-1 ring-inset ring-border hover:text-foreground"
@@ -145,6 +151,7 @@ export default function QuestionnairePage() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [manquantes, setManquantes] = useState<string[]>([]);
   // "done" = questionnaire envoyé et non rouvert pour modification
   const [done, setDone] = useState(false);
   // Une réponse partielle a été reprise (enregistrement automatique à chaque étape)
@@ -218,6 +225,7 @@ export default function QuestionnairePage() {
   function goTo(next: number) {
     setStep(next);
     setError("");
+    setManquantes([]);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -225,12 +233,16 @@ export default function QuestionnairePage() {
     const missing = questions.filter((q) => q.required && !isAnswered(answers[q.id]));
     if (missing.length > 0) {
       setError(t("survey.errorRequired"));
+      setManquantes(missing.map((q) => q.id));
+      // La page défile jusqu'à la première question obligatoire sans réponse.
+      document.getElementById(`question-${missing[0].id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     setSaving(true);
     try {
       await persist(isLast);
       if (isLast) {
+        compter("cmd.questionnaire.envoyer");
         setDone(true);
         setResumed(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -369,12 +381,19 @@ export default function QuestionnairePage() {
                         key={q.id}
                         q={q}
                         value={answers[q.id]}
+                        manquante={manquantes.includes(q.id) && !isAnswered(answers[q.id])}
                         onChange={(value) => setAnswers((prev) => ({ ...prev, [q.id]: value }))}
                       />
                     ))}
                   </div>
                 </div>
               ))}
+
+              {error && (
+                <Alert variant="destructive" className="mt-3">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
               <div className={grand ? "mt-1 flex flex-wrap items-center gap-3 border-t border-border pt-4" : "mt-1 space-y-3 border-t border-border pt-4"}>
                 <span className={grand ? "min-w-0 flex-1 text-sm text-muted-foreground" : "block text-sm text-muted-foreground"}>{t("survey.identityNotice", { name: authorName })}</span>

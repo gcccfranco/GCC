@@ -24,7 +24,7 @@ const item = (over: Record<string, unknown>) => ({
 const setlist = {
   title: "Culte du 8 novembre", leader: "Gaspard T.", category: "Culte Francophone", date: "2026-11-08",
   language: "mixed", notes: "", ownerId: MUSICIENNE.uid, isPrivate: false,
-  items: [item({ songSlug: "aucun-autre-nom", position: 1 }), item({ songSlug: "一切歌颂赞美", position: 2, jianpuSheet: false })],
+  items: [item({ songSlug: "aucun-autre-nom", position: 1 }), item({ songSlug: "一切歌颂赞美", position: 2 })],
 };
 
 const prefs = (page: Page, langue: "fr" | "zh-CN", sombre: boolean) =>

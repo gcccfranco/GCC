@@ -6,9 +6,9 @@ import { parseChordPro } from "../src/lib/chordpro/parser";
 import { materializeSectionCopy } from "../src/lib/chordpro/editSource";
 import { buildDefaultStructure, resolveStructureOverride } from "../src/lib/chordpro/structure";
 import { repairCopyIds } from "../src/lib/setlist/sectionOrigins";
-import { basculerMode } from "./helpers/menuSetlist";
+import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 
-// Mode Adapter : modifier une ligne d'une section qui passe deux fois copie la
+// Crayon, « Pour tout le culte » (ex-mode Adapter) : modifier une ligne d'une section qui passe deux fois copie la
 // section en fin de source et fait pointer cette occurrence vers la copie. Du
 // 11 au 25/10/2026, la copie gardait le `{section_id: …}` de son original et le
 // passage modifié disparaissait. Setlists et comptes simulés, noms fictifs.
@@ -66,8 +66,8 @@ async function ouvrir(page: Page, doc: Record<string, unknown>, extra: Record<st
 }
 
 /** Touche la n-ième ligne (1, 2…) qui contient `texte`, change l'accord `de`
- *  en `vers` (fondamentale, ♮, maj) et valide. */
-async function changerAccord(page: Page, texte: string, n: number, de: string, vers: string, portee?: string) {
+ *  en `vers` (fondamentale, ♮, maj), valide, puis choisit où l'enregistrer (MP-3 : l'auteur règle le culte). */
+async function changerAccord(page: Page, texte: string, n: number, de: string, vers: string, portee?: string, destination: "moi" | "culte" = "culte") {
   await song(page).getByRole("button").filter({ hasText: texte }).nth(n - 1).click();
   const feuille = page.getByRole("dialog");
   if (portee) await feuille.getByRole("button", { name: portee }).click();
@@ -77,6 +77,7 @@ async function changerAccord(page: Page, texte: string, n: number, de: string, v
   await feuille.getByRole("button", { name: "maj", exact: true }).click();
   await feuille.getByRole("button", { name: "Valider l'accord" }).click();
   await feuille.getByRole("button", { name: "Valider", exact: true }).click();
+  await choisirDestination(page, destination);
   await expect(feuille).toHaveCount(0);
 }
 
@@ -96,7 +97,7 @@ for (const c of CAS) {
     test.slow(); // deux chargements de la page
     const db = await ouvrir(page, setlist([item({ songSlug: c.slug, position: 1, structureOverride: c.structure })]));
     await expect(sections(page)).toHaveCount(c.structure.length);
-    await basculerMode(page, "Adapter");
+    await basculerMode(page);
     await changerAccord(page, c.texte, 2, c.de, c.vers);
 
     await expect(sections(page), "aucune section perdue en mode Adapter").toHaveCount(c.structure.length);
@@ -131,15 +132,15 @@ test("setlist déjà cassée (copie à l'id de son original) : le passage réapp
   await expect(sections(page).nth(7).locator(".font-chord", { hasText: /^C$/ })).toHaveCount(1);
 });
 
-test("Ma version › Seulement ce passage, moi-et-ma-maison : le passage modifié reste", async ({ page }) => {
+test("Crayon › Pour moi › Seulement ce passage, moi-et-ma-maison : le passage modifié reste", async ({ page }) => {
   test.slow(); // deux chargements de la page
   const db = await ouvrir(page, setlist([item({ songSlug: "moi-et-ma-maison", position: 1, structureOverride: MAISON })]));
-  await basculerMode(page, "Ma version");
-  await changerAccord(page, "Dans chaque lie", 2, "A", "C", "Seulement ce passage");
+  await basculerMode(page);
+  await changerAccord(page, "Dans chaque lie", 2, "A", "C", "Seulement ce passage", "moi");
   await expect(sections(page)).toHaveCount(MAISON.length);
-  const doc = `${SETLIST_DOC}/versions/${AUTRICE.uid}`;
-  await expect.poll(() => (db.doc(doc)?.items as Record<string, { content: string }> | undefined)?.["moi-et-ma-maison"]?.content ?? "").toContain("[C]");
-  const mien = (db.doc(doc)!.items as Record<string, { content: string; structure: string[]; sectionOrigins?: Record<string, string> }>)["moi-et-ma-maison"];
+  const doc = `partitions/${AUTRICE.uid}__moi-et-ma-maison`;
+  await expect.poll(() => String(db.doc(doc)?.content ?? "")).toContain("[C]");
+  const mien = db.doc(doc)! as { content: string; structure: string[]; sectionOrigins?: Record<string, string> };
   expect(Object.keys(mien.sectionOrigins ?? {}), "une copie de ce seul passage").toHaveLength(1);
   expect(resolveStructureOverride(parseChordPro(mien.content).sections, mien.structure)).toHaveLength(MAISON.length);
   await page.reload();

@@ -1,0 +1,47 @@
+import { test } from "@playwright/test";
+import { signInAs, ADMIN_EMAIL, musicien, type FakeProfile } from "../helpers/fakeSession";
+import { prepare, mesure, ouvrir, visible, LARGEUR } from "./outil";
+
+test.use({ viewport: { width: LARGEUR, height: LARGEUR <= 400 ? 844 : LARGEUR <= 820 ? 1080 : 900 }, ...(LARGEUR <= 400 ? { isMobile: true, hasTouch: true } : {}) });
+const ADMIN: FakeProfile = { uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Odile", lastName: "Fermat", planningName: "Odile F.", serviceRoles: { "Culte Francophone": ["musicien"] }, ...musicien("piano") };
+
+const PAGES = ["/", "/planning/", "/planning/culte/", "/evenements/", "/evenements/salles/", "/moi/", "/mes-services/", "/harmonie/", "/accords/",
+  "/back-office/", "/back-office/calendrier/", "/back-office/equipes/", "/back-office/planning/", "/back-office/messages/", "/back-office/usage/"];
+
+test("écrans : ouverture, navigation, langue, thème", async ({ page }) => {
+  const cdp = await prepare(page);
+  await signInAs(page, ADMIN, {}, "/moi");
+  for (const u of PAGES) await ouvrir(page, cdp, "Ouverture", u, () => page.locator("main, h1").first().waitFor({ timeout: 30_000 }));
+
+  // Navigation entre les onglets (liens de la barre)
+  await page.goto("/songs/"); await page.locator("main").first().waitFor();
+  for (const href of ["/setlists/", "/planning/", "/evenements/", "/moi/", "/songs/", "/back-office/", "/planning/"]) {
+    const lien = await visible(page.locator(`nav a[href="${href}"], a[href="${href}"]`), 3000);
+    if (!lien) { console.log("pas de lien", href); continue; }
+    await mesure(page, cdp, "Navigation", `onglet ${href}`, () => lien.click(), () => page.waitForURL((u) => u.pathname === href, { timeout: 30_000 }));
+  }
+  // Planning : changer de vue / filtre
+  await page.goto("/planning/"); await page.locator("main").first().waitFor();
+  const tab = await visible(page.getByRole("tab").nth(1), 3000) ?? await visible(page.getByRole("radio").nth(1), 1000);
+  if (tab) await mesure(page, cdp, "Planning", "changer d'onglet ou de vue", () => tab.click());
+  // Évènements : filtre et ouverture d'une salle
+  await page.goto("/evenements/salles/"); await page.locator("main").first().waitFor();
+  const grille = await visible(page.getByRole("radio", { name: /Grille/ }).or(page.getByRole("button", { name: /^Grille$/ })), 3000);
+  if (grille) await mesure(page, cdp, "Salles", "Liste → Grille", () => grille.click());
+  const jour = await visible(page.locator("[data-jour], [data-bande-jours] button").nth(2), 2000);
+  if (jour) await mesure(page, cdp, "Salles", "changer de jour", () => jour.click());
+
+  // Langue et thème
+  await page.goto("/songs/"); await page.locator("main").first().waitFor();
+  const zh = await visible(page.getByRole("button", { name: "切换为中文" }), 3000);
+  if (zh) {
+    await mesure(page, cdp, "Langue", "passer en chinois (page Chants)", () => zh.click());
+    const fr = await visible(page.getByRole("button", { name: "Changer en français" }), 3000);
+    if (fr) await mesure(page, cdp, "Langue", "revenir en français", () => fr.click());
+  } else console.log("pas de bouton langue");
+  const theme = await visible(page.getByRole("button", { name: /^Mode (clair|sombre)$/ }), 3000);
+  if (theme) {
+    await mesure(page, cdp, "Thème", "basculer le thème (page Chants)", () => theme.click());
+    await mesure(page, cdp, "Thème", "rebasculer le thème", () => page.getByRole("button", { name: /^Mode (clair|sombre)$/ }).filter({ visible: true }).first().click());
+  } else console.log("pas de bouton thème");
+});

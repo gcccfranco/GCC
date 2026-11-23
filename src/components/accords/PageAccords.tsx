@@ -3,7 +3,7 @@
 // Dictionnaire d'accords (lot DA, DA-2) — la page /accords : une recherche, les douze notes, la carte de l'accord
 // choisi et les accords de la note.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { ChampRecherche } from "@/components/layout/ChampRecherche";
@@ -11,6 +11,7 @@ import { Retour } from "@/components/layout/EnTetePage";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { analyserAccord, type Accord } from "@/lib/accords/analyse";
 import { notesDeLAccord } from "@/lib/accords/notes";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { noteToIndex } from "@/lib/transpose";
 import { ChoixInstrument, PanneauAccord } from "./PanneauAccord";
@@ -36,6 +37,18 @@ export function PageAccords() {
   const [texte, setTexte] = useState(() => analyserAccord(params.get("accord") ?? "")?.texte ?? "C");
   const [saisie, setSaisie] = useState("");
   const [signalement, setSignalement] = useState(false);
+  // Retour au chant d'où l'on vient (`?depuis=<slug>`) : seulement si ce slug est un chant de l'index,
+  // jamais une valeur libre recopiée dans un lien. Ouvert par l'onglet des Musiciens : pas de retour.
+  const depuis = params.get("depuis");
+  const [chantDOrigine, setChantDOrigine] = useState<string | null>(null);
+  useEffect(() => {
+    if (!depuis) { setChantDOrigine(null); return; }
+    let vivant = true;
+    chargerIndexChants()
+      .then((songs) => { if (vivant) setChantDOrigine(songs.some((s) => s.slug === depuis) ? depuis : null); })
+      .catch(() => { /* pas de retour */ });
+    return () => { vivant = false; };
+  }, [depuis]);
 
   const accord = useMemo(() => analyserAccord(texte) as Accord, [texte]);
   const note = NOTES.find((n) => noteToIndex(n) === noteToIndex(accord.fondamentale)) ?? "C";
@@ -45,7 +58,7 @@ export function PageAccords() {
   function choisir(nouveau: string, depuisLaSaisie = false) {
     setTexte(nouveau);
     if (!depuisLaSaisie) setSaisie("");
-    router.replace(`/accords?accord=${encodeURIComponent(nouveau)}`, { scroll: false });
+    router.replace(`/accords?accord=${encodeURIComponent(nouveau)}${depuis ? `&depuis=${encodeURIComponent(depuis)}` : ""}`, { scroll: false });
   }
 
   // Les basses de la note : sa tierce, sa quinte, sa seconde, sa septième mineure, sa sixte, épelées
@@ -62,9 +75,35 @@ export function PageAccords() {
     { titre: t("accords.plusRares"), accords: PLUS_RARES.map((q) => note + q) },
   ];
 
+  const rendreGroupe = (g: { titre: string; accords: string[] }) => (
+    <section key={g.titre}>
+      <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{g.titre}</h2>
+      <div className="flex flex-wrap gap-2">
+        {g.accords.map((a) => {
+          const pleine = cleDeAccord(a) === cleAffichee;
+          return (
+            <button
+              key={a}
+              type="button"
+              aria-pressed={pleine}
+              onClick={() => choisir(a)}
+              className={`inline-flex h-11 min-w-11 items-center justify-center rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                pleine
+                  ? "border-transparent bg-[color:var(--chord-color)] text-background"
+                  : "border-border bg-card text-[color:var(--chord-color)] hover:bg-secondary"
+              }`}
+            >
+              {a}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+
   return (
     <div className="w-full max-w-[1120px] px-[var(--marge-page)] pb-28 pt-6">
-      <Retour href="/">{t("accords.retour")}</Retour>
+      {chantDOrigine && <Retour href={`/songs/${encodeURIComponent(chantDOrigine)}`}>{t("accords.retour")}</Retour>}
       <h1 className="titre-page text-foreground">{t("accords.titre")}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{t("accords.sousTitre")}</p>
 
@@ -105,6 +144,8 @@ export function PageAccords() {
         </div>
       </div>
 
+      <div className="mt-5 md:hidden">{rendreGroupe(groupes[0])}</div>
+
       <div className="mt-6 flex flex-wrap items-start gap-6">
         <section
           aria-label={accord.texte}
@@ -115,31 +156,8 @@ export function PageAccords() {
         </section>
 
         <div className="min-w-0 flex-[2_1_380px] space-y-5">
-          {groupes.map((g) => (
-            <section key={g.titre}>
-              <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{g.titre}</h2>
-              <div className="flex flex-wrap gap-2">
-                {g.accords.map((a) => {
-                  const pleine = cleDeAccord(a) === cleAffichee;
-                  return (
-                    <button
-                      key={a}
-                      type="button"
-                      aria-pressed={pleine}
-                      onClick={() => choisir(a)}
-                      className={`inline-flex h-11 min-w-11 items-center justify-center rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                        pleine
-                          ? "border-transparent bg-[color:var(--chord-color)] text-background"
-                          : "border-border bg-card text-[color:var(--chord-color)] hover:bg-secondary"
-                      }`}
-                    >
-                      {a}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+          <div className="hidden md:block">{rendreGroupe(groupes[0])}</div>
+          {groupes.slice(1).map(rendreGroupe)}
           <p className="text-sm leading-5 text-muted-foreground">{t("accords.dansLesChants", { n: note, a: note, b: quinte })}</p>
         </div>
       </div>

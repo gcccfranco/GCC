@@ -5,7 +5,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 
-// Lot 9, tranche MV (docs/spec-harmonie.md) : dans « Ma version », une retouche
+// Lot 9, tranche MV (docs/spec-harmonie.md) : au Crayon, pour moi (MP-3 : ma partition), une retouche
 // d'une section répétée vaut pour « Toutes les répétitions » (comme avant) ou
 // pour « Seulement ce passage » — copie de section du mode Adapter. Une version
 // partagée s'affiche « au même endroit » chez quelqu'un dont la structure
@@ -21,23 +21,12 @@ const RUTH: FakeProfile = {
   serviceRoles: { "Culte Francophone": ["musicien"] },
 };
 
-const CHRISTELLE: FakeProfile = {
-  uid: "uid-christelle",
-  email: "christelle@example.com",
-  firstName: "Christelle",
-  lastName: "Durand",
-  planningName: "Christelle D.",
-  serviceRoles: { "Culte Francophone": ["musicien"] },
-};
-
 const SETLIST_ID = "setlist-passage";
 const SETLIST_DOC = `setlists/${SETLIST_ID}`;
 const RUTH_DOC = `setlists/${SETLIST_ID}/versions/${RUTH.uid}`;
 
 /** Deux refrains chez la présidence (C R C R), un refrain répété en 中文. */
 const DEUX_REFRAINS = ["verse-2-0", "chorus-3-1", "verse-5-2", "chorus-3-3"];
-const TROIS_REFRAINS = ["verse-2-0", "chorus-3-1", "verse-5-2", "chorus-3-3", "chorus-3-4"];
-const UN_REFRAIN = ["verse-2-0", "chorus-3-1"];
 const ZH_DEUX_REFRAINS = ["verse-2-0", "chorus-3-1", "chorus-3-2"];
 
 const item = (over: Record<string, unknown>) => ({
@@ -86,7 +75,7 @@ const ruthDoc = (items: Record<string, unknown>) => ({
 const passageItem = (structure: string[]) => ({
   content: ABBA_PASSAGE,
   structure,
-  shared: true,
+  shared: false,
   sectionOrigins: { "chorus-7": "chorus-3" },
 });
 
@@ -95,12 +84,6 @@ const bodySections = (page: Page, position: number) => song(page, position).loca
 const sectionAt = (page: Page, position: number, uid: string) =>
   song(page, position).locator(`[data-section-uids="${uid}"]`);
 const lyricLine = (page: Page, text: string) => page.locator("[data-copy-line]", { hasText: text });
-// Le choix de version est un menu (T3c) : le déclencheur se nomme « Version : <choix> », le panneau est dans le portail de la page.
-const versionSelect = (page: Page, position: number) => song(page, position).getByRole("button", { name: /^Version : / });
-const choisirVersion = async (page: Page, position: number, libelle: string) => {
-  await versionSelect(page, position).click();
-  await page.getByRole("menuitemradio", { name: libelle, exact: true }).click();
-};
 /** Page affichée du mode louange, sans la copie invisible qui sert à mesurer. */
 const onStage = (page: Page, text: string) =>
   page.locator("[data-performance-mode] [data-copy-line]:not([aria-hidden=true] *)", { hasText: text });
@@ -142,11 +125,14 @@ async function editLyrics(page: Page, uid: string, text: string, next: string, s
   await page.getByRole("button", { name: "Valider" }).click();
 }
 
+/** Mes partitions écrites (MP-3 : `partitions/{uid}__{slug}` ; `versions/{uid}` n'est plus écrit), par chant. */
 const myItems = (db: Awaited<ReturnType<typeof openPartitions>>) =>
-  db.writes.filter((w) => w.path === RUTH_DOC).pop()!.data.items as Record<
-    string,
-    { content: string | null; structure: string[] | null; sectionOrigins?: Record<string, string> }
-  >;
+  Object.fromEntries(
+    ["abba-pere", "一生爱你"].flatMap((slug) => {
+      const d = db.doc(`partitions/${RUTH.uid}__${slug}`);
+      return d ? [[slug, d]] : [];
+    }),
+  ) as Record<string, { content: string | null; structure: string[] | null; sectionOrigins?: Record<string, string> }>;
 
 test("le choix de portée n'apparaît que dans une section répétée", async ({ page }) => {
   await openPartitions(page);
@@ -157,15 +143,15 @@ test("le choix de portée n'apparaît que dans une section répétée", async ({
   await page.getByRole("button", { name: "Annuler" }).first().click();
 
   await tapLine(page, 1, "chorus-3-3", "Abba");
-  await expect(page.getByRole("button", { name: "Toutes les répétitions" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("button", { name: "Seulement ce passage" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Seulement ce passage" }), "choisi d'avance").toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Toutes les répétitions" })).toHaveAttribute("aria-pressed", "false");
   await capture(page, "mv-choix-de-portee");
 });
 
-test("« Toutes les répétitions » (par défaut) retouche les deux refrains", async ({ page }) => {
+test("« Toutes les répétitions », choisi explicitement, retouche les deux refrains", async ({ page }) => {
   const db = await openPartitions(page);
   await basculerMode(page, "Ma version");
-  await editLyrics(page, "chorus-3-3", "Abba", LIGNE_PAPA);
+  await editLyrics(page, "chorus-3-3", "Abba", LIGNE_PAPA, "Toutes les répétitions");
 
   await expect(lyricLine(page, "Papa"), "les deux refrains changent").toHaveCount(2);
   const items = myItems(db);
@@ -181,7 +167,7 @@ test("« Seulement ce passage » ne retouche que le refrain touché", async ({ p
   await expect(lyricLine(page, "Papa")).toHaveCount(1);
   await expect(bodySections(page, 1).nth(1), "le premier refrain est intact").not.toContainText("Papa");
   await expect(bodySections(page, 1).nth(3)).toContainText("Papa");
-  await expect(song(page, 1).getByText("Ma version", { exact: true })).toBeVisible();
+  await expect(song(page, 1).locator('[data-marque="moi"]').first()).toBeVisible();
   await capture(page, "mv-seulement-ce-passage");
 
   const items = myItems(db);
@@ -201,57 +187,6 @@ test("le mode louange joue le passage retouché seul", async ({ page }) => {
   await capture(page, "mv-mode-louange");
 });
 
-test("version partagée : le dernier refrain retouché reste le dernier", async ({ page }) => {
-  await openPartitions(
-    page,
-    { [RUTH_DOC]: ruthDoc({ "abba-pere": passageItem(["verse-2-0", "chorus-3-1", "verse-5-2", "chorus-7-3"]) }) },
-    CHRISTELLE,
-    setlist(TROIS_REFRAINS),
-  );
-  await choisirVersion(page, 1, "Ruth K.");
-
-  await expect(lyricLine(page, "Papa")).toHaveCount(1);
-  await expect(bodySections(page, 1), "C R C R R chez la présidence").toHaveCount(5);
-  await expect(bodySections(page, 1).nth(1), "les deux premiers refrains sont intacts").not.toContainText("Papa");
-  await expect(bodySections(page, 1).nth(3)).not.toContainText("Papa");
-  await expect(bodySections(page, 1).nth(4), "le troisième refrain est le dernier ici").toContainText("Papa");
-  await bodySections(page, 1).nth(4).scrollIntoViewIfNeeded();
-  await capture(page, "mv-partagee-dernier-refrain");
-});
-
-/** Ruth a retouché son 2e refrain sur trois : il n'est pas le dernier. */
-const MILIEU = ["chorus-3-0", "chorus-7-1", "chorus-3-2"];
-
-test("version partagée : un refrain du milieu garde son rang", async ({ page }) => {
-  await openPartitions(
-    page,
-    { [RUTH_DOC]: ruthDoc({ "abba-pere": passageItem(MILIEU) }) },
-    CHRISTELLE,
-    setlist(TROIS_REFRAINS),
-  );
-  await choisirVersion(page, 1, "Ruth K.");
-
-  await expect(lyricLine(page, "Papa")).toHaveCount(1);
-  await expect(bodySections(page, 1).nth(3), "2e refrain de la présidence").toContainText("Papa");
-  await expect(bodySections(page, 1).nth(4)).not.toContainText("Papa");
-  await bodySections(page, 1).nth(3).scrollIntoViewIfNeeded();
-  await capture(page, "mv-partagee-rang-du-milieu");
-});
-
-test("version partagée : un rang qui n'existe pas ne s'affiche pas", async ({ page }) => {
-  await openPartitions(
-    page,
-    { [RUTH_DOC]: ruthDoc({ "abba-pere": passageItem(MILIEU) }) },
-    CHRISTELLE,
-    setlist(UN_REFRAIN),
-  );
-  await choisirVersion(page, 1, "Ruth K.");
-
-  await expect(lyricLine(page, "Papa"), "un seul refrain chez la présidence").toHaveCount(0);
-  await expect(bodySections(page, 1), "le refrain copié ne s'ajoute pas à la fin").toHaveCount(2);
-  await bodySections(page, 1).nth(1).scrollIntoViewIfNeeded();
-  await capture(page, "mv-partagee-rang-absent");
-});
 
 test("chant chinois : « Seulement ce passage » garde le pinyin de l'autre refrain", async ({ page }) => {
   // 一生爱你 a un scan, affiché par défaut : on retouche ici ses paroles.

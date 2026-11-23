@@ -20,6 +20,8 @@ import { fetchFidelite, lireSheetDe } from "@/lib/planning/sheets";
 import { listEvenements } from "@/lib/firebase/evenements";
 import { getSetlistsDepuis } from "@/lib/firebase/setlists";
 import type { FSSetlist } from "@/types/setList";
+import { listGroupes } from "@/lib/firebase/groupes";
+import { titulairesSansCompte } from "@/lib/groupes/personnes";
 import { listProfiles } from "@/lib/firebase/users";
 import type { Evenement } from "@/types/evenement";
 import type { UserProfile } from "@/types/user";
@@ -147,8 +149,9 @@ async function lireSansGarde(user: { uid: string; email?: string | null }, profi
   }
   if (permis.includes("comptes")) {
     taches.push(async () => {
-      const [data, profils] = await Promise.all([loadPlanningData(), lireProfils()]);
-      return { comptes: { noms: collectPlanningNames(data), profils } };
+      // Les mêmes titulaires sans compte que la rangée de Personnes : un seul nombre. Groupes illisibles : pas de rangée.
+      const [data, profils, groupes] = await Promise.all([loadPlanningData(), lireProfils(), listGroupes()]);
+      return { comptes: { noms: collectPlanningNames(data), profils, titulaires: titulairesSansCompte(groupes.map((x) => x.groupe)) } };
     });
   }
   if (isAdminUser(user)) {

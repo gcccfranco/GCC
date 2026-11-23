@@ -39,7 +39,7 @@ import { libellesResponsabilites } from "@/lib/equipes/responsabilites";
 import { InscriptionsComptes } from "./InscriptionsComptes";
 import { libelleRole, libelleRolePlanning, libelleService, libelleServicePlanning } from "./libelles";
 import {
-  Avatar, FiltresPersonnes, FormulairePersonne, LignePersonne, ListePersonnes, isRecent,
+  Avatar, FiltresPersonnes, FormulairePersonne, LignePersonne, ListePersonnes, RetirerFiltreSansEquipe, isRecent, texteListeVide,
   useDonneesPersonnes, useFiltresPersonnes,
 } from "./Personnes";
 
@@ -158,9 +158,10 @@ export function PersonnesVolets() {
       {d.loadingProfiles ? (
         <p className="py-6 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : f.displayed.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">
-          {d.profiles.length === 0 ? t("admin.membre.aucunProfil") : t("admin.membre.aucunCorrespond")}
-        </p>
+        <div className="space-y-3 py-6 text-center">
+          <p className="text-sm text-muted-foreground">{texteListeVide(t, d.profiles.length, f)}</p>
+          <RetirerFiltreSansEquipe f={f} />
+        </div>
       ) : (
         <div className="space-y-0.5">
           {f.displayed.map((p) => {

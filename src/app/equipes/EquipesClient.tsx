@@ -13,12 +13,12 @@
 import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { Pencil, X } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { OngletsRail } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
-import { BandeauEquipes } from "@/components/equipes/BandeauEquipes";
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { GrilleEquipes } from "@/components/equipes/GrilleEquipes";
+import { Drawer, DrawerBarre, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
@@ -28,7 +28,7 @@ import {
   canEditerEquipes, isAdminUser, peutChangerReferents, peutModifierEquipe, peutPlacerMembre, peutPlacerSousEquipe, peutVoirEquipe,
 } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { CeQueCaOuvre, CorpsLouange, MembreOrganigramme, MentionReferent, ligneGrise, majuscule, resume } from "@/components/equipes/OrganigrammeLouange";
+import { CeQueCaOuvre, CorpsLouange, LigneMembreEdition, MembreOrganigramme, MentionReferent, ligneGrise, majuscule, resume } from "@/components/equipes/OrganigrammeLouange";
 import { COLONNE_LIEU, porteDesLieux, referentSousDe, sousEquipesDe } from "@/lib/equipes/louange";
 import { EQUIPES, uidsAChanger, type EquipeDef } from "@/lib/equipes/organigramme";
 import {
@@ -37,7 +37,7 @@ import {
 import { findMyServices, loadPlanningData, type PlanningData } from "@/lib/planning/names";
 import { categoryLabel } from "@/lib/serviceColors";
 import { SERVICE_LIEUX, SERVICE_ROLE_LABELS, type UserProfile } from "@/types/user";
-import { SOUS_EQUIPES, SOUS_EQUIPES_EDD, type Equipe, type MembreEquipe } from "@/types/equipe";
+import { SOUS_EQUIPES, SOUS_EQUIPES_EDD, type Equipe, type MembreEquipe, type SousEquipe } from "@/types/equipe";
 import { libellesResponsabilites } from "@/lib/equipes/responsabilites";
 import { colonnesEdd } from "@/lib/equipes/edd";
 import { cleNomEquipe } from "@/lib/equipes/table";
@@ -88,8 +88,8 @@ export function EquipesClient({
       : !BACK_OFFICE ? true
       : peutModifierEquipe(user, profile, id) || (id === "louange" && SOUS_EQUIPES.some((s) => peutPlacerSousEquipe(user, profile, s)));
   const onglets = [t("equipes.onglet.equipes"), t("equipes.onglet.musiciens")];
-  // Lot U4 bis, B6 (Q12) : l'organigramme est un bandeau qui défile de gauche à droite et la
-  // page tient dans la hauteur de l'écran. Au Back-Office aussi depuis la v18 (B8) : l'édition
+  // CI-16 (B12) : l'organigramme est une grille à ordre fixe, la page défile en hauteur.
+  // Au Back-Office aussi depuis la v18 (B8) : l'édition
   // n'est plus dans la carte mais dans un panneau.
   const bandeau = onglet === "equipes";
   const equipeDe = (id: string) => equipes.find((e) => e.id === id) ?? null;
@@ -102,7 +102,7 @@ export function EquipesClient({
       equipe={equipeDe(def.id)}
       peutEditer={modifiable(def.id)}
       // Piste A (BO7, BO4) : le nom de l'équipe ouvre sa page à qui peut la voir (coupée en ligne).
-      href={BACK_OFFICE && peutVoirEquipe(user, profile, def.id) ? `${gestion ? "/back-office" : ""}/equipes/${def.id}` : undefined}
+      href={BACK_OFFICE && peutVoirEquipe(user, profile, def.id) ? gestion ? `/back-office/equipes/${def.id}` : `/equipes/${def.id}?depuis=equipes` : undefined}
       enBandeau={bandeau}
       onFiche={setFiche}
       onModifier={() => setEditee(def.id)}
@@ -135,7 +135,7 @@ export function EquipesClient({
 
   if (gestion) {
     // Back-Office (agencement v18, B8) : l'en-tête commun, Équipes · Musiciens en rail
-    // (une vue de la page) ; le bandeau sous l'en-tête, ou la matrice des musiciens.
+    // (une vue de la page) ; la grille sous l'en-tête, ou la matrice des musiciens.
     const defEditee = EQUIPES.find((d) => d.id === editee) ?? null;
     const entete = (
       <EnTetePage
@@ -157,9 +157,9 @@ export function EquipesClient({
     return (
       <>
         {bandeau ? (
-          <div className="equipes-ecran flex flex-col">
+          <div>
             {entete}
-            <BandeauEquipes
+            <GrilleEquipes
               cartes={EQUIPES.map((def) => ({ id: def.id, large: !!def.sousColonnes, carte: carte(def) }))}
             />
           </div>
@@ -203,9 +203,9 @@ export function EquipesClient({
   if (bandeau) {
     return (
       <div className="relative">
-        <div className="equipes-ecran relative flex flex-col">
+        <div className="relative">
           {enTeteApp}
-          <BandeauEquipes
+          <GrilleEquipes
             cartes={EQUIPES.map((def) => ({ id: def.id, large: !!def.sousColonnes, carte: carte(def) }))}
           />
         </div>
@@ -242,35 +242,31 @@ function PanneauEquipe({
   onEnregistre: (e: Equipe) => void;
 }) {
   const { t } = useTranslation();
-  const aDroite = useDisposition() === "grand";
+  const disposition = useDisposition();
+  const aDroite = disposition === "grand";
   const sousTitre = def ? t(`equipes.soustitre.${def.id}`) : "";
   return (
     <Drawer open={def !== null} onOpenChange={(o) => !o && onClose()} direction={aDroite ? "right" : "bottom"}>
       <DrawerContent
         // Le sous-titre de l'équipe décrit le panneau ; sans lui, pas de description (Radix).
         {...(sousTitre ? {} : { "aria-describedby": undefined })}
+        data-feuille-equipe
+        formulaire={disposition === "tablette"}
         className={aDroite
           ? "left-auto top-0 bottom-0 mt-0 h-full w-[420px] rounded-none rounded-l-2xl border-y-0 border-r-0 [&>div:first-child]:hidden"
-          : "max-h-[90dvh]"}
+          : disposition === "tablette" ? undefined : "max-h-[90dvh]"}
       >
         {def && (
-          <>
-            <DrawerHeader className="pb-1 text-left">
-              <DrawerTitle>{t(cleNomEquipe(def.id, true))}</DrawerTitle>
-              {sousTitre && <DrawerDescription>{sousTitre}</DrawerDescription>}
-            </DrawerHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
-              <EditionEquipe
-                key={def.id}
-                def={def}
-                membres={equipe?.membres ?? []}
-                version={equipe?.version ?? null}
-                profils={profils}
-                onClose={onClose}
-                onEnregistre={onEnregistre}
-              />
-            </div>
-          </>
+          <EditionEquipe
+            key={def.id}
+            def={def}
+            sousTitre={sousTitre}
+            membres={equipe?.membres ?? []}
+            version={equipe?.version ?? null}
+            profils={profils}
+            onClose={onClose}
+            onEnregistre={onEnregistre}
+          />
         )}
       </DrawerContent>
     </Drawer>
@@ -333,7 +329,7 @@ function CarteEquipe({
     const blocs = SOUS_EQUIPES_EDD.filter((s) => parSous[s].length > 0).map((s) => colonneEdd(`sous-${s}`, t(`equipes.sousEquipeEdd.${s}`), parSous[s]));
     // « Sans sous-équipe » en dernier, sans intertitre si personne n'a de sous-équipe.
     if (sans.length > 0) blocs.push(colonneEdd("sans", blocs.length > 0 ? t("equipes.sousEquipeEdd.sans") : null, sans));
-    return enColonnes ? <div className="columns-3 gap-4 [&>div]:pb-2">{blocs}</div> : <div className="space-y-2">{blocs}</div>;
+    return enColonnes ? <div className="columns-1 gap-4 sm:columns-3 [&>div]:pb-2">{blocs}</div> : <div className="space-y-2">{blocs}</div>;
   };
 
   return (
@@ -346,7 +342,7 @@ function CarteEquipe({
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-2">
           <h2 className="min-w-0 break-words hyphens-auto text-lg font-bold leading-[23px] text-foreground">
-            {href ? <Link href={href} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{nom}</Link> : nom}
+            {href ? <Link href={href} className={`rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${TOUCHER_44}`}>{nom}</Link> : nom}
           </h2>
           {peutEditer && (
             <button
@@ -410,7 +406,7 @@ function LigneMembre({
     <>
       <span className={gras ? "font-semibold" : ""}>{membre.nom}</span>
       {membre.mention && <span className="text-muted-foreground"> — {membre.mention}</span>}
-      {nouveau && referentTexte && <span className="text-muted-foreground"> — {referentTexte}</span>}
+      {nouveau && referentTexte && !/^R[ée]f/i.test(membre.mention) && <span className="text-muted-foreground"> — {referentTexte}</span>}
       {!nouveau && membre.referent && !/^R[ée]f/i.test(membre.mention) && (
         <span className="ml-1.5 text-xs font-semibold text-muted-foreground">{t("equipes.referent")}</span>
       )}
@@ -438,10 +434,21 @@ function LigneMembre({
 
 const cleMembre = (m: MembreEquipe) => `${m.uid}|${m.nom}`;
 
+/** Le document à écrire : chaque membre retiré disparaît ; un référent de sous-équipe (`sienne`) ne le retire que de SA
+ *  sous-équipe, et la ligne ne disparaît que s'il n'en reste aucune autre. */
+function appliqueRetraits(membres: MembreEquipe[], retires: Set<string>, sienne: ((s: SousEquipe) => boolean) | null): MembreEquipe[] {
+  return membres.flatMap((m) => {
+    if (!retires.has(cleMembre(m))) return [m];
+    const reste = sienne ? sousEquipesDe(m).filter((s) => !sienne(s)) : [];
+    return reste.length > 0 ? [{ ...m, sousEquipes: reste, referentSous: referentSousDe(m).filter((s) => reste.includes(s)) }] : [];
+  });
+}
+
 function EditionEquipe({
-  def, membres, version: versionLue, profils, onClose, onEnregistre,
+  def, sousTitre, membres, version: versionLue, profils, onClose, onEnregistre,
 }: {
   def: EquipeDef;
+  sousTitre: string;
   membres: MembreEquipe[];
   /** `updateTime` du document lu : précondition de l'écriture (`saveEquipe`). */
   version: string | null;
@@ -482,6 +489,9 @@ function EditionEquipe({
   const [ajoutes, setAjoutes] = useState<Set<string>>(() => new Set());
   const ouvrable = (m: MembreEquipe) => ajoutes.has(cleMembre(m)) || peutOuvrir(originaux.get(cleMembre(m)) ?? m);
   const [ouvert, setOuvert] = useState<string | null>(null);
+  // Retraits marqués, appliqués à l'enregistrement seulement (« Remettre » les défait).
+  const [retires, setRetires] = useState<Set<string>>(() => new Set());
+  const sousSeulement = louange && nouveau && !droits.equipe;
 
   const q = recherche.trim().toLowerCase();
   const deja = new Set(brouillon.map((m) => m.uid).filter(Boolean));
@@ -501,18 +511,12 @@ function EditionEquipe({
     setRecherche("");
   }
 
-  function retire(i: number) {
-    const m = brouillon[i];
-    // Un référent de sous-équipe retire de SA sous-équipe ; la ligne ne disparaît que s'il ne reste aucune autre.
-    if (louange && nouveau && !droits.equipe) {
-      const reste = sousEquipesDe(m).filter((s) => !droits.sous(s));
-      if (reste.length > 0) {
-        change(i, { sousEquipes: reste, referentSous: referentSousDe(m).filter((s) => reste.includes(s)) });
-        return;
-      }
-    }
-    setBrouillon((prev) => prev.filter((_, j) => j !== i));
+  function retire(m: MembreEquipe) {
+    setRetires((prev) => new Set(prev).add(cleMembre(m)));
+    setOuvert(null);
   }
+  const remet = (m: MembreEquipe) =>
+    setRetires((prev) => { const n = new Set(prev); n.delete(cleMembre(m)); return n; });
 
   async function recopier(uids: string[], ecrite: Equipe) {
     try {
@@ -533,12 +537,13 @@ function EditionEquipe({
     setErreur("");
     try {
       const nom = profile ? nomComplet(profile) : (user.email ?? "");
+      const aEcrire = appliqueRetraits(brouillon, retires, sousSeulement ? droits.sous : null);
       let ecrite: Equipe;
       try {
-        const nouvelle = await saveEquipe(def.id, brouillon, { uid: user.uid, nom }, version.current);
+        const nouvelle = await saveEquipe(def.id, aEcrire, { uid: user.uid, nom }, version.current);
         version.current = nouvelle ?? version.current;
         ecrite = {
-          id: def.id, membres: brouillon,
+          id: def.id, membres: aEcrire,
           updatedAt: new Date().toISOString(), parUid: user.uid, parNom: nom,
           ...(version.current ? { version: version.current } : {}),
         };
@@ -552,7 +557,7 @@ function EditionEquipe({
       // Seuls les comptes aux lignes changées (ajoutées, retirées, modifiées) : la recopie d'un compte ne lit que ses
       // lignes et l'id de l'équipe, qui ne s'édite pas ici. Le document est déjà écrit : si la recopie échoue, les
       // comptes restent à recopier (« Réessayer »).
-      const touches = [...new Set([...uidsAChanger(membres, brouillon), ...(aRecopier ?? [])])];
+      const touches = [...new Set([...uidsAChanger(membres, aEcrire), ...(aRecopier ?? [])])];
       if (touches.length) await recopier(touches, ecrite);
       else onEnregistre(ecrite);
     } finally {
@@ -561,108 +566,119 @@ function EditionEquipe({
   }
 
   return (
-    <div className="space-y-2.5 border-t border-border pt-3">
-      <div className="space-y-1.5">
-        {brouillon.map((m, i) => aLieux ? (
-          <MembreOrganigramme
-            key={`${m.nom}-${i}`}
-            equipe={def.id as "louange" | "regie"}
-            m={m}
-            profil={profils.find((p) => p.uid === m.uid)}
-            ouvert={ouvert === cleMembre(m)}
-            ouvrable={ouvrable(m)}
-            onBascule={() => setOuvert((o) => (o === cleMembre(m) ? null : cleMembre(m)))}
-            droits={droits}
-            gerer={isAdminUser(user)}
-            onChange={(champ) => change(i, champ)}
-            onRetirer={() => retire(i)}
+    <>
+      <DrawerHeader className="shrink-0 pb-1 text-left">
+        <DrawerTitle>{t("equipes.titreEdition", { equipe: t(cleNomEquipe(def.id, true)), count: brouillon.length })}</DrawerTitle>
+        {sousTitre && <DrawerDescription>{sousTitre}</DrawerDescription>}
+      </DrawerHeader>
+      <div className="shrink-0 space-y-2.5 px-4 pb-3">
+        {peutAjouter && (
+          <Input
+            value={recherche}
+            placeholder={t("equipes.ajouterMembre")}
+            onChange={(e) => setRecherche(e.target.value)}
+            className="h-10"
           />
-        ) : (
-          <div key={`${m.nom}-${i}`} data-testid={`membre-${m.uid || m.nom}`} className="rounded-lg border border-border p-2 space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-foreground">{m.nom}</span>
+        )}
+        {peutAjouter && q && (
+          <div className="max-h-[30dvh] space-y-1 overflow-y-auto">
+            {resultats.map((p) => (
               <button
+                key={p.uid}
                 type="button"
-                aria-label={t("equipes.retirer", { nom: m.nom })}
-                onClick={() => retire(i)}
-                className="h-8 w-8 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center"
+                onClick={() => ajoute({ nom: nomComplet(p), uid: p.uid, mention: "", referent: false, essai: false, groupe: "" })}
+                className="block w-full rounded-lg bg-secondary px-2.5 py-1.5 text-left text-sm text-foreground"
               >
-                <X className="h-4 w-4" />
+                {nomComplet(p)}
               </button>
-            </div>
-            <Input
-              value={m.mention}
-              placeholder={t("equipes.mention")}
-              onChange={(e) => change(i, { mention: e.target.value })}
-              className="h-9"
-            />
-            {edd && droits.equipe && (
-              <PastillesEdd m={m} onChange={(champ) => change(i, champ)} />
-            )}
-            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-              {/* Lot RS : en nouveau mode, le référent se lit ici et se change dans Équipes › Responsabilités. */}
-              {nouveau ? (
-                <MentionReferent m={m} louange={false} gerer={isAdminUser(user)} />
-              ) : (
-                <label className="inline-flex items-center gap-1.5">
-                  <input type="checkbox" checked={m.referent} disabled={!droits.referents} onChange={(e) => change(i, { referent: e.target.checked })} />
-                  {t("equipes.referent")}
-                </label>
-              )}
-              <label className="inline-flex items-center gap-1.5">
-                <input type="checkbox" checked={m.essai} onChange={(e) => change(i, { essai: e.target.checked })} />
-                {t("equipes.essai")}
-              </label>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {peutAjouter && (
-        <Input
-          value={recherche}
-          placeholder={t("equipes.ajouterMembre")}
-          onChange={(e) => setRecherche(e.target.value)}
-          className="h-10"
-        />
-      )}
-      {peutAjouter && q && (
-        <div className="space-y-1">
-          {resultats.map((p) => (
+            ))}
             <button
-              key={p.uid}
               type="button"
-              onClick={() => ajoute({ nom: nomComplet(p), uid: p.uid, mention: "", referent: false, essai: false, groupe: "" })}
-              className="block w-full rounded-lg bg-secondary px-2.5 py-1.5 text-left text-sm text-foreground"
+              onClick={() => ajoute({ nom: recherche.trim(), uid: "", mention: "", referent: false, essai: false, groupe: "" })}
+              className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-muted-foreground"
             >
-              {nomComplet(p)}
+              {t("equipes.nomLibre", { nom: recherche.trim() })}
             </button>
+          </div>
+        )}
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
+        <div className="space-y-1.5">
+          {brouillon.map((m, i) => aLieux ? (
+            <MembreOrganigramme
+              key={`${m.nom}-${i}`}
+              equipe={def.id as "louange" | "regie"}
+              m={m}
+              profil={profils.find((p) => p.uid === m.uid)}
+              ouvert={ouvert === cleMembre(m)}
+              ouvrable={ouvrable(m)}
+              onBascule={() => setOuvert((o) => (o === cleMembre(m) ? null : cleMembre(m)))}
+              droits={droits}
+              gerer={isAdminUser(user)}
+              onChange={(champ) => change(i, champ)}
+              onRetirer={() => retire(m)}
+              retire={retires.has(cleMembre(m))}
+              sousSeulement={sousSeulement}
+              onRemettre={() => remet(m)}
+            />
+          ) : (
+            <LigneMembreEdition
+              key={`${m.nom}-${i}`}
+              m={m}
+              resumeTexte={m.mention}
+              ouvert={ouvert === cleMembre(m)}
+              ouvrable
+              retire={retires.has(cleMembre(m))}
+              libelleRetirer={t("equipes.retirerDeLEquipe")}
+              onBascule={() => setOuvert((o) => (o === cleMembre(m) ? null : cleMembre(m)))}
+              onRetirer={() => retire(m)}
+              onRemettre={() => remet(m)}
+            >
+              <Input
+                value={m.mention}
+                placeholder={t("equipes.mention")}
+                onChange={(e) => change(i, { mention: e.target.value })}
+                className="h-9"
+              />
+              {edd && droits.equipe && (
+                <PastillesEdd m={m} onChange={(champ) => change(i, champ)} />
+              )}
+              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                {/* Lot RS : en nouveau mode, le référent se lit ici et se change dans Équipes › Responsabilités. */}
+                {nouveau ? (
+                  <MentionReferent m={m} louange={false} gerer={isAdminUser(user)} />
+                ) : (
+                  <label className="inline-flex items-center gap-1.5">
+                    <input type="checkbox" checked={m.referent} disabled={!droits.referents} onChange={(e) => change(i, { referent: e.target.checked })} />
+                    {t("equipes.referent")}
+                  </label>
+                )}
+                <label className="inline-flex items-center gap-1.5">
+                  <input type="checkbox" checked={m.essai} onChange={(e) => change(i, { essai: e.target.checked })} />
+                  {t("equipes.essai")}
+                </label>
+              </div>
+            </LigneMembreEdition>
           ))}
-          <button
-            type="button"
-            onClick={() => ajoute({ nom: recherche.trim(), uid: "", mention: "", referent: false, essai: false, groupe: "" })}
-            className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-muted-foreground"
-          >
-            {t("equipes.nomLibre", { nom: recherche.trim() })}
-          </button>
         </div>
-      )}
-
-      {erreur && (
-        <p role="alert" className="flex items-center gap-2 text-sm text-destructive">
-          {erreur}
-          {aRecopier && enregistree && (
-            <button type="button" disabled={enCours} onClick={() => { setErreur(""); void recopier(aRecopier, enregistree); }} className="font-semibold underline">
-              {t("groupes.reessayer")}
-            </button>
-          )}
-        </p>
-      )}
-      <div className="flex justify-end gap-2">
+      </div>
+      <div className="shrink-0 px-4">
+        {erreur && (
+          <p role="alert" className="flex items-center gap-2 pb-2 text-sm text-destructive">
+            {erreur}
+            {aRecopier && enregistree && (
+              <button type="button" disabled={enCours} onClick={() => { setErreur(""); void recopier(aRecopier, enregistree); }} className="font-semibold underline">
+                {t("groupes.reessayer")}
+              </button>
+            )}
+          </p>
+        )}
+      </div>
+      <DrawerBarre>
         <Button variant="outline" onClick={onClose} className="h-10">{t("equipes.annuler")}</Button>
         <Button onClick={enregistrer} disabled={enCours} className="h-10">{t("equipes.enregistrer")}</Button>
-      </div>
-    </div>
+      </DrawerBarre>
+    </>
   );
 }
 

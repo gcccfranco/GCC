@@ -108,24 +108,22 @@ test.describe("Harmonie : le catalogue", () => {
   test("en grand, les filtres restent d'une fiche à l'autre ; la première suit le filtre ; retour arrière", async ({ page }, info) => {
     test.skip(!enGrand(info), "deux volets : ordinateur et tablette paysage");
     await entrer(page, "/harmonie");
-    const niveau = liste(page).locator('[data-menu][aria-label^="Niveau"]');
-    await niveau.click();
-    await page.getByRole("menuitemradio", { name: "Avancé", exact: true }).click();
-    const premiereAvancee = fichesPiano.find((f) => f.niveau.piano === "avance")!;
-    await expect(detail(page).locator(`[data-fiche="${premiereAvancee.id}"]`), "Q3 : la première de la liste filtrée").toBeVisible();
+    const chaleureux = liste(page).getByRole("group", { name: "Ressenti" }).getByRole("button", { name: "Chaleureux" });
+    await chaleureux.click();
     const lignes = liste(page).locator("a[href^='/harmonie/']:not([href^='/harmonie/cours']):not([href^='/harmonie/rd2000'])");
+    const premiereChaleureuse = (await lignes.first().getAttribute("href"))!.replace(/^\/harmonie\//, "").replace(/\/$/, "");
+    await expect(detail(page).locator(`[data-fiche="${premiereChaleureuse}"]`), "Q3 : la première de la liste filtrée").toBeVisible();
     // L'adresse de la deuxième ligne, lue avant le toucher : la fiche qu'on attend à droite.
     const deuxieme = (await lignes.nth(1).getAttribute("href"))!.replace(/^\/harmonie\//, "").replace(/\/$/, "");
-    expect(deuxieme).not.toBe(premiereAvancee.id);
+    expect(deuxieme).not.toBe(premiereChaleureuse);
     await lignes.nth(1).click();
     await expect(detail(page).locator(`[data-fiche="${deuxieme}"]`)).toBeVisible();
     await lignes.nth(0).click();
-    await expect(detail(page).locator(`[data-fiche="${premiereAvancee.id}"]`)).toBeVisible();
-    await expect(niveau, "le filtre est resté").toContainText("Avancé");
-    await expect(niveau).toHaveAttribute("data-pose", "");
+    await expect(detail(page).locator(`[data-fiche="${premiereChaleureuse}"]`)).toBeVisible();
+    await expect(chaleureux, "le filtre est resté").toHaveAttribute("aria-pressed", "true");
     await page.goBack();
     await expect(detail(page).locator(`[data-fiche="${deuxieme}"]`), "retour arrière rend la fiche précédente").toBeVisible();
-    await expect(niveau).toContainText("Avancé");
+    await expect(chaleureux).toHaveAttribute("aria-pressed", "true");
   });
 
   test("un volet : la liste seule, puis la fiche avec son retour, comme aujourd'hui", async ({ page }, info) => {
@@ -167,33 +165,28 @@ test.describe("Harmonie : le catalogue", () => {
   test("partout, les filtres au-dessus de « Par où commencer » (question 5)", async ({ page }) => {
     await entrer(page, "/harmonie");
     const cat = page.locator("[data-harmonie]");
-    const filtres = await boite(cat.getByRole("group", { name: "Sensation" }));
+    const filtres = await boite(cat.getByRole("group", { name: "Ressenti" }));
     const parcours = await boite(cat.locator("[data-parcours]"));
     expect(parcours.y).toBeGreaterThan(filtres.y);
   });
 
   test("aucun <select> hors formulaire dans le catalogue", async ({ page }) => {
     await entrer(page, "/harmonie");
-    await expect(page.locator("[data-harmonie] [data-menu]").first()).toBeVisible();
+    await expect(page.locator("[data-harmonie]").getByRole("group", { name: "Ressenti" })).toBeVisible();
     expect(await page.locator("[data-harmonie] select:visible").count()).toBe(0);
   });
 
-  test("deux volets : le parcours est replié au départ, puis se déplie sur place ; ailleurs il reste ouvert", async ({ page }, info) => {
+  test("le parcours est replié au départ, partout, puis se déplie sur place", async ({ page }) => {
     await entrer(page, "/harmonie");
     const parcours = page.locator("[data-parcours]");
     await expect(parcours).toBeVisible();
-    if (enGrand(info)) {
-      const bouton = parcours.getByRole("button", { name: /Par où commencer/ });
-      await expect(bouton).toHaveAttribute("aria-expanded", "false");
-      await expect(bouton).toContainText("fiches dans l'ordre");
-      await expect(parcours.getByRole("link")).toHaveCount(0);
-      await bouton.click();
-      await expect(bouton).toHaveAttribute("aria-expanded", "true");
-      await expect(parcours.getByRole("link")).toHaveCount(3);
-    } else {
-      await expect(parcours.getByRole("button", { name: /Par où commencer/ })).toHaveCount(0);
-      await expect(parcours.getByRole("link")).toHaveCount(3);
-    }
+    const bouton = parcours.getByRole("button", { name: /Par où commencer/ });
+    await expect(bouton).toHaveAttribute("aria-expanded", "false");
+    await expect(bouton).toContainText("fiches dans l'ordre");
+    await expect(parcours.getByRole("link")).toHaveCount(0);
+    await bouton.click();
+    await expect(bouton).toHaveAttribute("aria-expanded", "true");
+    await expect(parcours.getByRole("link")).toHaveCount(3);
   });
 
   // musiciens-3 : un seul interrupteur Piano | Guitare par disposition.
@@ -226,45 +219,36 @@ test.describe("Harmonie : le catalogue", () => {
     expect(colonnes, `volet de ${Math.round(largeur)} px`).toBe(largeur < 640 ? 1 : 2);
   });
 
-  // musiciens-7 : sur tablette portrait, deux colonnes qui se lisent colonne par colonne, titres sur deux lignes.
-  test("les familles ne se coupent pas entre deux colonnes, et aucun titre n'est tronqué ; une colonne ailleurs", async ({ page }, info) => {
+  // musiciens-7 (H6-1) : liste à plat ; les sous-titres ne sont jamais coupés ; sur tablette portrait, deux colonnes de cartes.
+  test("la liste est à plat, aucun nom ni sous-titre n'est tronqué ; deux colonnes sur tablette portrait seulement", async ({ page }, info) => {
     await entrer(page, "/harmonie");
     const cat = page.locator("[data-harmonie]");
-    const familles = cat.locator("[data-famille]");
-    await expect(familles.first()).toBeVisible();
-    const zone = await boite(cat);
-    const milieu = zone.x + zone.width / 2;
-    const n = await familles.count();
+    await expect(cat.locator("[data-famille]"), "plus de groupes par famille").toHaveCount(0);
+    const lignes = cat.locator("a[href^='/harmonie/']:not([href^='/harmonie/cours']):not([href^='/harmonie/rd2000']):not([data-parcours] a)");
+    await expect(lignes.first()).toBeVisible();
     const xs = new Set<number>();
-    for (let i = 0; i < n; i++) {
-      const b = await boite(familles.nth(i));
-      xs.add(Math.round(b.x));
-      if (info.project.name === "tablette") expect(b.x + b.width <= milieu + 1 || b.x >= milieu - 1, `la famille ${i} tient dans une colonne`).toBe(true);
-    }
+    for (let i = 0; i < (await lignes.count()); i++) xs.add(Math.round((await boite(lignes.nth(i))).x));
     expect(xs.size, info.project.name === "tablette" ? "deux colonnes" : "une colonne").toBe(info.project.name === "tablette" ? 2 : 1);
-    const tronques = await cat.locator("[data-famille] a .line-clamp-2").evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1).length);
-    expect(tronques, "aucun titre coupé").toBe(0);
+    const tronques = await lignes.locator(".line-clamp-2, .text-muted-foreground").evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1).length);
+    expect(tronques, "rien de coupé").toBe(0);
   });
 
   // Agencement v18 (A16) : dès 768 px, le rail de l'en-tête remplace les cartes Cours et Sons.
-  test("tablette portrait : le parcours en cartes, les familles sur deux colonnes", async ({ page }, info) => {
+  test("tablette portrait : le parcours déplié en cartes, la liste en cartes sur deux colonnes", async ({ page }, info) => {
     test.skip(info.project.name !== "tablette", "tablette portrait seulement");
     await entrer(page, "/harmonie");
     const cat = page.locator("[data-harmonie]");
+    await cat.locator("[data-parcours]").getByRole("button", { name: /Par où commencer/ }).click();
     const etapes = cat.locator("[data-parcours] a");
     const [e1, e2] = [await boite(etapes.nth(0)), await boite(etapes.nth(1))];
     expect(Math.abs(e1.y - e2.y)).toBeLessThan(2);
-    const familles = cat.locator("[data-famille]");
-    // musiciens-7 : deux colonnes qui se lisent colonne par colonne — la première famille de la seconde
-    // colonne est en haut, à droite de la première.
-    const f1 = await boite(familles.nth(0));
-    let f2 = f1;
-    for (let i = 1; i < (await familles.count()); i++) {
-      const b = await boite(familles.nth(i));
-      if (b.x > f1.x + f1.width - 1) { f2 = b; break; }
-    }
-    expect(f2.x, "une seconde colonne").toBeGreaterThan(f1.x + f1.width - 1);
-    expect(Math.abs(f1.y - f2.y), "les deux colonnes partent du même haut").toBeLessThan(2);
+    // Cartes alignées en haut sans trous : deux colonnes, la seconde ligne part sous la première (grille).
+    const lignes = cat.locator("a[href^='/harmonie/']:not([href^='/harmonie/cours']):not([href^='/harmonie/rd2000']):not([data-parcours] a)");
+    const [c1, c2, c3] = [await boite(lignes.nth(0)), await boite(lignes.nth(1)), await boite(lignes.nth(2))];
+    expect(c2.x, "une seconde colonne").toBeGreaterThan(c1.x + c1.width - 1);
+    expect(Math.abs(c1.y - c2.y), "les deux colonnes partent du même haut").toBeLessThan(2);
+    expect(Math.abs(c1.height - c2.height), "cartes d'une rangée de même hauteur").toBeLessThan(2);
+    expect(Math.abs(c3.y - (c1.y + c1.height)), "pas de trou entre deux rangées").toBeLessThan(13);
     expect(await sansDefilementHorizontal(page)).toBe(true);
     await capture(page, "b3-harmonie");
   });

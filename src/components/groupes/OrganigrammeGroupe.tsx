@@ -14,6 +14,7 @@ import { libellePoste, postesDeCompte } from "@/lib/groupes/personnes";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { Button } from "@/components/ui/button";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { useDisposition } from "@/hooks/useDisposition";
 import { listProfiles, useProfile } from "@/lib/firebase/users";
 import { enregistrerGroupe, listGroupes, majGroupe, ModifieEntreTemps, type GroupeLu } from "@/lib/firebase/groupes";
@@ -212,7 +213,7 @@ export function OrganigrammeGroupe({
         <h2 className="whitespace-nowrap text-base font-bold text-foreground">{t("groupes.enTete.titre")}</h2>
         <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-muted-foreground"><Lock className="h-3 w-3" aria-hidden />{t("groupes.enTete.nommesParAdmin")}</span>
         {admin && (
-          <Button variant="outline" className="ml-auto h-8" onClick={() => { setErreurForm(""); setNommer({ president: groupe.president, vp: groupe.vp, maxVp: groupe.maxVp }); }}>
+          <Button variant="outline" className={`ml-auto h-8 ${TOUCHER_44}`} onClick={() => { setErreurForm(""); setNommer({ president: groupe.president, vp: groupe.vp, maxVp: groupe.maxVp }); }}>
             {t("groupes.enTete.nommer")}
           </Button>
         )}

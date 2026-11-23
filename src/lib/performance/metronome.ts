@@ -1,0 +1,112 @@
+// Métronome visuel (lot MT) : calculs purs, sans React. L'horloge `t` (ms) est passée en paramètre
+// (`performance.now()` en MT-1, Web Audio en MT-3).
+
+export type Accent = "fort" | "moyen" | "faible" | "muet";
+export type Mesure = { temps: number; unite: 4 | 8; groupes: number[]; compose: boolean };
+
+/** « 4/4 », « 6/8 »… ; absent ou invalide (n hors 1..12, d hors 4 / 8) → 4/4. Composé : unité 8, n multiple de 3, n ≥ 6. */
+export function parseMesure(time?: string | null): Mesure {
+  const m = /^\s*(\d{1,2})\s*\/\s*(4|8)\s*$/.exec(time ?? "");
+  const n = m ? Number(m[1]) : 4;
+  const unite = (m && n >= 1 && n <= 12 ? Number(m[2]) : 4) as 4 | 8;
+  const temps = m && n >= 1 && n <= 12 ? n : 4;
+  const compose = unite === 8 && temps >= 6 && temps % 3 === 0;
+  return { temps, unite, compose, groupes: compose ? Array(temps / 3).fill(3) : [temps] };
+}
+
+export function accentsParDefaut(m: Mesure): Accent[] {
+  const debuts = new Set<number>();
+  let i = 0;
+  for (const g of m.groupes) { debuts.add(i); i += g; }
+  return Array.from({ length: m.temps }, (_, k): Accent => (k === 0 ? "fort" : m.compose && debuts.has(k) ? "moyen" : "faible"));
+}
+
+/** Durée d'un temps (une pastille) en ms. En composé le tempo compte la noire pointée : la croche dure un tiers. */
+export function dureeTemps(tempo: number, m: Mesure): number {
+  return m.compose ? 60000 / tempo / 3 : 60000 / tempo;
+}
+
+export type PositionHorloge = { temps: number; mesure: number; fraction: number; duree: number };
+
+/** Horloge de temps : tempo changé au temps suivant, mesure changée à la mesure suivante. */
+export function creerHorloge() {
+  let actif = false;
+  let t0 = 0; // instant du temps `i0`
+  let i0 = 0; // numéro du temps (depuis le départ) à `t0`
+  let dur = 500;
+  let nb = 4;
+  let debutRegime = 0; // numéro du temps où commence le régime de mesure courant
+  let mesuresAvant = 0;
+  let enAttenteTempo: { dur: number; a: number } | null = null;
+  let enAttenteMesure: { nb: number; a: number } | null = null;
+
+  const numero = (t: number) => i0 + Math.floor((t - t0) / dur);
+  const appliquer = (t: number) => {
+    for (;;) {
+      const i = numero(t);
+      if (enAttenteTempo && i >= enAttenteTempo.a) {
+        t0 += (enAttenteTempo.a - i0) * dur;
+        i0 = enAttenteTempo.a;
+        dur = enAttenteTempo.dur;
+        enAttenteTempo = null;
+      } else if (enAttenteMesure && i >= enAttenteMesure.a) {
+        mesuresAvant += (enAttenteMesure.a - debutRegime) / nb;
+        debutRegime = enAttenteMesure.a;
+        nb = enAttenteMesure.nb;
+        enAttenteMesure = null;
+      } else return i;
+    }
+  };
+
+  return {
+    demarrer(t: number, dureeMs = dur, nbTemps = nb) {
+      actif = true; t0 = t; i0 = 0; dur = dureeMs; nb = nbTemps; debutRegime = 0; mesuresAvant = 0;
+      enAttenteTempo = null; enAttenteMesure = null;
+    },
+    arreter() { actif = false; },
+    position(t: number): PositionHorloge | null {
+      if (!actif) return null;
+      const i = appliquer(t);
+      const rel = i - debutRegime;
+      return { temps: ((rel % nb) + nb) % nb, mesure: mesuresAvant + Math.floor(rel / nb), fraction: ((t - t0) / dur) - Math.floor((t - t0) / dur), duree: dur };
+    },
+    /** Débuts de temps dont l'instant est dans [de, jusqua[ (sans rien modifier), changements en attente compris :
+     *  instant = t0 + k × durée (jamais une somme de pas), numéro du temps dans la mesure, durée de ce temps. */
+    debuts(de: number, jusqua: number): { instant: number; temps: number; mesure: number; duree: number }[] {
+      const sortie: { instant: number; temps: number; mesure: number; duree: number }[] = [];
+      if (!actif) return sortie;
+      const at = enAttenteTempo;
+      const am = enAttenteMesure;
+      let debut = Math.max(i0, i0 + Math.floor((de - t0) / dur));
+      if (at && debut > at.a) debut = at.a; // estimé à l'ancienne durée : un tempo plus lent en attente sauterait des temps
+      for (let i = debut; ; i++) {
+        const nouveau = at !== null && i >= at.a;
+        const instant = nouveau ? t0 + (at.a - i0) * dur + (i - at.a) * at.dur : t0 + (i - i0) * dur;
+        if (instant >= jusqua) break;
+        if (instant < de) continue;
+        const regime = am && i >= am.a ? { n: am.nb, d: am.a, avant: mesuresAvant + (am.a - debutRegime) / nb } : { n: nb, d: debutRegime, avant: mesuresAvant };
+        sortie.push({ instant, temps: (((i - regime.d) % regime.n) + regime.n) % regime.n, mesure: regime.avant + Math.floor((i - regime.d) / regime.n), duree: nouveau ? at.dur : dur });
+      }
+      return sortie;
+    },
+    changerTempo(dureeMs: number, t: number) {
+      if (!actif) { dur = dureeMs; return; }
+      enAttenteTempo = { dur: dureeMs, a: appliquer(t) + 1 };
+    },
+    /** Applique la durée exactement au premier temps de la mesure `k` (numéro depuis le départ, comme `position().mesure`) ;
+     *  remplace un changement de tempo en attente. Sans effet si cette mesure est déjà commencée. */
+    changerTempoAMesure(dureeMs: number, k: number, t: number) {
+      if (!actif) return;
+      const i = appliquer(t);
+      const am = enAttenteMesure;
+      const avantAm = am ? mesuresAvant + (am.a - debutRegime) / nb : 0;
+      const a = am && k >= avantAm ? am.a + (k - avantAm) * am.nb : debutRegime + (k - mesuresAvant) * nb;
+      if (a > i) enAttenteTempo = { dur: dureeMs, a };
+    },
+    changerMesure(nbTemps: number, t: number) {
+      if (!actif) { nb = nbTemps; return; }
+      const i = appliquer(t);
+      enAttenteMesure = { nb: nbTemps, a: debutRegime + (Math.floor((i - debutRegime) / nb) + 1) * nb };
+    },
+  };
+}

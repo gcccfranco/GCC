@@ -4,7 +4,7 @@ import type { FSSetlist } from "@/types/setList";
 import { titreAffiche } from "@/lib/fetes/droits";
 import { formatDate, langueCourte } from "@/lib/utils/formatDate";
 
-/** La corbeille repliée en bas d'« Archives » : restaurer, ou supprimer pour de bon (après confirmation). */
+/** La corbeille en bas de la page Setlists, sur tous les onglets ; vide, elle le dit (décision du 17/11/2026). */
 export function SectionCorbeille({
   setlists,
   ouverte,
@@ -26,7 +26,14 @@ export function SectionCorbeille({
       : new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(d);
   };
   return (
-    <section className="mt-8" data-testid="corbeille">
+    <section id="corbeille" className="mt-8 scroll-mt-24" data-testid="corbeille" data-vide={setlists.length === 0 ? "" : undefined}>
+      {setlists.length === 0 ? (
+        <div className="py-1">
+          <h2 className="block text-base font-semibold text-foreground">{t("setlists.corbeille.titreVide")}</h2>
+          <p className="block text-sm text-muted-foreground">{t("setlists.corbeille.aide")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("setlists.corbeille.vide")}</p>
+        </div>
+      ) : (
       <button
         type="button"
         aria-expanded={ouverte}
@@ -41,6 +48,7 @@ export function SectionCorbeille({
         </span>
         <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 ${ouverte ? "rotate-180" : ""}`} aria-hidden />
       </button>
+      )}
       {ouverte && (
         <ul className="mt-1">
           {setlists.map((s) => (

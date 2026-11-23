@@ -208,7 +208,9 @@ test("trimestre non publié : le publieur voit les lignes, marquées", async ({ 
   // Le T4 n'est pas publié : le publieur a sa pilule, le membre ne l'a pas.
   await page.getByRole("tab", { name: "T4" }).click();
   await expect(laCase(page, "2026-10-04", "presidence")).toHaveText("Paul W.");
-  await expect(page.locator('[data-non-publie="2026-10-04"]').filter({ visible: true })).toBeVisible();
+  // Retouches d'usage T5 : tout le trimestre en brouillon → « Non publié » écrit une fois en tête, plus sur chaque ligne.
+  await expect(page.locator("[data-non-publie-trimestre]").filter({ visible: true })).toBeVisible();
+  await expect(page.locator('[data-non-publie="2026-10-04"]').filter({ visible: true })).toHaveCount(0);
   await expect(page.locator('[data-non-publie="2026-09-20"]')).toHaveCount(0);
 });
 

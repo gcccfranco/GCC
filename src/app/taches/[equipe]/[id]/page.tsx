@@ -8,5 +8,6 @@ import { FicheTache } from "@/components/taches/FicheTache";
 
 export default function TachePage() {
   const { equipe, id } = useParams<{ equipe: string; id: string }>();
-  return <FicheTache equipe={equipe} id={id} date={useSearchParams().get("date")} />;
+  const params = useSearchParams();
+  return <FicheTache equipe={equipe} id={id} date={params.get("date")} depuis={params.get("depuis")} />;
 }

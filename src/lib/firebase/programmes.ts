@@ -9,10 +9,13 @@ import {
 } from "./setlists";
 import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import { idEdition, type Fete } from "@/lib/scene/fetes";
+import { libelleQui } from "@/lib/fetes/qui";
+import { creneauDeReservation } from "@/lib/scene/rappels";
+import { listReservationsDeFete, type Reservation } from "./reservations";
 import type { Creneau, Duree, Passage, Plage, Programme } from "@/types/programme";
 
-// Programmes de scène (lot 3 bis) : programmes/{id} et programmes/{id}/creneaux/{cid},
-// en REST comme le reste. Droits : firestore.rules (isCoordination) et
+// Programmes de scène (lot 3 bis) : programmes/{id} ; leurs créneaux sont des réservations de la Scène depuis le lot 5
+// du chantier AR (§ Créneaux ci-dessous). En REST comme le reste. Droits : firestore.rules (isCoordination) et
 // src/lib/access.ts (isCoordination, canEditCreneau).
 
 /** Événement `window` émis après toute écriture : la barre d'onglets se recharge. */
@@ -54,30 +57,23 @@ function fromFsProgramme(raw: RawDoc & { updateTime?: string }): Programme {
     ...(data.fete != null && { fete: data.fete as Programme["fete"] }),
     ...(data.annee != null && { annee: data.annee as number }),
     ...(data.modifiePar != null && { modifiePar: data.modifiePar as string }),
+    ...(data.image != null && { image: data.image as string }),
+    ...(data.aImage != null && { aImage: data.aImage as boolean }),
     ...(raw.updateTime && { version: raw.updateTime }),
   };
 }
 
-function fromFsCreneau(raw: RawDoc): Creneau {
-  const { id, data } = docData(raw);
-  return {
-    id,
-    dimanche: (data.dimanche as string) ?? "",
-    debut: (data.debut as string) ?? "",
-    fin: (data.fin as string) ?? "",
-    quoi: (data.quoi as string) ?? "",
-    qui: (data.qui as string[]) ?? [],
-    note: (data.note as string) ?? "",
-    auteurUid: (data.auteurUid as string) ?? "",
-    auteurNom: (data.auteurNom as string) ?? "",
-    createdAt: (data.createdAt as string) ?? "",
-    updatedAt: (data.updatedAt as string) ?? "",
-  };
-}
+/** Les champs lus par `listProgrammes` : tous sauf `image` (deux images de ~250 Ko par année, lues par 8 écrans).
+ *  TypeScript force à ajouter ici tout futur champ de `Programme`. `updateTime` (→ `version`) vient du document. */
+const CHAMPS_LISTE = {
+  nom: 1, jourJ: 1, debut: 1, passages: 1, createdBy: 1, updatedAt: 1, fin: 1, plages: 1, duree: 1,
+  quiAutorises: 1, ouvert: 1, fermees: 1, fete: 1, annee: 1, modifiePar: 1, aImage: 1,
+} satisfies Record<Exclude<keyof Programme, "id" | "version" | "image">, 1>
 
-async function runQuery(parent: string, collectionId: string, orderBy: string): Promise<RawDoc[]> {
+async function runQuery(parent: string, collectionId: string, orderBy: string, champs?: string[]): Promise<RawDoc[]> {
   return (await lireRequete(parent, {
     from: [{ collectionId }],
+    ...(champs && { select: { fields: champs.map((fieldPath) => ({ fieldPath })) } }),
     orderBy: [{ field: { fieldPath: orderBy }, direction: "ASCENDING" }],
   })) ?? [];
 }
@@ -104,7 +100,8 @@ async function patch(path: string, data: Record<string, unknown>, version?: stri
   const res = await fetch(`${FS_BASE}/${path}?${mask}${precondition}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({ fields: toFsFields(data) }),
+    // Un champ `undefined` est dans le masque mais pas dans le corps : Firestore le retire (pas de `null` écrit).
+    body: JSON.stringify({ fields: toFsFields(Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined))) }),
   });
   viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   if (version && res.status === 400) {
@@ -130,12 +127,24 @@ function changed(): void {
 
 /** Tous les programmes, masqués compris, par jour J croissant. */
 export async function listProgrammes(): Promise<Programme[]> {
-  return (await runQuery("", "programmes", "jourJ")).map(fromFsProgramme);
+  return (await runQuery("", "programmes", "jourJ", Object.keys(CHAMPS_LISTE))).map(fromFsProgramme);
 }
+
+/** L'image d'une édition (data-URL), lue seule ; `null` si le document (404) ou le champ manque ; autre erreur : rejet. */
+export async function lireImageEdition(id: string): Promise<string | null> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}/programmes/${id}?mask.fieldPaths=image`, { headers });
+  if (res.status === 404) return null;
+  await checkRest(res);
+  return (fromFsProgramme((await res.json()) as RawDoc).image) ?? null;
+}
+
+/** Sans `image` (lue par les setlists de fête) : `lireImageEdition` la lit seule. */
+const MASQUE_SANS_IMAGE = Object.keys(CHAMPS_LISTE).map((k) => `mask.fieldPaths=${k}`).join("&");
 
 export async function getProgramme(id: string): Promise<Programme | null> {
   const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}/programmes/${id}`, { headers });
+  const res = await fetch(`${FS_BASE}/programmes/${id}?${MASQUE_SANS_IMAGE}`, { headers });
   if (!res.ok) return null;
   return fromFsProgramme((await res.json()) as RawDoc);
 }
@@ -184,15 +193,38 @@ export async function updateProgramme(
 }
 
 // ─── Créneaux ────────────────────────────────────────────────────────────────
+// Lot 5 du chantier AR, T5a (docs/spec-salles.md, AR19, AR20) : un créneau de fête est une réservation de la Grande salle (AS14),
+// `reservations/{id}` avec `salle: "grande"` (anciens : "scene") et `fete` = l'id du programme ; `dimanche` s'y écrit `date`, et `pour`
+// reçoit le libellé des `qui` pour Salles. Mêmes noms et même type `Creneau` qu'avant : les écrans suivent. Les anciens
+// `programmes/{id}/creneaux` ne sont plus lus (AR19) ; le cron des rappels lit aussi `reservations` (T5c). Droits : firestore.rules
+// (match /reservations/{id}, feteReservable) et src/lib/access.ts (canReserverPour, canEditReservation).
 
-/** Créneaux d'un programme, par dimanche croissant (puis heure, côté client). */
+/** Le libellé des `qui` (en français), 60 caractères au plus (SA7) ; 200 quand des personnes sont choisies (AS15, rules : `pour` <= 200). */
+export function pourDe(qui: string[], max = 60): string {
+  return qui.map((q) => libelleQui(q)).join(", ").slice(0, max);
+}
+
+/** Un créneau de fête lu comme la réservation qu'il est (inverse de `creneauDeReservation`) : la feuille « Réserver » la modifie. */
+export function reservationDeCreneau(programmeId: string, c: Creneau): Reservation {
+  return {
+    id: c.id, salle: "grande", date: c.dimanche, debut: c.debut, fin: c.fin, ...(c.libre && { libre: true }), pour: pourDe(c.qui), quoi: c.quoi,
+    fete: programmeId, qui: c.qui, ...(c.personnes && { personnes: c.personnes }), note: c.note, auteurUid: c.auteurUid, auteurNom: c.auteurNom, createdAt: c.createdAt, updatedAt: c.updatedAt,
+  };
+}
+
+/** Les champs d'un créneau, écrits dans une réservation : `dimanche` devient `date`, `qui` donne `pour`. */
+function versReservation(data: Partial<Omit<Creneau, "id">>): Record<string, unknown> {
+  const { dimanche, ...reste } = data;
+  return { ...reste, ...(dimanche !== undefined && { date: dimanche }), ...(data.qui && { pour: pourDe(data.qui) }) };
+}
+
+/** Créneaux d'un programme, par dimanche puis heure. Lecture en échec : aucun créneau, comme avant. */
 export async function listCreneaux(programmeId: string): Promise<Creneau[]> {
-  const rows = (await runQuery(`programmes/${programmeId}`, "creneaux", "dimanche")).map(fromFsCreneau);
-  return rows.sort((a, b) => (a.dimanche + a.debut).localeCompare(b.dimanche + b.debut));
+  return (await listReservationsDeFete(programmeId).catch(() => [])).map(creneauDeReservation);
 }
 
 export async function createCreneau(programmeId: string, data: Omit<Creneau, "id">): Promise<string> {
-  return post(`programmes/${programmeId}/creneaux`, data as unknown as Record<string, unknown>);
+  return post("reservations", { salle: "grande", fete: programmeId, ...versReservation(data) });
 }
 
 export async function updateCreneau(
@@ -200,9 +232,9 @@ export async function updateCreneau(
   id: string,
   data: Partial<Omit<Creneau, "id">>,
 ): Promise<void> {
-  await patch(`programmes/${programmeId}/creneaux/${id}`, { ...data, updatedAt: new Date().toISOString() });
+  await patch(`reservations/${id}`, { ...versReservation(data), updatedAt: new Date().toISOString() });
 }
 
 export async function deleteCreneau(programmeId: string, id: string): Promise<void> {
-  await remove(`programmes/${programmeId}/creneaux/${id}`);
+  await remove(`reservations/${id}`);
 }

@@ -4,7 +4,6 @@ import { useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, Link2, Shuffle, Trash2, Unlink } from "lucide-react";
 import { formatSectionName } from "@/lib/chordpro/parser";
-import { useJianpuScore } from "@/lib/jianpu/images";
 import { nextUid } from "@/lib/uid";
 import {
   itemSections,
@@ -71,7 +70,6 @@ export function VoletChant({
   onRetirer: () => void;
 }) {
   const { t } = useTranslation();
-  const scan = useJianpuScore(item.song.slug);
   const [etape, setEtape] = useState<string | null>(null);
   const sections = useMemo(() => itemSections(item.song, item.contentOverride), [item.song, item.contentOverride]);
   const allSections = item.song.sections ?? [];
@@ -109,34 +107,6 @@ export function VoletChant({
         <h3 className={titreDeSection}>{t("setlists.editeur.tonalite")}</h3>
         <Tonalites song={item.song} keyOverride={item.keyOverride} onChange={(keyOverride) => onPatch({ keyOverride })} />
       </section>
-
-      {scan && (
-        <section className="space-y-2.5">
-          <h3 className={titreDeSection}>{t("setlists.editeur.jouerSur")}</h3>
-          <div role="radiogroup" aria-label={t("setlists.editeur.jouerSur")} className="inline-flex rounded-full bg-secondary p-1">
-            {[
-              { sur: true, libelle: t("setlists.editeur.partition") },
-              { sur: false, libelle: t("setlists.editeur.paroles") },
-            ].map(({ sur, libelle }) => {
-              const on = (item.jianpuSheet !== false) === sur;
-              return (
-                <button
-                  key={libelle}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  onClick={() => onPatch({ jianpuSheet: sur })}
-                  className={`h-8 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    on ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {libelle}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {allSections.length > 1 && (
         <>

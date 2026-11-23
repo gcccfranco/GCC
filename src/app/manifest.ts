@@ -9,6 +9,9 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "GCC",
     description: "L'app de l'église GCC : chants, setlists, planning, évènements",
     start_url: "/planning/",
+    // Portée : tout le site. Sans elle, la portée par défaut est le dossier de start_url (/planning/) et iPadOS
+    // affiche sa barre de navigateur dès qu'on en sort (setlists, chants, back-office) : Timothée, 13/11/2026.
+    scope: "/",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#ffffff",

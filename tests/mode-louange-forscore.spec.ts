@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
+import { attendreCompteur, basculerAnnoter, attendreMiseEnPage, lireCompteur, onStage, ouvrirMenu, ouvrirOutils, ouvrirReglages } from "./helpers/louange";
 
 // Mode louange « façon forScore » (docs/spec-mode-louange-forscore.md), seul mode depuis le 27/10/2026.
 // Setlist et compte simulés : aucun accès au Firestore réel.
@@ -66,7 +66,6 @@ test("stockage inaccessible : mode ouvert, sans erreur", async ({ page }) => {
 // Lot L1 : barre à la demande et bandes invisibles qui ne captent plus.
 
 const BARRES = "[data-performance-mode] .material-chrome";
-const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums:not([data-tempo-barre])").first();
 
 async function toucherCentre(page: Page) {
   const ecran = page.viewportSize()!;
@@ -104,7 +103,7 @@ test("forScore : la barre visible le reste 5 s ; toucher centre la masque, un au
   page.on("pageerror", (e) => erreurs.push(e.message));
   page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) erreurs.push(m.text()); });
   await ouvrir(page);
-  const reglages = page.getByRole("button", { name: "Réglages" });
+  const reglages = page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true });
   await expect(reglages).toBeVisible();
   await page.waitForTimeout(5_000);
   await expect(reglages).toBeVisible();
@@ -125,16 +124,16 @@ test("forScore, barre masquée : un toucher à la hauteur de la bande basse, cô
   page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) erreurs.push(m.text()); });
   await ouvrir(page, { chants: 4 });
   await toucherCentre(page);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeHidden();
 
-  const avant = (await compteur(page).textContent())!.trim();
+  const avant = (await lireCompteur(page))!.trim();
   const total = Number(avant.split("/")[1]);
   expect(total).toBeGreaterThan(1);
   const bas = await page.locator(BARRES).nth(1).boundingBox();
   const ecran = page.viewportSize()!;
   await page.mouse.click(ecran.width - 20, bas!.y + bas!.height / 2);
-  await expect(compteur(page)).not.toHaveText(avant);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await expect.poll(() => lireCompteur(page)).not.toBe(avant);
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeHidden();
   expect(erreurs).toEqual([]);
 });
 
@@ -147,14 +146,14 @@ function surveillerErreurs(page: Page) {
   return erreurs;
 }
 
-const lirePage = async (page: Page) => (await compteur(page).textContent())!.trim();
+const lirePage = async (page: Page) => (await lireCompteur(page))!.trim();
 const numero = async (page: Page) => Number((await lirePage(page)).split("/")[0]);
 
 /** Barre masquée, plusieurs pages. */
 async function ouvrirMasquee(page: Page) {
   await ouvrir(page, { chants: 4 });
   await toucherCentre(page);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeHidden();
   const ecran = page.viewportSize()!;
   return { ecran, y: ecran.height / 2 };
 }
@@ -183,7 +182,7 @@ test("forScore : toucher à 15 % = page précédente, à 85 % = suivante, à 50 
 
   await cliquerA(page, 0.85);
   await expect.poll(() => numero(page)).toBe(2);
-  const reglages = page.getByRole("button", { name: "Réglages" });
+  const reglages = page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true });
   await expect(reglages).toBeHidden();
 
   await cliquerA(page, 0.15);
@@ -203,7 +202,7 @@ test("forScore, téléphone et ordinateur : un toucher à 32 % tourne la page", 
   await expect.poll(() => numero(page)).toBe(2);
   await cliquerA(page, 0.32);
   await expect.poll(() => numero(page)).toBe(1);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeHidden();
 });
 
 test("forScore, tablette : un toucher à 32 % ouvre la barre sans tourner, à 29 % il tourne", async ({ page }, testInfo) => {
@@ -213,11 +212,11 @@ test("forScore, tablette : un toucher à 32 % ouvre la barre sans tourner, à 29
   await expect.poll(() => numero(page)).toBe(2);
 
   await cliquerA(page, 0.32);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeVisible();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeVisible();
   expect(await numero(page)).toBe(2);
 
   await cliquerA(page, 0.5);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeHidden();
   await cliquerA(page, 0.29);
   await expect.poll(() => numero(page)).toBe(1);
 });
@@ -225,7 +224,7 @@ test("forScore, tablette : un toucher à 32 % ouvre la barre sans tourner, à 29
 test("forScore : glissé de 80 px vers la gauche = page suivante, vers la droite = précédente, barre inchangée", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirMasquee(page);
-  const reglages = page.getByRole("button", { name: "Réglages" });
+  const reglages = page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true });
 
   await glisser(page, -80, 0);
   await expect.poll(() => numero(page)).toBe(2);
@@ -265,7 +264,7 @@ async function ouvrirDernierePage(page: Page) {
   }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  await expect(compteur(page)).toHaveText(/^\d+ \/ \d+$/);
+  await attendreCompteur(page, /^\d+ \/ \d+$/);
 }
 
 test("« Ensuite » sur la dernière page du chant, un toucher amène à la 1re page du suivant", async ({ page }) => {
@@ -307,6 +306,9 @@ test("dernier chant de la setlist, aucun bandeau « Ensuite »", async ({ page }
 test("L3 colonne scan 简谱 (paysage grand écran seulement) : « Ensuite » de la colonne change de chant", async ({ page }) => {
   test.setTimeout(90_000);
   const erreurs = surveillerErreurs(page);
+  // Scan non certifié : "一生爱你" est certifié, donc en tranches sans colonne ; on le rend non certifié.
+  await page.route("**/jianpu/systemes.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await signInAs(page, MUSICIEN, {
@@ -334,7 +336,7 @@ test("L3 colonne scan 简谱 (paysage grand écran seulement) : « Ensuite » de
   expect(erreurs).toEqual([]);
 });
 
-// Lot L4 : tempo sur toutes les pages, métronome visuel (liseré silencieux).
+// Lot L4 : tempo sur toutes les pages, métronome visuel (bande des temps).
 
 async function ouvrirChantL4(
   page: Page,
@@ -352,14 +354,9 @@ async function ouvrirChantL4(
   await attendreMiseEnPage(page);
 }
 
-const largeurs = async (page: Page) => {
-  const vus: number[] = [];
-  for (let i = 0; i < 8; i++) {
-    vus.push(await page.locator("[data-liseret-barre]").evaluate((el) => el.getBoundingClientRect().width));
-    await page.waitForTimeout(250);
-  }
-  return vus;
-};
+/** Bouton ▶ / ■ du métronome : celui de la barre (grand écran) ou celui de la bande (téléphone). */
+const marcheBtn = (page: Page) => page.locator("[data-metronome-marche]:visible").first();
+const tempsActif = (page: Page) => page.locator("[data-bande-temps] [data-actif]").getAttribute("data-temps");
 
 test("un chant avec {tempo} affiche ♩ N dans la barre, sur une page texte", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
@@ -369,75 +366,99 @@ test("un chant avec {tempo} affiche ♩ N dans la barre, sur une page texte", as
   expect(erreurs).toEqual([]);
 });
 
-test("un chant sans tempo n'affiche ni ♩ ni liseré, même métronome actif", async ({ page }) => {
+test("un chant sans tempo, métronome actif : la bande est à ♩ 72", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirChantL4(page, "abba-pere", { metronome: true });
-  await expect(page.locator("[data-tempo-barre]")).toHaveCount(0);
-  await expect(page.locator("[data-performance-mode] .material-chrome").first()).not.toContainText("♩");
-  await expect(page.locator("[data-liseret]")).toHaveCount(0);
+  await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
+  await expect(page.locator("[data-tempo-barre]")).toHaveText(/♩\s*72/);
   expect(erreurs).toEqual([]);
 });
 
-test("métronome inactif par défaut : pas de liseré, même avec un tempo", async ({ page }) => {
+test("métronome inactif par défaut : pas de bande, même avec un tempo", async ({ page }) => {
   await ouvrirChantL4(page, "avec-nous");
   await expect(page.locator("[data-tempo-barre]")).toHaveCount(1);
-  await expect(page.locator("[data-liseret]")).toHaveCount(0);
+  await expect(page.locator("[data-bande-temps]")).toHaveCount(0);
 });
 
-test("métronome actif : le liseré se remplit au fil des pulsations", async ({ page }) => {
+test("métronome actif : la bande (36 px) est là et la pastille allumée change au fil des temps après Marche", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirChantL4(page, "avec-nous", { metronome: true });
-  const liseret = page.locator("[data-liseret]");
-  await expect(liseret).toHaveCount(1);
-  await expect(liseret).toHaveAttribute("aria-hidden", "true");
-  await expect(liseret).toHaveCSS("pointer-events", "none");
-  await expect(liseret).toHaveCSS("height", "3px");
-  const vus = await largeurs(page);
-  expect(new Set(vus.map((w) => Math.round(w))).size).toBeGreaterThanOrEqual(2);
+  const bande = page.locator("[data-bande-temps]");
+  await expect(bande).toHaveCount(1);
+  await expect(bande).toHaveCSS("height", "36px");
+  await expect(bande.locator("[data-actif]")).toHaveCount(0);
+  await marcheBtn(page).click();
+  await expect(marcheBtn(page)).toHaveAttribute("aria-pressed", "true");
+  await expect(bande.locator("[data-actif]")).toHaveCount(1);
+  const vus = new Set<string | null>();
+  for (let i = 0; i < 8; i++) {
+    vus.add(await tempsActif(page).catch(() => null));
+    await page.waitForTimeout(200);
+  }
+  expect(vus.size).toBeGreaterThanOrEqual(2);
   expect(erreurs).toEqual([]);
 });
 
-test("mouvement réduit : le liseré ne bouge pas", async ({ page }) => {
+test("mouvement réduit : pas de transition sur les pastilles, le temps avance", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await ouvrirChantL4(page, "avec-nous", { metronome: true });
-  await expect(page.locator("[data-liseret]")).toHaveCount(1);
-  const vus = await largeurs(page);
-  expect(new Set(vus.map((w) => Math.round(w))).size).toBe(1);
+  await expect(page.locator("[data-bande-temps] [data-temps]").first()).toHaveCSS("animation-name", "none");
+  await marcheBtn(page).click();
+  const vus = new Set<string | null>();
+  for (let i = 0; i < 8; i++) {
+    vus.add(await tempsActif(page).catch(() => null));
+    await page.waitForTimeout(200);
+  }
+  expect(vus.size).toBeGreaterThanOrEqual(2);
 });
+
+/** Le tempo : le panneau Métronome (♩ de la barre à partir de md ; au téléphone, la ligne « Métronome » d'Outils). */
+const ouvrirTempo = (page: Page) => ouvrirMenu(page, "tempo");
 
 test("tempo réglé par chant : gardé après rechargement, « Tempo du fichier » l'efface", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirChantL4(page, "avec-nous");
-  let reglages = await ouvrirReglages(page);
-  await expect(reglages.locator("[data-tempo-valeur]")).toHaveCount(0);
-  await reglages.locator("[data-metronome-on]").click();
+  // L'interrupteur « Métronome visuel » est dans le panneau Métronome (CI-8 : plus dans Outils).
+  const options = await ouvrirOutils(page);
+  if (page.viewportSize()!.width >= 768) await expect(options.locator("[data-tempo-valeur]")).toHaveCount(0);
+  await expect(options.locator("[data-metronome]")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(options).toBeHidden();
+  let reglages = await ouvrirTempo(page);
+  await reglages.locator("[data-metronome]").click();
+  await page.keyboard.press("Escape");
+  await expect(reglages).toBeHidden();
+  reglages = await ouvrirTempo(page);
   const valeur = reglages.locator("[data-tempo-valeur]");
-  await expect(valeur).toHaveText(/♩\s*94/);
+  await expect(valeur).toHaveText(/^94$/);
   await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(0);
   await reglages.locator("[data-tempo-plus]").click();
   await reglages.locator("[data-tempo-plus]").click();
-  await expect(valeur).toHaveText(/♩\s*96/);
+  await expect(valeur).toHaveText(/^96$/);
   await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(1);
 
   await page.reload();
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  reglages = await ouvrirReglages(page);
-  await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/♩\s*96/);
+  reglages = await ouvrirTempo(page);
+  await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/^96$/);
   await reglages.locator("[data-tempo-fichier]").click();
-  await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/♩\s*94/);
+  await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/^94$/);
   await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem("perf-tempo-avec-nous"))).toBeNull();
   expect(erreurs).toEqual([]);
 });
 
-// Lot L5 : annotations stables. Taille du texte mémorisée par setlist et par chant (`perf-annot-scale-<setlist>-<slug>`),
+// Lot L5 : annotations stables. Taille du texte mémorisée par compte, par setlist et par chant (`perf-annot-scale-<uid>-<setlist>-<slug>`),
 // figée en annotation ; bannière « Revenir à cette taille » quand on lit à une autre taille.
 // Les traits sont dessinés à la souris sur le canevas ; le Firestore est simulé (`db.writes`).
 
-const CLE_TAILLE = `perf-annot-scale-${SETLIST_ID}-abba-pere`;
+const CLE_TAILLE = `perf-annot-scale-${MUSICIEN.uid}-${SETLIST_ID}-abba-pere`;
 const calqueLecture = (page: Page) => page.locator("[data-performance-mode] > canvas");
-const ecritesAnnot = (db: { writes: { path: string }[] }) => db.writes.filter((w) => w.path.startsWith("annotations/"));
+// MP-5 : le Crayon écrit des traits accrochés au texte dans ma partition (`partitions/`), plus dans `annotations/`.
+const ecritesAnnot = (db: { writes: { path: string }[] }) => db.writes.filter((w) => w.path.startsWith("partitions/"));
+/** La bannière « autre taille » ne vient plus que des anciennes annotations (lecture seule) : on pose à la main la taille qu'elles avaient. */
+const poserTailleAnnotee = (page: Page) => page.evaluate((c) => localStorage.setItem(c, "1"), CLE_TAILLE);
 
 async function ouvrirL5(page: Page) {
   const erreurs = surveillerErreurs(page);
@@ -448,9 +469,9 @@ async function ouvrirL5(page: Page) {
   return { db, erreurs };
 }
 
-/** Ouvre Annoter, trace un trait à la souris au centre, attend l'enregistrement, ressort. */
+/** Ouvre le Crayon, trace un trait à la souris au centre, attend l'enregistrement, ressort. */
 async function tracerTrait(page: Page, db: { writes: { path: string }[] }) {
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await basculerAnnoter(page);
   await expect(calqueLecture(page)).toHaveCount(1);
   const ecran = page.viewportSize()!;
   const x = ecran.width * 0.4;
@@ -461,7 +482,7 @@ async function tracerTrait(page: Page, db: { writes: { path: string }[] }) {
   await page.mouse.move(x + 90, y + 30, { steps: 4 });
   await page.mouse.up();
   await expect.poll(() => ecritesAnnot(db).length).toBeGreaterThan(0);
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await basculerAnnoter(page);
   await expect(calqueLecture(page)).toHaveCount(1);
 }
 
@@ -482,20 +503,26 @@ const pourcentage = async (page: Page) => {
   return pct;
 };
 
-test("forScore, L5 : trait tracé, taille changée puis rétablie : le trait est relu ; bannière et « Revenir à cette taille »", async ({ page }) => {
+test("forScore, L5 : trait tracé, taille changée : le trait suit le texte, sans bannière (MP-5) ; la bannière ne vient que d'une ancienne annotation", async ({ page }) => {
   const { db, erreurs } = await ouvrirL5(page);
   await tracerTrait(page, db);
-  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBe("1");
+  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE), "un trait accroché au texte ne mémorise pas de taille").toBeNull();
   await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
 
-  // (b) autre taille : le trait n'est plus lu, la bannière prévient
+  // autre taille : le trait est toujours lu (il suit le texte), aucune bannière
   expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
-  await expect(calqueLecture(page)).toHaveCount(0);
+  await expect(calqueLecture(page)).toHaveCount(1);
+  await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
+
+  // une ancienne annotation (taille mémorisée à 100 %) : la bannière prévient, « Revenir à cette taille » la retire
+  await poserTailleAnnotee(page);
+  expect(await changerTaille(page, "Réduire le texte")).toBe("100%");
+  expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
   const bandeau = page.locator("[data-alerte-annotations]");
   await expect(bandeau).toBeVisible();
   // La bannière (z 6) est sous la barre haute (z 20) : on masque la barre pour la toucher.
   await toucherCentre(page);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeHidden();
   await expect(bandeau).toContainText("Des annotations existent à une autre taille (100");
   await expect(bandeau).toHaveCSS("pointer-events", "none");
   const bouton = bandeau.getByRole("button", { name: "Revenir à cette taille" });
@@ -507,35 +534,31 @@ test("forScore, L5 : trait tracé, taille changée puis rétablie : le trait est
   // la page n'a pas tourné sous le toucher du bouton
   expect(await numeroPage()).toBe(p);
   expect(await pourcentage(page)).toBe("100%");
-
-  // (a) la taille d'origine est revenue : le trait est de nouveau lu
-  await expect(calqueLecture(page)).toHaveCount(1);
   expect(erreurs).toEqual([]);
 });
 
-test("forScore, L5 : en annotation A− / A+ sont désactivés, et rouvrir l'annotation rend la taille mémorisée", async ({ page }) => {
-  const { db, erreurs } = await ouvrirL5(page);
-  await tracerTrait(page, db);
+test("forScore, L5 : au Crayon la taille du texte ne se règle pas, et rouvrir le Crayon rend la taille mémorisée (ancienne annotation)", async ({ page }) => {
+  const { erreurs } = await ouvrirL5(page);
+  await poserTailleAnnotee(page);
   expect(await changerTaille(page, "Agrandir le texte", 2)).toBe("120%");
 
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await basculerAnnoter(page);
   await expect(calqueLecture(page)).toHaveCount(1);
+  // AN-3a : la barre d'annotation remplace la barre de titre, Affichage (A− / A+) n'est plus offert en Crayon.
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toHaveCount(0);
+  await basculerAnnoter(page);
   const reglages = await ouvrirReglages(page);
-  await expect(reglages.getByRole("button", { name: "Réduire le texte" })).toBeDisabled();
-  await expect(reglages.getByRole("button", { name: "Agrandir le texte" })).toBeDisabled();
   await expect(reglages.getByText(/^\d+%$/)).toHaveText("100%");
   await page.keyboard.press("Escape");
   await expect(reglages).toBeHidden();
   expect(erreurs).toEqual([]);
 });
 
-test("L5 : un trait ancien (sans taille mémorisée sur l'appareil) se lit encore, sans bannière", async ({ page }) => {
-  // Le trait est posé, puis la taille mémorisée est effacée : comme un trait fait avant le lot L5.
+test("L5 : un trait relu après rechargement (sans taille mémorisée sur l'appareil) se lit, sans bannière", async ({ page }) => {
+  // Le trait est posé dans ma partition : relu au rechargement, sans taille mémorisée.
   const { db } = await ouvrirL5(page);
   await tracerTrait(page, db);
-  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBe("1");
 
-  await page.evaluate((c) => localStorage.removeItem(c), CLE_TAILLE);
   await page.reload();
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
@@ -543,13 +566,13 @@ test("L5 : un trait ancien (sans taille mémorisée sur l'appareil) se lit encor
   await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
 });
 
-// Lot L6 : aperçu de la page suivante (tablette en portrait seulement).
+// Lot L6 : aperçu de la page suivante (tablette en portrait seulement), retiré le 13/11/2026 (go de Timothée,
+// « Oui retire ») : les tests vérifient son absence, et que la page reprend la hauteur de la bande.
 // `chants: 4` répète Abba Père : plusieurs pages, et des pages suivantes qui ouvrent un autre chant.
 
 const APERCU = "[data-apercu-suivant]";
 const BLOCS = "[data-section], [data-entete-chant]";
 const blocsPage = (page: Page) => page.locator(`[data-performance-mode] :is(${BLOCS}):not([aria-hidden=true] *)`);
-const normaliser = (t: string | null) => (t ?? "").replace(/\s+/g, " ").trim();
 
 const nombrePages = async (page: Page) => Number((await lirePage(page)).split("/")[1]);
 async function allerPremierePage(page: Page) {
@@ -564,36 +587,20 @@ async function pageSuivante(page: Page) {
   await page.keyboard.press("ArrowRight");
   await expect.poll(() => numero(page)).toBe(n + 1);
 }
-const premierBlocApercu = (page: Page) => page.locator(`[data-performance-mode] ${APERCU} :is(${BLOCS})`).first();
-const textePremierBlocPage = async (page: Page) => normaliser(await blocsPage(page).first().textContent());
 
-test("forScore, tablette portrait : l'aperçu montre le début de la page suivante, mis à jour par un tour de page et le retour", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "tablette", "propre à la tablette en portrait");
+test("forScore, tablette portrait : plus d'aperçu de la page suivante, ni à la page 1, ni après un tour et un retour", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablette", "propre à la tablette en portrait (l'aperçu n'existait que là)");
   const erreurs = surveillerErreurs(page);
   await ouvrir(page, { chants: 4 });
-  await expect(compteur(page)).toHaveText(/^1 \/ \d+$/);
+  await attendreCompteur(page, /^1 \/ \d+$/);
   expect(await nombrePages(page)).toBeGreaterThan(2);
   const apercu = page.locator(`[data-performance-mode] ${APERCU}`);
-  await expect(apercu).toBeVisible();
-  await expect(apercu).toHaveAttribute("aria-hidden", "true");
-  await expect(apercu).toHaveCSS("pointer-events", "none");
-  const un = normaliser(await premierBlocApercu(page).textContent());
-  expect(un.length).toBeGreaterThan(5);
-
+  await expect(apercu).toHaveCount(0);
   await pageSuivante(page);
-  // Le tour de page montre ce que l'aperçu annonçait.
-  expect(await textePremierBlocPage(page)).toBe(un);
-  // Page qui clôt un chant : « Ensuite » prend la bande, sans aperçu dessous ; sinon l'aperçu se met à jour.
-  if (await onStage(page, "[data-suivant]").count()) {
-    await expect(apercu).toHaveCount(0);
-  } else {
-    await expect(apercu).toBeVisible();
-    expect(normaliser(await premierBlocApercu(page).textContent())).not.toBe(un);
-  }
-
+  await expect(apercu).toHaveCount(0);
   await page.keyboard.press("ArrowLeft");
   await expect.poll(() => numero(page)).toBe(1);
-  expect(normaliser(await premierBlocApercu(page).textContent())).toBe(un);
+  await expect(apercu).toHaveCount(0);
 
   // Pas de défilement horizontal, pas d'erreur.
   const debord = await page.evaluate(() => {
@@ -606,11 +613,11 @@ test("forScore, tablette portrait : l'aperçu montre le début de la page suivan
 });
 
 for (const taille of [100, 120]) {
-  test(`forScore, tablette portrait, texte à ${taille} % : l'aperçu ne chevauche jamais la dernière ligne, rien n'est rogné, aucun aperçu sur la dernière page`, async ({ page }, testInfo) => {
+  test(`forScore, tablette portrait, texte à ${taille} % : aucun aperçu, rien n'est rogné`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "tablette", "propre à la tablette en portrait");
     test.setTimeout(120_000);
     await ouvrir(page, { chants: 4 });
-    await expect(compteur(page)).toHaveText(/^1 \/ \d+$/);
+    await attendreCompteur(page, /^1 \/ \d+$/);
     if (taille === 120) {
       expect(await changerTaille(page, "Agrandir le texte", 2)).toBe("120%");
       await attendreMiseEnPage(page);
@@ -623,29 +630,15 @@ for (const taille of [100, 120]) {
       expect(await numero(page)).toBe(p);
       const dernier = blocsPage(page).last();
       await expect(dernier).toBeVisible();
-      if (p < total && (await onStage(page, "[data-suivant]").count())) {
-        // Dernière page d'un chant : la pastille « Ensuite » occupe la bande, pas d'aperçu.
-        await expect(apercu).toHaveCount(0);
-        await pageSuivante(page);
-      } else if (p < total) {
-        await expect(apercu).toBeVisible();
-        const haut = (await apercu.boundingBox())!.y;
-        const bas = (await dernier.boundingBox())!.y + (await dernier.boundingBox())!.height;
-        expect(bas, `page ${p} : dernier bloc sous le haut de l'aperçu`).toBeLessThanOrEqual(haut + 0.5);
-        // Le haut de l'aperçu est sous le dernier bloc, et la bande tient dans la fenêtre.
-        expect((await apercu.boundingBox())!.y + (await apercu.boundingBox())!.height).toBeLessThanOrEqual(page.viewportSize()!.height + 0.5);
-        await pageSuivante(page);
-      } else {
-        // Dernière page de la setlist : aucun aperçu.
-        await expect(apercu).toHaveCount(0);
-      }
+      await expect(apercu).toHaveCount(0);
       await expect(dernier).toBeInViewport({ ratio: 1 });
+      if (p < total) await pageSuivante(page);
     }
   });
 }
 
 test("forScore, tablette portrait : sur la dernière page d'un chant, « Ensuite » seul, sans aperçu dessous", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "tablette", "l'aperçu n'existe qu'en tablette portrait");
+  test.skip(testInfo.project.name !== "tablette", "l'aperçu n'existait qu'en tablette portrait");
   await ouvrirDernierePage(page);
   const suivant = onStage(page, "[data-suivant]");
   await expect(async () => {
@@ -656,10 +649,9 @@ test("forScore, tablette portrait : sur la dernière page d'un chant, « Ensuite
   await expect(onStage(page, "[data-apercu-suivant]")).toHaveCount(0);
 });
 
-test("forScore : aucun aperçu hors tablette en portrait (téléphone, paysage, ordinateur)", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === "tablette", "la tablette en portrait a l'aperçu");
+test("forScore : aucun aperçu, sur aucun appareil", async ({ page }) => {
   await ouvrir(page, { chants: 4 });
-  await expect(compteur(page)).toHaveText(/^1 \/ ([2-9]|\d\d+)$/);
+  await attendreCompteur(page, /^1 \/ ([2-9]|\d\d+)$/);
   await expect(page.locator(APERCU)).toHaveCount(0);
 });
 
@@ -680,6 +672,8 @@ async function ouvrirTroisChants(page: Page, slugs = TROIS_CHANTS) {
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: doc }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
+  // La rangée de points est tout en bas (FS-A) : la pastille de développement de Next la recouvre à gauche.
+  await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
 }
 
 /** Rappelle la barre (geste au centre) si elle est masquée. */
@@ -691,7 +685,7 @@ async function barreVisible(page: Page) {
   }).toPass({ timeout: 15_000 });
 }
 
-const titreBarreHaute = (page: Page) => page.locator("[data-performance-mode] .material-chrome").first().locator("p").first();
+const titreBarreHaute = (page: Page) => page.locator("[data-performance-mode] [data-barre-haut]").locator("p").first();
 
 test("forScore, L7 : le curseur couvre toute la setlist, 3 repères = débuts de chant, un clic amène au 1er page du chant", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
@@ -716,7 +710,7 @@ test("forScore, L7 : le curseur couvre toute la setlist, 3 repères = débuts de
   // On visite les repères du dernier au premier : chaque clic amène au 1er page du chant, titre en barre haute.
   for (const i of [2, 1, 0]) {
     await barreVisible(page);
-    await reperes.nth(i).click();
+    await reperes.nth(i).click({ force: true }); // le repère ne capte aucun pointeur : le clic est reçu par la rangée
     await expect.poll(() => numero(page)).toBe(debuts[i].page + 1);
     await expect(curseur).toHaveValue(String(debuts[i].page));
     await expect(titreBarreHaute(page)).toHaveText(debuts[i].titre);
@@ -724,31 +718,38 @@ test("forScore, L7 : le curseur couvre toute la setlist, 3 repères = débuts de
   expect(erreurs).toEqual([]);
 });
 
-test("forScore, L7 : étiquette sous la glissière (titre du chant courant, page n / total, 12 px), mise à jour après un saut de page (dimanche-24)", async ({ page }) => {
+test("forScore, FS-A : plus d'étiquette « page n / N » ni de flèches ‹ › ; le curseur et le titre suivent un saut de page (dimanche-24)", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirTroisChants(page);
   const total = Number((await lirePage(page)).split("/")[1]);
   await barreVisible(page);
-  const etiquette = page.locator("[data-performance-mode] [data-curseur-etiquette]");
-  await expect(etiquette.locator("[data-etiquette-page]")).toHaveText(`page 1 / ${total}`);
+  const curseur = page.locator(CURSEUR);
+  await expect(page.locator("[data-performance-mode] [data-curseur-etiquette]")).toHaveCount(0);
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Page précédente" })).toHaveCount(0);
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Page suivante" })).toHaveCount(0);
   const reperes = page.locator(REPERES);
   const debuts = await reperes.evaluateAll((els) => els.map((e) => ({ page: Number(e.getAttribute("data-page")), titre: e.getAttribute("data-titre")! })));
-  await expect(etiquette.locator("[data-etiquette-titre]")).toHaveText(debuts[0].titre);
-  const taille = await etiquette.locator("[data-etiquette-page]").evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
-  expect(taille).toBeGreaterThanOrEqual(12);
-  // Saut au dernier chant : le titre et le numéro suivent.
-  await reperes.nth(2).click();
-  await expect(etiquette.locator("[data-etiquette-titre]")).toHaveText(debuts[2].titre);
-  await expect(etiquette.locator("[data-etiquette-page]")).toHaveText(`page ${debuts[2].page + 1} / ${total}`);
+  await expect(titreBarreHaute(page)).toHaveText(debuts[0].titre);
+  await expect(curseur).toHaveAttribute("aria-valuetext", `Page 1 sur ${total}`);
+  // Saut au dernier chant : le titre, la valeur et son texte suivent.
+  await reperes.nth(2).click({ force: true });
+  await expect(titreBarreHaute(page)).toHaveText(debuts[2].titre);
+  await expect(curseur).toHaveValue(String(debuts[2].page));
+  await expect(curseur).toHaveAttribute("aria-valuetext", `Page ${debuts[2].page + 1} sur ${total}`);
   // Le titre tronqué ne pousse pas la barre hors de l'écran.
   const debord = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(debord).toBeLessThanOrEqual(0);
-  // « ‹ » désactivé : bordure visible, opacité 40 %.
-  await reperes.nth(0).click();
-  const prec = page.locator("[data-performance-mode]").getByRole("button", { name: "Page précédente" });
-  await expect(prec).toBeDisabled();
-  expect(await prec.evaluate((el) => getComputedStyle(el).opacity)).toBe("0.4");
-  expect(await prec.evaluate((el) => parseFloat(getComputedStyle(el).borderTopWidth))).toBeGreaterThan(0);
+  // Le curseur couvre la navigation des anciennes flèches : un cran en arrière puis en avant (clavier).
+  await curseur.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(() => numero(page)).toBe(debuts[2].page);
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => numero(page)).toBe(debuts[2].page + 1);
+  // Au premier chant, Début ramène à la page 1 (l'ancien « ‹ » désactivé).
+  await page.keyboard.press("Home");
+  await expect.poll(() => numero(page)).toBe(1);
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(() => numero(page)).toBe(1);
   expect(erreurs).toEqual([]);
 });
 
@@ -770,22 +771,18 @@ test("forScore : barres du mode louange opaques (fond d'alpha 1, sans flou), dim
   }
 });
 
-test("forScore, tablette portrait : l'aperçu s'efface quand la barre est affichée, revient quand elle est escamotée (dimanche-10)", async ({ page }, testInfo) => {
+test("forScore, tablette portrait : aucun aperçu, barre affichée comme escamotée (dimanche-10)", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "tablette", "propre à la tablette en portrait");
   await ouvrir(page, { chants: 4 });
+  await attendreCompteur(page, /^1 \/ \d+$/);
   const apercu = page.locator(`[data-performance-mode] ${APERCU}`);
-  await expect(apercu).toHaveCount(1);
-  // Première ouverture sur l'appareil : la barre est affichée, l'aperçu est effacé.
+  // Première ouverture sur l'appareil : la barre est affichée.
   await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
-  await expect(apercu).toHaveCSS("opacity", "0");
-  const posAffichee = (await apercu.boundingBox())!;
-  // Escamotée (état normal en service) : visible, en entier, au même endroit.
+  await expect(apercu).toHaveCount(0);
+  // Escamotée (état normal en service) : toujours rien au bas de la page.
   await toucherCentre(page);
   await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
-  await expect(apercu).toHaveCSS("opacity", "1");
-  expect(Math.abs((await apercu.boundingBox())!.y - posAffichee.y)).toBeLessThan(1);
-  await toucherCentre(page);
-  await expect(apercu).toHaveCSS("opacity", "0");
+  await expect(apercu).toHaveCount(0);
 });
 
 test("forScore, L7 : le curseur au clavier (Fin, Début, flèche) change de page et le compteur suit", async ({ page }) => {
@@ -810,9 +807,9 @@ test("forScore, L7 : le curseur au clavier (Fin, Début, flèche) change de page
 test("forScore, L7 : la barre basse tient dans l'écran, fine, sans défilement horizontal", async ({ page }) => {
   await ouvrirTroisChants(page);
   await barreVisible(page);
-  const hauteurAvec = await page.evaluate(() => (document.querySelectorAll("[data-performance-mode] .material-chrome")[1] as HTMLElement).offsetHeight);
+  const hauteurAvec = await page.evaluate(() => (document.querySelector("[data-performance-mode] [data-barre-bas]") as HTMLElement).offsetHeight);
   const m = await page.evaluate(() => {
-    const barre = document.querySelectorAll("[data-performance-mode] .material-chrome")[1] as HTMLElement;
+    const barre = document.querySelector("[data-performance-mode] [data-barre-bas]") as HTMLElement;
     const r = barre.getBoundingClientRect();
     const racine = document.querySelector("[data-performance-mode]") as HTMLElement;
     return {
@@ -833,16 +830,16 @@ test("forScore, L7 : la barre basse tient dans l'écran, fine, sans défilement 
   expect(hauteurAvec).toBeLessThan(150);
 });
 
-test("forScore, L7 : la ligne du curseur pèse au plus 36 px de mise en page", async ({ page }) => {
+test("forScore, L7 : la ligne du curseur pèse au plus 44 px de mise en page (une cible tactile, plus d'étiquette dessous)", async ({ page }) => {
   await ouvrirTroisChants(page);
   await barreVisible(page);
-  const avec = await page.evaluate(() => (document.querySelectorAll("[data-performance-mode] .material-chrome")[1] as HTMLElement).offsetHeight);
+  const avec = await page.evaluate(() => (document.querySelector("[data-performance-mode] [data-barre-bas]") as HTMLElement).offsetHeight);
   const ligne = await page.evaluate(() => {
     const c = document.querySelector("[data-curseur-page]") as HTMLElement;
     const cs = getComputedStyle(c);
     return c.offsetHeight + parseFloat(cs.marginBottom);
   });
-  expect(ligne).toBeLessThanOrEqual(36);
+  expect(ligne).toBeLessThanOrEqual(44);
   expect(avec).toBeGreaterThan(0);
 });
 
@@ -884,7 +881,8 @@ test("forScore, L7 : glisser le curseur montre le titre du chant visé en bulle"
   const bulle = page.locator("[data-performance-mode] [data-bulle-curseur]");
   await expect(bulle).toBeVisible();
   await expect(bulle).toHaveAttribute("aria-hidden", "true");
-  await expect(bulle).toHaveText("Avec nous (Emmanuel)");
+  await expect(bulle.locator("[data-bulle-titre]")).toHaveText("Avec nous (Emmanuel)");
+  await expect(bulle.locator("[data-bulle-page]")).toHaveText(/^page \d+$/);
   await page.mouse.up();
   await expect(bulle).toHaveCount(0);
 });
@@ -892,22 +890,27 @@ test("forScore, L7 : glisser le curseur montre le titre du chant visé en bulle"
 // Correctifs de l'audit du 27/10/2026 : clavier, barre masquée, taille annotée par setlist,
 // pastille et bannière sous la barre ouverte, liseré, feuilles, souris.
 
-test("forScore, clavier : Réglages ouverts, Espace et flèche droite ne tournent pas la page", async ({ page }) => {
+test("forScore, clavier : Réglages ouverts, Espace ne tourne pas la page ; une pédale ferme le menu et tourne (A8)", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrir(page, { chants: 4 });
-  const avant = await lirePage(page);
-  const reglages = await ouvrirReglages(page);
-  await reglages.locator("[data-metronome-on]").focus();
+  const avant = await numero(page);
+  const reglages = await ouvrirMenu(page, "tempo");
+  await reglages.locator("[data-metronome]").focus();
   await page.keyboard.press("Space");
-  await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("PageDown");
   await page.waitForTimeout(300);
-  expect(await lirePage(page)).toBe(avant);
+  // Panneau ouvert, Espace lance ou arrête le métronome : ni page tournée, ni panneau fermé.
+  expect(await numero(page)).toBe(avant);
+  await expect(reglages).toBeVisible();
   // Échap referme la feuille, puis les flèches tournent de nouveau la page.
   await page.keyboard.press("Escape");
   await expect(reglages).toBeHidden();
   await page.keyboard.press("ArrowRight");
   await expect.poll(() => numero(page)).toBe(2);
+  // A8 : une pédale ferme le menu ouvert et tourne la page.
+  const reglages2 = await ouvrirMenu(page, "tempo");
+  await page.keyboard.press("ArrowRight");
+  await expect(reglages2).toBeHidden();
+  await expect.poll(() => numero(page)).toBe(3);
   expect(erreurs).toEqual([]);
 });
 
@@ -939,14 +942,13 @@ test("forScore, L5 : la taille annotée est propre à la setlist (pas de banniè
   const erreurs = surveillerErreurs(page);
   const AUTRE = "setlist-autre";
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
-  const db = await signInAs(page, MUSICIEN, {
+  await signInAs(page, MUSICIEN, {
     [`setlists/${SETLIST_ID}`]: setlist,
     [`setlists/${AUTRE}`]: { ...setlist, title: "Autre culte" },
   }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  await tracerTrait(page, db);
-  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBe("1");
+  await poserTailleAnnotee(page);
   expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
   await expect(page.locator("[data-alerte-annotations]")).toBeVisible();
 
@@ -956,13 +958,23 @@ test("forScore, L5 : la taille annotée est propre à la setlist (pas de banniè
   expect(await pourcentage(page)).toBe("110%");
   await page.waitForTimeout(500);
   await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
-  expect(await page.evaluate((c) => localStorage.getItem(c), `perf-annot-scale-${AUTRE}-abba-pere`)).toBeNull();
+  expect(await page.evaluate((c) => localStorage.getItem(c), `perf-annot-scale-${MUSICIEN.uid}-${AUTRE}-abba-pere`)).toBeNull();
   expect(erreurs).toEqual([]);
 });
 
-test("forScore, L5 : en annulant le dernier trait, la taille reste mémorisée (jamais supprimée automatiquement)", async ({ page }) => {
+test("forScore, L5 : l'ancienne clé sans compte sert de taille de départ au premier compte, pas à un autre", async ({ page }) => {
+  // Taille annotée avant les comptes : 130 %, lue à 100 % -> la bannière prévient ; l'ancienne clé n'est pas réécrite.
+  await page.addInitScript((c) => { if (!localStorage.getItem("perf-role-migre")) localStorage.setItem(c, "1.3"); }, `perf-annot-scale-${SETLIST_ID}-abba-pere`);
+  await ouvrirL5(page);
+  await expect(page.locator("[data-alerte-annotations]")).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("perf-role-migre"))).toBe(MUSICIEN.uid);
+  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBeNull();
+});
+
+test("forScore, L5 : en annulant le dernier trait, ma partition est réécrite sans trait ; la taille mémorisée (ancienne annotation) reste", async ({ page }) => {
   const { db, erreurs } = await ouvrirL5(page);
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await poserTailleAnnotee(page);
+  await basculerAnnoter(page);
   await expect(calqueLecture(page)).toHaveCount(1);
   const ecran = page.viewportSize()!;
   const x = ecran.width * 0.4;
@@ -973,13 +985,12 @@ test("forScore, L5 : en annulant le dernier trait, la taille reste mémorisée (
   await page.mouse.move(x + 90, y + 30, { steps: 4 });
   await page.mouse.up();
   await expect.poll(() => ecritesAnnot(db).length).toBeGreaterThan(0);
-  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBe("1");
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
-  // Plus aucun trait, mais la taille reste : on attend l'écriture de la page vide avant de regarder la clé.
+  // Plus aucun trait : on attend l'écriture de la partition sans trait avant de regarder la clé.
   await expect.poll(() => ecritesAnnot(db).length).toBeGreaterThan(1);
   expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBe("1");
-  // Sortie d'annotation, puis autre taille : la bannière apparaît ; « Revenir à cette taille » la retire.
-  await page.getByRole("button", { name: "Annoter" }).click();
+  // Sortie du Crayon, puis autre taille : la bannière apparaît ; « Revenir à cette taille » la retire.
+  await basculerAnnoter(page);
   expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
   const bandeau = page.locator("[data-alerte-annotations]");
   await expect(bandeau).toBeVisible();
@@ -1005,7 +1016,7 @@ test("barre : toute première ouverture sur un appareil vierge, la barre est vis
   await expect(barre).not.toHaveCSS("pointer-events", "none");
   await expect(page.locator("[data-performance-mode] [inert]")).toHaveCount(0);
   await expect(barre.locator("xpath=..")).not.toHaveAttribute("aria-hidden", "true");
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeVisible();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem("perf-barre-vue"))).toBe("1");
   expect(erreurs).toEqual([]);
 });
@@ -1016,12 +1027,12 @@ test("barre : après rechargement et réouverture, masquée (aria-hidden, inert)
   await rouvrirApresRechargement(page);
   await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
   await expect(page.locator("[data-performance-mode] [inert][aria-hidden='true']")).toHaveCount(1);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeHidden();
   await toucherCentre(page);
   await expect(page.locator("[data-performance-mode] [inert]")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeVisible();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeVisible();
   await toucherCentre(page);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeHidden();
   expect(erreurs).toEqual([]);
 });
 
@@ -1050,6 +1061,11 @@ test("barre masquée à l'ouverture : la pastille « Ensuite » est dans le flux
   }).toPass({ timeout: 20_000 });
   const hauteurEcran = page.viewportSize()!.height;
   const bas = (await suivant.boundingBox())!;
+  // A12, CI-22 : page avec rappel, la page remonte barre cachée et redescend sous la barre revenue ; la pastille du flux
+  // bouge avec elle. On compare donc sa place à celle de la page (première section).
+  const hautPage = () => page.evaluate(() => Math.min(...[...document.querySelectorAll("[data-performance-mode] [data-section]")]
+    .filter((e) => !e.closest("[aria-hidden=true]") && e.getBoundingClientRect().height > 0).map((e) => e.getBoundingClientRect().top)));
+  const pageAvant = await hautPage();
   expect(bas.y + bas.height).toBeLessThanOrEqual(hauteurEcran + 0.5);
   // Dans le flux (dimanche-11) : aucun bloc de la page ne passe sous la pastille.
   const intersections = await page.evaluate(() => {
@@ -1067,17 +1083,18 @@ test("barre masquée à l'ouverture : la pastille « Ensuite » est dans le flux
   // couvre pas (elle ne bouge pas), sinon posée au-dessus de la barre, comme avant dimanche-11.
   await expect(suivant).toHaveCount(1);
   const apres = (await suivant.boundingBox())!;
-  if (bas.y + bas.height <= barreBasse.y + 0.5) expect(Math.abs(apres.y - bas.y)).toBeLessThan(1);
+  const glissement = (await hautPage()) - pageAvant;
+  if (bas.y + glissement + bas.height <= barreBasse.y + 0.5) expect(Math.abs(apres.y - bas.y - glissement)).toBeLessThan(1);
   expect(apres.y + apres.height).toBeLessThanOrEqual(barreBasse.y + 0.5);
   expect(erreurs).toEqual([]);
 });
 
-test("barre masquée à l'ouverture : le liseré du métronome se pose sous la zone de sécurité, sous la barre une fois ouverte", async ({ page }) => {
+test("barre masquée à l'ouverture : la bande du métronome se pose sous la zone de sécurité, sous la barre une fois ouverte", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirChantL4(page, "avec-nous", { metronome: true });
   await rouvrirApresRechargement(page);
   await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
-  const liseret = page.locator("[data-liseret]");
+  const liseret = page.locator("[data-bande-temps]");
   await expect(liseret).toHaveCount(1);
   const haute = (await page.locator(BARRES).first().boundingBox())!;
   await expect.poll(async () => (await liseret.boundingBox())!.y).toBeLessThan(haute.y + haute.height - 1);
@@ -1088,8 +1105,8 @@ test("barre masquée à l'ouverture : le liseré du métronome se pose sous la z
 });
 
 test("barre masquée à l'ouverture : la bannière « autre taille » est en haut de l'écran et touchable", async ({ page }) => {
-  const { db, erreurs } = await ouvrirL5(page);
-  await tracerTrait(page, db);
+  const { erreurs } = await ouvrirL5(page);
+  await poserTailleAnnotee(page);
   expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
   await rouvrirApresRechargement(page);
   await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
@@ -1118,7 +1135,7 @@ test("barre : stockage perf-* qui lève, le mode s'ouvre sans erreur et la barre
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
   await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeVisible();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeVisible();
   expect(erreurs).toEqual([]);
 });
 
@@ -1126,13 +1143,13 @@ test("barre : la sortie du mode annotation la laisse visible, et la réouverture
   const erreurs = surveillerErreurs(page);
   await ouvrir(page);
   await toucherCentre(page);
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeHidden();
   await toucherCentre(page);
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await basculerAnnoter(page);
   await expect(calqueLecture(page)).toHaveCount(1);
   await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
-  await page.getByRole("button", { name: "Annoter" }).click();
-  await expect(page.getByRole("button", { name: "Réglages" })).toBeVisible();
+  await basculerAnnoter(page);
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeVisible();
   await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
   await page.getByRole("button", { name: "Quitter" }).click();
   await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
@@ -1166,8 +1183,8 @@ test("forScore : barre ouverte, la pastille « Ensuite » reste visible et touch
 });
 
 test("forScore, L5 : barre ouverte, la bannière « autre taille » reste touchable", async ({ page }) => {
-  const { db, erreurs } = await ouvrirL5(page);
-  await tracerTrait(page, db);
+  const { erreurs } = await ouvrirL5(page);
+  await poserTailleAnnotee(page);
   expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
   const bandeau = page.locator("[data-alerte-annotations]");
   await expect(bandeau).toBeVisible();
@@ -1181,9 +1198,9 @@ test("forScore, L5 : barre ouverte, la bannière « autre taille » reste toucha
   expect(erreurs).toEqual([]);
 });
 
-test("forScore, L4 : barre ouverte, le liseré du métronome est visible sous la barre haute", async ({ page }) => {
+test("forScore, L4 : barre ouverte, la bande du métronome est visible sous la barre haute", async ({ page }) => {
   await ouvrirChantL4(page, "avec-nous", { metronome: true });
-  const liseret = page.locator("[data-liseret]");
+  const liseret = page.locator("[data-bande-temps]");
   await expect(liseret).toHaveCount(1);
   await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
   const haute = (await page.locator(BARRES).first().boundingBox())!;
@@ -1210,7 +1227,9 @@ test("forScore : un toucher sur le fond sombre d'une feuille ne tourne pas la pa
   const avant = await lirePage(page);
   const reglages = await ouvrirReglages(page);
   const ecran = page.viewportSize()!;
-  await page.mouse.click(ecran.width - 12, 12);
+  // Un toucher sur la page, hors de la marge (à gauche de la colonne, ou au-dessus de la feuille basse) : elle se ferme.
+  if ((await reglages.getAttribute("data-place")) === "colonne") await page.mouse.click(ecran.width * 0.3, ecran.height * 0.5);
+  else await page.mouse.click(ecran.width * 0.5, ecran.height * 0.25);
   await expect(reglages).toBeHidden();
   await page.waitForTimeout(400);
   expect(await lirePage(page)).toBe(avant);
@@ -1219,7 +1238,7 @@ test("forScore : un toucher sur le fond sombre d'une feuille ne tourne pas la pa
 
 test.describe("tempo du fichier aberrant", () => {
   test.use({ serviceWorkers: "block" });
-  test("{tempo: 600} est ramené aux bornes : le liseré bat à 240, pas à 10 Hz", async ({ page }) => {
+  test("{tempo: 600} est ramené aux bornes : la bande bat à 240, pas à 10 Hz", async ({ page }) => {
     const erreurs = surveillerErreurs(page);
     await page.route("**/api/song/avec-nous", async (route) => {
       const rep = await route.fetch();
@@ -1227,10 +1246,10 @@ test.describe("tempo du fichier aberrant", () => {
       await route.fulfill({ response: rep, body: corps });
     });
     await ouvrirChantL4(page, "avec-nous", { metronome: true });
-    await expect(page.locator("[data-liseret]")).toHaveCount(1);
+    await expect(page.locator("[data-bande-temps]")).toHaveCount(1);
     await expect.poll(() =>
-      page.locator("[data-liseret-barre]").evaluate((el) => (el as HTMLElement).style.getPropertyValue("--battement")),
-    ).toBe("0.25s");
+      page.locator("[data-bande-temps]").evaluate((el) => (el as HTMLElement).style.getPropertyValue("--duree-temps")),
+    ).toBe("250ms");
     expect(erreurs).toEqual([]);
   });
 });
@@ -1243,4 +1262,29 @@ test("forScore : un clic droit au bord droit ne tourne pas la page", async ({ pa
   expect(await numero(page)).toBe(1);
   await page.mouse.click(ecran.width - 20, ecran.height / 2);
   await expect.poll(() => numero(page)).toBe(2);
+});
+
+// DP-E, B1 : la pastille des Repères ouvre sa bulle ; le toucher ne tourne pas la page et n'ouvre pas la barre.
+test("forScore, Repères : toucher la pastille d'une section ouvre sa bulle, sans tourner la page ni rappeler la barre", async ({ page }) => {
+  // L'indice de rappel (première fois par appareil) se pose sur la pastille en paysage : déjà vu ici.
+  await page.addInitScript(() => {
+    localStorage.setItem("disposition", "reperes");
+    localStorage.setItem("perf-astuce-rappel-joue", "2");
+    localStorage.setItem("perf-astuce-rappel-unique", "2");
+  });
+  await ouvrir(page, { chants: 4 });
+  await toucherCentre(page); // barre masquée
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true })).toBeHidden();
+  const ecran = page.viewportSize()!;
+  // Une page plus loin : un toucher dans la zone de gauche tournerait en arrière.
+  const premiere = await lireCompteur(page);
+  await page.mouse.click(ecran.width - 20, ecran.height / 2);
+  await expect.poll(() => lireCompteur(page)).not.toBe(premiere);
+  const avant = await lireCompteur(page);
+  const pastille = onStage(page, "[data-repere-pastille]").last();
+  await expect(pastille).toBeVisible();
+  await pastille.click();
+  await expect(page.locator("[data-repere-bulle]")).toHaveCount(1);
+  expect(await lireCompteur(page), "la page n'a pas tourné").toBe(avant);
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Affichage", exact: true }), "la barre ne s'est pas ouverte").toBeHidden();
 });

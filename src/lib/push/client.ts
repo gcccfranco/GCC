@@ -4,6 +4,7 @@
 // `{uid}__{hashEndpoint}` (mirroir des règles, cf. firestore.rules).
 
 import { FS_BASE, authHeader, toFsFields } from "@/lib/firebase/setlists";
+import { compter } from "@/lib/usage";
 
 export function isPushSupported(): boolean {
   return (
@@ -91,6 +92,7 @@ export async function subscribeToPush(uid: string): Promise<void> {
     }),
   });
   if (!res.ok) throw new Error("Enregistrement de l'abonnement échoué");
+  compter("cmd.compte.push"); // un seul point pour le réglage du profil, l'invite et la visite
 }
 
 /** Désabonne l'appareil et supprime son document Firestore. */

@@ -5,7 +5,8 @@
 import type { Language } from "@/types/common";
 import type { Programme } from "@/types/programme";
 import { JOUR_MS as DAY, versUtc as utc, versIso as iso } from "@/lib/dates/iso";
-import { archiveDate, reservationsClosed } from "./dimanches";
+import { daysAgo } from "@/lib/evenements/agenda";
+import { archiveDate, lastSundayBefore, reservationsClosed } from "./dimanches";
 import { PLAGES_DEFAUT, saisonDe } from "./saison";
 
 export type Fete = NonNullable<Programme["fete"]>;
@@ -123,12 +124,12 @@ export function editionProche(editions: Edition[], today: string): Edition | nul
 
 /** Le document d'une édition nouvelle, sans `createdBy` ni `updatedAt`. */
 type ReglagesEdition = Required<
-  Pick<Programme, "nom" | "fete" | "annee" | "jourJ" | "debut" | "plages" | "duree" | "quiAutorises" | "passages" | "ouvert">
+  Pick<Programme, "nom" | "fete" | "annee" | "jourJ" | "debut" | "plages" | "quiAutorises" | "passages" | "ouvert">
 >;
 
 /** Réglages d'une édition nouvelle (Q7) : ceux de l'édition précédente de la
- *  même fête (plages, durée, « Qui peut réserver », ouverture au même nombre de
- *  jours avant le jour J) ; sans elle, dimanche 14:00–19:00, 1 h, tout membre,
+ *  même fête (plages, « Qui peut réserver », ouverture au même nombre de
+ *  jours avant le jour J) ; sans elle, dimanche 14:00–19:00, tout membre,
  *  ouverture le lundi sept semaines avant la semaine du jour J. Fermeture
  *  absente (dernier dimanche avant le jour J), ordre de passage vide, brouillon. */
 export function reglagesRepris(precedent: Programme | null, fete: Fete, annee: number): ReglagesEdition {
@@ -136,11 +137,11 @@ export function reglagesRepris(precedent: Programme | null, fete: Fete, annee: n
   const base = { nom: libelleEdition(fete, annee, "fr"), fete, annee, jourJ, passages: [], ouvert: false };
   if (!precedent) {
     const lundi = utc(jourJ) - ((new Date(utc(jourJ)).getUTCDay() + 6) % 7) * DAY;
-    return { ...base, debut: iso(lundi - 49 * DAY), plages: [...PLAGES_DEFAUT], duree: 60, quiAutorises: [] };
+    return { ...base, debut: iso(lundi - 49 * DAY), plages: [...PLAGES_DEFAUT], quiAutorises: [] };
   }
   const s = saisonDe(precedent);
   const ecart = utc(precedent.jourJ) - utc(precedent.debut);
-  return { ...base, debut: iso(utc(jourJ) - ecart), plages: s.plages, duree: s.duree, quiAutorises: s.quiAutorises };
+  return { ...base, debut: iso(utc(jourJ) - ecart), plages: s.plages, quiAutorises: s.quiAutorises };
 }
 
 const NOMS: Record<Fete, Record<Language, string>> = {
@@ -148,7 +149,38 @@ const NOMS: Record<Fete, Record<Language, string>> = {
   noel: { fr: "Noël", zh: "圣诞节" },
 };
 
+/** Le nom d'une fête sans l'année : « Noël », « 圣诞节 ». */
+export const nomFete = (fete: Fete, langue: Language): string => NOMS[fete][langue];
+
 /** Le titre d'une édition (Q11) : « Noël 2026 », « 复活节 2027 ». */
 export function libelleEdition(fete: Fete, annee: number, langue: Language): string {
   return `${NOMS[fete][langue]} ${annee}`;
+}
+
+/** Dernier jour des réservations : `fin`, sinon le dernier dimanche avant le jour J. */
+export const dateFermeture = (p: Pick<Programme, "fin" | "jourJ">): string => p.fin ?? lastSundayBefore(p.jourJ);
+
+/** `jourJ` moins deux mois calendaires (24/12 → 24/10), le jour ramené au dernier du mois s'il manque. */
+function deuxMoisAvant(jourJ: string): string {
+  const [y, m, d] = jourJ.split("-").map(Number);
+  const dernier = new Date(Date.UTC(y, m - 2, 0)).getUTCDate();
+  return iso(Date.UTC(y, m - 3, Math.min(d, dernier)));
+}
+
+/** L'édition à montrer en carte en haut d'Évènements (AS10, RS5) : `jourJ` − 2 mois ≤ `today` ≤ `jourJ`,
+ *  brouillon exclu ; plusieurs : le jour J le plus proche. */
+export function feteEnVue(editions: Edition[], today: string): Edition | null {
+  const enVue = editions.filter((e) => {
+    const p = e.programme;
+    return !!p && p.ouvert !== false && deuxMoisAvant(p.jourJ) <= today && today <= p.jourJ;
+  });
+  return enVue.sort((a, b) => a.programme!.jourJ.localeCompare(b.programme!.jourJ))[0] ?? null;
+}
+
+/** Les éditions passées depuis moins de 92 jours (RS6), brouillons exclus. */
+export function fetesPassees(programmes: Programme[], today: string): Edition[] {
+  const depuis = daysAgo(today, 92);
+  return FETES.flatMap((fete) => editionsDe(fete, programmes)
+    .filter((p) => p.ouvert !== false && p.jourJ < today && p.jourJ >= depuis)
+    .map((programme) => ({ fete, annee: anneeDe(programme)!, programme })));
 }

@@ -3,14 +3,15 @@
 @tailwind utilities;
 
 /* Altérations du cours d'Harmonie (harmonie-4) : ♯ ♭ ♮ 𝄪 𝄫 seuls, sous-ensemble de Noto Music (OFL,
-   scripts/build-fonts.py). Hors de ces cinq signes, le navigateur garde la police du texte. */
+   scripts/build-fonts.py), plus piano, mezzo, forte, crescendo, decrescendo et point d'orgue des tampons du Crayon (AN-5).
+   Hors de ces signes, le navigateur garde la police du texte. */
 @font-face {
   font-family: "Noto Music";
   src: url("/fonts/NotoMusic-alterations.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+266D-266F, U+1D12A-1D12B;
+  unicode-range: U+266D-266F, U+1D12A-1D12B, U+1D110, U+1D112, U+1D18F-1D193;
 }
 
 @layer utilities {
@@ -108,6 +109,9 @@
     height: 320px;
     overflow: hidden;
     pointer-events: none;
+    /* Fondu jusqu'au transparent en bas : le flou ne s'arrête pas net au bord de la boîte (AS9). */
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
   }
   .halo::before {
     content: "";
@@ -196,6 +200,8 @@
 
 @layer base {
   :root {
+    /* Ressort critique (sans rebond), réponse 0,35 s, échantillonné sur 400 ms. */
+    --ressort-sans-rebond: linear(0, 0.075 6.25%, 0.227 12.5%, 0.39 18.75%, 0.536 25%, 0.656 31.25%, 0.75 37.5%, 0.821 43.75%, 0.873 50%, 0.911 56.25%, 0.938 62.5%, 0.957 68.75%, 0.971 75%, 0.98 81.25%, 0.986 87.5%, 0.991 93.75%, 1);
     /* Zone sûre du haut : 0 partout, SAUF pour une icône installée pendant les quelques
        heures du 21/09/2026 où la page montait sous la barre d'état. iOS fige ce réglage
        à l'installation et ne le relit jamais : ces appareils passent donc toujours sous
@@ -259,12 +265,16 @@
     /* Semantic music colors */
     --chord-color: #3f63cf;   /* bleu PDF FR */
     --jianpu-color: #b3261d;
+    /* Ma partition (docs/spec-ma-partition.md, « Signes ») : filet et souligné de mes retouches. */
+    --graphite: #5a5e66;
     /* Encre du scan 简谱 (piste A, docs/spec-jianpu-integration.md) : = --foreground en clair. */
     --jianpu-encre: 240 3.4% 11.4%;  /* #1c1c1e */
     --pinyin-color: #8a8f98;
     --sheet-accent: #1c6e7c;
 
     /* Section identity — accent (label / rail) + tint (block bg) */
+    /* Repères (DP-B) : encre du sigle sur les pastilles foncées (pont, fin, autre) — blanc en clair, encre en sombre. */
+    --rep-encre-claire: #ffffff;
     --sec-intro: #5b7fa6;        --sec-intro-tint: #eef3f9;
     --sec-verse: #2c8a7d;        --sec-verse-tint: #e8f3f0;
     --sec-prechorus: #c1871f;    --sec-prechorus-tint: #faf2e1;
@@ -328,10 +338,12 @@
 
     --chord-color: #8fb0ff;   /* bleu PDF FR dark */
     --jianpu-color: #ff7d72;
+    --graphite: #a3a7ae;
     --jianpu-encre: 240 5.9% 90%;    /* #e4e4e7 : encre adoucie du scan (D10), distincte de --foreground */
     --pinyin-color: #888e98;
     --sheet-accent: #63c3cf;
 
+    --rep-encre-claire: #0e0e10;
     --sec-intro: #8fb2dc;        --sec-intro-tint: #161f2a;
     --sec-verse: #59bdac;        --sec-verse-tint: #112320;
     --sec-prechorus: #e0b35b;    --sec-prechorus-tint: #251e0f;
@@ -369,6 +381,14 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Panneau du sommaire (rail, grand écran) : glisse en ressort ; mouvement réduit : fondu de 150 ms, sans transform. */
+.sommaire-panneau { transform: translateX(-100%); transition: transform 400ms var(--ressort-sans-rebond); }
+.sommaire-panneau[data-ouvert] { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .sommaire-panneau { transform: none; opacity: 0; transition: opacity 150ms linear !important; }
+  .sommaire-panneau[data-ouvert] { opacity: 1; }
 }
 
 @layer base {
@@ -410,6 +430,9 @@
      --svc-sombre est la couleur éclaircie jusqu'à 4,5:1 sur #2c2c2e. */
   .texte-service { color: var(--svc-clair); }
   .dark .texte-service { color: var(--svc-sombre); }
+  /* Couleur d'une salle (T7, AS13) : `styleTexteService(COULEUR_SALLE[id])` + cette classe, `--salle` sert de fond ou de filet. */
+  .couleur-salle { --salle: var(--svc-clair); }
+  .dark .couleur-salle { --salle: var(--svc-sombre); }
   .svc-line { border-left-color: var(--svc); }
   .dark .svc-line { border-left-color: color-mix(in srgb, var(--svc) 55%, white); }
   /* Tuile d'un service (V7 ter) : le fond porte la couleur, le libellé la reprend
@@ -669,7 +692,9 @@
 }
 
 /* Libellés de la barre d'outils de la setlist : à partir de 1 024 px de fenêtre comme avant
-   (en dessous, téléphones même couchés et iPad en portrait : icônes), et seulement s'ils tiennent dans la
+   (en dessous, téléphones même couchés et iPad en portrait : icône et libellé court dessous ; de même
+   au-dessus de 1 024 px quand la rangée a moins de 880 px : dimanche-9, `PILULE_EMPILEE` et
+   `LIBELLE_COURT` de SetlistDetailClient), et seulement s'ils tiennent dans la
    rangée, donc à côté de la barre latérale. Requête de conteneur sur la rangée, qui ne
    contient aucun élément fixe (Q9 : jamais sur `main` ni ses ancêtres). Seuil mesuré le
    05/10/2026 : la rangée avec ses libellés fait 852 px en français dans le pire cas (Adapter,
@@ -741,7 +766,8 @@
 :where(:root:not(.dark)) :where(.chants-volets[data-sur-liste]) .chants-liste-corps { padding: 14px 16px 8px; }
 /* Un volet, clair : la liste finit avant l'index A–Z, qui reste sur le gris à droite (colonne de 44 px, `--index-hors`,
    remise à 0 en deux volets où l'index est dans la carte). Dans le groupe blanc, la recherche est en aplat `--secondary`. */
-.chants-liste-contenu { padding-right: calc(1.75rem - var(--index-hors, 0px)); }
+/* Bande sûre de l'index A–Z, un volet : sous la barre du haut, au-dessus de la barre d'onglets (64 px + `--tabbar-bottom`). */
+.chants-liste-contenu { padding-right: calc(1.75rem - var(--index-hors, 0px)); --index-bande-haut: var(--nav-h); --index-bande-bas: calc(var(--tabbar-bottom) + 64px); }
 .index-az-colonne { right: calc(-1rem - var(--index-hors, 0px)); }
 .index-az { background-color: var(--index-fond, hsl(var(--background) / 0.7)); }
 :root:not(.dark) .chants-volets[data-sur-liste] .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
@@ -753,34 +779,23 @@
   :where(:root:not(.dark) .chants-volets[data-sur-liste]) > .chants-entete { padding-right: calc(var(--index-hors) + 16px); }
 }
 
-/* Barre du chant, piste A (docs/spec-barre-chant.md, Q4) : libellés par priorité, jamais de
-   deuxième ligne — tous (2), ceux des actions Vidéo et PDF seuls (1), aucun (0) ; Idées et ⋯
-   restent des icônes. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`) : des seuils fixes, calés sur la
-   rangée la plus chargée (Retour, ↺, Pinyin), cachaient tout sur la tablette couchée. */
+/* Barre du chant (docs/spec-barre-chant.md, Q4 ; RU-3 : une seule ligne à toutes les tailles) : libellés par priorité,
+   jamais de deuxième ligne — tous (2), ceux des actions seuls (1), aucun (0) ; « Harmonie » (texte seul) et ⋯ restent
+   affichés à tous les niveaux. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`). Accords, Pinyin et
+   Affichage n'en dépendent plus (B6) : icône seule sous 768 px, mot dès 768 px (`BOUTON_LECTURE`) ; seuls Retour et Vidéo tombent. */
 .rangee-chant { container-type: inline-size; }
 .libelle-chant, .libelle-action { display: none; }
-/* Téléphone : comme avant, pas de libellé sous 620 px de rangée (la pilule de tonalité, qui
-   rétrécit, ne ferait jamais déborder la ligne : la mesure ne suffit pas). */
-@container (min-width: 620px) { .rangee-chant[data-libelles="2"] .libelle-chant { display: inline; } }
-/* Téléphone, même couché (moins de 500 px de haut) : la rangée d'avant, sans ⋯ ; dessous, la
-   seconde rangée d'actions (Q5, `.actions-tel`) — 44 px de plus sous la barre, d'où les marges
-   hautes de la partition et de la vidéo (48 et 82 px sans elle). Dès la tablette debout : la
-   rangée s'aligne sur la partition (mêmes bords que `main`), les actions sortent à droite d'un
-   filet (Q1 à Q3). */
-.actions-chant { display: none; }
-.actions-tel { display: flex; }
-@media screen and (max-width: 767.98px), screen and (max-height: 499.98px) {
-  .song-zoom { margin-top: 92px; }
-  .video-chant { margin-top: 126px; }
-  .video-chant ~ .song-zoom { margin-top: 48px; }
-}
+/* Un libellé de la barre ne se coupe jamais : la mesure `data-libelles` retombe au niveau inférieur. */
+.libelle-chant, .libelle-action, .libelle-harmonie { white-space: nowrap; }
+/* Rangée serrée (niveaux 0 et 1) : « Harmonie », qui ne tombe jamais, perd 4 px de rembourrage de chaque côté. */
+.rangee-chant:is([data-libelles="0"], [data-libelles="1"]) .bouton-harmonie { padding-inline: 0.375rem; }
+/* Pas de libellé sous 620 px de rangée. */
+@container (min-width: 620px) { .rangee-chant:is([data-libelles="2"], [data-libelles="3"]) .libelle-chant { display: inline; } }
+.actions-chant { display: flex; }
 @media (min-width: 768px) and (min-height: 500px) {
   .rangee-chant { padding-inline: 1rem; }
-  .rangee-chant[data-libelles="2"] .libelle-chant,
-  .rangee-chant:is([data-libelles="1"], [data-libelles="2"]) .libelle-action { display: inline; }
-  .actions-chant { display: flex; }
-  .actions-tel { display: none; }
-  .groupe-chant { margin-left: 0; }
+  .rangee-chant:is([data-libelles="2"], [data-libelles="3"]) .libelle-chant,
+  .rangee-chant:is([data-libelles="1"], [data-libelles="2"], [data-libelles="3"]) .libelle-action { display: inline; }
 }
 
 /* Deux volets : mêmes conditions que `useDeuxVolets` (Q1), au moins 900 px utiles — tablette
@@ -794,9 +809,9 @@
    (`.chants-chant`, chants-8 B) et, comme un groupe de lecture, 16 px en haut et 24 px de chaque côté : le chant, sa barre
    et « Choisis un chant » y rentrent, sans marge propre ; la barre colle au même décalage que la liste (20 px). Le chant
    s'étire sur toute la rangée : un chant court sous une liste plus haute garde sa barre collée.
-   L'index A–Z se centre dans `--cadre-index`, la part de la carte toujours à l'écran : page en haut,
-   la carte part sous l'en-tête (104 px : 24 + titre 36 + 4 + sous-titre 20 + 20) et finit sous le
-   bas de la fenêtre ; page défilée, elle colle 20 px sous la barre. La molette sur la liste ne
+   L'index A–Z est fixe à l'écran, centré dans la part de la carte toujours visible : page en haut (la carte
+   part 104 px sous le haut : 24 + titre 36 + 4 + sous-titre 20 + 20) comme défilée (elle finit 24 px au-dessus
+   du bas). La molette sur la liste ne
    défile que la liste : sans cela, Y et Z restaient sous le bord de la fenêtre (relecture T89).
    Barre du chant, piste A (docs/spec-barre-chant.md, Q8) : la partition (`main`, la vue du chant
    qu'il porte) et la rangée de la barre vont jusqu'à 900 px au lieu de 672 ; la 简谱 suit la
@@ -805,7 +820,8 @@
   :root:has(.chants-volets) { --fond-page: var(--fond-groupe); }
   .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --index-hors: 0px; --index-fond: hsl(var(--background) / 0.7); }
   .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
-  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
+  .chants-volets > .chants-liste { display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
+  .chants-volets > .chants-liste .chants-liste-contenu { --index-bande-haut: calc(var(--nav-h) + 104px); --index-bande-bas: 24px; }
   .chants-liste .chants-liste-fond { min-height: 0; }
   .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
   .dark .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
@@ -817,8 +833,9 @@
   .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
   .dark .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
-  .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
+  .chants-chant .song-zoom, .chants-chant .video-chant, .chants-chant .colonne-harmonie { margin-top: 0; }
   .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  .chants-chant main.song-zoom { --marge-bande: 0px; } /* plus de remplissage : la bande Scène ne sort pas de la colonne */
   .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
@@ -826,7 +843,8 @@
   :root[data-barre="reduite"]:has(.chants-volets) { --fond-page: var(--fond-groupe); }
   :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --index-hors: 0px; --index-fond: hsl(var(--background) / 0.7); }
   :root[data-barre="reduite"] .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
-  :root[data-barre="reduite"] .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
+  :root[data-barre="reduite"] .chants-volets > .chants-liste { display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
+  :root[data-barre="reduite"] .chants-volets > .chants-liste .chants-liste-contenu { --index-bande-haut: calc(var(--nav-h) + 104px); --index-bande-bas: 24px; }
   :root[data-barre="reduite"] .chants-liste .chants-liste-fond { min-height: 0; }
   :root[data-barre="reduite"] .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
   :root.dark[data-barre="reduite"] .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
@@ -838,8 +856,9 @@
   :root[data-barre="reduite"] .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
   :root.dark[data-barre="reduite"] .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
-  :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
+  :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant, :root[data-barre="reduite"] .chants-chant .colonne-harmonie { margin-top: 0; }
   :root[data-barre="reduite"] .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  :root[data-barre="reduite"] .chants-chant main.song-zoom { --marge-bande: 0px; }
   :root[data-barre="reduite"] .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   :root[data-barre="reduite"] .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
@@ -847,7 +866,8 @@
   :root:has(.chants-volets) { --fond-page: var(--fond-groupe); }
   .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --index-hors: 0px; --index-fond: hsl(var(--background) / 0.7); }
   .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
-  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
+  .chants-volets > .chants-liste { display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
+  .chants-volets > .chants-liste .chants-liste-contenu { --index-bande-haut: calc(var(--nav-h) + 104px); --index-bande-bas: 24px; }
   .chants-liste .chants-liste-fond { min-height: 0; }
   .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
   .dark .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
@@ -859,8 +879,9 @@
   .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
   .dark .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
-  .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
+  .chants-chant .song-zoom, .chants-chant .video-chant, .chants-chant .colonne-harmonie { margin-top: 0; }
   .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  .chants-chant main.song-zoom { --marge-bande: 0px; } /* plus de remplissage : la bande Scène ne sort pas de la colonne */
   .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
@@ -870,21 +891,94 @@
    au lieu de glisser depuis le bas. `!important` : le glissé est posé par la feuille de style de
    vaul, et la règle générale du mouvement réduit ramène toute animation à 0,01 ms (ce sélecteur,
    plus précis, garde sa durée). */
-/* Liseré du métronome visuel (mode louange, L4) : se remplit en une pulsation (`--battement`).
-   Mouvement réduit : plus d'animation, la bande reste pleine, à opacité réduite. */
-@keyframes liseret-battement { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.liseret-tempo-barre {
-  transform-origin: left;
-  animation: liseret-battement var(--battement, 1s) linear infinite;
+/* Bande des temps du métronome (lot MT, MT-1) : 36 px sous la barre, une pastille par temps ; accents par la forme
+   au repos, le temps en cours s'allume d'un coup (`--plein`) et revient au repos sur 60 % du temps (`--duree-temps`).
+   Aucune teinte. Mouvement réduit : ni transition ni animation, le temps en cours reste allumé. */
+[data-bande-temps] {
+  --plein: hsl(var(--foreground));
+  --repos: color-mix(in srgb, hsl(var(--foreground)) 60%, transparent);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
+[data-bande-temps] { --repos: color-mix(in srgb, hsl(var(--foreground)) 65%, transparent); } /* clair : chiffres ≥ 4,5:1 */
+.dark [data-bande-temps] { --plein: color-mix(in srgb, hsl(var(--foreground)) 85%, transparent); --repos: color-mix(in srgb, hsl(var(--foreground)) 60%, transparent); }
+[data-bande-interieur] {
+  position: relative; display: flex; align-items: center; height: 100%;
+  padding-left: calc(1.5rem + env(safe-area-inset-left)); padding-right: calc(1.5rem + env(safe-area-inset-right));
+}
+[data-bande-ouvrir] { position: absolute; inset: 0; background: none; border: 0; }
+[data-bande-pastilles] { position: relative; flex: 1; display: flex; justify-content: center; gap: 16px; pointer-events: none; }
+[data-bande-groupe] { display: flex; flex-basis: 0; justify-content: center; align-items: center; gap: 6px; }
+[data-bande-groupe] > [data-temps] {
+  position: relative; flex: 1; max-width: 96px; /* MT-2 : 160 px se lisaient comme des onglets (critique) */ display: flex; align-items: center; justify-content: center;
+  box-sizing: border-box; border: 1.5px solid var(--repos); border-radius: 9999px; height: 20px;
+  color: var(--repos); font-size: 12px; line-height: 1;
+}
+[data-bande-groupe] > [data-accent="fort"] { height: 28px; border-width: 2px; font-weight: 700; font-size: 14px; } /* MT-2 : contour de 2 px comme le moyen, l'accent porté par la hauteur et le chiffre gras (au repos, le fort ne se lit plus comme un onglet choisi) */
+@media (min-width: 1024px) { /* MT-2 : chiffres un peu plus grands, hauteurs inchangées */
+  [data-bande-groupe] > [data-temps] { font-size: 15px; }
+  [data-bande-groupe] > [data-accent="fort"] { font-size: 17px; }
+}
+[data-bande-groupe] > [data-accent="moyen"] { height: 24px; border-width: 2px; }
+[data-bande-groupe] > [data-accent="muet"] { border-style: dashed; }
+[data-bande-groupe] > [data-compact] { max-height: 24px; font-size: 11px; letter-spacing: -0.04em; border-width: 1.5px; }
+[data-bande-groupe]:has(> [data-compact]) { gap: 3px; }
+[data-bande-groupe] > [data-actif] { animation: bande-battement calc(var(--duree-temps) * 0.6) ease-out; }
+[data-bande-groupe] > [data-actif][data-accent="muet"] { border-style: solid; border-color: var(--plein); animation: none; color: var(--repos); }
+[data-bande-groupe] > [data-actif][data-accent="muet"]::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0;
+  background: repeating-linear-gradient(45deg, var(--plein) 0 2px, transparent 2px 6px);
+  animation: bande-trame calc(var(--duree-temps) * 0.6) ease-out;
+}
+/* MT-4 : pendant le décompte le temps allumé est un contour épais (pas une pastille pleine), à la couleur des pastilles, sans transition. */
+[data-bande-temps][data-decompte] [data-bande-groupe] > [data-actif] { animation: none; background: transparent; border-style: solid; border-width: 4px; border-color: var(--plein); color: var(--plein); }
+[data-bande-temps][data-decompte] [data-bande-groupe] > [data-actif]::before { content: none; }
+@keyframes bande-battement { from { background: var(--plein); border-color: var(--plein); color: hsl(var(--background)); } 40% { color: hsl(var(--background)); } }
+@keyframes bande-trame { from { opacity: 1; } }
+[data-bande-interieur] > [data-metronome-marche] {
+  position: relative; flex: none; min-width: 44px; height: 36px; display: flex; align-items: center; justify-content: center; gap: 4px;
+  margin-left: 8px; background: none; border: 0; font-size: 13px; font-weight: 600; color: hsl(var(--foreground));
+}
+[data-bande-interieur] > [data-metronome-marche]::after { content: ""; position: absolute; inset: -4px 0; }
 @media (prefers-reduced-motion: reduce) {
-  .liseret-tempo-barre { animation: none !important; transform: none; opacity: 0.35; }
+  [data-bande-groupe] > [data-temps] { transition: none !important; animation: none !important; } /* !important : bat la règle globale à 0.01ms */
+  [data-bande-groupe] > [data-actif]:not([data-accent="muet"]) { background: var(--plein); border-color: var(--plein); color: hsl(var(--background)); }
+  [data-bande-groupe] > [data-actif][data-accent="muet"]::before { animation: none !important; opacity: 1; }
 }
+/* Panneau Métronome (lot MT, MT-2) : réglette graduée tous les 10 et pastilles des temps (cible fixe de 44 px, l'accent par le
+   contour et la graisse : mêmes `data-temps` / `data-accent` que la bande). Aucune teinte. */
+[data-panneau-metronome] { --repos: color-mix(in srgb, hsl(var(--foreground)) 65%, transparent); }
+.dark [data-panneau-metronome] { --repos: color-mix(in srgb, hsl(var(--foreground)) 60%, transparent); }
+[data-reglette] { position: relative; }
+[data-reglette]::before { /* 21 intervalles de 10 sur 30 à 240, entre les centres des extrémités du pouce (≈ 14 px de chaque côté) */
+  content: ""; position: absolute; left: 14px; right: 14px; top: 50%; height: 14px; transform: translateY(-50%); pointer-events: none;
+  background: repeating-linear-gradient(to right, var(--repos) 0 1px, transparent 1px calc(100% / 21));
+  border-right: 1px solid var(--repos);
+}
+[data-reglette] > input { position: relative; background: transparent; accent-color: hsl(var(--foreground)); }
+[data-panneau-temps] button { width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; padding: 0; color: var(--repos); }
+[data-panneau-temps] button > span {
+  box-sizing: border-box; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9999px;
+  border: 1.5px solid var(--repos); font-size: 15px; line-height: 1;
+}
+[data-panneau-temps] [data-accent="fort"] > span { border-width: 3px; font-weight: 700; color: hsl(var(--foreground)); border-color: hsl(var(--foreground)); }
+[data-panneau-temps] [data-accent="moyen"] > span { border-width: 2px; font-weight: 600; }
+[data-panneau-temps] [data-accent="muet"] > span { border-style: dashed; }
+[data-panneau-temps] button:focus-visible > span { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 @keyframes volet-fondu { from { opacity: 0; } }
 @keyframes volet-fondu-sortie { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   [data-volet][data-vaul-drawer][data-state="open"] { animation-name: volet-fondu !important; animation-duration: 200ms !important; }
   [data-volet][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 200ms !important; }
+  [data-feuille-equipe][data-vaul-drawer][data-state="open"] { animation-name: volet-fondu !important; animation-duration: 150ms !important; }
+  [data-feuille-equipe][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 150ms !important; }
+}
+
+/* Feuille d'équipe (T7) : la zone dépliée d'un membre s'ouvre en hauteur (≈ 0,3 s) ; mouvement réduit : fondu de 150 ms. */
+@keyframes deplie-membre { from { grid-template-rows: 0fr; opacity: 0; } to { grid-template-rows: 1fr; opacity: 1; } }
+.deplie-membre { display: grid; animation: deplie-membre 300ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .deplie-membre { animation-name: volet-fondu !important; animation-duration: 150ms !important; }
 }
 
 /* « Choisis un chant » (chants-9) : à partir de 520 px de contenu (volet de 560 px moins sa marge), « Nouveaux au
@@ -907,21 +1001,6 @@
    la teinte `--secondary` à 50 % est composée sur `--background` en une couleur opaque (pas de dégradé) pour qu'aucun
    bloc placé derrière (le panneau est `sticky`) ne transparaisse. */
 .panneau-marque { background-color: color-mix(in srgb, hsl(var(--secondary)) 50%, hsl(var(--background))); }
-
-/* Équipes en bandeau (lot U4 bis, B6, Q12) : la page tient dans la hauteur de l'écran, sous la
-   navbar et au-dessus de la cale de la barre du bas (`MobileTabBar`, 78 px + `--tabbar-bottom`) ;
-   sans barre du bas (ordinateur, tablette en paysage : mêmes requêtes que le bloc « Lot U4 »),
-   jusqu'au bas de l'écran. */
-.equipes-ecran { height: calc(100dvh - var(--nav-h) - 78px - var(--tabbar-bottom)); }
-@media screen and (max-width: 639px) {
-  .equipes-ecran { height: auto; }
-}
-@media screen and (pointer: fine) and (min-width: 1024px) {
-  .equipes-ecran { height: calc(100dvh - var(--nav-h)); }
-}
-@media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
-  .equipes-ecran { height: calc(100dvh - var(--nav-h)); }
-}
 
 /* ══ Agencement v18, F1 (docs/spec-agencement-v18.md, R2, R10, R12) ══════════════════════════
    Jetons lus par `EnTetePage`, `DeuxVolets` et les pages :
@@ -1079,3 +1158,40 @@
     padding-right: 0.75rem;
   }
 }
+
+/* Ma partition, signes de lecture (docs/spec-ma-partition.md, « Signes ») : un filet dans la marge, sans effet sur la mise
+   en page. Retouché par moi : 2 px graphite ; retouché pour le culte : double filet d'encre (forme distincte). Une parole
+   retouchée reste à l'encre, soulignée d'un trait fin graphite ; un accord retouché garde sa graisse (déjà
+   en gras sur le site : 600 l'aurait rendu plus léger que ses voisins) ; le filet suffit. */
+[data-marque] { position: relative; }
+[data-marque]::before { content: ""; position: absolute; top: 0; bottom: 0; left: -8px; border-left: 2px solid var(--graphite); }
+[data-marque="culte"]::before,
+[data-marque="conflit"][data-conflit="chant"]::before { border-left: 3px double currentColor; }
+/* Sur le texte des paroles seul (caractère chinois sans son pinyin, mot français sans l'espace qui tient un accord) :
+   posé sur la ligne, le trait descendait dans les blancs sous les accords et sous le pinyin. */
+[data-retouche="paroles"] :is([data-paroles]:not(:has(> [data-copy-ignore])), [data-car]:not(:has(+ [data-ligne="pinyin"])), [data-car] + [data-ligne="pinyin"]) { text-decoration: underline; text-decoration-color: var(--graphite); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+@media print { [data-marque]::before { display: none; } }
+
+/* Marge « Affichage » (RU-2) : ressort sans rebond sur transform et width ; aucun mouvement au mode louange ;
+   mouvement réduit : fondu d'opacité de 150 ms seulement. */
+.marge-aff { visibility: hidden; }
+.marge-aff[data-ouvert="true"] { visibility: visible; }
+.marge-aff[data-mode="page"] { transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), width 300ms cubic-bezier(0.32, 0.72, 0, 1), height 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 300ms; }
+.marge-aff[data-mode="page"][data-ouvert="true"] { transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), width 300ms cubic-bezier(0.32, 0.72, 0, 1), height 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }
+.marge-aff[data-mode="louange"] { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .marge-aff[data-mode="page"] { opacity: 0; transition: opacity 150ms linear, visibility 0s linear 150ms !important; }
+  .marge-aff[data-mode="page"][data-ouvert="true"] { opacity: 1; transition: opacity 150ms linear, visibility 0s !important; }
+}
+
+/* CI-5, défaut M : en setlist, la musique à côté de la marge ouverte devient elle-même le conteneur « partition »
+   (sinon la zone, marge comprise, déclenche deux colonnes trop étroites). Page chant : sans conteneur partition, inchangée. */
+.\[container-name\:partition\] [data-marge-musique] { container: partition / inline-size; }
+
+/* Glissement Liste ↔ Partitions (lot AT) : l'ancienne image et la nouvelle page glissent ensemble ; les animations
+   sont posées en JS (useSwipeViews). Barres nommées le temps du glissement seulement : elles restent en place. */
+:root[data-glisse-vues]::view-transition-old(root),
+:root[data-glisse-vues]::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+:root[data-glisse-vues] .barre-laterale { view-transition-name: barre-laterale; }
+:root[data-glisse-vues] .barre-onglets { view-transition-name: barre-onglets; }
+:root[data-glisse-vues] .barre-haut { view-transition-name: barre-haut; }

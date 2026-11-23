@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { readdirSync, readFileSync } from "node:fs";
 
 /** Port dédié aux tests : le `next dev` de travail (3000) reste libre. */
 export const PORT = Number(process.env.PW_PORT ?? 3100);
@@ -14,6 +15,98 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // UP-7 : la note « 2ᵉ fois » et le badge « retouché seul » en mode louange.
+  /louange-passage-unique\.spec\.ts/,
+  // Lot AS, T5 (docs/spec-reserver-unique-fetes.md) : la carte de la fête dans Évènements et la fête passée dans « Passés ».
+  /evenements-fete\.spec\.ts/,
+  // Lot AS, T6 : l'évènement épinglé en grand (une ou plusieurs cartes, rangée qui défile, avec ou sans image).
+  /evenements-epingle\.spec\.ts/,
+  // Lot « Image de fête », IF-2 (docs/spec-scene-saison.md) : la carte de la fête avec image, au gabarit de l'épinglé avec image.
+  /evenements-fete-image\.spec\.ts/,
+  // Lot AS, T4 (docs/spec-reserver-unique-fetes.md) : le rail à deux onglets et l'en-tête compact de la page de la fête (h1 « Noël 2026 », halo fondu).
+  /fete-en-tete\.spec\.ts/,
+  // Salles AR, T2b (docs/spec-salles.md) : la Liste, la bande de jours, le repère d'heure, la journée d'une salle (page ou volet).
+  /salles-liste\.spec\.ts/,
+  // Salles AR, T2c : la Grille (neuf colonnes, défilement au téléphone), le sélecteur « Liste · Grille » et la vue par appareil.
+  /salles-grille\.spec\.ts/,
+  // Salles AR, T3a : la feuille « Réserver » (feuille du bas ou panneau à droite), les réservations dans la Liste et la Grille.
+  /salles-reserver\.spec\.ts/,
+  // Salles AR, T3c : les gestes de la Grille (glisser, appui, Entrée) ouvrent la feuille « Réserver ».
+  /salles-gestes\.spec\.ts/,
+  // CI-2 (docs/spec-corrections-interface.md) : le parcours du culte au mode louange, de l'ouverture aux menus.
+  /louange-parcours-culte\.spec\.ts/,
+  // Lot AL, AL-2 (docs/spec-accords-louange.md) : accords touchables en mode louange, panneau au centre de la page, bandes latérales, Crayon, « Ici ».
+  /louange-accords\.spec\.ts/,
+  // Lot RU, RU-5 (docs/spec-reglages-unifies.md) : le mode louange, bouton « Affichage » (marge), armure dans la barre, rien de la musique sous la marge.
+  /louange-reglages\.spec\.ts/,
+  // Métronome MT-2 (docs/spec-metronome.md) : le panneau Métronome, fenêtre comme le menu Setlist (popover dès 768 px, feuille du bas au téléphone), et ses réglages.
+  /metronome-panneau\.spec\.ts/,
+  // Lot RU, RU-4 (docs/spec-reglages-unifies.md) : la setlist, armure et tonalité personnelle, marge « Affichage » (colonne ou feuille), Accords à un toucher.
+  /setlist-tonalite-perso\.spec\.ts/,
+  // Lot RU, RU-3 (docs/spec-reglages-unifies.md) : la page chant, barre sur une ligne, armure, marge « Affichage » montée (colonne ou feuille) et réglages retenus.
+  /page-chant-reglages\.spec\.ts/,
+  // Lot RU, RU-2 (docs/spec-reglages-unifies.md) : la marge « Affichage » : colonne de 320 px qui pousse la musique dès la tablette paysage, feuille basse de 60 % en dessous.
+  /marge-affichage\.spec\.ts/,
+  // Parcours à l'œil du 14/11 (docs/parcours-oeil-2026-11-14.md) : rangée des ronds et note longue, Métronome sans tempo, légende du rappel.
+  /louange-trois-defauts\.spec\.ts/,
+  // Harmonie H4-2 (docs/spec-harmonie-accords.md) : la colonne « Harmonie de ce chant » dès 1 024 px, la feuille en dessous.
+  /harmonie-colonne\.spec\.ts/,
+  // JV-5a : le nom de section ouvre le volet Harmonie au bloc du passage (colonne en grand écran, feuille à mi-hauteur sinon).
+  /harmonie-volet-section\.spec\.ts/,
+  // JV-5b : dans le mode louange, le nom de section ouvre le volet Harmonie par-dessus la page (colonne dès 1 024 px, feuille à mi-hauteur sinon).
+  /louange-harmonie\.spec\.ts/,
+  // R4 (docs/spec-retouches-2026-11-21.md) : la fenêtre Harmonie du mode louange à côté du texte de la section, déplaçable par son en-tête (≥ 768 px) ; feuille du bas inchangée au téléphone.
+  /harmonie-fenetre-placement\.spec\.ts/,
+  // JV-5c : étiquettes de section dans le rail du scan 简谱 (page chant, Partitions, mode louange), qui ouvrent le volet Harmonie.
+  /harmonie-jianpu\.spec\.ts/,
+  // Harmonie H6-1 : la bibliothèque (filtres Ressenti et Usage, liste ordonnée par niveau, fiche ≥ 640 px à l'ordinateur).
+  /harmonie-bibliotheque\.spec\.ts/,
+  // Harmonie H5-1 : le panneau d'un accord enrichi (chiffre, Écouter, Ensuite) en feuille et en bulle.
+  /harmonie-porte1\.spec\.ts/,
+  // Harmonie H7-1 : la bascule Lettres / Chiffres des accords (dans la marge « Affichage » de la page chant depuis RU-3).
+  /notation-accords\.spec\.ts/,
+  // Lot Pupitre, PU-2 (docs/spec-entree-musiciens.md) : « Mon prochain service » en tête de l'onglet Setlists (rangées, vignettes, volet de droite en deux volets).
+  /pupitre-onglet\.spec\.ts/,
+  // Lot Pupitre, PU-3 : « Prêt hors-ligne » dans le bloc (téléphone et tablette debout surtout).
+  /pupitre-hors-ligne\.spec\.ts/,
+  // Lot Pupitre, PU-6 : « ‹ Toutes mes setlists » dans le menu Setlist du mode louange.
+  /louange-toutes-setlists\.spec\.ts/,
+  // Lot TC, TC-1 : menu Setlist à deux onglets, liste « Tous les chants » (recherche, index, interrupteur 简谱) et insertion.
+  /louange-tous-les-chants\.spec\.ts/,
+  // Comptage d'usage, T4 (docs/spec-comptage-usage.md) : l'écran de lecture /back-office/usage (tableau trié) sur les quatre dispositions.
+  /usage-lecture\.spec\.ts/,
+  // Ma partition, MP-2 (docs/spec-ma-partition.md) : menu « Je lis », filets et mention de conflit sur les quatre dispositions.
+  /ma-partition-lecture\.spec\.ts/,
+  // Ma partition, MP-3 (docs/spec-ma-partition.md) : la barre basse du Crayon et la feuille « Pour moi / Pour tout le culte » sur les quatre dispositions.
+  /ma-partition-crayon\.spec\.ts/,
+  // Ma partition, MP-4 (docs/spec-ma-partition.md) : la feuille « Partager ma partition » (feuille du bas au téléphone, popover de 380 px ailleurs) sur les quatre dispositions.
+  /ma-partition-partage\.spec\.ts/,
+  // Ma partition, MP-5 (docs/spec-ma-partition.md) : traits accrochés au texte du mode louange, qui suivent le mot quand la page se recompose (quatre dispositions), rubrique « Partition » de « Je joue ».
+  /ma-partition-traits\.spec\.ts/,
+  // Annotations façon forScore, AN-3a (docs/spec-mode-louange-forscore-2.md) : la barre d'annotation attachée à la place de la barre de titre (deux barres au téléphone) sur les quatre dispositions.
+  /annotations-forscore\.spec\.ts/,
+  // Lot pupitre, T1 (docs/spec-exemples-usage.md) : partitions pleine largeur en volet unique, vue Liste à 720 px, étiquettes de section, 简谱 ; deux volets inchangés.
+  /pupitre-partitions\.spec\.ts/,
+  // Lot CL, CL-1 (docs/spec-corrections-louange.md) : la vue Partitions, scan 简谱 en une colonne à toutes les largeurs (1 440 compris), calque calé sur l'image (JV-3 retiré).
+  /jianpu-deux-volets\.spec\.ts/,
+  // Lot CL, CL-1 : « 2 colonnes » ne découpe plus un scan 简谱 du mode louange (une page d'écran entière, 为我而来 en deux pages), un chant en texte garde ses deux colonnes ; captures cl1-*.
+  /louange-jianpu-deux-colonnes\.spec\.ts/,
+  // Exemples d'usage, T6 (docs/spec-exemples-usage.md) : feuille d'équipe (champ d'ajout en tête, barre collée) sur les quatre dispositions.
+  /equipes-feuille\.spec\.ts/,
+  // Lot 1 du rapport d'usage, T5 (docs/spec-retouches-usage.md) : textes coupés, cellule Date, barre de la setlist, sur les quatre dispositions.
+  /retouches-usage-t5\.spec\.ts/,
+  // Lot CL, CL-1 (docs/spec-corrections-louange.md) : un scan 简谱 entier sur une page d'écran (plus de tranches), tête de feuille, repères, pastille, sur les quatre dispositions.
+  /louange-jianpu-tranches\.spec\.ts/,
+  // Lot RP (tranche 2) : la pastille « d'après le planning » du mode louange (centrée sous la barre) sur les quatre dispositions.
+  /louange-role-planning\.spec\.ts/,
+  // Lot FS-E : la demi-page du mode louange (filet et poignée, coupe entre deux blocs) sur les quatre dispositions.
+  /louange-demi-page\.spec\.ts/,
+  // Lot FS-D : la feuille de route du batteur (lignes à la hauteur de l'écran) sur les quatre dispositions.
+  /louange-feuille-route\.spec\.ts/,
+  // Lot DP (docs/spec-mode-louange-forscore-2.md) : la disposition de la partition, ses menus à miniatures et le mode louange.
+  /dispositions-partition\.spec\.ts/,
+  // Lot CA, CA-A (docs/spec-mode-louange-forscore-2.md) : la couleur des accords au choix de chacun (page du chant, vue partitions, mode louange) sur les quatre dispositions.
+  /couleur-accords\.spec\.ts/,
   // Lot CH (docs/spec-chargement.md) : la forme du membre pendant l'attente de Firebase, sur les quatre dispositions.
   /chargement\.spec\.ts/,
   // Lot CD, T1h (bo-reunions-taches-1) : aucun débordement horizontal des pages du Back-Office, aux largeurs du téléphone.
@@ -37,8 +130,18 @@ const SPECS_GRAND_ECRAN = [
   /rappel-dp\.spec\.ts/,
   /rappel-ordre-joue\.spec\.ts/,
   /rappel-indice\.spec\.ts/,
+  // Lot CV (docs/spec-mode-louange-forscore-2.md) : la coupure des vers français sur les quatre dispositions.
+  /coupure-vers\.spec\.ts/,
+  // Lot CV, CV-3 : copie de mesure et rendu au même calcul de coupure, clé de page « v2 », bandeau de composition.
+  /louange-coupure\.spec\.ts/,
   /performance-mode\.spec\.ts/,
   /mode-louange-forscore\.spec\.ts/,
+  // Lot FS-A (docs/spec-mode-louange-forscore-2.md) : barre de titre, rangée de points, couleur des icônes.
+  /louange-barre-titre\.spec\.ts/,
+  // Lot FS-B (docs/spec-mode-louange-forscore-2.md) : les menus du mode louange (Setlist, Repères, Outils, Tempo, Options).
+  /louange-menus\.spec\.ts/,
+  // Lot FS-C (docs/spec-mode-louange-forscore-2.md) : « Je joue », le menu du rôle (ancrage sous l'icône, première ouverture).
+  /louange-je-joue\.spec\.ts/,
   /setlist-regie\.spec\.ts/,
   /setlist-partage\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,
@@ -111,6 +214,8 @@ const SPECS_GRAND_ECRAN = [
   /agencement-barre-reduite\.spec\.ts/,
   // Scène Pâques · Noël (docs/spec-scene-paques-noel.md) : onglets de fête, une semaine à la fois.
   /scene-paques-noel\.spec\.ts/,
+  // Lot AQ, SQ-B (docs/spec-scene-qui-autre-moment.md) : « Réserver un autre moment » (bouton du volet, feuille) et ses captures sur quatre dispositions.
+  /scene-autre-moment\.spec\.ts/,
   // … et fermer les réservations avant la date de fin (docs/spec-fermer-reservations.md, FR-A) : la vue Saison.
   /fermer-reservations\.spec\.ts/,
   // Agencement v18 (docs/spec-agencement-v18.md) : chaque tranche, F1 comprise, sur les cinq projets.
@@ -128,12 +233,49 @@ const SPECS_GRAND_ECRAN = [
   /barre-chant\.spec\.ts/,
   // Tranche B4b de docs/spec-corrections-audit.md : la règle de largeur (colonne de 960 px, pleine largeur des grilles).
   /largeurs-b4\.spec\.ts/,
+  // Métronome MT-1 (docs/spec-metronome.md) : la bande des temps, sur les quatre dispositions et 1 440 px.
+  /metronome-bande\.spec\.ts/,
 ];
 
 // Lot AO : les tests sans page importent src/lib/access.ts, dont le mode par défaut suit
 // `NEXT_PUBLIC_BACK_OFFICE`. Le lanceur ne la voit jamais (une session cloud l'exporte, un Mac
 // non) : chaque test passe le mode lui-même, les serveurs reçoivent la leur plus bas.
 delete process.env.NEXT_PUBLIC_BACK_OFFICE;
+
+/** Le second serveur (back-office coupé) ne démarre que si la commande vise une spec qui s'en sert
+ *  (celles qui importent `BASE_URL_COUPE`), ou si elle ne nomme aucun fichier (suite complète,
+ *  `--last-failed`, filtre par mot) : un démarrage de `next dev` de moins par passe (Timothée, 21/11/2026).
+ *  `PW_COUPE=1` le force, `PW_COUPE=0` l'interdit. */
+function besoinServeurCoupe(): boolean {
+  if (process.env.PW_COUPE) return process.env.PW_COUPE === "1";
+  const i = process.argv.indexOf("test");
+  if (i < 0) return true;
+  const avecValeur = new Set(["--project", "--grep", "-g", "--grep-invert", "--workers", "-j", "--reporter",
+    "--shard", "--max-failures", "-x", "--config", "-c", "--timeout", "--repeat-each", "--retries", "--output", "--trace"]);
+  const fichiers: string[] = [];
+  for (let k = i + 1; k < process.argv.length; k++) {
+    const a = process.argv[k];
+    if (a.startsWith("-")) { if (!a.includes("=") && avecValeur.has(a)) k++; continue; }
+    fichiers.push(a);
+  }
+  if (!fichiers.length) return true;
+  if (!fichiers.every((f) => /\.spec\.ts(:\d+)*$/.test(f))) return true;
+  const avecCoupe = new Set(readdirSync("tests").filter((f) => f.endsWith(".spec.ts")
+    && readFileSync(`tests/${f}`, "utf8").includes("BASE_URL_COUPE")));
+  return fichiers.some((f) => avecCoupe.has(f.replace(/(:\d+)+$/, "").split("/").pop()!));
+}
+
+const serveurCoupe = {
+  // Interrupteur coupé. Next 16 verrouille `.next/dev` : un second `next dev`
+  // dans le même dossier a besoin de son propre dossier de build.
+  command: `npm run dev -- -p ${PORT + 1}`,
+  url: BASE_URL_COUPE,
+  reuseExistingServer: true,
+  timeout: 180_000,
+  stdout: "ignore",
+  stderr: "pipe",
+  env: { NEXT_PUBLIC_BACK_OFFICE: "0", NEXT_DIST_DIR: ".next-coupe" },
+} as const;
 
 export default defineConfig({
   testDir: "./tests",
@@ -180,16 +322,6 @@ export default defineConfig({
       // La suite existante teste le back-office : interrupteur ouvert, quoi que dise `.env.local`.
       env: { NEXT_PUBLIC_BACK_OFFICE: "1" },
     },
-    {
-      // Interrupteur coupé. Next 16 verrouille `.next/dev` : un second `next dev`
-      // dans le même dossier a besoin de son propre dossier de build.
-      command: `npm run dev -- -p ${PORT + 1}`,
-      url: BASE_URL_COUPE,
-      reuseExistingServer: true,
-      timeout: 180_000,
-      stdout: "ignore",
-      stderr: "pipe",
-      env: { NEXT_PUBLIC_BACK_OFFICE: "0", NEXT_DIST_DIR: ".next-coupe" },
-    },
+    ...(besoinServeurCoupe() ? [serveurCoupe] : []),
   ],
 });

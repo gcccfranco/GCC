@@ -1,0 +1,63 @@
+// Mesure temporaire (non commitée) : temps des actions sur une setlist de quatre chants, écran large.
+import { test, type Page } from "@playwright/test";
+import type { SetlistItem } from "../src/types/setList";
+import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreCompteur } from "./helpers/louange";
+
+const LARGEUR = Number(process.env.MESURE_LARGEUR ?? 1512);
+test.use({ viewport: { width: LARGEUR, height: 900 }, ...(process.env.MESURE_BASE ? { baseURL: process.env.MESURE_BASE } : {}) });
+test.setTimeout(180_000);
+
+const ID = "setlist-mesure";
+const MUSICIEN: FakeProfile = { uid: "uid-musicien", email: "musicien@example.com", serviceRoles: { "Culte Francophone": ["musicien"] } };
+const item = (songSlug: string, position: number): SetlistItem => ({
+  songSlug, position, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "",
+} as SetlistItem);
+const SETLIST = {
+  title: "Culte de mesure", leader: "Présidence", category: "Culte Francophone", date: "2026-10-11", language: "mixed", notes: "",
+  ownerId: "uid-musicien", isPrivate: false,
+  items: [item("abba-pere", 1), item("beni-soit-ton-nom", 2), item("一生爱你", 3), item("为我而来", 4)],
+};
+
+/** Temps jusqu'à ce que `pret` soit vrai, puis deux images sans tâche longue en cours. */
+async function chrono(page: Page, action: () => Promise<void>, pret: () => Promise<void>) {
+  await page.evaluate(() => {
+    const w = window as unknown as { __long: number; __obs?: PerformanceObserver };
+    w.__long = 0;
+    w.__obs?.disconnect();
+    w.__obs = new PerformanceObserver((l) => { for (const e of l.getEntries()) w.__long += e.duration; });
+    w.__obs.observe({ entryTypes: ["longtask"] });
+  });
+  const t0 = Date.now();
+  await action();
+  await pret();
+  await page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))));
+  const total = Date.now() - t0;
+  const long = await page.evaluate(() => Math.round((window as unknown as { __long: number }).__long));
+  return { total, long };
+}
+
+test("mesure des actions", async ({ page }, info) => {
+  test.skip(info.project.name !== "ordinateur", "une seule mesure");
+  await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
+  const t0 = Date.now();
+  await signInAs(page, MUSICIEN, { [`setlists/${ID}`]: SETLIST }, `/setlists/${ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).waitFor();
+  const res: Record<string, unknown> = { largeur: LARGEUR, base: process.env.MESURE_BASE ?? "dev", ouverturePage: Date.now() - t0 };
+
+  // Onglet Partitions s'il existe (sous deux volets, il est déjà là).
+  const partitions = page.getByRole("tab", { name: /Partitions/ });
+  if (await partitions.count()) res.partitions = await chrono(page, () => partitions.first().click(), () => page.locator("[data-chord], .chord").first().waitFor());
+
+  const crayon = page.getByRole("button", { name: "Crayon", exact: true }).filter({ visible: true }).first();
+  for (const tour of [1, 2]) {
+    res[`crayonOn${tour}`] = await chrono(page, () => crayon.click(), () => page.locator("[data-barre-crayon]").waitFor());
+    res[`crayonOff${tour}`] = await chrono(page, () => page.locator("[data-barre-crayon]").getByRole("button", { name: "Terminé" }).click(), () => page.locator("[data-barre-crayon]").waitFor({ state: "detached" }));
+  }
+  for (const tour of [1, 2]) {
+    res[`louange${tour}`] = await chrono(page, () => page.getByRole("button", { name: /Mode Louange/ }).click(), async () => { await attendreCompteur(page, /^\d+ \/ \d+$/, 120_000); });
+    res[`pageSuivante${tour}`] = await chrono(page, () => page.keyboard.press("ArrowRight"), async () => { await page.waitForTimeout(50); });
+    res[`quitter${tour}`] = await chrono(page, () => page.keyboard.press("Escape"), () => page.locator("[data-performance-mode]").waitFor({ state: "detached" }));
+  }
+  console.log("MESURE " + JSON.stringify(res));
+});

@@ -178,9 +178,11 @@ const recherche = (page: Page) => volet(page).getByPlaceholder("Chercher un chan
 const resultats = (page: Page) => volet(page).locator("[data-resultat]");
 const items = (db: FakeDb) => (db.doc(SETLIST_DOC)?.items ?? []) as { songSlug: string; keyOverride: string | null }[];
 
-test("la recherche trouve par titre, pinyin et artiste ; le compteur suit", async ({ page }) => {
+test("la recherche trouve par titre, pinyin et artiste ; le compteur suit", async ({ page }, testInfo) => {
   await ouvrirLaBibliotheque(page);
-  await expect(recherche(page)).toBeFocused();
+  // Grand écran : le champ a le focus. En feuille, non (le clavier d'un téléphone ne s'ouvre pas tout seul).
+  if (deuxColonnesAttendues(testInfo)) await expect(recherche(page)).toBeFocused();
+  else await expect(recherche(page)).not.toBeFocused();
   await expect(volet(page).getByText(`${INDEX.length} chants`)).toBeVisible();
   await recherche(page).fill("Je reviens au cœur");
   await expect(resultats(page).first()).toContainText("Je reviens au cœur");
@@ -232,7 +234,8 @@ test("petits écrans : la bibliothèque en feuille — « N chants dans la setli
   await ouvrirLaBibliotheque(page);
   const feuille = page.getByRole("dialog", { name: "Ajouter des chants" });
   await expect(feuille).toBeVisible();
-  await expect(recherche(page)).toBeFocused();
+  await expect(feuille).toBeFocused();
+  await expect(recherche(page)).not.toBeFocused();
   await expect(feuille.getByText("1 chant dans la setlist", { exact: true })).toBeVisible();
   await recherche(page).fill("Je reviens au cœur");
   await feuille.getByRole("button", { name: "Ajouter Je reviens au cœur", exact: true }).click();
@@ -240,6 +243,10 @@ test("petits écrans : la bibliothèque en feuille — « N chants dans la setli
   // Presque toute la hauteur de l'écran.
   const h = (await feuille.boundingBox())!.height;
   expect(h).toBeGreaterThan(page.viewportSize()!.height * 0.85);
+  // La barre « N chants dans la setlist » va jusqu'au bas de la feuille : aucun chant ne passe dessous.
+  const barre = (await feuille.locator("[data-barre-bibliotheque]").boundingBox())!;
+  const cadre = (await feuille.boundingBox())!;
+  expect(Math.abs(barre.y + barre.height - (cadre.y + cadre.height))).toBeLessThanOrEqual(1);
   await page.waitForTimeout(500);
   await page.screenshot({ path: testInfo.outputPath(`bibliotheque-feuille-${testInfo.project.name}.png`) });
 
@@ -250,7 +257,7 @@ test("petits écrans : la bibliothèque en feuille — « N chants dans la setli
   await expect(listeCourte(page).locator("[data-element]").last()).toContainText("Je reviens au cœur");
 
   await ajouter.click();
-  await expect(recherche(page)).toBeFocused();
+  await expect(page.getByRole("dialog", { name: "Ajouter des chants" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(volet(page)).toHaveCount(0);
 });
@@ -272,25 +279,35 @@ const paroles = (ligne: ReturnType<Page["locator"]>) =>
   });
 const accords = (ligne: ReturnType<Page["locator"]>) => ligne.locator(".font-chord").allTextContents();
 
+// B11 : le filtre de langue de la bibliothèque est le Segment de la liste des chants (même pastille active).
+test("filtre de langue : même pastille active que la liste des chants", async ({ page }) => {
+  await ouvrirLaBibliotheque(page);
+  const actif = (l: ReturnType<Page["locator"]>) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const biblio = await actif(volet(page).getByRole("tablist", { name: "Langue" }).getByRole("tab", { selected: true }));
+  await page.goto("/songs");
+  const liste = await actif(page.locator('[data-onglets="rail"] [role="tab"][aria-selected="true"]').first());
+  expect(biblio).toBe(liste);
+});
+
 test("filtre de langue : Tous · FR · 中文, le compteur suit", async ({ page }) => {
   await ouvrirLaBibliotheque(page);
-  const langue = volet(page).getByRole("group", { name: "Langue" });
-  await expect(langue.getByRole("button", { name: "Tous" })).toHaveAttribute("aria-pressed", "true");
+  const langue = volet(page).getByRole("tablist", { name: "Langue" }); // B11 : Segment, plus des pilules aria-pressed
+  await expect(langue.getByRole("tab", { name: "Tous" })).toHaveAttribute("aria-selected", "true");
 
-  await langue.getByRole("button", { name: "中文" }).click();
-  await expect(langue.getByRole("button", { name: "中文" })).toHaveAttribute("aria-pressed", "true");
+  await langue.getByRole("tab", { name: "中文" }).click();
+  await expect(langue.getByRole("tab", { name: "中文" })).toHaveAttribute("aria-selected", "true");
   await expect(compteur(page, attendus({ langue: "zh" }))).toBeVisible();
   await recherche(page).fill("Abba Père");
   await expect(resultats(page).filter({ hasText: "Abba Père" })).toHaveCount(0);
   await recherche(page).fill("yi sheng ai ni");
   await expect(resultats(page).filter({ hasText: "一生爱你" })).toHaveCount(1);
 
-  await langue.getByRole("button", { name: "FR" }).click();
+  await langue.getByRole("tab", { name: "FR" }).click();
   await expect(resultats(page).filter({ hasText: "一生爱你" })).toHaveCount(0);
   await recherche(page).fill("");
   await expect(compteur(page, attendus({ langue: "fr" }))).toBeVisible();
 
-  await langue.getByRole("button", { name: "Tous" }).click();
+  await langue.getByRole("tab", { name: "Tous" }).click();
   await expect(compteur(page, INDEX.length)).toBeVisible();
 });
 

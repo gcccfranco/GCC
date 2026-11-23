@@ -1,0 +1,107 @@
+import { test, type Page } from "@playwright/test";
+import type { SetlistItem } from "../../src/types/setList";
+import { signInAs, musicien, type FakeProfile } from "../helpers/fakeSession";
+import { attendreCompteur, ouvrirMenu, basculerAnnoter, toucherCentre } from "../helpers/louange";
+import { prepare, mesure, visible, LARGEUR, ouvrir } from "./outil";
+
+test.use({ viewport: { width: LARGEUR, height: LARGEUR <= 400 ? 844 : LARGEUR <= 820 ? 1080 : 900 }, ...(LARGEUR <= 400 ? { isMobile: true, hasTouch: true } : {}) });
+const ID = "setlist-mesure";
+const PROFIL: FakeProfile = { uid: "uid-sacha", email: "sacha@example.com", firstName: "Sacha", lastName: "Quérel", planningName: "Sacha Q.", serviceRoles: { "Culte Francophone": ["musicien"] }, ...musicien("piano") };
+const item = (songSlug: string, position: number): SetlistItem => ({ songSlug, position, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" } as SetlistItem);
+const SETLIST = { title: "Culte de mesure", leader: "Présidence", category: "Culte Francophone", date: "2026-11-29", language: "mixed", notes: "", ownerId: "uid-sacha", isPrivate: false,
+  items: [item("abba-pere", 1), item("beni-soit-ton-nom", 2), item("一生爱你", 3), item("为我而来", 4)] };
+const S = "Setlist";
+const L = "Mode louange";
+const pret = (page: Page) => attendreCompteur(page, /^\d+ \/ \d+$/, 120_000);
+
+test("setlist et mode louange", async ({ page }) => {
+  const cdp = await prepare(page);
+  await signInAs(page, PROFIL, { [`setlists/${ID}`]: SETLIST }, "/setlists");
+  await ouvrir(page, cdp, "Setlists", "/setlists/", () => page.getByText("Culte de mesure").first().waitFor({ timeout: 30_000 }));
+  await mesure(page, cdp, "Setlists", "toucher la setlist dans la liste", () => page.getByText("Culte de mesure").filter({ visible: true }).first().click(), () => page.waitForURL(/setlist-mesure/));
+  await ouvrir(page, cdp, S, `/setlists/${ID}/`, () => page.getByRole("button", { name: /Mode Louange/ }).first().waitFor({ timeout: 30_000 }));
+
+  const part = await visible(page.getByRole("button", { name: /^Partitions$/ }), 2000);
+  if (part) {
+    await mesure(page, cdp, S, "Liste → Partitions", () => part.click(), () => page.locator("[data-outline-item]").first().waitFor());
+    const liste = await visible(page.getByRole("button", { name: /^Liste$/ }), 2000);
+    if (liste) { await mesure(page, cdp, S, "Partitions → Liste", () => liste.click()); await mesure(page, cdp, S, "Liste → Partitions (2e fois)", () => part.click()); }
+  }
+  const som = await visible(page.getByRole("button", { name: /^Ouvrir le sommaire$/ }), 1500);
+  if (som) {
+    await mesure(page, cdp, S, "ouvrir le sommaire", () => som.click());
+    const it = await visible(page.getByRole("navigation", { name: "Sommaire" }).getByRole("button").nth(2), 2000) ?? await visible(page.getByRole("navigation", { name: "Sommaire" }).getByRole("link").nth(2), 1000);
+    if (it) await mesure(page, cdp, S, "sommaire : aller au 3e chant", () => it.click());
+  }
+  const aff = await visible(page.getByTestId("barre-outils").or(page.locator("[data-en-tete]")).getByRole("button", { name: /^Affichage$/ }), 3000);
+  if (aff) {
+    await mesure(page, cdp, S, "ouvrir Affichage", () => aff.click(), () => page.locator('[data-testid="marge-affichage"][data-ouvert="true"]').first().waitFor());
+    const corps = page.locator('[data-testid="marge-affichage"][data-ouvert="true"] [data-testid="marge-corps"]').first();
+    for (const nom of ["Une fois chacune", "Plan", "Tout le chant", "Partition", "Scène", "Chiffres", "Lettres", "Pinyin", "A+", "A−"]) {
+      const b = await visible(corps.getByRole("radio", { name: nom }).or(corps.getByRole("switch", { name: nom })).or(corps.getByRole("button", { name: nom })), 800)
+        ?? await visible(corps.locator(`[aria-label="${nom === "A+" ? "Agrandir le texte" : nom === "A−" ? "Réduire le texte" : nom}"]`), 500);
+      if (b) await mesure(page, cdp, S, `Affichage › ${nom}`, () => b.click());
+    }
+    const f = await visible(page.getByRole("button", { name: /^Fermer l'affichage$/ }), 1500);
+    if (f) await mesure(page, cdp, S, "fermer Affichage", () => f.click());
+  }
+  const crayon = page.getByRole("button", { name: "Crayon", exact: true }).filter({ visible: true }).first();
+  for (const t of [1, 2]) {
+    if (!(await crayon.count())) break;
+    await mesure(page, cdp, S, `activer le Crayon (${t})`, () => crayon.click(), () => page.locator("[data-barre-crayon]").waitFor());
+    await mesure(page, cdp, S, `quitter le Crayon (${t})`, () => page.locator("[data-barre-crayon]").getByRole("button", { name: "Terminé" }).click(), () => page.locator("[data-barre-crayon]").waitFor({ state: "detached" }));
+  }
+  const acc = await visible(page.locator("[data-outline-item] [data-accord-touchable]"), 2000);
+  if (acc) { await mesure(page, cdp, S, "toucher un accord", () => acc.click()); await page.keyboard.press("Escape"); }
+
+  // Mode louange
+  for (const t of [1, 2]) {
+    await mesure(page, cdp, L, `lancer (${t})`, () => page.getByRole("button", { name: /Mode Louange/ }).filter({ visible: true }).first().click(), () => pret(page));
+    await mesure(page, cdp, L, `page suivante (${t})`, () => page.keyboard.press("ArrowRight"));
+    await mesure(page, cdp, L, `page suivante bis (${t})`, () => page.keyboard.press("ArrowRight"));
+    if (t === 1) {
+      const enMode = async () => { if (!(await page.locator("[data-performance-mode]").count())) { await page.getByRole("button", { name: /Mode Louange/ }).filter({ visible: true }).first().click(); await pret(page); } };
+      for (const m of ["setlist", "reperes", "outils", "affichage"] as const) {
+        try {
+          await enMode();
+          await mesure(page, cdp, L, `ouvrir le menu ${m}`, () => ouvrirMenu(page, m));
+          if (m === "affichage") {
+            const marge = page.locator('[data-testid="marge-affichage"][data-mode="louange"]');
+            for (const nom of ["Plan", "Tout le chant", "Une fois chacune", "Chiffres", "Lettres"]) {
+              const b = await visible(marge.getByRole("radio", { name: nom }), 800);
+              if (b) await mesure(page, cdp, L, `Affichage › ${nom}`, () => b.click());
+            }
+            const disp = await visible(marge.getByRole("radio").filter({ hasText: /Scène/ }), 800);
+            if (disp) await mesure(page, cdp, L, "Affichage › disposition Scène", () => disp.click());
+            const disp2 = await visible(marge.getByRole("radio").filter({ hasText: /Partition/ }), 800);
+            if (disp2) await mesure(page, cdp, L, "Affichage › disposition Partition", () => disp2.click());
+            const f = await visible(marge.getByRole("button", { name: /^Fermer l'affichage$/ }), 800); if (f) await mesure(page, cdp, L, "fermer Affichage", () => f.click());
+          } else await page.keyboard.press("Escape");
+        } catch (e) { console.log("menu", m, String(e).slice(0, 100)); }
+      }
+      try {
+        await enMode();
+        await mesure(page, cdp, L, "entrer en annotation (Crayon)", () => basculerAnnoter(page));
+        await mesure(page, cdp, L, "sortir de l'annotation", () => basculerAnnoter(page));
+      } catch (e) { console.log("annoter", String(e).slice(0, 100)); }
+      await enMode();
+      const nom = await visible(page.locator("[data-performance-mode] button[data-section-nom-bouton]:not([aria-hidden=true] *)"), 2000);
+      if (nom) { await mesure(page, cdp, L, "ouvrir Harmonie (nom de section)", () => nom.click(), () => page.locator("[data-idees-harmonie]").waitFor({ timeout: 5000 })); await page.keyboard.press("Escape"); }
+      await enMode();
+      const ac = await visible(page.locator("[data-performance-mode] [data-accord-touchable]:not([aria-hidden=true] *)"), 1500);
+      if (ac) { await mesure(page, cdp, L, "toucher un accord", () => ac.click()); await page.keyboard.press("Escape"); }
+      try {
+        await enMode();
+        const d = await ouvrirMenu(page, "setlist");
+        const ch = await visible(d.getByText("为我而来"), 2000);
+        if (ch) await mesure(page, cdp, L, "changer de chant (menu Setlist → 为我而来)", () => ch.click());
+      } catch (e) { console.log("menu setlist", String(e).slice(0, 100)); }
+      await enMode();
+      await mesure(page, cdp, L, "page suivante (chant ZH)", () => page.keyboard.press("ArrowRight"));
+    }
+    if (!(await page.locator("[data-barre-haut]").getByRole("button", { name: "Quitter" }).filter({ visible: true }).count())) await toucherCentre(page);
+    await mesure(page, cdp, L, `quitter (${t})`, () => page.locator("[data-barre-haut]").getByRole("button", { name: "Quitter" }).filter({ visible: true }).first().click(), () => page.locator("[data-performance-mode]").waitFor({ state: "detached", timeout: 10_000 }));
+    // Échap peut d'abord fermer un menu : insister
+    for (let i = 0; i < 3 && (await page.locator("[data-performance-mode]").count()); i++) await page.keyboard.press("Escape");
+  }
+});

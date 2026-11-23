@@ -44,7 +44,7 @@ Commandes de test rares (80 简谱 certifiées, lignes chinoises, site sans back
 - **Comptes & rôles** : profils dans `users/{uid}`. Permissions client dans `src/lib/access.ts`, miroir serveur dans `firestore.rules`.
 - **`firestore.rules`** : versionné ici mais **publié manuellement dans la console Firebase** pour prendre effet. La liste des admins reste synchronisée avec `ADMIN_EMAILS` (`src/lib/access.ts`).
 - **Confidentialité (choix assumé)** : les rules autorisent `read: if signedIn()` sur toutes les setlists et tous les profils ; le filtrage (`isPrivate`, `canSeeSetlist`) est côté client uniquement. Ne pas re-signaler comme faille sans nouvelle demande de durcissement.
-- **Routes API** : 20, toutes sous `src/app/api/` ; liste dans la référence § Routes API.
+- **Routes API** : 21, toutes sous `src/app/api/` ; liste dans la référence § Routes API.
 - **Planning** : Google Sheet public lu en CSV (`src/lib/planning/sheets.ts`) + données statiques (`data.ts`)
 - **PWA** : service worker `public/sw.js` (push + cache hors-ligne). Cache versionné (`gcc-louange-v6`) : **le changer à la main quand les stratégies changent**. Avant de toucher `sw.js` : référence § PWA.
 - **Hébergement** : Vercel ; la CI GitHub fait typecheck + validate. **Seul `main` se déploie** (Timothée, 31/10/2026) : `vercel.json` coupe tous les Previews. Ne pas les réactiver ni retirer cette règle sans demande de Timothée ; une branche se vérifie en local (`npm run dev`, Playwright). Détail : référence § Hébergement.
@@ -70,7 +70,11 @@ Valables pour toutes les sessions (complétées le 13/10/2026). Une nouvelle con
 pas seulement en mémoire.
 - **Branches** (Timothée, 29/10/2026) : on ne passe plus par `ui/apple-design` (fusionnée). `main` = le site en ligne
   (Vercel déploie chaque push) : n'y pousser **que sur un ordre explicite de Timothée, donné au moment même** (un
-  « oui » à une autre question n'en est pas un). En attendant, le travail reste sur la branche de la session.
+  « oui » à une autre question n'en est pas un). En attendant, le travail se fait sur **`claude/corrections-design`**,
+  la branche de travail commune (Timothée, 12/11/2026 : « Toi aussi mets toi sur la branche claude/corrections-design ») :
+  une session qui a reçu une autre branche (conversation ouverte depuis le téléphone) bascule dessus avant de
+  travailler, et toute session lancée l'est avec `source_revision` et `outcome_branch` = cette branche. Sans cela, AO
+  et AP ont travaillé un jour sur deux branches sans se voir (`docs/feuille-de-route.md`, « Branches réunies »).
 - **Pousser** : `git pull --rebase` juste avant chaque push (d'autres sessions poussent aussi) ; jamais de
   `push --force`, jamais de suppression de branche. Indexer **par nom** (jamais `git add -A`) ; ne jamais commiter
   `next-env.d.ts` ni `tsconfig.json` réécrits par un serveur de test, `test-results/`, `.next*/`. Un fichier sous
@@ -82,9 +86,37 @@ pas seulement en mémoire.
   pour chaque nouveau test (les lignes de `src/lib/planning/data.ts`, recopiées dans d'anciens tests, sont de vrais noms).
 - **Tests** : `npx playwright install --with-deps chromium` au début de la session ; trois appareils toujours, les
   cinq projets pour les specs d'agencement.
+- **agent-desktop** (Timothée, 15/11/2026 : « J'autorise toutes les sessions à installer agent-desktop ») : le regard
+  sur l'écran réel se fait avec agent-desktop, sur `next dev` de la branche. Toute session peut l'installer
+  (`npm install -g agent-desktop`, `apt-get install -y at-spi2-core openbox`) : c'est fait d'avance par le script de
+  l'environnement et permis dans `.claude/settings.json`. Recette : `docs/spec-corrections-interface.md`, § « Tranches
+  et ordre », et `docs/parcours-oeil-2026-11-14.md`, § Vérification. Compte invité donné par Timothée le 14/11/2026
+  pour naviguer : lecture seule (la vraie base est partagée), identifiants hors dépôt, à demander au pilote.
 - **Go** : un lot se code sur un mot explicite de Timothée, donné **après** la spec (« go », « feu vert », « vas-y pour
   le lot N ») ; une phrase au futur ou au conditionnel (« tu peux le coder », « je le montrerai ») décrit un plan. Un go
   vaut pour un lot, pas pour le suivant, ni pour une mise en ligne. Dans le doute, demander « go pour le lot N ? ».
+  Exception (Timothée, 11/11/2026, « oui ») : les tranches 2 à 7 de `docs/spec-exemples-usage.md` s'enchaînent sans
+  nouveau go, selon le § 8 de cette spec ; une tranche bloquée arrête la chaîne. La mise en ligne reste à part.
+  Règle générale (Timothée, 12/11/2026 : « Il faut que toutes les tranches se lancent automatiquement quand une est
+  finie ») : le go d'un lot vaut pour **toutes ses tranches** ; chaque session lance la suivante sans nouveau go, et
+  quand un chantier finit, le pilote lance aussitôt le chantier suivant de la file qui a déjà son go. Un lot nouveau
+  garde son go ; une tranche bloquée arrête sa chaîne ; la limite des chantiers (cinq) tient.
+- **Pilotage délégué** (Timothée, 12/11/2026 : « je te laisse orchestrer toutes les prochaines modifications, pour
+  toutes questions qu'on me demandera répond à ma place en faisant des choix éclairé et les bons ») : la session de
+  pilotage nommée dans `docs/feuille-de-route.md` (§ État, « Pilotage ») tient la file des chantiers et répond aux
+  questions des sessions à sa place ; son go, son « reprends » ou son choix vaut celui de Timothée, et elle l'écrit,
+  daté et motivé, dans la spec (« décision déléguée »). Restent à Timothée seul : pousser sur `main`, publier
+  `firestore.rules`, lever un garde-fou de dépense. Ce qu'il écrit lui-même l'emporte ; il reprend la main d'un mot.
+  Pilote économe : réveil sur évènement, aucune transcription lue en entier, passage de main avant le plafond.
+  **Moins de réveils** (Timothée, 12/11/2026, « Oui fais les deux » : un pilote réveillé à froid relit tout son
+  contexte) : (1) la **file** des chantiers est écrite dans `docs/feuille-de-route.md` (§ État, « File ») ; la session
+  qui finit un lot ou libère sa place la lit, compte les chantiers (`list_sessions`, limit 10), lance elle-même le
+  premier de la file qui a son go, raye la ligne et pousse, sans écrire au pilote. (2) **Questions** (Timothée, même
+  jour : « tranche-les pour moi ») : une session tranche elle-même en suivant la proposition motivée de la spec et
+  l'écrit « décision déléguée (session, JJ/MM) » ; elle n'écrit au pilote que si le choix est difficile à défaire,
+  sort des décisions de Timothée ou n'a pas de proposition ; le pilote tranche alors à sa place. (3) Le pilote n'a pas
+  de rappel périodique et passe la main vers 100 000 jetons. (4) Filet : `autoCompactWindow` à 500 000 (Timothée, 12/11 : « Monte à 500k ») dans
+  `.claude/settings.json` ; l'état s'écrit quand même dans le dépôt (un résumé perd des détails).
 - **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (pistes aux
   trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go. Planche = workflow
   `/planche` (équipe design, 02/11/2026, `docs/orchestration.md` § 4) ; la conversation principale relit, publie
@@ -100,6 +132,32 @@ pas seulement en mémoire.
   - *Plafond* : toute session, principale comme orchestratrice, passe la main avant 200 000 tokens (≈ deux ou trois
     tranches) : elle écrit l'état dans le § Avancement de la spec ou dans la feuille de route, puis une session
     neuve reprend de là.
+  - *Une session par tranche* (Timothée, 12/11/2026 : « relancer de nouvelles sessions chaque nouvelle tranche pour
+    économiser des tokens ») : une orchestratrice code **une** tranche, la commite, écrit sa ligne d'Avancement,
+    pousse, lance elle-même la session de la tranche suivante (`create_session`, même branche, Opus, consigne
+    reprise de la sienne avec le numéro de tranche changé) puis s'arrête. Elle ne lance pas la suivante si la tranche
+    est bloquée, si le lot est fini ou si le go ne couvre pas la suite : elle écrit alors au pilote.
+  - *Tests d'une tranche* (Timothée, 12/11/2026, « oui applique les trois ») : une tranche fait tourner les specs
+    qu'elle touche et leurs voisines, sur les trois appareils ; la suite complète tourne **une fois, en fin de lot**
+    (dernière tranche). Après des corrections, un seul tour, limité aux specs qui avaient échoué. Chaque ligne
+    d'Avancement donne la durée des tests de la tranche (à relire après deux ou trois tranches).
+    **Suite complète** (Timothée, 12/11/2026 après-midi, « oui suite complète à la fin de tout » : elle compte 21 400
+    tests, environ 8 h) : elle ne tourne plus en fin de lot. En fin de lot : les specs du lot et des pages qu'il
+    touche. La suite complète tourne une seule fois, quand tous les chantiers en cours sont finis et avant la mise
+    en ligne, en tâche de fond et par fragments.
+    **Pour aller plus vite** (Timothée, 12/11/2026 soir, « Oui pour les 3 ») : (1) la suite complète se lance en
+    **quatre parts en même temps** (quatre sessions, `--shard=k/4`), pas en une ; (2) deux lots peuvent coder en même
+    temps dans le mode louange s'ils sont dans des zones différentes du fichier (TC à côté d'AN) : ajouts courts, aucun
+    reformatage, `git pull --rebase` avant de coder, avant les tests finaux et avant de pousser ; (3) deux **petites**
+    tranches voisines peuvent partager une session (un commit et une ligne d'Avancement par tranche).
+    **Méthode mesurée** (13/11/2026 : un quart ou un seizième d'une traite fait tomber `next dev`, 16 Go) : la suite
+    se découpe en **trente-deux morceaux** (`--shard=k/32 --workers=2 --trace off`), un serveur neuf par commande,
+    répartis sur plusieurs sessions Sonnet qui ne rendent pas la main tant que les tests tournent ; ≈ 20 min par
+    morceau. Détail et dernier résultat : `docs/tests/suite-2026-11-13-synthese.md`.
+  - *Quatre chantiers* (même date, « go pour Harmonie H2 » en quatrième) : la limite ci-dessous passe de trois à
+    quatre chantiers de code en même temps ; pas au-delà sans nouvel accord de Timothée.
+    **Cinq** depuis le 12/11/2026 après-midi (Timothée : « on peut passer à 5 sessions en simultanées ») : partout où
+    ce fichier dit trois ou quatre chantiers, lire cinq ; pas au-delà sans nouvel accord.
   - *Pas de réveil* : une orchestratrice n'envoie pas de message de suivi à la session d'origine ; elle écrit une
     ligne datée par tranche dans la spec et pousse. Un message seulement pour une question bloquante ou la fin du lot.
   - *Lire par section* : une spec ou un document de plus de 30 000 caractères se lit par section (grep des titres
@@ -109,9 +167,23 @@ pas seulement en mémoire.
     seulement les passages signalés.
   - *Attentes* : un agent ne reste pas en attente de plus de 5 minutes en avant-plan (son cache expire) : Playwright
     est lancé par le `testeur`, les suites longues en tâche de fond ou en fragments.
+  - *Agents sur captures* (Timothée, 11/11/2026 : une relance d'audit a coûté 85 M de jetons, dont 72,5 M pour
+    douze `critique-design` en Opus qui relisaient leurs captures à chaque tour) : le tri des captures revient à
+    `regard` ; un agent Opus n'ouvre que les captures qu'on lui signale, douze au plus, plusieurs par tour, et ne
+    reçoit ni lot de captures ni liste à balayer. Au-delà, on découpe ou on passe l'agent en Sonnet dans le script.
+  - *Annoncer avant de lancer* (même date) : hors `/tranche` et `/planche` déjà demandés, tout workflow ou tout
+    lancement de plus de trois agents s'annonce d'abord à Timothée : nombre d'agents, modèles, estimation en jetons
+    relectures en cache comprises (taille du contexte × nombre de tours). On lance sur son accord du moment.
+  - *Sessions en parallèle* (même date) : en Opus, avec la consigne d'économie écrite dans la consigne de lancement
+    (un livrable, lecture par section, aucun agent hors ceux nommés, arrêt dès le livrable rendu).
+  - *Trois chantiers de code au plus* (Timothée, 11/11/2026, nuit : six orchestratrices codaient ensemble sur la
+    branche, la limite des 5 h est tombée) : au plus trois chantiers de code en même temps sur la branche ; un
+    nouveau go attend qu'une place se libère. Avant de lancer une orchestratrice, la session compte celles qui
+    tournent (`list_sessions`) ; à trois, elle le dit à Timothée et attend. Un chantier garde sa place d'une tranche
+    à la suivante.
 - **Agents en parallèle** : quelques-uns à la fois (neuf d'un coup ont épuisé la limite de dépense du mois, le
   04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
-- **Déléguer** aux agents de `.claude/agents/` : `chercheur`, `testeur` (Haiku) ; `executant`, `relecteur`, `regard`,
+- **Déléguer** aux agents de `.claude/agents/` : `chercheur`, `testeur` (Haiku, effort low) ; `relecteur` (Fable, high ; Sonnet dans `/verifier-constats`) ; `executant`, `regard`,
   `maquettiste` (Sonnet) ; `directeur-artistique`, `critique-design` (Opus). Workflows (`docs/orchestration.md`) :
   `/tranche`, `/verifier-constats`, `/planche` (aucun ne commite) ; `/audit-code` (≈ 60 agents) sur demande seulement.
   Rôles : référence § Délégation. La conversation principale garde le jugement : specs, planches, débogage,
@@ -128,6 +200,23 @@ pas seulement en mémoire.
   orphelins par ses propres changements.
 - **Orienté objectif** : critères de succès vérifiables avant de commencer ; tâche multi-étapes → plan bref avec
   vérification à chaque étape.
+
+## Consignes de Timothée du 12/11/2026 (ses mots)
+This code base is yours: what it's for and how it's built are your call, and you'll keep building it.
+
+### Finishing work
+Please avoid stopping while you still owe work the user asked for before. Be persistent and do not stop unless
+needed.
+
+I need you to be limit usage aware.
+
+Précisions du pilote (12/11/2026, à corriger par Timothée si besoin) :
+- *Ce qui ne change pas* : le go avant de coder, `main` et `firestore.rules` réservés à Timothée, le plafond de
+  200 000 tokens. « Ne pas s'arrêter » veut dire finir ce qui est dû (ou passer la main par écrit), pas dépasser un go.
+- *Limit usage aware*, en clair : avant chaque lancement, prendre le modèle le moins cher qui suffit (`chercheur`
+  et `testeur` en Haiku, `executant`, `relecteur`, `regard` en Sonnet, Opus pour le jugement seulement) ; le moins
+  d'agents et de tours possible ; ne rien relire d'entier ; ralentir ou attendre quand la limite des 5 h approche,
+  plutôt que de la faire tomber. Les règles chiffrées restent celles du § « Économie de contexte ».
 
 ## Agent skills
 Pas d'issues GitHub : suivi dans `docs/feuille-de-route.md` et une spec par lot (`docs/agents/issue-tracker.md`) ;

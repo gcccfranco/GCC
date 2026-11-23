@@ -8,7 +8,7 @@ import { basculerMode } from "./helpers/menuSetlist";
 
 // Lot DA / DA-3 (docs/spec-dictionnaire-accords.md, Q13, Q15, Q16) : toucher un accord ouvre son panneau, en
 // lecture seulement — page chant, partition d'une setlist hors édition, calque des accords sur la 简谱 —,
-// jamais en édition (« Ma version », « Adapter »), ni en mode louange. Setlists et comptes simulés, noms
+// jamais en édition (« Crayon »), ni en mode louange. Setlists et comptes simulés, noms
 // fictifs. Les captures à regarder sont dans accords-toucher-agencement.spec.ts.
 
 const SETLIST_ID = "setlist-accords";
@@ -41,7 +41,7 @@ const setlist = {
   notes: "",
   ownerId: MUSICIENNE.uid, // la créatrice : « Adapter » lui est offert
   isPrivate: false,
-  items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一切歌颂赞美", position: 2, jianpuSheet: false })],
+  items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一切歌颂赞美", position: 2 })],
 };
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
@@ -66,6 +66,7 @@ const csvVide = (page: Page) =>
 async function ouvrirLaSetlist(page: Page) {
   await csvVide(page);
   await sansAide(page);
+  await paroles(page);
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await signInAs(page, MUSICIENNE, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);
@@ -122,6 +123,20 @@ test.describe("page chant", () => {
     await expect(touchables(page).first()).toHaveText("F");
     await touchables(page).first().click();
     await expect(nom(page)).toHaveText("F");
+  });
+
+  test("ZH téléphone, processeur ralenti ×4 : un toucher avant la fin de l'hydratation ouvre quand même le panneau (DP-G2, point 24)", async ({ page }, info) => {
+    test.skip(info.project.name !== "telephone", "téléphone seulement");
+    await sansAide(page);
+    await paroles(page);
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    // Le rendu serveur doit déjà être dans la disposition de l'appareil (Couleurs par section) : sinon l'hydratation
+    // recompose la page, recrée les boutons d'accord, et le toucher commencé sur l'ancien bouton n'ouvre rien.
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+    await page.goto("/songs/" + encodeURIComponent("一切歌颂赞美"));
+    await touchables(page).first().click();
+    await expect(panneau(page)).toBeVisible({ timeout: 15_000 });
   });
 
   test("FR : Piano, la flèche suivante passe au 1er renversement et la main droite change", async ({ page }) => {
@@ -202,7 +217,7 @@ test.describe("setlist", () => {
     await expect(nom(page)).toHaveText("E");
   });
 
-  for (const mode of ["Ma version", "Adapter"] as const) {
+  for (const mode of ["Crayon"] as const) {
     test(`en « ${mode} » : aucun accord touchable, la ligne s'édite comme avant`, async ({ page }) => {
       await ouvrirLaSetlist(page);
       await basculerMode(page, mode);
@@ -215,23 +230,21 @@ test.describe("setlist", () => {
     });
   }
 
-  test("mode louange : aucun accord touchable, toucher un accord n'ouvre rien", async ({ page }) => {
+  test("mode louange : sans accès Harmonie, les accords sont inertes même réglage « Idées d'harmonie » posé (CL-4), sans bulle d'aide", async ({ page }) => {
+    // Le panneau d'accord en louange (réglage allumé, accès Harmonie) est couvert par louange-accords.spec.ts.
+    await page.addInitScript((u) => localStorage.setItem(`perf-idees-harmonie-${u}`, "1"), MUSICIENNE.uid);
     await ouvrirLaSetlist(page);
     await page.getByRole("button", { name: /Mode Louange/ }).click();
     await attendreMiseEnPage(page);
-    await expect(onStage(page, "[data-copy-line]").first()).toBeVisible();
+    await expect(onStage(page, "[data-copy-line] .font-chord, [data-copy-line] [data-accord]").first()).toBeVisible();
     await expect(page.locator("[data-performance-mode] [data-accord-touchable]")).toHaveCount(0);
-    await expect(page.locator("[data-performance-mode] [role=button][aria-label^='Voir comment jouer']")).toHaveCount(0);
-    const accord = onStage(page, ".font-chord").first();
-    await accord.click({ force: true });
-    await expect(panneau(page)).toHaveCount(0);
     await expect(aide(page)).toHaveCount(0);
   });
 });
 
-test.describe("bulle d'aide", () => {
-  test("visible la première fois, OK la ferme, absente après rechargement", async ({ page }, info) => {
-    await page.goto("/songs/abba-pere");
+test.describe("bandeau d'aide", () => {
+  test("visible la première fois, × (« OK ») le ferme, absent après rechargement", async ({ page }, info) => {
+    await page.goto("/songs/aucun-autre-nom");
     await expect(touchables(page).first()).toBeVisible();
     await expect(aide(page)).toBeVisible();
     await expect(aide(page)).toHaveAttribute("role", "status");
@@ -245,22 +258,30 @@ test.describe("bulle d'aide", () => {
     await expect(aide(page)).toHaveCount(0);
   });
 
-  test("en bas de l'écran, centrée sur la colonne de lecture, sans recouvrir la première ligne de paroles (C9)", async ({ page }) => {
-    await page.goto("/songs/abba-pere");
-    await expect(aide(page)).toBeVisible();
-    const vue = page.viewportSize()!;
-    const bulle = (await aide(page).boundingBox())!;
-    expect(bulle.width).toBeLessThanOrEqual(280.5);
-    // Centrée sur la colonne des paroles (en deux volets, la fenêtre entière déborderait sur la liste).
-    const colonne = (await page.locator("[data-copy-line]").first().evaluate((el) => {
-      const r = el.parentElement!.getBoundingClientRect();
-      return r.left + r.width / 2;
-    }));
-    expect(Math.abs(bulle.x + bulle.width / 2 - colonne)).toBeLessThan(2);
-    expect(bulle.y + bulle.height).toBeGreaterThan(vue.height / 2);
-    expect(bulle.y + bulle.height).toBeLessThanOrEqual(vue.height);
-    const ligne = (await page.locator("[data-copy-line]").first().boundingBox())!;
-    expect(ligne.y + ligne.height).toBeLessThanOrEqual(bulle.y);
+  test("bandeau gris au-dessus du chant, dans la colonne de lecture, × à droite, sans recouvrir de ligne (C9)", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+    for (const slug of ["aucun-autre-nom", "一切歌颂赞美"]) {
+      await page.goto(`/songs/${encodeURIComponent(slug)}`);
+      await expect(aide(page)).toBeVisible();
+      const bandeau = (await aide(page).boundingBox())!;
+      await expect(page.locator("[data-copy-line]:visible").first()).toBeVisible();
+      const ligne = (await page.locator("[data-copy-line]:visible").first().boundingBox())!;
+      expect(bandeau.y + bandeau.height).toBeLessThanOrEqual(ligne.y);
+      // La colonne de lecture (`main`) ; le bandeau s'aligne sur les pastilles de structure, comme dans la setlist.
+      const colonne = await page.locator("main.song-zoom").evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return { x: r.x, droite: r.right };
+      });
+      expect(bandeau.x).toBeGreaterThanOrEqual(colonne.x - 1);
+      expect(bandeau.x + bandeau.width).toBeLessThanOrEqual(colonne.droite + 1);
+      const croix = (await aide(page).getByRole("button", { name: "OK" }).boundingBox())!;
+      expect(croix.x + croix.width).toBeLessThanOrEqual(bandeau.x + bandeau.width + 0.5);
+      expect(bandeau.x + bandeau.width - (croix.x + croix.width)).toBeLessThan(8);
+      for (const l of await page.locator("[data-copy-line]").all()) {
+        const b = await l.boundingBox();
+        if (b) expect(b.y >= bandeau.y + bandeau.height - 0.5 || b.y + b.height <= bandeau.y + 0.5).toBe(true);
+      }
+    }
   });
 
   test("toucher un accord la ferme et la mémorise ; Échap aussi", async ({ page }) => {
@@ -286,7 +307,7 @@ test.describe("bulle d'aide", () => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIENNE, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
     await ouvrirPartitions(page);
-    await basculerMode(page, "Adapter");
+    await basculerMode(page);
     await expect(page.locator('[data-outline-item="1"] [data-section] .font-chord').first()).toBeVisible();
     await page.waitForTimeout(1500);
     await expect(aide(page)).toHaveCount(0);
@@ -295,6 +316,40 @@ test.describe("bulle d'aide", () => {
     await page.waitForTimeout(1000);
     await expect(aide(page)).toHaveCount(0);
   });
+});
+
+test.describe("panneau à côté de l'accord (B4 ter)", () => {
+  for (const slug of ["aucun-autre-nom", "一切歌颂赞美"]) {
+    for (const premier of [false, true]) {
+      test(`ordinateur seulement : fenêtre basse, le panneau ne couvre pas l'accord et s'ouvre du côté libre, ${premier ? "à gauche du premier accord d'une ligne" : "à droite d'un accord en milieu de ligne"} (${slug})`, async ({ page }, info) => {
+        test.skip(info.project.name !== "ordinateur", "ordinateur seulement");
+        await sansAide(page);
+        await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+        await page.setViewportSize({ width: 1366, height: 600 });
+        await page.goto(`/songs/${encodeURIComponent(slug)}`);
+        await expect(touchables(page).first()).toBeVisible();
+        // Premier de sa ligne : aucun autre accord de la même rangée n'a son bord gauche à plus de 8 px à gauche du sien.
+        const n = await touchables(page).evaluateAll((els, premier) => {
+          const rs = els.map((el) => el.getBoundingClientRect());
+          return rs.findIndex((r, i) => r.width > 0 && r.left > 300 && r.left < 1000
+            && rs.some((o, j) => j !== i && o.width > 0 && Math.abs(o.top + o.height / 2 - (r.top + r.height / 2)) < r.height / 2 && o.left < r.left - 8) === !premier);
+        }, premier);
+        test.skip(n < 0, "pas de cas exploitable dans ce chant");
+        const accord = touchables(page).nth(n);
+        await accord.evaluate((el) => el.scrollIntoView({ block: "center" }));
+        await accord.click();
+        await expect(panneau(page)).toHaveAttribute("data-accord-panneau", "bulle");
+        const ensuite = panneau(page).getByRole("button", { name: /Ensuite/ });
+        if (await ensuite.count() && (await ensuite.first().getAttribute("aria-expanded")) === "false") await ensuite.first().click();
+        const a = (await accord.boundingBox())!;
+        const b = (await panneau(page).boundingBox())!;
+        const croise = a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+        expect(croise, "le panneau ne couvre pas l'accord").toBe(false);
+        if (premier) expect(b.x + b.width, "à gauche de l'accord").toBeLessThanOrEqual(a.x);
+        else expect(b.x, "à droite de l'accord").toBeGreaterThanOrEqual(a.x + a.width);
+      });
+    }
+  }
 });
 
 test.describe("idées d'harmonie", () => {
@@ -315,10 +370,10 @@ test.describe("idées d'harmonie", () => {
     });
     await sansAide(page);
     await signInAs(page, AMBROISE, {}, "/songs/au-nom-de-jesus");
-    await page.getByTestId("barre-outils").getByRole("button", { name: "Idées d'harmonie" }).click();
+    await page.getByTestId("barre-outils").getByRole("button", { name: "Harmonie", exact: true }).click();
     await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
-    // Le premier accord proposé de la feuille (aperçu d'une carte).
-    const accord = page.locator("[data-idees-harmonie] [data-accord-touchable]").first();
+    // Le premier accord d'une carte d'idée (les lettres de la grille sont sans pastille, H4-1).
+    const accord = page.locator("[data-idees-harmonie] [data-suggestion] [data-accord-touchable]").first();
     await expect(accord).toBeVisible();
     return accord;
   }

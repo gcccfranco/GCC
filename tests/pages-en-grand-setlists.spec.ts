@@ -44,13 +44,15 @@ const SL2 = {
 const DOCS = { "setlists/sl-1": SL1, "setlists/sl-2": SL2 };
 
 /** Jeudi 1er octobre 2026. */
-async function ouvrir(page: Page, adresse = "/setlists", docs: Record<string, Record<string, unknown>> = {}) {
+async function ouvrir(page: Page, adresse = "/setlists", docs: Record<string, Record<string, unknown>> = {}, sansService = false) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
-    return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES[feuille] ?? "" });
+    return route.fulfill({ status: 200, contentType: "text/csv", body: sansService ? "" : FEUILLES[feuille] ?? "" });
   });
-  await signInAs(page, RUTH, { ...DOCS, ...docs }, adresse);
+  // Sans service au planning, Ruth ne voit ces setlists que dans l'équipe (`editeurs`).
+  const base = sansService ? { "setlists/sl-1": { ...SL1, editeurs: [RUTH.uid] }, "setlists/sl-2": { ...SL2, editeurs: [RUTH.uid] } } : DOCS;
+  await signInAs(page, RUTH, { ...base, ...docs }, adresse);
 }
 
 type Disposition = "grand" | "tablette" | "telephone";
@@ -140,7 +142,7 @@ test.describe("Setlists : les dispositions", () => {
 
   test("en grand : toucher une setlist ouvre son aperçu, l'adresse est remplacée, « Ouvrir » mène à la setlist", async ({ page }, info) => {
     test.skip(disposition(info) !== "grand", "deux volets : ordinateur et iPad paysage");
-    await ouvrir(page);
+    await ouvrir(page, "/setlists", {}, true); // aucun service au planning : pas de « Mon prochain service » (PU-2)
     // V3 : la première setlist est déjà montrée et sa ligne marquée, sans rien toucher.
     await expect(apercu(page).getByRole("heading", { name: "Culte du 4 octobre" })).toBeVisible();
     await expect(ligne(page, "Culte du 4 octobre")).toHaveAttribute("aria-current", "true");
@@ -219,7 +221,7 @@ test.describe("Setlists : les dispositions", () => {
   // V3 (validation du 07/11/2026) : seulement quand il n'y a aucune setlist à montrer (ici les Archives, vides à cette date).
   test("en grand : liste vide seule, colonne de 720 px calée sur le titre, action de l'en-tête au bord droit de la colonne", async ({ page }, info) => {
     test.skip(disposition(info) !== "grand", "colonne seule : grand écran");
-    await ouvrir(page, "/setlists?tab=archived");
+    await ouvrir(page, "/setlists?tab=archived", {}, true); // sans service : pas de bloc (PU-2)
     const volet = page.locator('[data-volet="liste"]');
     await expect(volet).toBeVisible();
     const entete = page.locator("header[data-entete-page]");
@@ -231,32 +233,36 @@ test.describe("Setlists : les dispositions", () => {
     expect(Math.abs(action.x + action.width - (colonne.x + colonne.width)), "action au bord droit de la colonne").toBeLessThan(2);
   });
 
-  // dimanche-7, seconde moitié (lot CD, T4b ; V5, validation du 07/11/2026) : la colonne de lecture va jusqu'à 860 px, centrée dans le volet de
-  // droite, et la rangée de boutons de l'en-tête finit à son bord droit, à 1 440 px comme à 1 940 px de fenêtre.
+  // T3 du lot « exemples d'usage » (remplace dimanche-7 / V5) : la colonne de lecture va jusqu'à 920 px, alignée à gauche contre le rail ;
+  // l'en-tête est une rangée pleine largeur, ⋯ à son bord droit, « Mode Louange » juste avant (B7), à 1 440 px comme à 1 940 px de fenêtre.
   for (const largeur of [1440, 1940]) {
-    test(`ordinateur-1440 : à ${largeur} px, « Mode Louange » finit au bord droit de la colonne de lecture, centrée dans son volet`, async ({ page }, info) => {
-      test.skip(info.project.name !== "ordinateur-1440", "ordinateur large : la partition est plafonnée à 860 px");
+    test(`ordinateur-1440 : à ${largeur} px, la colonne de lecture est plafonnée à 920 px (1 080 px dès 1 000 px de zone, T4), alignée à gauche ; « Mode Louange » reste dans l'en-tête`, async ({ page }, info) => {
+      test.skip(info.project.name !== "ordinateur-1440", "ordinateur large : la partition est plafonnée à 920 px");
       await page.setViewportSize({ width: largeur, height: 900 });
       await ouvrir(page, "/setlists/sl-1");
       const partition = page.locator(".grid > .min-w-0 [class*='max-w-[var(--colonne-partition']").first();
       await expect(partition).toBeVisible();
-      // La rangée de l'en-tête (son contenu, marge de 28 px ôtée) finit où finit la partition ; « Mode Louange » finit là aussi
-      // quand les boutons tiennent à côté du titre (avec tous les boutons, ils peuvent passer sous le titre).
-      const bouton = page.locator("[data-en-tete]").getByRole("button", { name: "Mode Louange" });
-      const rangee = bouton.locator("xpath=ancestor::div[contains(@class,'px-7')][1]");
-      const r = await rangee.evaluate((el) => ({ droite: el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight) }));
       const lecture = (await partition.boundingBox())!;
-      expect(Math.abs(r.droite - (lecture.x + lecture.width)), "un seul bord droit pour l'en-tête et la colonne de lecture").toBeLessThan(2);
+      const bouton = page.locator("[data-en-tete]").getByRole("button", { name: "Mode Louange" });
       const louange = (await bouton.boundingBox())!;
-      expect(louange.x + louange.width, "« Mode Louange » ne dépasse pas la colonne").toBeLessThanOrEqual(lecture.x + lecture.width + 1);
-      // La colonne fait min(860, place) et laisse autant d'espace à gauche qu'à droite dans son volet (marges de 28 px ôtées).
+      // B7 : ⋯ est le dernier ; « Mode Louange » le précède, collé à lui.
+      const plus = (await page.locator("[data-en-tete]").getByRole("button", { name: "Plus d'actions" }).boundingBox())!;
+      expect(plus.x + plus.width, "⋯ ne sort pas de la fenêtre").toBeLessThanOrEqual(largeur);
+      expect(plus.x + plus.width, "⋯ au bord droit de l'en-tête").toBeGreaterThan(largeur - 48);
+      expect(louange.x + louange.width, "« Mode Louange » juste avant ⋯").toBeLessThanOrEqual(plus.x);
+      expect(plus.x - (louange.x + louange.width), "« Mode Louange » collé à ⋯").toBeLessThan(16);
+      // Une seule rangée : « Mode Louange » est à droite du bouton titre, à sa hauteur.
+      const titre = (await page.locator("[data-en-tete]").getByRole("button", { name: /Afficher les détails de la setlist/ }).boundingBox())!;
+      expect(louange.x, "à droite du titre").toBeGreaterThan(titre.x + titre.width - 1);
+      expect(Math.abs(louange.y + louange.height / 2 - (titre.y + titre.height / 2)), "même rangée que le titre").toBeLessThan(8);
+      // La colonne fait min(920, place) et part du bord gauche de son volet (marge de 24 px ôtée) : plus de centrage.
       const volet = await page.locator(".grid > .min-w-0").first().evaluate((el) => {
         const b = el.getBoundingClientRect();
         const c = getComputedStyle(el);
         return { gauche: b.left + parseFloat(c.paddingLeft), droite: b.right - parseFloat(c.paddingRight) };
       });
-      expect(Math.abs(lecture.width - Math.min(860, volet.droite - volet.gauche)), "min(860, place)").toBeLessThan(2);
-      expect(Math.abs(lecture.x - volet.gauche - (volet.droite - lecture.x - lecture.width)), "écarts gauche et droit égaux").toBeLessThan(2);
+      expect(Math.abs(lecture.width - Math.min((volet.droite - volet.gauche) >= 1000 ? 1080 : 920, volet.droite - volet.gauche)), "min(920 ou 1 080 dès 1 000 px de zone, place)").toBeLessThan(2);
+      expect(Math.abs(lecture.x - volet.gauche), "alignée à gauche contre le rail").toBeLessThan(2);
     });
   }
 
@@ -277,7 +283,7 @@ test.describe("Setlists : les dispositions", () => {
 
   test("téléphone : inchangé, une ligne par setlist, toucher ouvre la setlist", async ({ page }, info) => {
     test.skip(disposition(info) !== "telephone", "téléphone");
-    await ouvrir(page);
+    await ouvrir(page, "/setlists", {}, true); // sans service : pas de « Mon prochain service » (PU-2)
     await expect(page.getByRole("link", { name: /Culte du 4 octobre/ })).toBeVisible();
     await expect(page.getByTestId("carte-setlist")).toHaveCount(0);
     await expect(page.getByText("一生爱你", { exact: true }), "les chants ne sont pas listés").toHaveCount(0);

@@ -7,6 +7,7 @@
 // « Voir les n » ; l'ancienne administration garde la carte d'avant.
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { getRegistrationOpen, setRegistrationOpen } from "@/lib/firebase/users";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -56,6 +57,7 @@ export function InscriptionsComptes({
             onCheckedChange={() => void toggleRegistration()}
             // Un nom fixe : l'interrupteur annonce lui-même son état (activé, désactivé).
             aria-label={t("admin.inscr.ouvertes")}
+            className={TOUCHER_44}
           />
           <div className="min-w-0 flex-1">
             <p className="text-base font-semibold text-foreground">
@@ -74,7 +76,7 @@ export function InscriptionsComptes({
                 <button
                   type="button"
                   onClick={onVoir}
-                  className="h-9 rounded-full bg-background px-3.5 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
+                  className={`${TOUCHER_44} h-9 rounded-full bg-background px-3.5 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary`}
                 >
                   {t("admin.inscr.voir", { count: nouveaux })}
                 </button>

@@ -16,6 +16,7 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { espaceDe, labelDeSection } from "@/lib/navigation";
+import { compter } from "@/lib/usage";
 import { Cloche } from "@/components/layout/Cloche";
 import { IconeMessages, IconeMessagesRetenue } from "@/components/layout/IconeMessages";
 import { useBarreMontree } from "@/components/layout/BarreLaterale";
@@ -50,7 +51,7 @@ export function Navbar() {
   const attente = authLoading && probablementConnecte;
   const membre = !!user || attente;
   const dark = mounted && resolvedTheme === "dark";
-  const toggleTheme = () => setTheme(dark ? "light" : "dark");
+  const toggleTheme = () => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); };
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -86,15 +87,30 @@ export function Navbar() {
   };
 
   // Langue mémorisée côté serveur (notifPrefs/{uid}.lang) : les rappels du
-  // cron partent dans la langue de l'interface. Écrite à la connexion puis à
-  // chaque changement, une fois par valeur et par compte.
+  // cron partent dans la langue de l'interface. Écrite seulement si elle diffère
+  // de la dernière écrite avec succès pour ce compte sur cet appareil, ou si
+  // cette écriture date d'un autre jour (localStorage `notifLang:${uid}` =
+  // « langue|jour ») : avec deux appareils en deux langues, les rappels suivent
+  // l'appareil utilisé ce jour-là. Le useRef évite les doubles appels.
   const sentLangRef = useRef("");
   useEffect(() => {
     if (!user) return;
     const key = `${user.uid}|${currentLang}`;
     if (sentLangRef.current === key) return;
     sentLangRef.current = key;
-    saveNotifLang(user.uid, currentLang === "zh-CN" ? "zh-CN" : "fr").catch(() => {});
+    const lang = currentLang === "zh-CN" ? "zh-CN" : "fr";
+    const storageKey = `notifLang:${user.uid}`;
+    const marque = `${lang}|${new Date().toDateString()}`;
+    try {
+      if (localStorage.getItem(storageKey) === marque) return;
+    } catch {}
+    saveNotifLang(user.uid, lang)
+      .then(() => {
+        try {
+          localStorage.setItem(storageKey, marque);
+        } catch {}
+      })
+      .catch(() => {});
   }, [user, currentLang]);
 
   const isActiveSongs = pathname.startsWith("/songs");
@@ -250,11 +266,11 @@ export function Navbar() {
               <span className={membre ? "" : "hidden min-[400px]:inline"}>{isZh ? "中文" : "FR"}</span>
             </button>
 
-            {/* Thème : sur ordinateur ; sur tactile, un membre le trouve dans « Moi » */}
+            {/* Thème : le visiteur l'a partout (Timothée, 21/11/2026) ; un membre, sur ordinateur, et sur tactile dans « Moi » */}
             <button
               onClick={toggleTheme}
               aria-label={dark ? t("common.aria.modeClair") : t("common.aria.modeSombre")}
-              className={`${ICON_BUTTON} ${membre ? "hidden lg:flex" : "hidden sm:flex"}`}
+              className={`${ICON_BUTTON} ${membre ? "hidden lg:flex" : "flex"}`}
             >
               {dark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
             </button>
@@ -273,13 +289,14 @@ export function Navbar() {
                   </button>
                 </MenuCompte>
               ) : pathname.startsWith("/login") || pathname.startsWith("/signup") ? null : (
+                // Timothée, 21/11/2026 : icône seule sous 430 px, le bouton de thème du visiteur a pris la place.
                 <Link
                   aria-label={t("common.header.login")}
                   href="/login"
-                  className="connexion-visiteur flex h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-sm font-semibold"
+                  className="connexion-visiteur flex h-10 w-10 shrink-0 min-[430px]:w-auto min-[430px]:px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-sm font-semibold"
                 >
                   <LogIn className="h-4 w-4" aria-hidden />
-                  <span className="max-[359px]:hidden">{t("common.header.login")}</span>
+                  <span className="hidden min-[430px]:inline whitespace-nowrap">{t("common.header.login")}</span>
                 </Link>
               )
             )}

@@ -1,0 +1,74 @@
+import { test } from "@playwright/test";
+import { signInAs, type FakeProfile } from "../helpers/fakeSession";
+import { prepare, mesure, ouvrir, visible, LARGEUR } from "./outil";
+
+const MUSICIEN: FakeProfile = { uid: "uid-musicien", email: "musicien@example.com", firstName: "Lison", lastName: "Varenne", serviceRoles: { "Culte Francophone": ["musicien"] } };
+test.use({ viewport: { width: LARGEUR, height: LARGEUR <= 400 ? 844 : 900 }, ...(LARGEUR <= 400 ? { isMobile: true, hasTouch: true } : {}) });
+
+test("chants : liste, recherche, page d'un chant", async ({ page }) => {
+  const cdp = await prepare(page);
+  await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
+  await signInAs(page, MUSICIEN, {}, "/songs");
+  await page.locator('input[type="search"], input[placeholder*="Chant"]').first().waitFor({ timeout: 60_000 });
+
+  await ouvrir(page, cdp, "Chants", "/songs/", () => page.locator('a[href*="/songs/"]').nth(5).waitFor());
+  const champ = page.locator('input[placeholder="Chant ou artiste…"]').filter({ visible: true }).first();
+  await mesure(page, cdp, "Chants", "recherche (taper « grace », 5 lettres)", () => champ.pressSequentially("grace", { delay: 60 }));
+  await mesure(page, cdp, "Chants", "effacer la recherche", async () => { await champ.click(); await page.keyboard.press("Control+A"); await page.keyboard.press("Backspace"); });
+  const filtre = await visible(page.getByRole("button", { name: /^(中文|Chinois|ZH)$/ }).or(page.getByRole("radio", { name: /^(中文|Chinois)$/ })).or(page.getByRole("tab", { name: "中文" })));
+  if (filtre) await mesure(page, cdp, "Chants", "filtre langue 中文", () => filtre.click());
+  const theme = await visible(page.getByRole("combobox", { name: /thème/i }).or(page.getByLabel("Filtrer par thème")));
+  if (theme) await mesure(page, cdp, "Chants", "ouvrir le filtre thème", () => theme.click());
+  await page.keyboard.press("Escape");
+  const lettre = await visible(page.getByRole("button", { name: /Aller à la lettre|Aller à J|^J$/ }), 2000);
+  if (lettre) await mesure(page, cdp, "Chants", "index alphabétique (J)", () => lettre.click());
+
+  // Ouverture d'un chant depuis la liste (navigation interne)
+  await page.goto("/songs/");
+  await page.locator('a[href*="/songs/abba-pere"]').first().waitFor({ timeout: 30_000 });
+  await mesure(page, cdp, "Chants", "toucher un chant FR (Abba Père) dans la liste", () => page.locator('a[href*="/songs/abba-pere"]').filter({ visible: true }).first().click(), () => page.waitForURL(/abba-pere/));
+
+  for (const slug of ["abba-pere", "jireh", "为我而来"]) {
+    const fr = !/[一-龥]/.test(slug);
+    await ouvrir(page, cdp, `Chant ${fr ? "FR" : "ZH"}`, `/songs/${encodeURIComponent(slug)}/`, () => page.locator("[data-accord-touchable], [data-jianpu-page] img").filter({ visible: true }).first().waitFor({ timeout: 30_000 }));
+    if (slug === "jireh") continue;
+    const E = `Chant ${fr ? "FR" : "ZH"} (${slug})`;
+    const ton = await visible(page.getByRole("button", { name: /^Tonalité/ }));
+    if (ton) {
+      await mesure(page, cdp, E, "ouvrir Tonalité", () => ton.click());
+      const g = await visible(page.getByRole("radiogroup").getByRole("radio").nth(3), 2000) ?? await visible(page.getByRole("radiogroup").getByRole("button").nth(3), 2000);
+      if (g) await mesure(page, cdp, E, "choisir une autre tonalité (transposition)", () => g.click());
+      await page.keyboard.press("Escape");
+    }
+    const aff = await visible(page.getByTestId("barre-outils").or(page.locator("[data-en-tete]")).getByRole("button", { name: /^(Affichage|显示)$/ }));
+    if (aff) {
+      await mesure(page, cdp, E, "ouvrir Affichage", () => aff.click(), () => page.locator('[data-testid="marge-affichage"][data-ouvert="true"]').first().waitFor());
+      const corps = page.locator('[data-testid="marge-affichage"][data-ouvert="true"] [data-testid="marge-corps"]').first();
+      const n = await corps.locator('button:not([disabled]), [role="switch"], [role="radio"]').count();
+      const vus = new Set<string>();
+      for (let i = 0; i < Math.min(n, 40); i++) {
+        const b = corps.locator('button:not([disabled]), [role="switch"], [role="radio"]').nth(i);
+        if (!(await b.isVisible().catch(() => false))) continue;
+        const nom = ((await b.getAttribute("aria-label")) || (await b.innerText().catch(() => "")) || "").replace(/\s+/g, " ").trim().slice(0, 40);
+        if (!nom || vus.has(nom) || /Fermer|Réduire|Agrandir/.test(nom)) continue;
+        vus.add(nom);
+        await mesure(page, cdp, E, `Affichage › ${nom}`, () => b.click({ timeout: 3000 }));
+        // Revenir si un menu s'est ouvert
+        if (await page.getByRole("menu").count()) await page.keyboard.press("Escape");
+      }
+      const fermer = await visible(page.getByRole("button", { name: /^(Fermer l'affichage|关闭显示)$/ }), 2000);
+      if (fermer) await mesure(page, cdp, E, "fermer Affichage", () => fermer.click());
+    }
+    const crayon = await visible(page.getByRole("button", { name: "Crayon", exact: true }), 2000);
+    if (crayon) {
+      await mesure(page, cdp, E, "activer le Crayon", () => crayon.click());
+      const fin = await visible(page.getByRole("button", { name: "Terminé", exact: true }), 3000);
+      if (fin) await mesure(page, cdp, E, "quitter le Crayon (Terminé)", () => fin.click());
+    }
+    const acc = await visible(page.locator("[data-accord-touchable]"), 2000);
+    if (acc) {
+      await mesure(page, cdp, E, "toucher un accord (panneau)", () => acc.click(), () => page.locator("[data-accord-panneau]").first().waitFor({ timeout: 5000 }));
+      await page.keyboard.press("Escape");
+    }
+  }
+});

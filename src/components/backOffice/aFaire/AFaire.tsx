@@ -12,7 +12,7 @@ import { EnTetePage } from "@/components/layout/EnTetePage";
 import { EtatVide } from "@/components/layout/EtatVide";
 import { useBarreMontree } from "@/components/layout/BarreLaterale";
 import { Pilules } from "@/components/layout/Onglets";
-import { equipesDe, isCoordination } from "@/lib/access";
+import { equipesDe, isCoordination, peutLireUsage } from "@/lib/access";
 import { nowIsoParis } from "@/lib/evenements/agenda";
 import { useProfile } from "@/lib/firebase/users";
 import { PLANNING_COLORS } from "@/lib/serviceColors";
@@ -94,6 +94,13 @@ export function AFaire({ titre }: { titre: string }) {
                 <span className="block text-balance break-words text-sm text-muted-foreground">{t("backOffice.aFaire.sceneDesFetes.sousTitre")}</span>
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </Link>
+          )}
+          {/* T4 du comptage d'usage : l'écran de lecture, aux administrateurs seuls. */}
+          {peutLireUsage(user) && (
+            <Link href="/back-office/usage" data-testid="lien-usage" className="mt-6 inline-flex min-h-[44px] items-center gap-1 text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground">
+              {t("backOffice.usage.lien")}
+              <ChevronRight className="h-4 w-4" aria-hidden />
             </Link>
           )}
         </div>

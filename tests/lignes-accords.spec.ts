@@ -27,8 +27,9 @@ function accordsAuNiveauDesParoles(page: Page): Promise<string[]> {
       const colonnes = Array.from(ligne.querySelectorAll<HTMLElement>(zh ? "span[style*='column']" : "span.flex-col"));
       const cases = colonnes.map((c) => {
         const enfants = Array.from(c.children) as HTMLElement[];
+        const bande = c.querySelector<HTMLElement>("[data-accord]"); // ZhLine : absente d'une rangée sans accord (R2)
         const accord = zh
-          ? enfants[0] && getComputedStyle(enfants[0]).visibility === "visible" ? enfants[0] : undefined
+          ? bande && getComputedStyle(bande).visibility === "visible" ? bande : undefined
           : enfants.find((e) => e.classList.contains("font-chord"));
         const parole = enfants[enfants.length - 1];
         return { c, accord, parole: parole !== accord && (parole?.textContent ?? "").trim() ? parole : undefined };
@@ -81,10 +82,10 @@ for (const slug of ["abba-pere", "grace-infinie", "一切歌颂赞美", "一切�
 // n'ont alors pas de cadre pour rogner ce qui dépasse, et le contenu glisse.
 for (const slug of ["tu-m-aimes", "abrite-moi", "abba-pere"]) {
   test(`${slug} — texte agrandi au maximum, rien ne dépasse sur les côtés`, async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem("chart-style", "0"));
+    await page.addInitScript(() => localStorage.setItem("disposition", "classique"));
+    // Taille maximale posée par la clé de l'appareil (le bouton A+ est dans la marge « Affichage » depuis RU-3).
+    await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5"));
     await ouvrir(page, slug);
-    const plus = page.getByRole("button", { name: "Agrandir le texte" }).first();
-    while (await plus.isEnabled()) await plus.click();
     await page.waitForTimeout(300);
     const mesure = await page.evaluate(() => {
       const doc = document.documentElement;
@@ -100,7 +101,12 @@ for (const slug of ["tu-m-aimes", "abrite-moi", "abba-pere"]) {
 
 test("grace-infinie — accords masqués, les syllabes se recollent", async ({ page }) => {
   await ouvrir(page, "grace-infinie");
-  await page.locator("[data-testid='barre-outils'] button[aria-label='Accords']").click();
+  // Le bouton n'agit qu'une fois la page hydratée : on retouche jusqu'à ce qu'il soit éteint.
+  const accords = page.locator("[data-testid='barre-outils'] button[aria-label='Accords']");
+  await expect(async () => {
+    if ((await accords.getAttribute("aria-pressed")) !== "false") await accords.click();
+    await expect(accords).toHaveAttribute("aria-pressed", "false", { timeout: 1000 });
+  }).toPass();
   // textContent et non innerText : innerText sépare chaque colonne flex (« sau vé »).
   const lignes = await page.locator("[data-copy-line]").evaluateAll((ls) => ls.map((l) => (l.textContent ?? "").replace(/\s+/g, " ").trim()));
   expect(lignes).toContain("Grâce infinie qui m'a sauvé,");
@@ -112,7 +118,9 @@ test("grace-infinie — accords masqués, les syllabes se recollent", async ({ p
 function motsCoupes(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const out: string[] = [];
-    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line].items-end"))) {
+    const lignes = Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line][data-coupe]"));
+    if (!lignes.length) throw new Error("motsCoupes : aucune ligne française examinée");
+    for (const ligne of lignes) {
       const morceaux = Array.from(ligne.querySelectorAll<HTMLElement>("span.flex-col"));
       for (let i = 1; i < morceaux.length; i++) {
         const avant = morceaux[i - 1].lastElementChild?.textContent ?? "";
@@ -134,8 +142,10 @@ for (const slug of ["abba-pere", "tu-m-aimes"]) {
     expect(await motsCoupes(page), "taille de départ").toEqual([]);
     const dir = process.env.PW_CAPTURES;
     if (dir) await page.screenshot({ path: `${dir}/mots-${slug}-${test.info().project.name}.png` });
-    const plus = page.getByRole("button", { name: "Agrandir le texte" }).first();
-    while (await plus.isEnabled()) await plus.click();
+    // Taille maximale posée par la clé de l'appareil (le bouton A+ est dans la marge « Affichage » depuis RU-3).
+    await page.evaluate(() => localStorage.setItem("perf-font-scale", "1.5"));
+    await page.reload();
+    await expect(page.locator("main.song-zoom [data-copy-line]").first()).toBeVisible();
     await page.waitForTimeout(300);
     expect(await motsCoupes(page), "texte agrandi au maximum").toEqual([]);
   });
@@ -152,7 +162,7 @@ async function segmentsCoupes(page: Page): Promise<string[]> {
       const zh = ligne.classList.contains("items-start");
       const colonnes = Array.from(ligne.querySelectorAll<HTMLElement>(zh ? "span[style*='column']" : "span.flex-col"));
       const aUnAccord = (c: HTMLElement) =>
-        zh ? getComputedStyle(c.children[0] as HTMLElement).visibility === "visible" && !!c.children[0].textContent?.trim() && c.children[0].textContent !== "x"
+        zh ? !!c.querySelector("[data-accord]") && getComputedStyle(c.querySelector("[data-accord]")!).visibility === "visible" && !!c.querySelector("[data-accord]")!.textContent?.trim() && c.querySelector("[data-accord]")!.textContent !== "x"
            : !!c.querySelector(".font-chord");
       if (!colonnes.some(aUnAccord)) continue;
       const largeur = ligne.getBoundingClientRect().width;

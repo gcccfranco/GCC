@@ -334,7 +334,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
       <div className="max-w-2xl mx-auto space-y-3">
         <div data-testid="barre-fiche" className="flex min-h-10 items-center justify-between gap-3">
           {/* Le seul retour du site (R8, tranche Z). */}
-          <Retour href={liste}>{t("evenements.title")}</Retour>
+          <Retour href={liste}>{t("evenements.tabs.calendrier")}</Retour>
           <div className="flex min-w-0 items-center gap-2">
             {gestionnaire && estResponsable(user, profile) && (
               <Link href={`${baseBackOffice(e)}/${e.id}`} aria-label={t("backOffice.gerer")} title={t("backOffice.gerer")} className={`${TOUCHER_44} sur-gris inline-flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 rounded-full p-0 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:w-auto sm:px-4`}>

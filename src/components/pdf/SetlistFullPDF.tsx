@@ -126,7 +126,7 @@ export function SetlistFullPDF({
         if (!baseAst) return [];
         const ast = transposerVers(baseAst, item.keyOverride);
         // ── Partition 简谱 : le scan remplace les paroles, une page par page ──
-        const sheet = sheetEnabled(jianpuPref, item.jianpuSheet)
+        const sheet = sheetEnabled(jianpuPref)
           ? jianpuSheets?.[item.songSlug]
           : undefined;
         // Une page de scan qui n'a pas pu être ré-encodée ferait un trou dans

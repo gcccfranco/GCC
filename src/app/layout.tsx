@@ -7,6 +7,7 @@ import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { BarreLaterale } from "@/components/layout/BarreLaterale";
 import { Accueil } from "@/components/onboarding/Accueil";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { UsageCompteur } from "@/components/UsageCompteur";
 import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
 import { NotificationsProvider } from "@/components/layout/NotificationsPartagees";
 import { ConfirmerProvider } from "@/components/layout/Confirmer";
@@ -84,6 +85,7 @@ export default function RootLayout({
               <MobileTabBar />
               <ViewportLecture />
             </NotificationsProvider>
+            <UsageCompteur />
             <LyricsCopyListener />
             <Accueil />
             </ConfirmerProvider>

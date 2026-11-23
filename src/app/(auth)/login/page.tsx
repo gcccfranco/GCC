@@ -33,8 +33,9 @@ function LoginForm() {
     try {
       const user = await signIn(email, password);
       // Comptes existants : profil à compléter à la connexion
-      const profile = await getProfile(user.uid);
-      router.push(profile ? from : "/profil");
+      // Lecture en échec (undefined) : on va à `from`, pas à /profil.
+      const profile = await getProfile(user.uid).catch(() => undefined);
+      router.push(profile === null ? "/profil" : from);
     } catch (err) {
       // Erreur réseau ≠ identifiants invalides : ne pas accuser l'utilisateur à tort
       const code = (err as { code?: string })?.code;

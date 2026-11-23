@@ -638,6 +638,34 @@ responsables sachent ce qui est prêt, ce qui manque et qui relancer, et fassent
 et le Back-Office garde son rôle : le travail d'organisation que les autres ne voient pas (plannings, évènements,
 réunions, tâches).
 
+### Le site devient le pupitre (11/11/2026, demande AP)
+
+Détail : `docs/spec-pupitre-musicien.md`. Décisions de Timothée ce jour-là :
+- **But** : que chaque musicien de service joue sur le site et plus sur forScore. Les musiciens n'ont rien contre
+  forScore (« ils adorent même ») : on ne force pas, la partition du site doit être meilleure, la sienne, annotée,
+  et le suivre d'une setlist à l'autre.
+- **« Ma version » et « Adapter » fusionnent** ; la personne choisit si elle partage, et à qui (liste de personnes).
+- **Une annotation reste sur le chant** : dans une nouvelle setlist, on retrouve la partition annotée.
+- **Export PDF retiré aux musiciens** : « je pense que oui » (à confirmer sur planche : qui le garde).
+- **Idées d'harmonie dans le mode louange** : la décision du 17/09/2026 (« jamais en mode louange ») est rouverte.
+- **Accords en chiffres** (number system) sur les partitions.
+- **Compter l'usage de toutes les fonctionnalités**, pour retirer ensuite celles qui ne servent pas.
+- **Toutes les pages** revues pour l'usage, sur toutes les dispositions ; de petites animations.
+- Contenu des fiches d'harmonie et des cours, ordre des chantiers avec AO : délégués à Claude.
+
+**Après le rapport d'usage (11/11/2026, soir).** Timothée valide : commencer par les retouches sans dessin et par
+une planche pour ses deux exemples ; les partitions prennent la largeur de l'écran (la règle « colonne alignée à
+gauche » du 07/11/2026 ne vaut plus pour elles) ; toucher Liste | Partitions fait glisser la vue comme le doigt ; le
+mode louange reste sans animation. Détail : `docs/spec-pupitre-musicien.md`, `docs/audit-usage-2026-11-11.md`.
+
+**Après la planche des deux exemples (11/11/2026, nuit).** Timothée retient la piste « Pupitre » : en vue
+Partitions, le haut de page se resserre pour que le premier couplet arrive tôt, le sommaire devient un rail de
+numéros sur grand écran, la note de la setlist tient en une ligne dans la barre, deux colonnes lues en rangées à
+partir d'environ 1 360 px ; la vue Liste reste une colonne d'environ 720 px au même bord gauche ; « Mode Louange »
+est un bouton rond au téléphone ; les étiquettes de sections passent en minuscules semi-grasses. Feuille d'une
+équipe : ajouter en tête, une ligne par membre qui se déplie, retirer depuis les réglages avec « Remettre », boutons
+collés en bas, feuille centrée de 560 px en tablette debout. Détail : `docs/spec-pupitre-musicien.md`.
+
 ## Historique des changements d'avis
 
 | Date | Avant | Après |
@@ -666,4 +694,6 @@ réunions, tâches).
 | 03/10/2026 → 04/10/2026 | iPad paysage : exactement l'apparence de l'ordinateur, barre latérale dépliée et réductible. | Tablette en paysage : barre latérale toujours réduite (icônes) ; l'ordinateur garde le choix. |
 | 03/10/2026 → 23/10/2026 | Tableau de bord du Back-Office personnalisable, à widgets (ajouter, glisser, tailles, réglages). | Back-Office = les coulisses de la préparation des évènements ; accueil fixe, le même pour tous (prochains évènements prêts ou non, Pour toi, Tes équipes) ; plus de widgets. |
 | 23/10/2026 (entretien) → 23/10/2026 (soir) | Le Culte Franco a sa fiche de préparation, comme un évènement. | Le culte n'est pas un évènement : c'est un planning parmi d'autres. Fiches en pause, seul le tableau de bord est revu. |
+| 26/10/2026 → 07/11/2026 | Mode louange « façon forScore » par les gestes seulement ; l'apparence du site (matériaux, polices) gardée. | Le mode louange ressemble à forScore aussi par l'apparence, partout : barre, menus, page, vues par rôle (`../feuille-de-route.md` § 3.AO). La vue par rôle est **proposée** d'après le planning, jamais imposée ; cajon = vue Batteur ; rôle retenu par compte sur un appareil partagé (`../chantier-forscore/04-role-suggere.md`). |
+| 16/09/2026 → 08/11/2026 | Deux dispositions des paroles, un interrupteur « Couleurs par section » (appareil neuf en Couleurs par section). | **Cinq dispositions au choix (08/11/2026) : Classique (ex-Bleu, appareil neuf), Couleurs par section, Repères, Scène (page de la piste B) et Partition (page de la piste A)**, avec miniatures ; spec `../spec-mode-louange-forscore-2.md` ; 3 ou 4 dispositions au choix, partagées par la page du chant, la vue partitions et le mode louange ; appareil neuf en **Bleu** ; le mode louange garde les paroles du site sous la barre forScore (`../feuille-de-route.md` § 3.AO). |
 | 14/09/2026 → 07/11/2026 | Interlude et instrumental abrégés « Pm » (pont musical). | Interlude « Int », instrumental « Inst » : « Pm » se lisait comme une sorte de Pont « P » (signalement d'un membre, `../spec-abreviation-interlude.md`). |

@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harmonie, trois portes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap">
+<style>
+/* Planche : une bande, trois pistes, chacune en téléphone (390) · tablette (820) · ordinateur (1 280), la recommandée marquée.
+   Les maquettes sont dessinées à leur vraie largeur puis réduites (zoom) : les proportions (bulle 380, colonne 400, liste 320, fiche 712) sont justes. */
+:root{
+  /* planche */
+  --bg:#f6f5f2; --surface:#ffffff; --ink:#1c1b19; --muted:#6d6a63; --line:#e3e0d9;
+  --reco:#1f7a4d; --reco-bg:#e5f3ea; --warn:#a15c00; --warn-bg:#fdf0dc;
+  --f-ui:"Inter Tight",system-ui,-apple-system,"Segoe UI","PingFang SC","Noto Sans SC",sans-serif;
+  --f-site:-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,"PingFang SC","Noto Sans SC",sans-serif;
+  /* maquettes : jetons du site (src/app/globals.css), clair */
+  --s-bg:#ffffff; --s-fg:#1c1c1e; --s-mfg:#6c6c72; --s-line:#e4e4e5; --s-card:#ffffff;
+  --s-fond:#f2f2f7; --s-fill2:#e5e5ea; --s-pose:#ffffff; --s-ink:#1c1c1e; --s-ink-fg:#ffffff;
+  --s-shadow:0 14px 40px rgba(28,28,30,.2),0 2px 6px rgba(28,28,30,.08);
+  --s-key-w:#ffffff; --s-key-b:#1c1c1e; --s-key-line:#c9c9ce;
+  --chord-color:#3f63cf; --jianpu-color:#b3261d;
+  --sec-intro:#5b7fa6;        --sec-intro-tint:#eef3f9;
+  --sec-verse:#2c8a7d;        --sec-verse-tint:#e8f3f0;
+  --sec-prechorus:#c1871f;    --sec-prechorus-tint:#faf2e1;
+  --sec-chorus:#e0560a;       --sec-chorus-tint:#fcece1;
+  --sec-bridge:#7a5bcb;       --sec-bridge-tint:#f0ecf9;
+  --sec-instrumental:#6b7280; --sec-instrumental-tint:#f1f3f6;
+  --sec-interlude:#6b7280;    --sec-interlude-tint:#f1f3f6;
+  --sec-outro:#4f6477;        --sec-outro-tint:#eef1f5;
+  --sec-tag:#bd476a;          --sec-tag-tint:#faedf0;
+  --sec-coda:#4f6477;         --sec-coda-tint:#eef1f5;
+  --sec-other:#6b7280;        --sec-other-tint:#f1f3f6;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141413; --surface:#1e1d1b; --ink:#f0eee9; --muted:#a29e95; --line:#34322e;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12;
+  --s-bg:#000000; --s-fg:#f2f2f7; --s-mfg:#98989f; --s-line:#373739; --s-card:#1c1c1e;
+  --s-fond:#000000; --s-fill2:#2c2c2e; --s-pose:#3a3a3c; --s-ink:#f2f2f7; --s-ink-fg:#1c1c1e;
+  --s-shadow:0 0 0 1px rgba(255,255,255,.1);
+  --s-key-w:#3a3a3c; --s-key-b:#000000; --s-key-line:#1c1c1e;
+  --chord-color:#8fb0ff; --jianpu-color:#ff7d72;
+  --sec-intro:#8fb2dc;        --sec-intro-tint:#161f2a;
+  --sec-verse:#59bdac;        --sec-verse-tint:#112320;
+  --sec-prechorus:#e0b35b;    --sec-prechorus-tint:#251e0f;
+  --sec-chorus:#fb923c;       --sec-chorus-tint:#2a1810;
+  --sec-bridge:#b59ce9;       --sec-bridge-tint:#1d1730;
+  --sec-instrumental:#98a0ad; --sec-instrumental-tint:#181d26;
+  --sec-interlude:#98a0ad;    --sec-interlude-tint:#181d26;
+  --sec-outro:#93a8ba;        --sec-outro-tint:#161e28;
+  --sec-tag:#e08ba1;          --sec-tag-tint:#281720;
+  --sec-coda:#93a8ba;         --sec-coda-tint:#161e28;
+  --sec-other:#98a0ad;        --sec-other-tint:#181d26;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141413; --surface:#1e1d1b; --ink:#f0eee9; --muted:#a29e95; --line:#34322e;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12;
+  --s-bg:#000000; --s-fg:#f2f2f7; --s-mfg:#98989f; --s-line:#373739; --s-card:#1c1c1e;
+  --s-fond:#000000; --s-fill2:#2c2c2e; --s-pose:#3a3a3c; --s-ink:#f2f2f7; --s-ink-fg:#1c1c1e;
+  --s-shadow:0 0 0 1px rgba(255,255,255,.1);
+  --s-key-w:#3a3a3c; --s-key-b:#000000; --s-key-line:#1c1c1e;
+  --chord-color:#8fb0ff; --jianpu-color:#ff7d72;
+  --sec-intro:#8fb2dc;        --sec-intro-tint:#161f2a;
+  --sec-verse:#59bdac;        --sec-verse-tint:#112320;
+  --sec-prechorus:#e0b35b;    --sec-prechorus-tint:#251e0f;
+  --sec-chorus:#fb923c;       --sec-chorus-tint:#2a1810;
+  --sec-bridge:#b59ce9;       --sec-bridge-tint:#1d1730;
+  --sec-instrumental:#98a0ad; --sec-instrumental-tint:#181d26;
+  --sec-interlude:#98a0ad;    --sec-interlude-tint:#181d26;
+  --sec-outro:#93a8ba;        --sec-outro-tint:#161e28;
+  --sec-tag:#e08ba1;          --sec-tag-tint:#281720;
+  --sec-coda:#93a8ba;         --sec-coda-tint:#161e28;
+  --sec-other:#98a0ad;        --sec-other-tint:#181d26;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 72px}
+.wrap{max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-size:30px;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:22px;margin:0;text-wrap:balance}
+h3{font-size:16px;margin:0}
+p{margin:0;max-width:72ch;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:20px;min-width:0}
+.eyebrow{font-size:13px;color:var(--muted);font-weight:600}
+.intro{display:flex;flex-direction:column;gap:12px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.piste{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.piste.reco{border:2px solid var(--reco)}
+.piste-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--reco-bg);color:var(--reco)}
+.tag.neutre{background:var(--bg);color:var(--muted)}
+.fiche4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 20px;font-size:13.5px;color:var(--muted)}
+.fiche4 b{color:var(--ink);font-weight:600}
+.pro-con{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;font-size:14px}
+.pro-con ul{margin:4px 0 0;padding-left:18px}
+.plus{color:var(--reco);font-weight:600}.moins{color:var(--warn);font-weight:600}
+.rowlabel{font-size:13px;font-weight:600;color:var(--muted);margin:0}
+.devrow{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;min-width:0}
+.dev{display:flex;flex-direction:column;gap:6px;min-width:0;max-width:100%}
+.dev-label{font-size:12.5px;color:var(--muted);font-weight:600;max-width:300px}
+.scrollx{max-width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
+.aside{flex:1;min-width:240px;font-size:14px;display:flex;flex-direction:column;gap:8px;color:var(--muted)}
+.aside b{color:var(--ink)}
+.aside ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+table.t{border-collapse:collapse;width:100%;font-size:14px}
+table.t th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:6px 10px;border-bottom:1px solid var(--line)}
+table.t td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tw{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px}
+.questions{counter-reset:q;display:flex;flex-direction:column;gap:12px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.q h3::before{counter-increment:q;content:"Q" counter(q) " · ";color:var(--muted)}
+.q .rec{font-size:14px;color:var(--reco);font-weight:600}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.9em;background:var(--bg);padding:1px 5px;border-radius:5px}
+.hint{display:none;font-size:12px;color:var(--muted)}
+
+/* ───────── maquettes (site) ───────── */
+.mock{position:relative;overflow:hidden;border:1px solid var(--s-line);zoom:var(--z,1);flex:none;background:var(--s-bg);color:var(--s-fg);
+  font-family:var(--f-site);font-size:15px;line-height:1.35;font-variant-numeric:tabular-nums;text-align:left}
+.mock *{box-sizing:border-box}
+.mock .zh,.mock [lang="zh"]{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",var(--f-site)}
+.phone{width:390px;height:780px;--z:.72;border-radius:38px}
+.tab{width:820px;height:1000px;--z:.7;border-radius:22px}
+.desk{width:1280px;height:700px;--z:.98;border-radius:12px;display:flex}
+.mock.louange{background:#000;color:#f2f2f7;--s-mfg:#98989f;--s-line:#373739;--s-fg:#f2f2f7;--chord-color:#8fb0ff;--s-card:#1c1c1e;--s-ink:#f2f2f7;--s-ink-fg:#1c1c1e}
+.num{font-variant-numeric:tabular-nums;font-weight:600;color:var(--chord-color)}
+.ch{color:var(--chord-color);font-weight:600}
+.muted{color:var(--s-mfg)}
+.bar{height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:15px;color:var(--s-mfg);flex:none}
+.bar .back{color:var(--chord-color)}
+.dots{width:34px;height:34px;border-radius:50%;background:var(--s-fond);display:grid;place-items:center;color:var(--s-fg);font-weight:700;letter-spacing:1px;padding-bottom:5px}
+.mock .pg{padding:0 16px;flex:1;min-height:0;overflow:hidden}
+.ttl{font-size:26px;font-weight:700;line-height:1.1;margin:2px 0 2px}
+.art{font-size:13px;color:var(--s-mfg)}
+.ctl{display:flex;gap:10px;align-items:center;margin:12px 0 14px;flex-wrap:wrap}
+.key{display:inline-grid;place-items:center;min-width:38px;height:32px;padding:0 12px;border-radius:999px;background:var(--s-fill2);font-weight:700;font-size:14px}
+.seg{display:inline-flex;background:var(--s-fill2);border-radius:999px;padding:3px;font-size:13px;font-weight:600;color:var(--s-mfg)}
+.seg span{padding:5px 12px;border-radius:999px;white-space:nowrap}
+.seg span.on{background:var(--s-pose);color:var(--s-fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1.5px solid var(--s-fg);background:transparent;color:var(--s-fg);font:600 13px var(--f-site);white-space:nowrap}
+.btn .zh{font-weight:600}
+.ecouter{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:12px;border:0;background:var(--s-ink);color:var(--s-ink-fg);font:600 15px var(--f-site);white-space:nowrap;flex:none}
+.ecouter.ctr{background:transparent;color:var(--s-fg);box-shadow:inset 0 0 0 1.5px var(--s-fg)}
+.ecouter.sm{height:36px;padding:0 13px;font-size:13.5px;border-radius:10px}
+.ecouter.xs{height:30px;padding:0 10px;font-size:12.5px;border-radius:9px;gap:6px}
+.ecouter.sm,.ecouter.xs{background:transparent;color:var(--s-fg);box-shadow:inset 0 0 0 1.5px var(--s-line,currentColor)}
+/* partition */
+.blk{border-left:3px solid var(--sc);padding-left:12px;margin:0 0 12px}
+.secname{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--sc);font-weight:600;margin-bottom:4px}
+.ln{margin:0 0 8px;font-size:16px;line-height:1.2;white-space:nowrap}
+.u{display:inline-flex;flex-direction:column;vertical-align:top}
+.u .c{font-size:13.5px;color:var(--chord-color);font-weight:600;line-height:1.15;padding-right:3px;min-height:16px;border-radius:5px}
+.u .c.on{outline:2px solid var(--chord-color);outline-offset:1px;background:color-mix(in srgb,var(--chord-color) 14%,transparent)}
+.u .c.hear{background:var(--chord-color);color:var(--s-bg);padding-left:4px;padding-right:4px;margin-right:2px}
+.u .t{white-space:pre;min-height:19px}
+.py{font-size:11.5px;color:var(--s-mfg);margin:-4px 0 9px;line-height:1.25}
+.marge{position:absolute;left:3px;width:8px;height:8px;border-radius:50%;background:var(--chord-color)}
+/* feuille / scrim */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--s-card);border-radius:20px 20px 0 0;box-shadow:var(--s-shadow);padding:8px 16px 14px;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+.sheet.sans-voile{box-shadow:var(--s-shadow),0 0 0 1px var(--s-line)}
+.grab{width:38px;height:5px;border-radius:3px;background:var(--s-line);margin:0 auto 2px;flex:none}
+.sh-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sh-head h4{margin:0;font-size:18px;font-weight:700}
+.x{width:30px;height:30px;border-radius:50%;background:var(--s-fill2);display:grid;place-items:center;color:var(--s-mfg);font-size:17px;line-height:1;flex:none}
+.bt{font-size:13px;color:var(--s-mfg);font-weight:500}
+.hr{height:1px;background:var(--s-line);flex:none}
+/* panneau d'accord */
+.pn{display:flex;flex-direction:column;gap:10px}
+.pn-head{display:flex;align-items:center;gap:12px}
+.pn-ch{font-size:34px;font-weight:700;color:var(--chord-color);line-height:1}
+.pn-deg{font-size:15px;font-weight:600}
+.pn-fct{font-size:13px;color:var(--s-mfg)}
+.pn-row{display:flex;gap:12px;align-items:center}
+.notes{font-size:13px;color:var(--s-mfg)}
+.doigte{width:64px;height:76px;flex:none;color:var(--s-mfg)}
+.doigte .dt{fill:var(--s-fg)}
+.doigte .nt{font:600 8px var(--f-site);fill:var(--s-mfg)}
+.kb{display:block;width:100%;height:auto}
+.kb .w{fill:var(--s-key-w);stroke:var(--s-key-line);stroke-width:.8}
+.kb .b{fill:var(--s-key-b)}
+.kb .p{fill:var(--chord-color);stroke:var(--chord-color)}
+.kb .o{stroke:var(--chord-color);stroke-width:2.2;fill:color-mix(in srgb,var(--chord-color) 10%,var(--s-key-w))}
+.kb .b.o{fill:var(--s-key-b)}
+.suite{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--s-line)}
+.suite:first-child{border-top:0}
+.suite .num{font-size:17px;min-width:42px}
+.suite .let{min-width:56px}
+.suite .why{flex:1;font-size:13px;color:var(--s-mfg)}
+.suite .chev{color:var(--s-mfg);font-size:18px}
+.tagpill{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:999px;background:var(--s-fill2);color:var(--s-mfg);white-space:nowrap}
+.gard{font-size:13px;color:var(--s-mfg)}
+.gard b{color:var(--s-fg);font-weight:600}
+.al{display:grid;grid-template-columns:56px 52px 52px 66px 66px;gap:4px 8px;align-items:baseline;font-size:15px}
+.al .l{font-size:13px;color:var(--s-mfg)}
+.al span:not(.l){font-weight:600;color:var(--chord-color)}
+.ench{margin:0;font-size:15px;font-weight:600;color:var(--chord-color);line-height:1.3}
+.ench .sep{color:var(--s-mfg);font-weight:400;margin:0 6px}
+.ench .a{color:var(--s-mfg);font-weight:400}
+.phr{margin:0;font-size:14px;color:var(--s-fg)}
+.line-ici{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:var(--s-fond);font-size:14px}
+.line-ici .grow{flex:1;min-width:0}
+.line-ici .chev{color:var(--s-mfg);font-size:18px}
+.mock.louange .line-ici,.mock.louange .tagpill{background:var(--s-card)}
+/* passages (porte 2) */
+.ps{border-left:3px solid var(--sc);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:7px}
+.ps-h{display:flex;align-items:baseline;gap:8px}
+.ps-h b{font-size:16px;font-weight:600}
+.ps-h span{font-size:13px;color:var(--s-mfg)}
+.idee{display:flex;flex-direction:column;gap:6px;padding-top:2px}
+.idee .who{font-size:12.5px;color:var(--s-mfg)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.flat{display:flex;flex-direction:column}
+.flat .r{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--s-line)}
+.flat .r:first-child{border-top:0}
+.flat .r .n{font-size:16px;font-weight:600;min-width:84px}
+.flat .r .g{flex:1;font-size:14px}
+.flat .r .chev{color:var(--s-mfg);font-size:18px}
+/* bibliothèque */
+.chips{display:flex;gap:6px;overflow:hidden;flex-wrap:wrap}
+.chip{font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;background:var(--s-fill2);color:var(--s-fg);white-space:nowrap}
+.chip.on{background:var(--s-ink);color:var(--s-ink-fg)}
+.chip .zh{font-weight:500;margin-left:4px;opacity:.8}
+.fl{display:flex;flex-direction:column}
+.fl .r{display:flex;flex-direction:column;gap:3px;padding:11px 0;border-top:1px solid var(--s-line)}
+.fl .r:first-child{border-top:0}
+.fl .r.sel{background:var(--s-fond);margin:0 -10px;padding:11px 10px;border-radius:10px;border-top-color:transparent}
+.fl .tt{font-size:15.5px;font-weight:600}
+.fl .amb{font-size:13px;color:var(--s-mfg);line-height:1.35}
+.tabbar{position:absolute;left:14px;right:14px;bottom:14px;height:56px;border-radius:999px;background:var(--s-card);box-shadow:var(--s-shadow);display:flex;align-items:center;justify-content:space-around;font-size:12.5px;color:var(--s-mfg);font-weight:500}
+.tabbar .on{color:var(--s-fg);font-weight:700;background:var(--s-fill2);padding:8px 14px;border-radius:999px}
+/* fiche */
+.fi{display:flex;flex-direction:column;gap:12px}
+.fi h5{margin:0;font-size:22px;font-weight:700;line-height:1.15}
+.fi .meta{display:flex;gap:6px;flex-wrap:wrap}
+.fi h6{margin:0;font-size:13px;font-weight:500;color:var(--s-mfg)}
+.fi p{margin:0;font-size:14.5px;max-width:60ch}
+.ou{display:flex;flex-direction:column}
+.ou .r{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--s-line);font-size:14px}
+.ou .r:first-child{border-top:0}
+.ou .r .g{flex:1;min-width:0}
+.ou .r .ch{white-space:nowrap}
+.ou .r .chev{color:var(--chord-color);font-size:18px}
+.pn-nav{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--s-line);padding-top:10px;font-size:13.5px}
+.pn-nav span{color:var(--chord-color);font-weight:600}
+.cardmini{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--s-fond);border:1px solid var(--s-line)}
+.cardmini .g{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cardmini b{font-size:14.5px;font-weight:600}
+.pile{position:relative;flex:1;display:flex;flex-direction:column;gap:10px}
+.dotsrow{display:flex;gap:5px;justify-content:center}
+.dotsrow i{width:6px;height:6px;border-radius:50%;background:var(--s-line)}
+.dotsrow i.on{background:var(--s-fg)}
+.peek{position:absolute;top:0;bottom:0;width:14px;background:var(--s-fond);border:1px solid var(--s-line)}
+/* desktop */
+.side{width:248px;flex:none;border-right:1px solid var(--s-line);background:var(--s-fond);padding:16px 12px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.side .lg{font-weight:700;font-size:15px;padding:4px 10px 14px;color:var(--s-fg)}
+.side .it{padding:8px 10px;border-radius:9px;color:var(--s-mfg)}
+.side .it.on{background:var(--s-pose);color:var(--s-fg);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.main{flex:1;min-width:0;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.main .pg{padding:0 28px}
+.colh{width:400px;flex:none;border-left:1px solid var(--s-line);padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden;background:var(--s-bg)}
+.listcol{width:320px;flex:none;border-right:1px solid var(--s-line);padding:14px 14px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.fichecol{flex:1;min-width:0;padding:18px 24px;overflow:hidden;display:flex;flex-direction:column;gap:12px;position:relative}
+.bulle{position:absolute;width:380px;background:var(--s-card);border-radius:18px;box-shadow:var(--s-shadow);border:1px solid var(--s-line);padding:14px 16px;z-index:3}
+.bulle:before{content:"";position:absolute;top:-7px;left:var(--ax,40px);width:14px;height:14px;background:var(--s-card);border-left:1px solid var(--s-line);border-top:1px solid var(--s-line);transform:rotate(45deg)}
+.cote{position:absolute;font:600 11px var(--f-ui);background:var(--warn-bg);color:var(--warn);padding:2px 8px;border-radius:999px;z-index:5;white-space:nowrap}
+.tabs{display:flex;gap:6px;padding:0 0 2px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dim{opacity:.55}
+
+@media (max-width:700px){
+  body{padding-block:24px 56px}
+  h1{font-size:26px}
+  .piste{padding:14px}
+  .tab{--z:.5}.desk{--z:.5}
+  .hint{display:block}
+  .devrow{gap:14px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="intro">
+  <span class="eyebrow">Planche · 12/11/2026 · à trancher avant spec</span>
+  <h1>Harmonie : un seul contenu, trois portes</h1>
+  <p>Timothée trouve l'onglet Harmonie « pas très pratique », n'aime pas l'entrée par boucles, et remarque que l'harmonie est étalée un peu partout. Organisation validée (« Ok ») : un seul contenu, trois portes, dans l'esprit de wangshubianqu.com (on part d'un chant, l'oreille partout). Les trois pistes ci-dessous ne changent pas ce principe : elles décident <b>où le contenu vit vraiment</b> et <b>quelle porte est la grande</b>. Rien n'est codé.</p>
+</header>
+
+<section id="commun">
+  <h2>Ce qui est décidé, commun aux trois pistes</h2>
+  <div class="cols3">
+    <div class="box"><h3>Porte 1 · dans la partition</h3><p>On touche un accord (le geste existe : feuille au téléphone, bulle ailleurs). Le doigté reste ; s'y ajoutent le chiffre dans la tonalité, Écouter, « Et ensuite ? » (notes gardées, notes qui bougent) et l'idée qui s'applique à cet endroit précis.</p></div>
+    <div class="box"><h3>Porte 2 · « Harmonie de ce chant »</h3><p>Remplace la feuille « Idées d'harmonie » (page chant et setlist) : la grille passage par passage, ce que chacun fait, Écouter, les idées avec « avant / après », et dans une setlist la transition vers le chant suivant.</p></div>
+    <div class="box"><h3>Porte 3 · l'onglet Harmonie</h3><p>La bibliothèque pour apprendre hors répétition : fiches par <b>ressenti</b> et par <b>usage</b>, chaque fiche renvoyant aux chants de GCC qui la jouent ; les cours ; un volet « Jouer ensemble ».</p></div>
+  </div>
+  <div class="box"><h3>Une même fiche, un même bouton Écouter, partout</h3>
+    <p>L'objet ci-dessous est celui qui revient dans les trois portes (et dans la bande du mode louange) : la ligne d'enchaînement, chiffres puis lettres, et le bouton plein <b>Écouter</b>, jamais en orange (l'orange reste au refrain et à l'édition). Mode louange : seulement le point en marge de la porte 1, sans son ni animation.</p>
+    <div id="objet"></div>
+  </div>
+  <div class="devrow" id="commun-devs"></div>
+</section>
+
+<section id="comparatif">
+  <h2>Les trois pistes côte à côte</h2>
+  <div class="cols3" id="compa"></div>
+</section>
+
+<section id="pistes">
+  <div id="piste-A"></div>
+  <div id="piste-B"></div>
+  <div id="piste-C"></div>
+</section>
+
+<section id="constats">
+  <h2>Constats d'usage repris au passage</h2>
+  <p>Constats de l'audit du 11/11/2026 (espace Musiciens). Chaque piste les traite dans ses maquettes de la porte 3 ; ici, la correction en une ligne et l'alternative.</p>
+  <div class="tw"><table class="t">
+    <thead><tr><th>Constat</th><th>Correction recommandée</th><th>Alternative</th></tr></thead>
+    <tbody>
+      <tr><td><b>musiciens-5</b> · « Où l'entendre » sans liens</td><td>Chaque entrée devient un lien : le chant s'ouvre à la section citée (la porte 2 ouverte à ce passage) ; on retire ces chants de la liste « 49 chants qui le jouent déjà ».</td><td>Garder la liste des chants et n'y ajouter que les liens. Un chant sans section connue (荣耀至高神) ouvre le chant entier.</td></tr>
+      <tr><td><b>musiciens-7</b> · ambiances tronquées par « … »</td><td>Le ressenti et l'usage s'écrivent en entier, sur deux lignes au besoin ; deux ressentis au plus par fiche.</td><td>Une seule pastille de ressenti (le premier) et l'usage seulement dans la fiche.</td></tr>
+      <tr><td><b>musiciens-12</b> · pas de fiche précédente / suivante</td><td>Rangée « ‹ précédente · suivante › » en bas de chaque fiche, qui suit la liste filtrée ; « ‹ Harmonie » revient en arrière et retrouve sa place.</td><td>Flèches ← → au clavier et au geste seulement (piste C), sans rangée visible.</td></tr>
+      <tr><td><b>musiciens-10</b> · détail à ~530 px sur ordinateur 1 280</td><td>Liste réduite à 320 px : la fiche passe à 712 px (1 280 − barre 248 − liste 320).</td><td>Replier la barre latérale quand une fiche est ouverte : ~900 px à la lecture.</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="cout">
+  <h2>Ce que ça coûte</h2>
+  <p>Trois ou quatre tranches. (1) Moteur sans interface : découpage du chant en passages avec la fonction de chaque accord (<code>chiffreDuDegre</code>), suites « Et ensuite ? », rattachement des fiches et des idées à un passage précis, synthèse Écouter A / B dans le navigateur (coupée en mode louange). (2) Porte 2 : <code>IdeesSheet.tsx</code> refondu, bouton et colonne dans <code>SongDetailClient.tsx</code>, setlist, i18n fr / 中文. (3) Porte 1 : <code>PanneauAccord.tsx</code> et <code>AccordsProvider.tsx</code> reçoivent tonalité, section et chant. (4) Porte 3 : filtres Ressenti et Usage, fiche, volet « Jouer ensemble ». Une quinzaine de fichiers, deux nouveaux modules de lib, tests Playwright sur trois appareils, agencement sur cinq. La piste A est la moins chère ; la B, la plus chère (deux surfaces à tenir cohérentes) ; la C demande surtout les données (ressenti et usage de chaque fiche).</p>
+</section>
+
+<section id="questions">
+  <h2>Questions à trancher</h2>
+  <div class="questions" id="qs"></div>
+  <div class="box"><h3>Non vérifié (déduit du code, pas vu à l'écran)</h3>
+    <p>Taille réelle et densité de la feuille actuelle, du panneau d'accord et d'une setlist ; tablette paysage 1 180 × 820 (non dessinée : barre ~64 px + partition ~720 px + colonne ~380 px, à confirmer) ; sombre et mode louange ne sont que vérifiés sur les jetons. Les sections nommées des .cho chinois (calque 简谱) et l'ancre « section + position » d'un « Où l'entendre » sont à vérifier avant spec.</p></div>
+</section>
+
+</div>
+
+<script>
+/* ═════════ composants partagés : une seule définition, utilisée dans les trois portes de chaque piste ═════════ */
+const PLAY='<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.6 1.2v9.6L10.6 6z" fill="currentColor"/></svg>';
+const zh=s=>`<span lang="zh">${s}</span>`;
+const btnEc=(l='Écouter',c='')=>`<button type="button" class="ecouter ${c}">${PLAY}<span>${l}</span></button>`;
+const seg=(a,on=0)=>`<div class="seg">${a.map((x,i)=>`<span class="${i===on?'on':''}">${x}</span>`).join('')}</div>`;
+const chev='<span class="chev">›</span>';
+
+/* ligne d'enchaînement : chiffres puis lettres, côte à côte (bascule 字母 / 数字) */
+const ench=(d1,d2,l1,l2)=>`<p class="ench"><span class="num">${d1} → ${d2}</span><span class="sep">·</span><span>${l1} → ${l2}</span></p>`;
+const grille=(d,l)=>`<p class="ench"><span class="num">${d}</span><span class="sep">·</span><span>${l}</span></p>`;
+
+/* partition : « [G*]texte » (* = accord touché, ^ = accord entendu) */
+function lyr(src){
+  const t=src.split(/(\[[^\]]+\])/).filter(x=>x!=='');let o='',i=0;
+  if(!t[0].startsWith('[')){o+=`<span class="u"><b class="c"> </b><span class="t">${t[0]}</span></span>`;i=1}
+  for(;i<t.length;i++){
+    let c=t[i].slice(1,-1),x='';if(t[i+1]&&!t[i+1].startsWith('[')){x=t[++i]}
+    let k='c';if(c.endsWith('*')){c=c.slice(0,-1);k+=' on'}if(c.endsWith('^')){c=c.slice(0,-1);k+=' hear'}
+    o+=`<span class="u"><b class="${k}">${c}</b><span class="t">${x.trim()===''&&x.length?x:x.replace(/^ /,'')||' '}</span></span>`;
+  }
+  return `<div class="ln">${o}</div>`;
+}
+const blk=(t,n,lines,fn)=>`<div class="blk" style="--sc:var(--sec-${t})"><div class="secname">${n}</div>${lines.map(x=>x.startsWith('~')?`<div class="py" lang="zh">${x.slice(1)}</div>`:lyr(x)).join('')}</div>`;
+
+/* données : vrais chants de GCC (content/songs) */
+const HOS={
+  couplet:['[D]Je vois le Roi de gloire','[Bm]qui revient sur les nuées.','Les nations tr[Em7]emblent,','les nations tr[A]emblent.[Bm7]'],
+  refrain:t=>[`Hos[D/F#]ann[G${t||''}]a, hos[A]ann[Bm]a,`,'ho[G]sanna à Toi [Bm]Seigneur[A].'],
+  pont:['[Bm7]  [D]  [Em7]  [F#m7]','[G]Prends mon cœur et rends-le p[A]ur,','[D]Ouvre grand mes yeux à Ta [Bm]vérité.']
+};
+const ZHS=(t)=>[`[D]圣洁尊贵全[A/C#${t||''}]能神，你国度[Bm7]降临这地[D/A]，`,'~shèng jié zūn guì quán néng shén nǐ guó dù jiàng lín zhè dì','[G]荣耀得胜大[D/F#]君王，你荣美[Em7]无人能及[A]。','~róng yào dé shèng dà jūn wáng nǐ róng měi wú rén néng jí'];
+
+/* doigté guitare : cases de la corde grave à la corde aiguë, -1 = non jouée, 0 = à vide */
+function doigte(f,from=1){
+  const sx=i=>8+i*9.6, fy=j=>12+j*14; let s='<svg class="doigte" viewBox="0 0 64 76" role="img" aria-label="Doigté guitare">';
+  for(let i=0;i<6;i++)s+=`<line x1="${sx(i)}" y1="12" x2="${sx(i)}" y2="68" stroke="currentColor" stroke-width=".8"/>`;
+  for(let j=0;j<=4;j++)s+=`<line x1="${sx(0)}" y1="${fy(j)}" x2="${sx(5)}" y2="${fy(j)}" stroke="currentColor" stroke-width="${j===0&&from===1?2:.8}"/>`;
+  f.forEach((v,i)=>{ if(v<0)s+=`<text class="nt" x="${sx(i)}" y="9" text-anchor="middle">×</text>`; else if(v===0)s+=`<circle cx="${sx(i)}" cy="7" r="2.6" fill="none" stroke="currentColor"/>`; else s+=`<circle class="dt" cx="${sx(i)}" cy="${fy(v-from)+7}" r="4.2"/>`;});
+  return s+'</svg>';
+}
+/* clavier fixe à trois octaves (lot H1) : plein = note gardée, contour = note qui bouge */
+function clavier(plein=[],contour=[]){
+  const L={C:0,D:1,E:2,F:3,G:4,A:5,B:6},W=14,H=58,BW=9,BH=36;
+  const pos=n=>{const m=n.match(/^([A-G])(#?)(\d)$/);const wi=(+m[3]-3)*7+L[m[1]];return{wi,b:!!m[2]}};
+  const st=n=>plein.includes(n)?'p':contour.includes(n)?'o':'';
+  let w='',b='';
+  for(let o=3;o<6;o++)for(const l of 'CDEFGAB'){const n=l+o;w+=`<rect class="w ${st(n)}" x="${((o-3)*7+L[l])*W}" y="0" width="${W}" height="${H}" rx="2"/>`;}
+  for(let o=3;o<6;o++)for(const l of 'CDFGA'){const n=l+'#'+o;const x=((o-3)*7+L[l]+1)*W-BW/2;b+=`<rect class="b ${st(n)}" x="${x}" y="0" width="${BW}" height="${BH}" rx="1.5"/>`;}
+  return `<svg class="kb" viewBox="0 0 294 ${H}" role="img" aria-label="Notes au piano">${w}${b}</svg>`;
+}
+const fctMots=(m)=>({repos:`repos · ${zh('主')}`,eloigne:`s'éloigne · ${zh('下属')}`,appelle:`appelle · ${zh('属')}`}[m]);
+
+/* barres, en-têtes */
+const bar=(l,r)=>`<div class="bar"><span class="back">‹ ${l}</span><span>${r||''}</span></div>`;
+const dots='<span class="dots">···</span>';
+function chantHead({ton='D',titre='Hosanna',art='Hillsong',harmonie=false,py=''}){
+  return `${bar('Chants',harmonie?'':dots)}<div class="pg" style="flex:none;padding-bottom:0"><div class="ttl">${titre}</div>${py?`<div class="art" lang="zh">${py}</div>`:''}<div class="art">${art}</div>
+  <div class="ctl"><span class="key">${ton}</span>${seg(['Lettres','Chiffres'],0)}${harmonie?`<span class="btn">Harmonie ${zh('和声')}</span>`:''}</div></div>`;
+}
+const phone=(inner,cls='')=>`<div class="mock phone ${cls}" style="display:flex;flex-direction:column">${inner}</div>`;
+const dev=(label,mock,scroll)=>`<div class="dev"><div class="dev-label">${label}</div>${scroll?`<div class="scrollx">${mock}</div>`:mock}</div>`;
+
+/* ── panneau d'accord : le contenu de la porte 1, variantes par piste ── */
+const SUITES=[
+  {n:'5',l:'A',w:'dans ce chant',g:'tout monte d\'un cran',keep:[],mv:['A3','C#4','E4']},
+  {n:'6m',l:'Bm',w:'dans ce chant',g:'garde B D · G → F#',keep:['B3','D4'],mv:['F#4']},
+  {n:'1',l:'D',w:'',g:'garde D · G → F#, B → A',keep:['D4'],mv:['F#3','A3']}
+];
+function suitesA(open=0){
+  return `<div class="flat">${SUITES.map((s,i)=>`<div class="suite"><span class="num">${s.n}</span><span class="let ch">${s.l}</span>${s.w?`<span class="tagpill">${s.w}</span>`:'<span class="grow"></span>'}<span class="why" style="text-align:right">${i===open?'':s.g}</span>${i===open?'<span class="chev">⌄</span>':chev}</div>${i===open?`<div style="padding:2px 0 10px;display:flex;flex-direction:column;gap:6px"><div class="gard"><b>Garde</b> rien · <b>bouge</b> G → A, B → C#, D → E</div>${clavier([],['A3','C#4','E4'])}</div>`:''}`).join('')}</div>`;
+}
+const alignIdee=()=>`<div class="al"><span class="l">Avant</span><span>4</span><span>5</span><span>G</span><span>A</span><span class="l">Après</span><span>2m7</span><span>5</span><span>Em7</span><span>A</span></div>`;
+
+function pnA({zhv=false,bulle=false}={}){
+  if(bulle) return `<div class="pn">
+    <div class="pn-head"><span class="pn-ch">G</span><div style="flex:1"><div class="pn-deg"><span class="num">4</span> dans D</div><div class="pn-fct">${fctMots('eloigne')}</div></div>${btnEc()}</div>
+    <div class="pn-row">${doigte([3,2,0,0,0,3],1)}<div class="notes">notes G B D<br>${seg(['Guitare','Piano'],0)}</div></div>
+    ${clavier(['G3','B3','D4'])}
+    <div class="bt">Et ensuite ?</div>
+    <div class="flat"><div class="suite"><span class="num">5</span><span class="let ch">A</span><span class="tagpill">dans ce chant</span><span class="why" style="text-align:right">tout monte d'un cran</span>${chev}</div><div class="suite"><span class="num">6m</span><span class="let ch">Bm</span><span class="tagpill">dans ce chant</span><span class="why" style="text-align:right">garde B D</span>${chev}</div></div>
+    <div class="hr"></div><div class="bt">Idée pour cet endroit</div>${alignIdee()}
+    <div class="btns">${btnEc('Écouter avant','ctr sm')}${btnEc('Écouter après','ctr sm')}</div></div>`;
+  if(zhv) return `<div class="pn">
+    <div class="pn-head"><span class="pn-ch">A/C#</span><div style="flex:1"><div class="pn-deg"><span class="num">5/7</span> dans D</div><div class="pn-fct">${fctMots('appelle')}</div></div>${btnEc()}</div>
+    <div class="pn-row">${doigte([-1,4,2,2,2,-1],1)}<div class="notes">notes A C# E · basse C#<br>${seg(['Guitare','Piano'],0)}</div></div>
+    <div class="hr"></div><div class="bt">Et ensuite ?</div>
+    <div class="flat"><div class="suite"><span class="num">1</span><span class="let ch">D</span><span class="grow"></span><span class="chev">⌄</span></div><div style="padding:2px 0 10px;display:flex;flex-direction:column;gap:6px"><div class="gard"><b>Garde</b> A · <b>bouge</b> C# → D, E → F#</div>${clavier(['A3'],['D4','F#4'])}</div><div class="suite"><span class="num">6m</span><span class="let ch">Bm7</span><span class="tagpill">dans ce chant</span><span class="why" style="text-align:right">garde A</span>${chev}</div><div class="suite"><span class="num">4</span><span class="let ch">G</span><span class="why">tout descend d'un cran</span>${chev}</div></div></div>`;
+  return `<div class="pn">
+    <div class="pn-head"><span class="pn-ch">G</span><div style="flex:1"><div class="pn-deg"><span class="num">4</span> dans D</div><div class="pn-fct">${fctMots('eloigne')}</div></div>${btnEc()}</div>
+    <div class="pn-row">${doigte([3,2,0,0,0,3],1)}<div class="notes">notes G B D<br>${seg(['Guitare','Piano'],0)}</div></div>
+    <div class="hr"></div><div class="bt">Et ensuite ?</div>${suitesA(0)}
+    <div class="hr"></div><div class="bt">Idée pour cet endroit</div>${alignIdee()}
+    <div class="btns">${btnEc('Écouter avant','ctr sm')}${btnEc('Écouter après','ctr sm')}</div></div>`;
+}
+function pnB({plie=true,zhv=false}={}){
+  if(zhv) return `<div class="pn">
+    <div class="pn-head"><span class="pn-ch">A/C#</span><div style="flex:1"><div class="pn-deg"><span class="num">5/7</span> dans D</div><div class="pn-fct">${fctMots('appelle')}</div></div>${btnEc()}</div>
+    <div class="pn-row">${doigte([-1,4,2,2,2,-1],1)}<div class="notes">notes A C# E · basse C#<br>${seg(['Guitare','Piano'],0)}</div></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><div class="line-ici" style="border-radius:12px 12px 4px 4px"><div class="grow"><b>Ensuite :</b> <span class="num">1 · 6m · 4</span></div><span class="chev">⌄</span></div><div style="padding:0 2px;display:flex;flex-direction:column;gap:5px"><div class="gard"><b>1 · D</b> : garde A, C# monte à D, E à F#</div>${clavier(['A3'],['D4','F#4'])}<div class="gard"><b>6m · Bm7</b> : garde A <span class="tagpill">dans ce chant</span></div></div></div></div>`;
+  return `<div class="pn">
+    <div class="pn-head"><span class="pn-ch">G</span><div style="flex:1"><div class="pn-deg"><span class="num">4</span> dans D</div><div class="pn-fct">${fctMots('eloigne')}</div></div>${btnEc()}</div>
+    <div class="pn-row">${doigte([3,2,0,0,0,3],1)}<div class="notes">notes G B D<br>${seg(['Guitare','Piano'],0)}</div></div>
+    ${plie?`<div class="line-ici"><div class="grow"><b>Ensuite :</b> <span class="num">5 · 6m · 1</span></div>${chev}</div>`:`<div style="display:flex;flex-direction:column;gap:6px"><div class="line-ici" style="border-radius:12px 12px 4px 4px"><div class="grow"><b>Ensuite :</b> <span class="num">5 · 6m · 1</span></div><span class="chev">⌄</span></div><div style="padding:0 2px;display:flex;flex-direction:column;gap:5px"><div class="gard"><b>5 · A</b> : rien ne reste, tout monte d'un cran</div>${clavier([],['A3','C#4','E4'])}<div class="gard"><b>6m · Bm</b> : garde B D, G → F# <span class="tagpill">dans ce chant</span></div></div></div>`}
+    <div class="line-ici"><div class="grow"><b>Ici :</b> <span class="num">4 5 → 2m7 5</span> <span class="muted">· refrain</span></div>${chev}</div></div>`;
+}
+const cardFiche=(t,a,b,c,d)=>`<div class="cardmini"><div class="g"><b>${t}</b>${ench(a,b,c,d)}</div>${btnEc('Écouter','sm')}</div>`;
+function pnC(){
+  return `<div class="pn">
+    <div class="pn-head"><span class="pn-ch">G</span><div style="flex:1"><div class="pn-deg"><span class="num">4</span> dans D</div><div class="pn-fct">${fctMots('eloigne')}</div></div>${btnEc()}</div>
+    <div class="pn-row">${doigte([3,2,0,0,0,3],1)}<div class="notes">notes G B D<br>${seg(['Guitare','Piano'],0)}</div></div>
+    <div class="hr"></div><div class="bt">Fiches qui s'appliquent ici</div>
+    ${cardFiche('Le 2m7 à la place du 4','4 5','2m7 5','G A','Em7 A')}
+    ${cardFiche('Le maj7 sur le 1 et le 4','1 4','1maj7 4maj7','D G','Dmaj7 Gmaj7')}
+    <div class="bt" style="text-align:center">Toutes les fiches de ce chant ›</div></div>`;
+}
+
+/* ── porte 2 ── */
+const PASS=[
+  {t:'intro',n:'Intro',z:'前奏',d:'6m 1 2m7 3m7',l:'Bm D Em7 F#m7',p:'On monte par degrés depuis le 6m : repos, repos, puis le 2m7 s\'éloigne.'},
+  {t:'verse',n:'Couplet',z:'主歌',d:'1 6m 2m7 5 6m7',l:'D Bm Em7 A Bm7',p:'Ça tourne autour du 1. Le 2m7 s\'éloigne, le 5 appelle le retour.'},
+  {t:'chorus',n:'Refrain',z:'副歌',d:'1/3 4 5 6m 4 6m 5',l:'D/F# G A Bm G Bm A',p:'Le 4 s\'éloigne, le 5 appelle ; le 6m pose. Deux fois de suite.'},
+  {t:'bridge',n:'Pont',z:'桥段',d:'4 5 1 6m · 4 5 6m · 4 5 4',l:'G A D Bm · G A Bm · G A G',p:'Reprend l\'intro, puis le 4 et le 5 appellent le 1 jusqu\'au dernier mot.'}
+];
+const ideeRefrain=()=>`<div class="idee"><div class="bt">Idée pour ce passage</div>${ench('4 5','2m7 5','G A','Em7 A')}<div class="btns">${btnEc('Écouter avant','ctr xs')}${btnEc('Écouter après','ctr xs')}</div></div>`;
+const ideeEquipe=()=>`<div class="idee"><div class="bt">Idée de l'équipe</div><p class="phr">Finir le pont sur un A tenu pour retomber sur le refrain.</p>${ench('4','5','G','A')}<div class="who">Marion · ${btnEc('Écouter','ctr xs')}</div></div>`;
+function passageB(p,{idee=false,equipe=false}={}){
+  return `<div class="ps" style="--sc:var(--sec-${p.t})"><div class="ps-h"><b>${p.n}</b><span>${p.z}</span></div>${grille(p.d,p.l)}<p class="phr">${p.p}</p><div class="btns">${btnEc('Écouter','xs')}</div>${idee?ideeRefrain():''}${equipe?ideeEquipe():''}</div>`;
+}
+function sommaireA(){
+  return `<div class="flat">${PASS.map(p=>`<div class="r"><span class="n">${p.n}</span><span class="g num" style="font-weight:500">${p.d.split(' · ')[0]}</span>${chev}</div>`).join('')}</div>`;
+}
+const transitionB=()=>`<div class="ps" style="--sc:var(--s-line)"><div class="ps-h"><b>Vers le chant suivant</b><span>${zh('接下一首')}</span></div><p class="phr"><b>Hosanna</b> finit sur le 4 (G). ${zh('荣耀至高神')} commence sur le 1 (D), même tonalité : ça passe tout seul.</p>${ench('4','1','G','D')}<p class="phr muted">C'est la cadence « amen ».</p><div class="btns">${btnEc('Écouter la transition','sm')}</div></div>`;
+const modulationB=()=>`<div class="ps" style="--sc:var(--sec-chorus)"><div class="ps-h"><b>Faire monter le dernier refrain</b></div><p class="phr">Dernier Refrain en E (un ton plus haut).</p><div class="btns">${btnEc('Écouter','ctr xs')}<button type="button" class="ecouter xs" style="background:transparent;color:var(--s-fg);box-shadow:inset 0 0 0 1.5px var(--s-fg)">Appliquer à la setlist</button></div></div>`;
+
+/* ── porte 3 : liste et fiche ── */
+const ROWS=[
+  {t:'Le maj7 sur le 1 et le 4',a:'1 4',b:'1maj7 4maj7',c:'D G',d:'Dmaj7 Gmaj7',r:'chaleureux, mélancolique',u:'couplet',n:'Facile'},
+  {t:'Le 2m7 à la place du 4',a:'4 5',b:'2m7 5',c:'G A',d:'Em7 A',r:'chaleureux',u:'couplet, pré-refrain',n:'Facile',sel:1},
+  {t:'Le 6m à la place du 1 répété',a:'1 1',b:'1 6m',c:'D D',d:'D Bm',r:'chaleureux, mélancolique',u:'couplet, refrain',n:'Facile'},
+  {t:'La fin « amen »',a:'5 1',b:'5 1 4/1 1',c:'A D',d:'A D G/D D',r:'chaleureux',u:'fin',n:'Facile'},
+  {t:'La fin ouverte sur 6m7',a:'1',b:'6m7',c:'D',d:'Bm7',r:'mélancolique, couleur',u:'fin',n:'Facile'},
+  {t:'Le sus4 qui se résout',a:'5 1',b:'5sus4 5 1',c:'A D',d:'Asus4 A D',r:'élan, chaleureux',u:'pré-refrain, refrain, fin',n:'Facile'},
+  {t:'La montée épique b6 – b7 – 1',a:'5 1',b:'b6 b7 1',c:'A D',d:'Bb C D',r:'élan',u:'fin, refrain',n:'Intermédiaire'}
+];
+const filtres=(c)=>`<div style="display:flex;flex-direction:column;gap:8px"><div class="chips"><span class="chip">Tous</span><span class="chip on">Chaleureux ${zh('温暖')}</span><span class="chip">Mélancolique ${zh('忧伤')}</span><span class="chip">Élan ${zh('推进')}</span><span class="chip">Couleur ${zh('色彩')}</span></div><div class="chips"><span class="chip on">Couplet</span><span class="chip">Pré-refrain</span><span class="chip">Refrain</span><span class="chip">Fin</span><span class="chip">Transition</span></div>${c?'':''}</div>`;
+function liste(n=7,{ench:e=true,sel=true}={}){
+  return `<div class="fl">${ROWS.slice(0,n).map(r=>`<div class="r ${sel&&r.sel?'sel':''}"><span class="tt">${r.t}</span>${e?ench(r.a,r.b,r.c,r.d):''}<span class="amb">${r.r} · ${r.u} · ${r.n}</span></div>`).join('')}</div>`;
+}
+function onglets3(on=0){return `<div class="tabs">${seg(['Fiches','Cours','Jouer ensemble'],on)}</div>`}
+const instr=`<div class="chips"><span class="chip on">Guitare</span><span class="chip">Piano</span><span class="chip" style="margin-left:auto">Du plus simple au plus avancé</span></div>`;
+
+function ficheS1({prevnext=true,larg=false,court=false}={}){
+  return `<div class="fi">
+    <div><h5>Le 2m7 à la place du 4</h5><div class="meta" style="margin-top:8px"><span class="tagpill">chaleureux ${zh('温暖')}</span><span class="tagpill">couplet ${zh('主歌')}</span><span class="tagpill">pré-refrain</span><span class="tagpill">Facile</span></div></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${ench('4 5','2m7 5','G A','Em7 A')}</div>
+    <div class="btns">${btnEc()}${btnEc('Avant','ctr')}${btnEc('Après','ctr')}</div>
+    ${court?'':`<div class="cols2" ${larg?'':'style="grid-template-columns:1fr"'}>
+      <div class="fi"><h6>Pourquoi ça marche</h6><p>Em7 (E G B D) contient les trois notes de G (G B D) : la mélodie ne peut pas frotter. Seule la basse change.</p></div>
+      <div class="fi"><h6>Au piano</h6><p>La main droite ne bouge pas : G-B-D. La main gauche joue E au lieu de G.</p>${clavier(['G3','B3','D4'],['E3'])}</div>
+    </div>`}
+    <div><h6>Où l'entendre · touche pour ouvrir le chant à ce passage</h6><div class="ou">
+      <div class="r"><div class="g"><b>Hosanna</b> · couplet « Les nations tremblent » <span class="ch">Em7 – A</span></div>${chev}</div>
+      <div class="r"><div class="g"><b>Il m'aime</b> · refrain, en G <span class="ch">Am7 – D</span></div>${chev}</div>
+      <div class="r"><div class="g"><b>Le Fils de Dieu</b> · couplet <span class="ch">Em7 – A7</span></div>${chev}</div>
+      <div class="r"><div class="g"><b>${zh('荣耀至高神')}</b> <span class="muted">· ouvre le chant</span></div>${chev}</div>
+    </div></div>
+    ${prevnext?`<div class="pn-nav"><span>‹ Le maj7 sur le 1 et le 4</span><span>Le 6m à la place du 1 répété ›</span></div>`:''}
+  </div>`;
+}
+
+/* mode louange : le point en marge, la bande d'une ligne (aucun son, aucune animation) */
+function louange(v){
+  const bande={
+    A:`<div class="line-ici" style="background:var(--s-card)"><div class="grow"><b>Ici</b> <span class="num">4 5 → 2m7 5</span></div><span class="chev">⌃</span></div>`,
+    B:`<div class="line-ici" style="background:var(--s-card);flex-direction:column;align-items:flex-start;gap:4px"><div class="muted" style="font-size:12.5px">Refrain</div>${ench('4 5','2m7 5','G A','Em7 A')}</div>`,
+    C:`<div class="line-ici" style="background:var(--s-card)"><div class="grow"><b>Fiche</b> · Le 2m7 à la place du 4</div><span class="chev">›</span></div>`
+  }[v];
+  const pt=v==='B'?['verse','chorus']:['chorus'];
+  return `<div class="mock louange phone" style="display:flex;flex-direction:column;padding:20px 20px 16px"><div class="muted" style="font-size:13px;display:flex;justify-content:space-between"><span>Hosanna · D</span><span>Refrain</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:26px;position:relative">
+    <div style="position:relative;padding-left:12px">${v==='B'?'<span class="marge" style="top:9px;left:-6px"></span>':''}<div class="ln" style="font-size:24px;line-height:1.5">${lyr('Hos[D/F#]ann[G]a, hos[A]ann[Bm]a,').replace(/class="ln"/,'')}</div></div>
+    <div style="position:relative;padding-left:12px">${v!=='B'?'<span class="marge" style="top:34px;left:-6px"></span>':''}<div class="ln" style="font-size:24px;line-height:1.5">${lyr('ho[G]sanna à Toi [Bm]Seigneur[A].')}</div></div>
+    <div style="position:relative;padding-left:12px"><div class="ln" style="font-size:24px;line-height:1.5;opacity:.5">${lyr('Hos[D/F#]ann[G]a, hos[A]ann[Bm]a,')}</div></div>
+  </div>${bande}<div class="muted" style="font-size:11.5px;text-align:center;margin-top:8px">Point en marge · pas de son · pas d'animation</div></div>`;
+}
+
+/* ═════════ objet commun et volet « Jouer ensemble » (identique dans les trois pistes) ═════════ */
+document.getElementById('objet').innerHTML=`<div class="mock site" style="zoom:1;border-radius:14px;padding:16px;display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;max-width:620px">${ench('4 5','2m7 5','G A','Em7 A')}<div class="btns">${btnEc()}${btnEc('Écouter avant','ctr sm')}${btnEc('Écouter après','ctr sm')}</div></div>`;
+function jouerEnsemble(){
+  const roles=[['Basse','Fondation harmonique et rythmique','Doubler la main gauche du piano'],['Piano','Harmonie, couleur, rythme','Tout jouer tout le temps'],['Guitare acoustique','Rythme, texture','Le même registre que le piano'],['Guitare électrique','Textures, réponses','Jouer en même temps que la voix']];
+  return phone(`${bar('Harmonie')}<div class="pg"><div class="ttl" style="font-size:24px">Harmonie ${zh('和声')}</div><div style="margin:12px 0">${onglets3(2)}</div>
+  <div class="bt" style="margin-bottom:6px">Un cours à lire dans l'ordre</div>
+  <div class="flat"><div class="r"><span class="n" style="min-width:0;flex:1">1 · Le rôle de chaque instrument</span>${chev}</div><div class="r"><span class="n" style="min-width:0;flex:1">2 · Piano main gauche et basse</span>${chev}</div><div class="r"><span class="n" style="min-width:0;flex:1">3 · Deux guitares ensemble</span>${chev}</div><div class="r"><span class="n" style="min-width:0;flex:1">4 · Intro, pont, fin</span>${chev}</div></div>
+  <div class="hr" style="margin:10px 0"></div><div class="bt" style="margin-bottom:4px">1 · Le rôle de chaque instrument</div>
+  <div class="flat">${roles.map(r=>`<div class="r" style="align-items:flex-start;flex-direction:column;gap:2px"><b style="font-size:15px">${r[0]} <span class="muted" style="font-weight:400;font-size:13px">· ${r[1]}</span></b><span style="font-size:13px" class="muted">À éviter : ${r[2]}</span></div>`).join('')}</div>
+  <div class="line-ici" style="margin-top:10px"><div class="grow"><b>À entendre :</b> Hosanna, l'intro revient au début du pont</div><span class="chev">›</span></div></div>`);
+}
+document.getElementById('commun-devs').innerHTML=dev('Téléphone · volet « Jouer ensemble » (un cours, pas des fiches)',jouerEnsemble())+`<div class="aside"><b>Ressenti et usage : correspondance proposée</b><ul>
+ <li>Chaleureux ${zh('温暖')} : douceur et intimité · repos · lumière et espérance</li>
+ <li>Mélancolique ${zh('忧伤')} : tendresse et nostalgie · gravité et recueillement</li>
+ <li>Élan ${zh('推进')} : joie et élan · épique · majesté · tension</li>
+ <li>Couleur ${zh('色彩')} : suspendu et planant · émerveillement · surprise</li></ul>
+ <p style="font-size:13.5px">Usage : couplet ${zh('主歌')} · pré-refrain (ex-« montée ») · refrain ${zh('副歌')} · fin ${zh('结尾')} · transition ${zh('过渡')}. Les fiches d'intro et de pont perdent leur étiquette : question 4. À valider fiche par fiche.</p>
+ <p style="font-size:13.5px"><b>Les maquettes des pistes</b> montrent Hosanna (couplet, refrain, pont) et ${zh('荣耀至高神')} (主歌, avec pinyin) ; noms de personnes fictifs ; lignes de la partition coupées à la main pour tenir au téléphone.</p></div>`;
+
+/* ═════════ PISTE A : le pupitre ═════════ */
+const fiche4=(p,t,m,mv)=>`<div class="fiche4"><div><b>Palette.</b> ${p}</div><div><b>Typo.</b> ${t}</div><div><b>Matières.</b> ${m}</div><div><b>Mouvement.</b> ${mv}</div></div>`;
+const pistehead=(n,reco,sub)=>`<div class="piste-head"><h3>${n}</h3>${reco?'<span class="tag">Recommandée</span>':'<span class="tag neutre">Piste</span>'}</div>`;
+const procon=(p,c)=>`<div class="pro-con"><div><span class="plus">Pour</span><ul>${p.map(x=>`<li>${x}</li>`).join('')}</ul></div><div><span class="moins">Contre</span><ul>${c.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>`;
+const coteP=(t,s)=>`<span class="cote" style="${s}">${t}</span>`;
+const desk=(side,main,extra='',h)=>`<div class="mock desk" style="position:relative${h?';height:'+h+'px':''}">${side}${main}${extra}</div>`;
+const sideNav=(on)=>`<div class="side"><div class="lg">GCC Louange</div>${['Accueil','Chants','Setlists','Planning','Musiciens','Moi'].map(x=>`<div class="it ${x===on?'on':''}">${x}</div>`).join('')}</div>`;
+const musTabs=(on)=>`<div class="tabbar">${['Accords','Harmonie','Théorie','RD-2000'].map(x=>`<span class="${x===on?'on':''}">${x}</span>`).join('')}</div>`;
+
+function pisteA(){
+  const phones=[
+    dev('Porte 1 · on touche le G du refrain : feuille haute, la partition reste visible au-dessus',phone(`${chantHead({})}<div class="pg">${blk('chorus','Refrain',HOS.refrain('*'))}${blk('verse','Couplet 2',HOS.couplet)}</div><div class="scrim"></div><div class="sheet" style="top:150px"><div class="grab"></div>${pnA()}</div>`)),
+    dev('Porte 2 · feuille courte « Passages » : un sommaire, rien de plus',phone(`${chantHead({})}<div class="pg">${blk('verse','Couplet 1',HOS.couplet)}${blk('chorus','Refrain',HOS.refrain())}</div><div class="scrim"></div><div class="sheet" style="top:360px"><div class="grab"></div><div class="sh-head"><h4>Passages</h4><span class="x">×</span></div><div class="bt">Toucher un passage fait défiler la partition</div>${sommaireA()}<div class="muted" style="font-size:12.5px;margin-top:4px">Les idées s'ouvrent depuis l'accord touché, pas d'ici.</div></div>`)),
+    dev('Porte 3 · bibliothèque : filtres par ressenti et usage, liste à part',phone(`${bar('Musiciens')}<div class="pg"><div class="ttl" style="font-size:24px">Harmonie ${zh('和声')}</div><div style="margin:10px 0 10px">${onglets3(0)}</div>${filtres()}<div style="margin:10px 0 4px">${instr}</div>${liste(5,{ench:false})}</div>${musTabs('Harmonie')}`)),
+    dev('Mode louange · le point en marge et la bande d\'une ligne',louange('A'))
+  ].join('');
+  const tab=dev('Tablette portrait 820 · feuille centrée (max 576 px), même contenu que le téléphone',`<div class="mock tab" style="display:flex;flex-direction:column">${bar('Chants',dots)}<div class="pg" style="padding:0 28px;flex:1"><div class="ttl" style="font-size:30px">${zh('荣耀至高神')}</div><div class="art" lang="zh">Róng yào zhì gāo shén</div><div class="art">陈琰冰</div><div class="ctl"><span class="key">D</span>${seg(['字母','数字'],0)}<span class="btn" style="border-color:var(--jianpu-color);color:var(--jianpu-color)">${zh('简谱')}</span></div>${blk('verse','主歌 · Couplet',ZHS('*'))}${blk('chorus','副歌 · Refrain',['[A]荣耀至高神[D]，配得尊崇敬[A/C#]拜，','~róng yào zhì gāo shén pèi dé zūn chóng jìng bài','[D]诸天述说[G]你的荣耀[D/F#]，','~zhū tiān shù shuō nǐ de róng yào'])}${blk('bridge','桥段 · Pont',['[G]至圣至荣，可[D/F#]颂可畏，[Em7]全能三[A]一神[D]，','~zhì shèng zhì róng kě sòng kě wèi quán néng sān yī shén'])}</div><div class="scrim"></div><div class="sheet" style="left:122px;right:122px;border-radius:20px 20px 0 0"><div class="grab"></div>${pnA({zhv:true})}</div></div>`,true)
+    +`<div class="aside"><b>Tablette portrait</b><ul><li>Feuille centrée, <code>max-w-xl</code>, comme aujourd'hui : on ne change que le contenu.</li><li>Le chiffre <span class="num">5/7</span> dit : accord de 5, basse sur le 7 (A/C# dans D).</li><li>La fonction s'écrit en mots de musicien, en français et en ${zh('属')}.</li><li>Pas d'idée ici : aucun bloc vide.</li></ul></div>`;
+  const d1=dev('Ordinateur 1 280 · la bulle naît de l\'accord (380 px, sans voile) ; la partition reste lisible autour',desk(sideNav('Chants'),`<div class="main">${chantHead({})}<div class="pg" style="display:grid;grid-template-columns:1fr 1fr;gap:0 40px">${`<div>${blk('verse','Couplet 1',HOS.couplet)}</div><div>${blk('chorus','Refrain',HOS.refrain('*'))}${blk('bridge','Pont',HOS.pont)}</div>`}</div>
+   <div class="bulle" style="left:452px;top:214px;--ax:176px">${pnA({bulle:true})}</div></div>`,'',760),true);
+  const d2=dev('Ordinateur 1 280 · porte 3 : liste 320 px et fiche 712 px (au lieu de ~530), précédente / suivante',desk(sideNav('Musiciens'),`<div class="main" style="flex-direction:row"><div class="listcol"><div class="ttl" style="font-size:20px">Harmonie ${zh('和声')}</div>${onglets3(0)}${filtres()}${liste(5,{ench:false})}</div><div class="fichecol">${ficheS1({larg:true})}${coteP('712 px','right:14px;top:10px')}</div></div>`),true);
+  return `<div class="piste">${pistehead('A. Le pupitre (tout dans l\'accord touché)',false)}
+  <p>La partition est la seule entrée : l'accord qu'on touche ouvre un panneau riche. La feuille du chant n'est plus qu'un sommaire des passages, la bibliothèque un lieu d'étude à part.</p>
+  ${fiche4('jetons actuels, rien d\'ajouté ; Écouter plein <code>--foreground</code> ; notes gardées pleines, notes qui bougent en contour.','police du site, accords en <code>font-chord</code>, chiffres tabulaires pour que « 4 5 → 2m7 5 » s\'aligne en colonne ; titres de bloc en phrase, gris.','la feuille Drawer (88 vh) ou la bulle élargie à 380 px, une seule couche, pas de scrim sur la bulle ; sommaire en liste plate, sans cartes.','bulle qui naît de l\'accord, ressort amorti 1.0 en 0,3 s ; « Et ensuite ? » se déplie en place ; l\'accord entendu se surligne pas à pas ; mode louange : le point et la bande, sans animation.')}
+  <p class="rowlabel">Téléphone 390</p><div class="devrow">${phones}</div>
+  <p class="rowlabel">Tablette 820</p><div class="devrow">${tab}</div>
+  <p class="rowlabel">Ordinateur 1 280</p><div class="devrow">${d1}</div><div class="devrow">${d2}</div>
+  ${procon(['Un seul geste à apprendre : on touche l\'accord.','Le moins cher : le panneau existe déjà.','Aucune nouvelle surface sur la page chant.'],['Au téléphone en plein service, la feuille haute cache les lignes qu\'on joue.','La vue d\'ensemble du chant (fonction de chaque passage, transition vers le chant suivant) n\'a plus de vraie place : la porte 2 devient un doublon du sommaire.','Le panneau doit connaître section, tonalité et chant suivant partout où <code>AccordTouchable</code> apparaît, fiches comprises.'])}</div>`;
+}
+
+/* ═════════ PISTE B : la grille du chant (recommandée) ═════════ */
+function pisteB(){
+  const colG=(withTr)=>`<div class="sh-head"><h4>Harmonie de ce chant</h4><span class="x">×</span></div><div class="bt">Hosanna · D · ${seg(['Lettres','Chiffres'],0).replace('class="seg"','class="seg" style="margin-left:6px;font-size:12px"')}</div>${PASS.map((p,i)=>passageB(p,{idee:i===2,equipe:i===3})).join('')}${withTr?transitionB():''}`;
+  const phones=[
+    dev('Porte 1 · feuille courte : doigté, « 4 dans D », Écouter, une ligne Ensuite, une ligne Ici',phone(`${chantHead({harmonie:true})}<div class="pg">${blk('chorus','Refrain',HOS.refrain('*'))}${blk('bridge','Pont',HOS.pont)}</div><div class="sheet sans-voile" style="top:420px"><div class="grab"></div>${pnB()}</div>`)),
+    dev('Porte 2 · « Harmonie 和声 » : feuille haute, ouverte au refrain, un filet de section par passage',phone(`${chantHead({harmonie:true})}<div class="scrim"></div><div class="sheet" style="top:112px;gap:12px"><div class="grab"></div><div class="sh-head"><h4>Harmonie de ce chant</h4><span class="x">×</span></div>${passageB(PASS[1])}${passageB(PASS[2],{idee:true})}${passageB(PASS[3],{equipe:true})}</div>`)),
+    dev('Porte 3 · filtres Ressenti et Usage, ambiances en entier, du plus simple au plus avancé',phone(`${bar('Musiciens')}<div class="pg"><div class="ttl" style="font-size:24px">Harmonie ${zh('和声')}</div><div style="margin:10px 0 10px">${onglets3(0)}</div>${filtres()}<div style="margin:10px 0 4px">${instr}</div>${liste(5)}</div>${musTabs('Harmonie')}`)),
+    dev('Mode louange · un point en marge par section au plus, la bande d\'une ligne',louange('B'))
+  ].join('');
+  const tab=dev('Tablette portrait 820 · setlist, chant courant : feuille aux deux tiers, on voit le haut de la partition',`<div class="mock tab" style="display:flex;flex-direction:column">${bar('Setlist · Dimanche 15 novembre',dots)}<div class="pg" style="padding:0 28px;flex:none"><div style="display:flex;align-items:center;gap:14px"><div class="ttl" style="font-size:28px">Hosanna</div><span class="art">2 sur 5</span></div><div class="ctl"><span class="key">D</span>${seg(['Lettres','Chiffres'],0)}<span class="btn">Harmonie ${zh('和声')}</span></div>${blk('chorus','Refrain',HOS.refrain())}</div><div class="scrim"></div><div class="sheet" style="top:330px;gap:14px;padding:8px 28px"><div class="grab"></div><div class="sh-head"><h4>Harmonie de ce chant</h4><span class="x">×</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 36px;align-items:start"><div style="display:flex;flex-direction:column;gap:14px">${passageB(PASS[2],{idee:true})}${passageB(PASS[3],{equipe:true})}</div><div style="display:flex;flex-direction:column;gap:14px">${modulationB()}${transitionB()}</div></div></div></div>`,true)
+   +`<div class="aside"><b>Setlist</b><ul><li>Le même bouton « Harmonie ${zh('和声')} » dans la barre du chant courant.</li><li>« Faire monter le dernier refrain » vit dans le dernier Refrain, avec son bouton Appliquer, <b>seulement ici</b> : il change la setlist.</li><li>« Vers le chant suivant » est le dernier bloc.</li><li>Un passage sans idée n'affiche pas de bloc vide (l'Intro et le Couplet n'en ont pas).</li></ul></div>`;
+  const d1=dev('Ordinateur 1 280 · partition (632 px) + colonne parallèle de 400 px, sans voile ; bulle d\'accord sur la partition',desk(sideNav('Chants'),`<div class="main">${bar('Chants',dots)}<div class="pg" style="flex:none;padding-bottom:0"><div class="ttl">${zh('荣耀至高神')}</div><div class="art" lang="zh">Róng yào zhì gāo shén · 陈琰冰</div><div class="ctl"><span class="key">D</span>${seg(['字母','数字'],0)}<span class="btn">Harmonie ${zh('和声')}</span><span class="btn" style="border-color:var(--jianpu-color);color:var(--jianpu-color)">${zh('简谱')}</span></div></div><div class="pg">${blk('verse','主歌 · Couplet',ZHS('*').slice(0,4))}${blk('chorus','副歌 · Refrain',['[A]荣耀至高神[D]，配得尊崇敬[A/C#]拜，','~róng yào zhì gāo shén pèi dé zūn chóng jìng bài','[D]诸天述说[G]你的荣耀[D/F#]，','~zhū tiān shù shuō nǐ de róng yào'])}</div><div class="bulle" style="left:132px;top:236px;--ax:40px"><div class="pn">${pnB({zhv:true})}</div></div></div><div class="colh"><div class="sh-head"><h4>Harmonie de ce chant</h4><span class="x">×</span></div><div class="bt">${zh('荣耀至高神')} · D</div>${passageB({t:'verse',n:'Couplet',z:'主歌',d:'1 5/7 6m7 1/5 · 4 1/3 2m7 5',l:'D A/C# Bm7 D/A · G D/F# Em7 A',p:'La basse descend d\'un degré à la fois : 1, 7, 6, 5, puis 4, 3, 2, 5.'})}${passageB({t:'chorus',n:'Refrain',z:'副歌',d:'5 1 5/7 6m7 5m7',l:'A D A/C# Bm7 Am7',p:'On part du 5 qui appelle, le 1 repose, la basse redescend.'})}</div>`),true);
+  const d2=dev('Ordinateur 1 280 · porte 3 : liste 320 px et fiche 712 px, « Où l\'entendre » en liens, précédente / suivante',desk(sideNav('Musiciens'),`<div class="main" style="flex-direction:row"><div class="listcol"><div class="ttl" style="font-size:20px">Harmonie ${zh('和声')}</div>${onglets3(0)}${filtres()}${instr}${liste(5)}</div><div class="fichecol">${ficheS1({larg:true})}${coteP('712 px','right:14px;top:10px')}</div></div>`),true);
+  return `<div class="piste reco">${pistehead('B. La grille du chant (une pièce, trois portes)',true)}
+  <p>Le contenu unique est « l'harmonie de ce chant », passage par passage. La porte 2 est cette pièce, le panneau d'accord est une fenêtre sur le passage où l'on est, chaque fiche de la bibliothèque mène au passage d'un chant de GCC qui la joue.</p>
+  <p><b>Pourquoi je la recommande.</b> C'est la seule piste où le contenu est vraiment unique, et elle suit le premier principe de l'inventaire : partir d'un chant. En plein service, le panneau reste court (doigté, « 4 dans D », Écouter, une ligne Ensuite, une ligne Ici) et ne recouvre pas les lignes qu'on joue ; en mode louange il ne reste que le point en marge. En répétition, la feuille ou la colonne montre ce que fait chaque passage, avec sa couleur de section gelée, la même que sur la partition. La ligne d'enchaînement et le bouton Écouter sont le même objet partout. Sur grand écran, la colonne sans voile permet de lire et de jouer sans rien fermer.</p>
+  ${fiche4('jetons actuels ; couleur de section gelée en filet vertical, la seule couleur de structure ; Écouter plein, « avant / après » en contour ; jamais d\'orange.','police du site ; une ligne d\'enchaînement unique « 4 5 → 2m7 5 · G A → Em7 A » ; fonction en mots courts (repos, s\'éloigne, appelle) ; titres de passage en graisse moyenne, sans numéro.','feuille au téléphone et en tablette portrait, colonne sans voile sur grand écran ; passages séparés par l\'espace et le filet, jamais par des cartes.','la feuille d\'accord se range, celle du chant monte déjà au bon passage ; en colonne, ressort amorti 1.0 en 0,4 s, interruptible ; Écouter : pression à 0,97 ; reduced-motion : fondus. Mode louange : aucune animation.')}
+  <p class="rowlabel">Téléphone 390</p><div class="devrow">${phones}</div>
+  <p class="rowlabel">Tablette 820</p><div class="devrow">${tab}</div>
+  <p class="rowlabel">Ordinateur 1 280</p><div class="devrow">${d1}</div><div class="devrow">${d2}</div>
+  ${procon(['Un contenu, trois distances : le même passage, la même ligne, le même Écouter.','Le panneau reste court : il ne cache pas la partition en service.','Les idées, idées de l\'équipe, modulation et transition ont chacune un rang naturel.'],['Deux surfaces à garder cohérentes (panneau et porte 2) et une transition feuille → feuille à soigner au téléphone.','La colonne mange la partition en tablette paysage : fermée par défaut, jamais ouverte seule.','Suppose des sections nommées propres dans chaque chant, et une ancre « passage » pour chaque fiche.'])}</div>`;
+}
+
+/* ═════════ PISTE C : le carnet ═════════ */
+function pisteC(){
+  const groupe=(p,cards)=>`<div style="display:flex;flex-direction:column;gap:6px"><div class="ps-h"><b style="font-size:15px">${p.n}</b><span>${p.z}</span></div>${grille(p.d,p.l)}${cards}</div>`;
+  const S1=()=>cardFiche('Le 2m7 à la place du 4','4 5','2m7 5','G A','Em7 A');
+  const C4=()=>cardFiche('Le maj7 sur le 1 et le 4','1 4','1maj7 4maj7','D G','Dmaj7 Gmaj7');
+  const phones=[
+    dev('Porte 1 · doigté, « 4 dans D », Écouter, puis deux cartes de fiche',phone(`${chantHead({})}<div class="pg">${blk('chorus','Refrain',HOS.refrain('*'))}${blk('bridge','Pont',HOS.pont)}</div><div class="sheet sans-voile" style="top:300px"><div class="grab"></div>${pnC()}</div>`)),
+    dev('Porte 2 · « Fiches de ce chant », groupées par passage',phone(`${chantHead({})}<div class="scrim"></div><div class="sheet" style="top:112px"><div class="grab"></div><div class="sh-head"><h4>Fiches de ce chant</h4><span class="x">×</span></div>${groupe(PASS[1],cardFiche('Le 6m à la place du 1 répété','1 1','1 6m','D D','D Bm'))}${groupe(PASS[2],S1()+C4())}${groupe(PASS[3],cardFiche('Le sus4 qui se résout','5 1','5sus4 5 1','A D','Asus4 A D'))}</div>`)),
+    dev('Porte 3 · une pile de fiches feuilletées par ressenti (au lieu de 17 écrans de liste)',phone(`${bar('Musiciens')}<div class="pg" style="display:flex;flex-direction:column;gap:10px"><div class="ttl" style="font-size:24px">Harmonie ${zh('和声')}</div>${onglets3(0)}<div class="chips"><span class="chip">Tous</span><span class="chip on">Chaleureux ${zh('温暖')}</span><span class="chip">Mélancolique ${zh('忧伤')}</span><span class="chip">Élan ${zh('推进')}</span><span class="chip">Couleur ${zh('色彩')}</span></div><div class="chips"><span class="chip">Par usage ›</span><span class="muted" style="font-size:13px;align-self:center;margin-left:auto">2 sur 14</span></div><div class="pile">${ficheS1({prevnext:false,court:true})}<div class="dotsrow"><i></i><i class="on"></i><i></i><i></i><i></i></div><div class="muted" style="text-align:center;font-size:12.5px">Glisse pour la fiche suivante</div></div></div>`)),
+    dev('Mode louange · le point en marge et la bande, sans animation',louange('C'))
+  ].join('');
+  const tab=dev('Tablette portrait 820 · porte 3 : fiche pleine largeur, feuilletage',`<div class="mock tab" style="display:flex;flex-direction:column;height:780px">${bar('Musiciens')}<div class="pg" style="padding:0 40px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;align-items:center;gap:12px"><div class="ttl" style="font-size:26px">Harmonie ${zh('和声')}</div><span style="margin-left:auto">${onglets3(0)}</span></div><div class="chips"><span class="chip on">Chaleureux ${zh('温暖')}</span><span class="chip">Mélancolique ${zh('忧伤')}</span><span class="chip">Élan ${zh('推进')}</span><span class="chip">Couleur ${zh('色彩')}</span><span class="muted" style="margin-left:auto;font-size:13px">2 sur 14</span></div><div style="position:relative;margin:0 22px;background:var(--s-card);border:1px solid var(--s-line);border-radius:20px;padding:22px 26px;box-shadow:0 6px 24px rgba(0,0,0,.08)"><span class="peek" style="left:-22px;top:14px;bottom:14px;border-radius:12px 0 0 12px"></span><span class="peek" style="right:-22px;top:14px;bottom:14px;border-radius:0 12px 12px 0"></span>${ficheS1({prevnext:false,larg:true})}</div><div class="dotsrow"><i></i><i class="on"></i><i></i><i></i><i></i></div><div class="muted" style="text-align:center;font-size:13px">Glisse horizontalement · bord élastique à la première et à la dernière fiche</div></div></div>`,true)
+   +`<div class="aside"><b>Tablette portrait</b><ul><li>La fiche est la même surface qu'au téléphone, en page : pleine largeur, 720 px de lecture.</li><li>Les cartes voisines dépassent sur les côtés : le geste se devine.</li><li>Dans un chant (tablette paysage) : volet de fiche à droite.</li></ul></div>`;
+  const d1=dev('Ordinateur 1 280 · dans le chant : un volet de fiche à droite (400 px) ; la bulle liste les fiches',desk(sideNav('Chants'),`<div class="main">${chantHead({})}<div class="pg"><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 36px"><div>${blk('chorus','Refrain',HOS.refrain('*'))}</div><div>${blk('bridge','Pont',HOS.pont)}</div></div></div><div class="bulle" style="left:60px;top:214px;--ax:55px;width:380px">${pnC()}</div></div><div class="colh"><div class="sh-head"><h4>Fiche</h4><span class="x">×</span></div><div class="fi"><h5 style="font-size:19px">Le 2m7 à la place du 4</h5><div class="meta"><span class="tagpill">chaleureux ${zh('温暖')}</span><span class="tagpill">couplet</span><span class="tagpill">Facile</span></div>${ench('4 5','2m7 5','G A','Em7 A')}<div class="btns">${btnEc()}${btnEc('Avant','ctr sm')}${btnEc('Après','ctr sm')}</div><p>Em7 contient les trois notes de G : la mélodie ne peut pas frotter. Seule la basse change.</p>${clavier(['G3','B3','D4'],['E3'])}<div class="ou"><div class="r"><div class="g"><b>Hosanna</b> · couplet <span class="ch">Em7 – A</span></div>${chev}</div></div></div></div>`),true);
+  const d2=dev('Ordinateur 1 280 · porte 3 : liste 320 px, fiche 712 px, flèches précédente / suivante et clavier ← →',desk(sideNav('Musiciens'),`<div class="main" style="flex-direction:row"><div class="listcol"><div class="ttl" style="font-size:20px">Harmonie ${zh('和声')}</div>${onglets3(0)}${filtres()}${liste(5)}</div><div class="fichecol"><div style="display:flex;align-items:center;gap:10px"><span class="btn" style="height:34px">←</span><span class="muted" style="font-size:13px">2 sur 14 · chaleureux</span><span class="btn" style="height:34px">→</span></div>${ficheS1({larg:true,prevnext:false})}${coteP('712 px','right:14px;top:10px')}</div></div>`),true);
+  return `<div class="piste">${pistehead('C. Le carnet (la fiche au centre)',false)}
+  <p>L'unité est la fiche. La bibliothèque est la maison ; le panneau d'accord et la feuille du chant en montrent des cartes, et chaque fiche s'ouvre telle quelle, la même partout.</p>
+  ${fiche4('jetons actuels ; les quatre ressentis se distinguent par un mot, pas par une teinte ; accords en <code>--chord-color</code>, Écouter en <code>--foreground</code>.','police du site ; titre de fiche en graisse forte et grande taille ; ligne d\'enchaînement en tête ; ressenti et usage écrits en entier, 温暖 / 忧伤 / 推进 / 色彩 en face du français.','la fiche est une surface pleine, la même en page, en feuille et en volet ; cartes miniatures (titre, enchaînement, Écouter) dans le panneau et la feuille du chant.','feuilletage horizontal au doigt, 1:1, projection de l\'élan (décélération 0,998), ressort 0,8 / 0,3, bord élastique ; la fiche naît de sa carte ; reduced-motion : fondu. Mode louange : le point et la bande seulement.')}
+  <p class="rowlabel">Téléphone 390</p><div class="devrow">${phones}</div>
+  <p class="rowlabel">Tablette 820</p><div class="devrow">${tab}</div>
+  <p class="rowlabel">Ordinateur 1 280</p><div class="devrow">${d1}</div><div class="devrow">${d2}</div>
+  ${procon(['La fiche est la même partout : on apprend un seul objet.','La pile feuilletée remplace les 17 écrans de liste du téléphone.','Les données sont déjà des fiches : pas de nouveau découpage du chant.'],['C\'est encore un catalogue : dans un chant on voit des fiches génériques, pas la grille qu\'on a sous les yeux.','La fonction de chaque passage, « Et ensuite ? » et la transition vers le chant suivant ne sont pas des fiches : pas de place naturelle.','Le feuilletage horizontal entre en conflit avec le défilement de la page et du Drawer.'])}</div>`;
+}
+
+document.getElementById('piste-A').innerHTML=pisteA();
+document.getElementById('piste-B').innerHTML=pisteB();
+document.getElementById('piste-C').innerHTML=pisteC();
+
+/* comparatif */
+document.getElementById('compa').innerHTML=[
+ ['A. Le pupitre','Le panneau d\'accord','Panneau riche, long','Feuille « Passages », un sommaire','Bibliothèque à part','Au téléphone la feuille cache la partition ; la vue d\'ensemble n\'a plus de place',false],
+ ['B. La grille du chant','La feuille ou colonne « Harmonie de ce chant »','Panneau court + une ligne Ensuite + une ligne Ici','Grille passage par passage, fonction, idées, transition','Bibliothèque : liens vers le passage du chant','Deux surfaces à tenir cohérentes ; colonne à garder fermée en paysage',true],
+ ['C. Le carnet','La fiche','Deux cartes de fiche dans le panneau','Fiches du chant groupées par passage','Pile feuilletée ou liste ; fiche au centre','C\'est le catalogue habillé autrement ; pas de place pour « Et ensuite ? »',false]
+].map(x=>`<div class="box" ${x[6]?'style="border:2px solid var(--reco)"':''}><h3>${x[0]} ${x[6]?'<span class="tag">Recommandée</span>':''}</h3><p><b>Le contenu vit dans</b> : ${x[1]}</p><p><b>Porte 1</b> : ${x[2]}</p><p><b>Porte 2</b> : ${x[3]}</p><p><b>Porte 3</b> : ${x[4]}</p><p><b>Risque</b> : ${x[5]}</p></div>`).join('');
+
+/* questions */
+const QS=[
+ ['Où s\'ouvre la porte 2 ?','Page chant : un bouton « Harmonie 和声 » dans la même rangée que la tonalité et la bascule Lettres / Chiffres (pas dans un menu ; la piste B le montre, A et C gardent le menu ⋯ actuel). Setlist : le même bouton dans la barre du chant courant, la transition vers le chant suivant étant le dernier bloc.'],
+ ['Porte 2 sur grand écran : feuille ou colonne ?','Colonne parallèle, sans voile, en tablette paysage et à l\'ordinateur, fermée par défaut et mémorisée par musicien ; feuille au téléphone et en tablette portrait (aux deux tiers de la hauteur).'],
+ ['Place de la porte 3 dans la navigation','Garder l\'onglet Harmonie dans Musiciens (Accords, Harmonie, Théorie, RD-2000), sous le même nom ; il ne s\'ouvre plus sur « Par où commencer » mais sur les filtres Ressenti et Usage, avec trois entrées : Fiches · Cours · Jouer ensemble.'],
+ ['Filtres de la bibliothèque','Ressenti à quatre valeurs (chaleureux 温暖, mélancolique 忧伤, élan 推进, couleur 色彩) qui remplacent les onze ambiances ; Usage à cinq (couplet, pré-refrain, refrain, fin, transition) ; instrument gardé ; Niveau ordonne la liste du plus simple au plus avancé. À trancher : les fiches d\'intro et de pont perdent leur étiquette d\'usage (proposition : elles restent trouvables par Ressenti), et « montée » devient « pré-refrain ». Correspondance à valider fiche par fiche.'],
+ ['Idées de l\'équipe : bloc à part ou au passage ?','Rangées dans le passage auquel elles s\'appliquent, sous les idées calculées ; un passage sans idée n\'affiche pas de bloc vide.'],
+ ['Modulation du dernier refrain (famille 8)','Dans le dernier passage Refrain de la porte 2, avec son bouton Appliquer, et seulement dans une setlist (elle change la setlist).'],
+ ['« Jouer ensemble » : cours ou fiches ?','Un cours (rôles, plans, piano main gauche / basse, deux guitares, intro / pont / fin, à lire dans l\'ordre), dont chaque exemple renvoie à un passage d\'un chant de GCC ; pas de fiches, ce ne sont pas des remplacements d\'accords. Les parties 2 et 3 (piano main gauche, deux guitares) sont à écrire : le cours 17 n\'en traite que les rôles.'],
+ ['Exercices d\'oreille','Plus tard : aucune place réservée sur la planche, pour ne pas dessiner une porte vide.'],
+ ['Chiffre et accord montrés dans la maquette','Le brief cite « 5/7 » pour l\'accord touché et « 4 → 2m7 » pour l\'idée de l\'endroit. Pour que l\'idée tombe sur l\'accord touché, la porte 1 montre le G du refrain d\'Hosanna (« 4 dans D ») ; le « 5/7 » (A/C#) est montré avec 荣耀至高神 sur la tablette de la piste A. Proposition : garder les deux exemples tels quels.']
+];
+document.getElementById('qs').innerHTML=QS.map(q=>`<div class="q"><h3>${q[0]}</h3><p class="rec">Proposition : ${q[1]}</p></div>`).join('');
+</script>
+</body>
+</html>

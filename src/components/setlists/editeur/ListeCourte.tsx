@@ -6,7 +6,6 @@ import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, 
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronRight, CirclePlus, GripVertical, MessageSquare } from "lucide-react";
-import { useJianpuScore } from "@/lib/jianpu/images";
 import { isFormChant, isFormFusion, isFormProposition, isFormTransition, itemSections, type FormItem, type FormListItem } from "@/lib/setlist/formItems";
 import { KeyPill } from "@/components/ui/key-pill";
 import { TOUCHER_44 } from "@/lib/toucher44";
@@ -100,7 +99,6 @@ function LigneElement({
   const titre = titreElement(item, t("setlists.form.transitionLabel"));
   const style = { transform: CSS.Transform.toString(transform), transition };
   const chant = isFormChant(item) ? item : null;
-  const scan = useJianpuScore(chant?.song.slug);
 
   // Le bouton couvre toute la ligne (`before:`), sauf la poignée, au-dessus de lui.
   const bouton = (contenu: ReactNode, className = "") => (
@@ -195,11 +193,6 @@ function LigneElement({
               <span className="text-base font-semibold leading-snug">{titre}</span>
               {chant?.song.titlePinyin && (
                 <span className={`text-sm ${choisi ? "text-background/70" : "text-muted-foreground"}`}>{chant.song.titlePinyin}</span>
-              )}
-              {scan && chant?.jianpuSheet !== false && (
-                <span className={`rounded px-1 text-xs font-semibold ${choisi ? "bg-background/15" : "bg-secondary text-foreground"}`}>
-                  {t("setlists.form.jianpuSheet")}
-                </span>
               )}
             </span>,
           )}

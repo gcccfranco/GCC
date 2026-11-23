@@ -79,7 +79,6 @@ test("chant ZH : le panneau d'un accord (capture)", async ({ page }) => {
   await page.goto("/songs/" + encodeURIComponent("一切歌颂赞美"));
   await expect(touchables(page).first()).toBeVisible();
   const accord = touchables(page).nth(3);
-  await accord.scrollIntoViewIfNeeded();
   await verifier(page, accord);
   await photo(page, "panneau-zh");
   await panneau(page).getByRole("radio", { name: "钢琴" }).click();
@@ -88,14 +87,14 @@ test("chant ZH : le panneau d'un accord (capture)", async ({ page }) => {
   await photo(page, "panneau-zh-piano-renversement");
 });
 
-test("la bulle d'aide se pose sous le premier accord visible (capture)", async ({ page }) => {
+test("le bandeau d'aide au-dessus du chant (capture)", async ({ page }) => {
   await page.goto("/songs/abba-pere");
   const premier = touchables(page).first();
   await expect(premier).toBeVisible();
   await expect(aide(page)).toBeVisible();
   const a = await boite(premier);
   const b = await boite(aide(page));
-  expect(b.y, "sous l'accord").toBeGreaterThanOrEqual(a.y + a.height - 1);
+  expect(b.y + b.height, "au-dessus du premier accord").toBeLessThanOrEqual(a.y + 1);
   const vue = page.viewportSize()!;
   expect(b.x).toBeGreaterThanOrEqual(0);
   expect(b.x + b.width).toBeLessThanOrEqual(vue.width);
@@ -110,8 +109,8 @@ test("idées d'harmonie : l'accord proposé, puis son panneau (captures)", async
   });
   await sansAide(page);
   await signInAs(page, AMBROISE, {}, "/songs/au-nom-de-jesus");
-  await page.getByTestId("barre-outils").getByRole("button", { name: "Idées d'harmonie" }).click();
-  const accord = page.locator("[data-idees-harmonie] [data-accord-touchable]").first();
+  await page.getByTestId("barre-outils").getByRole("button", { name: "Harmonie", exact: true }).click();
+  const accord = page.locator("[data-idees-harmonie] [data-suggestion] [data-accord-touchable]").first();
   await expect(accord).toBeVisible();
   await accord.scrollIntoViewIfNeeded();
   await photo(page, "idees-carte");

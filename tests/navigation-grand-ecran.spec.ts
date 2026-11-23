@@ -170,7 +170,7 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
     await page.getByRole("searchbox").waitFor();
     const nav = navigation(page);
     await expect(nav).toHaveCount(1);
-    await expect(nav.getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Évènements", "Moi"]);
+    await expect(nav.getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Église", "Moi"]);
     const chants = nav.getByRole("link", { name: "Chants" });
     await expect(chants).toHaveAttribute("aria-current", "page");
     await expect.poll(() => chants.evaluate((a) => getComputedStyle(a).backgroundColor)).toBe(ENCRE);
@@ -189,14 +189,14 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
     await expect(nav.getByRole("link", { name: "Planning" })).toHaveAttribute("aria-current", "page");
   });
 
-  test("membre : le pied porte l'initiale, le nom, la cloche et la langue ; l'initiale ouvre le menu « Compte »", async ({ page }) => {
+  test("membre : le pied porte l'initiale, le nom, la cloche, la langue et le thème ; l'initiale ouvre le menu « Compte »", async ({ page }) => {
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     const pied = barreLaterale(page).getByTestId("pied-barre");
     await expect(pied).toContainText("Ruth K.");
     await expect(pied.getByRole("button", { name: "Notifications" })).toBeVisible();
     await expect(pied.getByRole("button", { name: "切换为中文" })).toBeVisible();
-    await expect(barreLaterale(page).getByRole("button", { name: /mode (clair|sombre)/i }), "le thème d'un membre est dans Moi").toHaveCount(0);
+    await expect(pied.getByRole("button", { name: /^Mode (clair|sombre)$/ }), "le thème d'un membre est au pied, barre dépliée").toBeVisible();
     await sansIndicateurDeNext(page);
     await pied.getByRole("button", { name: "Compte" }).click();
     const menu = page.getByRole("menu");
@@ -207,10 +207,21 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
     expect((await menu.boundingBox())!.x).toBeGreaterThanOrEqual(240);
   });
 
-  test("visiteur : Chants · Évènements ; en bas « Connexion », la langue et le thème", async ({ page }) => {
+  test("ordinateur, membre, barre dépliée : le bouton de thème du pied bascule le thème", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    const pied = barreLaterale(page).getByTestId("pied-barre");
+    const html = page.locator("html");
+    const etaitSombre = await html.evaluate((el) => el.classList.contains("dark"));
+    await pied.getByRole("button", { name: /^Mode (clair|sombre)$/ }).click();
+    if (etaitSombre) await expect(html).not.toHaveClass(/dark/);
+    else await expect(html).toHaveClass(/dark/);
+  });
+
+  test("visiteur : Chants · Église ; en bas « Connexion », la langue et le thème", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Évènements"]);
+    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Église"]);
     const pied = barreLaterale(page).getByTestId("pied-barre");
     await expect(pied.getByRole("link", { name: "Connexion" })).toBeVisible();
     await expect(pied.getByRole("button", { name: "切换为中文" })).toBeVisible();
@@ -237,7 +248,7 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
       await page.keyboard.press("Tab");
     }
     expect(ordre[0]).toMatch(/GCC/);
-    expect(ordre.slice(1, 4)).toEqual(["Réduire la barre latérale", "Chants", "Évènements"]);
+    expect(ordre.slice(1, 4)).toEqual(["Réduire la barre latérale", "Chants", "Église"]);
     // Focus à l'encre, visible même sur l'entrée courante (pastille d'encre) : décalé de 2 px.
     const focus = await page.evaluate(() => {
       const st = getComputedStyle(document.activeElement!);
@@ -303,10 +314,10 @@ async function barreDeSetlistAuBord(page: Page, largeur: number, bord: number) {
   expect(await debordement(page), `${largeur} px`).toBe(0);
 }
 
-/** Le Sommaire des deux volets : le volet de gauche, jamais sous la barre latérale, à
- *  gauche des partitions. */
+/** Le rail du Sommaire des deux volets (T3 du lot exemples d'usage) : le volet de gauche, jamais sous la barre
+ *  latérale, à gauche des partitions. */
 async function sommaireAGauche(page: Page, bord: number) {
-  const sommaire = page.getByRole("navigation", { name: "Sommaire" });
+  const sommaire = page.getByRole("button", { name: /^(Ouvrir|Fermer) le sommaire$/ });
   await expect(sommaire).toBeVisible();
   const s = (await sommaire.boundingBox())!;
   expect(s.x, "jamais sous la barre").toBeGreaterThanOrEqual(bord);
@@ -337,7 +348,7 @@ test.describe("navigation sur grand écran (U4) : rien ne passe sous la barre, o
     await sommaireAGauche(page, 248);
     // 1 147 px, barre dépliée : 899 px utiles, un volet (G).
     await page.setViewportSize({ width: 1147, height: 900 });
-    await expect(page.getByRole("navigation", { name: "Sommaire" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^(Ouvrir|Fermer) le sommaire$/ })).toHaveCount(0);
     await expect(page.getByTestId("bascule-vues")).toBeVisible();
   });
 
@@ -444,7 +455,7 @@ test.describe("navigation sur grand écran (U4) : impression, zone sûre, couleu
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     const nav = page.getByRole("navigation", { name: "主导航" });
-    await expect(nav.getByRole("link")).toHaveText(["诗歌", "歌单", "排班表", "活动", "我"]);
+    await expect(nav.getByRole("link")).toHaveText(["诗歌", "歌单", "排班表", "教会", "我"]);
     await expect(barreLaterale(page).getByTestId("label-section")).toHaveText("敬拜");
     const pied = barreLaterale(page).getByTestId("pied-barre");
     await expect(pied.getByRole("button", { name: "账户" })).toBeVisible();
@@ -463,7 +474,7 @@ test.describe("navigation sur grand écran (U4) : impression, zone sûre, couleu
 // est retenu par appareil (`localStorage` « barre-laterale »), reflété sur
 // `<html data-barre="reduite">` par une ligne de script dans l'en-tête, avant le premier affichage.
 
-const ENTREES_MEMBRE = ["Chants", "Setlists", "Planning", "Évènements", "Moi"];
+const ENTREES_MEMBRE = ["Chants", "Setlists", "Planning", "Église", "Moi"];
 const reduire = (page: Page) => barreLaterale(page).getByRole("button", { name: "Réduire la barre latérale" });
 const deplier = (page: Page) => barreLaterale(page).getByRole("button", { name: "Déplier la barre latérale" });
 const largeurBarre = async (page: Page) => Math.round((await barreLaterale(page).boundingBox())!.width);
@@ -509,9 +520,14 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     for (const nom of ENTREES_MEMBRE) {
       const lien = nav.getByRole("link", { name: nom, exact: true });
       await expect(lien).toHaveAttribute("title", nom);
-      await expect(lien.getByText(nom, { exact: true })).toBeHidden();
+      // CI-17 (B13, validée par Timothée le 15/11/2026) : barre réduite, le nom passe sous l'icône ;
+      // le libellé de la barre dépliée (`.barre-texte`) reste caché.
+      await expect(lien.locator(".barre-texte")).toBeHidden();
+      await expect(lien.getByText(nom, { exact: true }).filter({ visible: true }), `${nom} : nom sous l'icône`).toHaveCount(1);
       const b = (await lien.boundingBox())!;
-      expect([Math.round(b.width), Math.round(b.height)], `${nom} : 44 × 44`).toEqual([44, 44]);
+      // CI-17 : l'entrée prend la largeur du rail (`!w-full`, BarreLaterale.tsx:310) pour le nom sous l'icône ; 44 px de haut.
+      expect(Math.round(b.height), `${nom} : 44 px de haut`).toBe(44);
+      expect(Math.round(b.width), `${nom} : 44 px de large au moins`).toBeGreaterThanOrEqual(44);
       expect(b.x + b.width, `${nom} dans la barre`).toBeLessThanOrEqual(68);
     }
     await expect(nav.getByRole("link", { name: "Chants", exact: true })).toHaveAttribute("aria-current", "page");
@@ -527,11 +543,13 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     expect([Math.round(d.width), Math.round(d.height)]).toEqual([44, 44]);
     const pied = barre.getByTestId("pied-barre");
     await expect(pied.getByText("Ruth K.")).toBeHidden();
-    await expect(pied.getByRole("button", { name: "切换为中文" })).toBeHidden();
+    // CI-17 (Q5 révisé, 15/11/2026) : langue et thème d'un membre restent au pied du rail réduit.
+    const langue = pied.getByRole("button", { name: "切换为中文" });
+    await expect(langue).toBeVisible();
     const cloche = (await pied.getByRole("button", { name: "Notifications" }).boundingBox())!;
     const initiale = (await pied.getByRole("button", { name: "Compte" }).boundingBox())!;
     expect(cloche.y + cloche.height, "cloche au-dessus de l'initiale").toBeLessThanOrEqual(initiale.y);
-    for (const b of [cloche, initiale]) expect(b.x + b.width).toBeLessThanOrEqual(68);
+    for (const b of [cloche, initiale, (await langue.boundingBox())!]) expect(b.x + b.width).toBeLessThanOrEqual(68);
 
     // partout-q2 : /songs n'a plus de halo ; Planning, qui porte la couleur d'un service, garde le sien.
     await expect(page.getByTestId("halo"), "/songs : plus de halo").toHaveCount(0);
@@ -717,8 +735,15 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     await expect(nav.getByRole("link")).toHaveCount(5);
     for (const nom of ENTREES_MEMBRE) {
       const lien = nav.getByRole("link", { name: nom, exact: true });
-      await expect(lien.getByText(nom, { exact: true })).toBeHidden();
-      expect((await boite(lien)).slice(2), `${nom} : 44 × 44`).toEqual([44, 44]);
+      // CI-17 (B13, validée par Timothée le 15/11/2026) : barre réduite, le nom passe sous l'icône ;
+      // le libellé de la barre dépliée (`.barre-texte`) reste caché.
+      await expect(lien.locator(".barre-texte")).toBeHidden();
+      await expect(lien.getByText(nom, { exact: true }).filter({ visible: true }), `${nom} : nom sous l'icône`).toHaveCount(1);
+      // CI-17 : l'entrée prend la largeur du rail (`!w-full`, BarreLaterale.tsx:310) pour le nom sous l'icône ; 44 px de haut.
+      const [x, , l, h] = await boite(lien);
+      expect(h, `${nom} : 44 px de haut`).toBe(44);
+      expect(l, `${nom} : 44 px de large au moins`).toBeGreaterThanOrEqual(44);
+      expect(x + l, `${nom} dans la barre`).toBeLessThanOrEqual(68);
     }
     await expect(nav.getByRole("link", { name: "Chants", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(reduire(page), "jamais « Réduire » : elle l'est toujours").toBeHidden();
@@ -730,10 +755,11 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     await expect(pied.getByText("Ruth K.")).toBeHidden();
   });
 
-  test("tablette en paysage, visiteur : Chants · Évènements, « Connexion », langue et thème en icônes", async ({ page }) => {
+  test("tablette en paysage, visiteur : Chants · Église, « Connexion », langue et thème en icônes", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Évènements"]);
+    // CI-17 : le lien du rail porte son libellé caché et le nom sous l'icône ; on lit le texte affiché.
+    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Église"], { useInnerText: true });
     expect(await largeurBarre(page)).toBe(68);
     const pied = barreLaterale(page).getByTestId("pied-barre");
     for (const bouton of [pied.getByRole("link", { name: "Connexion" }), pied.getByRole("button", { name: "切换为中文" }), pied.getByRole("button", { name: /Mode (clair|sombre)/ })]) {
@@ -888,7 +914,7 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     await barreLaterale(page).getByRole("button", { name: "展开侧边栏" }).tap();
     await barreArrivee(page);
     const dessus = barreParDessus(page);
-    await expect(dessus.getByRole("navigation", { name: "主导航" }).getByRole("link")).toHaveText(["诗歌", "歌单", "排班表", "活动", "我"]);
+    await expect(dessus.getByRole("navigation", { name: "主导航" }).getByRole("link")).toHaveText(["诗歌", "歌单", "排班表", "教会", "我"]);
     await expect(dessus.getByTestId("label-section")).toHaveText("敬拜");
     await expect(dessus.getByRole("button", { name: "收起侧边栏" })).toBeVisible();
   });
@@ -932,7 +958,7 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     await page.getByRole("menuitem", { name: "Déconnexion" }).tap();
     await expect(barreParDessus(page)).toHaveCount(0);
     await expect(voile(page)).toHaveCount(0);
-    await expect(navigation(page).getByRole("link"), "la barre réduite du visiteur").toHaveText(["Chants", "Évènements"]);
+    await expect(navigation(page).getByRole("link"), "la barre réduite du visiteur").toHaveText(["Chants", "Église"], { useInnerText: true });
     expect(await largeurBarre(page)).toBe(68);
   });
 });
@@ -943,7 +969,7 @@ test("captures de la barre (PW_CAPTURES)", async ({ page }, info) => {
   test.skip(!dir, "seulement avec PW_CAPTURES");
   await sansSheet(page);
   // Les entrées arrivent une fois la session connue : chaque capture les attend.
-  const entreesArrivees = () => page.getByRole("link", { name: "Évènements" }).filter({ visible: true }).first().waitFor();
+  const entreesArrivees = () => page.getByRole("link", { name: "Église" }).filter({ visible: true }).first().waitFor();
   for (const theme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: theme });
     await page.goto("/songs");

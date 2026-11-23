@@ -11,6 +11,8 @@
 // (« Nom de la réunion », « Équipe », ni « Catégorie », bannière sous « Plus d'options », « Créer la réunion ») ;
 // libellés par `Champ` (13 px semi-gras gris), champs de 44 px. Depuis le 08/11/2026, une réunion a son propre
 // formulaire (`ReunionForm`) : les pages de réunion n'arrivent plus ici, ce mode ne sert plus qu'à un cas limite.
+// Salles (chantier AR, lot 4, SA12 ; AS17) : « Où ? » à la place du lieu (`ChampSalle`) : « À l'église » propose une
+// salle (ou aucune, lieu « Église »), « Ailleurs » rend le lieu libre ; une salle choisie montre l'heure de fin et se vérifie à l'enregistrement (chevauchement refusé, SA8).
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
@@ -30,6 +32,11 @@ import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { ChampSalle, egliseInitiale, erreurSalle, valeursSalle, verifierSalle, type RefusEvenement } from "@/components/salles/ChampSalle"
+import { canSeeEvenement } from "@/lib/access"
+import { jourDeParis } from "@/lib/evenements/bascule"
+import { useAuth } from "@/lib/firebase/auth"
+import { useProfile } from "@/lib/firebase/users"
 
 const MAX_IMAGES = 3
 // Une réunion (lot U6, relecture) a toujours une date : jamais « Info » (sujets jusqu'au début,
@@ -66,8 +73,10 @@ function Periode({ id, label, heureLabel, aide, value, onChange }: {
   )
 }
 
-export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCache = false, onSubmit, onCancel }: {
+export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCache = false, evenementId, onSubmit, onCancel }: {
   initial: EvenementValues
+  /** À la modification : l'évènement lui-même ne gêne pas sa salle (SA8, SA10). */
+  evenementId?: string
   /** Publics que la personne peut viser (« eglise » et/ou des sections). */
   pours: string[]
   /** À la création : bouton « Créer » et case « Prévenir les membres ». */
@@ -84,10 +93,14 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
     const pour = pours.includes(initial.pour) ? initial.pour : (pours[0] as EvenementValues["pour"])
     return { ...initial, pour, ...(estReunion({ ...initial, pour }) && initial.type === "info" ? { type: TYPE_REUNION } : {}) }
   })
+  const [eglise, setEglise] = useState(() => egliseInitiale(initial, creation))
   const [prevenir, setPrevenir] = useState(initial.type !== "eglise")
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
   const [compressing, setCompressing] = useState(false)
+  const [refus, setRefus] = useState<RefusEvenement | null>(null)
+  const { user } = useAuth()
+  const { profile } = useProfile()
   const info = v.type === "info"
   // Réunion d'équipe (lot U6, R4) : pas d'inscriptions. Un évènement d'équipe (`reunion: false`,
   // « Nouvel évènement », lot E) en a, comme un évènement de l'assemblée.
@@ -109,7 +122,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
   const Titre = reunion && !titreCache ? "h1" : "h2"
 
   function setType(type: EvenementType) {
-    set({ type, ...(type === "info" ? { date: "", heure: "", heureFin: "", dateFin: "", ...sansInscription } : {}) })
+    set({ type, ...(type === "info" ? { date: "", heure: "", heureFin: "", dateFin: "", salle: null, ...sansInscription } : {}) })
     setPrevenir(type !== "eglise")
   }
 
@@ -150,11 +163,24 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
     // Une seule porte d'inscription à la fois : des places déjà prises dans
     // l'app ne se perdent pas au profit d'un formulaire externe.
     if (externe && inscrits > 0) { setError(t("evenements.form.lienExterneOccupe", { count: inscrits })); return }
+    const erreur = erreurSalle(v)
+    if (erreur) { setError(t(erreur)); return }
     setBusy(true); setError("")
+    // SA12 : la salle se vérifie sur les occupations relues du jour ; un chevauchement montre le refus sous le champ.
+    try {
+      const r = await verifierSalle(v, evenementId, jourDeParis(), (e) => canSeeEvenement(user, profile, e))
+      setRefus(r)
+      if (r) { setBusy(false); document.getElementById("ev-salle")?.focus(); return }
+    } catch {
+      setError(t("salles.formulaire.echec")); setBusy(false); return
+    }
     try {
       await onSubmit({
         ...v,
         titre: v.titre.trim(), lieu: v.lieu.trim(), description: v.description.trim(), contact: v.contact.trim(),
+        // La salle ne s'écrit que si l'évènement en a une ou en avait une (« Ailleurs » la retire).
+        // « À l'église » sans salle écrit le lieu « Église » (AS17) ; le type « info » garde son lieu libre.
+        ...(v.salle || initial.salle || (eglise && !info) ? valeursSalle(v, eglise && !info) : {}),
         liens: v.liens.map((l) => ({ label: l.label.trim(), url: l.url.trim() })).filter((l) => l.url),
         lienExterne: v.lienExterne.trim(),
         expiresAt: info ? v.expiresAt || null : null,
@@ -162,7 +188,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
         inscriptions: mode,
         inscriptionDebut: mode === "auto" ? v.inscriptionDebut ?? "" : "",
         inscriptionFin: mode === "auto" ? v.inscriptionFin ?? "" : "",
-        epingle: info ? v.epingle : false,
+        epingle: reunion ? false : v.epingle,
         sansCompte: !reserve && v.sansCompte,
         ...(reunion ? sansInscription : {}),
       }, creation && prevenir)
@@ -239,7 +265,8 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
               <Input id="ev-date" className="h-11" type="date" max={DATE_MAX} value={v.date} onChange={(e) => set({ date: e.target.value })} required
                 aria-invalid={refusSheet || undefined} aria-describedby={refusSheet ? "ev-date-sheet" : undefined} />
             </Champ>
-            <Champ id="ev-heure" label={t("evenements.form.heure")}>
+            {/* Une salle choisie : « Heure de début » au-dessus de « Heure de fin » (T4b). */}
+            <Champ id="ev-heure" label={t(v.salle ? "evenements.form.heureDebut" : "evenements.form.heure")}>
               <Input id="ev-heure" className="h-11" type="time" value={v.heure} onChange={(e) => set({ heure: e.target.value })} />
             </Champ>
           </div>
@@ -254,9 +281,11 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
           </p>
         )}
 
-        <Champ id="ev-lieu" label={t("evenements.form.lieu")}>
-          <Input id="ev-lieu" className="h-11" value={v.lieu} maxLength={120} onChange={(e) => set({ lieu: e.target.value })} />
-        </Champ>
+        {info ? (
+          <Champ id="ev-lieu" label={t("evenements.form.lieu")}>
+            <Input id="ev-lieu" className="h-11" value={v.lieu} maxLength={120} onChange={(e) => set({ lieu: e.target.value })} />
+          </Champ>
+        ) : <ChampSalle v={v} set={set} refus={refus} eglise={eglise} setEglise={setEglise} />}
 
         <Champ id="ev-contact" label={t("evenements.form.contact")}>
           <Input id="ev-contact" className="h-11" value={v.contact} maxLength={80} placeholder={t("evenements.form.contactHint")} onChange={(e) => set({ contact: e.target.value })} />
@@ -306,15 +335,18 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
         </label>
       )}
 
-      {info && (
+      {!reunion && (
         <div className="space-y-3 p-4">
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" className="h-4 w-4" checked={v.epingle} onChange={(e) => set({ epingle: e.target.checked })} />
             {t("evenements.form.epingle")}
           </label>
-          <Champ id="ev-expires" label={t("evenements.form.expiresAt")}>
-            <Input id="ev-expires" className="h-11" type="date" value={v.expiresAt ?? ""} onChange={(e) => set({ expiresAt: e.target.value || null })} />
-          </Champ>
+          {/* Lot AS, T6 : « Visible jusqu'au » reste aux infos (sur un daté, il le ferait disparaître de tout l'agenda). */}
+          {info && (
+            <Champ id="ev-expires" label={t("evenements.form.expiresAt")}>
+              <Input id="ev-expires" className="h-11" type="date" value={v.expiresAt ?? ""} onChange={(e) => set({ expiresAt: e.target.value || null })} />
+            </Champ>
+          )}
         </div>
       )}
 
@@ -331,9 +363,12 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
               <Champ id="ev-date-fin" label={t("evenements.form.dateFin")}>
                 <Input id="ev-date-fin" className="h-11" type="date" max={DATE_MAX} value={v.dateFin} onChange={(e) => set({ dateFin: e.target.value })} />
               </Champ>
-              <Champ id="ev-heure-fin" label={t("evenements.form.heureFin")}>
-                <Input id="ev-heure-fin" className="h-11" type="time" value={v.heureFin} onChange={(e) => set({ heureFin: e.target.value })} />
-              </Champ>
+              {/* Avec une salle, l'heure de fin est sous elle (SA12). */}
+              {!v.salle && (
+                <Champ id="ev-heure-fin" label={t("evenements.form.heureFin")}>
+                  <Input id="ev-heure-fin" className="h-11" type="time" value={v.heureFin} onChange={(e) => set({ heureFin: e.target.value })} />
+                </Champ>
+              )}
             </div>
           )}
 

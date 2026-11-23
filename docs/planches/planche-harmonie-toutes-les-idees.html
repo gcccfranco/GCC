@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harmonie, toutes les idées</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* Planche : une bande (toucher le nom d'une section), trois pistes, chacune en téléphone (390) · tablette (820) · ordinateur (1 280)
+   plus le scan 简谱 ; la recommandée marquée. Les maquettes sont dessinées à leur vraie largeur puis réduites (zoom). */
+:root{
+  /* planche */
+  --bg:#f6f5f2; --surface:#ffffff; --ink:#1c1b19; --muted:#6d6a63; --line:#e3e0d9;
+  --reco:#1f7a4d; --reco-bg:#e5f3ea; --warn:#a15c00; --warn-bg:#fdf0dc;
+  --f-ui:"Inter Tight",system-ui,-apple-system,"Segoe UI","PingFang SC","Noto Sans SC",sans-serif;
+  --f-site:-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,"PingFang SC","Source Han Sans CN","Noto Sans SC",sans-serif;
+  --f-chord:"Atkinson Hyperlegible Next",system-ui,sans-serif;
+  --f-zh:"Source Han Sans CN","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  /* maquettes : jetons du site (src/app/globals.css), clair */
+  --s-bg:#ffffff; --s-fg:#1c1c1e; --s-mfg:#6c6c72; --s-line:#e4e4e5; --s-card:#ffffff;
+  --s-fond:#f2f2f7; --s-fill2:#e5e5ea; --s-pose:#ffffff; --s-ink:#1c1c1e; --s-ink-fg:#ffffff;
+  --s-org:rgba(28,28,30,.55);
+  --s-shadow:0 14px 40px rgba(28,28,30,.2),0 2px 6px rgba(28,28,30,.08);
+  --chord-color:#3f63cf; --jianpu-color:#b3261d;
+  --sec-intro:#5b7fa6;        --sec-intro-tint:#eef3f9;
+  --sec-verse:#2c8a7d;        --sec-verse-tint:#e8f3f0;
+  --sec-prechorus:#c1871f;    --sec-prechorus-tint:#faf2e1;
+  --sec-chorus:#e0560a;       --sec-chorus-tint:#fcece1;
+  --sec-bridge:#7a5bcb;       --sec-bridge-tint:#f0ecf9;
+  --sec-instrumental:#6b7280; --sec-instrumental-tint:#f1f3f6;
+  --sec-interlude:#6b7280;    --sec-interlude-tint:#f1f3f6;
+  --sec-outro:#4f6477;        --sec-outro-tint:#eef1f5;
+  --sec-tag:#bd476a;          --sec-tag-tint:#faedf0;
+  --sec-coda:#4f6477;         --sec-coda-tint:#eef1f5;
+  --sec-other:#6b7280;        --sec-other-tint:#f1f3f6;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141413; --surface:#1e1d1b; --ink:#f0eee9; --muted:#a29e95; --line:#34322e;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12;
+  --s-bg:#000000; --s-fg:#f2f2f7; --s-mfg:#98989f; --s-line:#373739; --s-card:#1c1c1e;
+  --s-fond:#000000; --s-fill2:#2c2c2e; --s-pose:#3a3a3c; --s-ink:#f2f2f7; --s-ink-fg:#1c1c1e;
+  --s-org:rgba(242,242,247,.6);
+  --s-shadow:0 0 0 1px rgba(255,255,255,.1);
+  --chord-color:#8fb0ff; --jianpu-color:#ff7d72;
+  --sec-intro:#8fb2dc;        --sec-intro-tint:#161f2a;
+  --sec-verse:#59bdac;        --sec-verse-tint:#112320;
+  --sec-prechorus:#e0b35b;    --sec-prechorus-tint:#251e0f;
+  --sec-chorus:#fb923c;       --sec-chorus-tint:#2a1810;
+  --sec-bridge:#b59ce9;       --sec-bridge-tint:#1d1730;
+  --sec-instrumental:#98a0ad; --sec-instrumental-tint:#181d26;
+  --sec-interlude:#98a0ad;    --sec-interlude-tint:#181d26;
+  --sec-outro:#93a8ba;        --sec-outro-tint:#161e28;
+  --sec-tag:#e08ba1;          --sec-tag-tint:#281720;
+  --sec-coda:#93a8ba;         --sec-coda-tint:#161e28;
+  --sec-other:#98a0ad;        --sec-other-tint:#181d26;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141413; --surface:#1e1d1b; --ink:#f0eee9; --muted:#a29e95; --line:#34322e;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12;
+  --s-bg:#000000; --s-fg:#f2f2f7; --s-mfg:#98989f; --s-line:#373739; --s-card:#1c1c1e;
+  --s-fond:#000000; --s-fill2:#2c2c2e; --s-pose:#3a3a3c; --s-ink:#f2f2f7; --s-ink-fg:#1c1c1e;
+  --s-org:rgba(242,242,247,.6);
+  --s-shadow:0 0 0 1px rgba(255,255,255,.1);
+  --chord-color:#8fb0ff; --jianpu-color:#ff7d72;
+  --sec-intro:#8fb2dc;        --sec-intro-tint:#161f2a;
+  --sec-verse:#59bdac;        --sec-verse-tint:#112320;
+  --sec-prechorus:#e0b35b;    --sec-prechorus-tint:#251e0f;
+  --sec-chorus:#fb923c;       --sec-chorus-tint:#2a1810;
+  --sec-bridge:#b59ce9;       --sec-bridge-tint:#1d1730;
+  --sec-instrumental:#98a0ad; --sec-instrumental-tint:#181d26;
+  --sec-interlude:#98a0ad;    --sec-interlude-tint:#181d26;
+  --sec-outro:#93a8ba;        --sec-outro-tint:#161e28;
+  --sec-tag:#e08ba1;          --sec-tag-tint:#281720;
+  --sec-coda:#93a8ba;         --sec-coda-tint:#161e28;
+  --sec-other:#98a0ad;        --sec-other-tint:#181d26;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 72px}
+.wrap{max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-size:30px;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:22px;margin:0;text-wrap:balance}
+h3{font-size:16px;margin:0}
+p{margin:0;max-width:72ch;text-wrap:pretty}
+section{display:flex;flex-direction:column;gap:20px;min-width:0}
+.eyebrow{font-size:13px;color:var(--muted);font-weight:600}
+.intro{display:flex;flex-direction:column;gap:12px}
+.cite{border-left:3px solid var(--line);padding-left:12px;color:var(--muted);font-style:italic}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.piste{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.piste.reco{border:2px solid var(--reco)}
+.piste-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--reco-bg);color:var(--reco)}
+.tag.neutre{background:var(--bg);color:var(--muted)}
+.fiche4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 20px;font-size:13.5px;color:var(--muted)}
+.fiche4 b{color:var(--ink);font-weight:600}
+.pro-con{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;font-size:14px}
+.pro-con ul{margin:4px 0 0;padding-left:18px}
+.plus{color:var(--reco);font-weight:600}.moins{color:var(--warn);font-weight:600}
+.devrow{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;min-width:0}
+.dev{display:flex;flex-direction:column;gap:6px;min-width:0;max-width:100%}
+.dev-label{font-size:12.5px;color:var(--muted);font-weight:600;max-width:320px}
+.scrollx{max-width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
+.hint{display:none;font-size:12px;color:var(--muted)}
+.questions{counter-reset:q;display:flex;flex-direction:column;gap:12px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.q h3::before{counter-increment:q;content:"Q" counter(q) " · ";color:var(--muted)}
+.q .rec{font-size:14px;color:var(--reco);font-weight:600}
+.q .ajout{font-size:12px;color:var(--muted)}
+code{white-space:nowrap;font-family:ui-monospace,Menlo,monospace;font-size:.9em;background:var(--bg);padding:1px 5px;border-radius:5px}
+.nonvu ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+@media (max-width:640px){.piste{padding:14px}.hint{display:block}}
+
+/* ───────── maquettes (site) ───────── */
+.mock{position:relative;overflow:hidden;border:1px solid var(--s-line);flex:none;background:var(--s-bg);color:var(--s-fg);
+  font-family:var(--f-site);font-size:15px;line-height:1.35;text-align:left;zoom:var(--z,1)}
+.mock *{box-sizing:border-box}
+.mock .zh{font-family:var(--f-zh);font-weight:500}
+.phone{width:390px;height:844px;border-radius:38px}
+.tab{width:820px;height:640px;border-radius:22px}
+.desk{width:1280px;height:680px;border-radius:12px;display:flex;flex-direction:column}
+.scanm{width:390px;height:844px;border-radius:38px;background:#ffffff;color:#1c1c1e}
+.mock.louange{background:#000;color:#f2f2f7;--s-bg:#000;--s-fg:#f2f2f7;--s-mfg:#98989f;--s-line:#373739;--s-card:#1c1c1e;--s-fill2:#2c2c2e;
+  --s-ink:#f2f2f7;--s-ink-fg:#1c1c1e;--s-org:rgba(242,242,247,.6);--chord-color:#8fb0ff;--sec-chorus:#fb923c;--sec-verse:#59bdac;--sec-prechorus:#e0b35b;--sec-bridge:#b59ce9;--s-pose:#3a3a3c}
+.bar{height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:15px;color:var(--s-mfg);flex:none}
+.bar .back{color:var(--chord-color)}
+.dots{width:34px;height:34px;border-radius:50%;background:var(--s-fill2);display:grid;place-items:center;color:var(--s-fg);font-weight:700;letter-spacing:1px;padding-bottom:5px}
+.pg{padding:0 16px;flex:1;min-height:0;overflow:hidden;position:relative}
+.desk .pg{padding:0 32px}
+.ttl{font-size:26px;font-weight:700;line-height:1.1;margin:2px 0 2px}
+.art{font-size:13px;color:var(--s-mfg)}
+.ctl{display:flex;gap:8px;align-items:center;margin:12px 0 16px;flex-wrap:wrap}
+.key{display:inline-grid;place-items:center;min-width:38px;height:32px;padding:0 12px;border-radius:999px;background:var(--s-fill2);font-weight:700;font-size:14px}
+.pill{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:999px;background:var(--s-fill2);font-size:13px;font-weight:600;color:var(--s-fg);white-space:nowrap}
+.pill.on{background:var(--s-ink);color:var(--s-ink-fg)}
+.pill.idees{color:var(--chord-color)}
+/* section */
+.blk{--sc:var(--sec-other);position:relative;margin:0 0 18px;min-width:0}
+.blk.verse{--sc:var(--sec-verse)}.blk.prechorus{--sc:var(--sec-prechorus)}.blk.chorus{--sc:var(--sec-chorus)}.blk.bridge{--sc:var(--sec-bridge)}
+.sh{height:26px;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:var(--s-fg);position:relative}
+.sh::before{content:"";width:16px;height:2px;background:var(--sc);flex:none}
+.sh .nm{color:var(--sc);filter:saturate(1)}
+.sh .cnt{font-family:var(--f-chord);font-weight:700;font-size:13px;color:var(--chord-color);min-width:44px;height:26px;display:inline-flex;align-items:center}
+.sh.press .nm{opacity:.7}
+/* lignes de paroles et accords */
+.ln{display:flex;flex-wrap:wrap;align-items:flex-end;margin:0 0 8px;font-size:16px;line-height:1.2}
+.u{display:inline-flex;flex-direction:column;vertical-align:bottom;min-width:0}
+.u .c{font-family:var(--f-chord);font-size:15px;font-weight:700;color:var(--chord-color);line-height:1.2;padding-right:5px;min-height:18px;white-space:pre}
+.u .c.org{text-decoration:underline dotted 1px var(--chord-color);text-underline-offset:3px}
+.u .t{white-space:pre-wrap;min-height:19px}
+.u .o{font-family:var(--f-chord);font-size:10.8px;font-weight:700;color:var(--chord-color);line-height:1.25;white-space:pre;padding-right:4px}
+.u .o.more{font-weight:500;color:var(--s-mfg)}
+.py{font-size:12px;color:var(--s-mfg);margin:-5px 0 10px;line-height:1.25}
+/* liste B */
+.lst{display:flex;flex-direction:column;margin:4px 0 12px;--oc:68px;position:relative;padding-left:14px}
+.lst::before{content:"";position:absolute;left:0;top:-17px;bottom:0;width:2px;background:var(--sc)}
+.rw{display:grid;grid-template-columns:var(--oc) 24px minmax(0,1fr) auto;align-items:start;column-gap:0;min-height:24px}
+.rw.nv{margin-top:6px}
+.rw .og{text-align:right;color:var(--s-org);font-family:var(--f-chord);font-weight:500;font-size:var(--ac,15px);line-height:var(--rh,24px);padding-right:6px}
+.rw .ar{width:24px;height:var(--rh,24px);display:block;color:var(--s-line)}
+.rw .rc{min-width:0;padding-left:6px}
+.rw .rp{font-family:var(--f-chord);font-weight:700;color:var(--chord-color);font-size:var(--ac,15px);line-height:var(--rh,24px)}
+.rw .rp.ec2{font-weight:400}
+.rw .fn{display:block;font-size:13px;color:var(--s-mfg);line-height:1.25;margin-top:-3px;padding-bottom:3px;font-family:var(--f-site)}
+.rw .ec{align-self:start;min-height:44px;display:inline-flex;align-items:center;padding-left:6px;margin-top:-10px}
+.ec b{font-weight:600;font-size:13px;height:30px;padding:0 11px;border-radius:9px;display:inline-flex;align-items:center;box-shadow:inset 0 0 0 1.5px var(--s-line);color:var(--s-fg);white-space:nowrap}
+.lst .ao{font-size:13px;color:var(--s-mfg);margin:8px 0 0 var(--oc);padding-left:30px;line-height:1.35}
+.lst .tout{font-size:14px;font-weight:600;color:var(--chord-color);min-height:44px;display:flex;align-items:center;margin-left:var(--oc);padding-left:30px}
+.lst.lou{--ac:20px;--rh:28px}
+.lst.lou .rw{min-height:28px}
+.lst.lou .ao{font-size:14px;font-family:var(--f-zh);margin-top:6px}
+.tab .lst .fn,.desk .lst .fn{display:inline;margin-left:12px;margin-top:0}
+.tab .lst .rc,.desk .lst .rc{display:flex;align-items:baseline;flex-wrap:wrap}
+.desk .lst{--oc:76px;max-width:560px}
+/* feuille et colonne (C) */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--s-card);border-radius:20px 20px 0 0;box-shadow:var(--s-shadow),0 0 0 1px var(--s-line);padding:8px 16px 14px;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+.grab{width:38px;height:5px;border-radius:3px;background:var(--s-line);margin:0 auto 2px;flex:none}
+.sh-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sh-head h4{margin:0;font-size:18px;font-weight:700}
+.x{width:30px;height:30px;border-radius:50%;background:var(--s-fill2);display:grid;place-items:center;color:var(--s-mfg);font-size:17px;line-height:1;flex:none}
+.hcol{display:flex;flex-direction:column;gap:10px;font-size:14px}
+.hb.blk{margin:0}
+.hb{display:flex;align-items:center;gap:8px;padding:9px 0 9px 12px;border-left:2px solid var(--sc);color:var(--s-fg);font-weight:600}
+.hb .n{margin-left:auto;font-family:var(--f-chord);font-weight:700;color:var(--chord-color)}
+.hb.cible{border-left-width:4px;padding-left:10px;flex-direction:column;align-items:stretch;gap:6px;font-weight:400}
+.hb.cible .hh{display:flex;align-items:center;gap:8px;font-weight:600}
+.hi{display:flex;flex-direction:column;gap:2px;padding:7px 0;border-top:1px solid var(--s-line)}
+.hi .l1{display:flex;align-items:center;gap:8px}
+.hi .ch{font-family:var(--f-chord);font-weight:700;color:var(--chord-color);font-size:15px;flex:1}
+.hi .ch i{font-style:normal;font-weight:400;color:var(--s-org)}
+.hi .fn{font-size:13px;color:var(--s-mfg)}
+.hlink{font-size:13px;color:var(--s-mfg)}
+.volet{position:absolute;top:50px;right:0;bottom:0;width:320px;background:#1c1c1e;border-left:1px solid var(--s-line);padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.sideC{width:400px;flex:none;border-left:1px solid var(--s-line);padding:16px 18px;overflow:hidden;background:var(--s-card)}
+/* louange */
+.lou-bar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;color:var(--s-mfg);font-size:14px;flex:none}
+.lou-pg{flex:1;padding:8px 40px 0;overflow:hidden;position:relative}
+.tab .lou-pg .ln{font-size:22px;margin-bottom:6px}
+.tab .lou-pg .u .c{font-size:20px;min-height:24px}
+.tab .lou-pg .py{font-size:13px;margin-bottom:14px}
+.tab .lou-pg .sh{font-size:16px}
+.tab .lou-pg .u .o{font-size:14.4px}
+.tab .lou-pg .blk{margin-bottom:22px}
+/* scan 简谱 */
+.sc{position:relative;height:100%;padding:0;background:#fff;color:#1c1c1e;font-family:var(--f-zh)}
+.sc-t{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-family:var(--f-site);font-size:14px;color:#6c6c72;border-bottom:1px solid #e4e4e5;background:#fff}
+.sc-row{display:grid;grid-template-columns:50px minmax(0,1fr);position:relative}
+.sc-m{padding:6px 2px 0 6px;font-family:var(--f-site);font-size:11.5px;line-height:1.15;font-weight:700;color:var(--sc);word-break:keep-all}
+.sc-m .b{display:flex;flex-direction:column;gap:1px;min-height:44px}
+.sc-m .tr{width:14px;height:2px;background:var(--sc);margin-bottom:4px}
+.sc-m .cn{font-family:var(--f-chord);color:#3f63cf;font-size:11px}
+.sc-sys{padding:6px 8px 6px 4px}
+.sc-ch{font-family:var(--f-chord);font-weight:700;font-size:12px;color:#3f63cf;display:flex;gap:14px;white-space:nowrap;height:18px}
+.sc-dg{height:16px;margin:2px 0;background:repeating-linear-gradient(90deg,#9a9aa0 0 7px,transparent 7px 11px,#9a9aa0 11px 13px,transparent 13px 22px);opacity:.4;border-radius:1px;-webkit-mask:linear-gradient(#000,#000)}
+.sc-ly{font-size:12.5px;color:#4a4a50;line-height:1.35;font-weight:500}
+.sc-ln{font-size:10px;color:#8b8b92;font-family:var(--f-site);margin-top:3px}
+.sc-lst{padding:2px 8px 6px 0;margin-left:-2px;border-left:2px solid var(--sc);padding-left:10px;margin:4px 8px 6px 0;background:#fff;--s-fg:#1c1c1e;--s-mfg:#6c6c72;--s-line:#e4e4e5;--s-org:rgba(28,28,30,.55);--chord-color:#3f63cf;--oc:84px;color:#1c1c1e}
+.sc-lst .lst{margin:0;padding-left:0;--ac:13px;--rh:22px}
+.sc-lst .lst::before{display:none}
+.sc-lst .lst .og{padding-right:4px}
+.sc-cap{position:absolute;left:0;right:0;bottom:0;padding:8px 14px;background:#fdf0dc;color:#a15c00;font-family:var(--f-site);font-size:11.5px;font-weight:600}
+.rg{--sc:var(--sec-chorus)}.rv{--sc:var(--sec-verse)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="intro">
+  <span class="eyebrow">Planche · 13/11/2026 · à trancher avant spec</span>
+  <h1>Toucher «&nbsp;Refrain&nbsp;»&nbsp;: toutes les idées d'harmonie du passage</h1>
+  <p class="cite">«&nbsp;Ce qu'il faudrait c'est que quand on appuie sur le refrain par exemple il y a toutes les propositions d'harmonie qui apparaissent.&nbsp;» Timothée, 13/11/2026</p>
+  <p>Aujourd'hui, le mode louange montre au plus un point par section (la première idée) et, au toucher, une bande d'une ligne. Dans Partitions et sur la page chant, les idées vivent dans la colonne Harmonie&nbsp;; sur un scan 简谱, rien. Trois façons de répondre à la demande, dessinées sur le vrai chant <i>Promesses</i> (Maverick City Music, en C), sur <i>奇异恩典</i> (en E) et sur un scan. Une seule notation partout&nbsp;: celle que la personne a choisie, lettres par défaut. Rien n'est codé&nbsp;: les pistes attendent un choix, puis une spec, puis un go.</p>
+</header>
+
+<section>
+  <span class="eyebrow">Ce qui pèse sur le choix</span>
+  <div class="cols3">
+    <div class="box"><h3>Le nombre d'idées est le vrai problème</h3>
+      <p>Sur 1 616 sections (idées calculées, dans la tonalité recommandée)&nbsp;: 49 n'en ont aucune, 377 en ont 1 à 3, 715 en ont 4 à 8, 475 (29 %) en ont 9 ou plus, jusqu'à 20. Médiane&nbsp;: 6.</p></div>
+    <div class="box"><h3>Trois endroits, trois formes aujourd'hui</h3>
+      <p>Louange&nbsp;: un point et une bande d'une ligne. Partitions et page chant&nbsp;: la colonne Harmonie (porte 2), ouverte par la puce «&nbsp;Idées d'harmonie&nbsp;» ou par «&nbsp;Ici&nbsp;». Scan 简谱&nbsp;: rien, il ne connaît pas ses sections.</p></div>
+    <div class="box"><h3>Ce que le scan sait déjà</h3>
+      <p><code>sections.json</code> donne la ligne où chaque section commence, <code>marges.json</code> la marge blanche, <code>systemes.json</code> les coupes entre lignes. Dans 85 chants sur 190, plusieurs sections commencent sur la même ligne.</p></div>
+  </div>
+</section>
+
+<!-- ───────────── BANDE : toucher le nom ───────────── -->
+<section>
+  <span class="eyebrow">Bande unique</span>
+  <h2>Toucher le nom d'une section</h2>
+  <p>Le nombre d'idées s'écrit en petit après le nom, dans la couleur des accords («&nbsp;Refrain 8&nbsp;»)&nbsp;; il remplace le point de 8 px (question 1) et sert de signal à toutes les pistes. Chaque piste&nbsp;: téléphone (page chant), tablette (mode louange, en sombre), scan 简谱, puis ordinateur.</p>
+
+  <!-- PISTE A -->
+  <div class="piste">
+    <div class="piste-head"><h3>A. L'ossia&nbsp;: les idées au-dessus des accords qu'elles changent</h3><span class="tag neutre">Piste</span></div>
+    <p>Toucher «&nbsp;Refrain&nbsp;» écrit chaque proposition en petit au-dessus de l'accord qu'elle remplace, à sa place dans la ligne, comme l'ossia d'une partition classique ou le crayon du musicien au-dessus de l'accord.</p>
+    <div class="fiche4">
+      <div><b>Palette.</b> Rien de nouveau. Accords proposés en <code>--chord-color</code> (#3f63cf, sombre #8fb0ff) à 72 % de la taille&nbsp;; accord d'origine souligné en pointillé de 1 px. Les <code>--sec-*</code> restent sur le nom et le trait&nbsp;; <code>--primary</code> (encre) et <code>--sec-chorus</code> inchangés.</div>
+      <div><b>Typo.</b> Atkinson Hyperlegible Next en gras à 0,72 em, sans nom de fiche (pas de place). Aucun texte chinois nouveau dans la partition&nbsp;; sur le scan, repli en Source Han Sans CN Medium (relancer build-fonts.py).</div>
+      <div><b>Matières.</b> Aucune surface, aucune ombre&nbsp;: des rangées d'accords de plus entre la ligne d'accords et la ligne au-dessus. Trois rangées au plus par endroit, puis «&nbsp;+2&nbsp;». Rien ne s'écrit sur l'encre du scan&nbsp;: repli sur une liste sous l'étiquette de marge.</div>
+      <div><b>Mouvement.</b> Hors louange&nbsp;: ressort sans rebond (amortissement 1, réponse 0,3 s), interruptible. Reduced-motion&nbsp;: apparition directe, fondu de 120 ms. Louange&nbsp;: aucune animation (R4). Le toucher arrête la propagation.</div>
+    </div>
+    <div class="devrow">
+      <div class="dev"><span class="dev-label">Téléphone · page chant, Refrain touché&nbsp;: 4 lignes deviennent environ 10</span><div class="scrollx"><div class="mock phone" data-w="390" data-pref=".8" data-min=".6" id="A-phone"></div></div></div>
+      <div class="dev"><span class="dev-label">Tablette · mode louange, 副歌 touché, sans animation</span><div class="scrollx"><div class="mock tab louange" data-w="820" data-pref=".72" data-min=".5" id="A-tab"></div></div></div>
+      <div class="dev"><span class="dev-label">Scan 简谱 · l'ossia ne peut pas suivre&nbsp;: repli sur la liste</span><div class="scrollx"><div class="mock scanm" data-w="390" data-pref=".8" data-min=".6" id="A-scan"></div></div></div>
+      <div class="dev" style="width:100%"><span class="dev-label">Ordinateur (1 280) · page chant, deux colonnes</span><div class="scrollx"><div class="mock desk" data-w="1280" data-pref="1" data-min=".45" id="A-desk"></div></div></div>
+    </div>
+    <p class="hint">Faire défiler chaque maquette sur le côté pour la voir en entier.</p>
+    <div class="pro-con">
+      <div><span class="plus">Ce qu'elle donne</span><ul><li>La plus belle à deux ou trois idées&nbsp;: l'idée est exactement là où on joue l'accord.</li><li>Rien de nouveau à apprendre, aucune surface de plus.</li></ul></div>
+      <div><span class="moins">Ce qu'elle coûte</span><ul><li>Illisible au-delà&nbsp;: médiane de 6 idées par section, 29 % des sections en ont 9 ou plus.</li><li>Un accord revient (C huit fois dans le refrain)&nbsp;: choisir l'occurrence ou tout charger. Les insertions (C G/B Am) n'ont pas d'ancre&nbsp;; les idées de forme (intro, tag) n'ont pas de place.</li><li>Il faut toucher au rendu de ChordLine dans SongView. Au téléphone le texte se recoupe&nbsp;; la page de louange se recompte à chaque ouverture. Le scan ne suit pas&nbsp;: c'est la piste la plus chère et la moins homogène.</li></ul></div>
+    </div>
+  </div>
+
+  <!-- PISTE B -->
+  <div class="piste reco">
+    <div class="piste-head"><h3>B. Le tableau d'échange&nbsp;: la liste sous le nom, alignée sur la flèche</h3><span class="tag">Recommandée</span></div>
+    <p>Toucher «&nbsp;Refrain&nbsp;» déplie sous le nom un petit tableau de remplacements «&nbsp;ce qu'on joue → ce qu'on peut jouer&nbsp;», aligné sur une colonne de flèches, comme la grille de variantes qu'un musicien recopie au dos de sa feuille. Le trait de couleur de la section descend le long de la liste pour la tenir. Même forme partout, scan compris.</p>
+    <div class="fiche4">
+      <div><b>Palette.</b> Accord d'origine à l'encre atténuée (#1c1c1e à 55 %, sombre #f2f2f7 à 60 %). Flèche en filet <code>--border</code> (#e4e4e5). Remplacement en <code>--chord-color</code>&nbsp;: gras pour les idées très sûres et sûres, regular pour celles «&nbsp;à écouter&nbsp;». Le trait de 16 × 2 px en <code>--sec-c</code> se prolonge à la verticale (2 px)&nbsp;: un L. Aucun fond teinté.</div>
+      <div><b>Typo.</b> Accords en Atkinson Hyperlegible Next&nbsp;: taille des accords de la page en louange (suit le zoom), 15 px sur page chant et Partitions. Nom de fiche en police système, 13 px, gris, sans majuscule. Chinois&nbsp;: «&nbsp;另外&nbsp;» en Source Han Sans CN Medium 13 px (build-fonts.py pour les nouveaux libellés).</div>
+      <div><b>Matières.</b> Ni carte, ni ombre, ni flou&nbsp;: de l'encre sur la page. L'accord d'origine n'est écrit qu'une fois par groupe&nbsp;; groupes rangés par sûreté&nbsp;; idées sans accords (intro, tag) sur une dernière ligne grise «&nbsp;Aussi&nbsp;:&nbsp;» / «&nbsp;另外：&nbsp;»&nbsp;; idées de l'équipe dessous, sous «&nbsp;de l'équipe&nbsp;»&nbsp;; au-delà de six rangées, deux colonnes dès 768 px.</div>
+      <div><b>Mouvement.</b> Hors louange&nbsp;: hauteur et opacité en ressort sans rebond (amortissement 1, réponse 0,3 s), réversible au second toucher&nbsp;; au pointerdown le nom passe à 70 %. Reduced-motion&nbsp;: ouverture sèche, fondu de 120 ms. Louange&nbsp;: aucune animation (R4). Une seule liste ouverte&nbsp;; tourner la page ne la ferme pas.</div>
+    </div>
+    <div class="devrow">
+      <div class="dev"><span class="dev-label">Téléphone · page chant&nbsp;: accords 15 px, rangées 24 px, nom de fiche en seconde ligne 13 px</span><div class="scrollx"><div class="mock phone" data-w="390" data-pref=".8" data-min=".6" id="B-phone"></div></div></div>
+      <div class="dev"><span class="dev-label">Tablette · mode louange&nbsp;: accords 20 px, rangées 28 px, sans nom de fiche ni Écouter</span><div class="scrollx"><div class="mock tab louange" data-w="820" data-pref=".72" data-min=".5" id="B-tab"></div></div></div>
+      <div class="dev"><span class="dev-label">Scan 简谱 · étiquette dans la marge blanche, liste insérée entre deux lignes</span><div class="scrollx"><div class="mock scanm" data-w="390" data-pref=".8" data-min=".6" id="B-scan"></div></div></div>
+      <div class="dev" style="width:100%"><span class="dev-label">Ordinateur (1 280) · page chant, deux colonnes&nbsp;; liste plafonnée à 560 px, alignée sur le texte</span><div class="scrollx"><div class="mock desk" data-w="1280" data-pref="1" data-min=".45" id="B-desk"></div></div></div>
+    </div>
+    <p class="hint">Faire défiler chaque maquette sur le côté pour la voir en entier.</p>
+    <div class="pro-con">
+      <div><span class="plus">Ce qu'elle donne</span><ul><li>Un seul geste, une seule forme, au même endroit sur les trois écrans et sur le scan&nbsp;; suite logique de la bande d'H8, qui poussait déjà le contenu.</li><li>L'accord d'origine écrit une fois par groupe&nbsp;: les 8 idées du refrain de Promesses tiennent en 5 groupes et 6 rangées (environ 170 px en louange à la taille par défaut). Le tri par sûreté met d'abord ce qui se joue sans répétition.</li><li>Rien de nouveau à apprendre&nbsp;: des accords dans la couleur des accords, tenus par le trait de la section.</li></ul></div>
+      <div><span class="moins">Ce qu'elle coûte</span><ul><li>Une section à 15–20 idées (175 sur 1 616 en ont 13 ou plus) fait une demi-page au téléphone en louange&nbsp;; les deux colonnes ne servent qu'à partir de 768 px.</li><li>L'alignement demande une vraie grille&nbsp;; les accords longs (E2/G# F#m → E2/G# Fdim F#m) passent à la ligne plutôt que d'être coupés.</li><li>Scan&nbsp;: dépend du chantier «&nbsp;deux volets&nbsp;» (JianpuSheet, coupe entre lignes). Plusieurs sections sur la même ligne (85 chants sur 190)&nbsp;: une seule étiquette, «&nbsp;主歌 1–4&nbsp;», et une seule liste.</li></ul></div>
+    </div>
+  </div>
+
+  <!-- PISTE C -->
+  <div class="piste">
+    <div class="piste-head"><h3>C. Le pupitre voisin&nbsp;: les idées à côté de la partition</h3><span class="tag neutre">Piste</span></div>
+    <p>Toucher «&nbsp;Refrain&nbsp;» ne déplie rien dans la partition&nbsp;: la colonne Harmonie s'ouvre à côté, sur le bloc de ce passage, comme la feuille du chef de louange posée sur le pupitre d'à côté. La partition ne bouge pas d'un pixel.</p>
+    <div class="fiche4">
+      <div><b>Palette.</b> Celle de la porte 2 telle qu'elle existe&nbsp;: fond <code>--card</code>, filet gauche <code>--sec-&lt;type&gt;</code> du bloc. Le bloc visé&nbsp;: filet de 4 px au lieu de 2, sans fond ni halo. Louange sombre&nbsp;: volet opaque #1c1c1e sur #000. <code>--primary</code> et <code>--sec-chorus</code> inchangés.</div>
+      <div><b>Typo.</b> Celle de HarmonieDuChant&nbsp;: Atkinson pour les accords, police système pour les phrases, Source Han Sans CN Medium pour le chinois. Une seule notation. Noms de fiche toujours affichés&nbsp;: la colonne a la place.</div>
+      <div><b>Matières.</b> Une vraie surface. Colonne de 400 px sans voile dès 1 024 px&nbsp;; feuille aux deux tiers de la hauteur au téléphone et en tablette portrait. Louange&nbsp;: volet opaque, sans flou, pas de matériau translucide sur une page lue en plein service.</div>
+      <div><b>Mouvement.</b> Hors louange&nbsp;: ressorts actuels (vaul, suivi 1:1, élastique)&nbsp;; défilement jusqu'au bloc en ressort sans rebond. Reduced-motion&nbsp;: on saute au bloc. Louange&nbsp;: le volet apparaît sans animation&nbsp;; le toucher ne tourne pas la page.</div>
+    </div>
+    <div class="devrow">
+      <div class="dev"><span class="dev-label">Téléphone · la feuille couvre les deux tiers&nbsp;: la ligne jouée disparaît</span><div class="scrollx"><div class="mock phone" data-w="390" data-pref=".8" data-min=".6" id="C-phone"></div></div></div>
+      <div class="dev"><span class="dev-label">Tablette · louange&nbsp;: volet fixe de 320 px, la zone de lecture rétrécit</span><div class="scrollx"><div class="mock tab louange" data-w="820" data-pref=".72" data-min=".5" id="C-tab"></div></div></div>
+      <div class="dev"><span class="dev-label">Scan 简谱 · l'étiquette de marge ouvre la même colonne (feuille)</span><div class="scrollx"><div class="mock scanm" data-w="390" data-pref=".8" data-min=".6" id="C-scan"></div></div></div>
+      <div class="dev" style="width:100%"><span class="dev-label">Ordinateur (1 280) · partition et colonne de 400 px côte à côte</span><div class="scrollx"><div class="mock desk" data-w="1280" data-pref="1" data-min=".45" id="C-desk"></div></div></div>
+    </div>
+    <p class="hint">Faire défiler chaque maquette sur le côté pour la voir en entier.</p>
+    <div class="pro-con">
+      <div><span class="plus">Ce qu'elle donne</span><ul><li>La moins chère hors louange&nbsp;: la porte 2 existe, «&nbsp;Ici&nbsp;» fait déjà ce saut.</li><li>La partition ne bouge pas&nbsp;: rien à recompter hors louange.</li></ul></div>
+      <div><span class="moins">Ce qu'elle coûte</span><ul><li>Elle ne répond pas à la demande là où elle compte&nbsp;: au téléphone et en louange, «&nbsp;appuyer sur le refrain&nbsp;» cache la partition ou change de forme&nbsp;; en louange la piste retombe forcément sur une liste dépliée (B), donc deux formes.</li><li>En louange sur grand écran, ouvrir le volet rétrécit la page&nbsp;: toutes les pages se recomptent pendant qu'on joue.</li><li>La colonne mélange idées, grille, phrase de fonction et formulaire&nbsp;: beaucoup à lire entre deux accords.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Recommandation</span>
+  <div class="box" style="border:2px solid var(--reco)">
+    <h3>B, le tableau d'échange</h3>
+    <p>Un musicien qui lit une grille en plein service doit voir l'idée là où il regarde déjà, sans perdre sa ligne, et la lire d'un coup d'œil. B tient ces trois conditions&nbsp;: un geste, une forme, au même endroit partout, scan compris&nbsp;; un tableau qui absorbe le nombre d'idées (origine écrite une fois, tri par sûreté, deux colonnes sur grand écran)&nbsp;; rien de nouveau à apprendre. A est plus belle à deux idées mais casse à six et ne sait pas faire le scan&nbsp;; C cache la partition au téléphone.</p>
+    <p><b>Coût de B&nbsp;:</b> environ 9 fichiers en 3 tranches. (1) Liste commune, fonction pure de groupage dans <code>src/lib/harmonie/</code>, nom de section touchable dans <code>SongView.tsx</code>, branchement dans <code>PartitionView.tsx</code> et <code>SongDetailClient.tsx</code>. (2) Mode louange&nbsp;: <code>IdeeHarmonieMarge.tsx</code> passe de la première idée à toutes, <code>PerformanceMode.tsx</code> recompte la hauteur ouverte. (3) Scan 简谱, à caler sur le chantier «&nbsp;deux volets&nbsp;». Tests&nbsp;: <code>louange-harmonie.spec.ts</code> étendue, plus une spec d'agencement dans <code>SPECS_GRAND_ECRAN</code>.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">À trancher</span>
+  <h2>Questions</h2>
+  <div class="questions">
+    <div class="q"><h3>Signal sur le nom&nbsp;: le point de 8 px reste-t-il ?</h3>
+      <p>Décisions 4 et 7 d'H8&nbsp;: un point dans la marge, une idée seulement. Il n'existe pas sur la page chant ni dans Partitions.</p>
+      <p class="rec">Proposition&nbsp;: le remplacer partout par le nombre d'idées en petit, dans <code>--chord-color</code>, juste après le nom («&nbsp;Refrain 8&nbsp;»). Le nom devient la seule cible&nbsp;: un signe, un geste. Il ne s'affiche que si l'accès Harmonie est ouvert, et en louange seulement si le réglage est allumé. (Dessiné ainsi dans les trois pistes.)</p></div>
+    <div class="q"><h3>À partir de 1 024 px, colonne Harmonie déjà ouverte&nbsp;: que fait le toucher du nom ?</h3>
+      <p>Risque&nbsp;: la même liste à deux endroits.</p>
+      <p class="rec">Proposition&nbsp;: la colonne défile jusqu'au bloc du passage et le marque&nbsp;; pas de liste dans la partition. Colonne fermée, la liste s'ouvre sous le nom comme ailleurs.</p></div>
+    <div class="q"><h3>Étiquette sur le scan 简谱&nbsp;: en quelle langue ?</h3>
+      <p>Dessinée ici avec «&nbsp;主歌 1–4&nbsp;» et «&nbsp;副歌&nbsp;» sur un chant chinois, interface en 中文.</p>
+      <p class="rec">Proposition&nbsp;: la langue de l'interface, horizontale, en forme courte («&nbsp;Refrain&nbsp;» / «&nbsp;副歌&nbsp;»&nbsp;; «&nbsp;Couplets 1–4&nbsp;» / «&nbsp;主歌 1–4&nbsp;» quand plusieurs sections commencent sur la même ligne, soit 85 chants sur 190), dans la marge blanche de marges.json. Si la marge fait moins de 40 px au téléphone&nbsp;: la couleur de la section et l'initiale seule.</p></div>
+    <div class="q"><h3>Idées «&nbsp;à écouter&nbsp;» (Bb F C, F Fm C) en mode louange&nbsp;: on les montre ?</h3>
+      <p>Moins sûres, elles rallongent la liste d'un chant lu en plein service.</p>
+      <p class="rec">Proposition&nbsp;: oui, puisque la demande est «&nbsp;toutes les propositions&nbsp;», mais en dernier et en graisse normale, pour qu'on lise d'abord ce qui se joue sans répétition.</p></div>
+    <div class="q"><h3>Noms de fiche et libellés nouveaux en 中文</h3>
+      <p class="ajout">Question ajoutée par le maquettiste. Les fiches Harmonie sont écrites en français seulement («&nbsp;Contenu en français pour l'instant&nbsp;», <code>harmonie.avisFrancais</code>)&nbsp;; la piste B demande pourtant le nom de fiche en chinois. Sur la maquette de 奇异恩典, les noms de fiche restent en français. Les libellés «&nbsp;Tout sur ce passage&nbsp;» et «&nbsp;de l'équipe&nbsp;» n'existent pas encore en 中文.</p>
+      <p class="rec">Proposition&nbsp;: garder les noms de fiche en français tant que les fiches le sont (comme la porte 2)&nbsp;; ne traduire que «&nbsp;另外&nbsp;», «&nbsp;Tout sur ce passage&nbsp;» et «&nbsp;de l'équipe&nbsp;», puis relancer build-fonts.py.</p></div>
+  </div>
+</section>
+
+<section class="nonvu">
+  <span class="eyebrow">Ce que cette planche n'a pas vu</span>
+  <div class="box"><ul>
+    <li>L'état réel du mode louange dans ses cinq dispositions (classique, sections, repères, scène, partition)&nbsp;: le nom de section y prend d'autres formes (lettre de scène, pastille de repère). Seule la disposition classique est dessinée.</li>
+    <li>La planche «&nbsp;jianpu-deux-volets&nbsp;» n'a pas été relue&nbsp;: le placement de l'étiquette dans les demi-lignes est supposé. Le scan est une maquette (chiffres en gris, pas l'image réelle).</li>
+    <li>Les comptes d'idées sont ceux des idées calculées seules, dans la tonalité recommandée&nbsp;: ni idées de l'équipe ni refus (base Firestore inaccessible ici).</li>
+    <li>Pagination du mode louange avec une insertion haute (170 px et plus), largeur réelle des marges des scans au téléphone, page chant en deux colonnes en tablette paysage&nbsp;: non mesurées. La tablette est dessinée en portrait (820), pas en paysage (1 180 × 820).</li>
+    <li>Les accords des idées sont ceux annoncés par la consigne&nbsp;; le fichier <code>promesses.cho</code> écrit le refrain Am C/E F C&nbsp;: les idées ne sont pas recalculées ici.</li>
+  </ul></div>
+</section>
+
+</div>
+
+<script>
+/* Maquettes générées depuis des lignes ChordPro réelles (content/songs/promesses.cho, 奇异恩典.cho). */
+const E = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function units(line){const out=[];let cur=null;for(const tk of line.split(/(\[[^\]]+\])/)){if(!tk)continue;const m=tk.match(/^\[(.+)\]$/);if(m){cur={c:m[1],t:''};out.push(cur);}else{if(!cur){cur={c:'',t:''};out.push(cur);}cur.t+=tk;}}return out;}
+/* ln : une ligne de paroles ; os = {indice d'unité: [rangée 1 (près de l'accord), rangée 2, …]} ; org = indices d'accords d'origine soulignés */
+function ln(line,{os={},org=[],zh=false}={}){
+  let pinyin='';const parts=line.split(/\s{3,}/);if(parts.length>1){line=parts[0];pinyin=parts.slice(1).join(' ');}
+  const html=units(line).map((u,i)=>{const o=(os[i]||[]).slice().reverse().map(r=>`<span class="o${r.startsWith('+')?' more':''}">${E(r)}</span>`).join('');
+    return `<span class="u">${o}<span class="c${org.includes(i)?' org':''}">${E(u.c)}</span><span class="t${zh?' zh':''}">${E(zh?u.t.replace(/^ +/,''):u.t)}</span></span>`;}).join('');
+  return `<div class="ln">${html}</div>${pinyin?`<div class="py">${E(pinyin)}</div>`:''}`;
+}
+const AR='<svg class="ar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h19M16.5 7.5 21 12l-4.5 4.5"/></svg>';
+/* liste B : groupes [{org, rows:[{r, n, a}]}] ; a = "à écouter" (graisse normale) */
+function liste(groups,{lou=false,ec=true,fn=true,aussi='',tout='',oc=null}={}){
+  let n=0;const rows=groups.map(g=>g.rows.map((r,i)=>{const first=i===0;const cls=first&&n++>0?' nv':'';
+    return `<div class="rw${cls}"><span class="og">${first?E(g.org):''}</span>${AR}<span class="rc"><span class="rp${r.a?' ec2':''}">${E(r.r)}</span>${fn&&r.n?`<span class="fn">${E(r.n)}</span>`:''}</span>${ec?'<span class="ec"><b>Écouter</b></span>':'<span></span>'}</div>`;}).join('')).join('');
+  return `<div class="lst${lou?' lou':''}"${oc?` style="--oc:${oc}px"`:''}>${rows}${aussi?`<div class="ao">${aussi}</div>`:''}${tout?`<div class="tout">${tout}</div>`:''}</div>`;
+}
+const blk=(kind,name,cnt,inner,{open=false,cible=false,press=false}={})=>`<div class="blk ${kind}${open?' open':''}${cible?' cible':''}"><div class="sh${press?' press':''}"><span class="nm">${E(name)}</span>${cnt?`<span class="cnt">${cnt}</span>`:''}</div><div class="in">${inner}</div></div>`;
+const bar=(l,r)=>`<div class="bar"><span class="back">${l}</span><span class="dots">⋯</span></div>`;
+const ctl=`<div class="ctl"><span class="key">C</span><span class="pill">A−</span><span class="pill">A+</span><span class="pill on">Accords</span><span class="pill idees">Idées d'harmonie</span></div>`;
+const head=(t,a)=>`<div class="ttl">${t}</div><div class="art">${a}</div>`;
+
+/* ─ données : Promesses (promesses.cho) ─ */
+const P={
+  c1:"[Am] Ô Dieu d'Abra[F]ham, Tu es le Dieu fi[C]dèle à l'alliance éter[G]nelle.",
+  r:["[Am]Tu es fi[C/E]dèle et [F]bon pour [C]moi.","[Am]Tu es fi[C/E]dèle et [F]bon pour [C]moi.","Oui dans [Am]l'allégresse et dans [C/E]la détresse Je loue[F]rai Ton [C]Nom.","[Am]Tu es fi[C/E]dèle et [F]bon pour [C]moi."],
+  p:["Quand vient [Am]l'ouragan et sou[F]fflent les vents, Je ne [C]tremble [G]pas."]
+};
+const GR=[
+ {org:'Am',rows:[{r:'Am7',n:'le m7 sur les accords mineurs'}]},
+ {org:'C',rows:[{r:'C2',n:'l\'accord « 2 » (add9)'}]},
+ {org:'C Am',rows:[{r:'C G/B Am',n:'la basse qui descend'},{r:'E7 Am',n:'le 5 du 6m'}]},
+ {org:'F C',rows:[{r:'Bb F C',n:'le b7 qui conclut',a:1},{r:'F Fm C',n:'le 4 mineur avant le 1',a:1}]}
+];
+const AUSSI_FR="Aussi : l'intro avec la fin du refrain, le tag";
+/* ─ données : 奇异恩典 (奇异恩典.cho),副歌 ─ */
+const Z={
+  r:["[E] 不再[E/G#]有捆[A2]绑，我已得释[E2/G#] 放，我救主[A/C#]耶稣，已付代[E] 价；   bù zài yǒu kǔn bǎng wǒ yǐ dé shì fàng wǒ jiù zhǔ yē sū yǐ fù dài jià",
+     "[E/G#] 丰富恩[A2] 典，今充满[E2/G#] 我，永恒的[F#m] 爱，[Bsus4] 奇异恩[E] 典。   fēng fù ēn diǎn jīn chōng mǎn wǒ yǒng héng de ài qí yì ēn diǎn"]
+};
+const GZ=[
+ {org:'E',rows:[{r:'E2',n:"l'accord « 2 » (add9)"}]},
+ {org:'F#m',rows:[{r:'F#m7',n:'le m7 sur les accords mineurs'}]},
+ {org:'A/C# E',rows:[{r:'D A E',n:'le b7 qui conclut',a:1}]},
+ {org:'E2/G# F#m',rows:[{r:'E2/G# Fdim F#m',n:'le diminué de passage',a:1}]}
+];
+
+/* ─ cadre « page chant » ─ */
+const pageChant=(body)=>`${bar('‹ Chants')}<div class="pg">${head('Promesses','Maverick City Music')}${ctl}${body}</div>`;
+const cou1=(cnt,open='')=>blk('verse','Couplet 1',cnt,ln(P.c1,{}),{});
+
+/* ─ cadre louange ─ */
+const louBar=`<div class="lou-bar"><span>Quitter</span><span class="zh">奇异恩典 · E</span><span>p. 2</span></div>`;
+
+function build(){
+  /* ===== A ===== */
+  const refrA=P.r.map((l,i)=>{const os={};const u=units(l);const iAm=u.findIndex(x=>x.c==='Am'),iC=u.length-1;
+    if(i===0){os[iAm]=['Am7'];os[iC]=['C2','C G/B Am','E7 Am  +2'];}else{os[iAm]=['Am7'];os[iC]=['C2'];}
+    return ln(l,{os,org:[iAm,iC]});}).join('');
+  $('A-phone').innerHTML=pageChant(blk('verse','Couplet 1','6',ln(P.c1))+blk('chorus','Refrain','8',refrA,{press:true}));
+  $('A-desk').innerHTML=`${bar('‹ Chants')}<div class="pg"><div style="display:flex;gap:32px;align-items:flex-start"><div style="width:420px;flex:none">${head('Promesses','Maverick City Music')}${ctl}${blk('verse','Couplet 1','6',ln(P.c1))}${blk('prechorus','Pré-Refrain','5',ln(P.p[0]))}</div><div style="flex:1;min-width:0;padding-top:78px">${blk('chorus','Refrain','8',refrA,{press:true})}</div></div></div>`;
+  const zrA=Z.r.map((l,i)=>{const u=units(l.split(/\s{3,}/)[0]);const os={};
+    if(i===0){os[0]=['E2'];os[u.length-1]=['D A E'];}
+    else{const f=u.findIndex(x=>x.c==='F#m');os[f]=['F#m7','E2/G# Fdim F#m'];os[0]=['E2'];}
+    return ln(l,{os,org:i===0?[0,u.length-1]:[0,u.findIndex(x=>x.c==='F#m')],zh:true});}).join('');
+  $('A-tab').innerHTML=`${louBar}<div class="lou-pg">${blk('chorus','副歌','6',zrA,{press:true})}</div>`;
+  /* ===== B ===== */
+  const lstB=liste(GR,{aussi:AUSSI_FR,tout:'Tout sur ce passage'});
+  $('B-phone').innerHTML=pageChant(blk('verse','Couplet 1','6',ln(P.c1))+blk('chorus','Refrain','8',lstB+P.r.map(l=>ln(l)).join(''),{open:true,press:true}));
+  const zhB=liste(GZ,{lou:true,ec:false,fn:false,aussi:'另外：intro, tag',oc:150});
+  $('B-tab').innerHTML=`${louBar}<div class="lou-pg">${blk('chorus','副歌','6',zhB+Z.r.map(l=>ln(l,{zh:true})).join(''),{open:true,press:true})}</div>`;
+  const lstD=liste(GR,{aussi:AUSSI_FR,tout:'Tout sur ce passage'});
+  $('B-desk').innerHTML=`${bar('‹ Chants')}<div class="pg"><div style="display:flex;gap:32px;align-items:flex-start"><div style="width:420px;flex:none">${head('Promesses','Maverick City Music')}${ctl}${blk('verse','Couplet 1','6',ln(P.c1))}${blk('prechorus','Pré-Refrain','5',ln(P.p[0]))}</div><div style="flex:1;min-width:0;padding-top:78px">${blk('chorus','Refrain','8',lstD+P.r.map(l=>ln(l)).join(''),{open:true,press:true})}</div></div></div>`;
+  /* ===== C ===== */
+  const hcolFR=(compact)=>`<div class="hcol"><div class="sh-head"><h4>Harmonie de ce chant</h4><span class="x">×</span></div>
+    <div class="hb blk verse"><span>Couplet 1</span><span class="n">6</span></div>
+    <div class="hb blk prechorus"><span>Pré-Refrain</span><span class="n">5</span></div>
+    <div class="hb blk chorus cible"><div class="hh"><span style="color:var(--sec-chorus)">Refrain</span><span class="n" style="margin-left:auto;color:var(--chord-color);font-family:var(--f-chord);font-weight:700">8</span></div>
+      <div class="hi"><div class="l1"><span class="ch">Am <i>→</i> Am7</span><span class="ec"><b>Écouter</b></span></div><span class="fn">le m7 sur les accords mineurs</span></div>
+      <div class="hi"><div class="l1"><span class="ch">C <i>→</i> C2</span><span class="ec"><b>Écouter</b></span></div><span class="fn">l'accord « 2 » (add9)</span></div>
+      ${compact?'':`<div class="hi"><div class="l1"><span class="ch">C Am <i>→</i> C G/B Am</span><span class="ec"><b>Écouter</b></span></div><span class="fn">la basse qui descend</span></div>`}
+      <div class="hlink">Voir les ${compact?6:5} autres</div></div></div>`;
+  $('C-phone').innerHTML=`${bar('‹ Chants')}<div class="pg">${head('Promesses','Maverick City Music')}${ctl}${blk('verse','Couplet 1','6',ln(P.c1))}${blk('chorus','Refrain','8',P.r.map(l=>ln(l)).join(''))}</div><div class="scrim"></div><div class="sheet" style="height:66%">${'<div class="grab"></div>'}${hcolFR(false)}</div>`;
+  const zhC=`<div class="hcol" style="font-size:14px"><div class="sh-head"><h4 class="zh">和声提示</h4><span class="x">×</span></div>
+    <div class="hb blk verse"><span class="zh">主歌 1</span><span class="n">5</span></div>
+    <div class="hb blk chorus cible"><div class="hh"><span class="zh" style="color:var(--sec-chorus)">副歌</span><span class="n" style="margin-left:auto;color:var(--chord-color);font-family:var(--f-chord);font-weight:700">6</span></div>
+      <div class="hi"><div class="l1"><span class="ch">E <i>→</i> E2</span><span class="ec"><b class="zh">试听</b></span></div><span class="fn">l'accord « 2 » (add9)</span></div>
+      <div class="hi"><div class="l1"><span class="ch">F#m <i>→</i> F#m7</span><span class="ec"><b class="zh">试听</b></span></div><span class="fn">le m7 sur les accords mineurs</span></div>
+      <div class="hi"><div class="l1"><span class="ch">A/C# E <i>→</i> D A E</span><span class="ec"><b class="zh">试听</b></span></div><span class="fn">le b7 qui conclut</span></div>
+      <div class="hlink zh">还有 3 条</div></div></div>`;
+  $('C-tab').innerHTML=`${louBar}<div class="lou-pg" style="padding-right:340px">${blk('chorus','副歌','6',Z.r.map(l=>ln(l,{zh:true})).join(''))}</div><div class="volet" style="top:44px">${zhC}</div>`;
+  $('C-desk').innerHTML=`${bar('‹ Chants')}<div style="display:flex;flex:1;min-height:0"><div class="pg" style="padding:0 32px"><div style="display:flex;gap:32px;align-items:flex-start"><div style="width:420px;flex:none">${head('Promesses','Maverick City Music')}${ctl}${blk('verse','Couplet 1','6',ln(P.c1))}${blk('prechorus','Pré-Refrain','5',ln(P.p[0]))}</div><div style="flex:1;min-width:0;padding-top:78px">${blk('chorus','Refrain','8',P.r.map(l=>ln(l)).join(''))}</div></div></div><div class="sideC">${hcolFR(false)}</div></div>`;
+  /* ===== scans ===== */
+  const sys=(ch,ly,n)=>`<div class="sc-sys"><div class="sc-ch">${ch.map(c=>`<span>${E(c)}</span>`).join('')}</div><div class="sc-dg"></div>${ly.map(l=>`<div class="sc-ly">${E(l)}</div>`).join('')}</div>`;
+  const scanTop=`<div class="sc-t"><span>‹ 奇异恩典</span><span>E</span></div>`;
+  const lab=(txt,cnt,sc,cible)=>`<div class="sc-m" style="--sc:var(--${sc});${cible?'':''}"><div class="b"><span class="tr"></span><span class="zh" style="color:var(--${sc})">${txt}</span><span class="cn">${cnt}</span></div></div>`;
+  const scLst=liste(GZ,{lou:true,ec:false,fn:false,aussi:'另外：intro, tag',oc:null});
+  const scanHtml=(mode)=>{
+    const s1=`<div class="sc-row rv" style="--sc:var(--sec-verse)">${lab('主歌<br>1–4','5','sec-verse')}${sys(['E2','A/E','E2','E','B/E'],['1. 奇异恩典，何等甘甜，我罪已得赦免；','2. 如此恩典，使我敬畏，使我心得安慰；'])}</div>`;
+    const s2=`<div class="sc-row">${'<div></div>'}${sys(['E2','E2/G#','A2','E2','F#m','B/E'],['前我失丧，今被寻回，瞎眼今得看见。','初信之时，即蒙恩惠，真是何等宝贵。'])}</div>`;
+    const s3=`<div class="sc-row rg" style="--sc:var(--sec-chorus)">${lab('副歌','6','sec-chorus')}<div>${mode==='C'?'':`<div class="sc-lst" style="--sc:var(--sec-chorus)">${scLst}</div>`}${sys(['E','E/G#','A2','E2/G#','A/C#','E'],['不再有捆绑，我已得释放，我救主耶稣，已付代价；'])}</div></div>`;
+    const s4=`<div class="sc-row">${'<div></div>'}${sys(['E/G#','A2','E2/G#','F#m','Bsus4','E'],['丰富恩典，今充满我，永恒的爱，奇异恩典。'])}</div>`;
+    const sheet=mode==='C'?`<div class="scrim" style="background:rgba(0,0,0,.35)"></div><div class="sheet" style="height:62%;background:#1c1c1e;color:#f2f2f7;--s-fg:#f2f2f7;--s-mfg:#98989f;--s-line:#373739;--s-card:#1c1c1e;--chord-color:#8fb0ff;--s-fill2:#2c2c2e;--s-org:rgba(242,242,247,.6);--sec-chorus:#fb923c;--sec-verse:#59bdac;font-family:var(--f-site)"><div class="grab"></div>${zhC}</div>`:'';
+    const cap=mode==='A'?`<div class="sc-cap">Piste A : l'ossia ne peut rien écrire sur l'encre, elle se replie sur la liste de B : deux formes.</div>`:'';
+    return `<div class="sc">${scanTop}${s1}${s2}${s3}${s4}${cap}${sheet}</div>`;
+  };
+  $('A-scan').innerHTML=scanHtml('A');$('B-scan').innerHTML=scanHtml('B');$('C-scan').innerHTML=scanHtml('C');
+}
+const $=id=>document.getElementById(id);
+build();
+
+/* Zoom : vraie largeur si la place le permet, sinon réduite (plancher data-min ; au-delà, défilement dans la maquette). */
+function fit(){
+  document.querySelectorAll('.mock').forEach(m=>{
+    const w=+m.dataset.w,pref=+m.dataset.pref,min=+m.dataset.min;
+    const row=m.closest('.devrow');const avail=row.clientWidth;
+    m.style.setProperty('--z',Math.max(min,Math.min(pref,avail/w)));
+  });
+}
+fit();addEventListener('resize',fit);
+</script>
+</body>
+</html>

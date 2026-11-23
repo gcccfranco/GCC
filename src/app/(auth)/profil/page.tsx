@@ -28,13 +28,14 @@ import { MesAbsences } from "@/components/profil/MesAbsences";
 import { CarteMesEquipes } from "@/components/moi/CartesAcces";
 import { cn } from "@/lib/utils";
 import { Squelette } from "@/components/layout/Squelette";
+import { EcranProfilIllisible } from "@/app/setlists/_components/EcransAccesListe";
 
 const FORMULAIRE = "formulaire-profil";
 
 export default function ProfilPage() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { user, profile, loading } = useProfile();
+  const { user, profile, loading, echec, relire } = useProfile();
 
   const [form, setForm] = useState<ProfileFormValue | null>(null);
   const [planningNames, setPlanningNames] = useState<string[]>([]);
@@ -73,6 +74,11 @@ export default function ProfilPage() {
     return <Squelette />;
   }
 
+  // Lecture en échec : pas de formulaire vide enregistrable (il écraserait le vrai profil).
+  if (echec && !profile) {
+    return <EcranProfilIllisible onReessayer={relire} />;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user || !form || !canEditProfile(user, profile)) return;
@@ -96,9 +102,9 @@ export default function ProfilPage() {
         // Les droits (annonces, notify, coordination, equipes, plannings) ne sont pas
         // envoyés : saveProfile n'écrit que les champs donnés, ils restent intacts.
       });
-      // Retour à la page d'origine (?from=…) plutôt que /setlists systématique
+      // Retour à la page d'origine (?from=…, chemin du site seulement) ; sans paramètre, à Moi.
       const from = new URLSearchParams(window.location.search).get("from");
-      router.push(from && from.startsWith("/") ? from : "/setlists");
+      router.push(from && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/\\") ? from : "/moi");
     } catch {
       setError(t("profile.saveError"));
       setSaving(false);
@@ -130,7 +136,7 @@ export default function ProfilPage() {
       />
 
       <div className="space-y-4 px-[var(--marge-page)]">
-        {!profile && (
+        {!profile && !echec && (
           <Alert className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
             <AlertDescription className="text-inherit">
               {t("profile.welcome")}

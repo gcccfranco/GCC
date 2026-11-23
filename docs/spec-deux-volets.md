@@ -76,6 +76,7 @@ Christelle : « comme on s'est tous habitué à certains trucs, vaut mieux pas t
 | 03/10/2026 | Chants en grand : liste et recherche à gauche, partition et toute la personnalisation à droite ; avant de choisir, « Choisis un chant » et, pour un connecté, les chants de ses prochaines setlists. |
 | 03/10/2026 | Setlist en grand : sommaire à gauche (surlignage du chant lu, saut au clic), toutes les partitions à la suite à droite (copier-coller) ; la page « Modifier » reste. |
 | 03/10/2026 | Mode louange : 2 colonnes automatiques en grand, plus un interrupteur ; un chant en 简谱 reste tel quel, sans coupe en deux pages. |
+| 13/11/2026 | **Levée** de « un chant en 简谱 reste tel quel » (go de Timothée du 13/11, « go pour les pistes des 2 artefacts », Q6 = B et Q7 = oui de `spec-jianpu-deux-volets.md`) : sous l'interrupteur « 2 colonnes » allumé, un scan certifié se pose en deux colonnes de demi-lignes par page d'écran (tranche JV-4) ; éteint, ses tranches de lignes entières. Les tranches (JP-B) et les demi-lignes (JP-C) l'avaient déjà levée de fait. |
 | 03/10/2026 | Setlists montrées dans Chants : la règle de l'onglet Setlists (`canSeeSetlist`). Lecture plafonnée vers 1 440 px. |
 | 04/10/2026 | Setlist sur téléphone et tablette portrait : G, Liste et Partitions reliées, avec toutes les fonctions des deux vues ; A à F, H, I, J écartées. Tablette paysage : barre latérale toujours réduite. Tout part en ligne ensemble à la fin du chantier. |
 

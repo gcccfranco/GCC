@@ -34,6 +34,16 @@ function main() {
     fiches.push(...lireFamille(fs.readFileSync(path.join(DOSSIER, f), "utf-8"), f));
   }
 
+  // Titres et « avant → après » en 中文 (cinq corrections, point 2) : une table à part, relue par Timothée.
+  const zh = JSON.parse(fs.readFileSync(path.join(DOSSIER, "fiches-zh.json"), "utf-8")) as Record<string, { nom: string; avantApres?: string } | string>;
+  for (const [id, v] of Object.entries(zh)) {
+    if (id.startsWith("_") || typeof v === "string") continue;
+    const fiche = fiches.find((f) => f.id === id);
+    if (!fiche) throw new Error(`fiches-zh.json : fiche inconnue « ${id} »`);
+    fiche.nomZh = v.nom;
+    if (v.avantApres) fiche.avantApresZh = v.avantApres;
+  }
+
   const parcours = lireParcours(fs.readFileSync(path.join(DOSSIER, "00-par-ou-commencer.md"), "utf-8"), fiches);
 
   // Exemples du répertoire : les chants dont le `.cho` joue déjà le « après ».
@@ -45,7 +55,14 @@ function main() {
     for (const regle of REGLES) {
       const fiche = parFiche.get(regle.fiche);
       if (!fiche || !regle.variantes.length) continue;
-      if (chercher(ast.sections, tonalite, regle, "apres").length) fiche.exemples.push(slug);
+      const endroits = chercher(ast.sections, tonalite, regle, "apres");
+      if (!endroits.length) continue;
+      fiche.exemples.push(slug);
+      for (const e of endroits) {
+        if (!fiche.ecoutes.some((x) => x.slug === slug && x.section === e.sectionUid)) {
+          fiche.ecoutes.push({ slug, section: e.sectionUid, nom: e.sectionNom });
+        }
+      }
     }
   }
 
@@ -55,10 +72,11 @@ function main() {
 
   const avecRegle = fiches.filter((f) => REGLES.some((r) => r.fiche === f.id && r.variantes.length));
   const exemples = avecRegle.reduce((n, f) => n + f.exemples.length, 0);
+  const ecoutes = avecRegle.reduce((n, f) => n + f.ecoutes.length, 0);
   const aRelire = fiches.filter((f) => f.statut !== "validee").length;
   console.log(
     `✓ ${fiches.length} fiche(s) d'harmonie, ${parcours.length} étapes de parcours, ` +
-      `${exemples} exemple(s) du répertoire sur ${avecRegle.length} fiche(s) à règle ` +
+      `${exemples} exemple(s) du répertoire sur ${avecRegle.length} fiche(s) à règle, ${ecoutes} écoute(s) ` +
       `(${aRelire} fiche(s) encore à relire) → ${SORTIE}`,
   );
 }

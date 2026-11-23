@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { readFileSync } from "node:fs";
-import { attendreMiseEnPage } from "./helpers/louange";
+import { attendreMiseEnPage, basculerAnnoter, ouvrirOutils } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { suivreLeCompte } from "../src/lib/setlist/copieHorsLigne";
 import { verifierMode } from "./helpers/menuSetlist";
@@ -92,8 +92,8 @@ test.describe("copie hors ligne d'une setlist", () => {
   test("réseau en échec : la copie est servie avec son bandeau, sans écriture possible", async ({ page }) => {
     // Le PROPRIÉTAIRE de la setlist : en ligne il peut tout, hors ligne (copie) plus rien n'est offert.
     const db = await signInAsPuisCopie(page, { setlist: { ...SETLIST, ownerId: MUSICIEN.uid } });
-    // « Adapter » est dans la barre ; « Modifier » dans la barre (grand écran) ou dans le menu ⋯ (téléphone, tablette).
-    await verifierMode(page, "Adapter");
+    // « Crayon » est dans la barre ; « Modifier » dans la barre (grand écran) ou dans le menu ⋯ (téléphone, tablette).
+    await verifierMode(page, "Crayon");
     const modifier = page.getByRole("link", { name: "Modifier" }).or(page.getByRole("menuitem", { name: "Modifier" }));
     if (!(await modifier.first().isVisible())) await page.getByRole("button", { name: "Plus d'actions" }).first().click();
     await expect(modifier.first()).toBeVisible();
@@ -107,11 +107,11 @@ test.describe("copie hors ligne d'une setlist", () => {
     // L'ordre des chants de la copie s'affiche.
     await expect(page.getByText(/Abba/i).first()).toBeVisible();
     // Pas de bouton d'édition ni de suppression pendant que la copie est affichée.
-    await expect(page.getByRole("button", { name: "Adapter" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Crayon" })).toHaveCount(0);
     await page.getByRole("button", { name: "Plus d'actions" }).first().click();
     await expect(page.getByRole("menu")).toBeVisible();
     await expect(page.getByRole("link", { name: "Modifier" }).or(page.getByRole("menuitem", { name: "Modifier" }))).toHaveCount(0);
-    await expect(page.getByRole("menuitemcheckbox", { name: "Adapter" })).toHaveCount(0);
+    await expect(page.getByRole("menuitemcheckbox", { name: "Crayon" })).toHaveCount(0);
     await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveCount(0);
     await expect(page.getByRole("menuitem", { name: /Dupliquer/ })).toHaveCount(0);
     expect(db.writes.filter((w) => w.path.startsWith("setlists/"))).toEqual([]);
@@ -349,15 +349,15 @@ const URL_ANNOTATIONS = /firestore\.googleapis\.com\/.*\/annotations\//;
 const canevas = (page: Page) => page.locator("[data-performance-mode] > canvas");
 const ecritesAnnotations = (db: { writes: { path: string }[] }) => db.writes.filter((w) => w.path.startsWith("annotations/"));
 
-test("annotations : lecture impossible (5xx) → message, pas de page vide à écrire, rien d'enregistré", async ({ page }) => {
+test("annotations : lecture impossible (5xx) des anciennes annotations → message ; le Crayon reste offert (traits dans ma partition), rien n'est écrit dans les annotations par page", async ({ page }) => {
   const db = await signInAsPuisCopie(page);
   await page.route(URL_ANNOTATIONS, (route) => route.fulfill({ status: 503, contentType: "application/json", body: "{}" }));
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
   await expect(page.locator("[data-annotations-indisponibles]")).toHaveText("Annotations indisponibles pour l'instant");
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await basculerAnnoter(page);
   await page.waitForTimeout(300);
-  await expect(canevas(page), "pas de page vide initialisée : pas de canevas pour tracer").toHaveCount(0);
+  await expect(canevas(page), "les traits du Crayon ne dépendent pas des anciennes annotations : le canevas est offert").toHaveCount(1);
   expect(ecritesAnnotations(db)).toEqual([]);
 });
 
@@ -365,20 +365,25 @@ test("annotations : document absent (404) → page vide, canevas offert, pas de 
   await signInAsPuisCopie(page);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await basculerAnnoter(page);
   await expect(canevas(page)).toHaveCount(1);
   await expect(page.locator("[data-annotations-indisponibles]")).toHaveCount(0);
 });
 
-test("annotations : copie hors ligne → « Annoter » est masqué, rien n'est enregistré", async ({ page }) => {
+test("annotations : copie hors ligne → « Crayon » est masqué, rien n'est enregistré", async ({ page }) => {
   const db = await signInAsPuisCopie(page);
   await page.route(/firestore\.googleapis\.com/, (route) => route.abort("internetdisconnected"));
   await page.reload();
   await expect(page.getByText(COPIE)).toBeVisible();
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  await expect(page.getByRole("button", { name: "Réglages" }).or(page.getByRole("button", { name: "Quitter" })).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "Annoter" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Options d'affichage" }).or(page.getByRole("button", { name: "Quitter" })).first()).toBeVisible();
+  await expect(page.locator("[data-performance-mode]").getByRole("button", { name: "Crayon" })).toHaveCount(0);
+  // Au téléphone « Crayon » est une ligne du menu Outils : absente aussi hors ligne.
+  if (page.viewportSize()!.width < 768) {
+    const outils = await ouvrirOutils(page);
+    await expect(outils.getByRole("button", { name: "Crayon" })).toHaveCount(0);
+  }
   expect(ecritesAnnotations(db)).toEqual([]);
 });
 

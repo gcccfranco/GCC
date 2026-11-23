@@ -19,6 +19,7 @@ import { Pilules } from "@/components/layout/Onglets";
 import { categoryColor } from "@/lib/serviceColors";
 import { libelleAudience } from "@/components/admin/libelles";
 import { ApercuNotification, DerniersEnvois } from "./ApercuNotification";
+import { compter } from "@/lib/usage";
 
 // Au-delà de ce nombre de destinataires (ou « tout le monde »), on demande confirmation.
 const CONFIRM_THRESHOLD = 20;
@@ -131,7 +132,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
   const canSend = !!title.trim() && !!body.trim() && !busy && selected.size > 0;
   // compte-12 : la première condition qui manque, dite sous « Envoyer » tant qu'il est grisé.
   const manque = busy || canSend ? null
-    : selected.size === 0 ? "destinataires"
+    : selected.size === 0 ? (!audience && groupe === "Cultes" ? "culte" : "destinataires")
     : !title.trim() ? "titre"
     : "message";
   const needsConfirm = broadcast || selected.size > CONFIRM_THRESHOLD;
@@ -174,6 +175,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
+        compter("cmd.notifier.envoyer");
         setFeedback(t("notifier.envoye", { n: data.sent ?? 0 }));
         setTitle("");
         setBody("");

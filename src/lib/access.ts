@@ -2,6 +2,7 @@ import { EDD_CLASSES } from "@/lib/planning/utils";
 import { aCommence } from "@/lib/evenements/agenda";
 import type { Evenement } from "@/types/evenement";
 import type { FSSetlist } from "@/types/setList";
+import type { Partition } from "@/types/partition";
 import type { Tache } from "@/types/tache";
 import type { DateServie } from "@/types/planning";
 import { EQUIPES } from "@/lib/equipes/table";
@@ -9,6 +10,7 @@ import { COMITES, groupeDef } from "@/lib/groupes/table";
 import { PUBLISHABLE_PLANNINGS, droitsDePrevenir, peutPrevenir } from "@/lib/planning/releases";
 import { audiencesNotifiables } from "@/lib/push/audiences";
 import { BACK_OFFICE } from "@/lib/backOffice";
+import { SALLES } from "@/lib/salles/salles";
 import * as org from "@/lib/acces/organigramme";
 import { categoriesDesPlannings, gereUnPlanning, responsabilitesDe } from "@/lib/acces/responsabilites";
 import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
@@ -39,6 +41,11 @@ export function isAdminEmail(email: string | null | undefined): boolean {
 
 export function isAdminUser(user: { email?: string | null } | null): boolean {
   return isAdminEmail(user?.email);
+}
+
+/** Lire le comptage d'usage (`usage/{mois}`) : administrateurs seuls. Miroir : la règle `usage/{mois}` de firestore.rules. */
+export function peutLireUsage(user: { email?: string | null } | null): boolean {
+  return isAdminUser(user);
 }
 
 /** Modification du profil : autorisée tant qu'il n'existe pas encore (première
@@ -243,7 +250,8 @@ export function tientUnGroupe(user: AuthUser | null, profile: { referentDe?: str
 
 export { audiencesNotifiables };
 
-/** Créneau sur scène : son auteur + la coordination. Miroir : programmes/{id}/creneaux dans firestore.rules. */
+/** Créneau sur scène : son auteur + la coordination. Lot 5 (AR20) : un créneau est une réservation de la Scène, même
+ *  règle que canEditReservation. Miroir : match /reservations/{id} dans firestore.rules. */
 export function canEditCreneau(
   user: AuthUser,
   profile: ProfilCoordination | null,
@@ -252,13 +260,50 @@ export function canEditCreneau(
   return creneau.auteurUid === user.uid || isCoordination(user, profile);
 }
 
+// ─── Salles : réservations (chantier AR, lot 3, docs/spec-salles.md, § Permissions) — miroir : ──────────────
+// firestore.rules, match /reservations/{id}. Le chevauchement ne se vérifie pas dans les rules (SA8, T3b).
+
+/** Lire Salles et les réservations : tout membre connecté (SA14). */
+export function canVoirSalles(user: AuthUser | null): boolean {
+  return !!user;
+}
+
+/** Réserver une salle : tout membre connecté (AR4). Une réservation de fête (`fete`, lot 5, AR21 ; la Grande salle depuis AS14) passe en
+ *  plus par canReserverPour, comme `feteReservable()` dans firestore.rules. */
+export function canReserverSalle(user: AuthUser | null): boolean {
+  return !!user;
+}
+
+/** Modifier ou supprimer une réservation : son auteur ou la coordination (SA10). Une réservation de fête (lot 5) de
+ *  même ; l'auteur qui la modifie passe aussi par canReserverPour (rules : `feteReservable()`, `fete` inchangée). */
+export function canEditReservation(
+  user: AuthUser | null,
+  profile: ProfilCoordination | null,
+  r: { auteurUid: string },
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  if (!user) return false;
+  return r.auteurUid === user.uid || isCoordination(user, profile, backOffice);
+}
+
+/** AS16 : la coordination qui supprime la réservation d'un autre l'annule avec un motif (route /api/salles/annulation).
+ *  Miroir : rien à changer dans firestore.rules (la coordination supprime déjà ; la route passe par l'Admin SDK), AS16. */
+export function canAnnulerReservation(
+  user: AuthUser | null,
+  profile: ProfilCoordination | null,
+  r: { auteurUid: string },
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  return !!user && r.auteurUid !== user.uid && isCoordination(user, profile, backOffice);
+}
+
 // ─── Scène : saison de réservation (lot U1, docs/spec-scene-saison.md) ───────
 
 /** Réserver pour ces groupes : la coordination toujours ; un membre si la saison
  *  est ouverte et que chaque groupe est permis (liste vide = tous).
  *  Lot RS (`backOffice`, Q12) : la scène est réservée au Comité Orga et aux gestionnaires de planning, qui réservent
  *  toujours (`gereUnPlanning`).
- *  Miroir serveur : reservable() sous programmes/{id}/creneaux, firestore.rules. */
+ *  Miroir serveur : reservable() (anciens créneaux) et feteReservable() (réservations de fête, lot 5), firestore.rules. */
 export function canReserverPour(
   user: AuthUser | null,
   profile: ProfilCoordination | null,
@@ -274,6 +319,14 @@ export function canReserverPour(
   if (programme.fermees === true) return false;
   const permis = programme.quiAutorises ?? [];
   return permis.length === 0 || qui.every((q) => permis.includes(q));
+}
+
+/** AS15 : `personnes` d'une réservation (« Des personnes… ») : 20 au plus, chacune { uid non vide, nom de 1 à 60 caractères }.
+ *  Miroir de reservationValide() dans firestore.rules, qui ne vérifie que la taille de la liste (les rules ne la parcourent pas) :
+ *  le détail uid/nom se vérifie ici, avant l'écriture. */
+export function personnesEcrivables(p: unknown): boolean {
+  return Array.isArray(p) && p.length <= 20 && p.every((x) =>
+    typeof x?.uid === "string" && x.uid !== "" && typeof x.nom === "string" && x.nom.length >= 1 && x.nom.length <= 60);
 }
 
 // ─── Évènements (lot 6, docs/spec-evenements.md) — miroir : firestore.rules ───
@@ -384,8 +437,17 @@ export function canSeeInscrits(user: AuthUser | null): boolean {
   return user !== null;
 }
 
+/** Une salle qu'on peut écrire : une des huit, ou « scene » si le document l'avait déjà (AS14). Miroir de
+ *  reservationValide / salleEvenementValide (firestore.rules). */
+export function salleEcrivable(salle: unknown, avant?: unknown): boolean {
+  return SALLES.some((s) => s.id === salle) || (salle === "scene" && avant === "scene");
+}
+
 /** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination
- *  (lot RS : le Comité Orga) + admins. */
+ *  (lot RS : le Comité Orga) + admins.
+ *  Salles (AR, T4b) : à la création comme à la modification, `salle` est absente, null ou une des huit
+ *  (`salleEvenementValide` de firestore.rules ; AS14 : « scene » seulement inchangée) ; côté client, le champ « Salle de l'église » n'offre que `SALLES`
+ *  et la lecture passe par `estSalleId` (src/lib/salles/salles.ts). */
 export function canEditEvenement(
   user: AuthUser | null,
   profile: ProfilCoordination | null,
@@ -718,10 +780,31 @@ export function canSetPresentationLink(
   return canEditSetlist(user, profile, setlist, backOffice) || (!setlist.isPrivate && regie);
 }
 
-/** Version perso d'un chant dans une setlist (docs/spec-version-perso.md) :
- *  qui voit la setlist peut avoir la sienne. Miroir serveur dans
- *  firestore.rules (setlists/{id}/versions/{uid} : écrit par son propriétaire). */
-export const canHaveSetlistVersion = canSeeSetlist;
+/** Ma partition (docs/spec-ma-partition.md) : lue par son propriétaire ou une personne de `sharedWith`. Miroir de
+ *  firestore.rules (`match /partitions/{id}`, lecture). */
+export function canLirePartition(
+  user: AuthUser | null,
+  p: Pick<Partition, "ownerUid" | "sharedWith">,
+): boolean {
+  return !!user && (p.ownerUid === user.uid || (p.sharedWith ?? []).includes(user.uid));
+}
+
+/** Écriture : le propriétaire seul. Miroir de firestore.rules (`match /partitions/{id}`, create / update / delete). */
+export function canEcrirePartition(user: AuthUser | null, p: Pick<Partition, "ownerUid" | "sharedWith">): boolean {
+  return !!user && p.ownerUid === user.uid;
+}
+
+/** Export PDF réservé (docs/spec-entree-musiciens.md) : un masquage, pas une permission. Pas de miroir dans
+ *  firestore.rules : le PDF se fait dans le navigateur à partir de données déjà lisibles (exception assumée à la
+ *  règle des permissions en double). Setlist : l'équipe (modification) ou la présidence du service. Chant : sans
+ *  compte, tout le monde ; connecté, les admins et l'équipe d'une setlist à venir. */
+export function canExporterPdfSetlist(user: AuthUser | null, profile: UserProfile | null, setlist: FSSetlist, presidence: boolean): boolean {
+  return !!user && (canEditSetlist(user, profile, setlist) || presidence);
+}
+
+export function canExporterPdfChant(user: AuthUser | null, equipeAVenir: boolean): boolean {
+  return !user || isAdminUser(user) || equipeAVenir;
+}
 
 export function canEditSetlist(
   user: AuthUser,

@@ -1,5 +1,6 @@
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
+import { HarmonieDuChant } from "@/components/harmonie/HarmonieDuChant";
 import { AccordsProvider } from "@/components/accords/AccordsProvider";
 import { appliquerDansLaSource } from "@/lib/harmonie/appliquer";
 import { semitonesTo } from "@/lib/transpose";
@@ -29,6 +30,10 @@ export function IdeesDuChant({
   flashFeedback,
   setIdeesTarget,
   setIdeesChant,
+  disposition,
+  onFermerColonne,
+  styleColonne,
+  passage,
 }: {
   ideesTarget: number;
   ideesChant: string | null;
@@ -46,6 +51,12 @@ export function IdeesDuChant({
   flashFeedback: (msg: string) => void;
   setIdeesTarget: (index: number | null) => void;
   setIdeesChant: (slug: string | null) => void;
+  disposition?: "feuille" | "colonne";
+  /** La croix ou Échap de la colonne (mémoriser, rendre le focus à la puce). */
+  onFermerColonne?: () => void;
+  styleColonne?: CSSProperties;
+  /** H5-2 « Ici » : le passage à montrer dans la porte 2. */
+  passage?: { uid: string; cle: number; idee?: string };
 }) {
   const { t } = useTranslation();
   const item = items[ideesTarget];
@@ -76,15 +87,19 @@ export function IdeesDuChant({
   return (
     // Les accords proposés s'ouvrent au toucher, même en « Ma version » (DA-3, Q13).
     <AccordsProvider chant={{ slug, titre: songsMap[slug]?.title ?? slug }}>
-    <IdeesSheet
+    <HarmonieDuChant
       open
-      onClose={() => { setIdeesTarget(null); setIdeesChant(null); }}
+      disposition={disposition}
+      styleColonne={styleColonne}
+      onClose={() => { setIdeesTarget(null); setIdeesChant(null); if (disposition === "colonne") onFermerColonne?.(); }}
       slug={slug}
       titre={songsMap[slug]?.title ?? slug}
       sections={ast.sections}
       tonalite={tonalite}
       tonaliteOrigine={ast.metadata.key}
       instrument={instrument}
+      passage={passage}
+      sansFormes
       // « Montrer » cherche dans ce chant : les identifiants de section
       // se répètent d'un chant à l'autre, et d'un chant à l'autre d'une fusion.
       portee={`[data-outline-item="${item.position}"]${chantFusion ? ` [data-chant-slug="${CSS.escape(slug)}"]` : ""}`}
@@ -129,14 +144,15 @@ export function IdeesDuChant({
               // Chant affiché en scan 简谱 : la retouche va bien dans la
               // version texte, mais elle ne se verra pas sur l'image —
               // on le dit, avec le changement à reporter à la main.
-              if (jianpuManifest?.[item.songSlug] && sheetEnabled(jianpuPref, item.jianpuSheet)) {
+              if (jianpuManifest?.[item.songSlug] && sheetEnabled(jianpuPref)) {
                 flashFeedback(
                   t("harmonie.reporterJianpu", {
                     quoi: `${sectionNom} : ${changements[0].endroit.accords.join(" – ")} → ${changements[0].apres.join(" – ")}`,
                   }),
                 );
               }
-              setIdeesTarget(null);
+              // Feuille : elle se ferme ; colonne : elle reste, comme pour « Montrer ».
+              if (disposition !== "colonne") setIdeesTarget(null);
             }
           : undefined
       }

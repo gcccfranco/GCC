@@ -21,6 +21,7 @@ import type { FSSetlist } from "../src/types/setList";
 import type { Evenement } from "../src/types/evenement";
 import type { Creneau, Programme } from "../src/types/programme";
 import type { Fois, Tache } from "../src/types/tache";
+import { creneauxEnReservations } from "./helpers/creneauxScene";
 
 // Lot U8, tranche C2 (docs/spec-calendrier.md) : les sources du calendrier,
 // une seule fonction pure qui produit la liste des entrées (grille, agenda,
@@ -796,7 +797,7 @@ async function ouvrir(
 ) {
   await page.clock.setFixedTime(new Date(opts.maintenant ?? "2026-10-01T10:00:00"));
   await sheets(page, opts);
-  const db = await signInAs(page, profil, { ...DOCS, ...opts.docs }, "/back-office/calendrier");
+  const db = await signInAs(page, profil, creneauxEnReservations({ ...DOCS, ...opts.docs }), "/back-office/calendrier");
   // « Octobre 2026 » ; « Octobre » sur téléphone (planche bo-telephone-calendrier, C4).
   await expect(page.getByTestId("mois-affiche")).toHaveText(/^Octobre( 2026)?$/);
   await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
@@ -837,7 +838,7 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     // bord sur téléphone et tablette en portrait (U6).
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
-    await signInAs(page, P_ADMIN, DOCS, "/back-office");
+    await signInAs(page, P_ADMIN, creneauxEnReservations(DOCS), "/back-office");
     await expect(page.getByRole("heading", { name: "À faire" })).toBeVisible();
     const lien = page.getByRole("link", { name: "Calendrier" }).filter({ visible: true }).first();
     await expect(lien).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
@@ -1018,7 +1019,7 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
-    await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+    await signInAs(page, P_ADMIN, creneauxEnReservations(DOCS), "/back-office/calendrier");
     await expect(page.getByTestId("mois-affiche")).toHaveText("2026年10月");
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
     // BO-C : le filtre en pilules, et les pastilles des sources dans la feuille « 来源 », sur toutes les tailles.
@@ -1058,7 +1059,7 @@ test.describe("relecture du lot : setlist du culte, ordre des pastilles, lecture
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
-    await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+    await signInAs(page, P_ADMIN, creneauxEnReservations(DOCS), "/back-office/calendrier");
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
     await jour(page, "2026-10-11").click();
     await expect(page.getByRole(panneauADroite(info) ? "complementary" : "dialog", { name: /10月11日/ }))
@@ -1368,7 +1369,7 @@ test.describe("C4 : Agenda, feuille « Sources », Mois à points", () => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
-    await signInAs(page, P_ADMIN, { ...DOCS, ...DOCS_AGENDA }, "/back-office/calendrier");
+    await signInAs(page, P_ADMIN, creneauxEnReservations({ ...DOCS, ...DOCS_AGENDA }), "/back-office/calendrier");
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
     const choix = page.getByRole("tablist", { name: "视图" });
     await choix.getByRole("tab", { name: "日程" }).click();
@@ -1450,7 +1451,7 @@ test.describe("C5 : créer depuis un jour", () => {
   test("une adresse « ?date= » pré-remplit la date ; une date mal formée est ignorée", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
-    await signInAs(page, P_ADMIN, DOCS, "/back-office/evenements/nouveau?date=2026-12-24");
+    await signInAs(page, P_ADMIN, creneauxEnReservations(DOCS), "/back-office/evenements/nouveau?date=2026-12-24");
     await expect(page.getByLabel("Date", { exact: true })).toHaveValue("2026-12-24");
     // Une année à cinq chiffres ne se tape pas (relecture : le calendrier bouclerait sur elle).
     await expect(page.getByLabel("Date", { exact: true })).toHaveAttribute("max", "9999-12-31");
@@ -1527,7 +1528,7 @@ test.describe("C5 : créer depuis un jour", () => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
-    await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+    await signInAs(page, P_ADMIN, creneauxEnReservations(DOCS), "/back-office/calendrier");
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
     let menu = false;
     if (estTelephone(info)) {
@@ -1565,7 +1566,7 @@ test.describe("C5 : captures à regarder", () => {
 async function ouvrirAdresse(page: Page, adresse: string, profil: FakeProfile = P_ADMIN) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await sheets(page);
-  await signInAs(page, profil, DOCS, adresse);
+  await signInAs(page, profil, creneauxEnReservations(DOCS), adresse);
   await expect(page.getByTestId("mois-affiche")).toHaveText(/^Octobre( 2026)?$/);
   await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
 }
@@ -1679,7 +1680,7 @@ test.describe("BO-C : « Scène des fêtes »", () => {
       if (langue === "zh-CN") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
       await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
       await sheets(page);
-      await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+      await signInAs(page, P_ADMIN, creneauxEnReservations(DOCS), "/back-office/calendrier");
       const entete = page.locator("header[data-entete-page]");
       const lien = entete.getByRole("link", { name: nom });
       await expect(lien).toBeVisible();
@@ -1702,7 +1703,7 @@ test.describe("BO-C : « Scène des fêtes »", () => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
-    await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+    await signInAs(page, P_ADMIN, creneauxEnReservations(DOCS), "/back-office/calendrier");
     await expect(page.getByRole("link", { name: "节日舞台" })).toHaveAttribute("href", /^\/back-office\/evenements\/scene\/?$/);
   });
 
@@ -1728,7 +1729,7 @@ test.describe("BO16 (a) : le volet du jour tient dans la marge", () => {
       if (langue === "zh-CN") await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
       await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
       await sheets(page);
-      await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+      await signInAs(page, P_ADMIN, creneauxEnReservations(DOCS), "/back-office/calendrier");
       await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
       await jour(page, "2026-10-11").click();
       const panneau = page.getByRole("complementary").filter({ has: page.getByRole("link", { name: /Culte Franco/ }) });

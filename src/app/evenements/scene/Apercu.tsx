@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { todayIso } from "@/lib/scene/dimanches"
 import {
-  commence, compteCreneaux, grilleDuJour, heureLocale, jourDeSemaine, lignesDuJour, saisonDe, semainesDe,
+  compteJours, heureLocale, jourDeSemaine, lignesDuJour, saisonDe, semainesDe,
 } from "@/lib/scene/saison"
 import type { Creneau, Programme } from "@/types/programme"
 import { BadgeHorsGrille, Fleche, TuileDate } from "./pieces"
@@ -37,18 +37,19 @@ export function Apercu({ programme, creneaux }: {
   const i = semaine ? semaines.indexOf(semaine) : -1
   const premier = semaine?.jours[0] ?? null
   const bornes = semaine ? bornesSemaine(semaine.jours, lang) : null
-  /** « Dimanche 7 février : 5 créneaux, de 14:00 à 19:00. » */
+  /** « Dimanche 7 février : de 14:00 à 19:00. » */
   const phraseDuJour = (d: string) => t("planning.gestion.apercuJour", {
     jour: titreDuJour(d, lang),
-    count: grilleDuJour(saison, d).length,
+    count: 1,
     plages: saison.plages.filter((p) => p.jour === jourDeSemaine(d))
       .map((p) => t("planning.gestion.plage", { debut: p.debut, fin: p.fin })).join(t("planning.fete.et")),
   })
-  const compte = compteCreneaux(saison, programme.jourJ)
+  const compte = compteJours(saison, programme.jourJ)
   const zh = lang === "zh-CN"
-  const total = `${t("planning.gestion.totalSemaines", { count: compte.semaines })}${zh ? "，" : ", "}${t("planning.gestion.totalCreneaux", { count: compte.total })}${zh ? "。" : "."}`
-  const lignes = premier ? lignesDuJour(saison, premier, creneaux) : []
-  const libres = premier ? lignes.filter((l) => l.type === "libre" && !commence(premier, l.debut, today, maintenant)).length : 0
+  const total = `${t("planning.gestion.totalSemaines", { count: compte.semaines })}${zh ? "，" : ", "}${t("planning.gestion.totalCreneaux", { count: compte.jours })}${zh ? "。" : "."}`
+  // L'aperçu ne lit que les réservations de la fête : l'emploi du temps fixe et Salles se voient chez les membres.
+  const lignes = premier ? lignesDuJour(saison, premier, creneaux, [], { today, maintenant }) : []
+  const libres = lignes.filter((l) => l.type === "libre").length
 
   return (
     <div className="space-y-4">
@@ -79,12 +80,12 @@ export function Apercu({ programme, creneaux }: {
             <ul className="px-3 pb-3 space-y-1.5">
               {lignes.map((l) => (
                 <LigneJour
-                  key={l.type === "reserve" ? l.creneau.id : `${l.type}-${l.debut}`}
+                  key={l.type === "reserve" ? l.creneau.id : `${l.type}-${l.debut}-${l.fin}`}
                   ligne={l}
                   badges={l.type === "reserve" && l.horsGrille ? <BadgeHorsGrille /> : undefined}
                   droite={l.type === "reserve"
                     ? <span>{l.creneau.auteurNom}</span>
-                    : !commence(premier, l.debut, today, maintenant)
+                    : l.type === "libre"
                       ? <span className="rounded-full bg-secondary px-3 py-1 font-semibold">{t("planning.saison.reserver")}</span>
                       : undefined}
                 />

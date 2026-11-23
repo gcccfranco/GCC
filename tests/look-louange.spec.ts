@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import * as fs from "fs";
 import * as path from "path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, onStage } from "./helpers/louange";
+import { attendreMiseEnPage, fermerBarre, onStage } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 4 « Nouveau look », tranche T3 : louange (docs/spec-look.md).
@@ -76,7 +76,7 @@ test.describe("louange (T3) : page du chant", () => {
   test.use(phone);
 
   for (const [slug, nom] of [["abba-pere", "FR"], ["爱的约定", "ZH"]] as const) {
-    test(`barre d'outils sous la navbar, en pilule groupée (${nom})`, async ({ page }) => {
+    test(`barre d'outils sous la navbar, armure au contour (${nom})`, async ({ page }) => {
       await page.goto(`/songs/${encodeURIComponent(slug)}`);
       const barre = page.getByTestId("barre-outils");
       await barre.waitFor();
@@ -87,21 +87,18 @@ test.describe("louange (T3) : page du chant", () => {
       // monté sur la page d'un chant (masqué en un volet).
       const [b, h] = await Promise.all([barre.boundingBox(), page.locator("header.barre-haut").boundingBox()]);
       expect(Math.round(b!.y), "la barre reste collée sous la navbar").toBe(Math.round(h!.y + h!.height));
-      const pilule = page.getByTestId("pilule-tonalite");
-      // 5C1 : ce qui se touche est en relief — surface blanche et ombre, plus un aplat gris.
-      expect(await pilule.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(255, 255, 255)");
-      expect(await pilule.evaluate((el) => getComputedStyle(el).boxShadow), "la pilule porte une ombre").not.toBe("none");
-      expect(await pilule.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("9999px");
-      // Les boutons dans la pilule n'ont ni bordure ni fond propre.
-      const moins = pilule.getByRole("button").first();
-      expect(await moins.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe("0px");
+      // L'armure (RU-3) a remplacé la pilule : au contour (ombre intérieure), coins de 9 px.
+      const armure = page.getByTestId("armure");
+      await expect(armure).toBeVisible();
+      expect(await armure.evaluate((el) => getComputedStyle(el).boxShadow), "l'armure porte son contour").not.toBe("none");
+      expect(await armure.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("9px");
     });
   }
 });
 
-// partout-q1 : casse normale sur la page chant, capitales gardées sur la scène du mode louange.
+// partout-q1 : casse normale sur la page chant.
 test.describe("louange : casse des titres de chants (partout-q1)", () => {
-  test("le titre est en casse normale sur la page chant, en capitales sur la scène", async ({ page }) => {
+  test("le titre est en casse normale sur la page chant", async ({ page }) => {
     await page.goto("/songs/abba-pere");
     const titre = page.getByRole("heading", { level: 1, name: /abba/i }).last();
     await expect(titre).toBeVisible();
@@ -120,9 +117,10 @@ test.describe("louange : casse des titres de chants (partout-q1)", () => {
     await signInAs(page, MUSICIEN, { "setlists/setlist-louange": setlist }, "/setlists/setlist-louange");
     await page.getByRole("button", { name: /Mode Louange/ }).click();
     await attendreMiseEnPage(page);
+    await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
     const titreScene = onStage(page, "[data-entete-chant] h2").first();
     await expect(titreScene).toBeVisible();
-    expect(await titreScene.evaluate((el) => getComputedStyle(el).textTransform)).toBe("uppercase");
+    expect(await titreScene.evaluate((el) => getComputedStyle(el).textTransform)).not.toBe("uppercase");
   });
 });
 
@@ -130,7 +128,7 @@ test.describe("louange : casse des titres de chants (partout-q1)", () => {
 // setlist passait sur deux lignes sur son iPhone (402 pt) — 374 pt de commandes
 // pour 370 pt de large. Une seule ligne à toute largeur de téléphone ; sous
 // 431 pt (lot CD, T4a : libellés de 12 px et pastilles à 8 px de marge, la barre ne tient plus
-// sur un 430 pt), « Adapter » et « Ma version » vivent dans le menu « ⋯ ». Même défaut sur
+// sur un 430 pt), « Crayon » (qui remplace Adapter et Ma version, MP-3) vit dans le menu « ⋯ ». Même défaut sur
 // tablette, l'appareil du pupitre : les libellés texte arrivaient dès 640 px et ne
 // ne tiennent pas (iPad en portrait : 768 à 834 px). En paysage aussi (demande du
 // soir même) : un téléphone reste en icônes dans les deux sens, jusqu'à 956 px de
@@ -143,19 +141,17 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
     keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
     structureOverride: null, sectionNotes: {}, notes: "", ...over,
   });
-  // Le pire cas : on peut modifier (Adapter) et avoir sa version (Pinyin est passé dans « Affichage »). Depuis SC1
+  // Le pire cas : on peut modifier et retoucher au Crayon (Pinyin est passé dans « Affichage »). Depuis SC1
   // (18/10/2026), seul le créateur modifie une setlist : la musicienne est la créatrice de la sienne.
   const setlist = {
     title: "高班", leader: "David C.", category: "Culte Francophone", date: "2026-09-20",
     language: "mixed", notes: "", ownerId: "uid-musicien", isPrivate: false,
     items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "爱的约定", position: 2 })],
   };
-  const AIDE_ADAPTER = /Mode adaptation/;
-  const AIDE_MA_VERSION = /^Ma version :/;
+  const AIDE_CRAYON = "Crayon : touche un accord ou un mot pour le retoucher.";
 
   /** Deux volets (docs/spec-deux-volets.md, T4, Q7) : plus de barre d'outils, l'en-tête
-   *  pleine largeur porte Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange (pas de
-   *  Présentation sans lien), libellés compris ; la rangée tient sur une ligne, à droite du
+   *  pleine largeur porte Affichage · Accords · Crayon · Modifier · Mode Louange · ⋯ (B7 : PDF et Présentation sont dans le ⋯), libellés compris ; la rangée tient sur une ligne, à droite du
    *  titre ou dessous, jamais par-dessus, ni sous la barre latérale (`bord`), ni hors de l'écran. */
   async function enTeteSurUneLigne(page: Page, largeur: number, bord: number) {
     const enTete = page.locator("[data-en-tete]");
@@ -169,22 +165,28 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           return { nom: el.getAttribute("aria-label") ?? el.textContent?.trim() ?? "", milieu: r.top + r.height / 2, haut: r.top, gauche: r.left, droite: r.right };
         }),
     );
-    expect(boites.map((b) => b.nom)).toEqual(["Adapter", "Ma version", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
+    const nomTitre = "高班, Afficher les détails de la setlist";
+    expect(boites.map((b) => b.nom)).toEqual([nomTitre, "Affichage", "Accords", "Crayon", "Modifier", "Mode Louange", "Plus d'actions"]);
     const milieux = boites.map((b) => b.milieu);
     expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
-    const titre = (await enTete.getByRole("heading", { level: 1 }).boundingBox())!;
-    for (const b of boites) {
+    const titre = (await enTete.getByRole("button", { name: nomTitre }).boundingBox())!;
+    for (const b of boites.filter((b) => b.nom !== nomTitre)) {
       expect.soft(b.gauche, `${b.nom} ne passe pas sous la barre latérale`).toBeGreaterThanOrEqual(bord);
       expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
       expect.soft(b.gauche >= titre.x + titre.width || b.haut >= titre.y + titre.height, `${b.nom} ne passe pas sur le titre`).toBe(true);
     }
     expect(await enTete.evaluate((el) => el.scrollWidth <= el.clientWidth), "l'en-tête ne déborde pas").toBe(true);
-    await expect(enTete.getByText("Mode Louange", { exact: true }), "libellés compris").toBeVisible();
-    await enTete.getByRole("button", { name: "Adapter" }).click();
-    await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();
-    await enTete.getByRole("button", { name: "Ma version" }).click();
-    await expect(page.getByText(AIDE_MA_VERSION)).toBeVisible();
+    await expect(enTete.getByText("Louange", { exact: true }), "libellés compris (B8 : « Louange » dès 768 px)").toBeVisible();
+    await enTete.getByRole("button", { name: "Crayon" }).click();
+    await expect(page.getByText(AIDE_CRAYON)).toBeVisible();
   }
+
+  /** Commandes de la barre G (B7) : l'ordre complet, puis sans « Modifier », puis sans « Modifier » ni « Crayon » (ordre de repli). */
+  const COMPLETE_G = ["Setlists", "Afficher les détails de la setlist", "Affichage", "Accords", "Crayon", "Modifier", "Liste", "Partitions", "Mode Louange", "Plus d'actions"];
+  // Accords suit quand le titre serait coupé : dès 640 px, ou au téléphone de 320 px (bloc titre plus étroit qu'un toucher) ;
+  // entre 360 et 639 px il reste à un toucher (titre sur deux lignes, RU-4).
+  const repliees = (complet: string[], largeur: number) => [complet, complet.filter((n) => n !== "Modifier"), complet.filter((n) => n !== "Modifier" && n !== "Crayon"),
+    ...(largeur < 360 || largeur >= 640 ? [complet.filter((n) => n !== "Modifier" && n !== "Crayon" && n !== "Accords")] : [])];
 
   const ECRANS: [number, number, string][] = [
     [320, 568, "portrait"], [360, 740, "portrait"], [375, 667, "portrait"], [390, 844, "portrait"], [402, 874, "portrait"], [430, 932, "portrait"],
@@ -202,6 +204,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       const barre = page.getByTestId("barre-outils");
       // Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : « Affichage » remplace
       // Pinyin dans la barre ; la bascule Liste | Partitions est sous l'en-tête.
+      // Affichage reste dans la barre à toutes les largeurs (RU-4).
       await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible();
       // La barre glisse (transition-transform) quand la page défile : la mesurer à l'arrêt, sinon un
       // décalage fractionnaire donne 31,999996 px au lieu de 32 sous charge.
@@ -212,41 +215,42 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           .filter((el) => (el as HTMLElement).offsetParent !== null)
           .map((el) => {
             const r = el.getBoundingClientRect();
-            return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width };
+            return { nom: el.getAttribute("aria-label") ?? (el.textContent ?? "").trim(), milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width, zone: parseFloat(getComputedStyle(el, "::after").height) };
           }),
       );
-      expect(boites.length, "retour, affichage, (adapter), accords, (ma version), mode louange, ⋯").toBe(largeur >= 431 ? 7 : 5);
+      // Vue Partitions, un volet (T2 du lot exemples d'usage) : retour, bloc titre, affichage, accords, crayon, modifier, bascule (Liste, Partitions), mode louange, ⋯ ;
+      // affichage et accords restent dans la barre à toutes les largeurs (RU-4) ; Modifier puis Crayon se replient dans le menu « ⋯ » quand la place manque (B7).
+      const noms = boites.map((b) => b.nom.replace(/^.+, (Afficher les détails de la setlist)$/, "$1"));
+      expect(repliees(COMPLETE_G, largeur), "retour, titre, affichage, accords, (crayon, modifier), Liste, Partitions, mode louange, ⋯").toContainEqual(noms);
+      const pleine = noms.includes("Crayon");
       const milieux = boites.map((b) => b.milieu);
       expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
       for (const b of boites) {
         // iPad couché : la barre latérale réduite (68 px, lot U4, N4) est à gauche.
         expect.soft(b.gauche, `${b.nom} ne sort pas à gauche`).toBeGreaterThanOrEqual(sens === "iPad paysage" ? 68 : 0);
         expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
-        expect.soft(Math.min(b.h, b.l), `${b.nom} : pas plus petit qu'avant (32 px)`).toBeGreaterThanOrEqual(32);
+        // Les segments de la bascule (h-7 dans une bascule de 32 px) ont leur zone de toucher de 44 px au doigt.
+        // Le retour « ‹ Setlists » (B10) est du texte de 20 px de haut : sa zone de toucher (::after, 44 px) remplace les 32 px de dessin, mesurée au doigt seulement.
+        if (b.nom === "Setlists") { if (!Number.isNaN(b.zone)) expect.soft(b.zone, "Retour : zone de toucher de 44 px").toBeGreaterThanOrEqual(44); expect.soft(b.h, "Retour : une ligne de texte").toBeGreaterThanOrEqual(20); }
+        else if (!/^(Liste|Partitions)$/.test(b.nom)) expect.soft(Math.min(b.h, b.l), `${b.nom} : pas plus petit qu'avant (32 px)`).toBeGreaterThanOrEqual(32);
       }
-      // Icônes seules sur téléphone (dans les deux sens) et iPad en portrait ; libellés à partir de 1024 px.
-      await expect(barre.getByText("Mode Louange", { exact: true })).toBeVisible({ visible: largeur >= 1024 });
+      // Icônes seules sous 768 px (téléphone dans les deux sens) ; « Louange » dessous dès 768 px (B8).
+      await expect(barre.getByText("Louange", { exact: true })).toBeVisible({ visible: largeur >= 768 });
       // La barre seule : à 320 px une longue ligne d'accords du corps (« Dm7(b5)/G ») dépasse de 4 px, c'est une autre histoire.
       expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
 
-      if (largeur >= 431) {
-        // Assez de place : les deux modes restent dans la barre, comme avant.
-        await barre.getByRole("button", { name: "Adapter" }).click();
-        await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();
-        await barre.getByRole("button", { name: "Ma version" }).click();
-        await expect(page.getByText(AIDE_MA_VERSION)).toBeVisible();
+      if (pleine) {
+        // Assez de place : le Crayon reste dans la barre, comme Adapter avant lui.
+        await barre.getByRole("button", { name: "Crayon" }).click();
+        await expect(page.getByText(AIDE_CRAYON)).toBeVisible();
       } else {
-        // Téléphone étroit : ils passent dans le menu « ⋯ », et y marchent pareil.
-        await expect(barre.getByRole("button", { name: "Adapter" })).toBeHidden();
-        await expect(barre.getByRole("button", { name: "Ma version" })).toBeHidden();
+        // Place manquante : il passe dans le menu « ⋯ », et y marche pareil.
+        await expect(barre.getByRole("button", { name: "Crayon" })).toBeHidden();
         await barre.getByRole("button", { name: "Plus d'actions" }).click();
-        await page.getByRole("menuitemcheckbox", { name: "Adapter" }).click();
-        await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();
+        await page.getByRole("menuitemcheckbox", { name: "Crayon" }).click();
+        await expect(page.getByText(AIDE_CRAYON)).toBeVisible();
         await barre.getByRole("button", { name: "Plus d'actions" }).click();
-        await expect(page.getByRole("menuitemcheckbox", { name: "Adapter" })).toHaveAttribute("aria-checked", "true");
-        await page.getByRole("menuitemcheckbox", { name: "Ma version" }).click();
-        await expect(page.getByText(AIDE_MA_VERSION)).toBeVisible();
-        await expect(page.getByText(AIDE_ADAPTER), "les deux modes s'excluent, comme dans la barre").toHaveCount(0);
+        await expect(page.getByRole("menuitemcheckbox", { name: "Crayon" })).toHaveAttribute("aria-checked", "true");
       }
     });
   }
@@ -274,10 +278,11 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
             .filter((el) => (el as HTMLElement).offsetParent !== null)
             .map((el) => {
               const r = el.getBoundingClientRect();
-              return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
+              return { nom: el.getAttribute("aria-label") ?? (el.textContent ?? "").trim(), milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
             }),
         );
-        expect(boites.length, "retour, affichage, adapter, accords, ma version, mode louange, ⋯").toBe(7);
+        expect(repliees(COMPLETE_G, largeur), "retour, titre, affichage, accords, (crayon, modifier), Liste, Partitions, mode louange, ⋯").toContainEqual(
+          boites.map((b) => b.nom.replace(/^.+, (Afficher les détails de la setlist)$/, "$1")));
         const milieux = boites.map((b) => b.milieu);
         expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
         for (const b of boites) {
@@ -285,8 +290,8 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
         }
         expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
-        // 1 024 px : 776 px à côté de la barre, les libellés ne tiennent pas.
-        await expect(barre.getByText("Mode Louange", { exact: true })).toBeHidden();
+        // 1 024 px : « Louange » s'affiche dès 768 px de fenêtre (B8), même à côté de la barre dépliée.
+        await expect(barre.getByText("Louange", { exact: true })).toBeVisible();
       });
     }
   });
@@ -351,22 +356,20 @@ test.describe("louange (T3) : sélecteur de tonalité, téléphone et tablette",
     await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
     const barre = page.getByTestId("barre-outils");
     await barre.waitFor();
-    await expect(barre.getByRole("button", { name: "Pinyin" }), "chant 中文").toBeVisible();
     await expect(barre.getByRole("button", { name: "简谱" }), "chant à cinq commandes : 谱 a quitté la barre").toHaveCount(0);
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
-    const tonalite = page.getByTestId("tonalite-courante");
-    // innerText : le suffixe « (orig.) » existe dans le DOM mais n'est affiché que sur ordinateur.
-    await expect(page.getByTestId("tonalite-lettre")).toHaveText("E", { useInnerText: true });
-    expect(await tonalite.evaluate((el) => el.scrollWidth <= el.clientWidth), "la tonalité n'est pas rognée").toBe(true);
-    const [t, pilule] = await Promise.all([tonalite.boundingBox(), page.getByTestId("pilule-tonalite").boundingBox()]);
-    expect(t!.x).toBeGreaterThanOrEqual(pilule!.x);
-    expect(t!.x + t!.width).toBeLessThanOrEqual(pilule!.x + pilule!.width);
-    const select = page.getByTestId("pilule-tonalite").getByRole("combobox");
-    await expect(select).toHaveValue("E");
-    await expect(select.locator("option[value=E]")).toHaveText(/\(orig\.\)/);
-    await select.selectOption("F");
-    await expect(page.getByTestId("tonalite-lettre")).toHaveText("F", { useInnerText: true });
-    await expect(select).toHaveValue("F");
+    // Chant 中文 : « 1=E » entier dans le bouton de l'armure, sans rognage.
+    const armure = page.getByTestId("armure");
+    await expect(armure).toHaveText("1=E");
+    expect(await armure.evaluate((el) => el.scrollWidth <= el.clientWidth), "la tonalité n'est pas rognée").toBe(true);
+    await expect(async () => {
+      if (!(await page.getByTestId("fenetre-armure").isVisible())) await armure.click({ timeout: 1000 });
+      await expect(page.getByTestId("fenetre-armure")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 15_000 });
+    const radios = page.getByTestId("fenetre-armure").getByRole("radio");
+    await expect(radios.filter({ hasText: /^E(?![#♯♭b])/ })).toContainText("orig.");
+    await radios.filter({ hasText: /^F(?![#♯♭b])/ }).click();
+    await expect(armure).toHaveText("1=F");
   });
 });
 

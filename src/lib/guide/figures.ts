@@ -93,10 +93,11 @@ export const FIGURES: Record<string, GuideFigure[]> = {
     {
       id: "performance",
       annotations: [
-        { kind: "circle", x: 11.4, y: 96, rx: 2.4, ry: 3.6 },
-        { kind: "label", x: 11.4, y: 90, labelId: "annotate" },
-        { kind: "circle", x: 91.6, y: 96, rx: 4.2, ry: 3.6 },
-        { kind: "label", x: 97.6, y: 89.4, labelId: "swipe", align: "right" },
+        // Annoter : barre de titre (FS-A, 08/11/2026) ; le changement de page : rangée de points en bas.
+        { kind: "circle", x: 86.3, y: 4.3, rx: 2.4, ry: 3.6 },
+        { kind: "label", x: 88.7, y: 11, labelId: "annotate", align: "right" },
+        { kind: "circle", x: 50, y: 96.8, rx: 5.2, ry: 3.6 },
+        { kind: "label", x: 50, y: 90.2, labelId: "swipe", align: "center" },
       ],
     },
   ],

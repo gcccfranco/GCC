@@ -14,18 +14,65 @@ import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
 import { useDefaultSensors } from "@/lib/dnd/sensors"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
-import { QUOI, type Passage } from "@/types/programme"
-import { libelleQui } from "@/lib/fetes/qui"
+import { QUI, QUOI, type Passage } from "@/types/programme"
+import { estQuiLibre, libelleQui, normaliserQui } from "@/lib/fetes/qui"
 import { nouvelIdPassage } from "@/lib/fetes/passages"
 import { Button } from "@/components/ui/button"
 import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { useConfirmer } from "@/components/layout/Confirmer"
-import { QuiChecklist } from "./CreneauForm"
 import { PassageBoutons, PassageContenu, type DetailFete } from "./PassageDetail"
 import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
+
+/** Cases « Qui » (un ou plusieurs) de l'ordre de passage. Une valeur retirée de la liste (敬拜团,
+ *  Jeunes, Chorale) encore présente dans le passage reste affichée, cochée et grisée « retiré », pour
+ *  que la coordination la décoche ; elle n'est plus proposée à un nouveau passage (CF3). */
+export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (qui: string[]) => void }) {
+  const { t, i18n } = useTranslation()
+  const langue = langueCourte(i18n.language)
+  const retires = value.filter((q) => !(QUI as readonly string[]).includes(q) && !estQuiLibre(q))
+  const libre = value.find(estQuiLibre)
+  const [autre, setAutre] = useState(libre !== undefined)
+  const [texte, setTexte] = useState(libre ?? "")
+  const emet = (base: string[], a: boolean, tx: string) => {
+    const n = a ? normaliserQui(tx) : ""
+    onChange(n && !base.includes(n) ? [...base, n] : base)
+  }
+  const sansLibre = value.filter((q) => !estQuiLibre(q))
+  return (
+    <fieldset className="space-y-1">
+      <legend className="text-xs font-semibold">{t("planning.programme.qui")}</legend>
+      <div className="flex flex-wrap gap-2">
+        {[...QUI, ...retires].map((q) => {
+          const checked = value.includes(q)
+          const retire = retires.includes(q)
+          return (
+            <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "texte-service" : "bg-background border-border text-muted-foreground"} ${retire ? "opacity-60" : ""}`}
+              style={checked ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, ...styleTexteService(PLANNING_COLORS.scene) } : undefined}>
+              <input type="checkbox" className="h-3.5 w-3.5" checked={checked}
+                onChange={() => onChange(checked ? value.filter((x) => x !== q) : [...value, q])} />
+              {libelleQui(q, langue)}
+              {retire && <span className="font-normal"> · {t("planning.programme.quiRetire")}</span>}
+            </label>
+          )
+        })}
+        <label className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${autre ? "texte-service" : "bg-background border-border text-muted-foreground"}`}
+          style={autre ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, ...styleTexteService(PLANNING_COLORS.scene) } : undefined}>
+          <input type="checkbox" className="h-3.5 w-3.5" checked={autre}
+            onChange={() => { setAutre(!autre); emet(sansLibre, !autre, texte) }} />
+          {t("planning.programme.quiAutre")}
+        </label>
+      </div>
+      {autre && (
+        <Input className="h-11 rounded-xl" value={texte} maxLength={40} aria-label={t("planning.programme.quiAutreChamp")}
+          placeholder={t("planning.programme.quiAutreChamp")}
+          onChange={(e) => { setTexte(e.target.value); emet(sansLibre, true, e.target.value) }} />
+      )}
+    </fieldset>
+  )
+}
 
 function PassageForm({ title, initial, onSubmit, onCancel }: {
   title: string

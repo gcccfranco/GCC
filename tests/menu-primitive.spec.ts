@@ -39,7 +39,7 @@ test.describe("Menu (jeu B)", () => {
     expect(await d.evaluate((e) => getComputedStyle(e).borderTopWidth)).toBe("0px");
   });
 
-  test("panneau : rayon 12, lignes de 36 px (44 au toucher), coche sur la valeur courante, 320 px au plus", async ({ page }, info) => {
+  test("panneau : rayon 12, lignes de 36 px (44 au toucher), coche sur la valeur courante, sans plafond fixe (T4)", async ({ page }, info) => {
     await ouvrirListe(page);
     await declencheur(page).click();
     await expect(declencheur(page)).toHaveAttribute("aria-expanded", "true");
@@ -52,7 +52,9 @@ test.describe("Menu (jeu B)", () => {
     expect(await lignes.count()).toBeGreaterThan(3);
     const attendu = estOrdinateur(info.project.name) ? 36 : 44;
     for (const i of [0, 1, 2]) expect(Math.round((await lignes.nth(i).boundingBox())!.height)).toBe(attendu);
-    expect((await panneau.boundingBox())!.height).toBeLessThanOrEqual(320.5);
+    // Lot retouches T4 (Q1 a) : plus de plafond fixe de 294/320 px, le panneau reste à 8 px au moins du bas de la fenêtre.
+    const boite = (await panneau.boundingBox())!;
+    expect(boite.y + boite.height).toBeLessThanOrEqual(page.viewportSize()!.height - 8 + 0.5);
     // La valeur courante (« Tous les thèmes ») porte la coche, à gauche du texte ; les autres lignes non.
     await expect(lignes.first()).toHaveAttribute("aria-checked", "true");
     await expect(lignes.first().locator("svg")).toBeVisible();

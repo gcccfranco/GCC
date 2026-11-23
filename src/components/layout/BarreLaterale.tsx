@@ -29,6 +29,7 @@ import { entreesBackOffice } from "@/lib/access";
 import { useProfile } from "@/lib/firebase/users";
 import { getBarreReduite, setBarreReduite, suivreBarreReduite } from "@/lib/barreLateralePref";
 import { usePastilles } from "@/lib/tableauDeBord/usePastilles";
+import { compter } from "@/lib/usage";
 import { Cloche } from "@/components/layout/Cloche";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
 import { SelecteurEspace, useFormeAffichee } from "@/components/layout/SelecteurEspace";
@@ -234,7 +235,8 @@ function ContenuBarre({
   // Sur une setlist, « Setlists » rouvre la liste filtrée qu'on a quittée (U5, Q7).
   const listeSetlists = useSyncExternalStore(rienASuivre, listeSetlistsRetenue, () => "/setlists");
 
-  // Barre réduite : la langue d'un membre n'y figure pas (Q5), celle du visiteur si.
+  // Barre réduite (B13, décision déléguée CI-17) : la langue et le thème d'un membre y figurent aussi, en colonne ;
+  // en barre dépliée, la langue et le thème sont dans la rangée du pied (R2, 21/11/2026).
   const langue = (classe = "") => (
     <button
       onClick={() => setLanguage(isZh ? "fr" : "zh-CN")}
@@ -242,6 +244,16 @@ function ContenuBarre({
       className={`${PASTILLE} text-xs font-bold ${classe}`}
     >
       {isZh ? "中文" : "FR"}
+    </button>
+  );
+
+  const theme = (
+    <button
+      onClick={() => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); }}
+      aria-label={dark ? t("common.aria.modeClair") : t("common.aria.modeSombre")}
+      className={PASTILLE}
+    >
+      {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
   );
 
@@ -279,7 +291,7 @@ function ContenuBarre({
       {/* BO-G, 10 : barre réduite, le même interrupteur en deux icônes (le CSS ne le montre que réduite). */}
       <SelecteurEspace compact />
 
-      <nav aria-label={t("common.aria.navigationPrincipale")} className="flex flex-col gap-0.5">
+      <nav aria-label={t("common.aria.navigationPrincipale")} className={`flex flex-col gap-0.5${enIcones ? " w-full" : ""}`}>
         {entrees.map((entree) => {
           const { href, cle, Icone } = entree;
           const active = estEntreeActive(entree, pathname);
@@ -295,10 +307,12 @@ function ContenuBarre({
               onClick={onChoix}
               className={`barre-entree relative flex items-center gap-3 rounded-xl px-3 py-[9px] text-base font-semibold transition-colors duration-150 ${
                 active ? "bg-primary text-primary-foreground" : "text-foreground/85 hover:bg-foreground/5"
-              }`}
+              }${enIcones ? " !h-auto !min-h-11 !w-full flex-col !gap-0.5 !px-0 !py-1" : ""}`}
             >
               <Icone className="h-5 w-5 shrink-0" strokeWidth={active ? 2.1 : 1.9} aria-hidden />
               <span className="barre-texte">{t(cle)}</span>
+              {/* B13 : barre réduite, le même nom sous l'icône (le `barre-texte` ci-dessus y est masqué par le CSS). */}
+              {enIcones && <span aria-hidden className="-mx-2 line-clamp-2 block w-[calc(100%+16px)] text-center text-[10px] font-semibold leading-[11px] tracking-[-0.01em]">{t(cle)}</span>}
               {n > 0 && (
                 // Le nom de l'entrée (aria-label) le tait : la pastille le dit en description.
                 <span
@@ -338,6 +352,7 @@ function ContenuBarre({
             <div aria-hidden className="flex shrink-0 gap-1.5">
               <span className={`${PASTILLE} pointer-events-none`} />
               <span className={`${PASTILLE} barre-si-depliee pointer-events-none`} />
+              <span className={`${PASTILLE} barre-si-depliee pointer-events-none`} />
             </div>
           </>
         )}
@@ -361,11 +376,12 @@ function ContenuBarre({
                   <div className="truncate text-muted-foreground">{planningName}</div>
                 )}
               </div>
-              <div className="flex shrink-0 gap-1.5">
+              <div className={`flex shrink-0 gap-1.5${enIcones ? " flex-col items-center" : ""}`}>
                 <span className="contents" {...cloche.ouvrir}>
                   <Cloche boutonClassName={PASTILLE} side="right" align="end" sideOffset={cloche.sideOffset} />
                 </span>
-                {langue("barre-si-depliee")}
+                {langue(enIcones ? "" : "barre-si-depliee")}
+                {theme}
               </div>
             </>
           ) : (
@@ -382,13 +398,7 @@ function ContenuBarre({
                 </Link>
               )}
               {langue()}
-              <button
-                onClick={() => setTheme(dark ? "light" : "dark")}
-                aria-label={dark ? t("common.aria.modeClair") : t("common.aria.modeSombre")}
-                className={PASTILLE}
-              >
-                {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
+              {theme}
             </>
           ))}
       </div>

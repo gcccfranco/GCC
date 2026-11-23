@@ -7,7 +7,7 @@ import { buildPerformanceBlocks, computePageKey, type PerformanceBlock, type Sec
 import { deserializeAnnotations, recaler, serializeAnnotations } from "../src/lib/annotations/strokes";
 import type { SectionNuance, SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
-import { onStage } from "./helpers/louange";
+import { attendreCompteur, basculerAnnoter, lireCompteur, onStage } from "./helpers/louange";
 
 // Lot RS, tranche RS-C (docs/spec-rappel-structure-louange.md) : rappel en Ordre joué
 // (points / pleines / claires), réserve mesurée, Dp imprimé une fois dans le corps,
@@ -174,7 +174,6 @@ const MUSICIEN: FakeProfile = {
   serviceRoles: { "Culte Francophone": ["musicien"] },
 };
 
-const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums").last();
 
 async function ouvrirMode(page: Page, items: SetlistItem[], affichage: string | null = null, echelle = "1.5"): Promise<FakeDb> {
   await page.addInitScript(({ a, e }) => {
@@ -206,16 +205,16 @@ async function ouvrirMode(page: Page, items: SetlistItem[], affichage: string | 
 
 async function lancer(page: Page) {
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(compteur(page)).toHaveText(/^\d+ \/ \d+$/);
+  await attendreCompteur(page, /^\d+ \/ \d+$/);
   await expect(page.getByText("Mise en page…")).toHaveCount(0, { timeout: 20_000 });
 }
 
-const totalPages = async (page: Page) => Number((await compteur(page).innerText()).split("/")[1]);
+const totalPages = async (page: Page) => Number((await lireCompteur(page)).split("/")[1]);
 async function allerPage(page: Page, n: number) {
   expect(await totalPages(page), `au moins ${n} pages`).toBeGreaterThanOrEqual(n);
   for (let p = 1; p < n; p++) {
     await page.keyboard.press("ArrowRight");
-    await expect(compteur(page)).toHaveText(new RegExp(`^${p + 1} /`));
+    await attendreCompteur(page, new RegExp(`^${p + 1} /`));
   }
 }
 const telephone = (page: Page) => page.viewportSize()!.width < 640;
@@ -292,7 +291,7 @@ test.describe("rappel en Ordre joué", () => {
     expect(etapes.some((e) => e.etat === "pleine" && e.nuances > 0)).toBe(true);
     await expect(onStage(page, "[data-rappel] [data-cerclee]")).toHaveCount(0);
 
-    const titre = rappel.locator("span.uppercase");
+    const titre = rappel.locator("[data-rappel-titre]");
     if (telephone(page)) await expect(titre).toBeHidden();
     else {
       await expect(titre).toHaveText("Abba Père");
@@ -317,7 +316,7 @@ test.describe("rappel en Ordre joué", () => {
     expect(etapes.some((e) => e.etat === "point")).toBe(true);
     expect(etapes.some((e) => e.etat === "pleine")).toBe(true);
     expect(etapes.every((e) => e.visible)).toBe(true);
-    const titre = rappel.locator("span.uppercase");
+    const titre = rappel.locator("[data-rappel-titre]");
     if (telephone(page)) await expect(titre).toBeHidden();
     else await expect(titre).toHaveText("圣诞节耶稣为你而来");
   });
@@ -329,7 +328,7 @@ test.describe("rappel en Ordre joué", () => {
       expect(total).toBeGreaterThan(2);
       const f = Number(echelle);
       for (let p = 1; p <= total; p++) {
-        await expect(compteur(page)).toHaveText(`${p} / ${total}`);
+        await attendreCompteur(page, `${p} / ${total}`);
         if (p > 1) {
           const { depasse, bas, hauteur } = await page.evaluate((k) => {
             const visible = (sel: string) => [...document.querySelectorAll<HTMLElement>(`[data-performance-mode] ${sel}`)].filter((e) => !e.closest("[aria-hidden=true]"));
@@ -363,6 +362,10 @@ test.describe("rappel en Ordre joué", () => {
 
 const calque = (page: Page) => page.locator("[data-performance-mode] > canvas");
 const ecritesAnnot = (db: FakeDb) => db.writes.filter((w) => w.path.startsWith("annotations/"));
+// MP-5 : le Crayon écrit des traits accrochés au texte dans ma partition ; les annotations par page sont en lecture seule.
+const ecritesTraits = (db: FakeDb) => db.writes.filter((w) => w.path.startsWith("partitions/"));
+/** Clé de la page affichée : où se range une ancienne annotation par page. */
+const clePage = (page: Page) => page.locator("[data-performance-mode]").getAttribute("data-cle-page");
 
 /** Boîte (px d'écran) des pixels dessinés du calque de lecture. */
 const boite = (page: Page) =>
@@ -382,20 +385,27 @@ async function montrerChrome(page: Page) {
   await expect(page.getByRole("button", { name: "Quitter" })).toBeVisible();
 }
 
-async function tracer(page: Page, db: FakeDb) {
+/** `calques` : le canvas du Crayon, plus le calque des anciennes annotations de la page quand il y en a une. */
+async function tracer(page: Page, db: FakeDb, calques = 1) {
   await montrerChrome(page);
-  await page.getByRole("button", { name: "Annoter" }).click();
-  await expect(calque(page)).toHaveCount(1);
+  await basculerAnnoter(page);
+  await expect(calque(page)).toHaveCount(calques);
   const ecran = page.viewportSize()!;
+  // Sur une ligne de texte (le trait s'accroche au texte : un tracé à plus de 2 em de toute ligne est ignoré), la plus proche de 55 % de la hauteur.
+  const y = await page.evaluate((cible) => {
+    const lignes = [...document.querySelectorAll<HTMLElement>("[data-performance-mode] [data-trait-section]")].filter((e) => !e.closest("[aria-hidden=true]")).map((e) => e.getBoundingClientRect());
+    lignes.sort((p, q) => Math.abs((p.top + p.bottom) / 2 - cible) - Math.abs((q.top + q.bottom) / 2 - cible));
+    return (lignes[0].top + lignes[0].bottom) / 2;
+  }, ecran.height * 0.55);
   const x = ecran.width * 0.4;
-  const y = ecran.height * 0.55;
   await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.mouse.move(x + 40, y + 15, { steps: 4 });
-  await page.mouse.move(x + 90, y + 30, { steps: 4 });
+  await page.mouse.move(x + 40, y + 5, { steps: 4 });
+  await page.mouse.move(x + 90, y, { steps: 4 });
   await page.mouse.up();
-  await expect.poll(() => ecritesAnnot(db).length).toBeGreaterThan(0);
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await expect.poll(() => ecritesTraits(db).length).toBeGreaterThan(0);
+  await basculerAnnoter(page);
+  return y;
 }
 
 /** Hauteur actuelle du rappel (marge comprise), en px d'écran, et haut de la 1re section. */
@@ -417,12 +427,15 @@ test.describe("annotations avec le rappel", () => {
     await tracer(page, db);
     await expect.poll(() => boite(page)).not.toBeNull();
     const avant = (await boite(page))!;
-    expect(JSON.parse(ecritesAnnot(db).at(-1)!.data.strokes as string).rappel, "la hauteur du rappel est enregistrée").toBeGreaterThan(30);
+    expect((ecritesTraits(db).at(-1)!.data.traits as unknown[]).length, "le trait est enregistré dans ma partition, accroché au texte").toBeGreaterThan(0);
     await page.waitForTimeout(1500);
     await page.reload();
     await lancer(page);
     await page.keyboard.press("ArrowRight");
-    await expect(compteur(page)).toHaveText(/^2 \//);
+    await attendreCompteur(page, /^2 \//);
+    // Le trait a été tracé barre montrée (`tracer`). Barre cachée, la page 2 passe en rangée unique (A12, CI-22, Timothée
+    // le 16/11 : titre, rappel et carré sur une ligne, la page remonte avec ses traits) : on la remontre pour comparer.
+    await montrerChrome(page);
     await expect.poll(() => boite(page)).not.toBeNull();
     const apres = (await boite(page))!;
     avant.forEach((v, i) => expect(Math.abs(v - apres[i]), `bord ${i}`).toBeLessThanOrEqual(2));
@@ -432,15 +445,14 @@ test.describe("annotations avec le rappel", () => {
 
   // Annotation « d'avant le lot » : pas de champ `rappel`, trait posé là où l'ancien rendu aurait mis le haut
   // de la section (haut actuel − (rappel actuel − ancienne hauteur)).
-  for (const [affichage, nom] of [["unique", "Sections uniques"], ["played", "Ordre joué"]] as const) {
+  for (const [affichage, nom] of [["unique", "Chaque section une fois"], ["played", "Tout le chant"]] as const) {
     test(`annotation d'avant le lot : le trait est sur le haut de sa section, ${nom} (FR)`, async ({ page }) => {
       const echelle = 1.5;
       const db = await ouvrirMode(page, [ABBA], affichage === "unique" ? "unique" : null, String(echelle));
       await allerPage(page, 2);
       await expect(onStage(page, "[data-rappel]")).toBeVisible();
-      // Un premier trait crée le document de la page (sa clé) ; on le remplace par une annotation d'avant.
-      await tracer(page, db);
-      const ecriture = ecritesAnnot(db).at(-1)!;
+      // Une annotation d'avant (par page, lecture seule) posée sous la clé de la page.
+      const cle = await clePage(page);
       const { rappel, haut } = await mesures(page, echelle);
       const ancien = affichage === "unique" ? 32 * echelle : 0;
       const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
@@ -449,11 +461,11 @@ test.describe("annotations avec le rappel", () => {
         w, h,
         strokes: [{ tool: "pen", size: 3.5, color: "#dc2626", points: [[w * 0.2, y], [w * 0.5, y]] }],
       });
-      db.set(decodeURIComponent(ecriture.path), { strokes: sansChamp, updatedAt: new Date() });
+      db.set(`annotations/${MUSICIEN.uid}__${SETLIST_ID}__${cle}`, { strokes: sansChamp, updatedAt: new Date() });
       await page.reload();
       await lancer(page);
       await page.keyboard.press("ArrowRight");
-      await expect(compteur(page)).toHaveText(/^2 \//);
+      await attendreCompteur(page, /^2 \//);
       await expect.poll(() => boite(page)).not.toBeNull();
       const [, y0, , y1] = (await boite(page))!;
       expect(Math.abs((y0 + y1) / 2 - haut), `trait à ${((y0 + y1) / 2).toFixed(1)} px, haut de la section à ${haut.toFixed(1)} px`).toBeLessThanOrEqual(3);
@@ -465,7 +477,7 @@ test.describe("annotations avec le rappel", () => {
   // Les pages qui changent de composition dépendent de l'appareil, du chant et de la taille du texte : trois
   // candidats, chacun recomposé sur au moins un appareil (les autres sautent).
   const CANDIDATS = [["quand-tu-parles", 1.5], ["la-pour-toi", 1.5], ["la-pour-toi", 1]] as const;
-  for (const [affichage, nom] of [["unique", "Sections uniques"], ["played", "Ordre joué"]] as const)
+  for (const [affichage, nom] of [["unique", "Chaque section une fois"], ["played", "Tout le chant"]] as const)
   for (const [slug, echelle] of CANDIDATS) {
     test(`annotation sous l'ancienne clé d'une page recomposée : lue sur la nouvelle page, enregistrée sous la nouvelle clé, ${nom}, ${slug} à ${echelle * 100} % (FR)`, async ({ page }) => {
       const db = await ouvrirMode(page, [item({ songSlug: slug })], affichage === "unique" ? "unique" : null, String(echelle));
@@ -475,7 +487,7 @@ test.describe("annotations avec le rappel", () => {
       let ancienne: string | null = null;
       for (let p = 2; p <= total && !ancienne; p++) {
         await page.keyboard.press("ArrowRight");
-        await expect(compteur(page)).toHaveText(`${p} / ${total}`);
+        await attendreCompteur(page, `${p} / ${total}`);
         ancienne = await scene.getAttribute("data-cle-ancienne");
         numero = p;
       }
@@ -494,19 +506,20 @@ test.describe("annotations avec le rappel", () => {
       await page.reload();
       await lancer(page);
       for (let p = 2; p <= numero; p++) await page.keyboard.press("ArrowRight");
-      await expect(compteur(page)).toHaveText(new RegExp(`^${numero} /`));
+      await attendreCompteur(page, new RegExp(`^${numero} /`));
       await expect.poll(() => boite(page)).not.toBeNull();
       const [, y0, , y1] = (await boite(page))!;
       expect(Math.abs((y0 + y1) / 2 - haut), `trait à ${((y0 + y1) / 2).toFixed(1)} px, haut de la section à ${haut.toFixed(1)} px`).toBeLessThanOrEqual(3);
 
-      // Un trait de plus : tout s'enregistre sous la NOUVELLE clé, avec la hauteur du rappel ; l'ancienne reste.
-      await tracer(page, db);
-      const ecrite = ecritesAnnot(db).at(-1)!;
-      expect(decodeURIComponent(ecrite.path)).not.toBe(chemin);
-      const donnees = JSON.parse(ecrite.data.strokes as string);
-      expect(donnees.rappel).toBeGreaterThan(30);
-      expect(donnees.strokes).toHaveLength(2);
-      expect(decodeURIComponent(ecrite.path)).toContain(`${SETLIST_ID}__`);
+      // Un trait de plus : il s'enregistre dans ma partition ; l'ancienne annotation reste en lecture seule, intacte.
+      const yTrace = await tracer(page, db, 2);
+      expect(ecritesAnnot(db), "plus rien ne s'écrit dans les annotations par page").toEqual([]);
+      // Le trait s'ancre au bon endroit sur la page à rappel : il est relu là où il a été tracé (x 40 %, sur la ligne tracée).
+      const { w: largeur } = await page.evaluate(() => ({ w: innerWidth }));
+      await expect.poll(async () => {
+        const boites = await page.evaluate(() => [...document.querySelectorAll("[data-performance-mode] > canvas[data-strokes-boites]")].flatMap((c) => JSON.parse(c.getAttribute("data-strokes-boites")!) as number[][]));
+        return boites.some((b) => Math.abs(b[0] - largeur * 0.4) <= 8 && b[1] >= yTrace - 12 && b[3] <= yTrace + 12);
+      }, { message: "le trait neuf est sur la page, là où il a été tracé" }).toBe(true);
       expect(db.doc(chemin)!.strokes).toBe(sansChamp);
     });
   }

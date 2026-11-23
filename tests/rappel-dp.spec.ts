@@ -6,7 +6,7 @@ import { dpFullName, dpOrigin, groupSteps, isDp, paletteKeyOf } from "../src/lib
 import type { SectionOccurrence } from "../src/lib/setlist/sectionSteps";
 import type { SectionNuance, SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { onStage } from "./helpers/louange";
+import { attendreCompteur, onStage } from "./helpers/louange";
 
 // Lot RS, tranche RS-A (docs/spec-rappel-structure-louange.md) : les règles des
 // « Dernière phrase » (Dp) dans les bandeaux de structure et en Structure seule —
@@ -73,6 +73,11 @@ test.describe("Dp : origine, palette, nom (pur)", () => {
     expect(paletteKeyOf({ type: "other", name: "Dernière phrase – ???" })).toBe("other");
     expect(paletteKeyOf({ type: "other", name: "Bénédiction" })).toBe("other");
     expect(paletteKeyOf({ type: "verse", name: "Couplet 1" })).toBe("verse");
+    // DP-G1 : « Tag » (type « other » du parseur) prend sa couleur ; « Interlude », « Instrumental », « Fin » restent « autre ».
+    expect(paletteKeyOf({ type: "other", name: "Tag (x2)" })).toBe("tag");
+    expect(paletteKeyOf({ type: "other", name: "Interlude" })).toBe("other");
+    expect(paletteKeyOf({ type: "other", name: "Instrumental" })).toBe("other");
+    expect(paletteKeyOf({ type: "other", name: "Fin" })).toBe("other");
     expect(paletteKeyOf({ type: "postchorus", name: "Post-refrain" })).toBe("chorus");
   });
 
@@ -182,7 +187,7 @@ async function ouvrirMode(page: Page, items: SetlistItem[], affichage: string | 
     `/setlists/${SETLIST_ID}`,
   );
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/);
+  await attendreCompteur(page, /^\d+ \/ \d+$/);
   await expect(page.getByText("Mise en page…")).toHaveCount(0, { timeout: 20_000 });
 }
 
@@ -244,11 +249,16 @@ test.describe("bandeau du mode louange : règles des Dp", () => {
     await expect(liste.locator("li")).toHaveCount(3);
     const pastilleZh = liste.locator("li > span:first-child");
     await expect(pastilleZh.nth(2)).toContainText("Dp");
+    // Tête de feuille (B4, CI-10) : mêmes ronds que la page chant ; la couleur de section est le fond d'un repère
+    // allumé (plein), le texte d'un repère éteint (teinté). Bandeau de la page chant : le texte est toujours à la couleur.
     const [r, dp] = await pastilleZh.evaluateAll((els) =>
-      els.slice(1).map((e) => ({ couleur: getComputedStyle(e).color, fond: getComputedStyle(e).backgroundColor })),
+      els.slice(1).map((e) => {
+        const s = getComputedStyle(e);
+        return { section: e.hasAttribute("data-repere-tete") && e.hasAttribute("data-allume") ? s.backgroundColor : s.color, fond: s.backgroundColor, tete: e.hasAttribute("data-repere-tete") };
+      }),
     );
-    expect(dp.couleur).toBe(r.couleur);
-    expect(dp.fond).toBe(r.fond);
+    expect(dp.section).toBe(r.section);
+    if (!r.tete) expect(dp.fond).toBe(r.fond);
     // En colonne, le nom écrit l'origine en entier.
     if ((await liste.evaluate((el) => el.className)).includes("flex-col")) {
       await expect(liste.locator("li").nth(2)).toContainText("最后一句 – Refrain");
@@ -280,7 +290,15 @@ test.describe("Structure seule : règles des Dp", () => {
     await ouvrirMode(page, [joue("prince-de-paix", source, ["chorus-3", ids[0]])], "structure");
     const blocs = onStage(page, "[data-section]");
     await expect(blocs).toHaveCount(2);
-    const style = (i: number) => blocs.nth(i).evaluate((el) => el.getAttribute("style"));
-    expect(await style(1)).toBe(await style(0));
+    // Le `style` entier diffère (FS-D : `flex` proportionnel à la longueur de la section, un Dp est plus court que son refrain) :
+    // on compare la couleur héritée, la variable `--sec-c` et la bordure du repère.
+    const couleurs = (i: number) =>
+      blocs.nth(i).evaluate((el) => ({
+        secC: (el as HTMLElement).style.getPropertyValue("--sec-c"),
+        bordure: getComputedStyle(el.querySelector("[data-feuille-route-repere]")!).borderTopColor,
+      }));
+    const origine = await couleurs(0);
+    expect(origine.secC).not.toBe("");
+    expect(await couleurs(1)).toEqual(origine);
   });
 });

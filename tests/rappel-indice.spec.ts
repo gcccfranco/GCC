@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import type { SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { onStage } from "./helpers/louange";
+import { attendreCompteur, lireCompteur, onStage } from "./helpers/louange";
 
 // Lot RS, tranche RS-D (docs/spec-rappel-structure-louange.md, D6) : l'indice du rappel,
 // une seule fois par appareil et par mode (`perf-astuce-rappel-unique` / `-joue`).
@@ -39,7 +39,6 @@ const setlist = {
   items: [ABBA],
 };
 
-const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums").last();
 const indice = (page: Page) => onStage(page, "[data-indice-rappel]");
 const cle = (page: Page, nom: string) => page.evaluate((n) => localStorage.getItem(n), nom);
 
@@ -50,7 +49,7 @@ const TEXTES = {
 
 async function lancer(page: Page, langue: "fr" | "zh") {
   await page.getByRole("button", { name: TEXTES[langue].bouton }).click();
-  await expect(compteur(page)).toHaveText(/^\d+ \/ \d+$/);
+  await attendreCompteur(page, /^\d+ \/ \d+$/);
   await expect(onStage(page, "[data-section]").first()).toBeVisible();
 }
 
@@ -69,18 +68,19 @@ async function ouvrir(page: Page, langue: "fr" | "zh" = "fr", mode: "unique" | "
   await lancer(page, langue);
 }
 
-const total = async (page: Page) => Number((await compteur(page).innerText()).split("/")[1]);
+const total = async (page: Page) => Number((await lireCompteur(page)).split("/")[1]);
 
 async function pageDeux(page: Page) {
   expect(await total(page), "Abba Père tient sur plusieurs pages").toBeGreaterThan(2);
   await page.keyboard.press("ArrowRight");
-  await expect(compteur(page)).toHaveText(/^2 \//);
+  await attendreCompteur(page, /^2 \//);
   await expect(onStage(page, "[data-rappel]")).toBeVisible();
 }
 
 for (const langue of ["fr", "zh"] as const) {
   test.describe(`indice du rappel (${langue === "fr" ? "français" : "中文"})`, () => {
     test("visible à la 1re apparition du rappel ; absent à la page suivante et au rechargement ; clé du mode seule", async ({ page }) => {
+      test.setTimeout(90_000);
       await ouvrir(page, langue);
       await expect(indice(page), "page 1 : pas de rappel, pas d'indice").toHaveCount(0);
       expect(await cle(page, "perf-astuce-rappel-unique")).toBeNull();
@@ -92,26 +92,35 @@ for (const langue of ["fr", "zh"] as const) {
       expect(await cle(page, "perf-astuce-rappel-unique"), "écrite dès que la bulle paraît").toBe("1");
       expect(await cle(page, "perf-astuce-rappel-joue"), "l'autre mode n'est pas touché").toBeNull();
 
-      // Elle n'occupe aucune place : le rappel garde sa hauteur, la bulle est posée par-dessus.
+      // Elle n'occupe aucune place : posée par-dessus la page, en bas, hors du rappel (parcours du 14/11, F : sous la
+      // rangée, elle cachait le titre de la 1re section).
       const pos = await page.evaluate(() => {
         const bulle = [...document.querySelectorAll("[data-indice-rappel]")].find((e) => !e.closest("[aria-hidden=true]"))!;
-        const rappel = bulle.closest("[data-rappel]")!;
-        return { position: getComputedStyle(bulle).position, hauteurRappel: rappel.getBoundingClientRect().height, haut: bulle.getBoundingClientRect().top, basRappel: rappel.getBoundingClientRect().bottom };
+        return { position: getComputedStyle(bulle).position, dansRappel: !!bulle.closest("[data-rappel]"), haut: bulle.getBoundingClientRect().top };
       });
       expect(pos.position).toBe("absolute");
-      expect(pos.haut, "sous la rangée").toBeGreaterThanOrEqual(pos.basRappel - pos.hauteurRappel);
+      expect(pos.dansRappel).toBe(false);
+      expect(pos.haut, "en bas de l'écran").toBeGreaterThan(page.viewportSize()!.height * 0.6);
 
       // Page suivante : la bulle part.
       await page.keyboard.press("ArrowRight");
-      await expect(compteur(page)).toHaveText(/^3 \//);
+      await attendreCompteur(page, /^3 \//);
       await expect(indice(page)).toHaveCount(0);
       // Retour à la page 2 : elle ne revient pas.
       await page.keyboard.press("ArrowLeft");
-      await expect(compteur(page)).toHaveText(/^2 \//);
+      await attendreCompteur(page, /^2 \//);
       await expect(onStage(page, "[data-rappel]")).toBeVisible();
       await expect(indice(page)).toHaveCount(0);
 
-      // Rechargement : la clé tient, l'indice ne revient pas.
+      // Rechargement : deux apparitions au plus par appareil (Timothée, 14/11) ; la 2e part seule au bout de 6 s,
+      // la 3e n'a pas lieu.
+      await page.reload();
+      await lancer(page, langue);
+      await pageDeux(page);
+      await expect(indice(page)).toBeVisible();
+      expect(await cle(page, "perf-astuce-rappel-unique")).toBe("2");
+      await expect(indice(page)).toHaveCount(0, { timeout: 9000 });
+      await attendreCompteur(page, /^2 \//);
       await page.reload();
       await lancer(page, langue);
       await pageDeux(page);
@@ -135,7 +144,7 @@ for (const langue of ["fr", "zh"] as const) {
       expect(await cle(page, "perf-astuce-rappel-joue"), "écrite dès que la bulle paraît").toBe("1");
       expect(await cle(page, "perf-astuce-rappel-unique"), "l'autre mode n'est pas touché").toBeNull();
       await page.keyboard.press("ArrowRight");
-      await expect(compteur(page)).toHaveText(/^3 \//);
+      await attendreCompteur(page, /^3 \//);
       await expect(indice(page)).toHaveCount(0);
     });
 
@@ -145,7 +154,7 @@ for (const langue of ["fr", "zh"] as const) {
       await expect(indice(page)).toBeVisible();
       const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
       await page.mouse.click(w - 6, h / 2);
-      await expect(compteur(page)).toHaveText(/^3 \//);
+      await attendreCompteur(page, /^3 \//);
       await expect(indice(page)).toHaveCount(0);
     });
 
@@ -157,8 +166,43 @@ for (const langue of ["fr", "zh"] as const) {
       const barre = await page.getByRole("button", { name: /Quitter|退出/ }).isVisible();
       await bulle.click();
       await expect(bulle).toHaveCount(0);
-      await expect(compteur(page)).toHaveText(/^2 \//);
+      await attendreCompteur(page, /^2 \//);
       expect(await page.getByRole("button", { name: /Quitter|退出/ }).isVisible(), "la barre n'a pas bougé").toBe(barre);
     });
+  });
+}
+
+// A13 (docs/spec-corrections-interface.md) : à la première ouverture, l'indice ne recouvre pas la pastille « Ensuite »
+// (relevé de CI-20 et CI-22 au téléphone, setlist du parcours du culte : Abba Père puis 谢谢你). La pastille garde 44 px.
+for (const langue of ["fr", "zh"] as const) {
+  test(`A13 : l'indice du rappel et la pastille « Ensuite » ne se recouvrent pas (${langue === "fr" ? "français" : "中文"})`, async ({ page }) => {
+    await page.addInitScript((l) => {
+      localStorage.setItem("perf-role-preset", "pianiste");
+      if (l === "zh") localStorage.setItem("i18nextLng", "zh-CN");
+    }, langue);
+    const items = [{ ...ABBA, structureOverride: null }, { ...ABBA, songSlug: "谢谢你", position: 2, structureOverride: null }];
+    await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: { ...setlist, items } }, `/setlists/${SETLIST_ID}`);
+    await lancer(page, langue);
+    const n = await total(page);
+    let vus = 0;
+    for (let p = 1; p <= n; p++) {
+      await attendreCompteur(page, new RegExp(`^${p} /`));
+      await page.waitForTimeout(250);
+      const m = await page.evaluate(() => {
+        const vis = (s: string) => [...document.querySelectorAll(s)].filter((e) => !e.closest("[aria-hidden=true]") && (e as HTMLElement).offsetParent !== null && getComputedStyle(e).visibility !== "hidden");
+        const r = (e: Element) => { const b = e.getBoundingClientRect(); return { haut: b.top, bas: b.bottom, gauche: b.left, droite: b.right }; };
+        return { indice: vis("[data-indice-rappel]").map(r), suivants: vis("[data-suivant]").map(r), h: vis("[data-suivant]").map((e) => e.getBoundingClientRect().height) };
+      });
+      for (const i of m.indice) {
+        for (const s of m.suivants) {
+          vus++;
+          const recouvre = Math.min(i.bas, s.bas) - Math.max(i.haut, s.haut) > 0.5 && Math.min(i.droite, s.droite) - Math.max(i.gauche, s.gauche) > 0.5;
+          expect(recouvre, `page ${p} : indice ${JSON.stringify(i)} / Ensuite ${JSON.stringify(s)}`).toBe(false);
+        }
+      }
+      for (const h of m.h) expect(h, "« Ensuite » à 44 px").toBeGreaterThanOrEqual(43.5);
+      if (p < n) await page.keyboard.press("ArrowRight");
+    }
+    test.info().annotations.push({ type: "A13", description: `${vus} paire(s) indice / Ensuite mesurée(s)` });
   });
 }

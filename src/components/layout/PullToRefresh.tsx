@@ -3,24 +3,38 @@
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { compter } from "@/lib/usage";
 
 /**
  * Tirer-vers-le-bas pour actualiser (téléphone/tablette, utile surtout en PWA
  * installée où il n'y a pas de bouton recharger). Écoute passive : on n'altère
  * jamais le défilement — on arme le geste quand la page est déjà tout en haut
  * et que l'utilisateur tire d'au moins 70 px, puis on recharge au relâchement.
- * À monter uniquement sur les pages de données (planning, setlists).
+ * À monter uniquement sur les pages de données (planning, setlists). Pas armé quand une
+ * feuille ou un menu est ouvert, ni quand le geste défile une zone qui n'est pas en haut (défaut du 17/11/2026).
  */
 export function PullToRefresh() {
   const { t } = useTranslation();
   const [state, setState] = useState<"idle" | "armed" | "refreshing">("idle");
   const startY = useRef<number | null>(null);
+  const compte = useRef(false);
 
   useEffect(() => {
     const THRESHOLD = 70;
 
     const onStart = (e: TouchEvent) => {
       startY.current = window.scrollY <= 0 ? e.touches[0].clientY : null;
+      if (startY.current === null) return;
+      // Les feuilles (vaul = dialogue Radix) portent role="dialog" : le défilement de la page y est verrouillé à 0.
+      let enDefilement = false;
+      for (let n = e.target instanceof Element ? e.target : null; n && n !== document.body; n = n.parentElement) {
+        if (n.scrollTop > 0) { enDefilement = true; break; }
+      }
+      if (
+        enDefilement ||
+        document.querySelector('[role="dialog"], [role="alertdialog"]') ||
+        (e.target as Element).closest?.('[role="menu"], [role="listbox"], [data-radix-popper-content-wrapper]')
+      ) startY.current = null;
     };
     const onMove = (e: TouchEvent) => {
       if (startY.current === null) return;
@@ -32,6 +46,8 @@ export function PullToRefresh() {
       if (startY.current !== null && window.scrollY <= 0) {
         setState((s) => {
           if (s === "armed") {
+            // Une mise à jour d'état peut être rejouée (mode strict) : un seul compte avant le rechargement.
+            if (!compte.current) { compte.current = true; compter("cmd.general.rafraichir"); }
             window.location.reload();
             return "refreshing";
           }

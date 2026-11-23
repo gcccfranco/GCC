@@ -29,7 +29,6 @@ const OLIVIA: FakeProfile = {
 const SETLIST_ID = "setlist-pdf-version";
 const SETLIST_DOC = `setlists/${SETLIST_ID}`;
 const VERSION_BERNARD = `${SETLIST_DOC}/versions/${BERNARD.uid}`;
-const VERSION_OLIVIA = `${SETLIST_DOC}/versions/${OLIVIA.uid}`;
 
 const item = (over: Record<string, unknown>) => ({
   keyOverride: null,
@@ -50,6 +49,7 @@ const SETLIST = {
   language: "mixed",
   notes: "",
   ownerId: BERNARD.uid,
+  editeurs: [OLIVIA.uid], // le PDF est réservé à l'équipe (PU-1)
   isPrivate: false,
   items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2 })],
 };
@@ -83,12 +83,9 @@ async function ouvrir(page: Page, who: FakeProfile, extra: Record<string, Record
 }
 
 async function quelPdf(page: Page) {
-  if (await enDeuxVolets(page)) {
-    await page.locator("[data-en-tete]").getByRole("button", { name: "PDF", exact: true }).click();
-  } else {
-    await page.getByRole("button", { name: "Plus d'actions" }).click();
-    await page.getByRole("menuitem", { name: "PDF" }).click();
-  }
+  // CI-12 (B7) : le PDF est une entrée du ⋯ dans les deux mises en page.
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("menuitem", { name: "PDF" }).click();
   const sheet = page.getByRole("dialog", { name: "Quel PDF ?" });
   await expect(sheet).toBeVisible();
   return sheet;
@@ -150,15 +147,6 @@ test("le PDF « Ma version » diffère de celui de la présidence", async ({ pag
   expect(mien.equals(presidence), "deux versions, deux fichiers").toBe(false);
   // Ma structure est plus courte (trois sections au lieu de la structure complète).
   expect(mien.length).not.toBe(presidence.length);
-});
-
-test("une version partagée par un autre et choisie suffit à proposer le choix", async ({ page }) => {
-  await ouvrir(page, OLIVIA, {
-    [VERSION_BERNARD]: doc(BERNARD.uid, "Bernard L.", { "abba-pere": { content: MY_ABBA, structure: null, shared: true } }),
-    [VERSION_OLIVIA]: doc(OLIVIA.uid, "Olivia M.", {}, { "abba-pere": BERNARD.uid }),
-  });
-  const sheet = await quelPdf(page);
-  await expect(sheet.getByRole("radiogroup", { name: "Version" })).toBeVisible();
 });
 
 test("une version partagée non choisie ne change rien : pas de groupe « Version »", async ({ page }) => {

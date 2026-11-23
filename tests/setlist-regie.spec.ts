@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ouvrirPartitions } from "./helpers/setlist";
+import { ouvrirPartitions, ouvrirSommaire } from "./helpers/setlist";
 import { isOnDutyRegie, parsePresentationUrl } from "../src/lib/setlist/presentationLink";
 import type { Servant } from "../src/lib/planning/names";
 import { cliquerMenuSetlist } from "./helpers/menuSetlist";
-import { verifierPuce } from "./helpers/puce";
 
 // Chantier Régie (docs/spec-regie.md) : ce dont la régie se sert avant le
 // culte, sur ordinateur, depuis la vue partitions de la setlist.
@@ -54,9 +53,14 @@ async function openPartitions(page: Page, profile = REGIE, data = setlist()) {
   await ouvrirPartitions(page);
 }
 
-test("« Copier les paroles » est une puce de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
+// T2 (docs/spec-exemples-usage.md, § 5) : dans l'en-tête de chant compact, la puce de 32 px (dimanche-17) devient un
+// bouton icône de 44 px, nom gardé ; la disposition « partition » garde la puce.
+test("« Copier les paroles » est un bouton icône de 44 px dans l'en-tête de chant, nom gardé (T2)", async ({ page }) => {
   await openPartitions(page);
-  await verifierPuce(page.locator('[data-outline-item="1"]').getByRole("button", { name: "Copier les paroles" }), info);
+  const bouton = page.locator('[data-outline-item="1"]').getByRole("button", { name: "Copier les paroles" });
+  await expect(bouton).toBeVisible();
+  const boite = (await bouton.boundingBox())!;
+  expect([boite.width, boite.height]).toEqual([44, 44]);
 });
 
 test("bouton « Copier les paroles » : ordre joué, reprises comprises, ligne vide entre sections (FR)", async ({ page }) => {
@@ -83,8 +87,7 @@ test.describe("sommaire", () => {
 
   test("sur ordinateur, le sommaire liste chants et étapes jouées et y amène au clic", async ({ page }) => {
     await openPartitions(page);
-    const sommaire = page.getByRole("navigation", { name: "Sommaire" });
-    await expect(sommaire).toBeVisible();
+    const sommaire = await ouvrirSommaire(page);
     const chant = (n: number) => sommaire.locator(`[data-sommaire="${n}"] [data-sommaire-chant]`);
     await expect(chant(1)).toHaveText("Abba Père");
     await expect(chant(2)).toHaveText("一生爱你");
@@ -96,6 +99,8 @@ test.describe("sommaire", () => {
     await chant(2).click();
     const song2 = page.locator('[data-outline-item="2"]');
     await expect.poll(async () => (await song2.boundingBox())!.y).toBeLessThan(250);
+    // Le choix a refermé le panneau : on le rouvre.
+    await ouvrirSommaire(page);
     await expect(chant(2)).toHaveAttribute("aria-current", "true");
 
     // Retour à une section précise du 1ᵉʳ chant.

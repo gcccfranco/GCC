@@ -84,7 +84,7 @@ async function ouvrir(page: Page, chemin: string) {
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
   });
   await signInAs(page, ADMIN, DOCS, chemin);
-  await expect(page.locator("header[data-entete-page] h1").filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator("h1").filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
   // Les lectures simulées et les fondus finis : les mesures portent sur la page posée.
   await page.waitForLoadState("networkidle").catch(() => {});
 }

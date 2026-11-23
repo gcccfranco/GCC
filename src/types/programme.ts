@@ -13,9 +13,12 @@ export const QUOI = ["Séance louange", "Chant", "Danse", "Sketch", "Spectacle"]
  *  est lue telle quelle. */
 export const QUI = [
   "Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie",
-  "Franco",
+  "Franco", "Intergroupe", "Interfranco",
   "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
 ] as const;
+
+/** Anciennes valeurs, lues telles quelles mais plus proposées. */
+export const QUI_RETIRES = ["敬拜团", "Jeunes", "Chorale"] as const;
 
 /** Lot U1 : une plage horaire réservable, par jour de la semaine (0 = dimanche). */
 export interface Plage {
@@ -92,6 +95,10 @@ export interface Programme {
   annee?: number;
   /** Prénom de qui a écrit en dernier (retouches v18, D20) : le refus d'un ordre de passage le nomme. */
   modifiePar?: string;
+  /** Image de l'édition (docs/spec-scene-saison.md, « Image de fête ») : data-URL JPEG ; absente = sans image. */
+  image?: string;
+  /** Drapeau posé et retiré avec `image`, lu avec la liste (la carte choisit son gabarit sans attendre l'image) ; absent = comportement d'avant IF-3. */
+  aImage?: boolean;
   /** `updateTime` du document lu (métadonnée REST, jamais écrite) : précondition de l'ordre de passage (D20). */
   version?: string;
 }
@@ -104,8 +111,12 @@ export interface Creneau {
   /** « HH:MM » : un créneau de la grille (lot U1), ou une heure d'avant U1. */
   debut: string;
   fin: string;
+  /** Un autre moment (SQ-B) : date et heures choisies hors de la grille ; absent sinon. */
+  libre?: boolean;
   quoi: string;
   qui: string[];
+  /** AS15 : « Des personnes… » (leurs noms sont aussi dans `qui`). */
+  personnes?: { uid: string; nom: string }[];
   note: string;
   auteurUid: string;
   auteurNom: string;

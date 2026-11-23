@@ -39,6 +39,7 @@ import { ANNONCE_SECTIONS } from "@/types/annonce"
 import type { EvenementPour } from "@/types/evenement"
 import { EMPTY_EVENEMENT, EvenementForm, type EvenementValues } from "@/components/evenements/EvenementForm"
 import { ReunionForm } from "@/components/reunions/ReunionForm"
+import { compter } from "@/lib/usage"
 import { Squelette } from "@/components/layout/Squelette";
 
 export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
@@ -120,6 +121,7 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
           const reprendre = laisses.length > 0 && await demanderReprise(laisses)
           const now = new Date().toISOString()
           const id = await createEvenement({ ...values, reunion, organisateurUid: user.uid, organisateurNom: nom, inscrits: 0, createdAt: now, updatedAt: now })
+          compter("cmd.evenement.creer")
           if (prevenir) await notifyEvenement(id)
           if (reprendre) await reprendreSujets(laisses, id, user.uid)
           const liees = items.map((x) => x.tache).filter((tache) => tache.evenement?.id === from)

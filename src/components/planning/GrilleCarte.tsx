@@ -1,10 +1,22 @@
 "use client"
 
-import type { ReactNode } from "react"
+import type { MouseEvent, ReactNode } from "react"
 import { Lock } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { styleTexteService } from "@/lib/couleurSombre"
 import { fdShort } from "@/lib/planning/utils"
+import { TOUCHER_44 } from "@/lib/toucher44"
+
+/** Zone de 44 px d'une case de nom, posée sur la cellule (ou la ligne de carte) : le bouton de la case porte `truncate`
+ *  et rognerait une zone posée sur lui. Au toucher, la zone passe sous le contenu (`isolate` + `-z-10`) : le bouton reste
+ *  atteignable, et un toucher sur le reste de la zone est renvoyé au bouton par `ouvrirLaCase`. */
+export const ZONE_CASE = `${TOUCHER_44} [@media(pointer:coarse)]:isolate [@media(pointer:coarse)]:after:-z-10`
+
+/** Un toucher dans la zone, hors du bouton, ouvre la case (au toucher seulement : au pointeur, le bord de la case ne fait rien). */
+export function ouvrirLaCase(e: MouseEvent<HTMLElement>) {
+  if (e.target !== e.currentTarget || !matchMedia("(pointer: coarse)").matches) return
+  e.currentTarget.querySelector<HTMLElement>(":scope > button")?.click()
+}
 
 /** La carte d'un dimanche sur téléphone : l'en-tête (date, « Cette semaine », « non publié », badge, actions) et,
  *  dessous, les cases (`children`). Sorti de `PlanningGrille` (lot N, N6b). */
@@ -54,7 +66,8 @@ export function CarteDimanche({
         {badge}
         {actions}
       </div>
-      <div className="px-3.5 py-2.5 space-y-1">{children}</div>
+      {/* Au toucher, 12 px entre deux lignes : les zones de 44 px des cases (32 px de dessin) se touchent sans se recouvrir. */}
+      <div className="px-3.5 py-2.5 space-y-1 [@media(pointer:coarse)]:space-y-3">{children}</div>
     </div>
   )
 }
@@ -80,7 +93,7 @@ export function LigneDeCarte({
   return (
     <div className="flex items-baseline gap-2 text-sm">
       <span className="w-24 shrink-0 text-xs text-muted-foreground">{libelle}</span>
-      <span data-case={dataCase} data-geste={dansGeste || undefined} data-apercu={apercu} data-changement={changement} className={`relative min-w-0 flex-1 rounded-md ${changement ? "bg-amber-100/70 pr-4 dark:bg-amber-500/15" : ""}`} style={dansGeste ? { background: `${couleur}22` } : undefined}>{children}</span>
+      <span data-case={dataCase} data-geste={dansGeste || undefined} data-apercu={apercu} data-changement={changement} onClick={ouvrirLaCase} className={`relative min-w-0 flex-1 rounded-md ${ZONE_CASE} ${changement ? "bg-amber-100/70 pr-4 dark:bg-amber-500/15" : ""}`} style={dansGeste ? { background: `${couleur}22` } : undefined}>{children}</span>
     </div>
   )
 }

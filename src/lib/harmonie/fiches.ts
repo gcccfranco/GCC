@@ -6,8 +6,8 @@
 // pour qu'une coquille se voie au build et non dans le catalogue.
 
 import {
-  MOMENT_FR, NIVEAU_FR, SENSATION_FR, STATUT_FR,
-  type EtapeParcours, type Fiche, type Instrument, type Moment, type Niveau, type Sensation,
+  MOMENT_FR, NIVEAU_FR, RESSENTI_FR, SENSATION_FR, STATUT_FR, USAGE_FR,
+  type EtapeParcours, type Fiche, type Instrument, type Moment, type Niveau, type Ressenti, type Sensation, type Usage,
 } from "@/types/harmonie";
 
 // Les intertitres d'une fiche. Liste fermée : le corps des fiches met aussi du
@@ -41,6 +41,14 @@ function morceaux(bloc: string): Map<string, string> {
 function ligneDuTableau(bloc: string, cle: string): string | null {
   const m = bloc.match(new RegExp(`^\\|\\s*${cle}\\s*\\|\\s*(.+?)\\s*\\|\\s*$`, "m"));
   return m ? m[1].trim() : null;
+}
+
+/** Les valeurs d'une ligne facultative ; « (proposé) » en fin de cellule est retiré et signalé. */
+function etiquettes<T>(bloc: string, cle: string, table: Record<string, T>, ou: string): { valeurs: T[]; propose: boolean } {
+  const brut = ligneDuTableau(bloc, cle);
+  if (!brut) return { valeurs: [], propose: false };
+  const texte = brut.replace(/\s*\(proposé\)\s*$/, "");
+  return { valeurs: traduire(texte, table, cle.toLowerCase(), ou), propose: texte !== brut };
 }
 
 function traduire<T>(valeurs: string, table: Record<string, T>, quoi: string, ou: string): T[] {
@@ -117,6 +125,8 @@ export function lireFamille(markdown: string, nomFichier: string): Fiche[] {
 
     const parts = morceaux(bloc);
     const { niveau, note: niveauNote } = lireNiveau(ligneDuTableau(bloc, "Niveau") ?? "facile", instrument, ou);
+    const ressentis = etiquettes<Ressenti>(bloc, "Ressenti", RESSENTI_FR, ou);
+    const usages = etiquettes<Usage>(bloc, "Usage", USAGE_FR, ou);
     const fiche: Fiche = {
       id,
       code: code.trim(),
@@ -127,6 +137,9 @@ export function lireFamille(markdown: string, nomFichier: string): Fiche[] {
       instrument,
       sensations: traduire(ligneDuTableau(bloc, "Sensations") ?? "", SENSATION_FR, "sensation", ou) as Sensation[],
       moments: traduire(ligneDuTableau(bloc, "Moments") ?? "", MOMENT_FR, "moment", ou) as Moment[],
+      ressentis: ressentis.valeurs,
+      usages: usages.valeurs,
+      etiquettesProposees: ressentis.propose || usages.propose,
       niveau,
       niveauNote,
       avantApres: parts.get("Avant → après"),
@@ -140,6 +153,7 @@ export function lireFamille(markdown: string, nomFichier: string): Fiche[] {
       repertoire: parts.get("Dans le répertoire")?.replace(/^\([^)]*\)\s*:?\s*/, ""),
       regle: parts.get("Règle"),
       exemples: [],
+      ecoutes: [],
     };
     return fiche;
   });

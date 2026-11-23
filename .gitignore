@@ -181,3 +181,6 @@ scripts/rude-epreuve/results.json
 # Identifiants locaux
 token.pickle
 *.pickle
+
+# Planche d'audit des mots chinois (npm run coupure:audit)
+scripts/coupure-zh-audit/

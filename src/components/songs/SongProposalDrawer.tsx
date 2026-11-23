@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
+import { compter } from "@/lib/usage";
 
 function isHttpUrl(s: string): boolean {
   return /^https?:\/\//i.test(s.trim());
@@ -94,6 +95,7 @@ export function SongProposalDrawer({ enTete = false, controle }: { enTete?: bool
         authorName,
         ...(controle ? { setlistId: controle.setlistId, setlistTitre: controle.setlistTitre } : {}),
       });
+      compter("cmd.chants.proposer");
       if (controle) {
         controle.onAjoutee({ id, titre: title.trim() });
         setOpen(false);

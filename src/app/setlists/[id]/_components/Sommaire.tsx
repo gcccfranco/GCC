@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ComponentProps, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy } from "lucide-react";
+import { TOUCHER_PILULE } from "@/lib/toucher44";
+import { Check, Copy, ListOrdered } from "lucide-react";
 import type { SetlistItem } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
 import type { SongContent } from "@/lib/api/songs";
@@ -11,6 +12,7 @@ import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { playedSections } from "@/lib/setlist/playedSections";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
+import { compter } from "@/lib/usage";
 
 /** Sommaire de la setlist en deux volets (lot U5, docs/spec-deux-volets.md, Q6) :
  *  par chant, numéro, titre, tonalité et « orig. », une pastille par étape jouée,
@@ -71,7 +73,7 @@ export function Sommaire({
             const tonalite = item.keyOverride ?? song?.originalKey;
             const transpose = !!item.keyOverride && item.keyOverride !== song?.originalKey;
             const etapes = playedSections(item, contents);
-            const surScan = !fusion && sheetEnabled(jianpuPref, item.jianpuSheet) && !!manifest?.[item.songSlug];
+            const surScan = !fusion && sheetEnabled(jianpuPref) && !!manifest?.[item.songSlug];
             return (
               <li
                 key={item.position}
@@ -96,7 +98,7 @@ export function Sommaire({
                       {titre}
                     </button>
                     {etapes.length > 0 && (
-                      <div className="relative mt-1.5 flex flex-wrap gap-1">
+                      <div className="relative mt-1.5 flex flex-wrap gap-1.5">
                         {etapes.map((s, i) => {
                           const ici = lu && uidsLus.includes(s.uid);
                           return (
@@ -106,7 +108,7 @@ export function Sommaire({
                               data-pastille
                               aria-current={ici ? "true" : undefined}
                               onClick={() => onGo(item.position, s.uid)}
-                              className={`h-[18px] min-w-[18px] rounded-full px-1.5 text-xs font-semibold leading-[18px] transition-colors ${
+                              className={`${TOUCHER_PILULE} h-[18px] min-w-[18px] rounded-full px-1.5 text-xs font-semibold leading-[18px] transition-colors ${
                                 ici
                                   ? "bg-background text-foreground"
                                   : lu
@@ -148,6 +150,122 @@ export function Sommaire({
   );
 }
 
+/** Grand écran (docs/spec-exemples-usage.md, T3) : le sommaire devient un rail de 56 px, un numéro par chant ;
+ *  son bouton ouvre le `Sommaire` en panneau par-dessus la partition. Toucher un numéro amène au chant sans
+ *  ouvrir le panneau ; Échap, un toucher en dehors ou un choix dans le panneau le ferment. */
+export function RailSommaire({ className, style, ...sommaire }: ComponentProps<typeof Sommaire>) {
+  const { t } = useTranslation();
+  // Phases du panneau : monté pour toutes sauf « ferme » ; « entree » le monte en position fermée, puis « ouvert » le fait glisser.
+  const [phase, setPhase] = useState<"ferme" | "entree" | "ouvert" | "fermeture">("ferme");
+  const ouvert = phase === "entree" || phase === "ouvert";
+  const ouvrir = () => setPhase((p) => (p === "fermeture" ? "ouvert" : p === "ferme" ? "entree" : p));
+  const fermer = () => setPhase((p) => (p === "entree" || p === "ouvert" ? "fermeture" : p));
+  const boutonRef = useRef<HTMLButtonElement>(null);
+  const panneauRef = useRef<HTMLDivElement>(null);
+  const { items, songsMap, current, onGo } = sommaire;
+  const chants = [...items].sort((a, b) => a.position - b.position).filter((item) => item.type !== "transition");
+
+  useLayoutEffect(() => {
+    if (phase !== "entree") return;
+    panneauRef.current?.getBoundingClientRect(); // reflow : la position fermée est peinte avant la transition
+    setPhase("ouvert");
+  }, [phase]);
+  useEffect(() => {
+    if (phase !== "fermeture") return;
+    const minuteur = window.setTimeout(() => setPhase("ferme"), 400);
+    return () => window.clearTimeout(minuteur);
+  }, [phase]);
+
+  useEffect(() => {
+    if (!ouvert) return;
+    // Le chant lu, sinon le premier (le chant lu peut être une proposition, absente du panneau).
+    (panneauRef.current?.querySelector<HTMLElement>("[data-sommaire-chant][aria-current]")
+      ?? panneauRef.current?.querySelector<HTMLElement>("[data-sommaire-chant]"))?.focus({ preventScroll: true });
+    const dehors = (e: PointerEvent) => {
+      const cible = e.target as Node;
+      if (!panneauRef.current?.contains(cible) && !boutonRef.current?.contains(cible)) fermer();
+    };
+    const echap = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      fermer();
+      boutonRef.current?.focus({ preventScroll: true });
+    };
+    document.addEventListener("pointerdown", dehors);
+    document.addEventListener("keydown", echap);
+    return () => {
+      document.removeEventListener("pointerdown", dehors);
+      document.removeEventListener("keydown", echap);
+    };
+  }, [ouvert]);
+
+  const libelle = t(ouvert ? "setlists.detail.fermerSommaire" : "setlists.detail.ouvrirSommaire");
+  return (
+    <div className={className} style={style}>
+      <div className="flex h-full w-14 flex-col items-center gap-1.5 overflow-y-auto pb-4">
+        <button
+          ref={boutonRef}
+          type="button"
+          aria-expanded={ouvert}
+          aria-controls="sommaire-panneau"
+          aria-label={libelle}
+          title={libelle}
+          onClick={ouvert ? fermer : ouvrir}
+          className="flex h-11 w-14 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ListOrdered className="h-5 w-5" aria-hidden />
+        </button>
+        {chants.map((item, i) => {
+          if (item.type === "proposition") return null;
+          const lu = item.position === current;
+          const titre =
+            item.type === "fusion" && item.fusionSongs
+              ? item.fusionSongs.map((fs) => songsMap[fs.songSlug]?.title ?? fs.songSlug).join(" / ")
+              : (songsMap[item.songSlug]?.title ?? item.songSlug);
+          const nom = `${i + 1}. ${titre}`;
+          return (
+            <button
+              key={item.position}
+              type="button"
+              data-rail-numero={item.position}
+              aria-current={lu ? "true" : undefined}
+              aria-label={nom}
+              title={nom}
+              onClick={() => onGo(item.position)}
+              className={`h-11 w-14 shrink-0 rounded-xl text-base font-bold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                lu ? "bg-foreground text-background" : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
+      </div>
+      {phase !== "ferme" && (
+        <div className="absolute left-full top-0 z-10 h-full w-[380px]" style={{ clipPath: "inset(0 -48px 0 0)" }}>
+        <div
+          ref={panneauRef}
+          id="sommaire-panneau"
+          inert={phase === "fermeture"}
+          data-ouvert={phase === "ouvert" ? "" : undefined}
+          className="sommaire-panneau h-full w-full border-r border-border bg-background shadow-xl"
+        >
+          <Sommaire
+            {...sommaire}
+            onGo={(position, uid) => {
+              fermer();
+              onGo(position, uid);
+              // Le focus ne tombe pas sur la page : il revient au bouton du rail.
+              boutonRef.current?.focus({ preventScroll: true });
+            }}
+            className="h-full"
+          />
+        </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** « Copier toutes les paroles » (question 6), en pied du sommaire. */
 function CopierTout({ copier, pret }: { copier: () => string; pret: boolean }) {
   const { t } = useTranslation();
@@ -166,6 +284,7 @@ function CopierTout({ copier, pret }: { copier: () => string; pret: boolean }) {
           } catch {
             return; // presse-papiers refusé : rien n'est annoncé
           }
+          compter("cmd.chant.copierParoles");
           setCopie(true);
           window.clearTimeout(minuteur.current);
           minuteur.current = window.setTimeout(() => setCopie(false), 2000);

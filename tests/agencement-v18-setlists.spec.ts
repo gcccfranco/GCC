@@ -163,6 +163,18 @@ test.describe("Setlists (A9)", () => {
       const b = (await controle.boundingBox())!;
       expect(b.y + b.height, "le contrôle au-dessus de la carte").toBeLessThanOrEqual(bListe.y + 1);
     }
+    // B13 (CI-17) : une même rangée a un seul bord droit : « Mode Louange », dernier des boutons de l'aperçu, finit au bord droit de la dernière carte de l'aperçu
+    // (la carte d'équipe ici ; seule, la carte des chants prend toute la rangée).
+    const droiteCartes = await detail(page).locator(".apercu-colonnes").evaluate((g) =>
+      Math.max(...[...g.children].map((c) => c.getBoundingClientRect().right)));
+    const bLouange = (await detail(page).getByRole("link", { name: /Mode Louange/i }).boundingBox())!;
+    // Volet étroit : les boutons passent sous le titre, à gauche (rangée à part) ; la règle vaut quand ils sont sur sa rangée.
+    const bTitre = (await detail(page).getByRole("heading", { level: 2 }).boundingBox())!;
+    if (bLouange.y < bTitre.y + bTitre.height) {
+      expect(Math.abs(bLouange.x + bLouange.width - droiteCartes), "les boutons au bord droit des cartes de l'aperçu").toBeLessThanOrEqual(1);
+    } else {
+      expect(bLouange.x + bLouange.width, "boutons sous le titre : dans la largeur des cartes").toBeLessThanOrEqual(droiteCartes + 1);
+    }
     await capture(page, "v18-setlists");
   });
 

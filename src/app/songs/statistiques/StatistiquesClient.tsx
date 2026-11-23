@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { ArrowDownWideNarrow, ChevronDown, ChevronRight, ChevronUp } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
 import { canFiltrerPresidence } from "@/lib/access";
@@ -402,12 +403,12 @@ function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirP
       </div>
       {etat.periode === "libre" && (
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <label className="inline-flex items-center gap-2">
+          <label className={`${TOUCHER_44} inline-flex items-center gap-2`}>
             <span className="font-semibold">{t("stats.du")}</span>
             <input type="date" value={etat.du} max={etat.au || hier} onChange={(e) => changer({ du: e.target.value })}
               className="h-9 rounded-lg bg-secondary px-3 focus:outline-none focus:ring-2 focus:ring-ring/30" />
           </label>
-          <label className="inline-flex items-center gap-2">
+          <label className={`${TOUCHER_44} inline-flex items-center gap-2`}>
             <span className="font-semibold">{t("stats.au")}</span>
             <input type="date" value={etat.au} min={etat.du || undefined} max={hier} onChange={(e) => changer({ au: e.target.value })}
               className="h-9 rounded-lg bg-secondary px-3 focus:outline-none focus:ring-2 focus:ring-ring/30" />

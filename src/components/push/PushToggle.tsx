@@ -16,6 +16,7 @@ import {
   subscribeToPush,
   unsubscribeFromPush,
 } from "@/lib/push/client";
+import { compter } from "@/lib/usage";
 import { getNotifPrefs, saveNotifPrefs } from "@/lib/firebase/notifPrefs";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import {
@@ -98,6 +99,7 @@ export function PushToggle() {
     setPrefBusy(type);
     try {
       await saveNotifPrefs(user.uid, updated);
+      compter("cmd.compte.notifPrefs");
     } catch {
       setPrefs((p) => (p ? { ...p, [type]: !next } : p)); // rollback
     } finally {

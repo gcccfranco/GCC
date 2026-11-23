@@ -16,6 +16,7 @@ import { BOUTON_CHAMP_ACTION, CHAMP_ACTION } from "@/components/reunions/champAc
 import { TOUCHER_44 } from "@/lib/toucher44"
 import { majCompteRendu } from "@/lib/firebase/evenements"
 import { lienCompteRendu, sourceDuLien } from "@/lib/reunions/compteRendu"
+import { compter } from "@/lib/usage"
 import type { CompteRendu, Evenement } from "@/types/evenement"
 import type { UserProfile } from "@/types/user"
 
@@ -43,6 +44,7 @@ export function CompteRenduCarte({ evenement: e, user, profile, onChange }: {
     setErreur("")
     try {
       await majCompteRendu(e.id, valeur)
+      if (valeur) compter("cmd.evenement.compteRendu")
       onChange(valeur)
       setSaisie("")
     } catch {

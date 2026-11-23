@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { getEvenementsSince } from "@/lib/firebase/evenements";
 import { getSetlistsSince } from "@/lib/firebase/setlists";
@@ -41,7 +41,7 @@ const MAX_ITEMS = 20;
 
 export interface NotificationItem {
   id: string;
-  kind: "annonce" | "setlist-created" | "setlist-updated" | "manual" | "reminder" | "broadcast" | "presentation" | "scene" | "evenement" | "tache";
+  kind: "annonce" | "setlist-created" | "setlist-updated" | "manual" | "reminder" | "broadcast" | "presentation" | "scene" | "evenement" | "tache" | "salles";
   title: string;
   /** Catégorie d'origine (annonce/setlist) ; vide pour les push ponctuels. */
   category: string;
@@ -58,7 +58,11 @@ function readLastSeen(): number {
 }
 
 export function useNotifications() {
-  const { user, profile } = useProfile();
+  const { user, profile, loading } = useProfile();
+  // Audit perf P2 (n° 4) : une seule passe au chargement. La passe attend le profil (sans lui, les catégories
+  // sont vides et une seconde passe partait à son arrivée) et ne se relance que si son contenu change, pas à
+  // chaque nouvel objet `profile`.
+  const cleProfil = useMemo(() => (profile ? JSON.stringify(profile) : ""), [profile]);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   // Plus grande date déjà chargée : les requêtes suivantes ne lisent que l'après.
@@ -157,7 +161,8 @@ export function useNotifications() {
     } catch {
       /* réseau indisponible — on retentera au prochain tick */
     }
-  }, [user, profile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `cleProfil` relance la passe quand le profil change vraiment
+  }, [user, cleProfil]);
 
   useEffect(() => {
     if (!user) {
@@ -168,6 +173,7 @@ export function useNotifications() {
       setUnreadCount(0);
       return;
     }
+    if (loading) return;
     refresh();
     const interval = setInterval(refresh, POLL_INTERVAL_MS);
     const onVisible = () => {
@@ -181,7 +187,7 @@ export function useNotifications() {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [user, refresh]);
+  }, [user, loading, refresh]);
 
   const markAllSeen = useCallback(() => {
     try {

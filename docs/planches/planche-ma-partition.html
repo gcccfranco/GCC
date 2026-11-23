@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ma partition</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600&display=swap">
+<style>
+/* Planche « Ma partition » : une bande, trois pistes (téléphone · tablette · ordinateur), la recommandée marquée. */
+:root{
+  --bg:#f2f2f7; --surface:#ffffff; --ink:#1c1c1e; --muted:#6c6c72; --line:#e4e4e5; --fill:#f2f2f7;
+  --m-bg:#ffffff; --m-fg:#1c1c1e;
+  --chord:#3f63cf; --jianpu:#b3261d;
+  --sec-intro:#5b7fa6; --sec-intro-tint:#eef3f9; --sec-verse:#2c8a7d; --sec-verse-tint:#e8f3f0;
+  --sec-prechorus:#c1871f; --sec-prechorus-tint:#faf2e1; --sec-chorus:#e0560a; --sec-chorus-tint:#fcece1;
+  --sec-bridge:#7a5bcb; --sec-bridge-tint:#f0ecf9;
+  --reco:#1f7a4d; --reco-bg:#e5f3ea; --warn:#a15c00; --warn-bg:#fdf0dc;
+  --graphite:#5a5e66; --marge:#f3f4f5; --exp:#6c6c72; --tab-line:#e4e4e5; --voile:rgba(0,0,0,.3);
+  --f-ui:system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Noto Sans SC","WenQuanYi Zen Hei",sans-serif;
+  --f-zh:"PingFang SC","Noto Sans SC","WenQuanYi Zen Hei",sans-serif;
+  --f-serif:"Source Serif 4","Songti SC","Noto Serif CJK SC",Georgia,serif;
+  --f-mono:ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b0b0c; --surface:#1c1c1e; --ink:#f2f2f7; --muted:#98989f; --line:#373739; --fill:#2c2c2e;
+  --m-bg:#000000; --m-fg:#f2f2f7;
+  --chord:#8fb0ff; --jianpu:#ff7d72;
+  --sec-intro:#8fb2dc; --sec-intro-tint:#161f2a; --sec-verse:#59bdac; --sec-verse-tint:#112320;
+  --sec-prechorus:#e0b35b; --sec-prechorus-tint:#251e0f; --sec-chorus:#fb923c; --sec-chorus-tint:#2a1810;
+  --sec-bridge:#b59ce9; --sec-bridge-tint:#1d1730;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12;
+  --graphite:#a3a7ae; --marge:#151517; --exp:#98989f; --tab-line:#373739; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b0b0c; --surface:#1c1c1e; --ink:#f2f2f7; --muted:#98989f; --line:#373739; --fill:#2c2c2e;
+  --m-bg:#000000; --m-fg:#f2f2f7;
+  --chord:#8fb0ff; --jianpu:#ff7d72;
+  --sec-intro:#8fb2dc; --sec-intro-tint:#161f2a; --sec-verse:#59bdac; --sec-verse-tint:#112320;
+  --sec-prechorus:#e0b35b; --sec-prechorus-tint:#251e0f; --sec-chorus:#fb923c; --sec-chorus-tint:#2a1810;
+  --sec-bridge:#b59ce9; --sec-bridge-tint:#1d1730;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12;
+  --graphite:#a3a7ae; --marge:#151517; --exp:#98989f; --tab-line:#373739; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 72px}
+.wrap{max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-size:30px;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:22px;margin:0;text-wrap:balance}
+h3{font-size:16px;margin:0;text-wrap:balance}
+p{margin:0;max-width:72ch;text-wrap:pretty}
+.eyebrow{font-size:12px;color:var(--muted);font-weight:600}
+.intro{display:flex;flex-direction:column;gap:12px}
+section{display:flex;flex-direction:column;gap:20px;min-width:0}
+.constat,.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.box.reco{border:2px solid var(--reco)}
+.piste{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.piste.reco{border:2px solid var(--reco)}
+.piste-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--reco-bg);color:var(--reco)}
+.tag.neutre{background:var(--fill);color:var(--muted)}
+.fiche{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 20px;font-size:13.5px;margin:0}
+.fiche div{min-width:0}
+.fiche dt{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:1px}
+.fiche dd{margin:0;text-wrap:pretty}
+.swatches{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.sw{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-family:var(--f-mono)}
+.sw i{width:14px;height:14px;border-radius:4px;border:1px solid var(--line);display:inline-block}
+.rowlabel{font-size:12px;font-weight:700;color:var(--muted)}
+.devices{display:flex;flex-wrap:wrap;gap:22px 20px;align-items:flex-start}
+.dev{display:flex;flex-direction:column;gap:6px;min-width:0;max-width:100%}
+.dev-label{font-size:12px;color:var(--muted);font-weight:600}
+.cap{font-size:12px;color:var(--muted);max-width:none;line-height:1.4}
+.dev.w-ph{width:276px}.dev.w-tb{width:410px}.dev.w-dk{width:560px}
+.pro-con{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;font-size:14px}
+code{font-family:var(--f-mono);font-size:.9em;background:var(--fill);padding:1px 5px;border-radius:5px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:520px}
+th{text-align:left;font-weight:700;color:var(--muted);font-size:12px;padding:8px 12px;border-bottom:1px solid var(--line)}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.questions{counter-reset:q;display:flex;flex-direction:column;gap:12px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.q h3::before{counter-increment:q;content:"Q" counter(q) " · ";color:var(--muted)}
+.q .rec{font-size:14px;color:var(--reco);font-weight:600}
+ul.plain{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
+
+/* ───────── maquettes ───────── */
+.frame{border:1px solid var(--line);border-radius:22px;background:var(--m-bg);color:var(--m-fg);overflow:hidden;max-width:100%;position:relative;font-size:11.5px;line-height:1.4;font-family:var(--f-ui)}
+.frame.phone{width:276px}.frame.tablet{width:410px;border-radius:16px}.frame.desktop{width:560px;border-radius:10px}.frame.land{width:410px;border-radius:14px}
+.ic{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.grow{flex:1}
+.topbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:11px}
+.topbar .back{display:inline-flex;align-items:center;gap:2px;color:var(--muted)}
+.topbar .tt{font-size:12px}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--line)}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;font-weight:600;font-size:10.5px;white-space:nowrap;background:var(--m-bg);color:var(--m-fg);line-height:1.5}
+.btn.pri,.btn.on{background:var(--m-fg);color:var(--m-bg);border-color:var(--m-fg)}
+.btn.ghost{border-color:transparent;background:var(--fill)}
+.btn.sq{border-radius:7px}
+.chead{display:flex;align-items:center;gap:8px;padding:9px 12px 0}
+.chead b{font-size:14px}
+.chead .num{width:18px;height:18px;border-radius:50%;background:var(--fill);display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--muted)}
+.key{border:1.5px solid var(--m-fg);border-radius:999px;padding:0 8px;font-weight:700;font-size:10.5px}
+.je{padding:6px 12px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tete{padding:6px 12px 0;font-size:10.5px;font-weight:600}
+.tete.gr{color:var(--graphite)}
+.pt{padding:8px 12px 12px;display:flex;flex-direction:column;gap:7px}
+.pt h4{margin:0;font-size:18px;line-height:1.15}
+.sub{color:var(--muted);font-size:10.5px}
+.sec-l{align-self:flex-start;font-size:10px;font-weight:700;padding:1px 7px;border-radius:5px;margin-top:3px}
+.sec-l.ch{color:var(--sec-chorus);background:var(--sec-chorus-tint)}
+.sec-l.br{color:var(--sec-bridge);background:var(--sec-bridge-tint)}
+.sec-l.vs{color:var(--sec-verse);background:var(--sec-verse-tint)}
+.ln{display:flex;gap:6px;padding-left:8px;border-left:2px solid transparent;font-size:12.5px;line-height:1.25;position:relative;min-width:0}
+.ln .tx{min-width:0}
+.ln.me{border-left-color:var(--graphite)}
+.ln.cu{border-left-color:var(--m-fg)}
+.ln .g{width:16px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:3px}
+.cl{display:inline-flex;flex-direction:column;vertical-align:top;white-space:pre}
+.cl i{font-style:normal;font-weight:700;color:var(--chord);font-size:10.5px;min-height:1.4em;padding-right:3px}
+.cl i.me{font-weight:600}
+.cl i sup{font-size:7.5px;color:var(--exp);font-weight:600;font-variant-numeric:tabular-nums;margin-left:1px;vertical-align:top;line-height:1.3}
+.cl u{text-decoration:none}
+.cl s{text-decoration:none;color:var(--muted);font-size:9px;line-height:1.2}
+.cl.z u{font-family:var(--f-zh);font-size:13px}
+em.m{font-style:normal;color:var(--graphite)}
+.zh{font-family:var(--f-zh)}
+.dock{display:flex;align-items:center;gap:2px;padding:6px 8px;border-top:1px solid var(--line);background:var(--m-bg);overflow:hidden}
+.dock .btn{padding:3px 8px;font-size:10px}
+.tool{font-size:10px;font-weight:600;padding:3px 6px;border-radius:7px;color:var(--muted)}
+.tool.on{background:var(--m-fg);color:var(--m-bg)}
+.circ{position:absolute;border:1.8px solid #dc2626;border-radius:50%;pointer-events:none}
+.pop{position:absolute;z-index:4;background:var(--m-bg);border:1px solid var(--line);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:1px;font-size:11px}
+.pop .it{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:7px;font-weight:500}
+.pop .it.on{background:var(--fill);font-weight:700}
+.pop .it .sm{margin-left:auto;font-size:9.5px;color:var(--muted);font-weight:500}
+.pop hr{border:0;border-top:1px solid var(--line);margin:3px 0;width:100%}
+.mk{width:2px;height:12px;border-radius:1px;flex:none;display:inline-block}
+.mk.gr{background:var(--graphite)}.mk.cu{background:var(--m-fg)}.mk.o{background:transparent;border:1px solid var(--line);width:6px}
+.scrim{position:relative}
+.scrim::after{content:"";position:absolute;inset:0;background:var(--voile);pointer-events:none}
+.sheet-b{background:var(--m-bg);border-top-left-radius:16px;border-top-right-radius:16px;border:1px solid var(--line);border-bottom:0;margin-top:-14px;position:relative;z-index:2;padding:8px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.grab{width:34px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
+.sh-t{display:flex;align-items:baseline;gap:8px}
+.sh-t b{font-size:14px}
+.sh-sec{font-size:10.5px;font-weight:700;color:var(--muted);margin-top:2px}
+.pers{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:11.5px}
+.pers .av{width:20px;height:20px;border-radius:50%;background:var(--fill);display:grid;place-items:center;font-size:9px;font-weight:700;color:var(--muted)}
+.pers .ro{color:var(--muted);font-size:10.5px}
+.pers .chk{margin-left:auto}.cal .nm+.chk{margin-left:auto}
+.chk{width:15px;height:15px;border:1.5px solid var(--line);border-radius:4px;display:grid;place-items:center;flex:none}
+.chk.on{background:var(--m-fg);border-color:var(--m-fg);color:var(--m-bg)}
+.chk .ic{width:10px;height:10px}
+.srch{display:flex;align-items:center;gap:6px;background:var(--fill);border-radius:9px;padding:5px 8px;color:var(--muted);font-size:11px}
+.sw-row{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:600}
+.tog{width:26px;height:15px;border-radius:999px;background:var(--line);position:relative;margin-left:auto;flex:none}
+.tog::after{content:"";position:absolute;left:2px;top:2px;width:11px;height:11px;border-radius:50%;background:var(--m-bg)}
+.tog.on{background:var(--m-fg)}.tog.on::after{left:13px}
+.lnk{font-size:10.5px;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:7px 9px;border:1px solid var(--line);border-radius:10px}
+.opt.on{border-color:var(--m-fg);border-width:1.5px}
+.rad{width:13px;height:13px;border:1.5px solid var(--line);border-radius:50%;margin-top:2px;flex:none;display:grid;place-items:center}
+.opt.on .rad{border-color:var(--m-fg)}.opt.on .rad::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--m-fg)}
+.opt b{font-size:11.5px}.opt span.d{display:block;color:var(--muted);font-size:10px}
+.cols{display:grid;min-width:0}
+.list-c{display:flex;flex-direction:column;border-right:1px solid var(--line);padding:8px;gap:2px;font-size:10.5px;min-width:0}
+.list-c .r{padding:4px 6px;border-radius:7px;display:flex;gap:6px;align-items:center}
+.list-c .r.on{background:var(--fill);font-weight:700}
+/* AO : mode louange */
+.ao{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--line)}
+.ao .grp{display:flex;gap:6px;align-items:center}
+.ao-body{padding:10px 14px 14px;position:relative;display:flex;flex-direction:column;gap:8px}
+.ao .ln,.ao-body .ln{font-size:11px}
+.ao .cl i{font-size:9.5px}
+.ao-grid{display:grid;grid-template-columns:156px 1fr;align-items:start}
+.ao-grid .pop{position:static;margin:8px;border-radius:10px}
+.rng{position:relative;display:inline-block;white-space:nowrap}
+.rng::after{content:"";position:absolute;inset:auto -5px -3px -5px;height:1.7em;border:1.8px solid #dc2626;border-radius:50%;pointer-events:none}
+.tools56{width:44px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:6px;align-items:center;padding:8px 0}
+.tools56 .tl{width:38px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--muted);font-size:8px;font-weight:700}
+.tools56 .tl.on{background:var(--m-fg);color:var(--m-bg)}
+
+/* ───── piste B : le carnet ───── */
+.dot{width:6px;height:6px;border-radius:50%;background:var(--m-fg);display:block}
+.ini{width:16px;height:16px;border:1px solid var(--m-fg);border-radius:50%;font-size:8px;font-weight:700;display:grid;place-items:center;line-height:1}
+.seg3{display:inline-flex;background:var(--fill);border-radius:999px;padding:2px;font-size:10.5px;font-weight:600}
+.seg3 span{padding:2px 9px;border-radius:999px;color:var(--muted);white-space:nowrap}
+.seg3 span.on{background:var(--m-fg);color:var(--m-bg)}
+.grid2{display:grid;grid-template-columns:1fr 30%}
+.grid2>div{padding:4px 0;min-width:0}
+.grid2 .mgc{background:var(--marge);padding:4px 9px;display:flex;align-items:center}
+.grid2 .lc{padding:4px 10px 4px 12px}
+.note{font-family:var(--f-serif);font-size:10.5px;line-height:1.45;color:var(--m-fg)}
+.note.zh{font-family:var(--f-serif)}
+.nbar{display:flex;align-items:center;gap:6px;margin:1px 0 0 22px;padding:3px 8px;background:var(--marge);border-radius:6px;font-family:var(--f-serif);font-size:10.5px;line-height:1.3}
+.nbar .ic{color:var(--muted);margin-left:auto}
+.nbar.open{align-items:flex-start;padding:5px 8px}
+.margin-ov{position:absolute;right:0;top:0;bottom:0;width:39%;background:var(--marge);padding:10px 10px;display:flex;flex-direction:column;gap:12px;z-index:3}
+.editor-tabs{display:flex;gap:2px;padding:6px 10px;border-bottom:1px solid var(--line);overflow:hidden}
+.field{border:1px solid var(--line);border-radius:9px;padding:6px 8px;font-family:var(--f-serif);font-size:11px;line-height:1.45;background:var(--m-bg)}
+
+/* ───── piste C : les calques ───── */
+.tabs-h{display:flex;gap:0;padding:7px 12px 0;border-bottom:1px solid var(--tab-line)}
+.tabs-h span{padding:4px 12px;border:1px solid var(--tab-line);border-bottom:0;border-radius:7px 7px 0 0;font-size:10.5px;font-weight:600;margin-right:-1px;position:relative;top:1px;background:var(--m-bg)}
+.tabs-h span.on{background:var(--m-fg);color:var(--m-bg);border-color:var(--m-fg)}
+.tabs-h span.off{color:var(--muted)}
+.cwrap{position:relative;margin-right:20px}
+.cpage{border:1px solid var(--tab-line);border-right:0;min-height:100px}
+.rtab{position:absolute;left:100%;margin-left:-1px;writing-mode:vertical-rl;padding:9px 4px;border:1px solid var(--tab-line);border-left:0;border-radius:0 7px 7px 0;font-size:10px;font-weight:600;background:var(--m-bg);white-space:nowrap}
+.rtab.on{background:var(--m-fg);color:var(--m-bg);border-color:var(--m-fg);transform:translateX(4px);padding-right:6px}
+.rtab.off{color:var(--muted)}
+.panel{display:flex;flex-direction:column;gap:6px;padding:10px;border-left:1px solid var(--line);font-size:11px;min-width:0}
+.panel h5{margin:0;font-size:11.5px}
+.cal{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid var(--tab-line);border-radius:8px}
+.cal.off{color:var(--muted)}
+.cal .grip{color:var(--muted);letter-spacing:-2px;font-size:11px;line-height:1}
+.cal .nm{font-weight:600}
+.cal .sm{font-size:9.5px;color:var(--muted);margin-left:auto}
+.banner{display:flex;gap:6px;align-items:center;padding:6px 12px;background:var(--fill);font-size:10.5px;font-weight:600}
+
+/* ───── petit écran de revue ───── */
+@media (max-width:620px){
+  .frame.tablet,.frame.land{zoom:.8}.frame.desktop{zoom:.6}
+  .dev.w-tb,.dev.w-dk{width:auto}
+  body{font-size:14.5px}
+  h1{font-size:25px}
+}
+
+.frame.desktop .btn{padding:2px 7px;font-size:10px}.frame.desktop .bar{gap:4px;flex-wrap:nowrap;padding:7px 8px;overflow:hidden}
+.cols>*{min-width:0}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/><path d="M14 7l3 3"/></symbol><symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></symbol><symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 4l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3V4z"/><path d="M5 17a3 3 0 013-3h11"/></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol><symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol><symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h14v12l-5 4H5z"/><path d="M14 20v-4h5"/></symbol></defs></svg>
+<div class="wrap">
+
+<header class="intro">
+ <span class="eyebrow">Planche · 11/11/2026 · à trancher avant spec</span>
+ <h1>Ma partition : une seule par chant, qui suit le musicien</h1>
+ <p>Demande de Timothée, points 2 et 3 de « le site devient le pupitre » : fusionner « Ma version » et « Adapter » en une seule partition personnelle par chant, que la personne partage à des gens choisis, et garder ses annotations sur le chant comme dans forScore. But : au culte, chacun joue sur le site parce que sa partition y est la sienne et le suit de dimanche en dimanche. Rien n'est codé. Les chants, les accords et les libellés sont ceux du site ; les noms de personnes sont fictifs.</p>
+</header>
+
+<section>
+ <span class="eyebrow">Sujet · Ma partition</span>
+ <h2>Pourquoi deux boutons, et une partition qui repart de zéro</h2>
+ <div class="constat">
+  <div class="box"><h3>Adapter et Ma version s'excluent</h3><p><b>Adapter</b> écrit sur le chant de la setlist, pour tous, et n'est offert qu'à qui peut modifier la setlist ; <b>Ma version</b> écrit pour soi seul. Un seul des deux à la fois (<code>toggleAdapter</code> et <code>toggleMaVersion</code>) : une barre qui aligne Présentation · Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange.</p></div>
+  <div class="box"><h3>Tout est rangé par setlist</h3><p>Ma version vit dans <code>setlists/{id}/versions/{uid}</code> ; les annotations dans <code>annotations/{uid}__{setlistId}__{pageKey}</code>. Dans une nouvelle setlist, le musicien repart de zéro : c'est ce que forScore ne fait pas.</p></div>
+  <div class="box"><h3>Le partage est « tout le monde »</h3><p>Le bouton « Partager ma version » est un interrupteur par chant, visible de tous. La demande : des personnes choisies. Le badge ambre « Version modifiée / Ma version / Version de … » est le seul signe de provenance.</p></div>
+ </div>
+</section>
+
+<section>
+ <span class="eyebrow">Les trois pistes d'un coup d'œil</span>
+ <div class="compare">
+  <div class="box reco"><div class="piste-head"><h3>A. Au crayon</h3><span class="tag">Recommandée</span></div><p>Un seul geste « Crayon » ; on dit en enregistrant si c'est pour soi ou pour tout le culte.</p><p class="cap"><b>Ce qui est à moi, d'un coup d'œil :</b> filet graphite = toi, filet encre = le culte, rien = original.</p><p class="cap"><b>Le responsable :</b> « Enregistrer » ouvre : Pour moi, ou Pour tout le culte.</p><p class="cap"><b>Le coût :</b> une vingtaine de fichiers ; la plus simple à lire en plein culte.</p></div>
+  <div class="box "><div class="piste-head"><h3>B. Le carnet</h3></div><p>Ma partition vit sur la page du chant comme un carnet, avec ses notes de marge.</p><p class="cap"><b>Ce qui est à moi, d'un coup d'œil :</b> point d'encre = à moi, initiales = carnet d'un autre.</p><p class="cap"><b>Le responsable :</b> « Modifier la setlist », ligne « Partition du culte : originale ▾ ».</p><p class="cap"><b>Le coût :</b> deux lieux d'édition ; marge cachée sur téléphone.</p></div>
+  <div class="box "><div class="piste-head"><h3>C. Les calques</h3></div><p>Des transparents empilés sur le chant : culte, moi, Joachim.</p><p class="cap"><b>Ce qui est à moi, d'un coup d'œil :</b> onglets, exposant (J) sur chaque retouche.</p><p class="cap"><b>Le responsable :</b> écrit sur le calque « Culte du 8 nov. ».</p><p class="cap"><b>Le coût :</b> la plus chère : fusion par ligne, priorité, origine.</p></div>
+ </div>
+</section>
+
+<section>
+ <span class="eyebrow">Les pistes aux trois tailles</span>
+ <h2>Où l'on entre, ce qu'on retouche, à qui l'on partage</h2>
+ <p>Chaque piste montre la barre de la setlist, la page d'un chant, le mode louange, la feuille de personnes, le geste du responsable et le choix de la partition d'un autre. Les maquettes sont à l'échelle de principe : les largeurs de 390, 820 et 1 280 px sont celles des cibles de lecture.</p>
+ <div class="piste reco" id="piste-a">
+ <div class="piste-head"><h3>A. Au crayon</h3><span class="tag">Recommandée</span></div>
+ <p>La partition imprimée est celle du culte ; ce que tu y changes, accords, paroles, ordre ou traits, se fait au crayon, d'un seul geste « Crayon », et au moment d'enregistrer tu dis si c'est pour toi ou, si tu es responsable, pour tout le culte.</p>
+ <dl class="fiche"><div><dt>Palette</dt><dd>Fond blanc, encre #1c1c1e (le CSS dit blanc, pas crème). Une seule couleur nouvelle, le graphite : filet de marge de 2 px et libellé « ma partition ». Rien = chant d'origine, encre = le culte, graphite = toi. Le badge ambre disparaît.<div class="swatches"><span class="sw"><i style="background:#1c1c1e"></i>encre #1c1c1e</span><span class="sw"><i style="background:#5a5e66"></i>graphite #5a5e66</span><span class="sw"><i style="background:#f2f2f7"></i>sombre : encre</span><span class="sw"><i style="background:#a3a7ae"></i>sombre : graphite #a3a7ae</span></div></dd></div><div><dt>Typo</dt><dd>Police système (SF Pro, Roboto, Segoe ; PingFang SC, Noto Sans SC). Ce qui est à toi change de graisse et de couleur seulement : accord retouché en 600, parole en graphite, pas d'italique. Note de marge : 0,8125 rem, interligne 1,35.</dd></div><div><dt>Matières</dt><dd>Papier plat, aucune profondeur. Feuilles du bas (téléphone) ou popovers ancrés (tablette, ordinateur), opaques ; voile à 30 % pour la feuille de partage seulement.</dd></div><div><dt>Mouvement</dt><dd>Feuilles : ressort amorti à 1,0 (réponse 0,3), rattrapables. Entrée en Crayon : fondu de 120 ms sur place. Mode louange : aucune animation. Mouvement réduit : fondu de 150 ms.</dd></div><div><dt>Accords, sections, 简谱</dt><dd>Gelés, intacts : l'accord retouché reste bleu #3f63cf, seule sa graisse change.</dd></div><div><dt>À regarder de près</dt><dd>Une règle de doigt claire (doigt = retoucher, stylet = tracer) ; filet de 2 px à vérifier en plein soleil ; « Passer au culte » pour rattraper un enregistrement trop vite validé.</dd></div></dl>
+ <span class="rowlabel">Les trois tailles</span>
+ <div class="devices">
+  <div class="dev w-ph"><span class="dev-label">Téléphone · 390 px</span><div class="frame phone"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Culte du 8 novembre</b></div>
+<div class="bar"><span class="btn ">Accords</span><span class="btn on"><svg class="ic " aria-hidden="true"><use href="#i-pen"/></svg>Crayon</span><span class="btn pri">Louange</span></div>
+<div class="chead"><span class="num">1</span><b>Hosanna</b><span class="key">D</span><span class="grow"></span></div>
+<div class="je"><span class="btn ghost">Je lis : ma partition<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></span></div>
+<div class="tete gr">Ma partition · retouchée le 2 nov.</div>
+<div class="pt">
+<span class="sec-l vs">Couplet 1</span><div class="ln me"><span class="tx"><span class="cl"><i class="">D</i><u> Je vois <em class="m">notre</em> Roi de gloire</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">Bm</i><u>qui revient sur les nuées.</u></span></span></div>
+<span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln me"><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="me">Bm7</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div>
+<span class="sec-l br">Pont</span><div class="ln "><span class="tx"><span class="cl"><i class="">G</i><u>Prends mon cœur et rends-le p</u></span><span class="cl"><i class="">A</i><u>ur,</u></span></span></div><div class="ln cu"><span class="tx"><span class="cl"><i class="">D/F#</i><u>Ouvre grand mes yeux à Ta </u></span><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div>
+</div>
+<div class="dock"><span class="tool on">Accord</span><span class="tool">Paroles</span><span class="tool">Ordre</span><span class="tool">Trait</span><span class="grow"></span><span class="btn pri">Enregistrer</span></div></div><p class="cap">Barre de la setlist : Adapter et Ma version disparaissent au profit d'un seul « Crayon » entre Accords et Louange (même entrée dans le menu ⋯ étroit). En Crayon, barre basse fixe : Accord · Paroles · Ordre · Trait, puis Enregistrer. Trait gris = retouché par toi, trait encre = retouché pour le culte, rien = original.</p></div>
+  <div class="dev w-tb"><span class="dev-label">Tablette portrait · 820 px</span><div class="frame tablet"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Culte du 8 novembre</b></div>
+<div class="bar"><span class="btn ">Accords</span><span class="btn "><svg class="ic " aria-hidden="true"><use href="#i-pen"/></svg>Crayon</span><span class="btn pri">Louange</span></div>
+<div class="chead"><span class="num">1</span><b>Hosanna</b><span class="key">D</span><span class="grow"></span></div>
+<div class="je"><span class="btn on">Je lis : ma partition<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></span></div>
+<div class="tete gr">Ma partition · retouchée le 2 nov.</div>
+<div class="pt" style="min-height:300px">
+<span class="sec-l vs">Couplet 1</span><div class="ln me"><span class="tx"><span class="cl"><i class="">D</i><u> Je vois <em class="m">notre</em> Roi de gloire</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">Bm</i><u>qui revient sur les nuées.</u></span></span></div>
+<span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln me"><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="me">Bm7</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div>
+<span class="sec-l br">Pont</span><div class="ln "><span class="tx"><span class="cl"><i class="">G</i><u>Prends mon cœur et rends-le p</u></span><span class="cl"><i class="">A</i><u>ur,</u></span></span></div><div class="ln cu"><span class="tx"><span class="cl"><i class="">D/F#</i><u>Ouvre grand mes yeux à Ta </u></span><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div>
+</div>
+<div class="pop" style="left:12px;top:146px;width:190px;padding:10px;border-radius:12px"><div style="display:flex;flex-direction:column;gap:7px">
+  <div class="sh-t"><b>Partager ma partition</b><span class="sub">Hosanna</span></div>
+  <div class="sh-sec">Ce dimanche avec toi</div>
+  <div><div class="pers"><span class="av">M</span><b>Maëlle</b><span class="ro">clavier</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span></div><div class="pers"><span class="av">J</span><b>Joachim</b><span class="ro">basse</span><span class="chk "></span></div><div class="pers"><span class="av">I</span><b>Ines</b><span class="ro">voix</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span></div></div>
+  <div class="srch"><svg class="ic " aria-hidden="true"><use href="#i-search"/></svg>Chercher parmi tous les membres</div>
+  <div class="sw-row">Inclure mes traits<span class="tog"></span></div>
+  <div class="sh-t"><span class="lnk">Partager toutes mes partitions avec cette personne</span></div>
+  
+  <div style="display:flex;gap:6px;justify-content:flex-end"><span class="btn ">Annuler</span><span class="btn pri">Partager</span></div></div></div></div><p class="cap">Même barre, libellés visibles, partition pleine largeur. Le partage s'ouvre en popover de 380 px sous « Je lis ». En paysage (barre latérale réduite), les outils du Crayon se rangent à droite en colonne de 56 px.</p></div>
+  <div class="dev w-dk"><span class="dev-label">Ordinateur · 1 280 px</span><div class="frame desktop"><div class="cols" style="grid-template-columns:100px 1fr">
+<div class="list-c"><b style="font-size:11px;padding:2px 6px 6px">Culte du 8 nov.</b><span class="r on">1 · Hosanna</span><span class="r">2 · <span class="zh">一生敬拜你</span></span><span class="r">3 · À l'agneau</span></div>
+<div style="position:relative">
+<div class="bar"><span class="btn ">Présentation</span><span class="btn "><svg class="ic " aria-hidden="true"><use href="#i-pen"/></svg>Crayon</span><span class="btn ">Modifier</span><span class="btn ">PDF</span><span class="btn"><svg class="ic " aria-hidden="true"><use href="#i-more"/></svg></span><span class="grow"></span><span class="btn pri">Mode louange</span></div>
+<div class="chead"><span class="num">1</span><b>Hosanna</b><span class="key">D</span><span class="grow"></span></div>
+<div class="je"><span class="btn on">Je lis : ma partition<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></span></div>
+<div class="tete gr">Ma partition · retouchée le 2 nov.</div>
+<div class="pt" style="min-height:250px">
+<span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln me"><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="me">Bm7</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div>
+<span class="sec-l br">Pont</span><div class="ln "><span class="tx"><span class="cl"><i class="">G</i><u>Prends mon cœur et rends-le p</u></span><span class="cl"><i class="">A</i><u>ur,</u></span></span></div><div class="ln cu"><span class="tx"><span class="cl"><i class="">D/F#</i><u>Ouvre grand mes yeux à Ta </u></span><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div>
+</div>
+<div class="pop" style="left:12px;top:100px;width:230px">
+<div class="it on"><span class="mk gr"></span>Ma partition<svg class="ic " aria-hidden="true"><use href="#i-check"/></svg><span class="sm">retouchée le 2 nov.</span></div>
+<div class="it"><span class="mk cu"></span>Celle du culte<span class="sm">8 novembre</span></div>
+<div class="it"><span class="mk o"></span>Maëlle<span class="sm">partagée avec toi</span></div>
+<div class="it"><span class="mk o"></span>Joachim<span class="sm">partagée avec toi</span></div>
+<hr><div class="it">Partager ma partition…</div></div>
+</div></div></div><p class="cap">Dans la rangée Présentation · Modifier · PDF · ⋯ · Mode louange, Adapter et Ma version deviennent « Crayon ». Le menu « Je lis » choisit la partition : la tienne, celle du culte, ou celle de Maëlle ou Joachim, seulement s'ils te l'ont partagée. Lecture plafonnée à 1 440 px.</p></div>
+ </div>
+ <span class="rowlabel">Les autres entrées, le partage, le responsable</span>
+ <div class="devices">
+  <div class="dev w-ph"><span class="dev-label">Page d'un chant · téléphone</span><div class="frame phone"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Chant</b></div>
+<div class="pt" style="padding-bottom:0"><h4 class="zh">一生敬拜你</h4><span class="sub">Yī shēng jìng bài nǐ · <span class="key" style="padding:0 6px">C</span> · ♩ 66 · 4/4</span></div>
+<div class="bar" style="border-bottom:0"><span class="btn ">Vidéo</span><span class="btn ">PDF</span><span class="btn "><svg class="ic " aria-hidden="true"><use href="#i-pen"/></svg>Crayon</span></div>
+<div class="je" style="padding-top:0"><span class="btn ghost">Je lis : ma partition<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></span></div>
+<div class="tete gr">Ma partition · retouchée le 2 nov.</div>
+<div class="pt"><span class="sec-l vs">主歌 / Couplet</span>
+<div class="ln me"><span class="tx"><span class="cl z"><i>&nbsp;</i><u>亲爱</u><s>qīn ài</s></span><span class="cl z"><i>C</i><u>耶稣，你真</u><s>yē sū nǐ zhēn</s></span><span class="cl z"><i class="me">G/B</i><u>爱我，毫无</u><s>ài wǒ háo wú</s></span><span class="cl z"><i>F/A</i><u>保留，</u><s>bǎo liú</s></span></span></div>
+<div class="ln"><span class="tx"><span class="cl z"><i>G/B</i><u>因你</u><s>yīn nǐ</s></span><span class="cl z"><i>Am</i><u>舍命，我回到</u><s>shě mìng wǒ huí dào</s></span><span class="cl z"><i>Em</i><u>父神面</u><s>fù shén miàn</s></span></span></div></div></div><p class="cap">« Crayon » prend la place de l'étincelle dans la rangée Vidéo · PDF. Le pinyin reste aligné sous les caractères.</p></div>
+  <div class="dev w-tb"><span class="dev-label">Mode louange · tablette paysage</span><div class="frame land"><div class="ao"><div class="grp"><span class="btn ">Setlist</span><span class="btn ">Repères</span><span class="btn on">Je joue<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></span></div><span class="grow"></span><div class="grp"><span class="btn on"><svg class="ic " aria-hidden="true"><use href="#i-pen"/></svg>Crayon</span><span class="btn sq">D</span><span class="btn sq">T</span></div></div>
+<div class="ao-grid" style="grid-template-columns:140px 1fr 44px">
+<div class="pop">
+<div class="it"><b>Clavier</b><span class="sm">rôle</span></div><hr>
+<div class="it" style="font-weight:700;font-size:10px;gap:3px;padding:5px 4px">Partition : la mienne<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></div>
+<div class="it on"><span class="mk gr"></span>La mienne<svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></div>
+<div class="it"><span class="mk cu"></span>Celle du culte</div>
+<div class="it"><span class="mk o"></span>Joachim</div>
+<div class="it"><span class="mk o"></span>Maëlle</div></div>
+<div class="ao-body" style="min-height:215px;padding:10px 8px 14px 4px">
+<span class="sec-l ch">Refrain</span><div class="ln"><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, </u></span><span class="rng"><span class="cl"><i class="">&nbsp;</i><u>hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></span></div><div class="ln me"><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="me">Bm7</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div>
+<span class="sec-l br">Pont</span><div class="ln "><span class="tx"><span class="cl"><i class="">G</i><u>Prends mon cœur et rends-le p</u></span><span class="cl"><i class="">A</i><u>ur,</u></span></span></div><div class="ln cu"><span class="tx"><span class="cl"><i class="">D/F#</i><u>Ouvre grand mes yeux à Ta </u></span><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div></div>
+<div class="tools56"><span class="tl on">Accord</span><span class="tl">Paroles</span><span class="tl">Ordre</span><span class="tl">Trait</span></div></div></div><p class="cap">État AO : « Annoter » devient « Crayon » (même place, même icône). « Je joue » gagne une ligne « Partition : la mienne ▾ » sous le rôle : choisir celle de Joachim se fait sans quitter la scène. Cercle autour de « hosanna » accroché au mot. Aucune animation.</p></div>
+  <div class="dev w-ph"><span class="dev-label">Feuille de partage · téléphone</span><div class="frame phone"><div class="scrim"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Culte du 8 novembre</b></div><div class="pt" style="padding-bottom:20px"><span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln me"><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="me">Bm7</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div></div></div><div class="sheet-b"><div class="grab"></div>
+  <div class="sh-t"><b>Partager ma partition</b><span class="sub">Hosanna</span></div>
+  <div class="sh-sec">Ce dimanche avec toi</div>
+  <div><div class="pers"><span class="av">M</span><b>Maëlle</b><span class="ro">clavier</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span></div><div class="pers"><span class="av">J</span><b>Joachim</b><span class="ro">basse</span><span class="chk "></span></div><div class="pers"><span class="av">I</span><b>Ines</b><span class="ro">voix</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span></div></div>
+  <div class="srch"><svg class="ic " aria-hidden="true"><use href="#i-search"/></svg>Chercher parmi tous les membres</div>
+  <div class="sw-row">Inclure mes traits<span class="tog"></span></div>
+  <div class="sh-t"><span class="lnk">Partager toutes mes partitions avec cette personne</span></div>
+  
+  <div style="display:flex;gap:6px;justify-content:flex-end"><span class="btn ">Annuler</span><span class="btn pri">Partager</span></div></div></div><p class="cap">« Ce dimanche avec toi » d'abord (équipe du planning), puis tous les membres ; une case par personne ; « Inclure mes traits » éteint par défaut ; voile à 30 %.</p></div>
+  <div class="dev w-ph"><span class="dev-label">Responsable · téléphone</span><div class="frame phone"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Culte du 8 novembre</b></div>
+<div class="chead"><span class="num">1</span><b>Hosanna</b><span class="key">D</span><span class="grow"></span></div>
+<div class="tete gr">Ma partition · retouchée le 2 nov.</div>
+<div class="pt"><span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln me"><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="me">Bm7</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div>
+<span class="lnk" style="margin-left:10px;color:var(--graphite)">Passer au culte</span></div>
+<div class="sheet-b" style="margin-top:0;border-radius:0">
+<div class="sh-t"><b>Enregistrer ma retouche</b></div>
+<div class="opt on"><span class="rad"></span><div><b>Pour moi</b><span class="d">Seul toi la vois, dans tous tes cultes.</span></div></div>
+<div class="opt"><span class="rad"></span><div><b>Pour tout le culte du 8 novembre</b><span class="d">Responsable : tout le monde la lit.</span></div></div>
+<div style="display:flex;gap:6px;justify-content:flex-end"><span class="btn ">Annuler</span><span class="btn pri">Enregistrer</span></div></div></div><p class="cap">« Enregistrer » ouvre un choix à deux lignes, « Pour moi » par défaut. « Passer au culte » rattrape un choix trop vite fait.</p></div>
+ </div></div>
+ <div class="piste " id="piste-b">
+ <div class="piste-head"><h3>B. Le carnet</h3><span class="tag neutre">Autre piste</span></div>
+ <p>Ma partition vit sur la page du chant, comme un carnet de chants personnel avec ses notes de marge ; la setlist ne fait que l'emprunter, et un responsable peut proposer son carnet comme partition du culte.</p>
+ <dl class="fiche"><div><dt>Palette</dt><dd>Fond blanc, encre #1c1c1e ; marge gris papier froid #f3f4f5 (pas crème). Mien : point d'encre de 6 px devant la ligne ; d'un autre : ses initiales dans un rond de 18 px à filet d'encre. Pas de couleur nouvelle : la structure distingue, pas la teinte.<div class="swatches"><span class="sw"><i style="background:#f3f4f5"></i>marge #f3f4f5</span><span class="sw"><i style="background:#151517"></i>sombre : marge #151517</span><span class="sw"><i style="background:#f2f2f7"></i>sombre : points #f2f2f7</span></div></dd></div><div><dt>Typo</dt><dd>Chrome en police système. Notes de marge en Source Serif 4, 0,875 rem, interligne 1,45 ; en chinois, serif du système (Songti SC, Noto Serif CJK) puisque le texte tapé n'est pas dans le sous-ensemble du build. Titres inchangés.</dd></div><div><dt>Matières</dt><dd>Deux plans, partition (blanc) et marge (gris), séparés par un simple changement de fond, sans filet ni ombre. Téléphone : la note se replie sous sa ligne, en bande d'une ligne.</dd></div><div><dt>Mouvement</dt><dd>Note qui se déplie (téléphone) : ressort amorti à 1,0, réponse 0,25, interruptible. Changement de carnet : fondu de 120 ms sur place. Mode louange : aucune animation. Mouvement réduit : dépliage instantané.</dd></div><div><dt>Accords, sections, 简谱</dt><dd>Gelés, intacts.</dd></div><div><dt>À regarder de près</dt><dd>Reste « document » (marge, serif) alors que « Sobre sur crème » a été reproché ; la marge, cœur de l'idée, est cachée sur téléphone et en tablette portrait ; deux endroits pour éditer ; une police de plus à charger (environ 40 Ko).</dd></div></dl>
+ <span class="rowlabel">Les trois tailles</span>
+ <div class="devices">
+  <div class="dev w-ph"><span class="dev-label">Téléphone · 390 px</span><div class="frame phone"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Fermer</span><b class="tt">Mon carnet · Hosanna</b></div>
+<div class="editor-tabs"><span class="tool">Accords</span><span class="tool">Paroles</span><span class="tool">Ordre</span><span class="tool on">Notes</span><span class="tool">Traits</span></div>
+<div class="pt">
+<span class="sec-l ch">Refrain</span>
+<div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div>
+<div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div>
+<div class="field" style="margin-left:22px"><span style="color:var(--muted);font-size:9.5px;font-family:var(--f-ui);font-weight:600;display:block">Note sur cette ligne</span>Tenir la basse sur Bm, couper après « Seigneur ».</div>
+<span class="sec-l br">Pont</span><div class="ln "><span class="tx"><span class="cl"><i class="">D</i><u>Ouvre grand mes yeux à Ta </u></span><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div>
+</div>
+<div class="dock"><span class="btn ">Annuler</span><span class="grow"></span><span class="btn pri">Enregistrer mon carnet</span></div></div><p class="cap">Éditeur plein écran du carnet : Accords · Paroles · Ordre · Notes · Traits. Sur téléphone, la note se replie sous sa ligne ; on entre par « Modifier mon carnet » en bas de la page du chant.</p></div>
+  <div class="dev w-tb"><span class="dev-label">Tablette portrait · 820 px</span><div class="frame tablet"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Culte du 8 novembre</b></div>
+<div class="bar"><span class="btn ">Accords</span><span class="btn "><svg class="ic " aria-hidden="true"><use href="#i-book"/></svg>Ouvrir mon carnet</span><span class="btn pri">Louange</span><span class="grow"></span><span class="btn on">Marge</span></div>
+<div class="chead"><span class="num">1</span><b>Hosanna</b><span class="key">D</span><span class="grow"></span></div>
+<div class="je"><span class="dot"></span><b style="font-size:10.5px">Ton carnet</b></div>
+<div style="height:6px"></div>
+<div class="grid2" style="grid-template-columns:1fr 36%"><div class="lc"><span class="sec-l vs">Couplet 1</span></div><div class="mgc"></div><div class="lc"><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">D</i><u> Je vois le Roi de gloire</u></span></span></div></div><div class="mgc"><span class="note">Couper la reprise du pont.</span></div><div class="lc"><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">Bm</i><u>qui revient sur les nuées.</u></span></span></div></div><div class="mgc"></div><div class="lc"><span class="sec-l ch">Refrain</span></div><div class="mgc"></div><div class="lc"><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div></div><div class="mgc"></div><div class="lc"><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div></div><div class="mgc"><span class="note">Tenir la basse sur Bm, couper après « Seigneur ».</span></div><div class="lc"><span class="sec-l br">Pont</span></div><div class="mgc"></div><div class="lc"><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">G</i><u>Prends mon cœur et rends-le p</u></span><span class="cl"><i class="">A</i><u>ur,</u></span></span></div></div><div class="mgc"></div></div></div><p class="cap">Barre de la setlist : « Ouvrir mon carnet » remplace Ma version, Adapter disparaît ; « Ton carnet » (point d'encre) sous le titre. Marge masquée par défaut : le bouton « Marge » l'ouvre en superposition à droite (320 px), les notes alignées sur leurs lignes.</p></div>
+  <div class="dev w-dk"><span class="dev-label">Ordinateur · 1 280 px</span><div class="frame desktop"><div class="cols" style="grid-template-columns:100px 1fr">
+<div class="list-c"><b style="font-size:11px;padding:2px 6px 6px">Culte du 8 nov.</b><span class="r on">1 · Hosanna<span class="dot" style="margin-left:auto"></span></span><span class="r">2 · <span class="zh">一生敬拜你</span></span><span class="r">3 · À l'agneau</span></div>
+<div>
+<div class="bar"><span class="btn ">Présentation</span><span class="btn "><svg class="ic " aria-hidden="true"><use href="#i-book"/></svg>Ouvrir mon carnet</span><span class="btn ">Modifier</span><span class="btn ">PDF</span><span class="btn"><svg class="ic " aria-hidden="true"><use href="#i-more"/></svg></span><span class="grow"></span><span class="btn pri">Mode louange</span></div>
+<div class="chead"><span class="num">1</span><b>Hosanna</b><span class="key">D</span><span class="grow"></span><span class="seg3"><span>Original</span><span>Mon carnet</span><span class="on">Ines</span></span></div>
+<div class="je"><span class="ini">I</span><b style="font-size:10.5px">Carnet d'Ines</b></div>
+<div style="height:6px"></div>
+<div class="grid2" style="grid-template-columns:1fr 28%"><div class="lc"><span class="sec-l ch">Refrain</span></div><div class="mgc"></div><div class="lc"><div class="ln "><span class="g"><span class="ini">I</span></span><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div></div><div class="mgc"></div><div class="lc"><div class="ln "><span class="g"><span class="ini">I</span></span><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div></div><div class="mgc"><span class="note">À deux voix à partir de « hosanna à Toi ».</span></div><div class="lc"><span class="sec-l br">Pont</span></div><div class="mgc"></div><div class="lc"><div class="ln "><span class="g"><span class="ini">I</span></span><span class="tx"><span class="cl"><i class="">G</i><u>Prends mon cœur et rends-le p</u></span><span class="cl"><i class="">A</i><u>ur,</u></span></span></div></div><div class="mgc"><span class="note">Piano seul sur le premier vers.</span></div><div class="lc"><div class="ln "><span class="g"><span class="ini">I</span></span><span class="tx"><span class="cl"><i class="">D</i><u>Ouvre grand mes yeux à Ta </u></span><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div></div><div class="mgc"></div></div>
+</div></div></div><p class="cap">Marge visible, 360 px fixes, partition sur le reste jusqu'au plafond de 1 440 px. Le segment « Original · Mon carnet · Ines » (seulement ce qui existe) choisit la partition ; ici le carnet d'Ines, ses initiales devant chaque ligne.</p></div>
+ </div>
+ <span class="rowlabel">Les autres entrées, le partage, le responsable</span>
+ <div class="devices">
+  <div class="dev w-ph"><span class="dev-label">Page d'un chant · téléphone</span><div class="frame phone"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Chant</b></div>
+<div class="pt" style="padding-bottom:0"><h4 class="zh">一生敬拜你</h4><span class="sub">Yī shēng jìng bài nǐ · <span class="key" style="padding:0 6px">C</span> · ♩ 66 · 4/4</span></div>
+<div style="padding:8px 12px 0"><span class="seg3"><span>Original</span><span class="on">Mon carnet</span><span>Ines</span></span></div>
+<div class="bar" style="border-bottom:0"><span class="btn ">Vidéo</span><span class="btn ">PDF</span></div>
+<div class="pt" style="padding-top:2px"><span class="sec-l vs">主歌 / Couplet</span>
+<div class="ln"><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl z"><i>&nbsp;</i><u>亲爱</u><s>qīn ài</s></span><span class="cl z"><i>C</i><u>耶稣，你真</u><s>yē sū nǐ zhēn</s></span><span class="cl z"><i>G/B</i><u>爱我，毫无</u><s>ài wǒ háo wú</s></span><span class="cl z"><i>F/A</i><u>保留，</u><s>bǎo liú</s></span></span></div>
+<div class="nbar"><span class="zh" style="font-family:var(--f-serif)">第二段不要加鼓。</span><svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></div>
+<div class="ln"><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl z"><i>G/B</i><u>因你</u><s>yīn nǐ</s></span><span class="cl z"><i>Am</i><u>舍命，我回到</u><s>shě mìng wǒ huí dào</s></span><span class="cl z"><i>Em</i><u>父神面</u><s>fù shén miàn</s></span></span></div>
+<div class="nbar"><span>Note repliée</span><svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></div>
+<span style="margin-top:4px"><span class="btn pri"><svg class="ic " aria-hidden="true"><use href="#i-book"/></svg>Modifier mon carnet</span></span></div></div><p class="cap">Entrée principale : le segment en tête de la page du chant. Notes repliées sous leurs lignes, dépliables au toucher ; « Modifier mon carnet » en bas.</p></div>
+  <div class="dev w-tb"><span class="dev-label">Mode louange · tablette paysage</span><div class="frame land"><div class="ao"><div class="grp"><span class="btn ">Setlist</span><span class="btn ">Repères</span><span class="btn on">Je joue<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></span></div><span class="grow"></span><div class="grp"><span class="btn "><svg class="ic " aria-hidden="true"><use href="#i-note"/></svg>Annoter</span><span class="btn sq">D</span><span class="btn sq">T</span></div></div>
+<div class="ao-grid" style="grid-template-columns:132px 1fr">
+<div class="pop">
+<div class="it"><b>Clavier</b><span class="sm">rôle</span></div><hr>
+<div class="it" style="font-weight:700">Carnet<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></div>
+<div class="it">Original</div>
+<div class="it on"><span class="dot"></span>Mon carnet<svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></div>
+<div class="it"><span class="ini">I</span>Carnet d'Ines</div></div>
+<div><div class="grid2" style="grid-template-columns:1fr 28%"><div class="lc"><span class="sec-l ch">Refrain</span></div><div class="mgc"></div><div class="lc"><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div></div><div class="mgc"></div><div class="lc"><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div></div><div class="mgc"><span class="note">Tenir la basse sur Bm.</span></div><div class="lc"><span class="sec-l br">Pont</span></div><div class="mgc"></div><div class="lc"><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">D</i><u>Ouvre grand mes yeux à Ta</u></span></span></div></div><div class="mgc"><span class="note">Reprendre sans batterie.</span></div><div class="lc"><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div></div><div class="mgc"></div></div></div></div></div><p class="cap">« Je joue » propose les carnets ; la marge ne s'affiche qu'en paysage (28 % de la largeur). « Annoter » écrit des notes de marge ou des traits.</p></div>
+  <div class="dev w-ph"><span class="dev-label">Feuille de partage · téléphone</span><div class="frame phone"><div class="scrim"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Culte du 8 novembre</b></div><div class="pt" style="padding-bottom:20px"><span class="sec-l ch">Refrain</span><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln "><span class="g"><span class="dot"></span></span><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm</i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div></div></div><div class="sheet-b"><div class="grab"></div>
+  <div class="sh-t"><b>Prêter mon carnet</b><span class="sub">Hosanna</span></div>
+  <div class="sh-sec">Ce dimanche avec toi</div>
+  <div><div class="pers"><span class="av">M</span><b>Maëlle</b><span class="ro">clavier</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span></div><div class="pers"><span class="av">J</span><b>Joachim</b><span class="ro">basse</span><span class="chk "></span></div><div class="pers"><span class="av">I</span><b>Ines</b><span class="ro">voix</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span></div></div>
+  <div class="srch"><svg class="ic " aria-hidden="true"><use href="#i-search"/></svg>Chercher parmi tous les membres</div>
+  <div class="sw-row">Inclure mes traits<span class="tog"></span></div>
+  <div class="sh-t"><span class="lnk">Partager toutes mes partitions avec cette personne</span></div>
+  
+  <div style="display:flex;gap:6px;justify-content:flex-end"><span class="btn ">Annuler</span><span class="btn pri">Prêter</span></div></div></div><p class="cap">« Prêter mon carnet » : même structure que A, équipe du dimanche d'abord, puis recherche.</p></div>
+  <div class="dev w-ph"><span class="dev-label">Responsable · téléphone</span><div class="frame phone"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Modifier la setlist</b></div>
+<div style="padding:10px 12px;display:flex;flex-direction:column;gap:10px">
+<div style="border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:7px">
+<div style="display:flex;gap:8px;align-items:center"><span class="num" style="width:18px;height:18px;border-radius:50%;background:var(--fill);display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--muted)">1</span><b style="font-size:13px">Hosanna</b><span class="key">D</span></div>
+<div><span class="btn on">Partition du culte : originale<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></span></div>
+<div class="pop" style="position:static;border-radius:10px">
+<div class="it on">Originale<svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></div>
+<div class="it"><span class="dot"></span>Mon carnet</div>
+<div class="it"><span class="ini">M</span>Carnet de Maëlle</div></div>
+<span class="sub">Choisir un carnet en fait la partition du culte, par copie datée.</span></div>
+<div style="border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;gap:8px;align-items:center"><span style="width:18px;height:18px;border-radius:50%;background:var(--fill);display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--muted)">2</span><b class="zh" style="font-size:13px">一生敬拜你</b><span class="grow"></span><span class="sub">originale</span></div>
+<div style="border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;gap:8px;align-items:center"><span style="width:18px;height:18px;border-radius:50%;background:var(--fill);display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--muted)">3</span><b style="font-size:13px">À l'agneau</b><span class="grow"></span><span class="sub">originale</span></div>
+</div>
+<div class="dock"><span class="btn ">Annuler</span><span class="grow"></span><span class="btn pri">Enregistrer</span></div></div><p class="cap">Le geste ex-Adapter passe dans « Modifier la setlist » : une ligne « Partition du culte : originale ▾ » par chant ; choisir un carnet en fait la partition du culte, par copie datée.</p></div>
+ </div></div>
+ <div class="piste " id="piste-c">
+ <div class="piste-head"><h3>C. Les calques</h3><span class="tag neutre">Autre piste</span></div>
+ <p>Comme les transparents posés sur un pupitre, chaque partition est un calque sur le chant d'origine : le calque du culte, le mien, celui de Joachim ; on choisit lesquels on empile, et un responsable pose le calque du culte pour tous.</p>
+ <dl class="fiche"><div><dt>Palette</dt><dd>Fond blanc, encre : les calques ne prennent pas de teinte. Onglets de classeur sur le bord droit : actif plein d'encre, texte blanc ; inactifs à filet de 1 px #e4e4e5. Origine d'une retouche : initiale en exposant gris #6c6c72 (Bm⁽ᴶ⁾).<div class="swatches"><span class="sw"><i style="background:#e4e4e5"></i>filet #e4e4e5</span><span class="sw"><i style="background:#6c6c72"></i>exposant #6c6c72</span><span class="sw"><i style="background:#f2f2f7"></i>sombre : onglet actif</span></div></dd></div><div><dt>Typo</dt><dd>Police système partout. Noms d'onglets en 0,8125 rem, demi-gras, sans capitales. Exposants en 0,6875 rem, chiffres et lettres tabulaires pour ne pas décaler les accords.</dd></div><div><dt>Matières</dt><dd>Profondeur réelle mais plate : les onglets dépassent de 4 px, décalés verticalement, sans ombre ni flou. Panneau « Calques » : liste à cases, ordre par glissement, le calque du haut gagne.</dd></div><div><dt>Mouvement</dt><dd>Réordonner : glisser 1:1 puis ressort amorti à 1,0 (réponse 0,3), interruptible. Activer un calque : aucun mouvement. Mode louange : aucune animation. Mouvement réduit : boutons haut/bas.</dd></div><div><dt>Accords, sections, 简谱</dt><dd>Gelés, intacts.</dd></div><div><dt>À regarder de près</dt><dd>Le musicien doit savoir quel calque il lit et lequel gagne ; trois calques sur le même accord font un casse-tête ; la plus coûteuse (fusion par ligne, priorité, origine) ; les exposants chargent les grilles denses, surtout en chinois avec pinyin.</dd></div></dl>
+ <span class="rowlabel">Les trois tailles</span>
+ <div class="devices">
+  <div class="dev w-ph"><span class="dev-label">Téléphone · 390 px</span><div class="frame phone"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Culte du 8 novembre</b></div>
+<div class="bar"><span class="btn ">Accords</span><span class="btn on"><svg class="ic " aria-hidden="true"><use href="#i-layers"/></svg>Calques</span><span class="btn pri">Louange</span></div>
+<div class="chead"><span class="num">1</span><b>Hosanna</b><span class="key">D</span><span class="grow"></span></div>
+<div style="height:8px"></div>
+<div class="tabs-h"><span class="">Culte</span><span class="on">Moi</span><span class="off">Joachim</span></div>
+<div class="pt"><span class="sec-l vs">Couplet 1</span><div class="ln "><span class="tx"><span class="cl"><i class="">D</i><u> Je vois le Roi de gloire</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">Bm</i><u>qui revient sur les nuées.</u></span></span></div><span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm7<sup>(M)</sup></i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div><span class="sec-l br">Pont</span><div class="ln "><span class="tx"><span class="cl"><i class="">G</i><u>Prends mon cœur et rends-le p</u></span><span class="cl"><i class="">A</i><u>ur,</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">D/F#<sup>(C)</sup></i><u>Ouvre grand mes yeux à Ta </u></span><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div></div></div><p class="cap">Barre de la setlist : Adapter et Ma version deviennent un seul bouton « Calques ». Une rangée d'onglets sous le titre (Culte · Moi · Joachim) bascule le calque du haut ; la pile complète se gère dans une feuille « Calques ».</p></div>
+  <div class="dev w-tb"><span class="dev-label">Tablette portrait · 820 px</span><div class="frame tablet"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Culte du 8 novembre</b></div>
+<div class="bar"><span class="btn ">Accords</span><span class="btn "><svg class="ic " aria-hidden="true"><use href="#i-layers"/></svg>Calques</span><span class="btn pri">Louange</span></div>
+<div class="chead"><span class="num">1</span><b>Hosanna</b><span class="key">D</span><span class="grow"></span></div>
+<div style="height:8px"></div>
+<div class="cwrap"><div class="cpage"><div class="pt" style="min-height:290px"><span class="sec-l vs">Couplet 1</span><div class="ln "><span class="tx"><span class="cl"><i class="">D</i><u> Je vois le Roi de gloire</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">Bm</i><u>qui revient sur les nuées.</u></span></span></div><span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm7<sup>(M)</sup></i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div><span class="sec-l br">Pont</span><div class="ln "><span class="tx"><span class="cl"><i class="">G</i><u>Prends mon cœur et rends-le p</u></span><span class="cl"><i class="">A</i><u>ur,</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">D/F#<sup>(C)</sup></i><u>Ouvre grand mes yeux à Ta </u></span><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div></div></div>
+<span class="rtab" style="top:14px">Culte</span><span class="rtab on" style="top:62px">Moi</span><span class="rtab off" style="top:104px">Joachim</span></div>
+<div style="height:10px"></div></div><p class="cap">Onglets sur le bord droit de la partition pleine largeur ; toucher un onglet le monte en haut de la pile. En paysage, le panneau Calques s'ouvre en colonne de 300 px qui pousse la partition.</p></div>
+  <div class="dev w-dk"><span class="dev-label">Ordinateur · 1 280 px</span><div class="frame desktop"><div class="cols" style="grid-template-columns:1fr 150px">
+<div>
+<div class="bar"><span class="btn ">Présentation</span><span class="btn on"><svg class="ic " aria-hidden="true"><use href="#i-layers"/></svg>Calques</span><span class="btn ">Modifier</span><span class="btn ">PDF</span><span class="btn"><svg class="ic " aria-hidden="true"><use href="#i-more"/></svg></span><span class="grow"></span><span class="btn pri">Mode louange</span></div>
+<div class="chead"><span class="num">1</span><b>Hosanna</b><span class="key">D</span><span class="grow"></span></div>
+<div style="height:8px"></div>
+<div class="tabs-h"><span class="">Culte</span><span class="on">Moi</span><span class="off">Joachim</span></div>
+<div class="pt" style="min-height:250px"><span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm7<sup>(M)</sup></i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div><span class="sec-l br">Pont</span><div class="ln "><span class="tx"><span class="cl"><i class="">G</i><u>Prends mon cœur et rends-le p</u></span><span class="cl"><i class="">A</i><u>ur,</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">D/F#<sup>(C)</sup></i><u>Ouvre grand mes yeux à Ta </u></span><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div></div></div>
+<div class="panel"><h5>Calques</h5><span class="sub">Le calque du haut gagne. Ouvert par défaut quand on modifie.</span>
+<div class="cal"><span class="grip">⋮⋮</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span><span class="nm">Moi</span></div>
+<div class="cal off"><span class="grip">⋮⋮</span><span class="chk"></span><span class="nm">Joachim</span></div>
+<div class="cal"><span class="grip" style="opacity:.3">⋮⋮</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span><span class="nm">Culte du 8 nov.</span></div>
+<span class="sub">Le calque du culte reste toujours en bas.</span></div></div></div><p class="cap">Panneau Calques ancré à droite, ouvert par défaut quand on modifie, fermé en lecture ; plafond 1 440 px. Les initiales en exposant disent d'où vient chaque retouche.</p></div>
+ </div>
+ <span class="rowlabel">Les autres entrées, le partage, le responsable</span>
+ <div class="devices">
+  <div class="dev w-ph"><span class="dev-label">Page d'un chant · téléphone</span><div class="frame phone"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Chant</b></div>
+<div class="pt" style="padding-bottom:0"><h4 class="zh">一生敬拜你</h4><span class="sub">Yī shēng jìng bài nǐ · <span class="key" style="padding:0 6px">C</span> · ♩ 66 · 4/4</span></div>
+<div class="bar" style="border-bottom:0"><span class="btn ">Vidéo</span><span class="btn ">PDF</span><span class="btn "><svg class="ic " aria-hidden="true"><use href="#i-layers"/></svg>Calques</span></div>
+<div class="tabs-h"><span class="">Original</span><span class="on">Moi</span><span class="off">Joachim</span></div>
+<div class="pt"><span class="sec-l vs">主歌 / Couplet</span>
+<div class="ln"><span class="tx"><span class="cl z"><i>&nbsp;</i><u>亲爱</u><s>qīn ài</s></span><span class="cl z"><i>C</i><u>耶稣，你真</u><s>yē sū nǐ zhēn</s></span><span class="cl z"><i>G/B<sup>(M)</sup></i><u>爱我，毫无</u><s>ài wǒ háo wú</s></span><span class="cl z"><i>F/A</i><u>保留，</u><s>bǎo liú</s></span></span></div>
+<div class="ln"><span class="tx"><span class="cl z"><i>G/B</i><u>因你</u><s>yīn nǐ</s></span><span class="cl z"><i>Am</i><u>舍命，我回到</u><s>shě mìng wǒ huí dào</s></span><span class="cl z"><i>Em</i><u>父神面</u><s>fù shén miàn</s></span></span></div>
+<span class="sub">Ici, seulement tes calques et ceux qu'on t'a partagés : pas le calque du culte.</span></div></div><p class="cap">Les calques personnels s'y voient aussi, sans le calque du culte.</p></div>
+  <div class="dev w-tb"><span class="dev-label">Mode louange · tablette paysage</span><div class="frame land"><div class="ao"><div class="grp"><span class="btn ">Setlist</span><span class="btn ">Repères</span><span class="btn on">Je joue<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></span></div><span class="grow"></span><div class="grp"><span class="btn "><svg class="ic " aria-hidden="true"><use href="#i-pen"/></svg>Annoter · Moi</span><span class="btn sq">D</span><span class="btn sq">T</span></div></div>
+<div class="ao-grid" style="grid-template-columns:132px 1fr">
+<div class="pop">
+<div class="it"><b>Clavier</b><span class="sm">rôle</span></div><hr>
+<div class="it" style="font-weight:700">Calques<svg class="ic " aria-hidden="true"><use href="#i-chev"/></svg></div>
+<div class="cal"><span class="grip">⋮⋮</span><span class="nm">Moi</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span></div>
+<div class="cal off"><span class="grip">⋮⋮</span><span class="nm">Joachim</span><span class="chk"></span></div>
+<div class="cal"><span class="grip" style="opacity:.3">⋮⋮</span><span class="nm">Culte 8 nov.</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span></div></div>
+<div style="padding:10px 0 14px"><div class="cwrap"><div class="cpage"><div class="pt" style="min-height:190px;padding:8px 6px"><span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm7<sup>(M)</sup></i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div><span class="sec-l br">Pont</span><div class="ln "><span class="tx"><span class="cl"><i class="">D/F#<sup>(C)</sup></i><u>Ouvre grand mes yeux à Ta</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">Bm</i><u>vérité.</u></span></span></div></div></div>
+<span class="rtab on" style="top:12px">Moi</span><span class="rtab off" style="top:50px">Joachim</span></div></div></div></div><p class="cap">« Je joue » ouvre la pile ; « Annoter » écrit dans le calque du haut. Aucune animation : le panneau s'ouvre et se ferme sec.</p></div>
+  <div class="dev w-ph"><span class="dev-label">Feuille de partage · téléphone</span><div class="frame phone"><div class="scrim"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Culte du 8 novembre</b></div><div class="tabs-h"><span class="">Culte</span><span class="on">Moi</span><span class="off">Joachim</span></div><div class="pt" style="padding-bottom:14px"><span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm7<sup>(M)</sup></i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div></div></div><div class="sheet-b"><div class="grab"></div>
+  <div class="sh-t"><b>Partager mon calque</b><span class="sub">Hosanna</span></div>
+  <div class="sh-sec">Ce dimanche avec toi</div>
+  <div><div class="pers"><span class="av">M</span><b>Maëlle</b><span class="ro">clavier</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span></div><div class="pers"><span class="av">J</span><b>Joachim</b><span class="ro">basse</span><span class="chk "></span></div><div class="pers"><span class="av">I</span><b>Ines</b><span class="ro">voix</span><span class="chk on"><svg class="ic " aria-hidden="true"><use href="#i-check"/></svg></span></div></div>
+  <div class="srch"><svg class="ic " aria-hidden="true"><use href="#i-search"/></svg>Chercher parmi tous les membres</div>
+  <div class="sw-row">Inclure mes traits<span class="tog"></span></div>
+  <div class="sh-t"><span class="lnk">Partager toutes mes partitions avec cette personne</span></div>
+  <div><span class="sub">Chez Joachim, ton calque apparaît comme un onglet éteint :</span><div class="tabs-h" style="padding:4px 0 0;margin-top:3px"><span>Culte</span><span>Joachim</span><span class="off">Salomé</span></div></div>
+  <div style="display:flex;gap:6px;justify-content:flex-end"><span class="btn ">Annuler</span><span class="btn pri">Partager</span></div></div></div><p class="cap">« Partager mon calque » ouvre la même feuille de personnes ; chez Joachim, ton calque apparaît comme onglet éteint.</p></div>
+  <div class="dev w-ph"><span class="dev-label">Responsable · téléphone</span><div class="frame phone"><div class="topbar"><span class="back"><svg class="ic " aria-hidden="true"><use href="#i-back"/></svg>Retour</span><b class="tt">Culte du 8 novembre</b></div>
+<div class="banner"><span>Tu écris sur</span><span class="seg3"><span>Moi</span><span class="on">Culte du 8 nov.</span></span></div>
+<div class="sub" style="padding:5px 12px 0">Visible de toute l'équipe, toujours sous les calques personnels.</div>
+<div class="tabs-h"><span class="on">Culte</span><span class="">Moi</span><span class="off">Joachim</span></div>
+<div class="pt"><span class="sec-l ch">Refrain</span><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>Hos</u></span><span class="cl"><i class="">D/F#</i><u>ann</u></span><span class="cl"><i class="">G</i><u>a, hos</u></span><span class="cl"><i class="">A</i><u>ann</u></span><span class="cl"><i class="">Bm</i><u>a,</u></span></span></div><div class="ln "><span class="tx"><span class="cl"><i class="">&nbsp;</i><u>ho</u></span><span class="cl"><i class="">G</i><u>sanna à Toi </u></span><span class="cl"><i class="">Bm7<sup>(C)</sup></i><u>Seigneur</u></span><span class="cl"><i class="">A</i><u>.</u></span></span></div><span class="sec-l br">Pont</span><div class="ln "><span class="tx"><span class="cl"><i class="">G</i><u>Prends mon cœur et rends-le p</u></span><span class="cl"><i class="">A</i><u>ur,</u></span></span></div></div>
+<div class="dock"><span class="tool on">Accord</span><span class="tool">Paroles</span><span class="tool">Ordre</span><span class="tool">Trait</span><span class="grow"></span><span class="btn pri">Enregistrer</span></div></div><p class="cap">Le responsable modifie le calque « Culte du 8 nov. », visible de tous et toujours sous les calques personnels : l'ex-Adapter est écrire sur ce calque.</p></div>
+ </div></div>
+</section>
+
+<section>
+ <span class="eyebrow">À regarder de près</span>
+ <h2>Finitions, sans dessin</h2>
+ <div class="tbl-wrap"><table>
+  <thead><tr><th>Constat</th><th>Correction recommandée</th><th>Alternative</th></tr></thead>
+  <tbody>
+   <tr><td>Filet de 2 px graphite à peine visible en plein soleil ou en sombre (A).</td><td>Passer à 3 px, après essai sur un appareil en extérieur.</td><td>Garder 2 px et ajouter une pastille graphite en tête de ligne.</td></tr>
+   <tr><td>Accord retouché en 600 contre 700 : un cran d'écart, presque invisible (A).</td><td>Le filet porte le signal ; la graisse n'est qu'un renfort.</td><td>Souligner l'accord retouché d'un pointillé fin.</td></tr>
+   <tr><td>Chinois tapé hors du sous-ensemble woff2, qu'on ne peut pas prévoir au build (A, B).</td><td>Police chinoise du système, assumé.</td><td>Un second sous-ensemble, chargé à la demande.</td></tr>
+   <tr><td>Un trait libre accroché au texte se déforme quand la ligne se recompose (A, B, C).</td><td>Découper le trait par mot.</td><td>Figer le trait sur la ligne.</td></tr>
+   <tr><td>Source Serif 4 ajoute environ 40 Ko en latin (B).</td><td>Ne charger que les graisses 400 et 600.</td><td>Serif du système pour le latin aussi.</td></tr>
+  </tbody></table></div>
+ <span class="eyebrow">Libellés</span>
+ <div class="tbl-wrap"><table>
+  <thead><tr><th>Français</th><th>中文</th><th>Source</th></tr></thead>
+  <tbody>
+   <tr><td>Mode Louange · Louange</td><td>敬拜模式 · 敬拜</td><td>zh-CN.json</td></tr>
+   <tr><td>Accords · Annoter · Je joue · Enregistrer</td><td>和弦 · 批注 · 我演奏 · 保存</td><td>zh-CN.json</td></tr>
+   <tr><td>Adapter · Ma version · Partager ma version</td><td>调整 · 我的版本 · 分享我的版本</td><td>zh-CN.json (remplacés)</td></tr>
+   <tr><td>Crayon · Ma partition · Je lis · Carnet · Calques</td><td>à traduire</td><td>absents de zh-CN.json</td></tr>
+  </tbody></table></div>
+</section>
+
+<section>
+ <span class="eyebrow">Recommandation</span>
+ <h2>A. Au crayon</h2>
+ <div class="box reco"><p>En plein service, un musicien lit une grille, pas une interface : il doit voir en un coup d'œil ce qui est à lui et ce qui vient du culte, sans choisir de mode ni de calque. « Au crayon » réduit tout à un geste (Crayon), un choix de lecture (« Je lis ▾ », par défaut la mienne) et un code de deux couleurs qui ne touche à aucune couleur gelée. La partition reste pleine largeur sur les quatre dispositions. En mode louange, « Annoter » devient « Crayon » et « Je joue » gagne une ligne. Le responsable tranche au bon moment, quand il enregistre : c'est exactement la fusion demandée. B cache son idée (la marge) sur téléphone et laisse deux lieux d'édition ; C est juste en théorie mais trop lourde à lire en plein culte.</p>
+ <p><b>Coût :</b> grande ampleur, trois ou quatre lots, une vingtaine de fichiers. (1) Données et migration : un document par personne et par chant, qui reprend <code>setlistVersions.ts</code>, les annotations (<code>annotations.ts</code>, <code>strokes.ts</code> : accrochage au texte, levée de la décision 18 du lot AN) et la liste de partage ; la retouche « pour le culte » continue d'écrire <code>contentOverride</code>. <code>firestore.rules</code> à republier à la main par Timothée, <code>access.ts</code> en miroir. (2) Entrées et lecture : <code>SetlistDetailClient.tsx</code>, <code>PartitionView.tsx</code>, page d'un chant, <code>PerformanceMode.tsx</code>, <code>AnnotationCanvas.tsx</code>. (3) Feuille de partage. (4) Éditeur Crayon et choix pour moi / pour le culte. Plus i18n fr/zh et specs Playwright sur les cinq projets.</p></div>
+</section>
+
+<section>
+ <span class="eyebrow">À trancher</span>
+ <h2>Questions, chacune avec la proposition</h2>
+ <div class="questions">
+  <div class="q"><h3>Quand la présidence ou le .cho change un chant que j'ai retouché, que devient ma retouche ?</h3><p class="rec">Proposition : on garde les retouches comme des différences ligne par ligne ; les lignes non touchées suivent le chant, et une ligne changée des deux côtés montre les deux versions, marquée « Le chant a changé ici », jusqu'à ce que je choisisse.</p></div>
+  <div class="q"><h3>Une partition partagée se copie-t-elle ou se suit-elle ?</h3><p class="rec">Proposition : elle se suit (Joachim voit mes retouches à mesure), avec « Garder une copie » chez lui pour la figer ; si je retire le partage, il revient à celle du culte, sauf copie faite.</p></div>
+  <div class="q"><h3>Un responsable peut-il imposer sa partition à toute la setlist ?</h3><p class="rec">Proposition : oui, pour ce culte seulement, en enregistrant « Pour tout le culte » (l'ex-Adapter) ; cela ne remplace jamais la partition personnelle d'un autre, qui garde la sienne, avec le filet d'encre sur les lignes que le culte a changées sous sa retouche.</p></div>
+  <div class="q"><h3>Faut-il pouvoir relire le chant d'origine, sans aucune retouche ?</h3><p class="rec">Proposition : oui, « Le chant d'origine » en dernière ligne du menu « Je lis » (la piste A ne le montre pas encore ; la piste B l'a, en segment « Original »).</p></div>
+  <div class="q"><h3>Le partage se fait-il chant par chant ou pour toutes mes partitions d'un coup ?</h3><p class="rec">Proposition : chant par chant, avec en bas de la feuille « Partager toutes mes partitions avec cette personne », pour un binôme stable (clavier et basse).</p></div>
+  <div class="q"><h3>Les traits d'annotation partent-ils avec la partition partagée ?</h3><p class="rec">Proposition : non par défaut (« Inclure mes traits » éteint) ; accords, paroles et ordre partent toujours.</p></div>
+  <div class="q"><h3>La tonalité et le capo font-ils partie de Ma partition ?</h3><p class="rec">Proposition : la tonalité perso suit la partition (par chant), le capo reste par appareil.</p></div>
+  <div class="q"><h3>Sur un chant à scan 简谱, que peut-on retoucher dans Ma partition ?</h3><p class="rec">Proposition : les accords du calque et les traits seulement ; le scan reste intouchable, et l'intérieur du calque 简谱 est gelé. À décider avant la spec : aucune maquette ici.</p></div>
+  <div class="q"><h3>Quels libellés chinois pour « Crayon », « Ma partition », « Je lis », « Carnet », « Calques » ?</h3><p class="rec">Proposition : à faire traduire par l'équipe chinoise ; en attendant, libellés français dans les deux langues, comme les nouveaux boutons d'aujourd'hui.</p></div>
+  <div class="q"><h3>Piste A : la règle de doigt, quand on retouche et qu'on trace dans le même mode.</h3><p class="rec">Proposition : doigt = toucher un accord ou un mot pour le retoucher, stylet = tracer ; sans stylet, l'outil « Trait » explicite de la barre.</p></div>
+  <div class="q"><h3>Piste C : où est le calque du culte dans la pile ?</h3><p class="rec">Proposition : la fiche le range « toujours sous les calques personnels » mais le liste en premier. J'ai dessiné le plus simple : toujours en bas, non déplaçable, les calques personnels se réordonnent au-dessus.</p></div>
+  <div class="q"><h3>Mode louange : que contient aujourd'hui la ligne du rôle sous « Je joue » ?</h3><p class="rec">Proposition : je n'ai pas vu le contenu actuel de la popover ; j'ai dessiné « Clavier · rôle » comme repère. La nouvelle ligne « Partition » se pose dessous, sans toucher au rôle.</p></div>
+ </div>
+</section>
+
+<section>
+ <h2>Réserves de la relecture, à reprendre à la spec</h2>
+ <ul>
+  <li><b>Piste A, filets « à moi » et « pour le culte »</b> : seule une nuance de gris les sépare (contraste d'environ 2,6:1 en clair, 2,2:1 en sombre) ; de loin, on ne les distingue pas. À donner une forme propre à la retouche « pour le culte » (double filet ou petite marque « culte »).</li>
+  <li><b>Piste A, parole retouchée en graphite</b> : elle se lit comme un mot effacé (teinte proche du texte atténué du site). La laisser à l'encre, marquée par le seul filet ou un souligné fin.</li>
+  <li><b>Échelles</b> : tablette et ordinateur sont réduits mais le texte ne l'est pas, et la piste A n'y montre que des feuilles ouvertes, pas la lecture avec ses filets.</li>
+  <li><b>Finitions</b> : « Hosann a » semble coupé dans les maquettes ; lignes de la piste B mal recomposées en mode louange ; libellé provisoire « rôle » dans la vignette de l'état AO.</li>
+ </ul>
+</section>
+<section>
+ <span class="eyebrow">Non vu</span>
+ <h2>Ce que cette planche déduit sans l'avoir regardé</h2>
+ <ul class="plain">
+  <li>Page d'un chant sur tablette et ordinateur : seule la capture téléphone existe ; l'entrée « Crayon » au-delà est déduite.</li>
+  <li>Mode louange sur ordinateur et en tablette paysage, popover « Je joue » ouverte : dessinés d'après la capture tablette de la barre Setlist · Repères · Je joue.</li>
+  <li>Sombre : le contraste du filet graphite #a3a7ae sur noir n'est pas vérifié par un test sur appareil.</li>
+  <li>Adapter et Ma version en cours d'édition, menu ⋯ du téléphone étroit : lus dans le code (<code>PartitionView.tsx</code>, <code>SetlistDetailClient.tsx</code>), jamais en capture.</li>
+  <li>Une partition 简谱 annotée : aucune capture, l'accrochage aux coordonnées du scan n'est pas vérifié.</li>
+  <li>Le planning : je n'ai pas vérifié qu'il est lisible côté client pour remplir « Ce dimanche avec toi » (qui joue, et à quel instrument).</li>
+  <li>Le fond : la consigne parlait de crème ; <code>globals.css</code> donne <code>--background</code> #ffffff et <code>--primary</code> encre #1c1c1e. J'ai suivi le CSS.</li>
+ </ul>
+</section>
+
+</div>
+</body>
+</html>

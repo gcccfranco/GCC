@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 const ROOT = path.resolve(__dirname, "..", "..");
 
@@ -254,4 +254,22 @@ export function songKey(slug: string): string | undefined {
 export function auditKey(slug: string, printedKey: string): string {
   const up = halfStepUp(printedKey);
   return up === songKey(slug) ? halfStepUp(up) : up;
+}
+
+/** Touche le scan en Crayon au point (x, y) en pixels de l'image d'origine (`w` × `h`). Chaque fenêtre du scan
+ *  (tranche, demi-ligne, volet de JV-3) porte sa zone de retouche sur la page entière, rognée par la fenêtre :
+ *  on touche celle dont la fenêtre montre ce point. Une colonne : une seule fenêtre, rien ne change. */
+export async function toucherScan(page: Page, x: number, y: number, w: number, h: number): Promise<void> {
+  const zones = page.locator("[data-jianpu-retouche-zone]");
+  await zones.first().waitFor();
+  const n = await zones.evaluateAll((els, [x, y, w, h]) => els.findIndex((el) => {
+    const z = el.getBoundingClientRect();
+    const f = el.closest("[data-jianpu-fenetre]")!.getBoundingClientRect();
+    const px = z.left + (x / w) * z.width, py = z.top + (y / h) * z.height;
+    return px > f.left + 2 && px < f.right - 2 && py > f.top + 2 && py < f.bottom - 2;
+  }), [x, y, w, h]);
+  expect(n, `une fenêtre du scan montre le point (${x}, ${y})`).toBeGreaterThanOrEqual(0);
+  const zone = zones.nth(n);
+  const box = (await zone.boundingBox())!;
+  await zone.click({ position: { x: (x / w) * box.width, y: (y / h) * box.height } });
 }

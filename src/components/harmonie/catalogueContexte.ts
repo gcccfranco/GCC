@@ -15,6 +15,8 @@ interface CatalogueHarmonie {
   /** Combien de setlists chantent chaque chant (slug → nombre) : les exemples d'une fiche s'y
    *  classent. Les setlists ne sont lues qu'une fois pour la section, au premier appel. */
   comptesDesChants: () => Promise<Record<string, number>>;
+  /** Les ids de la liste visible (filtrée, triée par niveau), dans l'ordre affiché. */
+  ordre: string[];
 }
 
 export const ContexteCatalogue = createContext<CatalogueHarmonie | null>(null);

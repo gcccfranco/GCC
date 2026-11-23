@@ -11,6 +11,7 @@ import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import type { CompteRendu, Deplacement, Evenement, Inscription } from "@/types/evenement";
 import { modeInscriptions } from "@/lib/evenements/agenda";
 import { estReunion } from "@/lib/access";
+import { estSalleId, salleLue } from "@/lib/salles/salles";
 
 // Évènements (lot 6) : evenements/{id} et evenements/{id}/inscriptions/{iid},
 // en REST. Sans compte, seule la requête filtrée « pour = eglise » est
@@ -40,6 +41,7 @@ function fromFsEvenement(raw: RawDoc): Evenement {
     heureFin: (data.heureFin as string) ?? "",
     dateFin: (data.dateFin as string) ?? "",
     lieu: (data.lieu as string) ?? "",
+    ...(estSalleId(data.salle) ? { salle: salleLue(data.salle) } : {}),
     description: (data.description as string) ?? "",
     liens: (data.liens as Evenement["liens"]) ?? [],
     images: (data.images as string[]) ?? [],

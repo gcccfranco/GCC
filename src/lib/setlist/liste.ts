@@ -1,5 +1,5 @@
 import type { FSSetlist } from "@/types/setList";
-import { findMyServices, serviceCategory, normalizeName, type PlanningData } from "@/lib/planning/names";
+import { findMyServices, serviceCategory, normalizeName, type PlanningData, type ServiceEntry } from "@/lib/planning/names";
 
 // Format des clés de service, écrit une seule fois. Campus : matin et soir partagent date + catégorie → clés par
 // moment (setlists récentes) ET par président (anciennes setlists sans moment).
@@ -8,9 +8,14 @@ const clePresident = (date: string, leader: string | undefined) => `${date}|Camp
 
 /** Clés des services réels d'un compte (filtre « Mes services »), lues dans le planning. */
 export function clesDeMesServices(planning: PlanningData | null, planningName: string | undefined): Set<string> {
+  if (!planning || !planningName) return new Set();
+  return clesDesEntrees(findMyServices(planning, planningName));
+}
+
+/** Les mêmes clés, depuis les entrées déjà trouvées (`findMyServices`). */
+export function clesDesEntrees(entrees: ServiceEntry[]): Set<string> {
   const set = new Set<string>();
-  if (!planning || !planningName) return set;
-  for (const e of findMyServices(planning, planningName)) {
+  for (const e of entrees) {
     const cat = serviceCategory(e.service);
     if (!cat) continue;
     const date = e.setlistDate ?? e.date;
@@ -22,6 +27,13 @@ export function clesDeMesServices(planning: PlanningData | null, planningName: s
     }
   }
   return set;
+}
+
+/** Date du jour en heure locale (pas UTC : décalée autour de minuit), comme l'accueil. */
+export function aujourdhuiLocal(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
 /** La setlist tombe-t-elle sur un des services de `cles` ? Campus : le moment, sinon le président. */
@@ -44,4 +56,11 @@ export function trierSetlists(
   return aVenir
     ? list.filter((s) => s.date >= aujourdhui).sort((a, b) => a.date.localeCompare(b.date) || memeJour(a, b))
     : list.filter((s) => s.date < aujourdhui).sort((a, b) => b.date.localeCompare(a.date) || memeJour(a, b));
+}
+
+/** Menu « Toutes mes setlists » du mode louange : les setlists à venir hors la courante et les brouillons, par date ;
+ *  `miens` = celles de mes services (`cles`), `autres` = le reste. */
+export function setlistsAVenir(list: FSSetlist[], cles: Set<string>, aujourdhui: string, idCourant: string): { miens: FSSetlist[]; autres: FSSetlist[] } {
+  const restes = trierSetlists(list.filter((s) => s.id !== idCourant && !s.isDraft), true, aujourdhui, () => 0);
+  return { miens: restes.filter((s) => estDeMesServices(s, cles)), autres: restes.filter((s) => !estDeMesServices(s, cles)) };
 }

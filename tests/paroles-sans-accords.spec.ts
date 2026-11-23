@@ -12,7 +12,11 @@ test("sans accords, « à Lui » garde son espace", async ({ page }) => {
   await signInAs(page, MEMBRE, {}, "/songs/en-toi-je-sais-qui-je-suis");
   const main = page.locator("main.song-zoom");
   await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
-  await page.getByTestId("barre-outils").getByRole("button", { name: "Accords", exact: true }).click();
+  // B6 (CI-11) : l'interrupteur « Accords » a quitté la marge de la page ; le bouton de la barre le porte seul.
+  const accords = page.getByTestId("barre-outils").getByRole("button", { name: "Accords", exact: true });
+  await expect(accords).toHaveAttribute("aria-pressed", "true");
+  await accords.click();
+  await expect(accords).toHaveAttribute("aria-pressed", "false");
   await expect(main.getByText("à Lui.").first()).toBeVisible();
   const texte = (await lignes(page)).join("\n");
   expect(texte).toContain("Je suis enfant de Dieu, je suis à Lui.");
@@ -24,7 +28,11 @@ test("sans accords, un mot coupé par des accords se recolle (« digne »)", asy
   await signInAs(page, MEMBRE, {}, "/songs/toi-seul-es-digne");
   const main = page.locator("main.song-zoom");
   await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
-  await page.getByTestId("barre-outils").getByRole("button", { name: "Accords", exact: true }).click();
+  // B6 (CI-11) : l'interrupteur « Accords » a quitté la marge de la page ; le bouton de la barre le porte seul.
+  const accords = page.getByTestId("barre-outils").getByRole("button", { name: "Accords", exact: true });
+  await expect(accords).toHaveAttribute("aria-pressed", "true");
+  await accords.click();
+  await expect(accords).toHaveAttribute("aria-pressed", "false");
   await expect(main.getByText("digne").first()).toBeVisible();
   const texte = (await lignes(page)).join("\n");
   expect(texte).toMatch(/es digne/);

@@ -242,16 +242,17 @@ test("structure en pastilles — retirer, ajouter, Dernière phrase ; note de se
     .toMatch(/^Dp-/);
 });
 
-test("chant à scan, interrupteur Partition 简谱 / Paroles ; les accords retouchés restent", async ({ page }) => {
+test("chant à scan : plus d'interrupteur « Jouer sur » dans l'éditeur ; les accords retouchés restent", async ({ page }) => {
   const db = await ouvrirT3(page);
   await reglerElement(page, SCAN);
-  const choix = volet(page).getByRole("radiogroup", { name: "Jouer sur" });
-  await expect(choix.getByRole("radio", { name: "Partition 简谱" })).toBeChecked();
-  await choix.getByRole("radio", { name: "Paroles" }).click();
-  // « Paroles » s'écrit false (lot 1 简谱 par défaut) : absent veut dire « non réglé », donc le scan.
-  await expect.poll(() => itemsEnBase(db)[3]?.jianpuSheet ?? null, { timeout: 10_000 }).toBe(false);
+  await expect(volet(page).getByRole("radiogroup", { name: "Jouer sur" })).toHaveCount(0);
+  await expect(volet(page).getByRole("radio", { name: "Paroles" })).toHaveCount(0);
+  // Aucune clé jianpuSheet n'est écrite, les accords retouchés restent.
+  await choisirTonalite(page, "Abba Père", "B");
+  await expect.poll(() => itemsEnBase(db).find((i) => i.songSlug === "abba-pere")?.keyOverride, { timeout: 10_000 }).toBe("B");
   expect(itemsEnBase(db)[3].jianpuChords).toEqual(RETOUCHES);
-  // Un chant sans scan n'a pas l'interrupteur.
+  expect(itemsEnBase(db).every((i) => !("jianpuSheet" in i) || i.jianpuSheet === true), "aucun « Paroles » écrit").toBe(true);
+  // Un chant sans scan ne l'a pas non plus.
   await reglerElement(page, "Abba Père");
   await expect(volet(page).getByRole("radiogroup", { name: "Jouer sur" })).toHaveCount(0);
 });

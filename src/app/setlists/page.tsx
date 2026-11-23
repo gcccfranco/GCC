@@ -29,6 +29,13 @@ import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44";
 import { SetlistCard, SetlistCarteChants } from "@/components/setlists/SetlistCard";
 import { BandeauCorbeille } from "@/components/setlists/BandeauCorbeille";
 import { ApercuSetlist } from "@/components/setlists/ApercuSetlist";
+import { Pupitre } from "@/components/setlists/Pupitre";
+import { servicesDuCompte } from "@/lib/petitdej/services";
+import { joursAvant, pourMoi, reunirServices, setlistDuService } from "@/lib/planning/accueil";
+import { listerCopies } from "@/lib/setlist/copieHorsLigne";
+import { demanderPrecache, garderServices, precacheFait, urlsAGarder } from "@/lib/setlist/gardeServices";
+import { loadJianpuManifest } from "@/lib/jianpu/images";
+import { roleDuPlanning } from "@/lib/planning/rolePlanning";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
@@ -42,16 +49,24 @@ import { EtatVide } from "@/components/layout/EtatVide";
 import { Squelette } from "@/components/layout/Squelette";
 import { useMessageTemporaire } from "@/hooks/useMessageTemporaire";
 import { clesDeMesServices, estDeMesServices, trierSetlists } from "@/lib/setlist/liste";
-import { EcranConnexionRequise, EcranProfilRequis } from "./_components/EcransAccesListe";
+import { EcranConnexionRequise, EcranProfilIllisible, EcranProfilRequis } from "./_components/EcransAccesListe";
 import { SectionCorbeille } from "./_components/SectionCorbeille";
 import { ConfirmationSuppressionGroupee, ConfirmationSuppressionDefinitive } from "./_components/ConfirmationsSuppression";
+import { compter } from "@/lib/usage";
+
+/** Date du jour en heure locale (pas UTC : décalée autour de minuit), comme l'accueil. */
+function aujourdhuiLocal(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
 
 // Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q4) : en grand, la liste à gauche et l'aperçu
 // de la setlist choisie à droite (`?apercu=<id>`, sans aperçu choisi la première de la liste,
 // Q3) ; tablette portrait, cartes sur deux colonnes qui listent leurs chants ; téléphone inchangé.
 export default function SetlistsPage() {
   const { t, i18n } = useTranslation();
-  const { user, profile, loading: authLoading } = useProfile();
+  const { user, profile, loading: authLoading, echec, relire } = useProfile();
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
   const [mySetlists, setMySetlists] = useState<FSSetlist[]>([]);
   // Celles dont on est de l'équipe (PS10) : lues à part, fusionnées par id avec la liste commune.
@@ -61,6 +76,10 @@ export default function SetlistsPage() {
   const [programmesLus, setProgrammesLus] = useState(!BACK_OFFICE);
   const [loading, setLoading] = useState(true);
   const [loadingMine, setLoadingMine] = useState(true);
+  // Lecture refusée ou sans réseau ≠ liste vide : « Réessayer » relit (`essai`).
+  const [echecListe, setEchecListe] = useState(false);
+  const [echecMine, setEchecMine] = useState(false);
+  const [essai, setEssai] = useState(0);
   const [planning, setPlanning] = useState<PlanningData | null>(null);
   // Onglet, recherche, catégorie : dans l'URL (retour navigateur fidèle).
   // « Mes services » : mémorisé sur l'appareil (coché par défaut).
@@ -110,13 +129,15 @@ export default function SetlistsPage() {
     if (authLoading) return;
     if (!user) { setSetlists([]); setLoading(false); return; }
     setLoading(true);
-    Promise.all([getSetlists(), getSetlistsPartagees(user.uid).catch(() => [] as FSSetlist[])])
+    setEchecListe(false);
+    Promise.all([getSetlists(true), getSetlistsPartagees(user.uid).catch(() => [] as FSSetlist[])])
       .then(([toutes, miennes]) => {
         setSetlists(toutes);
         setPartagees(miennes);
       })
+      .catch(() => setEchecListe(true))
       .finally(() => setLoading(false));
-  }, [user, authLoading]);
+  }, [user, authLoading, essai]);
 
   // Liste commune + setlists de l'équipe, sans doublon (la requête n'est pas crue sur parole).
   const toutes = useMemo(() => {
@@ -147,12 +168,13 @@ export default function SetlistsPage() {
   useEffect(() => {
     if (!user) { setMySetlists([]); setLoadingMine(false); return; }
     setLoadingMine(true);
-    getMySetlists(user.uid).then(setMySetlists).finally(() => setLoadingMine(false));
-  }, [user]);
+    setEchecMine(false);
+    getMySetlists(user.uid, true).then(setMySetlists).catch(() => setEchecMine(true)).finally(() => setLoadingMine(false));
+  }, [user, essai]);
 
   // ── Corbeille (SC2, docs/spec-createur-corbeille-absences.md) ──
   // Les ids du bandeau « Annuler » (la suppression qui vient d'avoir lieu), la section repliée en bas
-  // d'« Archives », et la setlist dont la suppression définitive attend confirmation.
+  // de la page (tous les onglets), et la setlist dont la suppression définitive attend confirmation.
   const [enCorbeille, setEnCorbeille] = useState<string[]>([]);
   const fermerBandeau = useCallback(() => setEnCorbeille([]), []);
   const [corbeille, setCorbeille] = useState<FSSetlist[]>([]);
@@ -168,9 +190,16 @@ export default function SetlistsPage() {
   }, []);
 
   useEffect(() => {
-    if (!user || tab !== "archived") return;
+    if (!user) return;
     getCorbeille().then(setCorbeille).catch(() => {});
-  }, [user, tab, versionCorbeille]);
+  }, [user, versionCorbeille]);
+
+  /** « Voir la corbeille » du bandeau : ouvre la section, puis y descend après le rendu. */
+  function voirCorbeille() {
+    setCorbeilleOuverte(true);
+    const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.setTimeout(() => document.getElementById("corbeille")?.scrollIntoView({ behavior: reduit ? "auto" : "smooth", block: "start" }), 0);
+  }
 
   /** Relit les listes de la page sans l'écran « Chargement » : après une restauration. */
   async function rafraichir() {
@@ -220,10 +249,85 @@ export default function SetlistsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, toutes, mySetlists, matches, todayStr, user, profile, onlyMine, myServiceKeys, programmes, feteFiltree, datesDuCompte]);
 
+  // « Mon prochain service » (PU-2) : le prochain jour où le compte sert, et la setlist reliée à l'un de ses
+  // services (même règle que l'accueil : jamais une privée, un brouillon ni une qu'il ne pourrait pas ouvrir).
+  // Aucun service ou aucune setlist reliée : null, l'onglet est celui d'avant.
+  // (Pas de useMemo : le compilateur de React ne sait pas le préserver ici ; le calcul est court.)
+  const pupitre = (() => {
+    if (!user || !planning) return null;
+    const entries = servicesDuCompte(planning, [], user.uid, profile?.planningName ?? "");
+    const p = pourMoi(entries, aujourdhuiLocal(), 0);
+    if (!p) return null;
+    const lisibles = toutes.filter((s) => !s.isPrivate && !s.isDraft && canSeeSetlist(user, profile, s, datesDuCompte));
+    for (const service of p.prochain) {
+      const setlist = setlistDuService(lisibles, service);
+      if (setlist) {
+        const role = roleDuPlanning(entries, { date: setlist.date, category: setlist.category, moment: setlist.moment }, profile?.joue);
+        return { setlist, services: p.prochain, role };
+      }
+    }
+    return null;
+  })();
+  const aUnPupitre = !!pupitre;
+  const prochaine = pupitre?.setlist;
+  // Gardé hors ligne d'office (PU-3) : les services du compte des 14 prochains jours sont copiés et mis en cache à
+  // l'ouverture de l'onglet ; `pret` dit si le prochain l'est (copie + cache), revérifié toutes les 3 s pendant
+  // 2 minutes. Hors ligne : rien n'est tenté, le test tourne une fois (une copie d'avant peut suffire). Le « prêt »
+  // est celui d'une setlist (son id) : un autre prochain service ne l'hérite pas. Manifeste 简谱 illisible : pas prêt.
+  const [pretId, setPretId] = useState<string | null>(null);
+  const pret = !!prochaine && pretId === prochaine.id;
+  useEffect(() => {
+    if (!user || !planning || authLoading || loading) return;
+    const uid = user.uid;
+    let vivant = true;
+    let minuterie: ReturnType<typeof setInterval> | undefined;
+    (async () => {
+      const aujourdhui = aujourdhuiLocal();
+      const lisibles = toutes.filter((s) => !s.isPrivate && !s.isDraft && canSeeSetlist(user, profile, s, datesDuCompte));
+      const entries = servicesDuCompte(planning, [], uid, profile?.planningName ?? "");
+      const aGarder: FSSetlist[] = [];
+      for (const service of reunirServices(entries).filter((x) => x.date >= aujourdhui)) {
+        const sl = setlistDuService(lisibles, service);
+        if (sl && !aGarder.some((x) => x.id === sl.id)) aGarder.push(sl);
+      }
+      const manifest = await loadJianpuManifest();
+      if (!vivant) return;
+      await garderServices({ uid, setlists: aGarder, manifest, aujourdhui });
+      if (!vivant || !prochaine) return;
+      const verifier = async () => {
+        const urls = urlsAGarder(prochaine, manifest);
+        const ok = Object.keys(manifest).length > 0 &&
+          (await listerCopies(uid)).some((c) => c.setlist.id === prochaine.id) && (await precacheFait(urls));
+        if (vivant) setPretId(ok ? prochaine.id : null);
+        return ok;
+      };
+      // Le prochain service hors de la garde (plus de 14 jours) : un seul test, sans redemande au service worker.
+      if ((await verifier()) || navigator.onLine === false || joursAvant(prochaine.date, aujourdhui) > 14) return;
+      if (!vivant) return;
+      const debut = Date.now();
+      minuterie = setInterval(async () => {
+        if (!vivant) { clearInterval(minuterie); return; }
+        // Un service worker qui prend la main après coup n'a pas reçu le message : on le redemande.
+        if (Date.now() - debut > 120_000 || (await verifier())) clearInterval(minuterie);
+        else demanderPrecache(urlsAGarder(prochaine, manifest));
+      }, 3000);
+    })();
+    return () => { vivant = false; clearInterval(minuterie); };
+  }, [user, authLoading, loading, planning, toutes, profile, datesDuCompte, prochaine]);
+  // Sans index chargé par la disposition (téléphone), le bloc a besoin des titres.
+  useEffect(() => {
+    if (!aUnPupitre || avecChants) return;
+    chargerIndexChants()
+      .then((index) => setSongsMap(Object.fromEntries(index.map((x) => [x.slug, x]))))
+      .catch(() => {});
+  }, [aUnPupitre, avecChants]);
+  // En grand, le bloc prend le volet de droite tant qu'aucune setlist n'est choisie.
+  const pupitreAffiche = grand && !!pupitre && !apercu;
+
   // L'aperçu (en grand) : celui de l'adresse, sinon la première setlist de la liste filtrée (Q3).
   // Une adresse peut viser une setlist d'un autre onglet (lien partagé) : seulement si la page
   // de la setlist l'ouvrirait (`canSeeSetlist`, même règle que sa page).
-  const choisie =
+  const choisie = pupitreAffiche ? null :
     (apercu &&
       (displayed.find((s) => s.id === apercu) ??
         [...toutes, ...mySetlists].find((s) => s.id === apercu && !!user && canSeeSetlist(user, profile, s, datesDuCompte)))) ||
@@ -290,6 +394,7 @@ export default function SetlistsPage() {
     setCoches(new Set(ko));
     const rates = cibles.filter((s) => ko.includes(s.id)).map((s) => `« ${s.title} »`);
     if (vers.ok.length) {
+      compter("cmd.setlist.corbeille.mettre");
       setEnCorbeille(vers.ok);
       setVersionCorbeille((v) => v + 1);
     }
@@ -312,6 +417,7 @@ export default function SetlistsPage() {
     const ids = enCorbeille;
     try {
       for (const id of ids) await restaurerSetlist(id);
+      compter("cmd.setlist.corbeille.restaurer");
     } catch {
       montrerMessage(t("setlists.corbeille.erreur"));
     }
@@ -322,6 +428,7 @@ export default function SetlistsPage() {
   async function restaurer(s: FSSetlist) {
     try {
       await restaurerSetlist(s.id);
+      compter("cmd.setlist.corbeille.restaurer");
       await rafraichir();
     } catch {
       montrerMessage(t("setlists.corbeille.erreur"));
@@ -332,6 +439,7 @@ export default function SetlistsPage() {
     setEnCours(true);
     try {
       await deleteSetlist(s.id);
+      compter("cmd.setlist.corbeille.supprimer");
       setVersionCorbeille((v) => v + 1);
     } catch {
       montrerMessage(t("setlists.corbeille.erreur"));
@@ -355,6 +463,10 @@ export default function SetlistsPage() {
   // Non connecté : les setlists sont réservées aux membres
   if (!user) {
     return <EcranConnexionRequise />;
+  }
+
+  if (echec && !profile && !admin) {
+    return <EcranProfilIllisible onReessayer={relire} />;
   }
 
   // Connecté mais profil incomplet (les admins passent quand même)
@@ -487,6 +599,7 @@ export default function SetlistsPage() {
       titre={t("common.header.setlists")}
       sousTitre={t("setlists.list.sousTitre")}
       action={canCreate ? <BoutonNouveau label={t("setlists.list.newButton")} href="/setlists/new" /> : undefined}
+      milieu={!grand && pupitre ? <Pupitre setlist={pupitre.setlist} services={pupitre.services} songsMap={songsMap} role={pupitre.role} disposition={disposition} pret={pret} /> : undefined}
       onglets={rail}
       apres={filtres}
     />
@@ -504,7 +617,7 @@ export default function SetlistsPage() {
         )}
 
         {enCorbeille.length > 0 && (
-          <BandeauCorbeille count={enCorbeille.length} onAnnuler={annulerCorbeille} onFermer={fermerBandeau} />
+          <BandeauCorbeille count={enCorbeille.length} onAnnuler={annulerCorbeille} onFermer={fermerBandeau} onVoir={voirCorbeille} />
         )}
 
         {/* ── Barre d'action de la sélection ──
@@ -539,6 +652,21 @@ export default function SetlistsPage() {
         {/* ── Contenu ── */}
         {(tab === "mine" ? loadingMine : loading || !programmesLus) ? (
           <Squelette enTete={false} className="px-0" />
+        ) : (tab === "mine" ? echecMine : echecListe) ? (
+          <EtatVide
+            surGris={!grand}
+            action={
+              <button
+                type="button"
+                onClick={() => setEssai((n) => n + 1)}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+              >
+                {t("common.retry")}
+              </button>
+            }
+          >
+            {t("setlists.list.listUnreadable")}
+          </EtatVide>
         ) : displayed.length === 0 ? (
           <EtatVide
             surGris={!grand}
@@ -587,8 +715,8 @@ export default function SetlistsPage() {
           </ul>
           )
         )}
-        {feteFiltree && tab !== "mine" && piedFete}
-        {tab === "archived" && corbeilleVisible.length > 0 && (
+        {feteFiltree && tab !== "mine" && !echecListe && piedFete}
+        {user && (canCreate || corbeilleVisible.length > 0) && (
           <SectionCorbeille
             setlists={corbeilleVisible}
             ouverte={corbeilleOuverte}
@@ -611,9 +739,26 @@ export default function SetlistsPage() {
           largeurListe={400}
           // V3 (validation du 07/11/2026) : plus de colonne seule tant qu'on n'a rien touché ; la première
           // setlist de la liste est montrée d'emblée (`choisie`). Seule une liste vide reste en colonne seule.
-          colonneSeule={!choisie}
-          liste={<div className="relative px-4 pb-4 pt-4">{contenuListe}</div>}
-          premier={choisie && (
+          colonneSeule={!choisie && !pupitre}
+          liste={
+            <div className="relative px-4 pb-4 pt-4">
+              {pupitre && (
+                <button
+                  type="button"
+                  data-pupitre-retour
+                  aria-pressed={pupitreAffiche}
+                  onClick={() => setApercu(null)}
+                  className={`mb-3 flex h-10 w-full items-center rounded-xl px-3 text-left text-sm font-semibold transition-colors duration-150 ${pupitreAffiche ? "bg-secondary" : "active:bg-secondary/70"}`}
+                >
+                  {t("setlists.pupitre.retour")}
+                </button>
+              )}
+              {contenuListe}
+            </div>
+          }
+          premier={pupitreAffiche && pupitre ? (
+            <Pupitre setlist={pupitre.setlist} services={pupitre.services} songsMap={songsMap} role={pupitre.role} disposition={disposition} pret={pret} />
+          ) : choisie && (
             <ApercuSetlist setlist={choisie} songsMap={songsMap} planning={planning} monNom={profile ? nomCourt(profile) : ""} />
           )}
         >

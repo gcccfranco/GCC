@@ -18,9 +18,11 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { Coffee, Pencil, Trash2 } from "lucide-react"
 import { MenuActions } from "@/components/layout/MenuActions"
+import { compter } from "@/lib/usage"
 import { PassesReplies } from "./PassesReplies"
 import { Tile } from "@/components/ui/tile"
 import { canGererPetitDej } from "@/lib/access"
@@ -119,6 +121,7 @@ export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
       const r = await inscrire(dimanche, nom, user.uid)
       // Quelqu'un vient de prendre ce dimanche : rien n'est écrit (Q11).
       if ("deja" in r) setAnnonce({ dimanche, texte: t("planning.petitDej.vientDeSInscrire", { nom: r.deja.map((l) => l.nom).join(", ") }) })
+      else compter("cmd.planning.petitDej")
     })
   }
 
@@ -208,7 +211,7 @@ export function PetitDejCarte({ etat, annee, tri }: {
 
   const champ = (label: string) => <ChampDeSaisie etat={etat} label={label} />
 
-  const bouton = "h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] disabled:opacity-60"
+  const bouton = `${TOUCHER_44} h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] disabled:opacity-60`
 
   function laLigne(l: LignePetitDej): ReactNode {
     if (saisie?.id === l.id) return <div key={l.id} className="flex min-h-9 items-center">{champ(t("planning.petitDej.modifier"))}</div>

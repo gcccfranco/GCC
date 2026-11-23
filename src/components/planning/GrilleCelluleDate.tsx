@@ -39,7 +39,7 @@ export function GrilleCelluleDate({
   return (
     <td
       data-date-cell={date}
-      className="sticky left-0 z-10 w-24 pl-3 pr-2.5 py-2 font-semibold whitespace-nowrap bg-card texte-service"
+      className="sticky left-0 z-10 w-24 pl-3 pr-2.5 py-2 font-semibold bg-card texte-service"
       style={{ ...styleTexteService(couleur), backgroundImage: fond ? `linear-gradient(${fond}, ${fond})` : undefined }}
     >
       {/* La date, puis « Cette semaine » dessous (planches `v18-app-planning-grille-a`, `v18-bo-planning-a`). */}
@@ -58,7 +58,7 @@ export function GrilleCelluleDate({
         {menu}
       </div>
       {cetteSemaine && (
-        <span className={`mt-0.5 mr-1 inline-block [@container(min-width:960px)]:hidden text-xs leading-[14px] font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
+        <span className={`mt-0.5 mr-1 inline-block whitespace-nowrap [@container(min-width:960px)]:hidden text-xs leading-[14px] font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
           {t("planning.table.thisWeek")}
         </span>
       )}

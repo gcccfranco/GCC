@@ -29,6 +29,7 @@ import { useSetLanguage } from "@/lib/I18nProvider";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { audiencesNotifiables, equipesDesTaches, isAdminUser } from "@/lib/access";
+import { compter } from "@/lib/usage";
 import { BACK_OFFICE } from "@/lib/backOffice";
 
 const TOGGLE = "rounded-full bg-secondary px-3 py-1.5 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.96] cursor-pointer";
@@ -83,7 +84,7 @@ function MoiClient() {
               <GroupRow leading={<Globe />} onClick={() => setLanguage(isZh ? "fr" : "zh-CN")} trailing={isZh ? "中文" : t("moi.french")}>
                 {t("moi.language")}
               </GroupRow>
-              <GroupRow leading={<Moon />} onClick={() => setTheme(dark ? "light" : "dark")} trailing={dark ? t("moi.dark") : t("moi.light")}>
+              <GroupRow leading={<Moon />} onClick={() => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); }} trailing={dark ? t("moi.dark") : t("moi.light")}>
                 {t("moi.theme")}
               </GroupRow>
             </>
@@ -102,7 +103,7 @@ function MoiClient() {
               <GroupRow
                 leading={<Moon />}
                 trailing={
-                  <button type="button" onClick={() => setTheme(dark ? "light" : "dark")} className={TOGGLE}>
+                  <button type="button" onClick={() => { compter("cmd.general.theme"); setTheme(dark ? "light" : "dark"); }} className={TOGGLE}>
                     {dark ? t("moi.light") : t("moi.dark")}
                   </button>
                 }
@@ -125,20 +126,18 @@ function MoiClient() {
   // A12 (agencement v18) : des aperçus utiles à la place des lignes de liens d'avant (Mes services,
   // Équipes, Tâches ; Harmonie retiré le 02/11/2026) ; leur « Tout voir » mène aux pages, rien ne disparaît.
   const apercus = (
-    <div key="apercus" className="min-w-0 [container-type:inline-size]">
-      <div className="grid items-start gap-4 [@container(min-width:720px)]:grid-cols-2">
-        <div className="min-w-0 space-y-4">
-          <ApercuServices />
-          <MesPresidences profile={profile} />
-        </div>
-        {BACK_OFFICE && (
-          <div className="min-w-0 space-y-4">
-            {equipes.length > 0 && user && <ApercuTaches equipes={equipes} />}
-            <CarteMesEquipes profile={profile} />
-            <CarteCeQueTuPeuxFaire profile={profile} admin={admin} />
-          </div>
-        )}
-      </div>
+    <div key="apercus" className="min-w-0 space-y-4">
+      {/* B13 (décision déléguée CI-17, 15/11) : une seule colonne d'aperçus à toutes les tailles ; deux colonnes de
+          hauteurs inégales laissaient un trou sous « Mes services », et les colonnes CSS n'équilibrent pas des cartes si différentes. */}
+      <ApercuServices />
+      <MesPresidences profile={profile} />
+      {BACK_OFFICE && (
+        <>
+          {equipes.length > 0 && user && <ApercuTaches equipes={equipes} />}
+          <CarteMesEquipes profile={profile} />
+          <CarteCeQueTuPeuxFaire profile={profile} admin={admin} />
+        </>
+      )}
     </div>
   );
   const aide = (
@@ -150,21 +149,18 @@ function MoiClient() {
     </div>
   );
 
-  // A12 : en grand, le compte, les réglages et la déconnexion à gauche (340 px), les aperçus en deux
-  // colonnes à droite puis l'aide ; tablette portrait, compte et réglages côte à côte, puis les
-  // aperçus en deux colonnes ; téléphone, une colonne (les réglages après l'aide).
-  // Un seul arbre pour les trois : seules les classes changent, et les aperçus restent au même endroit.
+  // A12 : dès la tablette, le compte, les réglages et la déconnexion à gauche (340 px, collants), les
+  // aperçus en colonnes équilibrées à droite puis l'aide (B13, CI-17 : la tablette portrait prend
+  // l'agencement du grand écran) ; téléphone, une colonne (les réglages après l'aide).
+  // Un seul arbre pour les deux : seules les classes changent, et les aperçus restent au même endroit.
   // Une rotation ou la barre pliée ne les démonte donc pas (sinon toutes leurs lectures repartiraient).
-  const grand = disposition === "grand";
   const telephone = disposition === "telephone";
   const contenu = (
-    <div className={grand ? "grid grid-cols-[340px_minmax(0,1fr)] items-start gap-5" : "space-y-4"}>
-      <div className={grand ? "space-y-4 sticky top-[calc(var(--nav-h)+20px)]" : telephone ? undefined : "grid grid-cols-2 items-start gap-4"}>
+    <div className={telephone ? "space-y-4" : "grid grid-cols-[340px_minmax(0,1fr)] items-start gap-5"}>
+      <div className={telephone ? undefined : "space-y-4 sticky top-[calc(var(--nav-h)+20px)]"}>
         {compte}
-        {!telephone && <div className="space-y-4">{reglages}{notifierAdmin}{grand && deconnexion}</div>}
+        {!telephone && <div className="space-y-4">{reglages}{notifierAdmin}{deconnexion}</div>}
       </div>
-      {/* R2, n° 1 : en tablette, « Déconnexion » en rangée pleine largeur sous la paire compte / réglages (ni vide gris sous l'une, ni colonne inégale). */}
-      {!grand && !telephone && deconnexion}
       <div className="min-w-0 space-y-4">{apercus}{aide}</div>
       {telephone && <div className="space-y-4">{notifierAdmin}{reglages}{deconnexion}</div>}
     </div>

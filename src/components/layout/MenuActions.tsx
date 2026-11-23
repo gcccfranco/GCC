@@ -70,13 +70,14 @@ export function MenuActions({ actions, label, onOuvert, compact }: {
     <DropdownMenu modal={false} onOpenChange={onOuvert}>
       <DropdownMenuTrigger
         aria-label={label ?? t("common.moreActions")}
-        className={cn("flex shrink-0 items-center justify-center rounded-full bg-pose text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", compact ? `h-8 w-8 ${TOUCHER_44}` : "h-9 w-9")}
+        className={cn("flex shrink-0 items-center justify-center rounded-full bg-pose text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", TOUCHER_44, compact ? "h-8 w-8" : "h-9 w-9")}
       >
         <MoreHorizontal className="h-4 w-4" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="min-w-48"
+        collisionPadding={8}
+        className="min-w-48 max-w-[min(20rem,calc(100vw-1rem))]"
         onCloseAutoFocus={(e) => {
           const a = enAttente.current;
           if (!a) return;

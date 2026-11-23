@@ -4,11 +4,11 @@
 // Louange (trois sous-équipes) et Régie. La carte (colonnes, lignes grises), la ligne de membre du panneau
 // d'édition (pastilles à bascule) et l'encadré « Ce que ça lui ouvre », calculé par `ceQueCaOuvre`.
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ceQueCaOuvre, type ProfilOrganigramme } from "@/lib/acces/organigramme";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/lib/equipes/louange";
 import { INSTRUMENTS, SOUS_EQUIPES, type MembreEquipe, type SousEquipe } from "@/types/equipe";
 import { SERVICE_LIEUX, type ServiceLieu } from "@/types/user";
+import { cn } from "@/lib/utils";
 
 export const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const bascule = <T,>(liste: readonly T[] | undefined, v: T): T[] => ((liste ?? []).includes(v) ? (liste ?? []).filter((x) => x !== v) : [...(liste ?? []), v]);
@@ -181,10 +182,89 @@ type DroitsMembre = {
   referents: boolean;
 };
 
+/** La ligne d'un membre dans la feuille d'équipe (T7) : repliée, UN bouton de 52 px (nom, « en essai », chevron, résumé
+ *  sur une ligne) ; dépliée, ses réglages (`children`) puis « Retirer » ; retirée, pâlie, avec « Remettre ». */
+export function LigneMembreEdition({
+  m, resumeTexte, ouvert, ouvrable, retire, libelleRetirer, onBascule, onRetirer, onRemettre, children,
+}: {
+  m: MembreEquipe;
+  resumeTexte: string;
+  ouvert: boolean;
+  ouvrable: boolean;
+  /** Marqué retiré (brouillon) : pâli, non ouvrable, « Remettre » à droite. */
+  retire: boolean;
+  libelleRetirer: string;
+  onBascule: () => void;
+  onRetirer: () => void;
+  onRemettre: () => void;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const interactive = ouvrable && !retire;
+  // Après « Remettre », le focus revient sur la ligne (le bouton « Remettre » disparaît).
+  const ligne = useRef<HTMLButtonElement>(null);
+  const etaitRetire = useRef(retire);
+  useEffect(() => {
+    if (etaitRetire.current && !retire) ligne.current?.focus();
+    etaitRetire.current = retire;
+  }, [retire]);
+  const contenu = (
+    <>
+      <span className="flex items-center gap-1.5 text-sm font-semibold leading-5 text-foreground">
+        <span className="truncate">{m.nom}</span>
+        {m.essai && <span className="shrink-0 rounded-full bg-secondary px-1.5 text-[11px] font-medium leading-4 text-muted-foreground">{t("equipes.essai")}</span>}
+        {interactive && (ouvert ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />)}
+      </span>
+      {resumeTexte && <span className="block truncate text-xs leading-4 text-muted-foreground">{resumeTexte}</span>}
+    </>
+  );
+  const forme = "flex min-h-[50px] w-full min-w-0 flex-col justify-center px-2 py-1 text-left";
+  return (
+    <div className="rounded-lg border border-border" data-testid={`membre-${m.uid || m.nom}`}>
+      <div className="flex items-center gap-2">
+        <div className={cn("min-w-0 flex-1 transition-opacity duration-200 motion-reduce:duration-150", retire && "opacity-55")}>
+          {interactive ? (
+            <button ref={ligne} type="button" onClick={onBascule} aria-expanded={ouvert} className={forme}>{contenu}</button>
+          ) : (
+            <div className={forme}>
+              {contenu}
+              {retire && <span className="sr-only">{t("equipes.retireALEnregistrement", { nom: m.nom })}</span>}
+            </div>
+          )}
+        </div>
+        {retire && (
+          // Dessin de 32 px, zone de toucher de 44 px (pseudo-élément) ; focus ici : sinon il se perd avec le bouton « Retirer ».
+          <button
+            type="button"
+            autoFocus
+            aria-label={t("equipes.remettreNom", { nom: m.nom })}
+            onClick={onRemettre}
+            className="relative mr-2 h-8 shrink-0 rounded-full border border-border bg-background px-3.5 text-sm font-semibold text-foreground before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
+          >
+            {t("equipes.remettre")}
+          </button>
+        )}
+      </div>
+      {interactive && ouvert && (
+        <div className="deplie-membre">
+          <div className="min-h-0 overflow-hidden">
+            <div className="space-y-3 px-2 pb-1 pt-1">
+              {children}
+              <button type="button" onClick={onRetirer} className="flex h-11 items-center text-sm font-semibold text-destructive">
+                {libelleRetirer}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Un membre de Louange ou de Régie dans le panneau d'édition : replié, sa ligne de résumé ; ouvert, la mention,
  *  « en essai » et les pastilles. `ouvrable` : le droit d'ouvrir (un référent de sous-équipe n'ouvre que les siens). */
 export function MembreOrganigramme({
-  equipe, m, profil, ouvert, ouvrable, onBascule, droits, gerer = false, onChange, onRetirer,
+  equipe, m, profil, ouvert, ouvrable, onBascule, droits, gerer = false, onChange, onRetirer, retire, sousSeulement, onRemettre,
 }: {
   equipe: EquipeALieux;
   m: MembreEquipe;
@@ -197,6 +277,10 @@ export function MembreOrganigramme({
   gerer?: boolean;
   onChange: (champ: Partial<MembreEquipe>) => void;
   onRetirer: () => void;
+  retire: boolean;
+  /** Qui modifie est référent de sous-équipe sans droit sur toute l'équipe : « Retirer de ma sous-équipe ». */
+  sousSeulement: boolean;
+  onRemettre: () => void;
 }) {
   const { t } = useTranslation();
   const louange = equipe === "louange";
@@ -211,77 +295,50 @@ export function MembreOrganigramme({
   };
 
   return (
-    <div className="space-y-1.5 rounded-lg border border-border p-2" data-testid={`membre-${m.uid || m.nom}`}>
-      <div className="flex items-start justify-between gap-2">
-        {ouvrable ? (
-          <button type="button" onClick={onBascule} aria-expanded={ouvert} className="min-w-0 flex-1 text-left">
-            <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              {m.nom}
-              {ouvert ? <ChevronUp className="h-4 w-4 text-muted-foreground" aria-hidden /> : <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden />}
-            </span>
-            {lignes && <span className="block text-xs text-muted-foreground">{lignes}</span>}
-          </button>
-        ) : (
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">{m.nom}</p>
-            {lignes && <p className="text-xs text-muted-foreground">{lignes}</p>}
-          </div>
-        )}
-        {ouvrable && (
-          <button
-            type="button"
-            aria-label={t("equipes.retirer", { nom: m.nom })}
-            onClick={onRetirer}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground hover:text-destructive"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+    <LigneMembreEdition
+      m={m} resumeTexte={lignes} ouvert={ouvert} ouvrable={ouvrable} retire={retire}
+      libelleRetirer={t(sousSeulement ? "equipes.retirerDeMaSousEquipe" : "equipes.retirerDeLEquipe")}
+      onBascule={onBascule} onRetirer={onRetirer} onRemettre={onRemettre}
+    >
+      {droits.equipe && (
+        <>
+          <Input value={m.mention} placeholder={t("equipes.mention")} onChange={(e) => onChange({ mention: e.target.value })} className="h-11" />
+          <Pastille actif={m.essai} onClick={() => onChange({ essai: !m.essai })}>{t("equipes.essai")}</Pastille>
+        </>
+      )}
 
-      {ouvrable && ouvert && (
-        <div className="space-y-3 pt-1">
-          {droits.equipe && (
-            <>
-              <Input value={m.mention} placeholder={t("equipes.mention")} onChange={(e) => onChange({ mention: e.target.value })} className="h-11" />
-              <Pastille actif={m.essai} onClick={() => onChange({ essai: !m.essai })}>{t("equipes.essai")}</Pastille>
-            </>
-          )}
-
-          {louange && (
-            <>
-              <Groupe titre={t("equipes.organigramme.sousEquipes")}>
-                {SOUS_EQUIPES.map((s) => (
-                  <Pastille key={s} actif={sous.includes(s)} disabled={!droits.sous(s)} onClick={() => changeSous(s)}>
-                    {t(`acces.sousEquipe.${s}`)}
-                  </Pastille>
-                ))}
-              </Groupe>
-              <MentionReferent m={m} louange gerer={gerer} />
-            </>
-          )}
-          {!louange && <MentionReferent m={m} louange={false} gerer={gerer} />}
-
-          <Groupe titre={t("equipes.organigramme.ouIlSert")}>
-            {SERVICE_LIEUX.map((l) => (
-              <Pastille key={l} actif={lieuxDe(m).includes(l)} onClick={() => onChange({ lieux: bascule(m.lieux, l) })}>
-                {nomLieu(t, l)}
+      {louange && (
+        <>
+          <Groupe titre={t("equipes.organigramme.sousEquipes")}>
+            {SOUS_EQUIPES.map((s) => (
+              <Pastille key={s} actif={sous.includes(s)} disabled={!droits.sous(s)} onClick={() => changeSous(s)}>
+                {t(`acces.sousEquipe.${s}`)}
               </Pastille>
             ))}
           </Groupe>
-          {louange && sous.includes("musiciens") && (
-            <Groupe titre={t("equipes.organigramme.ceQuIlJoue")}>
-              {INSTRUMENTS.map((i) => (
-                <Pastille key={i} actif={(m.joue ?? []).includes(i)} onClick={() => onChange({ joue: bascule(m.joue, i) })}>
-                  {majuscule(t(`acces.instrument.${i}`))}
-                </Pastille>
-              ))}
-            </Groupe>
-          )}
-
-          <CeQueCaOuvre profil={profilSimule(equipe, m, profil)} sansCompte={!m.uid} />
-        </div>
+          <MentionReferent m={m} louange gerer={gerer} />
+        </>
       )}
-    </div>
+      {!louange && <MentionReferent m={m} louange={false} gerer={gerer} />}
+
+      <Groupe titre={t("equipes.organigramme.ouIlSert")}>
+        {SERVICE_LIEUX.map((l) => (
+          <Pastille key={l} actif={lieuxDe(m).includes(l)} onClick={() => onChange({ lieux: bascule(m.lieux, l) })}>
+            {nomLieu(t, l)}
+          </Pastille>
+        ))}
+      </Groupe>
+      {louange && sous.includes("musiciens") && (
+        <Groupe titre={t("equipes.organigramme.ceQuIlJoue")}>
+          {INSTRUMENTS.map((i) => (
+            <Pastille key={i} actif={(m.joue ?? []).includes(i)} onClick={() => onChange({ joue: bascule(m.joue, i) })}>
+              {majuscule(t(`acces.instrument.${i}`))}
+            </Pastille>
+          ))}
+        </Groupe>
+      )}
+
+      <CeQueCaOuvre profil={profilSimule(equipe, m, profil)} sansCompte={!m.uid} />
+    </LigneMembreEdition>
   );
 }

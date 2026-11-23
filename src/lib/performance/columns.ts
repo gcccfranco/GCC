@@ -1,3 +1,5 @@
+import type { Tranche } from "@/lib/performance/tranchesScan";
+
 // Pagination du mode louange (PerformanceMode.tsx) — pur, sans DOM.
 // Une colonne : les pages d'aujourd'hui. Deux colonnes (lot U5, T1,
 // docs/spec-deux-volets.md Q2 à Q5) : sur tablette couchée et sur ordinateur,
@@ -10,9 +12,19 @@
  *  coupe pas). `twoColumns` : page posée en deux colonnes hors vue structure ;
  *  ses annotations ont leur propre clé (« x2 »). */
 export type PerfPage = { header: number | null; cols: number[][]; scale: number; fit?: boolean; twoColumns?: boolean;
+  /** Lot CV : au moins une ligne de la page n'est pas posée en une seule rangée (coupure des vers). Sa clé de
+   *  page porte « v2 » ; une page dont tous les vers tiennent sur une rangée garde sa clé d'avant CV. */
+  coupe?: boolean;
+  /** Page de scan 简谱 certifié (lot JP-B) : la tranche de la page de partition qu'elle montre (lignes entières,
+   *  y en px image). Absent : le scan entier, comme avant. Sa clé de page est « j4-<y0> » (« j5-<y0> » en demi-lignes, téléphone en portrait, lot JP-C). */
+  tranche?: Tranche;
   /** Dernière page d'un chant suivi d'un autre : indice de la colonne qui porte la pastille « Ensuite »
    *  (posée à la fin de cette colonne, dans le flux). Absent : pas de pastille dans le flux. */
-  suivant?: number };
+  suivant?: number;
+  /** Vue structure (FS-D) : les lignes de la feuille de route grossissent puis s'étirent pour remplir la page. */
+  etire?: boolean;
+  /** Avec `etire` : somme des hauteurs naturelles (échelle 1) des lignes de la page. */
+  naturel?: number };
 
 /** Place gardée à la pastille « Ensuite » dans le flux (44 px de bouton + marge). */
 export const PASTILLE_SUIVANT_H = 64;
@@ -164,10 +176,10 @@ export function paginateColumns({
 
   return pages.map((c, p) => {
     const hauteurs = c.map((col) => sum(col, heightsColumn));
-    // Pastille « Ensuite » : à la fin de la colonne la plus courte (la gauche à égalité). Sans place
-    // dans aucune des deux, la page est réduite d'autant (repli A).
+    // Pastille « Ensuite » : à la fin de la dernière colonne qui porte du texte, après la dernière section
+    // (R7). Sans place dans cette colonne, la page est réduite d'autant (repli A).
     const dernier = p === pages.length - 1 && pastille > 0;
-    const colPastille = dernier ? (hauteurs.length > 1 && hauteurs[1] < hauteurs[0] ? 1 : 0) : -1;
+    const colPastille = dernier ? (c[1]?.length > 0 ? 1 : 0) : -1;
     if (dernier) hauteurs[colPastille] += pastille;
     const tallest = Math.max(...hauteurs);
     return {

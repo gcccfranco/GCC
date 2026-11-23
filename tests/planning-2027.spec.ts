@@ -173,7 +173,8 @@ test("Paix 2027 : le gestionnaire voit le brouillon, marqué, le bandeau, et peu
   await expect(bandeau).toContainText("2027 · brouillon");
   await expect(bandeau).toContainText("les 52 dimanches de 2027 sont déjà posés");
   await expect(laCase(page, "2027-01-10", "presidence")).toContainText("Invité A.");
-  await expect(page.locator("[data-non-publie='2027-01-10']").filter({ visible: true })).toHaveCount(1);
+  // Retouches d'usage T5 : tout le T1 en brouillon → « Non publié » une fois en tête, plus sur chaque ligne.
+  await expect(page.locator("[data-non-publie-trimestre]").filter({ visible: true })).toHaveCount(1);
   await expect(page.getByRole("button", { name: "Publier le T1" }), "lot RS : le gestionnaire publie").toBeVisible();
 });
 
@@ -193,6 +194,7 @@ test("Paix 2027 : « Publier le T1 » appelle la route avec l'année, puis propo
   await repondreDansLeSite(page, "Publier le T1");
   await expect(page.getByRole("button", { name: "Masquer le T1" })).toBeVisible();
   expect(corps).toEqual([{ key: "paix", tri: "T1", publish: true, year: 2027 }]);
+  await expect(page.locator("[data-non-publie-trimestre]").filter({ visible: true })).toHaveCount(0);
   await expect(page.locator("[data-non-publie='2027-01-10']").filter({ visible: true })).toHaveCount(0);
 });
 

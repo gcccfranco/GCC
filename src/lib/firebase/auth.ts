@@ -13,14 +13,19 @@ import { poserMarqueConnecte, useMarqueConnecte } from "@/lib/marqueConnecte";
 import { effacerCopieListe } from "@/lib/setlist/copieListe";
 import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import { balayerLesCopies, effacerToutesLesCopies, suivreLeCompte } from "@/lib/setlist/copieHorsLigne";
+import { suivreLaFile } from "@/lib/partition/fileEnAttente";
 
 // Copies hors ligne liées au compte : un seul écouteur pour tout le site, installé une fois côté navigateur.
 // Le premier événement est le compte restauré par le SDK (rien n'est effacé) ; un autre identifiant ensuite,
 // ou aucun, efface les copies. Au démarrage, les copies de plus de 14 jours sont aussi balayées.
 if (typeof window !== "undefined") {
   const suivre = suivreLeCompte(() => { void effacerToutesLesCopies(); void effacerCopieListe(); viderGardesTableau(); });
+  // File d'attente de Ma partition (MP-1) : rejouée au chargement et au retour du réseau, tant que le compte est connecté.
+  let desabonnerFile: (() => void) | null = null;
   onAuthStateChanged(auth, (u) => {
     suivre(u?.uid ?? null);
+    desabonnerFile?.();
+    desabonnerFile = u ? suivreLaFile(u.uid) : null;
     // Lot CH (C1, C5) : la marque « était connecté » suit la réponse de Firebase.
     poserMarqueConnecte(!!u);
   });

@@ -3,6 +3,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { parsePdfStyle, pdfFileName } from "../src/lib/pdfStylePref";
 import { nuancePdfColors, sectionPdfPalette } from "../src/lib/pdf/colors";
+import { sectionColorKind } from "../src/lib/sectionPalette";
 import { compactPlan, compactTransitions, stripGroups } from "../src/lib/pdf/compact";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { resolveStructureOverride } from "../src/lib/chordpro/structure";
@@ -43,6 +44,7 @@ function setlist(over: Record<string, unknown> = {}) {
     language: "mixed",
     notes: "",
     ownerId: "uid-owner",
+    editeurs: [MUSICIEN.uid], // le PDF est réservé à l'équipe (PU-1)
     isPrivate: false,
     items: [
       item({
@@ -58,21 +60,16 @@ function setlist(over: Record<string, unknown> = {}) {
 
 const openMenu = (page: Page) => page.getByRole("button", { name: "Plus d'actions" }).click();
 const pdfEntry = (page: Page) => page.getByRole("menuitem", { name: "PDF" });
-/** « Quel PDF ? » d'une setlist : l'entrée PDF du ⋯ sur G, le bouton PDF de l'en-tête
- *  en deux volets (docs/spec-deux-volets.md, Q7). */
+/** « Quel PDF ? » d'une setlist : l'entrée PDF du ⋯, sur G comme en deux volets (B7 : elle a quitté l'en-tête). */
 async function quelPdf(page: Page) {
-  if (await enDeuxVolets(page)) {
-    await page.locator("[data-en-tete]").getByRole("button", { name: "PDF", exact: true }).click();
-    return;
-  }
   await openMenu(page);
   await pdfEntry(page).click();
 }
 
-/** « Quel PDF ? » d'un chant : le bouton PDF de la barre, au bout de la rangée dès la tablette
- *  debout, sur la seconde rangée du téléphone (docs/spec-barre-chant.md, Q2, Q5). */
+/** « Quel PDF ? » d'un chant : l'entrée PDF du menu ⋯ de la barre (RU-3, docs/spec-reglages-unifies.md). */
 async function pdfDuChant(page: Page) {
-  await page.getByTestId("barre-outils").getByRole("button", { name: "PDF", exact: true }).click();
+  await page.getByTestId("barre-outils").getByRole("button", { name: "Plus d'actions" }).click();
+  await pdfEntry(page).click();
 }
 
 // ── Préférence et nom de fichier (fonctions pures) ──────────────────────────
@@ -117,8 +114,11 @@ test("couleurs par section : même palette que l'écran, le reste en gris « aut
   expect(sectionPdfPalette("bridge").color).toBe("#7a5bcb");
   expect(sectionPdfPalette("outro").color).toBe("#4f6477");
   expect(sectionPdfPalette("coda").color).toBe("#4f6477");
+  // DP-G1 : « tag » a sa couleur (--sec-tag) comme à l'écran, y compris pour une section « other » nommée « Tag ».
+  expect(sectionPdfPalette("tag")).toEqual({ color: "#bd476a", tint: "#faedf0" });
+  expect(sectionPdfPalette(sectionColorKind({ type: "other", name: "Tag (x2)" }))).toEqual({ color: "#bd476a", tint: "#faedf0" });
+  expect(sectionPdfPalette(sectionColorKind({ type: "other", name: "Interlude" })).color).toBe("#6b7280");
   // Types sans couleur propre à l'écran (CHART_TYPE_COLOR) : gris « autre ».
-  expect(sectionPdfPalette("tag")).toEqual({ color: "#6b7280", tint: "#f1f3f6" });
   expect(sectionPdfPalette("instrumental").color).toBe("#6b7280");
   expect(sectionPdfPalette("other").color).toBe("#6b7280");
 });

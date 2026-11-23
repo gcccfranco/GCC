@@ -1,11 +1,12 @@
 import { createHash } from "crypto";
-import { basculerMode } from "./helpers/menuSetlist";
+import { basculerMode, choisirDestination } from "./helpers/menuSetlist";
 import { readFileSync, existsSync } from "fs";
 import { inflateSync } from "zlib";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { loadChords, openSheet } from "./helpers/jianpu";
-import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
+import { loadChords, openSheet, toucherScan } from "./helpers/jianpu";
+import { attendreCompteur, basculerAnnoter, fermerBarre } from "./helpers/louange";
+import { ouvrirPartitions } from "./helpers/setlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
 import { JianpuPDFPage } from "../src/components/pdf/SongPDF";
@@ -275,20 +276,19 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
     },
   }, "/setlists/setlist-jianpu");
   await ouvrirPartitions(page);
-  await page.locator('[data-jianpu-page="0"] img').waitFor();
+  await page.locator('[data-jianpu-page="0"] img').first().waitFor(); // JV-3 : en volets, une copie par fenêtre
   await page.waitForFunction(() =>
     Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every((i) => i.complete && i.naturalWidth > 0));
-  await basculerMode(page, "Adapter");
+  await basculerMode(page);
 
   // L'étiquette 1 (« G7 », x 638, y 344) : on touche au centre de l'écriture qui l'a retouchée.
   const c = loadChords()[ADAPTER_SLUG];
-  const zone = (await page.locator("[data-jianpu-retouche-zone]").boundingBox())!;
-  await page.locator("[data-jianpu-retouche-zone]").click({
-    position: { x: ((c.labels[1].x + c.labels[1].w / 2) / c.w) * zone.width, y: ((c.labels[1].y + c.labels[1].h / 2) / c.h) * zone.height },
-  });
+  await toucherScan(page, c.labels[1].x + c.labels[1].w / 2, c.labels[1].y + c.labels[1].h / 2, c.w, c.h);
   const feuille = page.getByRole("dialog");
   await feuille.getByRole("button", { name: "A", exact: true }).click();
   await feuille.getByRole("button", { name: "Valider l'accord" }).click();
+  // MP-3 : la créatrice de la setlist règle le culte, « Enregistrer » lui demande où.
+  await choisirDestination(page, "culte");
 
   const retouche = page.locator('[data-jianpu-retouche="1"]');
   await expect(retouche).toHaveText("A7");
@@ -410,7 +410,15 @@ test("5 fenêtre (page chant, deux pages) : 为我而来 p. 1 recadrée, p. 2 en
   expect(Math.abs(p2.img.top - p2.fenetre.top), "page 2 : rien de coupé").toBeLessThan(1);
 });
 
+/** Lot JP-B : 一生爱你 est certifié (`systemes.json`) et se coupe en tranches. Ces tests décrivent l'affichage d'un scan
+ *  non certifié (une page de scan par page d'écran, ratio w / (h − top), colonne en paysage) : on répond à
+ *  `systemes.json` par « aucun chant certifié » ; les tranches sont dans tests/louange-jianpu-tranches.spec.ts. */
+const scanNonCertifie = (page: Page) =>
+  page.route("**/jianpu/systemes.json", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: '{"version":1,"chants":{}}' }));
+
 test("5 fenêtre (mode louange, fit) : ratio w / (h − top), la page tient à l'écran, centrée sans compensation", async ({ page }) => {
+  await scanNonCertifie(page);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await signInAs(page, MUSICIEN, {
@@ -423,7 +431,7 @@ test("5 fenêtre (mode louange, fit) : ratio w / (h − top), la page tient à l
   }, "/setlists/setlist-fenetre");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   // Serveur froid ou chargé : la mise en page (polices chinoises) prend plusieurs secondes.
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
   await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length).toBe(1);
@@ -613,7 +621,7 @@ const T4_SETLIST = {
   title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
   language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
   items: [
-    { songSlug: "abba-pere", position: 1 },
+    { songSlug: "abba-pere", position: 1, notes: "Avec la batterie" },
     { songSlug: SLUG, position: 2, jianpuSheet: true, keyOverride: "D", notes: "Plus calme", sectionKeys: { "chorus-3": "E" } },
     { songSlug: "a-la-croix", position: 3 },
   ].map((over) => ({
@@ -649,7 +657,7 @@ async function enTete(page: Page, position: number, titre: string) {
 
 test("L3-T4 vue Partitions : un chant sur scan a le même en-tête qu'un chant en paroles (n°, titre lié, auteurs, ♩, pastille, bandeau)", async ({ page }) => {
   await ouvrirSetlistT4(page);
-  await page.locator('[data-outline-item="2"] [data-jianpu-page="0"] img').waitFor();
+  await page.locator('[data-outline-item="2"] [data-jianpu-page="0"] img').first().waitFor(); // JV-3 : en volets, une copie par fenêtre
   const paroles = await enTete(page, 1, "Abba Père");
   const scan = await enTete(page, 2, SLUG);
   // Même place du n° et du titre dans le bloc, même bord gauche.
@@ -657,9 +665,10 @@ test("L3-T4 vue Partitions : un chant sur scan a le même en-tête qu'un chant e
   expect(Math.abs(scan.dy - paroles.dy), "titre à la même hauteur").toBeLessThan(1);
   expect(Math.abs(scan.rondY - paroles.rondY), "n° à la même hauteur").toBeLessThan(1);
   const bloc = page.locator('[data-outline-item="2"]');
-  await expect(bloc.getByText("曾祥怡词 / 游智婷曲")).toBeVisible();
-  await expect(bloc.getByText("♩")).toBeVisible();
-  await expect(bloc.getByText("D", { exact: true }).first()).toBeVisible();
+  // Depuis l'en-tête compact (exemples d'usage, T2), l'auteur ne paraît plus à l'écran, seulement à l'impression.
+  await expect(bloc.getByText("曾祥怡词 / 游智婷曲")).toBeAttached();
+  await expect(bloc.getByText("♩").locator("visible=true")).toHaveCount(1); // l’en-tête complet reste dans la page pour l’impression
+  await expect(bloc.getByRole("button", { name: "Tonalité : D" })).toHaveText("1=D");
   await expect(bloc.getByText("Plus calme")).toBeVisible();
   // Titre, puis bandeau, puis le scan.
   const fenetre = (await bloc.locator("[data-jianpu-fenetre]").first().boundingBox())!;
@@ -669,12 +678,12 @@ test("L3-T4 vue Partitions : un chant sur scan a le même en-tête qu'un chant e
 
 test("L3-T4 vue Partitions : le chant suivant commence au même écart après un scan qu'après des paroles", async ({ page }) => {
   await ouvrirSetlistT4(page);
-  await page.locator('[data-outline-item="2"] [data-jianpu-page="0"] img').waitFor();
+  await page.locator('[data-outline-item="2"] [data-jianpu-page="0"] img').first().waitFor(); // JV-3 : en volets, une copie par fenêtre
   // L'écart qui se voit : de la fin de l'encre (dernière section, dernière fenêtre) au n° du
   // chant suivant ; mesuré d'un coup, et attendu stable (la fenêtre se coupe après l'image).
   const ecarts = () => page.evaluate(() => {
     const bloc = (i: number) => document.querySelector(`[data-outline-item="${i}"]`)!;
-    const bas = (els: NodeListOf<Element>) => els[els.length - 1].getBoundingClientRect().bottom;
+    const bas = (els: NodeListOf<Element>) => Math.max(...Array.from(els, (e) => e.getBoundingClientRect().bottom)); // T4 : deux colonnes, la dernière section n'est plus forcément la plus basse
     const rond = (i: number) => Array.from(bloc(i).querySelectorAll("span")).find((s) => s.textContent === String(i))!.getBoundingClientRect();
     return {
       apresParoles: rond(2).top - bas(bloc(1).querySelectorAll("[data-section]")),
@@ -724,10 +733,11 @@ for (const th of THEMES) {
 
 // ─── L3-T5a : mode louange — K1 (le scan entre les barres) et l'en-tête d'une ligne ─
 
-async function ouvrirLouangeT5(page: Page, role = "pianiste") {
+async function ouvrirLouangeT5(page: Page, role = "pianiste", certifie = false) {
+  if (!certifie) await scanNonCertifie(page);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
-  await signInAs(page, MUSICIEN, {
+  const db = await signInAs(page, MUSICIEN, {
     "setlists/setlist-t5": {
       title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
       language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
@@ -736,25 +746,31 @@ async function ouvrirLouangeT5(page: Page, role = "pianiste") {
     },
   }, "/setlists/setlist-t5");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
+  // CL-1 : une page de partition = une fenêtre, certifiée ou non (plus de demi-lignes ni de tranche).
   await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);
-  // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus.
+  // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus. Certifié : la page entière, sa tête de feuille au-dessus.
+  if (certifie) {
+    await expect(page.locator("[data-performance-mode] [data-tete-feuille]:not([aria-hidden=true] *)").first()).toBeAttached({ timeout: 30_000 });
+    return db;
+  }
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
   await expect.poll(async () => ratio((await fenetres(page, "[data-performance-mode]"))[0].fenetre) / (w / (h - top))).toBeCloseTo(1, 2);
+  return db;
 }
 
 /** Bas de la barre du haut, haut de la barre du bas (elles restent en place, escamotées). */
 async function barres(page: Page) {
-  const haut = (await page.locator("[data-performance-mode] .material-chrome:has(span.tabular-nums)").boundingBox())!;
-  const bas = (await page.locator("[data-performance-mode] .material-chrome:has(button[aria-label='Quitter'])").boundingBox())!;
+  const haut = (await page.locator("[data-performance-mode] [data-barre-haut]").boundingBox())!;
+  const bas = (await page.locator("[data-performance-mode] [data-barre-bas]").boundingBox())!;
   return { hautBas: haut.y + haut.height, basHaut: bas.y };
 }
 
 test("8 K1 (mode louange) : le scan et son en-tête tiennent entre les deux barres, affichées puis escamotées", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouangeT5(page);
-  const chrome = page.locator("[data-performance-mode] .material-chrome:has(span.tabular-nums)").locator("xpath=..");
+  const chrome = page.locator("[data-performance-mode] [data-barre-haut]").locator("xpath=..");
   // Barres affichées (elles s'escamotent après 3 s : un toucher au centre les rappelle).
   const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
   if ((await chrome.evaluate((el) => getComputedStyle(el).opacity)) !== "1") await page.mouse.click(w / 2, h / 2);
@@ -776,6 +792,7 @@ test("8 K1 (mode louange) : le scan et son en-tête tiennent entre les deux barr
 test("L3-T5a en-tête d'une ligne (mode louange) : n°, titre, ♩, pastille de tonalité, puis le bandeau, puis le scan", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouangeT5(page);
+  await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
   // En paysage sur grand écran, l'en-tête et le bandeau sont dans la colonne de gauche (L3-T5b).
   test.skip(await grandEcran(page), "téléphone et tablette en portrait");
   const entete = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)");
@@ -784,7 +801,7 @@ test("L3-T5a en-tête d'une ligne (mode louange) : n°, titre, ♩, pastille de 
     entete.getByText("1", { exact: true }).boundingBox(),
     entete.getByRole("heading", { name: SLUG }).boundingBox(),
     entete.getByText(/♩\s*65/).boundingBox(),
-    entete.getByText("D", { exact: true }).boundingBox(),
+    entete.locator("[data-carre-tonalite]").boundingBox(),
   ]);
   const milieu = (r: { y: number; height: number }) => r.y + r.height / 2;
   for (const r of [rond!, tempo!, pastille!]) expect(Math.abs(milieu(r) - milieu(titre!)), "sur la ligne du titre").toBeLessThan(6);
@@ -809,6 +826,7 @@ test("L3-T5a en-tête d'une ligne (mode louange), A+ 150 %, capo et tonalité de
   }, SLUG);
   // Le capo ne s'affiche qu'au guitariste.
   await ouvrirLouangeT5(page, "guitariste");
+  await fermerBarre(page); // barre ouverte à la première ouverture : l'en-tête du chant est alors invisible
   const entete = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)");
   await expect(entete.getByText(/Capo/)).toBeVisible();
   const titre = (await entete.getByRole("heading", { name: SLUG }).boundingBox())!;
@@ -817,16 +835,24 @@ test("L3-T5a en-tête d'une ligne (mode louange), A+ 150 %, capo et tonalité de
   expect(e.x + e.width).toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
 });
 
-test("L3-T5a annotations : une page de scan a sa propre clé (« j2 ») — les traits posés avant que le scan ne bouge ne s'y chargent plus", async ({ page }) => {
+test("L3-T5a annotations (MP-5) : un trait tracé sur un scan s'accroche à l'image (ancre « scan », coordonnées de l'image) dans ma partition, plus sous la clé de la page", async ({ page }) => {
   test.setTimeout(90_000);
-  const lues: string[] = [];
-  page.on("request", (r) => {
-    const m = r.url().match(/\/documents\/(annotations\/[^?]+)/);
-    if (m && r.method() === "GET") lues.push(decodeURIComponent(m[1]));
-  });
-  await ouvrirLouangeT5(page);
-  // En paysage sur grand écran, la colonne (L3-T5b) a encore déplacé le scan : « j3 ».
-  await expect.poll(() => lues.at(-1) ?? "").toMatch((await grandEcran(page)) ? /j3$/ : /j2$/);
+  // 一生爱你 est certifié (`systemes.json`, lot JP-B) : sa page tient entière à l'écran (CL-1). Les anciennes annotations par page
+  // (clés « j2 », « j4-<y0> ») restent lues, plus rien ne s'y écrit : tests/louange-jianpu-tranches.spec.ts.
+  const db = await ouvrirLouangeT5(page, "pianiste", true);
+  await basculerAnnoter(page);
+  const fenetre = (await page.locator("[data-performance-mode] [data-jianpu-fenetre]:not([aria-hidden=true] *)").first().boundingBox())!;
+  const x = fenetre.x + fenetre.width * 0.4;
+  const y = Math.min(fenetre.y + fenetre.height * 0.5, page.viewportSize()!.height * 0.5);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 40, y + 15, { steps: 4 });
+  await page.mouse.move(x + 90, y + 30, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(() => db.writes.filter((w) => w.path.startsWith("partitions/")).length).toBeGreaterThan(0);
+  const traits = db.writes.filter((w) => w.path.startsWith("partitions/")).at(-1)!.data.traits as { ancre: { scan?: boolean; image?: number } }[];
+  expect(traits[0].ancre).toMatchObject({ scan: true, image: 0 });
+  expect(db.writes.filter((w) => w.path.startsWith("annotations/")), "rien dans les annotations par page").toEqual([]);
 });
 
 // ─── L3-T5b : mode louange — en paysage sur grand écran, la structure en colonne ─
@@ -836,6 +862,7 @@ const grandEcran = (page: Page) =>
 
 /** 一生爱你 en D puis Abba Père : la page du scan est la dernière du chant, « Suivant » y est. */
 async function ouvrirLouangeT5b(page: Page, over: Record<string, unknown> = {}, role = "pianiste") {
+  await scanNonCertifie(page);
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
   const item = { showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, notes: "" };
@@ -851,7 +878,7 @@ async function ouvrirLouangeT5b(page: Page, over: Record<string, unknown> = {}, 
     },
   }, "/setlists/setlist-t5b");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
   await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);
@@ -1049,18 +1076,15 @@ test("10 PDF téléchargé : 一生爱你 en D — le scan ré-encodé fait w ×
   await signInAs(page, MUSICIEN, {
     "setlists/setlist-t6": {
       title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
-      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false, editeurs: ["uid-musicien"],
       items: [{ songSlug: SLUG, position: 1, keyOverride: "D", showChords: true, showPinyin: true, useJianpu: false,
         structureOverride: null, sectionNotes: {}, notes: "", jianpuSheet: true }],
     },
   }, "/setlists/setlist-t6");
   await ouvrirPartitions(page);
-  if (await enDeuxVolets(page)) {
-    await page.locator("[data-en-tete]").getByRole("button", { name: "PDF", exact: true }).click();
-  } else {
-    await page.getByRole("button", { name: "Plus d'actions" }).click();
-    await page.getByRole("menuitem", { name: "PDF" }).click();
-  }
+  // CI-12 (B7) : le PDF est une entrée du ⋯ dans les deux mises en page.
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("menuitem", { name: "PDF" }).click();
   const [download] = await Promise.all([
     page.waitForEvent("download", { timeout: 90_000 }),
     page.getByRole("dialog", { name: "Quel PDF ?" }).getByRole("button", { name: "Télécharger" }).click(),

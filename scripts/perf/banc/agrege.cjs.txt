@@ -1,0 +1,36 @@
+// node agrege.cjs <profil.cpuprofile> [base] : temps propre par fichier:ligne source (source maps de next dev).
+const fs = require("fs");
+const { SourceMapConsumer } = require("/home/user/gcc/node_modules/source-map-js");
+const p = JSON.parse(fs.readFileSync(process.argv[2]));
+const base = process.argv[3] || "http://localhost:3400";
+const byId = new Map(p.nodes.map((n) => [n.id, n]));
+const self = new Map();
+for (let i = 0; i < p.samples.length; i++) self.set(p.samples[i], (self.get(p.samples[i]) || 0) + (p.timeDeltas[i] || 0));
+const maps = new Map();
+async function carte(url) {
+  if (maps.has(url)) return maps.get(url);
+  let c = null;
+  try { const r = await fetch(url + ".map"); if (r.ok) c = new SourceMapConsumer(await r.json()); } catch {}
+  maps.set(url, c); return c;
+}
+(async () => {
+  const agg = new Map(); const fich = new Map(); let total = 0;
+  for (const [id, us] of self) {
+    const n = byId.get(id); const f = n.callFrame; total += us;
+    let cle = f.functionName || "(anonyme)";
+    let fichier = f.url ? f.url.replace(base, "") : f.functionName;
+    if (f.url && f.url.includes("/_next/")) {
+      const c = await carte(f.url);
+      const o = c && c.originalPositionFor({ line: f.lineNumber + 1, column: f.columnNumber });
+      if (o && o.source) { fichier = o.source.replace(/^.*?\/(src|node_modules)\//, "$1/").replace(/^turbopack:\/\/\/\[project\]\//, ""); cle = `${f.functionName || "(anonyme)"} ${fichier}:${o.line}`; }
+      else cle = `${f.functionName || "(anonyme)"} ${f.url.replace(base, "")}:${f.lineNumber + 1}`;
+    }
+    agg.set(cle, (agg.get(cle) || 0) + us);
+    const fk = (fichier || "?").replace(/(node_modules\/[^/]+(\/[^/]+)?).*/, "$1");
+    fich.set(fk, (fich.get(fk) || 0) + us);
+  }
+  const ms = (x) => (x / 1000).toFixed(0).padStart(6);
+  console.log(`total ${ms(total)} ms`);
+  console.log("-- par fichier"); for (const [k, v] of [...fich].sort((a, b) => b[1] - a[1]).slice(0, 14)) console.log(ms(v), k);
+  console.log("-- par fonction"); for (const [k, v] of [...agg].sort((a, b) => b[1] - a[1]).slice(0, 22)) console.log(ms(v), k.slice(0, 150));
+})();

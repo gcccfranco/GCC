@@ -31,11 +31,14 @@ export type Idee = {
   apres?: string;
   /** Fiche du catalogue à laquelle l'idée se rattache. */
   ficheId?: string;
+  /** Passage du chant visé : uid de section, puis son nom si le chant a été réécrit (H2). */
+  passage?: string;
+  passageNom?: string;
   creeLe: string;
   modifieLe: string;
 };
 
-type IdeeValues = Pick<Idee, "texte" | "avant" | "apres" | "ficheId">;
+type IdeeValues = Pick<Idee, "texte" | "avant" | "apres" | "ficheId" | "passage" | "passageNom">;
 
 function docData(raw: RawDoc): { id: string; data: Record<string, unknown> } {
   return {
@@ -106,6 +109,8 @@ export async function getIdees(slug: string): Promise<Idee[]> {
       avant: (data.avant as string) || undefined,
       apres: (data.apres as string) || undefined,
       ficheId: (data.ficheId as string) || undefined,
+      passage: (data.passage as string) || undefined,
+      passageNom: (data.passageNom as string) || undefined,
       creeLe: (data.creeLe as string) ?? "",
       modifieLe: (data.modifieLe as string) ?? "",
     };

@@ -118,7 +118,7 @@ export function ayantsDroitDuQui(qui: string, ctx: ContexteFetes): AyantDroit[] 
       }
       for (const p of ctx.profils) if (p.planningName && noms.has(normalizeName(p.planningName))) ajoute(p.uid, "planning-edd");
     }
-  } else if (qui === "Franco") {
+  } else if (qui === "Franco" || qui === "Intergroupe" || qui === "Interfranco") {
     // L'équipe de l'organigramme, pas le public « Louange élargi » (choix de la spec).
     for (const p of ctx.profils) if (p.dansEquipes.includes("louange")) ajoute(p.uid, "team-louange");
   }

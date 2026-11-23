@@ -84,8 +84,11 @@ export async function verifierEnTete(page: Page, options: { premierBloc?: Locato
     await expect(h1, "un seul h1 dans la page").toHaveCount(1);
     expect(await h1.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "taille du titre de la fiche").toBe(30);
   } else {
-    const h1 = entete.locator("h1");
-    await expect(h1, "un seul h1 dans l'en-tête").toHaveCount(1);
+    // Page d'une fête (lot AS, AS9) : l'en-tête est compact (retour, rail), le h1 est le titre de l'édition, juste dessous.
+    const fete = new URL(page.url()).pathname.startsWith("/evenements/scene");
+    const h1 = fete ? page.locator("h1").filter({ visible: true }) : entete.locator("h1");
+    if (fete) await expect(entete.locator("h1"), "pas de h1 dans l'en-tête compact").toHaveCount(0);
+    else await expect(h1, "un seul h1 dans l'en-tête").toHaveCount(1);
     await expect(page.locator("h1").filter({ visible: true }), "un seul h1 dans la page").toHaveCount(1);
 
     const taille = await tailleDuTitreAttendue(page);

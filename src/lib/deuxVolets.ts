@@ -57,6 +57,8 @@ export const SECTIONS_EN_DEUX_VOLETS: readonly string[] = [
   // Pâques · Noël (P4) : les onglets de la scène posent leurs deux volets à eux, avant l'agenda
   // qui les contient ; passer d'une fête à l'autre ne remonte pas la section.
   "/evenements/scene",
+  // Salles (docs/spec-salles.md, SA4) : la liste des salles et la journée d'une salle, avant l'agenda qui les contient.
+  "/evenements/salles",
   // B2 : l'agenda des évènements.
   "/evenements",
   // B4 : Mes services (`/mes-services/[date]`) et Mes tâches (`/taches/[equipe]/[id]`).

@@ -9,8 +9,13 @@ import type { JianpuEntry, JianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { uniqueSections } from "@/lib/setlist/uniqueSections";
+import type { Disposition } from "@/lib/dispositionPref";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { isDp } from "@/lib/setlist/dp";
+import { copiesSousOrigine, passagesRetouches } from "@/lib/setlist/passages";
+
+/** UP-7 : un passage retouché seul (section copiée) : sa section d'origine et son rang dans la structure. */
+export type PassageRetouche = { origine: ChordProSection; rang: number };
 
 export type SongHeaderBlock = {
   kind: "song-header";
@@ -21,6 +26,9 @@ export type SongHeaderBlock = {
   songKey: string;
   position: number;
   language?: "fr" | "zh";
+  /** Tempo du chant (♩ = …) : l'en-tête de la disposition Partition l'affiche sous le titre. */
+  tempo?: number;
+  time?: string;
   /** Slug du chant (absent pour les fusions) — cible du réglage capo */
   songSlug?: string;
   /** Capo appliqué (frets) : les accords des sections sont déjà transposés */
@@ -33,6 +41,8 @@ export type SongHeaderBlock = {
   /** Déroulé joué, pour le bandeau de structure en tête du chant ; une
    *  modulation vers la tonalité jouée n'en est pas une. */
   steps?: SectionOccurrence[];
+  /** UP-7 : passages retouchés seuls de `steps` (uid de l'étape → origine et rang), pour le badge des pastilles. */
+  retouches?: Map<string, PassageRetouche>;
 };
 
 export type SectionBlock = {
@@ -48,15 +58,22 @@ export type SectionBlock = {
   keyChange?: string;
   songTitle: string;
   songKey: string;
+  /** Lot CV : le chant de la section, pour ses exceptions de mots chinois (motsChinois.ts). */
+  songSlug?: string;
   songSourceLabel?: string;
   /** Tempo du `.cho` (♩), repris par la barre haute. */
   tempo?: number;
+  time?: string;
   /** Occurrences de la structure jouée que ce bloc représente (une en ordre
    *  joué, toutes les reprises en sections uniques). */
   occurrenceUids?: string[];
   /** Ordre joué : le même Dp joué plusieurs fois de suite n'est imprimé qu'une
    *  fois, « ×n » à côté du nom (le bloc garde les uids de tous ses passages). */
   repeat?: number;
+  /** Capo du chant (frets) : `songKey` et `keyChange` sont sonores, les accords de `section` sont déjà transposés de −capo. */
+  capo?: number;
+  /** UP-7 : passage retouché seul (section copiée) : libellé « Refrain · 2ᵉ fois » en Sections uniques. */
+  retouche?: PassageRetouche;
 };
 
 export type TransitionIntraBlock = {
@@ -95,6 +112,7 @@ export type JianpuSheetBlock = {
   position: number;
   /** Tempo du `.cho` (♩), repris par l'en-tête au-dessus du scan. */
   tempo?: number;
+  time?: string;
   /** Structure jouée : le scan ne la porte pas (il ignore l'ordre et les
    *  reprises décidés pour ce dimanche), le bandeau au-dessus l'affiche. */
   steps: SectionOccurrence[];
@@ -155,13 +173,14 @@ export function buildPerformanceBlocks(
   /** Affichage (même préférence que la setlist, `partition-layout`) :
    *  ordre joué ; chaque section une fois, notes et transitions laissées au
    *  bandeau ; ou structure seule, où un chant à scan donne ses sections. */
-  { affichage = "played" }: { affichage?: PartitionLayout } = {},
+  { affichage = "played", choixScan }: { affichage?: PartitionLayout; choixScan?: Record<string, boolean> } = {},
 ): PerformanceBlock[] {
   const blocks: PerformanceBlock[] = [];
   const unique = affichage === "unique";
   // Le responsable coche le 简谱 par chant ; la préférence de l'appareil peut
   // le suivre, l'imposer partout, ou ne jamais l'utiliser.
-  const wantsSheet = (item: SetlistItem) => sheetEnabled(jianpuPref, item.jianpuSheet);
+  // `choixScan` : choix fait à l'ajout d'un chant (mode louange), plus fort que la préférence.
+  const wantsSheet = (item: SetlistItem) => choixScan?.[item.songSlug] ?? sheetEnabled(jianpuPref);
   let c = 0;
   const uid = () => `pb-${c++}`;
 
@@ -242,6 +261,7 @@ export function buildPerformanceBlocks(
           blocks.push({
             kind: "section",
             uid: uid(),
+            songSlug: ms.songSlug,
             section: msKeyChange
               ? transposeSection(section, semitonesTo(fusionKey, msKeyChange), msKeyChange)
               : section,
@@ -275,6 +295,8 @@ export function buildPerformanceBlocks(
             songKey: fusionKey,
             position: item.position,
             language: ast.metadata.language,
+            tempo: ast.metadata.tempo ?? undefined,
+            time: ast.metadata.time ?? undefined,
             steps: bandeau(occurrences, fusionKey),
           });
           const shown = unique
@@ -286,6 +308,7 @@ export function buildPerformanceBlocks(
             blocks.push({
               kind: "section",
               uid: uid(),
+              songSlug: item.songSlug,
               section: secKeyChange
                 ? transposeSection(sec, semitonesTo(fusionKey, secKeyChange), secKeyChange)
                 : sec,
@@ -325,6 +348,12 @@ export function buildPerformanceBlocks(
       personalShift && o.targetKey ? { ...o, targetKey: getTransposedKey(o.targetKey, personalShift) } : o,
     );
     const steps = bandeau(occurrences, playedKey);
+    const retouches = new Map(
+      [...passagesRetouches(steps, item.sectionOrigins)].flatMap(([u, r]) => {
+        const origine = ast.sections.find((s) => s.id === r.origine);
+        return origine ? [[u, { origine, rang: r.rang }] as const] : [];
+      }),
+    );
     blocks.push({
       kind: "song-header",
       uid: uid(),
@@ -334,10 +363,13 @@ export function buildPerformanceBlocks(
       songKey: playedKey,
       position: item.position,
       language: ast.metadata.language,
+      tempo: ast.metadata.tempo ?? undefined,
+      time: ast.metadata.time ?? undefined,
       songSlug: item.songSlug,
       capo: capo || undefined,
       setlistKey: personalKey ? setlistKey : undefined,
       steps,
+      retouches: retouches.size ? retouches : undefined,
     });
     // ── Partition 简谱 : la page entière remplace les sections ──
     // La structure de l'item reste décrite (elle sert à la liste de la
@@ -364,6 +396,7 @@ export function buildPerformanceBlocks(
           setlistKey: personalKey ? setlistKey : undefined,
           position: item.position,
           tempo: ast.metadata.tempo ?? undefined,
+          time: ast.metadata.time ?? undefined,
           steps,
         });
       });
@@ -373,7 +406,7 @@ export function buildPerformanceBlocks(
     // Sections uniques : une impression par section (et par tonalité de
     // 升调) ; notes, nuances et transitions passent au bandeau.
     const shown = unique
-      ? uniqueSections(occurrences, playedKey).map(({ step, uids }) => ({ ...step, note: "", transition: "", nuance: undefined, uids }))
+      ? copiesSousOrigine(uniqueSections(occurrences, playedKey), item.sectionOrigins).map(({ step, uids }) => ({ ...step, note: "", transition: "", nuance: undefined, uids }))
       : occurrences.map((step) => ({ ...step, uids: [step.section.uid] }));
     for (const { section: sec, note, transition, nuance, targetKey, uids } of shown) {
       // Modulation (升调) : section transposée dans sa tonalité cible. Avec un
@@ -390,6 +423,7 @@ export function buildPerformanceBlocks(
       blocks.push({
         kind: "section",
         uid: uid(),
+        songSlug: item.songSlug,
         section: shownSec,
         language: ast.metadata.language,
         chordsEnabled: showChordsGlobal && item.showChords,
@@ -400,7 +434,10 @@ export function buildPerformanceBlocks(
         songTitle: ast.metadata.title,
         songKey: playedKey,
         tempo: ast.metadata.tempo ?? undefined,
+        time: ast.metadata.time ?? undefined,
         occurrenceUids: uids,
+        capo: capo || undefined,
+        retouche: unique ? retouches.get(sec.uid) : undefined,
       });
       if (transition) blocks.push({ kind: "transition-intra", uid: uid(), text: transition });
     }
@@ -410,18 +447,22 @@ export function buildPerformanceBlocks(
 }
 
 /** Signature de mise en page d'une page du mode louange, partie de la clé de
- *  ses annotations : accords, transitions, paroles, style « chart » (s1),
+ *  ses annotations : accords, transitions, paroles, disposition (rien en
+ *  Classique, s1 en Couleurs par section, dR Repères, dS Scène, dP Partition),
  *  capo (kN), tonalité choisie sur l'appareil (p…) et taille du texte.
  *  L'affichage y entre aussi (O12) : rien en Ordre joué, pour que les clés
  *  d'aujourd'hui ne changent pas ; « au » en Sections uniques ; Structure
  *  seule s'écrit comme la vue ossature qu'elle rend (accords coupés, paroles
  *  masquées) — la vue structure du batteur garde ainsi ses traits, par quelque
  *  chemin qu'on y arrive. */
+/** Marque de la vue Structure (FS-D) : la feuille de route a remplacé la mise en page d'avant, les traits posés sur les anciennes cartes ne se chargent plus ici (ils restent dans Firestore). */
+export const SUFFIXE_FEUILLE = "f2";
+
 export function signatureAffichage({
   showChords,
   showTransitions,
   hideLyrics,
-  chartStyle,
+  disposition,
   capo,
   personalKey,
   fontScale,
@@ -430,7 +471,7 @@ export function signatureAffichage({
   showChords: boolean;
   showTransitions: boolean;
   hideLyrics: boolean;
-  chartStyle: boolean;
+  disposition: Disposition;
   capo?: number;
   personalKey?: string;
   fontScale: number;
@@ -439,14 +480,15 @@ export function signatureAffichage({
   const ossature = affichage === "structure";
   const accords = showChords && !ossature;
   const paroles = !hideLyrics && !ossature;
-  return `c${accords ? 1 : 0}t${showTransitions ? 1 : 0}l${paroles ? 0 : 1}${chartStyle ? "s1" : ""}${capo ? `k${capo}` : ""}${personalKey ? `p${personalKey}` : ""}z${Math.round(fontScale * 100)}${affichage === "unique" ? "au" : ""}`;
+  const suffixeDisposition = disposition === "sections" ? "s1" : disposition === "reperes" ? "dR" : disposition === "scene" ? "dS" : disposition === "partition" ? "dP" : "";
+  return `c${accords ? 1 : 0}t${showTransitions ? 1 : 0}l${paroles ? 0 : 1}${suffixeDisposition}${capo ? `k${capo}` : ""}${personalKey ? `p${personalKey}` : ""}z${Math.round(fontScale * 100)}${affichage === "unique" ? "au" : ""}${ossature ? SUFFIXE_FEUILLE : ""}`;
 }
 
 /** Identité stable d'un bloc d'une mise en page à l'autre : les indices ne le
  *  sont pas (changer d'affichage reconstruit les blocs). Le chant par la
  *  position de l'item et le rang de son en-tête (une fusion hors structure
  *  mixte en a un par chant) ; une section par les occurrences qu'elle joue. */
-export type AncreLecture = { position: number; rang: number; uids: string[] | null };
+export type AncreLecture = { position: number; rang: number; uids: string[] | null; pageScan?: number };
 
 /** Chant de chaque bloc : position de l'item et rang de l'en-tête parmi ceux de
  *  même position. */
@@ -467,12 +509,16 @@ export function ancreDeLecture(blocks: PerformanceBlock[], index: number): Ancre
   const b = blocks[index];
   const chant = chantsDesBlocs(blocks)[index];
   if (!b || !chant) return null;
-  return { ...chant, uids: b.kind === "section" && b.occurrenceUids?.length ? b.occurrenceUids : null };
+  return {
+    ...chant,
+    uids: b.kind === "section" && b.occurrenceUids?.length ? b.occurrenceUids : null,
+    pageScan: b.kind === "jianpu-sheet" ? b.pageIndex : undefined, // la page d'un scan n'a ni section ni uid
+  };
 }
 
 /** Blocs de la nouvelle mise en page où reprendre la lecture, du plus précis au
  *  plus large : la section du même chant qui joue l'une des occurrences lues,
- *  puis l'en-tête de ce chant. Vide quand le chant n'existe plus. */
+ *  ou la même page de son scan, puis l'en-tête de ce chant. Vide quand le chant n'existe plus. */
 export function retrouverAncre(blocks: PerformanceBlock[], ancre: AncreLecture): number[] {
   const chants = chantsDesBlocs(blocks);
   const memeChant = (i: number) => chants[i]?.position === ancre.position && chants[i]?.rang === ancre.rang;
@@ -481,6 +527,8 @@ export function retrouverAncre(blocks: PerformanceBlock[], ancre: AncreLecture):
     ? blocks.findIndex((b, i) => b.kind === "section" && memeChant(i) && !!b.occurrenceUids?.some((u) => ancre.uids!.includes(u)))
     : -1;
   if (section >= 0) trouves.push(section);
+  const scan = ancre.pageScan == null ? -1 : blocks.findIndex((b, i) => b.kind === "jianpu-sheet" && memeChant(i) && b.pageIndex === ancre.pageScan);
+  if (scan >= 0) trouves.push(scan);
   const entete = blocks.findIndex((b, i) => b.kind === "song-header" && memeChant(i));
   if (entete >= 0) trouves.push(entete);
   return trouves;

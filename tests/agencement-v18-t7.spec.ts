@@ -6,7 +6,7 @@ import {
 
 // Agencement v18 (docs/spec-agencement-v18.md), tranche T7 — App › Évènements (A10 ; planches
 // `v18-app-evenements`, `v18-app-evenements-reduite`). L'en-tête de toute la section (agenda et scène) :
-// « Évènements », « Les rendez-vous de l'église et les inscriptions », « + Nouvel évènement » (pilule à
+// « Église » (lot AR 1, ex-« Évènements »), « Évènements, salles et fêtes », « + Nouvel évènement » (pilule à
 // libellé en grand, rond sur téléphone), les onglets en rail sous le titre ; sur l'onglet de la scène, le
 // même en-tête sans action principale. En grand, la fiche dans le volet : titre en h2 de 22 px, une
 // colonne sous 760 px de volet, deux au-delà ; sans image, elle commence par son titre (plus de cadre
@@ -56,13 +56,13 @@ async function capture(page: Page, nom: string) {
 }
 
 test.describe("T7 : l'en-tête de la section Évènements", () => {
-  test("l'agencement commun : « Évènements », sous-titre, onglets en rail sous le titre", async ({ page }, info) => {
+  test("l'agencement commun : « Église », sous-titre, onglets en rail sous le titre", async ({ page }, info) => {
     await ouvrir(page, MEMBRE, "/evenements");
-    const titre = enTete(page).getByRole("heading", { level: 1, name: "Évènements" });
+    const titre = enTete(page).getByRole("heading", { level: 1, name: "Église" });
     await expect(titre).toBeVisible();
-    await expect(enTete(page)).toContainText("Les rendez-vous de l'église et les inscriptions");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Calendrier", "Pâques", "Noël"]);
-    await expect(ongletsRail(page).getByRole("link", { name: "Calendrier" })).toHaveAttribute("aria-current", "page");
+    await expect(enTete(page)).toContainText("Évènements, salles et fêtes");
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Salles"]);
+    await expect(ongletsRail(page).getByRole("link", { name: "Évènements" })).toHaveAttribute("aria-current", "page");
     const [h1, rail] = [(await titre.boundingBox())!, (await ongletsRail(page).boundingBox())!];
     expect(rail.y, "le rail sous le titre").toBeGreaterThan(h1.y + h1.height - 1);
     await expect(page.getByRole("link", { name: /Repas de rentrée/ }).first()).toBeVisible();
@@ -76,7 +76,7 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
   test("en grand : la liste n'a plus de titre, la fiche se titre en h2 de 22 px", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : grand écran");
     await ouvrir(page, MEMBRE, "/evenements");
-    await expect(liste(page).getByRole("heading", { name: "Évènements" })).toHaveCount(0);
+    await expect(liste(page).getByRole("heading", { name: "Église" })).toHaveCount(0);
     const titre = volet(page).getByRole("heading", { level: 2, name: "Soirée louange" });
     await expect(titre).toBeVisible();
     expect(await titre.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBe(22);
@@ -113,25 +113,17 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
 
   test("membre : pas de « Nouvel évènement »", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/evenements");
-    await expect(enTete(page).getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
+    await expect(enTete(page).getByRole("heading", { level: 1, name: "Église" })).toBeVisible();
     await expect(nouvel(page)).toHaveCount(0);
   });
 
-  test("onglet de la scène : le même en-tête, sans action principale, le titre ne bouge pas", async ({ page }) => {
-    await ouvrir(page, COORDINATION, "/evenements");
-    const h1 = enTete(page).getByRole("heading", { level: 1, name: "Évènements" });
-    await expect(h1).toBeVisible();
-    await expect(nouvel(page)).toHaveCount(1);
-    const avant = (await h1.boundingBox())!;
-    await ongletsRail(page).getByRole("link", { name: "Noël" }).click();
-    await expect(page).toHaveURL(/\/evenements\/scene\/noel\/?$/);
-    await expect(ongletsRail(page).getByRole("link", { name: "Noël" })).toHaveAttribute("aria-current", "page");
+  test("page de la fête : en-tête compact, sans action principale, le titre est « Noël 2026 »", async ({ page }) => {
+    await ouvrir(page, COORDINATION, "/evenements/scene/noel");
+    await expect(page.getByRole("heading", { level: 1, name: /^Noël/ })).toBeVisible();
+    await expect(ongletsRail(page).getByRole("link", { name: "Évènements" })).toHaveAttribute("aria-current", "page");
     await expect(enTete(page)).toHaveCount(1);
-    await expect(enTete(page)).toContainText("Les rendez-vous de l'église et les inscriptions");
+    await expect(enTete(page)).not.toContainText("Évènements, salles et fêtes");
     await expect(nouvel(page), "pas d'action principale sur la scène").toHaveCount(0);
-    const apres = (await h1.boundingBox())!;
-    expect(Math.round(apres.x)).toBe(Math.round(avant.x));
-    expect(Math.round(apres.y)).toBe(Math.round(avant.y));
     await expect(page.getByTestId("barre-section"), "plus de barre d'onglets collante").toHaveCount(0);
     // Le contenu de la scène part du même bord que le titre : plus de borne de 1 080 px centrée (R2, R10).
     await verifierAgencement(page);
@@ -142,7 +134,7 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await fakeFirestore(page, DOCS);
     await page.goto("/evenements");
-    await expect(enTete(page).getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
+    await expect(enTete(page).getByRole("heading", { level: 1, name: "Église" })).toBeVisible();
     await expect(ongletsRail(page)).toHaveCount(0);
     await expect(page.getByRole("link", { name: /Soirée louange/ }).first()).toBeVisible();
   });

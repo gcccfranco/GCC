@@ -16,6 +16,8 @@ Tout est écrit en D.
 | Statut | à valider |
 | Sensations | Repos · Joie et élan |
 | Moments | Intro |
+| Ressenti | chaleureux · élan (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : pas d'intro (ou une intro sans rapport) devient **les
@@ -49,6 +51,8 @@ accords de la dernière ligne du refrain · sûreté : **très sûre**.
 | Statut | à valider |
 | Sensations | Suspendu et planant · Douceur et intimité |
 | Moments | Intro |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : intro `D – G – A – D` devient `D – G/D – A/D – D`, basse
@@ -84,6 +88,8 @@ dans le médium, doux, sans marteler.
 | Statut | à valider |
 | Sensations | Suspendu et planant · Douceur et intimité |
 | Moments | Pont · Transition |
+| Ressenti | chaleureux · couleur (proposé) |
+| Usage | pré-refrain · transition (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : entre deux couplets, `D` tenu devient la boucle
@@ -119,6 +125,8 @@ remplacement boucle `1 – 4/1` · sûreté : **sûre**.
 | Statut | à valider |
 | Sensations | Tendresse et nostalgie · Repos · Majesté |
 | Moments | Fin |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | fin (proposé) |
 | Niveau | piano : facile · guitare : facile · **à préparer avec l'équipe** |
 
 **Avant → après** : dernier refrain puis fin devient dernier refrain,
@@ -156,6 +164,8 @@ dernière ligne » · sûreté : **très sûre**.
 | Statut | à valider |
 | Sensations | Suspendu et planant · Tendresse et nostalgie · Gravité et recueillement |
 | Moments | Fin |
+| Ressenti | mélancolique · couleur (proposé) |
+| Usage | fin (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : dernier accord `D` devient `Bm7` · degrés `1` devient
@@ -190,6 +200,8 @@ sonner.
 | Statut | à valider |
 | Sensations | Suspendu et planant · Émerveillement · Douceur et intimité |
 | Moments | Fin |
+| Ressenti | couleur (proposé) |
+| Usage | fin (proposé) |
 | Niveau | piano : facile · guitare : intermédiaire |
 
 **Avant → après** : dernier accord `D` devient `D2` (ou `Dmaj7`) tenu ·
@@ -225,6 +237,8 @@ chants soient comme un signe* (pont, en F : F2 « Tu es le bienvenu ») ·
 | Statut | à valider |
 | Sensations | Repos · Gravité et recueillement · Majesté |
 | Moments | Fin |
+| Ressenti | chaleureux · mélancolique (proposé) |
+| Usage | fin (proposé) |
 | Niveau | piano : facile · guitare : facile |
 
 **Avant → après** : fin `A → D` devient `A → D – G/D – D` · degrés `5 → 1`

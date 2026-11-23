@@ -15,6 +15,7 @@ import { createPortal } from "react-dom"
 import { usePathname } from "next/navigation"
 import { Lock, User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { Pilules, type OngletRail } from "@/components/layout/Onglets"
 import { useProfile } from "@/lib/firebase/users"
 import { planningsDuBackOffice } from "@/lib/access"
@@ -105,7 +106,7 @@ export function FiltreDeNom({ filtre, couleur }: { filtre: FiltreNom; couleur: s
             <button
               type="button"
               onClick={filtre.effacer}
-              className="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 text-muted-foreground hover:text-foreground active:text-foreground"
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 text-muted-foreground hover:text-foreground active:text-foreground [@media(pointer:coarse)]:after:absolute [@media(pointer:coarse)]:after:-inset-[6px] [@media(pointer:coarse)]:after:content-['']"
               aria-label={t("planning.table.clear")}
             >
               <X className="h-3 w-3" />
@@ -118,7 +119,7 @@ export function FiltreDeNom({ filtre, couleur }: { filtre: FiltreNom; couleur: s
           type="button"
           aria-pressed={filtre.mesDates}
           onClick={filtre.basculerMesDates}
-          className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
+          className={`${TOUCHER_44} inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
             filtre.mesDates ? "text-white" : "border border-border bg-card text-foreground hover:bg-secondary"
           }`}
           style={filtre.mesDates ? { background: couleur } : undefined}

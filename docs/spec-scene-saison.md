@@ -343,6 +343,47 @@ npx tsc --noEmit
 npm run lint
 ```
 
+## Image de fête (Timothée, 21/11/2026) — go du 21/11/2026
+
+Mots de Timothée : « Il faudrait que pour les événements comme Pâques et Noël on puisse mettre une image pour que ça
+s'affiche comme les événements épinglées. » Go : « Go fait tout en même temps » (21/11, nuit), après la proposition
+ci-dessous, dont il a laissé les deux choix à la proposition (« si tu réponds juste go, je pars sur une image par
+année, montrée sur la carte de la page Église seulement »).
+
+Ce que le code montre : la fête est un document `programmes/{id}` (une édition par année, `src/types/programme.ts`),
+sans image ; la carte est `src/app/evenements/CarteFete.tsx` (bandeau bleu), posée par `CalendrierClient.tsx`. Un
+évènement épinglé (`CarteEpingle.tsx`) montre `images[0]` en 16/9 au-dessus du texte ; ses images sont des data-URL
+JPEG compressées (`src/lib/utils/compressImage.ts`, formulaire `src/components/evenements/EvenementForm.tsx`), gardées
+dans le document Firestore, sans Storage ni route API.
+
+Décisions :
+- **Une image par édition** (Noël 2026 a la sienne) : champ facultatif `image` (data-URL JPEG) dans `Programme`.
+- **Où on la met** : back-office, écran de la fête (`src/app/back-office/evenements/scene/[fete]/`, `FeteGestion.tsx`),
+  derrière `BACK_OFFICE` : choisir, aperçu 16/9, remplacer, retirer. Compression par `compressImage`, comme les
+  évènements ; plafond de taille à fixer par la session pour que le document reste loin du mégaoctet de Firestore
+  (décision déléguée, à écrire ici).
+- **Qui** : ceux qui modifient déjà la fête (`isCoordination()`, `firestore.rules`, `programmes/{id}`). La règle ne
+  filtre pas les champs : rien à publier. Si la session trouve le contraire, elle s'arrête sur ce point et l'écrit
+  (publier `firestore.rules` revient à Timothée).
+- **Affichage** : avec une image, `CarteFete` prend le gabarit de `CarteEpingle` avec image (image 16/9 en haut, carte
+  claire, titre, date · « dans N jours », ligne d'état des réservations, puis « Réserver la Grande salle » et « Voir la
+  fête ») ; sans image, le bandeau bleu reste tel quel. Image décorative (`alt=""`), le titre suit.
+- **Pas de planche** : le gabarit existe déjà et Timothée l'a nommé ; captures aux quatre dispositions, thème sombre et
+  中文, puis `critique-design`.
+- **Hors périmètre** : la page « Voir la fête », la ligne des fêtes passées, une image commune à toutes les années.
+- **À surveiller** : les lectures qui listent tous les `programmes` portent désormais l'image ; la session dit où ils
+  sont lus et, si le poids gêne (liste de toutes les éditions), écarte le champ de ces lectures.
+
+Tranches (petites et voisines : une seule session, un commit et une ligne d'Avancement par tranche) :
+- **IF-1** — modèle (`image?`), lecture et écriture, champ dans l'écran de la fête, libellés fr et zh-CN.
+- **IF-2** — `CarteFete` avec image, tests d'agencement (cinq projets, `SPECS_GRAND_ECRAN`), captures.
+Tests : Playwright, session simulée (`tests/helpers/fakeSession.ts`), noms fictifs ; les specs des fêtes et de la page
+Église voisines ; pas de suite complète.
+- **IF-3** (go de Timothée du 21/11, nuit : « Go pour les deux ») — la carte ne passe plus par le bleu : l'édition
+  garde un drapeau `aImage` (posé et retiré avec l'image, lu avec la liste) ; quand il est vrai, `CarteFete` prend
+  tout de suite le gabarit avec image, avec un emplacement 16/9 neutre le temps que l'image arrive, sans saut de
+  mise en page. Une édition sans drapeau se comporte comme aujourd'hui. `firestore.rules` : rien à changer attendu.
+
 ## Avancement
 
 - 04/10/2026 : go (« Lance plusieurs agents si besoin pour coder les autres specs en même temps » ; questions sans
@@ -413,3 +454,56 @@ npm run lint
   saison de Noël 2026 puis l'ouvre. Téléphone des membres : planches `scene-reserver-telephone` et
   `scene-reserver-feuille-telephone` (version 17). Timothée relit le 中文 (dont « 本季允许的团体 », les groupes
   permis pour cette saison).
+- **IF-1 fait (21/11/2026, session orchestratrice « Image de fête »)** : champ `image?` (data-URL JPEG) dans
+  `Programme` ; bloc « Image » (图片) dans l'écran de la fête du back-office (`FeteGestion.tsx`, derrière
+  `BACK_OFFICE`) : choisir, aperçu 16/9, « Remplacer l'image », « Retirer l'image » ; message distinct pour une
+  image illisible (HEIC sous Chrome). `firestore.rules` relue : `programmes/{id}` ne filtre pas les champs, rien à
+  publier. Décisions déléguées (session, 21/11) : **plafond** `compressImage(fichier, 1280, 250_000)` (plus grand
+  côté 1 280 px, 250 000 caractères au plus, ≈ 190 Ko : document loin du mégaoctet) ; **poids** : `listProgrammes`
+  lit par projection `select` tous les champs sauf `image` (liste typée `CHAMPS_LISTE` : TypeScript force à y
+  ajouter tout futur champ), `getProgramme` par masque sans `image`, et l'image se lit seule par
+  `lireImageEdition(id)`. Lectures en liste des `programmes` : page Église (`CalendrierClient`), page de la fête
+  (`FeteClient`), `VersLaFete`, setlists (`setlists/page.tsx`), salles (`lib/salles/charger.ts`), tableau de bord
+  (`lib/tableauDeBord/lecture.ts`), calendrier (`lib/calendrier/charger.ts`), back-office (`FeteGestion`) : aucune
+  ne porte plus l'image. Restent côté serveur, non changés (Admin SDK, peu de documents) : le cron
+  (`api/cron/reminders/route.ts:81`, toute la collection) et `lib/fetes/serveur.ts` (une édition à la fois ;
+  écritures par `update`, l'image n'est jamais écrasée). Double de test : `select` et `mask.fieldPaths` simulés.
+  Tests : `fete-image.spec.ts` (nouveau, 4 cas) et voisines (`scene-des-fetes`, `scene-paques-noel`,
+  `evenements-fete`, `coherence`) sur trois appareils : 720 passés, 0 échec (10 min) ; après les corrections du
+  relecteur, `fete-image`, `chants-fetes-setlist`, `fete-setlists-suivent`, `coherence` : 105 passés (1 min 30).
+  Polices : aucun caractère chinois nouveau. Non vérifié : la projection sur le vrai Firestore (seul le double).
+- **IF-2 fait (21/11/2026, même session)** : `CarteFete` lit l'image de l'édition par `lireImageEdition` ; avec
+  image, gabarit de `CarteEpingle` avec image (image 16/9 en tête, carte claire `bg-card ring-1 ring-border`,
+  titre, date · « dans N jours », ligne d'état, « Réserver la Grande salle » pleine et « Voir la fête » bordée,
+  `data-image="1"`) ; sans image ou pendant la lecture, bandeau bleu inchangé ; aucun accent bleu ajouté.
+  `CarteEpingle`, la page « Voir la fête » et `LigneFetePassee` non touchés. Décision déléguée (session, 21/11), sur
+  `critique-design` : quand les réservations ne sont pas ouvertes, « Voir la fête » passe en pilule pleine (la carte
+  garde toujours une action pleine, comme l'épinglé). Tests : `evenements-fete-image.spec.ts` (nouveau, dans
+  `SPECS_GRAND_ECRAN`, cinq cas avec captures) + `evenements-fete`, `evenements-epingle`, `fete-image`, cinq
+  projets : 162 passés, 0 échec (2 min). Captures aux cinq dispositions, sombre et 中文, triées par `regard` (rien
+  de bloquant), 8 relues par `critique-design` (rien de bloquant).
+  Restes (non faits, à décider) : (1) pendant la lecture de l'image la carte est bleue puis devient claire et
+  grandit (≈ 200 px au téléphone) — piste : un booléen `aImage` écrit avec l'image et lu avec la liste, pour
+  rendre d'emblée le gabarit clair avec un emplacement `bg-muted` ; (2) existait avant : carte dans le panneau
+  de la liste en grand écran (gris sur gris en sombre), contour des pilules bordées à ≈ 1,3:1 sur tout le site,
+  apostrophe droite de « jusqu'au » (`fr.json`) ; (3) l'enveloppe de la carte en rangée qui défile (fête + deux
+  épinglés, tablette) n'a pas `h-full` (déjà vrai pour le bandeau bleu). Non vérifié : une vraie photo et le vrai
+  Firestore (projection, masque).
+- **IF-3 fait (21/11/2026, nuit, session orchestratrice IF-3)** : drapeau `aImage?: boolean` dans `Programme`, lu
+  avec la liste (`CHAMPS_LISTE`, donc aussi `getProgramme`) ; `FeteGestion` l'écrit avec l'image (`{ image, aImage:
+  true }`) et le retire avec elle (les deux dans le masque du PATCH). `CarteFete` : drapeau vrai → gabarit clair
+  d'emblée, emplacement 16/9 fixe (`relative aspect-[16/9] bg-muted`, `data-testid="carte-fete-visuel"`) où l'image
+  se pose en `absolute inset-0` (une photo en portrait n'agrandit pas la boîte : défaut vu par le relecteur, corrigé) ;
+  `data-image-pret="1"` à l'arrivée. Sans drapeau : comme avant (une édition qui a déjà une image sans drapeau passe
+  encore par le bleu jusqu'à un nouvel envoi ; pas de migration). **Décision déléguée (session, 21/11)** : lecture de
+  l'image en erreur ou vide alors que le drapeau est vrai → l'emplacement neutre reste (aucun changement d'état ni
+  saut ; texte et actions utilisables). `firestore.rules` relue : `programmes/{id}` sans filtre de champs, rien à
+  publier. Tests : `evenements-fete-image` (f) image en portrait retardée par `page.route` — gabarit clair au premier
+  rendu, aucun bandeau bleu vu par un `MutationObserver` posé avant le rendu, hauteur égale à 1 px près à l'arrivée ;
+  (g) lecture en erreur ; `fete-image` : drapeau posé et retiré. `evenements-fete-image`, `evenements-fete`,
+  `fete-image`, `eglise-entree`, cinq projets : 132 passés (2 min 20) ; après correction, `evenements-fete-image` et
+  `evenements-epingle` : 90 passés (1 min 50). Captures de l'attente aux cinq dispositions triées par `regard` : rien
+  de bloquant ; vu en passant, hors périmètre : « Eglise » sans accent dans la barre latérale réduite (tablette
+  paysage). Méthode : les agents de `.claude/agents/` ne se sont pas chargés dans cette session (lancée hors du
+  dépôt) ; `/tranche` a tourné avec des agents généraux qui lisaient chacun la fiche de leur rôle ; le second testeur
+  n'a pas rendu son bilan, les specs ont été relancées par l'orchestratrice. Non vérifié : vraie photo, vrai Firestore.
