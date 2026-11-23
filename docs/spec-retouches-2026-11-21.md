@@ -195,6 +195,22 @@ quand je suis dans les setlists en mode partition ». Jusque-là, l'interrupteur
   est éteint par défaut pour le culte ; lié à celui des pages, l'éteindre après une répétition aurait retiré
   « Harmonie » de la page des chants sans que rien ne le dise. Facile à lier plus tard si Timothée le préfère.
 
+## R12 — Colonne Harmonie : toucher un nom de section faisait descendre la partition (défaut signalé le 23/11/2026)
+
+Timothée (capture Safari, setlist) : « quand je clique sur harmonie ça fait ça à chaque fois, l'écran se décale vers le
+bas ». Défaut d'un lot déjà livré (JV-5a, H4-2), corrigé sous leur go.
+
+- **Cause** : le bloc du passage, dans la colonne, était amené par `scrollIntoView`, qui fait défiler *tous* les
+  conteneurs, page comprise. La colonne est collante : son bloc n'atteint jamais le haut de l'écran, la page descendait
+  donc à chaque fois (254 px mesurés à 1 280, 1 440 et 1 728 px), puis encore à chaque recalage pendant 1,5 s.
+- **Correction** : `amenerDansSaZone` (`HarmonieDuChant.tsx`) ne fait défiler que la zone de la colonne (ou de la
+  feuille). Vaut pour la page d'un chant, la setlist et le mode louange, qui partagent ce contenu.
+- **Autres dispositions** : mesuré à 390, 810 et 1 080 px (feuille) : la page défile pour amener le nom touché sous la
+  barre, au-dessus de la feuille. C'est voulu (JV-5a) et inchangé. La puce « Harmonie » ne fait rien défiler, à aucune
+  largeur.
+- Non reproduit sous WebKit : la session simulée des tests ne s'y ouvre pas (WebKit reste écarté) ; la cause est la
+  même pour tous les navigateurs.
+
 ## Avancement
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,
@@ -415,3 +431,8 @@ quand je suis dans les setlists en mode partition ». Jusque-là, l'interrupteur
   `harmonie-setlist`, `marge-affichage`, `harmonie-jianpu`, `harmonie-volet-section`, `harmonie-fenetre-placement` :
   402 passés, 73 sautés (tests propres à un appareil), 0 échec, 13 min. tsc propre, lint sans erreur. Captures
   regardées sur les cinq dispositions (FR et 中文).
+- 23/11/2026 : **R12 faite** (session d'origine, sans sous-agent). `amenerDansSaZone` remplace `scrollIntoView` dans la
+  colonne et la feuille Harmonie. Tests : deux ajoutés dans `harmonie-colonne` (setlist et page chant), rouges sans la
+  correction (314 et 144 px de défilement), verts avec ; puis `harmonie-colonne`, `harmonie-volet-section`,
+  `louange-harmonie`, `harmonie-porte1`, `harmonie-idees`, `harmonie-montrer`, `harmonie-fenetre-placement`,
+  `harmonie-setlist` : 385 passés, 72 sautés (tests propres à un appareil), 0 échec, 15 min. tsc propre.

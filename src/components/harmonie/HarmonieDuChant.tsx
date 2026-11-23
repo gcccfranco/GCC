@@ -120,6 +120,19 @@ function montrerLEndroit(endroit: Endroit, fermer: (() => void) | undefined, por
   });
 }
 
+/** Amène `el` au début (ou au centre) de la zone qui défile autour de lui, et d'elle seule. `scrollIntoView` faisait aussi
+ *  défiler la page : la colonne est collante, son bloc n'atteint jamais le haut de l'écran, et la partition descendait de
+ *  254 px à chaque nom de section touché (Timothée, 23/11/2026). */
+function amenerDansSaZone(el: HTMLElement, bloc: "start" | "center", behavior: ScrollBehavior) {
+  let zone = el.parentElement;
+  while (zone && !/auto|scroll/.test(getComputedStyle(zone).overflowY)) zone = zone.parentElement;
+  if (!zone) return;
+  const e = el.getBoundingClientRect();
+  const z = zone.getBoundingClientRect();
+  const marge = bloc === "center" ? (z.height - e.height) / 2 : parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+  zone.scrollTo({ top: zone.scrollTop + e.top - z.top - marge, behavior });
+}
+
 /** JV-5a : le nom de section touché monte en haut de la zone visible (sous la barre du haut), pour rester visible au-dessus de la feuille.
  *  Une section en bas d'un chant court ne peut pas monter : la page reçoit 50 dvh de marge basse tant que la feuille est ouverte
  *  (retirée par `HarmonieDuChant` à la fermeture). */
@@ -410,7 +423,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
         image = requestAnimationFrame(chercher);
         return;
       }
-      el.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      amenerDansSaZone(el, "start", window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
       el.classList.add("harmonie-surligne");
       el.focus({ preventScroll: true });
       fin = setTimeout(() => el.classList.remove("harmonie-surligne"), 2500);
@@ -421,11 +434,11 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
       if (liste && zone) {
         // Le bloc d'abord ; la carte de l'idée ensuite, si elle n'est pas entièrement dans la zone.
         const recaler = () => {
-          el.scrollIntoView({ block: "start", behavior: "auto" });
+          amenerDansSaZone(el, "start", "auto");
           if (!carte) return;
           const c = carte.getBoundingClientRect();
           const z = zone.getBoundingClientRect();
-          if (c.top < z.top || c.bottom > z.bottom) carte.scrollIntoView({ block: "center", behavior: "auto" });
+          if (c.top < z.top || c.bottom > z.bottom) amenerDansSaZone(carte, "center", "auto");
         };
         const obs = new ResizeObserver(recaler);
         const gestes = ["wheel", "touchstart", "pointerdown", "keydown"] as const;

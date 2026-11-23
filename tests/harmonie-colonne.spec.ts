@@ -254,3 +254,42 @@ test("page chant : sans accès Harmonie, la marge Affichage n'a pas la ligne « 
   await ouvrirAffichage(page);
   await expect(reglage(page)).toHaveCount(0);
 });
+
+// Timothée, 23/11/2026 : toucher un nom de section, colonne ouverte, faisait descendre la partition de 254 px
+// (`scrollIntoView` du bloc de la colonne faisait aussi défiler la page). Seule la colonne défile.
+const nomsDeSection = (page: Page) => page.locator("[data-section-nom-bouton]");
+const defilement = (page: Page) => page.evaluate(() => Math.round(window.scrollY));
+
+test("setlist, colonne : toucher un nom de section ne fait pas défiler la partition ; le bloc du passage vient en haut de la colonne", async ({ page }, info) => {
+  test.skip(!colonneSurSetlist(info), "colonne seulement");
+  await ouvrirSetlist(page);
+  const nom = nomsDeSection(page).nth(2);
+  await nom.scrollIntoViewIfNeeded(); // sinon c'est le clic de Playwright qui ferait défiler
+  const avant = { y: await defilement(page), nom: (await nom.boundingBox())!.y };
+  await nom.click();
+  await expect(colonne(page)).toBeVisible();
+  const bloc = colonne(page).locator(".harmonie-surligne");
+  await expect(bloc).toBeVisible();
+  await page.waitForTimeout(1800); // le bloc est recalé pendant 1,5 s : la page ne doit pas bouger pendant ce temps non plus
+  expect(await defilement(page), "la page n'a pas défilé").toBe(avant.y);
+  expect(Math.abs((await nomsDeSection(page).nth(2).boundingBox())!.y - avant.nom), "le nom touché n'a pas bougé de plus de 8 px").toBeLessThanOrEqual(8);
+  const haut = await bloc.evaluate((el) => {
+    let z = el.parentElement;
+    while (z && !/auto|scroll/.test(getComputedStyle(z).overflowY)) z = z.parentElement;
+    return { ecart: el.getBoundingClientRect().top - z!.getBoundingClientRect().top, fin: z!.scrollTop + z!.clientHeight >= z!.scrollHeight - 1 };
+  });
+  expect(haut.fin || Math.abs(haut.ecart) <= 12, `le bloc est en haut de la colonne (écart ${haut.ecart} px)`).toBe(true);
+});
+
+test("page chant, grande fenêtre, colonne : toucher un nom de section ne fait pas défiler la partition", async ({ page }, info) => {
+  test.skip(!colonneSurChant(info), "ordinateur seulement");
+  await ouvrirChantLarge(page);
+  const nom = nomsDeSection(page).nth(2);
+  await nom.scrollIntoViewIfNeeded();
+  const avant = await defilement(page);
+  await nom.click();
+  await expect(colonne(page)).toBeVisible();
+  await expect(colonne(page).locator(".harmonie-surligne")).toBeVisible();
+  await page.waitForTimeout(1800);
+  expect(await defilement(page), "la page n'a pas défilé").toBe(avant);
+});
