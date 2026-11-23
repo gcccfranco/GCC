@@ -73,13 +73,17 @@ for (const [slug, zh] of [["a-jamais-tu-es-saint", false], ["一切歌颂赞美"
   test(`chant ${zh ? "ZH" : "FR"} : le panneau d'un accord montre le chiffre, Écouter et Ensuite`, async ({ page }) => {
     await toucher(page, slug, zh);
     await expect(panneau(page).locator("[data-accord-chiffre]")).toHaveText(zh ? /^[A-G][#b]?m? 调的 \S+$/ : /^\S+ dans [A-G][#b]?m?$/);
-    await expect(panneau(page).getByRole("button", { name: zh ? "试听" : "Écouter" })).toBeVisible();
+    await expect(panneau(page).getByRole("button", { name: zh ? "试听" : "Écouter" }).first()).toBeVisible();
     const ensuiteBtn = panneau(page).getByRole("button", { name: zh ? /^接下来/ : /^Ensuite/ });
-    await expect(ensuiteBtn).toHaveAttribute("aria-expanded", "false");
-    await ensuiteBtn.click();
+    // Dépliée d'office (22/11/2026) : chaque suite dit en une ligne ce qui reste et ce qui bouge (« garde D F# ; A → B »).
     await expect(ensuiteBtn).toHaveAttribute("aria-expanded", "true");
     expect(await panneau(page).locator("[data-ensuite] li").count()).toBeGreaterThanOrEqual(1);
     await expect(panneau(page).locator("[data-ensuite] li").first()).toContainText(zh ? /保留|全部移动/ : /garde|tout bouge/);
+    const lignes = await panneau(page).locator("[data-ensuite] li").allTextContents();
+    expect(lignes.some((l) => (zh ? /(保留 [A-G][#b]?( [A-G][#b]?)*|全部移动)；[A-G][#b]? → [A-G]/ : /(garde [A-G][#b]?( [A-G][#b]?)*|tout bouge)\u00a0; [A-G][#b]? → [A-G]/).test(l)), lignes.join(" | ")).toBe(true);
+    await ensuiteBtn.click();
+    await expect(ensuiteBtn).toHaveAttribute("aria-expanded", "false");
+    await expect(panneau(page).locator("[data-ensuite]")).toHaveCount(0);
   });
 }
 

@@ -165,6 +165,36 @@ une rotation dans les deux sens, chant FR et chant ZH (capture regardée) ; la p
 `rappel-ordre-joue:449` et `:482` (téléphone), `louange-reglages:123` (Chiffres en mode louange).
 Ensuite : la session lance P3 (`docs/audit-performance-2026-11-21.md`, § 7).
 
+## R10 — Harmonie en setlist et en mode louange : sans idées de forme ni montée de ton (22/11/2026)
+
+Mots de Timothée : « dans les idées d'harmonie qui s'affichent dans le mode louange et dans la partition des setlists
+enlève les sections "intro après la fin du refrains", "le tag : répéter la dernière phrase" et même les propositions
+pour monter de gamme généralement on le fait pas ».
+
+Fait : dans la partition d'une setlist (`IdeesDuChant.tsx`) et en mode louange (`VoletHarmonie.tsx`), la fenêtre
+Harmonie ne montre plus les idées « Intro avec la fin du refrain » et « Tag », ni les cartes de montée de ton
+(option `sansFormes` de `HarmonieDuChant`, `harmonieDuChant`, `suggestionsPour`). La page d'un chant les garde (il
+n'en a pas parlé : à lui de dire s'il veut les retirer aussi). Le sélecteur 升调 de la setlist ne change pas : on peut
+toujours poser une montée de ton à la main. Code laissé en place, plus appelé depuis une setlist : le `onModuler` de
+`IdeesDuChant.tsx` et les cartes de modulation de `HarmonieDuChant.tsx` (à retirer si la décision se confirme).
+
+## R11 — Éteindre les idées d'harmonie sur la page d'un chant et dans une setlist (go : « go », 22/11/2026)
+
+Demande de Timothée : « quand je suis dans cette vue comment je fais pour retirer les idées d'harmonies ? Pareil
+quand je suis dans les setlists en mode partition ». Jusque-là, l'interrupteur n'existait que dans le mode louange.
+
+- **Interrupteur « Idées d'harmonie »** dans la marge Affichage (« Ce que je lis »), sur la page d'un chant et sur
+  celle d'une setlist, pour qui a l'accès Harmonie seulement. Allumé par défaut, retenu par appareil
+  (`gcc-harmonie-idees`), commun aux deux pages.
+- **Éteint** : plus de pastille « Harmonie » dans la barre du chant, plus de puce « Harmonie » sous les titres d'une
+  setlist, plus de colonne ni de feuille, les noms de section ne sont plus des boutons, et la fenêtre d'un accord
+  n'a plus sa ligne « Ici ». Toucher un accord ouvre toujours ses doigtés.
+- **Pastilles du scan 简谱** (I, C1, R…) : elles restent à leur place, comme repères, mais n'ouvrent plus rien
+  (`data-jianpu-repere` au lieu de `data-jianpu-etiquette`). Proposé à Timothée avant le go.
+- **Décision déléguée (pilote, 22/11)** : le réglage du mode louange (`perf-idees-harmonie-<uid>`) reste à part. Il
+  est éteint par défaut pour le culte ; lié à celui des pages, l'éteindre après une répétition aurait retiré
+  « Harmonie » de la page des chants sans que rien ne le dise. Facile à lier plus tard si Timothée le préfère.
+
 ## Avancement
 
 - 21/11/2026 : causes trouvées, décisions et go notés ci-dessus (session d'origine). R1 codée par un `executant`,
@@ -373,3 +403,15 @@ Ensuite : la session lance P3 (`docs/audit-performance-2026-11-21.md`, § 7).
   ajouté dans `harmonie-fenetre-placement` (rouge avant : saut de 573 px) ; la spec entière sur cinq projets :
   42 passés, 18 ignorés, 1,8 min. Vérifié aussi, au doigt, la poignée de la feuille « Affichage » du mode louange :
   pas de défaut (test ajouté dans `louange-menus`, vert sans correction). Sur un vrai iPad : à revoir par Timothée.
+- 22/11/2026, soir : **R10 faite** (session d'origine). Option `sansFormes` passée par la partition d'une setlist et
+  par le mode louange : plus d'« Intro avec la fin du refrain », de « Tag » ni de carte de montée de ton dans la
+  fenêtre Harmonie ; la page d'un chant inchangée. Tests : test pur ajouté (`harmonie-suggestions`), deux tests de
+  `harmonie-setlist` remplacés par un test d'absence (la montée de ton ne s'applique plus depuis Harmonie) ; ces deux
+  specs sur trois appareils : 63 passés ; `louange-harmonie`, `harmonie-volet-section`, `harmonie-appliquer` :
+  168 passés, 1 échec (`louange-harmonie:133` ZH au téléphone, instable connu : 8 sur 8 seul). tsc propre.
+- 22/11/2026, nuit : **R11 faite** (session d'origine, sans sous-agent). Interrupteur « Idées d'harmonie » dans la marge
+  Affichage de la page d'un chant et de la setlist ; pastilles du scan 简谱 gardées comme repères inertes. Tests : quatre
+  ajoutés (`harmonie-colonne` sur cinq dispositions, `harmonie-setlist` sur trois), 18 passés ; puis `harmonie-colonne`,
+  `harmonie-setlist`, `marge-affichage`, `harmonie-jianpu`, `harmonie-volet-section`, `harmonie-fenetre-placement` :
+  402 passés, 73 sautés (tests propres à un appareil), 0 échec, 13 min. tsc propre, lint sans erreur. Captures
+  regardées sur les cinq dispositions (FR et 中文).

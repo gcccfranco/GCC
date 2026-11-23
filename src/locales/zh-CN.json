@@ -3191,6 +3191,8 @@
     "dansCeChant": "本歌中",
     "garde": "保留 {{notes}}",
     "toutBouge": "全部移动",
+    "separateurNotes": "；",
+    "separateurMouvements": "，",
     "fermer": "关闭",
     "labelGuitare": "{{accord}} 的吉他指法：{{cases}}",
     "labelPiano": "{{accord}} 钢琴：左手 {{gauche}}，右手 {{droite}}",

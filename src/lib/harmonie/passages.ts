@@ -110,11 +110,12 @@ export function harmonieDuChant(
   fiches: Fiche[],
   refuses: string[],
   idees: Idee[],
+  sansFormes = false,
 ): { passages: PassageAvecIdees[]; sansPassage: Idee[] } {
   const passages: PassageAvecIdees[] = passagesDuChant(sections, tonalite).map((p) => ({ ...p, idees: [], ideesEquipe: [] }));
   const parUid = new Map(passages.map((p) => [p.uid, p]));
 
-  for (const s of suggestionsPour(sections, tonalite, fiches, refuses)) parUid.get(s.sectionUid)?.idees.push(s);
+  for (const s of suggestionsPour(sections, tonalite, fiches, refuses, sansFormes)) parUid.get(s.sectionUid)?.idees.push(s);
 
   const sansPassage: Idee[] = [];
   for (const idee of idees) {

@@ -330,6 +330,59 @@ fixé par les décisions 4 (11/11) et 7 (12/11) : pas de planche.
 Avant chaque lot : vérifier ses constats d'usage (musiciens-5, 7, 10, 11, 12) sur la tête de branche. Libellés
 nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre dispositions et 1 440 px.
 
+## Lot H9 — « Chez nous » : ce qui se joue dans nos chants (Timothée, 22/11/2026 ; go : « go lance une session pour coder »)
+
+**Retiré le 22/11/2026 par Timothée** (« je pense que tu peux supprimer le « Cette boucle, on la joue déjà » et
+« Après cet accord, chez nous » ça sert pas à grand chose en réalité je trouve ») : code enlevé, « Ensuite » revient au
+tableau écrit à la main. Spec et Avancement gardés pour mémoire ; le code est dans `8ab9b251`, `6aaa7325`, `a09783b5`.
+
+Origine : Timothée a montré le site wangshubianqu.com/chord-map (« ça peut nous aider pour les idées d'harmonie »).
+On en garde deux idées, refaites à partir de **nos** chants (384 `.cho`, tous avec `{key}`), sans rien copier du
+site (ni textes, ni classement, ni fichier de statistiques) et sans chansons extérieures pour l'instant.
+
+Décisions (proposition acceptée par le go) :
+- **Les comptes se font à la construction** (`npm run build:index`, à côté de `scripts/build-harmonie.ts`) et sortent
+  dans un fichier de `public/` chargé à la demande par Harmonie ; rien ne se calcule à l'écran.
+- **Comment on compte** : chaque chant dans sa tonalité (`{key}`), accords ramenés en degrés avec
+  `src/lib/harmonie/degres.ts` (basse et enrichissements ôtés : `D/F#` et `Dsus4` comptent comme le degré de `D`),
+  majeur et mineur séparés ; une section répétée dans la structure compte une fois ; un chant compte une fois par
+  suite ou par boucle (on compte des chants, pas des occurrences) ; les chants `needs_review` sont comptés quand même.
+- **H9-1 — « Après cet accord, chez nous »** : là où Harmonie montre « Ensuite : 5 · 6m · 1 »
+  (`src/lib/harmonie/suites.ts`, `suitesUsuelles`, panneau d'un accord), les trois suites viennent du compte de nos
+  chants, classées, avec leur part (« 5 · 41 % »). En dessous de **8 chants** pour un degré, on garde le tableau
+  écrit à la main (c'est aussi le repli si le fichier ne se charge pas). Le gabarit de la ligne ne change pas.
+- **H9-2 — « Cette boucle, on la joue déjà »** : dans la fenêtre Harmonie d'un chant, sous le nom d'une section dont
+  les accords forment une boucle de quatre degrés (les quatre premiers accords distincts consécutifs, répétés au moins
+  une fois dans la section), une ligne « Boucle 1 · 5 · 6m · 4 — comme N autres chants » ; au toucher, la liste de ces
+  chants (titre, section, tonalité), chacun ouvrant sa page. Affichée seulement si N ≥ 3. Lecture seule, page d'un
+  chant, partition d'une setlist et mode louange (en mode louange : la ligne sans les liens, on ne quitte pas le mode).
+  Les deux langues (libellés fr et zh-CN).
+- **Hors périmètre** : chansons extérieures (POP909, Billboard), accords empruntés et dominantes secondaires,
+  étiquettes d'ambiance, noms de boucles (« 王道进行 »), toute écriture en base, `firestore.rules`.
+- **Pas de planche** : deux lignes dans des gabarits qui existent ; Timothée a demandé de coder directement. Captures
+  aux quatre dispositions, thème sombre et 中文, puis `critique-design`.
+
+Tranches : **H9-1** (script de compte, fichier, « Après cet accord ») puis **H9-2** (boucles). Chaque tranche : tests
+purs du compte sur de petits chants écrits dans le test (majeur, mineur, basse, section répétée, seuil), un test à
+l'écran FR et un ZH, noms fictifs. Les chiffres réels (les cinq boucles les plus jouées, les suites de chaque degré)
+s'écrivent dans l'Avancement, pour que Timothée voie s'ils ont du sens avant la mise en ligne.
+
+## Idées du 22/11/2026 (Timothée : « ça ça peut être utile pour nous je pense ») — go le 22/11 (« go pour les deux »), faites
+
+Deux idées reprises d'un site de théorie musicale, refaites avec nos mots et nos fiches (rien n'est copié).
+- **« Garde Do ; Mi → Fa » en une ligne.** Déjà là pour l'essentiel : la liste dépliée d'« Ensuite » écrit, pour chaque
+  suite, « garde D F# · A → B » (`notesGardeesEtMouvantes`, `PanneauAccord.tsx`). Ce qui pourrait changer, au choix :
+  (a) l'écrire sans avoir à déplier « Ensuite », sous chaque accord proposé ; (b) noms de notes en Do Ré Mi en
+  français (le site écrit partout les lettres : à décider pour tout le site, pas pour cette ligne seule) ;
+  (c) « ; » au lieu de « · » entre ce qui reste et ce qui bouge. Recommandation : (a) + (c), une petite retouche.
+- **Étiquettes d'usage et d'ambiance sur les idées.** Usage (« pour finir », « pour relancer », « pour entrer au
+  refrain ») : déjà en partie dans la fonction d'un passage (« se pose », « vers le refrain », « suspens ») et dans
+  les familles de fiches ; à afficher comme une petite étiquette sur la carte d'une idée. Ambiance (« chaleureux »,
+  « triste », « surprise ») : à écrire **à la main dans chaque fiche** (`docs/harmonie/*.md`, une ligne `ambiance:`),
+  relue par Timothée comme les fiches, puis montrée sur la carte. Recommandation : deux ou trois étiquettes au plus
+  par fiche, prises dans une liste courte et fixe (fr et zh), pas de filtre au début.
+Les deux changent l'apparence : planche courte puis spec, ou go direct pour (a)+(c) qui tient dans un gabarit existant.
+
 ## Avancement
 
 - 11/11/2026 : captures de l'existant (téléphone, tablette, ordinateur), un `/planche` (3 agents), retouches à la
@@ -549,6 +602,82 @@ nouveaux en FR et 中文 avec `scripts/build-fonts.py`. Captures sur les quatre 
   premier appui, 12 requêtes, sources de piano ; repli si `/audio/piano/` est coupé), 10 / 0 (1 min) ; avec
   `harmonie-ecoute`, `harmonie-porte1`, `harmonie-porte2` 168 / 0, 4 ignorés (4 min). Son **pas jugé à l'oreille** :
   à écouter par Timothée (niveau 1,5 / nombre de notes, choisi sans écoute).
+- 22/11/2026 : **H9-1 faite** (« Après cet accord, chez nous » ; session seule, sans agent, go du 22/11). Compte à la
+  construction : `scripts/build-chez-nous.ts` (dans `npm run build:index`, après `build-harmonie`) →
+  `public/harmonie-chez-nous.json` (17 Ko, sans date : il ne change que si les chants changent ; commité comme
+  `harmonie-index.json`). Fonctions pures dans `src/lib/harmonie/chezNous.ts` (compte des suites et des boucles),
+  lecture à la demande par `useChezNous` (une fois par visite). Le panneau d'un accord lit les trois suites comptées
+  quand le degré a au moins 8 chants (sinon, ou fichier absent : « Ensuite : » et le tableau de `suites.ts`). Gabarit
+  inchangé : l'accord qui suit vraiment dans ce chant passe toujours en premier (H5-1), puis les suites comptées.
+  **Décisions déléguées (session, 22/11)** : la part d'une suite = son nombre de chants sur la somme des chants de
+  toutes les suites de ce degré (les parts d'un degré font 100 %) ; « les chants d'un degré » = ceux où il est suivi
+  d'un autre degré ; une suite se compte dans une section (pas d'une section à la suivante) ; une répétition immédiate
+  du même degré (`D D/F#`) n'est pas une suite ; la part s'écrit en petit gris après l'accord (« A 29 % ») plutôt
+  que « 5 · 41 % » (en chiffres, « 5 · 41 % » se lisait comme deux degrés) ; zh « 我们的歌里，这个和弦之后： ».
+  `sw.js` **inchangé** : comme `harmonie-index.json`, le fichier n'est pas gardé hors ligne ; hors ligne, la ligne
+  reprend le tableau (repli prévu par la spec).
+  **Chiffres réels** (381 chants en majeur, 2 en mineur ; entre parenthèses, les chants du degré) — majeur :
+  1 (378) → 5 29 % · 4 28 % · 6m 15 % ; 4 (373) → 1 39 % · 5 34 % · 6m 11 % ; 5 (371) → 1 33 % · 6m 27 % · 4 21 % ;
+  6m (352) → 4 31 % · 2m 19 % · 1 17 % ; 2m (257) → 5 41 % · 4 24 % · 1 15 % ; 3m (156) → 6m 48 % · 4 29 % · 2m 8 % ;
+  3 (68) → 6m 92 % · 4 6 % · 2 1 % ; 2 (66) → 5 57 % · 4 10 % · 1 8 % ; b7 (40) → 5 27 % · 4 25 % · 1 23 % ;
+  6 (29) → 2m 47 % · 2 13 % · 4 11 % ; 5m (25) → 1 63 % · 6 15 % · 4 7 % ; 4m (19) → 1 56 % · 5 19 % · 2m 7 % ;
+  7m (10) → 3 33 % · 5 25 % · 3m 17 % ; #4dim (9) → 5 36 % · 1 27 % · 2m 27 % ; les autres (#4m, b6, 7dim, 1m, b3…,
+  5 chants au plus) gardent le tableau. **Mineur : 2 chants seulement**, aucun degré n'atteint 8 : le tableau partout.
+  À juger par Timothée : « 7m » (10 chants) vient de chants qui écrivent un accord mineur sur le 7.
+  Tests : `harmonie-chez-nous` (nouvelle : majeur, mineur, basse et couleur, section répétée, seuil 8 et repli null ;
+  écran FR et ZH avec un fichier fictif, fichier absent → « Ensuite ») ; libellé élargi dans `harmonie-porte1`,
+  `notation-accords`, `accords-toucher`. Trois appareils, avec `harmonie-volet-section`, `louange-harmonie` et H9-2 :
+  256 / 6 (7,9 min), puis 9 / 0 et 27 / 0 après corrections. Reste rouge : `accords-toucher:233` (mode louange sans
+  accès, 288 accords touchables), **rouge aussi sans mes changements** (vérifié par `git stash`) : hors lot.
+  Captures regardées : téléphone, tablette portrait 中文, tablette paysage 中文, ordinateur sombre ; corrigé après
+  elles : la part ne se sépare plus de son accord en fin de ligne.
+- 22/11/2026 : **H9-2 faite, lot H9 (« chez nous ») fini** (même session, sans agent). Dans la fenêtre Harmonie
+  d'un chant, sous le nom d'une section qui tourne sur quatre degrés : « Boucle 1 · 5 · 6m · 4 — comme N autres
+  chants » (zh « 循环 1 · 5 · 6m · 4——另有 N 首歌也这样弹 »), affichée si N ≥ 3 ; au toucher, la liste (titre ·
+  section dans la langue de l'écran · tonalité), chaque titre ouvrant sa page ; en mode louange, la liste sans liens.
+  Même composant pour la page d'un chant, la partition d'une setlist et le mode louange ; `sansFormes` intact. Le
+  fichier ne garde que les boucles d'au moins 4 chants. **Décisions déléguées (session, 22/11)** : une boucle = les
+  quatre premiers degrés distincts de la section (répétitions immédiates fondues), rejoués aussitôt une fois de plus ;
+  une boucle qui commence ailleurs (6m · 4 · 1 · 5) est **une autre boucle** (pas de rotation : à rediscuter si
+  Timothée veut les réunir) ; un chant compte une fois par boucle, avec sa première section qui la joue.
+  **Chiffres réels**, majeur : 1 · 5 · 6m · 4 (**19 chants**) ; 6m · 4 · 1 · 5 (17) ; 1 · 6m · 4 · 5 (16) ;
+  4 · 1 · 5 · 6m (11) ; 1 · 4 · 6m · 5 (9) ; puis 4 · 1 · 6m · 5 (8) et huit autres de 4 à 6 chants. Mineur : aucune.
+  Tests : `harmonie-boucles` (nouvelle : boucle trouvée ou non, seuil 3 autres chants, le chant exclu de sa liste ;
+  écran FR « amour-sans-fin » et ZH « 是耶稣的名 », liens vers les pages) et un test dans `louange-harmonie` (liste
+  sans liens) ; trois appareils, avec le tour d'H9-1 (256 / 6), puis 9 / 0 après correction (le test ZH visait la
+  première boucle du chant, 1 · 6m · 4 · 5). `louange-harmonie:133` (instable connu) passé dans ce tour.
+  `npm run validate` 383 chants valides, `tsc` propre, eslint sans nouvel avertissement.
+- 22/11/2026 : **critique de design d'H9** (demandée par Timothée avec `/critique-design` ; faite dans la session avec
+  la grille `.claude/references/critique-gcc.md`, sans l'agent, consigne de dépense). Verdict **à retoucher → bon**
+  après deux retouches. Points : (1) *vu*, premier coup d'œil, `telephone-panneau` : « Bm 15 % · A 29 % · G 28 % »,
+  l'accord du chant en tête avec la plus petite part, se lisait comme un classement faux → les suites comptées se
+  classent par part ; l'accord du chant ne garde la tête que s'il n'est pas compté (il garde « dans ce chant » dans la
+  liste ouverte) ; (2) *vu*, à regarder de près, `telephone-boucle` : ouverte, la liste de 18 chants remplissait la
+  feuille → cinq chants, puis « Voir les 13 autres » (zh « 查看其余 13 首 ») ; (3) *vu*, finition, ordinateur : la
+  part se séparait de son accord en fin de ligne → corrigé avant H9-1. Retenus sans changement : la boucle s'écrit en
+  chiffres même en notation lettres (texte de la spec) ; « titre · section · tonalité » reprend le gabarit des listes
+  du site. Qualités : ligne muette tant qu'on ne la touche pas, mêmes jetons que le volet (gris atténué, filets de
+  liste, cibles de 44 px), 中文 sans trou ni coupure, sombre lisible. Non vérifié : mode louange à l'œil (couvert par
+  le test), 1 440 px. Tests : `harmonie-chez-nous`, `harmonie-boucles`, H9 de `louange-harmonie`, H7-2 de
+  `notation-accords`, trois appareils, 48 / 0 (1,6 min).
+- 22/11/2026 : **lot H9 (« chez nous ») retiré** à la demande de Timothée (citation en tête du lot H9). Le code revient
+  à l'état d'avant le lot (`54e26291`) : plus de script de compte dans `build:index`, plus de
+  `public/harmonie-chez-nous.json`, plus de `chezNous.ts` ni `useChezNous.ts`, plus de lignes dans le panneau d'un
+  accord ni dans la fenêtre Harmonie ; les deux specs nouvelles sont supprimées, les libellés de test rendus. Pour le
+  remettre : `git revert` de ce commit. Tests : `harmonie-porte1`, trois appareils (voir le commit).
+- 22/11/2026 : **idées du 22/11 faites** (go de Timothée : « go pour les deux » ; même session, sans agent).
+  (1) Panneau d'un accord : « Ensuite » est **dépliée d'office** (on la replie d'un appui ; repliée, la ligne courte
+  revient) et chaque suite dit en une ligne « garde C ; E → F, G → F » (zh « 保留 C；E → F，G → F »). (2) Fenêtre
+  Harmonie d'un chant : chaque carte d'idée porte, sous son nom, le **ressenti** (chaleureux, mélancolique, élan,
+  couleur) et l'**usage** (couplet, pré-refrain, refrain, fin, transition) de sa fiche. **Décisions déléguées
+  (session, 22/11)** : pas de nouveau vocabulaire, on reprend les étiquettes que les 91 fiches portent déjà (H2) au
+  lieu d'écrire des ambiances à la main ; elles restent « proposées » (non validées par Timothée), mention gardée sur
+  la page de la fiche mais pas sur la carte ; les notes restent en lettres comme partout sur le site.
+  Tests : `harmonie-porte1` (dépliée d'office, ligne « garde … ; … → … » FR et ZH, repli), `harmonie-volet-section`
+  (étiquettes FR et ZH), `notation-accords` et `accords-toucher` ajustés ; avec `harmonie-suggestions`,
+  `harmonie-setlist`, `louange-harmonie`, trois appareils : 280 / 9 (7,7 min), puis 6 / 0 et 74 / 0 après corrections.
+  Reste rouge `accords-toucher:233`, déjà rouge avant (hors lot). Captures regardées au téléphone : panneau, carte
+  d'idée (étiquettes passées sur leur ligne après la capture).
 
 ## Fiches d'harmonie qui manquent (choix délégué par Timothée)
 

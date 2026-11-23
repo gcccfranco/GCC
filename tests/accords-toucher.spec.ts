@@ -340,7 +340,7 @@ test.describe("panneau à côté de l'accord (B4 ter)", () => {
         await accord.click();
         await expect(panneau(page)).toHaveAttribute("data-accord-panneau", "bulle");
         const ensuite = panneau(page).getByRole("button", { name: /Ensuite/ });
-        if (await ensuite.count()) await ensuite.first().click();
+        if (await ensuite.count() && (await ensuite.first().getAttribute("aria-expanded")) === "false") await ensuite.first().click();
         const a = (await accord.boundingBox())!;
         const b = (await panneau(page).boundingBox())!;
         const croise = a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;

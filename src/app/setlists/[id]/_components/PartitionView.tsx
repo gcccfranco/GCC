@@ -105,6 +105,7 @@ export function PartitionsView({
   onEditJianpu,
   onIdees,
   onIci,
+  ideesEteintes,
   onFermerAccord,
   onRetryChant,
   titres,
@@ -168,6 +169,8 @@ export function PartitionsView({
   onIdees?: (itemIndex: number, slug?: string) => void;
   /** H5-2 « Ici » : ouvre la porte 2 au passage de l'accord touché (sans basculer) — absent sans accès Harmonie. */
   onIci?: (itemIndex: number, slug: string | undefined, sectionUid: string, idee?: string, options?: { depuisNom?: boolean; element?: HTMLElement | null }) => void;
+  /** Réglage « Idées d'harmonie » éteint : `onIci` ne sert plus qu'aux repères du scan 简谱 (pastilles inertes). */
+  ideesEteintes?: boolean;
   /** Reçoit la fermeture de la bulle d'accord de la partition. */
   onFermerAccord?: (fermer: () => void) => void;
   /** « Chant non chargé — Réessayer » : relit le contenu de ce seul chant. */
@@ -189,7 +192,7 @@ export function PartitionsView({
     .sort((a, b) => a.position - b.position)[0]?.position;
   return (
     // Les accords s'ouvrent au toucher hors édition (DA-3) ; « Ma version » et « Adapter » gardent leurs lignes tappables.
-    <AccordsProvider actif={!editMode} aide="flux">
+    <AccordsProvider actif={!editMode} aide="flux" ideesEteintes={ideesEteintes}>
     <DonnerFermeture onFermer={onFermerAccord} />
     <div className="space-y-10 print:space-y-6" data-disposition={disposition}>
       {items

@@ -27,12 +27,12 @@ import { decrire, grilleDe, nombreDeRenversements, notesEnLettres, pianoDe } fro
 type Variante = "feuille" | "bulle" | "carte";
 
 /** Une légende « a · b · c » dont chaque élément ne se coupe jamais (« P pouce » seul en bout de ligne, musiciens-5). */
-function Insecables({ elements }: { elements: string[] }) {
+function Insecables({ elements, separateur = " · " }: { elements: string[]; separateur?: string }) {
   return (
     <>
       {elements.map((e, i) => (
         <span key={i}>
-          {i > 0 && " · "}
+          {i > 0 && separateur}
           <span className="whitespace-nowrap">{e}</span>
         </span>
       ))}
@@ -101,10 +101,11 @@ function Fleches({
   );
 }
 
-/** « Ensuite : 5 · 6m · 1 », repliée ; dépliée, une ligne par suite (lettre, notes gardées, écoute). Repliée à chaque nouvel accord (`key`). */
+/** « Ensuite », dépliée d'office (Timothée, 22/11/2026) : une ligne par suite (lettre, « garde D F# ; A → B », écoute).
+ *  Repliée : « Ensuite : 5 · 6m · 1 ». Dépliée à chaque nouvel accord (`key`). */
 function Ensuite({ accord, harmonie, capo, bulle }: { accord: string; harmonie: HarmonieDuPanneau; capo?: number; bulle: boolean }) {
   const { t } = useTranslation();
-  const [ouvert, setOuvert] = useState(false);
+  const [ouvert, setOuvert] = useState(true);
   const notation = useNotationDuCompte();
   const { tonalite } = harmonie;
   const degre = degreDeLAccord(accord, tonalite);
@@ -128,7 +129,7 @@ function Ensuite({ accord, harmonie, capo, bulle }: { accord: string; harmonie: 
       >
         <span className="min-w-0 flex-1">
           {t("accords.ensuite")}{" "}
-          <span className="font-chord font-semibold text-[color:var(--chord-color)]">{lignes.map((l) => (notation === "chiffres" ? chiffrerEtiquette(l.accord, tonalite) : l.accord)).join(" · ")}</span>
+          <span className={`font-chord font-semibold text-[color:var(--chord-color)]${ouvert ? " sr-only" : ""}`}>{lignes.map((l) => (notation === "chiffres" ? chiffrerEtiquette(l.accord, tonalite) : l.accord)).join(" · ")}</span>
         </span>
         <Fleche className="h-4 w-4 shrink-0" aria-hidden />
       </button>
@@ -143,10 +144,12 @@ function Ensuite({ accord, harmonie, capo, bulle }: { accord: string; harmonie: 
                 <span className="min-w-0 text-muted-foreground">
                   {l.dansCeChant && <span className="block text-xs">{t("accords.dansCeChant")}</span>}
                   {notes && (
+                    // « garde D F# ; A → B » (Timothée, 22/11/2026 : la note qui reste, puis celles qui bougent, en une ligne).
                     <Insecables
+                      separateur={t("accords.separateurNotes")}
                       elements={[
                         notes.gardees.length ? t("accords.garde", { notes: notes.gardees.join(" ") }) : t("accords.toutBouge"),
-                        ...notes.bougent.map((m) => `${m.de} → ${m.vers}`),
+                        ...(notes.bougent.length ? [notes.bougent.map((m) => `${m.de} → ${m.vers}`).join(t("accords.separateurMouvements"))] : []),
                       ]}
                     />
                   )}

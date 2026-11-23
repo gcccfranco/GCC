@@ -89,6 +89,13 @@ test("l'intro avec la fin du refrain n'est proposée que si le chant n'a pas d'i
   expect(suggestionsPour(avecIntro.sections, "D", fiches).some((s) => s.fiche.id === id), "celui-ci en a une").toBe(false);
 });
 
+test("setlist et mode louange (sansFormes) : ni intro reprise de la fin du refrain ni tag, le reste inchangé", () => {
+  const formes = ["intros-fins/intro-fin-du-refrain", "intros-fins/tag"];
+  const sans = suggestionsPour(parseChordPro(CHANT).sections, "D", fiches, [], true);
+  expect(sans.filter((s) => formes.includes(s.fiche.id)), "aucune idée de forme").toEqual([]);
+  expect(sans.map((s) => s.id), "les autres idées restent, dans le même ordre").toEqual(toutes.filter((s) => !formes.includes(s.fiche.id)).map((s) => s.id));
+});
+
 test("le tag vise le dernier refrain", () => {
   const tag = toutes.find((s) => s.fiche.id === "intros-fins/tag");
   expect(tag, "proposé").toBeTruthy();

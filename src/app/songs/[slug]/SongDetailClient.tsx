@@ -11,7 +11,7 @@ import { useRecents } from "./_hooks/useRecents";
 import { useBarreRappelee } from "./_hooks/useBarreRappelee";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { Music, SlidersHorizontal } from "lucide-react";
-import { MargeAffichage, BOUTON_LECTURE } from "@/components/song/MargeAffichage";
+import { LigneIdeesHarmonie, MargeAffichage, BOUTON_LECTURE } from "@/components/song/MargeAffichage";
 import { useReglagesAffichage } from "@/hooks/useReglagesAffichage";
 import { SongView } from "@/components/song/SongView";
 import { Armure } from "@/components/song/Armure";
@@ -36,7 +36,7 @@ import type { SectionNuance } from "@/types/setList";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
 import { HarmonieDuChant, defilerSousLaBarre } from "@/components/harmonie/HarmonieDuChant";
-import { useColonneHarmonie, useGrandEcranHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
+import { useColonneHarmonie, useGrandEcranHarmonie, useIdeesHarmonie, useZoneAssezLarge } from "@/hooks/useColonneHarmonie";
 import { AccordsProvider, AideAccordsEnLigne, type IciDuChant } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { useAllerAuPassage } from "@/lib/harmonie/useAllerAuPassage";
@@ -257,6 +257,9 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
     const [colonneOuverte, setColonneOuverte] = useColonneHarmonie();
     const boutonHarmonieRef = useRef<HTMLButtonElement>(null);
     const accesHarmonie = useAccesHarmonie();
+    // Réglage « Idées d'harmonie » (marge Affichage) : éteint, ni pastille « Harmonie », ni nom de section touchable.
+    const [ideesAllumees, setIdeesAllumees] = useIdeesHarmonie();
+    const harmonieVue = accesHarmonie.peut && ideesAllumees;
     const [instrumentHarmonie] = useInstrument(accesHarmonie);
     useEffect(() => {
       const saved = sessionStorage.getItem("lastListPath");
@@ -549,7 +552,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
     for (const c of el.children) ro.observe(c);
     document.fonts?.ready.then(ajuster);
     return () => ro.disconnect();
-  }, [isZh, youtubeId, accesHarmonie.peut, compte, setlistDOrigine, deuxVolets]);
+  }, [isZh, youtubeId, harmonieVue, compte, setlistDOrigine, deuxVolets]);
 
   // Menu ⋯ (spec-reglages-unifies.md, RU-3) : PDF, Personnaliser, Signaler ; Vidéo, Harmonie, Crayon et Affichage sont dans la barre.
   const menuChant = <MenuChant pdf={pdf} downloading={downloading} setShowPdfChoice={setShowPdfChoice} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
@@ -568,7 +571,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
   );
 
   return (
-    <AccordsProvider aide="flux" chant={{ slug: song.slug, titre: song.title }} tonalite={customize.currentKey} ici={ici}>
+    <AccordsProvider aide="flux" chant={{ slug: song.slug, titre: song.title }} tonalite={customize.currentKey} ici={ici} ideesEteintes={!ideesAllumees}>
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
         {/* Barre de contrôles */}
         <div ref={barreRef} data-testid="barre-outils" className={`barre-chant print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : barPinned ? "-translate-y-[calc(var(--nav-h)-var(--sat))]" : "-translate-y-[calc(100%+var(--nav-h)+var(--barre-decalage,0px)+var(--barre-ombre,0px))]"}`}>
@@ -588,7 +591,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
             {/* Harmonie · Vidéo · Crayon · Affichage · ⋯ : une seule ligne à toutes les tailles (RU-3) ;
                 les libellés suivent la place de la rangée (globals.css, `.actions-chant`). */}
             <div className="actions-chant ml-auto shrink-0 items-center gap-1">
-              {accesHarmonie.peut && (
+              {harmonieVue && (
                 <Button
                   variant="secondary"
                   aria-label={t("harmonie.idees")}
@@ -681,6 +684,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
           aJianpu={!!jianpuScore}
           uid={authEnCours ? undefined : compte?.uid ?? null}
           retourFocus={boutonAffichageRef}
+          groupeLecture={accesHarmonie.peut && <LigneIdeesHarmonie allume={ideesAllumees} set={setIdeesAllumees} />}
         >
         <div ref={zoneLecture} className="corps-chant flex items-start gap-6">
         <main
@@ -790,7 +794,7 @@ function equipeAVenirLue(uid: string): Promise<boolean> {
         <HarmonieDuChant
           sansTitre={grandEcran}
           disposition={grandEcran ? "colonne" : "feuille"}
-          open={grandEcran ? accesHarmonie.peut && colonneOuverte : showIdees}
+          open={harmonieVue && (grandEcran ? colonneOuverte : showIdees)}
           onClose={() => {
             setPassageIci(undefined);
             if (grandEcran) { setColonneOuverte(false); boutonHarmonieRef.current?.focus(); } else setShowIdees(false);

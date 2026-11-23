@@ -86,12 +86,15 @@ test("un pianiste ouvre les idées d'un chant de la setlist, avec la transition 
   await capture(page, "idees-setlist");
 });
 
-test("la modulation suit le bloc du dernier refrain, la transition vers le chant suivant vient en dernier", async ({ page }) => {
+// Timothée, 22/11/2026 : dans une setlist, plus d'idées de forme (intro reprise de la fin du refrain, tag) ni de montée de ton.
+test("setlist : ni montée de ton, ni tag, ni intro reprise du refrain ; la transition vers le chant suivant vient en dernier", async ({ page }) => {
   await openPartitions(page);
   await ouvrirLesIdees(page);
-  const bloc = page.locator("[data-idees-harmonie] [data-passage]").filter({ has: page.locator("[data-modulation]") });
-  await expect(bloc, "la modulation est dans un seul bloc").toHaveCount(1);
-  await expect(bloc.locator("h3").first()).toContainText(/Refrain/);
+  const idees = page.locator("[data-idees-harmonie]");
+  await expect(idees.locator("[data-suggestion]").first()).toBeVisible();
+  await expect(idees.locator("[data-modulation]")).toHaveCount(0);
+  await expect(idees.locator('[data-suggestion^="intros-fins/tag"], [data-suggestion^="intros-fins/intro-fin-du-refrain"]')).toHaveCount(0);
+  await expect(idees.getByText(/tag|Intro avec la fin du refrain/i)).toHaveCount(0);
   await expect(page.locator("[data-idees-harmonie] .overflow-y-auto > :last-child")).toContainText("Vers le chant suivant");
   await expect(page.locator("[data-idees-harmonie] .overflow-y-auto > :last-child").getByRole("button", { name: "Écouter" })).toBeVisible();
 });
@@ -124,21 +127,6 @@ test("« Essayer dans Ma version » écrit dans ma partition, jamais dans la set
     db.writes.filter((w) => w.path === SETLIST_DOC || w.path.startsWith(`${SETLIST_DOC}/history`)),
     "la setlist de la présidence ne bouge pas",
   ).toHaveLength(0);
-});
-
-test("« Appliquer à la setlist » fait monter le dernier refrain", async ({ page }) => {
-  const db = await openPartitions(page);
-  await ouvrirLesIdees(page);
-  const modulation = page.locator("[data-modulation='modulations/ton-par-le-5']");
-  await expect(modulation, "un ton plus haut, amené par le 5").toContainText("en B");
-  await modulation.getByRole("button", { name: "Appliquer à la setlist" }).click();
-
-  await expect.poll(() => db.writes.filter((w) => w.path === SETLIST_DOC).length).toBeGreaterThan(0);
-  const ecrit = db.writes.filter((w) => w.path === SETLIST_DOC).pop()!;
-  const items = ecrit.data.items as Array<{ songSlug: string; sectionKeys?: Record<string, string>; contentOverride?: string }>;
-  const abba = items.find((i) => i.songSlug === "abba-pere")!;
-  expect(Object.values(abba.sectionKeys ?? {}), "le dernier refrain monte en B").toContain("B");
-  expect(abba.contentOverride, "l'accord d'approche est posé avant").toContain("F#7");
 });
 
 test("chant lu sur son scan 简谱 : l'app rappelle de reporter le changement", async ({ page }) => {
@@ -201,4 +189,23 @@ test("un chanteur ne voit pas le bouton", async ({ page }) => {
   await ouvrirPartitions(page);
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Harmonie", exact: true })).toHaveCount(0);
+});
+
+// Réglage « Idées d'harmonie » de la marge Affichage (Timothée, 22/11/2026) : le même que sur la page d'un chant.
+test("setlist : « Idées d'harmonie » éteint dans Affichage retire la puce Harmonie et le toucher des noms de section", async ({ page }) => {
+  await openPartitions(page);
+  const puces = page.locator("[data-puce-harmonie]");
+  await expect(puces.first()).toBeVisible();
+  await expect(page.locator("[data-section-nom-bouton]").first()).toBeVisible();
+  await page.getByRole("button", { name: "Affichage", exact: true }).first().click();
+  const reglage = page.getByTestId("marge-affichage").getByRole("switch", { name: "Idées d'harmonie" });
+  await expect(reglage).toBeChecked();
+  await reglage.click();
+  await expect(puces).toHaveCount(0);
+  await expect(page.locator("[data-section-nom-bouton]")).toHaveCount(0);
+  await expect(page.locator("[data-idees-harmonie]")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
+  await capture(page, "setlist-idees-eteintes");
+  await reglage.click();
+  await expect(puces.first()).toBeVisible();
 });

@@ -85,6 +85,10 @@ type Contexte = {
   ici?: IciDuChant;
   /** AL-2 : l'`ici` joint aux demandes d'accord ; absent de `ici` quand les noms de section restent inertes (mode louange, réglage éteint). */
   iciAccords?: IciDuChant;
+  /** Réglage « Idées d'harmonie » éteint (pages de lecture) : `ici` n'est plus transmis, seules ses sections restent (`reperes`). */
+  ideesEteintes?: boolean;
+  /** Sections du chant quand le réglage est éteint : les pastilles du scan 简谱 restent des repères, sans rien ouvrir. */
+  reperes?: ChordProSection[];
 };
 
 const Rien: Contexte = { ouvrir: () => {}, fermer: () => {}, fermerSansFocus: () => {}, actif: false, enregistrer: () => () => {} };
@@ -110,6 +114,11 @@ export function useIciDesAccords(): IciDuChant | undefined {
   return c.iciAccords ?? c.ici;
 }
 
+/** Les sections du chant quand « Idées d'harmonie » est éteint : de quoi garder les repères du scan, inertes. */
+export function useReperesDuScan(): ChordProSection[] | undefined {
+  return useContext(AccordsContext).reperes;
+}
+
 /** Coupe les accords touchables de tout ce qui est dessous (édition d'une ligne, mode louange). `actif` à faux : laisse
  *  passer le fournisseur du dessus sans changer l'arbre (P1 : une ligne garde sa place en entrant dans le Crayon). */
 export function AccordsInactifs({ children, actif = true }: { children: React.ReactNode; actif?: boolean }) {
@@ -120,7 +129,10 @@ export function AccordsInactifs({ children, actif = true }: { children: React.Re
 /** Dit de quel chant sont les accords dessous (une setlist en porte plusieurs). */
 export function ChantDesAccords({ chant, tonalite, ici, sansNoms, children }: { chant: Chant; tonalite?: string; ici?: IciDuChant; /** Les noms de section ne lisent pas `ici` (il ne sert qu'au panneau). */ sansNoms?: boolean; children: React.ReactNode }) {
   const parent = useContext(AccordsContext);
-  const valeur = useMemo(() => avecTonalite({ ...parent, chant, ici: sansNoms ? undefined : ici, iciAccords: ici }, tonalite, ici, chant), [parent, chant, tonalite, ici, sansNoms]);
+  const valeur = useMemo(() => {
+    const vu = parent.ideesEteintes ? undefined : ici;
+    return avecTonalite({ ...parent, chant, ici: sansNoms ? undefined : vu, iciAccords: vu, reperes: parent.ideesEteintes ? ici?.sections : undefined }, tonalite, vu, chant);
+  }, [parent, chant, tonalite, ici, sansNoms]);
   return <AccordsContext.Provider value={valeur}>{children}</AccordsContext.Provider>;
 }
 
@@ -155,7 +167,8 @@ export function AccordsProvider({
   actif = true,
   chant,
   tonalite,
-  ici,
+  ici: iciRecu,
+  ideesEteintes = false,
   aide,
   louange = false,
 }: {
@@ -167,11 +180,15 @@ export function AccordsProvider({
   tonalite?: string;
   /** H5-2 : de quoi ouvrir la porte 2 au passage de l'accord touché (page chant). */
   ici?: IciDuChant;
+  /** Réglage « Idées d'harmonie » éteint : `ici` ne sert plus qu'aux repères du scan (pastilles inertes). */
+  ideesEteintes?: boolean;
   /** `"flux"` : l'aide de la première fois (une seule par appareil) se dessine là où l'on pose `AideAccordsEnLigne`. */
   aide?: "flux";
   /** AL-2 : posé par-dessus le mode louange (z-[9999]) : bulle et feuille passent au-dessus. */
   louange?: boolean;
 }) {
+  const ici = ideesEteintes ? undefined : iciRecu;
+  const reperes = ideesEteintes ? iciRecu?.sections : undefined;
   const [ouvert, setOuvert] = useState<Ouvert | null>(null);
   const enLigne = aide === "flux";
   const [aideLigne, setAideLigne] = useState(false);
@@ -260,8 +277,8 @@ export function AccordsProvider({
   }, [actif, aideLigne, fermerAide]);
 
   const valeur = useMemo<Contexte>(
-    () => (actif ? { ouvrir: tonalite ? (d: DemandeAccord) => ouvrir({ tonalite, ici, ...d }) : ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined, ici } : Rien),
-    [actif, ouvrir, fermer, fermerSansFocus, chant, tonalite, ici, enregistrer, aideLigne, fermerAide],
+    () => (actif ? { ouvrir: tonalite ? (d: DemandeAccord) => ouvrir({ tonalite, ici, ...d }) : ouvrir, fermer, fermerSansFocus, actif: true, chant, enregistrer, fermerAideLigne: aideLigne ? fermerAide : undefined, ici, ideesEteintes, reperes } : Rien),
+    [actif, ouvrir, fermer, fermerSansFocus, chant, tonalite, ici, ideesEteintes, reperes, enregistrer, aideLigne, fermerAide],
   );
 
   return (

@@ -84,6 +84,9 @@ type Props = {
   passage?: { uid: string; cle: number; /** L'idée nommée par « Ici » : sa carte est dépliée et visible. */ idee?: string; /** JV-5a : ouvert depuis le nom de la section : feuille à mi-hauteur (téléphone, tablette portrait). */ miHauteur?: boolean };
   /** JV-5b : posé par-dessus le mode louange (z au-dessus de lui ; sans « Montrer », la page paginée ne défile pas). */
   louange?: boolean;
+  /** Setlist et mode louange (Timothée, 22/11/2026) : sans les idées de forme (intro reprise de la fin du refrain,
+   *  tag) ni les montées de ton ; la page d'un chant les garde. */
+  sansFormes?: boolean;
 };
 
 /** La section visée, dans le chant lu : d'abord son occurrence, sinon (structure
@@ -330,7 +333,7 @@ function grilleDuPassage(p: Passage) {
   return { lignes: uniques.map((l) => l.map((a) => a.texte)) };
 }
 
-function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage, louange }: Props) {
+function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee, disposition, sansTitre, passage, louange, sansFormes }: Props) {
   const { t } = useTranslation();
   const texteFiche = useTexteFiche();
   const { user, profile } = useProfile();
@@ -352,8 +355,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
   }, [slug]);
 
   const { passages, sansPassage } = useMemo(
-    () => harmonieDuChant(sections, tonalite, fiches, suggestionsEcartees(rejets), idees),
-    [sections, tonalite, fiches, rejets, idees],
+    () => harmonieDuChant(sections, tonalite, fiches, suggestionsEcartees(rejets), idees, sansFormes),
+    [sections, tonalite, fiches, rejets, idees, sansFormes],
   );
   // Un bloc par passage ; les reprises d'une même section se replient dans le premier.
   const blocs = useMemo(() => {
@@ -474,7 +477,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
     recharger: async () => setIdees(await getIdees(slug)),
   });
 
-  const modulations = onModuler
+  const modulations = onModuler && !sansFormes
     ? MODULATIONS.flatMap((m) => {
         const prop = modulationProposee(sections, tonalite, m);
         const fiche = fiches.find((f) => f.id === m.fiche);
@@ -572,6 +575,12 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                           <Link href={`/harmonie/${s.fiche.id}`} lang={texteFiche(s.fiche).lang} className="text-sm font-semibold underline-offset-4 hover:underline">
                             {texteFiche(s.fiche).nom}
                           </Link>
+                        </div>
+                        {/* Ressenti et usage de la fiche (Timothée, 22/11/2026 : des étiquettes pour choisir une idée), sous le nom. */}
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {[...s.fiche.ressentis.map((x) => t(`harmonie.ressenti.${x}`)), ...s.fiche.usages.map((x) => t(`harmonie.usage.${x}`))].map((e) => (
+                            <span key={e} data-etiquette-idee="" className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{e}</span>
+                          ))}
                         </div>
                         {apercu ? (
                           // Timothée (13/11/2026) : on distinguait mal l'ancienne progression de la nouvelle. L'ancienne en gris,

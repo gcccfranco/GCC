@@ -44,3 +44,17 @@ export function useColonneHarmonie(): [boolean, (ouverte: boolean) => void] {
   }, []);
   return [ouverte, poser];
 }
+
+/** Réglage « Idées d'harmonie » des pages de lecture (chant, setlist), par appareil ; allumé par défaut. Éteint, plus rien
+ *  n'ouvre Harmonie sur ces pages. Le mode louange garde le sien (`perf-idees-harmonie`, éteint par défaut : le culte). */
+export function useIdeesHarmonie(): [boolean, (allume: boolean) => void] {
+  const [allume, setAllume] = useState(true);
+  useEffect(() => {
+    try { if (localStorage.getItem("gcc-harmonie-idees") === "0") setAllume(false); } catch { /* stockage indisponible : allumé */ }
+  }, []);
+  const poser = useCallback((a: boolean) => {
+    setAllume(a);
+    try { localStorage.setItem("gcc-harmonie-idees", a ? "1" : "0"); } catch { /* ignore */ }
+  }, []);
+  return [allume, poser];
+}
